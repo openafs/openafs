@@ -2713,7 +2713,7 @@ afs_int32 SAFSVolConvertROtoRWvolume(acid, partId, volumeId)
     afs_int32 partId;
     afs_int32 volumeId;
 {
-#ifdef AFS_NAMEI_ENV
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     DIR *dirp;
     char pname[16];
     char volname[20];
