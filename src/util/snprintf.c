@@ -447,7 +447,7 @@ afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 	case 'n':		/* report count so far */
 	    if (lflag > 1) {
 		llcountp = va_arg(ap, afs_intmax_t *);
-		*llcountp = (long long)count;
+		*llcountp = (afs_intmax_t)count;
 	    } else if (lflag) {
 		lcountp = va_arg(ap, long *);
 		*lcountp = (long)count;
