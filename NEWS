@@ -1,5 +1,16 @@
 Openafs News -- history of user Visible changes. September 17, 2001
 
+* Changes incorporated in OpenAFS 1.2.2
+
+** The namei fileserver allows vice "partitions" to be directories instead
+   of partitions and will attach and display accordingly. Creating the file
+   "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
+
+* Changes incorporated in OpenAFS 1.2.1
+
+** vfsck on Digital UNIX and Solaris will now refuse to fsck mounted
+   mounted partitions.
+
 * Changes incorporated in OpenAFS 1.2.0
 
 ** AFS now supports --prefix and the other directory options of
@@ -7,7 +18,6 @@ Openafs News -- history of user Visible changes. September 17, 2001
    /usr/local.  In order to get traditional AFS directory paths (/usr/afs
    and /usr/vice/etc) use the --enable-transarc-paths option to
    configure.  More details on the new directory layout are found in README.
-
 
 * Changes incorporated in OpenAFS 1.1.1a
  
