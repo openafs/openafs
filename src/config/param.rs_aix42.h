@@ -18,6 +18,10 @@
 #define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 
+#ifdef AFS_NAMEI_ENV
+#define AFS_64BIT_IOPS_ENV      1       /* needed for NAMEI... */
+#endif
+
 #include <afs/afs_sysnames.h>
 
 /* Global lock in AFS part of client. */
