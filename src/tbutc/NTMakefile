@@ -47,8 +47,8 @@ BUTMINCLUDE = -I$(DESTDIR)\include
 BUTCOBJS   = dbentries.obj tcprocs.obj lwps.obj tcmain.obj list.obj recoverDb.obj \
 	     tcudbprocs.obj dump.obj tcstatus.obj butc_xbsa.obj \
              $(LWPOBJS) $(BUCOORDOBJS)
-BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)\
-BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
+BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)
+BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
 	     $(VOLSERLIBS) \
              $(BUTMLIBS) \

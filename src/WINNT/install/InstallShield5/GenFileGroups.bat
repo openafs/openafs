@@ -81,10 +81,7 @@ rem -------------- Client_System32_Files.fgl ---------------------------
 echo [TopDir] > Client_System32_Files.fgl
 echo file0=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Client_System32_Files.fgl
 echo file1=%MSVCDIR%\REDIST\Msvcrt.dll >> Client_System32_Files.fgl
-echo file2=%SYSTEMROOT%\system32\Msvcrtd.dll >> Client_System32_Files.fgl
-echo file3=%MSVCDIR%\REDIST\Mfc42.dll >> Client_System32_Files.fgl
-echo file4=%SYSTEMROOT%\system32\mfc42d.dll >> Client_System32_Files.fgl
-echo file5=%SYSTEMROOT%\system32\mfco42d.dll >> Client_System32_Files.fgl
+echo file2=%MSVCDIR%\REDIST\Mfc42.dll >> Client_System32_Files.fgl
 echo.  >> Client_System32_Files.fgl
 echo [General] >> Client_System32_Files.fgl
 echo Type=FILELIST >> Client_System32_Files.fgl
@@ -159,11 +156,8 @@ rem -------------- Light_Client_System32_Files.fgl ---------------------
 
 echo [TopDir] > Light_Client_System32_Files.fgl
 echo file0=%MSVCDIR%\REDIST\Msvcrt.dll >> Light_Client_System32_Files.fgl
-echo file1=%SYSTEMROOT%\system32\Msvcrtd.dll >> Light_Client_System32_Files.fgl
-echo file2=%MSVCDIR%\REDIST\Mfc42.dll >> Light_Client_System32_Files.fgl
-echo file3=%SYSTEMROOT%\system32\mfc42d.dll >> Light_Client_System32_Files.fgl
-echo file4=%SYSTEMROOT%\system32\mfco42d.dll >> Light_Client_System32_Files.fgl
-echo file5=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Light_Client_System32_Files.fgl
+echo file1=%MSVCDIR%\REDIST\Mfc42.dll >> Light_Client_System32_Files.fgl
+echo file2=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Light_Client_System32_Files.fgl
 echo.  >> Light_Client_System32_Files.fgl
 echo [General] >> Light_Client_System32_Files.fgl
 echo Type=FILELIST >> Light_Client_System32_Files.fgl
@@ -218,11 +212,8 @@ rem -------------- Light95_Client_System32_Files.fgl ---------------------
 
 echo [TopDir] > Light95_Client_System32_Files.fgl
 echo file0=%MSVCDIR%\REDIST\Msvcrt.dll >> Light95_Client_System32_Files.fgl
-echo file1=%SYSTEMROOT%\system32\Msvcrtd.dll >> Light95_Client_System32_Files.fgl
-echo file2=%MSVCDIR%\REDIST\Mfc42.dll >> Light95_Client_System32_Files.fgl
-echo file3=%SYSTEMROOT%\system32\mfc42d.dll >> Light95_Client_System32_Files.fgl
-echo file4=%SYSTEMROOT%\system32\mfco42d.dll >> Light95_Client_System32_Files.fgl
-echo file5=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Light95_Client_System32_Files.fgl
+echo file1=%MSVCDIR%\REDIST\Mfc42.dll >> Light95_Client_System32_Files.fgl
+echo file2=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Light95_Client_System32_Files.fgl
 echo.  >> Light95_Client_System32_Files.fgl
 echo [General] >> Light95_Client_System32_Files.fgl
 echo Type=FILELIST >> Light95_Client_System32_Files.fgl
@@ -290,7 +281,6 @@ rem -------------- Server_System32_Files.fgl ---------------------------
 echo [TopDir] > Server_System32_Files.fgl
 echo file0=%IS5_DEST%\root.server\usr\afs\bin\afsserver.cpl >> Server_System32_Files.fgl
 echo file1=%MSVCDIR%\REDIST\Msvcrt.dll >> Server_System32_Files.fgl
-echo file2=%SYSTEMROOT%\system32\Msvcrtd.dll >> Server_System32_Files.fgl
 echo.  >> Server_System32_Files.fgl
 echo [General] >> Server_System32_Files.fgl
 echo Type=FILELIST >> Server_System32_Files.fgl
@@ -346,7 +336,6 @@ rem -------------- Control_Center_System32_Files.fgl--------------------
 echo [TopDir] > Control_Center_System32_Files.fgl
 echo file0=%IS5_DEST%\root.client\usr\vice\etc\afs_cpa.cpl >> Control_Center_System32_Files.fgl
 echo file1=%MSVCDIR%\REDIST\Msvcrt.dll >> Control_Center_System32_Files.fgl
-echo file2=%SYSTEMROOT%\system32\Msvcrtd.dll >> Control_Center_System32_Files.fgl
 echo.  >> Control_Center_System32_Files.fgl
 echo [General] >> Control_Center_System32_Files.fgl
 echo Type=FILELIST >> Control_Center_System32_Files.fgl
@@ -1262,7 +1251,7 @@ echo file0=%IS5_INCL%\afs\afs_args.h >> Client_Afs_Header_Files.fgl
 echo file1=%IS5_INCL%\afs\debug.h >> Client_Afs_Header_Files.fgl
 echo file2=%IS5_INCL%\afs\param.h >> Client_Afs_Header_Files.fgl
 echo file3=%IS5_INCL%\afs\afs_sysnames.h >> Client_Afs_Header_Files.fgl
-echo file4=%IS5_INCL%\afs\bnode.h >> Client_Afs_Header_Files.fgl
+echo file4=%IS5_INCL%\afs\permit_xprt.h >> Client_Afs_Header_Files.fgl
 echo file5=%IS5_INCL%\afs\stds.h >> Client_Afs_Header_Files.fgl
 echo file6=%IS5_INCL%\afs\icl.h >> Client_Afs_Header_Files.fgl
 echo file7=%IS5_INCL%\afs\procmgmt.h >> Client_Afs_Header_Files.fgl
@@ -1349,6 +1338,7 @@ echo file87=%IS5_INCL%\afs\volser.h >> Client_Afs_Header_Files.fgl
 echo file88=%IS5_INCL%\afs\volint.h >> Client_Afs_Header_Files.fgl
 echo file89=%IS5_INCL%\afs\fs_stats.h >> Client_Afs_Header_Files.fgl
 echo file90=%IS5_INCL%\afs\bosint.h >> Client_Afs_Header_Files.fgl
+echo file91=%IS5_INCL%\afs\bnode.h >> Client_Afs_Header_Files.fgl
 echo. >> Client_Afs_Header_Files.fgl
 echo [General] >> Client_Afs_Header_Files.fgl
 echo Type=FILELIST >> Client_Afs_Header_Files.fgl
@@ -1425,3 +1415,4 @@ echo [General] >> Client_Sample_Files.fgl
 echo Type=FILELIST >> Client_Sample_Files.fgl
 echo Version=1.00.000 >> Client_Sample_Files.fgl
 
+:EOF

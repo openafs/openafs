@@ -124,8 +124,10 @@ typedef struct smb_vc {
         struct smb_fid *fidsp;		/* the first child in the open file list */
 	struct smb_user *justLoggedOut;	/* ready for profile upload? */
 	unsigned long logoffTime;	/* tick count when logged off */
-	struct cm_user *logonDLLUser;	/* integrated logon user */
+	/*struct cm_user *logonDLLUser;	/* integrated logon user */
 	unsigned char errorCount;
+        char rname[17];
+	int lana;
 } smb_vc_t;
 
 					/* have we negotiated ... */
@@ -144,9 +146,18 @@ typedef struct smb_user {
         osi_mutex_t mx;
         long userID;			/* the session identifier */
         struct smb_vc *vcp;		/* back ptr to virtual circuit */
-	struct cm_user *userp;		/* CM user structure */
-	char *name;			/* user name */
+  struct smb_username *unp;        /* user name struct */
 } smb_user_t;
+
+typedef struct smb_username {
+	struct smb_username *nextp;		/* next sibling */
+        long refCount;			/* ref count */
+        long flags;			/* flags; locked by mx */
+        osi_mutex_t mx;
+	struct cm_user *userp;		/* CM user structure */
+        char *name;			/* user name */
+  char *machine;                  /* machine name */
+} smb_username_t;
 
 #define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
 
@@ -194,6 +205,9 @@ typedef struct smb_ioctl {
 	
         /* flags */
         long flags;
+
+        /* fid pointer */
+        struct smb_fid *fidp;
 } smb_ioctl_t;
 
 /* flags for smb_ioctl_t */
@@ -265,6 +279,7 @@ typedef struct smb_dirListPatch {
 	osi_queue_t q;
         char *dptr;		/* ptr to attr, time, data, sizel, sizeh */
 	cm_fid_t fid;
+  cm_dirEntry_t *dep;   /* temp */
 } smb_dirListPatch_t;
 
 /* waiting lock list elements */
@@ -315,7 +330,7 @@ extern void smb_DosUTimeFromUnixTime(long *dosUTimep, long unixTime);
 
 extern void smb_UnixTimeFromDosUTime(long *unixTimep, long dosUTime);
 
-extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags);
+extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
 extern void smb_ReleaseVC(smb_vc_t *vcp);
 
@@ -434,5 +449,7 @@ extern BOOL smb_IsLegalFilename(char *filename);
 #include "smb3.h"
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
+
+cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, char *usern);
 
 #endif /* whole file */

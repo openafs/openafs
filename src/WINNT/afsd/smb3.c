@@ -7,6 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+//#define NOSERVICE 1 
+
 #include <afs/param.h>
 #include <afs/stds.h>
 
@@ -42,14 +44,16 @@ smb_tran2Packet_t *smb_tran2AssemblyQueuep;
 cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
 {
 	smb_user_t *uidp;
-        cm_user_t *up;
+        cm_user_t *up = NULL;
         
         uidp = smb_FindUID(vcp, inp->uid, 0);
         if (!uidp) return NULL;
         
 	lock_ObtainMutex(&uidp->mx);
-        up = uidp->userp;
-        cm_HoldUser(up);
+        if (uidp->unp) {
+          up = uidp->unp->userp;
+          cm_HoldUser(up);
+        }
 	lock_ReleaseMutex(&uidp->mx);
 
         smb_ReleaseUID(uidp);
@@ -107,119 +111,123 @@ unsigned char *smb_ParseString(unsigned char *inp, char **chainpp)
 
 long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-	char *tp;
-	char *usern, *pwd, *pwdx;
-	smb_user_t *uidp, *dead_uidp;
-	unsigned short newUid;
-	unsigned long caps;
-	cm_user_t *userp;
-	char *s1 = " ";
+    char *tp;
+    char *usern, *pwd, *pwdx;
+    smb_user_t *uidp, *dead_uidp;
+    unsigned short newUid;
+    unsigned long caps;
+    cm_user_t *userp;
+    smb_username_t *unp;
+    char *s1 = " ";
 
-	/* Check for bad conns */
-	if (vcp->flags & SMB_VCFLAG_REMOTECONN)
-		return CM_ERROR_REMOTECONN;
+    /* Check for bad conns */
+    if (vcp->flags & SMB_VCFLAG_REMOTECONN)
+        return CM_ERROR_REMOTECONN;
 
-	/* For NT LM 0.12 and up, get capabilities */
-	if (vcp->flags & SMB_VCFLAG_USENT) {
-		caps = smb_GetSMBParm(inp, 11);
-		if (caps & 0x40)
-			vcp->flags |= SMB_VCFLAG_STATUS32;
-		/* for now, ignore other capability bits */
-	}
+    /* For NT LM 0.12 and up, get capabilities */
+    if (vcp->flags & SMB_VCFLAG_USENT) {
+        caps = smb_GetSMBParm(inp, 11);
+        if (caps & 0x40)
+            vcp->flags |= SMB_VCFLAG_STATUS32;
+        /* for now, ignore other capability bits */
+    }
 
-	/* Parse the data */
-	tp = smb_GetSMBData(inp, NULL);
-	if (vcp->flags & SMB_VCFLAG_USENT)
-		pwdx = smb_ParseString(tp, &tp);
-	pwd = smb_ParseString(tp, &tp);
-	usern = smb_ParseString(tp, &tp);
+    /* Parse the data */
+    tp = smb_GetSMBData(inp, NULL);
+    if (vcp->flags & SMB_VCFLAG_USENT)
+        pwdx = smb_ParseString(tp, &tp);
+    pwd = smb_ParseString(tp, &tp);
+    usern = smb_ParseString(tp, &tp);
 
-	/* Create a new UID and cm_user_t structure */
-	userp = cm_NewUser();
-	lock_ObtainMutex(&vcp->mx);
-	newUid = vcp->uidCounter++;
-	lock_ReleaseMutex(&vcp->mx);
-
-	/* Create a new smb_user_t structure and connect them up */
-	uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
-	lock_ObtainMutex(&uidp->mx);
-	uidp->userp = userp;
-	uidp->name = strdup(usern);
-	lock_ReleaseMutex(&uidp->mx);
-	smb_ReleaseUID(uidp);
-        
-	if (dead_vcp) {
-		dead_uidp = dead_vcp->usersp;
-		while (dead_uidp) {
-			if (dead_uidp->userp
-			    && strcmp(dead_uidp->name, usern) == 0)
-				break;
-			dead_uidp = dead_uidp->nextp;
+    if (strlen(usern)==0) {
+        /*return CM_ERROR_NOACCESS;*/
+        newUid = 0;   /* always assign uid 0 for blank username */
+        uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
+#ifdef DEBUG_VERBOSE
+		{
+        HANDLE h; char *ptbuf[1],buf[132];
+        h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
+        sprintf(buf, "VCP[%x] lsn[%d] anonymous, uid[%d]",vcp,vcp->lsn,uidp->userID);
+        ptbuf[0] = buf;
+        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
 		}
-	}
+#endif
+        smb_ReleaseUID(uidp);
+        goto done;
+    }
 
-	/* transfer tokens from dead vcp */
-	if (dead_vcp && dead_uidp) {
-		cm_user_t *dead_userp;
-		s1 = ", tokens from terminated session";
-		dead_userp = dead_uidp->userp;
-		cm_ResetACLCache(dead_userp);
-		userp->cellInfop = dead_userp->cellInfop;
-		dead_userp->cellInfop = NULL;
-		dead_vcp = NULL;
-	}
+    /* On Windows 2000, this function appears to be called more often than
+       it is expected to be called. This resulted in multiple smb_user_t
+       records existing all for the same user session which results in all
+       of the users tokens disappearing.
 
-	/* transfer tokens from integrated logon */
-	if (vcp->logonDLLUser) {
-		s1 = ", tokens from integrated logon";
-		cm_ResetACLCache(vcp->logonDLLUser);
-		userp->cellInfop = vcp->logonDLLUser->cellInfop;
-		vcp->logonDLLUser->cellInfop = NULL;
-		vcp->logonDLLUser = NULL;
-	}
+       To avoid this problem, we look for an existing smb_user_t record
+       based on the users name, and use that one if we find it.
+    */
 
-	/* transfer tokens for logoff profile upload */
-	if (vcp->justLoggedOut) {
-		cm_user_t *logout_userp;
-		if (GetTickCount() - vcp->logoffTime <
-			1000 * smb_LogoffTransferTimeout
-		    && strcmp(vcp->justLoggedOut->name, usern) == 0) {
-			s1 = ", tokens from logoff";
-			logout_userp = vcp->justLoggedOut->userp;
-			cm_ResetACLCache(logout_userp);
-			userp->cellInfop = logout_userp->cellInfop;
-			logout_userp->cellInfop = NULL;
+    uidp = smb_FindUserByNameThisSession(vcp, usern);
+    if (uidp) {   /* already there, so don't create a new one */
+        unp = uidp->unp;
+        userp = unp->userp;
+        newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
+#ifdef DEBUG_VERBOSE
+        {
+		   HANDLE h; char *ptbuf[1],buf[132];
+			h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
+			sprintf(buf,"FindUserByName:VCP[%x],Lana[%d],lsn[%d],userid[%d],name[%s]",vcp,vcp->lana,vcp->lsn,newUid,usern);
+			ptbuf[0] = buf;
+			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+			DeregisterEventSource(h);
+        }
+#endif
+        smb_ReleaseUID(uidp);
+    }
+    else {
+      /* do a global search for the username/machine name pair */
+        unp = smb_FindUserByName(usern, vcp->rname, SMB_FLAG_CREATE);
+
+        /* Create a new UID and cm_user_t structure */
+        userp = unp->userp;
+        if (!userp)
+          userp = cm_NewUser();
+        lock_ObtainMutex(&vcp->mx);
+        newUid = vcp->uidCounter++;
+        lock_ReleaseMutex(&vcp->mx);
+
+        /* Create a new smb_user_t structure and connect them up */
+        lock_ObtainMutex(&unp->mx);
+        unp->userp = userp;
+        lock_ReleaseMutex(&unp->mx);
+
+        uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
+        lock_ObtainMutex(&uidp->mx);
+        uidp->unp = unp;
+#ifdef DEBUG_VERBOSE
+		{
+		   HANDLE h; char *ptbuf[1],buf[132];
+			h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
+			sprintf(buf,"NewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],name[%s]",vcp,vcp->lana,vcp->lsn,newUid,usern);
+			ptbuf[0] = buf;
+			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+			DeregisterEventSource(h);
 		}
-		vcp->justLoggedOut = NULL;
-	}
-	else if (loggedOut) {
-		cm_user_t *logout_userp;
-		if (GetTickCount() - loggedOutTime <
-			1000 * smb_LogoffTransferTimeout
-		    && strcmp(loggedOutName, usern) == 0) {
-			s1 = ", tokens from logoff";
-			logout_userp = loggedOutUserp->userp;
-			cm_ResetACLCache(logout_userp);
-			userp->cellInfop = logout_userp->cellInfop;
-			logout_userp->cellInfop = NULL;
-		}
-		smb_ReleaseUID(loggedOutUserp);
-		loggedOutUserp = NULL;
-		free(loggedOutName);
-		loggedOutName = NULL;
-		loggedOut = 0;
-	}
+#endif
+        lock_ReleaseMutex(&uidp->mx);
+        smb_ReleaseUID(uidp);
+    }
 
-	/* Return UID to the client */
-	((smb_t *)outp)->uid = newUid;
-	/* Also to the next chained message */
-	((smb_t *)inp)->uid = newUid;
+ done:
+    /* Return UID to the client */
+    ((smb_t *)outp)->uid = newUid;
+    /* Also to the next chained message */
+    ((smb_t *)inp)->uid = newUid;
 
-	osi_Log3(afsd_logp, "SMB3 session setup name %s creating ID %d%s",
-			osi_LogSaveString(afsd_logp, usern), newUid, osi_LogSaveString(afsd_logp, s1));
-	smb_SetSMBParm(outp, 2, 0);
-        smb_SetSMBDataLength(outp, 0);
-        return 0;
+    osi_Log3(afsd_logp, "SMB3 session setup name %s creating ID %d%s",
+             osi_LogSaveString(afsd_logp, usern), newUid, osi_LogSaveString(afsd_logp, s1));
+    smb_SetSMBParm(outp, 2, 0);
+    smb_SetSMBDataLength(outp, 0);
+    return 0;
 }
 
 long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -236,27 +244,13 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         if (uidp) {
 		char *s1 = NULL, *s2 = NULL;
 
-		/* Also, this is not logon session any more */
-		if (uidp->userp == vcp->logonDLLUser) {
-			s1 = ", was logon session";
-			vcp->logonDLLUser = NULL;
-		}
-
-		/* But its tokens might be needed later */
-		if (uidp->userp && !(uidp->userp->flags & CM_USERFLAG_WASLOGON)
-		    && smb_LogoffTokenTransfer) {
-			s2 = ", pre-logout effect";
-			vcp->justLoggedOut = uidp;
-			vcp->logoffTime = GetTickCount();
-		}
-
 		if (s2 == NULL) s2 = " ";
 		if (s1 == NULL) {s1 = s2; s2 = " ";}
 
 		osi_Log4(afsd_logp, "SMB3 user logoffX uid %d name %s%s%s",
 			 uidp->userID,
-			 osi_LogSaveString(afsd_logp, uidp->name),
-			 s1, s2);
+			 osi_LogSaveString(afsd_logp,
+                 (uidp->unp) ? uidp->unp->name: " "), s1, s2);
 
 		lock_ObtainMutex(&uidp->mx);
 		uidp->flags |= SMB_USERFLAG_DELETE;
@@ -1227,7 +1221,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 smb_FreeTran2Packet(outp);
                 return 0;
         }
-        
+
         lock_ObtainMutex(&scp->mx);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
         	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
@@ -2320,6 +2314,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 				curPatchp->fid.volume = scp->fid.volume;
 				curPatchp->fid.vnode = ntohl(dep->fid.vnode);
 				curPatchp->fid.unique = ntohl(dep->fid.unique);
+
+                                /* temp */
+                                curPatchp->dep = dep;
 			}
 
 			if (searchFlags & 4)
@@ -4135,3 +4132,40 @@ void smb3_Init()
 {
 	lock_InitializeMutex(&smb_Dir_Watch_Lock, "Directory Watch List Lock");
 }
+
+cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
+{
+    cm_user_t *userp;
+    /*int newUid;*/
+    smb_user_t *uidp;
+    smb_username_t *unp;
+
+    unp = smb_FindUserByName(usern, machine, SMB_FLAG_CREATE);
+    if (!unp->userp) {
+        lock_ObtainMutex(&unp->mx);
+        unp->userp = cm_NewUser();
+        lock_ReleaseMutex(&unp->mx);
+#ifdef DEBUG_VERBOSE
+		{       //jimpeter
+		   HANDLE h; char *ptbuf[1],buf[132];
+			h = RegisterEventSource(NULL, "AFS Service - smb_FindCMUserByName");
+			sprintf(buf,"New User name[%s] machine[%s]",usern,machine);
+			ptbuf[0] = buf;
+			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+			DeregisterEventSource(h);
+		}
+#endif
+    } 
+#ifdef DEBUG_VERBOSE
+	  else	{       //jimpeter
+		   HANDLE h; char *ptbuf[1],buf[132];
+			h = RegisterEventSource(NULL, "AFS Service - smb_FindCMUserByName");
+			sprintf(buf,"Found-name[%s] machine[%s]",usern,machine);
+			ptbuf[0] = buf;
+			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+			DeregisterEventSource(h);
+		}
+#endif
+    return unp->userp;
+}
+

@@ -3,7 +3,7 @@
 ---FileGroup---=
 HKLM0=Software\TransarcCorporation\AFS Client\CurrentVersion
 HKLM1=Software\TransarcCorporation\AFS Client
-HKLM2=Software\TransarcCorporation\AFS Client\3.6
+HKLM2=Software\TransarcCorporation\AFS Client\1.0 4.01
 HKLM3=SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon
 HKCR0=CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}
 HKLM4=SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
@@ -11,6 +11,7 @@ HKCR1=CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32
 HKLM5=SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider
 HKCR2=*\shellex\ContextMenuHandlers\AFS Client Shell Extension
 HKCR3=FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension
+HKLM6=SYSTEM\CurrentControlSet\Services\NetBT\Parameters
 
 [Client:HKCR:*\shellex\ContextMenuHandlers\AFS Client Shell Extension]
 ---Comment---=
@@ -41,7 +42,7 @@ TypesSupported=N,7
 HKLM0=Software\TransarcCorporation\AFS Server\CurrentVersion
 HKLM1=System\CurrentControlSet\Services\EventLog\Application\AFS Service
 HKLM2=Software\TransarcCorporation\AFS Server
-HKLM3=Software\TransarcCorporation\AFS Server\3.6
+HKLM3=Software\TransarcCorporation\AFS Server\1.0 4.01
 
 [WinNT_Client_NoUninstall:HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion\File Manager\AddOns]
 ---Comment---=
@@ -53,22 +54,22 @@ AFS Client FME=S,<TARGETDIR>\Client\Program\afs_fme.dll
 ---FileGroup---=
 HKLM0=Software\TransarcCorporation\AFS Control Center\CurrentVersion
 HKLM1=Software\TransarcCorporation\AFS Control Center
-HKLM2=Software\TransarcCorporation\AFS Control Center\3.6
+HKLM2=Software\TransarcCorporation\AFS Control Center\1.0 4.01
 
-[Client:HKLM:Software\TransarcCorporation\AFS Client\3.6]
-PatchLevel=N,0
-BetaLevel=N,0
+[Client:HKLM:Software\TransarcCorporation\AFS Client\1.0 4.01]
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 Title=S,<CLIENT_TITLE>
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Client
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,<CLIENT_DESC>
 
 [Client_NoUninstall]
@@ -85,19 +86,19 @@ HKLM0=SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved
 (Default)=S,
 Gateway=S,
 
-[Control_Center:HKLM:Software\TransarcCorporation\AFS Control Center\3.6]
-PatchLevel=N,0
-BetaLevel=N,0
+[Control_Center:HKLM:Software\TransarcCorporation\AFS Control Center\1.0 4.01]
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Control Center
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS Control Center for Windows NT
 
 [Client_NoUninstall:HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
@@ -110,18 +111,18 @@ Description=S,AFS Control Center for Windows NT
 (Default)=S,
 
 [Control_Center:HKLM:Software\TransarcCorporation\AFS Control Center\CurrentVersion]
-PatchLevel=N,0
-BetaLevel=N,0
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Control Center
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS Control Center for Windows NT
 
 [Light_Client]
@@ -143,7 +144,7 @@ IsGateway=N,0
 ---FileGroup---=
 HKLM0=Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion
 HKLM1=Software\TransarcCorporation\AFS Supplemental Documentation
-HKLM2=Software\TransarcCorporation\AFS Supplemental Documentation\3.6
+HKLM2=Software\TransarcCorporation\AFS Supplemental Documentation\1.0 4.01
 
 [Data]
 Set0=Server
@@ -156,19 +157,19 @@ Set6=Full_Client
 Set7=Docs
 
 [Client:HKLM:Software\TransarcCorporation\AFS Client\CurrentVersion]
-PatchLevel=N,0
-BetaLevel=N,0
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 Title=S,<CLIENT_TITLE>
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Client
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,<CLIENT_DESC>
 
 [Full_Client]
@@ -177,33 +178,33 @@ Description=S,<CLIENT_DESC>
 HKLM0=SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
 
 [Docs:HKLM:Software\TransarcCorporation\AFS Supplemental Documentation\CurrentVersion]
-PatchLevel=N,0
-BetaLevel=N,0
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Documentation
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS System Administration Documentation
 
-[Server:HKLM:Software\TransarcCorporation\AFS Server\3.6]
-PatchLevel=N,0
-BetaLevel=N,0
+[Server:HKLM:Software\TransarcCorporation\AFS Server\1.0 4.01]
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Server
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS Server for Windows NT
 
 [Client:HKLM:SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
@@ -228,19 +229,19 @@ AFS Client FME=S,<TARGETDIR>\Client\Program\afs_fme.dll
 ---FileGroup---=
 HKLM0=SOFTWARE\Microsoft\Windows NT\CurrentVersion\File Manager\AddOns
 
-[Docs:HKLM:Software\TransarcCorporation\AFS Supplemental Documentation\3.6]
-PatchLevel=N,0
-BetaLevel=N,0
+[Docs:HKLM:Software\TransarcCorporation\AFS Supplemental Documentation\1.0 4.01]
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Documentation
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS System Administration Documentation
 
 [General]
@@ -252,18 +253,18 @@ Version=1.00.000
 (Default)=S,{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}
 
 [Server:HKLM:Software\TransarcCorporation\AFS Server\CurrentVersion]
-PatchLevel=N,0
-BetaLevel=N,0
+PatchLevel=N,401
+BetaLevel=N,1
 Revision=N,0
 ---Comment---=
 (Default)=S,
-MajorVersion=N,3
+MajorVersion=N,1
 InstallDateString=S,<INSTALL_DATE>
 PathName=S,<TARGETDIR>\Server
 Software Type=S,File System
-MinorVersion=N,6
+MinorVersion=N,0
 ReleaseType=S,<RELEASE_TYPE>
-VersionString=S,3.6
+VersionString=S,1.0 4.01
 Description=S,AFS Server for Windows NT
 
 [Client:HKCR:CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}]

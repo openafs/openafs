@@ -21,6 +21,7 @@
 #include <osi.h>
 
 #include <cm.h>
+#include <cm_dir.h>
 #include <cm_cell.h>
 #include <cm_user.h>
 #include <cm_conn.h>
@@ -30,7 +31,6 @@
 #include <cm_ioctl.h>
 
 #include <smb.h>
-#include <cm.h>
 #include <pioctl_nt.h>
 
 static char AFSConfigKeyName[] =

@@ -7,6 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+//#define NOSERVICE 1
+
 #include <afs/param.h>
 #include <afs/stds.h>
 
@@ -61,8 +63,9 @@ osi_hyper_t hones = {0xFFFFFFFF, -1};
 osi_log_t *smb_logp;
 osi_rwlock_t smb_globalLock;
 osi_rwlock_t smb_rctLock;
-
-unsigned char smb_LANadapter;
+osi_rwlock_t smb_ListenerLock;
+ 
+char smb_LANadapter;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
 
 /* for debugging */
@@ -88,7 +91,9 @@ struct smb_packet *bufs[NCBmax];
 #define Sessionmax 100
 EVENT_HANDLE SessionEvents[Sessionmax];
 unsigned short LSNs[Sessionmax];
+int lanas[Sessionmax];
 BOOL dead_sessions[Sessionmax];
+LANA_ENUM lana_list;
 
 /* for raw I/O */
 osi_mutex_t smb_RawBufLock;
@@ -142,6 +147,8 @@ char *smb_localNamep;
 
 smb_vc_t *smb_allVCsp;
 
+smb_username_t *usernamesp = NULL;
+
 smb_waitingLock_t *smb_allWaitingLocks;
 
 /* forward decl */
@@ -170,7 +177,145 @@ extern char cm_confDir[];
 #define EXPIREDATE 834000000		/* Wed Jun 5 1996 */
 
 
+char * myCrt_Dispatch(int i)
+{
+	switch (i)
+	{
+	default:
+		return "unknown SMB op";
+	case 0x00:
+		return "(00)ReceiveCoreMakeDir";
+	case 0x01:
+		return "(01)ReceiveCoreRemoveDir";
+	case 0x02:
+		return "(02)ReceiveCoreOpen";
+	case 0x03:
+		return "(03)ReceiveCoreCreate";
+	case 0x04:
+		return "(04)ReceiveCoreClose";
+	case 0x05:
+		return "(05)ReceiveCoreFlush";
+	case 0x06:
+		return "(06)ReceiveCoreUnlink";
+	case 0x07:
+		return "(07)ReceiveCoreRename";
+	case 0x08:
+		return "(08)ReceiveCoreGetFileAttributes";
+	case 0x09:
+		return "(09)ReceiveCoreSetFileAttributes";
+	case 0x0a:
+		return "(0a)ReceiveCoreRead";
+	case 0x0b:
+		return "(0b)ReceiveCoreWrite";
+	case 0x0c:
+		return "(0c)ReceiveCoreLockRecord";
+	case 0x0d:
+		return "(0d)ReceiveCoreUnlockRecord";
+	case 0x0e:
+		return "(0e)SendCoreBadOp";
+	case 0x0f:
+		return "(0f)ReceiveCoreCreate";
+	case 0x10:
+		return "(10)ReceiveCoreCheckPath";
+	case 0x11:
+		return "(11)SendCoreBadOp";
+	case 0x12:
+		return "(12)ReceiveCoreSeek";
+	case 0x1a:
+		return "(1a)ReceiveCoreReadRaw";
+	case 0x1d:
+		return "(1d)ReceiveCoreWriteRawDummy";
+	case 0x22:
+		return "(22)ReceiveV3SetAttributes";
+	case 0x23:
+		return "(23)ReceiveV3GetAttributes";
+	case 0x24:
+		return "(24)ReceiveV3LockingX";
+	case 0x29:
+		return "(29)SendCoreBadOp";
+	case 0x2b:
+		return "(2b)ReceiveCoreEcho";
+	case 0x2d:
+		return "(2d)ReceiveV3OpenX";
+	case 0x2e:
+		return "(2e)ReceiveV3ReadX";
+	case 0x32:
+		return "(32)ReceiveV3Tran2A";
+	case 0x33:
+		return "(33)ReceiveV3Tran2A";
+	case 0x34:
+		return "(34)ReceiveV3FindClose";
+	case 0x35:
+		return "(35)ReceiveV3FindNotifyClose";
+	case 0x70:
+		return "(70)ReceiveCoreTreeConnect";
+	case 0x71:
+		return "(71)ReceiveCoreTreeDisconnect";
+	case 0x72:
+		return "(72)ReceiveNegotiate";
+	case 0x73:
+		return "(73)ReceiveV3SessionSetupX";
+	case 0x74:
+		return "(74)ReceiveV3UserLogoffX";
+	case 0x75:
+		return "(75)ReceiveV3TreeConnectX";
+	case 0x80:
+		return "(80)ReceiveCoreGetDiskAttributes";
+	case 0x81:
+		return "(81)ReceiveCoreSearchDir";
+	case 0xA0:
+		return "(A0)ReceiveNTTransact";
+	case 0xA2:
+		return "(A2)ReceiveNTCreateX";
+	case 0xA4:
+		return "(A4)ReceiveNTCancel";
+	case 0xc0:
+		return "(c0)SendCoreBadOp";
+	case 0xc1:
+		return "(c1)SendCoreBadOp";
+	case 0xc2:
+		return "(c2)SendCoreBadOp";
+	case 0xc3:
+		return "(c3)SendCoreBadOp";
+	}
+}
 
+char * myCrt_2Dispatch(int i)
+{
+	switch (i)
+	{
+	default:
+		return "unknown SMB op-2";
+	case 0:
+		return "S(00)CreateFile";
+	case 1:
+		return "S(01)FindFirst";
+	case 2:
+		return "S(02)FindNext";	/* FindNext */
+	case 3:
+		return "S(03)QueryFileSystem_ReceiveTran2QFSInfo";
+	case 4:
+		return "S(04)??";
+	case 5:
+		return "S(05)QueryFileInfo_ReceiveTran2QPathInfo";
+	case 6:
+		return "S(06)SetFileInfo_ReceiveTran2SetPathInfo";
+	case 7:
+		return "S(07)SetInfoHandle_ReceiveTran2QFileInfo";
+	case 8:
+		return "S(08)??_ReceiveTran2SetFileInfo";
+	case 9:
+		return "S(09)??_ReceiveTran2FSCTL";
+	case 10:
+		return "S(0a)_ReceiveTran2IOCTL";
+	case 11:
+		return "S(0b)_ReceiveTran2FindNotifyFirst";
+	case 12:
+		return "S(0c)_ReceiveTran2FindNotifyNext";
+	case 13:
+		return "S(0d)CreateDirectory_ReceiveTran2MKDir";
+	}
+}
 
 /* scache must be locked */
 unsigned int smb_Attributes(cm_scache_t *scp)
@@ -521,13 +666,13 @@ void smb_UnixTimeFromDosUTime(long *unixTimep, long dosTime)
 #endif /* !DJGPP */
 }
 
-smb_vc_t *smb_FindVC(unsigned short lsn, int flags)
+smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 {
 	smb_vc_t *vcp;
 
 	lock_ObtainWrite(&smb_rctLock);
 	for(vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
-		if (lsn == vcp->lsn) {
+		if (lsn == vcp->lsn && lana == vcp->lana) {
 			vcp->refCount++;
                 	break;
 		}
@@ -538,10 +683,12 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags)
                 vcp->refCount = 1;
                 vcp->tidCounter = 1;
                 vcp->fidCounter = 1;
+                vcp->uidCounter = 1;  /* UID 0 is reserved for blank user */
                 vcp->nextp = smb_allVCsp;
                 smb_allVCsp = vcp;
                 lock_InitializeMutex(&vcp->mx, "vc_t mutex");
                 vcp->lsn = lsn;
+                vcp->lana = lana;
         }
         lock_ReleaseWrite(&smb_rctLock);
         return vcp;
@@ -625,13 +772,23 @@ void smb_ReleaseTID(smb_tid_t *tidp)
 
 smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
 {
-	smb_user_t *uidp;
+	smb_user_t *uidp = NULL;
 
 	lock_ObtainWrite(&smb_rctLock);
 	for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
 		if (uid == uidp->userID) {
 			uidp->refCount++;
-                	break;
+#ifdef DEBUG_VERBOSE 
+		{
+        HANDLE h; char *ptbuf[1],buf[132];
+        h = RegisterEventSource(NULL, "AFS Service - smb_FindUID (Find by UID)");
+        sprintf(buf, "VCP[%x] found-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
+        ptbuf[0] = buf;
+        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
+		}
+#endif
+        	break;
 		}
         }
         if (!uidp && (flags & SMB_FLAG_CREATE)) {
@@ -643,11 +800,73 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
                 vcp->usersp = uidp;
                 lock_InitializeMutex(&uidp->mx, "uid_t mutex");
                 uidp->userID = uid;
+#ifdef DEBUG_VERBOSE 
+		{
+        HANDLE h; char *ptbuf[1],buf[132];
+        h = RegisterEventSource(NULL, "AFS Service - smb_FindUID (Find by UID)");
+        sprintf(buf, "VCP[%x] new-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
+        ptbuf[0] = buf;
+        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
+		}
+#endif
         }
         lock_ReleaseWrite(&smb_rctLock);
         return uidp;
 }
 
+smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags)
+{
+	smb_username_t *unp= NULL;
+
+	lock_ObtainWrite(&smb_rctLock);
+	for(unp = usernamesp; unp; unp = unp->nextp) {
+		if (stricmp(unp->name, usern) == 0 &&
+                    stricmp(unp->machine, machine) == 0) {
+			unp->refCount++;
+			break;
+		}
+	}
+        if (!unp && (flags & SMB_FLAG_CREATE)) {
+          unp = malloc(sizeof(*unp));
+          memset(unp, 0, sizeof(*unp));
+          unp->nextp = usernamesp;
+          unp->name = strdup(usern);
+          unp->machine = strdup(machine);
+          usernamesp = unp;
+          lock_InitializeMutex(&unp->mx, "username_t mutex");
+        }
+	lock_ReleaseWrite(&smb_rctLock);
+	return unp;
+}
+
+smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
+{
+	smb_user_t *uidp= NULL;
+
+	lock_ObtainWrite(&smb_rctLock);
+	for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
+          if (!uidp->unp) 
+            continue;
+          if (stricmp(uidp->unp->name, usern) == 0) {
+            uidp->refCount++;
+#ifdef DEBUG_VERBOSE 
+            {
+              HANDLE h; char *ptbuf[1],buf[132];
+              h = RegisterEventSource(NULL, "AFS Service - smb_FindUserByNameThisSession");
+              sprintf(buf, "VCP[%x] uid[%d] match-name[%s]",vcp,uidp->userID,usern);
+              ptbuf[0] = buf;
+              ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+              DeregisterEventSource(h);
+            }
+#endif
+            break;
+          } else
+            continue;
+	}
+	lock_ReleaseWrite(&smb_rctLock);
+	return uidp;
+}
 void smb_ReleaseUID(smb_user_t *uidp)
 {
 	smb_user_t *up;
@@ -665,7 +884,8 @@ void smb_ReleaseUID(smb_user_t *uidp)
                 osi_assert(up != NULL);
                 *lupp = up->nextp;
                 lock_FinalizeMutex(&uidp->mx);
-                userp = uidp->userp;	/* remember to drop ref later */
+                if (uidp->unp)
+                  userp = uidp->unp->userp;	/* remember to drop ref later */
         }
 	lock_ReleaseWrite(&smb_rctLock);
         if (userp) {
@@ -686,10 +906,11 @@ cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp)
         
 	smbp = (smb_t *) inp;
         uidp = smb_FindUID(vcp, smbp->uid, 0);
-        if (!uidp) return NULL;
+        if ((!uidp) ||  (!uidp->unp))
+	         return NULL;
         
 	lock_ObtainMutex(&uidp->mx);
-        up = uidp->userp;
+        up = uidp->unp->userp;
         cm_HoldUser(up);
 	lock_ReleaseMutex(&uidp->mx);
 
@@ -957,13 +1178,19 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
 	{
 		if (var = smb_stristr(p, VNUserName)) {
 			uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-			smb_subst(p, var, sizeof(VNUserName),
-				  uidp->name);
+			if (uidp && uidp->unp)
+			  smb_subst(p, var, sizeof(VNUserName),
+				       uidp->unp->name);
+			else
+			  smb_subst(p, var, sizeof(VNUserName),
+				       " ");
 			smb_ReleaseUID(uidp);
 		}
 		else if (var = smb_stristr(p, VNLCUserName)) {
 			uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-			strcpy(temp, uidp->name);
+			if (uidp && uidp->unp)
+			  strcpy(temp, uidp->unp->name);
+			else strcpy(temp, " ");
 			_strlwr(temp);
 			smb_subst(p, var, sizeof(VNLCUserName), temp);
 			smb_ReleaseUID(uidp);
@@ -1576,7 +1803,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
         
         ncbp->ncb_length = extra;	/* bytes to send */
         ncbp->ncb_lsn = (unsigned char) vcp->lsn;	/* vc to use */
-	ncbp->ncb_lana_num = smb_LANadapter;
+	ncbp->ncb_lana_num = vcp->lana;
         ncbp->ncb_command = NCBSEND;	/* op means send data */
 #ifndef DJGPP
         ncbp->ncb_buffer = (char *) inp;/* packet */
@@ -1974,7 +2201,7 @@ send1:
 
 	ncbp->ncb_length = (unsigned short) finalCount;
 	ncbp->ncb_lsn = (unsigned char) vcp->lsn;
-	ncbp->ncb_lana_num = smb_LANadapter;
+	ncbp->ncb_lana_num = vcp->lana;
 	ncbp->ncb_command = NCBSEND;
 	ncbp->ncb_buffer = rawBuf;
 
@@ -5163,8 +5390,29 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				/* Raw Write */
 				code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
 								rwcp);
-			else
-                        	code = (*(dp->procp)) (vcp, inp, outp);
+			else {
+				
+#ifdef DEBUG_VERBOSE
+			    HANDLE h; char *ptbuf[1],buf[132];DWORD err;
+			 	h = RegisterEventSource(NULL, "AFS Server - Dispatch");
+		 		sprintf(buf,"%s vcp[%x] lana[%d] lsn[%d]",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
+			 	ptbuf[0] = buf;
+			 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+			 	DeregisterEventSource(h);
+#endif
+					code = (*(dp->procp)) (vcp, inp, outp);
+
+#ifdef DEBUG_VERBOSE
+					h = RegisterEventSource(NULL, "AFS Server - Dispatch return ");
+					sprintf(buf,"code[%d]",code-CM_ERROR_BASE);
+					if (code)
+						ptbuf[0] = buf;
+					else
+						ptbuf[0] = "code[0]";
+					ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+					DeregisterEventSource(h);
+#endif
+				}
 
 			if (oldGen != sessionGen) {
 #ifndef DJGPP
@@ -5180,8 +5428,8 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				1005, NULL, 1, ncbp->ncb_length, ptbuf, smbp);
 				DeregisterEventSource(h);
 #else /* DJGPP */
-                              osi_Log1(afsd_logp, "Pkt straddled session startup, "
-                                       "ncb length %d", ncbp->ncb_length);
+				osi_Log1(afsd_logp, "Pkt straddled session startup, "
+					"ncb length %d", ncbp->ncb_length);
 #endif /* !DJGPP */
 			}
                 }
@@ -5402,7 +5650,7 @@ NCBretry:
 #endif /* DJGPP */
 		ncbp->ncb_lsn = (unsigned char) LSNs[idx_session];
 		ncbp->ncb_command = NCBRECV | ASYNCH;
-		ncbp->ncb_lana_num = smb_LANadapter;
+		ncbp->ncb_lana_num = lanas[idx_session];
 #ifndef DJGPP
 		ncbp->ncb_buffer = (unsigned char *) bufs[idx_NCB];
 		ncbp->ncb_event = NCBevents[idx_NCB];
@@ -5489,7 +5737,7 @@ void smb_Server(VOID *parmp)
 			case NRC_SNUMOUT:
 				/* Client closed session */
 				dead_sessions[idx_session] = TRUE;
-				vcp = smb_FindVC(ncbp->ncb_lsn, 0);
+				vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);
 				/* Should also release vcp.  Also, would do
 				 * sanity check that all TID's are gone. */
 				if (dead_vcp)
@@ -5508,7 +5756,7 @@ void smb_Server(VOID *parmp)
 					loggedOut = 1;
 					loggedOutTime = vcp->logoffTime;
 					loggedOutName =
-					    strdup(vcp->justLoggedOut->name);
+					    strdup(vcp->justLoggedOut->unp->name);
 					loggedOutUserp = vcp->justLoggedOut;
 					lock_ObtainWrite(&smb_rctLock);
 					loggedOutUserp->refCount++;
@@ -5573,7 +5821,7 @@ void smb_Server(VOID *parmp)
 		if (smb_concurrentCalls > smb_maxObsConcurrentCalls)
 			smb_maxObsConcurrentCalls = smb_concurrentCalls;
 
-		vcp = smb_FindVC(ncbp->ncb_lsn, 0);
+		vcp = smb_FindVC(ncbp->ncb_lsn, 0, ncbp->ncb_lana_num);
 		vcp->errorCount = 0;
 		bufp = (struct smb_packet *) ncbp->ncb_buffer;
 #ifdef DJGPP
@@ -5597,7 +5845,7 @@ void smb_Server(VOID *parmp)
 				rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
 				ncbp->ncb_command = NCBRECV | ASYNCH;
 				ncbp->ncb_lsn = (unsigned char) vcp->lsn;
-				ncbp->ncb_lana_num = smb_LANadapter;
+				ncbp->ncb_lana_num = vcp->lana;
 				ncbp->ncb_buffer = rwc.buf;
 				ncbp->ncb_length = 65535;
 				ncbp->ncb_event = rwevent;
@@ -5674,6 +5922,7 @@ void smb_Listener(void *parmp)
         dos_ptr dos_ncb;
         time_t now;
 #endif /* DJGPP */
+	int lana = (int) parmp;
 
 	ncbp = GetNCB();
 #ifdef DJGPP
@@ -5681,6 +5930,7 @@ void smb_Listener(void *parmp)
 #endif /* DJGPP */
 
 	while (1) {
+		memset(ncbp, 0, sizeof(NCB));
 #ifdef DJGPP
              /* terminate if shutdown flag is set */
              if (smbShutdownFlag == 1)
@@ -5712,7 +5962,7 @@ void smb_Listener(void *parmp)
 	        strcpy(ncbp->ncb_callname, "*");
 	        for(i=1; i<NCBNAMSZ; i++) ncbp->ncb_callname[i] = ' ';
         
-		ncbp->ncb_lana_num = smb_LANadapter;
+		ncbp->ncb_lana_num = lana;
 
 #ifndef DJGPP
 	        code = Netbios(ncbp);
@@ -5721,18 +5971,17 @@ void smb_Listener(void *parmp)
 
                 if (code != 0)
                 {
-                  fprintf(stderr, "NCBLISTEN lana=%d (smb_LANadapter=%d) "
-                          "failed with code %d\n",
-                          ncbp->ncb_lana_num, smb_LANadapter, code);
-                  osi_Log3(0, "NCBLISTEN lana=%d (smb_LANadapter=%d) "
-                           "failed with code %d",
-                           ncbp->ncb_lana_num, smb_LANadapter, code);
+                  fprintf(stderr, "NCBLISTEN lana=%d failed with code %d\n",
+                          ncbp->ncb_lana_num, code);
+                  osi_Log2(0, "NCBLISTEN lana=%d failed with code %d",
+                           ncbp->ncb_lana_num, code);
                   fprintf(stderr, "\nClient exiting due to network failure "
                           "(possibly due to power-saving mode)\n");
                   fprintf(stderr, "Please restart client.\n");
                   afs_exit(AFS_EXITCODE_NETWORK_FAILURE);
                 }
 #endif /* !DJGPP */
+
 		osi_assert(code == 0);
 
 		/* check for remote conns */
@@ -5752,11 +6001,18 @@ void smb_Listener(void *parmp)
 				flags |= SMB_VCFLAG_REMOTECONN;
 
 		osi_Log1(afsd_logp, "New session lsn %d", ncbp->ncb_lsn);
+		/* lock */
+		lock_ObtainMutex(&smb_ListenerLock);
 
 		/* New generation */
 		sessionGen++;
 
 		/* Log session startup */
+#ifdef NOSERVICE
+            fprintf(stderr, "New session(ncb_lsn,ncb_lana_num) %d,%d starting from host "
+				 "%s\n",
+                  ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
+#endif
 		if (reportSessionStartups) {
 #ifndef DJGPP
 			HANDLE h;
@@ -5771,21 +6027,21 @@ void smb_Listener(void *parmp)
 				    1, 0, ptbuf, NULL);
 			DeregisterEventSource(h);
 #else /* DJGPP */
-                        afsi_log("NCBLISTEN completed, call from %s",rname);
-                        osi_Log1(afsd_logp, "SMB session startup, %d ongoing o
-ps",
-                                 ongoingOps);
-                         time(&now);
-                         fprintf(stderr, "%s: New session starting from host %s
-\n",
-                                 asctime(localtime(&now)), rname);
-                         fflush(stderr);
+            afsi_log("NCBLISTEN completed, call from %s",rname);
+            osi_Log1(afsd_logp, "SMB session startup, %d ongoing ops",
+                  ongoingOps);
+            time(&now);
+            fprintf(stderr, "%s: New session %d starting from host "
+				 "%s\n",
+                 asctime(localtime(&now)), ncbp->ncb_lsn, rname);
+            fflush(stderr);
 #endif /* !DJGPP */
 		}
 
                 /* now ncbp->ncb_lsn is the connection ID */
-                vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE);
+                vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
 		vcp->flags |= flags;
+                strcpy(vcp->rname, rname);
 
 		/* Allocate slot in session arrays */
 		/* Re-use dead session if possible, otherwise add one more */
@@ -5796,6 +6052,8 @@ ps",
 			}
 		}
 		LSNs[i] = ncbp->ncb_lsn;
+		lanas[i] = ncbp->ncb_lana_num;
+		
 		if (i == numSessions) {
 			/* Add new NCB for new session */
 			InitNCBslot(numNCBs);
@@ -5811,6 +6069,8 @@ ps",
 		} else {
 			thrd_SetEvent(SessionEvents[i]);
 		}
+		/* unlock */
+		lock_ReleaseMutex(&smb_ListenerLock);
 
         }	/* dispatch while loop */
 }
@@ -5818,119 +6078,173 @@ ps",
 /* initialize Netbios */
 void smb_NetbiosInit()
 {
-        NCB *ncbp;
+    NCB *ncbp;
 #ifdef DJGPP
-        dos_ptr dos_ncb;
+    dos_ptr dos_ncb;
 #endif /* DJGPP */
-        int i, lana, code;
-        char s[100];
-        int delname_tried=0;
-        int len;
+    int i, lana, code, l;
+    char s[100];
+    int delname_tried=0;
+    int len;
+    int lana_found = 0;
 
-	/* setup the NCB system */
-	ncbp = GetNCB();
+    /* setup the NCB system */
+    ncbp = GetNCB();
 #ifdef DJGPP
-        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
+    dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
 #endif /* DJGPP */
 
 #ifndef DJGPP
-	/* reset the adaptor: in Win32, this is required for every process, and
+    if (smb_LANadapter == -1) {
+        ncbp->ncb_command = NCBENUM;
+        ncbp->ncb_buffer = &lana_list;
+        ncbp->ncb_length = sizeof(lana_list);
+        code = Netbios(ncbp);
+        if (code != 0) {
+            sprintf(s, "Netbios NCBENUM error code %d", code);
+            afsi_log(s);
+            osi_panic(s, __FILE__, __LINE__);
+        }
+    }
+    else {
+        lana_list.length = 1;
+        lana_list.lana[0] = smb_LANadapter;
+    }
+	  
+    for (i = 0; i < lana_list.length; i++) {
+        /* reset the adaptor: in Win32, this is required for every process, and
          * acts as an init call, not as a real hardware reset.
          */
         ncbp->ncb_command = NCBRESET;
         ncbp->ncb_callname[0] = 100;
         ncbp->ncb_callname[2] = 100;
-	ncbp->ncb_lana_num = smb_LANadapter;
+        ncbp->ncb_lana_num = lana_list.lana[i];
         code = Netbios(ncbp);
         if (code == 0) code = ncbp->ncb_retcode;
-	if (code != 0) {
-		sprintf(s, "Netbios NCBRESET error code %d", code);
-		afsi_log(s);
-		osi_panic(s, __FILE__, __LINE__);
-	}
+        if (code != 0) {
+	    sprintf(s, "Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
+	    afsi_log(s);
+	    lana_list.lana[i] = 255;  /* invalid lana */
+        }
+        else {
+            sprintf(s, "Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
+            afsi_log(s);
+        }
+    }
+#else
+    /* for DJGPP, there is no NCBENUM and NCBRESET is a real reset.  so
+       we will just fake the LANA list */
+    if (smb_LANadapter == -1) {
+        for (i = 0; i < 8; i++)
+	    lana_list.lana[i] = i;
+        lana_list.length = 8;
+    }
+    else {
+        lana_list.length = 1;
+        lana_list.lana[0] = smb_LANadapter;
+    }
 #endif /* !DJGPP */
 
-  try_addname:
-	/* and declare our name so we can receive connections */
-	memset(ncbp, 0, sizeof(*ncbp));
-	ncbp->ncb_lana_num = smb_LANadapter;
-        ncbp->ncb_command = NCBADDNAME;
-	strcpy(ncbp->ncb_name, smb_localNamep);
-        len = strlen(smb_localNamep);
-        for(i=len; i<NCBNAMSZ; i++) ncbp->ncb_name[i] = ' ';
-        /* Keep the name so we can unregister it later */
-        memcpy(smb_sharename,ncbp->ncb_name,NCBNAMSZ);
-        lana = smb_LANadapter;
+ try_addname:
+    /* and declare our name so we can receive connections */
+    memset(ncbp, 0, sizeof(*ncbp));
+    len=lstrlen(smb_localNamep);
+    memset(smb_sharename,' ',NCBNAMSZ);
+    memcpy(smb_sharename,smb_localNamep,len);
+#if 0
+    /*ncbp->ncb_lana_num = smb_LANadapter;*/
+    strcpy(ncbp->ncb_name, smb_localNamep);
+    len = strlen(smb_localNamep);
+    for(i=len; i<NCBNAMSZ; i++) ncbp->ncb_name[i] = ' ';
+#endif
+    /* Keep the name so we can unregister it later */
+    for (l = 0; l < lana_list.length; l++) {
+        lana = lana_list.lana[l];
 
-        do {        /* try multiple LANA numbers until we find one that works */
-          ncbp->ncb_lana_num = lana;
+        ncbp->ncb_command = NCBADDNAME;
+        ncbp->ncb_lana_num = lana;
+        memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
 #ifndef DJGPP
-          code = Netbios(ncbp);
+        code = Netbios(ncbp);
 #else /* DJGPP */
-          code = Netbios(ncbp, dos_ncb);
+        code = Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
           
-          afsi_log("Netbios NCBADDNAME code=%d retcode=%d complete=%d",code,
-                   ncbp->ncb_retcode,ncbp->ncb_cmd_cplt);
-          {
-            char name[200];
-            int i;
-            for (i=0;i<NCBNAMSZ;++i)
-              name[i] = ncbp->ncb_name[i];
-            name[i] = '\0';
-            afsi_log("Netbios NCBADDNAME added new name >%s<",name);
-          }
-
-          if (code == 0)
-          {
-            code = ncbp->ncb_retcode;
-            smb_LANadapter = lana;     /* correct LANA number */
-            break;
-          }
-          else
-          {
-            sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
-            afsi_log(s);
-            if (code != NRC_BRIDGE)    /* invalid LANA num */
-              break;
-            else
-              lana = (lana + 1) % 8;
-          }
-        } while (lana != smb_LANadapter);  /* quit when we loop back to orig. */
-        
-        if (code == NRC_DUPNAME)
+        afsi_log("Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
+                 lana, code, ncbp->ncb_retcode,ncbp->ncb_cmd_cplt);
         {
-          /* Name already exists; try to delete it */
-          memset(ncbp, 0, sizeof(*ncbp));
-          ncbp->ncb_command = NCBDELNAME;
-          memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
-          ncbp->ncb_lana_num = smb_LANadapter;
-#ifndef DJGPP
-          code = Netbios(ncbp);
-#else
-          code = Netbios(ncbp, dos_ncb);
-#endif /* DJGPP */
-          if (code == 0) code = ncbp->ncb_retcode;
-          if (code != 0) {
-            fprintf(stderr, "Netbios NCBDELNAME error code %d", code);
-          }
-          fflush(stderr);
-          if (code == 0 && !delname_tried)
-          {
-            delname_tried = 1;
-            goto try_addname;
-          }
+            char name[NCBNAMSZ+1];
+            name[NCBNAMSZ]=0;
+            memcpy(name,ncbp->ncb_name,NCBNAMSZ);
+            afsi_log("Netbios NCBADDNAME added new name >%s<",name);
         }
 
-        if (code != 0)
-          osi_panic(s, __FILE__, __LINE__);
-        
-        fprintf(stderr, "Using LAN Adapter %d\n", smb_LANadapter, code);
-        afsi_log("Netbios NCBADDNAME lana=%d name number=%d", smb_LANadapter,
-                 ncbp->ncb_num);
+        if (code == 0) code = ncbp->ncb_retcode;
+        if (code == 0) {
+            fprintf(stderr, "Netbios NCBADDNAME succeeded on lana %d\n", lana);
+#ifdef DJGPP
+            /* we only use one LANA with djgpp */
+            lana_list.lana[0] = lana;
+            lana_list.length = 1;
+#endif	  
+        }
+        else {
+            sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
+            afsi_log(s);
+            fprintf(stderr, "Netbios NCBADDNAME lana %d error code %d\n", lana, code);
+            if (code == NRC_BRIDGE) {    /* invalid LANA num */
+                lana_list.lana[l] = 255;
+                continue;
+            }
+            else if (code == NRC_DUPNAME) {
+                /* Name already exists; try to delete it */
+                memset(ncbp, 0, sizeof(*ncbp));
+                ncbp->ncb_command = NCBDELNAME;
+                memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
+                ncbp->ncb_lana_num = lana;
+#ifndef DJGPP
+                code = Netbios(ncbp);
+#else
+                code = Netbios(ncbp, dos_ncb);
+#endif /* DJGPP */
+                if (code == 0) code = ncbp->ncb_retcode;
+                else
+                    fprintf(stderr, "Netbios NCBDELNAME lana %d error code %d\n", lana, code);
+                fflush(stderr);
+                if (code != 0 || delname_tried) {
+                    lana_list.lana[l] = 255;
+                }
+                else if (code == 0) {
+                    if (!delname_tried) {
+                        lana--;
+                        delname_tried = 1;
+                        continue;
+                    }
+                }
+            }
+            else {
+                sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
+                afsi_log(s);
+                lana_list.lana[l] = 255;  /* invalid lana */
+                osi_panic(s, __FILE__, __LINE__);
+            }
+        }
+        if (code == 0) {
+            lana_found = 1;   /* at least one worked */
+#ifdef DJGPP
+            break;
+#endif
+        }
+    }
 
-	/* we're done with the NCB now */
-        FreeNCB(ncbp);
+    osi_assert(lana_list.length >= 0);
+    if (!lana_found) {
+        sprintf(s, "No valid LANA numbers found!");
+        osi_panic(s, __FILE__, __LINE__);
+    }
+        
+    /* we're done with the NCB now */
+    FreeNCB(ncbp);
 }
 
 void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
@@ -6007,6 +6321,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	/* Raw I/O data structures */
 	lock_InitializeMutex(&smb_RawBufLock, "smb raw buffer lock");
 
+	lock_InitializeMutex(&smb_ListenerLock, "smb listener lock");
+	
 	/* 4 Raw I/O buffers */
 #ifndef DJGPP
 	smb_RawBufs = GlobalAlloc(GMEM_FIXED, 65536);
@@ -6159,10 +6475,13 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
 	/* Start listeners, waiters, servers, and daemons */
 
-        phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
-        	NULL, 0, &lpid, "smb_Listener");
-	osi_assert(phandle != NULL);
-	thrd_CloseHandle(phandle);
+	for (i = 0; i < lana_list.length; i++) {
+		if (lana_list.lana[i] == 255) continue;
+		phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Listener,
+			(void*)lana_list.lana[i], 0, &lpid, "smb_Listener");
+		osi_assert(phandle != NULL);
+		thrd_CloseHandle(phandle);
+	}
 
 #ifndef DJGPP
         phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_ClientWaiter,
@@ -6227,7 +6546,7 @@ void smb_Shutdown(void)
           
           /*fprintf(stderr, "NCBHANGUP session %d LSN %d\n", i, LSNs[i]);*/
           ncbp->ncb_command = NCBHANGUP;
-          ncbp->ncb_lana_num = smb_LANadapter;
+          ncbp->ncb_lana_num = lanas[i];  /*smb_LANadapter;*/
           ncbp->ncb_lsn = LSNs[i];
           code = Netbios(ncbp, dos_ncb);
           /*fprintf(stderr, "returned from NCBHANGUP session %d LSN %d\n", i, LS
@@ -6238,15 +6557,21 @@ void smb_Shutdown(void)
           }
         }
 
+#if 1
         /* Delete Netbios name */
-        ncbp->ncb_command = NCBDELNAME;
-        memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
-        ncbp->ncb_lana_num = smb_LANadapter;
-        code = Netbios(ncbp, dos_ncb);
-        if (code == 0) code = ncbp->ncb_retcode;
-        if (code != 0) {
-          fprintf(stderr, "Netbios NCBDELNAME error code %d", code);
-        }
-        fflush(stderr);
+	for (i = 0; i < lana_list.length; i++) {
+		if (lana_list.lana[i] == 255) continue;
+		ncbp->ncb_command = NCBDELNAME;
+		ncbp->ncb_lana_num = lana_list.lana[i];
+		memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
+		code = Netbios(ncbp, dos_ncb);
+		if (code == 0) code = ncbp->ncb_retcode;
+		if (code != 0) {
+			fprintf(stderr, "Netbios NCBDELNAME lana %d error code %d",
+			ncbp->ncb_lana_num, code);
+		}
+		fflush(stderr);
+	}
+#endif
 }
 #endif /* DJGPP */

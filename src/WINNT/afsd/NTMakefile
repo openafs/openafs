@@ -30,6 +30,7 @@ INCFILES =\
 	$(INCFILEDIR)\fs_utils.h \
 	$(INCFILEDIR)\krb.h \
 	$(INCFILEDIR)\krb_prot.h \
+	$(INCFILEDIR)\cm_dir.h \
 	$(INCFILEDIR)\smb.h \
 	$(INCFILEDIR)\smb3.h \
 	$(INCFILEDIR)\smb_iocons.h \

@@ -362,8 +362,8 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
         }
         else
         {
-          LANadapter = 0;
-          afsi_log("Default LAN adapter number 0");
+          LANadapter = -1;
+          afsi_log("Default LAN adapter number");
         }
         
         if (as->parms[1].items) {

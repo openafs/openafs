@@ -10,6 +10,7 @@
 
 #include "stdio.h"
 #include "io.h"
+#include <assert.h>
 #include "string.h"
 #include "process.h"
 #include "windows.h"
@@ -23,7 +24,7 @@ void usuage()
 	OR util_cr * \"-[register key value]\" ; aremove register key value\n\
 	OR util_cr & file.ini \"SectionKey=value\" ; update ini-ipr-pwf file\n\
 	OR util_cr ~  ;force error\n");
-	exit(1);
+	exit(0xc000);
 }
 
 
@@ -46,7 +47,7 @@ void Addkey (const char *hkey,const char *subkey,const char *stag,const char *sv
 	if(!result)
 	{
 		printf("AFS Error - Could Not create a registration key\n");
-		exit(1);
+		exit(0xc000);
 	}
 	if (stag==NULL) return;
 	if ((sval)&&(strlen(sval)))
@@ -65,7 +66,7 @@ void Addkey (const char *hkey,const char *subkey,const char *stag,const char *sv
 	if(result!=ERROR_SUCCESS)
 	{
 		printf("AFS Error - Could Not create a registration key\n");
-		exit(1);
+		exit(0xc000);
 	}
 }
 
@@ -85,7 +86,7 @@ void Subkey(const char *hkey,const char *subkey)
 	if(result!=ERROR_SUCCESS)
 	{
 		printf("AFS Error - Could Not create a registration key\n");
-		exit(1);
+		exit(0xc000);
 	}
 }
 
@@ -101,8 +102,11 @@ int main(int argc, char* argv[])
 	if (argc<3)
 		usuage();
 	if (strcmp(argv[1],"~")==0)
-	{
-		exit(2);
+	{	//check for file presence
+		if (fopen(argv[2],"r"))
+			return(0);
+		printf("Error---%s\n",argv[3]);
+		exit(0xc000);
 	}
 	if (strcmp(argv[1],"*")==0)
 	{		/* "[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}]  @=AFS Client Shell Extension" */
@@ -117,7 +121,7 @@ int main(int argc, char* argv[])
 			if ((ssub==NULL) || (skey==NULL))
 			{
 				printf("format error parameter %s\n",argv[i]);
-				exit(1);
+				exit(0xc000);
 			}
 			option=(*ssub=='-');
 			stag=strtok(NULL,"\0");
@@ -158,7 +162,7 @@ int main(int argc, char* argv[])
 			if ((ssect==NULL) || (skey==NULL))
 			{
 				printf("format error parameter %s\n",argv[i]);
-				exit(1);
+				exit(0xc000);
 			}
 			while(*skey==' ') 
 				skey++;
@@ -167,9 +171,9 @@ int main(int argc, char* argv[])
 			if (sval==NULL)
 			{
 				printf("format error parameter %s\n",argv[i]);
-				exit(1);
+				exit(0xc000);
 			}
-			printf("parameters %s %s %s %s\n",ssect,skey,sval,argv[2]);
+//			printf("parameters %s %s %s %s\n",ssect,skey,sval,argv[2]);
 			if (WritePrivateProfileString(ssect,skey,sval,argv[2])==0)
 			{
 				LPVOID lpMsgBuf;
@@ -186,7 +190,7 @@ int main(int argc, char* argv[])
 				);
 				printf("Error writing profile string - %s",lpMsgBuf);
 				LocalFree( lpMsgBuf );
-				exit(1);
+				exit(0xc000);
 			}
 			argc-=1;
 		}
@@ -197,7 +201,7 @@ int main(int argc, char* argv[])
 	{
 		file=fopen(fname,"rb");
 		if (file==NULL)
-			exit(2);
+			exit(0xc000);
 		len=filelength(_fileno(file));
 		ch=(char *)malloc(len+2);
 		*ch++=0;	/* a small hack to allow matching /r/n if /n is first character*/
@@ -220,7 +224,7 @@ int main(int argc, char* argv[])
 		strcpy(fname,argv[2]);
 		file=fopen(fname,"rb");
 		if (file==NULL)
-			exit(2);
+			exit(0xc000);
 		len=filelength(_fileno(file));
 		ch=(char *)malloc(len+1);
 		len=fread(ch,sizeof(char),len,file);
@@ -238,7 +242,7 @@ int main(int argc, char* argv[])
 		strcat(fname,".et");
 	file=fopen(fname,"rb");
 	if (file==NULL)
-		exit(2);
+		exit(0xc000);
 	len=filelength(_fileno(file));
 	ch=(char *)malloc(len+1);
 	len=fread(ch,sizeof(char),len,file);

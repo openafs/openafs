@@ -47,6 +47,9 @@ RSC=rc.exe
 
 HLPDIR= .\HELP
 
+prep : 
+	$(DESTDIR)\bin\util_cr.exe ~ "$(MSSDK)\Include\windows.h" "MSSDK must point to SDK include headers "
+
 !IF  "$(AFSDEV_BUILDTYPE)" == "FREE"
 
 INTDIR=.
@@ -329,8 +332,4 @@ SOURCE=.\WinAfsLoadDlg.cpp
 !ENDIF 
 
 install9x: install
-
-.SILENT:
-prep : 
-	if not exist $(MSSDK)\Include\$(NULL) $(DESTDIR)\bin\util_cr.exe ~ "MSSDK must point to SDK include headers "
 

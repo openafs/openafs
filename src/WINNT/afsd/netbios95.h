@@ -44,6 +44,13 @@ typedef struct _NCB {
     EVENT_HANDLE ncb_event;
 } NCB, *PNCB;
 
+/* this struct is returned by NCBENUM command in Win32 but is not available
+   in DJGPP. */
+typedef struct {
+  int length;
+  int lana[8];
+} LANA_ENUM;
+
 
 #define NCBCALL 0x10
 #define NCBLISTEN 0x11
