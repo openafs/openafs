@@ -34,7 +34,6 @@ RCSID("$Header$");
 #if defined(AFS_LINUX24_ENV)
 #include "../h/smp_lock.h"
 #endif
-#include "../afs/afs_osidnlc.h"
 
 #ifdef pgoff2loff
 #define pageoff(pp) pgoff2loff((pp)->index)
