@@ -140,7 +140,7 @@ afs_int32 *vfid; {
     int blobs, firstelt;
     register int i;
     register struct DirEntry *ep;
-    unsigned short *pp;
+    unsigned short *pp = NULL;
     register struct DirHeader *dhp;
 
     /* check name quality */
