@@ -89,7 +89,7 @@ ${DESTDIR}etc/kdump: kdump
 		for f in kdump.IP??; \
 		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
 		done ;; \
-	sun4x_57 ) \
+	sun4x_5[78] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
 	*linux* ) \
@@ -106,7 +106,7 @@ ${DESTDIR}etc/kdump: kdump
 ${DESTDIR}etc/kdump64: kdump64
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_57 | hp_ux11* ) \
+	sun4x_5[78] | hp_ux11* ) \
 		${INSTALL} -s $? $@ ;;\
 	* ) \
 		echo skipping kdump64 for ${SYS_NAME} ;; \
@@ -209,7 +209,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_57 | hp_ux11* ) \
+	sun4x_5[78] | hp_ux11* ) \
 		${CC} -g -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
 	esac
 
@@ -254,7 +254,7 @@ kdump:  kdump.o
 kdump64 : kdump64.o
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_57 | hp_ux11* )  \
+	sun4x_5[78] | hp_ux11* )  \
 		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
