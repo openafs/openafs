@@ -3272,6 +3272,8 @@ shutdown_dcache(void)
 	afs_dchashTbl[i] = NULLIDX;
     }
 
+    afs_osi_Free(afs_dvhashTbl, afs_dhashsize * sizeof(afs_int32));
+    afs_osi_Free(afs_dchashTbl, afs_dhashsize * sizeof(afs_int32));
 
     afs_blocksUsed = afs_dcentries = 0;
     hzero(afs_indexCounter);
