@@ -237,7 +237,7 @@ LWP_QWait(void)
 {
     register PROCESS tp;
     (tp = lwp_cpptr)->status = QWAITING;
-    move(tp, &runnable[tp->priority], qwaiting);
+    move(tp, &runnable[tp->priority], &qwaiting);
     Set_LWP_RC();
     return LWP_SUCCESS;
 }
@@ -248,7 +248,7 @@ LWP_QSignal(pid)
 {
     if (pid->status == QWAITING) {
 	pid->status = READY;
-	move(pid, qwaiting, &runnable[pid->priority]);
+	move(pid, &qwaiting, &runnable[pid->priority]);
 	return LWP_SUCCESS;
     } else
 	return LWP_ENOWAIT;
