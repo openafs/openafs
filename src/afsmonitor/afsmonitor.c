@@ -277,7 +277,7 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV)
+#if !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN70_ENV) && !defined(AFS_NBSD20_ENV)
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
