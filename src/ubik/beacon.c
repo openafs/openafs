@@ -456,7 +456,7 @@ static verifyInterfaceAddress(ame, info, aservers)
 {
     afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
     afs_uint32  myAddr2[UBIK_MAX_INTERFACE_ADDR];
-    int 	count, found, i, j, totalServers, start, end, usednetfiles = 0;
+    int tcount,	count, found, i, j, totalServers, start, end, usednetfiles = 0;
 
     if (info)
         totalServers = info->numServers;
@@ -520,15 +520,15 @@ static verifyInterfaceAddress(ame, info, aservers)
 	if (usednetfiles) {
 	    /* take the address we did get, then see if ame was masked */
 	    *ame=myAddr[0];
-	    count = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR); 
-	    if ( count <= 0 )           /* no address found */
+	    tcount = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR); 
+	    if ( tcount <= 0 )           /* no address found */
 	    {
 		ubik_print("ubik: No network addresses found, aborting..");
 		return UBADHOST;
 	    }
 	    
 	    /* verify that the My-address passed in by ubik is correct */
-	    for ( j=0, found = 0; j < count; j++)
+	    for ( j=0, found = 0; j < tcount; j++)
 	    {
 		if ( *ame == myAddr2[j] ) /* both in net byte order */
 		{
