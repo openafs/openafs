@@ -98,7 +98,7 @@ DWORD NCBsessions[NCBmax];
 NCB *NCBs[NCBmax];
 struct smb_packet *bufs[NCBmax];
 
-#define Sessionmax MAXIMUM_WAIT_OBJECTS
+#define Sessionmax MAXIMUM_WAIT_OBJECTS - 4
 EVENT_HANDLE SessionEvents[Sessionmax];
 unsigned short LSNs[Sessionmax];
 int lanas[Sessionmax];
@@ -896,7 +896,9 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
 	for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
 		if (uid == uidp->userID) {
 			uidp->refCount++;
-			osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[%x] found-uid[%d] name[%s]",(int)vcp,uidp->userID,(uidp->unp) ? uidp->unp->name : "");
+                        osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[%x] found-uid[%d] name[%s]",
+                                      (int)vcp, uidp->userID, 
+                                      osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name : ""));
         	break;
 		}
 	}
@@ -1101,7 +1103,7 @@ retry:
         sprintf(eventName,"fid_t event vcp=%d fid=%d", vcp->vcID, fid);
         event = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
         if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-            afsi_log("Event Object Already Exists: %s", eventName);
+            osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
             thrd_CloseHandle(event);
             fid++;
             if (fid == 0)
@@ -1736,12 +1738,12 @@ static smb_packet_t *GetPacket(void)
             signed int retval =
                 __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
             if (retval == -1) {
-                afsi_log("Cannot allocate %d paragraphs of DOS memory",
+                osi_Log1(smb_logp, "Cannot allocate %d paragraphs of DOS memory",
                           npar);
                 osi_panic("",__FILE__,__LINE__);
             }
             else {
-                afsi_log("Allocated %d paragraphs of DOS mem at 0x%X",
+                osi_Log2(smb_logp, "Allocated %d paragraphs of DOS mem at 0x%X",
                           npar, retval);
                 seg = retval;
             }
@@ -1787,11 +1789,11 @@ static NCB *GetNCB(void)
             signed int retval =
                 __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
             if (retval == -1) {
-                afsi_log("Cannot allocate %d paragraphs of DOS mem in GetNCB",
+                osi_Log1(smb_logp, "Cannot allocate %d paragraphs of DOS mem in GetNCB",
                           npar);
                 osi_panic("",__FILE__,__LINE__);
             } else {
-                afsi_log("Allocated %d paragraphs of DOS mem at 0x%X in GetNCB",
+                osi_Log2(smb_logp, "Allocated %d paragraphs of DOS mem at 0x%X in GetNCB",
                           npar, retval);
                 seg = retval;
             }
@@ -1904,7 +1906,7 @@ unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm)
 
 		sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
 				parm, parmCount, smbp->ncb_length);
-		osi_Log0(smb_logp, s);
+                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
 #endif /* !DJGPP */
 		osi_panic(s, __FILE__, __LINE__);
 	}
@@ -1939,7 +1941,7 @@ unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset)
 		sprintf(s, "Bad SMB param %d offset %d out of %d, "
 				"ncb len %d",
 				 parm, offset, parmCount, smbp->ncb_length);
-		osi_Log0(smb_logp, s);
+                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
 #endif /* !DJGPP */
 
 		osi_panic(s, __FILE__, __LINE__);
@@ -3596,7 +3598,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 				fid.unique = ntohl(dep->fid.unique);
 				fileType = cm_FindFileType(&fid);
 				osi_Log2(smb_logp, "smb_ReceiveCoreSearchDir: file %s "
-						  "has filetype %d", dep->name,
+                                                  "has filetype %d", osi_LogSaveString(smb_logp, dep->name),
 						  fileType);
 				if (fileType == CM_SCACHETYPE_DIRECTORY)
 					goto nextEntry;
@@ -4467,7 +4469,7 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* Check if the file already exists; if so return error */
 	code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
 	if ((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
-        osi_Log2(afsd_logp, "  lookup returns %ld for [%s]", code,
+        osi_Log2(smb_logp, "  lookup returns %ld for [%s]", code,
                  osi_LogSaveString(afsd_logp, newLastNamep));
  
         /* Check if the old and the new names differ only in case. If so return
@@ -4489,7 +4491,7 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             }
         } else {
             /* file exist, do not rename, also fixes move */
-            osi_Log0(afsd_logp, "Can't rename.  Target already exists");
+            osi_Log0(smb_logp, "Can't rename.  Target already exists");
             code = CM_ERROR_EXISTS;
         }
 
@@ -6241,23 +6243,23 @@ void smb_ClientWaiter(void *parmp)
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
         {
             int abandonIdx = code - WAIT_ABANDONED_0;
-            afsi_log("Error: smb_ClientWaiter event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+            osi_Log2(smb_logp, "Error: smb_ClientWaiter event %d abandoned, errno %d\n", abandonIdx, GetLastError());
         }
 
         if (code == WAIT_IO_COMPLETION)
         {
-            afsi_log("Error: smb_ClientWaiter WAIT_IO_COMPLETION\n");
+            osi_Log0(smb_logp, "Error: smb_ClientWaiter WAIT_IO_COMPLETION\n");
             continue;
         }
         
         if (code == WAIT_TIMEOUT)
         {
-            afsi_log("Error: smb_ClientWaiter WAIT_TIMEOUT, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ClientWaiter WAIT_TIMEOUT, errno %d\n", GetLastError());
         }
 
         if (code == WAIT_FAILED)
         {
-            afsi_log("Error: smb_ClientWaiter WAIT_FAILED, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ClientWaiter WAIT_FAILED, errno %d\n", GetLastError());
         }
 
         idx = code - WAIT_OBJECT_0;
@@ -6266,7 +6268,7 @@ void smb_ClientWaiter(void *parmp)
         if (idx < 0 || idx > (sizeof(NCBevents) / sizeof(NCBevents[0])))
         {
             /* this is fatal - log as much as possible */
-            afsi_log("Fatal: NCBevents idx [ %d ] out of range.\n", idx);
+            osi_Log1(smb_logp, "Fatal: NCBevents idx [ %d ] out of range.\n", idx);
             osi_assert(0);
         }
         
@@ -6299,23 +6301,23 @@ void smb_ServerWaiter(void *parmp)
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numSessions))
         {
             int abandonIdx = code - WAIT_ABANDONED_0;
-            afsi_log("Error: smb_ServerWaiter (SessionEvents) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+            osi_Log2(smb_logp, "Error: smb_ServerWaiter (SessionEvents) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
         }
 	
         if (code == WAIT_IO_COMPLETION)
         {
-            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_IO_COMPLETION\n");
+            osi_Log0(smb_logp, "Error: smb_ServerWaiter (SessionEvents) WAIT_IO_COMPLETION\n");
             continue;
         }
 	
         if (code == WAIT_TIMEOUT)
         {
-            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_TIMEOUT, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ServerWaiter (SessionEvents) WAIT_TIMEOUT, errno %d\n", GetLastError());
         }
 	
         if (code == WAIT_FAILED)
         {
-            afsi_log("Error: smb_ServerWaiter (SessionEvents) WAIT_FAILED, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ServerWaiter (SessionEvents) WAIT_FAILED, errno %d\n", GetLastError());
         }
 	
         idx_session = code - WAIT_OBJECT_0;
@@ -6324,7 +6326,7 @@ void smb_ServerWaiter(void *parmp)
         if (idx_session < 0 || idx_session > (sizeof(SessionEvents) / sizeof(SessionEvents[0])))
         {
             /* this is fatal - log as much as possible */
-            afsi_log("Fatal: session idx [ %d ] out of range.\n", idx_session);
+            osi_Log1(smb_logp, "Fatal: session idx [ %d ] out of range.\n", idx_session);
             osi_assert(0);
         }
 
@@ -6339,23 +6341,23 @@ void smb_ServerWaiter(void *parmp)
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
         {
             int abandonIdx = code - WAIT_ABANDONED_0;
-            afsi_log("Error: smb_ClientWaiter (NCBavails) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
+            osi_Log2(smb_logp, "Error: smb_ClientWaiter (NCBavails) event %d abandoned, errno %d\n", abandonIdx, GetLastError());
         }
 	
         if (code == WAIT_IO_COMPLETION)
         {
-            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_IO_COMPLETION\n");
+            osi_Log0(smb_logp, "Error: smb_ClientWaiter (NCBavails) WAIT_IO_COMPLETION\n");
             continue;
         }
 	
         if (code == WAIT_TIMEOUT)
         {
-            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_TIMEOUT, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ClientWaiter (NCBavails) WAIT_TIMEOUT, errno %d\n", GetLastError());
         }
 	
         if (code == WAIT_FAILED)
         {
-            afsi_log("Error: smb_ClientWaiter (NCBavails) WAIT_FAILED, errno %d\n", GetLastError());
+            osi_Log1(smb_logp, "Error: smb_ClientWaiter (NCBavails) WAIT_FAILED, errno %d\n", GetLastError());
         }
 		
         idx_NCB = code - WAIT_OBJECT_0;
@@ -6364,7 +6366,7 @@ void smb_ServerWaiter(void *parmp)
         if (idx_NCB < 0 || idx_NCB > (sizeof(NCBsessions) / sizeof(NCBsessions[0])))
         {
             /* this is fatal - log as much as possible */
-            afsi_log("Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_Log1(smb_logp, "Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
             osi_assert(0);
         }
 
@@ -6448,23 +6450,23 @@ void smb_Server(VOID *parmp)
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
         {
             int abandonIdx = code - WAIT_ABANDONED_0;
-            afsi_log("Error: smb_Server ( NCBreturns[%d] ) event %d abandoned, errno %d\n", myIdx, abandonIdx, GetLastError());
+            osi_Log3(smb_logp, "Error: smb_Server ( NCBreturns[%d] ) event %d abandoned, errno %d\n", myIdx, abandonIdx, GetLastError());
         }
 	
         if (code == WAIT_IO_COMPLETION)
         {
-            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_IO_COMPLETION\n", myIdx);
+            osi_Log1(smb_logp, "Error: smb_Server ( NCBreturns[%d] ) WAIT_IO_COMPLETION\n", myIdx);
             continue;
         }
 	
         if (code == WAIT_TIMEOUT)
         {
-            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_TIMEOUT, errno %d\n", myIdx, GetLastError());
+            osi_Log2(smb_logp, "Error: smb_Server ( NCBreturns[%d] ) WAIT_TIMEOUT, errno %d\n", myIdx, GetLastError());
         }
 	
         if (code == WAIT_FAILED)
         {
-            afsi_log("Error: smb_Server ( NCBreturns[%d] ) WAIT_FAILED, errno %d\n", myIdx, GetLastError());
+            osi_Log2(smb_logp, "Error: smb_Server ( NCBreturns[%d] ) WAIT_FAILED, errno %d\n", myIdx, GetLastError());
         }
 
         idx_NCB = code - WAIT_OBJECT_0;
@@ -6473,7 +6475,7 @@ void smb_Server(VOID *parmp)
         if (idx_NCB < 0 || idx_NCB > (sizeof(NCBs) / sizeof(NCBs[0])))
         {
             /* this is fatal - log as much as possible */
-            afsi_log("Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_Log1(smb_logp, "Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
             osi_assert(0);
         }
 
@@ -6501,7 +6503,7 @@ void smb_Server(VOID *parmp)
 				/* Client closed session */
                 if (reportSessionStartups) 
                 {
-                    afsi_log("session [ %d ] closed", idx_session);
+                    osi_Log1(smb_logp, "session [ %d ] closed", idx_session);
                 }
 				dead_sessions[idx_session] = TRUE;
                 if (vcp)
@@ -6581,7 +6583,7 @@ void smb_Server(VOID *parmp)
 				/* A weird error code.  Log it, sleep, and
 				 * continue. */
 				if (vcp && vcp->errorCount++ > 3) {
-                    afsi_log("session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
+                    osi_Log2(smb_logp, "session [ %d ] closed, vcp->errorCount = %d", idx_session, vcp->errorCount);
 					dead_sessions[idx_session] = TRUE;
                 }
 				else {
@@ -6681,7 +6683,7 @@ void smb_Server(VOID *parmp)
 			if (rwc.code == 0) {
 				rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, TEXT("smb_Server() rwevent"));
                 if ( GetLastError() == ERROR_ALREADY_EXISTS )
-                    afsi_log("Event Object Already Exists: %s", eventName);
+                    osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
 				ncbp->ncb_command = NCBRECV | ASYNCH;
 				ncbp->ncb_lsn = (unsigned char) vcp->lsn;
 				ncbp->ncb_lana_num = vcp->lana;
@@ -6773,17 +6775,17 @@ void InitNCBslot(int idx)
     sprintf(eventName,"NCBavails[%d]", idx);
 	NCBavails[idx] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        afsi_log("Event Object Already Exists: %s", eventName);
+        osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
 #ifndef DJGPP
     sprintf(eventName,"NCBevents[%d]", idx);
 	NCBevents[idx] = thrd_CreateEvent(NULL, TRUE, FALSE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        afsi_log("Event Object Already Exists: %s", eventName);
+        osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
 #endif /* !DJGPP */
     sprintf(eventName,"NCBReturns[0<=i<smb_NumServerThreads][%d]", idx);
 	retHandle = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
-        afsi_log("Event Object Already Exists: %s", eventName);
+        osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
 	for (i=0; i<smb_NumServerThreads; i++)
 		NCBreturns[i][idx] = retHandle;
 	bufp = GetPacket();
@@ -6928,8 +6930,8 @@ void smb_Listener(void *parmp)
 				"%s\n",
                 ncbp->ncb_lsn,ncbp->ncb_lana_num, rname);
 #endif
-        afsi_log("New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
-                  ncbp->ncb_lsn,ncbp->ncb_lana_num, rname, ongoingOps);
+        osi_Log4(smb_logp, "New session(ncb_lsn,ncb_lana_num) (%d,%d) starting from host %s, %d ongoing ops",
+                  ncbp->ncb_lsn,ncbp->ncb_lana_num, osi_LogSaveString(smb_logp, rname), ongoingOps);
 
         if (reportSessionStartups) {
 #ifndef DJGPP
@@ -6944,15 +6946,15 @@ void smb_Listener(void *parmp)
                         1, 0, ptbuf, NULL);
 			DeregisterEventSource(h);
 #else /* DJGPP */
-            afsi_log("NCBLISTEN completed, call from %s",rname);
-            osi_Log1(smb_logp, "SMB session startup, %d ongoing ops",
-                     ongoingOps);
             time(&now);
             fprintf(stderr, "%s: New session %d starting from host %s\n",
                     asctime(localtime(&now)), ncbp->ncb_lsn, rname);
             fflush(stderr);
 #endif /* !DJGPP */
 		}
+            osi_Log1(smb_logp, "NCBLISTEN completed, call from %s", osi_LogSaveString(smb_logp, rname));
+            osi_Log1(smb_logp, "SMB session startup, %d ongoing ops",
+                     ongoingOps);
 
         /* now ncbp->ncb_lsn is the connection ID */
         vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
@@ -6964,7 +6966,7 @@ void smb_Listener(void *parmp)
         /* But don't look at session[0], it is reserved */
 		for (i = 1; i < numSessions; i++) {
 			if (dead_sessions[i]) {
-                afsi_log("connecting to dead session [ %d ]", i);
+                osi_Log1(smb_logp, "connecting to dead session [ %d ]", i);
 				dead_sessions[i] = FALSE;
 				break;
 			}
@@ -6997,9 +6999,9 @@ void smb_Listener(void *parmp)
             sprintf(eventName, "SessionEvents[%d]", i);
             SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
             if ( GetLastError() == ERROR_ALREADY_EXISTS )
-                afsi_log("Event Object Already Exists: %s", eventName);
+                osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
 			numSessions++;
-            afsi_log("increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
+            osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
 			thrd_SetEvent(SessionEvents[0]);
 		} else {
 			thrd_SetEvent(SessionEvents[i]);
@@ -7047,7 +7049,7 @@ void smb_NetbiosInit()
         code = Netbios(ncbp);
         if (code != 0) {
             sprintf(s, "Netbios NCBENUM error code %d", code);
-            afsi_log(s);
+            osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
             osi_panic(s, __FILE__, __LINE__);
         }
     }
@@ -7069,11 +7071,11 @@ void smb_NetbiosInit()
             code = ncbp->ncb_retcode;
         if (code != 0) {
             sprintf(s, "Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
-            afsi_log(s);
+            osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
             lana_list.lana[i] = 255;  /* invalid lana */
         } else {
             sprintf(s, "Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
-            afsi_log(s);
+            osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
         }
     }
 #else
@@ -7096,7 +7098,7 @@ void smb_NetbiosInit()
     memset(smb_sharename,' ',NCBNAMSZ);
     memcpy(smb_sharename,smb_localNamep,len);
     sprintf(s, "lana_list.length %d", lana_list.length);
-    afsi_log(s);
+    osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
 
     /* Keep the name so we can unregister it later */
     for (l = 0; l < lana_list.length; l++) {
@@ -7111,18 +7113,18 @@ void smb_NetbiosInit()
         code = Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
           
-        afsi_log("Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
+        osi_Log3(smb_logp, "Netbios NCBADDNAME lana=%d code=%d retcode=%d complete=%d",
                  lana, code, ncbp->ncb_retcode,ncbp->ncb_cmd_cplt);
         {
             char name[NCBNAMSZ+1];
             name[NCBNAMSZ]=0;
             memcpy(name,ncbp->ncb_name,NCBNAMSZ);
-            afsi_log("Netbios NCBADDNAME added new name >%s<",name);
+            osi_Log1(smb_logp, "Netbios NCBADDNAME added new name >%s<",osi_LogSaveString(smb_logp, name));
         }
 
         if (code == 0) code = ncbp->ncb_retcode;
         if (code == 0) {
-            afsi_log("Netbios NCBADDNAME succeeded on lana %d\n", lana);
+            osi_Log1(smb_logp, "Netbios NCBADDNAME succeeded on lana %d\n", lana);
 #ifdef DJGPP
             /* we only use one LANA with djgpp */
             lana_list.lana[0] = lana;
@@ -7131,13 +7133,13 @@ void smb_NetbiosInit()
         }
         else {
             sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
-            afsi_log(s);
+            osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
             if (code == NRC_BRIDGE) {    /* invalid LANA num */
                 lana_list.lana[l] = 255;
                 continue;
             }
             else if (code == NRC_DUPNAME) {
-                afsi_log("Name already exists; try to delete it");
+                osi_Log0(smb_logp, "Name already exists; try to delete it");
                 memset(ncbp, 0, sizeof(*ncbp));
                 ncbp->ncb_command = NCBDELNAME;
                 memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
@@ -7150,7 +7152,7 @@ void smb_NetbiosInit()
                 if (code == 0) code = ncbp->ncb_retcode;
                 else {
                     sprintf(s, "Netbios NCBDELNAME lana %d error code %d\n", lana, code);
-                    afsi_log(s);
+                    osi_Log0(smb_logp, s);
                 }
                 if (code != 0 || delname_tried) {
                     lana_list.lana[l] = 255;
@@ -7165,7 +7167,7 @@ void smb_NetbiosInit()
             }
             else {
                 sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
-                afsi_log(s);
+                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
                 lana_list.lana[l] = 255;  /* invalid lana */
                 osi_panic(s, __FILE__, __LINE__);
             }

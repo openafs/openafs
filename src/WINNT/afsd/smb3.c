@@ -122,6 +122,7 @@ void OutputDebugF(char * format, ...) {
                                + 3; // terminating '\0' + '\n'
     buffer = malloc( len * sizeof(char) );
     vsprintf( buffer, format, args );
+    osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buffer));
     strcat(buffer, "\n");
     OutputDebugString(buffer);
     free( buffer );
@@ -136,12 +137,14 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
 
     for(i=0;i<len;i++) {
         if(!(i%16)) {
-            if(i)
+            if(i) {
+                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buf));
+                strcat(buf,"\n");
                 OutputDebugString(buf);
+            }
             sprintf(buf,"%5x",i);
             memset(buf+5,' ',80);
             buf[85] = 0;
-            strcat(buf,"\n");
         }
 
         j = (i%16);
@@ -155,9 +158,12 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
 
         buf[j] = (k>32 && k<127)?k:'.';
     }    
-    if(i)
+    if(i) {
+        osi_Log0(smb_logp, osi_LogSaveString(smb_logp, buf));
+        strcat(buf,"\n");
         OutputDebugString(buf);
 }   
+}
 /**/
 
 #define SMB_EXT_SEC_PACKAGE_NAME "Negotiate"
@@ -794,7 +800,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         unp = uidp->unp;
         userp = unp->userp;
         newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
-		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,usern);
+                osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
 		osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
@@ -820,7 +826,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
-		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,usern);
+                osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,osi_LogSaveString(smb_logp, usern));
 		osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
@@ -1814,11 +1820,11 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
 	memset(outp->datap,0,totalData);
 
     if(infoLevel == 0) {
-        info0 = (smb_rap_share_info_0_t *) outp->datap;
+        info0 = (smb_rap_server_info_0_t *) outp->datap;
         cstrp = (char *) (info0 + 1);
         strcpy(info0->sv0_name, "AFS");
     } else { /* infoLevel == 1 */
-        info1 = (smb_rap_share_info_1_t *) outp->datap;
+        info1 = (smb_rap_server_info_1_t *) outp->datap;
         cstrp = (char *) (info1 + 1);
         strcpy(info1->sv1_name, "AFS");
 
@@ -1829,7 +1835,7 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
 
         info1->sv1_version_major = 5;
         info1->sv1_version_minor = 1;
-        info1->sv1_comment_or_master_browser = (DWORD) (cstrp - outp->datap);
+        info1->sv1_comment_or_master_browser = (DWORD *) (cstrp - outp->datap);
 
         strcpy(cstrp, smb_ServerComment);
 

@@ -17,7 +17,7 @@ typedef struct cm_cell {
 	long cellID;			/* cell ID */
 	struct cm_cell *nextp;		/* locked by cm_cellLock */
         char *namep;			/* cell name; never changes */
-        struct cm_serverRef *vlServersp;	/* locked by cm_serverLock */
+        cm_serverRef_t *vlServersp;     /* locked by cm_serverLock */
         osi_mutex_t mx;			/* mutex locking fields (flags) */
         long flags;			/* locked by mx */
         long timeout;                   /* if dns, time at which the server addrs expire */
