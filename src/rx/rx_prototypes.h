@@ -436,7 +436,6 @@ extern int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov,
         int *nio, int maxio, int nbytes);
 extern int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, 
         int maxio, int nbytes);
-extern int rx_WritevInit(struct rx_call *call);
 extern int rxi_WritevProc(struct rx_call *call, struct iovec *iov, 
         int nio, int nbytes);
 extern int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes);
