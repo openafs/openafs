@@ -190,6 +190,7 @@ int	Console = 0;
 afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
+extern afs_int32 readonlyServer;
 
 static TryLocalVLServer();
 
@@ -2290,6 +2291,10 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
 
     /* Lookup the new file  */
     if (!(Lookup(&newdir, NewName, &newFileFid))) {
+	if (readonlyServer) {
+	    errorCode = VREADONLY;
+	    goto Bad_Rename;
+	}
 	if (!(newrights & PRSFS_DELETE)) {
 	    errorCode = EACCES;
 	    goto Bad_Rename;
@@ -2647,6 +2652,10 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
      * to do this.
      */
     if ((InStatus->Mask & AFS_SETMODE) && !(InStatus->UnixModeBits & 0111)) {
+	if (readonlyServer) {
+	    errorCode = VREADONLY;
+	    goto Bad_SymLink;
+	}
 	/*
 	 * We have a mountpoint, 'cause we're trying to set the Unix mode
 	 * bits to something with some x bits missing (default mode bits
@@ -4713,6 +4722,10 @@ afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMs
 				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_SetVolumeStatus;
 
+    if (readonlyServer) {
+	errorCode = VREADONLY;
+	goto Bad_SetVolumeStatus;
+    }
     if (VanillaUser(client)) {
 	errorCode = EACCES;
 	goto Bad_SetVolumeStatus;
@@ -5609,7 +5622,9 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 	   * unless you are a system administrator */
 	  /******  InStatus->Owner && UnixModeBits better be SET!! */
 	  if ( CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-	    if (VanillaUser (client)) 
+	    if (readonlyServer) 
+	      return(VREADONLY);
+	    else if (VanillaUser (client)) 
 	      return(EPERM);      /* Was EACCES */
 	    else
 	      osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
@@ -5621,6 +5636,9 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 		                          AUD_INT, CallingRoutine, AUD_END);
 	  }
 	  else {
+	    if (readonlyServer) {
+		return(VREADONLY);
+	    }
 	    if (CallingRoutine == CHK_STOREACL) {
 	      if (!(rights & PRSFS_ADMINISTER) &&
 		  !VolumeOwner(client, targetptr)) return(EACCES);
@@ -5628,7 +5646,9 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 	    else {	/* store data or status */
 	      /* watch for chowns and chgrps */
 	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-		if (VanillaUser (client)) 
+		if (readonlyServer) 
+		  return(VREADONLY);
+		else if (VanillaUser (client)) 
 		  return(EPERM);	/* Was EACCES */
 		else
 		  osi_audit(PrivilegeEvent, 0,
@@ -5642,12 +5662,16 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 #else
 		  (InStatus->UnixModeBits & (S_ISUID|S_ISGID)) != 0) {
 #endif
+		if (readonlyServer)
+		  return(VREADONLY);
 		if (VanillaUser(client))
 		  return(EACCES);
 		else osi_audit( PrivSetID, 0, AUD_INT, (client ? client->ViceId : 0),
 			                      AUD_INT, CallingRoutine, AUD_END);
 	      }
 	      if (CallingRoutine == CHK_STOREDATA) {
+		if (readonlyServer)
+		  return(VREADONLY);
 		if (!(rights & PRSFS_WRITE))
 		  return(EACCES);
 		/* Next thing is tricky.  We want to prevent people
@@ -5674,12 +5698,16 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 #endif
 		if ((targetptr->disk.type != vDirectory)
 		    && (!(targetptr->disk.modeBits & OWNERWRITE)))
+		  if (readonlyServer)
+		    return(VREADONLY);
 		  if (VanillaUser(client))
 		    return(EACCES);
 		  else osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
 				                     AUD_INT, CallingRoutine, AUD_END);
 	      }
 	      else {  /* a status store */
+		if (readonlyServer)
+		  return(VREADONLY);
 		if (targetptr->disk.type == vDirectory) {
 		  if (!(rights & PRSFS_DELETE) && !(rights & PRSFS_INSERT))
 		    return(EACCES);
@@ -6601,6 +6629,8 @@ Vnode	    * targetptr;
 afs_int32	    rights;
 int	    Prfs_Mode;
 {
+    if (readonlyServer)
+	return(VREADONLY);
     if (!(rights & Prfs_Mode))
 	return(EACCES);
     if ((targetptr->disk.type != vDirectory) && (!(targetptr->disk.modeBits & OWNERWRITE)))

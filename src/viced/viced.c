@@ -144,6 +144,7 @@ int	printBanner = 0;
 int	rxJumbograms = 1; /* default is to send and receive jumbograms. */
 afs_int32	implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is 
 						   already implied */
+afs_int32       readonlyServer = 0;
 
 int     stack = 24;
 int	stackSize = 24000;
@@ -929,6 +930,7 @@ static FlagMsg()
     strcat(buffer, "[-banner (print banner every 10 minutes)] ");
     strcat(buffer, "[-novbc (whole volume cbs disabled)] ");
     strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
+    strcat(buffer, "[-readonly (read-only file server)] ");
     strcat(buffer, "[-hr <number of hours between refreshing the host cps>] ");
     strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
@@ -1057,6 +1059,9 @@ static ParseArgs(argc, argv)
 	    if (!strcmp(argv[i], "-implicit")) {
 		implicitAdminRights = ParseRights(argv[++i]);
 		if (implicitAdminRights < 0) return implicitAdminRights;
+	} else
+	    if (!strcmp(argv[i], "-readonly")) {
+		readonlyServer = 1;
 	} else
 	    if (!strcmp(argv[i], "-L")) {
 		SawL = 1;
