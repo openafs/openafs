@@ -150,6 +150,7 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
     struct vcache *vcp = ITOAFS(fp->f_dentry->d_inode);
     struct vrequest treq;
     cred_t *credp = crref();
+    afs_offs_t toffs;
 
     AFS_GLOCK();
 
@@ -171,13 +172,16 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
 	code = -code;
     else {
 #ifdef AFS_64BIT_CLIENT
-	if (*offp + count > afs_vmMappingEnd) {
+	toffs = *offp;
+	if (fp->f_flags & O_APPEND) 
+	    toffs += vcp->m.Length;
+	if (toffs + count > afs_vmMappingEnd) {
     	    uio_t tuio;
     	    struct iovec iov;
 	    afs_size_t oldOffset = *offp;
 	    afs_int32 xfered = 0;
 
-	    if (*offp < afs_vmMappingEnd) {
+	    if (toffs < afs_vmMappingEnd) {
 		/* special case of a buffer crossing the VM mapping end */
 		afs_int32 tcount = afs_vmMappingEnd - *offp;
 		count -= tcount;
@@ -188,8 +192,9 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
 		    goto done;
 		}
 		xfered = tcount;
+		toffs += tcount;
 	    } 
-            setup_uio(&tuio, &iov, buf + xfered, (afs_offs_t) *offp, count, 
+	    setup_uio(&tuio, &iov, buf + xfered, (afs_offs_t) toffs, count,
 						UIO_WRITE, AFS_UIOSYS);
             code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
 	    xfered += count - tuio.uio_resid;
@@ -209,11 +214,12 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
         	}
 		code = xfered;
 		*offp += count;
+		toffs += count;
 		ObtainWriteLock(&vcp->lock,400);
         	vcp->m.Date = osi_Time();       /* Set file date (for ranlib) */
         	/* extend file */
-        	if (*offp > vcp->m.Length) {
-            	    vcp->m.Length = *offp;
+		if (!(fp->f_flags & O_APPEND) &&  toffs > vcp->m.Length) {
+		    vcp->m.Length = toffs;
         	}
         	ReleaseWriteLock(&vcp->lock);
 	    }
