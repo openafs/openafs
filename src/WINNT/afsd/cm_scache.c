@@ -844,7 +844,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->FileType = CM_SCACHETYPE_DIRECTORY;
         statusp->LinkCount = scp->linkCount;
         statusp->Length = cm_fakeDirSize;
-        statusp->DataVersion = cm_fakeDirVersion;
+        statusp->DataVersion = scp->dataVersion;
         statusp->Author = 0x1;
         statusp->Owner = 0x0;
         statusp->CallerAccess = 0x9;

@@ -41,7 +41,7 @@ SOFTWARE.
 #define REG_CLIENT_TRACE_OPTION_PARM	"TraceOption"
 #define REG_CLIENT_LOGON_OPTION_PARM	"LogonOptions"
 #define REG_CLIENT_LOGON_SCRIPT_PARMW	L"LogonScript"
-#define DEFAULT_RETRY_INTERVAL          30                        /* seconds*/
+#define DEFAULT_RETRY_INTERVAL          60                        /* seconds*/
 #define DEFAULT_FAIL_SILENTLY           FALSE
 #define DEFAULT_SLEEP_INTERVAL          5                         /* seconds*/
 #define DEFAULT_LOGON_OPTION			1

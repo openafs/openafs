@@ -171,10 +171,8 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
     long code;
 
     switch (ctrlCode) {
+    case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_STOP:
-        /* Shutdown RPC */
-        RpcMgmtStopServerListening(NULL);
-
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                              AFSConfigKeyName,
@@ -199,7 +197,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
         ServiceStatus.dwCheckPoint = 1;
         ServiceStatus.dwWaitHint = 10000;
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
         SetServiceStatus(StatusHandle, &ServiceStatus);
         SetEvent(WaitToTerminate);
         break;
@@ -208,7 +206,7 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
         ServiceStatus.dwCheckPoint = 0;
         ServiceStatus.dwWaitHint = 0;
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
         SetServiceStatus(StatusHandle, &ServiceStatus);
         break;
         /* XXX handle system shutdown */
@@ -237,9 +235,6 @@ afsd_ServiceControlHandlerEx(
     switch (ctrlCode) 
     {
     case SERVICE_CONTROL_STOP:
-        /* Shutdown RPC */
-        RpcMgmtStopServerListening(NULL);
-
         /* Force trace if requested */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                             AFSConfigKeyName,
@@ -275,7 +270,7 @@ afsd_ServiceControlHandlerEx(
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
         ServiceStatus.dwCheckPoint = 0;
         ServiceStatus.dwWaitHint = 0;
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_POWEREVENT;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT;
         SetServiceStatus(StatusHandle, &ServiceStatus);
         dwRet = NO_ERROR;
         break;
@@ -1155,7 +1150,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwWaitHint = 0;
 
         /* accept Power events */
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_POWEREVENT;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_POWEREVENT;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif  
         {
@@ -1181,6 +1176,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     DismountGlobalDrives();
     smb_Shutdown();
     rx_Finalize();
+    RpcShutdown();
     buf_Shutdown();
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS

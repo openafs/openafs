@@ -121,6 +121,7 @@ long fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     return 0;
 }
 
+#ifdef COMMENT
 struct hostent *hostutil_GetHostByName(char *namep)
 {
 	struct hostent *thp;
@@ -149,6 +150,7 @@ char *hostutil_GetNameByINet(afs_uint32 addr)
 	/* return static buffer */
         return hostNameBuffer;
 }
+#endif
 
 /* is this a digit or a digit-like thing? */
 static int ismeta(ac, abase)

@@ -622,7 +622,7 @@ int afsd_InitCM(char **reasonP)
         }
         afsi_log("Cache path %s", cm_CachePath);
     } else {
-        dummyLen = ExpandEnvironmentStrings("%TEMP%\AFSCache", cm_CachePath, sizeof(cm_CachePath));
+        dummyLen = ExpandEnvironmentStrings("%TEMP%\\AFSCache", cm_CachePath, sizeof(cm_CachePath));
         if (dummyLen > sizeof(cm_CachePath)) {
             afsi_log("Cache path [%%TEMP%%\\AFSCache] longer than %d after expanding env strings", 
                      sizeof(cm_CachePath));
