@@ -4875,7 +4875,11 @@ ListAddrs(as)
     memset(&askuuid, 0, sizeof(afsUUID));
     if (as->parms[0].items) {
 	/* -uuid */
-	afsUUID_from_string(as->parms[0].items->data, &askuuid);
+        if (afsUUID_from_string(as->parms[0].items->data, &askuuid) < 0) {
+	    fprintf(STDERR, "vos: invalid UUID '%s'\n", 
+		    as->parms[0].items->data);
+	    exit(-1);
+	}
 	m_attrs.Mask = VLADDR_UUID;
 	m_attrs.uuid = askuuid;
     }
@@ -4885,7 +4889,7 @@ ListAddrs(as)
 	afs_int32 saddr;
 	he = hostutil_GetHostByName((char *)as->parms[1].items->data);
 	if (he == NULL) {
-	    fprintf(stderr, "Can't get host info for '%s'\n",
+	    fprintf(STDERR, "vos: Can't get host info for '%s'\n",
 		    as->parms[1].items->data);
 	    exit(-1);
 	}
@@ -4922,10 +4926,21 @@ ListAddrs(as)
 	vcode =
 	    ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
 			  &vlcb, &m_nentries, &m_addrs);
+
 	if (vcode == VL_NOENT) {
-	    i++;
-	    nentries++;
-	    continue;
+  	    if (m_attrs.Mask == VLADDR_UUID) {
+	        fprintf(STDERR, "vos: no entry for UUID '%s' found in VLDB\n",
+			as->parms[0].items->data);
+		exit(-1);
+	    } else if (m_attrs.Mask == VLADDR_IPADDR) {
+	        fprintf(STDERR, "vos: no entry for host '%s' [0x%08x] found in VLDB\n",
+			as->parms[1].items->data, m_attrs.ipaddr);
+		exit(-1);
+	    } else {
+	        i++;
+		nentries++;
+		continue;
+	    }
 	}
 
 	if (vcode == VL_INDEXERANGE) {
