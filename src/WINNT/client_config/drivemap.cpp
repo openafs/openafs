@@ -698,22 +698,27 @@ void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWa
 
 BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 {
-    TCHAR szDrive[] = TEXT("*:");
+	BOOL isWinNT = IsWindowsNT();
+
+	TCHAR szDrive[] = TEXT("*:");
     szDrive[0] = chDrive;
 
     TCHAR szMapping[ _MAX_PATH ] = TEXT("");
-    LPTSTR pszSubmount = szMapping;
-    TCHAR szNetBiosName[32];
 
-    memset(szNetBiosName, '\0', sizeof(szNetBiosName));
-    lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_FULL);
-    _tcscat(szNetBiosName, TEXT("\\"));
-
-   if (IsWindowsNT())
-   {
-       if (!QueryDosDevice (szDrive, szMapping, MAX_PATH))
+    if (isWinNT && !QueryDosDevice (szDrive, szMapping, MAX_PATH))
            return FALSE;
 
+    LPTSTR pszSubmount = szMapping;
+    
+	static TCHAR szNetBiosName[32] = "";
+	if (szNetBiosName[0] == 0) {
+		memset(szNetBiosName, '\0', sizeof(szNetBiosName));
+		lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_FULL);
+		_tcscat(szNetBiosName, TEXT("\\"));
+	}
+
+   if (isWinNT)
+   {
       // Now if this is an AFS network drive mapping, {szMapping} will be:
       //
       //   \Device\LanmanRedirector\<Drive>:\<netbiosname>\submount
