@@ -444,11 +444,36 @@ KFW_cleanup(void)
 
 static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
+int
+KFW_use_krb524(void)
+{
+    HKEY parmKey;
+    DWORD code, len;
+    DWORD use524 = 0;
+
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS)
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                             0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        len = sizeof(use524);
+        code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
+                                (BYTE *) &use524, &len);
+        if (code != ERROR_SUCCESS) {
+            use524 = 0;
+        }
+        RegCloseKey (parmKey);
+    }
+
+    return use524;
+}
+
 int 
 KFW_is_available(void)
 {
     HKEY parmKey;
-	DWORD code, len;
+    DWORD code, len;
     DWORD enableKFW = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
@@ -456,7 +481,7 @@ KFW_is_available(void)
     if (code != ERROR_SUCCESS)
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
                              0, KEY_QUERY_VALUE, &parmKey);
-	if (code == ERROR_SUCCESS) {
+    if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
         code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
                                 (BYTE *) &enableKFW, &len);
@@ -464,7 +489,7 @@ KFW_is_available(void)
             enableKFW = 1;
         }
         RegCloseKey (parmKey);
-	}
+    }
 
     if ( !enableKFW )
         return FALSE;
@@ -2761,7 +2786,8 @@ KFW_AFS_klog(
          * No need to perform a krb524 translation which is 
          * commented out in the code below
          */
-        if (k5creds->ticket.length > MAXKTCTICKETLEN)
+        if (KFW_use_krb524() ||
+            k5creds->ticket.length > MAXKTCTICKETLEN)
             goto try_krb524d;
 
         memset(&aserver, '\0', sizeof(aserver));

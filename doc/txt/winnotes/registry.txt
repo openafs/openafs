@@ -628,6 +628,17 @@ Function: KFW_is_available()
   Kerberos 4 implementation will be used instead.  The current user value 
   is checked first; if it does not exist the local machine value is checked.
 
+Value   : Use524
+Type    : DWORD {0, 1}
+Default : 0
+Function: KFW_use_krb524()
+
+  When MIT Kerberos for Windows can be loaded, Kerberos 5 will be used
+  to obtain AFS credentials.  By setting this value to 1, the Kerberos 5
+  tickets will be converted to Kerberos 4 tokens via a call to the krb524
+  daemon.  The current user value is checked first; if it does not exist 
+  the local machine value is checked.
+
 Value   : AfscredsShortcutParams
 Type    : REG_SZ
 Default : "-A -M -N -Q"

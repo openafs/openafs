@@ -134,8 +134,8 @@ get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep
 #define VOLMARKERSTRING ":"	/* String form of above */
 
 typedef struct {
-	char cell[BUFSIZ];
-	char realm[REALM_SZ];
+    char cell[BUFSIZ];
+    char realm[REALM_SZ];
 } cellinfo_t;
 
 
@@ -148,29 +148,30 @@ static int force = FALSE;	/* Bash identical tokens? */
 static linked_list authedcells;	/* List of cells already logged to */
 
 static int usev5 = TRUE;   /* use kerberos 5? */
+static int use524 = FALSE;  /* use krb524? */
 static krb5_ccache _krb425_ccache;
 
 long GetLocalCell(struct afsconf_dir **pconfigdir, char *local_cell)
 {
-	if (!(*pconfigdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH)))
-	{
-		fprintf(stderr, "%s: can't get afs configuration (afsconf_Open(%s))\n",
-			progname, AFSDIR_CLIENT_ETC_DIRPATH);
-		exit(AKLOG_AFS);
-	}
+    if (!(*pconfigdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH)))
+    {
+        fprintf(stderr, "%s: can't get afs configuration (afsconf_Open(%s))\n",
+                 progname, AFSDIR_CLIENT_ETC_DIRPATH);
+        exit(AKLOG_AFS);
+    }
 
-	return afsconf_GetLocalCell(*pconfigdir, local_cell, MAXCELLCHARS);
+    return afsconf_GetLocalCell(*pconfigdir, local_cell, MAXCELLCHARS);
 }
 
 long GetCellInfo(struct afsconf_dir **pconfigdir, char* cell, 
 struct afsconf_cell **pcellconfig)
 {
-	return afsconf_GetCellInfo(*pconfigdir, cell, NULL, *pcellconfig);
+    return afsconf_GetCellInfo(*pconfigdir, cell, NULL, *pcellconfig);
 }
 
 void CloseConf(struct afsconf_dir **pconfigdir)
-{
-	(void) afsconf_Close(*pconfigdir);
+{       
+    (void) afsconf_Close(*pconfigdir);
 }
 
 #define ALLOW_REGISTER 1
@@ -182,7 +183,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
     char username_copy[BUFSIZ];
-	long viceId;			/* AFS uid of user */
+    long viceId;			/* AFS uid of user */
 #ifdef ALLOW_REGISTER
     afs_int32 id;
 #endif /* ALLOW_REGISTER */
@@ -192,8 +193,8 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
         confname[sizeof(confname) - 2] = '\0';
     }
 
-	if (dflag)
-		printf("About to resolve name %s to id\n", username);
+    if (dflag)
+        printf("About to resolve name %s to id\n", username);
 
     /*
     * Talk about DUMB!  It turns out that there is a bug in
@@ -217,31 +218,31 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 
     strcpy(lastcell, aserver->cell);
 
-	if (!pr_Initialize (0, confname, aserver->cell))
-		*status = pr_SNameToId (username, &viceId);
+    if (!pr_Initialize (0, confname, aserver->cell))
+        *status = pr_SNameToId (username, &viceId);
 
-	if (dflag)
-	{
-		if (*status)
-			printf("Error %d\n", *status);
-		else
-			printf("Id %d\n", viceId);
-	}
-
-	/*
-	* This is a crock, but it is Transarc's crock, so
-	* we have to play along in order to get the
-	* functionality.  The way the afs id is stored is
-	* as a string in the username field of the token.
-	* Contrary to what you may think by looking at
-	* the code for tokens, this hack (AFS ID %d) will
-	* not work if you change %d to something else.
-	*/
+    if (dflag)
+    {
+        if (*status)
+            printf("Error %d\n", *status);
+        else
+            printf("Id %d\n", viceId);
+    }       
 
     /*
-    * This code is taken from cklog -- it lets people
-    * automatically register with the ptserver in foreign cells
-    */
+     * This is a crock, but it is Transarc's crock, so
+     * we have to play along in order to get the
+     * functionality.  The way the afs id is stored is
+     * as a string in the username field of the token.
+     * Contrary to what you may think by looking at
+     * the code for tokens, this hack (AFS ID %d) will
+     * not work if you change %d to something else.
+     */
+
+    /*
+     * This code is taken from cklog -- it lets people
+     * automatically register with the ptserver in foreign cells
+     */
 
 #ifdef ALLOW_REGISTER
     if (*status == 0) {
@@ -256,91 +257,91 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 #endif /* AFS_ID_TO_NAME */
             }
 #ifdef ALLOW_REGISTER
-            } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
-                if (dflag) {
-                    printf("doing first-time registration of %s "
-                            "at %s\n", username, cell_to_use);
-                }
-                id = 0;
-                strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
-                strcpy(aclient->instance, "");
-                strncpy(aclient->cell, c->realm, MAXKTCREALMLEN - 1);
-                if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
-                    printf("%s: unable to obtain tokens for cell %s "
-                            "(status: %d).\n", progname, cell_to_use, status);
-                    *status = AKLOG_TOKEN;
+        } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
+            if (dflag) {
+                printf("doing first-time registration of %s "
+                        "at %s\n", username, cell_to_use);
+            }
+            id = 0;
+            strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
+            strcpy(aclient->instance, "");
+            strncpy(aclient->cell, c->realm, MAXKTCREALMLEN - 1);
+            if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
+                printf("%s: unable to obtain tokens for cell %s "
+                        "(status: %d).\n", progname, cell_to_use, status);
+                *status = AKLOG_TOKEN;
                 return ;
-                }
+            }
 
-                /*
-                 * In case you're wondering, we don't need to change the
-                 * filename here because we're still connecting to the
-                 * same cell -- we're just using a different authentication
-                 * level
-                 */
+            /*
+             * In case you're wondering, we don't need to change the
+             * filename here because we're still connecting to the
+             * same cell -- we're just using a different authentication
+             * level
+             */
 
-                if ((*status = pr_Initialize(1L, confname, aserver->cell, 0))) {
-                    printf("Error %d\n", status);
+            if ((*status = pr_Initialize(1L, confname, aserver->cell, 0))) {
+                printf("Error %d\n", status);
                 return;
-                }
+            }
 
-                if ((*status = pr_CreateUser(username, &id))) {
-                    printf("%s: unable to create remote PTS "
-                            "user %s in cell %s (status: %d).\n", progname,
-                            username, cell_to_use, *status);
-                } else {
-                    printf("created cross-cell entry for %s at %s\n",
-                            username, cell_to_use);
+            if ((*status = pr_CreateUser(username, &id))) {
+                printf("%s: unable to create remote PTS "
+                        "user %s in cell %s (status: %d).\n", progname,
+                        username, cell_to_use, *status);
+            } else {
+                printf("created cross-cell entry for %s at %s\n",
+                        username, cell_to_use);
 #ifdef AFS_ID_TO_NAME
                 strncpy(username_copy, username, BUFSIZ);
                 snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
 #endif /* AFS_ID_TO_NAME */
-                }
             }
         }
+    }
 #endif /* ALLOW_REGISTER */
 }
 
 char *LastComponent(char *str)
 {
-	char *ret = strrchr(str, DIR);
+    char *ret = strrchr(str, DIR);
 
 #ifdef WIN32
-	if (!ret)
-		ret = strrchr(str, BDIR);
+    if (!ret)
+        ret = strrchr(str, BDIR);
 #endif
-	return ret;
+    return ret;
 }
 
 int FirstComponent(char *str)
 {
-	return (int)(
+    return (int)(
 #ifdef WIN32
-		strchr(str, BDIR) ||
+                strchr(str, BDIR) ||
 #endif
-		strchr(str, DIR));
+                strchr(str, DIR));
 }
 
 void CopyPathColon(char *origpath, char *path, char *pathtocheck)
 {
 #ifdef WIN32
-	if (origpath[1] == DRIVECOLON)
-	{
-		strncpy(pathtocheck, origpath, 2);
-		strcpy(path, origpath+2);
-	}
-	else
+    if (origpath[1] == DRIVECOLON)
+    {
+        strncpy(pathtocheck, origpath, 2);
+        strcpy(path, origpath+2);
+    }
+    else
 #endif
-		strcpy(path, origpath);
+        strcpy(path, origpath);
 }
 
 int BeginsWithDir(char *str, int colon)
 {
-	return (str[0] == DIR) ||
+    return (str[0] == DIR) ||
 #ifdef WIN32
-		((str[0] == BDIR) || (colon && str[1] == DRIVECOLON));
+        ((str[0] == BDIR) || (colon && str[1] == DRIVECOLON));
 #else
-		FALSE;
+    FALSE;
 #endif
 }
 
@@ -356,32 +357,32 @@ int BeginsWithDir(char *str, int colon)
 */
 int des_pcbc_init()
 {
-	abort();
+    abort();
 }
 
 static int get_cred(char *name, char *inst, char *realm, CREDENTIALS *c)
 {
-	int status;
+    int status;
 
-	status = krb_get_cred(name, inst, realm, c);
-	if (status != KSUCCESS)
-	{
+    status = krb_get_cred(name, inst, realm, c);
+    if (status != KSUCCESS)
+    {
 #ifdef DONT_HAVE_GET_AD_TKT
-		KTEXT_ST ticket;
-		status = krb_mk_req(&ticket, name, inst, realm, 0);
+        KTEXT_ST ticket;
+        status = krb_mk_req(&ticket, name, inst, realm, 0);
 #else
-		status = get_ad_tkt(name, inst, realm, 255);
+        status = get_ad_tkt(name, inst, realm, 255);
 #endif
-		if (status == KSUCCESS)
-			status = krb_get_cred(name, inst, realm, c);
-	}
+        if (status == KSUCCESS)
+            status = krb_get_cred(name, inst, realm, c);
+    }       
 
-	return (status);
+    return (status);
 }
 
 static int get_v5cred(krb5_context context, 
-			char *name, char *inst, char *realm, CREDENTIALS *c,
-			krb5_creds **creds)
+                      char *name, char *inst, char *realm, CREDENTIALS *c,
+                      krb5_creds **creds)
 {
     krb5_creds increds;
     krb5_error_code r;
@@ -547,137 +548,139 @@ static int get_v5_user_realm(krb5_context context,char *realm)
 * to.  */
 static int auth_to_cell(krb5_context context, char *cell, char *realm)
 {
-	int status = AKLOG_SUCCESS;
-	char username[BUFSIZ];	/* To hold client username structure */
+    int status = AKLOG_SUCCESS;
+    char username[BUFSIZ];	/* To hold client username structure */
 
-	char name[ANAME_SZ];		/* Name of afs key */
-	char instance[INST_SZ];	/* Instance of afs key */
-	char realm_of_user[REALM_SZ]; /* Kerberos realm of user */
-	char realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
-	char local_cell[MAXCELLCHARS+1];
-	char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
+    char name[ANAME_SZ];		/* Name of afs key */
+    char instance[INST_SZ];	/* Instance of afs key */
+    char realm_of_user[REALM_SZ]; /* Kerberos realm of user */
+    char realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
+    char local_cell[MAXCELLCHARS+1];
+    char cell_to_use[MAXCELLCHARS+1]; /* Cell to authenticate to */
 
-	krb5_creds *v5cred = NULL;
-	CREDENTIALS c;
-	struct ktc_principal aserver;
-	struct ktc_principal aclient;
-	struct ktc_token atoken, btoken;
+    krb5_creds *v5cred = NULL;
+    CREDENTIALS c;
+    struct ktc_principal aserver;
+    struct ktc_principal aclient;
+    struct ktc_token atoken, btoken;
 
 
-	/* try to avoid an expensive call to get_cellconfig */
-	if (cell && ll_string_check(&authedcells, cell))
-	{
-		if (dflag)
-			printf("Already authenticated to %s (or tried to)\n", cell);
-		return(AKLOG_SUCCESS);
-	}
+    /* try to avoid an expensive call to get_cellconfig */
+    if (cell && ll_string_check(&authedcells, cell))
+    {
+        if (dflag)
+            printf("Already authenticated to %s (or tried to)\n", cell);
+        return(AKLOG_SUCCESS);
+    }
 
-	memset(name, 0, sizeof(name));
-	memset(instance, 0, sizeof(instance));
-	memset(realm_of_user, 0, sizeof(realm_of_user));
-	memset(realm_of_cell, 0, sizeof(realm_of_cell));
+    memset(name, 0, sizeof(name));
+    memset(instance, 0, sizeof(instance));
+    memset(realm_of_user, 0, sizeof(realm_of_user));
+    memset(realm_of_cell, 0, sizeof(realm_of_cell));
 
-	/* NULL or empty cell returns information on local cell */
-	if (status = get_cellconfig(cell, &ak_cellconfig, local_cell))
-		return(status);
+    /* NULL or empty cell returns information on local cell */
+    if (status = get_cellconfig(cell, &ak_cellconfig, local_cell))
+        return(status);
 
-	strncpy(cell_to_use, ak_cellconfig.name, MAXCELLCHARS);
-	cell_to_use[MAXCELLCHARS] = 0;
+    strncpy(cell_to_use, ak_cellconfig.name, MAXCELLCHARS);
+    cell_to_use[MAXCELLCHARS] = 0;
 
-	if (ll_string_check(&authedcells, cell_to_use))
-	{
-		if (dflag)
-			printf("Already authenticated to %s (or tried to)\n", cell_to_use);
-		return(AKLOG_SUCCESS);
-	}
+    if (ll_string_check(&authedcells, cell_to_use))
+    {
+        if (dflag)
+            printf("Already authenticated to %s (or tried to)\n", cell_to_use);
+        return(AKLOG_SUCCESS);
+    }
 
-	/*
-	* Record that we have attempted to log to this cell.  We do this
-	* before we try rather than after so that we will not try
-	* and fail repeatedly for one cell.
-	*/
-	(void)ll_add_string(&authedcells, cell_to_use);
+    /*
+     * Record that we have attempted to log to this cell.  We do this
+     * before we try rather than after so that we will not try
+     * and fail repeatedly for one cell.
+     */
+    (void)ll_add_string(&authedcells, cell_to_use);
 
-	if (dflag)
-		printf("Authenticating to cell %s.\n", cell_to_use);
+    if (dflag)
+        printf("Authenticating to cell %s.\n", cell_to_use);
 
-	if (realm && realm[0])
-		strcpy(realm_of_cell, realm);
-	else
-		strcpy(realm_of_cell,
-			(usev5)? 
-				afs_realm_of_cell5(context, &ak_cellconfig) : 
-				afs_realm_of_cell(&ak_cellconfig));
+    if (realm && realm[0])
+        strcpy(realm_of_cell, realm);
+    else
+        strcpy(realm_of_cell,
+                (usev5)? 
+                afs_realm_of_cell5(context, &ak_cellconfig) : 
+                afs_realm_of_cell(&ak_cellconfig));
 
-	/* We use the afs.<cellname> convention here... */
-	strcpy(name, AFSKEY);
-	strncpy(instance, cell_to_use, sizeof(instance));
-	instance[sizeof(instance)-1] = '\0';
+    /* We use the afs.<cellname> convention here... */
+    strcpy(name, AFSKEY);
+    strncpy(instance, cell_to_use, sizeof(instance));
+    instance[sizeof(instance)-1] = '\0';
 
-	/*
-	* Extract the session key from the ticket file and hand-frob an
-	* afs style authenticator.
-	*/
+    /*
+     * Extract the session key from the ticket file and hand-frob an
+     * afs style authenticator.
+     */
 
-	if (usev5) 
-	{ /* using krb5 */
+    if (usev5) 
+    { /* using krb5 */
         int retry = 1;
 
       try_v5:
-		if (dflag)
-			printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
-		status = get_v5cred(context, name, instance, realm_of_cell, NULL, &v5cred);
-		if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
-			if (dflag)
-				printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
-			status = get_v5cred(context, name, "", realm_of_cell, NULL, &v5cred);
-		}
+        if (dflag)
+            printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
+        status = get_v5cred(context, name, instance, realm_of_cell, 
+                            use524 ? &c : NULL, &v5cred);
+        if (status == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) {
+            if (dflag)
+                printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
+            status = get_v5cred(context, name, "", realm_of_cell, 
+                                use524 ? &c : NULL, &v5cred);
+        }
         if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
             retry = 0;
             goto try_v5;
+        }       
+    }       
+    else 
+    {
+        /*
+         * Try to obtain AFS tickets.  Because there are two valid service
+         * names, we will try both, but trying the more specific first.
+         *
+         * 	afs.<cell>@<realm>
+         * 	afs@<realm>
+         */
+        if (dflag)
+            printf("Getting tickets: %s.%s@%s\n", name, instance, realm_of_cell);
+        status = get_cred(name, instance, realm_of_cell, &c);
+        if (status == KDC_PR_UNKNOWN)
+        {
+            if (dflag)
+                printf("Getting tickets: %s@%s\n", name, realm_of_cell);
+            status = get_cred(name, "", realm_of_cell, &c);
         }
-	}
-	else 
-	{
-		/*
-		* Try to obtain AFS tickets.  Because there are two valid service
-		* names, we will try both, but trying the more specific first.
-		*
-		* 	afs.<cell>@<realm>
-		* 	afs@<realm>
-		*/
-		if (dflag)
-			printf("Getting tickets: %s.%s@%s\n", name, instance, realm_of_cell);
-		status = get_cred(name, instance, realm_of_cell, &c);
-		if (status == KDC_PR_UNKNOWN)
-		{
-			if (dflag)
-				printf("Getting tickets: %s@%s\n", name, realm_of_cell);
-			status = get_cred(name, "", realm_of_cell, &c);
-		}
-	} 
+    } 
 
-	/* TODO: get k5 error text */
-	if (status != KSUCCESS)
-	{
-		if (dflag)
-			printf("Kerberos error code returned by get_cred: %d\n", status);
-		fprintf(stderr, "%s: Couldn't get %s AFS tickets: %s\n",
-			progname, cell_to_use, 
-			(usev5)?"":
-			krb_err_text(status));
-		return(AKLOG_KERBEROS);
-	}
+    /* TODO: get k5 error text */
+    if (status != KSUCCESS)
+    {
+        if (dflag)
+            printf("Kerberos error code returned by get_cred: %d\n", status);
+        fprintf(stderr, "%s: Couldn't get %s AFS tickets: %s\n",
+                 progname, cell_to_use, 
+                 (usev5)?"":
+                 krb_err_text(status));
+        return(AKLOG_KERBEROS);
+    }
 
-	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
-	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
-	strncpy(aserver.cell, cell_to_use, MAXKTCREALMLEN - 1);
+    strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
+    strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
+    strncpy(aserver.cell, cell_to_use, MAXKTCREALMLEN - 1);
 
-    if (usev5) {
+    if (usev5 && !use524) {
         /* This code inserts the entire K5 ticket into the token
-        * No need to perform a krb524 translation which is
-        * commented out in the code below
-        */
+         * No need to perform a krb524 translation which is
+         * commented out in the code below
+         */
         char * p;
         int len;
         
@@ -718,131 +721,131 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         memcpy(atoken.ticket, c.ticket_st.dat, atoken.ticketLen);
     }
 
-	if (!force &&
-		!ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
-		atoken.kvno == btoken.kvno &&
-		atoken.ticketLen == btoken.ticketLen &&
-		!memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
-		!memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
-	{
-		if (dflag)
-			printf("Identical tokens already exist; skipping.\n");
-		return 0;
-	}
+    if (!force &&
+         !ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient) &&
+         atoken.kvno == btoken.kvno &&
+         atoken.ticketLen == btoken.ticketLen &&
+         !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
+         !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen))
+    {       
+        if (dflag)
+            printf("Identical tokens already exist; skipping.\n");
+        return 0;
+    }
 
-	if (noprdb)
-	{
-		if (dflag)
-			printf("Not resolving name %s to id (-noprdb set)\n", username);
-	}
-	else
-	{
-		if(usev5) {
-			if((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
-				fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
-					progname, status);
-				return(AKLOG_KERBEROS);
-			}
+    if (noprdb)
+    {
+        if (dflag)
+            printf("Not resolving name %s to id (-noprdb set)\n", username);
+    }       
+    else    
+    {
+        if (usev5) {
+            if((status = get_v5_user_realm(context, realm_of_user)) != KSUCCESS) {
+                fprintf(stderr, "%s: Couldn't determine realm of user: %d\n",
+                         progname, status);
+                return(AKLOG_KERBEROS);
+            }
         } else {
-			if ((status = krb_get_tf_realm(TKT_FILE, realm_of_user)) != KSUCCESS)
-			{
-				fprintf(stderr, "%s: Couldn't determine realm of user: %s)",
-					progname, krb_err_text(status));
-				return(AKLOG_KERBEROS);
-			}
-		}
+            if ((status = krb_get_tf_realm(TKT_FILE, realm_of_user)) != KSUCCESS)
+            {
+                fprintf(stderr, "%s: Couldn't determine realm of user: %s)",
+                         progname, krb_err_text(status));
+                return(AKLOG_KERBEROS);
+            }
+        }
 
-		if (strcmp(realm_of_user, realm_of_cell))
-		{
-			strcat(username, "@");
-			strcat(username, realm_of_user);
-		}
+        if (strcmp(realm_of_user, realm_of_cell))
+        {
+            strcat(username, "@");
+            strcat(username, realm_of_user);
+        }
 
-		ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, &c, &status, &aclient, &aserver, &atoken);
-	}
+        ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, &c, &status, &aclient, &aserver, &atoken);
+    }
 
-	if (dflag)
-		printf("Set username to %s\n", username);
+    if (dflag)
+        printf("Set username to %s\n", username);
 
-	/* Reset the "aclient" structure before we call ktc_SetToken.
-	* This structure was first set by the ktc_GetToken call when
-	* we were comparing whether identical tokens already existed.
-	*/
-	strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
-	strcpy(aclient.instance, "");
+    /* Reset the "aclient" structure before we call ktc_SetToken.
+     * This structure was first set by the ktc_GetToken call when
+     * we were comparing whether identical tokens already existed.
+     */
+    strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
+    strcpy(aclient.instance, "");
     
-    if (usev5) {
+    if (usev5 && !use524) {
         int len = min(v5cred->client->realm.length,MAXKTCNAMELEN - 1);
         strncpy(aclient.cell, v5cred->client->realm.data, len);
         aclient.cell[len] = '\0';
     } else
 	strncpy(aclient.cell, c.realm, MAXKTCREALMLEN - 1);
 
-	if (dflag)
-		printf("Getting tokens.\n");
-	if (status = ktc_SetToken(&aserver, &atoken, &aclient, 0))
-	{
-		fprintf(stderr,
-			"%s: unable to obtain tokens for cell %s (status: %d).\n",
-			progname, cell_to_use, status);
-		status = AKLOG_TOKEN;
-	}
+    if (dflag)
+        printf("Getting tokens.\n");
+    if (status = ktc_SetToken(&aserver, &atoken, &aclient, 0))
+    {
+        fprintf(stderr,
+                 "%s: unable to obtain tokens for cell %s (status: %d).\n",
+                 progname, cell_to_use, status);
+        status = AKLOG_TOKEN;
+    }
 
-	return(status);
+    return(status);
 }
 
 static int get_afs_mountpoint(char *file, char *mountpoint, int size)
 {
-	char our_file[MAXPATHLEN + 1];
-	char *parent_dir;
-	char *last_component;
-	struct ViceIoctl vio;
-	char cellname[BUFSIZ];
+    char our_file[MAXPATHLEN + 1];
+    char *parent_dir;
+    char *last_component;
+    struct ViceIoctl vio;
+    char cellname[BUFSIZ];
 
-	memset(our_file, 0, sizeof(our_file));
-	strcpy(our_file, file);
+    memset(our_file, 0, sizeof(our_file));
+    strcpy(our_file, file);
 
-	if (last_component = LastComponent(our_file))
-	{
-		*last_component++ = 0;
-		parent_dir = our_file;
-	}
-	else
-	{
-		last_component = our_file;
-		parent_dir = ".";
-	}
+    if (last_component = LastComponent(our_file))
+    {
+        *last_component++ = 0;
+        parent_dir = our_file;
+    }
+    else
+    {
+        last_component = our_file;
+        parent_dir = ".";
+    }
 
-	memset(cellname, 0, sizeof(cellname));
+    memset(cellname, 0, sizeof(cellname));
 
-	vio.in = last_component;
-	vio.in_size = strlen(last_component)+1;
-	vio.out_size = size;
-	vio.out = mountpoint;
+    vio.in = last_component;
+    vio.in_size = strlen(last_component)+1;
+    vio.out_size = size;
+    vio.out = mountpoint;
 
-	if (!pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &vio, 0))
-	{
-		if (strchr(mountpoint, VOLMARKER) == NULL)
-		{
-			vio.in = file;
-			vio.in_size = strlen(file) + 1;
-			vio.out_size = sizeof(cellname);
-			vio.out = cellname;
+    if (!pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &vio, 0))
+    {
+        if (strchr(mountpoint, VOLMARKER) == NULL)
+        {
+            vio.in = file;
+            vio.in_size = strlen(file) + 1;
+            vio.out_size = sizeof(cellname);
+            vio.out = cellname;
 
-			if (!pioctl(file, VIOC_FILE_CELL_NAME, &vio, 1))
-			{
-				strcat(cellname, VOLMARKERSTRING);
-				strcat(cellname, mountpoint + 1);
-				memset(mountpoint + 1, 0, size - 1);
-				strcpy(mountpoint + 1, cellname);
-			}
-		}
-		return(TRUE);
-	}
-	else {
-		return(FALSE);
-	}
-}
+            if (!pioctl(file, VIOC_FILE_CELL_NAME, &vio, 1))
+            {
+                strcat(cellname, VOLMARKERSTRING);
+                strcat(cellname, mountpoint + 1);
+                memset(mountpoint + 1, 0, size - 1);
+                strcpy(mountpoint + 1, cellname);
+            }
+        }
+        return(TRUE);
+    }
+    else {
+        return(FALSE);
+    }
+}       
 
 /*
 * This routine each time it is called returns the next directory
@@ -853,92 +856,92 @@ static int get_afs_mountpoint(char *file, char *mountpoint, int size)
 */
 static char *next_path(char *origpath)
 {
-	static char path[MAXPATHLEN + 1];
-	static char pathtocheck[MAXPATHLEN + 1];
+    static char path[MAXPATHLEN + 1];
+    static char pathtocheck[MAXPATHLEN + 1];
 
-	int link = FALSE;		/* Is this a symbolic link? */
-	char linkbuf[MAXPATHLEN + 1];
-	char tmpbuf[MAXPATHLEN + 1];
+    int link = FALSE;		/* Is this a symbolic link? */
+    char linkbuf[MAXPATHLEN + 1];
+    char tmpbuf[MAXPATHLEN + 1];
 
-	static char *last_comp;	/* last component of directory name */
-	static char *elast_comp;	/* End of last component */
-	char *t;
-	int len;
+    static char *last_comp;	/* last component of directory name */
+    static char *elast_comp;	/* End of last component */
+    char *t;
+    int len;
 
-	static int symlinkcount = 0;	/* We can't exceed MAXSYMLINKS */
+    static int symlinkcount = 0;	/* We can't exceed MAXSYMLINKS */
 
-	/* If we are given something for origpath, we are initializing only. */
-	if (origpath)
-	{
-		memset(path, 0, sizeof(path));
-		memset(pathtocheck, 0, sizeof(pathtocheck));
-		CopyPathColon(origpath, path, pathtocheck);
-		last_comp = path;
-		symlinkcount = 0;
-		return(NULL);
-	}
+    /* If we are given something for origpath, we are initializing only. */
+    if (origpath)
+    {
+        memset(path, 0, sizeof(path));
+        memset(pathtocheck, 0, sizeof(pathtocheck));
+        CopyPathColon(origpath, path, pathtocheck);
+        last_comp = path;
+        symlinkcount = 0;
+        return(NULL);
+    }
 
-	/* We were not given origpath; find then next path to check */
+    /* We were not given origpath; find then next path to check */
 
-	/* If we've gotten all the way through already, return NULL */
-	if (last_comp == NULL)
-		return(NULL);
+    /* If we've gotten all the way through already, return NULL */
+    if (last_comp == NULL)
+        return(NULL);
 
-	do
-	{
-		while (BeginsWithDir(last_comp, FALSE))
-			strncat(pathtocheck, last_comp++, 1);
-		len = (elast_comp = LastComponent(last_comp))
-			? elast_comp - last_comp : strlen(last_comp);
-		strncat(pathtocheck, last_comp, len);
-		memset(linkbuf, 0, sizeof(linkbuf));
-		if (link = (readlink(pathtocheck, linkbuf, sizeof(linkbuf)) > 0))
-		{
-			if (++symlinkcount > MAXSYMLINKS)
-			{
-				fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
-				exit(AKLOG_BADPATH);
-			}
-			memset(tmpbuf, 0, sizeof(tmpbuf));
-			if (elast_comp)
-				strcpy(tmpbuf, elast_comp);
-			if (BeginsWithDir(linkbuf, FALSE))
-			{
-				/*
-				* If this is a symbolic link to an absolute path,
-				* replace what we have by the absolute path.
-				*/
-				memset(path, 0, strlen(path));
-				memcpy(path, linkbuf, sizeof(linkbuf));
-				strcat(path, tmpbuf);
-				last_comp = path;
-				elast_comp = NULL;
-				memset(pathtocheck, 0, sizeof(pathtocheck));
-			}
-			else
-			{
-				/*
-				* If this is a symbolic link to a relative path,
-				* replace only the last component with the link name.
-				*/
-				strncpy(last_comp, linkbuf, strlen(linkbuf) + 1);
-				strcat(path, tmpbuf);
-				elast_comp = NULL;
-				if (t = LastComponent(pathtocheck))
-				{
-					t++;
-					memset(t, 0, strlen(t));
-				}
-				else
-					memset(pathtocheck, 0, sizeof(pathtocheck));
-			}
-		}
-		else
-			last_comp = elast_comp;
-	}
-	while(link);
+    do
+    {
+        while (BeginsWithDir(last_comp, FALSE))
+            strncat(pathtocheck, last_comp++, 1);
+        len = (elast_comp = LastComponent(last_comp))
+            ? elast_comp - last_comp : strlen(last_comp);
+        strncat(pathtocheck, last_comp, len);
+        memset(linkbuf, 0, sizeof(linkbuf));
+        if (link = (readlink(pathtocheck, linkbuf, sizeof(linkbuf)) > 0))
+        {
+            if (++symlinkcount > MAXSYMLINKS)
+            {
+                fprintf(stderr, "%s: %s\n", progname, strerror(ELOOP));
+                exit(AKLOG_BADPATH);
+            }
+            memset(tmpbuf, 0, sizeof(tmpbuf));
+            if (elast_comp)
+                strcpy(tmpbuf, elast_comp);
+            if (BeginsWithDir(linkbuf, FALSE))
+            {
+                /*
+                * If this is a symbolic link to an absolute path,
+                * replace what we have by the absolute path.
+                */
+                memset(path, 0, strlen(path));
+                memcpy(path, linkbuf, sizeof(linkbuf));
+                strcat(path, tmpbuf);
+                last_comp = path;
+                elast_comp = NULL;
+                memset(pathtocheck, 0, sizeof(pathtocheck));
+            }
+            else
+            {
+                /*
+                * If this is a symbolic link to a relative path,
+                * replace only the last component with the link name.
+                */
+                strncpy(last_comp, linkbuf, strlen(linkbuf) + 1);
+                strcat(path, tmpbuf);
+                elast_comp = NULL;
+                if (t = LastComponent(pathtocheck))
+                {
+                    t++;
+                    memset(t, 0, strlen(t));
+                }
+                else
+                    memset(pathtocheck, 0, sizeof(pathtocheck));
+            }
+        }
+        else
+            last_comp = elast_comp;
+    }       
+    while(link);
 
-	return(pathtocheck);
+    return(pathtocheck);
 }
 
 /*
@@ -947,314 +950,317 @@ static char *next_path(char *origpath)
 */
 static int auth_to_path(krb5_context context, char *path)
 {
-	int status = AKLOG_SUCCESS;
-	int auth_to_cell_status = AKLOG_SUCCESS;
+    int status = AKLOG_SUCCESS;
+    int auth_to_cell_status = AKLOG_SUCCESS;
 
-	char *nextpath;
-	char pathtocheck[MAXPATHLEN + 1];
-	char mountpoint[MAXPATHLEN + 1];
+    char *nextpath;
+    char pathtocheck[MAXPATHLEN + 1];
+    char mountpoint[MAXPATHLEN + 1];
 
-	char *cell;
-	char *endofcell;
+    char *cell;
+    char *endofcell;
 
-	/* Initialize */
-	if (BeginsWithDir(path, TRUE))
-		strcpy(pathtocheck, path);
-	else
-	{
-		if (getcwd(pathtocheck, sizeof(pathtocheck)) == NULL)
-		{
-			fprintf(stderr, "Unable to find current working directory:\n");
-			fprintf(stderr, "%s\n", pathtocheck);
-			fprintf(stderr, "Try an absolute pathname.\n");
-			exit(AKLOG_BADPATH);
-		}
-		else
-		{
-			/* in WIN32, if getcwd returns a root dir (eg: c:\), the returned string
-			* will already have a trailing slash ('\'). Otherwise, the string will
-			* end in the last directory name */
-#ifdef WIN32
-			if(pathtocheck[strlen(pathtocheck) - 1] != BDIR)
-#endif
-				strcat(pathtocheck, DIRSTRING);
-			strcat(pathtocheck, path);
-		}
-	}
-	next_path(pathtocheck);
+    /* Initialize */
+    if (BeginsWithDir(path, TRUE))
+        strcpy(pathtocheck, path);
+    else
+    {
+        if (getcwd(pathtocheck, sizeof(pathtocheck)) == NULL)
+        {
+            fprintf(stderr, "Unable to find current working directory:\n");
+            fprintf(stderr, "%s\n", pathtocheck);
+            fprintf(stderr, "Try an absolute pathname.\n");
+            exit(AKLOG_BADPATH);
+        }
+        else
+        {
+            /* in WIN32, if getcwd returns a root dir (eg: c:\), the returned string
+            * will already have a trailing slash ('\'). Otherwise, the string will
+            * end in the last directory name */
+#ifdef WIN32    
+            if(pathtocheck[strlen(pathtocheck) - 1] != BDIR)
+#endif  
+                strcat(pathtocheck, DIRSTRING);
+            strcat(pathtocheck, path);
+        }
+    }
+    next_path(pathtocheck);
 
-	/* Go on to the next level down the path */
-	while (nextpath = next_path(NULL))
-	{
-		strcpy(pathtocheck, nextpath);
-		if (dflag)
-			printf("Checking directory [%s]\n", pathtocheck);
-		/*
-		* If this is an afs mountpoint, determine what cell from
-		* the mountpoint name which is of the form
-		* #cellname:volumename or %cellname:volumename.
-		*/
-		if (get_afs_mountpoint(pathtocheck, mountpoint, sizeof(mountpoint)))
-		{
-			if(dflag)
-				printf("Found mount point [%s]\n", mountpoint);
-			/* skip over the '#' or '%' */
-			cell = mountpoint + 1;
-			if (endofcell = strchr(mountpoint, VOLMARKER))
-			{
-				*endofcell = '\0';
-				if (auth_to_cell_status = auth_to_cell(context, cell, NULL))
-				{
-					if (status == AKLOG_SUCCESS)
-						status = auth_to_cell_status;
-					else if (status != auth_to_cell_status)
-						status = AKLOG_SOMETHINGSWRONG;
-				}
-			}
-		}
-		else
-		{
-			struct stat st;
+    /* Go on to the next level down the path */
+    while (nextpath = next_path(NULL))
+    {
+        strcpy(pathtocheck, nextpath);
+        if (dflag)
+            printf("Checking directory [%s]\n", pathtocheck);
+        /*
+        * If this is an afs mountpoint, determine what cell from
+        * the mountpoint name which is of the form
+        * #cellname:volumename or %cellname:volumename.
+        */
+        if (get_afs_mountpoint(pathtocheck, mountpoint, sizeof(mountpoint)))
+        {
+            if(dflag)
+                printf("Found mount point [%s]\n", mountpoint);
+            /* skip over the '#' or '%' */
+            cell = mountpoint + 1;
+            if (endofcell = strchr(mountpoint, VOLMARKER))
+            {
+                *endofcell = '\0';
+                if (auth_to_cell_status = auth_to_cell(context, cell, NULL))
+                {
+                    if (status == AKLOG_SUCCESS)
+                        status = auth_to_cell_status;
+                    else if (status != auth_to_cell_status)
+                        status = AKLOG_SOMETHINGSWRONG;
+                }
+            }
+        }
+        else
+        {
+            struct stat st;
 
-			if (lstat(pathtocheck, &st) < 0)
-			{
-				/*
-				* If we've logged and still can't stat, there's
-				* a problem...
-				*/
-				fprintf(stderr, "%s: stat(%s): %s\n", progname,
-					pathtocheck, strerror(errno));
-				return(AKLOG_BADPATH);
-			}
-			else if (!S_ISDIR(st.st_mode))
-			{
-				/* Allow only directories */
-				fprintf(stderr, "%s: %s: %s\n", progname, pathtocheck,
-					strerror(ENOTDIR));
-				return(AKLOG_BADPATH);
-			}
-		}
-	}
+            if (lstat(pathtocheck, &st) < 0)
+            {
+                /*
+                * If we've logged and still can't stat, there's
+                * a problem...
+                */
+                fprintf(stderr, "%s: stat(%s): %s\n", progname,
+                         pathtocheck, strerror(errno));
+                return(AKLOG_BADPATH);
+            }
+            else if (!S_ISDIR(st.st_mode))
+            {
+                /* Allow only directories */
+                fprintf(stderr, "%s: %s: %s\n", progname, pathtocheck,
+                         strerror(ENOTDIR));
+                return(AKLOG_BADPATH);
+            }
+        }
+    }
 
-	return(status);
+    return(status);
 }
 
 /* Print usage message and exit */
 static void usage(void)
 {
-	fprintf(stderr, "\nUsage: %s %s%s%s%s\n", progname,
-		"[-d] [[-cell | -c] cell [-k krb_realm]] ",
-		"[[-p | -path] pathname]\n",
-		"    [-noprdb] [-force]\n",
-		"    [-5 | -4]\n"
-		);
-	fprintf(stderr, "    -d gives debugging information.\n");
-	fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
-	fprintf(stderr, "    pathname is the name of a directory to which ");
-	fprintf(stderr, "you wish to authenticate.\n");
-	fprintf(stderr, "    -noprdb means don't try to determine AFS ID.\n");
-	fprintf(stderr, "    -5 or -4 selects whether to use Kerberos V or Kerberos IV.\n"
-					"       (default is Kerberos V)\n");
-	fprintf(stderr, "    No commandline arguments means ");
-	fprintf(stderr, "authenticate to the local cell.\n");
-	fprintf(stderr, "\n");
-	exit(AKLOG_USAGE);
+    fprintf(stderr, "\nUsage: %s %s%s%s%s\n", progname,
+             "[-d] [[-cell | -c] cell [-k krb_realm]] ",
+             "[[-p | -path] pathname]\n",
+             "    [-noprdb] [-force]\n",
+             "    [-5 [-m]| -4]\n"
+             );
+    fprintf(stderr, "    -d gives debugging information.\n");
+    fprintf(stderr, "    krb_realm is the kerberos realm of a cell.\n");
+    fprintf(stderr, "    pathname is the name of a directory to which ");
+    fprintf(stderr, "you wish to authenticate.\n");
+    fprintf(stderr, "    -noprdb means don't try to determine AFS ID.\n");
+    fprintf(stderr, "    -5 or -4 selects whether to use Kerberos V or Kerberos IV.\n"
+                    "       (default is Kerberos V)\n");
+    fprintf(stderr, "       -m means use krb524d to convert Kerberos V tickets.\n");
+    fprintf(stderr, "    No commandline arguments means ");
+    fprintf(stderr, "authenticate to the local cell.\n");
+    fprintf(stderr, "\n");
+    exit(AKLOG_USAGE);
 }
 
 int main(int argc, char *argv[])
 {
-	int status = AKLOG_SUCCESS;
-	int i;
-	int somethingswrong = FALSE;
+    int status = AKLOG_SUCCESS;
+    int i;
+    int somethingswrong = FALSE;
 
-	cellinfo_t cellinfo;
+    cellinfo_t cellinfo;
 
-	extern char *progname;	/* Name of this program */
+    extern char *progname;	/* Name of this program */
 
-	extern int dflag;		/* Debug mode */
+    extern int dflag;		/* Debug mode */
 
-	int cmode = FALSE;		/* Cellname mode */
-	int pmode = FALSE;		/* Path name mode */
+    int cmode = FALSE;		/* Cellname mode */
+    int pmode = FALSE;		/* Path name mode */
 
-	char realm[REALM_SZ];		/* Kerberos realm of afs server */
-	char cell[BUFSIZ];		/* Cell to which we are authenticating */
-	char path[MAXPATHLEN + 1];	/* Path length for path mode */
+    char realm[REALM_SZ];		/* Kerberos realm of afs server */
+    char cell[BUFSIZ];		/* Cell to which we are authenticating */
+    char path[MAXPATHLEN + 1];	/* Path length for path mode */
 
-	linked_list cells;		/* List of cells to log to */
-	linked_list paths;		/* List of paths to log to */
-	ll_node *cur_node;
+    linked_list cells;		/* List of cells to log to */
+    linked_list paths;		/* List of paths to log to */
+    ll_node *cur_node;
 
-	krb5_context context = 0;
+    krb5_context context = 0;
 
-	memset(&cellinfo, 0, sizeof(cellinfo));
+    memset(&cellinfo, 0, sizeof(cellinfo));
 
-	memset(realm, 0, sizeof(realm));
-	memset(cell, 0, sizeof(cell));
-	memset(path, 0, sizeof(path));
+    memset(realm, 0, sizeof(realm));
+    memset(cell, 0, sizeof(cell));
+    memset(path, 0, sizeof(path));
 
-	ll_init(&cells);
-	ll_init(&paths);
+    ll_init(&cells);
+    ll_init(&paths);
 
-	/* Store the program name here for error messages */
-	if (progname = LastComponent(argv[0]))
-		progname++;
-	else
-		progname = argv[0];
+    /* Store the program name here for error messages */
+    if (progname = LastComponent(argv[0]))
+        progname++;
+    else
+        progname = argv[0];
 
-	/* Initialize list of cells to which we have authenticated */
-	(void)ll_init(&authedcells);
+    /* Initialize list of cells to which we have authenticated */
+    (void)ll_init(&authedcells);
 
-	/* Parse commandline arguments and make list of what to do. */
-	for (i = 1; i < argc; i++)
-	{
-		if (strcmp(argv[i], "-d") == 0)
-			dflag++;
-		else if (strcmp(argv[i], "-5") == 0)
-			usev5++;
-		else if (strcmp(argv[i], "-4") == 0)
-			usev5 = 0;
-		else if (strcmp(argv[i], "-noprdb") == 0)
-			noprdb++;
-		else if (strcmp(argv[i], "-force") == 0)
-			force++;
-		else if (((strcmp(argv[i], "-cell") == 0) ||
-			(strcmp(argv[i], "-c") == 0)) && !pmode)
-		{
-			if (++i < argc)
-			{
-				cmode++;
-				strcpy(cell, argv[i]);
-			}
-			else
-				usage();
-		}
-		else if (((strcmp(argv[i], "-path") == 0) ||
-			(strcmp(argv[i], "-p") == 0)) && !cmode)
-		{
-			if (++i < argc)
-			{
-				pmode++;
-				strcpy(path, argv[i]);
-			}
-			else
-				usage();
-		}
-		else if (argv[i][0] == '-')
-			usage();
-		else if (!pmode && !cmode)
-		{
-			if (FirstComponent(argv[i]) || (strcmp(argv[i], ".") == 0) ||
-				(strcmp(argv[i], "..") == 0))
-			{
-				pmode++;
-				strcpy(path, argv[i]);
-			}
-			else
-			{
-				cmode++;
-				strcpy(cell, argv[i]);
-			}
-		}
-		else
-			usage();
+    /* Parse commandline arguments and make list of what to do. */
+    for (i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "-d") == 0)
+            dflag++;
+        else if (strcmp(argv[i], "-5") == 0)
+            usev5++;
+        else if (strcmp(argv[i], "-m") == 0)
+            use524++;
+        else if (strcmp(argv[i], "-4") == 0)
+            usev5 = 0;
+        else if (strcmp(argv[i], "-noprdb") == 0)
+            noprdb++;
+        else if (strcmp(argv[i], "-force") == 0)
+            force++;
+        else if (((strcmp(argv[i], "-cell") == 0) ||
+                   (strcmp(argv[i], "-c") == 0)) && !pmode)
+        {       
+            if (++i < argc)
+            {
+                cmode++;
+                strcpy(cell, argv[i]);
+            }
+            else
+                usage();
+        }
+        else if (((strcmp(argv[i], "-path") == 0) ||
+                   (strcmp(argv[i], "-p") == 0)) && !cmode)
+        {       
+            if (++i < argc)
+            {
+                pmode++;
+                strcpy(path, argv[i]);
+            }
+            else
+                usage();
+        }
+        else if (argv[i][0] == '-')
+            usage();
+        else if (!pmode && !cmode)
+        {
+            if (FirstComponent(argv[i]) || (strcmp(argv[i], ".") == 0) ||
+                 (strcmp(argv[i], "..") == 0))
+            {
+                pmode++;
+                strcpy(path, argv[i]);
+            }
+            else
+            {
+                cmode++;
+                strcpy(cell, argv[i]);
+            }
+        }
+        else
+            usage();
 
-		if (cmode)
-		{
-			if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0))
-			{
-				i += 2;
-				if (i < argc)
-					strcpy(realm, argv[i]);
-				else
-					usage();
-			}
-			/* Add this cell to list of cells */
-			strcpy(cellinfo.cell, cell);
-			strcpy(cellinfo.realm, realm);
-			if (cur_node = ll_add_node(&cells, ll_tail))
-			{
-				char *new_cellinfo;
-				if (new_cellinfo = copy_cellinfo(&cellinfo))
-					ll_add_data(cur_node, new_cellinfo);
-				else
-				{
-					fprintf(stderr, "%s: failure copying cellinfo.\n", progname);
-					exit(AKLOG_MISC);
-				}
-			}
-			else
-			{
-				fprintf(stderr, "%s: failure adding cell to cells list.\n",
-					progname);
-				exit(AKLOG_MISC);
-			}
-			memset(&cellinfo, 0, sizeof(cellinfo));
-			cmode = FALSE;
-			memset(cell, 0, sizeof(cell));
-			memset(realm, 0, sizeof(realm));
-		}
-		else if (pmode)
-		{
-			/* Add this path to list of paths */
-			if (cur_node = ll_add_node(&paths, ll_tail))
-			{
-				char *new_path;
-				if (new_path = copy_string(path))
-					ll_add_data(cur_node, new_path);
-				else
-				{
-					fprintf(stderr, "%s: failure copying path name.\n",
-						progname);
-					exit(AKLOG_MISC);
-				}
-			}
-			else
-			{
-				fprintf(stderr, "%s: failure adding path to paths list.\n",
-					progname);
-				exit(AKLOG_MISC);
-			}
-			pmode = FALSE;
-			memset(path, 0, sizeof(path));
-		}
-	}
+        if (cmode)
+        {
+            if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0))
+            {
+                i += 2;
+                if (i < argc)
+                    strcpy(realm, argv[i]);
+                else
+                    usage();
+            }
+            /* Add this cell to list of cells */
+            strcpy(cellinfo.cell, cell);
+            strcpy(cellinfo.realm, realm);
+            if (cur_node = ll_add_node(&cells, ll_tail))
+            {
+                char *new_cellinfo;
+                if (new_cellinfo = copy_cellinfo(&cellinfo))
+                    ll_add_data(cur_node, new_cellinfo);
+                else
+                {
+                    fprintf(stderr, "%s: failure copying cellinfo.\n", progname);
+                    exit(AKLOG_MISC);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "%s: failure adding cell to cells list.\n",
+                         progname);
+                exit(AKLOG_MISC);
+            }
+            memset(&cellinfo, 0, sizeof(cellinfo));
+            cmode = FALSE;
+            memset(cell, 0, sizeof(cell));
+            memset(realm, 0, sizeof(realm));
+        }
+        else if (pmode)
+        {
+            /* Add this path to list of paths */
+            if (cur_node = ll_add_node(&paths, ll_tail))
+            {
+                char *new_path;
+                if (new_path = copy_string(path))
+                    ll_add_data(cur_node, new_path);
+                else
+                {
+                    fprintf(stderr, "%s: failure copying path name.\n",
+                             progname);
+                    exit(AKLOG_MISC);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "%s: failure adding path to paths list.\n",
+                         progname);
+                exit(AKLOG_MISC);
+            }
+            pmode = FALSE;
+            memset(path, 0, sizeof(path));
+        }
+    }
 
-	if(usev5)
-		krb5_init_context(&context);
+    if(usev5)
+        krb5_init_context(&context);
 
-	/* If nothing was given, log to the local cell. */
-	if ((cells.nelements + paths.nelements) == 0)
-		status = auth_to_cell(context, NULL, NULL);
-	else
-	{
-		/* Log to all cells in the cells list first */
-		for (cur_node = cells.first; cur_node; cur_node = cur_node->next)
-		{
-			memcpy(&cellinfo, cur_node->data, sizeof(cellinfo));
+    /* If nothing was given, log to the local cell. */
+    if ((cells.nelements + paths.nelements) == 0)
+        status = auth_to_cell(context, NULL, NULL);
+    else
+    {
+        /* Log to all cells in the cells list first */
+        for (cur_node = cells.first; cur_node; cur_node = cur_node->next)
+        {
+            memcpy(&cellinfo, cur_node->data, sizeof(cellinfo));
             if (status = auth_to_cell(context, 
-				cellinfo.cell, cellinfo.realm))
-				somethingswrong++;
-		}
+                                       cellinfo.cell, cellinfo.realm))
+                somethingswrong++;
+        }       
 
-		/* Then, log to all paths in the paths list */
-		for (cur_node = paths.first; cur_node; cur_node = cur_node->next)
-		{
+        /* Then, log to all paths in the paths list */
+        for (cur_node = paths.first; cur_node; cur_node = cur_node->next)
+        {
             if (status = auth_to_path(context, 
-				cur_node->data))
-				somethingswrong++;
-		}
+                                       cur_node->data))
+                somethingswrong++;
+        }
 
-		/*
-		* If only one thing was logged to, we'll return the status
-		* of the single call.  Otherwise, we'll return a generic
-		* something failed status.
-		*/
-		if (somethingswrong && ((cells.nelements + paths.nelements) > 1))
-			status = AKLOG_SOMETHINGSWRONG;
-	}
+        /*
+        * If only one thing was logged to, we'll return the status
+        * of the single call.  Otherwise, we'll return a generic
+        * something failed status.
+        */
+        if (somethingswrong && ((cells.nelements + paths.nelements) > 1))
+            status = AKLOG_SOMETHINGSWRONG;
+    }       
 
-	if(usev5)
-		krb5_free_context(context);
+    if(usev5)
+        krb5_free_context(context);
 
-	exit(status);
-}
+    exit(status);
+}       
