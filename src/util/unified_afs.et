@@ -56,7 +56,6 @@ error_table uae
  ec UAENOANO, "No anode"
  ec UAEBADRQC, "Invalid request code"
  ec UAEBADSLT, "Invalid slot"
- ec UAEDEADLK, "Deadlock avoided"
  ec UAEBFONT, "Bad font file format"
  ec UAENOSTR, "Device not a stream"
  ec UAENODATA, "No data available"
