@@ -49,8 +49,7 @@ ino_t VnodeToIno(vnode_t *avp)
    if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
       struct inode *ip = VTOI(avp);
       ret=ip->i_number;
-   }
-   if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
+   } else if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
 #ifndef VTOH
       struct vattr va;
       if (VOP_GETATTR(avp, &va, &afs_osi_cred, current_proc()))
@@ -60,7 +59,8 @@ ino_t VnodeToIno(vnode_t *avp)
       struct hfsnode *hp = VTOH(avp);
       ret=H_FILEID(hp);
 #endif
-   }
+   } else
+       osi_Panic("VnodeToIno called before cacheops initialized\n");
    return ret;
 }
 
@@ -72,7 +72,7 @@ dev_t VnodeToDev(vnode_t *avp)
    if (afs_CacheFSType == AFS_APPL_UFS_CACHE) {
       struct inode *ip = VTOI(avp);
       return ip->i_dev;
-   }
+   } else
    if (afs_CacheFSType == AFS_APPL_HFS_CACHE) {
 #ifndef VTOH /* slow, but works */
       struct vattr va;
@@ -83,7 +83,8 @@ dev_t VnodeToDev(vnode_t *avp)
       struct hfsnode *hp = VTOH(avp);
       return H_DEV(hp);
 #endif
-   }
+   } else
+       osi_Panic("VnodeToDev called before cacheops initialized\n");
 }
 
 void *osi_UFSOpen(ainode)
@@ -111,7 +112,10 @@ void *osi_UFSOpen(ainode)
     if (afs_CacheFSType == AFS_APPL_HFS_CACHE) 
        code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, &ainode, &vp, &va, &dummy); /* XXX hfs is broken */
     else
-       code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t)ainode, &vp, &va, &dummy);
+	if (afs_CacheFSType == AFS_APPL_UFS_CACHE)
+	    code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t)ainode, &vp, &va, &dummy);
+	else
+	    panic("osi_UFSOpen called before cacheops initialized\n");
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
