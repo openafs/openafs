@@ -138,10 +138,6 @@ static void GetHandler(fd_set *fdsetp, int *maxfdp);
  */
 struct Lock FSYNC_handler_lock;
 
-/* this lock prevents a volume utility or volserver from having multiple FSYNC
-   requests active simultaneously */
-struct Lock FSYNC_client_lock;
-
 int FSYNC_clientInit(void)
 {
     struct sockaddr_in addr;
@@ -149,7 +145,6 @@ int FSYNC_clientInit(void)
     static backoff[] = {3,3,3,5,5,5,7,15,16,24,32,40,48,0};
     int *timeout = &backoff[0];
 
-    Lock_Init(&FSYNC_client_lock);
     for (;;) {
         FS_sd = getport(&addr);
 	if (connect(FS_sd, (struct sockaddr *) &addr, sizeof(addr)) >= 0)
@@ -181,7 +176,6 @@ void FSYNC_clientFinis(void)
     close(FS_sd);
 #endif
     FS_sd = -1;
-    Lock_Destroy(&FSYNC_client_lock);
     Lock_Destroy(&FSYNC_handler_lock);
 }
 
@@ -190,12 +184,6 @@ int FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
     byte response;
     struct command command;
     int n;
-#ifndef AFS_NT40_ENV
-#ifndef AFS_PTHREAD_ENV
-    fd_set *fds;
-#endif
-    ObtainWriteLock(&FSYNC_client_lock);
-#endif
     command.volume = volume;
     command.command = com;
     command.reason = reason;
@@ -218,28 +206,14 @@ int FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
 #else
     if (write(FS_sd, &command, sizeof(command)) != sizeof(command)) {
 	printf("FSYNC_askfs: write to file server failed\n");
-	ReleaseWriteLock(&FSYNC_client_lock);
 	return FSYNC_DENIED;
     }
-#ifndef AFS_PTHREAD_ENV
-    fds=IOMGR_AllocFDSet();
-    if (fds) {
-       FD_SET(FS_sd, fds);
-       IOMGR_Select(FS_sd+1, fds, 0,0,0);
-       IOMGR_FreeFDSet(fds);
-       fds=0;
-    }
-#endif
     while ((n = read(FS_sd, &response, 1)) != 1) {
 	if (n == 0 || errno != EINTR) {
 	    printf("FSYNC_askfs: No response from file server\n");
-	    ReleaseWriteLock(&FSYNC_client_lock);
 	    return FSYNC_DENIED;
 	}
     }
-#endif
-#ifndef AFS_NT40_ENV
-    ReleaseWriteLock(&FSYNC_client_lock);
 #endif
     if (response == 0) {
 	printf("FSYNC_askfs: negative response from file server; volume %u, command %d\n", command.volume, command.command);
