@@ -1,3 +1,14 @@
+openafs (1.2.6-1) unstable; urgency=low
+
+
+  * New upstream version
+  * Update CellServDB, Closes: #154893
+  * Add debconf support for fakestat
+  * Patch from Sergio Gelato to avoid use of host, Closes: #144264
+  * Install sys because it was requested
+
+ -- Sam Hartman <hartmans@debian.org>  Fri,  2 Aug 2002 17:33:11 -0400
+
 openafs (1.2.5-1) unstable; urgency=low
 
   * New upstream version.
