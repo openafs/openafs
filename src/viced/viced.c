@@ -421,6 +421,8 @@ static FsyncCheckLWP()
 #endif
     ViceLog(1, ("Starting fsync check process\n"));
 
+    setThreadId("FsyncCheckLWP");
+
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_cond_init(&fsync_cond, NULL) == 0);
     assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
