@@ -21,7 +21,7 @@ Package: openafs-kpasswd
 Priority: extra
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
 Depends: ${shlibs:Depends}, openafs-client (= ${Source-Version})
-Conflicts: krb5-user, heimdal-clients
+Conflicts: krb5-user, heimdal-clients, kerberos4kth-clients
 Description: The AFS distributed filesystem- old password changing
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
@@ -63,6 +63,8 @@ Package: libopenafs-dev
 Section: libdevel
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
 Priority: extra
+Conflicts: arla-dev
+Depends: ${shlibs:Depends}
 Description: The AFS distributed filesystem- development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
