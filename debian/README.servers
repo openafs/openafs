@@ -19,7 +19,7 @@ sample transcript of configuring an AFS cell can be found in
 transcript assumes you are using MIT Kerberos and the openafs-krb5
 package.  Similar steps could be taken with Heimdal.
 
-Another issue is upgrades.  It is likely that futurue versions of this
+Another issue is upgrades.  It is likely that future versions of this
 package will install for example /usr/lib/openafs/fileserver.package
 instead of /usr/lib/openafs/fileserver.  The postinst script will
 create links the actual binaries.  Upgrades will not replace the old

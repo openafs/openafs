@@ -1,3 +1,12 @@
+openafs (1.0.snap20001106-9) unstable; urgency=medium
+
+  * Fix openafs-fileserver restart to do a bos restart
+  * Document that AFS key must be single-DES.
+  * afs-rootvol: use the -fast option so we do not hang forever on bad cells or firewalls.
+  * Fix priority on openafs-client rc script to run after server starts.
+
+ -- Sam Hartman <hartmans@mit.edu>  Wed, 29 Nov 2000 20:43:59 -0500
+
 openafs (1.0.snap20001106-8) unstable; urgency=low
 
   * Modules no longer depend on the tlient; client depends on modules.

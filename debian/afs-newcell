@@ -53,7 +53,7 @@ In order to set up a new AFS cell, you must meet the following:
    should install Heimdal with Kth-kerberos compatibility or MIT
    Kerberos5.
 
-2) You need to create the AFS key and load it into
+2) You need to create the single-DES AFS key and load it into
    /etc/openafs/server/KeyFile.  If your cell's name is the same as
    your Kerberos realm then create a principal called afs.  Otherwise,
    create a principal called afs/cellname in your realm.  The cell

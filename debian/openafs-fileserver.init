@@ -56,10 +56,8 @@ case "$1" in
 	#	just the same as "restart".
 	#
 	echo -n "Restarting $DESC: "
-	start-stop-daemon --stop --quiet--signal 1 --exec $DAEMON
+    bos restart localhost -localauth -bos
 	sleep 1
-	start-stop-daemon --start --quiet --pidfile \
-		/var/run/$NAME.pid --exec $DAEMON
 	echo "$NAME."
 	;;
   *)

@@ -142,7 +142,8 @@ binary-arch: build install
 	dh_installmenu
 #	dh_installemacsen
 #	dh_installpam
-	dh_installinit -r
+	dh_installinit -popenafs-client -r -- defaults 25 18
+	dh_installinit -popenafs-fileserver -r
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo

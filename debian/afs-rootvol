@@ -112,7 +112,7 @@ open(CELLSERVDB, "/etc/openafs/CellServDB")
 while(<CELLSERVDB>) {
     chomp;
     if (/^>\s*([a-z0-9_\-.]+)/ ) {
-	run("fs mkm /afs/$1 root.cell -cell $1 ");
+	run("fs mkm /afs/$1 root.cell -cell $1  -fastch");
     }
 }
 
