@@ -62,8 +62,10 @@ struct ViceIoctl {
  */
 #if defined(KERNEL) && !defined(AFS_OSF_ENV) && !defined(AFS_ALPHA_LINUX20_ENV)
 #define _VICEIOCTL(id)  ((unsigned int ) _IOW('V', id, struct ViceIoctl32))
+#define _VICEIOCTL2(dev, id) ((unsigned int ) _IOW(dev, id, struct ViceIoctl32))
 #else
 #define _VICEIOCTL(id)  ((unsigned int ) _IOW('V', id, struct ViceIoctl))
+#define _VICEIOCTL2(dev, id) ((unsigned int ) _IOW(dev, id, struct ViceIoctl))
 #endif
 
 /* Use this macro to define up to 256 vice ioctl's.  These ioctl's
@@ -72,4 +74,3 @@ struct ViceIoctl {
    into the kernel by the normal ioctl parameter passing mechanism.
  */
 
-#define _VALIDVICEIOCTL(com) (com >= _VICEIOCTL(0) && com <= _VICEIOCTL(255))

@@ -177,4 +177,9 @@ struct cm_initparams {
 #define VIOC_PREFETCHTAPE       _VICEIOCTL(66)  /* MR-AFS prefetch from tape */
 #define VIOC_RESIDENCY_CMD      _VICEIOCTL(67)  /* generic MR-AFS cmds */
 #define VIOC_STATISTICS         _VICEIOCTL(68)  /* arla: fetch statistics */
+
+/* Coordinated 'C' pioctl's */
+#define VIOC_NEWALIAS		_VICEIOCTL2('C', 1) /* create new cell alias */
+#define VIOC_GETALIAS		_VICEIOCTL2('C', 2) /* get alias info */
+
 #endif /* AFS_VENUS_H */

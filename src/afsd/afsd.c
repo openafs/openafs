@@ -1062,6 +1062,16 @@ struct afsconf_dir *adir; {
     return 0;
 }
 
+static ConfigCellAlias(aca, arock, adir)
+    register struct afsconf_cellalias *aca;
+    char *arock;
+    struct afsconf_dir *adir;
+{
+    /* push the alias into the kernel */
+    call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
+    return 0;
+}
+
 #ifdef AFS_AFSDB_ENV
 static AfsdbLookupHandler()
 {
@@ -1616,6 +1626,7 @@ mainproc(as, arock)
     lookingForHomeCell = 1;
 
     afsconf_CellApply(cdir, ConfigCell, (char *) 0);
+    afsconf_CellAliasApply(cdir, ConfigCellAlias, (char *) 0);
 
     /*
      * If we're still looking for the home cell after the whole cell configuration database

@@ -77,6 +77,10 @@ afs_symlink
     AFS_STATCNT(afs_symlink);
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
+
+    if (afs_IsDynroot(adp))
+	return afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+
     if (code = afs_InitReq(&treq, acred))
        return code;
 

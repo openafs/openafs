@@ -233,6 +233,10 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_REMOVE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
+    /* Check if this is dynroot */
+    if (afs_IsDynroot(adp))
+	return afs_DynrootVOPRemove(adp, acred, aname);
+
     if (code = afs_InitReq(&treq, acred))
       return code;
 tagain:

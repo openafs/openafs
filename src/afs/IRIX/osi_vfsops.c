@@ -537,7 +537,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
     afid2 = (afs_fid2_t*)fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
-	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK);
+	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK, 0 /* !refresh */);
 	if (!tcell) {
 	    code = ENOENT;
 	    goto out;

@@ -55,7 +55,7 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
 	 */
 	struct cell *tcell;
 	cellindex = (Sfid.CellAndUnique >> 24) & 0xff;
-	tcell = afs_GetCellByIndex(cellindex, READ_LOCK);
+	tcell = afs_GetCellByIndex(cellindex, READ_LOCK, 0 /* don't refresh */);
 	if (!tcell) {
 	    return ENOENT;
         }

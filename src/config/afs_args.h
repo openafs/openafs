@@ -40,6 +40,7 @@
 #define	AFSOP_ADDCELL2		 29	/* 2nd add cell protocol interface */
 #define	AFSOP_AFSDB_HANDLER	 30	/* userspace AFSDB lookup handler */
 #define	AFSOP_SET_DYNROOT	 31	/* enable/disable dynroot support */
+#define	AFSOP_ADDCELLALIAS	 32	/* create alias for existing cell */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

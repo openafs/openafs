@@ -1,4 +1,11 @@
-OpenAFS News -- history of user-visible changes. October 13, 2001
+OpenAFS News -- history of user-visible changes. October 19, 2001
+
+* Changes incorporated in OpenAFS 1.2.3
+
+** Cell aliases for dynroot can be specified in the CellAlias file in
+   /usr/vice/etc or /usr/local/etc/openafs, in format "realname alias",
+   one per line.  They can also be managed at runtime with "fs newalias"
+   and "fs listaliases".
 
 * Changes incorporated in OpenAFS 1.2.2
 
