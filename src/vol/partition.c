@@ -506,6 +506,7 @@ int VAttachPartitions(void)
 	    continue; /* Ignore any "special" partitions */
 
 #ifdef AFS_AIX42_ENV
+#ifndef AFS_NAMEI_ENV
 	{
 	    struct superblock fs;
 	    /* The Log statements are non-sequiters in the SalvageLog and don't
@@ -522,6 +523,7 @@ int VAttachPartitions(void)
 		continue;
 	    }
 	}
+#endif
 #endif
 
 	/* If we're going to always attach this partition, do it later. */
