@@ -80,7 +80,7 @@ install: build
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
 	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin
-	install -g root -o root -m 755 debian/afs-newcall \
+	install -g root -o root -m 755 debian/afs-newcell \
 		debian/openafs-dbserver/usr/sbin
 	install -D debian/ConfigUtils.pm \
 		debian/openafs-dbserver/usr/lib/perl5/Debian/OpenAFS/ConfigUtils.pm
