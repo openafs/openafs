@@ -1091,8 +1091,8 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
       if (outSize > ablob->out_size) outSize = ablob->out_size;
       if (outSize >= PIGGYSIZE) code = E2BIG;
       else if	(outSize) {
-	AFS_COPYOUT(outData, ablob->out, outSize, code);
 	outData[outSize]='\0';
+	AFS_COPYOUT(outData, ablob->out, outSize, code);
       }
     }
     osi_FreeLargeSpace(outData);
