@@ -89,25 +89,16 @@ die "The administrative user must be in the same realm as the cell and no realm 
 $cellname = $rl->readline("What cellname should be used? ") unless $cellname;
 die "Please specify a cellname\n" unless $cellname;
 
-if (! -f "$openafsdirpath->{'afsconfdir'}/ThisCell") {
-    open(CELL, "> $openafsdirpath->{'afsconfdir'}/ThisCell");
-    print CELL "${cellname}";
-    close CELL;
-}
+unlink "$openafsdirpath->{'viceetcdir'}/CellServDB";
+unlink "$openafsdirpath->{'viceetcdir'}/ThisCell";
 
-open(CELL, "$openafsdirpath->{'afsconfdir'}/ThisCell") or
-    die "Cannot open $openafsdirpath->{'afsconfdir'}/ThisCell: $!\n";
+my $lcell = "${cellname}";
 
-my $lcell = <CELL>;
-chomp $lcell;
-close CELL;
-
-run( "echo \\>$lcell >$openafsdirpath->{'afsconfdir'}/CellServDB");
-$csdb = `host $server|awk '{print $4 " #" $1}'`;
-run( "echo $csdb >>$openafsdirpath->{'afsconfdir'}/CellServDB");
+#let bosserver create symlinks
 run("$openafsinitcmd->{'filesrv-start'}");
 unwind("$openafsinitcmd->{'filesrv-stop'}");
 $shutdown_needed = 1;
+run ("$openafsdirpath->{'afssrvbindir'}/bos setcellname $server $lcell -localauth ||true");
 run ("$openafsdirpath->{'afssrvbindir'}/bos addhost $server $server -localauth ||true");
 run("$openafsdirpath->{'afssrvbindir'}/bos adduser $server $admin -localauth");
 unwind("$openafsdirpath->{'afssrvbindir'}/bos removeuser $server $admin -localauth");
@@ -138,7 +129,7 @@ unwind( "$openafsdirpath->{'afssrvbindir'}/bos delete $server fs -localauth ");
 unwind( "$openafsdirpath->{'afssrvbindir'}/bos stop $server fs -localauth -wait");
 
 print "Waiting for database elections: ";
-sleep(30);
+sleep(60);
 print "done.\n";
 # Past this point we want to control when bos shutdown happens
 $shutdown_needed = 0;
@@ -149,8 +140,6 @@ run("$openafsdirpath->{'afssrvsbindir'}/vos create $server a root.afs -localauth
 $cachesize = $rl->readline("What size cache (in 1k blocks)? ") unless $cachesize;
 die "Please specify a cache size\n" unless $cachesize;
 
-run("echo $lcell >$openafsdirpath->{'viceetcdir'}/ThisCell");
-run("cp $openafsdirpath->{'afsconfdir'}/CellServDB $openafsdirpath->{'viceetcdir'}/CellServDB");
 run("echo /afs:/usr/vice/cache:${cachesize} >$openafsdirpath->{'viceetcdir'}/cacheinfo");
 run("$openafsinitcmd->{'client-forcestart'}");
 my $afs_running = 0;
