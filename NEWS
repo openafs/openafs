@@ -1,4 +1,30 @@
-OpenAFS News -- history of user-visible changes.  April 10, 2003.
+OpenAFS News -- history of user-visible changes.  June 5, 2003.
+
+* Changes incorporated in OpenAFS 1.2.10
+
+** Linux on AMD Opteron (sysname amd64_linux24), HP-UX 11i on PA-RISC 
+   (sysname hp_ux11i), HP-UX 11.22 on Intel Itanium (sysname ia64_hpux1122),
+   and User Mode Linux i386 (sysnames i386_umlinux22, i386_umlinux24) now
+   supported.
+
+** Windows Largeint support (for VC7)
+
+** afsd will not shut itself down while /afs is mounted, to preclude panics.
+
+** On Linux 2.4, the AFS cache cannot be unmounted if afsd is not shut down.
+   This is consistent with the behavior of other platforms and of Linux 2.2, 
+   but until now Linux 2.4 had not behaved this way. 
+
+** Restore behavior pre-1.2.9 of adding cell aliases we find using AFSDB 
+   for cells that have been statically configured via CellServDB.
+
+** MacOS X client fakes mode bits so host does not preclude user access to
+   data incorrectly.
+
+** MacOS X client enables disk arbitration such that AFS shows up immediately
+   in Finder, and precludes afs unmount unless force is used, to prevent
+   Finder from "ejecting" it. AFS can also be mounted multiple times
+   on the MacOS X client.
 
 * Changes incorporated in OpenAFS 1.2.9
 
