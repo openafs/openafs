@@ -787,7 +787,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	/* none free, making one is better than a panic */
 	afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
 	tvc = (struct vcache *) afs_osi_Alloc(sizeof (struct vcache));
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	pin((char *)tvc, sizeof(struct vcache));	/* XXX */
 #endif
 #ifdef	AFS_MACH_ENV
@@ -2652,7 +2652,7 @@ void afs_vcacheInit(int astatSize)
        tvp[i].nextfree = &(tvp[i+1]);
     }	
     tvp[astatSize-1].nextfree = NULL;
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
     pin((char *)tvp, astatSize * sizeof(struct vcache));	/* XXX */    
 #endif
 #endif
@@ -2696,7 +2696,7 @@ void shutdown_vcache(void)
 #if	!defined(AFS_OSF_ENV)
     afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
     unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
 

@@ -43,7 +43,7 @@ void osi_AllocMoreSSpace(register afs_int32 preallocs)
     char *p;
 
     p = (char *) afs_osi_Alloc(AFS_SMALLOCSIZ * preallocs);
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
     pin(p, AFS_SMALLOCSIZ * preallocs);	/* XXXX */
 #endif
     for (i=0; i < preallocs; i++, p += AFS_SMALLOCSIZ) {
@@ -109,7 +109,7 @@ osi_AllocMoreMSpace(register afs_int32 preallocs)
     char *p;
 
     p = (char *) afs_osi_Alloc(AFS_MDALLOCSIZ * preallocs);
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
     pin(p, AFS_MDALLOCSIZ * preallocs);	/* XXXX */
 #endif
     for (i=0; i < preallocs; i++, p += AFS_MDALLOCSIZ) {
@@ -181,7 +181,7 @@ void *osi_AllocLargeSpace(size_t size)
 
 	afs_stats_cmperf.LargeBlocksAlloced++;
 	p = (char *) afs_osi_Alloc(AFS_LRALLOCSIZ);
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
 	/*
 	 * Need to pin this memory since under heavy conditions this memory
          * could be swapped out; the problem is that we could inside rx where
@@ -327,7 +327,7 @@ void shutdown_osinet(void)
     while ((tp = freePacketList)) {
       freePacketList = tp->next;
       afs_osi_Free(tp, AFS_LRALLOCSIZ);
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
       unpin(tp, AFS_LRALLOCSIZ);	
 #endif
     }
@@ -335,7 +335,7 @@ void shutdown_osinet(void)
     while ((tp = freeSmallList)) {
       freeSmallList = tp->next;
       afs_osi_Free(tp, AFS_SMALLOCSIZ);
-#ifdef	AFS_AIX32_ENV
+#ifdef  KERNEL_HAVE_PIN
       unpin(tp, AFS_SMALLOCSIZ);	
 #endif
     }

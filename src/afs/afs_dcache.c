@@ -2613,7 +2613,7 @@ struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache 
 	    /* none free, making one is better than a panic */
 	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
 	    tdc = (struct dcache *) afs_osi_Alloc(sizeof (struct dcache));
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
 	} else {
@@ -2706,7 +2706,7 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
 	    /* none free, making one is better than a panic */
 	    afs_stats_cmperf.dcacheXAllocs++;	/* count in case we have a leak */
 	    tdc = (struct dcache *) afs_osi_Alloc(sizeof (struct dcache));
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	    pin((char *)tdc, sizeof(struct dcache));	/* XXX */
 #endif
 	} else {
@@ -3105,7 +3105,7 @@ void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
     tdp = afs_Initial_freeDSList =
 	(struct dcache *) afs_osi_Alloc(aDentries * sizeof(struct dcache));
     memset((char *)tdp, 0, aDentries * sizeof(struct dcache));
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);/* XXX */    
     pin((char *)afs_indexTimes, sizeof(afs_hyper_t) * afiles);	/* XXX */    
     pin((char *)afs_indexFlags, sizeof(char) * afiles);		/* XXX */    
@@ -3146,7 +3146,7 @@ void shutdown_dcache(void)
     afs_osi_Free(afs_indexUnique, afs_cacheFiles * sizeof(afs_uint32));
     afs_osi_Free(afs_indexFlags, afs_cacheFiles * sizeof(u_char));
     afs_osi_Free(afs_Initial_freeDSList, afs_dcentries * sizeof(struct dcache));
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
     unpin((char *)afs_dcnextTbl, afs_cacheFiles * sizeof(afs_int32));
     unpin((char *)afs_dvnextTbl, afs_cacheFiles * sizeof(afs_int32));
     unpin((char *)afs_indexTable, afs_cacheFiles * sizeof(struct dcache *));

@@ -46,24 +46,28 @@ char afs_rootVolumeName[64]="";
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set*)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set*)0;
 
-#if	defined(AFS_GLOBAL_SUNLOCK) && !defined(AFS_HPUX_ENV) && !defined(AFS_AIX41_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
-
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) 
 kmutex_t afs_global_lock;
 kmutex_t afs_rxglobal_lock;
+#endif
 
 #if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
 long afs_global_owner;
 #endif
-#endif
 
 #if defined(AFS_OSF_ENV)
 simple_lock_data_t afs_global_lock;
-#elif defined(AFS_DARWIN_ENV)
+#endif
+
+#if defined(AFS_DARWIN_ENV)
 struct lock__bsd__ afs_global_lock;
-#elif defined(AFS_FBSD_ENV)
+#endif
+
+#if defined(AFS_FBSD_ENV)
 struct lock afs_global_lock;
 struct proc *afs_global_owner;
 #endif
+
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 thread_t afs_global_owner;
 #endif /* AFS_OSF_ENV */
@@ -560,15 +564,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	} else
 	    afs_shutdown();
     }
-
-#if	! defined(AFS_HPUX90_ENV) || defined(AFS_HPUX100_ENV)
     else if (parm == AFSOP_AFS_VFSMOUNT) {
 #ifdef	AFS_HPUX_ENV
-#if defined(AFS_HPUX100_ENV)
 	vfsmount(parm2, parm3, parm4, parm5);
-#else
-      afs_vfs_mount(parm2, parm3, parm4, parm5);
-#endif /* AFS_HPUX100_ENV */
 #else /* defined(AFS_HPUX_ENV) */
 #if defined(KERNEL_HAVE_SETUERROR)
       setuerror(EINVAL);
@@ -577,7 +575,6 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif
 #endif /* defined(AFS_HPUX_ENV) */
     }
-#endif
     else if (parm == AFSOP_CLOSEWAIT) {
 	afs_SynchronousCloses = 'S';
     }
@@ -962,9 +959,7 @@ struct afssysa {
 };
 #endif
 
-Afs_syscall (uap, rvp)
-    register struct afssysa *uap;
-    rval_t *rvp;
+Afs_syscall(register struct afssysa *uap, rval_t *rvp)
 {
     int *retval = &rvp->r_val1;
 #else /* AFS_SUN5_ENV */
@@ -2246,7 +2241,7 @@ int afs_icl_LogUse(register struct afs_icl_log *logp)
 	    logp->logSize = ICL_DEFAULT_LOGSIZE;
 	}
 	logp->datap = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logp->logSize);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	pin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
     }
@@ -2262,7 +2257,7 @@ int afs_icl_LogFreeUse(register struct afs_icl_log *logp)
     if (--logp->setCount == 0) {
 	/* no more users -- free it (but keep log structure around)*/
 	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
 	logp->firstUsed = logp->firstFree = 0;
@@ -2288,11 +2283,11 @@ int afs_icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
 
 	/* free and allocate a new one */
 	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
 	logp->datap = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logSize);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	pin((char *)logp->datap, sizeof(afs_int32) * logSize);
 #endif
 	logp->logSize = logSize;
@@ -2464,7 +2459,7 @@ int afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     strcpy(setp->name, name);
     setp->nevents = ICL_DEFAULTEVENTS;
     setp->eventFlags = afs_osi_Alloc(ICL_DEFAULTEVENTS);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
     pin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif
     for(i=0; i<ICL_DEFAULTEVENTS; i++)
@@ -2555,7 +2550,7 @@ int afs_icl_ZapSet(register struct afs_icl_set *setp)
 	    *lpp = setp->nextp;
 	    osi_FreeSmallSpace(setp->name);
 	    afs_osi_Free(setp->eventFlags, ICL_DEFAULTEVENTS);
-#ifdef	AFS_AIX32_ENV
+#ifdef	KERNEL_HAVE_PIN
 	    unpin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif
 	    for(i=0; i < ICL_LOGSPERSET; i++) {
