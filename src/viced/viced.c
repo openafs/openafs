@@ -177,6 +177,7 @@ int     lwps = 9;		/* 6 */
 int     buffs = 90;		/* 70 */
 int	novbc = 0;		/* Enable Volume Break calls */
 int     busy_threshold = 600;
+int	abort_threshold = 10;
 int	udpBufSize = 0;		/* UDP buffer size for receive*/
 int	sendBufSize = 16384;	/* send buffer size */
 
@@ -821,6 +822,10 @@ static int ParseArgs(int argc, char *argv[])
 	    if (!strcmp(argv[i], "-s")) {
 		Sawsmall = 1;
 		nSmallVns = atoi(argv[++i]);
+	    }
+	else	
+	    if (!strcmp(argv[i], "-abortthreshold")) {
+		abort_threshold = atoi(argv[++i]);
 	    }
 	else	
 	    if (!strcmp(argv[i], "-k"))
@@ -1508,8 +1513,8 @@ main(int argc, char * argv[])
     rx_extraPackets = rxpackets;
     rx_extraQuota = 4;	/* for outgoing prserver calls from R threads */
     rx_SetBusyThreshold(busy_threshold, VBUSY);
-    rx_SetCallAbortThreshold(10);
-    rx_SetConnAbortThreshold(10);
+    rx_SetCallAbortThreshold(abort_threshold);
+    rx_SetConnAbortThreshold(abort_threshold);
     stackSize = lwps * 4000;
     if (stackSize < 32000)
 	stackSize = 32000;
