@@ -844,12 +844,21 @@ static void MultiBreakCallBack_r(cba, ncbas, afidp, xhost)
     struct host *hp;
     hp = cba[i].hp;
     if (hp && xhost != hp) {
-      rx_PutConnection(hp->callback_rxcon);
       h_Release_r(hp);
     }
   }
 
-return ;
+  /* H_UNLOCK around this so h_FreeConnection does not deadlock.
+     h_FreeConnection should *never* be called on a callback connection,
+     but on 10/27/04 a deadlock occurred where it was, when we know why,
+     this should be reverted. -- shadow */
+  H_UNLOCK;
+  for (i = 0; i < j; i++) {
+      rx_PutConnection(conns[i]);
+  }
+  H_LOCK;
+
+  return ;
 }
 
 /*
