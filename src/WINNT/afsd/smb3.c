@@ -3016,6 +3016,13 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
 			    /* copy to Change Time */
 			    *((FILETIME *)dptr) = ft;
+                dptr += 24;
+
+                /* merge in hidden attribute */
+                if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
+			        *((u_long *)dptr) = SMB_ATTR_HIDDEN;
+                }
+			    dptr += 4;
 
             } else {
                 /* 1969-12-31 23:59:58 +00*/
@@ -3049,7 +3056,15 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 			    /* copy out mod time */
 			    shortTemp = dosTime & 0xffff;
 			    *((u_short *)dptr) = shortTemp;
-			    dptr += 2;
+			    dptr += 10;
+
+                /* merge in hidden (dot file) attribute */
+                if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
+                    attr == SMB_ATTR_HIDDEN;
+			        *dptr++ = attr & 0xff;
+			        *dptr++ = (attr >> 8) & 0xff;
+                }
+
             }
 			continue;
         }

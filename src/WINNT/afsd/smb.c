@@ -3185,17 +3185,25 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
 
 	for(patchp = *dirPatchespp; patchp; patchp =
 		 (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
-		code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
-		if (code) continue;
+
+        dptr = patchp->dptr;
+
+        code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
+        if (code) {
+            if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
+                *dptr++ = SMB_ATTR_HIDDEN;
+            continue;
+        }
 		lock_ObtainMutex(&scp->mx);
 		code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 						  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 		if (code) {	
 			lock_ReleaseMutex(&scp->mx);
 			cm_ReleaseSCache(scp);
+            if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
+                *dptr++ = SMB_ATTR_HIDDEN;
 			continue;
 		}
-		dptr = patchp->dptr;
 
 		attr = smb_Attributes(scp);
         /* check hidden attribute (the flag is only ON when dot file hiding is on ) */
@@ -3203,7 +3211,7 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
             attr |= SMB_ATTR_HIDDEN;
         *dptr++ = attr;
 
-		/* get dos time */
+        /* get dos time */
 		smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
                 
 		/* copy out time */
