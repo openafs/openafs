@@ -259,6 +259,10 @@ configureBackConnectionHostNames(void)
      *             check for the UnsetDisableLoopbackCheck value.  
      *             If set, set the DisableLoopbackCheck flag to 0x0 
      *             and delete the UnsetDisableLoopbackCheck value
+     *
+     * Starting in Longhorn Beta 1, an entry in the BackConnectionHostNames value will
+     * force Windows to use the loopback authentication mechanism for the specified 
+     * services.
      */
     HKEY hkLsa;
     HKEY hkMSV10;

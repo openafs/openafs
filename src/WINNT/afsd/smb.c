@@ -1,4 +1,3 @@
-#define LARRY_HACK 1
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -8036,8 +8035,14 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
             packageName.MaximumLength = packageName.Length + 1;
             nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
             if (nts == STATUS_SUCCESS) {
-#ifdef LARRY_HACK
-                /* BEGIN - This code is from Larry */
+                /* BEGIN 
+                 * This code forces Windows to authenticate against the Logon Cache 
+                 * first instead of attempting to authenticate against the Domain 
+                 * Controller.  When the Windows logon cache is enabled this improves
+                 * performance by removing the network access and works around a bug
+                 * seen at sites which are using a MIT Kerberos principal to login
+                 * to machines joined to a non-root domain in a multi-domain forest.
+                 */
                 PVOID pResponse = NULL;
                 ULONG cbResponse = 0;
                 MSV1_0_SETPROCESSOPTION_REQUEST OptionsRequest;
@@ -8066,7 +8071,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                     OutputDebugString("MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */
-#endif /* LARRY_HACK */
 
                 smb_lsaLogonOrigin.Buffer = "OpenAFS";
                 smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
