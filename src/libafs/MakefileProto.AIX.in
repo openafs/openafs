@@ -68,6 +68,12 @@ COMPDIRS = aix_compdirs
 INSTDIRS = aix_instdirs
 DESTDIRS = aix_destdirs
 
+<rs_aix42>
+KMODS=32 
+<rs_aix50 rs_aix51 rs_aix52>
+KMODS=32 64
+<all>
+
 include Makefile.common
 
 setup:
@@ -79,7 +85,7 @@ setup:
 	ln -fs /usr/include/sys sys
 	ln -fs /usr/include/nfs nfs
 	ln -fs /usr/include/jfs ufs
-	for m in 32 64 ; do \
+	for m in $${KMODS} ; do \
 		KDIR=MODLOAD-$$m ; \
 		mkdir -p $${KDIR} ; \
 		ln -fs ../Makefile $${KDIR}/Makefile ; \
@@ -88,7 +94,7 @@ setup:
 	done
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
-	for m in 32 64 ; do \
+	for m in $${KMODS} ; do \
 		KDIR=MODLOAD-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "32" ] ; then \
