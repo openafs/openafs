@@ -222,6 +222,8 @@
 #define SYS_NAME_ID_ppc64_linux24	2902
 #define SYS_NAME_ID_ppc64_linux26	2903
 
+#define SYS_NAME_ID_amd64_fbsd_53        3008
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)
