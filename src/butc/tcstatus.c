@@ -47,7 +47,7 @@ struct Lock cmdLineLock;
  *	statusPtr - filled in with task status
  */
 
-STC_GetStatus(call, taskId, statusPtr)
+afs_int32 STC_GetStatus(call, taskId, statusPtr)
      struct rx_call *call;
      afs_uint32 taskId;
      struct tciStatusS *statusPtr;
@@ -81,7 +81,7 @@ STC_GetStatus(call, taskId, statusPtr)
     return(retval);
 }
 
-STC_EndStatus(call, taskId )
+afs_int32 STC_EndStatus(call, taskId )
      struct rx_call *call;
      afs_uint32 taskId;
 {
@@ -101,7 +101,7 @@ STC_EndStatus(call, taskId )
     return(retval);
 }
 
-STC_RequestAbort(call,  taskId )
+afs_int32 STC_RequestAbort(call,  taskId )
      struct rx_call *call;
      afs_uint32 taskId;
 {
@@ -137,7 +137,7 @@ STC_RequestAbort(call,  taskId )
  *	TC_NOTASKS - no tasks active
  */
 
-STC_ScanStatus(call, taskId, statusPtr, flags)
+afs_int32 STC_ScanStatus(call, taskId, statusPtr, flags)
      struct rx_call *call;
      afs_uint32 *taskId;
      struct tciStatusS *statusPtr;

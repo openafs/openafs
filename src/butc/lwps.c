@@ -2029,7 +2029,6 @@ updateTapeLabel(labelIfPtr, tapeInfoPtr, newLabelPtr)
     afs_uint32 taskId;
     int tapeIsLabeled = 0;
     int interactiveFlag;
-    extern afs_int32 BUDB_DeleteDump();
     int tapecount = 1;
 
     interactiveFlag = autoQuery;

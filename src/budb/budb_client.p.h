@@ -53,48 +53,4 @@ struct udbClientTextS
 typedef struct udbClientTextS	udbClientTextT;
 typedef udbClientTextT		*udbClientTextP;
 
-extern afs_int32 BUDB_AddVolume();
-extern afs_int32 BUDB_AddVolumes();
-extern afs_int32 BUDB_CreateDump ();
-extern afs_int32 BUDB_DeleteDump ();
-extern afs_int32 BUDB_ListDumps ();
-extern afs_int32 BUDB_DeleteTape ();
-extern afs_int32 BUDB_DeleteVDP();
-extern afs_int32 BUDB_FindClone();
-extern afs_int32 BUDB_FindDump();
-extern afs_int32 BUDB_FindLatestDump();
-extern afs_int32 BUDB_FindLastTape();
-extern afs_int32 BUDB_MakeDumpAppended();
-extern afs_int32 BUDB_FinishDump ();
-extern afs_int32 BUDB_FinishTape ();
-extern afs_int32 BUDB_GetDumps ();
-extern afs_int32 BUDB_GetTapes ();
-extern afs_int32 BUDB_GetVolumes ();
-extern afs_int32 BUDB_UseTape ();
-
-/* text mgmt interface */
-extern afs_int32 BUDB_GetText();
-extern afs_int32 BUDB_GetTextVersion();
-extern afs_int32 BUDB_SaveText();
-extern afs_int32 BUDB_SaveTextVersion();
-
-/* text lock mgmt interface */
-
-extern afs_int32 BUDB_FreeAllLocks();
-extern afs_int32 BUDB_FreeLock();
-extern afs_int32 BUDB_GetInstanceId();
-extern afs_int32 BUDB_GetLock();
-
-/* Database verification and dump */
-
-extern afs_int32 BUDB_DbVerify();
-extern afs_int32 BUDB_DumpDB();
-extern afs_int32 BUDB_RestoreDbHeader();
-
-/* testing interface */
-
-extern afs_int32 BUDB_T_GetVersion();
-extern afs_int32 BUDB_T_DumpHashTable ();
-extern afs_int32 BUDB_T_DumpDatabase();
-
 #endif

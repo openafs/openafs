@@ -59,7 +59,7 @@ register struct rx_call *acall; {
  * transactions: this is the code executed on the other servers when a
  * sync site is executing a write transaction.
  */
-SDISK_Begin(rxcall, atid)
+afs_int32 SDISK_Begin(rxcall, atid)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
 {
@@ -87,7 +87,7 @@ SDISK_Begin(rxcall, atid)
     return code;}
 
 
-SDISK_Commit(rxcall, atid)
+afs_int32 SDISK_Commit(rxcall, atid)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
 {
@@ -125,7 +125,7 @@ SDISK_Commit(rxcall, atid)
     return code;
 }
 
-SDISK_ReleaseLocks(rxcall, atid)
+afs_int32 SDISK_ReleaseLocks(rxcall, atid)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
 {
@@ -161,7 +161,7 @@ SDISK_ReleaseLocks(rxcall, atid)
     return 0;
 }
 
-SDISK_Abort(rxcall, atid)
+afs_int32 SDISK_Abort(rxcall, atid)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
 {
@@ -198,7 +198,7 @@ SDISK_Abort(rxcall, atid)
     return code;
 }
 
-SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
+afs_int32 SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
     afs_int32 afile, apos, alen, atype;   /* apos and alen are not used */
@@ -245,7 +245,7 @@ SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
 }
 
 /* Write a vector of data */
-SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
+afs_int32 SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
     iovec_wrt *io_vector;
@@ -294,7 +294,7 @@ SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
     return code;
 }
 
-SDISK_Write(rxcall, atid, afile, apos, adata)
+afs_int32 SDISK_Write(rxcall, atid, afile, apos, adata)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
     afs_int32 afile, apos;
@@ -326,7 +326,7 @@ SDISK_Write(rxcall, atid, afile, apos, adata)
     return code;
 }
 
-SDISK_Truncate(rxcall, atid, afile, alen)
+afs_int32 SDISK_Truncate(rxcall, atid, afile, alen)
     register struct rx_call *rxcall;
     struct ubik_tid *atid;
     afs_int32 afile;
@@ -358,7 +358,7 @@ SDISK_Truncate(rxcall, atid, afile, alen)
     return code;
 }
 
-SDISK_GetVersion(rxcall, aversion)
+afs_int32 SDISK_GetVersion(rxcall, aversion)
     register struct rx_call *rxcall;
     register struct ubik_version *aversion; 
 {
@@ -395,7 +395,7 @@ SDISK_GetVersion(rxcall, aversion)
     return 0;
 }
 
-SDISK_GetFile(rxcall, file, version)
+afs_int32 SDISK_GetFile(rxcall, file, version)
     register struct rx_call *rxcall;
     register afs_int32 file;
     struct ubik_version *version;
@@ -452,7 +452,7 @@ SDISK_GetFile(rxcall, file, version)
     return code;
 }
 
-SDISK_SendFile(rxcall, file, length, avers)
+afs_int32 SDISK_SendFile(rxcall, file, length, avers)
     register struct rx_call *rxcall;
     afs_int32 file;
     afs_int32 length;
@@ -545,7 +545,7 @@ failed:
 }
 
 
-SDISK_Probe(rxcall)
+afs_int32 SDISK_Probe(rxcall)
     register struct rx_call *rxcall;
 {
     return 0;
@@ -556,7 +556,7 @@ SDISK_Probe(rxcall)
 * Send back my addresses to caller of this RPC
 * Returns zero on success, else 1.
 */
-SDISK_UpdateInterfaceAddr(rxcall, inAddr, outAddr)
+afs_int32 SDISK_UpdateInterfaceAddr(rxcall, inAddr, outAddr)
 register struct rx_call *rxcall;
 UbikInterfaceAddr	*inAddr, *outAddr;
 {
@@ -638,7 +638,7 @@ printServerInfo()
     ubik_print("\n");
 }
 
-SDISK_SetVersion(rxcall, atid, oldversionp, newversionp)
+afs_int32 SDISK_SetVersion(rxcall, atid, oldversionp, newversionp)
   struct rx_call      *rxcall;
   struct ubik_tid     *atid;
   struct ubik_version *oldversionp; 

@@ -2290,7 +2290,7 @@ afs_int32 FinishTape (call, tape)
 afs_int32 SBUDB_GetDumps (call, majorVersion, flags, name, start, end,
 		    index, nextIndexP, dbTimeP, dumps)
   struct rx_call *call;
-  int majorVersion;			/* version of interface structures */
+  afs_int32 majorVersion;			/* version of interface structures */
   afs_int32  flags;				/* search & select controls */
   char *name;				/* s&s parameters */
   afs_int32  start;
@@ -2311,7 +2311,7 @@ afs_int32 SBUDB_GetDumps (call, majorVersion, flags, name, start, end,
 afs_int32 GetDumps (call, majorVersion, flags, name, start, end,
 		    index, nextIndexP, dbTimeP, dumps)
   struct rx_call *call;
-  int majorVersion;			/* version of interface structures */
+  afs_int32 majorVersion;			/* version of interface structures */
   afs_int32  flags;				/* search & select controls */
   char *name;				/* s&s parameters */
   afs_int32  start;
@@ -2775,7 +2775,7 @@ afs_int32 FindLastTape (call, dumpID, dumpEntry, tapeEntry, volEntry)
 afs_int32 SBUDB_GetTapes (call, majorVersion, flags, name, start, end, index, nextIndexP,
 	       dbTimeP, tapes)
      struct rx_call *call;
-     int   majorVersion;		/* version of interface structures */
+     afs_int32  majorVersion;		/* version of interface structures */
      afs_int32  flags;			/* search & select controls */
      char *name;			/* s&s parameters */
      afs_int32  start;
@@ -2796,7 +2796,7 @@ afs_int32 SBUDB_GetTapes (call, majorVersion, flags, name, start, end, index, ne
 afs_int32 GetTapes (call, majorVersion, flags, name, start, end, 
 			 index, nextIndexP, dbTimeP, tapes)
      struct rx_call *call;
-     int   majorVersion;		/* version of interface structures */
+     afs_int32  majorVersion;		/* version of interface structures */
      afs_int32  flags;			/* search & select controls */
      char *name;			/* s&s parameters */
      afs_int32  start;
@@ -2929,7 +2929,7 @@ afs_int32 GetTapes (call, majorVersion, flags, name, start, end,
 afs_int32 SBUDB_GetVolumes (call, majorVersion, flags, name, start, end,
 		      index, nextIndexP, dbTimeP, volumes)
   struct rx_call *call;
-  int   majorVersion;			/* version of interface structures */
+  afs_int32  majorVersion;			/* version of interface structures */
   afs_int32  flags;				/* search & select controls */
   char *name;				/*  - parameters for search */
   afs_int32  start;				/*  - usage depends which BUDP_OP_* */
@@ -2950,7 +2950,7 @@ afs_int32 SBUDB_GetVolumes (call, majorVersion, flags, name, start, end,
 afs_int32 GetVolumes (call, majorVersion, flags, name, start, end,
 		      index, nextIndexP, dbTimeP, volumes)
   struct rx_call *call;
-  int   majorVersion;			/* version of interface structures */
+  afs_int32  majorVersion;			/* version of interface structures */
   afs_int32  flags;				/* search & select controls */
   char *name;				/*  - parameters for search */
   afs_int32  start;				/*  - usage depends which BUDP_OP_* */
@@ -3108,7 +3108,7 @@ afs_int32 GetVolumes (call, majorVersion, flags, name, start, end,
 afs_int32 SBUDB_UseTape (call, tape, new)
   struct rx_call *call;
   struct budb_tapeEntry *tape;		/* tape info */
-  int  *new;				/* set if tape is new */
+  afs_int32  *new;			/* set if tape is new */
 {
   afs_int32 code;
 
@@ -3200,7 +3200,7 @@ afs_int32 UseTape (call, tape, new)
 
 afs_int32 SBUDB_T_DumpHashTable (call, type, filename)
   struct rx_call *call;
-  int   type;
+  afs_int32 type;
   char *filename;
 {
   afs_int32 code;
@@ -3298,7 +3298,7 @@ afs_int32 T_DumpHashTable (call, type, filename)
 
 afs_int32 SBUDB_T_GetVersion (call, majorVersion)
   struct rx_call *call;
-  int *majorVersion;
+  afs_int32 *majorVersion;
 {
   afs_int32 code;
 

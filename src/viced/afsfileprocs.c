@@ -440,7 +440,7 @@ static int VolumeRootVnode (targetptr)
 } /*VolumeRootVnode*/
 
 
-SRXAFS_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync)
+afs_int32 SRXAFS_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Fid of file to fetch */
     afs_int32 Pos, Len;	   		/* Not implemented yet */
@@ -456,7 +456,7 @@ SRXAFS_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync)
     return code;
 }
 
-SRXAFS_FetchData64 (acall, Fid, Pos, Len, OutStatus, CallBack, Sync)
+afs_int32 SRXAFS_FetchData64 (acall, Fid, Pos, Len, OutStatus, CallBack, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;                 /* Fid of file to fetch */
     afs_int64 Pos, Len;                 /* Not implemented yet */
@@ -722,7 +722,7 @@ Bad_FetchData:
 } /*SRXAFS_FetchData*/
 
 
-SRXAFS_FetchACL (acall, Fid, AccessList, OutStatus, Sync)
+afs_int32 SRXAFS_FetchACL (acall, Fid, AccessList, OutStatus, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Fid of target dir */
     struct AFSOpaque *AccessList;	/* Returned contents of dir's ACL */
@@ -904,7 +904,7 @@ Bad_FetchStatus:
 } /*SAFSS_FetchStatus*/
 
 
-SRXAFS_BulkStatus(acall, Fids, OutStats, CallBacks, Sync)
+afs_int32 SRXAFS_BulkStatus(acall, Fids, OutStats, CallBacks, Sync)
     struct rx_call *acall;
     struct AFSCBFids *Fids;
     struct AFSBulkStats *OutStats;
@@ -1041,7 +1041,7 @@ Audit_and_Return:
 } /*SRXAFS_BulkStatus*/
 
 
-SRXAFS_InlineBulkStatus(acall, Fids, OutStats, CallBacks, Sync)
+afs_int32 SRXAFS_InlineBulkStatus(acall, Fids, OutStats, CallBacks, Sync)
     struct rx_call *acall;
     struct AFSCBFids *Fids;
     struct AFSBulkStats *OutStats;
@@ -1190,7 +1190,7 @@ Audit_and_Return:
 } /*SRXAFS_InlineBulkStatus*/
 
 
-SRXAFS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync)
+afs_int32 SRXAFS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Fid of target file */
     struct AFSFetchStatus *OutStatus;	/* Returned status for the fid */
@@ -1249,7 +1249,7 @@ Bad_FetchStatus:
 } /*SRXAFS_FetchStatus*/
 
 
-SRXAFS_StoreData (acall, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
+afs_int32 SRXAFS_StoreData (acall, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Fid of taret file */
     struct AFSStoreStatus *InStatus;	/* Input Status for Fid */
@@ -1481,7 +1481,7 @@ Bad_StoreData:
 
 } /*SRXAFS_StoreData*/
 
-SRXAFS_StoreData64 (acall, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
+afs_int32 SRXAFS_StoreData64 (acall, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;                 /* Fid of taret file */
     struct AFSStoreStatus *InStatus;    /* Input Status for Fid */
@@ -1515,7 +1515,7 @@ SRXAFS_StoreData64 (acall, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sy
     return code;
 }
 
-SRXAFS_StoreACL (acall, Fid, AccessList, OutStatus, Sync)
+afs_int32 SRXAFS_StoreACL (acall, Fid, AccessList, OutStatus, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Target dir's fid */
     struct AFSOpaque *AccessList;	/* Access List's contents */
@@ -1711,7 +1711,7 @@ Bad_StoreStatus:
 } /*SAFSS_StoreStatus*/
 
 
-SRXAFS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync)
+afs_int32 SRXAFS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync)
     struct rx_call *acall;		/* Rx call */
     struct AFSFid *Fid;			/* Target file's fid */
     struct AFSStoreStatus *InStatus;	/* Input status for Fid */
@@ -1869,7 +1869,7 @@ Bad_RemoveFile:
 } /*SAFSS_RemoveFile*/
 
 
-SRXAFS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
+afs_int32 SRXAFS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Dir fid for file to remove */
     char *Name;				 /* File name to remove */
@@ -2030,7 +2030,7 @@ Bad_CreateFile:
 } /*SAFSS_CreateFile*/
 
 
-SRXAFS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
+afs_int32 SRXAFS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent Dir fid */
     char *Name;				 /* File name to be created */
@@ -2490,7 +2490,7 @@ Bad_Rename:
 } /*SAFSS_Rename*/
 
 
-SRXAFS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus, OutNewDirStatus, Sync)
+afs_int32 SRXAFS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus, OutNewDirStatus, Sync)
     struct rx_call *acall;		     /* Rx call */
     struct AFSFid *OldDirFid;		     /* From parent dir's fid */
     char *OldName;			     /* From file name */
@@ -2680,7 +2680,7 @@ Bad_SymLink:
 } /*SAFSS_Symlink*/
 
 
-SRXAFS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, Sync)
+afs_int32 SRXAFS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, Sync)
     struct AFSVolSync *Sync;
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent dir's fid */
@@ -2881,7 +2881,7 @@ Bad_Link:
 } /*SAFSS_Link*/
 
 
-SRXAFS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
+afs_int32 SRXAFS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent dir's fid */
     char *Name;				 /* File name to create */
@@ -3074,7 +3074,7 @@ Bad_MakeDir:
 } /*SAFSS_MakeDir*/
 
 
-SRXAFS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
+afs_int32 SRXAFS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent dir's fid */
     char *Name;				 /* Name of dir to be created */
@@ -3233,7 +3233,7 @@ Bad_RemoveDir:
 } /*SAFSS_RemoveDir*/
 
 
-SRXAFS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
+afs_int32 SRXAFS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent dir's fid */
     char *Name;				 /* (Empty) dir's name to be removed */
@@ -3357,7 +3357,7 @@ Bad_SetLock:
 }  /*SAFSS_SetLock*/
 
 
-SRXAFS_OldSetLock(acall, Fid, type, Sync)
+afs_int32 SRXAFS_OldSetLock(acall, Fid, type, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file to lock */
     ViceLockType type;		/* Type of lock (Read or write) */
@@ -3368,7 +3368,7 @@ SRXAFS_OldSetLock(acall, Fid, type, Sync)
 } /*SRXAFS_OldSetLock*/
 
 
-SRXAFS_SetLock (acall, Fid, type, Sync)
+afs_int32 SRXAFS_SetLock (acall, Fid, type, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file to lock */
     ViceLockType type;		/* Type of lock (Read or write) */
@@ -3483,7 +3483,7 @@ Bad_ExtendLock:
 } /*SAFSS_ExtendLock*/
 
 
-SRXAFS_OldExtendLock (acall, Fid, Sync)
+afs_int32 SRXAFS_OldExtendLock (acall, Fid, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file whose lock we extend */
     struct AFSVolSync *Sync;
@@ -3493,7 +3493,7 @@ SRXAFS_OldExtendLock (acall, Fid, Sync)
 } /*SRXAFS_OldExtendLock*/
 
 
-SRXAFS_ExtendLock (acall, Fid, Sync)
+afs_int32 SRXAFS_ExtendLock (acall, Fid, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file whose lock we extend */
     struct AFSVolSync *Sync;
@@ -3617,7 +3617,7 @@ Bad_ReleaseLock:
 } /*SAFSS_ReleaseLock*/
 
 
-SRXAFS_OldReleaseLock (acall, Fid, Sync)
+afs_int32 SRXAFS_OldReleaseLock (acall, Fid, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file to release lock */
     struct AFSVolSync *Sync;
@@ -3627,7 +3627,7 @@ SRXAFS_OldReleaseLock (acall, Fid, Sync)
 } /*SRXAFS_OldReleaseLock*/
 
 
-SRXAFS_ReleaseLock (acall, Fid, Sync)
+afs_int32 SRXAFS_ReleaseLock (acall, Fid, Sync)
     struct rx_call *acall;	/* Rx call */
     struct AFSFid *Fid;		/* Fid of file to release lock */
     struct AFSVolSync *Sync;
@@ -3706,7 +3706,7 @@ static GetStatistics (acall, Statistics)
 } /*GetStatistics*/
 
 
-SRXAFS_GetStatistics (acall, Statistics)
+afs_int32 SRXAFS_GetStatistics (acall, Statistics)
     struct rx_call *acall;	      /* Rx call */
     struct ViceStatistics *Statistics; /* Placeholder for returned AFS statistics */
 
@@ -3781,7 +3781,7 @@ Bad_GetStatistics:
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFS_XStatsVersion(a_call, a_versionP)
+afs_int32 SRXAFS_XStatsVersion(a_call, a_versionP)
     struct rx_call *a_call;
     afs_int32 *a_versionP;
 
@@ -4008,7 +4008,7 @@ static void FillPerfValues(a_perfP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersionNumP, a_timeP, a_dataP)
+afs_int32 SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersionNumP, a_timeP, a_dataP)
     struct rx_call *a_call;
     afs_int32 a_clientVersionNum;
     afs_int32 a_collectionNumber;
@@ -4169,7 +4169,7 @@ int SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersio
 } /*SRXAFS_GetXStats*/
 
 
-SRXAFS_GiveUpCallBacks (acall, FidArray, CallBackArray)
+afs_int32 SRXAFS_GiveUpCallBacks (acall, FidArray, CallBackArray)
     struct rx_call *acall;		/* Rx call */
     struct AFSCBFids *FidArray;		/* Array of Fids entries */
     struct AFSCBs *CallBackArray;	/* array of callbacks */
@@ -4245,7 +4245,7 @@ out:
 } /*SRXAFS_GiveUpCallBacks*/
 
 
-SRXAFS_NGetVolumeInfo (acall, avolid, avolinfo)
+afs_int32 SRXAFS_NGetVolumeInfo (acall, avolid, avolinfo)
     struct rx_call *acall;		/* Rx call */
     char *avolid;			/* Volume name/id */
     struct AFSVolumeInfo *avolinfo;	/* Returned volume's specific info */
@@ -4261,7 +4261,7 @@ SRXAFS_NGetVolumeInfo (acall, avolid, avolinfo)
  * invoke this interface when communicating with a AFS/DFS Protocol
  * Translator).
  */
-SRXAFS_Lookup(call_p, afs_dfid_p, afs_name_p, afs_fid_p,
+afs_int32 SRXAFS_Lookup(call_p, afs_dfid_p, afs_name_p, afs_fid_p,
 	      afs_status_p, afs_dir_status_p, afs_callback_p, afs_sync_p)
   struct rx_call *call_p;		/* Rx call handle */
   struct AFSFid *afs_dfid_p;		/* Directory */
@@ -4276,7 +4276,7 @@ SRXAFS_Lookup(call_p, afs_dfid_p, afs_name_p, afs_fid_p,
 }
 
 
-SRXAFS_FlushCPS(acall, vids, addrs, spare1, spare2, spare3)
+afs_int32 SRXAFS_FlushCPS(acall, vids, addrs, spare1, spare2, spare3)
     struct rx_call *acall;
     struct ViceIds *vids;
     struct IPAddrs *addrs;
@@ -4474,7 +4474,7 @@ static TryLocalVLServer(avolid, avolinfo)
 }
 
 
-SRXAFS_GetVolumeInfo (acall, avolid, avolinfo)
+afs_int32 SRXAFS_GetVolumeInfo (acall, avolid, avolinfo)
     struct rx_call *acall;		/* Rx call */
     char *avolid;			/* Volume name/id */
     struct VolumeInfo *avolinfo;	/* Returned volume's specific info */
@@ -4531,7 +4531,7 @@ Bad_GetVolumeInfo:
 } /*SRXAFS_GetVolumeInfo*/
 
 
-SRXAFS_GetVolumeStatus (acall, avolid, FetchVolStatus, Name, OfflineMsg, Motd)
+afs_int32 SRXAFS_GetVolumeStatus (acall, avolid, FetchVolStatus, Name, OfflineMsg, Motd)
     struct rx_call *acall;		  /* Rx call */
     afs_int32 avolid;			  /* Volume's id */
     AFSFetchVolumeStatus *FetchVolStatus; /* Place to hold volume's status info */
@@ -4622,7 +4622,7 @@ Bad_GetVolumeStatus:
 } /*SRXAFS_GetVolumeStatus*/
 
 
-SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMsg, Motd)
+afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMsg, Motd)
     struct rx_call *acall;		  /* Rx call */
     afs_int32 avolid;			  /* Volume's id */
     AFSStoreVolumeStatus *StoreVolStatus; /* Adjusted output volume's status */
@@ -4715,7 +4715,7 @@ SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMsg, Motd)
 #define	DEFAULTVOLUME	"root.afs"
 
 
-SRXAFS_GetRootVolume (acall, VolumeName)
+afs_int32 SRXAFS_GetRootVolume (acall, VolumeName)
     struct rx_call *acall; /* Rx call */
     char **VolumeName;		 /* Returned AFS's root volume name */
 
@@ -4801,7 +4801,7 @@ Bad_GetRootVolume:
 
 
 /* still works because a struct CBS is the same as a struct AFSOpaque */
-SRXAFS_CheckToken (acall, AfsId, Token)
+afs_int32 SRXAFS_CheckToken (acall, AfsId, Token)
     struct rx_call *acall; /* Rx call */
     afs_int32 AfsId;	    		/* AFS id whose token we verify */
     struct AFSOpaque *Token;		/* Token value for used Afsid */
@@ -4880,7 +4880,7 @@ static GetTime (acall, Seconds, USeconds)
 } /*GetTime*/
 
 
-SRXAFS_GetTime (acall, Seconds, USeconds)
+afs_int32 SRXAFS_GetTime (acall, Seconds, USeconds)
     struct rx_call *acall;	    /* Rx call */
     afs_uint32 *Seconds;	    /* Returned time in seconds */
     afs_uint32 *USeconds;	    /* Returned leftovers in useconds */
@@ -7147,7 +7147,7 @@ PrintVolumeStatus(status)
  * and is not supported by the AFS fileserver. We just return EINVAL.
  * The cache manager should not generate this call to an AFS cache manager.
  */
-SRXAFS_DFSSymlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
+afs_int32 SRXAFS_DFSSymlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
     struct rx_call *acall;		 /* Rx call */
     struct AFSFid *DirFid;		 /* Parent dir's fid */
     char *Name;				 /* File name to create */
@@ -7162,7 +7162,7 @@ SRXAFS_DFSSymlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidSt
     return EINVAL;
 }
 
-SRXAFS_ResidencyCmd (acall, Fid, Inputs, Outputs)
+afs_int32 SRXAFS_ResidencyCmd (acall, Fid, Inputs, Outputs)
     struct rx_call *acall;
     struct AFSFid *Fid;
     struct ResidencyCmdInputs *Inputs;

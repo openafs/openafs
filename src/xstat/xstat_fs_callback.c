@@ -451,7 +451,7 @@ afs_int32 SRXAFSCB_GetXStats(rxcall, clientVersionNumber, collectionNumber,
  *      None
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_InitCallBackState2(rxcall, addr)
+afs_int32 SRXAFSCB_InitCallBackState2(rxcall, addr)
 struct rx_call *rxcall;
 struct interfaceAddr * addr;
 {
@@ -496,7 +496,7 @@ struct interfaceAddr * addr;
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_WhoAreYou(rxcall, addr)
+afs_int32 SRXAFSCB_WhoAreYou(rxcall, addr)
 struct rx_call *rxcall;
 struct interfaceAddr *addr;
 {
@@ -551,7 +551,7 @@ struct interfaceAddr *addr;
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_InitCallBackState3(rxcall, uuidp)
+afs_int32 SRXAFSCB_InitCallBackState3(rxcall, uuidp)
 struct rx_call *rxcall;
 afsUUID *uuidp;
 {
@@ -599,7 +599,7 @@ afsUUID *uuidp;
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_ProbeUuid(rxcall, uuidp)
+afs_int32 SRXAFSCB_ProbeUuid(rxcall, uuidp)
 struct rx_call *rxcall;
 afsUUID *uuidp;
 {
@@ -647,7 +647,7 @@ afsUUID *uuidp;
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetServerPrefs(
+afs_int32 SRXAFSCB_GetServerPrefs(
     struct rx_call *a_call,
     afs_int32 a_index,
     afs_int32 *a_srvr_addr,
@@ -678,7 +678,7 @@ int SRXAFSCB_GetServerPrefs(
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCellServDB(
+afs_int32 SRXAFSCB_GetCellServDB(
     struct rx_call *a_call,
     afs_int32 a_index,
     char **a_name,
@@ -708,7 +708,7 @@ int SRXAFSCB_GetCellServDB(
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetLocalCell(
+afs_int32 SRXAFSCB_GetLocalCell(
     struct rx_call *a_call,
     char **a_name)
 {
@@ -748,7 +748,7 @@ int SRXAFSCB_GetLocalCell(
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCacheConfig(
+afs_int32 SRXAFSCB_GetCacheConfig(
     struct rx_call *a_call,
     afs_uint32 callerVersion,
     afs_uint32 *serverVersion,

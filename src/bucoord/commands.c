@@ -2288,7 +2288,6 @@ bc_dbVerifyCmd(as, arock)
     afs_int32 code = 0;
 
     extern struct udbHandleS udbHandle;
-    extern afs_int32 BUDB_DbVerify();
     
     detail = (as->parms[0].items ? 1 : 0);       /* print more details */
 

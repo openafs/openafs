@@ -411,7 +411,7 @@ ubeacon_Interact() {
 	/* now call our own voter module to see if we'll vote for ourself.  Note that
 	    the same restrictions apply for our voting for ourself as for our voting
 	    for anyone else. */
-	i = SVOTE_Beacon((struct rx_connection *) 0, ubeacon_AmSyncSite(), startTime, &ubik_dbase->version, &ttid);
+	i = SVOTE_Beacon((struct rx_call *) 0, ubeacon_AmSyncSite(), startTime, &ubik_dbase->version, &ttid);
 	if (i) {
 	    yesVotes += 2;
 	    if (amIMagic) yesVotes++;	/* extra epsilon */

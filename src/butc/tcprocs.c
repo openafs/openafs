@@ -69,7 +69,7 @@ callPermitted(call)
  * -------------------------
  */
 
-STC_LabelTape(acid, label, taskId)
+afs_int32 STC_LabelTape(acid, label, taskId)
      struct rx_call *acid;
      struct tc_tapeLabel *label;
      afs_uint32 *taskId;
@@ -144,7 +144,7 @@ error_exit:
  *	Tape coordinator server routine to do a dump
  */
 
-STC_PerformDump(rxCallId, tcdiPtr, tc_dumpArrayPtr, taskId)
+afs_int32 STC_PerformDump(rxCallId, tcdiPtr, tc_dumpArrayPtr, taskId)
     struct rx_call *rxCallId;
     struct tc_dumpInterface *tcdiPtr;
     tc_dumpArray *tc_dumpArrayPtr;
@@ -237,7 +237,7 @@ error_exit:
     return(code);
 }
 
-STC_PerformRestore(acid, dumpSetName, arestores, taskID)
+afs_int32 STC_PerformRestore(acid, dumpSetName, arestores, taskID)
      struct rx_call *acid;
      char *dumpSetName;               /* not used */
      tc_restoreArray *arestores;
@@ -311,7 +311,7 @@ error_exit:
     return(code);
 }
 
-STC_ReadLabel(acid, label, taskId)
+afs_int32 STC_ReadLabel(acid, label, taskId)
      struct rx_call *acid;
      struct tc_tapeLabel *label;
      afs_uint32 *taskId;
@@ -335,7 +335,7 @@ STC_ReadLabel(acid, label, taskId)
  *	restore the backup database from tape
  */
 
-STC_RestoreDb(rxCall, taskId)
+afs_int32 STC_RestoreDb(rxCall, taskId)
      struct rx_call *rxCall;
      afs_uint32 *taskId;
 {
@@ -400,7 +400,7 @@ error_exit:
  *	restore the backup database from tape
  */
 
-STC_SaveDb(rxCall, archiveTime, taskId)
+afs_int32 STC_SaveDb(rxCall, archiveTime, taskId)
      struct rx_call *rxCall;
      Date   archiveTime;
      afs_uint32 *taskId;
@@ -479,7 +479,7 @@ error_exit:
  *	addDbFlag - if set, the information will be added to the database
  */
 
-STC_ScanDumps(acid, addDbFlag, taskId)
+afs_int32 STC_ScanDumps(acid, addDbFlag, taskId)
      struct rx_call *acid;
      afs_int32 addDbFlag;
      afs_uint32 *taskId;
@@ -553,7 +553,7 @@ error_exit:
  *	is just the version number of the interface
  */
 
-STC_TCInfo(acid, tciptr)
+afs_int32 STC_TCInfo(acid, tciptr)
      struct rx_call *acid;
      struct tc_tcInfo *tciptr;
 {
@@ -566,7 +566,7 @@ STC_TCInfo(acid, tciptr)
 
 /* STC_DeleteDump
  */
-STC_DeleteDump(acid, dumpID, taskId)
+afs_int32 STC_DeleteDump(acid, dumpID, taskId)
    struct rx_call *acid;
    afs_uint32 dumpID;
    afs_uint32 *taskId;

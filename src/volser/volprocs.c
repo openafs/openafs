@@ -1286,7 +1286,7 @@ afs_int32 fromDate;
  */
 afs_int32 SAFSVolRestore (acid, atrans, aflags,cookie)
 struct rx_call *acid;
-int aflags;
+afs_int32 aflags;
 afs_int32 atrans; 
 struct restoreCookie *cookie;
 {

@@ -87,7 +87,7 @@ rmtsysd() {
 /* Implements the remote setpag(2) call. Note that unlike the standard call,
  * here we also get back the new pag value; we need this so that the caller
  * can add it to its group list via setgroups() */
-int SRMTSYS_SetPag(call, creds, newpag, errornumber)
+afs_int32 SRMTSYS_SetPag(call, creds, newpag, errornumber)
 struct rx_call *call;
 clientcred *creds;
 afs_int32 *newpag, *errornumber;
@@ -116,7 +116,7 @@ afs_int32 *newpag, *errornumber;
 
 
 /* Implements the remote pioctl(2) call */
-int SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
+afs_int32 SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
 struct rx_call *call;
 clientcred *creds;
 afs_int32 cmd, follow, *errornumber;

@@ -124,7 +124,6 @@ static cs_ProcTail_setup();
 static ss_Proc_CodeGeneration();
 static ss_ProcName_setup();
 static ss_ProcParams_setup();
-static ss_ProcProto_setup();
 static ss_ProcSpecial_setup();
 static ss_ProcUnmarshallInParams_setup();
 static ss_ProcCallRealProc_setup();
@@ -1353,7 +1352,6 @@ definition *defp;
     ss_ProcName_setup(defp);
     if (!cflag) {
 	ss_ProcParams_setup(defp, &somefrees);
-	ss_ProcProto_setup(defp, &somefrees);
 	ss_ProcSpecial_setup(defp, &somefrees);
 	ss_ProcUnmarshallInParams_setup(defp);
 	ss_ProcCallRealProc_setup(defp);
@@ -1447,18 +1445,6 @@ int *somefrees;
 	}
     }	
     fprintf(fout, "\n");
-}
-
-
-static
-ss_ProcProto_setup(defp, somefrees)
-definition *defp;
-int *somefrees;
-{
-	f_print(fout, "#ifndef KERNEL\n");
-	f_print(fout, "\tafs_int32 %s%s%s%s();\n", prefix, ServerPrefix, 
-		PackagePrefix[PackageIndex], defp->pc.proc_name);
-	f_print(fout, "#endif\n");
 }
 
 

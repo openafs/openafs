@@ -1501,7 +1501,6 @@ getDumpTape(dparamsPtr, interactiveFlag, append)
 
     extern struct tapeConfig globalTapeConfig;
     extern struct udbHandleS udbHandle;
-    extern afs_int32 BUDB_DeleteDump();
 
     askForTape = interactiveFlag;
     dparamsPtr->wroteLabel = 0;
