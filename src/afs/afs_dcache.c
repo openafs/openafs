@@ -1417,6 +1417,7 @@ static int afs_UFSCacheFetchProc(acall, afile, abase, adc, avc,
     (*abytesXferredP) = 0;
 #endif /* AFS_NOSTATS */
     tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    adc->validPos = abase;
     do {
 	if (moredata) {
 	    RX_AFS_GUNLOCK();
@@ -1470,7 +1471,7 @@ static int afs_UFSCacheFetchProc(acall, afile, abase, adc, avc,
 	    abase += tlen;
 	    length -= tlen;
 	    adc->validPos = abase;
-	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
 		       ICL_TYPE_STRING, __FILE__,
 		       ICL_TYPE_INT32, __LINE__,
 		       ICL_TYPE_POINTER, adc,
@@ -2396,7 +2397,7 @@ RetryLookup:
 #endif /* AFS_NOSTATS */
 
 	tdc->dflags &= ~DFFetching;
-	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
 		   ICL_TYPE_STRING, __FILE__,
 		   ICL_TYPE_INT32, __LINE__,
 		   ICL_TYPE_POINTER, tdc,
@@ -2487,7 +2488,7 @@ done:
 	    *aoffset = abyte;
 	else
 	    *aoffset = AFS_CHUNKOFFSET(abyte);
-	*alen = *aoffset + tdc->f.chunkBytes - abyte;
+	*alen = (tdc->f.chunkBytes - *aoffset);
 	ReleaseSharedLock(&tdc->lock);
     }
 
