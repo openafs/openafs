@@ -58,7 +58,8 @@
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS       2 /* Set to Userdisabled, allow sysctl to override */
+
 
 /* Machine / Operating system information */
 #define SYS_NAME	"i386_linux22"

@@ -108,6 +108,7 @@ typedef struct cred {		/* maps to task field: */
     int cr_ngroups;
 } cred_t;
 #define AFS_UCRED cred
+#define AFS_PROC struct task_struct
 #define crhold(c) (c)->cr_ref++
 
 /* UIO manipulation */
