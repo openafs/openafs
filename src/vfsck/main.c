@@ -197,7 +197,7 @@ main(argc, argv)
 #if	defined(AFS_HPUX100_ENV)
 	mflag = 0;
 #endif
-	printf("----Transarc AFS (R) %s fsck----\n", AFSVersion); /* generated version */
+	printf("----Open AFS (R) %s fsck----\n", AFSVersion); /* generated version */
 	if (access("/TRYFORCE", 0) == 0)
 	    tryForce = 1;
 	while (--argc > 0 && **++argv == '-') {
