@@ -137,6 +137,8 @@ static int FindHandler_r();
 static int RemoveHandler();
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
 
+extern int LogLevel;
+
 /*
  * This lock controls access to the handler array. The overhead
  * is minimal in non-preemptive environments.
