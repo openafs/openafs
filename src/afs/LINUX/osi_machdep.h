@@ -117,6 +117,9 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 
 
 #define PAGESIZE PAGE_SIZE
+#ifndef NGROUPS
+#define NGROUPS NGROUPS_SMALL
+#endif
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
