@@ -1,4 +1,4 @@
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #ifndef __krb5_asn1_h__
@@ -21,6 +21,22 @@ typedef struct oid {
   size_t length;
   unsigned *components;
 } oid;
+
+#define ASN1_MALLOC_ENCODE(T, B, BL, S, L, R)                  \
+  do {                                                         \
+    (BL) = length_##T((S));                                    \
+    (B) = malloc((BL));                                        \
+    if((B) == NULL) {                                          \
+      (R) = ENOMEM;                                            \
+    } else {                                                   \
+      (R) = encode_##T(((unsigned char*)(B)) + (BL) - 1, (BL), \
+                       (S), (L));                              \
+      if((R) != 0) {                                           \
+        free((B));                                             \
+        (B) = NULL;                                            \
+      }                                                        \
+    }                                                          \
+  } while (0)
 
 #endif
 
@@ -156,8 +172,7 @@ typedef enum ENCTYPE {
   ETYPE_DES_CBC_NONE = -4096,
   ETYPE_DES3_CBC_NONE = -4097,
   ETYPE_DES_CFB64_NONE = -4098,
-  ETYPE_DES_PCBC_NONE = -4099,
-  ETYPE_DES3_CBC_NONE_IVEC = -4100
+  ETYPE_DES_PCBC_NONE = -4099
 } ENCTYPE;
 
 int    encode_ENCTYPE(unsigned char *, size_t, const ENCTYPE *, size_t *);

@@ -1,9 +1,10 @@
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -68,10 +69,9 @@ decode_Ticket(const unsigned char *p, size_t len, Ticket *data, size_t *size)
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, APPL, CONS, 1, &reallen, &l);
 FORW;
@@ -257,12 +257,13 @@ if(copy_EncryptedData(&(from)->enc_part, &(to)->enc_part)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -317,10 +318,9 @@ decode_EncryptedData(const unsigned char *p, size_t len, EncryptedData *data, si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -470,12 +470,13 @@ if(copy_octet_string(&(from)->cipher, &(to)->cipher)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -527,10 +528,9 @@ decode_PrincipalName(const unsigned char *p, size_t len, PrincipalName *data, si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -671,12 +671,13 @@ if(copy_general_string(&(&(from)->name_string)->val[(&(to)->name_string)->len], 
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -710,10 +711,9 @@ decode_HostAddresses(const unsigned char *p, size_t len, HostAddresses *data, si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -779,12 +779,13 @@ if(copy_HostAddress(&(from)->val[(to)->len], &(to)->val[(to)->len])) return ENOM
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -829,10 +830,9 @@ decode_HostAddress(const unsigned char *p, size_t len, HostAddress *data, size_t
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -938,12 +938,13 @@ if(copy_octet_string(&(from)->address, &(to)->address)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -995,10 +996,9 @@ decode_AuthorizationData(const unsigned char *p, size_t len, AuthorizationData *
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -1138,12 +1138,13 @@ if(copy_octet_string(&(&(from)->val[(to)->len])->ad_data, &(&(to)->val[(to)->len
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -1275,10 +1276,9 @@ decode_EncTicketPart(const unsigned char *p, size_t len, EncTicketPart *data, si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, APPL, CONS, 3, &reallen, &l);
 FORW;
@@ -1743,12 +1743,13 @@ if(copy_AuthorizationData((from)->authorization_data, (to)->authorization_data))
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -1775,10 +1776,9 @@ decode_KerberosTime(const unsigned char *p, size_t len, KerberosTime *data, size
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = decode_generalized_time(p, len, data, &l);
 FORW;
@@ -1809,12 +1809,13 @@ copy_KerberosTime(const KerberosTime *from, KerberosTime *to)
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -1859,10 +1860,9 @@ decode_TransitedEncoding(const unsigned char *p, size_t len, TransitedEncoding *
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -1968,12 +1968,13 @@ if(copy_octet_string(&(from)->contents, &(to)->contents)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -2018,10 +2019,9 @@ decode_EncryptionKey(const unsigned char *p, size_t len, EncryptionKey *data, si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, CONS, UT_Sequence,&reallen, &l);
 FORW;
@@ -2127,12 +2127,13 @@ if(copy_octet_string(&(from)->keyvalue, &(to)->keyvalue)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -2188,10 +2189,9 @@ decode_TicketFlags(const unsigned char *p, size_t len, TicketFlags *data, size_t
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = der_match_tag_and_length (p, len, UNIV, PRIM, UT_BitString,&reallen, &l);
 FORW;
@@ -2289,12 +2289,13 @@ TicketFlags int2TicketFlags(unsigned n)
 }
 
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -2321,10 +2322,9 @@ decode_Realm(const unsigned char *p, size_t len, Realm *data, size_t *size)
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = decode_general_string(p, len, data, &l);
 FORW;
@@ -2356,12 +2356,13 @@ if(copy_general_string(from, to)) return ENOMEM;
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -2388,10 +2389,9 @@ decode_ENCTYPE(const unsigned char *p, size_t len, ENCTYPE *data, size_t *size)
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = decode_integer(p, len, (int*)data, &l);
 FORW;
@@ -2422,12 +2422,13 @@ copy_ENCTYPE(const ENCTYPE *from, ENCTYPE *to)
 return 0;
 }
 
-/* Generated from ../../../lib/asn1/k5.asn1 */
+/* Generated from /home/lha/src/cvs/heimdal/lib/asn1/k5.asn1 */
 /* Do not edit */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <errno.h>
 #include <asn1_err.h>
 
@@ -2454,10 +2455,9 @@ decode_NAME_TYPE(const unsigned char *p, size_t len, NAME_TYPE *data, size_t *si
 {
 size_t ret = 0, reallen;
 size_t l;
-int i, e;
+int e;
 
 memset(data, 0, sizeof(*data));
-i = 0;
 reallen = 0;
 e = decode_integer(p, len, (int*)data, &l);
 FORW;

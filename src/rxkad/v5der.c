@@ -1,7 +1,7 @@
 #include "asn1_err.h"
 #include <errno.h>
 /*
- * Copyright (c) 1997 - 2001 Kungliga Tekniska Högskolan
+ * Copyright (c) 1997 - 2002 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
  * All rights reserved. 
  *
@@ -34,7 +34,7 @@
  */
 
 
-/* RCSID("$Heimdal: der_get.c,v 1.31 2001/09/28 22:53:24 assar Exp $"); */
+/* RCSID("Heimdal: der_get.c,v 1.33 2002/09/03 16:21:49 nectar Exp $"); */
 
 
 /* 
@@ -66,10 +66,11 @@ der_get_int (const unsigned char *p, size_t len,
     int val = 0;
     size_t oldlen = len;
 
-    if (len--)
+    if (len > 0) {
 	val = (signed char)*p++;
-    while (len--)
-	val = val * 256 + *p++;
+	while (--len)
+	    val = val * 256 + *p++;
+    }
     *ret = val;
     if(size) *size = oldlen;
     return 0;
@@ -251,6 +252,8 @@ decode_integer (const unsigned char *p, size_t len,
     p += l;
     len -= l;
     ret += l;
+    if (reallen > len)
+	return ASN1_OVERRUN;
     e = der_get_int (p, reallen, num, &l);
     if (e) return e;
     p += l;
@@ -278,6 +281,8 @@ decode_unsigned (const unsigned char *p, size_t len,
     p += l;
     len -= l;
     ret += l;
+    if (reallen > len)
+	return ASN1_OVERRUN;
     e = der_get_unsigned (p, reallen, num, &l);
     if (e) return e;
     p += l;
@@ -510,7 +515,7 @@ fix_dce(size_t reallen, size_t *len)
  */
 
 
-/* RCSID("$Heimdal: der_put.c,v 1.27 2001/09/25 23:37:25 assar Exp $"); */
+/* RCSID("Heimdal: der_put.c,v 1.27 2001/09/25 23:37:25 assar Exp $"); */
 
 /*
  * All encoding functions take a pointer `p' to first position in
@@ -927,7 +932,7 @@ encode_generalized_time (unsigned char *p, size_t len,
  */
 
 
-/* RCSID("$Heimdal: der_free.c,v 1.8 2001/09/25 13:39:26 assar Exp $"); */
+/* RCSID("Heimdal: der_free.c,v 1.8 2001/09/25 13:39:26 assar Exp $"); */
 
 void
 free_general_string (general_string *str)
@@ -980,7 +985,7 @@ free_oid (oid *k)
  */
 
 
-/* RCSID("$Heimdal: der_length.c,v 1.12 2001/09/25 13:39:26 assar Exp $"); */
+/* RCSID("Heimdal: der_length.c,v 1.12 2001/09/25 13:39:26 assar Exp $"); */
 
 static size_t
 len_unsigned (unsigned val)
@@ -1133,7 +1138,7 @@ length_generalized_time (const time_t *t)
  */
 
 
-/* RCSID("$Heimdal: der_copy.c,v 1.9 2001/09/25 13:39:25 assar Exp $"); */
+/* RCSID("Heimdal: der_copy.c,v 1.9 2001/09/25 13:39:25 assar Exp $"); */
 
 int
 copy_general_string (const general_string *from, general_string *to)
@@ -1166,7 +1171,6 @@ copy_oid (const oid *from, oid *to)
     memcpy(to->components, from->components, to->length);
     return 0;
 }
-
 /*
  * Copyright (c) 1997 Kungliga Tekniska Högskolan
  * (Royal Institute of Technology, Stockholm, Sweden). 
@@ -1200,7 +1204,8 @@ copy_oid (const oid *from, oid *to)
  * SUCH DAMAGE. 
  */
 
-/* RCSID("$KTHId: timegm.c,v 1.7 1999/12/02 17:05:02 joda Exp $"); */
+
+/* RCSID("Heimdal: timegm.c,v 1.7 1999/12/02 17:05:02 joda Exp $"); */
 
 #ifndef HAVE_TIMEGM
 
