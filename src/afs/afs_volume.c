@@ -693,7 +693,8 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	 * This means that very soon we'll ask for the BK volume so
 	 * we'll prefetch it (well we did already.)
 	 */
-	tv1 = afs_SetupVolume(tv->backVol, (char *)0, ve, tcell, 0, type, areq);
+	tv1 =
+	    afs_SetupVolume(tv->backVol, (char *)0, ve, tcell, 0, type, areq);
 	tv1->refCount--;
     }
     if ((agood >= 2) && tv->roVol) {

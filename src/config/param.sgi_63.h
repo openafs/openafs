@@ -133,7 +133,7 @@
 
 #include <afs/afs_sysnames.h>
 
-									   /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
+													       /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 

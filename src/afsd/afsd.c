@@ -265,10 +265,10 @@ static int enable_process_stats = 0;	/* enable rx stats */
 #ifdef AFS_AFSDB_ENV
 static int enable_afsdb = 0;	/* enable AFSDB support */
 #endif
-static int enable_dynroot = 0;		/* enable dynroot support */
-static int enable_fakestat = 0;		/* enable fakestat support */
+static int enable_dynroot = 0;	/* enable dynroot support */
+static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
-static int enable_nomount = 0;		/* do not mount */
+static int enable_nomount = 0;	/* do not mount */
 #ifdef notdef
 static int inodes = 60;		/* VERY conservative, but has to be */
 #endif
@@ -2164,7 +2164,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-fakestat-all", CMD_FLAG, CMD_OPTIONAL,
 		"Enable fakestat support for all mounts");
     cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
-    cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL, "Prefer backup volumes for mointpoints in backup volumes");
+    cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
+		"Prefer backup volumes for mointpoints in backup volumes");
     return (cmd_Dispatch(argc, argv));
 }
 

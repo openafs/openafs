@@ -165,8 +165,10 @@ jfieldID process_stateBadFileAccessField = 0;
  * for the exception.  See Exceptions.h for the available
  * exceptions.
  */
-void throwException(JNIEnv * env, jclass * excCls, char *excClsName,
-		    jmethodID * initID, int code) {
+void
+throwException(JNIEnv * env, jclass * excCls, char *excClsName,
+	       jmethodID * initID, int code)
+{
     jobject exc;
     if (*excCls == 0) {
 	*excCls =
@@ -469,8 +471,9 @@ getNativeString(JNIEnv * env, const jstring jstr)
  *
  * @returns		file descriptor
  */
-int openAFSFile(JNIEnv * env, jstring filenameUTF, int flags, int mode,
-		int *err) {
+int
+openAFSFile(JNIEnv * env, jstring filenameUTF, int flags, int mode, int *err)
+{
     char *filename;
     int fd = -1;
 

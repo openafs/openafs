@@ -17,8 +17,8 @@ This file is now obsolete.
 #include <afs/param.h>
 #endif
  
-RCSID
-  ("$Header$");
+    RCSID
+    ("$Header$");
 
 #ifdef	KERNEL
 #include "h/types.h"

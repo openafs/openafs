@@ -64,11 +64,11 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char   *cpos, *volnamep;
-    char   type, *buf;
-    afs_int32  prefetch;          /* 1=>None  2=>RO  3=>BK */
-    afs_int32  mtptCell, assocCell, hac = 0;
-    afs_int32  samecell, roname, len;
+    char *cpos, *volnamep;
+    char type, *buf;
+    afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
+    afs_int32 mtptCell, assocCell, hac = 0;
+    afs_int32 samecell, roname, len;
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
@@ -121,14 +121,14 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      *   want to prefetch the RO volume.
      */
     if ((type == '#') && !roname) {
-       if (afs_bkvolpref && samecell && (avc->states & CBackup))
-           prefetch = 3; /* Prefetch the BK */
-       else if (!samecell || (avc->states & CRO))
-           prefetch = 2; /* Prefetch the RO */
-       else
-           prefetch = 1; /* Do not prefetch */
+	if (afs_bkvolpref && samecell && (avc->states & CBackup))
+	    prefetch = 3;	/* Prefetch the BK */
+	else if (!samecell || (avc->states & CRO))
+	    prefetch = 2;	/* Prefetch the RO */
+	else
+	    prefetch = 1;	/* Do not prefetch */
     } else {
-       prefetch = 1; /* Do not prefetch */
+	prefetch = 1;		/* Do not prefetch */
     }
 
     /* Get the volume struct. Unless this volume name has ".readonly" or
@@ -139,7 +139,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 
     /* If no volume was found in this cell, try the associated linked cell */
     if (!tvp && hac && areq->volumeError) {
-       tvp =
+	tvp =
 	    afs_GetVolumeByName(volnamep, assocCell, prefetch, areq,
 				WRITE_LOCK);
     }
@@ -191,7 +191,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	afs_PutVolume(tvp, WRITE_LOCK);	/* release old volume */
 	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
 	if (!tvp)
-	   return ENODEV;	/* oops, can't do it */
+	    return ENODEV;	/* oops, can't do it */
     }
 
     if (avc->mvid == 0)

@@ -296,8 +296,10 @@ KTEXT pkt_cipher(KTEXT packet);
  * Check the response with the supplied key. If the key is apparently
  * wrong, return INTK_BADPW, otherwise zero.
  */
-static check_response(KTEXT rpkt, KTEXT cip, char *service, char *instance,
-		      char *realm, struct ktc_encryptionKey *key) {
+static
+check_response(KTEXT rpkt, KTEXT cip, char *service, char *instance,
+	       char *realm, struct ktc_encryptionKey *key)
+{
     Key_schedule key_s;
     char *ptr;
     char s_service[SNAME_SZ];

@@ -93,7 +93,7 @@ static int stripcalled = 0;
 
 /* How many systems don't have strerror now? */
 #ifndef HAVE_STRERROR
-#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_FBSD50_ENV) 
+#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_FBSD50_ENV)
 extern int sys_nerr;
 #endif
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
@@ -183,7 +183,7 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
 {
     int pid;
     pid_t status;
-    static char *env[] = { 
+    static char *env[] = {
 	0,
     };
     static char *strip[] = {
@@ -275,7 +275,7 @@ static int
 quickStrip(char *iname, char *oname, int ignored, int copy_only)
 {
     int pid, status;
-    static char *env[] = { 
+    static char *env[] = {
 	0,
     };
     static char *strip[] = {

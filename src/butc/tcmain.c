@@ -642,7 +642,6 @@ GetConfigParams(filename, port)
 #endif
 	    }
 	}
-
 #ifndef xbsa
 	/* All the xbsa spacific parameters */
 	else if (!strcmp(cmd, "TYPE") || !strcmp(cmd, "NODE")

@@ -86,10 +86,12 @@ struct afs_atomlist {
     void *block_head;		/* pointer to block list */
 };
 
-afs_atomlist *afs_atomlist_create(size_t atom_size, size_t block_size,
-				  void *(*allocate) (size_t n)
-				  , void (*deallocate) (void *p, size_t n)
-    ) {
+afs_atomlist *
+afs_atomlist_create(size_t atom_size, size_t block_size,
+		    void *(*allocate) (size_t n)
+		    , void (*deallocate) (void *p, size_t n)
+    )
+{
     afs_atomlist *al;
     size_t atoms_per_block;
     size_t extra_space;

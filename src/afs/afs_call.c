@@ -871,12 +871,10 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_SET_FAKESTAT) {
 	afs_fakestat_enable = parm2;
 	code = 0;
-    }
-    else if (parm == AFSOP_SET_BACKUPTREE) {
+    } else if (parm == AFSOP_SET_BACKUPTREE) {
 	afs_bkvolpref = parm2;
-    }
-    else
-      code = EINVAL;
+    } else
+	code = EINVAL;
 
   out:
     AFS_GUNLOCK();

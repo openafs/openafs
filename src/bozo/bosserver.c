@@ -966,8 +966,8 @@ main(int argc, char **argv, char **envp)
     rx_SetNoJumbo();
 
     tservice = rx_NewService( /* port */ 0, /* service id */ 1,
-							/*service name */ "bozo",
-							/* security classes */
+			     /*service name */ "bozo",
+			     /* security classes */
 			     bozo_rxsc,
 			     /* numb sec classes */ 3, BOZO_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);

@@ -48,7 +48,8 @@ int
 DoKasPrincipalCreate(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE,
-	    PASSWORD } DoKasPrincipalCreate_parm_t;
+	PASSWORD
+    } DoKasPrincipalCreate_parm_t;
     afs_status_t st = 0;
     const char *instance = NULL;
     kas_identity_t user;
@@ -220,7 +221,8 @@ int
 DoKasPrincipalKeySet(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE, PASSWORD,
-	    KEYVERSION } DoKasPrincipalKeySet_parm_t;
+	KEYVERSION
+    } DoKasPrincipalKeySet_parm_t;
     afs_status_t st = 0;
     kas_encryptionKey_t key;
     kas_identity_t user;

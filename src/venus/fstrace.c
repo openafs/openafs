@@ -963,7 +963,7 @@ open1catfile(file)
 	    while (*np && *np != ':')
 		*p++ = *np++;
 	    *p = '\0';
-	    if (*np)				/*----  iff on a colon then advance --*/
+	    if (*np)					/*----  iff on a colon then advance --*/
 		np++;
 	    valid = 0;
 	    if (strlen(cpth)) {
@@ -1081,7 +1081,7 @@ cat_already_open(cat)
 
 
 int
-catclose1(catd)				/*---- the catd to be closed ----*/
+catclose1(catd)					/*---- the catd to be closed ----*/
      nl_catd catd;	/*---- the catd to be closed ----*/
 
 {

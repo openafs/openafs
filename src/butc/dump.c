@@ -473,7 +473,8 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
      * If we hit the end, see if this is the first volume on the tape or not.
      * Also, mark the tape as finished if the tape contains other dumps.
      */
-    if (!code) code = rc;
+    if (!code)
+	code = rc;
     if (HITEOT(code)) {
 	ErrorLog(2, taskId, code, tapeInfoPtr->error,
 		 "Warning: Dump (%s) hit end-of-tape inferred\n",

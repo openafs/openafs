@@ -875,9 +875,9 @@ ProcessAfsInodes(devname, partition)
 		    /* for inodes created in solaris 2.4, there is a possibility
 		     ** that the gid gets chopped off to an unsigned short(2 bytes)
 		     */
-		    if ((p2 || p3) && !p4
-			&& ((p5 == -2)
-			    || ((unsigned short)p5 == (unsigned short)-2))) {
+		    if ((p2 || p3) && !p4 && ((p5 == -2)
+					      || ((unsigned short)p5 ==
+						  (unsigned short)-2))) {
 			/* This is a pre Sol2.6 inode */
 			mod = 1;
 			cnt++;

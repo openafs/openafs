@@ -1666,11 +1666,11 @@ main(int argc, char *argv[])
     sc[1] = 0;			/* rxvab_NewServerSecurityObject(key1, 0) */
     sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
     sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
-    tservice =
-	rx_NewService( /* port */ 0, /* service id */ 1, /*service name */
-		      "AFS",
-		      /* security classes */ sc, /* numb sec classes */ 4,
-		      RXAFS_ExecuteRequest);
+    tservice = rx_NewService( /* port */ 0, /* service id */ 1,	/*service name */
+			     "AFS",
+							/* security classes */ sc,
+							/* numb sec classes */
+			     4, RXAFS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));

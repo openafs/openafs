@@ -32,12 +32,12 @@ RCSID
 #include "error_macros.h"
 
 #ifdef O_LARGEFILE
-typedef off64_t         osi_lloff_t;
+typedef off64_t osi_lloff_t;
 #else /* O_LARGEFILE */
 #ifdef AFS_HAVE_LLSEEK
-typedef offset_t        osi_lloff_t;
+typedef offset_t osi_lloff_t;
 #else /* AFS_HAVE_LLSEEK */
-typedef off_t           osi_lloff_t;
+typedef off_t osi_lloff_t;
 #endif /* AFS_HAVE_LLSEEK */
 #endif /* O_LARGEFILE */
 
@@ -1622,7 +1622,7 @@ file_Seek(info, position)
 
     if (isafile) {
 	p = (struct progress *)info->tmRock;
-	posit = (osi_lloff_t)position * (osi_lloff_t)BUTM_BLOCKSIZE;
+	posit = (osi_lloff_t) position *(osi_lloff_t) BUTM_BLOCKSIZE;
 
 	/* Not really necessary to do it this way, should be fixed */
 #ifdef O_LARGEFILE

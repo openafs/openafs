@@ -271,7 +271,8 @@ int
 DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, PROCESS, BINARY, CRON, CRONTIME,
-	    NOTIFIER } DoBosProcessCreate_parm_t;
+	NOTIFIER
+    } DoBosProcessCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -473,7 +474,8 @@ int
 DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, PROCESS, STOPPED,
-	    RUNNING } DoBosProcessExecutionStateSet_parm_t;
+	RUNNING
+    } DoBosProcessExecutionStateSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -523,7 +525,8 @@ int
 DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, PROCESS, STOPPED,
-	    RUNNING } DoBosProcessExecutionStateSetTemporary_parm_t;
+	RUNNING
+    } DoBosProcessExecutionStateSetTemporary_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -1386,7 +1389,8 @@ int
 DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, OLDFILES, BAKFILES,
-	    COREFILES } DoBosExecutablePrune_parm_t;
+	COREFILES
+    } DoBosExecutablePrune_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Prune_t old_files = BOS_DONT_PRUNE;
@@ -1426,7 +1430,8 @@ int
 DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, DAILY, WEEKLY,
-	    TIME } DoBosExecutableRestartTimeSet_parm_t;
+	TIME
+    } DoBosExecutableRestartTimeSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type;
@@ -1524,7 +1529,8 @@ int
 DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
 {
     typedef enum { SERVER, DAILY,
-	    WEEKLY } DoBosExecutableRestartTimeGet_parm_t;
+	WEEKLY
+    } DoBosExecutableRestartTimeGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type;

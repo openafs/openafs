@@ -1270,9 +1270,8 @@ auth_stream(s, sepent)
 		debug = 0;
 		dup2(0, 2);
 
-		if (!afs_didsetpag
-		    && (!strcmp(sep->se_service, "login")
-			|| !strcmp(sep->se_service, "shell"))) {
+		if (!afs_didsetpag && (!strcmp(sep->se_service, "login")
+				       || !strcmp(sep->se_service, "shell"))) {
 		    setpag();	/* to disassociate it from current group... */
 		}
 		execv(sep->se_server, sep->se_argv);

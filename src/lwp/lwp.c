@@ -973,8 +973,9 @@ Free_PCB(PROCESS pid)
 {
     Debug(4, ("Entered Free_PCB"));
     if (pid->stack != NULL) {
-	Debug(0, ("HWM stack usage: %d, [PCB at 0x%x]",
-		  Stack_Used(pid->stack, pid->stacksize), pid));
+	Debug(0,
+	      ("HWM stack usage: %d, [PCB at 0x%x]",
+	       Stack_Used(pid->stack, pid->stacksize), pid));
 	free(pid->stack);
     }
     if (pid->eventlist != NULL)

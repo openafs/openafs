@@ -969,8 +969,8 @@ DeleteCallBack(struct host *host, AFSFid * fid)
 	h_Unlock_r(host);
 	H_UNLOCK;
 	ViceLog(8,
-		("DCB: No call backs for fid (%u, %u, %u)\n",
-		 fid->Volume, fid->Vnode, fid->Unique));
+		("DCB: No call backs for fid (%u, %u, %u)\n", fid->Volume,
+		 fid->Vnode, fid->Unique));
 	return 0;
     }
     pcb = FindCBPtr(fe, host);
@@ -1011,8 +1011,8 @@ DeleteFileCallBacks(AFSFid * fid)
     if (!fe) {
 	H_UNLOCK;
 	ViceLog(8,
-		("DF: No fid (%u,%u,%u) to delete\n", fid->Volume,
-		 fid->Vnode, fid->Unique));
+		("DF: No fid (%u,%u,%u) to delete\n", fid->Volume, fid->Vnode,
+		 fid->Unique));
 	return 0;
     }
     for (n = 0, cbi = fe->firstcb; cbi; n++) {
