@@ -454,6 +454,7 @@ AC_SUBST(afslocaldir)
 AC_SUBST(afsbackupdir)
 AC_SUBST(afsbosconfigdir)
 AC_SUBST(afsperldir)
+
 if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
