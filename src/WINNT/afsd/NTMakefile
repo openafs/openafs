@@ -322,12 +322,13 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 AFSD_SDKLIBS =\
 	largeint.lib \
 	netapi32.lib \
-    mpr.lib \
     dnsapi.lib \
 	rpcrt4.lib \
 	user32.lib \
     Dbghelp.lib \
-    strsafe.lib
+    strsafe.lib \
+    mpr.lib \
+    secur32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
