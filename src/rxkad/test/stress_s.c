@@ -16,6 +16,7 @@ RCSID("$Header$");
 
 #include <afs/stds.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -25,6 +26,9 @@ RCSID("$Header$");
 #include <rx/rx_null.h>
 
 #include <rx/rxkad.h>
+
+#include <afs/keys.h>
+#include <afs/cellconfig.h>
 
 #include "stress.h"
 #include "stress_internal.h"
@@ -41,8 +45,38 @@ static long GetKey (rock, kvno, key)
   IN long  kvno;
   OUT struct ktc_encryptionKey *key;
 {
-    memcpy(key, &serviceKey, sizeof(*key));
-    return 0;
+    struct serverParms *parms = (struct serverParms *)rock;
+    struct afsconf_keys tstr;
+    afs_int32 code;
+    int fd;
+
+    fprintf(stderr, "GetKey called for kvno %d\n", kvno);
+    if (!parms->keyfile) {
+        memcpy(key, &serviceKey, sizeof(*key));
+        return 0;
+    }
+
+    /* the rest of this function borrows heavily from auth/cellconfig.c */
+    fd = open(parms->keyfile, O_RDONLY);
+    if (fd < 0) {
+        return AFSCONF_FAILURE;
+    }
+    code = read(fd, &tstr, sizeof(struct afsconf_keys));
+    close(fd);
+    if (code < sizeof(afs_int32)) {
+        return AFSCONF_FAILURE;
+    }
+
+    /* convert key structure to host order */
+    tstr.nkeys = ntohl(tstr.nkeys);
+    for(fd = 0; fd < tstr.nkeys; fd++) {
+        if (kvno == ntohl(tstr.key[fd].kvno)) {
+            memcpy(key, tstr.key[fd].key, sizeof(*key));
+            return 0;
+        }
+    }
+
+    return AFSCONF_NOTFOUND;
 }
 
 static int minAuth;
@@ -61,7 +95,7 @@ long rxkst_StartServer (parms)
 
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;				/* no rxvab anymore */
-    sc[2] = rxkad_NewServerSecurityObject (minLevel, 0, GetKey, 0);
+    sc[2] = rxkad_NewServerSecurityObject (minLevel, (void *)parms, GetKey, 0);
     tservice = rx_NewService(htons(RXKST_SERVICEPORT), RXKST_SERVICEID,
 			     "stress test", sc, 3, RXKST_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
@@ -77,6 +111,10 @@ long rxkst_StartServer (parms)
     return 0;
 }
 
+static char test_client_name[MAXKTCNAMELEN];
+static char test_client_inst[MAXKTCNAMELEN];
+static char test_client_cell[MAXKTCREALMLEN];
+static int got_client_id = 0;
 static long CheckAuth (call)
   IN struct rx_call *call;
 {
@@ -105,16 +143,23 @@ static long CheckAuth (call)
 				name, inst, cell, &kvno);
     if (code) return code;
     if (minAuth > level) return -1;
-    if (kvno != serviceKeyVersion) return RXKST_BADKVNO;
-    if (strcmp (name, RXKST_CLIENT_NAME) ||
-	strcmp (inst, RXKST_CLIENT_INST) ||
-	cell[0]) return RXKST_BADCLIENT;
+    fprintf(stderr, "Test client is %s.%s@%s\n", name, inst, cell);
+    if (got_client_id) {
+        if (strcmp(name, test_client_name)) return RXKST_BADCLIENT;
+        if (strcmp(inst, test_client_inst)) return RXKST_BADCLIENT;
+        if (strcmp(cell, test_client_cell)) return RXKST_BADCLIENT;
+    } else {
+        strcpy(test_client_name, name);
+        strcpy(test_client_inst, inst);
+        strcpy(test_client_cell, cell);
+        got_client_id = 1;
+    }
     return 0;
 }
 
 /* Stop the server.  There isn't a graceful way to do this so just exit. */
 
-long SRXKST_Kill (call)
+afs_int32 SRXKST_Kill (call)
   IN struct rx_call *call;
 {
     long code;
@@ -131,7 +176,7 @@ long SRXKST_Kill (call)
     return 0;    
 }
 
-long SRXKST_Fast (call, n, inc_nP)
+afs_int32 SRXKST_Fast (call, n, inc_nP)
   IN struct rx_call *call;
   IN u_long n;
   OUT u_long *inc_nP;
@@ -140,7 +185,7 @@ long SRXKST_Fast (call, n, inc_nP)
     return 0;
 }
 
-long SRXKST_Slow (call, tag, nowP)
+afs_int32 SRXKST_Slow (call, tag, nowP)
   IN struct rx_call *call;
   IN u_long tag;
   OUT u_long *nowP;
@@ -184,7 +229,7 @@ static void PutBuffer(b)
     buflist = bl;
 }
 
-long SRXKST_Copious (call, inlen, insum, outlen, outsum)
+afs_int32 SRXKST_Copious (call, inlen, insum, outlen, outsum)
   IN struct rx_call *call;
   IN u_long inlen;
   IN u_long insum;
