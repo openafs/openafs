@@ -47,4 +47,3 @@ if [[ -f /usr/newconfig/sbin/init.d/afs ]]; then
   fi
 
 fi
-

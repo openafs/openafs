@@ -1,0 +1,35 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-CLNT
+# preremove
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+#
+# Shutdown the afsd process
+#
+
+/usr/vice/etc/afsd -shutdown
+
+exit $exitval

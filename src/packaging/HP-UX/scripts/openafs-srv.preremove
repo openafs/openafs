@@ -1,0 +1,42 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-SRV
+# preremove
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+#
+# Assume this system is an AFS server
+#
+SERVER=`/usr/bin/hostname`
+
+if [[ -f /usr/afs/bin/bosserver ]]; then
+  /usr/afs/bin/bos shutdown $SERVER -localauth
+fi
+#
+# The bosserver is still running, kill it
+#
+kill_named_procs bosserver SIGTERM
+
+exit $exitval

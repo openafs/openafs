@@ -1,0 +1,48 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-SRV
+# configure
+# @(#) $Revision$
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+
+
+if [[ -f /sbin/lib/mfsconfig.d/afs ]]; then
+  print "File /sbin/lib/mfsconfig.d/afs already exists"
+else
+  print "Creating file /sbin/lib/mfsconfig.d/afs"
+  print "format_revision 1" > /sbin/lib/mfsconfig.d/afs
+  print "fsck            0        m,P,p,d,f,b:c:y,n,Y,N,q," \
+	>> /sbin/lib/mfsconfig.d/afs
+  chmog 444 bin bin /sbin/lib/mfsconfig.d/afs
+fi
+#
+# Add /sbin/lib/mfsconfig.d/afs to the IPD so it will be removed
+# upon removal of the fileset
+
+print "Adding file /sbin/lib/mfsconfig.d/afs to the OPENAFS.OPENAFS-SRV fileset"
+swmodify -x files=/sbin/lib/mfsconfig.d/afs OPENAFS.OPENAFS-SRV
+
+exit $exitval

@@ -4,7 +4,7 @@ echo "NOTE:    Executing unconfigure script."
 #######
 #
 #  (c) Copyright Hewlett-Packard Company 1994
-#
+# @(#) OpenAFS unconfigure v1.2 4/22/03
 ########
 
     set -a
@@ -15,6 +15,10 @@ echo "NOTE:    Executing unconfigure script."
         exit 1
     fi
     . ${UTILS}
+#
+# Anticipate SUCCESS
+exitval=$SUCCESS
+ 
 ################################################
 # Set the global PATH to include OPENAFS software
 ROOT=/opt/afs/
@@ -46,4 +50,4 @@ do
   fi
 done
 
-exit 0
+exit $exitval

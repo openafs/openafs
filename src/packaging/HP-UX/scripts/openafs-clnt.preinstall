@@ -1,0 +1,49 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-CLNT
+# preinstall
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+# 
+# Shutdown the afsd process before upgrading. This is just cleaner, than
+# having SD move the file to #afsd because it's busy and adding it to
+# the cleanup file for removal on the next boot.
+#
+
+ps -ef | grep -v grep | grep afsd 
+
+if [[ $? = 0 ]]; then
+  print "afsd process is running..attempting to shut down afsd process"
+  /usr/vice/etc/afsd -shutdown
+  if [[ $? = 0 ]]; then
+    print "Successfully shutdown the afsd processes."
+    exitval=$SUCCESS
+  else
+    print "Failed to successfully shutdown the afsd process."
+    exitval=$FAILURE
+  fi
+fi
+
+exit $exitval
