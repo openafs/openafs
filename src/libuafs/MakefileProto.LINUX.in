@@ -8,7 +8,11 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
+# MakefileProto for LINUX systems
+# This Makefile generates two libraries: the standard libuafs and libjuafs,
+# a libuafs variant that is designed to link with Java enabled libraries.
+# The libjuafs library implements the AFS_WEB_ENHANCEMENTS definition, see
+# the libuafs README for details.
 
 # System specific build commands and flags
 CC = gcc
@@ -23,6 +27,7 @@ TEST_LDFLAGS=
 TEST_LIBS=-lpthread
 
 LIBUAFS = libuafs.a
+LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.so
 LIBAFSWEBKRB = nsafs.krb.so
 
@@ -45,7 +50,15 @@ setup_uafs: UAFS setup_common
 	ln -s ../Makefile UAFS/Makefile
 	ln -s ../Makefile.common UAFS/Makefile.common
 
+setup_juafs: JUAFS setup_common
+	-$(RM) -f JUAFS/Makefile JUAFS/Makefile.common
+	ln -s ../Makefile JUAFS/Makefile
+	ln -s ../Makefile.common JUAFS/Makefile.common
+
 UAFS:
+	mkdir -p $@
+
+JUAFS:
 	mkdir -p $@
 
 setup_nsafs: AFSWEB setup_common
@@ -58,7 +71,13 @@ AFSWEB:
 
 UAFS/$(LIBUAFS): setup_uafs
 	cd UAFS; \
+	export LIBJUAFS_FLAGS=; \
 	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR}
+
+JUAFS/$(LIBJUAFS): setup_juafs
+	cd JUAFS; \
+	export LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS; \
+	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR}
 
 AFSWEB/$(LIBAFSWEB): setup_nsafs
 	cd AFSWEB; \
@@ -74,6 +93,10 @@ $(LIBUAFS): $(UAFSOBJ)
 	-$(RM) -f $(LIBUAFS)
 	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
 
+$(LIBJUAFS): $(JUAFSOBJ)
+	-$(RM) -f $(LIBJUAFS)
+	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
+
 $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
 	-$(RM) -f $(LIBAFSWEB)
 	ld -b $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
@@ -81,3 +104,9 @@ $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
 $(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
 	-$(RM) -f $(LIBAFSWEBKRB)
 	ld -b $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)
+
+
+
+
+
+

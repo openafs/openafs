@@ -11,17 +11,18 @@
 SHELL=/bin/sh
 INCLUDE=  -I. -I/usr/include -I${TOP_OBJDIR}/src/config
 UOBJ	=../UAFS
-WEBOBJ	=../AFSWEB
+JUAFS	=../JUAFS
+WEBOBJ=../AFSWEB
 AFS	=../afs
 RX	=../rx
-AFSINT	=../afsint
+AFSINT=../afsint
 DES	=../des
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
-all: ${TOP_LIBDIR}/$(LIBUAFS) linktest
+all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) linktest
 
 webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
@@ -33,7 +34,8 @@ linktest: UAFS/$(LIBUAFS) des/libdes.a
 ukinstall: install
 
 install: \
-	${DESTDIR}${libdir}/$(LIBUAFS)
+	${DESTDIR}${libdir}/$(LIBUAFS) \
+	${DESTDIR}${libdir}/$(LIBJUAFS)
 
 dest: \
 	${DEST}/root.perf/include/afs/param.h \
@@ -43,11 +45,12 @@ dest: \
 	${DEST}/root.perf/include/afs/sysincludes.h \
 	${DEST}/root.perf/include/afs/afs_usrops.h \
 	${DEST}/root.perf/lib/libdes.a \
-	${DEST}/root.perf/lib/$(LIBUAFS)
+	${DEST}/root.perf/lib/$(LIBUAFS) \
+	${DEST}/root.perf/lib/$(LIBJUAFS)
 
 
-CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
-CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?
+CRULE1=	$(CC) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 
 UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
@@ -402,6 +405,123 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Krxstat.ss.o \
 	$(WEBOBJ)/Krxstat.xdr.o \
 	$(WEBOBJ)/rxstat.o
+
+JUAFSOBJ = \
+	$(JUAFS)/afs_atomlist.o \
+	$(JUAFS)/afs_lhash.o \
+	$(JUAFS)/afs_analyze.o \
+	$(JUAFS)/afs_axscache.o  \
+	$(JUAFS)/afs_buffer.o	\
+	$(JUAFS)/afs_callback.o	\
+	$(JUAFS)/afs_cbqueue.o    \
+	$(JUAFS)/afs_cell.o \
+	$(JUAFS)/afs_chunk.o \
+	$(JUAFS)/afs_conn.o \
+	$(JUAFS)/afs_daemons.o	\
+	$(JUAFS)/afs_dcache.o \
+	$(JUAFS)/afs_dir.o \
+	$(JUAFS)/afs_dynroot.o \
+	$(JUAFS)/afs_init.o \
+	$(JUAFS)/afs_lock.o	\
+	$(JUAFS)/afs_mariner.o \
+	$(JUAFS)/afs_memcache.o	\
+	$(JUAFS)/afs_osidnlc.o	\
+	$(JUAFS)/afs_osi_pag.o \
+	$(JUAFS)/afs_segments.o \
+	$(JUAFS)/afs_server.o \
+	$(JUAFS)/afs_stat.o \
+	$(JUAFS)/afs_user.o \
+	$(JUAFS)/afs_util.o \
+	$(JUAFS)/afs_vcache.o \
+	$(JUAFS)/afs_osi_uio.o \
+	$(JUAFS)/afs_vnop_access.o \
+	$(JUAFS)/afs_vnop_attrs.o \
+	$(JUAFS)/afs_vnop_create.o \
+	$(JUAFS)/afs_vnop_dirops.o \
+	$(JUAFS)/afs_vnop_fid.o \
+	$(JUAFS)/afs_vnop_flock.o \
+	$(JUAFS)/afs_vnop_link.o \
+	$(JUAFS)/afs_vnop_lookup.o \
+	$(JUAFS)/afs_vnop_open.o \
+	$(JUAFS)/afs_vnop_read.o \
+	$(JUAFS)/afs_vnop_readdir.o \
+	$(JUAFS)/afs_vnop_remove.o \
+	$(JUAFS)/afs_vnop_rename.o \
+	$(JUAFS)/afs_vnop_strategy.o \
+	$(JUAFS)/afs_vnop_symlink.o \
+	$(JUAFS)/afs_vnop_write.o \
+	$(JUAFS)/afs_volume.o \
+	$(JUAFS)/afs_call.o \
+	$(JUAFS)/afs_pioctl.o \
+	$(JUAFS)/osi_vfsops.o \
+	$(JUAFS)/afs_usrops.o \
+	$(JUAFS)/xdr_afsuuid.o \
+	$(JUAFS)/afs_uuid.o \
+	$(JUAFS)/osi_vnodeops.o \
+	$(JUAFS)/osi_vm.o \
+	$(JUAFS)/osi_groups.o \
+	$(JUAFS)/afsaux.o \
+	$(JUAFS)/Kvice.xdr.o \
+	$(JUAFS)/xdr_arrayn.o \
+	$(JUAFS)/Kvice.cs.o \
+	$(JUAFS)/fcrypt.o \
+	$(JUAFS)/rx.o \
+	$(JUAFS)/rx_rdwr.o \
+	$(JUAFS)/rx_clock.o \
+	$(JUAFS)/rx_event.o \
+	$(JUAFS)/rx_globals.o \
+	$(JUAFS)/rx_knet.o \
+	$(JUAFS)/rx_kcommon.o \
+	$(JUAFS)/rx_misc.o \
+	$(JUAFS)/rx_null.o \
+	$(JUAFS)/rx_getaddr.o \
+	$(JUAFS)/rx_packet.o \
+	$(JUAFS)/rx_conncache.o \
+	$(JUAFS)/xdr_rx.o \
+	$(JUAFS)/Kvldbint.cs.o \
+	$(JUAFS)/Kvldbint.xdr.o \
+	$(JUAFS)/Kcallback.ss.o \
+	$(JUAFS)/crypt_conn.o \
+	$(JUAFS)/AFS_component_version_number.o \
+	$(JUAFS)/afs_exporter.o \
+	$(JUAFS)/rxkad_client.o \
+	$(JUAFS)/rxkad_common.o \
+	$(JUAFS)/casestrcpy.o \
+	$(JUAFS)/dirpath.o \
+	$(JUAFS)/fileutil.o \
+	$(JUAFS)/netutils.o \
+	$(JUAFS)/et_name.o \
+	$(JUAFS)/com_err.o \
+	$(JUAFS)/error_msg.o \
+	$(JUAFS)/uerrors.o \
+	$(JUAFS)/kaerrors.o \
+	$(JUAFS)/ktc_errors.o \
+	$(JUAFS)/rxkad_errs.o \
+	$(JUAFS)/authclient.o \
+	$(JUAFS)/authcon.o \
+	$(JUAFS)/cellconfig.o \
+	$(JUAFS)/client.o \
+	$(JUAFS)/acfg_errors.o \
+	$(JUAFS)/kaaux.o \
+	$(JUAFS)/kalocalcell.o \
+	$(JUAFS)/kauth.cs.o \
+	$(JUAFS)/kauth.xdr.o \
+	$(JUAFS)/ktc.o \
+	$(JUAFS)/ptint.cs.o \
+	$(JUAFS)/ptint.xdr.o \
+	$(JUAFS)/ptuser.o \
+	$(JUAFS)/pterror.o \
+	$(JUAFS)/ticket.o \
+	$(JUAFS)/token.o \
+	$(JUAFS)/ubik_int.cs.o \
+	$(JUAFS)/ubik_int.xdr.o \
+	$(JUAFS)/ubikclient.o \
+	$(JUAFS)/user.o \
+	$(JUAFS)/hostparse.o \
+	$(JUAFS)/Krxstat.ss.o \
+	$(JUAFS)/Krxstat.xdr.o \
+	$(JUAFS)/rxstat.o \
+	$(JUAFS)/xdr_int64.o
 
 # Compilation rules
 
@@ -904,6 +1024,253 @@ $(WEBOBJ)/Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
 $(WEBOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
 	$(CRULE2)
 
+# These are for libjuafs.a 
+# Used for linking with libafsauthent and libafsrpc
+
+$(JUAFS)/afs_atomlist.o: $(AFS)/afs_atomlist.c
+	$(CRULE1);
+$(JUAFS)/afs_lhash.o: $(AFS)/afs_lhash.c
+	$(CRULE1);
+$(JUAFS)/afs_analyze.o: $(AFS)/afs_analyze.c
+	$(CRULE1);
+$(JUAFS)/afs_axscache.o: $(AFS)/afs_axscache.c
+	$(CRULE1);
+$(JUAFS)/afs_buffer.o: $(AFS)/afs_buffer.c
+	$(CRULE1);
+$(JUAFS)/afs_cell.o: $(AFS)/afs_cell.c
+	$(CRULE1);
+$(JUAFS)/afs_conn.o: $(AFS)/afs_conn.c
+	$(CRULE1);
+$(JUAFS)/afs_dcache.o: $(AFS)/afs_dcache.c
+	$(CRULE1);
+$(JUAFS)/afs_dynroot.o: $(AFS)/afs_dynroot.c
+	$(CRULE1);
+$(JUAFS)/afs_init.o: $(AFS)/afs_init.c
+	$(CRULE1);
+$(JUAFS)/afs_mariner.o: $(AFS)/afs_mariner.c
+	$(CRULE1);
+$(JUAFS)/afs_osidnlc.o: $(AFS)/afs_osidnlc.c
+	$(CRULE1);
+$(JUAFS)/afs_osi.o: 	$(AFS)/afs_osi.c
+	$(CRULE1);
+$(JUAFS)/afs_osi_pag.o: $(AFS)/afs_osi_pag.c
+	$(CRULE1);
+$(JUAFS)/afs_segments.o: $(AFS)/afs_segments.c
+	$(CRULE1);
+$(JUAFS)/afs_server.o: $(AFS)/afs_server.c
+	$(CRULE1);
+$(JUAFS)/afs_user.o: $(AFS)/afs_user.c
+	$(CRULE1);
+$(JUAFS)/afs_util.o: $(AFS)/afs_util.c
+	$(CRULE1);
+$(JUAFS)/afs_vcache.o: $(AFS)/afs_vcache.c
+	$(CRULE1);
+$(JUAFS)/afs_osi_uio.o: $(AFS)/afs_osi_uio.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_access.o: $(AFS)/afs_vnop_access.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_attrs.o: $(AFS)/afs_vnop_attrs.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_create.o: $(AFS)/afs_vnop_create.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_dirops.o: $(AFS)/afs_vnop_dirops.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_fid.o: $(AFS)/afs_vnop_fid.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_flock.o: $(AFS)/afs_vnop_flock.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_link.o: $(AFS)/afs_vnop_link.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_lookup.o: $(AFS)/afs_vnop_lookup.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_open.o: $(AFS)/afs_vnop_open.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_read.o: $(AFS)/afs_vnop_read.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_readdir.o: $(AFS)/afs_vnop_readdir.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_remove.o: $(AFS)/afs_vnop_remove.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_rename.o: $(AFS)/afs_vnop_rename.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_strategy.o: $(AFS)/afs_vnop_strategy.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_symlink.o: $(AFS)/afs_vnop_symlink.c
+	$(CRULE1);
+$(JUAFS)/afs_vnop_write.o: $(AFS)/afs_vnop_write.c
+	$(CRULE1);
+$(JUAFS)/afs_volume.o: $(AFS)/afs_volume.c
+	$(CRULE1);
+$(JUAFS)/rx_rdwr.o: $(RX)/rx_rdwr.c
+	$(CRULE1);
+$(JUAFS)/afs_cbqueue.o: $(AFS)/afs_cbqueue.c
+	$(CRULE1);
+$(JUAFS)/afs_callback.o: $(AFS)/afs_callback.c
+	$(CRULE1);
+$(JUAFS)/afs_chunk.o: $(AFS)/afs_chunk.c
+	$(CRULE1);
+$(JUAFS)/afs_daemons.o: $(AFS)/afs_daemons.c
+	$(CRULE1);
+$(JUAFS)/afs_dir.o: 	$(AFS)/afs_dir.c
+	$(CRULE1);
+$(JUAFS)/AFS_component_version_number.o: $(AFS)/AFS_component_version_number.c
+	$(CRULE1);
+$(JUAFS)/afs_lock.o: $(AFS)/afs_lock.c
+	$(CRULE1);
+$(JUAFS)/afs_memcache.o: $(AFS)/afs_memcache.c
+	$(CRULE1);
+$(JUAFS)/afs_stat.o: $(AFS)/afs_stat.c
+	$(CRULE1);
+$(JUAFS)/fcrypt.o: 	$(AFS)/fcrypt.c
+	$(CRULE1);
+$(JUAFS)/crypt_conn.o: $(AFS)/crypt_conn.c
+	$(CRULE1);
+$(JUAFS)/rxkad_client.o: $(AFS)/rxkad_client.c
+	$(CRULE1);
+$(JUAFS)/rxkad_common.o: $(AFS)/rxkad_common.c
+	$(CRULE1);
+$(JUAFS)/afs_exporter.o: $(AFS)/afs_exporter.c
+	$(CRULE1);
+$(JUAFS)/afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
+	$(CRULE1);
+$(JUAFS)/afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
+	$(CRULE1);
+$(JUAFS)/afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
+	$(CRULE1);
+$(JUAFS)/rx.o: $(RX)/rx.c
+	$(CRULE1);
+$(JUAFS)/rx_clock.o: $(RX)/rx_clock.c
+	$(CRULE1);
+$(JUAFS)/rx_event.o: $(RX)/rx_event.c
+	$(CRULE1);
+$(JUAFS)/rx_globals.o: $(RX)/rx_globals.c
+	$(CRULE1);
+$(JUAFS)/rx_misc.o: $(RX)/rx_misc.c
+	$(CRULE1);
+$(JUAFS)/rx_null.o: $(RX)/rx_null.c
+	$(CRULE1);
+$(JUAFS)/rx_getaddr.o: $(RX)/rx_getaddr.c
+	$(CRULE1);
+$(JUAFS)/rx_packet.o: $(RX)/rx_packet.c
+	$(CRULE1);
+$(JUAFS)/rx_conncache.o: $(RX)/rx_conncache.c
+	$(CRULE1);
+$(JUAFS)/xdr_rx.o: $(RX)/xdr_rx.c
+	$(CRULE1);
+$(JUAFS)/xdr_int64.o: $(RX)/xdr_int64.c
+	$(CRULE1);
+$(JUAFS)/afs_usrops.o: $(AFS)/afs_usrops.c
+	$(CRULE1);
+$(JUAFS)/afs_uuid.o: $(AFS)/afs_uuid.c
+	$(CRULE1);
+$(JUAFS)/xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
+	$(CRULE1);
+$(JUAFS)/osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1);
+$(JUAFS)/osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1);
+$(JUAFS)/osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1);
+$(JUAFS)/Kcallback.ss.o: $(AFSINT)/Kcallback.ss.c
+	$(CRULE1);
+$(JUAFS)/Kvice.xdr.o: $(AFSINT)/Kvice.xdr.c
+	$(CRULE1);
+$(JUAFS)/Kvice.cs.o: $(AFSINT)/Kvice.cs.c
+	$(CRULE1);
+$(JUAFS)/afsaux.o: $(AFSINT)/afsaux.c
+	$(CRULE1);
+$(JUAFS)/xdr_arrayn.o: $(RX)/xdr_arrayn.c
+	$(CRULE1);
+$(JUAFS)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
+	$(CRULE1);
+$(JUAFS)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
+	$(CRULE1);
+$(JUAFS)/afs_main.o: $(AFS)/afs_main.c
+	$(CRULE1);
+$(JUAFS)/rx_knet.o: $(RX)/rx_knet.c
+	$(CRULE1);
+$(JUAFS)/rx_kcommon.o: $(RX)/rx_kcommon.c
+	$(CRULE1);
+$(JUAFS)/afs_call.o: $(AFS)/afs_call.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+$(JUAFS)/afs_pioctl.o: $(AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+$(JUAFS)/osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS;
+$(JUAFS)/ktc.o: 	$(AFS)/ktc.c
+	$(CRULE1);
+$(JUAFS)/ticket.o: $(AFS)/ticket.c
+	$(CRULE1);
+$(JUAFS)/rxkad_server.o: $(AFS)/rxkad_server.c
+	$(CRULE1);
+$(JUAFS)/ptint.cs.o: $(AFSINT)/ptint.cs.c
+	$(CRULE1);
+$(JUAFS)/ptint.xdr.o: $(AFSINT)/ptint.xdr.c
+	$(CRULE1);
+$(JUAFS)/ptuser.o: $(AFS)/ptuser.c
+	$(CRULE1);
+$(JUAFS)/pterror.o: $(AFS)/pterror.c
+	$(CRULE1);
+$(JUAFS)/ubikclient.o: $(AFS)/ubikclient.c
+	$(CRULE1);
+$(JUAFS)/ubik_int.cs.o: $(AFSINT)/ubik_int.cs.c
+	$(CRULE1);
+$(JUAFS)/ubik_int.xdr.o: $(AFSINT)/ubik_int.xdr.c
+	$(CRULE1);
+$(JUAFS)/authclient.o: $(AFS)/authclient.c
+	$(CRULE1);
+$(JUAFS)/kalocalcell.o: $(AFS)/kalocalcell.c
+	$(CRULE1);
+$(JUAFS)/client.o: $(AFS)/client.c
+	$(CRULE1);
+$(JUAFS)/user.o: $(AFS)/user.c
+	$(CRULE1);
+$(JUAFS)/hostparse.o: $(AFS)/hostparse.c
+	$(CRULE1);
+$(JUAFS)/token.o: $(AFS)/token.c
+	$(CRULE1);
+$(JUAFS)/acfg_errors.o: $(AFS)/acfg_errors.c
+	$(CRULE1);
+$(JUAFS)/kaaux.o: $(AFS)/kaaux.c
+	$(CRULE1);
+$(JUAFS)/authcon.o: $(AFS)/authcon.c
+	$(CRULE1);
+$(JUAFS)/cellconfig.o: $(AFS)/cellconfig.c
+	$(CRULE1);
+$(JUAFS)/casestrcpy.o: $(AFS)/casestrcpy.c
+	$(CRULE1);
+$(JUAFS)/dirpath.o: $(AFS)/dirpath.c
+	$(CRULE1);
+$(JUAFS)/fileutil.o: $(AFS)/fileutil.c
+	$(CRULE1);
+$(JUAFS)/netutils.o: $(AFS)/netutils.c
+	$(CRULE1);
+$(JUAFS)/et_name.o: $(AFS)/et_name.c
+	$(CRULE1);
+$(JUAFS)/com_err.o: $(AFS)/com_err.c
+	$(CRULE1);
+$(JUAFS)/error_msg.o: $(AFS)/error_msg.c
+	$(CRULE1);
+$(JUAFS)/uerrors.o: $(AFS)/uerrors.c
+	$(CRULE1);
+$(JUAFS)/kaerrors.o: $(AFS)/kaerrors.c
+	$(CRULE1);
+$(JUAFS)/ktc_errors.o: $(AFS)/ktc_errors.c
+	$(CRULE1);
+$(JUAFS)/rxkad_errs.o: $(AFS)/rxkad_errs.c
+	$(CRULE1);
+$(JUAFS)/kauth.cs.o: $(AFSINT)/kauth.cs.c
+	$(CRULE1);
+$(JUAFS)/kauth.xdr.o: $(AFSINT)/kauth.xdr.c
+	$(CRULE1);
+$(JUAFS)/rxstat.o: $(AFSINT)/rxstat.c
+	$(CRULE1);
+$(JUAFS)/Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
+	$(CRULE1);
+$(JUAFS)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
+	$(CRULE1);
+
+
 clean:
 	-$(RM) -rf UAFS* AFSWEB* nsapi des afs afsint config rx
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest
@@ -918,6 +1285,9 @@ ${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
 ${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
 	${INSTALL} $? $@
 
+${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
+	${INSTALL} $? $@
+
 
 ${DESTDIR}${libdir}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
 	${INSTALL} $? $@
@@ -926,6 +1296,9 @@ ${DESTDIR}${libdir}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
 	${INSTALL} $? $@
 
 
@@ -958,3 +1331,8 @@ ${DEST}/root.perf/lib/libdes.a: des/libdes.a
 
 ${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
 	${INSTALL} $? $@
+
+${DEST}/root.perf/lib/$(LIBJUAFS): UAFS/$(LIBJUAFS)
+	${INSTALL} $? $@
+
+
