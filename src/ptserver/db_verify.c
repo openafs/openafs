@@ -95,7 +95,7 @@ afs_int32 ReadHeader()
     }
     /* Check and see if database exists and is approximately OK. */
     if (ntohl(cheader.headerSize) != sizeof(cheader) ||
-	ntohl(cheader.eofPtr) == NULL) {
+	ntohl(cheader.eofPtr) == 0) {
 	if (code) return code;
 	com_err (whoami, PRDBBAD, "header is bad");
 	return PRDBBAD;

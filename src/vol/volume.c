@@ -98,7 +98,7 @@
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif /* AFS_NT40_ENV */
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_LINUX20_ENV)
 #include <string.h>
 #else
 #include <strings.h>

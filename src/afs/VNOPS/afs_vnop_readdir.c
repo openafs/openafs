@@ -637,7 +637,7 @@ tagain:
 		}
 #else /* AFS_HPUX_ENV */
 		code = afs_readdir_move(ode, avc, auio, o_slen,
-#ifdef defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV)
 		                        len, origOffset);
 #else
 					auio->afsio_resid, origOffset);

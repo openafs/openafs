@@ -792,7 +792,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_LINUX22_ENV
 	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &dp);
 	if (!code)
-	    vp = (struct vcache *)dp->d_inode;
+	    vp = (struct vnode *)dp->d_inode;
 #else
 	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &vp);
 #endif /* AFS_LINUX22_ENV */
@@ -2753,7 +2753,7 @@ static int afs_setsprefs(sp, num, vlonly)
       /* Note that it doesn't have a cell yet...     */
       if (!matches) {
 	 afs_uint32 temp = sp->host.s_addr;
-	 srvr = afs_GetServer(&temp, 1, NULL, (vlonly ? AFS_VLPORT : AFS_FSPORT), 
+	 srvr = afs_GetServer(&temp, 1, 0, (vlonly ? AFS_VLPORT : AFS_FSPORT), 
 			      WRITE_LOCK, (afsUUID *)0,0);
 	 srvr->addr->sa_iprank = sp->rank + afs_randomMod15();
 	 afs_PutServer(srvr, WRITE_LOCK);

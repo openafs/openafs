@@ -56,7 +56,7 @@
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
 #endif
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_LINUX20_ENV)
 #include <string.h>
 #else
 #include <strings.h>

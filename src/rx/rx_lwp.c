@@ -54,7 +54,7 @@ void rxi_Wakeup(void *addr)
 }
 
 PROCESS rx_listenerPid;	/* LWP process id of socket listener process */
-void rx_ListenerProc();
+static void rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -250,7 +250,7 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static void rx_ListenerProc()
+static void rx_ListenerProc(void *dummy)
 {
     int threadID;
     int sock;

@@ -353,7 +353,7 @@ void BPath(ab)
 #ifdef AFS_LINUX22_ENV
     code = gop_lookupname((char *)ab->parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, &dp);
     if (dp)
-	tvn = (struct vcache*)dp->d_inode;
+	tvn = (struct vnode*)dp->d_inode;
 #else
     code = gop_lookupname((char *)ab->parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, (struct vnode **)&tvn);
 #endif

@@ -132,7 +132,7 @@ static void afs_random_once(void)
  * use time and pid to try to get some initial randomness.
  */
 #if !defined(UKERNEL)
-#define	ranstage(x)	(x)= (afs_uint32) (3141592621*((afs_uint32)x)+1)
+#define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
 
 unsigned int afs_random(void)
 {

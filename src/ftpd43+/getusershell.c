@@ -35,7 +35,7 @@ static char *okshells[] =
 
 static char **shells, *strings;
 static char **curshell = NULL;
-extern char **initshells();
+static char **initshells();
 
 /*
  * Get a list of shells from SHELLS, if it exists.
@@ -63,12 +63,6 @@ endusershell()
 		free(strings);
 	strings = NULL;
 	curshell = NULL;
-}
-
-setusershell()
-{
-
-	curshell = initshells();
 }
 
 static char **
@@ -118,3 +112,15 @@ initshells()
 	(void)fclose(fp);
 	return (shells);
 }
+
+setusershell()
+{
+
+	curshell = initshells();
+}
+
+
+
+
+
+

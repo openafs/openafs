@@ -142,7 +142,8 @@ static afs_int32 get_time (timeP, tt, admin)
 				     &key, 0, 0);
 		if (code == 0) {
 		    des_init_random_number_generator (&key);
-		    ka_ConvertBytes (buf, sizeof(buf), &key, sizeof(key));
+		    ka_ConvertBytes (buf, sizeof(buf), (char *)&key, 
+				     sizeof(key));
 		    es_Report ("New Admin key is %s\n", buf);
 		} else {
 		    es_Report ("in get_time: set_password failed because: %d\n", code);
@@ -159,7 +160,8 @@ static afs_int32 get_time (timeP, tt, admin)
 		des_fixup_key_parity (&key);
 		code = set_password (tt, KA_TGS_NAME, lrealm, &key, 0, 0);
 		if (code == 0) {
-		    ka_ConvertBytes (buf, sizeof(buf), &key, sizeof(key));
+		    ka_ConvertBytes (buf, sizeof(buf), (char *)&key, 
+				     sizeof(key));
 		    es_Report ("New TGS key is %s\n", buf);
 		} else {
 		    es_Report ("in get_time: set_password failed because: %s\n", error_message (code));
@@ -720,7 +722,7 @@ impose_reuse_limits ( password, tentry )
   if (!bcmp(password, &(tentry->key), sizeof(EncryptionKey)))
       return KAREUSED;
 
-  code = ka_KeyCheckSum (password, &newsum);
+  code = ka_KeyCheckSum ((char *)password, &newsum);
   if (code)
      return code;
 
@@ -759,7 +761,7 @@ set_password (tt, name, instance, password, kvno, caller)
       /* do nothing, no limits */ ;
     }
     else {
-     code = ka_KeyCheckSum (&(tentry.key), &newsum);
+     code = ka_KeyCheckSum ((char *)&(tentry.key), &newsum);
      if (code)
        return code;
      for (i=npwSums-1; i ; i--) 
@@ -1551,7 +1553,7 @@ afs_int32 kamGetEntry (call, aname, ainstance, aversion, aentry)
 	(callerIsAdmin && enc_level == rxkad_crypt))
 	bcopy (&tentry.key, &aentry->key, sizeof(struct ktc_encryptionKey));
     else bzero (&aentry->key, sizeof(aentry->key));
-    code = ka_KeyCheckSum (&tentry.key, &aentry->keyCheckSum);
+    code = ka_KeyCheckSum ((char *)&tentry.key, &aentry->keyCheckSum);
     if (!tentry.pwsums[0] && npwSums > 1 && !tentry.pwsums[1]) {
 	aentry->reserved3 = 0x12340000;
     } else {

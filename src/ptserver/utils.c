@@ -287,7 +287,7 @@ afs_int32 aid;
     if (code != 0) return 0;
     if (aid == tentry.id) return entry;
     entry = tentry.nextID;
-    while (entry != NULL) {
+    while (entry != 0) {
 	bzero(&tentry,sizeof(tentry));
 	code = pr_ReadEntry(at,0,entry,&tentry);
 	if (code != 0) return 0;
@@ -317,7 +317,7 @@ struct prentry *tentryp;
     if (code != 0) return 0;
     if ((strncmp(aname,tentryp->name,PR_MAXNAMELEN)) == 0) return entry;
     entry = tentryp->nextName;
-    while (entry != NULL) {
+    while (entry != 0) {
 	bzero(tentryp, sizeof(struct prentry));
 	code = pr_ReadEntry(at,0,entry, tentryp);
 	if (code != 0) return 0;
@@ -437,18 +437,18 @@ afs_int32 *loc;				/* ??? in case ID hashed twice ??? */
     bzero(&tentry,sizeof(tentry));
     bzero(&bentry,sizeof(bentry));
     trail = 0;
-    if (current == NULL) return PRSUCCESS; /* already gone */
+    if (current == 0) return PRSUCCESS; /* already gone */
     code = pr_ReadEntry(tt,0,current,&tentry);
     if (code) return PRDBFAIL;
     while (aid != tentry.id) {
 	trail = current;
 	current = tentry.nextID;
-	if (current == NULL) break;
+	if (current == 0) break;
 	code = pr_ReadEntry(tt,0,current,&tentry);
 	if (code) return PRDBFAIL;
     }
-    if (current == NULL) return PRSUCCESS;  /* we didn't find him, so he's already gone */
-    if (trail == NULL) {
+    if (current == 0) return PRSUCCESS;  /* we didn't find him, so he's already gone */
+    if (trail == 0) {
 	/* it's the first entry! */
 	cheader.idHash[i] = htonl(tentry.nextID);
 	code = pr_Write(tt,0,72+HASHSIZE*4+i*4,(char *)&cheader.idHash[i],sizeof(cheader.idHash[i]));
@@ -504,18 +504,18 @@ afs_int32 *loc;
     bzero(&tentry,sizeof(tentry));
     bzero(&bentry,sizeof(bentry));
     trail = 0;
-    if (current == NULL) return PRSUCCESS;  /* already gone */
+    if (current == 0) return PRSUCCESS;  /* already gone */
     code = pr_ReadEntry(tt,0,current,&tentry);
     if (code) return PRDBFAIL;
     while (strcmp(aname,tentry.name)) {
 	trail = current;
 	current = tentry.nextName;
-	if (current == NULL) break;
+	if (current == 0) break;
 	code = pr_ReadEntry(tt,0,current,&tentry);
 	if (code) return PRDBFAIL;
     }
-    if (current == NULL) return PRSUCCESS;  /* we didn't find him, already gone */
-    if (trail == NULL) {
+    if (current == 0) return PRSUCCESS;  /* we didn't find him, already gone */
+    if (trail == 0) {
 	/* it's the first entry! */
 	cheader.nameHash[i] = htonl(tentry.nextName);
 	code = pr_Write(tt,0,72+i*4,(char *)&cheader.nameHash[i],sizeof(cheader.nameHash[i]));
@@ -609,7 +609,7 @@ afs_int32 RemoveFromOwnerChain(at,gid,oid)
     le =  &thisEntry;
     lastLoc = 0;
     nptr = thisEntry.owned;
-    while (nptr != NULL) {
+    while (nptr != 0) {
 	if (nptr == lastLoc) te = le;
 	else {
 	    if (&thisEntry == le) te = &thatEntry;
@@ -690,7 +690,7 @@ afs_int32 gid;
     nptr = ntohl(cheader.orphan);
     bzero(&bentry,sizeof(bentry));
     loc = 0;
-    while (nptr != NULL) {
+    while (nptr != 0) {
 	code = pr_ReadEntry(at,0,nptr,&tentry);
 	if (code != 0) return PRDBFAIL;
 	if (gid == tentry.id) {

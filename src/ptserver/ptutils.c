@@ -32,6 +32,7 @@
 extern struct ubik_dbase *dbase;
 extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
+extern afs_int32 IDCmp();
 
 extern afs_int32 AddToEntry();
 static char *whoami = "ptserver";
@@ -444,7 +445,7 @@ afs_int32 RemoveFromEntry (at, aid, bid)
     }
     hloc = 0;
     nptr = tentry.next;
-    while (nptr != NULL) {
+    while (nptr != 0) {
 	code = pr_ReadCoEntry(at,0,nptr,&centry);
 	if (code != 0) return code;
 	if ((centry.id != bid) || !(centry.flags & PRCONT)) return PRDBBAD;
@@ -526,7 +527,7 @@ afs_int32 DeleteEntry (at, tentry, loc)
 	if (code) return code;
     }
     nptr = tentry->next;
-    while (nptr != NULL) {
+    while (nptr != (afs_int32)NULL) {
 	code = pr_ReadCoEntry(at,0,nptr,&centry);
 	if (code != 0) return PRDBFAIL;
 	for (i=0;i<COSIZE;i++) {
@@ -638,7 +639,7 @@ afs_int32 AddToEntry (tt, entry, loc, aid)
     }
     last = 0;
     nptr = entry->next;
-    while (nptr != NULL) {
+    while (nptr != (afs_int32)NULL) {
  	code = pr_ReadCoEntry(tt,0,nptr,&nentry);
 	if (code != 0) return code;
 	last = nptr;
@@ -693,7 +694,7 @@ afs_int32 AddToEntry (tt, entry, loc, aid)
     bzero(&aentry,sizeof(aentry));
     aentry.flags |= PRCONT;
     aentry.id = entry->id;
-    aentry.next = NULL;
+    aentry.next = 0;
     aentry.entries[0] = aid;
     code = pr_WriteCoEntry(tt,0,nptr,&aentry);
     if (code != 0) return code;
@@ -739,7 +740,6 @@ afs_int32 GetList (at, tentry, alist, add)
     afs_int32 nptr;
     int size;
     int count = 0;
-    extern afs_int32 IDCmp();
 
     size = 0;
     alist->prlist_val = 0;
@@ -752,7 +752,7 @@ afs_int32 GetList (at, tentry, alist, add)
 	if (code) return code;
     }
 
-    for (nptr = tentry->next; nptr != NULL; nptr = centry.next) {
+    for (nptr = tentry->next; nptr != 0; nptr = centry.next) {
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at,0,nptr,&centry);
 	if (code != 0) return code;
@@ -795,7 +795,6 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
     afs_int32 nptr;
     afs_int32 size;
     int count = 0;
-    extern afs_int32 IDCmp();
 
     size = 0;
     alist->prlist_val = 0;
@@ -808,7 +807,7 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
     }
 
     nptr = tentry->next;
-    while (nptr != NULL) {
+    while (nptr != (afs_uint32)NULL) {
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at,0,nptr,&centry);
 	if (code != 0) return code;
@@ -831,7 +830,7 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
 
     if (!code) {
 	    nptr = tentry2->next;
-	    while (nptr != NULL) {
+	    while (nptr != (afs_uint32)NULL) {
 		/* look through cont entries */
 		code = pr_ReadCoEntry(at,0,nptr,&centry);
 		if (code != 0) break;
@@ -869,7 +868,6 @@ afs_int32 GetOwnedChain (ut, next, alist)
     struct prentry tentry;
     int size;
     int count = 0;
-    extern afs_int32 IDCmp();
 
     size = 0;
     alist->prlist_val = 0;
@@ -970,7 +968,7 @@ afs_int32 Initdb()
     }
     if ((ntohl(cheader.version) == PRDBVERSION) &&
 	ntohl(cheader.headerSize) == sizeof(cheader) &&
-	ntohl(cheader.eofPtr) != NULL &&
+	ntohl(cheader.eofPtr) != (afs_uint32)NULL &&
 	FindByID(tt,ANONYMOUSID) != 0){
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);
@@ -1016,7 +1014,7 @@ afs_int32 Initdb()
      */
     if ((ntohl(cheader.version) == PRDBVERSION) &&
 	ntohl(cheader.headerSize) == sizeof(cheader) &&
-	ntohl(cheader.eofPtr) != NULL &&
+	ntohl(cheader.eofPtr) != (afs_uint32)NULL &&
 	FindByID(tt,ANONYMOUSID) != 0){
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);

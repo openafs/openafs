@@ -1029,7 +1029,7 @@ machtime()
 		fprintf(stderr, "Unable to get time of day\n");
 		return (0L);
 	}
-	return (htonl((afs_int32)tv.tv_sec + 2208988800));
+	return (htonl((afs_int32)tv.tv_sec + 2208988800U));
 }
 
 /* ARGSUSED */
