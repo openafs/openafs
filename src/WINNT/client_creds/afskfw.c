@@ -3449,9 +3449,11 @@ GetNumOfIpAddrs(void)
     if (code == ERROR_INSUFFICIENT_BUFFER) {
         pIpAddrTable = malloc(dwSize);
         code = GetIpAddrTable(pIpAddrTable, &dwSize, 0);
-        for ( index=0; index < pIpAddrTable->dwNumEntries; index++ ) {
-            if (pIpAddrTable->table[index].dwAddr != 0)
-                validAddrs++;
+        if ( code == NO_ERROR ) {
+            for ( index=0; index < pIpAddrTable->dwNumEntries; index++ ) {
+                if (pIpAddrTable->table[index].dwAddr != 0)
+                    validAddrs++;
+            }
         }
         free(pIpAddrTable);
     }
