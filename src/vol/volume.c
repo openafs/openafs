@@ -149,6 +149,7 @@ RCSID
 pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_attach_mutex;
 pthread_mutex_t vol_fsync_mutex;
+pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
 #endif /* AFS_PTHREAD_ENV */
@@ -246,6 +247,8 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_mutex_init(&vol_glock_mutex, NULL) == 0);
     assert(pthread_mutex_init(&vol_attach_mutex, NULL) == 0);
+    assert(pthread_mutex_init(&vol_fsync_mutex, NULL) == 0);
+    assert(pthread_mutex_init(&vol_trans_mutex, NULL) == 0);
     assert(pthread_cond_init(&vol_put_volume_cond, NULL) == 0);
     assert(pthread_cond_init(&vol_sleep_cond, NULL) == 0);
 #else /* AFS_PTHREAD_ENV */
