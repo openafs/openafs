@@ -38,7 +38,7 @@ found_one="false"
 CAN_BUILD=""
 
 for VERS in $LINUX_VERS ; do
-	dir=$LINUX_SRCDIR$VERS
+	dir=$LINUX_SRCDIR
 	if [ ! -d $dir ] ; then
 		echo "ERROR: Cannot build for Linux kernel $VERS: $dir does not exist."
 		errors=true

@@ -57,9 +57,9 @@ include Makefile.common
 setup:
 	-rm -f h net netinet sys rpc
 	-ln -s rx rpc
-	for v in ${LINUX_VERS} ; do \
+	for v in notused; do \
 		for m in ${MPS} ; do \
-			KDIR=$(KOBJ)-$$v-$$m; \
+			KDIR=$(KOBJ)-$$m; \
 			mkdir -p $${KDIR}; \
 			ln -fs ../Makefile $${KDIR}/Makefile ; \
 			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
@@ -71,8 +71,8 @@ setup:
 LINUX_INCDIR=include/linux
 
 ${COMPDIRS}:
-	for v in ${LINUX_VERS} ; do \
-		IDIR=${LINUX_SRCDIR}$$v/${LINUX_INCDIR}; \
+	for v in notused ; do \
+		IDIR=${LINUX_SRCDIR}/${LINUX_INCDIR}; \
 		rm -f h; \
 		ln -s $${IDIR} h; \
 		rm -f linux; \
@@ -84,9 +84,9 @@ ${COMPDIRS}:
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
 		rm -f asm; \
-		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
+		ln -s ${LINUX_SRCDIR}/include/asm-i386 asm ; \
 		for m in ${MPS} ; do \
-			KDIR=${KOBJ}-$$v-$$m ; \
+			KDIR=${KOBJ}-$$m ; \
 			echo Building in directory: $${KDIR} ; \
 			if [ "$$m" = "MP" ] ; then \
 				SMP_DEF="-DAFS_SMP" ; \
@@ -96,7 +96,7 @@ ${COMPDIRS}:
 				TARG=libafs ; \
 			fi ; \
 			cd $${KDIR} ; \
-			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF=$${SMP_DEF} $${TARG} CLIENT=$$v || exit $$?; \
+			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF=$${SMP_DEF} $${TARG} CLIENT="" || exit $$?; \
 			cd ../ ; \
 		done \
 	done
@@ -104,8 +104,8 @@ ${COMPDIRS}:
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = libafs-${CLIENT}.o
-LIBAFS_MP = libafs-${CLIENT}.mp.o
+LIBAFS = libafs${CLIENT}.o
+LIBAFS_MP = libafs${CLIENT}.mp.o
 
 DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
