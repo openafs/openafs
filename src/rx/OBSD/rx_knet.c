@@ -20,12 +20,12 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
     struct uio u;
     int i, code;
     struct iovec iov[RX_MAXIOVECS];
-    struct sockaddr *sa;
+    struct mbuf *nam = NULL;
 
     int haveGlock = ISAFS_GLOCK();
 
     if (nvecs > RX_MAXIOVECS)
-        osi_Panic("osi_NetReceive: %d: Too many iovecs.\n", nvecs);
+        osi_Panic("osi_NetReceive: %d: too many iovecs\n", nvecs);
 
     for (i = 0 ; i < nvecs ; i++) {
         iov[i].iov_base = dvec[i].iov_base;
@@ -42,13 +42,18 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
 
     if (haveGlock)
         AFS_GUNLOCK();
-    code = soreceive(asocket, (struct sockaddr_in *) &sa, &u, NULL, NULL, NULL);
+    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL);
     if (haveGlock)
         AFS_GLOCK();
 
-    *alength = *alength - u.uio_resid;
-    if (sa != NULL && sa->sa_family == AF_INET && addr != NULL)
-	*addr = *(struct sockaddr_in *)sa;
+    if (code)
+	return code;
+
+    *alength -= u.uio_resid;
+    if (addr && nam) {
+	memcpy(addr, mtod(nam, caddr_t), nam->m_len);
+	m_freem(nam);
+    }
 
     return code;
 }
@@ -106,22 +111,19 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_WRITE;
     u.uio_procp = NULL;
-    if (haveGlock)
-	AFS_GUNLOCK();
 
     nam = m_get(M_DONTWAIT, MT_SONAME);
-    if (nam == NULL) {
-        code = ENOBUFS;
-        goto bad;
-    }
+    if (!nam)
+	return ENOBUFS;
     nam->m_len = addr->sin_len = sizeof(struct sockaddr_in);
-    memcpy(mtod(nam, caddr_t), (caddr_t)addr, addr->sin_len);
-    code = sosend(asocket, mtod(nam, struct sockaddr_in *), &u, NULL, NULL, 0);
-    m_freem(nam);
+    memcpy(mtod(nam, caddr_t), addr, addr->sin_len);
 
-bad:
+    if (haveGlock)
+	AFS_GUNLOCK();
+    code = sosend(asocket, nam, &u, NULL, NULL, 0);
     if (haveGlock)
 	AFS_GLOCK();
+    m_freem(nam);
 
     return code;
 }

@@ -313,11 +313,13 @@ afs_root(struct mount *mp,
 	!(code = afs_CheckInit())) {
 	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	if (tvp) {
+printf("tvp %x %d\n", tvp, AFSTOV(tvp)->v_usecount);
 	    /* There is really no reason to over-hold this bugger--it's held
 	       by the root filesystem reference. */
 	    if (afs_globalVp != tvp) {
 		if (afs_globalVp)
-		    AFS_RELE(AFSTOV(afs_globalVp));
+printf("afs_globalVp %x %d\n", afs_globalVp, AFSTOV(afs_globalVp)->v_usecount);
+/*		    AFS_RELE(AFSTOV(afs_globalVp));*/
 		afs_globalVp = tvp;
 		AFS_HOLD(AFSTOV(afs_globalVp));
 	    }
