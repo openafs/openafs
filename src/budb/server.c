@@ -158,6 +158,10 @@ initializeArgHandler()
 
     cmd_AddParm(cptr, "-servers", CMD_LIST, CMD_OPTIONAL,
                 "list of ubik database servers");
+
+    cmd_AddParm(cptr, "-ubikbuffers", CMD_SINGLE, CMD_OPTIONAL,
+                "the number of ubik buffers");
+
 }
 
 int
@@ -206,6 +210,11 @@ argHandler(as, arock)
     /* user provided list of ubik database servers */
     if ( as->parms[5].items != 0 )
 	parseServerList(as->parms[5].items);
+
+    /* user provided the number of ubik buffers    */
+    if ( as->parms[6].items != 0 )
+	ubik_nBuffers = atoi(as->parms[6].items->data);
+    else ubik_nBuffers = 0;
 
     return 0;
 }
@@ -448,7 +457,10 @@ main(argc, argv)
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
     ubik_CheckRXSecurityRock = (char *)BU_conf;
 
+    if (ubik_nBuffers == 0)
     ubik_nBuffers = 400;
+
+    LogError(0, "Will allocate %d ubik buffers\n", ubik_nBuffers);
 
     dbNamePtr = (char *) malloc(strlen(globalConfPtr->databaseDirectory) +
                            strlen(globalConfPtr->databaseName) + 1);
