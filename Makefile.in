@@ -5,38 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-SHELL=/bin/sh
-DEST=@DEST@
-TOP_SRCDIR=@TOP_SRCDIR@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_OBJDIR=@TOP_OBJDIR@
 srcdir=@srcdir@
-VPATH=${srcdir}
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afskerneldir=@afskerneldir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-
-# Systype-generic items
-SYS_NAME=@AFS_SYSNAME@
-MKAFS_OSTYPE=@MKAFS_OSTYPE@
-
-# Systype-specific items
-LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
-LINUX_VERSION=@LINUX_VERSION@
-DARWIN_INFOFILE=@DARWIN_INFOFILE@
-
-# Other items
-LIB_AFSDB=@LIB_AFSDB@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 # Enable build+install of obsolete and insecure packages
 # Set to anything other than YES, or comment out to disable the build
@@ -44,8 +14,6 @@ WITH_OBSOLETE=@WITH_OBSOLETE@
 WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
-
-include src/config/Makefile.${SYS_NAME}
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -362,7 +330,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 		${INSTALL} -c -f $$f libafs_tree/$$f; \
 	done
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
-	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
+	${INSTALL} -c src/config/Makefile.config.in libafs_tree/config
 	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
 	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
 	case ${SYS_NAME} in \
@@ -619,7 +587,7 @@ distclean: clean
 	src/config/Makefile \
 	src/config/Makefile.version \
 	src/config/Makefile.version-NOCML \
-	src/config/Makefile.${SYS_NAME} \
+	src/config/Makefile.config \
 	src/dauth/Makefile \
 	src/des/test/Makefile \
 	src/des/Makefile \

@@ -20,5 +20,6 @@ fi
 
 AC_OUTPUT(             \
 Makefile               \
+config/Makefile.config \
 config/Makefile.${AFS_SYSNAME} \
 )

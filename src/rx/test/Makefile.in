@@ -5,31 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_OBJDIR=@TOP_OBJDIR@
 srcdir=@srcdir@
-VPATH=${srcdir}
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
-RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-MKAFS_OSTYPE=@MKAFS_OSTYPE@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-include ../../config/Makefile.${SYS_NAME}
-OPTIMIZE=-g
+
 
 INCDIRS= -I${TOP_INCDIR} -I.. -I. -I${srcdir} -I${srcdir}/.. -I${TOP_OBJDIR}/src/config 
 LDIRS= -L.. -L${TOP_LIBDIR}

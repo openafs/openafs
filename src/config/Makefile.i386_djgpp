@@ -7,8 +7,8 @@
 
 # Keep macros within each section in sorted order for clean diff displays.
 #
-# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
-AFS_OSTYPE = DJGPP
+# MKAFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+MKAFS_OSTYPE = DJGPP
 
 # compilation and link editor flags
 #DBG=-g
@@ -18,12 +18,12 @@ OPTMZ=-O2
 XCFLAGS= ${DBG} -Dfds_bits=fd_bits -DAFS_AFSDB_ENV -DAFS_FREELANCE_CLIENT
 MT_CFLAGS=${XCFLAGS}
 XLDFLAGS=
-SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_LDFLAGS = -shared -Xlinker -x
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=
 #
 # libraries
-MTLIBS=
+MT_LIBS=
 TXLIBS=
 XLIBS=
 #

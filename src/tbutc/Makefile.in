@@ -5,31 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_OBJDIR=@TOP_OBJDIR@
 srcdir=@srcdir@
-VPATH=${srcdir}
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
-RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL    =/bin/sh
 
-include ../config/Makefile.${SYS_NAME}
 
 BUTMOBJS    =file_tm.o
 BUTMLIBS    =libbutm.a
@@ -97,7 +76,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MTLIBS} ${XLIBS} -o butc
+	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS} -o butc
 
 libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
 	-$(RM) -f $@

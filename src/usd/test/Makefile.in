@@ -5,17 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-include ../../config/Makefile.${SYS_NAME}
-
-INSTALL=${SRCDIR}/bin/install
-RXGEN=${SRCDIR}/bin/rxgen
-COMPILE_ET = ${SRCDIR}/bin/compile_et
 
 INCDIRS= -I${DESTDIR}/include  -I..
 CFLAGS = $(DBUG) -I${SRCDIR}/include ${INCDIRS} ${XCFLAGS}

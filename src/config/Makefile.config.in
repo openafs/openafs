@@ -1,0 +1,107 @@
+#
+# Installation vars
+#
+afsbackupdir=@afsbackupdir@
+afsbosconfigdir=@afsbosconfigdir@
+afsconfdir=@afsconfdir@
+afsdbdir=@afsdbdir@
+afslocaldir=@afslocaldir@
+afslogsdir=@afslogsdir@
+afssrvbindir=@afssrvbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afssrvsbindir=@afssrvsbindir@
+bindir=@bindir@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+libexecdir=@libexecdir@
+localstatedir=@localstatedir@
+mandir=@mandir@
+prefix=@prefix@
+sbindir=@sbindir@
+sysconfdir=@sysconfdir@
+viceetcdir=@viceetcdir@
+
+
+#
+# Programs and other defines
+#
+AR = @AR@
+AS = @AS@
+CC = @CC@
+CFLAGS = @CFLAGS@
+CP = @CP@
+DARWIN_INFOFILE=@DARWIN_INFOFILE@
+DBG = @DBG@
+DEST = @DEST@
+FSINCLUDES = @FSINCLUDES@
+LD = @LD@
+LEX = @LEX@
+LIB_AFSDB = @LIB_AFSDB@
+LIBS = @LIBS@
+LINUX_KERNEL_PATH = @LINUX_KERNEL_PATH@
+LINUX_VERSION = @LINUX_VERSION@
+LINUX_VERS = @LINUX_VERSION@
+LWP_OPTMZ = @LWP_OPTMZ@
+MKAFS_OSTYPE = @MKAFS_OSTYPE@
+MT_CC = @MT_CC@
+MT_CFLAGS = @MT_CFLAGS@
+MT_LIBS = @MT_LIBS@
+MV = @MV@
+OPTMZ = @OPTMZ@
+PAM_CFLAGS = @PAM_CFLAGS@
+PAM_LIBS = @PAM_LIBS@
+RANLIB = @RANLIB@
+REGEX_OBJ = @REGEX_OBJ@
+RM = @RM@
+SHLIB_CFLAGS = @SHLIB_CFLAGS@
+SHLIB_LDFLAGS = @SHLIB_LDFLAGS@
+SHLIB_SUFFIX = @SHLIB_SUFFIX@
+SYS_NAME = @AFS_SYSNAME@
+TOP_INCDIR = @TOP_INCDIR@
+TOP_LIBDIR = @TOP_LIBDIR@
+TOP_OBJDIR = @TOP_OBJDIR@
+TOP_SRCDIR = @TOP_SRCDIR@
+TXLIBS = @TXLIBS@
+VPATH = ${srcdir}
+XCFLAGS = @XCFLAGS@
+XLDFLAGS64 = @XLDFLAGS64@
+XLDFLAGS = @XLDFLAGS@
+XLIBELFA = @XLIBELFA@
+XLIBKVM = @XLIBKVM@
+XLIBS = @XLIBS@
+YACC = @YACC@
+
+
+#
+# Special build targets
+#
+dest_FS_CONV_OSF40D = @dest_FS_CONV_OSF40D@
+install_FS_CONV_OSF40D = @install_FS_CONV_OSF40D@
+FS_CONV_OSF40D = @FS_CONV_OSF40D@
+
+dest_FS_CONV_SOL26 = @dest_FS_CONV_SOL26@
+install_FS_CONV_SOL26 = @install_FS_CONV_SOL26@
+FS_CONV_SOL26 = @FS_CONV_SOL26@
+
+dest_XFS_SIZE_CHECK = @dest_XFS_SIZE_CHECK@
+install_XFS_SIZE_CHECK = @install_XFS_SIZE_CHECK@
+XFS_SIZE_CHECK = @XFS_SIZE_CHECK@
+
+#
+# Paths to build dirs
+#
+# Could be absolute, but leaving as relative for now
+#UKERNELDIR = ${TOP_OBJDIR}/src/libuafs
+#KERNELDIR = ${TOP_OBJDIR}/src/libafs
+UKERNELDIR = ../libuafs
+KERNELDIR = ../libafs
+
+#
+# Build helper apps
+#
+COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
+INSTALL = ${TOP_OBJDIR}/src/pinstall/pinstall
+INSTALLex = ${INSTALL} -m 755
+RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
+SHELL = /bin/sh

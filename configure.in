@@ -12,12 +12,6 @@ if test "${DEST}x" = "x"; then
 	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
 fi
 
-# Check for files involved in porting.  Report errors, don't make the
-# user hunt through the configure log after the build fails!
-if test ! -r ${TOP_SRCDIR}/config/Makefile.${AFS_SYSNAME}.in ; then
-  AC_MSG_ERROR(no source file ${TOP_SRCDIR}/config/Makefile.${AFS_SYSNAME}.in)
-fi
-
 AC_OUTPUT(             \
 Makefile               \
 src/afs/Makefile \
@@ -40,8 +34,8 @@ src/cmd/Makefile \
 src/comerr/test/Makefile \
 src/comerr/Makefile \
 src/config/Makefile \
+src/config/Makefile.config \
 src/config/Makefile.version-NOCML \
-src/config/Makefile.${AFS_SYSNAME} \
 src/dauth/Makefile \
 src/des/test/Makefile \
 src/des/Makefile \

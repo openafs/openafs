@@ -5,32 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
 srcdir=@srcdir@
-VPATH=${srcdir}
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
-RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-KERNELDIR=../libafs
-UKERNELDIR=../libuafs
-SHELL=/bin/sh
-
-include Makefile.${SYS_NAME}
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 CFLAGS=-g -I${TOP_INCDIR} ${XCFLAGS}
 
@@ -107,9 +83,6 @@ ${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include
 ${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
 	$(INST)
 
-${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
-	$(INST)
-
 ${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
 	$(INST)
 
@@ -143,7 +116,6 @@ kinstall: \
 	${KERNELDIR}/afs/param.h \
 	${KERNELDIR}/afs/stds.h \
 	${KERNELDIR}/afs/afs_sysnames.h \
-	${KERNELDIR}/config/Makefile.${SYS_NAME} \
 	${KERNELDIR}/afs/afs_args.h \
 	${KERNELDIR}/afs/icl.h \
 	${KERNELDIR}/afs/AFS_component_version_number.c
@@ -153,7 +125,6 @@ ukinstall: \
 	${UKERNELDIR}/afs/param.h \
 	${UKERNELDIR}/afs/stds.h \
 	${UKERNELDIR}/afs/afs_sysnames.h \
-	${UKERNELDIR}/config/Makefile.${SYS_NAME} \
 	${UKERNELDIR}/afs/afs_args.h \
 	${UKERNELDIR}/afs/icl.h \
 	${UKERNELDIR}/afs/venus.h \

@@ -5,33 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_OBJDIR=@TOP_OBJDIR@
 srcdir=@srcdir@
-VPATH=${srcdir}
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_OBJDIR}/src/comerr/compile_et
-RXGEN=${TOP_OBJDIR}/src/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL=/bin/sh
-KERNELDIR = ../libafs
-UKERNELDIR = ../libuafs
-
-include ../config/Makefile.${SYS_NAME}
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h
 	case ${SYS_NAME} in \
@@ -46,8 +21,8 @@ kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afszcm.cat
 	${INSTALL} ${srcdir}/*.[csh] ${KERNELDIR}/afs
 	-${INSTALL} *.[csh] ${KERNELDIR}/afs
 	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${KERNELDIR}/afs
-	${INSTALL} ${srcdir}/${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
-	-${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${srcdir}/${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+	-${INSTALL} ${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 
 afs_trace.h afs_trace.msf:
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
@@ -85,7 +60,7 @@ install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_in
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs ;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac
@@ -105,13 +80,13 @@ ${TOP_INCDIR}/afs/afs.h: afs.h
 	${INSTALL} $? $@
 
 
-${DEST}/include/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${DEST}/include/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${DESTDIR}${includedir}/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${TOP_INCDIR}/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
 	${INSTALL} $? $@
 
 
@@ -161,7 +136,7 @@ dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/includ
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs ;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac

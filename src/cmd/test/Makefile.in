@@ -5,14 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-
-OPTIMIZE=-O
 
 LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 LIBS=-lcmd -lcom_err -lafsutil
