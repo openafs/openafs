@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     }
 
     printf("\n");
-    printf("RPC stats are version %d\n", version);
+    printf("RPC stats are version %d\n", (int) version);
     printf("\n");
 
     exit(0);
