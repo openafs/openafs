@@ -441,7 +441,7 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
 	return NOPAG;
     }
 #else
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
     if (cred->cr_ngroups < 2) return NOPAG;
 #endif
 #endif
