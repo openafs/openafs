@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
-#include <strsafe.h>
 
 #include <osi.h>
 #include "afsd.h"
@@ -29,6 +28,7 @@
 #include "smb.h"
 #include "cm_rpc.h"
 #include "lanahelper.h"
+#include <strsafe.h>
 #include "afsicf.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);

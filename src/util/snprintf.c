@@ -508,7 +508,7 @@ afs_snprintf(char *p, size_t avail, const char *fmt, ...)
 
 #if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_VSNPRINTF)
 
-#ifdef AFS_AIX51_ENV
+#if defined(AFS_AIX51_ENV) || defined(AFS_NT40_ENV)
 int
 vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 #else
