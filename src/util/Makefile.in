@@ -97,7 +97,7 @@ casestrcpy.o: ${srcdir}/casestrcpy.c
 hputil.o: ${srcdir}/hputil.c
 	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
 
-flipbase64.o: ${srcdir}/flipbase64.c
+flipbase64.o: ${srcdir}/flipbase64.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
 volparse.o: ${srcdir}/volparse.c
@@ -109,19 +109,19 @@ snprintf.o: ${srcdir}/snprintf.c
 base64.o: ${srcdir}/base64.c
 	${CC} ${CFLAGS} -c ${srcdir}/base64.c
 
-hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h
+hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
 
-ktime.o: ${srcdir}/ktime.c
+ktime.o: ${srcdir}/ktime.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
 
-kreltime.o: ${srcdir}/kreltime.c
+kreltime.o: ${srcdir}/kreltime.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
 
-get_krbrlm.o: ${srcdir}/get_krbrlm.c
+get_krbrlm.o: ${srcdir}/get_krbrlm.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
 
-uuid.o: ${srcdir}/uuid.c
+uuid.o: ${srcdir}/uuid.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
 
 sys.o: ${srcdir}/sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c
@@ -133,10 +133,10 @@ sys: sys.o
 isathing.o: ${srcdir}/isathing.c
 	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
 
-serverLog.o: ${srcdir}/serverLog.c
+serverLog.o: ${srcdir}/serverLog.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
-dirpath.o: ${srcdir}/dirpath.c dirpath.h
+dirpath.o: ${srcdir}/dirpath.c ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
 
 fileutil.o: ${srcdir}/fileutil.c ${srcdir}/fileutil.h

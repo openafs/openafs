@@ -242,7 +242,6 @@ ukinstall: \
 	${UKERNELDIR}/rx/rx.h \
 	${UKERNELDIR}/rx/rx_kcommon.c \
 	${UKERNELDIR}/rx/rx_kcommon.h \
-	${UKERNELDIR}/rx/rx_kcommon.h \
 	${UKERNELDIR}/rx/rx_kernel.h \
 	${UKERNELDIR}/rx/rx_kmutex.h \
 	${UKERNELDIR}/rx/rx_knet.c \

@@ -44,8 +44,21 @@ all: kinstall ukinstall ${TOP_INCDIR}/rx/rxstat.h ${TOP_LIBDIR}/librxstat.a
 #
 # Build targets
 #
-rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
-	${RXGEN} -x ${srcdir}/rxstat.xg
+rxstat.cs.c: rxstat.xg
+	${RXGEN} -x -C -o $@ ${srcdir}/rxstat.xg
+
+rxstat.ss.c: rxstat.xg
+	${RXGEN} -x -S -o $@ ${srcdir}/rxstat.xg
+
+rxstat.xdr.c: rxstat.xg
+	${RXGEN} -x -c -o $@ ${srcdir}/rxstat.xg
+
+rxstat.h: rxstat.xg
+	${RXGEN} -x -h -o $@ ${srcdir}/rxstat.xg
+
+rxstat.xdr.c: rxstat.h
+rxstat.cs.c: rxstat.h
+rxstat.ss.c: rxstat.h
 
 librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@

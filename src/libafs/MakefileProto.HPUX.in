@@ -98,25 +98,25 @@ BITS = 64 32
 
 setup:
 	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys
-	ln -s /usr/include/sys h
-	ln -s /etc/conf/net net
-	ln -s /etc/conf/dux dux
-	ln -s /etc/conf/machine machine
-	ln -s /etc/conf/netinet netinet
-	ln -s /etc/conf/nfs nfs
-	ln -s /usr/include/rpc rpc
-	ln -s /etc/conf/machine s200
-	ln -s /etc/conf/ufs ufs
-	ln -s /usr/include/sys sys
+	ln -fs /usr/include/sys h
+	ln -fs /etc/conf/net net
+	ln -fs /etc/conf/dux dux
+	ln -fs /etc/conf/machine machine
+	ln -fs /etc/conf/netinet netinet
+	ln -fs /etc/conf/nfs nfs
+	ln -fs /usr/include/rpc rpc
+	ln -fs /etc/conf/machine s200
+	ln -fs /etc/conf/ufs ufs
+	ln -fs /usr/include/sys sys
 	for b in $(BITS); do \
 	    for t in $(KOBJ); do \
 		dir=$$t.$$b; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
 		$(RM) -f $$dir/Makefile $$dir/Makefile.common $$dir/config; \
-		ln -s ../Makefile $$dir/Makefile; \
-		ln -s ../Makefile.common $$dir/Makefile.common; \
-		ln -s ../config $$dir/config; \
+		ln -fs ../Makefile $$dir/Makefile; \
+		ln -fs ../Makefile.common $$dir/Makefile.common; \
+		ln -fs ../config $$dir/config; \
 	    done; \
 	done
 	echo Setup complete.

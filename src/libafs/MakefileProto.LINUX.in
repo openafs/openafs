@@ -116,7 +116,7 @@ LOCAL_SMP_DEF=
 
 setup:
 	-$(RM) -f h net netinet sys rpc
-	-ln -s rx rpc
+	-ln -fs rx rpc
 	for m in ${MPS} ; do \
 		KDIR=$(KOBJ)-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m; \
 		mkdir -p $${KDIR}; \
@@ -129,32 +129,32 @@ setup:
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f h 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux h 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux h 
 	$(RM) -f linux 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux linux 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
 	$(RM) -f net 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux net 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux net 
 	$(RM) -f netinet 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux netinet 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet 
 	$(RM) -f sys
-	ln -s ${LINUX_KERNEL_PATH}/include/linux sys
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux sys
 	$(RM) -f asm-generic
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
 <alpha_linux_22 alpha_linux_24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-alpha asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
 <i386_linux22 i386_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-i386 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
 <s390_linux22 s390_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-s390 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
 <ppc_linux22 ppc_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
 <sparc_linux22 sparc_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
 <ia64_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m ; \

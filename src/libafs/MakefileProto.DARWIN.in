@@ -71,18 +71,18 @@ include Makefile.common
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm mach kern
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
-	-ln -s /usr/include/rpc rpc
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
 
 
 # Below this line are targets when in the COMMON directory:

@@ -71,8 +71,21 @@ bosint.ss.o: bosint.ss.c ${RPCINCLS}
 bosint.xdr.o: bosint.xdr.c ${RPCINCLS}
 bosint.cs.o: bosint.cs.c ${RPCINCLS}
 
-bosint.xdr.c bosint.ss.c bosint.cs.c bosint.h: bosint.xg
-	${RXGEN} -x ${srcdir}/bosint.xg
+bosint.cs.c: bosint.xg
+	${RXGEN} -x -C -o $@ ${srcdir}/bosint.xg
+
+bosint.ss.c: bosint.xg
+	${RXGEN} -x -S -o $@ ${srcdir}/bosint.xg
+
+bosint.xdr.c: bosint.xg
+	${RXGEN} -x -c -o $@ ${srcdir}/bosint.xg
+
+bosint.h: bosint.xg
+	${RXGEN} -x -h -o $@ ${srcdir}/bosint.xg
+
+bosint.cs.c: bosint.h
+bosint.ss.c: bosint.h
+bosint.xdr.c: bosint.h
 
 bnode.h boserr.c: bnode.p.h boserr.et
 	$(RM) -f boserr.c bnode.h

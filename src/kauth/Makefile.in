@@ -130,8 +130,23 @@ kauth.ss.o: kauth.ss.c
 kauth.cs.o: kauth.cs.c
 kauth.xdr.o: kauth.xdr.c kauth.h
 
-kauth.ss.c kauth.cs.c kauth.xdr.c kauth.h: kauth.rg
-	${RXGEN} -x ${srcdir}/kauth.rg
+$(UKSRCS): kauth.h
+
+kauth.cs.c: kauth.rg
+	${RXGEN} -x -C -o $@ ${srcdir}/kauth.rg
+
+kauth.ss.c: kauth.rg
+	${RXGEN} -x -S -o $@ ${srcdir}/kauth.rg
+
+kauth.xdr.c: kauth.rg
+	${RXGEN} -x -c -o $@ ${srcdir}/kauth.rg
+
+kauth.h: kauth.rg
+	${RXGEN} -x -h -o $@ ${srcdir}/kauth.rg
+
+kauth.xdr.c: kauth.h
+kauth.cs.c: kauth.h
+kauth.ss.c: kauth.h
 
 Kkauth.cs.c: kauth.rg Kkauth.h
 	${RXGEN} -x -k -C -o Kkauth.cs.c ${srcdir}/kauth.rg
@@ -212,7 +227,7 @@ user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CC} ${CFLAGS} -c ${srcdir}/user.c
 
-kdb: kdb.o ${INCLS}
+kdb: kdb.o ${INCLS} ${LIBS} ${XLIBS} libkauth.a
 	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} ${XLIBS}
 
 kdb.o: kdb.c AFS_component_version_number.o

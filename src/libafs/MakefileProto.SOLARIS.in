@@ -86,21 +86,21 @@ include Makefile.common
 
 setup:
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet
-	-ln -s /usr/include/sys h
-	-ln -s /usr/include/net net
-	-ln -s /usr/include/netinet netinet
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/include/sys sys
-	-ln -s /usr/include/nfs nfs
-	-ln -s /usr/include/inet inet
-	-ln -s /usr/include/ufs ufs
+	-ln -fs /usr/include/sys h
+	-ln -fs /usr/include/net net
+	-ln -fs /usr/include/netinet netinet
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs /usr/include/sys sys
+	-ln -fs /usr/include/nfs nfs
+	-ln -fs /usr/include/inet inet
+	-ln -fs /usr/include/ufs ufs
 	for t in ${KOBJ} ; do \
 		echo Making directory: $$t; \
 		mkdir -p $$t; \
 		$(RM) -f $$t/Makefile.common $$t/Makefile $$t/config ; \
-		ln -s ../Makefile.common $$t/Makefile.common ; \
-		ln -s ../Makefile $$t/Makefile ;\
-		ln -s ../config $$t/config ;\
+		ln -fs ../Makefile.common $$t/Makefile.common ; \
+		ln -fs ../Makefile $$t/Makefile ;\
+		ln -fs ../config $$t/config ;\
 	done
 
 

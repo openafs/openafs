@@ -95,8 +95,21 @@ server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 budb_server: $(SERVER_OBJS) ${LIBS}
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
-budb.xdr.c budb.cs.c budb.ss.c budb.h: budb.rg
-	${RXGEN} ${srcdir}/budb.rg
+budb.cs.c: budb.rg
+	${RXGEN} -C -o $@ ${srcdir}/budb.rg
+
+budb.ss.c: budb.rg
+	${RXGEN} -S -o $@ ${srcdir}/budb.rg
+
+budb.xdr.c: budb.rg
+	${RXGEN} -c -o $@ ${srcdir}/budb.rg
+
+budb.h: budb.rg
+	${RXGEN} -h -o $@ ${srcdir}/budb.rg
+
+budb.cs.c: budb.h
+budb.xdr.c: budb.h
+budb.ss.c: budb.h
 
 libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
 	-$(RM) -f $@

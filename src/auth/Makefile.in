@@ -72,10 +72,10 @@ libauth.krb.a: $(KOBJS) AFS_component_version_number.o
 	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
-copyauth: copyauth.o
+copyauth: copyauth.o ${LIBS}
 	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS}
 
-setkey: setkey.o
+setkey: setkey.o ${LIBS}
 	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS}
 
 acfg_errors.o: acfg_errors.c

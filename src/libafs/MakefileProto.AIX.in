@@ -94,17 +94,17 @@ include Makefile.common
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys
-	ln -s /usr/include/sys h
-	ln -s /usr/include/net net
-	ln -s /usr/include/netinet netinet
-	ln -s /usr/include/rpc rpc
-	ln -s /usr/include/sys sys
-	ln -s /usr/include/nfs nfs
-	ln -s /usr/include/jfs ufs
+	ln -fs /usr/include/sys h
+	ln -fs /usr/include/net net
+	ln -fs /usr/include/netinet netinet
+	ln -fs /usr/include/rpc rpc
+	ln -fs /usr/include/sys sys
+	ln -fs /usr/include/nfs nfs
+	ln -fs /usr/include/jfs ufs
 
 
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of

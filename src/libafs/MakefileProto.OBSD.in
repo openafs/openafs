@@ -70,19 +70,19 @@ include Makefile.common
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -s /usr/src/sys/net net
-	-ln -s /usr/src/sys/i386/include machine
-	-ln -s /usr/src/sys/netinet netinet
-	-ln -s /usr/src/sys/nfs nfs
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/src/sys/sys sys
-	-ln -s /usr/src/sys/ufs/ufs ufs
-	-ln -s /usr/src/sys/sys h
-	-ln -s /usr/src/sys/vm vm
+	-ln -fs /usr/src/sys/net net
+	-ln -fs /usr/src/sys/i386/include machine
+	-ln -fs /usr/src/sys/netinet netinet
+	-ln -fs /usr/src/sys/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs /usr/src/sys/sys sys
+	-ln -fs /usr/src/sys/ufs/ufs ufs
+	-ln -fs /usr/src/sys/sys h
+	-ln -fs /usr/src/sys/vm vm
 	-touch $(KOBJ)/sec_net.h
 
 

@@ -242,10 +242,10 @@ KOBJ = STATIC MODLOAD
 
 setup:
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys 
-	-ln -s /usr/include/sys h
-	-ln -s /usr/include/net /usr/include/netinet .
-	-ln -s /usr/include/rpc /usr/include/sys .
-	-ln -s /usr/include/sys/fs .
+	-ln -fs /usr/include/sys h
+	-ln -fs /usr/include/net /usr/include/netinet .
+	-ln -fs /usr/include/rpc /usr/include/sys .
+	-ln -fs /usr/include/sys/fs .
 <all -sgi_65>
 	BUILDPROCS="${PROCESSORS}" ; \
 	BUILDMPS="${MPS}" ; \
@@ -260,9 +260,9 @@ setup:
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
 		$(RM) -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
-		ln -s ../Makefile.common $$dir/Makefile.common; \
-		ln -s ../Makefile $$dir/Makefile; \
-		ln -s ../config $$dir/config; \
+		ln -fs ../Makefile.common $$dir/Makefile.common; \
+		ln -fs ../Makefile $$dir/Makefile; \
+		ln -fs ../config $$dir/config; \
 	    done; \
 	  done; \
 	done
@@ -277,9 +277,9 @@ setup:
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
 		$(RM) -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
-		ln -s ../Makefile.common $$dir/Makefile.common; \
-		ln -s ../Makefile $$dir/Makefile; \
-		ln -s ../config $$dir/config; \
+		ln -fs ../Makefile.common $$dir/Makefile.common; \
+		ln -fs ../Makefile $$dir/Makefile; \
+		ln -fs ../config $$dir/config; \
 	    done; \
 	done
 <all>

@@ -173,7 +173,7 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 				;;			\
 	esac
 
-gi: ${TOP_LIBDIR}/libsys.a
+gi: ${TOP_LIBDIR}/libsys.a 
 	case ${SYS_NAME} in \
                 *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
@@ -182,7 +182,7 @@ gi: ${TOP_LIBDIR}/libsys.a
 			${CC} ${LDFLAGS} -o gi gi.o ${TOP_LIBDIR}/libsys.a;; \
         esac
 
-volinfo: vol-info.o physio.o ihandle.o
+volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	case ${SYS_NAME} in \
 		*linux* | *fbsd*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \

@@ -43,11 +43,37 @@ libbubasics.a: $(OBJS) AFS_component_version_number.o
 	ar r libbubasics.a ${OBJS} AFS_component_version_number.o
 	${RANLIB} libbubasics.a
 
-butc.xdr.c butc.ss.c butc.cs.c butc.h: butc.xg
-	${RXGEN} ${srcdir}/butc.xg
+butc.xdr.c: butc.xg
+	${RXGEN} -c -o $@ ${srcdir}/butc.xg
 
-bumon.xdr.c bumon.ss.c bumon.cs.c bumon.h: bumon.xg
-	${RXGEN} ${srcdir}/bumon.xg
+butc.ss.c: butc.xg
+	${RXGEN} -S -o $@ ${srcdir}/butc.xg
+
+butc.cs.c: butc.xg
+	${RXGEN} -C -o $@ ${srcdir}/butc.xg
+
+butc.h: butc.xg
+	${RXGEN} -h -o $@ ${srcdir}/butc.xg
+
+butc.xdr.c: butc.h
+butc.cs.c: butc.h
+butc.ss.c: butc.h
+
+bumon.xdr.c: bumon.xg
+	${RXGEN} -c -o $@ ${srcdir}/bumon.xg
+
+bumon.ss.c: bumon.xg
+	${RXGEN} -S -o $@ ${srcdir}/bumon.xg
+
+bumon.cs.c: bumon.xg
+	${RXGEN} -C -o $@ ${srcdir}/bumon.xg
+
+bumon.h: bumon.xg
+	${RXGEN} -h -o $@ ${srcdir}/bumon.xg
+
+bumon.xdr.c: bumon.h
+bumon.ss.c: bumon.h
+bumon.cs.c: bumon.h
 
 butm_errs.c butm.h: butm_errs.et butm.p.h
 	$(RM) -f butm.h butm_errs.c
