@@ -565,7 +565,7 @@ void afs_CheckServers(adown, acellp)
 	    continue;  /* have just been added by setsprefs */ 
 
 	/* get a connection, even if host is down; bumps conn ref count */
-	tu = afs_GetUser(treq.uid, ts->cell, SHARED_LOCK);
+	tu = afs_GetUser(treq.uid, ts->cell->cell, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cell, tu,
 			  1/*force*/, 1/*create*/, SHARED_LOCK);
 	afs_PutUser(tu, SHARED_LOCK);
