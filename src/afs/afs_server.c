@@ -303,7 +303,7 @@ static void CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
     RX_AFS_GUNLOCK();
     code = VL_ProbeServer(tc->id);
     RX_AFS_GLOCK();
-    rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
+    rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
     afs_PutConn(tc, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
@@ -616,7 +616,7 @@ void afs_CheckServers(int adown, struct cell *acellp)
 		afs_setTimeHost = tc->srvr->server;
 	    }
 	    if (setTimer)
-		rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
+		rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 	    if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 		/* server back up */
 		print_internet_address("afs: file server ", sa, " is back up", 2);

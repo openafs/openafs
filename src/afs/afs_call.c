@@ -89,6 +89,9 @@ extern struct interfaceAddr afs_cb_interface;
 static int afs_RX_Running = 0;
 static int afs_InitSetup_done = 0;
 
+afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
+afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
+
 static int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval);
 
@@ -125,7 +128,7 @@ static int afs_InitSetup(int preallocs)
 	printf("AFS: RX failed to initialize.\n");
 	return code;
     }
-    rx_SetRxDeadTime(AFS_RXDEADTIME);
+    rx_SetRxDeadTime(afs_rx_deadtime);
     /* resource init creates the services */
     afs_ResourceInit(preallocs);
 

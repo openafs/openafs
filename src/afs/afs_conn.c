@@ -226,10 +226,9 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 	AFS_GUNLOCK();
 	tc->id = rx_NewConnection(sap->sa_ip, aport, service, csec, isec);
 	AFS_GLOCK();
-        if (service == 52) { 
-           rx_SetConnHardDeadTime(tc->id, AFS_HARDDEADTIME);
-       }
-
+	if (service == 52) { 
+	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
+	}
 
 	tc->forceConnectFS = 0;	/* apparently we're appropriately connected now */
 	if (csec)

@@ -84,7 +84,10 @@ extern int afs_shuttingdown;
 #define	VCACHE_FREE	5
 #define	AFS_NRXPACKETS	80
 #define	AFS_RXDEADTIME	50
-#define AFS_HARDDEADTIME        120
+#define AFS_HARDDEADTIME	120
+
+extern afs_int32 afs_rx_deadtime;
+extern afs_int32 afs_rx_harddead;
 
 struct sysname_info {
   char *name;

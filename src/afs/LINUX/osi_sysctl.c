@@ -37,6 +37,9 @@ static ctl_table afs_sysctl_table[] = {
         {4, "GCPAGs",
          &afs_gcpags, sizeof(afs_int32), 0644, NULL,
          &proc_dointvec},
+	{5, "rx_deadtime",
+	 &afs_rx_deadtime, sizeof(afs_int32), 0644, NULL,
+	 &proc_dointvec},
 	{0}
 };
 
