@@ -172,12 +172,11 @@ struct min_direct {		/* miniature direct structure */
 #else
 #if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV)
     afs_int32 d_off;
-    afs_uint32 d_fileno;
 #endif
 #if     defined(AFS_HPUX100_ENV)
     unsigned long long d_off;
-    afs_uint32 d_fileno;
 #endif
+    afs_uint32 d_fileno;
     u_short d_reclen;
     u_short d_namlen;
 #endif
