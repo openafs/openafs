@@ -32,7 +32,13 @@ RCSID("$Header$");
 #include <fcntl.h>
 #endif
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
-
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE

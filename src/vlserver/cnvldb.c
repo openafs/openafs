@@ -25,7 +25,13 @@ RCSID("$Header$");
 #include <afs/fileutil.h>
 
 #include "vlserver.h"
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
+#endif
 
 #define MAXSIZE 2048 /* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */
