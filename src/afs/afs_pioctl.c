@@ -121,6 +121,17 @@ static int (*(pioctlSw[]))() = {
   PFlushMount,			/* 52 - flush mount symlink data */
   PRxStatProc,			/* 53 - control process RX statistics */
   PRxStatPeer,			/* 54 - control peer RX statistics */
+  PGetRxkcrypt,			/* 55 -- Get rxkad encryption flag */
+  PSetRxkcrypt,			/* 56 -- Set rxkad encryption flag */
+  PNoop,			/* 57 -- arla: set file prio */
+  PNoop,			/* 58 -- arla: fallback getfh */
+  PNoop,			/* 59 -- arla: fallback fhopen */
+  PNoop,			/* 60 -- arla: controls xfsdebug */
+  PNoop,			/* 61 -- arla: controls arla debug */
+  PNoop,			/* 62 -- arla: debug interface */
+  PNoop,			/* 63 -- arla: print xfs status */
+  PNoop,			/* 64 -- arla: force cache check */
+  PNoop,			/* 65 -- arla: break callback */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
