@@ -392,3 +392,33 @@ ac_cv_linux_sched_struct_task_struct_has_sighand=yes,
 ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM], [
+AC_MSG_CHECKING(for rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.rlim);],
+ac_cv_linux_sched_struct_task_struct_has_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
+AC_MSG_CHECKING(for signal->rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_signal_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.signal->rlim);],
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_signal_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
