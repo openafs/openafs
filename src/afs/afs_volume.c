@@ -225,6 +225,7 @@ void afs_ResetVolumes(struct server *srvp)
      for (vp=afs_volumes[j]; vp; vp=vp->next) {
 	for (k=0; k<MAXHOSTS; k++) {
 	   if (!srvp || (vp->serverHost[k] == srvp)) {
+	      vp->serverHost[k] = 0;
 	      afs_ResetVolumeInfo(vp);
 	      break;
 	   }
