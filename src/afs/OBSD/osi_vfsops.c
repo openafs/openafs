@@ -116,7 +116,6 @@ static int lkmid = -1;
 static int afs_badcall(struct proc *p, void *xx, register_t * yy);
 static struct sysent old_sysent;
 
-char afs_NetBSD_osname[] = "OpenBSD";
 struct osi_vfs *afs_globalVFS;
 struct vcache *afs_globalVp;
 
@@ -495,11 +494,6 @@ int
 libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 {
     if (cmd == LKM_E_LOAD) {
-	if (strcmp(ostype, afs_NetBSD_osname)) {
-	    printf("This is %s version %s\n", ostype, osrelease);
-	    printf("This version of AFS is only for %s\n", afs_NetBSD_osname);
-	    return EPROGMISMATCH;
-	}
 	if (sysent[AFS_SYSCALL].sy_call == afs3_syscall
 	    || sysent[AFS_SYSCALL].sy_call == afs_badcall) {
 	    printf("AFS already loaded\n");
