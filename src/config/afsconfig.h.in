@@ -74,6 +74,9 @@
 /* Define if you have the srandom function.  */
 #undef HAVE_SRANDOM
 
+/* Define if you have the timegm function.  */
+#undef HAVE_TIMEGM
+
 /* Define if you have the utimes function.  */
 #undef HAVE_UTIMES
 
@@ -185,11 +188,71 @@
 /* define if sys/param.h defines the endiness */
 #undef ENDIANESS_IN_SYS_PARAM_H
 
+/* define if you have redhat buildsystem */
+#undef ENABLE_REDHAT_BUILDSYS
+
+/* define if your linux kernel exports tasklist_lock */
+#undef EXPORTED_TASKLIST_LOCK
+
+/* define if your h_exists exists */
+#undef COMPLETION_H_EXISTS
+
+/* define if your setattr return return non-void */
+#undef INODE_SETATTR_NOT_VOID
+
+/* define if your struct address_space has page_lock */
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+
+/* define if your struct address_space has gfp_mask */
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+
+/* define if your struct inode has truncate_sem */
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+
+/* define if you struct inode has i_devices */
+#undef STRUCT_INODE_HAS_I_DEVICES
+
+/* define if you struct inode has data_buffers */
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+
 /* define if struct ufsvfs has vfs_dqrwlock */
 #undef HAVE_VFS_DQRWLOCK
 
 /* define if struct proc has p_corefile */
 #undef HAVE_P_COREFILE
+
+/* define if you struct sockaddr sa_len */
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
+
+/* define if you have socket */
+#undef HAVE_SOCKET
+
+/* define if you have connect */
+#undef HAVE_CONNECT
+
+/* define if you have gethostbyname */
+#undef HAVE_GETHOSTBYNAME
+
+/* define if you have res_search */
+#undef HAVE_RES_SEARCH
+
+/* define if you want to have fast restart */
+#undef FAST_RESTART
+
+/* define if you want to salvager to check bitmasks later */
+#undef BITMAP_LATER
+
+/* define if you want to want listvol switch */
+#undef FULL_LISTVOL_SWITCH
+
+/* define if you want to want bos restricted mode */
+#undef BOS_RESTRICTED_MODE
+
+/* define if you want to want namei fileserver */
+#undef AFS_NAMEI_ENV
+
+/* define if you want to want search afsdb rr */
+#undef AFS_AFSDB_ENV
 
 #undef PACKAGE
 #undef VERSION
@@ -228,6 +291,9 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 #undef STRUCT_INODE_HAS_I_DEVICES
 #undef EXPORTED_TASKLIST_LOCK
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_KALLSYMS_ADDRESS
 #undef COMPLETION_H_EXISTS
 #undef ssize_t
 
