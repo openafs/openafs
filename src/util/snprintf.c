@@ -1,7 +1,7 @@
 /* snprintf.c - Formatted, length-limited print to a string */
 
 #include <afs/param.h>
-#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV)
 #include <sys/types.h>
 #include <stdarg.h>
 #include <stdio.h>
