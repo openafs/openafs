@@ -183,9 +183,12 @@ void osi_StopListener(void)
 #endif
     listener =  find_task_by_pid(rxk_ListenerPid);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-                    read_unlock(&tasklist_lock);
+    read_unlock(&tasklist_lock);
 #endif
     while (rxk_ListenerPid) {
+	struct task_struct *p;
+
+	flush_signals(listener);
 	force_sig(SIGKILL, listener);
 	afs_osi_Sleep(&rxk_ListenerPid); 
     }
