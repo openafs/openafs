@@ -4108,7 +4108,7 @@ UV_SyncVolume(aserver, apart, avolname, flags)
        if (modified && (code == VL_NOENT)) {
 	  fprintf(STDOUT,"\n**entry deleted**\n");
        } else if (modified) {
-	  EnumerateEntry(vldbentry);
+	  EnumerateEntry(&vldbentry);
        } else {
 	  fprintf(STDOUT,"\n**no change**\n");
        }
