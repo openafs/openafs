@@ -345,7 +345,7 @@ casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
-	${CCRULE} ${UTIL}/assert.c
+	${CCRULE}
 
 base64.o: ${UTIL}/base64.c
 	${CCRULE}
