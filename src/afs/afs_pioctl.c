@@ -1066,10 +1066,10 @@ int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	return EINVAL;		/* out of range */
     }
     inSize = ablob->in_size;
-    
+
     /* Do all range checking before continuing */
-    if ((inSize >= PIGGYSIZE) || (inSize < 0)) return E2BIG;
-    if ((ablob->out_size >= PIGGYSIZE) || (ablob->out_size < 0)) return E2BIG;
+    if (inSize >= PIGGYSIZE || inSize < 0 || ablob->out_size < 0)
+	return E2BIG;
 
     inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     if (inSize > 0) {
