@@ -266,48 +266,49 @@ done:
 long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	smb_ioctl_t *iop;
-        long count;
-        long code;
-        long leftToCopy;
-        char *op;
-        cm_user_t *userp;
+    long count;
+    long code;
+    long leftToCopy;
+    char *op;
+    cm_user_t *userp;
+    smb_user_t *uidp;
 
-        iop = fidp->ioctlp;
-        count = smb_GetSMBParm(inp, 5);
+    iop = fidp->ioctlp;
+    count = smb_GetSMBParm(inp, 5);
 	
 	userp = smb_GetUser(vcp, inp);
 	osi_assert(userp != 0);
 
-	{
-		smb_user_t *uidp;
-
-		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		if (uidp && uidp->unp)
-		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			     uidp->userID, userp,
-			     osi_LogSaveString(afsd_logp, uidp->unp->name));
-		else {
-			if (uidp)
+    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+    iop->uidp = uidp;
+    if (uidp && uidp->unp)
+        osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+                  uidp->userID, userp,
+                  osi_LogSaveString(afsd_logp, uidp->unp->name));
+    else {
+        if (uidp)
 		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
-			     uidp->userID, userp);
-			else
+                      uidp->userID, userp);
+        else
 		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
-			     userp);
-		}
-		if (uidp) smb_ReleaseUID(uidp);
-	}
+                     userp);
+    }
 
 	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
 
 	code = smb_IoctlPrepareRead(fidp, iop, userp);
-        if (code) {
+    if (uidp) {
+        iop->uidp = 0;
+        smb_ReleaseUID(uidp);
+    }
+    if (code) {
 		cm_ReleaseUser(userp);
-                smb_ReleaseFID(fidp);
+        smb_ReleaseFID(fidp);
 		return code;
-        }
+    }
 
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
-        if (count > leftToCopy) count = leftToCopy;
+    if (count > leftToCopy) count = leftToCopy;
         
 	/* 0 and 1 are reserved for request chaining, were setup by our caller,
          * and will be further filled in after we return.

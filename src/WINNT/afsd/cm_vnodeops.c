@@ -1553,9 +1553,7 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
            tfid.cell==0x1 && tfid.volume==0x20000001 &&
 			   !(tfid.vnode==0x1 && tfid.unique==0x1) )
 	{
-#ifdef DEBUG
-	        afsi_log("   cm_trybulkproc going to call getscache");
-#endif
+        osi_Log0(afsd_logp, "cm_TryBulkProc calling cm_GetSCache to avoid BulkStat");
 		return cm_GetSCache(&tfid, &tscp, NULL, NULL);
 	}
 #endif /* AFS_FREELANCE_CLIENT */

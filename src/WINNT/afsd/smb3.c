@@ -237,6 +237,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tid_t *tidp;
+    smb_user_t *uidp;
     unsigned short newTid;
     char shareName[256];
 	char *sharePath;
@@ -271,7 +272,10 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	lock_ReleaseMutex(&vcp->mx);
         
 	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
-	shareFound = smb_FindShare(vcp, inp, shareName, &sharePath);
+    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
+    if (uidp)
+        smb_ReleaseUID(uidp);
 	if (!shareFound) {
 		smb_ReleaseTID(tidp);
 		return CM_ERROR_BADSHARENAME;

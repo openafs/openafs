@@ -846,7 +846,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
 		uidp->vcp = vcp;
         vcp->refCount++;
 		vcp->usersp = uidp;
-		lock_InitializeMutex(&uidp->mx, "uid_t mutex");
+		lock_InitializeMutex(&uidp->mx, "user_t mutex");
 		uidp->userID = uid;
 		osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[%x] new-uid[%d] name[%s]",(int)vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
 	}
@@ -1201,13 +1201,12 @@ int smb_ListShares()
 }
 
 /* find a shareName in the table of submounts */
-int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
+int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	char **pathNamep)
 {
 	DWORD len;
 	char pathName[1024];
 	char *var;
-	smb_user_t *uidp;
 	char temp[1024];
 	DWORD sizeTemp;
     char sbmtpath[MAX_PATH];
@@ -1275,25 +1274,19 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
         while (1)
         {
             if (var = smb_stristr(p, VNUserName)) {
-                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
                 if (uidp && uidp->unp)
                     smb_subst(p, var, sizeof(VNUserName),uidp->unp->name);
                 else
                     smb_subst(p, var, sizeof(VNUserName)," ");
-                if (uidp)
-                    smb_ReleaseUID(uidp);
             }
             else if (var = smb_stristr(p, VNLCUserName)) 
             {
-                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
                 if (uidp && uidp->unp)
                     strcpy(temp, uidp->unp->name);
                 else 
                     strcpy(temp, " ");
                 _strlwr(temp);
                 smb_subst(p, var, sizeof(VNLCUserName), temp);
-                if (uidp)
-                    smb_ReleaseUID(uidp);
             }
             else if (var = smb_stristr(p, VNComputerName)) 
             {
@@ -2702,6 +2695,7 @@ long smb_ReceiveCoreGetDiskAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *rsp)
 {
 	smb_tid_t *tidp;
+    smb_user_t *uidp;
 	unsigned short newTid;
 	char shareName[256];
 	char *sharePath;
@@ -2729,7 +2723,10 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	lock_ReleaseMutex(&vcp->mx);
         
 	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
-	shareFound = smb_FindShare(vcp, inp, shareName, &sharePath);
+    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
+    if (uidp)
+        smb_ReleaseUID(uidp);
 	if (!shareFound) {
 		smb_ReleaseTID(tidp);
 		return CM_ERROR_BADSHARENAME;

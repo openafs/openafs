@@ -153,6 +153,10 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
          relativePath[1] == '\\' && 
          !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
     {
+        char shareName[256];
+        char *sharePath;
+        int shareFound, i;
+
         /* We may have found a UNC path. 
          * If the first component is the NetbiosName,
          * then throw out the second component (the submount)
@@ -163,21 +167,59 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         if ( !_strnicmp("all", p, 3) )
             p += 4;
 
-        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
-                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                         userp, p, reqp, &substRootp);
-        if (code) return code;
-        
-        code = cm_NameI(substRootp, ".", CM_FLAG_FOLLOW,
+        for (i = 0; *p != '\\'; i++,p++ ) {
+            shareName[i] = *p;
+        }
+        p++;                    /* skip past trailing slash */
+        shareName[i] = 0;       /* terminate string */
+
+        shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
+        if ( shareFound ) {
+            /* we found a sharename, therefore use the resulting path */
+            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, sharePath, reqp, &substRootp);
+            free(sharePath);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, NULL, reqp, scpp);
-        if (code) return code;
+			if (code) return code;
+        } else {
+            /* otherwise, treat the name as a cellname mounted off the afs root.
+			 * This requires that we reconstruct the shareName string with 
+			 * leading and trailing slashes.
+			 */
+            p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
+			if ( !_strnicmp("all", p, 3) )
+				p += 4;
+
+			shareName[0] = '/';
+			for (i = 1; *p != '\\'; i++,p++ ) {
+				shareName[i] = *p;
+			}
+			p++;                    /* skip past trailing slash */
+			shareName[i++] = '/';	/* add trailing slash */
+			shareName[i] = 0;       /* terminate string */
+
+			
+			code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, shareName, reqp, &substRootp);
+            free(sharePath);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+			if (code) return code;
+        }
     } else {
         code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
         
-        code = cm_NameI(substRootp, relativePath, CM_FLAG_FOLLOW,
+        code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, NULL, reqp, scpp);
         if (code) return code;
     }
