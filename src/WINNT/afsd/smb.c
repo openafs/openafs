@@ -1890,24 +1890,21 @@ unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm)
 	parmCount = *smbp->wctp;
 
 	if (parm >= parmCount) {
+		char s[100];
 #ifndef DJGPP
         HANDLE h;
 		char *ptbuf[1];
-		char s[100];
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+#endif
 		sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
 				parm, parmCount, smbp->ncb_length);
+#ifndef DJGPP
 		ptbuf[0] = s;
 		ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1006, NULL,
 					1, smbp->ncb_length, ptbuf, smbp);
 		DeregisterEventSource(h);
-#else /* DJGPP */
-		char s[100];
-
-		sprintf(s, "Bad SMB param %d out of %d, ncb len %d",
-				parm, parmCount, smbp->ncb_length);
-                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
-#endif /* !DJGPP */
+#endif
+        osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
 		osi_panic(s, __FILE__, __LINE__);
 	}
 	parmDatap = smbp->wctp + (2*parm) + 1;
@@ -1924,26 +1921,21 @@ unsigned int smb_GetSMBOffsetParm(smb_packet_t *smbp, int parm, int offset)
 	parmCount = *smbp->wctp;
 
 	if (parm * 2 + offset >= parmCount * 2) {
+		char s[100];
 #ifndef DJGPP
 		HANDLE h;
 		char *ptbuf[1];
-		char s[100];
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+#endif
 		sprintf(s, "Bad SMB param %d offset %d out of %d, ncb len %d",
 				parm, offset, parmCount, smbp->ncb_length);
-		ptbuf[0] = s;
+#ifndef DJGPP
+        ptbuf[0] = s;
 		ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1006, NULL,
 					1, smbp->ncb_length, ptbuf, smbp);
 		DeregisterEventSource(h);
-#else /* DJGPP */
-		char s[100];
-                
-		sprintf(s, "Bad SMB param %d offset %d out of %d, "
-				"ncb len %d",
-				 parm, offset, parmCount, smbp->ncb_length);
-                osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
-#endif /* !DJGPP */
-
+#endif
+        osi_Log0(smb_logp, osi_LogSaveString(smb_logp, s));
 		osi_panic(s, __FILE__, __LINE__);
 	}
 	parmDatap = smbp->wctp + (2*parm) + 1 + offset;
@@ -5972,10 +5964,8 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 			1, ncbp->ncb_length, ptbuf, inp);
 		DeregisterEventSource(h);
 #else /* DJGPP */
-        osi_Log1(smb_logp, "SMB message too short, len %d",
-                 ncbp->ncb_length);
+        osi_Log1(smb_logp, "SMB message too short, len %d", ncbp->ncb_length);
 #endif /* !DJGPP */
-
 		return;
 	}
 
@@ -6056,10 +6046,9 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				ReportEvent(h, EVENTLOG_WARNING_TYPE, 0,
                             1005, NULL, 1, ncbp->ncb_length, ptbuf, smbp);
 				DeregisterEventSource(h);
-#else /* DJGPP */
+#endif /* !DJGPP */
 				osi_Log1(smb_logp, "Pkt straddled session startup, "
                          "ncb length %d", ncbp->ncb_length);
-#endif /* !DJGPP */
 			}
         }
         else {
@@ -6100,10 +6089,9 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 #ifdef NOTSERVICE
             smb_LogPacket(inp);
 #endif /* NOTSERVICE */
-#else /* DJGPP */
+#endif /* !DJGPP */
             osi_Log1(smb_logp, "Invalid SMB message, length %d",
                      ncbp->ncb_length);
-#endif /* !DJGPP */
 
 			code = CM_ERROR_INVAL;
 		}
@@ -6564,8 +6552,6 @@ void smb_Server(VOID *parmp)
 					char *ptbuf[1];
 					char s[100];
 
-					osi_Log1(smb_logp, "dispatch smb recv failed, message incomplete, ncb_length %d",
-                             ncbp->ncb_length);
 					h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 					sprintf(s, "SMB message incomplete, length %d",
                             ncbp->ncb_length);
@@ -6575,14 +6561,13 @@ void smb_Server(VOID *parmp)
                                 ncbp->ncb_length, ptbuf,
                                 bufp);
 					DeregisterEventSource(h);
-#else /* DJGPP */
+#endif /* !DJGPP */
 					osi_Log1(smb_logp,
                               "dispatch smb recv failed, message incomplete, ncb_length %d",
                               ncbp->ncb_length);
                     osi_Log1(smb_logp,
                               "SMB message incomplete, "
                               "length %d", ncbp->ncb_length);
-#endif /* !DJGPP */
 
 					/*
 					 * We used to discard the packet.
