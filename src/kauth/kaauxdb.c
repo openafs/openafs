@@ -16,12 +16,20 @@
 
 RCSID("$Header$");
 
-#include <fcntl.h>
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
 #include <io.h>
 #else
 #include <sys/file.h>
+#endif
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <rx/rxkad.h>
 #include "ubik_int.h"
