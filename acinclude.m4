@@ -764,7 +764,8 @@ case $TOP_SRCDIR in
         /*)
                 ;;
         *)
-                TOP_SRCDIR=${SRCDIR_PARENT}/src
+		TOP_SRCDIR=`cd $TOP_SRCDIR; pwd`
+		;;
 esac
 
 TOP_OBJDIR="${SRCDIR_PARENT}"
