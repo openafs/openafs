@@ -1,0 +1,64 @@
+AC_INIT(Makefile.am)
+AM_CONFIG_HEADER(include/config.h)
+AM_INIT_AUTOMAKE(openafs,devel-autoconf)
+
+test -z "$CFLAGS" && CFLAGS=-g
+
+AC_PROG_CC
+AC_PROG_RANLIB
+AC_PROG_YACC
+AM_PROG_LEX
+AC_PROG_LN_S
+AC_C_BIGENDIAN
+
+AC_TYPE_SIGNAL
+
+AC_HEADER_TIME
+
+AC_PREFIX_DEFAULT(/usr/afsws)
+
+AC_CHECK_HEADERS(sys/types.h sys/param.h sys/file.h unistd.h)
+AC_CHECK_HEADERS(io.h signal.h fcntl.h)
+
+AC_CHECK_FUNCS(setitimer sigaction random)
+
+AC_ARG_WITH(afssrc,[  --with-afssrc=DIR       location of AFS source])
+
+case "$with_afssrc" in
+/*)	top_afssrcdir="$with_afssrc";;
+*)	top_afssrcdir="\$(top_builddir)/$with_afssrc";;
+esac
+	
+AC_SUBST(top_afssrcdir)
+
+AC_OUTPUT([
+	Makefile
+	afs/Makefile
+	afsd/Makefile
+	audit/Makefile
+	auth/Makefile
+	bozo/Makefile
+	cmd/Makefile
+	comerr/Makefile
+	des/Makefile
+	dir/Makefile
+	fsint/Makefile
+	include/Makefile
+	include/afs/Makefile
+	include/rx/Makefile
+	kauth/Makefile
+	libacl/Makefile
+	lwp/Makefile
+	procmgmt/Makefile
+	ptserver/Makefile
+	rx/Makefile
+	rxgen/Makefile
+	rxkad/Makefile
+	sys/Makefile
+	ubik/Makefile
+	util/Makefile
+	viced/Makefile
+	vlserver/Makefile
+	vol/Makefile
+	volser/Makefile
+	])
