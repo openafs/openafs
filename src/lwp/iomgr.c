@@ -736,8 +736,8 @@ static int SignalSignals (void)
     for (i=0; i < NSOFTSIG; i++) {
 	PROCESS pid;
 	if (p=sigProc[i]) /* This yields!!! */
-	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, sigRock[i],
-		"SignalHandler", &pid);
+	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, 
+			       (void *) sigRock[i], "SignalHandler", &pid);
 	sigProc[i] = 0;
     }
 
@@ -807,8 +807,8 @@ int IOMGR_Initialize(void)
     install_ncb_handler();
 #endif /* AFS_DJGPP_ENV */
 
-    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, 0, "IO MANAGER",
-			     &IOMGR_Id);
+    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
+			     "IO MANAGER", &IOMGR_Id);
 }
 
 int IOMGR_Finalize()

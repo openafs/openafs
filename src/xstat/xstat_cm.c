@@ -613,7 +613,7 @@ int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
 	LWP_CreateProcess(xstat_cm_LWP,		/*Function to start up*/
 			  LWP_STACK_SIZE,	/*Stack size in bytes*/
 			  1,			/*Priority*/
-			  0,			/*Parameters*/
+			  (void *) 0,		/*Parameters*/
 			  "xstat_cm Worker",	/*Name to use*/
 			  &probeLWP_ID);	/*Returned LWP process ID*/
     if (code) {

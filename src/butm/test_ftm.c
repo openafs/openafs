@@ -171,7 +171,7 @@ main (argc, argv)
       exit(1);
     }
     /* Perform normal test */
-    code = LWP_CreateProcess(PerformDumpTest, 100000, 0, &ti ,
+    code = LWP_CreateProcess(PerformDumpTest, 100000, 0, (void *) &ti,
 			     "BUTM Tester", &pid);
     if (code) {
       com_err(whoami,code,"libbutm.a: Normal Tests failed!. :-( ");
@@ -183,7 +183,7 @@ main (argc, argv)
     /* Perform Appended Test, on tapes */
     if (!isafile) {
       ti.appended = 1;
-      code = LWP_CreateProcess(PerformDumpTest, 100000, 0, &ti ,
+      code = LWP_CreateProcess(PerformDumpTest, 100000, 0, (void *) &ti,
 			       "BUTM Tester", &pid);
       if (code) {
 	com_err(whoami,code,"libbutm.a: Appended Tests failed!. :-( ");

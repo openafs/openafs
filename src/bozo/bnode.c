@@ -737,7 +737,8 @@ int bnode_Init() {
     LWP_InitializeProcessSupport(1, &junk); /* just in case */
     IOMGR_Initialize();
     code = LWP_CreateProcess(bproc, BNODE_LWP_STACKSIZE,
-			     /* priority */ 1, /* parm */0, "bnode-manager", &bproc_pid);
+			     /* priority */ 1, (void *) /* parm */0, 
+			     "bnode-manager", &bproc_pid);
     if (code) return code;
     memset((char *)&newaction, 0, sizeof(newaction));
     newaction.sa_handler = bnode_Int;

@@ -2011,7 +2011,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
       LWP_CreateProcess(gtx_InputServer,	/*Fcn to start up*/
 			8192,			/*Stack size in bytes*/
 			LWP_NORMAL_PRIORITY,	/*Priority*/
-			scout_gwin,		/*Params: Ptr to window*/
+			(void *) scout_gwin,	/*Params: Ptr to window*/
 			"gx-listener",		/*Name to use*/
 			&gxlistener_ID);	/*Returned LWP process ID*/
 #endif /* 0 */

@@ -233,7 +233,7 @@ void FSYNC_fsInit(void)
 #else /* AFS_PTHREAD_ENV */
     PROCESS pid;
     assert (LWP_CreateProcess(FSYNC_sync, USUAL_STACK_SIZE,
-			      USUAL_PRIORITY, 0,
+			      USUAL_PRIORITY, (void *) 0,
 			      "FSYNC_sync", &pid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 }

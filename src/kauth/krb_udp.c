@@ -920,12 +920,12 @@ afs_int32 init_krb_udp ()
     IOMGR_Initialize();
 #endif
     LWP_CreateProcess(SocketListener, /*stacksize*/16000, LWP_NORMAL_PRIORITY,
-		      0, "Socket Listener", &slPid);
+		      (void *) 0, "Socket Listener", &slPid);
 
 	/* just to close the log every five minutes */
 
 	LWP_CreateProcess(FiveMinuteCheckLWP, 24*1024,
-		 LWP_MAX_PRIORITY - 2, &fiveminutes,
+		 LWP_MAX_PRIORITY - 2, (void *) &fiveminutes,
 		 "FiveMinuteChecks", &checkPid);
 
 #if MAIN

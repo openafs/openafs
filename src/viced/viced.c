@@ -586,10 +586,10 @@ main(argc, argv)
     AFS_SIGSET_RESTORE();
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_CreateProcess(FiveMinuteCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
-	    &fiveminutes, "FiveMinuteChecks", &serverPid) == LWP_SUCCESS);
+			     (void *) &fiveminutes, "FiveMinuteChecks", &serverPid) == LWP_SUCCESS);
 	    
     assert(LWP_CreateProcess(HostCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
-	    &fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
+	    (void *) &fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
     TM_GetTimeOfDay(&tp, 0);

@@ -355,8 +355,8 @@ usage:
     SetupLogSignals();
 
     /* create the lwp to garbage-collect old transactions and sleep periodically */
-    LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
-    LWP_CreateProcess(BKGSleep,16*1024, 3, 0, "vol slp daemon", &pid);
+    LWP_CreateProcess(BKGLoop, 16*1024, 3, (void *) 0, "vol bkg daemon", &pid);
+    LWP_CreateProcess(BKGSleep,16*1024, 3, (void *) 0, "vol slp daemon", &pid);
 
     /* Create a single security object, in this case the null security object, for unauthenticated connections, which will be used to control security on connections made to this server */
 

@@ -372,7 +372,7 @@ extern int LWP_CurrentProcess(PROCESS *pid);
 extern int LWP_INTERNALSIGNAL(char *event, int yield);
 extern int LWP_InitializeProcessSupport(int priority, PROCESS *pid);
 extern int LWP_CreateProcess(int (*ep)(), int stacksize, int priority,
-        char *parm, char *name, PROCESS *pid);
+        void *parm, char *name, PROCESS *pid);
 extern int LWP_DestroyProcess(PROCESS pid);
 extern int LWP_WaitProcess(char *event);
 extern PROCESS LWP_ThreadId(void);

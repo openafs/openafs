@@ -91,7 +91,7 @@ int astartInput; {
     IOMGR_Initialize();	/* input thread uses it */
     if (astartInput)
 	code = LWP_CreateProcess(gtx_InputServer, 8192, LWP_NORMAL_PRIORITY,
-				 0, "gx-listener", &junk);
+				 (void *) 0, "gx-listener", &junk);
     /* all done */
     twin = &gator_basegwin;
     return twin;
