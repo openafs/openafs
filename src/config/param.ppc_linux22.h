@@ -18,25 +18,6 @@
 #define AFS_SYSCALL 137
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1   /* User space interface to file system */
-#if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/config.h>
-#ifdef CONFIG_SMP
-#undef CONFIG_SMP
-#endif
-/* Using "AFS_SMP" to map to however many #define's are required to get
- * MP to compile for Linux
- */
-#ifdef AFS_SMP
-#define CONFIG_SMP
-#define __SMP__
-#define AFS_GLOBAL_SUNLOCK
-#endif
-
-#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
-#define MODVERSIONS
-#include <linux/modversions.h>
-#endif
-#endif /* __KERNEL__  && !DUMP_KERNEL*/
 #include <afs/afs_sysnames.h>
 
 #define AFS_USERSPACE_IP_ADDR 1
@@ -52,6 +33,21 @@
 #define AFS_HAVE_STATVFS    0  /* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
 
+#if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+#include <linux/config.h>
+#ifdef CONFIG_SMP
+#undef CONFIG_SMP
+#endif
+/* Using "AFS_SMP" to map to however many #define's are required to get
+ * MP to compile for Linux
+ */
+#ifdef AFS_SMP
+#define CONFIG_SMP
+#define __SMP__
+#define AFS_GLOBAL_SUNLOCK
+#endif
+
+#endif /* __KERNEL__  && !DUMP_KERNEL*/
 
 #ifdef KERNEL
 #ifndef MIN
