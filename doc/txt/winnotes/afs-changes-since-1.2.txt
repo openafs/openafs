@@ -1,5 +1,8 @@
 Since 1.3.75:
 
+  * A bug has been fixed in the auto-generation of Freelance root.afs
+    symlinks which produced random entries in the \\AFS\all directory.
+
   * Support has been added for multi-homed servers
 
 Since 1.3.74:
