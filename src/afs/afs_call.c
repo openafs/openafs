@@ -308,7 +308,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 long parm, parm2, parm3, parm4, parm5, parm6;
 {
     afs_int32 code = 0;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;	
 #else /* AFS_SGI61_ENV */
     u_int bufferSize;	
@@ -467,7 +467,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	while (!afs_InitSetup_done)
 	    afs_osi_Sleep(&afs_InitSetup_done);
 
-#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	temp = AFS_MINBUFFERS;  /* Should fix this soon */
 #else
 	/* number of 2k buffers we could get from all of the buffer space */
@@ -1132,7 +1132,8 @@ Afs_syscall(register struct afssysa *uap, rval_t *rvp)
 {
     int *retval = &rvp->r_val1;
 #else /* AFS_SUN5_ENV */
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+int
 afs3_syscall(p, args, retval)
 	struct proc *p;
 	void *args;
@@ -1203,12 +1204,10 @@ Afs_syscall ()
 #endif /* UKERNEL */
 #if  defined(AFS_DEC_ENV)
     int *retval = &u.u_r.r_val1;
-#else
-#if defined(AFS_HPUX_ENV)
+#elif defined(AFS_HPUX_ENV)
     long *retval = &u.u_rval1;
 #else
     int *retval = &u.u_rval1;
-#endif
 #endif
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_OSF_ENV */
@@ -1289,7 +1288,7 @@ Afs_syscall ()
 	AFS_GUNLOCK();
 #else
 	AFS_GLOCK();
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_setpag(p, args, retval);
 #else	/* AFS_OSF_ENV */
 	code = afs_setpag();
@@ -1301,7 +1300,7 @@ Afs_syscall ()
 #ifdef	AFS_SUN5_ENV
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, rvp, CRED());
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, p->p_cred->pc_ucred);
 #else
 	code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4);
@@ -1322,7 +1321,7 @@ Afs_syscall ()
 				   iparams.param3, iparams.param4, rvp, CRED());
 #else
 	code =  afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1, iparams.param2,
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 				   iparams.param3, iparams.param4, retval);
 #else
 				   iparams.param3, iparams.param4);
@@ -1332,7 +1331,7 @@ Afs_syscall ()
 #ifdef	AFS_SUN5_ENV
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3, rvp, CRED());
 #else
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3, retval);
 #else
 	code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3);
@@ -1537,7 +1536,7 @@ void shutdown_afstest(void)
 /* In case there is a bunch of dynamically build bkg daemons to free */
 void afs_shutdown_BKG(void)
 {
-  AFS_STATCNT(shutdown_BKG);
+    AFS_STATCNT(shutdown_BKG);
 }
 
 
@@ -1572,7 +1571,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     register afs_int32 code;
     struct afs_icl_log *logp;
     struct afs_icl_set *setp;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t temp;
 #else /* AFS_SGI61_ENV */
     afs_uint32 temp;

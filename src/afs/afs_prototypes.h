@@ -553,6 +553,7 @@ extern afs_int32 afs_waitForever;
 extern short afs_waitForeverCount;
 extern afs_int32 afs_showflags;
 extern int afs_defaultAsynchrony;
+extern int afs_syscall_pioctl();
 
 /* afs_segments.c */
 extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
@@ -655,6 +656,7 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
 extern int afs_strcasecmp(char *s1, char *s2);
 extern char *afs_strdup(char *s);
+extern char *afs_strcat(char *s1, char *s2);
 extern char *afs_strchr(char *s, int c);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);

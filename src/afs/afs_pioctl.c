@@ -13,6 +13,9 @@
 RCSID("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
+#ifdef AFS_OBSD_ENV
+#include "h/syscallargs.h"
+#endif
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* afs statistics */
 #include "afs/vice.h"
@@ -394,7 +397,7 @@ kioctl(fdes, com, arg, ext)
 #endif
   } u_uap, *uap = &u_uap;
 #else
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV)
 
 struct afs_ioctl_sys {
     int fd;
@@ -406,8 +409,7 @@ afs_xioctl (uap, rvp)
     struct afs_ioctl_sys *uap;
     rval_t *rvp;
 {
-#else
-#ifdef AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
 afs_xioctl (p, args, retval)
         struct proc *p;
         void *args;
@@ -418,20 +420,20 @@ afs_xioctl (p, args, retval)
         u_long com;
         caddr_t arg;
     } *uap = (struct a *)args;
-#else /* AFS_OSF_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
-        int fd;
-        u_long com;
-        caddr_t arg;
+    int fd;
+    u_long com;
+    caddr_t arg;
 };
+
+int
 afs_xioctl(p, uap, retval) 
         struct proc *p; 
         register struct ioctl_args *uap;
         register_t *retval;
 {
-#else
-#ifdef AFS_LINUX22_ENV
+#elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
@@ -442,58 +444,52 @@ asmlinkage int afs_xioctl(struct inode *ip, struct file *fp,
     struct afs_ioctl_sys ua, *uap = &ua;
 #else
 int afs_xioctl (void) 
-    {
-      register struct a {
+{
+    register struct a {
 	int fd;
 	int com;
 	caddr_t arg;
-      } *uap = (struct a *)u.u_ap;
-#endif /* AFS_LINUX22_ENV */
-#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
-#endif /* AFS_OSF_ENV */
+    } *uap = (struct a *)u.u_ap;
 #endif	/* AFS_SUN5_ENV */
 #endif
-#ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
-      struct file *fd;
-#else
-      register struct file *fd;
+#if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+    struct file *fd;
+#elif !defined(AFS_LINUX22_ENV)
+    register struct file *fd;
 #endif
+#if defined(AFS_XBSD_ENV)
+    register struct filedesc *fdp;
 #endif
-#if defined(AFS_FBSD_ENV)
-      register struct filedesc *fdp;
-#endif
-      register struct vcache *tvc;
-      register int ioctlDone = 0, code = 0;
+    register struct vcache *tvc;
+    register int ioctlDone = 0, code = 0;
       
-      AFS_STATCNT(afs_xioctl);
-#if defined(AFS_FBSD_ENV)
-        fdp=p->p_fd;
-        if ((u_int)uap->fd >= fdp->fd_nfiles ||
-            (fd = fdp->fd_ofiles[uap->fd]) == NULL)
-                return EBADF;
-        if ((fd->f_flag & (FREAD | FWRITE)) == 0)
-                return EBADF;
+    AFS_STATCNT(afs_xioctl);
+#if defined(AFS_XBSD_ENV)
+    fdp=p->p_fd;
+    if ((u_int)uap->fd >= fdp->fd_nfiles ||
+	(fd = fdp->fd_ofiles[uap->fd]) == NULL)
+	return EBADF;
+    if ((fd->f_flag & (FREAD | FWRITE)) == 0)
+	return EBADF;
 #else
 #if defined(AFS_DARWIN_ENV)
-        if ((code=fdgetf(p, uap->fd, &fd)))
-           return code;
+    if ((code=fdgetf(p, uap->fd, &fd)))
+	return code;
 #else
 #ifdef AFS_LINUX22_ENV
     ua.com = com;
     ua.arg = arg;
 #else
 #ifdef	AFS_AIX32_ENV
-      uap->fd = fdes;
-      uap->com = com;
-      uap->arg = arg;
+    uap->fd = fdes;
+    uap->com = com;
+    uap->arg = arg;
 #ifdef AFS_AIX51_ENV
-      uap->arg2 = arg2;
-      uap->arg3 = arg3;
+    uap->arg2 = arg2;
+    uap->arg3 = arg3;
 #endif
 
-  
-      if (setuerror(getf(uap->fd, &fd))) {
+    if (setuerror(getf(uap->fd, &fd))) {
 	return -1;
     }
 #else
@@ -504,34 +500,34 @@ int afs_xioctl (void)
 #else   /* AFS_OSF_ENV */
 #ifdef	AFS_SUN5_ENV
 #if defined(AFS_SUN57_ENV)
-	fd = getf(uap->fd);
-        if (!fd) return(EBADF);
+    fd = getf(uap->fd);
+    if (!fd) return(EBADF);
 #elif defined(AFS_SUN54_ENV)
-      fd = GETF(uap->fd);
-      if (!fd) return(EBADF);
+    fd = GETF(uap->fd);
+    if (!fd) return(EBADF);
 #else
-      if (code = getf(uap->fd, &fd)) {
-	  return (code);
-      }
+    if (code = getf(uap->fd, &fd)) {
+	return (code);
+    }
 #endif
 #else
-      fd = getf(uap->fd);
-      if (!fd) return(EBADF);
+    fd = getf(uap->fd);
+    if (!fd) return(EBADF);
 #endif
 #endif
 #endif
 #endif
 #endif
 #endif
-      /* first determine whether this is any sort of vnode */
-#ifdef AFS_LINUX22_ENV
-      tvc = VTOAFS(ip);
-      {
+    /* first determine whether this is any sort of vnode */
+#if defined(AFS_LINUX22_ENV)
+    tvc = VTOAFS(ip);
+    {
 #else
-#ifdef	AFS_SUN5_ENV
-      if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
+#ifdef AFS_SUN5_ENV
+    if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
 #else
-      if (fd->f_type == DTYPE_VNODE) {
+    if (fd->f_type == DTYPE_VNODE) {
 #endif
 	/* good, this is a vnode; next see if it is an AFS vnode */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
@@ -542,150 +538,142 @@ int afs_xioctl (void)
 #endif /* AFS_LINUX22_ENV */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 #ifdef AFS_DEC_ENV
-	  tvc = VTOAFS(afs_gntovn((struct gnode *) tvc));
-	  if (!tvc) {	/* shouldn't happen with held gnodes */
-	    u.u_error = ENOENT;
-	    return;
-	  }
+	    tvc = VTOAFS(afs_gntovn((struct gnode *) tvc));
+	    if (!tvc) {	/* shouldn't happen with held gnodes */
+		u.u_error = ENOENT;
+		return;
+	    }
 #endif
-	  /* This is an AFS vnode */
-	  if (((uap->com >> 8) & 0xff) == 'V') {
-	    register struct afs_ioctl *datap;
-	    AFS_GLOCK();
-	    datap = (struct afs_ioctl *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-	    AFS_COPYIN((char *)uap->arg, (caddr_t) datap, sizeof (struct afs_ioctl), code);
-	    if (code) {
-	      osi_FreeSmallSpace(datap);
-	      AFS_GUNLOCK();
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-              return code;
+	    /* This is an AFS vnode */
+	    if (((uap->com >> 8) & 0xff) == 'V') {
+		register struct afs_ioctl *datap;
+		AFS_GLOCK();
+		datap = (struct afs_ioctl *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+		AFS_COPYIN((char *)uap->arg, (caddr_t) datap, sizeof (struct afs_ioctl), code);
+		if (code) {
+		    osi_FreeSmallSpace(datap);
+		    AFS_GUNLOCK();
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+		    return code;
 #else 
 #if	defined(AFS_SUN5_ENV)
 #ifdef	AFS_SUN54_ENV
-	      releasef(uap->fd);
+		    releasef(uap->fd);
 #else
-	      releasef(fd);
+		    releasef(fd);
 #endif
-	      return (EFAULT);
+		    return (EFAULT);
 #else
 #ifdef	AFS_OSF_ENV
 #ifdef	AFS_OSF30_ENV
-	      FP_UNREF_ALWAYS(fd);
+		    FP_UNREF_ALWAYS(fd);
 #else
-              FP_UNREF(fd);
+		    FP_UNREF(fd);
 #endif
-              return code;
+		    return code;
 #else	/* AFS_OSF_ENV */
 #ifdef	AFS_AIX41_ENV
-	      ufdrele(uap->fd);
+		    ufdrele(uap->fd);
 #endif
 #ifdef AFS_LINUX22_ENV
-	      return -code;
+		    return -code;
 #else
-	      setuerror(code);
-	      return;
+		    setuerror(code);
+		    return;
 #endif
 #endif
+#endif
+#endif
+		}
+		code = HandleIoctl(tvc, uap->com, datap);
+		osi_FreeSmallSpace(datap);
+		AFS_GUNLOCK();
+		ioctlDone = 1;
+#ifdef	AFS_AIX41_ENV
+		ufdrele(uap->fd);
+#endif
+#ifdef	AFS_OSF_ENV
+#ifdef	AFS_OSF30_ENV
+		FP_UNREF_ALWAYS(fd);
+#else
+		FP_UNREF(fd);
 #endif
 #endif
 	    }
-	    code = HandleIoctl(tvc, uap->com, datap);
-	    osi_FreeSmallSpace(datap);
-	    AFS_GUNLOCK();
-	    ioctlDone = 1;
-#ifdef	AFS_AIX41_ENV
-	    ufdrele(uap->fd);
-#endif
-#ifdef	AFS_OSF_ENV
-#ifdef	AFS_OSF30_ENV
-	      FP_UNREF_ALWAYS(fd);
-#else
-              FP_UNREF(fd);
-#endif
-#endif
-	  }
 #if defined(AFS_LINUX22_ENV)
-	  else 
-	    code = EINVAL;
+	    else 
+		code = EINVAL;
 #endif
 	}
-      }
+    }
 
-      if (!ioctlDone) {
+    if (!ioctlDone) {
 #ifdef	AFS_AIX41_ENV
-	  ufdrele(uap->fd);
+	ufdrele(uap->fd);
 #ifdef AFS_AIX51_ENV
-	  code = okioctl(fdes, com, arg, ext, arg2, arg3);
+	code = okioctl(fdes, com, arg, ext, arg2, arg3);
 #else
-	  code = okioctl(fdes, com, arg, ext);
+	code = okioctl(fdes, com, arg, ext);
 #endif
-	  return code;
+	return code;
 #else
 #ifdef	AFS_AIX32_ENV
-	  okioctl(fdes, com, arg, ext);
-#else
-#if	defined(AFS_SUN5_ENV)
+	okioctl(fdes, com, arg, ext);
+#elif defined(AFS_SUN5_ENV)
 #if defined(AFS_SUN57_ENV)
 	releasef(uap->fd);
 #elif defined(AFS_SUN54_ENV)
-	  RELEASEF(uap->fd);
+	RELEASEF(uap->fd);
 #else
-          releasef(fd);
+	releasef(fd);
 #endif
-          code = ioctl(uap, rvp);
-#else
-#if defined(AFS_FBSD_ENV)
+	code = ioctl(uap, rvp);
+#elif defined(AFS_FBSD_ENV)
         return ioctl(p, uap);
-#else
-#if defined(AFS_DARWIN_ENV) 
+#elif defined(AFS_OBSD_ENV)
+        code = sys_ioctl(p, uap, retval);
+#elif defined(AFS_DARWIN_ENV) 
         return ioctl(p, uap, retval);
-#else
-#ifdef  AFS_OSF_ENV
-	  code = ioctl(p, args, retval);
+#elif defined(AFS_OSF_ENV)
+	code = ioctl(p, args, retval);
 #ifdef	AFS_OSF30_ENV
-	  FP_UNREF_ALWAYS(fd);
+	FP_UNREF_ALWAYS(fd);
 #else
-	  FP_UNREF(fd);
+	FP_UNREF(fd);
 #endif
-	  return code;
-#else   /* AFS_OSF_ENV */
-#ifndef AFS_LINUX22_ENV
-          ioctl();
-#endif
+	return code;
+#elif !defined(AFS_LINUX22_ENV)
+	ioctl();
 #endif
 #endif
-#endif
-#endif
-#endif
-#endif
-      }
+    }
 #ifdef	AFS_SUN5_ENV
-      if (ioctlDone)
+    if (ioctlDone)
 #ifdef	AFS_SUN54_ENV
-	  releasef(uap->fd);
+	releasef(uap->fd);
 #else
-	  releasef(fd);
+	releasef(fd);
 #endif
-      return (code);
+    return (code);
 #else
 #ifdef AFS_LINUX22_ENV
-      return -code;
+    return -code;
 #else
 #if defined(KERNEL_HAVE_UERROR)
-      if (!getuerror())
-	  setuerror(code);
+    if (!getuerror())
+	setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
-      return (getuerror() ? -1 : u.u_ioctlrv);
+    return (getuerror() ? -1 : u.u_ioctlrv);
 #else
-      return getuerror() ? -1 : 0;
+    return getuerror() ? -1 : 0;
 #endif
 #endif
 #endif /* AFS_LINUX22_ENV */
 #endif	/* AFS_SUN5_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-      return (code);
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    return (code);
 #endif
-    }
+}
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX102_ENV */
   
@@ -733,7 +721,8 @@ afs_pioctl(p, args, retval)
 }
 
 #else	/* AFS_OSF_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+int
 afs_pioctl(p, args, retval)
         struct proc *p;
         void *args;
@@ -761,12 +750,13 @@ afs_pioctl(p, args, retval)
 #define PIOCTL_FREE_CRED()
 #endif
 
+int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
     rval_t *rvp;
     struct AFS_UCRED *credp;
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(path, com, cmarg, follow, credp)
     struct AFS_UCRED *credp;
 #else
@@ -871,32 +861,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #else
 	code =  Prefetch(path, &data, follow, osi_curcred());
 #endif
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
-	if (foreigncreds) {
-#ifdef	AFS_AIX41_ENV
- 	    crset(tmpcred);	/* restore original credentials */
-#else
-#if	defined(AFS_HPUX101_ENV)
-	    set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
-#else
-#ifndef	AFS_SUN5_ENV
-#ifdef AFS_SGI_ENV
-	    OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
-#else
-	    u.u_cred = tmpcred;	/* restore original credentials */
-#endif
-#endif
-#endif /* AFS_HPUX101_ENV */
-	    crfree(foreigncreds);
-#endif
-	}
-#endif /* AFS_LINUX22_ENV */
-	PIOCTL_FREE_CRED();
+	vp = NULL;
 #if defined(KERNEL_HAVE_UERROR)
-	return (setuerror(code), code);
-#else
-	return (code);
+	setuerror(code);
 #endif
+	goto rescred;
     }
     if (path) {
 	AFS_GUNLOCK();
@@ -914,36 +883,15 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
 	if (code) {
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
-	    if (foreigncreds) {
-#ifdef	AFS_AIX41_ENV
-		crset(tmpcred);	/* restore original credentials */
-#else
-#if	defined(AFS_HPUX101_ENV)
-		set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
-#else
-#if	!defined(AFS_SUN5_ENV)
-#ifdef AFS_SGI_ENV
-		OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
-#else
-		u.u_cred = tmpcred; /* restore original credentials */
-#endif /* AFS_SGI64_ENV */
-#endif
-#endif /* AFS_HPUX101_ENV */
-		crfree(foreigncreds);
-#endif
-	    }
-#endif /* AFS_LINUX22_ENV */
-	    PIOCTL_FREE_CRED();
+	    vp = NULL;
 #if defined(KERNEL_HAVE_UERROR)
-	    return(setuerror(code), code);
-#else
-	    return (code);
+	    setuerror(code);
 #endif
+	    goto rescred;
 	}
     }
     else vp = NULL;
-    
+
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
 #ifdef AFS_DEC_ENV
@@ -990,7 +938,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
     }
 #else
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
 	code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
@@ -1013,26 +961,23 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
 
+ rescred:
 #if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
-	crset(tmpcred);
+	crset(tmpcred);	/* restore original credentials */
 #else
 #if	defined(AFS_HPUX101_ENV)
 	set_p_cred(u.u_procp, tmpcred); /* restore original credentials */
-#else
-#ifndef	AFS_SUN5_ENV
-#ifdef AFS_SGI_ENV
+#elif	defined(AFS_SGI_ENV)
 	OSI_SET_CURRENT_CRED(tmpcred); /* restore original credentials */
-#else
-	u.u_cred = tmpcred;	/* restore original credentials */
-#endif /* ASF_SGI64_ENV */
-#endif
+#elif	!defined(AFS_SUN5_ENV)
+	osi_curcred() = tmpcred;	/* restore original credentials */
 #endif /* AFS_HPUX101_ENV */
 	crfree(foreigncreds);
-#endif
+#endif /* AIX41 */
     }
-#endif /* AFS_LINUX22_ENV */
+#endif /* LINUX, DARWIN, FBSD */
     if (vp) {
 #ifdef AFS_LINUX22_ENV
 	dput(dp);
@@ -1961,7 +1906,7 @@ static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow, struct AF
 {
     register char *tp;
     register afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;
@@ -2438,7 +2383,7 @@ DECL_PIOCTL(PFlushVolumeData)
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		VREFCOUNT_INC(tvc);

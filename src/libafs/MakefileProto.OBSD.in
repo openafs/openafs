@@ -28,11 +28,9 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 	osi_vnodeops.o
 
-AFS_OS_NFSOBJS = \
-	osi_vfsops_nfs.o
+#AFS_OS_NFSOBJS = osi_vfsops_nfs.o
 
-AFS_OS_NONFSOBJS = \
-	osi_vfsops.o
+AFS_OS_NONFSOBJS = osi_vfsops.o
 
 # This tells Makefile.common to use its single directory build target.
 COMPDIRS = single_compdir
@@ -71,7 +69,8 @@ setup:
 
 # Below this line are targets when in the COMMON directory:
 LIBAFS = libafs.o
-LIBAFSNONFS = libafs.nonfs.o
+LIBAFSNONFS = libafs.o
+#LIBAFSNONFS = libafs.nonfs.o
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}

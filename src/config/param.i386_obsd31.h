@@ -48,6 +48,7 @@
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
 
+#define RXK_LISTENER_ENV	1
 #define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
 #define AFS_USE_GETTIMEOFDAY    1       /* use gettimeofday to implement rx clock */
 

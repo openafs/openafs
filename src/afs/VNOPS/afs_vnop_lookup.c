@@ -33,20 +33,8 @@ RCSID("$Header$");
 #include "afs/afs_osidnlc.h"
 
 
-/**
- * A few definitions. This is until we have a proper header file	
- * which has prototypes for all functions
- */
-
 extern struct DirEntry * afs_dir_GetBlob();
 
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-extern struct afs_exporter *afs_nfsexporter;
-extern char *afs_sysname;
-extern char *afs_sysnamelist[];
-extern int afs_sysnamecount;
-extern struct afs_q VLRU;			/*vcache LRU*/
 #ifdef AFS_LINUX22_ENV
 extern struct inode_operations afs_symlink_iops, afs_dir_iops;
 #endif
@@ -61,32 +49,6 @@ int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
  * dependant on byte-order and alignment, and I haven't figured out
  * what "@sys" is in binary... */
 #define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
-
-char *afs_strcat(register char *s1, register char *s2)
-{
-	register char *os1;
-
-	AFS_STATCNT(strcat);
-	os1 = s1;
-	while (*s1++)
-		;
-	--s1;
-	while ((*s1++ = *s2++))
-		;
-	return (os1);
-}
-
-
-char *afs_index(register char *a, register char c)
-{
-    register char tc;
-    AFS_STATCNT(afs_index);
-    while ((tc = *a)) {
-	if (tc == c) return a;
-	else a++;
-    }
-    return NULL;
-}
 
 /* call under write lock, evaluate mvid field from a mt pt.
  * avc is the vnode of the mount point object; must be write-locked.
@@ -120,7 +82,7 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 
     /* Determine which cell and volume the mointpoint goes to */
     type = avc->linkData[0];                   /* '#'=>Regular '%'=>RW */
-    cpos = afs_index(&avc->linkData[1], ':');  /* if cell name present */
+    cpos = afs_strchr(&avc->linkData[1], ':');  /* if cell name present */
     if (cpos) {
        volnamep = cpos+1;
        *cpos = 0;
@@ -1394,7 +1356,7 @@ afs_lookup(adp, aname, avcp, acred)
 		ConvertSToRLock(&tvc->lock);
 		code = 0;
 	    }
-	    if (!code && !strchr(tvc->linkData, ':'))
+	    if (!code && !afs_strchr(tvc->linkData, ':'))
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
