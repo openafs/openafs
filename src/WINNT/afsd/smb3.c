@@ -4131,8 +4131,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 bytesInBuffer++;
             }
         }	/* if we're including this name */
-        else if (!NeedShortName &&
-                 !starPattern &&
+        else if (!starPattern &&
                  !foundInexact &&
                  dep->fid.vnode != 0 &&
                  smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
