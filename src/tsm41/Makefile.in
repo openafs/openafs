@@ -41,11 +41,11 @@ afs_dynamic_auth: aix41_auth.o ${AFSLIBS} ${AUTHFILES}
 afs_dynamic_kerbauth: aix41_auth_krb.o ${KAFSLIBS} ${AUTHFILES}
 	$(LD) -o afs_dynamic_kerbauth aix41_auth_krb.o $(KAFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
 
-aix41_auth.o: aix41_auth.c
-	${CC} ${CFLAGS} -c aix41_auth.c
+aix41_auth.o: ${srcdir}/aix41_auth.c
+	${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c
 
-aix41_auth_krb.o: aix41_auth.c
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c aix41_auth.c -o aix41_auth_krb.o
+aix41_auth_krb.o: ${srcdir}/aix41_auth.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/aix41_auth.c -o aix41_auth_krb.o
 ${DEST}/root.client/usr/vice/etc/afs_dynamic_auth: afs_dynamic_auth
 	${INSTALL} $? $@
 
