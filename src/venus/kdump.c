@@ -17,10 +17,14 @@ RCSID
 #include <errno.h>
 #include <stdlib.h>		/* for malloc() */
 
+/* Here be hacks. */
 #ifdef AFS_LINUX24_ENV
 #define __KERNEL__
 #include <linux/string.h>
 #define _STRING_H 1
+#define _SYS_STATFS_H 1
+#define _BITS_SIGCONTEXT_H 1
+#undef USE_UCONTEXT
 #endif
 
 #include <string.h>
@@ -2314,17 +2318,20 @@ kread(int kmem, off_t loc, void *buf, KDUMP_SIZE_T len)
 	perror("lseek");
 	exit(1);
     }
-    if ((i = read(kmem, buf, len)) != len) {
-	printf("WARNING: Read failed: ");
-	if (sizeof(loc) > sizeof(long)) {
-	    printf("loc=%llx", loc);
-	} else {
-	    printf("loc=%lx", (long)loc);
+    if (loc == 0) 
+	printf("WARNING: Read failed: loc=0\n"); 
+    else
+	if ((i = read(kmem, buf, len)) != len) {
+	    printf("WARNING: Read failed: ");
+	    if (sizeof(loc) > sizeof(long)) {
+		printf("loc=%llx", loc);
+	    } else {
+		printf("loc=%lx", (long)loc);
+	    }
+	    printf(", buf=%lx, len=%ld, i=%d, errno=%d\n", (long)buf,
+		   (long)len, i, errno);
+	    return;			/*exit(1); */
 	}
-	printf(", buf=%lx, len=%ld, i=%d, errno=%d\n", (long)buf, (long)len,
-	       i, errno);
-	return;			/*exit(1); */
-    }
 #endif
 }
 #endif /* AFS_KDUMP_LIB */
