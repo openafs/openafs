@@ -275,6 +275,15 @@ int LWP_CurrentProcess(PROCESS *pid)
 	return LWP_EINIT;
 }
 
+PROCESS LWP_ThreadId()
+{
+    Debug(0, ("Entered ThreadId"))
+    if (lwp_init)
+        return lwp_cpptr;
+    else
+        return (PROCESS) 0;
+}
+
 int LWP_DispatchProcess(void)		/* explicit voluntary preemption */
 {
     Debug(2, ("Entered Dispatch_Process"))

@@ -87,6 +87,18 @@ void Lock_Destroy(struct Lock *lock);
 	    LOCK_UNLOCK(lock) \
 	ENDMAC
     
+#define ObtainReadLockNoBlock(lock, code)\
+        BEGINMAC \
+            LOCK_LOCK(lock) \
+            if (!((lock)->excl_locked & WRITE_LOCK) && !(lock)->wait_states) {\
+                (lock) -> readers_reading++;\
+                code = 0;\
+            }\
+            else\
+                code = -1; \
+            LOCK_UNLOCK(lock) \
+        ENDMAC
+
 #define ObtainWriteLock(lock)\
 	BEGINMAC \
 	    LOCK_LOCK(lock) \
@@ -97,6 +109,18 @@ void Lock_Destroy(struct Lock *lock);
 	    LOCK_UNLOCK(lock) \
 	ENDMAC
     
+#define ObtainWriteLockNoBlock(lock, code)\
+        BEGINMAC \
+            LOCK_LOCK(lock) \
+            if (!(lock)->excl_locked && !(lock)->readers_reading) {\
+                (lock) -> excl_locked = WRITE_LOCK;\
+                code = 0;\
+            }\
+            else\
+                code = -1; \
+            LOCK_UNLOCK(lock) \
+        ENDMAC
+
 #define ObtainSharedLock(lock)\
 	BEGINMAC \
 	    LOCK_LOCK(lock) \
@@ -106,6 +130,18 @@ void Lock_Destroy(struct Lock *lock);
 	        Afs_Lock_Obtain(lock, SHARED_LOCK); \
 	    LOCK_UNLOCK(lock) \
 	ENDMAC
+
+#define ObtainSharedLockNoBlock(lock, code)\
+        BEGINMAC \
+            LOCK_LOCK(lock) \
+            if (!(lock)->excl_locked && !(lock)->wait_states) {\
+                (lock) -> excl_locked = SHARED_LOCK;\
+                code = 0;\
+            }\
+            else\
+                code = -1; \
+            LOCK_UNLOCK(lock) \
+        ENDMAC
 
 #define BoostSharedLock(lock)\
 	BEGINMAC \

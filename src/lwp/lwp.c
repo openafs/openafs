@@ -445,6 +445,15 @@ int LWP_CurrentProcess(pid)	/* returns pid of current process */
 	return LWP_EINIT;
 }
 
+PROCESS LWP_ThreadId()
+{
+    Debug(0, ("Entered ThreadId"))
+    if (lwp_init)
+        return lwp_cpptr;
+    else
+        return (PROCESS) 0;
+}
+
 #define LWPANCHOR (*lwp_init)
 
 int LWP_DestroyProcess(pid)		/* destroy a lightweight process */
