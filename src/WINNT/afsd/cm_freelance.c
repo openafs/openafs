@@ -82,7 +82,9 @@ void cm_InitFakeRootDir() {
 	int curDirEntryInPage = 0;
 	int sizeOfCurEntry;
 	int dirSize;
-	
+
+	/* Reserve 2 directory chunks for "." and ".." */
+	curChunk += 2;
 
 	while (curDirEntry!=cm_noLocalMountPoints) {
 		sizeOfCurEntry = cm_NameEntries((cm_localMountPoints+curDirEntry)->namep, 0);

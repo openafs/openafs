@@ -229,6 +229,9 @@ afs_RefreshDynroot()
     curChunk = 13;
     curPage = 0;
 
+    /* Reserve space for "." and ".." */
+    curChunk += 2;
+
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
 	if (!c) continue;
