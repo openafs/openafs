@@ -571,7 +571,6 @@ VAttachVolumeByName_r(ec, partition, name, mode)
     if ((fd = open(path, O_RDONLY)) == -1 || fstat(fd,&status) == -1) {
 	close(fd);
 	VOL_LOCK
-	Log("VAttachVolume: Error opening/statting volume header file (%s)\n", path);
 	*ec = VNOVOL;
 	goto done;
     }
