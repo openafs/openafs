@@ -25,7 +25,7 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
 #include <sys/fcntl.h>
 #include <sys/resource.h>
 #endif
@@ -94,9 +94,6 @@ void ih_glock_init()
 /* Initialize the file descriptor cache */
 void ih_Initialize() {
     int i;
-#ifdef AFS_SUN5_ENV
-    struct rlimit rlim;
-#endif /* AFS_SUN5_ENV */
     assert(!ih_Inited);
     ih_Inited = 1;
     DLL_INIT_LIST(ihAvailHead, ihAvailTail);
@@ -107,13 +104,27 @@ void ih_Initialize() {
     }
 #if defined(AFS_NT40_ENV)
     fdMaxCacheSize = FD_MAX_CACHESIZE;
-#elif defined(AFS_SUN5_ENV)
-    assert(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
-    rlim.rlim_cur = rlim.rlim_max;
-    assert(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
-    fdMaxCacheSize = rlim.rlim_cur-FD_HANDLE_SETASIDE;
-    fdMaxCacheSize = MIN(fdMaxCacheSize, FD_MAX_CACHESIZE);
-    assert(fdMaxCacheSize > 0);
+#elif defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
+    {
+	struct rlimit rlim;
+	assert(getrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	rlim.rlim_cur = rlim.rlim_max;
+	assert(setrlimit(RLIMIT_NOFILE, &rlim) == 0);
+	fdMaxCacheSize = rlim.rlim_cur-FD_HANDLE_SETASIDE;
+#ifdef AFS_NBSD_ENV
+	/* XXX this is to avoid using up all system fd netbsd is
+	 * somewhat broken and have set maximum fd for a root process
+	 * to the same as system fd that is avaible, so if the
+	 * fileserver uses all up process fds, all system fd will be
+	 * used up too !
+	 *
+	 * Check for this better
+	 */
+	fdMaxCacheSize /= 4;
+#endif
+	fdMaxCacheSize = MIN(fdMaxCacheSize, FD_MAX_CACHESIZE);
+	assert(fdMaxCacheSize > 0);
+    }
 #elif defined(AFS_HPUX_ENV)
     /* Avoid problems with "UFSOpen: igetinode failed" panics on HPUX 11.0 */
     fdMaxCacheSize = 0;
