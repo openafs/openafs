@@ -551,17 +551,7 @@ afs_StoreAllSegments(avc, areq, sync)
 	    bytes = 0;
 	  }
 	}
-	/* Release any zero-length dcache entries in our interval
-	 * that we locked but didn't store back above.
-	 */
-	for (j = 0; j <= high; j++) {
-	    tdc = dcList[j];
-	    if (tdc) {
-		osi_Assert(tdc->f.chunkBytes == 0);
-		afs_PutDCache(tdc);
-	    }
-	}
-     } /* if (j) */
+      } /* if (j) */
 
     minj += NCHUNKSATONCE;
     } while ( !code && moredata ); 
