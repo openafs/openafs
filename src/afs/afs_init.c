@@ -439,7 +439,7 @@ int afs_InitCacheInfo(register char *afile)
     afs_cacheVfsp = filevp->v_vfsp;
 #endif /* AFS_OBSD_ENV */
 #endif /* AFS_LINUX20_ENV */
-    AFS_RELE((struct vnode *)filevp);
+    AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
     tfile = osi_UFSOpen(cacheInode);
     afs_osi_Stat(tfile, &tstat);

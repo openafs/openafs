@@ -120,7 +120,7 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 void osi_DisableAtimes(struct vnode *avp)
 {
 #if 0
-    VTOI(avp)->i_flag &= ~IACC;
+    VTOI(avp)->i_flag &= ~IN_ACCESS;
 #endif
 }
 

@@ -128,7 +128,7 @@ struct sysname_info {
 #define	BUVALID		2	    /* code is valid (store) */
 #define	BUWAIT		4	    /* someone is waiting for BUVALID */
 struct brequest {
-    struct vcache *vnode;	    /* vnode to use, with vrefcount bumped */
+    struct vcache *vc;	            /* vnode to use, with vrefcount bumped */
     struct AFS_UCRED *cred;	    /* credentials to use for operation */
     afs_size_t size_parm[BPARMS];   /* random parameters */
     void *ptr_parm[BPARMS];	    /* pointer parameters */
@@ -628,7 +628,6 @@ extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
 struct vcache {
 #if defined(AFS_OBSD_ENV)
     struct vnode *v;
-    struct lock rwlock;			/* vnode lock */
 #else
     struct vnode v;			/* Has reference count in v.v_count */
 #endif
@@ -675,7 +674,7 @@ struct vcache {
 #ifdef AFS_DARWIN_ENV
     struct lock__bsd__      rwlock;
 #endif
-#ifdef AFS_FBSD_ENV
+#ifdef AFS_XBSD_ENV
     struct lock      rwlock;
 #endif
     afs_int32 parentVnode;		/* Parent dir, if a file. */

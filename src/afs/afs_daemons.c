@@ -373,13 +373,13 @@ static void BPath(register struct brequest *ab)
     if (dp)
 	tvn = (struct vnode*)dp->d_inode;
 #else
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, (struct vnode **)&tvn);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, &tvn);
 #endif
     AFS_GLOCK();
     osi_FreeLargeSpace((char *)ab->ptr_parm[0]); /* free path name buffer here */
     if (code) return;
     /* now path may not have been in afs, so check that before calling our cache manager */
-    if (!tvn || !IsAfsVnode((struct vnode *) tvn)) {
+    if (!tvn || !IsAfsVnode(tvn)) {
 	/* release it and give up */
 	if (tvn) {
 #ifdef AFS_DEC_ENV
@@ -388,7 +388,7 @@ static void BPath(register struct brequest *ab)
 #ifdef AFS_LINUX22_ENV
 	    dput(dp);
 #else
-	    AFS_RELE((struct vnode *) tvn);
+	    AFS_RELE(tvn);
 #endif
 #endif
 	}
@@ -410,7 +410,7 @@ static void BPath(register struct brequest *ab)
 #ifdef AFS_LINUX22_ENV
     dput(dp);
 #else
-    AFS_RELE((struct vnode *) tvn);
+    AFS_RELE(tvn);
 #endif
 #endif
 }
@@ -428,7 +428,7 @@ static void BPrefetch(register struct brequest *ab)
 
     AFS_STATCNT(BPrefetch);
     if ((len = afs_InitReq(&treq, ab->cred))) return;
-    tvc = ab->vnode;
+    tvc = ab->vc;
     tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
@@ -465,7 +465,7 @@ static void BStore(register struct brequest *ab)
     AFS_STATCNT(BStore);
     if ((code = afs_InitReq(&treq, ab->cred))) return;
     code = 0;
-    tvc = ab->vnode;
+    tvc = ab->vc;
 #if defined(AFS_SGI_ENV)
     /*
      * Since StoreOnLastReference can end up calling osi_SyncVM which
@@ -538,7 +538,7 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 	if (i < NBRS) {
 	    /* found a buffer */
 	    tb->opcode = aopcode;
-	    tb->vnode = avc;
+	    tb->vc = avc;
 	    tb->cred = acred;
 	    crhold(tb->cred);
 	    if (avc) {
@@ -1268,13 +1268,13 @@ void afs_BackgroundDaemon(void)
 	    else if (tb->opcode == BOP_PATH)
 		BPath(tb);
 	    else panic("background bop");
-	    if (tb->vnode) {
+	    if (tb->vc) {
 #ifdef	AFS_DEC_ENV
-		tb->vnode->vrefCount--;	    /* fix up reference count */
+		tb->vc->vrefCount--;	    /* fix up reference count */
 #else
-		AFS_RELE((struct vnode *)(tb->vnode));	/* MUST call vnode layer or could lose vnodes */
+		AFS_RELE(AFSTOV(tb->vc));	/* MUST call vnode layer or could lose vnodes */
 #endif
-		tb->vnode = NULL;
+		tb->vc = NULL;
 	    }
 	    if (tb->cred) {
 		crfree(tb->cred);

@@ -460,7 +460,7 @@ afs_nbsd_read(ap)
     int code;
 
     AFS_GLOCK();
-    code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, 0, 0, 0);
+    code = afs_read(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, (daddr_t)0, NULL, 0);
     AFS_GUNLOCK();
     return code;
 }
@@ -1009,7 +1009,7 @@ afs_nbsd_print(ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(ap->a_vp);
 
-    printf("tag %d, fid: %ld.%x.%x.%x, ", vp->v_tag, vc->fid.Cell,
+    printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->fid.Cell,
 	   (int) vc->fid.Fid.Volume, (int) vc->fid.Fid.Vnode, (int) vc->fid.Fid.Unique);
     lockmgr_printinfo(&vc->rwlock);
     printf("\n");
