@@ -619,17 +619,30 @@ else
         done    
   fi    
 
-  AC_CHECK_FUNCS(res_search)
+  openafs_save_libs="$LIBS"
+  AC_MSG_CHECKING([for res_search])
+  AC_FUNC_RES_SEARCH
+
   if test "$ac_cv_func_res_search" = no; then
-        for lib in dns nsl resolv; do
-          if test "$HAVE_RES_SEARCH" != 1; then
-            AC_CHECK_LIB(${lib}, res_search, LIBS="$LIBS -l$lib";HAVE_RES_SEARCH=1;AC_DEFINE(HAVE_RES_SEARCH, 1, [define if you have res_search]))
-          fi
-        done    
-	if test "$HAVE_RES_SEARCH" = 1; then
-	  LIB_res_search="-l$lib"	
-	fi
-  fi    
+      for lib in dns nsl resolv; do
+        if test "$ac_cv_func_res_search" != yes; then
+	  LIBS="-l$lib $LIBS"
+          AC_FUNC_RES_SEARCH
+          LIBS="$openafs_save_libs"
+        fi
+      done    
+      if test "$ac_cv_func_res_search" = yes; then
+        LIB_res_search="-l$lib"       
+	AC_DEFINE(HAVE_RES_SEARCH, 1, [])
+        AC_MSG_RESULT([yes, in lib$lib])
+      else
+        AC_MSG_RESULT(no)
+      fi
+  else
+    AC_DEFINE(HAVE_RES_SEARCH, 1, [])
+    AC_MSG_RESULT(yes)
+  fi
+  
 fi
 
 PTHREAD_LIBS=error
