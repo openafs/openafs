@@ -1,31 +1,6 @@
->grand.central.org      #GCO Public CellServDB 29 Jan 2002
+>grand.central.org      #GCO Public CellServDB 10 Apr 2002
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
->usatlas.bnl.gov        #US Atlas Tier 1 Facility at BNL
-130.199.48.32                   #aafs01.usatlas.bnl.gov
-130.199.48.33                   #aafs02.usatlas.bnl.gov
-130.199.48.34                   #aafs03.usatlas.bnl.gov
->rpi.edu                #Rensselaer Polytechnic Institute
-128.113.22.11                   #saul.server.rpi.edu
-128.113.22.12                   #joab.server.rpi.edu
-128.113.22.13                   #korah.server.rpi.edu
-128.113.22.14                   #achan.server.rpi.edu
->nimlabs.org            #Nimlabs, Ink. Cell.
-18.238.1.103                    #olfin.nimlabs.org
-18.238.1.105                    #caerbanog.nimlabs.org
->hep.sc.edu             #USC HEP cell
-129.252.78.77                   #cpeven.physics.sc.edu
-129.252.78.79                   #redbaron.physics.sc.edu
->hep.man.ac.uk          #Manchester HEP
-194.36.2.3                      #afs1.hep.man.ac.uk
->uni-bonn.de            #Cell name
-131.220.14.198                  #work15-eth.rhrz.uni-bonn.de
-131.220.14.203                  #node03-en2.rhrz.uni-bonn.de
-131.220.14.205                  #node05.rhrz.uni-bonn.de
->uni-freiburg.de        #Albert-Ludwigs-Universitat Freiburg
-132.230.6.235                   #sv6.ruf.uni-freiburg.de
-132.230.6.236                   #sv7.ruf.uni-freiburg.de
-132.230.6.237                   #sv8.ruf.uni-freiburg.de
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
 137.208.3.33                    #afsdb1.wu-wien.ac.at
 137.208.7.4                     #afsdb2.wu-wien.ac.at
@@ -34,13 +9,18 @@
 137.138.128.148                 #afsdb1.cern.ch
 137.138.246.50                  #afsdb3.cern.ch
 137.138.246.51                  #afsdb2.cern.ch
+>ethz.ch                #Swiss Federal Inst. of Tech. - Zurich, Switzerland
+129.132.97.19                   #amalthea.ethz.ch
+129.132.97.27                   #nethzafs-001.ethz.ch
+129.132.115.3                   #himalia.ethz.ch
+129.132.115.37                  #nethzafs-005.ethz.ch
+129.132.115.38                  #nethzafs-006.ethz.ch
 >extundo.com            #Simon Josefsson's cell
 195.42.214.241                  #slipsten.extundo.com
 >mekinok.com            #Mekinok, Inc.
 4.17.166.66                     #loggerhead.mekinok.com
 >sodre.cx               #Sodre.cx
-128.8.140.87                    #khan.isr.umd.edu
-129.2.145.254                   #greed.sodre.cx
+128.8.140.165                   #greed.sodre.cx
 >ipp-garching.mpg.de    #Institut fuer Plasmaphysik
 130.183.9.5                     #afs-db1.rzg.mpg.de
 130.183.100.10                  #afs-db2.aug.ipp-garching.mpg.de
@@ -49,6 +29,14 @@
 134.109.2.1                     #zuse.hrz.tu-chemnitz.de
 134.109.2.15                    #phoenix.hrz.tu-chemnitz.de
 134.109.200.7                   #aetius.hrz.tu-chemnitz.de
+>uni-bonn.de            #Cell name
+131.220.14.198                  #work15-eth.rhrz.uni-bonn.de
+131.220.14.203                  #node03-en2.rhrz.uni-bonn.de
+131.220.14.205                  #node05.rhrz.uni-bonn.de
+>uni-freiburg.de        #Albert-Ludwigs-Universitat Freiburg
+132.230.6.235                   #sv6.ruf.uni-freiburg.de
+132.230.6.236                   #sv7.ruf.uni-freiburg.de
+132.230.6.237                   #sv8.ruf.uni-freiburg.de
 >uni-hohenheim.de       #University of Hohenheim
 144.41.2.2                      #rs13.serv.uni-hohenheim.de
 144.41.2.3                      #rs14.serv.uni-hohenheim.de
@@ -87,8 +75,8 @@
 129.186.142.243                 #afsdb-3.iastate.edu
 >athena.mit.edu         #MIT/Athena cell
 18.7.1.66                       #paris.mit.edu.
-18.70.0.6                       #prill.mit.edu.
 18.145.0.25                     #agamemnon.mit.edu.
+18.158.0.37                     #prill.mit.edu.
 >dev.mit.edu            #MIT/IS Development cell
 18.7.1.70                       #wham.mit.edu.
 18.7.15.89                      #rattle.mit.edu.
@@ -116,6 +104,14 @@
 137.112.7.13                    #afs3.rose-hulman.edu
 >cs.rose-hulman.edu     #Rose-Hulman CS Department
 137.112.40.10                   #galaxy.cs.rose-hulman.edu
+>rpi.edu                #Rensselaer Polytechnic Institute
+128.113.22.11                   #saul.server.rpi.edu
+128.113.22.12                   #joab.server.rpi.edu
+128.113.22.13                   #korah.server.rpi.edu
+128.113.22.14                   #achan.server.rpi.edu
+>hep.sc.edu             #USC HEP cell
+129.252.78.77                   #cpeven.physics.sc.edu
+129.252.78.79                   #redbaron.physics.sc.edu
 >ir.stanford.edu        #Stanford University
 171.64.7.222                    #afsdb1.stanford.edu
 171.64.7.234                    #afsdb2.stanford.edu
@@ -150,6 +146,14 @@
 141.211.1.34                    #ruthless.ifs.umich.edu
 >citi.umich.edu         #University of Michigan - CITI
 141.211.92.144                  #babble.citi.umich.edu
+>lsa.umich.edu          #University of Michigan - College of LS&A
+141.211.54.132                  #curtis.admin.lsa.umich.edu
+141.211.61.23                   #zee.admin.lsa.umich.edu
+141.211.68.15                   #marshall.lsa.umich.edu
+>math.lsa.umich.edu     #University of Michigan - Math Department
+141.211.61.40                   #ike.math.lsa.umich.edu
+141.211.61.41                   #clark.math.lsa.umich.edu
+141.211.61.42                   #nimitz.math.lsa.umich.edu
 >umr.edu                #University of Missouri - Rolla
 131.151.1.59                    #afs1.umr.edu
 131.151.1.70                    #afs6.umr.edu
@@ -172,10 +176,21 @@
 134.158.232.11                  #ccafsdb1.in2p3.fr
 134.158.232.12                  #ccafsdb2.in2p3.fr
 134.158.232.13                  #ccafsdb3.in2p3.fr
+>anl.gov                #Argonne National Laboratory
+146.137.96.33                   #arteus.ctd.anl.gov
+146.137.162.88                  #agamemnon.ctd.anl.gov
+146.137.194.80                  #antenor.ctd.anl.gov
+>usatlas.bnl.gov        #US Atlas Tier 1 Facility at BNL
+130.199.48.32                   #aafs01.usatlas.bnl.gov
+130.199.48.33                   #aafs02.usatlas.bnl.gov
+130.199.48.34                   #aafs03.usatlas.bnl.gov
 >fnal.gov               #Fermi National Acclerator Laboratory
 131.225.68.1                    #fsus01.fnal.gov
 131.225.68.4                    #fsus03.fnal.gov
 131.225.68.14                   #fsus04.fnal.gov
+>ictp.trieste.it        #The Abdus Salam International Centre for Theoretical Physics (IC
+140.105.16.8                    #fs1.ictp.trieste.it
+140.105.16.9                    #fs2.ictp.trieste.it
 >cmf.nrl.navy.mil       #Naval Research Lab - CCS
 134.207.10.68                   #picard.cmf.nrl.navy.mil
 134.207.10.69                   #riker.cmf.nrl.navy.mil
@@ -191,9 +206,17 @@
 >zepa.net               #Kolya/zepa.net cell
 205.245.53.21                   #perseus.zepa.net.
 205.245.53.48                   #neptune.zepa.net.
+>nikhef.nl              #The Dutch National Institute for High Energy Physics
+192.16.185.26                   #afs1.nikhef.nl
+192.16.185.27                   #afs2.nikhef.nl
+>1ts.org                #KCR/private Karl Ramm, Cambridge, MA
+4.36.43.102                     #dol-guldur.1ts.org
 >dementia.org           #Dementia Unlimited
 128.2.12.45                     #alycia.dementia.org
 128.2.120.216                   #meredith.dementia.org
+>nimlabs.org            #Nimlabs, Ink. Cell.
+18.238.1.103                    #olfin.nimlabs.org
+18.238.1.105                    #caerbanog.nimlabs.org
 >openafs.org            #OpenAFS
 128.2.121.218                   #virtue.openafs.org
 >rhic                   #Relativistic Heavy Ion Collider
@@ -208,3 +231,9 @@
 130.237.209.141                 #afsdb3.isk.kth.se
 >phy.bris.ac.uk         #Bristol University - phyics
 137.222.58.9                    #afs1.phy.bris.ac.uk
+>hep.man.ac.uk          #Manchester HEP
+194.36.2.3                      #afs1.hep.man.ac.uk
+>rl.ac.uk               #Rutherford Appleton Lab, England
+130.246.12.45                   #isabel.cc.rl.ac.uk
+130.246.15.135                  #tinkerbel.cc.rl.ac.uk
+130.246.183.164                 #wallace.cc.rl.ac.uk
