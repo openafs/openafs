@@ -325,6 +325,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     char computerName[MAX_COMPUTERNAME_LENGTH + 1];
     char *effDomain;
 
+    memset(opt, 0, sizeof(LogonOptions_t));
+
     DebugEvent("In GetDomainLogonOptions for user [%s] in domain [%s]", username, domain);
     /* If the domain is the same as the Netbios computer name, we use the LOCALHOST domain name*/
     opt->flags = LOGON_FLAG_REMOTE;

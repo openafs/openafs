@@ -298,16 +298,10 @@ char lwp_debug;			/* ON = show LWP debugging trace */
  */
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 #define AFS_LWP_MINSTACKSIZE  (288 * 1024)
-#else
-#if defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX22_ENV)
 #define AFS_LWP_MINSTACKSIZE	(192 * 1024)
 #else
-#if defined(AFS_AIX52_ENV)
-#define AFS_LWP_MINSTACKSIZE	(128 * 1024)
-#else
 #define AFS_LWP_MINSTACKSIZE	(48 * 1024)
-#endif
-#endif
 #endif
 
 /* Action to take on stack overflow. */

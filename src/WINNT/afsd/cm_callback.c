@@ -964,11 +964,11 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = cm_NetMtu[i];
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+            cm_NetMtu[i] : rx_mtu;
     }
-    
-    MUTEX_EXIT(&callp->lock);
 
+    MUTEX_EXIT(&callp->lock);
     return 0;
 }
 
@@ -1123,7 +1123,8 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = cm_NetMtu[i];
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+            cm_NetMtu[i] : rx_mtu;
     }
 
     dataBytes = 1 * sizeof(afs_int32);
@@ -1133,7 +1134,6 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     capabilities->Capabilities_val = dataBuffP;
 
     MUTEX_EXIT(&callp->lock);
-
     return 0;
 }
 
@@ -1517,13 +1517,20 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	if (scp) {
             if (scp->cbServerp != cbrp->serverp) {
                 serverp = scp->cbServerp;
+                if (!freeFlag)
+                    cm_GetServer(cbrp->serverp);
+                scp->cbServerp = cbrp->serverp;
+            } else {
+                if (freeFlag)
+                    serverp = cbrp->serverp;
             }
-            scp->cbServerp = cbrp->serverp;
             scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
         } else {
-            serverp = cbrp->serverp;
+            if (freeFlag)
+                serverp = cbrp->serverp;
         }
-        cbrp->serverp = NULL;
+        if (freeFlag)
+            cbrp->serverp = NULL;
     }
 
     /* a callback was actually revoked during our granting call, so

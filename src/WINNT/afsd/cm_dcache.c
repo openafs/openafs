@@ -56,6 +56,7 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
     AFSVolSync volSync;
     AFSFid tfid;
     struct rx_call *callp;
+    struct rx_connection *rxconnp;
     osi_queueData_t *qdp;
     cm_buf_t *bufp;
     long wbytes;
@@ -129,11 +130,11 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         if (code) 
             continue;
 		
-        lock_ObtainMutex(&connp->mx);
-        callp = rx_NewCall(connp->callp);
-        lock_ReleaseMutex(&connp->mx);
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
-        osi_Log3(afsd_logp, "CALL StoreData vp %x, off 0x%x, size 0x%x",
+        osi_Log3(afsd_logp, "CALL StoreData scp 0x%x, off 0x%x, size 0x%x",
                  (long) scp, biod.offset.LowPart, nbytes);
 
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
@@ -175,11 +176,15 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
                 osi_Log1(afsd_logp, "EndRXAFS_StoreData failed (%lX)",code);
         }
         code = rx_EndCall(callp, code);
-        osi_Log0(afsd_logp, "CALL StoreData DONE");
                 
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
+    if (code)
+        osi_Log1(afsd_logp, "CALL StoreData FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL StoreData SUCCESS");
+
     /* now, clean up our state */
     lock_ObtainMutex(&scp->mx);
 
@@ -235,6 +240,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     long truncPos;
     cm_conn_t *connp;
     struct rx_call *callp;
+    struct rx_connection *rxconnp;
 
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0,
@@ -262,9 +268,9 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (code) 
             continue;
 		
-        lock_ObtainMutex(&connp->mx);
-        callp = rx_NewCall(connp->callp);
-        lock_ReleaseMutex(&connp->mx);
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     0, 0, truncPos);
@@ -1117,6 +1123,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
     osi_queueData_t *qdp;		/* q element we're scanning */
     AFSFid tfid;
     struct rx_call *callp;
+    struct rx_connection *rxconnp;
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     cm_conn_t *connp;
     int getroot;
@@ -1247,10 +1254,10 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         code = cm_Conn(&scp->fid, up, reqp, &connp);
         if (code) 
             continue;
-		
-        lock_ObtainMutex(&connp->mx);
-        callp = rx_NewCall(connp->callp);
-        lock_ReleaseMutex(&connp->mx);
+	
+        rxconnp = cm_GetRxConn(connp);
+        callp = rx_NewCall(rxconnp);
+        rx_PutConnection(rxconnp);
 
         osi_Log3(afsd_logp, "CALL FetchData vp %x, off 0x%x, size 0x%x",
                   (long) scp, biod.offset.LowPart, biod.length);

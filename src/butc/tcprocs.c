@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.12.2.1 2004/08/25 07:12:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.12.2.2 2005/04/03 18:48:29 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -49,6 +49,83 @@ callPermitted(call)
     /* be changed so that it will set up for token passing instead of using  a    */
     /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
     return 1;
+}
+
+/* -----------------------------
+ * misc. routines
+ * -----------------------------
+ */
+
+static int
+CopyDumpDesc(toDump, fromDump)
+     struct tc_dumpDesc *toDump;
+     tc_dumpArray *fromDump;
+{
+    struct tc_dumpDesc *toPtr, *fromPtr;
+    int i;
+
+    toPtr = toDump;
+    fromPtr = fromDump->tc_dumpArray_val;
+    for (i = 0; i < fromDump->tc_dumpArray_len; i++) {
+	toPtr->vid = fromPtr->vid;
+	toPtr->vtype = fromPtr->vtype;
+	toPtr->partition = fromPtr->partition;
+	toPtr->date = fromPtr->date;
+	toPtr->cloneDate = fromPtr->cloneDate;
+	toPtr->hostAddr = fromPtr->hostAddr;
+	strcpy(toPtr->name, fromPtr->name);
+	fromPtr++;
+	toPtr++;
+    }
+    return 0;
+}
+
+
+static int
+CopyRestoreDesc(toRestore, fromRestore)
+     struct tc_restoreDesc *toRestore;
+     tc_restoreArray *fromRestore;
+{
+    struct tc_restoreDesc *toPtr, *fromPtr;
+    int i;
+
+    toPtr = toRestore;
+    fromPtr = fromRestore->tc_restoreArray_val;
+    for (i = 0; i < fromRestore->tc_restoreArray_len; i++) {
+	toPtr->flags = fromPtr->flags;
+	toPtr->position = fromPtr->position;
+	strcpy(toPtr->tapeName, fromPtr->tapeName);
+	toPtr->dbDumpId = fromPtr->dbDumpId;
+	toPtr->initialDumpId = fromPtr->initialDumpId;
+	toPtr->origVid = fromPtr->origVid;
+	toPtr->vid = fromPtr->vid;
+	toPtr->partition = fromPtr->partition;
+	toPtr->dumpLevel = fromPtr->dumpLevel;
+	toPtr->hostAddr = fromPtr->hostAddr;
+	strcpy(toPtr->newName, fromPtr->newName);
+	strcpy(toPtr->oldName, fromPtr->oldName);
+	fromPtr++;
+	toPtr++;
+
+    }
+    return 0;
+}
+
+static int
+CopyTapeSetDesc(toPtr, fromPtr)
+     struct tc_tapeSet *toPtr, *fromPtr;
+{
+
+    toPtr->id = fromPtr->id;
+    toPtr->maxTapes = fromPtr->maxTapes;
+    toPtr->a = fromPtr->a;
+    toPtr->b = fromPtr->b;
+    strcpy(toPtr->tapeServer, fromPtr->tapeServer);
+    strcpy(toPtr->format, fromPtr->format);
+
+    toPtr->expDate = fromPtr->expDate;
+    toPtr->expType = fromPtr->expType;
+    return 0;
 }
 
 /* -------------------------
@@ -683,79 +760,3 @@ STC_DeleteDump(acid, dumpID, taskId)
     return (code);
 }
 
-/* -----------------------------
- * misc. routines
- * -----------------------------
- */
-
-static
-CopyDumpDesc(toDump, fromDump)
-     struct tc_dumpDesc *toDump;
-     tc_dumpArray *fromDump;
-{
-    struct tc_dumpDesc *toPtr, *fromPtr;
-    int i;
-
-    toPtr = toDump;
-    fromPtr = fromDump->tc_dumpArray_val;
-    for (i = 0; i < fromDump->tc_dumpArray_len; i++) {
-	toPtr->vid = fromPtr->vid;
-	toPtr->vtype = fromPtr->vtype;
-	toPtr->partition = fromPtr->partition;
-	toPtr->date = fromPtr->date;
-	toPtr->cloneDate = fromPtr->cloneDate;
-	toPtr->hostAddr = fromPtr->hostAddr;
-	strcpy(toPtr->name, fromPtr->name);
-	fromPtr++;
-	toPtr++;
-    }
-    return 0;
-}
-
-
-static
-CopyRestoreDesc(toRestore, fromRestore)
-     struct tc_restoreDesc *toRestore;
-     tc_restoreArray *fromRestore;
-{
-    struct tc_restoreDesc *toPtr, *fromPtr;
-    int i;
-
-    toPtr = toRestore;
-    fromPtr = fromRestore->tc_restoreArray_val;
-    for (i = 0; i < fromRestore->tc_restoreArray_len; i++) {
-	toPtr->flags = fromPtr->flags;
-	toPtr->position = fromPtr->position;
-	strcpy(toPtr->tapeName, fromPtr->tapeName);
-	toPtr->dbDumpId = fromPtr->dbDumpId;
-	toPtr->initialDumpId = fromPtr->initialDumpId;
-	toPtr->origVid = fromPtr->origVid;
-	toPtr->vid = fromPtr->vid;
-	toPtr->partition = fromPtr->partition;
-	toPtr->dumpLevel = fromPtr->dumpLevel;
-	toPtr->hostAddr = fromPtr->hostAddr;
-	strcpy(toPtr->newName, fromPtr->newName);
-	strcpy(toPtr->oldName, fromPtr->oldName);
-	fromPtr++;
-	toPtr++;
-
-    }
-    return 0;
-}
-
-static
-CopyTapeSetDesc(toPtr, fromPtr)
-     struct tc_tapeSet *toPtr, *fromPtr;
-{
-
-    toPtr->id = fromPtr->id;
-    toPtr->maxTapes = fromPtr->maxTapes;
-    toPtr->a = fromPtr->a;
-    toPtr->b = fromPtr->b;
-    strcpy(toPtr->tapeServer, fromPtr->tapeServer);
-    strcpy(toPtr->format, fromPtr->format);
-
-    toPtr->expDate = fromPtr->expDate;
-    toPtr->expType = fromPtr->expType;
-    return 0;
-}

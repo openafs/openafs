@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/main.c,v 1.8 2003/07/15 23:17:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/main.c,v 1.8.2.1 2005/04/03 18:15:54 shadow Exp $");
 
 #define VICE			/* allow us to put our changes in at will */
 #include <stdio.h>
@@ -79,10 +79,6 @@ RCSID
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
-
-#ifdef AFS_DEC_ENV
-#include <sys/fs_types.h>
-#endif
 
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -215,20 +211,7 @@ main(argc, argv)
 	    preen++;
 	    break;
 #endif
-#if	defined(AFS_DEC_ENV)
-	    /* On the late versions of Ultrix they changed the defn of '-p' a bit. Particularly,
-	     * -p is used to check a file system that was not unmounted cleanly, and they added,
-	     * -P to check a file system regardless of how it was unmounted; this, unfortunately,
-	     * is identical to '-p' on the rest of the systems but we have to maintain vendor's
-	     * semantics so we leave it the way Dec likes it.
-	     */
 	case 'p':
-	    only_when_needed++;
-	    /* P is for Ultrix compatibility */
-	case 'P':
-#else
-	case 'p':
-#endif
 	    preen++;
 	    break;
 #if	defined(AFS_HPUX100_ENV)
@@ -453,11 +436,6 @@ main(argc, argv)
 		&& strcmp(fsp->fs_type, FSTAB_RO)
 		&& strcmp(fsp->fs_type, FSTAB_RQ))
 		continue;
-#ifdef	AFS_DEC_ENV
-	    /* Only check local (i.e. ufs) file systems */
-	    if (strcmp(fsp->fs_name, "4.2") && strcmp(fsp->fs_name, "ufs"))
-		continue;
-#endif
 #ifdef	AFS_OSF_ENV
 	    if (strcmp(fsp->fs_vfstype, "ufs") || fsp->fs_passno == 0) {
 		continue;
@@ -644,11 +622,6 @@ checkfilesys(filesys, parname)
     struct zlncnt *zlnp;
     char devbuffer[128];
     int ret_val;
-#ifdef	AFS_DEC_ENV
-    int retries = 3;		/* # of retries fora clean fsck pass */
-    int fsdirty = 0;		/* file system was or is dirty */
-    int rootdirty = 0;		/* Root was or is dirty */
-#endif
 
 #ifdef	AFS_OSF_ENV
     int temp;
@@ -672,9 +645,6 @@ checkfilesys(filesys, parname)
     EnsureDevice(devname);	/* canonicalize name */
     if (debug && preen)
 	pinfo("starting\n");
-#ifdef	AFS_DEC_ENV
-    for (; retries > 0; retries--) {	/* 003 - Loop for NUMRETRIES or until clean */
-#endif
 
 	ret_val = setup(devname);
 
@@ -695,7 +665,7 @@ checkfilesys(filesys, parname)
 	} else if (ret_val == -1) {	/* pclean && FS_CLEAN */
 	    return (1);
 #endif
-#if	defined(AFS_DEC_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_OSF_ENV)
 	} else if (ret_val == FS_CLEAN) {	/* pclean && FS_CLEAN */
 	    return (1);
 #endif
@@ -774,108 +744,7 @@ checkfilesys(filesys, parname)
 	    msgprintf("** Phase 5 - Check Cyl groups\n");
 	pass5();
 
-#ifdef	AFS_DEC_ENV
-	if (fsmodified || (sblk.b_dirty) || (cgblk.b_dirty)) {
-	    fsdirty = 1;
-	    if (hotroot)
-		rootdirty = 1;
-	    if (retries <= 1) {
-		/*
-		 * 003 - Number of retry attempts have been
-		 * exhausted. Mark super block as dirty.
-		 */
-		(void)time(&sblock.fs_time);
-		sbdirty();
-	    }
-	} else {
-	    /*
-	     * 003 - If checking root file system, and it was
-	     * modified during any pass, don't assume it is ok. Must reboot.
-	     */
-	    if (rootdirty) {
-		sbdirty();
-		retries = 0;
-	    } else {
-		if ((!hotroot) && (!bflag) && (!nflag) && (!iscorrupt)) {
-		    sblock.fs_fmod = 0;
-		    sblock.fs_clean = FS_CLEAN;
-		    (void)time(&sblock.fs_time);
-		    (void)time(&sblock.fs_lastfsck);
-		    if ((sblock.fs_deftimer) && (sblock.fs_deftimer > 0)
-			&& (sblock.fs_deftimer < 255))
-			sblock.fs_cleantimer = sblock.fs_deftimer;
-		    else
-			sblock.fs_cleantimer = sblock.fs_deftimer =
-			    FSCLEAN_TIMEOUTFACTOR;
-		    sbdirty();
-		}
-		/*
-		 * 006 - If an alternate super block was used,
-		 * we want to re fsck the partition after 
-		 * updating the primary super block.
-		 */
-		if (!bflag)
-		    retries = 0;
-	    }
-	}
-	/* Unless no updates are to be done, write out maps. */
-	if (nflag)
-	    retries = 0;
-	else
-	    ckfini();
-	if (debug) {
-	    daddr_t nn_files = n_files;
-	    daddr_t nn_blks = n_blks;
-
-	    n_ffree = sblock.fs_cstotal.cs_nffree;
-	    n_bfree = sblock.fs_cstotal.cs_nbfree;
-	    if (nn_files -= maxino - ROOTINO - sblock.fs_cstotal.cs_nifree)
-		printf("%d files missing\n", nn_files);
-	    nn_blks +=
-		sblock.fs_ncg * (cgdmin(&sblock, 0) - cgsblock(&sblock, 0));
-	    nn_blks += cgsblock(&sblock, 0) - cgbase(&sblock, 0);
-	    nn_blks += howmany(sblock.fs_cssize, sblock.fs_fsize);
-	    if (nn_blks -= maxfsblock - (n_ffree + sblock.fs_frag * n_bfree))
-		printf("%d blocks missing\n", nn_blks);
-	}
-	if (duplist != NULL) {
-	    if (debug)
-		printf("The following duplicate blocks remain:");
-	    for (dp = duplist; dp; dp = dp->next) {
-		if (debug)
-		    printf(" %d,", dp->dup);
-		free(dp);
-	    }
-	    if (debug)
-		printf("\n");
-	}
-	if (zlnhead != NULL) {
-	    if (debug)
-		printf("The following zero link count inodes remain:");
-	    for (zlnp = zlnhead; zlnp; zlnp = zlnp->next) {
-		if (debug)
-		    printf(" %d,", zlnp->zlncnt);
-		free(zlnp);
-	    }
-	    if (debug)
-		printf("\n");
-	}
-	zlnhead = NULL;
-	duplist = NULL;
-
-	free(blockmap);
-	free(statemap);
-	free((char *)lncntp);
-	/* Print out retry message, and fsck file system again. */
-	if (retries > 1)
-	    if (preen)
-		printf("%s: FILE SYSTEM MODIFIED, VERIFYING\n", filesys);
-	    else
-		printf("**** FILE SYSTEM MODIFIED, VERIFYING\n");
-    }				/* for retries */
-#endif
-
-#if	defined(AFS_SUN_ENV) && !defined(AFS_SUN3_ENV)
+#if	defined(AFS_SUN_ENV)
     updateclean();
     if (debug)
 	printclean();
@@ -908,19 +777,6 @@ checkfilesys(filesys, parname)
     n printf("(%d frags, %d blocks, %.1f%% fragmentation)\n", n_ffree,
 	     n_bfree, (float)(n_ffree * 100) / sblock.fs_dsize);
 #endif /* VICE */
-#ifdef	AFS_DEC_ENV
-    if ((!fsdirty) && (!rootdirty))
-	return;
-    if (!preen) {
-	printf("\n***** FILE SYSTEM WAS MODIFIED *****\n");
-	if (hotroot)
-	    printf("\n***** HALT PROCESSOR WITHOUT SYNCING DISK *****\n");
-    }
-    if (hotroot) {
-	sync();
-	exit(4);
-    }
-#else
     if (debug && (n_files -= maxino - ROOTINO - sblock.fs_cstotal.cs_nifree))
 	msgprintf("%d files missing\n", n_files);
     if (debug) {
@@ -942,7 +798,6 @@ checkfilesys(filesys, parname)
 	    msgprintf("\n");
 	}
     }
-#endif
 #ifdef	AFS_HPUX_ENV
     /* if user's specification denotes that the file system block
      * is going to be modified (nflag == 0) then fsck store the
@@ -1040,7 +895,6 @@ checkfilesys(filesys, parname)
     }
 #endif
 #endif
-#ifndef	AFS_DEC_ENV
     ckfini();
     free(blockmap);
     free(statemap);
@@ -1077,16 +931,13 @@ checkfilesys(filesys, parname)
 	    exit(4);
 #endif
     }
-#endif
 #ifdef VICE
     (void)close(fsreadfd);
     (void)close(fswritefd);
     if (nViceFiles || tryForce) {
 	/* Modified file system with vice files: force full salvage */
 	/* Salvager recognizes the file FORCESALVAGE in the root of each partition */
-#if !defined(AFS_DEC_ENV)
 	struct ufs_args ufsargs;
-#endif
 
 	char pname[100], fname[100], *special;
 	int fd, code, failed = 0;
@@ -1135,29 +986,21 @@ checkfilesys(filesys, parname)
 	if (failed && parname) {
 	    strcpy(pname, parname);
 	}
-#if !defined(AFS_DEC_ENV) && !defined(AFS_HPUX_ENV)
+#if !defined(AFS_HPUX_ENV)
 #ifdef	AFS_SUN5_ENV
 	ufsargs.flags = UFSMNT_NOINTR;
 #else
 	ufsargs.fspec = devname;
 #endif
-#ifdef AFS_SUN_ENV
 #ifdef	AFS_SUN5_ENV
 	if (mount
 	    (devname, pname, MS_DATA, "ufs", (char *)&ufsargs,
 	     sizeof(ufsargs)) < 0) {
 #else
-	if (mount("4.2", pname, M_NEWTYPE, &ufsargs) < 0) {
-#endif
-#else
 	if (mount(MOUNT_UFS, pname, 0, &ufsargs) < 0) {
 #endif
 #else
-#ifdef AFS_DEC_ENV
-	if (mount(devname, pname, 0, GT_ULTRIX, NULL)) {
-#else
 	if (mount(devname, pname, 0) < 0) {
-#endif
 #endif
 	    printf
 		("Couldn't mount %s on %s to force FULL SALVAGE; continuing anyway (%d)!\n",
@@ -1168,24 +1011,17 @@ checkfilesys(filesys, parname)
 	    fd = open(fname, O_CREAT, 0);
 	    if (fd == -1) {
 		errexit("Couldn't create %s to force full salvage!\n", fname);
-#if defined(AFS_DEC_ENV)
-		stat(".", &tstat);
-#endif
 	    } else {
 		fstat(fd, &tstat);
 		close(fd);
 	    }
-#if /*defined(AFS_VFS_ENV) &&*/ !defined(AFS_DEC_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV)
 	    unmount(pname);
-#else
-#if defined(AFS_DEC_ENV)
-	    umount(tstat.st_dev);
 #else
 #if	defined(AFS_OSF_ENV)
 	    umount(pname, MNT_NOFORCE);
 #else /* AFS_OSF_ENV */
 	    umount(devname);
-#endif
 #endif
 #endif
 	}

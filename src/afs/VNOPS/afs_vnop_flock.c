@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.2 2004/12/07 06:12:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.3 2005/04/03 18:15:39 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -82,7 +82,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 #endif
 	slp->pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	slp->pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
@@ -121,7 +121,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 #endif
 	flock->l_pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	flock->l_pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
@@ -471,7 +471,7 @@ DoLockWarning(void)
 #ifdef	AFS_OSF_ENV
 int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
 		struct AFS_UCRED * acred, pid_t clid, off_t offset)
-#elif defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 		struct AFS_UCRED * acred, pid_t clid)
 #else
@@ -509,7 +509,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	acmd = F_SETLK;
     }
 #endif
-#if (defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
     if ((acmd == F_GETLK) || (acmd == F_RGETLK)) {
 #else
     if (acmd == F_GETLK) {
@@ -525,7 +525,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	afs_PutFakeStat(&fakestate);
 	return code;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
-#if (defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
+#if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
 	       || (acmd == F_RSETLK) || (acmd == F_RSETLKW)) {
 #else
 	) {
@@ -564,12 +564,12 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	return EINVAL;		/* unknown lock type */
     }
     if (((acmd == F_SETLK)
-#if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV)) && !defined(AFS_SUN58_ENV)
+#if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
 	 || (acmd == F_RSETLK)
 #endif
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	(defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
+#if	defined(AFS_OSF_ENV)
     code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
@@ -885,17 +885,6 @@ afs_xflock(void)
 	tvc = VTOAFS(fd->f_data);	/* valid, given a vnode */
 	if (IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode, so do the work */
-#ifdef AFS_DEC_ENV
-	    /* find real vcache entry; shouldn't be null if gnode ref count
-	     * is greater than 0.
-	     */
-	    tvc = VTOAFS(afs_gntovn) (tvc);
-	    if (!tvc) {
-		u.u_error = ENOENT;
-		afs_PutFakeStat(&fakestate);
-		return;
-	    }
-#endif
 	    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
 	    if (code) {
 		afs_PutFakeStat(&fakestate);
@@ -903,7 +892,7 @@ afs_xflock(void)
 	    }
 	    if ((fd->f_flag & (FEXLOCK | FSHLOCK)) && !(uap->com & LOCK_UN)) {
 		/* First, if fd already has lock, release it for relock path */
-#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
+#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
 		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
 			    0 /*!onlymine */ );
 #else
@@ -913,7 +902,7 @@ afs_xflock(void)
 	    }
 	    /* now try the requested operation */
 
-#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
+#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
 	    code =
 		HandleFlock(tvc, uap->com, &treq, u.u_procp->p_pid,
 			    0 /*!onlymine */ );

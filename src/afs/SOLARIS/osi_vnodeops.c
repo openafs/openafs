@@ -11,9 +11,8 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.1 2004/10/18 07:11:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.2 2005/04/03 18:15:39 shadow Exp $");
 
-#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
  * SOLARIS/osi_vnodeops.c
  *
@@ -48,18 +47,11 @@ RCSID
 #include <vm/seg_map.h>
 #include <vm/seg_vn.h>
 #include <vm/rm.h>
-#if	defined(AFS_SUN5_ENV)
 #include <sys/modctl.h>
 #include <sys/syscall.h>
-#else
-#include <vm/swap.h>
-#endif
 #include <sys/debug.h>
-#if	defined(AFS_SUN5_ENV)
 #include <sys/fs_subr.h>
-#endif
 
-#if	defined(AFS_SUN5_ENV)
 /* 
  * XXX Temporary fix for problems with Solaris rw_tryupgrade() lock.
  * It isn't very persistent in getting the upgrade when others are
@@ -78,7 +70,6 @@ AFS_TRYUP(lock)
 	rw_enter(lock, RW_WRITER);
     }
 }
-#endif
 #endif
 
 
@@ -110,8 +101,6 @@ int afs_nfsrdwr(), afs_getpage(), afs_putpage(), afs_map();
 int afs_dump(), afs_cmp(), afs_realvp(), afs_GetOnePage();
 
 int afs_pvn_vptrunc;
-
-#ifdef	AFS_SUN5_ENV
 
 int
 afs_addmap(avp, offset, asp, addr, length, prot, maxprot, flags, credp)
@@ -194,8 +183,6 @@ afs_vmwrite(avp, auio, ioflag, acred)
     return code;
 }
 
-#endif /* AFS_SUN5_ENV */
-
 int
 afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
      struct vnode *vp;
@@ -204,23 +191,16 @@ afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
      struct page *pl[];
      u_int plsz;
      struct seg *seg;
-#ifdef	AFS_SUN5_ENV
      offset_t off;
      caddr_t addr;
-#else
-     u_int off;
-     addr_t addr;
-#endif
      enum seg_rw rw;
      struct AFS_UCRED *acred;
 {
     register afs_int32 code = 0;
     AFS_STATCNT(afs_getpage);
 
-#ifdef	AFS_SUN5_ENV
     if (vp->v_flag & VNOMAP)	/* File doesn't allow mapping */
 	return (ENOSYS);
-#endif
 
     AFS_GLOCK();
 
@@ -230,23 +210,16 @@ afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
 	    afs_GetOnePage(vp, off, len, protp, pl, plsz, seg, addr, rw,
 			   acred);
 #else
-#ifdef	AFS_SUN5_ENV
     if (len <= PAGESIZE)
 	code =
 	    afs_GetOnePage(vp, (u_int) off, len, protp, pl, plsz, seg, addr,
 			   rw, acred);
-#else
-    if (len == PAGESIZE)
-	code = afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred);
-#endif
 #endif
     else {
 	struct vcache *vcp = VTOAFS(vp);
-#ifdef	AFS_SUN5_ENV
 	ObtainWriteLock(&vcp->vlock, 548);
 	vcp->multiPage++;
 	ReleaseWriteLock(&vcp->vlock);
-#endif
 	afs_BozonLock(&vcp->pvnLock, vcp);
 #if	defined(AFS_SUN56_ENV)
 	code =
@@ -258,25 +231,18 @@ afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
 			 plsz, seg, addr, rw, acred);
 #endif
 	afs_BozonUnlock(&vcp->pvnLock, vcp);
-#ifdef	AFS_SUN5_ENV
 	ObtainWriteLock(&vcp->vlock, 549);
 	vcp->multiPage--;
 	ReleaseWriteLock(&vcp->vlock);
-#endif
     }
     AFS_GUNLOCK();
     return code;
 }
 
 /* Return all the pages from [off..off+len) in file */
-#ifdef	AFS_SUN5_ENV
 int
 afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
      u_int alen;
-#else
-int
-afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
-#endif
      struct vnode *vp;
 #if	defined(AFS_SUN56_ENV)
      u_offset_t off;
@@ -287,11 +253,7 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
      struct page *pl[];
      u_int plsz;
      struct seg *seg;
-#ifdef	AFS_SUN5_ENV
      caddr_t addr;
-#else
-     addr_t addr;
-#endif
      enum seg_rw rw;
      struct AFS_UCRED *acred;
 {
@@ -307,37 +269,23 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
     afs_size_t offset, nlen;
     struct vrequest treq;
     afs_int32 mapForRead = 0, Code = 0;
-#if	defined(AFS_SUN56_ENV)
     u_offset_t toffset;
-#else
-    afs_int32 toffset;
-#endif
 
     if (!acred)
-#ifdef	AFS_SUN5_ENV
 	osi_Panic("GetOnePage: !acred");
-#else
-	acred = u.u_cred;	/* better than nothing */
-#endif
 
     avc = VTOAFS(vp);		/* cast to afs vnode */
 
-#ifdef	AFS_SUN5_ENV
     if (avc->credp		/*&& AFS_NFSXLATORREQ(acred) */
 	&& AFS_NFSXLATORREQ(avc->credp)) {
 	acred = avc->credp;
     }
-#endif
     if (code = afs_InitReq(&treq, acred))
 	return code;
 
     if (!pl) {
 	/* This is a read-ahead request, e.g. due to madvise.  */
-#ifdef	AFS_SUN5_ENV
 	int plen = alen;
-#else
-	int plen = PAGESIZE;
-#endif
 	ObtainReadLock(&avc->lock);
 
 	while (plen > 0 && !afs_BBusy()) {
@@ -405,32 +353,17 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
 
     if (protp)
 	*protp = PROT_ALL;
-#ifndef	AFS_SUN5_ENV
-    if (AFS_NFSXLATORREQ(acred)) {
-	if (rw == S_READ) {
-	    if (!afs_AccessOK
-		(avc, PRSFS_READ, &treq,
-		 CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
-		return EACCES;
-	    }
-	}
-    }
-#endif
 
   retry:
-#ifdef	AFS_SUN5_ENV
     if (rw == S_WRITE || rw == S_CREATE)
 	tdc = afs_GetDCache(avc, (afs_offs_t) off, &treq, &offset, &nlen, 5);
     else
 	tdc = afs_GetDCache(avc, (afs_offs_t) off, &treq, &offset, &nlen, 1);
     if (!tdc)
 	return EINVAL;
-#endif
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
-#ifdef  AFS_SUN5_ENV
 	afs_PutDCache(tdc);
-#endif
 	return afs_CheckCode(code, &treq, 44);	/* failed to get it */
     }
 
@@ -444,7 +377,6 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
     tlen = len;
     slot = 0;
     toffset = off;
-#ifdef	AFS_SUN5_ENV
     /* Check to see if we're in the middle of a VM purge, and if we are, release
      * the locks and try again when the VM purge is done. */
     ObtainWriteLock(&avc->vlock, 550);
@@ -466,7 +398,6 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
 	goto retry;
     }
     ReleaseWriteLock(&avc->vlock);
-#endif
 
     /* We're about to do stuff with our dcache entry..  Lock it. */
     ObtainReadLock(&tdc->lock);
@@ -493,7 +424,6 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
 	/* if we make it here, we can't find the page in memory.  Do a real disk read
 	 * from the cache to get the data */
 	Code |= 0x200;		/* XXX */
-#ifdef	AFS_SUN5_ENV
 #if	defined(AFS_SUN54_ENV)
 	/* use PG_EXCL because we know the page does not exist already.  If it 
 	 * actually does exist, we have somehow raced between lookup and create.
@@ -517,86 +447,38 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
 	}
 	if (alen < PAGESIZE)
 	    pagezero(page, alen, PAGESIZE - alen);
-#else
-	page = rm_allocpage(seg, addr, PAGESIZE, 1);	/* can't fail */
-	if (!page)
-	    osi_Panic("afs_getpage alloc page");
-	/* we get a circularly-linked list of pages back, but we expect only
-	 * one, since that's what we asked for */
-	if (page->p_next != page)
-	    osi_Panic("afs_getpage list");
-	/* page enter returns a locked page; we'll drop the lock as a side-effect
-	 * of the pvn_done done by afs_ustrategy.  If we decide not to call
-	 * strategy, we must be sure to call pvn_fail, at least, to release the
-	 * page locks and otherwise reset the pages.  The page, while locked, is
-	 * not held, for what it is worth */
-	page->p_intrans = 1;	/* set appropriate flags */
-	page->p_pagein = 1;
-	/* next call shouldn't fail, since we have pvnLock set */
-	if (page_enter(page, vp, toffset))
-	    osi_Panic("afs_getpage enter race");
-#endif /* AFS_SUN5_ENV */
 
-#ifdef	AFS_SUN5_ENV
 	if (rw == S_CREATE) {
 	    /* XXX Don't read from AFS in write only cases XXX */
 	    page_io_unlock(page);
 	} else
-#else
-	if (0) {
-	    /* XXX Don't read from AFS in write only cases XXX */
-	    page->p_intrans = page->p_pagein = 0;
-	    page_unlock(page);	/* XXX */
-	} else
-#endif
 	{
-#ifndef	AFS_SUN5_ENV
-	    PAGE_HOLD(page);
-#endif
 	    /* now it is time to start I/O operation */
 	    buf = pageio_setup(page, PAGESIZE, vp, B_READ);	/* allocate a buf structure */
-#if	defined(AFS_SUN5_ENV)
 	    buf->b_edev = 0;
-#endif
 	    buf->b_dev = 0;
 	    buf->b_blkno = btodb(toffset);
 	    bp_mapin(buf);	/* map it in to our address space */
 
-#if	defined(AFS_SUN5_ENV)
 	    AFS_GLOCK();
 	    /* afs_ustrategy will want to lock the dcache entry */
 	    ReleaseReadLock(&tdc->lock);
 	    code = afs_ustrategy(buf, acred);	/* do the I/O */
 	    ObtainReadLock(&tdc->lock);
 	    AFS_GUNLOCK();
-#else
-	    ReleaseReadLock(&tdc->lock);
-	    ReleaseReadLock(&avc->lock);
-	    code = afs_ustrategy(buf);	/* do the I/O */
-	    ObtainReadLock(&avc->lock);
-	    ObtainReadLock(&tdc->lock);
-#endif
 
-#ifdef	AFS_SUN5_ENV
 	    /* Before freeing unmap the buffer */
 	    bp_mapout(buf);
 	    pageio_done(buf);
-#endif
 	    if (code) {
-#ifndef	AFS_SUN5_ENV
-		PAGE_RELE(page);
-#endif
 		goto bad;
 	    }
-#ifdef	AFS_SUN5_ENV
 	    page_io_unlock(page);
-#endif
 	}
 
 	/* come here when we have another page (already held) to enter */
       nextpage:
 	/* put page in array and continue */
-#ifdef	AFS_SUN5_ENV
 	/* The p_selock must be downgraded to a shared lock after the page is read */
 #if	defined(AFS_SUN56_ENV)
 	if ((rw != S_CREATE) && !(PAGE_SHARED(page)))
@@ -606,11 +488,8 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
 	{
 	    page_downgrade(page);
 	}
-#endif
 	pl[slot++] = page;
-#ifdef	AFS_SUN5_ENV
 	code = page_iolock_assert(page);
-#endif
 	code = 0;
 	toffset += PAGESIZE;
 	addr += PAGESIZE;
@@ -630,7 +509,6 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
     }
 
     ReleaseReadLock(&avc->lock);
-#ifdef	AFS_SUN5_ENV
     ObtainWriteLock(&afs_xdcache, 246);
     if (!mapForRead) {
 	/* track that we have dirty (or dirty-able) pages for this chunk. */
@@ -638,11 +516,8 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
     }
     afs_indexFlags[tdc->index] |= IFAnyPages;
     ReleaseWriteLock(&afs_xdcache);
-#endif
     afs_BozonUnlock(&avc->pvnLock, avc);
-#ifdef	AFS_SUN5_ENV
     afs_PutDCache(tdc);
-#endif
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGEINDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, (int)page, ICL_TYPE_LONG, Code);
     return 0;
@@ -652,23 +527,15 @@ afs_GetOnePage(vp, off, protp, pl, plsz, seg, addr, rw, acred)
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGEINDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, (int)page, ICL_TYPE_LONG, Code);
     /* release all pages, drop locks, return code */
-#ifdef	AFS_SUN5_ENV
     if (page)
 	pvn_read_done(page, B_ERROR);
-#else
-    for (i = 0; i < slot; i++)
-	PAGE_RELE(pl[i]);
-#endif
     ReleaseReadLock(&avc->lock);
     afs_BozonUnlock(&avc->pvnLock, avc);
-#ifdef	AFS_SUN5_ENV
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
-#endif
     return code;
 }
 
-#ifdef	AFS_SUN5_ENV
 int
 afs_putpage(vp, off, len, flags, cred)
      struct vnode *vp;
@@ -838,132 +705,6 @@ afs_putapage(struct vnode *vp, struct page *pages,
     return code;
 }
 
-#else /* AFS_SUN5_ENV */
-
-int
-afs_putpage(vp, off, len, flags, cred)
-     struct vnode *vp;
-     u_int off;
-     u_int len;
-     int flags;
-     struct AFS_UCRED *cred;
-{
-    int wholeEnchilada;		/* true if we must get all of the pages */
-    struct vcache *avc;
-    struct page *pages;
-    struct page *tpage;
-    struct buf *tbuf;
-    afs_int32 tlen;
-    afs_int32 code = 0, rcode;
-    afs_int32 poffset;
-    afs_int32 clusterStart, clusterEnd, endPos;
-
-    /* In the wholeEnchilada case, we must ensure that we get all of the pages
-     * from the system, since we're doing this to shutdown the use of a vnode */
-
-    AFS_STATCNT(afs_putpage);
-    wholeEnchilada = (off == 0 && len == 0
-		      && (flags & (B_INVAL | B_ASYNC)) == B_INVAL);
-
-    avc = VTOAFS(vp);
-    afs_BozonLock(&avc->pvnLock, avc);
-    ObtainWriteLock(&avc->lock, 248);
-
-    while (1) {
-	/* in whole enchilada case, loop until call to pvn_getdirty can't find
-	 * any more modified pages */
-
-	/* first we try to get a list of modified (or whatever) pages */
-	if (len == 0) {
-	    pages = pvn_vplist_dirty(vp, off, flags);
-	} else {
-	    endPos = off + len;	/* position we're supposed to write up to */
-	    if (endPos > avc->m.Length)
-		endPos = avc->m.Length;	/* bound by this */
-	    clusterStart = off & ~(PAGESIZE - 1);	/* round down to nearest page */
-	    clusterEnd = ((endPos - 1) | (PAGESIZE - 1)) + 1;	/* round up to nearest page */
-	    pages =
-		pvn_range_dirty(vp, off, endPos, clusterStart, clusterEnd,
-				flags);
-	}
-
-	/* Now we've got the modified pages.  All pages are locked and held */
-	rcode = 0;		/* return code */
-	while (pages) {		/* look over all pages in the returned set */
-	    tpage = pages;	/* get first page in the list */
-
-	    /* write out the page */
-	    poffset = tpage->p_offset;	/* where the page starts in the file */
-	    /* tlen will represent the end of the range to write, for a while */
-	    tlen = PAGESIZE + poffset;	/* basic place to end tpage write */
-	    /* but we also don't want to write past end of off..off+len range */
-	    if (len != 0 && tlen > off + len)
-		tlen = off + len;
-	    /* and we don't want to write past the end of the file */
-	    if (tlen > avc->m.Length)
-		tlen = avc->m.Length;
-	    /* and we don't want to write at all if page starts after end */
-	    if (poffset >= tlen) {
-		pvn_fail(pages, B_WRITE | flags);
-		goto done;
-	    }
-	    /* finally change tlen from end position to length */
-	    tlen -= poffset;	/* compute bytes to write from this page */
-	    page_sub(&pages, tpage);	/* remove tpage from "pages" list */
-	    tbuf = pageio_setup(tpage, tlen, vp, B_WRITE | flags);
-	    if (!tbuf) {
-		pvn_fail(tpage, B_WRITE | flags);
-		pvn_fail(pages, B_WRITE | flags);
-		goto done;
-	    }
-	    tbuf->b_dev = 0;
-	    tbuf->b_blkno = btodb(tpage->p_offset);
-	    bp_mapin(tbuf);
-	    ReleaseWriteLock(&avc->lock);	/* can't hold during strategy call */
-	    code = afs_ustrategy(tbuf);	/* unlocks page */
-	    ObtainWriteLock(&avc->lock, 249);	/* re-obtain */
-	    if (code) {
-		/* unlocking of tpage is done by afs_ustrategy */
-		rcode = code;
-		if (pages)	/* may have already removed last page */
-		    pvn_fail(pages, B_WRITE | flags);
-		goto done;
-	    }
-	}			/* for (tpage=pages....) */
-
-	/* see if we've gotten all of the pages in the whole enchilada case */
-	if (!wholeEnchilada || !vp->v_pages)
-	    break;
-    }				/* while(1) obtaining all pages */
-
-    /*
-     * If low on chunks, and if writing the last byte of a chunk, try to
-     * free some.  Note that afs_DoPartialWrite calls osi_SyncVM which now
-     * calls afs_putpage, so this is recursion.  It stops there because we
-     * insist on len being non-zero.
-     */
-    if (afs_stats_cmperf.cacheCurrDirtyChunks >
-	afs_stats_cmperf.cacheMaxDirtyChunks && len != 0
-	&& AFS_CHUNKOFFSET((off + len)) == 0) {
-	struct vrequest treq;
-	if (!afs_InitReq(&treq, cred ? cred : u.u_cred)) {
-	    rcode = afs_DoPartialWrite(avc, &treq);	/* XXX */
-	}
-    }
-
-  done:
-
-    if (rcode && !avc->vc_error)
-	avc->vc_error = rcode;
-
-    /* when we're here, we just return code. */
-    ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
-    return rcode;
-}
-
-#endif /* AFS_SUN5_ENV */
-
 int
 afs_nfsrdwr(avc, auio, arw, ioflag, acred)
      register struct vcache *avc;
@@ -1010,13 +751,9 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	return (EFBIG);
 #endif
 
-#ifdef	AFS_SUN5_ENV
     if (!acred)
 	osi_Panic("rdwr: !acred");
-#else
-    if (!acred)
-	acred = u.u_cred;
-#endif
+
     if (code = afs_InitReq(&treq, acred))
 	return code;
 
@@ -1135,13 +872,11 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 		return EACCES;
 	    }
 	}
-#ifdef	AFS_SUN5_ENV
 	crhold(acred);
 	if (avc->credp) {
 	    crfree(avc->credp);
 	}
 	avc->credp = acred;
-#endif
     }
     counter = 0;		/* don't call afs_DoPartialWrite first time through. */
     while (1) {
@@ -1170,7 +905,6 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	    }
 	    sflags = 0;
 	} else {
-#ifdef	AFS_SUN5_ENV
 	    /* Purge dirty chunks of file if there are too many dirty
 	     * chunks. Inside the write loop, we only do this at a chunk
 	     * boundary. Clean up partial chunk if necessary at end of loop.
@@ -1180,7 +914,6 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 		if (code)
 		    break;
 	    }
-#endif /* AFS_SUN5_ENV */
 	    /* write case, we ask segmap_release to call putpage.  Really, we
 	     * don't have to do this on every page mapin, but for now we're
 	     * lazy, and don't modify the rest of AFS to scan for modified
@@ -1193,7 +926,6 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	    code = 0;
 	    break;		/* nothing to transfer, we're done */
 	}
-#ifdef	AFS_SUN5_ENV
 	if (arw == UIO_WRITE)
 	    avc->states |= CDirty;	/* may have been cleared by DoPartialWrite */
 
@@ -1226,31 +958,13 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 		break;
 	    }
 	}
-#endif
 	ReleaseWriteLock(&avc->lock);	/* uiomove may page fault */
 	AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
 	data = segmap_getmap(segkmap, AFSTOV(avc), (u_offset_t) pageBase);
-#else
-	data = segmap_getmap(segkmap, AFSTOV(avc), pageBase);
-#endif
-#ifndef	AFS_SUN5_ENV
-	code =
-	    afs_fc2errno(as_fault
-			 (&kas, data + pageOffset, tsize, F_SOFTLOCK, mode));
-	if (code == 0) {
-	    AFS_UIOMOVE(data + pageOffset, tsize, arw, auio, code);
-	    as_fault(&kas, data + pageOffset, tsize, F_SOFTUNLOCK, mode);
-	    code2 = segmap_release(segkmap, data, sflags);
-	    if (!code)
-		code = code2;
-	} else {
-	    (void)segmap_release(segkmap, data, 0);
-	}
-#else
-#if defined(AFS_SUN56_ENV)
 	raddr = (caddr_t) (((uintptr_t) data + pageOffset) & PAGEMASK);
 #else
+	data = segmap_getmap(segkmap, AFSTOV(avc), pageBase);
 	raddr = (caddr_t) (((u_int) data + pageOffset) & PAGEMASK);
 #endif
 	rsize =
@@ -1313,27 +1027,22 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	} else {
 	    (void)segmap_release(segkmap, data, 0);
 	}
-#endif /* AFS_SUN5_ENV */
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock, 253);
-#ifdef	AFS_SUN5_ENV
 	counter++;
 	if (dcp)
 	    afs_PutDCache(dcp);
-#endif /* AFS_SUN5_ENV */
 	if (code)
 	    break;
     }
     if (didFakeOpen) {
 	afs_FakeClose(avc, acred);
     }
-#ifdef	AFS_SUN5_ENV
     if (arw == UIO_WRITE && (avc->states & CDirty)) {
 	code2 = afs_DoPartialWrite(avc, &treq);
 	if (!code)
 	    code = code2;
     }
-#endif /* AFS_SUN5_ENV */
 
     if (!code && avc->vc_error) {
 	code = avc->vc_error;
@@ -1365,19 +1074,10 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
      struct vnode *vp;
      struct as *as;
-#ifdef	AFS_SUN5_ENV
      offset_t off;
      caddr_t *addr;
-#else
-     u_int off;
-     addr_t *addr;
-#endif
      u_int len;
-#ifdef	AFS_SUN5_ENV
      u_char prot, maxprot;
-#else
-     u_int prot, maxprot;
-#endif
      u_int flags;
      struct AFS_UCRED *cred;
 {
@@ -1400,13 +1100,12 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
     }
 #endif
 
-#if	defined(AFS_SUN5_ENV)
     if (vp->v_flag & VNOMAP)	/* File isn't allowed to be mapped */
 	return (ENOSYS);
 
     if (vp->v_filocks)		/* if locked, disallow mapping */
 	return (EAGAIN);
-#endif
+
     AFS_GLOCK();
     if (code = afs_InitReq(&treq, cred))
 	goto out;
@@ -1426,9 +1125,7 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
     afs_BozonUnlock(&avc->pvnLock, avc);
 
     AFS_GUNLOCK();
-#ifdef	AFS_SUN5_ENV
     as_rangelock(as);
-#endif
     if ((flags & MAP_FIXED) == 0) {
 #if	defined(AFS_SUN57_ENV)
 	map_addr(addr, len, off, 1, flags);
@@ -1438,9 +1135,7 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
 	map_addr(addr, len, (off_t) off, 1);
 #endif
 	if (*addr == NULL) {
-#ifdef	AFS_SUN5_ENV
 	    as_rangeunlock(as);
-#endif
 	    code = ENOMEM;
 	    goto out1;
 	}
@@ -1454,14 +1149,10 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
     crargs.prot = prot;
     crargs.maxprot = maxprot;
     crargs.amp = (struct anon_map *)0;
-#if	defined(AFS_SUN5_ENV)
     crargs.flags = flags & ~MAP_TYPE;
-#endif
 
     code = as_map(as, *addr, len, segvn_create, (char *)&crargs);
-#ifdef	AFS_SUN5_ENV
     as_rangeunlock(as);
-#endif
   out1:
     AFS_GLOCK();
     code = afs_CheckCode(code, &treq, 47);
@@ -1473,42 +1164,13 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
     return code;
 }
 
-/* Sun 4.0.X-specific code.  It computes the number of bytes that need
-    to be zeroed at the end of a page by pvn_vptrunc, given that you're
-    trying to get vptrunc to truncate a file to alen bytes.  The result
-    will be passed to pvn_vptrunc by the truncate code */
-#ifndef	AFS_SUN5_ENV		/* Not good for Solaris */
-afs_PageLeft(alen)
-     register afs_int32 alen;
-{
-    register afs_int32 nbytes;
-
-    AFS_STATCNT(afs_PageLeft);
-    nbytes = PAGESIZE - (alen & PAGEOFFSET);	/* amount to zap in last page */
-    /* now check if we'd zero the entire last page.  Don't need to do this
-     * since pvn_vptrunc will handle this case properly (it will invalidate
-     * this page) */
-    if (nbytes == PAGESIZE)
-	nbytes = 0;
-    if (nbytes < 0)
-	nbytes = 0;		/* just in case */
-    return nbytes;
-}
-#endif
-
 
 /*
  * For Now We use standard local kernel params for AFS system values. Change this
  * at some point.
  */
-#if	defined(AFS_SUN5_ENV)
 afs_pathconf(vp, cmd, outdatap, credp)
      register struct AFS_UCRED *credp;
-#else
-afs_cntl(vp, cmd, indatap, outdatap, inflag, outflag)
-     int inflag, outflag;
-     char *indatap;
-#endif
      struct vnode *vp;
      int cmd;
      u_long *outdatap;
@@ -1530,26 +1192,11 @@ afs_cntl(vp, cmd, indatap, outdatap, inflag, outflag)
     case _PC_NO_TRUNC:
 	*outdatap = 1;
 	break;
-#if	!defined(AFS_SUN5_ENV)
-    case _PC_MAX_CANON:
-	*outdatap = CANBSIZ;
-	break;
-    case _PC_VDISABLE:
-	*outdatap = VDISABLE;
-	break;
-    case _PC_PIPE_BUF:
-	return EINVAL;
-	break;
-#endif
     default:
 	return EINVAL;
     }
     return 0;
 }
-
-#endif /* AFS_SUN_ENV */
-
-#if	defined(AFS_SUN5_ENV)
 
 afs_ioctl(vnp, com, arg, flag, credp, rvalp)
      struct vnode *vnp;
@@ -1679,9 +1326,6 @@ afs_space(vnp, cmd, ap, flag, off, credp)
     }
     return (code);
 }
-
-
-#endif
 
 int
 afs_dump(vp, addr, i1, i2)

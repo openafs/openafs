@@ -28,6 +28,7 @@
 #define	AFS_SUN54_ENV		1
 #define	AFS_SUN55_ENV		1
 #define	AFS_SUN56_ENV		1
+#define AFS_BOZONLOCK_ENV       1
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */

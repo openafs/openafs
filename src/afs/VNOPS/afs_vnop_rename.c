@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.4 2005/01/31 03:49:15 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.5 2005/04/03 18:15:40 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -299,7 +299,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
 
 	if (tvc) {
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
 	    ObtainWriteLock(&tvc->lock, 151);
@@ -318,7 +318,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		    afs_TryToSmush(tvc, acred, 0);
 	    }
 	    ReleaseWriteLock(&tvc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 	    afs_PutVCache(tvc);

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/vol_sets.c,v 1.10 2003/12/07 22:49:19 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/vol_sets.c,v 1.10.2.1 2005/04/03 18:48:29 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -340,6 +340,24 @@ bc_DeleteVolSetCmd(as, arock)
 }
 
 
+static int
+ListVolSet(struct bc_volumeSet *aset)
+{
+    struct bc_volumeEntry *tentry;
+    int i;
+
+    printf("Volume set %s", aset->name);
+    if (aset->flags & VSFLAG_TEMPORARY)
+	printf(" (temporary)");
+    printf(":\n");
+    i = 1;
+    for (tentry = aset->ventries; tentry; tentry = tentry->next, i++) {
+	printf("    Entry %3d: server %s, partition %s, volumes: %s\n", i,
+	       tentry->serverName, tentry->partname, tentry->name);
+    }
+    return 0;
+}
+
  /* bc_ListVolSetCmd
   *     list out all the information (?) about a volumeset or about all
   *     volumesets
@@ -348,9 +366,7 @@ bc_DeleteVolSetCmd(as, arock)
   */
 
 afs_int32
-bc_ListVolSetCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+bc_ListVolSetCmd(struct cmd_syndesc *as, char *arock)
 {
     /* parm 0 is optional volume set to display */
     register struct bc_volumeSet *tset;
@@ -415,26 +431,6 @@ bc_ClearVolumeSets()
     }
     return (0);
 }
-
-static
-ListVolSet(aset)
-     struct bc_volumeSet *aset;
-{
-    struct bc_volumeEntry *tentry;
-    int i;
-
-    printf("Volume set %s", aset->name);
-    if (aset->flags & VSFLAG_TEMPORARY)
-	printf(" (temporary)");
-    printf(":\n");
-    i = 1;
-    for (tentry = aset->ventries; tentry; tentry = tentry->next, i++) {
-	printf("    Entry %3d: server %s, partition %s, volumes: %s\n", i,
-	       tentry->serverName, tentry->partname, tentry->name);
-    }
-    return 0;
-}
-
 
 /* bc_ParseVolumeSet
  *	Open up the volume set configuration file as specified in our argument,

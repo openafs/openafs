@@ -2,9 +2,9 @@
 #
 # Purpose:      OpenAFS Product Specification File (PSF) for swpackage
 #
-# Copyright:    Copyright (c) 2003 
+# Copyright:    Copyright (c) 2003 International Business Machines Corporation and others. All Rights Reserved.
 #
-# Header:       $Header: /cvs/openafs/src/packaging/HP-UX/psf-1.2.10-transarc-paths-11.22,v 1.1 2003/06/19 22:03:29 shadow Exp $
+# Header:       $Header: /cvs/openafs/src/packaging/HP-UX/psf-1.2.10-transarc-paths-11.22,v 1.1.4.1 2005/04/03 19:33:40 shadow Exp $
 #
 # Description:  This PSF contains a valid product definition which includes
 #               all attributes for OpenAFS installation via software Distributor
@@ -60,7 +60,7 @@
     description < data/product.description  # A file containing a 
 				#multi-line description of the product.
 
-    copyright   "(c)Copyright 2002 OpenAFS,  All Rights Reserved."
+    copyright   "(c)Copyright 2002 International Business Machines Corporation and others. All Rights Reserved."
 
     readme      < data/product.README # A multi-page README for the product.
 

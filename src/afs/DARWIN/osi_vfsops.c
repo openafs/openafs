@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vfsops.c,v 1.11 2003/10/24 06:26:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vfsops.c,v 1.11.2.1 2005/04/04 04:01:19 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -154,6 +154,15 @@ afs_unmount(mp, flags, p)
 	    mp->mnt_data = (qaddr_t) - 1;
 	} else {
 	    if (flags & MNT_FORCE) {
+                if (afs_globalVp) {
+                    AFS_GUNLOCK();
+                    vrele(AFSTOV(afs_globalVp));
+                    AFS_GLOCK();
+                }
+		afs_globalVp = NULL;
+		AFS_GUNLOCK();
+	        vflush(mp, NULLVP, FORCECLOSE/*0*/);
+		AFS_GLOCK();
 		afs_globalVFS = 0;
 		afs_shutdown();
 	    } else {
@@ -234,7 +243,7 @@ afs_vget(mp, lfl, vp)
      int lfl;
 {
     int error;
-    printf("vget called. help!\n");
+    //printf("vget called. help!\n");
     if (vp->v_usecount < 0) {
 	vprint("bad usecount", vp);
 	panic("afs_vget");

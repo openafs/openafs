@@ -160,6 +160,7 @@
 #define SYS_NAME_ID_alpha_linux_2       2000
 #define SYS_NAME_ID_alpha_linux_22      2001
 #define SYS_NAME_ID_alpha_linux_24      2002
+#define SYS_NAME_ID_alpha_linux_26      2003
 
 #define SYS_NAME_ID_i386_fbsd_42        2100
 #define SYS_NAME_ID_i386_fbsd_43        2101

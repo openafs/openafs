@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.8 2005/03/16 04:49:49 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.13 2005/04/04 04:27:01 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -48,13 +48,13 @@ RCSID
 #include "sys/debug.h"
 #endif
 #include "afsint.h"
-#ifdef	AFS_ALPHA_ENV
+#ifdef	AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -2194,30 +2194,13 @@ rxi_Alloc(register size_t size)
 {
     register char *p;
 
-#if defined(AFS_AIX41_ENV) && defined(KERNEL)
-    /* Grab the AFS filesystem lock. See afs/osi.h for the lock
-     * implementation.
-     */
-    int glockOwner = ISAFS_GLOCK();
-    if (!glockOwner)
-	AFS_GLOCK();
-#endif
     MUTEX_ENTER(&rx_stats_mutex);
     rxi_Alloccnt++;
     rxi_Allocsize += size;
     MUTEX_EXIT(&rx_stats_mutex);
-#if	(defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)) && !defined(AFS_HPUX100_ENV) && defined(KERNEL)
-    if (size > AFS_SMALLOCSIZ) {
-	p = (char *)osi_AllocMediumSpace(size);
-    } else
-	p = (char *)osi_AllocSmall(size, 1);
-#if defined(AFS_AIX41_ENV) && defined(KERNEL)
-    if (!glockOwner)
-	AFS_GUNLOCK();
-#endif
-#else
+
     p = (char *)osi_Alloc(size);
-#endif
+
     if (!p)
 	osi_Panic("rxi_Alloc error");
     memset(p, 0, size);
@@ -2227,30 +2210,12 @@ rxi_Alloc(register size_t size)
 void
 rxi_Free(void *addr, register size_t size)
 {
-#if defined(AFS_AIX41_ENV) && defined(KERNEL)
-    /* Grab the AFS filesystem lock. See afs/osi.h for the lock
-     * implementation.
-     */
-    int glockOwner = ISAFS_GLOCK();
-    if (!glockOwner)
-	AFS_GLOCK();
-#endif
     MUTEX_ENTER(&rx_stats_mutex);
     rxi_Alloccnt--;
     rxi_Allocsize -= size;
     MUTEX_EXIT(&rx_stats_mutex);
-#if	(defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)) && !defined(AFS_HPUX100_ENV) && defined(KERNEL)
-    if (size > AFS_SMALLOCSIZ)
-	osi_FreeMediumSpace(addr);
-    else
-	osi_FreeSmall(addr);
-#if defined(AFS_AIX41_ENV) && defined(KERNEL)
-    if (!glockOwner)
-	AFS_GUNLOCK();
-#endif
-#else
+
     osi_Free(addr, size);
-#endif
 }
 
 /* Find the peer process represented by the supplied (host,port)
@@ -5558,20 +5523,10 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 {
     struct clock thisRtt, *rttp = &thisRtt;
 
-#if defined(AFS_ALPHA_LINUX22_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
-    /* making year 2038 bugs to get this running now - stroucki */
-    struct timeval temptime;
-#endif
     register int rtt_timeout;
 
-#if defined(AFS_ALPHA_LINUX20_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
-    /* yet again. This was the worst Heisenbug of the port - stroucki */
-    clock_GetTime(&temptime);
-    rttp->sec = (afs_int32) temptime.tv_sec;
-    rttp->usec = (afs_int32) temptime.tv_usec;
-#else
     clock_GetTime(rttp);
-#endif
+
     if (clock_Lt(rttp, sentp)) {
 	clock_Zero(rttp);
 	return;			/* somebody set the clock back, don't count this time. */

@@ -216,43 +216,33 @@ re_comp(sp)
     }
 }
 
-/* 
- * match the argument string against the compiled re
- */
-int
-re_exec(p1)
-     register char *p1;
+static int
+cclass(set, c, af)
+     register char *set, c;
+     int af;
 {
-    register char *p2 = expbuf;
-    register int c;
-    int rv;
+    register int n;
 
-    for (c = 0; c < NBRA; c++) {
-	braslist[c] = 0;
-	braelist[c] = 0;
-    }
-    if (circf)
-	return ((advance(p1, p2)));
-    /*
-     * fast check for first character
-     */
-    if (*p2 == CCHR) {
-	c = p2[1];
-	do {
-	    if (*p1 != c)
-		continue;
-	    if (rv = advance(p1, p2))
-		return (rv);
-	} while (*p1++);
+    if (c == 0)
 	return (0);
-    }
-    /*
-     * regular algorithm
-     */
-    do
-	if (rv = advance(p1, p2))
-	    return (rv);
-    while (*p1++);
+    n = *set++;
+    while (--n)
+	if (*set++ == c)
+	    return (af);
+    return (!af);
+}
+
+static
+backref(i, lp)
+     register int i;
+     register char *lp;
+{
+    register char *bp;
+
+    bp = braslist[i];
+    while (*bp++ == *lp++)
+	if (bp >= braelist[i])
+	    return (1);
     return (0);
 }
 
@@ -364,32 +354,43 @@ advance(lp, ep)
 	}
 }
 
-static
-backref(i, lp)
-     register int i;
-     register char *lp;
+/* 
+ * match the argument string against the compiled re
+ */
+int
+re_exec(p1)
+     register char *p1;
 {
-    register char *bp;
+    register char *p2 = expbuf;
+    register int c;
+    int rv;
 
-    bp = braslist[i];
-    while (*bp++ == *lp++)
-	if (bp >= braelist[i])
-	    return (1);
+    for (c = 0; c < NBRA; c++) {
+	braslist[c] = 0;
+	braelist[c] = 0;
+    }
+    if (circf)
+	return ((advance(p1, p2)));
+    /*
+     * fast check for first character
+     */
+    if (*p2 == CCHR) {
+	c = p2[1];
+	do {
+	    if (*p1 != c)
+		continue;
+	    if (rv = advance(p1, p2))
+		return (rv);
+	} while (*p1++);
+	return (0);
+    }
+    /*
+     * regular algorithm
+     */
+    do
+	if (rv = advance(p1, p2))
+	    return (rv);
+    while (*p1++);
     return (0);
 }
 
-static int
-cclass(set, c, af)
-     register char *set, c;
-     int af;
-{
-    register int n;
-
-    if (c == 0)
-	return (0);
-    n = *set++;
-    while (--n)
-	if (*set++ == c)
-	    return (af);
-    return (!af);
-}

@@ -4,7 +4,7 @@
 #
 # Copyright:    Copyright (c) 2003 
 #
-# Header:       $Header: /cvs/openafs/src/packaging/HP-UX/psf-1.2.9-transarc-paths-11.00,v 1.1 2003/06/19 22:03:29 shadow Exp $
+# Header:       $Header: /cvs/openafs/src/packaging/HP-UX/Attic/psf-1.2.9-transarc-paths-11.00,v 1.1 2003/06/19 22:03:29 shadow Exp $
 #
 # Description:  This PSF contains a valid product definition which includes
 #               all attributes for OpenAFS installation via software Distributor

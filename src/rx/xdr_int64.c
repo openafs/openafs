@@ -7,7 +7,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_int64.c,v 1.9.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_int64.c,v 1.9.2.2 2005/04/03 18:15:51 shadow Exp $");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV
@@ -20,11 +20,6 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
-#if defined(KERNEL) && !defined(UKERNEL)
-#ifdef        AFS_DEC_ENV
-#include <afs/longc_procs.h>
-#endif
-#endif
 
 #ifdef AFS_64BIT_ENV
 /*

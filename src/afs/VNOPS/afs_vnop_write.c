@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.3 2005/01/31 03:49:15 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.4 2005/04/03 18:15:40 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -159,16 +159,12 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      */
     avc->m.Date = startDate;
 
-#if	defined(AFS_HPUX_ENV) || defined(AFS_GFS_ENV)
+#if	defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX101_ENV)
     if ((totalLength + filePos) >> 9 >
 	(p_rlimit(u.u_procp))[RLIMIT_FSIZE].rlim_cur) {
 #else
-#ifdef	AFS_HPUX_ENV
     if ((totalLength + filePos) >> 9 > u.u_rlimit[RLIMIT_FSIZE].rlim_cur) {
-#else
-    if (totalLength + filePos > u.u_rlimit[RLIMIT_FSIZE].rlim_cur) {
-#endif
 #endif
 	if (!noLock)
 	    ReleaseWriteLock(&avc->lock);
@@ -327,11 +323,6 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
     osi_FreeSmallSpace(tvec);
-#ifdef AFS_DEC_ENV
-    /* next, on GFS systems, we update g_size so that lseek's relative to EOF will
-     * work.  GFS is truly a poorly-designed interface!  */
-    afs_gfshack((struct gnode *)avc);
-#endif
     error = afs_CheckCode(error, &treq, 6);
     return error;
 }
@@ -410,16 +401,12 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
      */
     avc->m.Date = startDate;
 
-#if	defined(AFS_HPUX_ENV) || defined(AFS_GFS_ENV)
+#if	defined(AFS_HPUX_ENV)
 #if 	defined(AFS_HPUX101_ENV)
     if ((totalLength + filePos) >> 9 >
 	p_rlimit(u.u_procp)[RLIMIT_FSIZE].rlim_cur) {
 #else
-#ifdef	AFS_HPUX_ENV
     if ((totalLength + filePos) >> 9 > u.u_rlimit[RLIMIT_FSIZE].rlim_cur) {
-#else
-    if (totalLength + filePos > u.u_rlimit[RLIMIT_FSIZE].rlim_cur) {
-#endif
 #endif
 	if (!noLock)
 	    ReleaseWriteLock(&avc->lock);
@@ -664,11 +651,6 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (!noLock)
 	ReleaseWriteLock(&avc->lock);
     osi_FreeSmallSpace(tvec);
-#ifdef AFS_DEC_ENV
-    /* next, on GFS systems, we update g_size so that lseek's relative to EOF will
-     * work.  GFS is truly a poorly-designed interface!  */
-    afs_gfshack((struct gnode *)avc);
-#endif
 #ifndef	AFS_VM_RDWR_ENV
     /*
      * If write is implemented via VM, afs_fsync() is called from the high-level
@@ -770,11 +752,7 @@ afs_closex(register struct file *afd)
 	    if (flags)
 		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
 			    1 /*onlymine */ );
-#ifdef	AFS_DEC_ENV
-	    grele((struct gnode *)tvc);
-#else
 	    AFS_RELE(AFSTOV(tvc));
-#endif
 	    closeDone = 1;
 	}
     }
@@ -807,13 +785,9 @@ afs_close(OSI_VC_ARG(avc), aflags, lastclose,
      struct flid *flp;
 #endif
 #endif
-#elif	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
 afs_close(OSI_VC_ARG(avc), aflags, count, offset, acred)
      offset_t offset;
-#else
-afs_close(OSI_VC_ARG(avc), aflags, count, acred)
-#endif
      int count;
 #else
 afs_close(OSI_VC_ARG(avc), aflags, acred)
@@ -853,7 +827,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
 	return 0;
     }
-#elif	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
 	afs_PutFakeStat(&fakestat);
@@ -880,7 +854,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     afs_chkpgoob(&avc->v, btoc(avc->m.Length));
 #else /* AFS_SGI_ENV */
     if (avc->flockCount) {	/* Release Lock */
-#if	defined(AFS_OSF_ENV) || defined(AFS_SUN_ENV)
+#if	defined(AFS_OSF_ENV) 
 	HandleFlock(avc, LOCK_UN, &treq, u.u_procp->p_pid, 1 /*onlymine */ );
 #else
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );

@@ -30,7 +30,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8.2.1 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8.2.2 2005/04/03 18:15:51 shadow Exp $");
 
 #if !defined(NeXT)
 
@@ -57,11 +57,6 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
-#if defined(KERNEL) && !defined(UKERNEL)
-#ifdef        AFS_DEC_ENV
-#include <afs/longc_procs.h>
-#endif
-#endif
 
 #define LASTUNSIGNED	((u_int)0-1)
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17 2003/12/08 01:45:29 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.1 2005/04/03 18:15:45 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -827,11 +827,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 #endif
 }
 
-#ifdef AFS_DEC_ENV
-#define HOSTADDR(sockaddr) (sockaddr)->sin_addr.S_un.S_addr
-#else
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
-#endif
 
 /* dumpPass
  *	Go through the list of volumes to dump, dumping each one. The action

@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.3 2005/01/31 04:20:00 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.5 2005/03/27 20:22:03 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -279,6 +279,7 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 #else
     char *stackptr;
 #endif
+    char *stackmemory;
 
 #if defined(AFS_LWP_MINSTACKSIZE)
     /*
@@ -346,20 +347,21 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
 	    stackptr = reserveFromStack(lwp_MaxStackSize);
 	}
 	stackptr -= stacksize;
+	stackmemory = stackptr;
 #else
-	if ((stackptr = (char *)malloc(stacksize + 7)) == NULL) {
+	if ((stackmemory = (char *)malloc(stacksize + 7)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
 	/* Round stack pointer to byte boundary */
-	stackptr = (char *)(8 * (((long)stackptr + 7) / 8));
+	stackptr = (char *)(8 * (((long)stackmemory + 7) / 8));
 #endif
 	if (priority < 0 || priority >= MAX_PRIORITIES) {
 	    Set_LWP_RC();
 	    return LWP_EBADPRI;
 	}
 	Initialize_Stack(stackptr, stacksize);
-	Initialize_PCB(temp, priority, stackptr, stacksize, ep, parm, name);
+	Initialize_PCB(temp, priority, stackmemory, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
 	if (PRE_Block != 0)
@@ -835,7 +837,6 @@ Dump_One_Process(PROCESS pid)
 	       pid->stacksize, pid->stack);
 	printf("***LWP: HWM stack usage: ");
 	printf("%d\n", Stack_Used(pid->stack, pid->stacksize));
-	free(pid->stack);
     }
     printf("***LWP: Current Stack Pointer: 0x%x\n", pid->context.topstack);
     if (pid->eventcnt > 0) {
@@ -999,7 +1000,9 @@ Free_PCB(PROCESS pid)
 	Debug(0,
 	      ("HWM stack usage: %d, [PCB at 0x%x]",
 	       Stack_Used(pid->stack, pid->stacksize), pid));
+#ifndef AFS_AIX32_ENV
 	free(pid->stack);
+#endif
     }
     if (pid->eventlist != NULL)
 	free(pid->eventlist);

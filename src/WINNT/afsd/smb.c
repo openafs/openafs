@@ -161,8 +161,12 @@ extern HANDLE WaitToTerminate;
  */
 time_t smb_localZero = 0;
 
+#define USE_NUMERIC_TIME_CONV 1
+
+#ifndef USE_NUMERIC_TIME_CONV
 /* Time difference for converting to kludge-GMT */
-int smb_NowTZ;
+afs_uint32 smb_NowTZ;
+#endif /* USE_NUMERIC_TIME_CONV */
 
 char *smb_localNamep = NULL;
 
@@ -543,7 +547,7 @@ void GetTimeZoneInfo(BOOL *pDST, LONG *pDstBias, LONG *pBias)
 #endif /* DJGPP */
  
 
-void CompensateForSmbClientLastWriteTimeBugs(long *pLastWriteTime)
+void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *pLastWriteTime)
 {
     BOOL dst;       /* Will be TRUE if observing DST */
     LONG dstBias;   /* Offset from local time if observing DST */
@@ -579,6 +583,7 @@ void CompensateForSmbClientLastWriteTimeBugs(long *pLastWriteTime)
         *pLastWriteTime -= (-bias * 60);        /* Convert bias to seconds */
 }	        	
 
+#ifndef USE_NUMERIC_TIME_CONV
 /*
  * Calculate the difference (in seconds) between local time and GMT.
  * This enables us to convert file times to kludge-GMT.
@@ -595,21 +600,26 @@ smb_CalculateNowTZ()
     local_tm = *(localtime(&t));
 
     days = local_tm.tm_yday - gmt_tm.tm_yday;
-    hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour
-#ifdef COMMENT
-        /* There is a problem with DST immediately after the time change
-        * which may continue to exist until the machine is rebooted
-         */
-        - (local_tm.tm_isdst ? 1 : 0)
-#endif /* COMMENT */
-            ;
+    hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour;
     minutes = 60 * hours + local_tm.tm_min - gmt_tm.tm_min; 
     seconds = 60 * minutes + local_tm.tm_sec - gmt_tm.tm_sec;
 
     smb_NowTZ = seconds;
 }
+#endif /* USE_NUMERIC_TIME_CONV */
 
 #ifndef DJGPP
+#ifdef USE_NUMERIC_TIME_CONV
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = Int32x32To64(unixTime, 10000000) + 116444736000000000;
+    largeTimep->dwLowDateTime = (DWORD)(ll & 0xFFFFFFFF);
+    largeTimep->dwHighDateTime = (DWORD)(ll >> 32);
+}
+#else
 void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
     struct tm *ltp;
@@ -649,6 +659,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 
     SystemTimeToFileTime(&stm, largeTimep);
 }
+#endif /* USE_NUMERIC_TIME_CONV */
 #else /* DJGPP */
 void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
@@ -672,6 +683,22 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 #endif /* !DJGPP */
 
 #ifndef DJGPP
+#ifdef USE_NUMERIC_TIME_CONV
+void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = largeTimep->dwHighDateTime;
+    ll <<= 32;
+    ll += largeTimep->dwLowDateTime;
+
+    ll -= 116444736000000000;
+    ll /= 10000000;
+
+    *unixTimep = (DWORD)ll;
+}
+#else /* USE_NUMERIC_TIME_CONV */
 void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
     SYSTEMTIME stm;
@@ -694,6 +721,7 @@ void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
     *unixTimep = mktime(&lt);
     _timezone = save_timezone;
 }       
+#endif /* USE_NUMERIC_TIME_CONV */
 #else /* DJGPP */
 void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
@@ -716,7 +744,7 @@ void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 }       
 #endif /* !DJGPP */
 
-void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime)
+void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
 {
     struct tm *ltp;
     int dosDate;
@@ -739,10 +767,10 @@ void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime)
 
     dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
     dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
-    *dosTimep = (dosDate<<16) | dosTime;
+    *searchTimep = (dosDate<<16) | dosTime;
 }	
 
-void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
+void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
 {
     unsigned short dosDate;
     unsigned short dosTime;
@@ -762,12 +790,12 @@ void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
     *unixTimep = mktime(&localTm);
 }
 
-void smb_DosUTimeFromUnixTime(time_t *dosUTimep, time_t unixTime)
+void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime)
 {
     *dosUTimep = unixTime - smb_localZero;
 }
 
-void smb_UnixTimeFromDosUTime(time_t *unixTimep, time_t dosTime)
+void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
 {
 #ifndef DJGPP
     *unixTimep = dosTime + smb_localZero;
@@ -1841,7 +1869,8 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
     tbp = GetPacket();
     memcpy(tbp, pkt, sizeof(smb_packet_t));
     tbp->wctp = tbp->data + ((unsigned int)pkt->wctp - (unsigned int)pkt->data);
-    smb_HoldVC(tbp->vcp);
+	if (tbp->vcp)
+		smb_HoldVC(tbp->vcp);
     return tbp;
 }
 
@@ -2711,7 +2740,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     char protocol_array[10][1024];  /* protocol signature of the client */
     int caps;                       /* capabilities */
     time_t unixTime;
-    time_t dosTime;
+    afs_uint32 dosTime;
     TIME_ZONE_INFORMATION tzi;
 
     osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
@@ -2951,8 +2980,9 @@ void smb_Daemon(void *parmp)
             myTime.tm_sec = 0;
             smb_localZero = mktime(&myTime);
 
+#ifndef USE_NUMERIC_TIME_CONV
             smb_CalculateNowTZ();
-
+#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE
             if ( smb_localZero != old_localZero )
                 cm_noteLocalMountPointChange();
@@ -3303,7 +3333,7 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
     long code = 0;
     cm_scache_t *scp;
     char *dptr;
-    time_t dosTime;
+    afs_uint32 dosTime;
     u_short shortTemp;
     char attr;
     smb_dirListPatch_t *patchp;
@@ -3990,7 +4020,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     unsigned short attribute;
     cm_attr_t attr;
     cm_scache_t *newScp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     cm_user_t *userp;
     int caseFold;
     char *tidPathp;
@@ -4100,7 +4130,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     long code = 0;
     cm_scache_t *rootScp;
     cm_scache_t *newScp, *dscp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int attrs;
     cm_user_t *userp;
     int caseFold;
@@ -4282,7 +4312,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     long code = 0;
     cm_user_t *userp;
     cm_scache_t *scp;
-    time_t dosTime;
+    afs_uint32 dosTime;
     int caseFold;
     cm_space_t *spacep;
     char *tidPathp;
@@ -5207,7 +5237,7 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned short fid;
     smb_fid_t *fidp;
     cm_user_t *userp;
-    long dosTime;
+    afs_uint32 dosTime;
     long code = 0;
     cm_req_t req;
 
@@ -6193,7 +6223,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int attributes;
     char *lastNamep;
     int caseFold;
-    long dosTime;
+    afs_uint32 dosTime;
     char *tidPathp;
     cm_req_t req;
 
@@ -6518,11 +6548,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
                                                  rwcp);
             else {
-                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-                osi_Log4(smb_logp,"Dispatch %s vcp[%x] lana[%d] lsn[%d]",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
+                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%x lana %d lsn %d",(int)vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp 0x%x lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_LogEvent("AFS Dispatch return",NULL,"Code[%d]",(code==0)?0:code-CM_ERROR_BASE);
-                osi_Log1(smb_logp,"Dispatch return  code[%d]",(code==0)?0:code-CM_ERROR_BASE);
+                osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",(code==0)?0:code-CM_ERROR_BASE);
+                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%x lana %d lsn %d",(code==0)?0:code-CM_ERROR_BASE,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
@@ -6972,7 +7002,7 @@ void smb_Server(VOID *parmp)
         if (idx_NCB < 0 || idx_NCB > (sizeof(NCBs) / sizeof(NCBs[0])))
         {
             /* this is fatal - log as much as possible */
-            osi_Log1(smb_logp, "Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_Log1(smb_logp, "Fatal: idx_NCB %d out of range.\n", idx_NCB);
             osi_assert(0);
         }
 
@@ -7001,13 +7031,13 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal buffer address", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x08:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session number out of range", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session number out of range", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x09:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no resource available", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x0a:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session closed", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session closed", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x0b:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command cancelled", ncbp->ncb_lsn, idx_session);
@@ -7022,10 +7052,10 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no deletions, name has active lsn %d sessions", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x11:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: local lsn %d session table full", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: local session table full", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x12:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: remote lsn %d session table full", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: remote session table full", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x13:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal name number", ncbp->ncb_lsn, idx_session);
@@ -7043,7 +7073,7 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name deleted", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x18:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session ended abnormally", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session ended abnormally", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x19:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name conflict detected", ncbp->ncb_lsn, idx_session);
@@ -7107,9 +7137,8 @@ void smb_Server(VOID *parmp)
             break;
 
         case NRC_PENDING:
-            /* Can this happen? Or is it just my
-             * UNIX paranoia? 
-             */
+            /* Can this happen? Or is it just my UNIX paranoia? */
+            osi_Log2(smb_logp, "NCBRECV pending lsn %d session %d", ncbp->ncb_lsn, idx_session);
             continue;
 
         case NRC_SCLOSED:
@@ -7127,15 +7156,17 @@ void smb_Server(VOID *parmp)
              * also cleanup after dead vcp 
              */
             if (vcp) {
-                if (dead_vcp)
-                    osi_Log1(smb_logp,
-                             "dead_vcp already set, %x",
-                             dead_vcp);
+                if (dead_vcp == vcp)
+                    osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
                 else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-                    osi_Log2(smb_logp,
-                             "setting dead_vcp %x, user struct %x",
+                    osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
                     smb_HoldVC(vcp);
+                    if (dead_vcp) {
+                        smb_ReleaseVC(dead_vcp);
+                        osi_Log1(smb_logp,
+                                  "Previous dead_vcp %x", dead_vcp);
+                    }
                     dead_vcp = vcp;
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
                 }
@@ -7551,7 +7582,6 @@ void smb_Listener(void *parmp)
         vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
         vcp->flags |= flags;
         strcpy(vcp->rname, rname);
-        smb_ReleaseVC(vcp);
 
         /* Allocate slot in session arrays */
         /* Re-use dead session if possible, otherwise add one more */
@@ -7564,43 +7594,82 @@ void smb_Listener(void *parmp)
             }
         }
 
-        /* assert that we do not exceed the maximum number of sessions or NCBs.
-         * we should probably want to wait for a session to be freed in case
-         * we run out.
-         */
+        if (i >= Sessionmax - 1  || numNCBs >= NCBmax - 1) {
+            unsigned long code = CM_ERROR_ALLBUSY;
+            smb_packet_t * outp = GetPacket();
+            unsigned char *outWctp;
+            smb_t *smbp;
+            
+            outp->ncbp = ncbp;
 
-        osi_assert(i < Sessionmax - 1);
-        osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
-
-        LSNs[i] = ncbp->ncb_lsn;
-        lanas[i] = ncbp->ncb_lana_num;
-		
-        if (i == numSessions) {
-            /* Add new NCB for new session */
-            char eventName[MAX_PATH];
-
-            osi_Log1(smb_logp, "smb_Listener creating new session %d", i);
-
-            InitNCBslot(numNCBs);
-            numNCBs++;
-            thrd_SetEvent(NCBavails[0]);
-            thrd_SetEvent(NCBevents[0]);
-            for (j = 0; j < smb_NumServerThreads; j++)
-                thrd_SetEvent(NCBreturns[j][0]);
-            /* Also add new session event */
-            sprintf(eventName, "SessionEvents[%d]", i);
-            SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
-            if ( GetLastError() == ERROR_ALREADY_EXISTS )
-                osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
-            numSessions++;
-            osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
-            thrd_SetEvent(SessionEvents[0]);
+            if (vcp->flags & SMB_VCFLAG_STATUS32) {
+                unsigned long NTStatus;
+                smb_MapNTError(code, &NTStatus);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                smbp->rcls = (unsigned char) (NTStatus & 0xff);
+                smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
+                smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
+                smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
+                smbp->flg2 |= SMB_FLAGS2_32BIT_STATUS;
+            } else {
+                unsigned short errCode;
+                unsigned char errClass;
+                smb_MapCoreError(code, vcp, &errCode, &errClass);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                smbp->errLow = (unsigned char) (errCode & 0xff);
+                smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
+                smbp->rcls = errClass;
+            }
+            smb_SendPacket(vcp, outp);
+            smb_FreePacket(outp);
         } else {
-            thrd_SetEvent(SessionEvents[i]);
+            /* assert that we do not exceed the maximum number of sessions or NCBs.
+            * we should probably want to wait for a session to be freed in case
+            * we run out.
+            */
+            osi_assert(i < Sessionmax - 1);
+            osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
+
+            LSNs[i] = ncbp->ncb_lsn;
+            lanas[i] = ncbp->ncb_lana_num;
+		
+            if (i == numSessions) {
+                /* Add new NCB for new session */
+                char eventName[MAX_PATH];
+
+                osi_Log1(smb_logp, "smb_Listener creating new session %d", i);
+
+                InitNCBslot(numNCBs);
+                numNCBs++;
+                thrd_SetEvent(NCBavails[0]);
+                thrd_SetEvent(NCBevents[0]);
+                for (j = 0; j < smb_NumServerThreads; j++)
+                    thrd_SetEvent(NCBreturns[j][0]);
+                /* Also add new session event */
+                sprintf(eventName, "SessionEvents[%d]", i);
+                SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+                if ( GetLastError() == ERROR_ALREADY_EXISTS )
+                    osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
+                numSessions++;
+                osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
+                thrd_SetEvent(SessionEvents[0]);
+            } else {
+                thrd_SetEvent(SessionEvents[i]);
+            }
         }
+        
+        smb_ReleaseVC(vcp);
+
         /* unlock */
         lock_ReleaseMutex(&smb_ListenerLock);
-
     }	/* dispatch while loop */
 }
 
@@ -7808,9 +7877,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     myTime.tm_sec = 0;
     smb_localZero = mktime(&myTime);
 
+#ifndef USE_NUMERIC_TIME_CONV
     /* Initialize kludge-GMT */
     smb_CalculateNowTZ();
-
+#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE_CLIENT
     /* Make sure the root.afs volume has the correct time */
     cm_noteLocalMountPointChange();
@@ -8075,13 +8145,15 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
+                    char message[256];
+                    sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                                       nts, ntsEx);
+                    OutputDebugString(message);
                     osi_Log2(smb_logp,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                               nts, ntsEx);
-                    OutputDebugString("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                                       nts, ntsEx);
                 } else {
-                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
                     OutputDebugString("MsV1_0SetProcessOption success");
+                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */
 
@@ -8090,18 +8162,23 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                 smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
             } else {
                 afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
+
+                /* something went wrong. We report the error and revert back to no authentication
+                because we can't perform any auth requests without a successful lsa handle
+                or sec package id. */
+                afsi_log("Reverting to NO SMB AUTH");
+                smb_authType = SMB_AUTH_NONE;
             }
         } else {
             afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
-        }
 
-        if (nts != STATUS_SUCCESS) {
             /* something went wrong. We report the error and revert back to no authentication
             because we can't perform any auth requests without a successful lsa handle
             or sec package id. */
             afsi_log("Reverting to NO SMB AUTH");
             smb_authType = SMB_AUTH_NONE;
-        } 
+        }
+
 #ifdef COMMENT
         /* Don't fallback to SMB_AUTH_NTLM.  Apparently, allowing SPNEGO to be used each
          * time prevents the failure of authentication when logged into Windows with an

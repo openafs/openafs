@@ -412,7 +412,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	  
     if (cm_freelanceEnabled && special) {
         osi_Log0(afsd_logp,"cm_getSCache Freelance and special");
-        if (fidp->vnode > 1) {
+        if (fidp->vnode > 1 && fidp->vnode <= cm_localMountPoints + 2) {
 	    lock_ObtainMutex(&cm_Freelance_Lock);
             mp =(cm_localMountPoints+fidp->vnode-2)->mountPointStringp;
             lock_ReleaseMutex(&cm_Freelance_Lock);
@@ -432,7 +432,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         cm_data.hashTablep[hash]=scp;
         scp->flags |= CM_SCACHEFLAG_INHASH;
         scp->refCount = 1;
-        scp->fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
+        if (fidp->vnode > 1 && fidp->vnode <= cm_localMountPoints + 2)
+            scp->fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
+        else 
+            scp->fileType = CM_SCACHETYPE_INVALID;
 
         lock_ObtainMutex(&cm_Freelance_Lock);
         scp->length.LowPart = strlen(mp)+4;

@@ -26,9 +26,7 @@ AC_ARG_WITH(afs-sysname,
 [  --with-afs-sysname=sys    use sys for the afs sysname]
 )
 AC_ARG_ENABLE( obsolete,
-[  --enable-obsolete 			enable obsolete portions of AFS (mpp, ntp and package)],, enable_obsolete="no")
-AC_ARG_ENABLE( insecure,
-[  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="no")
+[  --enable-obsolete 			enable obsolete portions of AFS (mpp and package)],, enable_obsolete="no")
 AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
 AC_ARG_ENABLE( pam,
@@ -469,7 +467,7 @@ else
 			AFS_SYSNAME="ia64_linuxXX"
 			;;
 		powerpc-*-linux*)
-			AFS_SYSNAME="ppc_linuxXX"
+			AFS_SYSNAME="`/bin/arch`_linuxXX"
 			;;
 		powerpc64-*-linux*)
 			AFS_SYSNAME="ppc64_linuxXX"
@@ -895,11 +893,6 @@ if test "$enable_obsolete" = "yes"; then
 	WITH_OBSOLETE=YES
 fi
 
-WITH_INSECURE=NO
-if test "$enable_insecure" = "yes"; then
-	WITH_INSECURE=YES
-fi
-
 if test "x$with_bsd_kernel_headers" != "x"; then
 	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
 else
@@ -1080,7 +1073,6 @@ AC_SUBST(TOP_INCDIR)
 AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
-AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
 
@@ -2118,7 +2110,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
 AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-default -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
 [
 AC_TRY_COMPILE(
@@ -2230,6 +2222,7 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
@@ -2238,11 +2231,28 @@ case $AFS_SYSNAME in
 		;;
 
 	alpha_linux_24)
+		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	alpha_linux_26)
+		CCOBJ="${CC} -fPIC"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
@@ -2419,8 +2429,9 @@ case $AFS_SYSNAME in
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="-lncurses"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -fPIC"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;

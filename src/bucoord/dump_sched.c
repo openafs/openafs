@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dump_sched.c,v 1.7.2.1 2004/10/18 07:11:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dump_sched.c,v 1.7.2.2 2005/04/03 18:48:29 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -198,7 +198,68 @@ bc_DeleteDumpCmd(as, arock)
     return code;
 }
 
+/* ListDumpSchedule
+ *	Print out the dump schedule tree whose root is adump. Alevel should
+ *	be passed in as 0, and is incremented for the recursive calls
+ * entry:
+ *	adump - ptr to the root node of a dump schedule
+ *	alevel - 0
+ */
 
+static int
+ListDumpSchedule(register struct bc_dumpSchedule *adump, int alevel)
+{
+    register int i;
+    register struct bc_dumpSchedule *child;
+
+    char *tailCompPtr();
+
+    /* sanity check for loops */
+    if (alevel > 100) {
+	printf("backup: recursing listing dump schedule\n");
+	return -1;
+    }
+
+    /* move to appropriate indentation level */
+    for (i = 0; i < alevel; i++)
+	printf("    ");
+
+    /* name is a pathname style name, determine trailing name and only print
+     * it
+     */
+
+    printf("/%s ", tailCompPtr(adump->name));
+
+
+    /* list expiration time */
+    switch (adump->expType) {
+    case BC_ABS_EXPDATE:
+	/* absolute expiration date. Never expires if date is 0 */
+	if (adump->expDate) {
+            time_t t = adump->expDate;
+	    printf("expires at %.24s", cTIME(&t));
+	}
+	break;
+
+    case BC_REL_EXPDATE:
+	{
+	    struct ktime_date kt;
+
+	    /* expiration date relative to the time that the dump is done */
+	    LongTo_ktimeRelDate(adump->expDate, &kt);
+	    printf(" expires in %s", RelDatetoString(&kt));
+	}
+	break;
+
+    default:
+	break;
+    }
+    printf("\n");
+    for (child = adump->firstChild; child; child = child->nextSibling)
+	ListDumpSchedule(child, alevel + 1);
+
+    return 0;
+}
 
 /* bc_ListDumpScheduleCmd
  *      list the (internally held) dump schedule tree
@@ -207,9 +268,7 @@ bc_DeleteDumpCmd(as, arock)
  */
 
 afs_int32
-bc_ListDumpScheduleCmd(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+bc_ListDumpScheduleCmd(struct cmd_syndesc *as, char *arock)
 {
     /* no parms */
     afs_int32 code;
@@ -541,67 +600,3 @@ bc_UpdateDumpSchedule()
     return (code);
 }
 
-/* ListDumpSchedule
- *	Print out the dump schedule tree whose root is adump. Alevel should
- *	be passed in as 0, and is incremented for the recursive calls
- * entry:
- *	adump - ptr to the root node of a dump schedule
- *	alevel - 0
- */
-
-static
-ListDumpSchedule(adump, alevel)
-     int alevel;
-     register struct bc_dumpSchedule *adump;
-{
-    register int i;
-    register struct bc_dumpSchedule *child;
-
-    char *tailCompPtr();
-
-    /* sanity check for loops */
-    if (alevel > 100) {
-	printf("backup: recursing listing dump schedule\n");
-	return -1;
-    }
-
-    /* move to appropriate indentation level */
-    for (i = 0; i < alevel; i++)
-	printf("    ");
-
-    /* name is a pathname style name, determine trailing name and only print
-     * it
-     */
-
-    printf("/%s ", tailCompPtr(adump->name));
-
-
-    /* list expiration time */
-    switch (adump->expType) {
-    case BC_ABS_EXPDATE:
-	/* absolute expiration date. Never expires if date is 0 */
-	if (adump->expDate) {
-            time_t t = adump->expDate;
-	    printf("expires at %.24s", cTIME(&t));
-	}
-	break;
-
-    case BC_REL_EXPDATE:
-	{
-	    struct ktime_date kt;
-
-	    /* expiration date relative to the time that the dump is done */
-	    LongTo_ktimeRelDate(adump->expDate, &kt);
-	    printf(" expires in %s", RelDatetoString(&kt));
-	}
-	break;
-
-    default:
-	break;
-    }
-    printf("\n");
-    for (child = adump->firstChild; child; child = child->nextSibling)
-	ListDumpSchedule(child, alevel + 1);
-
-    return 0;
-}

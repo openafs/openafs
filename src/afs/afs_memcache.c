@@ -11,19 +11,19 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15.2.2 2005/02/21 01:15:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15.2.3 2005/04/03 18:15:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
 #include "rpc/types.h"
 #endif
-#ifdef	AFS_ALPHA_ENV
+#ifdef	AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 

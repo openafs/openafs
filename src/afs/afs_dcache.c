@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.9 2005/03/20 20:09:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.10 2005/04/03 18:15:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -625,9 +625,7 @@ afs_GetDownD(int anumber, int *aneedSpace)
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, 3,
 			       ICL_TYPE_INT32, tdc->index, ICL_TYPE_OFFSET,
 			       ICL_HANDLE_OFFSET(tchunkoffset));
-#ifndef	AFS_DEC_ENV
 		    AFS_STATCNT(afs_gget);
-#endif
 		    afs_HashOutDCache(tdc);
 		    if (tdc->f.chunkBytes != 0) {
 			discard = 1;
@@ -682,9 +680,7 @@ afs_HashOutDCache(struct dcache *adc)
 {
     int i, us;
 
-#ifndef	AFS_DEC_ENV
     AFS_STATCNT(afs_glink);
-#endif
     /* we know this guy's in the LRUQ.  We'll move dude into DCQ below */
     DZap(adc);
     /* if this guy is in the hash table, pull him out */
@@ -1857,7 +1853,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 #endif /* AFS_SGI_ENV */
 	if (AFS_CHUNKTOBASE(chunk) + adjustsize >= avc->m.Length &&
 #else /* defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV) */
-#if	defined(AFS_SUN_ENV)  || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN5_ENV)  || defined(AFS_OSF_ENV)
 	if ((doAdjustSize || (AFS_CHUNKTOBASE(chunk) >= avc->m.Length)) &&
 #else
 	if (AFS_CHUNKTOBASE(chunk) >= avc->m.Length &&
@@ -3025,11 +3021,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	dput(filevp);
 #else
 	tdc->f.inode = afs_vnodeToInumber(filevp);
-#ifdef AFS_DEC_ENV
-	grele(filevp);
-#else
 	AFS_RELE(filevp);
-#endif
 #endif /* AFS_LINUX22_ENV */
     } else {
 	tdc->f.inode = ainode;

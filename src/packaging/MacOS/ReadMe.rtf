@@ -4,10 +4,10 @@
 \margl1440\margr1440\vieww9000\viewh9000\viewkind0
 \pard\tx1440\tx2880\tx4320\tx5760\tx7200\ql\qnatural
 
-\f0\fs20 \cf0 This release of OpenAFS is known to be compatible with MacOS 10.2 and 10.3 through 10.3.3 (517.3.15).\
+\f0\fs20 \cf0 This release of OpenAFS is known to be compatible with MacOS 10.3 through 10.3.8.\
 \
-Select a client cell name by creating /var/db/openafs/etc/ThisCell\
+Select a client cell name by editing /var/db/openafs/etc/ThisCell\
 \
-The root.afs.local hack should no longer be required beginning with OpenAFS releases newer than 1.2.6. The OpenAFS cache manager now includes functionality that should prevent lengthy delays when the finder accesses the afs root. If you created a /var/db/openafs/etc/config/afsd.options file for this purpose, it should be removed.\
+The included afssettings program is distributed under the Apple Public Source License, version 2.0. See http://www.opensource.apple.com/apsl/2.0.txt or the included file 2.0.txt.\
 \
 Reboot when all of this is done.}
