@@ -137,7 +137,7 @@ void EasyErrorBox (int hr, WCHAR *format, ...)
 }
 
 // RSM4: Converted this to stdcall so NSIS System::Call can call it (It defaults to stdcall)
-bool _stdcall loopback_isInstalled()
+DWORD _stdcall loopback_isInstalled()
 {
     TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
