@@ -1291,7 +1291,11 @@ mainproc(as, arock)
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
-	call_syscall(AFSOP_SHUTDOWN, 1);
+	code = call_syscall(AFSOP_SHUTDOWN, 1);
+	if (code) {
+	    printf("afsd: AFS still mounted; Not shutting down\n");
+	    exit(1);
+	}
 	exit(0);
     }
     if (as->parms[21].items) {
