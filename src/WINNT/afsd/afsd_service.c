@@ -283,7 +283,7 @@ void main()
 #else
 
 #ifdef _CRTAPI1
-void _CRTAPI1 main()
+void _CRTAPI1 main(void)
 #else
 void  main()
 #endif
