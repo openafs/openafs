@@ -181,7 +181,12 @@ typedef struct timeval osi_timeval_t;
  * is going on in the system.  So if ps cannot show thread IDs it is
  * likely to be the process ID instead.
  */
+#ifdef AFS_FBSD50_ENV
+/* should use curthread, but 'ps' can't display it */
+#define osi_ThreadUnique()	curproc
+#else
 #define osi_ThreadUnique()	getpid()
+#endif
 
 
 

@@ -65,7 +65,11 @@ struct lock__bsd__ afs_global_lock;
 
 #if defined(AFS_XBSD_ENV)
 struct lock afs_global_lock;
+#ifdef AFS_FBSD50_ENV
+struct thread *afs_global_owner;
+#else
 struct proc *afs_global_owner;
+#endif
 #endif
 
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)

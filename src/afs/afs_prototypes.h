@@ -860,6 +860,23 @@ extern int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
 extern int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq);
 extern int afs_closex(register struct file *afd);
 
+/* other VNOPS (please fix these) */
+extern int afs_open();
+extern int afs_close();
+extern int vnode_pager_freepage();
+extern int HandleIoctl();
+extern int afs_fsync();
+extern int afs_remove();
+extern int afs_link();
+extern int afs_rename();
+extern int afs_mkdir();
+extern int afs_rmdir();
+extern int afs_symlink();
+extern int afs_readdir();
+extern int afs_readlink();
+extern int afs_ustrategy();
+extern int afs_lockctl();
+
 
 /* afs_volume.c */
 extern afs_int32 afs_FVIndex;

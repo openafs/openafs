@@ -24,7 +24,9 @@
 /* #include <kern/sched_prim.h> */
 /* #include <sys/unix_defs.h> */
 
+#ifndef AFS_FBSD50_ENV
 #define getpid()		curproc
+#endif
 extern struct simplelock afs_rxglobal_lock;
 
 /* 
@@ -37,6 +39,11 @@ extern struct simplelock afs_rxglobal_lock;
 
 #define	AFS_UCRED	ucred
 #define	AFS_PROC	struct proc
+#ifdef AFS_FBSD50_ENV
+#define osi_curcred()	(curthread->td_ucred)
+#else
+#define osi_curcred()	(curproc->p_cred->pc_ucred)
+#endif
 
 #define afs_bufferpages bufpages
 

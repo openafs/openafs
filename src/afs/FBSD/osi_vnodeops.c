@@ -208,9 +208,12 @@ afs_vop_create(ap)
     int error = 0;
     struct vcache *vcp;
     register struct vnode *dvp = ap->a_dvp;
-    struct proc *p;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p = ap->a_cnp->cn_thread;
+#else
+    struct proc *p = ap->a_cnp->cn_proc;
+#endif
     GETNAME();
-    p=cnp->cn_proc;
 
     AFS_GLOCK();
     error = afs_create(VTOAFS(dvp), name, ap->a_vap, ap->a_vap->va_vaflags & VA_EXCLUSIVE? EXCL : NONEXCL,
@@ -407,45 +410,49 @@ afs_vop_getpages(ap)
      */
 
     {
-       vm_page_t m = ap->a_m[ap->a_reqpage];
+	vm_page_t m = ap->a_m[ap->a_reqpage];
 
-       if (m->valid != 0) {
-               /* handled by vm_fault now        */
-               /* vm_page_zero_invalid(m, TRUE); */
-               for (i = 0; i < npages; ++i) {
-                       if (i != ap->a_reqpage)
-                               vnode_pager_freepage(ap->a_m[i]);
-               }
-               return(0);
-       }
+	if (m->valid != 0) {
+	    /* handled by vm_fault now        */
+	    /* vm_page_zero_invalid(m, TRUE); */
+	    for (i = 0; i < npages; ++i) {
+		if (i != ap->a_reqpage)
+		    vnode_pager_freepage(ap->a_m[i]);
+	    }
+	    return(0);
+	}
     }
     bp = getpbuf(&afs_pbuf_freecnt);
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    iov.iov_base=(caddr_t)kva;
-    iov.iov_len=ap->a_count;
-    uio.uio_iov=&iov;
-    uio.uio_iovcnt=1;
-    uio.uio_offset=IDX_TO_OFF(ap->a_m[0]->pindex);
-    uio.uio_resid=ap->a_count;
-    uio.uio_segflg=UIO_SYSSPACE;
-    uio.uio_rw=UIO_READ;
-    uio.uio_procp=curproc;
+    iov.iov_base = (caddr_t)kva;
+    iov.iov_len = ap->a_count;
+    uio.uio_iov = &iov;
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = IDX_TO_OFF(ap->a_m[0]->pindex);
+    uio.uio_resid = ap->a_count;
+    uio.uio_segflg = UIO_SYSSPACE;
+    uio.uio_rw = UIO_READ;
+#ifdef AFS_FBSD50_ENV
+    uio.uio_td = curthread;
+#else
+    uio.uio_procp = curproc;
+#endif
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, curproc->p_cred->pc_ucred);  /* hold bozon lock, but not basic vnode lock */
-    code=afs_read(avc, &uio, curproc->p_cred->pc_ucred, 0, 0, 0);
+    osi_FlushPages(avc, osi_curcred());  /* hold bozon lock, but not basic vnode lock */
+    code=afs_read(avc, &uio, osi_curcred(), 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
 
     relpbuf(bp, &afs_pbuf_freecnt);
     if (code && (uio.uio_resid == ap->a_count)) {
-           for (i = 0; i < npages; ++i) {
-               if (i != ap->a_reqpage)
-                   vnode_pager_freepage(ap->a_m[i]);
-           }
-           return VM_PAGER_ERROR;
+	for (i = 0; i < npages; ++i) {
+	    if (i != ap->a_reqpage)
+		vnode_pager_freepage(ap->a_m[i]);
+	}
+	return VM_PAGER_ERROR;
     }
     size = ap->a_count - uio.uio_resid;
     for (i = 0, toff = 0; i < npages; i++, toff = nextoff) {
@@ -456,43 +463,43 @@ afs_vop_getpages(ap)
         m->flags &= ~PG_ZERO;
 
         if (nextoff <= size) {
-                /*
-                 * Read operation filled an entire page
-                 */
-                m->valid = VM_PAGE_BITS_ALL;
-                vm_page_undirty(m);
+	    /*
+	     * Read operation filled an entire page
+	     */
+	    m->valid = VM_PAGE_BITS_ALL;
+	    vm_page_undirty(m);
         } else if (size > toff) {
-                /*
-                 * Read operation filled a partial page.
-                 */
-                m->valid = 0;
-                vm_page_set_validclean(m, 0, size - toff);
-                /* handled by vm_fault now        */
-                /* vm_page_zero_invalid(m, TRUE); */
+	    /*
+	     * Read operation filled a partial page.
+	     */
+	    m->valid = 0;
+	    vm_page_set_validclean(m, 0, size - toff);
+	    /* handled by vm_fault now        */
+	    /* vm_page_zero_invalid(m, TRUE); */
         }
         
         if (i != ap->a_reqpage) {
-                /*
-                 * Whether or not to leave the page activated is up in
-                 * the air, but we should put the page on a page queue
-                 * somewhere (it already is in the object).  Result:
-                 * It appears that emperical results show that
-                 * deactivating pages is best.
-                 */
+	    /*
+	     * Whether or not to leave the page activated is up in
+	     * the air, but we should put the page on a page queue
+	     * somewhere (it already is in the object).  Result:
+	     * It appears that emperical results show that
+	     * deactivating pages is best.
+	     */
 
-                /*
-                 * Just in case someone was asking for this page we
-                 * now tell them that it is ok to use.
-                 */
-                if (!code) {
-                        if (m->flags & PG_WANTED)
-                                vm_page_activate(m);
-                        else
-                                vm_page_deactivate(m);
-                        vm_page_wakeup(m);
-                } else {
-                        vnode_pager_freepage(m);
-                }
+	    /*
+	     * Just in case someone was asking for this page we
+	     * now tell them that it is ok to use.
+	     */
+	    if (!code) {
+		if (m->flags & PG_WANTED)
+		    vm_page_activate(m);
+		else
+		    vm_page_deactivate(m);
+		vm_page_wakeup(m);
+	    } else {
+		vnode_pager_freepage(m);
+	    }
         }
     }
     return 0;
@@ -550,39 +557,44 @@ afs_vop_putpages(ap)
     bp = getpbuf(&afs_pbuf_freecnt);
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    iov.iov_base=(caddr_t)kva;
-    iov.iov_len=ap->a_count;
-    uio.uio_iov=&iov;
-    uio.uio_iovcnt=1;
-    uio.uio_offset=IDX_TO_OFF(ap->a_m[0]->pindex);
-    uio.uio_resid=ap->a_count;
-    uio.uio_segflg=UIO_SYSSPACE;
-    uio.uio_rw=UIO_WRITE;
-    uio.uio_procp=curproc;
-    sync=IO_VMIO;
+    iov.iov_base = (caddr_t)kva;
+    iov.iov_len = ap->a_count;
+    uio.uio_iov = &iov;
+    uio.uio_iovcnt = 1;
+    uio.uio_offset = IDX_TO_OFF(ap->a_m[0]->pindex);
+    uio.uio_resid = ap->a_count;
+    uio.uio_segflg = UIO_SYSSPACE;
+    uio.uio_rw = UIO_WRITE;
+#ifdef AFS_FBSD50_ENV
+    uio.uio_td = curthread;
+#else
+    uio.uio_procp = curproc;
+#endif
+    sync = IO_VMIO;
     if (ap->a_sync & VM_PAGER_PUT_SYNC)
-       sync|=IO_SYNC;
+       sync |= IO_SYNC;
     /*if (ap->a_sync & VM_PAGER_PUT_INVAL)
-       sync|=IO_INVAL;*/
+       sync |= IO_INVAL;*/
 
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    code=afs_write(avc, &uio, sync, curproc->p_cred->pc_ucred,  0);
+    code = afs_write(avc, &uio, sync, osi_curcred(), 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
 
     relpbuf(bp, &afs_pbuf_freecnt);
     if (!code) {
-           size = ap->a_count - uio.uio_resid;
-           for (i = 0; i < round_page(size) / PAGE_SIZE; i++) {
-               ap->a_rtvals[i]=VM_PAGER_OK;
-               ap->a_m[i]->dirty=0;
-           }
-           return VM_PAGER_ERROR;
+	size = ap->a_count - uio.uio_resid;
+	for (i = 0; i < round_page(size) / PAGE_SIZE; i++) {
+	    ap->a_rtvals[i]=VM_PAGER_OK;
+	    ap->a_m[i]->dirty=0;
+	}
+	return VM_PAGER_ERROR;
     }
     return ap->a_rtvals[0];
 }
+
 int
 afs_vop_ioctl(ap)
 	struct vop_ioctl_args /* {
@@ -595,7 +607,6 @@ afs_vop_ioctl(ap)
 	} */ *ap;
 {
     struct vcache *tvc = VTOAFS(ap->a_vp);
-    struct afs_ioctl data;
     int error = 0;
   
     /* in case we ever get in here... */
@@ -603,10 +614,10 @@ afs_vop_ioctl(ap)
     AFS_STATCNT(afs_ioctl);
     if (((ap->a_command >> 8) & 0xff) == 'V') {
 	/* This is a VICEIOCTL call */
-    AFS_GLOCK();
-	error = HandleIoctl(tvc, (struct file *)0/*Not used*/,
+	AFS_GLOCK();
+	error = HandleIoctl(tvc, NULL /*Not used*/,
 	                    ap->a_command, ap->a_data);
-    AFS_GUNLOCK();
+	AFS_GUNLOCK();
 	return(error);
     } else {
 	/* No-op call; just return. */
@@ -624,10 +635,10 @@ afs_vop_poll(ap)
 	        struct proc *a_p;
 	} */ *ap;
 {
-	/*
-	 * We should really check to see if I/O is possible.
-	 */
-	return (1);
+    /*
+     * We should really check to see if I/O is possible.
+     */
+    return (1);
 }
 /*
  * Mmap a file
@@ -656,16 +667,15 @@ afs_vop_fsync(ap)
 	        struct proc *a_p;
 	} */ *ap;
 {
-    int wait = ap->a_waitfor == MNT_WAIT;
     int error;
     register struct vnode *vp = ap->a_vp;
 
     AFS_GLOCK();
     /*vflushbuf(vp, wait);*/
     if (ap->a_cred)
-      error=afs_fsync(VTOAFS(vp), ap->a_cred);
+	error = afs_fsync(VTOAFS(vp), ap->a_cred);
     else
-      error=afs_fsync(VTOAFS(vp), &afs_osi_cred);
+	error = afs_fsync(VTOAFS(vp), &afs_osi_cred);
     AFS_GUNLOCK();
     return error;
 }
@@ -702,10 +712,13 @@ afs_vop_link(ap)
     int error = 0;
     register struct vnode *dvp = ap->a_tdvp;
     register struct vnode *vp = ap->a_vp;
-    struct proc *p;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p = ap->a_cnp->cn_thread;
+#else
+    struct proc *p = ap->a_cnp->cn_proc;
+#endif
 
     GETNAME();
-    p=cnp->cn_proc;
     if (dvp->v_mount != vp->v_mount) {
 	error = EXDEV;
 	goto out;
@@ -714,7 +727,7 @@ afs_vop_link(ap)
 	error = EISDIR;
 	goto out;
     }
-    if (error = vn_lock(vp, LK_EXCLUSIVE, p)) {
+    if ((error = vn_lock(vp, LK_EXCLUSIVE, p)) != 0) {
 	goto out;
     }
     AFS_GLOCK();
@@ -747,7 +760,11 @@ afs_vop_rename(ap)
     register struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
     register struct vnode *fdvp = ap->a_fdvp;
-    struct proc *p=fcnp->cn_proc;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p = fcnp->cn_thread;
+#else
+    struct proc *p = fcnp->cn_proc;
+#endif
 
     /*
      * Check for cross-device rename.
@@ -806,7 +823,7 @@ abortit:
         vput(fvp);
         return (error);
     }
-    if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
+    if ((error = vn_lock(fvp, LK_EXCLUSIVE, p)) != 0)
 	goto abortit;
 
     MALLOC(fname, char *, fcnp->cn_namelen+1, M_TEMP, M_WAITOK);
@@ -848,10 +865,13 @@ afs_vop_mkdir(ap)
     register struct vattr *vap = ap->a_vap;
     int error = 0;
     struct vcache *vcp;
-    struct proc *p;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p = ap->a_cnp->cn_thread;
+#else
+    struct proc *p = ap->a_cnp->cn_proc;
+#endif
 
     GETNAME();
-    p=cnp->cn_proc;
 #ifdef DIAGNOSTIC
     if ((cnp->cn_flags & HASBUF) == 0)
 	panic("afs_vop_mkdir: no name");
@@ -882,7 +902,6 @@ afs_vop_rmdir(ap)
 	} */ *ap;
 {
     int error = 0;
-    register struct vnode *vp = ap->a_vp;
     register struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
@@ -1026,14 +1045,14 @@ afs_vop_reclaim(ap)
 	panic("afs_reclaim: vnode not cleaned");
     return error;
 #else
-   if (vp->v_usecount == 2) {
+    if (vp->v_usecount == 2) {
         vprint("reclaim count==2", vp);
-   } else if (vp->v_usecount == 1) {
+    } else if (vp->v_usecount == 1) {
         vprint("reclaim count==1", vp);
-   } else 
+    } else 
         vprint("reclaim bad count", vp);
 
-   return 0;
+    return 0;
 #endif
 }
 
@@ -1043,13 +1062,17 @@ afs_vop_lock(ap)
 	        struct vnode *a_vp;
 	} */ *ap;
 {
-	register struct vnode *vp = ap->a_vp;
-	register struct vcache *avc = VTOAFS(vp);
+    register struct vnode *vp = ap->a_vp;
+    register struct vcache *avc = VTOAFS(vp);
 
-	if (vp->v_tag == VT_NON)
-	        return (ENOENT);
-	return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock,
-                ap->a_p));
+#ifdef AFS_FBSD50_ENV
+    if (!strcmp(vp->v_tag, "none"))
+#else
+    if (vp->v_tag == VT_NON)
+#endif
+	return (ENOENT);
+    return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock,
+		    ap->a_p));
 }
 
 int
@@ -1076,18 +1099,16 @@ afs_vop_bmap(ap)
 	        int *a_runb;
 	} */ *ap;
 {
-    struct vcache *vcp;
-    int error;
     if (ap->a_bnp) {
 	*ap->a_bnp = ap->a_bn * (PAGE_SIZE / DEV_BSIZE);
     }
     if (ap->a_vpp) {
 	*ap->a_vpp = ap->a_vp;
     }
-	if (ap->a_runp != NULL)
-	        *ap->a_runp = 0;
-	if (ap->a_runb != NULL)
-	        *ap->a_runb = 0;
+    if (ap->a_runp != NULL)
+	*ap->a_runp = 0;
+    if (ap->a_runb != NULL)
+	*ap->a_runb = 0;
  
     return 0;
 }
@@ -1144,13 +1165,11 @@ afs_vop_advlock(ap)
 	} */ *ap;
 {
     int error;
-    struct proc *p=curproc;
-    struct ucred cr;
-    cr=*p->p_cred->pc_ucred;
+    struct ucred cr = *osi_curcred();
+
     AFS_GLOCK();
     error= afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, &cr,
 	               (int) ap->a_id);
     AFS_GUNLOCK();
     return error;
 }
-
