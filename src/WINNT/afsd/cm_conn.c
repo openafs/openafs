@@ -408,10 +408,10 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
-		if (allBusy) 
-			firstError = CM_ERROR_ALLBUSY;
-		else if (allDown) 
+		if (allDown) 
 			firstError = CM_ERROR_ALLOFFLINE;
+		else if (allBusy) 
+			firstError = CM_ERROR_ALLBUSY;
 		else if (serversp == NULL) 
 			/* Only return CM_ERROR_NOSUCHVOLUME if there are no
 			 * servers for this volume 
