@@ -74,7 +74,7 @@ ulock_getLock(atrans, atype, await)
      return UDONE;
 
   if (atrans->locktype != 0) {
-     printf("Ubik: Internal Error: attempted to take lock twice\n");
+     ubik_print("Ubik: Internal Error: attempted to take lock twice\n");
      abort();
   }
 
