@@ -608,15 +608,19 @@ tagain:
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
+#ifdef notdef
 	    code = RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
 					  &cbParm, &volSync);
 	    if (code == RXGEN_OPCODE) {
+#endif
 		code = RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
 					&volSync);
 		inlinebulk=0;
+#ifdef notdef
 	    } else {
 		inlinebulk=1;
 	    }
+#endif
 
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GLOCK();
