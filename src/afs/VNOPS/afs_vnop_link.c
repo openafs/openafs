@@ -56,6 +56,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_int32 offset, len;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;
+    struct afs_fakestat_state vfakestate, dfakestate;
     XSTATS_DECLS
     OSI_VC_CONVERT(adp)
 
@@ -65,6 +66,13 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     /* create a hard link; new entry is aname in dir adp */
     if (code = afs_InitReq(&treq, acred)) 
 	goto done2;
+
+    afs_InitFakeStat(&vfakestate);
+    afs_InitFakeStat(&dfakestate);
+    code = afs_EvalFakeStat(&avc, &vfakestate, &treq);
+    if (code) goto done;
+    code = afs_EvalFakeStat(&adp, &dfakestate, &treq);
+    if (code) goto done;
 
     if (avc->fid.Cell != adp->fid.Cell || avc->fid.Fid.Volume != adp->fid.Fid.Volume) {
 	code = EXDEV;
@@ -151,6 +159,8 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     code = 0;
 done:
     code = afs_CheckCode(code, &treq, 24);
+    afs_PutFakeStat(&vfakestate);
+    afs_PutFakeStat(&dfakestate);
 done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, WRITE_LOCK);
