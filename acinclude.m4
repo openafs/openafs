@@ -152,6 +152,9 @@ case $system in
                 AC_MSG_RESULT(hp_ux)
                 ;;
         *-irix*)
+		if test -d /usr/include/SN/SN1; then
+		 IRIX_BUILD_IP35="IP35"
+		fi
 		MKAFS_OSTYPE=IRIX
                 AC_MSG_RESULT(sgi)
                 ;;
@@ -483,6 +486,7 @@ AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
+AC_SUBST(IRIX_BUILD_IP35)
 
 OPENAFS_OSCONF
 
