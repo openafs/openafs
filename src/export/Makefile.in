@@ -163,7 +163,7 @@ ${DEST}/root.client/usr/vice/etc/dkload/cfgexport64: @AIX64@cfgexport64
 @AIX64@	${INSTALL} $? $@
 
 ${DEST}/root.client/usr/vice/etc/dkload/cfgafs: cfgafs
-@AIX64@	${INSTALL} $? $@
+${INSTALL} $? $@
 
 ${DEST}/root.client/usr/vice/etc/dkload/cfgafs64: @AIX64@cfgafs64
 @AIX64@	${INSTALL} $? $@
