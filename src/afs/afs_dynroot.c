@@ -149,6 +149,23 @@ int afs_IsDynroot(struct vcache *avc)
 }
 
 /*
+ * Given the current page and chunk pointers in a directory, adjust them
+ * appropriately so that the given file name can be appended.  Used for
+ * computing the size of a directory.
+ */
+static void afs_dynroot_computeDirEnt(char *name, int *curPageP, int *curChunkP)
+{
+    int esize;
+
+    esize = afs_dir_NameBlobs(name);
+    if (*curChunkP + esize > EPP) {
+	*curPageP += 1;
+	*curChunkP = 1;
+    }
+    *curChunkP += esize;
+}
+
+/*
  * Add directory entry by given name to a directory.  Assumes the
  * caller has allocated the directory to be large enough to hold
  * the necessary entry.
@@ -258,7 +275,7 @@ static void afs_RebuildDynroot(void)
     struct cell *c;
     struct cell_alias *ca;
     int curChunk, curPage;
-    int dirSize, sizeOfCurEntry;
+    int dirSize, dotLen;
     char *newDir, *dotCell;
     struct DirHeader *dirHeader;
     int linkCount = 0;
@@ -283,23 +300,15 @@ static void afs_RebuildDynroot(void)
 	if (!c) break;
 	if (c->cellNum == afs_dynrootCell) continue;
 
-	sizeOfCurEntry = afs_dir_NameBlobs(c->cellName);
-	if (curChunk + sizeOfCurEntry > EPP) {
-	    curPage++;
-	    curChunk = 1;
-	}
-	curChunk += sizeOfCurEntry;
-
-	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
+	dotLen = strlen(c->cellName) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
-	sizeOfCurEntry = afs_dir_NameBlobs(dotCell);
-	if (curChunk + sizeOfCurEntry > EPP) {
-	    curPage++;
-	    curChunk = 1;
-	}
-	curChunk += sizeOfCurEntry;
 
+	afs_dynroot_computeDirEnt(c->cellName, &curPage, &curChunk);
+	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
+
+	afs_osi_Free(dotCell, dotLen);
 	afs_PutCell(c, READ_LOCK);
     }
     maxcellidx = cellidx;
@@ -308,23 +317,15 @@ static void afs_RebuildDynroot(void)
 	ca = afs_GetCellAlias(aliasidx);
 	if (!ca) break;
 
-	sizeOfCurEntry = afs_dir_NameBlobs(ca->alias);
-	if (curChunk + sizeOfCurEntry > EPP) {
-	    curPage++;
-	    curChunk = 1;
-	}
-	curChunk += sizeOfCurEntry;
-
-	dotCell = afs_osi_Alloc(strlen(ca->alias) + 2);
+	dotLen = strlen(ca->alias) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, ca->alias);
-	sizeOfCurEntry = afs_dir_NameBlobs(dotCell);
-	if (curChunk + sizeOfCurEntry > EPP) {
-	    curPage++;
-	    curChunk = 1;
-	}
-	curChunk += sizeOfCurEntry;
 
+	afs_dynroot_computeDirEnt(ca->alias, &curPage, &curChunk);
+	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
+
+	afs_osi_Free(dotCell, dotLen);
 	afs_PutCellAlias(ca);
     }
     maxaliasidx = aliasidx;
@@ -332,12 +333,7 @@ static void afs_RebuildDynroot(void)
     ObtainReadLock(&afs_dynSymlinkLock);
     ts = afs_dynSymlinkBase;
     while (ts) {
-	sizeOfCurEntry = afs_dir_NameBlobs(ts->name);
-	if (curChunk + sizeOfCurEntry > EPP) {
-	    curPage++;
-	    curChunk = 1;
-	}
-	curChunk += sizeOfCurEntry;
+	afs_dynroot_computeDirEnt(ts->name, &curPage, &curChunk);
 	ts = ts->next;
     }
 
@@ -375,13 +371,15 @@ static void afs_RebuildDynroot(void)
 	if (!c) continue;
 	if (c->cellNum == afs_dynrootCell) continue;
 
-	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
+	dotLen = strlen(c->cellName) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      c->cellName, VNUM_FROM_CIDX_RW(cellidx, 0));
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      dotCell, VNUM_FROM_CIDX_RW(cellidx, 1));
+	afs_osi_Free(dotCell, dotLen);
 
 	linkCount += 2;
 	afs_PutCell(c, READ_LOCK);
@@ -391,13 +389,15 @@ static void afs_RebuildDynroot(void)
 	ca = afs_GetCellAlias(aliasidx);
 	if (!ca) continue;
 
-	dotCell = afs_osi_Alloc(strlen(ca->alias) + 2);
+	dotLen = strlen(ca->alias) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, ca->alias);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      ca->alias, VNUM_FROM_CAIDX_RW(aliasidx, 0));
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      dotCell, VNUM_FROM_CAIDX_RW(aliasidx, 1));
+	afs_osi_Free(dotCell, dotLen);
 	afs_PutCellAlias(ca);
     }
 
