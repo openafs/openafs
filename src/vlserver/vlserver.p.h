@@ -49,14 +49,6 @@ struct vlheader {
 #define	VLLOCKED	4		/* Advisory lock on entry */
 #define	VLCONTBLOCK	8		/* Special continuation block entry */
 
-/* Vlentry's flags also used to stamp type of ongoing operation */
-#define	VLOP_MOVE	0x10
-#define	VLOP_RELEASE	0x20
-#define	VLOP_BACKUP	0x40
-#define	VLOP_DELETE	0x80
-#define	VLOP_DUMP	0x100
-#define	VLOP_ALLOPERS	(VLOP_MOVE | VLOP_RELEASE | VLOP_BACKUP | VLOP_DELETE | VLOP_DUMP)
-
 /* Valid RelaseLock types */
 #define	LOCKREL_TIMESTAMP   1
 #define	LOCKREL_OPCODE	    2

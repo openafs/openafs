@@ -175,6 +175,14 @@ struct vldstats {
     afs_int32 reserved[5];				/* for future usage */
 };
 
+/* Volser information/status */
+const VLOP_MOVE        = 0x10;
+const VLOP_RELEASE     = 0x20;
+const VLOP_BACKUP      = 0x40;
+const VLOP_DELETE      = 0x80;
+const VLOP_DUMP        = 0x100;
+
+%#define VLOP_ALLOPERS ( VLOP_MOVE | VLOP_RELEASE | VLOP_BACKUP | VLOP_DELETE | VLOP_DUMP)
 
 /* defines for convenience of vl users */
 %#define	VLF_RWEXISTS	    0x1000  /* flags for whole vldb entry */
