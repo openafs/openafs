@@ -29,6 +29,8 @@ RCSID
 #include <afs/kauth.h>
 #include <afs/kautils.h>
 
+struct passwd *afs_getpwnam_int(char *, int);
+
 int
 afs_authenticate(char *userName, char *response, int *reenter, char **message)
 {
@@ -52,7 +54,12 @@ afs_authenticate(char *userName, char *response, int *reenter, char **message)
 	    return AUTH_FAILURE;
 	}
     }
-    if ((pwd = getpwnam(userName)) == NULL) {
+#ifdef AFS_AIX51_ENV
+    if ((pwd = afs_getpwnam_int(userName, 1)) == NULL) 
+#else
+    if ((pwd = getpwnam(userName)) == NULL) 
+#endif
+      {
 	*message = (char *)malloc(256);
 	sprintf(*message, "getpwnam for user failed\n");
 	return AUTH_FAILURE;
@@ -137,6 +144,12 @@ afs_getgrnam(char *name)
 struct passwd *
 afs_getpwnam(char *user)
 {
+    return (struct passwd *) afs_getpwnam_int(user, 0);
+}
+
+struct passwd *
+afs_getpwnam_int(char *user, int ignore)
+{
     static char name[64];
     static char passwd[64];
     static char gecos[256];
@@ -144,6 +157,12 @@ afs_getpwnam(char *user)
     static char shell[256];
     static struct passwd pwd;
     struct passwd *p;
+
+    pwd.pw_uid = 4294967294;
+    pwd.pw_gid = 4294967294;
+    strcpy((char *)&shell, "/bin/false");
+    if (!user)
+       return &pwd;
 
     while ((p = getpwent()) != NULL) {
 	if (!strcmp(p->pw_name, user)) {
@@ -163,6 +182,8 @@ afs_getpwnam(char *user)
 	}
     }
     endpwent();
+    if (ignore && (p == NULL))
+       return NULL;
     return &pwd;
 }
 #else
@@ -173,19 +194,11 @@ afs_getpwnam(int id)
 }
 #endif
 
-#ifdef AFS_AIX52_ENV
-struct passwd *
-afs_getpwuid(uid_t uid)
-{
-    return pwd;
-}
-#else
 int
 afs_getpwuid(char *name)
 {
     return NULL;
 }
-#endif
 
 int
 afs_initialize(struct secmethod_table *meths)
