@@ -1,3 +1,1276 @@
+2003-07-29 22:36  shadow
+
+	* src/butm/file_tm.c: DELTA
+	STABLE12-butm-restore-from-large-files-20030729 AUTHOR
+	shadow@dementia.org FIXES
+	
+	make restore also work from large files
+
+2003-07-29 02:01  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-opteron-linux-sys-call-hack-fix-20030728 AUTHOR
+	shadow@dementia.org FIXES
+	
+	smp machines need a larger search space?
+
+2003-07-25 18:15  shadow
+
+	* Makefile.in: DELTA STABLE12-package-build-rules-20030709 AUTHOR
+	shadow@dementia.org FIXES
+	
+	allow building of macos packages from make
+
+2003-07-25 04:57  shadow
+
+	* configure-libafs.in, configure.in: DELTA
+	STABLE12-create-openafs-1_2_10-20030725 AUTHOR shadow@dementia.org
+	FIXES
+	
+	Begin 1.2.10 release cycle.
+
+2003-07-25 04:40  shadow
+
+	* acinclude.m4, src/pinstall/install.c: DELTA
+	STABLE12-use-strerror-if-available-20030725 AUTHOR
+	shadow@dementia.org FIXES
+	
+	discover and use strerror instead of sys_errlist and sys_nerr.
+
+2003-07-25 04:30  shadow
+
+	* src/config/param.i386_linux24.h: DELTA
+	STABLE12-linux-largefile-defns-20030724 AUTHOR shadow@dementia.org
+	FIXES
+	
+	make usd library able to write large files on i386 linux
+
+2003-07-25 02:53  shadow
+
+	* src/config/param.i386_linux24.h: DELTA
+	STABLE12-linux-largefile-defns-20030724 AUTHOR shadow@dementia.org
+	FIXES
+	
+	make usd library able to write large files on i386 linux
+
+2003-07-23 16:30  shadow
+
+	* src/butc/dump.c: DELTA STABLE12-butc-notice-eot-20030723 AUTHOR
+	shadow@dementia.org FIXES
+	
+	if we're going to check for BUTM_EOT, have a chance in hell of
+	finding it.  and not, say, 0.
+
+2003-07-15 05:30  shadow
+
+	* Makefile.in: DELTA STABLE12-hpux-make-packaging-target-20030715
+	AUTHOR shadow@dementia.org FIXES 1315
+	
+	make the make rule able to make packages
+
+2003-07-11 02:13  shadow
+
+	* src/WINNT/afsd/smb3.c: DELTA
+	STABLE12-winnt-fileinfo-is-directory-20030710 AUTHOR
+	rsm4@cssd.pitt.edu FIXES
+	
+	correctly report directories by not setting field in incorrect
+	position in reply.
+
+2003-07-10 21:52  shadow
+
+	* acinclude.m4: DELTA STABLE12-linux-usermode-better-test-20030710
+	AUTHOR aedil-afs@alchar.org FIXES
+	
+	test the source tree and not the running kernel
+
+2003-07-09 20:51  shadow
+
+	* Makefile.in: DELTA STABLE12-package-build-rules-20030709 AUTHOR
+	shadow@dementia.org FIXES
+	
+	allow building of macos packages from make
+
+2003-07-09 18:54  shadow
+
+	* src/packaging/MacOS/buildpkg.sh: DELTA
+	STABLE12-macos-pkg-update-csdb-20030709 AUTHOR shadow@dementia.org
+	FIXES
+	
+	update the cellservdb while we build packages
+
+2003-07-09 18:24  shadow
+
+	* src/packaging/HP-UX/README: file README was initially added on
+	branch openafs-stable-1_2_x.
+
+2003-07-09 18:24  shadow
+
+	* src/packaging/: README, HP-UX/README,
+	HP-UX/psf-1.2.10-transarc-paths-11.00,
+	HP-UX/psf-1.2.10-transarc-paths-11.11,
+	HP-UX/psf-1.2.10-transarc-paths-11.22,
+	HP-UX/psf-1.2.8-transarc-paths-11.00,
+	HP-UX/psf-1.2.9-transarc-paths-11.00, HP-UX/data/depot.copyright,
+	HP-UX/data/depot.description, HP-UX/data/fileset.description,
+	HP-UX/data/openafs-clnt.description,
+	HP-UX/data/openafs-krn.description,
+	HP-UX/data/openafs-run.description,
+	HP-UX/data/openafs-srv.description, HP-UX/data/product.README,
+	HP-UX/data/product.copyright, HP-UX/data/product.description,
+	HP-UX/data/subproduct.description, HP-UX/data/vendor.description,
+	HP-UX/files/usr/vice/etc/CellServDB,
+	HP-UX/files/usr/vice/etc/SuidCells,
+	HP-UX/files/usr/vice/etc/cacheinfo,
+	HP-UX/scripts/openafs-clnt.checkinstall,
+	HP-UX/scripts/openafs-clnt.configure,
+	HP-UX/scripts/openafs-clnt.preinstall,
+	HP-UX/scripts/openafs-clnt.preremove,
+	HP-UX/scripts/openafs-clnt.unconfigure,
+	HP-UX/scripts/openafs-eng-man.configure,
+	HP-UX/scripts/openafs-eng-man.unconfigure,
+	HP-UX/scripts/openafs-krn.checkremove,
+	HP-UX/scripts/openafs-krn.configure,
+	HP-UX/scripts/openafs-krn.postinstall,
+	HP-UX/scripts/openafs-krn.unconfigure,
+	HP-UX/scripts/openafs-krn.verify,
+	HP-UX/scripts/openafs-srv.checkremove,
+	HP-UX/scripts/openafs-srv.configure,
+	HP-UX/scripts/openafs-srv.postremove,
+	HP-UX/scripts/openafs-srv.preinstall,
+	HP-UX/scripts/openafs-srv.preremove,
+	HP-UX/scripts/openafs-srv.subscript,
+	HP-UX/scripts/openafs-srv.unconfigure,
+	HP-UX/scripts/openafs-srv.verify, HP-UX/scripts/openafs.configure,
+	HP-UX/scripts/openafs.postremove,
+	HP-UX/scripts/openafs.unconfigure, MacOS/CellServDB,
+	MacOS/CellServDB.list, MacOS/License.rtf, MacOS/OpenAFS.info,
+	MacOS/OpenAFS.post_install, MacOS/OpenAFS.pre_upgrade,
+	MacOS/ReadMe.rtf, MacOS/buildpkg.sh, MacOS/csrvdbmerge.pl: DELTA
+	STABLE12-packagings-20030709 AUTHOR shadow@dementia.org FIXES
+	
+	pull up hpux and macos packaging
+
+2003-07-09 18:06  shadow
+
+	* src/packaging/HP-UX/scripts/: openafs-clnt.configure,
+	openafs-srv.postremove: DELTA hpux-packagings-20030709 AUTHOR
+	paul.weber@hp.com FIXES 1315
+	
+	updated packaging for hp-ux 11.00, 11.11 and 11.22
+
+2003-07-07 20:16  shadow
+
+	* src/: afs/Makefile.in, afsweb/Makefile.in, audit/Makefile.in,
+	auth/Makefile.in, comerr/Makefile.in, des/Makefile.in,
+	dir/Makefile.in, dir/test/Makefile.in, export/Makefile.in,
+	fsint/Makefile.in, kauth/Makefile.in, libacl/Makefile.in,
+	pam/Makefile.in, ptserver/Makefile.in, rx/Makefile.in,
+	rxdebug/Makefile.in, rxgen/Makefile.in, rxkad/Makefile.in,
+	rxkad/test/Makefile.in, rxstat/Makefile.in, sys/Makefile.in,
+	ubik/Makefile.in, vlserver/Makefile.in: DELTA
+	STABLE12-kerneldir-cleanup-20030707 AUTHOR peb@mppmu.mpg.de FIXES
+	1706
+	
+	"Now that the make variables KERNELDIR and UKERNELDIR are
+	consistently used with a trailing slash ([grand.central.org #1655]
+	resp. STABLE12-makefile-consistency-20030701) they should be
+	defined without trailing slash.
+	
+	This certainly doesn't change any functionality but avoids funny
+	looking doble slashes in the expanded make rules."
+
+2003-07-02 06:36  shadow
+
+	* src/fsprobe/Makefile.in: DELTA
+	STABLE12-cleanup-dbg-and-ldflags-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1653
+	
+	switch from -g to ${DBG}; remove -g from LDFLAGS.
+
+2003-07-02 05:20  shadow
+
+	* src/libafs/: afs.ppc_darwin_12.plist.in,
+	afs.ppc_darwin_13.plist.in, afs.ppc_darwin_14.plist.in,
+	afs.ppc_darwin_60.plist.in: DELTA darwin-kext-versions-20030702
+	AUTHOR shadow@dementia.org FIXES
+	
+	we can't call it 1.2.10, so it's 1.2.9f1. bleah.
+
+2003-07-02 00:44  shadow
+
+	* src/venus/fs.c: DELTA STABLE12-gcc-warnings-cleanup-20030701
+	AUTHOR peb@mppmu.mpg.de FIXES 1650
+	
+	gcc warnings cleanup; add headers, fix castings
+
+2003-07-02 00:33  shadow
+
+	* src/: WINNT/afs_setup_utils/afs_setup_utils_stub.rc,
+	WINNT/afs_setup_utils/lang/de_DE/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/en_US/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/es_ES/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/ja_JP/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/ko_KR/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/pt_BR/afs_setup_utils.rc,
+	WINNT/afs_setup_utils/lang/zh_CN/afs_setup_utmls.rc,
+	WINNT/afs_setup_utils/lang/zh_TW/afs_setup_utils.rc,
+	WINNT/afsadmsvr/afsadmsvr.rc, WINNT/afsapplib/afsapplib_stub.rc,
+	WINNT/afsapplib/lang/de_DE/afsapplib.rc,
+	WINNT/afsapplib/lang/en_US/afsapplib.rc,
+	WINNT/afsapplib/lang/es_ES/afsapplib.rc,
+	WINNT/afsapplib/lang/ja_JP/afsapplib.rc,
+	WINNT/afsapplib/lang/ko_KR/afsapplib.rc,
+	WINNT/afsapplib/lang/pt_BR/afsapplib.rc,
+	WINNT/afsapplib/lang/zh_CN/afsapplib.rc,
+	WINNT/afsapplib/lang/zh_TW/afsapplib.rc, WINNT/afsd/afsd.rc,
+	WINNT/afsd/afsd_service.rc, WINNT/afsd/afslog95.rc,
+	WINNT/afsd/afslogon.rc, WINNT/afsd/afsshare.rc, WINNT/afsd/fs.rc,
+	WINNT/afsd/klog.rc, WINNT/afsd/libafsconf.rc,
+	WINNT/afsd/symlink.rc, WINNT/afsd/tokens.rc, WINNT/afsd/unlog.rc,
+	WINNT/afslegal/afslegal_stub.rc,
+	WINNT/afslegal/lang/de_DE/afslegal.rc,
+	WINNT/afslegal/lang/en_US/afslegal.rc,
+	WINNT/afslegal/lang/es_ES/afslegal.rc,
+	WINNT/afslegal/lang/ja_JP/afslegal.rc,
+	WINNT/afslegal/lang/ko_KR/afslegal.rc,
+	WINNT/afslegal/lang/pt_BR/afslegal.rc,
+	WINNT/afslegal/lang/zh_CN/afslegal.rc,
+	WINNT/afslegal/lang/zh_TW/afslegal.rc,
+	WINNT/afssvrcfg/afscfg_stub.rc,
+	WINNT/afssvrcfg/lang/de_DE/afscfg.rc,
+	WINNT/afssvrcfg/lang/en_US/afscfg.rc,
+	WINNT/afssvrcfg/lang/es_ES/afscfg.rc,
+	WINNT/afssvrcfg/lang/ja_JP/afscfg.rc,
+	WINNT/afssvrcfg/lang/ko_KR/afscfg.rc,
+	WINNT/afssvrcfg/lang/pt_BR/afscfg.rc,
+	WINNT/afssvrcfg/lang/zh_CN/afscfg.rc,
+	WINNT/afssvrcfg/lang/zh_TW/afscfg.rc,
+	WINNT/afssvrcpa/afssvrcpa_stub.rc,
+	WINNT/afssvrcpa/lang/de_DE/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/en_US/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/es_ES/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/ja_JP/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/ko_KR/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/pt_BR/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/zh_CN/afssvrcpa.rc,
+	WINNT/afssvrcpa/lang/zh_TW/afssvrcpa.rc,
+	WINNT/afssvrmgr/svrmgr_stub.rc,
+	WINNT/afssvrmgr/lang/de_DE/svrmgr.rc,
+	WINNT/afssvrmgr/lang/en_US/svrmgr.rc,
+	WINNT/afssvrmgr/lang/es_ES/svrmgr.rc,
+	WINNT/afssvrmgr/lang/ja_JP/svrmgr.rc,
+	WINNT/afssvrmgr/lang/ko_KR/svrmgr.rc,
+	WINNT/afssvrmgr/lang/pt_BR/svrmgr.rc,
+	WINNT/afssvrmgr/lang/zh_CN/svrmgr.rc,
+	WINNT/afssvrmgr/lang/zh_TW/svrmgr.rc,
+	WINNT/afsusrmgr/AfsUsrMgr_stub.rc,
+	WINNT/afsusrmgr/lang/de_DE/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/en_US/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/es_ES/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/ja_JP/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/ko_KR/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/pt_BR/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/zh_CN/AfsUsrMgr.rc,
+	WINNT/afsusrmgr/lang/zh_TW/AfsUsrMgr.rc,
+	WINNT/bosctlsvc/bosctlsvc.rc,
+	WINNT/client_config/afs_config_stub.rc,
+	WINNT/client_config/lang/de_DE/afs_config.rc,
+	WINNT/client_config/lang/en_US/afs_config.rc,
+	WINNT/client_config/lang/es_ES/afs_config.rc,
+	WINNT/client_config/lang/ja_JP/afs_config.rc,
+	WINNT/client_config/lang/ko_KR/afs_config.rc,
+	WINNT/client_config/lang/pt_BR/afs_config.rc,
+	WINNT/client_config/lang/zh_CN/afs_config.rc,
+	WINNT/client_config/lang/zh_TW/afs_config.rc,
+	WINNT/client_cpa/afs_cpa_stub.rc,
+	WINNT/client_cpa/lang/de_DE/afs_cpa.rc,
+	WINNT/client_cpa/lang/en_US/afs_cpa.rc,
+	WINNT/client_cpa/lang/es_ES/afs_cpa.rc,
+	WINNT/client_cpa/lang/ja_JP/afs_cpa.rc,
+	WINNT/client_cpa/lang/ko_KR/afs_cpa.rc,
+	WINNT/client_cpa/lang/pt_BR/afs_cpa.rc,
+	WINNT/client_cpa/lang/zh_CN/afs_cpa.rc,
+	WINNT/client_cpa/lang/zh_TW/afs_cpa.rc,
+	WINNT/client_creds/afscreds_stub.rc,
+	WINNT/client_creds/lang/de_DE/afscreds.rc,
+	WINNT/client_creds/lang/en_US/afscreds.rc,
+	WINNT/client_creds/lang/es_ES/afscreds.rc,
+	WINNT/client_creds/lang/ja_JP/afscreds.rc,
+	WINNT/client_creds/lang/ko_KR/afscreds.rc,
+	WINNT/client_creds/lang/pt_BR/afscreds.rc,
+	WINNT/client_creds/lang/zh_CN/afscreds.rc,
+	WINNT/client_creds/lang/zh_TW/afscreds.rc,
+	WINNT/client_exp/afs_shl_ext_stub.rc,
+	WINNT/client_exp/lang/de_DE/afs_shl_ext.rc,
+	WINNT/client_exp/lang/en_US/afs_shl_ext.rc,
+	WINNT/client_exp/lang/es_ES/afs_shl_ext.rc,
+	WINNT/client_exp/lang/ja_JP/afs_shl_ext.rc,
+	WINNT/client_exp/lang/ko_KR/afs_shl_ext.rc,
+	WINNT/client_exp/lang/pt_BR/afs_shl_ext.rc,
+	WINNT/client_exp/lang/zh_CN/afs_shl_ext.rc,
+	WINNT/client_exp/lang/zh_TW/afs_shl_ext.rc,
+	WINNT/client_osi/libosi.rc, WINNT/eventlog/lang/afseventmsg.rc,
+	WINNT/pthread/pthread.rc, WINNT/pthread/pthread95.rc, bozo/bos.rc,
+	bozo/bosserver.rc, bu_utils/fms.rc, bucoord/backup.rc,
+	budb/buserver.rc, butc/butc.rc, config/NTMakefile.i386_nt40,
+	config/NTMakefile.version-NOCML, config/NTVersioninfo.rc,
+	finale/translate_et.rc, kauth/kas.rc, kauth/kaserver.rc,
+	kauth/kpasswd.rc, libadmin/adminutil/afsadminutil.rc,
+	libadmin/bos/afsbosadmin.rc, libadmin/cfg/afscfgadmin.rc,
+	libadmin/client/afsclientadmin.rc, libadmin/kas/afskasadmin.rc,
+	libadmin/pts/afsptsadmin.rc, libadmin/vos/afsvosadmin.rc,
+	libafsauthent/afsauthent.rc, libafsrpc/afsrpc.rc,
+	procmgmt/afskill.rc, procmgmt/afsprocmgmt.rc, ptserver/pts.rc,
+	ptserver/ptserver.rc, rx/rxdebug.rc, rxdebug/rxdebug.rc,
+	shlibafsauthent/afsauthent.rc, shlibafsrpc/afsrpc.rc,
+	ubik/udebug.rc, update/upclient.rc, update/upserver.rc, uss/uss.rc,
+	viced/fileserver.rc, vlserver/vlserver.rc, vol/salvager.rc,
+	vol/volinfo.rc, volser/volserver.rc, volser/vos.rc: DELTA
+	STABLE12-windows-file-versioning-20030619 AUTHOR
+	cg2v@andrew.cmu.edu FIXES 1488
+	
+	pull up versioning for windows files
+
+2003-07-02 00:21  shadow
+
+	* src/vlserver/cnvldb.c: DELTA
+	STABLE12-gcc-warnings-cleanup-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1650
+	
+	gcc warnings cleanup; add headers, fix castings
+
+2003-07-02 00:18  shadow
+
+	* src/vlserver/cnvldb.c: DELTA
+	STABLE12-gcc-warnings-cleanup-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1650
+	
+	gcc warnings cleanup; add headers, fix castings
+
+2003-07-01 23:53  shadow
+
+	* src/afs/: afs_analyze.c, afs_dcache.c: DELTA
+	STABLE12-translate-more-vol-errors-20030701 AUTHOR
+	shadow@dementia.org FIXES
+	
+	based on complaint from Ryan Underwood on openafs-info.  translate
+	to EDQUOT and ENOSPC actually instead of just returning random
+	numbers
+
+2003-07-01 22:24  shadow
+
+	* acconfig.h, acinclude.m4, src/afs/afs_vcache.c,
+	src/afs/LINUX/osi_file.c, src/cf/linux-test2.m4: DELTA
+	STABLE12-linux-i-alloc-sem-usage-20030701 AUTHOR
+	shadow@dementia.org FIXES
+	
+	modern kernels appear to use i_alloc_sem around truncation
+
+2003-07-01 19:51  shadow
+
+	* src/WINNT/afsd/: cm.h, cm_conn.c: DELTA
+	STABLE12-winnt-avoid-nosuchvolume-for-down-servers-20030619 AUTHOR
+	lantzer@umr.edu FIXES 1568
+	
+	a volume could be marked "no such volume" and hence disappear if a
+	server went down until fs checkv.
+
+2003-07-01 19:46  shadow
+
+	* src/WINNT/afsd/smb.c: DELTA
+	STABLE12-winnt-reset-smb-listener-flags-20030701 AUTHOR
+	bpcreech@eos.ncsu.edu FIXES 1641
+	
+	reset flags on next pass through loop
+
+2003-07-01 19:44  shadow
+
+	* src/WINNT/afsd/afsd_service.c: DELTA
+	STABLE12-winnt-enable-global-drive-mappings-20030701 AUTHOR
+	deengert@anl.gov FIXES 1614
+	
+	This will allow access to AFS from system processes and scheduled
+	tasks.	It also means that each user does not have to map AFS to
+	his own drive.
+
+2003-07-01 19:39  shadow
+
+	* src/ptserver/ptserver.c: DELTA
+	STABLE12-ptserver-make-main-int-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1645
+	
+	don't declare main void.
+
+2003-07-01 19:36  shadow
+
+	* src/auth/ktc.c: DELTA
+	STABLE12-fix-static-decl-conflict-for-localcell-20030701 AUTHOR
+	peb@mppmu.mpg.de FIXES 1646
+	
+	declared static, make header match
+
+2003-07-01 19:35  shadow
+
+	* src/libadmin/pts/afs_ptsAdmin.c: DELTA
+	STABLE12-libadmin-pts-pointer-fixes-20030701 AUTHOR
+	peb@mppmu.mpg.de FIXES 1647
+	
+	fix pointers, kill warnings
+
+2003-07-01 19:31  shadow
+
+	* src/config/: Makefile.i386_linux22.in, Makefile.i386_linux24.in:
+	DELTA STABLE12-use-lncurses-instead-of-path-20030701 AUTHOR
+	peb@mppmu.mpg.de FIXES 1648
+	
+	use -lncurses instead of explicit path
+
+2003-07-01 19:27  shadow
+
+	* Makefile.in, acinclude.m4: DELTA
+	STABLE12-ignore-pam-module-if-no-headers-20030701 AUTHOR
+	peb@mppmu.mpg.de FIXES 1649
+	
+	we check for pam headers; use the result
+
+2003-07-01 19:21  shadow
+
+	* src/: afsd/afsd.c, bozo/bos_util.c, sys/rmtsysc.c,
+	uss/uss_common.h, util/potpourri.h, venus/fs.c, venus/kdump.c,
+	venus/up.c, venus/test/owntest.c, vlserver/cnvldb.c: DELTA
+	STABLE12-gcc-warnings-cleanup-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1650
+	
+	gcc warnings cleanup; add headers, fix castings
+
+2003-07-01 19:15  shadow
+
+	* src/: afs/Makefile.in, budb/Makefile.in: DELTA
+	STABLE12-eliminate-bogus-rebuilding-20030701 AUTHOR
+	peb@mppmu.mpg.de FIXES 1651
+	
+	so makefiles have proper dependancies
+
+2003-07-01 19:10  shadow
+
+	* src/: fsprobe/Makefile.in, libafs/Makefile.common,
+	libuafs/Makefile.common, login/Makefile.in, package/Makefile.in,
+	uss/Makefile.in, xstat/Makefile.in: DELTA
+	STABLE12-kill-usr-include-20030701 AUTHOR peb@mppmu.mpg.de FIXES
+	1652
+	
+	kill explicit makefile refs to -I/usr/include.
+
+2003-07-01 19:03  shadow
+
+	* src/: afsd/Makefile.in, afsmonitor/Makefile.in, auth/Makefile.in,
+	bozo/Makefile.in, bu_utils/Makefile.in, budb/Makefile.in,
+	butc/Makefile.in, butm/Makefile.in, config/Makefile.in,
+	dauth/Makefile.in, finale/Makefile.in, fsprobe/Makefile.in,
+	login/Makefile.in, pinstall/Makefile.in,
+	rx/bulk.example/Makefile.in, rx/bulktest/Makefile.in,
+	rx/multi.example/Makefile.in, rx/simple.example/Makefile.in,
+	rxkad/test/Makefile.in, sia/Makefile.in, tsm41/Makefile.in,
+	ubik/Makefile.in, util/test/Makefile.in, venus/Makefile.in: DELTA
+	STABLE12-cleanup-dbg-and-ldflags-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1653
+	
+	switch from -g to ${DBG}; remove -g from LDFLAGS.
+
+2003-07-01 18:57  shadow
+
+	* src/venus/Makefile.in, acinclude.m4: DELTA
+	STABLE12-kdump-build-cleanup-20030701 AUTHOR peb@mppmu.mpg.de FIXES
+	1654
+	
+	don't rebuild kdump on each build
+
+2003-07-01 18:51  shadow
+
+	* src/: afs/Makefile.in, rx/Makefile.in: DELTA
+	STABLE12-makefile-consistency-20030701 AUTHOR peb@mppmu.mpg.de
+	FIXES 1655
+	
+	apply leading / ourselves for consistency
+
+2003-06-27 14:12  shadow
+
+	* src/bozo/Makefile.in: DELTA STABLE12-bozo-ubik-needs-rx-20030627
+	AUTHOR shadow@dementia.org FIXES
+	
+	make ubik depend on rx, not vice-versa
+
+2003-06-27 14:09  shadow
+
+	* src/rx/xdr.h: DELTA
+	
+	pull up fix for amd64 xdr problem
+	STABLE12-rx-xdr-rename-userland-symbols-also-on-amd64-linux-2003062
+	7 AUTHOR shadow@dementia.org FIXES
+
+2003-06-19 22:03  shadow
+
+	* src/packaging/HP-UX/: psf-1.2.10-transarc-paths-11.00,
+	psf-1.2.10-transarc-paths-11.11, psf-1.2.10-transarc-paths-11.22,
+	psf-1.2.8-transarc-paths-11.00, psf-1.2.9-transarc-paths-11.00,
+	data/depot.copyright, data/depot.description,
+	data/fileset.description, data/openafs-clnt.description,
+	data/openafs-krn.description, data/openafs-run.description,
+	data/openafs-srv.description, data/product.README,
+	data/product.copyright, data/product.description,
+	data/subproduct.description, data/vendor.description,
+	files/usr/vice/etc/CellServDB, files/usr/vice/etc/SuidCells,
+	files/usr/vice/etc/cacheinfo, scripts/openafs-clnt.checkinstall,
+	scripts/openafs-clnt.configure, scripts/openafs-clnt.preinstall,
+	scripts/openafs-clnt.preremove, scripts/openafs-clnt.unconfigure,
+	scripts/openafs-eng-man.configure,
+	scripts/openafs-eng-man.unconfigure,
+	scripts/openafs-krn.checkremove, scripts/openafs-krn.configure,
+	scripts/openafs-krn.postinstall, scripts/openafs-krn.unconfigure,
+	scripts/openafs-krn.verify, scripts/openafs-srv.checkremove,
+	scripts/openafs-srv.configure, scripts/openafs-srv.postremove,
+	scripts/openafs-srv.preinstall, scripts/openafs-srv.preremove,
+	scripts/openafs-srv.subscript, scripts/openafs-srv.unconfigure,
+	scripts/openafs-srv.verify, scripts/openafs.configure,
+	scripts/openafs.postremove, scripts/openafs.unconfigure: DELTA
+	hpux-packagings-20030619 AUTHOR paul.weber@hp.com FIXES 1315
+	
+	updated packaging for hp-ux 11.00, 11.11 and 11.22
+
+2003-06-19 16:19  shadow
+
+	* src/butc/tcudbprocs.c: DELTA
+	STABLE12-use-mkstemp-correctly-on-linux-20030619 AUTHOR
+	shadow@dementia.org FIXES 1603
+	
+	might as well fix it all.
+
+2003-06-19 16:18  shadow
+
+	* acinclude.m4, src/butc/tcudbprocs.c: DELTA
+	STABLE12-check-mkstemp-in-config-20030617 AUTHOR nneul@umr.edu
+	
+	check for mkstemp in configure use HAVE_MKSTEMP in
+	src/butc/tcudbprocs.c
+
+2003-06-19 16:18  shadow
+
+	* src/butc/tcudbprocs.c: DELTA STABLE12-use-mkstemp-20030617 AUTHOR
+	dmagda@magda.ca
+	
+	have the BSDs use mkstemp(3)
+
+2003-06-10 19:22  shadow
+
+	* src/rxkad/ticket.c: DELTA
+	STABLE12-rxkad-check-tkt-length-20030610 AUTHOR shadow@dementia.org
+	FIXES
+	
+	tkt_DecodeTicket didn't seem to check that ticketLen <
+	MAXKTCTICKETLEN
+	
+	didn't matter since no callers failed to check, but we should
+	enforce this where the limit is
+
+2003-06-10 19:15  shadow
+
+	* acinclude.m4: DELTA
+	STABLE12-opteron-no-modversions-ia32-sys-call-table-fun-20030610
+	AUTHOR shadow@dementia.org FIXES
+	
+	attempt to deal if modversions is disabled
+
+2003-06-06 21:12  shadow
+
+	* src/WINNT/afsd/: afsd_init.c, afslogon.c: DELTA
+	STABLE12-winnt-give-better-debugging-20030606 AUTHOR
+	fallsjo@stacken.kth.se FIXES
+	
+	offer better messages in certain cases
+
+2003-06-06 20:00  shadow
+
+	* src/rx/LINUX/rx_knet.c: DELTA
+	STABLE12-linux-rx-listener-flush-signals-20030605 AUTHOR
+	shadow@dementia.org FIXES 1409
+	
+	make sure we flush signals before calling force_sig. i don't know
+	why this matters, but it does.
+
+2003-06-06 19:30  shadow
+
+	* src/rx/LINUX/rx_knet.c: DELTA
+	STABLE12-linux-rx-listener-flush-signals-20030605 AUTHOR
+	shadow@dementia.org FIXES 1409
+	
+	make sure we flush signals before calling force_sig. i don't know
+	why this matters, but it does.
+
+2003-06-05 22:43  shadow
+
+	* src/config/NTMakefile.i386_nt40: DELTA
+	STABLE12-windows-version-20030605 AUTHOR shadow@dementia.org FIXES
+	
+	update version now
+
+2003-06-05 22:39  shadow
+
+	* NEWS: DELTA STABLE12-news-20030605 AUTHOR shadow@dementia.org
+	FIXES
+	
+	update news to be current
+
+2003-06-05 21:42  shadow
+
+	* src/rx/rx.c: DELTA STABLE12-rx-avoid-leaking-nwaiting-20030605
+	AUTHOR shadow@dementia.org FIXES
+	
+	thanks to kolya@mit.edu for suggesting moving rather than adding
+	the decrement and confirming sanity.
+	
+	basically if a call ended up call->error it was possible to
+	queue_Remove() it, drop the call, and not rx_nWaiting--; result
+	should be observed as rxdebug reporting waitprocs when threads were
+	idle.
+
+2003-06-05 14:17  shadow
+
+	* acinclude.m4: DELTA STABLE12-amd64-hook-ia32-table-20030519
+	AUTHOR shadow@dementia.org FIXES
+	
+	if sys_call_table is exported and ia32_sys_call_table isn't, we
+	need it this way
+
+2003-06-04 16:12  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-amd64-hook-ia32-table-20030521 AUTHOR shadow@dementia.org
+	FIXES
+	
+	provide the variables we need for ia32 sys call table if
+	sys_call_table is exported
+
+2003-06-02 22:49  shadow
+
+	* src/util/softsig.c: DELTA STABLE12-softsig-update-20030602 AUTHOR
+	cg2v@andrew.cmu.edu FIXES 1435
+	
+	changes to help us die and to unblock all signals to wait on
+
+2003-05-30 19:29  shadow
+
+	* src/config/: param.i386_umlinux22.h, param.i386_umlinux22_usr.h,
+	param.i386_umlinux24.h, param.i386_umlinux24_usr.h: DELTA
+	STABLE12-i386-user-mode-linux-support-20030513 AUTHOR
+	kvanhees@sinenomine.net FIXES 1396
+	
+	usermode linux support for 1.2.x
+
+2003-05-28 23:49  shadow
+
+	* src/config/Makefile.i386_umlinux22.in: file
+	Makefile.i386_umlinux22.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-28 23:49  shadow
+
+	* src/config/Makefile.i386_umlinux24.in: file
+	Makefile.i386_umlinux24.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-28 23:49  shadow
+
+	* README, .cvsignore, acinclude.m4, src/afs/Makefile.in,
+	src/afs/LINUX/osi_alloc.c, src/config/Makefile.i386_umlinux22.in,
+	src/config/Makefile.i386_umlinux24.in, src/config/afs_sysnames.h,
+	src/config/param.i386_umlinux22.h,
+	src/config/param.i386_umlinux22_usr.h,
+	src/config/param.i386_umlinux24.h,
+	src/config/param.i386_umlinux24_usr.h,
+	src/libafs/MakefileProto.LINUX.in, src/lwp/Makefile.in,
+	src/util/afs_lhash.c: DELTA
+	STABLE12-i386-user-mode-linux-support-20030513 AUTHOR
+	kvanhees@sinenomine.net FIXES 1396
+	
+	usermode linux support for 1.2.x
+
+2003-05-28 18:36  shadow
+
+	* src/WINNT/: afsd/NTMakefile, afsd/afsd_service.c,
+	afsd/largeintdotnet.c, client_osi/osi.h, client_osi/osistatl.h,
+	client_osi/osiutils.c: DELTA
+	STABLE12-closer-to-vc7-support-20030528 AUTHOR cg2v@andrew.cmu.edu
+	FIXES 1334
+	
+	VC7 dropped support for the LARGE_INTEGER functions (linking
+	against largeint.lib doesn't seem to have any effect)
+
+2003-05-28 18:34  shadow
+
+	* src/WINNT/afsd/largeintdotnet.c: DELTA
+	closer-to-vc7-support-20030528 AUTHOR cg2v@andrew.cmu.edu FIXES
+	1334
+	
+	VC7 dropped support for the LARGE_INTEGER functions (linking
+	against largeint.lib doesn't seem to have any effect)
+
+2003-05-28 18:08  shadow
+
+	* Makefile.in: DELTA STABLE12-hpux11i-ia64-hpux-1122-20030523
+	AUTHOR deengert@anl.gov FIXES 1490
+	
+	so 1.2.10 will support hpux 11i and 11.22
+
+2003-05-23 06:52  shadow
+
+	* src/config/Makefile.ia64_hpux1122.in: file
+	Makefile.ia64_hpux1122.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-23 06:52  shadow
+
+	* src/config/Makefile.hp_ux11i.in: file Makefile.hp_ux11i.in was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-05-23 06:52  shadow
+
+	* src/config/param.ia64_hpux1122_usr.h: file
+	param.ia64_hpux1122_usr.h was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-23 06:52  shadow
+
+	* src/config/param.hp_ux11i_usr.h: file param.hp_ux11i_usr.h was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-05-23 06:52  shadow
+
+	* Makefile.in, acinclude.m4, src/afs/afs_osi.c, src/afs/afs_util.c,
+	src/afs/sysincludes.h, src/afs/HPUX/osi_groups.c,
+	src/afs/HPUX/osi_machdep.h, src/afs/HPUX/osi_sleep.c,
+	src/afs/HPUX/osi_vfsops.c, src/afs/HPUX/osi_vnodeops.c,
+	src/afs/VNOPS/afs_vnop_attrs.c, src/afs/VNOPS/afs_vnop_readdir.c,
+	src/afsd/Makefile.in, src/afsd/afs.hpux1122.driver,
+	src/config/Makefile.hp_ux11i.in,
+	src/config/Makefile.ia64_hpux1122.in, src/config/afs_sysnames.h,
+	src/config/param.hp_ux11i.h, src/config/param.hp_ux11i_usr.h,
+	src/config/param.ia64_hpux1122.h,
+	src/config/param.ia64_hpux1122_usr.h, src/dir/dir.c,
+	src/libafs/MakefileProto.HPUX.in,
+	src/libuafs/MakefileProto.HPUX.in, src/lwp/Makefile.in,
+	src/lwp/lwp.h, src/lwp/process.c, src/pam/Makefile.in,
+	src/pinstall/install.c, src/rx/rx_kcommon.c, src/rx/rx_kcommon.h,
+	src/rx/rx_packet.c, src/rx/HPUX/rx_kmutex.h, src/venus/Makefile.in,
+	src/viced/viced.c: DELTA STABLE12-hpux11i-ia64-hpux-1122-20030523
+	AUTHOR deengert@anl.gov FIXES 1490
+	
+	so 1.2.10 will support hpux 11i and 11.22
+
+2003-05-22 15:52  shadow
+
+	* src/afs/afs_call.c: DELTA
+	STABLE12-linux-system-calls-return-long-20030522 AUTHOR
+	shadow@dementia.org FIXES
+	
+	the kernel says they return long. returning int causes sadness.
+	stop being sad.
+
+2003-05-22 15:17  shadow
+
+	* src/afs/afs_pioctl.c: DELTA
+	STABLE12-revert-pioctl-return-negative-errors-on-linux-20030522
+	AUTHOR shadow@dementia.org FIXES
+	
+	syscall stub handles it. this is actually an overflow on 64 bit
+	system
+
+2003-05-22 14:22  shadow
+
+	* src/afs/afs_pioctl.c: DELTA
+	STABLE12-pioctl-return-negative-errors-on-linux-20030522 AUTHOR
+	shadow@dementia.org FIXES
+	
+	otherwise we can end up with errors that make no sense.
+
+2003-05-22 04:58  shadow
+
+	* src/uss/: uss_procs.c, uss_vol.c: DELTA
+	STABLE12-switch-to-strerror-20030522 AUTHOR shadow@dementia.org
+	FIXES 1458
+	
+	your brights brighter, your whites whiter. well, at least compilers
+	won't bitch that sys_errlist[] isn't supported anymore.
+
+2003-05-22 04:08  shadow
+
+	* src/afs/LINUX/: osi_groups.c, osi_module.c: DELTA
+	STABLE12-amd64-hook-ia32-table-20030521 AUTHOR shadow@dementia.org
+	FIXES
+	
+	keep track of the ia32 table separately. annoying but needed.
+
+2003-05-21 21:41  shadow
+
+	* src/afs/LINUX/osi_groups.c: DELTA
+	STABLE12-linux-group-syscalls-return-long-20030521 AUTHOR
+	shadow@dementia.org FIXES
+	
+	these return long. also call the underlying handler expecting to
+	get a long back
+
+2003-05-21 14:45  shadow
+
+	* src/auth/cellconfig.c: DELTA STABLE12-close-cellaliases-20030521
+	AUTHOR thomas.mueller@hrz.tu-chemnitz.de FIXES 1481
+	
+	don't leak a ref to CellAliases
+
+2003-05-21 13:43  shadow
+
+	* src/afs/: afs_call.c, afs_pioctl.c: DELTA
+	STABLE12-amd64-copy-args-for-ia32-table-20030520 AUTHOR
+	shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-21 02:38  shadow
+
+	* src/afs/: afs_call.c, afs_pioctl.c: DELTA
+	STABLE12-amd64-copy-args-for-ia32-table-20030520 AUTHOR
+	shadow@dementia.org FIXES
+	
+	so the ia32 emulation might work
+
+2003-05-20 07:03  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-amd64-hook-ia32-table-20030519 AUTHOR shadow@dementia.org
+	FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 06:26  shadow
+
+	* Makefile.in: DELTA STABLE12-amd64-linux-port-20030428 AUTHOR
+	shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 06:04  shadow
+
+	* acconfig.h, src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-amd64-hook-ia32-table-20030519 AUTHOR shadow@dementia.org
+	FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 05:51  shadow
+
+	* acinclude.m4, src/cf/linux-test4.m4: DELTA
+	STABLE12-amd64-hook-ia32-table-20030519 AUTHOR shadow@dementia.org
+	FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 05:48  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-amd64-hook-ia32-table-20030519 AUTHOR shadow@dementia.org
+	FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 04:23  shadow
+
+	* src/: rx/rx_kcommon.h, afs/afs_conn.c, afs/afs_server.c,
+	afs/afs_user.c, afs/afs_util.c, afs/afs_volume.c,
+	libafs/MakefileProto.LINUX.in: DELTA
+	STABLE12-linux-use-kernel-net-include-dir-for-net-20030519 AUTHOR
+	shadow@dementia.org FIXES
+	
+	since we can end up trying to include things which exist in
+	include/net but not include/linux, try to rationalize.
+
+2003-05-20 04:18  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-amd64-linux-port-20030428 AUTHOR shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-20 04:05  shadow
+
+	* src/cf/linux-test3.m4: DELTA
+	STABLE12-linux-look-for-syscall-h-in-kernel-20030519 AUTHOR
+	shadow@dementia.org FIXES
+	
+	some new kernels appear not to have linux/syscall.h in the kernel.
+	no clue.
+
+2003-05-20 03:50  shadow
+
+	* acinclude.m4, src/cf/linux-test3.m4, src/afs/LINUX/osi_module.c:
+	DELTA STABLE12-linux-look-for-syscall-h-in-kernel-20030519 AUTHOR
+	shadow@dementia.org FIXES
+	
+	some new kernels appear not to have linux/syscall.h in the kernel.
+	no clue.
+
+2003-05-16 19:59  shadow
+
+	* src/config/Makefile.amd64_linux24.in: DELTA
+	STABLE12-amd64-linux-port-20030428 AUTHOR shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-16 19:52  shadow
+
+	* src/config/param.amd64_linux24_usr.h: file
+	param.amd64_linux24_usr.h was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-16 19:52  shadow
+
+	* src/config/: param.amd64_linux24_usr.h,
+	Makefile.amd64_linux24.in: DELTA STABLE12-amd64-linux-port-20030428
+	AUTHOR shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-16 17:45  shadow
+
+	* src/uss/grammar.y: DELTA STABLE12-uss-fix-bogus-grammar-20021026
+	AUTHOR hartmans@mit.edu FIXES 1451
+	
+	newer bison actually wants you to write correct grammars
+	apparently.
+
+2003-05-16 17:43  shadow
+
+	* acinclude.m4, src/cf/linux-test4.m4, src/afs/LINUX/osi_module.c:
+	DELTA STABLE12-linux-try-sys-wait4-20030516 AUTHOR
+	shadow@dementia.org FIXES
+	
+	we may have close/wait4 instead of close/chdir or open/exit
+
+2003-05-15 17:00  shadow
+
+	* src/afs/: afs_call.c, LINUX/osi_file.c, LINUX/osi_misc.c,
+	LINUX/osi_vfsops.c: DELTA
+	
+	to preclude superblock corruption and stramge oopses
+	STABLE12-linux-busy-cache-partition-while-afs-running-and-dont-allo
+	w-afsd-shutdown-while-afs-mounted-20030515 AUTHOR
+	shadow@dementia.org FIXES 1454
+
+2003-05-15 16:24  shadow
+
+	* src/vol/vol-salvage.c: DELTA
+	STABLE12-salvage-allow-hardlinked-logs-by-date-20030515 AUTHOR
+	jhutz@cmu.edu FIXES 1259
+	
+	so salvagelogs can be made persistent (by switch)
+
+2003-05-15 16:13  shadow
+
+	* src/config/Makefile.amd64_linux24.in: file
+	Makefile.amd64_linux24.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-05-15 16:13  shadow
+
+	* Makefile.in, acinclude.m4, src/afs/afs_call.c,
+	src/afs/afs_pioctl.c, src/afs/LINUX/osi_module.c,
+	src/config/Makefile.amd64_linux24.in, src/config/afs_sysnames.h,
+	src/config/param.amd64_linux24.h, src/des/andrew-conf.h,
+	src/des/conf-amd64-linux.h, src/des/crypt.c,
+	src/libafs/MakefileProto.LINUX.in, src/lwp/process.c: DELTA
+	STABLE12-amd64-linux-port-20030428 AUTHOR shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-05-15 15:52  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-pass-pointers-for-uuid-printing-20030422 AUTHOR
+	shadow@dementia.org FIXES
+	
+	pass pointers for uuid string building
+
+2003-05-15 15:52  shadow
+
+	* src/auth/cellconfig.c: DELTA
+	STABLE12-cellconfig-unlock-mutex-on-error-20030422 AUTHOR
+	shadow@dementia.org FIXES
+	
+	clean up my own mess (i bet).  certain error cases weren't being
+	cleaned up properly before we returned
+
+2003-05-15 15:51  shadow
+
+	* src/viced/: callback.c, viced.c: DELTA
+	STABLE12-viced-shutdown-avoid-deadlock-20030424 AUTHOR
+	rtb@pclella.cern.ch FIXES
+	
+	don't deadlock on H_LOCK if we need to shut down in an emergency
+
+2003-05-15 15:51  shadow
+
+	* acinclude.m4, src/cf/ressearch.m4: DELTA
+	STABLE12-autoconf-deal-with-res-search-as-macro-20030428 AUTHOR
+	shadow@dementia.org FIXES
+	
+	on some platforms, res_search is a macro for __res_search, find it
+	anyway
+
+2003-05-15 15:49  shadow
+
+	* src/afs/afs_cell.c: DELTA
+	STABLE12-add-afsdb-aliases-for-cellservdb-cells-20030429 AUTHOR
+	kolya@mit.edu
+	
+	Add cell aliases we find using AFSDB for cells that have been
+	statically configured via CellServDB.  This preserves the AFSDB
+	implementation behavior from before the cell code rewrite.
+
+2003-05-15 15:47  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-mapname-allocate-enough-space-for-pr-nametoid-20030505
+	AUTHOR shadow@dementia.org FIXES
+	
+	the alternative is to crash when we get a foreign user here
+
+2003-05-15 15:46  shadow
+
+	* src/ubik/beacon.c: DELTA
+	
+	don't mess up count by reusing it
+	STABLE12-ubik-dont-copy-stack-garbage-when-netinfo-forces-primary-a
+	ddress-change-20030505 AUTHOR shadow@dementia.org FIXES
+
+2003-05-15 15:45  shadow
+
+	* src/afs/afs_user.c: DELTA
+	STABLE12-linux-gcpags-deal-correctly-with-uid-tokens-20030508
+	AUTHOR shadow@dementia.org FIXES
+	
+	look at the correct uid, so we don't gc in use tokens
+
+2003-05-15 15:32  shadow
+
+	* src/afs/SOLARIS/osi_vfsops.c: DELTA
+	STABLE12-solaris8-dont-read-binding-file-20030513 AUTHOR
+	deengert@anl.gov FIXES 1434
+	
+	Sun changed read_binding_file in a patch; Make sure we avoid the
+	problem.  We don't need to call it if afs was already in
+	/etc/system.
+
+2003-05-15 15:27  shadow
+
+	* src/libafs/MakefileProto.SOLARIS.in: DELTA
+	STABLE12-solaris-deal-with-gatekeeper-stupidity-20030515 AUTHOR
+	jhutz@cmu.edu FIXES 1261
+	
+	make gmake not try to link libafs.o and libafs.nonfs.o into another
+	object
+
+2003-05-15 15:18  shadow
+
+	* src/afsd/afs.rc.darwin: DELTA
+	STABLE12-darwin-use-perl-instead-of-grep-20030513 AUTHOR
+	akosut@cs.stanford.edu FIXES 1361
+	
+	perl is installed by default. grep isn't. use perl.
+
+2003-05-15 15:16  shadow
+
+	* src/afs/LINUX/osi_groups.c: DELTA
+	STABLE12-setgroups-return-errors-negative-20030515 AUTHOR
+	wingc@engin.umich.edu FIXES 1383
+	
+	return errors negative as linux kernel needs
+
+2003-05-15 15:12  shadow
+
+	* src/afs/afs_pioctl.c: DELTA
+	STABLE12-pioctl-buffer-size-checking-20030515 AUTHOR rees@umich.edu
+	
+	don't check output buffer size against PIGGY
+
+2003-05-15 15:12  shadow
+
+	* src/afs/afs_pioctl.c: DELTA
+	STABLE12-pioctl-buffer-size-checking-20030512 AUTHOR
+	dhowells@redhat.com FIXES 1413
+	
+	buffers are signed, should be checked for negative in addition to
+	smaller than PIGGYSIZE; also, check out buffer size before calling
+	pioctl handler.
+
+2003-05-15 15:09  shadow
+
+	* src/: afs/afs_call.c, afs/DARWIN/osi_vfsops.c,
+	afs/DARWIN/osi_vnodeops.c, afsd/Makefile.in, afsd/afsd.c: DELTA
+	STABLE12-darwin-mount-and-disk-arbitration-enhancements-20030515
+	AUTHOR akosut@cs.stanford.edu FIXES 1363
+	
+	* Allow AFS to be mounted multiple times, each mountpoint with its 
+	 own root volume.  This allows usage similar to the Windows client,
+	  e.g., mounting a drive that contains only the user's home  
+	directory.  Our users find this much easier to work with than  
+	having to navigate the entire AFS tree in the Finder or open/save  
+	dialog.
+	
+	* Have afsd register /afs with the DiskArbitration system   when
+	mounting it.  This means that the root afs volume shows up in	the
+	Finder immediately, and prevents the Finder from getting   confused
+	by additional AFS volumes later on.
+	
+	* Add a "-nomount" option to afsd, which prevents afsd from  
+	mounting /afs.	We use this by default on our Mac OS X client, so  
+	that AFS doesn't show up in the interface at all unless the user  
+	explicitly asks for an AFS volume to be mounted.  This is  
+	especially handy for portable or remote users who don't always	
+	have a network connection, since there isn't an AFS filesystem	
+	around to hang the Finder if the AFS servers can't be contacted 
+	(the cache manager may still hang, but since there are no AFS  
+	volumes mounted, the rest of the OS doesn't notice).
+	
+	* Make it so that /afs (mounted by afsd) will not unmount unless  
+	MNT_FORCE is given.  This prevents the user from accidentally  
+	ejecting /afs in the Finder, and also works around a DiskArb bug in
+	  Mac OS X (possibly fixed in 10.2) where autodiskmount would
+	sometimes   unmount /afs when logging out, even though it's marked
+	as   non-ejectable.
+
+2003-05-15 14:33  shadow
+
+	* src/: WINNT/afsd/afsd_service.c,
+	WINNT/install/InstallShield5/NTMakefile,
+	config/NTMakefile.i386_nt40, rx/xdr_mem.c: DELTA
+	STABLE129a-winnt-129a-updates-20030515 AUTHOR james@abrakus.com
+	FIXES 1450
+	
+	minor updates and bugfixes
+
+2003-05-15 14:29  shadow
+
+	* acconfig.h, acinclude.m4: DELTA
+	STABLE12-bos-new-config-option-20021210 AUTHOR shadow@dementia.org
+	FIXES 1224
+	
+	based on patch from nneul@umr.edu but including the switch
+
+2003-05-15 14:17  shadow
+
+	* src/: rx/xdr_mem.c, config/NTMakefile.i386_nt40,
+	WINNT/afsd/afsd_service.c, WINNT/install/InstallShield5/NTMakefile:
+	DELTA STABLE12-winnt-129a-updates-20030515 AUTHOR james@abrakus.com
+	FIXES 1450
+	
+	minor updates and bugfixes
+
+2003-05-15 14:11  shadow
+
+	* src/volser/volprocs.c: DELTA
+	STABLE12-volser-ros-use-parent-id-20030512 AUTHOR
+	shadow@dementia.org FIXES 1448
+	
+	everything shoudl be done as the parent volume id so the volume
+	group stuff works right.  otherwise, we create things which get
+	stored under one "tag", try to open the, under another "tag" and
+	they aren't there, because it doesn't hash the same.
+
+2003-05-14 15:50  shadow
+
+	* src/afs/VNOPS/afs_vnop_attrs.c: DELTA
+	STABLE12-osx-fake-mode-bits-20030513 AUTHOR akosut@cs.stanford.edu
+	FIXES 1362
+	
+	give up on waiting for apple to get things right, which probably
+	means they never will.
+
+2003-05-14 14:44  shadow
+
+	* src/: uss/lex.c, uss/uss_procs.c, venus/fs.c, venus/up.c,
+	vlserver/cnvldb.c, budb/procs.c: DELTA
+	STABLE12-ia64-string-headers-20030513 AUTHOR
+	chas@locutus.cmf.nrl.navy.mil FIXES 1395
+	
+	already in CVS head, needed for 1.2
+
+2003-05-13 04:24  shadow
+
+	* src/config/: param.i386_umlinux22.h, param.i386_umlinux22_usr.h,
+	param.i386_umlinux24.h, param.i386_umlinux24_usr.h: DELTA
+	i386-user-mode-linux-support-20030513 AUTHOR
+	kvanhees@sinenomine.net FIXES 1396
+	
+	support for usermode linux
+
+2003-05-12 15:16  shadow
+
+	* src/afs/afs_analyze.c: DELTA
+	STABLE12-afs-analyze-avoid-potential-loop-20030423 AUTHOR
+	shadow@dementia.org FIXES
+	
+	avoid potentially looping forever in e.g. afs_FetchStatus because
+	we exit afs_Analyze too early to increment busyCount, and despite
+	having areq->busyCount non-zero we have servers still not_busy
+	which are already down that we'll never talk to again. that
+	combined with no conn means we never touch most of afs_Analyze,
+	exiting early with shouldRetry set.
+	
+	incrementing busyCount whenever we exit with shouldRetry set should
+	ensure we can never end up looping forever.
+
+2003-05-05 20:11  jhutz
+
+	* src/WINNT/eventlog/lang/: de_DE/event.mc, es_ES/event.mc,
+	ja_JP/event.mc, ko_KR/event.mc, pt_BR/event.mc, zh_CN/event.mc,
+	zh_TW/event.mc: DELTA
+	STABLE12-winnt-eventlog-newline-fixes-20030505 AUTHOR jhutz@cmu.edu
+	
+	Clean up newline conventions in src/WINNT/eventlog/lang/*/event.mc.
+	 Existing files were in CVS with CRLF newlines, and so some Windows
+	tools would check them out with CRCRLF.  Unfortunately, the
+	mc-compiler can't handle CRCRLF newlines.  Fixing the files in CVS
+	to have LF newlines (like all proper text files) makes the problem
+	go away -- they end up with CRLF if checked out using tools that do
+	newline conversion, and LF-only if not, and the compiler accepts
+	either.
+
+2003-04-28 23:06  shadow
+
+	* src/cf/ressearch.m4: DELTA
+	autoconf-deal-with-res-search-as-macro-20030428 AUTHOR
+	shadow@dementia.org FIXES
+	
+	on some platforms, res_search is a macro for __res_search, find it
+	anyway
+
+2003-04-28 21:07  shadow
+
+	* src/: config/param.amd64_linux24.h, des/conf-amd64-linux.h: DELTA
+	amd64-linux-port-20030428 AUTHOR shadow@dementia.org FIXES
+	
+	first cut at an opteron port
+
+2003-04-14 15:47  shadow
+
+	* src/rx/SOLARIS/rx_knet.c: DELTA
+	STABLE12-solaris-x86-port-already-htons-20030414 AUTHOR
+	fallsjo@isk.kth.se FIXES
+	
+	rx_port is already htons() and htons is a NULL-op on sparc but not
+	on x86...  make shutdown actually work on x86 solaris
+	
+	will issue this patch only as 1.2.9a or as "contributed"; something
+	to avoid needing a fresh release.
+
 2003-04-11 13:50  shadow
 
 	* src/util/pthread_nosigs.h: DELTA
