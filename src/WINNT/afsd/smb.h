@@ -153,7 +153,7 @@ typedef struct smb_vc {
     struct smb_user *usersp;	/* the first child in the user session list */
     struct smb_fid *fidsp;		/* the first child in the open file list */
 	struct smb_user *justLoggedOut;	/* ready for profile upload? */
-	unsigned long logoffTime;	/* tick count when logged off */
+	time_t logoffTime;	/* tick count when logged off */
 	/*struct cm_user *logonDLLUser;	/* integrated logon user */
 	unsigned char errorCount;
     char rname[17];
@@ -316,7 +316,7 @@ typedef struct smb_dirSearch {
         int refCount;			/* reference count */
         long cookie;			/* value returned to the caller */
         struct cm_scache *scp;		/* vnode of the dir we're searching */
-        long lastTime;			/* last time we used this */
+        time_t lastTime;		/* last time we used this */
         long flags;			/* flags (see below);
 					 * locked by smb_globalLock */
         unsigned short attribute;	/* search attribute
@@ -350,7 +350,7 @@ typedef struct smb_waitingLock {
 	smb_vc_t *vcp;
 	smb_packet_t *inp;
 	smb_packet_t *outp;
-	u_long timeRemaining;
+	time_t timeRemaining;
 	void *lockp;
 } smb_waitingLock_t;
 
@@ -380,17 +380,17 @@ extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
 #endif
   );
 
-extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime);
+extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime);
 
-extern void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep);
+extern void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep);
 
-extern void smb_SearchTimeFromUnixTime(long *dosTimep, afs_uint32 unixTime);
+extern void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime);
 
-extern void smb_UnixTimeFromSearchTime(afs_uint32 *unixTimep, long searchTime);
+extern void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime);
 
-extern void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, afs_uint32 unixTime);
+extern void smb_DosUTimeFromUnixTime(time_t *dosUTimep, time_t unixTime);
 
-extern void smb_UnixTimeFromDosUTime(afs_uint32 *unixTimep, afs_uint32 dosUTime);
+extern void smb_UnixTimeFromDosUTime(time_t *unixTimep, time_t dosUTime);
 
 extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
@@ -476,7 +476,7 @@ extern void smb_HoldVC(smb_vc_t *vcp);
 /* some globals, too */
 extern char *smb_localNamep;
 extern int loggedOut;
-extern unsigned long loggedOutTime;
+extern time_t loggedOutTime;
 extern char *loggedOutName;
 extern smb_user_t *loggedOutUserp;
 
@@ -487,7 +487,7 @@ extern osi_rwlock_t smb_globalLock;
 extern osi_rwlock_t smb_rctLock;
 
 extern int smb_LogoffTokenTransfer;
-extern unsigned long smb_LogoffTransferTimeout;
+extern time_t smb_LogoffTransferTimeout;
 
 extern int smb_maxVCPerServer; /* max # of VCs per server */
 extern int smb_maxMpxRequests; /* max # of mpx requests */
