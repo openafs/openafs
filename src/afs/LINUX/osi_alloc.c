@@ -188,7 +188,7 @@ hash_verify(size_t index, unsigned key, void *data)
     int memtype;
 
     memtype = MEMTYPE(lmp->chunk);
-#ifdef AFS_SPARC64_LINUX24_ENV
+#if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_I386_UMLINUX20_ENV)
     if ((memtype == KM_TYPE) && (!VALID_PAGE(virt_to_page(lmp->chunk)))) {
 	printf("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n", lmp->chunk, index, key);
     }

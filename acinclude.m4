@@ -536,6 +536,11 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
+			AFS_ISUML=`echo $LINUX_VERSION | awk 'BEGIN {FS="-[[0-9]]+"} {print $[]2}'`
+			if test "x${AFS_ISUML}" = "xum"; then
+			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			fi
+			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)

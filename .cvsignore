@@ -9,6 +9,8 @@ hp_ux102
 hp_ux110
 i386_linux22
 i386_linux24
+i386_umlinux22
+i386_umlinux24
 include
 lib
 parisc_linux24
