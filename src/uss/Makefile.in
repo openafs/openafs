@@ -75,8 +75,8 @@ uss_fs.o : uss_fs.c
 lex.yy.o : lex.yy.c y.tab.c
 	${CC} -c ${CFLAGS} lex.yy.c
 
-lex.yy.c : lex.c
-	${LEX} ${srcdir}/lex.c
+lex.yy.c : lex.l
+	${LEX} ${srcdir}/lex.l
 
 y.tab.o : y.tab.c
 	${CC} -c ${CFLAGS} y.tab.c
