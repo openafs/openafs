@@ -522,12 +522,14 @@ links:
 	- /bin/rm -rf @sys/dest/* ;
 	- /bin/mkdir @sys/obj ;
 	echo "Create the obj directories"
+	here=`pwd` ; \
 	cd src; \
 	for file in `find [!NW]* -type d -print` ; do \
-		/bin/mkdir ../obj/$${file} ; \
+		/bin/mkdir $${here}/obj/$${file} ; \
 	done;
 	echo "Create the obj file links"
+	here=`pwd` ; \
 	cd src; \
 	for file in `find [!NW]* -type f -print` ; do \
-		/bin/ln -s `pwd`/$${file} ../obj/$${file} ; \
+		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
 	done;
