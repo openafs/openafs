@@ -248,7 +248,7 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 struct timezone {
     int a,b;
 };
-#ifndef AFS_ALPHA_LINUX20_ENV
+#if 0/*ndef AFS_ALPHA_LINUX20_ENV*/
 #ifndef AFS_LINUX24_ENV
 typedef struct timeval {
     int tv_sec;
