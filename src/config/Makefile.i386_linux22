@@ -45,7 +45,7 @@ MV=mv
 RANLIB=ranlib
 RM=rm
 WASHTOOL=${DESTDIR}bin/washtool
-INSTALL=install
+INSTALL=${DESTDIR}bin/install
 #
 # Other OS specific requirements
 #
