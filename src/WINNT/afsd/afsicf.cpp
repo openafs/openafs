@@ -135,6 +135,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 	INetFwOpenPort * fwPort = NULL;
 	HRESULT hr;
 	HRESULT rhr = S_OK; /* return value */
+        int i = 0;
 
 	hr = fwProfile->get_GloballyOpenPorts(&fwPorts);
 	if (FAILED(hr)) {
@@ -145,7 +146,7 @@ HRESULT icf_CheckAndAddPorts(INetFwProfile * fwProfile, global_afs_port_t * port
 	}
 
 	// go through the supplied ports
-	for (int i=0; i<nPorts; i++) {
+	for (i=0; i<nPorts; i++) {
 		VARIANT_BOOL vbEnabled;
 		BSTR bstName = NULL;
 		BOOL bCreate = FALSE;

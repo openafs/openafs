@@ -142,6 +142,9 @@ directories.
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
 
+(31) Add support for multi-homed servers
+
+
 -------------------------------------------------------------------------
 List of unfunded projects:
 
@@ -220,3 +223,5 @@ List of unfunded projects:
   24. Add support for storing Extended Attributes on files
   25. Add support for storing Windows ACLs on files
   26. Remove submount creation as a side effect of drive creation
+  27. Finish conversion from string.h to strsafe.h
+  28. Add support for multi-homed servers

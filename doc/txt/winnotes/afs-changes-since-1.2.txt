@@ -1,3 +1,10 @@
+Since 1.3.74:
+  * Added support for VL_GetEntryByNameN().  Still need to add
+    support for VL_GetEntryByNameU() for multi-homed support.
+
+  * Fix a deadlock situation in afscreds.exe when canceling an
+    auto-generated Obtain Tokens dialog
+
 Since 1.3.72/73:
   * Fix the locking of objects during Directory Searches in the
     SMB/CIFS server.  The failure to properly lock the reference 

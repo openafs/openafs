@@ -619,26 +619,6 @@ long cm_InitLocalMountPoints() {
     // open the ini file for reading
     fp = fopen(hdir, "r");
 
-    // if we fail to open the file, create an empty one
-    if (!fp) {
-        fp = fopen(hdir, "w");
-      	code = cm_GetRootCellName(rootCellName);
-        if (code == 0) {
-            fputs("1\n", fp);
-            fprintf(fp,"%s#%s:root.cell.\n",rootCellName,rootCellName);
-            fprintf(fp,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
-            fclose(fp);
-            fp = fopen(hdir, "r");
-        } else {
-            fputs("0\n", fp);
-            fclose(fp);
-            return 0;  /* success */
-        }
-    }
-
-    // we successfully opened the file
-    osi_Log0(afsd_logp,"opened afs_freelance.ini");
-	
 #if !defined(DJGPP)
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                     "SOFTWARE\\OpenAFS\\Client\\Freelance",
@@ -652,6 +632,22 @@ long cm_InitLocalMountPoints() {
     dwIndex = 0;
 #endif
 
+    if (!fp) {
+#if !defined(DJGPP);
+        RegCloseKey(hkFreelance);
+#endif
+        rootCellName[0] = '.';
+      	code = cm_GetRootCellName(&rootCellName[1]);
+        if (code == 0) {
+            cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
+            cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+        }
+        return 0;
+    }
+
+    // we successfully opened the file
+    osi_Log0(afsd_logp,"opened afs_freelance.ini");
+	
     // now we read the first line to see how many entries
     // there are
     fgets(line, sizeof(line), fp);
@@ -668,9 +664,11 @@ long cm_InitLocalMountPoints() {
     // that we read
     cm_noLocalMountPoints = atoi(line);
 
-    // create space to store the local mount points
-    cm_localMountPoints = malloc(sizeof(cm_localMountPoint_t) * cm_noLocalMountPoints);
-    aLocalMountPoint = cm_localMountPoints;
+    if (cm_noLocalMountPoints > 0) {
+        // create space to store the local mount points
+        cm_localMountPoints = malloc(sizeof(cm_localMountPoint_t) * cm_noLocalMountPoints);
+        aLocalMountPoint = cm_localMountPoints;
+    }
 
     // now we read n lines and parse them into local mount points
     // where n is the number of local mount points there are, as
@@ -687,6 +685,11 @@ long cm_InitLocalMountPoints() {
             fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: empty line in line %d", i);
             return -1;
         }
+
+        /* find the trailing dot; null terminate after it */
+        t2 = strrchr(line, '.');
+        if (t2)
+            *(t2+1) = '\0';
 
 #if !defined(DJGPP)
         if ( hkFreelance ) {
@@ -714,8 +717,8 @@ long cm_InitLocalMountPoints() {
         *(aLocalMountPoint->namep + (t-line)) = 0;
 
         aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
-        memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-2);
-        *(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
+        memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-1);
+        *(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-1)) = 0;
 
         osi_Log2(afsd_logp,"found mount point: name %s, string %s",
                   aLocalMountPoint->namep,
@@ -816,9 +819,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
                 RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
                 break;
             } else {
-				int len = strlen(filename);
-				if ( dwType == REG_SZ && !strncmp(filename, szMount, len) && 
-					(szMount[len] == '%' || szMount[len] == '#')) {
+                int len = strlen(filename);
+                if ( dwType == REG_SZ && !strncmp(filename, szMount, len) && 
+                     (szMount[len] == '%' || szMount[len] == '#')) {
                     /* Replace the existing value */
                     dwType = REG_SZ;
                     dwSize = strlen(line) + 1;

@@ -21,7 +21,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-
 #include <osi.h>
 
 #include "afsd.h"

@@ -250,7 +250,7 @@ configureBackConnectionHostNames(void)
     DWORD dwType;
     DWORD dwSize;
     DWORD dwValue;
-    PBYTE pHostNames = NULL, pName;
+    PBYTE pHostNames = NULL, pName = NULL;
     BOOL  bNameFound = FALSE;   
 
     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
@@ -273,12 +273,14 @@ configureBackConnectionHostNames(void)
         }
              
         if ( !bNameFound ) {
+            int size = strlen(cm_NetbiosName) + 2;
             if ( !pHostNames ) {
-                pName = pHostNames = malloc(strlen(cm_NetbiosName) + 2);
+                pHostNames = malloc(size);
                 dwSize = 1;
             }
-            strcpy(pName, cm_NetbiosName);
-            pName += strlen(cm_NetbiosName) + 1;
+            pName = pHostNames;
+            StringCbCopyA(pName, size, strlen(cm_NetbiosName));
+            pName += size - 1;
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;

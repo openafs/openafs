@@ -1007,8 +1007,6 @@ int cm_FindFileType(cm_fid_t *fidp)
     lock_ObtainWrite(&cm_scacheLock);
     for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
-            /*scp->refCount++;*/
-            /*cm_AdjustLRU(scp);*/
             lock_ReleaseWrite(&cm_scacheLock);
             return scp->fileType;
         }
