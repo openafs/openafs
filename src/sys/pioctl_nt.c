@@ -112,6 +112,20 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
             strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+        } else if (fileNamep[0] == fileNamep[1] && 
+			       fileNamep[0] == '\\')
+        {
+            int count = 0, i = 0;
+
+            while (count < 4 && fileNamep[i]) {
+                tbuffer[i] = fileNamep[i];
+                if ( tbuffer[i++] == '\\' )
+                    count++;
+            }
+            if (tbuffer[i] == 0)
+                tbuffer[i++] = '\\';
+            tbuffer[i] = 0;
+            strcat(tbuffer, SMB_IOCTL_FILENAME);
         } else {
             char curdir[256]="";
 
@@ -120,6 +134,20 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 tbuffer[0] = curdir[0];
                 tbuffer[1] = ':';
                 strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+            } else if (curdir[0] == curdir[1] &&
+                       curdir[0] == '\\') 
+            {
+                int count = 0, i = 0;
+
+                while (count < 4 && curdir[i]) {
+                    tbuffer[i] = curdir[i];
+                    if ( tbuffer[i++] == '\\' )
+                        count++;
+                }
+                if (tbuffer[i] == 0)
+                    tbuffer[i++] = '\\';
+                tbuffer[i] = 0;
+                strcat(tbuffer, SMB_IOCTL_FILENAME);
             }
         }
 	}

@@ -167,7 +167,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         if ( !_strnicmp("all", p, 3) )
             p += 4;
 
-        for (i = 0; *p != '\\'; i++,p++ ) {
+        for (i = 0; *p && *p != '\\'; i++,p++ ) {
             shareName[i] = *p;
         }
         p++;                    /* skip past trailing slash */
@@ -195,7 +195,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 				p += 4;
 
 			shareName[0] = '/';
-			for (i = 1; *p != '\\'; i++,p++ ) {
+			for (i = 1; *p && *p != '\\'; i++,p++ ) {
 				shareName[i] = *p;
 			}
 			p++;                    /* skip past trailing slash */
