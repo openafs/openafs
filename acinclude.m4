@@ -201,17 +201,17 @@ case $system in
                          if test "x$linux_syscall_method" = "xnone"; then
                         AC_MSG_ERROR([no available sys_call_table access method])
                          fi
-			 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
-			  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
-			 fi
-			 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
-			  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
-			 fi
-			 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
-			  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
-			 fi
                    fi
                  fi
+		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+		 fi
+		 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
+		 fi
+		 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
+		 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if your linux kernel exports tasklist_lock])
 		 fi
