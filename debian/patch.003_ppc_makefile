@@ -1,0 +1,31 @@
+Index: src/config//Makefile.ppc_linux22.in
+===================================================================
+RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/Makefile.ppc_linux22.in,v
+retrieving revision 1.4
+diff -u -r1.4 Makefile.ppc_linux22.in
+--- src/config//Makefile.ppc_linux22.in	11 Sep 2001 15:48:00 -0000	1.4
++++ src/config//Makefile.ppc_linux22.in	13 Sep 2001 20:26:09 -0000
+@@ -35,7 +35,7 @@
+ MV=mv
+ RANLIB=ranlib
+ RM=rm
+-
++INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+ # Other OS specific requirements
+ #
+ YACC = bison -y
+Index: src/config//Makefile.ppc_linux24.in
+===================================================================
+RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/Makefile.ppc_linux24.in,v
+retrieving revision 1.1.1.2
+diff -u -r1.1.1.2 Makefile.ppc_linux24.in
+--- src/config//Makefile.ppc_linux24.in	11 Sep 2001 14:32:08 -0000	1.1.1.2
++++ src/config//Makefile.ppc_linux24.in	13 Sep 2001 20:26:09 -0000
+@@ -35,7 +35,6 @@
+ MV=mv
+ RANLIB=ranlib
+ RM=rm
+-
+ INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+ #
+ # Other OS specific requirements
