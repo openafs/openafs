@@ -1163,18 +1163,63 @@ afs_linux_link(struct dentry *olddp, struct inode *dip, struct dentry *newdp)
 int
 afs_linux_unlink(struct inode *dip, struct dentry *dp)
 {
-    int code;
+    int code = EBUSY;
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
+    struct vcache *tvc = ITOAFS(dp->d_inode);
 
 #if defined(AFS_LINUX26_ENV)
     lock_kernel();
 #endif
+    if (((VREFCOUNT(tvc) > 0) && tvc->opens > 0)
+				&& !(tvc->states & CUnlinked)) {
+	struct dentry *__dp;
+	char *__name;
+	extern char *afs_newname();
+
+	__dp = NULL;
+	__name = NULL;
+	do {
+	    dput(__dp);
+
+	    AFS_GLOCK();
+	    if (__name)
+		osi_FreeSmallSpace(__name);
+	    __name = afs_newname();
+	    AFS_GUNLOCK();
+
+	    __dp = lookup_one_len(__name, dp->d_parent, strlen(__name));
+		
+	    if (IS_ERR(__dp))
+		goto out;
+	} while (__dp->d_inode != NULL);
+
+	AFS_GLOCK();
+	code = afs_rename(ITOAFS(dip), dp->d_name.name, ITOAFS(dip), __dp->d_name.name, credp);
+	if (!code) {
+            tvc->mvid = __name;
+            crhold(credp);
+            if (tvc->uncred) {
+                crfree(tvc->uncred);
+            }
+            tvc->uncred = credp;
+	    tvc->states |= CUnlinked;
+	}
+	AFS_GUNLOCK();
+
+	if (!code)
+	    d_move(dp, __dp);
+	dput(__dp);
+
+	goto out;
+    }
+
     AFS_GLOCK();
     code = afs_remove(ITOAFS(dip), name, credp);
     AFS_GUNLOCK();
     if (!code)
 	d_drop(dp);
+out:
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
