@@ -494,7 +494,7 @@ nfs3_to_afs_call(int which, caddr_t *args, nfs_fh3 **fhpp, nfs_fh3 **fh2pp)
         case NFSPROC3_LOOKUP: 
 	{
             LOOKUP3args *arg = (LOOKUP3args *)args;
-            fhp1 = (nfs_fh3 *) &arg->what.dir;
+            fhp1 = (nfs_fh3 *) &arg->what.dirp;
             break;
         } 
         case NFSPROC3_ACCESS: 
