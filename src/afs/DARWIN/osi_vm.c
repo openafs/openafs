@@ -63,6 +63,27 @@ osi_VM_FlushVCache(avc, slept)
                 ubc_release(vp);
 	        ubc_info_free(vp);
 	}
+#else
+    /* This is literally clean_up_name_parent_ptrs */
+    if (VNAME(vp) || VPARENT(vp)) {
+	char *tmp1;
+	struct vnode *tmp2;
+	
+	// do it this way so we don't block before clearing 
+	// these fields.
+	tmp1 = VNAME(vp);
+	tmp2 = VPARENT(vp);
+	VNAME(vp) = NULL;
+	VPARENT(vp) = NULL;
+	
+	if (tmp1) {
+	    remove_name(tmp1);
+	}
+	
+	if (tmp2) {
+	    vrele(tmp2);
+	}
+    }
 #endif
 
     AFS_GLOCK();
