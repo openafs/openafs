@@ -134,14 +134,7 @@ rx: des
 	$(NTMAKE)
 	$(CD) ..\..
 
-rx\test: rx
-    echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-rxstat: rx\test
+rxstat: rx
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -589,8 +582,12 @@ lang:
     nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile lang" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile lang" install
 
 mkdir:
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
+    -mkdir $(AFS_OBJDIR)
+    -mkdir $(DESTDIR)
+    -mkdir $(AFS_OBJDIR)\checked
+    -mkdir $(AFS_OBJDIR)\free
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin
