@@ -1,4 +1,4 @@
-OpenAFS for Windows 1.3.74 Installation Notes
+OpenAFS for Windows 1.3.78 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
@@ -56,16 +56,18 @@ is in use, the NETBIOS name associated with the AFS Client Service is simply
 
 When the MLA is installed, UNC paths of the form \\AFS\cellname\path may be used.
 
-The MLA is installed without binding the "Client for Microsoft Networks" or 
-"File and Printer Sharing for Microsoft Networks".  If you bind these options
-to the MLA there will be a conflict between the name "AFS" and the name of 
-the machine on the published IP Address.  This may result in a failure to be
-able to access files in AFS.  The "NET VIEW" command will return a "System 
-Error 52" message when this conflict exists.  To correct the problem:
+The MLA is installed with a binding to "Client for Microsoft Networks" but not 
+to "File and Printer Sharing for Microsoft Networks".  If you fail to bind 
+"Client Microsoft Networks" you will not be able to access the AFS Client 
+Service when the machine is disconnect from the network.  If you bind "File 
+and Printer Sharing ..." there will be a conflict between the name "AFS" and 
+the name of the machine on the published IP Address.  This will result in a 
+failure to be able to access files in AFS.  The "NET VIEW" command will return 
+a "System Error 52" message when this conflict exists.  To correct the problem:
 
  * stop the AFS Client Service
- * unbind the "Client for Microsoft Networks" and "File and Printer Sharing
-   for Microsoft Networks" from the MLA
+ * bind the "Client for Microsoft Networks" to the MLA
+ * unbind "File and Printer Sharing for Microsoft Networks" from the MLA
  * Disable and then Enable the MLA
  * start the AFS Client Service
 
@@ -168,13 +170,21 @@ What Integrated Logon does not do:
      Kerberos KDC is inaccessible at logon time.
 
 
-7. The AFS Systray tool (afscreds.exe) supports several new command line 
+7. The AFS Systray tool (afscreds.exe) supports several command line 
 options: 
 
     -A = autoinit 
+    -E = force existing afscreds to exit
+    -I = install startup shortcut
     -M = renew drive maps 
     -N = ip address change detection 
+    -Q = quiet mode.  do not display start service dialog
+             if afsd_service is not already running
+    -S = show tokens dialog on startup
+    -U = uninstall startup shortcut
+    -X = test and do map share
     -Z = unmap drives
+    -: = magic parameter for high security mode 
 
 autoinit will result in automated attempts to acquire AFS tokens when 
 afscreds.exe is started.  afscreds.exe will attempt to utilize tickets stored
@@ -501,6 +511,29 @@ file is available for the problem include it along with the AFS Client Trace
 file  %WINDIR%\TEMP\afsd.log.  The AFS Client startup log is 
 %WINDIR%\TEMP\afsd_init.log.  Send the last continuous block of log 
 information from this file.
+
+Configuring DrWatson to generate dump files for crashes:
+
+ * Run drwtsn32.exe to configure or to identify where the log and the crash dump 
+   files are created: 
+   - click Start > Run...  
+   - type drwtsn32 <enter>. 
+   - Select either a Crash Dump Type: Mini or Full. 
+   - Clear Dump Symbol Table
+   - Clear Append to Existing Log file. 
+   - Check Dump All Thread Contexts.
+   - Check Create Crash Dump File
+ * Next run the monitoring module of Dr. Watson: 
+   - click Start > Run...
+   - type drwatson <enter>. 
+   - Once a crash happens, Dr. Watson generates a dump file and a report in the 
+     log file, including the address of the crash and the stack dump.
+
+Once you have the Dr. Watson's logfile and minidump, zip them and send them as
+attachments with your e-mail to openafs-bugs@openafs.org.
+
+When reporting a error, please be sure to include the version of OpenAFS.
+
 
 ------------------------------------------------------------------------
 

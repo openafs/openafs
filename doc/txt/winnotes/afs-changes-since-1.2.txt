@@ -1,4 +1,29 @@
 Since 1.3.77:
+  * The list of ACL entries was becoming corrupted because the function
+    which obtained a free entry was doing so without the appropriate lock
+    being held.
+
+  * Changed the default @sys name list to "x86_win32 i386_w2k i386_nt40"
+    for 32-bit x86 systems.  The default for itanium will be "ia64_win64"
+    and "amd64_win64" for amd 64-bit processors.
+
+  * When executing executables, Windows provides a mechanisms by which
+    the normal search for DLLs can be bypassed.  If a file foo.exe is
+    being executed and there exists a file or directory "foo.exe.local" 
+    (the contents are ignored if a file), then Windows will search for
+    DLLs first in the "foo.exe.local" directory and second in the 
+    directory in which the "foo.exe" file is located.  
+
+    Previous releases of OAFW would improperly return 
+    STATUS_NOT_A_DIRECTORY instead of the expected 
+    STATUS_OBJECT_PATH_NOT_FOUND.  This would cause the Windows SMB client
+    to terminate the search for the DLL causing the execution of the 
+    application to fail.                                                                           
+
+  * Re-work the reference counting of smb_vc_t objects.  The references
+    stored in the waiting locks were not counted.  This could result in
+    an assertion if the reference count drops below 0.
+
   * Correct deadlock condition in cm_EndCallbackGrantingCall which can
     be triggered if the volume referenced by the cm_scache_t object is
     offline.
