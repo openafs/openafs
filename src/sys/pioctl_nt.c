@@ -309,8 +309,24 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     GetCurrentDirectory(sizeof(tpath), tpath);
 	if (tpath[1] == ':')
 	    strcpy(outPathp, tpath + 2);	/* skip drive letter */
-	else
-		strcpy(outPathp, tpath);		/* copy entire UNC path */
+	else if ( tpath[0] == '\\' && tpath[1] == '\\') {
+        /* UNC path - strip off the server and sharename */
+        int i, count;
+        for ( i=2,count=2; count < 4 && tpath[i]; i++ ) {
+            if ( tpath[i] == '\\' || tpath[i] == '/' ) {
+                count++;
+            }
+        }
+        if ( tpath[i] == 0 ) {
+            strcpy(outPathp,"\\");
+        } else {
+            strcpy(outPathp,&tpath[--i]);
+        }
+    } else {
+        /* this should never happen */
+        strcpy(outPathp, tpath);
+    }
+
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
 		int len = strlen(outPathp);
