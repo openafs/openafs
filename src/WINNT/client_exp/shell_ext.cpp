@@ -173,7 +173,7 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 
 	// Don't add any menu items if we're being asked to deal with this file as a shortcut.
 	if (uFlags & CMF_VERBSONLY)
-		return ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_NULL, (USHORT)0));
+		return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, (USHORT)0);
 
 	// Check to see if there's already an AFS menu here; if so, remove it
 	int nItemsNow = GetMenuItemCount (hMenu);
@@ -263,8 +263,8 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	// Add a separator after us
 	::InsertMenu (hMenu, indexMenu + indexShellMenu++, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, TEXT(""));
 	
-    return ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_NULL, 
-			(USHORT)indexAfsMenu + indexVolPartMenu + indexMountPointMenu + indexShellMenu + indexSymbolicMenu));
+    return MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, 
+			(USHORT)indexAfsMenu + indexVolPartMenu + indexMountPointMenu + indexShellMenu + indexSymbolicMenu);
 }
 
 STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
@@ -523,8 +523,9 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
 
     //  Use the given IDataObject to get a list of filenames (CF_HDROP)
     hres = pdobj->GetData(&fmte, &medium);
-    if (FAILED(hres))
+    if (FAILED(hres)) {
 	    return E_FAIL;
+    }
 
     int nNumFiles = DragQueryFile((HDROP)medium.hGlobal, 0xFFFFFFFF, NULL, 0);
 	if (nNumFiles == 0)
@@ -561,7 +562,7 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
 		}
 
 		if (pThis->m_astrFileNames.GetSize() > 0)
-			hres = S_OK;
+			hres = NOERROR;
 		else
 			hres = E_FAIL;
     }

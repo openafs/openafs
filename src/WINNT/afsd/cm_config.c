@@ -23,13 +23,19 @@
 
 #include "cm_config.h"
 #ifdef AFS_AFSDB_ENV
+#if !defined(DJGPP) && defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x500
+#include <windns.h>
+#define DNSAPI_ENV
+#else
 #include "cm_dns.h"
+#endif
 #include <afs/afsint.h>
 #endif
 
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
 
+/* TODO: these should be pulled in from dirpath.h */
 #define AFS_THISCELL "ThisCell"
 #define AFS_CELLSERVDB_UNIX "CellServDB"
 #define AFS_CELLSERVDB_NT "afsdcell.ini"
@@ -46,6 +52,38 @@ extern int errno;
 #define AFS_CELLSERVDB AFS_CELLSERVDB_NT
 #endif /* DJGPP || WIN95 */
 
+DWORD TraceOption=1;
+
+#define TRACE_OPTION_EVENT 1
+#define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
+
+void DebugEvent0_local(char *a) 
+{
+	HANDLE h; char *ptbuf[1];
+	if (!ISLOGONTRACE(TraceOption))
+		return;
+	h = RegisterEventSource(NULL, a);
+	ptbuf[0] = a;
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+	DeregisterEventSource(h);
+}
+
+#define MAXBUF_ 131
+
+void DebugEvent_local(char *a,char *b,...) 
+{
+	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+	va_list marker;
+	if (!ISLOGONTRACE(TraceOption))
+		return;
+	h = RegisterEventSource(NULL, a);
+	va_start(marker,b);
+	_vsnprintf(buf,MAXBUF_,b,marker);
+	ptbuf[0] = buf;
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
+	DeregisterEventSource(h);
+	va_end(marker);
+}
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -128,8 +166,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	long ip_addr;
     int c1, c2, c3, c4;
     char aname[256];
-#endif
     char *afsconf_path;
+#endif
 
 	foundCell = 0;
 
@@ -150,6 +188,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 
     tfilep = fopen(wdir, "r");
 
+#if defined(DJGPP) || defined(AFS_WIN95_ENV)
     if (!tfilep) {
         /* If we are using DJGPP client, cellservdb will be in afsconf dir. */
         /* If we are in Win95 here, we are linking with klog etc. and are
@@ -166,9 +205,16 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
         tfilep = fopen(wdir, "r");
         if (!tfilep) return -2;
     }
+#else
+    /* If we are NT or higher, we don't do DJGPP, So just fail */
+    if ( !tfilep )
+        return -2;
+#endif
 
 	bestp = fopen(wdir, "r");
-        
+    
+    DebugEvent_local("AFS- cm_searchfile fopen", "Handle[%x], wdir[%s]", bestp, wdir);
+
 	/* have we seen the cell line for the guy we're looking for? */
 	inRightCell = 0;
 	while (1) {
@@ -223,6 +269,8 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 					strcpy(newCellNamep, lineBuffer+1);
                 inRightCell = 1;
 				tracking = 0;
+                DebugEvent_local("AFS- cm_searchfile is cell", "inRightCell[%x], linebuffer[%s]", 
+                                 inRightCell, lineBuffer);
 			}
 			else if (strnicmp(lineBuffer+1, cellNamep,
                                strlen(cellNamep)) == 0) {
@@ -260,7 +308,15 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 			if (inRightCell) {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 				/* add the server to the VLDB list */
+                WSASetLastError(0);
                 thp = gethostbyname(valuep);
+                {
+                    int iErr = 0;
+                    iErr = WSAGetLastError();
+                    DebugEvent_local("AFS- cm_searchfile inRightCell", 
+                                     "thp[%x], valuep[%s], WSAGetLastError[%d]", 
+                                     thp, valuep, iErr);
+                }
                 if (thp) {
 					memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
                             sizeof(long));
@@ -300,29 +356,121 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                cm_configProc_t *procp, void *rockp)
 {
 #ifdef AFS_AFSDB_ENV
-     int rc;
-     int cellHosts[AFSMAXCELLHOSTS];
-     int numServers;
-     int i;
-     struct sockaddr_in vlSockAddr;
+#ifndef DNSAPI_ENV
+    int rc;
+    int cellHosts[AFSMAXCELLHOSTS];
+    int numServers;
+    int i;
+    struct sockaddr_in vlSockAddr;
 
-     rc = getAFSServer(cellNamep, cellHosts, &numServers, ttl);
-     if (rc == 0 && numServers > 0) {     /* found the cell */
-       for (i = 0; i < numServers; i++) {
-           memcpy(&vlSockAddr.sin_addr.s_addr, &cellHosts[i],
-               sizeof(long));
+    DebugEvent_local("AFS SearchCellDNS-","Doing search for [%s]", cellNamep);
+    rc = getAFSServer(cellNamep, cellHosts, &numServers, ttl);
+    if (rc == 0 && numServers > 0) {     /* found the cell */
+        for (i = 0; i < numServers; i++) {
+            memcpy(&vlSockAddr.sin_addr.s_addr, &cellHosts[i],
+                   sizeof(long));
            vlSockAddr.sin_family = AF_INET;
            /* sin_port supplied by connection code */
            if (procp)
           (*procp)(rockp, &vlSockAddr, NULL);
            if(newCellNamep)
           strcpy(newCellNamep,cellNamep);
-       }
-       return 0;   /* found cell */
-     }
-     else
-#endif /* AFS_AFSDB_ENV */
+        }
+        return 0;   /* found cell */
+    }
+    else
        return -1;  /* not found */
+#else /* DNSAPI_ENV */
+	PDNS_RECORD pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
+	LPSTR vlServers[AFSMAXCELLHOSTS];
+	IP4_ADDRESS vlAddrs[AFSMAXCELLHOSTS];
+	WORD nvlServers;
+	DWORD wttl, i;
+	BOOL success;
+    struct sockaddr_in vlSockAddr;
+
+	success = FALSE;
+
+	/* query the AFSDB records of cell */
+	if(DnsQuery_A(cellNamep, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
+
+		memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
+		
+		nvlServers = 0; wttl = 0;
+
+		/* go through the returned records */
+		for(pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
+			/* if we find an AFSDB record with Preference set to 1, we found a volserver */
+			if(pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+				vlServers[nvlServers++] = pDnsIter->Data.Afsdb.pNameExchange;
+				if(!wttl) wttl = pDnsIter->dwTtl;
+				if(nvlServers == AFSMAXCELLHOSTS) break;
+			}
+		}
+
+		for(i=0;i<nvlServers;i++) vlAddrs[i] = 0;
+
+		/* now check if there are any A records in the results */
+		for(pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
+			if(pDnsIter->wType == DNS_TYPE_A)
+				/* check if its for one of the volservers */
+				for(i=0;i<nvlServers;i++)
+					if(stricmp(pDnsIter->pName, vlServers[i]) == 0)
+						vlAddrs[i] = pDnsIter->Data.A.IpAddress;
+		}
+
+		for(i=0;i<nvlServers;i++) {
+			/* if we don't have an IP yet, then we should try resolving the volserver hostname
+			   in a separate query. */
+			if(!vlAddrs[i]) {
+				if(DnsQuery_A(vlServers[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
+					for(pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
+						/* if we get an A record, keep it */
+						if(pDnsVolIter->wType == DNS_TYPE_A && stricmp(vlServers[i], pDnsVolIter->pName)==0) {
+							vlAddrs[i] = pDnsVolIter->Data.A.IpAddress;
+							break;
+						}
+						/* if we get a CNAME, look for a corresponding A record */
+						if(pDnsVolIter->wType == DNS_TYPE_CNAME && stricmp(vlServers[i], pDnsVolIter->pName)==0) {
+							for(pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
+								if(pDnsCIter->wType == DNS_TYPE_A && stricmp(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
+									vlAddrs[i] = pDnsCIter->Data.A.IpAddress;
+									break;
+								}
+							}
+							if(vlAddrs[i]) break;
+							/* TODO: if the additional section is missing, then do another lookup for the CNAME */
+						}
+					}
+					/* we are done with the volserver lookup */
+					DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
+				}
+			}
+
+			/* if we found a volserver, then add it */
+			if(vlAddrs[i]) {
+				vlSockAddr.sin_family = AF_INET;
+				vlSockAddr.sin_addr.s_addr = vlAddrs[i];
+				if(procp)
+					(*procp)(rockp, &vlSockAddr, vlServers[i]);
+				success = TRUE;
+			}
+		}
+
+		DnsRecordListFree(pDnsCell, DnsFreeRecordListDeep);
+	}
+
+	if(!success) return -1;
+	else {
+		strcpy(newCellNamep, cellNamep);
+		if(ttl) *ttl = (int) wttl;
+		return 0;
+	}
+
+#endif /* DNSAPI_ENV */
+#else
+	return -1;  /* not found */
+#endif /* AFS_AFSDB_ENV */
 }
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)

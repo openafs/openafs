@@ -13,6 +13,7 @@ extern "C" {
 }
 
 #include "afscreds.h"
+#include "afskfw.h"
 
 
 /*
@@ -184,6 +185,42 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
             }
          break;
+      case WM_OBTAIN_TOKENS:
+          if ( InterlockedIncrement (&g.fShowingMessage) != 1 )
+              InterlockedDecrement (&g.fShowingMessage);
+          else
+              ShowObtainCreds (wp, (char *)lp);
+          GlobalFree((void *)lp);
+          break;
+
+      case WM_START_SERVICE:
+          {
+              SC_HANDLE hManager;
+              if ((hManager = OpenSCManager ( NULL, NULL, 
+                                              SC_MANAGER_CONNECT |
+                                              SC_MANAGER_ENUMERATE_SERVICE |
+                                              SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
+              {
+                  SC_HANDLE hService;
+                  if ((hService = OpenService ( hManager, TEXT("TransarcAFSDaemon"), 
+                                                SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG |
+                                                SERVICE_QUERY_STATUS)) != NULL)
+                  {
+                      if (StartService (hService, 0, 0))
+                          TestAndDoMapShare(SERVICE_START_PENDING);
+		                  if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
+			                  KFW_AFS_renew_tokens_for_all_cells();
+						  }
+
+                      CloseServiceHandle (hService);
+                  }
+
+                  CloseServiceHandle (hManager);
+              }
+              KFW_AFS_wait_for_service_start();
+              ObtainTokensFromUserIfNeeded(g.hMain);
+          }
+          break;
       }
 
    return FALSE;
@@ -562,6 +599,8 @@ size_t Main_FindExpiredCreds (void)
 {
    size_t retval = (size_t) -1;
    lock_ObtainMutex(&g.expirationCheckLock);
+   if ( KFW_is_available() )
+       KFW_AFS_renew_expiring_credentials();
    lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
@@ -586,8 +625,13 @@ size_t Main_FindExpiredCreds (void)
       llExpires /= c100ns1SECOND;
 
       if (llExpires <= (llNow + (LONGLONG)cminREMIND_WARN * csec1MINUTE))
+         {
+         if ( KFW_is_available() &&
+              KFW_AFS_renew_token_for_cell(g.aCreds[ iCreds ].szCell) )
+             continue;
          retval = (size_t) iCreds;
          break;
+         }
       }
    
    lock_ReleaseMutex(&g.credsLock);

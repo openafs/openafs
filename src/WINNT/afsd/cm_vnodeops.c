@@ -1272,140 +1272,140 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         cm_HoldSCache(tscp);
         symlinkCount = 0;
         while (1) {
-		tc = *tp++;
+            tc = *tp++;
 		
-                /* map Unix slashes into DOS ones so we can interpret Unix
-		 * symlinks properly
-                 */
-                if (tc == '/') tc = '\\';
-		
-                if (!haveComponent) {
+            /* map Unix slashes into DOS ones so we can interpret Unix
+             * symlinks properly
+             */
+            if (tc == '/') tc = '\\';
+
+            if (!haveComponent) {
 			if (tc == '\\') continue;
-                        else if (tc == 0) {
+            else if (tc == 0) {
 				if (phase == 1) {
 					phase = 2;
 					tp = pathp;
 					continue;
 				}
-                        	code = 0;
-                                break;
-                        }
-                        else {
+                code = 0;
+                break;
+            }
+            else {
 				haveComponent = 1;
-                                cp = component;
-                                *cp++ = tc;
+                cp = component;
+                *cp++ = tc;
+            }
+            }
+            else {
+                /* we have a component here */
+                if (tc == 0 || tc == '\\') {
+                    /* end of the component; we're at the last
+                     * component if tc == 0.  However, if the last
+                     * is a symlink, we have more to do.
+                     */
+                    *cp++ = 0;	/* add null termination */
+                    extraFlag = 0;
+                    if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
+                        extraFlag = CM_FLAG_NOMOUNTCHASE;
+                    code = cm_Lookup(tscp, component,
+                                      flags | extraFlag,
+                                      userp, reqp, &nscp);
+
+                    if (code) {
+                        cm_ReleaseSCache(tscp);
+                        if (psp) cm_FreeSpace(psp);
+                        return code;
+                    }
+                    haveComponent = 0;	/* component done */
+                    dirScp = tscp;		/* for some symlinks */
+                    tscp = nscp;	/* already held */
+                    if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
+                        code = 0;
+                        cm_ReleaseSCache(dirScp);
+                        break;
+                    }
+
+                    /* now, if tscp is a symlink, we should follow
+                     * it and assemble the path again.
+                     */
+                    lock_ObtainMutex(&tscp->mx);
+                    code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
+                                      CM_SCACHESYNC_GETSTATUS
+                                      | CM_SCACHESYNC_NEEDCALLBACK);
+                    if (code) {
+                        lock_ReleaseMutex(&tscp->mx);
+                        cm_ReleaseSCache(tscp);
+                        cm_ReleaseSCache(dirScp);
+                        break;
+                    }
+                    if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
+                        /* this is a symlink; assemble a new buffer */
+                        lock_ReleaseMutex(&tscp->mx);
+                        if (symlinkCount++ >= 16) {
+                            cm_ReleaseSCache(tscp);
+                            cm_ReleaseSCache(dirScp);
+                            if (psp) cm_FreeSpace(psp);
+                            return CM_ERROR_TOOBIG;
                         }
-                }
-		else {
-			/* we have a component here */
-                        if (tc == 0 || tc == '\\') {
-				/* end of the component; we're at the last
-				 * component if tc == 0.  However, if the last
-				 * is a symlink, we have more to do.
-                                 */
-                                *cp++ = 0;	/* add null termination */
-				extraFlag = 0;
-				if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
-					extraFlag = CM_FLAG_NOMOUNTCHASE;
-                                code = cm_Lookup(tscp, component,
-					flags | extraFlag,
-					userp, reqp, &nscp);
-                                if (code) {
-					cm_ReleaseSCache(tscp);
-                                        if (psp) cm_FreeSpace(psp);
-                                        return code;
-                                }
-                                haveComponent = 0;	/* component done */
-                                dirScp = tscp;		/* for some symlinks */
-                                tscp = nscp;	/* already held */
-                                if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
-					code = 0;
-                                        cm_ReleaseSCache(dirScp);
-                                	break;
-				}
-                                
-                                /* now, if tscp is a symlink, we should follow
-				 * it and assemble the path again.
-                                 */
-				lock_ObtainMutex(&tscp->mx);
-				code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
-			        	CM_SCACHESYNC_GETSTATUS
-					 | CM_SCACHESYNC_NEEDCALLBACK);
-                                if (code) {
-					lock_ReleaseMutex(&tscp->mx);
-					cm_ReleaseSCache(tscp);
-                                        cm_ReleaseSCache(dirScp);
-                                        break;
-                                }
-                                if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
-					/* this is a symlink; assemble a new buffer */
-					lock_ReleaseMutex(&tscp->mx);
-                                        if (symlinkCount++ >= 16) {
-						cm_ReleaseSCache(tscp);
-                                                cm_ReleaseSCache(dirScp);
-						if (psp) cm_FreeSpace(psp);
-                                                return CM_ERROR_TOOBIG;
-                                        }
-                                        if (tc == 0) restp = "";
-                                        else restp = tp;
-                                        code = cm_AssembleLink(tscp, restp,
-						&linkScp, &tempsp, userp, reqp);
-                                        if (code) {
-						/* something went wrong */
-						cm_ReleaseSCache(tscp);
-                                                cm_ReleaseSCache(dirScp);
-	                                        break;
-                                        }
-                                        
-                                        /* otherwise, tempsp has the new path,
-					 * and linkScp is the new root from
-					 * which to interpret that path.
-					 * Continue with the namei processing,
-					 * also doing the bookkeeping for the
-					 * space allocation and tracking the
-                                         * vnode reference counts.
-                                         */
-					if (psp) cm_FreeSpace(psp);
-					psp = tempsp;
-                                        tp = psp->data;
-                                        cm_ReleaseSCache(tscp);
-                                        tscp = linkScp;	/* already held
-							 * by AssembleLink */
-                                        /* now, if linkScp is null, that's
-					 * AssembleLink's way of telling us that
-					 * the sym link is relative to the dir
-					 * containing the link.  We have a ref
-					 * to it in dirScp, and we hold it now
-					 * and reuse it as the new spot in the
-					 * dir hierarchy.
-                                         */
-                                        if (tscp == NULL) {
-						cm_HoldSCache(dirScp);
-                                                tscp = dirScp;
-                                        }
-                                }	/* if we have a sym link */
-                                else {
-					/* not a symlink, we may be done */
-                                	lock_ReleaseMutex(&tscp->mx);
-                                        if (tc == 0) {
-						if (phase == 1) {
-							phase = 2;
-							tp = pathp;
-							continue;
-						}
-						cm_ReleaseSCache(dirScp);
-                                                code = 0;
-                                                break;
-                                        }
-				}
-                                cm_ReleaseSCache(dirScp);
-                        } /* end of a component */
-                        else *cp++ = tc;
-                } /* we have a component */
-        }	/* big while loop over all components */
+                        if (tc == 0) restp = "";
+                        else restp = tp;
+                        code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
+                        if (code) {
+                            /* something went wrong */
+                            cm_ReleaseSCache(tscp);
+                            cm_ReleaseSCache(dirScp);
+                            break;
+                        }
+
+                        /* otherwise, tempsp has the new path,
+                         * and linkScp is the new root from
+                         * which to interpret that path.
+                         * Continue with the namei processing,
+                         * also doing the bookkeeping for the
+                         * space allocation and tracking the
+                         * vnode reference counts.
+                         */
+                        if (psp) cm_FreeSpace(psp);
+                        psp = tempsp;
+                        tp = psp->data;
+                        cm_ReleaseSCache(tscp);
+                        tscp = linkScp;	/* already held
+                                         * by AssembleLink */
+                        /* now, if linkScp is null, that's
+                         * AssembleLink's way of telling us that
+                         * the sym link is relative to the dir
+                         * containing the link.  We have a ref
+                         * to it in dirScp, and we hold it now
+                         * and reuse it as the new spot in the
+                         * dir hierarchy.
+                         */
+                        if (tscp == NULL) {
+                            cm_HoldSCache(dirScp);
+                            tscp = dirScp;
+                        }
+                    }	/* if we have a sym link */
+                    else {
+                        /* not a symlink, we may be done */
+                        lock_ReleaseMutex(&tscp->mx);
+                        if (tc == 0) {
+                            if (phase == 1) {
+                                phase = 2;
+                                tp = pathp;
+                                continue;
+                            }
+                            cm_ReleaseSCache(dirScp);
+                            code = 0;
+                            break;
+                        }
+                    }
+                    cm_ReleaseSCache(dirScp);
+                } /* end of a component */
+                else *cp++ = tc;
+            } /* we have a component */
+        } /* big while loop over all components */
 
 	/* already held */
-        if (psp) cm_FreeSpace(psp);
+    if (psp) cm_FreeSpace(psp);
 	if (code == 0) *outScpp = tscp;
         return code;
 }

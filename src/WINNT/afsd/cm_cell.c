@@ -86,6 +86,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
         memset(cp, 0, sizeof(*cp));
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
+            afsi_log("in cm_GetCell_gen code= %d fullname= %s", code, fullname);
+
 #ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/)
                 code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);

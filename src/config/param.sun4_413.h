@@ -67,7 +67,7 @@
 #define	AFS_DIRENT	
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
-#endif /*  */
+#endif /*  */
     
 #endif	/* AFS_PARAM_H */
 #else /* !defined(UKERNEL) */
@@ -129,7 +129,7 @@
 #define	AFS_DIRENT	
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
-#endif /*  */
+#endif /*  */
     
 #endif	/* AFS_PARAM_H */
 #endif /* !defined(UKERNEL) */

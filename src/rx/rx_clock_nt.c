@@ -23,6 +23,8 @@ RCSID
 #include <winbase.h>
 #include "rx_clock.h"
 
+void clock_UpdateTime(void);    /* forward reference */
+
 struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
 /* This is set to 1 whenever the time is read, and reset to 0 whenever

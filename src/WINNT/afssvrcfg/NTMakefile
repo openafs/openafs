@@ -69,7 +69,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-$(OUT)\afscfg_stub.res: AFS_component_version_number.h
+$(OUT)\afscfg_stub.res:afscfg_stub.rc AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -82,7 +82,7 @@ install: $(EXEFILE) lang
 
 lang::
 	$(CD) lang
-	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /e /f NTMakefile install
 	$(CD) ..
 
 

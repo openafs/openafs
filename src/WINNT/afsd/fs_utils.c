@@ -130,12 +130,12 @@ struct hostent *hostutil_GetHostByName(char *namep)
 }
 
 /* get hostname or addr, given addr in network byte order */
-char *hostutil_GetNameByINet(long addr)
+char *hostutil_GetNameByINet(afs_uint32 addr)
 {
 	static char hostNameBuffer[256];
         struct hostent *thp;
         
-        thp = gethostbyaddr((char *) &addr, sizeof(long), AF_INET);
+        thp = gethostbyaddr((char *) &addr, sizeof(afs_uint32), AF_INET);
         if (thp)
         	strcpy(hostNameBuffer, thp->h_name);
 	else {

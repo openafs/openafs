@@ -394,6 +394,7 @@ BOOL CALLBACK DriveEdit_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
    return FALSE;
 }
 
+extern void GetNetbiosName(LPTSTR pszName, int type);
 
 void DriveEdit_OnInitDialog (HWND hDlg)
 {
@@ -434,7 +435,14 @@ void DriveEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
+#ifdef NOLANA
    AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+#else
+   memset(szMapping, '\0', sizeof(szMapping));
+   szMapping[0] = '\\';
+   GetNetbiosName(&szMapping[1], 0);
+#endif
+
    CHAR msg[256], msgf[256];
    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
    {

@@ -258,6 +258,18 @@ typedef struct smb_fid {
 #define SMB_FID_LOOKSLIKECOPY	(SMB_FID_LENGTHSETDONE | SMB_FID_MTIMESETDONE)
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 
+/*
+ * SMB file attributes
+ */
+#define SMB_ATTR_ARCHIVE  0x20
+#define SMB_ATTR_COMPRESSED 0x800 /* file or dir is compressed */
+#define SMB_ATTR_NORMAL 0x80 /* normal file. Only valid if used alone */
+#define SMB_ATTR_HIDDEN 0x2 /* hidden file for the purpose of dir listings */
+#define SMB_ATTR_READONLY 0x1
+#define SMB_ATTR_TEMPORARY 0x100
+#define SMB_ATTR_DIRECTORY 0x10
+#define SMB_ATTR_SYSTEM 0x4
+
 /* for tracking in-progress directory searches */
 typedef struct smb_dirSearch {
 	osi_queue_t q;			/* queue of all outstanding cookies */
@@ -281,10 +293,15 @@ typedef struct smb_dirSearch {
 /* type for patching directory listings */
 typedef struct smb_dirListPatch {
 	osi_queue_t q;
-        char *dptr;		/* ptr to attr, time, data, sizel, sizeh */
+    char *dptr;		/* ptr to attr, time, data, sizel, sizeh */
+    long flags;     /* flags.  See below */
 	cm_fid_t fid;
   cm_dirEntry_t *dep;   /* temp */
 } smb_dirListPatch_t;
+
+/* dirListPatch Flags */
+#define SMB_DIRLISTPATCH_DOTFILE 1  /* the file referenced is a dot file 
+									   Note: will not be set if smb_hideDotFiles is false */
 
 /* waiting lock list elements */
 typedef struct smb_waitingLock {
@@ -428,6 +445,12 @@ extern osi_rwlock_t smb_rctLock;
 extern int smb_LogoffTokenTransfer;
 extern unsigned long smb_LogoffTransferTimeout;
 
+extern int smb_maxVCPerServer; /* max # of VCs per server */
+extern int smb_maxMpxRequests; /* max # of mpx requests */
+
+extern int smb_hideDotFiles;
+extern unsigned int smb_IsDotFile(char *lastComp);
+
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
 
@@ -461,6 +484,8 @@ extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 
 extern BOOL smb_IsLegalFilename(char *filename);
 
+extern char *smb_GetSharename(void);
+
 /* include other include files */
 #include "smb3.h"
 #include "smb_ioctl.h"
@@ -468,4 +493,7 @@ extern BOOL smb_IsLegalFilename(char *filename);
 
 cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, char *usern);
 
+#ifdef NOTSERVICE
+extern void smb_LogPacket(smb_packet_t *packet);
+#endif /* NOTSERVICE */
 #endif /* whole file */

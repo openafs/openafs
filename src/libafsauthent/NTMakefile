@@ -140,7 +140,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
-	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib
+	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

@@ -1,0 +1,241 @@
+
+Registry keys used in the Windows AFS Client
+--------------------------------------------
+
+This file describes the registry keys used in the Windows AFS clients.
+
+1. Service parameters
+---------------------
+
+The service parameters primarily affect the behavior of the AFS client
+service (afsd_service.exe).
+
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+
+Value   : LANadapter
+Type    : DWORD
+Default : -1
+Variable: LANadapter
+
+  LAN adapter number to use.  This is the lana number of the LAN
+  adapter that the SMB server should bind to.  If unspecified or set
+  to -1, a LAN adapter with named 'AFS' or a loopback adapter will be
+  selected.  If neither are present, then all available adapters will
+  be bound to.  When binding to a non-loopback adapter, the NetBIOS
+  name '%hostname%-AFS' will be used (where %hostname% is the NetBIOS
+  name of the host truncated to 11 characters). Otherwise, the NetBIOS
+  name will be 'AFS'.
+
+Value   : CacheSize
+Type    : QWORD
+Default : 20480 (CM_CONFIGDEFAULT_CACHESIZE)
+Variable: cm_initParams.cacheSize
+
+  Size of the AFS cache.
+
+Value   : ChunkSize
+Type    : DWORD
+Default : 15 (CM_CONFIGDEFAULT_CHUNKSIZE)
+Variable: cm_logChunkSize (cm_chunkSize = 1 << cm_logChunkSize)
+
+  Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize.
+
+Value   : Daemons
+Type	: DWORD
+Default : 2 (CM_CONFIGDEFAULT_DAEMONS)
+Variable: numBkgD
+
+  Number of background daemons (number of threads of
+  cm_BkgDaemon). (see cm_BkgDaemon in cm_daemon.c)
+
+Value	: ServerThreads
+Type	: DWORD
+Default	: 4 (CM_CONFIGDEFAULT_SVTHREADS)
+Variable: numSvThreads
+
+  Number of SMB server threads (number of threads of smb_Server). (see
+  smb_Server in smb.c).
+
+Value	: Stats
+Type	: QWORD
+Default : 1000 (CM_CONFIGDEFAULT_STATS)
+Variable: cm_initParams.nStatCaches
+
+  Cache configuration.
+
+Value	: LogoffTokenTransfer
+Type	: DWORD {1,0}
+Default : 1
+Variable: smb_LogoffTokenTransfer
+
+  If enabled (set to 1), activates functionality where the user's
+  tokens are kept intact until smb_LogofTokenTransferTimeout seconds
+  elapse after user logs off.  If roaming profiles are used and the
+  roaming profile takes a long time to be written back, this ensures
+  that the tokens remain valid until the profile save is complete.
+
+Value	: LogoffTokenTransferTimeout
+Type	: QWORD
+Default : 10
+Variable: smb_LogoffTokenTransferTimeout
+
+  See LogoffTokenTransfer above.
+
+Value	: RootVolume
+Type	: REG_SZ
+Default : "root.afs"
+Variable: cm_rootVolumeName
+
+  Root volume name.
+
+Value	: Mountroot
+Type	: REG_SZ
+Default : "/afs"
+Variable: cm_mountRoot
+
+  Name of root mount point.  In symlinks, if a path starts with
+  cm_mountRoot, it is assumed that the path is absolute (as opposed to
+  relative) and is adjusted accordingly. Eg: if a path is specified as
+  /afs/athena.mit.edu/foo/bar/baz and cm_mountRoot is "/afs", then the
+  path is interpreted as \\afs\all\athena.mit.edu\foo\bar\baz.  If a
+  path does not start with with cm_mountRoot, the path is assumed to
+  be relative and suffixed to the reference directory (i.e. directory
+  where the symlink exists)
+ 
+Value	: CachePath
+Type	: REG_SZ
+Default : "\AFSCache"
+Variable: cm_CachePath
+
+  Location of on-disk cache file.
+
+Value	: TrapOnPanic
+Type	: DWORD {1,0}
+Default : 0
+Variable: traceOnPanic
+
+  Issues a breakpoint in the event of a panic. (breakpoint: _asm int 3).
+
+Value	: IsGateway
+Type	: DWORD {1,0}
+Default : 0
+Variable: isGateway
+
+  Select whether or not this AFS client should act as a gateway.  If
+  set and the NetBIOS name hostname-AFS is bound to a physical NIC,
+  other machines in the subnet can access AFS via SMB connections to
+  hostname-AFS .
+
+Value	: ReportSessionStartups
+Type	: DWORD {1,0}
+Default : 0
+Variable: reportSessionStartups
+
+  If enabled, all SMB sessions created are recorded in the Application
+  event log.
+
+Value	: TraceBufferSize
+Type	: QWORD
+Default : 5000 (CM_CONFIGDEFAULT_TRACEBUFSIZE)
+Variable: traceBufSize
+
+  Number of entries to keep in trace log.
+
+Value	: SysName
+Type	: REG_SZ
+Default : "i386_nt40"
+Variable: cm_sysName
+
+  Self explanatory.
+
+Value	: SecurityLevel
+Type	: DWORD {1,0}
+Default : 0
+Variable: cryptall
+
+  Enables encryption on RX calls.
+
+Value	: UseDNS
+Type	: DWORD {1,0}
+Default : 1
+Variable: cm_dnsEnabled
+
+  Enables resolving volservers using AFSDB DNS queries. (see
+  afsdb-freelance-notes)
+
+Value	: FreelanceClient
+Type	: DWORD {1,0}
+Default : 0
+Variable: cm_freelanceEnabled
+
+  Enables freelance client. (see afsdb-freelance-notes)
+
+Value	: HideDotFiles
+Type	: DWORD {1,0}
+Default : 1
+Variable: smb_hideDotFiles
+
+  Enables marking dotfiles with the hidden attribute.  Dot files are
+  files whose name starts with a period (excluding "." and "..").
+
+Value	: MaxMpxRequests
+Type	: DWORD
+Default : 50
+Variable: smb_maxMpxRequests
+
+  Maximum number of multiplexed SMB requests that can be made.
+
+Value	: MaxVCPerServer
+Type	: DWORD
+Default : 100
+Variable: smb_maxVCPerServer
+
+  Maximum number of SMB virtual circuits.
+
+Value	: Cell
+Type	: REG_SZ
+Default : <none>
+Variable: rootCellName
+
+  Name of root cell (the cell from which root.afs should be mounted in
+  \\afs\all).
+
+Value	: RxNoJumbo
+Type	: DWORD {0,1}
+Default : 0
+Variable: rx_nojumbo
+
+  If enabled, does not send or indicate that we are able to send or
+  receive RX jumbograms.
+
+Value	: RxMaxMTU
+Type	: DWORD
+Default : -1
+Variable: rx_mtu
+
+  If set to anything other than -1, uses that value as the maximum MTU
+  supported by the RX interface.
+
+2. Network provider parameters
+------------------------------
+Affects the network provider (aklogon.dll).
+
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+
+Value	: FailLoginsSilently
+Type	: DWORD
+Default : 0
+
+Do not display message boxes if the login fails.
+
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+
+Value   : NoWarnings
+Type	: DWORD
+Default : 0
+
+Disables visible warnings during logon.
+

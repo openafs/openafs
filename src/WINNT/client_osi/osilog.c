@@ -205,6 +205,13 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, long p0, long p1, long p2, long 
         lep->parms[1] = p1;
         lep->parms[2] = p2;
         lep->parms[3] = p3;
+
+#ifdef NOTSERVICE
+		printf( "%9ld:", lep->micros );
+		printf( formatp, p0, p1, p2, p3);
+		printf( "\n" );
+#endif
+
 	thrd_LeaveCrit(&logp->cs);
 }
 
@@ -380,3 +387,26 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 	DeregisterEventSource(h);
 	va_end(marker);
 }
+
+char *osi_HexifyString(char *s) {
+	int len,c;
+	char *hex = "0123456789abcdef";
+	char *buf, *counter, *bufp;
+
+	len = strlen(s);
+	
+	bufp = buf = malloc( len * 3 ); /* [xx.xx.xx.xx\0] */
+
+	if(!buf) return NULL;
+
+	for(counter = s; *counter; counter ++) {
+		if(counter != s) *bufp++ = '.';
+		c = *counter;
+		*bufp++ = hex[(c>>4) & 0xf];
+		*bufp++ = hex[c & 0xf];
+	}
+	*bufp = 0;
+
+	return buf;
+}
+

@@ -137,6 +137,7 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
  *
  * volSyncp and/or cbrp may also be NULL.
  */
+int
 cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	struct cm_fid *fidp,
 	AFSVolSync *volSyncp, cm_callbackRequest_t *cbrp, long errorCode)

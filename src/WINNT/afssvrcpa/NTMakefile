@@ -34,7 +34,7 @@ $(DLLFILE): $(DLLOBJS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-$(OUT)\afssvrcpa_stub.res: AFS_component_version_number.h
+$(OUT)\afssvrcpa_stub.res: afssvrcpa_stub.rc AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -47,7 +47,7 @@ install: $(DLLFILE) lang
 
 lang::
 	$(CD) lang
-	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /e /f NTMakefile install
 	$(CD) ..
 
 

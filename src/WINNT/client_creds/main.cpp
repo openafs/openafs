@@ -20,6 +20,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include "rxkad.h"
+#include "afskfw.h"
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -44,6 +45,7 @@ GLOBALS g;
 
 BOOL InitApp (LPSTR pszCmdLineA);
 void ExitApp (void);
+void Quit (void);
 void PumpMessage (MSG *pmsg);
 BOOL IsServerInstalled (void);
 
@@ -87,6 +89,9 @@ BOOL InitApp (LPSTR pszCmdLineA)
    BOOL fExit = FALSE;
    BOOL fInstall = FALSE;
    BOOL fUninstall = FALSE;
+   BOOL fAutoInit = FALSE;
+   BOOL fNetDetect = FALSE;
+   BOOL fRenewMaps = FALSE;
 
    // Parse the command-line
    //
@@ -97,6 +102,18 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
       switch (*(++pszCmdLineA))
          {
+         case 'a':
+         case 'A':
+            fAutoInit = TRUE;
+            break;
+         case 'm':
+         case 'M':
+            fRenewMaps = TRUE;
+            break;
+         case 'n':
+         case 'N':
+            fNetDetect = TRUE;
+            break;
          case 's':
          case 'S':
             fShow = TRUE;
@@ -218,6 +235,8 @@ BOOL InitApp (LPSTR pszCmdLineA)
    lock_InitializeMutex(&g.expirationCheckLock, "expiration check lock");
    lock_InitializeMutex(&g.credsLock, "global creds lock");
 
+   KFW_AFS_wait_for_service_start();
+
    if ( IsDebuggerPresent() ) {
        if ( !g.fIsWinNT )
            OutputDebugString("No Service Present on non-NT systems\n");
@@ -228,9 +247,42 @@ BOOL InitApp (LPSTR pszCmdLineA)
                OutputDebugString("AFSD Service stopped\n");
                if ( !IsServiceConfigured() )
                    OutputDebugString("AFSD Service not configured\n");
+               else if ( fAutoInit )
+                   OutputDebugString("AFSD Service will be started\n");
            }   
        }
    }
+
+    // If the service isn't started yet, and autoInit start the service
+    if ( g.fIsWinNT && !IsServiceRunning() && IsServiceConfigured() && fAutoInit ) {
+        SC_HANDLE hManager;
+
+        if ((hManager = OpenSCManager( NULL, NULL, 
+                                       SC_MANAGER_CONNECT |
+                                       SC_MANAGER_ENUMERATE_SERVICE |
+                                       SC_MANAGER_QUERY_LOCK_STATUS)) != NULL )
+        {
+            SC_HANDLE hService;
+            if ((hService = OpenService( hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG |
+                                         SERVICE_QUERY_STATUS) ) != NULL)
+            {
+                if (StartService(hService, 0, 0)) {
+                    if ( IsDebuggerPresent() )
+                        OutputDebugString("AFSD Service start successful\n");
+                    fRenewMaps = TRUE;
+                } else if ( IsDebuggerPresent() )
+                    OutputDebugString("AFSD Service start failed\n");
+
+                CloseServiceHandle (hService);
+            }
+
+            CloseServiceHandle (hManager);
+        }
+        KFW_AFS_wait_for_service_start();
+    }
+
+    KFW_initialize();
 
    // Create a main window. All further initialization will be done during
    // processing of WM_INITDIALOG.
@@ -260,20 +312,43 @@ BOOL InitApp (LPSTR pszCmdLineA)
          Message (MB_ICONHAND, IDS_UNCONFIG_TITLE, IDS_UNCONFIG_DESC);
       }
    if (IsServiceRunning()) { 
+      if ( fRenewMaps )
+      {
+          if ( IsDebuggerPresent() )
+              OutputDebugString("Renewing Drive Maps\n");
+          TestAndDoMapShare(SERVICE_START_PENDING);
+          TestAndDoMapShare(SERVICE_RUNNING);
+      }
       if (fShow)
       {
       if ( IsDebuggerPresent() )
           OutputDebugString("Displaying Main window\n");
       Main_Show (TRUE);
       }
+      // If the root cell is reachable and we have no tokens
+      // display the Obtain Tokens dialog to the user
+      if ( fAutoInit ) {
+          if ( IsDebuggerPresent() )
+              OutputDebugString("Obtaining Tokens (if needed)\n");
+          ObtainTokensFromUserIfNeeded(g.hMain);
+      }
    } else if ( IsDebuggerPresent() )
-      OutputDebugString("Displaying Main window\n");
+       OutputDebugString("AFSD Service Stopped\n");
+
+    if ( fNetDetect ) {
+        // Start IP Address Change Monitor
+        if ( IsDebuggerPresent() )
+            OutputDebugString("Activating Network Change Monitor\n");
+        IpAddrChangeMonitorInit(g.hMain);
+    }
+    Main_EnableRemindTimer(TRUE);
     return TRUE;
 }
 
 
 void ExitApp (void)
 {
+   KFW_cleanup();
    g.hMain = NULL;
 }
 

@@ -21,6 +21,7 @@ extern "C" {
 #include <shellapi.h>
 #include <shobjidl.h>
 #include <shlguid.h>
+#include "afscreds.h"
 #include "shortcut.h"
 
 
@@ -110,7 +111,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 
    if (fAutoStart)
       {
-      Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent");
+      Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", AFSCREDS_SHORTCUT_OPTIONS);
       }
    else // (!g.fAutoStart)
       {

@@ -14,7 +14,7 @@
 
 #include "osibasel.h"
 #if !defined(_MSC_VER) || (_MSC_VER < 1300)
-#include <largeint.h>
+#include "largeint.h"
 #endif
 #include "osiqueue.h"
 

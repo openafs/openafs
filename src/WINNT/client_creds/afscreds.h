@@ -63,6 +63,7 @@ extern "C" {
 
 #define cszSHORTCUT_NAME     TEXT("AFS Credentials.lnk")
 
+#define AFSCREDS_SHORTCUT_OPTIONS  TEXT("-A -M -N -Q")
 
 /*
  * VARIABLES __________________________________________________________________
@@ -102,6 +103,8 @@ extern GLOBALS g;
 
 #define cminREMIND_TEST      1    // test every minute for expired creds
 #define cminREMIND_WARN      15   // warn if creds expire in 15 minutes
+#define cminRENEW            20   // renew creds when there are 20 minutes remaining
+#define cminMINLIFE          30   // minimum life of Kerberos creds
 
 #define cmsecMOUSEOVER       1000 // retest freq when mouse is over tray icon
 #define cmsecSERVICE         2000 // retest freq when starting/stopping service

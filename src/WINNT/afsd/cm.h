@@ -18,10 +18,10 @@
 
 /* from .xg file */
 /* FIXME: these were "long" but Windows NT wants "int" */
-int VL_GetEntryByID(struct rx_connection *, long, long, struct vldbentry *);
+int VL_GetEntryByID(struct rx_connection *, afs_int32, afs_int32, struct vldbentry *);
 int VL_GetEntryByNameO(struct rx_connection *, char *, struct vldbentry *);
 int VL_ProbeServer(struct rx_connection *);
-int VL_GetEntryBYIDN(struct rx_connection *, long, long, struct nvldbentry *);
+int VL_GetEntryBYIDN(struct rx_connection *, afs_int32, afs_int32, struct nvldbentry *);
 int VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
 
 /* from .xg file */
@@ -49,9 +49,9 @@ extern RXAFS_FetchStatus (struct rx_connection *,
 int StartRXAFS_StoreData (struct rx_call *,
 	struct AFSFid *Fid, 
 	struct AFSStoreStatus *InStatus, 
-	afs_int32 Pos, 
-	afs_int32 Length, 
-	afs_int32 FileLength);
+	afs_uint32 Pos, 
+	afs_uint32 Length, 
+	afs_uint32 FileLength);
 
 int EndRXAFS_StoreData(struct rx_call *,
 	struct AFSFetchStatus *OutStatus, 

@@ -136,7 +136,7 @@ BEGIN
                     IDC_WARN,13,193,193,17
 END
 
-IDD_ADVANCED_NT DIALOG DISCARDABLE  0, 0, 220, 225
+IDD_ADVANCED_NT DIALOG DISCARDABLE  0, 0, 220, 247
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advanced"
 FONT 9, "MS Shell Dlg"
@@ -146,8 +146,8 @@ BEGIN
     EDITTEXT        IDC_CHUNK_SIZE,88,62,32,13,ES_AUTOHSCROLL | ES_READONLY
     EDITTEXT        IDC_STAT_ENTRIES,88,83,32,13,ES_AUTOHSCROLL
     PUSHBUTTON      "&Logon...",IDC_LOGON_PARMS,13,128,56,14
-    PUSHBUTTON      "&Global Drives...",IDC_AUTOMAP_PARMS,13,173,56,14
-    PUSHBUTTON      "&Miscellaneous...",IDC_MISC_PARMS,13,195,56,14
+    PUSHBUTTON      "&Global Drives...",IDC_AUTOMAP_PARMS,13,172,56,14
+    PUSHBUTTON      "&Miscellaneous...",IDC_MISC_PARMS,13,216,56,14
     GROUPBOX        "Cache Configuration",IDC_STATIC,7,7,206,100
     LTEXT           "&Cache Size:",IDC_STATIC,13,23,71,8
     LTEXT           "kb",IDC_INUSE,136,23,68,8
@@ -156,17 +156,20 @@ BEGIN
     LTEXT           "&Status Cache:",IDC_STATIC,13,85,71,8
     LTEXT           "entries",IDC_STATIC,136,85,68,8
     LTEXT           "Cache &Path:",IDC_STATIC,13,44,71,8
-    GROUPBOX        "Additional Advanced Parameters",IDC_STATIC,7,114,206,
-                    104
-    LTEXT           "Create global AFS drive mappings.",IDC_STATIC,74,176,
+    GROUPBOX        "Additional Advanced Parameters",IDC_STATIC,7,118,206,
+                    122
+    LTEXT           "Create global AFS drive mappings.",IDC_STATIC,74,174,
                     132,10
-    LTEXT           "Adjust integrated logon settings.",IDC_STATIC,74,132,
+    LTEXT           "Adjust integrated logon settings.",IDC_STATIC,74,130,
                     133,10
     LTEXT           "Set various other advanced parameters.",IDC_STATIC,74,
-                    199,132,10
+                    218,132,10
     PUSHBUTTON      "&Diagnostic...",IDC_DIAG_PARMS,13,150,56,14
     LTEXT           "Enable settings for problem debugging.",IDC_STATIC,74,
-                    153,132,10
+                    152,132,10
+    PUSHBUTTON      "&Binding...",IDC_BINDING_PARMS,13,194,56,14
+    LTEXT           "Adjust network adapter binding settings.",IDC_STATIC,74,
+                    196,133,10
 END
 
 IDD_PREFS_EDIT DIALOG DISCARDABLE  0, 0, 251, 123
@@ -347,34 +350,30 @@ BEGIN
     PUSHBUTTON      "&Remove",IDC_REMOVE,157,227,50,14
 END
 
-IDD_MISC_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 220, 193
+IDD_MISC_CONFIG_PARMS DIALOG DISCARDABLE  0, 0, 220, 170
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Miscellaneous Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_LAN_ADAPTER,162,22,32,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_PROBE,90,40,32,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_THREADS,90,60,32,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_DAEMONS,90,80,32,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_SYSNAME,90,100,83,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_MOUNTDIR,90,120,83,13,ES_AUTOHSCROLL
-    EDITTEXT        IDC_ROOTVOLUME,90,140,83,13,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,55,172,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,109,172,50,14
-    PUSHBUTTON      "Help",9,163,172,50,14
-    GROUPBOX        "Parameters",IDC_STATIC,7,7,206,156
-    LTEXT           "&Probe Interval:",IDC_STATIC,15,42,71,8
-    LTEXT           "seconds",IDC_STATIC,138,42,68,8
-    LTEXT           "&Background Threads:",IDC_STATIC,15,62,71,8
-    LTEXT           "threads",IDC_STATIC,138,62,68,8
-    LTEXT           "S&ervice Threads:",IDC_STATIC,15,82,71,8
-    LTEXT           "threads",IDC_STATIC,138,82,68,8
-    LTEXT           "S&ystem Name:",IDC_STATIC,15,102,71,8
-    LTEXT           "&Mount Directory:",IDC_STATIC,15,122,71,8
-    LTEXT           "&Root Volume:",IDC_STATIC,15,141,71,8
-    CONTROL         "Automatic Lana scan",IDC_AUTOLANA,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,19,22,82,10
-    RTEXT           "Lana Number:",IDC_STATICLANA,106,24,53,8
+    EDITTEXT        IDC_PROBE,90,16,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THREADS,90,36,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DAEMONS,90,56,32,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SYSNAME,90,76,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_MOUNTDIR,90,96,83,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ROOTVOLUME,90,116,83,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,55,143,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,143,50,14
+    PUSHBUTTON      "Help",9,163,143,50,14
+    GROUPBOX        "Parameters",IDC_STATIC,7,7,206,130
+    LTEXT           "&Probe Interval:",IDC_STATIC,15,18,71,8
+    LTEXT           "seconds",IDC_STATIC,138,18,68,8
+    LTEXT           "&Background Threads:",IDC_STATIC,15,38,71,8
+    LTEXT           "threads",IDC_STATIC,138,38,68,8
+    LTEXT           "S&ervice Threads:",IDC_STATIC,15,58,71,8
+    LTEXT           "threads",IDC_STATIC,138,58,68,8
+    LTEXT           "S&ystem Name:",IDC_STATIC,15,78,71,8
+    LTEXT           "&Mount Directory:",IDC_STATIC,15,98,71,8
+    LTEXT           "&Root Volume:",IDC_STATIC,15,117,71,8
 END
 
 IDD_DIAG_PARMS DIALOG DISCARDABLE  0, 0, 217, 135
@@ -447,6 +446,23 @@ BEGIN
     GROUPBOX        "Global AFS Drive",IDC_STATIC,7,7,232,80
 END
 
+IDD_BINDING_CONFIG_PARAMS DIALOG DISCARDABLE  0, 0, 220, 149
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Binding"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Use Default NIC",IDC_DEFAULTNIC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,14,82,10
+    COMBOBOX        IDC_NICSELECTION,15,41,159,66,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,55,128,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,128,50,14
+    PUSHBUTTON      "Help",9,163,128,50,14
+    GROUPBOX        "Network Adapter Selection (NIC):",IDC_STATIC,7,5,206,57
+    LTEXT           "Select the NIC to Bind to:",IDC_STATICLANA,15,29,78,8
+    LTEXT           "",IDC_BINDING_MESSAGE,7,68,206,41
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -501,7 +517,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 213
         TOPMARGIN, 7
-        BOTTOMMARGIN, 218
+        BOTTOMMARGIN, 240
     END
 
     IDD_PREFS_EDIT, DIALOG
@@ -589,7 +605,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 213
         TOPMARGIN, 7
-        BOTTOMMARGIN, 186
+        BOTTOMMARGIN, 163
     END
 
     IDD_DIAG_PARMS, DIALOG
@@ -614,6 +630,14 @@ BEGIN
         RIGHTMARGIN, 246
         TOPMARGIN, 7
         BOTTOMMARGIN, 162
+    END
+
+    IDD_BINDING_CONFIG_PARAMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 142
     END
 END
 #endif    // APSTUDIO_INVOKED

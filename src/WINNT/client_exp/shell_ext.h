@@ -87,7 +87,7 @@ protected:
 
     // IShellExtInit interface
     BEGIN_INTERFACE_PART(ShellInit, IShellExtInit)
-        STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,LPDATAOBJECT lpdobj, HKEY hkeyProgID);
+        STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,IDataObject *lpdobj, HKEY hkeyProgID);
     END_INTERFACE_PART(ShellInit)
 
     BEGIN_INTERFACE_PART(IconExt, IShellIconOverlayIdentifier)

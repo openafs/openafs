@@ -34,7 +34,8 @@ INCFILES =\
 !IFDEF OSIEVENT
 	$(INCFILEDIR)\osievent.h \
 !ENDIF
-    $(INCFILEDIR)\osithrdnt.h
+    $(INCFILEDIR)\osithrdnt.h \
+    $(INCFILEDIR)\largeint.h
 
 $(INCFILEDIR)\dbrpc.h: dbrpc.h
 

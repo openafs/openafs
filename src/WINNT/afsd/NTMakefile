@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" 
 AFSDEV_NETGUI = 1
 RELDIR=WINNT\afsd
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -16,6 +17,8 @@ EXEDIR = $(DESTDIR)\root.client\usr\vice\etc
 # Definitions for installing header files
 
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+# afsdicon and below added for WINNT\extra support
 
 INCFILES =\
 	$(INCFILEDIR)\afsd.h \
@@ -43,10 +46,27 @@ INCFILES =\
 !IFDEF OSICRASH
 	$(INCFILEDIR)\afsdcrash.h \
 !ENDIF
-	$(INCFILEDIR)\cm_dns_private.h
+	$(INCFILEDIR)\cm_dns_private.h \
+	$(INCFILEDIR)\lanahelper.h \
+	$(INCFILEDIR)\afsdicon.h \
+	$(INCFILEDIR)\cm_callback.h \
+	$(INCFILEDIR)\cm_aclent.h \
+	$(INCFILEDIR)\cm_volume.h \
+	$(INCFILEDIR)\cm_dcache.h \
+	$(INCFILEDIR)\cm_access.h \
+	$(INCFILEDIR)\cm_vnodeops.h \
+	$(INCFILEDIR)\cm_dir.h \
+	$(INCFILEDIR)\cm_utils.h \
+	$(INCFILEDIR)\cm_daemon.h \
+	$(INCFILEDIR)\cm_ioctl.h \
+	$(INCFILEDIR)\cm_dnlc.h \
+	$(INCFILEDIR)\cm_buf.h \
+	$(INCFILEDIR)\cm_freelance.h \
+    $(INCFILEDIR)\afsd_eventlog.h \
+    $(INCFILEDIR)\afsd_eventmessages.h
 
 IDLFILES =\
-	afsrpc.h $(OUT)\afsrpc_c.c
+	afsrpc.h $(OUT)\afsrpc_c.obj
 
 CONFOBJS=$(OUT)\cm_config.obj \
          $(OUT)\cm_dns.obj
@@ -94,10 +114,15 @@ AFSDOBJS=\
 !IFDEF OSICRASH
 	$(OUT)\afsdcrash.obj \
 !ENDIF
-     $(OUT)\cm_freelance.obj
+    $(OUT)\cm_freelance.obj \
+    $(OUT)\lanahelper.obj  \
+    $(OUT)\afsd_eventlog.obj \
+    $(OUT)\afsd_flushvol.obj
+
+$(AFSDOBJS):
 
 $(OUT)\cm_conn.obj: cm_conn.c
-	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 FSOBJS=$(OUT)\fs.obj $(OUT)\fs_utils.obj
 
@@ -105,6 +130,12 @@ SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
 
 ILIBDIR = $(DESTDIR)\lib
 
+#                                                    
+# Rules for message compiler info for logging events 
+#                                                    
+$(INCFILEDIR)\afsd_eventmessages.h:  afsd_eventmessages.mc         
+	mc afsd_eventmessages.mc                           
+                                                     
 ############################################################################
 #
 # Flags for linking LOGON DLL'S
@@ -136,6 +167,7 @@ MIDL_FLAGS=/app_config \
 CONF_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll
 
 CONF_DLLLIBS = \
+    dnsapi.lib \
     $(DESTDIR)\lib\afs\afsutil.lib \
     $(DESTDIR)\lib\afs\afsreg.lib
 
@@ -155,6 +187,7 @@ LOGON_DLLOBJS =\
 	$(OUT)\afslogon.res
 
 LOGON_DLLLIBS =\
+    dnsapi.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib
 
@@ -174,6 +207,7 @@ LOG95_DLLOBJS =\
 	$(OUT)\afslog95.res
 
 LOG95_DLLLIBS =\
+    dnsapi.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib
 
@@ -225,6 +259,7 @@ install_libutils: install_headers $(CONF_DLLFILE) \
 # assorted exe's
 
 EXELIBS = \
+    dnsapi.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
 	$(DESTDIR)\lib\afs\afskauth.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
@@ -263,9 +298,11 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 AFSD_EXELIBS =\
 	largeint.lib \
 	netapi32.lib \
-        mpr.lib \
+    mpr.lib \
+    dnsapi.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
+    $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
@@ -282,7 +319,7 @@ $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS)
 
 # afsd_service.exe
 $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_service.res  $(RXOBJS)
-	$(EXECONLINK) $(AFSD_EXELIBS)
+	$(EXECONLINK) $(AFSD_EXELIBS) /NODEFAULTLIB:libc.lib /MAP
 	$(EXEPREP)
 
 # fs.exe
@@ -318,18 +355,22 @@ KPASSWD_OBJS =\
 KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
+    $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
 $(OUT)\kpasswd.obj: $(KAUTH)/kpasswd.c
-	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 $(OUT)\kkids.obj: $(KAUTH)/kkids.c
-	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 $(OUT)\kautils.obj: $(KAUTH)/kautils.c
-	$(C2OBJ) -DAFS_PTHREAD_ENV $**
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
+
+$(OUT)\kpasswd.res: $(KAUTH)\kpasswd.rc
+    $(RC) /Fo$@ $**
 
 $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
 	$(DEL) $(DESTDIR)\bin\kpasswd.exe
@@ -340,30 +381,34 @@ $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
 ############################################################################
 # generate versioninfo resources
 
-$(OUT)\afsshare.res: AFS_component_version_number.h
+$(OUT)\afsshare.res: afsshare.rc AFS_component_version_number.h
 
-$(OUT)\fs.res: AFS_component_version_number.h
+$(OUT)\fs.res: fs.rc AFS_component_version_number.h
 
-$(OUT)\symlink.res: AFS_component_version_number.h
+$(OUT)\symlink.res: symlink.rc AFS_component_version_number.h
 
-$(OUT)\klog.res: AFS_component_version_number.h
+$(OUT)\klog.res: klog.rc AFS_component_version_number.h
 
-$(OUT)\tokens.res: AFS_component_version_number.h
+$(OUT)\tokens.res: tokens.rc AFS_component_version_number.h
 
-$(OUT)\unlog.res: AFS_component_version_number.h
+$(OUT)\unlog.res: unlog.rc AFS_component_version_number.h
 
-$(OUT)\afsd_service.res: AFS_component_version_number.h
+afsd_eventmessages.rc: afsd_eventmessages.h
 
-$(OUT)\afslogon.res: AFS_component_version_number.h
+$(OUT)\afsd_service.res: afsd_service.rc afsd_eventmessages.rc AFS_component_version_number.h
 
-$(OUT)\afslog95.res: AFS_component_version_number.h
+$(OUT)\afslogon.res: afslogon.rc AFS_component_version_number.h
 
-$(OUT)\libafsconf.res: AFS_component_version_number.h
+$(OUT)\afslog95.res: afslog95.rc AFS_component_version_number.h
 
+$(OUT)\libafsconf.res: libafsconf.rc AFS_component_version_number.h
+
+############################################################################
 clean::
 	$(DEL) $(OUT)\*.res
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
+    $(DEL) afsd_eventmessages.h
 	$(DEL) $(CONF_DLLFILE)
 	$(DEL) $(LOGON_DLLFILE)
 	$(DEL) $(LOG95_DLLFILE)

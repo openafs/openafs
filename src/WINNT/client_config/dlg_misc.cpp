@@ -35,7 +35,9 @@ extern "C" {
 
 // Our dialog data
 BOOL fFirstTime = TRUE;
+#if undef
 DWORD nLanAdapter;
+#endif
 DWORD csecProbe;
 DWORD nThreads;
 DWORD nDaemons;
@@ -95,6 +97,7 @@ BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDCANCEL:
                 Misc_OnCancel(hDlg);
                 break;
+#if undef
 			case IDC_AUTOLANA:
 				if (IsDlgButtonChecked(hDlg,IDC_AUTOLANA))
 					nLanAdapter=-1;
@@ -102,6 +105,7 @@ BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 					nLanAdapter=0;
 				SP_SetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER),nLanAdapter);
 				EnableWindow(GetDlgItem(hDlg,IDC_LAN_ADAPTER),(nLanAdapter!=-1));
+#endif
             }
          break;
 
@@ -117,7 +121,9 @@ BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 void Misc_OnInitDialog (HWND hDlg)
 {
    if (fFirstTime) {
+#if undef
       Config_GetLanAdapter(&g.Configuration.nLanAdapter);
+#endif
       Config_GetProbeInt (&g.Configuration.csecProbe);
       Config_GetNumThreads (&g.Configuration.nThreads);
       Config_GetNumDaemons (&g.Configuration.nDaemons);
@@ -125,7 +131,9 @@ void Misc_OnInitDialog (HWND hDlg)
       Config_GetRootVolume (g.Configuration.szRootVolume);
       Config_GetMountRoot (g.Configuration.szMountDir);
 
+#if undef
       nLanAdapter = g.Configuration.nLanAdapter;
+#endif
       csecProbe = g.Configuration.csecProbe;
       nThreads = g.Configuration.nThreads;
       nDaemons = g.Configuration.nDaemons;
@@ -136,7 +144,9 @@ void Misc_OnInitDialog (HWND hDlg)
       fFirstTime = FALSE;
    }
 
+#if undef
    CreateSpinner (GetDlgItem (hDlg, IDC_LAN_ADAPTER), 99, FALSE, nLANA_MIN, nLanAdapter, nLANA_MAX);
+#endif
    CreateSpinner (GetDlgItem (hDlg, IDC_PROBE), 10, FALSE, csecPROBE_MIN, csecProbe, csecPROBE_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_THREADS), 10, FALSE, cTHREADS_MIN, nThreads, cTHREADS_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_DAEMONS), 10, FALSE, cDAEMONS_MIN, nDaemons, cDAEMONS_MAX);
@@ -144,15 +154,18 @@ void Misc_OnInitDialog (HWND hDlg)
    SetDlgItemText (hDlg, IDC_SYSNAME, szSysName);
    SetDlgItemText (hDlg, IDC_ROOTVOLUME, szRootVolume);
    SetDlgItemText (hDlg, IDC_MOUNTDIR, szMountDir);
+#if undef
    CheckDlgButton (hDlg, IDC_AUTOLANA, (nLanAdapter==-1));
    EnableWindow(GetDlgItem(hDlg,IDC_LAN_ADAPTER),(nLanAdapter!=-1));
+#endif
 }
 
 void Misc_OnOK (HWND hDlg)
 {
+#if undef
 	nLanAdapter =  (IsDlgButtonChecked(hDlg,IDC_AUTOLANA))?-1
 		:SP_GetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER));
-
+#endif
    csecProbe = SP_GetPos (GetDlgItem (hDlg, IDC_PROBE));
   
    nThreads = SP_GetPos (GetDlgItem (hDlg, IDC_THREADS));
@@ -172,11 +185,13 @@ BOOL Misc_OnApply()
    if (fFirstTime)
       return TRUE;
 
+#if undef
    if (nLanAdapter != g.Configuration.nLanAdapter) {
       if (!Config_SetLanAdapter (nLanAdapter))
          return FALSE;
       g.Configuration.nLanAdapter = nLanAdapter;
    }
+#endif
 
    if (csecProbe != g.Configuration.csecProbe) {
       if (!Config_SetProbeInt (csecProbe))

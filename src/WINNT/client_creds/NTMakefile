@@ -7,8 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd -I..\client_config
-
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash
 
 # include the primary makefile
 RELDIR=WINNT\client_creds
@@ -35,6 +34,9 @@ EXEOBJS = \
 	$(OUT)\trayicon.obj \
 	$(OUT)\window.obj
 
+EXECOBJS = \
+    $(OUT)\afskfw.obj
+
 EXERES = \
 	$(OUT)\afscreds_stub.res
 
@@ -47,14 +49,18 @@ AFSAPPLIBOBJS= \
 	$(OUT)\subclass.obj 
 
 CLIENTOBJS = \
-	$(OUT)\drivemap.obj
+	$(OUT)\drivemap.obj \
+    $(OUT)\RegistrySupport.obj \
+    $(OUT)\getlana.obj
 
 VCLIBS =\
+    iphlpapi.lib \
 	comctl32.lib \
 	shell32.lib \
 	uuid.lib \
 	ole32.lib \
-	mpr.lib
+	mpr.lib \
+    netapi32.lib 
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
@@ -93,9 +99,12 @@ $(AFSDOBJS): $(AFSD)\$$(@B).c
 $(EXEOBJS): $$(@B).cpp
 	$(C2OBJ) -I$*(*D) -I$(AFSAPPLIB) $**
 
+$(EXECOBJS): $$(@B).c
+	$(C2OBJ) -I$*(*D) -I$(AFSAPPLIB) $**
+
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
 	$(EXEGUILINK) $(VCLIBS)
 	$(EXEPREP) 
 

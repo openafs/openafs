@@ -33,6 +33,7 @@ enum DDDACTION  { DDD_ADD, DDD_REMOVE };
  * PROTOTYPES _________________________________________________________________
  *
  */
+extern void GetNetbiosName(LPTSTR pszName, int type);
 
 void AutoMap_OnInitDialog (HWND hDlg);
 void AutoMap_OnAdd (HWND hDlg);
@@ -449,7 +450,13 @@ void AutoMapEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
+#ifdef NOLANA
    AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+#else
+    memset(szMapping, '\0', sizeof(szMapping));
+    szMapping[0] = '\\';
+    GetNetbiosName(&szMapping[1], 0);
+#endif
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
 
@@ -477,12 +484,25 @@ void AutoMapEdit_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
-        (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
+#ifdef NOLANA
+    if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+         (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
+    {
+        Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
+        return;
+    }
+#else
+   TCHAR szName[MAX_PATH];
+   memset(szName, '\0', sizeof(szName));
+   szName[0] = '\\';
+   GetNetbiosName(&szName[1], 0);
+
+   if ( lstrncmpi (pMap->szMapping, szName, lstrlen(szName) ))
       {
       Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
       return;
       }
+#endif
 
    // First get a proper submount
    if (pMap->szSubmount[0]) {

@@ -27,9 +27,10 @@
 
 #include "smb.h"
 #include "cm_rpc.h"
+#include "lanahelper.h"
 
-extern int RXAFSCB_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
+extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
+extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
 
@@ -130,6 +131,9 @@ afsi_log(char *pattern, ...)
         sprintf(u, "%s: %s\n", t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+#ifdef NOTSERVICE
+        printf("%s", u);
+#endif 
     } else {
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, s, strlen(s), &zilch, NULL);
@@ -175,6 +179,7 @@ int afsd_InitCM(char **reasonP)
 	long stats;
 	long traceBufSize;
 	long ltt, ltto;
+    long rx_mtu, rx_nojumbo;
 	char rootCellName[256];
 	struct rx_service *serverp;
 	static struct rx_securityClass *nullServerSecurityClassp;
@@ -225,12 +230,15 @@ int afsd_InitCM(char **reasonP)
 	dummyLen = sizeof(LANadapter);
 	code = RegQueryValueEx(parmKey, "LANadapter", NULL, NULL,
 				(BYTE *) &LANadapter, &dummyLen);
-	if (code == ERROR_SUCCESS)
+	if (code == ERROR_SUCCESS) {
 		afsi_log("LAN adapter number %d", LANadapter);
-	else {
+        if (LANadapter < 0 || LANadapter > MAX_LANA)
+            LANadapter = -1;
+	} else {
 		LANadapter = -1;
+    }
+    if ( LANadapter == -1 )
 		afsi_log("Default LAN adapter number");
-	}
 
 	dummyLen = sizeof(cacheSize);
 	code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
@@ -450,33 +458,78 @@ int afsd_InitCM(char **reasonP)
         cm_NetBiosName[0] = 0;   /* default off */
     }
 
+    dummyLen = sizeof(smb_hideDotFiles);
+    code = RegQueryValueEx(parmKey, "HideDotFiles", NULL, NULL,
+                           (BYTE *) &smb_hideDotFiles, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        smb_hideDotFiles = 1; /* default on */
+    }
+    afsi_log("Dot files/dirs will %sbe marked hidden",
+              smb_hideDotFiles ? "" : "not ");
+
+    dummyLen = sizeof(smb_maxMpxRequests);
+    code = RegQueryValueEx(parmKey, "MaxMpxRequests", NULL, NULL,
+                           (BYTE *) &smb_maxMpxRequests, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        smb_maxMpxRequests = 50;
+    }
+    afsi_log("Maximum number of multiplexed sessions is %d", smb_maxMpxRequests);
+
+    dummyLen = sizeof(smb_maxVCPerServer);
+    code = RegQueryValueEx(parmKey, "MaxVCPerServer", NULL, NULL,
+                           (BYTE *) &smb_maxVCPerServer, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        smb_maxVCPerServer = 100;
+    }
+    afsi_log("Maximum number of VCs per server is %d", smb_maxVCPerServer);
+
+    dummyLen = sizeof(rx_nojumbo);
+    code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
+                           (BYTE *) &rx_nojumbo, &dummyLen);
+    if (code != ERROR_SUCCESS) {
+        rx_nojumbo = 0;
+    }
+    if(rx_nojumbo)
+        afsi_log("RX Jumbograms are disabled");
+
+    dummyLen = sizeof(rx_mtu);
+    code = RegQueryValueEx(parmKey, "RxMaxMTU", NULL, NULL,
+                           (BYTE *) &rx_mtu, &dummyLen);
+    if (code != ERROR_SUCCESS || !rx_mtu) {
+        rx_mtu = -1;
+    }
+    if(rx_mtu != -1)
+        afsi_log("RX maximum MTU is %d", rx_mtu);
+
 	RegCloseKey (parmKey);
 
 	/* setup early variables */
 	/* These both used to be configurable. */
 	smb_UseV3 = 1;
-        buf_bufferSize = CM_CONFIGDEFAULT_BLOCKSIZE;
+    buf_bufferSize = CM_CONFIGDEFAULT_BLOCKSIZE;
 
 	/* turn from 1024 byte units into memory blocks */
-        cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
+    cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
         
 	/* setup and enable debug log */
 	afsd_logp = osi_LogCreate("afsd", traceBufSize);
 	afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
-        osi_LogEnable(afsd_logp);
+    osi_LogEnable(afsd_logp);
 	logReady = 1;
+
+    osi_Log0(afsd_logp, "Log init");
 
 	/* get network related info */
 	cm_noIPAddr = CM_MAXINTERFACE_ADDR;
 	code = syscfg_GetIFInfo(&cm_noIPAddr,
-				cm_IPAddr, cm_SubnetMask,
-				cm_NetMtu, cm_NetFlags);
+                            cm_IPAddr, cm_SubnetMask,
+                            cm_NetMtu, cm_NetFlags);
 
 	if ( (cm_noIPAddr <= 0) || (code <= 0 ) )
 	    afsi_log("syscfg_GetIFInfo error code %d", code);
 	else
 	    afsi_log("First Network address %x SubnetMask %x",
-		     cm_IPAddr[0], cm_SubnetMask[0]);
+                 cm_IPAddr[0], cm_SubnetMask[0]);
 
 	/*
 	 * Save client configuration for GetCacheConfig requests
@@ -491,9 +544,16 @@ int afsd_InitCM(char **reasonP)
 	cm_initParams.setTime = 0;
 	cm_initParams.memCache = 0;
 
+    /* Set RX parameters before initializing RX */
+    if ( rx_nojumbo )
+        rx_SetNoJumbo();
+
+    if ( rx_mtu != -1 )
+        rx_SetMaxMTU(rx_mtu);
+
 	/* initialize RX, and tell it to listen to port 7001, which is used for
-         * callback RPC messages.
-         */
+     * callback RPC messages.
+     */
 	code = rx_Init(htons(7001));
 	afsi_log("rx_Init code %x", code);
 	if (code != 0) {
@@ -506,8 +566,8 @@ int afsd_InitCM(char **reasonP)
 
 	/* create an unauthenticated service #1 for callbacks */
 	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-        serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
-        	RXAFSCB_ExecuteRequest);
+    serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
+                            RXAFSCB_ExecuteRequest);
 	afsi_log("rx_NewService addr %x", (int)serverp);
 	if (serverp == NULL) {
 		*reasonP = "unknown error";
@@ -515,16 +575,16 @@ int afsd_InitCM(char **reasonP)
 	}
 
 	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-        serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
-		&nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
+    serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
+                            &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
 	afsi_log("rx_NewService addr %x", (int)serverp);
 	if (serverp == NULL) {
 		*reasonP = "unknown error";
 		return -1;
 	}
         
-        /* start server threads, *not* donating this one to the pool */
-        rx_StartServer(0);
+    /* start server threads, *not* donating this one to the pool */
+    rx_StartServer(0);
 	afsi_log("rx_StartServer");
 
 	/* init user daemon, and other packages */
@@ -534,21 +594,21 @@ int afsd_InitCM(char **reasonP)
 
 	cm_InitConn();
 
-        cm_InitCell();
+    cm_InitCell();
         
-        cm_InitServer();
+    cm_InitServer();
         
-        cm_InitVolume();
+    cm_InitVolume();
+
+    cm_InitIoctl();
         
-        cm_InitIoctl();
+    smb_InitIoctl();
         
-        smb_InitIoctl();
+    cm_InitCallback();
         
-        cm_InitCallback();
+    cm_InitSCache(stats);
         
-        cm_InitSCache(stats);
-        
-        code = cm_InitDCache(0, cacheBlocks);
+    code = cm_InitDCache(0, cacheBlocks);
 	afsi_log("cm_InitDCache code %x", code);
 	if (code != 0) {
 		*reasonP = "error initializing cache";
@@ -556,28 +616,33 @@ int afsd_InitCM(char **reasonP)
 	}
 
 #ifdef AFS_AFSDB_ENV
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
 	if (cm_InitDNS(cm_dnsEnabled) == -1)
 	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
 	afsi_log("cm_InitDNS %d", cm_dnsEnabled);
 #endif
+#endif
 
 	code = cm_GetRootCellName(rootCellName);
-	afsi_log("cm_GetRootCellName code %d rcn %s", code,
-		 (code ? "<none>" : rootCellName));
-	if (code != 0 && !cm_freelanceEnabled) {
+	afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
+             code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
+	if (code != 0 && !cm_freelanceEnabled) 
+    {
 	    *reasonP = "can't find root cell name in afsd.ini";
 	    return -1;
-        }
-        else if (cm_freelanceEnabled)
-          cm_rootCellp = NULL;
+    }
+    else if (cm_freelanceEnabled)
+        cm_rootCellp = NULL;
 
-        if (code == 0 && !cm_freelanceEnabled) {
-	  cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-          afsi_log("cm_GetCell addr %x", (int)cm_rootCellp);
-	  if (cm_rootCellp == NULL) {
-	    *reasonP = "can't find root cell in afsdcell.ini";
-	    return -1;
-	  }
+    if (code == 0 && !cm_freelanceEnabled) 
+    {
+        cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
+        afsi_log("cm_GetCell addr %x", (int)cm_rootCellp);
+        if (cm_rootCellp == NULL) 
+        {
+            *reasonP = "can't find root cell in afsdcell.ini";
+            return -1;
+        }
 	}
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -597,30 +662,30 @@ int afsd_InitDaemons(char **reasonP)
 
 	/* this should really be in an init daemon from here on down */
 
-        if (!cm_freelanceEnabled) {
-          code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
-                                    &req, CM_FLAG_CREATE, &cm_rootVolumep);
-          afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-                   (code ? (cm_volume_t *)-1 : cm_rootVolumep));
-          if (code != 0) {
+    if (!cm_freelanceEnabled) {
+        code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
+                                  &req, CM_FLAG_CREATE, &cm_rootVolumep);
+        afsi_log("cm_GetVolumeByName code %x root vol %x", code,
+                 (code ? (cm_volume_t *)-1 : cm_rootVolumep));
+        if (code != 0) {
             *reasonP = "can't find root volume in root cell";
             return -1;
-          }
         }
+    }
 
 	/* compute the root fid */
 	if (!cm_freelanceEnabled) {
-	  cm_rootFid.cell = cm_rootCellp->cellID;
-	  cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
-	  cm_rootFid.vnode = 1;
-	  cm_rootFid.unique = 1;
+        cm_rootFid.cell = cm_rootCellp->cellID;
+        cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
+        cm_rootFid.vnode = 1;
+        cm_rootFid.unique = 1;
 	}
 	else
-	  cm_FakeRootFid(&cm_rootFid);
+        cm_FakeRootFid(&cm_rootFid);
         
-        code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
+    code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
 	afsi_log("cm_GetSCache code %x scache %x", code,
-		 (code ? (cm_scache_t *)-1 : cm_rootSCachep));
+             (code ? (cm_scache_t *)-1 : cm_rootSCachep));
 	if (code != 0) {
 		*reasonP = "unknown error";
 		return -1;
@@ -636,27 +701,49 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
 	char hostName[200];
 	char *ctemp;
+    lana_number_t lana;
 
 	/* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
-    if (!cm_NetBiosName[0])
-    {
-        strcpy(hostName, cm_HostName);
-        ctemp = strchr(hostName, '.');	/* turn ntdfs.* into ntdfs */
-        if (ctemp) *ctemp = 0;
+    if (LANadapter == -1) {
+        /* Find the default LAN adapter to use.  First look for
+         * the adapter named AFS; otherwise, unless we are doing
+         * gateway service, look for any valid loopback adapter.
+         */
+        lana = lana_FindLanaByName("AFS");
+        if (lana == LANA_INVALID && !isGateway)
+            lana = lana_FindLoopback();
+        if (lana != LANA_INVALID)
+            LANadapter = lana;
+    }
+    afsi_log("Lana %d", (int) lana);
+    /* If we are using a loopback adapter, we can use the preferred
+     * (but non-unique) server name; otherwise, we must fall back to
+     * the <machine>-AFS name.
+     */
+    if (LANadapter >= 0 && lana_IsLoopback((lana_number_t) LANadapter)) {
+        if ( cm_NetBiosName[0] )
+            strcpy(hostName, cm_NetBiosName);
+        else
+            strcpy(hostName, "AFS");
+    } else {
+        if (!cm_NetBiosName[0])
+        {
+            strcpy(hostName, cm_HostName);
+            ctemp = strchr(hostName, '.');	/* turn ntdfs.* into ntdfs */
+            if (ctemp) *ctemp = 0;
             hostName[11] = 0; /* ensure that even after adding the -A, we
                                * leave one byte free for the netbios server
                                * type.
                                */
-        strcat(hostName, "-AFS");
-    } else {
-        strcpy(hostName, cm_NetBiosName);
+            strcat(hostName, "-AFS");
+        } else {
+            strcpy(hostName, cm_NetBiosName);
+        }
+        _strupr(hostName);
     }
-    _strupr(hostName);
-
-    smb_Init(afsd_logp, hostName, smb_UseV3, LANadapter, numSvThreads, 
-             aMBfunc);
+    smb_Init(afsd_logp, hostName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
 	afsi_log("smb_Init");
 
 	return 0;

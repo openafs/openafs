@@ -121,7 +121,7 @@ rxi_GetUDPSocket(u_short port)
 	goto error;
     }
 
-    taddr.sin_addr.s_addr = 0;
+    taddr.sin_addr.s_addr = ADDR_ANY;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
@@ -625,12 +625,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
     }
     UNLOCK_IF if (!pp->ifMTU) {	/* not local */
 	pp->timeout.sec = 3;
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
 #else /* ADAPT_MTU */
     pp->rateFlag = 2;		/* start timing after two full packets */
     pp->timeout.sec = 2;
-    pp->ifMTU = OLD_MAX_PACKET_SIZE;
+    pp->ifMTU = MIN(rx_MyMaxSendSize, OLD_MAX_PACKET_SIZE);
 #endif /* ADAPT_MTU */
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
@@ -656,3 +656,11 @@ rx_SetNoJumbo(void)
     rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
     rxi_nSendFrags = rxi_nRecvFrags = 1;
 }
+
+/* Override max MTU.  If rx_SetNoJumbo is called, it must be 
+   called before calling rx_SetMaxMTU since SetNoJumbo clobbers rx_maxReceiveSize */
+void rx_SetMaxMTU(int mtu)
+{
+	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
+}
+

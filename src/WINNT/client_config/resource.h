@@ -105,6 +105,7 @@
 #define IDD_LOGIN_CONFIG_PARMS          119
 #define IDD_GLOBAL_DRIVES               120
 #define IDD_GLOBAL_DRIVES_ADDEDIT       121
+#define IDD_BINDING_CONFIG_PARAMS       122
 #define IDC_STATUS                      1000
 #define IDC_SERVICE_STOP                1001
 #define IDC_SERVICE_START               1002
@@ -154,8 +155,9 @@
 #define IDC_ADDR_LOOKUP                 1049
 #define IDC_LOGON_PARMS                 1049
 #define IDC_TRACE_LOG_BUF_SIZE          1050
-#define IDC_AUTOMAP_PARMS               1050
+#define IDC_AUTOMAP_PARMS               1051
 #define IDC_LOGIN_RETRY_INTERVAL        1052
+#define IDC_BINDING_PARMS               1053
 #define IDC_TRAP_ON_PANIC               1054
 #define IDC_REPORT_SESSION_STARTUPS     1055
 #define IDC_FAIL_SILENTLY               1056
@@ -164,8 +166,11 @@
 #define IDC_DIAG_PARMS                  1060
 #define IDC_ROOTVOLUME					1061
 #define IDC_AUTOLANA                    1062
+#define IDC_DEFAULTNIC                  1062
 #define IDC_STATICLANA                  1063
 #define IDC_STATICSUBMOUNT              1064
+#define IDC_NICSELECTION                1065
+#define IDC_BINDING_MESSAGE             1066
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -174,9 +179,9 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_RESOURCE_VALUE        123
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1064
+#define _APS_NEXT_CONTROL_VALUE         1067
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

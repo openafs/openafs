@@ -197,6 +197,7 @@ void Mount_OnCheck (HWND hDlg)
          }
       }
 
+   WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, fChecked && List.aDriveMap[ iDriveSel ].fPersistent );
    FreeDriveMapList (&List);
 }
 
@@ -456,13 +457,14 @@ void Mapping_OnOK (HWND hDlg)
       return;
       }
 
-    if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&	/*TEXT("/afs")*/
-         (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) ) /*TEXT("\\afs")*/
-    {
-      Message (MB_ICONHAND, IDS_BADMAP_TITLE, IDS_BADMAP_DESC);
-      return;
-      }
+   if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&	/*TEXT("/afs")*/
+        (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) ) /*TEXT("\\afs")*/
+   {
+     Message (MB_ICONHAND, IDS_BADMAP_TITLE, IDS_BADMAP_DESC);
+     return;
+   }
 
+   WriteActiveMap(pMap->chDrive, pMap->fPersistent);
    EndDialog (hDlg, IDOK);
 }
 

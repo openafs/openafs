@@ -13,7 +13,9 @@ extern "C" {
 }
 
 #include "afscreds.h"
-
+#ifdef USE_KFW
+#include "afskrb5.h"
+#endif
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -245,6 +247,10 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
          SetWindowLong (hDlg, DWL_USER, TRUE);
       Advanced_OnServiceTimer (hDlg);
       Advanced_StartTimer (hDlg);
+#ifdef USE_KFW
+      if ( wCmd == IDC_SERVICE_START && KRB5_is_available() && KRB5_wait_for_service_start() )
+          KRB5_AFS_renew_tokens_for_all_cells();
+#endif /* USE_KFW */
       }
    else
       {

@@ -8,6 +8,7 @@
  */
 
 #include "afscreds.h"
+#include "afskfw.h"
 
 extern "C" {
 #include <afs\stds.h>
@@ -354,6 +355,8 @@ int DestroyCurrentCredentials (LPCTSTR pszCell)
       CopyStringToAnsi (Principal.cell, pszCell);
       CopyStringToAnsi (Principal.name, TEXT("afs"));
       rc = ktc_ForgetToken (&Principal);
+      if ( KFW_is_available() )
+          KFW_AFS_destroy_tickets_for_cell(Principal.cell);
       }
 
    if (rc != 0)
@@ -389,7 +392,10 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword)
 
       int Expiration = 0;
 
-      rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
+      if ( KFW_is_available() )
+          rc = KFW_AFS_get_cred(szNameA, NULL, szCellA, szPasswordA, 0, &Result);
+      else
+          rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
       }
 
    if (rc != 0)

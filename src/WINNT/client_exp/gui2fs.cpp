@@ -1579,10 +1579,9 @@ BOOL IsPathInAfs(const CHAR *strPath)
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(PCCHAR(strPath), VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code) {
-	if ((errno == EINVAL) || (errno == ENOENT)) return FALSE;
-    }
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
     return TRUE;
 }
 

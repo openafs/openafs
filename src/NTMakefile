@@ -537,7 +537,18 @@ client_creds: client_exp
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-finale: client_creds
+extra: client_creds
+!	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
+     echo ***** $@
+    $(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+!	ELSE
+     echo ***** Skipping $@ ***** Not found.
+!	ENDIF
+                
+finale: extra
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -548,20 +559,6 @@ finale: client_creds
 install: finale
 
 # InstallShield dependencies
-
-InstallShield5:
-	echo ***** afs_setup_utils
-	$(DOCD) $(SRC)\WINNT\afs_setup_utils
-	$(CD) $(SRC)\WINNT\afs_setup_utils
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-	$(DOCD) $(SRC)\WINNT\install\$@
-	$(CD) $(SRC)\WINNT\install\$@
-	$(NTMAKE)
-	$(CD) ..\..\..\..
-
-media: InstallShield5 NSIS
 
 # Clean target for obj tree
 clean:
@@ -586,12 +583,35 @@ mkdir:
 
 NSIS:
    echo ***** Making NSIS Installer
-   $(DOCD) $(SRC)\WINNT\install\NSIS
-   $(CD) $(SRC)\WINNT\install\NSIS
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
+#msi:
+#   echo ***** Making MSI Installer
+#   $(DOCD) $(SRC)\WINNT\install\$@
+#   $(CD) $(SRC)\WINNT\install\$@
+#   $(NTMAKE)
+#   $(CD) ..\..\..\..
+
+InstallShield5:
+	echo ***** afs_setup_utils
+	$(DOCD) $(SRC)\WINNT\afs_setup_utils
+	$(CD) $(SRC)\WINNT\afs_setup_utils
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+	$(DOCD) $(SRC)\WINNT\install\$@
+	$(CD) $(SRC)\WINNT\install\$@
+	$(NTMAKE)
+	$(CD) ..\..\..\..
+
+media: install InstallShield5 NSIS
+
 install-nsis: install NSIS
+
+install-msi: install msi
 
 install-is5: install InstallShield5
 

@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd
 
 # include the primary makefile
 RELDIR=WINNT\client_config
@@ -36,7 +36,10 @@ EXEOBJS = \
 	$(OUT)\dlg_diag.obj \
 	$(OUT)\dlg_misc.obj \
 	$(OUT)\isadmin.obj \
-	$(OUT)\dlg_automap.obj
+	$(OUT)\dlg_automap.obj \
+    $(OUT)\dlg_binding.obj \
+    $(OUT)\RegistrySupport.obj \
+    $(OUT)\getlana.obj
 
 EXEOBJSc = \
 	$(OUT)\cellservdb.obj
@@ -52,7 +55,8 @@ AFSD= ..\afsd
 VCLIBS =\
 	comctl32.lib \
 	shell32.lib \
-	mpr.lib
+	mpr.lib \
+    netapi32.lib
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
@@ -131,61 +135,61 @@ lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE
 
 en_US:
 	$(CD) lang
-	$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 ja_JP:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 ko_KR:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 zh_CN:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 zh_TW:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 pt_BR:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 es_ES:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
 de_DE:
 	$(CD) lang
-	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /e /f NTMakefile install
     $(CD) ..
 
-$(OUT)\afs_config_stub.res : AFS_component_version_number.h
+$(OUT)\afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
 
 clean::
 	$(DEL) $(COPYHEADERS)
 	$(CD) lang
-	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) zh_CN $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) zh_TW $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) pt_BR $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /f NTMakefile clean
-	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) zh_CN $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) zh_TW $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) pt_BR $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /e /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /e /f NTMakefile clean
     $(CD) ..
 
 mkdir:
 	-mkdir $(OUT)\lang
 	cd lang
-	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	nmake /nologo /e /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..
