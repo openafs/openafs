@@ -114,6 +114,7 @@ int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
     KERNEL_SPACE_DECL;
     struct file *filp = &file->file;
     off_t offset = file->offset;
+    unsigned long savelim;
 
     /* Seek to the desired position. Return -1 on error. */
     if (filp->f_op->llseek) {
@@ -122,6 +123,9 @@ int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
     }
     else
 	filp->f_pos = offset;
+
+    savelim = current->rlim[RLIMIT_FSIZE].rlim_cur;
+    current->rlim[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
     /* Read/Write the data. */
     TO_USER_SPACE();
@@ -132,6 +136,8 @@ int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
     else /* all is well? */
 	code = asize;
     TO_KERNEL_SPACE();
+
+    current->rlim[RLIMIT_FSIZE].rlim_cur = savelim;
 
     if (code >=0) {
 	*resid = asize - code;
@@ -152,6 +158,10 @@ int osi_file_uio_rdwr(struct osi_file *osifile, uio_t *uiop, int rw)
     int code = 0;
     struct iovec *iov;
     int count;
+    unsigned long savelim;
+
+    savelim = current->rlim[RLIMIT_FSIZE].rlim_cur;
+    current->rlim[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_USER_SPACE();
@@ -165,7 +175,7 @@ int osi_file_uio_rdwr(struct osi_file *osifile, uio_t *uiop, int rw)
 	    uiop->uio_iovcnt--;
 	    continue;
 	}
-	
+
 	if (rw == UIO_READ)
 	    code = FOP_READ(filp, iov->iov_base, count);
 	else
@@ -185,6 +195,8 @@ int osi_file_uio_rdwr(struct osi_file *osifile, uio_t *uiop, int rw)
 
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_KERNEL_SPACE();
+
+    current->rlim[RLIMIT_FSIZE].rlim_cur = savelim;
 
     return code;
 }
