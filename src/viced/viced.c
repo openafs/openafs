@@ -646,15 +646,17 @@ static FiveMinuteCheckLWP()
 	ViceLog(2, ("Set disk usage statistics\n"));
 	VSetDiskUsage();
 	if (FS_registered == 1) Do_VLRegisterRPC();
-#ifndef AFS_QUIETFS_ENV
 	if(printBanner && (++msg&1)) { /* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
 	    if (console != NULL) {
+#ifndef AFS_QUIETFS_ENV
 		fprintf(console,"File server is running at %s\r",
 			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+#endif /* AFS_QUIETFS_ENV */
+		ViceLog(2, ("File server is running at %s\n",
+			afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	    }
 	}
-#endif /* AFS_QUIETFS_ENV */
     }
 } /*FiveMinuteCheckLWP*/
 
@@ -857,17 +859,24 @@ int dopanic;
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-#ifndef AFS_QUIETFS_ENV
     if (console != NULL) {
 	now = time(0);
-	if (dopanic)
+	if (dopanic) {
+#ifndef AFS_QUIETFS_ENV
 	    fprintf(console, "File server has terminated abnormally at %s\r",
 		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-	else 
+#endif
+	    ViceLog(0, ("File server has terminated abnormally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	} else {
+#ifndef AFS_QUIETFS_ENV
 	    fprintf(console, "File server has terminated normally at %s\r",
 		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    }
 #endif
+	    ViceLog(0, ("File server has terminated normally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	}
+    }
 
     exit(0);
 
