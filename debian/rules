@@ -224,8 +224,9 @@ build-modules: build-modules-stamp
 build-modules-stamp: 
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
-	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
-	make dest_only_libafs
+	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp
+	make only_libafs
+	cd src/libafs&&make install
 	touch build-modules-stamp
 
 binary-modules: build-modules

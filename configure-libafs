@@ -6043,10 +6043,9 @@ fi
 
   echo "$as_me:$LINENO: result: $ac_cv_linux_config_modversions" >&5
 echo "${ECHO_T}$ac_cv_linux_config_modversions" >&6
-	ac_cv_linux_config_modversions=yes
   echo "$as_me:$LINENO: checking which kernel modules to build" >&5
 echo $ECHO_N "checking which kernel modules to build... $ECHO_C" >&6
-  if test "x$ac_linux_rhconfig" = "xyes" -o "x$ac_cv_linux_config_modversions" = "xno"; then
+  if false; then
       MPS="MP SP"
   else
   if test "${ac_cv_linux_config_smp+set}" = set; then

@@ -2575,9 +2575,8 @@ lose;
   ac_cv_linux_config_modversions=yes,
   ac_cv_linux_config_modversions=no)])
   AC_MSG_RESULT($ac_cv_linux_config_modversions)
-	ac_cv_linux_config_modversions=yes
   AC_MSG_CHECKING(which kernel modules to build)
-  if test "x$ac_linux_rhconfig" = "xyes" -o "x$ac_cv_linux_config_modversions" = "xno"; then
+  if false; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
