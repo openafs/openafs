@@ -30,6 +30,8 @@
 #define AFS_SGI_EXMAG		1	/* use magic fields in extents for AFS extra fields */
 /* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */	
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #define RXK_LISTENER_ENV	1	/* Use an rx listener daemon */
 #define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
 

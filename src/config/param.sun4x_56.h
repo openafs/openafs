@@ -35,6 +35,8 @@
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #define	AFS_SYSCALL		105
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
 

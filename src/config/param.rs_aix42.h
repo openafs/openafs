@@ -25,6 +25,8 @@
 #define AFS_64BIT_IOPS_ENV      1       /* needed for NAMEI... */
 #endif
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #include <afs/afs_sysnames.h>
 
 /* Global lock in AFS part of client. */
@@ -117,6 +119,8 @@
 #define	AFS_AIX32_ENV		1
 #define	AFS_AIX41_ENV		1
 #define AFS_AIX42_ENV		1
+
+#define AFS_HAVE_FLOCK_SYSID    1
 
 #endif /* KERNEL */
 

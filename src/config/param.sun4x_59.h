@@ -23,6 +23,8 @@
 
 #define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #ifdef AFS_NAMEI_ENV
 #define AFS_64BIT_IOPS_ENV     1       /* needed for NAMEI... */
 #else /* AFS_NAMEI_ENV */

@@ -26,6 +26,8 @@
 #define	AFS_SUN54_ENV		1
 #define	AFS_SUN55_ENV		1
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #include <afs/afs_sysnames.h>
 
 #define RXK_LISTENER_ENV	1

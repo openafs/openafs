@@ -183,7 +183,7 @@ static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
     }
 
     for (slp = vp->slocks; slp; slp = slp->next) {
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	if (flock1->l_sysid != slp->sysid) {
 	  continue;
 	}
@@ -611,7 +611,7 @@ static int HandleGetLock(register struct vcache *avc,
 	    af->l_type = F_WRLCK;
 
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
 	goto done;
@@ -633,12 +633,12 @@ static int HandleGetLock(register struct vcache *avc,
 	af->l_type = F_WRLCK;           /* not us, so lock would block */
 	if (avc->slocks) {              /* we know who, so tell */
 	    af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	    af->l_sysid = avc->slocks->sysid;
 #endif
 	} else {
 	    af->l_pid = 0;      /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	    af->l_sysid = 0;
 #endif
 	}
@@ -654,12 +654,12 @@ static int HandleGetLock(register struct vcache *avc,
 	    af->l_type = F_WRLCK;
 	    if (avc->slocks) {
 		af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		af->l_sysid = avc->slocks->sysid;
 #endif
 	    } else {
 		af->l_pid = 0;  /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		af->l_sysid = 0;
 #endif
 	    }
@@ -680,14 +680,14 @@ static int HandleGetLock(register struct vcache *avc,
 	
 	af->l_type = F_RDLCK;
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
 	/* find a pid that isn't our own */
 	for (slp = avc->slocks; slp; slp = slp->next) {
            if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
                af->l_pid = slp->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
                af->l_sysid = avc->slocks->sysid;
 #endif
 		break;
@@ -705,12 +705,12 @@ static int HandleGetLock(register struct vcache *avc,
 		af->l_type = F_WRLCK;
 		if (avc->slocks) {
 		    af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		    af->l_sysid = avc->slocks->sysid;
 #endif
 		} else {
 		    af->l_pid = 0;  /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		    af->l_sysid = 0;
 #endif
 		}
@@ -730,14 +730,14 @@ static int HandleGetLock(register struct vcache *avc,
 	    struct SimpleLocks *slp;
 	    af->l_type = F_RDLCK;
 	    af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	    af->l_sysid = 0;
 #endif
 	    /* find a pid that isn't our own */
 	    for (slp = avc->slocks; slp; slp = slp->next) {
 		if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
 		    af->l_pid = slp->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		    af->l_sysid = avc->slocks->sysid;
 #endif
 		    break;
@@ -761,7 +761,7 @@ static int HandleGetLock(register struct vcache *avc,
 	else
 	    af->l_type = F_WRLCK;
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
 

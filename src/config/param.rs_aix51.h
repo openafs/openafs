@@ -28,6 +28,8 @@
 #define BITMAP_LATER		1
 #define FAST_RESTART		1
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #include <afs/afs_sysnames.h>
 
 /* Global lock in AFS part of client. */
@@ -128,6 +130,8 @@
 #define	AFS_AIX41_ENV		1
 #define AFS_AIX42_ENV		1
 #define AFS_AIX51_ENV		1
+
+#define AFS_HAVE_FLOCK_SYSID    1
 
 #endif /* KERNEL */
 

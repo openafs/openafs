@@ -27,6 +27,8 @@
 #define AFS_SGI_EXMAG		1	/* use magic fields in extents for AFS extra fields */
 /* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */	
 
+#define AFS_HAVE_FLOCK_SYSID    1
+
 #define AFS_PAG_LAST_ENV	1	/* PAG comes last in groups. */
 #define _ANSI_C_SOURCE		1	/* rx_user.h */
 
