@@ -964,6 +964,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	INIT_LIST_HEAD(&ip->i_dirty_buffers);
 	ip->i_data.host = (void*) ip;
 	ip->i_mapping = &ip->i_data;
+#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+	init_rwsem(&ip->i_truncate_sem);
+#endif
 #else
 	sema_init(&ip->i_atomic_write, 1);
 	init_waitqueue(&ip->i_wait);
