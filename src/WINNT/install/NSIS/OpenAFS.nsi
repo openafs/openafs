@@ -712,7 +712,7 @@ skipCheck:
   ; Stop any running services or we can't replace the files
   ; Stop the running processes
   GetTempFileName $R0
-  File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"
   nsExec::Exec '$R0 afscreds.exe'
   Exec "afscreds.exe -z"
   ; in case we are upgrading an old version that does not support -z
@@ -722,6 +722,8 @@ skipCheck:
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
 
+  Delete $R0
+  
   nsExec::Exec "net stop TransarcAFSDaemon"
   nsExec::Exec "net stop TransarcAFSServer"
 
@@ -825,6 +827,19 @@ skipCheck:
 !ifdef DEBUG
   File "${AFS_WININSTALL_DIR}\Service.pdb"
 !endif
+
+  ; Check if the service exists--if it does, this is an upgrade/re-install
+  ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSServer" "ImagePath"
+  StrCmp $R0 "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" SkipStartup
+  
+  ; If an uninstall was done, but we kept the config files, also skip
+  IfFileExists "$INSTDIR\Server\usr\afs\etc\ThisCell" SkipStartup
+
+  ; Make the server config wizard auto-start on bootup if this is an install (not an upgrade)
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" "AFS Server Wizard" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard"'
+  
+  
+SkipStartup:
   ;Don't want to whack existing settings... Make users un-install and then re-install if they want that
   ;nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
   nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
@@ -833,8 +848,6 @@ skipCheck:
   CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Server Configuration.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
   
-  ; Make the server config wizard auto-start on bootup
-  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" "AFS Server Wizard" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard"'
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
@@ -1180,6 +1193,21 @@ Function .onInit
    Abort
    
 contInstall:
+
+   ; Check that RPC functions are installed (I believe any one of these can be present for
+   ; OpenAFS to work)
+   ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_np"
+   StrCmp $R0 "rpcrt4.dll" contInstall2
+   ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncacn_ip_tcp"
+   StrCmp $R0 "rpcrt4.dll" contInstall2
+   ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\RPC\ClientProtocols" "ncadg_ip_udp"
+   StrCmp $R0 "rpcrt4.dll" contInstall2
+   
+   MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "An error was detected with your Windows RPC installation. Please make sure Windows RPC is installed before installing OpenAFS."
+   Abort
+
+
+contInstall2:
    ; Our logic should be like this.
    ;     1) If no AFS components are installed, we do a clean install with default options. (Client/Docs)
    ;     2) If existing modules are installed, we keep them selected
