@@ -238,7 +238,7 @@ afs_uint32 swap_byte_bits(x)
 #endif /* LSBFIRST */
 }
 
-swap_long_bytes_bit_number(x)
+int swap_long_bytes_bit_number(x)
     afs_uint32 x;
 {
     /*
@@ -290,7 +290,7 @@ char const *whoami;
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
+int main(argc, argv)
     int argc;
     char *argv[];
 {

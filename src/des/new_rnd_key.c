@@ -19,12 +19,15 @@
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
+#include <string.h>
 #include <des.h>
 #include "des_internal.h"
 #include "stats.h"
 
 extern void des_fixup_key_parity();
 extern int des_is_weak_key();
+extern int des_ecb_encrypt();
+extern int des_key_sched();
 
 void des_set_random_generator_seed();
 static afs_int32 des_set_sequence_number(des_cblock new_sequence_number);
@@ -103,6 +106,7 @@ des_random_key(key)
 #include <afs/afsutil.h>
 #else
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 void des_init_random_number_generator(key)

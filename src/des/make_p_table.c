@@ -9,6 +9,8 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"
+
+#define WANT_P_TABLE
 #include "tables.h"
 
 extern afs_uint32 swap_byte_bits();
@@ -25,7 +27,7 @@ void gen(stream)
 #ifdef BIG
     /* flip p into p_temp */
     for (i = 0; i<32; i++)
-	P_temp[P[rev_swap_bit_pos_0(i)]] = rev_swap_bit_pos_0(i);
+	P_temp[(int) P[rev_swap_bit_pos_0(i)]] = rev_swap_bit_pos_0(i);
 
     /*
      * now for each byte of input, figure out all possible combinations
@@ -47,11 +49,13 @@ void gen(stream)
     fprintf(stream,
 	    "\n\tstatic afs_uint32 const P_prime[4][256] = {\n\t");
     for (i = 0; i < 4; i++) {
-	fprintf(stream,"\n");
+	fprintf(stream,"\n{ ");
 	for (j = 0; j < 64; j++) {
 	    fprintf(stream,"\n");
 	    for (k = 0; k < 4; k++) {
 		fprintf(stream,"0x%08X",P_prime[i][j*4+k]);
+		if ((j == 63) && (k == 3))
+		    fprintf(stream, "}");
 		if ((i == 3) && (j == 63) && (k == 3))
 		    fprintf(stream,"\n};");
 		else

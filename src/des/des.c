@@ -58,8 +58,9 @@
 #endif
 
 extern int des_debug;
-extern des_cblock_print_file ();
-extern des_debug_print ();
+extern int des_cblock_print_file ();
+extern int des_debug_print ();
+extern int swap_long_bytes_bit_number(int);
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t rxkad_stats_mutex;

@@ -38,6 +38,7 @@
 
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 #ifdef	AFS_HPUX_ENV
@@ -76,8 +77,10 @@ typedef int sigtype;
 #endif
 static sigtype sig_restore();
 static push_signals(), pop_signals();
-int des_read_pw_string();
 #endif
+
+int des_read_pw_string(char *, int, char *, int);
+int des_string_to_key(char *, des_cblock *);
 
 /*** Routines ****************************************************** */
 int
@@ -100,7 +103,9 @@ des_read_password(k,prompt,verify)
     if (ok == 0)
 	des_string_to_key(key_string, k);
 
+#ifdef BSDUNIX
 lose:
+#endif
     bzero(key_string, sizeof (key_string));
     return ok;
 }
@@ -297,7 +302,9 @@ des_read_pw_string(s,maxa,prompt,verify)
 	ok = 1;
     }
 
+#ifdef BSDUNIX
 lose:
+#endif
     if (!ok)
 	bzero(s, maxa);
     printf("\n");

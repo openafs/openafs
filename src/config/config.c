@@ -16,9 +16,10 @@
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-int argc;
-char **argv; {
+/* prototypes */
+int mc_copy(FILE *, FILE *, char **);
+
+int main(int argc, char **argv) {
     register FILE *infile;
     register FILE *outfile;
     char *alist[3];

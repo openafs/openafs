@@ -30,6 +30,7 @@
 
 extern int des_debug;
 extern int des_debug_print();
+extern int des_ecb_encrypt();
 
 /*
  * pcbc_encrypt is an "error propagation chaining" encrypt operation

@@ -26,6 +26,7 @@
 
 extern int des_debug;
 extern int des_debug_print();
+extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining operation, either
