@@ -150,7 +150,7 @@ case $system in
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
-                 if test "$ac_cv_linux_config_modversions" = "xno"; then
+                 if test "x$ac_cv_linux_config_modversions" = "xno"; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
                    ac_cv_linux_exports_sys_call_table=yes
                  else
