@@ -1025,17 +1025,23 @@ cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp)
  * Return a pointer to a pathname extracted from a TID structure.  The
  * TID structure is not held; assume it won't go away.
  */
-char *smb_GetTIDPath(smb_vc_t *vcp, unsigned short tid)
+long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** treepath)
 {
 	smb_tid_t *tidp;
-	char *tpath;
+    long code = 0;
 
 	tidp = smb_FindTID(vcp, tid, 0);
-    if (!tidp) 
-        return NULL;
-	tpath = tidp->pathname;
+    if (!tidp) {
+        *treepath = NULL;
+    } else {
+        if(tidp->flags & SMB_TIDFLAG_IPC) {
+            code = CM_ERROR_TIDIPC;
+            /* tidp->pathname would be NULL, but that's fine */
+        }
+        *treepath = tidp->pathname;
 	smb_ReleaseTID(tidp);
-	return tpath;
+    }
+    return code;
 }
 
 /* check to see if we have a chained fid, that is, a fid that comes from an
@@ -1263,6 +1269,37 @@ int smb_ListShares()
 	return num_shares;
 }
 #endif /* DJGPP */
+
+typedef struct smb_findShare_rock {
+    char * shareName;
+    char * match;
+    int matchType;
+} smb_findShare_rock_t;
+
+#define SMB_FINDSHARE_EXACT_MATCH 1
+#define SMB_FINDSHARE_PARTIAL_MATCH 2
+
+long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
+	osi_hyper_t *offp)
+{
+    int matchType = 0;
+    smb_findShare_rock_t * vrock = (smb_findShare_rock_t *) rockp;
+    if(!strnicmp(dep->name, vrock->shareName, 12)) {
+        if(!stricmp(dep->name, vrock->shareName))
+            matchType = SMB_FINDSHARE_EXACT_MATCH;
+        else
+            matchType = SMB_FINDSHARE_PARTIAL_MATCH;
+        if(vrock->match) free(vrock->match);
+        vrock->match = strdup(dep->name);
+        vrock->matchType = matchType;
+
+        if(matchType == SMB_FINDSHARE_EXACT_MATCH)
+            return CM_ERROR_STOPNOW;
+    }
+    return 0;
+}
+
+
 /* find a shareName in the table of submounts */
 int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	char **pathNamep)
@@ -1386,11 +1423,40 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
         *pathNamep = strdup(p);
         return 1;
     } 
-    else /* create  \\<netbiosName>\<cellname>  */
+    else
     {
+        /* First lookup shareName in root.afs */
+        cm_req_t req;
+        smb_findShare_rock_t vrock;
+        osi_hyper_t thyper;
         char * p = shareName; 
         int rw = 0;
 
+        /*  attempt to locate a partial match in root.afs.  This is because
+            when using the ANSI RAP calls, the share name is limited to 13 chars
+            and hence is truncated. Of course we prefer exact matches. */
+        cm_InitReq(&req);
+        thyper.HighPart = 0;
+        thyper.LowPart = 0;
+
+        vrock.shareName = shareName;
+        vrock.match = NULL;
+        vrock.matchType = 0;
+
+        cm_HoldSCache(cm_rootSCachep);
+        code = cm_ApplyDir(cm_rootSCachep, smb_FindShareProc, &vrock, &thyper,
+            (uidp? (uidp->unp ? uidp->unp->userp : NULL) : NULL), &req, NULL);
+        cm_ReleaseSCache(cm_rootSCachep);
+
+        if(vrock.matchType) {
+            sprintf(pathName,"/%s/",vrock.match);
+            *pathNamep = strdup(strlwr(pathName));
+            free(vrock.match);
+            return 1;
+        }
+
+        /* if we get here, there was no match for the share in root.afs */
+        /* so try to create  \\<netbiosName>\<cellname>  */
         if ( *p == '.' ) {
             p++;
             rw = 1;
@@ -3298,7 +3364,14 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 		spacep = inp->spacep;
 		smb_StripLastComponent(spacep->data, NULL, pathp);
 		lock_ReleaseMutex(&dsp->mx);
-		tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+		code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+        if(code) {
+            lock_ReleaseMutex(&dsp->mx);
+            cm_ReleaseUser(userp);
+            smb_DeleteDirSearch(dsp);
+            smb_ReleaseDirSearch(dsp);
+            return CM_ERROR_NOFILES;
+        }
 		code = cm_NameI(cm_rootSCachep, spacep->data,
 						caseFold | CM_FLAG_FOLLOW, userp, tidPathp, &req, &scp);
 		lock_ObtainMutex(&dsp->mx);
@@ -3675,7 +3748,11 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
 	caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(rootScp, pathp,
 					 caseFold | CM_FLAG_FOLLOW | CM_FLAG_CHECKPATH,
 					 userp, tidPathp, &req, &newScp);
@@ -3744,7 +3821,11 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
 	caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHFILE;
+    }
 	code = cm_NameI(rootScp, pathp, caseFold | CM_FLAG_FOLLOW, userp,
 					tidPathp, &req, &newScp);
 
@@ -3842,7 +3923,11 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	/* we shouldn't need this for V3 requests, but we seem to */
 	caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHFILE;
+    }
 
 	/*
 	 * XXX Strange hack XXX
@@ -4020,7 +4105,11 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
     code = cm_NameI(cm_rootSCachep, pathp, caseFold | CM_FLAG_FOLLOW, userp,
                     tidPathp, &req, &scp);
         
@@ -4170,7 +4259,11 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold, userp, tidPathp,
 					&req, &dscp);
 
@@ -4320,7 +4413,11 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
   */
 	caseFold = CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold,
 					userp, tidPathp, &req, &oldDscp);
 
@@ -4519,7 +4616,11 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
 	caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold | CM_FLAG_FOLLOW,
 					userp, tidPathp, &req, &dscp);
 
@@ -5522,7 +5623,11 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
     caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
 	code = cm_NameI(cm_rootSCachep, spacep->data,
                     caseFold | CM_FLAG_FOLLOW | CM_FLAG_CHECKPATH,
@@ -5629,7 +5734,11 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     caseFold = CM_FLAG_CASEFOLD;
 
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold | CM_FLAG_FOLLOW,
                     userp, tidPathp, &req, &dscp);
 

@@ -248,4 +248,5 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_AMBIGUOUS_FILENAME (CM_ERROR_BASE+41)
 #define CM_ERROR_BADLOGONTYPE	(CM_ERROR_BASE+42)
 #define CM_ERROR_GSSCONTINUE    (CM_ERROR_BASE+43)
+#define CM_ERROR_TIDIPC         (CM_ERROR_BASE+44)
 #endif /*  __CM_H_ENV__ */

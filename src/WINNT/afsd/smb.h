@@ -412,7 +412,7 @@ extern void smb_ReleaseUID(smb_user_t *uidp);
 
 extern cm_user_t *smb_GetUser(smb_vc_t *vcp, smb_packet_t *inp);
 
-extern char *smb_GetTIDPath(smb_vc_t *vcp, unsigned short tid);
+extern long smb_LookupTIDPath(smb_vc_t *vcp, unsigned short tid, char ** tidPathp);
 
 extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 

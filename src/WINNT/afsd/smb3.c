@@ -940,6 +940,10 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     }
     strcpy(shareName, tp+1);
 
+    osi_Log2(smb_logp, "Tree connect pathp[%s] shareName[%s]",
+        osi_LogSaveString(smb_logp, pathp),
+        osi_LogSaveString(smb_logp, shareName));
+
 	if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0) {
 #ifndef NO_IPC
 		osi_Log0(smb_logp, "TreeConnectX connecting to IPC$");
@@ -1756,9 +1760,92 @@ long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
 	return code;
 }
 
+typedef struct smb_rap_server_info_0 {
+    char    sv0_name[16];
+} smb_rap_server_info_0_t;
+
+typedef struct smb_rap_server_info_1 {
+    char            sv1_name[16];
+    char            sv1_version_major;
+    char            sv1_version_minor;
+    unsigned long   sv1_type;
+    DWORD           *sv1_comment_or_master_browser; /* char *sv1_comment_or_master_browser;*/
+} smb_rap_server_info_1_t;
+
+char smb_ServerComment[] = "OpenAFS Client";
+int smb_ServerCommentLen = sizeof(smb_ServerComment);
+
+#define SMB_SV_TYPE_SERVER      	0x00000002L
+#define SMB_SV_TYPE_NT              0x00001000L
+#define SMB_SV_TYPE_SERVER_NT       0x00008000L
+
 long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
-	return CM_ERROR_BADOP;
+	smb_tran2Packet_t *outp;
+    long code = 0;
+	int infoLevel;
+	int bufsize;
+	unsigned short * tp;
+	int totalData;
+	int totalParams;
+    smb_rap_server_info_0_t * info0;
+    smb_rap_server_info_1_t * info1;
+    char * cstrp;
+
+	tp = p->parmsp + 1; /* Skip over function number */
+	(void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over param descriptor */
+	(void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over data descriptor */
+	infoLevel = *tp++;
+	bufsize = *tp++;
+
+    if(infoLevel != 0 && infoLevel != 1) {
+        return CM_ERROR_INVAL;
+    }
+
+	totalParams = 6;
+	
+	totalData = 
+        (infoLevel == 0) ? sizeof(smb_rap_server_info_0_t)
+        : (sizeof(smb_rap_server_info_1_t) + smb_ServerCommentLen);
+
+	outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParams, totalData);
+
+	memset(outp->parmsp,0,totalParams);
+	memset(outp->datap,0,totalData);
+
+    if(infoLevel == 0) {
+        info0 = (smb_rap_share_info_0_t *) outp->datap;
+        cstrp = (char *) (info0 + 1);
+        strcpy(info0->sv0_name, "AFS");
+    } else { /* infoLevel == 1 */
+        info1 = (smb_rap_share_info_1_t *) outp->datap;
+        cstrp = (char *) (info1 + 1);
+        strcpy(info1->sv1_name, "AFS");
+
+        info1->sv1_type = 
+            SMB_SV_TYPE_SERVER |
+            SMB_SV_TYPE_NT |
+            SMB_SV_TYPE_SERVER_NT;
+
+        info1->sv1_version_major = 5;
+        info1->sv1_version_minor = 1;
+        info1->sv1_comment_or_master_browser = (DWORD) (cstrp - outp->datap);
+
+        strcpy(cstrp, smb_ServerComment);
+
+        cstrp += smb_ServerCommentLen;
+    }
+
+    totalData = cstrp - outp->datap;
+	outp->totalData = min(bufsize,totalData); /* actual data size */
+    outp->parmsp[0] = (outp->totalData == totalData)? 0 : ERROR_MORE_DATA;
+	outp->parmsp[2] = totalData;
+	outp->totalParms = totalParams;
+
+	smb_SendTran2Packet(vcp,outp,op);
+	smb_FreeTran2Packet(outp);
+
+    return code;
 }
 
 long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -2006,7 +2093,16 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         return CM_ERROR_BADSMB;
     }
 
-	tidPathp = smb_GetTIDPath(vcp, p->tid);
+	code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if(code == CM_ERROR_TIDIPC) {
+        /* Attempt to use TID allocated for IPC.  The client is
+           probably trying to locate DCE RPC end points, which
+           we don't support. */
+        osi_Log0(smb_logp, "Tran2Open received IPC TID");
+        cm_ReleaseUser(userp);
+        smb_FreeTran2Packet(outp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
 	dscp = NULL;
 	code = cm_NameI(cm_rootSCachep, pathp,
@@ -2429,7 +2525,13 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return CM_ERROR_BADSMB;
     }
 
-	tidPathp = smb_GetTIDPath(vcp, p->tid);
+	code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOSUCHPATH);
+        smb_FreeTran2Packet(outp);
+        return 0;
+    }
 
 	/*
 	 * XXX Strange hack XXX
@@ -3368,7 +3470,15 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         smb_StripLastComponent(spacep->data, NULL, pathp);
         lock_ReleaseMutex(&dsp->mx);
 
-		tidPathp = smb_GetTIDPath(vcp, p->tid);
+		code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+        if(code) {
+		    cm_ReleaseUser(userp);
+            smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOFILES);
+            smb_FreeTran2Packet(outp);
+		    smb_DeleteDirSearch(dsp);
+		    smb_ReleaseDirSearch(dsp);
+            return 0;
+        }
         code = cm_NameI(cm_rootSCachep, spacep->data,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
@@ -3958,7 +4068,11 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUser(vcp, inp);
 
 	dscp = NULL;
-	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 	code = cm_NameI(cm_rootSCachep, pathp,
                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                     userp, tidPathp, &req, &scp);
@@ -4603,7 +4717,16 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	if (baseFid == 0) {
 		baseDirp = cm_rootSCachep;
-		tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+		code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+        if(code == CM_ERROR_TIDIPC) {
+            /* Attempt to use a TID allocated for IPC.  The client
+               is probably looking for DCE RPC end points which we
+               don't support. */
+            osi_Log0(smb_logp, "NTCreateX received IPC TID");
+            free(realPathp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_NOSUCHFILE;
+        }
 	}
 	else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
@@ -5118,7 +5241,16 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
 	if (baseFid == 0) {
 		baseDirp = cm_rootSCachep;
-		tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+		code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+        if(code == CM_ERROR_TIDIPC) {
+            /* Attempt to use TID allocated for IPC.  The client is
+               probably trying to locate DCE RPC endpoints, which we
+               don't support. */
+            osi_Log0(smb_logp, "NTTranCreate received IPC TID");
+            free(realPathp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_NOSUCHPATH;
+        }
 	}
 	else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);

@@ -181,7 +181,11 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
         userp = smb_GetUser(vcp, inp);
 
 	/* Identify tree */
-	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
 	/* turn the connection around, if required */
 	code = smb_IoctlPrepareRead(fidp, iop, userp);
@@ -294,7 +298,13 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                      userp);
     }
 
-	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+	code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
+    if(code) {
+        smb_ReleaseUID(uidp);
+        cm_ReleaseUser(userp);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
 	code = smb_IoctlPrepareRead(fidp, iop, userp);
     if (uidp) {
@@ -392,7 +402,12 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		if (uidp) smb_ReleaseUID(uidp);
 	}
 
-	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &iop->tidPathp);
+    if(code) {
+        cm_ReleaseUser(userp);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHPATH;
+    }
 
 	code = smb_IoctlPrepareRead(fidp, iop, userp);
 	if (code) {
