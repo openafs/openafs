@@ -44,13 +44,14 @@ $(PICTARGET)/%.o: %.c $(PICTARGET)
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
+OBJS = afssyscalls.o $(RMTOBJS)
 
 OBJECTS= afssyscalls.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
 include ../config/Makefile.version
 
-all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall $(PICOBJS)
+all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall  $(PICOBJS) 
 	case "${SYS_NAME}" in \
 	rs_aix*)			\
 		${INSTALL} afs.exp ${TOP_LIBDIR};;	\
@@ -78,7 +79,7 @@ ${DEST}/bin/pagsh.krb: pagsh.krb
 ${DEST}/include/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
-libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
+libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o 
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
 	$(RANLIB) $@

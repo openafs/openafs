@@ -5,8 +5,10 @@ openafs (1.2.10-2) unstable; urgency=low
   * Fix wording of question about using dynroot, Closes: #209332
   * New French debconf translations, sorry about the delay in including these, Closes: #203608
   * Avoid yes/no construction in openafs-client templates, Closes: #198476
+  * Fix libpam-openafs-kaserver to include the symbols it needs, patch
+    from Daniel Joseph Barnhart Clark , Closes: #194818
 
- --
+ -- Sam Hartman <hartmans@debian.org>  Mon, 13 Oct 2003 00:38:42 -0400
 
 openafs (1.2.10-1) unstable; urgency=low
 

@@ -73,7 +73,7 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 UKSRCS = $(KSRCS) rx_conncache.c
 
 PICTARGET =../pic/rx
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
 
@@ -118,7 +118,7 @@ xdr_refernce.o: xdr_refernce.c xdr.h
 rxperf: rxperf.o librx.a
 	${CC} -o $@ rxperf.o ${LIBS}
 
-librx.a: ${LIBOBJS} RX_component_version_number.o
+librx.a: ${LIBOBJS} RX_component_version_number.o 
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIBOBJS} RX_component_version_number.o
 	$(RANLIB) $@

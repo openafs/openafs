@@ -47,7 +47,7 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 
 
 PICTARGET =../pic/util
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS)) 
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(objects)) 
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
 
@@ -73,7 +73,7 @@ all: ukinstall kinstall \
 	${TOP_INCDIR}/potpourri.h \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
-	sys
+	sys $(PICOBJS)
 
 dirpath.h: dirpath.hin Makefile
 	( sed \
@@ -90,7 +90,7 @@ dirpath.h: dirpath.hin Makefile
 		dirpath.hin >dirpath.h.tmp && \
 		mv dirpath.h.tmp dirpath.h )
 
-util.a: ${objects} AFS_component_version_number.o $(PICOBJS)
+util.a: ${objects} AFS_component_version_number.o 
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a

@@ -76,7 +76,7 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 		$(LD) $(LDFLAGS) -M mapfile -o $@ afs_setcred.o afs_auth.o afs_util.o\
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
-		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS)  `find ../pic/ -name "*.o" | grep -v AFS_compo`  -lpam;;\
+		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS)  `find ../pic/ -name "*.o" | grep -v AFS_compo`  -lpam -lresolv;;\
 	*fbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
 	* ) \
