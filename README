@@ -32,8 +32,9 @@ A. Creating the proper directory structure.
 
       alpha_dux40
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
-      i386_fbsd42, i386_fbsd43, i386_fbsd44, i386_fbsd45,
-	      i386_fbsd46 (gmake is required to build for FreeBSD)
+      i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
+	      i386_fbsd_46, i386_fbsd_47, i386_fbsd_50
+              (gnu make is required for building on FreeBSD)
       i386_linux22
       i386_linux24 
       rs_aix42

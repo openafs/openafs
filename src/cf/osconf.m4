@@ -164,6 +164,18 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
+	*fbsd_5*)
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
+		PAM_CFLAGS="-O2 -pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="/usr/lib/libncurses.so"
+		XCFLAGS="-O2 -pipe"
+		XLIBS="${LIB_AFSDB} -lcompat"
+		YACC="byacc"
+		;;
+
 	*nbsd20)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '

@@ -90,7 +90,7 @@ RCSID("$Header$");
 static struct stat istat, ostat;
 static int stripcalled = 0;
 
-#if !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_FBSD50_ENV)
 extern int sys_nerr;
 #endif
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
