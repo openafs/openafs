@@ -66,6 +66,7 @@ if [ "x$PERL" = "xno" ] ; then
     PERL_INSTALL=perl
 fi
 AC_SUBST(PERL_INSTALL)
+
 OPENAFS_CHECK_BIGENDIAN
 
 AC_MSG_CHECKING(your OS)
