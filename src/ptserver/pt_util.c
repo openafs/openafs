@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.2 2001/01/20 20:01:36 hartmans Exp $ */
+/* $Id: pt_util.c,v 1.3 2001/07/11 04:03:28 hartmans Exp $ */
 
 /*
  *
@@ -19,6 +19,10 @@
 #include <sys/file.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/pt_util.c,v 1.3 2001/07/11 04:03:28 hartmans Exp $");
+
 #include <lock.h>
 #include <netinet/in.h>
 #define UBIK_INTERNALS

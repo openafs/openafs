@@ -12,6 +12,10 @@
  *
  */
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_module.c,v 1.5 2001/07/11 04:03:24 hartmans Exp $");
+
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../h/unistd.h" /* For syscall numbers. */

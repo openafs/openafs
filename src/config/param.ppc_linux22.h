@@ -1,5 +1,5 @@
-#ifndef _PARAM_PPC_LINUX22_H_
-#define _PARAM_PPC_LINUX22_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
  * it's a judgment call. If something is obviously ppc specific, use that
@@ -66,4 +66,4 @@
 #endif
 #endif /* KERNEL */
 
-#endif /* _PARAM_PPC_LINUX22_H_ */
+#endif /* AFS_PARAM_H */

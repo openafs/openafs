@@ -11,6 +11,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/dirpath.c,v 1.8 2001/07/11 04:03:29 hartmans Exp $");
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,10 +107,12 @@ unsigned int initAFSDirPath(void)
  */
 static void initDirPathArray(void)
 { 
-    char *buf, *pathp;
-    int status;
+    char *pathp;
 
 #ifdef AFS_NT40_ENV
+    char *buf;
+    int status;
+
     /* get the afs server software installation dir from the registry */
     if (afssw_GetServerInstallDir(&buf)) {
 	/* failed; server not installed; use temp directory */

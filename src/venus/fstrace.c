@@ -11,6 +11,10 @@
  * All Rights Reserved
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fstrace.c,v 1.4 2001/07/11 04:03:30 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) && !defined(AFS_DARWIN_ENV)

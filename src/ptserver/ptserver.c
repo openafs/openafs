@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.3 2001/07/11 04:03:28 hartmans Exp $");
+
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -43,7 +47,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 ubik_lastYesTime;
 extern afs_int32 ubik_nBuffers;
 
-extern int afsconf_ClientAuth();
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
@@ -256,7 +259,6 @@ void main (argc, argv)
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;
     if (kerberosKeys) {
-	extern int afsconf_GetKey();
 	sc[2] = rxkad_NewServerSecurityObject
 	    (0, prdir, afsconf_GetKey, (char *)0);
     }

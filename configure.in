@@ -3,7 +3,7 @@ AM_INIT_AUTOMAKE(openafs,devel)
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
-#BOZO_SAVE_CORES BOS_RESTRICTED_MODE BOS_NEW_CONFIG pam sia  BITMAP_LATER FAST_RESTART
+#BOZO_SAVE_CORES BOS_RESTRICTED_MODE BOS_NEW_CONFIG pam sia
 AC_ARG_WITH(afs-sysname,
 [  --with-afs-sysname=sys    use sys for the afs sysname]
 )
@@ -17,8 +17,15 @@ AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+AC_ARG_ENABLE( fast-restart,
+[  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
+AC_ARG_ENABLE( bitmap-later,
+[  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+)
+AC_ARG_ENABLE(kernel-module,
+[  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
 )
 
 AC_PROG_CC
@@ -49,27 +56,43 @@ system=$host
 case $system in
         *-linux*)
 		MKAFS_OSTYPE=LINUX
-		if test "x$with_linux_kernel_headers" != "x"; then
-			LINUX_KERNEL_PATH="$with_linux_kernel_headers"
-		else
-			LINUX_KERNEL_PATH="/usr/src/linux"
-		fi
-		if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'`
-		 if test "x$linux_kvers" = "x"; then
-		  AC_MSG_ERROR(Linux headers lack version definition)
-		  exit 1
+		if test "x$enable_kernel_module" = "xyes"; then
+		 if test "x$with_linux_kernel_headers" != "x"; then
+		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		  LINUX_VERSION="$linux_kvers"
+		   LINUX_KERNEL_PATH="/usr/src/linux"
 		 fi
-		LINUX_FS_STRUCT_INODE_HAS_I_BYTES
-		LINUX_INODE_SETATTR_RETURN_TYPE
-
-		else
-#		 AC_MSG_ERROR(No linux headers found at $with_linux_kernel_headers)
-:
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'|tail -1`
+		  if test "x$linux_kvers" = "x"; then
+		    AC_MSG_ERROR(Linux headers lack version definition)
+		    exit 1
+		  else
+		    LINUX_VERSION="$linux_kvers"
+		  fi
+		 else
+                    enable_kernel_module="no"
+                 fi
+		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
+		     enable_kernel_module="no"
+		 fi
+		 if test "x$enable_kernel_module" = "xno"; then
+		  if test "x$with_linux_kernel_headers" != "x"; then
+		   AC_MSG_ERROR(No usable linux headers found at $LINUX_KERNEL_PATH)
+		   exit 1
+		  else
+		   AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
+		  fi
+		 fi
 		fi
-                AC_MSG_RESULT(linux)
+		AC_MSG_RESULT(linux)
+		if test "x$enable_kernel_module" = "xyes"; then
+	         LINUX_FS_STRUCT_INODE_HAS_I_BYTES
+	  	 LINUX_INODE_SETATTR_RETURN_TYPE
+		 LINUX_NEED_RHCONFIG
+		 LINUX_WHICH_MODULES
+                :
+		fi
                 ;;
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
@@ -164,7 +187,7 @@ if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
-        AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+        AC_MSG_WARN(*** Unable to locate working posix thread library ***)
 fi
 AC_SUBST(PTHREAD_LIBS)
 
@@ -176,6 +199,15 @@ fi
 WITH_INSECURE=NO
 if test "$enable_insecure" = "yes"; then
 	WITH_INSECURE=YES
+fi
+
+# Fast restart
+if test "$enable_fast_restart" = "yes"; then
+	AC_DEFINE(FAST_RESTART)
+fi
+
+if test "$enable_bitmap_later" = "yes"; then
+	AC_DEFINE(BITMAP_LATER)
 fi
 
 # Should autocompute a default
@@ -215,7 +247,12 @@ AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
 
+if test "x$enable_kernel_module" = "xyes"; then
+ENABLE_KERNEL_MODULE=libafs
+fi
+
 AC_SUBST(AFS_SYSNAME)
+AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(LINUX_VERSION)

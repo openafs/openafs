@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volmain.c,v 1.5 2001/07/11 04:03:31 hartmans Exp $");
+
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <time.h>
