@@ -17,7 +17,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vutil.c,v 1.1.1.8 2001/10/14 18:07:26 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15 2003/11/29 21:38:05 jaltman Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -45,6 +46,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vutil.c,v 1.1.1.8 2001/10/14 18:07:
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
+#include <afs/afsutil.h>
 #ifdef AFS_NT40_ENV
 #include "ntops.h"
 #include <io.h>
@@ -64,10 +66,18 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vutil.c,v 1.1.1.8 2001/10/14 18:07:
 #include <strings.h>
 #endif
 
-void AssignVolumeName();
-void AssignVolumeName_r();
-void ClearVolumeStats();
-void ClearVolumeStats_r();
+#ifdef O_LARGEFILE
+#define afs_open	open64
+#else /* !O_LARGEFILE */
+#define afs_open	open
+#endif /* !O_LARGEFILE */
+
+/*@printflike@*/ extern void Log(const char *format, ...);
+
+void AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext);
+void AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext);
+void ClearVolumeStats(register VolumeDiskData * vol);
+void ClearVolumeStats_r(register VolumeDiskData * vol);
 
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
@@ -76,7 +86,8 @@ void ClearVolumeStats_r();
    volume header ON:  this means that the volumes will not be attached by the
    file server and WILL BE DESTROYED the next time a system salvage is performed */
 
-static void RemoveInodes(Device dev, int vid)
+static void
+RemoveInodes(Device dev, VolumeId vid)
 {
     register int i;
     IHandle_t *handle;
@@ -85,7 +96,7 @@ static void RemoveInodes(Device dev, int vid)
      * needs the dev and vid to decrement volume special files.
      */
     IH_INIT(handle, dev, vid, -1);
-    for (i = 0; i<nFILES; i++) {
+    for (i = 0; i < nFILES; i++) {
 	Inode inode = *stuff[i].inode;
 	if (VALID_INO(inode))
 	    IH_DEC(handle, inode, vid);
@@ -93,27 +104,19 @@ static void RemoveInodes(Device dev, int vid)
     IH_RELEASE(handle);
 }
 
-Volume *VCreateVolume(ec, partname, volumeId, parentId)
-    Error *ec;
-    char *partname;
-    VolId volumeId;
-    VolId parentId;	/* Should be the same as volumeId if there is
-    			   no parent */
-{
+Volume *
+VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
+{				/* Should be the same as volumeId if there is
+				 * no parent */
     Volume *retVal;
-    VOL_LOCK
-    retVal = VCreateVolume_r(ec, partname, volumeId, parentId);
-    VOL_UNLOCK
-    return retVal;
+    VOL_LOCK retVal = VCreateVolume_r(ec, partname, volumeId, parentId);
+    VOL_UNLOCK return retVal;
 }
 
-Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
-    Error *ec;
-    char *partname;
-    VolId volumeId;
-    VolId parentId;	/* Should be the same as volumeId if there is
-    			   no parent */
-{
+Volume *
+VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
+{				/* Should be the same as volumeId if there is
+				 * no parent */
     VolumeDiskData vol;
     int fd, i;
     char headerName[32], volumePath[64];
@@ -122,31 +125,31 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     struct VolumeDiskHeader diskHeader;
     IHandle_t *handle;
     FdHandle_t *fdP;
-    Inode nearInode=0; 
+    Inode nearInode = 0;
 
     *ec = 0;
-    memset(&vol, 0, sizeof (vol));
+    memset(&vol, 0, sizeof(vol));
     vol.id = volumeId;
     vol.parentId = parentId;
     vol.copyDate = time(0);	/* The only date which really means when this
-				   @i(instance) of this volume was created.
-				   Creation date does not mean this */
+				 * @i(instance) of this volume was created.
+				 * Creation date does not mean this */
 
     /* Initialize handle for error case below. */
     handle = NULL;
 
     /* Verify that the parition is valid before writing to it. */
-    if (!(partition = VGetPartition(partname, 0))) {
+    if (!(partition = VGetPartition_r(partname, 0))) {
 	Log("VCreateVolume: partition %s is not in service.\n", partname);
 	*ec = VNOVOL;
 	return NULL;
     }
 #if	defined(NEARINODE_HINT)
-    nearInodeHash(volumeId,nearInode);
+    nearInodeHash(volumeId, nearInode);
     nearInode %= partition->f_files;
 #endif
-    VLockPartition(partname);
-    memset(&tempHeader, 0, sizeof (tempHeader));
+    VLockPartition_r(partname);
+    memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
     tempHeader.id = vol.id;
@@ -154,15 +157,16 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     vol.stamp.magic = VOLUMEINFOMAGIC;
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
-    sprintf(headerName, VFORMAT, vol.id);
-    sprintf(volumePath, "%s/%s", VPartitionPath(partition), headerName);
-    fd = open(volumePath, O_CREAT|O_EXCL|O_WRONLY, 0600);
+    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, vol.id);
+    (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
+		       VPartitionPath(partition), headerName);
+    fd = afs_open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);
     if (fd == -1) {
-        if (errno == EEXIST) {
-	    Log("VCreateVolume: Header file %s already exists!\n", volumePath);
+	if (errno == EEXIST) {
+	    Log("VCreateVolume: Header file %s already exists!\n",
+		volumePath);
 	    *ec = VVOLEXISTS;
-	}
-	else {
+	} else {
 	    Log("VCreateVolume: Couldn't create header file %s for volume %u\n", volumePath, vol.id);
 	    *ec = VNOVOL;
 	}
@@ -170,17 +174,15 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     }
     device = partition->device;
 
-    for (i = 0; i<nFILES; i++) {
+    for (i = 0; i < nFILES; i++) {
 	register struct stuff *p = &stuff[i];
 	if (p->obsolete)
 	    continue;
 #ifdef AFS_NAMEI_ENV
-	*(p->inode) = IH_CREATE(NULL, device, VPartitionPath(partition),
-				nearInode, 
-				(p->inodeType == VI_LINKTABLE) ? vol.parentId :
-				vol.id,
-				INODESPECIAL, p->inodeType,
-				vol.parentId);
+	*(p->inode) =
+	    IH_CREATE(NULL, device, VPartitionPath(partition), nearInode,
+		      (p->inodeType == VI_LINKTABLE) ? vol.parentId : vol.id,
+		      INODESPECIAL, p->inodeType, vol.parentId);
 	if (!(VALID_INO(*(p->inode)))) {
 	    if (errno == EEXIST) {
 		/* Increment the reference count instead. */
@@ -201,21 +203,21 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
 		code = IH_INC(lh, *(p->inode), parentId);
 		FDH_REALLYCLOSE(fdP);
 		IH_RELEASE(lh);
-		if (code<0)
+		if (code < 0)
 		    goto bad;
 		continue;
 	    }
 	}
 #else
-	*(p->inode) = IH_CREATE(NULL, device, VPartitionPath(partition),
-				nearInode, vol.id, INODESPECIAL, p->inodeType,
-				vol.parentId);
+	*(p->inode) =
+	    IH_CREATE(NULL, device, VPartitionPath(partition), nearInode,
+		      vol.id, INODESPECIAL, p->inodeType, vol.parentId);
 #endif
- 
-        if (!VALID_INO(*(p->inode))) {
+
+	if (!VALID_INO(*(p->inode))) {
 	    Log("VCreateVolume:  Problem creating %s file associated with volume header %s\n", p->description, volumePath);
 	  bad:
-	    if(handle)
+	    if (handle)
 		IH_RELEASE(handle);
 	    RemoveInodes(device, vol.id);
 	    *ec = VNOVOL;
@@ -227,94 +229,92 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
 	if (fdP == NULL) {
 	    Log("VCreateVolume:  Problem iopen inode %s (err=%d)\n",
 		PrintInode(NULL, *(p->inode)), errno);
-	   goto bad;
-       }
-       if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	   Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
-	       PrintInode(NULL, *(p->inode)), errno);
-	   FDH_REALLYCLOSE(fdP);
-	   goto bad;
-       }
-       if (FDH_WRITE(fdP, (char*)&p->stamp, sizeof(p->stamp)) != sizeof(p->stamp)) {
-	   Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
-	       PrintInode(NULL, *(p->inode)), errno);
-	   FDH_REALLYCLOSE(fdP);
-	   goto bad;
-       }
+	    goto bad;
+	}
+	if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
+	    Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
+		PrintInode(NULL, *(p->inode)), errno);
+	    FDH_REALLYCLOSE(fdP);
+	    goto bad;
+	}
+	if (FDH_WRITE(fdP, (char *)&p->stamp, sizeof(p->stamp)) !=
+	    sizeof(p->stamp)) {
+	    Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
+		PrintInode(NULL, *(p->inode)), errno);
+	    FDH_REALLYCLOSE(fdP);
+	    goto bad;
+	}
 	FDH_REALLYCLOSE(fdP);
 	IH_RELEASE(handle);
-       nearInode = *(p->inode);
+	nearInode = *(p->inode);
     }
 
     IH_INIT(handle, device, vol.parentId, tempHeader.volumeInfo);
     fdP = IH_OPEN(handle);
     if (fdP == NULL) {
-	Log("VCreateVolume:  Problem iopen inode %d (err=%d)\n", tempHeader.volumeInfo, errno);
+	Log("VCreateVolume:  Problem iopen inode %s (err=%d)\n",
+	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	unlink(volumePath);
 	goto bad;
-       }
+    }
     if (FDH_SEEK(fdP, 0, SEEK_SET) < 0) {
-	Log("VCreateVolume:  Problem lseek inode %d (err=%d)\n", tempHeader.volumeInfo, errno);
+	Log("VCreateVolume:  Problem lseek inode %s (err=%d)\n",
+	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);
 	unlink(volumePath);
 	goto bad;
-       }
-    if (FDH_WRITE(fdP, (char*)&vol, sizeof(vol)) != sizeof(vol)) {
-	Log("VCreateVolume:  Problem writing to  inode %d (err=%d)\n", tempHeader.volumeInfo, errno);
+    }
+    if (FDH_WRITE(fdP, (char *)&vol, sizeof(vol)) != sizeof(vol)) {
+	Log("VCreateVolume:  Problem writing to  inode %s (err=%d)\n",
+	    PrintInode(NULL, tempHeader.volumeInfo), errno);
 	FDH_REALLYCLOSE(fdP);
 	unlink(volumePath);
 	goto bad;
-       }
+    }
     FDH_CLOSE(fdP);
     IH_RELEASE(handle);
 
     VolumeHeaderToDisk(&diskHeader, &tempHeader);
-    if (write(fd, &diskHeader, sizeof (diskHeader)) != sizeof (diskHeader)) {
+    if (write(fd, &diskHeader, sizeof(diskHeader)) != sizeof(diskHeader)) {
 	Log("VCreateVolume: Unable to write volume header %s; volume %u not created\n", volumePath, vol.id);
 	unlink(volumePath);
 	goto bad;
     }
     fsync(fd);
     close(fd);
-    return (VAttachVolumeByName(ec, partname, headerName, V_SECRETLY));
+    return (VAttachVolumeByName_r(ec, partname, headerName, V_SECRETLY));
 }
 
 
 void
-AssignVolumeName(vol, name, ext)
-    register VolumeDiskData *vol;
-    char *name,*ext;
+AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext)
 {
-    VOL_LOCK
-    AssignVolumeName_r(vol, name, ext);
-    VOL_UNLOCK
-}
+    VOL_LOCK AssignVolumeName_r(vol, name, ext);
+VOL_UNLOCK}
 
 void
-AssignVolumeName_r(vol, name, ext)
-    register VolumeDiskData *vol;
-    char *name,*ext;
+AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext)
 {
     register char *dot;
-    strncpy(vol->name, name, VNAMESIZE-1);
-    vol->name[VNAMESIZE-1] = '\0';
+    strncpy(vol->name, name, VNAMESIZE - 1);
+    vol->name[VNAMESIZE - 1] = '\0';
     dot = strrchr(vol->name, '.');
-    if (dot && (strcmp(dot,".backup") == 0 || strcmp(dot, ".readonly") == 0))
-        *dot = 0;
+    if (dot && (strcmp(dot, ".backup") == 0 || strcmp(dot, ".readonly") == 0))
+	*dot = 0;
     if (ext)
-	strncat(vol->name, ext, VNAMESIZE-1-strlen(vol->name));
+	strncat(vol->name, ext, VNAMESIZE - 1 - strlen(vol->name));
 }
 
-afs_int32 CopyVolumeHeader_r(from, to)
-    VolumeDiskData *from, *to;
+afs_int32
+CopyVolumeHeader_r(VolumeDiskData * from, VolumeDiskData * to)
 {
     /* The id and parentId fields are not copied; these are inviolate--the to volume
-       is assumed to have already been created.  The id's cannot be changed once
-       creation has taken place, since they are embedded in the various inodes associated
-       with the volume.  The copydate is also inviolate--it always reflects the time
-       this volume was created (compare with the creation date--the creation date of
-       a backup volume is the creation date of the original parent, because the backup
-       is used to backup the parent volume). */
+     * is assumed to have already been created.  The id's cannot be changed once
+     * creation has taken place, since they are embedded in the various inodes associated
+     * with the volume.  The copydate is also inviolate--it always reflects the time
+     * this volume was created (compare with the creation date--the creation date of
+     * a backup volume is the creation date of the original parent, because the backup
+     * is used to backup the parent volume). */
     Date copydate;
     VolumeId id, parent;
     id = to->id;
@@ -330,29 +330,23 @@ afs_int32 CopyVolumeHeader_r(from, to)
     return 0;
 }
 
-afs_int32 CopyVolumeHeader(from, to)
-    VolumeDiskData *from, *to;
+afs_int32
+CopyVolumeHeader(VolumeDiskData * from, VolumeDiskData * to)
 {
     afs_int32 code;
 
-    VOL_LOCK
-    code = CopyVolumeHeader_r(from, to);
-    VOL_UNLOCK
-    return(code);
+    VOL_LOCK code = CopyVolumeHeader_r(from, to);
+    VOL_UNLOCK return (code);
 }
 
 void
-ClearVolumeStats(vol)
-    register VolumeDiskData *vol;
+ClearVolumeStats(register VolumeDiskData * vol)
 {
-    VOL_LOCK
-    ClearVolumeStats_r(vol);
-    VOL_UNLOCK
-}
+    VOL_LOCK ClearVolumeStats_r(vol);
+VOL_UNLOCK}
 
 void
-ClearVolumeStats_r(vol)
-    register VolumeDiskData *vol;
+ClearVolumeStats_r(register VolumeDiskData * vol)
 {
     memset(vol->weekUse, 0, sizeof(vol->weekUse));
     vol->dayUse = 0;

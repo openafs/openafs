@@ -12,20 +12,21 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_vget.c,v 1.1.1.7 2003/04/13 19:02:37 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_osi_vget.c,v 1.10 2003/07/15 23:14:12 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics stuff */
 
 
 
 #if !defined(AFS_LINUX20_ENV)
 /* This is the common part of the vget VFS call. */
-int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
-		 struct vrequest *areqp)
+int
+afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 {
     struct VenusFid vfid;
     struct SmallFid Sfid;
@@ -58,16 +59,15 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
      * afs_GetVCache.
      */
 
-    ret = afs_NFSFindVCache(avcpp, &vfid, 1);
+    ret = afs_NFSFindVCache(avcpp, &vfid);
     if (ret > 1) {
 	/* More than one entry matches. */
 	code = ENOENT;
-    }
-    else if (ret == 0) {
+    } else if (ret == 0) {
 	/* didn't find an entry. */
-	*avcpp = afs_GetVCache(&vfid, &treq, (afs_int32 *)0, (struct vcache*)0, 0);
+	*avcpp = afs_GetVCache(&vfid, &treq, NULL, NULL);
     }
-    if (! *avcpp) {
+    if (!*avcpp) {
 	code = ENOENT;
     }
 

@@ -19,7 +19,7 @@
 #define _OSI_MACHDEP_H_
 
 #ifdef AFS_SUN57_64BIT_ENV
-#include <sys/model.h>	/* for get_udatamodel() */
+#include <sys/model.h>		/* for get_udatamodel() */
 #endif
 
 #define getpid()		curproc->p_pid
@@ -45,9 +45,9 @@ extern void gethrestime(timespec_t *);
 static int
 local_osi_Time()
 {
-   timespec_t start;
-   gethrestime(&start);
-   return start.tv_sec;
+    timespec_t start;
+    gethrestime(&start);
+    return start.tv_sec;
 }
 #else
 #define osi_Time() (hrestime.tv_sec)
@@ -71,7 +71,7 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 extern kmutex_t afs_global_lock;
 extern kmutex_t afs_rxglobal_lock;
 
-#define AFS_GLOCK()	mutex_enter(&afs_global_lock);		
+#define AFS_GLOCK()	mutex_enter(&afs_global_lock);
 #define AFS_GUNLOCK()	mutex_exit(&afs_global_lock);
 #define ISAFS_GLOCK()	mutex_owned(&afs_global_lock)
 
@@ -82,10 +82,10 @@ extern kmutex_t afs_rxglobal_lock;
 
 
 /* Associate the Berkley signal equivalent lock types to System V's */
-#define	LOCK_SH 1	/* F_RDLCK */
-#define	LOCK_EX	2	/* F_WRLCK */
-#define	LOCK_NB	4	/* XXX */
-#define	LOCK_UN	8	/* F_UNLCK */
+#define	LOCK_SH 1		/* F_RDLCK */
+#define	LOCK_EX	2		/* F_WRLCK */
+#define	LOCK_NB	4		/* XXX */
+#define	LOCK_UN	8		/* F_UNLCK */
 
 #ifndef	IO_APPEND
 #define	IO_APPEND 	FAPPEND
@@ -106,4 +106,3 @@ extern kmutex_t afs_rxglobal_lock;
 #endif
 
 #endif /* _OSI_MACHDEP_H_ */
-

@@ -10,21 +10,14 @@
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
 
+#if !defined(KERNEL) && !defined(KDUMP_KERNEL)
+#error Do not include afs/lock.h except for kernel code.
+#endif
+
 /*
  * (C) COPYRIGHT IBM CORPORATION 1987
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
-
-/* The following macros allow multi statement macros to be defined safely, i.e.
-   - the multi statement macro can be the object of an if statement;
-   - the call to the multi statement macro may be legally followed by a semi-colon.
-   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
-   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
-   both optimized out the constant loop code.  For an example of the use
-   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
-   An alternative to this, using "if(1)" for BEGINMAC is not used because it
-   may generate worse code with pcc, and may generate warning messages with hi-C.
-*/
 
 #if	(defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
 #define	AFS_NOBOZO_LOCK
@@ -32,20 +25,20 @@
 
 #if !defined(AFS_OSF20_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_OSF32_ENV)
     /* We do not instrument locks on osf20 because the vcache structure
-    ** exceeds the maximim possible limit for a vnode.
-    */
+     ** exceeds the maximim possible limit for a vnode.
+     */
 #define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
-#define MAX_LOCK_NUMBER 572
-#endif 
+#define MAX_LOCK_NUMBER 700
+#endif
 
 struct afs_bozoLock {
-    short count;    /* count of excl locks */
-    char flags;	    /* bit 1: is anyone waiting? */
-    char spare;	    /* for later */
-    char *proc;	    /* process holding the lock, really a struct proc * */
+    short count;		/* count of excl locks */
+    char flags;			/* bit 1: is anyone waiting? */
+    char spare;			/* for later */
+    char *proc;			/* process holding the lock, really a struct proc * */
 };
 #ifndef	AFS_NOBOZO_LOCK
 typedef struct afs_bozoLock afs_bozoLock_t;
@@ -62,7 +55,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define afs_CheckBozonLockBlocking(lock)	0
 #endif
 
-#define	AFS_BOZONWAITING    1	    /* someone is waiting for this lock */
+#define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
 
 #undef MObtainWriteLock		/* Defined also in ../rx/rx_machdep.h" */
 #undef MReleaseWriteLock
@@ -82,6 +75,17 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define	RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)
+
+/* The following macros allow multi statement macros to be defined safely, i.e.
+   - the multi statement macro can be the object of an if statement;
+   - the call to the multi statement macro may be legally followed by a semi-colon.
+   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
+   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
+   both optimized out the constant loop code.  For an example of the use
+   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
+   An alternative to this, using "if(1)" for BEGINMAC is not used because it
+   may generate worse code with pcc, and may generate warning messages with hi-C.
+*/
 
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
@@ -119,26 +123,26 @@ extern tid_t thread_self();
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif /* AFS_AIX41_ENV */
-#endif 
+#endif
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
 struct afs_lock {
-    unsigned char	wait_states;	/* type of lockers waiting */
-    unsigned char	excl_locked;	/* anyone have boosted, shared or write lock? */
-    unsigned short	readers_reading;/* # readers actually with read locks */
-    unsigned short	num_waiting;	/* probably need this soon */
-    unsigned short	spare;		/* not used now */
-    osi_timeval_t       time_waiting;   /* for statistics gathering */
+    unsigned char wait_states;	/* type of lockers waiting */
+    unsigned char excl_locked;	/* anyone have boosted, shared or write lock? */
+    unsigned short readers_reading;	/* # readers actually with read locks */
+    unsigned short num_waiting;	/* probably need this soon */
+    unsigned short spare;	/* not used now */
+    osi_timeval_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
     /* the following are useful for debugging 
-    ** the field 'src_indicator' is updated only by ObtainLock() and
-    ** only for writes/shared  locks. Hence, it indictes where in the
-    ** source code the shared/write lock was set.
-    */
-    unsigned int       	pid_last_reader;/* proceess id of last reader */
-    unsigned int       	pid_writer;     /* process id of writer, else 0 */
-    unsigned int        src_indicator;  /* third param to ObtainLock()*/
-#endif /* INSTRUMENT_LOCKS */
+     ** the field 'src_indicator' is updated only by ObtainLock() and
+     ** only for writes/shared  locks. Hence, it indictes where in the
+     ** source code the shared/write lock was set.
+     */
+    unsigned int pid_last_reader;	/* proceess id of last reader */
+    unsigned int pid_writer;	/* process id of writer, else 0 */
+    unsigned int src_indicator;	/* third param to ObtainLock() */
+#endif				/* INSTRUMENT_LOCKS */
 };
 typedef struct afs_lock afs_lock_t;
 typedef struct afs_lock afs_rwlock_t;
@@ -156,11 +160,20 @@ typedef struct afs_lock afs_rwlock_t;
 #include "icl.h"
 
 extern int afs_trclock;
+
+#define AFS_LOCK_TRACE_ENABLE 0
+#if AFS_LOCK_TRACE_ENABLE
+#define AFS_LOCK_TRACE(op, lock, type) \
+	if (afs_trclock) Afs_Lock_Trace(op, lock, type, __FILE__, __LINE__);
+#else
+#define AFS_LOCK_TRACE(op, lock, type)
+#endif
+
 #if defined(INSTRUMENT_LOCKS)
 
 #define ObtainReadLock(lock)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
 	if (!((lock)->excl_locked & WRITE_LOCK)) \
             ((lock)->readers_reading)++; \
 	else \
@@ -170,7 +183,7 @@ extern int afs_trclock;
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)WRITE_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
 	if (!(lock)->excl_locked && !(lock)->readers_reading)\
 	    (lock) -> excl_locked = WRITE_LOCK;\
 	else\
@@ -183,7 +196,7 @@ extern int afs_trclock;
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
 	if (!(lock)->excl_locked)\
 	    (lock) -> excl_locked = SHARED_LOCK;\
 	else\
@@ -196,7 +209,7 @@ extern int afs_trclock;
 
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)BOOSTED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
 	if (!(lock)->readers_reading)\
 	    (lock)->excl_locked = WRITE_LOCK;\
 	else\
@@ -208,7 +221,7 @@ extern int afs_trclock;
 /* this must only be called with a WRITE or boosted SHARED lock! */
 #define ConvertWToSLock(lock)\
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
 	    (lock)->excl_locked = SHARED_LOCK; \
 	    if((lock)->wait_states) \
 		Afs_Lock_ReleaseR(lock); \
@@ -216,7 +229,7 @@ extern int afs_trclock;
 
 #define ConvertWToRLock(lock) \
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
@@ -226,7 +239,7 @@ extern int afs_trclock;
 
 #define ConvertSToRLock(lock) \
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
@@ -236,7 +249,7 @@ extern int afs_trclock;
 
 #define ReleaseReadLock(lock)\
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
 	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	if ( (lock)->pid_last_reader == MyPidxx ) \
@@ -245,7 +258,7 @@ extern int afs_trclock;
 
 #define ReleaseWriteLock(lock)\
         BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)WRITE_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    (lock)->pid_writer=0; \
@@ -254,7 +267,7 @@ extern int afs_trclock;
 /* can be used on shared or boosted (write) locks */
 #define ReleaseSharedLock(lock)\
         BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
 	    (lock)->pid_writer=0; \
@@ -264,7 +277,7 @@ extern int afs_trclock;
 
 #define ObtainReadLock(lock)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
 	if (!((lock)->excl_locked & WRITE_LOCK)) \
             ((lock)->readers_reading)++; \
 	else \
@@ -273,7 +286,7 @@ extern int afs_trclock;
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)WRITE_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
 	if (!(lock)->excl_locked && !(lock)->readers_reading)\
 	    (lock) -> excl_locked = WRITE_LOCK;\
 	else\
@@ -284,7 +297,7 @@ extern int afs_trclock;
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
 	if (!(lock)->excl_locked)\
 	    (lock) -> excl_locked = SHARED_LOCK;\
 	else\
@@ -292,10 +305,10 @@ extern int afs_trclock;
    ENDMAC
 
 #define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), 0))
-   
+
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)BOOSTED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
 	if (!(lock)->readers_reading)\
 	    (lock)->excl_locked = WRITE_LOCK;\
 	else\
@@ -305,7 +318,7 @@ extern int afs_trclock;
 /* this must only be called with a WRITE or boosted SHARED lock! */
 #define ConvertWToSLock(lock)\
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
 	    (lock)->excl_locked = SHARED_LOCK; \
 	    if((lock)->wait_states) \
 		Afs_Lock_ReleaseR(lock); \
@@ -313,7 +326,7 @@ extern int afs_trclock;
 
 #define ConvertWToRLock(lock) \
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    Afs_Lock_ReleaseR(lock);\
@@ -321,7 +334,7 @@ extern int afs_trclock;
 
 #define ConvertSToRLock(lock) \
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDOWN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    Afs_Lock_ReleaseR(lock);\
@@ -329,14 +342,14 @@ extern int afs_trclock;
 
 #define ReleaseReadLock(lock)\
 	BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)READ_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
 	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	ENDMAC
 
 #define ReleaseWriteLock(lock)\
         BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)WRITE_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
         ENDMAC
@@ -344,7 +357,7 @@ extern int afs_trclock;
 /* can be used on shared or boosted (write) locks */
 #define ReleaseSharedLock(lock)\
         BEGINMAC\
-/*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKDONE, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)SHARED_LOCK);} */ \
+	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
         ENDMAC

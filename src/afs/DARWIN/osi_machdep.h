@@ -21,7 +21,7 @@
 #ifdef XAFS_DARWIN_ENV
 #ifndef _MACH_ETAP_H_
 #define _MACH_ETAP_H_
-typedef unsigned short                  etap_event_t;
+typedef unsigned short etap_event_t;
 #endif
 #endif
 
@@ -37,7 +37,7 @@ typedef unsigned short                  etap_event_t;
 #define FTRUNC 0
 
 /* vcexcl - used only by afs_create */
-enum vcexcl { EXCL, NONEXCL } ;
+enum vcexcl { EXCL, NONEXCL };
 
 /* 
  * Time related macros
@@ -103,8 +103,8 @@ extern struct lock__bsd__ afs_global_lock;
 #define AFS_APPL_UFS_CACHE 1
 #define AFS_APPL_HFS_CACHE 2
 
-extern ino_t VnodeToIno(vnode_t *vp);
-extern dev_t VnodeToDev(vnode_t *vp);
+extern ino_t VnodeToIno(vnode_t * vp);
+extern dev_t VnodeToDev(vnode_t * vp);
 
 #endif /* KERNEL */
 

@@ -18,21 +18,28 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.2 2003/01/02 03:55:51 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/uss/uss_fs.c,v 1.8 2003/07/15 23:17:12 shadow Exp $");
 
-#include "uss_fs.h"		/*Interface to this module*/
+#include "uss_fs.h"		/*Interface to this module */
 #include <sys/types.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
-#include <errno.h>
 #include <netinet/in.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/venus.h>
 #include "uss_common.h"
-
 
 
 /*
@@ -44,8 +51,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.2 2003/01/02 03:55:51 
 /*
  * ------------------------ Private globals -----------------------
  */
-static struct ViceIoctl blob;		  /*Param-passing area*/
-static struct ViceIoctl *blobP = &blob;	  /*Ptr to above*/
+static struct ViceIoctl blob;	/*Param-passing area */
+static struct ViceIoctl *blobP = &blob;	/*Ptr to above */
 
 
 /*------------------------------------------------------------------------
@@ -68,27 +75,28 @@ static struct ViceIoctl *blobP = &blob;	  /*Ptr to above*/
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int InAFS(a_path)
-    register char *a_path;
+static int
+InAFS(a_path)
+     register char *a_path;
 
-{ /*InAFS*/
+{				/*InAFS */
 
     static char rn[] = "uss_fs:InAFS";
     register afs_int32 code;
 
-    blob.in       = (char *)0;
-    blob.in_size  = 0;
+    blob.in = NULL;
+    blob.in_size = 0;
     blob.out_size = USS_FS_MAX_SIZE;
-    blob.out      = uss_fs_OutBuff;
+    blob.out = uss_fs_OutBuff;
 
     code = pioctl(a_path, VIOC_FILE_CELL_NAME, blobP, 1);
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT))
-	    return(0);
+	    return (0);
     }
-    return(1);
+    return (1);
 
-} /*InAFS*/
+}				/*InAFS */
 
 
 /*------------------------------------------------------------------------
@@ -114,12 +122,13 @@ static int InAFS(a_path)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static char *ParentAndComponent(a_path, a_parentBuff, a_componentPP)
-    char *a_path;
-    char *a_parentBuff;
-    char **a_componentPP;
+static char *
+ParentAndComponent(a_path, a_parentBuff, a_componentPP)
+     char *a_path;
+     char *a_parentBuff;
+     char **a_componentPP;
 
-{ /*ParentAndComponent*/
+{				/*ParentAndComponent */
 
     static char rn[] = "uss_fs:Parent";
     char *rightSlashP;
@@ -132,19 +141,18 @@ static char *ParentAndComponent(a_path, a_parentBuff, a_componentPP)
      * we cheat and return ``.''.
      */
     strcpy(a_parentBuff, a_path);
-    rightSlashP = (char *) strrchr(a_parentBuff, '/');
+    rightSlashP = (char *)strrchr(a_parentBuff, '/');
     if (rightSlashP) {
 	*rightSlashP = 0;
-	*a_componentPP = rightSlashP+1;
-    }
-    else {
+	*a_componentPP = rightSlashP + 1;
+    } else {
 	strcpy(a_parentBuff, ".");
 	*a_componentPP = a_path;
     }
 
-    return(a_parentBuff);
+    return (a_parentBuff);
 
-} /*ParentAndComponent*/
+}				/*ParentAndComponent */
 
 
 /*------------------------------------------------------------------------
@@ -172,13 +180,14 @@ static char *ParentAndComponent(a_path, a_parentBuff, a_componentPP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
-    char *a_path;
-    int a_opcode;
-    struct ViceIoctl *a_blobP;
-    int a_sl;
+static int
+CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
+     char *a_path;
+     int a_opcode;
+     struct ViceIoctl *a_blobP;
+     int a_sl;
 
-{ /*CarefulPioctl*/
+{				/*CarefulPioctl */
 
     static char rn[] = "uss_fs:CarefulPioctl";
     register afs_int32 code;
@@ -193,11 +202,10 @@ static int CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
     code = pioctl(a_path, a_opcode, a_blobP, a_sl);
 #ifdef USS_FS_DB
     if (code)
-	printf("%s: First pioctl call fails, errno is %d\n",
-	       rn, errno);
+	printf("%s: First pioctl call fails, errno is %d\n", rn, errno);
 #endif /* USS_FS_DB */
     if ((code == 0) || (code && (errno != ENODEV)))
-	return(code);
+	return (code);
 
     /*
      * Hmm, it's possible out volume mappings are stale.  Let's
@@ -208,9 +216,9 @@ static int CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
 #endif /* USS_FS_DB */
     code = uss_fs_CkBackups();
     code = pioctl(a_path, a_opcode, a_blobP, a_sl);
-    return(code);
+    return (code);
 
-} /*CarefulPioctl*/
+}				/*CarefulPioctl */
 
 
 /*------------------------------------------------------------------------
@@ -223,24 +231,25 @@ static int CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
-    char *a_dirPath;
-    char *a_aclBuff;
-    afs_int32 a_aclBuffBytes;
+afs_int32
+uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
+     char *a_dirPath;
+     char *a_aclBuff;
+     afs_int32 a_aclBuffBytes;
 
-{ /*uss_fs_GetACL*/
+{				/*uss_fs_GetACL */
 
-    static char rn[] = "uss_fs_GetACL";	/*Routine name*/
-    register afs_int32 code;			/*pioctl() result*/
+    static char rn[] = "uss_fs_GetACL";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
 
-    blob.in	  = (char *)0;
-    blob.in_size  = 0;
-    blob.out      = a_aclBuff;
+    blob.in = NULL;
+    blob.in_size = 0;
+    blob.out = a_aclBuff;
     blob.out_size = a_aclBuffBytes;
 
 #ifdef USS_FS_DB
-    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
+    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n", rn, blob.in,
+	   blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
     code = CarefulPioctl(a_dirPath, VIOCGETAL, blobP, 1);
@@ -250,9 +259,9 @@ afs_int32 uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
 	printf("%s: pioctl() failed, errno %d\n", rn, errno);
 #endif /* USS_FS_DB */
 
-    return(code);
+    return (code);
 
-} /*uss_fs_GetACL*/
+}				/*uss_fs_GetACL */
 
 
 /*------------------------------------------------------------------------
@@ -265,26 +274,26 @@ afs_int32 uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
-    char *a_dirPath;
-    char *a_aclBuff;
-    afs_int32 a_aclBuffBytes;
+afs_int32
+uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
+     char *a_dirPath;
+     char *a_aclBuff;
+     afs_int32 a_aclBuffBytes;
 
-{ /*uss_fs_SetACL*/
+{				/*uss_fs_SetACL */
 
-    static char rn[] = "uss_fs_SetACL";	/*Routine name*/
-    register afs_int32 code;			/*pioctl() result*/
+    static char rn[] = "uss_fs_SetACL";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
 
-    blob.in	  = a_aclBuff;
-    blob.in_size  = a_aclBuffBytes;
-    blob.out      = (char *)0;
+    blob.in = a_aclBuff;
+    blob.in_size = a_aclBuffBytes;
+    blob.out = NULL;
     blob.out_size = 0;
 
 #ifdef USS_FS_DB
-    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
-    printf("%s: ACL value for dir '%s' is '%s'\n",
-	   rn, a_dirPath, a_aclBuff);
+    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n", rn, blob.in,
+	   blob.in_size, blob.out, blob.out_size);
+    printf("%s: ACL value for dir '%s' is '%s'\n", rn, a_dirPath, a_aclBuff);
 #endif /* USS_FS_DB */
 
     code = CarefulPioctl(a_dirPath, VIOCSETAL, blobP, 1);
@@ -294,9 +303,9 @@ afs_int32 uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
 	printf("%s: pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
 
-    return(code);
+    return (code);
 
-} /*uss_fs_SetACL*/
+}				/*uss_fs_SetACL */
 
 
 /*------------------------------------------------------------------------
@@ -309,24 +318,25 @@ afs_int32 uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
-    char *a_mountpoint;
-    char *a_volStatBuff;
-    afs_int32 a_volStatBuffBytes;
+afs_int32
+uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
+     char *a_mountpoint;
+     char *a_volStatBuff;
+     afs_int32 a_volStatBuffBytes;
 
-{ /*uss_fs_GetVolStat*/
+{				/*uss_fs_GetVolStat */
 
-    static char rn[] = "uss_fs_GetVolStat";	/*Routine name*/
-    register afs_int32 code;				/*pioctl() result*/
+    static char rn[] = "uss_fs_GetVolStat";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
 
-    blob.in	  = (char *)0;
-    blob.in_size  = 0;
-    blob.out      = a_volStatBuff;
+    blob.in = NULL;
+    blob.in_size = 0;
+    blob.out = a_volStatBuff;
     blob.out_size = a_volStatBuffBytes;
 
 #ifdef USS_FS_DB
-    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
+    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n", rn, blob.in,
+	   blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
     code = CarefulPioctl(a_mountpoint, VIOCGETVOLSTAT, blobP, 1);
@@ -336,9 +346,9 @@ afs_int32 uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
 	printf("%s: pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
 
-    return(code);
+    return (code);
 
-} /*uss_fs_GetVolStat*/
+}				/*uss_fs_GetVolStat */
 
 
 /*------------------------------------------------------------------------
@@ -351,24 +361,25 @@ afs_int32 uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
-    char *a_mountpoint;
-    char *a_volStatBuff;
-    afs_int32 a_volStatBuffBytes;
+afs_int32
+uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
+     char *a_mountpoint;
+     char *a_volStatBuff;
+     afs_int32 a_volStatBuffBytes;
 
-{ /*uss_fs_SetVolStat*/
+{				/*uss_fs_SetVolStat */
 
-    static char rn[] = "uss_fs_SetVolStat";	/*Routine name*/
-    register afs_int32 code;				/*pioctl() result*/
+    static char rn[] = "uss_fs_SetVolStat";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
 
-    blob.in	  = a_volStatBuff;
-    blob.in_size  = a_volStatBuffBytes;
-    blob.out      = a_volStatBuff;
+    blob.in = a_volStatBuff;
+    blob.in_size = a_volStatBuffBytes;
+    blob.out = a_volStatBuff;
     blob.out_size = USS_FS_MAX_SIZE;
 
 #ifdef USS_FS_DB
-    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
+    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n", rn, blob.in,
+	   blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
     code = CarefulPioctl(a_mountpoint, VIOCSETVOLSTAT, blobP, 1);
@@ -378,9 +389,9 @@ afs_int32 uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
 	printf("%s: pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
 
-    return(code);
+    return (code);
 
-} /*uss_fs_SetVolStat*/
+}				/*uss_fs_SetVolStat */
 
 
 /*------------------------------------------------------------------------
@@ -393,35 +404,35 @@ afs_int32 uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_CkBackups()
+afs_int32
+uss_fs_CkBackups()
+{				/*uss_fs_CkBackups */
 
-{ /*uss_fs_CkBackups*/
+    static char rn[] = "uss_fs_CkBackups";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
 
-    static char rn[] = "uss_fs_CkBackups";	/*Routine name*/
-    register afs_int32 code;				/*pioctl() result*/
-
-    blob.in       = (char *)0;
-    blob.in_size  = 0;
-    blob.out      = (char *)0;
+    blob.in = NULL;
+    blob.in_size = 0;
+    blob.out = NULL;
     blob.out_size = 0;
-    
+
 #ifdef USS_FS_DB
-    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
+    printf("%s: in 0x%x (%d bytes), out 0x%x, (%d bytes)\n", rn, blob.in,
+	   blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
-    code = pioctl((char *)0,	/*No pathname needed here*/
-		  VIOCCKBACK,	/*CheckBackups*/
-		  &blob,		/*Params*/
-		  1);		/*Symlink disposition*/
+    code = pioctl(NULL,		/*No pathname needed here */
+		  VIOCCKBACK,	/*CheckBackups */
+		  &blob,	/*Params */
+		  1);		/*Symlink disposition */
 #ifdef USS_FS_DB
     if (code)
 	printf("%s: pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
 
-    return(code);
+    return (code);
 
-} /*uss_fs_CkBackups*/
+}				/*uss_fs_CkBackups */
 
 
 /*------------------------------------------------------------------------
@@ -434,21 +445,23 @@ afs_int32 uss_fs_CkBackups()
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
-    char *a_volname;
-    char *a_cellname;
-    afs_int32 a_rw;
-    char *a_mountpoint;
+afs_int32
+uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
+     char *a_volname;
+     char *a_cellname;
+     afs_int32 a_rw;
+     char *a_mountpoint;
 
-{ /*uss_fs_MkMountPoint*/
+{				/*uss_fs_MkMountPoint */
     extern int local_Cell;
-    static char rn[] = "uss_fs_MkMountPoint";	/*Routine name*/
-    register afs_int32 code;				/*pioctl() result*/
-    char *tp;					/*Temporary*/
+    static char rn[] = "uss_fs_MkMountPoint";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
+    char *tp;			/*Temporary */
 
 #ifdef USS_FS_DB
-    printf("%s: a_volname='%s', a_cellname='%s', a_rw=%d, a_mountpoint='%s'\n",
-	   rn, a_volname, a_cellname, a_rw, a_mountpoint);
+    printf
+	("%s: a_volname='%s', a_cellname='%s', a_rw=%d, a_mountpoint='%s'\n",
+	 rn, a_volname, a_cellname, a_rw, a_mountpoint);
 #endif /* USS_FS_DB */
 
     /*
@@ -456,7 +469,7 @@ afs_int32 uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
      */
     if (!InAFS(ParentAndComponent(a_mountpoint, uss_fs_OutBuff, &tp))) {
 	printf("%s: Mountpoints must be created within AFS\n", rn);
-	return(-1);
+	return (-1);
     }
 
     /*
@@ -465,13 +478,9 @@ afs_int32 uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
      * char, by convention, is a dot.
      */
     if (local_Cell) {
-	sprintf(uss_fs_OutBuff, "%s%s.",
-		(a_rw ? "%" : "#"),
-		a_volname);
+	sprintf(uss_fs_OutBuff, "%s%s.", (a_rw ? "%" : "#"), a_volname);
     } else {
-	sprintf(uss_fs_OutBuff, "%s%s:%s.",
-		(a_rw ? "%" : "#"),
-		a_cellname,
+	sprintf(uss_fs_OutBuff, "%s%s:%s.", (a_rw ? "%" : "#"), a_cellname,
 		a_volname);
     }
 
@@ -481,13 +490,13 @@ afs_int32 uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
     code = symlink(uss_fs_OutBuff, a_mountpoint);
     if (code) {
 #ifdef USS_FS_DB
-	printf("%s: Mountpoint creation (symlink) failed, errno is %d\n",
-	       rn, errno);
+	printf("%s: Mountpoint creation (symlink) failed, errno is %d\n", rn,
+	       errno);
 #endif /* USS_FS_DB */
-	return(-1);
+	return (-1);
     }
 
-} /*uss_fs_MkMountPoint*/
+}				/*uss_fs_MkMountPoint */
 
 
 /*------------------------------------------------------------------------
@@ -500,26 +509,25 @@ afs_int32 uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_fs_RmMountPoint(a_mountpoint)
-    char *a_mountpoint;
+afs_int32
+uss_fs_RmMountPoint(a_mountpoint)
+     char *a_mountpoint;
 
-{ /*uss_fs_RmMountPoint*/
+{				/*uss_fs_RmMountPoint */
 
-    static char rn[] = "uss_fs_RmMountPoint";	/*Routine name*/
-    register afs_int32 code;				/*pioctl() result*/
-    char *parentDirP;				/*Ptr to parent*/
-    char *componentP;				/*Ptr to last component*/
+    static char rn[] = "uss_fs_RmMountPoint";	/*Routine name */
+    register afs_int32 code;	/*pioctl() result */
+    char *parentDirP;		/*Ptr to parent */
+    char *componentP;		/*Ptr to last component */
 
     /*
      * Get the parent & final component names.
      */
-    parentDirP = ParentAndComponent(a_mountpoint,
-				    uss_fs_InBuff,
-				    &componentP);
+    parentDirP = ParentAndComponent(a_mountpoint, uss_fs_InBuff, &componentP);
 
-    blob.in	  = componentP;
-    blob.in_size  = strlen(componentP) + 1;
-    blob.out      = uss_fs_OutBuff;
+    blob.in = componentP;
+    blob.in_size = strlen(componentP) + 1;
+    blob.out = uss_fs_OutBuff;
     blob.out_size = USS_FS_MAX_SIZE;
 
 #ifdef USS_FS_DB
@@ -533,23 +541,23 @@ afs_int32 uss_fs_RmMountPoint(a_mountpoint)
 	printf("%s: STAT_MT_PT pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
 	if (errno == EINVAL)
-	    printf("%s: '%s' is not a mountpoint\n",
-		   rn, a_mountpoint);
-	return(code);
+	    printf("%s: '%s' is not a mountpoint\n", rn, a_mountpoint);
+	return (code);
     }
 
     /*
      * Now that we know we have a proper mountpoint, nuke it.
      */
-    blob.in	  = componentP;
-    blob.in_size  = strlen(componentP) + 1;
-    blob.out      = (char *)0;
+    blob.in = componentP;
+    blob.in_size = strlen(componentP) + 1;
+    blob.out = NULL;
     blob.out_size = 0;
 
     if (!uss_DryRun) {
 #ifdef USS_FS_DB
-	printf("%s: AFS_DELETE_MT_PT, in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
-	       rn, blob.in, blob.in_size, blob.out, blob.out_size);
+	printf
+	    ("%s: AFS_DELETE_MT_PT, in 0x%x (%d bytes), out 0x%x, (%d bytes)\n",
+	     rn, blob.in, blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
 	code = pioctl(parentDirP, VIOC_AFS_DELETE_MT_PT, blobP, 1);
@@ -557,18 +565,18 @@ afs_int32 uss_fs_RmMountPoint(a_mountpoint)
 #ifdef USS_FS_DB
 	    printf("%s: DELETE_MT_PT pioctl() failed, errno %d", rn, errno);
 #endif /* USS_FS_DB */
-	} 
+	}
     } else
 	printf("\t[Dry run - mount point '%s' NOT removed]\n", componentP);
 
-    return(code);
+    return (code);
 
-} /*uss_fs_RmMountPoint*/
+}				/*uss_fs_RmMountPoint */
 
 
 #include <afs/auth.h>
 struct tokenInfo {
-    struct ktc_token  token;
+    struct ktc_token token;
     struct ktc_principal service;
     struct ktc_principal client;
     int deleted;
@@ -580,25 +588,27 @@ struct tokenInfo {
  * Ugly, but it works.
  */
 uss_fs_UnlogToken(celln)
-    char *celln;
+     char *celln;
 {
     unsigned count = 0, index, index2;
-    afs_int32 code = 0, cnt=0;
+    afs_int32 code = 0, cnt = 0;
     struct ktc_principal serviceName;
     struct tokenInfo *tokenInfoP, *tp;
 
     do {
 	code = ktc_ListTokens(count, &count, &serviceName);
 	cnt++;
-    } while(!code);
+    } while (!code);
     count = cnt - 1;
-    tokenInfoP = (struct tokenInfo *)malloc((sizeof(struct tokenInfo)*count));
-    for (code = index = index2= 0; (!code) && (index < count); index++) {
-	tp = tokenInfoP+index;
+    tokenInfoP =
+	(struct tokenInfo *)malloc((sizeof(struct tokenInfo) * count));
+    for (code = index = index2 = 0; (!code) && (index < count); index++) {
+	tp = tokenInfoP + index;
 	code = ktc_ListTokens(index2, &index2, &tp->service);
 	if (!code) {
-	    code = ktc_GetToken(&tp->service, &tp->token, sizeof(struct ktc_token),
-				&tp->client);
+	    code =
+		ktc_GetToken(&tp->service, &tp->token,
+			     sizeof(struct ktc_token), &tp->client);
 	    if (!code) {
 		tp->deleted = (!strcmp(celln, tp->client.cell) ? 1 : 0);
 		if (tp->deleted)
@@ -606,21 +616,21 @@ uss_fs_UnlogToken(celln)
 	    }
 	}
     }
-    if (code = ktc_ForgetAllTokens ()) {
-	printf("uss_fs_UnlogToken: could not discard tickets, code %d\n", code);
+    if (code = ktc_ForgetAllTokens()) {
+	printf("uss_fs_UnlogToken: could not discard tickets, code %d\n",
+	       code);
 	exit(1);
     }
-    for (code = index = 0; index < count ; index++) {
-	tp = tokenInfoP+index;
+    for (code = index = 0; index < count; index++) {
+	tp = tokenInfoP + index;
 	if (!(tp->deleted)) {
 	    code = ktc_SetToken(&tp->service, &tp->token, &tp->client, 0);
 	    if (code) {
-		printf("uss_fs_UnlogToken: Couldn't re-register token, code = %d\n",
-			code);
+		printf
+		    ("uss_fs_UnlogToken: Couldn't re-register token, code = %d\n",
+		     code);
 	    }
 	}
     }
     return 0;
 }
-
-

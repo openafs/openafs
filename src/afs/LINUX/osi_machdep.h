@@ -47,23 +47,33 @@
 #define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
 #endif
 
+
 #define afs_hz HZ
+#include "h/sched.h"
 #define osi_Time() (xtime.tv_sec)
-#if  (CPU == sparc64)
-#define osi_GetTime(V) do { (*(V)).tv_sec = xtime.tv_sec; (*(V)).tv_usec = xtime.tv_usec; } while (0)
-#else
-#define osi_GetTime(V) (*(V)=xtime)
-#endif
+#define osi_GetTime(V) do_gettimeofday((V))
 
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
-#define osi_vnhold(v, n)  VN_HOLD(v)
+#define osi_vnhold(v, n) do { VN_HOLD(AFSTOV(v)); } while (0)
+
+#if defined(AFS_LINUX24_ENV)
+#define VN_HOLD(V) atomic_inc(&((vnode_t *) V)->i_count)
+#else
+#define VN_HOLD(V) ((vnode_t *) V)->i_count++
+#endif
+
+#if defined(AFS_LINUX26_ENV)
+#define VN_RELE(V) iput((struct inode *) V)
+#else
+#define VN_RELE(V) osi_iput((struct inode *) V)
+#endif
 
 #define osi_AllocSmall afs_osi_Alloc
 #define osi_FreeSmall afs_osi_Free
 
-#define afs_suser suser
+#define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
 #undef vType
@@ -73,16 +83,12 @@
  * Use the same type of test as other OS's for compatibility.
  */
 #undef IsAfsVnode
-extern struct vnodeops afs_dir_iops, afs_symlink_iops;
-#define IsAfsVnode(vc) (((vc)->v_op == afs_ops) ? 1 : \
-			((vc)->v_op == &afs_dir_iops) ? 1 : \
-			((vc)->v_op == &afs_symlink_iops))
-
-#if 0
-/* bcopy is in stds.h, just so fcrypt.c can pick it up. */
-#define bzero(D,C)   memset((D), 0, (C))
-#define bcmp(A,B,C)  memcmp((A), (B), (C))
-#endif
+extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
+#define IsAfsVnode(v) (((v)->v_op == &afs_file_iops) ? 1 : \
+			((v)->v_op == &afs_dir_iops) ? 1 : \
+			((v)->v_op == &afs_symlink_iops))
+#undef SetAfsVnode
+#define SetAfsVnode(v)
 
 /* We often need to pretend we're in user space to get memory transfers
  * right for the kernel calls we use.
@@ -111,6 +117,9 @@ extern struct vnodeops afs_dir_iops, afs_symlink_iops;
 
 
 #define PAGESIZE PAGE_SIZE
+#ifndef NGROUPS
+#define NGROUPS NGROUPS_SMALL
+#endif
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
@@ -119,12 +128,16 @@ typedef struct cred {		/* maps to task field: */
 #else
     int cr_ref;
 #endif
-    uid_t cr_uid;	/* euid */
-    uid_t cr_ruid;	/* uid */
-    gid_t cr_gid;	/* egid */
-    gid_t cr_rgid;	/* gid */
+    uid_t cr_uid;		/* euid */
+    uid_t cr_ruid;		/* uid */
+    gid_t cr_gid;		/* egid */
+    gid_t cr_rgid;		/* gid */
+#if defined(AFS_LINUX26_ENV)
+    struct group_info *cr_group_info;
+#else
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
+#endif
 } cred_t;
 #define AFS_UCRED cred
 #define AFS_PROC struct task_struct
@@ -134,12 +147,12 @@ typedef struct cred {		/* maps to task field: */
 typedef enum { AFS_UIOSYS, AFS_UIOUSER } uio_seg_t;
 typedef enum { UIO_READ, UIO_WRITE } uio_flag_t;
 typedef struct uio {
-    struct  	iovec *uio_iov;
-    int     	uio_iovcnt;
-    int     	uio_offset;
-    uio_seg_t   uio_seg;
-    int     	uio_resid;
-    uio_flag_t 	uio_flag;
+    struct iovec *uio_iov;
+    int uio_iovcnt;
+    afs_offs_t uio_offset;
+    uio_seg_t uio_seg;
+    int uio_resid;
+    uio_flag_t uio_flag;
 } uio_t;
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
@@ -159,9 +172,7 @@ typedef struct uio {
  */
 extern unsigned long afs_linux_page_offset;
 
-/* some more functions to help with the page offset stuff */
-#define AFS_LINUX_MAP_NR(addr) ((((unsigned long)addr) - afs_linux_page_offset)  >> PAGE_SHIFT)
-
+/* function to help with the page offset stuff */
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__) && defined(CONFIG_SMP)
@@ -185,7 +196,7 @@ do { \
 #define AFS_GUNLOCK() \
 do { \
     if (!ISAFS_GLOCK()) \
-	osi_Panic("afs global lock not held"); \
+	osi_Panic("afs global lock not held at %s:%d", __FILE__, __LINE__); \
     afs_global_owner = 0; \
     up(&afs_global_lock); \
 } while (0)

@@ -26,8 +26,6 @@
 
 #else /* AFS_NOCHUNKING */
 
-extern afs_int32 afs_OtherCSize, afs_LogChunk, afs_FirstCSize;
-
 #define AFS_OTHERCSIZE  (afs_OtherCSize)
 #define AFS_LOGCHUNK    (afs_LogChunk)
 #define AFS_FIRSTCSIZE  (afs_FirstCSize)
@@ -37,21 +35,8 @@ extern afs_int32 afs_OtherCSize, afs_LogChunk, afs_FirstCSize;
 
 #endif /* AFS_NOCHUNKING */
 
-#define AFS_MINCHUNK 13  /* 8k is minimum */
-#define AFS_MAXCHUNK 18  /* 256K is maximum */
-
-#ifdef notdef
-extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(), 
-    afs_ChunkToBase(), afs_ChunkToSize();
-
-/* macros */
-#define	AFS_CHUNKOFFSET(x) afs_ChunkOffset(x)
-#define	AFS_CHUNK(x) afs_Chunk(x)
-#define	AFS_CHUNKBASE(x) afs_ChunkBase(x)
-#define	AFS_CHUNKSIZE(x) afs_ChunkSize(x)
-#define	AFS_CHUNKTOBASE(x) afs_ChunkToBase(x)
-#define	AFS_CHUNKTOSIZE(x) afs_ChunkToSize(x)
-#endif
+#define AFS_MINCHUNK 13		/* 8k is minimum */
+#define AFS_MAXCHUNK 18		/* 256K is maximum */
 
 #define AFS_CHUNKOFFSET(offset) ((offset < afs_FirstCSize) ? offset : \
 			 ((offset - afs_FirstCSize) & (afs_OtherCSize - 1)))
@@ -66,7 +51,7 @@ extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(),
 			       afs_OtherCSize)
 
 #define AFS_CHUNKTOBASE(chunk) ((chunk == 0) ? 0 :               \
-	(afs_FirstCSize + ((chunk - 1) << afs_LogChunk)))
+	((afs_size_t) afs_FirstCSize + ((afs_size_t) (chunk - 1) << afs_LogChunk)))
 
 #define AFS_CHUNKTOSIZE(chunk) ((chunk == 0) ? afs_FirstCSize :	afs_OtherCSize)
 
@@ -74,28 +59,40 @@ extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(),
 #define AFS_SETCHUNKSIZE(chunk) { afs_LogChunk = chunk; \
 		      afs_FirstCSize = afs_OtherCSize = (1 << chunk);  }
 
-
-extern void afs_CacheTruncateDaemon();
-
 /*
  * Functions exported by a cache type 
  */
 
-extern struct afs_cacheOps *afs_cacheType;
-
 struct afs_cacheOps {
-    void *(*open)();
-    int (*truncate)();
-    int (*fread)();
-    int (*fwrite)();
-    int (*close)();
-    int (*vread)();
-    int (*vwrite)();
-    int (*FetchProc)();
-    int (*StoreProc)();
-    struct dcache *(*GetDSlot)();
-    struct volume *(*GetVolSlot)();
-    int (*HandleLink)();
+#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
+    void *(*open) (ino_t ainode);
+#else
+    void *(*open) (afs_int32 ainode);
+#endif
+    int (*truncate) (struct osi_file * fp, afs_int32 len);
+    int (*fread) (struct osi_file * fp, int offset, void *buf, afs_int32 len);
+    int (*fwrite) (struct osi_file * fp, afs_int32 offset, void *buf,
+		   afs_int32 len);
+    int (*close) (struct osi_file * fp);
+    int (*vread) (register struct vcache * avc, struct uio * auio,
+		  struct AFS_UCRED * acred, daddr_t albn, struct buf ** abpp,
+		  int noLock);
+    int (*vwrite) (register struct vcache * avc, struct uio * auio, int aio,
+		   struct AFS_UCRED * acred, int noLock);
+    int (*FetchProc) (register struct rx_call * acall,
+		      struct osi_file * afile, afs_size_t abase,
+		      struct dcache * adc, struct vcache * avc,
+		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
+		      afs_int32 lengthFound);
+    int (*StoreProc) (register struct rx_call * acall,
+		      struct osi_file * afile, register afs_int32 alen,
+		      struct vcache * avc, int *shouldWake,
+		      afs_size_t * abytesToXferP,
+		      afs_size_t * abytesXferredP);
+    struct dcache *(*GetDSlot) (register afs_int32 aslot,
+				register struct dcache * tmpdc);
+    struct volume *(*GetVolSlot) (void);
+    int (*HandleLink) (register struct vcache * avc, struct vrequest * areq);
 };
 
 /* Ideally we should have used consistent naming - like COP_OPEN, COP_TRUNCATE, etc. */
@@ -108,12 +105,9 @@ struct afs_cacheOps {
 #define	afs_GetVolSlot()		(*(afs_cacheType->GetVolSlot))()
 #define	afs_HandleLink(avc, areq)	(*(afs_cacheType->HandleLink))(avc, areq)
 
-#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered) \
-          (*(afs_cacheType->FetchProc))(call, file, base, adc, avc, toxfer, xfered)
+#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
+          (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
 #define	afs_CacheStoreProc(call, file, bytes, avc, wake, toxfer, xfered) \
           (*(afs_cacheType->StoreProc))(call, file, bytes, avc, wake, toxfer, xfered)
 
 #endif /* AFS_CHUNKOPS */
-
-
-

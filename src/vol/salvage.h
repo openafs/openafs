@@ -21,7 +21,6 @@ typedef struct DirHandle {
     int dirh_volume;
     int dirh_device;
     Inode dirh_inode;
-    IHandle_t   *dirh_handle;
-    afs_int32	dirh_cacheCheck;
+    IHandle_t *dirh_handle;
+    afs_int32 dirh_cacheCheck;
 } DirHandle;
-

@@ -15,21 +15,22 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.1.1.7 2002/05/10 23:44:21 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.11 2003/07/15 23:14:30 shadow Exp $");
 
-#if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
-#include "../afs/afs_cbqueue.h"
-#include "../afs/nfsclient.h"
-#include "../afs/afs_osidnlc.h"
+#if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
+#include "afs/afs_cbqueue.h"
+#include "afs/nfsclient.h"
+#include "afs/afs_osidnlc.h"
 
 
 
-int afs_fid_vnodeoverflow=0, afs_fid_uniqueoverflow=0;
+int afs_fid_vnodeoverflow = 0, afs_fid_uniqueoverflow = 0;
 
 /*
  *  afs_fid
@@ -64,19 +65,21 @@ int afs_iauth_initd = 0;
 #endif
 
 
-extern int afs_NFSRootOnly; /* 1 => only allow NFS mounts of /afs. */
+extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
+
+int
 #if !defined(AFS_DEC_ENV) && !defined(AFS_ATHENA_ENV)
 #ifdef AFS_AIX41_ENV
 afs_fid(OSI_VC_ARG(avc), fidpp, credp)
-    struct ucred *credp ;
+     struct ucred *credp;
 #else
 afs_fid(OSI_VC_ARG(avc), fidpp)
-#endif /* AFS_AIX41_ENV */
+#endif				/* AFS_AIX41_ENV */
 OSI_VC_DECL(avc);
 #if	defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
-struct fid *fidpp;
+     struct fid *fidpp;
 #else
-struct fid **fidpp;
+     struct fid **fidpp;
 #endif
 {
     struct SmallFid Sfid;
@@ -87,11 +90,13 @@ struct fid **fidpp;
     int rootvp = 0;
     OSI_VC_CONVERT(avc)
 
-    AFS_STATCNT(afs_fid);
+	AFS_STATCNT(afs_fid);
 
-    if (afs_shuttingdown) return EIO;
+    if (afs_shuttingdown)
+	return EIO;
 
-    if (afs_NFSRootOnly && (avc == afs_globalVp)) rootvp = 1;
+    if (afs_NFSRootOnly && (avc == afs_globalVp))
+	rootvp = 1;
     if (!afs_NFSRootOnly || rootvp
 #ifdef AFS_AIX41_ENV
 	|| USE_SMALLFID(credp)
@@ -99,9 +104,9 @@ struct fid **fidpp;
 	) {
 	tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
 	Sfid.Volume = avc->fid.Fid.Volume;
-	Sfid.Vnode =  avc->fid.Fid.Vnode;
-	Sfid.CellAndUnique = ((tcell->cellIndex << 24) +
-			      (avc->fid.Fid.Unique & 0xffffff));
+	Sfid.Vnode = avc->fid.Fid.Vnode;
+	Sfid.CellAndUnique =
+	    ((tcell->cellIndex << 24) + (avc->fid.Fid.Unique & 0xffffff));
 	afs_PutCell(tcell, READ_LOCK);
 	if (avc->fid.Fid.Vnode > 0xffff)
 	    afs_fid_vnodeoverflow++;
@@ -109,7 +114,7 @@ struct fid **fidpp;
 	    afs_fid_uniqueoverflow++;
     } else {
 #if defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64))
-	addr[1] = (long)AFS_XLATOR_MAGIC << 48 ;
+	addr[1] = (long)AFS_XLATOR_MAGIC << 48;
 #else /* defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64) */
 	addr[1] = AFS_XLATOR_MAGIC;
 	SizeOfSmallFid = sizeof(addr);
@@ -127,25 +132,25 @@ struct fid **fidpp;
     if (afs_NFSRootOnly) {
 	if (rootvp
 #ifdef AFS_AIX41_ENV
-	    ||  USE_SMALLFID(credp)
+	    || USE_SMALLFID(credp)
 #endif
 	    ) {
-	    memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t) & Sfid, SizeOfSmallFid);
 	} else {
-	    memcpy(fidpp->fid_data, (caddr_t)addr, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t) addr, SizeOfSmallFid);
 	}
     } else {
-	memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
+	memcpy(fidpp->fid_data, (caddr_t) & Sfid, SizeOfSmallFid);
     }
 #else
     /* malloc a fid pointer ourselves. */
-    *fidpp = (struct fid *) AFS_KALLOC(SizeOfSmallFid+2);
+    *fidpp = (struct fid *)AFS_KALLOC(SizeOfSmallFid + 2);
     (*fidpp)->fid_len = SizeOfSmallFid;
     if (afs_NFSRootOnly) {
 	if (rootvp) {
 	    memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);
 	} else {
-	    memcpy((*fidpp)->fid_data, (char *)addr, SizeOfSmallFid);   
+	    memcpy((*fidpp)->fid_data, (char *)addr, SizeOfSmallFid);
 	}
     } else {
 	memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);

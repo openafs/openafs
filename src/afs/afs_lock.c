@@ -23,37 +23,31 @@
 */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_lock.c,v 1.1.1.4 2001/07/14 22:19:22 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_lock.c,v 1.9 2003/07/15 23:14:12 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* afs statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* afs statistics */
 
-
-#ifndef FALSE
-#define FALSE	0
-#endif
-#ifndef TRUE
-#define TRUE	1
-#endif
-
-int afs_trclock=0;
+/* probably needed if lock_trace is enabled - should ifdef */
+int afs_trclock = 0;
 
 void Lock_Obtain();
 void Lock_ReleaseR();
 void Lock_ReleaseW();
 
-void Lock_Init(lock)
-    register struct afs_lock *lock;
+void
+Lock_Init(register struct afs_lock *lock)
 {
 
     AFS_STATCNT(Lock_Init);
-    lock -> readers_reading = 0;
-    lock -> excl_locked = 0;
-    lock -> wait_states = 0;
-    lock -> num_waiting = 0;
+    lock->readers_reading = 0;
+    lock->excl_locked = 0;
+    lock->wait_states = 0;
+    lock->num_waiting = 0;
 #if defined(INSTRUMENT_LOCKS)
     lock->pid_last_reader = 0;
     lock->pid_writer = 0;
@@ -63,24 +57,23 @@ void Lock_Init(lock)
     lock->time_waiting.tv_usec = 0;
 }
 
-void ObtainLock(lock, how, src_indicator)
-    register struct afs_lock *lock;
-    int how;
-    unsigned int src_indicator;
+void
+ObtainLock(register struct afs_lock *lock, int how,
+	   unsigned int src_indicator)
 {
     switch (how) {
-      case READ_LOCK:		
+    case READ_LOCK:
 	if (!((lock)->excl_locked & WRITE_LOCK))
-	    (lock) -> readers_reading++;
+	    (lock)->readers_reading++;
 	else
 	    Afs_Lock_Obtain(lock, READ_LOCK);
 #if defined(INSTRUMENT_LOCKS)
 	(lock)->pid_last_reader = MyPidxx;
 #endif /* INSTRUMENT_LOCKS */
 	break;
-      case WRITE_LOCK:		
+    case WRITE_LOCK:
 	if (!(lock)->excl_locked && !(lock)->readers_reading)
-	    (lock) -> excl_locked = WRITE_LOCK;
+	    (lock)->excl_locked = WRITE_LOCK;
 	else
 	    Afs_Lock_Obtain(lock, WRITE_LOCK);
 #if defined(INSTRUMENT_LOCKS)
@@ -88,9 +81,9 @@ void ObtainLock(lock, how, src_indicator)
 	(lock)->src_indicator = src_indicator;
 #endif /* INSTRUMENT_LOCKS */
 	break;
-      case SHARED_LOCK:		
+    case SHARED_LOCK:
 	if (!(lock)->excl_locked)
-	    (lock) -> excl_locked = SHARED_LOCK;
+	    (lock)->excl_locked = SHARED_LOCK;
 	else
 	    Afs_Lock_Obtain(lock, SHARED_LOCK);
 #if defined(INSTRUMENT_LOCKS)
@@ -98,126 +91,130 @@ void ObtainLock(lock, how, src_indicator)
 	(lock)->src_indicator = src_indicator;
 #endif /* INSTRUMENT_LOCKS */
 	break;
-    }	
+    }
 }
 
-void ReleaseLock(lock, how)
-    register struct afs_lock *lock;
-    int how;
+void
+ReleaseLock(register struct afs_lock *lock, int how)
 {
     if (how == READ_LOCK) {
-	if (!--lock->readers_reading && lock->wait_states)
-	{
+	if (!--lock->readers_reading && lock->wait_states) {
 #if defined(INSTRUMENT_LOCKS)
-	    if ( lock->pid_last_reader == MyPidxx )
+	    if (lock->pid_last_reader == MyPidxx)
 		lock->pid_last_reader = 0;
 #endif /* INSTRUMENT_LOCKS */
-	    Afs_Lock_ReleaseW(lock); 
+	    Afs_Lock_ReleaseW(lock);
 	}
     } else if (how == WRITE_LOCK) {
 	lock->excl_locked &= ~WRITE_LOCK;
 #if defined(INSTRUMENT_LOCKS)
 	lock->pid_writer = 0;
 #endif /* INSTRUMENT_LOCKS */
-	if (lock->wait_states) Afs_Lock_ReleaseR(lock);
+	if (lock->wait_states)
+	    Afs_Lock_ReleaseR(lock);
     } else if (how == SHARED_LOCK) {
 	lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
 #if defined(INSTRUMENT_LOCKS)
 	lock->pid_writer = 0;
 #endif /* INSTRUMENT_LOCKS */
-	if (lock->wait_states) Afs_Lock_ReleaseR(lock);
+	if (lock->wait_states)
+	    Afs_Lock_ReleaseR(lock);
     }
 }
 
-Afs_Lock_Obtain(lock, how)
-    register struct afs_lock *lock;
-    int how;
+void
+Afs_Lock_Obtain(register struct afs_lock *lock, int how)
 {
     osi_timeval_t tt1, tt2, et;
+    afs_uint32 us;
 
     AFS_STATCNT(Lock_Obtain);
-  
+
     AFS_ASSERT_GLOCK();
     osi_GetuTime(&tt1);
-    
+
     switch (how) {
 
-	case READ_LOCK:		lock->num_waiting++;
-				do {
-				    lock -> wait_states |= READ_LOCK;
-				    afs_osi_Sleep(&lock->readers_reading);
-				} while (lock->excl_locked & WRITE_LOCK);
-				lock->num_waiting--;
-				lock->readers_reading++;
-				break;
+    case READ_LOCK:
+	lock->num_waiting++;
+	do {
+	    lock->wait_states |= READ_LOCK;
+	    afs_osi_Sleep(&lock->readers_reading);
+	} while (lock->excl_locked & WRITE_LOCK);
+	lock->num_waiting--;
+	lock->readers_reading++;
+	break;
 
-	case WRITE_LOCK:	lock->num_waiting++;
-				do {
-				    lock -> wait_states |= WRITE_LOCK;
-				    afs_osi_Sleep(&lock->excl_locked);
-				} while (lock->excl_locked || lock->readers_reading);
-				lock->num_waiting--;
-				lock->excl_locked = WRITE_LOCK;
-				break;
+    case WRITE_LOCK:
+	lock->num_waiting++;
+	do {
+	    lock->wait_states |= WRITE_LOCK;
+	    afs_osi_Sleep(&lock->excl_locked);
+	} while (lock->excl_locked || lock->readers_reading);
+	lock->num_waiting--;
+	lock->excl_locked = WRITE_LOCK;
+	break;
 
-	case SHARED_LOCK:	lock->num_waiting++;
-				do {
-				    lock->wait_states |= SHARED_LOCK;
-				    afs_osi_Sleep(&lock->excl_locked);
-				} while (lock->excl_locked);
-				lock->num_waiting--;
-				lock->excl_locked = SHARED_LOCK;
-				break;
+    case SHARED_LOCK:
+	lock->num_waiting++;
+	do {
+	    lock->wait_states |= SHARED_LOCK;
+	    afs_osi_Sleep(&lock->excl_locked);
+	} while (lock->excl_locked);
+	lock->num_waiting--;
+	lock->excl_locked = SHARED_LOCK;
+	break;
 
-	case BOOSTED_LOCK:	lock->num_waiting++;
-				do {
-				    lock->wait_states |= WRITE_LOCK;
-				    afs_osi_Sleep(&lock->excl_locked);
-				} while (lock->readers_reading);
-				lock->num_waiting--;
-				lock->excl_locked = WRITE_LOCK;
-				break;
+    case BOOSTED_LOCK:
+	lock->num_waiting++;
+	do {
+	    lock->wait_states |= WRITE_LOCK;
+	    afs_osi_Sleep(&lock->excl_locked);
+	} while (lock->readers_reading);
+	lock->num_waiting--;
+	lock->excl_locked = WRITE_LOCK;
+	break;
 
-	default:		osi_Panic("afs locktype");
+    default:
+	osi_Panic("afs locktype");
     }
 
     osi_GetuTime(&tt2);
     afs_stats_GetDiff(et, tt1, tt2);
     afs_stats_AddTo((lock->time_waiting), et);
+    us = (et.tv_sec << 20) + et.tv_usec;
 
     if (afs_trclock) {
-	afs_Trace2(afs_iclSetp, CM_TRACE_LOCKSLEPT, ICL_TYPE_POINTER, lock,
-		   ICL_TYPE_INT32, how);
+	afs_Trace3(afs_iclSetp, CM_TRACE_LOCKSLEPT, ICL_TYPE_INT32, us,
+		   ICL_TYPE_POINTER, lock, ICL_TYPE_INT32, how);
     }
 }
 
 /* release a lock, giving preference to new readers */
-Afs_Lock_ReleaseR(lock)
-    register struct afs_lock *lock;
+void
+Afs_Lock_ReleaseR(register struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseR);
     AFS_ASSERT_GLOCK();
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 	afs_osi_Wakeup(&lock->readers_reading);
-    }
-    else {
+    } else {
 	lock->wait_states &= ~EXCL_LOCKS;
 	afs_osi_Wakeup(&lock->excl_locked);
     }
 }
 
 /* release a lock, giving preference to new writers */
-Afs_Lock_ReleaseW(lock)
-    register struct afs_lock *lock;
+void
+Afs_Lock_ReleaseW(register struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseW);
     AFS_ASSERT_GLOCK();
     if (lock->wait_states & EXCL_LOCKS) {
 	lock->wait_states &= ~EXCL_LOCKS;
 	afs_osi_Wakeup(&lock->excl_locked);
-    }
-    else {
+    } else {
 	lock->wait_states &= ~READ_LOCK;
 	afs_osi_Wakeup(&lock->readers_reading);
     }
@@ -225,8 +222,8 @@ Afs_Lock_ReleaseW(lock)
 
 /*
 Wait for some change in the lock status.
-Lock_Wait(lock)
-    register struct afs_lock *lock; {
+void Lock_Wait(register struct afs_lock *lock)
+{
     AFS_STATCNT(Lock_Wait);
     if (lock->readers_reading || lock->excl_locked) return 1;
     lock->wait_states |= READ_LOCK;
@@ -240,27 +237,27 @@ Lock_Wait(lock)
  */
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepR(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void
+afs_osi_SleepR(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepR);
     ReleaseReadLock(alock);
     afs_osi_Sleep(addr);
 }
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepW(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void
+afs_osi_SleepW(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepW);
     ReleaseWriteLock(alock);
     afs_osi_Sleep(addr);
 }
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepS(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void
+afs_osi_SleepS(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepS);
     ReleaseSharedLock(alock);
     afs_osi_Sleep(addr);
@@ -271,40 +268,39 @@ register struct afs_lock *alock; {
 /* operations on locks that don't mind if we lock the same thing twice.  I'd like to dedicate
     this function to Sun Microsystems' Version 4.0 virtual memory system, without
     which this wouldn't have been necessary */
-void afs_BozonLock(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void
+afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonLock);
     while (1) {
 	if (alock->count == 0) {
 	    /* lock not held, we win */
 #ifdef	AFS_SUN5_ENV
-	    alock->proc = (char *) ttoproc(curthread);
+	    alock->proc = (char *)ttoproc(curthread);
 #else
 #ifdef AFS_64BITPOINTER_ENV
 	    /* To shut up SGI compiler on remark(1413) warnings. */
-	    alock->proc = (char *) (long)MyPidxx;
+	    alock->proc = (char *)(long)MyPidxx;
 #else /* AFS_64BITPOINTER_ENV */
-	    alock->proc = (char *) MyPidxx;
+	    alock->proc = (char *)MyPidxx;
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    alock->count = 1;
 	    return;
 #ifdef	AFS_SUN5_ENV
-	} else if (alock->proc == (char *) ttoproc(curthread)) {
+	} else if (alock->proc == (char *)ttoproc(curthread)) {
 #else
 #ifdef AFS_64BITPOINTER_ENV
-        /* To shut up SGI compiler on remark(1413) warnings. */
-	} else if (alock->proc == (char *) (long)MyPidxx) {
+	    /* To shut up SGI compiler on remark(1413) warnings. */
+	} else if (alock->proc == (char *)(long)MyPidxx) {
 #else /* AFS_64BITPOINTER_ENV */
-	} else if (alock->proc == (char *) MyPidxx) {
+	} else if (alock->proc == (char *)MyPidxx) {
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    /* lock is held, but by us, so we win anyway */
 	    alock->count++;
 	    return;
-	}
-	else {
+	} else {
 	    /* lock is held, and not by us; we wait */
 	    alock->flags |= AFS_BOZONWAITING;
 	    afs_osi_Sleep(alock);
@@ -313,9 +309,9 @@ struct afs_bozoLock *alock; {
 }
 
 /* releasing the same type of lock as defined above */
-void afs_BozonUnlock(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void
+afs_BozonUnlock(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonUnlock);
     if (alock->count <= 0)
 	osi_Panic("BozoUnlock");
@@ -327,38 +323,71 @@ struct afs_bozoLock *alock; {
     }
 }
 
-void afs_BozonInit(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void
+afs_BozonInit(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonInit);
     alock->count = 0;
     alock->flags = 0;
-    alock->proc = (char *) 0;
+    alock->proc = NULL;
 }
 
-afs_CheckBozonLock(alock)
-struct afs_bozoLock *alock; {
+int
+afs_CheckBozonLock(struct afs_bozoLock *alock)
+{
     AFS_STATCNT(afs_CheckBozonLock);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
 	return 1;
     return 0;
 }
 
-afs_CheckBozonLockBlocking(alock)
-struct afs_bozoLock *alock; {
+int
+afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
+{
     AFS_STATCNT(afs_CheckBozonLockBlocking);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
 #ifdef AFS_SUN5_ENV
-	if (alock->proc != (char *) ttoproc(curthread))
+	if (alock->proc != (char *)ttoproc(curthread))
 #else
 #ifdef AFS_64BITPOINTER_ENV
-	    /* To shut up SGI compiler on remark(1413) warnings. */
-	if (alock->proc != (char *) (long)MyPidxx)
+	/* To shut up SGI compiler on remark(1413) warnings. */
+	if (alock->proc != (char *)(long)MyPidxx)
 #else /* AFS_64BITPOINTER_ENV */
-	if (alock->proc != (char *) MyPidxx)
+	if (alock->proc != (char *)MyPidxx)
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    return 1;
     return 0;
 }
 #endif
+
+/* Not static - used conditionally if lock tracing is enabled */
+int
+Afs_Lock_Trace(int op, struct afs_lock *alock, int type, char *file, int line)
+{
+    int traceok;
+    struct afs_icl_log *tlp;
+    struct afs_icl_set *tsp;
+
+    if (!afs_trclock)
+	return 1;
+    if ((alock) == &afs_icl_lock)
+	return 1;
+
+    ObtainReadLock(&afs_icl_lock);
+    traceok = 1;
+    for (tlp = afs_icl_allLogs; tlp; tlp = tlp->nextp)
+	if ((alock) == &tlp->lock)
+	    traceok = 0;
+    for (tsp = afs_icl_allSets; tsp; tsp = tsp->nextp)
+	if ((alock) == &tsp->lock)
+	    traceok = 0;
+    ReleaseReadLock(&afs_icl_lock);
+    if (!traceok)
+	return 1;
+
+    afs_Trace4(afs_iclSetp, op, ICL_TYPE_STRING, (long)file, ICL_TYPE_INT32,
+	       (long)line, ICL_TYPE_POINTER, (long)alock, ICL_TYPE_LONG,
+	       (long)type);
+    return 0;
+}

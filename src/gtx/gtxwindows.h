@@ -21,14 +21,14 @@
  * Gator window definition.
  */
 struct gwin {
-    int	w_type;			/*Type of window*/
-    int	w_x, w_y;		/*X and Y coordinates*/
-    int	w_width, w_height;	/*Width & height in pixels*/
-    int	w_changed;		/*Does the window need to be refreshed?*/
-    struct gwinops *w_op;	/*Ptr to the operations defined on the window*/
-    struct gwin *w_parent;	/*Parent window, if any*/
+    int w_type;			/*Type of window */
+    int w_x, w_y;		/*X and Y coordinates */
+    int w_width, w_height;	/*Width & height in pixels */
+    int w_changed;		/*Does the window need to be refreshed? */
+    struct gwinops *w_op;	/*Ptr to the operations defined on the window */
+    struct gwin *w_parent;	/*Parent window, if any */
     struct gtx_frame *w_frame;	/*Frame information */
-    int	*w_data;		/*Ptr to info describing the window*/
+    int *w_data;		/*Ptr to info describing the window */
 };
 
 /*
@@ -43,87 +43,87 @@ struct gwin_dlist {
  * Initialization parameters for the gator window package.
  */
 struct gwin_initparams {
-    int	i_type;			/*Type of lower-level graphics package used*/
-    int	i_x, i_y;		/*X, Y coordinates of the screen area*/
-    int	i_width, i_height;	/*Width, height of the screen area*/
-    int	i_debug;		/*Should debugging be turned on?*/
+    int i_type;			/*Type of lower-level graphics package used */
+    int i_x, i_y;		/*X, Y coordinates of the screen area */
+    int i_width, i_height;	/*Width, height of the screen area */
+    int i_debug;		/*Should debugging be turned on? */
 };
 
 /*
  * Creation parameters for gator windows.
  */
 struct gwin_createparams {
-    int	cr_type;		/*Type of window*/
-    int	cr_x, cr_y;		/*X and Y coordinates*/
-    int	cr_width, cr_height;	/*Width & height in pixels*/
-    struct gwin	*cr_parentwin;	/*Ptr to parent window structure*/
+    int cr_type;		/*Type of window */
+    int cr_x, cr_y;		/*X and Y coordinates */
+    int cr_width, cr_height;	/*Width & height in pixels */
+    struct gwin *cr_parentwin;	/*Ptr to parent window structure */
 };
 
 /*
  * Line-drawing parameters.
  */
 struct gwin_lineparams {
-    int	x1, y1;	    /*X, Y coordinates of first point*/
-    int	x2, y2;	    /*X, Y coordinates of second point*/
+    int x1, y1;			/*X, Y coordinates of first point */
+    int x2, y2;			/*X, Y coordinates of second point */
 };
 
 /*
  * Rectangle-drawing parameters.
  */
 struct gwin_rectparams {
-    int	x, y;		/*X, Y coordinates of rectangle's origin*/
-    int	width, height;	/*Rectangle width & height*/
+    int x, y;			/*X, Y coordinates of rectangle's origin */
+    int width, height;		/*Rectangle width & height */
 };
 
 /*
  * Size params.
  */
 struct gwin_sizeparams {
-    int maxx, maxy;	/* x,y size */
+    int maxx, maxy;		/* x,y size */
 };
 
 /*
  * Char-drawing parameters.
  */
 struct gwin_charparams {
-    int	x, y;		/*X, Y coordinates of char origin*/
-    char c;		/*Char to draw*/
-    int	highlight;	/*Print in highlight/standout mode?*/
+    int x, y;			/*X, Y coordinates of char origin */
+    char c;			/*Char to draw */
+    int highlight;		/*Print in highlight/standout mode? */
 };
 
 /*
  * String-drawing parameters.
  */
 struct gwin_strparams {
-    int	x, y;		/*X, Y coordinates of string*/
-    int	highlight;	/*Print in highlight/standout mode?*/
-    char *s;		/*String to draw*/
+    int x, y;			/*X, Y coordinates of string */
+    int highlight;		/*Print in highlight/standout mode? */
+    char *s;			/*String to draw */
 };
 
 /*
  * Inversion parameters.
  */
 struct gwin_invparams {
-    int	x, y;		/*X, Y coordinates of origin*/
-    int	width, height;	/*Width & height of rectangle to invert*/
+    int x, y;			/*X, Y coordinates of origin */
+    int width, height;		/*Width & height of rectangle to invert */
 };
 
 /*
  * Operations on gator windows.
  */
 struct gwinops {
-    int	(*gw_box)();		/* Draw a box around the given window*/
-    int	(*gw_clear)();		/* Clear out a window*/
-    int	(*gw_destroy)();	/* Destroy a window*/
-    int	(*gw_display)();	/* [Re]display a window*/
-    int	(*gw_drawline)();	/* Draw a line between two points*/
-    int	(*gw_drawrectangle)();	/* Draw a rectangle at the given loc & dimensions*/
-    int	(*gw_drawchar)();	/* Draw a char at the given location*/
-    int	(*gw_drawstring)();	/* Draw a char string at the given location*/
-    int	(*gw_invert)();		/* Invert region*/
-    int (*gw_getchar)();	/* Get a character from a window */
-    int (*gw_getdimensions)();	/* Get dimensions of a window */
-    int (*gw_wait)();		/* Wait for input */
+    int (*gw_box) ();		/* Draw a box around the given window */
+    int (*gw_clear) ();		/* Clear out a window */
+    int (*gw_destroy) ();	/* Destroy a window */
+    int (*gw_display) ();	/* [Re]display a window */
+    int (*gw_drawline) ();	/* Draw a line between two points */
+    int (*gw_drawrectangle) ();	/* Draw a rectangle at the given loc & dimensions */
+    int (*gw_drawchar) ();	/* Draw a char at the given location */
+    int (*gw_drawstring) ();	/* Draw a char string at the given location */
+    int (*gw_invert) ();	/* Invert region */
+    int (*gw_getchar) ();	/* Get a character from a window */
+    int (*gw_getdimensions) ();	/* Get dimensions of a window */
+    int (*gw_wait) ();		/* Wait for input */
 };
 
 /*
@@ -146,8 +146,8 @@ struct gwinops {
  * Base operations on the lower-level window system.
  */
 struct gwinbaseops {
-    struct gwin	*(*gw_createwin)(); /*Create a window*/
-    int	(*gw_cleanup)();	    /*Clean up before program exit*/
+    struct gwin *(*gw_createwin) ();	/*Create a window */
+    int (*gw_cleanup) ();	/*Clean up before program exit */
 };
 
 /*
@@ -172,11 +172,11 @@ extern int gw_init();
      *    Initialize the gator window package.
      *
      * Args:
-     *	  struct gwin_initparams *params: Ptr to initialization params.
+     *    struct gwin_initparams *params: Ptr to initialization params.
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 /* initialize the whole gator toolkit package */

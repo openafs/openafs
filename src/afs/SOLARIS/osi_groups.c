@@ -14,42 +14,38 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_groups.c,v 1.1.1.5 2002/05/10 23:44:11 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_groups.c,v 1.7 2003/07/15 23:14:26 shadow Exp $");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"	/* statistics */
 
-
-static int
-afs_getgroups(
-    struct cred *cred,
-    gid_t *gidset);
 
 static int
-afs_setgroups(
-    struct cred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent);
+  afs_getgroups(struct cred *cred, gid_t * gidset);
+
+static int
+  afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
+		int change_parent);
 
 
 #if	defined(AFS_SUN55_ENV)
 int
 afs_xsetgroups(uap, rvp)
-u_int uap; /* this is gidsetsize */
-gid_t *rvp; /* this is gidset */
-#else 
+     u_int uap;			/* this is gidsetsize */
+     gid_t *rvp;		/* this is gidset */
+#else
 struct setgroupsa {
     u_int gidsetsize;
     gid_t *gidset;
 };
 
-afs_xsetgroups(uap, rvp) 
-    struct setgroupsa *uap;
-    rval_t *rvp;
+afs_xsetgroups(uap, rvp)
+     struct setgroupsa *uap;
+     rval_t *rvp;
 #endif
 {
     int code = 0;
@@ -60,7 +56,8 @@ afs_xsetgroups(uap, rvp)
     AFS_GLOCK();
     code = afs_InitReq(&treq, proc->p_cred);
     AFS_GUNLOCK();
-    if (code) return code;
+    if (code)
+	return code;
     code = setgroups(uap, rvp);
 
     /* Note that if there is a pag already in the new groups we don't
@@ -79,10 +76,10 @@ afs_xsetgroups(uap, rvp)
 
 int
 setpag(cred, pagvalue, newpag, change_parent)
-    struct cred **cred;
-    afs_uint32 pagvalue;
-    afs_uint32 *newpag;
-    afs_uint32 change_parent;
+     struct cred **cred;
+     afs_uint32 pagvalue;
+     afs_uint32 *newpag;
+     afs_uint32 change_parent;
 {
     gid_t *gidset;
     int ngroups, code;
@@ -97,16 +94,16 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
-	if ((sizeof gidset[0])*(ngroups + 2) > AFS_SMALLOCSIZ) {
+	if ((sizeof gidset[0]) * (ngroups + 2) > AFS_SMALLOCSIZ) {
 	    osi_FreeSmallSpace((char *)gidset);
 	    return (E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     /* afs_setgroups will release curproc->p_crlock */
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
@@ -119,9 +116,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 
 
 static int
-afs_getgroups(
-    struct cred *cred,
-    gid_t *gidset)
+afs_getgroups(struct cred *cred, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -132,18 +127,15 @@ afs_getgroups(
     savengrps = ngrps = cred->cr_ngroups;
     gp = cred->cr_groups;
     while (ngrps--)
-	*gidset++ = *gp++;   
+	*gidset++ = *gp++;
     return savengrps;
 }
 
 
 
 static int
-afs_setgroups(
-    struct cred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent)
+afs_setgroups(struct cred **cred, int ngroups, gid_t * gidset,
+	      int change_parent)
 {
     int ngrps;
     int i;
@@ -163,6 +155,6 @@ afs_setgroups(
 	*gp++ = *gidset++;
     mutex_exit(&curproc->p_crlock);
     if (!change_parent)
-	crset(curproc, *cred); /* broadcast to all threads */
+	crset(curproc, *cred);	/* broadcast to all threads */
     return (0);
 }

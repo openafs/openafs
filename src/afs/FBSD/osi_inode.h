@@ -46,7 +46,7 @@
 #define di_vicep2	di_gid
 #define di_vicep3a	di_u.oldids[0]
 #define di_vicep3b	di_u.oldids[1]
-#define di_vicep4	di_spare[1]		/* not used */
+#define di_vicep4	di_spare[1]	/* not used */
 
 /*
  * Macros for handling inode numbers:

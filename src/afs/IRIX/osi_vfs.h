@@ -47,8 +47,8 @@ typedef struct xfs_inode xfs_inode_t;
 #define XFS_ILOCK_SHARED 0x08
 struct xfs_trans;
 struct xfs_mount;
-extern int xfs_iget(struct mount *, struct xfs_trans *, xfs_ino_t,
-			 uint, xfs_inode_t **, daddr_t);
+extern int xfs_iget(struct mount *, struct xfs_trans *, xfs_ino_t, uint,
+		    xfs_inode_t **, daddr_t);
 
 #ifdef AFS_SGI64_ENV
 #define XFS_ITOV(ip) BHV_TO_VNODE((struct bhv_desc *)(((char*)(ip)) + 6*sizeof(void*)))
@@ -63,15 +63,15 @@ extern int xfs_iget(struct mount *, struct xfs_trans *, xfs_ino_t,
 #define AFS_SGI_EFS_CACHE 0
 #define AFS_SGI_XFS_CACHE 1
 extern int afs_CacheFSType;
-extern vnode_t * (*afs_IGetVnode)(ino_t);
+extern vnode_t *(*afs_IGetVnode) (ino_t);
 extern struct vnodeops *afs_efs_vnodeopsp;
 extern struct vnodeops *afs_xfs_vnodeopsp;
 
 #define AFS_SGI_IGETVNODE(INO) (*afs_IGetVnode)(INO)
 /* These need to be functions to wrap the vnode op calls. */
-extern ino_t VnodeToIno(vnode_t *vp);
-extern dev_t VnodeToDev(vnode_t *vp);
-extern off_t VnodeToSize(vnode_t *vp);
+extern ino_t VnodeToIno(vnode_t * vp);
+extern dev_t VnodeToDev(vnode_t * vp);
+extern off_t VnodeToSize(vnode_t * vp);
 #else
 /* Just the EFS variants exist for now. */
 #define VnodeToIno(vp)		((ino_t)(EFS_VTOI((vp))->i_number))
@@ -241,65 +241,65 @@ extern int afs_is_numa_arch;
 #ifdef AFS_SGI_VNODE_GLUE
 extern int afs_is_numa_arch;
 typedef struct bhv_head1 {
-	struct bhv_desc	*bh_first;	/* first behavior in chain */
+    struct bhv_desc *bh_first;	/* first behavior in chain */
 #ifdef notdef
-	/* This is not present in the non NUMA machines. */
-	mrlock_t	bh_mrlock;   	/* lock for ops-in-progress synch. */
+    /* This is not present in the non NUMA machines. */
+    mrlock_t bh_mrlock;		/* lock for ops-in-progress synch. */
 #endif
 } bhv_head1_t;
 
 typedef struct vnode1 {
-	struct vnlist	v_list;			/* freelist linkage */
-	uint		v_flag;			/* vnode flags (see below) */
-	cnt_t		v_count;		/* reference count */
-	u_short		v_namecap;		/* name cache capability */
-	enum vtype	v_type;			/* vnode type */
-	dev_t		v_rdev;			/* device (VCHR, VBLK) */
-	struct vfs	*v_vfsmountedhere;	/* ptr to vfs mounted here */
-	struct vfs	*v_vfsp;		/* ptr to containing VFS */
-	struct stdata	*v_stream;		/* associated stream */
-	struct filock	*v_filocks;		/* ptr to filock list */
-	mutex_t		*v_filocksem;		/* ptr to mutex for list */
-	vnumber_t	v_number;		/* in-core vnode number */
-	short		v_listid;		/* free list id */
-	cnt_t		v_intpcount;		/* interp. refcount for imon */
-	bhv_head1_t	v_bh;			/* behavior head */
+    struct vnlist v_list;	/* freelist linkage */
+    uint v_flag;		/* vnode flags (see below) */
+    cnt_t v_count;		/* reference count */
+    u_short v_namecap;		/* name cache capability */
+    enum vtype v_type;		/* vnode type */
+    dev_t v_rdev;		/* device (VCHR, VBLK) */
+    struct vfs *v_vfsmountedhere;	/* ptr to vfs mounted here */
+    struct vfs *v_vfsp;		/* ptr to containing VFS */
+    struct stdata *v_stream;	/* associated stream */
+    struct filock *v_filocks;	/* ptr to filock list */
+    mutex_t *v_filocksem;	/* ptr to mutex for list */
+    vnumber_t v_number;		/* in-core vnode number */
+    short v_listid;		/* free list id */
+    cnt_t v_intpcount;		/* interp. refcount for imon */
+    bhv_head1_t v_bh;		/* behavior head */
 
-	/*
-	 * Used only by global cache.
-	 */
-	struct vnode	*v_hashp;		/* hash list for lookup */
-	struct vnode	*v_hashn;		/* hash list for lookup */
+    /*
+     * Used only by global cache.
+     */
+    struct vnode *v_hashp;	/* hash list for lookup */
+    struct vnode *v_hashn;	/* hash list for lookup */
 
-	/*
-	 * Values manipulated only by VM and
-	 * the page/buffer caches.
-	 */
-	struct pregion	*v_mreg;		/* mapped file region pointer */
-	int		v_dbuf;			/* delwri buffer count */
-	pgno_t		v_pgcnt;		/* pages hashed to vnode */
-	struct pfdat	*v_dpages;		/* delwri pages */
-	struct buf	*v_buf;			/* vnode buffer tree head */
-	unsigned int	v_bufgen;		/* buf list generation number */
-	mutex_t		v_buf_lock;		/* mutex for buffer tree */
+    /*
+     * Values manipulated only by VM and
+     * the page/buffer caches.
+     */
+    struct pregion *v_mreg;	/* mapped file region pointer */
+    int v_dbuf;			/* delwri buffer count */
+    pgno_t v_pgcnt;		/* pages hashed to vnode */
+    struct pfdat *v_dpages;	/* delwri pages */
+    struct buf *v_buf;		/* vnode buffer tree head */
+    unsigned int v_bufgen;	/* buf list generation number */
+    mutex_t v_buf_lock;		/* mutex for buffer tree */
 
-	vnode_pcache_t	v_pc;			/* Page cache structure. 
-						 * per vnode. Refer to
-						 * vnode_pcache.h 
-						 * for details.
-						 */
+    vnode_pcache_t v_pc;	/* Page cache structure. 
+				 * per vnode. Refer to
+				 * vnode_pcache.h 
+				 * for details.
+				 */
 #ifdef VNODE_TRACING
-	struct ktrace 	*v_trace;		/* trace header structure    */
+    struct ktrace *v_trace;	/* trace header structure    */
 #endif
 #ifdef CKPT
-	ckpt_handle_t	v_ckpt;			/* ckpt lookup info */
+    ckpt_handle_t v_ckpt;	/* ckpt lookup info */
 #endif
 } vnode1_t;
 
-extern struct pfdat *vnode_get_dpages(vnode_t*);
-extern int vnode_get_dbuf(vnode_t*);
-extern pgno_t vnode_get_pgcnt(vnode_t*);
-extern struct pregion *vnode_get_mreg(vnode_t*);
+extern struct pfdat *vnode_get_dpages(vnode_t *);
+extern int vnode_get_dbuf(vnode_t *);
+extern pgno_t vnode_get_pgcnt(vnode_t *);
+extern struct pregion *vnode_get_mreg(vnode_t *);
 #define VN_GET_DPAGES(V)	(afs_is_numa_arch ? \
 				 ((V)->v_dpages) : \
 				 (((vnode1_t*)(V))->v_dpages))
@@ -351,10 +351,10 @@ extern struct pregion *vnode_get_mreg(vnode_t*);
 /*
  * Flock(3) call. (from sys/file.h)
  */
-#define LOCK_SH         1       /* shared lock */
-#define LOCK_EX         2       /* exclusive lock */
-#define LOCK_NB         4       /* don't block when locking */
-#define LOCK_UN         8       /* unlock */
+#define LOCK_SH         1	/* shared lock */
+#define LOCK_EX         2	/* exclusive lock */
+#define LOCK_NB         4	/* don't block when locking */
+#define LOCK_UN         8	/* unlock */
 
 #endif
 

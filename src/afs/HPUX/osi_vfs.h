@@ -6,10 +6,10 @@
 /*
  * Flock(3) call. (from sys/file.h)
  */
-#define LOCK_SH         1       /* shared lock */
-#define LOCK_EX         2       /* exclusive lock */
-#define LOCK_NB         4       /* don't block when locking */
-#define LOCK_UN         8       /* unlock */
+#define LOCK_SH         1	/* shared lock */
+#define LOCK_EX         2	/* exclusive lock */
+#define LOCK_NB         4	/* don't block when locking */
+#define LOCK_UN         8	/* unlock */
 
 #define d_fileno d_ino
 

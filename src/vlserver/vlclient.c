@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlclient.c,v 1.1.1.7 2001/10/14 18:07:16 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.12 2003/12/07 22:49:42 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -37,6 +38,15 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlclient.c,v 1.1.1.7 2001/10/1
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/afsutil.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -62,7 +72,6 @@ void print_usage();
 void fill_entry();
 void fill_update_entry();
 
-extern int VL_GetAddrsU(), VL_RegisterAddrs();
 #define	VL_NUMBER_OPCODESX	34
 static char *opcode_names[VL_NUMBER_OPCODESX] = {
     "CreateEntry",
@@ -81,7 +90,7 @@ static char *opcode_names[VL_NUMBER_OPCODESX] = {
     "Probe",
     "GetAddrs",
     "ChangeAddr",
-    "CreateEntryN",    
+    "CreateEntryN",
     "GetEntryByIDN",
     "GetEntryByNameN",
     "ReplaceEntryN",
@@ -97,7 +106,7 @@ static char *opcode_names[VL_NUMBER_OPCODESX] = {
     "ListAttributesU",
     "LinkedListU",
     "RegisterAddr",
-    "GetAddrsU"
+    "GetAddrsU",
     "ListAttributesN2"
 };
 
@@ -109,31 +118,31 @@ struct Vlent {
     char name[64];
 };
 
-extern int VL_UpdateEntryByName();
 #define	NVOLS	1000
 #define	ALLOCNT 50000
 struct Vlent *VLa[NVOLS];
 #define	VHash(avol)	((avol)&(NVOLS-1))
 struct Vlent *VL, *SVL;
-int VLcnt=0;
+int VLcnt = 0;
 struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
 char confdir[AFSDIR_PATH_MAX];
 char *(args[50]);
-extern struct cmd_syndesc *cmd_CreateSyntax();
 
-struct Vlent *GetVolume(vol, entry) 
-    struct vldbentry *entry;    
+struct Vlent *
+GetVolume(vol, entry)
+     struct vldbentry *entry;
 {
     register int i;
     register struct Vlent *vl;
 
-    if (!vol) return (struct Vlent *)0;
+    if (!vol)
+	return NULL;
     i = VHash(vol);
-    for (vl=VLa[i]; vl; vl = vl->next) {
-	if ((vl->rwid == vol && vol != entry->volumeId[0]) ||
-	    (vl->roid == vol && vol != entry->volumeId[1]) || 
-	    (vl->baid == vol && vol != entry->volumeId[2])) {
+    for (vl = VLa[i]; vl; vl = vl->next) {
+	if ((vl->rwid == vol && vol != entry->volumeId[0])
+	    || (vl->roid == vol && vol != entry->volumeId[1])
+	    || (vl->baid == vol && vol != entry->volumeId[2])) {
 	    return vl;
 	}
     }
@@ -143,19 +152,21 @@ struct Vlent *GetVolume(vol, entry)
     strcpy(entry->name, VL->name);
     VL->next = VLa[i];
     VLa[i] = VL;
-    if (VLcnt++ > ALLOCNT) {		/* XXXX FIX XXXXXXXXX */
+    if (VLcnt++ > ALLOCNT) {	/* XXXX FIX XXXXXXXXX */
 	printf("Too many entries (> %d)\n", ALLOCNT);
 	exit(1);
     }
     VL++;
-    return (struct Vlent *)0;
+    return NULL;
 }
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
-afs_int32 vl_Initialize(auth, confDir, server, cellp)
-int auth, server;
-char *confDir, *cellp;
-{   afs_int32 code;
+afs_int32
+vl_Initialize(auth, confDir, server, cellp)
+     int auth, server;
+     char *confDir, *cellp;
+{
+    afs_int32 code;
     struct afsconf_dir *tdir;
     struct ktc_principal sname;
     struct ktc_token ttoken;
@@ -166,7 +177,7 @@ char *confDir, *cellp;
 
     code = rx_Init(0);
     if (code) {
-	fprintf(stderr,"vl_Initialize:  Could not initialize rx.\n");
+	fprintf(stderr, "vl_Initialize:  Could not initialize rx.\n");
 	return code;
     }
 
@@ -174,73 +185,80 @@ char *confDir, *cellp;
     if (!server) {
 	tdir = afsconf_Open(confDir);
 	if (!tdir) {
-	    fprintf(stderr,"Could not open configuration directory (%s).\n", confDir);
+	    fprintf(stderr, "Could not open configuration directory (%s).\n",
+		    confDir);
 	    return -1;
 	}
     }
-    if (auth) {   /* we don't need tickets for null */
+    if (auth) {			/* we don't need tickets for null */
 	if (!server) {
 	    code = afsconf_GetLocalCell(tdir, sname.cell, sizeof(sname.cell));
 	    if (code) {
-		fprintf(stderr,"vl_Initialize: Could not get local cell name.\n");
+		fprintf(stderr,
+			"vl_Initialize: Could not get local cell name.\n");
 		return code;
 	    }
 	} else
 	    strncpy(sname.cell, cellp, sizeof(sname.cell));
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	if (code) {
-	    fprintf(stderr,"vl_Initialize: Could not get afs tokens, running unauthenticated.\n");
+	    fprintf(stderr,
+		    "vl_Initialize: Could not get afs tokens, running unauthenticated.\n");
 	    scIndex = 0;
-	}
-	else if (ttoken.kvno <= 255)
+	} else if (ttoken.kvno <= 255)
 	    scIndex = 2;
-	else { /* bcrypt */
-	    fprintf (stderr,
-		     "vl_Initialize: funny kvno (%d) in ticket, proceeding\n",
-		     ttoken.kvno);
+	else {			/* bcrypt */
+	    fprintf(stderr,
+		    "vl_Initialize: funny kvno (%d) in ticket, proceeding\n",
+		    ttoken.kvno);
 	    scIndex = 2;
 	}
     }
     switch (scIndex) {
-      case 0 :
-	  sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
-	  break;
-	case 1 :
-	    return -1;
-	case 2:
-	  sc = (struct rx_securityClass *) rxkad_NewClientSecurityObject (rxkad_clear,
-	       &ttoken.sessionKey, ttoken.kvno, ttoken.ticketLen, ttoken.ticket);
-      }
+    case 0:
+	sc = rxnull_NewClientSecurityObject();
+	break;
+    case 1:
+	return -1;
+    case 2:
+	sc = rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
+					   ttoken.kvno, ttoken.ticketLen,
+					   ttoken.ticket);
+    }
     if (!server) {
-	code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE, &info);
+	code = afsconf_GetCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info);
 	if (info.numServers > MAXSERVERS) {
 	    fprintf(stderr,
 		    "vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",
 		    info.numServers, MAXSERVERS);
 	    exit(1);
 	}
-	for (i = 0;i<info.numServers;i++) 
-	    serverconns[i] = rx_NewConnection
-		(info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,
-		 USER_SERVICE_ID, sc, scIndex);
+	for (i = 0; i < info.numServers; i++)
+	    serverconns[i] =
+		rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+				 info.hostAddr[i].sin_port, USER_SERVICE_ID,
+				 sc, scIndex);
     } else {
-	serverconns[0] = rx_NewConnection(server, htons(AFSCONF_VLDBPORT),
-		 USER_SERVICE_ID, sc, scIndex);
+	serverconns[0] =
+	    rx_NewConnection(server, htons(AFSCONF_VLDBPORT), USER_SERVICE_ID,
+			     sc, scIndex);
     }
     code = ubik_ClientInit(serverconns, &cstruct);
 
     if (code) {
-	fprintf(stderr,"vl_Initialize: ubik client init failed.\n");
+	fprintf(stderr, "vl_Initialize: ubik client init failed.\n");
 	return code;
     }
     return 0;
 }
 
 /* return host address in network byte order */
-afs_int32 GetServer(aname)
-char *aname; {
+afs_int32
+GetServer(aname)
+     char *aname;
+{
     register struct hostent *th;
     afs_int32 addr;
     int b1, b2, b3, b4;
@@ -248,34 +266,36 @@ char *aname; {
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
-	addr = (b1<<24) | (b2<<16) | (b3<<8) | b4;
-	return htonl(addr); /* convert to network order (128 in byte 0) */
+	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+	return htonl(addr);	/* convert to network order (128 in byte 0) */
     }
     th = gethostbyname(aname);
-    if (!th) return 0;
+    if (!th)
+	return 0;
     memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 
 
-static handleit(as) 
-    struct cmd_syndesc *as;
+static
+handleit(as)
+     struct cmd_syndesc *as;
 {
     register struct cmd_item *ti;
-    register afs_int32 code, server = 0, sawserver=0;
+    register afs_int32 code, server = 0, sawserver = 0;
     afs_int32 id, voltype;
-    struct vldbentry entry;    
-    char *cmd = 0, *cellp=0;
+    struct vldbentry entry;
+    char *cmd = 0, *cellp = 0;
     struct VldbUpdateEntry updateentry;
     struct VldbListByAttributes listbyattributes;
-    int	noAuth = 1;	    /* Default is authenticated connections */
+    int noAuth = 1;		/* Default is authenticated connections */
 
-    if (ti = as->parms[0].items) 	/* -cellpath <dir> */
+    if (ti = as->parms[0].items)	/* -cellpath <dir> */
 	strcpy(confdir, ti->data);
-    if (as->parms[1].items)		/* -server */
-      strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
-    if (as->parms[2].items)		/* -noauth */
-	noAuth = 0;	
+    if (as->parms[1].items)	/* -server */
+	strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
+    if (as->parms[2].items)	/* -noauth */
+	noAuth = 0;
     if (ti = as->parms[3].items) {	/* -host */
 	server = GetServer(ti->data);
 	if (server == 0) {
@@ -285,22 +305,24 @@ static handleit(as)
 	sawserver = 1;
     }
     if (!sawserver && noAuth && (!(ti = as->parms[4].items))) {
-	    printf("Must also specify the -cell' option along with -host for authenticated conns\n");
-	    exit(1);
+	printf
+	    ("Must also specify the -cell' option along with -host for authenticated conns\n");
+	exit(1);
     }
     if (ti = as->parms[4].items) {	/* -cell */
 	cellp = ti->data;
     }
     if (code = vl_Initialize(noAuth, confdir, server, cellp)) {
-	printf("Couldn't initialize vldb library (code=%d).\n",code);
+	printf("Couldn't initialize vldb library (code=%d).\n", code);
 	exit(1);
     }
 
-    if (as->parms[5].items) {		/* -gstats */
+    if (as->parms[5].items) {	/* -gstats */
 	vldstats stats;
 	vital_vlheader vital_header;
 	code = ubik_Call(VL_GetStats, cstruct, 0, &stats, &vital_header);
-	if (!code) dump_stats(&stats, &vital_header);
+	if (!code)
+	    dump_stats(&stats, &vital_header);
 	exit(0);
     }
 
@@ -323,14 +345,14 @@ static handleit(as)
 	    if (!strcmp(oper, "cr")) {
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
-		code = ubik_Call(VL_CreateEntry, cstruct,0, &entry);
+		code = ubik_Call(VL_CreateEntry, cstruct, 0, &entry);
 		printf("return code is %d\n", code);
-	    } else if (!strcmp(oper,"rm")) {
+	    } else if (!strcmp(oper, "rm")) {
 		sscanf(&(*argp)[0], "%d", &id);
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &voltype);
 		code = ubik_Call(VL_DeleteEntry, cstruct, 0, id, voltype);
-		printf("return code is %d\n",code);
+		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "re")) {
 		sscanf(&(*argp)[0], "%d", &id);
 		++argp, --nargs;
@@ -340,7 +362,9 @@ static handleit(as)
 		++argp, --nargs;
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
-		code = ubik_Call(VL_ReplaceEntry, cstruct, 0, id, voltype, &entry, releasetype);
+		code =
+		    ubik_Call(VL_ReplaceEntry, cstruct, 0, id, voltype,
+			      &entry, releasetype);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "up")) {
 		sscanf(&(*argp)[0], "%d", &id);
@@ -351,240 +375,321 @@ static handleit(as)
 		++argp, --nargs;
 		fill_update_entry(&updateentry, argp, nargs);
 		display_update_entry(&updateentry, 0);
-		code = ubik_Call(VL_UpdateEntry, cstruct, 0, id, voltype, &updateentry, releasetype);
+		code =
+		    ubik_Call(VL_UpdateEntry, cstruct, 0, id, voltype,
+			      &updateentry, releasetype);
 		printf("return code is %d\n", code);
-	    } else if (!strcmp(oper,"ls")) {
-		 afs_int32 index, count, next_index;
-		 for (index = 0; 1; index = next_index) {
-		     memset(&entry, 0, sizeof(entry));
-		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
-		     if (code) {
-			 printf("VL_ListEntry returned code = %d\n", code);
-			 break;
-		     }
-		     if (!next_index) break;
-		     display_entry(&entry, 0);
-		 }
-	    } else if (!strcmp(oper,"ldups")) {
-		 afs_int32 index, count, num=0, num1=0, next_index;
-		 struct Vlent *vl1;    
+	    } else if (!strcmp(oper, "ls")) {
+		afs_int32 index, count, next_index;
+		for (index = 0; 1; index = next_index) {
+		    memset(&entry, 0, sizeof(entry));
+		    code =
+			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+				  &next_index, &entry);
+		    if (code) {
+			printf("VL_ListEntry returned code = %d\n", code);
+			break;
+		    }
+		    if (!next_index)
+			break;
+		    display_entry(&entry, 0);
+		}
+	    } else if (!strcmp(oper, "ldups")) {
+		afs_int32 index, count, num = 0, num1 = 0, next_index;
+		struct Vlent *vl1;
 
-		 VL = SVL = (struct Vlent *) malloc(ALLOCNT * sizeof(struct Vlent));
-		 if (VL == NULL) {
-		     printf("Can't allocate memory...\n");
-		     exit(1);
-		 }
-		 printf("Enumerating all entries in vldb...\n");
-		 for (index = 0; 1; index = next_index) {
-		     memset(&entry, 0, sizeof(entry));
-		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
-		     if (code) {
-			 printf("VL_ListEntry returned code = %d\n", code);
-			 break;
-		     }
-		     if (!next_index) break;
-		     num++;
-		     if (vl1 = GetVolume(entry.volumeId[0], &entry)) {
-			 num1++;
-			 printf("Duplicate entry is found for RW vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
-				entry.volumeId[0], vl1->rwid, vl1->roid, vl1->baid, vl1->name);
-		     }
-		     if (vl1 = GetVolume(entry.volumeId[1], &entry)) {
-			 num1++;
-			 printf("Duplicate entry is found for RO vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
-				entry.volumeId[1], vl1->rwid, vl1->roid, vl1->baid, vl1->name);
-		     }
-		     if (vl1 = GetVolume(entry.volumeId[2], &entry)) {
-			 num1++;
-			 printf("Duplicate entry is found for BA vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
-				entry.volumeId[2], vl1->rwid, vl1->roid, vl1->baid, vl1->name);
-		     }
-		     /*display_entry(&entry, 0);*/
-		 }
-		 printf("(%d vldb entries found - %d duplicates)\n", num, num1);
-	    } else if (!strcmp(oper,"checkhash")) {
-		 int index, count, num=0, num1=0, num2 = 0, num3=0, num31=0, num4=0, num41=0, next_index;
-		 struct vldbentry tentry;    
+		VL = SVL =
+		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		if (VL == NULL) {
+		    printf("Can't allocate memory...\n");
+		    exit(1);
+		}
+		printf("Enumerating all entries in vldb...\n");
+		for (index = 0; 1; index = next_index) {
+		    memset(&entry, 0, sizeof(entry));
+		    code =
+			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+				  &next_index, &entry);
+		    if (code) {
+			printf("VL_ListEntry returned code = %d\n", code);
+			break;
+		    }
+		    if (!next_index)
+			break;
+		    num++;
+		    if (vl1 = GetVolume(entry.volumeId[0], &entry)) {
+			num1++;
+			printf
+			    ("Duplicate entry is found for RW vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
+			     entry.volumeId[0], vl1->rwid, vl1->roid,
+			     vl1->baid, vl1->name);
+		    }
+		    if (vl1 = GetVolume(entry.volumeId[1], &entry)) {
+			num1++;
+			printf
+			    ("Duplicate entry is found for RO vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
+			     entry.volumeId[1], vl1->rwid, vl1->roid,
+			     vl1->baid, vl1->name);
+		    }
+		    if (vl1 = GetVolume(entry.volumeId[2], &entry)) {
+			num1++;
+			printf
+			    ("Duplicate entry is found for BA vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
+			     entry.volumeId[2], vl1->rwid, vl1->roid,
+			     vl1->baid, vl1->name);
+		    }
+		    /*display_entry(&entry, 0); */
+		}
+		printf("(%d vldb entries found - %d duplicates)\n", num,
+		       num1);
+	    } else if (!strcmp(oper, "checkhash")) {
+		int index, count, num = 0, num1 = 0, num2 = 0, num3 =
+		    0, num31 = 0, num4 = 0, num41 = 0, next_index;
+		struct vldbentry tentry;
 
-		 VL = SVL = (struct Vlent *) malloc(ALLOCNT * sizeof(struct Vlent));
-		 if (VL == NULL) {
-		     printf("Can't allocate memory...\n");
-		     exit(1);
-		 }
-		 printf("Volumes not found in main hash tables in vldb...\n");
-		 for (index = 0; 1; index = next_index) {
-		     memset(&entry, 0, sizeof(entry));
-		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
-		     if (code) {
-			 printf("VL_ListEntry returned code = %d\n", code);
-			 break;
-		     }
-		     if (!next_index) break;
-		     num++;
-		     code = ubik_Call(VL_GetEntryByNameO,cstruct,0,entry.name, &tentry);
-		     if (code == VL_NOENT) {
-			 num1++;
-			 printf("\tVolume %s %d (not in namehash)\n", entry.name, entry.volumeId[RWVOL]);
-		     }
-		     code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[RWVOL], RWVOL, &tentry);
-		     if (code == VL_NOENT) {
-			 num2++;
-			 printf("\tVolume %s %d (not in rwid hash)\n", entry.name, entry.volumeId[RWVOL]);
-		     }
-		     if (entry.volumeId[BACKVOL]) {
-			 code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[BACKVOL], BACKVOL, &tentry);
-			 num31++;
-			 if (code == VL_NOENT) {
-			     num3++;
-			     printf("\tVolume %s %d (not in backup id hash)\n", entry.name, entry.volumeId[BACKVOL]);
-			 }
-		     }
-		     if (entry.volumeId[ROVOL]) {
-			 code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[ROVOL], ROVOL, &tentry);
-			 num41++;
-			 if (code == VL_NOENT) {
-			     num4++;
-			     printf("\tVolume %s %d (not in RO id hash)\n", entry.name, entry.volumeId[ROVOL]);
-			 }
-		     }
-		 }
-		 printf("\nTotal vldb entries %d\nTotal volumes %d (%d rw, %d backup, %d ro)\n",
-			num, num+num31+num41, num, num31, num41);
-		 printf("\n\t%d didn't hash properly by name\n\t%d didn't hash properly by rw volid\n", 
-			num1, num2);
-		 printf("\t%d didn't hash properly by backup volid (out of %d)\n\t%d didn't hash properly by ro volid (out of %d)\n", 
-			num3, num31, num4, num41);
-	    } else if (!strcmp(oper,"fixhash")) {
-		 int index, count, num=0, num1=0, num2 = 0, next_index, x=0;
-		 struct vldbentry tentry;    
+		VL = SVL =
+		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		if (VL == NULL) {
+		    printf("Can't allocate memory...\n");
+		    exit(1);
+		}
+		printf("Volumes not found in main hash tables in vldb...\n");
+		for (index = 0; 1; index = next_index) {
+		    memset(&entry, 0, sizeof(entry));
+		    code =
+			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+				  &next_index, &entry);
+		    if (code) {
+			printf("VL_ListEntry returned code = %d\n", code);
+			break;
+		    }
+		    if (!next_index)
+			break;
+		    num++;
+		    code =
+			ubik_Call(VL_GetEntryByNameO, cstruct, 0, entry.name,
+				  &tentry);
+		    if (code == VL_NOENT) {
+			num1++;
+			printf("\tVolume %s %d (not in namehash)\n",
+			       entry.name, entry.volumeId[RWVOL]);
+		    }
+		    code =
+			ubik_Call(VL_GetEntryByID, cstruct, 0,
+				  entry.volumeId[RWVOL], RWVOL, &tentry);
+		    if (code == VL_NOENT) {
+			num2++;
+			printf("\tVolume %s %d (not in rwid hash)\n",
+			       entry.name, entry.volumeId[RWVOL]);
+		    }
+		    if (entry.volumeId[BACKVOL]) {
+			code =
+			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+				      entry.volumeId[BACKVOL], BACKVOL,
+				      &tentry);
+			num31++;
+			if (code == VL_NOENT) {
+			    num3++;
+			    printf("\tVolume %s %d (not in backup id hash)\n",
+				   entry.name, entry.volumeId[BACKVOL]);
+			}
+		    }
+		    if (entry.volumeId[ROVOL]) {
+			code =
+			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+				      entry.volumeId[ROVOL], ROVOL, &tentry);
+			num41++;
+			if (code == VL_NOENT) {
+			    num4++;
+			    printf("\tVolume %s %d (not in RO id hash)\n",
+				   entry.name, entry.volumeId[ROVOL]);
+			}
+		    }
+		}
+		printf
+		    ("\nTotal vldb entries %d\nTotal volumes %d (%d rw, %d backup, %d ro)\n",
+		     num, num + num31 + num41, num, num31, num41);
+		printf
+		    ("\n\t%d didn't hash properly by name\n\t%d didn't hash properly by rw volid\n",
+		     num1, num2);
+		printf
+		    ("\t%d didn't hash properly by backup volid (out of %d)\n\t%d didn't hash properly by ro volid (out of %d)\n",
+		     num3, num31, num4, num41);
+	    } else if (!strcmp(oper, "fixhash")) {
+		int index, count, num = 0, num1 = 0, num2 = 0, next_index, x =
+		    0;
+		struct vldbentry tentry;
 
-		 VL = SVL = (struct Vlent *) malloc(ALLOCNT * sizeof(struct Vlent));
-		 if (VL == NULL) {
-		     printf("Can't allocate memory...\n");
-		     exit(1);
-		 }
-		 printf("Volumes not found in main hash tables in vldb will be fixed...\n");
-		 memset(&updateentry, 0, sizeof(updateentry));
-		 for (index = 0; 1; index = next_index) {
-		     int n1=0, n2=0, n3=0, n4=0;
-		     memset(&entry, 0, sizeof(entry));
-		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
-		     if (code) {
-			 printf("VL_ListEntry returned code = %d\n", code);
-			 break;
-		     }
-		     if (!next_index) break;
-		     num++;
-		     code = ubik_Call(VL_GetEntryByNameO,cstruct,0,entry.name, &tentry);
-		     if (code == VL_NOENT) {
-			 num1++;
-			 n1 = 1;
-			 updateentry.Mask = VLUPDATE_VOLNAMEHASH;
-			 printf("\tVolume %s %d (not in namehash)\n", entry.name, entry.volumeId[RWVOL]);
-			 code = ubik_Call(VL_UpdateEntry, cstruct, 0, entry.volumeId[RWVOL], -1, &updateentry, 0);
-			 if (code) {
-			     x++;
-			     printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-			 }
-		     }
-		     code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[RWVOL], RWVOL, &tentry);
-		     if (code == VL_NOENT) {
-			 num1++;
-			 num2++;
-			 updateentry.Mask = VLUPDATE_RWID;
-			 updateentry.spares3 = entry.volumeId[RWVOL];
-			 printf("\tVolume %s %d (not in rw id hash)\n", entry.name, entry.volumeId[RWVOL]);
-			 code = ubik_Call(VL_UpdateEntryByName, cstruct, 0, entry.name, &updateentry, 0);
-			 if (code) {
-			     printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-			     x++;
-			 }
-			 x++;
-		     }
-		     if (entry.volumeId[BACKVOL] && !n2) {
-			 code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[BACKVOL], BACKVOL, &tentry);
-			 if (code == VL_NOENT) {
-			     n3 = 1;
-			     num1++;
-			     updateentry.Mask = VLUPDATE_BACKUPID;
-			     updateentry.BackupId = entry.volumeId[BACKVOL];
-			     printf("\tVolume %s %d (not in backup id hash)\n", entry.name, entry.volumeId[BACKVOL]);
-			     code = ubik_Call(VL_UpdateEntry, cstruct, 0, entry.volumeId[RWVOL], -1, &updateentry, 0);
-			     if (code) {
-				 printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-				 x++;
-			     }
-			 }
-		     }
-		     if (entry.volumeId[ROVOL && !n2]) {
-			 code = ubik_Call(VL_GetEntryByID,cstruct,0,entry.volumeId[ROVOL], ROVOL, &tentry);
-			 if (code == VL_NOENT) {
-			     n4 = 1;
-			     num1++;
-			     updateentry.Mask = VLUPDATE_READONLYID;
-			     updateentry.ReadOnlyId = entry.volumeId[ROVOL];
-			     printf("\tVolume %s %d (not in RO id hash)\n", entry.name, entry.volumeId[ROVOL]);
-			     code = ubik_Call(VL_UpdateEntry, cstruct, 0, entry.volumeId[RWVOL], -1, &updateentry, 0);
-			     if (code) {
-				 printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-				 x++;
-			     }
-			 }
-		     }
-		 }
-		 printf("\nTotal vldb entries found %d:\n\t%d entries didn't hash properly and are fixed except %d that need to be handled manually\n", 
-			num, num1, x);
+		VL = SVL =
+		    (struct Vlent *)malloc(ALLOCNT * sizeof(struct Vlent));
+		if (VL == NULL) {
+		    printf("Can't allocate memory...\n");
+		    exit(1);
+		}
+		printf
+		    ("Volumes not found in main hash tables in vldb will be fixed...\n");
+		memset(&updateentry, 0, sizeof(updateentry));
+		for (index = 0; 1; index = next_index) {
+		    /* FIXME: n2 is never changed for some reason */
+		    int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+		    memset(&entry, 0, sizeof(entry));
+		    code =
+			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+				  &next_index, &entry);
+		    if (code) {
+			printf("VL_ListEntry returned code = %d\n", code);
+			break;
+		    }
+		    if (!next_index)
+			break;
+		    num++;
+		    code =
+			ubik_Call(VL_GetEntryByNameO, cstruct, 0, entry.name,
+				  &tentry);
+		    if (code == VL_NOENT) {
+			num1++;
+			n1 = 1;
+			updateentry.Mask = VLUPDATE_VOLNAMEHASH;
+			printf("\tVolume %s %d (not in namehash)\n",
+			       entry.name, entry.volumeId[RWVOL]);
+			code =
+			    ubik_Call(VL_UpdateEntry, cstruct, 0,
+				      entry.volumeId[RWVOL], -1, &updateentry,
+				      0);
+			if (code) {
+			    x++;
+			    printf("\tFailed to update volume %s (err=%d)\n",
+				   entry.name, code);
+			}
+		    }
+		    code =
+			ubik_Call(VL_GetEntryByID, cstruct, 0,
+				  entry.volumeId[RWVOL], RWVOL, &tentry);
+		    if (code == VL_NOENT) {
+			num1++;
+			num2++;
+			updateentry.Mask = VLUPDATE_RWID;
+			updateentry.spares3 = entry.volumeId[RWVOL];
+			printf("\tVolume %s %d (not in rw id hash)\n",
+			       entry.name, entry.volumeId[RWVOL]);
+			code =
+			    ubik_Call(VL_UpdateEntryByName, cstruct, 0,
+				      entry.name, &updateentry, 0);
+			if (code) {
+			    printf("\tFailed to update volume %s (err=%d)\n",
+				   entry.name, code);
+			    x++;
+			}
+			x++;
+		    }
+		    if (entry.volumeId[BACKVOL] && !n2) {
+			code =
+			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+				      entry.volumeId[BACKVOL], BACKVOL,
+				      &tentry);
+			if (code == VL_NOENT) {
+			    n3 = 1;
+			    num1++;
+			    updateentry.Mask = VLUPDATE_BACKUPID;
+			    updateentry.BackupId = entry.volumeId[BACKVOL];
+			    printf("\tVolume %s %d (not in backup id hash)\n",
+				   entry.name, entry.volumeId[BACKVOL]);
+			    code =
+				ubik_Call(VL_UpdateEntry, cstruct, 0,
+					  entry.volumeId[RWVOL], -1,
+					  &updateentry, 0);
+			    if (code) {
+				printf
+				    ("\tFailed to update volume %s (err=%d)\n",
+				     entry.name, code);
+				x++;
+			    }
+			}
+		    }
+		    if (entry.volumeId[ROVOL && !n2]) {
+			code =
+			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+				      entry.volumeId[ROVOL], ROVOL, &tentry);
+			if (code == VL_NOENT) {
+			    n4 = 1;
+			    num1++;
+			    updateentry.Mask = VLUPDATE_READONLYID;
+			    updateentry.ReadOnlyId = entry.volumeId[ROVOL];
+			    printf("\tVolume %s %d (not in RO id hash)\n",
+				   entry.name, entry.volumeId[ROVOL]);
+			    code =
+				ubik_Call(VL_UpdateEntry, cstruct, 0,
+					  entry.volumeId[RWVOL], -1,
+					  &updateentry, 0);
+			    if (code) {
+				printf
+				    ("\tFailed to update volume %s (err=%d)\n",
+				     entry.name, code);
+				x++;
+			    }
+			}
+		    }
+		}
+		printf
+		    ("\nTotal vldb entries found %d:\n\t%d entries didn't hash properly and are fixed except %d that need to be handled manually\n",
+		     num, num1, x);
 	    } else if (!strcmp(oper, "la")) {
-		int nentries=0, i;
+		int nentries = 0, i;
 		bulkentries entries;
 		struct vldbentry *entry;
 
 		memset(&entries, 0, sizeof(entries));
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
-		code = ubik_Call(VL_ListAttributes, cstruct, 0, &listbyattributes, &nentries, &entries);
+		code =
+		    ubik_Call(VL_ListAttributes, cstruct, 0,
+			      &listbyattributes, &nentries, &entries);
 		if (code) {
 		    printf("VL_ListAttributes returned code = %d\n", code);
 		    continue;
 		}
 		entry = (struct vldbentry *)entries.bulkentries_val;
-		for (i=0; i < nentries; i++, entry++)
+		for (i = 0; i < nentries; i++, entry++)
 		    display_entry(entry, 0);
-		if (entries.bulkentries_val) free((char *)entries.bulkentries_val);
+		if (entries.bulkentries_val)
+		    free((char *)entries.bulkentries_val);
 	    } else if (!strcmp(oper, "lan2")) {
-		int nentries, i, si, nsi, t=0;
+		int nentries, i, si, nsi, t = 0;
 		nbulkentries entries;
 		struct nvldbentry *entry;
 		char name[64];
 
 		/* The volume name to search for (supports wildcarding) */
 		if (nargs > 0) {
-		   strcpy(name,argp[0]);
-		   ++argp, --nargs;
+		    strcpy(name, argp[0]);
+		    ++argp, --nargs;
 		} else {
-		   strcpy(name,"");
+		    strcpy(name, "");
 		}
-		
+
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
 		printf("Wildcard VolName: '%s'\n", name);
 
-		for (si=0; si!=-1; si=nsi) {
-		   nentries = 0;
-		   memset(&entries, 0, sizeof(entries));
-		   code = ubik_Call(VL_ListAttributesN2, cstruct, 0, 
-				    &listbyattributes, name, si, 
-				    &nentries, &entries, &nsi);
-		   if (code) {
-		      printf("VL_ListAttributesN2 returned code = %d\n", code);
-		      break;
-		   }
+		for (si = 0; si != -1; si = nsi) {
+		    nentries = 0;
+		    memset(&entries, 0, sizeof(entries));
+		    code =
+			ubik_Call(VL_ListAttributesN2, cstruct, 0,
+				  &listbyattributes, name, si, &nentries,
+				  &entries, &nsi);
+		    if (code) {
+			printf("VL_ListAttributesN2 returned code = %d\n",
+			       code);
+			break;
+		    }
 
-		   t += nentries;
-		   entry = (struct nvldbentry *)entries.nbulkentries_val;
-		   for (i=0; i < nentries; i++, entry++)
-		      display_entryN(entry, 0);
-		   if (entries.nbulkentries_val) free((char *)entries.nbulkentries_val);
+		    t += nentries;
+		    entry = (struct nvldbentry *)entries.nbulkentries_val;
+		    for (i = 0; i < nentries; i++, entry++)
+			display_entryN(entry, 0);
+		    if (entries.nbulkentries_val)
+			free((char *)entries.nbulkentries_val);
 		}
 		printf("--- %d volumes ---\n", t);
 	    } else if (!strcmp(oper, "ln")) {
@@ -595,16 +700,18 @@ static handleit(as)
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
 		memset(&linkedvldbs, 0, sizeof(vldb_list));
-		code = ubik_Call(VL_LinkedList, cstruct, 0, &listbyattributes,
-				 &netries, &linkedvldbs);
+		code =
+		    ubik_Call(VL_LinkedList, cstruct, 0, &listbyattributes,
+			      &netries, &linkedvldbs);
 		if (code) {
 		    printf("VL_LinkedList returned code = %d\n", code);
 		    continue;
 		}
-		printf("Found %d entr%s\n", netries, (netries==1?"y":"ies"));
+		printf("Found %d entr%s\n", netries,
+		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);		    
+		    display_entry(&vllist->VldbEntry, 0);
 		    free((char *)vllist);
 		}
 	    } else if (!strcmp(oper, "lnn")) {
@@ -615,95 +722,120 @@ static handleit(as)
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
 		memset(&linkedvldbs, 0, sizeof(vldb_list));
-		code = ubik_Call(VL_LinkedListN, cstruct, 0, &listbyattributes,
-				 &netries, &linkedvldbs);
+		code =
+		    ubik_Call(VL_LinkedListN, cstruct, 0, &listbyattributes,
+			      &netries, &linkedvldbs);
 		if (code) {
 		    printf("VL_LinkedList returned code = %d\n", code);
 		    continue;
 		}
-		printf("Found %d entr%s\n", netries, (netries==1?"y":"ies"));
+		printf("Found %d entr%s\n", netries,
+		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);		    
+		    display_entry(&vllist->VldbEntry, 0);
 		    free((char *)vllist);
 		}
-	     } else if (!strcmp(oper,"di")) {
-		 sscanf(&(*argp)[0], "%d", &id);
-		 ++argp, --nargs;
-		 sscanf(&(*argp)[0], "%d", &voltype);
-		 code = ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype, &entry);
-		 display_entry(&entry, code);
-		 printf("return code is %d.\n",code);
-	     } else if (!strcmp(oper,"rmnh")) {
-		 sscanf(&(*argp)[0], "%d", &id);
-		 ++argp, --nargs;
-		 sscanf(&(*argp)[0], "%d", &voltype);
-		 code = ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype, &entry);
-		 display_entry(&entry, code);
-		 memset(&updateentry, 0, sizeof(updateentry));
-		 updateentry.Mask = VLUPDATE_VOLNAMEHASH;
-		 printf("\tRehashing namehash table for %s (%d)\n", entry.name, entry.volumeId[RWVOL]);
-		 code = ubik_Call(VL_UpdateEntry, cstruct, 0, entry.volumeId[RWVOL], -1, &updateentry, 0);
-		 if (code) {
-		     printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-		 }
-		 printf("return code is %d.\n",code);
-	     } else if (!strcmp(oper,"undelete")) {
-		 afs_int32 index, count, next_index;
+	    } else if (!strcmp(oper, "di")) {
+		sscanf(&(*argp)[0], "%d", &id);
+		++argp, --nargs;
+		sscanf(&(*argp)[0], "%d", &voltype);
+		code =
+		    ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype,
+			      &entry);
+		display_entry(&entry, code);
+		printf("return code is %d.\n", code);
+	    } else if (!strcmp(oper, "rmnh")) {
+		sscanf(&(*argp)[0], "%d", &id);
+		++argp, --nargs;
+		sscanf(&(*argp)[0], "%d", &voltype);
+		code =
+		    ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype,
+			      &entry);
+		display_entry(&entry, code);
+		memset(&updateentry, 0, sizeof(updateentry));
+		updateentry.Mask = VLUPDATE_VOLNAMEHASH;
+		printf("\tRehashing namehash table for %s (%d)\n", entry.name,
+		       entry.volumeId[RWVOL]);
+		code =
+		    ubik_Call(VL_UpdateEntry, cstruct, 0,
+			      entry.volumeId[RWVOL], -1, &updateentry, 0);
+		if (code) {
+		    printf("\tFailed to update volume %s (err=%d)\n",
+			   entry.name, code);
+		}
+		printf("return code is %d.\n", code);
+	    } else if (!strcmp(oper, "undelete")) {
+		afs_int32 index, count, next_index;
 
-		 memset(&updateentry, 0, sizeof(updateentry));
-		 sscanf(&(*argp)[0], "%d", &id);
-		 ++argp, --nargs;
-		 sscanf(&(*argp)[0], "%d", &voltype);
-		 if (voltype < 0 && voltype > 2) {
-		     printf("Illegal voltype; must be 0, 1 or 2\n");
-		     continue;
-		 }
-		 printf("Searching vldb for volume %d...\n", id);
-		 for (index = 0; 1; index = next_index) {
-		     memset(&entry, 0, sizeof(entry));
-		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
-		     if (code) {
-			 printf("VL_ListEntry returned code = %d\n", code);
-			 break;
-		     }
-		     if (!next_index) break;
-		     if (entry.volumeId[voltype] == id) {
-			 printf("\nThe current contents of the vldb for %d:\n", id);
-			 display_entry(&entry, 0);
+		memset(&updateentry, 0, sizeof(updateentry));
+		sscanf(&(*argp)[0], "%d", &id);
+		++argp, --nargs;
+		sscanf(&(*argp)[0], "%d", &voltype);
+		if (voltype < 0 && voltype > 2) {
+		    printf("Illegal voltype; must be 0, 1 or 2\n");
+		    continue;
+		}
+		printf("Searching vldb for volume %d...\n", id);
+		for (index = 0; 1; index = next_index) {
+		    memset(&entry, 0, sizeof(entry));
+		    code =
+			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+				  &next_index, &entry);
+		    if (code) {
+			printf("VL_ListEntry returned code = %d\n", code);
+			break;
+		    }
+		    if (!next_index)
+			break;
+		    if (entry.volumeId[voltype] == id) {
+			printf("\nThe current contents of the vldb for %d:\n",
+			       id);
+			display_entry(&entry, 0);
 
-			 if (entry.flags & VLDELETED) {
-			     updateentry.Mask = VLUPDATE_FLAGS;
-			     updateentry.flags = entry.flags;
-			     updateentry.flags &= ~VLDELETED;
-			     printf("\tUndeleting vldb entry for vol %d (%s)\n", id, entry.name);
-			     code = ubik_Call(VL_UpdateEntry, cstruct, 0, id, -1, &updateentry, 0);
-			     if (code) {
-				 printf("\tFailed to update volume %s (err=%d)\n", entry.name, code);
-			     }			 
-			 } else {
-			     printf("Entry not deleted; ignored\n");
-			 }
-			 break;
-		     }
-		 }
-	     } else if (!strcmp(oper,"dn")) {
-		 vname = &argp[0][0];
-		 code = ubik_Call(VL_GetEntryByNameO,cstruct,0,vname, &entry);
-		 display_entry(&entry, code);
-		 printf("return code is %d.\n",code);
-	     } else if (!strcmp(oper, "nv")) {
-		 int newvolid;
-		 sscanf(&(*argp)[0], "%d", &id);
-		 code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, id, &newvolid);
-		 if (!code) printf("Current Max volid is (in hex):%X\n", newvolid);
-		 printf("return code is %d\n", code);
-	     } else if (!strcmp(oper, "gs")) {
-		 vldstats stats;
-		 vital_vlheader vital_header;
-		 code = ubik_Call(VL_GetStats, cstruct, 0, &stats, &vital_header);
-		 if (!code) dump_stats(&stats, &vital_header);
-		 printf("return code is %d.\n", code);
+			if (entry.flags & VLDELETED) {
+			    updateentry.Mask = VLUPDATE_FLAGS;
+			    updateentry.flags = entry.flags;
+			    updateentry.flags &= ~VLDELETED;
+			    printf
+				("\tUndeleting vldb entry for vol %d (%s)\n",
+				 id, entry.name);
+			    code =
+				ubik_Call(VL_UpdateEntry, cstruct, 0, id, -1,
+					  &updateentry, 0);
+			    if (code) {
+				printf
+				    ("\tFailed to update volume %s (err=%d)\n",
+				     entry.name, code);
+			    }
+			} else {
+			    printf("Entry not deleted; ignored\n");
+			}
+			break;
+		    }
+		}
+	    } else if (!strcmp(oper, "dn")) {
+		vname = &argp[0][0];
+		code =
+		    ubik_Call(VL_GetEntryByNameO, cstruct, 0, vname, &entry);
+		display_entry(&entry, code);
+		printf("return code is %d.\n", code);
+	    } else if (!strcmp(oper, "nv")) {
+		int newvolid;
+		sscanf(&(*argp)[0], "%d", &id);
+		code =
+		    ubik_Call(VL_GetNewVolumeId, cstruct, 0, id, &newvolid);
+		if (!code)
+		    printf("Current Max volid is (in hex):%X\n", newvolid);
+		printf("return code is %d\n", code);
+	    } else if (!strcmp(oper, "gs")) {
+		vldstats stats;
+		vital_vlheader vital_header;
+		code =
+		    ubik_Call(VL_GetStats, cstruct, 0, &stats, &vital_header);
+		if (!code)
+		    dump_stats(&stats, &vital_header);
+		printf("return code is %d.\n", code);
 	    } else if (!strcmp(oper, "ga")) {
 		int nentries, i;
 		afs_uint32 *addrp;
@@ -712,18 +844,21 @@ static handleit(as)
 
 		addrs.bulkaddrs_val = 0;
 		addrs.bulkaddrs_len = 0;
-		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle*/, 0 /*spare2*/, &vlcb,
+		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle */ ,
+				 0 /*spare2 */ , &vlcb,
 				 &nentries, &addrs);
 		if (code) {
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
 		addrp = addrs.bulkaddrs_val;
-		for (i=0; i < nentries; i++, addrp++) {
+		for (i = 0; i < nentries; i++, addrp++) {
 		    if ((*addrp & 0xff000000) == 0xff000000)
-			printf ("[0x%x %u] (special multi-homed entry)\n", *addrp, *addrp);
+			printf("[0x%x %u] (special multi-homed entry)\n",
+			       *addrp, *addrp);
 		    else
-			printf ("[0x%x %u] %s\n", *addrp, *addrp, hostutil_GetNameByINet(ntohl(*addrp)));
+			printf("[0x%x %u] %s\n", *addrp, *addrp,
+			       hostutil_GetNameByINet(ntohl(*addrp)));
 		}
 		free((char *)addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "gau")) {
@@ -734,142 +869,161 @@ static handleit(as)
 
 		addrs.bulkaddrs_val = 0;
 		addrs.bulkaddrs_len = 0;
-		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle*/, 0 /*spare2*/, &vlcb,
+		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle */ ,
+				 0 /*spare2 */ , &vlcb,
 				 &nentries, &addrs);
 		if (code) {
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
 		addrp = addrs.bulkaddrs_val;
-		for (i=0; i < nentries; i++, addrp++) {
-		   if ((*addrp & 0xff000000) == 0xff000000) {
-		       int mhnentries, unique;
-		       struct in_addr hostAddr;
-		       afs_uint32 *mhaddrp;
-		       bulkaddrs mhaddrs;
-		       ListAddrByAttributes attrs;
-		       afsUUID uuid;
+		for (i = 0; i < nentries; i++, addrp++) {
+		    if ((*addrp & 0xff000000) == 0xff000000) {
+			int mhnentries, unique;
+			struct in_addr hostAddr;
+			afs_uint32 *mhaddrp;
+			bulkaddrs mhaddrs;
+			ListAddrByAttributes attrs;
+			afsUUID uuid;
 
-		       printf ("[0x%x %u] (special multi-homed entry)\n", *addrp, *addrp);
-		       attrs.Mask = VLADDR_INDEX;
-		       mhaddrs.bulkaddrs_val = 0;
-		       mhaddrs.bulkaddrs_len = 0;
-		       attrs.index = *addrp & 0x00ffffff;
+			printf("[0x%x %u] (special multi-homed entry)\n",
+			       *addrp, *addrp);
+			attrs.Mask = VLADDR_INDEX;
+			mhaddrs.bulkaddrs_val = 0;
+			mhaddrs.bulkaddrs_len = 0;
+			attrs.index = *addrp & 0x00ffffff;
 
-		       code = ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid, &unique, &mhnentries, &mhaddrs);
-		       if (code) {
-			  printf("VL_GetAddrsU returned code = %d\n", code);
-			  continue;
-		       }
-		       printf("   [%d]: uuid[%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x]\n   addrunique=%d, ip address(es):\n", attrs.index, uuid.time_low,
-			      uuid.time_mid, uuid.time_hi_and_version, uuid.clock_seq_hi_and_reserved, uuid.clock_seq_low,
-			      uuid.node[0], uuid.node[1], uuid.node[2], uuid.node[3], uuid.node[4], uuid.node[5], unique);
-		       mhaddrp = mhaddrs.bulkaddrs_val;
-		       for (j=0; j<mhnentries; j++) {
-			  mhaddrp[j] = ntohl(mhaddrp[j]);
-			  hostAddr.s_addr = mhaddrp[j];
-			  printf ("\t%s (%s)\n", inet_ntoa(hostAddr), hostutil_GetNameByINet(mhaddrp[j]));
-		       }
-		       if (mhaddrs.bulkaddrs_val) free((char *)mhaddrs.bulkaddrs_val);
-		   } else {
-		        printf ("[0x%x %u] %s\n", *addrp, *addrp, hostutil_GetNameByINet(ntohl(*addrp)));
-		   }
+			code =
+			    ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid,
+				      &unique, &mhnentries, &mhaddrs);
+			if (code) {
+			    printf("VL_GetAddrsU returned code = %d\n", code);
+			    continue;
+			}
+			printf
+			    ("   [%d]: uuid[%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x]\n   addrunique=%d, ip address(es):\n",
+			     attrs.index, uuid.time_low, uuid.time_mid,
+			     uuid.time_hi_and_version,
+			     uuid.clock_seq_hi_and_reserved,
+			     uuid.clock_seq_low, uuid.node[0], uuid.node[1],
+			     uuid.node[2], uuid.node[3], uuid.node[4],
+			     uuid.node[5], unique);
+			mhaddrp = mhaddrs.bulkaddrs_val;
+			for (j = 0; j < mhnentries; j++) {
+			    mhaddrp[j] = ntohl(mhaddrp[j]);
+			    hostAddr.s_addr = mhaddrp[j];
+			    printf("\t%s (%s)\n", inet_ntoa(hostAddr),
+				   hostutil_GetNameByINet(mhaddrp[j]));
+			}
+			if (mhaddrs.bulkaddrs_val)
+			    free((char *)mhaddrs.bulkaddrs_val);
+		    } else {
+			printf("[0x%x %u] %s\n", *addrp, *addrp,
+			       hostutil_GetNameByINet(ntohl(*addrp)));
+		    }
 		}
 		free((char *)addrs.bulkaddrs_val);
 	    } else if (!strcmp(oper, "mhc")) {
-	       afs_int32 serveraddrs[MAXSERVERID+1][VL_MAXIPADDRS_PERMH];
-	       afs_int32 serveraddrtype[MAXSERVERID+1];
-	       int nentries1, nentries2, i, j, x, y, unique, found;
-	       afs_uint32 *addrp1, *addrp2;
-	       bulkaddrs addrs1, addrs2;
-	       struct VLCallBack vlcb;
-	       ListAddrByAttributes attrs;
-	       afsUUID uuid;
-	       afs_int32 base, index;
+		afs_int32 serveraddrs[MAXSERVERID + 1][VL_MAXIPADDRS_PERMH];
+		afs_int32 serveraddrtype[MAXSERVERID + 1];
+		int nentries1, nentries2, i, j, x, y, unique, found;
+		afs_uint32 *addrp1, *addrp2;
+		bulkaddrs addrs1, addrs2;
+		struct VLCallBack vlcb;
+		ListAddrByAttributes attrs;
+		afsUUID uuid;
+		afs_int32 base, index;
 
-	       for (i=0; i<MAXSERVERID+1; i++) {
-		  serveraddrtype[i] = 0;
-		  for (j=0; j<VL_MAXIPADDRS_PERMH; j++)
-		     serveraddrs[i][j] = 0;
-	       }
+		for (i = 0; i < MAXSERVERID + 1; i++) {
+		    serveraddrtype[i] = 0;
+		    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++)
+			serveraddrs[i][j] = 0;
+		}
 
-	       /* Collect a list of all registered IP addresses */
-	       addrs1.bulkaddrs_val = 0;
-	       addrs1.bulkaddrs_len = 0;
-	       code = ubik_Call(VL_GetAddrs, cstruct, 0, 0, 
-				0, &vlcb, &nentries1, &addrs1);
+		/* Collect a list of all registered IP addresses */
+		addrs1.bulkaddrs_val = 0;
+		addrs1.bulkaddrs_len = 0;
+		code =
+		    ubik_Call(VL_GetAddrs, cstruct, 0, 0, 0, &vlcb,
+			      &nentries1, &addrs1);
 		if (code) {
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
 		addrp1 = addrs1.bulkaddrs_val;
-		for (i=0; i < nentries1; i++, addrp1++) {
+		for (i = 0; i < nentries1; i++, addrp1++) {
 		    if ((*addrp1 & 0xff000000) != 0xff000000) {
-		       serveraddrs[i][0] = ntohl(*addrp1);
-		       serveraddrtype[i] = 1;
+			serveraddrs[i][0] = ntohl(*addrp1);
+			serveraddrtype[i] = 1;
 		    } else {
-		       /* It's multihomed. Get all of its addresses */
-		       serveraddrtype[i] = 2;
-		       base  = (*addrp1 >> 16) & 0xff;
-		       index = *addrp1 & 0xffff;
+			/* It's multihomed. Get all of its addresses */
+			serveraddrtype[i] = 2;
+			base = (*addrp1 >> 16) & 0xff;
+			index = *addrp1 & 0xffff;
 
-		       addrs2.bulkaddrs_val = 0;
-		       addrs2.bulkaddrs_len = 0;
-		       attrs.Mask = VLADDR_INDEX;
-		       attrs.index = (base * VL_MHSRV_PERBLK) + index;
-		       code = ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs,
-					&uuid, &unique, &nentries2, &addrs2);
-		       if (code) {
-			  printf("VL_GetAddrsU returned code = %d\n", code);
-			  break;
-		       }
+			addrs2.bulkaddrs_val = 0;
+			addrs2.bulkaddrs_len = 0;
+			attrs.Mask = VLADDR_INDEX;
+			attrs.index = (base * VL_MHSRV_PERBLK) + index;
+			code =
+			    ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid,
+				      &unique, &nentries2, &addrs2);
+			if (code) {
+			    printf("VL_GetAddrsU returned code = %d\n", code);
+			    break;
+			}
 
-		       addrp2 = addrs2.bulkaddrs_val;
-		       for (j=0; j<nentries2; j++) {
-			  serveraddrs[i][j] = ntohl(addrp2[j]);
-		       }
-		       free((char *)addrs2.bulkaddrs_val);
+			addrp2 = addrs2.bulkaddrs_val;
+			for (j = 0; j < nentries2; j++) {
+			    serveraddrs[i][j] = ntohl(addrp2[j]);
+			}
+			free((char *)addrs2.bulkaddrs_val);
 		    }
 
 		    if (nargs) {
-		       if (serveraddrtype[i] == 1) {
-			  printf ("%u\n", serveraddrs[i][0]);
-		       } else {
-			  printf ("[");
-			  for (j=0; j<VL_MAXIPADDRS_PERMH; j++)
-			     if (serveraddrs[i][j])
-			        printf(" %u", serveraddrs[i][j]);
-			  printf (" ]\n");
-		       }
+			if (serveraddrtype[i] == 1) {
+			    printf("%u\n", serveraddrs[i][0]);
+			} else {
+			    printf("[");
+			    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++)
+				if (serveraddrs[i][j])
+				    printf(" %u", serveraddrs[i][j]);
+			    printf(" ]\n");
+			}
 		    }
 		}
 		free((char *)addrs1.bulkaddrs_val);
 
-	       /* Look for any duplicates */
-	       for (i=0; i<MAXSERVERID+1; i++) {
-		  if (!serveraddrtype[i]) continue;
-		  for (j=0; j<VL_MAXIPADDRS_PERMH; j++) {
-		     if (!serveraddrs[i][j]) continue;
-		     
-		     found = 0;
-		     for (x=i+1; x<MAXSERVERID+1; x++) {
-		        if (!serveraddrtype[x]) continue;
-			for (y=0; y<VL_MAXIPADDRS_PERMH; y++) {
-			   if (!serveraddrs[x][y]) continue;
-			   if (serveraddrs[i][j] == serveraddrs[x][y]) {
-			      serveraddrs[x][y] = 0;
-			      found++;
-			   }
+		/* Look for any duplicates */
+		for (i = 0; i < MAXSERVERID + 1; i++) {
+		    if (!serveraddrtype[i])
+			continue;
+		    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
+			if (!serveraddrs[i][j])
+			    continue;
+
+			found = 0;
+			for (x = i + 1; x < MAXSERVERID + 1; x++) {
+			    if (!serveraddrtype[x])
+				continue;
+			    for (y = 0; y < VL_MAXIPADDRS_PERMH; y++) {
+				if (!serveraddrs[x][y])
+				    continue;
+				if (serveraddrs[i][j] == serveraddrs[x][y]) {
+				    serveraddrs[x][y] = 0;
+				    found++;
+				}
+			    }
 			}
-		     }
-		     if (found) {
-		        printf("Found %d entries of IP address %u (0x%x)\n",
-			       found+1,
-			       serveraddrs[i][j], serveraddrs[i][j]);
-		     }
-		  }
-	       }
-	       
+			if (found) {
+			    printf
+				("Found %d entries of IP address %u (0x%x)\n",
+				 found + 1, serveraddrs[i][j],
+				 serveraddrs[i][j]);
+			}
+		    }
+		}
+
 	       /*----------------------------------------*/
 
 	    } else if (!strcmp(oper, "regaddr")) {
@@ -895,59 +1049,65 @@ static handleit(as)
 		    *addrp++ = tad;
 		    ++argp, --nargs;
 		}
-		code = ubik_Call(VL_RegisterAddrs, cstruct, 0, &uuid, 0 /*spare*/, &addrs);
+		code =
+		    ubik_Call(VL_RegisterAddrs, cstruct, 0, &uuid,
+			      0 /*spare */ , &addrs);
 		if (code) {
 		    printf("VL_RegisterAddrs returned code = %d\n", code);
 		    continue;
 		}
-	     } else if (!strcmp(oper,"ca")) {
-	       extern struct hostent *hostutil_GetHostByName();
-	       struct hostent *h1, *h2;
-	       afs_uint32 a1, a2;
+	    } else if (!strcmp(oper, "ca")) {
+		extern struct hostent *hostutil_GetHostByName();
+		struct hostent *h1, *h2;
+		afs_uint32 a1, a2;
 
-	       printf("changing %s", *argp);
-	       h1 = hostutil_GetHostByName(&(*argp)[0]);
-	       if (!h1) {
-		 printf("cmdebug: can't resolve address for host %s");
-		 continue;
-	       }
-	       memcpy(&a1, (afs_int32 *)h1->h_addr, sizeof(afs_uint32));
+		printf("changing %s", *argp);
+		h1 = hostutil_GetHostByName(&(*argp)[0]);
+		if (!h1) {
+		    printf("cmdebug: can't resolve address for host %s",
+			   *argp);
+		    continue;
+		}
+		memcpy(&a1, (afs_int32 *) h1->h_addr, sizeof(afs_uint32));
 
-	       ++argp, --nargs;
-	       printf(" to %s\n", *argp);
-	       h2 = hostutil_GetHostByName(&(*argp)[0]);
-	       if (!h2) {
-		 printf("cmdebug: can't resolve address for host %s", *argp);
-		 continue;
-	       }
-	       memcpy(&a2, (afs_int32 *)h2->h_addr, sizeof(afs_uint32));
+		++argp, --nargs;
+		printf(" to %s\n", *argp);
+		h2 = hostutil_GetHostByName(&(*argp)[0]);
+		if (!h2) {
+		    printf("cmdebug: can't resolve address for host %s",
+			   *argp);
+		    continue;
+		}
+		memcpy(&a2, (afs_int32 *) h2->h_addr, sizeof(afs_uint32));
 
-	       printf("changing 0x%x to 0x%x\n", ntohl(a1), ntohl(a2));
-	       code = ubik_Call(VL_ChangeAddr, cstruct, 0, ntohl(a1), ntohl(a2));
-	       if (code) {
-		 printf("VL_ChangeAddr returned code = %d\n", code);
-		 continue;
-	       }
-	     } else if (!strcmp(oper,"caid")) {
-	       afs_uint32 a1, a2;
+		printf("changing 0x%x to 0x%x\n", ntohl(a1), ntohl(a2));
+		code =
+		    ubik_Call(VL_ChangeAddr, cstruct, 0, ntohl(a1),
+			      ntohl(a2));
+		if (code) {
+		    printf("VL_ChangeAddr returned code = %d\n", code);
+		    continue;
+		}
+	    } else if (!strcmp(oper, "caid")) {
+		afs_uint32 a1, a2;
 
-	       sscanf(&(*argp)[0], "%d", &a1);
-	       printf("changing %d (0x%x)", a1, a1);
-	       ++argp, --nargs;
-	       sscanf(&(*argp)[0], "%d", &a2);
-	       printf(" to %d (0x%x)\n", a2, a2);
-	       code = ubik_Call(VL_ChangeAddr, cstruct, 0, a1, a2);
-	       if (code) {
-		 printf("VL_ChangeAddr returned code = %d\n", code);
-		 continue;
-	       }
-	     } else if ((!strcmp(oper,"?")) || !strcmp(oper,"h"))
-		 print_usage();
-	     else if ((!strcmp(oper,"q")) || !strcmp(oper, "quit")) 
-		 exit(0);
-	     else {
-		 printf("Unknown oper!\n");
-	     }
+		sscanf(&(*argp)[0], "%d", &a1);
+		printf("changing %d (0x%x)", a1, a1);
+		++argp, --nargs;
+		sscanf(&(*argp)[0], "%d", &a2);
+		printf(" to %d (0x%x)\n", a2, a2);
+		code = ubik_Call(VL_ChangeAddr, cstruct, 0, a1, a2);
+		if (code) {
+		    printf("VL_ChangeAddr returned code = %d\n", code);
+		    continue;
+		}
+	    } else if ((!strcmp(oper, "?")) || !strcmp(oper, "h"))
+		print_usage();
+	    else if ((!strcmp(oper, "q")) || !strcmp(oper, "quit"))
+		exit(0);
+	    else {
+		printf("Unknown oper!\n");
+	    }
 	}
     }
 }
@@ -956,20 +1116,26 @@ static handleit(as)
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-    int argc;
-    char **argv;
+     int argc;
+     char **argv;
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     ts = cmd_CreateSyntax("initcmd", handleit, 0, "initialize the program");
-    cmd_AddParm(ts, "-cellpath", CMD_LIST, CMD_OPTIONAL, "Cell configuration directory");
-    cmd_AddParm(ts, "-server", CMD_LIST, CMD_OPTIONAL, "Use the cell config in /usr/afs/etc (default /usr/vice/etc)");
-    cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "Run it without authentication");
-    cmd_AddParm(ts, "-host", CMD_LIST, CMD_OPTIONAL, "vldb server to talk to");
-    cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cellname '-host' belongs to (required for auth conns)");
-    cmd_AddParm(ts, "-getstats", CMD_FLAG, CMD_OPTIONAL, "print vldb statistics (non interactive)");
+    cmd_AddParm(ts, "-cellpath", CMD_LIST, CMD_OPTIONAL,
+		"Cell configuration directory");
+    cmd_AddParm(ts, "-server", CMD_LIST, CMD_OPTIONAL,
+		"Use the cell config in /usr/afs/etc (default /usr/vice/etc)");
+    cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL,
+		"Run it without authentication");
+    cmd_AddParm(ts, "-host", CMD_LIST, CMD_OPTIONAL,
+		"vldb server to talk to");
+    cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL,
+		"cellname '-host' belongs to (required for auth conns)");
+    cmd_AddParm(ts, "-getstats", CMD_FLAG, CMD_OPTIONAL,
+		"print vldb statistics (non interactive)");
     code = cmd_Dispatch(argc, argv);
     exit(code);
 }
@@ -977,9 +1143,9 @@ main(argc, argv)
 
 void
 fill_entry(entry, argp, nargs)
-struct vldbentry *entry;
-char **argp;
-int nargs;
+     struct vldbentry *entry;
+     char **argp;
+     int nargs;
 {
     char *name;
     int i;
@@ -990,20 +1156,20 @@ int nargs;
     ++argp, --nargs;
     sscanf(&(*argp)[0], "%d", &entry->nServers);
     strcpy(entry->name, name);
-    for (i=0; i < entry->nServers; i++) {
-	++argp, --nargs;	
+    for (i = 0; i < entry->nServers; i++) {
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%u", &entry->serverNumber[i]);
     }
-    for (i=0; i < entry->nServers; i++) {
-	++argp, --nargs;	
+    for (i = 0; i < entry->nServers; i++) {
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%d", &entry->serverPartition[i]);
     }
-    for (i=0; i < entry->nServers; i++) {
-	++argp, --nargs;	
+    for (i = 0; i < entry->nServers; i++) {
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%d", &entry->serverFlags[i]);
     }
-    for (i=0; i < MAXTYPES; i++) {
-	++argp, --nargs;		
+    for (i = 0; i < MAXTYPES; i++) {
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%d", &entry->volumeId[i]);
     }
     ++argp, --nargs;
@@ -1014,9 +1180,9 @@ int nargs;
 
 void
 fill_update_entry(entry, argp, nargs)
-struct VldbUpdateEntry *entry;
-char **argp;
-int nargs;
+     struct VldbUpdateEntry *entry;
+     char **argp;
+     int nargs;
 {
     int i, Mask;
     char *name;
@@ -1047,83 +1213,88 @@ int nargs;
     sscanf(&(*argp)[0], "%d", &entry->nModifiedRepsites);
     if (entry->nModifiedRepsites != -1)
 	entry->Mask |= VLUPDATE_REPSITES;
-    for (i=0; i < entry->nModifiedRepsites; i++) {
-	++argp, --nargs;	
+    for (i = 0; i < entry->nModifiedRepsites; i++) {
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%x", &Mask);
-	++argp, --nargs;	
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%u", &entry->RepsitesTargetServer[i]);
-	++argp, --nargs;	
+	++argp, --nargs;
 	sscanf(&(*argp)[0], "%d", &entry->RepsitesTargetPart[i]);
 	if (Mask & VLUPDATE_REPS_DELETE)
 	    entry->RepsitesMask[i] |= VLUPDATE_REPS_DELETE;
 	if (Mask & VLUPDATE_REPS_MODSERV) {
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%u", &entry->RepsitesNewServer[i]);
 	    entry->RepsitesMask[i] |= VLUPDATE_REPS_MODSERV;
 	} else if (Mask & VLUPDATE_REPS_MODPART) {
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%d", &entry->RepsitesNewPart[i]);
 	    entry->RepsitesMask[i] |= VLUPDATE_REPS_MODPART;
 	} else if (Mask & VLUPDATE_REPS_MODFLAG) {
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%d", &entry->RepsitesNewFlags[i]);
 	    entry->RepsitesMask[i] |= VLUPDATE_REPS_MODFLAG;
 	} else if (Mask & VLUPDATE_REPS_ADD) {
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%u", &entry->RepsitesNewServer[i]);
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%d", &entry->RepsitesNewPart[i]);
-	    ++argp, --nargs;	
+	    ++argp, --nargs;
 	    sscanf(&(*argp)[0], "%d", &entry->RepsitesNewFlags[i]);
 	    entry->RepsitesMask[i] |= VLUPDATE_REPS_ADD;
 	}
     }
- }
+}
 
 void
 fill_listattributes_entry(entry, argp, nargs)
-    struct VldbListByAttributes *entry;
-    char **argp;
-    int nargs;
+     struct VldbListByAttributes *entry;
+     char **argp;
+     int nargs;
 {
     entry->Mask = 0;
 
-    if (nargs <= 0) return;
+    if (nargs <= 0)
+	return;
     entry->server = ntohl(GetServer(argp[0]));
     sscanf(&(*argp)[0], "%d", &entry->server);
     if (entry->server != 0)
 	entry->Mask |= VLLIST_SERVER;
     ++argp, --nargs;
 
-    if (nargs <= 0) return;
+    if (nargs <= 0)
+	return;
     sscanf(&(*argp)[0], "%d", &entry->partition);
     if (entry->partition != -1)
 	entry->Mask |= VLLIST_PARTITION;
     ++argp, --nargs;
 
-    if (nargs <= 0) return;
+    if (nargs <= 0)
+	return;
     sscanf(&(*argp)[0], "%d", &entry->volumeid);
     if (entry->volumeid != -1)
 	entry->Mask |= VLLIST_VOLUMEID;
     ++argp, --nargs;
 
-    if (nargs <= 0) return;
+    if (nargs <= 0)
+	return;
     sscanf(&(*argp)[0], "%d", &entry->flag);
     if (entry->flag != -1)
 	entry->Mask |= VLLIST_FLAG;
- }
+}
 
 void
 display_listattributes_entry(entry, error)
-struct VldbListByAttributes *entry;
-int			    error;
+     struct VldbListByAttributes *entry;
+     int error;
 {
-    if (error) return;
+    if (error)
+	return;
     printf("\nList entry values (Mask=%x)\n", entry->Mask);
     if (entry->Mask & VLLIST_SERVER)
-	printf("\tServer: %d.%d.%d.%d\n", 
-	       (entry->server>>24) & 0xff, (entry->server>>16) & 0xff, 
-	       (entry->server>> 8) & 0xff, (entry->server)     & 0xff);
+	printf("\tServer: %d.%d.%d.%d\n", (entry->server >> 24) & 0xff,
+	       (entry->server >> 16) & 0xff, (entry->server >> 8) & 0xff,
+	       (entry->server) & 0xff);
     if (entry->Mask & VLLIST_PARTITION)
 	printf("\tPartition: %d\n", entry->partition);
     if (entry->Mask & VLLIST_VOLUMEID)
@@ -1137,56 +1308,62 @@ int			    error;
 
 void
 display_entry(entry, error)
-struct vldbentry    *entry;
-int		    error;
+     struct vldbentry *entry;
+     int error;
 {
     int i;
-    
-    if (error) return;
-    printf("\nEntry for volume name: %s, volid=%u (flags=%X) are:\n", entry->name, entry->volumeId[RWVOL], entry->flags);
-    printf("ParentID=%u, ReadOnlyID=%u, backupID=%u, CloneId=%u ",  entry->volumeId[0], entry->volumeId[1], entry->volumeId[2], entry->cloneId);
-    printf("nServers=%d\n",  entry->nServers);
+
+    if (error)
+	return;
+    printf("\nEntry for volume name: %s, volid=%u (flags=%X) are:\n",
+	   entry->name, entry->volumeId[RWVOL], entry->flags);
+    printf("ParentID=%u, ReadOnlyID=%u, backupID=%u, CloneId=%u ",
+	   entry->volumeId[0], entry->volumeId[1], entry->volumeId[2],
+	   entry->cloneId);
+    printf("nServers=%d\n", entry->nServers);
     printf("ServerNumber\tServerPart\tserverFlag\n");
-    for (i=0; i < entry->nServers; i++)
-	printf("%12u\t%10d\t%10x\n", entry->serverNumber[i], entry->serverPartition[i], entry->serverFlags[i]);
+    for (i = 0; i < entry->nServers; i++)
+	printf("%12u\t%10d\t%10x\n", entry->serverNumber[i],
+	       entry->serverPartition[i], entry->serverFlags[i]);
 }
 
 void
 display_entryN(entry, error)
-    struct nvldbentry *entry;
-    int		      error;
+     struct nvldbentry *entry;
+     int error;
 {
     int i, et, ei;
-    
-    if (error) return;
+
+    if (error)
+	return;
     printf("\nEntry for volume name: %s, volid=%u (flags=%X) are:\n",
 	   entry->name, entry->volumeId[RWVOL], entry->flags);
     printf("ParentID=%u, ReadOnlyID=%u, backupID=%u, CloneId=%u ",
-	   entry->volumeId[0], entry->volumeId[1],
-	   entry->volumeId[2], entry->cloneId);
-    printf("nServers=%d\n",  entry->nServers);
+	   entry->volumeId[0], entry->volumeId[1], entry->volumeId[2],
+	   entry->cloneId);
+    printf("nServers=%d\n", entry->nServers);
     printf("ServerNumber\tServerPart\tserverFlag\n");
     ei = entry->matchindex & 0xffff;
     et = (entry->matchindex >> 16) & 0xffff;
-    for (i=0; i < entry->nServers; i++) {
-       printf("%12u\t%10d\t%10x",
-	      entry->serverNumber[i], entry->serverPartition[i],
-	      entry->serverFlags[i]);
-       if (i == ei) {
-	  printf(" <--- %s", (et==4)?"RW":((et==8)?"BK":"RO"));
-       }
-       printf("\n");
-     }
+    for (i = 0; i < entry->nServers; i++) {
+	printf("%12u\t%10d\t%10x", entry->serverNumber[i],
+	       entry->serverPartition[i], entry->serverFlags[i]);
+	if (i == ei) {
+	    printf(" <--- %s", (et == 4) ? "RW" : ((et == 8) ? "BK" : "RO"));
+	}
+	printf("\n");
+    }
 }
 
 void
 display_update_entry(entry, error)
-struct VldbUpdateEntry	*entry;
-int			error;
+     struct VldbUpdateEntry *entry;
+     int error;
 {
     int i;
-    
-    if (error) return;
+
+    if (error)
+	return;
     printf("\nUpdate entry values (Mask=%x)\n", entry->Mask);
     if (entry->Mask & VLUPDATE_VOLUMENAME)
 	printf("\tNew name: %s\n", entry->name);
@@ -1201,17 +1378,22 @@ int			error;
     if (entry->Mask & VLUPDATE_REPSITES) {
 	printf("\tRepsites info:\n");
 	printf("\tFlag\tTServer\tTPart\tNServer\tNPart\tNFlag\n");
-	for (i=0; i < entry->nModifiedRepsites; i++) {
-	    printf("\t%4x\t%7U\t%5d", entry->RepsitesMask[i], entry->RepsitesTargetServer[i], entry->RepsitesTargetPart[i]);
-	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD) || (entry->RepsitesMask[i] & VLUPDATE_REPS_MODSERV))
+	for (i = 0; i < entry->nModifiedRepsites; i++) {
+	    printf("\t%4x\t%7U\t%5d", entry->RepsitesMask[i],
+		   entry->RepsitesTargetServer[i],
+		   entry->RepsitesTargetPart[i]);
+	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
+		|| (entry->RepsitesMask[i] & VLUPDATE_REPS_MODSERV))
 		printf("\t%7U", entry->RepsitesNewServer[i]);
 	    else
 		printf("\t-------");
-	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD) || (entry->RepsitesMask[i] & VLUPDATE_REPS_MODPART))
+	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
+		|| (entry->RepsitesMask[i] & VLUPDATE_REPS_MODPART))
 		printf("\t%5d", entry->RepsitesNewPart[i]);
 	    else
 		printf("\t-----");
-	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD) || (entry->RepsitesMask[i] & VLUPDATE_REPS_MODFLAG))
+	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
+		|| (entry->RepsitesMask[i] & VLUPDATE_REPS_MODFLAG))
 		printf("\t%5x\n", entry->RepsitesNewFlags[i]);
 	    else
 		printf("\t-----\n");
@@ -1221,28 +1403,34 @@ int			error;
 
 void
 dump_stats(stats, vital_header)
-vldstats	*stats;
-vital_vlheader	*vital_header;
-{   int	i;
+     vldstats *stats;
+     vital_vlheader *vital_header;
+{
+    int i;
     char strg[30];
 
-    strncpy(strg, ctime((time_t *)&stats->start_time), sizeof(strg));
-    strg[strlen(strg)-1] = 0;
+    strncpy(strg, ctime((time_t *) & stats->start_time), sizeof(strg));
+    strg[strlen(strg) - 1] = 0;
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");
-    for (i=0; i < VL_NUMBER_OPCODESX; i++)
-	printf("%10s\t%10d\t%8d\n", opcode_names[i], stats->requests[i], stats->aborts[i]);
-    printf("\nVldb header stats (version=%d)\n", ntohl(vital_header->vldbversion));
-    printf("headersize=%d, allocs=%d, frees=%d, MaxVolid=%X\n", ntohl(vital_header->headersize), ntohl(vital_header->allocs), ntohl(vital_header->frees), ntohl(vital_header->MaxVolumeId));
-    for (i=0; i < MAXTYPES; i++)
-	printf("total %s entries=%d\n", volumetype_string(i), ntohl(vital_header->totalEntries[i]));
+    for (i = 0; i < VL_NUMBER_OPCODESX; i++)
+	printf("%10s\t%10d\t%8d\n", opcode_names[i], stats->requests[i],
+	       stats->aborts[i]);
+    printf("\nVldb header stats (version=%d)\n",
+	   ntohl(vital_header->vldbversion));
+    printf("headersize=%d, allocs=%d, frees=%d, MaxVolid=%X\n",
+	   ntohl(vital_header->headersize), ntohl(vital_header->allocs),
+	   ntohl(vital_header->frees), ntohl(vital_header->MaxVolumeId));
+    for (i = 0; i < MAXTYPES; i++)
+	printf("total %s entries=%d\n", volumetype_string(i),
+	       ntohl(vital_header->totalEntries[i]));
 }
 
 void
-GetArgs(line,args, nargs)
-    register char *line;
-    register char **args;
-    register int *nargs;
+GetArgs(line, args, nargs)
+     register char *line;
+     register char **args;
+     register int *nargs;
 {
     *nargs = 0;
     while (*line) {
@@ -1253,7 +1441,7 @@ GetArgs(line,args, nargs)
 	    *last = 0;
 	if (!*line)
 	    break;
-	*args++  = line, (*nargs)++;
+	*args++ = line, (*nargs)++;
 	while (*line && *line != ' ')
 	    line++;
     }
@@ -1265,7 +1453,8 @@ print_usage()
     printf("Valid Commands:\n");
 
     printf("   CreateEntry:\n");
-    printf("\tcr <vname> <vtype> <#S> <Saddr1>.<Saddrn> <Spart1>.<Spartn> <Sflag1>.<Sflagn> <Volid1-3> <flag>\n");
+    printf
+	("\tcr <vname> <vtype> <#S> <Saddr1>.<Saddrn> <Spart1>.<Spartn> <Sflag1>.<Sflagn> <Volid1-3> <flag>\n");
 
     printf("   DeleteEntry:\n");
     printf("\trm <volid> <voltype>\n");
@@ -1274,7 +1463,8 @@ print_usage()
     printf("\tre <volid> <voltype> <New vldb entry ala 'cr'>\n");
 
     printf("   UpdateEntry:\n");
-    printf("\tup <volid> <voltype> <vname> <vtype> <#AddSer> [<Saddr1>.<Saddrn> <Spart1>.<Spartn> <Sflag1>.<Sflagn>] <Volid1-3> <flag>\n");
+    printf
+	("\tup <volid> <voltype> <vname> <vtype> <#AddSer> [<Saddr1>.<Saddrn> <Spart1>.<Spartn> <Sflag1>.<Sflagn>] <Volid1-3> <flag>\n");
 
     printf("   ListEntry:\n");
     printf("\tls\n");
@@ -1285,7 +1475,8 @@ print_usage()
     printf("   For each vlentry, find it by name, RW id, BK id, and RO id\n");
     printf("\tcheckhash\n");
 
-    printf("   UpdateEntry (update the volname, RW id, BK id, RO id hashes):\n");
+    printf
+	("   UpdateEntry (update the volname, RW id, BK id, RO id hashes):\n");
     printf("\tfixhash\n");
 
     printf("   ListAttributes:\n");
