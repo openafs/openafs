@@ -2096,9 +2096,9 @@ static SysNameCmd(as)
 register struct cmd_syndesc *as; {
     register afs_int32 code;
     struct ViceIoctl blob;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char *input = space;
-    afs_int32 setp = 1;
+    afs_int32 setp = 0;
     
     ti = as->parms[0].items;
     if (ti) {
@@ -2113,39 +2113,51 @@ register struct cmd_syndesc *as; {
         return EACCES;
     }
 #endif /* WIN32 */
-    } else {
-        setp = 0;
     }
+
     blob.in = space;
     blob.out = space;
     blob.out_size = MAXSIZE;
     blob.in_size = sizeof(afs_int32);
     memcpy(input, &setp, sizeof(afs_int32));
     input += sizeof(afs_int32);
-    if (ti) {
-	strcpy(input, ti->data);
-	blob.in_size += strlen(ti->data) + 1;
-	input += strlen(ti->data);
-	*(input++) = '\0';
+    for (; ti; ti = ti->next) {
+        setp++;
+        blob.in_size += strlen(ti->data) + 1;
+        if (blob.in_size > MAXSIZE) {
+            fprintf(stderr, "%s: sysname%s too long.\n", pn,
+                     setp > 1 ? "s" : "");
+            return 1;
+        }
+        strcpy(input, ti->data);
+        input += strlen(ti->data);
+        *(input++) = '\0';
     }
+    memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
-	Die(errno, 0);
-	exit(1);
+        Die(errno, 0);
+        return 1;
     }    
     if (setp) {
-	printf("%s: new sysname set.\n", pn);
+        printf("%s: new sysname%s set.\n", pn, setp > 1 ? "s" : "");
+        return 0;
     }
-    else {
+
 	input = space;
 	memcpy(&setp, input, sizeof(afs_int32));
 	input += sizeof(afs_int32);
 	if (!setp) {
 	    fprintf(stderr,"No sysname name value was found\n");
-	} else {
-	    printf("Current sysname is '%s'\n", input);
+        return 1;
+	} 
+    
+    printf("Current sysname%s", setp > 1 ? "s are" : " is");
+    for (; setp > 0; --setp ) {
+        printf(" \'%s\'", input);
+        input += strlen(input) + 1;
 	}
-    }
+    printf("\n");
     return 0;
 }
 

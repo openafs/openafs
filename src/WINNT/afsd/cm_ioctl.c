@@ -1079,7 +1079,6 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     */  
   
     cm_cell_t *cp;
-    cm_cell_t *tcp;
   
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
@@ -1137,30 +1136,94 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long setSysName;
-        char *cp;
+	long setSysName, foundname = 0;
+    char *cp, *cp2, inname[MAXSYSNAME], outname[MAXSYSNAME];
+    int t, count, num = 0;
+    char **sysnamelist[MAXSYSNAME];
         
 	cm_SkipIoctlPath(ioctlp);
 
-        memcpy(&setSysName, ioctlp->inDatap, sizeof(long));
-        ioctlp->inDatap += sizeof(long);
+    memcpy(&setSysName, ioctlp->inDatap, sizeof(long));
+    ioctlp->inDatap += sizeof(long);
         
-        if (setSysName) {
-		strcpy(cm_sysName, ioctlp->inDatap);
+    if (setSysName) {
+        /* check my args */
+        if ( setSysName < 0 || setSysName > MAXNUMSYSNAMES )
+            return EINVAL;
+        cp2 = ioctlp->inDatap;
+        for ( cp=ioctlp->inDatap, count = 0; count < setSysName; count++ ) {
+            /* won't go past end of ioctlp->inDatap since maxsysname*num < ioctlp->inDatap length */
+            t = strlen(cp);
+            if (t >= MAXSYSNAME || t <= 0)
+                return EINVAL;
+            /* check for names that can shoot us in the foot */
+            if (*cp == '.' && (cp[1] == 0 || (cp[1] == '.' && cp[2] == 0)))
+                return EINVAL;
+            cp += t + 1;
         }
-        else {
+        /* args ok */
+
+        /* inname gets first entry in case we're being a translator */
+        /* (we are never a translator) */
+        t = strlen(ioctlp->inDatap);
+        memcpy(inname, ioctlp->inDatap, t + 1);
+        ioctlp->inDatap += t + 1;
+        num = count;
+    }
+
+    /* Not xlating, so local case */
+    if (!cm_sysName)
+        osi_panic("cm_IoctlSysName: !cm_sysName\n", __FILE__, __LINE__);
+
+    if (!setSysName) {      /* user just wants the info */
+        strcpy(outname, cm_sysName);
+        foundname = cm_sysNameCount;
+        *sysnamelist = cm_sysNameList;
+    } else {                /* Local guy; only root can change sysname */
+        /* clear @sys entries from the dnlc, once afs_lookup can
+         * do lookups of @sys entries and thinks it can trust them */
+        /* privs ok, store the entry, ... */
+        strcpy(cm_sysName, inname);
+        if (setSysName > 1) {       /* ... or list */
+            cp = ioctlp->inDatap;
+            for (count = 1; count < setSysName; ++count) {
+                if (!cm_sysNameList[count])
+                    osi_panic
+                        ("cm_IoctlSysName: no cm_sysNameList entry to write\n"
+                          , __FILE__, __LINE__);
+                t = strlen(cp);
+                memcpy(cm_sysNameList[count], cp, t + 1);  /* include null */
+                cp += t + 1;
+            }
+        }
+        cm_sysNameCount = setSysName;
+    }
+
+    if (!setSysName) {
 		/* return the sysname to the caller */
-                setSysName = 1;	/* really means "found sys name */
 		cp = ioctlp->outDatap;
-                memcpy(cp, &setSysName, sizeof(long));
-                cp += sizeof(long);	/* skip found flag */
-                strcpy(cp, cm_sysName);
-                cp += strlen(cp) + 1;	/* skip name and terminating null char */
-                ioctlp->outDatap = cp;
+        memcpy(cp, (char *)&foundname, sizeof(afs_int32));
+        cp += sizeof(afs_int32);	/* skip found flag */
+        if (foundname) {
+            strcpy(cp, outname);
+            cp += strlen(outname) + 1;	/* skip name and terminating null char */
+            for ( count=1; count < foundname ; ++count) {   /* ... or list */
+                if ( !(*sysnamelist)[count] )
+                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n"
+                               , __FILE__, __LINE__);
+                t = strlen((*sysnamelist)[count]);
+                if (t >= MAXSYSNAME)
+                    osi_panic("cm_IoctlSysName: sysname entry garbled\n"
+                               , __FILE__, __LINE__);
+                strcpy(cp, (*sysnamelist)[count]);
+                cp += t + 1;
+            }
         }
+        ioctlp->outDatap = cp;
+    }
         
 	/* done: success */
-        return 0;
+    return 0;
 }
 
 long cm_IoctlGetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)

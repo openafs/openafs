@@ -34,8 +34,6 @@ extern void afsi_log(char *pattern, ...);
 
 unsigned int cm_mountRootGen = 0;
 
-char cm_sysName[100];
-
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
  * I do not know anything more about it.
@@ -943,24 +941,24 @@ done:
 int cm_ExpandSysName(char *inp, char *outp, long outSize)
 {
 	char *tp;
-        int prefixCount;
-        
-        tp = strrchr(inp, '@');
-        if (tp == NULL) return 0;		/* no @sys */
-        
-        if (strcmp(tp, "@sys") != 0) return 0;	/* no @sys */
-        
+    int prefixCount;
+
+    tp = strrchr(inp, '@');
+    if (tp == NULL) return 0;		/* no @sys */
+
+    if (strcmp(tp, "@sys") != 0) return 0;	/* no @sys */
+
 	/* caller just wants to know if this is a valid @sys type of name */
 	if (outp == NULL) return 1;
 
 	/* otherwise generate the properly expanded @sys name */
-        prefixCount = tp - inp;
-        
-        strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
-        outp[prefixCount] = 0;			/* null terminate the "a." */
-        strcat(outp, cm_sysName);		/* append i386_nt40 */
-        return 1;
-}
+    prefixCount = tp - inp;
+
+    strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
+    outp[prefixCount] = 0;			/* null terminate the "a." */
+    strcat(outp, cm_sysName);		/* append i386_nt40 */
+    return 1;
+}   
 
 long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 	cm_req_t *reqp, cm_scache_t **outpScpp)
