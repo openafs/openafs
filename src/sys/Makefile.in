@@ -36,12 +36,21 @@ SFLAGS=-P -I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 UKSRCS=afsl.exp
 
+PICTARGET =../pic/sys
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
+$(PICTARGET)/%.o: %.c $(PICTARGET)
+	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+$(PICTARGET):
+	mkdir -p $(PICTARGET)
+
+
 OBJECTS= afssyscalls.o syscall.o
 RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
 
 include ../config/Makefile.version
 
-all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall
+all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall $(PICOBJS)
 	case "${SYS_NAME}" in \
 	rs_aix*)			\
 		${INSTALL} afs.exp ${TOP_LIBDIR};;	\
@@ -206,7 +215,7 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
-	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
+	rmtsysd AFS_component_version_number.c pagsh pagsh.krb $(PICTARGET)/*.o
 ${DEST}/lib/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
 

@@ -61,7 +61,7 @@ clean:
 	# Add here commands to clean up after the build process.
 	-$(MAKE) -ki distclean
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
-	-rm -rf config.status config.cache lib include
+	-rm -rf config.status config.cache lib include src/pic
 	-rm -f src/venus/livesys src/tests/Makefile src/tests/OpenAFS/DirPath.pm 
 	dh_clean
 
@@ -84,7 +84,8 @@ install: build
 	cat debian/filelist |sh debian/movefiles
 	mv debian/openafs-client/usr/bin/pagsh  \
 	debian/openafs-client/usr/bin/pagsh.openafs
-
+	install -m644 -c dest/lib/pam_afs.so.1 \
+		debian/libpam-openafs-kaserver/lib/security/pam_afs.so
 	cp debian/CellServDB debian/openafs-client/usr/share/openafs
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
