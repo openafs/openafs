@@ -1,0 +1,143 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+RELDIR=WINNT\client_osi
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include  # header file install directory
+
+INCFILES =\
+	$(INCFILEDIR)\dbrpc.h \
+	$(INCFILEDIR)\basic.h   \
+	$(INCFILEDIR)\osidebug.h  \
+	$(INCFILEDIR)\osiltype.h \
+	$(INCFILEDIR)\osistatl.h \
+	$(INCFILEDIR)\trylock.h \
+	$(INCFILEDIR)\main.h \
+	$(INCFILEDIR)\osibasel.h \
+	$(INCFILEDIR)\osifd.h  \
+	$(INCFILEDIR)\osiqueue.h \
+	$(INCFILEDIR)\osiutils.h \
+	$(INCFILEDIR)\osi.h \
+	$(INCFILEDIR)\osidb.h \
+	$(INCFILEDIR)\osilog.h \
+	$(INCFILEDIR)\osisleep.h \
+	$(INCFILEDIR)\perf.h \
+!IFDEF OSIEVENT
+	$(INCFILEDIR)\osievent.h \
+!ENDIF
+    $(INCFILEDIR)\osithrdnt.h \
+    $(INCFILEDIR)\largeint.h
+
+$(INCFILEDIR)\dbrpc.h: dbrpc.h
+
+EXEFILE = $(DESTDIR)\bin\osidebug.exe
+
+EXEOBJS = \
+	osidebug.obj
+
+EXELIBS = \
+        rpcndr.lib rpcrt4.lib rpcns4.lib \
+		Ws2_32.lib \
+	$(DESTDIR)\lib\libosi.lib
+
+############################################################################
+# Definitions for building a DLL.
+
+DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libosi.dll
+
+ILIBDIR = $(DESTDIR)\lib
+
+DLLOBJS =\
+	$(OUT)\dbrpc_s.obj \
+	$(OUT)\osistatl.obj \
+	$(OUT)\osibasel.obj \
+	$(OUT)\osisleep.obj \
+	$(OUT)\osiqueue.obj \
+	$(OUT)\osiltype.obj \
+	$(OUT)\osidb.obj \
+	$(OUT)\osifd.obj \
+	$(OUT)\osilog.obj \
+	$(OUT)\osiutils.obj \
+	$(OUT)\libosi.res
+
+DLLLIBS =\
+        rpcndr.lib \
+        rpcrt4.lib \
+        rpcns4.lib
+#	largeint.lib
+
+$(DLLFILE): $(DLLOBJS) 
+	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
+	$(DLLPREP)
+	$(COPY) $*.lib $(ILIBDIR)
+	$(DEL) $*.lib $*.exp
+
+
+############################################################################
+# build osievent.dll
+OSIEVENTDLL = $(DESTDIR)\root.client\usr\vice\etc\osievent.dll
+
+osievent.rc: osievent.mc
+	mc $*.mc
+
+$(OUT)\osievent.res: osievent.rc
+
+$(OUT)\osievent.dll: $(OUT)\osievent.res
+	link -dll -noentry -out:$*.dll $*.res
+
+$(OSIEVENTDLL): $(OUT)\osievent.dll
+	$(COPY) osievent.dll $(DESTDIR)\root.client\usr\vice\etc\.
+
+############################################################################
+# build osidebug too
+
+$(OUT)\osidebug.res: osidebug.rc
+
+$(EXEOBJS) : osidebug.c
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXEGUILINK) $(EXELIBS)
+
+############################################################################
+# midl on dbrpc.idl
+
+dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
+	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" /no_robust $**
+############################################################################
+# generate versioninfo resources
+
+$(OUT)\libosi.res: libosi.rc AFS_component_version_number.h
+
+############################################################################
+# Install target; primary makefile target
+
+install_headers: $(INCFILES)
+
+!IFDEF OSIEVENT
+install: $(OSIEVENTDLL) install_headers $(DLLFILE)
+!ELSE
+install: install_headers $(DLLFILE)
+!ENDIF
+
+install_debug: $(OUT)\osidebug.res $(EXEFILE)
+
+install9x: install
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES) $(OSIEVENTDLL)
+	$(DEL) $(EXEOBJS) $(EXEFILE) $(OUT)\*.res $(OUT)\*.DLL
+
+
+mkdir:

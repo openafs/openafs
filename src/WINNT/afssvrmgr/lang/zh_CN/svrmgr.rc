@@ -1,0 +1,2932 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+#include <WINNT\al_resource.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS 服务器管理器"
+#define AFS_VERINFO_NAME "svrmgr"
+#define AFS_VERINFO_FILENAME "svrmgr.exe"
+#define AFS_VERINFO_LANG_CODE 0x804
+#define AFS_VERINFO_CHARSET 936
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SERVICES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 165
+    END
+
+    IDD_AGGREGATES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 118
+    END
+
+    IDD_FILESETS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 180
+    END
+
+    IDD_SVR_LISTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_AGG_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 262
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 155
+    END
+
+    IDD_SVR_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_SVR_SCOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 216
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_SVC_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 268
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 209
+    END
+
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 315
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 224
+    END
+
+    IDD_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 207
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVC_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 228
+    END
+
+    IDD_SET_REPSITES, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 216
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OPENCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 253
+        HORZGUIDE, 160
+    END
+
+    IDD_TIMEOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 281
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_REFRESHALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 260
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
+
+    IDD_SET_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 317
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 205
+    END
+
+    IDD_SET_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
+    END
+
+    IDD_SET_CLONE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 341
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 81
+    END
+
+    IDD_SVC_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 189
+    END
+
+    IDD_SVR_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_AGG_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 252
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 146
+    END
+
+    IDD_SET_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 268
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_SET_MOVETO, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 170
+    END
+
+    IDD_SET_MOVING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SVC_LOGNAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 102
+    END
+
+    IDD_SVC_VIEWLOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_SET_SETQUOTA, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 267
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 126
+    END
+
+    IDD_ACTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 234
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_SVR_SYNCVLDB, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 265
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_SET_CREATEREP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_SVR_INSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_SVR_UNINSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVR_PRUNE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 196
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_SET_RENAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 129
+    END
+
+    IDD_SVC_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_SVR_GETDATES, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_GETDATES_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SET_DUMP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 291
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_SET_RESTORE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 288
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 244
+    END
+
+    IDD_SVC_BOS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_DUMPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SET_RESTORING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SET_CLONESYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 254
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+
+    IDD_SUBSETS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 276
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_SUBSET_LOADSAVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 276
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_HELP_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 69
+    END
+
+    IDD_HELP_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_HELP_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 226
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_OPENINGCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 236
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 41
+    END
+
+    IDD_OPTIONS_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 274
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 131
+    END
+
+    IDD_SVR_KEYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_CREATEKEY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_SVC_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SVR_EXECUTE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 250
+    END
+
+    IDD_SVR_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SET_RELEASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_SVR_HOSTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_ADDHOST, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 221
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 102
+    END
+
+    IDD_SVR_ADDRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 204
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_SVR_NEWADDR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 219
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 65
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#include <WINNT\\al_resource.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS 服务器管理器""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_MAIN MENU DISCARDABLE 
+BEGIN
+    POPUP "单元(&C)"
+    BEGIN
+        MENUITEM "选择(&S)...",                 M_CELL_OPEN
+        MENUITEM "认证(&A)...",                 M_CREDENTIALS
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                    M_EXIT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        POPUP "服务器(&S)"
+        BEGIN
+            MENUITEM "大图标(&G)",                  M_SVR_VIEW_LARGE
+            , CHECKED
+            MENUITEM "小图标(&M)",                  M_SVR_VIEW_SMALL
+            , CHECKED
+            MENUITEM "详细资料(&D)",                M_SVR_VIEW_REPORT
+            , CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "正常(&N)",                    M_SVR_VIEW_ONEICON
+            , CHECKED
+            MENUITEM "所有图标(&A)",                M_SVR_VIEW_TWOICONS
+            , CHECKED
+            MENUITEM "仅显示状态(&S)",              M_SVR_VIEW_STATUS
+            , CHECKED
+        END
+        POPUP "快速浏览显示窗口(&Q)"
+        BEGIN
+            MENUITEM "无(&N)",                      M_DIVIDE_NONE, CHECKED
+            MENUITEM "垂直分割(&V)",                M_DIVIDE_H, CHECKED
+            MENUITEM "水平分割(&H)",                M_DIVIDE_V, CHECKED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "正在进行的操作(&P)",                M_ACTIONS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "被监视的服务器(&M)...",       M_SUBSET
+        MENUITEM "列(&C)...",                   M_COLUMNS
+        MENUITEM "选项(&O)...",                 M_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "刷新所有(&F)",                M_REFRESHALL
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "目录(&C)",                    M_HELP
+        MENUITEM "查找命令(&F)...",             M_HELP_FIND
+        MENUITEM "查找错误代码(&L)...",         M_HELP_XLATE
+        MENUITEM SEPARATOR
+        MENUITEM "关于 AFS 服务器管理器(&A)...", M_ABOUT
+    END
+END
+
+MENU_AGG MENU DISCARDABLE 
+BEGIN
+    MENUITEM "创建卷(&C)...",               M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "备份卷(&B)...",               M_SET_CLONE
+    MENUITEM "解锁所有卷(&U)",              M_SET_UNLOCK
+    MENUITEM "同步 VLDB(&Y)...",            M_SYNCVLDB
+    MENUITEM "挽救卷(&G)...",               M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "刷新(&F)",                    M_REFRESH
+    MENUITEM "特性(&R)",                    M_PROPERTIES
+END
+
+MENU_SVC MENU DISCARDABLE 
+BEGIN
+    MENUITEM "启动(&S)",                    M_SVC_START
+    MENUITEM "停止(&S)",                    M_SVC_STOP
+    MENUITEM "重新启动(&R)",                M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "查看日志文件(&V)",            M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "删除(&L)",                    M_SVC_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "刷新(&F)",                    M_REFRESH
+    MENUITEM "特性(&R)",                    M_PROPERTIES
+END
+
+MENU_AGG_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "正常(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "所有图标(&A)",                M_VIEW_TWOICONS, CHECKED
+        MENUITEM "仅显示状态(&S)",              M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "创建卷(&C)...",               M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "刷新所有(&F)",                M_REFRESHALL
+END
+
+MENU_SVC_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "正常(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "所有图标(&A)",                M_VIEW_TWOICONS, CHECKED
+        MENUITEM "仅显示状态(&S)",              M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "创建服务(&C)...",             M_SVC_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "刷新所有(&F)",                M_REFRESHALL
+END
+
+MENU_SET MENU DISCARDABLE 
+BEGIN
+    MENUITEM "复制(&P)...",                 M_SET_REPLICATION
+    MENUITEM "现在释放(&S)",                M_SET_RELEASE
+    MENUITEM SEPARATOR
+    MENUITEM "备份(&B)...",                 M_SET_CLONE
+    MENUITEM "转储到文件(&D)...",           M_SET_DUMP
+    MENUITEM "从文件恢复(&R)...",           M_SET_RESTORE
+    MENUITEM "设置限额(&Q)...",             M_SET_SETQUOTA
+    MENUITEM "挽救(&G)...",                 M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "移动到(&M)...",               M_SET_MOVETO
+    MENUITEM "重命名(&N)...",               M_SET_RENAME
+    MENUITEM "删除(&L)",                    M_SET_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "锁定(&K)",                    M_SET_LOCK
+    MENUITEM "解锁(&U)",                    M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "刷新(&F)",                    M_REFRESH
+    MENUITEM "特性(&R)",                    M_PROPERTIES
+END
+
+MENU_SVR MENU DISCARDABLE 
+BEGIN
+    MENUITEM "打开服务器窗口(&O)",          M_SVR_OPEN
+    MENUITEM "关闭服务器窗口(&C)",          M_SVR_CLOSE
+    MENUITEM "监视此服务器(&M)",            M_SVR_MONITOR, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "编辑服务器安全性(&S)...",     M_SVR_SECURITY
+    MENUITEM "管理数据库主机(&H)...",       M_SVR_HOSTS
+    MENUITEM "备份卷(&B)...",               M_SET_CLONE
+    MENUITEM "解锁所有卷(&U)",              M_SET_UNLOCK
+    MENUITEM "同步 VLDB(&Y)...",            M_SYNCVLDB
+    MENUITEM "挽救卷(&G)...",               M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "安装文件(&I)...",             M_SVR_INSTALL
+    MENUITEM "卸装文件(&U)...",             M_SVR_UNINSTALL
+    MENUITEM "删除旧文件(&P)...",           M_SVR_PRUNE
+    MENUITEM SEPARATOR
+    MENUITEM "获得文件日期(&T)...",         M_SVR_GETDATES
+    MENUITEM "查看日志文件(&V)...",         M_VIEWLOG
+    MENUITEM "执行命令(&X)...",             M_EXECUTE
+    MENUITEM SEPARATOR
+    MENUITEM "刷新(&F)",                    M_REFRESH
+    MENUITEM "特性(&R)",                    M_PROPERTIES
+END
+
+MENU_SVR_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "大图标(&G)",                  M_SVR_VIEW_LARGE, CHECKED
+        MENUITEM "小图标(&M)",                  M_SVR_VIEW_SMALL, CHECKED
+        MENUITEM "详细资料(&D)",                M_SVR_VIEW_REPORT, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "正常(&N)",                    M_SVR_VIEW_ONEICON, CHECKED
+        MENUITEM "所有图标(&A)",                M_SVR_VIEW_TWOICONS, CHECKED
+        MENUITEM "仅显示状态(&S)",              M_SVR_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "被监视的服务器(&M)...",       M_SUBSET
+    MENUITEM SEPARATOR
+    MENUITEM "解锁所有卷(&U)",              M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "关闭所有(&C)",                M_SVR_CLOSEALL
+    MENUITEM "刷新所有(&F)",                M_REFRESHALL
+END
+
+MENU_SET_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "按卷(&V)",                    M_SET_VIEW_REPORT, CHECKED
+        MENUITEM "按分区(&P)",                  M_SET_VIEW_TREELIST, CHECKED
+        MENUITEM "无详细信息(&D)",              M_SET_VIEW_TREE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "正常(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "所有图标(&A)",                M_VIEW_TWOICONS, CHECKED
+        MENUITEM "仅显示状态(&S)",              M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "创建卷(&C)...",               M_SET_CREATE
+    MENUITEM "从文件恢复(&R)...",           M_SET_RESTORE
+    MENUITEM SEPARATOR
+    MENUITEM "备份卷(&B)...",               M_SET_CLONE
+    MENUITEM SEPARATOR
+    MENUITEM "解锁所有(&U)",                M_SET_UNLOCK
+    MENUITEM "刷新所有(&F)",                M_REFRESHALL
+END
+
+MENU_COLUMNS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "列(&C)...",                   M_COLUMNS
+END
+
+MENU_SVC_BOS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "重新启动(&R)",                M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "查看日志文件(&V)",            M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "刷新(&F)",                    M_REFRESH
+    MENUITEM "特性(&R)",                    M_PROPERTIES
+END
+
+MENU_SET_DRAGDROP MENU DISCARDABLE 
+BEGIN
+    MENUITEM "移动这里(&M)...",             M_SET_MOVEHERE
+    MENUITEM "复制这里(&R)...",             M_SET_REPHERE
+    MENUITEM SEPARATOR
+    MENUITEM "取消(&C)",                    IDC_STATIC
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVICES DIALOGEX 0, 0, 179, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "服务：",IDC_SVC_DESC,0,5,179,8
+    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,0,17,179,
+                    61,WS_EX_STATICEDGE
+    PUSHBUTTON      "创建(&C)...",IDC_SVC_CREATE,37,80,46,12
+    PUSHBUTTON      "删除(&L)",IDC_SVC_DELETE,86,80,39,12
+    PUSHBUTTON      "重新启动(&R)",IDC_SVC_RESTART,128,80,48,12
+END
+
+IDD_AGGREGATES DIALOGEX 0, 0, 165, 84
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "分区：",IDC_AGG_DESC,0,5,165,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,0,17,165,
+                    53,WS_EX_STATICEDGE
+    PUSHBUTTON      "创建卷(&C)...",IDC_AGG_CREATESET,102,72,63,12
+END
+
+IDD_FILESETS DIALOGEX 0, 0, 194, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "卷：",IDC_SET_DESC,0,5,194,8
+    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,0,17,194,
+                    61,WS_EX_STATICEDGE
+    PUSHBUTTON      "创建(&C)...",IDC_SET_CREATE,1,80,42,12
+    PUSHBUTTON      "删除(&L)",IDC_SET_DELETE,45,80,36,12
+    PUSHBUTTON      "复制(&R)...",IDC_SET_REP,84,80,48,12
+    PUSHBUTTON      "设置限额(&Q)...",IDC_SET_SETQUOTA,134,80,59,12
+END
+
+IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+                    135,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "添加管理员(&A)",IDC_LIST_ADD,72,160,65,14
+    PUSHBUTTON      "除去管理员(&R)",IDC_LIST_REMOVE,141,160,80,14
+    LTEXT           "服务器 %1 的管理员：",IDC_LIST_NAME,5,7,216,8
+END
+
+IDD_AGG_GENERAL DIALOGEX 0, 0, 267, 160
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "标识符：",IDC_STATIC,5,30,36,8
+    LTEXT           "(正在查询)",IDC_AGG_ID,40,30,214,8
+    LTEXT           "设备：",IDC_STATIC,5,46,31,8
+    LTEXT           "(正在查询)",IDC_AGG_DEVICE,40,46,214,8
+    LTEXT           "卷：",IDC_STATIC,5,62,31,8
+    LTEXT           "(正在查询)",IDC_AGG_FILESETS,40,62,214,8
+    CONTROL         "如果组合的卷限额超过容量，显示警告(&W)",
+                    IDC_AGG_WARNALLOC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    38,76,224,10
+    LTEXT           "用法：",IDC_STATIC,5,90,31,8
+    LTEXT           "(正在查询)",IDC_AGG_USAGE,38,90,214,8
+    CONTROL         "",IDC_AGG_USAGEBAR,"msctls_progress32",0x0,38,103,224,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "如果分区使用超出限额，显示警告(&W)",IDC_AGG_WARN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,38,116,214,10
+    CONTROL         "该服务器的缺省阈值(&D)",IDC_AGG_WARN_AGGFULL_DEF,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,49,131,203,9
+    CONTROL         "其大小的",IDC_AGG_WARN_AGGFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,49,145,62,9
+    EDITTEXT        IDC_AGG_WARN_AGGFULL_PERCENT,112,143,29,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "% 阈值(&T)",IDC_AGG_WARN_AGGFULL_DESC,152,145,100,8
+    ICON            IDI_AGGREGATE,IDC_STATIC,5,5,20,20
+    LTEXT           "分区 %2 (服务器 %1)",IDC_AGG_NAME,38,14,214,8
+END
+
+IDD_SVR_GENERAL DIALOG DISCARDABLE  0, 0, 226, 188
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "IP 地址：",IDC_STATIC,5,29,43,8
+    LISTBOX         IDC_SVR_ADDRESSES,53,29,70,12,LBS_NOSEL | NOT WS_BORDER | 
+                    WS_VSCROLL
+    PUSHBUTTON      "更改地址(&A)...",IDC_SVR_CHANGEADDR,144,27,77,12
+    PUSHBUTTON      "需要认证(&R)",IDC_SVR_AUTH_YES,41,81,84,12
+    PUSHBUTTON      "允许未验证的(&U)",IDC_SVR_AUTH_NO,129,81,80,12
+    LTEXT           "分区数：",IDC_STATIC,11,131,90,8
+    LTEXT           "(正在查询)",IDC_SVR_NUMAGGREGATES,108,131,99,8
+    LTEXT           "总容量：",IDC_STATIC,11,148,48,8
+    LTEXT           "(正在查询)",IDC_SVR_CAPACITY,108,148,99,8
+    LTEXT           "组合的卷限额：",IDC_STATIC,11,165,79,8
+    LTEXT           "(正在查询)",IDC_SVR_ALLOCATION,108,165,99,8
+    ICON            IDI_SERVER,IDC_STATIC,5,5,20,20
+    LTEXT           "(服务器名)",IDC_SVR_NAME,55,13,93,8
+    GROUPBOX        "安全性",IDC_STATIC,5,52,216,52
+    GROUPBOX        "存储",IDC_STATIC,5,115,216,68
+    LTEXT           "您可以要求对此服务器的存取都必须经过认证。",IDC_STATIC,
+                    11,67,198,8
+END
+
+IDD_SVR_SCOUT DIALOG DISCARDABLE  0, 0, 221, 158
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "该服务器的任何分区变成",IDC_SVR_WARN_AGGFULL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,18,127,9
+    EDITTEXT        IDC_SVR_WARN_AGGFULL_PERCENT,144,16,24,12,ES_AUTOHSCROLL
+    LTEXT           "% 满",IDC_STATIC,184,18,28,8
+    CONTROL         "该服务器的任何卷变成",IDC_SVR_WARN_SETFULL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,32,125,9
+    EDITTEXT        IDC_SVR_WARN_SETFULL_PERCENT,144,30,24,12,ES_AUTOHSCROLL
+    LTEXT           "% 满",IDC_STATIC,184,32,24,8
+    CONTROL         "任何分区的组合的限额超过其容量",IDC_SVR_WARN_AGGALLOC,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,46,200,9
+    CONTROL         "该服务器上的任何服务停止运行",IDC_SVR_WARN_SVCSTOP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,60,195,9
+    CONTROL         "该服务器的任何卷没有 VLDB 条目",IDC_SVR_WARN_SETNOVLDB,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,74,195,9
+    CONTROL         "VLDB 引用该服务器上的任何脱机分区",
+                    IDC_SVR_WARN_AGGNOSERV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,88,195,9
+    CONTROL         "VLDB 引用该服务器上的任何脱机卷",IDC_SVR_WARN_SETNOSERV,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,103,195,9
+    CONTROL         "刷新服务器信息，每隔",IDC_SVR_AUTOREFRESH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,142,116,9
+    EDITTEXT        IDC_SVR_AUTOREFRESH_MINUTES,123,140,27,13,ES_AUTOHSCROLL
+    LTEXT           "分钟",IDC_STATIC,164,142,25,8
+    LTEXT           "显示警告，如果",IDC_STATIC,5,5,195,8
+END
+
+IDD_SVC_GENERAL DIALOG DISCARDABLE  0, 0, 225, 207
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    PUSHBUTTON      "查看服务日志(&V)",IDC_SVC_VIEWLOG,47,182,66,14
+    PUSHBUTTON      "现在启动(&S)",IDC_SVC_START,118,182,49,14
+    PUSHBUTTON      "现在停止(&P)",IDC_SVC_STOP,169,182,49,14
+    CONTROL         "如果该服务曾停止过，显示警告(&W)",IDC_SVC_WARNSTOP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,159,200,10
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "服务 %2 (服务器 %1)",IDC_SVC_NAME,52,13,168,8
+    LTEXT           "类型：",IDC_STATIC,5,29,44,8
+    LTEXT           "(正在查询)",IDC_SVC_TYPE,64,29,155,8
+    LTEXT           "参数：",IDC_STATIC,5,45,44,8
+    EDITTEXT        IDC_SVC_PARAMS,64,45,155,13,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "通知器：",IDC_STATIC,5,61,44,8
+    LTEXT           "(正在查询)",IDC_SVC_NOTIFIER,64,61,155,8
+    LTEXT           "最近一次启动：",IDC_STATIC,5,77,57,8
+    LTEXT           "(正在查询)",IDC_SVC_STARTDATE,64,77,155,8
+    LTEXT           "最近一次停止：",IDC_STATIC,5,93,57,8
+    LTEXT           "(正在查询)",IDC_SVC_STOPDATE,64,93,155,8
+    LTEXT           "最近一次失败：",IDC_STATIC,5,109,57,8
+    EDITTEXT        IDC_SVC_LASTERROR,64,109,155,13,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "服务状态",IDC_STATIC,5,127,215,75
+    LTEXT           "正在确定该服务的当前状态...",IDC_SVC_STATUS,11,142,200,
+                    8
+END
+
+IDD_SET_GENERAL DIALOGEX 0, 0, 273, 214
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "卷标识符：",IDC_STATIC,5,30,45,8
+    LTEXT           "(未知)",IDC_SET_ID,59,30,208,8
+    LTEXT           "已创建的：",IDC_STATIC,5,46,45,8
+    LTEXT           "(正在查询)",IDC_SET_CREATEDATE,59,46,208,8
+    LTEXT           "已更新的：",IDC_STATIC,5,62,45,8
+    LTEXT           "(正在查询)",IDC_SET_UPDATEDATE,59,62,112,8
+    LTEXT           "已存取的：",IDC_STATIC,5,78,45,8
+    LTEXT           "(正在查询)",IDC_SET_ACCESSDATE,59,78,208,8
+    LTEXT           "已备份的：",IDC_STATIC,5,94,45,8
+    LTEXT           "(正在查询)",IDC_SET_BACKUPDATE,59,94,208,8
+    LTEXT           "文件计数：",IDC_STATIC,5,110,45,8
+    LTEXT           "(正在查询)",IDC_SET_FILES,59,110,208,8
+    LTEXT           "状态：",IDC_STATIC,5,126,45,8
+    LTEXT           "(正在查询)",IDC_SET_STATUS,59,126,75,8
+    PUSHBUTTON      "锁定(&L)",IDC_SET_LOCK,142,124,61,12
+    PUSHBUTTON      "解锁(&U)",IDC_SET_UNLOCK,207,124,61,12
+    LTEXT           "用法：",IDC_STATIC,5,142,45,8
+    LTEXT           "(正在查询)",IDC_SET_USAGE,59,142,136,8
+    PUSHBUTTON      "设置限额(&Q)...",IDC_SET_QUOTA,207,140,61,12
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,49,156,219,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "如果该卷使用超出限额，显示警告(&W)",IDC_SET_WARN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,49,170,219,10
+    CONTROL         "该服务器的缺省阈值(&D) (其大小的 %1%%)",
+                    IDC_SET_WARN_SETFULL_DEF,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,61,185,207,9
+    CONTROL         "其大小的",IDC_SET_WARN_SETFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,61,199,62,9
+    EDITTEXT        IDC_SET_WARN_SETFULL_PERCENT,123,197,29,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "% 阈值(&T)",IDC_SET_WARN_SETFULL_DESC,163,199,105,8
+    ICON            IDI_FILESET,IDC_STATIC,5,5,20,20
+    LTEXT           "卷 %3 (服务器 %1，分区 %2)",IDC_SET_NAME,49,14,219,8
+END
+
+IDD_MAIN DIALOGEX 0, 0, 317, 226
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS 服务器管理器"
+MENU MENU_MAIN
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "所选单元：",IDC_STATIC,2,8,55,8
+    LTEXT           "(单元名将放于此)",IDC_CELL,62,8,222,9
+    LTEXT           "AFS 令牌：",IDC_STATIC,2,19,55,8
+    LTEXT           "%2:%1(令牌将在 %3 到期)",IDC_AFS_ID,62,19,222,9
+    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,31,313,
+                    193,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
+    ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_SERVER DIALOG DISCARDABLE  0, 0, 209, 137
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "服务器"
+CLASS "ServerWindowClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,2,2,205,133
+END
+
+IDD_SVC_CREATE DIALOGEX 0, 0, 225, 233
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "服务器(&S)：",IDC_STATIC,5,36,44,8
+    COMBOBOX        IDC_SVC_SERVER,57,33,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "服务(&V)：",IDC_STATIC,5,52,44,8
+    COMBOBOX        IDC_SVC_NAME,57,50,116,104,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "命令(&C)：",IDC_STATIC,5,70,44,8
+    EDITTEXT        IDC_SVC_COMMAND,57,68,163,13,ES_AUTOHSCROLL
+    LTEXT           "参数(&P)：",IDC_STATIC,5,88,44,8
+    EDITTEXT        IDC_SVC_PARAMS,57,86,163,13,ES_AUTOHSCROLL
+    LTEXT           "通知器(&N)：",IDC_STATIC,5,105,44,8
+    EDITTEXT        IDC_SVC_NOTIFIER,57,103,163,13,ES_AUTOHSCROLL
+    LTEXT           "日志文件(&L)：",IDC_STATIC,5,122,52,8
+    EDITTEXT        IDC_SVC_LOGFILE,57,120,163,13,ES_AUTOHSCROLL
+    CONTROL         "简单(&I)(不间断运行)",IDC_SVC_TYPE_SIMPLE,"Button",
+                    BS_AUTORADIOBUTTON,11,154,201,10
+    CONTROL         "现在启动该服务(&T)",IDC_SVC_RUNNOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,166,183,10
+    CONTROL         "&FS (文件系统)",IDC_SVC_TYPE_FS,"Button",
+                    BS_AUTORADIOBUTTON,11,180,201,10
+    CONTROL         "C&ron (在指定间隔运行)",IDC_SVC_TYPE_CRON,"Button",
+                    BS_AUTORADIOBUTTON,11,195,201,10
+    LTEXT           "何时运行(&W)：",IDC_STATIC,23,209,52,8
+    COMBOBOX        IDC_SVC_RUNDAY,75,207,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SVC_RUNTIME,"Time",WS_BORDER | WS_TABSTOP,148,207,
+                    68,13,WS_EX_CLIENTEDGE
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "新建服务",IDC_SVC_DESC,52,13,168,8
+    GROUPBOX        "服务类型",IDC_STATIC,5,141,215,87
+END
+
+IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+                    199,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "现在释放(&R)",IDC_SET_RELEASE,11,143,52,14
+    PUSHBUTTON      "创建(&C)...",IDC_SET_REPSITE_ADD,108,143,47,14
+    PUSHBUTTON      "删除(&L)",IDC_SET_REPSITE_DELETE,162,143,47,14
+    LTEXT           "服务器：",-1,11,31,37,8
+    LTEXT           "(服务器名)",IDC_SET_SERVER,55,31,147,8
+    LTEXT           "分区：",-1,11,44,37,8
+    LTEXT           "(分区名)",IDC_SET_AGGREGATE,55,44,147,8
+    LTEXT           "卷：",-1,11,18,37,8
+    LTEXT           "(卷名)",IDC_SET_NAME,55,18,147,8
+    GROUPBOX        "读／写卷",-1,5,5,211,56
+    GROUPBOX        "卷副本",-1,5,67,211,96
+END
+
+IDD_OPENCELL DIALOG DISCARDABLE  0, 0, 219, 257
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "选择单元 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "单元(&C)：",IDC_STATIC,4,24,38,8
+    COMBOBOX        IDC_OPENCELL_CELL,45,22,170,143,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "AFS 认证",IDC_STATIC,4,44,211,92
+    LTEXT           "AFS 身份(&I)：",IDC_STATIC,22,100,55,8
+    EDITTEXT        IDC_OPENCELL_ID,80,98,129,14,ES_AUTOHSCROLL
+    LTEXT           "AFS 口令(&P)：",IDC_STATIC,22,116,55,8
+    EDITTEXT        IDC_OPENCELL_PASSWORD,80,114,129,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    PUSHBUTTON      "高级(&V) >>",IDC_ADVANCED,4,146,53,14
+    DEFPUSHBUTTON   "确定",IDOK,86,146,41,14
+    PUSHBUTTON      "取消",IDCANCEL,130,146,41,14
+    PUSHBUTTON      "帮助(&H)",9,174,146,41,14
+    CONTROL         "监视该单元的所有服务器(&L)",IDC_MON_ALL,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,204,185,9
+    CONTROL         "仅监视一个服务器(&M)：",IDC_MON_ONE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,219,110,10
+    EDITTEXT        IDC_MON_SERVER,125,218,83,13,ES_AUTOHSCROLL
+    CONTROL         "仅监视子集中的服务器(&S)：",IDC_MON_SOME,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,235,110,10
+    COMBOBOX        IDC_MON_SUBSET,125,233,83,93,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "选择您希望使用的 AFS 单元。",IDC_STATIC,4,7,200,8
+    GROUPBOX        "监视服务器",IDC_ADVANCED_GROUP,4,169,211,84
+    LTEXT           "为了得到更快速的性能，您可以选择仅监视该单元中可用的服务器子集。",
+                    IDC_STATIC,10,182,199,17
+    LTEXT           "(正在查询...)",IDC_OPENCELL_OLDCREDS,22,70,185,8
+    LTEXT           "要管理单元，必须重新输入您的 AFS 口令：",IDC_STATIC,10,
+                    85,196,8
+    LTEXT           "您在所选单元内的当前 AFS 令牌：",IDC_STATIC,10,57,196,8
+END
+
+IDD_TIMEOUT DIALOG DISCARDABLE  0, 0, 236, 157
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "警告 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "继续等待直至任务正常完成(&C)",IDC_TIMEOUT_WAIT,"Button",
+                    BS_AUTORADIOBUTTON,24,87,208,10
+    CONTROL         "终止任务(&T)",IDC_TIMEOUT_KILL,"Button",
+                    BS_AUTORADIOBUTTON,24,101,208,10
+    DEFPUSHBUTTON   "确定",IDOK,93,139,50,14
+    LTEXT           "任务已运行的时间：",IDC_STATIC,4,119,142,8
+    LTEXT           "88:88:88",IDC_TIMEOUT_ELAPSED,151,119,32,8
+    LTEXT           "AFS 服务器管理器已经等待了很长一段时间，网络任务还未完成。",
+                    IDC_STATIC,4,7,228,18
+    LTEXT           "您可以让任务继续运行(建议)，或者如果您确信任务无法完成，您可以允许 AFS 服务器管理器终止任务。",
+                    IDC_STATIC,4,30,228,26
+    LTEXT           "请注意显示该窗口时，任务仍在运行；如果任务完成，该窗口会自动关闭。",
+                    IDC_STATIC,4,63,228,17
+END
+
+IDD_COLUMNS DIALOG DISCARDABLE  0, 0, 286, 148
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "列"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "选择列示时显示的列(&S)：",IDC_STATIC,5,7,126,8
+    COMBOBOX        IDC_COLUMNS,134,5,147,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "可用的列(&C)：",IDC_STATIC,12,40,100,8
+    LISTBOX         IDC_COL_AVAIL,12,49,100,71,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "要显示的列(&I)：",IDC_STATIC,173,41,100,8
+    LISTBOX         IDC_COL_SHOWN,173,50,100,71,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "添加(&A) >>",IDC_COL_INSERT,119,68,46,14
+    PUSHBUTTON      "<< 除去(&R)",IDC_COL_DELETE,119,88,46,14
+    PUSHBUTTON      "向上移动(&U)",IDC_COL_UP,173,122,48,14
+    PUSHBUTTON      "向下移动(&D)",IDC_COL_DOWN,224,122,48,14
+    GROUPBOX        "列出列",IDC_STATIC,5,25,276,118
+END
+
+IDD_REFRESHALL DIALOG DISCARDABLE  0, 0, 264, 72
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "刷新 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "",IDC_REFRESH_PERCENTBAR,"msctls_progress32",0x0,4,37,
+                    256,8
+    LTEXT           "完成 0%%",IDC_REFRESH_PERCENT,4,49,216,8
+    LTEXT           "",IDC_REFRESH_CURRENT,4,60,216,8
+    LTEXT           "请等待...",IDC_REFRESH_DESC,4,7,256,25
+    PUSHBUTTON      "跳过(&S)",IDC_REFRESH_SKIP,222,58,38,12,NOT WS_TABSTOP
+END
+
+IDD_SET_CREATE DIALOGEX 0, 0, 321, 209
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "创建卷"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "名称(&N)：",IDC_STATIC,4,30,39,8
+    EDITTEXT        IDC_SET_NAME,50,28,116,14,ES_AUTOHSCROLL
+    LTEXT           "限额(&Q)：",IDC_STATIC,4,48,39,8
+    EDITTEXT        IDC_SET_QUOTA,50,46,32,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,94,47,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "备份(&B)：",IDC_STATIC,4,66,39,8
+    CONTROL         "同时创建该卷的一个备份版本(&R)",IDC_SET_CLONE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,50,66,162,8
+    LTEXT           "服务器(&S)：",IDC_STATIC,4,84,46,8
+    COMBOBOX        IDC_SET_SERVER,50,82,116,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "分区(&P)：",IDC_STATIC,4,102,39,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,46,102,271,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "确定",IDOK,156,191,50,14
+    PUSHBUTTON      "取消",IDCANCEL,211,191,50,14
+    PUSHBUTTON      "帮助(&H)",9,267,191,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "新建卷",IDC_STATIC,46,12,170,8
+END
+
+IDD_SET_DELETE DIALOG DISCARDABLE  0, 0, 307, 103
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "删除卷"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "取消",IDCANCEL,199,85,50,14
+    PUSHBUTTON      "确定",IDOK,144,85,50,14
+    PUSHBUTTON      "帮助(&H)",9,253,85,50,14
+    CONTROL         "从服务器 %1，分区 %2 上删除卷 %3(&D)",IDC_DELSET_SERVER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,45,242,10
+    CONTROL         "删除卷 %3 的 VLDB 条目(&V)",IDC_DELSET_VLDB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,61,60,242,10
+    ICON            32515,IDC_STATIC,4,7,21,21
+    LTEXT           "注意！\n\n该操作将导致永久删除卷 %3",IDC_DELSET_DESC,61,
+                    7,242,33
+END
+
+IDD_SET_CLONE DIALOG DISCARDABLE  0, 0, 345, 85
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "备份卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,183,67,50,14
+    PUSHBUTTON      "取消",IDCANCEL,237,67,50,14
+    PUSHBUTTON      "帮助(&H)",9,291,67,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,21,20
+    LTEXT           "卷备份类似于该卷的只读副本。读／写卷只能有一个备份版本。",
+                    IDC_STATIC,34,9,307,17
+    LTEXT           "单击确定来为服务器 %1，分区 %2 上的卷 %3 创建一个备份。 如果该卷已存在备份，会自动更新。",
+                    IDC_CLONE_DESC,34,32,307,24
+END
+
+IDD_SVC_PROBLEMS DIALOG DISCARDABLE  0, 0, 225, 194
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "已知问题",IDC_PROBLEM_BOX,5,36,215,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,49,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,49,174,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,203,49,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,138,120,61,12
+    ICON            IDI_SERVICE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "服务 %2 (服务器 %1)",IDC_PROBLEM_TITLE,52,13,168,8
+END
+
+IDD_SVR_PROBLEMS DIALOG DISCARDABLE  0, 0, 226, 157
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "已知问题",IDC_PROBLEM_BOX,5,36,216,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,49,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,49,172,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,201,49,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,136,120,61,12
+    ICON            IDI_SERVER_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "%1",IDC_PROBLEM_TITLE,42,13,179,8
+END
+
+IDD_AGG_PROBLEMS DIALOG DISCARDABLE  0, 0, 257, 151
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "已知问题",IDC_PROBLEM_BOX,5,35,247,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,206,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,235,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,170,119,61,12
+    ICON            IDI_AGGREGATE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "分区 %2 (服务器 %1)",IDC_PROBLEM_TITLE,38,14,214,8
+END
+
+IDD_SET_PROBLEMS DIALOG DISCARDABLE  0, 0, 273, 182
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "已知问题",IDC_PROBLEM_BOX,5,35,263,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,220,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,249,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,184,119,61,12
+    ICON            IDI_FILESET_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "卷 %3 (服务器 %1，分区 %2)",IDC_PROBLEM_TITLE,49,14,219,
+                    8
+END
+
+IDD_SET_MOVETO DIALOGEX 0, 0, 277, 174
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "移动卷"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,70,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "确定",IDOK,115,156,50,14
+    PUSHBUTTON      "取消",IDCANCEL,169,156,50,14
+    PUSHBUTTON      "帮助(&H)",9,223,156,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,21,20
+    LTEXT           "A\nB\nC",IDC_MOVESET_DESC,31,4,242,24
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,35,269,1
+    LTEXT           "移动卷到(&M)：",IDC_STATIC,4,43,116,8
+END
+
+IDD_SET_MOVING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "移动卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "从服务器 %1 的分区 %2 上移动卷 %3 到服务器 %4 的分区 %5...",
+                    IDC_MOVESET_DESC,4,41,229,19
+END
+
+IDD_SVC_LOGNAME DIALOG DISCARDABLE  0, 0, 277, 106
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "查看日志文件"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "查看日志文件的服务器(&S)：",IDC_STATIC,4,45,109,8
+    COMBOBOX        IDC_VIEWLOG_SERVER,116,43,126,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "服务器上要查看的文件(&F)：",IDC_STATIC,4,64,109,8
+    EDITTEXT        IDC_VIEWLOG_FILENAME,116,62,157,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,169,88,50,14
+    PUSHBUTTON      "取消",IDCANCEL,223,88,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,4,4,20,20
+    LTEXT           "请输入您希望查看的日志文件的绝对路径。",
+                    IDC_VIEWLOG_DESC,31,10,242,21
+END
+
+IDD_SVC_VIEWLOG DIALOG DISCARDABLE  0, 0, 286, 185
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "查看日志文件"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "文件目录：",IDC_SVC_VIEWLOG_CONTENTS,4,41,277,8
+    EDITTEXT        IDC_VIEWLOG_TEXT,4,51,277,113,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "另存为(&A)...",IDC_VIEWLOG_SAVEAS,173,167,53,14
+    DEFPUSHBUTTON   "关闭(&C)",IDOK,231,167,50,14
+    ICON            IDI_SERVICE,-1,4,7,20,20
+    LTEXT           "在服务器 %1 上的[服务 %2 的]日志文件",
+                    IDC_SVC_VIEWLOG_DESC,33,7,248,8
+    LTEXT           "服务器上的文件名：%1",IDC_SVC_VIEWLOG_FILENAME,33,23,
+                    248,8
+END
+
+IDD_SET_SETQUOTA DIALOGEX 0, 0, 271, 130
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "设置卷限额"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "当前限额：",IDC_STATIC,4,49,47,8
+    LTEXT           "(未知)",IDC_SET_USAGE,59,49,208,8
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,59,60,208,8,
+                    WS_EX_STATICEDGE
+    LTEXT           "新限额(&Q)：",IDC_STATIC,4,81,47,8
+    EDITTEXT        IDC_SET_QUOTA,59,79,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,103,79,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "确定",IDOK,109,112,50,14
+    PUSHBUTTON      "取消",IDCANCEL,163,112,50,14
+    PUSHBUTTON      "帮助(&H)",9,217,112,50,14
+    PUSHBUTTON      "特性(&P)...",IDC_AGG_PROPERTIES,212,28,55,12
+    LTEXT           "分区：",IDC_STATIC,4,30,47,8
+    LTEXT           "服务器 %1 的分区 %2",IDC_SET_AGGREGATE,59,30,141,8
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "卷 %1",IDC_SET_NAME,59,11,208,8
+END
+
+IDD_ACTIONS DIALOGEX 0, 0, 236, 58
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "正在进行的操作 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "下列操作正在进行：",IDC_ACTION_DESC,2,2,232,8
+    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x3,2,14,232,43
+END
+
+IDD_SVR_SYNCVLDB DIALOG DISCARDABLE  0, 0, 269, 99
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "同步 VLDB"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,107,81,50,14
+    PUSHBUTTON      "取消",IDCANCEL,161,81,50,14
+    PUSHBUTTON      "帮助(&H)",9,215,81,50,14
+    ICON            32515,IDC_STATIC,4,4,21,20
+    LTEXT           "(运行时设置)",IDC_SYNC_DESC,37,4,228,32
+    LTEXT           "(运行时设置)",IDC_SYNC_DESC2,37,44,228,24
+END
+
+IDD_SET_CREATEREP DIALOGEX 0, 0, 277, 171
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "复制卷"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,62,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "确定",IDOK,115,153,50,14
+    PUSHBUTTON      "取消",IDCANCEL,169,153,50,14
+    PUSHBUTTON      "帮助(&H)",9,223,153,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,21,20
+    LTEXT           "卷 %3 的新副本",IDC_SET_NAME,31,12,242,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,27,268,1
+    LTEXT           "创建该卷的一个新副本在(&C)：",IDC_STATIC,4,35,125,8
+END
+
+IDD_SVR_INSTALL DIALOG DISCARDABLE  0, 0, 248, 156
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "安装文件"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "源文件(&F)：",IDC_STATIC,4,74,49,8
+    EDITTEXT        IDC_FILENAME,66,72,126,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "浏览(&B)...",IDC_BROWSE,194,72,50,14
+    LTEXT           "目标服务器(&S)：",IDC_STATIC,4,93,60,8
+    COMBOBOX        IDC_SERVER,66,92,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "目标名称(&N)：",IDC_STATIC,4,114,60,8
+    EDITTEXT        IDC_DIRECTORY,66,112,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,86,138,50,14
+    PUSHBUTTON      "取消",IDCANCEL,140,138,50,14
+    PUSHBUTTON      "帮助(&H)",9,194,138,50,14
+    ICON            IDI_INSTALL,IDC_STATIC,4,4,20,20
+    LTEXT           "在服务器上安装文件",IDC_STATIC,32,12,127,8
+    LTEXT           "(运行时设置的文本)\n(运行时设置的文本)\n(运行时设置的文本)\n(运行时设置的文本)",
+                    IDC_INSTALL_DESC,4,29,240,33
+END
+
+IDD_SVR_UNINSTALL DIALOG DISCARDABLE  0, 0, 248, 139
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "卸装文件"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器(&S)：",IDC_STATIC,4,66,52,8
+    COMBOBOX        IDC_SERVER,58,64,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "目标文件(&F)：",IDC_STATIC,4,85,52,8
+    EDITTEXT        IDC_FILENAME,58,83,175,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,88,121,50,14
+    PUSHBUTTON      "取消",IDCANCEL,141,121,50,14
+    PUSHBUTTON      "帮助(&H)",9,194,121,50,14
+    ICON            IDI_UNINSTALL,IDC_STATIC,4,4,20,20
+    LTEXT           "从服务器卸装文件",IDC_STATIC,32,12,127,8
+    LTEXT           "该操作允许您在一个特殊服务器上恢复一个预先安装的文件的副本。如果所选文件无此类副本存在，将除去该文件。",
+                    IDC_STATIC,4,29,240,26
+END
+
+IDD_SVR_PRUNE DIALOG DISCARDABLE  0, 0, 200, 141
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "删除旧文件"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器：",-1,4,56,44,8
+    COMBOBOX        IDC_SERVER,53,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "删除所有核心文件(&C)",IDC_OP_DELETE_CORE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,53,73,143,10
+    CONTROL         "删除.BAK扩展名文件(文件备份)(&B)",IDC_OP_DELETE_BAK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,84,143,10
+    CONTROL         "删除.OLD扩展名文件(旧文件备份)(&O)",IDC_OP_DELETE_OLD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,95,143,10
+    DEFPUSHBUTTON   "确定",IDOK,39,123,50,14
+    PUSHBUTTON      "取消",IDCANCEL,93,123,50,14
+    PUSHBUTTON      "帮助(&H)",9,146,123,50,14
+    ICON            IDI_PRUNE,-1,4,4,20,20
+    LTEXT           "从服务器上删除旧文件",-1,32,12,101,8
+    LTEXT           "该操作删除在特定服务器上的文件备份。",-1,4,29,192,16
+    LTEXT           "删除文件：",-1,4,73,45,8
+END
+
+IDD_SET_RENAME DIALOG DISCARDABLE  0, 0, 277, 133
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "重命名卷"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "旧名称(&O)：",IDC_STATIC,31,67,46,8
+    EDITTEXT        IDC_RENSET_OLD,88,65,122,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "新名称(&N)：",IDC_STATIC,31,85,46,8
+    EDITTEXT        IDC_RENSET_NEW,88,83,122,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,115,115,50,14
+    PUSHBUTTON      "取消",IDCANCEL,169,115,50,14
+    PUSHBUTTON      "帮助",9,223,115,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "要重命名卷 %3，在下面输入一个新名称。重命名会自动更改卷的备份和所有副本的名称。\n\n注意：如果您重命名一个安装的卷，您必须删除并重新创建其安装点。",
+                    IDC_RENSET_DESC,31,7,242,48
+END
+
+IDD_SVC_DELETE DIALOG DISCARDABLE  0, 0, 277, 68
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "删除服务"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "取消",IDCANCEL,169,50,50,14
+    PUSHBUTTON      "确定",IDOK,115,50,50,14
+    PUSHBUTTON      "帮助",9,223,50,50,14
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "注意！\n\n该操作将导致服务 %2 停止并从服务器 %1 上永久删除",
+                    IDC_DELSVC_DESC,31,7,242,33
+END
+
+IDD_SVR_GETDATES DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "获得文件日期"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器(&S)：",-1,4,56,68,8
+    COMBOBOX        IDC_SERVER,74,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "要查询的文件(&F)：",-1,4,75,68,8
+    EDITTEXT        IDC_FILENAME,74,73,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,86,107,50,14
+    PUSHBUTTON      "取消",IDCANCEL,140,107,50,14
+    PUSHBUTTON      "帮助(&H)",9,194,107,50,14
+    ICON            IDI_GETDATES,-1,4,4,20,20
+    LTEXT           "获得服务器上的文件日期",-1,32,12,127,8
+    LTEXT           "该操作获得文件及其备份(如果存在的话)最近一次修改的日期。",
+                    -1,4,29,240,16
+END
+
+IDD_SVR_GETDATES_RESULTS DIALOG DISCARDABLE  0, 0, 248, 132
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "获得文件日期 - 结果"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器：",IDC_STATIC,4,30,39,8
+    LTEXT           "(运行时设置)",IDC_SERVER,56,30,137,8
+    LTEXT           "文件名：",IDC_STATIC,4,45,39,8
+    LTEXT           "(运行时设置)",IDC_FILENAME,56,45,137,8
+    LTEXT           "文件日期：",IDC_STATIC,4,60,45,8
+    LTEXT           "(未知；无法找到文件)",IDC_DATE_FILE,56,60,188,8
+    LTEXT           ".BAK 日期：",IDC_STATIC,4,75,45,8
+    LTEXT           "(未知；无法找到文件)",IDC_DATE_BAK,56,75,188,8
+    LTEXT           ".OLD 日期：",IDC_STATIC,4,90,45,8
+    LTEXT           "(未知；无法找到文件)",IDC_DATE_OLD,56,90,188,8
+    DEFPUSHBUTTON   "关闭(&C)",IDOK,99,114,50,14
+    ICON            IDI_GETDATES,IDC_STATIC,4,4,20,20
+    LTEXT           "获得服务器上的文件日期",IDC_STATIC,32,12,127,8
+END
+
+IDD_SET_DUMP DIALOGEX 0, 0, 295, 144
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "转储卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "创建转储文件并命名为(&N)：",IDC_STATIC,4,42,100,8
+    EDITTEXT        IDC_DUMP_FILENAME,106,40,132,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "浏览(&B)...",IDC_DUMP_BROWSE,241,40,50,14
+    CONTROL         "转储卷 %3 所有的内容(分区 %1:%2)",IDC_DUMP_FULL,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,10,78,274,10
+    CONTROL         "仅转储自右面时间以来更改的文件(&S)",IDC_DUMP_LIMIT_TIME,
+                    "Button",BS_AUTORADIOBUTTON,10,93,153,10
+    CONTROL         "",IDC_DUMP_TIME,"Time",WS_BORDER | WS_TABSTOP,170,93,51,
+                    13,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_DUMP_DATE,"Date",WS_BORDER | WS_TABSTOP,228,93,56,
+                    13,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "确定",IDOK,131,126,50,14
+    PUSHBUTTON      "取消",IDCANCEL,185,126,50,14
+    PUSHBUTTON      "帮助(&H)",9,241,126,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "该操作复制一个卷的内容到一个单独文件，以便该卷可以方便地备份。这样转储的卷内容以后可以恢复。",
+                    IDC_STATIC,30,7,261,24
+    GROUPBOX        "转储参数",IDC_STATIC,4,62,287,53
+END
+
+IDD_SET_RESTORE DIALOGEX 0, 0, 292, 248
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "恢复卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "要恢复的文件(&R)：",IDC_STATIC,4,33,70,8
+    EDITTEXT        IDC_RESTORE_FILENAME,75,30,157,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "浏览(&B)...",IDC_RESTORE_BROWSE,238,30,50,14
+    CONTROL         "这是一个增量转储文件(&I)",IDC_RESTORE_INCREMENTAL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,46,114,10
+    LTEXT           "卷(&V)：",IDC_STATIC,11,102,31,8
+    EDITTEXT        IDC_RESTORE_SETNAME,57,100,115,14,ES_AUTOHSCROLL
+    LTEXT           "服务器(&S)：",IDC_STATIC,11,145,44,8
+    COMBOBOX        IDC_RESTORE_SERVER,57,143,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "分区(&P)：",IDC_STATIC,11,162,36,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,50,161,231,
+                    55,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "确定",IDOK,128,230,50,14
+    PUSHBUTTON      "取消",IDCANCEL,183,230,50,14
+    PUSHBUTTON      "帮助(&H)",9,238,230,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "从转储文件恢复卷",IDC_STATIC,33,11,224,8
+    GROUPBOX        "目标卷",IDC_STATIC,4,63,284,160
+    LTEXT           "当您从转储文件恢复卷时，可以创建一个新卷或覆盖一个现有的读/写卷。",
+                    IDC_STATIC,11,78,259,16
+    LTEXT           "(运行时设置)\n(运行时设置)",IDC_RESTORE_CREATE,57,119,
+                    229,17
+END
+
+IDD_SVC_BOS DIALOGEX 0, 0, 225, 207
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "周期性停止和重新启动该服务器上的所有服务(&P)",
+                    IDC_BOS_GENRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,
+                    71,193,10
+    LTEXT           "重新启动(&R)",IDC_BOS_GENRES_DESC1,17,87,47,8
+    COMBOBOX        IDC_BOS_GENRES_DATE,68,84,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "在(&A)",IDC_BOS_GENRES_DESC2,139,87,20,8
+    CONTROL         "",IDC_BOS_GENRES_TIME,"Time",WS_BORDER | WS_TABSTOP,164,
+                    84,53,13,WS_EX_CLIENTEDGE
+    CONTROL         "为新二进制文件周期性测试该服务器上的所有服务(&B)",
+                    IDC_BOS_BINRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,
+                    151,201,10
+    LTEXT           "测试(&S)",IDC_BOS_BINRES_DESC1,17,167,33,8
+    COMBOBOX        IDC_BOS_BINRES_DATE,68,164,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "在(&T)",IDC_BOS_BINRES_DESC2,139,167,20,8
+    CONTROL         "",IDC_BOS_BINRES_TIME,"Time",WS_BORDER | WS_TABSTOP,164,
+                    164,53,13,WS_EX_CLIENTEDGE
+    ICON            IDI_BOSSERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "服务 %2 (服务器 %1)",IDC_SVC_NAME,52,13,168,8
+    GROUPBOX        "BOS 服务",IDC_STATIC,5,27,215,175
+    LTEXT           "BOS 服务能用来周期性停止和重新启动该服务器上的所有服务(包括 BOS 服务本身)。",
+                    IDC_STATIC,11,45,200,18
+    LTEXT           "BOS 服务也能用来周期性测试服务器上的所有服务，仅停止和重新启动二进制文件已更新的服务。",
+                    IDC_STATIC,11,118,200,25
+END
+
+IDD_SET_DUMPING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "转储卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "从卷 %3 创建转储文件 %4...",IDC_DUMPSET_DESC,4,41,229,
+                    19
+END
+
+IDD_SET_RESTORING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "恢复卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "从转储文件 %2 恢复卷 %1...",IDC_RESTORESET_DESC,4,41,
+                    229,19
+END
+
+IDD_SET_CLONESYS DIALOG DISCARDABLE  0, 0, 258, 163
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "备份卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "创建该单元中的所有卷的备份版本(&A)",IDC_CLONE_ALL,
+                    "Button",BS_AUTORADIOBUTTON,30,53,214,10
+    GROUPBOX        "     ",IDC_STATIC,23,68,231,67
+    CONTROL         "仅为符合下列标准的卷创建备份(&O)：",IDC_CLONE_SOME,
+                    "Button",BS_AUTORADIOBUTTON,43,67,200,11
+    CONTROL         "仅对服务器上的卷(&S)：",IDC_CLONE_SVR_LIMIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,41,83,92,10
+    COMBOBOX        IDC_CLONE_SVR,152,82,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "仅分区上的卷(&P)：",IDC_CLONE_AGG_LIMIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,41,99,97,10
+    COMBOBOX        IDC_CLONE_AGG,152,98,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "仅对以右面开始的卷：",IDC_CLONE_PREFIX_LIMIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,41,116,106,10
+    EDITTEXT        IDC_CLONE_PREFIX,152,115,85,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,95,145,50,14
+    PUSHBUTTON      "取消",IDCANCEL,149,145,50,14
+    PUSHBUTTON      "帮助(&H)",9,204,145,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "卷备份类似于该卷的只读副本。读／写卷只能有一个备份版本。\n\n您可以同时为多个卷创建备份版本。",
+                    IDC_STATIC,30,7,214,40
+END
+
+IDD_SUBSETS DIALOGEX 0, 0, 281, 182
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "被监视的服务器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "子集名称：",IDC_STATIC,12,77,44,8
+    EDITTEXT        IDC_SUBSET_NAME,64,75,116,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    PUSHBUTTON      "打开(&O)...",IDC_SUBSET_LOAD,181,75,47,14
+    PUSHBUTTON      "保存(&S)...",IDC_SUBSET_SAVE,231,75,43,14
+    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x153,12,111,193,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "监视所有(&A)",IDC_SUBSET_ALL,211,122,57,14
+    PUSHBUTTON      "不监视(&N)",IDC_SUBSET_NONE,211,140,57,14
+    LTEXT           "当在一较大单元中工作，想要改进性能，您可以选择不监视某些服务器是否出问题。AFS 服务器管理器不会显示未被监视的服务器上的卷、分区或服务。",
+                    IDC_STATIC,5,5,271,24
+    LTEXT           "您可以在任何时刻选择监视(或不监视)服务器。您可以创建服务器子集来指定应监视的服务器列表。",
+                    IDC_STATIC,5,37,271,18
+    GROUPBOX        "当前子集",IDC_STATIC,5,63,271,114
+    LTEXT           "要监视的服务器：",IDC_STATIC,12,95,69,8
+END
+
+IDD_SUBSET_LOADSAVE DIALOGEX 0, 0, 280, 145
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "(运行时设置的标题)"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "子集名称(&N)：",1090,5,112,52,8,SS_NOTIFY
+    EDITTEXT        IDC_SUBSET_NAME,60,110,160,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "打开(&O)",IDOK,226,110,50,14
+    PUSHBUTTON      "取消(&L)",IDCANCEL,226,127,50,14
+    CONTROL         "列表1",IDC_SUBSET_LIST,"SysListView32",LVS_LIST | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_EDITLABELS | 
+                    LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,4,20,272,82,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "",IDC_SUBSET_RENAME,187,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    PUSHBUTTON      "",IDC_SUBSET_DELETE,203,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    LTEXT           "已为该单元定义的子集：",IDC_STATIC,4,6,114,8
+END
+
+IDD_HELP_FIND DIALOG DISCARDABLE  0, 0, 218, 73
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "查找命令"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    COMBOBOX        IDC_FIND_COMMAND,4,38,137,170,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "显示帮助(&H)",IDOK,147,38,67,14
+    PUSHBUTTON      "取消(&C)",IDCANCEL,147,55,67,14
+    LTEXT           "要查找如何使用 AFS 帐户管理器来执行任务，选择下面的一个命令行并单击“显示帮助”按钮。",
+                    IDC_STATIC,4,4,210,25
+END
+
+IDD_HELP_ERROR DIALOG DISCARDABLE  0, 0, 218, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "查找错误代码"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "错误号(&E)：",IDC_STATIC,4,41,45,8
+    EDITTEXT        IDC_ERROR_NUMBER,59,39,78,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "转换(&T)",IDC_ERROR_TRANSLATE,147,39,67,14
+    PUSHBUTTON      "关闭(&C)",IDCANCEL,85,123,48,14
+    LTEXT           "(运行时设置的文本)",IDC_ERROR_DESC,4,71,210,42
+    LTEXT           "要查找错误代码的含义，在下面输入代码然后单击""转换""按钮。",
+                    IDC_STATIC,4,4,210,25
+    CONTROL         "",IDC_ADVANCED_BOX,"Static",SS_ETCHEDHORZ,4,60,211,1
+END
+
+IDD_HELP_ABOUT DIALOG DISCARDABLE  0, 0, 230, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    ICON            IDI_MAIN,IDC_HELPABOUT_ICON,4,8,20,20
+    LTEXT           "AFS 服务器管理器，版本 3.5",IDC_STATIC,33,8,163,8
+    LTEXT           "版权所有(C) IBM 公司 1989，1999",IDC_STATIC,33,20,183,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,37,222,1
+    CTEXT           "",IDC_HELPABOUT_DESC,4,48,222,56
+    PUSHBUTTON      "关闭(&C)",IDOK,89,123,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,114,222,1
+END
+
+IDD_OPENINGCELL DIALOG DISCARDABLE  0, 0, 241, 46
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "AFS 服务器管理器正在单元 %1 中搜索服务器...",
+                    IDC_OPENCELL_DESC,41,15,183,16
+    GROUPBOX        "",IDC_STATIC,4,2,231,39
+    ICON            IDI_MAIN,IDC_ANIMATE,12,12,18,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_OPTIONS_GENERAL DIALOG DISCARDABLE  0, 0, 279, 136
+STYLE WS_CHILD
+FONT 9, "宋体"
+BEGIN
+    CONTROL         "为服务器显示全限定域名(例如，""machine.company.com"")",
+                    IDC_OPT_SVR_LONGNAMES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,5,269,10
+    CONTROL         "如果不用管理令牌工作，显示警告(&W)",
+                    IDC_OPT_WARN_BADCREDS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,19,269,10
+    CONTROL         "...总是显示服务器的特性",IDC_OPT_SVR_DBL_PROP,"Button",
+                    BS_AUTORADIOBUTTON,21,50,253,10
+    CONTROL         "...仅当快速查看显示窗口打开时，显示服务器特性",
+                    IDC_OPT_SVR_DBL_DEPENDS,"Button",BS_AUTORADIOBUTTON,21,
+                    63,253,10
+    CONTROL         "...总是为服务器打开一个窗口",IDC_OPT_SVR_DBL_OPEN,
+                    "Button",BS_AUTORADIOBUTTON,21,75,253,10
+    CONTROL         "...打开一个服务器窗口会使该服务器处于被监视状态",
+                    IDC_OPT_SVR_OPENMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,107,253,10
+    CONTROL         "...关闭一个服务器窗口会使该服务器结束被监视状态",
+                    IDC_OPT_SVR_CLOSEUNMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,121,253,10
+    LTEXT           "双击服务器图标...",IDC_STATIC,5,38,269,8
+    LTEXT           "如果服务器子集正在使用且快速查看显示窗口是关闭的...",
+                    IDC_STATIC,5,95,269,8
+END
+
+IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,22,216,
+                    135,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "添加服务器密钥(&A)",IDC_KEY_ADD,58,160,80,14
+    PUSHBUTTON      "除去服务器密钥(&R)",IDC_KEY_REMOVE,141,160,80,14
+    LTEXT           "服务器密钥：",IDC_KEY_NAME,5,7,216,8
+END
+
+IDD_SVR_CREATEKEY DIALOG DISCARDABLE  0, 0, 281, 150
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "添加服务器密钥"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "版本：",IDC_STATIC,7,37,26,8
+    EDITTEXT        IDC_KEY_VERSION,43,35,43,14,ES_AUTOHSCROLL
+    LTEXT           "值：",IDC_STATIC,7,58,21,8
+    CONTROL         "加密该字符串：",IDC_KEY_BYSTRING,"Button",
+                    BS_AUTORADIOBUTTON,43,58,73,10
+    CONTROL         "使用该密钥：",IDC_KEY_BYDATA,"Button",
+                    BS_AUTORADIOBUTTON,43,76,57,10
+    EDITTEXT        IDC_KEY_STRING,119,56,155,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_KEY_DATA,119,75,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "随机(&R)",IDC_KEY_RANDOM,226,75,48,14
+    LTEXT           "注意：在对服务器添加新密钥后，您必须修改 AFS 帐户以使用新密钥。几天后，您可以除去任何旧的服务器密钥。",
+                    IDC_STATIC,7,99,267,18
+    DEFPUSHBUTTON   "确定",IDOK,116,129,50,14
+    PUSHBUTTON      "取消",IDCANCEL,170,129,50,14
+    PUSHBUTTON      "帮助",9,224,129,50,14
+    LTEXT           "为服务器 %1 新建密钥",IDC_KEY_TITLE,43,14,181,8
+    ICON            IDI_SERVER_KEY,IDC_STATIC,7,7,20,20
+END
+
+IDD_SVC_STARTSTOP DIALOG DISCARDABLE  0, 0, 277, 132
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "启动／停止服务"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,115,114,50,14
+    PUSHBUTTON      "取消",IDCANCEL,169,114,50,14
+    PUSHBUTTON      "帮助(&H)",9,223,114,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,4,7,21,20
+    LTEXT           "单击确定启动／停止服务器 %1 的服务 %2。",
+                    IDC_STARTSTOP_TEXT,31,12,242,9
+    CONTROL         "永久(&P) (IDS_START/STOPSERVICE_PERMANENT)",
+                    IDC_STARTSTOP_PERMANENT,"Button",BS_AUTORADIOBUTTON,37,
+                    68,226,10
+    CONTROL         "临时(&T) (IDS_START/STOPSERVICE_TEMPORARY)",
+                    IDC_STARTSTOP_TEMPORARY,"Button",BS_AUTORADIOBUTTON,37,
+                    83,226,10
+    GROUPBOX        "服务启动",IDC_STATIC,31,31,242,70
+    LTEXT           "您可以永久保持该更改，以便服务器 %1 重新启动时，服务 %2 会(不会)自动启动。",
+                    IDC_STARTSTOP_STARTUP,38,45,223,16
+END
+
+IDD_SVR_EXECUTE DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "执行命令"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器(&S)：",IDC_STATIC,4,56,46,8
+    COMBOBOX        IDC_SERVER,56,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "命令(&C)：",IDC_STATIC,4,75,46,8
+    EDITTEXT        IDC_COMMAND,56,73,188,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,86,107,50,14
+    PUSHBUTTON      "取消",IDCANCEL,140,107,50,14
+    PUSHBUTTON      "帮助(&H)",9,194,107,50,14
+    ICON            IDI_SERVER,IDC_STATIC,4,4,20,20
+    LTEXT           "在服务器上执行命令",IDC_STATIC,32,12,185,8
+    LTEXT           "该操作允许您在一个远程服务器上发出命令。\n 它被典型地用于执行 /etc/reboot 脚本来重新启动服务器。",
+                    IDC_STATIC,4,29,240,16
+END
+
+IDD_SVR_SALVAGE DIALOG DISCARDABLE  0, 0, 248, 254
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "挽救卷 - AFS 服务器管理器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "服务器(&S)：",IDC_STATIC,30,50,44,8
+    COMBOBOX        IDC_SERVER,78,48,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "分区(&P)：",IDC_STATIC,30,67,44,8
+    COMBOBOX        IDC_AGGREGATE,78,65,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "挽救所有分区(&A)",IDC_AGGREGATE_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,170,67,73,10
+    LTEXT           "卷(&O)：",IDC_STATIC,29,85,44,8
+    COMBOBOX        IDC_FILESET,78,83,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "挽救所有卷(&L)",IDC_FILESET_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,170,85,73,10
+    DEFPUSHBUTTON   "确定",IDOK,85,108,50,14
+    PUSHBUTTON      "取消",IDCANCEL,139,108,50,14
+    PUSHBUTTON      "帮助(&H)",9,194,108,50,14
+    PUSHBUTTON      "高级(&V) >>",IDC_ADVANCED,4,108,53,14
+    LTEXT           "临时文件的路径(&T)：",IDC_STATIC,10,142,76,8
+    EDITTEXT        IDC_SALVAGE_TEMPDIR,92,141,144,13,ES_AUTOHSCROLL
+    CONTROL         "并行挽救操作；进程数(&R)：",IDC_SALVAGE_SIMUL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,29,157,171,10
+    EDITTEXT        IDC_SALVAGE_NUM,202,156,25,13,ES_AUTOHSCROLL
+    CONTROL         "不要挽救已损坏的卷(&N)",IDC_SALVAGE_READONLY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,29,167,123,10
+    CONTROL         "将读取操作分成小块",IDC_SALVAGE_BLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,29,177,139,10
+    CONTROL         "强制挽救所有指示的卷(&F)",IDC_SALVAGE_FORCE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,29,187,136,10
+    CONTROL         "强制重建目录结构(&E)",IDC_SALVAGE_FIXDIRS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,29,197,123,10
+    LTEXT           "结果日志的文件名(&U)：",IDC_STATIC,10,211,85,8
+    EDITTEXT        IDC_SALVAGE_LOG_FILE,98,210,144,13,ES_AUTOHSCROLL
+    CONTROL         "结果日志中包括损坏的内结点列表(&I)",
+                    IDC_SALVAGE_LOG_INODES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,224,203,10
+    CONTROL         "结果日志中包括 AFS 拥有的根内结点列表(&W)",
+                    IDC_SALVAGE_LOG_ROOT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,235,203,10
+    ICON            IDI_SERVER,IDC_STATIC,4,7,20,20
+    LTEXT           "该操作允许您在一个或多个卷上修正问题。\n\n注意：如果您立即挽救整个分区或服务器，服务器会临时脱机。",
+                    IDC_STATIC,30,7,214,32
+    GROUPBOX        "高级挽救选项",IDC_ADVANCED_GROUP,4,128,240,122
+END
+
+IDD_SVR_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 286, 178
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "挽救卷 - 结果"
+CLASS "AFSManagerClass"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "关闭(&C)",IDOK,232,160,50,14
+    LTEXT           "挽救操作结果：",IDC_STATIC,4,33,277,8
+    EDITTEXT        IDC_SALVAGE_DETAILS,4,43,277,113,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP
+    ICON            IDI_SERVER,IDC_STATIC,4,7,21,20
+    LTEXT           "挽救服务器 %1 的分区 %2 的卷 %3",IDC_SALVAGE_TITLE,33,
+                    15,248,8
+END
+
+IDD_SET_RELEASE DIALOG DISCARDABLE  0, 0, 277, 102
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "释放卷"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,115,84,50,14
+    PUSHBUTTON      "取消",IDCANCEL,169,84,50,14
+    PUSHBUTTON      "帮助(&H)",9,223,84,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "该操作允许您更新卷 %3 的副本。您可以选择仅更新过时的副本，或更新所有副本。",
+                    IDC_RELSET_DESC,31,7,242,26
+    CONTROL         "仅更新过时的副本(&U)",IDC_RELSET_NORMAL,"Button",
+                    BS_AUTORADIOBUTTON,46,41,173,10
+    CONTROL         "即使有未过时副本，也更新所有卷(&A)",IDC_RELSET_FORCE,
+                    "Button",BS_AUTORADIOBUTTON,46,56,172,10
+END
+
+IDD_SVR_HOSTS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "添加主机服务器(&A)",IDC_HOST_ADD,59,160,80,14
+    PUSHBUTTON      "除去主机服务器(&R)",IDC_HOST_REMOVE,141,160,80,14
+    LTEXT           "服务器识别的数据库主机服务器：",IDC_HOST_TITLE,5,7,216,
+                    8
+    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+                    135,WS_EX_CLIENTEDGE
+END
+
+IDD_SVR_ADDHOST DIALOGEX 0, 0, 225, 106
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "添加主机服务器"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "主机(&H)：",-1,31,55,38,8
+    EDITTEXT        IDC_ADDHOST_HOST,71,53,103,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,63,88,50,14
+    PUSHBUTTON      "取消",IDCANCEL,117,88,50,14
+    ICON            IDI_SERVER,-1,4,4,20,20
+    LTEXT           "您已选择添加一个数据库主机服务器到存储在服务器 %1 上的列表中。\n\n在下面输入新数据库主机名。",
+                    IDC_ADDHOST_DESC,31,10,190,34
+    PUSHBUTTON      "帮助",9,171,88,50,14
+END
+
+IDD_SVR_ADDRESS DIALOGEX 0, 0, 208, 115
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "更改服务器地址"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "为服务器 %1 记录在 VLDB 中的 IP 地址：",IDC_TITLE,4,4,
+                    200,8
+    LISTBOX         IDC_SVR_ADDRESSES,4,14,147,40,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "更改(&C)...",IDC_ADDR_CHANGE,154,24,50,14
+    PUSHBUTTON      "除去(&R)",IDC_ADDR_REMOVE,154,40,50,14
+    DEFPUSHBUTTON   "确定",IDOK,46,97,50,14
+    PUSHBUTTON      "取消",IDCANCEL,100,97,50,14
+    PUSHBUTTON      "帮助",9,154,97,50,14
+    LTEXT           "注：当文件服务器启动时，它用 VLDB 自动注册其当前的 IP 地址。",
+                    IDC_STATIC,4,64,200,18
+END
+
+IDD_SVR_NEWADDR DIALOGEX 0, 0, 223, 69
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "更改 IP 地址"
+CLASS "AFSManagerClass"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,61,51,50,14
+    PUSHBUTTON      "取消",IDCANCEL,115,51,50,14
+    PUSHBUTTON      "帮助",9,169,51,50,14
+    LTEXT           "输入新的 IP 地址以替换 VLDB 中的 %1：",IDC_TITLE,4,4,
+                    215,8
+    CONTROL         "",IDC_ADDRESS,"SockAddr",WS_BORDER | WS_TABSTOP,42,23,
+                    90,14
+    LTEXT           "地址：",IDC_STATIC,4,26,28,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "resource\\afssvrmgr.ico"
+32513                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\error.ico"
+32515                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\warning.ico"
+IDI_INSTALL             ICON    DISCARDABLE     "resource\\install.ico"
+IDI_UNINSTALL           ICON    DISCARDABLE     "resource\\uninstal.ico"
+IDI_PRUNE               ICON    DISCARDABLE     "resource\\prune.ico"
+IDI_GETDATES            ICON    DISCARDABLE     "resource\\getdates.ico"
+IDI_SUBSET              ICON    DISCARDABLE     "resource\\subset.ico"
+IDI_ADMINLIST           ICON    DISCARDABLE     "resource\\admlist.ico"
+IDI_BTN_DELETE          ICON    DISCARDABLE     "resource\\btn_delete.ico"
+IDI_BTN_RENAME          ICON    DISCARDABLE     "resource\\btn_rename.ico"
+IDI_SERVER              ICON    DISCARDABLE     "..\\afsapplib\\resource\\server.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "..\\afsapplib\\resource\\service.ico"
+IDI_AGGREGATE           ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg.ico"
+IDI_FILESET             ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset.ico"
+IDI_SERVER_ALERT        ICON    DISCARDABLE     "..\\afsapplib\\resource\\server1.ico"
+IDI_SERVICE_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\service1.ico"
+IDI_AGGREGATE_ALERT     ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg1.ico"
+IDI_FILESET_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset1.ico"
+IDI_BOSSERVICE          ICON    DISCARDABLE     "..\\afsapplib\\resource\\bos.ico"
+IDI_USER                ICON    DISCARDABLE     "..\\afsapplib\\resource\\user.ico"
+IDI_SERVER_KEY          ICON    DISCARDABLE     "..\\afsapplib\\resource\\key.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_MAIN ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_APPS,        M_KEY_MENU,             VIRTKEY, NOINVERT
+    VK_ESCAPE,      M_KEY_ESC,              VIRTKEY, NOINVERT
+    VK_F10,         M_KEY_MENU,             VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      M_KEY_RETURN,           VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_TAB,              VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_BACKTAB,          VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         M_KEY_CTRLTAB,          VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         M_KEY_CTRLBACKTAB,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_RETURN,      M_KEY_PROPERTIES,       VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_LISTS_TITLE     "服务器 %1 - 管理员列表"
+    IDS_TAB_SERVICES        "服务"
+    IDS_TAB_AGGREGATES      "分区"
+    IDS_TAB_FILESETS        "卷"
+    IDS_SERVICE_NONESELECTED "选择要查看的服务器。"
+    IDS_SERVICE_GOTSELECTED "在服务器 %1 上进行的服务："
+    IDS_AGGREGATE_ALL       "所有服务器上的分区："
+    IDS_AGGREGATE_ONE       "服务器 %1 上的分区："
+    IDS_FILESET_ALL         "单元 %1 中的所有卷："
+    IDS_FILESET_ONE         "服务器 %1 上的所有卷："
+    IDS_SVR_LISTS_TAB       "管理员列表"
+    IDS_SVR_PROP_TITLE      "服务器 %1 - 特性"
+    IDS_SVR_GENERAL_TAB     "一般"
+    IDS_SVR_SCOUT_TAB       "设置"
+    IDS_SERVER_TITLE        "服务器 %1 - AFS 服务器管理器"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_DESC         "单元 %2 中的服务器 %1："
+    IDS_SVC_PROP_TITLE      "服务器 %1 上的服务 %2 - 特性"
+    IDS_SVC_GENERAL_TAB     "一般"
+    IDS_SVC_ADD_TITLE       "创建服务"
+    IDS_SVC_ADD_TAB         "创建服务"
+    IDS_AGG_PROP_TITLE      "服务器 %1 上的分区 %2 - 特性"
+    IDS_AGG_GENERAL_TAB     "一般"
+    IDS_SET_REP_TITLE       "卷 %1 - 复制"
+    IDS_SET_REPSITES_TAB    "复制站点"
+    IDS_SET_PROP_TITLE      "卷 %1 - 特性"
+    IDS_SET_GENERAL_TAB     "一般"
+    IDS_SET_UNLOCKBTN       "现在解锁(&L)"
+    IDS_SET_LOCKBTN         "现在锁定(&L)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USAGE_FILESET       "使用了 %1，限额为 %2 (%3%%)"
+    IDS_USAGE_AGGREGATE     "使用了 %1，容量为 %2 (%3%%)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGCOL_ALLOCATED    "组合的限额"
+    IDS_SVRCOL_NAME         "服务器"
+    IDS_SVRCOL_STATUS       "状态"
+    IDS_SETCOL_DATE_ACCESS  "最近一次存取"
+    IDS_SETCOL_DATE_BACKUP  "最近一次备份"
+    IDS_SVCCOL_NAME         "服务"
+    IDS_SVCCOL_TYPE         "类型"
+    IDS_SVCCOL_PARAMS       "参数"
+    IDS_SVCCOL_STATUS       "状态"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_DATE_START   "最近一次启动"
+    IDS_SVCCOL_DATE_STOP    "最近一次停止"
+    IDS_SVCCOL_DATE_STARTSTOP "最近一次启动／停止"
+    IDS_SVCCOL_DATE_FAILED  "最近一次失败"
+    IDS_SVCCOL_LASTERROR    "最近一次的退出码"
+    IDS_AGGCOL_NAME         "分区"
+    IDS_AGGCOL_ID           "标识符"
+    IDS_AGGCOL_DEVICE       "设备"
+    IDS_AGGCOL_USED         "已使用"
+    IDS_AGGCOL_USED_PER     "已使用 %"
+    IDS_AGGCOL_FREE         "自由"
+    IDS_AGGCOL_TOTAL        "容量"
+    IDS_AGGCOL_STATUS       "状态"
+    IDS_SETCOL_NAME         "卷"
+    IDS_SETCOL_TYPE         "类型"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETCOL_DATE_CREATE  "已创建"
+    IDS_SETCOL_DATE_UPDATE  "最近一次更新"
+    IDS_SETCOL_STATUS       "状态"
+    IDS_SETCOL_QUOTA_USED   "已使用"
+    IDS_SETCOL_QUOTA_USED_PER "已使用 %"
+    IDS_SETCOL_QUOTA_FREE   "自由"
+    IDS_SETCOL_QUOTA_TOTAL  "限额"
+    IDS_TRYAGAINBTN         "再试一次(&A)"
+    IDS_NO_CELL_SELECTED    "(未指定单元)"
+    IDS_NO_AFS_ID           "(无令牌可用)"
+    IDS_AFS_ID_WILLEXP      "%1(令牌将在 %2 到期)"
+    IDS_ELAPSED_TIME        "%1"
+    IDS_SEARCHING_FOR_SERVERS "请等待；正在获取关于单元 %1 的信息..."
+    IDS_STATUS_NOALERTS     "正常"
+    IDS_TITLE_BROWSE_USER   "选择用户"
+    IDS_AGGTYPE_OTHER       "未知 (%1)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATEFILESET "在分区 %1:%2 上创建卷 %3"
+    IDS_ACTION_DELETEFILESET "从分区 %1:%2 上删除卷 %3"
+    IDS_ACTION_MOVEFILESET  "移动卷 %3 到分区 %1:%2"
+    IDS_ACTION_SETFILESETQUOTA "为卷 %3 更改限额"
+    IDS_SVCSTOP_DESC2       "单击确定停止该服务。"
+    IDS_SVCSTART_DESC2      "单击确定启动该服务。"
+    IDS_SYNCVLDB_SVR_DESC   "注意！\n\n如果您继续，AFS 服务器管理器将修改 VLDB 以匹配服务器 %1 上所有分区的内容。"
+    IDS_SYNCVLDB_SVR_DESC2  "如果 VLDB 提及一个卷，但该卷现在无法在服务器 %1 的任何分区上找到，将删除该卷的 VLDB 条目！"
+    IDS_SYNCVLDB_AGG_DESC   "注意！\n\n如果您继续，AFS 服务器管理器将修改 VLDB 以匹配服务器 %1 上分区 %2 的内容。"
+    IDS_SYNCVLDB_AGG_DESC2  "如果 VLDB 提及一个卷，但该卷现在无法在该分区上找到，将删除该卷的 VLDB 条目！"
+    IDS_PROMPT_BROWSE_USER  "用户："
+    IDS_PREVIEWIN_BUTTON    "<< 预览(&P)"
+    IDS_PREVIEWOUT_BUTTON   "预览(&P) >>"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADMCOL_TYPE_USER    "用户"
+    IDS_TITLE_BROWSE_PRINCIPAL "选择委托人"
+    IDS_TITLE_BROWSE_OWNGROUP "选择拥有组"
+    IDS_PROMPT_BROWSE_PRINCIPAL "委托人："
+    IDS_PROMPT_BROWSE_OWNGROUP "拥有组："
+    IDS_ACTION_CLONE        "创建卷 %3 的备份版本"
+    IDS_ACTION_CLONESYS     "创建多个卷备份"
+    IDS_CLONESYS_FAILED     "卷 %1 的备份无法创建，原因是错误 0x%2 (%3)。"
+    IDS_SET_UNSPECIFIED     "(未指定的)"
+    IDS_SETCOL_ID           "标识符"
+    IDS_SETCOL_FILES        "文件计数"
+    IDS_SET_DUMP_NAME       "%1.DMP 的转储"
+    IDS_ACTION_DUMP         "转储卷 %3(分区 %1:%2)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILESETNAME_ERROR   "%1 - %2"
+    IDS_SETCOL_AGGREGATE    "分区"
+    IDS_REFRESH_DESC_CELL   "AFS 服务器管理器正在确定单元 %1 中服务器的状态。这可能需要几分钟..."
+    IDS_REFRESH_DESC_SERVER "AFS 服务器管理器正在确定服务器 %1 的状态。这可能需要几分钟..."
+    IDS_REFRESH_CURRENT_CELL "正在检查：单元 %1"
+    IDS_REFRESH_CURRENT_SERVER "正在检查：服务器 %2"
+    IDS_REFRESH_CURRENT_AGGREGATE "正在检查：服务器 %2 的分区 %3"
+    IDS_REFRESH_CURRENT_FILESET "正在检查：服务器 %2，分区 %3 的卷 %4"
+    IDS_REFRESH_CURRENT_SERVICE "正在检查：服务器 %2 上的服务 %3"
+    IDS_REFRESH_PERCENT     "%1%% 完成"
+    IDS_PROBLEMS            "问题"
+    IDS_SERVER_NO_PROBLEMS  "该服务器无已知问题。"
+    IDS_SERVICE_NO_PROBLEMS "该服务无已知问题。"
+    IDS_AGGREGATE_NO_PROBLEMS "该分区无已知问题。"
+    IDS_FILESET_NO_PROBLEMS "该卷无已知问题。"
+    IDS_AGGTYPE_TYPE1       "UFS"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGTYPE_TYPE2       "LFS"
+    IDS_AGGTYPE_TYPE3       "AIX"
+    IDS_AGGTYPE_TYPE4       "VXFS"
+    IDS_AGGTYPE_TYPE5       "DMEPI"
+    IDS_REFRESH_CURRENT_VLDB "正在检查：卷位置数据库 (VLDB)"
+    IDS_FILESETTYPE_RW      "读取／写入"
+    IDS_FILESETTYPE_RO      "副本"
+    IDS_FILESETTYPE_CLONE   "备份"
+    IDS_MOVESET_READWRITE   "继续将导致卷 %3 从服务器 %1 的分区 %2 上移动到另一个位置。"
+    IDS_MOVESET_READONLY    "继续将导致卷副本 %3 从服务器 %1 的分区 %2 上被删除，并在您在下面指定的分区上创建另一个卷副本。"
+    IDS_SVC_START_TITLE     "启动服务"
+    IDS_SVC_STOP_TITLE      "停止服务"
+    IDS_SERVICESTATUS_STARTING "该服务当前正在启动。"
+    IDS_SERVICESTATUS_RUNNING "该服务当前正在运行。"
+    IDS_SERVICESTATUS_STOPPED "该服务当前停止。"
+    IDS_SERVICESTATUS_STOPPING "该服务当前正在停止。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICESTATUS_UNKNOWN "该服务状态未知。"
+    IDS_SVC_RESTART_BUTTON  "现在停止并重新启动(&R)"
+    IDS_PROBLEM_BOX         "已知问题 (%1)"
+    IDS_VIEWLOG_DESC_NOFILE "AFS 服务器管理器无法找到服务器 %1 上的服务 %2 的日志文件。请在下面输入服务日志文件的绝对路径。"
+    IDS_NO_GROUP            "(无拥有组)"
+    IDS_VIEWLOG_FROMSERVER  "服务器 %1 上的日志文件"
+    IDS_VIEWLOG_FROMSERVICE "服务器 %1 上服务 %2 的日志文件"
+    IDS_VIEWLOG_TRUNCATED   "文件目录(仅显示最后 %1 行)："
+    IDS_SAVELOG_FILTER      "文本文件|*.TXT|"
+    IDS_ADVANCEDIN_BUTTON   "<< 高级(&A)"
+    IDS_ADVANCEDOUT_BUTTON  "高级(&A) >>"
+    IDS_REPTYPE_RELEASE     "释放复制"
+    IDS_REPTYPE_SCHEDULED   "定期复制"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UPDATEALL_BUTTON    "更新所有(&U)"
+    IDS_UPDATETHIS_BUTTON   "更新(&U)"
+    IDS_SERVER_MULTIPLE_PROBLEMS "该服务器有 %1 个已知问题。"
+    IDS_SERVICE_MULTIPLE_PROBLEMS "该服务有 %1 个已知问题。"
+    IDS_AGGREGATE_MULTIPLE_PROBLEMS "该分区有 %1 个已知问题。"
+    IDS_FILESET_MULTIPLE_PROBLEMS "该卷有 %1 个已知问题。"
+    IDS_FILESETTYPE_RO_STAGE "副本"
+    IDS_SERVICETYPE_SIMPLE_LONG "简单（不间断运行）"
+    IDS_SERVICETYPE_CRON_LONG "Cron （在指定间隔运行）"
+    IDS_QUOTAUNITS_KB       "KB"
+    IDS_QUOTAUNITS_MB       "MB"
+    IDS_NO_QUOTA_REPLICA    "(该卷是副本，因而无限额)"
+    IDS_NO_QUOTA_CLONE      "(该卷是备份，因而无限额)"
+    IDS_USAGE_REPLICA       "已使用 %1"
+    IDS_USAGE_CLONE         "已使用 %1"
+    IDS_COL_AGGS_MOVE       "当创建卷时的分区"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERCENTAGE          "%1 %%"
+    IDS_AGGREGATES_IN_SERVER "服务器 %1 上的分区："
+    IDS_AGGREGATES_IN_CELL  "单元 %1 中所有分区："
+    IDS_AGGREGATES_IN_NOTHING "分区："
+    IDS_FILESETS_IN_SERVER  "服务器 %1 上的所有卷："
+    IDS_FILESETS_IN_CELL    "单元 %1 中的所有卷："
+    IDS_FILESETS_IN_NOTHING "卷："
+    IDS_SERVICES_IN_SERVER  "服务器 %1 上所有服务："
+    IDS_SERVICES_IN_NOTHING "服务："
+    IDS_UNKNOWN             "(未知)"
+    IDS_UNKNOWN_GROUP       "组 #%1 (名称未知)"
+    IDS_AGGFULL_WARN_OFF    "缺省阈值(服务器上禁用警告)"
+    IDS_SERVER_AGGREGATE    "%1:%2"
+    IDS_SERVERNAME_ERROR    "%1 - %2"
+    IDS_AGGREGATENAME_ERROR "%1 - %2"
+    IDS_SETFULL_WARN_OFF    "缺省阈值(服务器上禁用警告)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_LASTERRORDATE "%1 - 退出码 %2"
+    IDS_COL_SERVERS         "单元中的服务器"
+    IDS_COL_FILESETS        "服务器上的卷"
+    IDS_COL_AGGREGATES      "服务器上的分区"
+    IDS_COL_SERVICES        "服务器上的服务"
+    IDS_COL_REPLICAS        "卷副本"
+    IDS_COLUMNS_TITLE       "选择显示列 - AFS 服务器管理器"
+    IDS_REPCOL_SERVER       "服务器"
+    IDS_REPCOL_AGGREGATE    "分区"
+    IDS_REPCOL_DATE_UPDATE  "最近更新"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_AGGS_CREATE     "移动卷时的分区"
+    IDS_WARN_TITLE          "注意"
+    IDS_WARN_DISABLE_AUTH   "通过单击""允许不验证""按钮，您可允许未经验证的委托人来操作该服务器上的服务。由于许多服务以 root 身份运行，该操作代表 +"
+    IDS_WARN_DISABLE_AUTH2  "服务器安全性的一个严重缺陷。\n\n您确认要更改吗?"
+    IDS_SVR_NO_ADDR         "(未指定的)"
+    IDS_TITLE_BAD_CELL      "无法识别的单元名"
+    IDS_DESC_BAD_CELL       "网络上找不到您输入的单元名。\n\n 请再次检查您的条目，以确认是正确的。"
+    IDS_AGGFULL_WARN_ON     "该服务器的缺省阈值(&D) (其大小的 %1%%)"
+    IDS_SETFULL_WARN_ON     "该服务器的缺省阈值(&D) (其大小的 %1%%)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
+                            "无法识别您输入的 AFS 身份，或您指定的口令不正确。"
+    IDS_SVR_CREDS_NONE          "(没有令牌)"
+    IDS_SVR_CREDS_VALID         "%2，在 %3 到期"
+    IDS_SVR_CREDS_EXPIRED       "(令牌已在 %3 到期)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGG_FILESETS        "%1  (组合的限额：%2)"
+    IDS_ACTION_DESC_NONE    "没有正在进行的操作。"
+    IDS_ACTION_DESC_ONE     "此操作正在进行："
+    IDS_ACTION_DESC_MULT    "下列操作正在进行："
+    IDS_ACTCOL_OPERATION    "操作"
+    IDS_ACTCOL_ELAPSED      "已过时间"
+    IDS_ACTION_REFRESH      "正在刷新单元信息"
+    IDS_ACTION_CREATESERVER "正在创建服务器 %1"
+    IDS_ACTION_DELETESERVER "正在删除服务器 %1"
+    IDS_ACTION_GETSERVERLOGFILE "正在从服务器 %1 获取日志文件 %2"
+    IDS_ACTION_SETSERVERAUTH "正在为服务器 %1 更改存取限制"
+    IDS_ACTION_CHANGESERVERSTATUS "正在更改服务器 %1 的特性"
+    IDS_ACTION_STARTSERVICE "正在启动服务器 %1 的服务 %2"
+    IDS_ACTION_STOPSERVICE  "正在停止服务器 %1 的服务 %2"
+    IDS_ACTION_RESTARTSERVICE "正在重新启动服务器 %1 的服务 %2"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SYNCVLDB_SVR "正在使 VLDB 与服务器 %1 同步"
+    IDS_ACTION_SYNCVLDB_AGG "正在使 VLDB 与分区 %1:%2 同步"
+    IDS_ACTION_SCOUT        "正在检查服务器 %1 的问题"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SETREPPARAMS "正在更改卷 %3 的复制特性"
+    IDS_ACTION_CREATEREPLICA "正在分区 %1:%2 上创建卷 %3 的副本"
+    IDS_DELSET_REPLICA_DESC "注意！\n\n继续将删除服务器 %1 的分区 %2 的卷 %3 的副本。"
+    IDS_DELSET_CLONE_DESC   "注意！\n\n继续将删除服务器 %1 的分区 %2 的卷备份 %3 。"
+    IDS_INSTALL_DESC1       "该操作复制文件到另一台计算机。+"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_DESC2       "如果文件已存在于目标计算机，会将它做备份并以 .BAK 作为扩展名；任何现有的备份文件扩展名会转换为 .OLD，任何现有的扩展名为 .OLD 的文件将被删除。"
+    IDS_ACTION_INSTALLFILE  "正在服务器 %1 上安装文件 %2"
+    IDS_ACTION_UNINSTALLFILE "正在从服务器 %1 上卸装文件 %2"
+    IDS_ACTION_PRUNEFILES   "正在从服务器 %1 上删除文件"
+    IDS_FILTER_ALLFILES     "所有文件|*.*|"
+    IDS_ACTION_RENAMEFILESET "正在重命名卷 %1 为 %2"
+    IDS_RECUR_DAILY         "每天"
+    IDS_RECUR_SUNDAY        "每周日"
+    IDS_RECUR_MONDAY        "每周一"
+    IDS_RECUR_TUESDAY       "每周二"
+    IDS_RECUR_WEDNESDAY     "每周三"
+    IDS_RECUR_THURSDAY      "每周四"
+    IDS_RECUR_FRIDAY        "每周五"
+    IDS_RECUR_SATURDAY      "每周六"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATESERVICE "正在服务器 %1 上创建服务 %2"
+    IDS_ACTION_DELETESERVICE "正在从服务器 %1 上删除文件 %2"
+    IDS_ACTION_RELEASEFILESET "正在释放卷 %3"
+    IDS_ACTION_GETDATES     "正在获取服务器 %1 上的文件 %2 的日期"
+    IDS_LASTMODIFIED        "最近一次修改 %1"
+    IDS_SVR_SECURITY_TITLE  "服务器安全性 - %1"
+    IDS_SVR_LIST_TAB        "管理员"
+    IDS_ACTION_ADMINLIST_LOAD "正在获取服务器 %1 的管理员"
+    IDS_ACTION_ADMINLIST_SAVE "正在写入服务器 %1 的管理员"
+    IDS_ADMCOL_PRINCIPAL    "成员"
+    IDS_ADMCOL_TYPE         "类型"
+    IDS_ADMCOL_TYPE_GROUP   "组"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_RESTORE      "正在恢复卷 %1"
+    IDS_COL_AGGS_RESTORE    "恢复卷时的分区"
+    IDS_RESTORE_FILTER      "卷转储文件 |*.DMP|所有文件|*.*|"
+    IDS_SVC_BOS_TAB         "BOS"
+    IDS_ACTION_SETRESTART   "正在更改服务器 %1 的服务重新启动时间"
+    IDS_RESTORE_CREATESET   "卷 %1 将创建在您在下面指定的服务器的分区上。"
+    IDS_RESTORE_OVERWRITESET 
+                            "注意！卷 %3 存在于服务器 %1 的分区 %2 上，如果您继续，将覆盖它！"
+    IDS_SUBSET_TITLE_LOAD   "打开服务器子集"
+    IDS_SUBSET_TITLE_SAVE   "保存服务器子集"
+    IDS_BUTTON_OPEN         "打开(&O)"
+    IDS_BUTTON_SAVE         "保存(&S)"
+    IDS_SUBSET_SAVE_TITLE   "注意"
+    IDS_SUBSET_SAVE_DESC    "名为 %1 的服务器子集已存在。\n\n您想覆盖该子集吗？"
+    IDS_SUBSET_CHANGED      "%1 [已修改的]"
+    IDS_SUBSET_TAB          "被监视的服务器"
+    IDS_SUBSET_DISCARD_TITLE "保存子集？"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUBSET_DISCARD_DESC "您还未将当前监视的服务器列表保存为子集。如果保存该列表，以后您可以继续监视这些服务器。\n\n+"
+    IDS_SUBSET_DISCARD_DESC2 
+                            "您是否要创建一个子集来包含当前监视的服务器的列表？"
+    IDS_SUBSET_NONAME       "(未命名的)"
+    IDS_SUBSET_NOSUBSET     "(所有服务器正被监视)"
+    IDS_SUBSET_SERVERSUBSET "服务器 %1"
+    IDS_FILESET_SOME        "单元 %1 中所有被监视服务器的卷："
+    IDS_AGGREGATE_SOME      "单元 %1 中所有被监视服务器的分区："
+    IDS_SERVICE_SOME        "单元 %1 中所有被监视服务器的服务："
+    IDS_FILESET_UNMON       "服务器 %1 未被监视"
+    IDS_AGGREGATE_UNMON     "服务器 %1 未被监视"
+    IDS_SERVICE_UNMON       "服务器 %1 未被监视"
+    IDS_SUBSET_DELETE_TITLE "删除子集？"
+    IDS_SUBSET_DELETE_DESC  "您确定要删除服务器子集 %1？"
+    IDS_ERROR_TRANSLATED    "错误号 0x%1 (%2):\n\n%3"
+    IDS_ERROR_NOTTRANSLATED "无法辨认错误号 0x%1 (%2)。"
+    IDS_FIND_NOTHING_TITLE  "未选择命令"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIND_NOTHING_DESC   "要查找如何执行一个操作，首先从列表选择一个命令行或输入一个关键字。"
+    IDS_FIND_UNKNOWN_TITLE  "未知命令"
+    IDS_FIND_UNKNOWN_DESC   "AFS 服务器管理器无法找到命令""%1"" 的任何帮助主题。"
+    IDS_HELPABOUT_DESC1     "警告：该计算机程序受到版权及国际条约的保护。+"
+    IDS_HELPABOUT_DESC2     "未经授权复制或分发该软件会受到严厉的民事或刑事处罚，并将受到法律严惩。\n\n+"
+    IDS_HELPABOUT_DESC3     "AFS 是 Transarc 公司(IBM 公司)的商标。"
+    IDS_CANT_QUIT_TITLE     "AFS 服务器管理器"
+    IDS_CANT_QUIT_REBOOT    "注意！\n\n AFS 服务器管理器正在执行一个或更多操作。如果您现在关闭 Windows，将无法成功完成那些操作。\n\n 您确定要重新启动 Windows 吗？"
+    IDS_APP_TITLE           "AFS 服务器管理器"
+    IDS_ACTION_OPENCELL     "在单元 %1 中查找服务器"
+    IDS_OPTIONS_TITLE       "选项 - AFS 服务器管理器"
+    IDS_OPTIONS_GENERAL_TAB "一般"
+    IDS_BADCREDS_DESC       "除非作为管理员登录，否则您可能会没有充足的特权成功管理 %1 单元。没有充足的存取特权可能会导致正常情况下 AFS 服务器管理器也会在单元中找到问题。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRMATION_TITLE  "确认 - AFS 服务器管理器"
+    IDS_NO_GROUP_CHECKBOX   "无拥有组"
+    IDS_AFS_ID_DIDEXP       "%1(令牌已在 %2 到期)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_QUERYING            "(正在查询)"
+    IDS_ADMCOL_TYPE_FOREIGN_GROUP "外部组"
+    IDS_ADMCOL_TYPE_FOREIGN_USER "外部用户"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_NOTIFIER     "通知器"
+    IDS_SVC_NONOTIFIER      "(无)"
+    IDS_SVR_KEY_TAB         "服务器密钥"
+    IDS_KEYNAME_NOTIME      "服务器 %1 的密钥："
+    IDS_KEYNAME_WITHTIME    "服务器 %1 的密钥(已修改的 %2)："
+    IDS_SVRKEY_VERSION      "版本"
+    IDS_SVRKEY_DATA         "值"
+    IDS_SVRKEY_CHECKSUM     "校验和"
+    IDS_SVRKEY_DATA_UNKNOWN "(隐藏的)"
+    IDS_STARTSERVICE_TITLE  "启动服务"
+    IDS_STOPSERVICE_TITLE   "停止服务"
+    IDS_STARTSERVICE_TEXT   "单击“确定”以启动服务器 %1 上的服务 %2。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOPSERVICE_TEXT    "单击“确定”以停止服务器 %1 上的服务 %2。"
+    IDS_STARTSERVICE_STARTUP 
+                            "您可以永久保持该更改，以便服务器 %1 重新启动时，服务 %2 会自动启动。"
+    IDS_STOPSERVICE_STARTUP "您可以永久保持该更改，以便服务器 %1 重新启动时，服务 %2 不会自动启动。"
+    IDS_STARTSERVICE_PERMANENT "永久(如果服务器 %1 重新启动，启动服务 %2)(&P)"
+    IDS_STARTSERVICE_TEMPORARY 
+                            "临时(如果服务器 %1 重新启动，不启动服务 %2)(&T)"
+    IDS_STOPSERVICE_PERMANENT 
+                            "永久(如果服务器 %1 重新启动，不启动服务 %2)(&P)"
+    IDS_STOPSERVICE_TEMPORARY "临时(如果服务器 %1 重新启动，启动服务 %2)(&T)"
+    IDS_ACTION_EXECUTE      "执行服务器 %1 的 %2"
+    IDS_ACTION_SALVAGE_SVR  "挽救服务器 %1 上的所有卷："
+    IDS_ACTION_SALVAGE_AGG  "挽救分区 %1:2 上的所有卷："
+    IDS_ACTION_SALVAGE_VOL  "挽救分区 %1:2 上的卷 %3"
+    IDS_SALVAGE_SVR         "挽救服务器 %1 上的所有卷"
+    IDS_SALVAGE_AGG         "挽救服务器 %1 的分区 %2 的所有卷"
+    IDS_SALVAGE_SET         "挽救服务器 %1 的分区 %2 的卷 %3"
+    IDS_SETSTATUS_SALVAGE   "挽救卷"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETSTATUS_LOCKED    "卷被锁定"
+    IDS_SETSTATUS_NO_VOL    "卷丢失"
+    IDS_SETSTATUS_BUSY      "卷当前较忙"
+    IDS_SETSTATUS_MOVED     "已移动的卷"
+    IDS_SVR_CAPACITY        "%1"
+    IDS_SVR_ALLOCATION      "%1 (%2%%)"
+    IDS_SVRCOL_ADDRESS      "地址"
+    IDS_HOST_TITLE          "服务器 %1 识别的数据库主机服务器："
+    IDS_SVR_HOSTS_TITLE     "服务器 %1 - 数据库主机"
+    IDS_SVR_HOST_TAB        "数据库主机"
+    IDS_ACTION_HOSTLIST_LOAD "正在从服务器 %1 获取主机列表"
+    IDS_ACTION_HOSTLIST_SAVE "写主机列表到服务器 %1"
+    IDS_SETSTATUS_1ALERT    "卷有一个问题"
+    IDS_SETSTATUS_2ALERT    "卷有 %1 个问题"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CHANGEADDR   "为服务器 %1 更改 IP 地址"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_ADDSITE "vos addsite"
+    IDS_COMMAND_VOS_BACKUP  "vos backup"
+    IDS_COMMAND_VOS_BACKUPSYS "vos backupsys"
+    IDS_COMMAND_VOS_CREATE  "vos create"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_DELENTRY "vos delentry"
+    IDS_COMMAND_VOS_DUMP    "vos dump"
+    IDS_COMMAND_VOS_EXAMINE "vos examine"
+    IDS_COMMAND_VOS_LISTPART "vos listpart"
+    IDS_COMMAND_VOS_LISTVLDB "vos listvldb"
+    IDS_COMMAND_VOS_LISTVOL "vos listvol"
+    IDS_COMMAND_VOS_LOCK    "vos lock"
+    IDS_COMMAND_VOS_MOVE    "vos move"
+    IDS_COMMAND_VOS_PARTINFO "vos partinfo"
+    IDS_COMMAND_VOS_RELEASE "vos release"
+    IDS_COMMAND_VOS_REMOVE  "vos remove"
+    IDS_COMMAND_VOS_REMSITE "vos remsite"
+    IDS_COMMAND_VOS_RENAME  "vos rename"
+    IDS_COMMAND_VOS_RESTORE "vos restore"
+    IDS_COMMAND_VOS_SYNCVLDB "vos syncvldb"
+    IDS_COMMAND_VOS_UNLOCK  "vos unlock"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_UNLOCKVLDB "vos unlockvldb"
+    IDS_COMMAND_VOS_ZAP     "vos zap"
+    IDS_COMMAND_BOS_ADDHOST "bos addhost"
+    IDS_COMMAND_BOS_ADDKEY  "bos addkey"
+    IDS_COMMAND_BOS_ADDUSER "bos adduser"
+    IDS_COMMAND_BOS_CREATE  "bos create"
+    IDS_COMMAND_BOS_DELETE  "bos delete"
+    IDS_COMMAND_BOS_EXEC    "bos exec"
+    IDS_COMMAND_BOS_GETDATE "bos getdate"
+    IDS_COMMAND_BOS_GETLOG  "bos getlog"
+    IDS_COMMAND_BOS_GETRESTART "bos getrestart"
+    IDS_COMMAND_BOS_INSTALL "bos install"
+    IDS_COMMAND_BOS_LISTHOSTS "bos listhosts"
+    IDS_COMMAND_BOS_LISTKEYS "bos listkeys"
+    IDS_COMMAND_BOS_LISTUSERS "bos listusers"
+    IDS_COMMAND_BOS_PRUNE   "bos prune"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_BOS_REMOVEHOST "bos removehost"
+    IDS_COMMAND_BOS_REMOVEKEY "bos removekey"
+    IDS_COMMAND_BOS_REMOVEUSER "bos removeuser"
+    IDS_COMMAND_BOS_RESTART "bos restart"
+    IDS_COMMAND_BOS_SALVAGE "bos salvage"
+    IDS_COMMAND_BOS_SETAUTH "bos setauth"
+    IDS_COMMAND_BOS_SETRESTART "bos setrestart"
+    IDS_COMMAND_BOS_SHUTDOWN "bos shutdown"
+    IDS_COMMAND_BOS_START   "bos start"
+    IDS_COMMAND_BOS_STARTUP "bos startup"
+    IDS_COMMAND_BOS_STATUS  "bos status"
+    IDS_COMMAND_BOS_STOP    "bos stop"
+    IDS_COMMAND_BOS_UNINSTALL "bos uninstall"
+    IDS_COMMAND_KAS_GETRANDOMKEY "kas getrandomkey"
+    IDS_COMMAND_FS_LISTQUOTA "fs listquota"
+    IDS_COMMAND_FS_QUOTA    "fs quota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_FS_SETQUOTA "fs setquota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCSHORT_UNMONITORED "服务器 %1 未被监视"
+    IDS_ALERT_DESCSHORT_TIMEOUT "无法联系服务器 %1；最近一次错误：%3"
+    IDS_ALERT_DESCSHORT_AGG_FULL "%2 使用的分区超出警告阈值 %3%% (%4)"
+    IDS_ALERT_DESCSHORT_SET_FULL "%3 使用的卷超出警告阈值 %4%% (%5)"
+    IDS_ALERT_DESCSHORT_NO_VLDBENT "卷 %3 无 VLDB 条目"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_SET 
+                            "卷 %3 有 VLDB 条目但在服务器 %1 的分区 %1 上找不到"
+    IDS_ALERT_DESCSHORT_STOPPED "服务 %2 停止于 %3"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_AGG 
+                            "分区 %2 被 VLDB 引用但无法在服务器 %1 上找到"
+    IDS_ALERT_DESCSHORT_BADCREDS "您可能没有足够的特权管理服务器 %1"
+    IDS_ALERT_DESCSHORT_AGG_ALLOC "分区 %2 上组合的卷限额超出其容量"
+    IDS_ALERT_DESCSHORT_STATE_NO_VNODE "卷 %3 损坏，无法使用。"
+    IDS_ALERT_DESCSHORT_STATE_NO_SERVICE "无运行的服务可供卷 %3 使用。"
+    IDS_ALERT_DESCSHORT_STATE_OFFLINE "卷 %3 脱机，无法使用。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_TIMEOUT 
+                            "无法联系服务器 %1。最近一次尝试，发生于 %2，产生错误""%3""。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_AGG_FULL 
+                            "服务器 %1 的分区 %2 的使用超出其警告阈值 %3%% (%4)。"
+    IDS_ALERT_DESCFULL_SET_FULL 
+                            "卷 %3 (服务器 %1，分区 %2)的使用超出其警告阈值 %4%%(%5)。"
+    IDS_ALERT_DESCFULL_NO_VLDBENT 
+                            "卷 %3 存在于服务器 %1 的分区 %2 上，但没有相应的 VLDB 条目。"
+    IDS_ALERT_DESCFULL_NO_SVRENT_SET 
+                            "卷 %3 有 VLDB 条目，但在服务器 %1 的分区 %2 上找不到。"
+    IDS_ALERT_DESCFULL_STOPPED "服务器 %1 的服务 %2 停止于 %3，退出码为 %5。"
+    IDS_ALERT_DESCFULL_NO_SVRENT_AGG 
+                            "VLDB 指服务器 %1 的分区 %2 的卷，但找不到该分区。"
+    IDS_ALERT_DESCFULL_BADCREDS 
+                            "AFS 服务器管理器可能检测到服务器 %1 上不存在的错误，这是因为您没有该单元管理员的 AFS 令牌。 "
+    IDS_ALERT_DESCFULL_AGG_ALLOC 
+                            "服务器 %1 的分区的 %2 上组合的卷限额，总共 %4，超出分区容量 %3。"
+    IDS_ALERT_DESCFULL_STATE_NO_VNODE 
+                            "服务器 %1 的分区 %2 的 %3 卷没有 Vnode 与之关联。(卷状态为 0x%4。)"
+    IDS_ALERT_DESCFULL_STATE_NO_SERVICE 
+                            "服务器 %1 上没有文件调出器服务运行，无法使用分区 %2 的卷 %3。(卷状态为 0x%4。)"
+    IDS_ALERT_DESCFULL_STATE_OFFLINE 
+                            "服务器 %1 的分区 %2 的 %3 卷脱机，无法使用。(卷状态为 0x%4。)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_TIMEOUT   "单击“再试一次”按钮，尝试重新连接该服务器。"
+    IDS_ALERT_FIX_AGG_FULL  "单击“警告”按钮为该分区的使用更改警告阈值。"
+    IDS_ALERT_FIX_SET_FULL  "单击“警告”按钮为该卷的使用更改警告阈值。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_NO_VLDBENT 
+                            "VLDB 可能过时；如果这样，使用“同步 VLDB”命令进行更新。"
+    IDS_ALERT_FIX_NO_SVRENT_SET "检查服务器和分区以确保它们工作正常。"
+    IDS_ALERT_FIX_STOPPED   "单击“查看日志”按钮为该服务查看服务日志。"
+    IDS_ALERT_FIX_NO_SVRENT_AGG "检查服务器以确保分区已导出且工作正常。"
+    IDS_ALERT_FIX_BADCREDS  "单击“认证”按钮以获得新的 AFS 令牌。"
+    IDS_ALERT_FIX_AGG_ALLOC "减少该分区的卷限额，或者移动一个或多个卷到另一分区。"
+    IDS_ALERT_FIX_STATE_NO_VNODE " "
+    IDS_ALERT_FIX_STATE_NO_SERVICE " "
+    IDS_ALERT_FIX_STATE_OFFLINE " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_BUTTON_TRYAGAIN "再试一次(&A)"
+    IDS_ALERT_BUTTON_WARNINGS "警告(&W)..."
+    IDS_ALERT_BUTTON_VIEWLOG "查看日志(&V)"
+    IDS_ALERT_BUTTON_SHOWME "显示(&S)"
+    IDS_ALERT_BUTTON_GETCREDS "认证(&A)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_CELLSERVERS_NOCELL 
+                            "未指定单元。要使用 AFS 服务器管理器，您必须指定要使用的 AFS 单元。通过选择""打开..."" 菜单项(在上面的""单元 "" 菜单中)来选择单元。"
+    IDS_ERROR_REFRESH_CELLSERVERS 
+                            "无法获得单元 %1 的服务器列表。\n\n错误： %2"
+    IDS_ERROR_CANT_OPEN_CELL 
+                            "AFS 服务器管理器无法联系单元 %1 中的任何服务器。\n\n请重新检查以确认已正确输入单元名。"
+    IDS_ERROR_REFRESH_AGGREGATES "无法获得服务器 %1 的分区列表。\n\n错误：%2"
+    IDS_ERROR_REFRESH_SERVER_STATUS "无法获得服务器 %1 的当前状态。"
+    IDS_ERROR_CHANGE_SERVER_STATUS 
+                            "AFS 服务器管理器无法为服务器 %1 更改特性。"
+    IDS_ERROR_REFRESH_AGGREGATE_STATUS 
+                            "无法获得服务器 %1 的分区 %2 的当前状态。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_FILESET_STATUS 
+                            "无法获得卷 %3 (服务器　%1，分区 %2)的当前状态。"
+    IDS_ERROR_REFRESH_SERVICE_STATUS 
+                            "无法确定服务器 %1 的服务 %2 的当前状态。"
+    IDS_ERROR_MOVE_FILESET  "AFS 服务器管理器无法从服务器 %1 的分区 %2 上移动卷 %3 到服务器 %4 的分区 %5。"
+    IDS_ERROR_VIEW_LOGFILE  "无法从服务器 %1 读取文件 %2。\n\n检查以确认您已正确输入文件名，并且有足够的权限查看文件。"
+    IDS_ERROR_NOT_REPLICATED "无法确定卷 %1 的复制状态。"
+    IDS_ERROR_CANT_CREATE_FILESET 
+                            "AFS 服务器管理器无法在服务器 %1 的分区 %2 上创建卷 %3。"
+    IDS_ERROR_CANT_DELETE_FILESET 
+                            "AFS 服务器管理器无法删除卷 %3 (服务器 %1 的分区 %2)。"
+    IDS_ERROR_CANT_CREATE_VLDB_ENTRY 
+                            "AFS 服务器管理器无法在服务器 %1 的分区 %2 上为卷 %3 创建 VLDB 条目。"
+    IDS_ERROR_CANT_SET_FILESET_QUOTA 
+                            "AFS 服务器管理器无法为服务器 %1 的分区 %2 上的卷 %3 更改限额。"
+    IDS_ERROR_CANT_CREATE_SERVER 
+                            "AFS 服务器管理器无法在单元 %1 中创建请求的服务器条目。"
+    IDS_ERROR_CANT_PING_SERVER 
+                            "AFS 服务器管理器无法确定服务器 %1 的 IP 地址。"
+    IDS_ERROR_CANT_DELETE_SERVER "AFS 服务器管理器无法删除服务器 %1。"
+    IDS_ERROR_CANT_DELETE_SERVER_FILESETS 
+                            "无法删除服务器 %1，因为它仍拥有一个或多个卷。除非服务器不包含卷，否则不能删除。"
+    IDS_ERROR_CHANGE_AGGREGATE_STATUS 
+                            "AFS 服务器管理器无法更改服务器 %1 的分区 %2 的特性。"
+    IDS_ERROR_CHANGE_SERVICE_STATUS 
+                            "AFS 服务器管理器无法更改服务器 %1 的服务 %2 的特性。"
+    IDS_ERROR_CANT_START_SERVICE 
+                            "AFS 服务器管理器无法启动服务器 %1 的服务 %2。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_STOP_SERVICE 
+                            "AFS 服务器管理器无法停止服务器 %1 的服务 %2。"
+    IDS_ERROR_CANT_RESTART_SERVICE 
+                            "AFS 服务器管理器无法停止并重新启动服务器 %1 的服务 %2。"
+    IDS_ERROR_CHANGE_REPLICA_STATUS 
+                            "AFS 服务器管理器无法为服务器 %1 的分区 %2 上的卷 %3 更改复制特性。"
+    IDS_ERROR_CANT_SYNCVLDB "AFS 服务器管理器无法更新 VLDB。"
+    IDS_ERROR_CANT_CREATE_REPLICA 
+                            "AFS 服务器管理器无法创建服务器 %1 的分区 %2 上的卷 %3 的副本。"
+    IDS_ERROR_CANT_INSTALL_FILE 
+                            "AFS 服务器管理器无法在服务器 %1 上安装文件 %2。"
+    IDS_ERROR_CANT_UNINSTALL_FILE 
+                            "AFS 服务器管理器无法在服务器 %1 上卸装文件 %2。"
+    IDS_ERROR_CANT_PRUNE_FILES 
+                            "AFS 服务器管理器无法从服务器 %1 上除去请求的文件。"
+    IDS_ERROR_CANT_RENAME_FILESET "AFS 服务器管理器无法重命名卷 %1 为""%2""。"
+    IDS_ERROR_CANT_CREATE_SERVICE 
+                            "AFS 服务器管理器无法在服务器 %1 上创建服务 %2。"
+    IDS_ERROR_CANT_DELETE_SERVICE 
+                            "AFS 服务器管理器无法从服务器 %1 上删除服务 %2。"
+    IDS_ERROR_CANT_RELEASE_FILESET "AFS 服务器管理器无法释放复制的卷 %3。"
+    IDS_ERROR_CANT_UPDATE_FILESET 
+                            "AFS 服务器管理器无法更新服务器 %2 的分区 %1 的卷副本 %3。"
+    IDS_ERROR_CANT_UPDATE_ALL "AFS 服务器管理器无法更新卷 %3 的任何副本。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_LOAD_ADMLIST 
+                            "AFS 服务器管理器无法读取服务器 %1 的管理员列表。"
+    IDS_ERROR_CANT_LOAD_KEYLIST 
+                            "AFS 服务器管理器无法读取服务器 %1 的服务器密钥列表。"
+    IDS_ERROR_CANT_CREATE_KEY 
+                            "AFS 服务器管理器无法为服务器 %1 新建服务器密钥。"
+    IDS_ERROR_CANT_SAVE_ADMLIST 
+                            "AFS 服务器管理器无法更改服务器 %1 的管理员列表。"
+    IDS_ERROR_CANT_CLONE    "AFS 服务器管理器无法创建服务器 %1 的分区 %2 上的卷 %3 的备份版本。"
+    IDS_ERROR_CANT_CLONESYS "AFS 服务器管理器无法创建任何请求的备份卷。"
+    IDS_ERROR_CANT_DUMP_FILESET 
+                            "AFS 服务器管理器无法转储卷 %3 (服务器 %1，分区 %2)的内容到文件 %4。"
+    IDS_ERROR_CANT_RESTORE_FILESET 
+                            "AFS 服务器管理器无法恢复文件 %4 到卷 %3(服务器 %1，分区 %2)。"
+    IDS_ERROR_CANT_SET_RESTART_TIMES 
+                            "AFS 服务器管理器无法更改服务器 %1 服务的重新启动时间。"
+    IDS_ERROR_CANT_DELETE_REPLICATED_FILESET 
+                            "AFS 服务器管理器无法删除服务器 %1 的分区 %2 的卷 %3。\n\n无法删除卷 %3，除非首先删除其所有副本。"
+    IDS_CMDLINE_TITLE       "出错 - AFS 服务器管理器"
+    IDS_CMDLINE_SYNTAX      "您为 AFS 服务器管理器指定的命令行无效。"
+    IDS_CMDLINE_UNRECOGNIZED 
+                            "您为 AFS 服务器管理器指定的命令行无效。\n\n 无法识别参数 ""%1""。"
+    IDS_CMDLINE_DUPLICATE   "您为 AFS 服务器管理器指定的命令行无效。\n\n 参数""%1""被指定多次。"
+    IDS_CMDLINE_UNEXPECTVALUE 
+                            "您为 AFS 服务器管理器指定的命令行无效。\n\n 参数 ""%1"" 不应赋予值。"
+    IDS_CMDLINE_MISSINGVAL  "您为 AFS 服务器管理器指定的命令行无效。\n\n 参数 ""%1"" 必须带有值。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CMDLINE_SUBSETNOTCELL 
+                            "您为 AFS 服务器管理器指定的命令行无效。\n\n参数""/SUBSET""仅当参数""/CELL""指定时才指定。"
+    IDS_CMDLINE_INVALIDSUBSET 
+                            "您指定的服务器子集，""%2""，没有为单元 %1 定义。"
+    IDS_CMDLINE_SERVERNOTCELL 
+                            "您为 AFS 服务器管理器指定的命令行无效。\n\n参数""/SERVER""仅当指定参数""/CELL""时才指定。"
+    IDS_CMDLINE_RESET_TITLE "AFS 服务器管理器"
+    IDS_CMDLINE_RESET_DESC  "AFS 服务器管理器已清除指定的设置。"
+    IDS_ERROR_CANT_SYNC_GHOST_AGGREGATE 
+                            "AFS 服务器管理器无法使服务器 %1 的分区 %2 与 VLDB 同步，因为该分区不存在或未导出。\n\n要从服务器 %1 上除去该分区，您必须删除相应的卷 VLDB 条目。"
+    IDS_CMDLINE_USERPASSWORD 
+                            "您为 AFS 服务器管理器指定的命令行无效。\n\n要获得新的 AFS 令牌，必须同时指定参数""/USER"" 及 ""/PASSWORD""。"
+    IDS_ERROR_CANT_DELETE_KEY 
+                            "AFS 服务器管理器无法从服务器 %1 上删除服务器密钥 %2。"
+    IDS_ERROR_CANT_GETRANDOMKEY 
+                            "AFS 服务器管理器无法为服务器 %1 生成一个随机密钥。"
+    IDS_ERROR_CANT_EXECUTE_COMMAND 
+                            "AFS 服务器管理器无法在服务器 %1 上执行下列命令：\n\n ""%2"""
+    IDS_ERROR_CANT_READ_SALVAGE_LOG 
+                            "AFS 服务器管理器成功完成挽救操作，但无法检索描述挽救操作特定结果的日志文件。"
+    IDS_ERROR_CANT_SALVAGE  "AFS 服务器管理器无法执行请求的挽救操作。"
+    IDS_ERROR_CANT_AUTH_ON  "AFS 服务器管理器无法为服务器 %1 启用认证检查。"
+    IDS_ERROR_CANT_AUTH_OFF "AFS 服务器管理器无法为服务器 %1 禁用认证检查。"
+    IDS_ERROR_CANT_LOAD_HOSTLIST 
+                            "AFS 服务器管理器无法从服务器 %1 上读取数据库主机服务器列表。"
+    IDS_ERROR_CANT_SAVE_HOSTLIST 
+                            "AFS 服务器管理器无法更改服务器 %1 上的数据库主机服务器列表。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_INIT_AFSCLASS_INSTALL 
+                            "AFS 服务器管理器无法启动，因为该计算机上未正确安装 AFS 控制中心。\n\n您可能需要重新安装 AFS 控制中心。"
+    IDS_ERROR_CANT_INIT_AFSCLASS_UNKNOWN 
+                            "由于一个未知问题，AFS 服务器管理器无法启动。\n\n您可能需要重新安装 AFS 控制中心。"
+    IDS_ERROR_CANT_CHANGEADDR 
+                            "AFS 服务器管理器无法为服务器 %1 更改 VLDB 中的 IP 地址。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "简单"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "已停止"
+    IDS_SERVICESTATE_STOPPING "正在停止"
+    IDS_SERVICESTATE_STARTING "正在启动"
+    IDS_SERVICESTATE_RUNNING "正在运行"
+    IDS_SERVICETYPE_FS_LONG "FS (文件系统)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "单元 %1 中所有服务："
+    IDS_SERVICE_STARTDATE   "已启动 %1"
+    IDS_SERVICE_STOPDATE    "已停止 %1"
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFILESINTRO" HREF="auarf002.htm#ToC_9">afs_file_intro</A></H2>
+<P><STRONG>目的</STRONG>
+<P>AFS ファイルの概要
+<P><STRONG>構文</STRONG>
+<P>多くのファイルは、AFS サーバーおよびクライアント・マシンのローカル・ディスクに常駐しなければなりません。これらは、一般に次のカテゴリーに分類できます。
+<UL>
+<LI><I>構成ファイル</I> は、特定のサーバー、またはバックアップ・システムの磁気テープ・コーディネーターあるいはキャッシュ・マネージャーなどのカーネル・プロセスを定義する
+</LI><LI><I>管理ファイル</I> は、特権ユーザー・リストまたはサーバーの暗号化キー・リストなど、サーバー・マシンの管理で使用する情報をリストする
+</LI><LI><I>キャッシュ関連ファイル</I> には、クライアント側のキャッシュ・データ、またはキャッシュ・データに関する情報が含まれる
+</LI><LI><I>ログ・ファイル</I> には、特定のプロセスの操作についての追跡メッセージが含まれる
+</LI><LI><I>データベース・ファイル</I> には、AFS の管理に使用されるデータベース・レコードが含まれる
+</LI><LI><I>コントローラー・ファイル</I> は、プロセスの振る舞いを制御する
+</LI><LI><I>ボリューム・ヘッダー・ファイル</I> は、サーバー区画上の AFS ボリュームを表す
+</LI></UL>
+<P>各ファイルの形式および内容については、該当する解説ページを参照してください。
+<P><B>Windows ユーザーへの注意:</B> 本書に記載されているファイルには、
+Windows オペレーティング・システムを実行しているマシン上には存在しないファイルがいくつかあります。また、Windows では、パス名内の要素の区切りに、スラッシュ (<B>/</B>)
+ではなく円記号 (<B>\</B>) を使用します。
+<P><STRONG>関連情報 </STRONG>
+<P><B>構成ファイル:</B>
+<A NAME="IDX3862"></A>
+<DL>
+<DD><P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<DD><P><A HREF="auarf018.htm#HDRCFG">CFG_<I>device_name</I></A>
+<DD><P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (クライアント・バージョン)</A>
+<DD><P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (サーバー・バージョン)</A>
+<DD><P><A HREF="auarf024.htm#HDRCLI_NETINFO">NetInfo (クライアント・バージョン)</A>
+<DD><P><A HREF="auarf025.htm#HDRSV_NETINFO">NetInfo (サーバー・バージョン)</A>
+<DD><P><A HREF="auarf026.htm#HDRCLI_NETRESTRICT">NetRestrict (クライアント・バージョン)</A>
+<DD><P><A HREF="auarf027.htm#HDRSV_NETRESTRICT">NetRestrict (サーバー・バージョン)</A>
+<DD><P><A HREF="auarf032.htm#HDRCLI_THISCELL">ThisCell (クライアント・バージョン)</A>
+<DD><P><A HREF="auarf033.htm#HDRSV_THISCELL">ThisCell (サーバー・バージョン)</A>
+<DD><P><A HREF="auarf043.htm#HDRCACHEINFO">cacheinfo</A>
+<DD><P><A HREF="auarf049.htm#HDRSYSID">sysid</A>
+<DD><P><A HREF="auarf050.htm#HDRTAPECONFIG">tapeconfig</A>
+<DD><P><A HREF="auarf053.htm#HDRPACKAGECONFIG">package 構成ファイル</A>
+<DD><P><A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A>
+<DD><P><A HREF="auarf054.htm#HDRUSSBULKINPUT">uss バルク入力ファイル</A>
+</DL>
+<P><B>管理ファイル:</B>
+<A NAME="IDX3863"></A>
+<DL>
+<DD><P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<DD><P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+</DL>
+<P><B>キャッシュ関連ファイル:</B>
+<A NAME="IDX3864"></A>
+<DL>
+<DD><P><A HREF="auarf017.htm#HDRCACHEITEMS">CacheItems</A>
+<DD><P><A HREF="auarf036.htm#HDRVN">V<I>n</I></A>
+<DD><P><A HREF="auarf040.htm#HDRVOLUMEITEMS">VolumeItems</A>
+</DL>
+<P><B>ログ・ファイル:</B>
+<A NAME="IDX3865"></A>
+<DL>
+<DD><P><A HREF="auarf012.htm#HDRAUTHLOG">AuthLog</A>
+<DD><P><A HREF="auarf014.htm#HDRBACKUPLOG">BackupLog</A>
+<DD><P><A HREF="auarf015.htm#HDRBOSLOG">BosLog</A>
+<DD><P><A HREF="auarf021.htm#HDRFILELOG">FileLog</A>
+<DD><P><A HREF="auarf030.htm#HDRSALVAGELOG">SalvageLog</A>
+<DD><P><A HREF="auarf031.htm#HDRTE">TE_<I>device_name</I></A>
+<DD><P><A HREF="auarf034.htm#HDRTL">TL_<I>device_name</I></A>
+<DD><P><A HREF="auarf038.htm#HDRVLLOG">VLLog</A>
+<DD><P><A HREF="auarf039.htm#HDRVOLSERLOG">VolserLog</A>
+<DD><P><A HREF="auarf044.htm#HDRFMSLOG">fms.log</A>
+</DL>
+<P><B>データベース・ファイル:</B>
+<A NAME="IDX3866"></A>
+<DL>
+<DD><P><A HREF="auarf042.htm#HDRBDBDB">bdb.DB0 および bdb.DBSYS1</A>
+<DD><P><A HREF="auarf045.htm#HDRKASERVERDB">kaserver.DB0 および kaserver.DBSYS1</A>
+<DD><P><A HREF="auarf046.htm#HDRKASERVERAUXDB">kaserverauxdb</A>
+<DD><P><A HREF="auarf047.htm#HDRPRDBDB">prdb.DB0 および prdb.DBSYS1</A>
+<DD><P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 および vldb.DBSYS1</A>
+</DL>
+<A NAME="IDX3867"></A>
+<P><B>コントローラー・ファイル:</B>
+<DL>
+<DD><P><A HREF="auarf022.htm#HDRFORCESALVAGE">FORCESALVAGE</A>
+<DD><P><A HREF="auarf028.htm#HDRNOAUTH">NoAuth</A>
+<DD><P><A HREF="auarf029.htm#HDRSALVAGEFS">SALVAGE.fs</A>
+<DD><P><A HREF="auarf048.htm#HDRSALVAGELOCK">salvage.lock</A>
+</DL>
+<P><B>ボリューム・ヘッダー・ファイル:</B>
+<DL>
+<DD><P><A HREF="auarf037.htm#HDRVVOLID">V<I>vol_ID</I>.vol</A>
+</DL>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf010.htm">前ページ</A> &#124; <A HREF="auarf012.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

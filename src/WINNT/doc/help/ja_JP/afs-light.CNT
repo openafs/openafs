@@ -1,0 +1,63 @@
+:Base AFS-LIGHT.HLP
+:Title IBM AFS Light
+1 概説
+2 AFS について=Working_in_AFS>main
+2 AFS ファイル記憶域の概念=AFSFileStorageConcepts>main
+2 AFS セキュリティーの概念=AFS_security_concepts>main
+2 AFS Light の製品情報=AFS_Client>main
+2 ヘルプについて=Audience_and_Purpose>main
+1 開始する
+2 概説=Running_AFS>main
+2 AFS Light ゲートウェイを識別する=Adding_your_Client_to_a_Cell>main
+2 AFS ファイル・スペースをマウントする=Mapping_Drives_Overview>main
+2 AFS に対する認証=Authentication>main
+2 認証を検証する=VerifyingAuthentication@AFS-LIGHT.HLP>main
+2 AFS からの非認証=UnauthenticatingfromAFS@AFS-LIGHT.HLP>main
+1 AFS を管理する
+2 概説=AccessingAFS@AFS-LIGHT.HLP>main
+2 AFS メニュー=FileManagerAFSMenu>main
+2 AFS Light 構成ユーティリティー=AFS_Client_Configuration_Utility>main
+2 AFS Light プログラム・グループ=The_AFS_Client_Program_Group>main
+2 AFS Light プロパティー・ボックス=AFS_Credentials_utility.>main
+2 コマンド・プロンプト・コマンド=CommandPromptCommands@AFS-LIGHT.HLP>main
+1 AFS 使用法
+2 アクセス制御リスト (ACL)
+3 概説
+4 アクセス制御リスト (ACL)=ProtectingFilesandDirectories>main
+4 ディレクトリー・レベルのアクセス制御=Directory.LevelAccessControl>main
+4 AFS アクセス権=AFSAccessPermissions>main
+4 アクセス権 (補足)=OtherVariablePermissions>main
+4 標準および禁止の項目=NormalandNegativeEntries>main
+3 アクセス制御リスト (ACL) の使用法
+4 ACL を設定する=AccessControlLists>main
+4 ACL 項目を追加する=AddACLEntry>main
+4 ACL 項目を除去する=Removing_ACL_Entries>main
+4 ACL をコピーする=CopyACL>main
+2 ボリュームおよびパーティション
+3 概説=Volumes_and_Partitions>main
+3 ボリュームとパーティションの情報を表示する=Displaying_Volume_and_Partition_information>main
+3 名前 /ID マッピングの最新表示=Refreshname.IDmap>main
+2 マウント・ポイント
+3 概説=Mount_Point_first_page>main
+3 マウント・ポイントを表示する=Displaying_Mount_Points>main
+3 マウント・ポイントを削除する=Removing_Mount_Points>main
+3 マウント・ポイントを作る=Making_Mount_Points>main
+2 キャッシュされたファイル
+3 概説=Cached_Files>main
+3 ファイルとディレクトリーをフラッシュする=Flushing_files_or_directories>main
+3 ボリュームをフラッシュする=Flushing_Volumes>main
+2 サーバー情報
+3 概説=ListingFileServerInformation>main
+3 ファイル・サーバーの表示=Showing_File_Servers>main
+3 ファイル・サーバーの状況を表示する=Showing_the_Status_of_File_Servers>main
+2 セル
+3 情報をリストする
+4 セルを表示する=Showing_Cell>main
+3 セル・データベース
+4 概説=Cells>main
+4 セルを追加する=Adding_Cells_to_your_Cell_Database>main
+4 セルの情報を変更する=Changing_Cell_Information>main
+4 セルを削除する=Deleting_Cell_Information>main
+1 参照
+2 用語集=Glossary>main
+2 方法...=How_To...>main

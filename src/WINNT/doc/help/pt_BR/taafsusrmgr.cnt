@@ -1,0 +1,66 @@
+:Base TAAFSUSRMGR.HLP
+:Title Gerenciador de Contas do AFS IBM
+1 Gerenciador de Contas do AFS
+2 Contas de Usuários do AFS
+3 Criando Contas do AFS
+4 Criando Contas de Usuário do AFS=Creating_User_Entries
+4 Para criar uma nova conta do usuário do AFS=To_create_a_single_user_account
+3 Autenticação e Segurança de Senhas
+4 Aumentando a Segurança da Senha/Autenticação=Improving_Password_Authentication_Security
+4 Para limitar o número de tentativas de logon consecutivas com falha=To_limit_the_number_of_consecutive_failed_login_attempts
+4 Para desbloquear uma conta de usuário bloqueada=To_unlock_a_locked_user_account
+4 Para definir o tempo de duração de uma senha de usuário do AFS=To_set_password_lifetime
+4 Para restringir a reutilização de senhas por um usuário=To_restrict_reuse_of_passwords
+3 Alterando Senhas
+4 Alterando Senhas=Changing_Passwords
+4 Para alterar a senha do AFS de um usuário=To_change_a_password_in_the_Authentication_Database
+3 Removendo Contas de Usuário
+4 Removendo Contas de Usuário=Removing_User_Accounts
+4 Para excluir uma conta de usuário do AFS=To_remove_a_user_account
+2 Grupos do AFS
+3 Sobre o Banco de Dados de Proteção=AFS_Protection_Database
+3 Entradas do Banco de Dados de Proteção=Protection_Database_Entries
+3 Usando Grupos
+4 Usando Grupos Efetivamente=Using_Groups_Effectively
+4 Usando Grupos Sem Prefixo do AFS=Using_Prefix_Less_Groups
+4 Colocando Endereços IP em Grupos=Placing_Machines_in_Groups
+4 Os Grupos Padrões do Sistema=The_Standard_System_Groups
+4 Listando Informações sobre Grupos
+5 Listando Informações sobre Grupos=Listing_Information_about_Groups
+5 Para exibir uma lista dos membros de um grupo do AFS=To_list_the_members_of_a_group
+5 Para exibir informações sobre um grupo do AFS=To_examine_a_Protection_Database_group_entry
+5 Para exibir uma lista dos grupos que um grupo do AFS possui=To_list_the_groups_that_a_group_owns
+4 Listando Informações Relacionadas aos Grupos sobre Usuários e Entradas de Máquina
+5 Listando Informações Relacionadas aos Grupos sobre Usuários e Entradas de Máquina=Listing_Group_Related_Information_about_Users_and_Machine_Entries
+5 Para exibir uma lista dos grupos aos quais o usuário do AFS pertence=To_examine_a_Protection_Database_entry_for_a_user_or_machine
+5 Para exibir uma lista dos grupos que um usuário do AFS possui=To_view_a_list_of_the_groups_that_an_AFS_user_owns
+5 Para exibir uma lista dos grupos que uma conta de endereço IP possui=To_view_a_list_of_the_groups_that_an_IP_address_account_owns
+5 Para exibir uma lista dos grupos aos quais uma conta de endereço IP pertence=To_view_a_list_of_the_groups_to_which_an_IP_address_account_belongs
+4 Criando Entradas de Usuário
+5 Criando Contas de Usuário do AFS=Creating_User_Entries
+5 Para criar uma nova conta de usuário do AFS=To_create_a_single_user_account
+4 Criando Entradas de Máquina
+5 Criando Entradas de Endereço IP=Creating_Machine_Entries
+5 Para criar uma conta de endereço IP no Banco de Dados de Proteção do AFS=To_create_a_single_machine_entry_in_the_Protection_Database
+4 Criando Grupos Regulares e Sem Prefixo
+5 Criando Grupos Regulares e Sem Prefixo do AFS=Creating_Regular_and_Prefix_Less_Groups
+5 Para criar um novo grupo regular do AFS=To_create_a_single_regular_group_entry
+5 Para criar um novo grupo sem prefixo do AFS=To_create_a_single_prefix_less_group_entry
+4 Incluindo Membros em Grupos e Removendo-os de Grupos
+5 Incluindo Membros em Grupos e Removendo-os de Grupos=Adding_Members_to_Groups_and_Removing_Them_from_Groups
+5 Para incluir um usuário ou conta de endereço IP em um grupo=To_add_users_and_machines_to_groups
+5 Para remover um usuário, conta de endereço IP ou grupo de um grupo do AFS=To_remove_users_and_machines_from_groups
+3 Excluindo Entradas do Banco de Dados de Proteção
+4 Excluindo Entradas do Banco de Dados de Proteção=Deleting_Entries_from_the_Protection_Database
+4 Para excluir um grupo do AFS=To_delete_user_and_group_entries
+3 Alterando o Proprietário de uma Entrada
+4 Alterando o Proprietário de um grupo do AFS=Changing_the_Owner_of_an_Entry
+4 As Implicações de Mudança de Nome de uma Alteração de Propriedade=The_Name_Changing_Implications_of_Changing_Ownership
+4 Para alterar o proprietário de um grupo do AFS=To_change_the_owner_of_a_group_entry
+3 Alterando o Nome de uma Entrada
+4 Alterando o Nome de um Grupo do AFS=Changing_the_Name_of_an_Entry
+4 Para alterar o nome de um grupo do AFS=To_change_the_name_of_a_group_entry
+3 Alterando a Cota de Criação de Grupos
+4 Alterando a Cota de Criação de Grupos=Changing_Group_Creation_Quota
+4 Para exibir a cota de criação de grupos de um usuário do AFS=To_examine_group_creation_quota
+4 Para alterar a cota de criação de grupos de um usuário do AFS=To_change_group_creation_quota

@@ -1,0 +1,66 @@
+:Base TAAFSUSRMGR.HLP
+:Title IBM AFS Account Manager
+1 AFS Account Manager 
+2 AFS User Accounts
+3 Creating AFS Accounts
+4 Creating AFS User Accounts=Creating_User_Entries
+4 To create a new AFS user account=To_create_a_single_user_account
+3 Password Authentication and Security
+4 Improving Password/Authentication Security=Improving_Password_Authentication_Security
+4 To limit the number of consecutive failed login attempts by a user=To_limit_the_number_of_consecutive_failed_login_attempts
+4 To unlock a locked user account=To_unlock_a_locked_user_account
+4 To set the password lifetime for an AFS user account=To_set_password_lifetime
+4 To restrict reuse of passwords by a user=To_restrict_reuse_of_passwords
+3 Changing Passwords
+4 Changing Passwords=Changing_Passwords
+4 To change a user's AFS password=To_change_a_password_in_the_Authentication_Database
+3 Removing User Accounts
+4 Removing User Accounts=Removing_User_Accounts
+4 To delete an AFS user account=To_remove_a_user_account
+2 AFS Groups
+3 About the Protection Database=AFS_Protection_Database
+3 Protection Database Entries=Protection_Database_Entries
+3 Using Groups
+4 Using Groups Effectively=Using_Groups_Effectively
+4 Using Prefix-Less AFS Groups=Using_Prefix_Less_Groups
+4 Placing IP Addresses in Groups=Placing_Machines_in_Groups
+4 The Standard System Groups=The_Standard_System_Groups
+4 Listing Information about Groups
+5 Listing Information about Groups=Listing_Information_about_Groups
+5 To view a list of the members of an AFS group=To_list_the_members_of_a_group
+5 To view information about an AFS group=To_examine_a_Protection_Database_group_entry
+5 To view a list of the groups that an AFS group owns=To_list_the_groups_that_a_group_owns
+4 Listing Group-Related Information about Users and Machine Entries
+5 Listing Group-Related Information about Users and Machine Entries=Listing_Group_Related_Information_about_Users_and_Machine_Entries
+5 To view a list of the groups to which an AFS user belongs=To_examine_a_Protection_Database_entry_for_a_user_or_machine
+5 To view a list of the groups that an AFS user owns=To_view_a_list_of_the_groups_that_an_AFS_user_owns
+5 To view a list of the groups that an IP address account owns=To_view_a_list_of_the_groups_that_an_IP_address_account_owns
+5 To view a list of the groups to which an IP address account belongs=To_view_a_list_of_the_groups_to_which_an_IP_address_account_belongs
+4 Creating User Entries
+5 Creating AFS User Accounts=Creating_User_Entries
+5 To create a new AFS user account=To_create_a_single_user_account
+4 Creating Machine Entries
+5 Creating IP Address Entries=Creating_Machine_Entries
+5 To create an IP address account in the AFS Protection Database=To_create_a_single_machine_entry_in_the_Protection_Database
+4 Creating Regular and Prefix-Less Groups
+5 Creating Regular and Prefix-Less AFS Groups=Creating_Regular_and_Prefix_Less_Groups
+5 To create a new regular AFS group=To_create_a_single_regular_group_entry
+5 To create a new prefix-less AFS group=To_create_a_single_prefix_less_group_entry
+4 Adding Members to Groups and Removing Them from Groups
+5 Adding Members to Groups and Removing Them from Groups=Adding_Members_to_Groups_and_Removing_Them_from_Groups
+5 To add a user or IP address account to a group=To_add_users_and_machines_to_groups
+5 To remove a user, IP address account, or group from an AFS group=To_remove_users_and_machines_from_groups
+3 Deleting Entries from the Protection Database
+4 Deleting Entries from the Protection Database=Deleting_Entries_from_the_Protection_Database
+4 To delete an AFS group=To_delete_user_and_group_entries
+3 Changing the Owner of an Entry
+4 Changing the Owner of an AFS Group=Changing_the_Owner_of_an_Entry
+4 The Name-Changing Implications of Changing Ownership=The_Name_Changing_Implications_of_Changing_Ownership
+4 To change the owner of an AFS group=To_change_the_owner_of_a_group_entry
+3 Changing the Name of an Entry
+4 Changing the Name of an AFS Group=Changing_the_Name_of_an_Entry
+4 To change the name of an AFS group=To_change_the_name_of_a_group_entry
+3 Changing Group Creation Quota
+4 Changing Group Creation Quota=Changing_Group_Creation_Quota
+4 To view the group creation quota of an AFS user=To_examine_group_creation_quota
+4 To change the group creation quota of an AFS user=To_change_group_creation_quota

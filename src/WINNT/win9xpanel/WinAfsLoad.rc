@@ -1,0 +1,542 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+//#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#define APSTUDIO_READONLY_SYMBOLS
+// Microsoft Developer Studio generated Help ID include file.
+// Used by WinAfsLoad.rc
+//
+#define HIDC_STATIC                     0x80fcffff    // IDD_SETTINGS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\WinAfsLoad.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 235, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About WinAfsLoad"
+FONT 8, "MS Sans Serif"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "WinAfsLoad Version ",IDC_STATICABOUT,40,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2000",IDC_STATIC,40,25,119,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,50,14,WS_GROUP
+END
+
+IDD_WINAFSLOAD_DIALOG DIALOGEX 0, 0, 280, 215
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "AFS Control Panel"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_USERNAME,81,14,73,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_PASSWORD,81,32,73,12,ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON      "&Connect",IDC_CONNECT,223,7,50,14
+    PUSHBUTTON      "Exit",IDC_CANCEL,223,47,50,14
+    CONTROL         "Save Password",IDC_SAVEUSERNAME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,82,49,78,10
+    CONTROL         "Advanced Options",IDC_CHECKADVANCED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,198,69,75,10
+    CONTROL         "List1",IDC_DRIVEMOUNTLIST,"SysListView32",LVS_REPORT | 
+                    LVS_NOLABELWRAP | WS_BORDER | WS_TABSTOP,17,99,246,85
+    PUSHBUTTON      "Add",IDC_ADD,17,188,42,14
+    PUSHBUTTON      "Change",IDC_CHANGE,67,188,42,14,WS_DISABLED
+    PUSHBUTTON      "Remove",IDC_REMOVE,117,188,42,14,WS_DISABLED
+    PUSHBUTTON      "ReAuthenicate",IDC_AUTH,163,7,55,14,WS_DISABLED
+    PUSHBUTTON      "S&ettings",IDC_SETTINGS,223,27,50,14
+    LTEXT           "&UserName:",IDC_STATIC,37,15,36,8
+    LTEXT           "&Password:",IDC_STATIC,39,34,33,8
+    GROUPBOX        "",IDC_OPTIONLINE,7,78,266,9,NOT WS_VISIBLE
+    LTEXT           "Static",IDC_MOUNTDISPLAY,50,89,142,8
+    LTEXT           "* Connect Drive Letter Map Point when AFS connected.",
+                    IDC_STATIC,169,187,104,21
+    CTEXT           "",IDC_AUTHWARN,31,65,162,13,SS_CENTERIMAGE | NOT 
+                    WS_VISIBLE | NOT WS_GROUP,WS_EX_TRANSPARENT
+    PUSHBUTTON      "Help",IDC_HELPMAIN,166,46,50,14
+    GROUPBOX        "",IDC_WORLD,7,7,15,17,NOT WS_VISIBLE
+END
+
+IDD_ACTIVITYLOG DIALOG DISCARDABLE  0, 0, 256, 133
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS Activity Log"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT,7,7,242,119,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | ES_WANTRETURN | WS_VSCROLL | NOT 
+                    WS_TABSTOP
+END
+
+IDD_AFSCHANGE DIALOG DISCARDABLE  0, 0, 302, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS - Add/Change"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Drive",IDC_STATIC,21,49,22,8
+    LTEXT           "You can map drive letters on your computer to directory paths in AFS.",
+                    IDC_STATIC,12,7,283,8
+    LTEXT           "For instance, if you map drive Q as /afs/acme.com/usr/bob, then the files available in AFS as /afs/acme.com/usr/bob/* will be visible in your computer's Q:\\ directory.",
+                    IDC_STATIC,12,19,283,16
+    LTEXT           "AFS &Path:",IDC_STATIC,22,67,33,8
+    EDITTEXT        IDC_PATH,70,65,168,13,ES_AUTOHSCROLL
+    LTEXT           "Share Name",IDC_STATIC,22,86,38,8
+    EDITTEXT        IDC_DESCRIPTION,70,84,72,13,ES_AUTOHSCROLL
+    CONTROL         "&Connect Drive Letter Map Point when AFS is Connected.",
+                    IDC_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,49,
+                    102,185,10
+    PUSHBUTTON      "Cancel",IDCANCEL,245,122,50,14
+    PUSHBUTTON      "OK",IDOK,179,123,58,14
+    COMBOBOX        IDC_DRIVE,70,47,35,58,CBS_DROPDOWNLIST | CBS_SORT | 
+                    CBS_UPPERCASE | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "* Drive is currently active",IDC_STATIC,114,50,91,8
+    PUSHBUTTON      "Help",IDC_HELPMAIN,245,102,50,14
+END
+
+IDD_DIALOGTERM DIALOG DISCARDABLE  0, 0, 189, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS File Service - Warning"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT           "Previous AFS service was not properly terminated.\nClean up in progress\nPlease Wait.",
+                    IDC_STATIC,7,17,175,36
+END
+
+IDD_DIALOGFORCE DIALOG DISCARDABLE  0, 0, 216, 110
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS File Service"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Force",IDOK,7,89,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,159,89,50,14
+    CTEXT           "Static",IDC_STATICMSG,7,13,202,23,SS_CENTERIMAGE
+    LTEXT           "You may select 'Force' to disconnect the drive or select  'Cancel' to bypass the operation.\n\n If you select 'Force', you risk loosing data on any open file located on the connected Drive Letter.",
+                    IDC_STATIC,7,42,202,44
+END
+
+IDD_DIALOGRETRY DIALOG DISCARDABLE  0, 0, 198, 116
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Retry",IDOK,7,95,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,73,95,50,14
+    CTEXT           "Static",IDC_STATICMSG,7,13,181,23,SS_CENTERIMAGE
+    LTEXT           "You should shut down any applications that are using the Mapped Drive Letter and then press Retry.  Or press Cancel to the skip the disconnect.\n\nYou can Force disconnect; however, you may risk losing file data on any open file.",
+                    IDC_STATICOPTIONS,7,37,181,52
+    PUSHBUTTON      "Force",IDC_FORCE,141,95,50,14
+END
+
+IDD_PROGBAR_DIALOG DIALOG DISCARDABLE  0, 0, 179, 70
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP
+FONT 8, "MS Sans Serif"
+BEGIN
+    RTEXT           "backgroung time",IDC_TIMEBACKGROUND,6,14,36,8,NOT 
+                    WS_GROUP
+    RTEXT           "Authtime",IDC_TIMEAUTHENICATION,6,28,36,8,NOT WS_GROUP
+    RTEXT           "mounttime",IDC_TIMEMOUNT,6,44,36,8,NOT WS_GROUP
+    CTEXT           "",IDC_COMPLETE_AUTH,45,29,12,8,NOT WS_VISIBLE | 
+                    WS_BORDER
+    CTEXT           "",IDC_COMPLETE_ENABLE,45,15,12,8,NOT WS_VISIBLE | 
+                    WS_BORDER
+    CTEXT           "",IDC_COMPLETE_MOUNT,45,44,12,8,NOT WS_VISIBLE | 
+                    WS_BORDER
+    GROUPBOX        "",IDC_STATUSREGION,44,7,16,51,NOT WS_VISIBLE
+    LTEXT           "Enable AFS Client Console",IDC_CHECKBACKGROUND,61,15,
+                    111,8
+    LTEXT           "Authenication",IDC_CHECKAUTHENICATION,61,29,111,8
+    LTEXT           "Connect Drive Letter Map Points",IDC_CHECKMOUNT,61,43,
+                    111,12
+END
+
+IDD_MENUSETTINGS DIALOG DISCARDABLE  0, 0, 269, 104
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS Settings"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,212,83,50,14
+    LTEXT           "Advanced System Menus are enabled.\nRight click System Menu located on the Title bar of the main dialog box.\n\nFrom this menu you capture AFS events to a window or to a file (AFSCLI.LOG).\nYou can also choose to view the (DOS based) AFS Client Console.",
+                    IDC_STATIC,7,14,255,40
+    LTEXT           "Do not attempt to log off windows (or reboot) while the AFS Client Console visable!",
+                    IDC_STATIC,7,61,255,22
+END
+
+IDD_SETTINGS DIALOGEX 0, 0, 187, 161
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS Option Settings"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Accept",IDOK,130,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,130,24,50,14
+    CONTROL         "Log to File",IDC_LOGTOFILE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,24,47,10
+    CTEXT           "Command Line Loading Options",IDC_STATIC,7,7,116,14,
+                    SS_CENTERIMAGE
+    CONTROL         "Log to Window",IDC_LOGTOWINDOW,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,36,60,10
+    CONTROL         "Connect on Start",IDC_CONNECTONSTART,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,48,65,10
+    EDITTEXT        IDC_USERNAME,47,65,51,14,ES_READONLY | NOT WS_BORDER | 
+                    NOT WS_TABSTOP,WS_EX_STATICEDGE
+    RTEXT           "Username:",IDC_STATIC,7,65,39,8
+    PUSHBUTTON      "Help",IDH_SETTINGS,130,43,50,14
+    EDITTEXT        IDC_MAXLOGINTIME,148,98,31,14,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "Max Time - Enable Client Console (Sec.)",IDC_STATIC,19,
+                    99,127,11,0,0,HIDC_STATIC
+    EDITTEXT        IDC_POWERRESTARTDELAY,149,116,31,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    RTEXT           "Power Restart Delay (Sec.)",IDC_STATIC,62,118,84,8,0,0,
+                    HIDC_STATIC
+    GROUPBOX        "",IDC_OPTIONLINE,7,81,173,9,NOT WS_VISIBLE
+    CONTROL         "Advanced Settings",IDC_CHECKADVANCED,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,107,66,73,10
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,4,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "WinAfsLoad MFC Application\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "WinAfsLoad\0"
+            VALUE "LegalCopyright", "Copyright (C) 2000\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "WinAfsLoad.EXE\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName", "WinAfsLoad Application\0"
+            VALUE "ProductVersion", AFSPRODUCT_VERSION,"\0"
+            VALUE "SpecialBuild", "\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_WINAFSLOAD_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_ACTIVITYLOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 126
+    END
+
+    IDD_AFSCHANGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 295
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_DIALOGTERM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 182
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_DIALOGFORCE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 209
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_DIALOGRETRY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 109
+    END
+
+    IDD_PROGBAR_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 172
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
+
+    IDD_MENUSETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 97
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 154
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_TRAYICON MENU DISCARDABLE 
+BEGIN
+    POPUP "&Tray"
+    BEGIN
+        MENUITEM "&Open",                       IDM_APP_OPEN
+        MENUITEM "&Connect",                    IDC_CONNECT
+        MENUITEM "Settings",                    IDC_SETTINGS
+        MENUITEM "Exit",                        IDC_CANCEL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+BEGIN
+    "S",            IDC_SHOWBACK,           VIRTKEY, ALT, NOINVERT
+    VK_RETURN,      IDC_CONNECT,            VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\WinAfsLoad.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WORLD               BITMAP  DISCARDABLE     "res\\world.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About WinAFSLoad..."
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "AFS Control Panel"
+    IDR_TRAYICON            "AFS Control Panel"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_CONNECT             "Click to Connect/Disconnect AFS Client"
+    IDC_CANCEL              "Click to exit (terminate) application."
+    IDS_HIDE                "Click to shrink view into a System Tray Icon.  Hint right click icon to view."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_DRIVEMOUNTLIST      "Click Check box to Connect or Disconnect.  Highlight to Change or Remove."
+    IDC_SETTINGS            "Click to change load and log options."
+    IDC_CHECKADVANCED       "Click to show AFS Drive Letter Map Points."
+    IDC_USERNAME            "Enter Username"
+    IDC_PASSWORD            "Enter Password"
+    IDC_SAVEUSERNAME        "Click to remember password on connect or when you choose exit."
+    IDC_SHOWLOG             "Click to show the AFS Client Console."
+    IDC_ADD                 "Click to add a new AFS Drive Letter Map Point."
+    IDC_CHANGE              "Click to change a highlighted Drive Letter Cell Map Point"
+    IDC_REMOVE              "Click to remove all highlighted Drive Letter Map Points"
+    IDS_DISCONNECT          "Click to Disconnect AFS Client (Disconnect all AFS Drive Letter Maps)"
+    IDS_HIDEADVANCE         "Click to hide AFS Drive Letter Map Points."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HIDELOG             "Click to hide the AFS Client Console."
+    IDS_FORGETUSERNAME      "Click to forget password on connect or when you choose exit."
+    IDC_AUTH                "Click to re-authenicate (reset expiratoin token)."
+    IDC_SHOWBACK            "Use Alt+S to show background"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_VIEWAFS             "View AFS Client (toggle)"
+    IDH_ADD                 "HELP ADD"
+    IDH_CHANGE              "Help Change"
+    IDH_MAIN                "Help Main"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_CLEAR               "Clear Window"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_CAPTUREWINDOW       "Capture Events to windows"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_CAPTUREFILE         "Capture Events to file (AFSCLI.LOG)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_EXPLORERAFS         "Explorer AFS Menu."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "afxres.rc"         // Standard components
+//#include "res\WinAfsLoad.rc2"  // non-Microsoft Visual C++ edited resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

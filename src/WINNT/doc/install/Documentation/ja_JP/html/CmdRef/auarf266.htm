@@ -1,0 +1,220 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_LISTVOL" HREF="auarf002.htm#ToC_280">vos listvol</A></H2>
+<A NAME="IDX5729"></A>
+<A NAME="IDX5730"></A>
+<A NAME="IDX5731"></A>
+<A NAME="IDX5732"></A>
+<A NAME="IDX5733"></A>
+<A NAME="IDX5734"></A>
+<A NAME="IDX5735"></A>
+<A NAME="IDX5736"></A>
+<A NAME="IDX5737"></A>
+<A NAME="IDX5738"></A>
+<A NAME="IDX5739"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリューム・ヘッダーの情報を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos listvol -server</B> &lt;<VAR>machine name</VAR>>  [<B>-partition</B> &lt;<VAR>partition name</VAR>>]
+            [<B>-fast</B>]  [<B>-long</B>]  [<B>-quiet</B>]  [<B>-extended</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+            [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos listvo -s</B> &lt;<VAR>machine name</VAR>>  [<B>-p</B> &lt;<VAR>partition name</VAR>>]  [<B>-f</B>]  [<B>-lon</B>]  
+           [<B>-q</B>]  [<B>-e</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-loc</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos listvol</B> コマンドは、指定されたボリュームのボリューム・ヘッダーから、ボリューム、ボリューム ID、ボリューム・タイプ、サイズ、サーバーでの状況などの情報を読み取り、書式設定して表示します。実際に表示される内容は、このコマンドに使用する引き数によって異なります。さまざまな数のボリュームに関するボリューム・ヘッダー情報を表示するには、以下に指示されるとおり、コマンドの引き数を組み合わせます。
+<UL>
+<LI>ファイル・サーバー・マシンのすべてのボリュームに対して、
+<B>-server</B> 引き数にマシン名を指定します。
+</LI><LI>特定のサイトにある、すべてのボリュームに対して、
+<B>-server</B> 引き数と <B>-partition</B> 引き数を組み合わせます。
+</LI></UL>
+<P>1 つ以上のボリューム・ロケーション・データベース (VLDB) 項目を表示する場合には、<B>vos listvldb</B> コマンドを使用してください。単一ボリュームの VLDB 項目とボリューム・ヘッダーを表示するには、<B>vos examine</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>ヘッダーを表示するボリュームがあるファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数は、<B>-partition</B> 引き数や、
+<B>-fast</B>、<B>-long</B>、または <B>-extended</B> フラグと組み合わせて使用することができます。
+<P><DT><B>-partition
+</B><DD>ヘッダーを表示するボリュームがある区画 (<B>-server</B> 引き数に指定されたファイル・サーバー・マシン上の区画) を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-fast
+</B><DD><B>-server</B> 引き数 (場合によっては <B>-partition</B> 引き数も) に指定されたサイトに格納されたボリュームの ID 番号を表示します。このフラグは、<B>-extended</B> フラグと一緒に使用してはなりません。
+<P><DT><B>-long
+</B><DD><B>-server</B> 引き数 (場合によっては <B>-partition</B> 引き数も) に指定されたサイトに格納されたボリュームについて詳しい情報を表示します。たとえば、ボリュームに関連付けられた 3 つすべてのボリューム・タイプのボリューム ID、および読み取り / 書き込みボリュームの割り当て量、作成日、更新日などの情報が含まれます。
+<P><DT><B>-quiet
+</B><DD>リストされているボリューム数およびその状況を要約する行を抑制します。そうでなければ、複数のボリュームが出力されているときに、その先頭と末尾に出力されます。
+<P><DT><B>-extended
+</B><DD><B>-server</B> 引き数 (場合によっては <B>-partition</B> 引き数も) に指定されたサイトのボリュームについて、統計情報やアクセス・パターンを表示します。統計情報としては、ボリューム内でのファイルの読み取り読み取り回数または書き込み回数、所有者および他のユーザーがファイルおよびディレクトリーを削除した最新の情報があります。このフラグは、<B>-fast</B> フラグと一緒に使用してはなりません。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、ボリューム名でアルファベット順に配列され、デフォルトでは、各項目の単一行に以下の情報が表示されます。
+<UL>
+<LI>名前
+</LI><LI>ボリューム ID 番号
+<A NAME="IDX5740"></A>
+</LI><LI>タイプ (このフラグは、読み取り / 書き込みの場合は <TT>RW</TT>、読み取り専用の場合は <TT>RO</TT>、バックアップの場合は <TT>BK</TT>)
+</LI><LI>サイズ (KB 単位) (<TT>1024</TT> はメガバイトと等しい)
+</LI><LI><B>-extended</B> フラグが指定されている場合は、ボリューム内のファイル数
+<A NAME="IDX5741"></A>
+</LI><LI>ファイル・サーバー・マシン上の状況。これは以下のいずれかです。
+<P>
+<DL>
+<A NAME="IDX5742"></A>
+<P><DT><B><TT>On-line</TT>
+</B><DD>キャッシュ・マネージャーは、このボリュームに完全にアクセス可能です。
+<A NAME="IDX5743"></A>
+<P><DT><B><TT>Off-line</TT>
+</B><DD>キャッシュ・マネージャーは、このボリュームにアクセスできませんが、ボリュームは破壊されていないようです。この状況は、たとえば、ボリュームのダンプ処理中に現れます。
+<A NAME="IDX5744"></A>
+<P><DT><B><TT>Off-line**needs salvage**</TT>
+</B><DD>キャッシュ・マネージャーは、このボリュームにアクセスできません。ボリュームは破壊されているようです。
+<B>bos salvage</B> または <B>salvager</B> コマンドを使用して、破壊を修復します。
+</DL>
+</LI></UL>
+<P>次のメッセージが、既にリストされている情報の代わりに表示される場合、クローンが作成されているなどのため、キャッシュ・マネージャーまたは <B>vos</B> コマンド・インタープリターがボリュームにアクセスできないことを示します。
+<PRE>   **** ボリューム <VAR>volume_ID</VAR> は使用中です ****
+</PRE>
+<P>次のメッセージが、既にリストされている情報の代わりに表示される場合、ファイル・サーバーがボリュームに接続できないことを示します。ボリュームがひどく破壊されている可能性があるためです。ファイル・サーバー・マシンの <B>/usr/afs/logs</B> ディレクトリーの <B>FileLog</B> および <B>VolserLog</B> ログ・ファイルは、可能な限り追加情報を提供します。この追加情報を表示するには、<B>bos getlog</B> コマンドを使用します。
+<PRE>   **** ボリューム <VAR>volume_ID</VAR> に接続できませんでした ****
+</PRE>
+<P>個別のボリューム情報は、要約行により大括弧で囲まれます。出力の最初の行にはリストのボリューム数が示されます。出力の最後の行にはオンライン、オフライン、および使用中のボリューム数の合計が表示されます。
+<B>-quiet</B> フラグを使用した場合には、これらの行は表示されません。
+<P><B>-fast</B> フラグを追加すると、各ボリュームのボリューム ID 番号だけが昇順で表示されます。最終行 (オンライン、オフライン、使用中のボリューム数の合計が表示) は省略されます。
+<P><B>-long</B> フラグを組み込むと、各ボリュームの出力に、デフォルトのリスト表示のすべての情報と以下の情報が含まれます。このリストの各項目は、以下のように、出力の別の行と対応します。
+<UL>
+<LI>VLDB またはボリューム・ヘッダーから派生するのではなく、コマンド実行と同様にコマンド・インタープリターにより判別される、ボリュームを含むファイル・サーバー・マシンおよび区画。
+<A NAME="IDX5745"></A>
+<A NAME="IDX5746"></A>
+<A NAME="IDX5747"></A>
+<A NAME="IDX5748"></A>
+<A NAME="IDX5749"></A>
+<A NAME="IDX5750"></A>
+<A NAME="IDX5751"></A>
+<A NAME="IDX5752"></A>
+</LI><LI>以下の各種バージョンのボリュームに関連するボリューム ID 番号。読み取り / 書き込み (<TT>RWrite</TT>)、読み取り専用 (<TT>ROnly</TT>)、バックアップ (<TT>Backup</TT>)、および ReleaseClone (<TT>RClone</TT>)。これらのボリューム ID のいずれかが、ボリュームの出力の第 1 行に表示されるボリューム ID 番号と一致します。
+<TT>RWrite</TT>、<TT>ROnly</TT>、または <TT>Backup</TT> フィールドが <TT>0</TT> (ゼロ) である場合、該当するタイプのボリュームはありません。現在、ReleaseClone がない場合は、<TT>RClone</TT> フィールドは全く表示されません。
+<A NAME="IDX5753"></A>
+<A NAME="IDX5754"></A>
+</LI><LI>ボリュームの読み取り / 書き込みコピーに割り当てられた最大割り当て量は、<TT>MaxQuota</TT> フィールドに KB ブロック単位で表示されます。
+<A NAME="IDX5755"></A>
+<A NAME="IDX5756"></A>
+</LI><LI><TT>Creation</TT> フィールドのボリュームが作成された日時。ボリュームが <B>backup diskrestore</B>、
+<B>backup volrestore</B>、<B>vos restore</B> コマンドで復元されていると、これは復元時刻を表します。
+<A NAME="IDX5757"></A>
+<A NAME="IDX5758"></A>
+</LI><LI><TT>Last Update</TT> フィールドのボリュームの内容が最後に変更された日時。読み取り専用およびバックアップ・ボリュームの場合、
+<TT>Creation</TT> フィールドのタイム・スタンプと一致します。
+<A NAME="IDX5759"></A>
+<A NAME="IDX5760"></A>
+</LI><LI>次の 2 つの時刻のうち遅い時刻以降の、取り出しまたは保管操作の場合のボリュームに対するアクセス回数です。
+<UL>
+<LI>コマンドが発行された日の 午前 12 時 00 分
+</LI><LI>ボリュームのロケーションが最後に変更された時刻
+</LI></UL>
+</LI></UL>
+<P><B>-extended</B> フラグを組み込むと、各ボリュームの出力に、<B>-long</B> フラグと 2 つの統計表で報告されるすべての情報が含まれます。
+<UL>
+<LI><TT>未加工の読み取り / 書き込み状況</TT> 表というラベルの付いた表により、読み取りまたは書き込みのためにアクセスされたボリュームの回数を要約します。
+</LI><LI><TT>Writes Affecting Authorship</TT> 表には、指定されたボリュームのファイルおよびディレクトリーに対して実行された、書き込み操作についての情報が表示されます。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次の例は、フラグが指定されていない場合、ファイル・サーバー・マシン <B>fs2.abc.com</B> 上の <B>/vicepb</B> 区画の出力を示しています。
+<PRE>   % <B>vos listvol -server fs2.abc.com -partition b</B>
+   Total number of volumes on server fs2.abc.com   \
+                                       partition /vicepb : 66
+   sys                  1969534847 RW       1582 K On-line
+   sys.backup           1969535105 BK       1582 K On-line
+         .                   .     .         .   .    .
+         .                   .     .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+   user.pat.backup      1969534538 BK      17537 K On-line
+   Total volumes onLine 66 ; Total volumes offLine 0 ;  Total busy 0
+   
+</PRE>
+<P>次の例は、<B>-fast</B> フラグを追加した場合の出力例です。
+<PRE>   % <B>vos listvol -server fs2.abc.com -partition b -fast</B>
+   Total number of volumes on server fs2.abc.com   \
+                                       partition /vicepb : 66
+    1969516782
+    1969516784
+        .
+        .
+    1969535796
+    
+</PRE>
+<P>次の例は、<B>-long</B> フラグによって 2 つのボリュームが表示された例を表しています。
+<PRE>   % <B>vos listvol -server fs2.abc.com -partition b -long</B>
+   Total number of volumes on server fs2.abc.com \
+                                       partition /vicepb: 66
+         .                   .      .         .   .    .
+         .                   .      .         .   .    .
+   user.pat             1969534536 RW      17518 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538
+        MaxQuota      20000 K
+        Creation    Mon Jun 12 09:02:25 1989
+        Last Update Thu May 20 17:39:34 1999
+        1573 accesses in the past day (i.e., vnode references)
+   user.pat.backup      1969534538 BK      17537 K On-line
+        fs2.abc.com /vicepb
+        RWrite 1969534536 ROnly 0        Backup 1969534538
+        MaxQuota      20000 K
+        Creation    Tue Jun 13 04:37:59 1989
+        Last Update Wed May 19 06:37:59 1999
+        0 accesses in the past day (i.e., vnode references)
+          .                   .      .         .   .    .
+          .                   .      .         .   .    .
+   Total volumes onLine 66 ; Total volumes offLine 0 ; \
+                                                Total busy 0
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf072.htm#HDRBK_DISKRESTORE">backup diskrestore</A>
+<P><A HREF="auarf091.htm#HDRBK_VOLRESTORE">backup volrestore</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P><A HREF="auarf114.htm#HDRBOS_SALVAGE">bos salvage</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf265.htm#HDRVOS_LISTVLDB">vos listvldb</A>
+<P><A HREF="auarf274.htm#HDRVOS_RESTORE">vos restore</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf265.htm">前ページ</A> &#124; <A HREF="auarf267.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

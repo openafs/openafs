@@ -1,0 +1,171 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_LISTVLDB" HREF="auarf002.htm#ToC_279">vos listvldb</A></H2>
+<A NAME="IDX5708"></A>
+<A NAME="IDX5709"></A>
+<A NAME="IDX5710"></A>
+<A NAME="IDX5711"></A>
+<A NAME="IDX5712"></A>
+<A NAME="IDX5713"></A>
+<A NAME="IDX5714"></A>
+<A NAME="IDX5715"></A>
+<A NAME="IDX5716"></A>
+<A NAME="IDX5717"></A>
+<A NAME="IDX5718"></A>
+<P><STRONG>目的</STRONG>
+<P>ボリュームの VLDB 項目を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos listvldb</B> [<B>-name</B> &lt;<VAR>volume name or ID</VAR>>]  [<B>-server</B> &lt;<VAR>machine name</VAR>>]  
+             [<B>-partition</B> &lt;<VAR>partition name</VAR>>]  [<B>-locked</B>]  [<B>-quiet</B>]  [<B>-nosort</B>]  
+             [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+    
+<B>vos listvl</B> [<B>-na</B> &lt;<VAR>volume name or ID</VAR>>]  [<B>-s</B> &lt;<VAR>machine name</VAR>>]
+           [<B>-p</B> &lt;<VAR>partition name</VAR>>]  [<B>-lock</B>]  [<B>-q</B>]  [<B>-nos</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+           [<B>-noa</B>]  [<B>-loca</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos listvldb</B> コマンドは、指定されたボリュームのボリューム・ロケーション・データベース (VLDB) 項目の情報を書式設定して、表示します。出力は、このコマンドに指定されるオプションの組み合わせによって異なります。以下のように、必要なタイプの VLDB 項目を表示するには、指示どおりにオプションを組み合わせてください。
+<UL>
+<LI>VLDB のすべての項目を表示する場合には、オプションは指定しないでください。
+</LI><LI>ボリュームのサイトとして特定のファイル・サーバー・マシンを指定する、すべての VLDB 項目。
+<B>-server</B> 引き数にマシン名を指定します。
+</LI><LI>ボリュームのサイトとして任意のファイル・サーバー・マシンに特定の区画を指定する、すべての VLDB 項目。
+<B>-partition</B> 引き数に区画名を指定します。
+</LI><LI>ボリュームのサイトとして特定のファイル・サーバー・マシンを指定する、すべての VLDB 項目。
+<B>-server</B> 引き数と <B>-partition</B> 引き数を組み合わせます。
+</LI><LI>単一の VLDB 項目。<B> -name</B> 引き数にボリューム名または ID 番号を指定します。
+</LI><LI>特定のサイトで検出される、VLDB 項目がロックされているボリュームのみの VLDB 項目。サイトを定義する引き数と <B>-locked</B> フラグを組み合わせます。
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>3 つのタイプのいずかのボリュームの完全名またはボリューム
+ID 番号を指定します。
+<P><DT><B>-server
+</B><DD>表示する VLDB 項目にサイトとしてリストされているファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数は、<B>-partition</B> 引き数または <B>-locked</B> フラグ (あるいはその両方) と組み合わせて使用することができます。
+<P><DT><B>-partition
+</B><DD>表示する VLDB 項目でサイトとしてリストされている区画 (<B>-server</B> 引き数に指定されたファイル・サーバー・マシン上の区画) を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P>
+<P>この引き数は、<B>-server</B> 引き数または <B>-locked</B> フラグ (あるいはその両方) と組み合わせて使用することができます。
+<P><DT><B>-locked
+</B><DD>ロックされた VLDB 項目だけを表示します。このフラグは、<B>-server</B> 引き数または <B>-partition</B> 引き数 (あるいはその両方) と組み合わせて使用することができます。
+<P><DT><B>-quiet
+</B><DD>リストされているボリューム数およびその状況を要約する行を抑制します。そうでなければ、複数のボリュームが出力されているときに、その先頭と末尾に出力されます。
+<P><DT><B>-nosort
+</B><DD>デフォルトである、ボリューム名によるボリューム項目のアルファベット順のソートを抑止します。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力に複数の VLDB 項目が含まれている場合、デフォルトで、第 1 行には、ボリュームを含むファイル・サーバー・マシン、区画、またはその両方が報告されます。出力の最終行には、表示されている項目数が報告されます。
+<B>-quiet</B> フラグを組み込むと、これらの行を抑制します。
+<P>デフォルトでは、ボリュームはボリューム名でアルファベット順にソートされます。
+<B>-nosort</B> フラグを組み込むと、ソート・ステップがスキップされます。そのため、項目数が多い場合は、出力の作成が速くなります。
+<P>各ボリュームの VLDB 項目には、次の情報が記録されています。
+<UL>
+<LI>基本 (読み取り / 書き込み) ボリューム名。読み取り専用およびバックアップ・バージョンの名前は同じで、拡張子は、それぞれ <B>.readonly</B> と <B>.backup</B> です。
+</LI><LI>ボリューム ID 番号は、実際に存在するボリュームのバージョンに割り当てられます。読み取り / 書き込みの場合は <TT>RWrite</TT>、読み取り専用の場合は <TT>ROnly</TT>、バックアップの場合は <TT>Backup</TT>、
+ReleaseClone の場合は <TT>RClone</TT> というフィールドに設定されます。
+(フィールドが表示されない場合、対応するバージョンのボリュームは存在しません。)
+通常、<TT>RClone</TT> フィールドが現れると、解放操作が正常終了しなかったことを示します。
+<TT>Old release</TT> および <TT>New release</TT> フラグは、すぐ後で説明するサイト定義行の 1 行または複数行に表示される場合もよくあります。
+<A NAME="IDX5719"></A>
+<A NAME="IDX5720"></A>
+</LI><LI>ボリュームの読み取り / 書き込みコピーまたは読み取り専用コピーを含むサイト数。文字列 <TT>サイト数 -></TT> の後に続きます。
+<A NAME="IDX5721"></A>
+<A NAME="IDX5722"></A>
+<A NAME="IDX5723"></A>
+<A NAME="IDX5724"></A>
+<A NAME="IDX5725"></A>
+</LI><LI>ボリュームの読み取り / 書き込みコピーまたは読み取り専用コピーを含む各サイトの 1 行。ファイル・サーバー・マシン、区画、およびボリュームのタイプ (読み取り / 書き込みの場合は <TT>RW</TT>、読み取り専用の場合は、<TT>RO</TT>) を指定します。バックアップ・バージョンが存在する場合、読み取り / 書き込みサイトを共用することができます。複数のフラグが、以下のサイト定義と一緒に表示できます。
+<P>
+<DL>
+<A NAME="IDX5726"></A>
+<P><DT><B><TT>Not released</TT>
+</B><DD><B>vos addsite</B> コマンドを使用して、読み取り専用サイトを定義して以来、
+<B>vos release</B> コマンドが発行されていないことを示します。
+<A NAME="IDX5727"></A>
+<P><DT><B><TT>Old release</TT>
+</B><DD><B>vos release</B> コマンドが正常終了せず、このサイトに以前の廃止されたバージョンのボリュームが残っていることを示します。
+<A NAME="IDX5728"></A>
+<P><DT><B><TT>New release</TT>
+</B><DD><B>vos release</B> コマンドは正常終了しませんでしたが、このサイトは適切な新規バージョンのボリュームを受け取ったことを示します。
+</DL>
+</LI><LI>VLDB 項目がロックされている場合は、文字列<TT>ボリュームは現在ロックされています</TT>となります。
+</LI></UL>
+<P><TT>New release</TT> および <TT>Old release</TT> フラグの詳細な説明については、
+<B>vos release</B> コマンドの解説ページを参照してください。
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、<B>usr</B> という名前の ABC Corporation ボリュームの VLDB 情報を表示します。このボリュームには、次のように 2 つの読み取り専用の複写サイトがあります。
+<PRE>   % <B>vos listvldb -name usr</B>
+   usr
+    RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
+    number of sites -> 3
+       server fs1.abc.com partition /vicepa RO Site
+       server fs3.abc.com partition /vicepa RO Site
+       server fs2.abc.com partition /vicepb RW Site
+   
+</PRE>
+<P>次の例は、ファイル・サーバー・マシン <B>fs4.abc.com</B> にある 2 つのボリュームの項目を表示しています。最初の VLDB 項目は現在ロックされています。このマシンをボリューム・サイトに指定する項目は 508 あります。
+<PRE>   % <B>vos listvldb -server fs4.abc.com</B>
+   VLDB entries for server fs4.abc.com
+       .       .           .        .
+       .       .           .        .
+   user.smith
+    RWrite: 278541326   ROnly: 278541327   Backup: 278542328
+    number of sites -> 1
+      server fs4.abc.com partition /vicepg RW Site
+       Volume is currently LOCKED
+      user.terry
+       RWrite 354287190   ROnly 354287191   Backup 354287192
+       number of sites -> 1
+         server fs4.abc.com partition /vicepc RW Site
+         .       .           .        .
+         .       .           .        .
+      Total entries: 508
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<P><A HREF="auarf267.htm#HDRVOS_LOCK">vos lock</A>
+<P><A HREF="auarf278.htm#HDRVOS_UNLOCK">vos unlock</A>
+<P><A HREF="auarf279.htm#HDRVOS_UNLOCKVLDB">vos unlockvldb</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf264.htm">前ページ</A> &#124; <A HREF="auarf266.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

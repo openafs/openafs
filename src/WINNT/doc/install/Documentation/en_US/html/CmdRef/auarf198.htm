@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf197.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf199.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRKASERVER" HREF="auarf002.htm#ToC_212">kaserver</A></H2>
+<A NAME="IDX5170"></A>
+<A NAME="IDX5171"></A>
+<A NAME="IDX5172"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the Authentication Server
+<P><STRONG>Description</STRONG>
+<PRE><B>kaserver</B> [<B>-noAuth</B>]  [<B>-fastKeys</B>]  [<B>-database</B> &lt;<VAR>dbpath</VAR>>] 
+         [<B>-localfiles</B> &lt;<VAR>lclpath</VAR>>]  [<B>-minhours</B> &lt;<VAR>n</VAR>>] 
+         [<B>-servers</B> &lt;<VAR>serverlist</VAR>>]  [<B>-enable_peer_stats</B>]  
+         [<B>-enable_process_stats</B>]  [<B>-help</B>]
+</PRE>
+<P>This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+<P><STRONG>Description</STRONG>
+<P>The <B>kaserver</B> command initializes the Authentication Server,
+which runs on every database server machine. In the conventional
+configuration, its binary file is located in the <B>/usr/afs/bin</B>
+directory on a file server machine.
+<P>The <B>kaserver</B> command is not normally issued at the command shell
+prompt but rather placed into a file server machine&#39;s
+<B>/usr/afs/local/BosConfig</B> file with the <B>bos create</B>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a database server machine as the local superuser
+<B>root</B>.
+<P>As it initializes, the Authentication Server process creates the two files
+that constitute the Authentication Database, <B>kaserver.DB0</B>
+and <B>kaserver.DBSYS1</B>, in the <B>/usr/afs/db</B> directory
+if they do not already exist. Use the commands in the <B>kas</B>
+suite to administer the database.
+<P>The Authentication Server is responsible for several aspects of AFS
+security, including&#58;
+<UL>
+<P><LI>Maintenance of all AFS server encryption keys and user passwords in the
+Authentication Database.
+<P><LI>Creation of the tickets and tokens that users and servers use to establish
+secure connections. Its Ticket Granting Service (TGS) component
+performs this function.
+</UL>
+<P>The Authentication Server records a trace of its activity in the
+<B>/usr/afs/logs/AuthLog</B> file. Use the <B>bos getlog</B>
+command to display the contents of the file. Use the <B>kdb</B>
+command to read the protected files associated with the <B>AuthLog</B>
+file, <B>AuthLog.dir</B> and <B>AuthLog.pag</B>.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-noAuth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Thus, it establishes an unauthenticated connection between the
+issuer and the Authentication Server. It is useful only when
+authorization checking is disabled on the database server machine. In
+normal circumstances, the Authentication Server allows only authorized
+(privileged) users to issue commands that affect or contact the Authentication
+Database and will refuse to perform such an action even if the
+<B>-noAuth</B> flag is used.
+<P><DT><B>-fastKeys
+</B><DD>Is a test flag for use by the AFS Development staff; it serves no
+functional purpose.
+<P><DT><B>-database
+</B><DD>Specifies the pathname of an alternate directory in which the
+Authentication Database files reside. Provide the complete pathname,
+ending in the base filename to which the <B>.DB0</B> and
+<B>.DBSYS1</B> extensions are appended. For example, the
+appropriate value for the default database files is
+<B>/usr/afs/db/kaserver</B>.
+<P>Provide the <B>-localfiles</B> argument along with this one;
+otherwise, the <B>-localfiles</B> argument is also set to the value of
+this argument, which is probably inappropriate.
+<P><DT><B>-localfiles
+</B><DD>Specifies the pathname of an alternate directory in which the auxiliary
+Authentication Database file resides. Provide the complete pathname,
+ending in the base filename to which the <B>auxdb</B> suffix is
+appended. For example, the appropriate value for the default auxiliary
+database file is <B>/usr/afs/local/kaserver</B>.
+<P><DT><B>-minhours
+</B><DD>Specifies the minimum number of hours that must pass between password
+changes made by any regular user. System administrators (with the
+<TT>ADMIN</TT> flag in their Authentication Database entry) can change
+passwords as often as desired. Setting a minimum time between password
+changes is not recommended.
+<P><DT><B>-servers
+</B><DD>Names each database server machine running an Authentication Server with
+which the local Authentication Server is to synchronize its copy of the
+Authentication Database , rather than with the machines listed in the local
+<B>/usr/afs/etc/CellServDB</B> file.
+<P><DT><B>-enable_peer_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another
+machine, a separate record is kept for each type of RPC (FetchFile, GetStatus,
+and so on) sent or received. To display or otherwise access the
+records, use the Rx Monitoring API.
+<P><DT><B>-enable_process_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following <B>bos create</B> command creates a <B>kaserver</B>
+process on <B>fs3.abc.com</B> (the command appears on two
+lines here only for legibility)&#58;
+<PRE>   % <B>bos create -server fs3.abc.com -instance kaserver</B> \
+                <B>-type simple -cmd /usr/afs/bin/kaserver</B>
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the superuser <B>root</B> on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the <B>bos
+create</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf012.htm#HDRAUTHLOG">AuthLog</A>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (server version)</A>
+<P><A HREF="auarf045.htm#HDRKASERVERDB">kaserver.DB0 and kaserver.DBSYS1</A>
+<P><A HREF="auarf046.htm#HDRKASERVERAUXDB">kaserverauxdb</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf199.htm#HDRKDB">kdb</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf197.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf199.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

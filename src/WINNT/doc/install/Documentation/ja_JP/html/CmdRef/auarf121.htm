@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_STATUS" HREF="auarf002.htm#ToC_135">bos status</A></H2>
+<A NAME="IDX4656"></A>
+<A NAME="IDX4657"></A>
+<A NAME="IDX4658"></A>
+<A NAME="IDX4659"></A>
+<A NAME="IDX4660"></A>
+<A NAME="IDX4661"></A>
+<A NAME="IDX4662"></A>
+<P><STRONG>目的</STRONG>
+<P>サーバー・プロセスの状況を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos status -server</B> &lt;<VAR>machine name</VAR>>  [<B>-instance</B> &lt;<VAR>server process name</VAR>><SUP>+</SUP>]
+           [<B>-long</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+    
+<B>bos stat -s</B> &lt;<VAR>machine name</VAR>>  [<B>-i</B> &lt;<VAR>server process name</VAR>><SUP>+</SUP>]
+         [<B>-lon</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-loc</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos status</B> コマンドは、<B>-server</B> 引き数で指定されたサーバー・マシン上の次のいずれかのプロセスの状況を表示します。
+<UL>
+<LI><B>/usr/afs/local/BosConfig</B> ファイルにリストされるすべての AFS サーバー・プロセス。
+</LI><LI><B>-instance</B> 引き数に指定されたプロセス
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>サーバー・プロセス状況を表示するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-instance</B>
+</B><DD>状況を表示するプロセス名を指定します。
+<B>bos</B> コマンドの <B>-instance</B> 引き数に割り当てたプロセス名を使用してください。<B>bos status</B> コマンドの出力には、この名前がリストされます。
+<P><DT><B><B>-long</B>
+</B><DD>詳しい状況情報を表示します。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>プロセスの出力には、プロセスの現状として次のように少なくとも 1 行の情報が表示されます。
+<UL>
+<LI>「<TT>現在、正常に実行しています (currently running normally)</TT>」。<B>BosConfig</B>ファイルのプロセス状況は、<TT>Run</TT> です。<B>cron</B> 項目の場合、このメッセージは、コマンドが実行予定であり、<B>bos status</B> コマンドの発行時に実行されたとは限らないことを意味しています。
+</LI><LI>「<TT>使用不可 (disabled)</TT>」。プロセスを実行していませんが、<B>BosConfig</B> 状況フラグは <TT>NotRun</TT> です。
+</LI><LI>「<TT>一時的に使用不可 (temporarily disabled)</TT>」。<B>BosConfig</B> ファイルの状況フラグが <TT>Run</TT> であるにもかかわらず、このプロセスが実行されていません。管理者が <B>bos shutdown</B> コマンドを使用して停止したか、
+</LI><LI>あるいは、BOS サーバー が何度も失敗して、再起動を中止しています。
+2 番目の場合、「<TT>エラーが多過ぎて停止しました (stopped for too many errors)</TT>」 という補助メッセージが表示されます。
+</LI><LI>「<TT>一時的に使用可能 (temporarily enabled)</TT>」。<B>BosConfig</B> ファイルの状況フラグが <TT>NotRun</TT> であるにもかかわらず、このプロセスが実行されています。管理者が、<B>bos startup</B> コマンドを使用して開始しています。
+</LI></UL>
+<P>次のいずれかの環境が適用される場合、該当する項目がメッセージに表示されます。
+<UL>
+<LI>「<TT>コア・ファイルを作成しました (has core file)</TT>」。プロセスが失敗して、<B>/usr/afs/logs</B> ディレクトリーにコア・ファイルが作成されています。
+BOS サーバー が失敗後にプロセスを再起動できた場合、基本状況は、「<TT> 現在、正常に実行しています (currently running normally)</TT>」 となります。
+</LI><LI>「<TT>エラーが多過ぎて停止しました (stopped for too many  errors)</TT>」。「<TT>一時的に使用不可 (temporarily disabled)</TT>」 という基本状況が表示される理由は、
+BOS サーバーが失敗したすべてのプロセスを再起動しようしたからです。
+</LI></UL>
+<P><B>fs</B> プロセスの項目には、プロセスの <TT>補助状況</TT> を報告する 2 番目の行が含まれます。この行は次の 1 つになります。
+<UL>
+<LI>「<TT>ファイル・サーバーが実行しています (file server running)</TT>」。ファイル・サーバー・プロセスのファイル・サーバーおよびボリューム・サーバー・コンポーネントが正常に実行されています。
+</LI><LI>「<TT>ファイル・システムをサルベージしています (salvaging file system)</TT>」。サルベージャーが実行されているため、ファイル・サーバーおよびボリューム・サーバーは一時的に使用できません。BOS サーバーは、サルベージャーが終了するとすぐに再起動します。
+</LI></UL>
+<P><B>cron</B> プロセスの項目には、
+<TT>補助状況</TT> があり、コマンドが次に実行される時刻が示されます。
+<P><B>-long</B> フラグが指定されている場合、次の追加情報が各項目に示されます。
+<UL>
+<LI>プロセス・タイプ (<TT>simple</TT>、<TT>fs</TT>、または <TT>cron</TT>)。
+</LI><LI>プロセスが最後に開始または再始動した日時。
+</LI><LI><TT>proc starts</TT> の回数。BOS サーバーの開始後、
+BOS サーバーがプロセスを開始または再始動した回数。
+</LI><LI>プロセス (または <B>fs</B> プロセスのコンポーネント・プロセスの 1 つ) が最後に終了した <TT>Last exit</TT> 時刻。
+BOS サーバーの開始後、プロセスが終了していなければ、この行は表示されません。
+</LI><LI>エラーにより、プロセス (または <B>fs</B> プロセスのコンポーネント・プロセスの 1 つ) が最後に失敗した <TT>Last error exit</TT> 時刻。
+<TT>due to shutdown request</TT> など、さらに詳しい説明が表示されることがあります。BOS サーバーの開始後、プロセスが失敗していれば、この行は表示されません。
+</LI><LI>BOS サーバーがプロセスを開始するために呼び出す各コマンド。
+<B>bos create</B> コマンドの <B>-cmd</B> 引き数に指定されているコマンドです。
+</LI><LI>BOS サーバーがプロセスの終了時 (もしあれば) に呼び出す通知プログラムのパス名。
+<B>bos create</B> コマンドの <B>-notifier</B> 引き数に指定されたパス名です。
+</LI></UL>
+<P><B>-long</B> フラグが指定され、
+BOS サーバーがローカルの <B>/usr/afs</B> ディレクトリーのファイルおよびサブディレクトリーのモード・ビットが予想値とは異なることを認識すると、次の警告メッセージを出力します。
+<PRE>「BOS サーバーがサーバー・ディレクトリー上の不適切なアクセスをレポートします 
+ (Bosserver reports inappropriate access on server directories)」
+   
+</PRE>
+<P>以下の図表は、予想されるモード・ビットの設定を要約です。疑問符 (?) は、BOS サーバーが検査しないビットであることを示しています。
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/backup</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/bin</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/db</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/KeyFile</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>????<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/etc/UserList</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>-rw</TT>?????<TT>--</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/local</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwx</TT>???<TT>---</TT>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><B>/usr/afs/logs</B>
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="50%"><TT>drwxr</TT>?<TT>xr-x</TT>
+</TD></TR></TABLE>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、マシン <B>fs3.abc.com</B> のプロセス状況を表示しています。
+<PRE>   %<B> bos status fs3.abc.com</B>
+   Instance buserver, currently running normally.
+   Instance kaserver, currently running normally.
+   Instance ptserver, currently running normally.
+   Instance vlserver, currently running normally.
+   Instance fs, has core file, currently running normally.
+       Auxiliary status is: file server running.
+   Instance upserver, currently running normally.
+   Instance runntp, currently running normally.
+   
+</PRE>
+<P>次のコマンドは、マシン <B>fs1.abc.com</B> の <B>fs</B> および <B>ptserver</B> プロセスの詳しい状況を表示しています。
+<PRE>   % <B>bos status -server fs1.abc.com -instance fs ptserver -long</B>
+   Instance fs, (type is fs), currently running normally.
+      Auxiliary status is: file server running.
+      Process last started at Wed Jan 7 5:34:49 1998 (3 proc starts)
+      Last exit at Wed Jan 7 5:34:49 1998
+      Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown
+          request
+      Command 1 is '/usr/afs/bin/fileserver'
+      Command 2 is '/usr/afs/bin/volserver'
+      Command 3 is '/usr/afs/bin/salvager'
+   Instance ptserver, (type is simple) currently running normally.
+      Process last started at Tue Jan 6 8:29:19 1998 (1 proc starts)
+      Command 1 is '/usr/afs/bin/ptserver'
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<P><A HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<P><A HREF="#HDRBOS_STATUS">bos status</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf120.htm">前ページ</A> &#124; <A HREF="auarf122.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

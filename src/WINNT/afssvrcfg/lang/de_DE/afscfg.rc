@@ -1,0 +1,1212 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS® Configuration-Anwendung und -Assistent"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x407
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOGEX 0, 0, 320, 246
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "AFS® Server Quick-Start-Assistent"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Abbrechen",IDCANCEL,101,225,50,14
+    PUSHBUTTON      "< &Zurück",IDBACK,155,225,50,14
+    DEFPUSHBUTTON   "&Weiter >",IDNEXT,209,225,50,14
+    PUSHBUTTON      "&Hilfe",9,263,225,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,8,214,305,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,91,200,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,103,7,210,200
+END
+
+IDD_PARTITION_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, eine Partition erstellen.",IDC_CREATE_PARTITION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,0,94,105,10
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,116,
+                    186,52,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_PARTITION_NAME,101,172,20,12,ES_AUTOHSCROLL
+    CONTROL         "&Nein, keine Partition erstellen.",
+                    IDC_DONT_CREATE_PARTITION,"Button",BS_AUTORADIOBUTTON,0,
+                    191,126,8
+    LTEXT           "Dieser Datei-Server speichert und liefert Dateien und Programme an AFS-Clients. Für in diesem System gespeicherte Daten, die über AFS gemeinsam benutzt werden, muß mindestens ein NTFS-Volume als AFS-Partition gekennzeichnet sein.",
+                    -1,0,12,209,32
+    LTEXT           "&Wählen Sie das für die Partition zu verwendende Volume:",
+                    IDC_SELECT_DRIVE,12,106,192,9
+    LTEXT           "Na&me der AFS-Partition: /vicep",IDC_NAME_LABEL,12,174,
+                    89,8
+    LTEXT           "Eine AFS-Partition auf diesem Datei-Server erstellen.",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "Eine AFS-Partition entspricht physisch einem NTFS-Volume, enthält aber auch spezielle Metadaten über Struktur und Speicherort der Informationen zur Partition.",
+                    -1,0,48,209,25
+    LTEXT           "Möchten Sie auf diesem Datei-Server eine Partition erstellen?",
+                    IDC_ASK_CREATE_PARTITION,0,75,209,17
+    LTEXT           "Zur Laufzeit bei Bedarf erzeugte Nachricht.",
+                    IDC_PARTITION_MSG,0,166,210,34,NOT WS_VISIBLE
+    LTEXT           "",IDC_PARTITION_COVER,0,75,210,92,NOT WS_VISIBLE
+END
+
+IDD_FILE_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, als File Server konfigurieren.",
+                    IDC_SHOULD_CONFIG_FILE_SERVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,114,10
+    CONTROL         "&Nein, nicht als File Server konfigurieren.",
+                    IDC_DONT_CONFIG_FILE_SERVER,"Button",BS_AUTORADIOBUTTON,
+                    0,190,143,10
+    LTEXT           "Der AFS File Service liefert angeforderte Dateien und Programme von diesem Server an AFS-Clients. Dieser Service führt weiterhin alle Operationen zur Volume-Verwaltung aus wie Erstellen, Löschen, Bewegen und Nachbilden von Volumes.",
+                    -1,0,38,210,34
+    LTEXT           "Diese Maschine als File Server konfigurieren.",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "Möchten Sie diese Maschine als File Server konfigurieren?",
+                    IDC_CREATE_FS_QUESTION,0,166,210,8
+    LTEXT           "Um diese Maschine als File Server zu konfigurieren, müssen Sie den File Service konfigurieren.",
+                    -1,0,14,210,17
+    LTEXT           "Hinweis: Diese Maschine hat zur Zeit kein Plattenlaufwerk, das für das Speichern von Dateien in AFS verfügbar ist. Obwohl Sie diese Maschine als File Server konfigurieren können, werden Sie AFS-Daten auf der Maschine nicht speichern können.",
+                    IDC_NO_DRIVES_NOTE,0,77,210,32,NOT WS_VISIBLE
+    LTEXT           "Um Plattenlaufwerke zu erstellen, verwenden Sie den Windows NT Disk Administrator.",
+                    IDC_DISK_ADMIN_NOTE,0,112,210,16,NOT WS_VISIBLE
+    LTEXT           "Diese Maschine ist bereits als File Server konfiguriert.",
+                    IDC_MSG,0,166,209,34,NOT WS_VISIBLE
+END
+
+IDD_INTRO_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Willkommen beim AFS Server Quick Start-Assistenten. Dieser Assistent wird Sie beim schnellen Konfigurieren des AFS Servers auf diesem Windows NT-System unterstützen.",
+                    IDC_TITLE,0,0,209,52
+    LTEXT           "Drücken Sie Weiter, um mit der Konfiguration des AFS Servers zu beginnen.",
+                    IDC_STATIC,0,166,209,17
+END
+
+IDD_REPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, die Root-Volumes nachbilden.",IDC_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,179,115,10
+    CONTROL         "&Nein, die Root-Volumes nicht nachbilden.",
+                    IDC_DONT_REPLICATE,"Button",BS_AUTORADIOBUTTON,0,190,158,
+                    10
+    LTEXT           "Nachbildung ist der Prozeß des Erstellens von Kopien eines Volumes mit Lesezugriff in mehreren Partitionen, üblicherweise auf anderen Datei-Servern. Durch Nachbildung wird die Verfügbarkeit eines Volumes bei Ausfall eines Netzwerks oder",
+                    IDC_STATIC,0,36,209,25
+    LTEXT           "Möchten Sie die Root-Volumes nachbilden?",
+                    IDC_REPLICATE_QUESTION,0,148,209,17
+    LTEXT           "Nachbildung hilft ebenfalls, zu verhindern, daß ein Server mit Anforderungen an häufig angesprochene Volumes überlastet wird.",
+                    IDC_STATIC,0,90,209,24
+    LTEXT           "Die Root-Volumes der Zelle nachbilden.",IDC_TITLE,0,0,
+                    209,8
+    LTEXT           "Wenn Sie andere Volumes in dieser AFS-Zelle nachbilden möchten, müssen Sie zuerst die Root-Volumes nachbilden.",
+                    IDC_STATIC,0,15,209,16
+    LTEXT           "eines Servers erhöht, weil auf das Volume noch von einem anderen Server zugegriffen werden kann, wenn der Server, der das Volume beherbergt, ausfällt.",
+                    IDC_STATIC,0,60,209,25
+    LTEXT           "Zur Laufzeit bei Bedarf erzeugte Nachricht.",
+                    IDC_CANT_REPLICATE_MSG,0,166,209,34,NOT WS_VISIBLE | NOT 
+                    WS_GROUP
+END
+
+IDD_ROOT_VOLUMES_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, die Root-Volumes erstellen.",
+                    IDC_CREATE_ROOT_VOLUMES,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,0,179,108,10
+    CONTROL         "&Nein, die Root-Volumes nicht erstellen.",
+                    IDC_DONT_CREATE_ROOT_VOLUMES,"Button",BS_AUTORADIOBUTTON,
+                    0,190,139,10
+    LTEXT           "In AFS sind Volumes Objektgruppen zusammengehörender Dateien, die als einzelne, leicht zu verwaltende Einheiten strukturiert sind, um die Systemverwaltung zu erleichtern.",
+                    IDC_STATIC,0,15,209,24
+    LTEXT           "Möchten Sie die Root-Volumes erstellen?",
+                    IDC_ROOT_AFS_QUESTION,0,166,209,8
+    LTEXT           "Die Root-Volumes der Zelle erstellen.",IDC_TITLE,0,0,
+                    209,8
+    LTEXT           "Einmal erstellt, sind die Root-Volumes im AFS-Dateibereich automatisch erreichbar.",
+                    IDC_STATIC,0,78,209,17
+    LTEXT           "Zur Laufzeit bei Bedarf erzeugte Nachricht.",
+                    IDC_ROOT_AFS_MSG,0,166,209,33,NOT WS_VISIBLE
+    LTEXT           "Das Volume root.afs ist das Root des AFS-Dateibereichs. Das Volume root.cell ist das Root der untergeordneten Baumstruktur des AFS-Dateibereichs der Zelle, worauf über einen Mount-Punkt vom root.afs aus zugegriffen werden kann.",
+                    IDC_STATIC,0,42,209,34
+END
+
+IDD_GET_CURRENT_CONFIG DIALOG DISCARDABLE  0, 0, 198, 84
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Konfiguration des AFS® Servers"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    36,38,148,14
+    LTEXT           "Zur Laufzeit erzeugter Arbeitsfolgetext.",IDC_OPERATION,
+                    35,20,145,10
+    ICON            "",IDC_LOGO,7,7,20,20
+    PUSHBUTTON      "Abbrechen",IDCANCEL,73,63,50,14
+    LTEXT           "Ermitteln der aktuellen Konfiguration:",IDC_OPERATION2,
+                    35,7,156,10
+END
+
+IDD_BACKUP_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, als Backup-Server konfigurieren.",
+                    IDC_CONFIG_BACKUP_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,0,179,128,10
+    CONTROL         "&Nein, nicht als Backup-Server konfigurieren.",
+                    IDC_DONT_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,0,190,157,10
+    LTEXT           "Der Backup-Server kann nur auf Maschinen ausgeführt werden, die als Database Server konfiguriert sind. Wird der Backup-Server auf einem Database Server in der Zelle ausgeführt, so muß er auf ALLEN Database Servern in der Zelle ausgeführt werden.",
+                    -1,0,38,199,42
+    LTEXT           "Möchten Sie diese Maschine als Backup-Server konfigurieren?",
+                    IDC_BACKUP_SERVER_QUESTION,0,166,209,10
+    LTEXT           "Diese Maschine als Backup-Server konfigurieren.",
+                    IDC_TITLE,0,0,207,8
+    LTEXT           "Der Backup-Server ist eine Zusatzfunktion des Database Service.",
+                    -1,0,14,209,16
+    LTEXT           "Diese Maschine ist bereits als Database Server konfiguriert.",
+                    IDC_CANT_BACKUP_MSG,0,166,210,33,NOT WS_VISIBLE
+END
+
+IDD_SYS_CONTROL_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Als den System Control &Server konfigurieren.",
+                    IDC_SYS_CONTROL_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,0,151,166,10
+    CONTROL         "Als einen System Control &Client konfigurieren.",
+                    IDC_SYS_CONTROL_CLIENT,"Button",BS_AUTORADIOBUTTON,0,164,
+                    173,9
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,90,174,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    CONTROL         "&Nicht als System Control Client oder Server konfigurieren.",
+                    IDC_DONT_CONFIGURE,"Button",BS_AUTORADIOBUTTON,0,190,199,
+                    9
+    LTEXT           "Der System Control Server stellt anderen AFS-Server-Maschinen, die als System Control Clients konfiguriert sind, allgemeine Konfigurationsdateien zur Verfügung. AFS-Zellen dürfen nur einen einzigen System Control Server ausführen.",
+                    -1,0,14,209,33
+    LTEXT           "Als System Control Server oder Client konfigurieren.",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "Möchten Sie diese Maschine als System Control Server oder Client konfigurieren?",
+                    IDC_SYS_CONTROL_MACHINE_QUESTION,0,131,207,17
+    LTEXT           "Ein System Control Client erhält vom System Control Server der Zelle alle verfügbaren Aktualisierungen zu seinen AFS-Konfigurationsdateien.",
+                    IDC_SYS_CONTROL_CLIENT_DESC,0,52,209,26
+    LTEXT           "S&ystem Control Server:",IDC_SYS_CONTROL_MACHINE_LABEL,
+                    15,176,73,8,WS_DISABLED
+    LTEXT           "",IDC_CANT_CONFIG_MSG,0,166,210,34,NOT WS_VISIBLE
+    LTEXT           "WARNUNG: Standorte, die den Vertrieb von AFS® in den Vereinigten Staaten nicht nutzen, sollten Konfigurationsdateien nicht über den System Control Server verteilen. Es würden dabei sensible Systeminformationen in unverschlüsselter Form übertragen.",
+                    -1,9,81,200,49
+END
+
+IDD_CONFIG_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Dies sind die gesamten Informationen, die zum Konfigurieren des AFS Servers in diesem System benötigt werden.",
+                    IDC_ALL_NEEDED_MSG,1,14,209,17
+    LTEXT           "Diese Maschine in die Zelle <zur Laufzeit erzeugt> konfigurieren",
+                    IDC_TITLE,1,0,208,8
+    LTEXT           "Die folgenden Konfigurationsschritte werden ausgeführt:",
+                    IDC_FOLLOWING_STEPS_MSG,1,36,187,8
+    LTEXT           "Schritt 1 - zur Laufzeit erzeugter Text",IDC_STEP1,22,
+                    49,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 3 - zur Laufzeit erzeugter Text",IDC_STEP3,22,
+                    73,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 2 - zur Laufzeit erzeugter Text",IDC_STEP2,22,
+                    61,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 4 - zur Laufzeit erzeugter Text",IDC_STEP4,22,
+                    85,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 5 - zur Laufzeit erzeugter Text",IDC_STEP5,22,
+                    97,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 6 - zur Laufzeit erzeugter Text",IDC_STEP6,22,
+                    109,179,8,NOT WS_VISIBLE
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,1,178,200,11
+    LTEXT           "Schritt 8 - zur Laufzeit erzeugter Text",IDC_STEP8,22,
+                    133,179,8,NOT WS_VISIBLE
+    LTEXT           "Schritt 7 - zur Laufzeit erzeugter Text",IDC_STEP7,22,
+                    121,179,8,NOT WS_VISIBLE
+    LTEXT           "Zur Laufzeit bei Bedarf erzeugte Nachricht.",
+                    IDC_CANT_CONFIG_MSG,1,13,209,17,NOT WS_VISIBLE
+    LTEXT           "Vollständig in Prozent:",IDC_PERCENT_COMPLETE_LABEL,1,
+                    191,76,8,NOT WS_VISIBLE
+    LTEXT           "Laufender Prozeß:",IDC_CURRENT_STEP_LABEL,1,157,108,8,
+                    NOT WS_VISIBLE
+    LTEXT           "Beschreibung des laufenden Schrittes - zur Laufzeit erzeugt",
+                    IDC_CURRENT_STEP,1,167,208,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,92,191,49,8,NOT WS_VISIBLE
+    LTEXT           "Um mit der Konfiguration dieses Computers zu beginnen, drücken Sie Konfigurieren. Um die auszuführenden Konfigurationsschritte zu verändern, drücken Sie Zurück.",
+                    IDC_STATUS_MSG,1,159,208,41
+    LTEXT           "",IDC_STEP1_GRAPHIC,10,49,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP2_GRAPHIC,10,61,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP3_GRAPHIC,10,73,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP4_GRAPHIC,10,85,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP5_GRAPHIC,10,97,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP6_GRAPHIC,10,109,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP7_GRAPHIC,10,121,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP8_GRAPHIC,10,133,9,9,NOT WS_VISIBLE
+END
+
+IDD_INFO_PAGE2_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,64,55,138,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,64,71,138,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_VERIFY_ADMIN_PW,64,87,138,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_AFS_UID,112,158,37,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_AFS_UID_SPINNER,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,149,156,11,14
+    LTEXT           "Verwaltungsinformationen",IDC_TITLE,0,0,202,8
+    LTEXT           "&Name:",IDC_ADMIN_NAME_LABEL,7,57,22,8
+    LTEXT           "&Kennwort:",IDC_ADMIN_PW_LABEL,7,73,34,8
+    GROUPBOX        "Name und Kennwort des Kontos",IDC_ADMIN_INFO_FRAME,0,41,
+                    210,65
+    LTEXT           "&Prüfkennwort:",IDC_VERIFY_ADMIN_PW_LABEL,7,90,52,8
+    LTEXT           "Die untenstehenden Informationen werden benötigt, um das Verwaltungskonto für diese neue Zelle zu erstellen.",
+                    IDC_STATIC,0,15,209,17
+    CONTROL         "&Diese AFS UID verwenden:",IDC_USE_THIS_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,159,99,10
+    CONTROL         "Die &nächste verfügbare AFS UID verwenden",
+                    IDC_USE_NEXT_UID,"Button",BS_AUTORADIOBUTTON,6,144,160,
+                    10
+    GROUPBOX        "AFS UID",IDC_STATIC,0,118,209,57
+    LTEXT           "Geben Sie die Benutzer-ID für das AFS-Verwaltungskonto ein:",
+                    IDC_STATIC,6,130,196,9
+END
+
+IDD_DB_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Ja, als Database Server konfigurieren.",
+                    IDC_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,0,131,134,10
+    CONTROL         "&Nein, nicht als Database Server konfigurieren.",
+                    IDC_DONT_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON,0,
+                    188,160,10
+    LTEXT           "Der Database Service verwaltet die durch eine AFS-Zelle benötigte Gruppe nachgebildeter Datenbanken. Dieser Service verwaltet für die Zelle alle Informationen zu Konten, Volume-Speicherorten und (optional) zur Sicherung.",
+                    -1,0,38,209,54
+    LTEXT           "Möchten Sie diese Maschine als Database Server konfigurieren?",
+                    IDC_DB_SERVER_QUESTION,0,108,209,10
+    LTEXT           "Diese Maschine als Database Server konfigurieren.",
+                    IDC_TITLE,0,0,209,8
+    LTEXT           "Um diese Maschine als Database Server zu konfigurieren, müssen Sie den Database Service konfigurieren.",
+                    -1,0,14,209,16
+    LTEXT           "Diese Maschine ist bereits als Database Server konfiguriert.",
+                    IDC_MSG,0,167,210,33,NOT WS_VISIBLE
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,86,174,119,12,ES_AUTOHSCROLL
+    LTEXT           "S&ystem Control Server:",IDC_SYS_CONTROL_MACHINE_LABEL,
+                    12,176,73,8
+    LTEXT           "Wenn Ihre Zelle einen System Control Server besitzt, geben Sie seinen Hostnamen unter ein. Die AFS-Konfigurations-\ndateien werden über diesen Server aktualisiert.",
+                    IDC_SCM_PROMPT,10,144,195,27
+END
+
+IDD_INFO_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Diesen Host zu einem Server in einer vorhandenen AFS-Zelle &machen",
+                    IDC_JOIN_EXISTING_CELL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,0,41,203,15
+    CONTROL         "&Dies wird der erste Server in einer neuen AFS-Zelle sein",
+                    IDC_FIRST_SERVER,"Button",BS_AUTORADIOBUTTON,0,59,197,8
+    EDITTEXT        IDC_CELL_NAME,64,96,139,12,ES_LOWERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SERVER_PW,64,166,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_VERIFY_PW,64,180,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "Zellen- und Server-Informationen",IDC_TITLE,0,0,203,8
+    LTEXT           "&Zellenname:",IDC_CELL_NAME_LABEL,7,97,40,8
+    LTEXT           "&Kennwort:",IDC_SERVER_PW_LABEL,7,167,34,8,WS_DISABLED
+    LTEXT           "Geben Sie den Namen der AFS-Zelle ein:",
+                    IDC_CELL_NAME_PROMPT,8,86,195,9
+    LTEXT           "Geben Sie das Kennwort für den AFS-Principal ein. Alle AFS Server erhalten Token als dieser Principal.",
+                    IDC_SERVER_PW_PROMPT,7,130,196,19,WS_DISABLED
+    GROUPBOX        "Zellenname",IDC_CELL_NAME_FRAME,0,75,210,43
+    GROUPBOX        "Server-Kennwort",IDC_SERVER_PW_FRAME,0,119,210,81,
+                    WS_DISABLED
+    LTEXT           "&Prüfkennwort:",IDC_VERIFY_PW_LABEL,7,180,52,8,
+                    WS_DISABLED
+    LTEXT           "Eine AFS-Zelle ist eine Objektgruppe von Servern, die für den Dateizugriff einen einheitlichen Namespace zur Verfügung stellen.",
+                    IDC_CELL_NAME_PROMPT2,1,13,202,24
+    LTEXT           "Name:",IDC_PRINCIPAL_LABEL,7,152,22,8,WS_DISABLED
+    LTEXT           "afs",IDC_PRINCIPAL,64,150,139,12,WS_DISABLED,
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_INFO_PAGE2_NOT_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,53,43,149,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,53,59,149,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,53,132,149,12,ES_AUTOHSCROLL
+    LTEXT           "Verwaltungsinformationen",IDC_TITLE,0,0,209,8
+    LTEXT           "Geben Sie die Verwaltungsinformationen zum Konto unten ein:",
+                    IDC_ADMIN_INFO_PROMPT,7,30,196,10
+    LTEXT           "&Name:",IDC_ADMIN_NAME_LABEL,7,46,22,8
+    LTEXT           "&Kennwort:",IDC_ADMIN_PW_LABEL,7,62,34,8
+    GROUPBOX        "Name und Kennwort des Kontos",IDC_ADMIN_INFO_FRAME,0,17,
+                    210,62
+    GROUPBOX        "Vorhandene AFS Server",IDC_HOSTNAME_FRAME,1,92,209,60
+    LTEXT           "AFS Server:",IDC_HOSTNAME_LABEL,9,134,43,8
+    LTEXT           "Geben Sie den Hostnamen eines anderen AFS Servers in der Zelle ein, die Sie verknüpfen möchten. Von diesem Server werden die AFS-Konfigurationsdaten empfangen.",
+                    IDC_HOSTNAME_PROMPT,7,105,202,25
+END
+
+IDD_SERVICES_PAGE DIALOG DISCARDABLE  0, 0, 295, 284
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Services"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,20,281,45
+    GROUPBOX        "",IDC_STATIC,7,70,281,43
+    GROUPBOX        "",IDC_STATIC,7,119,281,45
+    GROUPBOX        "",IDC_STATIC,7,169,281,44
+    CONTROL         "File Service",IDC_FS_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,19,60,10
+    CONTROL         "Database Service",IDC_DB_SERVICE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,69,82,10
+    PUSHBUTTON      "Einzeldaten...",IDC_DB_DETAILS,230,85,50,14,NOT 
+                    WS_VISIBLE
+    CONTROL         "Backup-Server",IDC_BK_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,118,71,10
+    CONTROL         "System Control Server",IDC_SCS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,168,98,10
+    EDITTEXT        IDC_SC_MACHINE,107,241,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "Wählen Sie die Services aus, die auf diesem AFS Server laufen sollen:",
+                    IDC_STATIC,7,7,217,8
+    LTEXT           "Der File Service ist zur Zeit aktiv.",IDC_FS_STATUS_MSG,
+                    14,32,261,8
+    LTEXT           "Der Database Service ist zur Zeit teilweise installiert.",
+                    IDC_DB_STATUS_MSG,14,82,195,8
+    LTEXT           "S&ystem Control Server:",IDC_SC_MACHINE_LABEL,31,243,73,
+                    8,WS_DISABLED
+    LTEXT           "Um den File Service zu stoppen, machen Sie die Markierung des obigen Fensters rückgängig.",
+                    IDC_FS_ACTION_MSG,14,44,262,17
+    LTEXT           "Für weitere Informationen klicken Sie auf Einzeldaten.",
+                    IDC_DB_ACTION_MSG,14,93,212,15
+    LTEXT           "Der Backup-Server ist zur Zeit aktiv.",
+                    IDC_BK_STATUS_MSG,14,131,259,8
+    LTEXT           "Um den Backup-Server zu stoppen, machen Sie die Markierung des obigen Fensters rückgängig.",
+                    IDC_BK_ACTION_MSG,14,143,262,16
+    LTEXT           "Um diesen Server zu aktivieren, müssen Sie entweder den File Service oder den Database Service ausführen.",
+                    IDC_SCS_ACTION_MSG,14,193,268,18
+    LTEXT           "Der Service System Control ist zur Zeit nicht aktiv.",
+                    IDC_SCS_STATUS_MSG,14,180,263,9
+    GROUPBOX        "",IDC_STATIC,7,220,281,57
+    CONTROL         "System Control Client",IDC_SCC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,219,95,10
+    LTEXT           "Um diesen Server zu aktivieren, müssen Sie entweder den File Service oder den Database Service ausführen.",
+                    IDC_SCC_ACTION_MSG,14,257,268,15
+    LTEXT           "Der Service System Control ist zur Zeit nicht aktiv.",
+                    IDC_SCC_STATUS_MSG,14,230,263,9
+END
+
+IDD_PARTITIONS_PAGE DIALOGEX 0, 0, 295, 265
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Partitionen"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Die folgenden &AFS-Partitionen sind auf Ihrem Computer vorhanden:",
+                    IDC_STATIC,8,7,220,8
+    PUSHBUTTON      "&Erstellen...",IDC_CREATE_PARTITIONS,17,118,71,14
+    LTEXT           "Um eine Partition oder ein Volume auf einer Partition zurückzugewinnen, wählen Sie in der Liste die Partition aus und klicken auf die obige Schaltfläche. Um alle Partitionen auf diesem Server zurückzugewinnen, klicken Sie auf die obige Schaltfläche.",
+                    IDC_SALVAGE_MSG,30,179,250,32
+    PUSHBUTTON      "&Zurückgewinnen...",IDC_SALVAGE,17,159,71,14
+    LTEXT           "Um eine Partition zu entfernen, wählen Sie in der Liste die Partition aus und klicken auf die obige Schaltfläche.",
+                    IDC_REMOVE_MSG,30,235,253,17,WS_DISABLED
+    PUSHBUTTON      "&Entfernen",IDC_REMOVE,17,217,53,14,WS_DISABLED
+    GROUPBOX        "Partitionen",IDC_AGGR_FRAME,7,103,281,155
+    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+                    281,79,WS_EX_CLIENTEDGE
+    LTEXT           "Um auf diesem Server eine neue Partition zu erstellen, klicken Sie auf die obige Schaltfläche.",
+                    IDC_CREATE_MSG,30,136,254,16
+END
+
+IDD_CREATE_PARTITION DIALOGEX 0, 0, 264, 177
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS-Partition erstellen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Wählen Sie aus der unten stehenden Liste ein NTFS-Volume aus, auf dem die neue Partition erstellt werden soll:",
+                    IDC_TITLE,7,5,250,18
+    LTEXT           "Name der AFS-Partition:",IDC_NAME_STATIC,14,131,76,8
+    EDITTEXT        IDC_PARTITION_NAME,123,129,20,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Erstellen",IDC_CREATE,96,158,50,14,WS_DISABLED
+    PUSHBUTTON      "&Schließen",IDC_CLOSE,152,158,50,14
+    PUSHBUTTON      "Hilfe",9,207,158,50,14
+    GROUPBOX        "Parameter der Partition",IDC_ARGS_FRAME,7,117,250,33
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,25,250,
+                    85,WS_EX_CLIENTEDGE
+    LTEXT           "/vicep",IDC_VICEP_STATIC,99,131,22,8
+END
+
+IDD_ADMIN_INFO DIALOG DISCARDABLE  0, 0, 225, 159
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Konfiguration des AFS® Servers"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,59,33,151,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,59,49,151,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,59,113,151,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Konfigurieren",IDOK,108,138,50,14,WS_DISABLED
+    PUSHBUTTON      "Abbrechen",IDCANCEL,48,138,50,14
+    PUSHBUTTON      "Hilfe",9,168,138,50,14
+    LTEXT           "Geben Sie die Verwaltungsinformationen zum Konto unten ein:",
+                    IDC_ADMIN_INFO_PROMPT,14,20,196,10
+    LTEXT           "&Name:",IDC_ADMIN_NAME_LABEL,15,36,22,8
+    LTEXT           "&Kennwort:",IDC_ADMIN_PW_LABEL,15,52,34,8
+    GROUPBOX        "Name und Kennwort des Kontos",IDC_ADMIN_INFO_FRAME,7,7,
+                    211,62
+    GROUPBOX        "System Control Server",IDC_HOSTNAME_FRAME,7,73,211,59
+    LTEXT           "&Host-Name:",IDC_HOSTNAME_LABEL,15,115,40,8
+    LTEXT           "Wenn Ihre Zelle einen System Control Server besitzt, geben Sie seinen Hostnamen unter ein. Die AFS-Konfigurationsdateien werden über diesen Server aktualisiert.",
+                    IDC_HOSTNAME_PROMPT,13,84,205,24
+    LTEXT           "Translators: Please Read This! This dialog resizes at runtime. In certain situaions, the dialog is resized and everything that is part of the bottom group box is hidden.",
+                    IDC_STATIC,0,150,225,9,NOT WS_VISIBLE
+END
+
+IDD_CONFIG_SERVER DIALOG DISCARDABLE  0, 0, 257, 87
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Konfiguration des AFS® Servers"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Abbrechen",IDCANCEL,103,66,50,14
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,40,37,200,11
+    LTEXT           "Vollständig in Prozent:",IDC_PERCENT_COMPLETE_LABEL,40,
+                    50,76,8,NOT WS_VISIBLE
+    LTEXT           "Laufender Prozeß:",IDC_CURRENT_STEP_LABEL,40,15,108,8,
+                    NOT WS_VISIBLE
+    LTEXT           "Beschreibung des laufenden Schrittes - zur Laufzeit erzeugt",
+                    IDC_CURRENT_STEP,40,26,210,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,117,50,49,8,NOT WS_VISIBLE
+    ICON            "",IDC_LOGO,7,7,20,20
+    LTEXT           "Um mit der Konfiguration dieses Computers zu beginnen, drücken Sie Konfigurieren. Um die auszuführenden Konfigurationsschritte zu verändern, drücken Sie Zurück.",
+                    IDC_STATUS_MSG,40,16,210,41
+    PUSHBUTTON      "Protokoll &anzeigen",IDNEXT,156,66,62,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+END
+
+IDD_CELLSERVDB_ERRORS DIALOG DISCARDABLE  0, 0, 187, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CellServCB-Aktualisierungsfehler"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_LIST,7,26,173,127,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,22,162,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,75,162,50,14
+    PUSHBUTTON      "Hilfe",9,130,162,50,14
+    LTEXT           "Die Datei CellServDB auf den folgenden AFS-Servern konnte nicht automatisch aktualisiert werden:",
+                    IDC_STATIC,7,7,173,18
+END
+
+IDD_SALVAGE DIALOG DISCARDABLE  0, 0, 243, 188
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Wiederherstellung"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,78,97,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,132,97,50,14
+    PUSHBUTTON      "&Hilfe",9,186,97,50,14
+    CONTROL         "Alle Partitionen auf diesem Datei-Server &zurückgewinnen",
+                    IDC_SERVER,"Button",BS_AUTORADIOBUTTON,14,35,205,10
+    CONTROL         "Alle Volumes auf der ausgewählten &Partition zurückgewinnen",
+                    IDC_PARTITION,"Button",BS_AUTORADIOBUTTON,14,48,211,10
+    CONTROL         "Ein spezielles &Volume der ausgewählten Partition zurückgewinnen",
+                    IDC_VOLUME,"Button",BS_AUTORADIOBUTTON,14,61,222,10
+    EDITTEXT        IDC_VOLUME_NAME,76,74,97,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "<< &Erweitert",IDC_ADVANCED,7,97,50,14
+    GROUPBOX        "",IDC_STATIC,7,25,229,67
+    LTEXT           "Volume-&Name:",IDC_VOLUME_NAME_LABEL,27,75,47,8,
+                    WS_DISABLED
+    GROUPBOX        "Erweiterte Optionen zur Wiederherstellung ",
+                    IDC_ADVANCED_FRAME,7,119,229,62
+    LTEXT           "Pfad für &Temporärdateien:",IDC_TEMP_DIR_LABEL,13,162,
+                    84,12
+    EDITTEXT        IDC_LOG_FILE,97,146,133,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NUM_PROCESSES,209,129,21,12,ES_AUTOHSCROLL
+    LTEXT           "Dateiname für &Ergebnisprotokoll:",IDC_LOG_FILE_LABEL,
+                    13,144,68,16
+    EDITTEXT        IDC_TEMP_DIR,97,161,133,12,ES_AUTOHSCROLL
+    CONTROL         "Pa&rallele Wiederherstellungsoperationen; Anz. Prozesse:",
+                    IDC_NUM_PROCESSES_CHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,131,189,10
+    LTEXT           "Während Sie den Server oder eine ganze Partition zurückgewinnen, ist der Server zeitweilig offline.",
+                    IDC_STATIC,50,7,186,17
+    LTEXT           "HINWEIS:",IDC_STATIC,7,7,38,8
+    LTEXT           "Translators: Please Read This! This dialog resizes at runtime.  In certain situaions, the dialog is\\bresized and everything that is part of the bottom group box is hidden.",
+                    IDC_STATIC,0,180,243,8,NOT WS_VISIBLE
+END
+
+IDD_GET_PW DIALOG DISCARDABLE  0, 0, 197, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Kennwort des AFS-Principals"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_PW,48,42,142,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,31,61,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,85,61,50,14
+    PUSHBUTTON      "Hilfe",9,140,61,50,14
+    LTEXT           "Der Schlüssel eines AFS-Principals kann nicht von einem Authentifizierungs-Server mit einem Stand vor 3.5 abgerufen werden. Geben Sie bitte das Kennwort des AFS-Principals unten ein.",
+                    IDC_STATIC,7,7,183,34
+    LTEXT           "Kennwort:",IDC_STATIC,7,44,35,8
+END
+
+IDD_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 337, 287
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Wiederherstellung von Volumes - Ergebnisse"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_LOG,7,48,323,211,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "&Schließen",IDC_CLOSE,225,266,50,14,WS_DISABLED
+    PUSHBUTTON      "Hilfe",9,280,266,50,14
+    LTEXT           "<Zur Laufzeit erzeugt>",IDC_LOG_TITLE,7,38,263,8
+    ICON            "",IDC_LOGO,7,7,21,20
+    LTEXT           "<Zur Laufzeit erzeugt>",IDC_SALVAGE_STATUS,37,15,185,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 239
+        HORZGUIDE, 207
+    END
+
+    IDD_INTRO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 209
+    END
+
+    IDD_GET_CURRENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        VERTGUIDE, 35
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_CONFIG_SERVER_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        VERTGUIDE, 11
+        VERTGUIDE, 22
+        VERTGUIDE, 201
+    END
+
+    IDD_INFO_PAGE2_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 6
+        VERTGUIDE, 64
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 203
+        VERTGUIDE, 64
+        VERTGUIDE, 203
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE2_NOT_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 53
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_SERVICES_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 288
+        VERTGUIDE, 14
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 277
+    END
+
+    IDD_PARTITIONS_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 17
+        VERTGUIDE, 30
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_ADMIN_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 59
+        VERTGUIDE, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_CONFIG_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 80
+    END
+
+    IDD_CELLSERVDB_ERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+        HORZGUIDE, 7
+    END
+
+    IDD_GET_PW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#define  AFS_VERINFO_FILE_DESCRIPTION ""AFS® Configuration-Anwendung und -Assistent""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "status_16.bmp"
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "status_256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DISABLED_DISK_DRIVE ICON    DISCARDABLE     "disabled.ico"
+IDI_DISK_DRIVE          ICON    DISCARDABLE     "disk_dri.ico"
+IDI_APP_ICON            ICON    DISCARDABLE     "app_icon.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FILE                ICON    DISCARDABLE     "file.ico"
+IDI_DISK_DRIVE_WITH_WARNING ICON    DISCARDABLE     "warn_dri.ico"
+IDI_AFS_DISK_DRIVE      ICON    DISCARDABLE     "afsdrive.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "&Weiter >"
+    IDS_FINISH              "&Fertigstellen"
+    IDS_HELP_TITLE          "Schaltfläche Hilfe gedrückt"
+    IDS_HELP_DESC           "Hilfe ist zur Zeit nicht verfügbar."
+    IDS_CANCEL_DESC         "Den AFS Quick-Start-Assistenten abbrechen?"
+    IDS_PARTITION_ALREADY_CREATED 
+                            "Auf dieser Maschine ist bereits eine AFS-Partition vorhanden."
+    IDS_NOT_A_FS_SERVER     "Diese Maschine ist nicht als File Server konfiguriert. Volumes können nur auf File Server-Maschinen erstellt werden."
+    IDS_ROOT_AFS_ALREADY_EXISTS "Die Root-Volumes sind bereits vorhanden."
+    IDS_NO_PARTITION_EXISTS "Es sind keine Partitionen vorhanden, auf denen die Root-Volumes \nerstellt werden können. Eine Partition muß vorhanden sein, bevor die Root-Volumes erstellt \nwerden können."
+    IDS_ALREADY_REPLICATED  "Die Root-Volumes wurden bereits nachgebildet."
+    IDS_ROOT_AFS_DOESNT_EXIST 
+                            "Die Root-Volumes sind nicht vorhanden. Die Root-Volumes müssen vorhanden sein, bevor sie nachgebildet werden können."
+    IDS_ALREADY_CONFIGURED  "Diese Maschine ist bereits als AFS Server konfiguriert."
+    IDS_NOTHING_TO_CONFIGURE 
+                            "Sie haben für die Konfiguration nichts ausgewählt."
+    IDS_EXIT                "Exit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_FS_STEP       "Starten des File Service"
+    IDS_CANCEL_CONFIG_MSG   "Wenn Sie an diesem Punkt abbrechen, ist Computer nur teilweise als AFS-Server konfiguriert. Trotzdem abbrechen?"
+    IDS_WIZARD_APP_TITLE    "AFS® Server Quick Start-Assistent"
+    IDS_CANCEL_PENDING      "*** Abbruch läuft - einen Moment bitte... ***"
+    IDS_CHECK_FS_CONFIG     "Überprüfung des File Servers..."
+    IDS_CHECK_DB_CONFIG     "Überprüfung des Database Servers..."
+    IDS_CHECK_BAK_CONFIG    "Überprüfung des Backup-Servers..."
+    IDS_CHECK_PARTITION     "Überprüfung der AFS-Partition..."
+    IDS_CHECK_ROOT_AFS      "Überprüfung der Root-Volumes..."
+    IDS_CHECK_REP           "Überprüfung der Nachbildungen der Root-Volumes..."
+    IDS_CANCEL_GET_CONFIG   "Abbrechen...Einen Moment bitte..."
+    IDS_ALREADY_A_BACKUP_SERVER 
+                            "Diese Maschine ist bereits als Backup-Server konfiguriert."
+    IDS_NOT_A_DB_SERVER     "Diese Maschine ist nicht als Database Server konfiguriert. Backup-Server können nur auf Database Server-Maschinen ausgeführt werden."
+    IDS_ALREADY_A_SYS_CONTROL_SERVER 
+                            "Diese Maschine ist bereits als System Control Server konfiguriert."
+    IDS_ALREADY_A_SYS_CONTROL_CLIENT 
+                            "Diese Maschine ist bereits als System Control Client konfiguriert."
+    IDS_SC_NOT_A_DB_OR_FS_SERVER 
+                            "Diese Maschine ist nicht als Database oder File Server \nkonfiguriert. Ein Computer kann nur als System Control-Maschine konfiguriert werden, wenn er auch als Database oder File Server-Maschine konfiguriert ist."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE               "Volume"
+    IDS_NAME_OR_ERROR       "Name (oder Fehlernachricht)"
+    IDS_BIN_NOT_A_DB_OR_FS_SERVER 
+                            "Diese Maschine ist nicht als Database oder File Server \nkonfiguriert. Ein Computer kann nur als Binary Distribution-Maschine konfiguriert werden, wenn \ner auch als Database oder File Server-Maschine konfiguriert ist."
+    IDS_CHECK_SCS           "Überprüfung des System Control Servers..."
+    IDS_CHECK_SCC           "Überprüfung des System Control Clients..."
+    IDS_SIZE                "Größe"
+    IDS_ERROR_SEP           ",   "
+    IDS_MUST_CONFIG_FS      "Wenn dies der erste AFS Server in der Zelle ist, wird der File Service standardmäßig konfiguriert."
+    IDS_MUST_CONFIG_DB      "Wenn dies der erste AFS Server in der Zelle ist, wird der Database Service standardmäßig konfiguriert."
+    IDS_MUST_MAKE_PARTITION "Wenn dies der erste AFS Server in der Zelle ist, muß eine Partition erstellt werden."
+    IDS_MUST_CREATE_ROOT_AFS 
+                            "Wenn dies der erste AFS Server in der Zelle ist, werden die Volumes root.afs und root.cell standardmäßig erstellt."
+    IDS_MUST_REPLICATE      "Wenn dies der erste AFS Server in der Zelle ist, werden die Volumes root.afs und root.cell standardmäßig nachgebildet."
+    IDS_CHECK_AFS_CLIENT    "Überprüfung der Installation des AFS Clients..."
+    IDS_ERROR_HOST_NAME     "Der Host-Name dieser Maschine konnte nicht ermittelt werden."
+    IDS_ERROR_DRIVE_COMPRESSED "Laufwerk ist komprimiert"
+    IDS_ERROR_CFG_HOST_OPEN "Die Server Configuration Library konnte nicht initialisiert werden."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_CLIENT_STEP    "Stoppen des AFS Clients"
+    IDS_ERROR_LOCAL_HOST_NAME 
+                            "Der lokale Host-Name dieser Maschine konnte nicht ermittelt werden."
+    IDS_GET_TOKENS_ERROR    "Keine Token erhalten. Überprüfen Sie, ob Sie Benutzername und Kennwort korrekt eingegeben haben."
+    IDS_CANT_SALVAGE_WHEN_FS_NOT_CONFIGURED 
+                            "Wiederherstellung kann nicht durchgeführt werden, weil der File \nService noch nicht gestartet worden ist. Bitte starten Sie den File Service und versuchen Sie \nes erneut."
+    IDS_SALVAGING           "Wiederherstellung in Bearbeitung. Bitte warten..."
+    IDS_CURRENT_SALVAGE_LOG "Aktueller Inhalt des Wiederherstellungsprotokolls:"
+    IDS_FINAL_SALVAGE_LOG   "Letzter Inhalt des Wiederherstellungsprotokolls:"
+    IDS_SALVAGE_COMPLETE    "Die Wiederherstellung ist beendet."
+    IDS_CANT_GET_SALVAGE_LOG 
+                            "Wiederherstellungsprotokoll konnte nicht abgerufen werden."
+    IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK 
+                            "Wiederherstellungsprotokoll konnte nicht auf Platte gesichert werden."
+    IDS_VALIDATION_ERROR_TEMPLATE 
+                            "Angegebene(s) %1 ist ungültig. Bitte geben Sie %2 neu ein."
+    IDS_CELL_NAME_VALIDATION_TYPE "Zellenname"
+    IDS_SERVER_NAME_VALIDATION_TYPE "Server-Name"
+    IDS_PASSWORD_VALIDATION_TYPE "Kennwort"
+    IDS_UID_VALIDATION_TYPE "UID"
+    IDS_USER_NAME_VALIDATION_TYPE "Benutzername"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_AFS_CLIENT_NOT_INSTALLED 
+                            "Der AFS Client ist nicht installiert. Der AFS Client muß installiert sein, bevor der AFS Server konfiguriert werden kann."
+    IDS_ERROR_AFS_CLIENT_CHECK 
+                            "Es konnte nicht ermittelt werden, ob der AFS Client installiert ist."
+    IDS_ERROR_FS_IS_NOT_NTFS "Dateisystem ist kein NTFS-Dateisystem"
+    IDS_ERROR_DRIVE_HAS_DATA "Laufwerk enthält Daten"
+    IDS_PARTITION_STEP_DESC "AFS-Partition erstellen"
+    IDS_ERROR_DRIVE_CONTAINS_NT "Laufwerk enthält NT-Installation"
+    IDS_DB_STEP_DESC        "Database Service starten"
+    IDS_FS_STEP_DESC        "File Service starten"
+    IDS_SCC_STEP_DESC       "System Control Client starten"
+    IDS_SCS_STEP_DESC       "System Control Server starten"
+    IDS_ROOT_AFS_STEP_DESC  "Root-Volumes erstellen"
+    IDS_REP_STEP_DESC       "Root-Volumes nachbilden"
+    IDS_PARTITIONS_PAGE_TITLE "Partitionen"
+    IDS_CONFIGURE           "&Konfigurieren"
+    IDS_DB_AND_BK_STEP_DESC "Database Service starten (beinhaltet Backup-Server)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_STEP      "Erstellen der AFS-Partition"
+    IDS_CONFIG_COMMON_FUNCS "Konfigurieren der allen Services gemeinsamen Funktionen"
+    IDS_START_DB_STEP       "Starten des Database Service"
+    IDS_START_SCC_STEP      "Starten des System Control Service als System Control Client"
+    IDS_START_SCS_STEP      "Starten des System Control Service als System Control Server"
+    IDS_CREATE_ROOT_AFS_STEP "Erstellen des Volumes root.afs"
+    IDS_REP_STEP            "Nachbilden des Root-Volumes"
+    IDS_START_AUTH_STEP     "Abrufen von Token für diesen Server"
+    IDS_SERVICES_PAGE_TITLE "Services"
+    IDS_CONFIG_SUCCEEDED    "Konfiguration war erfolgreich."
+    IDS_CONFIG_CANCELED     "Konfiguration wurde abgebrochen."
+    IDS_CONFIG_FAILED       "Konfiguration fehlgeschlagen.\r\n\r\nDie detaillierte Protokolldatei %1 ist an Adresse %2 erstellt worden."
+    IDS_ERROR_NO_LICENSE_NUM "Keine AFS-Lizenznummer gefunden."
+    IDS_VERIFY_CLIENT_INSTALL_STEP 
+                            "Überprüfen der Installation des AFS Clients"
+    IDS_SET_SERVER_LICENSE_STEP "Einstellung der Lizenz für diesen Server"
+    IDS_DEFINE_CELL_NAME_STEP "Definieren des Namens für diese Zelle"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFINE_CELL_MEMBERSHIP_STEP 
+                            "Aus diesem Server ein Mitglied der Zelle machen"
+    IDS_START_BOS_SERVER_STEP "Starten des BOS-Servers"
+    IDS_START_AUTH_SERVER_STEP "Starten des Authentifizierungs-Servers"
+    IDS_CREATE_PRINCIPAL_AND_KEY_STEP 
+                            "Erstellen eines Principals und eines Schlüssels für diesen Server"
+    IDS_START_DB_AND_BK_STEP 
+                            "Starten des Database Service (beinhaltet Backup-Server)"
+    IDS_CREATE_ADMIN_PRINCIPAL_STEP "Erstellen des Principals cell admin"
+    IDS_START_CLIENT_STEP   "Starten des AFS Clients"
+    IDS_SET_ROOT_ACL_STEP   "Einstellung der ACL auf dem Volume root.afs"
+    IDS_CREATE_ROOT_CELL_STEP "Erstellen des Volumes root.cell"
+    IDS_MOUNT_ROOT_CELL_STANDARD_STEP 
+                            "Anhängen des Volumes root.cell mit Hilfe eines Standard-Mount-Punktes"
+    IDS_SET_ROOT_CELL_ACL_STEP "Einstellung der ACL auf dem Volume root.cell"
+    IDS_MOUNT_ROOT_CELL_RW_STEP 
+                            "Anhängen des Volumes root.cell mit Hilfe eines Read/Write-Mount-Punktes"
+    IDS_ENABLE_AUTH_CHECKING_STEP 
+                            "Aktivieren der Überprüfung der Authentifizierung"
+    IDS_OBTAIN_ADMIN_CREDS_STEP "Erlangen von Verwaltungs-Token"
+    IDS_RESTART_SERVERS_STEP 
+                            "Erneutes Starten aller Server auf dieser Maschine als authentifizierte Server"
+    IDS_ALREADY_A_FS_SERVER "Diese Maschine ist bereits als File Server konfiguriert."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALREADY_A_DB_SERVER "Diese Maschine ist bereits als Database Server konfiguriert."
+    IDS_INTRO_PAGE          "Einführung"
+    IDS_INFO_PAGE           "Zellen- und Serverinformationen"
+    IDS_FS_PAGE             "File Service"
+    IDS_DB_PAGE             "Database Service"
+    IDS_CFG_TOOL_APP_TITLE  "Konfiguration des AFS® Servers"
+    IDS_BK_PAGE             "Backup-Server"
+    IDS_ROOT_AFS_PAGE       "AFS-Root-Volumes"
+    IDS_NAME                "Name"
+    IDS_REP_PAGE            "Nachbildung"
+    IDS_SC_PAGE             "System Control Service"
+    IDS_CONFIG_PAGE         "Das System konfigurieren"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_PAGE      "AFS-Partition"
+    IDS_GRAPHIC_FONT        "Ms Sans Serif, 6, B"
+    IDS_CURRENT_STEP        "Aktueller Schritt:"
+    IDS_ADD_TO_CELLSERVDB_STEP "Hinzufügen dieses Servers zu CellServDB"
+    IDS_RESTART_ALL_DB_SERVERS_STEP 
+                            "Erneutes Starten aller Datenbank-Server in der Zelle"
+    IDS_CONFIG_SUCCEEDED_NEED_CELLSERVDB_UPDATE 
+                            "Konfiguration war erfolgreich. HINWEIS: Die Datei CellServDB aller \nAFS-Clients in Ihrer Zelle muß aktualisiert werden. Gewährleisten Sie, daß Sie den AFS Product \nSupport mit einer aktuellen Liste Ihrer Database Servers verwenden, wenn Sie Ihre Zelle für \nandere Standorte zugänglich machen."
+    IDS_SYS_CONTROL_SERVER_ONLY_MSG 
+                            "Möchten Sie diese Maschine als System Control Server konfigurieren?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DONT_CONFIG_SYS_CONTROL_SERVER_MSG 
+                            "&Nicht als System Control Server konfigurieren."
+    IDS_CLIENT_CELL_WILL_CHANGE 
+                            "Konfiguration des AFS Servers erfordert, daß der AFS Client in derselben Zelle wie der Server konfiguriert ist. Dies erfolgt automatisch."
+    IDS_INFO_PAGE2          "Informationen zur Verwaltung"
+    IDS_CONFIG_SUCCEEDED_FIRST_SERVER 
+                            "Konfiguration war erfolgreich.\r\n\r\nHINWEIS: Gewährleisten Sie, daß Sie den AFS Product Support mit einer Liste Ihrer Database Server verwenden, wenn Sie Ihre Zelle für andere Standorte zugänglich machen."
+    IDS_CONFIG_SCS          "Als System Control Server der Zelle konfigurieren."
+    IDS_CONFIG_INTO_CELL_MSG "Diesen Host konfigurieren in Zelle "
+    IDS_VIEW_LOG            "Protokoll ö&ffen"
+    IDS_VIEW_LOG_ERROR      "Die Protokolldatei kann nicht angezeigt werden"
+    IDS_ERROR_NO_LOG_FILE   "Die Protokolldatei ist nicht vorhanden."
+    IDS_UPDATING_CELLSERVDB_HOST_SUCCEEDED 
+                            "Aktualisierter CellServDB auf Host "
+    IDS_UPDATING_CELLSERVDB_HOST_FAILED 
+                            "Fehlgeschlagene Aktualisierung von CellServDB auf Host "
+    IDS_CELL_NAME_LEN_ERROR "Der von Ihnen eingegebene Zellenname ist zu lang. Zellennamen können nicht länger als 64 Zeichen sein."
+    IDS_CONFIG_CHECK_FAILED "Die aktuelle Konfiguration auf dieser Maschine konnte nicht ermittelt werden."
+    IDS_YES                 "Ja"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO                  "Nein"
+    IDS_FREE                "Freier Speicherbereich"
+    IDS_TOTAL               "Größe insgesamt"
+    IDS_DRIVE2              "Laufwerk"
+    IDS_SERVICE_STATUS      "Status"
+    IDS_SERVICE             "Service"
+    IDS_FS_RUNNING          "Der File Service ist zur Zeit aktiv."
+    IDS_FS_STOPPED          "Der File Service ist zur Zeit nicht aktiv."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DB_RUNNING          "Der Database Service ist zur Zeit aktiv."
+    IDS_DB_STOPPED          "Der Database Service ist zur Zeit nicht aktiv."
+    IDS_BK_RUNNING          "Der Backup-Service ist zur Zeit aktiv."
+    IDS_BK_STOPPED          "Der Backup-Service ist zur Zeit nicht aktiv."
+    IDS_SCS_STOPPED         "Der System Control Server ist zur Zeit nicht aktiv."
+    IDS_SCC_STOPPED         "Der System Contol Client ist zur Zeit nicht aktiv."
+    IDS_FS_HOW_TO_RUN       "Um den File Service zu starten, überprüfen Sie das obige Fenster."
+    IDS_FS_HOW_TO_STOP      "Um den File Service zu stoppen, machen Sie die Markierung des \nobigen Fensters rückgängig."
+    IDS_DB_HOW_TO_RUN       "Um den Database Service zu starten, überprüfen Sie das obige \nFenster."
+    IDS_DB_HOW_TO_STOP      "Um den Database Service zu stoppen, machen Sie die Markierung des \nobigen Fensters rückgängig."
+    IDS_BK_HOW_TO_RUN       "Um den Backup-Service zu starten, überprüfen Sie das obige \nFenster."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BK_HOW_TO_STOP      "Um den Backup-Service zu stoppen, machen Sie die Markierung des \nobigen Fensters rückgängig."
+    IDS_SCS_HOW_TO_RUN      "Um den System Control Server zu starten, überprüfen Sie das obige \nFenster."
+    IDS_SCS_HOW_TO_STOP     "Um den System Control Server zu stoppen, machen Sie die Markierung \ndes obigen Fensters rückgängig."
+    IDS_DB_PARTIAL_CONFIG   "Der Database Service ist teilweise konfiguriert."
+    IDS_DB_DETAILS          "Für weitere Informationen klicken Sie auf Einzeldaten."
+    IDS_BK_DISABLED         "Der Backup-Service ist gesperrt."
+    IDS_BK_ENABLE           "Um den Backup-Service zu aktivieren, müssen Sie den Database Service ausführen."
+    IDS_SC_DISABLED         "Dieser Server ist gesperrt."
+    IDS_SC_ENABLE           "Um diesen Server zu aktivieren, müssen Sie entweder den File Service oder den Database Service ausführen."
+    IDS_FS_WILL_RUN         "Der File Service wird gestartet."
+    IDS_FS_WILL_STOP        "Der File Service wird gestoppt."
+    IDS_DB_WILL_RUN         "Der Database Service wird gestartet."
+    IDS_DB_WILL_STOP        "Der Database Service wird gestoppt."
+    IDS_BK_WILL_RUN         "Der Backup-Service wird gestartet."
+    IDS_BK_WILL_STOP        "Der Backup-Service wird gestoppt."
+    IDS_SCS_WILL_RUN        "Der System Control Server wird gestartet."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCS_WILL_STOP       "Der System Control Server wird gestoppt."
+    IDS_ERROR_DRIVE_ALREADY_HAS_AFS "Laufwerk ist bereits eine AFS-Partition"
+    IDS_VOLUME_HAS_NO_NAME  "<Volume hat keinen Namen>"
+    IDS_PARTITION_CREATED   "Eine neue AFS-Partition wurde erfolgreich erstellt."
+    IDS_PARTITION_EXISTS    "Der von Ihnen eingegebene Name der Partition wird bereits durch eine andere Partition benutzt."
+    IDS_SCS_RUNNING         "Der System Control Server ist zur Zeit aktiv."
+    IDS_WARNING_DRIVE_HAS_RECYCLE_BIN 
+                            "Dieses Laufwerk enthält nur der Papierkorb."
+    IDS_SCC_WILL_RUN        "Der System Control Client wird gestartet."
+    IDS_SCC_WILL_STOP       "Der System Control Client wird gestoppt."
+    IDS_SCC_RUNNING         "Der System Control Client ist zur Zeit aktiv."
+    IDS_SCC_HOW_TO_RUN      "Um den System Control Client zu starten, überprüfen Sie das obige \nFenster."
+    IDS_SCC_HOW_TO_STOP     "Um den System Control Client zu stoppen, machen Sie die Markierung \ndes obigen Fensters rückgängig."
+    IDS_SCS_ENABLE          "Um diesen Server zu aktivieren, müssen Sie den System Control \nClient stoppen."
+    IDS_SCC_ENABLE          "Um diesen Server zu aktivieren, müssen Sie den System Control \nServer stoppen."
+    IDS_UNCONFIG_DB_STEP    "Dekonfigurieren des Database Service"
+    IDS_UNCONFIG_DB_STEP_DESC "Database Service dekonfigurieren"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNCONFIG_DB_AND_BK_STEP 
+                            "Dekonfigurieren des Database Service (und Backup-Servers)"
+    IDS_UNCONFIG_DB_AND_BK_STEP_DESC 
+                            "Database Service dekonfigurieren (und Backup-Server)"
+    IDS_UNCONFIG_BK_STEP    "Dekonfigurieren des Backup-Servers"
+    IDS_UNCONFIG_BK_STEP_DESC "Backup-Server dekonfigurieren"
+    IDS_UNCONFIG_FS_STEP    "Dekonfigurieren des File Service"
+    IDS_UNCONFIG_FS_STEP_DESC "File Service dekonfigurieren"
+    IDS_UNCONFIG_SCS_STEP   "Dekonfigurieren des System Control Servers"
+    IDS_UNCONFIG_SCS_STEP_DESC "System Control Server dekonfigurieren"
+    IDS_UNCONFIG_SCC_STEP   "Dekonfigurieren des System Control Clients"
+    IDS_UNCONFIG_SCC_STEP_DESC "System Control Client dekonfigurieren"
+    IDS_INVALIDATE_CONFIG_INFO_STEP 
+                            "Ungültigmachen der Konfigurationsdaten dieser Maschine"
+    IDS_CLOSE               "&Schließen"
+    IDS_CELLSERVDB_UPDATE_ERR_MSG 
+                            "Die Datei CellServDB konnte auf den unten angegebenen AFS-Servern nicht aktualisiert werden. Dies ist ein behebbarer Fehler.\r\n"
+    IDS_DELETE_PARTITION_PROMPT "Partition '%1' wirklich löschen?"
+    IDS_INVALIDATE_CFG_INFO "Auf diesem Computer ist zur Zeit kein AFS-Server-Prozeß aktiv. Möchten Sie die Konfigurationsdaten von dieser Maschine entfernen?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CELL_IS_GONE_MUST_EXIT 
+                            "Die Zelle existiert nicht mehr. Die Anwendung AFS Configuration kann nur verwendet werden, um bereits konfigurierte Server-Maschinen in eine AFS-Zelle zu konfigurieren. Der AFS Configuration-Assistent kann verwendet werden, um eine neue Zelle zu starten."
+    IDS_CFG_MAN_CANT_CONTINUE 
+                            "Die Anwendung AFS Configuration muß jetzt beendet werden. Sie kann \nauf Maschinen ausgeführt werden, die bereits als AFS Server konfiguriert sind. Um diese \nMaschine erneut als AFS Server zu konfigurieren, verwenden Sie den AFS \nConfiguration-Assistenten."
+    IDS_CONFIG_INFO_INVALIDATED 
+                            "Die Maschine ist nicht mehr als AFS Server konfiguriert. Die \nAnwendung AFS Configuration kann nur verwendet werden, um AFS Server-Maschinen zu \nkonfigurieren. Der AFS Configuration-Assistent kann verwendet werden, um diese Maschine als \nAFS Server zu rekonfigurieren."
+    IDS_GET_TOKENS_FAILED   "Für die angegebene Zelle konnten keine Token erlangt werden."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_BK_STEP       "Starten des Backup-Servers"
+    IDS_BK_STEP_DESC        "Backup-Server starten"
+    IDS_CONFIG_ERROR        "Ein Konfigurationsfehler ist aufgetreten"
+    IDS_CREATE_PARTITION_ERROR "Partition konnte nicht erstellt werden"
+    IDS_REMOVE_PARTITION_ERROR "Partition konnte nicht entfernt werden"
+    IDS_READ_PARTITIONS_ERROR "Partitionstabelle konnte nicht gelesen werden"
+    IDS_CELLSERVDB_UPDATE_PROBLEM 
+                            "\r\nDer Aktualisierungsprozeß für CellServDB wurde vorzeitig beendet. Nicht alle Server konnten aktualisiert werden."
+    IDS_GET_PARTITION_LIST_ERROR 
+                            "Die Partitionen auf diesem Server konnten nicht ermittelt werden"
+    IDS_EXPORTED            "Exportiert"
+    IDS_CANT_DELETE_EXPORTED_PARTITION 
+                            "Exportierte Partitionen können nicht entfernt werden, während der File Service aktiv ist. Sie müssen den File Service vor dem Entfernen dieser Partition stoppen."
+    IDS_CHECK_CONFIG_INFO   "Überprüfung auf gültige Konfigurationsdaten..."
+    IDS_ERROR_CFG_HOST_CLOSE 
+                            "Die Server Configuration Library konnte nicht geschlossen werden."
+    IDS_FAILED_OPEN_CELL    "Die Zelle konnte nicht geöffnet werden."
+    IDS_FAILED_OPEN_NULL_CELL 
+                            "Eine Zelle mit NULL-Kennung konnte nicht geöffnet werden"
+    IDS_CREATE_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "Möchten Sie die Root-Volumes erstellen, wenn sie noch nicht vorhanden sind?"
+    IDS_REP_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "Möchten Sie die Root-Volumes nachbilden, wenn sie noch nicht nachgebildet  sind?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TRANSARC_AFS_SERVER "AFS Server"
+    IDS_CANT_INIT_ADMIN_LIBS 
+                            "Diese Anwendung kann nicht ausgeführt werden: Initialisierung der Bibliothek ist fehlgeschlagen."
+    IDS_CANT_OPEN_LOG_FILE  "Die Protokolldatei konnte nicht geöffnet werden."
+    IDS_NEED_CLIENT_INFO    "Die Anwendung AFS Configuration kann nicht ausgeführt werden, weil AFS Client auf diesem Computer nicht konfiguriert ist. In dieser Situation kann der AFS Configuration-Assistent verwendet werden. Den AFS Configuration-Assistenten ausführen?"
+    IDS_NEED_SERVER_INFO    "Die Maschine ist nicht als AFS Server konfiguriert. Der AFS Configuration-Assistent muß verwendet werden, um einen AFS Server zum ersten Mal zu konfigurieren. Die Anwendung AFS Configuration kann dann verwendet werden. Den AFS Configuration-Assistenten ausführen, um diesen Computer erstmalig zu konfigurieren?"
+    IDS_ADVANCED_OPEN       "<< &Erweitert"
+    IDS_ADVANCED_CLOSED     "&Erweitert >>"
+    IDS_BOS_OPEN_FAILED     "Verbindung zum Server konnte nicht hergestellt werden (bos open fehlgeschlagen)."
+    IDS_SALVAGE_ERROR       "Die Wiederherstellungsoperation ist fehlgeschlagen."
+    IDS_INVALID_NUM_SALVAGE_PROCESSSES 
+                            "Die angegebene Anzahl der Wiederherstellungsprozesse ist ungültig. Die Anzahl der Wiederherstellungsprozesse muß zwischen 1 und 32 liegen."
+    IDS_WRONG_CELL          "In einem vorhergegangenen Schritt haben Sie einen Server angegeben, von dem die Konfigurationsdaten abgerufen werden sollen. Der angegebene Server gehört nicht zu der Zelle, die Sie verknüpfen möchten!"
+    IDS_CELLSERVDB_UPDATE_ERRORS_ARE_IN_LOG_FILE 
+                            "Die Datei CellServDB auf einigen Servern in der Zelle konnte nicht aktualisiert werden. Eine Liste mit Servern, die aktualisiert wurden oder nicht, enthält das Konfigurationsprotokoll in der Datei "
+    IDS_GET_CREDENTIALS_STEP "Erlangen von Verwaltungs-Token"
+    IDS_MUST_ENTER_SCS_NAME "Der Name einer System Control-Maschine muß eingegeben werden, bevor die Konfiguration beginnen kann."
+    IDS_NOT_SAME_CELL       "Der AFS Client ist in eine andere Zelle als der AFS Server \nkonfiguriert. Vor dem Konfigurieren des AFS Servers müssen Sie zuerst den AFS Client in die \nZelle des Servers neu konfigurieren."
+    IDS_LAST_DB_SERVER      "Diese Maschine führt den letzten Database Server in der Zelle aus. \nWenn Sie fortsetzen und den Database Service auf dieser Maschine dekonfigurieren, wird die \nZelle nicht mehr existieren, und alle anderen auf dieser Maschine aktiven AFS-Services werden \ndekonfiguriert. Trotzdem fortsetzen?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BAD_PW              "Das Kennwort für den AFS-Principal ist ungültig."
+    IDS_ERROR_CLIENT_VERSION 
+                            "Die Version des AFS Clients auf diesem Computer ist mit dem AFS Server nicht kompatibel. Der AFS Server erfordert mindestens Version 3.5 des AFS Clients."
+    IDS_CANT_MAP_ROOT_AFS   "Um die ACLs auf den Root-Volumes einzustellen, muß in AFS ein \nLaufwerkbuchstabe zugeordnet werden. Zur Zeit sind keine Laufwerkbuchstaben verfügbar. Bitte \nmachen Sie einen Laufwerkbuchstaben frei und drücken Sie dann OK."
+    IDS_NO_MSG_STEP         " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_NAME_VALIDATION_TYPE "Partitionsname"
+    IDS_VOLUME_NAME_VALIDATION_TYPE "Datenbereichsname"
+    IDS_NUM_SALVAGE_PROCS_VALIDATION_TYPE 
+                            "Anzahl von Wiederherstellungsprozessen"
+    IDS_PATH_NAME_VALIDATION_TYPE "Pfadname"
+    IDS_FILE_NAME_VALIDATION_TYPE "Dateiname"
+    IDS_GENERIC_VALIDATION_TYPE "Wert"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

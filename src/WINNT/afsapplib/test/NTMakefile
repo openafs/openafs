@@ -1,0 +1,47 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include winnt-specific header files
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(DESTDIR)\include\winnt
+AFSDEV_AUXRCDEFINES = $(AFSDEV_AUXRCDEFINES) -I$(DESTDIR)\include\winnt
+
+# include the primary makefile
+
+RELDIR=WINNT\afsapplib\test
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+
+############################################################################
+#
+# BUILD TARGETS
+#
+
+EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\WizTest.exe
+
+EXEOBJS = \
+	$(OUT)\wiztest.res \
+	$(OUT)\wiztest.obj
+
+EXELIBS = \
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib
+
+############################################################################
+
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+	$(EXEGUILINK) comctl32.lib shell32.lib
+	$(EXEPREP) 
+
+test : $(EXEFILE)
+
+
+mkdir:
+	

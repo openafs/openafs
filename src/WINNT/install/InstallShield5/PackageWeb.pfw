@@ -1,0 +1,267 @@
+[PackageForTheWeb]
+Version=2.0
+
+[Options]
+Title=OpenAFS for Windows
+Company=OpenAFS
+CompanyEMail=openafs-info@openafs.org
+BasePath=.\Media\OpenAFS\Disk Images
+ImportPath=.\Media\OpenAFS
+UseRTF=0
+SaveFiles=0
+SubFolders=1
+ApplicationName=AFSforWindows
+Description=
+Comments=Build:11/07/01 10:26 CellServDB:
+Notice=
+Version=1.2.2 a
+OutputSpec=Y:\DEST\WinInstall\PackageWeb\AFSforWindows.exe
+GUIDs=0
+Type=2
+Compress=1
+Sign=0
+Transfer=0
+Files=33
+
+[Engine]
+Setup=Disk1\Setup.exe
+
+[Web Page]
+Generate=1
+Template=
+MSClient=
+NClient=
+
+[Runtime]
+Welcome=
+License=
+Prompt=
+Password=
+DefaultPath=
+Language=English
+WindowStyle=0
+Options=19
+Execute=Disk1\Setup.exe
+CmdLine=/SMS
+
+[Extension]
+Server=
+Calls=0
+
+[Code Signing]
+CompanyURL=
+SpecFile=
+KeyFile=
+Method=0
+
+; ~~~~~~~~~~ File Section ~~~~~~~~~~~
+[SubFolders]
+Count=10
+Folder1=Disk1
+Folder2=Disk1\setupdir\0009
+Folder3=Disk1\setupdir\0416
+Folder4=Disk1\setupdir\0804
+Folder5=Disk1\setupdir\0404
+Folder6=Disk1\setupdir\0007
+Folder7=Disk1\setupdir\0011
+Folder8=Disk1\setupdir\0012
+Folder9=Disk1\setupdir\000a
+Folder10=Disk1\License
+
+[File 1]
+Name=_ISDel.exe
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=589825
+Disk=0
+
+[File 2]
+Name=Setup.exe
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=589825
+Disk=0
+
+[File 3]
+Name=_inst32i.ex_
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=524289
+Disk=0
+
+[File 4]
+Name=os.dat
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 5]
+Name=lang.dat
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 6]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0009\
+Flags=655377
+Disk=0
+
+[File 7]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0416\
+Flags=655377
+Disk=0
+
+[File 8]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0804\
+Flags=655377
+Disk=0
+
+[File 9]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0404\
+Flags=655377
+Disk=0
+
+[File 10]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0007\
+Flags=655377
+Disk=0
+
+[File 11]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0011\
+Flags=655377
+Disk=0
+
+[File 12]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\0012\
+Flags=655377
+Disk=0
+
+[File 13]
+Name=_Setup.dll
+Path=.\Media\OpenAFS\Disk Images\Disk1\setupdir\000a\
+Flags=655377
+Disk=0
+
+[File 14]
+Name=setup.ins
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 15]
+Name=_sys1.hdr
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 16]
+Name=_sys1.cab
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 17]
+Name=_user1.hdr
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 18]
+Name=_user1.cab
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 19]
+Name=DATA.TAG
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 20]
+Name=SETUP.INI
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 21]
+Name=setup.lid
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 22]
+Name=setup.bmp
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 23]
+Name=data1.hdr
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 24]
+Name=data1.cab
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=2097153
+Disk=0
+
+[File 25]
+Name=layout.bin
+Path=.\Media\OpenAFS\Disk Images\Disk1\
+Flags=1
+Disk=0
+
+[File 26]
+Name=en_US.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 27]
+Name=ja_JP.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 28]
+Name=ko_KR.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 29]
+Name=zh_CN.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 30]
+Name=zh_TW.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 31]
+Name=pt_BR.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 32]
+Name=es_ES.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0
+
+[File 33]
+Name=de_DE.rtf
+Path=.\Media\OpenAFS\Disk Images\Disk1\License\
+Flags=1
+Disk=0

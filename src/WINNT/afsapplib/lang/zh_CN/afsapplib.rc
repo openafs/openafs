@@ -1,0 +1,381 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "al_resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS 应用程序基本动态链接库"
+#define AFS_VERINFO_DLL
+#define AFS_VERINFO_NAME "afsapplib"
+#define AFS_VERINFO_FILENAME "afsapplib.dll"
+#define AFS_VERINFO_LANG_CODE 0x804
+#define AFS_VERINFO_CHARSET 936
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "al_resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS 应用程序基本动态链接库""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+32513                   ICON    DISCARDABLE     "Resource\\error.ico"
+32515                   ICON    DISCARDABLE     "Resource\\warning.ico"
+IDI_SPIN1               ICON    DISCARDABLE     "resource\\spin1.ico"
+IDI_SPIN2               ICON    DISCARDABLE     "resource\\spin2.ico"
+IDI_SPIN3               ICON    DISCARDABLE     "resource\\spin3.ico"
+IDI_SPIN4               ICON    DISCARDABLE     "resource\\spin4.ico"
+IDI_SPIN5               ICON    DISCARDABLE     "resource\\spin5.ico"
+IDI_SPIN6               ICON    DISCARDABLE     "resource\\spin6.ico"
+IDI_SPIN7               ICON    DISCARDABLE     "resource\\spin7.ico"
+IDI_SPIN8               ICON    DISCARDABLE     "resource\\spin8.ico"
+IDI_SPINSTOP            ICON    DISCARDABLE     "resource\\spinstop.ico"
+IDI_BOSSERVICE          ICON    DISCARDABLE     "resource\\bos.ico"
+IDI_SERVER              ICON    DISCARDABLE     "resource\\server.ico"
+IDI_SERVER_ALERT        ICON    DISCARDABLE     "resource\\server1.ico"
+IDI_SERVER_UNMON        ICON    DISCARDABLE     "resource\\server_u.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "resource\\service.ico"
+IDI_SERVICE_ALERT       ICON    DISCARDABLE     "resource\\service1.ico"
+IDI_SERVICE_STOPPED     ICON    DISCARDABLE     "resource\\service2.ico"
+IDI_AGGREGATE           ICON    DISCARDABLE     "resource\\aggreg.ico"
+IDI_AGGREGATE_ALERT     ICON    DISCARDABLE     "resource\\aggreg1.ico"
+IDI_FILESET             ICON    DISCARDABLE     "resource\\fileset.ico"
+IDI_FILESET_ALERT       ICON    DISCARDABLE     "resource\\fileset1.ico"
+IDI_FILESET_LOCKED      ICON    DISCARDABLE     "resource\\locked.ico"
+IDI_INITIAL_CONTAINER   ICON    DISCARDABLE     "resource\\ic.ico"
+IDI_INITIAL_OBJECT      ICON    DISCARDABLE     "resource\\io.ico"
+IDI_MULTIPLE            ICON    DISCARDABLE     "resource\\multiple.ico"
+IDI_ACL                 ICON    DISCARDABLE     "resource\\acl.ico"
+IDI_SERVER_KEY          ICON    DISCARDABLE     "resource\\key.ico"
+IDI_USER                ICON    DISCARDABLE     "resource\\user.ico"
+IDI_GROUP               ICON    DISCARDABLE     "resource\\group.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_APPLIB_ERROR DIALOG DISCARDABLE  0, 0, 277, 91
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "错误"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "由于发生了一个无法识别的错误，Windows 无法完成请求的任务。",
+                    IDC_ERROR_DESC,31,7,242,33
+    LTEXT           "错误：%1",IDC_ERROR_STATUS,31,49,241,16
+    DEFPUSHBUTTON   "确定",IDOK,114,73,50,14
+    ICON            32513,IDC_STATIC,4,7,20,20
+END
+
+IDD_APPLIB_OPENCELL DIALOG DISCARDABLE  0, 0, 219, 164
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "选择单元"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "单元(&C)：",IDC_STATIC,4,24,36,8
+    LTEXT           "选择您希望使用的 AFS 单元。",IDC_STATIC,4,7,200,8
+    COMBOBOX        IDC_OPENCELL_CELL,46,22,169,143,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS 身份(&I)：",IDC_STATIC,22,100,53,8
+    EDITTEXT        IDC_OPENCELL_ID,80,98,128,13,ES_AUTOHSCROLL
+    LTEXT           "AFS 口令(&P)：",IDC_STATIC,22,116,55,8
+    EDITTEXT        IDC_OPENCELL_PASSWORD,80,114,128,13,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,57,146,50,14
+    PUSHBUTTON      "取消",IDCANCEL,111,146,50,14
+    PUSHBUTTON      "帮助(&H)",9,165,146,50,14
+    GROUPBOX        "AFS 认证",IDC_STATIC,4,44,211,92
+    LTEXT           "(正在查询...)",IDC_OPENCELL_OLDCREDS,22,70,185,8
+    LTEXT           "要管理单元，必须重新输入您的 AFS 口令：",IDC_STATIC,10,
+                    85,196,8
+    LTEXT           "您在所选单元内的当前 AFS 令牌：",IDC_STATIC,10,57,196,8
+END
+
+IDD_APPLIB_CREDENTIALS DIALOGEX 0, 0, 197, 140
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 认证"
+FONT 9, "宋体"
+BEGIN
+    LTEXT           "AFS 身份(&I)：",IDC_STATIC,8,75,53,8
+    EDITTEXT        IDC_CREDS_ID,64,73,124,14,ES_AUTOHSCROLL
+    LTEXT           "AFS 口令(&P)：",IDC_STATIC,8,92,53,8
+    EDITTEXT        IDC_CREDS_PASSWORD,64,89,124,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "AFS 单元：",IDC_STATIC,4,7,52,8
+    EDITTEXT        IDC_CREDS_CELL,64,7,129,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP,WS_EX_STATICEDGE
+    LTEXT           "当前身份：",IDC_STATIC,4,23,52,8
+    EDITTEXT        IDC_CREDS_CURRENTID,64,22,129,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP,
+                    WS_EX_STATICEDGE
+    LTEXT           "到期日期：",IDC_STATIC,4,39,52,8
+    EDITTEXT        IDC_CREDS_EXPDATE,64,38,129,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP,
+                    WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "确定",IDOK,35,122,50,14
+    PUSHBUTTON      "取消",IDCANCEL,89,122,50,14
+    PUSHBUTTON      "帮助(&H)",9,143,122,50,14
+    GROUPBOX        "   ",IDC_STATIC,4,57,189,56
+    CONTROL         "获得该单元的新 AFS 令牌(&O)",IDC_CREDS_LOGIN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,57,138,10
+END
+
+IDD_APPLIB_BADCREDS DIALOG DISCARDABLE  0, 0, 335, 96
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "注意"
+FONT 9, "宋体"
+BEGIN
+    DEFPUSHBUTTON   "是(&Y)",IDOK,173,78,50,14
+    PUSHBUTTON      "否(&N)",IDCANCEL,227,78,50,14
+    PUSHBUTTON      "帮助(&H)",9,281,78,50,14
+    CONTROL         "不再显示此警告(&D)",IDC_BADCREDS_SHUTUP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,31,80,120,10
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "(运行时设置的文本)",IDC_BADCREDS_DESC,31,7,300,64
+END
+
+IDD_APPLIB_COVER DIALOG DISCARDABLE  0, 0, 189, 135
+STYLE WS_CHILD | WS_BORDER
+EXSTYLE WS_EX_CLIENTEDGE
+FONT 9, "宋体"
+BEGIN
+    GROUPBOX        "",IDC_COVER_BORDER,7,4,175,123
+    LTEXT           "(描述到此)",IDC_COVER_DESC,14,14,162,107
+    PUSHBUTTON      "重试(&A)...",IDC_COVER_BUTTON,126,107,50,14
+END
+
+IDD_APPLIB_BROWSE_FILESET DIALOGEX 0, 0, 281, 150
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION "选择卷"
+FONT 9, "宋体"
+BEGIN
+    RTEXT           "卷：",IDC_BROWSE_TYPE,7,115,49,8,SS_NOTIFY
+    EDITTEXT        IDC_BROWSE_NAMED,60,113,145,14,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "选择(&S)",IDOK,224,113,50,14
+    PUSHBUTTON      "取消",IDCANCEL,224,129,50,14
+    RTEXT           "查看单元(&C)：",IDC_STATIC,7,9,54,8,SS_NOTIFY
+    COMBOBOX        IDC_BROWSE_CELL,66,7,153,91,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "",IDC_BROWSE_LIST,"SysListView32",LVS_LIST | 
+                    LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER | WS_TABSTOP,7,23,267,84,WS_EX_CLIENTEDGE
+    CTEXT           "",IDC_BROWSE_STATUS,56,133,153,8,SS_NOTIFY
+    DEFPUSHBUTTON   "(我除去了对话，所以在运行时我不可见)",
+                    IDC_BROWSE_RESTART,43,137,177,13,NOT WS_TABSTOP
+END
+
+IDD_APPLIB_BROWSE DIALOGEX 0, 0, 281, 150
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "(运行时选中该标题)"
+FONT 9, "宋体"
+BEGIN
+    RTEXT           "(运行时)",IDC_BROWSE_TYPE,7,115,49,8,SS_NOTIFY
+    EDITTEXT        IDC_BROWSE_NAMED,60,113,145,14,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "选择(&S)",IDC_BROWSE_SELECT,224,112,50,14
+    PUSHBUTTON      "取消",IDCANCEL,224,129,50,14
+    RTEXT           "查看单元(&C)：",IDC_STATIC,7,9,54,8,SS_NOTIFY
+    COMBOBOX        IDC_BROWSE_CELL,66,7,153,91,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "",IDC_BROWSE_LIST,"SysListView32",LVS_LIST | 
+                    LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER | WS_TABSTOP,7,23,267,84,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "(我除去了对话，所以在运行时我不可见)",
+                    IDC_BROWSE_RESTART,43,137,177,13,NOT WS_TABSTOP
+    CTEXT           "",IDC_BROWSE_STATUS,56,133,153,8,SS_NOTIFY
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_APPLIB_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 87
+    END
+
+    IDD_APPLIB_OPENCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 160
+    END
+
+    IDD_APPLIB_CREDENTIALS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 136
+    END
+
+    IDD_APPLIB_BADCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 331
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 92
+    END
+
+    IDD_APPLIB_COVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 182
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_APPLIB_BROWSE_FILESET, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+        HORZGUIDE, 23
+        HORZGUIDE, 107
+    END
+
+    IDD_APPLIB_BROWSE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+        HORZGUIDE, 23
+        HORZGUIDE, 107
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOCAL_USER          BITMAP  DISCARDABLE     "resource\\local_user.bmp"
+IDB_LOCAL_GROUP         BITMAP  DISCARDABLE     "resource\\local_group.bmp"
+IDB_FOREIGN_USER        BITMAP  DISCARDABLE     "resource\\foreign_user.bmp"
+IDB_FOREIGN_GROUP       BITMAP  DISCARDABLE     "resource\\foreign_group.bmp"
+IDB_ANY_OTHER           BITMAP  DISCARDABLE     "resource\\any_other.bmp"
+IDB_FOREIGN_OTHER       BITMAP  DISCARDABLE     "resource\\foreign_other.bmp"
+IDB_LOCAL_OTHER         BITMAP  DISCARDABLE     "resource\\local_other.bmp"
+IDB_MASK_OBJ            BITMAP  DISCARDABLE     "resource\\mask_obj.bmp"
+IDB_UNAUTHENTICATED     BITMAP  DISCARDABLE     "resource\\unauthenticated.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADCREDS_DESC_GENERAL 
+                            "您在 %1 单元内没有 AFS 的管理员令牌。\n\n%2\n\n%3"
+    IDS_BADCREDS_DESC_EXPIRED "您在 %1 单元内的令牌已到期。\n\n%2\n\n%3"
+    IDS_BADCREDS_DESC_BADCHOICE 
+                            "您已选择在 %1 单元内不以管理员身份登录。\n\n%2\n\n%3"
+    IDS_BADCREDS_DESC2      "除非您已经以管理员身份登录，否则您将没有足够的特权来使用 %1 单元。"
+    IDS_BADCREDS_DESC3      "您希望现在获得新的 AFS 令牌吗?"
+    IDS_BADCREDS_DESC3_ADM  "您希望以管理员身份登录吗?"
+    IDS_BADCREDS_DESC_DESTROYED "您在 %1 单元内的令牌已失效。\n\n%2\n\n%3"
+    IDS_ERROR_BAD_CREDENTIALS "无法识别您输入的 AFS 身份，或您的口令不正确。"
+    IDS_BROWSE_WAITING      "正在查询服务器--请等待..."
+    IDS_BROWSE_BADCELL_TITLE "无法识别的单元"
+    IDS_BROWSE_BADCELL_DESC "网络中无法找到您输入的单元名。\n\n请检查单元名以确认拼写是否正确。"
+    IDS_CREDS_NONE          "(没有令牌)"
+    IDS_CREDS_VALID         "%2，到期 %3"
+    IDS_CREDS_EXPIRED       "(令牌到期 %3)"
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

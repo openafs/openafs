@@ -1,0 +1,211 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRUSS_ADD" HREF="auarf002.htm#ToC_257">uss add</A></H2>
+<A NAME="IDX5517"></A>
+<A NAME="IDX5518"></A>
+<A NAME="IDX5519"></A>
+<A NAME="IDX5520"></A>
+<A NAME="IDX5521"></A>
+<A NAME="IDX5522"></A>
+<A NAME="IDX5523"></A>
+<A NAME="IDX5524"></A>
+<A NAME="IDX5525"></A>
+<A NAME="IDX5526"></A>
+<A NAME="IDX5527"></A>
+<A NAME="IDX5528"></A>
+<A NAME="IDX5529"></A>
+<A NAME="IDX5530"></A>
+<A NAME="IDX5531"></A>
+<A NAME="IDX5532"></A>
+<A NAME="IDX5533"></A>
+<A NAME="IDX5534"></A>
+<A NAME="IDX5535"></A>
+<P><STRONG>目的</STRONG>
+<P>ユーザー・アカウントを作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>uss add -user</B> &lt;<VAR>login name</VAR>>  [<B>-realname</B> &lt;<VAR>full name in quotes</VAR>>]
+        [<B>-pass</B> &lt;<VAR>initial password</VAR>>]  
+        [<B>-pwexpires</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]
+        [<B>-server</B> &lt;<VAR>FileServer for home volume</VAR>>] 
+        [<B>-partition</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>] 
+        [<B>-mount</B> &lt;<VAR>home directory mount point</VAR>>]  
+        [<B>-uid</B> &lt;<VAR>uid to assign the user</VAR>>]
+        [<B>-template</B> &lt;<VAR>pathname of template file</VAR>>] 
+        [<B>-verbose</B>]  [<B>-var</B> &lt;<VAR>auxiliary argument pairs (Num val)</VAR>><SUP>+</SUP>] 
+        [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-admin</B> &lt;<VAR>administrator to authenticate</VAR>>]
+        [<B>-dryrun</B>]  [<B>-skipauth</B>]  [<B>-overwrite</B>]  [<B>-help</B>]
+   
+<B>uss ad -us</B> &lt;<VAR>login name</VAR>>  [<B>-r</B> &lt;<VAR>full name in quotes</VAR>>]   
+       [<B>-pas</B> &lt;<VAR>initial password</VAR>>] 
+       [<B>-pw</B> &lt;<VAR>password expires in [0..254] days (0 => never)</VAR>>]  
+       [<B>-se</B> &lt;<VAR>FileServer for home volume</VAR>>] 
+       [<B>-par</B> &lt;<VAR>FileServer's disk partition for home volume</VAR>>] 
+       [<B>-m</B> &lt;<VAR>home directory mount point</VAR>>]  [<B>-ui</B> &lt;<VAR>uid to assign the user</VAR>>]
+       [<B>-t</B> &lt;<VAR>pathname of template file</VAR>>]  [<B>-ve</B>]  
+       [<B>-va</B> &lt;<VAR>auxiliary argument pairs (Num val)</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]
+       [<B>-a</B> &lt;<VAR>administrator to authenticate</VAR>>]  [<B>-d</B>]  [<B>-sk</B>]  [<B>-o</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>uss add</B> コマンドは、
+<B>-user</B> 引き数で指定されたユーザー名を、保護データベースおよび認証データベースに作成します。デフォルトでは、保護サーバーは新規ユーザーに AFS ユーザー ID (UID) を自動的に割り振ります。代替 AFS UID を指定する場合には、<B>-uid</B> 引き数を使用してください。
+<B>-pass</B> 引き数でパスワードが指定されると、暗号化キーとして使用するために適切な形式に変換され、認証データベースにユーザーのパスワードとして保管されます。パスワードを指定しない場合には、ユーザーの初期パスワードとして、
+<B>changeme</B> という文字列が割り当てられます。
+<P>コマンドの他の結果は、命令および <B>-template</B>
+引き数で指定されたテンプレート・ファイルにある命令および変数の定義済みセットによって異なります。多くのコマンドの引き数は、定義済みの変数の 1 つに値を渡します。対応する変数がテンプレート・ファイルにあるときに、引き数を渡すことができないと、コマンド・インタープリターがテンプレート・ファイルで最初に変数を検出する場所で、アカウント作成処理が停止します。
+<P>単一コマンドで複数のアカウントを作成する場合には、
+<B>uss bulk</B> コマンドを使用してください。単一コマンドでアカウントを削除する場合には、
+<B>uss delete</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-user
+</B><DD>ユーザーの認証データベースおよび保護データベース項目を指定します。名前は、8 文字までの英数字とすることができますが、以下の文字、<B>:</B> (コロン)、<B>@</B> (アットマーク)、<B>.</B> (ピリオド)、スペース、または改行は含められません。これは、ユーザー名 (ユーザーがログインしたときの名前) になるので、シェル・メタキャラクターを含まず、多くのオペレーティング・システムがユーザー名に設けている制限事項に準拠することをお勧めします。(通常は、8 文字以内の英小文字にします)。
+<P>
+<P>テンプレート・ファイルの対応する変数は、$USER です。
+<P><DT><B>-realname
+</B><DD>ユーザーの完全名を指定します。スペースまたは句読点を含む場合には、二重引用符で囲んでください。名前を指定しないと、<B>-user</B> 引き数に指定されたユーザー名がデフォルトで使用されます。
+<P>
+<P>テンプレート・ファイルの対応する変数は、$NAME です。多くのオペレーティング・システムでは、ローカル・パスワード・ファイル (<B>/etc/passwd</B> または同等のファイル) のユーザー項目に完全名を入力するフィールドが用意されています。この変数は、そのフィールドに値を渡すために使用することができます。
+<P><DT><B>-pass
+</B><DD>ユーザーの初期パスワードを指定します。パスワードを処理する AFS コマンドは、実際には長さに制限のない文字列を受け入れますが、多くのアプリケーションおよびユーティリティーで使用できる 8 文字以内のパスワードを使用するようにしてください。値を指定しないと、文字列 <B>changeme</B> がデフォルトで使用されます。
+<P>
+<P>テンプレート・ファイルで対応する変数はありません。
+<P><DT><B>-pwexpires
+</B><DD>ユーザーのパスワードが変更された場合に、変更後の有効期限を指定します。有効期限までの日数を指定する場合には、<B>1</B> から <B>254</B> までの整数を指定してください。パスワードに有効期限を設定しない場合には、
+<B>0</B> (デフォルト) を指定してください。
+<P>
+<P>パスワードが無効 (有効期限切れ) になると、そのユーザーは認証されません。ただし、<B>kpasswd</B> コマンドを発行してパスワードを変更すると、そのパスワードは変更後 30 日までは保持されます。
+(これは管理者のみが変更可能です。)
+<P>
+<P>テンプレート・ファイルで対応する変数は、$PWEXPIRES です。
+<P><DT><B>-server
+</B><DD>新規ユーザーのボリュームを作成するファイル・サーバー・マシンを指定します。完全修飾されたホスト名 (たとえば、<B>fs1.abc.com</B>) を指定するようにしてください。ボリューム作成時に名前を解決するときにセルのネーム・サービスが使用可能であれば、省略形を使用することができます。
+<P>
+<P>テンプレート・ファイルで対応する変数は、$SERVER です。
+<P><DT><B>-partition
+</B><DD>ユーザーのボリュームを作成する区画を指定します。これは、
+<B>-server</B> 引き数で指定されたファイル・サーバー・マシン上にある必要があります。完全な区画名 (たとえば、<B>/vicepa</B>)、または以下の省略フォームの 1 つを指定します。
+<P>
+<PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
+   <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
+   
+</PRE>
+<P>
+<P>
+<P><B>/vicepz</B> (これのインデックスは 25 です) の後には、以下が続きます。
+<P>
+<PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
+   <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
+   
+</PRE>
+<P>
+<P>
+<P>次の値まで、以下同様となります。
+<P>
+<PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
+    
+</PRE>
+<P>
+<P>
+<P>テンプレート・ファイルに対応する変数は、$PART です。
+<P><DT><B>-mount
+</B><DD>ユーザーのホーム・ディレクトリーのパス名を指定します。部分的なパス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。
+<P>
+<P>読み取り / 書き込みパスをディレクトリーに指定すると、読み取り専用ボリュームに新規マウント・ポイントを作成しようとする際の失敗を避けることができます。規則では、読み取り / 書き込みパスは、パス名の第 2 レベルのセル名の前にピリオドを入れて示します (たとえば、<B>/afs/.abc.com</B>)。ファイル・スペースによる読み取り / 書き込みパスまたは読み取り専用パスの概念について、詳しくは、
+<B>fs mkmount</B> 解説ページを参照してください。
+<P>
+<P>テンプレート・ファイルの <B>V</B> 命令にある $MTPT のみがテンプレートで対応する変数になります。<B>V</B> 命令の後にあるテンプレート命令に $MTPT 変数があると、<B>V</B> 命令の <B>mount_point</B> フィールドから値を取得します。したがって、このコマンド行引き数の値は、<B>V</B> の <B>mount_point</B> フィールドに $MTPT という文字列がある場合にだけ、<B>V</B> 命令の後の命令の $MTPT 変数の値になります。
+<P><DT><B>-uid
+</B><DD>ユーザーの AFS UID として割り当てる場合には、0 (ゼロ) 以外の正の整数値を指定してください。この引き数を省略すると場合、保護サーバーは、<TT>max</TT> <TT>user</TT> <TT>id</TT> カウンターの現在値より大きな値の AFS UID を割り当てます。(カウンターを表示する場合には、<B>pts listmax</B> コマンドを使用してください。)
+この引き数を組み込んでいる場合は、最初に <B>pts examine</B> コマンドを使用して、必要な AFS UID を既に持っている既存のアカウントがないことを確認するのが最適です。あれば、アカウント作成プロセスは、エラーで終了します。
+<P>
+<P>テンプレート・ファイルに対応する変数は、$UID です。
+<P><DT><B>-template
+</B><DD>テンプレート・ファイルのパス名を指定します。この引き数が省略された場合、コマンド・インタープリターは、
+<B>uss.template</B> と呼ばれるファイルで指示された順序で次のディレクトリーを検索します。
+<P>
+<OL TYPE=1>
+<LI>現行作業ディレクトリー
+</LI><LI><B>/afs/</B><VAR>cellname</VAR><B>/common/uss</B>。<VAR>cellname</VAR> はローカル・セルに名前を付加します。
+</LI><LI><B>/etc</B>
+</LI></OL>
+<P>
+<P>
+<P>発行側が、<B>uss.template</B> 以外のファイル名をパス名なしで与えた場合、コマンド・インタープリターは、指示されたディレクトリーでこれを検索します。発行側が、すべてまたは一部のパス名を与えた場合、コマンド・インタープリターは指定されたファイルのみを調べます。これは、一部のパス名が現行作業ディレクトリーと対応すると解釈するからです。
+<P>
+<P>指定されたテンプレート・ファイルが空 (ゼロ長) の場合、コマンドは保護および認証データベース項目のみを作成します。
+<P>
+<P>ファイル形式の詳細については、"<B>uss テンプレート・ファイル</B>" の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-var
+</B><DD>テンプレート・ファイルにある $1 から $9 までの各番号変数に値を指定します。標準セットの一部ではない <B>uss</B> テンプレート・ファイルにある変数に値を割り当てる場合には、番号変数を使用してください。
+<P>
+<P>テンプレート・ファイルの対応する変数は、$1 から $9 です。
+<P>
+<P>この引き数の各インスタンスの場合、指示された順序で 2 つの部分を指定してください。
+<UL>
+<LI>テンプレート・ファイルにある変数と一致する <B>1</B> から <B>9</B> までの整数値です。先頭にドル記号は付けません。
+</LI><LI>変数の値として割り当てる英数字の文字列。
+</LI></UL>
+<P>
+<P>詳細については、<I>AFS 管理の手引き</I> の <B>uss</B> の章を参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-admin
+</B><DD>ユーザー・アカウントのさまざまなコンポーネントを保守する AFS サーバー・プロセスとの認証接続で使用する AFS ユーザー名を指定します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-dryrun
+</B><DD>コマンド・インタープリターが、コマンドの実行中に、実際には実行していなくても実行する必要があるアクションを報告します。詳細については、<B>uss</B> の解説ページを参照してください。
+<P><DT><B>-skipauth
+</B><DD>Kerberos を使用するサイトにその認証フォームの置換を許可し、AFS 認証サーバーでの認証を不可にします。
+<P><DT><B>-overwrite
+</B><DD><B>-template</B> 引き数で指定されたテンプレート・ファイルにある <B>D</B> 、<B>E</B>、
+<B>F</B>、<B>L</B>、または <B>S</B> 命令の定義に従って、ファイル・システムにあるディレクトリー、ファイルおよびリンクを上書きします。このフラグを省略すると、コマンド・インタープリターは、プロンプトを 1 回出して、すべての要素を上書きするかどうかを確認します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例では、<B>uss.tpl</B> と呼ばれるテンプレート・ファイルにある <B>uss add</B> コマンドおよび <B>V</B> 命令の組み合わせで、
+<B>smith</B> という名前の保護および認証データベース項目、およびパス名 <B>/afs/abc.com/usr/smith</B> でマウントされた 2500 KB ブロックの割り当て量がある <TT>user.smith</TT> というボリュームを作成しています。マウント・ポイントのアクセス制御リスト (ACL) は、
+<B>smith</B> にすべての権限を許可しています。
+<P><B>uss add</B> コマンドの発行側は、完全パス名ではなく、テンプレート・ファイル名のみを指定します。完全パス名が現在の作業ディレクトリーに存在しているためです。読みやすくするために、ここではコマンドおよび <B>V</B> 命令を 2 行に分けていますが、実際の命令およびコマンドは、1 行で入力してください。
+<PRE>   V user.$USER $SERVER.abc.com /vice$PART $1   \
+        /afs/abc.com/usr/$USER $UID $USER all
+   
+   % <B>uss add  -user smith -realname "John Smith" -pass js_pswd -server fs2</B>   \
+              <B>-partition b -template uss.tpl -var 1 2500</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行側 (または <B>-admin</B> 引き数で指定されたユーザー) は、保護データベースの <B>system:administrators</B> グループに所属して、発行側の認証データベース項目で <TT>ADMIN</TT> フラグをオンにする必要があります。
+<P>テンプレートに <B>V</B> 命令が含まれている場合、発行者が <B>/usr/afs/etc/UserList</B> ファイルにリストされていて、少なくとも <B>a</B> (<B>administer</B>) および <B>i</B> (<B>insert</B>) 許可が、新規マウント・ポイントを含むディレクトリーの ACL になければなりません。テンプレート・ファイルに、他のタイプのオブジェクト (ディレクトリー、ファイル、またはリンク) を作成する命令がある場合、発行者には、それらの命令を作成するのに必要なそれぞれの特権がなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf055.htm#HDRUSSFILE">uss テンプレート・ファイル</A>
+<P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
+<P><A HREF="auarf242.htm#HDRUSS_INTRO">uss</A>
+<P><A HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
+<P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf242.htm">前ページ</A> &#124; <A HREF="auarf244.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,89 @@
+:Base TAAFSSVRMGR.HLP
+:Title IBM AFS Server Manager
+1 AFS Server Manager
+2 Overview of AFS
+3 AFS: Overview=AFS__Overview
+3 AFS Cells=DCE_Cells
+2 AFS Server Manager
+3 AFS Server Manager: Overview=DFS_Server_Manager
+2 Authenticating to AFS
+3 To Authenticate to AFS=To_Obtain_DCE_Credentials
+3 To Choose an AFS Cell to Administer=To_Choose_a_DCE_Cell_to_Administer
+2 AFS Servers
+3 Servers: Overview=Servers__An_Overview
+3 Maintaining AFS Servers=Setting_Up_and_Maintaining_DFS_Servers
+3 Monitoring Server Subsets=Monitoring_Server_Subsets
+3 Server Properties=Server_Properties
+3 Server Warnings=Server_Warnings
+3 Administrators for a Server
+4 Administrators for a Server: Overview=Administrators_for_a_Server
+4 To Add or Remove a User from the Administrators List for a Server=To_Edit_an_Administrative_List
+3 Server Encryption Keys
+4 Server Encryption Keys: Overview=Server_Encryption_Keys
+4 To Add a New Server Encryption Key=To_Add_a_New_Server_Key
+4 To Remove a Server Encryption Key=To_Remove_a_Server_Encryption_Key
+3 Server Files
+4 To Install a New File on a Server=To_Install_New_Files_on_a_Server
+4 To Install the Former Versions of Binary Files on a Server=To_Install_Former_Versions_of_Binary_Files_on_a_Server
+4 To Prune Files from a Server=To_Prune_Files_from_a_Server
+4 To Get File Dates=To_Get_File_Dates
+3 Synchronizing the VLDB on a Server
+4 Synchronizing the VLDB=Synchronizing_the_FLDB
+4 To Synchronize the VLDB on a Server=To_Synchronize_the_FLDB
+2 AFS Partitions
+3 Partitions: Overview=Partitions__An_Overview
+3 Partitions Properties=Partition_Properties
+3 Partitions Warnings=Partition_Warnings
+2 AFS Volumes
+3 Volumes: Overview=Filesets__An_Overview
+3 The Different Types of Volumes =Read__Write_and_Read_Only_Filesets
+3 The Volume Location Database (VLDB)=FLDB__Fileset_Location_Database_
+3 Volume Properties=Fileset_Properties
+3 To Create a Volume =To_Create_a_Fileset
+3 To Rename a Volume =To_Rename_a_Fileset
+3 To Delete a Volume =To_Delete_a_Fileset
+3 Moving Volumes
+4 Moving Volumes: Overview=Moving_Filesets
+4 To Move a Volume =To_Move_a_Fileset
+3 Creating Backup Versions of Volumes
+4 To Create a Backup Version of a Volume=IDH_SVRMGR_CLONE_OVERVIEW
+4 To Create Backup Versions of Multiple Volumes=To_Clone_Multiple_Filesets
+3 Locking and Unlocking Volumes
+4 Locking and Unlocking VLDB Entries=Locking_and_Unlocking_Filesets
+4 To Determine if a Volume is Locked=To_Determine_Whether_a_Fileset_Entry_is_Locked
+4 To Lock a Volume =To_Lock_a_Fileset
+4 To Unlock a Volume =To_Unlock_a_Fileset
+3 Dumping and Restoring Volumes
+4 Dumping Volumes=Dumping_and_Restoring_Filesets
+4 To Dump a Volume =To_Dump_a_Fileset
+4 Restoring Volumes=Restoring_Filesets
+4 Restoring Incremental Volume Dumps =Restoring_Multiple_Incremental_Dumps_of_a_Fileset
+4 To Restore a Dump File=To_Restore_a_Dump_File_to_a_New_Fileset
+3 Volume Warnings=Fileset_Warnings
+2 AFS Volume Replication
+3 Replicating Volumes=Replicating_Filesets
+3 To Create a New Volume Replication Site=To_Create_a_New_Fileset_Replication_Site
+3 To Replicate a Volume =To_Replicate_a_Fileset
+3 Updating Volume Replicas=Updating_Replicas
+2 AFS Services
+3 Services: Overview=Services__An_Overview
+3 Setting Up and Maintaining AFS Services=Setting_Up_and_Maintaining_DFS_Services
+3 Service Properties=Service_Properties
+3 To Create a Service=To_Create_a_Service
+3 To Delete a Service=To_Delete_a_Service
+3 To Start a Service=To_Start_a_Service
+3 To Stop a Service=To_Stop_a_Service
+3 To Restart a Service=To_Restart_a_Service
+3 To Set BOS Service Restart Dates=To_Set_BOS_Service_Restart_Dates_and_Times
+3 To View Service Status and Details=To_View_Service_Status_and_Details
+3 Service Log Files
+4 Log Files=Log_Files
+4 To View a Service Log File=To_View_Service_Log
+2 Salvaging Volumes
+3 Salvaging Volumes: Overview=Salvaging_Volumes
+3 To Salvage all Volumes on a File Server=To_Salvage_all_Volumes_on_a_File_Server
+3 To Salvage all Volumes on a Partition=To_Salvage_all_Volumes_on_a_Partition
+3 To Salvage a Volume=To_Salvage_a_Volume
+2 AFS Command Reference
+3 Reference for AFS UNIX Users=UNIX_Command_Reference
+3 AFS Command Prompt Commands=AFS_Command_Prompt_Commands

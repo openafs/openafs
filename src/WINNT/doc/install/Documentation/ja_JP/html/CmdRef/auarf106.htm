@@ -1,0 +1,89 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_LISTHOSTS" HREF="auarf002.htm#ToC_120">bos listhosts</A></H2>
+<A NAME="IDX4556"></A>
+<A NAME="IDX4557"></A>
+<A NAME="IDX4558"></A>
+<A NAME="IDX4559"></A>
+<A NAME="IDX4560"></A>
+<A NAME="IDX4561"></A>
+<A NAME="IDX4562"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/etc/CellServDB</B> ファイルの内容を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos listhosts -server</B> &lt;<VAR>machine name</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+              [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+    
+<B>bos listh -s</B> &lt;<VAR>machine name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+   
+<B>bos getcell -server</B> &lt;<VAR>machine name</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+            [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+    
+<B>bos getc -s</B> &lt;<VAR>machine name</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos listhosts</B> コマンドは、<B>-server</B> 引き数に指定されたサーバー・マシンの <B>/usr/afs/etc/CellServDB</B> ファイルのセルのデータベース・サーバー・マシンのリストを書式化して表示します。
+<P>マシンのリストを変更する場合には、<B>bos addhost</B> および <B>bos removehost</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD><B>/usr/afs/etc/CellServDB</B> ファイルを表示するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P>
+<P>セル内のパフォーマンスを一定にするには、どのサーバー・マシンでも出力が同じになっていなければなりません。マシンを同期化する方法については、<B>bos addhost</B> の解説ページを参照してください。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力の最初の行には、サーバー・マシンが属すセル名が示されます。2 行目以降には、そのセルのデータベース・サーバー・マシン名が示されます。
+<P>各データベース・サーバー・マシンに割り当てられた <TT>Host</TT> 番号はサーバー内でだけで使用されます。マシンの IP アドレスと同じではありませんし、必ずしも関係しているわけではありません。
+BOS サーバー は、<B>bos addhost</B> コマンドの実行中にこの番号を割り当てています。
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、<B>fs7.abc.com</B> 上の <B>/usr/afs/etc/CellServDB</B> ファイルにリストされているデータベース・サーバー・マシンのリストを表示しています。
+<PRE>   % <B>bos listhosts fs7.abc.com</B>
+   Cell name is abc.com
+       Host 1 is db1.abc.com
+       Host 2 is db2.abc.com
+       Host 3 is db3.abc.com
+    
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (サーバー・バージョン)</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<P><A HREF="auarf110.htm#HDRBOS_REMOVEHOST">bos removehost</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf105.htm">前ページ</A> &#124; <A HREF="auarf107.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

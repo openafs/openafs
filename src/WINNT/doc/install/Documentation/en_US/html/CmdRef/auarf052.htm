@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf051.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf053.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRAFSMONCONFIG" HREF="auarf002.htm#ToC_50">afsmonitor Configuration File</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX4036"></A>
+<A NAME="IDX4037"></A>
+<P>Provides instructions for the <B>afsmonitor</B> command
+<P><STRONG>Description</STRONG>
+<P>The <B>afsmonitor</B> configuration file determines which machines the
+<B>afsmonitor</B> command probes for File Server or Cache Manager
+statistics and which statistics it gathers. Use the <B>-config</B>
+argument to the <B>afsmonitor</B> command to identify the configuration
+file to use.
+<P>The instructions that can appear in the configuration file are as
+follows&#58;
+<DL>
+<P><DT><B><TT>cm  <VAR>host_name</VAR></TT>
+</B><DD>Names a client machine for which to display Cache Manager
+statistics. The order of <B>cm</B> lines in the file determines the
+order in which client machines appear from top to bottom on the <TT>System
+Overview</TT> and <TT>Cache Managers</TT> output screens.
+<P><DT><B><TT>fs  <VAR>host_name</VAR></TT>
+</B><DD>Names a file server machine for which to display File Server
+statistics. The order of <B>fs</B> lines in the file determines the
+order in which file server machines appear from top to bottom on the
+<TT>System Overview</TT> and <TT>File Servers</TT> output screens.
+<P><DT><B><TT>thresh  fs | cm  <VAR>field_name</VAR>  <VAR>thresh_val</VAR> 
+[<VAR>cmd_to_run</VAR>]  [<VAR>arg</VAR><SUB>1</SUB>] . . .
+[<VAR>arg</VAR><SUB>n</SUB>]</TT>
+</B><DD>Assigns the threshold value <VAR>thresh_val</VAR> to the statistic
+<VAR>field_name</VAR>, for either a File Server statistic (<B>fs</B>) or a
+Cache Manager statistic (<B>cm</B>). The optional
+<VAR>cmd_to_execute</VAR> field names a binary or script to execute each time
+the value of the statistic changes from being below <VAR>thresh_val</VAR> to
+being at or above <VAR>thresh_val</VAR>. A change between two values that
+both exceed <VAR>thresh_val</VAR> does not retrigger the binary or
+script. The optional <VAR>arg</VAR><SUB>1</SUB> through
+<VAR>arg</VAR><SUB>n</SUB> fields are additional values that the
+<B>afsmonitor</B> program passes as arguments to the
+<VAR>cmd_to_execute</VAR> command. If any of them include one or more
+spaces, enclose the entire field in double quotes.
+<P>The parameters <B>fs</B>, <B>cm</B>, <VAR>field_name</VAR>,
+<VAR>threshold_val</VAR>, and <VAR>arg</VAR><SUB>1</SUB> through
+<VAR>arg</VAR><SUB>n</SUB> correspond to the values with the same name on the
+<B>thresh</B> line. The <VAR>host_name</VAR> parameter identifies the
+file server or client machine where the statistic has crossed the threshold,
+and the <VAR>actual_val</VAR> parameter is the actual value of
+<VAR>field_name</VAR> that equals or exceeds the threshold value.
+<P>Use the <B>thresh</B> line to set either a global threshold, which
+applies to all file server machines listed on <B>fs</B> lines or client
+machines listed on <B>cm</B> lines in the configuration file, or a
+machine-specific threshold, which applies to only one file server or client
+machine.
+<UL>
+<P><LI>To set a global threshold, place the <B>thresh</B> line before any of
+the <B>fs</B> or <B>cm</B> lines in the file.
+<P><LI>To set a machine-specific threshold, place the <B>thresh</B> line
+below the corresponding <B>fs</B> or <B>cm</B> line, and above any
+other <B>fs</B> or <B>cm</B> lines. A machine-specific
+threshold value always overrides the corresponding global threshold, if
+set. Do not place a <B>thresh fs</B> line directly after a
+<B>cm</B> line or a <B>thresh cm</B> line directly after a
+<B>fs</B> line.
+</UL>
+<P><DT><B><TT>show  fs | cm  <VAR>field/group/section</VAR></TT>
+</B><DD>Specifies which individual statistic, group of statistics, or section of
+statistics to display on the <TT>File Servers</TT> screen (<B>fs</B>) or
+<TT>Cache Managers</TT> screen (<B>cm</B>) and the order in which to
+display them. The appendix of <B>afsmonitor</B> statistics in the
+<I>AFS Administration Guide</I> specifies the group and section to which
+each statistic belongs. Include as many <B>show</B> lines as
+necessary to customize the screen display as desired, and place them anywhere
+in the file. The top-to-bottom order of the <B>show</B> lines in
+the configuration file determines the left-to-right order in which the
+statistics appear on the corresponding screen.
+<P>If there are no <B>show</B> lines in the configuration file, then the
+screens display all statistics for both Cache Managers and File
+Servers. Similarly, if there are no <B>show fs</B> lines, the
+<TT>File Servers</TT> screen displays all file server statistics, and if
+there are no <B>show cm</B> lines, the <TT>Cache Managers</TT> screen
+displays all client statistics.
+<P><DT><B># <VAR>comments</VAR>
+</B><DD>Precedes a line of text that the <B>afsmonitor</B> program ignores
+because of the initial number (<B>#</B>) sign, which must appear in the
+very first column of the line.
+</DL>
+<P>For a list of the values that can appear in the
+<VAR>field/group/section</VAR> field of a <B>show</B> instruction, see the
+<B>afsmonitor</B> statistics appendix to the <I>AFS Administration
+Guide</I>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf059.htm#HDRAFSMONITOR">afsmonitor</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf051.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf053.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

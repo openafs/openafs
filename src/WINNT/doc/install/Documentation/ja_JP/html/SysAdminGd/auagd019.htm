@@ -1,0 +1,1049 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理の手引き</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- E:\IDWB\TEMP\idwt2118\AUAGD000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 12:07:32            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 12:07:30">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 12:07:30">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 12:07:30">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理の手引き</H1>
+<HR><H1><A NAME="HDRWQ722" HREF="auagd002.htm#ToC_596">保護データベースの管理</A></H1>
+<P>この章では、保護データベース内のユーザー、マシン、およびグループ記入項目の作成および保守方法を説明します。
+<HR><H2><A NAME="HDRWQ723" HREF="auagd002.htm#ToC_597">説明の要約</A></H2>
+<P>本章では、指示されたコマンドを使用した以下のタスクの実行方法を説明します。
+<BR>
+<TABLE WIDTH="100%">
+<TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">保護データベース項目の表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザー、マシン、またはグループ名を AFS ID にマップする
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">項目の所有者または作成者の表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">グループに属しているユーザーまたはマシン数の表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーまたはマシンが属しているグループ番号を表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">グループ作成割り当て量の表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">項目のプライバシー・フラグの表示
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts examine</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーまたはマシンが属しているグループのメンバーを表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts membership</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーまたはグループが所有しているグループを表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listowned</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">保護データベースのすべての項目を表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listentries</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">マシン項目の作成
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts createuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">グループ項目の作成
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts creategroup</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーおよびマシンをグループに追加する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts adduser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">ユーザーおよびマシンをグループから削除する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts removeuser</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">マシンまたはグループ項目の削除
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts delete</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">グループの所有者を変更する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts chown</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">記入項目の名前を変更する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts rename</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">グループ作成割り当て量を設定する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">項目のプライバシー・フラグを設定する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setfields</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">AFS ID カウンターを表示する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts listmax</B>
+</TD></TR><TR>
+<TD ALIGN="LEFT" VALIGN="TOP" WIDTH="70%">AFS ID カウンターを設定する
+</TD><TD ALIGN="LEFT" VALIGN="TOP" WIDTH="30%"><B>pts setmax</B>
+</TD></TR></TABLE>
+<P>
+<A NAME="IDX7816"></A>
+<A NAME="IDX7817"></A>
+<A NAME="IDX7818"></A>
+<A NAME="IDX7819"></A>
+<A NAME="IDX7820"></A>
+<A NAME="IDX7821"></A>
+<A NAME="IDX7822"></A>
+<A NAME="IDX7823"></A>
+<A NAME="IDX7824"></A>
+<A NAME="IDX7825"></A>
+<HR><H2><A NAME="HDRWQ745" HREF="auagd002.htm#ToC_598">保護データベースについて</A></H2>
+<P>保護データベースは、クライアントが AFS のデータにアクセスできるかどうかを決めるためにファイル・サーバー・プロセスで使用する、
+AFS ユーザー、クライアント・マシン、およびグループに関する情報を保管します。
+<P>AFS セルへの認証済みアクセスを入手するためには、ユーザーは、必ず、そのセルの保護データベース記入項目にそのセル用の記入項目を所有していなければなりません。ユーザーがファイル・サーバー・マシンに保管されているデータへのアクセスを初めて要求するとき、そのマシンのファイル・サーバーは、保護サーバーと連絡を取り、ユーザーの<I>現在の保護サブグループ</I>
+(<I>CPS</I>) を要求します。保護サーバーは、そのユーザーが属するすべてのグループをリストします。ファイル・サーバーは、データのあるディレクトリーのアクセス制御リスト (ACL) をスキャンして、
+CPS 上のグループを検索します。保護サーバーは、ACL がユーザーのグループまたは個々のユーザーに拡張するアクセス権に従って、アクセス権を許可します。(ファイル・サーバーは、CPS を保管し、ユーザーが同じトークンを持っている間、その CPS を使用します。ユーザーのグループ・メンバーシップが変更されると、ユーザーは、変更を認識するためにサイドファイル・サーバーに対して認証を行う必要があります)。
+<P>セルの <B>system:administrators</B> グループに属している管理者だけが、ユーザー項目 (<A HREF="#HDRWQ746">システム・グループ</A>で説明するように、グループ自体が、保護データベースに定義されています) を作成することができます。<B>system:administrators</B> グループのメンバーは、マシン項目を作成することもできます。マシン項目は、アクセス要求の発信元であるマシンに基づいてアクセスを制御するために使用できます。マシン項目の作成後、マシン項目を保護データベース・グループに追加して、そのグループを ACL 上に配置します (マシンはACL 上に直接表示できません)。マシン項目は単一マシン、またはワイルドカード表記によって指定されるような、連続する IP アドレスを持つ複数マシンを表すことができます。説明については、<A HREF="#HDRWQ753">ユーザーおよびマシン項目の作成</A>を参照してください。ボリュームのすべてのレプリカは同じ ACL (ボリュームのルート・ディレクトリーのマウント・ポイント上のもの) を共有しているため、プログラムの製造業者が要求するマシン・ベースのライセンス協定に準拠している間は、プログラムのバイナリー・ファイルがあるボリュームを複写することができます。
+<A HREF="#HDRWQ753">ユーザーおよびマシン項目の作成</A> を参照してください。
+<P>グループ項目は、ユーザー項目、マシン項目、あるいはその両方 (グループは他のグループに属することができない) のリストです。ACL にグループを配置するのは、ユーザーを個別に ACL 上にリストしないでユーザーのセットへのアクセスを拡張または拒否するのに便利な方法です。同様に、グループにユーザーを追加すると、関連する ACL がそのグループをリストするすべてのファイルおよびディレクトリーへのアクセスが、自動的に許可されます。管理者および通常ユーザーは、どちらもグループを作成することができます。
+<A NAME="IDX7826"></A>
+<A NAME="IDX7827"></A>
+<A NAME="IDX7828"></A>
+<A NAME="IDX7829"></A>
+<A NAME="IDX7830"></A>
+<A NAME="IDX7831"></A>
+<P><H3><A NAME="HDRWQ746" HREF="auagd002.htm#ToC_599">システム・グループ</A></H3>
+<P>ユーザーおよび管理者が作成できるグループに加えて、AFS は、以下の 3 つのシステム・グループを定義しています。保護サーバーは、セルの保護データベースの最初のバージョンを構築するときに、自動的にグループを作成して、常にそれらのグループに同じ AFS GID を割り当てます。
+<DL>
+<P><DT><B>system:anyuser
+</B><DD>認証済みまたは非認証にかかわらず、ローカルおよび外部セルから、セルにファイル・スペースにアクセスできるすべてのユーザーを表します。このグループの AFS GID は、<B>-101</B> です。グループには、保護データベースにリストされた継続的なメンバーシップがありません。したがって、<B>pts examine</B> コマンドの場合、<TT>メンバーシップ</TT> フィールドに <B>0</B> を表示しますが、<B>pts membership</B> コマンドの場合は、このフィールドにどのメンバーも表示しません。
+<P>
+<P>このグループを ACL に配置するのは、すべてのユーザーにアクセスを拡張するのに便利な方法です。ファイル・サーバーは、このグループを、ファイル・サーバー・マシンに保管されているデータへのアクセスを要求する任意のユーザーの CPS に自動的に配置します (すべての非認証ユーザーは、
+<B>anonymous</B> という識別を割り当てられます。このグループは、
+<B>anonymous</B> に対する CPS 上の唯一の項目です)。
+<P><DT><B>system:authuser
+</B><DD>ローカルおよび外部セルからセルのファイル・スペースにアクセスできるすべてのユーザー、およびローカル・セル (認証済み) において、AFS トークンを正常に入手したすべてのユーザーを表します。このグループの AFS GID は、<B>-102</B> です。<B>system:anyuser</B> グループと同様に、このグループには、保護データベースにリストされた継続的なメンバーシップがありません。したがって、<B>pts examine</B> コマンドの場合、<TT>メンバーシップ</TT>・フィールドに <B>0</B> を表示しますが、<B>pts membership</B> コマンドの場合は、このフィールドにどのメンバーも表示しません。
+<P>
+<P>したがって、このグループを ACL に配置するのは、すべての認証済みユーザーにアクセスを拡張するのに便利な方法です。ファイル・サーバーは、このグループを、ファイル・サーバー・マシンに保管されているデータへのアクセスを要求する任意の認証済みユーザーの CPS に自動的に配置します
+<P><DT><B>system:administrators
+</B><DD>特権 <B>pts</B> コマンド、および割り当て量を設定する <B>fs</B> コマンドを発行することを許可されている、少数のセル管理者を表します。すべての新規に作成されたボリュームのルート・ディレクトリー上の ACL は、このグループにすべてのアクセス権を許可します。この項目を削除しても、このグループは、すべての ACL について <B>a</B> (<B>管理</B>) アクセス権、およびデフォルトでは<B>l</B> (<B>ルックアップ</B>) アクセス権を暗黙的に所有しています。このグループの AFS GID は、<B>-204</B> です。このグループの管理についての説明は、<A HREF="auagd021.htm#HDRWQ809">system:administrators グループの管理</A>を参照してください。
+</DL>
+<HR><H2><A NAME="HDRWQ747" HREF="auagd002.htm#ToC_600">保護データベースからの情報の表示</A></H2>
+<P>この機能グループでは、保護データベース項目およびそれに関連する情報を表示するために使用できるコマンドについて説明します。名前と AFS ID のほかに、保護データベースには、各ユーザー、マシン、またはグループ項目について、以下の情報が保管されています。
+<UL>
+<LI>項目の所有者。ユーザーまたはユーザーのグループであり、項目を管理することができます。
+</LI><LI>項目の作成者。ほとんど監査証跡として使用されます。
+</LI><LI>メンバーシップ件数。ユーザーまたはマシンが属しているグループ数、またはグループに属しているメンバー数を示します。
+</LI><LI>プライバシー・フラグのセット。項目に関する情報を管理または表示できるユーザーを制御します。
+</LI><LI>グループ作成割り当て。ユーザーが作成できるグループ数を定義します。
+</LI><LI>グループのリスト。1 つのユーザーまたはマシンが属している複数のグループ、または複数のユーザーおよびマシンが属している 1 つのグループのリストです。
+</LI><LI>ユーザーまたはグループが所有しているグループのリスト。
+</LI></UL>
+<A NAME="IDX7832"></A>
+<A NAME="IDX7833"></A>
+<A NAME="IDX7834"></A>
+<A NAME="IDX7835"></A>
+<A NAME="IDX7836"></A>
+<A NAME="IDX7837"></A>
+<A NAME="IDX7838"></A>
+<A NAME="IDX7839"></A>
+<A NAME="IDX7840"></A>
+<A NAME="IDX7841"></A>
+<A NAME="IDX7842"></A>
+<A NAME="IDX7843"></A>
+<A NAME="IDX7844"></A>
+<A NAME="IDX7845"></A>
+<A NAME="IDX7846"></A>
+<A NAME="IDX7847"></A>
+<A NAME="IDX7848"></A>
+<A NAME="IDX7849"></A>
+<A NAME="IDX7850"></A>
+<A NAME="IDX7851"></A>
+<A NAME="IDX7852"></A>
+<A NAME="IDX7853"></A>
+<A NAME="IDX7854"></A>
+<A NAME="IDX7855"></A>
+<A NAME="IDX7856"></A>
+<A NAME="IDX7857"></A>
+<A NAME="IDX7858"></A>
+<A NAME="IDX7859"></A>
+<A NAME="IDX7860"></A>
+<A NAME="IDX7861"></A>
+<A NAME="IDX7862"></A>
+<A NAME="IDX7863"></A>
+<A NAME="IDX7864"></A>
+<A NAME="IDX7865"></A>
+<A NAME="IDX7866"></A>
+<A NAME="IDX7867"></A>
+<A NAME="IDX7868"></A>
+<A NAME="IDX7869"></A>
+<P><H3><A NAME="HDRWQ748" HREF="auagd002.htm#ToC_601">保護データベース項目を表示する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。このグループからは、最初の (<B>s</B>) プライバシー・フラグの設定に関係なく、項目を表示することができます。デフォルトでは、いずれのユーザーも保護データベース項目を表示できます。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts examine</B> コマンドを発行して、1 つまたは複数の保護データベース記入項目を表示します。
+<P>
+<PRE>   % <B>pts examine</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>e
+</B><DD>は、<B>examine</B> の受け入れ可能な省略形です。
+(<B>check</B> は別名です)。
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>は、表示する各記入項目ごとの名前または AFS ID を指定します。すべての AFS
+GID の前にハイフン (<B>-</B>) を付けます。これは負の整数であるからです。
+</DL>
+</LI></OL>
+<P>以下のフィールドが出力されます。例も示します。
+<DL>
+<P><DT><B><TT>Name</TT>
+</B><DD>項目名を指定します。
+<UL>
+<LI>ユーザーの場合、これは、AFS による認証時に使用される名前および ACL の項目に表示される名前です。
+</LI><LI>マシンの場合、シングル・マシンの IP アドレス、または <A HREF="#HDRWQ753">ユーザーおよびマシン項目の作成</A> に説明するように、連続する IP アドレスを持つマシンのグループを表すワイルドカードの表記です。
+</LI><LI>ユーザーの場合、これは、ACL 項目に表示される名前であり、<B>pts membership</B> コマンドによって出力されるグループのリストに表示される名前です。<I>通常</I> グループの名前は、コロン (<B>:</B>) で 2 つの部分に分けられています。コロンの前の部分は、グループの所有者名、コロンの後の部分は固有の名前です。<I>接頭部を持たない</I> グループの名前には、所有者の接頭部がありません。<B>system:administrators</B> グループだけが接頭部を持たないグループを作成することができます。グループ名についての詳細は、<A HREF="#HDRWQ755">グループの作成</A>を参照してください。
+</LI></UL>
+<A NAME="IDX7870"></A>
+<A NAME="IDX7871"></A>
+<A NAME="IDX7872"></A>
+<P><DT><B><TT>id</TT>
+</B><DD>項目の固有の AFS 識別番号を指定します。ユーザーおよびマシン項目の場合、
+AFS ユーザー ID (AFS UID) は正の整数であり、グループの場合、
+AFS グループ ID (AFS GID) は負の整数です。AFS UID および GID は、対応する UNIX ファイル・システムの部分と同じ機能を持っています。ただし、
+AFS UID および GID を使用するのは、AFS サーバーとキャッシュ・マネージャーだけです。
+<P>
+<P>通常、保護サーバーは、保護データベース記入項目を作成する際に自動的に AFS UID または GID を割り当てます。<B>system:administrators</B> のメンバーだけが、必要に応じて、ID を指定することができます。詳しくは、<A HREF="#HDRWQ753">ユーザーおよびマシン項目の作成</A> と <A HREF="#HDRWQ755">グループの作成</A> を参照してください。
+<P><DT><B><TT>owner</TT>
+</B><DD>項目を所有しており、したがってその項目を管理できるユーザーまたはグループです (ほかのグループを所有しているグループについての詳細は、<A HREF="#HDRWQ756">グループの効果的な使用</A>を参照してください)。項目のプライバシー・フラグの設定によっては、ほかのユーザーが、管理権限を持っている可能性もあります。所有者の変更に関する説明については、
+<A HREF="#HDRWQ765">グループの所有者を変更する</A> を参照してください。
+<P><DT><B><TT>creator</TT>
+</B><DD>項目を作成し、監査証跡として機能するユーザーです。この項目が、保護データベースから削除されるようなことがあれば、その作成者がもうその項目を所有していなくても、その作成者のグループ作成割り当て量が、1 つずつ増えます。<A HREF="#HDRWQ769">グループ作成割り当て量の設定</A>を参照してください。
+<P>
+<P>このフィールドの <TT>anonymous</TT> の値は、一般に、保護サーバーが非認証モードで実行されているときの、おそらくそのセルの最初のファイル・サーバー・マシンの初期構成の間にその記入項目が作成されたことを示します。非認証モードについての説明は、
+<A HREF="auagd008.htm#HDRWQ158">認証と許可の要件の管理</A>を参照してください。
+<P><DT><B><TT>membership</TT>
+</B><DD>ユーザーやマシンが属しているグループの数、またはグループに属しているユーザーやマシンの数を示します。
+<P><DT><B><TT>flags</TT>
+</B><DD>保護データベース記入項目の情報をだれが表示または変更できるかを指定します。それぞれ異なる機能を表す 5 つのフラグが、常に同じ順序で表示されます。
+<UL>
+<LI>ユーザー項目の場合、デフォルトは <TT>S----</TT> であり、誰でもその項目に対して <B>pts examine</B> コマンドを発行できることを示しますが、その他のアクションを実行することができるのは、
+<B>system:administrators</B> グループのユーザーおよびメンバーだけです。
+</LI><LI>マシン項目の場合、デフォルトは <TT>S----</TT> であり、誰でもその項目に対して <B>pts examine</B> コマンドを発行できることを示しますが、その他のアクションを実行することができるのは、
+<B>system:administrators</B> グループのメンバーだけです。
+</LI><LI>グループ項目の場合、デフォルトは <TT>S-M--</TT> であり、誰でもその項目に対して <B>pts examine</B> コマンドと <B>pts membership</B> コマンドを発行できることを示しますが、その他のアクションを実行することができるのは、
+<B>system:administrators</B> グループの所有者およびメンバーだけです。
+</LI></UL>
+<P>
+フラグに使用できる可能性のある値についての詳細な説明は、
+<A HREF="#HDRWQ770">データベース項目のプライバシー・フラグを設定</A>を参照してください。
+<P><DT><B><TT>group quota</TT>
+</B><DD>ユーザーが、保護データベース内にあといくつのグループを作成できるかを指定します。新規に作成されるユーザー項目に対する値は 20 ですが、
+<B>system:administrators</B> グループのメンバーは、<B>pts setfields</B> コマンドを発行して、いつでも値を変更することができます。<A HREF="#HDRWQ769">グループ作成割り当て量の設定</A> を参照してください。
+<P>
+<P>グループ作成割り当て量は、マシンまたはグループ項目に対しては何の意味もありません。保護サーバーは、<B>pts creategroup</B> コマンドの発行を、マシンやグループとしてではなく、認証済みユーザーとして、または <B>anonymous</B> ユーザーとしてのみ認識します。グループ項目のデフォルト値は、
+0 (ゼロ) であり、変更する理由はありません。
+</DL>
+<P>以下の例は、<B>pat</B> というユーザー、IP アドレス <B>192.12.108.133</B> のマシン、および <B>terry:friends</B> というグループに対する出力を示しています。
+<PRE>   % <B>pts examine pat</B>
+   Name: pat, id: 1020, owner: system:administrators, creator: admin,
+     membership: 12, flags: S----, group quota: 15.
+   % <B>pts ex 192.12.108.133</B>
+   Name: 192.12.108.133, id: 5151, owner: system:administrators, creator: admin,
+     membership: 1, flags: S----, group quota: 20.
+   % <B>pts examine terry:friends</B>
+   Name: terry:friends, id: -567, owner: terry, creator: terry,
+     membership: 12, flags: SOm--, group quota: 0.
+</PRE>
+<A NAME="IDX7873"></A>
+<A NAME="IDX7874"></A>
+<A NAME="IDX7875"></A>
+<A NAME="IDX7876"></A>
+<A NAME="IDX7877"></A>
+<A NAME="IDX7878"></A>
+<A NAME="IDX7879"></A>
+<A NAME="IDX7880"></A>
+<A NAME="IDX7881"></A>
+<P><H3><A NAME="HDRWQ749" HREF="auagd002.htm#ToC_602">グループ・メンバーシップを表示する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。このグループからは、
+3 番目の (<B>m</B>) プライバシー・フラグの設定に関係なく、項目のグループ・メンバーシップ情報を表示することができます。デフォルトでは、所有者およびユーザーは、ユーザー項目のグループ・メンバーシップ、マシン項目の所有者、およびグループ項目のすべてを表示することができます。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><A NAME="LIWQ750"></A><B>pts membership</B> コマンドを発行して、グループのリスト。1 つのユーザーまたはマシンが属している複数のグループ、または複数のユーザーおよびマシンが属している 1 つのグループのリストです。
+<P>
+<PRE>   % <B>pts membership</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>m
+</B><DD>は、<B>membership</B> の受け入れ可能な省略形です。
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>属しているグループをリストする、各ユーザーやマシンの名前または AFS UID 、あるいはメンバーをリストする、各グループの名前または AFS GID を指定します。
+</DL>
+</LI></OL>
+<P>ユーザーおよびマシン項目の場合、出力は以下の文字列から開始されます。そして、各グループは別々の行に出力されます。
+<PRE>   Groups <VAR>user_or_machine</VAR> (id: <VAR>AFS_UID</VAR>) is a member of:
+</PRE>
+<P>グループ項目の場合、出力は以下の文字列から開始されます。そして、各メンバーは別々の行に出力されます。
+<PRE>   Members of <VAR>group</VAR> (id: <VAR>AFS_GID</VAR>) are:
+</PRE>
+<P>システム・グループ <B>system:anyuser</B> および <B>system:authuser</B> の場合、初期ヘッダー文字列だけが出力されます。これらのグループには、保護データベース記入項目にリストされる、継続したメンバーシップがないからです。<A HREF="#HDRWQ746">システム・グループ</A> を参照してください。
+<P>以下の例は、<B>terry</B> というユーザー、および <B>terry:friends</B> というグループに対する出力例を示しています。
+<PRE>   % <B>pts mem terry</B>
+   Groups terry (id: 5347) is a member of:
+     pat:friends
+     sales
+     acctg:general
+   % <B>pts mem terry:friends</B>
+   Members of terry:friends (id: -567) are:
+     pat
+     smith
+     johnson
+</PRE>
+<A NAME="IDX7882"></A>
+<A NAME="IDX7883"></A>
+<A NAME="IDX7884"></A>
+<A NAME="IDX7885"></A>
+<A NAME="IDX7886"></A>
+<A NAME="IDX7887"></A>
+<A NAME="IDX7888"></A>
+<A NAME="IDX7889"></A>
+<P><H3><A NAME="HDRWQ751" HREF="auagd002.htm#ToC_603">ユーザーまたはグループが所有しているグループをリストする</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。このグループからは、
+2 番目の (<B>o</B>) プライバシー・フラグの設定に関係なく、項目のグループ所有者情報を表示することができます。デフォルトでは、所有者は、グループが所有しているグループをリストし、ユーザーは、自分の所有するグループをリストすることができます。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts listowned</B> コマンドを発行して、各ユーザーまたはグループが所有しているグループをリストします。
+<P>
+<PRE>   % <B>pts listowned</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>listo
+</B><DD>は、<B>listowned</B> の受け入れ可能な省略形です。
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>所有しているグループをリストする、各ユーザーの名前または AFS UID 、あるいは各グループの名前または AFS GID を指定します。
+</DL>
+</LI></OL>
+<P>出力は以下の文字列から開始されます。そして、各グループは別々の行に出力されます。
+<PRE>   Groups owned by <VAR>user_or_group</VAR> (id: <VAR>AFS_ID</VAR>) are:
+</PRE>
+<P>以下の例は、<B>terry</B> というユーザー、および <B>terry:friends</B> というグループに対する出力例を示しています。
+<PRE>   % <B>pts listo terry</B> 
+   Groups owned by terry (id: 5347) are:  
+     terry:friends   
+     terry:co-workers
+   % <B>pts listo terry:friends</B>
+   Groups owned by terry:friends (id: -567) are:
+     terry:pals
+     terry:buddies
+</PRE>
+<A NAME="IDX7890"></A>
+<A NAME="IDX7891"></A>
+<A NAME="IDX7892"></A>
+<A NAME="IDX7893"></A>
+<A NAME="IDX7894"></A>
+<A NAME="IDX7895"></A>
+<A NAME="IDX7896"></A>
+<A NAME="IDX7897"></A>
+<A NAME="IDX7898"></A>
+<A NAME="IDX7899"></A>
+<A NAME="IDX7900"></A>
+<A NAME="IDX7901"></A>
+<A NAME="IDX7902"></A>
+<A NAME="IDX7903"></A>
+<A NAME="IDX7904"></A>
+<A NAME="IDX7905"></A>
+<A NAME="IDX7906"></A>
+<A NAME="IDX7907"></A>
+<P><H3><A NAME="HDRWQ752" HREF="auagd002.htm#ToC_604">すべての保護データベース項目の表示</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts listentries</B> コマンドを発行して、すべての保護データベース項目を表示します。
+<P>
+<PRE>   % <B>pts listentries</B> [<B>-users</B>] [<B>-groups</B>]
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>liste
+</B><DD><B>listentries</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-users
+</B><DD>ユーザーおよびマシン項目を表示します。このフラグと <B>-groups</B> フラグの両方を省略した場合も、出力結果は同じです。
+<P><DT><B>-groups
+</B><DD>グループ項目を表示します。
+</DL>
+</LI></OL>
+<P>以下の列を含むテーブルが出力されます。例も示します。
+<DL>
+<P><DT><B><TT>Name</TT>
+</B><DD>項目名を指定します。
+<P><DT><B><TT>ID</TT>
+</B><DD>項目の AFS 識別番号を指定します。ユーザーおよびマシン項目の場合、
+AFS ユーザー ID (AFS UID) は正の整数であり、グループの場合、
+AFS グループ ID (AFS GID) は負の整数です。
+<P><DT><B><TT>Owner</TT>
+</B><DD>項目を所有しており、したがってその項目を管理できるユーザーまたはグループの AFS ID を指定します。
+<P><DT><B><TT>Creator</TT>
+</B><DD>項目を作成したユーザーの AFS UID を指定します。
+</DL>
+<P>以下の例は、ABC Corporation セルからのものです。コマンドを発行する際にオプションを指定していないため、出力にはユーザーおよびマシン項目が含まれています。
+<PRE>   % <B>pts listentries</B>
+   Name                          ID  Owner Creator
+   anonymous                  32766   -204    -204 
+   admin                          1   -204   32766 
+   pat                         1000   -204       1 
+   terry                       1001   -204       1 
+   smith                       1003   -204       1 
+   jones                       1004   -204       1 
+   192.12.105.33               2000   -204       1 
+   192.12.105.46               2001   -204       1 
+</PRE>
+<A NAME="IDX7908"></A>
+<A NAME="IDX7909"></A>
+<A NAME="IDX7910"></A>
+<A NAME="IDX7911"></A>
+<A NAME="IDX7912"></A>
+<HR><H2><A NAME="HDRWQ753" HREF="auagd002.htm#ToC_605">ユーザーおよびマシン項目の作成</A></H2>
+<P>保護データベースの記入項目は、認証データベース内の項目と共に、すべての AFS ユーザー・アカウントの 2 つの必須コンポーネントの 1 つです。
+<A HREF="auagd017.htm#HDRWQ602">uss コマンド組によるユーザー・アカウントの作成と削除</A> で説明するように <B>uss add</B> または <B>uss bulk</B> コマンドを使用して、あるいは <A HREF="auagd018.htm#HDRWQ693">AFS ユーザー・アカウントの作成</A>で説明するように
+<B>pts createuser</B> コマンドを使用して、完全なユーザー・アカウントを作成するコンテキストに保護データベースのユーザー記入項目だけを作成するのが最も良い方法です。
+<P><B>pts createuser</B> コマンドを使用して、保護データベースのマシン項目を作成することもできます。マシン項目は、アクセス要求の発信元であるマシンに基づいてアクセスを制御するために使用できます。マシン項目の作成後、マシン項目を保護データベース・グループに追加して、そのグループを ACL 上に配置します (マシンはACL 上に直接表示できません)。ボリュームのすべてのレプリカは同じ ACL (ボリュームのルート・ディレクトリーのマウント・ポイント上のもの) を共有しているため、プログラムの製造業者が要求するマシン・ベースのライセンス協定に準拠している間は、プログラムのバイナリー・ファイルがあるボリュームを複写することができます。ACL に他に何も項目を配置しない場合、指定したマシンで作業するユーザーだけがそのファイルにアクセスすることができます。
+<P>マシン項目を持つグループに対してそのマシンに ACL 項目を作成すると、そのマシンで作業している認証済みユーザーおよび非認証ユーザーの両方へのアクセスが拡張されることに留意してください。ただし、ファイルのパス名の親ディレクトリーの ACL から、<B>system:anyuser</B> グループの項目を削除することによって、非認証ユーザーへのアクセスを拒否することができます。反対に、マシン上の非認証ユーザーがファイルにアクセスできるようにしたい場合は、そのユーザーに続くすべてのディレクトリー上の ACL は、
+<B>system:anyuser</B> グループ、またはマシン項目が属しているグループのいずれかに対する項目を組み込む必要があります。<B>system:anyuser</B> について詳しくは、
+<A HREF="#HDRWQ746">システム・グループ</A> を参照してください。
+<P>マシン項目には非認証ユーザーを組み込むことができるため、マシン項目およびユーザー項目の両方を同じグループに追加しないのが最も良い方法です。一般には、混合しないグループを使用して管理するほうが簡単です。マシン項目は単一マシン、またはワイルドカード表記によって指定されるような、連続する IP アドレス (すなわち、ネットワークまたはサブネット上のすべてのマシン) を持つ複数マシンを表すことができます。
+<A HREF="#HDRWQ754">保護データベースにマシン項目を作成する</A> にある説明を参照してください。
+<P>デフォルトでは、保護サーバーは、次に使用可能な AFS UID を新規ユーザーまたはマシン項目に割り当てます。特に、マシン項目の場合は、これを許可するのが最も良い方法です。ユーザー項目の場合は、ユーザーが AFS UID に一致させる必要のある UNIX UID をすでに所有している場合のみ、AFS UID を割り当てることが意味をなします (<A HREF="auagd018.htm#HDRWQ687">一致する AFS と UNIX UID の割り当て</A>を参照してください)。
+AFS UID を自動的に割り当てるとき、保護サーバーは、
+<TT>max user id</TT> カウンターを 1 ずつ増分して、その結果を新規項目に割り当てます。
+<A HREF="#HDRWQ771">AFS UID および GID カウンターの表示および設定</A>に説明するように、<B>pts listmax</B>コマンドを 使用して、カウンターを表示します。
+<A NAME="IDX7913"></A>
+<P>ユーザーのセルを永久に離脱したユーザーの AFS UID または削除したマシン項目は、
+ID の明らかな無駄を防ぐためであっても、再利用しないでください。保護データベースからユーザーまたはマシンの項目を削除しようとすると、<B>fs listacl</B> コマンドにより、名前ではなく以前の項目に関連する AFS UID が表示されます。その後、
+AFS UID を新規ユーザーまたはマシンに割り当てると、新規ユーザーまたはマシンは、
+ID の直前のプロセッサーに付与されたアクセス権を自動的に継承します。使用されなくなった AFS UID を ACL から削除するには、<A HREF="auagd020.htm#HDRWQ795">古くなった AFS ID を ACL から除去する</A> で説明するように、<B>fs cleanacl</B> コマンドを使用します。
+<P>名前および AFS UID のほかに、保護サーバーは、新規ユーザーまたはマシン項目の指定されたフィールドに、以下の値を記録します。項目の表示についての詳細な説明は、<A HREF="#HDRWQ748">保護データベース項目を表示する</A> を参照してください。
+<UL>
+<LI><TT>所有者</TT>フィールドに、<B>system:administrators</B> グループを設定し、そのグループのメンバーがグループを管理することを示します。
+</LI><LI><TT>作成者</TT>フィールドに、<B>pts createuser</B> コマンド (または <B>uss add</B> または <B>uss bulk</B> コマンド) を発行したユーザーのユーザー名を設定します。
+</LI><LI><TT>メンバーシップ</TT>・フィールドが <B>0</B> (ゼロ) に設定されていますが、これは新規の項目がまだどのグループにも属していないからです。
+</LI><LI><TT>フラグ</TT>・フィールドに、<B>S----</B> を設定します。説明については、<A HREF="#HDRWQ770">データベース項目のプライバシー・フラグを設定</A> を参照してください。
+</LI><LI><TT>グループ作成割り当て量</TT>フィールドは <B>20</B> に設定されています。これは、ユーザーが 20 個のグループを作成できることを意味します。このフィールドはマシン項目には関係ありません。詳しくは、<A HREF="#HDRWQ769">グループ作成割り当て量の設定</A> を参照してください。
+</LI></UL>
+<A NAME="IDX7914"></A>
+<A NAME="IDX7915"></A>
+<P><H3><A NAME="HDRWQ754" HREF="auagd002.htm#ToC_606">保護データベースにマシン項目を作成する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts createuser</B> コマンドを発行して、1 つまたは複数のマシン項目を作成します。
+<P>
+<PRE>   % <B>pts createuser -name</B> &lt;<VAR>user name</VAR>><SUP>+</SUP> 
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>cu
+</B><DD>は、<B>createuser</B> の別名です
+(<B>createu</B> は受け入れ可能な最も短い省略形です)。
+<P><DT><B>-name
+</B><DD>各マシン項目ごとに、小数点付き表記で IP アドレスを指定します。以下のリストで説明するワイルドカードを使用して、
+1 つの項目により、単独のマシンまたは連続する IP Aアドレスを持つ複数のマシンを表すことができます。
+<B>W</B>、<B>X</B>、<B>Y</B>、および <B>Z</B>の各文字は、フィールド
+<UL>
+<LI><B>W.X.Y.Z</B> は、単一マシンを表します。たとえば、
+<B>192.12.108.240</B> と表します。
+</LI><LI><B>W.X.Y.0</B> は、最初の 3 つの番号で始まる IP アドレスを持つすべてのマシンと一致します。たとえば、<B>192.12.108.0</B> は、<B>192.12.108.119</B> および <B>192.12.108.120</B> の両方と一致しますが、<B>192.12.105.144</B> とは一致しません。
+</LI><LI><B>W.X.0.0</B> は、最初の 2 つの番号で始まる IP アドレスを持つすべてのマシンと一致します。たとえば、アドレス <B>192.12.0.0</B> は、<B>192.12.106.23</B> および <B>192.12.108.120</B> の両方と一致しますが、<B>192.5.30.95</B> とは一致しません。
+</LI><LI><B>W.0.0.0</B> は、最初の番号で始まる IP アドレスを持つすべてのマシンと一致します。たとえば、アドレス <B>192.0.0.0</B> は、<B>192.5.30.95</B> および <B>192.12.108.120</B> の両方と一致しますが、<B>138.255.63.52</B> とは一致しません。
+</LI></UL>
+<P>
+<P>
+<P>すべてのマシンと一致する名前 <B>0.0.0.0</B> を持つマシン項目を定義しないでください。<B>system:anyuser</B> グループがこれに相当します。内の実際の値を表します。
+</DL>
+</LI></OL>
+<P>下記の例では、<B>192.12</B>のネットワーク内のすべてのマシン用にマシン記入項目を作成します。
+<PRE>   % <B>pts cu 192.12.0.0</B>
+</PRE>
+<A NAME="IDX7916"></A>
+<A NAME="IDX7917"></A>
+<A NAME="IDX7918"></A>
+<A NAME="IDX7919"></A>
+<A NAME="IDX7920"></A>
+<A NAME="IDX7921"></A>
+<A NAME="IDX7922"></A>
+<A NAME="IDX7923"></A>
+<A NAME="IDX7924"></A>
+<HR><H2><A NAME="HDRWQ755" HREF="auagd002.htm#ToC_607">グループの作成</A></H2>
+<P>必ずグループ記入項目を作成してからでなければ、グループにメンバーを追加できません。この機能グループでは、通常のグループおよび接頭部を持たないグループの両方の作成方法を説明します。
+<UL>
+<LI><I>通常グループ</I> の名前の先頭には、以下の形式で、グループの所有者を示すプレフィックスが付きます。
+<P>
+<P><VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>
+<P>
+<P>どのユーザーも通常グループを作成することができます。グループ名は、常にフルネームを入力しなければならないので、グループの用途またはそのメンバーの共通する関心を示す短い <VAR>group_name</VAR> が実際的です。<B>terry:1</B> および <B>terry:2</B> などのグループ名は、用途が不明確なため、あまり役に立ちません。通常グループ名の必須形式についての詳細は、
+<A HREF="#HDRWQ757">グループの作成方法</A> の説明を参照してください。
+</LI><LI><I>接頭部を持たないグループ</I>には、その名前が示唆するように、名前に 1 つのフィールドしかありません。これは、通常グループの <VAR>group_name</VAR> フィールドに相当します。
+<P>
+<P><B>system:administrators</B> グループのメンバーだけが接頭部を持たないグループを作成することができます。接頭部を持たないグループの目的については、<A HREF="#HDRWQ759">接頭部を持たないグループの使用</A> を参照してください。
+</LI></UL>
+<P>デフォルトでは、保護サーバーは、次に使用可能な AFS GID を新規グループ項目に割り当てます。また、これを許可するのが最も良い方法です。AFS GID (負の整数) を自動的に割り当てるとき、保護サーバーは、
+<TT>max group id</TT> カウンターを 1 ずつ減分して、その結果を新規グループに割り当てます。
+<A HREF="#HDRWQ771">AFS UID および GID カウンターの表示および設定</A>に説明するように、<B>pts listmax</B>コマンドを 使用して、カウンターを表示します。
+<P>名前および AFS GID のほかに、保護サーバーは、新規グループの項目の指定されたフィールドに、以下の値を記録します。<A HREF="#HDRWQ748">保護データベース項目を表示する</A> を参照してください。
+<UL>
+<LI><TT>所有者</TT>フィールドに、<B>pts creategroup</B> コマンドの発行者、または <B>-owner</B> 引き数で指定したユーザーやグループを設定します。
+</LI><LI><TT>作成者</TT>フィールドに、<B>pts creategroup</B> コマンドを発行したユーザーのユーザー名を設定します。
+</LI><LI><TT>メンバーシップ</TT>・フィールドに、<B>0</B> (ゼロ) を設定します。これは、グループに属するメンバーがまだないからです。
+</LI><LI><TT>フラグ</TT>フィールドに、<B>S-M--</B> を設定します。説明については、<A HREF="#HDRWQ770">データベース項目のプライバシー・フラグを設定</A> を参照してください。
+</LI><LI><TT>グループ作成割り当て量</TT>フィールドは <B>0</B> に設定されています。これは、このフィールドにはグループ項目の意味がないからです。
+</LI></UL>
+<A NAME="IDX7925"></A>
+<A NAME="IDX7926"></A>
+<A NAME="IDX7927"></A>
+<A NAME="IDX7928"></A>
+<A NAME="IDX7929"></A>
+<A NAME="IDX7930"></A>
+<A NAME="IDX7931"></A>
+<A NAME="IDX7932"></A>
+<P><H3><A NAME="HDRWQ756" HREF="auagd002.htm#ToC_608">グループの効果的な使用</A></H3>
+<P>グループを作成する主な理由は、グループを ACL に配置することです。これにより、複数のユーザーのアクセスを、ACL 上で個別にリストする必要なく制御することができます。グループの基本的な使用方法は 3 つあり、それぞれが異なる目的に適しています。
+<UL>
+<LI><I>個人使用</I>: グループに属しているメンバーに連絡する必要なく、ユーザーがグループを作成し、それを自分の ACL ディレクトリーに書き込むことができます。メンバーは、他のメンバーが特定の方法でそのディレクトリーにアクセスできるかどうかだけを通知します。所有者であるユーザーが、グループ全体に渡って単独で管理制御を保ってください。
+<P>
+<P>グループの存在およびそのメンバーの識別は、必ずしもシークレットである必要はありません。他のユーザーは、<B>fs listacl</B> コマンドを使用して、ACL のディレクトリーでグループの名前を参照したり、
+<B>pts membership</B> コマンドを使用して、そのユーザー自体が属しているグループをリストすることができます。グループの 3 番目のプライバシー・フラグを設定して、誰が <B>pts membership</B> コマンドを使用してグループのメンバーシップをリストできるかを制限することができますが、それを行うことができるのは常に <B>system:administrators</B> グループのメンバーだけです。
+<A HREF="#HDRWQ770">データベース項目のプライバシー・フラグを設定</A> を参照してください。
+</LI><LI><I>共有使用</I>: グループのメンバーに、そのメンバーがグループに属していることを通知しますが、依然として単独の管理者でもあります。たとえば、作業グループの管理者は、その作業グループのすべてのメンバーのグループを作成して、グループの他のメンバーと共有したい情報を収容するディレクトリーの ACL 上で、メンバーにその情報を使用させるようにします。
+<P>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>注:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">自分の ACL に誰か別の人が所有しているグループを追加する場合は、その所有者が自分に知らせることなくそのグループのメンバーシップを変更することができます。したがって、誰か新しい人が、あなたが知らないうちに、あなたが意図しなかった方法でアクセスを取得することが可能です。
+</TD></TR></TABLE>
+</LI><LI><I>グループ使用</I>: グループを作成し、
+<B>pts chown</B> コマンドを使用して、他のグループまたはそのグループ自体のいずれかの 1 つのグループに所有権を割り当てます
+(後者のタイプのグループは、<I>自己所有</I> グループです)。グループを所有しているメンバーに、すべてのメンバーが、その所有するグループを管理できることを通知します。
+<P>
+<P>グループを所有者として指定することの主な利点は、複数のユーザー間で 1 つのグループを管理する責任を共有できることにあります。
+1 人がすべての管理タスクを実行する必要がなく、また、元々の作成者がグループを抜けても、所有権を移す必要はありません。
+<P>
+<P>ただし、所有者グループのメンバーは誰でも、他のメンバーに悪影響を及ぼす変更を行うことができます。グループからメンバーを不当に追加または削除したり、グループの所有権を自分が独占できるように設定を変更したりすることができます。これらの問題は、自己所有のグループに特に要注意となる可能性があります。所有者グループを使用して最もうまくいくのは、メンバー全員がお互いによく知っており、信頼し合っている場合です。
+1 つの所有者グループの人数を少なく保つのが賢い方法と言えるかもしれません。
+</LI></UL>
+<A NAME="IDX7933"></A>
+<A NAME="IDX7934"></A>
+<P><H3><A NAME="HDRWQ757" HREF="auagd002.htm#ToC_609">グループの作成方法</A></H3>
+<OL TYPE=1>
+<LI>接頭部を持たないグループを作成する場合、<B>system:administrators</B> グループに属していることを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts creategroup</B> コマンドを発行して、各グループを作成します。グループのすべてが同じ所有者を持つことになります。
+<P>
+<PRE>   % <B>pts creategroup  -name</B> &lt;<VAR>group name</VAR>><SUP>+</SUP> [<B>-owner</B> &lt;<VAR>owner of the group</VAR>>]
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>cg
+</B><DD>は、<B>creategroup</B> の別名です
+(<B>createg</B> は受け入れ可能な最も短い省略形です)。
+<A NAME="IDX7935"></A>
+<A NAME="IDX7936"></A>
+<A NAME="IDX7937"></A>
+<P><DT><B>-name
+</B><DD>作成する各グループを指定します。名前には最大 63 文字までの英小文字または数字を組み込むことができますが、句読文字、特にシェルにとって特別な意味を持つ文字は使用しないようにしてください。
+<P>
+<P>接頭部を持たないグループの名前に、コロン (<B>:</B>) を使用することはできません。コロンは、通常グループの名前の 2 つの部分を区切るために使用しているからです。
+<P>
+<P><VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>
+<P>
+<P>保護サーバーでは、通常グループの <VAR>owner_name</VAR> プレフィックスがグループの所有者を示していなければなりません。デフォルトではユーザーは所有者として記録され、
+<VAR>owner_name</VAR> には AFS ユーザー名が入っていなければなりません。
+<B> -owner</B> 引き数を組み込み、<VAR>owner_name</VAR> フィールドに必要な値を指定して、他の AFS ユーザー、通常グループ、または接頭部を持たないグループを所有者として指定することができます。
+<UL>
+<LI>所有者がユーザーである場合、AFS ユーザー名でなければならない。
+</LI><LI>所有者が他の通常グループである場合、所有しているグループの<VAR>owner_name</VAR> フィールドと一致していなければならない。たとえば、所有者がグループ <B>terry:associates</B> である場合、所有者フィールドは <B>terry</B> でなければなりません。
+</LI><LI>所有者が接頭部を持たないグループである場合は、所有しているグループの名前でなければなりません。
+</LI></UL>
+<P>
+<P>
+<P>(あるグループが他のグループを所有していると便利な理由については、
+<A HREF="#HDRWQ756">グループの効果的な使用</A> を参照してください。)
+<P><DT><B>-owner
+</B><DD>オプションで、コマンドの発行者以外の所有者を示します。ユーザー名、またはすでに少なくとも 1 つのメンバーを持っている通常グループか接頭部を持たないグループのいずれかを指定します。
+<A HREF="#HDRWQ756">グループの効果的な使用</A> に説明するように、グループを自己所有にしたい場合は、この引き数を組み込まないでください説明については、<A HREF="#HDRWQ758">自己所有グループを作成する</A>を参照してください。
+<P>
+<P>グループの所有者としてマシンを指定しないでください。マシンは認証できないため、マシンがグループを管理する方法はありません。
+</DL>
+</LI></OL>
+<A NAME="IDX7938"></A>
+<A NAME="IDX7939"></A>
+<A NAME="IDX7940"></A>
+<P><H3><A NAME="HDRWQ758" HREF="auagd002.htm#ToC_610">自己所有グループを作成する</A></H3>
+<OL TYPE=1>
+<LI><B>pts creategroup</B> コマンドを発行して、グループを作成します。
+<B>-owner</B> 引き数を組み込まないでください。グループを所有して所有権を再度割り当てる必要があるからです。説明については、<A HREF="#HDRWQ757">グループの作成方法</A>を参照してください。
+<P>
+<PRE>   % <B>pts creategroup</B>  &lt;<VAR>group name</VAR>>
+</PRE>
+</LI><LI><B>pts adduser</B> コマンドを発行して、
+1 人または複数のメンバーをグループに追加します (他のグループを所有する前に、グループには、少なくとも 1 人のメンバーが既にいなければなりません)。詳細な説明については、<A HREF="#HDRWQ760">グループ・メンバーの追加および削除</A>を参照してください。
+<P>
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP> <B>-group</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>
+</PRE>
+</LI><LI><B>pts chown</B> コマンドを発行して、グループの所有権をそのグループ自体に割り当てます。詳細な説明については、<A HREF="#HDRWQ766">グループの所有者を変更する</A>を参照してください。
+<P>
+<PRE>   % <B>pts chown</B> &lt;<VAR>group name</VAR>> &lt;<VAR>new owner</VAR>>
+</PRE>
+</LI></OL>
+<P><H3><A NAME="HDRWQ759" HREF="auagd002.htm#ToC_611">接頭部を持たないグループの使用</A></H3>
+<P><B>system:administrators</B> のメンバーは、接頭部を持たないグループを作成することができます。このグループは、<I>グループ使用</I> (<A HREF="#HDRWQ756">グループの効果的な使用</A> で説明しています) に特に適しています。
+<P>たとえば、ABC Corporation の会計部長である、ユーザー <B>smith</B> が、同社の会計士全員を組み込むグループを作成し、そのグループを、部門レコードを収容しているディレクトリーの ACL に配置したと仮定します。通常グループではなく、接頭部を持たないグループを使用するのが適当である理由には、以下があげられます。
+<UL>
+<LI><B>smith</B> がグループを作成し、所有しているという事実は無関係です。また、通常グループは、<B>smith:acctg</B> と呼ばれなければなりません。<B>acctg</B> などのような接頭部名は、より適しています。
+</LI><LI>経理部長が <B>smith</B> から 別のユーザー (<B>jones</B>) に変わることがあれば、
+<B>jones</B> がそのグループの新規所有者にならなければなりません。通常グループの場合、
+<VAR>owner_name</VAR> 接頭部は自動的に <B>jones</B> に変更されますが、
+<VAR>owner_name</VAR> 内の変更は、そのグループが所有するどの通常グループにも伝搬しません。誰かが <B>pts rename</B> コマンドを使用して、各ユーザーの<VAR>owner_name</VAR> の接頭部を <B>smith</B> から <B>jones</B> に変更する必要があります。
+</LI></UL>
+<P>可能な解決策は、<B>acctg</B> という架空のユーザーに認証アカウントを作成し、そのユーザーを、<VAR>owner_name</VAR> の接頭部として <B>acctg</B> が付いている通常グループの所有者にすることです。ただし、<B>acctg</B> アカウントが他の目的にも使用されている場合、ユーザー <B>acctg</B> のパスワードを知る必要がある人数は、所有するグループを管理する必要がある人数より多くなります。
+<P><B>acctg</B> という名前の接頭部を持たないグループは、不適切な所有者名の問題を解決します。そのグループが所有するグループは、
+<VAR>owner_name</VAR> の接頭部が <B>acctg</B> であり、部長の名前を付けるよりもその目的が正確に反映されます。接頭部を持たないグループは、ダミーの認証アカウントよりも責任があります。グループに属すると、そのグループが ACL 上に所有しているアクセス権を個人個人が実行できますが、皆、ダミーのユーザー名よりも今まで通り自分の名前でタスクを実行します。グループが自己所有している場合でも、限られた人数だけがグループ記入項目を管理することができます。
+<HR><H2><A NAME="HDRWQ760" HREF="auagd002.htm#ToC_612">グループ・メンバーの追加および削除</A></H2>
+<P>ユーザーおよびマシンは、グループのメンバーであることができます。グループは他のグループに属することができません。新規に作成されたグループにはメンバーを持っていません。メンバーを追加するには、
+<B>pts adduser</B> コマンドを使用します。メンバーを削除するには<B>pts removeuser</B> コマンドを使用します。
+<A NAME="IDX7941"></A>
+<A NAME="IDX7942"></A>
+<A NAME="IDX7943"></A>
+<A NAME="IDX7944"></A>
+<A NAME="IDX7945"></A>
+<A NAME="IDX7946"></A>
+<A NAME="IDX7947"></A>
+<P><H3><A NAME="HDRWQ761" HREF="auagd002.htm#ToC_613">ユーザーおよびマシンをグループに追加するには</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。このグループからは、
+4 番目の (<B>a</B>) プライバシー・フラグの設定に関係なく、グループにメンバーを追加できます。デフォルトでは、グループの所有者も必要な特権を持っています。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts adduser</B> コマンドを発行して、1 つまたは複数のメンバーを 1 つまたは複数のグループに追加します。
+<P>
+<PRE>   % <B>pts adduser -user</B> &lt;<VAR>user name</VAR>><SUP>+</SUP> <B>-group</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>ad
+</B><DD>は、<B>adduser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-user
+</B><DD><B>-group</B> 引き数によって指定された各グループのメンバーとして追加する、各ユーザー名またはマシンの IP アドレスを指定します。グループは他のグループに属することができません。
+<P><DT><B><VAR>group name</VAR>
+</B><DD>新規メンバーを追加する各グループを指定します。
+</DL>
+</LI></OL>
+<A NAME="IDX7948"></A>
+<A NAME="IDX7949"></A>
+<A NAME="IDX7950"></A>
+<A NAME="IDX7951"></A>
+<A NAME="IDX7952"></A>
+<A NAME="IDX7953"></A>
+<A NAME="IDX7954"></A>
+<P><H3><A NAME="HDRWQ762" HREF="auagd002.htm#ToC_614">ユーザーまたはマシンをグループから削除するには</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> にグループに属することを確認します。このグループからは、
+4 番目の (<B>r</B>) プライバシー・フラグの設定に関係なく、グループからメンバーを削除できます。デフォルトでは、グループの所有者も必要な特権を持っています。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts removeuser</B> コマンドを発行して、1 つまたは複数のメンバーを 1 つまたは複数のグループから削除します。
+<P>
+<PRE>   % <B>pts removeuser -user</B>  &lt;<VAR>user name</VAR>><SUP>+</SUP>  <B>-group</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>rem
+</B><DD><B>removeuser</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-user
+</B><DD><B>-group</B> 引き数によって指定した各グループから削除する各ユーザーまたはマシンの IP アドレスを指定します。
+<P><DT><B>-group
+</B><DD>メンバーを削除する各グループを指定します。
+</DL>
+</LI></OL>
+<HR><H2><A NAME="HDRWQ763" HREF="auagd002.htm#ToC_615">保護データベース項目の削除</A></H2>
+<P>保護データベースのユーザー項目は、完全なユーザー・アカウントを削除しているときのみ削除することが最も良い方法です。<A HREF="auagd017.htm#HDRWQ658">uss delete コマンドによる個別アカウントの削除</A> で説明するように <B>uss delete</B> コマンドを使用するか、または<A HREF="auagd018.htm#HDRWQ715">ユーザー・アカウントの削除</A> で説明するように <B>pts delete</B> コマンドを使用します。
+<P>マシンおよびグループ項目を削除するには、この機能グループで説明するように、<B>pts delete</B> コマンドを使用します。オペレーションの結果は次のとおりです。
+<UL>
+<LI>マシン項目を削除すると、その名前 (IP アドレスのワイルドカード) がグループから削除されます。
+</LI><LI>グループ項目を削除すると、名前の代わりにその AFS GID が ACL 上に表示されます。このグループを作成したユーザーがもうそのグループを所有していなくでも、そのユーザーのグループ作成割り当て量が、1 つずつ増えます。
+<P>
+<P>使用されなくなった AFS ID を ACL から削除するには、
+<A HREF="auagd020.htm#HDRWQ795">古くなった AFS ID を ACL から除去する</A> で説明するように、<B>fs cleanacl</B> コマンドを使用します。
+</LI></UL>
+<A NAME="IDX7955"></A>
+<A NAME="IDX7956"></A>
+<A NAME="IDX7957"></A>
+<A NAME="IDX7958"></A>
+<A NAME="IDX7959"></A>
+<A NAME="IDX7960"></A>
+<A NAME="IDX7961"></A>
+<P><H3><A NAME="HDRWQ764" HREF="auagd002.htm#ToC_616">保護データベース項目を削除するには</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属する、または削除するグループを所有することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts delete</B> コマンドを発行して、保護データベースから 1 つまたは複数の項目を削除します。
+<P>
+<PRE>   % <B>pts delete</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>del
+</B><DD><B>delete</B> の受け入れ可能な最も短い省略形です。
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>削除する各マシンの IP アドレスまたは AFS UID 、あるいは削除する各グループの名前または AFS GID を指定します。
+</DL>
+</LI></OL>
+<A NAME="IDX7962"></A>
+<A NAME="IDX7963"></A>
+<HR><H2><A NAME="HDRWQ765" HREF="auagd002.htm#ToC_617">グループの所有者を変更する</A></H2>
+<P>ユーザーおよびマシン項目を作成するときに、保護サーバーは、その所有権を <B>system:administrators</B> グループに自動的に割り当てます。これは変更することができません。グループ項目の場合、所有権を変更できます。これにより、その所有権に対する管理責任を他のユーザーまたはグループに移すことができます (他のグループのグループ所有権については、<A HREF="#HDRWQ756">グループの効果的な使用</A> を参照してください)。
+<P>通常グループを作成するとき、グループの <VAR>owner_name</VAR> 接頭部は、<A HREF="#HDRWQ757">グループの作成方法</A> に説明するように、その所有者を正確に反映していなければなりません。
+<UL>
+<LI>所有者がユーザーである場合、<VAR>owner_name</VAR> はユーザー名である。
+</LI><LI>所有者が通常グループである場合、<VAR>owner_name</VAR> は、所有しているグループの <VAR>owner_name</VAR> 接頭部と一致していなければならない。
+</LI><LI>所有者が接頭部を持たないグループである場合、<VAR>owner_name</VAR> は、所有者のグループの名前でなければなりません。
+</LI></UL>
+<P>通常グループの所有者を変更するときは、保護サーバーは、その名前の <VAR>owner_name</VAR> 接頭部を自動的に適切に変更します。たとえば、ユーザー <B>pat</B> がグループ <B>terry:friends</B>の新規所有者になる場合、その名前は、保護データベースおよび ACL の両方で <B>pat:friends</B> に自動的に変わります。
+<P>ただし、保護サーバーは、そのグループが所有する通常サーバーの <VAR>owner_name</VAR> 接頭部をどれも自動的に変更しません。前の例の続きで、グループ <B>terry:friends</B> がグループ
+<B>terry:pals</B> を所有していると考えてください。<B>pat</B> が <B>terry:friends</B> の新規所有者になっても、
+<B>terry:pals</B> は変わりません。他のグループが所有する通常グループの <VAR>owner_name</VAR> 接頭部を変更する
+(この例では、グループ名を <B>pat:pals</B> に変更する) には、
+<A HREF="#HDRWQ767">保護データベース項目の名前の変更</A> で説明するように、<B>pts rename</B> コマンドを使用します。
+<A NAME="IDX7964"></A>
+<A NAME="IDX7965"></A>
+<A NAME="IDX7966"></A>
+<P><H3><A NAME="HDRWQ766" HREF="auagd002.htm#ToC_618">グループの所有者を変更する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属する、または所有者を変更するグループを所有することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>(オプション)</B> グループの所有者を別のグループ (またはそのグループ自身) に変更して、所有されたグループの管理特権を保存したい場合、ユーザーがその新規所有者グループに属していることを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="#HDRWQ749">グループ・メンバーシップを表示する</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership</B> &lt;<VAR>user or group name or id</VAR>>
+</PRE>
+<P>
+<P><A HREF="#HDRWQ761">ユーザーおよびマシンをグループに追加するには</A>に詳しく説明されているように、<B>pts adduser</B> コマンドを発行します。
+<P>
+<PRE>   % <B>pts adduser</B> &lt;<VAR>user name</VAR>> &lt;<VAR>group name</VAR>>
+</PRE>
+</LI><LI><B>pts chown</B> コマンドを発行して、グループの所有者を変更します。
+<P>
+<PRE>   % <B>pts chown</B> &lt;<VAR>group name</VAR>> &lt;<VAR>new owner</VAR>>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>cho
+</B><DD>は、<B>chown</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>group name</VAR>
+</B><DD>そのグループの現在の名前を指定します。
+<P><DT><B><VAR>new owner</VAR>
+</B><DD>そのグループの所有者になるユーザーまたはグループを指定します。
+</DL>
+</LI><LI>(<B>オプション)</B>。<B>pts listowned</B> コマンドを発行して、ユーザーが所有する任意のグループを表示します。この機能グループの概説で説明したように、<B>pts chown</B> コマンドは、グループが所有する通常サーバーの <VAR>owner_name</VAR> 接頭部をどれも自動的に変更しません。
+<P>
+<PRE>   % <B>pts listowned</B> &lt;<VAR>user or group name or id</VAR>>
+</PRE>
+<P>
+<P>接頭部を新規に所有するグループに一致させて変更したい場合は、
+<A HREF="#HDRWQ768">マシンまたはグループ項目の名前を変更するには</A> で説明するように、<B>pts rename</B> コマンドを 1 つごとに使用します。
+<P>
+<PRE>   % <B>pts rename</B> &lt;<VAR>old name</VAR>> &lt;<VAR>new name</VAR>>
+</PRE>
+</LI></OL>
+<A NAME="IDX7967"></A>
+<A NAME="IDX7968"></A>
+<A NAME="IDX7969"></A>
+<A NAME="IDX7970"></A>
+<A NAME="IDX7971"></A>
+<HR><H2><A NAME="HDRWQ767" HREF="auagd002.htm#ToC_619">保護データベース項目の名前の変更</A></H2>
+<P>保護データベース項目の名前を変更するには、<B>pts rename</B> コマンドを使用します。ユーザー項目の名前は、ユーザー・アカウント全体の名前を変更するときにのみ変更するのが最も良い方法です。アカウントの非常に多くのコンポーネント
+(認証データベース項目、ボリューム名、ホーム・ディレクトリーのマウント・ポイントなど) がその名前を共有しているからです。説明については、<A HREF="auagd018.htm#HDRWQ709">ユーザー名の変更</A>を参照してください。マシン項目の名前は、1 つまたは複数のマシンの実際の IP アドレスにマップするので、項目の名前の変更は、IP アドレスが変更された場合にのみ適切です。
+<P>その場合は、最も頻繁にグループ名の変更が必要なときです。可能な名前変更のタイプを以下に示します。
+<UL>
+<LI>通常グループの名前を別のグループの名前に変更する。このタイプの変更に共通する理由は、グループの<B>pts chown</B> コマンドを使用して所有者を変更したことです。このオペレーションでは、名前が変更されたグループに所有される通常グループの <VAR>owner_name</VAR> 接頭部は変更されません。したがって、<B>pts rename</B> コマンドを使用して、適切に変更する必要があります。たとえば、ユーザー <B>pat</B> が <B>terry:friends</B> グループの所有者になると、その名前は、自動的に <B>pat:friends</B> に変更されますが、このユーザーが所有するグループの名前 <B>terry:pals</B> は変更されません。<B>pts rename</B> コマンドを使用して、
+<B>terry:pals</B> を <B>pat:pals</B> に名前変更します。保護サーバーは、実際の所有権を反映しない <VAR>owner_name</VAR> 接頭部への変更を受け入れません
+(<B>terry:pals</B> を <B>smith:pals</B> に変更することはできません)。
+<P>
+<P><B>pts rename</B> コマンドを使用して、<VAR>owner_name</VAR> 接頭部を変更または変更なしで、通常グループ名の <VAR>group_name</VAR> 部分を変更することもできます。
+<P>
+<P>ただし、グループの所有者および <B>system:administrators</B> グループのメンバーは、その名前を別の通常グループの名前に変更することができます。
+</LI><LI>通常グループの名前を接頭部を持たないグループの名前に変更する。グループの名前をこの方法で変更する場合、
+<B>pts rename</B> コマンドを使用して、そのグループが所有するすべての通常グループの名前も変更する必要があります。
+<B>system:administrators</B> グループのメンバーだけがこのタイプの名前変更を行うことができます。
+</LI><LI>接頭部を持たないグループの名前を別の接頭部を持たないグループの名前に変更する。他の名前の変更と同様に、接頭部を持たないグループが所有する通常グループの <VAR>owner_name</VAR> 接頭部はいずれも自動的には変更されません。整合性を保つには、これに <B>pts rename</B> コマンドを発行する必要があります。
+<P>
+<P>グループの所有者および <B>system:administrators</B> グループのメンバーは、どちらも、その名前を別の接頭部を持たないグループの名前に変更することができます。
+</LI><LI>接頭部を持たないグループの名前を通常グループの名前に変更する。新規の名前の <VAR>owner</VAR> 接頭部は、必ずそのグループの所有権を正確に反映していなければなりません。他の名前の変更と同様に、接頭部を持たないグループが所有する通常グループの <VAR>owner_name</VAR> 接頭部はいずれも自動的には変更されません。整合性を保つには、これに <B>pts rename</B> コマンドを発行する必要があります。
+<P>
+<P><B>system:administrators</B> グループのメンバーだけがこのタイプの名前変更を行うことができます。
+</LI></UL>
+<A NAME="IDX7972"></A>
+<A NAME="IDX7973"></A>
+<P><H3><A NAME="HDRWQ768" HREF="auagd002.htm#ToC_620">マシンまたはグループ項目の名前を変更するには</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts rename</B> コマンドを発行して、項目の名前を変更します。
+<P>
+<PRE>   % <B>pts rename</B> &lt;<VAR>old name</VAR>> &lt;<VAR>new name</VAR>>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>ren
+</B><DD><B>rename</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>old name</VAR>
+</B><DD>項目の現在の名前を指定します。
+<P><DT><B><VAR>new name</VAR>
+</B><DD>新規の名前を指定します。通常グループに対する新規の名前である場合、<VAR>owner_name</VAR> 接頭部は、所有者を正しく示していなければなりません。
+</DL>
+</LI></OL>
+<A NAME="IDX7974"></A>
+<A NAME="IDX7975"></A>
+<A NAME="IDX7976"></A>
+<A NAME="IDX7977"></A>
+<A NAME="IDX7978"></A>
+<A NAME="IDX7979"></A>
+<HR><H2><A NAME="HDRWQ769" HREF="auagd002.htm#ToC_621">グループ作成割り当て量の設定</A></H2>
+<P>システム資源の濫用を防ぐため、保護サーバーは、
+<I>グループ作成割り当て量</I> を課して、ユーザーがあとどれだけグループを作成できるかを制限します。新規ユーザー項目が作成されるとき、割り当て量は 20 ですが、<B>system:administrators</B> グループのメンバーは、
+<B>pts setfields</B> コマンドを発行して、割り当て量をいつでも増加または減少させることができます。
+<P>マシンまたはグループ項目に対する割り当て量を変更するのは、無意味です。グループまたはマシンとして認証して、その後グループを作成することはできません。
+<P>グループ作成割り当て量を表示するには、<A HREF="#HDRWQ748">保護データベース項目を表示する</A> で説明するように、
+<B>pts examine</B> コマンドを使用して、ユーザー項目の <TT>グループ割り当て量</TT>フィールドを表示します。
+<A NAME="IDX7980"></A>
+<A NAME="IDX7981"></A>
+<P><H3><A NAME="Header_622" HREF="auagd002.htm#ToC_622">グループ作成割り当て量を設定する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts setfields</B> コマンドを発行して、1 つまたは複数の各ユーザーがあといくつグループを作成できるかを指定します。
+<P>
+<PRE>  % <B>pts setfields -nameorid</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP>  \
+                  <B>-groupquota</B> &lt;<VAR>set limit on group creation</VAR>>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>setf
+</B><DD>は、<B>setfields</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-nameorid
+</B><DD>は、グループ作成割り当て量を設定する各ユーザーの名前または AFS UID を指定します。
+<P><DT><B>-groupquota
+</B><DD>各ユーザーが、既存のグループに加えて作成できるグループの数を定義します(言いかえると、既にあるグループは割り当て量に不利になりません)。指定した値は、現在の値に加算されるのではなく、現在の値に上書きされます。
+</DL>
+</LI></OL>
+<A NAME="IDX7982"></A>
+<A NAME="IDX7983"></A>
+<A NAME="IDX7984"></A>
+<A NAME="IDX7985"></A>
+<A NAME="IDX7986"></A>
+<A NAME="IDX7987"></A>
+<HR><H2><A NAME="HDRWQ770" HREF="auagd002.htm#ToC_623">データベース項目のプライバシー・フラグを設定</A></H2>
+<P><B>system:administrators</B> グループのメンバーは、保護データベース項目を常にどのようにでも表示および管理することができます。通常ユーザーは、その独自の項目およびそのユーザーが所有する任意のグループ項目を表示および管理することができます。保護データベース項目の<I>プライバシー・フラグ</I> は、他のユーザーが項目から特定の情報を表示できるか、およびグループ内のメンバーを追加および削除できるかを指定します。
+<P>フラグを表示するには、<B>pts examine</B> コマンドを使用します (<A HREF="#HDRWQ748">保護データベース項目を表示する</A> を参照)。フラグは、出力の <TT>flags</TT> フィールドに表示されます。フラグを設定するには、<B>pts setfields</B> コマンドに <B>-access</B> 引き数を組み込みます。
+<P>常に、5 つのフラグが表示され、常に、以下の順序で設定しなければなりません。
+<DL>
+<P><DT><B>s
+</B><DD>項目を表示する <B>pts examine</B> コマンドを発行できるユーザーを制御します。
+<P><DT><B>o
+</B><DD>ユーザーまたはグループが所有するグループを表示する
+<B>pts listowned</B> コマンドを発行できるユーザーを制御します。
+<P><DT><B>m
+</B><DD>ユーザーまたはマシンが属しているグループ、またはどのユーザーまたはマシンがグループに属しているかを表示するために
+<B>pts membership</B> コマンドを発行できるユーザーを制御します。
+<P><DT><B>a
+</B><DD>ユーザーまたはマシンをグループに追加するために <B>pts adduser</B> コマンドを発行できるユーザーを制御します。これは、グループに対してのみ意味を持ちますが、ユーザーおよびマシン項目についても常に値を設定する必要があります。
+<P><DT><B>r
+</B><DD>ユーザーまたはマシンをグループから削除するために
+<B>pts removeuser</B> コマンドを発行できるユーザーを制御します。これは、グループに対してのみ意味を持ちますが、ユーザーおよびマシン項目についても常に値を設定する必要があります。
+</DL>
+<P>各フラグは、3 つのタイプの値を使用して、さまざまなユーザーのセットが、対応するコマンドを発行できるようにします。
+<UL>
+<LI>ハイフン (<B>-</B>) は、<B>system:administrators</B> グループのメンバーおよび項目の所有者を示します。ユーザー項目の場合、ハイフンは追加のユーザーを示します。
+</LI><LI>英小文字は、グループにのみ効果的に適用され、ハイフンで示される個々のメンバーに追加するグループのメンバーを示します。
+</LI><LI>英大文字は、全員を示します。
+</LI></UL>
+<P>たとえば、グループ項目に対するフラグ <TT>SOmar</TT> は、誰でもグループの項目を調べることができ、それが所有するグループを表示することができるということ、およびそのグループのメンバーだけがそのメンバーを表示、追加、または削除できるということを示します。
+<P>ユーザーおよびマシン項目に対するデフォルトのプライバシーは、<TT>S----</TT> です。これは、誰でもその項目を表示できることを意味します。その他の機能を実行する権限は、
+<B>system:administrators</B> グループのメンバーおよびその項目の所有者に制限されます (ユーザー項目のユーザーと同様に)。
+<P>グループ項目に対するデフォルトのプライバシーは、<TT>S-M--</TT> です。これは、すべてのユーザーが項目を表示し、グループのメンバーを表示できることを意味しますが、その他の機能を実行できるのは、項目の所有者および<B>system:administrators</B> グループのメンバーだけです。
+<A NAME="IDX7988"></A>
+<A NAME="IDX7989"></A>
+<P><H3><A NAME="Header_624" HREF="auagd002.htm#ToC_624">保護データベース項目のプライバシー・フラグを設定する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><B>pts setfields</B> コマンドを発行して、プライバシー・フラグを設定します。
+<P>
+<PRE>   % <B>pts setfields</B> &lt;<VAR>user or group name or id</VAR>><SUP>+</SUP> <B>-access</B> &lt;<VAR>set privacy flags</VAR>>
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>setf
+</B><DD>は、<B>setfields</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B><VAR>user or group name or id</VAR>
+</B><DD>プライバシー・フラグを設定する、各ユーザーの名前または AFS UID、各マシンの IP アドレスまたは AFS UID、あるいは各グループの名前または AFS GID を指定します。
+<P><DT><B>-access
+</B><DD>各項目に対応するようなプライバシー・フラグの設定を指定します。以下の制約に従い、5 つの各フラグに値を指定します。
+<UL>
+<LI>4 番目と 5 番目のフラグはユーザーおよびマシン項目には意味を持たないが、
+5 つのフラグすべてに値を指定する。
+</LI><LI>自己所有グループの場合、ハイフンは英小文字に相当するものとして解釈されます。自己所有グループのメンバーがすべて英小文字を持つからです。
+</LI><LI>最初のフラグには、英小文字 <B>s</B> または英大文字
+<B>S</B> のみを設定する。ユーザーおよびマシン記入項目に関しては、保護サーバーは、英小文字の <B>s</B> はハイフンと同じものとして解釈します。
+</LI><LI>2 番目のフラグには、ハイフン (<B>-</B>) または英大文字
+<B>O</B> のみを設定する。グループの場合、保護サーバーは、ハイフンを英小文字 <B>o</B> (すなわち、グループのメンバーは常にそのグループが所有するグループをリストできる) として解釈します。
+</LI><LI>3 番目のフラグにはハイフン (<B>-</B>)、英小文字 <B>m</B>、または英大文字 <B>M</B> を設定する。ユーザーおよびマシン項目に関しては、メンバーを持たないので、英小文字 <B>m</B> は意味のある解釈がありません。
+</LI><LI>4 番目のフラグには、ハイフン (<B>-</B>)、英小文字 <B>a</B>、または英大文字 <B>A</B> を設定する。このフラグはユーザーおよびマシン項目に関しては意味のある解釈がありませんが (これらの項目はメンバーを持たないため)、できればハイフンに設定してください。
+</LI><LI>5 番目のフラグには、ハイフン (<B>-</B>) または小文字の <B>r</B> のみを設定する。このフラグはユーザーおよびマシン項目に関しては意味のある解釈がありませんが (これらの項目はメンバーを持たないため)、できればハイフンに設定してください。
+</LI></UL>
+</DL>
+</LI></OL>
+<A NAME="IDX7990"></A>
+<A NAME="IDX7991"></A>
+<A NAME="IDX7992"></A>
+<A NAME="IDX7993"></A>
+<HR><H2><A NAME="HDRWQ771" HREF="auagd002.htm#ToC_625">AFS UID および GID カウンターの表示および設定</A></H2>
+<P><B>pts createuser</B> コマンドを使用して、保護データベースにユーザーまたはマシン項目を作成するとき、保護サーバーは、AFS ユーザー ID (AFS UID) をデフォルトで自動的に項目に割り振ります。同様に、
+<B>pts creategroup</B> コマンドによって作成する各グループ項目に対しても、デフォルトで、
+AFS グループ ID (AFS GID) を割り振ります。保護データベースは、次に使用可能な AFS UID (正の整数) および AFS GID (負の整数) を、それぞれ、<TT>max user id</TT> および <TT>max group id</TT> カウンターによって追跡します。
+<P><B>system:administrators</B> グループのメンバーは、
+<B>-id</B> 引き数をいずれかの<B>pts</B> 作成コマンドに組み込み、新規ユーザー、マシン、またはグループに特定の ID を割り当てることができます。
+<A HREF="auagd017.htm#HDRWQ611">一致する AFS と UNIX UID の割り当て</A> で説明するように、既存の UNIX アカウントを持つユーザーに対して AFS アカウントを作成するとき、
+AFS UID を明示的に割り当てると効果的であることがよくあります。また、部門提携 (たとえば、300 から 399 までのAFS UID をある部門のメンバーに割り当て、
+400 から 499 までのAFS UID を別の部門に割り当てる、など) に対応する ID の範囲を設定したい場合にも便利です。
+<P>カウンターの現在の値を表示するには、<B> pts listmax</B> コマンドを使用します。次にユーザーまたはマシン項目を作成するときに AFS UID を指定しないと、保護サーバーは、
+<TT>max user id</TT> カウンターを 1 ずつ増分して、その値を新規項目に割り当てます。新規グループを作成するときに AFS GID を指定しないと、保護サーバーは、
+<TT>max group id</TT> カウンターを 1 ずつ減分して (負の数が大きくなります)、その値を新規グループに割り当てます。
+<P>いずれか一方または両方のカウンター値を、以下の 2 つの方法のうち 1 つを使用して変更することができます。
+<UL>
+<LI>直接、<B>pts setmax</B> コマンドを使用する。
+</LI><LI>間接的に、<B>pts createuser</B> コマンドに <B>-id</B> 引き数を使用して、
+<TT>max user id</TT> カウンターよりも大きい AFS UID を割り当てることによって、または
+<B>pts creategroup</B> コマンドに <B>-id</B> 引き数を使用して、
+<TT>max group id</TT> カウンターより小さい (より負) AFS GID を割り当てることによって変更する。どちらの場合も、保護サーバーは、カウンターを <B>-id</B> 引き数の値に変更します。管理者が<B>pts setmax</B> コマンドを使用して古い値に戻さない限り、保護サーバーは、カウンターの古い値と新規の値の間の ID を使用することはありません。
+<P>
+<P><B>-id</B> 引き数によって指定した値が、<TT>max user id</TT> カウンターより小さい場合、または <TT>max group id</TT> カウンターより大きい (より負) 場合、カウンターは変更されません。
+</LI></UL>
+<A NAME="IDX7994"></A>
+<A NAME="IDX7995"></A>
+<A NAME="IDX7996"></A>
+<A NAME="IDX7997"></A>
+<A NAME="IDX7998"></A>
+<A NAME="IDX7999"></A>
+<P><H3><A NAME="HDRWQ772" HREF="auagd002.htm#ToC_626">AFS ID カウンターを表示する</A></H3>
+<OL TYPE=1>
+<LI><B>pts listmax</B> コマンドを発行して、カウンターを表示します。
+<P>
+<PRE>   % <B>pts listmax</B>
+</PRE>
+<P>
+<P>ここで、<B>listm</B> は、<B>listmax</B> の受け入れ可能な省略形です。
+</LI></OL>
+<P>以下の例は、出力の形式を示しています。この場合、次に自動的に割り当てられる AFS UID は 5439 で、AFS GIDは -469 となります。
+<PRE>   % <B>pts listmax</B>
+   Max user id is 5438 and max group id is -468.
+</PRE>
+<A NAME="IDX8000"></A>
+<A NAME="IDX8001"></A>
+<A NAME="IDX8002"></A>
+<A NAME="IDX8003"></A>
+<A NAME="IDX8004"></A>
+<A NAME="IDX8005"></A>
+<A NAME="IDX8006"></A>
+<A NAME="IDX8007"></A>
+<A NAME="IDX8008"></A>
+<A NAME="IDX8009"></A>
+<A NAME="IDX8010"></A>
+<P><H3><A NAME="Header_627" HREF="auagd002.htm#ToC_627">AFS ID カウンターを設定する</A></H3>
+<OL TYPE=1>
+<LI><B>system:administrators</B> グループに属することを確認します。必要な場合には、<B>pts membership</B> コマンドを発行してください。このコマンドの詳細は、<A HREF="auagd021.htm#HDRWQ810">system:administrators グループのメンバーの表示</A> を参照してください。
+<P>
+<PRE>   % <B>pts membership system:administrators</B>
+   
+</PRE>
+</LI><LI><TT>max user id</TT> カウンター、<TT>max group id</TT> カウンター (あるいはその両) を設定するには、<B>pts setmax</B> コマンドを発行します。
+<P>
+<PRE>   % <B>pts setmax</B> [<B>-group</B> &lt;<VAR>group max</VAR>>] [<B>-user</B> &lt;<VAR>user max</VAR>>]
+</PRE>
+<P>
+<P>ここで、
+<P>
+<DL>
+<P><DT><B>setm
+</B><DD>は、<B>setmax</B> の最も短い受け入れ可能な省略形です。
+<P><DT><B>-group
+</B><DD>保護サーバーが次のグループ項目に割り当てる予定の AFS GID よりも 1 大きい整数 (より負) を指定します。値は負の整数ですから、ハイフン (<B>-</B>) が先頭に付きます。
+<P><DT><B>-user
+</B><DD>保護サーバーが次のユーザーまたはマシン項目に割り当てる予定の AFS UID よりも 1 少ない整数 (より負) を指定します。
+</DL>
+</LI></OL>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auagd018.htm">前ページ</A> &#124; <A HREF="auagd020.htm">次ページ</A> &#124; <A HREF="auagd002.htm#ToC">目次</A> &#124; <A HREF="auagd026.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved<!-- 991224 --> 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,591 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client"
+
+#define AFS_VERINFO_NAME "afscreds"
+#define AFS_VERINFO_FILENAME "afscreds.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "afscreds.ico"
+IDI_CREDS_NO            ICON    DISCARDABLE     "creds_3.ico"
+IDI_CREDS_SOME          ICON    DISCARDABLE     "creds_2.ico"
+IDI_CREDS_YES           ICON    DISCARDABLE     "creds_1.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOG DISCARDABLE  0, 0, 307, 131
+STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS クライアント"
+CLASS "AfsCreds"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    RTEXT           "AFS バージョン %s (パッチ %lu)",IDC_TITLE_VERSION,152,
+                    19,146,8
+    LTEXT           "現在、次の名前で Windows Networking に ログオンしています。""%s""",
+                    IDC_TITLE_NT,7,5,293,8
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,29,293,97
+END
+
+IDD_TAB_CREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "セル:     ",IDC_STATIC,7,9,24,8
+    LTEXT           "(なし)",IDC_CREDS_CELL,51,9,231,8
+    LTEXT           "トークン:",IDC_STATIC,7,26,34,8
+    LTEXT           "(なし)",IDC_CREDS_INFO,51,26,231,8
+    CONTROL         "これらのトークンの期限切れ前に警告を表示(&S)",
+                    IDC_CREDS_REMIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    51,43,193,10
+    PUSHBUTTON      "新規トークンの取得(&O)...",IDC_CREDS_OBTAIN,21,63,98,14
+    PUSHBUTTON      "これらのトークンを破棄(&D)",IDC_CREDS_DESTROY,122,63,
+                    109,14
+    PUSHBUTTON      "ヘルプ",9,237,63,45,14
+END
+
+IDD_TAB_NOCREDS DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "どの AFS セル内にもトークンがありません。",IDC_RUNNING,
+                    7,9,155,8
+    LTEXT           "AFS クライアントが正しく構成されていないか、または AFS クライアント・サービスが実行されていません。\n\n「拡張」タブを使用して AFS クライアント・サービスを開始してください。",
+                    IDC_STOPPED,7,23,275,34
+    PUSHBUTTON      "ヘルプ",9,237,63,45,14
+    PUSHBUTTON      "新規トークンの取得(&O)...",IDC_CREDS_OBTAIN,51,63,98,14
+END
+
+IDD_TAB_ADVANCED DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "(照会中...)",IDC_SERVICE_STATUS,7,7,275,14
+    PUSHBUTTON      "サービスの開始(&S)",IDC_SERVICE_START,13,28,77,14
+    PUSHBUTTON      "サービスの停止(&T)",IDC_SERVICE_STOP,91,28,77,14
+    PUSHBUTTON      "AFS クライアントの構成(&C)",IDC_OPEN_CPL,169,28,109,14
+    CONTROL         "このコンピューターの再始動時に AFS クライアント・サービスを開始(&R)",
+                    IDC_SERVICE_AUTO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    51,268,10
+    CONTROL         "常にタスクバーに AFS クライアント・アイコンを表示(&A)",
+                    IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,65,
+                    220,10
+    PUSHBUTTON      "ヘルプ",9,237,63,45,14
+END
+
+IDD_NEWCREDS DIALOG DISCARDABLE  0, 0, 232, 127
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "新規 AFS トークンの取得"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "新規 AFS トークンを取得するには、AFS アカウントの AFS ユーザー名とパスワードを入力してください。複数 AFS セルにトークンを同時に持つことができます。",
+                    IDC_STATIC,7,7,218,24
+    LTEXT           "AFS セル(&C):",IDC_STATIC,23,42,53,8
+    EDITTEXT        IDC_NEWCREDS_CELL,87,40,132,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "ユーザー名(&N):",IDC_STATIC,23,60,53,8
+    EDITTEXT        IDC_NEWCREDS_USER,87,58,97,14,ES_AUTOHSCROLL
+    LTEXT           "パスワード(&P):",IDC_STATIC,23,78,53,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,87,76,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,69,106,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,122,106,50,14
+    PUSHBUTTON      "ヘルプ",9,175,106,50,14
+END
+
+IDD_NEWCREDS_EXPIRE DIALOG DISCARDABLE  0, 0, 232, 155
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "新規 AFS トークンの取得"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "新規 AFS トークンを取得するには、AFS アカウントの AFS ユーザー名とパスワードを入力してください。複数 AFS セルにトークンを同時に持つことができます。",
+                    IDC_STATIC,7,32,218,24
+    LTEXT           "AFS セル(&C):",IDC_STATIC,23,70,57,8
+    EDITTEXT        IDC_NEWCREDS_CELL,87,68,132,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "ユーザー名(&N):",IDC_STATIC,23,88,57,8
+    EDITTEXT        IDC_NEWCREDS_USER,87,86,97,14,ES_AUTOHSCROLL
+    LTEXT           "パスワード(&P):",IDC_STATIC,23,106,57,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,87,104,97,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "%1 セル内のトークンの有効期限がまもなく切れます。",
+                    IDC_NEWCREDS_TITLE,7,7,218,18
+    DEFPUSHBUTTON   "了解",IDOK,69,134,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,122,134,50,14
+    PUSHBUTTON      "ヘルプ",9,175,134,50,14
+END
+
+IDD_TAB_MOUNT DIALOG DISCARDABLE  0, 0, 289, 81
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "以下のドライブ名の AFS 内のパスへのマッピングを選択しました:",
+                    IDC_TITLE,7,8,275,8
+    PUSHBUTTON      "追加(&A)...",IDC_ADD,51,63,45,14
+    PUSHBUTTON      "変更(&C)...",IDC_EDIT,99,63,45,14
+    PUSHBUTTON      "削除(&R)",IDC_REMOVE,147,63,45,14
+    CONTROL         "",IDC_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x1d3,51,21,231,37
+    PUSHBUTTON      "ヘルプ",9,237,63,45,14
+END
+
+IDD_WIZARD DIALOGEX 0, 0, 346, 153
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS クライアント・ウィザード"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "次へ(&N) >",IDNEXT,229,132,50,14
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,281,132,50,14
+    CONTROL         "",IDC_LHS,"Static",SS_BLACKFRAME,7,7,76,112
+    CONTROL         "",IDC_RHS,"Static",SS_BLACKFRAME,91,7,240,112
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,125,324,1
+    PUSHBUTTON      "ヘルプ(&H)",9,125,132,50,14
+    PUSHBUTTON      "< 戻る(&B)",IDBACK,177,132,50,14
+END
+
+IDD_WIZ_START DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS クライアント・サービスがまだ開始されていません。",
+                    IDC_STATIC,0,5,209,8
+    LTEXT           "AFS クライアント・サービスを開始するには、「次へ」をクリックしてください。",
+                    IDC_STATIC,0,73,233,8
+    LTEXT           "AFS クライアント・サービスが実行されるまで、AFS に保管されているファイルは使用できません。",
+                    IDC_STATIC,0,17,233,17
+    LTEXT           "AFS クライアント・サービスを停止したままにするには、「取消し」をクリック。",
+                    IDC_STATIC,0,86,233,10
+END
+
+IDD_WIZ_CREDS DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS クライアント・サービスは実行されていますが、AFS を使用するためのトークンをまだ取得していません。",
+                    IDC_STATIC,0,3,173,20
+    CONTROL         "いずれのセルにもトークンを取得しない",IDC_NOCREDS,
+                    "Button",BS_AUTORADIOBUTTON,10,27,155,10
+    CONTROL         "次のセルのトークンを取得:",IDC_YESCREDS,"Button",
+                    BS_AUTORADIOBUTTON,10,41,141,10
+    LTEXT           "AFS セル(&C):",IDC_STATIC,14,60,57,8
+    EDITTEXT        IDC_NEWCREDS_CELL,77,58,96,14,ES_LOWERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "ユーザー名(&N):",IDC_STATIC,14,78,57,8
+    EDITTEXT        IDC_NEWCREDS_USER,77,76,96,14,ES_AUTOHSCROLL
+    LTEXT           "パスワード(&P):",IDC_STATIC,13,96,57,8
+    EDITTEXT        IDC_NEWCREDS_PASSWORD,77,93,96,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+END
+
+IDD_WIZ_STARTING DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "お待ちください。AFS クライアント・サービスを開始中です...",
+                    IDC_START_TRY,0,25,240,8
+    LTEXT           "AFS クライアント・サービスを開始できませんでした。\n\nネットワーク設定を確認し、またコントロール・パネルの AFS アイコンを使用して、このコンピューター上の AFS クライアントの構成を確認してください。",
+                    IDC_START_FAIL,0,25,240,51
+END
+
+IDD_WIZ_MOUNT DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS に保管されたファイルにアクセスするには、AFS 内のパスにドライブ名をマッピングする必要があります。",
+                    IDC_STATIC,3,4,223,16
+    CONTROL         "ドライブ名を AFS のパスにマッピングしない(&D)",
+                    IDC_NOMAP,"Button",BS_AUTORADIOBUTTON,10,25,189,10
+    CONTROL         "少なくとも 1 つのドライブ名を AFS のパスにマッピング(&M):",
+                    IDC_YESMAP,"Button",BS_AUTORADIOBUTTON,9,40,230,10
+    LTEXT           "ドライブ名(&L):",IDC_STATIC,34,58,56,8
+    COMBOBOX        IDC_MAP_LETTER,97,56,48,125,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS パス(&P):",IDC_STATIC,34,76,50,8
+    EDITTEXT        IDC_MAP_PATH,97,74,96,14,ES_AUTOHSCROLL
+    LTEXT           "記述(&E):",IDC_STATIC,34,94,33,8
+    EDITTEXT        IDC_MAP_DESC,97,92,60,14,ES_AUTOHSCROLL
+END
+
+IDD_TERMINATE DIALOGEX 0, 0, 291, 117
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS クライアント"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "アイコンの削除(&R)",IDOK,147,95,77,14
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,234,95,50,14
+    LTEXT           "AFS クライアント・アイコンをコンピューターのタスクバーから削除するよう選択しました。AFS クライアント・アイコンがコンピューターのタスクバーにない場合、AFS は AFS トークンの期限切れが近づいても警告を出せません。",
+                    IDC_STATIC,7,4,277,26
+    LTEXT           "AFS クライアント・サービスは現在実行中です。必要ならいま停止できます。",
+                    IDC_STATIC,7,38,279,12
+    CONTROL         "AFS クライアント・サービスを実行させておく(&L)",
+                    IDC_LEAVE,"Button",BS_AUTORADIOBUTTON,26,53,193,10
+    CONTROL         "AFS クライアント・サービスを停止する(&S)",IDC_STOP,
+                    "Button",BS_AUTORADIOBUTTON,26,67,170,10
+    CONTROL         "コンピューターの再始動時にアイコンを表示(&H)",
+                    IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,83,
+                    186,10
+END
+
+IDD_TERMINATE_SMALL DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS クライアント"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "アイコンの削除(&R)",IDOK,153,46,77,14
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,234,46,50,14
+    LTEXT           "AFS クライアント・アイコンをコンピューターのタスクバーから削除するよう選択しました。AFS クライアント・アイコンがコンピューターのタスクバーにない場合、AFS は AFS トークンの期限切れが近づいても警告を出せません。",
+                    -1,7,5,277,26
+    CONTROL         "コンピューターの再始動時にアイコンを表示(&H)",
+                    IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,35,
+                    160,10
+END
+
+IDD_TERMINATE_SMALL_95 DIALOGEX 0, 0, 291, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "AFS Light"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "アイコンの削除(&R)",IDOK,154,53,77,14
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,234,53,50,14
+    LTEXT           "AFS Light アイコンをコンピューターのタスクバーから削除することを選択しました。AFS Light アイコンがコンピューターのタスクバーにない場合、AFS は AFS トークンの期限切れが近づいても警告を出せません。",
+                    -1,7,7,277,25
+    CONTROL         "コンピューターの再始動時にアイコンを表示(&H)",
+                    IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,41,
+                    186,10
+END
+
+IDD_WIZ_MOUNTING DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "選択した 1 つまたは複数のドライブ名を AFS 内の適切なパスにマッピングできませんでした。\n\nすでに AFS 内のパスの使用しようとしているアプリケーションをクローズする必要がある可能性があります。",
+                    IDC_MAP_FAIL,0,26,240,41
+    LTEXT           "お待ちください。ドライブ名を AFS 内のパスにマッピング中です...",
+                    IDC_MAP_TRY,0,33,240,8
+END
+
+IDD_WIZ_FINISH DIALOG DISCARDABLE  0, 0, 240, 112
+STYLE DS_CONTROL | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS クライアントは使用の準備ができました。",IDC_STATIC,
+                    0,0,173,8
+    LTEXT           "このウィザードのクローズには、「終了」をクリック。",
+                    IDC_STATIC,0,73,200,8
+END
+
+IDD_MAPPING DIALOG DISCARDABLE  0, 0, 275, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "ドライブ名のマッピング"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "コンピューターのドライブ名を AFS 内のパスにマッピングできます。\n\nたとえば、Q: を \\afs\\acme.com\\usr\\bob としてマッピングすると、AFS で \\afs\\acme.com\\usr\\bob\\* として使用可能なファイルは Q:\\ で可視になります。",
+                    IDC_STATIC,7,7,261,36
+    LTEXT           "ドライブ名(&L):",IDC_STATIC,23,53,49,8
+    COMBOBOX        IDC_MAP_LETTER,83,51,56,162,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "AFS パス(&P):",IDC_STATIC,23,70,49,8
+    EDITTEXT        IDC_MAP_PATH,83,68,178,13,ES_AUTOHSCROLL
+    LTEXT           "記述(&E):",IDC_STATIC,23,88,49,8
+    EDITTEXT        IDC_MAP_DESC,83,86,60,13,ES_AUTOHSCROLL
+    CONTROL         "ログオン時にこのマッピングを復元(&R)",
+                    IDC_MAP_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    73,109,154,10
+    DEFPUSHBUTTON   "了解",IDOK,112,131,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,165,131,50,14
+    PUSHBUTTON      "ヘルプ",9,218,131,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 126
+    END
+
+    IDD_TAB_CREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_NOCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_TAB_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_NEWCREDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+
+    IDD_NEWCREDS_EXPIRE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+
+    IDD_TAB_MOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 282
+        TOPMARGIN, 9
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 331
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 146
+    END
+
+    IDD_WIZ_START, DIALOG
+    BEGIN
+        RIGHTMARGIN, 233
+    END
+
+    IDD_WIZ_MOUNT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 239
+    END
+
+    IDD_TERMINATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 110
+    END
+
+    IDD_TERMINATE_SMALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 284
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_MAPPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 268
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 145
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_TRAYICON MENU DISCARDABLE 
+BEGIN
+    MENUITEM "トークンの表示(&S)...",       M_ACTIVATE
+    MENUITEM "期限切れ前に警告(&W)",        M_REMIND, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "アイコンの削除(&R)...",          M_TERMINATE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WIZ16               BITMAP  DISCARDABLE     "wiz16.bmp"
+IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOOLTIP             "AFS クライアント"
+    IDS_TOOLTIP_95          "AFS Light"
+    IDS_CREDENTIALS         "トークン"
+    IDS_UNKNOWN             "(不明)"
+    IDS_ADVANCED            "拡張"
+    IDS_CREDS               "%1   (トークンの期限切れ %2)"
+    IDS_NO_CREDS            "(このセルにトークンがありません)"
+    IDS_SERVICE_BROKEN      "AFS クライアント・サービスが正しくインストールされていないか、またはその状況を照会する権限を持っていません。"
+    IDS_SERVICE_RUNNING     "AFS クライアント・サービスは正常に実行されています。"
+    IDS_SERVICE_STOPPED     "AFS クライアント・サービスは現在停止されています。"
+    IDS_SERVICE_STOPPING    "お待ちください。AFS クライアント・サービスを停止中です..."
+    IDS_SERVICE_STARTING    "お待ちください。AFS クライアント・サービスを開始中です..."
+    IDS_SERVICE_UNKNOWN     "AFS クライアント・サービスの状況を判別できませんでした。"
+    IDS_SERVICE_FAIL_STOP   "AFS クライアント・サービスを正常に停止できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1 "
+    IDS_SERVICE_FAIL_START  "AFS クライアント・サービスを正常に開始できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1"
+    IDS_SERVICE_FAIL_CONFIG "AFS クライアント・サービスの始動パラメーターを変更できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_ERROR       "サービスの構成エラー"
+    IDS_ERROR_TITLE         "エラー - AFS クライアント"
+    IDS_ERROR_TITLE_95      "エラー - AFS Light "
+    IDS_ERROR_DESTROY_95    "%1 セルのトークンを破棄できませんでした。\n\nエラー: %2"
+    IDS_ERROR_DESTROY_NOCM  "AFS クライアント・サービスが応答していないため、%1 セルのトークンを破棄できませんでした。\n\nAFS クライアントが正常に実行されているかを「拡張」タブで調べてください。\n\nエラー: %2"
+    IDS_ERROR_DESTROY_UNKNOWN 
+                            "%1 セルのトークンを破棄できませんでした。\n\nAFS クライアントが正常に実行されているかを「拡張」タブで調べてください。\n\nエラー: %2"
+    IDS_ERROR_OBTAIN        "AFS クライアントがセル %1 で %2 としてトークンを取得できませんでした。\n\nエラー: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "AFS Light がセル %1 で %2 としてトークンを取得できませんでした。\n\nエラー: %4 (%3)"
+    IDS_TITLE_VERSION       "AFS バージョン %s"
+    IDS_TITLE_VERSION_NOPATCH "AFS バージョン %s"
+    IDS_MOUNT_SOME          "以下のドライブ名の AFS 内のパスへのマッピングを選択しました:"
+    IDS_MOUNT_NONE          "ドライブ名の AFS 内のパスへのマッピングを選択していません。"
+    IDS_MOUNT               "ドライブ名"
+    IDS_WIZ_NEXT            "次へ(&N) >"
+    IDS_WIZ_FINISH          "終了(&F)"
+    IDS_MAP_LETTER          "ドライブ *:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE_MAP           "ドライブ %1: \t%2"
+    IDS_ERROR_MAP           "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_MAP_DESC      "AFS は AFS 内の指定されたパスにネットワーク・ドライブをマッピングできませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1 "
+    IDS_ERROR_UNMAP         "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_UNMAP_DESC    "AFS は指定されたネットワーク・ドライブをマッピング解除できませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1"
+    IDS_CELL_GATEWAY        "%s (ゲートウェイ %s 経由)"
+    IDS_BADMAP_TITLE        "ネットワーク・ドライブのマッピング・エラー"
+    IDS_BADMAP_DESC         "パスが ""\\afs"" で始まっていないため、AFS はドライブ名を指定されたパスにマッピングできません。\n\n入力したパスが ""\\afs"" で始まっているかを確かめてから、やり直してください。"
+    IDS_UNCONFIG_TITLE_95   "エラー - AFS Light "
+    IDS_UNCONFIG_DESC_95    "AFS Light が構成されていないため使用できません。\n\nAFS Light を構成するには、コントロール・パネルを開いて「AFS Light 構成」アイコンをダブルクリックしてください。"
+    IDS_UNCONFIG_TITLE      "エラー - AFS クライアント"
+    IDS_UNCONFIG_DESC       "AFS クライアントが構成されていないため使用できません。\n\nAFS クライアントを構成するには、コントロール・パネルを開いて「AFS クライアント」アイコンをダブルクリックしてください。"
+    IDS_NEWSUB_TITLE        "注意 - AFS クライアント"
+    IDS_NEWSUB_TITLE_95     "注意 - AFS Light "
+    IDS_NEWSUB_DESC         "AFS はネットワーク・ドライブの接続時に指定された記述を使用できませんでした。\n\n指定された記述はすでに他の AFS パスに使用されています。"
+    IDS_BADSUB_TITLE        "エラー - AFS クライアント"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADSUB_TITLE_95     "エラー - AFS Light "
+    IDS_BADSUB_DESC         "入力したドライブ名記述を使用できません。\n\nドライブ名の記述は 12 文字を超えてはならず、スペースまたはタブを含んでいてはいけません。"
+    IDS_TITLE_95            "AFS Light"
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

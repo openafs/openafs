@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_GETCLIENTADDRS" HREF="auarf002.htm#ToC_159">fs getclientaddrs</A></H2>
+<A NAME="IDX4839"></A>
+<A NAME="IDX4840"></A>
+<A NAME="IDX4841"></A>
+<A NAME="IDX4842"></A>
+<A NAME="IDX4843"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイル・サーバーで登録するため、クライアント・インターフェースを表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs getclientaddrs</B> [<B>-help</B>]
+      
+<B>fs gc</B> [<B>-h</B>]
+     
+<B>fs getcl </B>[<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs getclientaddrs</B> コマンドは、ローカルのキャッシュ・マネージャーがファイル・サーバーとの接続を最初に確立する際に、ファイル・サーバーに登録するインターフェースの IP アドレスを表示します。
+<P>ファイル・サーバーは、キャッシュ・マネージャーに対するリモート・プロシージャー・コール (RPC) を開始するときに (キャッシュ・マネージャーが送信した RPC に対する応答ではなく)、このアドレスを使用します。一般に、ファイル・サーバーは、コールバックを中断するときと、クライアント・マシンを PING して、キャッシュ・マネージャーがアクセス可能かどうか調べるときに、RPC を開始します。
+<P>このインターフェースとの RPC に障害が起こると、ファイル・サーバーは、リストを参照して、それ以外のすべてのインターフェースに RPC を同時に送信し、使用可能なインターフェースを調べます。最初に応答したインターフェースに、ファイル・サーバーは PING および RPC を送信し、コールバックを中断します。
+<P><B>fs setclientaddrs</B> 解説ページには、キャッシュ・マネージャーがカーネル・メモリーで自動的にリストを初期化されたように構成する方法および初期化後にカーネル・リストを更新するコマンドの使用方法についての説明があります。
+<P><STRONG>注意</STRONG>
+<P>ファイル・サーバーは、キャッシュ・マネージャーへのコールバックおよびネットワーク接続検査の切断に失敗した後に代替インターフェースを選択した場合のみ、このコマンドによって表示されたインターフェースのリストを使用します。ファイル・システム・データを求める、キャッシュ・マネージャーの要求に応答するとき、ファイル・サーバーは、キャッシュ・マネージャーが要求の送信時に使用したインターフェースに応答します。ファイル・サーバーのデータ要求への応答に失敗した場合、ファイル・サーバー・マシンのネットワーク・ルーティング構成が、応答の再送信に使用できるクライアント・マシンへの代替のネットワーク経路を決定します。
+<P>表示されたリストは、今後キャッシュ・マネージャーが接続するすべてのファイル・サーバーに適用されます。異なるアドレス・セットを別々のファイル・サーバーに登録するのは実用的ではありません。それは、リストを変更するのに <B>fs setclientaddrs</B> コマンドを使用してリストを変更してから、すぐにそれぞれの関連ファイル・サーバーをリブートしなければならないからです。
+<P>キャッシュ・マネージャーが指定されたファイル・サーバーに最初に接続してから以降に、管理者が <B>fs setclientaddrs</B> コマンドを発行していた場合、表示されたリストは必ずしもそのファイル・サーバーの振る舞いを制御しているわけではありません。表示されたリストが決定するのは、キャッシュ・マネージャーが今後ファイル・サーバーに接続するときに登録するアドレスだけです。
+<P>インターフェースのリストは、キャッシュ・マネージャーがファイル・サーバーに接続を確立するときのインターフェースの選択には影響しません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、キャッシュ・マネージャーが 1 行に 1 つのアドレスで接続するファイル・サーバーのプロセスに現在登録中のインターフェースの IP アドレスを表示します。ファイル・サーバーは、最初はコールバックの切断とキャッシュ・マネージャーのネットワーク接続検査に 1 番目のアドレスを使用しますが、他のインターフェースの順序に意味はありません。
+<P><STRONG>例</STRONG>
+<P>次の例では、キャッシュ・マネージャーがファイル・サーバーで登録する 2 つのインターフェースを表示します。
+<PRE>   % <B>fs getclientaddrs</B>
+   192.12.105.68
+   192.12.108.84
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf160.htm#HDRFS_SETCLIENTADDRS">fs setclientaddrs</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf144.htm">前ページ</A> &#124; <A HREF="auarf146.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

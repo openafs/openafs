@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf080.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf082.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_LISTHOSTS" HREF="auarf002.htm#ToC_95">backup listhosts</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX4365"></A>
+<A NAME="IDX4366"></A>
+<A NAME="IDX4367"></A>
+<A NAME="IDX4368"></A>
+<A NAME="IDX4369"></A>
+<A NAME="IDX4370"></A>
+<A NAME="IDX4371"></A>
+<A NAME="IDX4372"></A>
+<A NAME="IDX4373"></A>
+<P>Lists Tape Coordinator machines registered in the Backup Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup listhosts</B> [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+  
+<B>backup listh</B> [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup listhosts</B> command displays the Backup Database record
+of the port offset numbers defined for Tape Coordinator machines. A
+Tape Coordinator must have an entry in the list to be available for backup
+operations.
+<P>The existence of an entry does not necessarily indicate that the Tape
+Coordinator process (<B>butc</B>) is currently running at that port
+offset. To check, issue the <B>backup status</B> command.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>After a <TT>Tape</TT> <TT>hosts&#58;</TT> header, the output reports
+two things about each Tape Coordinator currently defined in the Backup
+Database&#58;
+<UL>
+<P><LI>The hostname of the machine housing the Tape Coordinator. The
+format of this name depends on the hostname format used when the <B>backup
+addhost</B> command was issued.
+<P><LI>The Tape Coordinator&#39;s port offset number.
+</UL>
+<P>The Tape Coordinators appear in the order in which they were added to the
+Backup Database.
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the result of the command in the ABC
+Corporation cell&#58;
+<PRE>   % <B>backup listhosts</B>
+   Tape hosts&#58;
+       Host backup1.abc.com, port offset 0
+       Host backup1.abc.com, port offset 1
+       Host backup3.abc.com, port offset 4
+       Host backup2.abc.com, port offset 3
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf062.htm#HDRBK_ADDHOST">backup addhost</A>
+<P><A HREF="auarf069.htm#HDRBK_DELHOST">backup delhost</A>
+<P><A HREF="auarf089.htm#HDRBK_STATUS">backup status</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf080.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf082.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

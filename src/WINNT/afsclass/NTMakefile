@@ -1,0 +1,69 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# make compiler warnings fatal
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
+
+# include the primary makefile
+
+RELDIR=WINNT\afsclass
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+############################################################################
+
+LIBOBJS = \
+	$(OUT)\c_debug.obj  \
+	$(OUT)\c_ident.obj  \
+	$(OUT)\c_identlist.obj  \
+	$(OUT)\c_cell.obj   \
+	$(OUT)\c_svr.obj    \
+	$(OUT)\c_svc.obj    \
+	$(OUT)\c_agg.obj    \
+	$(OUT)\c_set.obj    \
+	$(OUT)\c_usr.obj    \
+	$(OUT)\c_grp.obj    \
+	$(OUT)\c_notify.obj \
+	$(OUT)\afsclassfn.obj \
+	$(OUT)\internal.obj \
+	$(OUT)\worker.obj
+
+LIBINCLUDES = \
+	$(DESTDIR)\include\winnt\afsclass.h \
+	$(DESTDIR)\include\winnt\afsclassfn.h \
+	$(DESTDIR)\include\winnt\c_cell.h \
+	$(DESTDIR)\include\winnt\c_svr.h \
+	$(DESTDIR)\include\winnt\c_agg.h \
+	$(DESTDIR)\include\winnt\c_svc.h \
+	$(DESTDIR)\include\winnt\c_set.h \
+	$(DESTDIR)\include\winnt\c_grp.h \
+	$(DESTDIR)\include\winnt\c_usr.h \
+	$(DESTDIR)\include\winnt\c_notify.h \
+	$(DESTDIR)\include\winnt\c_ident.h \
+	$(DESTDIR)\include\winnt\c_identlist.h \
+	$(DESTDIR)\include\winnt\c_debug.h
+
+LIBFILE = $(DESTDIR)\lib\afs\afsclass.lib
+
+############################################################################
+
+install :
+	@echo AfsClass.LIB is built automatically when building AfsAdmSvr.
+	@echo.
+	@echo You do not need to build in the AfsClass directory explicitly.
+	@echo.
+
+primary: $(LIBINCLUDES) $(LIBFILE)
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+clean::
+
+
+mkdir:
+	

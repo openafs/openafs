@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_ADDHOST" HREF="auarf002.htm#ToC_76">backup addhost</A></H2>
+<A NAME="IDX4229"></A>
+<A NAME="IDX4230"></A>
+<A NAME="IDX4231"></A>
+<A NAME="IDX4232"></A>
+<A NAME="IDX4233"></A>
+<A NAME="IDX4234"></A>
+<A NAME="IDX4235"></A>
+<A NAME="IDX4236"></A>
+<A NAME="IDX4237"></A>
+<A NAME="IDX4238"></A>
+<P><STRONG>目的</STRONG>
+<P>テープ・コーディネーターの項目をバックアップ・データベースに追加します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup addhost -tapehost</B> &lt;<VAR>tape machine name</VAR>> [<B>-portoffset</B> &lt;<VAR>TC port offset</VAR>>]
+               [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-help</B>]
+   
+<B>backup addh -t</B> &lt;<VAR>tape machine name</VAR>>  [<B>-p</B> &lt;<VAR>TC port offset</VAR>>]
+            [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup addhost</B> コマンドは、バックアップ・データベースにテープ・コーディネーターの項目を作成します。次の項目が作成されます。
+<UL>
+<LI>テープ・コーディネーター (<B>butc</B>) プロセスが実行されているテープ・コーディネーター・マシンのホスト名。
+<B> -tapehost</B> 引き数で指定します。
+</LI><LI>テープ・コーディネーターのポート・オフセット番号。
+<B> -portoffset</B> 引き数で指定します。テープ・コーディネーター・マシンの <B>/usr/afs/backup/tapeconfig</B> ファイルにもポート・オフセットの項目が必要です。この項目は、磁気テープ装置の場合には UNIX の装置名に、バックアップ・データ・ファイルの場合にはパス名にマッピングされます。
+</LI></UL>
+<P>各テープ・コーディネーターには、固有のポート・オフセット番号が必要です。要求したポート・オフセット番号に対応する項目がバックアップ・データベースに存在していると、このコマンドは失敗します。既存のテープ・コーディネーターを表示するには、
+<B> backup listhosts</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-tapehost
+</B><DD>バックアップ・データベースにテープ・コーディネーターの項目を作成するマシンの完全修飾されたホスト名を指定します。このマシンは、セルのネーミング・サービス (ドメイン・ネーム・サービスなど) か、このコマンドが発行されたマシン上のホスト・ファイル (<B>/etc/hosts</B> または同等のファイル) に、項目が必要になります。
+<P><DT><B>-portoffset
+</B><DD>テープ・コーディネーターのポート・オフセット番号を指定します。
+<B>0</B> から <B>58510</B> までの範囲の整数を指定するか、この引き数を省略して、デフォルト値の <B>0</B> (ゼロ) を使用します。これは、<B>-tapehost</B> 引き数で指定されたテープ・コーディネーター・マシンの <B>/usr/afs/backup/tapeconfig</B> ファイルに、同じ組み合わせのテープ・コーディネーターと磁気テープ装置またはファイルが記述され、そのポート・オフセット番号とこの値が一致しなければなりません。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、
+<B>backup</B> コマンド・インタープリターは、バックアップ・サーバー、ボリューム・サーバーおよび VL サーバーにこのチケットを提供します。このフラグは、<B>-cell</B> 引き数と一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>backup</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、ポート・オフセット番号 4 を <B> backup1.abc.com</B> で実行されているテープ・コーディネーターに割り当てる項目をバックアップ・データベースに作成しています。
+<PRE>   % <B>backup addhost -tapehost backup1.abc.com -portoffset 4 </B>
+   
+</PRE>
+<P>次のコマンドは、ポート・オフセット番号 0 を <B>backup3.abc.com</B> で実行されているテープ・コーディネーターに割り当てる項目をバックアップ・データベースに作成しています。
+<PRE>   % <B>backup addhost backup3.abc.com</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、バックアップ・サーバーが実行されているすべてのマシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。また、<B>-localauth</B> フラグを使用する場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf069.htm#HDRBK_DELHOST">backup delhost</A>
+<P><A HREF="auarf081.htm#HDRBK_LISTHOSTS">backup listhosts</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf061.htm">前ページ</A> &#124; <A HREF="auarf063.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

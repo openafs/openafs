@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRCLI_NETRESTRICT" HREF="auarf002.htm#ToC_24">NetRestrict (クライアント・バージョン)</A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX3953"></A>
+<A NAME="IDX3954"></A>
+<A NAME="IDX3955"></A>
+<A NAME="IDX3956"></A>
+<A NAME="IDX3957"></A>
+<A NAME="IDX3958"></A>
+<P>ファイル・サーバーに登録されないクライアント・インターネットを定義します
+<P><STRONG>構文</STRONG>
+<P><B>NetRestrict</B> ファイルが、クライアント・マシンの <B>/usr/vice/etc</B> ディレクトリーにある場合には、このファイルは、最初に接続を確立するときに、ローカルのキャッシュ・マネージャーがファイル・サーバーとともに登録しないインターフェースの IP アドレスを定義します。ファイル・サーバーが、どのように登録されたインターフェースを使用するかについての説明は、
+<B>NetInfo</B> ファイルのクライアント版の解説ページを参照してください。
+<P>ファイル・サーバーが初期化中に、<B>/usr/vice/etc/NetInfo</B> がある場合には、キャッシュ・マネージャーはこのファイルから、登録するインターフェースのリストを構成します。存在しない場合には、オペレーティング・システムに構成されているインターフェースのリストから、このリストを構成します。ファイルが存在すると、キャッシュ・マネージャーは <B>NetRestrict</B> ファイルにあるすべてのアドレスを、リストから削除します。キャッシュ・マネージャーは、この結果リストを、カーネル・メモリーに記録します。
+<P><B>NetRestrict</B> ファイルは、ASCII 形式です。各行に 1 つの IP アドレスが記述されています。このアドレスは、ドット付き 10 進数で定義されています。このアドレスの順序に規則はありません。値 <B>255</B> は、そのフィールドで可能なすべてのアドレスを示すワイルドカードです。たとえば、値 <B>192.12.105.255</B> は、キャッシュ・マネージャーが、
+<B>192.12.105</B> サブネット内のアドレスは何も登録しないということを示しています。
+<P>ファイル・サーバーに登録されているキャッシュ・マネージャーのアドレスを表示する場合には、<B>fs getclientaddrs</B> コマンドを使用してください。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf024.htm#HDRCLI_NETINFO">NetInfo (クライアント・バージョン)</A>
+<P><A HREF="auarf145.htm#HDRFS_GETCLIENTADDRS">fs getclientaddrs</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf025.htm">前ページ</A> &#124; <A HREF="auarf027.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,269 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBOS_CREATE" HREF="auarf002.htm#ToC_112">bos create</A></H2>
+<A NAME="IDX4477"></A>
+<A NAME="IDX4478"></A>
+<A NAME="IDX4479"></A>
+<A NAME="IDX4480"></A>
+<A NAME="IDX4481"></A>
+<A NAME="IDX4482"></A>
+<A NAME="IDX4483"></A>
+<A NAME="IDX4484"></A>
+<A NAME="IDX4485"></A>
+<A NAME="IDX4486"></A>
+<P><STRONG>目的</STRONG>
+<P><B>/usr/afs/local/BosConfig</B> ファイルに新しいプロセスを定義して、実行を開始します。
+<P><STRONG>構文</STRONG>
+<PRE><B>bos create -server</B> &lt;<VAR>machine name</VAR>>  <B>-instance</B> &lt;<VAR>server process name</VAR>>
+           <B>-type</B> &lt;<VAR>server type</VAR>>  <B>-cmd</B> &lt;<VAR>command lines</VAR>><SUP>+</SUP>
+           [<B>-notifier</B> &lt;<VAR>Notifier program</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+           [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos c -s</B> &lt;<VAR>machine name</VAR>>  <B>-i</B> &lt;<VAR>server process name</VAR>>  <B>-t</B> &lt;<VAR>server type</VAR>>
+      <B>-cm</B> &lt;<VAR>command lines</VAR>><SUP>+</SUP>  [<B>-not</B> &lt;<VAR>Notifier program</VAR>>]  [<B>-ce</B> &lt;<VAR>cell name</VAR>>]
+      [<B>-noa</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>bos create</B> コマンドは、
+<B>-server</B> 引き数で指定されたサーバー・マシン上の <B>/usr/afs/local/BosConfig</B> ファイルにサーバー・プロセス項目を作成し、プロセスの状況を <B>BosConfig</B> ファイルおよびメモリー内で <B>Run</B> に設定し、そのプロセスを開始します。
+<P><B>BosConfig</B> ファイルのサーバー・プロセス項目には、サーバー・プロセスの名前、タイプ、初期化するコマンドが定義されます。またオプションで、プロセス終了時に実行する通知プログラム名が定義されます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>新規プロセスを定義し、開始するサーバー・マシンを指定します。
+IP アドレスまたはホスト名 (完全修飾名または省略形) によってマシンを識別します。詳細については、<B>bos</B> コマンド・セットの概要の解説ページを参照してください。
+<P><DT><B><B>-instance</B>
+</B><DD>定義および開始するプロセス名を指定します。任意の名前を指定することができますが、説明を簡単にするために、ここでは、プロセスのバイナリー・ファイル・パス名の最後の部分を使用してください。この名前は、すべてのサーバー・マシンで使用してください。AFS のドキュメントで使用している規約名は次のとおりです。
+<P>
+<DL>
+<P><DT><B><B>buserver</B>
+</B><DD>バックアップ・サーバー・プロセス
+<A NAME="IDX4487"></A>
+<A NAME="IDX4488"></A>
+<P><DT><B><B>fs</B>
+</B><DD>ファイル・サーバー、ボリューム・サーバー、およびサルベージャー・プロセス (<B>fileserver</B>、<B>volserver</B>、および <B>salvager</B>) を組み合わせたプロセス
+<A NAME="IDX4489"></A>
+<A NAME="IDX4490"></A>
+<P><DT><B><B>kaserver</B>
+</B><DD>認証サーバー・プロセス
+<A NAME="IDX4491"></A>
+<A NAME="IDX4492"></A>
+<P><DT><B><B>ptserver</B>
+</B><DD>保護サーバー・プロセス
+<A NAME="IDX4493"></A>
+<A NAME="IDX4494"></A>
+<P><DT><B><B>runntp</B>
+</B><DD>ネットワーク時刻プロトコル・デーモンのコントローラー・プロセス
+<A NAME="IDX4495"></A>
+<A NAME="IDX4496"></A>
+<P><DT><B><B>upclientbin</B>
+</B><DD>このマシンの CPU またはオペレーティング・システムのタイプに対応するバイナリー・ファイルの配布マシンの <B>/usr/afs/bin</B> ディレクトリーからバイナリー・ファイルを取り出す更新サーバー・プロセスのクライアント部分。
+(バイナリー名は、<B>upclient</B> ですが、このプロセスを <B>upclientetc</B> と区別するために <B>bin</B> サフィックスが付いています。)
+<A NAME="IDX4497"></A>
+<A NAME="IDX4498"></A>
+<P><DT><B><B>upclientetc</B>
+</B><DD>システム・コントロール・マシンの <B>/usr/afs/etc</B> ディレクトリーから構成ファイルを取り出す更新サーバーのクライアント部分。国際版 AFS を使用しているセルでは、このプロセスを実行しないでください。
+(バイナリー名は、<B>upclient</B> ですが、このプロセスを <B>upclientbin</B> と区別するために <B>etc</B> サフィックスが付いています。)
+<P><DT><B><B>upserver</B>
+</B><DD>更新サーバー・プロセスのサーバー部分
+<A NAME="IDX4499"></A>
+<A NAME="IDX4500"></A>
+<P><DT><B><B>vlserver</B>
+</B><DD>ボリューム・ロケーション (VL) サーバー・プロセス
+<A NAME="IDX4501"></A>
+<A NAME="IDX4502"></A>
+</DL>
+<P><DT><B><B>-type</B>
+</B><DD>プロセスのタイプを指定します。許容値は次のとおりです。
+<P>
+<DL>
+<P><DT><B><B>cron</B>
+</B><DD>この値は、cron タイプのプロセスに指定します。このタイプのプロセスは、BOS サーバーがプロセスの終了を検出したときではなく、毎日または毎週決まった時刻にだけ始動します。デフォルトでは、AFS はこのプロセスを定義していませんが、この値を管理目的で使用することはできます。<B>bos create</B> コマンドの <B>-cmd</B> 引き数の一部として、コマンドの実行時刻を定義してください。
+<P><DT><B><B>fs</B>
+</B><DD>この値は、<B>fs</B> プロセスにだけ使用してください。このプロセスは、ファイル・サーバー、ボリューム・サーバー、およびサルベージャー・プロセスを組み合わせたプロセスです。コンポーネントのプロセスが 1 つでも終了すると、BOS サーバーが終了し、適切な順序でプロセスを再始動します。
+<P><DT><B><B>simple</B>
+</B><DD>この値は、<B>fs</B> プロセスを除く、<B>-instance</B> 引き数に指定可能な値としてリストされたすべてのプロセスに使用してください。simple プロセス間には相互依存性がないため、BOS サーバーは、必要に応じてプロセスを個々に終了または開始することができます。
+</DL>
+<P><DT><B><B>-cmd</B>
+</B><DD>BOS サーバーがプロセスを開始するために実行するコマンドを指定します。指定するコマンドの数は、多くても 6 つまでにしてください (これには、コマンドのオプションも含みます。この場合、文字列全体を二重引用符で囲みます)。それを超えて指定したコマンドは無視されます。
+<P>
+<P>simpleプロセスの場合には、ローカル・ディスクにあるプロセスのバイナリー・ファイルを完全なパス名で指定してください。(たとえば、保護サーバーの場合には <B>/usr/afs/bin/ptserver</B>)
+初期化コマンドのオプションを使用する場合には、コマンド全体を二重引用符 (<B>" "</B>) で囲んでください。
+<B>upclient</B> プロセスには必須の引き数があり、それ以外のプロセスに対するコマンドにはオプションの引き数があります。
+<A NAME="IDX4503"></A>
+<P>
+<P>
+<P><B>fs</B> プロセスの場合には、各コンポーネント・プロセスごとにローカル・ディスク・バイナリーの完全なパス名を、<B>fileserver</B>、<B>volserver</B> および <B>salvager</B> の順に指定してください。標準のバイナリー・ディレクトリーは、<B>/usr/afs/bin</B> です。初期化コマンドのオプションを使用する場合には、コマンド全体を二重引用符 (<B>" "</B>) で囲んでください。
+<A NAME="IDX4504"></A>
+<P>
+<P>
+<P><B>cron</B> プロセスの場合には、次の 2 つのパラメーターを指定してください。
+<A NAME="IDX4505"></A>
+<P>
+<UL>
+<LI>実行可能ファイルまたは AFS セットのコマンドのいずれかの完全なローカル・ディスク・パス名。(他に必要な引き数はすべて指定してください)
+このパラメーターにスペースが含まれている場合は、パラメーターを二重引用符 (<B>" "</B>) で囲んでください。
+</LI><LI>BOS サーバーが最初のパラメーターに指定されたファイルまたはコマンドを実行するときの仕様。次の 3 つの値が指定できます。
+<UL>
+<LI>文字列 <B>now</B>。この文字列を指定すると、
+BOS サーバーはファイルまたはコマンドを即時に 1 度だけ実行します。コマンドを直接発行したり、<B>bos exec</B> コマンドを発行するほうが簡単です。
+</LI><LI>時刻。BOS サーバーは、毎日指定された時刻にファイルまたはコマンドを実行します。時間と分をコロンで区切って指定します (<I>hh</I>:<I>MM</I>)。これは、24 時間形式で指定することも、<B>am</B> または <B>pm</B> を付けて、<B>1:00</B> から <B>12:59</B> までの値の指定することもできます。たとえば、<B>14:30</B> と <B>"2:30 pm"</B> は、どちらも午後 2 時 30 分を表しています。このパラメーターにスペースがある場合は、パラメーターを二重引用符 (<B>" "</B>) で囲んでください。
+</LI><LI>曜日と時刻はスペースで区切り、二重引用符 (<B>" "</B>) で囲んでください。
+BOS サーバーは、毎週指定された時刻にファイルまたはコマンドを実行します。曜日は、最初の 3 文字をすべて小文字で入力してください (<B>sunday</B> は <B>sun</B>、<B>thursday</B> は <B>thu</B> のように入力します)。時刻は、時刻だけを指定した場合と同じ形式になります。
+</LI></UL>
+</LI></UL>
+<P><DT><B><B>-notifier</B>
+</B><DD>プロセスが終了したときに、
+BOS サーバーが呼び出すプログラムのローカル・ディスク上の完全なパス名を指定します。
+AFS 配布には、通知プログラムが組み込まれていないが、この引き数は管理者が使用できるように用意されています。
+<B>関連情報</B>の節を参照してください。
+<P><DT><B><B>-cell</B>
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-noauth</B>
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B><B>-localauth</B>
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。
+<B>bos</B> コマンド・インタープリターは、相互認証中に、このチケットを BOS サーバーに渡します。このフラグは、<B>-cell</B> 引き数または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>bos</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、マシン <B>fs3.abc.com</B> に simple プロセス <B>kaserver</B> を定義し、開始しています。
+<PRE>   % <B>bos create -server fs3.abc.com -instance kaserver -type simple</B>  \
+                <B>-cmd /usr/afs/bin/kaserver</B>
+   
+</PRE>
+<P>次のコマンドは、マシン <B>fs4.abc.com</B> に simple プロセス <B>upclientbin</B> を定義し、開始しています。このコマンドは、バイナリー・ファイルに対する更新のソースとして、<B>fs1.abc.com</B> を参照し、<B>/usr/afs/bin</B> ディレクトリーに対する変更を 120 秒ごとに検査しています。
+<PRE>   % <B>bos create -server fs4.abc.com -instance upclientbin -type simple</B>  \
+                <B>-cmd "/usr/afs/bin/upclient fs1.abc.com -clear -t 120</B>  \
+                <B>/usr/afs/bin"</B>
+   
+</PRE>
+<P>次のコマンドは、マシン <B>fs4.abc.com</B> に fs プロセス <B>fs</B> を作成しています。このコマンドは、1 行に入力してください。
+<PRE>   % <B>bos create -server fs4.abc.com -instance fs -type fs</B>  \
+                <B>-cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver</B>  \
+                <B>/usr/afs/bin/salvager</B>
+   
+</PRE>
+<P>以下のコマンドは、<B>userbackup</B> と呼ばれる <B>cron</B> プロセスを、マシン <B>fs5.abc.com</B> 上で作成します。その結果、BOS サーバーは、指示された <B>vos backupsys</B> コマンドを毎日 3:00 a.m. に発行します (このコマンドは、すべてのボリュームのバックアップ・バージョンを、名前が <B>user</B> で始まるファイル・システムに作成します)。
+<B>vos</B> コマンドには完全なパス名を指定し、
+<B>-localauth</B> フラグ付けて発行してください。また、<B>bos create</B> コマンドは、すべて 1行に入力してください。
+<PRE>   % <B>bos create -server fs5.abc.com -instance userbackup -type cron</B>  \
+                <B>-cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数で指定されたマシンの <B>/usr/afs/etc/UserList</B> ファイルにリストされているか、または <B>-localauth</B> フラグが使用されている場合は、ローカル・スーパーユーザー <B>root</B> としてサーバー・マシンにログオンしている必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P>プロセスの定義と開始を行うためにこのコマンドが使用されるときに、
+<B>-notifier</B> 引き数が組み込まれている場合、
+BOS サーバーは、プロセスが終了するときに、指示された <I>通知プログラム</I> を呼び出します。通知プログラムの本来の用途は、プロセスが突然終了したときに、管理者に知らせることですが、それを使用して、任意の適切なアクションを実行することもできます。以下の段落では、BOS サーバーが、終了したプロセスについての情報をレコードしている <B>bnode</B> および <B>bnode_proc</B> 構造体について説明します。これに関連した AFS コマンドのリストも掲げます。
+<P>BOS サーバーは、通知プログラムと関連した各終了プロセスに対して、
+1 つの <B>bnode</B> および 1 つの <B>bnode_proc</B> 構造体を構成して、標準出力ストリームで送信します。
+BOS サーバーは、それぞれの構造体を適切な <TT>BEGIN</TT> および <TT>END</TT> ステートメント (<TT>BEGIN bnode</TT> と <TT>END bnode</TT>、
+<TT>BEGIN bnode_proc</TT> と <TT>END bnode_proc</TT>) で囲みます。これは、スペースやほかの文字が介在しない直前の改行文字の直後に続きます。通知プログラムは、構造体からの情報を必要としない場合、
+<TT>END</TT> ステートメントに到達するまで入力ストリームのスキャンを続けます。
+<P>一般に、構造体の各フィールドには、改行文字で終了している ASCII テキストの文字列が入っています。構造体内の情報の形式は、通知プログラムと関連したプロセスのタイプ次第で若干変化することがあります。
+<P><B>bnode</B> および <B>bnode_proc</B> 構造体に対する C コードを以下に掲げます。
+BOS サーバーによって送信される構造体は、ここで説明するフィールドを必ずしもすべて組み込んでいるわけではないということに注意してください。フィールドのいくつかは、内部レコードの保持のためのみに使用されるからです。通知プロセスは、標準入力ストリーム上の、予期しないフィールドの存在はもちろんのこと、予期されたフィールドの不在も確実に処理しなければなりません。
+<P>適切なパフォーマンスのために、通知プログラムは、入力ストリームのプロセッシングを、ファイル終わり (EOF) を検出するまで続けなければなりません。
+BOS サーバーは、データの送達を完了すると、通知プロセスに対する標準入力ファイル記述子をクローズします。そして、適切に終了させるのは、通知プロセスの責任です。
+<P><B>struct bnode の内容</B>
+<PRE>   struct bnode {
+      struct bnode *next;      /* next pointer in top-level's list */
+      char *name;              /* instance name */
+      long nextTimeout;        /* next time this guy should be awakened */
+      long period;             /* period between calls */
+      long rsTime;             /* time we started counting restarts */
+      long rsCount;            /* count of restarts since rsTime */
+      struct bnode_type *type; /* type object */
+      struct bnode_ops *ops;   /* functions implementing bnode class */
+      long procStartTime;      /* last time a process was started */
+      long procStarts;         /* number of process starts */
+      long lastAnyExit;        /* last time a process exited for any reason */
+      long lastErrorExit;      /* last time a process exited unexpectedly */
+      long errorCode;          /* last exit return code */
+      long errorSignal;        /* last proc terminating signal */
+      char *lastErrorName;     /* name of proc that failed last */
+      short refCount;          /* reference count */
+      short flags;             /* random flags */
+      char goal;               /* 1=running or 0=not running */
+      char fileGoal;           /* same, but to be stored in file */
+};
+   
+</PRE>
+<P><B>struct bnode の出力形式</B>
+<PRE>   printf("name: %s\n",tp->name);
+   printf("rsTime: %ld\n", tp->rsTime);
+   printf("rsCount: %ld\n", tp->rsCount);
+   printf("procStartTime: %ld\n", tp->procStartTime);
+   printf("procStarts: %ld\n", tp->procStarts);
+   printf("lastAnyExit: %ld\n", tp->lastAnyExit);
+   printf("lastErrorExit: %ld\n", tp->lastErrorExit);
+   printf("errorCode: %ld\n", tp->errorCode);
+   printf("errorSignal: %ld\n", tp->errorSignal);
+   printf("lastErrorName: %s\n", tp->lastErrorName);
+   printf("goal: %d\n", tp->goal);
+   
+</PRE>
+<P><B>struct bnode_proc の内容</B>
+<PRE>   struct bnode_proc {
+      struct bnode_proc *next; /* next guy in top-level's list */
+      struct bnode *bnode;     /* bnode creating this process */
+      char *comLine;           /* command line used to start this process */
+      char *coreName;          /* optional core file component name */
+      long pid;                /* pid if created */
+      long lastExit;           /* last termination code */
+      long lastSignal;         /* last signal that killed this guy */
+      long flags;              /* flags giving process state */
+};
+   
+</PRE>
+<P><B>struct bnode_proc の出力形式</B>
+<PRE>   printf("comLine: %s\n", tp->comLine);
+   printf("coreName: %s\n", tp->coreName);
+   printf("pid: %ld\n", tp->pid);
+   printf("lastExit: %ld\n", tp->lastExit);
+   printf("lastSignal: %ld\n", tp->lastSignal);
+   
+</PRE>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf125.htm#HDRBUSERVER">buserver</A>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf198.htm#HDRKASERVER">kaserver</A>
+<P><A HREF="auarf227.htm#HDRPTSERVER">ptserver</A>
+<P><A HREF="auarf230.htm#HDRRUNNTP">runntp</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf240.htm#HDRUPCLIENT">upclient</A>
+<P><A HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<P><A HREF="auarf249.htm#HDRVLSERVER">vlserver</A>
+<P><A HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<P><A HREF="auarf256.htm#HDRVOS_BACKUPSYS">vos backupsys</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf097.htm">前ページ</A> &#124; <A HREF="auarf099.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

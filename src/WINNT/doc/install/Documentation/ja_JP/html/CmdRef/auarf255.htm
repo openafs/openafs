@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_BACKUP" HREF="auarf002.htm#ToC_269">vos backup</A></H2>
+<A NAME="IDX5596"></A>
+<A NAME="IDX5597"></A>
+<A NAME="IDX5598"></A>
+<A NAME="IDX5599"></A>
+<A NAME="IDX5600"></A>
+<A NAME="IDX5601"></A>
+<A NAME="IDX5602"></A>
+<A NAME="IDX5603"></A>
+<A NAME="IDX5604"></A>
+<P><STRONG>目的</STRONG>
+<P>単一の読み取り / 書き込みボリュームにバックアップ・ボリュームを作成します。
+<P><STRONG>構文</STRONG>
+<PRE> 
+<B>vos backup -id</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  
+           [<B>-localauth</B>]  [<B>-verbose</B>]  [<B>-help</B>]
+   
+<B>vos backup -i</B> &lt;<VAR>volume name or ID</VAR>>  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos backup</B> コマンドは、指定された読み取り / 書き込みボリュームを複製して、読み取り / 書き込みバージョンと同じサイトにバックアップ・バージョンを作成します。バックアップ・ボリュームの名前は、読み取り / 書き込みソースの名前に、拡張子 <B>.backup</B> が付いたものと同じです。このボリューム ID 番号は、
+<B>vos create</B> コマンドで読み取り / 書き込みソースが作成されたときに、ボリューム・ロケーション・データベース (VLDB) のボリュームに割り振られた ID です。バックアップ・バージョンが既に存在する場合には、新しい複製で置換されます。
+<P>複数のボリュームのバックアップ・バージョンを作成する場合には、
+<B>vos backupsys</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-id
+</B><DD>読み取り / 書き込みボリュームの完全名またはボリューム ID 番号のいずれかを指定します。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>コマンドが正常に終了すると、次のメッセージが表示されます。
+<PRE>   Created backup volume for <VAR>volume name</VAR>
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次の例では、ボリューム <B>user.smith</B> のバックアップ・バージョンを作成します。
+<PRE>   % <B>vos backup user.smith</B>
+   Created backup volume for user.smith
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf256.htm#HDRVOS_BACKUPSYS">vos backupsys</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf254.htm">前ページ</A> &#124; <A HREF="auarf256.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B>
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

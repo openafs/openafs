@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVN" HREF="auarf002.htm#ToC_34">V<I>n</I></A></H2>
+<P><STRONG>目的</STRONG>
+<A NAME="IDX3987"></A>
+<A NAME="IDX3988"></A>
+<A NAME="IDX3989"></A>
+<P>ディスク・キャッシュにある AFS データのチャンクを格納します。
+<P><STRONG>構文</STRONG>
+<P><B>V</B><VAR>n</VAR> ファイルには、ディスク・キャッシュを使用しているクライアント・マシンでキャッシュされた AFS データのチャンクが格納されます。キャッシュ・マネージャーは、初期化時に、以下に示した値の最大値と等しい数の <B>V</B><VAR>n</VAR> ファイルがローカル・ディスク・キャッシュ・ディレクトリーに格納されているかどうか検査をします。
+<UL>
+<LI>100
+</LI><LI>キャッシュ・サイズをチャンク・サイズで割った結果を 1.5 倍します
+(cachesize/chunksize * 1.5)。
+</LI><LI>キャッシュ・サイズを 10 MB (10,240) で除算した結果です。
+</LI></UL>
+<P>キャッシュ・マネージャーは、<B>afsd</B> コマンドの <B>-blocks</B> 引き数からキャッシュ・サイズを判別します。この引き数が指定されていない場合には、<B>/usr/vice/etc/cacheinfo</B> ファイルの 3 番目のフィールドから判別します。デフォルト・チャンク・サイズは 64 KB です。この値を変更する場合には、
+<B>-chunksize</B> 引き数を指定して、
+<B>afsd</B> コマンドを発行してください。計算で求められたデフォルトのチャンク数を変更する場合には、
+<B>-files</B> 引き数を指定して、
+<B>afsd</B> コマンドを発行してください。これらの引き数の制限事項および指定可能な値については、
+<B>afsd</B> の解説ページを参照してください。
+<P>ディスク・キャッシュ・ディレクトリーに、必要な数より少ない <B>V</B><VAR>n</VAR>ファイルしか格納されていない場合、キャッシュ・マネージャーは新しいファイルを作成し、他のファイルと区別するための固有の整数 <VAR>n</VAR> を各ファイルに割り当てます。この整数は 1 から始まり、<B>V</B><VAR>n</VAR> ファイルが作成されるたびに 1 ずつ増えていきます。キャッシュ・マネージャーは、必要以上のファイルが格納されている場合は、不要なファイルを削除します。また、キャッシュ・マネージャーは、<B>fs setcachesize</B> コマンドに応答して <B>V</B><VAR>n</VAR> ファイルを追加または削除する場合があります。これにより、次にリブートしたときのキャッシュ・サイズを変更することができます。
+<P>標準的なディスク・キャッシュ・ディレクトリー名は <B>/usr/vice/cache</B> ですが、使用可能なスペースがある区画であれば、そのディレクトリーを使用することができます。異なるディレクトリーを指定する場合は、<B>afsd</B> コマンドを発行する前に <B>/usr/vice/etc/cacheinfo</B> ファイルの 2 番目のフィールドの値を変更するか、<B>-cachedir</B> 引き数を指定して、<B>afsd</B> コマンドを発行してください。
+<P>AFS ディレクトリーのリストや一時的に格納されるファイルのサイズに合わせて、<B>V</B><VAR>n</VAR> ファイルが拡張される場合があります。前述のように、デフォルトでは 各 <B>V</B><VAR> n</VAR> ファイルには、キャッシュされた AFS 要素が最大 64 KB (65,536 バイト) まで格納されます。
+64 KB を超える AFS 要素は、複数の <B>V</B><VAR>n</VAR> ファイルに分割されます。要素が 64 KB より小さい場合、<B>V</B><VAR>n</VAR> ファイルは、必要なサイズになるまで拡張されます。
+<B>V</B><VAR>n</VAR> ファイルには、単一要素だけが格納されます。したがって、サイズの小さい要素が数多くキャッシュされていると、キャッシュ・サイズの最大値に達しないため、使用可能な <B>V</B><VAR>n</VAR> ファイルがなくなる可能性があります。
+<P><STRONG>注意</STRONG>
+<P><B>V</B><VAR>n</VAR> ファイルを編集したり、削除すると、カーネルに問題が起きる可能性があります。次回のリブート時のキャッシュ・サイズ (つまり、<B>V</B><VAR>n</VAR> ファイルの数) を変更する場合には、<B>fs setcachesize</B> コマンドを使用してください。また、マシンの AFS初期化ファイルで呼び出される
+<B>afsd</B> コマンドの <B>-blocks</B>、
+<B>-files</B> または <B>-chunksize</B>
+引き数の値を変更して、リブートしてください。
+1 つ以上の <B>V</B><VAR>n</VAR> ファイルの内容を更新する場合には、<B>fs flush</B> または <B>fs flushvolume</B> コマンドを使用してください。
+<B>V</B><VAR>n</VAR> ファイルが誤って変更または削除されても、マシンをリブートすると、通常のパフォーマンスを復元することができます。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf043.htm#HDRCACHEINFO">cacheinfo</A>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P><A HREF="auarf140.htm#HDRFS_FLUSH">fs flush</A>
+<P><A HREF="auarf142.htm#HDRFS_FLUSHVOLUME">fs flushvolume</A>
+<P><A HREF="auarf158.htm#HDRFS_SETCACHESIZE">fs setcachesize</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf035.htm">前ページ</A> &#124; <A HREF="auarf037.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

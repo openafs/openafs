@@ -1,0 +1,3010 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+#include <WINNT\al_resource.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS サーバー・マネージャー"
+#define AFS_VERINFO_NAME "svrmgr"
+#define AFS_VERINFO_FILENAME "svrmgr.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_AGGREGATES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 118
+    END
+
+    IDD_FILESETS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 180
+    END
+
+    IDD_SVR_LISTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_AGG_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 262
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 155
+    END
+
+    IDD_SVR_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_SVR_SCOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 216
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_SVC_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 268
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 209
+    END
+
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 315
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 224
+    END
+
+    IDD_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 207
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVC_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 228
+    END
+
+    IDD_SET_REPSITES, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 216
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OPENCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 253
+        HORZGUIDE, 160
+    END
+
+    IDD_TIMEOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 281
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_REFRESHALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 260
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
+
+    IDD_SET_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 317
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 205
+    END
+
+    IDD_SET_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
+    END
+
+    IDD_SET_CLONE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 341
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 81
+    END
+
+    IDD_SVC_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 189
+    END
+
+    IDD_SVR_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_AGG_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 252
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 146
+    END
+
+    IDD_SET_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 268
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_SET_MOVETO, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 170
+    END
+
+    IDD_SET_MOVING, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        RIGHTMARGIN, 306
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 63
+    END
+
+    IDD_SVC_LOGNAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 274
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 105
+    END
+
+    IDD_SVC_VIEWLOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 305
+        TOPMARGIN, 7
+    END
+
+    IDD_SET_SETQUOTA, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 267
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 127
+    END
+
+    IDD_ACTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 234
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_SVR_SYNCVLDB, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 265
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_SET_CREATEREP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_SVR_INSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 154
+    END
+
+    IDD_SVR_UNINSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVR_PRUNE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 251
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_SET_RENAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 129
+    END
+
+    IDD_SVC_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 65
+    END
+
+    IDD_SVR_GETDATES, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_GETDATES_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SET_DUMP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_SET_RESTORE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 288
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 244
+    END
+
+    IDD_SVC_BOS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 259
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_DUMPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 302
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SET_RESTORING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 302
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_SET_CLONESYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 254
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+
+    IDD_SUBSETS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 276
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_SUBSET_LOADSAVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 276
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_HELP_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 69
+    END
+
+    IDD_HELP_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_HELP_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 226
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_OPENINGCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 236
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 41
+    END
+
+    IDD_OPTIONS_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 274
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 131
+    END
+
+    IDD_SVR_KEYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_CREATEKEY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_SVC_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 306
+        TOPMARGIN, 7
+    END
+
+    IDD_SVR_EXECUTE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 250
+    END
+
+    IDD_SVR_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SET_RELEASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_SVR_HOSTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_ADDHOST, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 303
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_SVR_ADDRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 207
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_SVR_NEWADDR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 228
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 62
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#include <WINNT\\al_resource.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS サーバー・マネージャー""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_MAIN MENU DISCARDABLE 
+BEGIN
+    POPUP "セル(&C)"
+    BEGIN
+        MENUITEM "選択(&S)...",                 M_CELL_OPEN
+        MENUITEM "認証(&A)...",                 M_CREDENTIALS
+        MENUITEM SEPARATOR
+        MENUITEM "終了(&X)",                    M_EXIT
+    END
+    POPUP "表示(&V)"
+    BEGIN
+        POPUP "サーバー(&S)"
+        BEGIN
+            MENUITEM "大アイコン(&G)",              M_SVR_VIEW_LARGE
+            , CHECKED
+            MENUITEM "小アイコン(&M)",              M_SVR_VIEW_SMALL
+            , CHECKED
+            MENUITEM "詳細(&D)",                    M_SVR_VIEW_REPORT
+            , CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "標準(&N)",                    M_SVR_VIEW_ONEICON
+            , CHECKED
+            MENUITEM "すべてのアイコン(&A)",        M_SVR_VIEW_TWOICONS
+            , CHECKED
+            MENUITEM "状況のみ(&S)",                M_SVR_VIEW_STATUS
+            , CHECKED
+        END
+        POPUP "クィック・ビュー・ペイン(&Q)"
+        BEGIN
+            MENUITEM "なし(&N)",                    M_DIVIDE_NONE, CHECKED
+            MENUITEM "縦に分割(&V)",                M_DIVIDE_H, CHECKED
+            MENUITEM "横に分割(&H)",                M_DIVIDE_V, CHECKED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "進行中の操作(&P)",            M_ACTIONS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "モニターされるサーバー(&M)...", M_SUBSET
+        MENUITEM "列(&C)...",                   M_COLUMNS
+        MENUITEM "オプション(&O)...",           M_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "すべて最新表示(&F)",          M_REFRESHALL
+    END
+    POPUP "ヘルプ(&H)"
+    BEGIN
+        MENUITEM "目次(&C)",                    M_HELP
+        MENUITEM "コマンド検索(&F)...",         M_HELP_FIND
+        MENUITEM "エラー・コードの検索(&L)...", M_HELP_XLATE
+        MENUITEM SEPARATOR
+        MENUITEM "AFS サーバー・マネージャーについて(&A)...", M_ABOUT
+    END
+END
+
+MENU_AGG MENU DISCARDABLE 
+BEGIN
+    MENUITEM "ボリュームの作成(&C)...",     M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "ボリュームのバックアップ(&B)...", M_SET_CLONE
+    MENUITEM "すべてのボリュームをロック解除(&U)", M_SET_UNLOCK
+    MENUITEM "VLDB の同期化(&Y)...",        M_SYNCVLDB
+    MENUITEM "ボリュームのサルベージ(&G)...", M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "最新表示(&F)",                M_REFRESH
+    MENUITEM "プロパティー(&R)",            M_PROPERTIES
+END
+
+MENU_SVC MENU DISCARDABLE 
+BEGIN
+    MENUITEM "開始(&S)",                    M_SVC_START
+    MENUITEM "停止(&S)",                    M_SVC_STOP
+    MENUITEM "再始動(&R)",                  M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "ログ・ファイルの表示(&V)",    M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "削除(&L)",                    M_SVC_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "最新表示(&F)",                M_REFRESH
+    MENUITEM "プロパティー(&R)",            M_PROPERTIES
+END
+
+MENU_AGG_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "標準(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "すべてのアイコン(&A)",        M_VIEW_TWOICONS, CHECKED
+        MENUITEM "状況のみ(&S)",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "ボリュームの作成(&C)...",     M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "すべて最新表示(&F)",          M_REFRESHALL
+END
+
+MENU_SVC_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "標準(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "すべてのアイコン(&A)",        M_VIEW_TWOICONS, CHECKED
+        MENUITEM "状況のみ(&S)",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "サービスの作成(&C)...",       M_SVC_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "すべて最新表示(&F)",          M_REFRESHALL
+END
+
+MENU_SET MENU DISCARDABLE 
+BEGIN
+    MENUITEM "複製(&P)...",                 M_SET_REPLICATION
+    MENUITEM "即時解放(&S)",                M_SET_RELEASE
+    MENUITEM SEPARATOR
+    MENUITEM "バックアップ(&B)...",         M_SET_CLONE
+    MENUITEM "ファイルにダンプ(&D)...",     M_SET_DUMP
+    MENUITEM "ファイルから復元(&R)...",     M_SET_RESTORE
+    MENUITEM "割り当て量の設定(&Q)...",     M_SET_SETQUOTA
+    MENUITEM "サルベージ(&G)...",           M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "移動先(&M)...",               M_SET_MOVETO
+    MENUITEM "名前変更(&N)...",             M_SET_RENAME
+    MENUITEM "削除(&L)",                    M_SET_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "ロック(&K)",                  M_SET_LOCK
+    MENUITEM "ロック解除(&U)",              M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "最新表示(&F)",                M_REFRESH
+    MENUITEM "プロパティー(&R)",            M_PROPERTIES
+END
+
+MENU_SVR MENU DISCARDABLE 
+BEGIN
+    MENUITEM "サーバー・ウィンドウのオープン(&O)", M_SVR_OPEN
+    MENUITEM "サーバー・ウィンドウのクローズ(&C)", M_SVR_CLOSE
+    MENUITEM "このサーバーをモニター(&M)",  M_SVR_MONITOR, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "サーバー・セキュリティーの編集(&S)...", M_SVR_SECURITY
+    MENUITEM "データベース・ホストの管理(&H)...", M_SVR_HOSTS
+    MENUITEM "ボリュームのバックアップ(&B)...", M_SET_CLONE
+    MENUITEM "すべてのボリュームをロック解除(&U)", M_SET_UNLOCK
+    MENUITEM "VLDB の同期化(&Y)...",        M_SYNCVLDB
+    MENUITEM "ボリュームのサルベージ(&G)...", M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "ファイルのインストール(&I)...", M_SVR_INSTALL
+    MENUITEM "ファイルのアンインストール(&U)...", M_SVR_UNINSTALL
+    MENUITEM "旧ファイルの削除(&P)...",     M_SVR_PRUNE
+    MENUITEM SEPARATOR
+    MENUITEM "ファイル日付の取得(&T)...",   M_SVR_GETDATES
+    MENUITEM "ログ・ファイルの表示(&V)...", M_VIEWLOG
+    MENUITEM "コマンドの実行(&X)...",       M_EXECUTE
+    MENUITEM SEPARATOR
+    MENUITEM "最新表示(&F)",                M_REFRESH
+    MENUITEM "プロパティー(&R)",            M_PROPERTIES
+END
+
+MENU_SVR_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "大アイコン(&G)",              M_SVR_VIEW_LARGE, CHECKED
+        MENUITEM "小アイコン(&M)",              M_SVR_VIEW_SMALL, CHECKED
+        MENUITEM "詳細(&D)",                    M_SVR_VIEW_REPORT, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "標準(&N)",                    M_SVR_VIEW_ONEICON, CHECKED
+        MENUITEM "すべてのアイコン(&A)",        M_SVR_VIEW_TWOICONS, CHECKED
+        MENUITEM "状況のみ(&S)",                M_SVR_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "モニターされるサーバー(&M)...", M_SUBSET
+    MENUITEM SEPARATOR
+    MENUITEM "すべてのボリュームをロック解除(&U)", M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "すべてクローズ(&C)",          M_SVR_CLOSEALL
+    MENUITEM "すべて最新表示(&F)",          M_REFRESHALL
+END
+
+MENU_SET_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "表示(&V)"
+    BEGIN
+        MENUITEM "ボリュームごと(&V)",          M_SET_VIEW_REPORT, CHECKED
+        MENUITEM "パーティションごと(&P)",      M_SET_VIEW_TREELIST, CHECKED
+        MENUITEM "詳細なし(&D)",                M_SET_VIEW_TREE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "標準(&N)",                    M_VIEW_ONEICON, CHECKED
+        MENUITEM "すべてのアイコン(&A)",        M_VIEW_TWOICONS, CHECKED
+        MENUITEM "状況のみ(&S)",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "ボリュームの作成(&C)...",     M_SET_CREATE
+    MENUITEM "ファイルから復元(&R)...",     M_SET_RESTORE
+    MENUITEM SEPARATOR
+    MENUITEM "ボリュームのバックアップ(&B)...", M_SET_CLONE
+    MENUITEM SEPARATOR
+    MENUITEM "すべてロック解除(&U)",        M_SET_UNLOCK
+    MENUITEM "すべて最新表示(&F)",          M_REFRESHALL
+END
+
+MENU_COLUMNS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "列(&C)...",                   M_COLUMNS
+END
+
+MENU_SVC_BOS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "再始動(&R)",                  M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "ログ・ファイルの表示(&V)",    M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "最新表示(&F)",                M_REFRESH
+    MENUITEM "プロパティー(&R)",            M_PROPERTIES
+END
+
+MENU_SET_DRAGDROP MENU DISCARDABLE 
+BEGIN
+    MENUITEM "ここに移動(&M)...",           M_SET_MOVEHERE
+    MENUITEM "ここに複製(&R)...",           M_SET_REPHERE
+    MENUITEM SEPARATOR
+    MENUITEM "取消し(&C)",                  IDC_STATIC
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVICES DIALOGEX 0, 0, 179, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "サービス:",IDC_SVC_DESC,0,5,179,8
+    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,0,17,179,
+                    55,WS_EX_STATICEDGE
+    PUSHBUTTON      "作成(&C)...",IDC_SVC_CREATE,44,78,42,12
+    PUSHBUTTON      "削除(&L)",IDC_SVC_DELETE,88,78,39,12
+    PUSHBUTTON      "再始動(&R)",IDC_SVC_RESTART,129,78,45,12
+END
+
+IDD_AGGREGATES DIALOGEX 0, 0, 165, 84
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "パーティション:",IDC_AGG_DESC,0,5,159,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,0,16,165,
+                    47,WS_EX_STATICEDGE
+    PUSHBUTTON      "ボリュームの作成(&C)...",IDC_AGG_CREATESET,71,70,90,12
+END
+
+IDD_FILESETS DIALOGEX 0, 0, 231, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "ボリューム:",IDC_SET_DESC,0,5,224,8
+    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,0,17,224,
+                    51,WS_EX_STATICEDGE
+    PUSHBUTTON      "作成(&C)...",IDC_SET_CREATE,1,77,42,12
+    PUSHBUTTON      "削除(&L)",IDC_SET_DELETE,45,77,39,12
+    PUSHBUTTON      "複製(&R)...",IDC_SET_REP,85,77,51,12
+    PUSHBUTTON      "割り当て量の設定(&Q)...",IDC_SET_SETQUOTA,137,77,90,12
+END
+
+IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,23,216,
+                    129,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "管理者の追加(&A)",IDC_LIST_ADD,69,157,69,14
+    PUSHBUTTON      "管理者の削除(&R)",IDC_LIST_REMOVE,138,157,80,14
+    LTEXT           "サーバー %1 の管理者:",IDC_LIST_NAME,5,7,216,10
+END
+
+IDD_AGG_GENERAL DIALOGEX 0, 0, 267, 160
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ID:",IDC_STATIC,7,30,31,8
+    LTEXT           "(照会中)",IDC_AGG_ID,54,30,208,8
+    LTEXT           "装置:",IDC_STATIC,7,46,31,8
+    LTEXT           "(照会中)",IDC_AGG_DEVICE,54,46,208,8
+    LTEXT           "ボリューム:",IDC_STATIC,7,62,39,8
+    LTEXT           "(照会中)",IDC_AGG_FILESETS,54,62,208,8
+    CONTROL         "結合ボリューム割り当て量が容量を超えた場合は警告を表示(&V)",
+                    IDC_AGG_WARNALLOC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    18,76,221,10
+    LTEXT           "使用率:",IDC_STATIC,7,90,27,8
+    LTEXT           "(照会中)",IDC_AGG_USAGE,54,90,200,8
+    CONTROL         "",IDC_AGG_USAGEBAR,"msctls_progress32",0x0,38,103,224,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "パーティションの使用率が超過した場合に警告を表示(&W)",
+                    IDC_AGG_WARN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,
+                    116,220,10
+    CONTROL         "このサーバーのデフォルトしきい値(&D)",
+                    IDC_AGG_WARN_AGGFULL_DEF,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,49,129,203,9
+    CONTROL         "そのサイズの",IDC_AGG_WARN_AGGFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,49,143,55,9
+    EDITTEXT        IDC_AGG_WARN_AGGFULL_PERCENT,112,141,29,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "% のしきい値(&T)",IDC_AGG_WARN_AGGFULL_DESC,166,143,92,
+                    8
+    ICON            IDI_AGGREGATE,IDC_STATIC,5,5,20,20
+    LTEXT           "パーティション %2 (サーバー %1)",IDC_AGG_NAME,34,8,228,
+                    16
+END
+
+IDD_SVR_GENERAL DIALOG DISCARDABLE  0, 0, 226, 188
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "IP アドレス:",IDC_STATIC,5,34,37,8
+    LISTBOX         IDC_SVR_ADDRESSES,53,32,70,10,LBS_NOSEL | NOT WS_BORDER | 
+                    WS_VSCROLL
+    PUSHBUTTON      "アドレスの変更(&A)...",IDC_SVR_CHANGEADDR,134,32,82,12
+    PUSHBUTTON      "認証が必要(&R)",IDC_SVR_AUTH_YES,41,81,84,12
+    PUSHBUTTON      "未認証を許可(&U)",IDC_SVR_AUTH_NO,129,81,80,12
+    LTEXT           "パーティション数:",IDC_STATIC,11,131,90,8
+    LTEXT           "(照会中)",IDC_SVR_NUMAGGREGATES,113,131,99,8
+    LTEXT           "総容量:",IDC_STATIC,11,148,48,8
+    LTEXT           "(照会中)",IDC_SVR_CAPACITY,113,148,99,8
+    LTEXT           "結合ボリューム割り当て量:",IDC_STATIC,11,165,93,8
+    LTEXT           "(照会中)",IDC_SVR_ALLOCATION,113,165,99,8
+    ICON            IDI_SERVER,IDC_STATIC,5,5,20,20
+    LTEXT           "(サーバー名)",IDC_SVR_NAME,39,10,179,15
+    GROUPBOX        "セキュリティー",IDC_STATIC,5,52,216,52
+    GROUPBOX        "記憶域",IDC_STATIC,5,115,216,68
+    LTEXT           "このサーバーへの全アクセスの認証を必要にできます。",
+                    IDC_STATIC,11,67,201,8
+END
+
+IDD_SVR_SCOUT DIALOG DISCARDABLE  0, 0, 244, 158
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "このサーバーのパーティションが",IDC_SVR_WARN_AGGFULL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,18,116,9
+    EDITTEXT        IDC_SVR_WARN_AGGFULL_PERCENT,144,16,24,12,ES_AUTOHSCROLL
+    LTEXT           "% フル",IDC_STATIC,184,18,25,8
+    CONTROL         "このサーバーのボリュームが",IDC_SVR_WARN_SETFULL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,32,116,9
+    EDITTEXT        IDC_SVR_WARN_SETFULL_PERCENT,144,30,24,12,ES_AUTOHSCROLL
+    LTEXT           "% フル",IDC_STATIC,184,32,25,8
+    CONTROL         "パーティションの結合割り当て量が容量を超えた",
+                    IDC_SVR_WARN_AGGALLOC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,46,195,9
+    CONTROL         "このサーバーのサービスが実行を停止した",
+                    IDC_SVR_WARN_SVCSTOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,60,195,9
+    CONTROL         "このサーバーのボリュームに VLDB 項目がない",
+                    IDC_SVR_WARN_SETNOVLDB,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,74,195,9
+    CONTROL         "VLDB がこのサーバーのオフライン・パーティションを参照",
+                    IDC_SVR_WARN_AGGNOSERV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,88,195,9
+    CONTROL         "VLDB がこのサーバーのオフライン・ボリュームを参照",
+                    IDC_SVR_WARN_SETNOSERV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,103,195,9
+    CONTROL         "サーバー情報を",IDC_SVR_AUTOREFRESH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,140,63,9
+    EDITTEXT        IDC_SVR_AUTOREFRESH_MINUTES,79,138,27,13,ES_AUTOHSCROLL
+    LTEXT           "分ごとに最新表示",IDC_STATIC,125,140,65,8
+    LTEXT           "以下の場合に警告を表示",IDC_STATIC,5,5,195,8
+END
+
+IDD_SVC_GENERAL DIALOG DISCARDABLE  0, 0, 225, 207
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    PUSHBUTTON      "サービス・ログの表示(&V)",IDC_SVC_VIEWLOG,8,184,101,14
+    PUSHBUTTON      "即時開始(&S)",IDC_SVC_START,110,184,53,14
+    PUSHBUTTON      "即時停止(&P)",IDC_SVC_STOP,164,184,53,14
+    CONTROL         "サービスが停止していた場合は警告を表示(&W)",
+                    IDC_SVC_WARNSTOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    11,164,200,10
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "サービス %2 (サーバー %1)",IDC_SVC_NAME,31,6,188,20
+    LTEXT           "タイプ:",IDC_STATIC,7,34,37,8
+    LTEXT           "(照会中)",IDC_SVC_TYPE,77,34,138,8
+    LTEXT           "パラメーター:",IDC_STATIC,7,50,42,8
+    EDITTEXT        IDC_SVC_PARAMS,58,50,156,13,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "ノーティファイヤー:",IDC_STATIC,7,66,63,8
+    LTEXT           "(照会中)",IDC_SVC_NOTIFIER,77,66,138,8
+    LTEXT           "最終開始:",IDC_STATIC,7,82,34,8
+    LTEXT           "(照会中)",IDC_SVC_STARTDATE,77,82,138,8
+    LTEXT           "最終停止:",IDC_STATIC,7,98,34,8
+    LTEXT           "(照会中)",IDC_SVC_STOPDATE,77,98,138,8
+    LTEXT           "最終障害:",IDC_STATIC,7,115,34,8
+    EDITTEXT        IDC_SVC_LASTERROR,58,114,156,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "サービス状況",IDC_STATIC,5,131,215,71
+    LTEXT           "このサービスの現在の状況を判別中...",IDC_SVC_STATUS,11,
+                    147,203,8
+END
+
+IDD_SET_GENERAL DIALOGEX 0, 0, 273, 214
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ボリューム ID:",IDC_STATIC,5,30,51,8
+    LTEXT           "(不明)",IDC_SET_ID,89,30,173,8
+    LTEXT           "作成:",IDC_STATIC,5,46,39,8
+    LTEXT           "(照会中)",IDC_SET_CREATEDATE,89,46,173,8
+    LTEXT           "更新:",IDC_STATIC,5,62,39,8
+    LTEXT           "(照会中)",IDC_SET_UPDATEDATE,89,62,173,8
+    LTEXT           "アクセス:",IDC_STATIC,5,78,39,8
+    LTEXT           "(照会中)",IDC_SET_ACCESSDATE,89,78,173,8
+    LTEXT           "バックアップ:",IDC_STATIC,5,94,50,8
+    LTEXT           "(照会中)",IDC_SET_BACKUPDATE,89,94,173,8
+    LTEXT           "ファイル・カウント:",IDC_STATIC,5,110,74,8
+    LTEXT           "(照会中)",IDC_SET_FILES,89,110,173,8
+    LTEXT           "状況:",IDC_STATIC,5,125,18,8
+    LTEXT           "(照会中)",IDC_SET_STATUS,38,125,108,8
+    PUSHBUTTON      "ロック(&L)",IDC_SET_LOCK,152,123,49,12
+    PUSHBUTTON      "ロック解除(&U)",IDC_SET_UNLOCK,204,123,61,12
+    LTEXT           "使用率:",IDC_STATIC,5,141,24,8
+    LTEXT           "(照会中)",IDC_SET_USAGE,38,141,125,8
+    PUSHBUTTON      "割り当て量の設定(&Q)...",IDC_SET_QUOTA,175,139,90,12
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,49,156,213,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "ボリューム使用率が超過した場合は警告を表示(&W)",
+                    IDC_SET_WARN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,
+                    170,219,10
+    CONTROL         "このサーバーのデフォルトしきい値(&D) (サイズの %1%%)",
+                    IDC_SET_WARN_SETFULL_DEF,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,19,184,249,9
+    CONTROL         "そのサイズの",IDC_SET_WARN_SETFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,19,197,59,9
+    EDITTEXT        IDC_SET_WARN_SETFULL_PERCENT,86,195,29,12,ES_AUTOHSCROLL
+    LTEXT           "% のしきい値(&T)",IDC_SET_WARN_SETFULL_DESC,147,197,64,
+                    8
+    ICON            IDI_FILESET,IDC_STATIC,5,5,20,20
+    LTEXT           "ボリューム %3 (サーバー %1、パーティション %2)",
+                    IDC_SET_NAME,31,5,237,17
+END
+
+IDD_MAIN DIALOGEX 0, 0, 317, 226
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS サーバー・マネージャー"
+MENU MENU_MAIN
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "選択したセル:",IDC_STATIC,2,8,50,8
+    LTEXT           "(セル名がここに入ります)",IDC_CELL,62,8,208,9
+    LTEXT           "AFS トークン:",IDC_STATIC,2,21,50,8
+    LTEXT           "%2:%1 (トークンの期限 %3 に切れます)",IDC_AFS_ID,62,21,
+                    218,16
+    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,43,313,
+                    181,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
+    ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_SERVER DIALOG DISCARDABLE  0, 0, 209, 137
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "サーバー"
+CLASS "ServerWindowClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,2,2,205,133
+END
+
+IDD_SVC_CREATE DIALOGEX 0, 0, 225, 233
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー(&S):",IDC_STATIC,5,36,49,8
+    COMBOBOX        IDC_SVC_SERVER,62,33,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "サービス(&V):",IDC_STATIC,5,52,49,8
+    COMBOBOX        IDC_SVC_NAME,62,50,116,104,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "コマンド(&C):",IDC_STATIC,5,70,49,8
+    EDITTEXT        IDC_SVC_COMMAND,89,68,128,13,ES_AUTOHSCROLL
+    LTEXT           "パラメーター(&P):",IDC_STATIC,5,88,65,8
+    EDITTEXT        IDC_SVC_PARAMS,89,86,128,13,ES_AUTOHSCROLL
+    LTEXT           "ノーティファイヤー(&N):",IDC_STATIC,5,105,75,8
+    EDITTEXT        IDC_SVC_NOTIFIER,89,103,128,13,ES_AUTOHSCROLL
+    LTEXT           "ログ・ファイル(&L):",IDC_STATIC,5,122,72,8
+    EDITTEXT        IDC_SVC_LOGFILE,89,120,128,13,ES_AUTOHSCROLL
+    CONTROL         "シンプル(&I) (連続して実行)",IDC_SVC_TYPE_SIMPLE,"Button",
+                    BS_AUTORADIOBUTTON,11,154,201,10
+    CONTROL         "このサービスを即時開始(&T)",IDC_SVC_RUNNOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,166,183,10
+    CONTROL         "FS(&F) (ファイル・システム)",IDC_SVC_TYPE_FS,"Button",
+                    BS_AUTORADIOBUTTON,11,180,201,10
+    CONTROL         "Cron(&R) (指定の間隔で実行)",IDC_SVC_TYPE_CRON,"Button",
+                    BS_AUTORADIOBUTTON,11,195,201,10
+    LTEXT           "実行日時(&W):",IDC_STATIC,23,209,42,8
+    COMBOBOX        IDC_SVC_RUNDAY,76,207,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SVC_RUNTIME,"Time",WS_BORDER | WS_TABSTOP,158,207,
+                    53,13,WS_EX_CLIENTEDGE
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "新規サービス",IDC_SVC_DESC,35,9,179,14
+    GROUPBOX        "サービス・タイプ",IDC_STATIC,5,141,215,87
+END
+
+IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+                    199,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "即時解放(&R)",IDC_SET_RELEASE,11,145,53,14
+    PUSHBUTTON      "作成(&C)...",IDC_SET_REPSITE_ADD,126,145,42,14
+    PUSHBUTTON      "削除(&L)",IDC_SET_REPSITE_DELETE,172,145,38,14
+    LTEXT           "サーバー:",-1,9,31,42,8
+    LTEXT           "(サーバー名)",IDC_SET_SERVER,58,31,156,8
+    LTEXT           "パーティション:",-1,9,44,42,8
+    LTEXT           "(パーティション名)",IDC_SET_AGGREGATE,58,44,156,8
+    LTEXT           "ボリューム:",-1,9,18,42,8
+    LTEXT           "(ボリューム名)",IDC_SET_NAME,58,18,156,8
+    GROUPBOX        "読み取り / 書き込みボリューム",-1,5,5,211,56
+    GROUPBOX        "ボリューム・レプリカ",-1,5,67,211,96
+END
+
+IDD_OPENCELL DIALOG DISCARDABLE  0, 0, 219, 257
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "セルの選択 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "セル(&C):",IDC_STATIC,4,24,33,8
+    COMBOBOX        IDC_OPENCELL_CELL,43,22,171,143,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "AFS 認証",IDC_STATIC,4,44,211,92
+    LTEXT           "AFS ID(&I):",IDC_STATIC,22,100,55,8
+    EDITTEXT        IDC_OPENCELL_ID,100,98,109,14,ES_AUTOHSCROLL
+    LTEXT           "AFS パスワード(&P):",IDC_STATIC,22,116,67,8
+    EDITTEXT        IDC_OPENCELL_PASSWORD,100,114,109,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    PUSHBUTTON      "拡張(&V) >>",IDC_ADVANCED,4,140,53,14
+    DEFPUSHBUTTON   "了解",IDOK,76,140,41,14
+    PUSHBUTTON      "取消し",IDCANCEL,120,140,41,14
+    PUSHBUTTON      "ヘルプ(&H)",9,164,140,45,14
+    CONTROL         "このセルのすべてのサーバーをモニター(&L)",IDC_MON_ALL,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,10,196,185,9
+    CONTROL         "1 サーバーのみモニター(&M):",IDC_MON_ONE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,209,106,10
+    EDITTEXT        IDC_MON_SERVER,125,207,83,13,ES_AUTOHSCROLL
+    CONTROL         "次のサブセットのサーバーのみモニター(&S):",IDC_MON_SOME,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,10,223,146,10
+    COMBOBOX        IDC_MON_SUBSET,125,235,83,93,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "操作したい AFS セルを選択してください。",IDC_STATIC,4,7,
+                    200,8
+    GROUPBOX        "サーバーのモニター",IDC_ADVANCED_GROUP,4,162,211,91
+    LTEXT           "よりよいパフォーマンスのために、このセルで使用可能なサーバーのサブセットのみをモニターすることができます。",
+                    IDC_STATIC,10,172,199,20
+    LTEXT           "(照会中...)",IDC_OPENCELL_OLDCREDS,22,70,185,8
+    LTEXT           "セルの管理には AFS パスワードを再入力してください:",
+                    IDC_STATIC,10,85,197,8
+    LTEXT           "選択したセル内の現在の AFS トークン:",IDC_STATIC,10,57,
+                    196,8
+END
+
+IDD_TIMEOUT DIALOG DISCARDABLE  0, 0, 236, 157
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "警告 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "タスクが正常に完了するまで待機を続行(&C)",
+                    IDC_TIMEOUT_WAIT,"Button",BS_AUTORADIOBUTTON,21,87,208,
+                    10
+    CONTROL         "タスクの終了(&T)",IDC_TIMEOUT_KILL,"Button",
+                    BS_AUTORADIOBUTTON,21,101,208,10
+    DEFPUSHBUTTON   "了解",IDOK,93,137,50,14
+    LTEXT           "タスクの実行経過時間:",IDC_STATIC,6,119,137,8
+    LTEXT           "88:88:88",IDC_TIMEOUT_ELAPSED,155,119,29,8
+    LTEXT           "AFS サーバー・マネージャーは予想外に長い時間、ネットワーク・タスクの完了を待機しました。",
+                    IDC_STATIC,4,7,228,18
+    LTEXT           "タスクに実行を続けさせる (推奨) か、タスクが完了しないと思われる場合は AFS サーバー・マネージャーにタスクを終了させることができます。",
+                    IDC_STATIC,4,28,228,23
+    LTEXT           "このウィンドウが表示されても、タスクがまだ進行中であることに注意してください。タスクが完了すると、このウィンドウは自動的にクローズします。",
+                    IDC_STATIC,4,59,228,21
+END
+
+IDD_COLUMNS DIALOG DISCARDABLE  0, 0, 286, 148
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "列"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "リスト時に表示する列の選択(&S):",IDC_STATIC,5,7,111,8
+    COMBOBOX        IDC_COLUMNS,134,5,147,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "使用可能な列(&C):",IDC_STATIC,12,40,100,8
+    LISTBOX         IDC_COL_AVAIL,12,49,100,71,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "表示する列(&I):",IDC_STATIC,173,41,100,8
+    LISTBOX         IDC_COL_SHOWN,173,50,100,71,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "追加(&A) >>",IDC_COL_INSERT,119,68,46,14
+    PUSHBUTTON      "<< 削除(&R)",IDC_COL_DELETE,119,88,47,14
+    PUSHBUTTON      "上に移動(&U)",IDC_COL_UP,170,124,53,14
+    PUSHBUTTON      "下に移動(&D)",IDC_COL_DOWN,224,124,53,14
+    GROUPBOX        "列のリスト",IDC_STATIC,5,25,276,118
+END
+
+IDD_REFRESHALL DIALOG DISCARDABLE  0, 0, 269, 72
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "リフレッシュ中 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_REFRESH_PERCENTBAR,"msctls_progress32",0x0,4,37,
+                    256,8
+    LTEXT           "0%% 完了",IDC_REFRESH_PERCENT,4,49,171,8
+    LTEXT           "",IDC_REFRESH_CURRENT,4,60,192,8
+    LTEXT           "お待ちください...",IDC_REFRESH_DESC,4,7,256,25
+    PUSHBUTTON      "スキップ(&S)",IDC_REFRESH_SKIP,205,54,53,12,NOT 
+                    WS_TABSTOP
+END
+
+IDD_SET_CREATE DIALOGEX 0, 0, 321, 209
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの作成"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "名前(&N):",IDC_STATIC,6,30,39,8
+    EDITTEXT        IDC_SET_NAME,76,28,116,14,ES_AUTOHSCROLL
+    LTEXT           "割り当て量(&Q):",IDC_STATIC,6,48,58,8
+    EDITTEXT        IDC_SET_QUOTA,76,46,32,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,120,47,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "バックアップ(&B):",IDC_STATIC,6,66,60,8
+    CONTROL         "このボリュームのバックアップ・バージョンも作成(&R)",
+                    IDC_SET_CLONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,
+                    66,210,8
+    LTEXT           "サーバー(&S):",IDC_STATIC,6,84,49,8
+    COMBOBOX        IDC_SET_SERVER,76,82,116,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "パーティション(&P):",IDC_STATIC,6,100,73,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,46,112,271,
+                    70,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "了解",IDOK,152,188,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,207,188,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,263,188,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "新規ボリューム",IDC_STATIC,31,7,284,15
+END
+
+IDD_SET_DELETE DIALOG DISCARDABLE  0, 0, 307, 103
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの削除"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "取消し",IDCANCEL,196,85,50,14
+    CONTROL         "ボリューム %3 をサーバー %1、パーティション %2 から削除(&D)",
+                    IDC_DELSET_SERVER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    8,48,295,11
+    PUSHBUTTON      "了解",IDOK,142,85,50,14
+    CONTROL         "ボリューム %3 の VLDB 項目を削除(&V)",IDC_DELSET_VLDB,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,67,282,10
+    PUSHBUTTON      "ヘルプ(&H)",9,250,85,50,14
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "注意!\n\nこの操作を行うと、ボリューム %3 は永久に削除されます。",
+                    IDC_DELSET_DESC,31,8,272,29
+END
+
+IDD_SET_CLONE DIALOG DISCARDABLE  0, 0, 345, 85
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームのバックアップ - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,178,66,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,232,66,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,286,66,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "ボリューム・バックアップは、そのボリュームの読み取り専用コピーのような働きをします。読み取り/書き込みボリュームはバックアップ・バージョンを 1 つだけ持つことができます。",
+                    IDC_STATIC,29,5,312,16
+    LTEXT           "サーバー %1、パーティション %2 のボリューム %3 のバックアップを作成するには、「了解」をクリックします。このボリュームのバックアップがすでに存在する場合、バックアップは更新されます。",
+                    IDC_CLONE_DESC,29,29,312,30
+END
+
+IDD_SVC_PROBLEMS DIALOG DISCARDABLE  0, 0, 225, 194
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "既知の問題",IDC_PROBLEM_BOX,5,36,215,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,49,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,49,174,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,203,49,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,138,120,61,12
+    ICON            IDI_SERVICE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "サービス %2 (サーバー %1)",IDC_PROBLEM_TITLE,32,8,186,
+                    21
+END
+
+IDD_SVR_PROBLEMS DIALOG DISCARDABLE  0, 0, 226, 157
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "既知の問題",IDC_PROBLEM_BOX,5,38,216,112
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,51,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,27,60,172,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,204,51,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,139,134,61,12
+    ICON            IDI_SERVER_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "%1",IDC_PROBLEM_TITLE,32,10,189,20
+END
+
+IDD_AGG_PROBLEMS DIALOG DISCARDABLE  0, 0, 257, 151
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "既知の問題",IDC_PROBLEM_BOX,5,35,247,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,206,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,235,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,170,119,61,12
+    ICON            IDI_AGGREGATE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "パーティション %2 (サーバー %1)",IDC_PROBLEM_TITLE,33,8,
+                    219,16
+END
+
+IDD_SET_PROBLEMS DIALOG DISCARDABLE  0, 0, 273, 182
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    GROUPBOX        "既知の問題",IDC_PROBLEM_BOX,5,35,263,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,220,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,249,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,184,119,61,12
+    ICON            IDI_FILESET_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "ボリューム %3 (サーバー %1、パーティション %2)",
+                    IDC_PROBLEM_TITLE,31,5,237,20
+END
+
+IDD_SET_MOVETO DIALOGEX 0, 0, 277, 174
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの移動"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,72,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "了解",IDOK,115,153,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,167,153,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,219,153,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "A\nB\nC",IDC_MOVESET_DESC,31,4,236,24
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,35,269,1
+    LTEXT           "ボリュームの移動先(&M):",IDC_STATIC,4,41,116,8
+END
+
+IDD_SET_MOVING DIALOG DISCARDABLE  0, 0, 307, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリューム移動中 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,5,0,295,26
+    LTEXT           "ボリューム %3 をサーバー %1 のパーティション %2 からサーバー %4 のパーティション %5 に移動中...",
+                    IDC_MOVESET_DESC,1,29,305,34
+END
+
+IDD_SVC_LOGNAME DIALOG DISCARDABLE  0, 0, 277, 106
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ログ・ファイルの表示"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバーのログ・ファイルを表示(&S):",IDC_STATIC,2,35,
+                    137,8
+    COMBOBOX        IDC_VIEWLOG_SERVER,82,45,126,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "表示するサーバーのファイル(&F):",IDC_STATIC,2,63,121,8
+    EDITTEXT        IDC_VIEWLOG_FILENAME,82,73,185,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,166,91,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,220,91,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,2,1,20,20
+    LTEXT           "表示したいログ・ファイルの全パスを入力してください。",
+                    IDC_VIEWLOG_DESC,29,1,243,28
+END
+
+IDD_SVC_VIEWLOG DIALOG DISCARDABLE  0, 0, 307, 185
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "ログ・ファイルの表示"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ファイル・コンテンツ:",IDC_SVC_VIEWLOG_CONTENTS,4,48,
+                    280,8
+    EDITTEXT        IDC_VIEWLOG_TEXT,4,61,280,99,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "別名保管(&A)...",IDC_VIEWLOG_SAVEAS,167,167,58,14
+    DEFPUSHBUTTON   "クローズ(&C)",IDOK,227,167,53,14
+    ICON            IDI_SERVICE,-1,4,7,20,20
+    LTEXT           "サーバー %1 の [サービス %2 の] ログ・ファイル",
+                    IDC_SVC_VIEWLOG_DESC,30,9,273,15
+    LTEXT           "サーバーのファイル名: %1",IDC_SVC_VIEWLOG_FILENAME,30,
+                    32,273,8
+END
+
+IDD_SET_SETQUOTA DIALOGEX 0, 0, 271, 130
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリューム割り当て量の設定"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "現行割り当て量:",IDC_STATIC,4,66,50,8
+    LTEXT           "(不明)",IDC_SET_USAGE,62,66,194,8
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,62,78,201,8,
+                    WS_EX_STATICEDGE
+    LTEXT           "新規割り当て量(&Q):",IDC_STATIC,4,95,65,8
+    EDITTEXT        IDC_SET_QUOTA,79,93,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,123,93,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "了解",IDOK,106,113,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,160,113,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,214,113,50,14
+    PUSHBUTTON      "プロパティー(&P)...",IDC_AGG_PROPERTIES,193,34,69,12
+    LTEXT           "パーティション:",IDC_STATIC,4,36,50,8
+    LTEXT           "サーバー %1 のパーティション %2",IDC_SET_AGGREGATE,62,
+                    36,123,21
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "ボリューム %1",IDC_SET_NAME,36,8,228,19
+END
+
+IDD_ACTIONS DIALOGEX 0, 0, 236, 58
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "進行中の操作 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "次の操作が現在進行中です:",IDC_ACTION_DESC,2,2,232,8
+    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x3,2,14,232,43
+END
+
+IDD_SVR_SYNCVLDB DIALOG DISCARDABLE  0, 0, 269, 99
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "VLDB の同期化"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,107,79,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,161,79,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,215,79,50,14
+    ICON            32515,IDC_STATIC,4,4,20,20
+    LTEXT           "(実行時に設定)",IDC_SYNC_DESC,29,4,236,32
+    LTEXT           "(実行時に設定)",IDC_SYNC_DESC2,29,46,236,24
+END
+
+IDD_SET_CREATEREP DIALOGEX 0, 0, 277, 171
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの複製"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,67,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "了解",IDOK,112,150,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,166,150,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,220,150,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,21
+    LTEXT           "ボリューム %3 の新規レプリカ",IDC_SET_NAME,31,7,242,17
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,27,268,1
+    LTEXT           "このボリュームの新規レプリカを作成する場所(&C):",
+                    IDC_STATIC,4,34,259,8
+END
+
+IDD_SVR_INSTALL DIALOG DISCARDABLE  0, 0, 248, 156
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ファイルのインストール"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ソース・ファイル(&F):",IDC_STATIC,6,62,81,8
+    EDITTEXT        IDC_FILENAME,51,72,135,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "参照(&B)...",IDC_BROWSE,191,72,50,14
+    LTEXT           "ターゲット・サーバー(&S):",IDC_STATIC,6,88,97,8
+    COMBOBOX        IDC_SERVER,51,97,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ターゲット名(&N):",IDC_STATIC,6,112,66,8
+    EDITTEXT        IDC_DIRECTORY,51,121,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,83,140,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,137,140,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,191,140,50,14
+    ICON            IDI_INSTALL,IDC_STATIC,4,2,20,20
+    LTEXT           "サーバーにファイルをインストール",IDC_STATIC,32,6,205,
+                    15
+    LTEXT           "(テキストは実行時に設定)\n(テキストは実行時に設定)\n(テキストは実行時に設定)\n(テキストは実行時に設定)",
+                    IDC_INSTALL_DESC,4,27,240,31
+END
+
+IDD_SVR_UNINSTALL DIALOG DISCARDABLE  0, 0, 248, 139
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ファイルのアンインストール"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー(&S):",IDC_STATIC,6,66,49,8
+    COMBOBOX        IDC_SERVER,64,64,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "ターゲット・ファイル(&F):",IDC_STATIC,6,85,97,8
+    EDITTEXT        IDC_FILENAME,64,97,175,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,88,119,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,141,119,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,194,119,50,14
+    ICON            IDI_UNINSTALL,IDC_STATIC,4,4,20,20
+    LTEXT           "サーバーからファイルをアンインストール",IDC_STATIC,32,
+                    12,205,8
+    LTEXT           "この操作は、特定のサーバー上に以前にインストールされたファイルのコピーを復元します。選択したファイルに以前インストールされたコピーがない場合、ファイルは削除されます。",
+                    IDC_STATIC,6,29,234,26
+END
+
+IDD_SVR_PRUNE DIALOG DISCARDABLE  0, 0, 255, 141
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "旧ファイルの削除"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー:",-1,4,56,41,8
+    COMBOBOX        IDC_SERVER,57,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "すべてのコア・ファイルを削除(&C)",IDC_OP_DELETE_CORE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,85,138,10
+    CONTROL         "すべての .BAK ファイルを削除(&B) (ファイル・バックアップ)",
+                    IDC_OP_DELETE_BAK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,96,229,10
+    CONTROL         "すべての .OLD ファイルを削除(&O) (旧ファイル・バックアップ)",
+                    IDC_OP_DELETE_OLD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,107,232,10
+    DEFPUSHBUTTON   "了解",IDOK,38,121,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,92,121,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,201,121,50,14
+    ICON            IDI_PRUNE,-1,6,5,20,20
+    LTEXT           "旧ファイルをサーバーから削除",-1,39,10,205,11
+    LTEXT           "この操作は、特定のサーバーにインストールされたファイルのバックアップ・コピーを削除します。",
+                    -1,7,32,240,16
+    LTEXT           "削除するファイル:",-1,4,73,66,8
+END
+
+IDD_SET_RENAME DIALOG DISCARDABLE  0, 0, 277, 133
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの名前変更"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "現在の名前(&O):",IDC_STATIC,31,67,51,8
+    EDITTEXT        IDC_RENSET_OLD,94,65,122,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "新しい名前(&N):",IDC_STATIC,31,85,51,8
+    EDITTEXT        IDC_RENSET_NEW,94,83,122,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,112,111,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,166,111,50,14
+    PUSHBUTTON      "ヘルプ",9,220,111,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,21
+    LTEXT           "ボリューム %3 を名前変更するには、新しい名前を入力してください。自動的にボリュームのバックアップとそのすべてのレプリカの名前が変更されます。\n\n注意: マウントされたボリュームを名前変更する場合は、そのマウント・ポイントの削除と再作成が必要になります。",
+                    IDC_RENSET_DESC,29,7,242,48
+END
+
+IDD_SVC_DELETE DIALOG DISCARDABLE  0, 0, 307, 69
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "サービスの削除"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "取消し",IDCANCEL,195,47,50,14
+    PUSHBUTTON      "了解",IDOK,141,47,50,14
+    PUSHBUTTON      "ヘルプ",9,249,47,50,14
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "注意!\n\nこの操作により、サービス %2 は停止され、サーバー %1 から削除されます。",
+                    IDC_DELSVC_DESC,31,7,266,33
+END
+
+IDD_SVR_GETDATES DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ファイル日付の取得"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー(&S):",-1,4,56,49,8
+    COMBOBOX        IDC_SERVER,62,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "照会するファイル(&F):",-1,4,73,81,8
+    EDITTEXT        IDC_FILENAME,62,85,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,84,104,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,138,104,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,192,104,50,14
+    ICON            IDI_GETDATES,-1,4,4,20,20
+    LTEXT           "サーバーのファイルの日付を取得",-1,32,10,212,10
+    LTEXT           "この操作は、ファイルとそのバックアップ (存在する場合) が最後に変更された日付を取得します。",
+                    -1,6,29,234,16
+END
+
+IDD_SVR_GETDATES_RESULTS DIALOG DISCARDABLE  0, 0, 248, 132
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ファイル日付の取得 - 結果"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー:",IDC_STATIC,6,30,39,8
+    LTEXT           "(実行時に設定)",IDC_SERVER,58,30,179,8
+    LTEXT           "ファイル名:",IDC_STATIC,6,45,42,8
+    LTEXT           "(実行時に設定)",IDC_FILENAME,58,45,179,8
+    LTEXT           "ファイル日付:",IDC_STATIC,6,60,44,8
+    LTEXT           "(不明、ファイルが見つかりません)",IDC_DATE_FILE,58,60,
+                    179,8
+    LTEXT           ".BAK 日付:",IDC_STATIC,6,75,37,8
+    LTEXT           "(不明、ファイルが見つかりません)",IDC_DATE_BAK,58,75,
+                    179,8
+    LTEXT           ".OLD 日付:",IDC_STATIC,6,90,37,8
+    LTEXT           "(不明、ファイルが見つかりません)",IDC_DATE_OLD,58,90,
+                    179,8
+    DEFPUSHBUTTON   "クローズ(&C)",IDOK,99,112,53,14
+    ICON            IDI_GETDATES,IDC_STATIC,4,4,20,20
+    LTEXT           "サーバーのファイルの日付を取得",IDC_STATIC,32,12,212,8
+END
+
+IDD_SET_DUMP DIALOGEX 0, 0, 307, 145
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームのダンプ - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "作成するダンプ・ファイル(&N):",IDC_STATIC,4,36,114,8
+    EDITTEXT        IDC_DUMP_FILENAME,82,46,151,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "参照(&B)...",IDC_DUMP_BROWSE,239,46,49,14
+    CONTROL         "ボリューム %3 (パーティション %1:%2) の内容全体をダンプ(&E)",
+                    IDC_DUMP_FULL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,8,
+                    75,289,13
+    CONTROL         "この日時以降に変更されたファイルのみダンプ(&S)",
+                    IDC_DUMP_LIMIT_TIME,"Button",BS_AUTORADIOBUTTON,8,96,157,
+                    10
+    CONTROL         "",IDC_DUMP_TIME,"Time",WS_BORDER | WS_TABSTOP,171,103,
+                    51,13,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_DUMP_DATE,"Date",WS_BORDER | WS_TABSTOP,231,103,
+                    56,13,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "了解",IDOK,141,126,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,193,126,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,249,126,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "この操作はボリュームの内容を 1 つのファイルにコピーするため、ボリュームを簡単にバックアップすることができます。この方法でダンプされたボリュームの内容は、後で復元が可能です。",
+                    IDC_STATIC,30,7,255,24
+    GROUPBOX        "ダンプ・パラメーター",IDC_STATIC,4,62,299,58
+END
+
+IDD_SET_RESTORE DIALOGEX 0, 0, 292, 248
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの復元 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "復元するファイル(&R):",IDC_STATIC,4,32,62,8
+    EDITTEXT        IDC_RESTORE_FILENAME,75,29,154,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "参照(&B)...",IDC_RESTORE_BROWSE,236,29,50,14
+    CONTROL         "これは増分ダンプ・ファイルです(&I)",
+                    IDC_RESTORE_INCREMENTAL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,75,50,142,10
+    LTEXT           "ボリューム(&V):",IDC_STATIC,11,103,48,8
+    EDITTEXT        IDC_RESTORE_SETNAME,75,101,115,14,ES_AUTOHSCROLL
+    LTEXT           "サーバー(&S):",IDC_STATIC,11,146,44,8
+    COMBOBOX        IDC_RESTORE_SERVER,75,145,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "パーティション(&P):",IDC_STATIC,11,161,55,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,50,176,231,
+                    42,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "了解",IDOK,125,229,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,180,229,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,235,229,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "ダンプ・ファイルからボリュームを復元",IDC_STATIC,33,8,
+                    255,9
+    GROUPBOX        "ターゲット・ボリューム",IDC_STATIC,4,63,284,160
+    LTEXT           "ダンプ・ファイルからボリュームを復元するときは、新しいボリュームを作成するか、既存の読み取り/書き込みボリュームに上書きすることができます。",
+                    IDC_STATIC,8,76,276,18
+    LTEXT           "(実行時に設定)\n(実行時に設定)",IDC_RESTORE_CREATE,31,
+                    120,253,17
+END
+
+IDD_SVC_BOS DIALOGEX 0, 0, 265, 207
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "このサーバーの全サービスを定期的に停止/再始動(&P)",
+                    IDC_BOS_GENRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    76,204,10
+    LTEXT           "再始動(&R)",IDC_BOS_GENRES_DESC1,21,92,37,8
+    COMBOBOX        IDC_BOS_GENRES_DATE,65,89,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_BOS_GENRES_TIME,"Time",WS_BORDER | WS_TABSTOP,157,
+                    89,53,13,WS_EX_CLIENTEDGE
+    CONTROL         "このサーバーの全サービスの新規バイナリーを定期的にテスト(&B)",
+                    IDC_BOS_BINRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    157,246,10
+    LTEXT           "テスト(&S)",IDC_BOS_BINRES_DESC1,21,173,36,8
+    COMBOBOX        IDC_BOS_BINRES_DATE,65,170,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_BOS_BINRES_TIME,"Time",WS_BORDER | WS_TABSTOP,157,
+                    170,53,13,WS_EX_CLIENTEDGE
+    ICON            IDI_BOSSERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "サービス %2 (サーバー %1)",IDC_SVC_NAME,33,8,224,16
+    GROUPBOX        "BOS サービス",IDC_STATIC,5,33,254,169
+    LTEXT           "BOS サービスを使用して、このサーバーのすべてのサービス (BOS サービス自体を含む) を停止および再始動することができます。",
+                    IDC_STATIC,9,47,248,22
+    LTEXT           "また、BOS サービスを使用して、サーバーのすべてのサービスを定期的にテストし、バイナリー・ファイルが更新されたサービスのみを停止および再始動することができます。",
+                    IDC_STATIC,11,113,240,35
+END
+
+IDD_SET_DUMPING DIALOG DISCARDABLE  0, 0, 307, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームのダンプ中 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,4,0,296,30
+    LTEXT           "ダンプ・ファイル %4 をボリューム %3 から作成中...",
+                    IDC_DUMPSET_DESC,4,36,294,24
+END
+
+IDD_SET_RESTORING DIALOG DISCARDABLE  0, 0, 307, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの復元中 - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,4,0,295,29
+    LTEXT           "ボリューム %1 をダンプ・ファイル %2 から復元中...",
+                    IDC_RESTORESET_DESC,4,34,294,30
+END
+
+IDD_SET_CLONESYS DIALOG DISCARDABLE  0, 0, 258, 163
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームのバックアップ - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "このセルの全ボリュームのバックアップ・バージョンを作成(&A)",
+                    IDC_CLONE_ALL,"Button",BS_AUTORADIOBUTTON,6,53,242,10
+    GROUPBOX        "     ",IDC_STATIC,4,68,249,67
+    CONTROL         "以下の基準に一致するボリュームのバックアップのみ作成(&O)",
+                    IDC_CLONE_SOME,"Button",BS_AUTORADIOBUTTON,6,67,234,11
+    CONTROL         "次のサーバーのボリュームのみ(&S):",IDC_CLONE_SVR_LIMIT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,83,140,10
+    COMBOBOX        IDC_CLONE_SVR,164,82,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "次のパーティションのボリュームのみ(&P):",
+                    IDC_CLONE_AGG_LIMIT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,99,140,10
+    COMBOBOX        IDC_CLONE_AGG,164,98,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "名前が次で始まるボリュームのみ(&B):",
+                    IDC_CLONE_PREFIX_LIMIT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,116,140,10
+    EDITTEXT        IDC_CLONE_PREFIX,164,115,85,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,92,142,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,146,142,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,201,142,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "ボリューム・バックアップは、そのボリュームの読み取り専用コピーのような働きをします。読み取り/書き込みボリュームはバックアップ・バージョンを 1 つだけ持つことができます。\n\n複数のボリュームのバックアップ・バージョンを同時に作成できます。",
+                    IDC_STATIC,30,7,214,40
+END
+
+IDD_SUBSETS DIALOGEX 0, 0, 281, 182
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "モニターされるサーバー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サブセット名:",IDC_STATIC,13,73,50,8
+    EDITTEXT        IDC_SUBSET_NAME,54,84,111,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    PUSHBUTTON      "オープン(&O)...",IDC_SUBSET_LOAD,171,84,58,14
+    PUSHBUTTON      "保管(&S)...",IDC_SUBSET_SAVE,230,84,42,14
+    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x153,7,111,182,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "すべてモニター(&A)",IDC_SUBSET_ALL,196,122,77,14
+    PUSHBUTTON      "モニターしない(&N)",IDC_SUBSET_NONE,196,140,77,14
+    LTEXT           "大きなセルでのパフォーマンスを改善するには、問題について特定のサーバーをモニターしないことを選択します。AFS サーバー・マネージャーは、モニターされないサーバーのボリューム、パーティション、またはサービスは表示しません。",
+                    IDC_STATIC,5,2,271,27
+    LTEXT           "サーバーのモニター (またはモニターしない) はいつでも選択できます。サーバー・サブセットを作成して、モニターするサーバーのリストを指定することができます。",
+                    IDC_STATIC,5,36,271,20
+    GROUPBOX        "現行サブセット",IDC_STATIC,5,63,271,114
+    LTEXT           "モニターするサーバー:",IDC_STATIC,12,100,82,8
+END
+
+IDD_SUBSET_LOADSAVE DIALOGEX 0, 0, 280, 145
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "(タイトルは実行時に設定)"
+FONT 9, "ＭＳ Ｐゴシック", 0, 0, 0x1
+BEGIN
+    LTEXT           "サブセット名(&N):",1090,5,108,66,8,SS_NOTIFY
+    EDITTEXT        IDC_SUBSET_NAME,54,120,159,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "オープン(&O)",IDOK,221,108,53,14
+    PUSHBUTTON      "取消し(&L)",IDCANCEL,221,125,53,14
+    CONTROL         "List1",IDC_SUBSET_LIST,"SysListView32",LVS_LIST | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_EDITLABELS | 
+                    LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,4,20,272,82,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "",IDC_SUBSET_RENAME,187,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    PUSHBUTTON      "",IDC_SUBSET_DELETE,203,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    LTEXT           "このセルにすでに定義されているサブセット:",IDC_STATIC,4,
+                    6,162,8
+END
+
+IDD_HELP_FIND DIALOG DISCARDABLE  0, 0, 218, 73
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "コマンド検索"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    COMBOBOX        IDC_FIND_COMMAND,4,36,137,170,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "ヘルプの表示(&H)",IDOK,144,36,69,14
+    PUSHBUTTON      "取消し(&C)",IDCANCEL,144,53,69,14
+    LTEXT           "AFS サーバー・マネージャーを使用してタスクを実行する方法を見るには、下のコマンド行を選択して「ヘルプの表示」ボタンをクリックしてください。",
+                    IDC_STATIC,4,4,210,25
+END
+
+IDD_HELP_ERROR DIALOG DISCARDABLE  0, 0, 218, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "エラー・コードの検索"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "エラー番号(&E):",IDC_STATIC,4,41,50,8
+    EDITTEXT        IDC_ERROR_NUMBER,63,39,78,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "変換(&T)",IDC_ERROR_TRANSLATE,147,39,67,14
+    PUSHBUTTON      "クローズ(&C)",IDCANCEL,85,121,53,14
+    LTEXT           "(テキストは実行時に設定)",IDC_ERROR_DESC,4,65,210,48
+    LTEXT           "エラー・コードの意味を調べるには、コードを下に入力して「変換」ボタンをクリックしてください。",
+                    IDC_STATIC,4,4,210,25
+    CONTROL         "",IDC_ADVANCED_BOX,"Static",SS_ETCHEDHORZ,4,60,211,1
+END
+
+IDD_HELP_ABOUT DIALOG DISCARDABLE  0, 0, 230, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS サーバー・マネージャーについて"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    ICON            IDI_MAIN,IDC_HELPABOUT_ICON,4,8,20,20
+    LTEXT           "AFS サーバー・マネージャー バージョン 3.5",IDC_STATIC,
+                    33,8,163,8
+    LTEXT           "Copyright (C) IBM Corporation 1989, 1999",IDC_STATIC,33,
+                    20,183,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,37,222,1
+    CTEXT           "",IDC_HELPABOUT_DESC,4,48,222,56
+    PUSHBUTTON      "クローズ(&C)",IDOK,89,121,53,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,114,222,1
+END
+
+IDD_OPENINGCELL DIALOG DISCARDABLE  0, 0, 241, 46
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "AFS サーバー・マネージャーが %1 セル内のサーバーを検索中...",
+                    IDC_OPENCELL_DESC,41,15,183,16
+    GROUPBOX        "",IDC_STATIC,4,2,231,39
+    ICON            IDI_MAIN,IDC_ANIMATE,12,12,18,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_OPTIONS_GENERAL DIALOG DISCARDABLE  0, 0, 309, 136
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "サーバーの完全修飾ドメイン名 (例: ""machine.company.com"") を表示",
+                    IDC_OPT_SVR_LONGNAMES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,5,238,10
+    CONTROL         "管理トークンなしで機能する場合に警告を表示(&W)",
+                    IDC_OPT_WARN_BADCREDS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,19,238,10
+    CONTROL         "...常にサーバー・プロパティーを表示",
+                    IDC_OPT_SVR_DBL_PROP,"Button",BS_AUTORADIOBUTTON,11,50,
+                    238,10
+    CONTROL         "...クィック・ビュー・ペインのオープン時のみサーバー・プロパティーを表示",
+                    IDC_OPT_SVR_DBL_DEPENDS,"Button",BS_AUTORADIOBUTTON,11,
+                    63,238,10
+    CONTROL         "...常にそのサーバーのウィンドウをオープン",
+                    IDC_OPT_SVR_DBL_OPEN,"Button",BS_AUTORADIOBUTTON,11,75,
+                    238,10
+    CONTROL         "...サーバー・ウィンドウのオープンで、そのサーバーをモニター",
+                    IDC_OPT_SVR_OPENMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,107,238,10
+    CONTROL         "...サーバー・ウィンドウのクローズで、そのサーバーをモニター解除",
+                    IDC_OPT_SVR_CLOSEUNMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,121,238,10
+    LTEXT           "サーバーのアイコンをダブルクリックすると...",IDC_STATIC,
+                    7,38,238,8
+    LTEXT           "サーバー・サブセットが使用中でクィック・ビュー・ペインのクローズ時...",
+                    IDC_STATIC,7,95,238,8
+END
+
+IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,23,216,
+                    129,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "サーバー鍵の追加(&A)",IDC_KEY_ADD,46,157,85,14
+    PUSHBUTTON      "サーバー鍵の削除(&R)",IDC_KEY_REMOVE,133,157,85,14
+    LTEXT           "サーバーの鍵:",IDC_KEY_NAME,5,5,216,11
+END
+
+IDD_SVR_CREATEKEY DIALOG DISCARDABLE  0, 0, 281, 150
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "サーバー鍵の追加"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "バージョン:",IDC_STATIC,9,37,38,8
+    EDITTEXT        IDC_KEY_VERSION,57,35,43,14,ES_AUTOHSCROLL
+    LTEXT           "値:",IDC_STATIC,9,55,21,8
+    CONTROL         "このストリングを暗号化:",IDC_KEY_BYSTRING,"Button",
+                    BS_AUTORADIOBUTTON,43,54,101,10
+    CONTROL         "この鍵を使用:",IDC_KEY_BYDATA,"Button",
+                    BS_AUTORADIOBUTTON,43,86,61,10
+    EDITTEXT        IDC_KEY_STRING,112,65,155,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_KEY_DATA,112,83,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "ランダム(&R)",IDC_KEY_RANDOM,220,83,53,14
+    LTEXT           "注意: 新しい鍵をサーバーに追加した後、新しい鍵を使用するように AFS アカウントを変更してください。数日後、古いサーバー鍵はすべて削除することができます。",
+                    IDC_STATIC,9,101,260,21
+    DEFPUSHBUTTON   "了解",IDOK,113,127,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,167,127,50,14
+    PUSHBUTTON      "ヘルプ",9,221,127,50,14
+    LTEXT           "サーバー %1 の新規鍵",IDC_KEY_TITLE,39,11,229,18
+    ICON            IDI_SERVER_KEY,IDC_STATIC,7,7,20,20
+END
+
+IDD_SVC_STARTSTOP DIALOG DISCARDABLE  0, 0, 307, 133
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "サービスの開始/停止"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,112,116,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,166,116,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,220,116,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,4,7,20,20
+    LTEXT           "サーバー %1 のサービス %2 を開始/停止するには「了解」をクリックしてください。",
+                    IDC_STARTSTOP_TEXT,31,8,272,17
+    CONTROL         "永続(&P) (IDS_START/STOPSERVICE_PERMANENT)",
+                    IDC_STARTSTOP_PERMANENT,"Button",BS_AUTORADIOBUTTON,8,79,
+                    294,10
+    CONTROL         "一時(&T) (IDS_START/STOPSERVICE_TEMPORARY)",
+                    IDC_STARTSTOP_TEMPORARY,"Button",BS_AUTORADIOBUTTON,8,96,
+                    294,10
+    GROUPBOX        "サービス始動",IDC_STATIC,4,35,302,76
+    LTEXT           "この変更は永続的なものにすることができ、サーバー %1 が再始動されると自動的にサービス %2 が開始されます (されません)。",
+                    IDC_STARTSTOP_STARTUP,8,48,294,23
+END
+
+IDD_SVR_EXECUTE DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "コマンドの実行"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー(&S):",IDC_STATIC,7,56,44,8
+    COMBOBOX        IDC_SERVER,58,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "コマンド(&C):",IDC_STATIC,7,75,44,8
+    EDITTEXT        IDC_COMMAND,58,73,183,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,84,105,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,138,105,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,192,105,50,14
+    ICON            IDI_SERVER,IDC_STATIC,4,4,20,20
+    LTEXT           "サーバーのコマンドを実行",IDC_STATIC,36,12,204,8
+    LTEXT           "この操作は、リモート・サーバーでのコマンドの発行を可能にします。\n一般に /etc/reboot スクリプトの実行によるサーバーの再始動に使用されます。",
+                    IDC_STATIC,7,29,231,16
+END
+
+IDD_SVR_SALVAGE DIALOG DISCARDABLE  0, 0, 248, 254
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームのサルベージ - AFS サーバー・マネージャー"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー(&S):",IDC_STATIC,9,43,44,8
+    COMBOBOX        IDC_SERVER,78,41,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "パーティション(&P):",IDC_STATIC,9,55,59,8
+    COMBOBOX        IDC_AGGREGATE,78,54,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "すべてのパーティションをサルベージ(&A)",
+                    IDC_AGGREGATE_ALL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    81,70,145,10
+    LTEXT           "ボリューム(&O):",IDC_STATIC,9,83,49,8
+    COMBOBOX        IDC_FILESET,78,81,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "すべてのボリュームをサルベージ(&L)",IDC_FILESET_ALL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,81,96,145,10
+    DEFPUSHBUTTON   "了解",IDOK,85,108,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,139,108,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,193,108,50,14
+    PUSHBUTTON      "拡張(&V) >>",IDC_ADVANCED,6,108,53,14
+    LTEXT           "一時ファイルのパス(&T):",IDC_STATIC,5,141,77,8
+    EDITTEXT        IDC_SALVAGE_TEMPDIR,97,140,144,13,ES_AUTOHSCROLL
+    CONTROL         "並行サルベージ操作、プロセス数(&R):",IDC_SALVAGE_SIMUL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,157,148,10
+    EDITTEXT        IDC_SALVAGE_NUM,202,156,25,13,ES_AUTOHSCROLL
+    CONTROL         "損傷ボリュームをサルベージしない(&N)",
+                    IDC_SALVAGE_READONLY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,29,167,154,10
+    CONTROL         "読み取り操作を小さなブロックに分割(&B)",
+                    IDC_SALVAGE_BLOCK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    29,177,162,10
+    CONTROL         "示されたすべてのボリュームを強制サルベージ(&F)",
+                    IDC_SALVAGE_FORCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    29,187,193,10
+    CONTROL         "ディレクトリー構造を強制再作成(&E)",IDC_SALVAGE_FIXDIRS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,197,146,10
+    LTEXT           "結果ログのファイル名(&M):",IDC_STATIC,8,211,79,8
+    EDITTEXT        IDC_SALVAGE_LOG_FILE,98,210,140,13,ES_AUTOHSCROLL
+    CONTROL         "損傷 inode のリストを結果ログに入れる(&I)",
+                    IDC_SALVAGE_LOG_INODES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,225,165,10
+    CONTROL         "AFS 所有のルートinodeのリストを結果ログに入れる(&W)",
+                    IDC_SALVAGE_LOG_ROOT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,236,206,10
+    ICON            IDI_SERVER,IDC_STATIC,4,7,20,20
+    LTEXT           "この操作は、複数のボリュームでの問題の修正を可能にします。\n\n注意: パーティション全体かサーバー全体を一度にサルベージする場合、サーバーは一時的にオフラインになります。",
+                    IDC_STATIC,27,5,210,33
+    GROUPBOX        "拡張サルベージ・オプション",IDC_ADVANCED_GROUP,4,128,
+                    240,122
+END
+
+IDD_SVR_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 286, 178
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "ボリュームのサルベージ - 結果"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "クローズ(&C)",IDOK,222,158,53,14
+    LTEXT           "サルベージ操作の結果:",IDC_STATIC,7,41,271,8
+    EDITTEXT        IDC_SALVAGE_DETAILS,4,55,277,99,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP
+    ICON            IDI_SERVER,IDC_STATIC,4,7,20,20
+    LTEXT           "サーバー %1 のパーティション %2 のボリューム %3 をサルベージ",
+                    IDC_SALVAGE_TITLE,30,10,249,24
+END
+
+IDD_SET_RELEASE DIALOG DISCARDABLE  0, 0, 277, 102
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "ボリュームの解放"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,112,82,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,166,82,50,14
+    PUSHBUTTON      "ヘルプ(&H)",9,220,82,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "この操作は、%3 ボリュームのレプリカを更新します。古くなったレプリカのみを更新するか、すべてのレプリカを更新するかを選択することができます。",
+                    IDC_RELSET_DESC,30,7,242,29
+    CONTROL         "古いボリューム・レプリカのみ更新(&U)",IDC_RELSET_NORMAL,
+                    "Button",BS_AUTORADIOBUTTON,31,46,239,10
+    CONTROL         "すべてのボリューム・レプリカを更新(&A)",
+                    IDC_RELSET_FORCE,"Button",BS_AUTORADIOBUTTON,31,63,239,
+                    10
+END
+
+IDD_SVR_HOSTS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    PUSHBUTTON      "ホスト・サーバーの追加(&A)",IDC_HOST_ADD,10,157,100,14
+    PUSHBUTTON      "ホスト・サーバーの削除(&R)",IDC_HOST_REMOVE,115,157,100,
+                    14
+    LTEXT           "サーバーが認識するデータベース・ホスト・サーバー:",
+                    IDC_HOST_TITLE,5,7,216,13
+    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,26,216,
+                    126,WS_EX_CLIENTEDGE
+END
+
+IDD_SVR_ADDHOST DIALOGEX 0, 0, 307, 107
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "ホスト・サーバーの追加"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "ホスト(&H):",-1,31,61,42,8
+    EDITTEXT        IDC_ADDHOST_HOST,81,59,103,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "了解",IDOK,60,85,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,114,85,50,14
+    ICON            IDI_SERVER,-1,4,4,20,20
+    LTEXT           "データベース・ホスト・サーバーをサーバー %1 に保管されたリストに追加することを選択しました。\n\n新しいデータベース・ホストの名前を下に入力してください。",
+                    IDC_ADDHOST_DESC,31,5,268,42
+    PUSHBUTTON      "ヘルプ",9,168,85,50,14
+END
+
+IDD_SVR_ADDRESS DIALOGEX 0, 0, 211, 115
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "サーバー・アドレスの変更"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    LTEXT           "サーバー %1 の VLDB に記録された IP アドレス:",
+                    IDC_TITLE,4,2,200,16
+    LISTBOX         IDC_SVR_ADDRESSES,4,23,147,40,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "変更(&C)...",IDC_ADDR_CHANGE,152,33,50,14
+    PUSHBUTTON      "削除(&R)",IDC_ADDR_REMOVE,152,49,50,14
+    DEFPUSHBUTTON   "了解",IDOK,43,95,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,97,95,50,14
+    PUSHBUTTON      "ヘルプ",9,151,95,50,14
+    LTEXT           "注: ファイル・サーバーは始動時に、自動的にその現行 IP アドレスを VLDB に登録します。",
+                    IDC_STATIC,4,71,200,18
+END
+
+IDD_SVR_NEWADDR DIALOGEX 0, 0, 233, 69
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "IP アドレスの変更"
+CLASS "AFSManagerClass"
+FONT 9, "ＭＳ Ｐゴシック"
+BEGIN
+    DEFPUSHBUTTON   "了解",IDOK,66,48,50,14
+    PUSHBUTTON      "取消し",IDCANCEL,120,48,50,14
+    PUSHBUTTON      "ヘルプ",9,174,48,50,14
+    LTEXT           "VLDB の %1 を置き換える新規 IP アドレスを入力してください:",
+                    IDC_TITLE,8,6,220,15
+    CONTROL         "",IDC_ADDRESS,"SockAddr",WS_BORDER | WS_TABSTOP,52,27,
+                    168,14
+    LTEXT           "アドレス:",IDC_STATIC,9,30,34,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "resource\\afssvrmgr.ico"
+32513                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\error.ico"
+32515                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\warning.ico"
+IDI_INSTALL             ICON    DISCARDABLE     "resource\\install.ico"
+IDI_UNINSTALL           ICON    DISCARDABLE     "resource\\uninstal.ico"
+IDI_PRUNE               ICON    DISCARDABLE     "resource\\prune.ico"
+IDI_GETDATES            ICON    DISCARDABLE     "resource\\getdates.ico"
+IDI_SUBSET              ICON    DISCARDABLE     "resource\\subset.ico"
+IDI_ADMINLIST           ICON    DISCARDABLE     "resource\\admlist.ico"
+IDI_BTN_DELETE          ICON    DISCARDABLE     "resource\\btn_delete.ico"
+IDI_BTN_RENAME          ICON    DISCARDABLE     "resource\\btn_rename.ico"
+IDI_SERVER              ICON    DISCARDABLE     "..\\afsapplib\\resource\\server.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "..\\afsapplib\\resource\\service.ico"
+IDI_AGGREGATE           ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg.ico"
+IDI_FILESET             ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset.ico"
+IDI_SERVER_ALERT        ICON    DISCARDABLE     "..\\afsapplib\\resource\\server1.ico"
+IDI_SERVICE_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\service1.ico"
+IDI_AGGREGATE_ALERT     ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg1.ico"
+IDI_FILESET_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset1.ico"
+IDI_BOSSERVICE          ICON    DISCARDABLE     "..\\afsapplib\\resource\\bos.ico"
+IDI_USER                ICON    DISCARDABLE     "..\\afsapplib\\resource\\user.ico"
+IDI_SERVER_KEY          ICON    DISCARDABLE     "..\\afsapplib\\resource\\key.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_MAIN ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_APPS,        M_KEY_MENU,             VIRTKEY, NOINVERT
+    VK_ESCAPE,      M_KEY_ESC,              VIRTKEY, NOINVERT
+    VK_F10,         M_KEY_MENU,             VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      M_KEY_RETURN,           VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_TAB,              VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_BACKTAB,          VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         M_KEY_CTRLTAB,          VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         M_KEY_CTRLBACKTAB,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_RETURN,      M_KEY_PROPERTIES,       VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+AVI_SETMOVE             AVI     DISCARDABLE     "Resource\\setmove.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_LISTS_TITLE     "サーバー %1 - 管理リスト"
+    IDS_TAB_SERVICES        "サービス"
+    IDS_TAB_AGGREGATES      "パーティション"
+    IDS_TAB_FILESETS        "ボリューム"
+    IDS_SERVICE_NONESELECTED "表示するサーバーを選択してください。"
+    IDS_SERVICE_GOTSELECTED "サーバー %1 のサービス・プロセス:"
+    IDS_AGGREGATE_ALL       "すべてのサーバーのパーティション:"
+    IDS_AGGREGATE_ONE       "サーバー %1 のパーティション:"
+    IDS_FILESET_ALL         "セル %1 のすべてのボリューム:"
+    IDS_FILESET_ONE         "サーバー %1 のボリューム:"
+    IDS_SVR_LISTS_TAB       "管理リスト"
+    IDS_SVR_PROP_TITLE      "サーバー %1 - プロパティー"
+    IDS_SVR_GENERAL_TAB     "一般"
+    IDS_SVR_SCOUT_TAB       "設定"
+    IDS_SERVER_TITLE        "サーバー %1 - AFS サーバー・マネージャー"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_DESC         "セル %2 のサーバー %1:"
+    IDS_SVC_PROP_TITLE      "サーバー %1 のサービス %2 - プロパティー"
+    IDS_SVC_GENERAL_TAB     "一般"
+    IDS_SVC_ADD_TITLE       "サービスの作成"
+    IDS_SVC_ADD_TAB         "サービスの作成"
+    IDS_AGG_PROP_TITLE      "サーバー %1 のパーティション %2 - プロパティー"
+    IDS_AGG_GENERAL_TAB     "一般"
+    IDS_SET_REP_TITLE       "ボリューム %1 - レプリカ"
+    IDS_SET_REPSITES_TAB    "複製サイト"
+    IDS_SET_PROP_TITLE      "ボリューム %1 - プロパティー"
+    IDS_SET_GENERAL_TAB     "一般"
+    IDS_SET_UNLOCKBTN       "即時ロック解除(&L)"
+    IDS_SET_LOCKBTN         "即時ロック(&L)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USAGE_FILESET       "%2 割り当て量の %1 を使用 (%3%%)"
+    IDS_USAGE_AGGREGATE     "%2 容量の %1 を使用 (%3%%)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGCOL_ALLOCATED    "結合割り当て量"
+    IDS_SVRCOL_NAME         "サーバー"
+    IDS_SVRCOL_STATUS       "状況"
+    IDS_SETCOL_DATE_ACCESS  "最終アクセス"
+    IDS_SETCOL_DATE_BACKUP  "最終バックアップ"
+    IDS_SVCCOL_NAME         "サービス"
+    IDS_SVCCOL_TYPE         "タイプ"
+    IDS_SVCCOL_PARAMS       "パラメーター"
+    IDS_SVCCOL_STATUS       "状況"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_DATE_START   "最終開始"
+    IDS_SVCCOL_DATE_STOP    "最終停止"
+    IDS_SVCCOL_DATE_STARTSTOP "最終開始/停止"
+    IDS_SVCCOL_DATE_FAILED  "最終障害"
+    IDS_SVCCOL_LASTERROR    "最終終了コード"
+    IDS_AGGCOL_NAME         "パーティション"
+    IDS_AGGCOL_ID           "ID"
+    IDS_AGGCOL_DEVICE       "装置"
+    IDS_AGGCOL_USED         "使用量"
+    IDS_AGGCOL_USED_PER     "使用率 (%)"
+    IDS_AGGCOL_FREE         "空き"
+    IDS_AGGCOL_TOTAL        "容量"
+    IDS_AGGCOL_STATUS       "状況"
+    IDS_SETCOL_NAME         "ボリューム"
+    IDS_SETCOL_TYPE         "タイプ"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETCOL_DATE_CREATE  "作成"
+    IDS_SETCOL_DATE_UPDATE  "最終更新"
+    IDS_SETCOL_STATUS       "状況"
+    IDS_SETCOL_QUOTA_USED   "使用量"
+    IDS_SETCOL_QUOTA_USED_PER "使用率 (%)"
+    IDS_SETCOL_QUOTA_FREE   "空き"
+    IDS_SETCOL_QUOTA_TOTAL  "割り当て量"
+    IDS_TRYAGAINBTN         "再試行(&A)"
+    IDS_NO_CELL_SELECTED    "(セルが指定されていません)"
+    IDS_NO_AFS_ID           "(使用可能なトークンがありません)"
+    IDS_AFS_ID_WILLEXP      "%1 (トークンの期限が %2 に切れます)"
+    IDS_ELAPSED_TIME        "%1"
+    IDS_SEARCHING_FOR_SERVERS 
+                            "お待ちください。セル %1 に関する情報を取得中です..."
+    IDS_STATUS_NOALERTS     "標準"
+    IDS_TITLE_BROWSE_USER   "ユーザーの選択"
+    IDS_AGGTYPE_OTHER       "不明 (%1)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATEFILESET "パーティション %1:%2 にボリューム %3 を作成"
+    IDS_ACTION_DELETEFILESET "パーティション %1:%2 からボリューム %3 を削除"
+    IDS_ACTION_MOVEFILESET  "パーティション %1:%2 へボリューム %3 を移動"
+    IDS_ACTION_SETFILESETQUOTA "ボリューム %3 の割り当て量を変更"
+    IDS_SVCSTOP_DESC2       "このサービスを停止するには「了解」をクリックしてください。"
+    IDS_SVCSTART_DESC2      "このサービスを開始するには「了解」をクリックしてください。"
+    IDS_SYNCVLDB_SVR_DESC   "注意!\n\n続行すると、AFS サーバー・マネージャーはサーバー %1 のすべてのパーティションの内容に一致するように VLDB を変更します。"
+    IDS_SYNCVLDB_SVR_DESC2  "VLDB がサーバー %1 のパーティションに現在ボリュームが見つからないことを通知した場合、そのボリュームの VLDB 項目は削除されます!"
+    IDS_SYNCVLDB_AGG_DESC   "注意!\n\n続行すると、AFS サーバー・マネージャーはサーバー %1 のパーティション %2 の内容に一致するように VLDB を変更します。"
+    IDS_SYNCVLDB_AGG_DESC2  "VLDB がこのパーティションに現在ボリュームが見つからないことを通知した場合、そのボリュームの VLDB 項目は削除されます!"
+    IDS_PROMPT_BROWSE_USER  "ユーザー:"
+    IDS_PREVIEWIN_BUTTON    "<< プリビュー(&P)"
+    IDS_PREVIEWOUT_BUTTON   "プリビュー(&P) >>"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADMCOL_TYPE_USER    "ユーザー"
+    IDS_TITLE_BROWSE_PRINCIPAL "プリンシパルの選択"
+    IDS_TITLE_BROWSE_OWNGROUP "所有グループの選択"
+    IDS_PROMPT_BROWSE_PRINCIPAL "プリンシパル:"
+    IDS_PROMPT_BROWSE_OWNGROUP "所有グループ:"
+    IDS_ACTION_CLONE        "ボリューム %3 のバックアップ・バージョンを作成中"
+    IDS_ACTION_CLONESYS     "複数のボリューム・バックアップを作成中"
+    IDS_CLONESYS_FAILED     "エラー 0x%2 のため、ボリューム %1 のバックアップを作成できませんでした (%3)。"
+    IDS_SET_UNSPECIFIED     "(未指定)"
+    IDS_SETCOL_ID           "ID"
+    IDS_SETCOL_FILES        "ファイル・カウント"
+    IDS_SET_DUMP_NAME       "%1.DMP のダンプ"
+    IDS_ACTION_DUMP         "ボリューム %3 のダンプ中 (パーティション %1:%2)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILESETNAME_ERROR   "%1 - %2"
+    IDS_SETCOL_AGGREGATE    "パーティション"
+    IDS_REFRESH_DESC_CELL   "AFS サーバー・マネージャーが %1 セル内のサーバーの状況を判別中です。しばらく時間がかかります..."
+    IDS_REFRESH_DESC_SERVER "AFS サーバー・マネージャーがサーバー %1 の状況を判別中です。しばらく時間がかかります..."
+    IDS_REFRESH_CURRENT_CELL "現在検査中: セル %1"
+    IDS_REFRESH_CURRENT_SERVER "現在検査中: サーバー %2"
+    IDS_REFRESH_CURRENT_AGGREGATE 
+                            "現在検査中: サーバー %2 のパーティション %3"
+    IDS_REFRESH_CURRENT_FILESET 
+                            "現在検査中: サーバー %2 のボリューム %4、パーティション %3"
+    IDS_REFRESH_CURRENT_SERVICE "現在検査中: サーバー %2 のサービス %3"
+    IDS_REFRESH_PERCENT     "%1%% 完了"
+    IDS_PROBLEMS            "問題"
+    IDS_SERVER_NO_PROBLEMS  "このサーバーには既知の問題はありません。"
+    IDS_SERVICE_NO_PROBLEMS "このサービスには既知の問題はありません。"
+    IDS_AGGREGATE_NO_PROBLEMS "このパーティションには既知の問題はありません。"
+    IDS_FILESET_NO_PROBLEMS "このボリュームには既知の問題はありません。"
+    IDS_AGGTYPE_TYPE1       "UFS"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGTYPE_TYPE2       "LFS"
+    IDS_AGGTYPE_TYPE3       "AIX"
+    IDS_AGGTYPE_TYPE4       "VXFS"
+    IDS_AGGTYPE_TYPE5       "DMEPI"
+    IDS_REFRESH_CURRENT_VLDB 
+                            "現在検査中: ボリューム・ロケーション・データベース(VLDB)"
+    IDS_FILESETTYPE_RW      "読み取り/書き込み"
+    IDS_FILESETTYPE_RO      "レプリカ"
+    IDS_FILESETTYPE_CLONE   "バックアップ"
+    IDS_MOVESET_READWRITE   "続行すると、ボリューム %3 がサーバー %1 のパーティション %2 から他の場所へ移動されます。"
+    IDS_MOVESET_READONLY    "続行すると、ボリューム・レプリカ %3 がサーバー %1 のパーティション %2 、および以下に指定したパーティション上に作成された別のボリューム・レプリカから削除されます。"
+    IDS_SVC_START_TITLE     "サービスの開始"
+    IDS_SVC_STOP_TITLE      "サービスの停止"
+    IDS_SERVICESTATUS_STARTING "このサービスは現在開始中です。"
+    IDS_SERVICESTATUS_RUNNING "このサービスは現在実行中です。"
+    IDS_SERVICESTATUS_STOPPED "このサービスは現在停止されています。"
+    IDS_SERVICESTATUS_STOPPING "このサービスは現在停止中です。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICESTATUS_UNKNOWN "このサービスの状況は不明です。"
+    IDS_SVC_RESTART_BUTTON  "即時停止および再始動(&R)"
+    IDS_PROBLEM_BOX         "既知の問題 (%1)"
+    IDS_VIEWLOG_DESC_NOFILE "AFS サーバー・マネージャーがサーバー %1 のサービス %2 のログ・ファイルを見つけられませんでした。サービスのログ・ファイルの全パスを下に入力してください。"
+    IDS_NO_GROUP            "(所有グループなし)"
+    IDS_VIEWLOG_FROMSERVER  "サーバー %1 のログ・ファイル"
+    IDS_VIEWLOG_FROMSERVICE "サーバー %1 のサービス %2 ログ・ファイル"
+    IDS_VIEWLOG_TRUNCATED   "ファイルの内容 (最後の %1 行のみ表示):"
+    IDS_SAVELOG_FILTER      "テキスト・ファイル|*.TXT|"
+    IDS_ADVANCEDIN_BUTTON   "<< 拡張(&A)"
+    IDS_ADVANCEDOUT_BUTTON  "拡張(&A) >>"
+    IDS_REPTYPE_RELEASE     "リリース複製"
+    IDS_REPTYPE_SCHEDULED   "スケジュール複製"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UPDATEALL_BUTTON    "すべて更新(&U)"
+    IDS_UPDATETHIS_BUTTON   "更新(&U)"
+    IDS_SERVER_MULTIPLE_PROBLEMS "このサーバーには %1 の既知問題があります。"
+    IDS_SERVICE_MULTIPLE_PROBLEMS "このサービスには %1 の既知問題があります。"
+    IDS_AGGREGATE_MULTIPLE_PROBLEMS 
+                            "このパーティションには %1 の既知問題があります。"
+    IDS_FILESET_MULTIPLE_PROBLEMS 
+                            "このボリュームには %1 の既知問題があります。"
+    IDS_FILESETTYPE_RO_STAGE "レプリカ"
+    IDS_SERVICETYPE_SIMPLE_LONG "シンプル (連続して実行)"
+    IDS_SERVICETYPE_CRON_LONG "Cron (指定の間隔で実行)"
+    IDS_QUOTAUNITS_KB       "kb"
+    IDS_QUOTAUNITS_MB       "MB"
+    IDS_NO_QUOTA_REPLICA    "(このボリュームはレプリカのため、割り当て量を持っていません)"
+    IDS_NO_QUOTA_CLONE      "(このボリュームはバックアップのため、割り当て量を持っていません)"
+    IDS_USAGE_REPLICA       "%1 使用"
+    IDS_USAGE_CLONE         "%1 使用"
+    IDS_COL_AGGS_MOVE       "ボリューム作成時のパーティション"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERCENTAGE          "%1 %%"
+    IDS_AGGREGATES_IN_SERVER "サーバー %1 のパーティション:"
+    IDS_AGGREGATES_IN_CELL  "セル %1 のすべてのパーティション:"
+    IDS_AGGREGATES_IN_NOTHING "パーティション:"
+    IDS_FILESETS_IN_SERVER  "サーバー %1 のボリューム:"
+    IDS_FILESETS_IN_CELL    "セル %1 のすべてのボリューム:"
+    IDS_FILESETS_IN_NOTHING "ボリューム:"
+    IDS_SERVICES_IN_SERVER  "サーバー %1 のサービス:"
+    IDS_SERVICES_IN_NOTHING "サービス:"
+    IDS_UNKNOWN             "(不明)"
+    IDS_UNKNOWN_GROUP       "グループ #%1 (名前は不明)"
+    IDS_AGGFULL_WARN_OFF    "デフォルトしきい値 (警告はサーバーで使用不可)"
+    IDS_SERVER_AGGREGATE    "%1:%2"
+    IDS_SERVERNAME_ERROR    "%1 - %2"
+    IDS_AGGREGATENAME_ERROR "%1 - %2"
+    IDS_SETFULL_WARN_OFF    "デフォルトしきい値 (警告はサーバーで使用不可)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_LASTERRORDATE "%1 - 終了コード %2"
+    IDS_COL_SERVERS         "セルのサーバー"
+    IDS_COL_FILESETS        "サーバーのボリューム"
+    IDS_COL_AGGREGATES      "サーバーのパーティション"
+    IDS_COL_SERVICES        "サーバーのサービス"
+    IDS_COL_REPLICAS        "ボリュームのレプリカ"
+    IDS_COLUMNS_TITLE       "表示列の選択 - AFS サーバー・マネージャー"
+    IDS_REPCOL_SERVER       "サーバー"
+    IDS_REPCOL_AGGREGATE    "パーティション"
+    IDS_REPCOL_DATE_UPDATE  "最終更新"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_AGGS_CREATE     "ボリューム移動時のパーティション"
+    IDS_WARN_TITLE          "注意"
+    IDS_WARN_DISABLE_AUTH   "「未認証を許可」ボタンをクリックすると、未認証のプリンシパルがこのサーバーのサービスを操作することが可能になります。ルート ID の下では数多くのサービスが実行されているため、このアクションは+"
+    IDS_WARN_DISABLE_AUTH2  "サーバーのセキュリティーに重大な欠陥をもたらします。\n\nこの変更を行ってもいいですか?"
+    IDS_SVR_NO_ADDR         "(未指定)"
+    IDS_TITLE_BAD_CELL      "認識されていないセル名"
+    IDS_DESC_BAD_CELL       "入力したセル名がネットワーク上に見つかりませんでした。\n\n入力が正しいかどうかをもう一度確認してください。"
+    IDS_AGGFULL_WARN_ON     "このサーバーのデフォルトしきい値(&D) (サイズの %1%%)"
+    IDS_SETFULL_WARN_ON     "このサーバーのデフォルトしきい値(&D) (サイズの %1%%)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
+                            "入力した AFS ID が認識されないか、または指定したパスワードが正しくありません。"
+    IDS_SVR_CREDS_NONE          "(トークンなし)"
+    IDS_SVR_CREDS_VALID         "%2, 期限切れ %3"
+    IDS_SVR_CREDS_EXPIRED       "(トークンが期限切れ %3)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGG_FILESETS        "%1   (結合割り当て量: %2)"
+    IDS_ACTION_DESC_NONE    "進行中の操作はありません。"
+    IDS_ACTION_DESC_ONE     "次の操作が現在進行中です:"
+    IDS_ACTION_DESC_MULT    "次の操作が現在進行中です:"
+    IDS_ACTCOL_OPERATION    "操作"
+    IDS_ACTCOL_ELAPSED      "経過時間"
+    IDS_ACTION_REFRESH      "セル情報の最新表示中"
+    IDS_ACTION_CREATESERVER "サーバー %1 の作成中"
+    IDS_ACTION_DELETESERVER "サーバー %1 の削除中"
+    IDS_ACTION_GETSERVERLOGFILE "ログ・ファイル %2 をサーバー %1 から取得中"
+    IDS_ACTION_SETSERVERAUTH "サーバー %1 のアクセス制限を変更中"
+    IDS_ACTION_CHANGESERVERSTATUS "サーバー %1 のプロパティーを変更中"
+    IDS_ACTION_STARTSERVICE "サーバー %1 のサービス %2 を開始中"
+    IDS_ACTION_STOPSERVICE  "サーバー %1 のサービス %2 を停止中"
+    IDS_ACTION_RESTARTSERVICE "サーバー %1 のサービス %2 を再始動中"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SYNCVLDB_SVR "VLDB をサーバー %1 と同期化中"
+    IDS_ACTION_SYNCVLDB_AGG "VLDB をパーティション %1:%2 と同期化中"
+    IDS_ACTION_SCOUT        "サーバー %1 の問題を検査中"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SETREPPARAMS "ボリューム %3 の複製プロパティーを変更中"
+    IDS_ACTION_CREATEREPLICA 
+                            "パーティション %1:%2 にボリューム %3 のレプリカを作成中"
+    IDS_DELSET_REPLICA_DESC "注意!\n\n続行すると、サーバー %1 のパーティション %2 のボリューム %3 のレプリカが削除されます。"
+    IDS_DELSET_CLONE_DESC   "注意!\n\n続行すると、ボリューム・バックアップ %3 がサーバー %1のパーティション %2 から削除されます。"
+    IDS_INSTALL_DESC1       "この操作は、ファイルをこのコンピューターから他へコピーします。+"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_DESC2       "ファイルがすでにコピー先のコンピューターに存在する場合は、そのファイルはバックアップされ、.BAK 拡張子が付けられます。既存のバックアップには .OLD 拡張子が付けられ、既存の .OLD ファイルは削除されます。"
+    IDS_ACTION_INSTALLFILE  "サーバー %1 にファイル %2 をインストール中"
+    IDS_ACTION_UNINSTALLFILE 
+                            "サーバー %1 からファイル %2 をアンインストール中"
+    IDS_ACTION_PRUNEFILES   "サーバー %1 からファイルを削除中"
+    IDS_FILTER_ALLFILES     "すべてのファイル|*.*|"
+    IDS_ACTION_RENAMEFILESET "ボリューム %1 を %2 に名前変更中"
+    IDS_RECUR_DAILY         "毎日"
+    IDS_RECUR_SUNDAY        "毎日曜日"
+    IDS_RECUR_MONDAY        "毎月曜日"
+    IDS_RECUR_TUESDAY       "毎火曜日"
+    IDS_RECUR_WEDNESDAY     "毎水曜日"
+    IDS_RECUR_THURSDAY      "毎木曜日"
+    IDS_RECUR_FRIDAY        "毎金曜日"
+    IDS_RECUR_SATURDAY      "毎土曜日"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATESERVICE "サーバー %1 にサービス %2 を作成中"
+    IDS_ACTION_DELETESERVICE "サーバー %1 からサービス %2 を削除中"
+    IDS_ACTION_RELEASEFILESET "ボリューム %3 を解放中"
+    IDS_ACTION_GETDATES     "サーバー %1 のファイル %2 の日付を取得中"
+    IDS_LASTMODIFIED        "最終変更 %1"
+    IDS_SVR_SECURITY_TITLE  "サーバー・セキュリティー - %1"
+    IDS_SVR_LIST_TAB        "管理者"
+    IDS_ACTION_ADMINLIST_LOAD "サーバー %1 の管理者を取得中"
+    IDS_ACTION_ADMINLIST_SAVE "サーバー %1 の管理者を書き込み中"
+    IDS_ADMCOL_PRINCIPAL    "メンバー"
+    IDS_ADMCOL_TYPE         "タイプ"
+    IDS_ADMCOL_TYPE_GROUP   "グループ"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_RESTORE      "ボリューム %1 の復元中"
+    IDS_COL_AGGS_RESTORE    "ボリューム復元時のパーティション"
+    IDS_RESTORE_FILTER      "ボリューム・ダンプ・ファイル|*.DMP|すべてのファイル|*.*|"
+    IDS_SVC_BOS_TAB         "BOS"
+    IDS_ACTION_SETRESTART   "サーバー %1 のサービス再始動時刻を変更中"
+    IDS_RESTORE_CREATESET   "下で指定したサーバーおよびパーティションにボリューム %1 が作成されます。"
+    IDS_RESTORE_OVERWRITESET 
+                            "注意!  ボリューム %3 がサーバー %1 のパーティション %2 に存在します。続行すると上書きされます!"
+    IDS_SUBSET_TITLE_LOAD   "サーバー・サブセットのオープン"
+    IDS_SUBSET_TITLE_SAVE   "サーバー・サブセットの保管"
+    IDS_BUTTON_OPEN         "オープン(&O)"
+    IDS_BUTTON_SAVE         "保管(&S)"
+    IDS_SUBSET_SAVE_TITLE   "注意"
+    IDS_SUBSET_SAVE_DESC    "サーバー・サブセットは %1 の名前ですでに存在します。\n\nこのサブセットを上書きしますか?"
+    IDS_SUBSET_CHANGED      "%1 [変更済み]"
+    IDS_SUBSET_TAB          "モニターされるサーバー"
+    IDS_SUBSET_DISCARD_TITLE "サブセットを保管しますか?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUBSET_DISCARD_DESC "現在モニターされているサーバーのリストをサブセットとして保管していません。このリストを保管すると、後でこれを使用してサーバーのるこれと同じセットのモニターを続けることができます。\n\n+"
+    IDS_SUBSET_DISCARD_DESC2 
+                            "現在モニターされているサーバーのリストを含むサブセットを作成しますか?"
+    IDS_SUBSET_NONAME       "(無題)"
+    IDS_SUBSET_NOSUBSET     "(すべてのサーバーがモニターされています)"
+    IDS_SUBSET_SERVERSUBSET "サーバー %1"
+    IDS_FILESET_SOME        "セル %1 でモニターされているすべてのサーバーのボリューム:"
+    IDS_AGGREGATE_SOME      "セル %1 でモニターされているすべてのサーバーのパーティション:"
+    IDS_SERVICE_SOME        "セル %1 でモニターされているすべてのサーバーのサービス:"
+    IDS_FILESET_UNMON       "サーバー %1 はモニターされていません"
+    IDS_AGGREGATE_UNMON     "サーバー %1 はモニターされていません"
+    IDS_SERVICE_UNMON       "サーバー %1 はモニターされていません"
+    IDS_SUBSET_DELETE_TITLE "サブセットを削除しますか?"
+    IDS_SUBSET_DELETE_DESC  "サーバー・サブセット %1 を削除してもいいですか?"
+    IDS_ERROR_TRANSLATED    "エラー番号 0x%1 (%2):\n\n%3"
+    IDS_ERROR_NOTTRANSLATED "エラー番号 0x%1 (%2) が認識できません。"
+    IDS_FIND_NOTHING_TITLE  "コマンドが選択されていません"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIND_NOTHING_DESC   "操作の実行方法については、リストからコマンド行を選択するか、キーワードを入力してください。"
+    IDS_FIND_UNKNOWN_TITLE  "不明なコマンド"
+    IDS_FIND_UNKNOWN_DESC   "AFS サーバー・マネージャーは ""%1"" コマンドのヘルプ・トピックを見つけられませんでした。"
+    IDS_HELPABOUT_DESC1     "警告: このコンピューター・プログラムは、著作権および国際規約により保護されています。+"
+    IDS_HELPABOUT_DESC2     "許可なくこのソフトウェアを複写あるいは配布すると、民事または刑事上の犯罪となり、法律のもと告訴される場合があります。\n\n+"
+    IDS_HELPABOUT_DESC3     "AFS は Transarc Corporation (IBM company) の商標です。"
+    IDS_CANT_QUIT_TITLE     "AFS サーバー・マネージャー"
+    IDS_CANT_QUIT_REBOOT    "注意!\n\nAFS サーバー・マネージャーは現在操作を実行中です。いま Windows をシャットダウンすると、これらの操作は正常に完了しません。\n\nWindows を再始動しますか?"
+    IDS_APP_TITLE           "AFS サーバー・マネージャー"
+    IDS_ACTION_OPENCELL     "%1 セル内のサーバーを検索中"
+    IDS_OPTIONS_TITLE       "オプション - AFS サーバー・マネージャー"
+    IDS_OPTIONS_GENERAL_TAB "一般"
+    IDS_BADCREDS_DESC       "管理者としてログインしないと、%1 セルの管理に十分な権限が与えられない可能性があります。アクセス権限が十分でないと、問題が存在しないときに AFS サーバー・マネージャーがセルで問題を見つける場合があります。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRMATION_TITLE  "確認 - AFS サーバー・マネージャー"
+    IDS_NO_GROUP_CHECKBOX   "所有グループなし"
+    IDS_AFS_ID_DIDEXP       "%1 (トークンの期限が %2 に切れました)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_QUERYING            "(照会中)"
+    IDS_ADMCOL_TYPE_FOREIGN_GROUP "外部グループ"
+    IDS_ADMCOL_TYPE_FOREIGN_USER "外部ユーザー"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_NOTIFIER     "ノーティファイヤー"
+    IDS_SVC_NONOTIFIER      "(なし)"
+    IDS_SVR_KEY_TAB         "サーバー鍵"
+    IDS_KEYNAME_NOTIME      "サーバー %1 の鍵:"
+    IDS_KEYNAME_WITHTIME    "サーバー %1 の鍵 (変更 %2):"
+    IDS_SVRKEY_VERSION      "バージョン"
+    IDS_SVRKEY_DATA         "値"
+    IDS_SVRKEY_CHECKSUM     "チェックサム"
+    IDS_SVRKEY_DATA_UNKNOWN "(隠す)"
+    IDS_STARTSERVICE_TITLE  "サービスの開始"
+    IDS_STOPSERVICE_TITLE   "サービスの停止"
+    IDS_STARTSERVICE_TEXT   "サーバー %1 のサービス %2 を開始するには「了解」をクリックしてください。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOPSERVICE_TEXT    "サーバー %1 のサービス %2 を停止するには「了解」をクリックしてください。"
+    IDS_STARTSERVICE_STARTUP 
+                            "この変更は永続的なものにすることができ、それによってサーバー %1 が再始動されると自動的にサービス %2 が開始されます。"
+    IDS_STOPSERVICE_STARTUP "この変更は永続的なものにすることができ、それによってサーバー %1が再始動されると自動的にはサービス %2 が開始されません。"
+    IDS_STARTSERVICE_PERMANENT 
+                            "永続(&P) (サーバー %1 の再始動時にサービス %2 を開始)"
+    IDS_STARTSERVICE_TEMPORARY 
+                            "一時(&T) (サーバー %1 の再始動時にサービス %2 を開始しない)"
+    IDS_STOPSERVICE_PERMANENT 
+                            "永続(&P) (サーバー %1 の再始動時にサービス %2 を開始しない)"
+    IDS_STOPSERVICE_TEMPORARY 
+                            "一時(&T) (サーバー %1 の再始動時にサービス %2 を開始)"
+    IDS_ACTION_EXECUTE      "サーバー %1 で %2 を実行中"
+    IDS_ACTION_SALVAGE_SVR  "サーバー %1 のすべてのボリュームをサルベージ中"
+    IDS_ACTION_SALVAGE_AGG  "パーティション %1:2 のすべてのボリュームをサルベージ中"
+    IDS_ACTION_SALVAGE_VOL  "パーティション %1:2 のボリューム %3 をサルベージ中"
+    IDS_SALVAGE_SVR         "サーバー %1 のすべてのボリュームをサルベージ"
+    IDS_SALVAGE_AGG         "サーバー %1 パーティション %2 のすべてのボリュームをサルベージ"
+    IDS_SALVAGE_SET         "サーバー %1 パーティション %2 のボリューム %3 をサルベージ"
+    IDS_SETSTATUS_SALVAGE   "ボリュームのサルベージ中"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETSTATUS_LOCKED    "ボリュームがロックされています"
+    IDS_SETSTATUS_NO_VOL    "ボリュームがありません"
+    IDS_SETSTATUS_BUSY      "ボリュームが現在使用中です"
+    IDS_SETSTATUS_MOVED     "ボリュームが移動されました"
+    IDS_SVR_CAPACITY        "%1"
+    IDS_SVR_ALLOCATION      "%1 (%2%%)"
+    IDS_SVRCOL_ADDRESS      "アドレス"
+    IDS_HOST_TITLE          "サーバー %1 が認識するデータベース・ホスト・サーバー:"
+    IDS_SVR_HOSTS_TITLE     "サーバー %1 - データベース・ホスト"
+    IDS_SVR_HOST_TAB        "データベース・ホスト"
+    IDS_ACTION_HOSTLIST_LOAD "サーバー %1 からホスト・リストを取得中"
+    IDS_ACTION_HOSTLIST_SAVE "サーバー %1 にホスト・リストを書き込み中"
+    IDS_SETSTATUS_1ALERT    "ボリュームに 1 つ問題があります"
+    IDS_SETSTATUS_2ALERT    "ボリュームに %1 の問題があります"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CHANGEADDR   "サーバー %1 の IP アドレスを変更中"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_ADDSITE "vos addsite"
+    IDS_COMMAND_VOS_BACKUP  "vos backup"
+    IDS_COMMAND_VOS_BACKUPSYS "vos backupsys"
+    IDS_COMMAND_VOS_CREATE  "vos create"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_DELENTRY "vos delentry"
+    IDS_COMMAND_VOS_DUMP    "vos dump"
+    IDS_COMMAND_VOS_EXAMINE "vos examine"
+    IDS_COMMAND_VOS_LISTPART "vos listpart"
+    IDS_COMMAND_VOS_LISTVLDB "vos listvldb"
+    IDS_COMMAND_VOS_LISTVOL "vos listvol"
+    IDS_COMMAND_VOS_LOCK    "vos lock"
+    IDS_COMMAND_VOS_MOVE    "vos move"
+    IDS_COMMAND_VOS_PARTINFO "vos partinfo"
+    IDS_COMMAND_VOS_RELEASE "vos release"
+    IDS_COMMAND_VOS_REMOVE  "vos remove"
+    IDS_COMMAND_VOS_REMSITE "vos remsite"
+    IDS_COMMAND_VOS_RENAME  "vos rename"
+    IDS_COMMAND_VOS_RESTORE "vos restore"
+    IDS_COMMAND_VOS_SYNCVLDB "vos syncvldb"
+    IDS_COMMAND_VOS_UNLOCK  "vos unlock"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_UNLOCKVLDB "vos unlockvldb"
+    IDS_COMMAND_VOS_ZAP     "vos zap"
+    IDS_COMMAND_BOS_ADDHOST "bos addhost"
+    IDS_COMMAND_BOS_ADDKEY  "bos addkey"
+    IDS_COMMAND_BOS_ADDUSER "bos adduser"
+    IDS_COMMAND_BOS_CREATE  "bos create"
+    IDS_COMMAND_BOS_DELETE  "bos delete"
+    IDS_COMMAND_BOS_EXEC    "bos exec"
+    IDS_COMMAND_BOS_GETDATE "bos getdate"
+    IDS_COMMAND_BOS_GETLOG  "bos getlog"
+    IDS_COMMAND_BOS_GETRESTART "bos getrestart"
+    IDS_COMMAND_BOS_INSTALL "bos install"
+    IDS_COMMAND_BOS_LISTHOSTS "bos listhosts"
+    IDS_COMMAND_BOS_LISTKEYS "bos listkeys"
+    IDS_COMMAND_BOS_LISTUSERS "bos listusers"
+    IDS_COMMAND_BOS_PRUNE   "bos prune"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_BOS_REMOVEHOST "bos removehost"
+    IDS_COMMAND_BOS_REMOVEKEY "bos removekey"
+    IDS_COMMAND_BOS_REMOVEUSER "bos removeuser"
+    IDS_COMMAND_BOS_RESTART "bos restart"
+    IDS_COMMAND_BOS_SALVAGE "bos salvage"
+    IDS_COMMAND_BOS_SETAUTH "bos setauth"
+    IDS_COMMAND_BOS_SETRESTART "bos setrestart"
+    IDS_COMMAND_BOS_SHUTDOWN "bos shutdown"
+    IDS_COMMAND_BOS_START   "bos start"
+    IDS_COMMAND_BOS_STARTUP "bos startup"
+    IDS_COMMAND_BOS_STATUS  "bos status"
+    IDS_COMMAND_BOS_STOP    "bos stop"
+    IDS_COMMAND_BOS_UNINSTALL "bos uninstall"
+    IDS_COMMAND_KAS_GETRANDOMKEY "kas getrandomkey"
+    IDS_COMMAND_FS_LISTQUOTA "fs listquota"
+    IDS_COMMAND_FS_QUOTA    "fs quota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_FS_SETQUOTA "fs setquota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCSHORT_UNMONITORED 
+                            "サーバー %1 は問題についてモニターされていません"
+    IDS_ALERT_DESCSHORT_TIMEOUT 
+                            "サーバー %1 に接続できませんでした。最終エラー: %3"
+    IDS_ALERT_DESCSHORT_AGG_FULL 
+                            "%2 のパーティション使用率が警告しきい値 %3%% を超えました (%4)"
+    IDS_ALERT_DESCSHORT_SET_FULL 
+                            "%3 のボリューム使用率が警告しきい値 %4%% を超えました (%5)"
+    IDS_ALERT_DESCSHORT_NO_VLDBENT "ボリューム %3 に VLDB 項目がありません"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_SET 
+                            "ボリューム %3 は VLDB 項目を持っていますが、サーバー %1 のパーティション %2 に見つかりませんでした。"
+    IDS_ALERT_DESCSHORT_STOPPED "サービス %2 が %3 に停止しました"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_AGG 
+                            "パーティション %2 は VLDB によってリフレッシュされましたが、サーバー %1 に見つかりませんでした。"
+    IDS_ALERT_DESCSHORT_BADCREDS 
+                            "サーバー %1 を管理するために十分な権限がありません"
+    IDS_ALERT_DESCSHORT_AGG_ALLOC 
+                            "パーティション %2 の結合ボリューム割り当て量がその容量を超えました"
+    IDS_ALERT_DESCSHORT_STATE_NO_VNODE 
+                            "%3 ボリュームは壊れているため使用できません。"
+    IDS_ALERT_DESCSHORT_STATE_NO_SERVICE 
+                            "ボリューム %3 を扱うサービスが実行されていません。"
+    IDS_ALERT_DESCSHORT_STATE_OFFLINE 
+                            "%3 ボリュームはオフラインのため使用できません。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_TIMEOUT 
+                            "サーバー %1 に接続できません。%2 に行われた最後の試行はエラー ""%3"" になりました。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_AGG_FULL 
+                            "サーバー %1 のパーティション %2 の使用率がその警告しきい値 %3%% を超えました (%4)。"
+    IDS_ALERT_DESCFULL_SET_FULL 
+                            "ボリューム %3 (サーバー %1、パーティション %2) の使用率がその警告しきい値 %4%% を超えました (%5)。"
+    IDS_ALERT_DESCFULL_NO_VLDBENT 
+                            "ボリューム %3 がサーバー %1 のパーティション %2 に存在しますが、対応する VLDB 項目がありません。"
+    IDS_ALERT_DESCFULL_NO_SVRENT_SET 
+                            "ボリューム %3 の VLDB 項目が存在しますが、ボリュームがサーバー %1 のパーティション %2 に見つかりませんでした。"
+    IDS_ALERT_DESCFULL_STOPPED 
+                            "サーバー %1 のサービス %2 が %3 に終了コード %5 で停止しました。"
+    IDS_ALERT_DESCFULL_NO_SVRENT_AGG 
+                            "VLDB はサーバー %1 のパーティション %2 のボリュームを参照しますが、パーティションが見つかりませんでした。"
+    IDS_ALERT_DESCFULL_BADCREDS 
+                            "このセル内で管理者としての AFS トークンを持っていないため、AFSサーバー・マネージャーがサーバー %1 に存在しないエラーを検出しました。"
+    IDS_ALERT_DESCFULL_AGG_ALLOC 
+                            "サーバー %1 のパーティション %2 のボリュームの結合割り当て量、合計 %4、がパーティションの容量 %3 を超えました。"
+    IDS_ALERT_DESCFULL_STATE_NO_VNODE 
+                            "サーバー %1 のパーティション %2 の %3 ボリュームが関連する Vnode を持っていません。(ボリューム状況は 0x%4)"
+    IDS_ALERT_DESCFULL_STATE_NO_SERVICE 
+                            "サーバー %1 でファイル・エクスポーター・サービスが実行されていないため、パーティション %2 の %3 ボリュームを使用できません。(ボリューム状況は 0x%4)"
+    IDS_ALERT_DESCFULL_STATE_OFFLINE 
+                            "サーバー %1 のパーティション %2 の %3 ボリュームがオフラインのため使用できません。(ボリューム状況は 0x%4)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_TIMEOUT   "このサーバーに再接続するには、「再試行」ボタンをクリックしてください。"
+    IDS_ALERT_FIX_AGG_FULL  "このパーティションの使用率の警告しきい値を変更するには、「警告」ボタンをクリックしてください。"
+    IDS_ALERT_FIX_SET_FULL  "このボリュームの使用率の警告しきい値を変更するには、「警告」ボタンをクリックしてください。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_NO_VLDBENT 
+                            "VLDB が古くなっている可能性があります。その場合は、「VLDB の同期化」コマンドでこれを更新してください。"
+    IDS_ALERT_FIX_NO_SVRENT_SET 
+                            "サーバーとパーティションが正しく機能しているかを確認してください。"
+    IDS_ALERT_FIX_STOPPED   "このサービスのサービス・ログを見るには、「ログの表示」ボタンをクリックしてください。"
+    IDS_ALERT_FIX_NO_SVRENT_AGG 
+                            "サーバーを調べて、パーティションがエクスポートされ、正しく機能しているかを確認してください。"
+    IDS_ALERT_FIX_BADCREDS  "新しい AFS トークンを取得するには、「認証」ボタンをクリックしてください。"
+    IDS_ALERT_FIX_AGG_ALLOC "このパーティションのボリュームの割り当て量を減らすか、1 つまたは複数のボリュームを他のパーティションへ移動してください。"
+    IDS_ALERT_FIX_STATE_NO_VNODE " "
+    IDS_ALERT_FIX_STATE_NO_SERVICE " "
+    IDS_ALERT_FIX_STATE_OFFLINE " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_BUTTON_TRYAGAIN "再試行(&A)"
+    IDS_ALERT_BUTTON_WARNINGS "警告(&W)..."
+    IDS_ALERT_BUTTON_VIEWLOG "ログの表示(&V)"
+    IDS_ALERT_BUTTON_SHOWME "表示(&S)"
+    IDS_ALERT_BUTTON_GETCREDS "認証(&A)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_CELLSERVERS_NOCELL 
+                            "セルが指定されていません。AFS サーバー・マネージャーを使用するためには、操作したい AFS セルを指定する必要があります。上の「セル」メニューで「オープン...」メニュー項目を選んで、セルを選択してください。"
+    IDS_ERROR_REFRESH_CELLSERVERS 
+                            "サーバーのリストを %1 セルについて取得できませんでした。\n\nエラー: %2"
+    IDS_ERROR_CANT_OPEN_CELL 
+                            "AFS サーバー・マネージャーがセル %1 内のサーバーに接続できませんでした。\n\nセルの名前を正しく入力したかをもう一度確認してください。"
+    IDS_ERROR_REFRESH_AGGREGATES 
+                            "パーティションのリストを %1 サーバーについて取得できませんでした。\n\nエラー: %2"
+    IDS_ERROR_REFRESH_SERVER_STATUS 
+                            "サーバー %1 の現在の状況を取得できませんでした。"
+    IDS_ERROR_CHANGE_SERVER_STATUS 
+                            "AFS サーバー・マネージャーがサーバー %1 のプロパティーを変更できませんでした。"
+    IDS_ERROR_REFRESH_AGGREGATE_STATUS 
+                            "サーバー %1 のパーティション %2 の現在の状況を取得できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_FILESET_STATUS 
+                            "ボリューム %3 (サーバー %1、パーティション %2) の現在の状況を取得できませんでした。"
+    IDS_ERROR_REFRESH_SERVICE_STATUS 
+                            "サーバー %1 のサービス %2 の現在の状況を判別できませんでした。"
+    IDS_ERROR_MOVE_FILESET  "AFS サーバー・マネージャーがボリューム %3 をサーバー %1 のパーティション %2 からサーバー %4 のパーティション %5 へ移動できませんでした。"
+    IDS_ERROR_VIEW_LOGFILE  "%2 ファイルをサーバー %1 から読み取れませんでした。\n\nファイル名を正しく入力したか、またファイルを見るために十分な許可を持っているかを調べてください。"
+    IDS_ERROR_NOT_REPLICATED 
+                            "ボリューム %1 の複製状況を判別できませんでした。"
+    IDS_ERROR_CANT_CREATE_FILESET 
+                            "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 にボリューム %3 を作成できませんでした。"
+    IDS_ERROR_CANT_DELETE_FILESET 
+                            "AFS サーバー・マネージャーがボリューム %3 (サーバー %1 のパーティション %2) を削除できませんでした。"
+    IDS_ERROR_CANT_CREATE_VLDB_ENTRY 
+                            "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 にボリューム %3 の VLDB 項目を作成できませんでした。"
+    IDS_ERROR_CANT_SET_FILESET_QUOTA 
+                            "AFS サーバー・マネージャーがサーバー %1 パーティション %2 のボリューム %3の割り当て量を変更できませんでした。"
+    IDS_ERROR_CANT_CREATE_SERVER 
+                            "AFS サーバー・マネージャーがセル %1 内で必要なサーバー項目を作成できませんでした。"
+    IDS_ERROR_CANT_PING_SERVER 
+                            "AFS サーバー・マネージャーがサーバー %1 の IP アドレスを判別できませんでした。"
+    IDS_ERROR_CANT_DELETE_SERVER 
+                            "AFS サーバー・マネージャーがサーバー %1 を削除できませんでした。"
+    IDS_ERROR_CANT_DELETE_SERVER_FILESETS 
+                            "サーバー %1 はまだボリュームのホストであるため削除できません。サーバーはボリュームを持たなくなるまで削除できません。"
+    IDS_ERROR_CHANGE_AGGREGATE_STATUS 
+                            "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 のプロパティーを変更できませんでした。"
+    IDS_ERROR_CHANGE_SERVICE_STATUS 
+                            "AFS サーバー・マネージャーがサーバー %1 のサービス %2 のプロパティーを変更できませんでした。"
+    IDS_ERROR_CANT_START_SERVICE 
+                            "AFS サーバー・マネージャーがサーバー %1 のサービス %2 を開始できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_STOP_SERVICE 
+                            "AFS サーバー・マネージャーがサーバー %1 のサービス %2 を停止できませんでした。"
+    IDS_ERROR_CANT_RESTART_SERVICE 
+                            "AFS サーバー・マネージャーがサーバー %1 のサービス %2 を停止および再始動できませんでした。"
+    IDS_ERROR_CHANGE_REPLICA_STATUS 
+                            "AFS サーバー・マネージャーがサーバー %1 パーティション %2 のボリューム %3の複製プロパティーを変更できませんでした。"
+    IDS_ERROR_CANT_SYNCVLDB "AFS サーバー・マネージャーが VLDB を更新できませんでした。"
+    IDS_ERROR_CANT_CREATE_REPLICA 
+                            "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 にボリューム %3 のレプリカを作成できませんでした。"
+    IDS_ERROR_CANT_INSTALL_FILE 
+                            "AFS サーバー・マネージャーがサーバー %1 に %2 ファイルをインストールできませんでした。"
+    IDS_ERROR_CANT_UNINSTALL_FILE 
+                            "AFS サーバー・マネージャーがサーバー %1 に %2 ファイルをアンインストールできませんでした。"
+    IDS_ERROR_CANT_PRUNE_FILES 
+                            "AFS サーバー・マネージャーがサーバー %1 から要求されたファイルを削除できませんでした。"
+    IDS_ERROR_CANT_RENAME_FILESET 
+                            "AFS サーバー・マネージャーがボリューム %1 を ""%2"" に名前変更できませんでした。"
+    IDS_ERROR_CANT_CREATE_SERVICE 
+                            "AFS サーバー・マネージャーがサーバー %1 にサービス %2 を作成できませんでした。"
+    IDS_ERROR_CANT_DELETE_SERVICE 
+                            "AFS サーバー・マネージャーがサーバー %1 からサービス %2 を削除できませんでした。"
+    IDS_ERROR_CANT_RELEASE_FILESET 
+                            "AFS サーバー・マネージャーが複製されたボリューム %3 を解放できませんでした。"
+    IDS_ERROR_CANT_UPDATE_FILESET 
+                            "AFS サーバー・マネージャーがサーバー %2 パーティション %1 のボリューム・レプリカ %3 を更新できませんでした。"
+    IDS_ERROR_CANT_UPDATE_ALL 
+                            "AFS サーバー・マネージャーがボリューム %3 のレプリカを更新できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_LOAD_ADMLIST 
+                            "AFS サーバー・マネージャーがサーバー %1 の管理者のリストを読み取れませんでした。"
+    IDS_ERROR_CANT_LOAD_KEYLIST 
+                            "AFS サーバー・マネージャーがサーバー %1 のサーバー鍵のリストを読み取れませんでした。"
+    IDS_ERROR_CANT_CREATE_KEY 
+                            "AFS サーバー・マネージャーがサーバー %1 の新しいサーバー鍵を作成できませんでした。"
+    IDS_ERROR_CANT_SAVE_ADMLIST 
+                            "AFS サーバー・マネージャーがサーバー %1 の管理者のリストを変更できませんでした。"
+    IDS_ERROR_CANT_CLONE    "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 にボリューム %3 のバックアップ・バージョンを作成できませんでした。"
+    IDS_ERROR_CANT_CLONESYS "AFS サーバー・マネージャーが要求されたバックアップ・ボリュームを作成できませんでした。"
+    IDS_ERROR_CANT_DUMP_FILESET 
+                            "AFS サーバー・マネージャーがボリューム %3 (サーバー %1、パーティション %2) の内容をファイル %4 へダンプできませんでした。"
+    IDS_ERROR_CANT_RESTORE_FILESET 
+                            "AFS サーバー・マネージャーがファイル %4 をボリューム %3 (サーバー %1、パーティション %2) へ復元できませんでした。"
+    IDS_ERROR_CANT_SET_RESTART_TIMES 
+                            "AFS サーバー・マネージャーがサーバー %1 のサービスの再始動時刻を変更できませんでした。"
+    IDS_ERROR_CANT_DELETE_REPLICATED_FILESET 
+                            "AFS サーバー・マネージャーがサーバー %1 のパーティション %2 からボリューム %3 を削除できませんでした。\n\nすべてのレプリカが削除されるまでボリューム %3 は削除できません。"
+    IDS_CMDLINE_TITLE       "エラー - AFS サーバー・マネージャー"
+    IDS_CMDLINE_SYNTAX      "AFS サーバー・マネージャーに指定したコマンド行が無効です。"
+    IDS_CMDLINE_UNRECOGNIZED 
+                            "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""%1"" パラメーターが認識できません。"
+    IDS_CMDLINE_DUPLICATE   "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""%1"" パラメーターが複数回指定されています。"
+    IDS_CMDLINE_UNEXPECTVALUE 
+                            "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""%1"" パラメーターに値がありません。"
+    IDS_CMDLINE_MISSINGVAL  "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""%1"" パラメーターの後に値が続いていません。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CMDLINE_SUBSETNOTCELL 
+                            "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""/SUBSET""パラメーターは ""/CELL"" パラメーターが指定された場合にのみ指定できます。"
+    IDS_CMDLINE_INVALIDSUBSET 
+                            "指定したサーバー・サブセット ""%2"" が %1 セルに定義されていません。"
+    IDS_CMDLINE_SERVERNOTCELL 
+                            "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n""/SERVER""パラメーターは ""/CELL"" パラメーターが指定された場合にのみ指定できます。"
+    IDS_CMDLINE_RESET_TITLE "AFS サーバー・マネージャー"
+    IDS_CMDLINE_RESET_DESC  "AFS サーバー・マネージャーが指定された設定をクリアしました。"
+    IDS_ERROR_CANT_SYNC_GHOST_AGGREGATE 
+                            "パーティションが存在しないか、エクスポートされていないため、AFS サーバー・マネージャーは VLDB をサーバー %1 のパーティション %2 と同期化できません。\n\nこのパーティションをサーバー %1 から削除するには、これを参照するボリューム VLDB 項目を削除する必要があります。"
+    IDS_CMDLINE_USERPASSWORD 
+                            "AFS サーバー・マネージャーに指定したコマンド行が無効です。\n\n新しい AFS トークンを取得するには、 ""/USER"" および ""/PASSWORD"" パラメーターを指定する必要があります。"
+    IDS_ERROR_CANT_DELETE_KEY 
+                            "AFS サーバー・マネージャーがサーバー %1 からサーバー鍵 %2 を削除できませんでした。"
+    IDS_ERROR_CANT_GETRANDOMKEY 
+                            "AFS サーバー・マネージャーがサーバー %1 のランダム鍵を生成できませんでした。"
+    IDS_ERROR_CANT_EXECUTE_COMMAND 
+                            "AFS サーバー・マネージャーがサーバー %1 で次のコマンドを実行できませんでした:\n\n   ""%2"""
+    IDS_ERROR_CANT_READ_SALVAGE_LOG 
+                            "AFS サーバー・マネージャーがサルベージ操作を正常に完了しましたが、サルベージ操作の結果を示すログ・ファイルを検索できませんでした。"
+    IDS_ERROR_CANT_SALVAGE  "AFS サーバー・マネージャーが要求されたサルベージ操作を実行できませんでした。"
+    IDS_ERROR_CANT_AUTH_ON  "AFS サーバー・マネージャーがサーバー %1 の認証検査を使用可能にできませんでした。"
+    IDS_ERROR_CANT_AUTH_OFF "AFS サーバー・マネージャーがサーバー %1 の認証検査を使用不可にできませんでした。"
+    IDS_ERROR_CANT_LOAD_HOSTLIST 
+                            "AFS サーバー・マネージャーがサーバー %1 からデータベース・ホスト・サーバーのリストを読み取れませんでした。"
+    IDS_ERROR_CANT_SAVE_HOSTLIST 
+                            "AFS サーバー・マネージャーがサーバー %1 のデータベース・ホスト・サーバーのリストを変更できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_INIT_AFSCLASS_INSTALL 
+                            "AFS コントロール・センターがこのコンピューターに正しくインストールされていないため、AFS サーバー・マネージャーが開始できませんでした。\n\nAFS コントロール・センターの再インストールが必要である可能性があります。"
+    IDS_ERROR_CANT_INIT_AFSCLASS_UNKNOWN 
+                            "不明な問題のために AFS サーバー・マネージャーを開始できませんでした。\n\nAFS コントロール・センターの再インストールが必要である可能性があります。"
+    IDS_ERROR_CANT_CHANGEADDR 
+                            "AFS サーバー・マネージャーがサーバー %1 の VLDB 内の IP アドレスを変更できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "シンプル"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "停止"
+    IDS_SERVICESTATE_STOPPING "停止中"
+    IDS_SERVICESTATE_STARTING "開始中"
+    IDS_SERVICESTATE_RUNNING "実行中"
+    IDS_SERVICETYPE_FS_LONG "FS (ファイル・システム)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "セル %1 のすべてのサービス:"
+    IDS_SERVICE_STARTDATE   "開始 %1"
+    IDS_SERVICE_STOPDATE    "停止 %1"
+END
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

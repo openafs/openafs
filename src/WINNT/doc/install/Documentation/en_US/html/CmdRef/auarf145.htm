@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf144.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf146.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_GETCLIENTADDRS" HREF="auarf002.htm#ToC_159">fs getclientaddrs</A></H2>
+<A NAME="IDX4839"></A>
+<A NAME="IDX4840"></A>
+<A NAME="IDX4841"></A>
+<A NAME="IDX4842"></A>
+<A NAME="IDX4843"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the client interfaces to register with the File Server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs getclientaddrs</B> [<B>-help</B>]
+      
+<B>fs gc</B> [<B>-h</B>]
+     
+<B>fs getcl </B>[<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs getclientaddrs</B> command displays the IP addresses of the
+interfaces that the local Cache Manager registers with a File Server when
+first establishing a connection to it.
+<P>The File Server uses the addresses when it initiates a remote procedure
+call (RPC) to the Cache Manager (as opposed to responding to an RPC sent by
+the Cache Manager). There are two common circumstances in which the
+File Server initiates RPCs&#58; when it breaks callbacks and when it pings
+the client machine to verify that the Cache Manager is still
+accessible.
+<P>If an RPC to that interface fails, the File Server simultaneously sends
+RPCs to all of the other interfaces in the list, to learn which of them are
+still available. Whichever interface replies first is the one to which
+the File Server then sends pings and RPCs to break callbacks.
+<P>The <B>fs setclientaddrs</B> reference page explains how the Cache
+Manager constructs the list automatically in kernel memory as it initializes,
+and how to use that command to alter the kernel list after
+initialization.
+<P><STRONG>Cautions</STRONG>
+<P>The File Server uses the list of interfaces displayed by this command only
+when selecting an alternative interface after a failed attempt to break a
+callback or ping the Cache Manager. When responding to the Cache
+Manager&#39;s request for file system data, the File Server replies to the
+interface which the Cache Manager used when sending the request. If the
+File Server&#39;s reply to a data request fails, the file server
+machine&#39;s network routing configuration determines which alternate
+network routes to the client machine are available for resending the
+reply.
+<P>The displayed list applies to all File Servers to which the Cache Manager
+connects in the future. It is not practical to register different sets
+of addresses with different File Servers, because it requires using the
+<B>fs setclientaddrs</B> command to change the list and then rebooting
+each relevant File Server immediately.
+<P>The displayed list is not necessarily governing the behavior of a given
+File Server, if an administrator has issued the <B>fs setclientaddrs</B>
+command since the Cache Manager first contacted that File Server. It
+determines only which addresses the Cache Manager registers when connecting to
+File Servers in the future.
+<P>The list of interfaces does not influence the Cache Manager&#39;s choice
+of interface when establishing a connection to a File Server.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output displays the IP address of each interface that the Cache Manager
+is currently registering with File Server processes that it contacts, with one
+address per line. The File Server initially uses the first address for
+breaking callbacks and pinging the Cache Manager, but the ordering of the
+other interfaces is not meaningful.
+<P><STRONG>Examples</STRONG>
+<P>The following example displays the two interfaces that the Cache Manager is
+registering with File Servers.
+<PRE>   % <B>fs getclientaddrs</B>
+   192.12.105.68
+   192.12.108.84
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf160.htm#HDRFS_SETCLIENTADDRS">fs setclientaddrs</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf144.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf146.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOS_RESTORE" HREF="auarf002.htm#ToC_288">vos restore</A></H2>
+<A NAME="IDX5829"></A>
+<A NAME="IDX5830"></A>
+<A NAME="IDX5831"></A>
+<A NAME="IDX5832"></A>
+<P><STRONG>目的</STRONG>
+<P>ASCII ファイルを適切なボリューム形式に変換し、ファイル・システムに書き込みます。
+<P><STRONG>構文</STRONG>
+<PRE><B>vos restore -server</B> &lt;<VAR>machine name</VAR>>  <B>-partition</B> &lt;<VAR>partition name</VAR>>  
+            <B>-name</B> &lt;<VAR>name of volume to be restored</VAR>>  [<B>-file</B> &lt;<VAR>dump file</VAR>>]  
+            [<B>-id</B> &lt;<VAR>volume ID</VAR>>]  [<B>-overwrite</B> &lt;<B>abort</B> | <B>full</B> | <B>incremental</B>>]  
+            [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-verbose</B>]  
+            [<B>-help</B>]
+   
+<B>vos res -s</B> &lt;<VAR>machine name</VAR>>  <B>-p</B> &lt;<VAR>partition name</VAR>>  
+        <B>-na</B> &lt;<VAR>name of volume to be restored</VAR>>  [<B>-f</B> &lt;<VAR>dump file</VAR>>]  
+        [<B>-i</B> &lt;<VAR>volume ID</VAR>>]  [<B>-o</B> &lt;<B>a</B> | <B>f</B> | <B>inc</B>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+        [<B>-no</B>]  [<B>-l</B>]  [<B>-v</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>vos restore</B> コマンドは、<B>vos dump</B> コマンドで作成されたボリューム・ダンプ・ファイルを ASCII 形式から <B>-server</B> 引き数で指定されたマシン・タイプに適したボリューム形式に変換し、そのマシンの <B>-partition</B> 引き数で指定された区画に読み取り / 書き込みボリュームとして復元します。ボリューム・サーバーは、
+<B>-name</B> 引き数に指定されたボリューム名を割り当て、ボリューム作成タイム・スタンプを復元操作の開始時刻にリセットします。(作成タイム・スタンプは、ボリューム・ヘッダーに記録され、
+<TT>Creation</TT> 統計情報として <B>vos examine</B> および <B> vos listvol</B> コマンドの出力に表示されます。)
+<P><B>-file</B> 引き数にダンプ・ファイルの名前を指定してください。標準入力ストリームでパイプを介してファイルを指定する場合には、この引き数は省略してください。サード・パーティー製のバックアップ・ユーティリティーで操作できるように、名前付きパイプを使用することもできます。
+<P>次のリストにあるように、このコマンドではまったく新しくボリュームを作成することも、既存のボリュームを上書きすることもできます。いずれの場合も、増分ダンプの前にボリュームのフル・ダンプが復元されなければなりません。複数の増分ダンプ・ファイルがある場合には、その作成順に従って復元する必要があります。
+<UL>
+<LI>新規の読み取り / 書き込みボリュームを作成するには、
+<B>-name</B> 引き数を使用して、ボリューム・ロケーション・データベース (VLDB) にまだ存在しないボリューム名を指定し、
+<B>-server</B> および <B>-partition</B> 引き数を使用して、新規ボリュームのサイトを指定します。ボリューム ID は、ボリューム・ロケーション・サーバーが自動的に割り振るので、<B>-id</B> 引き数は省略してください。既存のボリュームは上書きしないので、<B> -overwrite</B> 引き数は使用しないでください。
+</LI><LI>現在のサイトにある既存のボリュームを上書きする場合には、
+<B>-name</B>、<B>-server</B>、および <B>-partition</B> 引き数を使用して、名前とサイトを指定してください。<B>-id</B> 引き数を使用しない限り、ボリュームの現在のボリューム ID は保存されます。
+<B>-overwrite</B> 引き数に値 <B>f</B> ( フル・ダンプ) または <B>i</B> 引き数 (増分ダンプ) を使用して、ダンプのタイプを指定します。
+</LI><LI>既存のボリュームを上書きして、それを新しいサイトに移動させる場合には、<B>-name</B>、<B>-server</B>、および <B>-partition</B> 引き数を使用して、ボリュームの名前と新規サイトを指定してください。<B>-id</B> 引き数を使用しない限り、ボリュームの現在のボリューム ID は保存されます。元のサイトのボリュームは削除されます。
+<B>f</B> を <B>-overwrite</B> 引き数に指定すると、ダンプ・ファイルはフル・ダンプになります (増分ダンプを復元して、同時にボリュームを移動させることはできません。)
+</LI></UL>
+<P><B>-name</B> 引き数に指定された名前がすでに存在し、
+<B>-overwrite</B> 引き数が指定されていない場合、次のメッセージが生成されます。
+<P>
+<PRE>   Do you want to do a full/incremental restore or abort? [fia](a):
+   
+</PRE>
+<P>次のいずれかの値で応答してください。
+<UL>
+<LI><B>f</B> (フル・ダンプ・ファイルを復元する場合)
+</LI><LI><B>i</B> (増分ダンプ・ファイルを復元する場合)
+</LI><LI><B>a</B> または &lt;<B>Return</B>&gt; (復元操作を取り消す場合)
+</LI></UL>
+<P><STRONG>注意</STRONG>
+<P><B>-file</B> 引き数を省略すると、コマンドの発行側は他の必要な引き数を指定しなければなりません。これは、情報が欠落しているときに表示されるコマンド・インタープリターのプロンプトの応答に、標準入力ストリームが使用できないためです。特に、既存のボリュームを上書きする場合には、コマンド発行側は、<B> -overwrite</B> 引き数を指定する必要があります。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-server
+</B><DD>ボリュームの復元先になるファイル・サーバー・マシンを指定します。マシンの IP アドレスまたはホスト名 (完全修飾名またはあいまいでない省略形) を指定します。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-partition
+</B><DD>ボリュームの復元先になる区画 (<B>-server</B> 引き数に指定されたファイル・サーバー・マシン上にある) を指定します。名前の前にスラッシュを付けて完全な区画名を指定するか (たとえば、<B>/vicepa</B>)、または使用可能な 3 つの省略形のいずれかを使用してください。詳細については、<B>vos</B> コマンド・セットの解説ページを参照してください。
+<P><DT><B>-name
+</B><DD>復元後のボリューム名を指定します。最大 22 文字までの名前が指定できます。ただし、<B>.readonly</B> または <B>.backup</B> などの拡張子は使用できません。ボリュームがすでに存在している場合には、<B>-overwrite</B> 引き数の値として上書きの対象になります。
+<P><DT><B>-file
+</B><DD>復元するダンプ・ファイルの名前を指定します。部分パス名を指定すると、現行作業ディレクトリーとの相対位置で解釈されます。この引き数を省略する場合は、標準入力ストリームを介して、ダンプ・ファイルを指定してください。
+<P><DT><B>-id
+</B><DD>復元後のボリュームに割り当てるボリューム ID 番号を指定します。
+<P><DT><B>-overwrite
+</B><DD>既存のボリュームを上書きするときに、復元されるダンプ・ファイルのタイプを指定します。次のいずれかの値を選択してください。
+<UL>
+<LI><B>a</B> (復元操作を終了するための書類)
+</LI><LI><B>f</B> (フル・ダンプ・ファイルの復元の場合)
+</LI><LI><B>i</B> (増分ダンプ・ファイルを復元する場合) <B>-server</B> および <B> -partition</B> 引き数がボリュームの現在のサイトを表していない場合には、この値は使用できません。
+</LI></UL>
+<P>
+<P>
+<P><B>-file</B> 引き数を指定していない場合、この引き数は必須です。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。この引き数は、
+<B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行側に非特権 ID <B>anonymous</B> を割り当てます。このフラグは <B>-localauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-localauth
+</B><DD>ローカルの <B>/usr/afs/etc/KeyFile</B> ファイルのキーを使用して、サーバー・チケットを構成します。相互認証の間、<B>vos</B> コマンド・インタープリターは、ボリューム・サーバーおよびボリューム・ロケーション・サーバーに、このチケットを提供します。このフラグは、<B>-cell</B> 引き数、または <B>-noauth</B> フラグと一緒に使用してはなりません。詳細については、<B>vos</B> の解説ページを参照してください。
+<P><DT><B>-verbose
+</B><DD>標準出力ストリームに、コマンド実行の詳細なトレースを出力します。この引き数を省略すると、警告およびエラー・メッセージだけが表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、ダンプ・ファイル <B> /afs/abc.com/common/dumps/terry.dump</B> の内容をファイル・サーバー・マシン <B>fs3.abc.com</B> の区画 <B>/vicepc</B> に復元しています。復元後の名前は <B>user.terry</B> です。
+<PRE>   % <B>cd /afs/abc.com/common/dumps</B>
+   
+   % <B>vos restore -file terry.dump -server fs3.abc.com -partition c</B>  \
+                 <B>-name user.terry</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行側は、<B>-server</B> 引き数に指定されたマシン、および各データベース・サーバー・マシン上の <B>/usr/afs/etc/UserList</B> ファイルにリストされていなければなりません。<B>-localauth</B> フラグを使用する場合には、コマンドの発行側が、ローカル・スーパーユーザー <B>root</B> として、サーバー・マシンにログオンする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf252.htm#HDRVOS_INTRO">vos</A>
+<P><A HREF="auarf260.htm#HDRVOS_DUMP">vos dump</A>
+<P><A HREF="auarf261.htm#HDRVOS_EXAMINE">vos examine</A>
+<P><A HREF="auarf266.htm#HDRVOS_LISTVOL">vos listvol</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf273.htm">前ページ</A> &#124; <A HREF="auarf275.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,66 @@
+:Base TAAFSUSRMGR.HLP
+:Title IBM AFS 계정 관리 프로그램
+1 AFS 계정 관리 프로그램 
+2 AFS 사용자 계정
+3 AFS 계정 작성
+4 AFS 사용자 계정 작성=Creating_User_Entries
+4 새로운 AFS 사용자 계정 작성하기=To_create_a_single_user_account
+3 암호 인증 및 보안
+4 암호/인증 보안 개선=Improving_Password_Authentication_Security
+4 사용자별 연속 실패 로그인 횟수 제한하기=To_limit_the_number_of_consecutive_failed_login_attempts
+4 잠겨진 사용자 계정 잠금해제하기=To_unlock_a_locked_user_account
+4 AFS 사용자 계정에 대한 암호 주기 설정하기=To_set_password_lifetime
+4 사용자별 암호 재사용 제한하기=To_restrict_reuse_of_passwords
+3 암호 변경
+4 암호 변경=Changing_Passwords
+4 사용자의 AFS 암호 변경하기=To_change_a_password_in_the_Authentication_Database
+3 사용자 계정 제거
+4 사용자 계정 제거=Removing_User_Accounts
+4 AFS 사용자 계정 삭제하기=To_remove_a_user_account
+2 AFS 그룹
+3 보호 데이터베이스 정보=AFS_Protection_Database
+3 보호 데이터베이스 항목=Protection_Database_Entries
+3 그룹 사용
+4 그룹의 효과적 사용=Using_Groups_Effectively
+4 접두어 부족(Prefix-Less) AFS 그룹 사용=Using_Prefix_Less_Groups
+4 IP 주소 그룹화=Placing_Machines_in_Groups
+4 표준 시스템 그룹=The_Standard_System_Groups
+4 그룹 정보 목록
+5 그룹 정보 목록=Listing_Information_about_Groups
+5 AFS 그룹 구성원 목록 열람하기=To_list_the_members_of_a_group
+5  AFS 그룹 정보 열람하기=To_examine_a_Protection_Database_group_entry
+5 AFS 그룹이 소유한 그룹 목록 열람하기=To_list_the_groups_that_a_group_owns
+4 사용자 및 기계 항목에 대한 그룹 관련 정보 목록
+5 사용자 및 기계 항목에 대한 그룹 관련 정보 목록=Listing_Group_Related_Information_about_Users_and_Machine_Entries
+5 AFS 사용자가 속한 그룹 목록 열람하기=To_examine_a_Protection_Database_entry_for_a_user_or_machine
+5 AFS 사용자가 소유한 그룹 목록 열람하기=To_view_a_list_of_the_groups_that_an_AFS_user_owns
+5 IP 주소 계정이 소유한 그룹 목록 열람하기=To_view_a_list_of_the_groups_that_an_IP_address_account_owns
+5 IP 주소 계정이 속한 그룹 목록 열람하기=To_view_a_list_of_the_groups_to_which_an_IP_address_account_belongs
+4 사용자 항목 작성
+5 AFS 사용자 계정 작성=Creating_User_Entries
+5 새로운 AFS 사용자 계정 작성하기=To_create_a_single_user_account
+4 기계 항목 작성
+5 IP 주소 항목 작성=Creating_Machine_Entries
+5 AFS 보호 데이터베이스에서 IP 주소 계정 작성하기=To_create_a_single_machine_entry_in_the_Protection_Database
+4 일반 및 소유자가 없는 그룹 작성
+5 일반 및 소유자가 없는 AFS 그룹 작성=Creating_Regular_and_Prefix_Less_Groups
+5 새로운 일반 AFS 그룹 작성하기=To_create_a_single_regular_group_entry
+5 새로운 소유자가 없는 AFS 그룹 작성하기=To_create_a_single_prefix_less_group_entry
+4 그룹에 구성원 추가 및 그룹에서 구성원 제거
+5 그룹에 구성원 추가 및 그룹에서 구성원 제거=Adding_Members_to_Groups_and_Removing_Them_from_Groups
+5 그룹에 사용자 또는 IP 주소 계정 추가하기=To_add_users_and_machines_to_groups
+5 AFS 그룹에서 사용자, IP 주소 계정, 또는 그룹 제거하기=To_remove_users_and_machines_from_groups
+3 보호 데이터베이스에서 항목 삭제
+4 보호 데이터베이스에서 항목 삭제=Deleting_Entries_from_the_Protection_Database
+4 AFS 그룹 삭제하기=To_delete_user_and_group_entries
+3 항목 소유자 변경
+4 AFS 그룹 소유자 변경=Changing_the_Owner_of_an_Entry
+4 변경 소유권의 이름 변경 의미=The_Name_Changing_Implications_of_Changing_Ownership
+4 AFS 그룹 소유자 변경하기=To_change_the_owner_of_a_group_entry
+3 항목 이름 변경
+4 AFS 그룹 이름 변경=Changing_the_Name_of_an_Entry
+4 AFS 그룹 이름 변경하기=To_change_the_name_of_a_group_entry
+3 그룹 작성 할당량 변경
+4 그룹 작성 할당량 변경=Changing_Group_Creation_Quota
+4 AFS 사용자의 그룹 작성 할당량 보기=To_examine_group_creation_quota
+4 AFS 사용자의 그룹 작성 할당량 변경하기=To_change_group_creation_quota

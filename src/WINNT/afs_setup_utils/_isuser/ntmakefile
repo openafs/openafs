@@ -1,0 +1,90 @@
+# include the primary makefile
+
+RELDIR=WINNT\afs_setup_utils\_isuser
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+
+# Microsoft Developer Studio Generated NMAKE File, Based on _IsUser.dsp
+!IF "$(OS)" == "Windows_NT"
+NULL=
+!ELSE 
+NULL=nul
+!ENDIF 
+
+OUTDIR=$(OUT) 
+INTDIR=$(OUT) 
+
+INSTALL : "$(DESTDIR)\WinInstall\Config\_IsUser.dll"
+	$(DEL) *.PCH 
+	$(DEL) *.IDB
+
+CLEAN ::
+	-@erase "$(INTDIR)\_isuser.obj"
+	-@erase "$(INTDIR)\_Isuser.res"
+	-@erase "$(INTDIR)\vc60.idb"
+	-@erase "$(OUTDIR)\_IsUser.dll"
+	-@erase "$(OUTDIR)\_IsUser.exp"
+	-@erase "$(OUTDIR)\_IsUser.lib"
+
+CPP=cl.exe
+CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+
+.c.{$(OUT)\}obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp.{$(OUT)\}obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx.{$(OUT)\}obj::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.c.$(OUT)\sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cpp.$(OUT)\sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+.cxx.$(OUT)\sbr::
+   $(CPP) @<<
+   $(CPP_PROJ) $< 
+<<
+
+MTL=midl.exe
+MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
+RSC=rc.exe
+RSC_PROJ=/l 0x409 /fo"$(INTDIR)\_Isuser.res" /d "NDEBUG" 
+BSC32=bscmake.exe
+BSC32_FLAGS=/nologo /o"$(OUTDIR)\_IsUser.bsc" 
+BSC32_SBRS= \
+
+LINK32=link.exe
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"$(OUTDIR)\_IsUser.pdb" /machine:I386 /out:"$(DESTDIR)\WinInstall\Config\_IsUser.dll" /implib:"$(OUTDIR)\_IsUser.lib" 
+LINK32_OBJS= \
+	"$(INTDIR)\_isuser.obj" \
+	"$(INTDIR)\_Isuser.res"
+
+"$(DESTDIR)\WinInstall\Config\_IsUser.dll" : $(DEF_FILE) $(LINK32_OBJS)
+    $(LINK32) @<<
+  $(LINK32_FLAGS) $(LINK32_OBJS)
+<<
+
+SOURCE=.\_isuser.c
+
+"$(INTDIR)\_isuser.obj" : $(SOURCE)
+
+SOURCE=.\_Isuser.RC
+
+"$(INTDIR)\_Isuser.res" : $(SOURCE)
+	$(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+mkdir:

@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRBK_HELP" HREF="auarf002.htm#ToC_89">backup help</A></H2>
+<A NAME="IDX4324"></A>
+<A NAME="IDX4325"></A>
+<A NAME="IDX4326"></A>
+<P><STRONG>目的</STRONG>
+<P>指定された <B>backup</B> コマンドの構文、またはすべての <B>backup</B> コマンドの簡単な説明を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>backup help</B>  [<B>-topic</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+  
+<B>backup h</B> [<B>-t</B> &lt;<VAR>help string</VAR>><SUP>+</SUP>]  [-<B>h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>backup help</B> コマンドは、
+<B>-topic</B> 引き数によって指定された各操作コードについての、完全なオンライン・ヘルプ項目 (概説および構文) を表示します。
+<B>-topic</B> 引き数が省略されると、各 <B>backup</B> コマンドのオンライン・ヘルプ項目の最初の行 (名前と簡単な説明) を表示します。
+<P>名前または説明部分に特定のキーワードを含む <B>backup</B> コマンドを表示する場合には、
+<B>backup apropos</B> コマンドを使用してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-topic
+</B><DD>各コマンドの完全なオンライン・ヘルプ項目が表示されます。操作コードだけを指定する場合には、コマンド名から <B>backup</B> を除いた部分を指定してください。
+(たとえば、<B>backup dump</B> ではなく、
+<B>dump</B> と指定します。)
+この引き数を省略すると、各 <B>backup</B> コマンドの簡単な説明が表示されます。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>各 <B>backup</B> コマンドのオンライン・ヘルプ項目は、次のように 2、3 行から構成されます。
+<UL>
+<LI>最初の行には、コマンド名および機能の説明が表示されます。
+</LI><LI>次の行には、コマンドの別名 (ある場合) が表示されます。
+</LI><LI>最後の行は、<TT>Usage</TT> という文字列で始まり、コマンドのオプションが一定の順序で表示されます。オンライン・ヘルプの項目では、この文書の解説ページと同じ記号 (大括弧など) が使用されています。
+</LI></UL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、
+<B>backup dump</B> コマンドのオンライン・ヘルプ項目を表示します。
+<PRE>   % <B>backup help dump</B>
+   backup dump: start dump
+   Usage: backup dump -volumeset &lt;volume set name> -dump &lt;dump level name>
+   [-portoffset &lt;TC port offset>]  [-at &lt;Date/time to start dump>+]
+   [-append]  [-n]  [-file &lt;load file>]  [-help]
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf065.htm#HDRBK_APROPOS">backup apropos</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf074.htm">前ページ</A> &#124; <A HREF="auarf076.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

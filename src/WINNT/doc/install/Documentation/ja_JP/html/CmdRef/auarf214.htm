@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPTS_CREATEGROUP" HREF="auarf002.htm#ToC_228">pts creategroup</A></H2>
+<A NAME="IDX5252"></A>
+<A NAME="IDX5253"></A>
+<A NAME="IDX5254"></A>
+<A NAME="IDX5255"></A>
+<A NAME="IDX5256"></A>
+<A NAME="IDX5257"></A>
+<A NAME="IDX5258"></A>
+<A NAME="IDX5259"></A>
+<A NAME="IDX5260"></A>
+<A NAME="IDX5261"></A>
+<A NAME="IDX5262"></A>
+<A NAME="IDX5263"></A>
+<A NAME="IDX5264"></A>
+<A NAME="IDX5265"></A>
+<A NAME="IDX5266"></A>
+<A NAME="IDX5267"></A>
+<A NAME="IDX5268"></A>
+<A NAME="IDX5269"></A>
+<A NAME="IDX5270"></A>
+<A NAME="IDX5271"></A>
+<A NAME="IDX5272"></A>
+<A NAME="IDX5273"></A>
+<P><STRONG>目的</STRONG>
+<P>(空の) 保護データベース・グループ項目を作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>pts creategroup -name</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-owner</B> &lt;<VAR>owner of the group</VAR>>] 
+                [<B>-id</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+                [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts createg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>] 
+            [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+            [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+      
+<B>pts cg -na</B> &lt;<VAR>group name</VAR>><SUP>+</SUP>  [<B>-o</B> &lt;<VAR>owner of the group</VAR>>]  
+       [<B>-i</B> &lt;<VAR>id (negated) for the group</VAR>><SUP>+</SUP>]  
+       [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>pts creategroup</B> コマンドは、
+<B>-name</B> 引き数に指定されたグループの保護データベースに、項目を作成します。この項目には、コマンドの発行者が、グループの作成者として記録されます。また、<B>-owner</B> 引き数に、代替ユーザーまたはグループが所有者として指定されていなければ、グループの所有者としても記録されます。
+<P>グループには次の 2 つのタイプがあります。
+<UL>
+<LI><I>通常</I> グループ。このグループの名前は、コロンで区切られた 2 つの部分で構成されています。コロンの前の部分は、グループの所有者名です。どのユーザーも、このようなグループを作成できます。
+</LI><LI><I>接頭部がない</I> グループ。このグループには、所有者接頭部がありません。接頭部のないグループを作成できるのは、
+<B>system:administrators</B> グループのメンバーだけです。
+</LI></UL>
+<P>グループを 1 つ作成すると、発行者のグループ作成割り当て量が 1 だけ下がります。代替ユーザーまたはグループに所有権を割り当てるために、
+<B>-owner</B> 引き数が使用された場合も同様です。ユーザーのグループ作成割り当て量を表示する場合には、
+<B>pts examine</B> コマンドを使用してください。また、割り当て量を設定する場合には、
+<B>pts setfields</B> コマンドを使用してください。
+<P>AFS グループ ID (AFS GID) 番号は負の整数です。デフォルトでは、保護サーバーは、保護データベースの <TT>max group id</TT> カウンターの現行値より、
+1 少ない値を GID に割り当てます。カウンターは、1 グループ追加されるごとに、1 ずつ減少します。
+<B>system:administrators</B> グループのメンバーは、
+<B>-id</B> 引き数を使用して、特定の AFS GID 番号を割り当てることができます。指定された GID が <TT>max group id</TT> カウンターの現行値より小さくなると、カウンターはその値にリセットされます。カウンターの現行値より大きい GID を指定することもできますが、その GID を持つグループがすでに存在していると、作成操作は失敗します。
+<TT>max group id</TT> カウンターの値を表示または設定するには、それぞれ <B>pts listmax</B> コマンドまたは、
+<B>pts setmax</B> コマンドを使用してください。
+<P><STRONG>出力</STRONG>
+<P>このコマンドは、次のような文字列を生成して、各グループの作成を確認します。
+<PRE>   group <VAR>name</VAR> has id <VAR>AFS GID</VAR>
+   
+</PRE>
+<P><STRONG>注意</STRONG>
+<P>グループの所有者にマシン項目を指定するために、
+<B>-owner</B> 引き数を使用しても、エラーの原因にはなりませんが、お勧めはしません。保護サーバーは、マシンにログオンしたユーザーにまで、グループ所有の通常特権を与えません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>作成する各グループの名前を指定します。最大 63 文字までの文字列を指定します。文字列には、英小文字 (英大文字は不可)、数字、および句読記号を使用することができます。通常、単一コロン (<B>:</B>) を使用して、名前を 2 つの部分に分けます。接頭部のないグループ名の場合には、コロンは使用されません。
+<P>
+<P>通常グループの名前は、次の形式でなければなりません。
+<P>
+<PRE>   <VAR>owner_name</VAR><B>:</B><VAR>group_name</VAR>
+   
+</PRE>
+<P>
+<P>
+<P>また、<VAR>owner_name</VAR> フィールドは、次に示すように、グループの実際の所有者を反映していなければなりません。
+<UL>
+<LI>オプションの <B>-owner</B> 引き数が組み込まれていない場合、このフィールドは、コマンドの発行者が現在認証されている AFS ユーザー名と、一致していなければなりません。
+</LI><LI><B>-owner</B> 引き数に、代替の AFS ユーザーが指定されている場合には、このフィールドは、その AFS ユーザー名と一致していなければなりません。
+</LI><LI><B>-owner</B> 引き数に他の通常グループが指定されている場合、このフィールドは、所有グループの所有者フィールド (名前のコロンより前の部分) と、一致していなければなりません。
+<B>-owner</B> 引き数に接頭部のないグループが指定されている場合、このフィールドは、所有グループの完全名と一致していなければなりません。
+</LI></UL>
+<P><DT><B>-owner
+</B><DD>ユーザーおよびグループを、コマンドの発行者ではなく、各グループの所有者として指定します。
+AFS ユーザー名を指定するか、あるいは通常グループまたは接頭部のないグループの名前を指定してください。所有グループには、すでに少なくとも 1 つは、メンバーが所属していなければなりません。この要件によって、作成中のグループに対する自己所有の割り当てを防ぐことができます。必要であれば、このコマンドの発行後、
+<B>pts chown</B> コマンドを使用してください。
+<P><DT><B>-id
+</B><DD>各グループの負の整数の AFS GID 番号を指定します。保護サーバーには、番号の割り当てを許可しません。負であることを示すために、整数の前にハイフン (<B>-</B>) を付けてください。
+<P>
+<P>この引き数が使用され、
+<B>-name</B> 引き数に複数の新規グループが指定されている場合には、
+AFS GID と同じ番号を指定してください。最初の GID が最初のグループに、
+2 番目の GID が 2 番目のグループに割り当てられます。以下同様に割り当てられます。グループの数よりも GID が少ない場合、保護サーバーは、
+<TT>max group id</TT> カウンターを基準にして、一致していないグループに GID を割り当てます。グループの数よりも GID が多い場合には、余分な GID は無視されます。
+<TT>max group id</TT> カウンターの現行値より 1 少ない GID があると、カウンターはその値にリセットされます。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>発行者に、非特権 ID <B>anonymous</B> を割り当てます。詳細については、
+<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-force
+</B><DD>このフラグを使用すると、エラーや他の問題が発生したときに、最初のエラーでコマンドの実行を停止するのではなく、可能な限り継続します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次の例では、ユーザー <B>pat</B> が、
+<B>pat:friends</B> および、
+<B>pat:colleagues</B> という名前のグループを作成しています。
+<PRE>   % <B>pts creategroup -name pat:friends pat:colleagues</B>
+   
+</PRE>
+<P>次の例では、<B>system:administrators</B> グループのメンバーが、接頭部のないグループ <B>staff</B> を作成し、自分自身ではなく <B>system:administrators</B> グループに、その所有権を割り当てています。
+<PRE>   % <B>pts creategroup -name staff -owner system:administrators</B>
+   
+</PRE>
+<P>次の例では、ユーザー <B>pat</B> が、
+<B>smith:team-members</B> という名前のグループを作成しています。このグループが許可されるのは、<B>-owner</B> 引き数に、必須の値 (<B>smith</B>) が指定されているからです。
+<PRE>   % <B>pts creategroup -name smith:team-members -owner smith</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>接頭部のないグループを作成したり、
+<B>-id</B> 引き数を組み込んだりするには、コマンドの発行者が、
+<B>system:administrators</B> グループに属していなければなりません。
+<P>通常グループを作成する場合には、コマンドの発行者は次の条件を満たしていなければなりません。
+<UL>
+<LI>認証済みである。
+<B>-noauth</B> フラグが指定されていると、コマンドは失敗します。
+</LI><LI>グループ作成割り当て量がゼロより大きい。
+<B>pts examine</B> コマンドを発行すると、この割り当て量を表示することができます。
+</LI></UL>
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf213.htm">前ページ</A> &#124; <A HREF="auarf215.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

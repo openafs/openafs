@@ -1,0 +1,3060 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+#include <WINNT\al_resource.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS Server Manager"
+#define AFS_VERINFO_NAME "svrmgr"
+#define AFS_VERINFO_FILENAME "svrmgr.exe"
+#define AFS_VERINFO_LANG_CODE 0x40a
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SERVICES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 165
+    END
+
+    IDD_AGGREGATES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 118
+    END
+
+    IDD_FILESETS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 180
+    END
+
+    IDD_SVR_LISTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_AGG_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 301
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 155
+    END
+
+    IDD_SVR_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_SVR_SCOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 261
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_SVC_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 228
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 294
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 315
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 224
+    END
+
+    IDD_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 207
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVC_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 237
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 228
+    END
+
+    IDD_SET_REPSITES, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 216
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_OPENCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 224
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 254
+        HORZGUIDE, 160
+    END
+
+    IDD_TIMEOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 232
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 281
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_REFRESHALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 260
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
+
+    IDD_SET_CREATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 317
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 205
+    END
+
+    IDD_SET_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_SET_CLONE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 341
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 81
+    END
+
+    IDD_SVC_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 220
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 189
+    END
+
+    IDD_SVR_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 152
+    END
+
+    IDD_AGG_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 252
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 146
+    END
+
+    IDD_SET_PROBLEMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 268
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 177
+    END
+
+    IDD_SET_MOVETO, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 170
+    END
+
+    IDD_SET_MOVING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SVC_LOGNAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 307
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 102
+    END
+
+    IDD_SVC_VIEWLOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_SET_SETQUOTA, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 267
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 126
+    END
+
+    IDD_ACTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 234
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_SVR_SYNCVLDB, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 265
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_SET_CREATEREP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_SVR_INSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 260
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 153
+    END
+
+    IDD_SVR_UNINSTALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_SVR_PRUNE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 314
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 129
+    END
+
+    IDD_SET_RENAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 129
+    END
+
+    IDD_SVC_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_SVR_GETDATES, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_GETDATES_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SET_DUMP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 307
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
+    END
+
+    IDD_SET_RESTORE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 297
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 243
+    END
+
+    IDD_SVC_BOS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 291
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_SET_DUMPING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SET_RESTORING, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 233
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 60
+    END
+
+    IDD_SET_CLONESYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 326
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 158
+    END
+
+    IDD_SUBSETS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 300
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 178
+    END
+
+    IDD_SUBSET_LOADSAVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 276
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_HELP_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 69
+    END
+
+    IDD_HELP_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_HELP_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 226
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_OPENINGCELL, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 236
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 41
+    END
+
+    IDD_OPTIONS_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 368
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 131
+    END
+
+    IDD_SVR_KEYS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 221
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_CREATEKEY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_SVC_STARTSTOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SVR_EXECUTE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 244
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 121
+    END
+
+    IDD_SVR_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 306
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 251
+    END
+
+    IDD_SVR_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 282
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SET_RELEASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 285
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 99
+    END
+
+    IDD_SVR_HOSTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 241
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 174
+    END
+
+    IDD_SVR_ADDHOST, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 221
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 102
+    END
+
+    IDD_SVR_ADDRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 204
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 111
+    END
+
+    IDD_SVR_NEWADDR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 219
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 65
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#include <WINNT\\al_resource.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS Server Manager""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_MAIN MENU DISCARDABLE 
+BEGIN
+    POPUP "&Célula"
+    BEGIN
+        MENUITEM "S&eleccionar...",             M_CELL_OPEN
+        MENUITEM "&Autentificación...",         M_CREDENTIALS
+        MENUITEM SEPARATOR
+        MENUITEM "&Salir",                      M_EXIT
+    END
+    POPUP "&Ver"
+    BEGIN
+        POPUP "&Servidores"
+        BEGIN
+            MENUITEM "Iconos &grandes",             M_SVR_VIEW_LARGE
+            , CHECKED
+            MENUITEM "Iconos &pequeños",            M_SVR_VIEW_SMALL
+            , CHECKED
+            MENUITEM "&Detalles",                   M_SVR_VIEW_REPORT
+            , CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "&Normal",                     M_SVR_VIEW_ONEICON
+            , CHECKED
+            MENUITEM "&Todos los iconos",           M_SVR_VIEW_TWOICONS
+            , CHECKED
+            MENUITEM "Sólo &estado",                M_SVR_VIEW_STATUS
+            , CHECKED
+        END
+        POPUP "Panel de &vista rápida"
+        BEGIN
+            MENUITEM "&Ninguno",                    M_DIVIDE_NONE, CHECKED
+            MENUITEM "Barra de división &vertical", M_DIVIDE_H, CHECKED
+            MENUITEM "Barra de división &horizontal", M_DIVIDE_V, CHECKED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "O&peraciones en curso",       M_ACTIONS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "Servidores s&upervisados...", M_SUBSET
+        MENUITEM "&Columnas...",                M_COLUMNS
+        MENUITEM "&Opciones...",                M_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "Ac&tualizar todo",            M_REFRESHALL
+    END
+    POPUP "A&yuda"
+    BEGIN
+        MENUITEM "&Contenido",                  M_HELP
+        MENUITEM "Buscar &mandato...",          M_HELP_FIND
+        MENUITEM "Buscar código de &error...",  M_HELP_XLATE
+        MENUITEM SEPARATOR
+        MENUITEM "&Acerca de AFS Server Manager...", M_ABOUT
+    END
+END
+
+MENU_AGG MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Crear volumen...",           M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "C&opia de seguridad de volúmenes...", M_SET_CLONE
+    MENUITEM "&Desbloquear todos los volúmenes", M_SET_UNLOCK
+    MENUITEM "S&incronizar VLDB...",        M_SYNCVLDB
+    MENUITEM "Recu&perar volúmenes...",     M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar",                 M_REFRESH
+    MENUITEM "P&ropiedades",                M_PROPERTIES
+END
+
+MENU_SVC MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Iniciar",                    M_SVC_START
+    MENUITEM "&Detener",                    M_SVC_STOP
+    MENUITEM "R&einiciar",                  M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "&Ver archivo de registro",    M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "Su&primir",                   M_SVC_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar",                 M_REFRESH
+    MENUITEM "P&ropiedades",                M_PROPERTIES
+END
+
+MENU_AGG_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "&Normal",                     M_VIEW_ONEICON, CHECKED
+        MENUITEM "&Todos los iconos",           M_VIEW_TWOICONS, CHECKED
+        MENUITEM "Sólo &estado",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Crear volumen...",           M_SET_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar todo",            M_REFRESHALL
+END
+
+MENU_SVC_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "&Normal",                     M_VIEW_ONEICON, CHECKED
+        MENUITEM "&Todos los iconos",           M_VIEW_TWOICONS, CHECKED
+        MENUITEM "Sólo &estado",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Crear servicio...",          M_SVC_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar todo",            M_REFRESHALL
+END
+
+MENU_SET MENU DISCARDABLE 
+BEGIN
+    MENUITEM "Du&plicación...",             M_SET_REPLICATION
+    MENUITEM "Li&berar ahora",              M_SET_RELEASE
+    MENUITEM SEPARATOR
+    MENUITEM "&Copia de seguridad...",      M_SET_CLONE
+    MENUITEM "&Volcar en archivo...",       M_SET_DUMP
+    MENUITEM "Restaurar desde arc&hivo...", M_SET_RESTORE
+    MENUITEM "Establecer c&uota...",        M_SET_SETQUOTA
+    MENUITEM "R&ecuperar...",               M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "&Mover a...",                 M_SET_MOVETO
+    MENUITEM "Cambiar &nombre...",          M_SET_RENAME
+    MENUITEM "&Suprimir",                   M_SET_DELETE
+    MENUITEM SEPARATOR
+    MENUITEM "Blo&quear",                   M_SET_LOCK
+    MENUITEM "&Desbloquear",                M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar",                 M_REFRESH
+    MENUITEM "P&ropiedades",                M_PROPERTIES
+END
+
+MENU_SVR MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Abrir ventana de servidor",  M_SVR_OPEN
+    MENUITEM "&Cerrar ventana de servidor", M_SVR_CLOSE
+    MENUITEM "&Supervisar este servidor",   M_SVR_MONITOR, CHECKED
+    MENUITEM SEPARATOR
+    MENUITEM "Editar seguridad de ser&vidor...", M_SVR_SECURITY
+    MENUITEM "Ad&ministrar sistemas principales de base de datos...", 
+                                            M_SVR_HOSTS
+    MENUITEM "C&opia de seguridad de seguridad de volúmenes...", M_SET_CLONE
+    MENUITEM "Desblo&quear todos los volúmenes", M_SET_UNLOCK
+    MENUITEM "Sincroni&zar VLDB...",        M_SYNCVLDB
+    MENUITEM "Rec&uperar volúmenes...",     M_SALVAGE
+    MENUITEM SEPARATOR
+    MENUITEM "&Instalar archivo...",        M_SVR_INSTALL
+    MENUITEM "&Desinstalar archivo...",     M_SVR_UNINSTALL
+    MENUITEM "&Podar archivos antiguos...", M_SVR_PRUNE
+    MENUITEM SEPARATOR
+    MENUITEM "Obtener &fechas de archivo...", M_SVR_GETDATES
+    MENUITEM "Ver archivo de re&gistro...", M_VIEWLOG
+    MENUITEM "E&jecutar mandato...",        M_EXECUTE
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar",                 M_REFRESH
+    MENUITEM "P&ropiedades",                M_PROPERTIES
+END
+
+MENU_SVR_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "Iconos &grandes",             M_SVR_VIEW_LARGE, CHECKED
+        MENUITEM "Iconos &pequeños",            M_SVR_VIEW_SMALL, CHECKED
+        MENUITEM "&Detalles",                   M_SVR_VIEW_REPORT, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Normal",                     M_SVR_VIEW_ONEICON, CHECKED
+        MENUITEM "&Todos los iconos",           M_SVR_VIEW_TWOICONS, CHECKED
+        MENUITEM "Sólo &estado",                M_SVR_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "Servidores &supervisados...", M_SUBSET
+    MENUITEM SEPARATOR
+    MENUITEM "&Desbloquear todos los volúmenes", M_SET_UNLOCK
+    MENUITEM SEPARATOR
+    MENUITEM "&Cerrar todo",                M_SVR_CLOSEALL
+    MENUITEM "Ac&tualizar todo",            M_REFRESHALL
+END
+
+MENU_SET_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&Ver"
+    BEGIN
+        MENUITEM "Por &volumen",                M_SET_VIEW_REPORT, CHECKED
+        MENUITEM "Por &partición",              M_SET_VIEW_TREELIST, CHECKED
+        MENUITEM "Sin &detalles",               M_SET_VIEW_TREE, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Normal",                     M_VIEW_ONEICON, CHECKED
+        MENUITEM "&Todos los iconos",           M_VIEW_TWOICONS, CHECKED
+        MENUITEM "Sólo &estado",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Crear volumen...",           M_SET_CREATE
+    MENUITEM "&Restaurar desde archivo...", M_SET_RESTORE
+    MENUITEM SEPARATOR
+    MENUITEM "C&opia de seguridad de volúmenes,...", M_SET_CLONE
+    MENUITEM SEPARATOR
+    MENUITEM "&Desbloquear todo",           M_SET_UNLOCK
+    MENUITEM "Ac&tualizar todo",            M_REFRESHALL
+END
+
+MENU_COLUMNS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Columnas...",                M_COLUMNS
+END
+
+MENU_SVC_BOS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "R&einiciar",                  M_SVC_RESTART
+    MENUITEM SEPARATOR
+    MENUITEM "&Ver archivo de registro",    M_VIEWLOG
+    MENUITEM SEPARATOR
+    MENUITEM "Ac&tualizar",                 M_REFRESH
+    MENUITEM "P&ropiedades",                M_PROPERTIES
+END
+
+MENU_SET_DRAGDROP MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Mover aquí...",              M_SET_MOVEHERE
+    MENUITEM "&Duplicar aquí...",           M_SET_REPHERE
+    MENUITEM SEPARATOR
+    MENUITEM "&Cancelar",                   IDC_STATIC
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVICES DIALOGEX 0, 0, 179, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Servicios:",IDC_SVC_DESC,0,5,179,8
+    CONTROL         "",IDC_SVC_LIST,"FastList",WS_TABSTOP | 0x303,0,17,179,
+                    61,WS_EX_STATICEDGE
+    PUSHBUTTON      "&Crear...",IDC_SVC_CREATE,56,80,39,12
+    PUSHBUTTON      "Su&primir",IDC_SVC_DELETE,98,80,39,12
+    PUSHBUTTON      "&Reiniciar",IDC_SVC_RESTART,140,80,39,12
+END
+
+IDD_AGGREGATES DIALOGEX 0, 0, 165, 84
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Particiones:",IDC_AGG_DESC,0,5,165,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,0,17,165,
+                    53,WS_EX_STATICEDGE
+    PUSHBUTTON      "&Crear volumen...",IDC_AGG_CREATESET,102,72,63,12
+END
+
+IDD_FILESETS DIALOGEX 0, 0, 194, 92
+STYLE DS_CENTER | WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Volúmenes:",IDC_SET_DESC,0,5,194,8
+    CONTROL         "",IDC_SET_LIST,"FastList",WS_TABSTOP | 0x303,0,17,194,
+                    61,WS_EX_STATICEDGE
+    PUSHBUTTON      "&Crear...",IDC_SET_CREATE,4,80,34,12
+    PUSHBUTTON      "Su&primir",IDC_SET_DELETE,40,80,36,12
+    PUSHBUTTON      "&Duplicación...",IDC_SET_REP,78,80,50,12
+    PUSHBUTTON      "Establecer c&uota...",IDC_SET_SETQUOTA,130,80,62,12
+END
+
+IDD_SVR_LISTS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,216,
+                    135,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Añadir administrador",IDC_LIST_ADD,66,160,71,14
+    PUSHBUTTON      "&Eliminar administrador",IDC_LIST_REMOVE,141,160,80,14
+    LTEXT           "Administradores para servidor %1:",IDC_LIST_NAME,5,7,
+                    216,8
+END
+
+IDD_AGG_GENERAL DIALOGEX 0, 0, 306, 160
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "ID:",IDC_STATIC,5,30,31,8
+    LTEXT           "(consultando)",IDC_AGG_ID,47,30,214,8
+    LTEXT           "Dispositivo:",IDC_STATIC,5,46,40,8
+    LTEXT           "(consultando)",IDC_AGG_DEVICE,47,46,214,8
+    LTEXT           "Volúmenes:",IDC_STATIC,5,62,39,8
+    LTEXT           "(consultando)",IDC_AGG_FILESETS,47,62,214,8
+    CONTROL         "Visualizar un a&viso si la cuota de volumen combinada supera la capacidad",
+                    IDC_AGG_WARNALLOC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    48,76,253,10
+    LTEXT           "Uso:",IDC_STATIC,5,90,31,8
+    LTEXT           "(consultando)",IDC_AGG_USAGE,47,90,214,8
+    CONTROL         "",IDC_AGG_USAGEBAR,"msctls_progress32",0x0,30,103,224,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "Visualizar un a&viso si el uso de la partición supera ",
+                    IDC_AGG_WARN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,47,
+                    116,214,10
+    CONTROL         "el umbral &por omisión para este servidor",
+                    IDC_AGG_WARN_AGGFULL_DEF,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,49,131,203,9
+    CONTROL         "un &umbral de",IDC_AGG_WARN_AGGFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,49,145,62,9
+    EDITTEXT        IDC_AGG_WARN_AGGFULL_PERCENT,112,143,29,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "% de su tamaño",IDC_AGG_WARN_AGGFULL_DESC,152,145,100,8
+    ICON            IDI_AGGREGATE,IDC_STATIC,5,5,21,20
+    LTEXT           "Partición %2 (servidor %1)",IDC_AGG_NAME,38,14,214,8
+END
+
+IDD_SVR_GENERAL DIALOG DISCARDABLE  0, 0, 226, 188
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Dirección IP:",IDC_STATIC,5,29,43,8
+    LISTBOX         IDC_SVR_ADDRESSES,53,29,70,12,LBS_NOSEL | NOT WS_BORDER | 
+                    WS_VSCROLL
+    PUSHBUTTON      "Cambiar &direcciones...",IDC_SVR_CHANGEADDR,144,27,77,
+                    12
+    PUSHBUTTON      "&Requerir autentificación",IDC_SVR_AUTH_YES,41,81,84,12
+    PUSHBUTTON      "Permitir &no autentificado",IDC_SVR_AUTH_NO,129,81,80,
+                    12
+    LTEXT           "Número de particiones",IDC_STATIC,11,131,75,8
+    LTEXT           "(consultando)",IDC_SVR_NUMAGGREGATES,112,131,99,8
+    LTEXT           "Capacidad total:",IDC_STATIC,11,148,77,8
+    LTEXT           "(consultando)",IDC_SVR_CAPACITY,112,147,99,8
+    LTEXT           "Cuota de volumen combinada:",IDC_STATIC,11,165,96,8
+    LTEXT           "(consultando)",IDC_SVR_ALLOCATION,112,165,99,8
+    ICON            IDI_SERVER,IDC_STATIC,5,5,20,20
+    LTEXT           "(nombre de servidor)",IDC_SVR_NAME,55,13,93,8
+    GROUPBOX        "Seguridad",IDC_STATIC,5,52,216,52
+    GROUPBOX        "Almacenamiento",IDC_STATIC,5,115,216,68
+    LTEXT           "Puede requerir que se autentifique el acceso a este servidor.",
+                    IDC_STATIC,11,67,210,8
+END
+
+IDD_SVR_SCOUT DIALOG DISCARDABLE  0, 0, 266, 158
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "cualquier partición de este servidor se llena en un",
+                    IDC_SVR_WARN_AGGFULL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,18,171,9
+    EDITTEXT        IDC_SVR_WARN_AGGFULL_PERCENT,186,16,24,12,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STATIC,215,18,28,8
+    CONTROL         "cualquier volumen de este servidor se llena en un",
+                    IDC_SVR_WARN_SETFULL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,32,169,9
+    EDITTEXT        IDC_SVR_WARN_SETFULL_PERCENT,186,30,24,12,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STATIC,215,32,44,8
+    CONTROL         "la cuota combinada de cualquier partición supera su capacidad",
+                    IDC_SVR_WARN_AGGALLOC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,46,218,9
+    CONTROL         "se detiene la ejecución de algún servicio de este servidor",
+                    IDC_SVR_WARN_SVCSTOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,60,218,9
+    CONTROL         "algún volumen de este servidor carece de entrada de VLDB",
+                    IDC_SVR_WARN_SETNOVLDB,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,74,218,9
+    CONTROL         "VLDB hace referencia a cualquier partición fuera de línea de este servidor",
+                    IDC_SVR_WARN_AGGNOSERV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,88,249,9
+    CONTROL         "VLDB hace referencia a cualquier volumen fuera de línea de este servidor",
+                    IDC_SVR_WARN_SETNOSERV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,103,249,9
+    CONTROL         "Actualizar información de servidor cada",
+                    IDC_SVR_AUTOREFRESH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,142,138,9
+    EDITTEXT        IDC_SVR_AUTOREFRESH_MINUTES,151,140,27,13,ES_AUTOHSCROLL
+    LTEXT           "minutos",IDC_STATIC,184,142,25,8
+    LTEXT           "Visualizar un aviso si",IDC_STATIC,5,5,195,8
+END
+
+IDD_SVC_GENERAL DIALOG DISCARDABLE  0, 0, 233, 207
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&Ver registro de servicio",IDC_SVC_VIEWLOG,34,182,78,14
+    PUSHBUTTON      "&Iniciar ahora",IDC_SVC_START,123,182,46,14
+    PUSHBUTTON      "De&tener ahora",IDC_SVC_STOP,172,182,50,14
+    CONTROL         "Visualizar un &aviso si se detiene el servicio",
+                    IDC_SVC_WARNSTOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    15,159,200,10
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "Servicio %2 (servidor %1)",IDC_SVC_NAME,40,13,168,8
+    LTEXT           "Tipo:",IDC_STATIC,5,29,44,8
+    LTEXT           "(consultando)",IDC_SVC_TYPE,60,29,168,8
+    LTEXT           "Parámetros:",IDC_STATIC,5,45,44,8
+    EDITTEXT        IDC_SVC_PARAMS,60,45,168,13,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Notificador:",IDC_STATIC,5,61,44,8
+    LTEXT           "(consultando)",IDC_SVC_NOTIFIER,60,61,168,8
+    LTEXT           "Último inicio:",IDC_STATIC,5,78,42,8
+    LTEXT           "(consultando)",IDC_SVC_STARTDATE,60,77,168,8
+    LTEXT           "Última parada:",IDC_STATIC,5,93,47,8
+    LTEXT           "(consultando)",IDC_SVC_STOPDATE,60,93,168,8
+    LTEXT           "Última anomalía:",IDC_STATIC,5,109,53,8
+    EDITTEXT        IDC_SVC_LASTERROR,60,109,168,13,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "Estado de servicio",IDC_STATIC,5,127,223,75
+    LTEXT           "El estado actual de este servicio se está determinando...",
+                    IDC_SVC_STATUS,11,142,200,8
+END
+
+IDD_SET_GENERAL DIALOGEX 0, 0, 299, 214
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "ID de volumen:",IDC_STATIC,5,30,52,8
+    LTEXT           "(desconocido)",IDC_SET_ID,73,30,219,8
+    LTEXT           "Creado:",IDC_STATIC,5,46,39,8
+    LTEXT           "(consultando)",IDC_SET_CREATEDATE,73,46,219,8
+    LTEXT           "Actualizado:",IDC_STATIC,5,62,39,8
+    LTEXT           "(consultando)",IDC_SET_UPDATEDATE,73,62,112,8
+    LTEXT           "Accedido:",IDC_STATIC,5,78,39,8
+    LTEXT           "(consultando)",IDC_SET_ACCESSDATE,73,78,219,8
+    LTEXT           "Copia de seguridad:",IDC_STATIC,5,94,65,8
+    LTEXT           "(consultando)",IDC_SET_BACKUPDATE,73,94,219,8
+    LTEXT           "Cuenta de archivos:",IDC_STATIC,5,110,67,8
+    LTEXT           "(consultando)",IDC_SET_FILES,73,110,219,8
+    LTEXT           "Estado",IDC_STATIC,5,126,26,8
+    LTEXT           "(consultando)",IDC_SET_STATUS,73,126,115,8
+    PUSHBUTTON      "&Bloquear",IDC_SET_LOCK,191,124,49,12
+    PUSHBUTTON      "&Desbloquear",IDC_SET_UNLOCK,245,124,49,12
+    LTEXT           "Uso:",IDC_STATIC,5,142,31,8
+    LTEXT           "(consultando)",IDC_SET_USAGE,73,142,136,8
+    PUSHBUTTON      "&Establecer cuota...",IDC_SET_QUOTA,229,140,65,12
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,75,156,219,8,
+                    WS_EX_STATICEDGE
+    CONTROL         "&Visualizar un aviso si el uso de este volumen supera",
+                    IDC_SET_WARN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,
+                    170,219,10
+    CONTROL         "el umbral por &omisión para este servidor (%1%% de su tamaño)",
+                    IDC_SET_WARN_SETFULL_DEF,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,39,185,207,9
+    CONTROL         "un &umbral de",IDC_SET_WARN_SETFULL,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,39,199,62,9
+    EDITTEXT        IDC_SET_WARN_SETFULL_PERCENT,102,196,29,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "% de su tamaño",IDC_SET_WARN_SETFULL_DESC,139,199,105,8
+    ICON            IDI_FILESET,IDC_STATIC,5,5,21,20
+    LTEXT           "Volumen %3 (servidor %1, partición %2)",IDC_SET_NAME,75,
+                    14,219,8
+END
+
+IDD_MAIN DIALOGEX 0, 0, 317, 226
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS Server Manager"
+MENU MENU_MAIN
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Célula seleccionada:",IDC_STATIC,2,8,69,8
+    LTEXT           "(el nombre de célula se colocará aquí)",IDC_CELL,73,8,
+                    208,9
+    LTEXT           "Señales de AFS:",IDC_STATIC,2,19,55,8
+    LTEXT           "%2:%1 (caducarán las señales %3)",IDC_AFS_ID,74,19,208,
+                    9
+    CONTROL         "",IDC_SERVERS,"FastList",WS_TABSTOP | 0x301,2,31,313,
+                    193,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_CELL_BORDER,"Static",SS_ETCHEDHORZ,1,2,315,1
+    ICON            IDI_MAIN,IDC_ANIMATE,292,7,20,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_SERVER DIALOG DISCARDABLE  0, 0, 209, 137
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Servidor"
+CLASS "ServerWindowClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,2,2,205,133
+END
+
+IDD_SVC_CREATE DIALOGEX 0, 0, 242, 233
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Servidor:",IDC_STATIC,5,36,44,8
+    COMBOBOX        IDC_SVC_SERVER,69,33,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Ser&vicio:",IDC_STATIC,5,52,44,8
+    COMBOBOX        IDC_SVC_NAME,69,50,116,104,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Mandato:",IDC_STATIC,5,70,44,8
+    EDITTEXT        IDC_SVC_COMMAND,69,68,168,13,ES_AUTOHSCROLL
+    LTEXT           "&Parámetros:",IDC_STATIC,5,88,44,8
+    EDITTEXT        IDC_SVC_PARAMS,69,86,168,13,ES_AUTOHSCROLL
+    LTEXT           "&Notificador:",IDC_STATIC,5,105,44,8
+    EDITTEXT        IDC_SVC_NOTIFIER,69,103,168,13,ES_AUTOHSCROLL
+    LTEXT           "Archivo de &registro:",IDC_STATIC,5,122,63,8
+    EDITTEXT        IDC_SVC_LOGFILE,69,120,168,13,ES_AUTOHSCROLL
+    CONTROL         "S&encillo (se ejecuta de modo continuo)",
+                    IDC_SVC_TYPE_SIMPLE,"Button",BS_AUTORADIOBUTTON,11,154,
+                    201,10
+    CONTROL         "Iniciar este servicio a&hora",IDC_SVC_RUNNOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,166,183,10
+    CONTROL         "&FS (sistema de archivos)",IDC_SVC_TYPE_FS,"Button",
+                    BS_AUTORADIOBUTTON,11,180,201,10
+    CONTROL         "&Cron (se ejecuta a intervalos especificados)",
+                    IDC_SVC_TYPE_CRON,"Button",BS_AUTORADIOBUTTON,11,195,201,
+                    10
+    LTEXT           "C&uándo ejecutar:",IDC_STATIC,23,209,56,8
+    COMBOBOX        IDC_SVC_RUNDAY,84,207,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "a las",IDC_STATIC,157,209,18,8
+    CONTROL         "",IDC_SVC_RUNTIME,"Time",WS_BORDER | WS_TABSTOP,178,207,
+                    53,13,WS_EX_CLIENTEDGE
+    ICON            IDI_SERVICE,IDC_STATIC,5,5,20,20
+    LTEXT           "Servicio nuevo",IDC_SVC_DESC,39,13,168,8
+    GROUPBOX        "Tipo de servicio",IDC_STATIC,5,141,232,87
+END
+
+IDD_SET_REPSITES DIALOGEX 0, 0, 221, 168
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_SET_REP_LIST,"FastList",WS_TABSTOP | 0x303,11,80,
+                    199,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Liberar ahora",IDC_SET_RELEASE,11,143,52,14
+    PUSHBUTTON      "&Crear...",IDC_SET_REPSITE_ADD,129,143,38,14
+    PUSHBUTTON      "Su&primir",IDC_SET_REPSITE_DELETE,172,143,38,14
+    LTEXT           "Servidor:",-1,11,31,37,8
+    LTEXT           "(nombre de servidor)",IDC_SET_SERVER,55,31,147,8
+    LTEXT           "Partición:",-1,11,44,37,8
+    LTEXT           "(nombre de partición)",IDC_SET_AGGREGATE,55,44,147,8
+    LTEXT           "Volumen:",-1,11,18,37,8
+    LTEXT           "(nombre de volumen)",IDC_SET_NAME,55,18,147,8
+    GROUPBOX        "Leer/Grabar volumen",-1,5,5,211,56
+    GROUPBOX        "Duplicados de volumen",-1,5,67,211,96
+END
+
+IDD_OPENCELL DIALOG DISCARDABLE  0, 0, 228, 258
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seleccionar célula - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Célula:",IDC_STATIC,4,24,27,8
+    COMBOBOX        IDC_OPENCELL_CELL,33,22,191,143,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Autentificación de AFS",IDC_STATIC,4,44,220,92
+    LTEXT           "&Identidad de AFS:",IDC_STATIC,22,104,60,8
+    EDITTEXT        IDC_OPENCELL_ID,89,102,129,14,ES_AUTOHSCROLL
+    LTEXT           "C&ontraseña de AFS:",IDC_STATIC,22,120,66,8
+    EDITTEXT        IDC_OPENCELL_PASSWORD,89,118,129,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    PUSHBUTTON      "A&vanzado >>",IDC_ADVANCED,4,146,53,14
+    DEFPUSHBUTTON   "Aceptar",IDOK,86,146,41,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,135,146,41,14
+    PUSHBUTTON      "A&yuda",9,183,146,41,14
+    CONTROL         "Supervisar &todos los servidores de esta célula",
+                    IDC_MON_ALL,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,10,
+                    204,185,9
+    CONTROL         "&Sólo un servidor:",IDC_MON_ONE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,10,219,110,10
+    EDITTEXT        IDC_MON_SERVER,137,218,83,13,ES_AUTOHSCROLL
+    CONTROL         "Sólo los servidores del s&ubconjunto:",IDC_MON_SOME,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,10,235,126,13
+    COMBOBOX        IDC_MON_SUBSET,137,233,83,93,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Seleccione la célula de AFS con la que le gustaría trabajar.",
+                    IDC_STATIC,4,7,200,8
+    GROUPBOX        "Supervisar servidores",IDC_ADVANCED_GROUP,4,170,220,84
+    LTEXT           "Para un rendimiento más rápido, puede optar por supervisar sólo un subconjunto de los servidores disponibles en esta célula.",
+                    IDC_STATIC,10,182,206,17
+    LTEXT           "(consultando...)",IDC_OPENCELL_OLDCREDS,22,70,185,8
+    LTEXT           "Para administrar una célula, debe volver a entrar la contraseña de AFS:",
+                    IDC_STATIC,10,83,204,17
+    LTEXT           "Las señales de AFS actuales dentro de la célula seleccionada:",
+                    IDC_STATIC,10,57,207,8
+END
+
+IDD_TIMEOUT DIALOG DISCARDABLE  0, 0, 236, 157
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Aviso - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Continuar esperando hasta que la tarea finalice con normalidad",
+                    IDC_TIMEOUT_WAIT,"Button",BS_AUTORADIOBUTTON,15,87,211,
+                    10
+    CONTROL         "&Finalizar la tarea",IDC_TIMEOUT_KILL,"Button",
+                    BS_AUTORADIOBUTTON,15,101,208,10
+    DEFPUSHBUTTON   "Aceptar",IDOK,93,139,50,14
+    LTEXT           "Tiempo transcurrido para la ejecución de la tarea:",
+                    IDC_STATIC,4,119,160,8
+    LTEXT           "88:88:88",IDC_TIMEOUT_ELAPSED,169,119,29,8
+    LTEXT           "El AFS Server Manager ha estado esperando durante un período de tiempo inesperadamente largo a que finalizase una tarea de red.",
+                    IDC_STATIC,4,7,228,18
+    LTEXT           "Puede continuar permitiendo la ejecución de la tarea (recomendado), o bien en el caso de que crea que la tarea no  finalizará nunca, puede dejar que el AFS Server Manager la finalice.",
+                    IDC_STATIC,4,30,228,26
+    LTEXT           "Por favor, tenga en cuenta que la tarea sigue en curso mientras se muestra esta ventana; si finaliza la tarea, esta ventana se cerrará automáticamente.",
+                    IDC_STATIC,4,60,228,24
+END
+
+IDD_COLUMNS DIALOG DISCARDABLE  0, 0, 286, 148
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "Columnas"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Seleccione las columnas para visualizar al efectuar el listado:",
+                    IDC_STATIC,5,7,126,18
+    COMBOBOX        IDC_COLUMNS,134,9,147,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Columnas disponibles:",IDC_STATIC,12,40,100,8
+    LISTBOX         IDC_COL_AVAIL,12,49,100,71,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Columnas para &visualizar:",IDC_STATIC,173,41,100,8
+    LISTBOX         IDC_COL_SHOWN,173,50,100,71,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Aña&dir >>",IDC_COL_INSERT,119,68,46,14
+    PUSHBUTTON      "<< &Eliminar",IDC_COL_DELETE,119,88,46,14
+    PUSHBUTTON      "Mover hacia a&rriba",IDC_COL_UP,142,122,63,14
+    PUSHBUTTON      "Mover hacia a&bajo",IDC_COL_DOWN,208,122,65,14
+    GROUPBOX        "Listar columnas",IDC_STATIC,5,25,276,118
+END
+
+IDD_REFRESHALL DIALOG DISCARDABLE  0, 0, 264, 72
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Actualizando - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_REFRESH_PERCENTBAR,"msctls_progress32",0x0,4,37,
+                    256,8
+    LTEXT           "0% completado",IDC_REFRESH_PERCENT,4,49,216,8
+    LTEXT           "",IDC_REFRESH_CURRENT,4,60,216,8
+    LTEXT           "Espere, por favor...",IDC_REFRESH_DESC,4,7,256,25
+    PUSHBUTTON      "&Omitir",IDC_REFRESH_SKIP,222,58,38,12,NOT WS_TABSTOP
+END
+
+IDD_SET_CREATE DIALOGEX 0, 0, 321, 209
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Crear volumen"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Nombre:",IDC_STATIC,4,30,39,8
+    EDITTEXT        IDC_SET_NAME,46,28,116,14,ES_AUTOHSCROLL
+    LTEXT           "&Cuota:",IDC_STATIC,4,48,39,8
+    EDITTEXT        IDC_SET_QUOTA,46,46,32,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,90,47,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "C&opia de seguridad:",IDC_STATIC,4,66,65,8
+    CONTROL         "C&rear también una versión de copia de seguridad de este volumen",
+                    IDC_SET_CLONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,
+                    66,224,8
+    LTEXT           "&Servidor:",IDC_STATIC,4,84,39,8
+    COMBOBOX        IDC_SET_SERVER,46,82,116,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Partición:",IDC_STATIC,4,102,39,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,46,102,271,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Aceptar",IDOK,156,191,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,211,191,50,14
+    PUSHBUTTON      "A&yuda",9,267,191,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "Volumen nuevo",IDC_STATIC,46,12,170,8
+END
+
+IDD_SET_DELETE DIALOG DISCARDABLE  0, 0, 277, 102
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Suprimir volumen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancelar",IDCANCEL,169,84,50,14
+    PUSHBUTTON      "Aceptar",IDOK,115,84,50,14
+    PUSHBUTTON      "A&yuda",9,223,84,50,14
+    CONTROL         "&Suprimir volumen %3 del servidor %1, partición %2",
+                    IDC_DELSET_SERVER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    46,45,227,10
+    CONTROL         "Suprimir entrada de &VLDB para volumen %3",
+                    IDC_DELSET_VLDB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,46,
+                    60,227,10
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "¡Precaución!\n\nEsta operación hará que el volumen %3 se elimine permanentemente.",
+                    IDC_DELSET_DESC,31,7,242,33
+END
+
+IDD_SET_CLONE DIALOG DISCARDABLE  0, 0, 345, 85
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Volumen de copia de seguridad - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,183,67,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,237,67,50,14
+    PUSHBUTTON      "A&yuda",9,291,67,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,21,20
+    LTEXT           "Una copia de seguridad de volumen actúa como una copia de sólo lectura de dicho volumen. Un volumen de leer/grabar sólo puede tener una versión de copia de seguridad. ",
+                    IDC_STATIC,34,9,307,17
+    LTEXT           "Pulse en Aceptar para crear una copia de seguridad del volumen %3 en el servidor %1, partición %2. Si ya existe una copia de seguridad de este volumen, la copia de seguridad se actualizará. ",
+                    IDC_CLONE_DESC,34,32,307,24
+END
+
+IDD_SVC_PROBLEMS DIALOG DISCARDABLE  0, 0, 225, 194
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Problemas conocidos",IDC_PROBLEM_BOX,5,36,215,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,49,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,49,174,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,203,49,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,138,120,61,12
+    ICON            IDI_SERVICE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "Servicio %2 (servidor %1)",IDC_PROBLEM_TITLE,52,13,168,
+                    8
+END
+
+IDD_SVR_PROBLEMS DIALOG DISCARDABLE  0, 0, 226, 157
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Problemas conocidos",IDC_PROBLEM_BOX,5,36,216,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,49,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,49,172,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,201,49,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,136,120,61,12
+    ICON            IDI_SERVER_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "%1",IDC_PROBLEM_TITLE,42,13,179,8
+END
+
+IDD_AGG_PROBLEMS DIALOG DISCARDABLE  0, 0, 257, 151
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Problemas conocidos",IDC_PROBLEM_BOX,5,35,247,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,206,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,235,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,170,119,61,12
+    ICON            IDI_AGGREGATE_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "Partición %2 (servidor %1)",IDC_PROBLEM_TITLE,38,14,214,
+                    8
+END
+
+IDD_SET_PROBLEMS DIALOG DISCARDABLE  0, 0, 273, 182
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Problemas conocidos",IDC_PROBLEM_BOX,5,35,263,102
+    LTEXT           "99:",IDC_PROBLEM_HEADER,11,48,11,8
+    LTEXT           "A\nB\nC\nD\nA\nB\nC\nD",IDC_PROBLEM_TEXT,25,48,220,66,
+                    SS_SUNKEN
+    SCROLLBAR       IDC_PROBLEM_SCROLL,249,48,10,83,SBS_VERT
+    PUSHBUTTON      "Button1",IDC_PROBLEM_REMEDY,184,119,61,12
+    ICON            IDI_FILESET_ALERT,IDC_STATIC,5,5,20,20
+    LTEXT           "Volumen %3 (servidor %1, partición %2)",
+                    IDC_PROBLEM_TITLE,49,14,219,8
+END
+
+IDD_SET_MOVETO DIALOGEX 0, 0, 277, 174
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Mover volumen"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_MOVESET_SERVER,4,54,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,70,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Aceptar",IDOK,115,156,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,169,156,50,14
+    PUSHBUTTON      "A&yuda",9,223,156,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,21,20
+    LTEXT           "A\nB\nC",IDC_MOVESET_DESC,31,4,242,24
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,35,269,1
+    LTEXT           "&Mover volumen a:",IDC_STATIC,4,43,116,8
+END
+
+IDD_SET_MOVING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Moviendo volumen - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "Moviendo volumen %3 desde partición %2 en servidor %1 a partición %5 en servidor %4...",
+                    IDC_MOVESET_DESC,4,41,229,19
+END
+
+IDD_SVC_LOGNAME DIALOG DISCARDABLE  0, 0, 311, 106
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ver archivo de registro"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Ver archivo de registro en &servidor:",IDC_STATIC,4,45,
+                    110,8
+    COMBOBOX        IDC_VIEWLOG_SERVER,115,43,126,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Archivo en servidor a visualizar:",IDC_STATIC,4,64,100,
+                    8
+    EDITTEXT        IDC_VIEWLOG_FILENAME,115,62,191,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,199,88,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,257,88,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,4,4,21,20
+    LTEXT           "Por favor, entre la vía de acceso completa del archivo de registro que desea visualizar.",
+                    IDC_VIEWLOG_DESC,65,10,242,21
+END
+
+IDD_SVC_VIEWLOG DIALOG DISCARDABLE  0, 0, 286, 185
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Ver archivo de registro"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Contenido del archivo:",IDC_SVC_VIEWLOG_CONTENTS,4,41,
+                    277,8
+    EDITTEXT        IDC_VIEWLOG_TEXT,4,51,277,113,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "Guardar &como...",IDC_VIEWLOG_SAVEAS,170,167,56,14
+    DEFPUSHBUTTON   "Ce&rrar",IDOK,231,167,50,14
+    ICON            IDI_SERVICE,-1,4,7,20,20
+    LTEXT           "Registrar archivo [para servicio %2] en servidor %1",
+                    IDC_SVC_VIEWLOG_DESC,33,7,248,8
+    LTEXT           "Nombre de archivo en servidor: %1",
+                    IDC_SVC_VIEWLOG_FILENAME,33,23,248,8
+END
+
+IDD_SET_SETQUOTA DIALOGEX 0, 0, 271, 130
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Establecer cuota de volumen"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Cuota actual:",IDC_STATIC,4,49,47,8
+    LTEXT           "(desconocido)",IDC_SET_USAGE,59,49,208,8
+    CONTROL         "",IDC_SET_USAGEBAR,"msctls_progress32",0x0,59,60,208,8,
+                    WS_EX_STATICEDGE
+    LTEXT           "Nueva &cuota:",IDC_STATIC,4,81,47,8
+    EDITTEXT        IDC_SET_QUOTA,59,79,32,13,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SET_QUOTA_UNITS,103,79,30,44,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Aceptar",IDOK,109,112,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,163,112,50,14
+    PUSHBUTTON      "A&yuda",9,217,112,50,14
+    PUSHBUTTON      "&Propiedades...",IDC_AGG_PROPERTIES,212,28,55,12
+    LTEXT           "Partición:",IDC_STATIC,4,30,47,8
+    LTEXT           "Partición %2 de servidor %1",IDC_SET_AGGREGATE,59,30,
+                    141,8
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "Volumen %1",IDC_SET_NAME,59,11,208,8
+END
+
+IDD_ACTIONS DIALOGEX 0, 0, 236, 58
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Operaciones en curso - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "La operaciones siguientes están actualmente en curso:",
+                    IDC_ACTION_DESC,2,2,232,8
+    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x3,2,14,232,43
+END
+
+IDD_SVR_SYNCVLDB DIALOG DISCARDABLE  0, 0, 269, 99
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Sincronizar VLDB"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,107,81,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,161,81,50,14
+    PUSHBUTTON      "A&yuda",9,215,81,50,14
+    ICON            32515,IDC_STATIC,4,4,21,20
+    LTEXT           "(definido en el momento de la ejecución)",IDC_SYNC_DESC,
+                    37,4,228,32
+    LTEXT           "(definido en el momento de la ejecución)",
+                    IDC_SYNC_DESC2,37,44,228,24
+END
+
+IDD_SET_CREATEREP DIALOGEX 0, 0, 277, 171
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Duplicar volumen"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_SET_SERVER,4,46,116,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,4,62,269,
+                    75,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Aceptar",IDOK,115,153,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,169,153,50,14
+    PUSHBUTTON      "A&yuda",9,223,153,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,20,20
+    LTEXT           "Duplicado nuevo del volumen %3",IDC_SET_NAME,31,12,242,
+                    8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,27,268,1
+    LTEXT           "&Crear un duplicado nuevo de este volumen en:",
+                    IDC_STATIC,4,35,149,8
+END
+
+IDD_SVR_INSTALL DIALOG DISCARDABLE  0, 0, 264, 157
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalar archivo"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Archivo de origen:",IDC_STATIC,4,74,63,8
+    EDITTEXT        IDC_FILENAME,71,72,135,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Examinar...",IDC_BROWSE,210,72,50,14
+    LTEXT           "&Servidor de destino:",IDC_STATIC,4,94,63,8
+    COMBOBOX        IDC_SERVER,71,92,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Nombre de destino:",IDC_STATIC,4,114,63,8
+    EDITTEXT        IDC_DIRECTORY,71,112,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,86,139,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,140,139,50,14
+    PUSHBUTTON      "A&yuda",9,210,139,50,14
+    ICON            IDI_INSTALL,IDC_STATIC,4,4,21,20
+    LTEXT           "Instalar archivo en servidor",IDC_STATIC,32,12,127,8
+    LTEXT           "(texto definido en el momento de la ejecución)\n(texto definido en el momento de la ejecución)\n(texto definido en el momento de la ejecución)\n(texto definido en el momento de la ejecución)",
+                    IDC_INSTALL_DESC,4,29,256,33
+END
+
+IDD_SVR_UNINSTALL DIALOG DISCARDABLE  0, 0, 248, 139
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Desinstalar archivo"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Servidor:",IDC_STATIC,4,66,35,8
+    COMBOBOX        IDC_SERVER,67,64,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Archivo de destino:",IDC_STATIC,4,85,61,8
+    EDITTEXT        IDC_FILENAME,67,83,175,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,88,121,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,141,121,50,14
+    PUSHBUTTON      "A&yuda",9,194,121,50,14
+    ICON            IDI_UNINSTALL,IDC_STATIC,4,4,20,20
+    LTEXT           "Desinstalar archivo del servidor",IDC_STATIC,32,12,127,
+                    8
+    LTEXT           "Esta operación le permite restaurar una copia instalada con anterioridad de un archivo en un determinado servidor. Si no existe ninguna copia instalada con anterioridad del archivo seleccionado, se eliminará el archivo. ",
+                    IDC_STATIC,4,29,240,26
+END
+
+IDD_SVR_PRUNE DIALOG DISCARDABLE  0, 0, 318, 133
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Podar archivos antiguos"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Servidor:",-1,4,56,44,8
+    COMBOBOX        IDC_SERVER,53,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Todos los archivos de &imagen de la memoria",
+                    IDC_OP_DELETE_CORE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    70,73,178,10
+    CONTROL         "Todos los archivos .&BAK (copias de seguridad de archivo)",
+                    IDC_OP_DELETE_BAK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    70,84,220,10
+    CONTROL         "Todos los archivos .&OLD (copias de seguridad de archivos más antiguos)",
+                    IDC_OP_DELETE_OLD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    70,95,243,10
+    DEFPUSHBUTTON   "Aceptar",IDOK,148,115,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,202,115,50,14
+    PUSHBUTTON      "A&yuda",9,264,115,50,14
+    ICON            IDI_PRUNE,-1,4,4,21,20
+    LTEXT           "Podar archivos antiguos del servidor",-1,32,12,128,8
+    LTEXT           "Esta operación elimina copias de seguridad de los archivos instalados en un determinado servidor.",
+                    -1,4,29,310,16
+    LTEXT           "Archivos a suprimir:",-1,4,73,62,8
+END
+
+IDD_SET_RENAME DIALOG DISCARDABLE  0, 0, 277, 133
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cambiar nombre de volumen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Nombre &antiguo",IDC_STATIC,31,67,54,8
+    EDITTEXT        IDC_RENSET_OLD,89,65,122,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Nombre &nuevo",IDC_STATIC,31,85,55,8
+    EDITTEXT        IDC_RENSET_NEW,89,83,122,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,115,115,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,169,115,50,14
+    PUSHBUTTON      "Ayuda",9,223,115,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "Para cambiar el nombre del volumen %3, entre uno nuevo. Se redenominan automáticamente el nombre de copia de seguridad del volumen y sus duplicados.\n\nPrecaución: si es un volumen montado, elimínelo y cree nuevos puntos de montaje.",
+                    IDC_RENSET_DESC,31,7,242,48
+END
+
+IDD_SVC_DELETE DIALOG DISCARDABLE  0, 0, 277, 68
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Suprimir servicio"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancelar",IDCANCEL,169,50,50,14
+    PUSHBUTTON      "Aceptar",IDOK,115,50,50,14
+    PUSHBUTTON      "Ayuda",9,223,50,50,14
+    ICON            32515,IDC_STATIC,4,7,20,20
+    LTEXT           "¡Precaución!\n\nEsta operación hará que el servicio %2 se detenga y se elimine del servidor %1.",
+                    IDC_DELSVC_DESC,31,7,242,33
+END
+
+IDD_SVR_GETDATES DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Obtener fechas de archivo"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Servidor:",-1,4,56,42,8
+    COMBOBOX        IDC_SERVER,71,54,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Archivo a consultar:",-1,4,75,64,8
+    EDITTEXT        IDC_FILENAME,71,73,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,86,107,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,140,107,50,14
+    PUSHBUTTON      "A&yuda",9,194,107,50,14
+    ICON            IDI_GETDATES,-1,4,4,20,20
+    LTEXT           "Obtener fechas de archivos del servidor",-1,32,12,127,8
+    LTEXT           "Esta operación obtiene la fecha en que se modificaron por última vez un archivo y sus copias de seguridad (si es que existen).",
+                    -1,4,29,240,16
+END
+
+IDD_SVR_GETDATES_RESULTS DIALOG DISCARDABLE  0, 0, 248, 132
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Obtener fechas de archivos - Resultados"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Servidor:",IDC_STATIC,4,30,39,8
+    LTEXT           "(definido en el momento de la ejecución)",IDC_SERVER,72,
+                    30,137,8
+    LTEXT           "Nombre de archivo:",IDC_STATIC,4,45,63,8
+    LTEXT           "(definido en el momento de la ejecución)",IDC_FILENAME,
+                    72,45,137,8
+    LTEXT           "Fecha de archivo:",IDC_STATIC,4,60,60,8
+    LTEXT           "(desconocida; no ha podido encontrarse el archivo)",
+                    IDC_DATE_FILE,72,60,168,8
+    LTEXT           "Fecha de .BAK:",IDC_STATIC,4,75,59,8
+    LTEXT           "(desconocida; no ha podido encontrarse el archivo)",
+                    IDC_DATE_BAK,72,75,167,8
+    LTEXT           "Fecha de .OLD:",IDC_STATIC,4,90,60,8
+    LTEXT           "(desconocida; no ha podido encontrarse el archivo)",
+                    IDC_DATE_OLD,72,90,166,8
+    DEFPUSHBUTTON   "Ce&rrar",IDOK,99,114,50,14
+    ICON            IDI_GETDATES,IDC_STATIC,4,4,20,20
+    LTEXT           "Obtener fechas de archivos del servidor",IDC_STATIC,32,
+                    12,127,8
+END
+
+IDD_SET_DUMP DIALOGEX 0, 0, 311, 143
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Volumen de vuelco - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Crear archivo de vuelco con el &nombre:",IDC_STATIC,4,
+                    42,79,18
+    EDITTEXT        IDC_DUMP_FILENAME,86,44,151,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Examinar...",IDC_DUMP_BROWSE,257,44,50,14
+    CONTROL         "Volcar &todo el contenido del volumen %3 (partición %1:%2)",
+                    IDC_DUMP_FULL,"Button",BS_AUTORADIOBUTTON | WS_GROUP,10,
+                    78,274,10
+    CONTROL         "Volcar sólo los archivos que hayan cambiado &desde",
+                    IDC_DUMP_LIMIT_TIME,"Button",BS_AUTORADIOBUTTON,10,94,
+                    178,10
+    CONTROL         "",IDC_DUMP_TIME,"Time",WS_BORDER | WS_TABSTOP,190,93,51,
+                    13,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_DUMP_DATE,"Date",WS_BORDER | WS_TABSTOP,248,93,56,
+                    13,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Aceptar",IDOK,131,125,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,185,125,50,14
+    PUSHBUTTON      "A&yuda",9,257,125,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,21,20
+    LTEXT           "Esta operación copia el contenido de un volumen en un único archivo, por lo que puede efectuarse la copia de seguridad del volumen de una manera sencilla. El contenido de los volúmenes volcados de este modo puede restaurarse con posterioridad.",
+                    IDC_STATIC,46,7,261,33
+    GROUPBOX        "Parámetros de vuelco",IDC_STATIC,4,62,303,53
+END
+
+IDD_SET_RESTORE DIALOGEX 0, 0, 301, 247
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Restaurar volumen - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Archivo a &restaurar:",IDC_STATIC,4,33,61,8
+    EDITTEXT        IDC_RESTORE_FILENAME,69,30,175,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Examinar...",IDC_RESTORE_BROWSE,247,30,50,14
+    CONTROL         "Este es un archivo de vuelco &gradual",
+                    IDC_RESTORE_INCREMENTAL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,69,46,214,10
+    LTEXT           "&Volumen:",IDC_STATIC,11,102,38,8
+    EDITTEXT        IDC_RESTORE_SETNAME,52,100,115,14,ES_AUTOHSCROLL
+    LTEXT           "&Servidor:",IDC_STATIC,11,145,36,8
+    COMBOBOX        IDC_RESTORE_SERVER,53,143,116,104,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Partición:",IDC_STATIC,11,162,36,8
+    CONTROL         "",IDC_AGG_LIST,"FastList",WS_TABSTOP | 0x303,52,161,231,
+                    55,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Aceptar",IDOK,128,229,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,183,229,50,14
+    PUSHBUTTON      "A&yuda",9,247,229,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,4,21,20
+    LTEXT           "Restaurar volumen desde archivo de vuelco",IDC_STATIC,
+                    33,11,224,8
+    GROUPBOX        "Volumen de destino",IDC_STATIC,4,63,293,160
+    LTEXT           "Al restaurar un volumen desde un archivo de vuelco, puede crear un volumen nuevo o sobregrabar un volumen de leer/grabar existente.",
+                    IDC_STATIC,11,78,259,16
+    LTEXT           "(definido en el momento de la ejecución)\n(definido en el momento de la ejecución)",
+                    IDC_RESTORE_CREATE,53,119,229,17
+END
+
+IDD_SVC_BOS DIALOGEX 0, 0, 296, 207
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Detener y reiniciar &periódicamente todos los servicios en este servidor",
+                    IDC_BOS_GENRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,
+                    71,231,10
+    LTEXT           "&Reiniciar",IDC_BOS_GENRES_DESC1,23,87,35,8
+    COMBOBOX        IDC_BOS_GENRES_DATE,61,84,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&en",IDC_BOS_GENRES_DESC2,134,87,8,8
+    CONTROL         "",IDC_BOS_GENRES_TIME,"Time",WS_BORDER | WS_TABSTOP,145,
+                    84,53,13,WS_EX_CLIENTEDGE
+    CONTROL         "Probar periódicamente si hay &binarios nuevos en todos los servicios de este servidor",
+                    IDC_BOS_BINRES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,
+                    151,278,10
+    LTEXT           "Pr&obar",IDC_BOS_BINRES_DESC1,23,167,25,8
+    COMBOBOX        IDC_BOS_BINRES_DATE,59,164,69,131,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "e&n",IDC_BOS_BINRES_DESC2,132,167,8,8
+    CONTROL         "",IDC_BOS_BINRES_TIME,"Time",WS_BORDER | WS_TABSTOP,143,
+                    164,53,13,WS_EX_CLIENTEDGE
+    ICON            IDI_BOSSERVICE,IDC_STATIC,5,5,21,20
+    LTEXT           "Servicio %2 (servidor %1)",IDC_SVC_NAME,37,13,168,8
+    GROUPBOX        "Servicio BOS",IDC_STATIC,5,27,285,175
+    LTEXT           "El servicio BOS puede utilizarse para detener y reiniciar periódicamente todos los servicios en este servidor (incluyendo el propio servicio BOS).",
+                    IDC_STATIC,11,45,260,18
+    LTEXT           "El servicio BOS también puede utilizarse para probar periódicamente todos los servicios de un servidor, deteniendo y reiniciando sólo los servicios cuyos archivos binarios se hayan actualizado.",
+                    IDC_STATIC,11,118,263,25
+END
+
+IDD_SET_DUMPING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Volcando volumen - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "Creando archivo de vuelco %4 desde volumen %3...",
+                    IDC_DUMPSET_DESC,4,41,229,19
+END
+
+IDD_SET_RESTORING DIALOG DISCARDABLE  0, 0, 238, 65
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Restaurando volumen - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_ANIMATE,"SysAnimate32",ACS_TRANSPARENT | 
+                    ACS_AUTOPLAY | WS_TABSTOP,0,0,229,33
+    LTEXT           "Restaurando volumen %1 desde archivo de vuelco %2...",
+                    IDC_RESTORESET_DESC,4,41,229,19
+END
+
+IDD_SET_CLONESYS DIALOG DISCARDABLE  0, 0, 330, 162
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Copia de seguridad de volúmenes- AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Crear versiones de copia de seguridad de &todos los volúmenes de esta célula",
+                    IDC_CLONE_ALL,"Button",BS_AUTORADIOBUTTON,30,53,277,10
+    GROUPBOX        "     ",IDC_STATIC,21,77,265,60
+    CONTROL         "Crear &sólo copias de seguridad para los volúmenes que satisfagan los siguientes criterios:",
+                    IDC_CLONE_SOME,"Button",BS_AUTORADIOBUTTON,30,67,293,11
+    CONTROL         "Sólo los volúmenes del s&ervidor:",IDC_CLONE_SVR_LIMIT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,41,87,124,10
+    COMBOBOX        IDC_CLONE_SVR,186,86,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Sólo los volúmenes de la &partición:",
+                    IDC_CLONE_AGG_LIMIT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,41,103,128,10
+    COMBOBOX        IDC_CLONE_AGG,186,102,85,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Sólo los volúmenes que &comiencen por:",
+                    IDC_CLONE_PREFIX_LIMIT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,41,120,141,10
+    EDITTEXT        IDC_CLONE_PREFIX,186,119,85,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,154,144,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,208,144,50,14
+    PUSHBUTTON      "A&yuda",9,276,144,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "Un volumen actúa como una copia de sólo lectura de dicho volumen. Un volumen de leer/grabar sólo puede tener una versión de copia de seguridad.\n\nPuede crear versiones de copia de seguridad para más de un volumen a la vez.",
+                    IDC_STATIC,30,7,244,40
+END
+
+IDD_SUBSETS DIALOGEX 0, 0, 305, 183
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "Servidores supervisados"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Nombre de subconjunto:",IDC_STATIC,12,77,79,8
+    EDITTEXT        IDC_SUBSET_NAME,93,75,116,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    PUSHBUTTON      "&Abrir...",IDC_SUBSET_LOAD,214,75,39,14
+    PUSHBUTTON      "&Guardar...",IDC_SUBSET_SAVE,257,75,39,14
+    CONTROL         "",IDC_SUBSET_LIST,"CheckList",WS_BORDER | WS_VSCROLL | 
+                    WS_TABSTOP | 0x153,12,111,193,58,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Supervisar &todos",IDC_SUBSET_ALL,216,122,77,14
+    PUSHBUTTON      "No supervisar &ninguno",IDC_SUBSET_NONE,216,140,77,14
+    LTEXT           "Para mejorar el rendimiento al trabajar en una célula grande, puede optar por no supervisar los problemas de determinados servidores. El AFS Server Manager no mostrará los volúmenes, particiones o servicios del servidor no supervisado. ",
+                    IDC_STATIC,5,5,295,24
+    LTEXT           "Puede optar por supervisar (o no supervisar) un servidor en cualquier momento. Puede crear subconjuntos de servidor para designar las listas de servidores que deben supervisarse. ",
+                    IDC_STATIC,5,37,295,18
+    GROUPBOX        "Subconjunto actual",IDC_STATIC,5,64,295,114
+    LTEXT           "Servidores a supervisar:",IDC_STATIC,12,95,112,8
+END
+
+IDD_SUBSET_LOADSAVE DIALOGEX 0, 0, 280, 145
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "(título definido en el momento de la ejecución)"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Nombre de subconjunto:",1090,5,109,45,18,SS_NOTIFY
+    EDITTEXT        IDC_SUBSET_NAME,54,110,165,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Abrir",IDOK,226,110,50,14
+    PUSHBUTTON      "Cance&lar",IDCANCEL,226,127,50,14
+    CONTROL         "List1",IDC_SUBSET_LIST,"SysListView32",LVS_LIST | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_EDITLABELS | 
+                    LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,4,20,272,82,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "",IDC_SUBSET_RENAME,187,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    PUSHBUTTON      "",IDC_SUBSET_DELETE,203,4,14,13,BS_ICON | NOT 
+                    WS_TABSTOP
+    LTEXT           "Subconjuntos ya definidos para esta célula:",IDC_STATIC,
+                    4,6,166,8
+END
+
+IDD_HELP_FIND DIALOG DISCARDABLE  0, 0, 218, 73
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Buscar mandato"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDC_FIND_COMMAND,4,38,137,170,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Visualizar a&yuda",IDOK,147,38,67,14
+    PUSHBUTTON      "&Cancelar",IDCANCEL,147,55,67,14
+    LTEXT           "Para averiguar el modo de utilizar el AFS Server Manager para efectuar una tarea, seleccione una línea de mandatos a continuación y pulse en el botón Mostrar ayuda.",
+                    IDC_STATIC,4,4,210,25
+END
+
+IDD_HELP_ERROR DIALOG DISCARDABLE  0, 0, 218, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Buscar código de error"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Número de &error:",IDC_STATIC,4,41,53,8
+    EDITTEXT        IDC_ERROR_NUMBER,59,39,78,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Convertir",IDC_ERROR_TRANSLATE,147,39,67,14
+    PUSHBUTTON      "Ce&rrar",IDCANCEL,85,123,48,14
+    LTEXT           "(texto definido en el momento de la ejecución)",
+                    IDC_ERROR_DESC,4,71,210,42
+    LTEXT           "Para averiguar que es lo que significa un código de error, escriba el código a continuación y pulse en el botón ""Convertir"".",
+                    IDC_STATIC,4,4,210,25
+    CONTROL         "",IDC_ADVANCED_BOX,"Static",SS_ETCHEDHORZ,4,60,211,1
+END
+
+IDD_HELP_ABOUT DIALOG DISCARDABLE  0, 0, 230, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Acerca de AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_MAIN,IDC_HELPABOUT_ICON,4,8,20,20
+    LTEXT           "AFS Server Manager versión 3.5",IDC_STATIC,33,8,163,8
+    LTEXT           "Copyright © IBM Corporation 1989, 1999",IDC_STATIC,33,
+                    20,183,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,37,222,1
+    CTEXT           "",IDC_HELPABOUT_DESC,4,48,222,56
+    PUSHBUTTON      "Ce&rrar",IDOK,89,123,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,114,222,1
+END
+
+IDD_OPENINGCELL DIALOG DISCARDABLE  0, 0, 241, 46
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "El AFS Server Manager está buscando servidores en la célula %1...",
+                    IDC_OPENCELL_DESC,41,15,183,16
+    GROUPBOX        "",IDC_STATIC,4,2,231,39
+    ICON            IDI_MAIN,IDC_ANIMATE,12,12,18,20,SS_REALSIZEIMAGE | 
+                    WS_BORDER
+END
+
+IDD_OPTIONS_GENERAL DIALOG DISCARDABLE  0, 0, 373, 136
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Mostrar nombres de dominio totalmente calificados para los servidores (por ejemplo, ""máquina.compañía.com"")",
+                    IDC_OPT_SVR_LONGNAMES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,5,363,10
+    CONTROL         "Mostrar un &aviso si se trabaja sin señales administrativas",
+                    IDC_OPT_WARN_BADCREDS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,19,363,10
+    CONTROL         "...muestra siempre las propiedades de dicho servidor",
+                    IDC_OPT_SVR_DBL_PROP,"Button",BS_AUTORADIOBUTTON,17,50,
+                    253,10
+    CONTROL         "...muestra las propiedades del servidor sólo si el Panel de Vista rápida está abierto.",
+                    IDC_OPT_SVR_DBL_DEPENDS,"Button",BS_AUTORADIOBUTTON,17,
+                    63,341,10
+    CONTROL         "...siempre abre una ventana para dicho servidor",
+                    IDC_OPT_SVR_DBL_OPEN,"Button",BS_AUTORADIOBUTTON,17,75,
+                    253,10
+    CONTROL         "...abrir una ventana de servidor hace que se supervise dicho servidor",
+                    IDC_OPT_SVR_OPENMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,107,253,10
+    CONTROL         "...cerrar una ventana de servidor hace que no se supervise dicho servidor",
+                    IDC_OPT_SVR_CLOSEUNMON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,121,253,10
+    LTEXT           "Haciendo una doble pulsación en un icono de servidor...",
+                    IDC_STATIC,5,38,363,8
+    LTEXT           "Si se está utilizando un subconjunto de servidor y se cierra el panel de Vista rápida...",
+                    IDC_STATIC,5,95,363,8
+END
+
+IDD_SVR_KEYS DIALOGEX 0, 0, 226, 179
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_KEY_LIST,"FastList",WS_TABSTOP | 0x30b,5,22,216,
+                    135,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Añadir clave de servidor",IDC_KEY_ADD,46,160,82,14
+    PUSHBUTTON      "&Eliminar clave de servidor",IDC_KEY_REMOVE,133,160,87,
+                    14
+    LTEXT           "Claves para servidor:",IDC_KEY_NAME,5,7,216,8
+END
+
+IDD_SVR_CREATEKEY DIALOG DISCARDABLE  0, 0, 281, 150
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Añadir clave de servidor"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Versión:",IDC_STATIC,7,37,26,8
+    EDITTEXT        IDC_KEY_VERSION,43,35,43,14,ES_AUTOHSCROLL
+    LTEXT           "Valor:",IDC_STATIC,7,58,21,8
+    CONTROL         "Cifrar esta serie:",IDC_KEY_BYSTRING,"Button",
+                    BS_AUTORADIOBUTTON,43,58,73,10
+    CONTROL         "Utilizar esta clave:",IDC_KEY_BYDATA,"Button",
+                    BS_AUTORADIOBUTTON,43,76,71,10
+    EDITTEXT        IDC_KEY_STRING,119,56,155,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_KEY_DATA,119,75,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "A&leatorio",IDC_KEY_RANDOM,226,75,48,14
+    LTEXT           "Aviso: después de añadir una clave nueva al servidor, debería modificar la cuenta de AFS para utilizar la clave nueva. Después de algunos días, puede eliminar las claves de servidor antiguas. ",
+                    IDC_STATIC,7,99,267,27
+    DEFPUSHBUTTON   "Aceptar",IDOK,116,129,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,170,129,50,14
+    PUSHBUTTON      "Ayuda",9,224,129,50,14
+    LTEXT           "Clave nueva para servidor %1",IDC_KEY_TITLE,43,14,181,8
+    ICON            IDI_SERVER_KEY,IDC_STATIC,7,7,20,20
+END
+
+IDD_SVC_STARTSTOP DIALOG DISCARDABLE  0, 0, 277, 132
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Iniciar/detener servicio"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,115,114,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,169,114,50,14
+    PUSHBUTTON      "A&yuda",9,223,114,50,14
+    ICON            IDI_SERVICE,IDC_STATIC,4,7,21,20
+    LTEXT           "Pulsar en Aceptar para iniciar/detener servicio %2 en servidor %1.",
+                    IDC_STARTSTOP_TEXT,31,12,242,9
+    CONTROL         "&Permanente (IDS_START/STOPSERVICE_PERMANENT)",
+                    IDC_STARTSTOP_PERMANENT,"Button",BS_AUTORADIOBUTTON,37,
+                    68,226,10
+    CONTROL         "&Temporal (IDS_START/STOPSERVICE_TEMPORARY)",
+                    IDC_STARTSTOP_TEMPORARY,"Button",BS_AUTORADIOBUTTON,37,
+                    83,226,10
+    GROUPBOX        "Inicio de servicio",IDC_STATIC,31,31,242,70
+    LTEXT           "Puede hacer que este cambio sea permanente, por lo que el servicio %2 (no) se iniciciará automáticamente si se reinicia el servidor %1.",
+                    IDC_STARTSTOP_STARTUP,38,45,223,16
+END
+
+IDD_SVR_EXECUTE DIALOG DISCARDABLE  0, 0, 248, 125
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ejecutar mandato"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Servidor:",IDC_STATIC,4,63,42,8
+    COMBOBOX        IDC_SERVER,50,61,90,107,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Mandato:",IDC_STATIC,4,82,42,8
+    EDITTEXT        IDC_COMMAND,50,80,194,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,86,107,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,140,107,50,14
+    PUSHBUTTON      "A&yuda",9,194,107,50,14
+    ICON            IDI_SERVER,IDC_STATIC,4,4,21,20
+    LTEXT           "Ejecutar mandato en servidor",IDC_STATIC,32,12,185,8
+    LTEXT           "Esta operación le permite emitir un mandato en un servidor remoto.\nNormalmente se utiliza para reiniciar un servidor ejecutando el archivo de mandatos /etc/reboot.",
+                    IDC_STATIC,4,29,240,27
+END
+
+IDD_SVR_SALVAGE DIALOG DISCARDABLE  0, 0, 310, 255
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Recuperar volúmenes - AFS Server Manager"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Servidor:",IDC_STATIC,30,55,35,8
+    COMBOBOX        IDC_SERVER,67,53,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Partición:",IDC_STATIC,30,72,35,8
+    COMBOBOX        IDC_AGGREGATE,67,70,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Re&cuperar todas las particiones",IDC_AGGREGATE_ALL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,163,72,117,10
+    LTEXT           "V&olumen:",IDC_STATIC,29,90,35,8
+    COMBOBOX        IDC_FILESET,67,88,88,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Rec&uperar todos los volúmenes",IDC_FILESET_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,162,90,118,10
+    DEFPUSHBUTTON   "Aceptar",IDOK,131,108,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,188,108,50,14
+    PUSHBUTTON      "A&yuda",9,254,108,50,14
+    PUSHBUTTON      "A&vanzado >>",IDC_ADVANCED,4,108,53,14
+    LTEXT           "Vía de acceso para archivos &temporales:",IDC_STATIC,10,
+                    142,130,8
+    EDITTEXT        IDC_SALVAGE_TEMPDIR,145,141,144,13,ES_AUTOHSCROLL
+    CONTROL         "Operaciones de recuperación pa&ralelas; número de procesos:",
+                    IDC_SALVAGE_SIMUL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    29,157,207,10
+    EDITTEXT        IDC_SALVAGE_NUM,239,156,25,13,ES_AUTOHSCROLL
+    CONTROL         "&No recuperar volúmenes dañados",IDC_SALVAGE_READONLY,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,167,194,10
+    CONTROL         "&Descomponer operaciones de lectura en bloques pequeños",
+                    IDC_SALVAGE_BLOCK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    29,177,250,10
+    CONTROL         "&Forzar la recuperación de todos los volúmenes indicados",
+                    IDC_SALVAGE_FORCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    29,187,241,10
+    CONTROL         "Forzar r&econstrucción de estructura de directorios",
+                    IDC_SALVAGE_FIXDIRS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,29,197,244,10
+    LTEXT           "Nombre del arc&hivo para registro de resultados:",
+                    IDC_STATIC,10,211,148,8
+    EDITTEXT        IDC_SALVAGE_LOG_FILE,159,210,144,13,ES_AUTOHSCROLL
+    CONTROL         "&Incluir lista de inodos dañados en registro de resultados",
+                    IDC_SALVAGE_LOG_INODES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,224,226,10
+    CONTROL         "Incluir lista de inodos de raíz que &posee AFS en registro de resultados",
+                    IDC_SALVAGE_LOG_ROOT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,30,235,267,10
+    ICON            IDI_SERVER,IDC_STATIC,4,7,20,20
+    LTEXT           "Esta operación le permite arreglar problemas en uno o más volúmenes.\n\nNota: Si recupera toda una partición o servidor a la vez, el servidor se llevará fuera de línea temporalmente.",
+                    IDC_STATIC,33,7,254,42
+    GROUPBOX        "Opciones de recuperación avanzadas",IDC_ADVANCED_GROUP,
+                    4,129,302,122
+END
+
+IDD_SVR_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 286, 178
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Recuperar volúmenes - Resultados"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Ce&rrar",IDOK,232,160,50,14
+    LTEXT           "Resultados de operación de recuperación:",IDC_STATIC,4,
+                    33,277,8
+    EDITTEXT        IDC_SALVAGE_DETAILS,4,43,277,113,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP
+    ICON            IDI_SERVER,IDC_STATIC,4,7,21,20
+    LTEXT           "Volumen de recuperación %3 en partición %2 del servidor %1",
+                    IDC_SALVAGE_TITLE,33,15,248,8
+END
+
+IDD_SET_RELEASE DIALOG DISCARDABLE  0, 0, 289, 103
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Liberar volumen"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,115,85,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,169,85,50,14
+    PUSHBUTTON      "A&yuda",9,235,85,50,14
+    ICON            IDI_FILESET,IDC_STATIC,4,7,20,20
+    LTEXT           "Esta operación le permite actualizar los duplicados del volumen %3. Puede optar por actualizar sólo los duplicados obsoletos, o todos los duplicados. ",
+                    IDC_RELSET_DESC,43,7,242,28
+    CONTROL         "Actualizar &sólo los duplicados de volumen que estén obsoletos",
+                    IDC_RELSET_NORMAL,"Button",BS_AUTORADIOBUTTON,46,41,221,
+                    10
+    CONTROL         "Actualizar &todos los duplicados de volumen, aunque no estén obsoletos",
+                    IDC_RELSET_FORCE,"Button",BS_AUTORADIOBUTTON,46,56,237,
+                    10
+END
+
+IDD_SVR_HOSTS DIALOGEX 0, 0, 246, 179
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Añadir servidor de sistema principal",IDC_HOST_ADD,6,
+                    160,115,14
+    PUSHBUTTON      "&Eliminar servidor de sistema principal",
+                    IDC_HOST_REMOVE,123,160,118,14
+    LTEXT           "Servidores de sistemas principales de base de datos reconocidos por el servidor:",
+                    IDC_HOST_TITLE,5,5,223,17
+    CONTROL         "",IDC_HOST_LIST,"FastList",WS_TABSTOP | 0x11,5,22,236,
+                    135,WS_EX_CLIENTEDGE
+END
+
+IDD_SVR_ADDHOST DIALOGEX 0, 0, 225, 106
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Añadir servidor de sistema principal"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Sistema principal:",-1,31,63,26,8
+    EDITTEXT        IDC_ADDHOST_HOST,61,61,103,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Aceptar",IDOK,63,88,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,117,88,50,14
+    ICON            IDI_SERVER,-1,4,4,20,20
+    LTEXT           "Ha optado por añadir un servidor de sistema principal de base de datos a la lista que está almacenado en el servidor %1.\n\nEntre a continuación el nombre del sistema principal de base de datos nuevo.",
+                    IDC_ADDHOST_DESC,31,10,190,48
+    PUSHBUTTON      "Ayuda",9,171,88,50,14
+END
+
+IDD_SVR_ADDRESS DIALOGEX 0, 0, 208, 115
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Cambiar direcciones de servidor"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Direcciones IP registradas en VLDB para servidor %1:",
+                    IDC_TITLE,4,4,200,8
+    LISTBOX         IDC_SVR_ADDRESSES,4,14,147,40,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Cambiar...",IDC_ADDR_CHANGE,154,24,50,14
+    PUSHBUTTON      "&Eliminar",IDC_ADDR_REMOVE,154,40,50,14
+    DEFPUSHBUTTON   "Aceptar",IDOK,46,97,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,100,97,50,14
+    PUSHBUTTON      "Ayuda",9,154,97,50,14
+    LTEXT           "Nota: cuando se inicia un servidor de archivos, registra automáticamente su(s) dirección(es) de IP actual(es) con VLDB.",
+                    IDC_STATIC,4,64,200,28
+END
+
+IDD_SVR_NEWADDR DIALOGEX 0, 0, 223, 69
+STYLE DS_CENTER | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Cambiar dirección IP"
+CLASS "AFSManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Aceptar",IDOK,61,51,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,115,51,50,14
+    PUSHBUTTON      "Ayuda",9,169,51,50,14
+    LTEXT           "Entre la dirección IP nueva que debería sustituir %1 en VLDB:",
+                    IDC_TITLE,4,4,215,8
+    CONTROL         "",IDC_ADDRESS,"SockAddr",WS_BORDER | WS_TABSTOP,42,23,
+                    90,14
+    LTEXT           "Dirección:",IDC_STATIC,4,26,35,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "resource\\afssvrmgr.ico"
+32513                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\error.ico"
+32515                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\warning.ico"
+IDI_INSTALL             ICON    DISCARDABLE     "resource\\install.ico"
+IDI_UNINSTALL           ICON    DISCARDABLE     "resource\\uninstal.ico"
+IDI_PRUNE               ICON    DISCARDABLE     "resource\\prune.ico"
+IDI_GETDATES            ICON    DISCARDABLE     "resource\\getdates.ico"
+IDI_SUBSET              ICON    DISCARDABLE     "resource\\subset.ico"
+IDI_ADMINLIST           ICON    DISCARDABLE     "resource\\admlist.ico"
+IDI_BTN_DELETE          ICON    DISCARDABLE     "resource\\btn_delete.ico"
+IDI_BTN_RENAME          ICON    DISCARDABLE     "resource\\btn_rename.ico"
+IDI_SERVER              ICON    DISCARDABLE     "..\\afsapplib\\resource\\server.ico"
+IDI_SERVICE             ICON    DISCARDABLE     "..\\afsapplib\\resource\\service.ico"
+IDI_AGGREGATE           ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg.ico"
+IDI_FILESET             ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset.ico"
+IDI_SERVER_ALERT        ICON    DISCARDABLE     "..\\afsapplib\\resource\\server1.ico"
+IDI_SERVICE_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\service1.ico"
+IDI_AGGREGATE_ALERT     ICON    DISCARDABLE     "..\\afsapplib\\resource\\aggreg1.ico"
+IDI_FILESET_ALERT       ICON    DISCARDABLE     "..\\afsapplib\\resource\\fileset1.ico"
+IDI_BOSSERVICE          ICON    DISCARDABLE     "..\\afsapplib\\resource\\bos.ico"
+IDI_USER                ICON    DISCARDABLE     "..\\afsapplib\\resource\\user.ico"
+IDI_SERVER_KEY          ICON    DISCARDABLE     "..\\afsapplib\\resource\\key.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_MAIN ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_APPS,        M_KEY_MENU,             VIRTKEY, NOINVERT
+    VK_ESCAPE,      M_KEY_ESC,              VIRTKEY, NOINVERT
+    VK_F10,         M_KEY_MENU,             VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      M_KEY_RETURN,           VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_TAB,              VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_BACKTAB,          VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         M_KEY_CTRLTAB,          VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         M_KEY_CTRLBACKTAB,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_RETURN,      M_KEY_PROPERTIES,       VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+AVI_SETMOVE AVI DISCARDABLE 
+BEGIN
+
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_LISTS_TITLE     "Servidor %1 - Listas de administración"
+    IDS_TAB_SERVICES        "Servicios"
+    IDS_TAB_AGGREGATES      "Particiones"
+    IDS_TAB_FILESETS        "Volúmenes"
+    IDS_SERVICE_NONESELECTED "Seleccione un servidor a visualizar."
+    IDS_SERVICE_GOTSELECTED "Procesos de servicio en servidor %1:"
+    IDS_AGGREGATE_ALL       "Particiones en todos los servidores:"
+    IDS_AGGREGATE_ONE       "Particiones en servidor %1:"
+    IDS_FILESET_ALL         "Todos los volúmenes de la célula %1:"
+    IDS_FILESET_ONE         "Volúmenes en servidor %1:"
+    IDS_SVR_LISTS_TAB       "Listas de administración"
+    IDS_SVR_PROP_TITLE      "Servidor %1 - Propiedades"
+    IDS_SVR_GENERAL_TAB     "General"
+    IDS_SVR_SCOUT_TAB       "Configuración"
+    IDS_SERVER_TITLE        "Servidor %1 - AFS Server Manager"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_DESC         "Servidor %1 en célula %2:"
+    IDS_SVC_PROP_TITLE      "Servicio %2 en servidor %1 - Propiedades"
+    IDS_SVC_GENERAL_TAB     "General"
+    IDS_SVC_ADD_TITLE       "Crear servicio"
+    IDS_SVC_ADD_TAB         "Crear servicio"
+    IDS_AGG_PROP_TITLE      "Partición %2 en servidor %1 - Propiedades"
+    IDS_AGG_GENERAL_TAB     "General"
+    IDS_SET_REP_TITLE       "Volumen %1 - Duplicación"
+    IDS_SET_REPSITES_TAB    "Sitios de duplicación"
+    IDS_SET_PROP_TITLE      "Volumen %1 - Propiedades"
+    IDS_SET_GENERAL_TAB     "General"
+    IDS_SET_UNLOCKBTN       "Desb&loquear ahora"
+    IDS_SET_LOCKBTN         "&Bloquear ahora"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USAGE_FILESET       "%1 utilizado de cuota de %2 (%3%%)"
+    IDS_USAGE_AGGREGATE     "%1 utilizado de capacidad de %2 (%3%%)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGCOL_ALLOCATED    "Cuota combinada"
+    IDS_SVRCOL_NAME         "Servidor"
+    IDS_SVRCOL_STATUS       "Estado"
+    IDS_SETCOL_DATE_ACCESS  "Último acceso"
+    IDS_SETCOL_DATE_BACKUP  "Última copia de seguridad"
+    IDS_SVCCOL_NAME         "Servicio"
+    IDS_SVCCOL_TYPE         "Tipo"
+    IDS_SVCCOL_PARAMS       "Parámetros"
+    IDS_SVCCOL_STATUS       "Estado"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_DATE_START   "Último inicio"
+    IDS_SVCCOL_DATE_STOP    "Última parada"
+    IDS_SVCCOL_DATE_STARTSTOP "Último inicio/parada"
+    IDS_SVCCOL_DATE_FAILED  "Última anomalía"
+    IDS_SVCCOL_LASTERROR    "Último código de salida"
+    IDS_AGGCOL_NAME         "Partición"
+    IDS_AGGCOL_ID           "ID"
+    IDS_AGGCOL_DEVICE       "Dispositivo"
+    IDS_AGGCOL_USED         "Utilizado"
+    IDS_AGGCOL_USED_PER     "% Utilizado"
+    IDS_AGGCOL_FREE         "Libre"
+    IDS_AGGCOL_TOTAL        "Capacidad"
+    IDS_AGGCOL_STATUS       "Estado"
+    IDS_SETCOL_NAME         "Volumen"
+    IDS_SETCOL_TYPE         "Tipo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETCOL_DATE_CREATE  "Creado"
+    IDS_SETCOL_DATE_UPDATE  "Última actualización"
+    IDS_SETCOL_STATUS       "Estado"
+    IDS_SETCOL_QUOTA_USED   "Utilizado"
+    IDS_SETCOL_QUOTA_USED_PER "% Utilizado"
+    IDS_SETCOL_QUOTA_FREE   "Libre"
+    IDS_SETCOL_QUOTA_TOTAL  "Cuota"
+    IDS_TRYAGAINBTN         "Volver &a intentar"
+    IDS_NO_CELL_SELECTED    "(no se ha especificado ninguna célula)"
+    IDS_NO_AFS_ID           "(no hay señales disponibles)"
+    IDS_AFS_ID_WILLEXP      "%1 (caducarán las señales %2)"
+    IDS_ELAPSED_TIME        "%1"
+    IDS_SEARCHING_FOR_SERVERS 
+                            "Espere, por favor; obteniendo información acerca de la célula %1 ..."
+    IDS_STATUS_NOALERTS     "Normal"
+    IDS_TITLE_BROWSE_USER   "Seleccionar usuario"
+    IDS_AGGTYPE_OTHER       "Desconocido (%1)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATEFILESET "Creando volumen %3 en partición %1:%2"
+    IDS_ACTION_DELETEFILESET "Suprimiendo volumen %3 de partición %1:%2"
+    IDS_ACTION_MOVEFILESET  "Moviendo volumen %3 a partición %1:%2"
+    IDS_ACTION_SETFILESETQUOTA "Cambiando la cuota para volumen %3"
+    IDS_SVCSTOP_DESC2       "Pulsar en Aceptar para detener este servicio."
+    IDS_SVCSTART_DESC2      "Pulsar en Aceptar para iniciar este servicio."
+    IDS_SYNCVLDB_SVR_DESC   "¡Precaución!\n\nSi continúa, el AFS Server Manager modificará VLDB para se corresponda con el contenido de todas las particiones del servidor %1."
+    IDS_SYNCVLDB_SVR_DESC2  "Si VLDB menciona un volumen que, por cualquier motivo, no puede encontrarse en la actualidad en ninguna partición del servidor %1, se eliminará la entrada de VLDB para dicho volumen!"
+    IDS_SYNCVLDB_AGG_DESC   "¡Precaución!\n\nSi continúa, el AFS Server Manager modificará VLDB para que se corresponda con el contenido de la partición %2 en el servidor %1."
+    IDS_SYNCVLDB_AGG_DESC2  "Si VLDB menciona un volumen que, por cualquier motivo, no puede encontrarse en la actualidad en esta partición, se eliminará la entrada de VLDB para dicho volumen!"
+    IDS_PROMPT_BROWSE_USER  "Usuario:"
+    IDS_PREVIEWIN_BUTTON    "<< &Vista preliminar"
+    IDS_PREVIEWOUT_BUTTON   "&Vista preliminar >>"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADMCOL_TYPE_USER    "Usuario"
+    IDS_TITLE_BROWSE_PRINCIPAL "Seleccionar principal"
+    IDS_TITLE_BROWSE_OWNGROUP "Seleccionar grupo propietario"
+    IDS_PROMPT_BROWSE_PRINCIPAL "Principal:"
+    IDS_PROMPT_BROWSE_OWNGROUP "Grupo propietario"
+    IDS_ACTION_CLONE        "Creando versión predeterminada de volumen %3"
+    IDS_ACTION_CLONESYS     "Creando múltiples copias de seguridad de volumen"
+    IDS_CLONESYS_FAILED     "No se ha podido crear una copia de seguridad del volumen %1 debido al error 0x%2 (%3)."
+    IDS_SET_UNSPECIFIED     "(no especificado)"
+    IDS_SETCOL_ID           "ID"
+    IDS_SETCOL_FILES        "Contador de archivo"
+    IDS_SET_DUMP_NAME       "Vuelco de %1.DMP"
+    IDS_ACTION_DUMP         "Volcando volumen %3 (partición %1:%2)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILESETNAME_ERROR   "%1 - %2"
+    IDS_SETCOL_AGGREGATE    "Partición"
+    IDS_REFRESH_DESC_CELL   "El AFS Server Manager está determinando el estado de los servidores en la célula %1. Esta operación puede llevar algunos momentos..."
+    IDS_REFRESH_DESC_SERVER "El AFS Server Manager está determinando el estado del servidor %1. Esta operación puede llevar algunos momentos..."
+    IDS_REFRESH_CURRENT_CELL "En la actualidad se está examinando : célula %1"
+    IDS_REFRESH_CURRENT_SERVER 
+                            "En la actualidad se está examinando : servidor %2"
+    IDS_REFRESH_CURRENT_AGGREGATE 
+                            "En la actualidad se está examinando : partición %3 en servidor %2"
+    IDS_REFRESH_CURRENT_FILESET 
+                            "En la actualidad se está examinando : volumen %4 en servidor %2, partición %3"
+    IDS_REFRESH_CURRENT_SERVICE 
+                            "En la actualidad se está examinando : servicio %3 en servidor %2"
+    IDS_REFRESH_PERCENT     "%1%% finalizado"
+    IDS_PROBLEMS            "Problemas"
+    IDS_SERVER_NO_PROBLEMS  "Este servidor no tiene problemas conocidos."
+    IDS_SERVICE_NO_PROBLEMS "Este servicio no tiene problemas conocidos."
+    IDS_AGGREGATE_NO_PROBLEMS "Esta partición no tiene problemas conocidos."
+    IDS_FILESET_NO_PROBLEMS "Este volumen no tiene problemas conocidos."
+    IDS_AGGTYPE_TYPE1       "UFS"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGGTYPE_TYPE2       "LFS"
+    IDS_AGGTYPE_TYPE3       "AIX"
+    IDS_AGGTYPE_TYPE4       "VXFS"
+    IDS_AGGTYPE_TYPE5       "DMEPI"
+    IDS_REFRESH_CURRENT_VLDB 
+                            "En la actualidad se está examinando : base de datos de ubicación de volumen (VLDB)"
+    IDS_FILESETTYPE_RW      "Leer/Grabar"
+    IDS_FILESETTYPE_RO      "Duplicado"
+    IDS_FILESETTYPE_CLONE   "Copia de seguridad"
+    IDS_MOVESET_READWRITE   "Continuar hará que el volumen %3 se mueva de la partición %2 del servidor %1 a otra ubicación."
+    IDS_MOVESET_READONLY    "Continuar hará que el duplicado de volúmenes %3 se elimine de la partición %2 del servidor %1 y que se cree otro duplicado de volumen creado en la partición especificada a continuación. "
+    IDS_SVC_START_TITLE     "Iniciar servicio"
+    IDS_SVC_STOP_TITLE      "Detener servicio"
+    IDS_SERVICESTATUS_STARTING 
+                            "Este servicio se está iniciando en la actualidad."
+    IDS_SERVICESTATUS_RUNNING 
+                            "El servicio se está ejecutando en la actualidad."
+    IDS_SERVICESTATUS_STOPPED "Este servicio está detenido en la actualidad."
+    IDS_SERVICESTATUS_STOPPING 
+                            "Este servicio se está deteniendo en la actualidad."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICESTATUS_UNKNOWN "El estado de este servicio es desconocido."
+    IDS_SVC_RESTART_BUTTON  "Detener y &reiniciar ahora"
+    IDS_PROBLEM_BOX         "Problemas conocidos (%1)"
+    IDS_VIEWLOG_DESC_NOFILE "El AFS Server Manager no ha podido encontrar el archivo de registro para el servicio %2 en el servidor %1. Por favor, entre a continuación la vía de acceso completa al archivo de registro de servicio."
+    IDS_NO_GROUP            "(no hay grupo propietario)"
+    IDS_VIEWLOG_FROMSERVER  "Registrar archivo en servidor %1"
+    IDS_VIEWLOG_FROMSERVICE "Registrar archivo para servicio %2 en servidor %1"
+    IDS_VIEWLOG_TRUNCATED   "Contenido de archivo (sólo se muestran las últimas %1 líneas):"
+    IDS_SAVELOG_FILTER      "Archivo de texto|*.TXT|"
+    IDS_ADVANCEDIN_BUTTON   "<< &Avanzado"
+    IDS_ADVANCEDOUT_BUTTON  "&Avanzado >>"
+    IDS_REPTYPE_RELEASE     "Liberar duplicación"
+    IDS_REPTYPE_SCHEDULED   "Duplicación programada"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UPDATEALL_BUTTON    "&Actualizar todo"
+    IDS_UPDATETHIS_BUTTON   "&Actualizar"
+    IDS_SERVER_MULTIPLE_PROBLEMS "Este servidor tiene %1 problemas conocidos."
+    IDS_SERVICE_MULTIPLE_PROBLEMS 
+                            "Este servicio tiene %1 problemas conocidos."
+    IDS_AGGREGATE_MULTIPLE_PROBLEMS 
+                            "Esta partición tiene %1 problemas conocidos."
+    IDS_FILESET_MULTIPLE_PROBLEMS "Este volumen tiene %1 problemas conocidos."
+    IDS_FILESETTYPE_RO_STAGE "Duplicado"
+    IDS_SERVICETYPE_SIMPLE_LONG "Sencillo (se ejecuta de modo continuo)"
+    IDS_SERVICETYPE_CRON_LONG "Cron (se ejecuta a intervalos especificados)"
+    IDS_QUOTAUNITS_KB       "Kb"
+    IDS_QUOTAUNITS_MB       "Mb"
+    IDS_NO_QUOTA_REPLICA    "(este volumen es un duplicado y por tanto no tiene cuota)"
+    IDS_NO_QUOTA_CLONE      "(este volumen es una copia de seguridad y por tanto no tiene cuota)"
+    IDS_USAGE_REPLICA       "%1 utilizado"
+    IDS_USAGE_CLONE         "%1 utilizado"
+    IDS_COL_AGGS_MOVE       "particiones al crear un volumen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERCENTAGE          "%1 %%"
+    IDS_AGGREGATES_IN_SERVER "Particiones en servidor %1:"
+    IDS_AGGREGATES_IN_CELL  "Todas las particiones de la célula %1:"
+    IDS_AGGREGATES_IN_NOTHING "Particiones:"
+    IDS_FILESETS_IN_SERVER  "Volúmenes en servidor %1:"
+    IDS_FILESETS_IN_CELL    "Todos los volúmenes de la célula %1:"
+    IDS_FILESETS_IN_NOTHING "Volúmenes:"
+    IDS_SERVICES_IN_SERVER  "Servicios en servidor %1:"
+    IDS_SERVICES_IN_NOTHING "Servicios:"
+    IDS_UNKNOWN             "(desconocido)"
+    IDS_UNKNOWN_GROUP       "grupo #%1 (nombre desconocido)"
+    IDS_AGGFULL_WARN_OFF    "El umbral por omisión (aviso inhabilitado en el servidor)"
+    IDS_SERVER_AGGREGATE    "%1:%2"
+    IDS_SERVERNAME_ERROR    "%1 - %2"
+    IDS_AGGREGATENAME_ERROR "%1 - %2"
+    IDS_SETFULL_WARN_OFF    "El umbral por omisión (aviso inhabilitado en el servidor)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVICE_LASTERRORDATE "%1 - Código de salida %2"
+    IDS_COL_SERVERS         "servidores de una célula"
+    IDS_COL_FILESETS        "volúmenes de un servidor"
+    IDS_COL_AGGREGATES      "particiones de un servidor"
+    IDS_COL_SERVICES        "servicios de un servidor"
+    IDS_COL_REPLICAS        "duplicados de un volumen"
+    IDS_COLUMNS_TITLE       "Seleccionar Mostrar columnas - AFS Server Manager"
+    IDS_REPCOL_SERVER       "Servidor"
+    IDS_REPCOL_AGGREGATE    "Partición"
+    IDS_REPCOL_DATE_UPDATE  "Última actualización"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_AGGS_CREATE     "particiones al mover un volumen"
+    IDS_WARN_TITLE          "Precaución"
+    IDS_WARN_DISABLE_AUTH   "Al pulsar en el botón ""Permitir no autentificados"", permitirá que principales no autentificados manipulen los servicios de este servidor. Puesto que hay muchos servicios que se ejecutan bajo la identidad de raíz, esta acción representa +"
+    IDS_WARN_DISABLE_AUTH2  "un defecto significativo en la seguridad del servidor.\n\n¿Está seguro de que desea efectuar este cambio?"
+    IDS_SVR_NO_ADDR         "(no especificado)"
+    IDS_TITLE_BAD_CELL      "Nombre de célula no reconocido"
+    IDS_DESC_BAD_CELL       "El nombre de célula que ha entrado no se ha podido encontrar en la red.\n\nPor favor compruebe la entrada de nuevo para asegurarse de que es correcta."
+    IDS_AGGFULL_WARN_ON     "el umbral &por omisión para este servidor (%1%% de su tamaño)"
+    IDS_SETFULL_WARN_ON     "el umbral &por omisión para este servidor (%1%% de su tamaño)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
+                            "La identidad de AFS que ha entrado no está reconocida, o bien la contraseña que ha especificado es incorrecta."
+    IDS_SVR_CREDS_NONE          "(no hay señales)"
+    IDS_SVR_CREDS_VALID         "%2, caduca %3"
+    IDS_SVR_CREDS_EXPIRED       "(señales caducadas %3)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGG_FILESETS        "%1   (Cuota combinada: %2)"
+    IDS_ACTION_DESC_NONE    "No hay operaciones en curso."
+    IDS_ACTION_DESC_ONE     "La operación siguiente está actualmente en curso:"
+    IDS_ACTION_DESC_MULT    "La operaciones siguientes están actualmente en curso:"
+    IDS_ACTCOL_OPERATION    "Operación"
+    IDS_ACTCOL_ELAPSED      "Tiempo transcurrido"
+    IDS_ACTION_REFRESH      "Renovando información de célula"
+    IDS_ACTION_CREATESERVER "Creación de servidor %1"
+    IDS_ACTION_DELETESERVER "Suprimiendo servidor %1"
+    IDS_ACTION_GETSERVERLOGFILE 
+                            "Obtención del archivo de registro %2 desde el servidor %1"
+    IDS_ACTION_SETSERVERAUTH 
+                            "Cambiando restricciones de acceso para servidor %1"
+    IDS_ACTION_CHANGESERVERSTATUS "Cambiando propiedades del servidor %1"
+    IDS_ACTION_STARTSERVICE "Iniciando servicio %2 en servidor %1"
+    IDS_ACTION_STOPSERVICE  "Deteniendo servicio %2 en servidor %1"
+    IDS_ACTION_RESTARTSERVICE "Reiniciando servicio %2 en servidor %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SYNCVLDB_SVR "Sincronizando VLDB con servidor %1"
+    IDS_ACTION_SYNCVLDB_AGG "Sincronizando VLDB con partición %1:%2"
+    IDS_ACTION_SCOUT        "Comprobando si hay problemas en el servidor %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_SETREPPARAMS "Cambiando propiedades de duplicación para volumen %3"
+    IDS_ACTION_CREATEREPLICA 
+                            "Creando duplicado de volumen %3 en partición %1:%2"
+    IDS_DELSET_REPLICA_DESC "¡Precaución!\n\nContinuar hará que se elimine el duplicado del volumen %3 en la partición %2 del servidor %1."
+    IDS_DELSET_CLONE_DESC   "¡Precaución!\n\nContinuar hará que se elimine la copia de seguridad del volumen %3 de la partición %2 del servidor %1."
+    IDS_INSTALL_DESC1       "Esta operación copia un archivo de este sistema en otro. +"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_DESC2       "Si el archivo ya existe en el sistema de destino, se hará copia de seguridad del mismo y se le otorgará una extensión .BAK; a cualquier copia de seguridad existente se le dará una extensión .OLD y, se eliminará cualquier archivo .OLD existente."
+    IDS_ACTION_INSTALLFILE  "Instalando el archivo %2 en el servidor %1"
+    IDS_ACTION_UNINSTALLFILE "Desinstalando el archivo %2 del servidor %1"
+    IDS_ACTION_PRUNEFILES   "Podando archivos del servidor %1"
+    IDS_FILTER_ALLFILES     "Todos los archivos|*.*|"
+    IDS_ACTION_RENAMEFILESET "Cambiando el nombre del volumen %1 por %2"
+    IDS_RECUR_DAILY         "cada día"
+    IDS_RECUR_SUNDAY        "cada domingo"
+    IDS_RECUR_MONDAY        "cada lunes"
+    IDS_RECUR_TUESDAY       "cada martes"
+    IDS_RECUR_WEDNESDAY     "cada miércoles"
+    IDS_RECUR_THURSDAY      "cada jueves"
+    IDS_RECUR_FRIDAY        "cada viernes"
+    IDS_RECUR_SATURDAY      "cada sábado"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CREATESERVICE "Creando el servicio %2 en servidor %1"
+    IDS_ACTION_DELETESERVICE "Suprimiendo el archivo %2 del servidor %1"
+    IDS_ACTION_RELEASEFILESET "Liberando el volumen %3"
+    IDS_ACTION_GETDATES     "Obtención de fechas para el archivo %2 en el servidor %1"
+    IDS_LASTMODIFIED        "Modificado por última vez %1"
+    IDS_SVR_SECURITY_TITLE  "Seguridad de servidor - %1"
+    IDS_SVR_LIST_TAB        "Administradores"
+    IDS_ACTION_ADMINLIST_LOAD "Obtención de administradores para servidor %1"
+    IDS_ACTION_ADMINLIST_SAVE 
+                            "Escribiendo administradores para el servidor %1"
+    IDS_ADMCOL_PRINCIPAL    "Miembro"
+    IDS_ADMCOL_TYPE         "Tipo"
+    IDS_ADMCOL_TYPE_GROUP   "Grupo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_RESTORE      "Restaurando el volumen %1"
+    IDS_COL_AGGS_RESTORE    "particiones al restaurar un volumen"
+    IDS_RESTORE_FILTER      "Archivos de vuelco de volumen|*.DMP|Todos los archivos|*.*|"
+    IDS_SVC_BOS_TAB         "BOS"
+    IDS_ACTION_SETRESTART   "Cambiando horas de reinicio de servicio para el servidor %1"
+    IDS_RESTORE_CREATESET   "El volumen %1 se creará en el servidor y partición especificada a continuación."
+    IDS_RESTORE_OVERWRITESET 
+                            "¡Precaución!  El volumen %3 existe en la partición %2 del servidor %1 y si continúa se sobregrabará!"
+    IDS_SUBSET_TITLE_LOAD   "Abrir subconjunto de servidor"
+    IDS_SUBSET_TITLE_SAVE   "Guardar subconjunto de servidor"
+    IDS_BUTTON_OPEN         "&Abrir"
+    IDS_BUTTON_SAVE         "&Guardar"
+    IDS_SUBSET_SAVE_TITLE   "Precaución"
+    IDS_SUBSET_SAVE_DESC    "Ya hay un subconjunto de servidor con el nombre %1.\n\n¿Desea sobregrabar este subconjunto?"
+    IDS_SUBSET_CHANGED      "%1 [MODIFICADO]"
+    IDS_SUBSET_TAB          "Servidores supervisados"
+    IDS_SUBSET_DISCARD_TITLE "¿Guardar subconjunto?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUBSET_DISCARD_DESC "No ha guardado como subconjunto la lista de los servidores supervisados en la actualidad. Si guarda esta lista, puede utilizarla con posterioridad para proseguir la supervisión de este mismo conjunto de servidores.\n\n+"
+    IDS_SUBSET_DISCARD_DESC2 
+                            "¿Desea crear un subconjunto que contenga la lista de servidores supervisados en la actualidad?"
+    IDS_SUBSET_NONAME       "(sin título)"
+    IDS_SUBSET_NOSUBSET     "(se están supervisando todos los servidores)"
+    IDS_SUBSET_SERVERSUBSET "Servidor %1"
+    IDS_FILESET_SOME        "Volúmenes de todos los servidores supervisados en la célula %1:"
+    IDS_AGGREGATE_SOME      "Particiones en todos los servidores supervisados en la célula %1:"
+    IDS_SERVICE_SOME        "Servicios en todos los servidores supervisados en la célula %1:"
+    IDS_FILESET_UNMON       "El servidor %1 no está siendo supervisado"
+    IDS_AGGREGATE_UNMON     "El servidor %1 no está siendo supervisado"
+    IDS_SERVICE_UNMON       "El servidor %1 no está siendo supervisado"
+    IDS_SUBSET_DELETE_TITLE "¿Suprimir subconjunto?"
+    IDS_SUBSET_DELETE_DESC  "¿Está seguro de que desea suprimir el subconjunto de servidor %1?"
+    IDS_ERROR_TRANSLATED    "Número de error 0x%1 (%2):\n\n%3"
+    IDS_ERROR_NOTTRANSLATED "El número de error 0x%1 (%2) no está reconocido."
+    IDS_FIND_NOTHING_TITLE  "No hay ningún mandato seleccionado"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIND_NOTHING_DESC   "Para averiguar el modo de efectuar una operación, seleccione en primer lugar una línea de mandatos de la lista o escriba una palabra clave."
+    IDS_FIND_UNKNOWN_TITLE  "Mandato desconocido"
+    IDS_FIND_UNKNOWN_DESC   "El AFS Server Manager no ha podido encontrar ningún tema de ayuda para el mandato ""%1""."
+    IDS_HELPABOUT_DESC1     "Aviso: este programa de sistema está protegido por el copyright y tratados internacionales. +"
+    IDS_HELPABOUT_DESC2     "La reproducción o distribución no autorizada de este software puede dar como resultado la aplicación de graves sanciones civiles y penales y se perseguirá por todos los medios legales posibles.\n\n+"
+    IDS_HELPABOUT_DESC3     "AFS es una marca registrada de Transarc Corporation, una compañía de IBM."
+    IDS_CANT_QUIT_TITLE     "AFS Server Manager"
+    IDS_CANT_QUIT_REBOOT    "¡Precaución!\n\nEl AFS Server Manager está efectuando en la actualidad una o más operaciones. Si cierra Windows en este momento, dichas operaciones no finalizarán satisfactoriamente.\n\n¿Está seguro de que desea reiniciar Windows?"
+    IDS_APP_TITLE           "AFS Server Manager"
+    IDS_ACTION_OPENCELL     "Búsqueda de servidores en la célula %1"
+    IDS_OPTIONS_TITLE       "Opciones - AFS Server Manager"
+    IDS_OPTIONS_GENERAL_TAB "General"
+    IDS_BADCREDS_DESC       "A menos que inicie la sesión como administrador, es posible que no disponga de privilegios suficientes para administrar satisfactoriamente la célula %1. No disponer de suficientes privilegios de acceso puede hacer que el AFS Server Manager encuentre problemas en una célula en la que no existan dichos problemas."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRMATION_TITLE  "Confirmación - AFS Server Manager"
+    IDS_NO_GROUP_CHECKBOX   "No hay grupo propietario"
+    IDS_AFS_ID_DIDEXP       "%1 (han caducado las señales %2)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_QUERYING            "(consultando)"
+    IDS_ADMCOL_TYPE_FOREIGN_GROUP "Grupo exterior"
+    IDS_ADMCOL_TYPE_FOREIGN_USER "Usuario exterior"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SVCCOL_NOTIFIER     "Notificador"
+    IDS_SVC_NONOTIFIER      "(ninguno)"
+    IDS_SVR_KEY_TAB         "Claves de servidor"
+    IDS_KEYNAME_NOTIME      "Claves para servidor %1:"
+    IDS_KEYNAME_WITHTIME    "Claves para servidor %1: (modificado %2):"
+    IDS_SVRKEY_VERSION      "Versión"
+    IDS_SVRKEY_DATA         "Valor"
+    IDS_SVRKEY_CHECKSUM     "Suma de comprobación"
+    IDS_SVRKEY_DATA_UNKNOWN "(oculto)"
+    IDS_STARTSERVICE_TITLE  "Iniciar servicio"
+    IDS_STOPSERVICE_TITLE   "Detener servicio"
+    IDS_STARTSERVICE_TEXT   "Pulsar en Aceptar para iniciar el servicio %2 en el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOPSERVICE_TEXT    "Pulsar en Aceptar para detener el servicio %2 en el servidor %1."
+    IDS_STARTSERVICE_STARTUP 
+                            "Puede hacer que este cambio sea permanente, por lo que el servicio %2 se iniciciará automáticamente si se reinicia el servidor %1."
+    IDS_STOPSERVICE_STARTUP "Puede hacer que este cambio sea permanente, por lo que el servicio %2 no se iniciciará automáticamente si se reinicia el servidor %1."
+    IDS_STARTSERVICE_PERMANENT 
+                            "&Permanente (iniciar servicio %2 si se reinicia el servidor %1)"
+    IDS_STARTSERVICE_TEMPORARY 
+                            "&Temporal (no iniciar servicio %2 si se reinicia el servidor %1)"
+    IDS_STOPSERVICE_PERMANENT 
+                            "&Permanente (no iniciar servicio %2 si se reinicia el servidor %1)"
+    IDS_STOPSERVICE_TEMPORARY 
+                            "&Temporal (iniciar servicio %2 si se reinicia el servidor %1)"
+    IDS_ACTION_EXECUTE      "Ejecutando %2 en el servidor %1"
+    IDS_ACTION_SALVAGE_SVR  "Recuperando todos los volúmenes en el servidor %1:"
+    IDS_ACTION_SALVAGE_AGG  "Recuperando todos los volúmenes en la partición %1:2:"
+    IDS_ACTION_SALVAGE_VOL  "Recuperando el volumen %3 en la partición %1:2"
+    IDS_SALVAGE_SVR         "Recuperar todos los volúmenes en el servidor %1:"
+    IDS_SALVAGE_AGG         "Recuperar todos los volúmenes en el servidor %1, partición %2:"
+    IDS_SALVAGE_SET         "Recuperar el volumen %3 en el servidor %1, partición %2"
+    IDS_SETSTATUS_SALVAGE   "Recuperando el volumen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETSTATUS_LOCKED    "El volumen está bloqueado"
+    IDS_SETSTATUS_NO_VOL    "Falta el volumen"
+    IDS_SETSTATUS_BUSY      "El volumen está ocupado en la actualidad"
+    IDS_SETSTATUS_MOVED     "Se ha movido el volumen"
+    IDS_SVR_CAPACITY        "%1"
+    IDS_SVR_ALLOCATION      "%1 (%2%%)"
+    IDS_SVRCOL_ADDRESS      "Dirección"
+    IDS_HOST_TITLE          "Servidores de sistema principal de base de datos que reconoce el servidor %1:"
+    IDS_SVR_HOSTS_TITLE     "Servidor %1 - Sistemas principales de bases de datos"
+    IDS_SVR_HOST_TAB        "Sistemas principales de base de datos"
+    IDS_ACTION_HOSTLIST_LOAD 
+                            "Obtención de lista de sistemas principales desde el servidor %1"
+    IDS_ACTION_HOSTLIST_SAVE 
+                            "Escribiendo lista de sistemas principales en el servidor %1"
+    IDS_SETSTATUS_1ALERT    "El volumen tiene un problema"
+    IDS_SETSTATUS_2ALERT    "El volumen tiene %1 problemas"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_CHANGEADDR   "Cambiando dirección IP para el servidor %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_ADDSITE "vos addsite"
+    IDS_COMMAND_VOS_BACKUP  "vos backup"
+    IDS_COMMAND_VOS_BACKUPSYS "vos backupsys"
+    IDS_COMMAND_VOS_CREATE  "vos create"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_DELENTRY "vos delentry"
+    IDS_COMMAND_VOS_DUMP    "vos dump"
+    IDS_COMMAND_VOS_EXAMINE "vos examine"
+    IDS_COMMAND_VOS_LISTPART "vos listpart"
+    IDS_COMMAND_VOS_LISTVLDB "vos listvldb"
+    IDS_COMMAND_VOS_LISTVOL "vos listvol"
+    IDS_COMMAND_VOS_LOCK    "vos lock"
+    IDS_COMMAND_VOS_MOVE    "vos move"
+    IDS_COMMAND_VOS_PARTINFO "vos partinfo"
+    IDS_COMMAND_VOS_RELEASE "vos release"
+    IDS_COMMAND_VOS_REMOVE  "vos remove"
+    IDS_COMMAND_VOS_REMSITE "vos remsite"
+    IDS_COMMAND_VOS_RENAME  "vos rename"
+    IDS_COMMAND_VOS_RESTORE "vos restore"
+    IDS_COMMAND_VOS_SYNCVLDB "vos syncvldb"
+    IDS_COMMAND_VOS_UNLOCK  "vos unlock"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_VOS_UNLOCKVLDB "vos unlockvldb"
+    IDS_COMMAND_VOS_ZAP     "vos zap"
+    IDS_COMMAND_BOS_ADDHOST "bos addhost"
+    IDS_COMMAND_BOS_ADDKEY  "bos addkey"
+    IDS_COMMAND_BOS_ADDUSER "bos adduser"
+    IDS_COMMAND_BOS_CREATE  "bos create"
+    IDS_COMMAND_BOS_DELETE  "bos delete"
+    IDS_COMMAND_BOS_EXEC    "bos exec"
+    IDS_COMMAND_BOS_GETDATE "bos getdate"
+    IDS_COMMAND_BOS_GETLOG  "bos getlog"
+    IDS_COMMAND_BOS_GETRESTART "bos getrestart"
+    IDS_COMMAND_BOS_INSTALL "bos install"
+    IDS_COMMAND_BOS_LISTHOSTS "bos listhosts"
+    IDS_COMMAND_BOS_LISTKEYS "bos listkeys"
+    IDS_COMMAND_BOS_LISTUSERS "bos listusers"
+    IDS_COMMAND_BOS_PRUNE   "bos prune"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_BOS_REMOVEHOST "bos removehost"
+    IDS_COMMAND_BOS_REMOVEKEY "bos removekey"
+    IDS_COMMAND_BOS_REMOVEUSER "bos removeuser"
+    IDS_COMMAND_BOS_RESTART "bos restart"
+    IDS_COMMAND_BOS_SALVAGE "bos salvage"
+    IDS_COMMAND_BOS_SETAUTH "bos setauth"
+    IDS_COMMAND_BOS_SETRESTART "bos setrestart"
+    IDS_COMMAND_BOS_SHUTDOWN "bos shutdown"
+    IDS_COMMAND_BOS_START   "bos start"
+    IDS_COMMAND_BOS_STARTUP "bos startup"
+    IDS_COMMAND_BOS_STATUS  "bos status"
+    IDS_COMMAND_BOS_STOP    "bos stop"
+    IDS_COMMAND_BOS_UNINSTALL "bos uninstall"
+    IDS_COMMAND_KAS_GETRANDOMKEY "kas getrandomkey"
+    IDS_COMMAND_FS_LISTQUOTA "fs listquota"
+    IDS_COMMAND_FS_QUOTA    "fs quota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_FS_SETQUOTA "fs setquota"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCSHORT_UNMONITORED 
+                            "No se están supervisando problemas en el servidor %1"
+    IDS_ALERT_DESCSHORT_TIMEOUT 
+                            "No se ha podido entrar en contacto con el servidor %1; último error: %3"
+    IDS_ALERT_DESCSHORT_AGG_FULL 
+                            "La utilización de la partición para %2 supera el umbral de aviso de %3%% (%4)"
+    IDS_ALERT_DESCSHORT_SET_FULL 
+                            "La utilización de volumen para %3 supera el umbral de aviso de %4%% (%5)"
+    IDS_ALERT_DESCSHORT_NO_VLDBENT 
+                            "El volumen %3 no tiene ninguna entrada de VLDB"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_SET 
+                            "El volumen %3 tiene una entrada de VLDB pero no se ha encontrado en la partición %2 del servidor %1"
+    IDS_ALERT_DESCSHORT_STOPPED "Servicio %2 detenido en %3"
+    IDS_ALERT_DESCSHORT_NO_SVRENT_AGG 
+                            "VLDB hace referencia a la partición %2 pero no se ha encontrado en el servidor %1"
+    IDS_ALERT_DESCSHORT_BADCREDS 
+                            "Es posible que no tenga suficientes privilegios para administrar el servidor %1"
+    IDS_ALERT_DESCSHORT_AGG_ALLOC 
+                            "La cuota de volumen combinada de la partición %2 ha superado su capacidad"
+    IDS_ALERT_DESCSHORT_STATE_NO_VNODE 
+                            "El volumen %3 está dañado y no puede utilizarse."
+    IDS_ALERT_DESCSHORT_STATE_NO_SERVICE 
+                            "No hay ningún servicio que esté ejecutándose para servir el volumen %3."
+    IDS_ALERT_DESCSHORT_STATE_OFFLINE 
+                            "El volumen %3 está fuera de línea y no puede utilizarse."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_TIMEOUT 
+                            "No ha podido contactarse con el servidor %1. El último intento, efectuado en %2, ha dado como resultado el error ""%3""."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_DESCFULL_AGG_FULL 
+                            "La utilización de la partición %2 en el servidor %1 supera su umbral de aviso de %3%% (%4)."
+    IDS_ALERT_DESCFULL_SET_FULL 
+                            "La utilización del volumen %3 (servidor %1, partición %2) supera su umbral de aviso de %4%% (%5)."
+    IDS_ALERT_DESCFULL_NO_VLDBENT 
+                            "El volumen %3 existe en la partición %2 del servidor %1, pero no tiene ninguna entrada de VLDB correspondiente."
+    IDS_ALERT_DESCFULL_NO_SVRENT_SET 
+                            "Existe una entrada de VLDB para el volumen %3, pero el volumen pero no se ha encontrado en la partición %2 del servidor %1."
+    IDS_ALERT_DESCFULL_STOPPED 
+                            "El servicio %2 del servidor %1 se ha detenido en %3 con código de salida %5."
+    IDS_ALERT_DESCFULL_NO_SVRENT_AGG 
+                            "VLDB hace referencia a volúmenes en la partición %2 del servidor %1, pero no se ha encontrado la partición. "
+    IDS_ALERT_DESCFULL_BADCREDS 
+                            "Es posible que el AFS Server Manager esté detectando errores que no existen en el servidor %1 debido a que no dispone de señales de AFS como administrador dentro de esta célula."
+    IDS_ALERT_DESCFULL_AGG_ALLOC 
+                            "La cuota combinada de volúmenes de la partición %2 del servidor %1, que totaliza %4, supera la capacidad de la partición de %3."
+    IDS_ALERT_DESCFULL_STATE_NO_VNODE 
+                            "El volumen %3 de la partición %2 del servidor %1 no tiene ningún Vnode asociado con el mismo. (El estado del volumen es 0x%4.)"
+    IDS_ALERT_DESCFULL_STATE_NO_SERVICE 
+                            "No hay ningún servicio de exportador de archivos ejecutándose en el servidor %1, por lo que no puede utilizarse el volumen %3 de la partición %2. (El estado del volumen es 0x%4.)"
+    IDS_ALERT_DESCFULL_STATE_OFFLINE 
+                            "El volumen %3 de la partición %2 del servidor %1 está fuera de línea y no puede utilizarse. (El estado del volumen es 0x%4.)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_TIMEOUT   "Pulse en el botón Intentar de nuevo para intentar volver a contactar con este servidor."
+    IDS_ALERT_FIX_AGG_FULL  "Pulse en el botón Avisos para cambiar el umbral de aviso para la utilización de esta partición."
+    IDS_ALERT_FIX_SET_FULL  "Pulse en el botón Avisos para cambiar el umbral de aviso para la utilización de este volumen."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_FIX_NO_VLDBENT 
+                            "VLDB está posiblemente sin actualizar; si es así, utilice el mandato Sincronizar VLDB para actualizarlo."
+    IDS_ALERT_FIX_NO_SVRENT_SET 
+                            "Compruebe el servidor y la partición para asegurarse de que están funcionando de modo adecuado."
+    IDS_ALERT_FIX_STOPPED   "Pulse en el botón Ver registro para ver el registro de servicio para este servicio."
+    IDS_ALERT_FIX_NO_SVRENT_AGG 
+                            "Compruebe el servidor para asegurarse de que se ha exportado la partición y de que está funcionando debidamente."
+    IDS_ALERT_FIX_BADCREDS  "Pulse en el botón Autentificación para obtener señales de AFS nuevas."
+    IDS_ALERT_FIX_AGG_ALLOC "Reduzca la cuota para los volúmenes de esta partición, o mueva uno o más volúmenes a otra partición."
+    IDS_ALERT_FIX_STATE_NO_VNODE " "
+    IDS_ALERT_FIX_STATE_NO_SERVICE " "
+    IDS_ALERT_FIX_STATE_OFFLINE " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALERT_BUTTON_TRYAGAIN "Volver &a intentar"
+    IDS_ALERT_BUTTON_WARNINGS "Av&isos..."
+    IDS_ALERT_BUTTON_VIEWLOG "&Ver registro"
+    IDS_ALERT_BUTTON_SHOWME "&Personalizar"
+    IDS_ALERT_BUTTON_GETCREDS "&Autentificación"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_CELLSERVERS_NOCELL 
+                            "No se ha especificado ninguna célula. Para utilizar el AFS Server Manager, debe especificar la célula de AFS con la que desearía trabajar. Elija una célula seleccionando el elemento ""Abrir..."" menu de ""Célula"" menu más arriba."
+    IDS_ERROR_REFRESH_CELLSERVERS 
+                            "No ha podido obtenerse la lista de servidores para la célula %1.\n\nError: %2"
+    IDS_ERROR_CANT_OPEN_CELL 
+                            "El AFS Server Manager no ha podido ponerse en contacto con ningún servidor de la célula %1.\n\nPor favor, vuelva a efectuar la comprobación para asegurarse de que ha escrito correctamente el nombre de la célula."
+    IDS_ERROR_REFRESH_AGGREGATES 
+                            "No ha podido obtenerse la lista de particiones para el servidor %1.\n\nError: %2"
+    IDS_ERROR_REFRESH_SERVER_STATUS 
+                            "No ha podido obtenerse el estado actual del servidor %1."
+    IDS_ERROR_CHANGE_SERVER_STATUS 
+                            "El AFS Server Manager no ha podido cambiar las propiedades para el servidor %1."
+    IDS_ERROR_REFRESH_AGGREGATE_STATUS 
+                            "No ha podido obtenerse el estado actual de la partición %2 en el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_REFRESH_FILESET_STATUS 
+                            "No puede obtenerse el estado actual del volumen %3 (servidor %1, partición %2)."
+    IDS_ERROR_REFRESH_SERVICE_STATUS 
+                            "No ha podido determinarse el estado actual del servicio %2 en el servidor %1."
+    IDS_ERROR_MOVE_FILESET  "El AFS Server Manager no ha podido mover el volumen %3 desde la partición %2 del servidor %1 a la partición %5 en el servidor %4."
+    IDS_ERROR_VIEW_LOGFILE  "No ha podido leerse el archivo %2 desde el servidor %1.\n\nAsegúrese de que ha entrado correctamente el nombre del archivo y de que tiene suficientes permisos para ver el archivo. "
+    IDS_ERROR_NOT_REPLICATED 
+                            "No se ha podido determinar el estado de duplicación del volumen %1."
+    IDS_ERROR_CANT_CREATE_FILESET 
+                            "El AFS Server Manager no ha podido crear el volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_DELETE_FILESET 
+                            "El AFS Server Manager no ha podido suprimir el volumen %3 (partición %2 del servidor %1)."
+    IDS_ERROR_CANT_CREATE_VLDB_ENTRY 
+                            "El AFS Server Manager no ha podido crear una entrada VLDB para el volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_SET_FILESET_QUOTA 
+                            "El AFS Server Manager no ha podido cambiar la cuota para el volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_CREATE_SERVER 
+                            "El AFS Server Manager no ha podido crear la entrada de servidor solicitada en la célula %1. "
+    IDS_ERROR_CANT_PING_SERVER 
+                            "El AFS Server Manager no ha podido determinar la dirección IP del servidor %1."
+    IDS_ERROR_CANT_DELETE_SERVER 
+                            "El AFS Server Manager no ha podido suprimir el servidor %1."
+    IDS_ERROR_CANT_DELETE_SERVER_FILESETS 
+                            "No puede suprimirse el servidor %1 debido a que es el sistema principal de uno o más volúmenes. Un servidor sólo puede eliminarse en el caso de que no contenga ningún volumen."
+    IDS_ERROR_CHANGE_AGGREGATE_STATUS 
+                            "El AFS Server Manager no ha podido cambiar las propiedades de la partición %2 del servidor %1."
+    IDS_ERROR_CHANGE_SERVICE_STATUS 
+                            "El AFS Server Manager no ha podido cambiar las propiedades del servicio %2 en el servidor %1."
+    IDS_ERROR_CANT_START_SERVICE 
+                            "El AFS Server Manager no ha podido iniciar el servicio %2 en el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_STOP_SERVICE 
+                            "El AFS Server Manager no ha podido detener el servicio %2 en el servidor %1."
+    IDS_ERROR_CANT_RESTART_SERVICE 
+                            "El AFS Server Manager no ha podido detener y reiniciar el servicio %2 en el servidor %1."
+    IDS_ERROR_CHANGE_REPLICA_STATUS 
+                            "El AFS Server Manager no ha podido cambiar las propiedades de duplicación para el volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_SYNCVLDB "El AFS Server Manager no ha podido actualizar VLDB."
+    IDS_ERROR_CANT_CREATE_REPLICA 
+                            "El AFS Server Manager no ha podido crear un duplicado del volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_INSTALL_FILE 
+                            "El AFS Server Manager no ha podido instalar el archivo %2 en el servidor %1."
+    IDS_ERROR_CANT_UNINSTALL_FILE 
+                            "El AFS Server Manager no ha podido desinstalar el archivo %2 en el servidor %1."
+    IDS_ERROR_CANT_PRUNE_FILES 
+                            "El AFS Server Manager no ha podido eliminar los archivos solicitados del servidor %1."
+    IDS_ERROR_CANT_RENAME_FILESET 
+                            "El AFS Server Manager no ha podido cambiar el nombre del volumen %1 por ""%2""."
+    IDS_ERROR_CANT_CREATE_SERVICE 
+                            "El AFS Server Manager no ha podido crear el servicio %2 en el servidor %1."
+    IDS_ERROR_CANT_DELETE_SERVICE 
+                            "El AFS Server Manager no ha podido suprimir el servicio %2 del servidor %1."
+    IDS_ERROR_CANT_RELEASE_FILESET 
+                            "El AFS Server Manager no ha podido liberar el volumen duplicado %3."
+    IDS_ERROR_CANT_UPDATE_FILESET 
+                            "El AFS Server Manager no ha podido actualizar el duplicado de volumen %3 en la partición %1 del servidor %2."
+    IDS_ERROR_CANT_UPDATE_ALL 
+                            "El AFS Server Manager no ha podido actualizar ningún duplicado del volumen %3."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_LOAD_ADMLIST 
+                            "El AFS Server Manager no ha podido leer la lista de administradores para el servidor %1."
+    IDS_ERROR_CANT_LOAD_KEYLIST 
+                            "El AFS Server Manager no ha podido leer la lista de claves de servidor para el servidor %1."
+    IDS_ERROR_CANT_CREATE_KEY 
+                            "El AFS Server Manager no ha podido crear una clave de servidor nueva para el servidor %1."
+    IDS_ERROR_CANT_SAVE_ADMLIST 
+                            "El AFS Server Manager no ha podido cambiar la lista de administradores para el servidor %1."
+    IDS_ERROR_CANT_CLONE    "El AFS Server Manager no ha podido crear una versión de copia de seguridad del volumen %3 en la partición %2 del servidor %1."
+    IDS_ERROR_CANT_CLONESYS "El AFS Server Manager no ha podido crear ninguno de los volúmenes de copia de seguridad solicitados."
+    IDS_ERROR_CANT_DUMP_FILESET 
+                            "El AFS Server Manager no ha podido volcar el contenido del volumen %3 (servidor %1, partición %2) en el archivo %4."
+    IDS_ERROR_CANT_RESTORE_FILESET 
+                            "El AFS Server Manager no ha podido restaurar el archivo %4 en el volumen %3 (servidor %1, partición %2)."
+    IDS_ERROR_CANT_SET_RESTART_TIMES 
+                            "El AFS Server Manager no ha podido cambiar las horas de reinicio para los servicios del servidor %1."
+    IDS_ERROR_CANT_DELETE_REPLICATED_FILESET 
+                            "El AFS Server Manager no ha podido suprimir el volumen %3 de la partición %2 del servidor %1.\n\nEl volumen %3 no puede eliminarse a menos que en primer lugar se hayan eliminado todos sus duplicados."
+    IDS_CMDLINE_TITLE       "Error - AFS Server Manager"
+    IDS_CMDLINE_SYNTAX      "La línea de mandatos que ha especificado para el AFS Server Manager no es válida."
+    IDS_CMDLINE_UNRECOGNIZED 
+                            "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nNo se reconoce el parámetro ""%1""."
+    IDS_CMDLINE_DUPLICATE   "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nEl parámetro ""%1"" se ha especificado más de una vez."
+    IDS_CMDLINE_UNEXPECTVALUE 
+                            "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nNo se debe proporcionar un valor al parámetro ""%1""."
+    IDS_CMDLINE_MISSINGVAL  "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nEl parámetro ""%1"" debe ir seguido de un valor."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CMDLINE_SUBSETNOTCELL 
+                            "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nEl parámetro ""/SUBSET"" sólo puede especificarse en el caso de que también se haya especificado el parámetro ""/CELL""."
+    IDS_CMDLINE_INVALIDSUBSET 
+                            "El subconjunto de servidor que ha especificado, ""%2"", no se ha definido para la célula %1."
+    IDS_CMDLINE_SERVERNOTCELL 
+                            "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nEl parámetro ""/SERVER"" sólo puede especificarse en el caso de que también se haya especificado el parámetro ""/CELL""."
+    IDS_CMDLINE_RESET_TITLE "AFS Server Manager"
+    IDS_CMDLINE_RESET_DESC  "El AFS Server Manager ha borrado la configuración especificada."
+    IDS_ERROR_CANT_SYNC_GHOST_AGGREGATE 
+                            "El AFS Server Manager no puede sincronizar VLDB con la partición %2 del servidor %1 ya que la partición no existe o no ha sido exportada.\n\nPara eliminar esta partición del servidor %1, debe eliminar la entradas de VLDB de volumen que hacen referencia a la misma."
+    IDS_CMDLINE_USERPASSWORD 
+                            "La línea de mandatos que ha especificado para el AFS Server Manager no es válida.\n\nPara obtener señales de AFS nuevas, deben especificarse tanto el parámetro ""/USER"" como el parámetro ""/PASSWORD"". "
+    IDS_ERROR_CANT_DELETE_KEY 
+                            "El AFS Server Manager no ha podido suprimir la clave de servidor %2 del servidor %1."
+    IDS_ERROR_CANT_GETRANDOMKEY 
+                            "El AFS Server Manager no ha podido generar una clave aleatoria para el servidor %1."
+    IDS_ERROR_CANT_EXECUTE_COMMAND 
+                            "El AFS Server Manager no ha podido ejecutar el mandato siguiente en el servidor %1.\n\n   ""%2"""
+    IDS_ERROR_CANT_READ_SALVAGE_LOG 
+                            "El AFS Server Manager ha completado la operación de recuperación de modo satisfactorio, pero no ha podido recuperar el archivo de registro que describe el resultado específico de la operación de recuperación."
+    IDS_ERROR_CANT_SALVAGE  "El AFS Server Manager no ha podido efectuar la operación de recuperación solicitada."
+    IDS_ERROR_CANT_AUTH_ON  "El AFS Server Manager no ha podido habilitar la comprobación de autentificación para el servidor %1."
+    IDS_ERROR_CANT_AUTH_OFF "El AFS Server Manager no ha podido inhabilitar la comprobación de autentificación para el servidor %1."
+    IDS_ERROR_CANT_LOAD_HOSTLIST 
+                            "El AFS Server Manager no ha podido leer la lista de servidores de sistema principal de base de datos del servidor %1."
+    IDS_ERROR_CANT_SAVE_HOSTLIST 
+                            "El AFS Server Manager no ha podido cambiar la lista de servidores de sistemas principales de base de datos en el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_INIT_AFSCLASS_INSTALL 
+                            "El AFS Server Manager no ha podido iniciarse debido a que el AFS Control Center no se ha instalado debidamente en este sistema.\n\nEs posible que tenga que volver a instalar el AFS Control Center."
+    IDS_ERROR_CANT_INIT_AFSCLASS_UNKNOWN 
+                            "El AFS Server Manager no ha podido iniciarse debido a un problema desconocido.\n\nEs posible que tenga que volver a instalar el AFS Control Center."
+    IDS_ERROR_CANT_CHANGEADDR 
+                            "El AFS Server Manager no ha podido cambiar la dirección IP en VLDB para el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "Sencillo"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "Detenido"
+    IDS_SERVICESTATE_STOPPING "Deteniéndose"
+    IDS_SERVICESTATE_STARTING "Iniciándose"
+    IDS_SERVICESTATE_RUNNING "Ejecutándose"
+    IDS_SERVICETYPE_FS_LONG "FS (sistema de archivos)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "Todos los servicios de la célula %1:"
+    IDS_SERVICE_STARTDATE   "Iniciado %1"
+    IDS_SERVICE_STOPDATE    "Detenido %1"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,89 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=WINNT\eventlog
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+LIBFILE = $(DESTDIR)\lib\afs\afseventlog.lib
+
+LIBOBJS =\
+	$(OUT)\logevent.obj
+
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+############################################################################
+
+install: $(LIBFILE) lang
+
+install9x: install
+
+lang:: en_US ja_JP ko_KR zh_TW zh_CN pt_BR es_ES de_DE
+
+en_US:
+	$(CD) lang
+	$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+ja_JP:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+ko_KR:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+zh_CN:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+zh_TW:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+pt_BR:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+es_ES:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+de_DE:
+	$(CD) lang
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
+    $(CD) ..
+
+clean::
+	$(DEL) $(LIBFILE)
+	$(CD) lang
+	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) ko_KR $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) zh_CN $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) zh_TW $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) pt_BR $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /f NTMakefile clean
+	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
+    $(CD) ..
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

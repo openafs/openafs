@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf015.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf017.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOSCONFIG" HREF="auarf002.htm#ToC_14">BosConfig</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX3880"></A>
+<A NAME="IDX3881"></A>
+<A NAME="IDX3882"></A>
+<A NAME="IDX3883"></A>
+<P>Defines server processes for the BOS Server to monitor
+<P><STRONG>Description</STRONG>
+<P>The <B>BosConfig</B> file lists the processes that the Basic OverSeer
+(BOS) Server monitors on its server machine, and thus defines which AFS server
+processes run on the machine. It specifies how the BOS Server reacts
+when a process fails, and also defines the times at which the BOS Server
+automatically restarts processes as part of performance maintenance.
+The file must reside in the <B>/usr/afs/local</B> directory on each AFS
+server machine.
+<P>A server process entry in the <B>BosConfig</B> file records the
+following information&#58;
+<UL>
+<P><LI>The<VAR> entry type</VAR>, which is one of the following&#58; 
+<A NAME="IDX3884"></A>
+<A NAME="IDX3885"></A>
+<DL>
+<P><DT><B>cron
+<A NAME="IDX3886"></A>
+</B><DD>Designates a server process that runs periodically instead of
+continuously. The BOS Server starts a cron process only at specified
+times, not whenever it fails. All standard AFS process entries except
+<B>fs</B> are simple (there are no standard cron processes).
+<P><DT><B>fs
+<A NAME="IDX3887"></A>
+<A NAME="IDX3888"></A>
+<A NAME="IDX3889"></A>
+<A NAME="IDX3890"></A>
+</B><DD>Designates a group of interdependent server processes. If one of
+the processes fails, the BOS Server must coordinate its restart with the
+restart of the other processes in the group, possibly by stopping them
+first. 
+<P>There is only one standard entry of this type, for which the conventional
+name is <B>fs</B>. It combines three server processes&#58; the
+File Server (<B>fileserver</B> process), the Volume Server
+(<B>volserver</B> process), and the Salvager (<B>salvager</B>
+process). These processes all operate on the same data--the AFS
+data stored on an AFS server machine&#39;s <B>/vicep</B> partitions and
+mounted in the AFS filespace--but in different ways. Grouping the
+processes prevents them from attempting to access the same data
+simultaneously, which can cause corruption. 
+<P>During normal operation, the Salvager process is not active. If the
+File Server process fails, however, the BOS Server stops the Volume Server
+process and runs the Salvager process to correct any corruption that resulted
+from the failure. (The administrator can also issue the <B>bos
+salvage</B> command to invoke the Salvager process.) If the Volume
+Server fails, the BOS Server can restart it without stopping the File Server
+or running the Salvager.
+<P><DT><B>simple
+<A NAME="IDX3891"></A>
+</B><DD>Designates a server process that runs independently of any other on the
+server machine. If a simple process fails, the BOS Server does not have
+to coordinate its restart with any other process.
+</DL>
+<P><LI>The <VAR>entry name</VAR>. The conventional name for an entry in the
+<B>BosConfig</B> file and the associated process matches the binary
+filename. When issuing any <B>bos</B> command that takes the
+<B>-instance</B> argument, identify each process by the name used in the
+<B>BosConfig</B> file. For a list of the names, see the <B>bos
+create</B> reference page.
+<P><LI>The process&#39;s <VAR>status flag</VAR>, which determines whether the BOS
+Server attempts to start the process in two cases&#58; each time the BOS
+Server itself restarts, and when the process fails. The
+<B>BosConfig</B> file currently uses a binary notation to indicate whether
+the BOS Server attempts to restart the process as necessary or does not
+monitor it at all. For the sake of clarity, the AFS documentation
+refers to the flags as <B>Run</B> and <B>NotRun</B> instead.
+Only a system administrator, not the BOS Server, can change the flag.
+<A NAME="IDX3892"></A>
+<A NAME="IDX3893"></A>
+<P><LI>One or more <VAR>command parameters</VAR> which the BOS Server invokes to
+start the process or processes associated with the entry&#58; 
+<UL>
+<P><LI>A <B>cron</B> entry has two command parameters, the first the complete
+pathname to the program, and the second the time at which the BOS Server
+invokes the program.
+<P><LI>The <B>fs</B> entry has three command parameters, each the complete
+pathname to the <B>fileserver</B>, <B>volserver</B>, and
+<B>salvager</B> programs, in that order.
+<P><LI>A <B>simple</B> entry has only one command parameter, the complete
+pathname to the program.
+</UL>
+</UL>
+<P>In addition to server process entries, the <B>BosConfig</B> file
+specifies the times at which the BOS Server performs two types of automatic
+process restarts&#58;
+<UL>
+<P><LI>The <VAR>general restart</VAR> time at which the BOS Server restarts itself
+and then each process for which the entry in the <B>BosConfig</B> file has
+status flag <B>Run</B>. The default setting is Sunday at 4&#58;00
+a.m.
+<P><LI>The <VAR>binary restart</VAR> time at which the BOS Server restarts any
+server process for which the time stamp on the binary file in the
+<B>/usr/afs/bin</B> directory is later than the last restart time for the
+process. The default is 5&#58;00 a.m.
+</UL>
+<P>Although the <B>BosConfig</B> file is in ASCII format, do not use a
+text editor to alter it. Its format is subject to change and
+incorrectly formatted entries can prevent server startup in ways that are
+difficult to diagnose. Instead always use the appropriate commands from
+the <B>bos</B> command suite&#58;
+<UL>
+<P><LI>The <B>bos create</B> command to create an entry in the file and start
+the associated process
+<P><LI>The <B>bos delete</B> command to remove an entry from the file after
+the <B>bos stop</B> command is used to stop the associated process
+<P><LI>The <B>bos getrestart</B> command to display the times at which the
+BOS Server performs automatic restarts
+<P><LI>The <B>bos setrestart</B> command to set the times at which the BOS
+Server performs automatic process restarts
+<P><LI>The <B>bos start</B> command to change an entry&#39;s status flag to
+<B>Run</B> and start the associated process
+<P><LI>The <B>bos status</B> command to display all processes listed in the
+file
+<P><LI>The <B>bos stop</B> command to change an entry&#39;s status flag to
+<B>NotRun</B> and stop the associated process
+</UL>
+<P>There are also <B>bos</B> commands that start and stop processes
+without changing entries in the <B>BosConfig</B> file. The BOS
+Server reads the <B>BosConfig</B> file only when it starts, transferring
+the information into its memory. Thus a process&#39;s status as
+represented in the BOS Server&#39;s memory can diverge from its status in the
+<B>BosConfig</B> file. The following commands change a
+process&#39;s status in the BOS Server&#39;s memory only&#58;
+<A NAME="IDX3894"></A>
+<A NAME="IDX3895"></A>
+<A NAME="IDX3896"></A>
+<UL>
+<P><LI>The <B>bos restart</B> command restarts a specified set of processes,
+all processes, or all processes other than the BOS Server
+<P><LI>The <B>bos shutdown</B> command stops a process
+<P><LI>The <B>bos startup</B> command starts a process
+</UL>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf099.htm#HDRBOS_DELETE">bos delete</A>
+<P><A HREF="auarf103.htm#HDRBOS_GETRESTART">bos getrestart</A>
+<P><A HREF="auarf113.htm#HDRBOS_RESTART">bos restart</A>
+<P><A HREF="auarf117.htm#HDRBOS_SETRESTART">bos setrestart</A>
+<P><A HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<P><A HREF="auarf119.htm#HDRBOS_START">bos start</A>
+<P><A HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P><A HREF="auarf122.htm#HDRBOS_STOP">bos stop</A>
+<P><A HREF="auarf114.htm#HDRBOS_SALVAGE">bos salvage</A>
+<P><A HREF="auarf129.htm#HDRFILESERVER">fileserver</A>
+<P><A HREF="auarf232.htm#HDRSALVAGER">salvager</A>
+<P><A HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf015.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf017.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>
