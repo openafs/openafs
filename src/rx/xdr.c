@@ -129,6 +129,49 @@ xdr_u_int(xdrs, up)
 	return (FALSE);
 }
 
+#else
+/*
+ * XDR afs_int32 integers
+ * same as xdr_u_long - open coded to save a proc call!
+ */
+bool_t
+xdr_int(xdrs, lp)
+	register XDR *xdrs;
+	int *lp;
+{
+
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, (long *)lp));
+
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, (long *)lp));
+
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
+
+	return (FALSE);
+}
+
+/*
+ * XDR unsigned afs_int32 integers
+ * same as xdr_long - open coded to save a proc call!
+ */
+bool_t
+xdr_u_int(xdrs, ulp)
+	register XDR *xdrs;
+	int *ulp;
+{
+
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, (long *)ulp));
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, (long *)ulp));
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
+	return (FALSE);
+}
+#endif
+
 
 /*
  * XDR afs_int32 integers
@@ -173,48 +216,7 @@ xdr_u_long(xdrs, ulp)
 
 	return (FALSE);
 }
-#else
-/*
- * XDR afs_int32 integers
- * same as xdr_u_long - open coded to save a proc call!
- */
-bool_t
-xdr_int(xdrs, lp)
-	register XDR *xdrs;
-	int *lp;
-{
 
-	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)lp));
-
-	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)lp));
-
-	if (xdrs->x_op == XDR_FREE)
-		return (TRUE);
-
-	return (FALSE);
-}
-
-/*
- * XDR unsigned afs_int32 integers
- * same as xdr_long - open coded to save a proc call!
- */
-bool_t
-xdr_u_int(xdrs, ulp)
-	register XDR *xdrs;
-	int *ulp;
-{
-
-	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)ulp));
-	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)ulp));
-	if (xdrs->x_op == XDR_FREE)
-		return (TRUE);
-	return (FALSE);
-}
-#endif
 /*
  * XDR chars
  */

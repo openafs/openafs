@@ -1155,7 +1155,7 @@ int SRXAFSCB_GetCellServDB(
       afs_PutCell(tcell, READ_LOCK);
     }
 
-    t_name = (char *)rxi_Alloc(i+1);
+    t_name = (char *)afs_osi_Alloc(i+1);
     if (t_name == NULL) {
         ReleaseReadLock(&afs_xcell);
 #ifdef RX_ENABLE_LOCKS
@@ -1234,7 +1234,7 @@ int SRXAFSCB_GetLocalCell(
 	plen = strlen(p_name);
     else
 	plen = 0;
-    t_name = (char *)rxi_Alloc(plen+1);
+    t_name = (char *)afs_osi_Alloc(plen+1);
     if (t_name == NULL) {
         ReleaseReadLock(&afs_xcell);
 #ifdef RX_ENABLE_LOCKS
@@ -1340,7 +1340,7 @@ int SRXAFSCB_GetCacheConfig(
      * Currently only support version 1
      */
     allocsize = sizeof(cm_initparams_v1);
-    t_config = (afs_uint32 *)rxi_Alloc(allocsize);
+    t_config = (afs_uint32 *)afs_osi_Alloc(allocsize);
     if (t_config == NULL) {
 #ifdef RX_ENABLE_LOCKS
 	AFS_GUNLOCK();
