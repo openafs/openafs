@@ -215,7 +215,7 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
-	    (char *)input += sizeof(t_input);
+	    input=((char *)input) + sizeof(t_input);
 
 	    /* zero pad */
 	    for (j = length; j <= 7; j++)
@@ -229,7 +229,7 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 
 	    /* copy temp output and save it for cbc */
 	    memcpy(output, t_output, sizeof(t_output));
-	    (char *)output += sizeof(t_output);
+	    output=(char *)output + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
 	    xor[0] = t_input[0] ^ t_output[0];
@@ -244,7 +244,7 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
-	    (char *)input += sizeof(t_input);
+	    input=((char *)input) + sizeof(t_input);
 
 	    /* no padding for decrypt */
 	    fc_ecb_encrypt(t_input, t_output, key, encrypt);
@@ -255,7 +255,7 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 
 	    /* copy temp output */
 	    memcpy(output, t_output, sizeof(t_output));
-	    (char *)output += sizeof(t_output);
+	    output=((char *)output) + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
 	    xor[0] = t_input[0] ^ t_output[0];

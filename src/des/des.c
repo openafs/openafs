@@ -77,7 +77,8 @@ des_ecb_encrypt(void * clear, void * cipher,
 {
     /* better pass 8 bytes, length not checked here */
 
-    register afs_uint32 R1 = 0, L1 = 0;	/* R1 = r10, L1 = r9 */
+    register afs_uint32 R1 = 0;
+    register afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
     register afs_uint32 R2 = 0, L2 = 0;	/* R2 = r8, L2 = r7 */
     afs_int32 i;
     /* one more registers left on VAX, see below P_temp_p */
@@ -129,15 +130,16 @@ des_ecb_encrypt(void * clear, void * cipher,
     }
 #endif
     if ((afs_int32) clear & 3) {
-	memcpy((char *)&L_save, (char *)clear++, sizeof(L_save));
-	memcpy((char *)&R_save, (char *)clear, sizeof(R_save));
+	clear=((char*)clear)+1;
+	memcpy((char *)(&L_save), (char *)clear, sizeof(L_save));
+	memcpy((char *)(&R_save), (char *)clear, sizeof(R_save));
 	L1 = L_save;
 	R1 = R_save;
     } else
 #endif
     {
 	if (clear)
-	    L1 = *((afs_int32 *)clear)++;
+	    L1 = (*((afs_int32 *)clear))++;
 	else
 	    L1 = 0;
 	if (clear)
@@ -441,12 +443,14 @@ des_ecb_encrypt(void * clear, void * cipher,
     if ((afs_int32) cipher & 3) {
 	L_save = L2;		/* cant bcopy a reg */
 	R_save = R2;
-	memcpy((char *)cipher++, (char *)&L_save, sizeof(L_save));
+	cipher=((char*)cipher)+1;
+	memcpy((char *)cipher, (char *)&L_save, sizeof(L_save));
 	memcpy((char *)cipher, (char *)&R_save, sizeof(R_save));
     } else
 #endif
     {
-	*((afs_int32 *)cipher)++ = L2;
+	(*((afs_int32 *)cipher))++;
+        *((afs_int32*)cipher)= L2;	
 	*((afs_int32 *)cipher) = R2;
     }
 
