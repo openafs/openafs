@@ -38,7 +38,7 @@ install: $(LIBFILE) $(INCFILES)
 install9x: install
 
 clean::
-	$(DEL) cmd_errors.c
+	$(DEL) cmd_errors.c cmd.h
 	$(DEL) $(LIBFILE)
 
 test tests:
