@@ -84,7 +84,7 @@ ${DEST}/etc/kdump: kdump
 			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun*_5[789] ) \
-		${INSTALLex} -f kdump.sh.solaris7 $@; \
+		${INSTALLex} -f ${srcdir}/kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*linux* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.linux $@; \
