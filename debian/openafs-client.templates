@@ -70,7 +70,7 @@ Description: Dynamically generate the contents of /afs?
  dynamically based on the contents of /etc/openafs/CellServDB and DNS.
  .
  If you generate /afs dynamically, you may need to create 
- /etc/openafs/CellAliases to include aliases for common cells.
+ /etc/openafs/CellAlias to include aliases for common cells.
  DO NOT SELECT THIS OPTION IF YOU ARE CREATING A NEW CELL.
 
 Template: openafs-client/fakestat

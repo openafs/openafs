@@ -1,3 +1,749 @@
+2002-09-25 18:14  zacheiss
+
+	* configure-libafs.in, configure.in: 
+	DELTA STABLE12-create-openafs-1_2_7-20020925 AUTHOR
+	zacheiss@mit.edu
+	
+	Begin release cycle.
+
+2002-09-19 18:33  shadow
+
+	* src/afs/LINUX/osi_misc.c: DELTA
+	linux-correct-fragsize-to-be-as-expected-20020919 AUTHOR
+	shadow@dementia.org
+	
+	consider it a partial pullup of 
+	client-64bit-file-size-support-20011031
+	
+	in order for the bit operations we do in afs_AdjustSize to work,
+	this must be (what it is) minus 1
+
+2002-09-17 19:11  shadow
+
+	* src/afsd/afs.rc.fbsd: DELTA
+	STABLE12-freebsd-finish-pullup-20020917 AUTHOR shadow@dementia.org
+	
+	sigh.
+
+2002-09-17 19:00  shadow
+
+	* src/libuafs/MakefileProto.FBSD.in: DELTA
+	STABLE12-freebsd-finish-pullup-20020917 AUTHOR shadow@dementia.org
+	
+	sigh.
+
+2002-09-17 18:32  shadow
+
+	* src/config/Makefile.i386_fbsd_43.in: file
+	Makefile.i386_fbsd_43.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2002-09-17 18:32  shadow
+
+	* src/config/Makefile.i386_fbsd_44.in: file
+	Makefile.i386_fbsd_44.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2002-09-17 18:32  shadow
+
+	* src/config/Makefile.i386_fbsd_45.in: file
+	Makefile.i386_fbsd_45.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2002-09-17 18:32  shadow
+
+	* src/config/param.i386_fbsd_43.h~: file param.i386_fbsd_43.h~ was
+	initially added on branch openafs-stable-1_2_x.
+
+2002-09-17 18:32  shadow
+
+	* src/config/Makefile.i386_fbsd_46.in: file
+	Makefile.i386_fbsd_46.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2002-09-17 18:32  shadow
+
+	* src/: afs/FBSD/osi_module.c, config/Makefile.i386_fbsd_42.in,
+	config/Makefile.i386_fbsd_43.in, config/Makefile.i386_fbsd_44.in,
+	config/Makefile.i386_fbsd_45.in, config/Makefile.i386_fbsd_46.in,
+	config/param.i386_fbsd_43.h, config/param.i386_fbsd_43.h~,
+	config/param.i386_fbsd_43_usr.h, config/param.i386_fbsd_44.h,
+	config/param.i386_fbsd_44_usr.h, config/param.i386_fbsd_45.h,
+	config/param.i386_fbsd_45_usr.h, config/param.i386_fbsd_46.h,
+	config/param.i386_fbsd_46_usr.h, config/param.i386_fbsd_43.h~:
+	DELTA STABLE12-freebsd-finish-pullup-20020917 AUTHOR
+	shadow@dementia.org
+	
+	sigh.
+
+2002-09-13 19:53  shadow
+
+	* src/afs/afs_nfsclnt.c: DELTA
+	STABLE12-nfs-trans-comment-unused-variables-20020913 AUTHOR
+	shadow@dementia.org
+	
+	make solaris xlator module load
+
+2002-09-13 01:06  shadow
+
+	* src/afs/FBSD/osi_prototypes.h: DELTA
+	STABLE12-freebsd-almost-working-client-20020216 AUTHOR
+	tardis@ece.cmu.edu
+	
+	missed file
+
+2002-09-13 00:15  shadow
+
+	* README: DELTA STABLE12-update-README-20020913 AUTHOR
+	shadow@dementia.org
+	
+	platform list update
+
+2002-09-13 00:10  shadow
+
+	* src/libafs/MakefileProto.FBSD.in: DELTA
+	STABLE12-freebsd-almost-working-client-20020216 AUTHOR
+	tardis@ece.cmu.edu
+	
+	no really, we need to include...
+
+2002-09-12 23:53  shadow
+
+	* src/config/: Makefile.alpha_dux40.in, Makefile.alpha_dux50.in:
+	DELTA STABLE12-alpha-dux-rm-missing-20020912 AUTHOR
+	shadow@dementia.org
+	
+	define RM
+
+2002-09-12 22:53  shadow
+
+	* src/: afs/afs_pioctl.c, rxkad/rxkad_client.c: DELTA
+	STABLE12-rxkad-client-offer-better-bad-token-warnings-20020912
+	AUTHOR shadow@dementia.org
+	
+	if it's too large to be a valid token, offer a useful error.
+
+2002-09-11 17:33  shadow
+
+	* src/config/: Makefile.rs_aix42.in, Makefile.sgi_62.in,
+	Makefile.sgi_63.in, Makefile.sgi_64.in, Makefile.sgi_65.in: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-11 17:25  shadow
+
+	* src/config/: Makefile.alpha_dux40.in, Makefile.alpha_dux50.in:
+	DELTA STABLE12-shared-library-builds-20020910 AUTHOR
+	shadow@dementia.org
+	
+	pullup from head
+
+2002-09-11 12:17  shadow
+
+	* src/afs/afs_call.c: DELTA
+	
+	no sys_exit in stock kernels
+	STABLE12-linux-use-kernel-threads-and-completions-if-possible-20020
+	911 AUTHOR shadow@dementia.org
+
+2002-09-11 04:18  shadow
+
+	* src/: config/param.rs_aix42.h, vol/partition.c,
+	vol/vol-salvage.c: DELTA STABLE12-aix-namei-fileserver-fix-20020911
+	AUTHOR nik@zurich.ibm.com
+	
+	make namei fileserver work on aix
+
+2002-09-11 03:21  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c: DELTA
+	STABLE12-evalmountpoint-save-stack-20020909 AUTHOR
+	shadow@dementia.org
+	
+	use "small" memory pool instead of 128 bytes off the stack
+
+2002-09-11 03:20  shadow
+
+	* src/ptserver/ptprocs.c: DELTA
+	
+	tighten up acl enforcement
+	STABLE12-ptserver-acl-dumpentry-to-disallow-access-based-on-record-
+	20020911 AUTHOR shadow@dementia.org
+
+2002-09-11 03:02  shadow
+
+	* src/cf/linux-test4.m4: DELTA
+	
+	rest of the configure glue
+	STABLE12-linux-use-kernel-threads-and-completions-if-possible-20020
+	911 AUTHOR shadow@dementia.org
+
+2002-09-11 03:02  shadow
+
+	* src/afs/afs_call.c: DELTA
+	
+	with some rewriting by shadow@dementia.org
+	STABLE12-linux-use-kernel-threads-and-completions-if-possible-20020
+	911 AUTHOR cg2v@andrew.cmu.edu
+
+2002-09-11 03:02  shadow
+
+	* acconfig.h, acinclude.m4: DELTA
+	
+	configure glue
+	STABLE12-linux-use-kernel-threads-and-completions-if-possible-20020
+	911 AUTHOR shadow@dementia.org
+
+2002-09-10 18:33  zacheiss
+
+	* Makefile.in, acconfig.h, acinclude.m4, src/afs/afs.h,
+	src/afs/afs_buffer.c, src/afs/afs_call.c, src/afs/afs_init.c,
+	src/afs/afs_mariner.c, src/afs/afs_osi.c, src/afs/afs_pioctl.c,
+	src/afs/afs_vcache.c, src/afs/lock.h, src/afs/sysincludes.h,
+	src/afs/FBSD/osi_file.c, src/afs/FBSD/osi_groups.c,
+	src/afs/FBSD/osi_inode.c, src/afs/FBSD/osi_machdep.h,
+	src/afs/FBSD/osi_misc.c, src/afs/FBSD/osi_sleep.c,
+	src/afs/FBSD/osi_vfsops.c, src/afs/FBSD/osi_vm.c,
+	src/afs/FBSD/osi_vnodeops.c, src/afs/FBSD/vnode_if.h,
+	src/afs/VNOPS/afs_vnop_attrs.c, src/afs/VNOPS/afs_vnop_flock.c,
+	src/afs/VNOPS/afs_vnop_read.c, src/afs/VNOPS/afs_vnop_readdir.c,
+	src/afs/VNOPS/afs_vnop_strategy.c, src/afs/VNOPS/afs_vnop_write.c,
+	src/afsmonitor/afsmonitor.c, src/auth/cellconfig.c,
+	src/bucoord/commands.c, src/bucoord/config.c, src/bucoord/dsvs.c,
+	src/bucoord/tape_hosts.c, src/butc/dump.c,
+	src/config/afs_sysnames.h, src/config/param.i386_fbsd_42.h,
+	src/config/param.i386_fbsd_42_usr.h, src/fsint/afsaux.c,
+	src/kauth/authclient.c, src/kauth/krb_udp.c,
+	src/libafs/MakefileProto.FBSD.in, src/ptserver/testpt.c,
+	src/rx/rx.c, src/rx/rx_kcommon.c, src/rx/rx_kcommon.h,
+	src/rx/rx_packet.c, src/rx/rx_user.c, src/rx/rxdebug.c,
+	src/rx/FBSD/rx_kmutex.h, src/rx/FBSD/rx_knet.c,
+	src/rxdebug/rxdebug.c, src/util/assert.c, src/viced/fsprobe.c,
+	src/vol/fssync.c: 
+	DELTA STABLE12-freebsd-almost-working-client-20020216 AUTHOR
+	tardis@ece.cmu.edu
+	
+	a) a freebsd client that compiles, and to a certain extent, works.
+	Should not be used except by people doing freebsd client
+	development b) configure glue for freebsd 4.3, 4.4, and 4.5 c)
+	freebsd tfileserver support. Note that, by default, this isn't very
+	interesting, as the supported freebsd pthreads are just as
+	cooperative as LWP. if you install the linuxthreads port and swap
+	the MT_* variables in osconf.m4, you will get a more traditional
+	tfileserver though. configure glue for that will be forthcoming at
+	some point.  d) a maybe-fix that sets sin_len in sockaddrs on
+	platforms that have them.
+	
+	(and also a fix for the AC_PROG_CC issue which affects autoconf
+	2.13 and 2.5x  on same conf files issue)
+
+2002-09-10 01:41  shadow
+
+	* src/config/: Makefile.alpha_linux_22.in,
+	Makefile.alpha_linux_24.in, Makefile.hp_ux110.in,
+	Makefile.i386_linux22.in, Makefile.i386_linux24.in,
+	Makefile.ia64_linux24.in, Makefile.ppc_linux22.in,
+	Makefile.ppc_linux24.in, Makefile.s390_linux22.in,
+	Makefile.s390_linux24.in, Makefile.sparc64_linux22.in,
+	Makefile.sparc64_linux24.in, Makefile.sparc_linux22.in,
+	Makefile.sparc_linux24.in, Makefile.sun4x_55.in,
+	Makefile.sun4x_56.in, Makefile.sun4x_57.in, Makefile.sun4x_58.in,
+	Makefile.sunx86_54.in, Makefile.sunx86_57.in: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-10 01:34  shadow
+
+	* src/shlibafsrpc/Makefile.in: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-10 01:29  shadow
+
+	* src/: shlibafsauthent/Makefile.in, shlibafsrpc/Makefile.in,
+	shlibafsauthent/Makefile.in, shlibafsrpc/Makefile.in: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-10 01:23  shadow
+
+	* configure.in, src/shlibafsauthent/Makefile.in,
+	src/shlibafsrpc/Makefile.in: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-10 01:03  shadow
+
+	* Makefile.in, src/config/Makefile.alpha_linux_22.in,
+	src/config/Makefile.alpha_linux_24.in,
+	src/config/Makefile.hp_ux102.in, src/config/Makefile.hp_ux110.in,
+	src/config/Makefile.i386_djgpp,
+	src/config/Makefile.i386_fbsd_42.in,
+	src/config/Makefile.i386_linux22.in,
+	src/config/Makefile.i386_linux24.in,
+	src/config/Makefile.i386_obsd29.in,
+	src/config/Makefile.ia64_linux24.in,
+	src/config/Makefile.parisc_linux24.in,
+	src/config/Makefile.ppc_darwin_12.in,
+	src/config/Makefile.ppc_darwin_13.in,
+	src/config/Makefile.ppc_darwin_14.in,
+	src/config/Makefile.ppc_darwin_60.in,
+	src/config/Makefile.ppc_linux22.in,
+	src/config/Makefile.ppc_linux24.in,
+	src/config/Makefile.s390_linux22.in,
+	src/config/Makefile.s390_linux24.in,
+	src/config/Makefile.sparc64_linux22.in,
+	src/config/Makefile.sparc64_linux24.in,
+	src/config/Makefile.sparc_linux22.in,
+	src/config/Makefile.sparc_linux24.in,
+	src/config/Makefile.sun4x_55.in, src/config/Makefile.sun4x_56.in,
+	src/config/Makefile.sun4x_57.in, src/config/Makefile.sun4x_58.in,
+	src/config/Makefile.sun4x_59.in, src/config/Makefile.sunx86_54.in,
+	src/config/Makefile.sunx86_57.in, src/pam/Makefile.in,
+	src/shlibafsauthent/Makefile.in, src/shlibafsauthent/NTMakefile,
+	src/shlibafsauthent/README, src/shlibafsauthent/afsauthent.def,
+	src/shlibafsauthent/afsauthent.exp,
+	src/shlibafsauthent/afsauthent.rc, src/shlibafsauthent/mapfile,
+	src/shlibafsrpc/Makefile.in, src/shlibafsrpc/NTMakefile,
+	src/shlibafsrpc/afsrpc.def, src/shlibafsrpc/afsrpc.exp,
+	src/shlibafsrpc/afsrpc.rc, src/shlibafsrpc/mapfile: DELTA
+	STABLE12-shared-library-builds-20020910 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2002-09-09 13:01  shadow
+
+	* src/uss/uss_vol.c: DELTA STABLE12-uss-fix-typo-20020909 AUTHOR
+	shadow@dementia.org
+	
+	reported anonymously
+
+2002-08-28 03:20  zacheiss
+
+	* src/vol/vol-salvage.c: 
+	DELTA STABLE12-fix-irix-build-20020828 AUTHOR shadow@dementia.org
+	
+	Irix needs this.  Put it back.
+	
+	Note:  This was part of the delta prototypes-fixes-20020821 on the
+	mainline, but this chunk is needed on the 1.2.x branch, and it
+	would be appropriate to pull in the entire delta in which it
+	appeared.
+
+2002-08-28 02:13  shadow
+
+	* src/cf/linux-test4.m4: DELTA
+	STABLE12-linux-symbol-export-test-20020810 AUTHOR
+	shadow@dementia.org
+	
+	test for tasklist_lock being exported
+
+2002-08-28 02:05  shadow
+
+	* src/: shlibafsauthent/Makefile.in, shlibafsauthent/NTMakefile,
+	shlibafsauthent/README, shlibafsauthent/afsauthent.def,
+	shlibafsauthent/afsauthent.exp, shlibafsauthent/afsauthent.rc,
+	shlibafsauthent/mapfile, shlibafsrpc/Makefile.in,
+	shlibafsrpc/NTMakefile, shlibafsrpc/afsrpc.def,
+	shlibafsrpc/afsrpc.exp, shlibafsrpc/afsrpc.rc, shlibafsrpc/mapfile:
+	DELTA shared-libafsrpc-and-libafsauthent-20020828 AUTHOR
+	shadow@dementia.org
+	
+	shared library versions of libafsrpc and libafsauthent
+
+2002-08-28 00:49  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_lookup.c: 
+	DELTA STABLE12-fakestat-macosx-finder-workaround-20020722 AUTHOR
+	kolya@mit.edu
+	
+	Work around MacOSX Finder's behavior by returning ENOENT when the
+	user tries to look up Contents or .DS_Store in an uncached volume
+	root.
+
+2002-08-28 00:30  shadow
+
+	* acconfig.h: DELTA
+	STABLE12-linux-tasklist-lock-export-detection-20020829 AUTHOR
+	shadow@dementia.org
+	
+	if you don't have a versioned kernel, so sorry.
+
+2002-08-28 00:14  shadow
+
+	* acinclude.m4, src/afs/afs_osi.c: DELTA
+	STABLE12-linux-tasklist-lock-export-detection-20020829 AUTHOR
+	shadow@dementia.org
+	
+	if you don't have a versioned kernel, so sorry.
+
+2002-08-27 23:57  zacheiss
+
+	* src/vol/namei_ops.c: 
+	DELTA STABLE12-namei-close-directory-behind-us-always-20020827
+	AUTHOR shadow@dementia.org
+	
+	more or less verbatim as suggested by kolya@mit.edu
+	
+	avoid leaking directory fds if we get an error
+
+2002-08-27 23:56  zacheiss
+
+	* src/libafsrpc/Makefile.in: 
+	DELTA STABLE12-libafsrpc-use-our-xdr-for-consistency-20020826
+	AUTHOR shadow@dementia.org
+	
+	suggested by Srikanth Vishwanathan
+
+2002-08-27 23:54  zacheiss
+
+	* src/afs/DUX/osi_vnodeops.c: 
+	DELTA STABLE12-dux-call-flushpages-with-cred-20020823 AUTHOR
+	shadow@dementia.org
+	
+	we weren't passing in creds before.  do so.
+
+2002-08-27 23:53  zacheiss
+
+	* src/venus/fs.c: 
+	DELTA STABLE12-allow-fs-newcell-even-when-no-cells-exist-20020822
+	AUTHOR kolya@mit.edu
+	
+	Make "fs newcell" work even when there are no pre-existing cells in
+	the kernel yet.  Previously, newcell tried to issue a GetCell
+	pioctl to figure out what version of the pioctl interface the
+	kernel is using.  Lacking such information (if the pioctl returns
+	an error), we now assume the newer interface.
+
+2002-08-27 23:47  zacheiss
+
+	* src/bozo/bosserver.c: 
+	DELTA STABLE12-bosserver-dont-create-unused-directories-20020821
+	AUTHOR shadow@dementia.org
+	
+	in a build with alternate dirpaths we shouldn't create directories
+	we don't use
+
+2002-08-27 23:39  zacheiss
+
+	* src/util/uuid.c: 
+	DELTA STABLE12-uuid-update-copyright-info-20020821 AUTHOR
+	shadow@dementia.org
+	
+	apply copyright info from arla.
+
+2002-08-27 23:37  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_lookup.c: 
+	DELTA STABLE12-eval-mountpoint-dont-return-eloop-20020819 AUTHOR
+	zacheiss@mit.edu
+	
+	Don't return ELOOP when crossing a mountpoint boundary from a BK
+	volume to a BK volume.	find treats it as a fatal error, and it's
+	annoying not to be able to naively use find to recurse through a
+	volume with its backup volume mounted.	Never noticed this before
+	because we used to ignore this return value.  Return ENODEV
+	instead.
+
+2002-08-27 23:35  zacheiss
+
+	* src/afs/afs_pioctl.c: 
+	DELTA STABLE12-pioctl-write-null-before-copyout-20020814 AUTHOR
+	shadow@dementia.org
+	
+	suggested by lha@stacken.kth.se.
+
+2002-08-27 23:34  zacheiss
+
+	* src/afs/afs_pioctl.c: 
+	DELTA STABLE12-pioctl-always-null-terminate-after-copy-20020612
+	AUTHOR shadow@dementia.org
+	
+	based on report from lha@e.kth.se
+	
+	note that this works because PIGGYSIZE is always less than
+	AFS_LRALLOCSIZ
+
+2002-08-27 23:32  shadow
+
+	* src/util/netutils.c: DELTA
+	STABLE12-netinfo-support-fake-ips-for-nat-20020808 AUTHOR
+	shadow@dementia.org
+	
+	basically verbatim from Todd DeSantis, cleared for release by IBM
+
+2002-08-27 23:28  shadow
+
+	* src/: util/readdir_nt.c, WINNT/afsapplib/dialog.cpp: DELTA
+	STABLE12-windows-build-fixes-20020806 AUTHOR kolya@mit.edu
+	
+	fix windows build items
+
+2002-08-27 23:27  zacheiss
+
+	* src/afs/afs_osi.c: 
+	DELTA STABLE12-linux-gcpags-smp-safeness-20020810 AUTHOR
+	shadow@dementia.org
+	
+	hold tasklist_lock in the right place. doesn't yet address versions
+	which don't export it.
+
+2002-08-26 00:34  shadow
+
+	* src/: config/param.ia64_linux24.h,
+	config/param.ia64_linux24_usr.h, lwp/lwp.h, lwp/preempt.c,
+	lwp/process.c: DELTA STABLE12-sunos-support-cleanup-20020822 AUTHOR
+	shadow@dementia.org
+	
+	some things want ucontext.h. leave it there
+
+2002-08-22 13:54  shadow
+
+	* src/volser/vsprocs.c: DELTA
+	STABLE12-vsprocs-checkvolume-bug-20020822 AUTHOR
+	shadow@dementia.org
+	
+	if we're going to make a string we should make it where we expect
+	it
+
+2002-08-22 12:15  shadow
+
+	* acinclude.m4: DELTA STABLE12-sunos-support-cleanup-20020822
+	AUTHOR shadow@dementia.org
+	
+	some things want ucontext.h. leave it there
+
+2002-08-21 22:03  zacheiss
+
+	* src/rx/rx.c: 
+	DELTA STABLE12-clear-attachwait-flag-20020403 AUTHOR kolya@mit.edu
+	
+	Clear the RX_CONN_ATTACHWAIT flag when an asymmetric client's calls
+	time out; otherwise, the client could be locked out until the conn
+	is recycled.
+
+2002-08-21 22:02  zacheiss
+
+	* src/rx/: rx.c, rx_pthread.h: 
+	DELTA STABLE12-minor-rx-lock-cleanup-20020330 AUTHOR kolya@mit.edu
+	
+	Add osi_Assert()'s around pthread_{cond,mutex}_* calls to make sure
+	we aren't getting errors anywhere.
+	
+	Update the documentation/comments about Rx lock ordering.
+	
+	Fix possible deadlock in asymmetric client detection code.
+
+2002-08-21 22:00  zacheiss
+
+	* src/rx/rx.c: 
+	DELTA STABLE12-rx-cleanup-deadlock-and-refcnt-leak-20020121 AUTHOR
+	kolya@mit.edu
+	
+	The first part of the patch fixes a likely deadlock in the case
+	when we're destroying a client connection with active calls.
+	
+	The second part fixes a minor connection refcount leak in my recent
+	modification to protect against half-reachable clients.
+	
+	(Note: the first part of this was pulled up a while ago.  The
+	second	part wasn't, and is being pulled up now.)
+
+2002-08-21 21:47  zacheiss
+
+	* src/: rx/rx.c, rx/rx.h, viced/viced.c: 
+	DELTA
+	STABLE12-better-protection-against-asymmetric-clients-20020222
+	AUTHOR kolya@mit.edu
+	
+	Always verify that the client is fully reachable before talking to
+	it, in the fileserver.	This prevents some additional lossage cases
+	with poorly-connected clients.
+	
+	Disable same feature for other Rx services, since they don't need
+	to incur extra RTT delay.
+
+2002-08-21 21:43  zacheiss
+
+	* src/rx/: rx.c, rx.h: 
+	DELTA
+	STABLE12-rx-protect-servers-from-half-reachable-clients-20020119
+	AUTHOR kolya@mit.edu
+	
+	This patch should protect Rx-based servers from half-reachable
+	clients, which issue requests but don't acknowledge the server's
+	response, thereby eventually tying up all of the server threads,
+	and denying service to all other clients.  Such clients can arise
+	in case of uni-directional routing failures, whereby all packets
+	from the server to client are lost but not the other way around.
+	
+	The idea it to ping clients (using Rx ack ping) before attaching
+	them to a thread, if (a) we're running low on threads, and (b) the
+	client hasn't responsed to a ping recently.
+
+2002-08-21 18:08  shadow
+
+	* src/: config/Makefile.ppc_darwin_60.in,
+	config/param.ppc_darwin_60.h, config/param.ppc_darwin_60_usr.h,
+	libafs/afs.ppc_darwin_60.plist.in: DELTA
+	STABLE12-darwin-updates-20020821 AUTHOR cg2v@andrew.cmu.edu
+	
+	should be correct support for 10.2. also updates for 10.1
+
+2002-08-21 17:13  shadow
+
+	* src/ptserver/ptprocs.c: DELTA
+	STABLE12-ptserver-catch-empty-idlist-20020831 AUTHOR
+	shadow@dementia.org
+	
+	based on report from joda+openafs@pdc.kth.se consistent with what
+	the opposite transform does
+
+2002-08-21 17:01  shadow
+
+	* src/viced/: callback.c, host.c: DELTA
+	STABLE12-viced-provide-way-to-not-retraverse-hostlist-20020821
+	AUTHOR thomas.mueller@hrz.tu-chemnitz.de
+	
+	avoid retraversing the host list and gewtting stucvk in a loop
+
+2002-08-21 16:59  shadow
+
+	* src/config/stds.h: DELTA STABLE12-int64-operator-updates-20020821
+	AUTHOR reuter@rzg.mpg.de
+	
+	Changing the length and offset fields from afs_int64 to afs_uint64
+	gave strange results for CompareInt64 and SubtractInt64. Therefore
+	it's better to cast the values as signed in these macros.
+
+2002-08-21 16:53  shadow
+
+	* acinclude.m4, src/afs/afs.h, src/afs/afs_analyze.c,
+	src/afs/afs_call.c, src/afs/afs_cell.c, src/afs/afs_conn.c,
+	src/afs/afs_server.c, src/afs/afs_user.c, src/afs/afs_util.c,
+	src/afs/afs_vcache.c, src/afs/afs_volume.c,
+	src/afs/DARWIN/osi_machdep.h, src/afs/DARWIN/osi_module.c,
+	src/afs/DARWIN/osi_prototypes.h, src/afs/DARWIN/osi_vm.c,
+	src/afs/DARWIN/osi_vnodeops.c, src/afs/VNOPS/afs_vnop_attrs.c,
+	src/afsd/afs.rc.darwin, src/butc/dump.c, src/config/afs_sysnames.h,
+	src/dir/dir.c, src/gtx/curseswindows.c,
+	src/libafs/MakefileProto.DARWIN.in, src/pinstall/install.c,
+	src/rx/rx_kcommon.c, src/rx/rx_kcommon.h,
+	src/rx/DARWIN/rx_kmutex.h, src/rxgen/rpc_main.c,
+	src/rxkad/rxkad_common.c: DELTA STABLE12-darwin-updates-20020821
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	should be correct support for 10.2. also updates for 10.1
+
+2002-08-21 15:58  shadow
+
+	* src/rx/LINUX/rx_kmutex.h: DELTA
+	STABLE12-linux-22-kernel-support-for-current-state-20020821 AUTHOR
+	shadow@dementia.org
+	
+	based on report from alfw@SLAC.Stanford.EDU
+
+2002-08-21 15:33  shadow
+
+	* src/bozo/bosoprocs.c: DELTA
+	STABLE12-print-cause-of-bosserver-whining-20020821 AUTHOR
+	lha@stacken.kth.se
+	
+	instead of a vague error be slightly more useful
+
+2002-08-21 15:29  shadow
+
+	* src/afs/: LINUX/osi_misc.c, SOLARIS/osi_file.c: DELTA
+	STABLE12-ignore-max-file-size-ulimit-internally-20020809 AUTHOR
+	kolya@mit.edu
+	
+	Set the maxfilesize rlimit to infinity while writing to cache files
+	to avoid potential truncation if the user's rlimit is too low. 
+	This bug likely also exists in AIX, DARWIN, DUX, FBSD, HPUX and
+	NBSD, but surprisingly IRIX got this right.
+
+2002-08-21 15:27  shadow
+
+	* src/volser/vsprocs.c: DELTA
+	STABLE12-volser-vsprocs-call-enumerateentry-correctly-20020821
+	AUTHOR nneul@umr.edu
+	
+	prototyping caught this
+
+2002-08-21 15:24  shadow
+
+	* Makefile.in, acconfig.h, acinclude.m4, src/afs/Makefile.in,
+	src/afs/SUNOS/osi_inode.h, src/afsd/afsd.c, src/auth/cellconfig.c,
+	src/bozo/bnode.c, src/butc/dump.c, src/config/Makefile.sun4_413.in,
+	src/config/param.sun4_413.h, src/config/param.sun4_413_usr.h,
+	src/config/venus.h, src/lwp/preempt.c, src/pinstall/install.c,
+	src/rx/rx_user.h, src/rx/SUNOS/rx_kmutex.h, src/rx/SUNOS/rx_knet.c,
+	src/usd/usd_file.c, src/util/snprintf.c, src/util/vice.h,
+	src/venus/Makefile.in, src/viced/viced.c, src/vol/listinodes.c,
+	src/vol/partition.c, src/vol/vol-salvage.c, src/vol/volume.c: DELTA
+	STABLE12-sunos4-port-20020821 AUTHOR jhutz@cmu.edu
+	
+	This patch adds support for building OpenAFS user-mode code on
+	SunOS 4.  It does not include libafs, ulibafs, or any code that
+	needs to understand the filesystem layout (so, no vfsck, and while
+	the salvager will be built, it won't work).
+
+2002-08-21 11:54  shadow
+
+	* src/viced/afsfileprocs.c: DELTA
+	STABLE12-allow-chown-on-storedata-20020820 AUTHOR kolya@mit.edu
+	
+	Allow users with admin bits to store different user/group IDs along
+	with a StoreData call; they can already do so anyway by using
+	StoreStatus.  Fixes a spurious permission denied error with arla
+	clients.
+
+2002-08-21 11:45  shadow
+
+	* src/bozo/bos.c: DELTA
+	STABLE12-bos-fix-restart-usage-message-20020821 AUTHOR
+	shadow@dementia.org
+	
+	as suggested by Turbo Fredriksson
+	
+	restart does not default to all
+
+2002-08-21 01:53  shadow
+
+	* src/afs/afs_cell.c: DELTA
+	STABLE12-realcellindex-fix-allocation-20020821 AUTHOR
+	shadow@dementia.org
+	
+	fix comparison and the double allocation it uncovers
+
+2002-08-19 16:40  shadow
+
+	* src/afs/afs_vcache.c: DELTA
+	
+	try to become less invasive about dcache child flushing
+	STABLE12-linux-try-to-reduce-invasiveness-of-flushdcachechildren-20
+	020725 AUTHOR chas@cmf.nrl.navy.mil
+
+2002-08-06 14:58  shadow
+
+	* src/pam/pam_afs.5: DELTA STABLE12-pam-afs-man-page-20020806
+	AUTHOR security@xauth.net
+	
+	our first real man page. now, we just need a few hundred others.
+
+2002-08-05 18:08  shadow
+
+	* src/volser/vos.c: DELTA
+	STABLE12-vos-listaddrs-avoid-holes-in-index-20020805 AUTHOR
+	shadow@dementia.org
+	
+	index may have holes in it, so make sure we actually walk over the
+	number of entries we expect
 2002-08-01 23:51  zacheiss
 
 	* configure-libafs.in, configure.in: 
