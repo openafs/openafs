@@ -1072,8 +1072,6 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     return -code;
 }
 
-#define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
-
 /* afs_linux_lookup */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
 struct dentry *
@@ -1087,29 +1085,8 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     cred_t *credp = crref();
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
-    char *name = NULL;
-    struct sysname_info sysState;
-    struct qstr qstr;
-    struct vrequest treq;
-
-    sysState.allocked = 0;
-
     AFS_GLOCK();
-
-    /* In order that we not get ESTALE on @sys links that resolve
-       into the 2nd or later item in an @sys list, resolve it ourselves
-       and force a lookup of the actual match here. The real directory
-       thus gets the dentry. */
-    if (AFS_EQ_ATSYS(comp) && !afs_InitReq(&treq, credp)) {
-	Check_AtSys(ITOAFS(dip), comp, &sysState, &treq);
-	name = sysState.name;
-
-	code = afs_lookup(ITOAFS(dip), name, &vcp, credp);
-	while (code == ENOENT && Next_AtSys(ITOAFS(dip), &treq, &sysState)) {
-	    code = afs_lookup(ITOAFS(dip), name, &vcp, credp);
-	}
-    } else
-	code = afs_lookup(ITOAFS(dip), comp, &vcp, credp);
+    code = afs_lookup(ITOAFS(dip), comp, &vcp, credp);
     
     if (vcp) {
 	struct inode *ip = AFSTOI(vcp);
@@ -1140,28 +1117,6 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     dp->d_time = jiffies;
     dp->d_op = afs_dops;
     d_add(dp, AFSTOI(vcp));
-
-    if (sysState.allocked) osi_FreeLargeSpace(sysState.name);
-#if 0
-    /* Set up a dentry alias. Should we be doing this for @sys?
-       You only get one for a directory, which would be fine,
-       @sys would only map to one at a time, but it's unclear
-       that this is consistent behavior. */
-    if (AFS_EQ_ATSYS(comp) && sysState.allocked) {
-	int result;
-	struct dentry *dentry;
-
-	qstr.name = name;
-	qstr.len  = strlen(name);
-	qstr.hash = full_name_hash(name, qstr.len);
-	result = d_lookup(dp->d_parent, &qstr);
-	if (!result) {
-	    dentry = d_alloc(dp->d_parent, &qstr);
-	    if (dentry)
-		d_instantiate(dentry, AFSTOI(vcp));
-	}
-    }
-#endif
 
     AFS_GUNLOCK();
     crfree(credp);
