@@ -272,7 +272,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "AFS &Path:",IDC_STATIC,34,76,33,8
     EDITTEXT        IDC_MAP_PATH,77,74,96,14,ES_AUTOHSCROLL
-    LTEXT           "D&escription:",IDC_STATIC,34,94,38,8
+    LTEXT           "&Submount:",IDC_STATIC,34,94,38,8
     EDITTEXT        IDC_MAP_DESC,77,92,60,14,ES_AUTOHSCROLL
 END
 
@@ -355,7 +355,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "AFS &Path:",IDC_STATIC,23,70,33,8
     EDITTEXT        IDC_MAP_PATH,73,68,178,13,ES_AUTOHSCROLL
-    LTEXT           "D&escription:",IDC_STATIC,23,88,38,8
+    LTEXT           "&Submount:",IDC_STATIC,23,88,38,8
     EDITTEXT        IDC_MAP_DESC,73,86,60,13,ES_AUTOHSCROLL
     CONTROL         "&Restore this mapping whenever I logon",
                     IDC_MAP_PERSISTENT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -549,7 +549,7 @@ BEGIN
     IDS_UNCONFIG_DESC       "The AFS Client cannot be used because it is not yet configured.\n\nTo configure the AFS Client, open the Control Panel and double-click on the AFS Client icon."
     IDS_NEWSUB_TITLE        "Caution - AFS Client"
     IDS_NEWSUB_TITLE_95     "Caution - AFS Light"
-    IDS_NEWSUB_DESC         "AFS was unable to use the description you specified when connecting the network drive.\n\nThe specified description is already used for a different AFS path."
+    IDS_NEWSUB_DESC         "AFS was unable to use the submount you specified when connecting the network drive.\n\nThe specified submount is already used for a different AFS path."
     IDS_BADSUB_TITLE        "Error - AFS Client"
 END
 
