@@ -5,16 +5,15 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-srcdir=@srcdir@
+srcdir=../../..
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-INCDIRS= -I${DESTDIR}/include ${XINCLS}
-LIBS = ${SRCDIR}/lib/afs/libdir.a ${SRCDIR}/lib/afs/util.a 
-CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
+LIBS = ${srcdir}/lib/libdir.a ${srcdir}/lib/util.a  ${srcdir}/lib/liblwp.a
+CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${srcdir} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
 
 OBJS=test-salvage.o physio.o dtest.o
 
-all:
+all:	dtest
 
 install:	dtest 
 
@@ -26,12 +25,3 @@ dtest:		dtest.o
 
 dtest.o:	dtest.c 
 	$(CC) $(CFLAGS) -c dtest.c 
-
-#test-salvage:		test-salvage.o  physio.o
-#	$(CC) $(LDFLAGS) -o test-salvage test-salvage.o physio.o $(LIBS)
-#
-#test-salvage.o:	test-salvage.c  physio.c
-#	$(CC) $(CFLAGS) -c test-salvage.c 
-#
-#physio.o:	physio.c 
-#	$(CC) $(CFLAGS) -c physio.c 
