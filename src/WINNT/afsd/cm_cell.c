@@ -85,8 +85,8 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	  ) {
         int dns_expired = 0;
 		if (!cp) {
-            cp = malloc(sizeof(*cp));
-            memset(cp, 0, sizeof(*cp));
+            cp = malloc(sizeof(cm_cell_t));
+            memset(cp, 0, sizeof(cm_cell_t));
         } 
         else {
             dns_expired = 1;
@@ -109,6 +109,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
                     if (dns_expired) {
                         cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
                         cp = NULL;  /* set cp to NULL to indicate error */
+                        goto done;
                     } 
                 }
                 else {   /* got cell from DNS */
@@ -126,7 +127,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 		}
 
 		/* randomise among those vlservers having the same rank*/ 
-		cm_RandomizeServer(&cp->vlServersp);
+        cm_RandomizeServer(&cp->vlServersp);
 
 #ifdef AFS_AFSDB_ENV
         if (dns_expired) {
