@@ -19,11 +19,11 @@ RCSID("$Header$");
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "rxstat/rxstat.h"
+#include <rx/rxstat.h>
 #else /* UKERNEL */
 #include <afs/stds.h>
 #include <rx/rx.h>
-#include "rxstat.h"
+#include <rx/rxstat.h>
 #ifdef KERNEL
 #include "sys/errno.h"
 #else /* KERNEL */
