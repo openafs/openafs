@@ -53,6 +53,8 @@ extern long cm_AppendNewCellLine(cm_configFile_t *filep, char *linep);
 
 extern long cm_CloseCellFile(cm_configFile_t *filep);
 
+extern long cm_GetCellServDB(char *cellNamep);
+
 #endif /* __CM_CONFIG_INTERFACES_ONLY__ */
 
 #endif /* __CONFIG_H_ENV_ */

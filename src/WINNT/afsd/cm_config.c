@@ -31,6 +31,7 @@
 
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
+char AFSLocalMachineKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
 /* TODO: these should be pulled in from dirpath.h */
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
@@ -152,7 +153,6 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	cm_configProc_t *procp, void *rockp)
 {
 	char wdir[257];
-    int tlen;
     FILE *tfilep = NULL, *bestp, *tempp;
     char *tp;
     char lineBuffer[257];
@@ -167,18 +167,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
     char *afsconf_path;
 #endif
 
-#if !defined(DJGPP)
-    strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-
-    /* add trailing backslash, if required */
-    tlen = strlen(wdir);
-    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
-#else
-    strcpy(wdir, cm_confDir);
-    strcat(wdir,"/");
-#endif /* !DJGPP */
-        
-    strcat(wdir, AFS_CELLSERVDB);
+    cm_GetCellServDB(wdir);
     tfilep = fopen(wdir, "r");
 
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
@@ -395,6 +384,44 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 }
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
+/* look up the CellServDBDir's name in the Registry 
+ * or use the Client Dirpath value to produce a CellServDB 
+ * filename
+ */
+long cm_GetCellServDB(char *cellNamep)
+{
+#if !defined(DJGPP)
+	DWORD code, dummyLen;
+	HKEY parmKey;
+    int tlen;
+
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLocalMachineKeyName,
+				0, KEY_QUERY_VALUE, &parmKey);
+	if (code != ERROR_SUCCESS)
+        goto dirpath;
+
+	dummyLen = 256;
+	code = RegQueryValueEx(parmKey, "CellServDBDir", NULL, NULL,
+				cellNamep, &dummyLen);
+	RegCloseKey (parmKey);
+
+  dirpath:
+	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
+        strcpy(cellNamep, AFSDIR_CLIENT_ETC_DIRPATH);
+
+    /* add trailing backslash, if required */
+    tlen = strlen(cellNamep);
+    if (cellNamep[tlen-1] != '\\') 
+        strcat(cellNamep, "\\");
+#else
+    strcpy(cellNamep, cm_confDir);
+    strcat(cellNamep,"/");
+#endif /* !DJGPP */
+        
+    strcat(cellNamep, AFS_CELLSERVDB);
+	return 0;
+}
+
 /* look up the root cell's name in the Registry */
 long cm_GetRootCellName(char *cellNamep)
 {

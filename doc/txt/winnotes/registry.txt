@@ -348,7 +348,7 @@ Default : 0
 
 Value   : AuthentProviderPath
 Type    : REG_SZ
-NSIS    : <install path>\afslogon.dll
+NSIS    : %WINDIR%\SYSTEM32\afslogon.dll
 
   Specifies the install location of the authentication provider dll.
 
@@ -383,12 +383,26 @@ NSIS    : "OpenAFSDaemon"
 
 Value   : ProviderPath
 Type    : REG_SZ
-NSIS    : <install path>\afslogon.dll
+NSIS    : %WINDIR%\SYSTEM32\afslogon.dll
 
   Specifies the DLL to use for the network provider
 
-2.1 Domain specific configuration keys
---------------------------------------
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client]
+
+Value   : CellServDBDir
+Type	: REG_SZ
+Default : <not defined>
+
+  Specifies the directory containing the CellServDB file.
+  When this value is not specified, the AFS Client install
+  directory is used.
+
+
+
+2.1 Domain specific configuration keys for the Network Provider
+---------------------------------------------------------------
 
 The network provider can be configured to have different behavior
 depending on the domain that the user logs into.  These settings are

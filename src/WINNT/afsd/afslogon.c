@@ -769,20 +769,33 @@ DWORD APIENTRY NPPasswordChangeNotify(
 
 #include <userenv.h>
 #include <Winwlx.h>
-#include "lanahelper.h"
+#include <afs/vice.h>
+#include <afs/fs_utils.h>
+
+BOOL IsPathInAfs(const CHAR *strPath)
+{
+    char space[2048];
+    struct ViceIoctl blob;
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = 2048;
+    blob.out = space;
+
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
 
 VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
     DWORD code;
     TCHAR profileDir[256] = TEXT("");
-    TCHAR uncprefix[64] = TEXT("\\\\");
-    DWORD  len;
-
-    len = 256;
-    lana_GetNetbiosName(&uncprefix[2], LANA_NETBIOS_NAME_FULL);
+    DWORD  len = 256;
 
     if ( GetUserProfileDirectory(pInfo->hToken, profileDir, &len) ) {
-        if (_tcsnicmp(uncprefix, profileDir, _tcslen(uncprefix))) {
+        if (!IsPathInAfs(profileDir)) {
             if (code = ktc_ForgetAllTokens())
                 DebugEvent(NULL,"AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
             else
@@ -792,8 +805,3 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
         }
     }
 }   
-
-
-
-
-

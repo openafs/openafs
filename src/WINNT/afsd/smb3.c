@@ -1509,7 +1509,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 		for(i=0; i < nRegShares && cshare < nSharesRet; i++) {
 			len = sizeof(thisShare);
             rv = RegEnumValue(hkSubmount, i, thisShare, &len, NULL, NULL, NULL, NULL);
-			if(rv == ERROR_SUCCESS && strlen(thisShare)) {
+			if(rv == ERROR_SUCCESS && strlen(thisShare) && (!allSubmount || stricmp(thisShare,"all"))) {
 				strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
 				shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
 				shares[cshare].shi1_remark = cstrp - outp->datap;

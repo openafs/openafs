@@ -211,8 +211,17 @@ afsconf_Check(register struct afsconf_dir *adir)
 #ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */
     if (IsClientConfigDirectory(adir->name)) {
-	strcompose(tbuffer, 256, adir->name, "/",
-		   AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        if ( !afssw_GetClientCellServDBDir(tbuffer) ) {
+            strcompose(tbuffer, sizeof(tbuffer), adir->name, "/",
+                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        } else {
+            int len = strlen(tbuffer);
+            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
+                strncat(tbuffer, "\\", sizeof(tbuffer));
+            }
+            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
+            tbuffer[sizeof(tbuffer)-1] = '\0';
+        }
     } else {
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
 		   NULL);
@@ -248,8 +257,17 @@ afsconf_Touch(register struct afsconf_dir *adir)
     /* NT client CellServDB has different file name than NT server or Unix */
 
     if (IsClientConfigDirectory(adir->name)) {
-	strcompose(tbuffer, 256, adir->name, "/",
-		   AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        if ( !afssw_GetClientCellServDBDir(tbuffer) ) {
+            strcompose(tbuffer, sizeof(tbuffer), adir->name, "/",
+                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        } else {
+            int len = strlen(tbuffer);
+            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
+                strncat(tbuffer, "\\", sizeof(tbuffer));
+            }
+            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
+            tbuffer[sizeof(tbuffer)-1] = '\0';
+        }
     } else {
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
 		   NULL);
@@ -412,8 +430,17 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
      */
     if (IsClientConfigDirectory(adir->name)) {
 	/* NT client config dir */
-	strcompose(tbuffer, 256, adir->name, "/",
-		   AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        if ( !afssw_GetClientCellServDBDir(tbuffer) ) {
+            strcompose(tbuffer, sizeof(tbuffer), adir->name, "/",
+                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+        } else {
+            int len = strlen(tbuffer);
+            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
+                strncat(tbuffer, "\\", sizeof(tbuffer));
+            }
+            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
+            tbuffer[sizeof(tbuffer)-1] = '\0';
+        }
     } else {
 	/* NT server config dir */
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,

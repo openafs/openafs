@@ -63,6 +63,20 @@ afssw_GetClientInstallDir(char **bufPP)   /* [out] data buffer */
 			  bufPP);
 }
 
+/*
+ * afssw_GetClientCellServDBDir() -- Get directory in which AFS client CellServDB
+ * file is installed.  Sets *bufPP to point to allocated buffer containing string.
+ *
+ * RETURN CODES: 0 success, -1 failed (errno set)
+ */
+int
+afssw_GetClientCellServDBDir(char **bufPP)   /* [out] data buffer */
+{
+    return StringDataRead(AFSREG_CLT_OPENAFS_KEY,
+			  AFSREG_CLT_OPENAFS_CELLSERVDB_DIR_VALUE,
+			  bufPP);
+}
+
 
 /*
  * afssw_GetClientCellName() -- Get name of cell in which AFS client is
