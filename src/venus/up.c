@@ -21,6 +21,7 @@
 #undef	_NONSTD_TYPES
 #endif
 #include <stdio.h>
+#include <afs/afs_args.h>
 #include <sys/param.h>
 #ifdef	AFS_SUN5_ENV
 #include <fcntl.h>
@@ -35,6 +36,9 @@
 #include <afs/vice.h>
 #undef VIRTUE
 #undef VICE
+#include <sys/ioctl.h>
+#include <netdb.h>      
+#include <afs/venus.h>
 
 /* ************************************************************* */
 
@@ -51,12 +55,16 @@ Boolean   verbose = false;
 Boolean   renameTargets = false;
 Boolean   oneLevel = false;
 Boolean   preserveDate = true;	
+Boolean   preserveMountPoints = false;
 Boolean   forceOverwrite = false;
 
 int   pageSize;
 Boolean setacl = true;
 Boolean oldAcl = false;
 char file1[MAXPATHLEN], file2[MAXPATHLEN];
+
+#define	MAXSIZE	2048
+static char space[MAXSIZE];
 
 struct OldAcl {
     int nplus;
@@ -138,9 +146,13 @@ ScanArgs(argc, argv)
 	    preserveDate = false;
 	    break;
 	    
+	  case 'm':
+	    preserveMountPoints = true;
+	    break;
+	    
 	  default: 
 	    fprintf(stderr, "Unknown option: '%c'\n", *cp);
-	    fprintf(stderr, "usage: up [-v1frx] from to\n");
+	    fprintf(stderr, "usage: up [-v1frxm] from to\n");
 	    exit(1);
 	}
 	argc--, argv++;
@@ -151,8 +163,8 @@ ScanArgs(argc, argv)
         exit(1);
     }
 
-    strcpy(file1, argv[0]);
-    strcpy(file2, argv[1]);
+    strncpy(file1, argv[0], MAXPATHLEN);
+    strncpy(file2, argv[1], MAXPATHLEN);
 
 } /*ScanArgs*/
 
@@ -437,6 +449,45 @@ Copy(file1, file2, recursive, level)
 	  return 1;
        }
     } /*Dealing with symlink*/
+    
+    else if ( preserveMountPoints && (code=isMountPoint( file1, &blob )) ) {
+       /*
+	* --------------------- Copy mount point  --------------------
+	*/
+
+       if ( code > 1 ) {
+          perror("checking for mount point ");
+          return 1;
+       }
+       if (verbose) {
+	  printf("Level %d: Mount point %s to %s\n", level, file1, file2);
+	  fflush(stdout);
+       }
+       
+       /* Don't ovewrite a write protected directory (unless force: -f) */
+       if (!forceOverwrite && goods2 && (s2.st_mode & 0200) == 0) {
+	  fprintf(stderr,
+		  "Target %s is write protected against its owner; not changed\n",
+		  file2);
+	  return 1;
+       }
+       
+       if (verbose) {
+	  printf("  Copy mount point %s for vol %s to %s\n", file1, blob.out, file2);
+	  fflush(stdout);
+       }
+       
+       unlink(file2);	/* Always make the new link (it was easier) */
+
+       strcat(blob.out, ".");		/* stupid convention; these end with a period */
+       code = symlink(blob.out, file2);
+       if (code == -1) {
+	  fprintf(stderr, "Could not create mount point %s for vol %s\n", file2, blob.out);
+	  perror("create mount point ");
+	  return 1;
+       }
+	
+    } /*Dealing with mount point*/
 
     else if (((s1.st_mode & S_IFMT) == S_IFDIR) && (recursive || (level == 0))) {
        /*
@@ -610,3 +661,75 @@ Copy(file1, file2, recursive, level)
 
     return rcode;
 } /*Copy*/
+
+
+int isMountPoint( name, blob )
+    char *name;
+    struct ViceIoctl *blob;
+{
+    afs_int32  code;
+    char true_name[1024];		/*dirname*/
+    char parent_dir[1024];		/*Parent directory of true name*/
+    char *last_component;		/*Last component of true name*/
+
+    sprintf(true_name, "%s%s",
+            (name[0] == '/') ? "" : "./",
+            name);
+
+    /*
+     * Find rightmost slash, if any.
+     */
+    last_component = (char *) rindex(true_name, '/');
+    if (last_component) {
+        /*
+         * Found it.  Designate everything before it as the parent directory,
+         * everything after it as the final component.
+         */
+        strncpy(parent_dir, true_name, last_component - true_name);
+        parent_dir[last_component - true_name] = 0;
+        last_component++;   /*Skip the slash*/
+    }
+    else {
+        /*
+         * No slash appears in the given file name.  Set parent_dir to the current
+         * directory, and the last component as the given name.
+         */
+        strcpy(parent_dir, ".");
+        last_component = true_name;
+    }
+
+    if (strcmp(last_component, ".") == 0 || strcmp(last_component, "..") == 0) {
+        fprintf(stderr, "up: you may not use '.' or '..' as the last component\n");
+        fprintf(stderr, "up: of a name in the 'up' command.\n");
+        return 3;
+    }
+
+    blob->in = last_component;
+    blob->in_size = strlen(last_component)+1;
+    blob->out_size = MAXSIZE;
+    blob->out = space;
+    bzero(space, MAXSIZE);
+
+    code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, blob, 0);
+
+    if (code == 0) {
+        printf("'%s' is a mount point for volume '%s'\n", name, space);
+        fflush(stdout);
+        return 1;
+    }
+    else {
+        if (errno == EINVAL) {
+            /* printf( "'%s' is not a mount point.\n", name);
+	     * fflush(stdout);
+	     */
+            return 0;
+        }
+        else {
+            fprintf( stderr, "problem examining '%s' in '%s'.\n", last_component, parent_dir );
+            return 2;
+            /* Die(errno, (ti->data ? ti->data : parent_dir));
+             */
+        }
+    }
+    return 4;
+}
