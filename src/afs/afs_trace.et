@@ -159,7 +159,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_WAKE, "Wakeup: evp 0x%x, evp->seq 0x%x"
 	ec	CM_TRACE_DENTRYDELETE, "d_delete inode 0x%x d_name %s/%s"
 	ec	CM_TRACE_DENTRYIPUT, "d_iput inode 0x%x d_name %s/%s"
-	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x"
+	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x name %s parent %s"
 	ec	CM_TRACE_DCACHEWAKE, "%s line %d: waking up waiters for 0x%x flags 0x%x"
 end
 
