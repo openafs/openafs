@@ -81,15 +81,16 @@ BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8])
 	te = tokenEvents;
 	ltep = &tokenEvents;
 	while (te) {
-		if (UuidEqual((UUID *)&uuid, (UUID *)&te->uuid, &status))
+	    if (UuidEqual((UUID *)&uuid, (UUID *)&te->uuid, &status)) {
 			*ltep = te->next;
 			lock_ReleaseMutex(&tokenEventLock);
 			memcpy(sessionKey, te->sessionKey,
 				sizeof(te->sessionKey));
 			free(te);
 			return TRUE;
-		ltep = &te->next;
-		te = te->next;
+	    }
+	    ltep = &te->next;
+	    te = te->next;
 	}
 	lock_ReleaseMutex(&tokenEventLock);
 	return FALSE;
