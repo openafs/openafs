@@ -743,7 +743,7 @@ afs_int32 PromptForTape(flag, name, dbDumpId, taskId, tapecount)
 	    if ( time(0) > start+BELLTIME )
 	    {
 	        start = time(0);
-		FFlushInput(stdin);
+		FFlushInput();
 		putchar(BELLCHAR);
 		fflush(stdout);
 	    }

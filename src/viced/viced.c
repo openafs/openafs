@@ -209,7 +209,7 @@ static CheckDescriptors()
 #ifdef AFS_PTHREAD_ENV
 void CheckSignal_Signal(x)       {CheckSignal(0);}
 void ShutDown_Signal(x)          {ShutDown(0);}
-void CheckDescriptors_Signal(x)  {CheckDescriptors(0);}
+void CheckDescriptors_Signal(x)  {CheckDescriptors();}
 #else /* AFS_PTHREAD_ENV */
 void CheckSignal_Signal(x)       {IOMGR_SoftSig(CheckSignal, 0);}
 void ShutDown_Signal(x)          {IOMGR_SoftSig(ShutDown, 0);}
