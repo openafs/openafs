@@ -61,7 +61,7 @@ extern int ADMINAPI CellHandleIsValid(
 
 extern int ADMINAPI util_RPCStatsGetBegin(
   struct rx_connection *conn,
-  int (*rpc)(struct rx_call *call),
+  int (*rpc)(),
   void **iterationIdP,
   afs_status_p st
 );
@@ -79,26 +79,26 @@ extern int ADMINAPI util_RPCStatsGetDone(
 
 extern int ADMINAPI util_RPCStatsStateGet(
   struct rx_connection *conn,
-  int (*rpc)(struct rx_call *call),
+  int (*rpc)(),
   afs_RPCStatsState_p state,
   afs_status_p st
 );
 
 extern int ADMINAPI util_RPCStatsStateEnable(
   struct rx_connection *conn,
-  int (*rpc)(struct rx_call *call),
+  int (*rpc)(),
   afs_status_p st
 );
 
 extern int ADMINAPI util_RPCStatsStateDisable(
   struct rx_connection *conn,
-  int (*rpc)(struct rx_call *call),
+  int (*rpc)(),
   afs_status_p st
 );
 
 extern int ADMINAPI util_RPCStatsClear(
   struct rx_connection *conn,
-  int (*rpc)(struct rx_call *call),
+  int (*rpc)(),
   afs_RPCStatsClearFlag_t flag,
   afs_status_p st
 );

@@ -501,7 +501,17 @@ extern void osi_VM_PreTruncate(struct vcache *avc, int alen, struct AFS_UCRED *a
 
 /* ARCH/osi_vnodeops.c */
 extern struct vnodeops Afs_vnodeops;
-
+#if defined(AFS_OSF_ENV)
+#if defined(AFS_OSF30_ENV)
+extern int max_vnodes;                  /* number of total system vnodes */
+#else
+extern int nvnode;                      /* number of total system vnodes */
+extern int numvnodes;                   /* number vnodes in use now */ 
+#endif 
+#ifdef AFS_DUX40_ENV
+extern struct vfs_ubcops afs_ubcops;
+#endif
+#endif
 
 /* afs_osifile.c */
 
