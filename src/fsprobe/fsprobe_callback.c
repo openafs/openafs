@@ -81,11 +81,9 @@ static int init_afs_cb() {
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array)
-    struct rx_call *rxcall;
-    AFSCBFids *Fids_Array;
-    AFSCBs *CallBack_Array;
-
+afs_int32 SRXAFSCB_CallBack(struct rx_call *rxcall,
+			    AFSCBFids *Fids_Array,
+			    AFSCBs *CallBack_Array)
 { /*SRXAFSCB_CallBack*/
 
 #if FSPROBE_CALLBACK_VERBOSE
@@ -131,9 +129,7 @@ afs_int32 SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_InitCallBackState(rxcall)
-    struct rx_call *rxcall;
-
+afs_int32 SRXAFSCB_InitCallBackState(struct rx_call *rxcall)
 { /*SRXAFSCB_InitCallBackState*/
 
 #if FSPROBE_CALLBACK_VERBOSE
@@ -182,9 +178,7 @@ afs_int32 SRXAFSCB_InitCallBackState(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_Probe(rxcall)
-	struct rx_call *rxcall;
-
+afs_int32 SRXAFSCB_Probe(struct rx_call *rxcall)
 { /*SRXAFSCB_Probe*/
 
 #if FSPROBE_CALLBACK_VERBOSE
@@ -230,11 +224,9 @@ afs_int32 SRXAFSCB_Probe(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetCE64(rxcall, index, ce)
-    struct rx_call *rxcall;
-    afs_int32 index;
-    AFSDBCacheEntry64 *ce;
-
+afs_int32 SRXAFSCB_GetCE64(struct rx_call *rxcall,
+			   afs_int32 index,
+			   AFSDBCacheEntry64 *ce)
 { /*SRXAFSCB_GetCE64*/
 
 #if XSTAT_FS_CALLBACK_VERBOSE
@@ -255,11 +247,8 @@ afs_int32 SRXAFSCB_GetCE64(rxcall, index, ce)
 
 } /*SRXAFSCB_GetCE64*/
 
-afs_int32 SRXAFSCB_GetCE(rxcall, index, ce)
-    struct rx_call *rxcall;
-    afs_int32 index;
-    AFSDBCacheEntry *ce;
-
+afs_int32 SRXAFSCB_GetCE(struct rx_call *rxcall, afs_int32 index,
+			 AFSDBCacheEntry *ce)
 { /*SRXAFSCB_GetCE*/
 
 #if XSTAT_FS_CALLBACK_VERBOSE
@@ -302,11 +291,8 @@ afs_int32 SRXAFSCB_GetCE(rxcall, index, ce)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetLock(rxcall, index, lock)
-    struct rx_call *rxcall;
-    afs_int32 index;
-    AFSDBLock *lock;
-
+afs_int32 SRXAFSCB_GetLock(struct rx_call *rxcall, afs_int32 index,
+			   AFSDBLock *lock)
 { /*SRXAFSCB_GetLock*/
 
 #if XSTAT_FS_CALLBACK_VERBOSE
@@ -349,10 +335,8 @@ afs_int32 SRXAFSCB_GetLock(rxcall, index, lock)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_XStatsVersion(rxcall, versionNumberP)
-    struct rx_call *rxcall;
-    afs_int32 *versionNumberP;
-
+afs_int32 SRXAFSCB_XStatsVersion(struct rx_call *rxcall,
+				 afs_int32 *versionNumberP)
 { /*SRXAFSCB_XStatsVersion*/
 
 #if XSTAT_FS_CALLBACK_VERBOSE
@@ -395,13 +379,12 @@ afs_int32 SRXAFSCB_XStatsVersion(rxcall, versionNumberP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetXStats(rxcall, clientVN, collN, srvVNP, timeP, dataP)
-    struct rx_call *rxcall;
-    afs_int32 clientVN;
-    afs_int32 collN;
-    afs_int32 *srvVNP;
-    afs_int32 *timeP;
-    AFSCB_CollData *dataP;
+afs_int32 SRXAFSCB_GetXStats(struct rx_call *rxcall,
+			     afs_int32 clientVN,
+			     afs_int32 collN,
+			     afs_int32 *srvVNP,
+			     afs_int32 *timeP,
+			     AFSCB_CollData *dataP)
 
 { /*SRXAFSCB_GetXStats*/
 
@@ -443,9 +426,8 @@ afs_int32 SRXAFSCB_GetXStats(rxcall, clientVN, collN, srvVNP, timeP, dataP)
  *      None
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_InitCallBackState2(rxcall, addr)
-struct rx_call *rxcall;
-struct interfaceAddr * addr;
+afs_int32 SRXAFSCB_InitCallBackState2(struct rx_call *rxcall,
+				      struct interfaceAddr * addr)
 {
 
 #if FSPROBE_CALLBACK_VERBOSE
@@ -488,9 +470,8 @@ struct interfaceAddr * addr;
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_WhoAreYou(rxcall, addr)
-struct rx_call *rxcall;
-struct interfaceAddr *addr;
+afs_int32 SRXAFSCB_WhoAreYou(struct rx_call *rxcall, 
+			     struct interfaceAddr *addr)
 {
     int i;
     int code = 0;
@@ -543,9 +524,8 @@ struct interfaceAddr *addr;
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_InitCallBackState3(rxcall, uuidp)
-struct rx_call *rxcall;
-afsUUID *uuidp;
+afs_int32 SRXAFSCB_InitCallBackState3(struct rx_call *rxcall,
+				      afsUUID *uuidp)
 {
 #if FSPROBE_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_InitCallBackState2";	/*Routine name*/
@@ -591,9 +571,7 @@ afsUUID *uuidp;
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_ProbeUuid(rxcall, uuidp)
-struct rx_call *rxcall;
-afsUUID *uuidp;
+afs_int32 SRXAFSCB_ProbeUuid(struct rx_call *rxcall, afsUUID *uuidp)
 {
     int code = 0;
 
@@ -786,4 +764,3 @@ afs_int32 SRXAFSCB_TellMeAboutYourself(struct rx_call *rxcall,
      */
     return(0);
 }
-
