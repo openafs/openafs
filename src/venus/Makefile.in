@@ -106,6 +106,7 @@ ${DEST}/etc/kdump: kdump
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*linux* ) \
+		${INSTALLex} -f kdump.sh.linux $@; \
 		${INSTALL} -s kdump-${LINUX_VERSION} ${DEST}/etc/kdump-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
