@@ -25,16 +25,16 @@ extern "C" {
  */
 
 rwWindowData awdMachinesTab[] = {
-    { IDC_MACHINES_TITLE, raRepaint | raSizeX },
-    { IDC_ADVANCED, raMoveX },
-    { IDC_MACHINES_PATTERN, raMoveX },
-    { IDC_MACHINES_PATTERN_PROMPT, raRepaint | raMoveX },
-    { IDC_MACHINES_LIST, raSizeX | raSizeY },
-    { M_MACHINE_CREATE, raMoveX | raMoveY },
-    { M_MEMBERSHIP, raMoveX | raMoveY },
-    { M_PROPERTIES, raMoveX | raMoveY },
-    { IDC_STATIC, raRepaint },
-    { idENDLIST, 0 }
+    { IDC_MACHINES_TITLE, raRepaint | raSizeX,		0,	0 },
+    { IDC_ADVANCED, raMoveX,				0,	0 },
+    { IDC_MACHINES_PATTERN, raMoveX,			0,	0 },
+    { IDC_MACHINES_PATTERN_PROMPT, raRepaint | raMoveX,	0,	0 },
+    { IDC_MACHINES_LIST, raSizeX | raSizeY,		0,	0 },
+    { M_MACHINE_CREATE, raMoveX | raMoveY,		0,	0 },
+    { M_MEMBERSHIP, raMoveX | raMoveY,			0,	0 },
+    { M_PROPERTIES, raMoveX | raMoveY,			0,	0 },
+    { IDC_STATIC, raRepaint,				0,	0 },
+    { idENDLIST, 0,					0,	0 }
  };
 
 

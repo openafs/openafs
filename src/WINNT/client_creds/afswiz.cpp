@@ -75,12 +75,12 @@ typedef enum
    } WIZSTEP;
 
 static WIZARD_STATE aStates[] = {
-   { STEP_START,     IDD_WIZ_START,     WizStart_DlgProc     },
-   { STEP_STARTING,  IDD_WIZ_STARTING,  WizStarting_DlgProc  },
-   { STEP_CREDS,     IDD_WIZ_CREDS,     WizCreds_DlgProc     },
-   { STEP_MOUNT,     IDD_WIZ_MOUNT,     WizMount_DlgProc     },
-   { STEP_MOUNTING,  IDD_WIZ_MOUNTING,  WizMounting_DlgProc  },
-   { STEP_FINISH,    IDD_WIZ_FINISH,    WizFinish_DlgProc    },
+   { STEP_START,     IDD_WIZ_START,     WizStart_DlgProc,	0 },
+   { STEP_STARTING,  IDD_WIZ_STARTING,  WizStarting_DlgProc,	0 },
+   { STEP_CREDS,     IDD_WIZ_CREDS,     WizCreds_DlgProc,	0 },
+   { STEP_MOUNT,     IDD_WIZ_MOUNT,     WizMount_DlgProc,	0 },
+   { STEP_MOUNTING,  IDD_WIZ_MOUNTING,  WizMounting_DlgProc,	0 },
+   { STEP_FINISH,    IDD_WIZ_FINISH,    WizFinish_DlgProc,	0 }
 };
 
 static const int cStates = sizeof(aStates) / sizeof(aStates[0]);

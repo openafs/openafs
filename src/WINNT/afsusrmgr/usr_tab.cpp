@@ -26,16 +26,16 @@ extern "C" {
  */
 
 rwWindowData awdUsersTab[] = {
-    { IDC_USERS_TITLE, raRepaint | raSizeX },
-    { IDC_ADVANCED, raMoveX },
-    { IDC_USERS_PATTERN, raMoveX },
-    { IDC_USERS_PATTERN_PROMPT, raRepaint | raMoveX },
-    { IDC_USERS_LIST, raSizeX | raSizeY },
-    { M_USER_CREATE, raMoveX | raMoveY },
-    { M_MEMBERSHIP, raMoveX | raMoveY },
-    { M_PROPERTIES, raMoveX | raMoveY },
-    { IDC_STATIC, raRepaint },
-    { idENDLIST, 0 }
+    { IDC_USERS_TITLE, raRepaint | raSizeX,		0,	0 },
+    { IDC_ADVANCED, raMoveX,				0,	0 },
+    { IDC_USERS_PATTERN, raMoveX,			0,	0 },
+    { IDC_USERS_PATTERN_PROMPT, raRepaint | raMoveX,	0,	0 },
+    { IDC_USERS_LIST, raSizeX | raSizeY,		0,	0 },
+    { M_USER_CREATE, raMoveX | raMoveY,			0,	0 },
+    { M_MEMBERSHIP, raMoveX | raMoveY,			0,	0 },
+    { M_PROPERTIES, raMoveX | raMoveY,			0,	0 },
+    { IDC_STATIC, raRepaint,				0,	0 },
+    { idENDLIST, 0,					0,	0 }
  };
 
 

@@ -40,16 +40,16 @@ static TCHAR szDrive[4];
 static TCHAR szSize[32];
 
 static rwWindowData arwDialog[] = {
-	{ IDC_TITLE,			raSizeX | raRepaint },
-	{ IDC_DRIVE_LIST,		raSizeX | raSizeY, MAKELONG(350, 150) },
-	{ IDC_ARGS_FRAME,		raSizeX | raMoveY },
-	{ IDC_NAME_STATIC,		raMoveY | raRepaint },
-	{ IDC_VICEP_STATIC,		raMoveY | raRepaint },
-	{ IDC_PARTITION_NAME,	raMoveY | raRepaint },
-	{ IDC_CREATE,			raMoveX | raMoveY },
-	{ IDC_CLOSE,			raMoveX | raMoveY },
-	{ 9,					raMoveX | raMoveY },
-	{ idENDLIST,			0 }
+	{ IDC_TITLE,		raSizeX | raRepaint,	0,	0 },
+	{ IDC_DRIVE_LIST,	raSizeX | raSizeY, 	MAKELONG(350, 150), 0 },
+	{ IDC_ARGS_FRAME,	raSizeX | raMoveY,	0,	0 },
+	{ IDC_NAME_STATIC,	raMoveY | raRepaint,	0,	0 },
+	{ IDC_VICEP_STATIC,	raMoveY | raRepaint,	0,	0 },
+	{ IDC_PARTITION_NAME,	raMoveY | raRepaint,	0,	0 },
+	{ IDC_CREATE,		raMoveX | raMoveY,	0,	0 },
+	{ IDC_CLOSE,		raMoveX | raMoveY,	0,	0 },
+	{ 9,			raMoveX | raMoveY,	0,	0 },
+	{ idENDLIST,		0,			0,	0 }
 };
 
 

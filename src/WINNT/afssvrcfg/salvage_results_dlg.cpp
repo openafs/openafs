@@ -29,10 +29,10 @@ static const int     EDIT_CONTROL_MAX_CHARS = 64000;            // Max chars an 
 static const char   *SALVAGE_LOG_FILE_NAME  = "SalvageLog.txt";
 
 static rwWindowData arwDialog[] = {
-	{ IDC_LOG,				raSizeX | raSizeY, MAKELONG(350, 150) },
-	{ IDC_CLOSE,			raMoveX | raMoveY },
-	{ 9,					raMoveX | raMoveY },
-	{ idENDLIST,			0 }
+	{ IDC_LOG,	raSizeX | raSizeY,	MAKELONG(350, 150), 0 },
+	{ IDC_CLOSE,	raMoveX | raMoveY,	0,	0 },
+	{ 9,		raMoveX | raMoveY,	0,	0 },
+	{ idENDLIST,	0,			0,	0 }
 };
 
 

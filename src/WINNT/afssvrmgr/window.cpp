@@ -47,48 +47,48 @@ extern "C" {
 #define cyMIN_WINDOW  120
 
 rwWindowData awdMain[] = {
-    { IDC_CELL_BORDER, raSizeX             },
-    { IDC_CELL,        raSizeX | raRepaint },
-    { IDC_AFS_ID,      raSizeX | raRepaint },
-    { IDC_SERVERS,     raSizeX | raSizeY,  MAKELONG(cxMIN_SERVER,cyMIN_SERVER) },
-    { IDC_COVERDLG,    raSizeX | raSizeY   },
-    { IDC_ANIMATE,     raMoveX             },
-    { idENDLIST,       0                   }
+    { IDC_CELL_BORDER, raSizeX,			0,	0 },
+    { IDC_CELL,        raSizeX | raRepaint,	0,	0 },
+    { IDC_AFS_ID,      raSizeX | raRepaint,	0,	0 },
+    { IDC_SERVERS,     raSizeX | raSizeY,  	MAKELONG(cxMIN_SERVER,cyMIN_SERVER), 0 },
+    { IDC_COVERDLG,    raSizeX | raSizeY,	0,	0 },
+    { IDC_ANIMATE,     raMoveX,			0,	0 },
+    { idENDLIST,       0,			0,	0 }
  };
 
 rwWindowData awdMainVert[] = {
-    { IDC_CELL_BORDER,     raSizeX                       },
-    { IDC_CELL,            raSizeX | raRepaint           },
-    { IDC_AFS_ID,          raSizeX | raRepaint           },
-    { IDC_SERVERS,         raSizeX, MAKELONG(cxMIN_SERVER,cyMIN_SERVER) },
-    { IDC_SPLITTER_SERVER, raSizeX                       },
-    { IDC_TABS,            raSizeX | raSizeY, MAKELONG(cxMIN_TABS,cyMIN_TABS) },
-    { IDC_COVERDLG,        raSizeX                       },
-    { IDC_ANIMATE,         raMoveX                       },
-    { idENDLIST,           0                             }
+    { IDC_CELL_BORDER,     raSizeX,		0,	0 },
+    { IDC_CELL,            raSizeX | raRepaint,	0,	0 },
+    { IDC_AFS_ID,          raSizeX | raRepaint,	0,	0 },
+    { IDC_SERVERS,         raSizeX, 		MAKELONG(cxMIN_SERVER,cyMIN_SERVER), 0 },
+    { IDC_SPLITTER_SERVER, raSizeX,		0,	0 },
+    { IDC_TABS,            raSizeX | raSizeY, MAKELONG(cxMIN_TABS,cyMIN_TABS), 0 },
+    { IDC_COVERDLG,        raSizeX,             0,	0 },
+    { IDC_ANIMATE,         raMoveX,             0,	0 },
+    { idENDLIST,           0,			0,	0  }
  };
 
 rwWindowData awdMainHorz[] = {
-    { IDC_CELL_BORDER,     raSizeX                       },
-    { IDC_CELL,            raSizeX  | raRepaint          },
-    { IDC_AFS_ID,          raSizeX  | raRepaint          },
-    { IDC_SERVERS,         raSizeY, MAKELONG(cxMIN_SERVER,cyMIN_SERVER) },
-    { IDC_SPLITTER_SERVER, raSizeY                       },
-    { IDC_TABS,            raSizeX | raSizeY, MAKELONG(cxMIN_TABS,cyMIN_TABS) },
-    { IDC_COVERDLG,        raSizeY                       },
-    { IDC_ANIMATE,         raMoveX                       },
-    { idENDLIST,           0                             }
+    { IDC_CELL_BORDER,     raSizeX,			0,	0 },
+    { IDC_CELL,            raSizeX  | raRepaint,	0,	0 },
+    { IDC_AFS_ID,          raSizeX  | raRepaint,	0,	0 },
+    { IDC_SERVERS,         raSizeY, 			MAKELONG(cxMIN_SERVER,cyMIN_SERVER), 0 },
+    { IDC_SPLITTER_SERVER, raSizeY,			0,	0 },
+    { IDC_TABS,            raSizeX | raSizeY, 		MAKELONG(cxMIN_TABS,cyMIN_TABS), 0 },
+    { IDC_COVERDLG,        raSizeY,			0,	0 },
+    { IDC_ANIMATE,         raMoveX,			0,	0 },
+    { idENDLIST,           0,				0,	0 }
  };
 
 rwWindowData awdSplitServer[] = {
-    { IDC_CELL,            raRepaint },
-    { IDC_AFS_ID,          raRepaint },
-    { IDC_SERVERS,         raSizeX | raSizeY,  MAKELONG(cxMIN_SERVER,cyMIN_SERVER) },
-    { IDC_SPLITTER_SERVER, raMoveX | raMoveY },
-    { IDC_TABS,            raMoveX | raMoveY | raSizeXB | raSizeYB, MAKELONG(cxMIN_TABS,cyMIN_TABS) },
-    { IDC_COVERDLG,        raSizeX | raSizeY },
-    { IDC_ANIMATE,         0  },
-    { idENDLIST,           0  }
+    { IDC_CELL,            raRepaint,			0,	0 },
+    { IDC_AFS_ID,          raRepaint,			0,	0 },
+    { IDC_SERVERS,         raSizeX | raSizeY,		MAKELONG(cxMIN_SERVER,cyMIN_SERVER), 0 },
+    { IDC_SPLITTER_SERVER, raMoveX | raMoveY,		0,	0 },
+    { IDC_TABS,            raMoveX | raMoveY | raSizeXB | raSizeYB, MAKELONG(cxMIN_TABS,cyMIN_TABS), 0 },
+    { IDC_COVERDLG,        raSizeX | raSizeY,		0,	0 },
+    { IDC_ANIMATE,         0,				0,	0 },
+    { idENDLIST,           0,				0,	0 }
  };
 
 

@@ -55,9 +55,9 @@ static struct
    }
 COLUMNS[] =
    {
-      { IDS_COL_USERS,        FALSE  },  // ceUSERS
-      { IDS_COL_GROUPS,       FALSE  },  // ceGROUPS
-      { IDS_COL_MACHINES,     FALSE  },  // ceMACHINES
+      { IDS_COL_USERS,        FALSE,	{0},	FALSE },  // ceUSERS
+      { IDS_COL_GROUPS,       FALSE,	{0},	FALSE },  // ceGROUPS
+      { IDS_COL_MACHINES,     FALSE,	{0},	FALSE },  // ceMACHINES
    };
 
 #define nCOLUMNS (sizeof(COLUMNS)/sizeof(COLUMNS[0]))

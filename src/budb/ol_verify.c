@@ -148,6 +148,7 @@ int blockEntrySize[NBLOCKTYPES] = {
     sizeof(((struct tBlock *) NULL)->a[0]),
     sizeof(((struct dBlock *) NULL)->a[0]),
     0
+    /* FIXME: possible missing initializer here */
 };
 
 char *typeName[NBLOCKTYPES] = {
@@ -157,6 +158,7 @@ char *typeName[NBLOCKTYPES] = {
     "tape",
     "dump",
     "hashTable"
+    /* FIXME: possible missing initializer here */
 };
 
 int hashBlockType[HT_MAX_FUNCTION + 1] = {
@@ -165,6 +167,7 @@ int hashBlockType[HT_MAX_FUNCTION + 1] = {
     dump_BLOCK,
     tape_BLOCK,
     volInfo_BLOCK
+    /* FIXME: possible missing initializer here */
 };
 
 /* Compatibility table for the bits in the blockMap. */

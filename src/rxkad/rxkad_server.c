@@ -59,6 +59,9 @@ static struct rx_securityOps rxkad_server_ops = {
     rxkad_CheckPacket,		/* check data packet */
     rxkad_DestroyConnection,
     rxkad_GetStats,
+	0, /* spare 1 */
+	0, /* spare 2 */
+	0, /* spare 3 */
 };
 extern afs_uint32 rx_MyMaxSendSize;
 
