@@ -2941,27 +2941,29 @@ static void ReSortCells(s,l, vlonly)
   register int  k;
 
   if (vlonly) {
-     struct cell *tcell;
-     for(k=0;k<s;k++) {
-        tcell = afs_GetCell(l[k], WRITE_LOCK);
-	if (!tcell) continue;
-	afs_SortServers(tcell->cellHosts, MAXCELLHOSTS);
-	afs_PutCell(tcell, WRITE_LOCK);
-     }
-     return;
+      struct cell *tcell;
+      ObtainWriteLock(&afs_xcell,300);
+      for(k=0;k<s;k++) {
+	  tcell = afs_GetCellNoLock(l[k], WRITE_LOCK);
+	  if (!tcell) continue;
+	  afs_SortServers(tcell->cellHosts, MAXCELLHOSTS);
+	  afs_PutCell(tcell, WRITE_LOCK);
+      }
+      ReleaseWriteLock(&afs_xcell);
+      return;
   }
 
   ObtainReadLock(&afs_xvolume);
   for (i= 0; i< NVOLS; i++) {
-     for (j=afs_volumes[i];j;j=j->next) {
-        for (k=0;k<s;k++)
-	   if (j->cell == l[k]) {
-	      ObtainWriteLock(&j->lock,233);
-	      afs_SortServers(j->serverHost, MAXHOSTS);
-	      ReleaseWriteLock(&j->lock);
-	      break; 
-	   }
-     }
+      for (j=afs_volumes[i];j;j=j->next) {
+	  for (k=0;k<s;k++)
+	      if (j->cell == l[k]) {
+		  ObtainWriteLock(&j->lock,233);
+		  afs_SortServers(j->serverHost, MAXHOSTS);
+		  ReleaseWriteLock(&j->lock);
+		  break; 
+	      }
+      }
   }
   ReleaseReadLock(&afs_xvolume);
 }

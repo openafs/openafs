@@ -968,6 +968,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 #define	FVHash(acell,avol)  (((avol)+(acell)) & (NFENTRIES-1))
 
 extern struct cell	    *afs_GetCell();
+extern struct cell	    *afs_GetCellNoLock();
 extern struct cell	    *afs_GetCellByName();
 extern struct cell	    *afs_GetCellByName2();
 extern struct cell	    *afs_GetCellByIndex();
