@@ -10,9 +10,9 @@
 #ifndef __CONFIG_H_ENV_
 #define __CONFIG_H_ENV_ 1
 
-#define CM_CONFIGDEFAULT_CACHESIZE	20480
+#define CM_CONFIGDEFAULT_CACHESIZE	98304
 #define CM_CONFIGDEFAULT_BLOCKSIZE	4096
-#define CM_CONFIGDEFAULT_STATS		1000
+#define CM_CONFIGDEFAULT_STATS		10000
 #define CM_CONFIGDEFAULT_CHUNKSIZE	17
 #define CM_CONFIGDEFAULT_DAEMONS	2
 #define CM_CONFIGDEFAULT_SVTHREADS	25
@@ -24,8 +24,6 @@
 #ifdef DJGPP
 #include <netinet/in.h>
 #endif /* DJGPP */
-
-extern char AFSConfigKeyName[];
 
 typedef FILE cm_configFile_t;
 

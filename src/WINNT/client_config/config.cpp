@@ -13,6 +13,7 @@ extern "C" {
 }
 
 #include "afs_config.h"
+#include <WINNT\afsreg.h>
 
 extern "C" {
 
@@ -83,25 +84,25 @@ DWORD Config_GetServiceState (void)
 
 void Config_GetGatewayFlag (BOOL *pfFlag)
 {
-   if (!Config_ReadGlobalNum (TEXT("IsGateway"), (DWORD*)pfFlag))
-      *pfFlag = FALSE;
+    if (!Config_ReadGlobalNum (TEXT("IsGateway"), (DWORD*)pfFlag))
+        *pfFlag = FALSE;
 }
 
 
 BOOL Config_SetGatewayFlag (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("IsGateway"), fFlag);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("IsGateway"), fFlag);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 void Config_GetGatewayName (LPTSTR pszName)
 {
-   if (!Config_ReadGlobalString (TEXT("Gateway"), pszName, MAX_PATH))
-      GetString (pszName, IDS_GATEWAY_UNKNOWN);
-   else if (!*pszName)
-      GetString (pszName, IDS_GATEWAY_UNKNOWN);
+    if (!Config_ReadGlobalString (TEXT("Gateway"), pszName, MAX_PATH))
+        GetString (pszName, IDS_GATEWAY_UNKNOWN);
+    else if (!*pszName)
+        GetString (pszName, IDS_GATEWAY_UNKNOWN);
 }
 
 
@@ -513,158 +514,126 @@ void Config_FreeServerPrefs (PSERVERPREFS pPrefs)
 
 void Config_GetCacheSize (ULONG *pckCache)
 {
-   if (!Config_ReadGlobalNum (TEXT("CacheSize"), (DWORD*)pckCache))
-      *pckCache = CM_CONFIGDEFAULT_CACHESIZE;
+    if (!Config_ReadGlobalNum (TEXT("CacheSize"), (DWORD*)pckCache))
+        *pckCache = CM_CONFIGDEFAULT_CACHESIZE;
 }
 
 
 BOOL Config_SetCacheSize (ULONG ckCache, ULONG *pStatus)
 {
-   BOOL rc = TRUE;
-   ULONG status = 0;
-
-   if (Config_GetServiceState() == SERVICE_RUNNING)
-      {
-      ULONG ckCacheNow;
-      Config_GetCacheSize (&ckCacheNow);
-      if (ckCacheNow > ckCache)
-         {
-         Message (MB_ICONHAND, GetErrorTitle(), IDS_SHRINKCACHE);
-         return FALSE;
-         }
-
-      struct ViceIoctl IOInfo;
-      IOInfo.in_size = sizeof(ULONG);
-      IOInfo.in = (char *)&ckCache;
-      IOInfo.out = (char *)0;
-      IOInfo.out_size = 0;
-
-      if ((status = pioctl (0, VIOCSETCACHESIZE, &IOInfo, 1)) != 0)
-         {
-         rc = FALSE;
-         }
-      }
-
-   if (rc)
-      {
-      Config_WriteGlobalNum (TEXT("CacheSize"), ckCache);
-      }
-
-   if (pStatus && !rc)
-      *pStatus = status;
-   if (!rc)
-      Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_CACHE, TEXT("%ld"), status);
-   return rc;
+    Config_WriteGlobalNum (TEXT("CacheSize"), ckCache);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 
 void Config_GetChunkSize (ULONG *pckChunk)
 {
-   if (!Config_ReadGlobalNum (TEXT("ChunkSize"), (DWORD*)pckChunk))
-      *pckChunk = CM_CONFIGDEFAULT_CHUNKSIZE;
-   *pckChunk = max (*pckChunk, 10);
-   *pckChunk = (1 << ((*pckChunk)-10));
+    if (!Config_ReadGlobalNum (TEXT("ChunkSize"), (DWORD*)pckChunk))
+        *pckChunk = CM_CONFIGDEFAULT_CHUNKSIZE;
+    *pckChunk = max (*pckChunk, 10);
+    *pckChunk = (1 << ((*pckChunk)-10));
 }
 
 
 BOOL Config_SetChunkSize (ULONG ckChunk, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("ChunkSize"), log2(ckChunk * 1024));
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("ChunkSize"), log2(ckChunk * 1024));
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 
 void Config_GetStatEntries (ULONG *pcEntries)
 {
-   if (!Config_ReadGlobalNum (TEXT("Stats"), (DWORD*)pcEntries))
-      *pcEntries = CM_CONFIGDEFAULT_STATS;
+    if (!Config_ReadGlobalNum (TEXT("Stats"), (DWORD*)pcEntries))
+        *pcEntries = CM_CONFIGDEFAULT_STATS;
 }
 
 
 BOOL Config_SetStatEntries (ULONG cEntries, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("Stats"), cEntries);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("Stats"), cEntries);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 
 void Config_GetProbeInt (ULONG *pcsecProbe)
 {
-   *pcsecProbe = 30;
-   // TODO: NEED REGISTRY SETTING
+    *pcsecProbe = 30;
+    // TODO: NEED REGISTRY SETTING
 }
 
 
 BOOL Config_SetProbeInt (ULONG csecProbe, ULONG *pStatus)
 {
-   BOOL rc = TRUE;
-   ULONG status = 0;
+    BOOL rc = TRUE;
+    ULONG status = 0;
 
-   // TODO: NEED REGISTRY SETTING
-   if (Config_GetServiceState() == SERVICE_RUNNING)
-      {
-      struct chservinfo checkserv;
-      memset (&checkserv, 0x00, sizeof(checkserv));
-      checkserv.magic = 0x12345678;
-      checkserv.tinterval = csecProbe;
+    // TODO: NEED REGISTRY SETTING
+    if (Config_GetServiceState() == SERVICE_RUNNING)
+    {
+        struct chservinfo checkserv;
+        memset (&checkserv, 0x00, sizeof(checkserv));
+        checkserv.magic = 0x12345678;
+        checkserv.tinterval = csecProbe;
 
-      BYTE OutData[ PIOCTL_MAXSIZE ];
-      memset (OutData, 0x00, sizeof(OutData));
+        BYTE OutData[ PIOCTL_MAXSIZE ];
+        memset (OutData, 0x00, sizeof(OutData));
 
-      struct ViceIoctl IOInfo;
-      IOInfo.in_size = sizeof(checkserv);
-      IOInfo.in = (char *)&checkserv;
-      IOInfo.out = (char *)OutData;
-      IOInfo.out_size = PIOCTL_MAXSIZE;
+        struct ViceIoctl IOInfo;
+        IOInfo.in_size = sizeof(checkserv);
+        IOInfo.in = (char *)&checkserv;
+        IOInfo.out = (char *)OutData;
+        IOInfo.out_size = PIOCTL_MAXSIZE;
 
-      if ((status = pioctl (0, VIOCCKSERV, &IOInfo, 1)) != 0)
-         {
-         rc = FALSE;
-         }
-      }
+        if ((status = pioctl (0, VIOCCKSERV, &IOInfo, 1)) != 0)
+        {
+            rc = FALSE;
+        }
+    }
 
-   if (pStatus && !rc)
-      *pStatus = status;
-   if (!rc)
-      Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_PROBE, TEXT("%ld"), status);
-   return rc;
+    if (pStatus && !rc)
+        *pStatus = status;
+    if (!rc)
+        Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_PROBE, TEXT("%ld"), status);
+    return rc;
 }
 
 
 
 void Config_GetNumThreads (ULONG *pcThreads)
 {
-   if (!Config_ReadGlobalNum (TEXT("ServerThreads"), (DWORD*)pcThreads))
-      *pcThreads = CM_CONFIGDEFAULT_SVTHREADS;
+    if (!Config_ReadGlobalNum (TEXT("ServerThreads"), (DWORD*)pcThreads))
+        *pcThreads = CM_CONFIGDEFAULT_SVTHREADS;
 }
 
 
 BOOL Config_SetNumThreads (ULONG cThreads, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("ServerThreads"), cThreads);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("ServerThreads"), cThreads);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 
 void Config_GetNumDaemons (ULONG *pcDaemons)
 {
-   if (!Config_ReadGlobalNum (TEXT("Daemons"), (DWORD*)pcDaemons))
-      *pcDaemons = CM_CONFIGDEFAULT_DAEMONS;
+    if (!Config_ReadGlobalNum (TEXT("Daemons"), (DWORD*)pcDaemons))
+        *pcDaemons = CM_CONFIGDEFAULT_DAEMONS;
 }
 
 
 BOOL Config_SetNumDaemons (ULONG cDaemons, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("Daemons"), cDaemons);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("Daemons"), cDaemons);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
@@ -738,164 +707,164 @@ BOOL Config_SetSysName (LPCTSTR pszName, ULONG *pStatus)
 
 void Config_GetRootVolume (LPTSTR pszName)
 {
-   if (!Config_ReadGlobalString (TEXT("RootVolume"), pszName, MAX_PATH))
-      lstrcpy (pszName, TEXT("root.afs"));
+    if (!Config_ReadGlobalString (TEXT("RootVolume"), pszName, MAX_PATH))
+        lstrcpy (pszName, TEXT("root.afs"));
 }
 
 
 BOOL Config_SetRootVolume (LPCTSTR pszName, ULONG *pStatus)
 {
-   Config_WriteGlobalString (TEXT("RootVolume"), pszName);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalString (TEXT("RootVolume"), pszName);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 
 void Config_GetMountRoot (LPTSTR pszPath)
 {
-   if (!Config_ReadGlobalString (TEXT("MountRoot"), pszPath, MAX_PATH))
-      lstrcpy (pszPath, TEXT("/afs"));
+    if (!Config_ReadGlobalString (TEXT("MountRoot"), pszPath, MAX_PATH))
+        lstrcpy (pszPath, TEXT("/afs"));
 }
 
 
 BOOL Config_SetMountRoot (LPCTSTR pszPath, ULONG *pStatus)
 {
-   Config_WriteGlobalString (TEXT("MountRoot"), pszPath);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalString (TEXT("MountRoot"), pszPath);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 
 BOOL Config_GetCacheInUse (ULONG *pckCacheInUse, ULONG *pStatus)
 {
-   BOOL rc = TRUE;
-   ULONG status = 0;
+    BOOL rc = TRUE;
+    ULONG status = 0;
 
-   *pckCacheInUse = 0;
+    *pckCacheInUse = 0;
 
-   if (Config_GetServiceState() != SERVICE_RUNNING)
-      {
-      rc = FALSE;
-      status = ERROR_SERVICE_NOT_ACTIVE;
-      }
-   else
-      {
-      BYTE OutData[ PIOCTL_MAXSIZE ];
-      memset (OutData, 0x00, sizeof(OutData));
+    if (Config_GetServiceState() != SERVICE_RUNNING)
+    {
+        rc = FALSE;
+        status = ERROR_SERVICE_NOT_ACTIVE;
+    }
+    else
+    {
+        BYTE OutData[ PIOCTL_MAXSIZE ];
+        memset (OutData, 0x00, sizeof(OutData));
 
-      struct ViceIoctl IOInfo;
-      IOInfo.in_size = 0;
-      IOInfo.in = (char *)0;
-      IOInfo.out = (char *)OutData;
-      IOInfo.out_size = PIOCTL_MAXSIZE;
+        struct ViceIoctl IOInfo;
+        IOInfo.in_size = 0;
+        IOInfo.in = (char *)0;
+        IOInfo.out = (char *)OutData;
+        IOInfo.out_size = PIOCTL_MAXSIZE;
 
-      if ((status = pioctl (0, VIOCGETCACHEPARMS, &IOInfo, 1)) != 0)
-         {
-         rc = FALSE;
-         }
-      else
-         {
-         *pckCacheInUse = ((LONG*)OutData)[1];
-         }
-      }
+        if ((status = pioctl (0, VIOCGETCACHEPARMS, &IOInfo, 1)) != 0)
+        {
+            rc = FALSE;
+        }
+        else
+        {
+            *pckCacheInUse = ((LONG*)OutData)[1];
+        }
+    }
 
-   if (pStatus && !rc)
-      *pStatus = status;
-   return rc;
+    if (pStatus && !rc)
+        *pStatus = status;
+    return rc;
 }
 
 void Config_GetCachePath (LPTSTR pszCachePath)
 {
-   if (!Config_ReadGlobalString (TEXT("CachePath"), pszCachePath, MAX_PATH)) {
-      TCHAR szPath[MAX_PATH];
-      GetWindowsDirectory(szPath, sizeof(szPath));
-		szPath[2] = 0;	/* get drive letter only */
-		strcat(szPath, "\\AFSCache");
+    if (!Config_ReadGlobalString (TEXT("CachePath"), pszCachePath, MAX_PATH)) {
+        TCHAR szPath[MAX_PATH];
+        GetWindowsDirectory(szPath, sizeof(szPath));
+        szPath[2] = 0;	/* get drive letter only */
+        strcat(szPath, "\\AFSCache");
 
-      lstrcpy (pszCachePath, szPath);
-   }
+        lstrcpy (pszCachePath, szPath);
+    }
 }        
 
 BOOL Config_SetCachePath(LPCTSTR pszPath, ULONG *pStatus)
 {
-   Config_WriteGlobalString (TEXT("CachePath"), pszPath);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalString (TEXT("CachePath"), pszPath);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 void Config_GetLanAdapter (ULONG *pnLanAdapter)
 {
-   if (!Config_ReadGlobalNum (TEXT("LANadapter"), (DWORD*)pnLanAdapter))
-      *pnLanAdapter = -1;
+    if (!Config_ReadGlobalNum (TEXT("LANadapter"), (DWORD*)pnLanAdapter))
+        *pnLanAdapter = -1;
 }
 
 BOOL Config_SetLanAdapter (ULONG nLanAdapter, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("LANadapter"), nLanAdapter);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("LANadapter"), nLanAdapter);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 void Config_GetTrapOnPanic (BOOL *pfFlag)
 {
-   if (!Config_ReadGlobalNum (TEXT("TrapOnPanic"), (DWORD*)pfFlag))
-      *pfFlag = TRUE;
+    if (!Config_ReadGlobalNum (TEXT("TrapOnPanic"), (DWORD*)pfFlag))
+        *pfFlag = TRUE;
 }
 
 BOOL Config_SetTrapOnPanic (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("TrapOnPanic"), fFlag);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("TrapOnPanic"), fFlag);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 void Config_GetTraceBufferSize (ULONG *pnBufSize)
 {
-   if (!Config_ReadGlobalNum (TEXT("TraceBufferSize"), (DWORD*)pnBufSize))
-      *pnBufSize = 5000;
+    if (!Config_ReadGlobalNum (TEXT("TraceBufferSize"), (DWORD*)pnBufSize))
+        *pnBufSize = 5000;
 }
 
 BOOL Config_SetTraceBufferSize (ULONG nBufSize, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("TraceBufferSize"), nBufSize);
-   g.fNeedRestart = TRUE;
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("TraceBufferSize"), nBufSize);
+    g.fNeedRestart = TRUE;
+    return TRUE;
 }
 
 void Config_GetLoginRetryInterval (ULONG *pnInterval)
 {
-   if (!Config_ReadGlobalNum (TEXT("LoginRetryInterval"), (DWORD*)pnInterval))
-      *pnInterval = 30;
+    if (!Config_ReadGlobalNum (TEXT("LoginRetryInterval"), (DWORD*)pnInterval))
+        *pnInterval = 30;
 }
 
 BOOL Config_SetLoginRetryInterval (ULONG nInterval, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("LoginRetryInterval"), nInterval);
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("LoginRetryInterval"), nInterval);
+    return TRUE;
 }
 
 void Config_GetFailLoginsSilently (BOOL *pfFlag)
 {
-   if (!Config_ReadGlobalNum (TEXT("FailLoginsSilently"), (DWORD*)pfFlag))
-      *pfFlag = FALSE;
+    if (!Config_ReadGlobalNum (TEXT("FailLoginsSilently"), (DWORD*)pfFlag))
+        *pfFlag = FALSE;
 }
 
 BOOL Config_SetFailLoginsSilently (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("FailLoginsSilently"), fFlag);
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("FailLoginsSilently"), fFlag);
+    return TRUE;
 }
 
 void Config_GetReportSessionStartups (BOOL *pfFlag)
 {
-   if (!Config_ReadGlobalNum (TEXT("ReportSessionStartups"), (DWORD*)pfFlag))
-      *pfFlag = FALSE;
+    if (!Config_ReadGlobalNum (TEXT("ReportSessionStartups"), (DWORD*)pfFlag))
+        *pfFlag = FALSE;
 }
 
 BOOL Config_SetReportSessionStartups (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteGlobalNum (TEXT("ReportSessionStartups"), fFlag);
-   return TRUE;
+    Config_WriteGlobalNum (TEXT("ReportSessionStartups"), fFlag);
+    return TRUE;
 }
 

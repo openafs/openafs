@@ -14,6 +14,7 @@ extern "C" {
 
 #include <windows.h>
 #include <stdlib.h>
+#include <WINNT\afsreg.h>
 #include "pagesize.h"
 
 

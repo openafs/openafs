@@ -328,7 +328,7 @@ FindFE(register AFSFid * fid)
     for (fei = HashTable[hash]; fei; fei = fe->fnext) {
 	fe = itofe(fei);
 	if (fe->volid == fid->Volume && fe->unique == fid->Unique
-	    && fe->vnode == fid->Vnode && fe->status != FE_LATER)
+	    && fe->vnode == fid->Vnode && (fe->status & FE_LATER) != FE_LATER)
 	    return fe;
     }
     return 0;

@@ -36,39 +36,42 @@ int cm_bkgWaitingForCount;	/* true if someone's waiting for cm_bkgQueueCount to 
 cm_bkgRequest_t *cm_bkgListp;		/* first elt in the list of requests */
 cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
+static int daemon_ShutdownFlag = 0;
+
 void cm_BkgDaemon(long parm)
 {
-	cm_bkgRequest_t *rp;
+    cm_bkgRequest_t *rp;
 
-	lock_ObtainWrite(&cm_daemonLock);
-	while(1) {
-		if (!cm_bkgListEndp) {
-			osi_SleepW((long) &cm_bkgListp, &cm_daemonLock);
-                        lock_ObtainWrite(&cm_daemonLock);
-                        continue;
-                }
-                
-                /* we found a request */
-		rp = cm_bkgListEndp;
-                cm_bkgListEndp = (cm_bkgRequest_t *) osi_QPrev(&rp->q);
-                osi_QRemove((osi_queue_t **) &cm_bkgListp, &rp->q);
-                osi_assert(cm_bkgQueueCount-- > 0);
-                lock_ReleaseWrite(&cm_daemonLock);
-                
-                (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
-                
-                cm_ReleaseUser(rp->userp);
-                cm_ReleaseSCache(rp->scp);
-                free(rp);
-
-                lock_ObtainWrite(&cm_daemonLock);
+    lock_ObtainWrite(&cm_daemonLock);
+    while (daemon_ShutdownFlag == 0) {
+        if (!cm_bkgListEndp) {
+            osi_SleepW((long) &cm_bkgListp, &cm_daemonLock);
+            lock_ObtainWrite(&cm_daemonLock);
+            continue;
         }
+                
+        /* we found a request */
+        rp = cm_bkgListEndp;
+        cm_bkgListEndp = (cm_bkgRequest_t *) osi_QPrev(&rp->q);
+        osi_QRemove((osi_queue_t **) &cm_bkgListp, &rp->q);
+        osi_assert(cm_bkgQueueCount-- > 0);
+        lock_ReleaseWrite(&cm_daemonLock);
+
+        (*rp->procp)(rp->scp, rp->p1, rp->p2, rp->p3, rp->p4, rp->userp);
+                
+        cm_ReleaseUser(rp->userp);
+        cm_ReleaseSCache(rp->scp);
+        free(rp);
+
+        lock_ObtainWrite(&cm_daemonLock);
+    }
+    lock_ReleaseWrite(&cm_daemonLock);
 }
 
 void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2, long p3, long p4,
 	cm_user_t *userp)
 {
-	cm_bkgRequest_t *rp;
+    cm_bkgRequest_t *rp;
         
     rp = malloc(sizeof(*rp));
     memset(rp, 0, sizeof(*rp));
@@ -84,9 +87,10 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
     rp->p4 = p4;
 
     lock_ObtainWrite(&cm_daemonLock);
-	cm_bkgQueueCount++;
+    cm_bkgQueueCount++;
     osi_QAdd((osi_queue_t **) &cm_bkgListp, &rp->q);
-    if (!cm_bkgListEndp) cm_bkgListEndp = rp;
+    if (!cm_bkgListEndp) 
+        cm_bkgListEndp = rp;
     lock_ReleaseWrite(&cm_daemonLock);
 
     osi_Wakeup((long) &cm_bkgListp);
@@ -96,106 +100,113 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
 void cm_Daemon(long parm)
 {
     unsigned long now;
-	unsigned long lastLockCheck;
+    unsigned long lastLockCheck;
     unsigned long lastVolCheck;
     unsigned long lastCBExpirationCheck;
-	unsigned long lastDownServerCheck;
-	unsigned long lastUpServerCheck;
-	unsigned long lastTokenCacheCheck;
-	char thostName[200];
-	unsigned long code;
-	struct hostent *thp;
+    unsigned long lastDownServerCheck;
+    unsigned long lastUpServerCheck;
+    unsigned long lastTokenCacheCheck;
+    char thostName[200];
+    unsigned long code;
+    struct hostent *thp;
 
-	/* ping all file servers, up or down, with unauthenticated connection,
-         * to find out whether we have all our callbacks from the server still.
-         * Also, ping down VLDBs.
-         */
-	/*
-	 * Seed the random number generator with our own address, so that
-	 * clients starting at the same time don't all do vol checks at the
-	 * same time.
-	 */
-	gethostname(thostName, sizeof(thostName));
-	thp = gethostbyname(thostName);
-        if (thp == NULL)    /* In djgpp, gethostname returns the netbios
-                               name of the machine.  gethostbyname will fail
-                               looking this up if it differs from DNS name. */
-          code = 0;
-        else
-          memcpy(&code, thp->h_addr_list[0], 4);
-	srand(ntohl(code));
+    /* ping all file servers, up or down, with unauthenticated connection,
+     * to find out whether we have all our callbacks from the server still.
+     * Also, ping down VLDBs.
+     */
+    /*
+     * Seed the random number generator with our own address, so that
+     * clients starting at the same time don't all do vol checks at the
+     * same time.
+     */
+    gethostname(thostName, sizeof(thostName));
+    thp = gethostbyname(thostName);
+    if (thp == NULL)    /* In djgpp, gethostname returns the netbios
+                           name of the machine.  gethostbyname will fail
+                           looking this up if it differs from DNS name. */
+        code = 0;
+    else
+        memcpy(&code, thp->h_addr_list[0], 4);
+    srand(ntohl(code));
 
-	now = osi_Time();
-	lastVolCheck = now - 1800 + (rand() % 3600);
-        lastCBExpirationCheck = now - 60 + (rand() % 60);
-	lastLockCheck = now - 60 + (rand() % 60);
-	lastDownServerCheck = now - cm_daemonCheckInterval/2 + (rand() % cm_daemonCheckInterval);
-	lastUpServerCheck = now - 1800 + (rand() % 3600);
-	lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
-	
-        while (1) {
-		thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
-                
-		/* find out what time it is */
-		now = osi_Time();
+    now = osi_Time();
+    lastVolCheck = now - 1800 + (rand() % 3600);
+    lastCBExpirationCheck = now - 60 + (rand() % 60);
+    lastLockCheck = now - 60 + (rand() % 60);
+    lastDownServerCheck = now - cm_daemonCheckInterval/2 + (rand() % cm_daemonCheckInterval);
+    lastUpServerCheck = now - 1800 + (rand() % 3600);
+    lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 
-		/* check down servers */
-		if (now > lastDownServerCheck + cm_daemonCheckInterval) {
-			lastDownServerCheck = now;
-			cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-		}
+    while (daemon_ShutdownFlag == 0) {
+        thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
+        if (daemon_ShutdownFlag == 1)
+            return;
 
-		/* check up servers */
-		if (now > lastUpServerCheck + 3600) {
-			lastUpServerCheck = now;
-			cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
-		}
+        /* find out what time it is */
+        now = osi_Time();
 
-                if (now > lastVolCheck + 3600) {
-			lastVolCheck = now;
-                        cm_CheckVolumes();
-                }
-                
-                if (now > lastCBExpirationCheck + 60) {
-			lastCBExpirationCheck = now;
-                        cm_CheckCBExpiration();
-                }
-                
-                if (now > lastLockCheck + 60) {
-			lastLockCheck = now;
-                        cm_CheckLocks();
-                }
-
-		if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
-		        lastTokenCacheCheck = now;
-			cm_CheckTokenCache(now);
-		}
+        /* check down servers */
+        if (now > lastDownServerCheck + cm_daemonCheckInterval) {
+            lastDownServerCheck = now;
+            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
         }
+
+        /* check up servers */
+        if (now > lastUpServerCheck + 3600) {
+            lastUpServerCheck = now;
+            cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
+        }
+
+        if (now > lastVolCheck + 3600) {
+            lastVolCheck = now;
+            cm_CheckVolumes();
+        }
+
+        if (now > lastCBExpirationCheck + 60) {
+            lastCBExpirationCheck = now;
+            cm_CheckCBExpiration();
+        }
+
+        if (now > lastLockCheck + 60) {
+            lastLockCheck = now;
+            cm_CheckLocks();
+        }
+
+        if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval) {
+            lastTokenCacheCheck = now;
+            cm_CheckTokenCache(now);
+        }
+    }
+}       
+
+void cm_DaemonShutdown(void)
+{
+    daemon_ShutdownFlag = 1;
 }
 
 void cm_InitDaemon(int nDaemons)
 {
-	static osi_once_t once;
-        long pid;
-        thread_t phandle;
-        int i;
+    static osi_once_t once;
+    long pid;
+    thread_t phandle;
+    int i;
         
-        if (osi_Once(&once)) {
-		lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
-		osi_EndOnce(&once);
+    if (osi_Once(&once)) {
+        lock_InitializeRWLock(&cm_daemonLock, "cm_daemonLock");
+        osi_EndOnce(&once);
                 
-                /* creating pinging daemon */
-		phandle = thrd_Create((SecurityAttrib) 0, 0,
-	                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
-		osi_assert(phandle != NULL);
+        /* creating pinging daemon */
+        phandle = thrd_Create((SecurityAttrib) 0, 0,
+                               (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
+        osi_assert(phandle != NULL);
 
-		thrd_CloseHandle(phandle);
-		for(i=0; i < nDaemons; i++) {
-			phandle = thrd_Create((SecurityAttrib) 0, 0,
-		                (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
-                                              "cm_BkgDaemon");
-			osi_assert(phandle != NULL);
-			thrd_CloseHandle(phandle);
-		}
+        thrd_CloseHandle(phandle);
+        for(i=0; i < nDaemons; i++) {
+            phandle = thrd_Create((SecurityAttrib) 0, 0,
+                                   (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
+                                   "cm_BkgDaemon");
+            osi_assert(phandle != NULL);
+            thrd_CloseHandle(phandle);
         }
+    }
 }

@@ -9,23 +9,18 @@
 
 /* Functions for accessing NT system configuration information. */
 
-#include <afs/param.h>
-#include <afs/stds.h>
-
 #include <windows.h>
-#include <stddef.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <winsock2.h>
+#include <iphlpapi.h>
+#include <iptypes.h>
+#include <ipifcons.h>
 
 #include "afsreg.h"
 #include "syscfg.h"
 
-static int GetInterfaceList(HKEY skey, char **list);
-static char *GetNextInterface(char *iflist);
-static int GetIP(HKEY skey, char *ifname, int *addr, int *mask);
-
+static int IsLoopback(char * guid);
 
 /* syscfg_GetIFInfo
  *
@@ -48,6 +43,213 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask);
 
 int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
 {
+    PMIB_IPADDRTABLE pIpAddrTable = NULL;
+    ULONG            dwSize;
+    DWORD            code;
+    DWORD            index;
+    DWORD            validAddrs = 0;
+
+    int maxCount = *count;
+    int nConfig = 0;
+    PIP_ADAPTER_ADDRESSES pAddresses, cAddress;
+    PMIB_IPADDRTABLE pIpTbl;
+    ULONG outBufLen = 0;
+    DWORD dwRetVal = 0;
+    int n = 0;
+    DWORD i;
+
+    HMODULE hIpHlp;
+    DWORD (WINAPI *pGetAdaptersAddresses)(ULONG, DWORD, PVOID, 
+                                          PIP_ADAPTER_ADDRESSES, PULONG) = 0;
+
+    hIpHlp = LoadLibrary("iphlpapi");
+    if (hIpHlp != NULL) {
+        (FARPROC) pGetAdaptersAddresses = GetProcAddress(hIpHlp, "GetAdaptersAddressess");
+        if (pGetAdaptersAddresses == NULL)
+            FreeLibrary(hIpHlp);
+    }
+
+    if (pGetAdaptersAddresses == NULL)
+        return syscfg_GetIFInfo_2000(count, addrs, masks, mtus, flags);
+
+    /* first pass to get the required size of the IP table */
+    pIpTbl = (PMIB_IPADDRTABLE) malloc(sizeof(MIB_IPADDRTABLE));
+    outBufLen = sizeof(MIB_IPADDRTABLE);
+    
+    dwRetVal = GetIpAddrTable(pIpTbl, &outBufLen, FALSE);
+    if (dwRetVal != ERROR_INSUFFICIENT_BUFFER) {
+        /* this should have failed with an insufficient buffer because we
+           didn't give any space to place the IP addresses */
+        free(pIpTbl);
+        *count = 0;
+        nConfig = -1;
+        goto done;
+    }
+    
+    /* second pass to get the actual data */
+    free(pIpTbl);
+    pIpTbl = (PMIB_IPADDRTABLE) malloc(outBufLen);
+    
+    dwRetVal = GetIpAddrTable(pIpTbl, &outBufLen, FALSE);
+    if (dwRetVal != NO_ERROR) {
+        free(pIpTbl);
+        *count = 0;
+        nConfig = -1;
+        goto done;
+    }
+    
+    pAddresses = (IP_ADAPTER_ADDRESSES*) malloc(sizeof(IP_ADAPTER_ADDRESSES));
+    
+    /* first call gets required buffer size */
+    if (pGetAdaptersAddresses(AF_INET, 
+                              0, 
+                              NULL, 
+                              pAddresses, 
+                              &outBufLen) == ERROR_BUFFER_OVERFLOW) 
+    {
+        free(pAddresses);
+        pAddresses = (IP_ADAPTER_ADDRESSES*) malloc(outBufLen);
+    } else {
+        free(pIpTbl);
+        *count = 0;
+        nConfig = -1;
+        goto done;
+    }
+    
+    /* second call to get the actual data */
+    if ((dwRetVal = pGetAdaptersAddresses(AF_INET, 
+                                          0, 
+                                          NULL, 
+                                          pAddresses, 
+                                          &outBufLen)) == NO_ERROR) 
+    {
+        /* we have a list of addresses.  go through them and figure out
+           the IP addresses */
+        for (cAddress = pAddresses; cAddress; cAddress = cAddress->Next) {
+            
+            /* skip software loopback adapters */
+            if (cAddress->IfType == IF_TYPE_SOFTWARE_LOOPBACK)
+                continue;
+            
+            /* also skip interfaces that are not up */
+            if (cAddress->OperStatus != 1)
+                continue;
+            
+            /* starting with the AdapterName, which is actually the adapter
+               instance GUID, check if this is a MS loopback device */
+            if (IsLoopback(cAddress->AdapterName))
+                continue;
+            
+            /* ok. looks good.  Now fish out all the addresses from the
+               address table corresponding to the interface, and add them
+               to the list */
+            for (i=0;i<pIpTbl->dwNumEntries;i++) {
+                if (pIpTbl->table[i].dwIndex == cAddress->IfIndex)
+                {
+                    if (n < maxCount) {
+                        addrs[n] = ntohl(pIpTbl->table[i].dwAddr);
+                        masks[n] = ntohl(pIpTbl->table[i].dwMask);
+                        mtus[n] = cAddress->Mtu;
+                        flags[n] = 0;
+                        n++;
+                    }
+                    nConfig++;
+                }
+            }
+        }
+        
+        free(pAddresses);
+        free(pIpTbl);
+        
+        *count = n;
+    } else { 
+        /* again. this is bad */
+        free(pAddresses);
+        free(pIpTbl);
+        *count = 0;
+        nConfig = -1;
+    }
+
+  done:
+    CloseHandle(hIpHlp);
+    return nConfig;
+}
+
+static int IsLoopback(char * guid)
+{
+    int isloopback = FALSE;
+ 
+    HKEY hkNet = NULL;
+    HKEY hkDev = NULL;
+    HKEY hkDevConn = NULL;
+    HKEY hkEnum = NULL;
+    HKEY hkAdapter = NULL;
+    
+    char pnpIns[MAX_PATH];
+    char hwId[MAX_PATH];
+    char service[MAX_PATH];
+    
+    DWORD size;
+    
+    /* Open the network adapters key */
+    if (FAILED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, KEY_READ, &hkNet)))
+        goto _exit;
+    
+    /* open the guid key */
+    if (FAILED(RegOpenKeyEx(hkNet, guid, 0, KEY_READ, &hkDev)))
+        goto _exit;
+    
+    /* then the connection */
+    if (FAILED(RegOpenKeyEx(hkDev, "Connection", 0, KEY_READ, &hkDevConn)))
+        goto _exit;
+    
+    /* and find out the plug-n-play instance ID */
+    size = MAX_PATH;
+    if (FAILED(RegQueryValueEx(hkDevConn, "PnpInstanceID", NULL, NULL, pnpIns, &size)))
+        goto _exit;
+    
+    /* now look in the device ENUM */
+    if (FAILED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Enum", 0, KEY_READ, &hkEnum)))
+        goto _exit;
+    
+    /* for the instance that we found above */
+    if (FAILED(RegOpenKeyEx(hkEnum, pnpIns, 0, KEY_READ, &hkAdapter)))
+        goto _exit;
+    
+    /* and fetch the harware ID */
+    size = MAX_PATH;
+    if (FAILED(RegQueryValueEx(hkAdapter, "HardwareID", NULL, NULL, hwId, &size)))
+        goto _exit;
+    
+    size = MAX_PATH;
+    if (FAILED(RegQueryValueEx(hkAdapter, "Service", NULL, NULL, service, &size)))
+        goto _exit;
+    
+    /* and see if it is the loopback adapter */
+    if (!stricmp(hwId, "*msloop") || !stricmp(service, "msloop"))
+        isloopback = TRUE;
+    
+  _exit:
+    if (hkAdapter)
+        RegCloseKey(hkAdapter);
+    if (hkEnum)
+        RegCloseKey(hkEnum);
+    if (hkDevConn)
+        RegCloseKey(hkDevConn);
+    if (hkDev)
+        RegCloseKey(hkDev);
+    if (hkNet)
+        RegCloseKey(hkNet);
+ 
+    return isloopback;
+}
+
+static int GetInterfaceList(HKEY skey, char **list);
+static char *GetNextInterface(char *iflist);
+static int GetIP(HKEY skey, char *ifname, int *addr, int *mask);
+
+int syscfg_GetIFInfo_2000(int *count, int *addrs, int *masks, int *mtus, int *flags)
+{
     int maxCount = *count;
     char *IFListBase = NULL;
     char *IFList, *ifname;
@@ -67,9 +269,11 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
     n = 0;
 
     while ((n < maxCount) && (ifname = GetNextInterface(IFList))) {
-	if (GetIP(skey, ifname, &addrs[n], &masks[n]) == 0) {
-	    n++ ;
-	}
+	if (!IsLoopback(ifname) && GetIP(skey, ifname, &addrs[n], &masks[n]) == 0 && addrs[n] != 0) {
+	    n++;
+	} else {
+            maxCount--;
+        }
 	IFList = ifname;
     }
 
@@ -146,7 +350,9 @@ static char *GetNextInterface(char *iflist)
 {
     char *ifname;
 
-    /* interface substrings are assumed to be of form \Device\<adapter name> */
+    /* interface substrings are assumed to be of form \Device\<adapter name> 
+     * \Tcpip\Parameters\Interfaces\<adapter name>
+     */
     ifname = strrchr(iflist, '\\');
 
     if (!ifname) {
@@ -180,6 +386,9 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
     char *ipStr = NULL;
     char *snMask = NULL;
     DWORD valType;
+    DWORD dwDHCP;
+    DWORD dwLease;
+    DWORD dwSize;
 
     len = strlen(ifname) + 1 + sizeof(AFSREG_IPSRV_ADAPTER_PARAM_SUBKEY);
     s = malloc(len);
@@ -194,15 +403,21 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
     if (status)
 	return -1;
 
-    status = RegQueryValueAlt(key, AFSREG_IPSRV_ADAPTER_PARAM_ADDR_VALUE,
-			      &valType, &ipStr, NULL);
-    if (status || (valType != REG_SZ && valType != REG_MULTI_SZ)) {
-	if (ipStr) free(ipStr);
-	(void) RegCloseKey(key);
-	return -1;
-    }
+    dwSize = sizeof(DWORD);
+    status = RegQueryValueEx(key, "EnableDHCP", NULL,
+			     &valType, &dwDHCP, &dwSize);
+    if (status || (valType != REG_DWORD))
+        dwDHCP = 0;
 
-    if (*ipStr != '0') {
+    if (dwDHCP == 0) {
+        status = RegQueryValueAlt(key, AFSREG_IPSRV_ADAPTER_PARAM_ADDR_VALUE,
+                                  &valType, &ipStr, NULL);
+        if (status || (valType != REG_SZ && valType != REG_MULTI_SZ)) {
+            if (ipStr) free(ipStr);
+            (void) RegCloseKey(key);
+            return -1;
+        }
+
 	status = RegQueryValueAlt(key, AFSREG_IPSRV_ADAPTER_PARAM_MASK_VALUE,
 				  &valType, &snMask, NULL);
 	if (status || (valType != REG_SZ && valType != REG_MULTI_SZ)) {
@@ -211,10 +426,15 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
 	}
     } else {
 	/* adapter configured via DHCP; address/mask in alternate values */
-	free(ipStr);
-	ipStr = NULL;
+        dwSize = sizeof(DWORD);
+        status = RegQueryValueEx(key, "Lease", NULL,
+                                 &valType, &dwLease, &dwSize);
+        if (status || (valType != REG_DWORD) || dwLease == 0) {
+            (void) RegCloseKey(key);
+            return -1;
+        }
 
-	status = RegQueryValueAlt(key,
+        status = RegQueryValueAlt(key,
 				  AFSREG_IPSRV_ADAPTER_PARAM_DHCPADDR_VALUE,
 				  &valType, &ipStr, NULL);
 
@@ -251,3 +471,4 @@ static int GetIP(HKEY skey, char *ifname, int *addr, int *mask)
 
     return 0;
 }
+

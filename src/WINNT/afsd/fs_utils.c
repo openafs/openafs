@@ -25,7 +25,7 @@
 #include "smb.h"
 #include "cmd.h"
 #include <fs_utils.h>
-
+#include <WINNT\afsreg.h>
 
 long fs_ExtractDriveLetter(char *inPathp, char *outPathp)
 {
@@ -225,7 +225,6 @@ long *aval;
 char *cm_mount_root="afs"; 
 char *cm_slash_mount_root="/afs";
 char *cm_back_slash_mount_root="\\afs";
-#define AFSCONFIGKEYNAME TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters")
 
 void fs_utils_InitMountRoot()
 {
@@ -234,7 +233,7 @@ void fs_utils_InitMountRoot()
     char *pmount=mountRoot;
     DWORD len=sizeof(mountRoot)-1;
     printf("int mountroot \n");
-    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSCONFIGKEYNAME,0, KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS) 
+    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS) 
          || (RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
          || (len==sizeof(mountRoot)-1)
          ) 

@@ -152,7 +152,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     int dead_session;
     long timeUsed, timeLeft;
         
-    osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code %d",
+    osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code 0x%x",
              (long) connp, errorCode);
 
     /* no locking required, since connp->serverp never changes after
@@ -196,30 +196,60 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* leave 5 seconds margin for sleep */
     timeLeft = RDRtimeout - timeUsed;
 
-    if (errorCode == CM_ERROR_TIMEDOUT && timeLeft > 5 ) {
-        thrd_Sleep(3000);
-        cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-        retry = 1;
+    if (errorCode == CM_ERROR_TIMEDOUT) {
+        if (timeLeft > 5 ) {
+            thrd_Sleep(3000);
+            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+            retry = 1;
+        }
     } 
 
     /* if all servers are offline, mark them non-busy and start over */
-    if (errorCode == CM_ERROR_ALLOFFLINE && timeLeft > 7) {
-        osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
-        thrd_Sleep(5000);
-        /* cm_ForceUpdateVolume marks all servers as non_busy */
-        /* No it doesn't and it won't do anything if all of the 
-         * the servers are marked as DOWN.  So clear the DOWN
-         * flag and reset the busy state as well.
-         */
-        if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serverspp);
-            serversp = *serverspp;
-            free_svr_list = 1;
+    else if (errorCode == CM_ERROR_ALLOFFLINE) {
+        if (timeLeft > 7) {
+            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
+            thrd_Sleep(5000);
+            /* cm_ForceUpdateVolume marks all servers as non_busy */
+            /* No it doesn't and it won't do anything if all of the 
+             * the servers are marked as DOWN.  So clear the DOWN
+             * flag and reset the busy state as well.
+             */
+            if (!serversp) {
+                cm_GetServerList(fidp, userp, reqp, &serverspp);
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
+            if (serversp) {
+                lock_ObtainWrite(&cm_serverLock);
+                for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                    tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
+                    if (tsrp->status == busy)
+                        tsrp->status = not_busy;
+                }
+                lock_ReleaseWrite(&cm_serverLock);
+                if (free_svr_list) {
+                    cm_FreeServerList(&serversp);
+                    *serverspp = serversp;
+                }
+                retry = 1;
+            }
+
+            if (fidp != NULL)   /* Not a VLDB call */
+                cm_ForceUpdateVolume(fidp, userp, reqp);
         }
-        if (serversp) {
+    }
+
+    /* if all servers are busy, mark them non-busy and start over */
+    else if (errorCode == CM_ERROR_ALLBUSY) {
+        if (timeLeft > 7) {
+            thrd_Sleep(5000);
+            if (!serversp) {
+                cm_GetServerList(fidp, userp, reqp, &serverspp);
+                serversp = *serverspp;
+                free_svr_list = 1;
+            }
             lock_ObtainWrite(&cm_serverLock);
             for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
                 if (tsrp->status == busy)
                     tsrp->status = not_busy;
             }
@@ -230,145 +260,125 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             }
             retry = 1;
         }
-
-        if (fidp != NULL)   /* Not a VLDB call */
-            cm_ForceUpdateVolume(fidp, userp, reqp);
     }
 
-	/* if all servers are busy, mark them non-busy and start over */
-    if (errorCode == CM_ERROR_ALLBUSY && timeLeft > 7) {
-        thrd_Sleep(5000);
+    /* special codes:  VBUSY and VRESTARTING */
+    else if (errorCode == VBUSY || errorCode == VRESTARTING) {
         if (!serversp) {
             cm_GetServerList(fidp, userp, reqp, &serverspp);
             serversp = *serverspp;
             free_svr_list = 1;
         }
-		lock_ObtainWrite(&cm_serverLock);
-		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-			if (tsrp->status == busy)
-				tsrp->status = not_busy;
-		}
+        lock_ObtainWrite(&cm_serverLock);
+        for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+            if (tsrp->server == serverp
+                 && tsrp->status == not_busy) {
+                tsrp->status = busy;
+                break;
+            }
+        }
         lock_ReleaseWrite(&cm_serverLock);
         if (free_svr_list) {
             cm_FreeServerList(&serversp);
             *serverspp = serversp;
         }
-		retry = 1;
-	}
+        retry = 1;
+    }
 
-	/* special codes:  VBUSY and VRESTARTING */
-	if (errorCode == VBUSY || errorCode == VRESTARTING) {
-            if (!serversp) {
-                cm_GetServerList(fidp, userp, reqp, &serverspp);
-                serversp = *serverspp;
-                free_svr_list = 1;
-            }
-            lock_ObtainWrite(&cm_serverLock);
-            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                if (tsrp->server == serverp
-                     && tsrp->status == not_busy) {
-                    tsrp->status = busy;
-                    break;
-                }
-            }
-            lock_ReleaseWrite(&cm_serverLock);
-            if (free_svr_list) {
-                cm_FreeServerList(&serversp);
-                *serverspp = serversp;
-            }
-            retry = 1;
-	}
-
-	/* special codes:  missing volumes */
-	if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
-	    || errorCode == VSALVAGE || errorCode == VNOSERVICE) 
+    /* special codes:  missing volumes */
+    else if (errorCode == VNOVOL || errorCode == VMOVED || errorCode == VOFFLINE
+         || errorCode == VSALVAGE || errorCode == VNOSERVICE) 
+    {       
+        /* Log server being offline for this volume */
+        osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
+                  ((serverp->addr.sin_addr.s_addr & 0xff)),
+                  ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                  ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                  ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+        /* Create Event Log message */ 
         {
-            /* Log server being offline for this volume */
-            osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
-                      ((serverp->addr.sin_addr.s_addr & 0xff)),
-                      ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                      ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                      ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
-            /* Create Event Log message */ 
-            {
-                HANDLE h;
-                char *ptbuf[1];
-                char s[100];
-                h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-                sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
-                         ((serverp->addr.sin_addr.s_addr & 0xff)),
-                         ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                         ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                         ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
-                         fidp->volume);
-                ptbuf[0] = s;
-                ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
-                             1, 0, ptbuf, NULL);
-                DeregisterEventSource(h);
-            }
-
-            /* Mark server offline for this volume */
-            if (!serversp) {
-                cm_GetServerList(fidp, userp, reqp, &serverspp);
-                serversp = *serverspp;
-                free_svr_list = 1;
-            }
-            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-                if (tsrp->server == serverp)
-                    tsrp->status = offline;
-            }
-            if (free_svr_list) {
-                cm_FreeServerList(&serversp);
-                *serverspp = serversp;
-            }
-            if ( timeLeft > 2 )
-		retry = 1;
-	}
-
-	/* RX codes */
-	if (errorCode == RX_CALL_TIMEOUT) {
-            /* server took longer than hardDeadTime 
-             * don't mark server as down but don't retry
-             * this is to prevent the SMB session from timing out
-             * In addition, we log an event to the event log 
-             */
-#ifndef DJGPP
             HANDLE h;
             char *ptbuf[1];
             char s[100];
             h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-            sprintf(s, "cm_Analyze: HardDeadTime exceeded.");
+            sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
+                     ((serverp->addr.sin_addr.s_addr & 0xff)),
+                     ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                     ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                     ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
+                     fidp->volume);
             ptbuf[0] = s;
             ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
                          1, 0, ptbuf, NULL);
             DeregisterEventSource(h);
+        }
+
+        /* Mark server offline for this volume */
+        if (!serversp) {
+            cm_GetServerList(fidp, userp, reqp, &serverspp);
+            serversp = *serverspp;
+            free_svr_list = 1;
+        }
+        for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+            if (tsrp->server == serverp)
+                tsrp->status = offline;
+        }   
+        if (free_svr_list) {
+            cm_FreeServerList(&serversp);
+            *serverspp = serversp;
+        }
+        if ( timeLeft > 2 )
+            retry = 1;
+    }
+
+    /* RX codes */
+    else if (errorCode == RX_CALL_TIMEOUT) {
+        /* server took longer than hardDeadTime 
+         * don't mark server as down but don't retry
+         * this is to prevent the SMB session from timing out
+         * In addition, we log an event to the event log 
+         */
+#ifndef DJGPP
+        HANDLE h;
+        char *ptbuf[1];
+        char s[100];
+        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+        sprintf(s, "cm_Analyze: HardDeadTime exceeded.");
+        ptbuf[0] = s;
+        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
+                     1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
 #endif /* !DJGPP */
 	  
-            retry = 0;
-            osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
-	}
-	else if (errorCode >= -64 && errorCode < 0) {
-            /* mark server as down */
-            lock_ObtainMutex(&serverp->mx);
-            serverp->flags |= CM_SERVERFLAG_DOWN;
-            lock_ReleaseMutex(&serverp->mx);
+        retry = 0;
+        osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
+    }
+    else if (errorCode >= -64 && errorCode < 0) {
+        /* mark server as down */
+        lock_ObtainMutex(&serverp->mx);
+        serverp->flags |= CM_SERVERFLAG_DOWN;
+        lock_ReleaseMutex(&serverp->mx);
+        if ( timeLeft > 2 )
+            retry = 1;
+    }
+    else if (errorCode == RXKADEXPIRED) {
+        if (!dead_session) {
+            lock_ObtainMutex(&userp->mx);
+            ucellp = cm_GetUCell(userp, serverp->cellp);
+            if (ucellp->ticketp) {
+                free(ucellp->ticketp);
+                ucellp->ticketp = NULL;
+            }
+            ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+            ucellp->gen++;
+            lock_ReleaseMutex(&userp->mx);
             if ( timeLeft > 2 )
                 retry = 1;
         }
-
-    if (errorCode == RXKADEXPIRED && !dead_session) {
-        lock_ObtainMutex(&userp->mx);
-        ucellp = cm_GetUCell(userp, serverp->cellp);
-        if (ucellp->ticketp) {
-            free(ucellp->ticketp);
-            ucellp->ticketp = NULL;
-        }
-        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
-        ucellp->gen++;
-        lock_ReleaseMutex(&userp->mx);
-        if ( timeLeft > 2 )
-            retry = 1;
-    }       
+    } else {
+        if (errorCode)
+            osi_Log1(afsd_logp, "cm_Analyze: ignoring error code 0x%x", errorCode);
+    }
 
     if (retry && dead_session)
         retry = 0;
@@ -414,15 +424,16 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
         cm_GetServerNoLock(tsp);
         lock_ReleaseWrite(&cm_serverLock);
         if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-            allDown = 0;
-            if (tsrp->status == busy)
+            if (tsrp->status == busy) {
+                allDown = 0;
                 someBusy = 1;
-            else if (tsrp->status == offline)
+            } else if (tsrp->status == offline) {
                 someOffline = 1;
-            else {
+            } else {
+                allDown = 0;
                 allBusy = 0;
                 code = cm_ConnByServer(tsp, usersp, connpp);
-                if (code == 0) {
+                if (code == 0) {        /* cm_CBS only returns 0 */
                     cm_PutServer(tsp);
                     /* Set RPC timeout */
                     if (timeLeft > ConnDeadtimeout)
@@ -437,10 +448,12 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                     lock_ReleaseMutex(&(*connpp)->mx);
                     return 0;
                 }
-                if (firstError == 0) 
+                
+                /* therefore, this code is never executed */
+                if (firstError == 0)
                     firstError = code;
             }
-        } 
+        }
         lock_ObtainWrite(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }   
@@ -453,11 +466,13 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             firstError = CM_ERROR_ALLOFFLINE;
         else if (allBusy) 
             firstError = CM_ERROR_ALLBUSY;
-        else
+        else {
+            osi_Log0(afsd_logp, "cm_ConnByMServers returning impossible error TIMEDOUT");
             firstError = CM_ERROR_TIMEDOUT;
+        }
     }
 
-    osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
+    osi_Log1(afsd_logp, "cm_ConnByMServers returning 0x%x", firstError);
     return firstError;
 }
 
@@ -490,13 +505,12 @@ void cm_GCConnections(cm_server_t *serverp)
 }
 
 static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
-	cm_server_t *serverp)
+                               cm_server_t *serverp)
 {
     unsigned short port;
     int serviceID;
     int secIndex;
     struct rx_securityClass *secObjp;
-    afs_int32 level;
 
     if (serverp->type == CM_SERVER_VLDB) {
         port = htons(7003);
@@ -510,15 +524,14 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
         secIndex = 2;
         if (cryptall) {
-            level = tcp->cryptlevel = rxkad_crypt;
+            tcp->cryptlevel = rxkad_crypt;
         } else {
-            level = tcp->cryptlevel = rxkad_clear;
+            tcp->cryptlevel = rxkad_clear;
         }
-        secObjp = rxkad_NewClientSecurityObject(level,
+        secObjp = rxkad_NewClientSecurityObject(tcp->cryptlevel,
                                                 &ucellp->sessionKey, ucellp->kvno,
                                                 ucellp->ticketLen, ucellp->ticketp);    
-    }
-    else {
+    } else {
         /* normal auth */
         secIndex = 0;
         secObjp = rxnull_NewClientSecurityObject();
@@ -569,6 +582,10 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         if ((tcp->ucgen < ucellp->gen) ||
             (tcp->cryptlevel != (cryptall ? rxkad_crypt : rxkad_clear)))
         {
+            if (tcp->ucgen < ucellp->gen)
+                osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to token update");
+            else
+                osi_Log0(afsd_logp, "cm_ConnByServer replace connection due to crypt change");
             lock_ObtainMutex(&tcp->mx);
             rx_DestroyConnection(tcp->callp);
             cm_NewRXConnection(tcp, ucellp, serverp);
@@ -587,19 +604,19 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
 }
 
 long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
-	cm_conn_t **connpp)
+             cm_conn_t **connpp)
 {
-	long code;
+    long code;
 
-	cm_serverRef_t **serverspp;
+    cm_serverRef_t **serverspp;
 
-	code = cm_GetServerList(fidp, userp, reqp, &serverspp);
-	if (code) {
-		*connpp = NULL;
-		return code;
-	}
+    code = cm_GetServerList(fidp, userp, reqp, &serverspp);
+    if (code) {
+        *connpp = NULL;
+        return code;
+    }
 
-	code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
+    code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
     cm_FreeServerList(serverspp);
     return code;
 }

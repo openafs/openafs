@@ -70,7 +70,7 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\cm_dns.obj
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP)
 
 
@@ -106,7 +106,7 @@ BOS_EXELIBS =\
 
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP)
 
 $(CL_BOS_EXEFILE): $(RS_BOS_EXEFILE)

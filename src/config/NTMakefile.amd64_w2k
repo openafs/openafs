@@ -1,0 +1,452 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Common nmake file to be included in each NTMakfile.
+#
+# Required definitions:
+#     AFSDEV_BUILDTYPE = [ CHECKED | FREE ]
+#
+# Optional definitions:
+#     AFSDEV_WARNLEVEL = [0 | 1 | 2 | 3 | 4]  (default is 3)
+#     AFSDEV_AUXCDEFINES = <auxiliary C preprocessor defs> (default is null)
+#     AFSDEV_AUXRCFLAGS = <auxiliary resource compiler flags> (default is null)
+#     AFSDEV_AUXMIDLFLAGS = auxiliary midl flags
+#     AFSDEV_TEXTMODE = <text mode is default if defined>  (default is null)
+#     DEBUG_VERBOSE = optional debug statements for testing
+#	  AFS_OBJDIR - Location of object directory, either absolute or relative
+#     AFSROOT - ROOT Directory so that $(AFSROOT)\scr is location of source
+#
+############################################################################
+#		Optional compliation flags
+#		NO_CRTDBG - used to disable some builds for CFTDBG allocate mapping
+#     	_CRTDBG_MAP_ALLOC = <utilize crt debug C runtime if define> (default is null)
+#		VADUMP - define VADUMP=1 if you are going to use the vadump utility and you are using V6.0
+#
+####### Special optional defines
+
+!IFNDEF NO_CRTDBG		
+#don't set _CRTDBG_MAP_ALLOC flag for some module compliations
+#_CRTDBG_MAP_ALLOC=1
+!ENDIF
+
+#######
+
+#sanity checks 
+
+!IF EXISTS("TOOLS.INI")
+!MESSAGE ************CAUTION TOOLS.INI IN EFFECT**********
+!ENDIF
+!IF ("$(AFSROOT)"=="")
+!ERROR AFSROOT is not set
+!ENDIF
+!IF (DEFINED(PROFILE) || DEFINED(TUNE))
+AFSDEV_BUILDTYPE = NONE
+!ELSE
+!IF ("$(AFSDEV_BUILDTYPE)" != "CHECKED" && "$(AFSDEV_BUILDTYPE)" != "FREE")
+!ERROR Must define AFSDEV_BUILDTYPE to be CHECKED or FREE.
+!ENDIF
+!ENDIF
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
+!UNDEF _CRTDBG_MAP_ALLOC
+!ENDIF
+
+# Limit default include and library directories to those specified for build.
+
+!IFNDEF AFSDEV_INCLUDE
+!ERROR Must define AFSDEV_INCLUDE to be the default include directories.
+!ENDIF
+
+!IF ((!DEFINED(INCLUDE)) && ([set INCLUDE=$(AFSDEV_INCLUDE)] != 0))
+#    If env. var. INCLUDE not defined then macro assignment won't set it.
+!ERROR Failed setting environment variable INCLUDE.
+!ENDIF
+INCLUDE = $(AFSDEV_INCLUDE)
+
+
+!IFNDEF AFSDEV_LIB
+!ERROR Must define AFSDEV_LIB to be the default library directories.
+!ENDIF
+
+!IF ((!DEFINED(LIB)) && ([set LIB=$(AFSDEV_LIB)] != 0))
+#    If env. var. LIB not defined then macro assignment won't set it.
+!ERROR Failed setting environment variable LIB.
+!ENDIF
+LIB = $(AFSDEV_LIB)
+
+#define used in WinNT/2000 installation and program version display
+AFSPRODUCT_VER_MAJOR=1
+AFSPRODUCT_VER_MINOR=3
+AFSPRODUCT_VER_PATCH=8000
+AFSPRODUCT_VER_BUILD=0
+
+# For MSI installer, each major release should have a different GUID
+# http://msdn.microsoft.com/library/en-us/msi/setup/changing_the_product_code.asp
+AFSPRODUCT_VER_GUID=CCAF9E14-976E-46C0-8A1B-A218EAB7ADC5
+
+AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
+AFSPRODUCT_FILE_VERSION=$(AFSPRODUCT_VER_MAJOR),$(AFSPRODUCT_VER_MINOR),$(AFSPRODUCT_VER_PATCH),$(AFSPRODUCT_VER_BUILD)
+# Set CELLNAME_DEFAULT to "your cell name"
+CELLNAME_DEFAULT=openafs.org
+CELLSERVDB_INSTALL=CellServDB.GrandCentral
+CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+TARGETOS = WINNT
+
+# Define defaults folder locations
+DEST=dest
+SRC=src
+OBJ=obj
+
+!IF ("$(AFS_OBJDIR)"=="") 
+#########  AFS_OBJDIR is NOT used use default locations
+!  IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+DESTDIR=$(AFSROOT)\$(DEST)\checked
+OJT=$(AFSROOT)\$(OBJ)\checked
+!  ELSE
+DESTDIR=$(AFSROOT)\$(DEST)\free
+OJT=$(AFSROOT)\$(OBJ)\free
+!  ENDIF
+UTIL_CR = $(DESTDIR)\bin\util_cr.exe
+!ELSE
+#########  AFS_OBJDIR is defined, use specific locations for obj and dest
+# there is a special case for config because util_cr is not defined yet!
+!  IF (EXIST($(AFSROOT)\$(AFS_OBJDIR)))
+#  AFS_OBJDIR is relative path
+!    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\checked
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\checked\config
+!    ELSE
+OJT=$(AFSROOT)\$(AFS_OBJDIR)\free\config
+DESTDIR=$(AFSROOT)\$(AFS_OBJDIR)\$(DEST)\free
+!    ENDIF
+!  ELSE
+!    IF (EXIST($(AFS_OBJDIR)))
+#   AFS_OBJDIR is full path
+!    IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\checked
+OJT=$(AFS_OBJDIR)\checked\config
+!      ELSE
+DESTDIR=$(AFS_OBJDIR)\$(DEST)\free
+OJT=$(AFS_OBJDIR)\free\config
+!      ENDIF
+!    ELSE
+!ERROR Can't find location of DEST directory!
+!    ENDIF
+!  ENDIF
+UTIL_CR = $(DESTDIR)\bin\util_cr.exe
+
+!  IF ("$(MAKEDIR:\config=)"=="$(MAKEDIR)") 
+#    we are NOT doing a config make, use util_cr to generate object directory
+!    IF ( !EXIST($(UTIL_CR)) || (!EXIST($(TMP)\home) && !EXIST($(TEMP)\home)) || (([$(UTIL_CR) _dir "!$(AFSDEV_BUILDTYPE)!src!$(AFS_OBJDIR)!"])!=0))
+!ERROR Can't produce object paths, util_cr not working , TMP or TEMP environment variables not defined
+!    ENDIF
+
+!    IF EXIST($(TMP)\home)
+!INCLUDE $(TMP)\home
+!    ELSE
+!INCLUDE $(TEMP)\home
+!    ENDIF
+!  ENDIF
+!ENDIF	#AFS_OBJDIR
+
+!IF ("$(RELDIR)"=="")
+OUT=$(OJT)
+!ELSE
+OUT=$(OJT)\$(RELDIR)
+!ENDIF
+
+!MESSAGE Directory assignments: 
+!MESSAGE     OJT=[$(OJT)]
+!MESSAGE     OUT=[$(OUT)] 
+!MESSAGE DESTDIR=[$(DESTDIR)]
+
+# Definitions provided here are based on WIN32.MAK, a common nmake
+# file included with the MS SDK and MS VC distributions.
+# WIN32.MAK, and this nmake file, are targeted to the MSVC compiler;
+# port this nmake file if additional compiler support is required.
+
+# !IF ("$(AFSVER_CL)"=="1300")
+# afslflags = $(afslflags) /DEBUG
+# !ENDIF
+
+!IF ("$(APPVER)" == "")
+APPVER=5.0
+!ENDIF
+
+
+
+!INCLUDE <WIN32.MAK>
+
+# Extend and/or supplement definitions in WIN32.MAK.
+
+# Command macros.
+COPY = -copy
+DEL = -del
+MKDIR = -mkdir
+REN = ren
+ECHO = echo
+CD = cd
+MC = mc -vcsU
+MAKECMD = nmake.exe
+
+COMPILE_ET = $(DESTDIR)\bin\compile_et
+RXGEN = $(DESTDIR)\bin\rxgen
+MIDL  = midl
+
+# Common clean target.
+clean::
+	$(DEL) /q $(OUT)\*.obj $(OUT)\*.lib $(OUT)\*.dll $(OUT)\*.exe $(OUT)\*.pdb
+	$(DEL) /q $(OUT)\*_component_version_number.* *_component_version_number.*
+
+# Common lang target.
+lang::
+
+
+#################### Compile optional build flags set ###########
+
+afscdefs =\
+	-I. \
+	-I$(DESTDIR)\include \
+	-I$(DESTDIR)\include\afs \
+	-I$(DESTDIR)\include\rx \
+	-DWIN32_LEAN_AND_MEAN \
+	-DSTRICT \
+	-D_WIN32_IE=0x0500 \
+	-D_WIN32_WINNT=0x0500 \
+    -DWINVER=0x0500 \
+    -DREGISTER_POWER_NOTIFICATIONS \
+    -DAFS_AFSDB_ENV \
+    -DAFS_FREELANCE_CLIENT \
+    -DAFS_64BIT_ENV \
+	-DAFS_64BIT_CLIENT \
+	 $(AFSDEV_AUXCDEFINES)
+
+# Compiler switches (except include paths and preprocessor defines)
+#
+# Note: if conflicting options are specified, rightmost option applies.
+#
+# /Oy-  specifies no frame-pointer omission
+# /GF   pool strings and place in read-only memory
+# /Gd   use cdecl calling convention by default
+# /Gy   enable function-level linking
+# /GX   enable C++ exceptions (assumes extern C funcs never throw exceptions)
+# /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
+# /Wp64 64-bit porting warnings
+
+afscflags =\
+        /Oy- \
+	/GF \
+	/Gd \
+	/Gy \
+	/Os \
+        /Wp64
+
+!IF ("$(AFSVER_CL)"=="1400")
+afscflags = $(afscflags) /EHsc /wd4996
+!ELSE
+afscflags = $(afscflags) /GX
+!ENDIF
+
+!IF ("$(AFSVER_CL)"!="1200")
+afscdefs = $(afscdefs) /GT /GS
+#/Wp64
+!IF ("$(AFSVER_CL)"!="1400")
+afscdefs = $(afscdefs) /G7
+!ENDIF
+!ENDIF
+
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
+
+afscflags = $(afscflags) /Ox /Zi
+cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
+cvarsdll = $(cvarsdll:-MDd=-MD)
+NODEBUG=1
+
+!ELSE		# CHECKED BUILD
+cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
+
+!IF ("$(AFSVER_CL)"=="1200")
+afscdefs = $(afscdefs) -DDEBUG /GZ
+!ELSE 
+afscdefs = $(afscdefs) -DDEBUG /RTCs /RTCu
+!ENDIF
+
+!IFDEF _CRTDBG_MAP_ALLOC
+afscflags = $(afscflags) -D_DEBUG -D_CRTDBG_MAP_ALLOC
+!ENDIF
+
+!UNDEF NODEBUG
+!ENDIF
+
+# Set compiler warning level
+
+!IFNDEF AFSDEV_WARNLEVEL
+AFSDEV_WARNLEVEL = 3
+!ELSE
+!IF ("$(AFSDEV_WARNLEVEL)" != "0" && \
+     "$(AFSDEV_WARNLEVEL)" != "1" && \
+     "$(AFSDEV_WARNLEVEL)" != "2" && \
+     "$(AFSDEV_WARNLEVEL)" != "3" && \
+     "$(AFSDEV_WARNLEVEL)" != "4")
+!ERROR Must define AFSDEV_WARNLEVEL to be one of 0 through 4.
+!ENDIF
+!ENDIF
+
+afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
+
+# C/C++ compilation macros
+C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c  
+CPP2OBJ = $(C2OBJ)
+# Inference rules for building and installing targets
+# Compile .c files, from current directory to defined by OUT
+
+.SUFFIXES: .c .rc 
+
+.c{$(OUT)\}.obj:
+	$(C2OBJ) $<
+   
+.c.obj:
+   $(C2OBJ) $<
+
+.cpp{$(OUT)\}.obj:
+	$(CPP2OBJ) $<
+
+.rc{$(OUT)\}.res:
+	$(RC) /fo$(OUT)\$(<B).res $<
+
+# Compile .rc (resource) files
+#.rc.res:
+#	$(RC) $*.rc
+
+.SUFFIXES: .h
+
+.h.{$(DESTDIR)\include\afs}.h:
+	$(COPY) $< $(DESTDIR)\include\afs
+
+.h.{$(DESTDIR)\include\rx}.h:
+	$(COPY) $< $(DESTDIR)\include\rx
+
+.h.{$(DESTDIR)\include}.h:
+	$(COPY) $< $(DESTDIR)\include
+
+.h.{$(DESTDIR)\include\WINNT}.h:
+	$(COPY) $< $(DESTDIR)\include\WINNT
+
+.h.{$(DESTDIR)\include}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include
+
+.h.{$(DESTDIR)\include\afs}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include\afs
+
+.h.{$(DESTDIR)\include\rx}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include\rx
+
+.h.{$(DESTDIR)\include\WINNT}.h:
+	$(COPY) $(*B).h $(DESTDIR)\include\WINNT
+
+# Resource compiler macro
+RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\""
+
+#################### Link optional build flags set ###########
+
+afslflags =\
+	/FIXED:NO /VERBOSE:LIB
+
+mfclflags = $(guilflags)
+mfclflags = $(mfclflags:/NODEFAULTLIB=)
+
+mfcdlllflags = $(dlllflags)
+mfcdlllflags = $(mfcdlllflags:/NODEFAULTLIB=)
+
+mfclibsdll = $(guilibsdll)
+mfclibsdll = $(mfclibsdll:msvcrtd.lib=)
+mfclibsdll = $(mfclibsdll:msvcrt.lib=)
+
+# Link with binmode.obj; files will be opened in binary mode by default.
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
+
+ldebug=/DEBUG /PDB:$*.pdb 
+EXEPREP = rebase -b 0x00400000 -x $(@D) -q $@
+DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -x $(@D) -q $@
+
+!ELSE	#CHECKED BUILD
+
+# Generate debug information and pdb files 
+ldebug = /DEBUG /PDB:$*.pdb /NODEFAULTLIB:LIBC 
+
+#!IF ("AFSVER_CL"=="1200")
+#ldebug = $(ldebug) -debugtype:cv 
+#!ENDIF
+
+# Disable optimization; generate full debug info in obj.
+afscflags = $(afscflags) /Od /Zi
+
+!IFDEF VADUMP
+!IF ("AFSVER_CL"=="1200")
+ldebug = $(ldebug) -debugtype:both
+ldebug = $(ldebug:-debugtype:cv=)
+!ENDIF #AFSVER_CL == 1200
+!ENDIF #VADUMPT
+
+!IFNDEF _CRTDBG_MAP_ALLOC
+mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrtd.lib
+mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrtd.lib
+
+#v6.0 doesn't work using msvcrtd.lib unless _CRTDBG_MAP_ALLOC is defined, v7.0 requires it
+!IF ("$(AFSVER_CL)"=="1200")
+EXEMFCLINK=$(EXEMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
+DLLMFCLINK=$(DLLMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
+!ENDIF #AFSVER_CL == 1200
+
+!ELSE #_CRTDBG_MAP_ALLOC
+mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrtd.lib
+mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrtd.lib
+conlibsdll = $(conlibsdll:msvcrt.lib=msvcrtd.lib)
+guilibsdll = $(guilibsdll:msvcrt.lib=msvcrtd.lib)
+!ENDIF #_CRTDBG_MAP_ALLOC
+
+EXEPREP = rebase -b 0x00400000 -q $@
+DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
+
+!ENDIF #CHECKED BUILD
+
+
+# EXE link macro for console applications
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+
+# EXE link macro for GUI applications
+EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
+
+# EXE link macro for MFC applications
+EXEMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
+
+# DLL link macro for console applications
+DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
+
+# DLL link macro for GUI applications
+DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
+DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
+
+# DLL link macro for resource-only DLLs
+DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**
+
+# Library archive macro
+LIBARCH = $(implib) /NOLOGO /OUT:$@ $**
+
+# Language selection macro
+NTLANG = $(DESTDIR)\bin\NTLang.bat
+
+######### MIDL FLAGS
+
+!IFDEF OSISXP
+AFSDEV_AUXMIDLFLAGS=/Oi
+!ENDIF
+
+# Lex/Yacc macros
+LEX = flex -l
+YACC = bison
+

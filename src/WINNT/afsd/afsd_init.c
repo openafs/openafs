@@ -25,31 +25,26 @@
 #include <rx\rx.h>
 #include <rx\rx_null.h>
 #include <WINNT/syscfg.h>
+#include <WINNT/afsreg.h>
 
 #include "smb.h"
 #include "cm_rpc.h"
 #include "lanahelper.h"
 #include <strsafe.h>
 #include "afsicf.h"
+#include "cm_memmap.h"
 
 extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
 extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_int32 cryptall;
 
-char AFSConfigKeyName[] =
-	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
-char OpenAFSConfigKeyName[] =
-	"SOFTWARE\\OpenAFS\\Client";
-
 osi_log_t *afsd_logp;
 
-char cm_rootVolumeName[64];
+cm_config_data_t        cm_data;
+
+char cm_rootVolumeName[VL_MAXNAMELEN];
 DWORD cm_rootVolumeNameLen;
-cm_volume_t *cm_rootVolumep = NULL;
-cm_cell_t *cm_rootCellp = NULL;
-cm_fid_t cm_rootFid;
-cm_scache_t *cm_rootSCachep = NULL;
 char cm_mountRoot[1024];
 DWORD cm_mountRootLen;
 int cm_logChunkSize;
@@ -58,7 +53,7 @@ int cm_chunkSize;
 char *cm_FakeRootDir;
 #endif /* freelance */
 
-int smb_UseV3;
+int smb_UseV3 = 1;
 
 int LANadapter;
 
@@ -76,6 +71,7 @@ char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
 char cm_CachePath[MAX_PATH];
 DWORD cm_CachePathLen;
+DWORD cm_ValidateCache = 1;
 
 BOOL isGateway = FALSE;
 
@@ -164,7 +160,7 @@ afsi_start()
     afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                            OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
 
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(maxLogSize);
@@ -314,15 +310,15 @@ configureBackConnectionHostNames(void)
                                &hkLsa) == ERROR_SUCCESS )
             {
                 dwSize = sizeof(DWORD);
-                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) != ERROR_SUCCESS ||
+                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) != ERROR_SUCCESS ||
                      dwValue == 0 ) {
                     dwType = REG_DWORD;
                     dwSize = sizeof(DWORD);
                     dwValue = 1;
-                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
 
                     if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                                        "SOFTWARE\\OpenAFS\\Client",
+                                        AFSREG_CLT_OPENAFS_SUBKEY,
                                         0,
                                         NULL,
                                         REG_OPTION_NON_VOLATILE,
@@ -334,7 +330,7 @@ configureBackConnectionHostNames(void)
                         dwType = REG_DWORD;
                         dwSize = sizeof(DWORD);
                         dwValue = 1;
-                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
                         RegCloseKey(hkClient);
                     }
                     RegCloseKey(hkLsa);
@@ -342,7 +338,7 @@ configureBackConnectionHostNames(void)
             }
         } else {
             if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                                "SOFTWARE\\OpenAFS\\Client",
+                                AFSREG_CLT_OPENAFS_SUBKEY,
                                 0,
                                 NULL,
                                 REG_OPTION_NON_VOLATILE,
@@ -352,7 +348,7 @@ configureBackConnectionHostNames(void)
                                 NULL) == ERROR_SUCCESS) {
 
                 dwSize = sizeof(DWORD);
-                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) == ERROR_SUCCESS &&
+                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS &&
                      dwValue == 1 ) {
                     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
                                        "SYSTEM\\CurrentControlSet\\Control\\Lsa",
@@ -372,6 +368,157 @@ configureBackConnectionHostNames(void)
     }
 }
 
+#if !defined(DJGPP)
+static void afsd_InitServerPreferences(void)
+{
+    HKEY hkPrefs = 0;
+    DWORD dwType, dwSize;
+    DWORD dwPrefs = 0;
+    DWORD dwIndex;
+    TCHAR szHost[256];
+    DWORD dwHostSize = 256;
+    DWORD dwRank;
+    struct sockaddr_in	saddr;
+    cm_server_t       *tsp;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Server Preferences\\VLDB",
+                      0,
+                      KEY_READ|KEY_QUERY_VALUE,
+                      &hkPrefs) == ERROR_SUCCESS) {
+
+        RegQueryInfoKey( hkPrefs,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwPrefs, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
+
+        for ( dwIndex = 0 ; dwIndex < dwPrefs; dwIndex++ ) {
+
+            dwSize = sizeof(DWORD);
+            dwHostSize = 256;
+
+            if (RegEnumValue( hkPrefs, dwIndex, szHost, &dwHostSize, NULL,
+                              &dwType, (LPBYTE)&dwRank, &dwSize))
+            {
+                afsi_log("RegEnumValue(hkPrefs) failed");
+                continue;
+            }
+
+            afsi_log("VLDB Server Preference: %s = %d",szHost, dwRank);
+
+            if (isdigit(szHost[0]))
+            {
+                if ((saddr.sin_addr.S_un.S_addr = inet_addr (szHost)) == INADDR_NONE)
+                    continue;
+            } else {
+                HOSTENT *pEntry;
+                if ((pEntry = gethostbyname (szHost)) == NULL)
+                    continue;
+
+                saddr.sin_addr.S_un.S_addr = *(unsigned long *)pEntry->h_addr;
+            }
+            saddr.sin_family = AF_INET;
+            dwRank += (rand() & 0x000f);
+
+            tsp = cm_FindServer(&saddr, CM_SERVER_VLDB);
+            if ( tsp )		/* an existing server - ref count increased */
+            {
+                tsp->ipRank = (USHORT)dwRank; /* no need to protect by mutex*/
+
+                /* set preferences for an existing vlserver */
+                cm_ChangeRankCellVLServer(tsp);
+                cm_PutServer(tsp);  /* decrease refcount */
+            }
+            else	/* add a new server without a cell */
+            {
+                tsp = cm_NewServer(&saddr, CM_SERVER_VLDB, NULL); /* refcount = 1 */
+                tsp->ipRank = (USHORT)dwRank;
+            }
+        }
+
+        RegCloseKey(hkPrefs);
+    }
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Server Preferences\\File",
+                      0,
+                      KEY_READ|KEY_QUERY_VALUE,
+                      &hkPrefs) == ERROR_SUCCESS) {
+
+        RegQueryInfoKey( hkPrefs,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwPrefs, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
+
+        for ( dwIndex = 0 ; dwIndex < dwPrefs; dwIndex++ ) {
+
+            dwSize = sizeof(DWORD);
+            dwHostSize = 256;
+
+            if (RegEnumValue( hkPrefs, dwIndex, szHost, &dwHostSize, NULL,
+                              &dwType, (LPBYTE)&dwRank, &dwSize))
+            {
+                afsi_log("RegEnumValue(hkPrefs) failed");
+                continue;
+            }
+
+            afsi_log("File Server Preference: %s = %d",szHost, dwRank);
+
+            if (isdigit(szHost[0]))
+            {
+                if ((saddr.sin_addr.S_un.S_addr = inet_addr (szHost)) == INADDR_NONE)
+                    continue;
+            } else {
+                HOSTENT *pEntry;
+                if ((pEntry = gethostbyname (szHost)) == NULL)
+                    continue;
+
+                saddr.sin_addr.S_un.S_addr = *(unsigned long *)pEntry->h_addr;
+            }
+            saddr.sin_family = AF_INET;
+            dwRank += (rand() & 0x000f);
+
+            tsp = cm_FindServer(&saddr, CM_SERVER_FILE);
+            if ( tsp )		/* an existing server - ref count increased */
+            {
+                tsp->ipRank = (USHORT)dwRank; /* no need to protect by mutex*/
+
+                /* find volumes which might have RO copy 
+                /* on server and change the ordering of 
+                 * their RO list 
+                 */
+                cm_ChangeRankVolume(tsp);
+                cm_PutServer(tsp);  /* decrease refcount */
+            }
+            else	/* add a new server without a cell */
+            {
+                tsp = cm_NewServer(&saddr, CM_SERVER_FILE, NULL); /* refcount = 1 */
+                tsp->ipRank = (USHORT)dwRank;
+            }
+        }
+
+        RegCloseKey(hkPrefs);
+    }
+}
+#endif /* DJGPP */
 
 /*
  * AFSD Initialization
@@ -380,10 +527,10 @@ configureBackConnectionHostNames(void)
 int afsd_InitCM(char **reasonP)
 {
     osi_uid_t debugID;
-    long cacheBlocks;
-    long cacheSize;
+    DWORD cacheBlocks;
+    DWORD cacheSize;
     long logChunkSize;
-    long stats;
+    DWORD stats;
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
@@ -394,7 +541,7 @@ int afsd_InitCM(char **reasonP)
     static struct rx_securityClass *nullServerSecurityClassp;
     struct hostent *thp;
     char *msgBuf;
-    char buf[1024], *p, *q;
+    char buf[1024];
     HKEY parmKey;
     DWORD dummyLen;
     DWORD regType;
@@ -403,6 +550,12 @@ int afsd_InitCM(char **reasonP)
     WSADATA WSAjunk;
     lana_number_t lanaNum;
     int i;
+    char *p, *q; 
+    int cm_noIPAddr;         /* number of client network interfaces */
+    int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+    int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+    int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+    int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
 
     WSAStartup(0x0101, &WSAjunk);
 
@@ -429,7 +582,7 @@ int afsd_InitCM(char **reasonP)
     srand(ntohl(cm_HostAddr));
 
     /* Look up configuration parameters in Registry */
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code != ERROR_SUCCESS) {
         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
@@ -613,7 +766,7 @@ int afsd_InitCM(char **reasonP)
     if (code == ERROR_SUCCESS && buf[0]) {
         if (regType == REG_EXPAND_SZ) {
             dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
-            if(dummyLen > sizeof(cm_CachePath)) {
+            if (dummyLen > sizeof(cm_CachePath)) {
                 afsi_log("Cache path [%s] longer than %d after expanding env strings", buf, sizeof(cm_CachePath));
                 osi_panic("CachePath too long", __FILE__, __LINE__);
             }
@@ -633,13 +786,27 @@ int afsd_InitCM(char **reasonP)
 
     dummyLen = sizeof(virtualCache);
     code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
-                            &virtualCache, &dummyLen);
-    if (code == ERROR_SUCCESS && virtualCache) {
-        buf_cacheType = CM_BUF_CACHETYPE_VIRTUAL;
-    } else {
-        buf_cacheType = CM_BUF_CACHETYPE_FILE;
+                            (LPBYTE)&virtualCache, &dummyLen);
+    afsi_log("Cache type is %s", (virtualCache?"VIRTUAL":"FILE"));
+
+    if (!virtualCache) {
+        dummyLen = sizeof(cm_ValidateCache);
+        code = RegQueryValueEx(parmKey, "ValidateCache", NULL, NULL,
+                               (LPBYTE)&cm_ValidateCache, &dummyLen);
+        if ( cm_ValidateCache < 0 || cm_ValidateCache > 2 )
+            cm_ValidateCache = 1;
+        switch (cm_ValidateCache) {
+        case 0:
+            afsi_log("Cache Validation disabled");
+            break;
+        case 1:
+            afsi_log("Cache Validation on Startup");
+            break;
+        case 2:
+            afsi_log("Cache Validation on Startup and Shutdown");
+            break;
+        }
     }
-    afsi_log("Cache type is %s", ((buf_cacheType == CM_BUF_CACHETYPE_FILE)?"FILE":"VIRTUAL"));
 
     dummyLen = sizeof(traceOnPanic);
     code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
@@ -826,7 +993,7 @@ int afsd_InitCM(char **reasonP)
     RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
-    if(SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
+    if (SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
         LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
 
         if (LANadapter != -1)
@@ -844,13 +1011,7 @@ int afsd_InitCM(char **reasonP)
         osi_panic(buf, __FILE__, __LINE__);
     }
 
-    /* setup early variables */
-    /* These both used to be configurable. */
-    smb_UseV3 = 1;
-    buf_bufferSize = CM_CONFIGDEFAULT_BLOCKSIZE;
-
-    /* turn from 1024 byte units into memory blocks */
-    cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
+    cacheBlocks = (cacheSize * 1024) / CM_CONFIGDEFAULT_BLOCKSIZE;
         
     /* get network related info */
     cm_noIPAddr = CM_MAXINTERFACE_ADDR;
@@ -869,13 +1030,13 @@ int afsd_InitCM(char **reasonP)
      */
     cm_initParams.nChunkFiles = 0;
     cm_initParams.nStatCaches = stats;
-    cm_initParams.nDataCaches = 0;
-    cm_initParams.nVolumeCaches = 0;
+    cm_initParams.nDataCaches = cacheBlocks;
+    cm_initParams.nVolumeCaches = stats/2;
     cm_initParams.firstChunkSize = cm_chunkSize;
     cm_initParams.otherChunkSize = cm_chunkSize;
     cm_initParams.cacheSize = cacheSize;
     cm_initParams.setTime = 0;
-    cm_initParams.memCache = 0;
+    cm_initParams.memCache = 1;
 
     /* Set RX parameters before initializing RX */
     if ( rx_nojumbo ) {
@@ -897,28 +1058,20 @@ int afsd_InitCM(char **reasonP)
     /* init user daemon, and other packages */
     cm_InitUser();
 
-    cm_InitACLCache(2*stats);
-
     cm_InitConn();
 
-    cm_InitCell();
-        
     cm_InitServer();
         
-    cm_InitVolume();
-
     cm_InitIoctl();
         
     smb_InitIoctl();
         
     cm_InitCallback();
         
-    cm_InitSCache(stats);
-        
-    code = cm_InitDCache(0, cacheBlocks);
-    afsi_log("cm_InitDCache code %x", code);
+    code = cm_InitMappedMemory(virtualCache, cm_CachePath, stats, cm_chunkSize, cacheBlocks);
+    afsi_log("cm_InitMappedMemory code %x", code);
     if (code != 0) {
-        *reasonP = "error initializing cache";
+        *reasonP = "error initializing cache file";
         return -1;
     }
 
@@ -972,13 +1125,13 @@ int afsd_InitCM(char **reasonP)
         return -1;
     }   
     else if (cm_freelanceEnabled)
-        cm_rootCellp = NULL;
+        cm_data.rootCellp = NULL;
 
     if (code == 0 && !cm_freelanceEnabled) 
     {
-        cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-        afsi_log("cm_GetCell addr %x", (int)cm_rootCellp);
-        if (cm_rootCellp == NULL) 
+        cm_data.rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
+        afsi_log("cm_GetCell addr %x", (int)cm_data.rootCellp);
+        if (cm_data.rootCellp == NULL) 
         {
             *reasonP = "can't find root cell in afsdcell.ini";
             return -1;
@@ -993,6 +1146,9 @@ int afsd_InitCM(char **reasonP)
     /* Initialize the RPC server for session keys */
     RpcInit();
 
+#if !defined(DJGPP)
+    afsd_InitServerPreferences();
+#endif
     return 0;
 }
 
@@ -1006,11 +1162,11 @@ int afsd_InitDaemons(char **reasonP)
     /* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
-		osi_Log0(afsd_logp, "Loading Root Volume from cell");
-        code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
-                                  &req, CM_FLAG_CREATE, &cm_rootVolumep);
+        osi_Log0(afsd_logp, "Loading Root Volume from cell");
+        code = cm_GetVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
+                                  &req, CM_FLAG_CREATE, &cm_data.rootVolumep);
         afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-                 (code ? (cm_volume_t *)-1 : cm_rootVolumep));
+                 (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
         if (code != 0) {
             *reasonP = "can't find root volume in root cell";
             return -1;
@@ -1019,24 +1175,24 @@ int afsd_InitDaemons(char **reasonP)
 
     /* compute the root fid */
     if (!cm_freelanceEnabled) {
-        cm_rootFid.cell = cm_rootCellp->cellID;
-        cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
-        cm_rootFid.vnode = 1;
-        cm_rootFid.unique = 1;
+        cm_data.rootFid.cell = cm_data.rootCellp->cellID;
+        cm_data.rootFid.volume = cm_GetROVolumeID(cm_data.rootVolumep);
+        cm_data.rootFid.vnode = 1;
+        cm_data.rootFid.unique = 1;
     }
     else
-        cm_FakeRootFid(&cm_rootFid);
+        cm_FakeRootFid(&cm_data.rootFid);
         
-    code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
+    code = cm_GetSCache(&cm_data.rootFid, &cm_data.rootSCachep, cm_rootUserp, &req);
     afsi_log("cm_GetSCache code %x scache %x", code,
-             (code ? (cm_scache_t *)-1 : cm_rootSCachep));
+             (code ? (cm_scache_t *)-1 : cm_data.rootSCachep));
     if (code != 0) {
         *reasonP = "unknown error";
         return -1;
     }
 
     cm_InitDaemon(numBkgD);
-    afsi_log("cm_InitDaemon");
+    afsi_log("cm_InitDaemon complete");
 
     return 0;
 }
@@ -1048,7 +1204,7 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
     DWORD dwValue;
     DWORD code;
 
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(DWORD);

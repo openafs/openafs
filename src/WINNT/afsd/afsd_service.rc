@@ -13,8 +13,8 @@
 #define AFS_VERINFO_NAME "afsd_service"
 #define AFS_VERINFO_FILENAME "afsd_service.exe"
 
-1	ICON	afsd.ico
-
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
+
+1       ICON    afsd.ico
 

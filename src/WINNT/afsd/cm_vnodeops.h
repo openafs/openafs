@@ -114,6 +114,10 @@ extern long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp,
 extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
 	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
+extern long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
+                            cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
+                            cm_user_t *userp, cm_req_t *reqp);
+
 extern int cm_ExpandSysName(char *inp, char *outp, long outSize,
                             unsigned int sysNameIndex);
 

@@ -17,6 +17,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include <WINNT/TaLocale.h>
+#include <WINNT/afsreg.h>
 #undef REALLOC
 #include "drivemap.h"
 #include <time.h>
@@ -35,9 +36,6 @@ extern void Config_GetLanAdapter (ULONG *pnLanAdapter);
  *
  */
 
-#undef AFSConfigKeyName
-const TCHAR sAFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
-
 
 /*
  * PROFILE SECTIONS ___________________________________________________________
@@ -46,9 +44,9 @@ const TCHAR sAFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\Tra
 
 #define cREALLOC_SUBMOUNTS   4
 
-static TCHAR cszSECTION_SUBMOUNTS[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Submounts");
-static TCHAR cszSECTION_MAPPINGS[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Mappings");
-static TCHAR cszSECTION_ACTIVE[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Active Maps");
+static TCHAR cszSECTION_SUBMOUNTS[] = TEXT(AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts");
+static TCHAR cszSECTION_MAPPINGS[]  = TEXT(AFSREG_CLT_OPENAFS_SUBKEY "\\Mappings");
+static TCHAR cszSECTION_ACTIVE[]    = TEXT(AFSREG_CLT_OPENAFS_SUBKEY "\\Active Maps");
 
 static TCHAR cszAUTOSUBMOUNT[] = TEXT("Auto");
 static TCHAR cszLANMANDEVICE[] = TEXT("\\Device\\LanmanRedirector\\");
@@ -648,7 +646,7 @@ BOOL DriveIsGlobalAfsDrive(TCHAR chDrive)
    TCHAR szValue[128];
    HKEY hKey;
 
-   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), sAFSConfigKeyName);
+   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSREG_CLT_SVC_PARAM_SUBKEY);
 
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
       return FALSE;
@@ -1001,7 +999,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 DWORD dwOldState=0;
 TCHAR pUserName[MAXRANDOMNAMELEN]=TEXT("");
 BOOL fUserName=FALSE;
-#define AFSLogonOptionName TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider")
+#define AFSLogonOptionName TEXT(AFSREG_CLT_SVC_PROVIDER_SUBKEY)
 
 void SetBitLogonOption(BOOL set,DWORD value)
 {
@@ -1011,32 +1009,32 @@ void SetBitLogonOption(BOOL set,DWORD value)
 
 DWORD RWLogonOption(BOOL read,DWORD value)
 {
-	// if read is true then if value==0 return registry value
-	// if read and value!=0 then use value to test registry, return TRUE if value bits match value read
-   HKEY hk;
-   DWORD dwDisp;
-	DWORD LSPtype, LSPsize;
-	DWORD rval;
-   if (read)
-   {
-	   rval=0;
-		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, KEY_QUERY_VALUE, &hk)==ERROR_SUCCESS)
-		{
-			LSPsize=sizeof(rval);
-			RegQueryValueEx(hk, "LogonOptions", NULL,
-						&LSPtype, (LPBYTE)&rval, &LSPsize);
-			RegCloseKey (hk);
-		}
-		return (value==0)?rval:((rval & value)==value);
-
-   } else {	//write
-		if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, NULL, 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
-		{
-			RegSetValueEx(hk,TEXT("LogonOptions"),NULL,REG_DWORD,(LPBYTE)&value,sizeof(value));
-			RegCloseKey (hk);
-		}
-		return TRUE;
-   }
+    // if read is true then if value==0 return registry value
+    // if read and value!=0 then use value to test registry, return TRUE if value bits match value read
+    HKEY hk;
+    DWORD dwDisp;
+    DWORD LSPtype, LSPsize;
+    DWORD rval;
+   
+    if (read)
+    {
+        rval=0;
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, KEY_QUERY_VALUE, &hk)==ERROR_SUCCESS)
+        {
+            LSPsize=sizeof(rval);
+            RegQueryValueEx(hk, "LogonOptions", NULL,
+                             &LSPtype, (LPBYTE)&rval, &LSPsize);
+            RegCloseKey (hk);
+        }
+        return (value==0)?rval:((rval & value)==value);
+    } else {	//write
+        if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, NULL, 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+        {
+            RegSetValueEx(hk,TEXT("LogonOptions"),NULL,REG_DWORD,(LPBYTE)&value,sizeof(value));
+            RegCloseKey (hk);
+        }
+        return TRUE;
+    }    
 }
 
 void MapShareName(char *pszCmdLineA)
@@ -1331,7 +1329,7 @@ BOOL GlobalMountDrive()
 	return TRUE;
     if (!GetComputerName(cm_HostName, &dwType))
         return TRUE;
-    sprintf(szKeyName, "%s\\GlobalAutoMapper", sAFSConfigKeyName);
+    sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSREG_CLT_SVC_PARAM_SUBKEY);
     
     dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE,
 			    &hKey);

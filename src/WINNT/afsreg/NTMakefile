@@ -27,7 +27,7 @@ $(LIBOBJS): $$(@B).c
     $(C2OBJ) $**
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)
+	$(LIBARCH) Iphlpapi.lib
 
 install_headers: $(INCFILES)
 

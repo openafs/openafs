@@ -10,12 +10,10 @@
 #include <windows.h>
 #include <stdarg.h>
 #include <string.h>
+#include <WINNT/afsreg.h>
 #include "afsd_eventlog.h"
 
-#define SZSERVICEPATH 		"System\\CurrentControlSet\\Services\\"
-#define SZSERVICENAME		"TransarcAFSDaemon"
-
-static CHAR	szKeyName[] = "System\\CurrentControlSet\\Services\\EventLog\\Application\\TransarcAFSDaemon";
+static CHAR	szKeyName[] = AFSREG_APPLOG_SUBKEY "\\" AFSREG_CLT_SVC_NAME;
 
 static BOOL	GetServicePath(LPTSTR lpPathBuf, PDWORD pdwPathBufSize);
 static BOOL	AddEventSource(void);
@@ -24,18 +22,13 @@ static BOOL
 GetServicePath(LPTSTR lpPathBuf, PDWORD pdwPathBufSize)
 {
 	HKEY	hKey = NULL; 
-	UCHAR	szBuf[MAX_PATH]; 
 	DWORD	dwData = 0;
 	BOOL	bRet = TRUE;
 
 	do {
-		// Prepare path in Registry
-		memset(szBuf, '\0', MAX_PATH);
-		strcpy(szBuf, SZSERVICEPATH);
-		strcat(szBuf, "TransarcAFSDaemon");
 		
 		// Open key
-		if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, szBuf, 0, KEY_QUERY_VALUE, &hKey ) )
+		if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_SVR_SVC_SUBKEY, 0, KEY_QUERY_VALUE, &hKey ) )
 		{		
 			bRet = FALSE;
 			break;
@@ -103,7 +96,7 @@ AddEventSource()
 			// Add the name to the EventMessageFile subkey. 
 			if ( RegSetValueEx(
 					hKey,			// subkey handle 
-					"EventMessageFile",	// value name 
+					AFSREG_SVR_APPLOG_MSGFILE_VALUE,	// value name 
 					0,			// must be zero 
 					REG_EXPAND_SZ,		// value type 
 					(LPBYTE) szBuf,		// pointer to value data 
@@ -119,7 +112,7 @@ AddEventSource()
  
 			if ( RegSetValueEx(
 					hKey,			// subkey handle 
-					"TypesSupported",	// value name 
+					AFSREG_SVR_APPLOG_MSGTYPE_VALUE,	// value name 
 					0,			// must be zero 
 					REG_DWORD,		// value type 
 					(LPBYTE) &dwData,	// pointer to value data 
@@ -137,7 +130,7 @@ AddEventSource()
 			dwData = MAX_PATH;
 			if ( RegQueryValueEx( 
 					hKey,			// handle to key
-					"EventMessageFile",	// value name
+					AFSREG_SVR_APPLOG_MSGFILE_VALUE,	// value name
 					NULL,			// reserved
 					NULL,			// type buffer
 					(LPBYTE) szBuf,		// data buffer
@@ -187,7 +180,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, LPTSTR lpString, ...)
 		return;
 
 	// Get a handle to the event log.
-	hEventSource = RegisterEventSource(NULL, SZSERVICENAME);
+	hEventSource = RegisterEventSource(NULL, AFSREG_CLT_SVC_PARAM_KEY);
 	if (hEventSource == NULL)
 		return;
 

@@ -12,6 +12,7 @@ extern "C" {
 #include <afs/stds.h>
 #include <afs/afskfw.h>
 }
+#include <WINNT\afsreg.h>
 
 #include "afscreds.h"
 #ifdef USE_KFW
@@ -294,7 +295,7 @@ void Advanced_OnStartup (HWND hDlg)
    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
    HKEY hk;
-   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
       {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;

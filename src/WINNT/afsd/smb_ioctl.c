@@ -79,24 +79,25 @@ void smb_InitIoctl(void)
 /* called to make a fid structure into an IOCTL fid structure */
 void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
 {
-	smb_ioctl_t *iop;
-	cm_space_t *copyPrefix;
+    smb_ioctl_t *iop;
+    cm_space_t *copyPrefix;
 
-	lock_ObtainMutex(&fidp->mx);
-	fidp->flags |= SMB_FID_IOCTL;
-	fidp->scp = &cm_fakeSCache;
-        if (fidp->ioctlp == NULL) {
-		iop = malloc(sizeof(*iop));
-                memset(iop, 0, sizeof(*iop));
-                fidp->ioctlp = iop;
-				iop->fidp = fidp;
-        }
-	if (prefix) {
-		copyPrefix = cm_GetSpace();
-		strcpy(copyPrefix->data, prefix->data);
-		fidp->ioctlp->prefix = copyPrefix;
-	}
-	lock_ReleaseMutex(&fidp->mx);
+    lock_ObtainMutex(&fidp->mx);
+    fidp->flags |= SMB_FID_IOCTL;
+    fidp->scp = &cm_data.fakeSCache;
+    cm_HoldSCache(fidp->scp);
+    if (fidp->ioctlp == NULL) {
+        iop = malloc(sizeof(*iop));
+        memset(iop, 0, sizeof(*iop));
+        fidp->ioctlp = iop;
+        iop->fidp = fidp;
+    }
+    if (prefix) {
+        copyPrefix = cm_GetSpace();
+        strcpy(copyPrefix->data, prefix->data);
+        fidp->ioctlp->prefix = copyPrefix;
+    }
+    lock_ReleaseMutex(&fidp->mx);
 }
 
 /* called when we receive a read call, does the send of the received data if
@@ -105,40 +106,42 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
  */
 smb_IoctlPrepareRead(smb_fid_t *fidp, smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	long opcode;
-        smb_ioctlProc_t *procp;
-        long code;
+    long opcode;
+    smb_ioctlProc_t *procp;
+    long code;
 
-	if (ioctlp->flags & SMB_IOCTLFLAG_DATAIN) {
-		ioctlp->flags &= ~SMB_IOCTLFLAG_DATAIN;
-                
-                /* do the call now, or fail if we didn't get an opcode, or
-                 * enough of an opcode.
-                 */
-                if (ioctlp->inCopied < sizeof(long)) return CM_ERROR_INVAL;
-                memcpy(&opcode, ioctlp->inDatap, sizeof(long));
-                ioctlp->inDatap += sizeof(long);
+    if (ioctlp->flags & SMB_IOCTLFLAG_DATAIN) {
+        ioctlp->flags &= ~SMB_IOCTLFLAG_DATAIN;
 
-                osi_Log1(afsd_logp, "Ioctl opcode %d", opcode);
+        /* do the call now, or fail if we didn't get an opcode, or
+         * enough of an opcode.
+         */
+        if (ioctlp->inCopied < sizeof(long)) 
+            return CM_ERROR_INVAL;
+        memcpy(&opcode, ioctlp->inDatap, sizeof(long));
+        ioctlp->inDatap += sizeof(long);
 
-		/* check for opcode out of bounds */
-                if (opcode < 0 || opcode >= SMB_IOCTL_MAXPROCS)
-                	return CM_ERROR_TOOBIG;
-		
-                /* check for no such proc */
-                procp = smb_ioctlProcsp[opcode];
-                if (procp == NULL) return CM_ERROR_BADOP;
+        osi_Log1(afsd_logp, "Ioctl opcode 0x%x", opcode);
 
-		/* otherwise, make the call */
-		ioctlp->outDatap += sizeof(long);	/* reserve room for return code */
-                code = (*procp)(ioctlp, userp);
+        /* check for opcode out of bounds */
+        if (opcode < 0 || opcode >= SMB_IOCTL_MAXPROCS)
+            return CM_ERROR_TOOBIG;
 
-		osi_Log1(afsd_logp, "Ioctl return code %d", code);
+        /* check for no such proc */
+        procp = smb_ioctlProcsp[opcode];
+        if (procp == NULL) 
+            return CM_ERROR_BADOP;
 
-		/* copy in return code */
-                memcpy(ioctlp->outAllocp, &code, sizeof(long));
-        }
-        return 0;
+        /* otherwise, make the call */
+        ioctlp->outDatap += sizeof(long);	/* reserve room for return code */
+        code = (*procp)(ioctlp, userp);
+
+        osi_Log1(afsd_logp, "Ioctl return code 0x%x", code);
+
+        /* copy in return code */
+        memcpy(ioctlp->outAllocp, &code, sizeof(long));
+    }
+    return 0;
 }
 
 /* called when we receive a write call.  If this is the first write call after

@@ -19,7 +19,7 @@ extern "C" {
 }
 
 #include "afscreds.h"
-
+#include <WINNT\afsreg.h>
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -155,7 +155,7 @@ void GetGatewayName (LPTSTR pszGateway)
 {
    *pszGateway = TEXT('\0');
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
       {
       DWORD dwSize = MAX_PATH;
       DWORD dwType = REG_SZ;
@@ -213,7 +213,7 @@ BOOL IsServicePersistent (void)
    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
       {
       SC_HANDLE hService;
-      if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+      if ((hService = OpenService (hManager, TEXT(AFSREG_CLT_SVC_NAME), GENERIC_READ)) != NULL)
          {
          DWORD dwSize = sizeof(Config);
          QueryServiceConfig (hService, (QUERY_SERVICE_CONFIG*)&Config, sizeof(Config), &dwSize);
@@ -237,7 +237,7 @@ BOOL IsServiceConfigured (void)
       {
       rc = TRUE;
       }
-   else if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+   else if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SVC_PARAM_SUBKEY), &hk) == 0)
       {
       TCHAR szCell[ MAX_PATH ];
       DWORD dwSize = sizeof(szCell);
@@ -450,7 +450,7 @@ int GetDefaultCell (LPTSTR pszCell)
         int rc;
         HKEY hk;
 
-        if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+        if (RegOpenKey (HKEY_CURRENT_USER, TEXT(AFSREG_USER_OPENAFS_SUBKEY), &hk) == 0)
         {
             DWORD dwSize = sizeof(szCellA);
             DWORD dwType = REG_SZ;

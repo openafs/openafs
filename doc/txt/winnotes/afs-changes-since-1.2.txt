@@ -1,7 +1,87 @@
 Since 1.3.77:
-  * The list of ACL entries was becoming corrupted because the function
-    which obtained a free entry was doing so without the appropriate lock
-    being held.
+  * The allDown logic in cm_ConnByMServers() was wrong.  The allDown
+    flag should not be cleared if a volume's server reference is 
+    marked as "offline".  In the case where all of the volume's 
+    servers are either "down" or the volumes are "offline", we want
+    cm_Analyze() to process the condition as CM_ERROR_ALLOFFLINE
+    instead of as CM_ERROR_TIMEDOUT.  In fact, CM_ERROR_TIMEDOUT
+    should never occur in practice.
+
+    In the case of CM_ERROR_ALLOFFLINE, cm_Analyze() will sleep for
+    5 seconds, clear the server down and volume busy flags, and 
+    then force an update from the VLDB.  This allows the client to 
+    update the location of a volume if the reason for it being 
+    marked offline is because it is being moved.  Calls to 
+    cm_ConnByMServers() will be retried either until success or
+    the RDRtimeout period is reached.
+
+  * Correct the Power Management code behavior in response to 
+    Standby, Suspend, and Shutdown events.  Instead of flushing the
+    buffers associated with the mounted SMB submounts, simply write
+    all buffers which are marked dirty.
+
+  * Added support for "TheseCells" to afslogon.dll.  "TheseCells"
+    provides a list of cells other than the default cell for which
+    tokens should be obtained using the default Kerberos principal.
+    This functionality is logon domain specific and is only available
+    when using KFW for authentication.
+
+  * Fixed FindNext Invalid Handle error caused by over agressive 
+    attempts at garbage collecting dirSearch entries when the 
+    dirSearch ID wraps from the maximum value to 1.
+
+  * Add support for registry defined server preferences for VLDB and 
+    File servers.  See registry.txt for details.
+
+  * Increased default cache size to 96MB and default number of cache
+    entries to 10,000.
+
+  * Fixed refCount leaks related to directory lookups and pioctl calls.
+
+  * Callbacks revoked during a race condition with an attempt to 
+    obtain the same callback no longer result in an inaccessible
+    stat cache entry.
+
+  * New command line tool:
+
+        afsdacl : Set or reset the DACL to allow starting or stopping
+             the afsd service by any ordinary user.
+
+        Usage : afsdacl [-set | -reset] [-show]
+              -set   : Sets the DACL
+              -reset : Reset the DACL
+              -show  : Show current DACL (SDSF)
+
+  * IP addresses are no longer queried once at startup.  Instead IP
+    addresses are obtained as needed.   Loopback adapter addresses are
+    no longer published to the server.
+
+  * Pay attention to the MIT KFW registry configuration for automatic
+    importation of MSLSA credentials. (SOFTWARE\MIT\Leash32,MsLsaImport)
+
+  * Fix (once again) case-sensitive comparisons which was apparently 
+    broken in 1.3.72.
+
+  * Activate support for vos listvol -format
+
+  * Population of the "AFS Client Admins" group failed on non-English
+    versions of Windows because the name of the "Administrators" group
+    is localized.  Now we lookup the name of the group by using the
+    Administrators Group Alias Relative ID.
+
+  * Multiple cell token acquisition within afscreds.exe was broken in the 
+    case of Kerberos 5 cross realm authentication.  Instead of contacting
+    the KDC associated with the cell's realm, afscreds would obtain a 
+    token from the KDC of the user's realm.  This would result in
+    "invalid kvno errors" while authenticating to the AFS servers.  
+    Unauthenticated access would work.  The symptoms would vary based upon
+    whether or not the VLDB servers had been contacted using unauthenticated
+    connections prior to the user obtaining tokens.
+
+  * The list of ACL entries was becoming corrupted.  It appears as if 
+    an ACL when it expires was not being appropriately cleaned up.  In
+    fact, it was left in the list of ACLs associated with the scache 
+    entry.
 
   * Changed the default @sys name list to "x86_win32 i386_w2k i386_nt40"
     for 32-bit x86 systems.  The default for itanium will be "ia64_win64"
@@ -18,11 +98,47 @@ Since 1.3.77:
     STATUS_NOT_A_DIRECTORY instead of the expected 
     STATUS_OBJECT_PATH_NOT_FOUND.  This would cause the Windows SMB client
     to terminate the search for the DLL causing the execution of the 
-    application to fail.                                                                           
+    application to fail.
 
-  * Re-work the reference counting of smb_vc_t objects.  The references
+  * Rework the reference counting of smb_vc_t objects.  The references  
     stored in the waiting locks were not counted.  This could result in
-    an assertion if the reference count drops below 0.
+    an assertion if the reference count drops to zero.
+
+  * "fs wscell" returns "Freelance.Local.Root" for the workstation cell
+    when running in freelance mode.
+
+  * Added support for persistent caching of file contents, stat entries,
+    volume data, cell data, and name lookup data.  When the registry 
+    value, "NonPersistentCaching", is not defined or set to 0 the file 
+    specified by "CachePath" becomes a persistent cache file.   The 
+    size of the cache file is computed at run time.  It has a maximum
+    size of approximately 1.2GB.  The contents of the file will be 
+    validated according to the rules specified by the "ValidateCache"
+    registry value.  
+
+  * Added support for UUIDs.  UUIDs are kept for as long as the 
+    cache file is intact.
+
+  * Added cmdebug.exe and support cache manager debugging callback 
+    interfaces in afsd_service.exe.
+
+    Usage: cmdebug -servers <server machine> [-port <IP port>] [-long] 
+                   [-addrs] [-cache] [-help]
+    Where: -long   print all info
+           -addrs  print only host interfaces
+           -cache  print only cache configuration
+
+  * Symlinks to \\AFS\[all\]... will now be treated the same as 
+    symlinks to /afs/....   However, please use /afs/... as otherwise
+    the symlinks won't work on Unix.
+  
+  * Correct a problem with local CellID allocation for cells whose 
+    server list is obtained via DNS instead of a CellServDB file.  If
+    the DNS information expires the CellID assigned to the entry will
+    be changed.  This causes all of the cm_scache_t objects which refer
+    to the old cellID number to become useless.  Attempts to access 
+    files or directories with cm_scache_t objects using the old cellID
+    will fail since the server list cannot be obtained.
 
   * Correct deadlock condition in cm_EndCallbackGrantingCall which can
     be triggered if the volume referenced by the cm_scache_t object is

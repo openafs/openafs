@@ -1043,6 +1043,9 @@ void *pthread_getspecific(pthread_key_t key) {
     void *rc = NULL;
     char **tsd = TlsGetValue(tsd_index);
 
+	if (tsd == NULL)
+		return NULL;
+
     if ((key > -1) && (key < PTHREAD_KEYS_MAX )) {
 	rc = (void *) *(tsd + key);
     }

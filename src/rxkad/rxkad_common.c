@@ -323,7 +323,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     fc_KeySchedule *schedule;
     fc_InitializationVector *ivec;
     int len;
-    int nlen;
+    int nlen = 0;
     u_int word;			/* so we get unsigned right-shift */
     int checkCksum;
     afs_int32 *preSeq;

@@ -25,6 +25,7 @@
 #include <afsint.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
+#include <WINNT\afsreg.h>
 
 #include "fs.h"
 #include "fs_utils.h"
@@ -3670,7 +3671,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, char *arock)
         char *policy;
 
         RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                        "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
+                         AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
                         0, 
                         "AFS", 
                         REG_OPTION_NON_VOLATILE,
@@ -3718,7 +3719,7 @@ CSCPolicyCmd(struct cmd_syndesc *asp, char *arock)
         /* list current csc policies */
 
         RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                        "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
+                        AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
                         0, 
                         "AFS", 
                         REG_OPTION_NON_VOLATILE,

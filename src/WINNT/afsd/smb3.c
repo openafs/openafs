@@ -12,6 +12,7 @@
 
 #ifndef DJGPP
 #include <windows.h>
+#include <ntstatus.h>
 #define SECURITY_WIN32
 #include <security.h>
 #include <lmaccess.h>
@@ -24,6 +25,7 @@
 #include <osi.h>
 
 #include "afsd.h"
+#include <WINNT\afsreg.h>
 
 #include "smb.h"
 
@@ -71,12 +73,15 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
     unsigned long attrs;
 
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
-        scp->fileType == CM_SCACHETYPE_MOUNTPOINT) 
+        scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+        scp->fileType == CM_SCACHETYPE_INVALID)
     {
         attrs = SMB_ATTR_DIRECTORY;
 #ifdef SPECIAL_FOLDERS
         attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
 #endif /* SPECIAL_FOLDERS */
+    } else if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        attrs = SMB_ATTR_DIRECTORY | SMB_ATTR_SPARSE_FILE;
     } else
         attrs = 0;
     /*
@@ -85,9 +90,11 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
      */
 #ifdef notdef
     if ((scp->unixModeBits & 0222) == 0 || (scp->flags & CM_SCACHEFLAG_RO))
+        attrs |= SMB_ATTR_READONLY;		/* Read-only */
+#else
+    if ((scp->unixModeBits & 0222) == 0)
+        attrs |= SMB_ATTR_READONLY;		/* Read-only */
 #endif
-	if ((scp->unixModeBits & 0222) == 0)
-            attrs |= SMB_ATTR_READONLY;		/* Read-only */
 
     if (attrs == 0)
         attrs = SMB_ATTR_NORMAL;		/* FILE_ATTRIBUTE_NORMAL */
@@ -576,6 +583,10 @@ long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDom
                         &quotaLimits,
                         &ntsEx);
 
+    if (nts != STATUS_SUCCESS)
+        osi_Log2(smb_logp,"LsaLogonUser failure: nts %u ntsEx %u",
+                  nts, ntsEx);
+
     OutputDebugF("Return from LsaLogonUser is 0x%lX", nts);
     OutputDebugF("Extended status is 0x%lX", ntsEx);
 
@@ -930,7 +941,8 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         if (s1 == NULL) {s1 = s2; s2 = " ";}
 
         osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s", uidp->userID,
-                  osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), s1, s2);
+                  osi_LogSaveString(smb_logp, (uidp->unp) ? uidp->unp->name: " "), 
+                  osi_LogSaveString(smb_logp,s1), osi_LogSaveString(smb_logp,s2));
 
         lock_ObtainMutex(&uidp->mx);
         uidp->flags |= SMB_USERFLAG_DELETE;
@@ -1038,11 +1050,16 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     ((smb_t *)inp)->tid = newTid;
     tp = smb_GetSMBData(outp, NULL);
     if (!ipc) {
-        /* XXX - why is this a drive letter? - jaltman */
+        /* XXX - why is this a drive letter? */
         *tp++ = 'A';
         *tp++ = ':';
         *tp++ = 0;
-        smb_SetSMBDataLength(outp, 3);
+        *tp++ = 'N';
+        *tp++ = 'T';
+        *tp++ = 'F';
+        *tp++ = 'S';
+        *tp++ = 0;
+        smb_SetSMBDataLength(outp, 8);
     } else {
         strcpy(tp, "IPC");
         smb_SetSMBDataLength(outp, 4);
@@ -1191,7 +1208,7 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
         smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
         smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
         smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
-        smbp->flg2 |= SMB_FLAGS2_ERR_STATUS;
+        smbp->flg2 |= SMB_FLAGS2_32BIT_STATUS;
     }
     else {
         smbp->rcls = errClass;
@@ -1491,7 +1508,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     }
 
     /* first figure out how many shares there are */
-    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0,
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                       KEY_QUERY_VALUE, &hkParam);
     if (rv == ERROR_SUCCESS) {
         len = sizeof(allSubmount);
@@ -1503,7 +1520,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
         RegCloseKey (hkParam);
     }
 
-    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client\\Submounts",
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                       0, KEY_QUERY_VALUE, &hkSubmount);
     if (rv == ERROR_SUCCESS) {
         rv = RegQueryInfoKey(hkSubmount, NULL, NULL, NULL, NULL,
@@ -1526,9 +1543,9 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     thyper.HighPart = 0;
     thyper.LowPart = 0;
 
-    cm_HoldSCache(cm_rootSCachep);
-    cm_ApplyDir(cm_rootSCachep, smb_rapCollectSharesProc, &rootShares, &thyper, userp, &req, NULL);
-    cm_ReleaseSCache(cm_rootSCachep);
+    cm_HoldSCache(cm_data.rootSCachep);
+    cm_ApplyDir(cm_data.rootSCachep, smb_rapCollectSharesProc, &rootShares, &thyper, userp, &req, NULL);
+    cm_ReleaseSCache(cm_data.rootSCachep);
 
     cm_ReleaseUser(userp);
 
@@ -1652,7 +1669,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
 
     if(!stricmp(shareName,"all")) {
-        rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0,
+        rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0,
                           KEY_QUERY_VALUE, &hkParam);
         if (rv == ERROR_SUCCESS) {
             len = sizeof(allSubmount);
@@ -1668,7 +1685,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
             shareFound = TRUE;
 
     } else {
-        rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client\\Submounts", 0,
+        rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY "\\Submounts", 0,
                           KEY_QUERY_VALUE, &hkSubmount);
         if (rv == ERROR_SUCCESS) {
             rv = RegQueryValueEx(hkSubmount, shareName, NULL, NULL, NULL, NULL);
@@ -2077,7 +2094,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         
     /* compute initial mode bits based on read-only flag in attributes */
     initialModeBits = 0666;
-    if (attributes & 1) initialModeBits &= ~0222;
+    if (attributes & 1) 
+        initialModeBits &= ~0222;
         
     pathp = (char *) (&p->parmsp[14]);
     if (smb_StoreAnsiFilenames)
@@ -2097,26 +2115,26 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
         /* copy out remainder of the parms */
         parmSlot = 0;
-        outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
+        outp->parmsp[parmSlot++] = fidp->fid;
         if (extraInfo) {
-            outp->parmsp[parmSlot] = /* attrs */ 0; parmSlot++;
-            outp->parmsp[parmSlot] = 0; parmSlot++;	/* mod time */
-            outp->parmsp[parmSlot] = 0; parmSlot++;
-            outp->parmsp[parmSlot] = 0; parmSlot++;	/* len */
-            outp->parmsp[parmSlot] = 0x7fff; parmSlot++;
-            outp->parmsp[parmSlot] = openMode; parmSlot++;
-            outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
-            outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
+            outp->parmsp[parmSlot++] = 0;       /* attrs */
+            outp->parmsp[parmSlot++] = 0;       /* mod time */
+            outp->parmsp[parmSlot++] = 0; 
+            outp->parmsp[parmSlot++] = 0;       /* len */
+            outp->parmsp[parmSlot++] = 0x7fff;
+            outp->parmsp[parmSlot++] = openMode;
+            outp->parmsp[parmSlot++] = 0;       /* file type 0 ==> normal file or dir */
+            outp->parmsp[parmSlot++] = 0;       /* IPC junk */
         }   
         /* and the final "always present" stuff */
-        outp->parmsp[parmSlot] = /* openAction found existing file */ 1; parmSlot++;
+        outp->parmsp[parmSlot++] = 1;           /* openAction found existing file */
         /* next write out the "unique" ID */
-        outp->parmsp[parmSlot] = 0x1234; parmSlot++;
-        outp->parmsp[parmSlot] = 0x5678; parmSlot++;
-        outp->parmsp[parmSlot] = 0; parmSlot++;
+        outp->parmsp[parmSlot++] = 0x1234;
+        outp->parmsp[parmSlot++] = 0x5678;
+        outp->parmsp[parmSlot++] = 0;
         if (returnEALength) {
-            outp->parmsp[parmSlot] = 0; parmSlot++;
-            outp->parmsp[parmSlot] = 0; parmSlot++;
+            outp->parmsp[parmSlot++] = 0;
+            outp->parmsp[parmSlot++] = 0;
         }       
                 
         outp->totalData = 0;
@@ -2151,21 +2169,25 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
     code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
     if (code == CM_ERROR_TIDIPC) {
-        /* Attempt to use TID allocated for IPC.  The client is
-           probably trying to locate DCE RPC end points, which
-           we don't support. */
+        /* Attempt to use a TID allocated for IPC.  The client
+         * is probably looking for DCE RPC end points which we
+         * don't support OR it could be looking to make a DFS
+         * referral request. 
+         */
         osi_Log0(smb_logp, "Tran2Open received IPC TID");
+#ifndef DFS_SUPPORT
         cm_ReleaseUser(userp);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_NOSUCHPATH;
+#endif
     }
 
     dscp = NULL;
-    code = cm_NameI(cm_rootSCachep, pathp,
+    code = cm_NameI(cm_data.rootSCachep, pathp,
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                      userp, tidPathp, &req, &scp);
     if (code != 0) {
-        code = cm_NameI(cm_rootSCachep, spacep->data,
+        code = cm_NameI(cm_data.rootSCachep, spacep->data,
                          CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                          userp, tidPathp, &req, &dscp);
         cm_FreeSpace(spacep);
@@ -2176,6 +2198,18 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             return code;
         }
         
+#ifdef DFS_SUPPORT
+        if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(dscp);
+            cm_ReleaseUser(userp);
+            smb_FreeTran2Packet(outp);
+            if ( WANTS_DFS_PATHNAMES(p) )
+                return CM_ERROR_PATH_NOT_COVERED;
+            else
+                return CM_ERROR_BADSHARENAME;
+        }
+#endif /* DFS_SUPPORT */
+
         /* otherwise, scp points to the parent directory.  Do a lookup,
          * and truncate the file if we find it, otherwise we create the
          * file.
@@ -2192,8 +2226,20 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             smb_FreeTran2Packet(outp);
             return code;
         }
-    }
-    else {
+    } else {
+#ifdef DFS_SUPPORT
+        if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            smb_FreeTran2Packet(outp);
+            if ( WANTS_DFS_PATHNAMES(p) )
+                return CM_ERROR_PATH_NOT_COVERED;
+            else
+                return CM_ERROR_BADSHARENAME;
+        }
+#endif /* DFS_SUPPORT */
+
+        /* macintosh is expensive to program for it */
         cm_FreeSpace(spacep);
     }
         
@@ -2203,7 +2249,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     if (code == 0) {
         code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
         if (code) {
-            if (dscp) cm_ReleaseSCache(dscp);
+            if (dscp) 
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             smb_FreeTran2Packet(outp);
@@ -2212,7 +2259,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
         if (excl) {
             /* oops, file shouldn't be there */
-            if (dscp) cm_ReleaseSCache(dscp);
+            if (dscp) 
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             smb_FreeTran2Packet(outp);
@@ -2229,9 +2277,10 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         else 
             openAction = 1;	/* found existing file */
     }
-    else if (!(openFun & SMB_ATTR_DIRECTORY)) {
+    else if (!(openFun & 0x10)) {
         /* don't create if not found */
-        if (dscp) cm_ReleaseSCache(dscp);
+        if (dscp) 
+            cm_ReleaseSCache(dscp);
         osi_assert(scp == NULL);
         cm_ReleaseUser(userp);
         smb_FreeTran2Packet(outp);
@@ -2270,11 +2319,13 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     }
         
     /* we don't need this any longer */
-    if (dscp) cm_ReleaseSCache(dscp);
+    if (dscp) 
+        cm_ReleaseSCache(dscp);
 
     if (code) {
         /* something went wrong creating or truncating the file */
-        if (scp) cm_ReleaseSCache(scp);
+        if (scp) 
+            cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         smb_FreeTran2Packet(outp);
         return code;
@@ -2288,9 +2339,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
             if (code == 0) {
                 /* we have a more accurate file to use (the
-                * target of the symbolic link).  Otherwise,
-                * we'll just use the symlink anyway.
-                */
+                 * target of the symbolic link).  Otherwise,
+                 * we'll just use the symlink anyway.
+                 */
                 osi_Log2(smb_logp, "symlink vp %x to vp %x",
                           scp, targetScp);
                 cm_ReleaseSCache(scp);
@@ -2323,30 +2374,28 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
     /* copy out remainder of the parms */
     parmSlot = 0;
-    outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
+    outp->parmsp[parmSlot++] = fidp->fid;
     lock_ObtainMutex(&scp->mx);
     if (extraInfo) {
-        outp->parmsp[parmSlot] = smb_Attributes(scp); parmSlot++;
+        outp->parmsp[parmSlot++] = smb_Attributes(scp);
         smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
-        outp->parmsp[parmSlot] = (unsigned short)(dosTime & 0xffff); parmSlot++;
-        outp->parmsp[parmSlot] = (unsigned short)((dosTime>>16) & 0xffff); parmSlot++;
-        outp->parmsp[parmSlot] = (unsigned short) (scp->length.LowPart & 0xffff);
-        parmSlot++;
-        outp->parmsp[parmSlot] = (unsigned short) ((scp->length.LowPart >> 16) & 0xffff);
-        parmSlot++;
-        outp->parmsp[parmSlot] = openMode; parmSlot++;
-        outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
-        outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
+        outp->parmsp[parmSlot++] = (unsigned short)(dosTime & 0xffff);
+        outp->parmsp[parmSlot++] = (unsigned short)((dosTime>>16) & 0xffff);
+        outp->parmsp[parmSlot++] = (unsigned short) (scp->length.LowPart & 0xffff);
+        outp->parmsp[parmSlot++] = (unsigned short) ((scp->length.LowPart >> 16) & 0xffff);
+        outp->parmsp[parmSlot++] = openMode;
+        outp->parmsp[parmSlot++] = 0;   /* file type 0 ==> normal file or dir */
+        outp->parmsp[parmSlot++] = 0;   /* IPC junk */
     }   
     /* and the final "always present" stuff */
-    outp->parmsp[parmSlot] = openAction; parmSlot++;
+    outp->parmsp[parmSlot++] = openAction;
     /* next write out the "unique" ID */
-    outp->parmsp[parmSlot] = (unsigned short) (scp->fid.vnode & 0xffff); parmSlot++;
-    outp->parmsp[parmSlot] = (unsigned short) (scp->fid.volume & 0xffff); parmSlot++;
-    outp->parmsp[parmSlot] = 0; parmSlot++;
+    outp->parmsp[parmSlot++] = (unsigned short) (scp->fid.vnode & 0xffff); 
+    outp->parmsp[parmSlot++] = (unsigned short) (scp->fid.volume & 0xffff); 
+    outp->parmsp[parmSlot++] = 0; 
     if (returnEALength) {
-        outp->parmsp[parmSlot] = 0; parmSlot++;
-        outp->parmsp[parmSlot] = 0; parmSlot++;
+        outp->parmsp[parmSlot++] = 0; 
+        outp->parmsp[parmSlot++] = 0; 
     }   
     lock_ReleaseMutex(&scp->mx);
     outp->totalData = 0;		/* total # of data bytes */
@@ -2516,10 +2565,19 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
-    code = cm_NameI(cm_rootSCachep, spacep->data, caseFold, userp, tidPathp,
+    code = cm_NameI(cm_data.rootSCachep, spacep->data, caseFold, userp, tidPathp,
                      reqp, &dscp);
     cm_FreeSpace(spacep);
-    if (code) return code;
+    if (code) 
+        return code;
+
+#ifdef DFS_SUPPORT
+    if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+        cm_ReleaseSCache(dscp);
+        cm_ReleaseUser(userp);
+        return CM_ERROR_PATH_NOT_COVERED;
+    }
+#endif /* DFS_SUPPORT */
 
     if (!lastNamep) lastNamep = pathp;
     else lastNamep++;
@@ -2642,14 +2700,21 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
             if (stricmp(lastComp, "\\desktop.ini") == 0) {
-                code = cm_NameI(cm_rootSCachep, spacep->data,
+                code = cm_NameI(cm_data.rootSCachep, spacep->data,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
                                  | CM_FLAG_FOLLOW,
                                  userp, tidPathp, &req, &dscp);
                 if (code == 0) {
-                    if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT
-                         && !dscp->mountRootFidp)
+#ifdef DFS_SUPPORT
+                    if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                        if ( WANTS_DFS_PATHNAMES(p) )
+                            code = CM_ERROR_PATH_NOT_COVERED;
+                        else
+                            code = CM_ERROR_BADSHARENAME;
+                    } else
+#endif /* DFS_SUPPORT */
+                    if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
                         code = CM_ERROR_NOSUCHFILE;
                     else if (dscp->fileType == CM_SCACHETYPE_DIRECTORY) {
                         cm_buf_t *bp = buf_Find(dscp, &hzero);
@@ -2675,7 +2740,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     /* now do namei and stat, and copy out the info */
-    code = cm_NameI(cm_rootSCachep, (char *)(&p->parmsp[3]),
+    code = cm_NameI(cm_data.rootSCachep, (char *)(&p->parmsp[3]),
                      CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
 
     if (code) {
@@ -2684,6 +2749,20 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         smb_FreeTran2Packet(outp);
         return 0;
     }
+
+#ifdef DFS_SUPPORT
+    if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        if ( WANTS_DFS_PATHNAMES(p) )
+            code = CM_ERROR_PATH_NOT_COVERED;
+        else
+            code = CM_ERROR_BADSHARENAME;
+        smb_SendTran2Error(vcp, p, opx, code);
+        smb_FreeTran2Packet(outp);
+        return 0;
+    }
+#endif /* DFS_SUPPORT */
 
     lock_ObtainMutex(&scp->mx);
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
@@ -3079,8 +3158,18 @@ smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
     return CM_ERROR_BADOP;
 }
 
+struct smb_v2_referral {
+    USHORT ServerType;
+    USHORT ReferralFlags;
+    ULONG  Proximity;
+    ULONG  TimeToLive;
+    USHORT DfsPathOffset;
+    USHORT DfsAlternativePathOffset;
+    USHORT NetworkAddressOffset;
+};
+
 long 
-smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
+smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
     /* This is a UNICODE only request (bit15 of Flags2) */
     /* The TID must be IPC$ */
@@ -3091,9 +3180,96 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* ServerType = 0; indicates the next server should be queried for the file */
     /* ReferralFlags = 0x01; PathConsumed characters should be stripped */
     /* Node = UnicodeString of UNC path of the next share name */
+#ifdef DFS_SUPPORT
+    long code = 0;
+    int maxReferralLevel = 0;
+    char requestFileName[1024] = "";
+    smb_tran2Packet_t *outp = 0;
+    cm_user_t *userp = 0;
+    cm_scache_t *scp;
+    cm_req_t req;
+    CPINFO CodePageInfo;
+    int i, nbnLen, reqLen;
+    int idx;
 
-    osi_Log0(smb_logp,"ReceiveTran2GetDFSReferral - NOT_SUPPORTED");
+    cm_InitReq(&req);
+
+    maxReferralLevel = p->parmsp[0];
+
+    GetCPInfo(CP_ACP, &CodePageInfo);
+    WideCharToMultiByte(CP_ACP, 0, (LPCWSTR) &p->parmsp[1], -1, 
+                        requestFileName, 1024, NULL, NULL);
+
+    osi_Log2(smb_logp,"ReceiveTran2GetDfsReferral [%d][%s]", 
+             maxReferralLevel, osi_LogSaveString(smb_logp, requestFileName));
+
+    nbnLen = strlen(cm_NetbiosName);
+    reqLen = strlen(requestFileName);
+
+    if (reqLen == nbnLen + 5 &&
+        requestFileName[0] == '\\' &&
+        !_strnicmp(cm_NetbiosName,&requestFileName[1],nbnLen) &&
+        requestFileName[nbnLen+1] == '\\' &&
+        !_strnicmp("all",&requestFileName[nbnLen+2],3)) 
+    {
+        USHORT * sp;
+        struct smb_v2_referral * v2ref;
+        outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, 2 * (reqLen + 8));
+
+        sp = (USHORT *)outp->datap;
+        idx = 0;
+        sp[idx++] = reqLen;   /* path consumed */
+        sp[idx++] = 1;        /* number of referrals */
+        sp[idx++] = 0x03;     /* flags */
+#ifdef DFS_VERSION_1
+        sp[idx++] = 1;        /* Version Number */
+        sp[idx++] = reqLen + 4;  /* Referral Size */ 
+        sp[idx++] = 1;        /* Type = SMB Server */
+        sp[idx++] = 0;        /* Do not strip path consumed */
+        for ( i=0;i<=reqLen; i++ )
+            sp[i+idx] = requestFileName[i];
+#else /* DFS_VERSION_2 */
+        sp[idx++] = 2;      /* Version Number */
+        sp[idx++] = sizeof(struct smb_v2_referral);     /* Referral Size */
+        idx += (sizeof(struct smb_v2_referral) / 2);
+        v2ref = (struct smb_v2_referral *) &sp[5];
+        v2ref->ServerType = 1;  /* SMB Server */
+        v2ref->ReferralFlags = 0x03;
+        v2ref->Proximity = 0;   /* closest */
+        v2ref->TimeToLive = 3600; /* seconds */
+        v2ref->DfsPathOffset = idx * 2;
+        v2ref->DfsAlternativePathOffset = idx * 2;
+        v2ref->NetworkAddressOffset = 0;
+        for ( i=0;i<=reqLen; i++ )
+            sp[i+idx] = requestFileName[i];
+#endif
+    } else {
+        userp = smb_GetTran2User(vcp, p);
+        if (!userp) {
+            osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral unable to resolve user [%d]", p->uid);
+            code = CM_ERROR_BADSMB;
+            goto done;
+        }   
+
+		/* not done yet */
+        code = CM_ERROR_NOSUCHPATH;
+    }
+
+  done:
+    if (userp)
+        cm_ReleaseUser(userp);
+    if (code == 0) 
+        smb_SendTran2Packet(vcp, outp, op);
+    else 
+        smb_SendTran2Error(vcp, p, op, code);
+    if (outp)
+        smb_FreeTran2Packet(outp);
+ 
+    return 0;
+#else /* DFS_SUPPORT */
+    osi_Log0(smb_logp,"ReceiveTran2GetDfsReferral - NOT_SUPPORTED"); 
     return CM_ERROR_BADOP;
+#endif /* DFS_SUPPORT */
 }
 
 long 
@@ -3262,13 +3438,22 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
             /* Copy attributes */
             lattr = smb_ExtAttributes(scp);
+            if (code == CM_ERROR_NOSUCHPATH && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                if (lattr == SMB_ATTR_NORMAL)
+                    lattr = SMB_ATTR_DIRECTORY;
+                else
+                    lattr |= SMB_ATTR_DIRECTORY;
+            }
             /* merge in hidden (dot file) attribute */
-            if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
-                lattr |= SMB_ATTR_HIDDEN;
+            if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
+                if (lattr == SMB_ATTR_NORMAL)
+                    lattr = SMB_ATTR_HIDDEN;
+                else
+                    lattr |= SMB_ATTR_HIDDEN;
+            }
             *((u_long *)dptr) = lattr;
             dptr += 4;
-        }
-        else {
+        } else {
             /* get dos time */
             smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
 
@@ -3313,8 +3498,12 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp,
             /* finally copy out attributes as short */
             attr = smb_Attributes(scp);
             /* merge in hidden (dot file) attribute */
-            if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
-                attr |= SMB_ATTR_HIDDEN;
+            if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
+                if (lattr == SMB_ATTR_NORMAL)
+                    lattr = SMB_ATTR_HIDDEN;
+                else
+                    lattr |= SMB_ATTR_HIDDEN;
+            }
             *dptr++ = attr & 0xff;
             *dptr++ = (attr >> 8) & 0xff;
         }
@@ -3601,7 +3790,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     int attribute;
     long nextCookie;
     char *tp;
-    long code = 0;
+    long code = 0, code2 = 0;
     char *pathp;
     cm_dirEntry_t *dep;
     int maxCount;
@@ -3676,14 +3865,17 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         osi_assert(p->opcode == 2);
         /* find next; obtain basic parameters from request or open dir file */
         dsp = smb_FindDirSearch(p->parmsp[0]);
-        if (!dsp) 
-            return CM_ERROR_BADFD;
-        attribute = dsp->attribute;
         maxCount = p->parmsp[1];
         infoLevel = p->parmsp[2];
-        searchFlags = p->parmsp[5];
-        pathp = NULL;
         nextCookie = p->parmsp[3] | (p->parmsp[4] << 16);
+        searchFlags = p->parmsp[5];
+        if (!dsp) {
+            osi_Log2(smb_logp, "T2 search dir bad search ID: id %d nextCookie 0x%x",
+                     p->parmsp[0], nextCookie);
+            return CM_ERROR_BADFD;
+        }
+        attribute = dsp->attribute;
+        pathp = NULL;
         maskp = dsp->mask;
         starPattern = 1;	/* assume, since required a Find Next */
     }
@@ -3692,8 +3884,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
               "T2 search dir attr 0x%x, info level %d, max count %d, flags 0x%x",
               attribute, infoLevel, maxCount, searchFlags);
 
-    osi_Log2(smb_logp, "...T2 search op %d, nextCookie 0x%x",
-              p->opcode, nextCookie);
+    osi_Log3(smb_logp, "...T2 search op %d, id %d, nextCookie 0x%x",
+              p->opcode, dsp->cookie, nextCookie);
 
     if (infoLevel >= 0x101)
         searchFlags &= ~4;	/* no resume keys */
@@ -3714,8 +3906,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
                                       maxReturnData);
 
-    osi_Log1(smb_logp, "T2 receive search dir %s",
-             osi_LogSaveString(smb_logp, pathp));
+    osi_Log2(smb_logp, "T2 receive search dir count %d [%s]",
+             maxCount, osi_LogSaveString(smb_logp, pathp));
         
     /* bail out if request looks bad */
     if (p->opcode == 1 && !pathp) {
@@ -3724,12 +3916,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return CM_ERROR_BADSMB;
     }
         
-    osi_Log2(smb_logp, "T2 dir search cookie 0x%x, connection %d",
-             nextCookie, dsp->cookie);
+    osi_Log3(smb_logp, "T2 search dir id %d, nextCookie 0x%x, attr 0x%x",
+             dsp->cookie, nextCookie, attribute);
 
     userp = smb_GetTran2User(vcp, p);
     if (!userp) {
-    	osi_Log1(smb_logp, "T2 dir search unable to resolve user [%d]", p->uid);
+    	osi_Log1(smb_logp, "T2 search dir unable to resolve user [%d]", p->uid);
     	smb_ReleaseDirSearch(dsp);
     	smb_FreeTran2Packet(outp);
     	return CM_ERROR_BADSMB;
@@ -3741,8 +3933,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         scp = dsp->scp;
         cm_HoldSCache(scp);
         code = 0;
-    }
-    else {
+    } else {
         spacep = cm_GetSpace();
         smb_StripLastComponent(spacep->data, NULL, pathp);
         code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
@@ -3755,14 +3946,28 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             smb_ReleaseDirSearch(dsp);
             return 0;
         }
-        code = cm_NameI(cm_rootSCachep, spacep->data,
+        code = cm_NameI(cm_data.rootSCachep, spacep->data,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
         cm_FreeSpace(spacep);
 
         if (code == 0) {
-            if (dsp->scp != 0) 
-                cm_ReleaseSCache(dsp->scp);
+#ifdef DFS_SUPPORT_BUT_NOT_FIND_FIRST
+            if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                cm_ReleaseSCache(scp);
+                cm_ReleaseUser(userp);
+                if ( WANTS_DFS_PATHNAMES(p) )
+                    code = CM_ERROR_PATH_NOT_COVERED;
+                else
+                    code = CM_ERROR_BADSHARENAME;
+                smb_SendTran2Error(vcp, p, opx, code);
+                smb_FreeTran2Packet(outp);
+                lock_ReleaseMutex(&dsp->mx);
+                smb_DeleteDirSearch(dsp);
+                smb_ReleaseDirSearch(dsp);
+                return 0;
+            }
+#endif /* DFS_SUPPORT */
             dsp->scp = scp;
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done
@@ -3778,7 +3983,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 dsp->flags |= SMB_DIRSEARCH_BULKST;
             }
             lock_ReleaseMutex(&scp->mx);
-        }       
+        } 
     }
     lock_ReleaseMutex(&dsp->mx);
     if (code) {
@@ -3846,6 +4051,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         /* check if we've passed the dir's EOF */
         if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength)) {
+            osi_Log0(smb_logp, "T2 search dir passed eof");
             eos = 1;
             break;
         }
@@ -3856,6 +4062,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
          * the dir entry, since we'll need to check its size.
          */
         if (returnedNames >= maxCount) {
+            osi_Log2(smb_logp, "T2 search dir returnedNames %d >= maxCount %d",
+                      returnedNames, maxCount);
             break;
         }
 
@@ -3864,7 +4072,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
          * the offset of the buffer we have.  If not, get the buffer.
          */
         thyper.HighPart = curOffset.HighPart;
-        thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
+        thyper.LowPart = curOffset.LowPart & ~(cm_data.buf_blockSize-1);
         if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
             /* wrong buffer */
             if (bufferp) {
@@ -3900,8 +4108,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 lock_ObtainMutex(&scp->mx);
             }
             lock_ReleaseMutex(&dsp->mx);
-            if (code) 
+            if (code) {
+                osi_Log2(smb_logp, "T2 search dir buf_Get scp %x failed %d", scp, code);
                 break;
+            }
 
             bufferOffset = thyper;
 
@@ -3911,14 +4121,24 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                                  PRSFS_LOOKUP,
                                  CM_SCACHESYNC_NEEDCALLBACK
                                  | CM_SCACHESYNC_READ);
-                if (code) break;
+                if (code) {
+                    osi_Log2(smb_logp, "T2 search dir cm_SyncOp scp %x failed %d", scp, code);
+                    break;
+                }
                                 
-                if (cm_HaveBuffer(scp, bufferp, 0)) break;
+                if (cm_HaveBuffer(scp, bufferp, 0)) {
+                    osi_Log2(smb_logp, "T2 search dir !HaveBuffer scp %x bufferp %x", scp, bufferp);
+                    break;
+                }
 
                 /* otherwise, load the buffer and try again */
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                     &req);
-                if (code) break;
+                if (code) {
+                    osi_Log3(smb_logp, "T2 search dir cm_GetBuffer failed scp %x bufferp %x code %d", 
+                              scp, bufferp, code);
+                    break;
+                }
             }
             if (code) {
                 buf_Release(bufferp);
@@ -3931,7 +4151,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
          * in; copy it out if it represents a non-deleted entry.
          */
         entryInDir = curOffset.LowPart & (2048-1);
-        entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
+        entryInBuffer = curOffset.LowPart & (cm_data.buf_blockSize - 1);
 
         /* page header will help tell us which entries are free.  Page
          * header can change more often than once per buffer, since
@@ -3939,7 +4159,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
          * a buffer package buffer.
          */
         /* only look intra-buffer */
-        temp = curOffset.LowPart & (buf_bufferSize - 1);
+        temp = curOffset.LowPart & (cm_data.buf_blockSize - 1);
         temp &= ~(2048 - 1);	/* turn off intra-page bits */
         pageHeaderp = (cm_pageHeader_t *) (bufferp->datap + temp);
 
@@ -3978,6 +4198,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             NeedShortName = 1;
         }
 
+        osi_Log3(smb_logp, "T2 search dir vn %u name %s (%s)",
+                  dep->fid.vnode, osi_LogSaveString(smb_logp, dep->name),
+                  NeedShortName ? osi_LogSaveString(smb_logp, shortName) : "");
+
         /* When matching, we are using doing a case fold if we have a wildcard mask.
          * If we get a non-wildcard match, it's a lookup for a specific file. 
          */
@@ -3988,9 +4212,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
             /* Eliminate entries that don't match requested attributes */
             if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
-                 smb_IsDotFile(dep->name))
+                 smb_IsDotFile(dep->name)) {
+                osi_Log0(smb_logp, "T2 search dir skipping hidden");
                 goto nextEntry; /* no hidden files */
-                    
+            }
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
             {
                 /* We have already done the cm_TryBulkStat above */
@@ -4002,7 +4227,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 /*osi_Log2(smb_logp, "smb_ReceiveTran2SearchDir: file %s "
                  "has filetype %d", dep->name,
                  fileType);*/
-                if (fileType == CM_SCACHETYPE_DIRECTORY)
+                if (fileType == CM_SCACHETYPE_DIRECTORY ||
+                    fileType == CM_SCACHETYPE_DFSLINK ||
+                    fileType == CM_SCACHETYPE_INVALID)
+                    osi_Log0(smb_logp, "T2 search dir skipping directory or bad link");
                     goto nextEntry;
             }
 
@@ -4041,8 +4269,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 align = (4 - (orbytes & 3)) & 3;
             else
                 align = 0;
-            if (orbytes + bytesInBuffer + align > maxReturnData)
+            if (orbytes + bytesInBuffer + align > maxReturnData) {
+                osi_Log1(smb_logp, "T2 dir search exceed max return data %d",
+                          maxReturnData);
                 break;
+            }
 
             /* this is one of the entries to use: it is not deleted
              * and it matches the star pattern we're looking for.
@@ -4159,16 +4390,18 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     /* release the mutex */
     lock_ReleaseMutex(&scp->mx);
-    if (bufferp) buf_Release(bufferp);
+    if (bufferp) 
+        buf_Release(bufferp);
 
     /* apply and free last set of patches; if not doing a star match, this
      * will be empty, but better safe (and freeing everything) than sorry.
      */
-    smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp,
+    code2 = smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp,
                               &req);
         
     /* now put out the final parameters */
-    if (returnedNames == 0) eos = 1;
+    if (returnedNames == 0) 
+        eos = 1;
     if (p->opcode == 1) {
         /* find first */
         outp->parmsp[0] = (unsigned short) dsp->cookie;
@@ -4195,12 +4428,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     /* return # of bytes in the buffer */
     outp->totalData = bytesInBuffer;
 
-    osi_Log2(smb_logp, "T2 search dir done, %d names, code %d",
-             returnedNames, code);
-
     /* Return error code if unsuccessful on first request */
     if (code == 0 && p->opcode == 1 && returnedNames == 0)
         code = CM_ERROR_NOSUCHFILE;
+
+    osi_Log4(smb_logp, "T2 search dir done, opcode %d, id %d, %d names, code %d",
+             p->opcode, dsp->cookie, returnedNames, code);
 
     /* if we're supposed to close the search after this request, or if
      * we're supposed to close the search if we're done, and we're done,
@@ -4212,9 +4445,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         smb_DeleteDirSearch(dsp);
     if (code)
         smb_SendTran2Error(vcp, p, opx, code);
-    else {
+    else
         smb_SendTran2Packet(vcp, outp, opx);
-    }
+
     smb_FreeTran2Packet(outp);
     smb_ReleaseDirSearch(dsp);
     cm_ReleaseSCache(scp);
@@ -4358,19 +4591,41 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
-    code = cm_NameI(cm_rootSCachep, pathp,
+    code = cm_NameI(cm_data.rootSCachep, pathp,
                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                     userp, tidPathp, &req, &scp);
+
+#ifdef DFS_SUPPORT
+    if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        if ( WANTS_DFS_PATHNAMES(inp) )
+            return CM_ERROR_PATH_NOT_COVERED;
+        else
+            return CM_ERROR_BADSHARENAME;
+    }
+#endif /* DFS_SUPPORT */
+
     if (code != 0) {
-        code = cm_NameI(cm_rootSCachep, spacep->data,
+        code = cm_NameI(cm_data.rootSCachep, spacep->data,
                         CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
-
         if (code) {
             cm_ReleaseUser(userp);
             return code;
         }
-        
+
+#ifdef DFS_SUPPORT
+        if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(dscp);
+            cm_ReleaseUser(userp);
+            if ( WANTS_DFS_PATHNAMES(inp) )
+                return CM_ERROR_PATH_NOT_COVERED;
+            else
+                return CM_ERROR_BADSHARENAME;
+        }
+#endif /* DFS_SUPPORT */
+
         /* otherwise, scp points to the parent directory.  Do a lookup,
          * and truncate the file if we find it, otherwise we create the
          * file.
@@ -4382,7 +4637,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
                           &req, &scp);
         if (code && code != CM_ERROR_NOSUCHFILE) {
-			cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             return code;
         }
@@ -4396,8 +4651,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == 0) {
         code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
         if (code) {
-            if (dscp) 
-                cm_ReleaseSCache(dscp);
+            if (dscp) cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             return code;
@@ -4421,7 +4675,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         }
         else openAction = 1;	/* found existing file */
     }
-    else if (!(openFun & 0x10)) {
+    else if (!(openFun & SMB_ATTR_DIRECTORY)) {
         /* don't create if not found */
         if (dscp) cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
@@ -4461,11 +4715,13 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
         
     /* we don't need this any longer */
-    if (dscp) cm_ReleaseSCache(dscp);
+    if (dscp) 
+        cm_ReleaseSCache(dscp);
 
     if (code) {
         /* something went wrong creating or truncating the file */
-        if (scp) cm_ReleaseSCache(scp);
+        if (scp) 
+            cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         return code;
     }
@@ -4485,7 +4741,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp->scp = scp;
         
     /* compute open mode */
-    if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
+    if (openMode != 1) 
+        fidp->flags |= SMB_FID_OPENREAD;
     if (openMode == 1 || openMode == 2)
         fidp->flags |= SMB_FID_OPENWRITE;
 
@@ -4565,85 +4822,85 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                       CM_SCACHESYNC_NEEDCALLBACK
 			 | CM_SCACHESYNC_GETSTATUS
 			 | CM_SCACHESYNC_LOCK);
-	if (code) 
-            goto doneSync;
+    if (code) 
+        goto doneSync;
 
-	LockType = smb_GetSMBParm(inp, 3) & 0xff;
-	Timeout = (smb_GetSMBParm(inp, 5) << 16) + smb_GetSMBParm(inp, 4);
-	NumberOfUnlocks = smb_GetSMBParm(inp, 6);
-	NumberOfLocks = smb_GetSMBParm(inp, 7);
+    LockType = smb_GetSMBParm(inp, 3) & 0xff;
+    Timeout = (smb_GetSMBParm(inp, 5) << 16) + smb_GetSMBParm(inp, 4);
+    NumberOfUnlocks = smb_GetSMBParm(inp, 6);
+    NumberOfLocks = smb_GetSMBParm(inp, 7);
 
-	op = smb_GetSMBData(inp, NULL);
+    op = smb_GetSMBData(inp, NULL);
 
-	for (i=0; i<NumberOfUnlocks; i++) {
-            if (LockType & 0x10) {
-                /* Large Files */
-                LOffset.HighPart = *((LONG *)(op + 4));
-                LOffset.LowPart = *((DWORD *)(op + 8));
-                LLength.HighPart = *((LONG *)(op + 12));
-                LLength.LowPart = *((DWORD *)(op + 16));
-                op += 20;
-            }
-            else {
-                /* Not Large Files */
-                LOffset.HighPart = 0;
-                LOffset.LowPart = *((DWORD *)(op + 2));
-                LLength.HighPart = 0;
-                LLength.LowPart = *((DWORD *)(op + 6));
-                op += 10;
-            }
-            if (LargeIntegerNotEqualToZero(LOffset))
-                continue;
-            /* Do not check length -- length check done in cm_Unlock */
+    for (i=0; i<NumberOfUnlocks; i++) {
+        if (LockType & 0x10) {
+            /* Large Files */
+            LOffset.HighPart = *((LONG *)(op + 4));
+            LOffset.LowPart = *((DWORD *)(op + 8));
+            LLength.HighPart = *((LONG *)(op + 12));
+            LLength.LowPart = *((DWORD *)(op + 16));
+            op += 20;
+        }
+        else {
+            /* Not Large Files */
+            LOffset.HighPart = 0;
+            LOffset.LowPart = *((DWORD *)(op + 2));
+            LLength.HighPart = 0;
+            LLength.LowPart = *((DWORD *)(op + 6));
+            op += 10;
+        }
+        if (LargeIntegerNotEqualToZero(LOffset))
+            continue;
+        /* Do not check length -- length check done in cm_Unlock */
 
-            code = cm_Unlock(scp, LockType, LOffset, LLength, userp, &req);
-            if (code) goto done;
-	}       
+        code = cm_Unlock(scp, LockType, LOffset, LLength, userp, &req);
+        if (code) goto done;
+    }       
 
-	for (i=0; i<NumberOfLocks; i++) {
-            if (LockType & 0x10) {
-                /* Large Files */
-                LOffset.HighPart = *((LONG *)(op + 4));
-                LOffset.LowPart = *((DWORD *)(op + 8));
-                LLength.HighPart = *((LONG *)(op + 12));
-                LLength.LowPart = *((DWORD *)(op + 16));
-                op += 20;
-            }
-            else {
-                /* Not Large Files */
-                LOffset.HighPart = 0;
-                LOffset.LowPart = *((DWORD *)(op + 2));
-                LLength.HighPart = 0;
-                LLength.LowPart = *((DWORD *)(op + 6));
-                op += 10;
-            }
-            if (LargeIntegerNotEqualToZero(LOffset))
-                continue;
-            if (LargeIntegerLessThan(LOffset, scp->length))
-                continue;
+    for (i=0; i<NumberOfLocks; i++) {
+        if (LockType & 0x10) {
+            /* Large Files */
+            LOffset.HighPart = *((LONG *)(op + 4));
+            LOffset.LowPart = *((DWORD *)(op + 8));
+            LLength.HighPart = *((LONG *)(op + 12));
+            LLength.LowPart = *((DWORD *)(op + 16));
+            op += 20;
+        }
+        else {
+            /* Not Large Files */
+            LOffset.HighPart = 0;
+            LOffset.LowPart = *((DWORD *)(op + 2));
+            LLength.HighPart = 0;
+            LLength.LowPart = *((DWORD *)(op + 6));
+            op += 10;
+        }
+        if (LargeIntegerNotEqualToZero(LOffset))
+            continue;
+        if (LargeIntegerLessThan(LOffset, scp->length))
+            continue;
 
-            code = cm_Lock(scp, LockType, LOffset, LLength, Timeout,
-                            userp, &req, &lockp);
-            if (code == CM_ERROR_WOULDBLOCK && Timeout != 0) {
-                /* Put on waiting list */
-                waitingLock = malloc(sizeof(smb_waitingLock_t));
-                waitingLock->vcp = vcp;
-                smb_HoldVC(vcp);
-                waitingLock->inp = smb_CopyPacket(inp);
-                waitingLock->outp = smb_CopyPacket(outp);
-                waitingLock->timeRemaining = Timeout;
-                waitingLock->lockp = lockp;
-                lock_ObtainWrite(&smb_globalLock);
-                osi_QAdd((osi_queue_t **)&smb_allWaitingLocks,
-                          &waitingLock->q);
-                osi_Wakeup((long) &smb_allWaitingLocks);
-                lock_ReleaseWrite(&smb_globalLock);
-                /* don't send reply immediately */
-                outp->flags |= SMB_PACKETFLAG_NOSEND;
-            }
-            if (code) 
-                break;
-	}       
+        code = cm_Lock(scp, LockType, LOffset, LLength, Timeout,
+                        userp, &req, &lockp);
+        if (code == CM_ERROR_WOULDBLOCK && Timeout != 0) {
+            /* Put on waiting list */
+            waitingLock = malloc(sizeof(smb_waitingLock_t));
+            waitingLock->vcp = vcp;
+            smb_HoldVC(vcp);
+            waitingLock->inp = smb_CopyPacket(inp);
+            waitingLock->outp = smb_CopyPacket(outp);
+            waitingLock->timeRemaining = Timeout;
+            waitingLock->lockp = lockp;
+            lock_ObtainWrite(&smb_globalLock);
+            osi_QAdd((osi_queue_t **)&smb_allWaitingLocks,
+                      &waitingLock->q);
+            osi_Wakeup((long) &smb_allWaitingLocks);
+            lock_ReleaseWrite(&smb_globalLock);
+            /* don't send reply immediately */
+            outp->flags |= SMB_PACKETFLAG_NOSEND;
+        }
+        if (code) 
+            break;
+    }           
 
     if (code) {
         /* release any locks acquired before the failure */
@@ -5016,19 +5273,22 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     if (baseFid == 0) {
-        baseDirp = cm_rootSCachep;
+        baseDirp = cm_data.rootSCachep;
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code == CM_ERROR_TIDIPC) {
             /* Attempt to use a TID allocated for IPC.  The client
              * is probably looking for DCE RPC end points which we
-             * don't support. */
+             * don't support OR it could be looking to make a DFS
+             * referral request. 
+             */
             osi_Log0(smb_logp, "NTCreateX received IPC TID");
+#ifndef DFS_SUPPORT
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHFILE;
+#endif /* DFS_SUPPORT */
         }
-    }
-    else {
+    } else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
             osi_Log1(smb_logp, "NTCreateX Invalid base fid [%d]", baseFid);
@@ -5060,6 +5320,17 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
+#ifdef DFS_SUPPORT
+            if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                if ( WANTS_DFS_PATHNAMES(inp) )
+                    return CM_ERROR_PATH_NOT_COVERED;
+                else
+                    return CM_ERROR_BADSHARENAME;
+            }
+#endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
                              userp, &req, &scp);
             if (code == CM_ERROR_NOSUCHFILE) {
@@ -5078,6 +5349,17 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
+#ifdef DFS_SUPPORT
+        if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            if ( WANTS_DFS_PATHNAMES(inp) )
+                return CM_ERROR_PATH_NOT_COVERED;
+            else
+                return CM_ERROR_BADSHARENAME;
+        }
+#endif /* DFS_SUPPORT */
         /* we might have scp but not dscp */
     }
 
@@ -5100,6 +5382,20 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 code = cm_NameI(baseDirp, spacep->data,
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                              userp, tidPathp, &req, &dscp);
+
+#ifdef DFS_SUPPORT
+                if (code == 0 && dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                    if (scp)
+                        cm_ReleaseSCache(scp);
+                    cm_ReleaseSCache(dscp);
+                    cm_ReleaseUser(userp);
+                    free(realPathp);
+                    if ( WANTS_DFS_PATHNAMES(inp) )
+                        return CM_ERROR_PATH_NOT_COVERED;
+                    else
+                        return CM_ERROR_BADSHARENAME;
+                }
+#endif /* DFS_SUPPORT */
 
                 if (code && 
                      (tp = strrchr(spacep->data,'\\')) &&
@@ -5248,8 +5544,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* don't create if not found */
         if (dscp)
             cm_ReleaseSCache(dscp);
-        if (scp)
-            cm_ReleaseSCache(scp);
+		if (scp)
+			cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOSUCHFILE;
@@ -5422,8 +5718,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* (only applies to single component case) */
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
         cm_ReleaseSCache(scp);
-        if (dscp)
-            cm_ReleaseSCache(dscp);
+        cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOTDIR;
@@ -5490,7 +5785,6 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* leave scp held since we put it in fidp->scp */
     return 0;
 }       
-
 
 /*
  * A lot of stuff copied verbatim from NT Create&X to NT Tran Create.
@@ -5638,19 +5932,22 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     }
 
     if (baseFid == 0) {
-        baseDirp = cm_rootSCachep;
+        baseDirp = cm_data.rootSCachep;
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-        if(code == CM_ERROR_TIDIPC) {
-            /* Attempt to use TID allocated for IPC.  The client is
-             * probably trying to locate DCE RPC endpoints, which we
-             * don't support. */
+        if (code == CM_ERROR_TIDIPC) {
+            /* Attempt to use a TID allocated for IPC.  The client
+             * is probably looking for DCE RPC end points which we
+             * don't support OR it could be looking to make a DFS
+             * referral request. 
+             */
             osi_Log0(smb_logp, "NTTranCreate received IPC TID");
+#ifndef DFS_SUPPORT
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHPATH;
+#endif 
         }
-    }
-    else {
+    } else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
         	osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
@@ -5679,6 +5976,17 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
+#ifdef DFS_SUPPORT
+            if (dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                if ( WANTS_DFS_PATHNAMES(inp) )
+                    return CM_ERROR_PATH_NOT_COVERED;
+                else
+                    return CM_ERROR_BADSHARENAME;
+            }
+#endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
                              userp, &req, &scp);
             if (code == CM_ERROR_NOSUCHFILE) {
@@ -5697,17 +6005,39 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
+#ifdef DFS_SUPPORT
+        if (code == 0 && scp->fileType == CM_SCACHETYPE_DFSLINK) {
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            if ( WANTS_DFS_PATHNAMES(inp) )
+                return CM_ERROR_PATH_NOT_COVERED;
+            else
+                return CM_ERROR_BADSHARENAME;
+        }
+#endif /* DFS_SUPPORT */
     }
 
     if (code == 0) 
         foundscp = TRUE;
-    if (code != 0
-         || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
+
+    if (code != 0 || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
         /* look up parent directory */
         if ( !dscp ) {
             code = cm_NameI(baseDirp, spacep->data,
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                              userp, tidPathp, &req, &dscp);
+#ifdef DFS_SUPPORT
+            if (code == 0 && dscp->fileType == CM_SCACHETYPE_DFSLINK) {
+                cm_ReleaseSCache(dscp);
+                cm_ReleaseUser(userp);
+                free(realPathp);
+                if ( WANTS_DFS_PATHNAMES(inp) )
+                    return CM_ERROR_PATH_NOT_COVERED;
+                else
+                    return CM_ERROR_BADSHARENAME;
+            }
+#endif /* DFS_SUPPORT */
         } else
             code = 0;
         
@@ -5746,8 +6076,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 return code;
             }
         }
-    }
-    else {
+    } else {
         if (baseFid != 0) {
             smb_ReleaseFID(baseFidp);
             baseFidp = 0;
@@ -5862,8 +6191,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 }       
             }	/* lookup succeeded */
         }
-    }
-    else {
+    } else {
         /* create directory */
         osi_assert(dscp != NULL);
         osi_Log1(smb_logp,
@@ -6308,7 +6636,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         lock_ReleaseMutex(&dscp->mx);
 
         /* Convert to response packet */
-        ((smb_t *) watch)->reb = 0x80;
+        ((smb_t *) watch)->reb = SMB_FLAGS_SERVER_TO_CLIENT | SMB_FLAGS_CANONICAL_PATHNAMES;
         ((smb_t *) watch)->wct = 0;
 
         /* out parms */
@@ -6398,7 +6726,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             ((smb_t *) watch)->errLow = 0;
             ((smb_t *) watch)->errHigh = 0;
             /* Set NT Status codes flag */
-            ((smb_t *) watch)->flg2 |= SMB_FLAGS2_ERR_STATUS;
+            ((smb_t *) watch)->flg2 |= SMB_FLAGS2_32BIT_STATUS;
         }
 
         smb_SendPacket(vcp, watch);
@@ -6466,7 +6794,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             ((smb_t *)watch)->reh = 0x1;
             ((smb_t *)watch)->errLow = 0;
             ((smb_t *)watch)->errHigh = 0xC0;
-            ((smb_t *)watch)->flg2 |= SMB_FLAGS2_ERR_STATUS;
+            ((smb_t *)watch)->flg2 |= SMB_FLAGS2_32BIT_STATUS;
             smb_SendPacket(vcp, watch);
             smb_FreePacket(watch);
             return 0;
@@ -6540,7 +6868,7 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
         lock_ObtainMutex(&unp->mx);
         unp->userp = cm_NewUser();
         lock_ReleaseMutex(&unp->mx);
-		osi_Log2(smb_logp,"smb_FindCMUserByName New user name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
+        osi_Log2(smb_logp,"smb_FindCMUserByName New user name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
         osi_LogEvent("AFS smb_FindCMUserByName : New User",NULL,"name[%s] machine[%s]",usern,machine);
     }  else	{
         osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
