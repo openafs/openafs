@@ -22,6 +22,10 @@
 #ifndef AFS_NT40_ENV
 #define HAVE_UNISTD_H
 #define HAVE_FCNTL_H
+#define HAVE_SYS_TIME_H
+#define HAVE_SYS_FILE_H
+#define HAVE_NETINET_IN_H
+#define HAVE_NETDB_H
 #endif
 
 #ifdef AFS_SUN5_ENV
@@ -30,13 +34,11 @@
 #define HAVE_SYS_MNTENT_H
 #endif
 
-#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
 #define HAVE_MNTENT_H
 #endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#define HAVE_SYS_MOUNT_H
-#else
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DEC_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #define HAVE_SYS_VFS_H
 #endif
 
@@ -45,7 +47,7 @@
 #define HAVE_SYS_FS_TYPES_H
 #endif
 
-#ifdef AFS_AIX41_ENV
+#if !defined(AFS_AIX41_ENV)
 #define HAVE_SYS_MOUNT_H
 #endif
 
