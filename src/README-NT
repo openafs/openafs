@@ -154,6 +154,16 @@ The header files that are required are found from a Microsoft SDK are:
    netspi.h
    npapi.h
 
+These files come from Microsoft DDKs/SDKs as follows:
+
+   January 1997 Windows NT Workstation DDK - /ddk/frc/network/inc/npapi.h
+   November 2001 Microsoft Platform SDK - install "samples" from "Core SDK"
+                              samples/winbase/security/winnt/logonnp/npapi.h
+   July 1998 Windows 95 DDK - net/inc/netmpr.h and net/inc/netspi.h
+   July 1999 Windows 98 DDK - src/net/inc/netmpr.h and src/net/inc/netspi.h
+                            - you need to install "Legacy and Related
+                              driver samples"
+
 To Install Platform SDK from CDROM
 	
 	Run "setup.exe default.htm" from CDROM:
