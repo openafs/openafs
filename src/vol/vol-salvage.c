@@ -2717,6 +2717,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     }
  
 #ifdef AFS_AIX_ENV
+#ifndef AFS_NAMEI_ENV
     /* On AIX machines, don't allow entries to point to inode 0. That is a special 
      * mount inode for the partition. If this inode were deleted, it would crash
      * the machine.
@@ -2732,6 +2733,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
        }
        return;
     }
+#endif
 #endif
 
     if (!(vnodeNumber & 1) && !Showmode &&
