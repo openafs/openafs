@@ -7,19 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.3  90/08/31  16:11:49
- * Move permit_xprt.h.
- * 
- * Revision 2.2  90/08/20  10:05:54
- * Include permit_xprt.h.
- * Use stds.h.
- * 
- * Revision 2.1  90/08/07  18:51:45
- * Start with clean version to sync test and dev trees.
- * */
-/* See RCS log for older history. */
-
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #include "../afs/sysincludes.h"
@@ -59,20 +46,6 @@ extern afs_int32 afsconf_Authenticate();
 extern int afsconf_GetKey();
 extern struct rx_securityClass *rxkad_NewServerSecurityObject();
 extern struct rx_securityClass *rxkad_NewClientSecurityObject();
-
-/*
- * Note: it is necessary for the #include of permit_xprt.h occur
- * AFTER the above declaration of rxkad_NewClientSecurityObject() --
- * otherwise, depending on the version of permit_xprt.h that gets
- * included, there might be a syntax error.
- */
-
-#if defined(UKERNEL)
-#include "../afs/permit_xprt.h"
-#else /* defined(UKERNEL) */
-#include "../permit_xprt.h"
-#endif /* defined(UKERNEL) */
-
 
 /* return a null security object if nothing else can be done */
 static afs_int32 QuickAuth(astr, aindex)

@@ -41,9 +41,6 @@
 #include "afs/audit.h"
 #include "kalog.h"
 
-#include "../permit_xprt.h"
-
-
 /* my kerberos error codes */
 #define KERB_ERR_BAD_MSG_TYPE  99
 #define KERB_ERR_BAD_LIFETIME  98

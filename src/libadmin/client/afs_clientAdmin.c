@@ -40,9 +40,6 @@
 #include <afs/vlserver.h>
 #include <afs/pthread_glock.h>
 
-
-#include "../../permit_xprt.h"
-
 /*
  * AFS client administration functions.
  *

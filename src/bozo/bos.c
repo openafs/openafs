@@ -53,7 +53,6 @@ static IStatServer();
 static DoStat();
 
 #include "bosint.h"
-#include "../permit_xprt.h"
 
 #define MRAFS_OFFSET  9
 #define ADDPARMOFFSET 26

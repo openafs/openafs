@@ -18,7 +18,6 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
-PE = ../permit_xprt.h
 INCLS=${SRCDIR}include/ubik.h \
              ${SRCDIR}include/lwp.h \
              ${SRCDIR}include/lock.h  \
@@ -93,10 +92,10 @@ xkaprocs: kaprocs.c ${INCLS}
 # tightly controlled.
 #	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1 -DGETPASSWORD
 
-kaprocs.o: kaprocs.c ${INCLS} ${PE} kaport.h
+kaprocs.o: kaprocs.c ${INCLS} kaport.h
 	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1
 
-authclient.o: authclient.c ${INCLS} ${PE}
+authclient.o: authclient.c ${INCLS}
 
 
 #authserver.o: authserver.c ${INCLS}
@@ -199,7 +198,7 @@ kdb: kdb.o ${INCLS}
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h \
-	   ${SRCDIR}include/lwp.h ${PE} AFS_component_version_number.o
+	   ${SRCDIR}include/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a ${SRCDIR}lib/liblwp.a ${deslib} ${rxkadlib} ${SRCDIR}lib/afs/libcom_err.a ${utilib} ${auditlib}

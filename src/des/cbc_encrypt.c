@@ -23,7 +23,6 @@
 #include <afs/param.h>
 
 #define XPRT_CBC_ENCRYPT
-#include "../permit_xprt.h"
 
 extern int des_debug;
 extern int des_debug_print();

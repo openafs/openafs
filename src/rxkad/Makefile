@@ -18,10 +18,9 @@ COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
-PE = ../permit_xprt.h
 INCLS= ${SRCDIR}include/rx/rx.h \
        ${SRCDIR}include/rx/xdr.h \
-       rxkad.h ${PE}
+       rxkad.h
 
 OBJS= rxkad_client.o rxkad_server.o rxkad_common.o ticket.o rxkad_errs.o
 
@@ -62,7 +61,7 @@ rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 
-fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h ${PE}
+fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h
 	${CC} ${CFLAGS} -c fcrypt.c
 
 kinstall: ${KSRCS}

@@ -48,7 +48,6 @@
 #include "stats.h"
 
 #define XPRT_DES
-#include "../permit_xprt.h"
 
 #ifdef DEBUG
 #define DBG_PRINT(s) if (des_debug & 2) \

@@ -23,7 +23,6 @@
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
-#include "../../permit_xprt.h"
 
 
 /*

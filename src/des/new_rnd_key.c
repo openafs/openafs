@@ -31,7 +31,6 @@ static afs_int32 des_set_sequence_number(des_cblock new_sequence_number);
 static afs_int32 des_generate_random_block(des_cblock block);
 
 #define XPRT_NEW_RND_KEY
-#include "../permit_xprt.h"
 
 static int is_inited = 0;
 #ifdef AFS_PTHREAD_ENV

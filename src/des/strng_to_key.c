@@ -31,8 +31,6 @@ extern int des_debug_print();
 extern void des_fixup_key_parity();
 extern afs_uint32 des_cbc_cksum();
 
-#include "../permit_xprt.h"
-
 /*
  * convert an arbitrary length string to a DES key
  */

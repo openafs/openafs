@@ -274,7 +274,6 @@ static int makeNewPAG()
 
 #include "adkint.h"
 #include "assert.h"
-#include <permit_xprt.h>
 #include <des.h>
 #include <afs/afsutil.h>
 

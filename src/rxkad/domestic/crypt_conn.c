@@ -39,12 +39,6 @@
 
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
-#ifdef KERNEL
-#include "../afs/permit_xprt.h"
-#else
-#include "../permit_xprt.h"
-#endif
-
 
 afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
   IN struct rx_connection *conn;

@@ -30,8 +30,6 @@ extern int des_ecb_encrypt();
 extern int des_cbc_encrypt();
 extern int des_pcbc_encrypt();
 
-#include "../../permit_xprt.h"
-
 char *progname;
 int sflag;
 int vflag;

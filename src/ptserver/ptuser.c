@@ -23,7 +23,6 @@
 #include "../afs/ptclient.h"
 #include "../afs/pterror.h"
 
-#include "../afs/permit_xprt.h"
 #else /* defined(UKERNEL) */
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -43,8 +42,6 @@
 #include <afs/afsutil.h>
 #include "ptclient.h"
 #include "pterror.h"
-
-#include "../permit_xprt.h"
 #endif /* defined(UKERNEL) */
 
 
