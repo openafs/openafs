@@ -41,6 +41,7 @@ typedef struct smb_tran2Dispatch {
 
 typedef struct smb_tran2QFSInfo {
 	union {
+#pragma pack(push, 2)
 		struct {
 			long FSID;			/* file system ID */
                         long sectorsPerAllocUnit;
@@ -48,6 +49,7 @@ typedef struct smb_tran2QFSInfo {
                         long availAllocUnits;		/* free blocks */
                         unsigned short bytesPerSector;	/* bytes per sector */
                 } allocInfo;
+#pragma pack(pop)
                 struct {
 			long vsn;	/* volume serial number */
                         char vnCount;	/* count of chars in label, incl null */
