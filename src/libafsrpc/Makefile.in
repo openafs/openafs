@@ -18,14 +18,14 @@ CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../
 	-I../fsint -DRXDEBUG ${MT_CFLAGS}
 
 SFLAGS=-P -I${TOP_INCDIR}
-RX = ../rx
+RX = ${srcdir}/../rx
 CCRULE = ${CC} ${CFLAGS} -c 
-RXKAD = ../rxkad
-RXSTAT = ../rxstat
-FSINT = ../fsint
-DES = ../des
-COMERR = ../comerr
-UTIL = ../util
+RXKAD = ${srcdir}/../rxkad
+RXSTAT = ${srcdir}/../rxstat
+FSINT = ${srcdir}/../fsint
+DES = ${srcdir}/../des
+COMERR = ${srcdir}/../comerr
+UTIL = ${srcdir}/../util
 SYS = ${srcdir}/../sys
 
 SYSOBJS =\
@@ -194,14 +194,14 @@ ticket5.o: ${RXKAD}/ticket5.c
 crc.o: ${RXKAD}/crc.c
 	${CCRULE} ${RXKAD}/crc.c
 
-fcrypt.o: ${RXKAD}/fcrypt.c
-	${CCRULE} ${RXKAD}/fcrypt.c
+fcrypt.o: ${TOP_OBJDIR}/src/rxkad/fcrypt.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxkad/fcrypt.c
 
-crypt_conn.o: ${RXKAD}/crypt_conn.c
-	${CCRULE} ${RXKAD}/crypt_conn.c
+crypt_conn.o: ${TOP_OBJDIR}/src/rxkad/crypt_conn.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxkad/crypt_conn.c
 
-AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
-	${CCRULE} ${RX}/AFS_component_version_number.c
+AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
+	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 
 xdr.o: ${RX}/xdr.c
 	${CCRULE} ${RX}/xdr.c
@@ -354,26 +354,26 @@ syscall.o: ${SYS}/syscall.s
 rxstat.o: ${RXSTAT}/rxstat.c
 	${CCRULE} ${RXSTAT}/rxstat.c
 
-rxstat.cs.o: ${RXSTAT}/rxstat.cs.c
-	${CCRULE} ${RXSTAT}/rxstat.cs.c
+rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 
-rxstat.ss.o: ${RXSTAT}/rxstat.ss.c
-	${CCRULE} ${RXSTAT}/rxstat.ss.c
+rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${RXSTAT}/rxstat.xdr.c
-	${CCRULE} ${RXSTAT}/rxstat.xdr.c
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
 
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE} ${FSINT}/afsint.cs.c
+afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE} ${FSINT}/afsint.xdr.c
+afsint.xdr.o: ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
 
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE} ${FSINT}/afscbint.cs.c
+afscbint.cs.o: ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
 
-afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE} ${FSINT}/afscbint.xdr.c
+afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 
 afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} ${FSINT}/afsaux.c
