@@ -340,12 +340,12 @@ void rxi_StartListener(void)
   to get interesting information. */
 void rxi_InitPeerParams(register struct rx_peer *pp)
 {
-#ifdef	ADAPT_MTU
-#ifndef AFS_SUN5_ENV
-#ifdef AFS_USERSPACE_IP_ADDR	
     u_short rxmtu;
     afs_int32 i, mtu;
 
+#ifdef	ADAPT_MTU
+#ifndef AFS_SUN5_ENV
+#ifdef AFS_USERSPACE_IP_ADDR	
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
 	pp->timeout.sec = 3;
