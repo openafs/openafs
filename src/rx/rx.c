@@ -3151,7 +3151,7 @@ nextloop:;
     } else if (call->nSoftAcks > (u_short)rxi_SoftAckRate) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 	np = rxi_SendAck(call, np, seq, serial, flags,
-			 RX_ACK_DELAY, istack);
+			 RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
 	clock_GetTime(&when);
 	if (haveLast && !(flags & RX_CLIENT_INITIATED)) {
@@ -3267,13 +3267,17 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 	if (tp->header.seq >= first) break;
 	call->tfirst = tp->header.seq + 1;
 	if (tp->header.serial == serial) {
-	  rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
+	  /* Use RTT if not delayed by client. */
+	  if (ap->reason != RX_ACK_DELAY)
+	      rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
 	}
-	else if ((tp->firstSerial == serial)) {
-	  rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
+	else if (tp->firstSerial == serial) {
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
@@ -3334,13 +3338,17 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	if (tp->header.serial == serial) {
-	  rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
 	}
 	else if ((tp->firstSerial == serial)) {
-	  rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
@@ -3820,7 +3828,7 @@ register struct rx_call **newcallp;
 	if (call->flags & RX_CALL_CLEARED) {
 	    /* send an ack now to start the packet flow up again */
 	    call->flags &= ~RX_CALL_CLEARED;
-	    rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+	    rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_IDLE, 0);
 	}
 #ifdef	RX_ENABLE_LOCKS
 	CV_SIGNAL(&sq->cv);

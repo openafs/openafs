@@ -690,6 +690,8 @@ struct rx_ackPacket {
 #define	RX_ACK_PING		6   /* This is a keep-alive ack */
 #define	RX_ACK_PING_RESPONSE	7   /* Ack'ing because we were pinged */
 #define	RX_ACK_DELAY		8   /* Ack generated since nothing has happened since receiving packet */
+#define RX_ACK_IDLE             9   /* Similar to RX_ACK_DELAY, but can 
+					      be */
 
 /* Packet acknowledgement type */ 
 #define	RX_ACK_TYPE_NACK	0   /* I Don't have this packet */
