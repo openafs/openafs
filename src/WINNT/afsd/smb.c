@@ -3831,6 +3831,7 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_renameRock_t rock;
         cm_scache_t *oldDscp;
         cm_scache_t *newDscp;
+	cm_scache_t *tmpscp;
         char *oldLastNamep;
         char *newLastNamep;
         osi_hyper_t thyper;
@@ -3914,6 +3915,14 @@ long smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          */
 	thyper.LowPart = 0;		/* search dir from here */
         thyper.HighPart = 0;
+	/* search for file to already exhist, if so return error*/
+
+	code = cm_Lookup(newDscp,newLastNamep,CM_FLAG_CHECKPATH,userp,&req,&tmpscp);
+	if((code != CM_ERROR_NOSUCHFILE) && (code != CM_ERROR_NOSUCHPATH) && (code != CM_ERROR_NOSUCHVOLUME) ) {
+	    cm_ReleaseSCache(tmpscp);
+	    return CM_ERROR_EXISTS; /* file exist, do not rename, also 
+				       fixes move*/
+	}
         code = cm_ApplyDir(oldDscp, smb_RenameProc, &rock, &thyper, userp, &req, NULL);
 
         if (code == CM_ERROR_STOPNOW)
