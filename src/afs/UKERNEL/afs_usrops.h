@@ -107,6 +107,8 @@ extern int uafs_truncate(char *path, int len);
 extern int uafs_truncate_r(char *path, int len);
 extern int uafs_ftruncate(int fd, int len);
 extern int uafs_ftruncate_r(int fd, int len);
+extern int uafs_lseek(int fd, int offset, int whence);
+extern int uafs_lseek_r(int fd, int offset, int whence);
 extern int uafs_chmod(char *path, int mode);
 extern int uafs_chmod_r(char *path, int mode);
 extern int uafs_fchmod(int fd, int mode);
