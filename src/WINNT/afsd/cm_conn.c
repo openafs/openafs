@@ -206,18 +206,20 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		 * flag and reset the busy state as well.
 		 */
 		cm_GetServerList(fidp, userp, reqp, &serversp);
-		lock_ObtainWrite(&cm_serverLock);
-		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
-	        tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
-			if (tsrp->status == busy)
-				tsrp->status = not_busy;
-		}
-        lock_ReleaseWrite(&cm_serverLock);
+        if (serversp) {
+            lock_ObtainWrite(&cm_serverLock);
+            for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+                tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
+                if (tsrp->status == busy)
+                    tsrp->status = not_busy;
+            }
+            lock_ReleaseWrite(&cm_serverLock);
+
+            retry = 1;
+        }
 
         if (fidp != NULL)   /* Not a VLDB call */
             cm_ForceUpdateVolume(fidp, userp, reqp);
-
-	    retry = 1;
 	}
 
 	/* if all servers are busy, mark them non-busy and start over */
@@ -409,15 +411,12 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
-		if (allDown) 
+        if (serversp == NULL)
+			firstError = CM_ERROR_NOSUCHVOLUME;
+        else if (allDown) 
 			firstError = CM_ERROR_ALLOFFLINE;
 		else if (allBusy) 
 			firstError = CM_ERROR_ALLBUSY;
-		else if (serversp == NULL) 
-			/* Only return CM_ERROR_NOSUCHVOLUME if there are no
-			 * servers for this volume 
-			 */
-			firstError = CM_ERROR_NOSUCHVOLUME;
 		else
 			firstError = CM_ERROR_TIMEDOUT;
 	}
