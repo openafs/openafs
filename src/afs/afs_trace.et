@@ -156,6 +156,8 @@ error_table 2 ZCM
 	ec	CM_TRACE_DCACHEWAIT, "%s line %d: sleeping or waiting for 0x%x flags 0x%x" 
 	ec	CM_TRACE_VNODEREAD, "UFSRead: tdc 0x%x, offset (0x%x, 0x%x) len (0x%x 0x%x)" 
 	ec	CM_TRACE_SLEEP, "Sleep: evp 0x%x, count %d seq 0x%x evp->seq 0x%x" 
-	ec	CM_TRACE_WAKE, "Wapeup: evp 0x%x, evp->seq 0x%x" 
+	ec	CM_TRACE_WAKE, "Wakeup: evp 0x%x, evp->seq 0x%x"
+        ec      CM_TRACE_DENTRYDELETE, "dentry_delete inode 0x%x d_name %s/%s"
+        ec      CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren tvc 0x%x"
 end
 

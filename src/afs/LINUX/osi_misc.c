@@ -329,7 +329,7 @@ void osi_linux_free_inode_pages(void)
 void osi_clear_inode(struct inode *ip)
 {
     cred_t *credp = crref();
-    struct vcache *vc = ITOAFS(ip);
+    struct vcache *vcp = ITOAFS(ip);
 
 #if defined(AFS_LINUX24_ENV)
     if (atomic_read(&ip->i_count) > 1)
@@ -338,15 +338,15 @@ void osi_clear_inode(struct inode *ip)
 #endif
         printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip, ip->i_count);
 
-    ObtainWriteLock(&vc->lock, 504);
-    afs_InactiveVCache(vc, credp);
-    ReleaseWriteLock(&vc->lock);
+    afs_InactiveVCache(vcp, credp);
+    ObtainWriteLock(&vcp->lock, 504);
 #if defined(AFS_LINUX24_ENV)
     atomic_set(&ip->i_count, 0);
 #else
     ip->i_count = 0;
 #endif
     ip->i_nlink = 0; /* iput checks this after calling this routine. */
+    ReleaseWriteLock(&vcp->lock);
     crfree(credp);
 }
 
