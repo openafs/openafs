@@ -581,11 +581,13 @@ Section "AFS Client" SecClient
   Call afs.GetCellServDB
   ;Call afs.InstallMSLoopback
   
+!ifdef INSTALL_KFW
   ; Include Kerberos for Windows files in the installer...
-  ;SetOutPath "$INSTDIR\kfw\bin\"
-  ;File "${KFW_SOURCE}\bin\*"
-  ;SetOutPath "$INSTDIR\kfw\doc"
-  ;File "${KFW_SOURCE}\doc\*"
+  SetOutPath "$INSTDIR\kfw\bin\"
+  File "${KFW_SOURCE}\bin\*"
+  SetOutPath "$INSTDIR\kfw\doc"
+  File "${KFW_SOURCE}\doc\*"
+!endif
   
   ReadINIStr $R0 $0 "Field 2" "State"
   StrCmp $R0 "1" UsePkg DontUsePkg
@@ -645,9 +647,11 @@ DontUseFile:
   Push "$INSTDIR\Common"
   Call AddToPath
   
+!ifdef INSTALL_KFW
   ; Add kfw to path too
   Push "$INSTDIR\kfw\bin"
   Call AddToPath
+!endif
    
   ; Create the AFS service
   SetOutPath "$INSTDIR\Common"
@@ -819,15 +823,11 @@ Section "AFS Control Center" SecControl
 
   SetOutPath "$INSTDIR\Common"
 !IFDEF DEBUG
-!IFDEF CL1310
+!IFDEF CL_1310
   File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
   File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
-  File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
-  File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
 !ELSE
-!IFDEF CL1300
-  File "${AFS_WININSTALL_DIR}\msvcr70d.dll"
-  File "${AFS_WININSTALL_DIR}\msvcr70d.pdb"
+!IFDEF CL_1300
   File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
   File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
 !ELSE
@@ -836,12 +836,10 @@ Section "AFS Control Center" SecControl
 !ENDIF
 !ENDIF
 !ELSE
-!IFDEF CL1310
+!IFDEF CL_1310
   File "${AFS_WININSTALL_DIR}\msvcr71.dll"
-  File "${AFS_WININSTALL_DIR}\msvcrt.dll"
 !ELSE
-!IFDEF CL1300
-  File "${AFS_WININSTALL_DIR}\msvcr70.dll"
+!IFDEF CL_1300
   File "${AFS_WININSTALL_DIR}\msvcrt.dll"
 !ELSE
   File "${AFS_WININSTALL_DIR}\msvcrt.dll"
@@ -1168,8 +1166,10 @@ Section "Uninstall"
   Call un.RemoveFromPath
   Push "$INSTDIR\Common"
   Call un.RemoveFromPath
+!ifdef INSTALL_KFW
   Push "$INSTDIR\kfw\bin"
   Call un.RemoveFromPath
+!endif
   
   ; Delete documentation
   Delete "$INSTDIR\Documentation\README.TXT"
@@ -1212,7 +1212,7 @@ Section "Uninstall"
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
 
-!IFDEF CL1310
+!IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
 !ELSE
@@ -1220,7 +1220,7 @@ Section "Uninstall"
    Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
 !ENDIF
 !ELSE
-!IFDEF CL1310
+!IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
 !ELSE
    Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
@@ -1324,7 +1324,7 @@ Section "Uninstall"
   RMDir  "$INSTDIR\Client"
   
 !IFDEF DEBUG
-!IFDEF CL1310
+!IFDEF CL_1310
   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
 !ELSE
@@ -1332,7 +1332,7 @@ Section "Uninstall"
   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
 !ENDIF
 !ELSE
-!IFDEF CL1310
+!IFDEF CL_1310
   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
 !ELSE
   Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
@@ -1341,12 +1341,14 @@ Section "Uninstall"
   Delete /REBOOTOK "$INSTDIR\Common\*"
   RMDir "$INSTDIR\Common"
 
+!ifdef INSTALL_KFW
   ;Remove KfW files
   Delete /REBOOTOK "$INSTDIR\kfw\bin\*"
   RMDIR  /r "$INSTDIR\kfw\bin"
   Delete /REBOOTOK "$INSTDIR\kfw\doc\*"
   RMDIR  /r "$INSTDIR\kfw\doc"
   RMDIR  /r "$INSTDIR\kfw"
+!endif
 
   Delete "$SMPROGRAMS\OpenAFS\Documentation.lnk"
 
@@ -1758,7 +1760,7 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 !IFDEF DEBUG
-!IFDEF CL1310
+!IFDEF CL_1310
    File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
    File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
 !ELSE
@@ -1766,7 +1768,7 @@ Function AFSLangFiles
    File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
 !ENDIF
 !ELSE
-!IFDEF CL1310
+!IFDEF CL_1310
    File "${AFS_WININSTALL_DIR}\msvcr71.dll"
 !ELSE
    File "${AFS_WININSTALL_DIR}\msvcrt.dll"
@@ -1872,7 +1874,7 @@ DoGerman:
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.pdb"
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.pdb"
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.pdb"
-!IFDEF CL1310
+!IFDEF CL_1310
    File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
    File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
 !ELSE
