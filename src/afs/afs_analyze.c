@@ -246,7 +246,7 @@ int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
 	afs_Trace2(afs_iclSetp, CM_TRACE_CHECKCODE,
 		   ICL_TYPE_INT32, acode, ICL_TYPE_INT32, where);
     }
-    if (acode & ~0xff == ERROR_TABLE_BASE_uae) 
+    if ((acode & ~0xff) == ERROR_TABLE_BASE_uae) 
 	acode = et_to_sys_error(acode);
     if (!areq || !areq->initd)
 	return acode;
@@ -533,7 +533,7 @@ int afs_Analyze(register struct conn *aconn, afs_int32 acode,
 
     /* Before we do anything with acode, make sure we translate it back to
        a system error */
-    if (acode & ~0xff == ERROR_TABLE_BASE_uae) 
+    if ((acode & ~0xff) == ERROR_TABLE_BASE_uae) 
 	acode = et_to_sys_error(acode);
 
     if (acode == 0) {

@@ -123,7 +123,6 @@ int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_in
 {
     unsigned int resid;
     register afs_int32 code;
-    register afs_int32 cnt1=0;
     AFS_STATCNT(osi_Read);
 
     /**

@@ -18,7 +18,11 @@
 
 #include <sys/systm.h>
 #include <sys/proc.h>
+#ifdef AFS_FBSD50_ENV
+#include <sys/lockmgr.h>
+#else
 #include <sys/lock.h>
+#endif
 
 #define RX_ENABLE_LOCKS         1
 #define AFS_GLOBAL_RXLOCK_KERNEL
@@ -56,7 +60,7 @@
 typedef int afs_kcondvar_t;
 
 #define HEAVY_LOCKS
-#ifdef NULL_LOCKS
+#if defined(NULL_LOCKS)
 typedef struct {
     struct proc *owner;
 } afs_kmutex_t;
@@ -85,8 +89,42 @@ typedef struct {
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
 
-#else
-#ifdef HEAVY_LOCKS
+#elif defined(AFS_FBSD50_ENV)
+typedef struct {
+    struct lock lock;
+    struct thread *owner;
+} afs_kmutex_t;
+
+
+#define MUTEX_INIT(a,b,c,d) \
+    do { \
+	lockinit(&(a)->lock,PSOCK, "afs rx mutex", 0, 0); \
+	(a)->owner = 0; \
+    } while(0);
+#define MUTEX_DESTROY(a) \
+    do { \
+	(a)->owner = (struct proc *)-1; \
+    } while(0);
+#define MUTEX_ENTER(a) \
+    do { \
+	lockmgr(&(a)->lock, LK_EXCLUSIVE, 0, curthread); \
+	osi_Assert((a)->owner == 0); \
+	(a)->owner = curthread; \
+    } while(0);
+#define MUTEX_TRYENTER(a) \
+    ( lockmgr(&(a)->lock, LK_EXCLUSIVE|LK_NOWAIT, 0, curthread) ? 0 : ((a)->owner = curthread, 1) )
+#define xMUTEX_TRYENTER(a) \
+    ( osi_Assert((a)->owner == 0), (a)->owner = curthread, 1)
+#define MUTEX_EXIT(a) \
+    do { \
+	osi_Assert((a)->owner == curthread); \
+	(a)->owner = 0; \
+	lockmgr(&(a)->lock, LK_RELEASE, 0, curthread); \
+    } while(0);
+
+#undef MUTEX_ISMINE
+#define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curthread)
+#elif defined(HEAVY_LOCKS)
 typedef struct {
     struct lock lock;
     struct proc *owner;
@@ -154,7 +192,6 @@ typedef struct {
 
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) (((afs_kmutex_t *)(a))->owner == curproc)
-#endif
 #endif
 
 

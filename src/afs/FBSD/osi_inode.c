@@ -24,9 +24,13 @@ RCSID("$Header$");
 #include "afs/afs_stats.h" /* statistics stuff */
 #include <sys/queue.h>
 #include <sys/lock.h>
-#include <ufs/ufsmount.h>
 #include <ufs/ufs/dinode.h>
+#if defined(AFS_FBSD50_ENV)
+#include <ufs/ufs/extattr.h>
+#endif
+#include <ufs/ufsmount.h>
 
+int
 getinode(fs, dev, inode, ipp, perror)
      struct mount *fs;
      struct inode **ipp;
@@ -42,15 +46,19 @@ getinode(fs, dev, inode, ipp, perror)
     if (!fs) {
 	register struct ufsmount *ump;
 	register struct mount *mp;
-	
-        simple_lock(&mountlist_slock);
+
+#if defined(AFS_FBSD50_ENV)
+	mtx_lock(&mountlist_mtx);
+#else
+	simple_lock(&mountlist_slock);
+#endif
 	if (mp = TAILQ_FIRST(&mountlist)) do {
 	    /*
-	     * XXX Also do the test for MFS 
+	     * XXX Also do the test for MFS
 	     */
 #undef m_data
 #undef m_next
-	    if (mp->mnt_stat.f_type == MOUNT_UFS) {	
+	    if (mp->mnt_stat.f_type == MOUNT_UFS) {
 		ump = VFSTOUFS(mp);
 		if (ump->um_fs == NULL)
 		    break;
@@ -60,11 +68,19 @@ getinode(fs, dev, inode, ipp, perror)
 	    }
 	    mp = TAILQ_NEXT(mp, mnt_list);
 	} while (mp != TAILQ_FIRST(&mountlist));
+#if defined(AFS_FBSD50_ENV)
+        mtx_unlock(&mountlist_mtx);
+#else
         simple_unlock(&mountlist_slock);
+#endif
 	if (!fs)
 	    return(ENXIO);
     }
-    code = VFS_VGET(fs,inode, &vp);
+#if defined(AFS_FBSD50_ENV)
+    code = VFS_VGET(fs, inode, 0, &vp);
+#else
+    code = VFS_VGET(fs, inode, &vp);
+#endif
     if (code != 0) {
 	*perror = BAD_IGET;
         return code;
@@ -74,6 +90,7 @@ getinode(fs, dev, inode, ipp, perror)
     }
 }
 
+int
 igetinode(vfsp, dev, inode, ipp, perror)
      struct inode **ipp;
      struct mount *vfsp;
@@ -81,8 +98,7 @@ igetinode(vfsp, dev, inode, ipp, perror)
      ino_t inode;
      int *perror;
 {
-    struct inode *pip, *ip;
-    extern struct osi_dev cacheDev;
+    struct inode *ip;
     register int code = 0;
 
     *perror = 0;
@@ -95,12 +111,12 @@ igetinode(vfsp, dev, inode, ipp, perror)
 
     if (ip->i_mode == 0) {
 	/* Not an allocated inode */
-	vput(ITOV(ip));	    
+	vput(ITOV(ip));
 	return(ENOENT);
     }
 
     if (ip->i_nlink == 0 || (ip->i_mode&IFMT) != IFREG) {
-	vput(ITOV(ip));	    
+	vput(ITOV(ip));
 	return(ENOENT);
     }
 
@@ -186,6 +202,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
 }
 
 
+int
 afs_syscall_iopen(dev, inode, usrmod, retval)
      long *retval;
      int dev, inode, usrmod;
@@ -231,6 +248,7 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
  * Restricted to super user.
  * Only VICEMAGIC type inodes.
  */
+int
 afs_syscall_iincdec(dev, inode, inode_p1, amount)
      int dev, inode, inode_p1, amount;
 {
@@ -259,18 +277,23 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
     return(0);
 }
 #else
+int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
      long *retval;
      long dev, near_inode, param1, param2, param3, param4;
 {
      return EOPNOTSUPP;
 }
+
+int
 afs_syscall_iopen(dev, inode, usrmod, retval)
      long *retval;
      int dev, inode, usrmod;
 {
      return EOPNOTSUPP;
 }
+
+int
 afs_syscall_iincdec(dev, inode, inode_p1, amount)
      int dev, inode, inode_p1, amount;
 {

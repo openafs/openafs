@@ -378,21 +378,17 @@ int afs_InitCacheInfo(register char *afile)
 #else
 	if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
 #endif /* AFS_SGI65_ENV */
-#else  /* AFS_SGI_ENV */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st)) 
-#else
-#ifdef	AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
       
 	VFS_STATFS(filevp->v_vfsp, code);
 	/* struct copy */
 	st = filevp->v_vfsp->m_stat;
 	if (code == 0)
-#else  /* AFS_OSF_ENV */
-#ifdef AFS_AIX41_ENV
+#elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
-#else
-#ifdef AFS_LINUX20_ENV
+#elif defined(AFS_LINUX20_ENV)
 	{
 	    KERNEL_SPACE_DECL;
 	    TO_USER_SPACE();
@@ -400,21 +396,15 @@ int afs_InitCacheInfo(register char *afile)
 	    VFS_STATFS(filevp->v_vfsp, &st);
 	    TO_KERNEL_SPACE();
 	}
-#else
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
-#else 
-#if defined(AFS_XBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+	if (!VFS_STATFS(filevp->v_mount, &st, curthread))
+#elif defined(AFS_XBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, curproc))
 #else 
 	if (!VFS_STATFS(filevp->v_vfsp, &st))  
-#endif /* AFS_XBSD_ENV */
-#endif /* AFS_DARWIN_ENV */
-#endif /* AFS_LINUX20_ENV */
-#endif /* AIX41 */
-#endif /* OSF */
-#endif /* SUN5 HP10 */
-#endif /* SGI */
+#endif /* SGI... */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	    afs_fsfragsize = st.f_frsize - 1; 
 #else

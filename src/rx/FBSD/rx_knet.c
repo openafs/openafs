@@ -17,10 +17,9 @@ RCSID("$Header$");
 #include "rx/rx_kcommon.h"
 
 #ifdef RXK_LISTENER_ENV
-int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
+int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 		   int nvecs, int *alength)
 {
-    struct socket *asocket = (struct socket *)so;
     struct uio u;
     int i;
     struct iovec iov[RX_MAXIOVECS];
@@ -42,7 +41,11 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     u.uio_resid = *alength;
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_READ;
+#ifdef AFS_FBSD50_ENV
+    u.uio_td = NULL;
+#else
     u.uio_procp = NULL;
+#endif
 
     if (haveGlock)
         AFS_GUNLOCK();
@@ -106,7 +109,11 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     u.uio_resid = alength;
     u.uio_segflg = UIO_SYSSPACE;
     u.uio_rw = UIO_WRITE;
+#ifdef AFS_FBSD50_ENV
+    u.uio_td = NULL;
+#else
     u.uio_procp = NULL;
+#endif
 
     addr->sin_len = sizeof(struct sockaddr_in);
 
@@ -115,7 +122,11 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 #if KNET_DEBUG
     printf("+");
 #endif
+#ifdef AFS_FBSD50_ENV
+    code = sosend(asocket, (struct sockaddr *) addr, &u, NULL, NULL, 0, curthread);
+#else
     code = sosend(asocket, (struct sockaddr *) addr, &u, NULL, NULL, 0, curproc);
+#endif
 #if KNET_DEBUG
     if (code) {
         if (code == EINVAL)

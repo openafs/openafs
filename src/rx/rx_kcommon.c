@@ -720,7 +720,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 {
     register afs_int32 code;
     struct socket *newSocket;
-#if !defined(AFS_HPUX1122_ENV)
+#if (!defined(AFS_HPUX1122_ENV) && !defined(AFS_FBSD50_ENV))
     struct mbuf *nam;
 #endif
     struct sockaddr_in myaddr;
@@ -747,7 +747,9 @@ struct osi_socket *rxk_NewSocket(short aport)
 #endif     /* else AFS_HPUX110_ENV */
 #elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
-#elif defined(AFS_FBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, &afs_osi_cred, curthread);
+#elif defined(AFS_FBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
@@ -788,7 +790,9 @@ struct osi_socket *rxk_NewSocket(short aport)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD50_ENV)
+    code = sobind(newSocket, (struct sockaddr *) &myaddr, curthread);
+#elif defined(AFS_FBSD40_ENV)
     code = sobind(newSocket, (struct sockaddr *) &myaddr, curproc);
 #else
     code = sobind(newSocket, (struct sockaddr *) &myaddr);

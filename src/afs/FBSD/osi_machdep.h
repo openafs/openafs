@@ -42,8 +42,6 @@ extern struct simplelock afs_rxglobal_lock;
 
 #define osi_vnhold(avc,r) do { VN_HOLD((struct vnode *)(avc)); } while (0)
 
-#define	gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
-  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
@@ -51,10 +49,16 @@ extern struct simplelock afs_rxglobal_lock;
 
 #ifdef KERNEL
 extern struct lock afs_global_lock;
+
 #if defined(AFS_FBSD50_ENV)
 #define VT_AFS		"afs"
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
+#define afs_suser()	(!suser(curthread))
+#define simple_lock(x)	mtx_lock(x)
+#define simple_unlock(x) mtx_unlock(x)
+#define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
+  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(cred),(aresid), curthread)
 extern struct thread * afs_global_owner;
 #define AFS_GLOCK() \
     do { \
@@ -71,7 +75,11 @@ extern struct thread * afs_global_owner;
         lockmgr(&afs_global_lock, LK_RELEASE, 0, curthread); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curthread && curthread)
+
 #else /* FBSD50 */
+
+#define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
+  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
 extern struct proc * afs_global_owner;
 #define AFS_GLOCK() \
     do { \
@@ -89,6 +97,7 @@ extern struct proc * afs_global_owner;
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
 #endif /* FBSD50 */
+
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
 #define ISAFS_RXGLOCK() 1

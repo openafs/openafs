@@ -148,8 +148,6 @@ enum vcexcl {NONEXCL, EXCL};
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1
 
-#define O_SYNC O_FSYNC
-
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 339
 #define AFS_NAMEI_ENV         1   /* User space interface to file system */

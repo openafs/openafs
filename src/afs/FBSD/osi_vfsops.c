@@ -229,7 +229,13 @@ struct vfsops afs_vfsops = {
   afs_sync,
   afs_vget,
   afs_fhtovp,
+#ifdef AFS_FBSD50_ENV
+  vfs_stdcheckexp,
+#endif
   afs_vptofh,
   afs_init,
+#ifdef AFS_FBSD50_ENV
+  vfs_stduninit,
+#endif
   afs_sysctl
 };

@@ -8,7 +8,9 @@ RCSID("$Header$");
 #include <afs/afs_stats.h>              /* statistics */
 #include <sys/malloc.h>
 #include <sys/namei.h>
+#ifndef AFS_FBSD50_ENV
 #include <vm/vm_zone.h>
+#endif
 #include <vm/vm_page.h>
 #include <vm/vm_object.h>
 #include <vm/vm_pager.h>
@@ -58,7 +60,9 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 	{ &vop_access_desc, (vop_t *) afs_vop_access },          /* access */
 	{ &vop_advlock_desc, (vop_t *) afs_vop_advlock },        /* advlock */
 	{ &vop_bmap_desc, (vop_t *) afs_vop_bmap },              /* bmap */
+#ifndef AFS_FBSD50_ENV
 	{ &vop_bwrite_desc, (vop_t *) vop_stdbwrite },
+#endif
 	{ &vop_close_desc, (vop_t *) afs_vop_close },            /* close */
         { &vop_createvobject_desc,  (vop_t *) vop_stdcreatevobject },
         { &vop_destroyvobject_desc, (vop_t *) vop_stddestroyvobject },
@@ -125,9 +129,13 @@ struct vop_lookup_args /* {
     register int flags = ap->a_cnp->cn_flags;
     int lockparent;                     /* 1 => lockparent flag is set */
     int wantparent;                     /* 1 => wantparent or lockparent flag */
-    struct proc *p;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p = ap->a_cnp->cn_thread;
+#else
+    struct proc *p = ap->a_cnp->cn_proc;
+#endif
     GETNAME();
-    p=cnp->cn_proc;
+
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT|WANTPARENT);
 

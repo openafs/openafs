@@ -16,6 +16,10 @@
  */
 #include <afsconfig.h>
 #include "afs/param.h"
+#include <sys/param.h>
+#ifdef AFS_FBSD50_ENV
+#include <sys/sysproto.h>
+#endif
 
 RCSID("$Header$");
 
@@ -37,6 +41,52 @@ afs_setgroups(
     gid_t *gidset,
     int change_parent);
 
+#ifdef AFS_FBSD50_ENV
+/*
+ * This does nothing useful yet.
+ * In 5.0, creds are associated not with a process, but with a thread.
+ * Probably the right thing to do is replace struct proc with struct thread
+ * everywhere, including setpag.
+ * That will be a tedious undertaking.
+ * For now, I'm just passing curproc to AddPag.
+ * This is probably wrong and I don't know what the consequences might be.
+ */
+
+int
+Afs_xsetgroups(struct thread *td, struct setgroups_args *uap)
+{
+    int code = 0;
+    struct vrequest treq;
+    struct ucred *cr;
+
+    cr = crdup(td->td_ucred);
+
+    AFS_STATCNT(afs_xsetgroups);
+    AFS_GLOCK();
+
+    code = afs_InitReq(&treq, cr);
+    AFS_GUNLOCK();
+    crfree(cr);
+    if (code) return setgroups(td, uap); /* afs has shut down */
+
+    code = setgroups(td, uap);
+    /* Note that if there is a pag already in the new groups we don't
+     * overwrite it with the old pag.
+     */
+    cr = crdup(td->td_ucred);
+
+    if (PagInCred(cr) == NOPAG) {
+	if (((treq.uid >> 24) & 0xff) == 'A') {
+	    AFS_GLOCK();
+	    /* we've already done a setpag, so now we redo it */
+	    AddPag(curproc, treq.uid, &cr);
+	    AFS_GUNLOCK();
+	}
+    }
+    crfree(cr);
+    return code;
+}
+#else /* FBSD50 */
 int
 Afs_xsetgroups(p, args, retval)
     struct proc *p;
@@ -74,6 +124,7 @@ Afs_xsetgroups(p, args, retval)
     crfree(cr);
     return code;
 }
+#endif
 
 
 int
@@ -125,7 +176,6 @@ afs_getgroups(
 }
 
 
-
 static int
 afs_setgroups(
     struct proc *proc,
@@ -134,6 +184,7 @@ afs_setgroups(
     gid_t *gidset,
     int change_parent)
 {
+#ifndef AFS_FBSD50_ENV
     int ngrps;
     int i;
     gid_t *gp;
@@ -161,5 +212,6 @@ afs_setgroups(
     oldcr=proc->p_cred->pc_ucred;
     proc->p_cred->pc_ucred=cr;
     crfree(oldcr);
+#endif
     return(0);
 }

@@ -53,6 +53,9 @@ typedef unsigned short                  etap_event_t;
 #include "h/dirent.h"
 #include "h/socket.h"
 #include "h/domain.h"
+#if defined(AFS_FBSD50_ENV)
+#include "h/bio.h"
+#endif
 #include "h/buf.h"
 #include "h/mbuf.h"
 #endif /* AFS_FBSD_ENV */

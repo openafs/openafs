@@ -22,6 +22,8 @@ RCSID("$Header$");
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include <sys/namei.h>
+
+#ifndef AFS_FBSD50_ENV
 /*
  * afs_suser() returns true if the caller is superuser, false otherwise.
  *
@@ -36,6 +38,7 @@ afs_suser() {
     }
     return(0);
 }
+#endif
 
 int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
                           struct vnode **dirvpp, struct vnode **vpp)

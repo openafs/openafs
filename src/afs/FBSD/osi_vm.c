@@ -62,7 +62,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	return EBUSY;
 
     AFS_GUNLOCK();
-    vp=avc;
+    vp = AFSTOV(avc);
     simple_lock(&vp->v_interlock);
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
        vm_object_page_remove(obj, 0, 0, FALSE);
@@ -91,26 +91,29 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
     struct vnode *vp;
     struct vm_object *obj;
     int anyio,tries;
+
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     tries=5;
-    vp=avc;
+    vp = AFSTOV(avc);
     do {
-    anyio=0;
-    simple_lock(&vp->v_interlock);
-    if (VOP_GETVOBJECT(vp, &obj) == 0 &&
-       (obj->flags & OBJ_MIGHTBEDIRTY)) {
-        if (!vget(vp,
-            LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
-            if (VOP_GETVOBJECT(vp, &obj) == 0) {
-               vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
-               anyio = 1;
-            }
-            vput(vp);
-        }
-    } else {
-        simple_unlock(&vp->v_interlock);
-    }
+	anyio=0;
+	simple_lock(&vp->v_interlock);
+	if (VOP_GETVOBJECT(vp, &obj) == 0 &&
+	    (obj->flags & OBJ_MIGHTBEDIRTY)) {
+#ifdef AFS_FBSD50_ENV
+	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY, curthread)) {
+#else
+	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
+#endif
+		if (VOP_GETVOBJECT(vp, &obj) == 0) {
+		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
+		    anyio = 1;
+		}
+		vput(vp);
+	    }
+	} else
+	    simple_unlock(&vp->v_interlock);
     } while (anyio && (--tries > 0));
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,94);
@@ -130,30 +133,33 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
     struct vnode *vp;
     struct vm_object *obj;
     int anyio, tries;
+
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    tries=5;
-    vp=avc;
+    tries = 5;
+    vp = AFSTOV(avc);
     do {
-       anyio=0;
-       simple_lock(&vp->v_interlock);
-       if (VOP_GETVOBJECT(vp, &obj) == 0 &&
-          (obj->flags & OBJ_MIGHTBEDIRTY)) {
-           if (!vget(vp,
-               LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
-               if (VOP_GETVOBJECT(vp, &obj) == 0) {
-                  vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
-                  anyio = 1;
-               }
-               vput(vp);
-           }
-       } else {
-           simple_unlock(&vp->v_interlock);
-       }
+	anyio=0;
+	simple_lock(&vp->v_interlock);
+	if (VOP_GETVOBJECT(vp, &obj) == 0 &&
+	    (obj->flags & OBJ_MIGHTBEDIRTY)) {
+#ifdef AFS_FBSD50_ENV
+	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY, curthread)) {
+#else
+	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
+#endif
+		if (VOP_GETVOBJECT(vp, &obj) == 0) {
+		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
+		    anyio = 1;
+		}
+		vput(vp);
+	    }
+	} else
+	    simple_unlock(&vp->v_interlock);
     } while (anyio && (--tries > 0));
     simple_lock(&vp->v_interlock);
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
-       vm_object_page_remove(obj, 0, 0, FALSE);
+	vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
     /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/
@@ -169,10 +175,11 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     struct vnode *vp;
     struct vm_object *obj;
-    vp=avc;
+
+    vp = AFSTOV(avc);
     simple_lock(&vp->v_interlock);
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
-       vm_object_page_remove(obj, 0, 0, FALSE);
+	vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
     /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/

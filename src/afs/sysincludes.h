@@ -237,7 +237,10 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #    include "h/resource.h"
 #endif
 #  endif /* AFS_HPUX_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#  if defined(AFS_FBSD50_ENV)
+struct vop_getwritemount_args;
+#  endif
 #  include <sys/uio.h>
 #  include <sys/mount.h> 
 #  include <sys/namei.h>
