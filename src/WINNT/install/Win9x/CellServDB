@@ -1,11 +1,11 @@
->grand.central.org      #GCO Public CellServDB 27 Jan 2005
+>grand.central.org      #GCO Public CellServDB 16 Mar 2005
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 130.237.48.87                   #andrew.e.kth.se
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
 137.208.3.33                    #afsdb1.wu-wien.ac.at
-137.208.7.4                     #afsdb2.wu-wien.ac.at
-137.208.7.7                     #afsdb3.wu-wien.ac.at
+137.208.8.12                    #caesar.wu-wien.ac.at
+137.208.127.33                  #buddy.wu-wien.ac.at
 >hephy.at               #hephy-vienna
 193.170.243.10                  #mowgli.oeaw.ac.at
 193.170.243.12                  #baloo.oeaw.ac.at
@@ -165,8 +165,8 @@
 204.194.25.7                    #afs1.qatar.cmu.edu
 204.194.25.8                    #afs2.qatar.cmu.edu
 >sbp.ri.cmu.edu         #Carnegie Mellon University - Sensor Based Planning Lab
-128.2.105.174                   #voronoi.sbp.ri.cmu.edu
-128.2.105.175                   #nihao.sbp.ri.cmu.edu
+128.2.56.129                    #nihao.sbp.ri.cmu.edu
+128.2.56.136                    #youtheman.sbp.ri.cmu.edu
 >msc.cornell.edu        #Cornell University Materials Science Center
 128.84.231.242                  #miranda.ccmr.cornell.edu
 128.84.241.35                   #co.ccmr.cornell.edu
@@ -201,6 +201,10 @@
 18.181.0.19                     #reynelda.mit.edu.
 18.181.0.22                     #rosebud.mit.edu.
 18.181.0.23                     #ronald-ann.mit.edu.
+>soap.mit.edu           #MIT School Of Architecture & Planning
+18.89.1.204                     #crypt.mit.edu
+18.89.1.209                     #grotto.mit.edu
+18.89.2.156                     #ac.mit.edu
 >msu.edu                #Michigan State University Main Cell
 35.9.7.10                       #afsdb0.cl.msu.edu
 >nd.edu                 #University of Notre Dame
@@ -364,11 +368,18 @@
 128.55.128.252                  #alfred.nersc.gov
 128.55.128.254                  #lurch.nersc.gov
 >bme.hu                 #Budapest University of Technology and Economics
-152.66.241.81                   #dugo.iit.bme.hu
+152.66.241.6                    #afs.iit.bme.hu
 >caspur.it              #CASPUR Inter-University Computing Consortium, Rome
 193.204.5.45                    #pomodoro.caspur.it
 193.204.5.46                    #banana.caspur.it
 193.204.5.50                    #maslo.caspur.it
+>enea.it                #ENEA New Tech. Energy & Environment Agency, Italy
+192.107.54.5                    #aixfs.frascati.enea.it
+192.107.54.11                   #rs2ced.frascati.enea.it
+192.107.54.12                   #43p.frascati.enea.it
+192.107.61.235                  #serverinfo02.bologna.enea.it
+192.107.71.6                    #glauco.casaccia.enea.it
+192.107.96.233                  #riscdb.trisaia.enea.it
 >fusione.it             #Assoz. FUSIONE/Euratom, ENEA, Frascati-Italy
 192.107.90.2                    #fusafs1.frascati.enea.it
 192.107.90.3                    #fusafs2.frascati.enea.it
@@ -379,6 +390,8 @@
 131.154.1.7                     #afs3.infn.it
 141.108.3.252                   #afs1.infn.it
 192.84.134.75                   #afs2.infn.it
+>ba.infn.it             #INFN, Sezione di Bari
+193.206.185.235                 #baafsserver.ba.infn.it
 >kloe.infn.it           #INFN, KLOE experiment at Laboratori di Frascati
 192.135.25.111                  #kloeafs1.lnf.infn.it
 192.135.25.112                  #kloeafs2.lnf.infn.it
