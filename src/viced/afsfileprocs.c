@@ -320,11 +320,13 @@ retry:
 	ViceLog(0,("BreakDelayedCallbacks FAILED for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
 	if ( MultiProbeAlternateAddress_r (thost) ) {
 	    ViceLog(0, ("MultiProbe failed to find new address for host %x.%d\n",
-			thost->host, thost->port));
-	    code = -1;
+			afs_inet_ntoa_r(thost->host, hoststr), 
+			ntohs(thost->port)));
+            code = -1;
 	} else {
-	    ViceLog(0, ("MultiProbe found new address for host %x.%d\n",
-			thost->host, thost->port));
+            ViceLog(0, ("MultiProbe found new address for host %s:%d\n",
+                       afs_inet_ntoa_r(thost->host, hoststr), 
+                       ntohs(thost->port)));
 	    if (BreakDelayedCallBacks_r(thost)) {
 		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
 		code = -1;
