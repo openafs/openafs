@@ -4,7 +4,9 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
+#ifndef IGNORE_STDS_H
 #include <sys/param.h>
+#endif
 
 #define AFS_XBSD_ENV 1             /* {Free,Open,Net}BSD */
 #define AFS_X86_XBSD_ENV 1
