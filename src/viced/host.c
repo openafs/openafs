@@ -943,8 +943,8 @@ retry:
     caps.Capabilities_len = 0;
 
     code = 0;
-    identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     host = h_Lookup_r(haddr, hport, &held);
+    identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     if (host && !identP && !(host->Console&1)) {
 	/* This is a new connection, and we already have a host
 	 * structure for this address. Verify that the identity
@@ -1069,39 +1069,50 @@ retry:
 	host = h_Alloc_r(tcon); /* returned held and locked */
 	h_gethostcps_r(host,FT_ApproxTime());
         if (!(host->Console&1)) {
-	    if (!identP || !interfValid) {
-		H_UNLOCK
-		code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, 
-						   &interf, &caps);
-		if ( code == RXGEN_OPCODE ) 
-		    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
-		H_LOCK
-		if ( code == RXGEN_OPCODE ) {
+	    int pident = 0;
+	    H_UNLOCK
+	    code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, 
+					       &interf, &caps);
+	    if ( code == RXGEN_OPCODE ) 
+		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
+	    H_LOCK
+	    if ( code == RXGEN_OPCODE ) {
+		if (!identP)
 		    identP = (struct Identity *)malloc(sizeof(struct Identity));
-		    if (!identP) {
-			ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-			assert(0);
-		    }
-		    identP->valid = 0;
-		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
-		    ViceLog(25,
-			    ("Host %s:%d does not support WhoAreYou.\n",
-			    afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
-		    code = 0;
-		} else if (code == 0) {
-		    interfValid = 1;
-		    identP = (struct Identity *)malloc(sizeof(struct Identity));
-		    if (!identP) {
-			ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
-			assert(0);
-		    }
-		    identP->valid = 1;
-		    identP->uuid = interf.uuid;
-		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
-		    ViceLog(25, ("WhoAreYou success on %s:%d\n",
-				afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+		else
+		    pident = 1;
+
+		if (!identP) {
+		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+		    assert(0);
 		}
+		identP->valid = 0;
+		if (!pident)
+		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
+		ViceLog(25,
+			("Host %s:%d does not support WhoAreYou.\n",
+			 afs_inet_ntoa_r(host->host, hoststr), 
+			 ntohs(host->port)));
+		code = 0;
+	    } else if (code == 0) {
+		if (!identP)
+		    identP = (struct Identity *)malloc(sizeof(struct Identity));
+		else 
+		    pident = 1;
+
+		if (!identP) {
+		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+		    assert(0);
+		}
+		identP->valid = 1;
+		identP->uuid = interf.uuid;
+		if (!pident)
+		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
+		ViceLog(25, ("WhoAreYou success on %s:%d\n",
+			     afs_inet_ntoa_r(host->host, hoststr), 
+			     ntohs(host->port)));
 	    }
+	    interfValid=identP->valid;
 	    if (code == 0 && !identP->valid) {
 	 	H_UNLOCK
 		code = RXAFSCB_InitCallBackState(host->callback_rxcon);
