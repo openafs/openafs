@@ -338,7 +338,7 @@ main(int argc, char *argv[])
     char fname[128];
     FILE *file;
     int l, i;
-    char **pvar, *ch;
+    char **pvar, *ch, *save;
     long len;
     BOOL bRecurse = FALSE;
     BOOL bQuiet = FALSE;
