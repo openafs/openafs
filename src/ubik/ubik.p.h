@@ -95,18 +95,6 @@ struct ubik_client {
 #define	ubik_GetRPCConn(astr,aindex)	((aindex) >= MAXSERVERS? 0 : (astr)->conns[aindex])
 #define	ubik_GetRPCHost(astr,aindex)	((aindex) >= MAXSERVERS? 0 : (astr)->hosts[aindex])
 
-/* ubik transaction id representation */
-struct ubik_tid {
-    afs_int32 epoch;	    /* time this server started */
-    afs_int32 counter;   /* counter within epoch of transactions */
-};
-
-/* ubik version representation */
-struct ubik_version {
-    afs_int32 epoch;	    /* time this server started */
-    afs_int32 counter;   /* counter within epoch of transactions */
-};
-
 /* ubik header file structure */
 struct ubik_hdr {
     afs_int32 magic;		    /* magic number */

@@ -91,7 +91,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.9 2001/10/14 18:07:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.10 2002/05/11 00:03:47 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -2451,6 +2451,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 			if (check) {
 			    if (!Showmode) {
 				Log("Vnode %d:  inode number incorrect (is %s should be %s). FileSize=%d\n",
+				    vnodeNumber,
 				    PrintInode(stmp1, VNDISK_GET_INO(vnode)),
 				    PrintInode(stmp2, ip->inodeNumber),
 				    ip->byteCount);

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/server.c,v 1.1.1.7 2001/10/14 18:04:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/server.c,v 1.1.1.8 2002/05/10 23:57:52 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -472,9 +472,8 @@ main(argc, argv)
 							  afsconf_GetKey,
 							  (char *) 0);
 
-    /* These two lines disallow jumbograms */
-    rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-    rxi_nSendFrags = rxi_nRecvFrags = 1;
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
 
     tservice = rx_NewService(0, BUDB_SERVICE, "BackupDatabase",
 			     sca, 3, BUDB_ExecuteRequest);

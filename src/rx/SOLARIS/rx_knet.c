@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/SOLARIS/rx_knet.c,v 1.1.1.8 2002/01/28 00:30:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/SOLARIS/rx_knet.c,v 1.1.1.9 2002/05/11 00:01:39 hartmans Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "../rx/rx_kcommon.h"
@@ -51,6 +51,10 @@ int (*sockfs_sosendmsg)
     (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
 int (*sockfs_sosetsockopt)
     (struct sonode *, int, int, void *, int) = NULL;
+int (*sockfs_sounbind)
+    (struct sonode *, int);
+void (*sockfs_sockfree)
+    (struct sonode *);
 
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
@@ -238,6 +242,16 @@ struct osi_socket *rxk_NewSocket(short aport)
 	    return NULL;
 	}
     }
+    if (sockfs_sounbind == NULL) {
+	sockfs_sounbind = (int (*)())modlookup("sockfs", "sounbind");
+	if (sockfs_sounbind == NULL)
+	    return NULL;
+    }
+    if (sockfs_sockfree == NULL) {
+	sockfs_sockfree = (void (*)())modlookup("sockfs", "sockfree");
+	if (sockfs_sockfree == NULL)
+	    return NULL;
+    }
 
     accessvp = sockfs_solookup(AF_INET, SOCK_DGRAM, 0, "/dev/udp", &error);
     if (accessvp == NULL) {
@@ -285,6 +299,9 @@ int osi_FreeSocket(asocket)
 	kill(rxk_ListenerPid, SIGUSR1);
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
+
+    sockfs_sounbind(so, 0);
+    sockfs_sockfree(so);
     return 0;
 }
 

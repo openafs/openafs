@@ -24,7 +24,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe_callback.c,v 1.1.1.4 2001/07/14 22:21:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe_callback.c,v 1.1.1.5 2002/05/10 23:58:47 hartmans Exp $");
 
 #include <errno.h>
 #include <stdio.h>			/*Standard I/O stuff*/
@@ -641,7 +641,7 @@ int SRXAFSCB_GetCellServDB(
     struct rx_call *a_call,
     afs_int32 a_index,
     char **a_name,
-    afs_int32 *a_hosts)
+    serverList *a_hosts)
 {
     return RXGEN_OPCODE;
 }

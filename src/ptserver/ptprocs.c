@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.8 2001/10/14 18:06:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.9 2002/05/11 00:00:47 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -161,7 +161,7 @@ afs_int32 WhoIsThis (acall, at, aid)
     return 0;
 }
 
-afs_int32 PR_INewEntry (call,aname,aid,oid)
+afs_int32 SPR_INewEntry (call,aname,aid,oid)
   struct rx_call *call;
   char aname[PR_MAXNAMELEN];
   afs_int32 aid;
@@ -225,7 +225,7 @@ afs_int32 iNewEntry (call,aname,aid,oid)
 }
 
 
-afs_int32 PR_NewEntry (call, aname, flag, oid, aid)
+afs_int32 SPR_NewEntry (call, aname, flag, oid, aid)
   struct rx_call *call;
   char aname[PR_MAXNAMELEN];
   afs_int32 flag;
@@ -263,7 +263,7 @@ afs_int32 newEntry (call, aname, flag, oid, aid)
     if (code) ABORT_WITH(tt,code);
 
     /* this is for cross-cell self registration. It is not added in the
-     * PR_INewEntry because we want self-registration to only do 
+     * SPR_INewEntry because we want self-registration to only do 
      * automatic id assignment.
      */
     code = WhoIsThisWithName(call,tt,&cid,cname);
@@ -286,7 +286,7 @@ afs_int32 newEntry (call, aname, flag, oid, aid)
 
 
 
-afs_int32 PR_WhereIsIt (call,aid,apos)
+afs_int32 SPR_WhereIsIt (call,aid,apos)
 struct rx_call *call;
 afs_int32 aid;
 afs_int32 *apos;
@@ -325,7 +325,7 @@ afs_int32 *apos;
 }
 
 
-afs_int32 PR_DumpEntry (call,apos, aentry)
+afs_int32 SPR_DumpEntry (call,apos, aentry)
 struct rx_call *call;
 afs_int32 apos;
 struct prdebugentry *aentry;
@@ -376,7 +376,7 @@ struct prdebugentry *aentry;
     return PRSUCCESS;
 }
 
-afs_int32 PR_AddToGroup (call,aid,gid)
+afs_int32 SPR_AddToGroup (call,aid,gid)
 struct rx_call *call;
 afs_int32 aid;
 afs_int32 gid;
@@ -439,7 +439,7 @@ afs_int32 gid;
     return PRSUCCESS;
 }
 
-afs_int32 PR_NameToID (call, aname, aid)
+afs_int32 SPR_NameToID (call, aname, aid)
   struct rx_call *call;
   namelist *aname;
   idlist *aid;
@@ -495,11 +495,11 @@ afs_int32 nameToID (call, aname, aid)
 }
 
 /*
- * PR_IDToName
+ * SPR_IDToName
  * Given an array of ids, find the name for each of them.
  * The array of ids and names is unlimited.
  */
-afs_int32 PR_IDToName (call, aid, aname)
+afs_int32 SPR_IDToName (call, aid, aname)
   struct rx_call *call;
   idlist *aid;
   namelist *aname;
@@ -527,6 +527,7 @@ afs_int32 idToName (call, aid, aname)
     if (size <= 0) size = 0;
     aname->namelist_val = (prname *)malloc(size*PR_MAXNAMELEN);
     aname->namelist_len = 0;
+    if (aname->namelist_val == 0) return PRNOMEM;
     if (aid->idlist_len == 0) return 0;
     if (size == 0) return PRTOOMANY;	/* rxgen will probably handle this */
 
@@ -552,7 +553,7 @@ afs_int32 idToName (call, aid, aname)
     return PRSUCCESS;
 }
 
-afs_int32 PR_Delete (call, aid)
+afs_int32 SPR_Delete (call, aid)
   struct rx_call *call;
   afs_int32 aid;
 {
@@ -691,7 +692,7 @@ afs_int32 Delete (call, aid)
     return PRSUCCESS;
 }
 
-afs_int32 PR_UpdateEntry (call, aid, name, uentry)
+afs_int32 SPR_UpdateEntry (call, aid, name, uentry)
   struct rx_call *call;
   afs_int32 aid;
   char *name;
@@ -756,7 +757,7 @@ afs_int32 PR_UpdateEntry (call, aid, name, uentry)
     return PRSUCCESS;
 }
 
-afs_int32 PR_RemoveFromGroup (call,aid,gid)
+afs_int32 SPR_RemoveFromGroup (call,aid,gid)
 struct rx_call *call;
 afs_int32 aid;
 afs_int32 gid;
@@ -816,7 +817,7 @@ afs_int32 gid;
 }
 
 
-afs_int32 PR_GetCPS (call, aid, alist, over)
+afs_int32 SPR_GetCPS (call, aid, alist, over)
   struct rx_call *call;
   afs_int32 aid;
   prlist *alist;
@@ -887,7 +888,7 @@ int inCPS (CPS,id)
 #endif /* IP_WILDCARDS */
 
 
-afs_int32 PR_GetCPS2 (call, aid, ahost, alist, over)
+afs_int32 SPR_GetCPS2 (call, aid, ahost, alist, over)
   struct rx_call *call;
   afs_int32 aid;
   afs_int32 ahost;
@@ -972,7 +973,7 @@ afs_int32 getCPS2 (call, aid, ahost, alist, over)
 }
 
 
-afs_int32 PR_GetHostCPS (call, ahost, alist, over)
+afs_int32 SPR_GetHostCPS (call, ahost, alist, over)
   struct rx_call *call;
   afs_int32 ahost;
   prlist *alist;
@@ -1037,7 +1038,7 @@ bad:
 }
 
 
-afs_int32 PR_ListMax (call,uid,gid)
+afs_int32 SPR_ListMax (call,uid,gid)
 struct rx_call *call;
 afs_int32 *uid;
 afs_int32 *gid;
@@ -1074,7 +1075,7 @@ afs_int32 *gid;
     return PRSUCCESS;
 }
 
-afs_int32 PR_SetMax (call,aid,gflag)
+afs_int32 SPR_SetMax (call,aid,gflag)
 struct rx_call *call;
 afs_int32 aid;
 afs_int32 gflag;
@@ -1117,7 +1118,7 @@ afs_int32 gflag;
     return PRSUCCESS;
 }
 
-afs_int32 PR_ListEntry (call,aid,aentry)
+afs_int32 SPR_ListEntry (call,aid,aentry)
 struct rx_call *call;
 afs_int32 aid;
 struct prcheckentry *aentry;
@@ -1177,7 +1178,7 @@ struct prcheckentry *aentry;
     return PRSUCCESS;
 }
 
-afs_int32 PR_ListEntries(call, flag, startindex, bulkentries, nextstartindex)
+afs_int32 SPR_ListEntries(call, flag, startindex, bulkentries, nextstartindex)
   struct rx_call *call;
   afs_int32          flag;
   afs_int32          startindex;
@@ -1304,7 +1305,7 @@ afs_int32 put_prentries(tentry, bulkentries)
   return 0;
 }
 
-afs_int32 PR_ChangeEntry (call,aid,name,oid,newid)
+afs_int32 SPR_ChangeEntry (call,aid,name,oid,newid)
 struct rx_call *call;
 afs_int32 aid;
 char *name;
@@ -1359,7 +1360,7 @@ afs_int32 newid;
     return code;
 }
 
-afs_int32 PR_SetFieldsEntry (call, id, mask, flags, ngroups, nusers, spare1, spare2)
+afs_int32 SPR_SetFieldsEntry (call, id, mask, flags, ngroups, nusers, spare1, spare2)
   struct rx_call *call;
   afs_int32 id;
   afs_int32 mask;				/* specify which fields to update */
@@ -1444,7 +1445,7 @@ afs_int32 setFieldsEntry (call, id, mask, flags, ngroups, nusers, spare1, spare2
     return code;
 }
 
-afs_int32 PR_ListElements (call, aid, alist, over)
+afs_int32 SPR_ListElements (call, aid, alist, over)
   struct rx_call *call;
   afs_int32 aid;
   prlist *alist;
@@ -1500,13 +1501,13 @@ afs_int32 listElements (call, aid, alist, over)
 }
 
 /* 
- * PR_istOwned
+ * SPR_ListOwned
  * List the entries owned by this id.  If the id is zero,
  * return the orphans list. This will return up to PR_MAXGROUPS
  * at a time with the lastP available to get the rest. The
  * maximum value is enforced in GetOwnedChain().
  */
-afs_int32 PR_ListOwned (call, aid, alist, lastP)
+afs_int32 SPR_ListOwned (call, aid, alist, lastP)
   struct rx_call *call;
   afs_int32 aid;
   prlist *alist;
@@ -1583,7 +1584,7 @@ afs_int32 listOwned (call, aid, alist, lastP)
     return code;
 }
 
-afs_int32 PR_IsAMemberOf (call,uid,gid,flag)
+afs_int32 SPR_IsAMemberOf (call,uid,gid,flag)
 struct rx_call *call;
 afs_int32 uid;
 afs_int32 gid;

@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_event.c,v 1.1.1.5 2001/09/11 14:34:16 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_event.c,v 1.1.1.6 2002/05/11 00:01:25 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -350,7 +350,7 @@ int rxevent_RaiseEvents(next)
 {
     register struct rxepoch *ep;
     register struct rxevent *ev;
-    struct clock now;
+    volatile struct clock now;
 
     MUTEX_ENTER(&rxevent_lock);
 

@@ -6,3 +6,4 @@ fcrypt.h
 rxkad.h
 rxkad_errs.c
 sboxes.h
+fc_test

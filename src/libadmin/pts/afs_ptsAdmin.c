@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/pts/afs_ptsAdmin.c,v 1.1.1.4 2001/07/14 22:22:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/pts/afs_ptsAdmin.c,v 1.1.1.5 2002/05/10 23:59:34 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -40,6 +40,7 @@ extern int PR_SetFieldsEntry();
 extern int PR_IsAMemberOf();
 extern int PR_ListMax();
 extern int PR_ListOwned();
+extern int PR_ListEntries();
 
 /*
  * IsValidCellHandle - validate the cell handle for making pts
@@ -2938,3 +2939,520 @@ fail_pts_OwnedGroupListDone:
     }
     return rc;
 }
+
+typedef struct pts_list {
+  prlistentries *names; /* the current list of pts names in this cell */
+  prlistentries *currName; /* the current pts entry */
+  afs_int32 index; /* the index into names for the next pts entry */
+  afs_int32 nextstartindex; /* the next start index for the RPC */
+  afs_int32 nentries; /* the number of entries in names */
+  afs_int32 flag; /* the type of the list */
+  int finished_retrieving; /* set when we've processed the last owned_names */
+  afs_cell_handle_p c_handle; /* ubik client to pts server's from c_handle */
+  char entries[CACHED_ITEMS][PTS_MAX_NAME_LEN]; /* cache of pts names */
+} pts_list_t, *pts_list_p;
+
+static int DeletePTSSpecificData(
+  void *rpc_specific,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    pts_list_p list = (pts_list_p) rpc_specific;
+
+    if (list->names) {
+	free(list->names);
+    }
+
+    rc = 1;
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+static int GetPTSRPC(
+  void *rpc_specific,
+  int slot,
+  int *last_item,
+  int *last_item_contains_data,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    pts_list_p list = (pts_list_p) rpc_specific;
+
+    /*
+     * We really don't make an rpc for every entry we return here
+     * since the pts interface allows several members to be returned
+     * with one rpc, but we fake it to make the iterator happy.
+     */
+
+    /*
+     * Check to see if we are done retrieving data
+     */
+
+    if (list->finished_retrieving) {
+	*last_item = 1;
+	*last_item_contains_data = 0;
+	goto fail_GetPTSRPC;
+    }
+
+    /*
+     * Check to see if we really need to make an rpc
+     */
+
+    if ((!list->finished_retrieving) && (list->index >= list->nentries) ) {
+        afs_int32 start = list->nextstartindex;
+	prentries bulkentries;
+	list->nextstartindex = -1;
+	bulkentries.prentries_val = 0;
+	bulkentries.prentries_len = 0;
+
+        tst = ubik_Call(PR_ListEntries, list->c_handle->pts, 0, list->flag, start,
+			&bulkentries, &(list->nextstartindex) );
+
+	if (tst != 0) {
+	    goto fail_GetPTSRPC;
+	}
+	
+	list->nentries = bulkentries.prentries_len;
+	list->names = bulkentries.prentries_val;
+	
+	list->index = 0;
+	list->currName = list->names;
+
+    }
+
+    /*
+     * We can retrieve the next entry from data we already received
+     */
+
+    strcpy(&list->entries[slot], list->currName->name);
+    list->index++;
+    list->currName++;
+
+
+    /*
+     * Check to see if there is more data to be retrieved
+     * We need to free up the previously retrieved data here
+     * and then check to see if the last rpc indicated that there
+     * were more items to retrieve.
+     */
+
+    if (list->index >= list->nentries) {
+        if( list->names ) {
+	  free(list->names);
+	}
+	list->names = NULL;
+
+	if (list->nextstartindex == -1) {
+	    list->finished_retrieving = 1;
+	}
+    }
+    rc = 1;
+
+fail_GetPTSRPC:
+
+    if (st != NULL) {
+        *st = tst;
+    }
+
+    return rc;
+}
+
+static int GetPTSFromCache(
+  void *rpc_specific,
+  int slot,
+  void *dest,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    pts_list_p list = (pts_list_p) rpc_specific;
+
+    strcpy((char *) dest, &list->entries[slot]);
+    rc = 1;
+
+    if (st != NULL) {
+        *st = tst;
+    }
+
+    return rc;
+}
+
+/*
+ * pts_UserListBegin - begin iterating over the list of users
+ * in a particular cell
+ *
+ * PARAMETERS
+ *
+ * IN cellHandle - a previously opened cellHandle that corresponds
+ * to the cell where the users exist.
+ *
+ * OUT iterationIdP - upon successful completion contains a iterator that
+ * can be passed to pts_UserListNext.
+ *
+ * LOCKS
+ *
+ * No locks are held by this function
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ */
+
+int ADMINAPI pts_UserListBegin(
+  const void *cellHandle,
+  void **iterationIdP,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
+ 
+    /*
+     * Validate arguments
+     */
+
+    if (!IsValidCellHandle(c_handle, &tst)) {
+	goto fail_pts_UserListBegin;
+    }
+
+    if (iterationIdP == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_UserListBegin;
+    }
+
+    if ((iter == NULL) || (list == NULL)) {
+	tst = ADMNOMEM;
+	goto fail_pts_UserListBegin;
+    }
+
+    /*
+     * Initialize the iterator specific data
+     */
+    
+    list->index = 0;
+    list->finished_retrieving = 0;
+    list->c_handle = c_handle;
+    list->names = NULL;
+    list->nextstartindex = 0;
+    list->nentries = 0;
+    list->flag = PRUSERS;
+
+    if (IteratorInit(iter, (void *) list, GetPTSRPC,
+		     GetPTSFromCache, NULL,
+		     DeletePTSSpecificData, &tst)) {
+	*iterationIdP = (void *) iter;
+	rc = 1;
+    }
+
+fail_pts_UserListBegin:
+
+    if (rc == 0) {
+	if (iter != NULL) {
+	    free(iter);
+	}
+	if (list != NULL) {
+	    free(list);
+	}
+    }
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+/*
+ * pts_UserListNext - get the next user in the cell.
+ *
+ * PARAMETERS
+ *
+ * IN iterationId - an iterator previously returned by pts_UserListBegin
+ *
+ * OUT groupName - upon successful completion contains the next user
+ *
+ * LOCKS
+ *
+ * The iterator mutex is held during the retrieval of the next member.
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ */
+
+int ADMINAPI pts_UserListNext(
+  const void *iterationId,
+  char *userName,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
+ 
+    /*
+     * Validate arguments
+     */
+
+    if (iterationId == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_UserListNext;
+    }
+
+    if (userName == NULL) {
+	tst = ADMPTSUSERNAMENULL;
+	goto fail_pts_UserListNext;
+    }
+
+    rc = IteratorNext(iter, (void *) userName, &tst);
+
+fail_pts_UserListNext:
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+/*
+ * pts_UserListDone - finish using a user list iterator
+ *
+ * PARAMETERS
+ *
+ * IN iterationId - an iterator previously returned by pts_UserListBegin
+ *
+ * LOCKS
+ *
+ * The iterator is locked and then destroyed
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ * ASSUMPTIONS
+ *
+ * It is the user's responsibility to make sure pts_UserListDone
+ * is called only once for each iterator.
+ */
+ 
+int ADMINAPI pts_UserListDone(
+  const void *iterationId,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
+
+    /*
+     * Validate arguments
+     */
+
+    if (iterationId == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_UserListDone;
+    }
+
+    rc = IteratorDone(iter, &tst);
+
+fail_pts_UserListDone:
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+/*
+ * pts_GroupListBegin - begin iterating over the list of groups
+ * in a particular cell.
+ *
+ * PARAMETERS
+ *
+ * IN cellHandle - a previously opened cellHandle that corresponds
+ * to the cell where the groups exist.
+ *
+ * OUT iterationIdP - upon successful completion contains a iterator that
+ * can be passed to pts_GroupListNext.
+ *
+ * LOCKS
+ *
+ * No locks are held by this function
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ */
+
+int ADMINAPI pts_GroupListBegin(
+  const void *cellHandle,
+  void **iterationIdP,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
+ 
+    /*
+     * Validate arguments
+     */
+
+    if (!IsValidCellHandle(c_handle, &tst)) {
+	goto fail_pts_GroupListBegin;
+    }
+
+    if (iterationIdP == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_GroupListBegin;
+    }
+
+    if ((iter == NULL) || (list == NULL)) {
+	tst = ADMNOMEM;
+	goto fail_pts_GroupListBegin;
+    }
+
+    /*
+     * Initialize the iterator specific data
+     */
+    
+    list->index = 0;
+    list->finished_retrieving = 0;
+    list->c_handle = c_handle;
+    list->names = NULL;
+    list->nextstartindex = 0;
+    list->nentries = 0;
+    list->flag = PRGROUPS;
+
+    if (IteratorInit(iter, (void *) list, GetPTSRPC,
+		     GetPTSFromCache, NULL,
+		     DeletePTSSpecificData, &tst)) {
+	*iterationIdP = (void *) iter;
+	rc = 1;
+    }
+
+fail_pts_GroupListBegin:
+
+    if (rc == 0) {
+	if (iter != NULL) {
+	    free(iter);
+	}
+	if (list != NULL) {
+	    free(list);
+	}
+    }
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+/*
+ * pts_UserListNext - get the next group in a cell.
+ *
+ * PARAMETERS
+ *
+ * IN iterationId - an iterator previously returned by pts_GroupListBegin
+ *
+ * OUT groupName - upon successful completion contains the next group
+ *
+ * LOCKS
+ *
+ * The iterator mutex is held during the retrieval of the next member.
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ */
+
+int ADMINAPI pts_GroupListNext(
+  const void *iterationId,
+  char *groupName,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
+ 
+    /*
+     * Validate arguments
+     */
+
+    if (iterationId == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_GroupListNext;
+    }
+
+    if (groupName == NULL) {
+	tst = ADMPTSGROUPNAMENULL;
+	goto fail_pts_GroupListNext;
+    }
+
+    rc = IteratorNext(iter, (void *) groupName, &tst);
+
+fail_pts_GroupListNext:
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+
+/*
+ * pts_GroupListDone - finish using a group list iterator
+ *
+ * PARAMETERS
+ *
+ * IN iterationId - an iterator previously returned by pts_GroupListBegin
+ *
+ * LOCKS
+ *
+ * The iterator is locked and then destroyed
+ *
+ * RETURN CODES
+ *
+ * Returns != 0 upon successful completion.
+ *
+ * ASSUMPTIONS
+ *
+ * It is the user's responsibility to make sure pts_GroupListDone
+ * is called only once for each iterator.
+ */
+ 
+int ADMINAPI pts_GroupListDone(
+  const void *iterationId,
+  afs_status_p st)
+{
+    int rc = 0;
+    afs_status_t tst = 0;
+    afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
+
+    /*
+     * Validate arguments
+     */
+
+    if (iterationId == NULL) {
+	tst = ADMITERATORNULL;
+	goto fail_pts_GroupListDone;
+    }
+
+    rc = IteratorDone(iter, &tst);
+
+fail_pts_GroupListDone:
+
+    if (st != NULL) {
+        *st = tst;
+    }
+    return rc;
+}
+

@@ -221,6 +221,7 @@ struct ka_debugInfo {
 /* finally the procedural definitions */
 
 package KAA_
+prefix S
 statindex 18
 
 proc Authenticate_old(
@@ -258,6 +259,7 @@ proc ChangePassword(
 ) = 2;
 
 package KAT_
+prefix S
 statindex 19
 
 proc GetTicket_old(
@@ -281,6 +283,7 @@ proc GetTicket(
 ) = 23;
 
 package KAM_
+prefix S
 statindex 20
 
 proc SetPassword(
@@ -297,7 +300,7 @@ proc SetFields(
   IN Date user_expiration,
   IN afs_int32 max_ticket_lifetime,
   IN afs_int32 maxAssociates,
-  IN afs_int32 spare1,
+  IN afs_uint32 misc_auth_bytes,
   IN afs_int32 spare2
 ) = 5;
 

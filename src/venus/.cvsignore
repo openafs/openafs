@@ -1,4 +1,5 @@
 AFS_component_version_number.c
+livesys
 Makefile
 cmdebug
 fs

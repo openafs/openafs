@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass1.c,v 1.1.1.4 2001/09/11 14:35:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass1.c,v 1.1.1.5 2002/05/11 00:03:19 hartmans Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -70,7 +70,8 @@ extern int ge_danger;
 static daddr_t badblk;
 static daddr_t dupblk;
 int pass1check();
-
+static int oldreported;
+ 
 pass1()
 {
 	register int c, i, j;
@@ -306,10 +307,19 @@ ignore_direct_block_check:
 #if	defined(AFS_SUN56_ENV) 
 			if ( OLDVICEINODE )
 			{
-			    /* This looks like a sol 2.5 AFS inode */
-			    printf("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
-			    printf("You should run the AFS file conversion utility before installing Sol 2.6\n");
-			    exit(100); /* unique return code? */
+			    if (yflag) {
+				if (!oldreported) {
+				    printf("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
+				    printf("You should run the AFS file conversion utility before installing Sol 2.6\n");
+				    printf("Continuing anyway.\n");
+				    oldreported++;
+				}
+			    } else {
+				/* This looks like a sol 2.5 AFS inode */
+				printf("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
+				printf("You should run the AFS file conversion utility before installing Sol 2.6\n");
+				exit(100); /* unique return code? */
+			    }
 			}
 #endif
 			statemap[inumber] =

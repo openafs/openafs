@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.10 2002/01/28 00:30:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.11 2002/05/11 00:01:27 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -998,22 +998,7 @@ int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
  */
 int rxk_ListenerPid; /* Used to signal process to wakeup at shutdown */
 
-#ifdef AFS_SUN5_ENV
-/*
- * Run the listener as a kernel process.
- */
 void rxk_Listener(void)
-{
-    extern id_t syscid;
-    void rxk_ListenerProc(void);
-    if (newproc(rxk_ListenerProc, syscid, 59))
-	osi_Panic("rxk_Listener: failed to fork listener process!\n");
-}
-
-void rxk_ListenerProc(void)
-#else /* AFS_SUN5_ENV */
-void rxk_Listener(void)
-#endif /* AFS_SUN5_ENV */
 {
     struct rx_packet *rxp = NULL;
     int code;
@@ -1028,9 +1013,9 @@ void rxk_Listener(void)
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
-#if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
+#if defined(RX_ENABLE_LOCKS)
     AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
+#endif /* RX_ENABLE_LOCKS */
 
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	if (rxp) {
@@ -1062,9 +1047,6 @@ void rxk_Listener(void)
 #if defined(AFS_LINUX22_ENV) || defined(AFS_SUN5_ENV)
     afs_osi_Wakeup(&rxk_ListenerPid);
 #endif
-#ifdef AFS_SUN5_ENV
-    AFS_GUNLOCK();
-#endif /* AFS_SUN5_ENV */
 }
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)

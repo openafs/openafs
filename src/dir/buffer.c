@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/buffer.c,v 1.1.1.7 2001/10/14 18:04:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/buffer.c,v 1.1.1.8 2002/05/10 23:58:41 hartmans Exp $");
 
 #include <stdlib.h>
 #include <lock.h>
@@ -394,10 +394,7 @@ char *DNew (fid,page)
      */
     register struct buffer *tb;
     ObtainWriteLock(&afs_bufferLock);
-    if ((tb = newslot(fid,page,0)) == 0) {
-	ReleaseWriteLock(&afs_bufferLock);
-	return 0;
-    }
+    tb = newslot(fid,page,0);
     ObtainWriteLock(&tb->lock);
     ReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;

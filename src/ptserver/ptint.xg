@@ -8,6 +8,7 @@
  */
 
 package PR_
+prefix S
 statindex 8
 
 #include "ptopcodes.h"

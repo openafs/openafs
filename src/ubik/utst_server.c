@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/utst_server.c,v 1.1.1.5 2001/10/14 18:06:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/utst_server.c,v 1.1.1.6 2002/05/11 00:02:50 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -42,8 +42,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/utst_server.c,v 1.1.1.5 2001/10/14
 struct ubik_dbase *dbase;
 afs_int32 sleepTime;
 
-SAMPLE_Inc(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Inc(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code, temp;
     struct ubik_trans	*tt;
@@ -99,8 +99,8 @@ this program's convention for locking the whole database */
 }
 
 
-SAMPLE_Get(rxcall, gnumber)
-struct rx_call	*rxcall;
+SAMPLE_Get(rxconn, gnumber)
+struct rx_connection	*rxconn;
 afs_int32 *gnumber;
 {
     afs_int32 code, temp;
@@ -143,8 +143,8 @@ afs_int32 *gnumber;
 }
 
 
-SAMPLE_QGet(rxcall, gnumber)
-struct rx_call	*rxcall;
+SAMPLE_QGet(rxconn, gnumber)
+struct rx_connection	*rxconn;
 afs_int32 *gnumber;
 {
     afs_int32 code, temp;
@@ -187,8 +187,8 @@ afs_int32 *gnumber;
 }
 
 
-SAMPLE_Trun(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Trun(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code;
     struct ubik_trans	*tt;
@@ -222,8 +222,8 @@ struct rx_call	*rxcall;
 }
 
 
-SAMPLE_Test(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Test(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code, temp;
     struct ubik_trans	*tt;

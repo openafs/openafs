@@ -9,6 +9,7 @@ use OpenAFS::ConfigUtils;
 use OpenAFS::Dirpath;
 use OpenAFS::OS;
 use OpenAFS::Auth;
+use File::Copy;
 use Getopt::Long;
 use vars qw($admin $server $cellname $cachesize $part
           $shutdown_needed $csdb);
@@ -70,12 +71,6 @@ while(<MOUNT>) {
 }
 close MOUNT;
 
-unless ( -f "$openafsdirpath->{'afsconfdir'}/KeyFile") {
-  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krb5 or 
-the bos addkey command";
-  exit(1);
-}
-
 print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("$openafsinitcmd->{'filesrv-stop'}");
 $server = `hostname`;
@@ -91,13 +86,32 @@ die "Please specify a cellname\n" unless $cellname;
 
 unlink "$openafsdirpath->{'viceetcdir'}/CellServDB";
 unlink "$openafsdirpath->{'viceetcdir'}/ThisCell";
+if ($cellname eq "this.thirty.nine.character.name.for.sed") {
+  copy("kaserver.DB0","$openafsdirpath->{'afsdbdir'}/kaserver.DB0");
+  copy("kaserver.DBSYS1","$openafsdirpath->{'afsdbdir'}/kaserver.DBSYS1");
+  copy("KeyFile","$openafsdirpath->{'afsconfdir'}/KeyFile");
+}
+
+unless ( -f "$openafsdirpath->{'afsconfdir'}/KeyFile") {
+  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krb5 or the bos addkey command";
+  exit(1);
+}
 
 my $lcell = "${cellname}";
 
 #let bosserver create symlinks
 run("$openafsinitcmd->{'filesrv-start'}");
 unwind("$openafsinitcmd->{'filesrv-stop'}");
+unwind("/bin/rm -f $openafsdirpath->{'afslocaldir'}/BosConfig");
 $shutdown_needed = 1;
+
+open(THISCELL, ">$openafsdirpath->{'afsconfdir'}/ThisCell");
+print THISCELL $cellname;
+close THISCELL;
+open(THISCELL, ">$openafsdirpath->{'afsconfdir'}/CellServDB");
+print THISCELL ">$cellname #test cell";
+close THISCELL;
+
 run ("$openafsdirpath->{'afssrvbindir'}/bos setcellname $server $lcell -localauth ||true");
 run ("$openafsdirpath->{'afssrvbindir'}/bos addhost $server $server -localauth ||true");
 run("$openafsdirpath->{'afssrvbindir'}/bos adduser $server $admin -localauth");
@@ -111,15 +125,21 @@ print PRDB "$admin 128/20 1 -204 -204\n";
 print PRDB "system:administrators 130/20 -204 -204 -204\n";
 print PRDB" $admin 1\n";
 close PRDB;
-unwind( "rm $openafsdirpath->{'afsdbdir'}/prdb* ");
+unwind( "rm $openafsdirpath->{'afsdbdir'}/prdb.DB* ");
 # Start up ptserver and vlserver
 run("$openafsdirpath->{'afssrvbindir'}/bos create $server ptserver simple $openafsdirpath->{'afssrvlibexecdir'}/ptserver -localauth");
 unwind("$openafsdirpath->{'afssrvbindir'}/bos delete $server ptserver -localauth");
 unwind("$openafsdirpath->{'afssrvbindir'}/bos stop $server ptserver -localauth -wait");
 
 run("$openafsdirpath->{'afssrvbindir'}/bos create $server vlserver simple $openafsdirpath->{'afssrvlibexecdir'}/vlserver -localauth");
+unwind( "rm $openafsdirpath->{'afsdbdir'}/vldb.DB* ");
 unwind("$openafsdirpath->{'afssrvbindir'}/bos delete $server vlserver -localauth");
 unwind("$openafsdirpath->{'afssrvbindir'}/bos stop $server vlserver -localauth -wait");
+
+run("$openafsdirpath->{'afssrvbindir'}/bos create $server kaserver simple $openafsdirpath->{'afssrvlibexecdir'}/kaserver -localauth");
+unwind( "rm $openafsdirpath->{'afsdbdir'}/kaserver.DB* ");
+unwind("$openafsdirpath->{'afssrvbindir'}/bos delete $server kaserver -localauth");
+unwind("$openafsdirpath->{'afssrvbindir'}/bos stop $server kaserver -localauth -wait");
 
 run( "$openafsdirpath->{'afssrvbindir'}/bos create $server fs fs ".
      "-cmd $openafsdirpath->{'afssrvlibexecdir'}/fileserver ".
@@ -134,8 +154,12 @@ sleep(90);
 print "done.\n";
 # Past this point we want to control when bos shutdown happens
 $shutdown_needed = 0;
+$part = "a" unless $part;
+
 unwind( "$openafsdirpath->{'afssrvbindir'}/bos shutdown $server -localauth ");
-run("$openafsdirpath->{'afssrvsbindir'}/vos create $server a root.afs -localauth");
+run("$openafsdirpath->{'afssrvsbindir'}/vos create $server $part root.afs -localauth");
+unwind("$openafsdirpath->{'afssrvsbindir'}/vos remove $server $part root.afs -localauth");
+
 # bring up client
 
 $cachesize = $rl->readline("What size cache (in 1k blocks)? ") unless $cachesize;
@@ -148,19 +172,25 @@ run("echo /afs:/usr/vice/cache:${cachesize} >$openafsdirpath->{'viceetcdir'}/cac
 run("$openafsinitcmd->{'client-forcestart'}");
 my $afs_running = 0;
 open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+  if(m:^AFS:) {
+    print "The AFS client is currently running on this workstation.\n";
+    print "Please restart this script after running $openafsinitcmd->{'client-stop'}\n";
+    exit(1);
+  }
 while(<MOUNT>) {
-if(m:^AFS:) {
-       $afs_running = 1;
+  if(m:^AFS:) {
+    $afs_running = 1;
+  }
+  if(m:^/afs on AFS:) {
+    $afs_running = 1;
+  }
 }
-       }
 unless ($afs_running) {
 print "*** The AFS client failed to start.\n";
 print  "Please fix whatever problem kept it from running.\n";
        exit(1);
 }
 unwind("$openafsinitcmd->{'client-stop'}");
-
-$part = "a" unless $part;
 
 &OpenAFS::Auth::authadmin();
 
