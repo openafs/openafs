@@ -102,7 +102,7 @@ ${DEST}/etc/kdump: kdump
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
-		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
+		${INSTALLex} -f ${srcdir}/kdump.sh.sgi_ipnos $@; \
 		ln -fs kdump ${DEST}/etc/kdump32; \
 		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP22; \
 		ln -fs kdump.IP20 ${DEST}/etc/kdump.IP32; \
@@ -110,13 +110,13 @@ ${DEST}/etc/kdump: kdump
 			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun4x_5[78]|sunx86_5[78] ) \
-		${INSTALLex} -f kdump.sh.solaris7 $@; \
+		${INSTALLex} -f ${srcdir}/kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*linux* ) \
-		${INSTALLex} -f kdump.sh.linux $@; \
+		${INSTALLex} -f ${srcdir}/kdump.sh.linux $@; \
 		${INSTALL} -s kdump-${LINUX_VERSION} ${DEST}/etc/kdump-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
-		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
+		${INSTALLex} -f ${srcdir}/kdump.sh.hp_ux11 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*) \
 		${INSTALL} -s $? $@ ;; \
