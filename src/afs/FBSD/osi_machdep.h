@@ -24,28 +24,23 @@
 /* #include <kern/sched_prim.h> */
 /* #include <sys/unix_defs.h> */
 
-#ifndef AFS_FBSD50_ENV
-#define getpid()		curproc
-#endif
 extern struct simplelock afs_rxglobal_lock;
 
 /* 
  * Time related macros
  */
-#define osi_Time() time_second
-#define	afs_hz	    hz
+#define osi_Time()	time_second
+#define	afs_hz		hz
 
 #define PAGESIZE 8192
 
 #define	AFS_UCRED	ucred
 #define	AFS_PROC	struct proc
-#ifdef AFS_FBSD50_ENV
-#define osi_curcred()	(curthread->td_ucred)
-#else
-#define osi_curcred()	(curproc->p_cred->pc_ucred)
-#endif
 
 #define afs_bufferpages bufpages
+#ifndef iodone
+#define iodone biodone
+#endif
 
 #define osi_vnhold(avc,r) do { VN_HOLD((struct vnode *)(avc)); } while (0)
 
@@ -54,6 +49,8 @@ extern struct simplelock afs_rxglobal_lock;
 
 #undef afs_suser
 
+#define afs_strcat(s1, s2)	strcat((s1), (s2))
+
 #ifdef KERNEL
 extern struct lock afs_global_lock;
 
@@ -61,6 +58,7 @@ extern struct lock afs_global_lock;
 #define VT_AFS		"afs"
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
+#define osi_curcred()	(curthread->td_ucred)
 #define afs_suser()	(!suser(curthread))
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
@@ -85,6 +83,8 @@ extern struct thread * afs_global_owner;
 
 #else /* FBSD50 */
 
+#define osi_curcred()	(curproc->p_cred->pc_ucred)
+#define getpid()	curproc
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
 extern struct proc * afs_global_owner;

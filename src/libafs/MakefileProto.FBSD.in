@@ -29,8 +29,13 @@ AFS_OS_NONFSOBJS = \
 
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
-KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-DKLD_MODULE -elf -mpreferred-stack-boundary=2
+KDEFS=-Wall -ansi -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
+	-elf -mpreferred-stack-boundary=2 \
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-fformat-extensions
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding
+<all>
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 

@@ -3,9 +3,9 @@
 
 RCSID("$Header$");
 
-#include <afs/sysincludes.h>            /* Standard vendor system headers */
-#include <afsincludes.h>            /* Afs-based standard headers */
-#include <afs/afs_stats.h>              /* statistics */
+#include <afs/sysincludes.h>		/* Standard vendor system headers */
+#include <afsincludes.h>		/* Afs-based standard headers */
+#include <afs/afs_stats.h>		/* statistics */
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #ifndef AFS_FBSD50_ENV
@@ -125,12 +125,12 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 int
 afs_vop_lookup(ap)
-struct vop_lookup_args /* {
-	                  struct vnodeop_desc * a_desc;
-	                  struct vnode *a_dvp;
-	                  struct vnode **a_vpp;
-	                  struct componentname *a_cnp;
-	                  } */ *ap;
+	struct vop_lookup_args /* {
+		struct vnodeop_desc * a_desc;
+		struct vnode *a_dvp;
+		struct vnode **a_vpp;
+		struct componentname *a_cnp;
+	} */ *ap;
 {
     int error;
     struct vcache *vcp;
@@ -1122,6 +1122,7 @@ afs_vop_bmap(ap)
  
     return 0;
 }
+
 int
 afs_vop_strategy(ap)
 	struct vop_strategy_args /* {
@@ -1134,6 +1135,7 @@ afs_vop_strategy(ap)
     AFS_GUNLOCK();
     return error;
 }
+
 int
 afs_vop_print(ap)
 	struct vop_print_args /* {
@@ -1143,8 +1145,9 @@ afs_vop_print(ap)
     register struct vnode *vp = ap->a_vp;
     register struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->states;
+
 #ifdef AFS_FBSD50_ENV
-    printf("tag %s, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag, vc->fid.Cell,
+    printf("tag %s, fid: %d.%x.%x.%x, opens %d, writers %d", vp->v_tag, (int) vc->fid.Cell,
 	   (u_int) vc->fid.Fid.Volume, (u_int) vc->fid.Fid.Vnode, (u_int) vc->fid.Fid.Unique,
 	   vc->opens, vc->execsOrWriters);
 #else

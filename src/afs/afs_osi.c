@@ -316,21 +316,19 @@ void afs_osi_Invisible(void)
 }
 
 
-#ifndef AFS_LINUX20_ENV /* Linux version in osi_misc.c */
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 /* set the real time */
 void afs_osi_SetTime(osi_timeval_t *atv)
 {
-#ifdef	AFS_AIX32_ENV
+#if defined(AFS_AIX32_ENV)
     struct timestruc_t t;
 
     t.tv_sec  = atv->tv_sec;
     t.tv_nsec = atv->tv_usec * 1000;
     ksettimer(&t);		/*  Was -> settimer(TIMEOFDAY, &t); */
-#else
-#ifdef AFS_SUN55_ENV
+#elif defined(AFS_SUN55_ENV)
     stime(atv->tv_sec);
-#else
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
     /*
      * To get more than second resolution we can use adjtime. The problem
      * is that the usecs from the server are wrong (by now) so it isn't
@@ -343,8 +341,7 @@ void afs_osi_SetTime(osi_timeval_t *atv)
     sta.time = atv->tv_sec;
 
     stime(&sta, NULL);
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
     struct stimea {
 	sysarg_t time;
     } sta;
@@ -353,27 +350,7 @@ void afs_osi_SetTime(osi_timeval_t *atv)
     sta.time = atv->tv_sec;
     stime(&sta);
     AFS_GLOCK();
-#else
-#if defined(AFS_FBSD_ENV)
-    /* does not impliment security features of kern_time.c:settime() */
-    struct timespec ts;
-    struct timeval tv,delta;
-    int s;
-    AFS_GUNLOCK();
-    s=splclock();
-    microtime(&tv);
-    delta=*atv;
-    timevalsub(&delta, &tv);
-    ts.tv_sec=atv->tv_sec;
-    ts.tv_nsec=atv->tv_usec * 1000;
-    set_timecounter(&ts);
-    (void) splsoftclock();
-    lease_updatetime(delta.tv_sec);
-    splx(s);
-    resettodr();
-    AFS_GLOCK();
-#else
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
     AFS_GUNLOCK();
     setthetime(atv);
     AFS_GLOCK();
@@ -407,11 +384,6 @@ void afs_osi_SetTime(osi_timeval_t *atv)
     logtchg(atv->tv_sec);
 #endif
 #endif  /* AFS_DARWIN_ENV */
-#endif  /* AFS_FBSD_ENV */
-#endif	/* AFS_SGI_ENV */
-#endif /* AFS_SUN55_ENV */
-#endif /* AFS_SUN5_ENV */
-#endif /* AFS_AIX32_ENV */
     AFS_STATCNT(osi_SetTime);
 }
 #endif /* AFS_LINUX20_ENV */
