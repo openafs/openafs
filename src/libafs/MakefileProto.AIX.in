@@ -85,7 +85,7 @@ setup:
 	ln -fs /usr/include/sys sys
 	ln -fs /usr/include/nfs nfs
 	ln -fs /usr/include/jfs ufs
-	for m in $${KMODS} ; do \
+	for m in ${KMODS} ; do \
 		KDIR=MODLOAD-$$m ; \
 		mkdir -p $${KDIR} ; \
 		ln -fs ../Makefile $${KDIR}/Makefile ; \
@@ -94,7 +94,7 @@ setup:
 	done
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
-	for m in $${KMODS} ; do \
+	for m in ${KMODS} ; do \
 		KDIR=MODLOAD-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "32" ] ; then \
