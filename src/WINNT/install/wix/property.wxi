@@ -16,6 +16,7 @@
 	<Property Id="CREDSRENEWDRMAP">-m</Property>
 	<Property Id="CREDSIPCHDET">-n</Property>
 	<Property Id="CREDSQUIET">-q</Property>
+	<Property Id="SMBAUTHTYPE">$(var.SMBAuthType)</Property>
 	<!-- empty property 
 	<Property Id="CREDSSHOW"></Property>
 	-->

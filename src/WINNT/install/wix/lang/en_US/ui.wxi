@@ -750,14 +750,14 @@
         </Control>
         <Control Id="CellLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="Default &amp;Cell" />
         <Control Id="CellEdit" Type="Edit" X="150" Y="73" Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
-        <Control Id="LogonOptionsLabel" Type="Text" X="45" Y="93" Width="100" Height="15" Text="Integrated logon options" />
-        <Control Id="LogonOptionSel" Type="RadioButtonGroup" X="45" Y="108" Width="220" Height="60" Property="LOGONOPTIONS" />
-        <Control Id="SecurityLevelLabel" Type="Text" X="45" Y="168" Width="100" Height="15" Text="AFS crypt security" />
-        <Control Id="SecurityLevelSel" Type="RadioButtonGroup" X="150" Y="168" Width="120" Height="20" Property="SECURITYLEVEL" />
-        <Control Id="FreelanceLabel" Type="Text" X="45" Y="188" Width="100" Height="15" Text="Freelance mode" />
-        <Control Id="FreelanceSel" Type="RadioButtonGroup" X="150" Y="188" Width="120" Height="20" Property="FREELANCEMODE" />
-        <Control Id="DNSLabel" Type="Text" X="45" Y="208" Width="100" Height="15" Text="Lookup cells in DNS" />
-        <Control Id="DNSSel" Type="RadioButtonGroup" X="150" Y="208" Width="120" Height="20" Property="USEDNS" />
+        <Control Id="LogonOptionsLabel" Type="Text"				X="45"	Y="100"	Width="100" Height="15" Text="Integrated logon" />
+        <Control Id="LogonOptionSel" Type="RadioButtonGroup"	X="150"	Y="100"	Width="120" Height="20" Property="LOGONOPTIONS" />
+        <Control Id="SecurityLevelLabel" Type="Text"			X="45"	Y="120"	Width="100" Height="15" Text="AFS crypt security" />
+        <Control Id="SecurityLevelSel" Type="RadioButtonGroup"	X="150"	Y="120"	Width="120" Height="20" Property="SECURITYLEVEL" />
+        <Control Id="FreelanceLabel" Type="Text"				X="45"	Y="140"	Width="100" Height="15" Text="Freelance mode" />
+        <Control Id="FreelanceSel" Type="RadioButtonGroup"		X="150"	Y="140"	Width="120" Height="20" Property="FREELANCEMODE" />
+        <Control Id="DNSLabel" Type="Text"						X="45"	Y="160"	Width="100" Height="15" Text="Lookup cells in DNS" />
+        <Control Id="DNSSel" Type="RadioButtonGroup"			X="150"	Y="160"	Width="120" Height="20" Property="USEDNS" />
       </Dialog>
       <RadioGroup Property="SECURITYLEVEL">
 		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
@@ -772,9 +772,8 @@
 		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
       </RadioGroup>
       <RadioGroup Property="LOGONOPTIONS">
-		<RadioButton X="5" Y="0" Width="215" Height="15" Text="Disable integrated logon">0</RadioButton>
-		<RadioButton X="5" Y="20" Width="215" Height="15" Text="Enable integrated logon">1</RadioButton>
-		<RadioButton X="5" Y="40" Width="215" Height="15" Text="Enable integrated logon and high security">3</RadioButton>		
+		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
+		<RadioButton X="65" Y="0" Width="55" Height="15" Text="Enable">1</RadioButton>
       </RadioGroup>
 
       <Dialog Id="ConfigCredsDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
@@ -820,7 +819,7 @@
           <Text>{\VerdanaBold13}[ProductName] [Wizard] was interrupted</Text>
         </Control>
         <Control Id="Description1" Type="Text" X="135" Y="70" Width="220" Height="40" Transparent="yes" NoPrefix="yes">
-          <Text>[ProductName] setup was interrupted.  Your system has not been modified.  To install this program at a later time, please run the installation again.</Text>
+          <Text>[ProductName] setup was interrupted.  Your system has not been modified.  To install or modify this program at a later time, please run the installation again.</Text>
         </Control>
         <Control Id="Description2" Type="Text" X="135" Y="115" Width="220" Height="20" Transparent="yes" NoPrefix="yes">
           <Text>Click the Finish button to exit the [Wizard].</Text>
@@ -911,8 +910,8 @@
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="no" NoPrefix="yes">
-          <Text>[DlgTitleFont]Remove [ProductName]</Text>
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="240" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Remove OpenAFS for Windows</Text>
         </Control>
       </Dialog>
       <Dialog Id="VerifyRepairDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes" TrackDiskSpace="yes">
@@ -940,8 +939,8 @@
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>[DlgTitleFont]Repair [ProductName]</Text>
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="240" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Repair OpenAFS for Windows</Text>
         </Control>
       </Dialog>
       <Dialog Id="WaitForCostingDlg" Y="10" Width="260" Height="85" Title="[ProductName] [Setup]" NoMinimize="yes">

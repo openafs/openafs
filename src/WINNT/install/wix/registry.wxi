@@ -119,6 +119,7 @@
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="FreelanceClient" Type="integer" Value="[FREELANCEMODE]" Id="reg_Full_Client9" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="UseDNS" Type="integer" Value="[USEDNS]" Id="reg_Full_Client10" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SecurityLevel" Type="integer" Value="[SECURITYLEVEL]" Id="reg_Full_Client12" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SMBAuthType" Type="integer" Value="[SMBAUTHTYPE]" Id="reg_Full_Client13" />
     </Component>
     <Component Id="rcm_Documentation" Guid="97493526-4A5C-4C55-A1D6-EA38841B1B85">
         <Registry Root="HKLM" Key="SOFTWARE\TransarcCorporation\AFS Supplemental Documentation" KeyPath="yes" Id="reg_Docs2" />
