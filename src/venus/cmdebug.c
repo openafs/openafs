@@ -25,9 +25,7 @@ RCSID("$Header$");
 #include <afs/cmd.h>
 #include <rx/rx.h>
 #include <lock.h>
-
-/* XXX is this kosher? */
-#include <afs_args.h>
+#include <afs/afs_args.h>
 
 extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern struct hostent *hostutil_GetHostByName();
