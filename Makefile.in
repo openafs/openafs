@@ -63,6 +63,12 @@ packages: dest
 	@case ${SYS_NAME} in \
 	ppc_darwin* ) \
 		${COMPILE_PART1} packaging/MacOS && ./buildpkg.sh ${DEST} ;; \
+	hp_ux110 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
+	hp_ux11i ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
+	ia64_hpux1122 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
 	*) \
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
