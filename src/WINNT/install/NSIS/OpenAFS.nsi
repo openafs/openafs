@@ -530,7 +530,6 @@ Section "AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -541,17 +540,13 @@ Section "AFS Client" secClient
   File "${AFS_DESTDIR}\bin\translate_et.exe"
   File "${AFS_DESTDIR}\etc\rxdebug.exe"
   File "${AFS_DESTDIR}\etc\backup.exe"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$INSTDIR\Client\Program\afs_cpa.cpl" "$INSTDIR"
   
-   Call AFSLangFiles
-   
-
-   
-  ; Do WINDOWSDIR components
-  
-  ; Do Windows SYSDIR (Control panel)
   SetOutPath "$SYSDIR"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$SYSDIR\afs_cpa.cpl" "$INSTDIR"
-  
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
+   
+   Call AFSLangFiles
+
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
 
@@ -574,6 +569,7 @@ Section "AFS Client" secClient
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "ThreadingModel" "Apartment"
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa" "$INSTDIR\Client\Program\afs_cpa.cpl"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -636,8 +632,6 @@ Section "AFS Client" secClient
   StrCmp $R1 "1" +1 +2
   CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
 
-  
-  
   Push "$INSTDIR\Client\Program"
   Call AddToUniquePath
   Push "$INSTDIR\Common"
@@ -666,7 +660,6 @@ skipremove:
   ; Daemon entries
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "" ""
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$SYSDIR\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10
@@ -712,27 +705,6 @@ skipremove:
   strcpy $REG_DATA_2  "NETBIOS"
   strcpy $REG_DATA_3  "RpcSs"
   Call RegWriteMultiStr
-
-  ; The following are keys added for Terminal Server compatibility
-  ; http://support.microsoft.com/default.aspx?scid=kb;EN-US;186499
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsd_service.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsshare.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\klog.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\tokens.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\aklog.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\unlog.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\fs.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afscreds.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\symlink.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kpasswd.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\pts.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\bos.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kas.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\vos.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\udebug.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe" "Flags" 0x408
-  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe" "Flags" 0x408
 
   ; WinLogon Event Notification
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
@@ -1218,10 +1190,10 @@ Section "Debug symbols" secDebug
   File "${AFS_DESTDIR}\bin\translate_et.pdb"
   File "${AFS_DESTDIR}\etc\rxdebug.pdb"
   File "${AFS_DESTDIR}\etc\backup.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
 
   SetOutPath "$SYSDIR"
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
   
 DoServer:
   	SectionGetFlags ${secServer} $R0
@@ -1979,27 +1951,7 @@ StartRemove:
   DeleteRegKey HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   DeleteRegKey HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension"
   DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
-
-  ; The following are keys added for Terminal Server compatibility
-  ; http://support.microsoft.com/default.aspx?scid=kb;EN-US;186499
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsd_service.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afsshare.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\klog.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\tokens.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\aklog.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\unlog.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\fs.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\afscreds.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\symlink.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kpasswd.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\pts.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\bos.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\kas.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\vos.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\udebug.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe"
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe"
+  DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa"
 
   ; WinLogon Event Notification
   DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\AfsLogon"
