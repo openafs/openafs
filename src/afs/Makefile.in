@@ -22,7 +22,7 @@ afs_trace.h afs_trace.msf: afs_trace.et
 
 unified_afs.c unified_afs.h: unified_afs.et
 	$(RM) -f unified_afs.c unified_afs.h
-	${COMPILE_ET} -p ${srcdir} unified_afs -h uae
+	${COMPILE_ET} -p ${srcdir} unified_afs -h unified_afs
 
 afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat
