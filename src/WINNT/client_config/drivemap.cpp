@@ -718,7 +718,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
     TCHAR szNetBiosName[32];
 
     memset(szNetBiosName, '\0', sizeof(szNetBiosName));
-    lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_SUFFIX);
+    lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_FULL);
     _tcscat(szNetBiosName, TEXT("\\"));
 
    if (IsWindowsNT())
