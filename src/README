@@ -36,7 +36,6 @@ A. Creating the proper directory structure.
       Builds for the following platforms will not fully compile:
 
       hp_ux110/
-      sgi_65/
 
    2. Within each of those directories, create a dest/ and obj/ directory.
 
