@@ -34,7 +34,7 @@ RCSID("$Header$");
 #include "../h/buf.h"
 #endif /* !defined(UKERNEL) */
 
-#if !defined(UKERNEL) && !defined(AFS_SUN5_ENV)
+#if !defined(UKERNEL) && defined(AFS_LINUX20_ENV)
 #include "../afs/osi_vfs.h"
 #endif
 
