@@ -498,6 +498,13 @@ clean2:
 	${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 
+ 
+distclean: clean
+	/bin/rm -f config.log config.cache config.status Makefile
+	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
+	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
+	/bin/rm -f src/libuafs/Makefile src/kauth/Kkauth.cs.c
+
 links:
 	echo "Remove the obj directory"
 	- /bin/rm -rf @sys/obj/* ;
