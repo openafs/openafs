@@ -1,0 +1,158 @@
+.TH pam_afs 5 "5 August 2002"
+
+.SH NAME
+pam_afs, pam_afs.so \- pluggable authentication modules for OpenAFS
+
+.SH SYNOPSIS
+.B pam_afs.so.1, pam_afs.krb.so.1
+
+.SH DESCRIPTION
+The OpenAFS pluggable authentication module provides module support
+for authentication, session management, and password management, which
+coorespond to the auth, session, and  password directives in a PAM 
+configuration file, respectively.
+
+The
+.B pam_afs.krb.so
+module additionally keeps users' Kerberos 4 TGT available for users
+to use in other applications.  The 
+.B pam_afs.so
+module does not do this.
+
+The
+.B pam_afs.krb.so
+module has nothing to do with Kerberos 5 authentication.  Users
+with a Kerberos 5 integrated AFS environment should not use
+either of these modules, but instead use
+.B pam_krb5.so
+directly.
+
+.SH OPTIONS
+The following arguments are supported.  In parenthesis next to
+each option are the environments in which it works.
+
+.IP "cell cell_name"
+(auth) Specify a 
+.I cell_name 
+to authenticate to other than the local cell.
+.IP debug
+(all) Provide extra debugging information to syslog.
+.IP dont_fork
+(auth) Do not use a fork() when authenticating.  Forking is a good idea,
+because sockets and memory used by the authentication function get
+cleaned up automatically.  This option should only be used if a
+PAM application fails when a fork() is issued.  This option cannot 
+be used with 
+.B use_klog.
+.IP ignore_root
+(auth, password) If user root is authenticating, simply return PAM_SUCCESS without
+any AFS authentication attempt.  Presumably, authentication would fall through
+to a secondary mechanism.
+.IP "ignore_uid uid"
+(auth) Similar to ignore_root but it allows you to specify a 
+.I uid
+such that any user authenticating with uid less than or equal to
+.I uid
+will not have AFS authentication performed.
+.IP no_unlog
+(session) Does not destroy a token during logout.  This is useful if
+users have background jobs still running under their PAG that
+need access to AFS after they log out.
+.IP nowarn
+(auth, password) Prevents warning from being written to syslog.
+.IP refresh_token
+(auth) Obtains a token without first obtaining a PAG.  This is useful for
+screensavers to update the lifetime of a user's token.
+.IP remain
+(session) Causes AFS tokens to remain for 5 minutes after logout.
+.IP "remainlifetime lifetime"
+(session) Specify, in seconds, how long tokens should remain after
+logout.
+.IP set_token
+(auth) If set_token is specified, the token obtained in the authentication
+phase is not destroyed.  Ordinarily, tokens are obtained in the
+setcred() phase of authentication.  For PAM applications which do not
+call setcred(), the
+.B set_token
+directive should be used.
+.IP setenv_password_expires
+(auth) Sets the PASSWORD_EXPIRES environment variable to the time when your
+AFS token will expire.
+.IP try_first_pass
+(auth, password) This will first try a password entered to a previous module and if it
+fails, prompt for the user's AFS password.
+If
+.B pam_afs.so
+is the first module called, it will generate a failed login attempt
+with a NULL password for every user logging in.
+.IP use_first_pass
+(auth, password) This option is similar to
+.B try_first_pass
+except that it will not prompt for the user's AFS password if the first
+password fails.  If this option is specified and 
+.B pam_afs.so
+is the first module listed in the PAM configuration, authentication
+will fail.
+.IP use_klog
+(auth) This directs
+.B pam_afs.so
+to exec klog for authentication instead of calling the authentication
+functions in the AFS libraries directly.
+
+.SH FILES
+.I /etc/pam.conf
+.RS
+This is the PAM configuration file on Solaris systems.
+.RE
+
+.I /etc/pam.d/*
+.RS
+These are the PAM configuration files on Linux systems.
+.RE
+
+.I /etc/pam.d/system-auth
+.RS
+This file controls all system authentication on many
+Linux distributions.
+.RE
+.SH EXAMPLE
+
+Standard 
+.I auth
+settings for
+.I /etc/pam.d/system-auth
+on Linux using OpenAFS:
+.RS
+auth required /lib/security/pam_env.so
+.br
+auth sufficient /lib/security/pam_afs.so.1 \\
+.br
+     setenv_password_expires ignore_root
+.br
+auth sufficient /lib/security/pam_unix.so likeauth \\
+.br
+     nullok try_first_pass
+.br
+auth required /lib/security/pam_deny.so
+.RE
+
+Suggested settings for
+.I auth
+in
+.I /etc/pam.d/xscreensaver
+.RS
+auth sufficient /lib/security/pam_afs.so.1 \\
+.br
+     refresh_token ignore_root
+.br
+auth required /lib/security/pam_stack.so \\
+.br
+     service=system-auth
+.RE
+
+.SH AUTHOR
+Charles Clancy <tcc@xauth.net>
+.SH "SEE ALSO"
+.BR klog (1),
+.BR klog.krb (1),
+.BR pagsh (1)
