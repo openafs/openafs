@@ -761,8 +761,10 @@ char **envp;
     /* chdir to AFS log directory */
     chdir(AFSDIR_SERVER_LOGS_DIRPATH);
 
+#if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout);
     fflush(stdout);
+#endif
 
     /* go into the background and remove our controlling tty */
 
