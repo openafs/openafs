@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15.2.3 2004/11/09 17:15:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15.2.4 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -32,15 +32,6 @@ extern afs_rwlock_t afs_xcbhash;
  * RPC is called synchronously. */
 
 int
-#ifdef	AFS_OSF_ENV
-afs_link(avc, ndp)
-     struct vcache *avc;
-     struct nameidata *ndp;
-{
-    struct vcache *adp = VTOAFS(ndp->ni_dvp);
-    char *aname = ndp->ni_dent.d_name;
-    struct ucred *acred = ndp->ni_cred;
-#else /* AFS_OSF_ENV */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_link(OSI_VC_ARG(adp), avc, aname, acred)
 #else
@@ -51,7 +42,6 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
      char *aname;
      struct AFS_UCRED *acred;
 {
-#endif
     struct vrequest treq;
     register struct dcache *tdc;
     register afs_int32 code;
@@ -170,8 +160,5 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_PutFakeStat(&vfakestate);
     afs_PutFakeStat(&dfakestate);
   done2:
-#ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp);
-#endif /* AFS_OSF_ENV */
     return code;
 }

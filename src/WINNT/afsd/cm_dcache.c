@@ -1191,8 +1191,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         afsStatus.ParentVnode = 0x1;
         afsStatus.ParentUnique = 0x1;
         afsStatus.ResidencyMask = 0;
-        afsStatus.ClientModTime = FakeFreelanceModTime;
-        afsStatus.ServerModTime = FakeFreelanceModTime;
+        afsStatus.ClientModTime = (afs_uint32)FakeFreelanceModTime;
+        afsStatus.ServerModTime = (afs_uint32)FakeFreelanceModTime;
         afsStatus.Group = 0;
         afsStatus.SyncCounter = 0;
         afsStatus.dataVersionHigh = 0;

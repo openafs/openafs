@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.1 2004/10/28 20:47:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.3 2005/01/31 04:14:50 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -483,11 +483,21 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		    /* I'm not really worried about when we restarted, I'm   */
 		    /* just worried about when the first VBUSY was returned. */
 		    TM_GetTimeOfDay(&restartedat, 0);
+		    if (busyonrst) {
+			FS_LOCK;
+			afs_perfstats.fs_nBusies++;
+			FS_UNLOCK;
+		    }
 		    return (busyonrst ? VBUSY : VRESTARTING);
 		} else {
 		    struct timeval now;
 		    TM_GetTimeOfDay(&now, 0);
 		    if ((now.tv_sec - restartedat.tv_sec) < (11 * 60)) {
+			if (busyonrst) {
+			    FS_LOCK;
+			    afs_perfstats.fs_nBusies++;
+			    FS_UNLOCK;
+			}
 			return (busyonrst ? VBUSY : VRESTARTING);
 		    } else {
 			return (VRESTARTING);
@@ -2308,13 +2318,13 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
 #ifdef AFS_64BIT_ENV
 #ifndef AFS_LARGEFILE_ENV
     if (Pos + Len > 0x7fffffff)
-	return E2BIG;
+	return EFBIG;
 #endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
     if (Pos.high || Len.high)
-	return E2BIG;
+	return EFBIG;
     tPos = Pos.low;
     tLen = Len.low;
 #endif /* AFS_64BIT_ENV */
@@ -3121,14 +3131,14 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
 #ifdef AFS_64BIT_ENV
 #ifndef AFS_LARGEFILE_ENV
     if (FileLength > 0x7fffffff)
-	return E2BIG;
+	return EFBIG;
 #endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
 #else /* AFS_64BIT_ENV */
     if (FileLength.high)
-	return E2BIG;
+	return EFBIG;
     tPos = Pos.low;
     tLength = Length.low;
     tFileLength = FileLength.low;
@@ -5640,7 +5650,8 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->host_ClientBlocks = CEBlocks;
 
     a_perfP->sysname_ID = afs_perfstats.sysname_ID;
-
+    a_perfP->rx_nBusies = (afs_int32) rx_stats.nBusies;
+    a_perfP->fs_nBusies = afs_perfstats.fs_nBusies;
 }				/*FillPerfValues */
 
 

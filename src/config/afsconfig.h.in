@@ -269,9 +269,6 @@
 /* define if your linux kernel exports sys_wait4 */
 #undef EXPORTED_SYS_WAIT4
 
-/* define if your linux kernel exports tasklist_lock */
-#undef EXPORTED_TASKLIST_LOCK
-
 /* define if completion_h exists */
 #undef COMPLETION_H_EXISTS
 
@@ -305,6 +302,9 @@
 /* define if you struct inode has i_security */
 #undef STRUCT_INODE_HAS_I_SECURITY
 
+/* define if you struct inode has i_sb_list */
+#undef STRUCT_INODE_HAS_I_SB_LIST
+
 /* define if your struct inode has data_buffers */
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 
@@ -337,6 +337,15 @@
 
 /* define if your struct task_struct has sig */
 #undef STRUCT_TASK_STRUCT_HAS_SIG
+
+/* define if your struct task_struct has rlim */
+#undef STRUCT_TASK_STRUCT_HAS_RLIM
+
+/* define if your struct task_struct has signal->rlim */
+#undef STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
+
+/* define if your struct task_struct has exit_state */
+#undef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 
 /* define if you have a struct buf */
 #undef HAVE_STRUCT_BUF

@@ -11,18 +11,17 @@
 #define __FS_H_ENV__ 1
 
 /* some forward references */
-extern void ZapList(struct AclEntry *);
+static void ZapList (struct AclEntry *alist);
 
-extern void ZapAcl(struct Acl *);
+static int PruneList (struct AclEntry **ae, int dfs);
 
-extern int PruneList (struct AclEntry **, int);
+static int CleanAcl(struct Acl *aa, char *fname);
 
-extern void ChangeList(struct Acl *, afs_int32, char *, afs_int32);
+static int SetVolCmd(struct cmd_syndesc *as, char *arock);
 
-extern int CleanAcl(struct Acl *);
+static int GetCellName(char *cellNamep, struct afsconf_cell *infop);
 
-extern void Die(int, char *);
+static int VLDBInit(int noAuthFlag, struct afsconf_cell *infop);
 
-static SetVolCmd(struct cmd_syndesc *);
-
+static void Die(int code, char *filename);
 #endif /* FS_H_ENV */

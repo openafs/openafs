@@ -388,13 +388,13 @@ int afsd_InitCM(char **reasonP)
     long maxcpus;
     long ltt, ltto;
     long rx_mtu, rx_nojumbo;
-    long virtualCache;
+    long virtualCache = 0;
     char rootCellName[256];
     struct rx_service *serverp;
     static struct rx_securityClass *nullServerSecurityClassp;
     struct hostent *thp;
     char *msgBuf;
-    char buf[1024];
+    char buf[1024], *p, *q;
     HKEY parmKey;
     DWORD dummyLen;
     DWORD regType;
@@ -622,9 +622,12 @@ int afsd_InitCM(char **reasonP)
         }
         afsi_log("Cache path %s", cm_CachePath);
     } else {
-        GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
-        cm_CachePath[2] = 0;	/* get drive letter only */
-        StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
+        dummyLen = ExpandEnvironmentStrings("%TEMP%\\AFSCache", cm_CachePath, sizeof(cm_CachePath));
+        if (dummyLen > sizeof(cm_CachePath)) {
+            afsi_log("Cache path [%%TEMP%%\\AFSCache] longer than %d after expanding env strings", 
+                     sizeof(cm_CachePath));
+            osi_panic("CachePath too long", __FILE__, __LINE__);
+        }
         afsi_log("Default cache path %s", cm_CachePath);
     }
 
@@ -668,35 +671,36 @@ int afsd_InitCM(char **reasonP)
 
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, buf, &dummyLen);
-    if (code == ERROR_SUCCESS && buf[0]) {
-        char * p, *q; 
-        afsi_log("Sys name %s", buf);
-
-        for (p = q = buf; p < buf + dummyLen; p++)
-        {
-            if (*p == '\0' || isspace(*p)) {
-                memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
-                cm_sysNameList[cm_sysNameCount][p-q] = '\0';
-                cm_sysNameCount++;
-
-                do {
-                    if (*p == '\0')
-                        goto done_sysname;
-                        
-                    p++;
-                } while (*p == '\0' || isspace(*p));
-                q = p;
-                p--;
-            }
-        }
-      done_sysname:
-        StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
-    } else {
-        cm_sysNameCount = 1;
-        StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
-        StringCbCopyA(cm_sysNameList[0], MAXSYSNAME, "i386_nt40");
-        afsi_log("Default sys name %s", cm_sysName);
+    if (code != ERROR_SUCCESS || !buf[0]) {
+#if defined(_IA64_)
+        StringCbCopyA(buf, sizeof(buf), "ia64_win64");
+#elif defined(_AMD64)
+        StringCbCopyA(buf, sizeof(buf), "amd64_win64");
+#else /* assume x86 32-bit */
+        StringCbCopyA(buf, sizeof(buf), "x86_win32 i386_w2k i386_nt40");
+#endif
     }
+    afsi_log("Sys name %s", buf); 
+
+    /* breakup buf into individual search string entries */
+    for (p = q = buf; p < buf + dummyLen; p++)
+    {
+        if (*p == '\0' || isspace(*p)) {
+            memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
+            cm_sysNameList[cm_sysNameCount][p-q] = '\0';
+            cm_sysNameCount++;
+
+            do {
+                if (*p == '\0')
+                    goto done_sysname;
+                p++;
+            } while (*p == '\0' || isspace(*p));
+            q = p;
+            p--;
+        }
+    }
+  done_sysname:
+    StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
 
     dummyLen = sizeof(cryptall);
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
@@ -890,42 +894,6 @@ int afsd_InitCM(char **reasonP)
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
 
-    /* initialize RX, and tell it to listen to port 7001, which is used for
-     * callback RPC messages.
-     */
-    code = rx_Init(htons(7001));
-    afsi_log("rx_Init code %x", code);
-    if (code != 0) {
-        *reasonP = "afsd: failed to init rx client on port 7001";
-        return -1;
-    }
-
-    /* Initialize the RPC server for session keys */
-    RpcInit();
-
-    /* create an unauthenticated service #1 for callbacks */
-    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-    serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
-                             RXAFSCB_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
-    if (serverp == NULL) {
-        *reasonP = "unknown error";
-        return -1;
-    }
-
-    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-    serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
-                             &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
-    if (serverp == NULL) {
-        *reasonP = "unknown error";
-        return -1;
-    }
-        
-    /* start server threads, *not* donating this one to the pool */
-    rx_StartServer(0);
-    afsi_log("rx_StartServer");
-
     /* init user daemon, and other packages */
     cm_InitUser();
 
@@ -962,6 +930,39 @@ int afsd_InitCM(char **reasonP)
 #endif
 #endif
 
+    /* initialize RX, and tell it to listen to port 7001, which is used for
+     * callback RPC messages.
+     */
+    code = rx_Init(htons(7001));
+    afsi_log("rx_Init code %x", code);
+    if (code != 0) {
+        *reasonP = "afsd: failed to init rx client on port 7001";
+        return -1;
+    }
+
+    /* create an unauthenticated service #1 for callbacks */
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
+                             RXAFSCB_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
+
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
+                             &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
+        
+    /* start server threads, *not* donating this one to the pool */
+    rx_StartServer(0);
+    afsi_log("rx_StartServer");
+
     code = cm_GetRootCellName(rootCellName);
     afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
               code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
@@ -988,6 +989,10 @@ int afsd_InitCM(char **reasonP)
     if (cm_freelanceEnabled)
         cm_InitFreelance();
 #endif
+
+    /* Initialize the RPC server for session keys */
+    RpcInit();
+
     return 0;
 }
 

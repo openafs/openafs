@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.5 2004/12/13 19:35:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.6 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -217,20 +217,11 @@ char *Tnam1;
 /* Note that we don't set CDirty here, this is OK because the unlink
  * RPC is called synchronously */
 int
-#ifdef	AFS_OSF_ENV
-afs_remove(ndp)
-     struct nameidata *ndp;
-{
-    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
-    char *aname = ndp->ni_dent.d_name;
-    struct ucred *acred = ndp->ni_cred;
-#else				/* AFS_OSF_ENV */
 afs_remove(OSI_VC_ARG(adp), aname, acred)
      OSI_VC_DECL(adp);
      char *aname;
      struct AFS_UCRED *acred;
 {
-#endif
     struct vrequest treq;
     register struct dcache *tdc;
     struct VenusFid unlinkFid;
@@ -250,7 +241,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 
     if ((code = afs_InitReq(&treq, acred))) {
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	return code;
@@ -261,7 +251,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (code) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	return code;
@@ -272,26 +261,14 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afs_DynrootVOPRemove(adp, acred, aname);
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	return code;
     }
-#if 0
-    if (adp->mvstat == 2) {
-	afs_PutFakeStat(&fakestate);
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
-	afs_PutVCache(tvc);
-#endif
-	return EISDIR;
-    }
-#endif
 
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	return ENAMETOOLONG;
@@ -301,7 +278,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #ifdef	AFS_OSF_ENV
     tvc = VTOAFS(ndp->ni_vp);	/* should never be null */
     if (code) {
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 	afs_PutFakeStat(&fakestate);
 	return afs_CheckCode(code, &treq, 22);
@@ -320,7 +296,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
       */
     if (adp->states & CRO) {
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	code = EROFS;
@@ -434,9 +409,6 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
-#ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp);
-#endif /* AFS_OSF_ENV */
     afs_PutFakeStat(&fakestate);
     return code;
 }

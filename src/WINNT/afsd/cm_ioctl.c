@@ -1164,17 +1164,21 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-    /* if we don't know our default cell, return failure */
-    if (cm_rootCellp == NULL) {
-        return CM_ERROR_NOSUCHCELL;
+	long code = 0;
+
+	if (cm_freelanceEnabled) {
+	    StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
+		ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+	} else if (cm_rootCellp) {
+	    /* return the default cellname to the caller */
+	    StringCbCopyA(ioctlp->outDatap, 999999, cm_rootCellp->namep);
+	    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+	} else {
+	    /* if we don't know our default cell, return failure */
+		code = CM_ERROR_NOSUCHCELL;
     }
 
-    /* return the default cellname to the caller */
-    StringCbCopyA(ioctlp->outDatap, 999999, cm_rootCellp->namep);
-    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-
-    /* done: success */
-    return 0;
+    return code;
 }
 
 long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
@@ -1561,9 +1565,6 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     return code;
 }
 
-extern long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
-                            cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
-                            cm_user_t *userp, cm_req_t *reqp);
 
 long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
@@ -1607,6 +1608,7 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cm_FreeSpace(spacep);
         if (newRootScp != NULL)
             cm_ReleaseSCache(newRootScp);
+        code = 0;
     }       
 
     return code;
@@ -1936,7 +1938,8 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     /* cell name is right here */
     cellp = cm_GetCell(tp, 0);
-    if (!cellp) return CM_ERROR_NOSUCHCELL;
+    if (!cellp) 
+        return CM_ERROR_NOSUCHCELL;
     tp += strlen(tp) + 1;
 
 #ifndef DJGPP

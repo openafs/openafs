@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10.2.1 2004/08/25 07:22:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10.2.2 2005/01/31 04:12:57 shadow Exp $");
 
 #include <stdio.h>
 #define VICE
@@ -743,7 +743,11 @@ readsb(listerr)
      */
     altsblock.fs_fsbtodb = sblock.fs_fsbtodb;
 #ifdef AFS_NEWCG_ENV
-# ifndef AFS_SUN59_ENV
+# if defined(AFS_SUN59_ENV) && defined(FS_SI_OK)
+    /* fs_interleave replaced with fs_si and FS_SI_OK defined in */
+    /* ufs_fs.h version 2.63 don't need to compare either */
+    altsblock.fs_si = sblock.fs_si;
+# else
     altsblock.fs_interleave = sblock.fs_interleave;
 # endif
     altsblock.fs_npsect = sblock.fs_npsect;

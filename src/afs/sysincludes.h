@@ -84,10 +84,12 @@ struct xfs_inode_info {
 #include <asm/uaccess.h>
 #include <linux/list.h>
 #include <linux/dcache.h>
+#include <linux/mount.h>
 #include <linux/fs.h>
 #include <linux/quota.h>
 #include <linux/sched.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/string.h>
 #include <asm/semaphore.h>
 #include <linux/errno.h>

@@ -436,6 +436,8 @@ extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
 extern void smb_ReleaseVC(smb_vc_t *vcp);
 
+extern void smb_ReleaseVCNoLock(smb_vc_t *vcp);
+
 extern smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags);
 
 extern void smb_ReleaseTID(smb_tid_t *tidp);
@@ -512,6 +514,8 @@ extern void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 extern void smb_MapNTError(long code, unsigned long *NTStatusp);
 
 extern void smb_HoldVC(smb_vc_t *vcp);
+
+extern void smb_HoldVCNoLock(smb_vc_t *vcp);
 
 /* some globals, too */
 extern char *smb_localNamep;

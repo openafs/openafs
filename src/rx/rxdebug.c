@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15.2.3 2004/12/07 06:06:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15.2.4 2005/01/31 04:23:17 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -256,7 +256,7 @@ MainCommand(as, arock)
     withRxStats = (supportedDebugValues & RX_SERVER_DEBUG_RX_STATS);
     withWaiters = (supportedDebugValues & RX_SERVER_DEBUG_WAITER_CNT);
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
-    withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
+    withWaited = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
 
     printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",

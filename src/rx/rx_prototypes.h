@@ -274,6 +274,8 @@ extern void rx_ReleaseCachedConnection(struct rx_connection *conn);
 
 
 /* rx_event.c */
+extern int rxevent_nFree;
+extern int rxevent_nPosted;
 #if 0
 extern struct rxevent *rxevent_Post(struct clock *when,
 				    void (*func) (struct rxevent * event,

@@ -116,7 +116,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
 AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
 [
 AC_TRY_COMPILE(
@@ -126,5 +126,5 @@ AC_TRY_COMPILE(
   ],
   ac_cv_linux_kernel_page_follow_link=yes,
   ac_cv_linux_kernel_page_follow_link=no)])
-AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_page)
+AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
 CPPFLAGS="$save_CPPFLAGS"])

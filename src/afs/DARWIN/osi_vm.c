@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vm.c,v 1.14 2004/06/23 18:34:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vm.c,v 1.14.2.1 2005/02/21 01:14:18 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -281,7 +281,7 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 		1
 #endif
 		)
-		VOP_INACTIVE(vp, p);
+	      VOP_UNLOCK(vp, 0, p); /* was VOP_INACTIVE(vp, p); */
 	    else
 		VOP_UNLOCK(vp, 0, p);
 #ifdef AFS_DARWIN14_ENV
@@ -290,7 +290,7 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 #endif
 	    if (obj) {
 		if (ISSET(vp->v_flag, VTERMINATE))
-		    panic("afs_vnreclaim: already teminating");
+		    panic("afs_vnreclaim: already terminating");
 		SET(vp->v_flag, VTERMINATE);
 		memory_object_destroy(obj, 0);
 		while (ISSET(vp->v_flag, VTERMINATE)) {

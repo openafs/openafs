@@ -1,7 +1,7 @@
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 
-/* 
+/*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
  * 
@@ -15,37 +15,36 @@
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously ia64 specific, use that
+ * it's a judgment call. If something is obviously s390 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
  */
 
-#define AFS_LINUX20_ENV	1
+#define AFS_LINUX20_ENV 1
 #define AFS_LINUX22_ENV	1
 #define AFS_LINUX24_ENV	1
 #define AFS_LINUX26_ENV	1
-#define AFS_IA64_LINUX20_ENV	1
-#define AFS_IA64_LINUX22_ENV	1
-#define AFS_IA64_LINUX24_ENV	1
-#define AFS_IA64_LINUX26_ENV	1
-#define AFS_LINUX_64BIT_KERNEL 1
+#define AFS_S390_LINUX20_ENV    1
+#define AFS_S390_LINUX22_ENV	1
+#define AFS_S390_LINUX24_ENV	1
+#define AFS_S390X_LINUX20_ENV    1
+#define AFS_S390X_LINUX22_ENV	1
+#define AFS_S390X_LINUX24_ENV	1
+#define AFS_S390X_LINUX26_ENV	1
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
-#define AFS_SYSCALL 1141
+#define AFS_SYSCALL 137
+#define AFS_64BIT_ENV  1
+#define AFS_64BITPOINTER_ENV  1
+#define AFS_64BIT_CLIENT  1
+#define AFS_64BIT_KERNEL  1
+#define AFS_LINUX_64BIT_KERNEL  1
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 
-#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
-#define AFS_64BIT_CLIENT	1	
-
-#define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
-
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
-#include <linux/init.h>
-#include <linux/module.h>
-#include <linux/kernel.h>
 #include <linux/threads.h>
 
 #include <linux/config.h>
@@ -66,12 +65,8 @@
 #endif
 #define AFS_GLOBAL_SUNLOCK
 #endif
-
-#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
-#define MODVERSIONS
-/* #include <config/modversions.h> */
-#endif
-
+extern unsigned long __per_cpu_offset[NR_CPUS];
+extern SYSCALLTYPE sys_call_table_emu[] __attribute__((weak));
 #endif /* __KERNEL__  && !DUMP_KERNEL */
 
 #include <afs/afs_sysnames.h>
@@ -81,12 +76,12 @@
 #define AFS_GCPAGS       2	/* Set to Userdisabled, allow sysctl to override */
 
 /* Machine / Operating system information */
-#define SYS_NAME	"ia64_linux26"
-#define SYS_NAME_ID	SYS_NAME_ID_ia64_linux26
-#define AFSLITTLE_ENDIAN    1
+#define SYS_NAME	"s390x_linux26"
+#define SYS_NAME_ID	SYS_NAME_ID_s390x_linux26
+#define AFSBIG_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
-#define AFS_VM_RDWR_ENV            1	/* read/write implemented via VM */
+#define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
 #ifdef KERNEL
 #ifndef MIN
@@ -97,9 +92,7 @@
 #endif
 #endif /* KERNEL */
 
-#define USE_UCONTEXT		/* should be in afsconfig.h */
-
-#endif /* _PARAM_IA64_LINUX20_H_ */
+#endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */
 
@@ -114,62 +107,66 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-
 #ifndef AFS_PARAM_H
 #define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously i386 specific, use that
+ * it's a judgment call. If something is obviously s390 specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
  */
 
-#define UKERNEL                        1	/* user space kernel */
-#define AFS_ENV                        1
-#define AFS_USR_LINUX20_ENV    1
-#define AFS_USR_LINUX22_ENV    1
-#define AFS_USR_LINUX24_ENV    1
-#define AFS_USR_LINUX26_ENV    1
+#define UKERNEL			1	/* user space kernel */
+#define AFS_ENV			1
+#define AFS_USR_LINUX20_ENV     1
+#define AFS_USR_LINUX22_ENV	1
+#define AFS_USR_LINUX24_ENV	1
+#define AFS_USR_LINUX26_ENV	1
+#define AFS_S390X_LINUX20_ENV    1
+#define AFS_S390X_LINUX22_ENV	1
+#define AFS_S390X_LINUX24_ENV	1
+#define AFS_S390X_LINUX26_ENV	1
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
-#define AFS_SYSCALL 1141
+#define AFS_SYSCALL 137
+#define AFS_64BIT_ENV  1
+#define AFS_64BIT_CLIENT  1
+#define AFS_64BITPOINTER_ENV  1
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #include <afs/afs_sysnames.h>
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS             0	/* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 
 /* Machine / Operating system information */
-#define SYS_NAME	"ia64_linux26"
-#define SYS_NAME_ID	SYS_NAME_ID_ia64_linux26
-#define AFSLITTLE_ENDIAN    1
+#define SYS_NAME	"s390x_linux26"
+#define SYS_NAME_ID	SYS_NAME_ID_s390x_linux26
+#define AFSBIG_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
-#define AFS_VM_RDWR_ENV            1	/* read/write implemented via VM */
+#define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
-#define        afsio_iov       uio_iov
-#define        afsio_iovcnt    uio_iovcnt
-#define        afsio_offset    uio_offset
-#define        afsio_seg       uio_segflg
-#define        afsio_fmode     uio_fmode
-#define        afsio_resid     uio_resid
-#define        AFS_UIOSYS      1
-#define        AFS_UIOUSER     UIO_USERSPACE
-#define        AFS_CLBYTES     MCLBYTES
-#define        AFS_MINCHANGE   2
-#define        VATTR_NULL      usr_vattr_null
+#define	afsio_iov	uio_iov
+#define	afsio_iovcnt	uio_iovcnt
+#define	afsio_offset	uio_offset
+#define	afsio_seg	uio_segflg
+#define	afsio_fmode	uio_fmode
+#define	afsio_resid	uio_resid
+#define	AFS_UIOSYS	1
+#define	AFS_UIOUSER	UIO_USERSPACE
+#define	AFS_CLBYTES	MCLBYTES
+#define	AFS_MINCHANGE	2
+#define	VATTR_NULL	usr_vattr_null
 
 #define AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
-
-#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */
 

@@ -21,7 +21,8 @@ INCFILES =\
 	$(INCFILEDIR)\afs\ptint.h \
 	$(INCFILEDIR)\afs\pterror.h \
 	ptopcodes.h \
-	$(INCFILEDIR)\afs\ptclient.h 
+	$(INCFILEDIR)\afs\ptclient.h \
+	$(INCFILEDIR)\afs\ptuser.h
 
 ############################################################################
 # build afsprot.lib

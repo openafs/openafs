@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.4 2004/12/07 06:12:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.7 2005/02/21 01:15:21 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -1301,8 +1301,9 @@ afs_UFSCacheStoreProc(register struct rx_call *acall, struct osi_file *afile,
 	(*abytesXferredP) += code;
 #endif /* AFS_NOSTATS */
 	if (code != got) {
+	    code = rx_Error(acall);
 	    osi_FreeLargeSpace(tbuffer);
-	    return -33;
+	    return code ? code : -33;
 	}
 	alen -= got;
 	/*

@@ -97,7 +97,7 @@
   * AFS_SYSCALL32 is used to protect the ILP32 syscall interface
   * AFS_64BIT_ENV is for use of 64 bit inode numbers
   */
-#if defined(__sparcv9)
+#if defined(__amd64)
 #define	AFS_SUN57_64BIT_ENV	1
 #define AFS_64BIT_INO   	1
 #endif
@@ -117,9 +117,6 @@
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
 #define	AFS_KFREE		kmem_free
 #define	VATTR_NULL		vattr_null
-#define memset(A, B, S)		bzero(A, S)
-#define memcpy(B, A, S)		bcopy(A, B, S)
-#define memcmp(A, B, S)		bcmp(A, B, S)
 #endif /* KERNEL */
 #define	AFS_DIRENT
 #ifndef CMSERVERPREF
@@ -132,15 +129,6 @@
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */
-
-/*
- * Copyright 2000, International Business Machines Corporation and others.
- * All Rights Reserved.
- * 
- * This software has been released under the terms of the IBM Public
- * License.  For details, see the LICENSE file in the top-level source
- * directory or online at http://www.openafs.org/dl/license10.html
- */
 
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
@@ -156,6 +144,12 @@
 #define AFS_ENV			1
 #define AFS_USR_SUN5_ENV	1
 #define AFS_USR_SUN6_ENV	1
+#define AFS_USR_SUN7_ENV        1
+#define AFS_USR_SUN8_ENV        1
+#define AFS_USR_SUN9_ENV        1
+
+#define AFS_64BIT_ENV           1
+
 
 #include <afs/afs_sysnames.h>
 
@@ -170,9 +164,9 @@
 #define AFS_MOUNT_AFS		1
 
 /* Machine / Operating system information */
-#define sys_sun4x_55		1
-#define SYS_NAME		"sun4x_55"
-#define SYS_NAME_ID		SYS_NAME_ID_sun4x_55
+#define sys_sunx86_510          1
+#define SYS_NAME                "sunx86_510"
+#define SYS_NAME_ID             SYS_NAME_ID_sunx86_510
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */

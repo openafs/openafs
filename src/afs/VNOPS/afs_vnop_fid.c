@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.11.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.11.2.2 2005/01/31 03:49:15 shadow Exp $");
 
 #if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -67,20 +67,15 @@ int afs_iauth_initd = 0;
 
 extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
 
-int
 #if !defined(AFS_DEC_ENV) && !defined(AFS_ATHENA_ENV)
+int
 #ifdef AFS_AIX41_ENV
-afs_fid(OSI_VC_ARG(avc), fidpp, credp)
-     struct ucred *credp;
+afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp)
+#elif defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
+afs_fid(OSI_VC_DECL(avc), struct fid *fidpp)
 #else
-afs_fid(OSI_VC_ARG(avc), fidpp)
+afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 #endif				/* AFS_AIX41_ENV */
-     OSI_VC_DECL(avc);
-#if	defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
-     struct fid *fidpp;
-#else
-     struct fid **fidpp;
-#endif
 {
     struct SmallFid Sfid;
     long addr[2];

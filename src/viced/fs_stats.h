@@ -123,10 +123,13 @@ struct afs_PerfStats {
      */
     afs_int32 sysname_ID;	/*Unique hardware/OS identifier */
 
+    afs_int32 rx_nBusies;	/*Ttl VBUSYs sent to shed load */
+    afs_int32 fs_nBusies;	/*Ttl VBUSYs sent during restart/vol clone */
+
     /*
      * Spares
      */
-    afs_int32 spare[31];
+    afs_int32 spare[29];
 };
 
 #if FS_STATS_DETAILED

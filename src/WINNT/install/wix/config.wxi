@@ -101,7 +101,7 @@
         <?error AFSDEV_BUILDTYPE is not set in the environment.?>
     <?endif?>
 
-    <!-- We are including debug symbols anyway.  Undefine this for a leaner installer witout debug syms. -->
+    <!-- We are including debug symbols anyway.  Undefine this for a leaner installer without debug syms. -->
     <?define DebugSyms?>
 
     <!-- Parameters for the features containing debug symbols -->

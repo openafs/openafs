@@ -63,7 +63,7 @@ finddepth(\&find_libafsdep, $projdir);
 #
 # Manual actions
 #
-&copyit("$projdir/configure-libafs", "$treedir/configure-libafs");
+&copyit("$projdir/configure-libafs", "$treedir/configure");
 &copyit("$projdir/Makefile-libafs.in", "$treedir/Makefile.in");
 
 system("$objdir/src/config/config", 

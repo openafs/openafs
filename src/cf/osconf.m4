@@ -195,7 +195,7 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd2*)
+	*nbsd2*|*nbsd3*)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon
@@ -414,21 +414,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		;;
 
-	ppc_linux22)
-		INSTALL="install"
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	ppc_linux24)
+	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -503,7 +489,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	s390_linux24)
+	s390_linux24|s390_linux26)
 		CC="gcc"
 		CCOBJ="gcc"
 		LD="ld"
@@ -520,7 +506,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	s390x_linux24)
+	s390x_linux24|s390x_linux26)
 		CC="gcc"
 		CCOBJ="gcc"
 		LD="ld"
@@ -786,7 +772,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -807,7 +793,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -828,7 +814,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -849,7 +835,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"

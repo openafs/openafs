@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.1 2004/12/07 06:12:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.3 2005/02/21 01:13:08 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -28,44 +28,60 @@ RCSID
 #endif
 
 #if defined(AFS_LINUX24_ENV)
+/* LOOKUP_POSITIVE is becoming the default */
+#ifndef LOOKUP_POSITIVE
+#define LOOKUP_POSITIVE 0
+#endif
 /* Lookup name and return vnode for same. */
 int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-			vnode_t ** dirvpp, struct dentry **dpp)
+osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
+			struct dentry **dpp)
 {
     int code;
-    extern struct nameidata afs_cacheNd;
-    struct nameidata *nd = &afs_cacheNd;
-
+    struct nameidata nd;
+    int flags = LOOKUP_POSITIVE;
     code = ENOENT;
-    if (seg == AFS_UIOUSER) {
-	code =
-	    followlink ? user_path_walk(aname,
-					nd) : user_path_walk_link(aname, nd);
-    } else {
+
+    if (followlink)
+       flags |= LOOKUP_FOLLOW;
 #if defined(AFS_LINUX26_ENV)
-	code = path_lookup(aname, followlink ? LOOKUP_FOLLOW : 0, nd);
+    code = path_lookup(aname, flags, &nd);
 #else
-	if (path_init(aname, followlink ? LOOKUP_FOLLOW : 0, nd))
-	    code = path_walk(aname, nd);
+    if (path_init(aname, flags, &nd))
+        code = path_walk(aname, &nd);
 #endif
-    }
 
     if (!code) {
-	if (nd->dentry->d_inode) {
-	    *dpp = dget(nd->dentry);
-	    code = 0;
-	} else {
-	    code = ENOENT;
-	    path_release(nd);
-	}
+	*dpp = dget(nd.dentry);
+        if (mnt)
+           *mnt = mntget(nd.mnt);
+	path_release(&nd);
+    }
+    return code;
+}
+int
+osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
+			struct dentry **dpp)
+{
+    int code;
+    char *tname;
+    code = ENOENT;
+    if (seg == AFS_UIOUSER) {
+        tname = getname(aname);
+        if (IS_ERR(tname)) 
+            return PTR_ERR(tname);
+    } else {
+        tname = aname;
+    }
+    code = osi_lookupname_internal(tname, followlink, NULL, dpp);   
+    if (seg == AFS_UIOUSER) {
+        putname(tname);
     }
     return code;
 }
 #else
 int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
-	       struct dentry **dpp)
+osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp, struct dentry **dpp)
 {
     struct dentry *dp = NULL;
     int code;
@@ -94,12 +110,13 @@ int
 osi_InitCacheInfo(char *aname)
 {
     int code;
-    struct dentry *dp;
+    struct dentry *dp,*dpp;
     extern ino_t cacheInode;
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
-    code = osi_lookupname(aname, AFS_UIOSYS, 1, NULL, &dp);
+    extern struct vfsmnt *afs_cacheMnt;
+    code = osi_lookupname_internal(aname, 1, &afs_cacheMnt, &dp);
     if (code)
 	return ENOENT;
 
@@ -138,8 +155,8 @@ osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
     } else
 	filp->f_pos = offset;
 
-    savelim = current->rlim[RLIMIT_FSIZE].rlim_cur;
-    current->rlim[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
+    savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
     /* Read/Write the data. */
     TO_USER_SPACE();
@@ -151,7 +168,7 @@ osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
 	code = asize;
     TO_KERNEL_SPACE();
 
-    current->rlim[RLIMIT_FSIZE].rlim_cur = savelim;
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
 
     if (code >= 0) {
 	*resid = asize - code;
@@ -173,8 +190,8 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     int count;
     unsigned long savelim;
 
-    savelim = current->rlim[RLIMIT_FSIZE].rlim_cur;
-    current->rlim[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
+    savelim = current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur;
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = RLIM_INFINITY;
 
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_USER_SPACE();
@@ -217,7 +234,7 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
     if (uiop->uio_seg == AFS_UIOSYS)
 	TO_KERNEL_SPACE();
 
-    current->rlim[RLIMIT_FSIZE].rlim_cur = savelim;
+    current->TASK_STRUCT_RLIM[RLIMIT_FSIZE].rlim_cur = savelim;
 
     return code;
 }

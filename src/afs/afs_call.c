@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.3 2004/12/07 06:12:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.5 2005/02/21 01:15:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1096,7 +1096,7 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV))
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV))
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -1139,21 +1139,31 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     }
 #endif /* AFS_SUN57_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct iparam32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
+
+#elif defined(AFS_AMD64_LINUX26_ENV)
+    if (test_thread_flag(TIF_IA32))
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
+
+#elif defined(AFS_PPC64_LINUX26_ENV)
+    if (current->thread_info->flags & _TIF_32BIT) 
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT) 
+
+#elif defined(AFS_S390X_LINUX26_ENV)
+    if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT) 
+
 #else
-#error Not done for this linux version
+#error iparam32 not done for this linux platform
 #endif
     {
 	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
@@ -2617,10 +2627,10 @@ afs_icl_LogFreeUse(register struct afs_icl_log *logp)
     ObtainWriteLock(&logp->lock, 189);
     if (--logp->setCount == 0) {
 	/* no more users -- free it (but keep log structure around) */
-	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 #ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
+	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	logp->firstUsed = logp->firstFree = 0;
 	logp->logElements = 0;
 	logp->datap = NULL;
@@ -2643,10 +2653,10 @@ afs_icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
 	logp->logElements = 0;
 
 	/* free and allocate a new one */
-	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 #ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
+	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	logp->datap =
 	    (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logSize);
 #ifdef	KERNEL_HAVE_PIN
@@ -2670,7 +2680,10 @@ afs_icl_ZapLog(register struct afs_icl_log *logp)
 	    /* found the dude we want to remove */
 	    *lpp = logp->nextp;
 	    osi_FreeSmallSpace(logp->name);
-	    osi_FreeSmallSpace(logp->datap);
+#ifdef KERNEL_HAVE_PIN
+	    unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
+#endif
+	    afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	    osi_FreeSmallSpace(logp);
 	    break;		/* won't find it twice */
 	}
@@ -2928,10 +2941,10 @@ afs_icl_ZapSet(register struct afs_icl_set *setp)
 	    /* found the dude we want to remove */
 	    *lpp = setp->nextp;
 	    osi_FreeSmallSpace(setp->name);
-	    afs_osi_Free(setp->eventFlags, ICL_DEFAULTEVENTS);
 #ifdef	KERNEL_HAVE_PIN
 	    unpin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif
+	    afs_osi_Free(setp->eventFlags, ICL_DEFAULTEVENTS);
 	    for (i = 0; i < ICL_LOGSPERSET; i++) {
 		if ((tlp = setp->logs[i]))
 		    afs_icl_LogReleNL(tlp);

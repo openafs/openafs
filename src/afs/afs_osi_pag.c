@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.2 2004/11/09 17:09:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.3 2005/01/31 04:19:20 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -189,7 +189,7 @@ afs_setpag(void)
 #if     defined(AFS_SUN5_ENV)
     struct AFS_UCRED **acred = *credpp;
 #elif  defined(AFS_OBSD_ENV)
-    struct AFS_UCRED **acred = p->p_ucred;
+    struct AFS_UCRED **acred = &p->p_ucred;
 #else
     struct AFS_UCRED **acred = NULL;
 #endif
@@ -285,7 +285,7 @@ afs_setpag_val(int pagval)
 #if     defined(AFS_SUN5_ENV)
     struct AFS_UCRED **acred = *credp;
 #elif  defined(AFS_OBSD_ENV)
-    struct AFS_UCRED **acred = p->p_ucred;
+    struct AFS_UCRED **acred = &p->p_ucred;
 #else
     struct AFS_UCRED **acred = NULL;
 #endif

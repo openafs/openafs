@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.3 2004/11/09 17:15:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.4 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -359,28 +359,12 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 }
 
 int
-#ifdef	AFS_OSF_ENV
-afs_rename(fndp, tndp)
-     struct nameidata *fndp, *tndp;
-{
-    struct vcache *aodp = VTOAFS(fndp->ni_dvp);
-    char *aname1 = fndp->ni_dent.d_name;
-    struct vcache *andp = VTOAFS(tndp->ni_dvp);
-    char *aname2 = tndp->ni_dent.d_name;
-    struct ucred *acred = tndp->ni_cred;
-#else /* AFS_OSF_ENV */
 #if defined(AFS_SGI_ENV)
-afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, npnp, acred)
-    struct pathname *npnp;
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, achar *name2, struct pathname *npnp, struct AFS_UCRED *acred)
 #else
-afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct AFS_UCRED *acred)
 #endif
-     OSI_VC_DECL(aodp);
-     struct vcache *andp;
-     char *aname1, *aname2;
-     struct AFS_UCRED *acred;
 {
-#endif
     register afs_int32 code;
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
@@ -402,14 +386,6 @@ afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
   done:
     afs_PutFakeStat(&ofakestate);
     afs_PutFakeStat(&nfakestate);
-#ifdef	AFS_OSF_ENV
-    AFS_RELE(tndp->ni_dvp);
-    if (tndp->ni_vp != NULL) {
-	AFS_RELE(tndp->ni_vp);
-    }
-    AFS_RELE(fndp->ni_dvp);
-    AFS_RELE(fndp->ni_vp);
-#endif /* AFS_OSF_ENV */
     code = afs_CheckCode(code, &treq, 25);
     return code;
 }

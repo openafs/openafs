@@ -24,12 +24,43 @@
  * in either the free list or in the LRU queue.  A read lock prevents someone
  * from modifying the list(s), and a write lock is required for modifying
  * the list.  The actual data stored in the randomUid and randomAccess fields
- * is actually maintained as up-to-date or not via the scache llock.
+ * is actually maintained as up-to-date or not via the scache lock.
  * An aclent structure is free if it has no back vnode pointer.
  */
 osi_rwlock_t cm_aclLock;		/* lock for system's aclents */
-cm_aclent_t *cm_aclLRUp;		/* LRUQ for dudes in vnodes' lists */
-cm_aclent_t *cm_aclLRUEndp;		/* ditto */
+cm_aclent_t *cm_aclLRUp;                /* LRUQ for dudes in vnode's lists */
+cm_aclent_t *cm_aclLRUEndp;             /* ditto */
+
+/* This function must be called with cm_aclLock and the aclp->back_mx held */
+static void CleanupACLEnt(cm_aclent_t * aclp)
+{
+    cm_aclent_t *taclp;
+    cm_aclent_t **laclpp;
+
+    if (aclp->backp) {
+        /* 
+         * Remove the entry from the vnode's list
+         */
+        laclpp = &aclp->backp->randomACLp;
+        for ( taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp ) {
+            if (taclp == aclp)
+                break;
+        }
+        if (!taclp)
+            osi_panic("CleanupACLEnt race",__FILE__,__LINE__);
+        *laclpp = aclp->nextp;                  /* remove from the vnode's list */
+        aclp->backp = NULL;
+    }
+
+    /* release the old user */
+    if (aclp->userp) {
+        cm_ReleaseUser(aclp->userp);
+        aclp->userp = NULL;
+    }
+
+    aclp->randomAccess = 0;
+    aclp->tgtLifetime = 0;
+}
 
 /* 
  * Get an acl cache entry for a particular user and file, or return that it doesn't exist.
@@ -37,39 +68,41 @@ cm_aclent_t *cm_aclLRUEndp;		/* ditto */
  */
 long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
 {
-	cm_aclent_t *aclp;
+    cm_aclent_t *aclp;
+    long retval = -1;
 
-	lock_ObtainWrite(&cm_aclLock);
-	for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
-		if (aclp->userp == userp) {
-			if (aclp->tgtLifetime && aclp->tgtLifetime <= (long) osi_Time()) {
-				/* ticket expired */
-				aclp->tgtLifetime = 0;
-				*rightsp = 0;
-				break; /* get a new acl from server */
-			}
-			else {
-				*rightsp = aclp->randomAccess;
-				if (cm_aclLRUEndp == aclp)
-                                	cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
+    lock_ObtainWrite(&cm_aclLock);
+    *rightsp = 0;       /* get a new acl from server if we don't find a 
+                         * current entry
+                         */
+    for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
+        if (aclp->userp == userp) {
+            if (aclp->tgtLifetime && aclp->tgtLifetime <= osi_Time()) {
+                /* ticket expired */
+                osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
+                CleanupACLEnt(aclp);
+                osi_QAddT((osi_queue_t **) &cm_aclLRUp,
+                           (osi_queue_t **) &cm_aclLRUEndp,
+                           &aclp->q);
+            } else {
+                *rightsp = aclp->randomAccess;
+                if (cm_aclLRUEndp == aclp)
+                    cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
 
-				/* move to the head of the LRU queue */
-				osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
-                                osi_QAddH((osi_queue_t **) &cm_aclLRUp,
-                                	(osi_queue_t **) &cm_aclLRUEndp,
-                                        &aclp->q);
-			}
-			lock_ReleaseWrite(&cm_aclLock);
-			return 0;
-		}
-	}
+                /* move to the head of the LRU queue */
+                osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
+                osi_QAddH((osi_queue_t **) &cm_aclLRUp,
+                           (osi_queue_t **) &cm_aclLRUEndp,
+                           &aclp->q);
+                retval = 0;     /* success */
+            }               
+            break;
+        }
+    }
 
-	/* 
-	 * If we make it here, this entry isn't present, so we're going to fail. 
-	 */
-	lock_ReleaseWrite(&cm_aclLock);
-	return -1;
-}
+    lock_ReleaseWrite(&cm_aclLock);
+    return retval;
+}       
 
 
 /* 
@@ -78,38 +111,16 @@ long cm_FindACLCache(cm_scache_t *scp, cm_user_t *userp, long *rightsp)
  */
 static cm_aclent_t *GetFreeACLEnt(void)
 {
-	cm_aclent_t *aclp;
-        cm_aclent_t *taclp;
-        cm_aclent_t **laclpp;
+    cm_aclent_t *aclp;
 
-	if (cm_aclLRUp == NULL)
-		osi_panic("empty aclent LRU", __FILE__, __LINE__);
+    if (cm_aclLRUp == NULL)
+        osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
-	aclp = cm_aclLRUEndp;
-	if (aclp == cm_aclLRUEndp)
-        	cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
-	osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
-	if (aclp->backp) {
-		/* 
-		 * Remove the entry from the vnode's list 
-		 */
-		laclpp = &aclp->backp->randomACLp;
-		for (taclp = *laclpp; taclp; laclpp = &taclp->nextp, taclp = *laclpp) {
-			if (taclp == aclp) 
-				break;
-		}
-		if (!taclp) 
-			osi_panic("GetFreeACLEnt race", __FILE__, __LINE__);
-		*laclpp = aclp->nextp;			/* remove from vnode list */
-		aclp->backp = NULL;
-	}
-	
-    /* release the old user */
-    if (aclp->userp) {
-		cm_ReleaseUser(aclp->userp);
-        aclp->userp = NULL;
-	}
-	return aclp;
+    aclp = cm_aclLRUEndp;
+    cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
+    osi_QRemove((osi_queue_t **) &cm_aclLRUp, &aclp->q);
+    CleanupACLEnt(aclp);
+    return aclp;
 }
 
 
@@ -121,36 +132,36 @@ static cm_aclent_t *GetFreeACLEnt(void)
  */
 long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
 {
-	register struct cm_aclent *aclp;
+    register struct cm_aclent *aclp;
 
-	lock_ObtainWrite(&cm_aclLock);
-	for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
-		if (aclp->userp == userp) {
-			aclp->randomAccess = rights;
-			if (aclp->tgtLifetime == 0) 
-				aclp->tgtLifetime = cm_TGTLifeTime(pag);
-			lock_ReleaseWrite(&cm_aclLock);
-			return 0;
-		}
-	}
+    lock_ObtainWrite(&cm_aclLock);
+    for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {
+        if (aclp->userp == userp) {
+            aclp->randomAccess = rights;
+            if (aclp->tgtLifetime == 0) 
+                aclp->tgtLifetime = cm_TGTLifeTime(pag);
+            lock_ReleaseWrite(&cm_aclLock);
+            return 0;
+        }
+    }
 
-	/* 
-	 * Didn't find the dude we're looking for, so take someone from the LRUQ 
-	 * and  reuse. But first try the free list and see if there's already 
-	 * someone there.
-	 */
-	aclp = GetFreeACLEnt();		 /* can't fail, panics instead */
-	osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp, &aclp->q);
-	aclp->backp = scp;
-	aclp->nextp = scp->randomACLp;
-	scp->randomACLp = aclp;
+    /* 
+     * Didn't find the dude we're looking for, so take someone from the LRUQ 
+     * and  reuse. But first try the free list and see if there's already 
+     * someone there.
+     */
+    aclp = GetFreeACLEnt();		 /* can't fail, panics instead */
+    osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp, &aclp->q);
+    aclp->backp = scp;
+    aclp->nextp = scp->randomACLp;
+    scp->randomACLp = aclp;
     cm_HoldUser(userp);
-	aclp->userp = userp;
-	aclp->randomAccess = rights;
-	aclp->tgtLifetime = cm_TGTLifeTime(userp);
-	lock_ReleaseWrite(&cm_aclLock);
+    aclp->userp = userp;
+    aclp->randomAccess = rights;
+    aclp->tgtLifetime = cm_TGTLifeTime(userp);
+    lock_ReleaseWrite(&cm_aclLock);
 
-	return 0;
+    return 0;
 }
 
 /* 
@@ -158,32 +169,29 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
  */
 long cm_InitACLCache(long size)
 {
-	cm_aclent_t *aclp;
-	long i;
-	static osi_once_t once;
+    cm_aclent_t *aclp;
+    long i;
+    static osi_once_t once;
 
-	
-	if (osi_Once(&once)) {
-		lock_InitializeRWLock(&cm_aclLock, "cm_aclLock");
-		osi_EndOnce(&once);
-	}
+    if (osi_Once(&once)) {
+        lock_InitializeRWLock(&cm_aclLock, "cm_aclLock");
+        osi_EndOnce(&once);
+    }
 
-	lock_ObtainWrite(&cm_aclLock);
-	cm_aclLRUp = cm_aclLRUEndp = NULL;
-	aclp = (cm_aclent_t *) malloc(size * sizeof(cm_aclent_t));
-	memset(aclp, 0, size * sizeof(cm_aclent_t));
+    lock_ObtainWrite(&cm_aclLock);
+    cm_aclLRUp = cm_aclLRUEndp = NULL;
+    aclp = (cm_aclent_t *) malloc(size * sizeof(cm_aclent_t));
+    memset(aclp, 0, size * sizeof(cm_aclent_t));
 
-	/* 
-	 * Put all of these guys on the LRU queue 
-	 */
-	for (i = 0; i < size; i++) {
-		osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp,
-                	&aclp->q);
-		aclp++;
-	}
-
-	lock_ReleaseWrite(&cm_aclLock);
-	return 0;
+    /* 
+     * Put all of these guys on the LRU queue 
+     */
+    for (i = 0; i < size; i++) {
+        osi_QAddH((osi_queue_t **) &cm_aclLRUp, (osi_queue_t **) &cm_aclLRUEndp, &aclp->q);
+        aclp++;
+    }
+    lock_ReleaseWrite(&cm_aclLock);
+    return 0;
 }
 
 
@@ -194,22 +202,22 @@ long cm_InitACLCache(long size)
  */
 void cm_FreeAllACLEnts(cm_scache_t *scp)
 {
-	cm_aclent_t *aclp;
-	cm_aclent_t *taclp;
+    cm_aclent_t *aclp;
+    cm_aclent_t *taclp;
 
-	lock_ObtainWrite(&cm_aclLock);
-	for (aclp = scp->randomACLp; aclp; aclp = taclp) {
-		taclp = aclp->nextp;
-		if (aclp->userp) {
-			cm_ReleaseUser(aclp->userp);
-			aclp->userp = NULL;
-		}
-		aclp->backp = (struct cm_scache *) 0;
-	}
+    lock_ObtainWrite(&cm_aclLock);
+    for (aclp = scp->randomACLp; aclp; aclp = taclp) {
+        taclp = aclp->nextp;
+        if (aclp->userp) {
+            cm_ReleaseUser(aclp->userp);
+            aclp->userp = NULL;
+        }
+        aclp->backp = (struct cm_scache *) 0;
+    }
 
-	scp->randomACLp = (struct cm_aclent *) 0;
-	scp->anyAccess = 0;		/* reset this, too */
-	lock_ReleaseWrite(&cm_aclLock);
+    scp->randomACLp = (struct cm_aclent *) 0;
+    scp->anyAccess = 0;		/* reset this, too */
+    lock_ReleaseWrite(&cm_aclLock);
 }
 
 
@@ -220,19 +228,19 @@ void cm_FreeAllACLEnts(cm_scache_t *scp)
  */
 void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 {
-	cm_aclent_t *aclp;
-        cm_aclent_t **laclpp;
+    cm_aclent_t *aclp;
+    cm_aclent_t **laclpp;
 
-	lock_ObtainWrite(&cm_aclLock);
-	laclpp = &scp->randomACLp;
-	for (aclp = *laclpp; aclp; laclpp = &aclp->nextp, aclp = *laclpp) {
-		if (userp == aclp->userp) {	/* One for a given user/scache */
-			*laclpp = aclp->nextp;
+    lock_ObtainWrite(&cm_aclLock);
+    laclpp = &scp->randomACLp;
+    for (aclp = *laclpp; aclp; laclpp = &aclp->nextp, aclp = *laclpp) {
+        if (userp == aclp->userp) {	/* One for a given user/scache */
+            *laclpp = aclp->nextp;
             cm_ReleaseUser(aclp->userp);
             aclp->userp = NULL;
-			aclp->backp = (struct cm_scache *) 0;
-			break;
-		}
-	}
-	lock_ReleaseWrite(&cm_aclLock);
+            aclp->backp = (struct cm_scache *) 0;
+            break;
+        }
+    }
+    lock_ReleaseWrite(&cm_aclLock);
 }

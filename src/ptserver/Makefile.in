@@ -14,7 +14,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptserver.h ptclient.h ptint.h pterror.h map.h
+	ptserver.h ptclient.h ptuser.h ptint.h pterror.h map.h
 
 LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h \
@@ -23,7 +23,7 @@ LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/rx/rxkad.h \
 	${TOP_INCDIR}/afs/auth.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
-	ptclient.h ptint.h pterror.h
+	ptclient.h ptuser.h ptint.h pterror.h
 
 LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
@@ -49,6 +49,7 @@ depinstall: \
 	${TOP_INCDIR}/afs/print.h \
 	${TOP_INCDIR}/afs/prserver.h \
 	${TOP_INCDIR}/afs/ptclient.h \
+	${TOP_INCDIR}/afs/ptuser.h \
 	${TOP_INCDIR}/afs/pterror.h \
 	${TOP_INCDIR}/afs/ptint.h \
 	${TOP_INCDIR}/afs/ptserver.h
@@ -170,6 +171,7 @@ install: \
 	${DESTDIR}${includedir}/afs/print.h \
 	${DESTDIR}${includedir}/afs/prserver.h \
 	${DESTDIR}${includedir}/afs/ptclient.h \
+	${DESTDIR}${includedir}/afs/ptuser.h \
 	${DESTDIR}${includedir}/afs/pterror.h \
 	${DESTDIR}${includedir}/afs/ptint.h \
 	${DESTDIR}${includedir}/afs/ptserver.h
@@ -211,6 +213,9 @@ ${DEST}/include/afs/pterror.h: pterror.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/ptclient.h: ptclient.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/ptuser.h: ptuser.h
 	${INSTALL} $? $@
 
 #
@@ -270,7 +275,13 @@ ${TOP_INCDIR}/afs/prserver.h: ptserver.h
 ${DESTDIR}${includedir}/afs/ptclient.h: ptclient.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/ptuser.h: ptuser.h
+	${INSTALL} $? $@
+
 ${TOP_INCDIR}/afs/ptclient.h: ptclient.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/ptuser.h: ptuser.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/pterror.h: pterror.h
@@ -303,6 +314,7 @@ dest: \
 	${DEST}/include/afs/print.h \
 	${DEST}/include/afs/prserver.h \
 	${DEST}/include/afs/ptclient.h \
+	${DEST}/include/afs/ptuser.h \
 	${DEST}/include/afs/pterror.h \
 	${DEST}/include/afs/ptint.h \
 	${DEST}/include/afs/ptserver.h

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.4 2004/12/07 06:10:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.6 2005/01/31 04:14:45 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -2673,6 +2673,9 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 		MUTEX_ENTER(&conn->conn_data_lock);
 		conn->refCount--;
 		MUTEX_EXIT(&conn->conn_data_lock);
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_stats.nBusies++;
+		MUTEX_EXIT(&rx_stats_mutex);
 		return tp;
 	    }
 	    rxi_KeepAliveOn(call);
@@ -5032,6 +5035,9 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	if (!(call->flags & RX_CALL_TQ_BUSY)) {
 	    call->flags |= RX_CALL_TQ_BUSY;
 	    do {
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+	    restart:
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 		call->flags &= ~RX_CALL_NEED_START;
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		nXmitPackets = 0;
@@ -5085,7 +5091,12 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		    /* Transmit the packet if it needs to be sent. */
 		    if (!clock_Lt(&now, &p->retryTime)) {
 			if (nXmitPackets == maxXmitPackets) {
-			    osi_Panic("rxi_Start: xmit list overflowed");
+			    rxi_SendXmitList(call, xmitList, nXmitPackets, 
+					     istack, &now, &retryTime, 
+					     resending);
+			    osi_Free(xmitList, maxXmitPackets * 
+				     sizeof(struct rx_packet *));
+			    goto restart;
 			}
 			xmitList[nXmitPackets++] = p;
 		    }

@@ -100,7 +100,7 @@ int smb_V3IsStarMask(char *maskp)
     char tc;
 
     while (tc = *maskp++)
-        if (tc == '?' || tc == '*') 
+        if (tc == '?' || tc == '*' || tc == '<' || tc == '>') 
             return 1;
     return 0;
 }
@@ -667,6 +667,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             /* extended authentication */
             char *secBlobIn;
             int secBlobInLength;
+
+            OutputDebugF("NT Session Setup: Extended");
         
             if (!(vcp->flags & SMB_VCFLAG_SESSX_RCVD)) {
                 caps = smb_GetSMBParm(inp,10) | (((unsigned long) smb_GetSMBParm(inp,11)) << 16);
@@ -703,6 +705,11 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             char *primaryDomain;
             int  datalen;
 
+            if (smb_authType == SMB_AUTH_NTLM)
+                OutputDebugF("NT Session Setup: NTLM");
+            else
+                OutputDebugF("NT Session Setup: None");
+
             /* TODO: parse for extended auth as well */
             ciPwdLength = smb_GetSMBParm(inp, 7); /* case insensitive password length */
             csPwdLength = smb_GetSMBParm(inp, 8); /* case sensitive password length */
@@ -719,6 +726,11 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             accountName = smb_ParseString(tp, &tp);
             primaryDomain = smb_ParseString(tp, NULL);
 
+            OutputDebugF("Account Name: %s",accountName);
+            OutputDebugF("Primary Domain: %s", primaryDomain);
+            OutputDebugF("Case Sensitive Password: %s", csPwd && csPwd[0] ? "yes" : "no");
+            OutputDebugF("Case Insensitive Password: %s", ciPwd && ciPwd[0] ? "yes" : "no");
+
             if (smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
                 /* shouldn't happen */
                 code = CM_ERROR_BADSMB;
@@ -732,6 +744,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
             if (smb_authType == SMB_AUTH_NTLM) {
                 code = smb_AuthenticateUserLM(vcp, accountName, primaryDomain, ciPwd, ciPwdLength, csPwd, csPwdLength);
+                if ( code )
+                    OutputDebugF("LM authentication failed [%d]", code);
+                else
+                    OutputDebugF("LM authentication succeeded");
             }
         }
     }  else { /* V3 */
@@ -740,6 +756,16 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         char *accountName;
         char *primaryDomain;
 
+        switch ( smb_authType ) {
+        case SMB_AUTH_EXTENDED:
+            OutputDebugF("V3 Session Setup: Extended");
+            break;
+        case SMB_AUTH_NTLM:
+            OutputDebugF("V3 Session Setup: NTLM");
+            break;
+        default:
+            OutputDebugF("V3 Session Setup: None");
+        }
         ciPwdLength = smb_GetSMBParm(inp, 7);
         tp = smb_GetSMBData(inp, NULL);
         ciPwd = tp;
@@ -747,6 +773,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
         accountName = smb_ParseString(tp, &tp);
         primaryDomain = smb_ParseString(tp, NULL);
+
+        OutputDebugF("Account Name: %s",accountName);
+        OutputDebugF("Primary Domain: %s", primaryDomain);
+        OutputDebugF("Case Insensitive Password: %s", ciPwd && ciPwd[0] ? "yes" : "no");
 
         if ( smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
             /* shouldn't happen */
@@ -759,6 +789,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
          */
         if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
             code = smb_AuthenticateUserLM(vcp,accountName,primaryDomain,ciPwd,ciPwdLength,"",0);
+            if ( code )
+                OutputDebugF("LM authentication failed [%d]", code);
+            else
+                OutputDebugF("LM authentication succeeded");
         }
     }
 
@@ -1111,7 +1145,8 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
 /* free a tran2 packet; must be called with smb_globalLock held */
 void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
 {
-    if (t2p->vcp) smb_ReleaseVC(t2p->vcp);
+    if (t2p->vcp) 
+        smb_ReleaseVC(t2p->vcp);
     if (t2p->flags & SMB_TRAN2PFLAG_ALLOC) {
         if (t2p->parmsp)
             free(t2p->parmsp);
@@ -3327,7 +3362,7 @@ VOID initUpperCaseTable(VOID)
 // BOOL : TRUE/FALSE (match/mistmatch)
 
 BOOL 
-szWildCardMatchFileName(PSZ pattern, PSZ name) 
+szWildCardMatchFileName(PSZ pattern, PSZ name, int casefold) 
 {
     PSZ pename;         // points to the last 'name' character
     PSZ p;
@@ -3344,13 +3379,15 @@ szWildCardMatchFileName(PSZ pattern, PSZ name)
             if (*pattern == '\0')
                 return TRUE;
             for (p = pename; p >= name; --p) {
-                if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
-                     szWildCardMatchFileName(pattern + 1, p + 1))
+                if ((casefold && (mapCaseTable[*p] == mapCaseTable[*pattern]) ||
+                     !casefold && (*p == *pattern)) &&
+                     szWildCardMatchFileName(pattern + 1, p + 1, casefold))
                     return TRUE;
             } /* endfor */
             return FALSE;
         default:
-            if (mapCaseTable[*name] != mapCaseTable[*pattern]) 
+            if ((casefold && mapCaseTable[*name] != mapCaseTable[*pattern]) ||
+                (!casefold && *name != *pattern))
                 return FALSE;
             ++pattern, ++name;
             break;
@@ -3369,12 +3406,14 @@ szWildCardMatchFileName(PSZ pattern, PSZ name)
 int smb_V3MatchMask(char *namep, char *maskp, int flags) 
 {
     char * newmask;
-    int    i, j, star, qmark, retval;
+    int    i, j, star, qmark, casefold, retval;
 
     /* make sure we only match 8.3 names, if requested */
     if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
         return 0;
     
+    casefold = (flags & CM_FLAG_CASEFOLD) ? 1 : 0;
+
     /* optimize the pattern:
      * if there is a mixture of '?' and '*',
      * for example  the sequence "*?*?*?*"
@@ -3411,7 +3450,7 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
     }
     newmask[j++] = '\0';
 
-    retval = szWildCardMatchFileName(newmask, namep) ? 1:0;
+    retval = szWildCardMatchFileName(newmask, namep, casefold) ? 1:0;
 
     free(newmask);
     return retval;
@@ -3708,10 +3747,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         smb_StripLastComponent(spacep->data, NULL, pathp);
         code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
         if (code) {
-            lock_ReleaseMutex(&dsp->mx);
             cm_ReleaseUser(userp);
             smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOFILES);
             smb_FreeTran2Packet(outp);
+            lock_ReleaseMutex(&dsp->mx);
             smb_DeleteDirSearch(dsp);
             smb_ReleaseDirSearch(dsp);
             return 0;
@@ -4092,8 +4131,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 bytesInBuffer++;
             }
         }	/* if we're including this name */
-        else if (!NeedShortName &&
-                 !starPattern &&
+        else if (!starPattern &&
                  !foundInexact &&
                  dep->fid.vnode != 0 &&
                  smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)) {
@@ -4337,8 +4375,10 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * and truncate the file if we find it, otherwise we create the
          * file.
          */
-        if (!lastNamep) lastNamep = pathp;
-        else lastNamep++;
+        if (!lastNamep) 
+            lastNamep = pathp;
+        else 
+            lastNamep++;
         code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
                           &req, &scp);
         if (code && code != CM_ERROR_NOSUCHFILE) {
@@ -4356,7 +4396,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (code == 0) {
         code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
         if (code) {
-            if (dscp) cm_ReleaseSCache(dscp);
+            if (dscp) 
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             return code;
@@ -4364,7 +4405,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         if (excl) {
             /* oops, file shouldn't be there */
-            if (dscp) cm_ReleaseSCache(dscp);
+            if (dscp) 
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             return CM_ERROR_EXISTS;
@@ -4523,7 +4565,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                       CM_SCACHESYNC_NEEDCALLBACK
 			 | CM_SCACHESYNC_GETSTATUS
 			 | CM_SCACHESYNC_LOCK);
-	if (code) goto doneSync;
+	if (code) 
+            goto doneSync;
 
 	LockType = smb_GetSMBParm(inp, 3) & 0xff;
 	Timeout = (smb_GetSMBParm(inp, 5) << 16) + smb_GetSMBParm(inp, 4);
@@ -4585,6 +4628,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 /* Put on waiting list */
                 waitingLock = malloc(sizeof(smb_waitingLock_t));
                 waitingLock->vcp = vcp;
+                smb_HoldVC(vcp);
                 waitingLock->inp = smb_CopyPacket(inp);
                 waitingLock->outp = smb_CopyPacket(outp);
                 waitingLock->timeRemaining = Timeout;
@@ -4597,7 +4641,8 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 /* don't send reply immediately */
                 outp->flags |= SMB_PACKETFLAG_NOSEND;
             }
-            if (code) break;
+            if (code) 
+                break;
 	}       
 
     if (code) {
@@ -4852,9 +4897,14 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     cm_InitReq(&req);
 
+    /* This code is very long and has a lot of if-then-else clauses
+     * scp and dscp get reused frequently and we need to ensure that 
+     * we don't lose a reference.  Start by ensuring that they are NULL.
+     */
+    scp = NULL;
+    dscp = NULL;
     treeCreate = FALSE;
     foundscp = FALSE;
-    scp = NULL;
 
     nameLength = smb_GetSMBOffsetParm(inp, 2, 1);
     flags = smb_GetSMBOffsetParm(inp, 3, 1)
@@ -5001,8 +5051,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (desiredAccess & AFS_ACCESS_WRITE)
         fidflags |= SMB_FID_OPENWRITE;
 
-    dscp = NULL;
     code = 0;
+
     /* For an exclusive create, we want to do a case sensitive match for the last component. */
     if ( createDisp == FILE_CREATE || 
          createDisp == FILE_OVERWRITE ||
@@ -5023,15 +5073,17 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     return CM_ERROR_EXISTS;
                 }
             }
-        } else
-            dscp = NULL;
+        }
+        /* we have both scp and dscp */
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
+        /* we might have scp but not dscp */
     }
-    if (code == 0) 
-        foundscp = TRUE;
 
+    if (scp)
+        foundscp = TRUE;
+    
     if (!foundscp || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
         /* look up parent directory */
         /* If we are trying to create a path (i.e. multiple nested directories), then we don't *need*
@@ -5039,8 +5091,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * recognize.
          */
 
-        if ( !dscp ) {
-            while (1) {
+        /* we might or might not have scp */
+
+        if (dscp == NULL) {
+            do {
                 char *tp;
 
                 code = cm_NameI(baseDirp, spacep->data,
@@ -5060,20 +5114,27 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                             smb_ReleaseFID(baseFidp);
                         cm_ReleaseUser(userp);
                         free(realPathp);
+                        if (scp)
+                            cm_ReleaseSCache(scp);
                         return CM_ERROR_BADNTFILENAME;
                     }
+                    code = 0;
                 }
-                else
-                    break;
-            }
+            } while (dscp == NULL && code == 0);
         } else
-            code = 0;
+			code = 0;
+
+        /* we might have scp and we might have dscp */
 
         if (baseFid != 0) 
             smb_ReleaseFID(baseFidp);
 
         if (code) {
             osi_Log0(smb_logp,"NTCreateX parent not found");
+            if (scp)
+                cm_ReleaseSCache(scp);
+            if (dscp)
+                cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             free(realPathp);
             return code;
@@ -5081,6 +5142,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         if (treeCreate && dscp->fileType == CM_SCACHETYPE_FILE) {
             /* A file exists where we want a directory. */
+            if (scp)
+                cm_ReleaseSCache(scp);
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -5093,6 +5156,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             lastNamep++;
 
         if (!smb_IsLegalFilename(lastNamep)) {
+            if (scp)
+                cm_ReleaseSCache(scp);
+			if (dscp)
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -5118,196 +5184,208 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 return code;
             }
         }
-    }
-    else {
+        /* we have scp and dscp */
+    } else {
+        /* we have scp but not dscp */
         if (baseFid != 0) 
             smb_ReleaseFID(baseFidp);
-	}       
+    }       
 
-	/* if we get here, if code is 0, the file exists and is represented by
-	 * scp.  Otherwise, we have to create it.  The dir may be represented
-	 * by dscp, or we may have found the file directly.  If code is non-zero,
-	 * scp is NULL.
-	 */
-	if (code == 0 && !treeCreate) {
-            if (createDisp == FILE_CREATE) {
-                /* oops, file shouldn't be there */
-                if (dscp) cm_ReleaseSCache(dscp);
-                cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                free(realPathp);
-                return CM_ERROR_EXISTS;
-            }
-
-            if ( createDisp == FILE_OVERWRITE || 
-                 createDisp == FILE_OVERWRITE_IF) {
-                setAttr.mask = CM_ATTRMASK_LENGTH;
-                setAttr.length.LowPart = 0;
-                setAttr.length.HighPart = 0;
-                /* now watch for a symlink */
-                code = 0;
-                while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
-                    targetScp = 0;
-                    code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                    if (code == 0) {
-                        /* we have a more accurate file to use (the
-                        * target of the symbolic link).  Otherwise,
-                        * we'll just use the symlink anyway.
-                        */
-                        osi_Log2(smb_logp, "symlink vp %x to vp %x",
-                                  scp, targetScp);
-                        cm_ReleaseSCache(scp);
-                        scp = targetScp;
-                    }
-                }
-                code = cm_SetAttr(scp, &setAttr, userp, &req);
-                openAction = 3;	/* truncated existing file */
-            }
-            else 
-                openAction = 1;	/* found existing file */
-
-            code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp,
-                                  &req);
-            if (code) {
-                if (dscp) cm_ReleaseSCache(dscp);
-                cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                free(realPathp);
-                return code;
-            }
-	}       
-	else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
-            /* don't create if not found */
-            if (dscp) cm_ReleaseSCache(dscp);
+    /* if we get here, if code is 0, the file exists and is represented by
+     * scp.  Otherwise, we have to create it.  The dir may be represented
+     * by dscp, or we may have found the file directly.  If code is non-zero,
+     * scp is NULL.
+     */
+    if (code == 0 && !treeCreate) {
+        if (createDisp == FILE_CREATE) {
+            /* oops, file shouldn't be there */
+            if (dscp)
+                cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
-            return CM_ERROR_NOSUCHFILE;
-	}       
-	else if (realDirFlag == 0 || realDirFlag == -1) {
-            osi_assert(dscp != NULL);
-            osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
-                      osi_LogSaveString(smb_logp, lastNamep));
-            openAction = 2;		/* created file */
-            setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-            setAttr.clientModTime = time(NULL);
-            code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-                              &req);
-            if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+            return CM_ERROR_EXISTS;
+        }
+
+        if ( createDisp == FILE_OVERWRITE || 
+             createDisp == FILE_OVERWRITE_IF) {
+            setAttr.mask = CM_ATTRMASK_LENGTH;
+            setAttr.length.LowPart = 0;
+            setAttr.length.HighPart = 0;
+            /* now watch for a symlink */
+            code = 0;
+            while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                targetScp = 0;
+                osi_assert(dscp != NULL);
+                code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                if (code == 0) {
+                    /* we have a more accurate file to use (the
+                     * target of the symbolic link).  Otherwise,
+                     * we'll just use the symlink anyway.
+                     */
+                    osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                              scp, targetScp);
+                    cm_ReleaseSCache(scp);
+                    scp = targetScp;
+                }
+            }
+            code = cm_SetAttr(scp, &setAttr, userp, &req);
+            openAction = 3;	/* truncated existing file */
+        }
+        else 
+            openAction = 1;	/* found existing file */
+
+        code = cm_CheckNTOpen(scp, desiredAccess, createDisp, userp, &req);
+        if (code) {
+            if (dscp)
+                cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            free(realPathp);
+            return code;
+        }
+    } else if (createDisp == FILE_OPEN || createDisp == FILE_OVERWRITE) {
+        /* don't create if not found */
+        if (dscp)
+            cm_ReleaseSCache(dscp);
+        if (scp)
+            cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        free(realPathp);
+        return CM_ERROR_NOSUCHFILE;
+    } else if (realDirFlag == 0 || realDirFlag == -1) {
+        osi_assert(dscp != NULL);
+        osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
+                  osi_LogSaveString(smb_logp, lastNamep));
+        openAction = 2;		/* created file */
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        setAttr.clientModTime = time(NULL);
+        code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp, &req);
+        if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+            smb_NotifyChange(FILE_ACTION_ADDED,
+                              FILE_NOTIFY_CHANGE_FILE_NAME,
+                              dscp, lastNamep, NULL, TRUE);
+        if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+            /* Not an exclusive create, and someone else tried
+             * creating it already, then we open it anyway.  We
+             * don't bother retrying after this, since if this next
+             * fails, that means that the file was deleted after we
+             * started this call.
+             */
+            code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                              userp, &req, &scp);
+            if (code == 0) {
+                if (createDisp == FILE_OVERWRITE_IF) {
+                    setAttr.mask = CM_ATTRMASK_LENGTH;
+                    setAttr.length.LowPart = 0;
+                    setAttr.length.HighPart = 0;
+
+                    /* now watch for a symlink */
+                    code = 0;
+                    while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
+                        targetScp = 0;
+                        code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
+                        if (code == 0) {
+                            /* we have a more accurate file to use (the
+                             * target of the symbolic link).  Otherwise,
+                             * we'll just use the symlink anyway.
+                             */
+                            osi_Log2(smb_logp, "symlink vp %x to vp %x",
+                                      scp, targetScp);
+                            cm_ReleaseSCache(scp);
+                            scp = targetScp;
+                        }
+                    }
+                    code = cm_SetAttr(scp, &setAttr, userp, &req);
+                }
+            }	/* lookup succeeded */
+        }
+    } else {
+        char *tp, *pp;
+        char *cp; /* This component */
+        int clen = 0; /* length of component */
+        cm_scache_t *tscp1, *tscp2;
+        int isLast = 0;
+
+        /* create directory */
+        if ( !treeCreate ) 
+            treeStartp = lastNamep;
+        osi_assert(dscp != NULL);
+        osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
+                  osi_LogSaveString(smb_logp, treeStartp));
+        openAction = 2;		/* created directory */
+
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        setAttr.clientModTime = time(NULL);
+
+        pp = treeStartp;
+        cp = spacep->data;
+        tscp1 = dscp;
+        cm_HoldSCache(tscp1);
+        tscp2 = NULL;
+
+        while (pp && *pp) {
+            tp = strchr(pp, '\\');
+            if (!tp) {
+                strcpy(cp,pp);
+                clen = strlen(cp);
+                isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
+            } else {
+                clen = tp - pp;
+                strncpy(cp,pp,clen);
+                *(cp + clen) = 0;
+                tp++;
+            }
+            pp = tp;
+
+            if (clen == 0) 
+                continue; /* the supplied path can't have consecutive slashes either , but */
+
+            /* cp is the next component to be created. */
+            code = cm_MakeDir(tscp1, cp, 0, &setAttr, userp, &req);
+            if (code == 0 && (tscp1->flags & CM_SCACHEFLAG_ANYWATCH))
                 smb_NotifyChange(FILE_ACTION_ADDED,
-                                  FILE_NOTIFY_CHANGE_FILE_NAME,
-                                  dscp, lastNamep, NULL, TRUE);
-            if (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE) {
+                                  FILE_NOTIFY_CHANGE_DIR_NAME,
+                                  tscp1, cp, NULL, TRUE);
+            if (code == 0 || 
+                 (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE)) {
                 /* Not an exclusive create, and someone else tried
                  * creating it already, then we open it anyway.  We
                  * don't bother retrying after this, since if this next
                  * fails, that means that the file was deleted after we
                  * started this call.
                  */
-                code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-                                  userp, &req, &scp);
-                if (code == 0) {
-                    if (createDisp == FILE_OVERWRITE_IF) {
-                        setAttr.mask = CM_ATTRMASK_LENGTH;
-                        setAttr.length.LowPart = 0;
-                        setAttr.length.HighPart = 0;
+                code = cm_Lookup(tscp1, cp, CM_FLAG_CASEFOLD,
+                                  userp, &req, &tscp2);
+            }       
+            if (code) 
+                break;
 
-                        /* now watch for a symlink */
-                        code = 0;
-                        while (code == 0 && scp->fileType == CM_SCACHETYPE_SYMLINK) {
-                            targetScp = 0;
-                            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, &req);
-                            if (code == 0) {
-                                /* we have a more accurate file to use (the
-                                * target of the symbolic link).  Otherwise,
-                                * we'll just use the symlink anyway.
-                                */
-                                osi_Log2(smb_logp, "symlink vp %x to vp %x",
-                                          scp, targetScp);
-                                cm_ReleaseSCache(scp);
-                                scp = targetScp;
-                            }
-                        }
-                        code = cm_SetAttr(scp, &setAttr, userp, &req);
-                    }
-                }	/* lookup succeeded */
+            if (!isLast) { /* for anything other than dscp, release it unless it's the last one */
+                cm_ReleaseSCache(tscp1);
+                tscp1 = tscp2; /* Newly created directory will be next parent */
+                /* the hold is transfered to tscp1 from tscp2 */
             }
-	}       
-	else {
-            char *tp, *pp;
-            char *cp; /* This component */
-            int clen = 0; /* length of component */
-            cm_scache_t *tscp;
-            int isLast = 0;
-		
-            /* create directory */
-            if ( !treeCreate ) 
-                treeStartp = lastNamep;
-            osi_assert(dscp != NULL);
-            osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
-                      osi_LogSaveString(smb_logp, treeStartp));
-            openAction = 2;		/* created directory */
+        }
 
-            setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-            setAttr.clientModTime = time(NULL);
-		
-            pp = treeStartp;
-            cp = spacep->data;
-            tscp = dscp;
-
-            while (pp && *pp) {
-                tp = strchr(pp, '\\');
-                if (!tp) {
-                    strcpy(cp,pp);
-                    clen = strlen(cp);
-                    isLast = 1; /* indicate last component.  the supplied path never ends in a slash */
-                }
-                else {
-                    clen = tp - pp;
-                    strncpy(cp,pp,clen);
-                    *(cp + clen) = 0;
-                    tp++;
-                }
-                pp = tp;
-
-                if (clen == 0) 
-                    continue; /* the supplied path can't have consecutive slashes either , but */
-
-                /* cp is the next component to be created. */
-                code = cm_MakeDir(tscp, cp, 0, &setAttr, userp, &req);
-                if (code == 0 && (tscp->flags & CM_SCACHEFLAG_ANYWATCH))
-                    smb_NotifyChange(FILE_ACTION_ADDED,
-                                      FILE_NOTIFY_CHANGE_DIR_NAME,
-                                      tscp, cp, NULL, TRUE);
-                if (code == 0 || 
-                     (code == CM_ERROR_EXISTS && createDisp != FILE_CREATE)) {
-                    /* Not an exclusive create, and someone else tried
-                     * creating it already, then we open it anyway.  We
-                     * don't bother retrying after this, since if this next
-                     * fails, that means that the file was deleted after we
-                     * started this call.
-                     */
-                    code = cm_Lookup(tscp, cp, CM_FLAG_CASEFOLD,
-                                      userp, &req, &scp);
-                }
-                if (code) break;
-
-                if (!isLast) { /* for anything other than dscp, release it unless it's the last one */
-                    cm_ReleaseSCache(tscp);
-                    tscp = scp; /* Newly created directory will be next parent */
-                }
-            }
-
-            /* 
-             * if we get here and code == 0, then scp is the last directory created, and tscp is the
-             * parent of scp.  dscp got released if dscp != tscp. both tscp and scp are held.
-             */
-            dscp = tscp;
-	}
+        if (dscp)
+            cm_ReleaseSCache(dscp);
+        dscp = tscp1;
+        if (scp)
+            cm_ReleaseSCache(scp);
+        scp = tscp2;
+        /* 
+         * if we get here and code == 0, then scp is the last directory created, and dscp is the
+         * parent of scp.
+         */
+    }
 
     if (code) {
         /* something went wrong creating or truncating the file */
-        if (scp) cm_ReleaseSCache(scp);
-        if (dscp) cm_ReleaseSCache(dscp);
+        if (scp) 
+            cm_ReleaseSCache(scp);
+        if (dscp) 
+            cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return code;
@@ -5325,14 +5403,15 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 * target of the symbolic link).  Otherwise,
                 * we'll just use the symlink anyway.
                 */
-                osi_Log2(smb_logp, "symlink vp %x to vp %x",
-                          scp, targetScp);
+                osi_Log2(smb_logp, "symlink vp %x to vp %x", scp, targetScp);
                 cm_ReleaseSCache(scp);
                 scp = targetScp;
             }
         }
 
         if (scp->fileType != CM_SCACHETYPE_FILE) {
+            if (dscp)
+                cm_ReleaseSCache(dscp);
             cm_ReleaseSCache(scp);
             cm_ReleaseUser(userp);
             free(realPathp);
@@ -5343,7 +5422,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* (only applies to single component case) */
     if (realDirFlag == 1 && scp->fileType == CM_SCACHETYPE_FILE) {
         cm_ReleaseSCache(scp);
-        if (dscp) cm_ReleaseSCache(dscp);
+        if (dscp)
+            cm_ReleaseSCache(dscp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOTDIR;
@@ -5353,7 +5433,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assert(fidp);
     /* save a pointer to the vnode */
-    fidp->scp = scp;
+    fidp->scp = scp;    /* Hold transfered to fidp->scp and no longer needed */
 
     fidp->flags = fidflags;
 
@@ -5367,7 +5447,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp->NTopen_wholepathp = realPathp;
 
     /* we don't need this any longer */
-    if (dscp) cm_ReleaseSCache(dscp);
+    if (dscp) {
+        cm_ReleaseSCache(dscp);
+        dscp = NULL;
+    }
     cm_Open(scp, 0, userp);
 
     /* set inp->fid so that later read calls in same msg can find fid */
@@ -5407,6 +5490,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* leave scp held since we put it in fidp->scp */
     return 0;
 }       
+
 
 /*
  * A lot of stuff copied verbatim from NT Create&X to NT Tran Create.
@@ -6318,7 +6402,6 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         }
 
         smb_SendPacket(vcp, watch);
-        smb_ReleaseVC(vcp);
         smb_FreePacket(watch);
         watch = nextWatch;
     }
@@ -6385,8 +6468,6 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             ((smb_t *)watch)->errHigh = 0xC0;
             ((smb_t *)watch)->flg2 |= SMB_FLAGS2_ERR_STATUS;
             smb_SendPacket(vcp, watch);
-            if (watch->vcp)
-                smb_ReleaseVC(watch->vcp);
             smb_FreePacket(watch);
             return 0;
         }
@@ -6411,7 +6492,6 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *oldPathp, *newPathp;
     long code = 0;
-    cm_user_t *userp;
     char * tp;
     int attrs;
     int rename_type;

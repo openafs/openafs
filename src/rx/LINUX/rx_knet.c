@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.4 2004/12/07 06:10:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.5 2005/01/31 04:25:34 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -194,20 +194,18 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 
     return code;
 }
-
+extern rwlock_t tasklist_lock __attribute__((weak));
 void
 osi_StopListener(void)
 {
     struct task_struct *listener;
     extern int rxk_ListenerPid;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    read_lock(&tasklist_lock);
-#endif
+    if (&tasklist_lock)
+      read_lock(&tasklist_lock);
     listener = find_task_by_pid(rxk_ListenerPid);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    read_unlock(&tasklist_lock);
-#endif
+    if (&tasklist_lock)
+       read_unlock(&tasklist_lock);
     while (rxk_ListenerPid) {
 	flush_signals(listener);
 	force_sig(SIGKILL, listener);

@@ -254,6 +254,28 @@ BOOL IsServiceRunning (void)
     return (Status.dwCurrentState == SERVICE_RUNNING);
 }   
 
+BOOL IsServiceStartPending (void)
+{
+    SERVICE_STATUS Status;
+    SC_HANDLE hManager;
+    memset (&Status, 0x00, sizeof(Status));
+    Status.dwCurrentState = SERVICE_STOPPED;
+
+    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
+    {
+        SC_HANDLE hService;
+        if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+        {
+            QueryServiceStatus (hService, &Status);
+            CloseServiceHandle (hService);
+        }
+
+        CloseServiceHandle (hManager);
+    }
+    DebugEvent("AFS AfsLogon - Test Service Start Pending","Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
+    return (Status.dwCurrentState == SERVICE_RUNNING);
+}   
+
 /* LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
    v:variable to receive value (reference type)
    t:type
@@ -550,6 +572,10 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
 
     GetCPInfo(CP_ACP, &CodePageInfo);
 
+    if (CodePageInfo.MaxCharSize > 1)
+        // Only supporting non-Unicode strings
+        return FALSE;
+    
     if (uInputString.Buffer && ((LPBYTE) uInputString.Buffer)[1] == '\0')
     {
         // Looks like unicode, better translate it
@@ -561,7 +587,6 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
     }
     else
         lpszOutputString[0] = '\0';
-
     return FALSE;
 }  // UnicodeStringToANSI
 
@@ -586,7 +611,7 @@ DWORD APIENTRY NPLogonNotify(
     DWORD code;
 
     int pw_exp;
-    char *reason;
+    char *reason = 0;
     char *ctemp;
 
     BOOLEAN interactive;
@@ -598,7 +623,7 @@ DWORD APIENTRY NPLogonNotify(
 
     BOOLEAN afsWillAutoStart;
 
-    BOOLEAN uppercased_name = TRUE;
+    BOOLEAN lowercased_name = TRUE;
 
     LogonOptions_t opt; /* domain specific logon options */
     int retryInterval;
@@ -629,10 +654,10 @@ DWORD APIENTRY NPLogonNotify(
     ctemp = strchr(uname, '@');
     if (ctemp) *ctemp = 0;
 
-    /* is the name all uppercase? */
+    /* is the name all lowercase? */
     for ( ctemp = uname; *ctemp ; ctemp++) {
-        if ( islower(*ctemp) ) {
-            uppercased_name = FALSE;
+        if ( !islower(*ctemp) ) {
+            lowercased_name = FALSE;
             break;
         }
     }
@@ -653,6 +678,9 @@ DWORD APIENTRY NPLogonNotify(
     retryInterval = opt.retryInterval;
     sleepInterval = opt.sleepInterval;
     *lpLogonScript = opt.logonScript;
+
+    if (retryInterval < sleepInterval)
+        sleepInterval = retryInterval;
 
     DebugEvent("Got logon script: %S",opt.logonScript);
 
@@ -687,7 +715,7 @@ DWORD APIENTRY NPLogonNotify(
         /* We get the user's home directory path, if applicable, though we can't lookup the
            cell right away because the client service may not have started yet. This call
            also sets the AD_REALM flag in opt.flags if applicable. */
-        if(ISREMOTE(opt.flags)) {
+        if (ISREMOTE(opt.flags)) {
             DebugEvent("Is Remote");
             GetAdHomePath(homePath,MAX_PATH,lpLogonId,&opt);
         }       
@@ -698,9 +726,9 @@ DWORD APIENTRY NPLogonNotify(
         DebugEvent("while(TRUE) LogonOption[%x], Service AutoStart[%d]",
                     opt.LogonOption,afsWillAutoStart);
 
-        if(ISADREALM(opt.flags)) {
+        if (ISADREALM(opt.flags)) {
             code = GetFileCellName(homePath,cell,256);
-            if(!code) {
+            if (!code) {
                 DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
             }
             /* Don't bail out if GetFileCellName failed.
@@ -711,45 +739,53 @@ DWORD APIENTRY NPLogonNotify(
 		
         /* if Integrated Logon  */
         if (ISLOGONINTEGRATED(opt.LogonOption))
-        {			
+        {	
             if ( KFW_is_available() ) {
                 code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",uname,opt.smbName,cell,code);
-            }
-            else {
+                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+                           uname,opt.smbName,cell,code);
+            } else {
                 code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                     uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
                                                     &reason);
-                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x]",
-                            code);
+
+                DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s] Reason[%s]",
+                            code,uname,cell,reason ? reason : "<none>");
+                {
+                    char msg[2048];
+                    sprintf(msg, "Code[%x] uname[%s] Cell[%s] Reason[%s]",
+                            code,uname,cell,reason ? reason : "<none>");
+                    MessageBox(hwndOwner,
+                                msg,
+                                "AFS Logon",
+                                MB_ICONINFORMATION | MB_OK);
+                }
             }       
-            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && uppercased_name ) {
+            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
                 for ( ctemp = uname; *ctemp ; ctemp++) {
                     *ctemp = tolower(*ctemp);
                 }
-                uppercased_name = FALSE;
-                continue;
+                lowercased_name = TRUE;
+                goto sleeping;
             }
-        }
-        else {  
+
+            /* is service started yet?*/
+            /* If we've failed because the client isn't running yet and the
+            * client is set to autostart (and therefore it makes sense for
+            * us to wait for it to start) then sleep a while and try again. 
+            * If the error was something else, then give up. */
+            if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
+                break;
+        } else {  
             /*JUST check to see if its running*/
             if (IsServiceRunning())
                 break;
-            code = KTC_NOCM;
-            if (!afsWillAutoStart)
+            if (afsWillAutoStart && !IsServiceStartPending()) {
+                code = KTC_NOCMRPC;
+                reason = "AFS Service start failed";
                 break;
+            }
         }
-
-        /* is service started yet?*/
-        DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s]",
-                    code,uname,cell);
-
-        /* If we've failed because the client isn't running yet and the
-         * client is set to autostart (and therefore it makes sense for
-         * us to wait for it to start) then sleep a while and try again. 
-         * If the error was something else, then give up. */
-        if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
-            break;
 
         /* If the retry interval has expired and we still aren't
          * logged in, then just give up if we are not in interactive
@@ -767,14 +803,11 @@ DWORD APIENTRY NPLogonNotify(
                 break;
 
             /* Wait just a little while and try again */
-            retryInterval = sleepInterval = DEFAULT_SLEEP_INTERVAL;
+            retryInterval = opt.retryInterval;
         }
 
-        if (retryInterval < sleepInterval)
-            sleepInterval = retryInterval;
-
+      sleeping:
         Sleep(sleepInterval * 1000);
-
         retryInterval -= sleepInterval;
     }
 
@@ -809,7 +842,6 @@ DWORD APIENTRY NPLogonNotify(
             *lpLogonScript = NULL;
             if (!afsWillAutoStart)	// its not running, so if not autostart or integrated logon then just skip
                 code = 0;
-
         }
     }
 

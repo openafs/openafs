@@ -83,7 +83,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.4 2004/11/09 17:17:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.5 2005/01/31 04:10:43 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -1552,21 +1552,21 @@ CleanupTimedOutCallBacks_r(void)
 }
 
 static struct host *lih_host;
-static int lih_host_held = 0;
+static int lih_host_held;
 
 static int
 lih_r(register struct host *host, register int held,
       register struct host *hostp)
 {
-    lih_host_held = 0;
     if (host->cblist
 	&& ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
 	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall)) {
+	if (lih_host != NULL && lih_host_held) {
+	    h_Release_r(lih_host);
+	}
 	lih_host = host;
-    }
-    if (!held) {
+	lih_host_held = !held;
 	held = 1;
-	lih_host_held = 1;
     }
     return held;
 }
@@ -1594,13 +1594,15 @@ GetSomeSpace_r(struct host *hostp, int locked)
 	h_Enumerate_r(lih_r, hp2, (char *)hp1);
 	hp = lih_host;
 	if (hp) {
+	    /* set in lih_r! private copy before giving up H_LOCK */
+	    int lih_host_held2=lih_host_held;   
 	    cbstuff.GSS4++;
 	    if (!ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
-		if (lih_host_held) 
+		if (lih_host_held2)
 		    h_Release_r(hp);
 		return 0;
 	    }
-	    if (lih_host_held) 
+	    if (lih_host_held2)
 		h_Release_r(hp);
 	    hp2 = hp->next;
 	} else {

@@ -24,6 +24,7 @@
 #include <krb.h>
 #include <krb5.h>
 #include <afs/ptserver.h>
+#include <afs/ptuser.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -280,7 +281,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
              * level
              */
 
-            if ((*status = pr_Initialize(1L, confname, aserver->cell, 0))) {
+            if ((*status = pr_Initialize(1L, confname, aserver->cell))) {
                 printf("Error %d\n", status);
                 return;
             }
