@@ -109,6 +109,11 @@ system apache_afs_web_secure:
 	chmod a+w ${DEST}/root.afsweb/install/${APACHE_INSTALL_SCRIPT}
 	${INSTALL} $(BINARIES) ${DEST}/root.afsweb/bin
 
+netscape_afs_web_secure:
+	${INSTALL} ${NETSCAPE_INSTALL_SCRIPT} ${DEST}/root.afsweb/install
+	chmod a+x ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
+	chmod a+w ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
+
 all: kinstall ukinstall
 
 install:  
