@@ -44,6 +44,9 @@ AC_ARG_ENABLE(redhat-buildsys,
 AC_ARG_ENABLE(transarc-paths,
 [  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice],, enable_transarc_paths="no"
 )
+AC_ARG_ENABLE(tivoli-tsm,
+[  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
+)
 
 AC_PROG_CC
 
@@ -382,6 +385,27 @@ if test "$enable_afsdb" = "yes"; then
 	LIB_AFSDB="$LIB_res_search"
 	AC_DEFINE(AFS_AFSDB_ENV)
 fi
+
+dnl check for tivoli
+AC_MSG_CHECKING(for tivoli tsm butc support)
+XBSA_CFLAGS=""
+if test "$enable_tivoli_tsm" = "yes"; then
+	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
+	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
+
+	if test -e "$XBSADIR1/xbsa.h"; then
+		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -e "$XBSADIR2/xbsa.h"; then
+		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	else
+		AC_MSG_RESULT([no, missing xbsa.h header file])
+	fi
+else
+	AC_MSG_RESULT([no])
+fi
+AC_SUBST(XBSA_CFLAGS)
 
 dnl checks for header files.
 AC_HEADER_STDC
