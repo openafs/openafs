@@ -669,9 +669,10 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "IsGateway" 0
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "HideDotFiles" 1
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "TruncateNetbios" "on"
-!IFDEF DEBUG
+
+  ; Find Lana By Name appears to be causing grief for many people 
+  ; I do not have time to track this down so I am simply going to disable it
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NoFindLanaByName" 1
-!ENDIF
 
   strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" 
   strcpy $REG_VALUE   "DependOnGroup" 
