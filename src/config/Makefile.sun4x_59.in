@@ -23,6 +23,7 @@ MTLIBS=-lpthread -lsocket
 XLIBELFA=-lelf
 XLIBKVM=-lkvm
 #
+SHLIB_LINKER=${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=-KPIC
 SHLIB_LDFLAGS = -G -Bsymbolic
