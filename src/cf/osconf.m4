@@ -89,6 +89,7 @@ case $AFS_SYSNAME in
 		;;
 
 	hp_ux110)
+		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"
 		DBM="/lib/libndbm.a"
