@@ -108,16 +108,16 @@ void afsd_initUpperCaseTable()
 void
 afsi_start()
 {
-	char wd[100];
-	char t[100], u[100], *p, *path;
-	int zilch;
-	int code;
+    char wd[100];
+    char t[100], u[100], *p, *path;
+    int zilch;
+    int code;
     DWORD dwLow, dwHigh;
-	HKEY parmKey;
-	DWORD dummyLen;
+    HKEY parmKey;
+    DWORD dummyLen;
     DWORD maxLogSize = 100 * 1024;
 
-	afsi_file = INVALID_HANDLE_VALUE;
+    afsi_file = INVALID_HANDLE_VALUE;
     if (getenv("TEMP"))
     {
         StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
@@ -125,21 +125,22 @@ afsi_start()
     else
     {
         code = GetWindowsDirectory(wd, sizeof(wd));
-        if (code == 0) return;
+        if (code == 0) 
+            return;
     }
-	StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
-	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+    StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
+    GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
+    afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                            OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
 
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
                          0, KEY_QUERY_VALUE, &parmKey);
-	if (code == ERROR_SUCCESS) {
+    if (code == ERROR_SUCCESS) {
         dummyLen = sizeof(maxLogSize);
         code = RegQueryValueEx(parmKey, "MaxLogSize", NULL, NULL,
                                 (BYTE *) &maxLogSize, &dummyLen);
         RegCloseKey (parmKey);
-	}
+    }
 
     if (maxLogSize) {
         dwLow = GetFileSize( afsi_file, &dwHigh );
