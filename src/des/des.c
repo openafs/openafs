@@ -66,7 +66,7 @@ extern des_debug_print ();
 pthread_mutex_t rxkad_stats_mutex;
 #endif /* AFS_PTHREAD_ENV */
     
-AFS_HIDE afs_int32
+afs_int32
 des_ecb_encrypt(clear, cipher, schedule, encrypt)
     afs_uint32 *clear;
     afs_uint32 *cipher;
