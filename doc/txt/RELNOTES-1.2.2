@@ -1,0 +1,67 @@
+                  OpenAFS Release Notes - Version 1.2.2
+     _________________________________________________________________
+Linux clients: Major bugfix
+All other systems: Minor updates
+     _________________________________________________________________
+
+All systems:
+- com_err patch included in 1.2.1 was missing a macro in generated
+  headers from .et source files. compile_et is now fixed.
+- source cleanup has been undertaken to remove unused variables. This work
+  is part of an ongoing effort.
+- fileserver will now correctly reap deleted clients. A bug previously
+  could preclude a client from being reaped if the client was marked
+  deleted and became active again before the 5 minute check LWP cleaned
+  it up.
+- fileserver now supports InlineBulk RPC to cut down round trips on
+  directories including unreadable files
+- fileserver is careful to avoid null pointer dereference if a callback
+  entry in the chain has been invalidated (possibly related to problem
+  fixed with reaping clients)
+- bosserver logs process exit statuses
+- vos can now encrypt volume dumps
+- vos now has a setfields option
+- vos restore now supports the -offline option to not bring volumes online
+  after restoring
+- vos restore now supports the -readonly option to mark a restored volume
+  readonly. This cannot be done if a readwrite volume already exists.
+- upclient cleans up after failures instead of leaving files in /tmp
+- rxdebug now has a -long option to increase verbosity
+- cache manager is careful to not dereference null pointers when reordering
+  server preferences
+- bos problem where potential false errors on salvage could be reported is
+  fixed
+- namei fileserver will attach appropriately named directories if they
+  contain a file named AlwaysAttach exists in them
+
+All UNIX systems:
+- dynamic root (/afs) support has been added. Invoke afsd with the -dynroot
+  switch. 
+- fix a minor vcache leak in the cache manager when a dangling mount point
+  is evaluated
+
+IRIX:
+- Rx now computes MTU correctly.
+- Use bcopy/bzero/bcmp for kernel modules since memset/memcmp/memcpy is
+  not supported
+
+Solaris:
+- Solaris 9 is now supported.
+- Rx now computes MTU correctly.
+
+Linux:
+- All Linux versions have a bug fixed where the kernel dentry cache would
+  interfere with AFS vcache entries from being deleted could lead to
+  an oops suggesting a VLRU cycle.
+- Rx now computes MTU correctly.
+- Linux 2.4 on Alpha should now build correctly
+- Previously added umount_begin support has been removed as it could
+  cause problems for hosts where processes were still using AFS when the
+  cache manager was shut down.
+- RC file has been cleaned up
+
+Windows NT/2000:
+- Freelance (dynamic AFS root) and AFSDB support are included
+
+Documentation:
+- NEWS file updated
