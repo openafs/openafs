@@ -61,7 +61,7 @@ cmd64.o: cmd.c cmd.h
 	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o cmd.c
 
 
-libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o $(PIC64OBJS)
+libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o 
 	-$(RM) -f $@
 	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
 	$(RANLIB) $@

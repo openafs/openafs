@@ -95,7 +95,7 @@ diff -u -r1.7 Makefile.in
  
  
 -libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
-+libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o $(PIC64OBJS)
++libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o 
  	-$(RM) -f $@
  	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
  	$(RANLIB) $@
