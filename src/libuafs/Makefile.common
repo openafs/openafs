@@ -39,10 +39,10 @@ ukinstlibs:
 	${INSTALL} des/libdes.a ${DESTDIR}root.perf/lib
 	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib	
 
-ukinstall: ukinsthdrs ukinstlibs UAFS/$(LIBUAFS) linktest
+ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest ukinstlibs
 
 linktest: UAFS/$(LIBUAFS) des/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include ${DESTDIR}root.perf/lib/$(LIBUAFS) ${DESTDIR}root.perf/lib/libdes.a $(TEST_LIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS)
 
 CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
 CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?
