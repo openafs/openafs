@@ -776,7 +776,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) {

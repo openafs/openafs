@@ -72,9 +72,20 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
     unsigned long attrs;
 
     if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
-        scp->fileType == CM_SCACHETYPE_MOUNTPOINT)
+        scp->fileType == CM_SCACHETYPE_MOUNTPOINT) 
+    {
         attrs = SMB_ATTR_DIRECTORY;
-    else
+#ifdef SPECIAL_FOLDERS
+#ifdef AFS_FREELANCE_CLIENT
+        if ( cm_freelanceEnabled &&
+             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && 
+             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
+             scp->fid.vnode==0x1 && scp->fid.unique==0x1) {
+            attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
+        }
+#endif /* AFS_FREELANCE_CLIENT */
+#endif /* SPECIAL_FOLDERS */
+    } else
         attrs = 0;
     /*
      * We used to mark a file RO if it was in an RO volume, but that
@@ -3575,8 +3586,10 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         pathp = ((char *) p->parmsp) + 12;	/* points to path */
         nextCookie = 0;
         maskp = strrchr(pathp, '\\');
-        if (maskp == NULL) maskp = pathp;
-        else maskp++;	/* skip over backslash */
+        if (maskp == NULL) 
+            maskp = pathp;
+        else 
+            maskp++;	/* skip over backslash */
         strcpy(dsp->mask, maskp);	/* and save mask */
         /* track if this is likely to match a lot of entries */
         starPattern = smb_V3IsStarMask(maskp);
@@ -3585,7 +3598,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         osi_assert(p->opcode == 2);
         /* find next; obtain basic parameters from request or open dir file */
         dsp = smb_FindDirSearch(p->parmsp[0]);
-        if (!dsp) return CM_ERROR_BADFD;
+        if (!dsp) 
+            return CM_ERROR_BADFD;
         attribute = dsp->attribute;
         maxCount = p->parmsp[1];
         infoLevel = p->parmsp[2];
@@ -3653,10 +3667,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     else {
         spacep = cm_GetSpace();
         smb_StripLastComponent(spacep->data, NULL, pathp);
-        lock_ReleaseMutex(&dsp->mx);
-
         code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
         if (code) {
+            lock_ReleaseMutex(&dsp->mx);
             cm_ReleaseUser(userp);
             smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOFILES);
             smb_FreeTran2Packet(outp);
@@ -3669,9 +3682,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                         userp, tidPathp, &req, &scp);
         cm_FreeSpace(spacep);
 
-        lock_ObtainMutex(&dsp->mx);
         if (code == 0) {
-            if (dsp->scp != 0) cm_ReleaseSCache(dsp->scp);
+            if (dsp->scp != 0) 
+                cm_ReleaseSCache(dsp->scp);
             dsp->scp = scp;
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done
@@ -3784,6 +3797,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
             lock_ReleaseRead(&scp->bufCreateLock);
+            lock_ObtainMutex(&dsp->mx);
 
             /* now, if we're doing a star match, do bulk fetching
              * of all of the status info for files in the dir.
@@ -3792,6 +3806,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 smb_ApplyV3DirListPatches(scp, &dirListPatchesp,
                                            infoLevel, userp,
                                            &req);
+                lock_ObtainMutex(&scp->mx);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                     LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
                     /* Don't bulk stat if risking timeout */
@@ -3803,10 +3818,13 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     } else
                         cm_TryBulkStat(scp, &thyper, userp, &req);
                 }
+            } else {
+                lock_ObtainMutex(&scp->mx);
             }
+            lock_ReleaseMutex(&dsp->mx);
+            if (code) 
+                break;
 
-            lock_ObtainMutex(&scp->mx);
-            if (code) break;
             bufferOffset = thyper;
 
             /* now get the data in the cache */

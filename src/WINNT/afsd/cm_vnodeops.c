@@ -787,7 +787,8 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         }
     }
     /* locked, has callback, has valid data in buffer */
-    if ((tlen = scp->length.LowPart) > 1000) return CM_ERROR_TOOBIG;
+    if ((tlen = scp->length.LowPart) > 1000) 
+        return CM_ERROR_TOOBIG;
     if (tlen <= 0) {
         code = CM_ERROR_INVAL;
         goto done;
@@ -1104,10 +1105,10 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                 *outpScpp = scp;
                 return 0;
             }
-			if (scp) {
-				cm_ReleaseSCache(scp);
-				scp = 0;
-			}
+            if (scp) {
+                cm_ReleaseSCache(scp);
+                scp = 0;
+            }
         } else {
             return cm_LookupInternal(dscp, namep, flags, userp, reqp, outpScpp);
         }
@@ -1405,12 +1406,12 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                 if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
                     /* this is a symlink; assemble a new buffer */
                     lock_ReleaseMutex(&tscp->mx);
-                    if (symlinkCount++ >= 16) {
+                    if (symlinkCount++ >= MAX_SYMLINK_COUNT) {
                         cm_ReleaseSCache(tscp);
                         cm_ReleaseSCache(dirScp);
                         if (psp) 
                             cm_FreeSpace(psp);
-                        return CM_ERROR_TOOBIG;
+                        return CM_ERROR_TOO_MANY_SYMLINKS;
                     }
                     if (tc == 0) 
                         restp = "";
@@ -1659,9 +1660,11 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     bb.counter = 0;
     bb.bufOffset = *offsetp;
 
+	lock_ReleaseMutex(&dscp->mx);
     /* first, assemble the file IDs we need to stat */
     code = cm_ApplyDir(dscp, cm_TryBulkProc, (void *) &bb, offsetp, userp,
                         reqp, NULL);
+	lock_ObtainMutex(&dscp->mx);
 
     /* if we failed, bail out early */
     if (code && code != CM_ERROR_STOPNOW) return;
@@ -1671,7 +1674,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
      * time.
      */
     filex = 0;
-    while(filex < bb.counter) {
+    while (filex < bb.counter) {
         filesThisCall = bb.counter - filex;
         if (filesThisCall > AFSCBMAX) filesThisCall = AFSCBMAX;
 

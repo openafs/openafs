@@ -387,10 +387,21 @@ unsigned int smb_Attributes(cm_scache_t *scp)
 {
     unsigned int attrs;
 
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY
-         || scp->fileType == CM_SCACHETYPE_MOUNTPOINT)
+    if ( scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+         scp->fileType == CM_SCACHETYPE_MOUNTPOINT) 
+    {
         attrs = SMB_ATTR_DIRECTORY;
-    else
+#ifdef SPECIAL_FOLDERS
+#ifdef AFS_FREELANCE_CLIENT
+        if ( cm_freelanceEnabled &&
+             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && 
+             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
+             scp->fid.vnode==0x1 && scp->fid.unique==0x1) {
+            attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
+        }
+#endif /* AFS_FREELANCE_CLIENT */
+#endif /* SPECIAL_FOLDERS */
+    } else
         attrs = 0;
 
     /*
@@ -1546,11 +1557,11 @@ int smb_FindShareCSCPolicy(char *shareName)
 /* find a dir search structure by cookie value, and return it held.
  * Must be called with smb_globalLock held.
  */
-smb_dirSearch_t *smb_FindDirSearchNL(long cookie)
+smb_dirSearch_t *smb_FindDirSearchNoLock(long cookie)
 {
     smb_dirSearch_t *dsp;
         
-    for(dsp = smb_firstDirSearchp; dsp; dsp = (smb_dirSearch_t *) osi_QNext(&dsp->q)) {
+    for (dsp = smb_firstDirSearchp; dsp; dsp = (smb_dirSearch_t *) osi_QNext(&dsp->q)) {
         if (dsp->cookie == cookie) {
             if (dsp != smb_firstDirSearchp) {
                 /* move to head of LRU queue, too, if we're not already there */
@@ -1562,7 +1573,9 @@ smb_dirSearch_t *smb_FindDirSearchNL(long cookie)
                 if (!smb_lastDirSearchp)
                     smb_lastDirSearchp = (smb_dirSearch_t *) &dsp->q;
             }
+            lock_ObtainMutex(&dsp->mx);
             dsp->refCount++;
+            lock_ReleaseMutex(&dsp->mx);
             break;
         }
     }
@@ -1572,10 +1585,9 @@ smb_dirSearch_t *smb_FindDirSearchNL(long cookie)
 void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
 {
     lock_ObtainWrite(&smb_globalLock);
-    dsp->flags |= SMB_DIRSEARCH_DELETE;
-    lock_ReleaseWrite(&smb_globalLock);
     lock_ObtainMutex(&dsp->mx);
-    if(dsp->scp != NULL) {
+    dsp->flags |= SMB_DIRSEARCH_DELETE;
+    if (dsp->scp != NULL) {
         lock_ObtainMutex(&dsp->scp->mx);
         if (dsp->flags & SMB_DIRSEARCH_BULKST) {
             dsp->flags &= ~SMB_DIRSEARCH_BULKST;
@@ -1585,28 +1597,38 @@ void smb_DeleteDirSearch(smb_dirSearch_t *dsp)
         lock_ReleaseMutex(&dsp->scp->mx);
     }	
     lock_ReleaseMutex(&dsp->mx);
+    lock_ReleaseWrite(&smb_globalLock);
 }               
 
-void smb_ReleaseDirSearch(smb_dirSearch_t *dsp)
+/* Must be called with the smb_globalLock held */
+void smb_ReleaseDirSearchNoLock(smb_dirSearch_t *dsp)
 {
     cm_scache_t *scp;
         
     scp = NULL;
 
-    lock_ObtainWrite(&smb_globalLock);
+    lock_ObtainMutex(&dsp->mx);
     osi_assert(dsp->refCount-- > 0);
     if (dsp->refCount == 0 && (dsp->flags & SMB_DIRSEARCH_DELETE)) {
         if (&dsp->q == (osi_queue_t *) smb_lastDirSearchp)
             smb_lastDirSearchp = (smb_dirSearch_t *) osi_QPrev(&smb_lastDirSearchp->q);
         osi_QRemove((osi_queue_t **) &smb_firstDirSearchp, &dsp->q);
+        lock_ReleaseMutex(&dsp->mx);
         lock_FinalizeMutex(&dsp->mx);
         scp = dsp->scp;
         free(dsp);
+    } else {
+        lock_ReleaseMutex(&dsp->mx);
     }
-    lock_ReleaseWrite(&smb_globalLock);
-
     /* do this now to avoid spurious locking hierarchy creation */
     if (scp) cm_ReleaseSCache(scp);
+}       
+
+void smb_ReleaseDirSearch(smb_dirSearch_t *dsp)
+{
+    lock_ObtainWrite(&smb_globalLock);
+    smb_ReleaseDirSearchNoLock(dsp);
+    lock_ReleaseWrite(&smb_globalLock);
 }       
 
 /* find a dir search structure by cookie value, and return it held */
@@ -1615,7 +1637,7 @@ smb_dirSearch_t *smb_FindDirSearch(long cookie)
     smb_dirSearch_t *dsp;
 
     lock_ObtainWrite(&smb_globalLock);
-    dsp = smb_FindDirSearchNL(cookie);
+    dsp = smb_FindDirSearchNoLock(cookie);
     lock_ReleaseWrite(&smb_globalLock);
     return dsp;
 }
@@ -1650,15 +1672,14 @@ void smb_GCDirSearches(int isV3)
         }
 
         /* don't do more than this */
-        if (victimCount >= SMB_DIRSEARCH_GCMAX) break;
+        if (victimCount >= SMB_DIRSEARCH_GCMAX) 
+            break;
     }
 	
     /* now release them */
-    lock_ReleaseWrite(&smb_globalLock);
-    for(i = 0; i < victimCount; i++) {
-        smb_ReleaseDirSearch(victimsp[i]);
+    for (i = 0; i < victimCount; i++) {
+        smb_ReleaseDirSearchNoLock(victimsp[i]);
     }
-    lock_ObtainWrite(&smb_globalLock);
 }
 
 /* function for allocating a dir search entry.  We need these to remember enough context
@@ -1677,25 +1698,27 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
     counter = 0;
 
     /* what's the biggest ID allowed in this version of the protocol */
-    if (isV3) maxAllowed = 65535;
-    else maxAllowed = 255;
+    maxAllowed = isV3 ? 65535 : 255;
 
-    while(1) {
+    while (1) {
         /* twice so we have enough tries to find guys we GC after one pass;
          * 10 extra is just in case I mis-counted.
          */
-        if (++counter > 2*maxAllowed+10) osi_panic("afsd: dir search cookie leak",
-                                                    __FILE__, __LINE__);
+        if (++counter > 2*maxAllowed+10) 
+            osi_panic("afsd: dir search cookie leak", __FILE__, __LINE__);
+
         if (smb_dirSearchCounter > maxAllowed) {	
             smb_dirSearchCounter = 1;
-            smb_GCDirSearches(isV3);	/* GC some (drops global lock) */
+            smb_GCDirSearches(isV3);	/* GC some */
         }	
-        dsp = smb_FindDirSearchNL(smb_dirSearchCounter);
+        dsp = smb_FindDirSearchNoLock(smb_dirSearchCounter);
         if (dsp) {
             /* don't need to watch for refcount zero and deleted, since
             * we haven't dropped the global lock.
             */
+            lock_ObtainMutex(&dsp->mx);
             dsp->refCount--;
+            lock_ReleaseMutex(&dsp->mx);
             ++smb_dirSearchCounter;
             continue;
         }	
@@ -1703,7 +1726,8 @@ smb_dirSearch_t *smb_NewDirSearch(int isV3)
         dsp = malloc(sizeof(*dsp));
         memset(dsp, 0, sizeof(*dsp));
         osi_QAdd((osi_queue_t **) &smb_firstDirSearchp, &dsp->q);
-        if (!smb_lastDirSearchp) smb_lastDirSearchp = (smb_dirSearch_t *) &dsp->q;
+        if (!smb_lastDirSearchp) 
+            smb_lastDirSearchp = (smb_dirSearch_t *) &dsp->q;
         dsp->cookie = smb_dirSearchCounter;
         ++smb_dirSearchCounter;
         dsp->refCount = 1;
@@ -2274,6 +2298,13 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_GSSCONTINUE) {
         NTStatus = 0xC0000016L; /* more processing required */
+    }
+    else if (code == CM_ERROR_TOO_MANY_SYMLINKS) {
+#ifdef COMMENT
+        NTStatus = 0xC0000280L; /* reparse point not resolved */
+#else
+        NTStatus = 0xC0000022L; /* Access Denied */
+#endif
     }
     else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
@@ -3402,7 +3433,6 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     else {
         spacep = inp->spacep;
         smb_StripLastComponent(spacep->data, NULL, pathp);
-        lock_ReleaseMutex(&dsp->mx);
         code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
         if (code) {
             lock_ReleaseMutex(&dsp->mx);
@@ -3413,9 +3443,9 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         }
         code = cm_NameI(cm_rootSCachep, spacep->data,
                         caseFold | CM_FLAG_FOLLOW, userp, tidPathp, &req, &scp);
-        lock_ObtainMutex(&dsp->mx);
         if (code == 0) {
-            if (dsp->scp != 0) cm_ReleaseSCache(dsp->scp);
+            if (dsp->scp != 0) 
+                cm_ReleaseSCache(dsp->scp);
             dsp->scp = scp;
             /* we need one hold for the entry we just stored into,
              * and one for our own processing.  When we're done with this
@@ -3520,13 +3550,14 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
             lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
             lock_ReleaseRead(&scp->bufCreateLock);
+            lock_ObtainMutex(&dsp->mx);
 
             /* now, if we're doing a star match, do bulk fetching of all of 
              * the status info for files in the dir.
              */
             if (starPattern) {
-                smb_ApplyDirListPatches(&dirListPatchesp, userp,
-                                         &req);
+                smb_ApplyDirListPatches(&dirListPatchesp, userp, &req);
+                lock_ObtainMutex(&scp->mx);
                 if ((dsp->flags & SMB_DIRSEARCH_BULKST) &&
                      LargeIntegerGreaterThanOrEqualTo(thyper, 
                                                       scp->bulkStatProgress)) {
@@ -3539,11 +3570,13 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                     } else
                         cm_TryBulkStat(scp, &thyper, userp, &req);
                 }
+            } else {
+                lock_ObtainMutex(&scp->mx);
             }
-
-            lock_ObtainMutex(&scp->mx);
+            lock_ReleaseMutex(&dsp->mx);
             if (code) 
                 break;
+
             bufferOffset = thyper;
 
             /* now get the data in the cache */
