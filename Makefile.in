@@ -468,20 +468,20 @@ libafsauthent: ubik auth kauth libafsrpc
 
 shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	amd64_linux24) \
+	*linux*) \
 		echo Skipping shlibafsprc for amd64_linux24 ;; \
-#	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-#	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
 
 shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
-	amd64_linux24) \
+	*linux*) \
 		echo Skipping shlibafsauthent for amd64_linux24 ;; \
-#	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-#	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac

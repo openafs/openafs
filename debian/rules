@@ -16,7 +16,7 @@ export DH_COMPAT=2
 export DH_OPTIONS
 
 # The AFS sysname is determined by a script
-KVERS=`perl -e '$_ = <>; $_ =~ m/"(.+)"/; print "$1\n";' < $(KSRC)/include/linux/version.h`
+KVERS=`perl -e '$$_ = <>; $$_ =~ m/"(.+)"/; print "$$1\n";' < $(KSRC)/include/linux/version.h`
 SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
 package=openafs
 srcpkg = openafs-modules-source
@@ -159,7 +159,7 @@ binary-arch: build install
 	dh_suidregister
 	dh_installdeb
 #	dh_makeshlibs
-#	dh_perl
+#	dh_perlc
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums

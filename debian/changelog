@@ -1,8 +1,15 @@
 openafs (1.2.10-1) unstable; urgency=low
 
   * New upstream version
+  * net/*.h included properly by kernel module, Closes: #204642
+  * Don't build libafsrpc or libafsauthent, as we can't exactly use them
+    because they contain non-pic code, Closes: #203456
+  * I think I finally build the PAM module on hppa, Closes: #179679
+  * Decnet includes should work now because of the change of the net
+    symlink, Closes: #204486
+  * Escape $ in debian/rules, Closes: #204185
 
- -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jul 2003 14:20:20 -0400
+ -- Sam Hartman <hartmans@debian.org>  Sun, 24 Aug 2003 18:03:21 -0400
 
 openafs (1.2.9-3) unstable; urgency=low
 
