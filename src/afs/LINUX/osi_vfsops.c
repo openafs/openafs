@@ -255,8 +255,10 @@ void afs_put_super(struct super_block *sbp)
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
-    if (!suser())
+    if (!suser()) {
+	AFS_GUNLOCK();
 	return;
+    }
 
     afs_globalVFS = 0;
     afs_globalVp = 0;
