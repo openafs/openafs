@@ -194,13 +194,13 @@ osi_assem.s: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem32.s $(TOP_SRCDIR)/afs/$
 
 
 # Build rules for iauth objects.
-afs_call_iauth.o:	$(AFS)/afs_call.c
+afs_call_iauth.o:	$(TOP_SRCDIR)/afs/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_call_iauth.o
-afs_nfsclnt_iauth.o:	$(AFS)/afs_nfsclnt.c
+afs_nfsclnt_iauth.o:	$(TOP_SRCDIR)/afs/afs_nfsclnt.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o
-afs_pioctl_iauth.o:	$(AFS)/afs_pioctl.c
+afs_pioctl_iauth.o:	$(TOP_SRCDIR)/afs/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o
-osi_vfsops_iauth.o: $(AFS)/osi_vfsops.c
+osi_vfsops_iauth.o: $(TOP_SRCDIR)/afs/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o
-osi_vnodeops_iauth.o:	$(AFS)/osi_vnodeops.c
+osi_vnodeops_iauth.o:	$(TOP_SRCDIR)/afs/osi_vnodeops.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o

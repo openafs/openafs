@@ -13,7 +13,7 @@ BUTMLIBS    =libbutm.a
 BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 CC      = ${MT_CC}
-CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I../bucoord -I../volser
+CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
 
 LWP     = ${srcdir}/../lwp
 BUTM    = ${srcdir}/../butm
