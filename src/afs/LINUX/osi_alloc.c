@@ -199,14 +199,15 @@ static int linux_alloc_init()
 {
     /* initiate our pool of osi_linux_mem structs */
     al_mem_pool = afs_atomlist_create(sizeof(struct osi_linux_mem),
-                                  sizeof(long)*1024, vmalloc, local_free);
+				      sizeof(long)*1024, (void *)vmalloc, 
+				      local_free);
     if (!al_mem_pool) {
         printf("afs_osi_Alloc: Error in initialization(atomlist_create)\n");
         return 0;
     }
 
     /* initialize the hash table to hold references to alloc'ed chunks */
-    lh_mem_htab = afs_lhash_create(hash_equal, vmalloc, local_free);
+    lh_mem_htab = afs_lhash_create(hash_equal, (void *)vmalloc, local_free);
     if (!lh_mem_htab) {
         printf("afs_osi_Alloc: Error in initialization(lhash_create)\n");
         return 0;

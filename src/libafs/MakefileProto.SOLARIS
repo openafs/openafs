@@ -28,9 +28,10 @@ AFS_OS_NONFSOBJS = \
 
 # System specific build commands and flags
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-LD = /usr/ccs/bin/ld
-LORDER = /usr/ccs/bin/lorder
-CC = /opt/SUNWspro/bin/cc
+#These are redundant
+#LD = /usr/ccs/bin/ld
+#LORDER = /usr/ccs/bin/lorder
+#CC = /opt/SUNWspro/bin/cc
 KDEFS= -Dsun4c -DSUN4C_60 -DNFSCLIENT -DSYSACCT -DOLDSCSI -DVDDRV -D_KERNEL \
 	-DSYSV -dn ${ARCH_DEFS}
 
@@ -106,7 +107,7 @@ ${COMPDIRS}:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-<all -sun4x_57 sun4x_58>
+<all -sun4x_57 -sun4x_58>
 DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 

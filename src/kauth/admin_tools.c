@@ -169,7 +169,7 @@ int DumpUser (
     if ((!ka_KeyIsZero((char *) &tentry.key, sizeof(tentry.key))) && 
 	(showkey)) {
 	printf ("  key (%d):", tentry.key_version);
-	ka_PrintBytes (&tentry.key, sizeof(tentry.key));
+	ka_PrintBytes ((char *)&tentry.key, sizeof(tentry.key));
     }
     else {
 	if (tentry.keyCheckSum == 0) 
@@ -704,7 +704,7 @@ int StringToKey (
 
     printf ("Converting %s in realm '%s' yields key='",
 	    as->parms[0].items->data, realm);
-    ka_PrintBytes (&key, sizeof(key));
+    ka_PrintBytes ((char *)&key, sizeof(key));
     printf ("'.\n");
 
     return 0;
@@ -745,9 +745,10 @@ int SetPassword (
       ka_StringToKey (as->parms[1].items->data, realm, &key);
     } 
     else if (as->parms[2].items) {
-      if (ka_ReadBytes (as->parms[2].items->data, &key, sizeof(key)) != 8) {
+      if (ka_ReadBytes (as->parms[2].items->data, (char *)&key, sizeof(key))
+	  != 8) {
 	printf ("Key must be 8 bytes: '%s' was too long\n",
-			 as->parms[2].items->data);
+		as->parms[2].items->data);
 	return KABADCMD;
       }
     } 
@@ -890,10 +891,10 @@ static afs_int32 ListTicket (
     }
     if (verbose) {
 	printf ("SessionKey: ");
-	ka_PrintBytes (&token.sessionKey, sizeof(token.sessionKey));
+	ka_PrintBytes ((char *)&token.sessionKey, sizeof(token.sessionKey));
 	printf ("\nTicket (kvno = %d, len = %d): ", token.kvno, 
 		token.ticketLen);
-	ka_PrintBytes (token.ticket, token.ticketLen);
+	ka_PrintBytes ((char *)token.ticket, token.ticketLen);
 	printf ("\n");
     }
     return 0;
@@ -982,7 +983,7 @@ static GetPassword (
     ubik_ClientDestroy(lpbkConn);
     if (code) goto abort;
     printf ("Key: ");
-    ka_PrintBytes (&key, sizeof(key));
+    ka_PrintBytes ((char *)&key, sizeof(key));
     printf ("\n");
     return code;
 }
@@ -999,7 +1000,7 @@ int GetRandomKey (
     else {
 	int i;
 	printf ("Key: ");
-	ka_PrintBytes (&key, sizeof(key));
+	ka_PrintBytes ((char *)&key, sizeof(key));
 	printf (" (");
 	for (i=0; i<sizeof(key); i++) {
 	    printf ("%0.2x", ((char *)&key)[i] & 0xff);
@@ -1174,7 +1175,7 @@ int Quit (
     return 0;
 }
 
-void MyAfterProc(
+int MyAfterProc(
   struct cmd_syndesc *as)
 {
     if (!strcmp(as->name,"help")) return;
@@ -1187,7 +1188,7 @@ void MyAfterProc(
         conn = 0;
     }
 
-    return;
+    return 0;
 }
 
 int   init = 0, noauth;

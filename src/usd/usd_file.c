@@ -64,8 +64,8 @@ typedef off_t           osi_lloff_t;
 static int usd_FileRead(
   usd_handle_t usd,
   char *buf,
-  u_int nbytes,
-  u_int *xferdP)
+  afs_uint32 nbytes,
+  afs_uint32 *xferdP)
 {
     int fd = (int)(usd->handle);
     int got;
@@ -84,8 +84,8 @@ static int usd_FileRead(
 static int usd_FileWrite(
   usd_handle_t usd,
   char *buf,
-  u_int nbytes,
-  u_int *xferdP)
+  afs_uint32 nbytes,
+  afs_uint32 *xferdP)
 {
     int fd = (int)(usd->handle);
     int sent;

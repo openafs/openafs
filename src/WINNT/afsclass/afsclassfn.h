@@ -137,7 +137,7 @@ BOOL    AfsClass_GetRandomKey         (LPIDENT lpi, LPENCRYPTIONKEY pKey, ULONG 
  *
  */
 
-LPIDENT AfsClass_CreateService        (LPIDENT lpiServer, LPTSTR pszService, LPTSTR pszCommand, LPTSTR pszParams, LPTSTR pszNotifier, SERVICETYPE type, SYSTEMTIME *pstIfCron, ULONG *pStatus = NULL);
+LPIDENT AfsClass_CreateService        (LPIDENT lpiServer, LPTSTR pszService, LPTSTR pszCommand, LPTSTR pszParams, LPTSTR pszNotifier, AFSSERVICETYPE type, SYSTEMTIME *pstIfCron, ULONG *pStatus = NULL);
 BOOL    AfsClass_DeleteService        (LPIDENT lpiService, ULONG *pStatus = NULL);
 
 BOOL    AfsClass_StartService         (LPIDENT lpiStart, BOOL fTemporary, ULONG *pStatus = NULL);

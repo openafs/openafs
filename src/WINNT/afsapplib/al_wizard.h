@@ -10,6 +10,8 @@
 #ifndef AL_WIZARD_H
 #define AL_WIZARD_H
 
+#include <windows.h>
+#include <prsht.h>
 #include <WINNT/TaLocale.h>
 #include <WINNT/subclass.h>
 

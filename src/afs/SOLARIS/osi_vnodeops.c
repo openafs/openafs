@@ -379,7 +379,11 @@ retry:
 	 * As of 4/98, that shouldn't be possible, but we'll be defensive here
 	 * in case someone tries to relax all the serialization of read and write
 	 * operations with harmless things like stat. */
+#if    defined(AFS_SUN58_ENV)
+        page = page_create_va(vp, toffset, PAGESIZE, PG_WAIT|PG_EXCL, seg, addr);
+#else
 	page = page_create_va(vp, toffset, PAGESIZE, PG_WAIT|PG_EXCL, seg->s_as, addr);
+#endif
 #else
 	page = page_create(vp, toffset, PAGESIZE, PG_WAIT);
 #endif
@@ -537,7 +541,12 @@ int afs_putpage(vp, off, len, flags, cred)
     struct vcache *avc;
     struct page *pages;
     afs_int32 code = 0;
-    afs_int32 tlen, endPos, NPages=0;
+#if    defined(AFS_SUN58_ENV)
+    size_t tlen;
+#else
+    afs_int32 tlen;
+#endif
+    afs_int32 endPos, NPages=0;
 #if	defined(AFS_SUN56_ENV)
     u_offset_t toff = off;
 #else
@@ -615,7 +624,12 @@ int afs_putapage(struct vnode *vp, struct page *pages,
 #else
 		 u_int *offp,
 #endif
-		 u_int *lenp, int flags, struct AFS_UCRED *credp)
+#if    defined(AFS_SUN58_ENV)
+                 size_t *lenp,
+#else
+                 u_int *lenp,
+#endif
+                 int flags, struct AFS_UCRED *credp)
 {
     struct buf *tbuf;
     struct vcache *avc = (struct vcache *)vp;

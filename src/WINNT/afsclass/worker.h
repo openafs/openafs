@@ -470,7 +470,7 @@ typedef union // WORKERPACKET
       struct {
          PVOID hServer;	// [in] token from BosServerOpen()
          LPTSTR pszService;	// [in] name of new service
-         SERVICETYPE type;	// [in] service type (stCRON, stFS, etc)
+         AFSSERVICETYPE type;	// [in] service type (stCRON, stFS, etc)
          LPTSTR pszCommand;	// [in] full command-line to execute
          LPTSTR pszTimeCron;	// [in] date/time (CRON only)
          LPTSTR pszNotifier; 	// [in] command executed on exit

@@ -201,7 +201,8 @@ struct ViceIoctl *data;
 {
     struct rx_connection *conn;
     clientcred creds;
-    afs_int32 errorcode, groups[NGROUPS_MAX], errornumber, ins= data->in_size;
+    afs_int32 errorcode, errornumber, ins= data->in_size;
+    afs_uint32 groups[NGROUPS_MAX];
     rmtbulk InData, OutData;
     char pathname[256], *pathp = pathname, *inbuffer;
 #if 0/*ndef HAVE_GETCWD*/ /* XXX enable when autoconf happens */

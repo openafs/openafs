@@ -17,6 +17,7 @@
 #if defined(AFS_GLOBAL_SUNLOCK)
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 #endif
+
 void afs_osi_Wakeup(char *event);
 void afs_osi_Sleep(char *event);
 

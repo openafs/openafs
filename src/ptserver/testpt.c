@@ -837,7 +837,7 @@ static char tmp_conf_file[128] = "";
 static char tmp_cell_file[128] = "";
 static char tmp_noauth_file[128] = "";
 
-static afs_int32 MyAfterProc (as, arock)
+static int MyAfterProc (as, arock)
   struct cmd_syndesc *as;
   char *arock;
 {   afs_int32  code;
@@ -848,7 +848,7 @@ static afs_int32 MyAfterProc (as, arock)
     return 0;
 }
 
-static afs_int32 MyBeforeProc (as, arock)
+static int MyBeforeProc (as, arock)
   struct cmd_syndesc *as;
   char *arock;
 {   afs_int32  code;

@@ -97,6 +97,7 @@ static unsigned_dec();
 static def_package();
 static def_prefix();
 static def_startingopcode();
+static def_statindex();
 static def_split();
 static customize_struct();
 static def_special();

@@ -188,6 +188,13 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_INT32, avc->m.Length);
 
+#if defined(AFS_SUN5_ENV)
+    if (flags & ATTR_HINT) {
+       code = afs_CopyOutAttrs(avc, attrs);
+       return code;
+    }
+#endif
+
 #if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
     afs_BozonLock(&avc->pvnLock, avc);
 #endif

@@ -176,7 +176,7 @@ PrintEntry(index, entry)
   printf("   Key Version = %d\n", entry->key_version);
 
   printf("   Key = ");
-  ka_PrintBytes (&entry->key, sizeof(entry->key));
+  ka_PrintBytes ((char *)&entry->key, sizeof(entry->key));
   printf("\n");
 
   /* What about asServer structs and such and misc_ath_bytes */
@@ -229,7 +229,8 @@ RebuildEntry(entryp)
 
   fprintf(out, "create    -name %s", EntryName(entryp));
 
-  ka_ConvertBytes (key, sizeof(key), &entryp->key, sizeof(entryp->key));
+  ka_ConvertBytes (key, sizeof(key), (char *)&entryp->key, 
+		   sizeof(entryp->key));
   fprintf(out, " -initial_password foo\n", key);
 
   strcpy(flags,"");

@@ -93,6 +93,8 @@ char **copyblk(register char **);
 static char *strend(register char *);
 int gethdir(char *);
 
+static addpath();
+static rscan();
 
 #ifdef notdef
 static addpath(char);

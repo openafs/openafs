@@ -50,7 +50,11 @@
 #ifdef AFS_SPARC64_LINUX20_ENV
 #include "conf-sparc64-linux.h"
 #else
+#ifdef AFS_S390_LINUX20_ENV
+#include "conf-s390-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */
 #endif /* AFS_SPARC_LINUX20_ENV */
 #endif

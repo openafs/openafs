@@ -48,10 +48,10 @@ afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
 	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
 
 ../rsh/rcmd.o: ../rsh/rcmd.c
-	(cd ../rsh ; make rcmd.o )
+	(cd ../rsh ; $(MAKE) rcmd.o )
 
 ../rsh/herror.o: ../rsh/herror.c
-	(cd ../rsh ; make herror.o )
+	(cd ../rsh ; $(MAKE) herror.o )
 
 sgi_auth.o: sgi_auth.c
 	${CC} ${CFLAGS} -c sgi_auth.c

@@ -61,6 +61,7 @@ static char sccsid[] = "@(#)ftpd.c	5.27.1.1	(Berkeley) 3/2/89";
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
 #if defined(AIX)
 #include <sys/syslog.h>

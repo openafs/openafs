@@ -42,6 +42,8 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
     if (!vfsp 
 #if !defined(AFS_SUN58_ENV)
 	&& !(vfsp = vfs_devsearch(dev))
+#else
+        && !(vfsp = vfs_dev2vfsp(dev))
 #endif
 	) {
 	return (ENODEV);
