@@ -73,7 +73,7 @@ CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) \
         -mdisable-fpregs -ffunction-sections -march=1.1 -mschedule=7100
 DEFINES = -D__KERNEL__  -D__linux__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ia64_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) -fno-strict-aliasing -pipe \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) -fno-strict-aliasing -fno-common -pipe \
 	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>

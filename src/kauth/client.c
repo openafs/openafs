@@ -44,6 +44,10 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#ifdef HAVE_UNISTD_H
+#define __USE_XOPEN
+#include <unistd.h>
+#endif
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
