@@ -43,7 +43,7 @@ extern int afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !defined(AFS_PPC64_LINUX26_ENV) && !defined(AFS_AMD64_LINUX26_ENV) && !defined(AFS_IA64_LINUX26_ENV))
+#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !defined(AFS_PPC64_LINUX26_ENV) && !defined(AFS_AMD64_LINUX26_ENV) && !defined(AFS_IA64_LINUX26_ENV) && !defined(AFS_S390X_LINUX26_ENV))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -562,19 +562,13 @@ struct SimpleLocks {
 #define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
 #define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
-#define DLOCK()      spin_lock(&dcache_lock)
-#define DUNLOCK()    spin_unlock(&dcache_lock)
-#define DGET(d)      dget_locked(d)
-#define DCOUNT(d)    atomic_read(&(d)->d_count)
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;
-#define DLOCK()
-#define DUNLOCK()
-#define DGET(d)      dget(d)
-#define DCOUNT(d)    ((d)->d_count)
+#define d_unhash(d) list_empty(&(d)->d_hash)
+#define dget_locked(d) dget(d)
 #endif
 
 #define	AFS_MAXDV   0x7fffffff	/* largest dataversion number */
@@ -702,7 +696,6 @@ struct vcache {
 	struct dcache *dchint;
     } h1;
 #ifdef AFS_LINUX22_ENV
-    u_short flushcnt;		/* Number of flushes which haven't released yet. */
     u_short mapcnt;		/* Number of mappings of this file. */
 #endif
 #if defined(AFS_SGI_ENV)
@@ -1195,7 +1188,8 @@ struct afs_fakestat_state {
 extern int afs_fakestat_enable;
 
 struct buffer {
-    struct dcache *fid;
+    afs_int32 fid;		/* is adc->index, the cache file number */
+    afs_inode_t inode;		/* is adc->f.inode, the inode number of the cache file */
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;

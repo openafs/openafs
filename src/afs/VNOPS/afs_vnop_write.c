@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.2 2004/12/07 06:12:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.3 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -714,9 +714,7 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
     return code;
 }
 
-
-
-#if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV) && !defined (AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#ifdef AFS_OSF_ENV
 #ifdef AFS_DUX50_ENV
 #define vno_close(X) vn_close((X), 0, NOCRED)
 #elif defined(AFS_DUX40_ENV)
@@ -770,12 +768,8 @@ afs_closex(register struct file *afd)
 	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
 	    code = vno_close(afd);
 	    if (flags)
-#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
 			    1 /*onlymine */ );
-#else
-		HandleFlock(tvc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
-#endif
 #ifdef	AFS_DEC_ENV
 	    grele((struct gnode *)tvc);
 #else
@@ -993,27 +987,17 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 
 int
 #ifdef	AFS_OSF_ENV
-afs_fsync(avc, fflags, acred, waitfor)
-     int fflags;
-     int waitfor;
+afs_fsync(OSI_VC_DECL(avc), int fflags, struct AFS_UCRED *acred, int waitfor)
 #else				/* AFS_OSF_ENV */
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
-afs_fsync(OSI_VC_ARG(avc), flag, acred
+afs_fsync(OSI_VC_DECL(avc), int flag, struct AFS_UCRED *acred
 #ifdef AFS_SGI65_ENV
-	  , start, stop
-#endif
+	  , off_t start, off_t stop
+#endif /* AFS_SGI65_ENV */
     )
-#else
-afs_fsync(avc, acred)
-#endif
-#endif
-OSI_VC_DECL(avc);
-     struct AFS_UCRED *acred;
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
-     int flag;
-#ifdef AFS_SGI65_ENV
-     off_t start, stop;
-#endif
+#else /* !OSF && !SUN53 && !SGI */
+afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
+#endif 
 #endif
 {
     register afs_int32 code;

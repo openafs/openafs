@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.4 2004/12/07 06:12:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.5 2005/02/21 01:15:21 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -60,8 +60,8 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     do {
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
-	    RX_AFS_GUNLOCK();
 	  retry:
+	    RX_AFS_GUNLOCK();
 	    tcall = rx_NewCall(tc->id);
 	    RX_AFS_GLOCK();
 	    /* Set the client mod time since we always want the file
@@ -104,17 +104,16 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 #endif /* AFS_64BIT_CLIENT */
 	    if (code == 0) {
 		code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
-#ifdef AFS_64BIT_CLIENT
-		if (code == RXGEN_OPCODE) {
-		    afs_serverSetNo64Bit(tc);
-		    code = rx_EndCall(tcall, code);
-		    goto retry;
-		}
-#endif /* AFS_64BIT_CLIENT */
 	    }
 	    code = rx_EndCall(tcall, code);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
+#ifdef AFS_64BIT_CLIENT
+	    if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
+		afs_serverSetNo64Bit(tc);
+		goto retry;
+	    }
+#endif /* AFS_64BIT_CLIENT */
 	} else
 	    code = -1;
     } while (afs_Analyze
@@ -508,14 +507,8 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 						   shouldwake, &lp1, &lp2);
 #endif /* AFS_NOSTATS */
 			    afs_CFileClose(tfile);
-#ifdef AFS_64BIT_CLIENT
-			    if (code == RXGEN_OPCODE) {
-				afs_serverSetNo64Bit(tc);
-				goto restart;
-			    }
-#endif /* AFS_64BIT_CLIENT */
 			    if ((tdc->f.chunkBytes < afs_OtherCSize)
-				&& (i < (nchunks - 1))) {
+				&& (i < (nchunks - 1)) && code == 0) {
 				int bsent, tlen, sbytes =
 				    afs_OtherCSize - tdc->f.chunkBytes;
 				char *tbuffer =
@@ -567,6 +560,12 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    if (code2)
 				code = code2;
 			}
+#ifdef AFS_64BIT_CLIENT
+			if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
+			    afs_serverSetNo64Bit(tc);
+			    goto restart;
+			}
+#endif /* AFS_64BIT_CLIENT */
 		    } while (afs_Analyze
 			     (tc, code, &avc->fid, areq,
 			      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,

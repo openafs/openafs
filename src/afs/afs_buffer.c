@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.2 2004/11/09 17:14:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.3 2005/01/31 04:18:41 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -63,7 +63,7 @@ RCSID
 /* page hash table size - this is pretty intertwined with pHash */
 #define PHSIZE (PHPAGEMASK + PHFIDMASK + 1)
 /* the pHash macro */
-#define pHash(fid,page) ((((afs_int32)((fid)->f.inode)) & PHFIDMASK) \
+#define pHash(fid,page) ((((afs_int32)(fid)) & PHFIDMASK) \
 			 | (page & PHPAGEMASK))
 
 #ifdef	dirty
@@ -88,7 +88,7 @@ static int nbuffers;
 static afs_int32 timecounter;
 
 /* Prototypes for static routines */
-static struct buffer *afs_newslot(struct dcache * afid, afs_int32 apage,
+static struct buffer *afs_newslot(struct dcache *adc, afs_int32 apage,
 				  register struct buffer *lp);
 
 static int dinit_flag = 0;
@@ -130,7 +130,8 @@ DInit(int abuffers)
 #endif
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
-	dirp_Zap(tb->fid);
+	tb->fid = 0;
+	tb->inode = 0;
 	tb->accesstime = 0;
 	tb->lockers = 0;
 #if AFS_USEBUFFERS
@@ -150,7 +151,7 @@ DInit(int abuffers)
 }
 
 void *
-DRead(register struct dcache * fid, register int page)
+DRead(register struct dcache *adc, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
@@ -160,7 +161,7 @@ DRead(register struct dcache * fid, register int page)
     AFS_STATCNT(DRead);
     MObtainWriteLock(&afs_bufferLock, 256);
 
-#define bufmatch(tb) (tb->page == page && dirp_Eq(tb->fid, fid))
+#define bufmatch(tb) (tb->page == page && tb->fid == adc->index)
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
     /* this apparently-complicated-looking code is simply an example of
@@ -169,7 +170,7 @@ DRead(register struct dcache * fid, register int page)
      * of larger code size.  This could be simplified by better use of
      * macros. 
      */
-    if ((tb = phTable[pHash(fid, page)])) {
+    if ((tb = phTable[pHash(adc->index, page)])) {
 	if (bufmatch(tb)) {
 	    MObtainWriteLock(&tb->lock, 257);
 	    ReleaseWriteLock(&afs_bufferLock);
@@ -180,7 +181,7 @@ DRead(register struct dcache * fid, register int page)
 	    return tb->data;
 	} else {
 	    register struct buffer **bufhead;
-	    bufhead = &(phTable[pHash(fid, page)]);
+	    bufhead = &(phTable[pHash(adc->index, page)]);
 	    while ((tb2 = tb->hashNext)) {
 		if (bufmatch(tb2)) {
 		    buf_Front(bufhead, tb, tb2);
@@ -216,7 +217,7 @@ DRead(register struct dcache * fid, register int page)
      * is at least the oldest buffer on one particular hash chain, so it's 
      * a pretty good place to start looking for the truly oldest buffer.
      */
-    tb = afs_newslot(fid, page, (tb ? tb : tb2));
+    tb = afs_newslot(adc, page, (tb ? tb : tb2));
     if (!tb) {
 	MReleaseWriteLock(&afs_bufferLock);
 	return NULL;
@@ -224,19 +225,21 @@ DRead(register struct dcache * fid, register int page)
     MObtainWriteLock(&tb->lock, 260);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
-    if (page * AFS_BUFFER_PAGESIZE >= fid->f.chunkBytes) {
-	dirp_Zap(tb->fid);
+    if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
+	tb->fid = 0;
+	tb->inode = 0;
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
     }
-    tfile = afs_CFileOpen(fid->f.inode);
+    tfile = afs_CFileOpen(adc->f.inode);
     code =
 	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
 		      AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
     if (code < AFS_BUFFER_PAGESIZE) {
-	dirp_Zap(tb->fid);
+	tb->fid = 0;
+	tb->inode = 0;
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
@@ -273,7 +276,7 @@ FixupBucket(register struct buffer *ap)
 
 /* lp is pointer to a fairly-old buffer */
 static struct buffer *
-afs_newslot(struct dcache * afid, afs_int32 apage, register struct buffer *lp)
+afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -340,7 +343,8 @@ afs_newslot(struct dcache * afid, afs_int32 apage, register struct buffer *lp)
     }
 
     if (lp->dirty) {
-	tfile = afs_CFileOpen(lp->fid->f.inode);
+	/* see DFlush for rationale for not getting and locking the dcache */
+	tfile = afs_CFileOpen(lp->inode);
 	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
 		       AFS_BUFFER_PAGESIZE);
 	lp->dirty = 0;
@@ -349,7 +353,8 @@ afs_newslot(struct dcache * afid, afs_int32 apage, register struct buffer *lp)
     }
 
     /* Now fill in the header. */
-    dirp_Cpy(lp->fid, afid);	/* set this */
+    lp->fid = adc->index;
+    lp->inode = adc->f.inode;
     lp->page = apage;
     lp->accesstime = timecounter++;
     FixupBucket(lp);		/* move to the right hash bucket */
@@ -432,7 +437,7 @@ DVOffset(register void *ap)
  * method of DRead...
  */
 void
-DZap(struct dcache * fid)
+DZap(struct dcache *adc)
 {
     register int i;
     /* Destroy all buffers pertaining to a particular fid. */
@@ -442,10 +447,11 @@ DZap(struct dcache * fid)
     MObtainReadLock(&afs_bufferLock);
 
     for (i = 0; i <= PHPAGEMASK; i++)
-	for (tb = phTable[pHash(fid, i)]; tb; tb = tb->hashNext)
-	    if (dirp_Eq(tb->fid, fid)) {
+	for (tb = phTable[pHash(adc->index, i)]; tb; tb = tb->hashNext)
+	    if (tb->fid == adc->index) {
 		MObtainWriteLock(&tb->lock, 262);
-		dirp_Zap(tb->fid);
+		tb->fid = 0;
+		tb->inode = 0;
 		tb->dirty = 0;
 		MReleaseWriteLock(&tb->lock);
 	    }
@@ -469,7 +475,18 @@ DFlush(void)
 	    tb->lockers++;
 	    MReleaseReadLock(&afs_bufferLock);
 	    if (tb->dirty) {
-		tfile = afs_CFileOpen(tb->fid->f.inode);
+		/* it seems safe to do this I/O without having the dcache
+		 * locked, since the only things that will update the data in
+		 * a directory are the buffer package, which holds the relevant
+		 * tb->lock while doing the write, or afs_GetDCache, which 
+		 * DZap's the directory while holding the dcache lock.
+		 * It is not possible to lock the dcache or even call
+		 * afs_GetDSlot to map the index to the dcache since the dir
+		 * package's caller has some dcache object locked already (so
+		 * we cannot lock afs_xdcache). In addition, we cannot obtain
+		 * a dcache lock while holding the tb->lock of the same file
+		 * since that can deadlock with DRead/DNew */
+		tfile = afs_CFileOpen(tb->inode);
 		afs_CFileWrite(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			       tb->data, AFS_BUFFER_PAGESIZE);
 		tb->dirty = 0;	/* Clear the dirty flag */
@@ -484,20 +501,24 @@ DFlush(void)
 }
 
 void *
-DNew(register struct dcache * fid, register int page)
+DNew(register struct dcache *adc, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;
     AFS_STATCNT(DNew);
     MObtainWriteLock(&afs_bufferLock, 264);
-    if ((tb = afs_newslot(fid, page, NULL)) == 0) {
+    if ((tb = afs_newslot(adc, page, NULL)) == 0) {
 	MReleaseWriteLock(&afs_bufferLock);
 	return 0;
     }
     /* extend the chunk, if needed */
-    if ((page + 1) * AFS_BUFFER_PAGESIZE > fid->f.chunkBytes) {
-        afs_AdjustSize(fid, (page + 1) * AFS_BUFFER_PAGESIZE);
-        afs_WriteDCache(fid, 1);
+    /* Do it now, not in DFlush or afs_newslot when the data is written out,
+     * since now our caller has adc->lock writelocked, and we can't acquire
+     * that lock (or even map from a fid to a dcache) in afs_newslot or
+     * DFlush due to lock hierarchy issues */
+    if ((page + 1) * AFS_BUFFER_PAGESIZE > adc->f.chunkBytes) {
+	afs_AdjustSize(adc, (page + 1) * AFS_BUFFER_PAGESIZE);
+	afs_WriteDCache(adc, 1);
     }
     MObtainWriteLock(&tb->lock, 265);
     MReleaseWriteLock(&afs_bufferLock);

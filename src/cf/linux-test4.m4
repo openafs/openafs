@@ -188,23 +188,6 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
-AC_MSG_CHECKING(for exported tasklist_lock)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_tasklist_lock
-#error tasklist_lock not exported
-#endif],
-ac_cv_linux_exports_tasklist_lock=yes,
-ac_cv_linux_exports_tasklist_lock=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
-CPPFLAGS="$save_CPPFLAGS"])
-
-
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
@@ -301,6 +284,22 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
+AC_MSG_CHECKING(for i_sb_list in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_sb_list, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_sb_list);], 
+ac_cv_linux_fs_struct_inode_has_i_sb_list=yes,
+ac_cv_linux_fs_struct_inode_has_i_sb_list=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_sb_list)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE],[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
@@ -391,4 +390,49 @@ printf("%d\n", _tsk.sighand);],
 ac_cv_linux_sched_struct_task_struct_has_sighand=yes,
 ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM], [
+AC_MSG_CHECKING(for rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.rlim);],
+ac_cv_linux_sched_struct_task_struct_has_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
+AC_MSG_CHECKING(for signal->rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_signal_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.signal->rlim);],
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_signal_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE], [
+AC_MSG_CHECKING(for exit_state in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_exit_state,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.exit_state);],
+ac_cv_linux_sched_struct_task_struct_has_exit_state=yes,
+ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)
 CPPFLAGS="$save_CPPFLAGS"])

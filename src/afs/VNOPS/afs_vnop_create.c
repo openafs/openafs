@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.3 2004/11/09 17:15:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.4 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -30,10 +30,6 @@ RCSID
  * I think we can get away without it, but I'm not sure.  Note that
  * afs_setattr is called in here for truncation.
  */
-#ifdef	AFS_OSF_ENV
-int
-afs_create(struct nameidata *ndp, struct vattr *attrs)
-#else /* AFS_OSF_ENV */
 #ifdef AFS_SGI64_ENV
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags,
@@ -44,17 +40,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	   enum vcexcl aexcl, int amode, struct vcache **avcp,
 	   struct AFS_UCRED *acred)
 #endif				/* AFS_SGI64_ENV */
-#endif				/* AFS_OSF_ENV */
 {
-#ifdef AFS_OSF_ENV
-    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
-    char *aname = ndp->ni_dent.d_name;
-    enum vcexcl aexcl = NONEXCL;	/* XXX - create called properly */
-    int amode = 0;		/* XXX - checked in higher level */
-    struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
-    struct ucred *acred = ndp->ni_cred;
-#endif
-
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
@@ -311,43 +297,33 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
 	      SHARED_LOCK, NULL));
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
-    if (code == EEXIST && aexcl == NONEXCL) {
-	/* This lookup was handled in the common vn_open code in the
-	 * vnode layer */
-	if (tdc) {
-	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	}
-	ReleaseWriteLock(&adp->lock);
-	goto done;
-    }
-#else /* AFS_OSF_ENV */
+    if (code == EEXIST &&
 #ifdef AFS_SGI64_ENV
-    if (code == EEXIST && !(flags & VEXCL)) {
+    !(flags & VEXCL)
 #else /* AFS_SGI64_ENV */
-    if (code == EEXIST && aexcl == NONEXCL) {
-#endif /* AFS_SGI64_ENV */
+    aexcl == NONEXCL
+#endif
+    ) {
 	/* if we get an EEXIST in nonexcl mode, just do a lookup */
 	if (tdc) {
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	}
 	ReleaseWriteLock(&adp->lock);
+#if !(defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV))
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
-	code =
-	    afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp, NULL,
-		       0, NULL, acred);
+	code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp, 
+			  NULL, 0, NULL, acred);
 #else
 	code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
 	code = afs_lookup(adp, aname, avcp, acred);
 #endif /* SUN5 || SGI */
+#endif /* !(AFS_OSF_ENV || AFS_DARWIN_ENV) */
 	goto done;
     }
-#endif /* AFS_OSF_ENV */
     if (code) {
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 488);
@@ -475,10 +451,6 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     code = afs_CheckCode(code, &treq, 20);
 
   done2:
-#ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp);
-#endif /* AFS_OSF_ENV */
-
     return code;
 }
 

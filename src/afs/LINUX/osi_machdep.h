@@ -47,6 +47,14 @@
 #define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
 #endif
 
+#if defined (STRUCT_TASK_STRUCT_HAS_RLIM)
+#define TASK_STRUCT_RLIM rlim
+#elif defined (STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM)
+#define TASK_STRUCT_RLIM signal->rlim
+#else
+#error Not sure what to do about rlim (should be in the Linux task struct somewhere....)
+#endif
+
 
 #define afs_hz HZ
 #include "h/sched.h"

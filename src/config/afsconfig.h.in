@@ -313,9 +313,6 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
-/* Define to the version of this package. */
-#undef PACKAGE_VERSION
-
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
 
@@ -343,6 +340,9 @@
 /* define if you struct inode has i_devices */
 #undef STRUCT_INODE_HAS_I_DEVICES
 
+/* define if you struct inode has i_sb_list */
+#undef STRUCT_INODE_HAS_I_SB_LIST
+
 /* define if your struct inode has data_buffers */
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 
@@ -369,6 +369,33 @@
 
 /* define if your struct task_struct has sigmask_lock */
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+
+/* define if your struct task_struct has rlim */
+#undef STRUCT_TASK_STRUCT_HAS_RLIM
+
+/* define if your struct task_struct has signal->rlim */
+#undef STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
+
+/* define if your struct task_struct has exit_state */
+#undef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+
+/* define if you have a struct buf */
+#undef HAVE_STRUCT_BUF
+
+/* define if you have a struct buf */
+#undef HAVE_STRUCT_BUF
+
+/* define if you struct sockaddr sa_len */
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
+
+/* define if you have socket */
+#undef HAVE_SOCKET
+
+/* define if you have connect */
+#undef HAVE_CONNECT
+
+/* define if you have gethostbyname */
+#undef HAVE_GETHOSTBYNAME
 
 /* define if you want to have support for nested pts groups */
 #undef SUPERGROUPS

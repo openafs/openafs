@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.1 2004/10/18 07:11:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.2 2005/01/31 04:14:36 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -155,23 +155,24 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
 #if defined(AFS_LINUX26_ENV)
     struct group_info *group_info;
     gid_t g0, g1;
+    struct group_info *tmp;
+    int i;
+    int need_space = 0;
 
     AFS_STATCNT(setpag);
 
     group_info = afs_getgroups(*cr);
     if (group_info->ngroups < 2
 	||  afs_get_pag_from_groups(GROUP_AT(group_info, 0),
-				    GROUP_AT(group_info, 1)) == NOPAG) {
+				    GROUP_AT(group_info, 1)) == NOPAG) 
 	/* We will have to make sure group_info is big enough for pag */
-	struct group_info *tmp;
-	int i;
-	
-	tmp = groups_alloc(group_info->ngroups + 2);
-	for (i = 0; i < group_info->ngroups; ++i)
-		GROUP_AT(tmp, i + 2) = GROUP_AT(group_info, i);
-	put_group_info(group_info);
-	group_info = tmp;
-    }
+      need_space = 2;
+
+    tmp = groups_alloc(group_info->ngroups + need_space);
+    
+    for (i = 0; i < group_info->ngroups; ++i)
+      GROUP_AT(tmp, i + need_space) = GROUP_AT(group_info, i);
+    group_info = tmp;
 
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &g0, &g1);

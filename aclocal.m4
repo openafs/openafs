@@ -329,9 +329,17 @@ else
 			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="ppc_nbsd16"
 			;;
-		i?86-*-netbsd*2.99*)
+		i?86-*-netbsd*2.1*)
 			AFS_PARAM_COMMON=param.nbsd21.h
 			AFS_SYSNAME="i386_nbsd21"
+			;;
+		i?86-*-netbsd*2.99*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="i386_nbsd30"
+			;;
+		i?86-*-netbsd*3.0*)
+			AFS_PARAM_COMMON=param.nbsd30.h
+			AFS_SYSNAME="i386_nbsd30"
 			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
@@ -559,19 +567,19 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 OPENAFS_GCC_SUPPORTS_PIPE
 		 AC_SUBST(LINUX_GCC_KOPTS)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
-	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
+	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
 		 LINUX_DEFINES_PREV_TASK
-		 LINUX_EXPORTS_TASKLIST_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 	  	 LINUX_WRITE_INODE_RETURN_TYPE
@@ -588,6 +596,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
@@ -638,9 +649,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
 		 fi
-		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if your linux kernel exports tasklist_lock])
-		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
                   AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
                  fi
@@ -686,6 +694,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
 		 fi
@@ -718,6 +729,15 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_rlim" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_RLIM, 1, [define if your struct task_struct has rlim])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_signal_rlim" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM, 1, [define if your struct task_struct has signal->rlim])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_exit_state" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_EXIT_STATE, 1, [define if your struct task_struct has exit_state])
 		 fi
                 :
 		fi
@@ -1747,23 +1767,6 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
-AC_MSG_CHECKING(for exported tasklist_lock)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_tasklist_lock
-#error tasklist_lock not exported
-#endif],
-ac_cv_linux_exports_tasklist_lock=yes,
-ac_cv_linux_exports_tasklist_lock=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
-CPPFLAGS="$save_CPPFLAGS"])
-
-
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
@@ -1860,6 +1863,22 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
+AC_MSG_CHECKING(for i_sb_list in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_sb_list, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_sb_list);], 
+ac_cv_linux_fs_struct_inode_has_i_sb_list=yes,
+ac_cv_linux_fs_struct_inode_has_i_sb_list=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_sb_list)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE],[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
@@ -1950,6 +1969,51 @@ printf("%d\n", _tsk.sighand);],
 ac_cv_linux_sched_struct_task_struct_has_sighand=yes,
 ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_RLIM], [
+AC_MSG_CHECKING(for rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.rlim);],
+ac_cv_linux_sched_struct_task_struct_has_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
+AC_MSG_CHECKING(for signal->rlim in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_signal_rlim,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.signal->rlim);],
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes,
+ac_cv_linux_sched_struct_task_struct_has_signal_rlim=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_signal_rlim)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE], [
+AC_MSG_CHECKING(for exit_state in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_exit_state,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.exit_state);],
+ac_cv_linux_sched_struct_task_struct_has_exit_state=yes,
+ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)
 CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE],[
@@ -2194,7 +2258,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
 AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
 [
 AC_TRY_COMPILE(
@@ -2204,7 +2268,7 @@ AC_TRY_COMPILE(
   ],
   ac_cv_linux_kernel_page_follow_link=yes,
   ac_cv_linux_kernel_page_follow_link=no)])
-AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_page)
+AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)
 CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN([AC_FUNC_RES_SEARCH], [
@@ -2428,7 +2492,7 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd2*)
+	*nbsd2*|*nbsd3*)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon
@@ -2647,21 +2711,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		;;
 
-	ppc_linux22)
-		INSTALL="install"
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
-	ppc_linux24)
+	ppc_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -2736,7 +2786,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	s390_linux24)
+	s390_linux24|s390_linux26)
 		CC="gcc"
 		CCOBJ="gcc"
 		LD="ld"
@@ -2753,7 +2803,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	s390x_linux24)
+	s390x_linux24|s390x_linux26)
 		CC="gcc"
 		CCOBJ="gcc"
 		LD="ld"
@@ -3019,7 +3069,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -3040,7 +3090,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -3061,7 +3111,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
@@ -3082,7 +3132,7 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-KPIC"
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		TXLIBS="-lcurses"
-		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS64='${XCFLAGS} -xarch=amd64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"

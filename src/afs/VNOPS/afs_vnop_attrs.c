@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.3 2004/12/07 06:12:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.4 2005/01/31 04:23:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -398,16 +398,14 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #if	defined(AFS_AIX_ENV)
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
-#else
-#if	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV)
     if (av->va_mask & ATTR_MODE) {
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
+#elif	defined(AFS_XBSD_ENV)
+    if (av->va_mode != (mode_t)VNOVAL) {
 #else
     if (av->va_mode != ((unsigned short)-1)) {
-#endif
-#endif
 #endif
 	mask |= AFS_SETMODE;
 	as->UnixModeBits = av->va_mode & 0xffff;
@@ -419,40 +417,36 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if defined(AFS_LINUX22_ENV)
     if (av->va_mask & ATTR_GID) {
-#else
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
-#else
-#if (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
+#elif (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
 #if	defined(AFS_HPUX102_ENV)
     if (av->va_gid != GID_NO_CHANGE) {
 #else
     if (av->va_gid != ((unsigned short)-1)) {
 #endif
+#elif	defined(AFS_XBSD_ENV)
+    if (av->va_gid != (gid_t)VNOVAL) {
 #else
     if (av->va_gid != -1) {
-#endif
-#endif /* AFS_SUN5_ENV */
 #endif /* AFS_LINUX22_ENV */
 	mask |= AFS_SETGROUP;
 	as->Group = av->va_gid;
     }
 #if defined(AFS_LINUX22_ENV)
     if (av->va_mask & ATTR_UID) {
-#else
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
-#else
-#if (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
+#elif (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
 #if	defined(AFS_HPUX102_ENV)
     if (av->va_uid != UID_NO_CHANGE) {
+#elif	defined(AFS_XBSD_ENV)
+    if (av->va_uid != (uid_t)VNOVAL) {
 #else
     if (av->va_uid != ((unsigned short)-1)) {
 #endif
 #else
     if (av->va_uid != -1) {
-#endif
-#endif /* AFS_SUN5_ENV */
 #endif /* AFS_LINUX22_ENV */
 	mask |= AFS_SETOWNER;
 	as->Owner = av->va_uid;
@@ -544,20 +538,14 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
      */
 #if	defined(AFS_LINUX22_ENV)
     if (attrs->va_mask & ATTR_SIZE) {
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#else
-#ifdef	AFS_OSF_ENV
+#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#else
-#ifdef	AFS_AIX41_ENV
+#elif	defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
 #else
     if (attrs->va_size != ~0) {
-#endif
-#endif
-#endif
 #endif
 	if (!afs_AccessOK(avc, PRSFS_WRITE, &treq, DONT_CHECK_MODE_BITS)) {
 	    code = EACCES;
@@ -582,16 +570,12 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #endif
 #if	defined(AFS_LINUX22_ENV)
     if (attrs->va_mask & ATTR_SIZE) {
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#else
-#if	defined(AFS_OSF_ENV)
+#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#else /* AFS_OSF_ENV */
+#else
     if (attrs->va_size != -1) {
-#endif
-#endif
 #endif
 	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock, 128);

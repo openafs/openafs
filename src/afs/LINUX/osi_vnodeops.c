@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.8 2004/12/17 14:43:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.12 2005/02/21 01:13:24 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -518,6 +518,9 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
     if (!code)
 	code = afs_VerifyVCache(vcp, &treq);
 
+    if (!code && (vcp->states & CRO) && 
+	(vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
+	code = EACCES;
 
     if (code)
 	code = -code;
@@ -587,29 +590,18 @@ afs_linux_open(struct inode *ip, struct file *fp)
     return -code;
 }
 
-/* afs_Close is called from release, since release is used to handle all
- * file closings. In addition afs_linux_flush is called from sys_close to
- * handle flushing the data back to the server. The kicker is that we could
- * ignore flush completely if only sys_close took it's return value from
- * fput. See afs_linux_flush for notes on interactions between release and
- * flush.
- */
 static int
 afs_linux_release(struct inode *ip, struct file *fp)
 {
-    int code = 0;
-    cred_t *credp = crref();
     struct vcache *vcp = ITOAFS(ip);
+    cred_t *credp = crref();
+    int code = 0;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
     AFS_GLOCK();
-    if (vcp->flushcnt) {
-	vcp->flushcnt--;	/* protected by AFS global lock. */
-    } else {
-	code = afs_close(vcp, fp->f_flags, credp);
-    }
+    code = afs_close(vcp, fp->f_flags, credp);
     AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
@@ -687,37 +679,34 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 }
 
 /* afs_linux_flush
- * flush is called from sys_close. We could ignore it, but sys_close return
- * code comes from flush, not release. We need to use release to keep
- * the vcache open count correct. Note that flush is called before release
- * (via fput) in sys_close. vcp->flushcnt is a bit of ugliness to avoid
- * races and also avoid calling afs_close twice when closing the file.
- * If we merely checked for opens > 0 in afs_linux_release, then if an
- * new open occurred when storing back the file, afs_linux_release would
- * incorrectly close the file and decrement the opens count. Calling afs_close
- * on the just flushed file is wasteful, since the background daemon will
- * execute the code that finally decides there is nothing to do.
+ * essentially the same as afs_fsync() but we need to get the return
+ * code for the sys_close() here, not afs_linux_release(), so call
+ * afs_StoreAllSegments() with AFS_LASTSTORE
  */
 int
 afs_linux_flush(struct file *fp)
 {
+    struct vrequest treq;
     struct vcache *vcp = ITOAFS(FILE_INODE(fp));
-    int code = 0;
-    cred_t *credp;
-
-    /* Only do this on the last close of the file pointer. */
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_read(&fp->f_count) > 1)
-#else
-    if (fp->f_count > 1)
-#endif
-	return 0;
-
-    credp = crref();
+    cred_t *credp = crref();
+    int code;
 
     AFS_GLOCK();
-    code = afs_close(vcp, fp->f_flags, credp);
-    vcp->flushcnt++;		/* protected by AFS global lock. */
+
+    code = afs_InitReq(&treq, credp);
+    if (code)
+	goto out;
+
+    ObtainSharedLock(&vcp->lock, 535);
+    if (vcp->execsOrWriters > 0) {
+	UpgradeSToWLock(&vcp->lock, 536);
+	code = afs_StoreAllSegments(vcp, &treq, AFS_SYNC | AFS_LASTSTORE);
+	ConvertWToSLock(&vcp->lock);
+    }
+    code = afs_CheckCode(code, &treq, 54);
+    ReleaseSharedLock(&vcp->lock);
+
+out:
     AFS_GUNLOCK();
 
     crfree(credp);
@@ -1047,7 +1036,6 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = jiffies;
 	d_instantiate(dp, ip);
     }
 
@@ -1118,7 +1106,6 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    ip->i_op = &afs_symlink_iops;
 #endif
     }
-    dp->d_time = jiffies;
     dp->d_op = &afs_dentry_operations;
     d_add(dp, AFSTOI(vcp));
 
@@ -1277,7 +1264,6 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = jiffies;
 	d_instantiate(dp, AFSTOI(tvcp));
     }
 
@@ -1331,8 +1317,10 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     cred_t *credp = crref();
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
+    struct dentry *rehash = NULL;
 
 #if defined(AFS_LINUX26_ENV)
+    /* Prevent any new references during rename operation. */
     lock_kernel();
 #endif
     /* Remove old and new entries from name hash. New one will change below.
@@ -1341,25 +1329,28 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
      * cases. Let another lookup put things right, if need be.
      */
 #if defined(AFS_LINUX26_ENV)
-    if (!d_unhashed(olddp))
-	d_drop(olddp);
-    if (!d_unhashed(newdp))
+    if (!d_unhashed(newdp)) {
 	d_drop(newdp);
+	rehash = newdp;
+    }
 #else
-    if (!list_empty(&olddp->d_hash))
-	d_drop(olddp);
-    if (!list_empty(&newdp->d_hash))
+    if (!list_empty(&newdp->d_hash)) {
 	d_drop(newdp);
+	rehash = newdp;
+    }
 #endif
+
+#if defined(AFS_LINUX24_ENV)
+    if (atomic_read(&olddp->d_count) > 1)
+	shrink_dcache_parent(olddp);
+#endif
+
     AFS_GLOCK();
     code = afs_rename(ITOAFS(oldip), oldname, ITOAFS(newip), newname, credp);
     AFS_GUNLOCK();
 
-    if (!code) {
-	/* update time so it doesn't expire immediately */
-	newdp->d_time = jiffies;
-	d_move(olddp, newdp);
-    }
+    if (rehash)
+	d_rehash(rehash);
 
 #if defined(AFS_LINUX26_ENV)
     unlock_kernel();

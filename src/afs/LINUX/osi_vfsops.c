@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.1 2004/12/07 06:12:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.2 2005/02/21 01:13:08 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -34,7 +34,7 @@ RCSID
 struct vcache *afs_globalVp = 0;
 struct vfs *afs_globalVFS = 0;
 #if defined(AFS_LINUX24_ENV)
-struct nameidata afs_cacheNd;
+struct vfsmount *afs_cacheMnt;
 #endif
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
@@ -336,7 +336,7 @@ afs_put_super(struct super_block *sbp)
     afs_globalVp = 0;
     afs_shutdown();
 #if defined(AFS_LINUX24_ENV)
-    path_release(&afs_cacheNd);
+    mntput(afs_cacheMnt);
 #endif
 
     osi_linux_verify_alloced_memory();

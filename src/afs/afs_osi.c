@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.1 2004/12/07 06:12:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.3 2005/01/31 04:25:32 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -850,30 +850,38 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_LINUX22_ENV)
+extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable()
 {
     struct task_struct *p;
-
-#ifdef EXPORTED_TASKLIST_LOCK
-    read_lock(&tasklist_lock);
-#endif
+    if (&tasklist_lock)
+       read_lock(&tasklist_lock);
 #ifdef DEFINED_FOR_EACH_PROCESS
     for_each_process(p) if (p->pid) {
+#ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+	if (p->exit_state)
+	    continue;
+#else
 	if (p->state & TASK_ZOMBIE)
 	    continue;
+#endif
 	afs_GCPAGs_perproc_func(p);
     }
 #else
     for_each_task(p) if (p->pid) {
+#ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+	if (p->exit_state)
+	    continue;
+#else
 	if (p->state & TASK_ZOMBIE)
 	    continue;
+#endif
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
-#ifdef EXPORTED_TASKLIST_LOCK
-    read_unlock(&tasklist_lock);
-#endif
+    if (&tasklist_lock)
+       read_unlock(&tasklist_lock);
 }
 #endif
 

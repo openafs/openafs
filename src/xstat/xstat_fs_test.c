@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_test.c,v 1.8 2003/07/15 23:17:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/xstat/xstat_fs_test.c,v 1.8.2.1 2005/01/31 04:14:51 shadow Exp $");
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <cmd.h>		/*Command line interpreter */
@@ -246,8 +246,10 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
     printf("\t%10d rx_nClientConns\n", a_ovP->rx_nClientConns);
     printf("\t%10d rx_nPeerStructs\n", a_ovP->rx_nPeerStructs);
     printf("\t%10d rx_nCallStructs\n", a_ovP->rx_nCallStructs);
-    printf("\t%10d rx_nFreeCallStructs\n\n", a_ovP->rx_nFreeCallStructs);
+    printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
+    printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
 
+    printf("\t%10d fs_nBusies\n\n", a_ovP->fs_nBusies);
     /*
      * Host module fields.
      */

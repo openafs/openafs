@@ -1,5 +1,5 @@
 /*
- * $Id: osi_sleep.c,v 1.7 2003/07/15 23:14:25 shadow Exp $
+ * $Id: osi_sleep.c,v 1.7.2.1 2005/01/31 04:18:25 shadow Exp $
  */
 
 /*
@@ -45,7 +45,7 @@ such damages.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_sleep.c,v 1.7 2003/07/15 23:14:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_sleep.c,v 1.7.2.1 2005/01/31 04:18:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -53,13 +53,6 @@ RCSID
 
 static char waitV;
 
-
-void
-afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
-{
-    AFS_STATCNT(osi_InitWaitHandle);
-    achandle->proc = NULL;
-}
 
 /* cancel osi_Wait */
 void

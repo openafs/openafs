@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.5 2004/12/07 06:12:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.6 2005/01/31 03:49:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1077,36 +1077,16 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 static int AFSDOBULK = 1;
 
 int
-#ifdef	AFS_OSF_ENV
-afs_lookup(adp, ndp)
-     struct vcache *adp;
-     struct nameidata *ndp;
-{
-    char aname[MAXNAMLEN + 1];	/* XXX */
-    struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
-    struct ucred *acred = ndp->ni_cred;
-    int wantparent = ndp->ni_nameiop & WANTPARENT;
-    int opflag = ndp->ni_nameiop & OPFLAG;
-#else				/* AFS_OSF_ENV */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_lookup(OSI_VC_ARG(adp), aname, avcp, pnp, flags, rdir, acred)
-     struct pathname *pnp;
-     int flags;
-     struct vnode *rdir;
+#ifdef AFS_OSF_ENV
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred, int opflag, int wantparent)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, struct AFS_UCRED *acred)
+#elif defined(UKERNEL)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred, int flags)
 #else
-#if defined(UKERNEL)
-afs_lookup(adp, aname, avcp, acred, flags)
-     int flags;
-#else
-afs_lookup(adp, aname, avcp, acred)
-#endif				/* UKERNEL */
-#endif				/* SUN5 || SGI */
-     OSI_VC_DECL(adp);
-     struct vcache **avcp;
-     char *aname;
-     struct AFS_UCRED *acred;
-{
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred)
 #endif
+{
     struct vrequest treq;
     char *tname = NULL;
     register struct vcache *tvc = 0;
@@ -1131,8 +1111,6 @@ afs_lookup(adp, aname, avcp, acred)
 
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = AFSTOV(adp);
-    memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
-    aname[ndp->ni_namelen] = '\0';
 #endif /* AFS_OSF_ENV */
 
 #if defined(AFS_DARWIN_ENV)

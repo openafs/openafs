@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16 2003/09/24 19:26:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.1 2005/01/31 04:14:08 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -2115,7 +2115,7 @@ icl_TailKernel(outFilep, logname, waitTime)
 afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
      long call, parm0, parm1, parm2, parm3, parm4, parm5, parm6;
 {
-    int code;
+    int code, rval;
 #ifdef AFS_LINUX20_ENV
 #if defined AFS_LINUX_64BIT_KERNEL
     long long eparm[4];
@@ -2133,9 +2133,13 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
 #endif
     /* Linux can only handle 5 arguments in the actual syscall. */
     if (call == AFSCALL_ICL) {
-	code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
+	rval = proc_afs_syscall(call, parm0, parm1, parm2, eparm, &code);
+	if (rval)
+	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
     } else {
-	code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3);
+	rval = proc_afs_syscall(call, parm0, parm1, parm2, parm3, &code);
+	if (rval)
+	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3);
     }
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
     /* on sparc this function returns none value, so do it myself */

@@ -154,6 +154,7 @@
 #define SYS_NAME_ID_s390x_linux2         1903
 #define SYS_NAME_ID_s390x_linux22        1904
 #define SYS_NAME_ID_s390x_linux24        1905
+#define SYS_NAME_ID_s390x_linux26        1906
 
 #define SYS_NAME_ID_alpha_linux_2       2000
 #define SYS_NAME_ID_alpha_linux_22      2001
@@ -198,6 +199,7 @@
 #define SYS_NAME_ID_sparc64_nbsd20	2523
 #define SYS_NAME_ID_macppc_nbsd20	2524
 #define SYS_NAME_ID_i386_nbsd21		2525
+#define SYS_NAME_ID_i386_nbsd30		2526
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
@@ -220,6 +222,8 @@
 #define SYS_NAME_ID_ppc64_linux22	2901
 #define SYS_NAME_ID_ppc64_linux24	2902
 #define SYS_NAME_ID_ppc64_linux26	2903
+
+#define SYS_NAME_ID_amd64_fbsd_53        3008
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

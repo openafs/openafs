@@ -184,15 +184,6 @@ typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
 /*
- * The following three routines provide the fid routines used by the buffer
- * and directory packages.
- */
-#define dirp_Zap(afid)    ((afid) = 0)
-#define dirp_Eq(afid, bfid) ((afid) == (bfid))
-#define dirp_Cpy(dfid,sfid) ((dfid) = (sfid))
-
-
-/*
  * osi_ThreadUnique() should yield a value that can be found in ps
  * output in order to draw correspondences between ICL traces and what
  * is going on in the system.  So if ps cannot show thread IDs it is

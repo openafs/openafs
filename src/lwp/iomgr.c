@@ -36,7 +36,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.13 2004/07/08 05:16:57 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.13.2.1 2005/02/21 01:13:50 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -536,10 +536,11 @@ static int IOMGR(void *dummy)
 		iomgr_timeout.tv_sec = 100000000;
 		iomgr_timeout.tv_usec = 0;
 	    }
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
 	    /* On NT, signals don't interrupt a select call. So this can potentially
 	     * lead to long wait times before a signal is honored. To avoid this we
 	     * dont do select() for longer than IOMGR_MAXWAITTIME (5 secs) */
+	    /* Whereas Linux seems to sometimes "lose" signals */
 	    if (iomgr_timeout.tv_sec > (IOMGR_MAXWAITTIME - 1)) {
 	      iomgr_timeout.tv_sec = IOMGR_MAXWAITTIME;
 	      iomgr_timeout.tv_usec = 0;
@@ -640,11 +641,12 @@ static int IOMGR(void *dummy)
 		/* Real timeout only if signal handler hasn't set
 		   iomgr_timeout to zero. */
 
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
 		/* On NT, real timeout only if above and if iomgr_timeout
 		 * interval is equal to timeout interval (i.e., not adjusted
 		 * to check for pseudo-signals).
 		 */
+		/* And also for Linux as above */
 		if (iomgr_timeout.tv_sec  != timeout.tv_sec ||
 		    iomgr_timeout.tv_usec != timeout.tv_usec) {
 		    /* signal check interval timed out; not real timeout */

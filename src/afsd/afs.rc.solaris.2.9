@@ -62,6 +62,9 @@ fi
 ## If sparcv9 then the location of the afs and nfs extensions differ
 
 case `/bin/isalist` in
+    *amd64* )
+              nfssrv=/kernel/misc/amd64/nfssrv
+              afs=/kernel/fs/amd64/afs ;;
     *sparcv9* )
               nfssrv=/kernel/misc/sparcv9/nfssrv
               afs=/kernel/fs/sparcv9/afs ;;

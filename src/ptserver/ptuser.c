@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.1 2004/10/18 07:12:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16.2.2 2005/01/31 03:58:39 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -29,6 +29,7 @@ RCSID
 #include "afs/cellconfig.h"
 #include "afs/afsutil.h"
 #include "afs/ptclient.h"
+#include "afs/ptuser.h"
 #include "afs/pterror.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
@@ -54,6 +55,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
 #endif /* defined(UKERNEL) */
 

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.4 2004/12/07 06:12:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.8 2005/02/21 01:15:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -195,7 +195,7 @@ static int (*(CpioctlSw[])) () = {
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
 int afs_nobody = NFS_NOBODY;
 
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV))
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV))
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -260,25 +260,31 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     }
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
+
+#elif defined(AFS_AMD64_LINUX26_ENV)
+    if (test_thread_flag(TIF_IA32))
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
+
+#elif defined(AFS_PPC64_LINUX26_ENV)
+    if (current->thread_info->flags & _TIF_32BIT)
 #elif defined(AFS_PPC64_LINUX20_ENV)
-#ifdef AFS_PPC64_LINUX26_ENV
-      if (current->thread_info->flags & _TIF_32BIT)
-#else /*Linux 2.6*/
-    if (current->thread.flags & PPC_FLAG_32BIT) 
-#endif
+    if (current->thread.flags & PPC_FLAG_32BIT)
+
+#elif defined(AFS_S390X_LINUX26_ENV)
+    if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
+
 #else
-#error Not done for this linux type
+#error pioctl32 not done for this linux
 #endif
     {
 	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
@@ -1119,62 +1125,64 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     if (inSize > MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
 	return E2BIG;
 
+    /* Note that we use osi_Alloc for large allocs and osi_AllocLargeSpace for small ones */
     if (inSize > AFS_LRALLOCSIZ) {
-        inData = osi_AllocLargeSpace(inSize+1);
+	inData = osi_Alloc(inSize + 1);
     } else {
-        inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     }
     if (!inData)
-        return ENOMEM;
+	return ENOMEM;
     if (inSize > 0) {
 	AFS_COPYIN(ablob->in, inData, inSize, code);
 	inData[inSize] = '\0';
     } else
 	code = 0;
     if (code) {
-    if (inSize > AFS_LRALLOCSIZ) {
-        osi_Free(inData, inSize+1);
-    } else {
-        osi_FreeLargeSpace(inData);
+	if (inSize > AFS_LRALLOCSIZ) {
+	    osi_Free(inData, inSize + 1);
+	} else {
+	    osi_FreeLargeSpace(inData);
+	}
+	afs_PutFakeStat(&fakestate);
+	return code;
     }
-    afs_PutFakeStat(&fakestate);
-    return code;
-    }
-    if (function == 8 && device == 'V') { /* PGetTokens */
-        outSizeMax = MAXPIOCTLTOKENLEN;
-        outData = osi_Alloc(outSizeMax);
+    if (function == 8 && device == 'V') {	/* PGetTokens */
+	outSizeMax = MAXPIOCTLTOKENLEN;
+	outData = osi_Alloc(outSizeMax);
     } else {
-        outSizeMax = AFS_LRALLOCSIZ;
-        outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	outSizeMax = AFS_LRALLOCSIZ;
+	outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     }
     if (!outData) {
-        if (inSize > AFS_LRALLOCSIZ) {
-            osi_Free(inData, inSize+1);
-        } else {
-            osi_FreeLargeSpace(inData);
-        }
-        return ENOMEM;
+	if (inSize > AFS_LRALLOCSIZ) {
+	    osi_Free(inData, inSize + 1);
+	} else {
+	    osi_FreeLargeSpace(inData);
+	}
+	afs_PutFakeStat(&fakestate);
+	return ENOMEM;
     }
     outSize = 0;
     code =
 	(*pioctlSw[function]) (avc, function, &treq, inData, outData, inSize,
 			       &outSize, acred);
     if (inSize > AFS_LRALLOCSIZ) {
-        osi_Free(inData, inSize+1);
+	osi_Free(inData, inSize + 1);
     } else {
-        osi_FreeLargeSpace(inData);
+	osi_FreeLargeSpace(inData);
     }
     if (code == 0 && ablob->out_size > 0) {
-        if (outSize > ablob->out_size) {
-            code = E2BIG; /* data wont fit in user buffer */
-        } else if (outSize) {
-            AFS_COPYOUT(outData, ablob->out, outSize, code);
-        }
+	if (outSize > ablob->out_size) {
+	    code = E2BIG;	/* data wont fit in user buffer */
+	} else if (outSize) {
+	    AFS_COPYOUT(outData, ablob->out, outSize, code);
+	}
     }
     if (outSizeMax > AFS_LRALLOCSIZ) {
-        osi_Free(outData, outSizeMax);
+	osi_Free(outData, outSizeMax);
     } else {
-        osi_FreeLargeSpace(outData);
+	osi_FreeLargeSpace(outData);
     }
     afs_PutFakeStat(&fakestate);
     return afs_CheckCode(code, &treq, 41);
@@ -2762,8 +2770,8 @@ DECL_PIOCTL(PSetSysName)
 		return error;
 	    }
 	} else {
-            foundname = num;
-            strcpy(outname, (*sysnamelist)[0]);
+	    foundname = num;
+	    strcpy(outname, (*sysnamelist)[0]);
 	}
 	afs_PutUser(au, READ_LOCK);
     } else {
@@ -3770,21 +3778,22 @@ DECL_PIOCTL(PCallBackAddr)
     struct unixuser *tu;
     struct srvAddr **addrs;
 
-    /*AFS_STATCNT(PCallBackAddr);*/
-    if ( !afs_resourceinit_flag )      /* afs deamons havn't started yet */
-	return EIO;          /* Inappropriate ioctl for device */
+    /*AFS_STATCNT(PCallBackAddr); */
+    if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
 
     if (!afs_osi_suser(acred))
 	return EACCES;
 
-    if ( ainSize < sizeof(afs_int32) )
+    if (ainSize < sizeof(afs_int32))
 	return EINVAL;
 
     memcpy(&addr, ain, sizeof(afs_int32));
 
     ObtainReadLock(&afs_xinterface);
-    for ( i=0; (unsigned short)i < afs_cb_interface.numberOfInterfaces; i++) {
-	if (afs_cb_interface.addr_in[i] == addr) break;
+    for (i = 0; (unsigned short)i < afs_cb_interface.numberOfInterfaces; i++) {
+	if (afs_cb_interface.addr_in[i] == addr)
+	    break;
     }
 
     ReleaseWriteLock(&afs_xinterface);
@@ -3792,65 +3801,65 @@ DECL_PIOCTL(PCallBackAddr)
     if (afs_cb_interface.addr_in[i] != addr)
 	return EINVAL;
 
-    ObtainReadLock(&afs_xserver);  /* Necessary? */
+    ObtainReadLock(&afs_xserver);	/* Necessary? */
     ObtainReadLock(&afs_xsrvAddr);
 
     srvAddrCount = 0;
-    for (i=0;i<NSERVERS;i++) {
-        for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-            srvAddrCount++;
-        }
+    for (i = 0; i < NSERVERS; i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	    srvAddrCount++;
+	}
     }
 
     addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
     j = 0;
-    for (i=0;i<NSERVERS;i++) {
-        for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
-            if (j >= srvAddrCount) break;
-            addrs[j++] = sa;
-        }
+    for (i = 0; i < NSERVERS; i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	    if (j >= srvAddrCount)
+		break;
+	    addrs[j++] = sa;
+	}
     }
 
     ReleaseReadLock(&afs_xsrvAddr);
     ReleaseReadLock(&afs_xserver);
 
-    for (i=0; i<j; i++) {
-        sa = addrs[i];
-        ts = sa->server;
-        if (!ts)
-            continue;
-
-        /* vlserver has no callback conn */
-        if (sa->sa_portal == AFS_VLPORT) {
-            continue;
-        }
-
-        if (!ts->cell) /* not really an active server, anyway, it must */
-	    continue;  /* have just been added by setsprefs */
-
-        /* get a connection, even if host is down; bumps conn ref count */
-        tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
-        tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
-			  1/*force*/, 1/*create*/, SHARED_LOCK);
-        afs_PutUser(tu, SHARED_LOCK);
-        if (!tc)
+    for (i = 0; i < j; i++) {
+	sa = addrs[i];
+	ts = sa->server;
+	if (!ts)
 	    continue;
 
-        if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(ts)) {
-            if (sa->sa_flags & SRVADDR_ISDOWN) {
-                rx_SetConnDeadTime(tc->id, 3);
-            }
+	/* vlserver has no callback conn */
+	if (sa->sa_portal == AFS_VLPORT) {
+	    continue;
+	}
 
+	if (!ts->cell)		/* not really an active server, anyway, it must */
+	    continue;		/* have just been added by setsprefs */
+
+	/* get a connection, even if host is down; bumps conn ref count */
+	tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
+	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
+			  1 /*force */ , 1 /*create */ , SHARED_LOCK);
+	afs_PutUser(tu, SHARED_LOCK);
+	if (!tc)
+	    continue;
+
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(ts)) {
+	    if (sa->sa_flags & SRVADDR_ISDOWN) {
+		rx_SetConnDeadTime(tc->id, 3);
+	    }
 #ifdef RX_ENABLE_LOCKS
-            AFS_GUNLOCK();
+	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
 	    code = RXAFS_CallBackRxConnAddr(tc->id, &addr);
 #ifdef RX_ENABLE_LOCKS
-            AFS_GLOCK();
+	    AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
 	}
-	afs_PutConn(tc, SHARED_LOCK);   /* done with it now */
-    } /* Outer loop over addrs */
+	afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
+    }				/* Outer loop over addrs */
 #endif /* UKERNEL */
     return 0;
 }
