@@ -33,7 +33,7 @@ process.o	: process.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
-	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_5?) \
+	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5?) \
 		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \
@@ -47,7 +47,7 @@ process.o	: process.s process.c
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
-	i386_obsd30 | i386_obsd31 | i386_obsd32 | i386_obsd33 ) \
+	i386_obsd31 | i386_obsd32 | i386_obsd33 ) \
 		cp ${srcdir}/process.i386.s process.S ; \
 		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
 		${AS} process.ss -o process.o ;  \
@@ -56,7 +56,7 @@ process.o	: process.s process.c
 		/usr/bin/cpp -P ${srcdir}/process.i386.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
-	ncrx86_*) \
+	ncrx86_* | sunx86_*) \
 		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
