@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.8 2002/01/22 19:47:59 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.9 2002/01/28 00:24:06 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -280,37 +280,49 @@ afs_gfs_FlushText(vp)
 
 #endif /* AFS_TEXT_ENV */
 
+/* mask signals in afsds */
+void afs_osi_MaskSignals(){
+#ifdef AFS_LINUX22_ENV
+    osi_linux_mask();
+#endif
+}
+    
+/* unmask signals in rxk listener */
+void afs_osi_UnmaskRxkSignals(){
+#ifdef AFS_LINUX22_ENV
+    osi_linux_unmask();
+#endif
+}
+    
+/* register rxk listener proc info */
+void afs_osi_RxkRegister(){
+#ifdef AFS_LINUX22_ENV
+    osi_linux_rxkreg();
+#endif
+}
+
 /* procedure for making our processes as invisible as we can */
 void afs_osi_Invisible() {
-#ifndef	AFS_AIX32_ENV
-    /* called once per "kernel" lwp to make it invisible */
+#ifdef AFS_LINUX22_ENV
+    afs_osi_MaskSignals();
+#endif 
 #ifdef AFS_DEC_ENV
     u.u_procp->p_type |= SSYS;
-#else
-#if	defined(AFS_SUN5_ENV)
+#endif 
+#if AFS_SUN5_ENV
     curproc->p_flag |= SSYS;
-#else
-#if defined(AFS_SGI_ENV)
-    vrelvm();
 #endif
-#ifdef	AFS_SUN_ENV
-    relvm(u.u_procp); 	/* release all the resources */
-#endif
-#if	defined(AFS_HPUX101_ENV)
+#if AFS_HPUX101_ENV
     set_system_proc(u.u_procp);
-#else
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
-#else
-#if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
-    u.u_procp->p_flag |= SSYS;
-#endif /* AFS_SGI64_ENV */
 #endif
-#endif
-#endif
-#endif
-#endif
+#if defined(AFS_SGI_ENV)
+    vrelvm();
+#endif /* AFS_SGI_ENV */
+
     AFS_STATCNT(osi_Invisible);
 }
 

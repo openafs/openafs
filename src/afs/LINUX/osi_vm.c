@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.6 2001/10/14 17:59:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.7 2002/01/28 00:24:18 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -89,7 +89,15 @@ void osi_VM_FSyncInval(struct vcache *avc)
  */
 void osi_VM_StoreAllSegments(struct vcache *avc)
 {
-
+#ifdef AFS_LINUX24_ENV
+    struct inode *ip = (struct inode *) avc;
+   
+    ReleaseWriteLock(&avc->lock);
+    AFS_GUNLOCK();
+    write_inode_now(ip, 1);
+    AFS_GLOCK();
+    ObtainWriteLock(&avc->lock, 121);
+#endif
 }
 
 /* Purge VM for a file when its callback is revoked.
