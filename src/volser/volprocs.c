@@ -75,6 +75,9 @@ extern int DoLogging;
 extern struct volser_trans *FindTrans(), *NewTrans(), *TransList();
 extern struct afsconf_dir *tdir;
 
+/* Needed by Irix. Leave, or include a header */
+extern char *volutil_PartitionName();
+
 extern void LogError(afs_int32 errcode);
 
 /* Forward declarations */
