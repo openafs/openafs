@@ -355,7 +355,7 @@ static afs_int32 GetDeviceConfig(filename, config, portOffset)
         count = sscanf(line, "%s %s %s %u%s\n",
 		      tcapacity, tfmsize, devName, &aport, trest);
 
-	if (count == 4) {
+	if (count == 4 || count == 5) {
 	    if ( atocl(tcapacity, 'K', &capacity) ) {
 	       fprintf(stderr, "tapeconfig: Tape capacity parse error in: %s\n", line);
 	       ERROR_EXIT(-1);
@@ -366,7 +366,7 @@ static afs_int32 GetDeviceConfig(filename, config, portOffset)
 	    }
 	} else {
 	    count = sscanf(line, "%s %u%s\n", devName, &aport, trest);
-	    if (count == 2) {
+	    if (count == 2 || count == 3) {
 	        capacity = 0x7fffffff;
 		fmSize = 0;
 	    } else {
