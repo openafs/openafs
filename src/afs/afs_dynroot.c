@@ -334,13 +334,13 @@ void afs_RefreshDynroot(void)
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvc = afs_FindVCache(&tfid, 0, 0, &retry, 0);
+	    tvc = afs_FindVCache(&tfid, &retry, 0);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (retry);
 	if (tvc) {
 	    tvc->states &= ~(CStatd | CUnique);
 	    osi_dnlc_purgedp(tvc);
-	    afs_PutVCache(tvc, 0);
+	    afs_PutVCache(tvc);
 	}
     }
 }

@@ -494,7 +494,7 @@ static void afs_GetDownD(int anumber, int *aneedSpace)
 		/* xdcache is lower than the xvcache lock */
 		MReleaseWriteLock(&afs_xdcache);
 		MObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(afid, 0,0, 0, 0 /* no stats, no vlru */ );
+		tvc = afs_FindVCache(afid, 0, 0 /* no stats, no vlru */ );
 		MReleaseReadLock(&afs_xvcache);
 		MObtainWriteLock(&afs_xdcache, 527);
 		skip = 0;

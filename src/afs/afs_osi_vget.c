@@ -73,14 +73,14 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
      * afs_GetVCache.
      */
 
-    ret = afs_NFSFindVCache(avcpp, &vfid, 1);
+    ret = afs_NFSFindVCache(avcpp, &vfid);
     if (ret > 1) {
 	/* More than one entry matches. */
 	code = ENOENT;
     }
     else if (ret == 0) {
 	/* didn't find an entry. */
-	*avcpp = afs_GetVCache(&vfid, &treq, (afs_int32 *)0, (struct vcache*)0, 0);
+	*avcpp = afs_GetVCache(&vfid, &treq, NULL, NULL);
     }
     if (! *avcpp) {
 	code = ENOENT;

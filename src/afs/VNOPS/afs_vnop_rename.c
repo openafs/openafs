@@ -291,12 +291,10 @@ tagain:
 	unlinkFid.Cell = aodp->fid.Cell;
 	tvc = (struct vcache *)0;
 	if (!unlinkFid.Fid.Unique) {
-	    tvc = afs_LookupVCache(&unlinkFid, areq, (afs_int32 *)0, WRITE_LOCK,
-				   aodp, aname1);
+	    tvc = afs_LookupVCache(&unlinkFid, areq, (afs_int32 *)0, aodp, aname1);
 	}
 	if (!tvc) /* lookup failed or wasn't called */
-	   tvc = afs_GetVCache(&unlinkFid, areq, (afs_int32 *)0,
-			       (struct vcache*)0, WRITE_LOCK);
+	   tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
 
 	if (tvc) {
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
@@ -320,7 +318,7 @@ tagain:
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)
 	    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
-	    afs_PutVCache(tvc, WRITE_LOCK);
+	    afs_PutVCache(tvc);
 	}
     }
 
@@ -329,10 +327,9 @@ tagain:
 	fileFid.Fid.Volume = aodp->fid.Fid.Volume;
 	fileFid.Cell = aodp->fid.Cell;
 	if (!fileFid.Fid.Unique)
-	    tvc = afs_LookupVCache(&fileFid, areq, (afs_int32 *)0, WRITE_LOCK, andp, aname2);
+	    tvc = afs_LookupVCache(&fileFid, areq, (afs_int32 *)0, andp, aname2);
 	else
-	    tvc = afs_GetVCache(&fileFid, areq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvc = afs_GetVCache(&fileFid, areq, (afs_int32 *)0, (struct vcache*)0);
 	if (tvc && (vType(tvc) == VDIR)) {
 	    ObtainWriteLock(&tvc->lock,152);
 	    tdc1 = afs_FindDCache(tvc, 0);
@@ -345,12 +342,12 @@ tagain:
 	    }
 	    osi_dnlc_remove(tvc, "..", 0);
 	    ReleaseWriteLock(&tvc->lock);
-	    afs_PutVCache(tvc, WRITE_LOCK);
+	    afs_PutVCache(tvc);
 	} else if (tvc) {
 	    /* True we shouldn't come here since tvc SHOULD be a dir, but we
 	     * 'syntactically' need to unless  we change the 'if' above...
 	     */
-	    afs_PutVCache(tvc, WRITE_LOCK);
+	    afs_PutVCache(tvc);
 	}
     }
     code = returnCode;

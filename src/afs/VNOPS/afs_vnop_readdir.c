@@ -241,15 +241,15 @@ struct vcache *		avc;
      if ((avc->states & CForeign) == 0 &&
          (ntohl(ade->fid.vnode) & 1)) {
           return DT_DIR;
-     } else if ((tvc=afs_FindVCache(&tfid,0,0,0,0))) {
+     } else if ((tvc=afs_FindVCache(&tfid,0,0))) {
            if (tvc->mvstat) {
-               afs_PutVCache(tvc, WRITE_LOCK);
+               afs_PutVCache(tvc);
                return DT_DIR;
           } else if (((tvc->states) & (CStatd|CTruth))) {
                /* CTruth will be set if the object has
                 *ever* been statd */
                vtype=vType(tvc);
-               afs_PutVCache(tvc, WRITE_LOCK);
+               afs_PutVCache(tvc);
                if (vtype == VDIR)
                     return DT_DIR;
                else if (vtype == VREG)
@@ -259,7 +259,7 @@ struct vcache *		avc;
                   type=DT_LNK; */
                /* what other types does AFS support? */
           } else
-               afs_PutVCache(tvc, WRITE_LOCK);
+               afs_PutVCache(tvc);
     }
     return DT_UNKNOWN;
 }

@@ -649,29 +649,25 @@ extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
 
 void afs_vcacheInit(int astatSize);
-extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
-				     afs_int32 locktype, afs_int32 *retry, afs_int32 flag);
+extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 *retry, afs_int32 flag);
 extern afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 			     struct vrequest *areq,
 			     struct AFSFetchStatus *Outsp);
 
 extern afs_int32 afs_FlushVCBs(afs_int32 lockit);
 extern void afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred);
-extern struct vcache *afs_LookupVCache(struct VenusFid *afid,
-				       struct vrequest *areq,
-				       afs_int32 *cached, afs_int32 locktype,
-				       struct vcache *adp, char *aname);
+extern struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
+				       afs_int32 *cached, struct vcache *adp, char *aname);
 extern int afs_FlushVCache(struct vcache *avc, int *slept);
 extern struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 					struct vrequest *areq, afs_int32 *cached,
-					struct volume *tvolp, afs_int32 locktype);
+					struct volume *tvolp);
 extern struct vcache *afs_NewVCache(struct VenusFid *afid,
-				    struct server *serverp,
-				    afs_int32 lockit, afs_int32 locktype);
+				    struct server *serverp);
 extern int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq);
 extern struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq, 
-        afs_int32 *cached, struct vcache *avc, afs_int32 locktype);
-extern void afs_PutVCache(register struct vcache *avc, afs_int32 locktype);
+        afs_int32 *cached, struct vcache *avc);
+extern void afs_PutVCache(register struct vcache *avc);
 extern void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *astat, 
         struct vrequest *areq);
 extern struct afs_cbr *afs_AllocCBR(void);
@@ -683,8 +679,7 @@ extern int afs_WriteVCache(register struct vcache *avc,
 extern int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
         char *name, struct VenusFid *nfid, struct AFSFetchStatus *OutStatusp,
         struct AFSCallBack *CallBackp, struct server **serverp, struct AFSVolSync *tsyncp);
-extern afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid, 
-        afs_int32 lockit);
+extern afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid);
 extern void afs_vcacheInit(int astatSize);
 extern void shutdown_vcache(void);
 

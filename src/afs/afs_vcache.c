@@ -592,8 +592,7 @@ restart:
  *		created.
  */
 /* LOCK: afs_NewVCache  afs_xvcache W */ 
-struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
-			     afs_int32 lockit, afs_int32 locktype)
+struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 {
     struct vcache *tvc;
     afs_int32 i;
@@ -1228,10 +1227,10 @@ int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
       osi_dnlc_purgevp (avc);
     
     /* fetch the status info */
-    tvc = afs_GetVCache(&avc->fid, areq, (afs_int32*)0, avc, READ_LOCK);
+    tvc = afs_GetVCache(&avc->fid, areq, NULL, avc);
     if (!tvc) return ENOENT;
     /* Put it back; caller has already incremented vrefCount */
-    afs_PutVCache(tvc, READ_LOCK);
+    afs_PutVCache(tvc);
     return 0;
 
 } /*afs_VerifyVCache*/
@@ -1589,7 +1588,7 @@ int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 			 * already be held by the caller */
 
 struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq, 
-	afs_int32 *cached, struct vcache *avc, afs_int32 locktype)
+	afs_int32 *cached, struct vcache *avc)
 {
 
     afs_int32 code, newvcache=0;
@@ -1607,7 +1606,7 @@ loop:
 
     ObtainSharedLock(&afs_xvcache,5); 
 
-    tvc = afs_FindVCache(afid, 0, 0, &retry, DO_STATS | DO_VLRU );
+    tvc = afs_FindVCache(afid, &retry, DO_STATS | DO_VLRU );
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	ReleaseSharedLock(&afs_xvcache);
@@ -1628,7 +1627,7 @@ loop:
 	UpgradeSToWLock(&afs_xvcache,21);
 
 	/* no cache entry, better grab one */
-	tvc = afs_NewVCache(afid, (struct server *)0, 1, WRITE_LOCK);
+	tvc = afs_NewVCache(afid, (struct server *)0);
 	newvcache = 1;
 
 	ConvertWToSLock(&afs_xvcache);
@@ -1720,8 +1719,7 @@ loop:
 
 
 struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
-				afs_int32 *cached, afs_int32 locktype,
-				struct vcache *adp, char *aname)
+				afs_int32 *cached, struct vcache *adp, char *aname)
 {
     afs_int32 code, now, newvcache=0;
     struct VenusFid nfid;
@@ -1742,7 +1740,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif
 
     ObtainReadLock(&afs_xvcache);
-    tvc = afs_FindVCache(afid, 0, 0, &retry, DO_STATS /* no vlru */);
+    tvc = afs_FindVCache(afid, &retry, DO_STATS /* no vlru */);
 
     if (tvc) {
       ReleaseReadLock(&afs_xvcache);
@@ -1782,7 +1780,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif
 
     ObtainSharedLock(&afs_xvcache,6);
-    tvc = afs_FindVCache(&nfid, 0, 0, &retry, DO_VLRU /* no xstats now*/);
+    tvc = afs_FindVCache(&nfid, &retry, DO_VLRU /* no xstats now*/);
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
       ReleaseSharedLock(&afs_xvcache);
@@ -1794,7 +1792,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     if (!tvc) {
         /* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache,22);
-        tvc = afs_NewVCache(&nfid, (struct server *)0, 1, WRITE_LOCK);
+        tvc = afs_NewVCache(&nfid, (struct server *)0);
 	newvcache = 1;
         ConvertWToSLock(&afs_xvcache);
     }
@@ -1883,7 +1881,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 
 struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 				 struct vrequest *areq, afs_int32 *cached,
-				 struct volume *tvolp, afs_int32 locktype)
+				 struct volume *tvolp)
 {
     afs_int32 code = 0, i, newvcache = 0, haveStatus = 0;
     afs_int32 getNewFid = 0;
@@ -1957,7 +1955,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
     if (!tvc) {
 	UpgradeSToWLock(&afs_xvcache,23);
 	/* no cache entry, better grab one */
-	tvc = afs_NewVCache(afid, (struct server *)0, 1, WRITE_LOCK);
+	tvc = afs_NewVCache(afid, (struct server *)0);
 	newvcache = 1;
 	afs_stats_cmperf.vcacheMisses++;
     }
@@ -2213,7 +2211,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
   loop:
     ObtainSharedLock(&afs_xvcache,8);
 
-    tvc = afs_FindVCache(afid, 0, 0, &retry, DO_VLRU /* no stats */);
+    tvc = afs_FindVCache(afid, &retry, DO_VLRU /* no stats */);
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	ReleaseSharedLock(&afs_xvcache);
@@ -2225,7 +2223,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
     if (!tvc) {
 	/* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache,25);
-	tvc = afs_NewVCache(afid, (struct server *)0, 1, WRITE_LOCK);
+	tvc = afs_NewVCache(afid, (struct server *)0);
 	newvcache = 1;
 	ConvertWToSLock(&afs_xvcache);
     }
@@ -2308,7 +2306,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
     /*
      * Release ref count... hope this guy stays around...
      */
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
 } /*afs_StuffVcache*/
 #endif
 
@@ -2324,7 +2322,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
  * Environment:
  *	Nothing interesting.
  */
-void afs_PutVCache(register struct vcache *avc, afs_int32 locktype)
+void afs_PutVCache(register struct vcache *avc)
 {
     AFS_STATCNT(afs_PutVCache);
     /*
@@ -2354,8 +2352,7 @@ void afs_PutVCache(register struct vcache *avc, afs_int32 locktype)
  *      must be shared-- we upgrade it here.
  */
 
-struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
-			      afs_int32 locktype, afs_int32 *retry, afs_int32 flag)
+struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 *retry, afs_int32 flag)
 {
 
     register struct vcache *tvc;
@@ -2463,8 +2460,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
 
 int afs_duplicate_nfs_fids=0;
 
-afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid, 
-	afs_int32 lockit)
+afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 {
     register struct vcache *tvc;
     afs_int32 i;

@@ -1654,17 +1654,16 @@ DECL_PIOCTL(PNewStatMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, WRITE_LOCK, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
     } else {
-	tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache*)0,
-			    WRITE_LOCK);
+	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
 	code = ENOENT;
 	goto out;
     }
     if (tvc->mvstat != 1) {
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
     }
@@ -1683,7 +1682,7 @@ DECL_PIOCTL(PNewStatMount)
 	    code = EIO;
     }
     ReleaseWriteLock(&tvc->lock);
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
 out:
     if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
@@ -2330,10 +2329,9 @@ DECL_PIOCTL(PRemoveMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique &&  (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, WRITE_LOCK, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
     } else {
-	tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0,
-			    (struct vcache*)0/*xxx avc?*/, WRITE_LOCK);
+	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
 	code = ENOENT;
@@ -2342,7 +2340,7 @@ DECL_PIOCTL(PRemoveMount)
     }
     if (tvc->mvstat != 1) {
 	afs_PutDCache(tdc);
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
     }
@@ -2357,7 +2355,7 @@ DECL_PIOCTL(PRemoveMount)
     }
     ReleaseWriteLock(&tvc->lock);
     osi_dnlc_purgedp(tvc);
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -3396,17 +3394,16 @@ DECL_PIOCTL(PFlushMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, WRITE_LOCK, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
     } else {
-	tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache*)0,
-			    WRITE_LOCK);
+	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
     if (!tvc) {
 	code = ENOENT;
 	goto out;
     }
     if (tvc->mvstat != 1) {
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
 	code = EINVAL;
 	goto out;
     }
@@ -3430,7 +3427,7 @@ DECL_PIOCTL(PFlushMount)
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
     afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
 out:
     if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
@@ -3528,8 +3525,7 @@ DECL_PIOCTL(PPrefetchFromTape)
     tfid.Fid.Vnode = Fid->Vnode;
     tfid.Fid.Unique = Fid->Unique;
 
-    tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache *)0,
-                                WRITE_LOCK);
+    tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     if (!tvc) {
         afs_Trace3(afs_iclSetp, CM_TRACE_PREFETCHCMD,
                 ICL_TYPE_POINTER, tvc,
@@ -3564,7 +3560,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 		(struct cell *)0));
     /* This call is done only to have the callback things handled correctly */
     afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
 
     if (!code) {
         *aoutSize = sizeof(afs_int32);
@@ -3596,8 +3592,7 @@ DECL_PIOCTL(PResidencyCmd)
     tfid.Fid.Vnode = Fid->Vnode;
     tfid.Fid.Unique = Fid->Unique;
 
-    tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache *)0,
-                                WRITE_LOCK);
+    tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     afs_Trace3(afs_iclSetp, CM_TRACE_RESIDCMD,
                 ICL_TYPE_POINTER, tvc,
                 ICL_TYPE_INT32, Inputs->command,
@@ -3634,7 +3629,7 @@ DECL_PIOCTL(PResidencyCmd)
         }
     }
 
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
 
     if (!code) {
         *aoutSize = sizeof(struct ResidencyCmdOutputs);

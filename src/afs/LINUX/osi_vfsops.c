@@ -125,8 +125,7 @@ static int afs_root(struct super_block *afsp)
 	afs_globalVp = 0;
 	if (!(code = afs_InitReq(&treq, credp)) &&
 	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    if (tvp) {
 		extern struct inode_operations afs_dir_iops;
 #if defined(AFS_LINUX24_ENV)

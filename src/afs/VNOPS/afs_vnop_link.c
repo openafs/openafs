@@ -161,7 +161,7 @@ done:
     afs_PutFakeStat(&dfakestate);
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, WRITE_LOCK);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
     return code;
 }

@@ -127,7 +127,7 @@ int afsremove(register struct vcache *adp, register struct dcache *tdc,
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	}
-	if (tvc) afs_PutVCache(tvc, WRITE_LOCK);
+	if (tvc) afs_PutVCache(tvc);
 
 	if (code < 0) {
 	  ObtainWriteLock(&afs_xcbhash, 497);
@@ -176,7 +176,7 @@ int afsremove(register struct vcache *adp, register struct dcache *tdc,
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
     }
     return (0);
 }
@@ -238,8 +238,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 
     if ((code = afs_InitReq(&treq, acred))) {
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
@@ -249,8 +249,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (code) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
@@ -260,16 +260,16 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afs_DynrootVOPRemove(adp, acred, aname);
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return ENAMETOOLONG;
     }
@@ -278,8 +278,8 @@ tagain:
 #ifdef	AFS_OSF_ENV
     tvc = VTOAFS(ndp->ni_vp);  /* should never be null */
     if (code) {
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 	afs_PutFakeStat(&fakestate);
 	return afs_CheckCode(code, &treq, 22);
     }
@@ -297,8 +297,8 @@ tagain:
       */
     if ( adp->states & CRO ) {
 #ifdef  AFS_OSF_ENV
-        afs_PutVCache(adp, 0);
-        afs_PutVCache(tvc, 0);
+        afs_PutVCache(adp);
+        afs_PutVCache(tvc);
 #endif
         code = EROFS;
 	afs_PutFakeStat(&fakestate);
@@ -338,12 +338,10 @@ tagain:
 	    unlinkFid.Cell = adp->fid.Cell;
 	    unlinkFid.Fid.Volume = adp->fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, 
-				       WRITE_LOCK, adp, aname);
+		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&unlinkFid, 1, WRITE_LOCK, 
-				     0 , DO_STATS );
+		tvc = afs_FindVCache(&unlinkFid, 0, DO_STATS);
 		ReleaseReadLock(&afs_xvcache);
 	    }
 	}
@@ -391,12 +389,12 @@ tagain:
 	}
         if ( tdc )
 		afs_PutDCache(tdc);
-	afs_PutVCache(tvc, WRITE_LOCK);	
+	afs_PutVCache(tvc);	
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, WRITE_LOCK);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
     afs_PutFakeStat(&fakestate);
     return code;
@@ -458,8 +456,7 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 	    dirFid.Fid.Volume = avc->fid.Fid.Volume;
 	    dirFid.Fid.Vnode = avc->parentVnode;
 	    dirFid.Fid.Unique = avc->parentUnique;
-	    adp = afs_GetVCache(&dirFid, &treq, (afs_int32 *)0, 
-				(struct vcache *)0, WRITE_LOCK);
+	    adp = afs_GetVCache(&dirFid, &treq, NULL, NULL);
 	    
 	    if (adp) {
 		tdc = afs_FindDCache(adp, 0);
@@ -468,10 +465,10 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 
 		/* afsremove releases the adp & tdc locks, and does vn_rele(avc) */
 		code = afsremove(adp, tdc, avc, unlname, cred, &treq);
-		afs_PutVCache(adp, WRITE_LOCK);
+		afs_PutVCache(adp);
 	    } else {
 		/* we failed - and won't be back to try again. */
-		afs_PutVCache(avc, WRITE_LOCK);
+		afs_PutVCache(avc);
 	    }
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);

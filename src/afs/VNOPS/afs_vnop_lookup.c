@@ -296,15 +296,15 @@ int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, 0, 0, &retry, 0);
+		root_vp = afs_FindVCache(tvc->mvid, &retry, 0);
 		if (root_vp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
-		    afs_PutVCache(root_vp, 0);
+		    afs_PutVCache(root_vp);
 		}
 	    } while (root_vp && retry);
 	    ReleaseWriteLock(&afs_xvcache);
 	} else {
-	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
+	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL);
 	}
 	if (!root_vp) {
 	    code = canblock ? ENOENT : 0;
@@ -380,7 +380,7 @@ void afs_PutFakeStat(struct afs_fakestat_state *state)
 {
     osi_Assert(state->valid == 1);
     if (state->need_release)
-	afs_PutVCache(state->root_vp, 0);
+	afs_PutVCache(state->root_vp);
     state->valid = 0;
 }
     
@@ -660,14 +660,14 @@ tagain:
 	    do {
 	      retry = 0;
 	      ObtainWriteLock(&afs_xvcache, 130);
-	      tvcp = afs_FindVCache(&tfid, 0, 0, &retry, 0 /* no stats | LRU */);
+	      tvcp = afs_FindVCache(&tfid, &retry, 0 /* no stats | LRU */);
 	      if (tvcp && retry) {
 		ReleaseWriteLock(&afs_xvcache);
-		afs_PutVCache(tvcp, 0);
+		afs_PutVCache(tvcp);
 	      }
 	    } while (tvcp && retry);
 	    if (!tvcp) {          /* otherwise, create manually */
-	      tvcp = afs_NewVCache(&tfid, hostp, 0, 0);
+	      tvcp = afs_NewVCache(&tfid, hostp);
 	      ObtainWriteLock(&tvcp->lock, 505);
 	      ReleaseWriteLock(&afs_xvcache);
 	      afs_RemoveVCB(&tfid);
@@ -714,7 +714,7 @@ tagain:
 		tvcp->m.Length = statSeqNo;
 		fidIndex++;
 	    }
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	}	/* if dir vnode has non-zero entry */
 
 	/* move to the next dir entry by adding in the # of entries
@@ -847,7 +847,7 @@ tagain:
 	do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);
-	   tvcp = afs_FindVCache(&afid, 1, 0, &retry, 0/* !stats&!lru*/);
+	   tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru*/);
 	   ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 
@@ -868,7 +868,7 @@ tagain:
 	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	    continue;
 	}
 
@@ -915,7 +915,7 @@ tagain:
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	    continue;
 	}
 
@@ -975,11 +975,11 @@ tagain:
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
-	afs_PutVCache(tvcp, 0);
+	afs_PutVCache(tvcp);
     }	/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
-    afs_PutVCache(lruvcp, 0);
+    afs_PutVCache(lruvcp);
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -991,7 +991,7 @@ tagain:
 	do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);
-	   tvcp = afs_FindVCache(&afid, 1, 0, &retry, 0/* !stats&!lru*/);
+	   tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru*/);
 	   ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 	if (tvcp != NULL
@@ -1000,7 +1000,7 @@ tagain:
 	  tvcp->states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
-	  afs_PutVCache(tvcp, 0);
+	  afs_PutVCache(tvcp);
 	}
     }
     if ( volp )
@@ -1139,8 +1139,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    goto done;
 	}
 	/* otherwise we have the fid here, so we use it */
-	tvc = afs_GetVCache(adp->mvid, &treq, (afs_int32 *)0,
-			    (struct vcache*)0, 0);
+	tvc = afs_GetVCache(adp->mvid, &treq, NULL, NULL);
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT,
 		   ICL_TYPE_FID, adp->mvid, ICL_TYPE_POINTER, tvc, 
 		   ICL_TYPE_INT32,  code);
@@ -1204,7 +1203,7 @@ afs_lookup(adp, aname, avcp, acred)
     if (tvc) {
 	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
 	    /* need read access on dir to stat non-directory / non-link */
-	    afs_PutVCache(tvc, WRITE_LOCK);
+	    afs_PutVCache(tvc);
 	    *avcp = (struct vcache *)0;
 	    code = EACCES;
 	    goto done;
@@ -1340,7 +1339,7 @@ afs_lookup(adp, aname, avcp, acred)
         do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);	
-	   tvc = afs_FindVCache(&tfid, 1, 0, &retry, 0/* !stats,!lru */);
+	   tvc = afs_FindVCache(&tfid, &retry, 0/* !stats,!lru */);
 	   ReleaseReadLock(&afs_xvcache);	
         } while (tvc && retry);
 
@@ -1351,7 +1350,7 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* if the vcache isn't usable, release it */
 	if (tvc && !(tvc->states & CStatd)) {
-	    afs_PutVCache(tvc, 0);
+	    afs_PutVCache(tvc);
 	    tvc = (struct vcache *) 0;
 	}
     } else {
@@ -1369,12 +1368,10 @@ afs_lookup(adp, aname, avcp, acred)
     if (!tvc) {
        afs_int32 cached = 0;
        if (!tfid.Fid.Unique && (adp->states & CForeign)) {
-	    tvc = afs_LookupVCache(&tfid, &treq, &cached, WRITE_LOCK, 
-				   adp, tname);
+	    tvc = afs_LookupVCache(&tfid, &treq, &cached, adp, tname);
        } 
        if (!tvc && !bulkcode) {  /* lookup failed or wasn't called */
-	   tvc = afs_GetVCache(&tfid, &treq, &cached, (struct vcache*)0,
-			       WRITE_LOCK);
+	   tvc = afs_GetVCache(&tfid, &treq, &cached, NULL);
        } 
     } /* if !tvc */
     } /* sub-block just to reduce stack usage */
@@ -1399,7 +1396,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    ReleaseWriteLock(&tvc->lock);
 
 	    if (code) {
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
 	    }
@@ -1414,12 +1411,11 @@ afs_lookup(adp, aname, avcp, acred)
 
 		if (tvolp && (tvolp->states & VForeign)) {
 		    /* XXXX tvolp has ref cnt on but not locked! XXX */
-		    tvc = afs_GetRootVCache(tvc->mvid, &treq, (afs_int32 *)0, tvolp, WRITE_LOCK);
+		    tvc = afs_GetRootVCache(tvc->mvid, &treq, (afs_int32 *)0, tvolp);
 		} else {
-		    tvc = afs_GetVCache(tvc->mvid, &treq, (afs_int32 *)0,
-					(struct vcache*)0, WRITE_LOCK);
+		    tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
 		}
-		afs_PutVCache(uvc, WRITE_LOCK); /* we're done with it */
+		afs_PutVCache(uvc); /* we're done with it */
 
 		if (!tvc) {
 		    code = ENOENT;
@@ -1444,7 +1440,7 @@ afs_lookup(adp, aname, avcp, acred)
 		}
 	    }
 	    else {
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 		code = ENOENT;
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
@@ -1490,7 +1486,7 @@ done:
 	/* Handle RENAME; only need to check rename "."  */
 	if (opflag == RENAME && wantparent && *ndp->ni_next == 0) {
 	    if (!FidCmp(&(tvc->fid), &(adp->fid))) { 
-		afs_PutVCache(*avcp, WRITE_LOCK);
+		afs_PutVCache(*avcp);
 		*avcp = NULL;
 		afs_PutFakeStat(&fakestate);
 		return afs_CheckCode(EISDIR, &treq, 18);

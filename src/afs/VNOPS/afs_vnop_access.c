@@ -133,11 +133,10 @@ int afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 	    dirFid.Fid.Vnode = avc->parentVnode;
 	    dirFid.Fid.Unique = avc->parentUnique;
 	    /* Avoid this GetVCache call */
-	    tvc = afs_GetVCache(&dirFid, areq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvc = afs_GetVCache(&dirFid, areq, NULL, NULL);
 	    if (tvc) {
 		dirBits = afs_GetAccessBits(tvc, arights, areq);
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 	    }
 	}
 	else

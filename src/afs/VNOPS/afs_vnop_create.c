@@ -160,12 +160,10 @@ tagain:
 	    newFid.Fid.Volume = adp->fid.Fid.Volume;
 	    tvc = (struct vcache *)0;
 	    if (newFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&newFid, &treq, (afs_int32 *)0, 
-				       WRITE_LOCK, adp, aname);	
+		tvc = afs_LookupVCache(&newFid, &treq, (afs_int32 *)0, adp, aname);	
 	    }
 	    if (!tvc)  /* lookup failed or wasn't called */
-	       tvc = afs_GetVCache(&newFid, &treq, (afs_int32 *)0,
-				   (struct vcache*)0, WRITE_LOCK);
+	       tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
 
 	    if (tvc) {
 		/* if the thing exists, we need the right access to open it.
@@ -179,7 +177,7 @@ tagain:
                  */
 		if ((amode & VREAD) && 
 		      !afs_AccessOK(tvc, PRSFS_READ, &treq, CHECK_MODE_BITS)) {	
-		   afs_PutVCache(tvc, READ_LOCK);
+		   afs_PutVCache(tvc);
 		   code = EACCES;
 		   goto done;
 		}
@@ -195,7 +193,7 @@ tagain:
 		    tvc->parentUnique = adp->fid.Fid.Unique;
 		    /* need write mode for these guys */
 		    if (!afs_AccessOK(tvc, PRSFS_WRITE, &treq, CHECK_MODE_BITS)) {
-			afs_PutVCache(tvc, READ_LOCK);
+			afs_PutVCache(tvc);
 			code = EACCES;
 			goto done;
 		    }
@@ -207,7 +205,7 @@ tagain:
 #endif
 		  {
 		    if (vType(tvc) != VREG) {
-			afs_PutVCache(tvc, READ_LOCK);
+			afs_PutVCache(tvc);
 			code = EISDIR;
 			goto done;
 		    }
@@ -235,7 +233,7 @@ tagain:
 		    tvc->states &= ~CCreating;
 		    ReleaseWriteLock(&tvc->lock);
 		    if (code) {
-			afs_PutVCache(tvc, 0);
+			afs_PutVCache(tvc);
 			goto done;
 		    }
 		}
@@ -399,9 +397,8 @@ tagain:
        freeing of the vnode will change evenZaps.  Don't need to update the VLRU
        queue, since the find will only succeed in the event of a create race, and 
        then the vcache will be at the front of the VLRU queue anyway...  */
-    if (!(tvc = afs_FindVCache(&newFid, 0, WRITE_LOCK, 
-			       0, DO_STATS))) {
-	tvc = afs_NewVCache(&newFid, hostp, 0, WRITE_LOCK);
+    if (!(tvc = afs_FindVCache(&newFid, 0, DO_STATS))) {
+	tvc = afs_NewVCache(&newFid, hostp);
 	if (tvc) {
 	    int finalCBs;
 	    ObtainWriteLock(&tvc->lock,139);
@@ -468,7 +465,7 @@ done:
 
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, 0);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
 
     return code;

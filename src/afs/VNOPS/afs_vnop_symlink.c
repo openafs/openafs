@@ -191,7 +191,7 @@ afs_symlink
     /* now we're done with parent dir, create the link's entry.  Note that
      * no one can get a pointer to the new cache entry until we release 
      * the xvcache lock. */
-    tvc = afs_NewVCache(&newFid, hostp, 1, WRITE_LOCK);
+    tvc = afs_NewVCache(&newFid, hostp);
     ObtainWriteLock(&tvc->lock,157);
     ObtainWriteLock(&afs_xcbhash, 500);
     tvc->states |= CStatd;		/* have valid info */
@@ -218,7 +218,7 @@ afs_symlink
     }
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
     code = 0;
 done:
     afs_PutFakeStat(&fakestate);

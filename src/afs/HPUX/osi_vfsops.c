@@ -80,8 +80,7 @@ int afs_root (struct vfs *afsp, struct vnode **avpp, char *unused1)
     } else {
 	if (!(code = afs_InitReq(&treq,  p_cred(u.u_procp))) &&
 	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		afs_globalVp = tvp;

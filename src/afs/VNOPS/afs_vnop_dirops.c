@@ -152,7 +152,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     newFid.Fid.Volume = adp->fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
     /* now we're done with parent dir, create the real dir's cache entry */
-    tvc = afs_GetVCache(&newFid, &treq, (afs_int32 *)0, (struct vcache*)0, 0);
+    tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
     if (tvc) {
 	code = 0;
 	*avcp = tvc;
@@ -242,12 +242,10 @@ afs_rmdir(adp, aname, acred)
 	    unlinkFid.Cell = adp->fid.Cell;
 	    unlinkFid.Fid.Volume = adp->fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, 
-				       WRITE_LOCK, adp, aname);
+		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&unlinkFid, 1, WRITE_LOCK, 
-				     0, 1/* do xstats */);
+		tvc = afs_FindVCache(&unlinkFid, 0, 1/* do xstats */);
 		ReleaseReadLock(&afs_xvcache);
 	    }
 	}
@@ -310,7 +308,7 @@ afs_rmdir(adp, aname, acred)
 	ObtainWriteLock(&tvc->lock,155);
 	tvc->states &= ~CUnique;		/* For the dfs xlator */
 	ReleaseWriteLock(&tvc->lock);
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
     }
     ReleaseWriteLock(&adp->lock);
     /* don't worry about link count since dirs can not be hardlinked */
@@ -321,8 +319,8 @@ done:
     code = afs_CheckCode(code, &treq, 27); 
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, 0);
-    afs_PutVCache(ndp->ni_vp, 0);
+    afs_PutVCache(adp);
+    afs_PutVCache(ndp->ni_vp);
 #endif	/* AFS_OSF_ENV */
     return code;
 }

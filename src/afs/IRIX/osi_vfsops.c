@@ -279,8 +279,7 @@ afs_root (OSI_VFS_ARG(afsp), avpp)
     } else {
 	if (!(code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED())) &&
 	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		afs_globalVp = tvp;
@@ -550,8 +549,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
 	if (code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED()))
 	    goto out;
-	*avcp = (vnode_t*) afs_GetVCache(&vfid, &treq, (afs_int32 *)0,
-					 (struct vcache*)0, 0);
+	*avcp = (vnode_t*) afs_GetVCache(&vfid, &treq, (afs_int32 *)0, (struct vcache*)0);
 	if (! *avcp) {
 	    code = ENOENT;
 	}
