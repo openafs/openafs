@@ -316,6 +316,7 @@ void DrivesTab_EditMapping (HWND hDlg, int iDrive)
       AdjustAfsPath (szAfsPathNew, DriveMap.szMapping, TRUE, TRUE);
 
       if ( (lstrcmpi (szAfsPathOrig, szAfsPathNew)) ||
+           (lstrcmpi (DriveMapOrig.szSubmount, DriveMap.szSubmount)) ||
            (DriveMapOrig.chDrive != DriveMap.chDrive) ||
            (DriveMapOrig.fPersistent != DriveMap.fPersistent) )
          {
@@ -331,11 +332,21 @@ void DrivesTab_EditMapping (HWND hDlg, int iDrive)
                }
             }
 
-         if (!ActivateDriveMap (DriveMap.chDrive, szAfsPathNew, "", DriveMap.fPersistent, &dwStatus))
+         if (!ActivateDriveMap (DriveMap.chDrive, szAfsPathNew, DriveMap.szSubmount, DriveMap.fPersistent, &dwStatus))
             {
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_MAP, IDS_ERROR_MAP_DESC, TEXT("%08lX"), dwStatus);
             DrivesTab_FillList (hDlg);
             return;
+            }
+
+         if (DriveMap.szSubmount[0])
+            {
+            TCHAR szSubmountNow[ MAX_PATH ];
+            if (GetDriveSubmount (DriveMap.chDrive, szSubmountNow))
+               {
+               if (lstrcmpi (DriveMap.szSubmount, szSubmountNow))
+                  Message (MB_OK | MB_ICONASTERISK, GetCautionTitle(), IDS_NEWSUB_DESC);
+               }
             }
 
          if (iDrive != -1)
@@ -442,6 +453,7 @@ void DriveEdit_OnInitDialog (HWND hDlg)
        SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
    }
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
+   SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
 
    CheckDlgButton (hDlg, IDC_PERSISTENT, (pMap->chDrive == 0) ? TRUE : (pMap->fPersistent));
 
@@ -458,7 +470,14 @@ void DriveEdit_OnOK (HWND hDlg)
 
    pMap->chDrive = chDRIVE_A + iDrive;
    GetDlgItemText (hDlg, IDC_PATH, pMap->szMapping, MAX_PATH);
+   GetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount, MAX_PATH);
    pMap->fPersistent = IsDlgButtonChecked (hDlg, IDC_PERSISTENT);
+
+   if (pMap->szSubmount[0] && !IsValidSubmountName (pMap->szSubmount))
+      {
+      Message (MB_ICONHAND, GetErrorTitle(), IDS_BADSUB_DESC);
+      return;
+      }
 
     if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
          (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
