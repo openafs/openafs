@@ -1226,7 +1226,7 @@ static int MapName_r(char *aname, char *acell, afs_int32 *aval)
 		return 0;
 	    }		    
 	    foreign = 1;  /* attempt cross-cell authentication */
-	    tname = (char *) malloc(anamelen+cnamelen+2);
+	    tname = (char *) malloc(PR_MAXNAMELEN);
 	    if (!tname) {
 		ViceLog(0, ("Failed malloc in MapName_r\n"));
 		assert(0);
