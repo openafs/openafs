@@ -844,7 +844,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 		Also, note that  we don't lock it any more... */
             tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
                                 (afs_size_t) acred->cr_uid, (afs_size_t) 0,
-                                (afs_size_t) 0, (afs_size_t) 0);
+                                (void *) 0);
 	    /* sleep waiting for the store to start, then retrieve error code */
 	    while ((tb->flags & BUVALID) == 0) {
 		tb->flags |= BUWAIT;

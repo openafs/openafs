@@ -2079,7 +2079,8 @@ struct AFS_UCRED *acred;
 	osi_FreeLargeSpace(tp);
 	return EWOULDBLOCK;	/* pretty close */
     }
-    afs_BQueue(BOP_PATH, (struct vcache*)0, 0, 0, acred, (long)tp, 0L, 0L, 0L);
+    afs_BQueue(BOP_PATH, (struct vcache*)0, 0, 0, acred,
+	       (afs_size_t) 0, (afs_size_t) 0, tp);
     return 0;
 }
 

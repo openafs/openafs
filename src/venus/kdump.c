@@ -2682,7 +2682,7 @@ void print_bkg(kmem)
 	if (uentry->refCount == 0) break;
 	printf("[%d] vcache=0x%lx, cred=0x%lx, code=%d, refCount=%d, opcode=%d, flags=%x [%lx, %lx, %lx, %lx]\n",
 	       i, uentry->vnode, uentry->cred, uentry->code, uentry->refCount, uentry->opcode, uentry->flags,
-	       uentry->parm[0], uentry->parm[1], uentry->parm[2], uentry->parm[3]);
+	       uentry->size_parm[0], uentry->size_parm[1], uentry->ptr_parm[0], uentry->ptr_parm[1]);
 
     }
     printf("... found %d active 'afs_brs' entries\n", j);

@@ -28,6 +28,7 @@ short afs_brsWaiters = 0;	/* number of users waiting for brs buffers */
 short afs_brsDaemons = 0;	/* number of daemons waiting for brs requests */
 struct brequest	afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
+static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 
 static int rxepoch_checked=0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
@@ -346,7 +347,7 @@ afs_CheckRootVolume () {
     else return ENOENT;
 }
 
-/* parm 0 is the pathname, parm 1 to the fetch is the chunk number */
+/* ptr_parm 0 is the pathname, size_parm 0 to the fetch is the chunk number */
 void BPath(ab)
     register struct brequest *ab; {
     register struct dcache *tdc;
@@ -363,14 +364,14 @@ void BPath(ab)
     if (code = afs_InitReq(&treq, ab->cred)) return;
     AFS_GUNLOCK();
 #ifdef AFS_LINUX22_ENV
-    code = gop_lookupname((char *)ab->parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, &dp);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, &dp);
     if (dp)
 	tvn = (struct vnode*)dp->d_inode;
 #else
-    code = gop_lookupname((char *)ab->parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, (struct vnode **)&tvn);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, (struct vnode **)&tvn);
 #endif
     AFS_GLOCK();
-    osi_FreeLargeSpace((char *)ab->parm[0]); /* free path name buffer here */
+    osi_FreeLargeSpace((char *)ab->ptr_parm[0]); /* free path name buffer here */
     if (code) return;
     /* now path may not have been in afs, so check that before calling our cache manager */
     if (!tvn || !IsAfsVnode((struct vnode *) tvn)) {
@@ -394,7 +395,7 @@ void BPath(ab)
     tvc = (struct vcache *) tvn;
 #endif
     /* here we know its an afs vnode, so we can get the data for the chunk */
-    tdc = afs_GetDCache(tvc, (afs_size_t) ab->parm[1], &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
@@ -409,8 +410,9 @@ void BPath(ab)
 #endif
 }
 
-/* parm 0 to the fetch is the chunk number; parm 1 is the dcache entry to wakeup,
- * parm 2 is true iff we should release the dcache entry here.
+/* size_parm 0 to the fetch is the chunk number,
+ * ptr_parm 0 is the dcache entry to wakeup,
+ * size_parm 1 is true iff we should release the dcache entry here.
  */
 void BPrefetch(ab)
     register struct brequest *ab; {
@@ -422,7 +424,7 @@ void BPrefetch(ab)
     AFS_STATCNT(BPrefetch);
     if (len = afs_InitReq(&treq, ab->cred)) return;
     tvc = ab->vnode;
-    tdc = afs_GetDCache(tvc, (afs_size_t)ab->parm[0], &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
@@ -430,10 +432,10 @@ void BPrefetch(ab)
      * use tdc from GetDCache since afs_GetDCache may fail, but someone may
      * be waiting for our wakeup anyway.
      */
-    tdc = (struct dcache *) (ab->parm[1]);
+    tdc = (struct dcache *) (ab->ptr_parm[0]);
     tdc->flags &= ~DFFetchReq;
     afs_osi_Wakeup(&tdc->validPos);
-    if ((afs_size_t)ab->parm[2]) {
+    if (ab->size_parm[1]) {
 #ifdef	AFS_SUN5_ENVX
 	mutex_enter(&tdc->lock);
 	tdc->refCount--;
@@ -512,13 +514,13 @@ int afs_BBusy() {
     return 1;
 }
 
-struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, aparm0, aparm1, aparm2, aparm3)
+struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, asparm0, asparm1, apparm0)
     register short aopcode;
     afs_int32 ause, dontwait;
     register struct vcache *avc;
     struct AFS_UCRED *acred;
-    /* On 64 bit platforms, "long" does the right thing. */
-    afs_size_t aparm0, aparm1, aparm2, aparm3;
+    afs_size_t asparm0, asparm1;
+    void *apparm0;
 {
     register int i;
     register struct brequest *tb;
@@ -544,12 +546,12 @@ struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, aparm0, aparm1,
 #endif
 	    }
 	    tb->refCount = ause+1;
-	    tb->parm[0] = aparm0;
-	    tb->parm[1] = aparm1;
-	    tb->parm[2] = aparm2;
-	    tb->parm[3] = aparm3;
+	    tb->size_parm[0] = asparm0;
+	    tb->size_parm[1] = asparm1;
+	    tb->ptr_parm[0]  = apparm0;
 	    tb->flags = 0;
 	    tb->code = 0;
+	    tb->ts = afs_brs_count++;
 	    /* if daemons are waiting for work, wake them up */
 	    if (afs_brsDaemons > 0) {
 		afs_osi_Wakeup(&afs_brsDaemons);
@@ -1231,6 +1233,9 @@ void afs_BackgroundDaemon() {
 
     MObtainWriteLock(&afs_xbrs,302);
     while (1) {
+	int min_ts;
+	struct brequest *min_tb;
+
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
@@ -1238,41 +1243,49 @@ void afs_BackgroundDaemon() {
 	    afs_osi_Wakeup(&afs_termState);
 	    return;
 	}
-	
+
 	/* find a request */
 	tb = afs_brs;
 	foundAny = 0;
-	for(i=0;i<NBRS;i++,tb++) {
-	    /* look for request */
+	min_tb = NULL;
+	for(i=0; i<NBRS; i++, tb++) {
+	    /* look for request with smallest ts */
 	    if ((tb->refCount > 0) && !(tb->flags & BSTARTED)) {
 		/* new request, not yet picked up */
-		tb->flags |= BSTARTED;
-		MReleaseWriteLock(&afs_xbrs);
-		foundAny = 1;
-		afs_Trace1(afs_iclSetp, CM_TRACE_BKG1,
-			   ICL_TYPE_INT32, tb->opcode);
-		if (tb->opcode == BOP_FETCH)
-		    BPrefetch(tb);
-		else if (tb->opcode == BOP_STORE)
-		    BStore(tb);
-		else if (tb->opcode == BOP_PATH)
-		    BPath(tb);
-		else panic("background bop");
-		if (tb->vnode) {
-#ifdef	AFS_DEC_ENV
-		    tb->vnode->vrefCount--;	    /* fix up reference count */
-#else
-		    AFS_RELE((struct vnode *)(tb->vnode));	/* MUST call vnode layer or could lose vnodes */
-#endif
-		    tb->vnode = (struct vcache *) 0;
+		if ((min_tb && (min_ts - tb->ts > 0)) || !min_tb) {
+		    min_tb = tb;
+		    min_ts = tb->ts;
 		}
-		if (tb->cred) {
-		    crfree(tb->cred);
-		    tb->cred = (struct AFS_UCRED *) 0;
-		}
-		afs_BRelease(tb);   /* this grabs and releases afs_xbrs lock */
-		MObtainWriteLock(&afs_xbrs,305);
 	    }
+	}
+	if (tb = min_tb) {
+	    /* claim and process this request */
+	    tb->flags |= BSTARTED;
+	    MReleaseWriteLock(&afs_xbrs);
+	    foundAny = 1;
+	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1,
+		       ICL_TYPE_INT32, tb->opcode);
+	    if (tb->opcode == BOP_FETCH)
+		BPrefetch(tb);
+	    else if (tb->opcode == BOP_STORE)
+		BStore(tb);
+	    else if (tb->opcode == BOP_PATH)
+		BPath(tb);
+	    else panic("background bop");
+	    if (tb->vnode) {
+#ifdef	AFS_DEC_ENV
+		tb->vnode->vrefCount--;	    /* fix up reference count */
+#else
+		AFS_RELE((struct vnode *)(tb->vnode));	/* MUST call vnode layer or could lose vnodes */
+#endif
+		tb->vnode = (struct vcache *) 0;
+	    }
+	    if (tb->cred) {
+		crfree(tb->cred);
+		tb->cred = (struct AFS_UCRED *) 0;
+	    }
+	    afs_BRelease(tb);   /* this grabs and releases afs_xbrs lock */
+	    MObtainWriteLock(&afs_xbrs,305);
 	}
 	if (!foundAny) {
 	    /* wait for new request */

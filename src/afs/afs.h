@@ -116,11 +116,13 @@ struct sysname_info {
 struct brequest {
     struct vcache *vnode;	    /* vnode to use, with vrefcount bumped */
     struct AFS_UCRED *cred;	    /* credentials to use for operation */
-    afs_size_t parm[BPARMS];	    /* random parameters */
-    afs_int32 code;			    /* return code */
+    afs_size_t size_parm[BPARMS];   /* random parameters */
+    void *ptr_parm[BPARMS];	    /* pointer parameters */
+    afs_int32 code;		    /* return code */
     short refCount;		    /* use counter for this structure */
     char opcode;		    /* what to do (store, fetch, etc) */
     char flags;			    /* free, etc */
+    afs_int32 ts;		    /* counter "timestamp" */
 };
 
 struct SecretToken {
