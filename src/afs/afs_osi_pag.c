@@ -297,9 +297,9 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     if (cred->cr_ngroups < 2) return NOPAG;
 #endif
 #endif
-#endif
     g0 = cred->cr_groups[0];
     g1 = cred->cr_groups[1];
+#endif
     pag = (afs_int32)afs_get_pag_from_groups(g0, g1);
     return pag;
 }
