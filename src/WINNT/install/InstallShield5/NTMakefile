@@ -20,6 +20,15 @@ AFSBUILDCOMMENTS=Build:*DatE* *TimE* CellServDB:$(CELLSERVDB_INSTALL)
  
 ############################################################################
 
+#CHECK which OS we are using to avoid using the wrong options
+!IF	(([$(DESTDIR)\bin\util_cr.exe _ xp w2])==1) 
+XCOPY= xcopy /s/e/y
+!ELSE
+XCOPY= xcopy /s/e
+!ENDIF
+
+#check which version of the complier we are using
+
 prep: AFS_component_version_number.txt
 	$(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" ".\lang\en_US\value.txt" ".\lang\en_US\value.shl"
 	$(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" "default.txt" "default.rge"
@@ -62,7 +71,7 @@ build:
 	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
 	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
 !ENDIF
-	$(DESTDIR)\bin\util_cr.exe # xp w2 # xcopy /s/e/y /s/e Media\OpenAFS\DiskIm~1\disk1\*.* $(DESTDIR)\WinInstall	
+	$(XCOPY) Media\OpenAFS\DiskIm~1\disk1\*.* $(DESTDIR)\WinInstall
 	copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
 	$(DEL) /q "Media\OpenAFS\Disk Images\disk1\*.*"
 install: prep build
