@@ -1328,7 +1328,7 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 /*MapName*/
 
 
-/* NOTE: this returns the client with a Shared lock */
+/* NOTE: this returns the client with a Write lock */
 struct client *
 h_ID2Client(afs_int32 vid)
 {
@@ -1343,7 +1343,7 @@ h_ID2Client(afs_int32 vid)
 	    if (!client->deleted && client->ViceId == vid) {
 		client->refCount++;
 		H_UNLOCK;
-		ObtainSharedLock(&client->lock);
+		ObtainWriteLock(&client->lock);
 		H_LOCK;
 		client->refCount--;
 		H_UNLOCK;
@@ -1353,7 +1353,7 @@ h_ID2Client(afs_int32 vid)
     }
 
     H_UNLOCK;
-    return 0;
+    return NULL;
 }
 
 /*
