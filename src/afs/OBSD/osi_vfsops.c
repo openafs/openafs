@@ -511,7 +511,7 @@ afs_vfs_unload(struct lkm_table *lktmp, int cmd)
 }
 
 int
-afsmodload(struct lkm_table *lkmtp, int cmd, int ver)
+libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 {
     if (cmd == LKM_E_LOAD) {
 	if (strcmp(ostype, afs_NetBSD_osname)) {
@@ -527,10 +527,4 @@ afsmodload(struct lkm_table *lkmtp, int cmd, int ver)
 	}
     }
     DISPATCH(lkmtp,cmd,ver,afs_vfs_load,afs_vfs_unload,lkm_nofunc);
-}
-
-int
-libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
-{
-    return afsmodload(lkmtp, cmd, ver);
 }
