@@ -14,7 +14,7 @@ dnl vac.C 4.4.0.0		440
 dnl vac.C 5.0.2.1		502
 dnl
 
-AC_DEFUN(AC_AIX_CC_GOOD, [
+AC_DEFUN([AC_AIX_CC_GOOD], [
 AIXCC="$CC"
 save_CC="$CC"
 if test "$CC" ; then

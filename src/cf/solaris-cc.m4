@@ -8,7 +8,7 @@ dnl whose digits correspond to the digits in the compiler
 dnl version. Thus compiler version 4.2.0 is 0x420.
 dnl
 
-AC_DEFUN(AC_SOLARIS_CC_GOOD, [
+AC_DEFUN([AC_SOLARIS_CC_GOOD], [
 SOLARISCC="$CC"
 save_CC="$CC"
 if test "$CC" ; then

@@ -1,4 +1,4 @@
-AC_DEFUN(AC_FUNC_RES_SEARCH, [
+AC_DEFUN([AC_FUNC_RES_SEARCH], [
   ac_cv_func_res_search=no
   AC_TRY_LINK([
 #include <sys/types.h>

@@ -1,5 +1,5 @@
 
-AC_DEFUN(OPENAFS_OSCONF, [
+AC_DEFUN([OPENAFS_OSCONF], [
 
 dnl defaults, override in case below as needed
 XCFLAGS='${DBG} ${OPTMZ}'

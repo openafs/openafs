@@ -4,7 +4,7 @@ dnl
 dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
-AC_DEFUN(OPENAFS_CONFIGURE_COMMON,[
+AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`

@@ -1,4 +1,4 @@
-AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
+AC_DEFUN([LINUX_KERNEL_LINUX_SYSCALL_H],[
   AC_MSG_CHECKING(for linux/syscall.h in kernel)
   if test -f "${LINUX_KERNEL_PATH}/include/linux/syscall.h"; then
     ac_linux_syscall=yes
@@ -9,7 +9,7 @@ AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
   fi
 ])
 
-AC_DEFUN(LINUX_NEED_RHCONFIG,[
+AC_DEFUN([LINUX_NEED_RHCONFIG],[
 RHCONFIG_SP=""
 RHCONFIG_MP=""
 if test "x$enable_redhat_buildsys" = "xyes"; then
@@ -33,7 +33,7 @@ AC_SUBST(RHCONFIG_SP)
 AC_SUBST(RHCONFIG_MP)
 ])
 
-AC_DEFUN(LINUX_WHICH_MODULES,[
+AC_DEFUN([LINUX_WHICH_MODULES],[
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
 else
