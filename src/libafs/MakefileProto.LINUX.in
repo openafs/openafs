@@ -238,11 +238,11 @@ libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
 <linux26 umlinux26>
-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
-	cp libafs.ko $@
+${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: openafs.ko
+	cp openafs.ko $@
 
 .FORCE:
-libafs.ko: .FORCE
+openafs.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" ../$(srcdir)/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
