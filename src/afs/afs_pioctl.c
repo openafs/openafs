@@ -371,7 +371,6 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void * arg, int flag, cred_t *cr, rval_t *r
 }
 #endif /* AFS_SGI_ENV */
 
-
 /* unlike most calls here, this one uses u.u_error to return error conditions,
    since this is really an intercepted chapter 2 call, rather than a vnode
    interface call.
@@ -381,7 +380,11 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void * arg, int flag, cred_t *cr, rval_t *r
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX51_ENV
+#ifdef __64BIT__
 kioctl(fdes, com, arg, ext, arg2, arg3)
+#else /* __64BIT__ */
+kioctl32(fdes, com, arg, ext, arg2, arg3)
+#endif /* __64BIT__ */
      caddr_t arg2, arg3;
 #else
 kioctl(fdes, com, arg, ext)
@@ -614,12 +617,16 @@ int afs_xioctl (void)
 #ifdef	AFS_AIX41_ENV
 	ufdrele(uap->fd);
 #ifdef AFS_AIX51_ENV
+#ifdef __64BIT__
 	code = okioctl(fdes, com, arg, ext, arg2, arg3);
-#else
+#else /* __64BIT__ */
+	code = okioctl32(fdes, com, arg, ext, arg2, arg3);
+#endif /* __64BIT__ */
+#else /* !AFS_AIX51_ENV */
 	code = okioctl(fdes, com, arg, ext);
-#endif
+#endif /* AFS_AIX51_ENV */
 	return code;
-#else
+#else /* !AFS_AIX41_ENV */
 #ifdef	AFS_AIX32_ENV
 	okioctl(fdes, com, arg, ext);
 #elif defined(AFS_SUN5_ENV)
