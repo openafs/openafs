@@ -239,9 +239,15 @@ int SRXAFSCB_GetLock (a_call, a_index, a_result)
 	a_result->lock.exclLocked = ((struct afs_lock *)(tl->addr))->excl_locked;
 	a_result->lock.readersReading = ((struct afs_lock *)(tl->addr))->readers_reading;
 	a_result->lock.numWaiting = ((struct afs_lock *)(tl->addr))->num_waiting;
+#ifdef INSTRUMENT_LOCKS
 	a_result->lock.pid_last_reader = ((struct afs_lock *)(tl->addr))->pid_last_reader;
 	a_result->lock.pid_writer = ((struct afs_lock *)(tl->addr))->pid_writer;
 	a_result->lock.src_indicator = ((struct afs_lock *)(tl->addr))->src_indicator;
+#else
+	a_result->lock.pid_last_reader = 0;
+	a_result->lock.pid_writer = 0;
+	a_result->lock.src_indicator = 0;
+#endif
 	code = 0;
     }
 
