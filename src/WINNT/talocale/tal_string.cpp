@@ -181,7 +181,7 @@ void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LONG ids, LPCT
 void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat, ...)
 {
    va_list arg;
-   if (pszFormat != NULL)
+   //if (pszFormat != NULL)
       va_start (arg, pszFormat);
    vFormatMultiString (ppszTarget, fAddHead, (LONG)pszTemplate, pszFormat, arg);
 }
@@ -189,7 +189,7 @@ void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemp
 void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate, LPCTSTR pszFormat, ...)
 {
    va_list arg;
-   if (pszFormat != NULL)
+   //if (pszFormat != NULL)
       va_start (arg, pszFormat);
    vFormatMultiString (ppszTarget, fAddHead, (LONG)idsTemplate, pszFormat, arg);
 }
@@ -212,7 +212,7 @@ void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplat
 LPTSTR cdecl FormatString (LPCTSTR psz, LPCTSTR pszFmt, ...)
 {
    va_list arg;
-   if (pszFmt != NULL)
+   //if (pszFmt != NULL)
       va_start (arg, pszFmt);
    return vFormatString ((LONG)psz, pszFmt, arg);
 }
@@ -220,7 +220,7 @@ LPTSTR cdecl FormatString (LPCTSTR psz, LPCTSTR pszFmt, ...)
 LPTSTR cdecl FormatString (int ids, LPCTSTR pszFmt, ...)
 {
    va_list  arg;
-   if (pszFmt != NULL)
+   //if (pszFmt != NULL)
       va_start (arg, pszFmt);
    return vFormatString ((LONG)ids, pszFmt, arg);
 }
