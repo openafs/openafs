@@ -24,7 +24,7 @@ kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afszcm.cat
 	${INSTALL} ${srcdir}/${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 	-${INSTALL} ${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 
-afs_trace.h afs_trace.msf:
+afs_trace.h afs_trace.msf: afs_trace.et
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
 
 afszcm.cat: afs_trace.msf
