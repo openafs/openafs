@@ -23,36 +23,82 @@ extern struct mount *afs_cacheVfsp;
 void *osi_UFSOpen(ainode)
     afs_int32 ainode;
 {
+    static struct vnode *tags_vnode = NULL;
     struct inode *ip;
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
     int dummy;
     AFS_STATCNT(osi_UFSOpen);
-    if(cacheDiskType != AFS_FCACHE_TYPE_UFS) {
+    if(cacheDiskType != AFS_FCACHE_TYPE_UFS) 
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    }
-    if (!afs_osicred_initialized) {
-	/* valid for alpha_osf, SunOS, Ultrix */
-	bzero((char *)&afs_osi_cred, sizeof(struct AFS_UCRED));
-	afs_osi_cred.cr_ref++;
-	afs_osicred_initialized = 1;
-    }
+
     afile = (struct osi_file *) osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t)ainode, &ip, &dummy);
-    AFS_GLOCK();
-    if (code) {
-	osi_FreeSmallSpace(afile);
-	osi_Panic("UFSOpen: igetinode failed");
+
+    switch(afs_cacheVfsp->m_stat.f_type) {
+    case MOUNT_UFS:
+       code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t)ainode, &ip, &dummy);
+       if (code) {
+           osi_FreeSmallSpace(afile);
+           osi_Panic("UFSOpen: igetinode failed");
+       }
+       IN_UNLOCK(ip);
+       afile->vnode = ITOV(ip);
+       afile->size = VTOI(afile->vnode)->i_size;
+       afile->offset = 0;
+       afile->proc = NULL;
+       afile->inum = ainode;        /* for hint validity checking */
+       break;
+    case MOUNT_MSFS: {
+       char path[1024];
+       struct nameidata nd, *ndp = &nd;
+       struct utask_nd utnd = { NULL, NULL };
+       struct vattr attr;
+
+       bzero(&nd, sizeof(nd));
+       ndp->ni_utnd = &utnd;
+       ndp->ni_nameiop = LOOKUP;
+       ndp->ni_cred = &afs_osi_cred;
+       ndp->ni_segflg  = UIO_SYSSPACE;
+
+       /* get hold of a vnode for the .tags directory, so we can
+           lookup files relative to it */
+       if(tags_vnode == NULL) {
+           ndp->ni_cdir = afs_cacheVfsp->m_vnodecovered;
+           strcpy(path, afs_cacheVfsp->m_stat.f_mntonname);
+           strcat(path, "/.tags");
+           ndp->ni_dirp = path;
+           if((code = namei(ndp)))
+               osi_Panic("failed to lookup %s (%d)", path, code);
+           tags_vnode = ndp->ni_vp;
+       }
+       sprintf(path, "%d", ainode);
+       ndp->ni_dirp = path;
+       ndp->ni_cdir = tags_vnode;
+       if((code = namei(ndp)))
+           osi_Panic("failed to lookup %s (%d)", path, code);
+
+       /* XXX this sucks, chances are we're going to do this again right
+          away, but apparently we can't just set the size to 0 */
+       VOP_GETATTR(ndp->ni_vp, &attr, &afs_osi_cred, code);
+       if(code) 
+           osi_Panic("failed to stat %s (%d)", path, code);
+
+       afile->vnode = ndp->ni_vp;
+       afile->size = attr.va_size;
+       afile->offset = 0;
+       afile->proc = NULL;
+       afile->inum = ainode;        /* for hint validity checking */
+       break;
     }
-    IN_UNLOCK(ip);
-    afile->vnode = ITOV(ip);
-    afile->size = VTOI(afile->vnode)->i_size;
-    afile->offset = 0;
-    afile->proc = (int (*)()) 0;
-    afile->inum = ainode;        /* for hint validity checking */
-    return (void *)afile;
+    default:
+	osi_Panic("UFSOpen called for unknown cache-type (%d)", 
+		  afs_cacheVfsp->m_stat.f_type);
+    }
+
+    AFS_GLOCK();
+    return afile;
 }
 
 afs_osi_Stat(afile, astat)
@@ -121,7 +167,9 @@ osi_UFSTruncate(afile, asize)
 void osi_DisableAtimes(avp)
 struct vnode *avp;
 {
-   struct inode *ip = VTOI(avp);
+   struct inode *ip;
+   assert(avp->v_tag == VT_UFS);
+   ip = VTOI(avp);
    ip->i_flag &= ~IACC;
 }
 
