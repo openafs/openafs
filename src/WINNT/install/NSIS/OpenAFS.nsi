@@ -593,8 +593,12 @@ Section "AFS Client" secClient
    DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Debug"
    DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Debug"
 !endif
-   ; Set network settings
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
+
+   ; On Windows 2000 work around KB301673.  This is fixed in Windows XP and 2003
+   Call GetWindowsVersion
+   Pop $R1
+   StrCmp $R1 "2000" +1 +2
+   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
   
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
