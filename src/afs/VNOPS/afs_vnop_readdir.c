@@ -96,7 +96,7 @@ int BlobScan(afs_int32 *afile, afs_int32 ablob)
 	}
 	/* now relativeBlob is the page-relative first allocated blob,
 	 or EPP (if there are none in this page). */
-	DRelease(tpe, 0);
+	DRelease((struct buffer *) tpe, 0);
 	if (i != EPP) return i+pageBlob;
 	ablob =	pageBlob + EPP;	/* go around again */
     }
@@ -477,14 +477,14 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     struct vrequest treq;
     register struct dcache *tdc;
     afs_size_t origOffset, tlen;
-    afs_int32 len, dirsiz;
+    afs_int32 len;
     int code = 0;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
     afs_uint32 us;
     struct afs_fakestat_state fakestate;
 #if defined(AFS_SGI53_ENV)
-    afs_int32 use64BitDirent;
+    afs_int32 use64BitDirent, dirsiz;
 #endif /* defined(AFS_SGI53_ENV) */
     OSI_VC_CONVERT(avc)
 #ifdef	AFS_HPUX_ENV
@@ -659,7 +659,7 @@ tagain:
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (eofp) *eofp = 1;	/* Set it properly */
 #endif
-	    if (ode) DRelease(ode, 0);
+	    if (ode) DRelease((struct buffer *) ode, 0);
 	    goto dirend;
 	}
 	/* by here nde is set */
@@ -678,7 +678,7 @@ tagain:
 	if (DIRSIZ_LEN(n_slen) >= (auio->afsio_resid-len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
-	    DRelease (nde, 0); /* can't use this one. */
+	    DRelease ((struct buffer *) nde, 0); /* can't use this one. */
 	    if (len) {
 #ifdef	AFS_HPUX_ENV
 		sdirEntry->d_fileno = (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
@@ -720,7 +720,7 @@ tagain:
 		 */
 		code = EINVAL;
 	    }
-	    if (ode) DRelease(ode, 0);
+	    if (ode) DRelease((struct buffer *) ode, 0);
 	    goto dirend;
 	}
 
@@ -767,11 +767,11 @@ tagain:
 #else
 	len = DIRSIZ_LEN( o_slen = n_slen );
 #endif /* AFS_SGI53_ENV */
-   	if (ode) DRelease(ode, 0);
+   	if (ode) DRelease((struct buffer *) ode, 0);
 	ode = nde;
 	auio->afsio_offset = (afs_int32)((us + afs_dir_NameBlobs(nde->name)) << 5);
     }
-    if (ode) DRelease(ode, 0);
+    if (ode) DRelease((struct buffer *) ode, 0);
 
 dirend:
     ReleaseReadLock(&tdc->lock);

@@ -179,10 +179,7 @@ struct volume *afs_UFSGetVolSlot(void)
 
 struct volume *afs_MemGetVolSlot(void)
 {
-    register struct volume *tv, **lv;
-    register afs_int32 i;
-    afs_int32 bestTime;
-    struct volume *bestVp, **bestLp;
+    register struct volume *tv;
 
     AFS_STATCNT(afs_MemGetVolSlot);
     if (!afs_freeVolList) {
@@ -558,7 +555,7 @@ int lastnvcode;
 static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 				   struct vrequest *areq, afs_int32 locktype)
 {
-    afs_int32 code, i, type=0;
+    afs_int32 code, type=0;
     struct volume *tv, *tv1;
     struct vldbentry *tve;
     struct nvldbentry *ntve;
@@ -567,7 +564,6 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     char *tbuffer, *ve;
     struct conn *tconn;
     struct vrequest treq;
-    XSTATS_DECLS;
 
     if (strlen(aname) > VL_MAXNAMELEN)	/* Invalid volume name */
 	return NULL;
@@ -843,14 +839,13 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 			 int acell, struct cell *tcell, struct vrequest *areq)
 {
-    register struct srvAddr *sa;
     register struct server *ts;
     struct conn *tconn;
     struct cell *cellp;
     register int i, j;
     afs_uint32 serverid;
     afs_int32 mask;
-    int hash, k;
+    int k;
 
     AFS_STATCNT(InstallVolumeEntry);
 

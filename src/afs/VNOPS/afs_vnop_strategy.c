@@ -47,9 +47,6 @@ afs_ustrategy(abp)
     struct AFS_UCRED *credp = u.u_cred;
 #endif
 #endif
-#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    int async = abp->b_flags & B_ASYNC;
-#endif
     struct iovec tiovec[1];
 
     AFS_STATCNT(afs_ustrategy);
