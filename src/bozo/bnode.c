@@ -554,11 +554,11 @@ static int bproc() {
 			    RememberProcName(tp);
 			}
 			if (tp->coreName)
-			    bozo_Log("%s:%s exited on signal %d%s",
+			    bozo_Log("%s:%s exited on signal %d%s\n",
 				tb->name, tp->coreName, tp->lastSignal,
 				WCOREDUMP(status) ? " (core dumped)" : "");
 			else
-			    bozo_Log("%s exited on signal %d%s",
+			    bozo_Log("%s exited on signal %d%s\n",
 				tb->name, tp->lastSignal,
 				WCOREDUMP(status) ? " (core dumped)" : "");
 			SaveCore(tb, tp);
