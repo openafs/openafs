@@ -14,7 +14,7 @@
 #define _OSI_PROTO_H_
 
 /* osi_alloc.c */
-extern void *osi_linux_alloc(unsigned int size);
+extern void *osi_linux_alloc(unsigned int size, int drop_glock);
 extern void osi_linux_free(void *addr);
 extern void osi_linux_free_afs_memory(void);
 /* Debugging aid */

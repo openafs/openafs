@@ -24,7 +24,7 @@ RCSID("$Header$");
 #include "../afs/afs_atomlist.h"
 #include "../afs/afs_lhash.h"
 
-#define MAX_KMALLOC_SIZE AFS_SMALLOCSIZ /* Max we should alloc with kmalloc */
+#define MAX_KMALLOC_SIZE PAGE_SIZE /* Max we should alloc with kmalloc */
 #define MAX_BUCKET_LEN 30 /* max. no. of entries per buckets we expect to see */
 #define STAT_INTERVAL 8192 /* we collect stats once every STAT_INTERVAL allocs*/
 
@@ -76,7 +76,7 @@ static int hash_equal(const void *a, const void *b)
  *  returns NULL if we failed to allocate memory.
  *  or pointer to memory if we succeeded.
  */
-static void *linux_alloc(unsigned int asize)
+static void *linux_alloc(unsigned int asize, int drop_glock)
 {
     void *new = NULL;
     int max_retry = 10;
@@ -106,7 +106,9 @@ static void *linux_alloc(unsigned int asize)
 #else
 	    current->state = TASK_INTERRUPTIBLE;
 #endif
+	    if (drop_glock) AFS_GUNLOCK();
 	    schedule_timeout(HZ);
+	    if (drop_glock) AFS_GLOCK();
 #ifdef set_current_state
             set_current_state(TASK_RUNNING);
 #else
@@ -280,12 +282,12 @@ DECLARE_MUTEX(afs_linux_alloc_sem);
 struct semaphore afs_linux_alloc_sem = MUTEX;
 #endif
 
-void *osi_linux_alloc(unsigned int asize)
+void *osi_linux_alloc(unsigned int asize, int drop_glock)
 {
     void *new = NULL;
     struct osi_linux_mem *lmem;
 
-    new = linux_alloc(asize); /* get a chunk of memory of size asize */
+    new = linux_alloc(asize, drop_glock); /* get a chunk of memory of size asize */
 
     if (!new) {
 	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
