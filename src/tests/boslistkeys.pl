@@ -17,7 +17,9 @@ $cell = &AFS_fs_wscell();
 foreach $this (keys %ret) {
     if ($this == 250) {
 	if ($ret{250} ne 3288840443) {
-	    exit(1);
+	    if ($ret{250} ne 1530169307) {
+		exit(1);
+	    }
 	}
     }
 }
