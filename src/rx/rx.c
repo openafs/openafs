@@ -897,7 +897,12 @@ static void rxi_DestroyConnectionNoLock(conn)
 		     * last reply packets */
 		    rxevent_Cancel(call->delayedAckEvent, call,
 				   RX_CALL_REFCOUNT_DELAY);
-		    rxi_AckAll((struct rxevent *)0, call, 0);
+		    if (call->state == RX_STATE_PRECALL ||
+			call->state == RX_STATE_ACTIVE) {
+			rxi_SendDelayedAck(call->delayedAckEvent, call, 0);
+		    } else {
+			rxi_AckAll((struct rxevent *)0, call, 0);
+		    }
 		}
 		MUTEX_EXIT(&call->lock);
 	    }
