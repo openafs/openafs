@@ -287,33 +287,48 @@ vfsck:	vol
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-login: cmd comerr kauth rxkad
+pam: cmd comerr kauth rxkad
+	set -x; \
+	if test "@HAVE_PAM@" = "yes"; then \
+		${COMPILE_PART1} pam ${COMPILE_PART2} ; \
+	else \
+		echo Skipping pam for ${SYS_NAME} ; \
+	fi
+
+tsm41: cmd comerr kauth rxkad
+	set -x; \
+	case ${SYS_NAME} in \
+	rs_aix* ) \
+		${COMPILE_PART1} tsm41 ${COMPILE_PART2} ;; \
+	* ) \
+		echo Skipping tsm41 for ${SYS_NAME} ;; \
+	esac
+
+sia: cmd comerr kauth rxkad
+	set -x; \
+	case ${SYS_NAME} in \
+	alpha_dux* ) \
+		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
+	* ) \
+		echo Skipping sia for ${SYS_NAME} ;; \
+	esac
+
+sgistuff: cmd comerr kauth rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	sgi_* ) \
 		${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
-	rs_aix42 | rs_aix51 ) \
-		${COMPILE_PART1} tsm41 ${COMPILE_PART2} ;; \
-	alpha_dux* ) \
-		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
-	sun4x_55 ) \
-		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	parisc_linux24) \
-		echo Skipping pam/login for parisc_linux24 ;; \
-	amd64_linux24) \
-		echo Skipping pam/login for amd64_linux24 ;; \
-	sun4x_* | sunx86_* | hp_ux11* | ia64_hpux* | *linux* | *fbsd* ) \
-		if test "@HAVE_PAM@" = "yes"; then \
-			${COMPILE_PART1} pam ${COMPILE_PART2} ; \
-		else \
-			echo Skipping pam for ${SYS_NAME} ; \
-		fi ;; \
-	*_darwin* | *_obsd* | *_nbsd* | hp_ux* | rs_aix5* ) \
-		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
-		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
+		echo Skipping sgistuff for ${SYS_NAME} ;; \
 	esac
 
+login: cmd comerr kauth rxkad pam sia tsm41 sgistuff
+	set -x; \
+	if test "@BUILD_LOGIN@" = "yes"; then \
+		${COMPILE_PART1} login ${COMPILE_PART2} ; \
+	else \
+		echo Skipping login for ${SYS_NAME} ; \
+	fi
 
 #
 # _depinstall targets - only build and install headers/sources that are needed by libafs/libuafs

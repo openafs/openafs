@@ -19,6 +19,8 @@ AC_ARG_ENABLE( insecure,
 [  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="no")
 AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
+AC_ARG_ENABLE( pam,
+[  --disable-pam 			disable PAM support],, enable_pam="yes")
 AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( bos-new-config,
@@ -77,6 +79,8 @@ AC_ARG_ENABLE(debug-lwp,
 AC_ARG_ENABLE(optimize-lwp,
 [  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
 )
+
+enable_login="no"
 
 dnl weird ass systems
 AC_AIX
@@ -507,6 +511,7 @@ else
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
+			enable_login="yes"
 			;;
 		sparc-sun-solaris2.6)
 			AFS_SYSNAME="sun4x_56"
@@ -522,6 +527,7 @@ else
 			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
+			enable_login="yes"
 			;;
 		i386-pc-solaris2.7)
 			AFS_SYSNAME="sunx86_57"
@@ -570,6 +576,7 @@ else
 			;;
 		parisc-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
+			enable_pam="no"
 			;;
 		power*-ibm-aix4.2*)
 			AFS_SYSNAME="rs_aix42"
@@ -585,6 +592,7 @@ else
 			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
+			enable_pam="no"
 			;;
 		*)
 			AC_MSG_ERROR(An AFS sysname is required)
@@ -872,12 +880,19 @@ AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
 
-if test "$ac_cv_header_security_pam_modules_h" = "yes"; then
+if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
 else
 	HAVE_PAM="no"
 fi
 AC_SUBST(HAVE_PAM)
+
+if test "$enable_login" = yes; then
+	BUILD_LOGIN="yes"
+else
+	BUILD_LOGIN="no"
+fi
+AC_SUBST(BUILD_LOGIN)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
