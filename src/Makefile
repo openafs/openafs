@@ -427,7 +427,7 @@ libafsauthent: ubik auth kauth libafsrpc
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
-libadmin_real: libafsauthent bozo
+libadmin_real: 
 	${COMPILE_PART1} libadmin ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/adminutil ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/vos ${COMPILE_PART2}
