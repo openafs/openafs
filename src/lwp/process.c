@@ -37,6 +37,8 @@ char*	newsp;
 {
 #if defined(AFS_IA64_LINUX20_ENV)
 	register unsigned long sp __asm__("r12");
+#elif defined(AFS_AMD64_LINUX24_ENV)
+	register unsigned long sp __asm__("sp");
 #elif defined(AFS_HPUX1122_ENV)
 /* don't need anything special, will use
  * ucontext.uc_stack.ss_sp as it matches r12.

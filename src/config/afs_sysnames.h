@@ -185,6 +185,9 @@
 #define SYS_NAME_ID_i386_obsd32		2601
 #define SYS_NAME_ID_i386_obsd33		2602
 
+#define SYS_NAME_ID_amd64_linux2        2700
+#define SYS_NAME_ID_amd64_linux22       2701
+#define SYS_NAME_ID_amd64_linux24       2702
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

@@ -520,6 +520,9 @@ else
 		power*-ibm-aix4.3*)
 			AFS_SYSNAME="rs_aix42"
 			;;
+		x86_64-*-linux-gnu)
+			AFS_SYSNAME="amd64_linuxXX"
+			;;
 		*)
 			AC_MSG_ERROR(An AFS sysname is required)
 			exit 1
