@@ -587,7 +587,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	vp = AttachVolume(dp, name, &header);
 	if (!vp) {
 	    printf("Volinfo: Error attaching volume header %s\n", name);
-	    exit(1);
+	    return;
 	}
     }
     PrintHeader(vp);
