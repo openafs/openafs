@@ -116,7 +116,7 @@ static purge_dead_pcbs();
 struct QUEUE {
     PROCESS head;
     int count;
-} runnable[MAX_PRIORITIES], blocked;
+} runnable[MAX_PRIORITIES], blocked, qwaiting;
 /* Invariant for runnable queues: The head of each queue points to the currently running process if it is in that queue, or it points to the next process in that queue that should run. */
 
 /* Offset of stack field within pcb -- used by stack checking stuff */
@@ -237,7 +237,7 @@ LWP_QWait(void)
 {
     register PROCESS tp;
     (tp = lwp_cpptr)->status = QWAITING;
-    lwp_remove(tp, &runnable[tp->priority]);
+    move(tp, &runnable[tp->priority], qwaiting);
     Set_LWP_RC();
     return LWP_SUCCESS;
 }
@@ -248,7 +248,7 @@ LWP_QSignal(pid)
 {
     if (pid->status == QWAITING) {
 	pid->status = READY;
-	insert(pid, &runnable[pid->priority]);
+	move(pid, qwaiting, &runnable[pid->priority]);
 	return LWP_SUCCESS;
     } else
 	return LWP_ENOWAIT;
@@ -556,6 +556,9 @@ Dump_Processes(void)
 	    for_all_elts(x, blocked, {
 			 Dump_One_Process(x);}
 	)
+	    for_all_elts(x, qwaiting, {
+			 Dump_One_Process(x);}
+	)
     } else
 	printf("***LWP: LWP support not initialized\n");
     return 0;
@@ -596,6 +599,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     }
     blocked.head = NULL;
     blocked.count = 0;
+    qwaiting.head = NULL;
+    qwaiting.count = 0;
     lwp_init = (struct lwp_ctl *)malloc(sizeof(struct lwp_ctl));
     temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
     if (lwp_init == NULL || temp == NULL)
@@ -653,6 +658,9 @@ LWP_TerminateProcessSupport(void)
 		     Free_PCB(cur);}
     )
 	for_all_elts(cur, blocked, {
+		     Free_PCB(cur);}
+    )
+	for_all_elts(cur, qwaiting, {
 		     Free_PCB(cur);}
     )
 	free(lwp_init);
@@ -779,7 +787,9 @@ Delete_PCB(register PROCESS pid)
     lwp_remove(pid,
 	       (pid->blockflag || pid->status == WAITING
 		|| pid->status ==
-		DESTROYED ? &blocked : &runnable[pid->priority]));
+		DESTROYED ? &blocked : 
+		(pid->status == QWAITING) ? &qwaiting :
+		&runnable[pid->priority]));
     LWPANCHOR.processcnt--;
     return 0;
 }
@@ -805,6 +815,9 @@ Dump_One_Process(PROCESS pid)
 	break;
     case DESTROYED:
 	printf("DESTROYED");
+	break;
+    case QWAITING:
+	printf("QWAITING");
 	break;
     default:
 	printf("unknown");
@@ -865,7 +878,13 @@ Dispatcher(void)
 		     printf(" \"%s\"", p->name);
 		     }
 	)
-	    puts("]");
+	puts("]");
+	printf("[Qwaiting (%d):", qwaiting.count);
+	for_all_elts(p, qwaiting, {
+		     printf(" \"%s\"", p->name);
+		     }
+	)
+	puts("]");
     }
 #endif
 
