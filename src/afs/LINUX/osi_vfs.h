@@ -50,6 +50,9 @@ typedef struct vnode {
 #if !defined(AFS_LINUX24_ENV)
 	unsigned long		i_nrpages;
 #endif
+#ifdef STRUCT_INODE_HAS_I_BYTES
+        unsigned short          i_bytes;
+#endif
 	struct semaphore	i_sem;
 #if defined(AFS_LINUX24_ENV)
         struct semaphore        i_zombie;
