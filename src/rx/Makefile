@@ -39,7 +39,7 @@ LIBS = librx.a ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/libcmd.a \
 LINK = ${CC} ${CFLAGS} -o $@ $@.o ${LIBS} ${SRCDIR}lib/afs/libsys.a ${XLIBS}
 
 KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
-	rx_globals.c rx_globals.h rx_kernel.h \
+	rx_globals.c rx_globals.h rx_kernel.h rx_misc.h \
 	rx_null.c rx_null.h rx_queue.h rx_getaddr.c rx_packet.c rx_packet.h \
 	rx_multi.h rx_kcommon.h rx_kcommon.c \
 	xdr.c xdr.h xdr_array.c xdr_arrayn.c xdr_rx.c rx_misc.c rx_rdwr.c \
