@@ -306,17 +306,9 @@ usd_FileClose(usd_handle_t usd)
     if (usd->openFlags & (O_WRONLY | O_RDWR)) {
 	int mode;
 	code = usd_FileIoctl(usd, USD_IOCTL_GETTYPE, &mode);
-	if (code == 0) {
-	    if (S_ISBLK(mode)
-#ifndef AFS_AIX_ENV
-		/* on AIX3.1 can't fsync raw disk device */
-		|| S_ISCHR(mode)
-#endif
-		) {
-		code = fsync(fd);
-		if (code)
-		    code = errno;
-	    }
+	if (code == 0 && S_ISBLK(mode)) {
+	    if (fsync(fd) < 0)
+		code = errno;
 	}
     }
 
