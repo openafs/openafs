@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
- * (Royal Institute of Technology, Stockholm, Sweden).
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan 
+ * (Royal Institute of Technology, Stockholm, Sweden).  
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,79 +33,70 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <time.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <err.h>
-
-#ifdef RCSID
 RCSID("$Id$");
 #endif
 
-static char *
-write_random_file (int fd, size_t sz)
+#include "err.h"
+
+#ifndef HAVE___PROGNAME
+const char *__progname;
+#endif
+
+#ifndef HAVE_GETPROGNAME
+const char *
+getprogname(void)
 {
-    char *buf;
-    int i, j;
+    return __progname;
+}
+#endif
 
-    j = sz;
-    if (j > 2048) {
-      j = 2048;
-    }
-    buf = malloc (j);
-    if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+#ifndef HAVE_SETPROGNAME
+void
+setprogname(const char *argv0)
+{
+#ifndef HAVE___PROGNAME
+    char *p;
+    if(argv0 == NULL)
+	return;
+    p = strrchr(argv0, '/');
+    if(p == NULL)
+	p = argv0;
+    else
+	p++;
+    __progname = p;
+#endif
+}
+#endif /* HAVE_SETPROGNAME */
 
-    for (i = 0; i < j; ++i) {
-      buf[i] = rand();
-    }      
-    while (sz > 0) {
-      if (write (fd, buf, j) != j)
-	err (1, "write");
-      
-      sz -= j;
-      j = sz;
-      if (j > 2048)
-	j = 2048;
-    }
-
-    return 0;
+void
+set_progname(char *argv0)
+{
+    setprogname ((const char *)argv0);
 }
 
-int
-main (int argc, char **argv)
+const char *
+get_progname (void)
 {
-    const char *file;
-    size_t sz;
-    char *random_buf;
-    char *read_buf1;
-    char *read_buf2;
-    int fd;
+    return getprogname ();
+}
 
-    if (argc != 3) 
-      errx (1, "usage: %s file size", argv[0]);
+void
+warnerr(int doerrno, const char *fmt, va_list ap)
+{
+    int sverrno = errno;
+    const char *progname = getprogname();
 
-    file = argv[1];
-    sz = atoi(argv[2]);
-
-    srand (time(NULL));
-
-    fd = open (file, O_RDWR | O_CREAT, 0755);
-    if (fd < 0)
-	err (1, "open %s", file);
-
-    if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
-    write_random_file(fd, sz);
-
-    close (fd);
-    return 0;
+    if(progname != NULL){
+	fprintf(stderr, "%s", progname);
+	if(fmt != NULL || doerrno)
+	    fprintf(stderr, ": ");
+    }
+    if (fmt != NULL){
+	vfprintf(stderr, fmt, ap);
+	if(doerrno)
+	    fprintf(stderr, ": ");
+    }
+    if(doerrno)
+	fprintf(stderr, "%s", strerror(sverrno));
+    fprintf(stderr, "\n");
 }

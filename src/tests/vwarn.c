@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan
- * (Royal Institute of Technology, Stockholm, Sweden).
+ * Copyright (c) 1995 - 2001 Kungliga Tekniska Högskolan 
+ * (Royal Institute of Technology, Stockholm, Sweden).  
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -33,79 +33,13 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <time.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <err.h>
-
-#ifdef RCSID
 RCSID("$Id$");
 #endif
 
-static char *
-write_random_file (int fd, size_t sz)
+#include <err.h>
+
+void
+vwarn(const char *fmt, va_list ap)
 {
-    char *buf;
-    int i, j;
-
-    j = sz;
-    if (j > 2048) {
-      j = 2048;
-    }
-    buf = malloc (j);
-    if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
-
-    for (i = 0; i < j; ++i) {
-      buf[i] = rand();
-    }      
-    while (sz > 0) {
-      if (write (fd, buf, j) != j)
-	err (1, "write");
-      
-      sz -= j;
-      j = sz;
-      if (j > 2048)
-	j = 2048;
-    }
-
-    return 0;
-}
-
-int
-main (int argc, char **argv)
-{
-    const char *file;
-    size_t sz;
-    char *random_buf;
-    char *read_buf1;
-    char *read_buf2;
-    int fd;
-
-    if (argc != 3) 
-      errx (1, "usage: %s file size", argv[0]);
-
-    file = argv[1];
-    sz = atoi(argv[2]);
-
-    srand (time(NULL));
-
-    fd = open (file, O_RDWR | O_CREAT, 0755);
-    if (fd < 0)
-	err (1, "open %s", file);
-
-    if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
-    write_random_file(fd, sz);
-
-    close (fd);
-    return 0;
+    warnerr(1, fmt, ap);
 }
