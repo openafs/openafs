@@ -14,7 +14,7 @@
 #ifdef KERNEL
 #include "../afs/fcrypt.h"
 #else
-#include "fcrypt.h"
+#include "rx/fcrypt.h"
 #endif
 #include "../rx/rx.h"
 
