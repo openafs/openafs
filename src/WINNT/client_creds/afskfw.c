@@ -62,6 +62,7 @@
 #include "creds.h"
 
 #include <osilog.h>
+#include <rxkad_prototypes.h>   /* for life_to_time */
 
 /*
  * TIMING _____________________________________________________________________
@@ -2471,64 +2472,6 @@ static const int tkt_lifetimes[TKTLIFENUMFIXED] = {
     2592000};				/* 720.00 hours, 30.00 days */
 
 
-/*
- * KFW_KRB4_life_to_time - takes a start time and a Kerberos standard
- * lifetime char and returns the corresponding end time.  There are
- * four simple cases to be handled.  The first is a life of 0xff,
- * meaning no expiration, and results in an end time of 0xffffffff.
- * The second is when life is less than the values covered by the
- * table.  In this case, the end time is the start time plus the
- * number of 5 minute intervals specified by life.  The third case
- * returns start plus the MAXTKTLIFETIME if life is greater than
- * TKTLIFEMAXFIXED.  The last case, uses the life value (minus
- * TKTLIFEMINFIXED) as an index into the table to extract the lifetime
- * in seconds, which is added to start to produce the end time.
- */
-static u_int32_t
-KFW_KRB4_life_to_time(u_int32_t start, int life_)
-{
-    unsigned char life = (unsigned char) life_;
-
-    if (no_long_lifetimes) return start + life*5*60;
-
-    if (life == TKTLIFENOEXPIRE) return NEVERDATE;
-    if (life < TKTLIFEMINFIXED) return start + life*5*60;
-    if (life > TKTLIFEMAXFIXED) return start + MAXTKTLIFETIME;
-    return start + tkt_lifetimes[life - TKTLIFEMINFIXED];
-}
-
-/*
- * KFW_KRB4_time_to_life - takes start and end times for the ticket and
- * returns a Kerberos standard lifetime char, possibily using the
- * tkt_lifetimes table for lifetimes above 127*5 minutes.  First, the
- * special case of (end == NEVERDATE) is handled to mean no
- * expiration.  Then negative lifetimes and those greater than the
- * maximum ticket lifetime are rejected.  Then lifetimes less than the
- * first table entry are handled by rounding the requested lifetime
- * *up* to the next 5 minute interval.  The final step is to search
- * the table for the smallest entry *greater than or equal* to the
- * requested entry.
- */
-static int 
-KFW_KRB4_time_to_life(u_int32_t start, u_int32_t end)
-{
-    int i;
-    long lifetime = end - start;
-
-    if (no_long_lifetimes) return (lifetime + 5*60 - 1)/(5*60);
-
-    if (end >= NEVERDATE) return TKTLIFENOEXPIRE;
-    if (lifetime > MAXTKTLIFETIME || lifetime <= 0) return 0;
-    if (lifetime < tkt_lifetimes[0]) return (lifetime + 5*60 - 1)/(5*60);
-    for (i=0; i<TKTLIFENUMFIXED; i++) {
-	if (lifetime <= tkt_lifetimes[i]) {
-	    return i+TKTLIFEMINFIXED;
-	}
-    }
-    return 0;
-}
-
-
 int
 KFW_AFS_klog(
     krb5_context alt_ctx,
@@ -2544,7 +2487,6 @@ KFW_AFS_klog(
     KTEXT_ST    ticket;
     struct ktc_principal	aserver;
     struct ktc_principal	aclient;
-    char	username[BUFSIZ];	/* To hold client username structure */
     char	realm_of_user[REALM_SZ]; /* Kerberos realm of user */
     char	realm_of_cell[REALM_SZ]; /* Kerberos realm of cell */
     char	local_cell[MAXCELLCHARS+1];
@@ -2564,6 +2506,7 @@ KFW_AFS_klog(
     krb5_creds * k5creds = 0;
     krb5_error_code code;
     krb5_principal client_principal = 0;
+    char * cname = 0, *sname = 0;
     int i, retry = 0;
 
     CurrentState = 0;
@@ -2662,6 +2605,9 @@ KFW_AFS_klog(
     memset(&creds, '\0', sizeof(creds));
 
     if ( try_krb5 ) {
+        int len;
+        char *p;
+
         /* First try service/cell@REALM */
         if (code = pkrb5_build_principal(ctx, &increds.server,
                                           strlen(RealmName),
@@ -2678,8 +2624,8 @@ KFW_AFS_klog(
         /* Ask for DES since that is what V4 understands */
         increds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
 
+
         if ( IsDebuggerPresent() ) {
-            char * cname, *sname;
             pkrb5_unparse_name(ctx, increds.client, &cname);
             pkrb5_unparse_name(ctx, increds.server, &sname);
             OutputDebugString("Getting tickets for \"");
@@ -2687,8 +2633,7 @@ KFW_AFS_klog(
             OutputDebugString("\" and service \"");
             OutputDebugString(sname);
             OutputDebugString("\"\n");
-            pkrb5_free_unparsed_name(ctx,cname);
-            pkrb5_free_unparsed_name(ctx,sname);
+            cname = sname = 0;
         }
 
         code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
@@ -2715,6 +2660,7 @@ KFW_AFS_klog(
                 OutputDebugString("\"\n");
                 pkrb5_free_unparsed_name(ctx,cname);
                 pkrb5_free_unparsed_name(ctx,sname);
+                cname = sname = 0;
             }
 
             if (!code)
@@ -2730,7 +2676,72 @@ KFW_AFS_klog(
             try_krb5 = 0;
             goto use_krb4;
         }
-        /* This requires krb524d to be running with the KDC */
+
+        /* This code inserts the entire K5 ticket into the token
+         * No need to perform a krb524 translation which is 
+         * commented out in the code below
+         */
+        if (k5creds->ticket.length > MAXKTCTICKETLEN)
+            goto try_krb524d;
+
+        memset(&aserver, '\0', sizeof(aserver));
+        strncpy(aserver.name, ServiceName, MAXKTCNAMELEN - 1);
+        strncpy(aserver.cell, CellName, MAXKTCREALMLEN - 1);
+
+        memset(&atoken, '\0', sizeof(atoken));
+        atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
+        atoken.startTime = k5creds->times.starttime;
+        atoken.endTime = k5creds->times.endtime;
+        memcpy(&atoken.sessionKey, k5creds->keyblock.contents, k5creds->keyblock.length);
+        atoken.ticketLen = k5creds->ticket.length;
+        memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
+
+      retry_gettoken5:
+        rc = pktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
+        if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
+            if ( rc == KTC_NOCM && retry < 20 ) {
+                Sleep(500);
+                retry++;
+                goto retry_gettoken5;
+            }
+            goto try_krb524d;
+        }
+
+        if (atoken.kvno == btoken.kvno &&
+             atoken.ticketLen == btoken.ticketLen &&
+             !memcmp(&atoken.sessionKey, &btoken.sessionKey, sizeof(atoken.sessionKey)) &&
+             !memcmp(atoken.ticket, btoken.ticket, atoken.ticketLen)) 
+        {
+            /* Success - Nothing to do */
+            goto cleanup;
+        }
+
+        // * Reset the "aclient" structure before we call ktc_SetToken.
+        // * This structure was first set by the ktc_GetToken call when
+        // * we were comparing whether identical tokens already existed.
+
+        len = min(k5creds->client->data[0].length,MAXKTCNAMELEN - 1);
+        strncpy(aclient.name, k5creds->client->data[0].data, len);
+        aclient.name[len] = '\0';
+
+        if ( k5creds->client->length > 1 ) {
+            len = min(k5creds->client->data[1].length,MAXKTCNAMELEN - 1);
+            strncpy(aclient.instance, k5creds->client->data[1].data, len);
+            aclient.instance[len] = '\0';
+        } else
+            aclient.instance[0] = '\0';
+        len = min(k5creds->client->realm.length,MAXKTCNAMELEN - 1);
+        strncpy(aclient.cell, k5creds->client->realm.data, len);
+        aclient.cell[len] = '\0';
+
+        rc = pktc_SetToken(&aserver, &atoken, &aclient, 0);
+        if (!rc)
+            goto cleanup;   /* We have successfully inserted the token */
+
+      try_krb524d:
+        /* Otherwise, the ticket could have been too large so try to
+         * convert using the krb524d running with the KDC 
+         */
         code = pkrb524_convert_creds_kdc(ctx, k5creds, &creds);
         pkrb5_free_creds(ctx, k5creds);
         if (code) {
@@ -2784,17 +2795,10 @@ KFW_AFS_klog(
     strncpy(aserver.name, ServiceName, MAXKTCNAMELEN - 1);
     strncpy(aserver.cell, CellName, MAXKTCREALMLEN - 1);
 
-    strcpy(username, creds.pname);
-    if (creds.pinst[0]) 
-    {
-        strcat(username, ".");
-        strcat(username, creds.pinst);
-    }
-
     memset(&atoken, '\0', sizeof(atoken));
     atoken.kvno = creds.kvno;
     atoken.startTime = creds.issue_date;
-    atoken.endTime = creds.issue_date + KFW_KRB4_life_to_time(0,creds.lifetime);
+    atoken.endTime = creds.issue_date + life_to_time(0,creds.lifetime);
     memcpy(&atoken.sessionKey, creds.session, 8);
     atoken.ticketLen = creds.ticket_st.length;
     memcpy(atoken.ticket, creds.ticket_st.dat, atoken.ticketLen);
@@ -2824,8 +2828,8 @@ KFW_AFS_klog(
     // * This structure was first set by the ktc_GetToken call when
     // * we were comparing whether identical tokens already existed.
 
-    strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
-    strcpy(aclient.instance, "");
+    strncpy(aclient.name, creds.pname, MAXKTCNAMELEN - 1);
+    strcpy(aclient.instance, creds.pinst);
     strncpy(aclient.cell, creds.realm, MAXKTCREALMLEN - 1);
 
     if (rc = pktc_SetToken(&aserver, &atoken, &aclient, 0))
@@ -2836,6 +2840,10 @@ KFW_AFS_klog(
     }
 
   cleanup:
+    if (cname)
+        pkrb5_free_unparsed_name(ctx,cname);
+    if (sname)
+        pkrb5_free_unparsed_name(ctx,sname);
     if (client_principal)
         pkrb5_free_principal(ctx,client_principal);
     /* increds.client == client_principal */
