@@ -26,8 +26,52 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include <lock.h>
 
+/* XXX is this kosher? */
+#include <afs_args.h>
+
 extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern struct hostent *hostutil_GetHostByName();
+
+static PrintCacheConfig(aconn)
+    struct rx_connection *aconn;
+{
+    struct cacheConfig c;
+    afs_uint32 srv_ver, conflen;
+    int code;
+
+    c.cacheConfig_len = 0;
+    code = RXAFSCB_GetCacheConfig(aconn, 1, &srv_ver, &conflen, &c);
+    if (code) {
+	printf("cmdebug: error checking cache config: %s\n",
+	       error_message(code));
+	return 0;
+    }
+
+    if (srv_ver == AFS_CLIENT_RETRIEVAL_FIRST_EDITION) {
+	struct cm_initparams_v1 *c1;
+
+	if (c.cacheConfig_len != sizeof(*c1) / sizeof(afs_uint32)) {
+	    printf("cmdebug: configuration data size mismatch (%d != %d)\n",
+		   c.cacheConfig_len, sizeof(*c1) / sizeof(afs_uint32));
+	    return 0;
+	}
+
+	c1 = (struct cm_initparams_v1 *) c.cacheConfig_val;
+	printf("Chunk files:   %d\n", c1->nChunkFiles);
+	printf("Stat caches:   %d\n", c1->nStatCaches);
+	printf("Data caches:   %d\n", c1->nDataCaches);
+	printf("Volume caches: %d\n", c1->nVolumeCaches);
+	printf("Chunk size:    %d", c1->otherChunkSize);
+	if (c1->firstChunkSize != c1->otherChunkSize)
+	    printf(" (first: %d)", c1->firstChunkSize);
+	printf("\n");
+	printf("Cache size:    %d kB\n", c1->cacheSize);
+	printf("Set time:      %s\n", c1->setTime ? "yes" : "no");
+	printf("Cache type:    %s\n", c1->memCache ? "memory" : "disk");
+    } else {
+	printf("cmdebug: unsupported server version %d\n", srv_ver);
+    }
+}
 
 static PrintInterfaces(aconn)
     struct rx_connection *aconn;
@@ -37,7 +81,7 @@ static PrintInterfaces(aconn)
 
     code = RXAFSCB_WhoAreYou(aconn, &addr);
     if (code) {
-	printf("cmdebug: error checking locks: %s\n", error_message(code));
+	printf("cmdebug: error checking interfaces: %s\n", error_message(code));
 	return 0;
     }
 
@@ -202,6 +246,11 @@ struct cmd_syndesc *as; {
 	PrintInterfaces(conn);
 	return 0;
     }
+    if (as->parms[4].items) {
+	/* -cache */
+	PrintCacheConfig(conn);
+	return 0;
+    }
     if (as->parms[2].items) int32p = 1;
     else int32p = 0;
     PrintLocks(conn, int32p);
@@ -237,6 +286,7 @@ char **argv; {
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
     cmd_AddParm(ts, "-addrs", CMD_FLAG, CMD_OPTIONAL, "print only host interfaces");
+    cmd_AddParm(ts, "-cache", CMD_FLAG, CMD_OPTIONAL, "print only cache configuration");
 
     cmd_Dispatch(argc, argv);
     exit(0);
