@@ -6403,17 +6403,19 @@ int CopyOnWrite(targetptr, volptr)
 			rc = IH_DEC(V_linkHandle(volptr), ino,
 				  V_parentId(volptr));
     			if (!rc ) {
-		    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
-			    	    V_id(volptr), volptr->partition->name));
+			    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
+				       rc, V_id(volptr), 
+				       volptr->partition->name));
 			    VTakeOffline (volptr);
 			}
 			free(buff);
 			return ENOSPC;
 		}
 		else {
-	    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
-		    	    V_id(volptr), volptr->partition->name));
-		    /* Decrement this inode so salvager doesn't find it. */
+		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
+			       V_id(volptr), volptr->partition->name, length,
+			       rdlen, wrlen, errno));
+                    /* Decrement this inode so salvager doesn't find it. */
 		    FDH_REALLYCLOSE(newFdP);
 		    IH_RELEASE(newH);
 		    FDH_REALLYCLOSE(targFdP);
