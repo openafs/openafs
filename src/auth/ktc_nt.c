@@ -32,7 +32,7 @@ RCSID
 #include <afs/afsutil.h>
 
 /* TBUFFERSIZE must be at least 512 larger than KTCMAXTICKETSIZE */
-#define TBUFFERSIZE 8192  
+#define TBUFFERSIZE 12512
 
 /* Forward declarations for local token cache. */
 static int SetLocalToken(struct ktc_principal *aserver,
