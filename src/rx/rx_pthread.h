@@ -57,8 +57,9 @@ typedef pthread_cond_t afs_kcondvar_t;
 #ifndef MUTEX_ISMINE
 /* Only used for debugging. */
 #ifdef AFS_SUN5_ENV
+/* synch.h says mutex_t and pthread_mutex_t are always the same */
 #include <synch.h>
-#define MUTEX_ISMINE(l) MUTEX_HELD(l)
+#define MUTEX_ISMINE(l) MUTEX_HELD((mutex_t *) l)
 #else /* AFS_SUN5_ENV */
 #define MUTEX_ISMINE(l) (1)
 #endif /* AFS_SUN5_ENV */
@@ -71,17 +72,17 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #ifdef MUTEX_INIT
 #undef MUTEX_INIT
 #endif
-#define MUTEX_INIT(a, b, c, d) pthread_mutex_init(a, NULL)
+#define MUTEX_INIT(a, b, c, d) osi_Assert(pthread_mutex_init(a, NULL) == 0)
 
 #ifdef MUTEX_DESTROY
 #undef MUTEX_DESTROY
 #endif
-#define MUTEX_DESTROY(l) pthread_mutex_destroy(l)
+#define MUTEX_DESTROY(l) osi_Assert(pthread_mutex_destroy(l) == 0)
 
 #ifdef MUTEX_ENTER
 #undef MUTEX_ENTER
 #endif
-#define MUTEX_ENTER(l) pthread_mutex_lock(l)
+#define MUTEX_ENTER(l) osi_Assert(pthread_mutex_lock(l) == 0)
 
 #ifdef MUTEX_TRYENTER
 #undef MUTEX_TRYENTER
@@ -91,7 +92,7 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #ifdef MUTEX_EXIT
 #undef MUTEX_EXIT
 #endif
-#define MUTEX_EXIT(l) pthread_mutex_unlock(l)
+#define MUTEX_EXIT(l) osi_Assert(pthread_mutex_unlock(l) == 0)
 
 #ifdef RXObtainWriteLock
 #undef RXObtainWriteLock
@@ -106,27 +107,27 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #ifdef CV_INIT
 #undef CV_INIT
 #endif
-#define CV_INIT(cv, a, b, c) pthread_cond_init(cv, NULL)
+#define CV_INIT(cv, a, b, c) osi_Assert(pthread_cond_init(cv, NULL) == 0)
 
 #ifdef CV_DESTROY
 #undef CV_DESTROY
 #endif
-#define CV_DESTROY(cv) pthread_cond_destroy(cv)
+#define CV_DESTROY(cv) osi_Assert(pthread_cond_destroy(cv) == 0)
 
 #ifdef CV_WAIT
 #undef CV_WAIT
 #endif
-#define CV_WAIT(cv, l) pthread_cond_wait(cv, l)
+#define CV_WAIT(cv, l) osi_Assert(pthread_cond_wait(cv, l) == 0)
 
 #ifdef CV_SIGNAL
 #undef CV_SIGNAL
 #endif
-#define CV_SIGNAL(cv) pthread_cond_signal(cv)
+#define CV_SIGNAL(cv) osi_Assert(pthread_cond_signal(cv) == 0)
 
 #ifdef CV_BROADCAST
 #undef CV_BROADCAST
 #endif
-#define CV_BROADCAST(cv) pthread_cond_broadcast(cv)
+#define CV_BROADCAST(cv) osi_Assert(pthread_cond_broadcast(cv) == 0)
 
 #endif /* AFS_PTHREAD_ENV */
 
