@@ -489,23 +489,21 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 	ServiceStatus.dwWaitHint = 0;
 	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
-    return;
 }
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
 {
 	afsd_Main(0, (LPTSTR*)NULL);
-    return(0);
+    exit(0);
 }
 
-void main()
+int
+main(void)
 {
-	SERVICE_TABLE_ENTRY dispatchTable[] = {
+	static SERVICE_TABLE_ENTRY dispatchTable[] = {
 		{AFS_DAEMON_SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) afsd_Main},
 		{NULL, NULL}
 	};
-
-    afsd_SetUnhandledExceptionFilter();
 
 	if (!StartServiceCtrlDispatcher(dispatchTable))
     {
@@ -520,4 +518,5 @@ void main()
             SetEvent(WaitToTerminate);
         }
     }
+    return(0);
 }
