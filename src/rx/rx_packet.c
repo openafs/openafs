@@ -191,7 +191,8 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
 	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
 	resid -= j;
-	l += packet->wirevec[i].iov_len;
+        out += j;
+  	l += packet->wirevec[i].iov_len;
 	i++;
     }
 
@@ -231,6 +232,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(b, in, j);
 	resid -= j;
+        in += j;
 	l += packet->wirevec[i].iov_len;
 	i++;
     }
