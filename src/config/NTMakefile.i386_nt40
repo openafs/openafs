@@ -229,16 +229,20 @@ afscdefs =\
 # /Os   favor small (over fast) code; seems to avoid 64-bit bugs in VC compiler
 
 afscflags =\
-	/Oy- \
+    /Oy- \
 	/GF \
 	/Gd \
 	/Gy \
 	/GX \
 	/Os
 
+!IF ("$(AFSVER_CL)"!="1200")
+afscdefs = $(afscdefs) /G7 /GT /GS /GZ /RTCs /RTCu
+!ENDIF
+
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-#afscflags = $(afscflags) /Ox
+afscflags = $(afscflags) /Ox
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
