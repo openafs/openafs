@@ -1385,7 +1385,8 @@ DECL_PIOCTL(PSetTokens)
       memcpy((char *)&flag, ain, sizeof(afs_int32));		/* primary id flag */
       ain += sizeof(afs_int32);			/* skip id field */
       /* rest is cell name, look it up */
-      if (flag & 0x8000) {			/* XXX Use Constant XXX */
+      /* some versions of gcc appear to need != 0 in order to get this right */
+      if (flag & 0x8000 != 0) {			/* XXX Use Constant XXX */
 	  flag &= ~0x8000;
 	  set_parent_pag = 1;
       }
