@@ -29,7 +29,7 @@ EXELIBS = \
 OTHERLIBS = \
     ..\kfw\lib\i386\krbv4w32.lib \
     ..\kfw\lib\i386\krb5_32.lib \
-    dnsapi.lib
+    dnsapi.lib mpr.lib
 
 afscflags = -I..\kfw\inc\krb5 -I..\kfw\inc\krb4 $(afscflags)
 
@@ -38,8 +38,8 @@ $(EXEOBJS): $$(@B).c
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(OUT)\aklog.res $(EXELIBS)
-	$(EXECONLINK) $(OTHERLIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXELIBS) $(OUT)\aklog.res
+	$(EXECONLINK) $(EXELIBS) $(OTHERLIBS)
 	$(EXEPREP) 
 
 install : $(COPYHEADERS) $(EXEFILE)

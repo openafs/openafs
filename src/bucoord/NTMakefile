@@ -91,7 +91,7 @@ EXELIBS =\
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 

@@ -111,7 +111,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 #----------------------------------------------- BUTC
 
 $(BUTCEXE): $(BUTCOBJS) $(BUTCLIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib
 	$(EXEPREP)
 
 .c.$(OUT)\obj:
