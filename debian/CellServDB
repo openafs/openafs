@@ -1,4 +1,5 @@
->grand.central.org      #GCO Public CellServDB 05 Dec 2001
+>grand.central.org      #GCO Public CellServDB 29 Jan 2002
+18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 >usatlas.bnl.gov        #US Atlas Tier 1 Facility at BNL
 130.199.48.32                   #aafs01.usatlas.bnl.gov
@@ -15,6 +16,16 @@
 >hep.sc.edu             #USC HEP cell
 129.252.78.77                   #cpeven.physics.sc.edu
 129.252.78.79                   #redbaron.physics.sc.edu
+>hep.man.ac.uk          #Manchester HEP
+194.36.2.3                      #afs1.hep.man.ac.uk
+>uni-bonn.de            #Cell name
+131.220.14.198                  #work15-eth.rhrz.uni-bonn.de
+131.220.14.203                  #node03-en2.rhrz.uni-bonn.de
+131.220.14.205                  #node05.rhrz.uni-bonn.de
+>uni-freiburg.de        #Albert-Ludwigs-Universitat Freiburg
+132.230.6.235                   #sv6.ruf.uni-freiburg.de
+132.230.6.236                   #sv7.ruf.uni-freiburg.de
+132.230.6.237                   #sv8.ruf.uni-freiburg.de
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
 137.208.3.33                    #afsdb1.wu-wien.ac.at
 137.208.7.4                     #afsdb2.wu-wien.ac.at
@@ -181,7 +192,7 @@
 205.245.53.21                   #perseus.zepa.net.
 205.245.53.48                   #neptune.zepa.net.
 >dementia.org           #Dementia Unlimited
-128.2.35.149                    #alycia.dementia.org
+128.2.12.45                     #alycia.dementia.org
 128.2.120.216                   #meredith.dementia.org
 >openafs.org            #OpenAFS
 128.2.121.218                   #virtue.openafs.org
