@@ -189,7 +189,7 @@ case $system in
 		;;
 	*-netbsd*)
 		MKAFS_OSTYPE=NBSD
-		AC_MSG_RESULT(i386_nbsd)
+		AC_MSG_RESULT(nbsd)
 		;;
 	*-openbsd*)
 		MKAFS_OSTYPE=OBSD
@@ -209,7 +209,12 @@ else
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
 		i?86-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="i386_nbsd15"
+			;;
+		alpha-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
+			AFS_SYSNAME="alpha_nbsd15"
 			;;
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
@@ -485,6 +490,7 @@ ENABLE_KERNEL_MODULE=libafs
 fi
 
 AC_SUBST(AFS_SYSNAME)
+AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)

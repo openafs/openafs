@@ -74,8 +74,15 @@ UKDIRS = ${UKERNELDIR}/afs \
 $(UKDIRS): 
 	mkdir -p $@
 
-${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}.h
-	-$(INST)
+# XXX inlined INST
+${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}.h ${AFS_PARAM_COMMON}
+	if [ X${AFS_PARAM_COMMON} != X ] ; then \
+		cat ${srcdir}/${AFS_PARAM_COMMON} ${srcdir}/param.${SYS_NAME}.h > param.h.new ; \
+		$(RM) -f $@; \
+		 $(CP) param.h.new $@ ; \
+	else \
+		$(RM) -f $@; $(CP) ${srcdir}/param.${SYS_NAME}.h $@ ; \
+	fi
 
 ${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: ${srcdir}/afs_sysnames.h
 	$(INST)
