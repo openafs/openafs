@@ -197,14 +197,14 @@ cm_headers: libacl_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-auth: cm_headers
+auth_headers: cm_headers
      echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
+	$(DOCD) $(SRC)\auth
+	$(CD) $(SRC)\auth
+	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-afsdobjs: auth
+afsdobjs: auth_headers
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -218,7 +218,14 @@ sys: afsdobjs
 	$(NTMAKE)
 	$(CD) ..\..
 
-ubik: sys
+auth: sys
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+ubik: auth
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
