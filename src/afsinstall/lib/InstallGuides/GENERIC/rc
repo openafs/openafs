@@ -1,0 +1,63 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for AFS startup scripts
+#
+
+sub rc {
+  &ErrorsAreFatal(1);
+  $rc = open(RC, ">> /etc/rc.afs");
+  &ErrorMsg("Can't append to file", "/etc/rc.afs") if (!$rc);
+  print RC <<"EORC";
+#!/bin/sh
+#
+
+EORC
+  close(rc);  
+  &Appendrc;
+}
+
+sub Appendrc {
+  my($rmtsys, $otherrmtsys);
+  &ErrorsAreFatal(1);
+
+  if ($Configuration{"NFSEXTENSIONS"}) {
+    $rmtsys = "-rmtsys";
+    $otherrmtsys = ""; }
+  else {
+    $otherrmtsys = "-rmtsys";
+    $rmtsys = ""; };
+
+  $rc = open(RC, ">> /etc/rc.afs");
+  &ErrorMsg("Can't append to file", "/etc/rc.afs") if (!$rc);
+  print RC <<"EORC";
+# Choose one depending on how much usage this client gets
+#OPTIONS="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+OPTIONS="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+#OPTIONS="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+
+# Choose one depending on if you want this machine to be an NFS Translator
+NFS="$rmtsys"
+#NFS="$otherrmtsys"
+
+# Start bosserver
+if [ -x /usr/afs/bin/bosserver ]; then
+  echo 'Starting bosserver' > /dev/console
+  /usr/afs/bin/bosserver &
+fi
+
+# Start afsd
+/usr/vice/etc/afsd \$OPTIONS \$NFS
+
+# Start AFS inetd services
+if [ -f /etc/inetd.afs -a -f /etc/inetd.conf.afs ]; then
+    /etc/inetd.afs /etc/inetd.conf.afs
+fi
+
+EORC
+  close(RC);
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf109.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf111.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_REMOVEHOST" HREF="auarf002.htm#ToC_124">bos removehost</A></H2>
+<A NAME="IDX4588"></A>
+<A NAME="IDX4589"></A>
+<A NAME="IDX4590"></A>
+<A NAME="IDX4591"></A>
+<A NAME="IDX4592"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Removes a database server machine from the
+<B>/usr/afs/etc/CellServDB</B> file
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos removehost -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-host</B> &lt;<VAR>host&nbsp;name</VAR>><SUP>+</SUP> 
+               [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+  
+<B>bos removeh -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  <B>-ho</B> &lt;<VAR>host&nbsp;name</VAR>><SUP>+</SUP>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+            [<B>-n</B>]  [<B>-l</B>]  [<B>-he</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos removehost</B> command removes the entry for each database
+server machine specified with the <B>-host</B> argument from the
+<B>/usr/afs/etc/CellServDB</B> file on the server machine named by the
+<B>-server</B> argument.
+<P><STRONG>Cautions</STRONG>
+<P>After executing this command (and waiting for the Update Server to
+propagate the changes, if it is used), restart the database server processes
+on all database server machines to force election of a quorum that includes
+the new set of machines listed in the <B>/usr/afs/etc/CellServDB</B>
+file. The <I>AFS Quick Beginnings</I> explains in more detail how
+to add and remove database server machines.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Indicates the server machine on which to change the
+<B>/usr/afs/etc/CellServDB</B> file. Identify the machine by IP
+address or its host name (either fully-qualified or abbreviated
+unambiguously). For details, see the introductory reference page for
+the <B>bos</B> command suite. 
+<P>In cells that run the United States edition of AFS and use the Update
+Server to distribute the contents of the <B>/usr/afs/etc</B> directory, it
+is conventional to specify only the system control machine as a value for the
+<B>-server</B> argument. In cells that run the international
+version of AFS, repeat the command for each file server machine. For
+further discussion, see the introductory reference page for the <B>bos</B>
+command suite.
+<P><DT><B><B>-host</B>
+</B><DD>Specifies the fully-qualified host name (such as
+<B>fs2.abc.com</B>) of each database server machine to
+remove from the <B>CellServDB</B> file.
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command removes the former database server machine
+<B>db2.abc.com</B> from the <B>CellServDB</B> file on
+the system control machine <B>fs1.abc.com</B>.
+<PRE>   % <B>bos removehost -server fs1.abc.com -host db2.abc.com</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+the machine named by the <B>-server</B> argument, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<P><A HREF="auarf106.htm#HDRBOS_LISTHOSTS">bos listhosts</A>
+<P><I>AFS Quick Beginnings</I>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf109.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf111.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

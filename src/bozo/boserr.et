@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+# NOTE: BZACCESS value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table BZ
+	ec BZNOTACTIVE, "process not active"
+	ec BZNOENT, "no such entity"
+	ec BZBUSY, "can't do operation now"
+	ec BZEXISTS, "entity already exists"
+	ec BZNOCREATE, "failed to create entity"
+	ec BZDOM, "index out of range"
+	ec BZACCESS, "you are not authorized for this operation"
+	ec BZSYNTAX, "syntax error in create parameter"
+	ec BZIO, "I/O error"
+	ec BZNET, "network problem"
+	ec BZBADTYPE, "unrecognized bnode type"
+	ec BZKEYINUSE, "kvno already used - have to remove existing kvno's before reuse"
+	ec BZENCREQ, "this function requires encrypted input, use a newer client program"
+end

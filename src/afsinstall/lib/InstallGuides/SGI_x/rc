@@ -1,0 +1,17 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the initialization script
+# For SGI systems running IRIX
+#
+
+sub rc {
+&Copy("root.client/usr/vice/etc/sgiload/afs.rc", "/etc/init.d/afs");
+&Chmod (0555, "/etc/init.d/afs");
+&Symlink("../init.d/afs", "/etc/rc0.d/K35afs");
+&Symlink("../init.d/afs", "/etc/rc2.d/S35afs");
+}

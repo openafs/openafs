@@ -1,0 +1,32 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for dynamic kernel loaded libraries
+# For IBM RS/6000 systems running AIX 3.x
+
+sub modkernel {
+&ErrorsAreFatal(1);
+&CreateDir("/usr/vice/etc/dkload");
+&ErrorsAreFatal(0);
+
+if ($Configuration{"NFSEXTENSIONS"}) {
+  &Copy("root.client/usr/vice/etc/dkload/afs.ext.trans",
+                                                     "/usr/vice/etc/dkload");
+  &Copy("root.client/usr/vice/etc/dkload/cfgafs",    "/usr/vice/etc/dkload");
+  &Copy("root.client/usr/vice/etc/dkload/cfgexport", "/usr/vice/etc/dkload");
+  &Copy("root.client/usr/vice/etc/dkload/export.ext","/usr/vice/etc/dkload"); }
+else {
+ &Copy("root.client/usr/vice/etc/dkload/afs.ext",   "/usr/vice/etc/dkload");
+ &Copy("root.client/usr/vice/etc/dkload/cfgafs",    "/usr/vice/etc/dkload");
+ &Copy("root.client/usr/vice/etc/dkload/cfgexport", "/usr/vice/etc/dkload");
+ &Copy("root.client/usr/vice/etc/dkload/export.ext.nonfs",
+                                                    "/usr/vice/etc/dkload"); }
+
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+}

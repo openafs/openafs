@@ -1,0 +1,25 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table AU
+    ec ADMUTILSERVERENTRYPNULL, "the server entry parameter cannot be NULL"
+    ec ADMUTILSERVERNAMENULL, "the server name parameter cannot be NULL"
+    ec ADMUTILSERVERADDRESSNULL, "the server address parameter cannot be NULL"
+    ec ADMUTILSERVERADDRESSPNULL, "the server address parameter cannot be NULL"
+    ec ADMUTILCANTGETSERVERNAME, "the server name parameter cannot translated to an address"
+    ec ADMUTILCANTOPENCELLSERVDB, "failed to open the client CellServDB file"
+    ec ADMUTILERRORTEXTPNULL, "the error text parameter cannot be NULL"
+    ec ADMUTILCELLNAMENULL, "the cell name parameter cannot be NULL"
+    ec ADMRXCONNNULL, "the rx connection parameter cannot be NULL"
+    ec ADMRPCPTRNULL, "the rpc function parameter cannot be NULL"
+    ec ADMUTILRPCSTATSNULL, "the rpc stats parameter cannot be NULL"
+    ec ADMRPCSTATENULL, "the state parameter cannot be NULL"
+    ec ADMRPCVERSIONNULL, "the rpc version parameter cannot be NULL"
+    ec ADMRXDEBUGHANDLENULL, "the rxdebug handle parameter cannot be null"
+    ec ADMRXDEBUGVERSIONNULL, "the rxdebug version parameter cannot be null"
+    ec ADMRXDEBUGSTATSNULL, "the rxdebug stats parameter cannot be null"
+end

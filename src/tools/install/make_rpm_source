@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# Copyright 2001, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# packup
+# creates rpm source file containing all the necessary files
+# for the OpenAFS command line tools.  Moves to RPM source dir.
+# 
+# openafs-tools, Version 1.2.2
+#
+# Directory containing installation scripts, etc.
+rootDir=../..
+mainFileDir=..
+rpmSource=/usr/src/redhat/SOURCES/
+#
+mkdir .tmpTarDir
+cd .tmpTarDir
+#
+cp $rootDir/openafs-tools-cmd.README .
+cp $mainFileDir/.afs_state afs_state
+cp $mainFileDir/afsinit_both .
+cp $mainFileDir/afsinit_client .
+cp $mainFileDir/afsinit_server .
+cp $mainFileDir/afs_uninstall .
+cp $mainFileDir/install_afs .
+cp $mainFileDir/K5_README .
+cp $mainFileDir/check_udebug.pl .
+cp $mainFileDir/write_fstab.pl .
+cp $mainFileDir/write_pam.pl .
+#
+cp $mainFileDir/unpack_cmd .
+#
+tar -cf afs_linux.tar *
+gzip -f afs_linux.tar
+cd ..
+cp .tmpTarDir/afs_linux.tar.gz .
+rm -rf .tmpTarDir
+#
+tar -cf openafs-tools-cmd.tar afs_linux.tar.gz
+rm -f afs_linux.tar.gz
+mv openafs-tools-cmd.tar $rpmSource
+chown nobody $rpmSource/openafs-tools-cmd.tar
+#
+

@@ -1,0 +1,77 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for dynamic kernel loaded libraries
+# For IBM RS/6000 systems running AIX 4.x
+#
+
+sub modkernel {
+  my($useiauth,$afsext,$export, $line, $a,$b,$c);
+  &ErrorsAreFatal(1);
+  &CreateDir("/usr/vice/etc/dkload");
+  &ErrorsAreFatal(0);
+
+  if ($Configuration{"NFSEXTENSIONS"}) {
+    # Determine if this AIX system uses the iauth system
+    #   AIX 4.1.x  for x>=5
+    #   AIX 4.2.x  for x>=1
+    #   AIX 4.x    for x>=3
+    $useiauth = 0;
+    open(LPP, "/bin/lslpp -L |");
+    while ($line = <LPP>) {
+      next unless ($line =~ /bos.rte\s/);
+      $line =~ /bos.rte\s+(\d)\.(\d)\.(\d)/;
+      ($a,$b,$c) = ($1,$2,$3);
+      $useiauth = 1 if ($a == 4 && $b == 1 && $c >= 5); 
+      $useiauth = 1 if ($a == 4 && $b == 2 && $c >= 1); 
+      $useiauth = 1 if ($a == 4 && $b >= 3);
+      last; };
+    close(LPP);
+
+    if ($useiauth) {
+      $export=".nonfs";
+      $afsext="iauth"; }
+    else {
+      $export="";
+      $afsext="trans"; }
+
+    # Copy NFS ready kernel extensions into place
+    &Copy("root.client/usr/vice/etc/dkload/cfgafs",    "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/cfgexport", "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/afs.ext.$afsext",
+	  "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/export.ext$export",
+          "/usr/vice/etc/dkload"); }
+  else {
+    # Copy non NFS ready kernel extensions into place
+    &Copy("root.client/usr/vice/etc/dkload/afs.ext",   "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/cfgafs",    "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/cfgexport", "/usr/vice/etc/dkload");
+    &Copy("root.client/usr/vice/etc/dkload/export.ext.nonfs",
+          "/usr/vice/etc/dkload"); }
+
+  &Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+  &Copy("bin/fs", "/usr/vice/etc/fs");
+
+  $File="/etc/vfs";
+  $Patch::Verbose if ($InstallVerbose);
+
+  &Patch::FileOpen($File);
+
+  $Search = << "xxENDxx";
+nfs	2	/sbin/helpers/nfsmnthelp	none			remote
+xxENDxx
+
+  $New = << "xxENDxx";
+afs     4       none    none
+xxENDxx
+
+  if (!&Patch::Patch($File, [[0, "Insert", $Search, $New]])) {
+    &ErrorMsg("Did not succeed in patching $File");
+  }
+}

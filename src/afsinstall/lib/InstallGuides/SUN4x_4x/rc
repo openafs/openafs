@@ -1,0 +1,84 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# afs.rc
+#
+# An InstallGuide for AFS startup scripts
+# For Sun systems running SunOS 4.x
+#
+
+sub SUNrc {
+my($nfsext, $othernfsext, $rcfile);
+$rcfile = "/etc/rc.afs";
+&ErrorsAreFatal(1);
+
+# Start an AFS RC file
+if ($Configuration{"NFSEXTENSIONS"}) {
+  $nfsext="";
+  $othernfsext=".nonfs"; }
+else {
+  $nfsext=".nonfs";
+  $othernfsext="";
+};
+
+&VPrint("Creating AFS startup script");
+&DisplaceFile($rcfile);
+$rc = open(RC, "> $rcfile");
+&ErrorMsg("Could not write to file", $rcfile) if (!$rc);
+print RC <<"EORC";
+#!/bin/sh
+#
+
+# Choose one of the following depending on how to load AFS into the kernel
+loader="modload"
+#loader="dkload"
+
+# Choose one of the following depending on whether or not system uses NFS
+NFS="$nfsext"
+#NFS="$othernfsext"
+
+if [ "\$loader" -eq "modload" ]; then
+  library="libafs${NFS}.o"
+  program="/usr/etc/modload"
+  options=""
+else
+  library="libafs${NFS}.a"
+  program="./dkload"
+  options="-quiet"
+fi
+
+if [ -d /usr/vice/etc/\$loader ]; then
+  echo 'Invoking \$loader kernel loader...'>/dev/console
+  cd /usr/vice/etc/\$loader
+  if [ -f "\$library" ]; then
+    echo "Loading AFS" > /dev/console
+    \$program \$options \$library 1> /dev/console 2>&1
+    if [ $? != 0 ]; then
+      echo "Error loading AFS" > /dev/console
+    fi
+  else
+    echo "Cannot load AFS - no kernel library object" > /dev/console
+  fi
+  cd /
+fi
+
+EORC
+close(RC);
+&Chmod(0744, $rcfile);
+
+# Append the generic RC file
+&ReadInstallGuide("$InstallGuideDir/GENERIC/rc");
+&Appendrc;
+
+&Print("AFS startup script created as $rcfile");
+}
+
+
+
+sub rc {
+goto &SUNrc;
+}

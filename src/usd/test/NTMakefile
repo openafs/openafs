@@ -1,0 +1,23 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBFILE = $(DESTDIR)\lib\afs\afsusd.lib
+LIBUTIL = $(DESTDIR)\lib\afs\afsutil.lib
+
+clean::
+
+test tests: usd_test.exe
+
+# make usd_test.exe
+usd_test.exe: usd_test.obj $(LIBFILE) $(LIBUTIL)
+	$(EXECONLINK)
+	
+
+

@@ -1,0 +1,50 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for dynamic kernel loaded libraries
+# For Sun systems running Solaris 5.x
+#
+
+sub modkernel {
+&ErrorsAreFatal(1);
+&CreateDir("/usr/vice/etc/modload");
+&ErrorsAreFatal(0);
+
+if ($Configuration{"NFSEXTENSIONS"}) {
+  &Copy("root.client/usr/vice/etc/modload/libafs.o","/kernel/fs/afs"); }
+else {
+  &Copy("root.client/usr/vice/etc/modload/libafs.nonfs.o",
+                                                    "/kernel/fs/afs"); }
+
+&Copy("root.client/usr/vice/etc/modload/afs.rc",   "/usr/vice/etc/modload");
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+
+&Copy("bin/fs", "/usr/vice/etc/fs");
+# add the afs line to /etc/name_to_sysnum
+&ErrorsAreFatal(1);
+$File="/etc/name_to_sysnum";
+
+&Patch::Verbose if ($InstallVerbose);
+&Patch::FileOpen($File);
+
+$SearchString = <<"xxENDxx";
+fstatvfs		104
+nfs			106
+xxENDxx
+
+$NewString = <<"xxENDxx";
+fstatvfs		104
+afs			105
+nfs			106
+xxENDxx
+
+if (!&Patch::Patch($File, [[0, "Replace", $SearchString, $NewString]])) {
+  &ErrorMsg ("Did not succeed with patch", $File);
+}
+
+}

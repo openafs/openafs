@@ -1,0 +1,504 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Top level nmake NTMakefile driver for building AFS.
+#
+# This file simply imposes a reasonable total ordering on the set of
+# directories to build; this ordering is of course more strict than the
+# partial ordering established by the actual directory dependencies.
+#
+# When porting a new directory, simply add the directory into the
+# dependence chain at the earliest point possible, updating its successor
+# appropriately; if the new directory is the last in the chain, then
+# update the 'finale' dependency to be the new directory.
+
+
+CD = cd
+NTMAKE = nmake /nologo /f ntmakefile install
+NTMAKELANG = nmake /nologo /f ntmakefile en_US
+NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
+NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
+MKDIR = mkdir
+OBJ = src
+
+# Standard install directory.
+!IFDEF AFSDEV_DESTDIR
+DESTDIR = $(AFSDEV_DESTDIR)
+!ELSE
+DESTDIR = $(AFSROOT)\DEST
+!ENDIF
+
+
+start:
+!	IF (!EXIST(src))
+!	ERROR Execute nmake from directory above src, e.g., afs\3.5.
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)))
+    $(MKDIR) $(DESTDIR)
+!	ENDIF
+
+config:
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+procmgmt_headers: config
+     echo ***** $@
+	$(CD) $(OBJ)\procmgmt
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+afsreg_headers: config
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\afsreg
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+util: procmgmt_headers afsreg_headers
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+comerr: util
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+cmd: comerr
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+afsreg: cmd
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+eventlog: afsreg
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+lwp: eventlog
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxgen: lwp
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+des: rxgen
+     echo ***** $@
+!	IF (EXIST($(OBJ)\des\NTMakefile))
+		$(CD) $(OBJ)\des
+		$(NTMAKE)
+		$(CD) ..\..
+!	ELSE
+		$(CD) $(OBJ)\des_stub
+		$(NTMAKE)
+		$(CD) ..\..
+!	ENDIF
+
+rx: des
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxstat: rx
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxkad: rxstat
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+pthread: rxkad
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+procmgmt: pthread
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+fsint: procmgmt
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+audit: fsint
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+osi_headers: audit
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\client_osi
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+libacl_headers: osi_headers
+     echo ***** $@
+	$(CD) $(OBJ)\libacl
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+cm_headers: libacl_headers
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\afsd
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+sys: cm_headers
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+afsdobjs: sys
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\afsd
+	$(NTMAKE_OBJS)
+	$(CD) ..\..\..
+
+auth: afsdobjs
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+ubik: auth
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+ptserver: ubik
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+
+libacl: ptserver
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+kauth: libacl
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+vlserver: kauth
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+usd: vlserver
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bubasics: usd
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+budb:	bubasics
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+butm:  budb
+     echo ***** $@
+        $(CD) $(OBJ)\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+dir: butm
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+vol: dir
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+volser: vol
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+viced: volser
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+update: viced
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bucoord: update
+     echo ***** $@
+        $(CD) $(OBJ)\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+butc:   bucoord
+     echo ***** $@
+        $(CD) $(OBJ)\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+bozo: butc
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+bosctlsvc: bozo
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+bu_utils: bosctlsvc
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+libafsrpc: bu_utils
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+libafsauthent: libafsrpc
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tviced: libafsauthent
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tbutc:  tviced
+     echo ***** $@
+        $(CD) $(OBJ)\$@
+        $(NTMAKE)
+        $(CD) ..\..
+
+libadmin: tbutc
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+adminutil: libadmin
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+vos: adminutil
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client: vos
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+kas: client
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+pts: kas
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+bos: pts
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+cfg: bos
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+admintest: cfg
+     echo ***** $@
+	$(CD) $(OBJ)\libadmin\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+talocale: admintest
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+license: talocale
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsadmsvr: license
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsusrmgr: afsadmsvr
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrmgr: afsusrmgr
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrcfg: afssvrmgr
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afssvrcpa: afssvrcfg
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_talocale: afssvrcpa
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\talocale
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_osi: client_talocale
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afsd: client_osi
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_cpa: afsd
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_config: client_cpa
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_exp: client_config
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+client_creds: client_exp
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+finale: client_creds
+     echo ***** $@
+	$(CD) $(OBJ)\$@
+	$(NTMAKE)
+	$(CD) ..\..	
+	echo Build Finished Successfully
+
+install: start finale
+
+# InstallShield dependencies
+
+InstallShield5:
+	echo ***** afs_setup_utils
+	$(CD) $(OBJ)\WINNT\afs_setup_utils
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+	$(CD) $(OBJ)\WINNT\install\$@
+	$(NTMAKE)
+	$(CD) ..\..\..\..
+
+media: InstallShield5
+	echo Install Script Finished Successfully
+
+
+# Clean target for obj tree
+clean: start
+	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
+	$(CD) $(OBJ)\config
+	nmake /nologo /f ntmakefile clean_version
+	$(CD) ..\..
+
+
+# Language-only build target
+lang:
+        nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile lang" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile lang" install

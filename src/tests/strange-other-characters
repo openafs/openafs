@@ -1,0 +1,5 @@
+#!/bin/sh
+# $Id: strange-other-characters,v 1.1 2002/01/22 19:54:43 hartmans Exp $
+dir=$AFSROOT/stacken.kth.se/ftp/pub/arla/tests
+
+test -f $dir/едц || exit 1

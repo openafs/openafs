@@ -1,0 +1,44 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for compiling a new kernel
+# For SUN systems running SunOS 4.x
+#
+
+sub build {
+my ($arch, $hostname);
+$arch = `/bin/uname -m`;
+chop $arch;
+$hostname = `/bin/uname -n`;
+chop $hostname;
+$hostname =~ tr/a-z/A-Z/;
+
+&Print("Starting compile with command \"/etc/config $hostname\"");
+&Print("in directory /usr/sys/$arch/conf");
+
+&ErrorsAreFatal(1);
+$rc = chdir("/usr/sys/$arch/conf");
+&ErrorMsg("Could not change to dir", "/usr/sys/$arch/conf") if (!$rc);
+
+$rc = system("/etc/config $hostname");
+$rc = $rc >> 8;
+&Print("Returned code $rc");
+&ErrorMsg("Stopping compile") if ($rc);
+
+
+&Print("Finishing compile with command \"make vmunix\"");
+&Print("in directory /usr/sys/$arch/$hostname");
+&Print("New kernel will be /usr/sys/$arch/$hostname/vmunix");
+&Print("and should be installed as /vmunix");
+
+$rc = chdir("/usr/sys/$arch/$hostname");
+&ErrorMsg("Could not change to dir", "/usr/sys/$arch/$hostname") if (!$rc);
+
+$rc = system("make vmunix");
+$rc = $rc >> 8;
+&Print("Returned code $rc");
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRVOLINFO" HREF="auarf002.htm#ToC_264">volinfo</A></H2>
+<A NAME="IDX5564"></A>
+<A NAME="IDX5565"></A>
+<P><STRONG>目的</STRONG>
+<P>1 つまたは複数のボリューム・ヘッダーおよびそれらを含む区画に関する詳細な統計を作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>volinfo</B> [<B>-online</B>]  [<B>-vnode</B>]  [<B>-date</B>]  [<B>-inode</B>] [<B>-itime</B>]  
+        [<B>-part</B>  &lt;<VAR>AFS partition name (default current partition)</VAR>><SUP>+</SUP>]   
+        [<B>-volumeid</B> &lt;<VAR>Volume id</VAR>><SUP>+</SUP>]  [<B>-header</B>]  [<B>-sizeOnly</B>]  [<B>-fixheader</B>]  
+        [<B>-saveinodes</B>]  [<B>-orphaned</B>]  [<B>-help</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>volinfo</B> コマンドは、
+1 つまたは複数のボリューム・ヘッダーおよびそれらを含む区画に関する詳細な統計を表示します。コマンドは、ファイル・サーバー・マシンで発行され、デフォルトで、マシン上のすべての AFS サーバー区画のすべてのボリュームについて出力を作成します。
+1 つの区画だけのボリュームについて出力を表示するには、
+<B>-part</B> 引き数を組み込みます。
+1 つのボリュームだけの出力を表示するには、<B>-volumeid</B> 引き数を組み込みます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-online
+</B><DD>この引き数は使用できません。
+<P><DT><B>-vnode
+</B><DD>デフォルトの出力の他に、ラージ (ディレクトリー) v ノードおよびスモール (ファイル) v ノードをリストする、各ボリュームごとのテーブルを表示します。
+<P><DT><B>-date
+</B><DD><B>-vnode</B> フラグと組み合わせる場合は、ラージ v ノードおよびスモール v ノード・テーブルの各 v ノード項目に <TT>ServerModTime</TT> フィールドを追加して、最新の修正時刻を報告します。
+<P><DT><B>-inode
+</B><DD><B>-vnode</B> フラグと組み合わせる場合は、ラージ v ノードおよびスモール v ノード・テーブルの各 v ノード項目に <TT>inode</TT> フィールドを追加して、関連した i ノード番号を報告します。
+<P><DT><B>-itime
+</B><DD><B>-vnode</B> フラグと組み合わせる場合は、ラージ v ノードおよびスモール v ノード・テーブルのそれぞれに、変更、修正、アクセス・タイム・スタンプを表示します。
+<P><DT><B>-part
+</B><DD>出力を作成する各ボリュームを含む区画を指定します。フォーマット <B>/vicep</B><VAR>xx</VAR> を使用します。ここで、<VAR>xx</VAR> は、1 文字か 2 文字の小文字です。この引き数は、現行作業ディレクトリーが AFS サーバー区画のマウント位置である場合に省略できます。
+AFS サーバー区画のマウント位置でない場合、このコマンドは、すべてのローカル AFS サーバー区画のあらゆるボリュームについて出力を作成します。
+<P><DT><B>-volumeid
+</B><DD>出力を作成する 1 つのボリュームの ID 番号を指定します。現行作業ディレクトリーが、このボリュームを含む AFS サーバー区画のマウント位置でない限り、この引き数と一緒に、<B>-part</B> 引き数を指定しなければなりません。
+<P><DT><B>-header
+</B><DD>デフォルトの出力の他に、各ボリュームのボリューム・ヘッダーに関する統計を表示します。
+<P><DT><B>-sizeOnly
+</B><DD>各ボリュームごとに単一行の出力を表示して、それに関連したさまざまな構造のサイズを報告します。デフォルト出力は抑制され、それを変更するフラグ (<B>-vnode</B> など) はいずれも無視されます。
+<P><DT><B>-fixheader
+</B><DD>できる限り、各ボリュームの損傷 i ノードを修復します。何らかの損傷がある場合、それらを修理するのに取るアクションを報告します。そうでない場合は、デフォルトの出力以外に出力は作成されません。
+<P><DT><B>-saveinodes
+</B><DD>各ボリュームの各 i ノードごとに、現行作業ディレクトリー内にファイルを作成します。各ファイルは <B>TmpInode.</B><VAR>vnode_number</VAR> と呼ばれ、
+i ノードの内容を含んでいます。デフォルト出力は抑制され、それを変更するフラグ (<B>-vnode</B> など) はいずれも無視されます。
+<P><DT><B>-orphaned
+</B><DD>各ボリュームごとにラージ v ノード・テーブルを表示します。ここには、オーファン v ノード (親のない v ノード) だけをリストします。表示するものがない場合、テーブルは空です (ヘッダーだけが表示されます)。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>デフォルトでは、このコマンドは、各ボリュームごとに複数行の統計を作成します。他のオプションを追加すると、この解説ページで前述の <B>オプション</B> 節で説明しているように、追加情報を作成または入れ替えます。出力は、デバッグを目的としていて、ボリューム・ヘッダーの内部構造を理解しているユーザーに分かりやすくなっています。
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 および vldb.DBSYS1</A>
+<P><A HREF="auarf251.htm#HDRVOLSERVER">volserver</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf249.htm">前ページ</A> &#124; <A HREF="auarf251.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

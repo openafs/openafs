@@ -1,0 +1,60 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# Definitions for building a DLL.
+
+DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsserver.cpl
+
+DLLOBJS =\
+	afssvrcpa_stub.res \
+	cpl_interface.obj \
+	AFS_component_version_number.obj
+
+DLLLIBS =\
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib \
+	comctl32.lib
+
+DEFFILE = afssvrcpa.def
+
+$(DLLFILE): $(DLLOBJS)
+	$(DLLGUILINK)  $(DLLLIBS) /DEF:$(DEFFILE)
+	$(DLLPREP)
+
+
+############################################################################
+# Definitions for generating versioninfo resource via RC
+
+afssvrcpa_stub.res: afssvrcpa_stub.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(DLLFILE) lang
+
+
+############################################################################
+# Language target
+
+lang::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	$(CD) ..
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

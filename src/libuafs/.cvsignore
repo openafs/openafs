@@ -1,0 +1,11 @@
+Makefile
+MakefileProto.HPUX
+MakefileProto.LINUX
+MakefileProto.SOLARIS
+UAFS
+afs
+afsint
+config
+des
+linktest
+rx

@@ -1,0 +1,11 @@
+{
+  Description     = "OpenAFS network file system";
+  Provides        = ("AFS");
+  Requires        = ("Resolver", "Disks");
+  OrderPreference = "None";
+  Messages =
+  {
+    start = "Starting OpenAFS file system";
+    stop  = "Stopping OpenAFS file system";
+  };
+}

@@ -1,0 +1,22 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# build
+#
+# An InstallGuide for building a kernel with AFS
+#
+
+sub build {
+&Print("This option will execute the commands which build a new kernel");
+&Print("on the system. It will modify the system files necessary to");
+&Print("incorporate AFS into the new kernel.  For details on what system");
+&Print("files must be modified, see the AFS Install Guide and current");
+&Print("Release Notes.  This option will tell where the new kernel is and");
+&Print("where to install it, but will NOT remove the existing kernel file.");
+&Print("See the \"installkernel\" option for automatically installing");
+&Print("the new kernel into place.");
+}

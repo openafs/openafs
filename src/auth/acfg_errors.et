@@ -1,0 +1,20 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+# AFS Configuration Package error table
+
+error_table ACFG
+  ec AFSCONF_FAILURE, "mysterious failure"
+  ec AFSCONF_NOTFOUND, "could not find entry"
+  ec AFSCONF_UNKNOWN, "do not know that information"
+  ec AFSCONF_NOCELL, "line appears before a cell has been defined"
+  ec AFSCONF_SYNTAX, "syntax error"
+  ec AFSCONF_NODB, "a database file is missing"
+  ec AFSCONF_FULL, "no more entries"
+end

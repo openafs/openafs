@@ -1,0 +1,44 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+Suggested test case for the backup system
+
+1)
+	Set variabel sizes on a batch of tapes to be used. Read
+	labels on them to verify the name and sizes.
+
+	Dump a large enough volume set so that some volumes
+	fragment across tapes and more than one tape is used.
+
+	Do restore of volume dumped in the beginning, at the
+	end and inbetween on the tape.
+
+	Enumerate the tapes used to check the volumes on them
+	and to determine info for previous step.
+
+	Repeat the above with incrementals as well ie do above
+	steps and repeat them doing incremental dumps of the same
+	volume set. Then do a full restore on those volumes.
+
+2)
+	Do the mix suggested in 1) but introduce variable delays
+	in changing tapes and aborting jobs in differing stages
+	of dump and restore.
+
+	Also try putting in the wrong tapes.
+
+3) 	
+	Do a restore after zapping a volume but keeping the vldb
+	entry, but without the .ext flag.
+	
+4)	To test the diskrestore command. Create some test volumes
+	on the selected partition. Dump these volume on tape
+	(which creates the db entry as a side effect). Zap these
+	volumes using vos zap. issue the diskrestore command with .ext 
+	switch. 
+
+	

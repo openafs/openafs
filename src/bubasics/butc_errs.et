@@ -1,0 +1,40 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Backup Tape Coordinator Module error table
+
+error_table BUTC
+# dump/restore management
+	ec TC_DUMPERROR, "error in dump/restore process "
+	ec TC_FORCEDABORT, "ungraceful abort "
+	ec TC_ABORTED, "the process has already been aborted"
+	ec TC_WORKINPROGRESS, "unable to end dump/restore since work in progress"
+	ec TC_INCOMPLETEDUMP, "some of the dump/restores were unsuccessful"
+	ec TC_ABORTFAILED, "could not abort the process "
+	ec TC_ABORTEDBYREQUEST, "the process was aborted by request"
+	ec TC_SCANFAILURE, "scan tape resulted in failure"
+
+#status errors
+	ec TC_NODENOTFOUND, "No dump task with specified ID"
+	ec TC_NOTASKS, "No tasks active"
+
+#tape errors
+	ec TC_VOLUMENOTONTAPE,"the volume was not found on tape"
+	ec TC_PREMATUREEOF,"unexpected EOF encountered on tape"
+	ec TC_MISSINGTRAILER,"missing file trailer on tape"
+	ec TC_WRONGTAPE,"unexpected tape label"
+	ec TC_TAPEUNUSABLE,"tape was unusable"
+	ec TC_BADVOLHEADER, "corrupted volume header on tape"
+#general
+	ec TC_INTERNALERROR, "internal error"
+	ec TC_BADQUEUE, "corruption in internal queue data structures"
+	ec TC_NOMEMORY, "memory allocation failure"
+        ec TC_NOTPERMITTED, "access denied"
+
+	ec TC_SKIPTAPE, "tape requested to be skipped"
+	ec TC_BADTASK,  "invalid task"
+end

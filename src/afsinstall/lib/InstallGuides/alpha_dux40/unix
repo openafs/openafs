@@ -1,0 +1,47 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for the AFS modified Unix commands
+# For Alpha systems running Digital Unix 4.x and SIA
+#
+
+sub DUXunix {
+  &Copy("etc/inetd", "/usr/sbin/inetd.afs");
+  &Copy("etc/inetd.conf",  "/etc/inetd.conf.afs");
+  &CopyStat("/etc/inetd.conf", "/etc/inetd.conf.afs");
+
+  &ErrorsAreFatal(1);
+  &CreateDir("/usr/vice/bin");
+
+  &Copy("bin/rcp", "/usr/vice/bin");
+  &Chown (0,2,   "/usr/vice/bin/rcp");
+  &Chmod (04755, "/usr/vice/bin/rcp");
+
+  &Copy("bin/rsh", "/usr/vice/bin");
+  &Chown (0,2,   "/usr/vice/bin/rsh");
+  &Chmod (04755, "/usr/vice/bin/rsh");
+
+  # comment out the rshd line in inetd.conf
+  $InetdConf = "/etc/inetd.conf";
+  &Patch::Verbose if ($InstallVerbose);
+  &Patch::FileOpen($InetdConf);
+
+  $Search = "^(shell\\s+.+)";
+  $Replace = '"#".$1';
+
+  if (!&Patch::Patch($InetdConf, [[1, "Substitution", $Search, $Replace]])) {
+    &ErrorMsg("Did not succeed with patch", $InetdConf);
+  }
+
+  # Modify the /etc/services file
+  &ReadInstallGuide("$InstallGuideDir/GENERIC/unix");
+  &unix;
+}
+
+sub unix {
+  goto &DUXunix;
+}

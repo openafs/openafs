@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_SETCELL" HREF="auarf002.htm#ToC_173">fs setcell</A></H2>
+<A NAME="IDX4955"></A>
+<A NAME="IDX4956"></A>
+<A NAME="IDX4957"></A>
+<A NAME="IDX4958"></A>
+<A NAME="IDX4959"></A>
+<A NAME="IDX4960"></A>
+<P><STRONG>目的</STRONG>
+<P>指定されたセルから setuid プログラムの実行を許可または禁止します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs setcell -cell</B> &lt;<VAR>cell name</VAR>><SUP>+</SUP>  [<B>-suid</B>]  [<B>-nosuid</B>]  [<B>-help</B>]
+   
+<B>fs setce -c</B> &lt;<VAR>cell name</VAR>><SUP>+</SUP>  [<B>-s</B>]  [<B>-n</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs setcell</B> コマンドは、キャッシュ・マネージャーが、<B>-cell</B> 引き数で指定した各セルのプログラム (および他の実行可能ファイル) を setuid アクセス権で実行することを許可するかどうかを設定します。デフォルトで、キャッシュ・マネージャーはそのホーム・セルからのプログラムを setuid アクセス権で実行することを許可しますが、外部セルからのプログラムには許可しません。プログラム は、ファイル・サーバー・マシンの <B>/usr/afs/etc/ThisCell</B> ファイルの指定通りに、プログラムのバイナリー・ファイルが常駐するボリュームを格納しているファイル・サーバー・マシンと同じセルに属しています。キャッシ ュ・マネージャーは、初期化時に <B>/usr/vice/etc/ThisCell</B> ファイルを読み込んで、それ自身のホーム・セルを決定します。
+<P>指定の各セルからのプログラムを setuid アクセス権で実行するには、<B>-suid</B> フラグを組み込みます。
+setuid アクセス権でのプログラムの実行を禁止するには、<B>-nosuid</B> フラグを組み込むか、両方のフラグを省略します。
+<P><B>fs setcell</B> コマンドは、カーネル・メモリーに記録されているセルの setuid 状況を直接更新するので、マシンをリブートする必要はありません。ただし、デフォルトでない設定は、適切な <B>fs setcell</B> コマンドがマシンの AFS 初期化ファイルにない限り、マシンのリブート後は残りません。
+<P>セルの setuid 状況を表示するには、<B>fs getcellstatus</B> コマンドを発行します。
+<P><STRONG>注意</STRONG>
+<P>AFS は有効な UID を認識しません。setuid プログラムが AFS ファイルおよびディレクトリーにアクセスした場合、それはプログラムの所有者ではなく、プログラムを初期化した AFS ユーザーの現在の AFS の ID を使用してアクセスしています。ローカル・ファイル・システムのみが有効な UID を認識します。
+<P><B>system:administrators</B> グループのメンバーのみが、AFS ファイルまたはディレクトリーの setuid モード・ビットをオンにすることができます。
+<P>setuid モード・ビットをオンにすると、UNIX の <B>ls -l</B> コマンドは、第 3 ユーザー・モード・ビットを <TT>x</TT> ではなく <TT>s</TT> として表示します。ただし、<TT>s</TT> は、ファイルが常駐するセルに対する setuid アクセス権が使用可能でない限り、AFS ファイルまたはディレクトリーには表示されません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-cell
+</B><DD>各セルを指定して、setuid の状況を設定します。完全修飾ドメイン名、またはローカルの <B>/usr/vice/etc/CellServDB</B> ファイルにリストされている他のセルと区別できる短縮形を指定してください。
+<P><DT><B>-suid
+</B><DD>指定の各セルからのプログラムを setuid 特権で実行することを許可します。このフラグまたは <B>-nosuid</B> フラグを付けるか、または両方のフラグを省略して、setuid 特権でプログラムを実行することを禁止します。
+<P><DT><B>-nosuid
+</B><DD>指定の各セルからのプログラムを setuid 特権で実行することを防ぎます。このフラグまたは <B>-suid</B> フラグを付けるか、または両方のフラグを省略して、setuid 特権でプログラムを実行することを禁止します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、State University セルの実行可能ファイルを使用可能にし、ローカル・マシンで setuid 特権をもってこれを実行します。
+<PRE>   % <B>fs setcell -cell stateu.edu -suid</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、ローカル・スーパーユーザー <B>root</B> としてログインする必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf144.htm#HDRFS_GETCELLSTATUS">fs getcellstatus</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf158.htm">前ページ</A> &#124; <A HREF="auarf160.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

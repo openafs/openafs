@@ -1,0 +1,27 @@
+# (C) Copyright Transarc Corporation 1989
+# Licensed Materials - Property of Transarc
+# All Rights Reserved
+#
+# Package prototype for a staff machine which also hosts a printer.
+#
+
+#
+# Base components
+#
+%include ${wsadmin}/lib/devel
+%include ${wsadmin}/src/admin
+%include ${wsadmin}/lib/base.generic
+
+#
+# Machine-specific components
+#
+%ifdef	rt_r4
+%include ${wsadmin}/lib/rt_r4.readwrite
+%include ${wsadmin}/lib/rt_r4.generic
+%include ${wsadmin}/lib/rt_r4.printer.generic
+%include ${wsadmin}/lib/rt_r4.generic.dev
+%else
+%include ${wsadmin}/lib/tree.readonly
+%include ${wsadmin}/lib/tree.generic
+%include ${wsadmin}/lib/device.generic
+%endif

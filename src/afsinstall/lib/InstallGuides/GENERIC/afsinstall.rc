@@ -1,0 +1,51 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#
+# Initialization file for AFSinstall
+#
+# 
+#
+# Alternate directories
+#
+default    /afs/cellname/afsprod/3.4a
+prod       /afs/cellname/afsprod/3.4a
+
+#
+# Install packages
+# file   Default    Description
+#
+modkernel     1  Dynamic kernel libraries and afsd
+bldkernel     0  Static  kernel libraries and afsd
+fileserver    0  Fileserver
+dbserver      0  Database server
+miscserver    0  Other servers
+serveruser    0  Server control commands
+tokens        1  User tokens related commands
+unix          1  Modified unix commands
+debug         0  Debugging programs
+other         0  Other
+login         1  Install AFS integrated login
+vfsck         0  Install AFS aware vfsck
+build         0  Perform kernel build
+installkernel 0  Install AFS aware kernel
+rc            1  Create an AFS startup script
+clientconfig  1  Configuration of an AFS client
+
+#
+# Client configuration options
+#
+# option definition
+NFSEXTENSIONS=0
+CACHEDIR=/usr/vice/cache
+CACHESIZE=30000
+CELLNAME=cellname
+CELLSERVDB=/afs/cellname/cinfo/etc/CellServDB
+AFSROOT=/afs
+

@@ -1,0 +1,6 @@
+#!/bin/sh
+# $Id: many-dirs,v 1.1 2002/01/22 19:54:41 hartmans Exp $
+
+mkdir foobar || exit 1
+(cd foobar && $objdir/create-dirs 1000) || exit 1
+$objdir/rm-rf foobar || exit 1

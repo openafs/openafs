@@ -1,0 +1,25 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for compiling a new kernel
+# For HP 9000/7xx systems running HPUX 9.x
+#
+
+sub build {
+&Print("Compiling with command \"make -f config.mk\"");
+&Print("in directory /etc/conf");
+&Print("New kernel will be /etc/conf/hp-ux");
+&Print("and should be installed as  /hp-ux");
+
+&ErrorsAreFatal(1);
+$rc = chdir("/etc/conf");
+&ErrorMsg("Could not change to dir", "/etc/conf") if (!$rc);
+
+$rc = system("make -f config.mk");
+$rc = $rc >> 8;
+&Print("Returned code $rc");
+}

@@ -1,0 +1,112 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+include ../../config/Makefile.${SYS_NAME}
+
+CC = ${MT_CC}
+CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
+CCRULE = ${CC} ${CFLAGS} -c $?
+
+VLSERVER = ../../vlserver/
+VOLSER = ../../volser/
+FSINT = ../../fsint/
+
+ADMINOBJS =\
+	afs_vosAdmin.o \
+	vosutils.o \
+	vsprocs.o \
+	lockprocs.o
+
+VLSERVEROBJS =\
+	vldbint.cs.o \
+	vldbint.xdr.o
+
+VOLSEROBJS =\
+	volint.cs.o \
+	volint.xdr.o
+
+FSINTOBJS =\
+	afsint.xdr.o \
+	afscbint.xdr.o
+
+LIBOBJS = ${ADMINOBJS} ${VLSERVEROBJS} ${VOLSEROBJS} ${FSINTOBJS}
+
+LIBVOSADMIN=${TOP_LIBDIR}/libvosadmin.a
+
+all: ${TOP_INCDIR}/afs/afs_vosAdmin.h ${TOP_LIBDIR}/libvosadmin.a
+
+install: ${DESTDIR}${includedir}/afs/afs_vosAdmin.h ${DESTDIR}${libdir}/afs/libvosadmin.a
+
+dest: ${DEST}/include/afs/afs_vosAdmin.h ${DEST}/lib/afs/libvosadmin.a
+
+${TOP_INCDIR}/afs/afs_vosAdmin.h: afs_vosAdmin.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs_vosAdmin.h: afs_vosAdmin.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/afs_vosAdmin.h: afs_vosAdmin.h
+	${INSTALL} $? $@
+
+
+${TOP_LIBDIR}/libvosadmin.a: libvosadmin.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libvosadmin.a: libvosadmin.a
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libvosadmin.a: libvosadmin.a
+	${INSTALL} $? $@
+
+
+libvosadmin.a: ${LIBOBJS}
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	${RANLIB} $@
+
+afs_vosAdmin.o: afs_vosAdmin.h
+
+vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
+	${CCRULE}
+
+vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
+	${CCRULE}
+
+volint.xdr.o: ${VOLSER}/volint.xdr.c
+	${CCRULE}
+
+volint.cs.o: ${VOLSER}/volint.cs.c
+	${CCRULE}
+
+afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
+	${CCRULE}
+
+afsint.xdr.o: ${FSINT}/afsint.xdr.c
+	${CCRULE}
+
+clean:
+	$(RM) -f *.o libvosadmin*

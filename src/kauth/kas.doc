@@ -1,0 +1,124 @@
+@comment (
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+)
+@comment (
+Revision 1.5  89/01/30  09:56:16
+Added copyright notice.
+
+  Revision 1.2  89/01/30  09:49:04
+  Added copyright notice
+  )
+
+This a brief description of the asr command which provides a preliminary
+interface to the Authentication Server.
+	881209
+Updated.
+	890111
+
+The command uses the libcmd.a facilities with a couple of modifications:
+  1. If the command is given no argument the interactive command is assumed as
+     a default.
+  2. If the first command line argument starts with "-c" the interactive
+     command is invoked.
+  3. If the first command line argument contains either a '.' or a '@'
+     character the interactive command is invoked.
+These shorthands allow the most common cases to enter interactive mode with a
+minimum of hassle.
+
+If one of the above cases is not met the first command line argument is taken
+as a command name.  These commands fall into three groups.  The first are those
+provided by the libcmd facility such as help and apropos.  The second group
+only makes sense within interactive mode.  The last group includes all the
+action commands.
+
+The interactive command is only useful from the command line; within command
+mode it is a no-op.  The quit command just leaves interactive mode.  Generally
+all commands in a single command invocation use a single connection to the
+Authentication Server.  The noauth command replaces the current connection with
+an unauthenticated one.  This will only be useful if the server is also running
+-noauth, but can be simpler than running unlog to remove all your tickets..
+
+Certain optional arguments are common to all the action commands.  These are
+important if the command is being run from the command line but they are
+ignored once a connection has been established in interactive mode.  These
+arguments are as follows:
+  -username - This allows the specification of the principal name to use for
+     authentication to the admin server.  The format of the principal is
+     "name[.instance][@cell]".  If this parameter is not specified the username
+     defaults to the current Unix user name, the null instance and the local
+     cell.
+
+  -password - This allows the specification of the password associated
+     with the username.  If not present it is prompted for.
+
+  -cell - This specifies the cell containing the Authentication Server
+     to contact.  A cell name may not be specified in both the username
+     and with this argument.
+
+  -servers - This argument is followed by a list of servers that is
+     passed to Ubik.  It can be used to override the contents of
+     CellServDB.  Use with care!
+
+To use of most of this program's commands you must have a ticket for the server
+"AuthServer.Admin".  If you don't have one the program will prompt for your
+password (unless it is specified with the -password parameter) and try to
+obtain one.  If your database entry marks you as an admin user you will be able
+to run all these commands (except getpassword).  Otherwise you will only be
+able to use getticket or run setpassword on yourself.
+
+Some of the action command accept parameters which are passwords.  If these are
+not specified on the command line they are prompted for.  Other arguments are
+required unless otherwise specified.
+
+debuginfo - This prints out a lot of debugging information that should be of
+    little interest to anyone except the program maintainer.
+statistics - This returns various statistics about the AuthServer and its
+    database.
+getticket <user> - this gets a ticket for the server <user> and installs the
+    ticket in the ticket cache.  At present, except for the server named "afs",
+    this will fail.  This is a debugging entry can won't be useful for most
+    users.
+getpassword <user> - this returns a user's encryption key.  It is used by the
+    message guardians to allow PC users to authenticate.  It will fail unless
+    you're running on a file server.
+setpassword (sp) <user> <pass> - This is used to set a user's password.  You
+    must be authenticated as <user> or be an admin user.
+setfields (sf) <user> - Set various database entry fields for this user.  This
+    command takes three optional parameters, at least one of which must be
+    specified.  They are "-flags", "-expiration" and "-lifetime".
+      -expiration <date> - this specifies the date after which the user will
+	  not be able to authenticate himself.  The format of the date is
+	  "[[[yy]mm]dd]hhmm[.ss]".
+      -lifetime <hh:mm | seconds> - this specified the maximum ticket
+	  lifetime.
+      -flags <flag expression | hex number> - this specifies the value
+	  of the flags field.  A flag expression allows combining the
+	  individual bits by name.  If the expression starts with an '='
+	  then all the desired bits must be set, otherwise the
+	  expression is relative to the current flag value.  Bits may be
+	  added (with '+') or subtracted (with '-' or '_').  The flag
+	  bit names and their values are as follows:
+	    NORMAL  = 0x01; /* set if a regular user */
+	    FREE    = 0x02; /* set if in free list */
+	    ADMIN   = 0x04; /* an administrator */
+	    NOTGS   = 0x08; /* Don't allow to use TGS */
+	    OLDKEYS = 0x10; /* set if entry used to store old keys */
+	    NOSEAL  = 0x20; /* don't use this entry's key to seal tickets */
+	    NOCPW   = 0x40; /* don't let principal to change its own key */
+	  Setting the FREE or OLDKEYS bits will result in an error.
+	  Thus "_ADMIN" removes the admin bit; "+NOCPW-admin" adds the
+	  no cpw bit and removes the admin bit; and "=ADMIN" sets the
+	  admin bit with all the other bits off (except NORMAL).
+delete (rm) <user>" - Delete a user.
+create <user> <pass> - Create a user with initial password.
+examine <user> - Print the database entry for this user.
+list (ls) - This lists all the users in the database.
+

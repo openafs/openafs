@@ -1,0 +1,32 @@
+:Base TAAFSCFG.HLP
+:Title Configuração do IBM AFS Server
+1 Ajuda da Configuração do AFS Server
+2 Sobre o AFS, AFS Server e Centro de Controle do AFS=About_AFS_and_the_AFS_Server_and_AFS_Control_Center
+2 Configurando o AFS Server
+3 Visão Geral=Configuring_the_AFS_Server
+3 O Assistente de Configuração do AFS Server=The_AFS_Server_Configuration_Wizard
+3 Para Configurar o AFS Server em uma Célula Existente=Configuring_the_AFS_Server_into_an_Existing_Cell
+3 Para Configurar o AFS Server como o primeiro AFS Server em uma Célula=Configuring_the_AFS_Server_as_the_First_AFS_Server_in_a_Cell
+3 Acessando os Dados do AFS=Accessing_AFS_Data
+2 A Caixa de Diálogo de Configuração do AFS Server
+3 Visão Geral=The_AFS_Server_Configuration_Dialog_Box
+3 Para Acessar a Caixa de Diálogo de Configuração do AFS Server=To_Access_the_AFS_Server_Configuration_Dialog_Box
+3 Guia Partições
+4 Visão Geral=IDH_PARTITIONS_PAGE
+4 Definindo as Partições do AFS
+5 Visão Geral=Setting_Up_AFS_Partitions
+5 Para Criar uma Partição no AFS=To_Create_an_AFS_Partion
+4 Administrando as Partições do AFS
+5 Visão Geral=Administering_AFS_Partitions
+5 Salvando uma Partição do AFS
+6 Visão Geral=Salvaging_an_AFS_Partition
+6 Para Salvar uma Partição do AFS=To_Salvage_an_AFS_Partition
+5 Removendo Partições do AFS
+6 Visão Geral=Removing_AFS_Partitions
+6 Para Remover uma Partição do AFS=To_Remove_an_AFS_Partition
+3 Guia Serviços
+4 Visão Geral=IDH_SERVICES_PAGE
+4 Funções do AFS Server=AFS_Server_Roles
+4 Serviços do AFS=AFS_Services
+4 Para Configurar e Iniciar um Serviço do AFS=To_Configure_and_Start_an_AFS_Service
+4 Para Parar e Desfazer a Configuração de um Serviço do AFS=To_Stop_and_Unconfigure_an_AFS_Service

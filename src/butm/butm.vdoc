@@ -1,0 +1,124 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/* procedure interface */
+
+package BUTM_
+
+/* All of these procedure take a tapeInfo structure which the tape module uses
+   to help it maintain the state of its various communications with tape users.
+   Generally this structure will be updated by the tape module as the tape is
+   being read or written.  Most fields should be treated as read-only by the
+   caller. */
+
+/* This is called to request a tape mount.  The input is the human readable
+   tape identitier.  The tape module will contact the operator to get the
+   requested tape mounted and wait until it has been loaded.  The tapeInfo
+   structure contains the tape identifies on input, and is updated with the
+   current status on output. */
+
+/* Note: Normally the tape coordinator will expect that when a tape is mounted
+   or dismounted that a piece of physical backup media is involved.  This is
+   useful so that the database can reflect the actual state of the backup
+   process.  For example, when a set of volumes have been written to tape
+   successfully and the tape dismounted, the data is fairly immune to random
+   failures and the data is "safe" in some important sense.  If the tape module
+   implements a level of buffering or disk staging these assumptions about data
+   safety are called into question.  Since there may still be important reasons
+   to support disk buffering this should be supported by the backup system.  If
+   the tape module is implementing buffering it should maintain the concept of
+   virtual tapes so that the coordinator and database can correctly map volumes
+   to physical tape locations.  The database can then provide a special status
+   for a tape that means it has been written but not written to permanent
+   storage.  When the tape module, or behind-the-scenes tape spooler, flushes
+   its buffers to permanent media it can contact the database to update the
+   status to indicate the tape data is "safe".  This final step may not involve
+   any part of the backup system besides the database. */
+
+Mount
+ (INOUT struct butm_tapeInfo *info);
+
+/* This requests that the tape be dismounted.  Until this call returns any
+   number of this could go wrong with the tape, but the caller can assume all
+   is well if this call returns without error.  Future operations on this
+   tapeInfo structure will fail. */
+
+Dismount
+ (INOUT struct butm_tapeInfo *info);
+
+/* This labels a new tape.  Any previous tape label is replaced. */
+
+Create
+ (INOUT struct butm_tapeInfo *info,
+  IN struct butm_tapeLabel *label);	/* tape label information */
+
+/* This tells the tape module that writing to this tape is complete and it may
+   mark it with an EOT. */
+
+WriteEOT
+ (INOUT struct butm_tapeInfo *info);
+
+/* This call returns the label of the tape */
+
+ReadLabel
+ (INOUT struct butm_tapeInfo *info,
+  OUT struct butm_tapeLabel *label);	/* tape label information */
+
+/* This positions a tape to a specific position.  The units of position are
+   unspecified, except that, for sequential media, position values should be
+   sorted into increasing order for efficient access.  The tape module only
+   guarantees to return the position to a value it previous reported the tape
+   to be at.  The granualarity of the positionis only sufficient to locate a
+   file.  The tape module does not guarantee to position a tape except on file
+   boundaries. */
+
+Seek
+ (INOUT struct butm_tapeInfo *info,
+  IN long position);			/* new position */
+
+/* These three procedures are used to read the file at the current position on
+   the tape. */
+
+/* This allows the tape module to do any initailization necessary to read the
+   next file on the tape. */
+ReadFileBegin
+ (INOUT struct butm_tapeInfo *info);
+
+/* This actually returns the data: it is copied into the provided buffer by the
+   tape module.  The returned nbytes is the number of bytes acually provided,
+   it may be less than datalen.  A returned length of zero means the tape
+   module encountered EOF. */
+ReadFileData
+ (INOUT struct butm_tapeInfo *info,
+  IN char *dataptr,
+  IN int   datalen,
+  OUT int *nbytes);
+
+/* cleanup... */
+ReadFileEnd
+ (INOUT struct butm_tapeInfo *info);
+
+
+/* Similarly, three procedures are provided to write a file to tape. */
+
+/* Initialization.  The position reported by the tapeInfo structure when this
+   procedure returns identifies the location of this file.  It can be used
+   later in a call to Seek and ReadFile to retrieve this file. */
+WriteFileBegin
+ (INOUT struct butm_tapeInfo *info);
+
+/* This actually provides the data. */
+WriteFileData
+ (INOUT struct butm_tapeInfo *info,
+  IN char *dataptr,
+  IN int   datalen);
+
+/* cleanup... */
+WriteFileEnd
+ (INOUT struct butm_tapeInfo *info);

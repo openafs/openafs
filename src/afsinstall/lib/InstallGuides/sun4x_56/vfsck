@@ -1,0 +1,32 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the AFS aware file system checker
+# For Sun systems running Solaris 2.6
+#
+
+sub vfsck {
+my($ufs, , $afs, $file);
+$ufs = "/usr/lib/fs/ufs";
+$afs = "/usr/lib/fs/afs";
+
+&CreateDir($afs);
+&Copy("root.server/etc/vfsck",  "$afs/fsck");
+
+&ErrorsAreFatal(1);
+$rc = opendir(UFS, $ufs);
+&ErrorMsg("Could not opendir", $ufs) if (!$rc);
+while($file = readdir(UFS)) {
+  next if ($file eq ".");
+  next if ($file eq "..");
+  next if ($file eq "fsck");
+  next if (-e "$afs/$file");
+  &Symlink("$ufs/$file", "$afs/$file"); };
+&ErrorsAreFatal(0);
+closedir(UFS);
+}
+

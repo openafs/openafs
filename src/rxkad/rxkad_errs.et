@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+#*/
+
+# NOTE: RXKADNOAUTH value is hardcoded in audit/audit.h, so if you make
+# changes here, make sure that audit/audit.h is kept up to date.
+
+error_table RXK
+  ec RXKADINCONSISTENCY, "Security module structure inconsistent"
+  ec RXKADPACKETSHORT, "Packet too short for security challenge"
+  ec RXKADLEVELFAIL, "Security level negotiation failed"
+  ec RXKADTICKETLEN, "Ticket length too long or too short"
+  ec RXKADOUTOFSEQUENCE, "packet had bad sequence number"
+  ec RXKADNOAUTH, "caller not authorized"
+  ec RXKADBADKEY, "illegal key: bad parity or weak"
+  ec RXKADBADTICKET, "security object was passed a bad ticket"
+  ec RXKADUNKNOWNKEY, "ticket contained unknown key version number"
+  ec RXKADEXPIRED, "authentication expired"
+  ec RXKADSEALEDINCON, "sealed data inconsistent"
+  ec RXKADDATALEN, "user data too long"
+  ec RXKADILLEGALLEVEL, "caller not authorized to use encrypted connections"
+end

@@ -1,0 +1,21 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+error_table CMD
+  ec CMD_EXCESSPARMS, "More than the maximum number of parameters defined"
+  ec CMD_INTERNALERROR, "Internal parsing error"
+  ec CMD_NOTLIST, "Too many values specified after a CMD_SINGLE switch"
+  ec CMD_TOOMANY, "Too many parameters specified"
+  ec CMD_USAGE, "Impossibly few aguments specified"
+  ec CMD_UNKNOWNCMD, "unrecognized or ambiguous command name"
+  ec CMD_UNKNOWNSWITCH, "unrecognized or ambiguous switch name"
+  ec CMD_AMBIG, "<unused>"
+  ec CMD_TOOFEW, "Insufficient required parameters provided"
+  ec CMD_TOOBIG, "Token too large"
+end

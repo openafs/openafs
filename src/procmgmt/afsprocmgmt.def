@@ -1,0 +1,10 @@
+EXPORTS
+	DllMain				@1
+	pmgt_SigactionSet		@2
+	pmgt_SignalSet			@3
+	pmgt_SignalRaiseLocal		@4
+	pmgt_SignalRaiseRemote		@5
+	pmgt_ProcessSpawnVEB		@6
+	pmgt_ProcessWaitPid		@7
+	pmgt_spawnData			@8  DATA
+	pmgt_spawnDataLen		@9  DATA

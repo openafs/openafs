@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_SETVOL" HREF="auarf002.htm#ToC_177">fs setvol</A></H2>
+<A NAME="IDX4978"></A>
+<A NAME="IDX4979"></A>
+<A NAME="IDX4980"></A>
+<A NAME="IDX4981"></A>
+<A NAME="IDX4982"></A>
+<A NAME="IDX4983"></A>
+<A NAME="IDX4984"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイルまたはディレクトリーを含むボリュームの最大割り当て量およびメッセージを設定します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs setvol</B> [<B>-path</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-max</B> &lt;<VAR>disk space quota in 1K units</VAR>>]
+          [<B>-offlinemsg</B> &lt;<VAR>offline message</VAR>>]  [<B>-help</B>]
+   
+<B>fs setv</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-ma</B> &lt;<VAR>disk space quota in 1K units</VAR>>] 
+        [<B>-o</B> &lt;<VAR>offline message</VAR>>]  [<B>-h</B>]
+    
+<B>fs sv</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-ma</B> &lt;<VAR>disk space quota in 1K units</VAR>>] 
+      [<B>-o</B> &lt;<VAR>offline message</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs setvol</B> コマンドは、<B>-path</B> 引き数が指定した各ディレクトリーまたはファイルを含む読み取り / 書き込みボリュームの割り当て量 (最大サイズ) を設定します。メッセージを <B>fs examine</B> コマンドの出力で表示されるボリュームと関連付けるには、
+<B>-offlinemsg</B> 引き数を使用します。
+<P>このコマンドで作成した設定のすべてを表示するには、<B>fs</B> コマンドを使用します。
+<B>fs listquota</B> コマンドはファイル・セットの割り当て量を報告し、<B>fs quota</B> コマンドは使用された割り当て量のパーセンテージを報告します。
+<P>割り当て量を一度に 1 つのボリュームに設定するには、<B>fs setquota</B> コマンドを使用します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>ホスト・ボリュームの割り当て量とオフライン・メッセージを設定する、各ファイルまたはディレクトリーを指定します。部分的なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P>
+<P>ファイルまたはディレクトリーへの読み取り / 書き込みパスを指定し、読み取り専用ボリュームを変更しようとして発生する障害を回避します。規則では、読み取り / 書き込みパスは、パス名の 2 番目のレベルのセル名の前にピリオドを入れて示します
+(たとえば、<B>/afs/.abc.com</B>)。ファイル・スペースを通る読み取り / 書き込みパスおよび読み取り専用パスの概念に関する詳細については、
+<B>fs mkmount</B> 参照ページを参照してください。
+<P><DT><B>-max
+</B><DD>ボリュームが占めることができるファイル・サーバーのディスク・スペースの最大量を設定します。
+1 KB ブロックの数を示す正の整数を使用します
+(<B>1024</B> が、1 MB です)。値 <B>0</B> は無制限の割り当て量を設定しますが、ボリュームを格納するディスク区画のサイズには、ボリューム・サイズに絶対的な制限があります。
+<P>
+<P><B>-path</B> 引き数が省略された場合
+(コマンドが現行作業ディレクトリーを格納しているボリュームの割り当て量を設定します)、
+<B>-max</B> スイッチを提供しなければなりません。
+<P><DT><B><B>-offlinemsg</B>
+</B><DD>メッセージを <B>fs examine</B> コマンドの出力で表示されるボリュームと関連付けます。この使用目的は、ボリュームが現在オフラインである理由を説明することです。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下のコマンドは、
+<B>/afs/abc.com/usr/smith</B> および
+<B>/afs/abc.com/usr/pat</B> のホーム・ディレクトリーを格納しているボリュームに、
+6500 KB の割り当て量を適用します。
+<PRE>   % <B>cd /afs/abc.com/usr</B>
+    
+   % <B>fs setvol -path smith pat -max 6500</B><B></B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、<B>system:administrators</B> グループに属している必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf138.htm#HDRFS_EXAMINE">fs examine</A>
+<P><A HREF="auarf150.htm#HDRFS_LISTQUOTA">fs listquota</A>
+<P><A HREF="auarf153.htm#HDRFS_MKMOUNT">fs mkmount</A>
+<P><A HREF="auarf155.htm#HDRFS_QUOTA">fs quota</A>
+<P><A HREF="auarf161.htm#HDRFS_SETQUOTA">fs setquota</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf162.htm">前ページ</A> &#124; <A HREF="auarf164.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

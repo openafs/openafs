@@ -1,0 +1,89 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+AFS file reorganization 
+
+Many files in the afs and rx directories were either moved or split up to
+facilitate readability and hence maintenance. As there is no DOC directory
+as yet in RX, it is included here. Also, MakefileProto was split into 
+operating system specific MakefileProto.<os> files. The common elements are
+in Makefile.common, which is included by all the MakefileProto.<os>'s.
+In addition, the subdirectory where the objects are compiled and the libraries
+are compiled have been named either "STATIC" or "MODLOAD" depending on the
+type of the client. There are no more separate NFS and no-NFS directories. The
+NFS translator specific object files all have _nfs suffixes, for example,
+afs_call_nfs.o.
+
+RX
+The rx directory now has operating system specific directories. The Unix
+operating systems use these for kernel code only. Each presently has 2 files,
+rx_kmutex.h and rx_knet.c. rx_kmutex.h contains that operating system's 
+locking macros for kernel RX that were in the now removed rx_machdep.h.
+rx_knet.c contains the system specific parts from rx_kernel.c. This includes
+a separate rxk_input for each system. In the afs directory, afs_osinet.c was
+also split up. osi_NetSend was moved to these rx_knet.c directories.
+
+RX Summary:
+rx_machdep.h -> rx_lwp.h (user space parts)
+             -> <os>/rx_kmutex.h (kernel parts)
+rx_kernel.c  -> <os>/rx_knet.c
+osi_NetSend  -> <os>/rx_knet.c
+
+AFS
+Files in the afs directory were broken up either because of the messy #ifdef's
+or because of the size of the file, and in particular, the RCS version of
+the file. For example, RCS/afs_vnodeops,v is nearly 10 Meg. Files in the
+operating system specific directories are all prefixed with osi_ (operating
+system interface). Each must have at least an osi_groups.c and an osi_machdep.h
+file. The first implements setgroups/getgroups and the latter implements the
+kernel locking macros for AFS.
+
+
+AFS Summary:
+afs_vnodeops.c -> VNOPS/*.c (one file per class of vnode op)
+                  afs_osi_pag.c
+                  afs_osi_uio.c
+                  <os>/osi_groups.c
+afs_cache.c    -> afs_dcache.c and afs_vcache.c afs_segments.c
+afs_resource.c -> afs_analyze.c
+                  afs_cell.c
+                  afs_conn.c
+                  afs_user.c
+                  afs_server.c
+                  afs_volume.c
+                  afs_util.c
+                  afs_init.c
+
+afs_osinet.c   -> rx_knet.c (osi_NetSend)
+                  afs_osi_alloc.c
+                  afs_osi_sleep.c
+osi.h          -> afs_osi.h
+                  <os>/osi_machdep.h
+
+Several operating system interface files were moved to their appropritate
+osi directories:
+AIX:  afs_aixops.c -> osi_vnodeops.c
+      afs_aix_subr.c -> osi_misc.c
+      afs_config.c -> osi_config.c osi_timeout.c
+      aix_vfs.h    -> osi_vfs.h
+      misc.s       -> osi_assem.s
+
+DUX:  afs_vnodeops.c -> osi_vnodeops.c (DUX specific code)
+
+HPUX: afs_vnodeops.c -> osi_vnodeops.c (HPUX specific code)
+      afs_hp_debug.c -> osi_debug.c
+      hpux_proc_private.h -> osi_proc_private.h
+      hpux_vfs.h   -> osi_vfs.h
+
+IRIX: afs_sgiops.c -> osi_idbg.c osi_groups.c osi_misc.c osi_vnodeops.c
+      sgi_vfs.h    -> osi_vfs.h
+
+SOLARIS: afs_sun_subr.c -> osi_vnodeops.c
+                           osi_prototypes.h (new header file)
+
+afs_mariner.c is centralizes the mariner code, which was plucked from both
+afs_cache.c and afs_vnodeops.c

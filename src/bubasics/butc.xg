@@ -1,0 +1,259 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+package TC_
+prefix S
+statindex 4
+	
+/*
+#define	TCPERFORMDUMP		100
+#define	TCPERFORMRESTORE	101
+#define	TCCHECKDUMP		102
+#define	TCABORTDUMP		103
+#define	TCWAITFORDUMP		104
+#define	TCENDDUMP		105
+#define	TCGETTMINFO		106
+#define TCLABELTAPE		107
+#define TCSCANNODES		108
+#define TCREADLABEL		109
+#define TCSCANDUMPS		110
+#define	TCGETTCINFO		111
+#define	TCSAVEDB		112
+#define	TCRESTOREDB		113
+#define	TCGETSTATUS		114
+#define	TCREQUESTABORT		115
+#define	TCENDSTATUS		116
+#define	TCSCANSTATUS		117
+#define TCDELETEDUMP            118
+*/
+
+/*random constants */
+/* there should be a single consistent set of these */
+
+const TC_MAXDUMPPATH = 256;	/* dump path names*/
+const TC_MAXNAMELEN = 64;	/* name length */
+const TC_MAXARRAY = 2000000000;	/* max volumes to dump */
+const TC_MAXFORMATLEN = 100;	/*size of the format statement */
+const TC_MAXHOSTLEN = 32;	/*for server/machine names */
+const TC_MAXTAPELEN = 32;	/*max tape name allowed */
+/*This specifies the interface to the tape coordinator*/
+/*describes the information that should be dumped to dump a single 
+volume*/
+
+struct tc_dumpDesc 
+{
+    afs_int32 vid;			/* volume to dump */
+    afs_int32 vtype;                /* volume type */
+    char name[TC_MAXNAMELEN];	/* name of volume whose clone is to be dumped*/
+    afs_int32 partition;		/* partition at which to find the volume */
+    afs_int32 date;			/* date from which to do the dump */
+    afs_int32 cloneDate;		/* clone date of the volume */
+    afs_uint32 hostAddr;		/* file server for this volume */
+};
+
+/*define how to restore a volume */
+const RDFLAG_LASTDUMP = 0x1;
+const RDFLAG_SKIP     = 0x2;
+const RDFLAG_FIRSTDUMP = 0x4;
+struct tc_restoreDesc {
+	afs_int32 flags;
+	char tapeName[TC_MAXTAPELEN];	/*name of tape, the frag is on*/
+	afs_uint32 dbDumpId;                /* The dump id of the tape */
+	afs_uint32 initialDumpId;           /* The initial dump id of the tape */
+	afs_int32 position;		/*start position of frag on tape */
+	afs_int32 origVid;		/* original volume id */
+	afs_int32 vid;			/* 0 means allocate new volid */
+	afs_int32 partition;		/* where to restore the volume */
+	afs_int32 dumpLevel;		/* flags */
+	afs_uint32 hostAddr;	/* file server to restore the volume to */
+	char oldName[TC_MAXNAMELEN];   /*name of volume whose clone is to be dumped */
+	opaque newName[TC_MAXNAMELEN];	/* new name suffix */
+
+};
+
+/*describes the current status of a dump */
+struct tc_dumpStat {
+	afs_int32 dumpID;		/* dump id we're returning */
+	afs_uint32 KbytesDumped;	/* Kbytes dumped so far */
+	afs_uint32 bytesDumped;	/* remainder bytes dumped so far */
+	afs_int32 volumeBeingDumped;	/* guess ?*/
+	afs_int32 numVolErrs;	/* # of volumes that had errors in processing */
+	afs_int32 flags;		/* true if the dump is done */
+};
+
+/*identifier for a tape */
+struct tc_tapeLabel {
+	afs_int32 size;                      /* size of tape in bytes */
+	char afsname[TC_MAXTAPELEN];     /* ascii AFS name, defaults to NULL */
+	char pname[TC_MAXTAPELEN];       /* ascii permanent name, defaults to NULL */
+	afs_uint32 tapeId;           /* The tapeId (or dumpId of the initial dump) */
+};
+
+/* structure to describe tapes */
+struct tc_TMInfo {
+	afs_int32 capacity;		/* in 1024 byte units */
+	afs_int32 flags;		/* flags, unused at present */
+};
+
+struct tc_tapeSet { /* describes a tape sequence */
+    afs_int32  id;				/* unique id of tapeSet, assigned by budb */
+    char  tapeServer[TC_MAXHOSTLEN];	/* name of server where this tape is */
+    char  format[TC_MAXFORMATLEN];	/* for using printf to make tape name */
+    int   maxTapes;			/* maximum number of tapes in seq. */
+    afs_int32  a; afs_int32 b;			/* linear transforms for tape */
+
+    afs_int32  expDate;			/* expiration date */
+    afs_int32  expType;			/* absolute or relative expiration */
+};
+
+/* identifies the tape coordinator interface */
+struct tc_tcInfo
+{
+    afs_int32	tcVersion;		/* for the interface & this struct */
+};
+
+/* flag definition constants */
+const TC_STAT_DONE = 1;	/* all done */
+const TC_STAT_OPRWAIT = 2;	/* waiting for user interaction */
+const TC_STAT_DUMP = 4;	/* true if dump, false if restore */
+const TC_STAT_ABORTED = 8;	/* the operation was aborted */
+const TC_STAT_ERROR = 16;	/* some error ocuured in the operation */
+
+/* flags for ScanStatus */
+
+%#define TSK_STAT_FIRST		0x1	/* get id of first task */
+%#define TSK_STAT_END		0x2	/* no more tasks */
+%#define TSK_STAT_NOTFOUND	0x4	/* couldn't find task id requested */
+%#define TSK_STAT_XBSA	       0x10     /* An XBSA server */
+%#define TSK_STAT_ADSM	       0x20	/* An ADSM XBSA server */
+
+typedef struct tc_dumpDesc tc_dumpArray<TC_MAXARRAY>;
+typedef struct tc_restoreDesc tc_restoreArray<TC_MAXARRAY>;
+
+/* interface structure */
+struct tc_dumpInterface
+{
+    char dumpPath[TC_MAXDUMPPATH];		/* full dump path */
+    char volumeSetName[TC_MAXNAMELEN];		/* volume set name */
+    char dumpName[TC_MAXNAMELEN];		/* volset.dump */
+    struct tc_tapeSet tapeSet;
+    afs_int32 parentDumpId;
+    afs_int32 dumpLevel;
+    int  doAppend;				/* Append dump to the dump set */
+};
+
+struct tciStatusS
+{
+    char	taskName[TC_MAXNAMELEN];	/* task name */
+    afs_uint32	taskId;                         /* The id for the task */
+    afs_uint32      flags;                          /* as above */
+    afs_uint32      dbDumpId;                       /* dump id */
+    afs_uint32      nKBytes;                        /* bytes xferred */
+    char        volumeName[TC_MAXNAMELEN];      /* current volume (if any) */
+    afs_int32	volsFailed;			/* # operation failures */
+    afs_int32        lastPolled;                     /* last successful poll */
+};
+
+/* Start a dump, given a dump set name, a tape set name and the volumes to
+ * dump.
+ */
+
+proc PerformDump(IN struct tc_dumpInterface *tcdiPtr,
+		 tc_dumpArray *dumps,
+		 OUT afs_int32 *dumpID);
+
+/* Start a restore, given a dump set name, a tape set name and the volumes to
+ * dump. 
+ */
+proc PerformRestore(IN string dumpSetName<TC_MAXNAMELEN>,
+    tc_restoreArray *restores,
+    OUT afs_int32 *dumpID);
+
+/* check the status of a dump; the tape coordinator is assumed to sit on
+ * the status of completed dumps for a reasonable period (2 - 12 hours)
+ * so that they can be examined later 
+ */
+/*
+ * proc CheckDump(IN afs_int32 dumpID, OUT struct tc_dumpStat *status);
+ */
+
+/* abort a dump */
+/* 
+ * proc AbortDump(IN afs_int32 dumpID);
+ */
+
+/* this call waits for a dump to complete; it ties up an LWP on the tape 
+coordinator */
+/*
+ * proc WaitForDump(IN afs_int32 dumpID);
+ */
+
+/* close a dump normally (not abort) */
+/*
+ * proc EndDump(IN afs_int32 dumpID);
+ */
+
+/* 
+ * proc GetTMInfo(OUT struct tc_TMInfo *info);
+ */
+
+proc LabelTape
+ ( IN struct tc_tapeLabel *label,
+   OUT afs_uint32 *taskId
+ );
+
+/*
+ * proc ScanNodes(IN afs_int32 index, OUT afs_int32 *nodeID);
+ */
+
+proc ReadLabel
+ ( OUT struct tc_tapeLabel *label,
+   OUT afs_uint32 *taskId 
+ );
+
+proc ScanDumps
+ ( IN afs_int32 addDbFlag,
+  OUT afs_uint32 *taskId
+ );
+
+/* For returning information about the butc interface.
+ * Currently this is just the version number
+ */
+
+proc TCInfo(OUT struct tc_tcInfo *tciptr);
+
+/* for database dump/restores */
+
+proc SaveDb(IN afs_uint32 archiveTime, OUT afs_uint32 *taskId );
+
+proc RestoreDb( OUT afs_uint32 *taskId );
+
+
+/* new status management - PA */
+
+proc EndStatus( IN  afs_uint32 taskId );
+
+proc GetStatus
+ ( IN  afs_uint32 taskId,
+   OUT struct tciStatusS *statusPtr
+ );
+
+proc RequestAbort( IN  afs_uint32 taskId );
+
+proc ScanStatus
+ ( INOUT afs_uint32 	*taskId,
+   OUT struct tciStatusS *statusPtr,
+   INOUT afs_uint32 	*flags
+ );
+
+proc DeleteDump
+ ( IN afs_uint32  aDumpId,
+   OUT afs_uint32 *taskId
+ );
+

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFTPD" HREF="auarf002.htm#ToC_192">ftpd (AFS バージョン)</A></H2>
+<A NAME="IDX5044"></A>
+<A NAME="IDX5045"></A>
+<A NAME="IDX5046"></A>
+<A NAME="IDX5047"></A>
+<A NAME="IDX5048"></A>
+<P><STRONG>目的</STRONG>
+<P>インターネット FTP サーバーを初期化します。
+<P><STRONG>構文</STRONG>
+<PRE><B>ftpd</B>  [<B>-d</B>]  [<B>-l</B>]  [<B>-t</B> &lt;<VAR>timeout</VAR>>] [<B>-v</B>] [<B>-T</B> &lt;<VAR>MaxTimeOut</VAR>>] [<B>-u</B>] [<B>-s</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P>AFS 修正 <B>ftpd</B> プログラムは、機能上、標準の UNIX <B>ftpd</B> プログラムと類似していますが、<B>ftp</B> コマンドの発行者 (リモート・マシンで作業している可能性があります) もローカル・セル (ローカルの <B>/usr/vice/etc/ThisCell</B> ファイルの定義に従って、
+<B>ftpd</B> プロセスが実行されているマシンのホーム・セル) の認証サーバーを使用して認証します。この認証は、リモート・マシン上の <TT>ftp></TT> プロンプトで入力されたユーザー名およびパスワードを基準に行われます。
+<B>ftpd</B> プロセスを実行しているマシン上のキャッシュ・マネ ージャーは、ユーザーの UNIX UID ではなく、プロセス認証グループ (PAG) を使用して、ユーザーを識別し、新しく作成されたトークンを保管します。
+<P>指定されたユーザー名およびパスワードが <B>ftpd</B> プロセスが実行されるセルで有効であれば、<B>ftp</B> コマンドの発行者は、他のセルで作業することができます。
+<B>ftpd</B> プロセスが実行されているセルの認証データベースに、<B>ftp</B> コマンドを発行したユーザー名が存在しないか、あるいは発行者の指定したパスワードが間違っていると、
+<B>ftpd</B> プロセスは、<B>ftpd</B> プロセスが実行されているマシンのローカル・ファイル・システムにユーザーをログインさせます。ローカル・ログインに成功するかどうかは、ローカル・パスワード・ファイルにあるユーザー名と、ユーザーが正しいローカル・パスワードを指定したかどうかによって決まります。ローカル・ログインの場合、AFS サーバー・プロセスは、
+<B>ftp</B> コマンドの発行者を
+<B>anonymous</B> とみなします。
+<P>推奨される構成では、<B>ftpd</B> プロセスの AFS バージョンは、標準バージョンの代わりに使用されています (1 度に 1 つのバージョンのみが実行可能です)。管理者には、2 つの選択肢があります。
+<UL>
+<LI><B>ftpd.afs</B> のようなバイナリーを指定し、標準のバージョンを <B>ftpd</B> プロセスとして残す。標準バージョンではなく <B>ftpd.afs</B> ファイルを参照するように、
+<B>inetd.conf</B> 構成ファイルを変更します。
+</LI><LI>AFS バージョンのバイナリーを標準名 (<B>ftpd</B> など) に変更し、標準バージョンのバイナリーを <B>ftpd.orig</B> などの名前に変更する。<B>inetd.conf</B> の変更は必要ありませんが、
+<B>ftpd</B> プロセスの標準バージョンが使用不能かどうかは不明瞭です。
+</LI></UL>
+<P><STRONG>注意</STRONG>
+<P>AFS 分散は、あらゆるシステム・タイプに、AFS 修正バージョンのこのコマンドを組み込みません。統合認証システムを使用するシステム・タイプでは、
+<B>ftpd</B> デーモンの、統合システムを介した AFS 認証の処理を制御する方が適しています。たとえば、プラグ可能認証モジュール (PAM) を使用するシステム・タイプでは、
+AFS PAM モジュールを参照する <B>ftpd</B> 項目を PAM 構成ファイルに追加します。マシンの統合認証システムへの AFS の結合に関する説明については、
+<I>AFS インストールの手引き</I> を参照してください。
+<P>システム・タイプによっては、以下の要件を満たさなければなりません。リモート・マシンの <B>ftp</B> コマンドの発行者が、
+<B>/bin/csh</B> を使用せずにシェルを使用している場合には、マシン (<B>ftpd</B> プロセスが実行されているマシン) のローカル・ディスクにある、アクセスされる <B>/etc/shells</B> ファイルには、代替シェルの項目が組み込まれていなければなりません。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-d
+</B><DD>システム・ログ デーモンにデバッグ情報を送信します。
+<P><DT><B>-l
+</B><DD>システム・ログ・デーモンに各 FTP セッションのログ情報を送信します。
+<P><DT><B>-t
+</B><DD>タイムアウト期間を指定します。デフォルトでは、FTP サーバーは、
+15 分後にタイムアウトになり、活動停止中のセッションになります。
+<P><DT><B>-v
+</B><DD><B>-d</B> と同じです。
+<P><DT><B>-T
+</B><DD>秒数でタイムアウト期間を指定します。デフォルトでは、FTP サーバーは、2 時間 (7200 秒) 後にタイムアウトになります。
+<P><DT><B>-s
+</B><DD>ソケット・レベルのデバッグをオンにします。このフラグは使用しないでください。これは、AFS がサポートしていないオペレーティング・システム・レベルでのみ有効です。
+<P><DT><B>-u
+</B><DD>使用されるデフォルトの unix モード・ビット・ファイル・マスクを指定します。
+</DL>
+<P><STRONG>必要となる特権</STRONG>
+<P>UNIX マニュアルの <B>ftpd</B> プロセスのページを参照してください。
+<P><STRONG>関連情報 </STRONG>
+<P>UNIX マニュアル・ページで <B>ftp</B> を参照してください。
+<P>UNIX マニュアル・ページで <B>ftpd</B> を参照してください。
+<P><I>AFS インストールの手引き</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf177.htm">前ページ</A> &#124; <A HREF="auarf179.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

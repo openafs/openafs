@@ -1,0 +1,74 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the initialization script
+# For HP 9000 systems running HPUX 9.x
+#
+
+sub rc {
+# Defaults
+$rcfile = "/etc/rc";
+
+# Add AFS kernel loader to RC file
+&VPrint("Updating $rcfile file");
+&ErrorsAreFatal(1);
+&DisplaceFile("/etc/rc.afs");
+
+# Append the generic RC file
+&ReadInstallGuide("$InstallGuideDir/GENERIC/rc");
+&Appendrc;
+
+# Read in the current RC file
+$Section = "rc";
+$rc = open(RC, $rcfile);
+&ErrorMsg("Could not read file", $rcfile) if (!$rc);
+@line = <RC>;
+close(RC);
+
+# Check if AFS is already referenced
+if (grep(/\bAFS\b/, @line) || grep(/\/usr\/vice\/etc/, @line)) {
+  &Print("AFS appears to already be in $rcfile");
+  return;  };
+
+# Find where function localrc() is. If it is not there, put it in after
+# all of the leading comments
+$localrc = -1;
+$comments = 0;
+foreach $n (0 ... $#line) {
+  $comments = $n unless (@line[$n] =~ /^#/ || $comments > 0);
+  if (@line[$n] =~ /^localrc\(\)/) {
+    $localrc = $n;
+    last; };  };
+
+# Insert a localrc() function if one was not already there
+if ($localrc == -1) {
+  splice(@line, $comments, 0, "localrc()\n", "{\n", "}\n", "\n");
+  $localrc = $comments;
+  &Print("Inserted function localrc() in $rcfile");
+  &Print("This should be run after NFS is started");  };
+
+# Skip past the function name and opening curly brace. Account for "{}"
+until (@line[$localrc] =~ /\{/ || $localrc > $#line) { $localrc ++;  };
+if (@line[$localrc] =~ /\}/) {
+  @line[$localrc] =~ s/\}//;
+  splice(@line, $localrc+1, 0, "}\n"); };
+$localrc++;
+
+# Insert a call to the AFS rc file
+splice(@line, $localrc, 0, 
+  "\# Start AFS\n",
+  "if [ -f /etc/rc.afs ]; then\n", 
+  "  /bin/sh /etc/rc.afs\n",
+  "fi\n");
+
+# Rewrite the RC file
+$rc = open(RC, "> $rcfile");
+&ErrorMsg("Could not rewrite file" , $rcfile) if (!$rc);
+foreach $line (@line) {
+  print RC $line;  };
+close(RC);
+}

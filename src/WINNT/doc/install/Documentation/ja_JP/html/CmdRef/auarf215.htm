@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPTS_CREATEUSER" HREF="auarf002.htm#ToC_229">pts createuser</A></H2>
+<A NAME="IDX5274"></A>
+<A NAME="IDX5275"></A>
+<A NAME="IDX5276"></A>
+<A NAME="IDX5277"></A>
+<A NAME="IDX5278"></A>
+<A NAME="IDX5279"></A>
+<A NAME="IDX5280"></A>
+<A NAME="IDX5281"></A>
+<A NAME="IDX5282"></A>
+<A NAME="IDX5283"></A>
+<A NAME="IDX5284"></A>
+<A NAME="IDX5285"></A>
+<A NAME="IDX5286"></A>
+<A NAME="IDX5287"></A>
+<A NAME="IDX5288"></A>
+<A NAME="IDX5289"></A>
+<A NAME="IDX5290"></A>
+<A NAME="IDX5291"></A>
+<A NAME="IDX5292"></A>
+<P><STRONG>目的</STRONG>
+<P>保護データベースにユーザーまたはマシンの項目を作成します。
+<P><STRONG>構文</STRONG>
+<PRE><B>pts createuser -name</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  [<B>-id</B> &lt;<VAR>user id</VAR>><SUP>+</SUP>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+               [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+   
+<B>pts createu -na</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  [<B>-i</B> &lt;<VAR>user id</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+            [<B>-no</B>] [<B>-f</B>]  [<B>-h</B>]
+   
+<B>pts cu -na</B> &lt;<VAR>user name</VAR>><SUP>+</SUP>  [<B>-i</B> &lt;<VAR>user id</VAR>><SUP>+</SUP>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  [<B>-no</B>] [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>pts createuser</B> コマンドは、
+<B>-name</B> 引き数に指定されたユーザーまたはマシンごとに、保護データベースに項目を作成します。ユーザー項目名は、ユーザーの AFS ユーザー名 (AFS 認証サーバーで認証する際に、提供する名前) になります。マシン項目の名前は、マシンのIP アドレスか、連続 IP アドレスの範囲 (同じネットワーク上のマシンのグループ) を表す、ワイルドカード表記です。
+1 台のマシンとして認証することはできませんが、マシン項目が属するグループは、ディレクトリーのアクセス制御リスト (ACL) に表示することができ、その結果、マシンにログオンした任意のユーザーに、指定のアクセス権が許可されます。
+<P>AFS ユーザー ID (AFS UID) は正の整数で、保護サーバーがデフォルトで割り当てる AFS UID は、保護データベースの <TT>max user id</TT> カウンターの現行値より、
+1 大きい値になります。ユーザーごとに 1 だけカウンターが増分します。特定の AFS UID を割り当てるには、<B>-id</B> 引き数を使用します。指定された AFS UID のいずれかが、
+<TT>max user id</TT> カウンターの現行値より大きい場合は、カウンターはその値にリセットされます。カウンターの現行値より小さく AFS UID を指定することも許容できますが、既存のユーザーまたはマシン項目がそれをすでに所有していると、作成操作は失敗します。
+<TT>max user id</TT> カウンターの値を表示または設定するには、それぞれ <B>pts listmax</B> コマンドまたは、
+<B>pts setmax</B> コマンドを使用します。
+<P><B>pts createuser</B> コマンドの発行者は、項目の作成者として記録され、またグループ <B>system:administrators</B> は、その所有者として記録されます。
+<P><STRONG>注意</STRONG>
+<P>保護サーバーは AFS UID 0 (ゼロ) を予約していて、
+<B>-id</B> 引き数にその値がある場合は、エラーを戻します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>ユーザー項目のユーザー名か、マシン項目のIP アドレス (完全またはワイルドカード形式) のいずれかを指定します。
+<UL>
+<LI>ユーザー名には、最高 63 個の数字と英小文字を使用することができますが、
+8 文字以内で作成するのが最良です。なぜなら、アプリケーション・プログラムの多くは、長い名前を処理できないからです。また、シェル・メタキャラクターまたはその他の句読記号を含まないことを推奨します。特に、コロン (<B>:</B>)、およびアットマーク (<B>@</B>) は、受け入れ不能です。通常ピリオドは、例 <B>pat.admin</B> に見られるように、ユーザー名と<I>インスタンス</I> を区分するために、特別な管理名でのみ使用されます。
+</LI><LI>マシン識別子は、ドット 10 進表記のIP アドレス (たとえば、
+192.12.108.240) であるか、あるいは、
+IP アドレスのセット (同じネットワーク上のマシンのグループ) を表す、ワイルドカード表記です。以下は、受け入れ可能なワイルドカード形式です。
+<B>W</B>、<B>X</B>、
+<B>Y</B>、および <B>Z</B> はそれぞれ、範囲 1 から 255 の実際の数値を表します。
+<UL>
+<LI><B>W.X.Y.Z</B> は、たとえば、
+<B>192.12.108.240</B> などの単一マシンを表します。
+</LI><LI><B>W.X.Y.0</B> は、
+IP アドレスが最初の 3 つの数字で始まるマシンすべてと一致します。たとえば、<B>192.12.108.0</B> は、
+<B>192.12.108.119</B> および、
+<B>192.12.108.120</B> の両方と一致しますが、
+<B>192.12.105.144</B> とは一致しません。
+</LI><LI><B>W.X.0.0</B> は、
+IP アドレスの最初の 2 つの数字で始まるマシンすべてと一致します。たとえば、アドレス <B>192.12.0.0</B> は、
+<B>192.12.106.23</B> および、
+<B>192.12.108.120</B> の両方と一致しますが、
+<B>192.5.30.95</B> とは一致しません。
+</LI><LI><B>W.0.0.0</B> は、指定されたアドレスにある IP アドレスの、最初の数字で始まるマシンすべてと一致します。たとえば、<B>192.0.0.0</B> は、
+<B>192.5.30.95</B> および、
+<B>192.12.108.120</B> の両方と一致しますが、
+<B>138.255.63.52</B> とは一致しません。
+</LI></UL>
+<P>
+<P>
+<P>各マシンと一致させるために、
+<B>0.0.0.0</B> の名前を使用してマシン項目を定義しないでください。
+<B>system:anyuser</B> グループがこれに相当します。
+</LI></UL>
+<P><DT><B>-id
+</B><DD>AFS UID は、保護サーバーにその割り当てを許可するのではなく、ユーザーおよびマシンの項目ごとに指定します。正の整数を与えます。
+<P>
+<P>この引き数が使用され、<B>-name</B> 引き数に、複数の新規項目が指定されている場合には、
+AFS UID と同じ番号を指定するのが最良です。最初の UID が最初の項目に、2 番目の UID が 2 番目の項目に割り当てられます。以下同様に割り当てられます。項目の数より UID が少ない場合には、保護サーバーは、
+<TT>max user id</TT> カウンターに基づいたアンマッチの項目に、
+UID を割り当てます。項目の数より UID のほうが多い場合には、余分な UID は無視されます。
+UID のいずれかが <TT>max user id</TT> カウンターの現行値より大きい場合は、カウンターはその値にリセットされます。
+<P><DT><B>-cell
+</B><DD>コマンドを実行するセルを指定します。詳細については、<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>発行者に、非特権 ID <B>anonymous</B> を割り当てます。詳細については、
+<B>pts</B> の概要に関する解説ページを参照してください。
+<P><DT><B>-force
+</B><DD>このフラグを使用すると、エラーや他の問題が発生したときに、最初のエラーでコマンドの実行を停止するのではなく、可能な限り継続します。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>コマンドは、各ユーザーの作成を確認するために、次のような文字列を生成します。
+<PRE>   User <VAR>name</VAR> has id <VAR>id</VAR>
+   
+</PRE>
+<P><STRONG>例</STRONG>
+<P>次の例では、ユーザー <B>johnson</B> の、保護データベース項目を作成しています。
+<PRE>   % <B>pts createuser -name johnson</B>
+   
+</PRE>
+<P>次の例では、ABC Corporation セルに、ワイルドカード・マシン項目を 3 項目作成しています。この 3 つの項目は、他のネットワーク上のマシンは組み込まずに、該当する会社のネットワーク上のすべてのマシンを包含します。
+<PRE>   % <B>pts createuser -name 138.255.0.0 192.12.105.0 192.12.106.0</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>コマンドの発行者は、<B>system:administrators</B> グループに属している必要があります。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf214.htm">前ページ</A> &#124; <A HREF="auarf216.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRPTS_INTRO" HREF="auarf002.htm#ToC_224">pts</A></H2>
+<A NAME="IDX5220"></A>
+<A NAME="IDX5221"></A>
+<A NAME="IDX5222"></A>
+<A NAME="IDX5223"></A>
+<A NAME="IDX5224"></A>
+<A NAME="IDX5225"></A>
+<A NAME="IDX5226"></A>
+<A NAME="IDX5227"></A>
+<A NAME="IDX5228"></A>
+<A NAME="IDX5229"></A>
+<A NAME="IDX5230"></A>
+<P><STRONG>目的</STRONG>
+<P><B>pts</B> コマンド・セットの概要説明
+<P><STRONG>構文</STRONG>
+<P><B>pts</B> コマンド・セットのコマンドは、セル内の各データベース・サーバー・マシン上で稼働し、保護データベースを保守する保護サーバーの、管理インターフェースです。データベースには、ファイルおよびディレクトリーへのアクセスを制御する、標準の UNIX 体系を補足するために、
+AFS が使用する情報が保管されています。
+<P>AFS は、個々のファイルに対するアクセス権を定義しているモード・ビットにのみ依存せず、アクセス制御リスト(ACL) を各ディレクトリーに関連付けています。
+ACL は、ユーザーおよびグループをリストし、
+ACL に含まれるディレクトリーおよびファイルに対する 7 種類のアクセス権のうち、そのユーザーやグループが許可されるアクセス権を指定します。
+(ディレクトリーまたはファイルのモード・ビットを設定することもできますが、
+AFS はそれを独自の方法で解釈します。詳細については、<I>AFS 管理の手引き</I> の保護に関する章を参照してください。)
+<P>また、AFS では、ユーザーが保護データベースでグループを定義し、定義したグループを ACL に配置して、一連の権利を、同時に複数のユーザーに拡張することができます。グループを作成することによって、管理作業が容易になります。
+ACL にすでに存在するグループに追加するだけで、ユーザーを多くの ACL に追加することができるからです。マシンをグループのメンバーにすることもできます。この場合、そのマシンにログインしたユーザーは、グループに許可されているアクセス権を自動的に継承します。
+<P><B>pts</B> コマンド・セットのコマンドには、次のようにいくつかの種類があります。
+<UL>
+<LI>保護データベース項目を作成したり削除したりするコマンド :
+<B>pts creategroup</B>、<B>pts createuser</B>、および <B>pts delete</B>
+</LI><LI>グループ・メンバーシップを管理したり表示したりするコマンド :
+<B>pts adduser</B>、<B>pts listowned</B>、<B>pts membership</B>、および <B>pts removeuser</B>
+</LI><LI>メンバーシップ以外のユーザーおよびグループ項目の特性を管理および表示するコマンド :
+<B>pts chown</B>、<B>pts examine</B>、
+<B>pts listentries</B>、<B>pts rename</B>、および <B>pts setfields</B>
+</LI><LI>ユーザーおよびグループに ID を割り当てるときに使用するカウンターを、設定および検査するコマンド : <B>pts listmax</B>、および <B>pts setmax</B>
+</LI><LI>ヘルプを呼び出すコマンド : <B>pts apropos</B>、および <B>pts help</B>
+</LI></UL>
+<P><STRONG>オプション </STRONG>
+<P>次の引き数およびフラグは、
+<B>pts</B> セットの多くのコマンドで使用可能です。各コマンドの解説ページにもリストされていますが、ここでは詳しく説明します。
+<DL>
+<A NAME="IDX5231"></A>
+<P><DT><B>-cell &lt;<VAR>cell name</VAR>>
+</B><DD>コマンドを実行するセルの名前を示します。ローカル・マシン上の <B>/usr/vice/etc/CellServDB</B> ファイルにある他の項目と区別できる場合には、セル名の省略形を使用することができます。
+<B>-cell</B> 引き数が省略されると、コマンド・インタープリターは、次の内容を順に読み込み、ローカル・セルの名前を判別します。
+<P>
+<OL TYPE=1>
+<LI>AFSCELL 環境変数値
+</LI><LI>ローカル <B>/usr/vice/etc/ThisCell</B> ファイル
+</LI></OL>
+<P><DT><B>-force
+</B><DD>
+<A NAME="IDX5232"></A>
+エラーや他の問題が発生したときに、即時に停止するのではなく、可能な限りコマンドの実行を継続します。このフラグがないと、最初のエラー発生直後にコマンドは停止します。フラグがある場合には、
+<B>pts</B> コマンド・インタープリターが、コマンド・シェルでエラーを報告します。発行者が、1 つのコマンド行引き数に多くの値を指定した場合に、このフラグは特に有効です。指定した値の 1 つが無効であっても、コマンド・インタープリターは残りの引き数の処理を継続します。
+<A NAME="IDX5233"></A>
+<P><DT><B>-help
+</B><DD>標準出力ストリームにコマンドのオンライン・ヘルプ・メッセージを出力します。このフラグは、コマンドの他のオプションと一緒に使用してはなりません。このフラグを使用すると、コマンド・インタープリターは、他のすべての引き数およびフラグを無視し、ヘルプ・メッセージの出力だけを行います。
+<P><DT><B>-noauth
+</B><DD>
+<A NAME="IDX5234"></A>
+保護サーバーへの非認証接続を確立します。ここでは、サーバーは、コマンドの発行者を非特権ユーザー <B>anonymous</B> として扱います。これは、サーバー・マシン上で許可検査が使用不可の場合にのみ有効です (たとえば、ファイル・サーバー・マシンのインストール時や、その他通常でない状況で、
+<B>bos setauth</B> コマンドを使用した場合など)。通常の環境では、保護サーバーは、保護データベースを変更するコマンドの発行を、特権ユーザーにのみ許可します。
+<B>-noauth</B> フラグが指定されていても、そのようなアクションの実行は許可しません。
+</DL>
+<P><STRONG>必要となる特権</STRONG>
+<P><B>system:administrators</B> グループのメンバーは、保護データベースの任意の項目に対して、すべての <B>pts</B> コマンドを発行することができます。
+<P><B>system:administrators</B> グループに属さないユーザーは、ユーザー独自の項目とユーザーが所有しているグループ項目に関する情報を、リスト表示することができます。
+<B>pts setfields</B> コマンドで privacy フラグを設定すると、他のユーザーが所有する項目へのアクセスを制御することができます。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf211.htm#HDRPTS_ADDUSER">pts adduser</A>
+<P><A HREF="auarf212.htm#HDRPTS_APROPOS">pts apropos</A>
+<P><A HREF="auarf213.htm#HDRPTS_CHOWN">pts chown</A>
+<P><A HREF="auarf214.htm#HDRPTS_CREATEGROUP">pts creategroup</A>
+<P><A HREF="auarf215.htm#HDRPTS_CREATEUSER">pts createuser</A>
+<P><A HREF="auarf216.htm#HDRPTS_DELETE">pts delete</A>
+<P><A HREF="auarf217.htm#HDRPTS_EXAMINE">pts examine</A>
+<P><A HREF="auarf218.htm#HDRPTS_HELP">pts help</A>
+<P><A HREF="auarf219.htm#HDRPTS_LISTENTRIES">pts listentries</A>
+<P><A HREF="auarf220.htm#HDRPTS_LISTMAX">pts listmax</A>
+<P><A HREF="auarf221.htm#HDRPTS_LISTOWNED">pts listowned</A>
+<P><A HREF="auarf222.htm#HDRPTS_MEMBERSHIP">pts membership</A>
+<P><A HREF="auarf223.htm#HDRPTS_REMOVEUSER">pts removeuser</A>
+<P><A HREF="auarf224.htm#HDRPTS_RENAME">pts rename</A>
+<P><A HREF="auarf225.htm#HDRPTS_SETFIELDS">pts setfields</A>
+<P><A HREF="auarf226.htm#HDRPTS_SETMAX">pts setmax</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf209.htm">前ページ</A> &#124; <A HREF="auarf211.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

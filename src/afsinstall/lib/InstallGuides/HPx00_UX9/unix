@@ -1,0 +1,71 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for the AFS modified Unix commands
+#
+
+sub HPunix {
+  &Copy("etc/inetd", "/etc/inetd.afs");
+  &Copy("etc/ftpd",  "/etc/ftpd.afs");
+  &Copy("etc/rexecd",  "/etc/rexecd.afs");
+  &Copy("etc/rlogind",  "/etc/rlogind.afs");
+
+  &ErrorsAreFatal(1);
+  &Patch::Verbose if ($InstallVerbose);
+  &CreateDir("/usr/vice/bin");
+
+  &Copy("bin/rcp", "/usr/vice/bin");
+  &Chown (0,2,   "/usr/vice/bin/rcp");
+  &Chmod (04755, "/usr/vice/bin/rcp");
+
+  &Copy("bin/remsh", "/usr/vice/bin");
+  &Chown (0,2,   "/usr/vice/bin/remsh");
+  &Chmod (04755, "/usr/vice/bin/remsh");
+
+  # Create the inetd.conf.afs file
+  $InetdConfAfs = "/etc/inetd.conf.afs";
+  open(INETD, ">$InetdConfAfs") || &ErrorMsg("Can't open file", $InetdConfAfs);
+  print INETD <<"EOINETD";
+ftp		stream tcp nowait root /etc/ftpd.afs	ftpd.afs
+shell		stream tcp nowait root /etc/remshd	remshd
+login		stream tcp nowait root /etc/rlogind.afs rlogind.afs
+ta-rauth	stream tcp nowait root internal		ta-rauth
+exec		stream tcp nowait root /etc/rexecd.afs rexecd.afs
+EOINETD
+  
+ # comment out the rshd line in inetd.conf
+  $InetdConf = "/etc/inetd.conf";
+  &CopyStat($InetdConf, $InetdConfAfs);
+  &Patch::FileOpen($InetdConf);
+
+  $Search1 = "^(ftp\\s+.+)";
+  $Replace1 = '"#".$1';
+
+  $Search2 = "^(shell\\s+.+)";
+  $Replace2 = '"#".$1';
+
+  $Search3 = "^(login\\s+.+)";
+  $Replace3 = '"#".$1';
+
+  $Search4 = "^(exec\\s+.+)";
+  $Replace4 = '"#".$1';
+
+  if (!&Patch::Patch($InetdConf, [[1, "Substitution", $Search1, $Replace1],
+				  [1, "Substitution", $Search2, $Replace2],
+				  [1, "Substitution", $Search3, $Replace3],
+				  [1, "Substitution", $Search4, $Replace4]])) {
+    &ErrorMsg("Did not succeed with patch", $InetdConf);
+  }
+
+  # Modify the /etc/services file
+  &ReadInstallGuide("$InstallGuideDir/GENERIC/unix");
+  &unix;
+}
+
+sub unix {
+  goto &HPunix;
+}

@@ -1,0 +1,146 @@
+#!/sbin/sh
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# afs.rc: rc script for AFS on HP-UX 10 platforms
+#
+# Install this script as /sbin/init.d/afs
+# then make links like this:
+# ln -s /sbin/init.d/afs /sbin/rc2.d/K800afs
+# ln -s /sbin/init.d/afs /sbin/rc2.d/S460afs
+#
+CONFIG=/usr/vice/etc/config
+AFSDOPT=$CONFIG/afsd.options
+PACKAGE=$CONFIG/package.options
+
+LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+
+if [ -f $AFSDOPT ]; then
+    OPTIONS=`cat $AFSDOPT`
+else
+    OPTIONS=$MEDIUM
+fi
+
+# Need the commands ps, awk, kill, sleep, as
+PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin:/opt/dce/bin:/usr/ccs/bin
+
+killproc() {            # kill the named process(es)
+	fpid='$2'
+	fproc='$8'
+	pid=`ps -ef | \
+           awk "$fproc == \"$1\" || $fproc ~ /.*\/$1/ { print $fpid }"`
+        [ "$pid" != "" ] && kill -KILL $pid
+}
+
+case $1 in
+start_msg)
+        echo "Start AFS subsystem"
+        ;;
+
+stop_msg)
+        echo "Stop AFS server subsystem"
+        ;;
+
+'start')
+
+#
+# Start the AFS server processes if a bosserver exists
+#
+
+if [ -x /usr/afs/bin/bosserver ]; then
+        echo "Starting AFS Server processes"
+	/usr/afs/bin/bosserver
+	OPTIONS="$OPTIONS -nosettime"
+	sleep 30
+fi
+
+#
+# Check that all of the client configuration files exist
+#
+
+for file in /usr/vice/etc/afsd /usr/vice/etc/cacheinfo \
+	    /usr/vice/etc/ThisCell /usr/vice/etc/CellServDB
+do
+	if [ ! -f ${file} ]; then
+		echo "${file} does not exist. Not starting AFS client."
+		exit 1
+	fi
+done
+
+#
+# Check that the root directory for AFS (/afs) 
+# and the cache directory (/usr/vice/cache) both exist
+#
+
+for dir in `awk -F: '{print $1, $2}' /usr/vice/etc/cacheinfo`
+do
+	if [ ! -d ${dir} ]; then
+		echo "${dir} does not exist. Not starting AFS client."
+		exit 2
+	fi
+done
+
+echo "Starting afsd"
+/usr/vice/etc/afsd $OPTIONS
+
+#
+# Run package to update the disk
+#
+if [ -f /usr/afsws/etc/package -a -f $PACKAGE ]; then
+	/usr/afsws/etc/package -v -o `cat $PACKAGE` > /dev/console 2>&1
+case $? in
+0)
+	(echo "Package completed successfully") > /dev/console 2>&1
+	date > /dev/console 2>&1
+	;;
+4)
+	(echo "Rebooting to restart system") > /dev/console 2>&1
+	sync
+	/etc/reboot
+	;;
+*)
+	(echo "Package update failed; continuing") > /dev/console 2>&1
+	;;
+esac
+
+fi
+
+#
+# Start AFS inetd services
+# (See the AFS Command Ref. for notes on the proper configuration of inetd.afs)
+#
+if [ -f /usr/sbin/inetd.afs -a -f /etc/inetd.conf.afs ]; then
+        /usr/sbin/inetd.afs /etc/inetd.conf.afs
+fi
+
+
+echo ;;
+
+'stop')
+
+#
+# Stop the server processes and inetd
+# Note that the afsd processes cannot be killed
+#
+echo "Killing inetd.afs"
+killproc inetd.afs
+
+bosrunning=`ps -ef | awk '/bosserver/ && ! /awk/ && ! /dcebos/'`
+if [ "${bosrunning}" != "" ]; then
+	echo "Shutting down AFS server processes"
+	/usr/afs/bin/bos shutdown localhost -localauth -wait
+	echo "Killing AFS bosserver"
+	killproc "\/usr\/afs\/bin\/bosserver"
+fi
+
+echo ;;
+
+*) 	echo "Invalid option supplied to $0"
+	exit 1;;
+esac

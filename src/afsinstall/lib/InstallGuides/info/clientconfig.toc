@@ -1,0 +1,19 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# clientconfig
+#
+# An InstallGuide for configuration of an AFS client
+#
+
+sub clientconfig {
+&Print("Initializes a machine for the first time to be an AFS client.");
+&Print("Creates the /usr/vice/etc directory and places therein a cacheinfo");
+&Print("file, ThisCell file, and CellServDB. These files are controlled by");
+&Print("the configuration parameters AFSROOT, CACHEDIR, CACHESIZE, CELLNAME,");
+&Print("and CELLSERVDB.");
+}

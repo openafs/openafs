@@ -1,0 +1,36 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+
+install test tests: afscp.exe
+
+AFSCP_EXELIBS =\
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+	$(DESTDIR)\lib\afs\afsclientadmin.lib \
+	$(DESTDIR)\lib\afs\afsbosadmin.lib \
+	$(DESTDIR)\lib\afs\afsvosadmin.lib \
+	$(DESTDIR)\lib\afs\afskasadmin.lib \
+	$(DESTDIR)\lib\afs\afsptsadmin.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\afsrpc.lib \
+	$(DESTDIR)\lib\afs\afscmd.lib  # static library
+
+AFSCP_EXEOBJS =\
+	bos.obj \
+	client.obj \
+	kas.obj \
+	pts.obj \
+	util.obj \
+	vos.obj
+
+afscp.exe: afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
+	$(EXECONLINK)

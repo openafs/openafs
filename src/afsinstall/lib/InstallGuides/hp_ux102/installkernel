@@ -1,0 +1,15 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing a new kernel
+# For HP 9000 systems running HPUX 10.20
+#
+
+
+sub installkernel {
+&VersionCopyFile("/stand/build/vmunix_test", "/stand/vmunix");
+}

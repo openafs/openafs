@@ -1,0 +1,108 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# MakefileProto for HP-UX systems
+#
+
+DEST=@DEST@
+TOP_SRCDIR=@TOP_SRCDIR@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../config/Makefile.${SYS_NAME}
+
+# System specific build commands and flags
+CC = /opt/ansic/bin/cc
+DEFINES= -D_REENTRANT -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
+<hp_ux102 hp_ux110 hp_ux11i>
+KOPTS=-Wp,-H200000 -Wl,-a,archive +DA1.0 +z
+<ia64_hpux1122>
+KOPTS=-Wp,-H200000 -Wl,-a,archive_shared
+<all>
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+OPTF=-O
+WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
+
+<hp_ux102 hp_ux110 hp_ux11i>
+TEST_CFLAGS= -Wp,-H200000 +DA1.0 +z -D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -Dhpux -DAFS_HPUX_ENV
+<ia64_hpux1122>
+TEST_CFLAGS= -Wp,-H200000 -D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -Dhpux -DAFS_HPUX_ENV
+<all>
+TEST_LDFLAGS=
+TEST_LIBS=-lnsl -lm -lpthread -ldld -lc
+
+LIBUAFS = libuafs.a
+LIBAFSWEB = nsafs.so
+LIBAFSWEBKRB = nsafs.krb.so
+
+include Makefile.common
+
+setup_common:
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet nsapi
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	-ln -s $(NS_INCL) nsapi
+
+setup_uafs: UAFS setup_common
+	-$(RM) -f UAFS/Makefile UAFS/Makefile.common
+	ln -s ../Makefile UAFS/Makefile
+	ln -s ../Makefile.common UAFS/Makefile.common
+
+UAFS:
+	mkdir -p $@
+
+setup_nsafs: AFSWEB setup_common
+	-$(RM) -f AFSWEB/Makefile AFSWEB/Makefile.common
+	ln -s ../Makefile AFSWEB/Makefile
+	ln -s ../Makefile.common AFSWEB/Makefile.common
+
+AFSWEB:
+	mkdir -p $@
+
+UAFS/$(LIBUAFS): setup_uafs
+	cd UAFS; \
+	$(MAKE) $(LIBUAFS)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEB)
+
+AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEBKRB)
+
+# Below this line are targets when in the COMMON directory:
+
+$(LIBUAFS): $(UAFSOBJ)
+	-$(RM) -f $(LIBUAFS)
+	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
+
+$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
+	-$(RM) -f $(LIBAFSWEB)
+	ld -b $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
+
+$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
+	-$(RM) -f $(LIBAFSWEBKRB)
+	ld -b $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

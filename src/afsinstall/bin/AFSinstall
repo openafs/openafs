@@ -1,0 +1,1532 @@
+#!/bin/perl
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# A Perl5 script to install AFS from a distribution directory. Installs in
+# sets called "packages", and offers a Tk based GUI for ease of use.
+#
+
+$| = 1;
+$Debug = 0;
+$RSHas = "root";   # Default ID to use for remote installs through rsh
+$Wish = "wish4.0"; # Location of Tcl/Tk shell
+$Indent = "    ";  # Indent package output lines with this string
+
+&GetPaths;
+&GetSysname;
+&ReadConfigFile;
+&ParseArgs;
+if ($GUI) { 
+  &RunGUI;  }
+else {
+  &CommandlineInstallPackages;  };
+
+
+
+
+
+#
+# Find out where this script is. The InstallGuides ought to be in a directory
+# next to this script
+#
+sub GetPaths {
+  my($libs);
+  $Command = $0;
+  $Command =~ s:.*/::;
+
+  $BinDir = $0;
+  $BinDir =~ s:$Command$::;
+  $BinDir = "." if ($BinDir eq "");
+  chdir($BinDir);
+  $BinDir = `/bin/pwd`;  chop $BinDir;
+
+  $Command = "$BinDir/$Command";
+
+  $libs = $BinDir;
+  $libs =~ s:bin$:lib:;
+  require "$libs/patch.pl";
+
+  $InstallGuideDir = "$libs/InstallGuides";
+}
+
+
+
+
+# Try to deduce the system type
+sub GetSysname {
+  my($OS, $revision, $version, $hardware);
+
+  if (!$ENV{HOST}) {
+    $ENV{HOST} = `/bin/uname -n`;
+    chop $ENV{HOST}; };
+
+  if ($ENV{SYS_NAME}) {
+    $Sysname = $ENV{SYS_NAME};
+    return;  };
+
+  $OS = `/bin/uname -s`;  chop $OS;
+  $revision = `/bin/uname -r`; chop $revision;
+  $revision =~ s/\.//g;  # x.y.z   -->  xyz
+  $version  = `/bin/uname -v`; chop $version;
+
+  if ($OS eq "AIX") {
+    $revision = "2" if ($version == 4 && $revision == 3);
+    $Sysname = "rs_aix$version$revision";  };
+
+  if ($OS eq "HP-UX") {
+    $revision =~ s/^[A-Z]*//;
+    $revision =~ s/^0//;
+    chop $revision;   # only 2 digits are used for HPUX
+
+    if ($revision < 102) {
+      $hardware = `/bin/uname -m`; chop $hardware;
+      $hardware =~ s:.*/(.).*:${1}00:; };
+    $Sysname = "hp${hardware}_ux$revision";  };
+
+  if ($OS =~ /IRIX/) {
+    $Sysname = "sgi_$revision";  };
+
+  if ($OS eq "OSF1") {
+    $revision =~ s/^V//;
+    $revision = "32c" if ($version == 148);
+    $version = "osf";
+    $version = "dux" if ($revision >= 4  && $revision < 10);
+    $version = "dux" if ($revision >= 40 && $revision < 100);
+    $Sysname = "alpha_$version$revision";  };
+
+  if ($OS eq "SunOS") {
+    $hardware = `/bin/uname -m`; chop $hardware;
+    $revision = int($revision/10) if ($revision >= 500);
+    $hardware = "sun4x" if ($revision >= 55 && $revision < 100);
+    $revision = 412 if ($revision == 413);
+    $Sysname = "${hardware}_$revision"; }
+}
+
+
+
+
+# Read the config file afsinstall.rc to find out the install path buttons for
+# the GUI, the default install path, the package names and descriptions and 
+# the client configuration options
+#
+sub ReadConfigFile {
+  my(@RCfiles, $rc, $filename, $name, $line, @fields, $value);
+  unshift(@Section, "Reading Config File");
+
+  # Read in the GENERIC afsinstall.rc file for basic options, then read the
+  # system specific file, then potentially read a custome file in the user's
+  # home directory
+  push(@RCfiles, "$InstallGuideDir/GENERIC/afsinstall.rc");
+
+  # The system specific file
+  $filename = &PickInstallGuide("afsinstall.rc");
+  unless($filename eq "N/A" || $filename eq "SKIP" || $filename =~ /GENERIC/) {
+    push(@RCfiles, $filename);  };
+
+  # The personal file
+  $filename = $ENV{'HOME'};
+  $filename .= "/" unless ($filename =~ /\/$/);
+  $filename .= ".afsinstall.rc";
+  for $name (0 .. $#ARGV) {
+    next unless (@ARGV[$name] =~ /^-pref/);
+    $filename = @ARGV[$name + 1];
+    last; };
+  push(@RCfiles, $filename);
+
+  for $filename (@RCfiles) {
+    $rc = open(RC, $filename);
+    next if (!$rc);
+
+    while ($line = <RC>) {
+      chomp $line;
+      next if ($line =~ /\#/);
+      next if ($line =~ /^$/);
+      # Look for leading "sysname:" string
+      if ($line =~ /^(\s*([a-zA-Z_0-9]*)\s*:)/) {
+        $specific = $1;
+        $sys = $2;
+        $sys =~ s:x:\.\*:g;
+        $sys =~ tr/A-Z/a-z/;
+        next unless ($Sysname =~ /$sys/);
+        $line =~ s/^$specific//; }
+      # Read possible install paths
+      if ($line =~ /^\s*\w+\s+\//) {
+	@fields = split(/\s+/, $line);
+        shift(@fields) if (@fields[0] eq "");
+        $name = shift @fields;
+        $value = shift @fields;
+	$DefaultPaths{$name} = $value;
+	if ($name ne "default") {
+	  unless (grep(/^$name$/, @DefaultPathsList)) {
+	    push(@DefaultPathsList, $name);  } }
+	else {
+	  $InstallPath = $value;  }
+	next;  }
+      # Read package names
+      if ($line =~ /^\s*\w+\s+\d\s*.*/) {
+	@fields = split(/\s+/, $line);
+        shift(@fields) if (@fields[0] eq "");
+	$name = shift @fields;
+	$InstallByDefault{$name} = shift @fields;
+	$PkgDescription{$name} =  join(" ", @fields) if ($#fields >= 0);
+	unless (grep(/^$name$/, @AvailPackages)) {
+	  push(@AvailPackages, $name);  }
+	next;  };
+
+      # Read configuration options
+      if ($line =~ /\w+=.*/) {
+	($name,$value) = split(/=/, $line);
+	$Configuration{$name} = $value;  
+	next;
+      }
+      &ErrorMsg("Unable to parse line in $filename: $line");
+    }
+    close(RC);  
+  }
+  shift @Section;
+}
+
+
+
+
+# Parse the command line args.
+sub ParseArgs {
+  my($pkgs, $arg);
+  unshift(@Section, "Initialization");
+  while ($arg = shift @ARGV) {
+    if ($arg =~ /^-h/)   { &Usage;  };
+    if ($arg eq "-v"  )  { $InstallVerbose = 1;           $pkgs = 0; next;  };
+    if ($arg eq "-gui")  { $GUI = 1;                      $pkgs = 0; next;  };
+    if ($arg eq "-info") { $InfoOnly= 1;                  $pkgs = 0; next;  };
+    if ($arg eq "-src")  { $InstallPath = shift @ARGV;    $pkgs = 0; next;  };
+    if ($arg =~ /^-pref/){ shift @ARGV;                   $pkgs = 0; next;  };
+    if ($arg =~ /^-noback/){ $NoOldFiles = 1;             $pkgs = 0; next;  };
+    if ($arg eq "-pkg")  { $arg = shift @ARGV;            $pkgs = 1;        };
+    if ($pkgs)  {
+      push(@Packages, $arg) unless grep(/^$arg$/, @Packages);
+      next;  };
+    &ErrorMsg("Unknown arg", $arg);
+    exit;  };
+
+  # If no packages specified, install default packages in afsinstall.rc file.
+  if ($#Packages >= 0) {
+    undef %InstallByDefault;
+    for $pkgs (@Packages) {
+      $InstallByDefault{$pkgs} = 1;  };
+    $InstallSet = "custom"; }
+  else {
+    if (!$GUI) {
+      for $pkgs (@AvailPackages) {
+        push(@Packages, $pkgs) if ($InstallByDefault{$pkgs});  };  }
+    else {
+      @Packages = @AvailPackages;  };
+    $InstallSet = "default";  };
+
+  if ($GUI || $InfoOnly) {
+    shift @Section;
+    return; };
+
+  # Where to find the distribution.
+  if ($InstallPath eq "") {
+    &ErrorMsg("You need to specify a source directory with -src");
+    exit;  };
+  foreach $subdir ("", "/$Sysname", "/$Sysname/dest") {
+    next if (!-d "$InstallPath$subdir/root.client" );
+    $InstallPath .= $subdir;
+    last;  };
+  if (!-d "$InstallPath/root.client") {
+    &ErrorMsg("No AFS distribution under $InstallPath for type", $Sysname);
+    exit 1;  };
+  shift @Section;
+}
+
+
+
+
+sub Usage {
+  print <<"EOUSAGE";
+
+Usage: AFSinstall.pl -pkg <package>+ -src <srcdir> [-nobackup] [-v] [-gui]
+
+  <package>  Specify what package(s) to install
+  <srcdir>   Specifies the AFS build tree from which to fetch the files.
+             The subdirectories ".", <sysname>, and <sysname>/dest will
+             be searched
+  [-noback]  Do not keep previous copy of replaced files as .old files
+  [-v]       Verbose output
+  [-gui]     Use a graphical interface to select and install packages
+
+EOUSAGE
+  exit;
+}
+
+
+
+
+
+#
+#  Command line install
+#
+
+
+sub CommandlineInstallPackages {
+  my($Package, $InstallGuide, $exitcode);
+  foreach $Package (@Packages) {
+    unshift(@Section, $Package);
+    print "\nInstalling package $Package\n";
+
+    # Find package
+    if ($InfoOnly) {
+      $InstallGuide = "$InstallGuideDir/info/$Package.toc";  }
+    else {
+      $InstallGuide = &PickInstallGuide($Package);  };
+
+    if ($InstallGuide eq "SKIP") {
+      print  "Package $Package does not apply to $Sysname\n";
+      shift @Section;
+      next;  };
+    if ($InstallGuide eq "N/A") {
+      &ErrorMsg("No package named $Package for $Sysname systems\n");
+      $exitcode++;
+      shift @Section;
+      next;  }
+
+    &ReadInstallGuide ($InstallGuide);
+    chdir($InstallPath);
+    &ErrorsAreFatal(0);
+    if (!defined(&$Package)) {
+      &ErrorMsg("Subroutine for $Package isn't defined in Install Guide",
+		$InstallGuide);
+      shift @Section;
+      next;  };
+    DOPACKAGE: { &$Package;  };  };
+  exit $exitcode;
+}
+
+
+
+
+# Try to find the package among the install guide directories. First look in
+# the directory matching the sysname. If the package isn't there, go to the
+# gerenalized sysnames. They have names like ALPHA_x, HPx_10x, or SGI_6x
+# Find the longest matching generalized sysname that has the package.
+# If no generalized sysnames have the package, use the GENERIC sysname.
+sub PickInstallGuide {
+  my($pkg, $best, $caps, $candidate, $wildcard, $skip);
+  $pkg = @_[0];
+
+  if (-f "$InstallGuideDir/$Sysname/$pkg") {
+    return "$InstallGuideDir/$Sysname/$pkg";  };
+  if (-f "$InstallGuideDir/$Sysname/$pkg.skip") {
+    return "SKIP";  };
+
+  $caps = $Sysname;
+  $caps =~ tr/a-z/A-Z/;
+
+  opendir(IG, $InstallGuideDir);
+  while ($candidate = readdir(IG)) {
+    next unless ($candidate =~ /[A-Z]/);
+    next if ($candidate eq "GENERIC");
+    $wildcard = $candidate;
+    $wildcard =~ s/x/.*/g;
+    next unless ($caps =~ /$wildcard/);
+    if (-f "$InstallGuideDir/$candidate/$pkg") {
+      $best = $candidate if (length($candidate) > length($best));
+      $skip = 0;  };
+    if (-f "$InstallGuideDir/$candidate/$pkg.skip") {
+      $best = $candidate if (length($candidate) >= length($best));
+      $skip = 1;  };  };
+  closedir(IG);
+  return("SKIP") if ($skip);
+  $best = "GENERIC" if ($best eq "");
+
+  return("N/A") unless (-f "$InstallGuideDir/$best/$pkg");
+  return("$InstallGuideDir/$best/$pkg");
+}
+
+
+
+
+
+#
+# GUI section
+#
+
+
+# The main input routine. It creates the selection window and reads input from
+# it on READTCL. Once install(s) start, it adds their file descriptors to the
+# vector ReadVec and select()'s on them as well
+sub RunGUI {
+  my($selected, $command, $i, $fh, $hostname, $output, $line, $rc);
+  local($ReadVec);
+  &ForkTCL;
+  &DrawMainWindow;
+  vec($ReadVec, fileno(READTCL), 1) = 1;
+  while(1) {
+    select($selected = $ReadVec, undef, undef, undef);
+    if (vec($selected, fileno(READTCL), 1)) {
+      $command = &TclRead;
+      print "Command: [$command]\n" if ($Debug >= 1);
+      if ($command =~ /HOST:/)   { &NewHost($command);              next;  };
+      if ($command =~ /SHOW:/)   { &ForceOutputWindow($command);    next;  };
+      if ($command =~ /STOP:/)   { &EndInstall($command);           next;  };
+      if ($command =~ /DISMISS:/){ &DestroyOutputWindow($command);  next;  };
+      if ($command eq "DEFAULT") { &DisablePackages;                next;  };
+      if ($command eq "CUSTOM")  { &EnablePackages;                 next;  };
+      if ($command eq "PROG")    { &DestroyProgressWindow;          next;  };
+      if ($command eq "HELP")    { &GUIHelp;                        next;  };
+      if ($command eq "INFO")    { &GUIInstall(" -info -v");        next;  };
+      if ($command eq "INSTALL") { &GUIInstall;                     next;  };
+      if ($command eq "EXIT")    {                                  last;  };
+      print "Unknown command from GUI: \"$command\" \n";  };
+
+    # Check if any pipes produced output
+    for $i (0 .. $#InstallHosts) {
+      $fh = "COM$i";
+      next unless (vec($selected, fileno($fh), 1));
+      $hostname = @InstallHosts[$i];
+      $output = "HostOutput$hostname";
+
+      # Read output from install command
+      print STDOUT "Reading from file handle \"$fh\" \n" if ($Debug >= 3);
+      $line = <$fh>;      chop $line;
+      print STDOUT "Subprocess $i: ($.) [$line]\n" if ($Debug >= 3);
+
+      if ($line) {
+        if (&TkWidgetExists(".out$i")) {
+          &AppendOutputWindow($i, $line); };
+
+        push(@$output, $line);  };
+
+      # Terminate quickly if rsh is failing
+      if ($line eq "No remote authentication") {
+        &ErrorWindow(" Rsh is not working on ", $hostname);
+        @InstallResult[$i] = "FAILED";
+        &EndInstall($i);
+        next;  };
+
+      # Terminate quickly if Perl is wrong version
+      if ($line =~ /syntax error.*my\(/i) {
+        &ErrorWindow("Perl must be version 5 on", $hostname);
+        &EndInstall($i);
+        &DestroyOutputWindow($i);
+        undef @$output;
+        next;  };
+
+      # Fill in status boxes in Progress window as package names appear
+      if ($line =~ /Installing package /) {
+        $nextpkg = $';
+        if (@Installing[$i]) {
+          &TclPrint("set InstallResult-$i-@Installing[$i] SUCCESS"); };
+        @Installing[$i] = $nextpkg;
+        &TclPrint("set InstallResult-$i-@Installing[$i] WORKING"); };
+
+      # If an error occurs, put an error message in package's result box.
+      # Set the @Installing package name to "error" so that when the next
+      # package name comes up this one doesn't get reset to "success"
+      if ($line =~ /^ *ERROR:/) {
+        if (@Installing[$i]) {
+          &TclPrint("set InstallResult-$i-@Installing[$i] ERROR");
+          @Installing[$i] = "ERROR"; };
+        @InstallResult[$i] = "ERRORS"; };
+
+      # When installation is done, set the last status box to done. If it
+      # had an error, the @Installing pkg name is safely set to ERROR anyway.
+      # If no packages were installed, it's a failure.
+      # End the installation
+      if (eof($fh)) {
+        if (@Installing[$i]) {
+          &TclPrint("set InstallResult-$i-@Installing[$i] SUCCESS"); }
+        else {    
+          @InstallResult[$i] = "FAILED"; }
+	&EndInstall($i); }; }; };
+
+  &TclPrint("exit");
+}
+
+
+
+
+# Create a TCL process and attach its STDOUT and STDIN to this Perl script
+sub ForkTCL {
+  my($ready);
+  pipe R0, WRITETCL;
+  pipe READTCL, W1;
+  $TclPid = fork;
+  if ($TclPid == 0) {
+    open(STDIN,  "<&R0");
+    open(STDOUT, ">&W1");
+    close(WRITETCL);
+    close(READTCL);
+    select(STDOUT);
+    exec $Wish;
+    print "Could not run wish4.0\n";
+    exit;  };
+
+  vec($ready, fileno(WRITETCL), 1) = 1;
+  select(undef, $ready, undef, 5);
+  if (vec($ready, fileno(WRITETCL), 1) == 0) {
+    print "Tcl/Tk didn't start\n";
+    exit; };
+
+  close(R0);
+  close(W1);
+  select WRITETCL;
+  $| = 1;
+  &TclPrint("wm geometry . 100x200+50+50");
+  &TclPrint("proc print {args} { puts \"[lrange \$args 0 end]\"; \\");
+  &TclPrint( "flush stdout }");
+  select STDOUT;
+}
+
+
+
+
+sub DrawMainWindow {
+  my($path, $safepath, $pkg, $n, $packer, $shortpacker, $fit);
+  # Typical attributes
+  $packer      = " -anchor w -padx 10 -pady 5 ";
+  $shortpacker = " -anchor w -padx 10";
+  $fit = " -fill x -expand 1";
+
+  &TclPrint("wm title . \"AFS Install\" ");
+
+  # Header
+  &TclPrint("set Hostname $ENV{HOST}");
+  &TclPrint("frame .host -rel flat -height 3");
+  &TclPrint("frame .host.name -rel flat");
+  &TclPrint("label .host.name.l -text Hostname: -width 16 -anchor w");
+  &TclPrint("entry .host.name.e -textvar Hostname -bd 2 -rel sunk");
+  &TclPrint("bind  .host.name.e <Key-Return> {print \"HOST:\$Hostname\"}");
+  &TclPrint("pack  .host.name.l -side left");
+  &TclPrint("pack  .host.name.e -side right -anchor e $fit");
+  &TclPrint("pack  .host.name $shortpacker $fit");
+  &TclPrint("pack  .host $packer $fit");
+
+  # Path
+  &TclPrint("set Path \"$InstallPath\"");
+  &TclPrint("frame .path -rel raised -bd 2");
+  &TclPrint("label .path.l -text Path -anchor w");
+  &TclPrint("entry .path.e -textvar Path -wid 50 -bd 2 -rel sunk");
+  &TclPrint("frame .path.go -rel flat");
+
+  $n=0;
+  for $path (@DefaultPathsList) {
+    $safepath = $path;
+    $safepath =~ s/\$/\\\$/;
+    &TclPrint("button .path.go.g$n -text \"$safepath\" \\");
+    &TclPrint( "-command { set Path \"$DefaultPaths{$path}\" } -bd 2");
+    &TclPrint("pack .path.go.g$n -side left");
+    $n++;  };
+  &TclPrint("button .path.go.g$n -text CLEAR -command {set Path \"\"} -bd 2");
+  &TclPrint("pack .path.go.g$n -side left");
+
+  &TclPrint("pack .path.l .path.e $packer $fit");
+  &TclPrint("pack .path.go $shortpacker $fit");
+  &TclPrint("pack .path $packer $fit");
+
+  # packages
+  &TclPrint("frame .pkgchoose -rel raised -bd 2");
+  &TclPrint("label .pkgchoose.l -text Packages ");
+  &TclPrint("pack  .pkgchoose.l $packer");
+
+  &TclPrint("set InstallSet $InstallSet");
+  &TclPrint("radiobutton .pkgchoose.default -text \\");
+  &TclPrint( "\"Default Installation\" -var InstallSet -value default");
+  &TclPrint("radiobutton .pkgchoose.custom -text \"Custom Installation:\" \\");
+  &TclPrint( "-var InstallSet -value custom");
+  &TclPrint(".pkgchoose.default config -command { print DEFAULT }");
+  &TclPrint(".pkgchoose.custom config -command { print CUSTOM }");
+  &Hilight(".pkgchoose.default", "#B04040");
+  &Hilight(".pkgchoose.custom", "#B04040");
+  &TclPrint("pack .pkgchoose.default .pkgchoose.custom $shortpacker");
+  &TclPrint("pack .pkgchoose $shortpacker $fit");
+
+  &TclPrint("frame .pkg -rel raised -bd 2");
+  $n=0;
+  for $pkg (@AvailPackages) {
+    &TclPrint("set cb$n ", 0 + $InstallByDefault{$pkg});
+    &TclPrint("checkbutton .pkg.c$n -text \"$PkgDescription{$pkg}\" \\");
+    &TclPrint( "-var cb$n");
+    &Hilight(".pkg.c$n", "#B04040");
+    &TclPrint("pack .pkg.c$n $shortpacker");
+    $n++;  };
+
+  &DisablePackages if ($InstallSet eq "default");
+  &TclPrint("pack .pkg $shortpacker $fit");
+
+  # Options
+  &TclPrint("frame .opt -rel raised -bd 2 ");
+  &TclPrint("label .opt.label -text Options ");
+  &TclPrint("pack .opt.label $shortpacker");
+
+  &TclPrint("set Verbose 1") if ($InstallVerbose);
+  &TclPrint("checkbutton .opt.verbose -text Verbose -var Verbose ");
+  &Hilight (".opt.verbose", "#B04040");
+  &TclPrint("pack .opt.verbose $shortpacker");
+
+  &TclPrint("set Nooldfiles 1") if ($NoOldFiles);
+  &TclPrint("checkbutton .opt.backup -text \"Don't keep backup files\" \\");
+  &TclPrint(" -var Nooldfiles");
+  &Hilight (".opt.backup", "#B04040");
+  &TclPrint("pack .opt.backup $shortpacker");
+
+  &TclPrint("pack .opt $packer $fit");
+
+  # Actions
+  &TclPrint("frame  .action -rel flat -bd 2");
+  &TclPrint("button .action.exit -text EXIT -command {print EXIT} -bd 2");
+  &TclPrint("button .action.help -text HELP -command {print HELP} -bd 2");
+  &TclPrint("button .action.info -text \"INFO ONLY\" -com {print INFO} -bd 2");
+  &TclPrint("button .action.go   -text INSTALL  -com {print INSTALL} -bd 2");
+  &TclPrint("pack   .action.exit .action.help -side left");
+  &TclPrint("pack   .action.go .action.info -side right");
+  &TclPrint("pack   .action $packer  -fill x -expand 1");
+
+  &TclPrint("wm geometry . \"\"");
+}
+
+
+
+
+# After user presses ENTER in Hostname: box, determine if newly entered
+# hostname is local machine or a remote machine or a filename
+sub NewHost {
+  my($hostname);
+  $hostname = @_[0];
+  $hostname =~ s/^HOST://;
+
+  if (-f $hostname && -r $hostname) {
+    &TclPrint(".host.name.l configure -text Filename: ");  }
+  else {
+    &TclPrint(".host.name.l configure -text Hostname: ");  };
+
+  # Local install
+  if ($hostname eq $ENV{HOST})  {
+    return unless (&TkWidgetExists(".host.id"));
+    &TclPrint("destroy .host.id");
+    return; };
+
+  # Remote install
+  return if (&TkWidgetExists(".host.id"));
+  &TclPrint("set UserID $RSHas");
+  &TclPrint("frame .host.id -rel flat");
+  &TclPrint("label .host.id.l -text \"rsh as username:\" -width 16");
+  &TclPrint("entry .host.id.e -textvar UserID -bd 2 -rel sunk");
+  &TclPrint("pack  .host.id.l -side left -anchor w");
+  &TclPrint("pack  .host.id.e -side right -ancho e -fill x -expand 1");
+  &TclPrint("pack  .host.id -side top -padx 10 -after .host.name \\");
+  &TclPrint(" -fill x -expand 1");
+}
+
+
+
+
+
+#
+# The "Default" installation is selected, so turn off the packages
+#
+sub DisablePackages {
+  local($pkg, $n);
+  $n = 0;
+  for $pkg (@AvailPackages) {
+    &TclPrint(".pkg.c$n config -state disabled");
+    &TclPrint(".pkg.c$n config -selectcolor [ .pkg cget -bg ]");
+    $n++;  };
+}
+
+
+#
+# The "Custom" installation is selected, so turn on the packages
+#
+sub EnablePackages {
+  local($pkg, $n);
+  $n = 0;
+  for $pkg (@AvailPackages) {
+    &TclPrint(".pkg.c$n config -state normal");
+    &Hilight(".pkg.c$n", "#B04040");
+    $n++;  };
+}
+
+
+
+
+
+#
+# GUI Based install procedure
+#
+
+# Help screen
+sub GUIHelp {
+  my($line, $rc);
+
+  $rc = open(HELP, "$InstallGuideDir/info/gui.toc");
+  if (!$rc) {
+    &ErrorWindow("Sorry, could not find the help file");
+    return; };
+
+  &CreateOutputWindow(0, "help");
+  while ($line = <HELP>) {
+    chop $line;
+    $line =~ s/\"/\\\"/g;
+    &AppendOutputWindow(0, $line); };
+  close(HELP);
+  &TclPrint(".out0.f.t see 1.0");
+}
+
+
+
+
+# Start up all pipes to start installs. Also set ReadVec with bits for all
+# running pipes.
+sub GUIInstall {
+  my($rc);
+  if (&TkWidgetExists(".prog")) {
+    &ErrorWindow("Please close the current install window first");
+    return; };
+
+  $rc = &GatherData(@_);
+  return if ($rc);
+
+  $rc = &StartInstalls;
+  return if ($rc);
+
+  if (@_[0]) {
+    &CreateOutputWindow(0, @InstallHosts[0]);  }
+  else {
+    &CreateProgressWindow; };
+}
+
+
+
+
+# Get the data in the boxes of the window.
+# Sets @InstallHosts, $InstallID, $InstallPath, $InstallPkgs,
+# $InstallVerbose, and $InstallOpts
+#
+sub GatherData {
+  my($pkg, $hostORfilename, $rc);
+
+  @InstallHosts = ($ENV{HOST});
+  undef $InstallID;
+  $InstallPkgs = "";
+  $InstallOpts = @_[0];  # This will be "-info -v" for Info Only install
+
+  # Read the package checkbuttons. Build a list of selected package names
+  &TclPrint("print \$InstallSet install");
+  $InstallSet = &TclRead;
+  if ($InstallSet eq "custom install") {
+    for $pkg (0 .. $#AvailPackages) {
+      &TclPrint("print \$cb$pkg");
+      $InstallPkgs .= " @AvailPackages[$pkg]" if (&TclRead);  };
+    $InstallPkgs =~ s/^ //;
+    if (!$InstallPkgs) {
+      &ErrorWindow("No install packages specified");
+      return 1;  }; };
+
+  return 0 if ($InstallOpts);  # Info only install
+
+  # Get the hostname or filename to install on
+  &TclPrint("print \$Hostname");
+  $hostORfilename = &TclRead;
+  if (!$hostORfilename) {
+    &ErrorWindow("Need to specify a hostname at top");
+    return 1;  };
+
+  # File containing hostnames
+  if (-f $hostORfilename) {
+    undef @InstallHosts;
+    $rc = open(HOSTS, $hostORfilename);
+    if (!$rc) {
+      &ErrorWindow("Cannot read", $hostORfilename);
+      return 1; };
+    @InstallHosts = <HOSTS>;
+    chomp @InstallHosts;
+    close(HOSTS); }
+  else {
+    @InstallHosts = ($hostORfilename); };
+
+  # Remote host named. Get the username under which to rsh
+  if ($hostORfilename ne $ENV{HOST}) {
+    if (&TkWidgetExists(".host.id")) {
+      &TclPrint("print \$UserID");
+      $InstallID = &TclRead; };
+    $InstallID = $RSHas  if (!$InstallID);  };
+
+  &TclPrint("print \$Path");
+  $InstallPath = &TclRead;
+  if (!$InstallPath) {
+    &ErrorWindow("Need to specify a path to install from");
+    return 1;  };
+
+  &TclPrint("print \$Verbose");
+  $InstallVerbose = &TclRead;
+  $InstallOpts .= "-v "   if ($InstallVerbose);
+
+  &TclPrint("print \$Nooldfiles");
+  $NoOldFiles = &TclRead;
+  $InstallOpts .= "-nobackup "   if ($NoOldFiles);
+
+  return 0;
+}
+
+
+
+
+# Start all install processes. Splice out hostnames that couldn't be started
+# Truncates fully qualified hostnames down to hostname
+# Sets @Pid, $ReadVec, and filehandle COM<i>
+# Clears @HostOuput<hostname> and @Installing
+#
+# Returns 0 if install(s) are started, 1 otherwise
+#
+sub StartInstalls {
+  my($i, $fh, $output, $command, @brokenpipes);
+
+  undef @Installing;
+  $i = 0;   # Cannot let $i start off undefined; must be numerical
+  while ($i <= $#InstallHosts) {
+    $command = "";
+    $command = "rsh -n -l $InstallID @InstallHosts[$i] " if ($InstallID);
+    $command .= "$Command ";
+    $command .= "-src $InstallPath ";
+    $command .= "-pkg $InstallPkgs " if ($InstallPkgs);
+    $command .= $InstallOpts;
+    #$command = "/bin/echo Installing package rc\n";
+
+    print STDOUT "COMMAND: \"$command\" \n" if ($Debug >= 2);
+
+    $fh = "COM$i";
+    @Pid[$i] = open($fh, "$command 2>&1 |");
+    if (@Pid[$i]) {
+      @InstallHosts[$i] =~ s:\..*::;
+      print STDOUT "Install on @InstallHosts[$i] started\n" if ($Debug >= 1);
+      $output = "HostOutput@InstallHosts[$i]";
+      undef @$output;
+      vec($ReadVec, fileno($fh), 1) = 1;
+      $i++;  }
+    else {
+      push(@brokenpipes, splice(@InstallHosts, $i, 1));   };  };
+
+  if ($#brokenpipes >= 0) {
+    &ErrorWindow("Could not create pipes for:", @brokenpipes);  };
+
+  print STDOUT $#InstallHosts + 1, " installs started\n" if ($Debug >= 1);
+  return 0 if ($#InstallHosts >=0);
+  return 1;
+}
+
+
+
+
+# An install process is done
+# Parameter passed in is "STOP: i" where "i" is the index into @Pid, COM<i>,
+# and @InstallHosts
+#
+# Kill the process, reset its @Pid, close it's file handle
+#
+sub EndInstall {
+  my($num, $fh);
+  $num =  @_[0];
+  $num =~ s/[^0-9]//g;
+  @InstallResult[$num] = "KILLED" if (@_[0] =~ /^STOP/);
+
+  kill 9, @Pid[$num] if (@Pid[$num] > 0);
+  print STDOUT "Process \"$num\" killed\n" if ($Debug >= 2);
+  @Pid[$num] = -1;
+  if (&TkWidgetExists(".out$num.act.stop")) {
+    &TclPrint("destroy .out$num.act.stop"); };
+
+  $fh = "COM$num";
+  vec($ReadVec, fileno($fh), 1) = 0;
+  close($fh);
+
+  &TclPrint("set InstallResult-$num-done @InstallResult[$num]");
+}
+
+
+
+
+# Set the colors of a Tk widget
+sub Hilight {
+  my($widget, $color) = @_;
+  &TclPrint("$widget configure -activebackground [ $widget cget -bg ]");
+  &TclPrint("$widget configure -activeforeground black ");
+  &TclPrint("$widget configure -selectcolor \"$color\" ");
+}
+
+
+
+
+# Create a window to show progress of install
+sub CreateProgressWindow {
+  my($pkg, $host, $i, @pkglist, $dx, $dy);
+  &TclPrint(".action.go   config -state disabled");
+  &TclPrint(".action.info config -state disabled");
+  &TclPrint("toplevel .prog");
+  &TclPrint("wm geometry .prog 100x100+100+150");
+  &TclPrint("wm title .prog Installing");
+  &TclPrint("wm protocol .prog WM_DELETE_WINDOW { print PROG }");
+
+  # Create a "Packages" label  in UL corner
+  # &TclPrint("label .prog.pkg -text \"Packages\" -width 20 -anchor w");
+  # &TclPrint("place .prog.pkg -x 10 -y 10");
+
+  # Create the lefthand column of package names
+  @pkglist = split(/ /, $InstallPkgs);
+  @pkglist = @AvailPackages if ($#pkglist < 0);
+  $dy = 45;
+  foreach $pkg (@pkglist, "done") {
+    &TclPrint("label .prog.$pkg -text \"$pkg\"");
+    &TclPrint("place .prog.$pkg -in .prog -x 10 -y $dy");
+    $dy += 30; };
+
+  # Create a column of indicators for each host
+  $i = 0;
+  $dx = 100;
+  foreach $host (@InstallHosts) {
+    &TclPrint("button .prog.h$i -text \"$host\" -command { print SHOW: $i }");
+    &TclPrint("place  .prog.h$i -in .prog -x $dx -y 10");
+    $dy = 40;
+    $dx += 5;
+
+    # Lights for each package for this host
+    foreach $pkg (@pkglist, "done") {
+      &TclPrint("set InstallResult-$i-$pkg \"\"");
+      &TclPrint("entry .prog.h$i-$pkg -width 8 -text InstallResult-$i-$pkg");
+      &TclPrint("place .prog.h$i-$pkg -in .prog -x $dx -y $dy");
+      &TclPrint(".prog.h$i-$pkg config -state disabled");
+      $dy += 30;  };
+    @InstallResult[$i] = "SUCCESS";   # gotta be optimistic
+    $dx += 75;
+    $i++; };
+
+  # Create a "go away" button
+  $dy += 15;
+  &TclPrint("label .prog.verbose -text \"Click hostname to view output\"");
+  &TclPrint("place .prog.verbose -in .prog -x 10 -y $dy");
+  $dy += 30;
+  &TclPrint("button .prog.exit -text DISMISS -com { print PROG }");
+  &TclPrint("place  .prog.exit -in .prog -x 10 -y $dy");
+  $dy += 35;
+  $dx = 200 if ($dx < 200);
+
+  # Display everything
+  $i = $dx . "x" . $dy . "+100+150";
+  &TclPrint("wm geometry .prog $i");
+}
+
+
+
+
+# Delete the progress window
+sub DestroyProgressWindow {
+  my($hostname, $output);
+  &TclPrint("destroy .prog") if (&TkWidgetExists(".prog"));
+  &TclPrint(".action.go   config -state normal");
+  &TclPrint(".action.info config -state normal");
+
+  # Clear install output from memory
+  for $hostname (@InstallHosts) {
+    $output = "HostOutput$hostname";
+    undef @$output;  };
+}
+
+
+
+
+# Create the 2nd window into which install output is written.
+sub CreateOutputWindow {
+  my($i, $hostname, $x);
+  $i = shift @_;
+  $hostname = shift @_;
+  &TclPrint("destroy .out$i") if (&TkWidgetExists(".out$i"));
+
+  if (&TkWidgetExists(".prog.h$i")) {
+    &TclPrint(".prog.h$i config -state disabled");  };
+
+  $x = 250 + $i * 10;
+  &TclPrint("toplevel .out$i");
+  &TclPrint("wm geometry .out$i 100x100+$x+150");
+  &TclPrint("wm title .out$i \"Command Output $hostname\"");
+  &TclPrint("wm protocol .out$i WM_DELETE_WINDOW { print DISMISS: $i }");
+
+  &TclPrint("frame .out$i.f -bd 2");
+  &TclPrint("text  .out$i.f.t -width 80 -height 20 -bd 2");
+  &TclPrint("scrollbar .out$i.f.s  -command \".out$i.f.t yview\" -bd 2");
+  &TclPrint(".out$i.f.t config -yscr \".out$i.f.s set\"");
+  &TclPrint("pack .out$i.f.t -side left -expand yes -fill both");
+  &TclPrint("pack .out$i.f.s -side right -fill y");
+  &TclPrint("pack .out$i.f   -side top  -expand yes -fill both");
+
+  &TclPrint("frame .out$i.act -relief flat");
+  if(@Pid[$i] > 0) {
+    &TclPrint("button .out$i.act.stop -text \"STOP INSTALL\" \\");
+    &TclPrint( "-com {print STOP: $i } -bd 2");
+    &TclPrint("pack .out$i.act.stop -padx 20 -side left"); };
+  &TclPrint("button .out$i.act.dismiss -text DISMISS \\");
+  &TclPrint( "-com {print DISMISS: $i } -bd 2");
+  &TclPrint("pack .out$i.act.dismiss -padx 20 -side right");
+
+  &TclPrint("pack .out$i.act  -side bottom");
+
+  &TclPrint("wm geometry .out$i \"\" ");
+
+  # Create some tags in the text box for easy highlighting
+  &TclPrint(".out$i.f.t tag add err 1.0 1.0");
+  &TclPrint(".out$i.f.t tag configure err -background \\#B04040");
+  &TclPrint(".out$i.f.t tag add header 1.0 1.0");
+  &TclPrint(".out$i.f.t tag configure header -background \\#A0A0A0");
+  &TclPrint(".out$i.f.t tag add normal 1.0 1.0");
+}
+
+
+
+
+# Print in the output window
+# Parameters passed in are the window number and the text to print
+sub AppendOutputWindow {
+  my($i, $line, $padlen);
+  $i = shift @_;
+  for $line (@_) {
+    # Backslash escape any quote characters that aren't already escaped
+    $line =~ s/([^\\])\"/$1\\\"/g;
+    # Backslash escape any bracket characters that aren't already escaped
+    $line =~ s/([^\\])([\[\]])/$1\\$2/g;
+
+    # Errors turn red
+    if ($line =~ /^ *ERROR:/) {
+      &TclPrint(".out$i.f.t insert end \"$Indent\" normal \"ERROR:\" err \\");
+      &TclPrint( "\"$'\\n\" normal");
+      next;  }
+    # Package names get highlighted in grey
+    elsif ($line =~ /^Installing package/) {
+      &TclPrint(".out$i.f.t insert end \"\\n\" normal \"$line \" header \\");
+      &TclPrint("\"\\n\" normal");
+      next;  }
+    # Normal text
+    else {
+      &TclPrint(".out$i.f.t insert end \"$line\\n\" normal");  };  };
+
+  # Scroll window to end of output
+  &TclPrint(".out$i.f.t see end");
+}
+
+
+
+
+# Create the output window and dump to it all of the lines of output that
+# have been accumulated so far
+sub ForceOutputWindow {
+  my($i, $hostname, $output);
+  $i = @_[0];
+  $i =~ s/^SHOW: //;
+  return if (&TkWidgetExists(".out$i"));
+
+  $hostname = @InstallHosts[$i];
+  $output = "HostOutput$hostname";
+
+  &CreateOutputWindow($i, $hostname);
+  &AppendOutputWindow($i, @$output);
+}
+
+
+
+
+sub DestroyOutputWindow {
+  my($i);
+  $i = @_[0];
+  $i =~ s/[^0-9]//g;
+  &TclPrint("destroy .out$i") if (&TkWidgetExists(".out$i"));
+  &TclPrint(".prog.h$i config -state normal") if(&TkWidgetExists(".prog.h$i"));
+}
+
+
+
+
+# Create a temp window with a message and an OK button
+sub ErrorWindow {
+  my($win, $phrase, $i);
+  $win = ".err$ErrorWindowNumber";
+  $ErrorWindowNumber++;
+  &TclPrint("toplevel $win");
+  &TclPrint("wm geometry $win 100x20+", 50 + $ErrorWindowNumber * 5, "+150");
+  &TclPrint("wm title $win Message");
+  &TclPrint("wm protocol $win WM_DELETE_WINDOW { destroy $win }");
+
+  $i = 0;
+  for $phrase (@_) {
+    &TclPrint("label $win.l$i -text \"$phrase\"");
+    &TclPrint("pack  $win.l$i -side top -padx 10");
+    $i++;  };
+  &TclPrint("button $win.b -text OK -command { destroy $win }");
+  &TclPrint("pack $win.b -pady 10 -anchor center");
+
+  &TclPrint("wm geometry $win \"\" ");
+}
+
+
+
+
+
+#
+# Routines for the Install Guides to use
+#
+
+
+# Read an InstallGuide file into the Perl context
+sub ReadInstallGuide {
+  my($ig, $rc, $contents, $line);
+  $ig = @_[0];
+
+  $rc = open(IG, $ig);
+  if (!$rc) {
+    &ErrorMsg("Could not read Install Guide", $ig);
+    return 1;  };
+  while ($line = <IG>) {
+    $contents .= $line;  };
+  close(IG);
+
+  eval $contents;
+  &ErrorMsg("$ig could not be avalulated:$@") if ($@ ne "");
+    
+}
+
+
+
+
+# Copy a file. Because there are so many error checks in this routine, a
+# wrapper is put around it so any errors can return() without a lot of 
+# cleanup code.
+sub Copy {
+  my(@msg);
+  unshift(@Section, "Copy");
+
+  @msg = &CopyWrapper(@_);
+  &ErrorMsg(@msg) unless (@msg[0] eq "OK");
+  close(SRC);
+  close(DST);
+
+  shift @Section;
+}
+
+sub CopyWrapper {
+  my($srcprog, $dstprog, $prog, @prog, $mode, $rc, $olddstprog, $different);
+  my($dbytes, $dstbuf, $sbytes, $srcbuf);
+  $different = $olddstprog = 0;
+
+  return("Wrong number of args") if ($#_ != 1);
+  $srcprog = shift @_;
+  $dstprog = shift @_;
+
+  # If a directory was given as the dest, append the filename
+  @prog = split(/\//, $srcprog);
+  $prog = pop(@prog);
+  $dstprog =~ s:/$::;
+  $dstprog .= "/$prog" if (-d $dstprog);
+
+  # Open the src and new dest file
+  $rc = open(SRC, $srcprog);
+  return("Could not open src file to Copy", $srcprog) if (!$rc);
+
+  $newdstprog = "$dstprog.new";
+  $rc = open(NEW, ">$newdstprog");
+  return("Could not open new dst file for Copy", $newdstprog) if (!$rc);
+
+  if (-e $dstprog) {
+    $rc = open(DST, $dstprog);
+    $olddstprog = "$dstprog.old";   }
+  while ($sbytes = read(SRC, $srcbuf, 4096)) {
+    if ($olddstprog) {
+      $dbytes = read(DST, $dstbuf, 4096);
+      if (!$different) {
+        if ($sbytes != $dbytes || $srcbuf ne $dstbuf) {
+	  $different = 1;  }; };  };
+    print NEW $srcbuf; };
+
+  if (!$olddstprog || $different) {
+    &VPrint ("Copying file: \"$srcprog\" to \"$dstprog\"");
+    if ($olddstprog && !$NoOldFiles) {
+      unlink($olddstprog);
+      rename($dstprog, $olddstprog); };
+    $rc = rename($newdstprog, $dstprog); 
+    if (!$rc) {
+      if ($! eq "Text file busy") {
+        rename($dstprog, "$dstprog.busy");
+        $rc = rename($newdstprog, $dstprog); }
+      &ErrorMsg("Could not install new version of", $newdstprog) if (!$rc); };
+
+    # Set the mode bits of the dst file identical to the src file
+    &Chown(0,2, $dstprog);
+    &Chmod(0755, $dstprog);  }
+  else {
+    &VPrint("\"$dstprog\" is already a copy of \"$srcprog\"");
+    unlink($newdstprog); };
+  return("OK");
+}
+
+
+
+
+# Read a file, looking for an AFS marker
+sub AFSversion {
+  my($filename, $version, $rc, $line);
+  $filename = @_[0];
+  $rc = open(FILE, $filename);
+  return("") if (!$rc);
+  while ($line = <FILE>) {
+    next unless ($line =~ /Base configuration afs/);
+    $line =~ s/.*Base configuration //;
+    $line =~ s/\000.*//;
+    last;  };
+  close(FILE);
+
+  if ($line) {
+    $version = $line;
+    $version =~ s/;.*//;
+    chomp $version;
+    $version .= "+" if ($&);
+    $version =~ s/ /-/g; };
+  return($version);
+}
+
+
+
+# Copy a file from one place to another. At the destination site, keep a hard
+# link to the file naming what version the file is. The version string will
+# be ".orig" for non-AFS files, or the AFS version number (eg -afs3.4-5.00)
+# for AFS files. Attempt to preserve old ,orig files and NOT preserve multiple
+# AFS versions.
+sub VersionCopyFile {
+  my(@msg);
+  unshift(@Section, "VersionCopyFile");
+
+  @msg = &VersionCopyFileWrapper(@_);
+  &ErrorMsg(@msg) unless (@msg[0] eq "OK");
+  shift @Section;
+}
+
+sub VersionCopyFileWrapper {
+  my($from, $to, $link, $rc, $inode, @paths, $dir, $file);
+  my($from_vers, $to_vers, $old_vers, $buf);
+  $from = shift @_;
+  $to = shift @_;
+
+  # Error check
+  return("No such file", $from) if (!-f $from);
+  $from_vers = &AFSversion($from);
+
+  # Check if there is already a file in the destination place
+  if (-e $to) {
+    @stats = stat(_);
+    $to_vers = &AFSversion($to);
+
+    # If the $to file is a soft link, just remove it
+    if (-l $to) {
+      &VPrint("Removing soft link \"$to\"");
+      $rc = unlink($to);
+      return("Could not remove symlink", $to) if ($rc != 1); }
+
+    # Cannot work if $to is a directory
+    elsif (-d $to) {
+      return("$to is a directory"); }
+
+    # The $to file exists but was not a soft symlink. Move aside or delete it.
+    # If the $to file is the same version as $from, just remove $to.
+    # Otherwise move $to aside
+    else {
+      if ($to_vers eq $from_vers) {
+        &VPrint("Removing \"$to\" that is same version as \"$from\"");
+        $rc = unlink($to);
+        return("Could not remove \"$to\"") if (!$rc);  }
+      else {
+        # Make a new name to which to move the old $to file
+        if ($to_vers) {
+          $file = "$to-$to_vers"; }
+        else {
+          $file = "$to.orig"; };
+        &VPrint("Moving \"$to\" to \"$file\"");
+        return("Cannot move old \"$to\" to \"$file\"") if (-d $file);
+        unlink($file);
+        $rc = rename($to, $file);
+        return("Could not move \"$to\" to", $file) if (!$rc); }; }; };
+
+  # Do the actual copy
+  &VPrint("Copying \"$from\" to \"$to\"");
+  $rc = open(SRC, $from);
+  return("Could not read original file", $from) if (!$rc);
+  $rc = open(DST, ">$to");
+  return("Could not open for writing", $to) if (!$rc);
+  while(read(SRC, $buf, 4096)) {
+    $rc = print DST $buf;
+    return("write() failed to", $to) if (!$rc); };
+  close(DST);
+  close(SRC);
+
+  # Create a hard link of the dest file
+  $version = &AFSversion($to);
+  if ($version) {
+    $link = "$to-$version"; }
+  else {
+    $link = "$to.orig"; };
+
+  # If a file already exists where the hard link is to be, delete it
+  if (-f $link) {
+    &VPrint("Removing \"$link\" to place a new hard link there");
+    $rc = unlink($link);
+    return("Could not ($!) remove old", $link) if (!$rc); };
+
+  # Make the hardlink
+  &VPrint("Creating new hard link \"$link\"");
+  $rc = link($to, $link);
+  return("Could not make hardlink \"$to\" to", $link) if (!$rc);
+  return("OK");
+}
+
+
+
+
+# Create a list of directories and any parent directories required
+# Only use absolute paths that start with /
+sub CreateDir {
+  my($dir, $path, @subdirs, $subdir, $rc);
+  unshift(@Section, "CreateDir");
+  foreach $dir (@_) {
+
+    # Make sure an absolute path was given
+    if (substr($dir, 0, 1) ne "/") {
+      &ErrorMsg("Won't mkdir relative directory", $dir);
+      shift @Section;
+      return;  };
+
+    # Check each parent directory. Work up parent dirs with $path variable.
+    # Split up the entire path into an array. Since $dir starts with a /, the
+    # first scalar in the array will be "". Remove it.
+    $path = "";
+    @subdirs = split(/\//, $dir);
+    shift @subdirs;
+
+    VPrint("Creating directory: \"$dir\"");
+
+    foreach $subdir (@subdirs) {
+      $path .= "/$subdir";
+      next if (-d $path);
+      next if (-l $path);
+
+      # Create the directory and check the return code
+      $rc = mkdir($path, 0775);
+      next if ($rc);
+      &ErrorMsg("Cannot create directory", $path);
+      shift @Section;
+      return;  };  };
+  shift @Section;
+}
+
+
+
+
+# Create a symlink. Carefully.
+sub Symlink {
+  my($filename, $linkname, $rc);
+  unshift(@Section, "Symlink");
+  $filename = @_[0];
+  $linkname = @_[1];
+  &VPrint("Making \"$linkname\" point to \"$filename\"");
+  &DisplaceFile($linkname);
+  $rc = symlink($filename, $linkname);
+  &ErrorMsg("Could not make symlink", "$linkname -> $filename") if (!$rc);
+  shift @Section;
+}
+
+
+
+
+# Move a file aside. Because there are so many error checks in this routine, a
+# wrapper is put around it so any errors can return() without a lot of 
+# cleanup code.
+sub DisplaceFile {
+  my(@msg);
+  unshift(@Section, "DisplaceFile");
+
+  @msg = &DisplaceWrapper(@_);
+  &ErrorMsg(@msg) unless (@msg[0] eq "OK");
+  shift @Section;
+}
+
+# Move a file aside. If it is an AFS file, delete it. Otherwise move it
+# to .orig   This is for files like fsck and login that have AFS equivalents
+sub DisplaceWrapper {
+  my($rc, $displace, $line, $isAFS);
+
+  $displace = @_[0];
+  return("OK") if (!-e $displace);
+
+  # If destination is just a symlink, remove it
+  if (readlink($displace)) {
+    &VPrint("Removing old \"$displace\" symlink");
+    $rc = unlink($displace);
+    return("Could not remove link", $displace) if (!$rc);
+    return("OK"); };
+
+  # If dest is not a file, (ie a directory) this is unfixable
+  return("Not a file", $displace) if (-d $displace);
+
+  # Read the file, looking for an AFS marker
+  $isAFS = &AFSversion($displace);
+
+  # Either remove an AFS file or rename a non-AFS file
+  if ($isAFS) {
+    $rc = unlink($displace);
+    return("Could not remove file", $displace) if (!$rc); }
+  else {
+    &VPrint("Moving old file \"$displace\" aside");
+    $rc = rename($displace, "$displace.orig");
+    return("Could not rename file", $displace) if (!$rc); };
+  return("OK");
+}
+
+
+
+
+# Change the mode bits of a file
+sub Chmod {
+  my ($mode, $file, $rc);
+  unshift(@Section, "Chmod");
+  $mode = shift @_;
+  while ($file = shift @_)  {
+    &VPrint("Setting mode bits on $file to ", sprintf("%lo", $mode));
+    $rc = chmod($mode, $file);
+    &ErrorMsg("Could not change mode bits of", $file) if (!$rc);  };
+  shift @Section;
+}
+
+
+
+
+# Change the owner of a file
+sub Chown {
+  my ($user, $group, $file, $rc);
+  unshift(@Section, "Chown");
+  $user = shift @_;
+  $group = shift @_;
+  while ($file = shift @_) {
+    &VPrint("Setting owner of \"$file\" to $user,$group");
+    $rc = chown $user, $group, $file;
+    &ErrorMsg("Could not change mode bits of", $file) if (!$rc);  };
+  shift @Section;
+}
+
+
+
+
+# Copy the UID, GID, and MODE info from one file to another
+sub CopyStat {
+  my ($user, $group, $srcfile, $destfile, $mode, $rc, @statinfo);
+  unshift(@Section, "CopyStat");
+  $srcfile = shift @_;
+  $destfile = shift @_;
+  @statinfo = stat($srcfile);
+  $mode = $statinfo[2];
+  $user = $statinfo[4];
+  $group = $statinfo[5];
+  &VPrint("Copying owner,group,mode of \"$srcfile\" to \"$destfile\"");
+  $rc = chown $user, $group, $destfile;
+  &ErrorMsg("Could not change mode bits of", $destfile) if (!$rc);
+  $rc = chmod $mode, $destfile;
+  &ErrorMsg("Could not change mode bits of", $destfile) if (!$rc); 
+  shift @Section;
+}
+
+
+
+#
+# Misc printing routines
+#
+
+
+# This routine causes calls to ErrorMsg to be fatal
+sub ErrorsAreFatal {
+  $Fatal = @_[0];
+}
+
+
+
+
+# Print a line with a prepended indent string
+sub Print {
+  my($text);
+  $text = join("", @_);
+  print "$Indent$text\n";
+}
+
+
+
+
+# Print only if in Verbose mode
+sub VPrint {
+  return unless ($InstallVerbose);
+  &Print(@_);
+}
+
+
+
+
+# A routine to make consistent error messages
+sub ErrorMsg {
+  my($msg, $prog);
+  $msg = "ERROR: @Section[0]: ";
+  $msg .= shift @_;
+  $prog = shift @_;
+  if ($prog) {
+    $prog =~ s:^$InstallPath::;
+    $msg .= " \"$prog\"";  };
+  $msg .= " ($!)" if (($? >> 8) && $Debug);
+  &Print($msg);
+  last DOPACKAGE if ($Fatal);
+}
+
+
+
+
+# Write a Tcl/Tk command to the $Wish process
+sub TclPrint {
+  my($text);
+  $text = join("", @_);
+  print STDOUT "TO TCL:\"$text\" \n" if($Debug >= 4);
+  if ($text =~ /\\$/) {
+    $text =~ s:\\$: :;
+    print WRITETCL $text;  }
+  else {
+    print WRITETCL "$text\n";  };
+}
+
+
+
+
+# Read a line from Tcl/Tk, and chop off any {} symbols Tcl tacks on
+sub TclRead {
+  my($line);
+  print STDOUT "Reading from Tcl\n" if ($Debug >= 4);
+  $line = <READTCL>;
+  chop $line;
+  $line =~ s:{::;
+  $line =~ s:}::;
+  print STDOUT "FROM TCL:\'$line\' \n" if ($Debug >= 4);
+  return($line);
+}
+
+
+
+
+# Query Tcl/Tk if a particular widget is drawn. 1=yes 0=no
+sub TkWidgetExists {
+  my($reply);
+  &TclPrint("print reply: [ info command @_[0] ]");
+  $reply = &TclRead;
+  return 0 if ($reply eq "reply: ");
+  return 1;
+}

@@ -1,0 +1,20 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# modkernel
+#
+# An InstallGuide for installing dynamic kernel libs
+#
+
+sub modkernel {
+&Print("Installs the libraries necessary for dynamically loading AFS");
+&Print("into the kernel, usually putting them in /usr/vice/etc/dkload");
+&Print("Also installs the AFS daemon /usr/vice/etc/afsd and the client");
+&Print("control and query program /usr/vice/etc/fs");
+&Print("If the NFS Support Option is turned on, the libraries which");
+&Print("support NFS and the NFS Translator are installed instead.");
+}

@@ -1,0 +1,322 @@
+OpenAFS News -- history of user-visible changes.  July 29, 2003.
+
+* Changes incorporated in OpenAFS 1.2.10
+
+** dumps to and restores from large files now supported by butc.
+
+** Linux on AMD Opteron (sysname amd64_linux24), HP-UX 11i on PA-RISC 
+   (sysname hp_ux11i), HP-UX 11.22 on Intel Itanium (sysname ia64_hpux1122),
+   and User Mode Linux i386 (sysnames i386_umlinux22, i386_umlinux24) now
+   supported.
+
+** Windows Largeint support (for VC7)
+
+** afsd will not shut itself down while /afs is mounted, to preclude panics.
+
+** On Linux 2.4, the AFS cache cannot be unmounted if afsd is not shut down.
+   This is consistent with the behavior of other platforms and of Linux 2.2, 
+   but until now Linux 2.4 had not behaved this way. 
+
+** Restore behavior pre-1.2.9 of adding cell aliases we find using AFSDB 
+   for cells that have been statically configured via CellServDB.
+
+** MacOS X client fakes mode bits so host does not preclude user access to
+   data incorrectly.
+
+** MacOS X client enables disk arbitration such that AFS shows up immediately
+   in Finder, and precludes afs unmount unless force is used, to prevent
+   Finder from "ejecting" it. AFS can also be mounted multiple times
+   on the MacOS X client.
+
+* Changes incorporated in OpenAFS 1.2.9
+
+** The kaserver now defaults to not allowing interrealm authentication,
+   due to security vulnerabilities in the krb4 protocol.  The new
+   "-crossrealm" flag to the kaserver is provided to reenable interrealm
+   authentication if desired.
+
+** RedHat Linux 9.0 is now supported.
+
+** Solaris 9 12/02 is now supported.  Solaris 7 and 8 x86 should now
+   work again.
+
+** On Linux machines using 2.2 series kernels, 2.2.19 or higher is now
+   required.
+
+** An OpenAFS 1.2.9 afsd will not work with kernel modules built from
+   an earlier OpenAFS release.  In general, using a mismatched afsd and
+   kernel modules set is unsupported; it is not recommended that you use
+   such a configuration on a regular basis.
+
+* Changes incorporated in OpenAFS 1.2.8
+
+** Mountpoint directory information is now only faked for cross-cell
+   mountpoits when using the -fakestat flag (e.g. for the directories
+   under /afs, but not for most other volumes mounted inside the cell).
+   The -fakestat-all switch can be used to fake information for all
+   mountpoints.
+
+** HPUX 11.0 is now supported.
+
+** It is now possible for AFS to use Kerberos 5 directly, via rxkad 2b.
+   See the OpenAFS 1.2.8 Release Notes for more information on using this
+   capability.
+
+** An NFS translator kernel module is now included and compiled by default
+   for Solaris only.
+
+* Changes incorporated in OpenAFS 1.2.7
+
+** MacOS X 10.2 is now supported.  FreeBSD 4.3 and later support is included
+   in this release, but is still under active development and should only
+   be used by those doing active development on the OpenAFS FreeBSD client.
+
+** When fakestat is enabled on MacOSX, the Finder can be used to browse
+   a fully-populated /afs directory.  However, this precludes reliable
+   use of entire volumes as MacOS bundles (i.e. containing a Contents
+   directory in the root of the volume).
+
+** The fileserver will now use Rx pings to determine if clients are reachable
+   prior to allocating resources to them, to prevent asymmetric clients from
+   consuming all fileserver resources.
+
+* Changes incorporated in OpenAFS 1.2.6
+
+** Mountpoint directory information can be faked by the cache manager,
+   making operations such as stat'ing all cells under /afs much faster.
+   This is enabled by passing -fakestat to afsd.
+
+** Solaris 9 FCS and Solaris 7 and 8 x86 are now supported.
+
+* Changes incorporated in OpenAFS 1.2.5
+
+** A remote denial of service attack in the AIX and IRIX clients has
+   been fixed.  Users of those platforms are strongly encouraged to
+   upgrade.
+
+** Fixed race conditions in fileserver that could result in crash.
+
+* Changes incorporated in OpenAFS 1.2.4
+
+** Server logfiles now more consistant about format in which hosts are
+   referred to.
+
+** vfsck on Solaris will now allow force runs (using -y flag) even if old 
+   inodes exist.
+
+* Changes incorporated in OpenAFS 1.2.3
+
+** Cell aliases for dynroot can be specified in the CellAlias file in
+   /usr/vice/etc or /usr/local/etc/openafs, in format "realname alias",
+   one per line.  They can also be managed at runtime with "fs newalias"
+   and "fs listaliases".
+
+* Changes incorporated in OpenAFS 1.2.2
+
+** Solaris 9 and Linux PA-RISC are now supported
+
+** fileserver will not erroneously delay legitimate errors for 3 seconds
+   after 10 errors are returned (e.g. stat() on a directory you can't read)
+
+** Rx MTU calculation now works for Irix, Solaris and Linux
+
+** If afsd is started with the -dynroot flag, /afs will be locally
+   generated from the CellServDB.  AFSDB cells will be mounted
+   automatically upon access.
+
+** The namei fileserver allows vice "partitions" to be directories instead
+   of partitions and will attach and display accordingly. Creating the file
+   "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
+
+** TSM support for butc no longer requires editing a Makefile, simply
+   specify the --enable-tivoli-tsm configure option.
+
+** Linux builds no longer require source changes every time the kernel
+   inode structure changes; the OpenAFS sources will now configure
+   itself to the actual inode structure as defined in the kernel
+   sources.
+
+* Changes incorporated in OpenAFS 1.2.1
+
+** vfsck on Digital UNIX and Solaris will now refuse to fsck mounted
+   mounted partitions.
+
+* Changes incorporated in OpenAFS 1.2.0
+
+** AFS now supports --prefix and the other directory options of
+   configure.  By default AFS builds assuming it will be installed in
+   /usr/local.  In order to get traditional AFS directory paths (/usr/afs
+   and /usr/vice/etc) use the --enable-transarc-paths option to
+   configure.  More details on the new directory layout are found in README.
+
+* Changes incorporated in OpenAFS 1.1.1a
+ 
+** Windows 95/98/ME/NT/2000 - Consistent versioning
+   Installation, AFS Control Center, Client dialog boxes and properties 
+   pages for executables display a consistent OpenAFS version number. 
+   Installation detects previous installation and prompts the user for upgrade 
+   options.
+
+** Windows 95/98/ME/NT/2000 - Installation features
+   During installation the user can select the source of the CellservDB file,
+   AFS home cell, and drive mappings.  During installation a drive path 
+   mapping can include a variable that will be substituted with the current 
+   UserName that is logged in.
+
+** Windows 2000/NT - Integrated logon
+   The Integrated Logon feature works now.
+
+** Windows 95/98/ME - Logon script features
+   The Windows 95/98/ME client now offers a command-line option for starting up 
+   the AFS client without authenication. It is now possilbe to start the AFS 
+   client first and obtain tokens, and map drives all through Windows scripts.
+   This helps using Windows 95/98/ME client in Kerberos 5 environment.
+
+** Windows 2000/NT - LANA numbers
+   AFS client now scans the LANA numbers to establish the correct NETBIOS
+   connection.  NetBEUI is no longer needed.  The user no longer needs to find
+   the correct LANA number.
+
+** Windows 2000/NT - OpenAFS naming consistancy
+   Further progress has been made to remove references to "Transarc AFS"
+   and replace with "OpenAFS".
+
+
+  
+* Changes since OpenAFS 1.0 
+
+** AFS now builds with configure. The README for building has been
+   updated and includes full details.
+
+** A client system can now have multiple sysname values for @sys.
+   They will be searched in order when looking up files in AFS.  The
+   -newsysname argument to fs sysname can be repeated to set multiple
+   sysnames.
+
+** A new system group is created for new cells (system:ptsviewers
+   with id -203).  If this group exists, members of this group can
+   examine and read the entire protection database.  They can examine
+   all users and groups and can get the membership of any group.
+
+** A new program, pt_util has been added to the distribution.  This
+   program allows users to print the contents of the protection
+   database or to edit the protection database without running a
+   ptserver.  It can be used to set up a new cell without ever running
+   in noauth mode.  Run pt_util -h for help.
+
+** The fs setcrypt and fs getcrypt commands have been added.  These
+   commands allow the system administrator to require that the client
+   encrypt all authenticated traffic between the client workstation
+   and AFS.  The encryption used is weak, but is likely better than
+   sending unencrypted traffic in most environments.  Some functions,
+   such as looking for a volume may not be encrypted, but data
+   transfer certainly is.  By default data is not encrypted.  At this
+   time no significant experimentation with server performance has
+   been conducted.
+
+** By default AFS is compiled with AFS_AFSDB_ENV, enabling the -afsdb 
+   option to be given to afsd on startup.  If this option is used, then new
+   cells will be looked up using AFSDB records stored in DNS if they
+   are not found in CellServDB.  This means that users can create
+   cross-cell mountpoints in directories they control to access cells
+   not in root.afs, and that cells in root.afs need not be in the
+   client's CellServDB.
+
+** AFS database servers can be marked as read-only clones.  Surround
+   the hostname in square brackets on the bos addhost command and the
+   database server will never be elected sync site.  This is useful
+   for cells distributed over a wide region.
+
+** The AFS servers now support the -syslog flag.  This flag causes
+   them to log to syslog rather than to files.  This flag is not
+   supported on NT.  For all servers besides the salvager, the flag can
+   also be specified as -syslog=facility, where facility is an integer
+   facility code from syslog.h.  A -syslogfacility option is provided for
+   the salvager to accomplish the same goal.
+
+** If the --enable-fast-restart flag is given when configuring AFS,
+   then the salvager supports the -dontsalvage flag which causes it to 
+   exit without salvaging any volumes.  If this is configured into the 
+   third command of a fs process, then the fileserver will start without 
+   salvaging.  It will fail to attach volumes that need salvaging and they
+   can be salvaged manually.  This provides significantly better server 
+   startup performance at the cost of administrative complexity.
+
+** If the --enable-bitmap-later flag is given when configuring AFS,
+   then the fileserver creates bitmaps for free vnodes on demand, allowing 
+   faster starts.
+
+** If bosserver finds a BosConfig.new file at startup, it reads this
+   file and renames it to BosConfig.  This allows bosserver to be
+   reconfigured at next restart.
+
+** The bosserver can be placed in a restricted mode in
+   which AFS superusers are only granted limited access to the server
+   host. The following functionality is disabled when restricted mode is in
+   use:
+
+    bos exec
+    bos getlog (except for files with no '/'s in their name)*
+    bos create *
+    bos delete
+    bos install
+    bos uninstall
+
+   specific exceptions are made for functionality that "bos salvage"
+   uses:
+
+    a cron bnode who's name is "salvage-tmp", time is now, and command
+    begins with "/usr/afs/bin/salvager" may be created. This bnode 
+    deletes itself when complete, so no special "delete" support is needed. 
+    This functionality may be removed in the future if a "Salvage" RPC is 
+    implimented.
+
+    The file with the exact path /usr/afs/logs/SalvageLog may be fetched,
+    since that is how bos salvage [...] -showlog is implimented.
+
+    Restricted mode is enabled using a new bos command (bos setrestricted)
+    or bossever command line switch (bosserver -restricted). Restricted
+    mode can be disabled by a) sending the bosserver process a SIGFPE (which
+    will then allow restricted operations until the next restart or
+    setrestricted command) or b) editing /usr/afs/local/BosConfig 
+    (or BosConfig.new), and restarting the bosserver.
+
+** The bos UserList of trusted administrators can now contain
+   cross-realm Kerberos principals.
+
+** udebug now takes --server not --servers.
+
+** Several error messages have been improved to include volume
+   numbers.
+
+** Several new ports have been included for UNIX platforms: Darwin
+   (ppc_darwin_12 and ppc_darwin_13), Linux 2.4 (i386_linux24), Linux on
+   the Powerpc (ppc_linux22 and ppc_linux24), Linux on the Sparc
+   (sparc_linux22, sparc64_linux22 and sparc64_linux24) .
+
+** Incomplete FreeBSD and Alpha Linux ports are included.  The
+   FreeBSD port has a working server and the Alpha Linux port has a
+   partially working client.
+
+** A native client for Windows 95/98/ME has been added to the distribution.
+   With this program, a gateway machine is no longer required for Windows 9x
+   to access AFS files.  One drive letter will be created on your machine by
+   default - Z:.  The Z: drive will be the root of the AFS tree, allowing you
+   to browse all sites that have AFS servers available.  Additional drive
+   letters can be defined for other AFS directories.  A Windows Explorer
+   shell extension is included that allows you to right click on items
+   within an AFS tree to bring up an "AFS" menu item and perform various
+   operations on a file or directory.  The most useful item is "Access
+   Control Lists", which allows you to view and edit the permissions of a
+   particular directory.  Command line tools are also available in the
+   install directory.  These commands include klog, unlog, tokens, kpasswd,
+   symlink, fs and pts.  The installable includes a readme file that contains
+   more information on how to use the client program and known issues.
+
+** support for large caches in afsd.  Cachefiles are stored in
+   subdirectories.  The default is 2048 files per subdirectory, which
+   should work fine in most situations.  You can use the new afsd
+   option -files_per_subdir to change this number.  Note that the first
+   time you run afsd with this patch, your cachefiles will get moved
+   into subdirectories.  If you subsequently run an older version of
+   afsd, you will lose all your cached files.

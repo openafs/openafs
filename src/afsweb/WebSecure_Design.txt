@@ -1,0 +1,138 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+			AFS WEB SECURE DESIGN DOCUMENT
+
+
+Functionality (common to both Servers)
+
+Any URL beginning with /afs is handled by the plug-in. If a username and 
+password accompanies the request then the plug-in attempts to authenticate 
+the user with AFS and uses that token for serving the request. 
+However in the absense of any Authentication header it attempts to serve 
+the request as it normally would (without the plug-in). If the request 
+returns an OK status, the document is served as is. If it returns HTTP 
+status FORBIDDEN, then the plug-in responds with an AUTHENTICATION_REQUIRED 
+response with a part of the URL giving the /afs/<cell_name> as the part of
+the WWW-Authenticate header.
+
+
+Netscape Enterprise Server Plug-in
+
+The Netscape Server is multithreaded (each incoming HTTP request is 
+handled by a thread). This design led to the requirement of per thread 
+authentication credentials for AFS, (without which there would be one common 
+token for all the threads handling requests for possibly different users).
+Since the AFS kernel cache manager only provides per process authentication 
+credentials (using Process Authentication Groups or PAG's), the plug-in 
+required a user-space cache manager. Within this user space cache manager 
+a data structure stores the authentication credentials in a manner similar 
+to PAG's (first two bits used). The user space cache manager provides the 
+capability of per thread authentication required for the Netscape Server. 
+
+
+The Netscape Server API provides an initialization routine using which the
+user space cache manager is started up. Unlike the Apache Server plug-in, the
+Netscape AFS Web Secure Server does not have to be on an AFS client machine.
+Configuration files permit the administrator to specify disk cache directories
+other than that used by any other cache managers. Therefore it is possible
+to have more than one user space cache manager running on the same machine 
+along with a kernel cache manager.
+
+The configuration allows the administrator to specify what URL it should
+look for files in AFS. Tokens for user credentials are obtained and cached
+in the user-space cache manager, which essentially is a port of the kernel 
+cache manager into user-space.
+
+
+
+Apache Server Module
+
+The Apache Server software provides an API for adding modules to the web server
+and for creating handlers for requests. AFS Web Secure for Apache is built as
+a standard Apache module (mod_afs.c) along with a library (libapacheafs.a) and
+two binaries (weblog_starter and weblog).
+
+The web server is not multithreaded but each request is served by child 
+processes (the number of which is configurable). AFS Authentication requires
+each child process to communicate with the weblog process over a UNIX pipe
+(file locking is used to provide exclusive access to the pipe). The child
+processes send authentication credentials (username, password and cellname)
+to the weblog process which authenticates the user with AFS using the 
+ka_AuthenticateUserGeneral system call (as in klog). Once an AFS token is 
+obtained it gets the token fro the cache manager using the lpioctl system
+call and sends the token back to the child process that requested it.
+Note that since AFS permits one token per cell per PAG, it is essential for
+each of the child processes to be in a unique PAG. The lsetpag system call
+is used on startup to ensure each child process and the weblog process  
+belong to a unique PAG. Once the child process obtains the token from the 
+weblog process it sets it using the lpioctl system call to set a token. It
+can then access files in AFS with the appropriate ACL's.
+
+Caching of tokens is done at two levels - the weblog process caches all tokens
+for all user credentials that it recieves from all Apache child processes. 
+Each child process in turn caches the credentials it recieves. Token times
+are configurable using the SetAFSCacheExpiration directive. The kernel cache
+manager may cache tokens for the time specified using the SetAFSTokenExpiration
+directive. This is similar to using klog -lifetime <time>. 
+
+The sequence of events for AFS authentication is :
+
+On startup the web-server creates two pipes and spawns the weblog_starter 
+process (nanny process to watch over the weblog process and restart it or log
+an error in case it dies), which in turn starts up the weblog process with
+the pipes' file descriptors (inherited) as command line parameters.
+
+Apache Server Process recieves request and hands it to a child process
+
+Child process checks to see if request should be handled by Web Secure
+(using a configurable parameter set using the SetAFSLocation directive)
+
+If Authentication credentials accompany the request, the child process checks
+its local cache for a matching (username, password, cellname, checksum) token.
+If one is found it sets the token using lpioctl and attempts to serve the 
+request normally. If no token is found in the local cache, it sends a request
+to the weblog process over the pipe (again inherited) consisting of a username
+password and cellname after locking the pipe for exclusive access. The weblog
+process checks it's own cache or obtains a token after authentication if 
+the cache lookup fails, and sends the token back to the child process which 
+caches it and sets it (lpioctl).
+
+The child process then serves the document normally.
+
+All the web server-side communication and system calls are in the 
+libapacheafs.a library, except for the "hook" to plug-in to the apache source 
+which is in mod_afs.c for which the source code must be provided. The library
+libapacheafs.a consists of the following object files:
+
+apache_afs_plugin.o - Initialization routines - interface to calls in 
+		      apache_afs_client.o. Lies in between mod_afs.o and
+		      apache_afs_client.o. 
+		  
+apache_afs_client.o - Apache child process functionality for obtaining
+		      the user credentials from the HTTP request, getting
+		      and caching AFS tokens, communicating with the weblog
+		      process.
+
+apache_afs_utils.o  - wrapper around pioctl and setpag system calls and 
+		      debugging utilities common to both weblog and apache plug
+		      in.
+
+apache_afs_cache.o  - token caching routines common to weblog and apache 
+		      plug-in
+
+In order to use the pioctl and setpag system calls the web server binary must
+link to libsys.a which is usually in /usr/afsws/lib/afs/ on AFS client machines
+
+
+
+
+
+
+
+
+

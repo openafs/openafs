@@ -1,0 +1,90 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for configuration of an AFS client
+#
+
+sub clientconfig {
+  my($cachefile, $cellfile, $dbfile, $replaced);
+  my($afsroot, $cachedir, $cachesize, $cellname);
+  my($config, $different, $line)
+  &ErrorsAreFatal(1);
+  &CreateDir("/usr/vice/etc");
+  $cachefile = "/usr/vice/etc/cacheinfo";
+  $cellfile = "/usr/vice/etc/ThisCell";
+  $dbfile = "/usr/vice/etc/CellServDB";
+
+  # Create a new cacheinfo file if it does not already exist
+  if (! -r $cachefile) {
+    $afsroot = $Configuration{"AFSROOT"};
+    $cachedir = $Configuration{"CACHEDIR"};
+    $cachesize = $Configuration{"CACHESIZE"};
+    &ErrorMsg("AFSROOT not defined") if ($afsroot eq "");
+    &ErrorMsg("CACHEDIR not defined") if ($cachedir eq "");
+    &ErrorMsg("CACHESIZE not defined") if ($cachesize eq "");
+    $config = "$afsroot:$cachedir:$cachesize";
+    
+    &CreateDir($cachedir);
+    
+    &CreateDir($afsroot);
+    # the next 2 blocks of code will be used later when config
+    # parameters can be passed through the GUI to override the
+    # defaults
+    if (-r $cachefile) {
+      open(CONFIG, "$cachefile");
+      $replaced = "$cachefile.old";
+      chomp($line = <CONFIG>);
+      $different = ($line ne $config);
+      close CONFIG;
+    }
+    if (($replaced && $different) || !$replaced) {
+      &VPrint("Creating new $cachefile");
+      unlink($replaced) if ($replaced);
+      rename($cachefile, $replaced) if ($replaced);
+      open(CONFIGNEW, ">$cachefile") || &ErrorMsg("Can't open config file", 
+						  $cachefile);
+      print CONFIGNEW "$config\n";
+      close CONFIGNEW;
+    } else {
+      &VPrint("$cachefile already created");
+    } 
+  }
+  $replaced = $different = 0;
+
+  # create a new ThisCell file
+  $cellname = $Configuration{"CELLNAME"};
+  &ErrorMsg("CELLNAME not defined") if ($cellname eq "");
+
+  if (-r $cellfile) {
+    open(CELL, "$cellfile");
+    $replaced = "$cellfile.old";
+    chomp($line = <CELL>);
+    $different = ($line ne $cellname);
+    close CELL;
+  }
+  if (($replaced && $different) || !$replaced) {
+    &VPrint("Creating new $cellfile");
+    unlink($replaced) if ($replaced);
+    rename($cellfile, $replaced) if ($replaced);
+    open(CELLNEW, ">$cellfile") || &ErrorMsg("Can't open cell file", 
+						 $cellfile);
+    print CELLNEW "$cellname\n";
+    close CELLNEW;
+  } else {
+    &VPrint("$cellfile already created");
+  } 
+
+  # create a new CellServDB file
+  $cellservdb = $Configuration{CELLSERVDB};
+  &ErrorMsg("CELLSERVDB not defined") if ($cellservdb eq "");
+  &Copy($cellservdb, $dbfile);
+}
+
+
+  
+
+  

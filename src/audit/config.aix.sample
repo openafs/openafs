@@ -1,0 +1,51 @@
+* Copyright 2000, International Business Machines Corporation and others.
+* All Rights Reserved.
+* 
+* This software has been released under the terms of the IBM Public
+* License.  For details, see the LICENSE file in the top-level source
+* directory or online at http://www.openafs.org/dl/license10.html
+
+* ----------------------------------------------------------------------
+* This file groups the afs audit events into classes. All of the
+* events are grouped into eight disjoint classes.
+* 	afsaudit	Events relevent to AFS auditing
+*       afsbudb		Events of the buserver
+*       afspts          Events of the ptserver
+* 	afsvols		Events of the volserver
+* 	afsauth		Events of the kaserver & other security related events
+*	afsfs		Events of the fs
+* 	afsbos		Events of the bosserver
+* 	afsvl		Events of the vlserver
+* Along with these events are 6 classes grouping events according 
+* to functionality.
+* 	afsauthent	Authentication & Identification Events
+* 	afssecurity	Security relevent events
+* 	afsprivilege	Events requiring privilege
+* 	afsobjects	Object creation/deletion
+* 	afsattributes	Attribute modification
+*	afsprocess	Process control
+* ----------------------------------------------------------------------
+* Classes of events.  These lines should be included after the classes
+* stanza ("classes:") within the "/etc/security/audit/config" file.
+* ----------------------------------------------------------------------
+	afsaudit = AFS_Aud_On,AFS_Aud_Off,AFS_Aud_EINVAL,AFS_Aud_Unauth,AFS_Aud_NoAFSId,AFS_Aud_UnknSec,AFS_Aud_NoCall,AFS_Aud_NoConn,AFS_Aud_NoHost
+	afsbudb = AFS_BUDB_Start,AFS_BUDB_Finish,AFS_BUDB_Exit,AFS_BUDB_AddVol,AFS_BUDB_CrDmp,AFS_BUDB_DelDmp,AFS_BUDB_LstDmp,AFS_BUDB_DelTpe,AFS_BUDB_DelVDP,AFS_BUDB_FndCln,AFS_BUDB_FndDmp,AFS_BUDB_FndLaD,AFS_BUDB_FinDmp,AFS_BUDB_FinTpe,AFS_BUDB_GetDmp,AFS_BUDB_GetTpe,AFS_BUDB_GetVol,AFS_BUDB_UseTpe,AFS_BUDB_GetTxt,AFS_BUDB_GetTxV,AFS_BUDB_SavTxt,AFS_BUDB_FrALck,AFS_BUDB_FreLck,AFS_BUDB_GetIId,AFS_BUDB_GetLck,AFS_BUDB_DBVfy,AFS_BUDB_DmpDB,AFS_BUDB_RstDBH,AFS_BUDB_TGetVr,AFS_BUDB_TDmpHa,AFS_BUDB_TDmpDB,AFS_BUDB_AppDmp,AFS_BUDB_FnLTpe
+	afspts = AFS_PTS_Start,AFS_PTS_Finish,AFS_PTS_Exit,AFS_PTS_INewEnt,AFS_PTS_NewEnt,AFS_PTS_LstEnt,AFS_PTS_ChgEnt,AFS_PTS_SetFEnt,AFS_PTS_LstOwn,AFS_PTS_LstEle,AFS_PTS_LstMax,AFS_PTS_SetMax,AFS_PTS_Del,AFS_PTS_AdToGrp,AFS_PTS_RmFmGrp,AFS_PTS_IsMemOf,AFS_PTS_NmToId,AFS_PTS_IdToNm,AFS_PTS_GetCPS,AFS_PTS_GetCPS2,AFS_PTS_GetHCPS,AFS_PTS_WheIsIt,AFS_PTS_DmpEnt
+	afsvols = AFS_VS_Start,AFS_VS_Finish,AFS_VS_Exit,AFS_VS_TransCr,AFS_VS_EndTran,AFS_VS_CrVol,AFS_VS_DelVol,AFS_VS_NukVol,AFS_VS_Dump,AFS_VS_SigRst,AFS_VS_Restore,AFS_VS_Forward,AFS_VS_Clone,AFS_VS_ReClone,AFS_VS_SetForw,AFS_VS_GetFlgs,AFS_VS_SetFlgs,AFS_VS_GetName,AFS_VS_GetStat,AFS_VS_SetIdTy,AFS_VS_SetDate,AFS_VS_ListPar,AFS_VS_ParInf,AFS_VS_ListVol,AFS_VS_XLstVol,AFS_VS_Lst1Vol,AFS_VS_XLst1Vl,AFS_VS_GetNVol,AFS_VS_Monitor,AFS_VS_SetInfo
+	afsauth = AFS_KAA_ChPswd,AFS_KAA_AuthO,AFS_KAA_Auth,AFS_KAT_GetTkt,AFS_KAT_GetTktO,AFS_KAM_CrUser,AFS_KAM_DelUser,AFS_KAM_SetPswd,AFS_KAM_LstEnt,AFS_KAM_GetPswd,AFS_KAM_Dbg,AFS_KAM_SetFld,AFS_KAM_GetStat,AFS_KAM_GetEnt,AFS_KAM_GRnKey,AFS_UnAth,AFS_UseOfPriv,AFS_Unlock,AFS_UDPAuth,AFS_UDPGetTckt,AFS_RunNoAuth,AFS_NoAuthDsbl,AFS_NoAuthEnbl
+	afsfs = AFS_SRX_FchData,AFS_SRX_FchACL,AFS_SRX_BFchSta,AFS_SRX_FchStat,AFS_SRX_StData,AFS_SRX_StACL,AFS_SRX_StStat,AFS_SRX_RmFile,AFS_SRX_CrFile,AFS_SRX_RNmFile,AFS_SRX_SymLink,AFS_SRX_Link,AFS_SRX_MakeDir,AFS_SRX_RmDir,AFS_SRX_SetLock,AFS_SRX_ExtLock,AFS_SRX_RelLock,AFS_SRX_SetVolS,AFS_Priv,AFS_PrivSet
+	afsbos = AFS_BOS_SetReSt,AFS_BOS_Exec,AFS_BOS_UnInst,AFS_BOS_Inst,AFS_BOS_SetCell,AFS_BOS_AddHst,AFS_BOS_DelHst,AFS_BOS_AddKey,AFS_BOS_LstKey,AFS_BOS_LstKeyU,AFS_BOS_DelKey,AFS_BOS_SetNoAu,AFS_BOS_AddSUsr,AFS_BOS_LstSUsr,AFS_BOS_DelSUsr,AFS_BOS_CreBnod,AFS_BOS_DelBnod,AFS_BOS_StartAl,AFS_BOS_ReStAll,AFS_BOS_ShtdAll,AFS_BOS_WaitAll,AFS_BOS_ReStart,AFS_BOS_ReBos,AFS_BOS_ReBosIn,AFS_BOS_SetTSta,AFS_BOS_SetStat,AFS_BOS_PrnLog,AFS_BOS_GetLog,AFS_BOS_DoExec,AFS_BOS_StpProc
+	afsvl = AFS_VL_CreEnt,AFS_VL_DelEnt,AFS_VL_GetNVlID,AFS_VL_RepEnt,AFS_VL_UpdEnt,AFS_VL_SetLck,AFS_VL_RelLck   
+	afsauthent = AFS_KAA_Auth,AFS_KAT_GetTkt,AFS_UDPAuth,AFS_UDPGetTckt
+	afssecurity = AFS_Aud_On,AFS_Aud_Off,AFS_Aud_Unauth,AFS_Aud_NoAFSId,AFS_Aud_UnknSec,AFS_Aud_NoCall,AFS_Aud_NoConn,AFS_Aud_NoHost,AFS_BOS_SetCell,AFS_BOS_AddHst,AFS_BOS_DelHst,AFS_BOS_AddKey,AFS_BOS_DelKey,AFS_BOS_SetNoAu,AFS_BOS_AddSUsr,AFS_BOS_DelSUsr,AFS_KAA_ChPswd,AFS_KAA_AuthO,AFS_KAA_Auth,AFS_KAT_GetTkt,AFS_KAT_GetTktO,AFS_KAM_CrUser,AFS_KAM_DelUser,AFS_KAM_SetPswd,AFS_KAM_LstEnt,AFS_KAM_GetPswd,AFS_KAM_Dbg,AFS_KAM_SetFld,AFS_KAM_GetStat,AFS_KAM_GetEnt,AFS_KAM_GRnKey,AFS_UnAth,AFS_Unlock,AFS_UDPAuth,AFS_UDPGetTckt,AFS_RunNoAuth,AFS_NoAuthDsbl,AFS_NoAuthEnbl
+	afsprivilege = AFS_BUDB_Start,AFS_BUDB_AddVol,AFS_BUDB_CrDmp,AFS_BUDB_AppDmp,AFS_BUDB_FnLTpe,AFS_BUDB_DelDmp,AFS_BUDB_DelTpe,AFS_BUDB_DelVDP,AFS_BUDB_FndCln,AFS_BUDB_FndDmp,AFS_BUDB_FndLaD,AFS_BUDB_FinDmp,AFS_BUDB_FinTpe,AFS_BUDB_GetDmp,AFS_BUDB_GetTpe,AFS_BUDB_GetVol,AFS_BUDB_UseTpe,AFS_BUDB_GetTxt,AFS_BUDB_GetTxV,AFS_BUDB_SavTxt,AFS_BUDB_FrALck,AFS_BUDB_FreLck,AFS_BUDB_GetIId,AFS_BUDB_GetLck,AFS_BUDB_DBVfy,AFS_BUDB_DmpDB,AFS_BUDB_RstDBH,AFS_BUDB_TGetVr,AFS_BUDB_TDmpHa,AFS_BUDB_TDmpDB,AFS_PTS_Start,AFS_VS_Start,AFS_VS_CrVol,AFS_VS_DelVol,AFS_VS_NukVol,AFS_VS_SigRst,AFS_VS_Restore,AFS_VS_Forward,AFS_VS_Clone,AFS_VS_ReClone,AFS_VS_SetForw,AFS_VS_SetFlgs,AFS_VS_SetIdTy,AFS_VS_SetDate,AFS_VS_SetInfo,AFS_KAM_CrUser,AFS_KAM_DelUser,AFS_KAM_SetFld,AFS_UseOfPriv,AFS_NoAuthDsbl,AFS_NoAuthEnbl,AFS_Priv,AFS_PrivSet,AFS_BOS_SetReSt,AFS_BOS_Exec,AFS_BOS_UnInst,AFS_BOS_Inst,AFS_BOS_SetCell,AFS_BOS_AddHst,AFS_BOS_DelHst,AFS_BOS_AddKey,AFS_BOS_LstKey,AFS_BOS_LstKeyU,AFS_BOS_DelKey,AFS_BOS_SetNoAu,AFS_BOS_AddSUsr,AFS_BOS_DelSUsr,AFS_BOS_CreBnod,AFS_BOS_DelBnod,AFS_BOS_StartAl,AFS_BOS_ReStAll,AFS_BOS_ShtdAll,AFS_BOS_WaitAll,AFS_BOS_ReStart,AFS_BOS_ReBos,AFS_BOS_ReBosIn,AFS_BOS_SetTSta,AFS_BOS_SetStat,AFS_BOS_PrnLog,AFS_BOS_GetLog,AFS_BOS_DoExec,AFS_BOS_StpProc,AFS_VL_CreEnt,AFS_VL_DelEnt,AFS_VL_RepEnt,AFS_VL_UpdEnt,AFS_VL_SetLck,AFS_VL_RelLck
+	afsobjects = AFS_SRX_RmFile,AFS_SRX_CrFile,AFS_SRX_RNmFile,AFS_SRX_SymLink,AFS_SRX_Link,AFS_SRX_MakeDir,AFS_SRX_RmDir,AFS_VS_CrVol,AFS_VS_DelVol,AFS_VS_NukVol,AFS_VS_Clone,AFS_BUDB_CrDmp,AFS_BUDB_DelDmp,AFS_VS_Restore,AFS_VS_Forward,AFS_VS_ReClone,AFS_VS_SetInfo,AFS_SRX_StData,AFS_BOS_PrnLog,AFS_BOS_UnInst,AFS_BOS_Inst
+	afsattributes = AFS_SRX_StACL,AFS_SRX_StStat,AFS_SRX_RNmFile,AFS_SRX_SetVolS,AFS_VS_SigRst,AFS_VS_SetForw,AFS_VS_SetFlgs,AFS_VS_SetIdTy,AFS_VS_SetDate,AFS_VS_SetInfo,AFS_BUDB_AddVol,AFS_BUDB_DelTpe,AFS_BUDB_DelVDP,AFS_BUDB_UseTpe,AFS_BUDB_SavTxt,AFS_VL_CreEnt,AFS_VL_DelEnt,AFS_VL_RepEnt,AFS_VL_UpdEnt,AFS_BOS_SetReSt,AFS_BOS_UnInst,AFS_BOS_Inst,AFS_BOS_SetTSta,AFS_BOS_SetStat
+	afsprocess = AFS_PTS_Start,AFS_PTS_Finish,AFS_PTS_Exit,AFS_VS_Start,AFS_VS_Finish,AFS_VS_Exit,AFS_BOS_SetReSt,AFS_BOS_Exec,AFS_BOS_StartAl,AFS_BOS_ReStAll,AFS_BOS_ShtdAll,AFS_BOS_WaitAll,AFS_BOS_ReStart,AFS_BOS_ReBos,AFS_BOS_ReBosIn,AFS_BOS_SetTSta,AFS_BOS_SetStat,AFS_BOS_DoExec,AFS_BOS_StpProc,AFS_BOS_CreBnod,AFS_BOS_DelBnod
+
+* ----------------------------------------------------------------------
+* Define/add the appropriate classes of AFS events to the root user.
+* This line appears after the users stanza ("users:") within the 
+* "/etc/security/audit/config" file.
+* ----------------------------------------------------------------------
+	root = afsauthent,afssecurity,afsprivilege,afsobjects,afsattributes,afsprocess

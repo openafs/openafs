@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_INTERACTIVE" HREF="auarf002.htm#ToC_202">kas interactive</A></H2>
+<P><STRONG>目的</STRONG>
+<P>対話モードに切り替えます。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas interactive</B> [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+                [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]
+                [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  
+                [<B>-noauth</B>]  [<B>-help</B>]
+      
+<B>kas i</B> [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+      [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-n</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas interactive</B> コマンドは、コマンドの発行者と対話式セッションを確立します。デフォルトでは、コマンド・インタープリターは、ローカルの <B>/usr/vice/etc/ThisCell</B> ファイルに指定されているセルで、ローカルの <B>/usr/vice/etc/CellServDB</B> ファイルに指定されているすべての認証サーバーに認証されてローカル・ファイル・システムにログオンしているユーザーと、認証接続を確立します。代替 ID セル名、または認証サーバーのリストを指定する場合には、
+<B>-admin_username</B>、<B>-cell</B>、または <B>-servers</B> 引き数をそれぞれ指定してください。発行者または認証サーバーのチケット獲得サービスの最大チケット存続時間が短くない限り、対話モードの存続時間は、6 時間継続します。
+<P><B>kas interactive</B> コマンド以外に、対話モードに入る方法が 2 つあります。
+<OL TYPE=1>
+<LI>シェル・プロンプトで操作コードを付けずに <B>kas</B> と入力します。必要であれば、<B>-admin_username</B>、
+<B>-password_for_admin</B>、
+<B>-cell</B>、および <B>-servers</B> 引き数の 1 つ以上を組み合わせて使用してください。
+</LI><LI>指示されたセルで、ローカルの
+<B>/usr/vice/etc/CellServDB</B> ファイルにリストされている認証サーバーと指定された ID で接続を確立する場合には、
+<B>kas</B> コマンドの後に、ユーザー名、セル名を
+<B>@</B> 記号で分けて入力してください (例 : <B>kas admin@abc.com</B>)。必要であれば、<B>-servers</B> 引き数を指定して、該当するセルに所属する認証サーバー・マシンの代替リストを指定してください。
+</LI></OL>
+<P>対話モードに入ると、次のようになります。
+<UL>
+<LI>システム (シェル) プロンプトの代わりに、<TT>ka></TT> プロンプトが表示されます。このプロンプトでは、操作コードを入力してください。(コマンド・セット名 <B>kas</B> は不要です。)
+</LI><LI>コマンド・インタープリターは、発行者のパスワードを要求するプロンプトを表示しません。
+<P>
+<P>対話モードに入るときに指定した発行者の ID およびパスワード、関連するセル、および一連の認証サーバー・マシンは、このセッションで発行されるすべてのコマンドに適用されます。
+<B>(kas) noauthentication</B> コマンドを使用しない限り、これらの情報はセッションが終了するまで変更できません。このコマンドを使用すると、現在の認証接続を非認証接続に変更することができます。対話モード時に発行されたコマンドで、
+<B>-admin_username</B>、
+<B>-password_for_admin</B>、
+<B>-cell</B>、および <B>-servers</B> 引き数が使用された場合には、これらの引き数は無視されます。
+</LI></UL>
+<P>認証サーバーと非認証接続を確立する場合には、
+<B>-noauth</B> フラグを使用するか、または間違ったパスワードを指定してください。ただし、各認証サーバー・マシンで許可検査が使用不可にならない限りは、このようなセッションで特権操作を実行することはできません。
+<P>現在の認証接続を終了し、非認証接続を確立するには、
+<B>(kas) noauthentication</B> コマンドを発行してください。対話モードのまま通常のシェル・プロンプトに戻るには、
+<B>(kas) quit</B> コマンドを発行してください。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例は、特権ユーザー <B>admin</B> として対話モードに入ったユーザーを表しています。
+<PRE>   % <B>kas interactive admin</B>
+   Password for admin: <VAR>admin_password</VAR>
+   ka>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf191.htm#HDRKAS_NOAUTH">kas noauthentication</A>
+<P><A HREF="auarf192.htm#HDRKAS_QUIT">kas quit</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf187.htm">前ページ</A> &#124; <A HREF="auarf189.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

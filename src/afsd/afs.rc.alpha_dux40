@@ -1,0 +1,175 @@
+#!/bin/sh
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# afs.rc: rc script for AFS on OSF/1 platforms
+# This script assumes that you have AFS built into the kernel.
+# This script should run after DCE, but before any long running programs
+# start which use authentication. That is because we will modify the
+# matrix.conf file.
+#
+# Install this script as /sbin/init.d/afs.rc
+# then make links like this:
+# ln -s ../init.d/afs.rc /sbin/rc0.d/K66afs
+# ln -s ../init.d/afs.rc /sbin/rc3.d/S67afs 
+#
+CONFIG=/usr/vice/etc/config
+AFSDOPT=$CONFIG/afsd.options
+PACKAGE=$CONFIG/package.options
+
+LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+
+if [ -f $AFSDOPT ]; then
+    OPTIONS=`cat $AFSDOPT`
+else
+    OPTIONS=$MEDIUM
+fi
+
+# Need the commands ps, awk, kill, sleep
+PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin
+
+killproc() {            # kill the named process(es)
+	awkfield2='$2'
+        pid=`ps -ef | awk "/$1/ && ! /awk/ {print $awkfield2}"`
+        [ "$pid" != "" ] && kill -KILL $pid
+}
+
+case $1 in
+'start')
+
+#
+# Start the AFS server processes if a bosserver exists
+#
+
+if [ -x /usr/afs/bin/bosserver ]; then
+	echo "Starting AFS Server processes"
+	/usr/afs/bin/bosserver
+	OPTIONS="$OPTIONS -nosettime"
+	sleep 30
+fi
+
+#
+# Check that all of the client configuration files exist
+#
+
+for file in /usr/vice/etc/afsd /usr/vice/etc/cacheinfo \
+	    /usr/vice/etc/ThisCell /usr/vice/etc/CellServDB
+do
+	if [ ! -f ${file} ]; then
+		echo "${file} does not exist. Not starting AFS client."
+		exit 1
+	fi
+done
+
+#
+# Check that the root directory for AFS (/afs) 
+# and the cache directory (/usr/vice/cache) both exist
+#
+
+for dir in `awk -F: '{print $1, $2}' /usr/vice/etc/cacheinfo`
+do
+	if [ ! -d ${dir} ]; then
+		echo "${dir} does not exist. Not starting AFS client."
+		exit 2
+	fi
+done
+
+echo "Starting afsd"
+/usr/vice/etc/afsd $OPTIONS
+
+#
+# Run package to update the disk
+#
+if [ -f /usr/afsws/etc/package -a -f $PACKAGE ]; then
+	/usr/afsws/etc/package -v -o `cat $PACKAGE` > /dev/console 2>&1
+case $? in
+0)
+	(echo "Package completed successfully") > /dev/console 2>&1
+	date > /dev/console 2>&1
+	;;
+4)
+	(echo "Rebooting to restart system") > /dev/console 2>&1
+	sync
+	/etc/reboot
+	;;
+*)
+	(echo "Package update failed; continuing") > /dev/console 2>&1
+	;;
+esac
+
+fi
+
+#
+# Start AFS inetd services
+# (See the AFS Command Ref. for notes on the proper configuration of inetd.afs)
+#
+if [ -f /usr/sbin/inetd.afs -a -f /etc/inetd.conf.afs ]; then
+	/usr/sbin/inetd.afs /etc/inetd.conf.afs
+fi
+
+# Let AFS get started, then test for the mount.
+i=30
+while test $i -gt 0; do
+	if mount | fgrep AFS > /dev/null
+	then
+		break
+	fi
+
+	sleep 1
+	i=`expr $i - 1`
+done
+
+if [ $i -eq 0 ]; then
+	echo "AFS failed to start. Not setting AFS SIA mechanism."
+	exit 1
+fi
+
+#
+# Update SIA matrix if /usr/shlib/libafssiad.so is present. 
+# Note that this runs *after* DCE so that we're sure to be after DCE in
+# the matrix.
+#
+if [ -f /usr/shlib/libafssiad.so ]; then
+	if [ -f /etc/sia/matrix.conf ]; then
+		echo Setting SIA matrix
+		sed -e 's:(AFS,/usr/shlib/libafssiad.so)[^(]*::g; s:,$::; s:(BSD,libc.so):(AFS,/usr/shlib/libafssiad.so),&:; s:(OSFC2,libsecurity.so):(AFS,/usr/shlib/libafssiad.so),&:' /etc/sia/matrix.conf > /etc/sia/AFS_matrix.conf
+		mv /etc/sia/matrix.conf /etc/sia/AFS_matrix.conf.orig
+		ln -s AFS_matrix.conf /etc/sia/matrix.conf
+	else
+		echo No matrix.conf file, not setting AFS SIA mechanism.
+	fi
+else
+	echo No /usr/shlib/libafssiad.so library, not setting AFS SIA mechanism.
+fi
+
+echo ;;
+
+'stop')
+
+#
+# Stop the AFS inetd and server processes
+# Note that the afsd processes cannot be killed
+# Digital Unix 4.0 will reset the matrix.conf upon reboot to bsd_matrix.conf
+
+echo "Killing inetd.afs"
+killproc inetd.afs
+
+bosrunning=`ps -ef | awk '/bosserver/ && ! /awk/'`
+if [ "${bosrunning}" != "" ]; then
+	echo "Shutting down AFS server processes"
+	/usr/afs/bin/bos shutdown localhost -localauth -wait
+	echo "Killing AFS bosserver"
+	killproc bosserver
+fi
+
+echo ;;
+
+*) 	echo "Invalid option supplied to $0"
+	exit 1;;
+esac

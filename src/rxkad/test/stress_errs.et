@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table RKS
+  ec RXKST_PROCESSCREATED, "process created, not yet started"
+  ec RXKST_PROCESSRUNNING, "process running, no error"
+  ec RXKST_BADARGS, "arguments illegal or inconsistent"
+  ec RXKST_BADINPUTSUM, "incorrect input checksum"
+  ec RXKST_BADOUTPUTSUM, "incorrect output checksum"
+  ec RXKST_READSHORT, "unexpected number of bytes returned by rx_Read"
+  ec RXKST_WRITESHORT, "unexpected number of bytes sent by rx_Write"
+  ec RXKST_UNAUTH, "connection unauthenticated"
+  ec RXKST_BADKVNO, "unknown key version number"
+  ec RXKST_BADCLIENT, "incorrect client name/instance/cell"
+  ec RXKST_INCFAILED, "increment operation produced wrong value"
+  ec RXKST_TIMESKEW, "clock on client and server too far apart"
+  ec RXKST_NEWCONNFAILED, "couldn't make a new connection"
+  ec RXKST_BADCALLNUMBERS, "connection has unexpected call numbers"
+  ec RXKST_NODUPLICATECALL, "failed to detect duplicate call"
+  ec RXKST_NOBADCKSUM, "failed to detect bad cksum"
+  ec RXKST_NOCONNERROR, "whole connection is not in error"
+  ec RXKST_CHALLENGEORACLE, "idle connection is acting as a challenge oracle"
+end

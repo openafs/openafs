@@ -1,0 +1,24 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for database server processes
+#
+
+sub dbserver {
+&CreateDir ("/usr/afs/db", "/usr/afs/etc", "/usr/afs/local", "/usr/afs/logs");
+&ErrorsAreFatal(1);
+&CreateDir ("/usr/afs/bin");
+&ErrorsAreFatal(0);
+&Copy ("root.server/usr/afs/bin/bosserver", "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/kaserver",  "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/vlserver",  "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/ptserver",  "/usr/afs/bin");
+&Chmod(0744, "/usr/afs/bin/bosserver");
+&Chmod(0744, "/usr/afs/bin/kaserver");
+&Chmod(0744, "/usr/afs/bin/vlserver");
+&Chmod(0744, "/usr/afs/bin/ptserver");
+}

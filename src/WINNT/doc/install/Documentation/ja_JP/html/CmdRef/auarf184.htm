@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRKAS_DELETE" HREF="auarf002.htm#ToC_198">kas delete</A></H2>
+<A NAME="IDX5078"></A>
+<A NAME="IDX5079"></A>
+<A NAME="IDX5080"></A>
+<A NAME="IDX5081"></A>
+<P><STRONG>目的</STRONG>
+<P>認証データベースから項目を削除します。
+<P><STRONG>構文</STRONG>
+<PRE><B>kas delete -name</B> &lt;<VAR>name of user</VAR>>  
+           [<B>-admin_username</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+           [<B>-password_for_admin</B> &lt;<VAR>admin password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell name</VAR>>]  
+           [<B>-servers</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  
+           [<B>-noauth</B>]  [<B>-help</B>]
+   
+<B>kas d -na</B> &lt;<VAR>name of user</VAR>>  [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>] 
+      [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+      [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>] 
+     
+<B>kas rm -na</B> &lt;<VAR>name of user</VAR>>  [<B>-a</B> &lt;<VAR>admin principal to use for authentication </VAR>>]  
+       [<B>-p</B> &lt;<VAR>admin password</VAR>>]  [<B>-c</B> &lt;<VAR>cell name</VAR>>]  
+       [<B>-s</B> &lt;<VAR>explicit list of authentication servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]  
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>kas delete</B> コマンドは、
+<B>-name</B> 引き数によって指定されたユーザー項目を認証データベースから削除します。指定されたユーザーはログイン不能になり、指定されたサーバーはアクセス不能になります。(認証サーバーのチケット獲得サービス・モジュールには、サーバーのチケットに付けるキーがないためです。)
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>削除する認証データベース項目の名前を指定します。
+<P><DT><B>-admin_username
+</B><DD>コマンド実行時の認証サーバーによる認証で使用されるユーザー ID
+を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-password_for_admin
+</B><DD>コマンド発行者のパスワードを指定します。省略すると (推奨)、
+<B>kas</B> コマンド・インタープリターは、プロンプトを出して、パスワードの入力を要求します。入力したパスワードは表示されません。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-cell
+</B><DD>コマンドの実行を行うセルに名前を付けます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-servers
+</B><DD>接続確立時に使用させる認証サーバーを実行しているマシンの名前を指定します。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-noauth
+</B><DD>コマンドの発行者に非特権 ID <B>anonymous</B> を割り当てます。詳細については、<B>kas</B> の解説ページを参照してください。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>例</STRONG>
+<P>以下の例は、3 つのアカウントを削除するために対話モードに入った管理ユーザー <B>admin</B> です。
+<PRE>   % <B>kas</B>
+   Password for admin:
+   ka> <B>delete smith</B>
+   ka><B> delete pat</B>
+   ka> <B>delete terry</B>
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>発行者には、認証データベース項目で <TT>ADMIN</TT> フラグを設定させなければなりません。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf183.htm#HDRKAS_CREATE">kas create</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf183.htm">前ページ</A> &#124; <A HREF="auarf185.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>版本注意事項</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWBWIN\TEMP\idwt1035\awrns000.scr converted by idb2h R4.2    -->
+<!-- (359) ID Workbench Version (WINNT-WIN95) on 23 Feb 2000 at       -->
+<!-- 14:03:43                                                         -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
+<META HTTP-EQUIV="updated" CONTENT="Wed, 23 Feb 2000 14:03:40">
+<META HTTP-EQUIV="review" CONTENT="Fri, 23 Feb 2001 14:03:40">
+<META HTTP-EQUIV="expires" CONTENT="Sat, 23 Feb 2002 14:03:40">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>版本注意事項</H1>
+<HR><H1><A NAME="HDRSERVER" HREF="awrns002.HTM#ToC_46">AFS 伺服器版本注意事項</A></H1>
+<HR><H2><A NAME="Header_47" HREF="awrns002.HTM#ToC_47">簡介</A></H2>
+<P>本節包含 AFS for Windows 3.6 版之 AFS 伺服器元件的重要資訊。
+AFS 伺服器在 Windows NT 機器上執行 AFS 伺服器程序。Windows NT 機器上的 AFS 伺服器可架構成下列一或多種型式：
+「AFS 檔案伺服器」、「AFS 資料庫伺服器」、「AFS 備份伺服器」、以及「AFS
+系統控制伺服器」。
+<HR><H2><A NAME="Header_48" HREF="awrns002.HTM#ToC_48">AFS 伺服器安裝基本需求</A></H2>
+<P>您的系統必須符合下列硬體、軟體及管理權限基本需求，
+才能安裝 AFS for Windows 的 AFS 伺服器元件。
+<P><H3><A NAME="Header_49" HREF="awrns002.HTM#ToC_49">硬體</A></H3>
+<P>安裝 AFS 伺服器的硬體基本需求：
+<UL>
+<LI>80486/66 MHz（或更快）微處理器或 Pentium 等級微處理器的 PC
+<P>
+<P><I>建議：配備 Pentium 或更高微處理器等級的 PC</I>
+</LI><LI>至少 16 MB 的 RAM
+<P>
+<P><I>建議：32 MB 或更多的 RAM</I>
+</LI><LI>至少 20 MB 可用磁碟空間的硬碟
+</LI><LI>至少一個 NTFS 磁碟容體來存放 AFS 檔案系統資料。NTFS
+容體不可包含 Windows NT「資源回收筒」以外的任何資料或檔案，才能架構成一個 AFS 分割區。
+</LI></UL>
+<P><H3><A NAME="Header_50" HREF="awrns002.HTM#ToC_50">軟體</A></H3>
+<P>安裝 AFS 伺服器的軟體基本需求：
+<UL>
+<LI>Microsoft Windows NT 4.0 加上 Service Pack 4 或 Service Pack 5
+</LI></UL>
+<P><H3><A NAME="Header_51" HREF="awrns002.HTM#ToC_51">管理權限基本需求</A></H3>
+<P>您必須是 Windows 系統的本端<B>管理者</B>群組成員之一，
+才能夠安裝、架構及啟動 AFS 伺服器。
+<HR><H2><A NAME="Header_52" HREF="awrns002.HTM#ToC_52">產品注意事項</A></H2>
+<P>本節強調對 AFS for Windows 3.6 版之 AFS 伺服器元件重要的一般資訊。
+本節的內容包括此版次 AFS Clinet 提供的新功能和加強功能。
+<P><H3><A NAME="Header_53" HREF="awrns002.HTM#ToC_53">支援大於 2GB 的容體</A></H3>
+<P>AFS 容體是一群相關檔案的集合，這些檔案組織成一個易於管理的單元，
+且可輕易地在「檔案伺服器」機器之間移動，有助於網路上的資料流量平衡。
+每一個 AFS 容體有一個特定的配額。
+容體的配額代表資訊在容體中可佔用的最大磁碟空間。
+配額是以一個容體為基礎來設定，所以對於含有較多資料的容體，可以增加配額，
+對於不需要額外空間的容體，可以減少配額。AFS
+for Windows 3.6 版現在支援大於 2 GB 配額的容體。
+<P><H3><A NAME="Header_54" HREF="awrns002.HTM#ToC_54">所有 AFS for Windows 版本皆包含「系統控制伺服器」所用的加密常式</A></H3>
+<P>由於美國政府出口的限制放鬆，現在<I>所有</I>
+AFS for Windows 版本皆包含「系統控制伺服器」之「更新服務」所用的加密常式。
+以往，美國政府的法規禁止出口這些加密常式。
+因此，未執行美國 AFS 分送軟體的網站，無法使用「系統控制伺服器」來分送架構檔，因為這樣做會以不加密的方式傳輸機密性的系統資訊。
+現在，所有網站都可使用「系統控制伺服器」機器，將新版的 AFS 伺服器架構資訊分送給所有「AFS 檔案伺服器」機器。
+<P><H3><A NAME="Header_55" HREF="awrns002.HTM#ToC_55">AFS 伺服器電腦名稱必須符合名稱服務的主電腦名稱</A></H3>
+<P>AFS 伺服器機器的電腦名稱（出現在「網路」對話方塊<B>識別資料</B>標籤的<B>電腦名稱</B>欄位中），
+必須符合名稱服務（通常是「領域名稱服務」或 DNS）指派給電腦的主電腦名稱，
+名稱服務可將名稱對應到網際網路通信協定（IP）位址。例如，若已安裝 AFS 伺服器的機器具有電腦名稱
+<B>afsserver1</B>，且位於 <B>yourcompany.com</B> 領域內，
+則機器對應的 DNS 登錄必須是 <B>afsserver1.yourcompany.com</B>。
+<P><H3><A NAME="Header_56" HREF="awrns002.HTM#ToC_56">時鐘同步化</A></H3>
+<P>為了支援安全性和資料庫抄寫通信協定，所有執行 AFS 伺服器的機器都必須同步化。
+時間同步化軟體可從許多來源取得；例如，Microsoft 就在 Windows NT Server Resource Kit
+中提供 <B>timeserv</B> 時間同步化服務。
+<P><H3><A NAME="Header_57" HREF="awrns002.HTM#ToC_57">保護 AFS 伺服器機器</A></H3>
+<P>若已安裝 AFS 伺服器軟體的機器不安全
+（亦即，非管理人員能夠登入機器），
+我們極力建議根據環境和檔案系統類型，來適當地保護機器上的 AFS 伺服器軟體目錄和所有 AFS 分割區。
+不過，保護 AFS 伺服器機器時，請確定
+Windows NT 本端 <B>SYSTEM</B> principal 具有完整的權限來存取
+AFS 軟體和全部 AFS 分割區；否則將無法執行 AFS 程序。
+<P><H3><A NAME="Header_58" HREF="awrns002.HTM#ToC_58">關閉 AFS 檔案伺服器機器</A></H3>
+<P>在關閉作為 AFS 檔案伺服器的 Windows NT 機器之前，
+請先停止機器上的 AFS 檔案伺服器。
+<P>當在機器上啟動 AFS 檔案伺服器時，程序會建立一個援救檔。
+以手動方式停止「檔案伺服器」時，此援救檔會被移除。
+不過，若關閉 Windows NT 機器時，AFS 檔案伺服器仍在執行，則不會移除此援救檔。下次重新啟動機器時，
+「檔案伺服器」會注意到援救檔的存在，自動執行 Salvager。
+因為執行 Salvager 非常耗時，所以最好是在關機之前，
+先停止機器上的 AFS 檔案伺服器，以避免執行不必要執行的 Salvager 程序。
+<P>請使用下列其中一個程序，來關閉 Windows NT 機器上的 AFS 檔案伺服器。
+<P><UL>
+<LI>從 Windows NT「控制台」：
+<OL TYPE=1>
+<LI>按兩下<B>服務</B>圖示。出現「服務」對話方塊。
+</LI><LI>在<B>服務</B>清單中，選取 <B>IBM AFS 伺服器</B> 服務。
+</LI><LI>選取<B>停止</B>按鈕。出現一個訊息方塊，
+提示您確認是否要停止服務。選取<B>是</B>按鈕。
+<P>
+<P>機器上的 AFS 檔案伺服器就停止。
+</LI></OL>
+</LI><LI>從 Windows NT「指令提示」：
+<OL TYPE=1>
+<LI>輸入下列指令：
+<PRE>bos shutdown -server <VAR>machine_name</VAR> -wait
+</PRE>
+<P>
+<P>
+<P>其中，<I>machine_name</I> 是執行 AFS 檔案伺服器的
+Windows NT 機器名稱。
+</LI><LI>按下 &lt;<B>Enter</B>> 執行指令。
+</LI></OL>
+</LI></UL>
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>註:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">一般而言，當作 AFS 檔案伺服器執行的機器，關機只是為了執行預防性維護。
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_59" HREF="awrns002.HTM#ToC_59">發生伺服器問題時，取得故障傾出檔</A></H3>
+<P>建議您架構所有 AFS 伺服器機器，以便在發生伺服器問題時，建立一個故障傾出檔。
+技術支援人員在診斷伺服器問題時，此資訊非常重要。
+請查閱 Microsoft Windows NT 說明文件，其中說明如何架構
+Dr. Watson 公用程式，以便在發生應用程式錯誤時，自動產生一個二進位的故障傾出檔。
+<P><H3><A NAME="Header_60" HREF="awrns002.HTM#ToC_60">必須將 AFS 伺服器安裝在其路徑只含 ANSI 字元的目錄中</A></H3>
+<P>必須將 AFS for Windows 軟體安裝在其路徑只含 ANSI 字元的目錄中，
+例如預設目錄 <B>C:\Program Files</B>。
+<P><H3><A NAME="Header_61" HREF="awrns002.HTM#ToC_61">暫存檔</A></H3>
+<P>Windows 版 AFS 伺服器偶而會建立暫存檔。若要控制這些檔案的建立位置，請將環境變數（TMP 或 TEMP）設定為您所要之暫時目錄的完整路徑。 若不指定暫時目錄，
+則任何暫存檔將在程序的現行工作目錄中建立。
+<P><H3><A NAME="Header_62" HREF="awrns002.HTM#ToC_62">AFS 伺服器的國家語言支援</A></H3>
+<P>AFS 提供關於 AFS 伺服器圖形使用者介面（GUI）工具和說明文件的國家語言支援，
+包括雙向 script 的支援（希伯來、阿拉伯等）。安裝的語言字串係由機器的系統預設語言環境所決定，
+亦即「控制台」的「國別設定內容」對話方塊中所指定的。 若目前的語言環境沒有可用的語言字串，
+則依預設安裝英語字串。
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>註:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">機器的<I>系統預設</I>語言環境可能不同於
+<I>使用者</I>語言環境（由使用者指定）。 不過，AFS for Windows 所安裝的語言字串，一律由系統預設語言環境來決定。
+</TD></TR></TABLE>
+<P><H3><A NAME="Header_63" HREF="awrns002.HTM#ToC_63">Windows 系統不使用 kpwvalid 密碼強化檢查器</A></H3>
+<P>從 Windows 系統變更 AFS 使用者密碼時，<I>不使用</I><B>kpwvalid</B> 程式來檢查新密碼的品質。
+（在 UNIX 系統上，若 <B>kpwvalid</B> 程式和
+<B>kpasswd</B> 程式位於相同目錄中，
+則由 <B>kpwvalid</B> 程式檢查新密碼使用者的品質。）
+<P><H3><A NAME="Header_64" HREF="awrns002.HTM#ToC_64">使用 3.5 版以前的資料庫伺服器在 Cell 中架構伺服器時需要 Principal 密碼</A></H3>
+<P>若您在一個 AFS Cell 內架構 Windows 版 AFS 伺服器 3.6 版，
+且該 Cell 內的「資料庫伺服器」執行 3.5 版以前的 AFS，
+則在架構處理期間，會出現一個對話方塊提示您輸入 AFS principal 密碼。
+<P><TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>註:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">若由於一些原因無法得知 AFS principal 密碼，
+您仍可輸入 24 個 8 進位的字串，以代表 AFS principal 的關鍵值。
+若要取得 8 進位關鍵值，請在「AFS 資料庫伺服器」機器上發出 <B>kas examine</B> 指令或 <B>boslistkeys</B> 指令。
+請注意，必須在 <B>noauth</B> 模式下執行伺服器，才能顯示 AFS principal 的 8 進位關鍵值。
+</TD></TR></TABLE>
+<HR><H2><A NAME="Header_65" HREF="awrns002.HTM#ToC_65">限制</A></H2>
+<P>本節簡述 AFS for Windows 3.6 版之 AFS 伺服器元件的已知限制。
+<P><H3><A NAME="Header_66" HREF="awrns002.HTM#ToC_66">當程序終止時，AFS bosserver 程序不執行 Notifier 程式</A></H3>
+<P>在 AFS <B>bosserver</B> 程序控制之下的程序終止時，
+AFS bosserver 程序目前不會執行已登記的 notifier 指令。
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">頁面頂端</A> &#124; <A HREF="awrns005.HTM">前一頁</A> &#124; <A HREF="awrns007.HTM">下一頁</A> &#124; <A HREF="awrns002.HTM#ToC">目錄</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,35 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for dynamic kernel loaded libraries
+# For SUN systems running SunOS 4.x
+#
+
+sub modkernel {
+&ErrorsAreFatal(1);
+&CreateDir("/usr/vice/etc/modload");
+&CreateDir("/usr/vice/etc/dkload");
+&ErrorsAreFatal(0);
+
+
+&Copy("root.client/usr/vice/etc/dkload/dkload",      "/usr/vice/etc/dkload");
+&Copy("root.client/usr/vice/etc/dkload/kalloc.o",    "/usr/vice/etc/dkload");
+&Copy("root.client/usr/vice/etc/dkload/libcommon.a", "/usr/vice/etc/dkload");
+
+if ($Configuration{"NFSEXTENSIONS"}) {
+  &Copy("root.client/usr/vice/etc/modload/libafs.o","/usr/vice/etc/modload");
+  &Copy("root.client/usr/vice/etc/dkload/libafs.a", "/usr/vice/etc/dkload");  }
+else {
+  &Copy("root.client/usr/vice/etc/modload/libafs.nonfs.o",
+                                                    "/usr/vice/etc/modload");
+  &Copy("root.client/usr/vice/etc/dkload/libafs.nonfs.a", 
+                                                     "/usr/vice/etc/dkload"); }
+
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+}

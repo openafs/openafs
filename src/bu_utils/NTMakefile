@@ -1,0 +1,48 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+
+############################################################################
+# build fms.exe
+
+EXEFILE = $(DESTDIR)\etc\fms.exe
+
+EXEOBJS =\
+	fms.obj \
+	fms.res
+
+EXELIBS =\
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	
+
+$(EXEFILE): $(EXEOBJS) $(EXELIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
+# Definitions for generating versioninfo resources
+
+fms.res: fms.rc AFS_component_version_number.h
+	$(RC) $*.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

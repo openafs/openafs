@@ -1,0 +1,46 @@
+#! /bin/csh -fe
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# This script runs the Rx stress test on a list of machines.  It needs
+# to be started on all the machines within a few seconds of each other
+# and it will run indefinitely.
+
+set load = 1
+if ("$1" == "-noload") then
+	echo Skipping load test.
+	set load = 0
+endif
+
+if (! $?RX_STRESS_SERVERS ) then
+	setenv RX_STRESS_SERVERS "sybil bigtime brick junior"
+endif
+set servers = ( $RX_STRESS_SERVERS )
+
+if (! $?RX_STRESS_DIR ) setenv RX_STRESS_DIR ~/afs/3.3/obj/rxkad/test
+cd $RX_STRESS_DIR
+
+# ./stress -client localhost -stopserver	# kill existing server if any
+./stress -server &
+sleep 10
+set i = 1
+set interval = 900
+while ($i <= $#servers)
+	./stress -client $servers[$i] -hijacktest -calltest
+	if (load == 1) then 
+		echo Starting load test on server $servers[$i]
+		alias stm ./stress -client $servers[$i] \
+			-fastcalls 1000 -slowcalls 60 \
+			-copiouscalls 10 -sendlen 100000 -recvlen 100000 \
+			-repeatinterval $interval
+		stm -auth clear &
+		stm -auth auth &
+		stm -auth crypt &
+	endif
+	@ i ++
+	@ interval += 100
+end

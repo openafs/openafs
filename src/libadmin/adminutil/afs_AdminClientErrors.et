@@ -1,0 +1,47 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table AL
+        ec ADMCLIENTCELLHANDLENULL, "the cell handle parameter cannot be NULL"
+        ec ADMCLIENTCELLHANDLEPNULL, "the cell handle reference parameter cannot be NULL"
+        ec ADMCLIENTCELLHANDLEBADMAGIC, "the server handle parameter failed to pass the magic number test.  Most likely the server handle is invalid, or has been overwritten by mistake."
+        ec ADMCLIENTCELLINVALID, "the cell handle is not valid."
+        ec ADMCLIENTCELLKASINVALID, "the cell handle is not valid for authentication server requests"
+        ec ADMCLIENTCELLKASNULL, "the cell handle authentication server pointer is NULL"
+        ec ADMCLIENTCELLPTSINVALID, "the cell handle is not valid for protection server requests"
+        ec ADMCLIENTCELLPTSNULL, "the cell handle protection server pointer is NULL"
+        ec ADMCLIENTCELLVOSINVALID, "the cell handle is not valid for volume server requests"
+        ec ADMCLIENTCELLVOSNULL, "the cell handle volume server pointer is NULL"
+        ec ADMCLIENTCELLNAMENULL, "the cell name parameter cannot be NULL"
+        ec ADMCLIENTTOKENHANDLENULL, "the token handle parameter cannot be NULL"
+        ec ADMCLIENTTOKENHANDLEINVALID, "the token handle is invalid"
+        ec ADMCLIENTTOKENHANDLEBADMAGIC, "the token handle parameter failed to pass the magic number test.  Most likely the token handle is invalid, or has been overwritten by mistake"
+        ec ADMCLIENTTOKENHANDLENOSECURITY, "failed to create a new client security object for the token handle"
+        ec ADMCLIENTCANTINITAFSLOCATION, "unable to locate the location of AFS install"
+        ec ADMCLIENTCANTINITRX, "unable to initialize the AFS rpc component"
+        ec ADMCLIENTCANTINITWINSOCK, "unable to initialize the windows socket component"
+        ec ADMCLIENTNOINIT, "afsclient_Init must be called before calling any other afsclient function"
+        ec ADMCLIENTBADCLIENTCONFIG, "an error occurred while trying to access the local client configuration information"
+        ec ADMCLIENTBADTOKENHANDLE, "the token handle was marked as containing valid tokens, but the actual tokens were invalid"
+        ec ADMCLIENTCELLOPENBADTOKEN, "the token handle must contain valid afs tokens for the cell"
+        ec ADMCLIENTDIRECTORYNULL, "the directory parameter cannot be NULL"
+        ec ADMCLIENTVOLUMENAME, "the volume name parameter cannot be NULL"
+        ec ADMCLIENTBADDIRECTORY, "unable to determine the parent of the given directory"
+        ec ADMCLIENTNOAFSDIRECTORY, "the directory is not in AFS"
+        ec ADMCLIENTNOMATCHINGSERVER, "the server did not match any known AFS servers"
+        ec ADMCLIENTRPCSTATHANDLEPNULL, "the rpc stat handle cannot be NULL"
+        ec ADMCLIENTNOKASTOKENS, "the cell handle does not contain kas tokens"
+        ec ADMCLIENTRPCSTATNOCONNECTION, "there is no connection to the server"
+        ec ADMCLIENTCMSTATHANDLEPNULL, "the client stat handle cannot be NULL"
+        ec ADMCLIENTCMSTATNOCONNECTION, "there is no connection to the client"
+        ec ADMCLIENTCMCELLNAMENULL, "the cell name pointer cannot be NULL"
+        ec ADMCLIENTCMCONFIGNULL, "the client configuration pointer cannot be NULL"
+        ec ADMCLIENTRXDEBUGHANDLEPNULL, "the rxdebug handle cannot be NULL"
+	ec ADMCLIENTRXDEBUGTIMEOUT, "the rxdebug request timed out"
+	ec ADMCLIENTRXDEBUGNOTSUPPORTED, "the rxdebug request is not supported"
+end
+

@@ -1,0 +1,250 @@
+## OpenAFS Tools Documentation ##
+## A collection of open source programs and interfaces designed ##
+## to ease the configuration and maintenance of OpenAFS. ##
+##
+## Copyright 2001, International Business Machines Corporation and others.
+## All Rights Reserved.
+## 
+## This software has been released under the terms of the IBM Public
+## License.  For details, see the LICENSE file in the top-level source
+## directory or online at http://www.openafs.org/dl/license10.html
+##
+## openafs-tools, Version 1.2.5 ##
+
+####################### TABLE OF CONTENTS ###########################
+
+1) Overview
+2) System configuration requirements
+ a) OS
+ b) OpenAFS
+ c) OpenAFS Tools
+3) Usage
+ a) OpenAFS Installation
+ b) OpenAFS Uninstallation 
+4) Implementation
+ a) OpenAFS Installation
+ b) OpenAFS Uninstallation
+5) Known Problems
+6) Future Expansion
+
+######################## 1) OVERVIEW ################################
+
+    The Tools use shell and Perl scripts.  So far, they has been tested 
+only on Red Hat Linux 6.2 and 7.1 machines, running kernels 2.2 or 2.4. 
+    As of this version, OpenAFS Tools has two functions: 
+installing OpenAFS, and uninstalling OpenAFS.  
+    We hope that you enjoy using and developing these tools, and
+that they enhance the popularity and use of OpenAFS.  If you have
+any questions, comments or suggestions, please send them to the
+OpenAFS mailing lists.  
+
+############# 2) SYSTEM CONFIGURATION REQUIREMENTS ##################
+
+a) OS
+    OpenAFS Tools has been developed and tested on machines running 
+Red Hat Linux 6.2 and 7.1, with kernel version 2.2 or 2.4.  It may 
+or may not run well on other versions of Linux or other kernel 
+versions -- use caution when using them with other setups.  
+
+b) OpenAFS
+    Finally, you need to download and install the OpenAFS 1.2.2 RPMs 
+for Red Hat Linux from http://www.openafs.org.  The files you need 
+are:
+    Red Hat 6.2:
+      openafs-kernel-1.2.2-rh6.2.1.i386.rpm
+      openafs-1.2.2-rh6.2.1.i386.rpm 
+      openafs-client-1.2.2-rh6.2.1.i386.rpm 
+      openafs-server-1.2.2-rh6.2.1.i386.rpm
+    Red Hat 7.1:
+      openafs-kernel-1.2.2-rh7.1.1.i386.rpm
+      openafs-1.2.2-rh7.1.1.i386.rpm 
+      openafs-client-1.2.2-rh7.1.1.i386.rpm 
+      openafs-server-1.2.2-rh7.1.1.i386.rpm
+Once these are downloaded, install them (using an rpm -i or rpm -U
+command).
+
+c) OpenAFS Tools
+    Now all that's left to do is install the OpenAFS Tools rpm.  The
+file you need is openafs-tools-1.2.2-1.i386.rpm.  Install it using 
+an rpm -i or rpm -U command.  This will create several directories
+and populate your system with necessary files.  The main directories
+created and populated is:
+    /usr/afs/tools/install/
+Now you should be ready to get started.
+
+########################## 3) USAGE #################################
+
+a) OpenAFS Installation
+
+    Execute the /usr/afs/tools/install/install_afs command.
+It can take a variety of arguments to specify how you would like
+to set the machine up.  If you do not specify needed arguments
+on the command line, you will be prompted for them interactively.
+To get a rundown on how to use install_afs, execute:
+  /usr/afs/tools/install/install_afs help
+
+If you are creating an additional server or not a server, OpenAFS 
+Tools will ensure that you have all the required files on your 
+system.  These are files needed by the OpenAFS installation program 
+to connect you to cells that already exist.  You must get these files
+manually from an existing server, as we have not yet implemented
+a secure way of doing this automatically.  For additional servers,
+the files you need to copy are:
+    - Copy the /usr/afs/etc/ThisCell file from the existing server
+to /usr/afs/tools/install/afs/ThisCell on your machine.
+    - Copy the /usr/afs/etc/CellServDB file from the existing server
+to /usr/afs/tools/install/afs/CellServDB on your machine.
+    - Copy the /usr/afs/etc/KeyFile file from the existing server
+to /usr/afs/tools/install/afs/KeyFile on your machine.
+    - Copy the /usr/afs/etc/UserList file from the existing server
+to /usr/afs/tools/install/afs/UserList on your machine.
+    - Copy the /usr/vice/etc/CellServDB file from the existing server
+to /usr/afs/tools/install/vice/CellServDB on your machine.
+
+    For client-only installation, you need the following file:
+    - Copy the /usr/vice/etc/CellServDB file from the existing server
+to /usr/afs/tools/install/vice/CellServDB on your machine.
+
+b) OpenAFS Uninstallation 
+
+    The uninstallation program is very simple.  Just run
+  /usr/afs/tools/install/afs_uninstall
+It does not accept any arguments and will not prompt you for
+anything.  Be forewarned, however: this will uninstall OpenAFS from
+your system and delete any information served from that machine in
+OpenAFS filespace.  You should also restart your machine after
+running the command, to avoid potential problems with future OpenAFS
+installations.
+
+##################### 4) IMPLEMENTATION #############################
+
+    This section will focus on the details of the implementation of
+OpenAFS tools.  It will outline the code and file structure of the
+package, and will document the choices made during implementation, so
+that someone working on the code can have a better understanding for
+what's there already.
+
+a) OpenAFS Installation
+
+    The files involved in OpenAFS installation are:
+
+  - Possible AFS configuration files (/etc/sysconfig/afs):
+    /usr/afs/tools/install/afsinit_both
+    /usr/afs/tools/install/afsinit_server
+    /usr/afs/tools/install/afsinit_client
+  - Checking the state of OpenAFS on the system:
+    /usr/afs/tools/install/.afs_state
+  - Command line installation:
+    /usr/afs/tools/install/install_afs
+  - Perl scripts:
+    /usr/afs/tools/install/check_udebug.pl
+    /usr/afs/tools/install/write_fstab.pl
+    /usr/afs/tools/install/write_pam.pl
+
+What follows is a brief summary of the installation process.
+  - Installation starts with the script install_afs.  The first thing
+it does is ensure that the files needed for setting up additional 
+servers and/or clients exist in the appropriate places (see section 
+3.a for a description of these files).  Then, after indicating to 
+the state file that installation has begun, it begins installing 
+OpenAFS.
+  - For clients, it then enables Pam Login Authentication using
+the write_pam.pl program to change the /etc/pam.d/login file.
+  - For servers, it will alter the /etc/fstab file via the 
+write_fstab.pl program, mounting the user-specified hard drive to
+the /vicepa directory.
+  - For additional servers, it now copies the required
+files from the /usr/afs/tools/install/afs directory to the
+/usr/afs/etc directory, and defines the upclient processes,
+which will periodically update the server's /usr/afs/bin and
+/usr/afs/etc directories based on those directories on the first
+server in the cell.
+  - A first server must then briefly start up a bosserver with
+the noauth flag in order to create the keyfile and set the cell 
+name.  It immediately shuts down the bosserver when this is down.
+Next, it uses a kaserver with noauth to initialize cell security.
+This involves creating two user accounts: afs and admin.  afs is an
+account for the server processes and will not be needed by the user.
+Currently we use the administrative password for the afs account
+password.  The admin account is now added to the bos server database
+and a pts entry is created as well.  Also, the afs account password
+is added as a key for the server. The kaserver process is terminated.  
+The pts database is then bootstrapped to add the administrator to it.  
+  - For first servers, a normal bosserver is started.  It then 
+creates the database server processes (kaserver, buserver, ptserver, 
+and vlserver).  
+  - The file server, volume server, and salvager processes are now 
+started for servers.  
+  - Next the root.afs volume is created for first servers, and on
+additional servers the vldb is synced up.
+  - On a first server, the upserver process is then defined.
+  - Next the /usr/vice/etc/ThisCell file is created on a non-server
+machine, and for non-first-servers the /usr/vice/etc/CellServDB file
+is copied from its location at /usr/afs/tools/install/vice.
+  - The correct AFS setup file is copied to /etc/sysconfig/.
+  - Now the bosserver process is killed for server machines.  
+  - The next thing it does is initialize afs (/etc/rc.d/init.d/afs), 
+and for servers it klogs in as admin.
+  - Then it activates the OpenAFS initialization script by running
+/sbin/chkconfig --add afs.  
+  - Next a first server will configure the OpenAFS file space. 
+Before doing this, however, it must first wait until a quorum has 
+been elected.  After the check, the root.cell volume is created, 
+it is mounted at /afs/<cell_name>, and the permissions are set 
+on both it and /afs as read and lookup for any user.  A read-write 
+version of root.cell is mounted at /afs/.<cell_name>.  Replication 
+sites for both root.afs and root.cell are added.
+  - If necessary, client functionality is removed.
+  - Lastly, a done.txt file is written explaining what has been done
+and what comes next, for use by the web interface.  The state file
+is notified that installation is complete, and then the script ends.
+
+b) OpenAFS Uninstallation
+
+    Uninstallation has only one file:
+  /usr/afs/tools/install/afs_uninstall
+Here is a brief summary of what it does to uninstall OpenAFS:
+  - First it indicates to the state file that uninstallation has 
+begun.
+  - Then it kills whatever bos server processes may be running.  
+  - Next, it deletes everything stored in an AFS partition directory
+( i.e. vicep*).
+  - It deletes the links to any initialization scripts in the startup 
+directories (/etc/rc.d/rc*.d/*afs*)
+  - It removes the PAM afs file, and reconfigures the PAM login file
+to not have integrated AFS logon.  
+  - It deletes the db, etc, local, and logs directories from
+/usr/afs.
+  - Next it removes unnecessary files from /usr/vice/etc. 
+  - Then it deletes everything from the cache (/usr/vice/cache).
+  - Finally, it informs the state file that uninstallation is 
+complete.
+
+##################### 5) KNOWN PROBLEMS #############################
+
+    We have encountered a few problems along the way, and wanted to 
+document them as such.
+  - Be careful when installing something without client 
+functionality.  This seems to require an extra reboot of the 
+machine.  After installing OpenAFS, restart your machine again,
+and that should get it working properly.
+    There very well be some other problems that we haven't 
+yet encountered.  If you encounted such a problem, please send a
+description to openafs-devel@openafs.org
+
+#################### 6) FUTURE EXPANSION ############################
+
+    There is a lot of room for developing this package into something
+very useful, and we would like to make a few suggestions for future
+additions/fixes to the code.
+  - Allow ways to authenticate other than the kaserver, such as krb5.
+  - Find a secure, automatic way to transfer files from a server 
+machine to a machine that is to be set up as an additional server or 
+a client, rather then require the manual tranferral of those files. 
+  - Agree on a standard way to set up the filespace of a cell, as in
+where to put the user volumes, etc., so that this can all be done
+automatically by the scripts.
+  - Port this code to other operating systems to make it more
+widely useful.
+  - Resolve all "Known Problems" (see section 5).
+  - Test, test, test.

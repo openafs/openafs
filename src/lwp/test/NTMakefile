@@ -1,0 +1,28 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+LIBS =  DEST\lib\afslwp.lib \
+	DEST\lib\afs\afsutil.lib
+
+
+# build testkey.exe
+TESTKEY = testkey.exe
+testkey.exe: test_key.obj $(LIBS)
+	$(EXECONLINK)
+
+
+# test targets
+test testkey: $(TESTKEY)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+

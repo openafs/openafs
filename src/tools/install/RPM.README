@@ -1,0 +1,33 @@
+## RPM creation documentation ##
+## Steps to creating an openafs-tools-cmd binary distribution RPM ##
+##
+## Copyright 2001, International Business Machines Corporation and others.
+## All Rights Reserved.
+## 
+## This software has been released under the terms of the IBM Public
+## License.  For details, see the LICENSE file in the top-level source
+## directory or online at http://www.openafs.org/dl/license10.html
+##
+## openafs-tools, Version 1.2.5 ##
+
+Follow these steps to create a binary distribution RPM for the 
+openafs-tools-cmd package no Red Hat Linux:
+
+1) Copy the spec file to your SPECS directory.
+
+  cp openafs-tools-cmd-1.2.5-1.spec /usr/src/redhat/SPECS/
+
+2) Create the source package by running:
+
+  ./make_rpm_source
+
+  This creates the source tar and moves it to the 
+/usr/src/redhat/SOURCES directory
+
+3) Now you can create the RPM:
+
+  cd /usr/src/redhat/SPECS
+  rpm -ba --clean openafs-tools-cmd-1.2.5-1.i386.rpm
+
+  The RPM is now ready for use in the 
+/usr/src/redhat/RPMS directory.

@@ -1,0 +1,172 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL    =/bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+BUTMOBJS    =file_tm.o
+BUTMLIBS    =libbutm.a
+BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
+BUTMINCLUDE =-I${TOP_INCDIR}
+
+CC      = ${MT_CC}
+CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE}
+
+LDFLAGS = ${DBG} ${XLDFLAGS}
+
+LWP     =../lwp
+BUTM    =../butm
+BUTC    =../butc
+BUCOORD = ../bucoord
+VOLSER  = ../volser
+
+BUCOORDOBJS=ubik_db_if.o ${BUCOORD}/volstub.o ${BUCOORD}/dlq.o \
+	    status.o ${BUCOORD}/bucoord_errs.o
+
+VOLSERLIBOBJ=${VOLSER}/volint.cs.o  vsprocs.o              ${VOLSER}/vsutils.o \
+            ${VOLSER}/lockprocs.o  ${VOLSER}/volint.xdr.o ${VOLSER}/volerr.o \
+            ${VOLSER}/volint.ss.o  AFS_component_version_number.o 
+VOLSERLIBS  =libvolser.a
+
+LWPOBJS     =lock.o
+
+BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
+	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
+            ${LWPOBJS} ${BUCOORDOBJS}
+
+BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
+	    ${TOP_INCDIR}/afs/volume.h \
+	    ${TOP_INCDIR}/afs/vlserver.h \
+	    ${TOP_INCDIR}/rx/rx.h \
+	    ${TOP_INCDIR}/rx/xdr.h \
+	    ${TOP_INCDIR}/afs/keys.h \
+	    ${TOP_INCDIR}/afs/cellconfig.h \
+	    ${TOP_INCDIR}/ubik.h \
+	    ${TOP_INCDIR}/afs/cmd.h \
+	    ${TOP_INCDIR}/afs/butc.h \
+	    ${TOP_INCDIR}/afs/tcdata.h \
+	    ${TOP_INCDIR}/afs/bubasics.h \
+	    ${TOP_INCDIR}/afs/butm.h
+
+BUTCINCLUDE=-I. -I${TOP_INCDIR}
+BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
+	    ${TOP_LIBDIR}/libbubasics.a \
+	    ${VOLSERLIBS} \
+            ${BUTMLIBS} \
+	    ${TOP_LIBDIR}/libvldb.a \
+	    ${TOP_LIBDIR}/libafsauthent.a \
+	    ${TOP_LIBDIR}/libafsrpc.a \
+            ${TOP_LIBDIR}/libcmd.a \
+	    ${TOP_LIBDIR}/util.a \
+	    ${TOP_LIBDIR}/libusd.a \
+	    ${TOP_LIBDIR}/libprocmgmt.a \
+	    ${TOP_LIBDIR}/librx.a
+
+#
+# Build targets
+#
+
+all: butc
+
+butc: ${BUTCOBJS} ${BUTCLIBS}
+	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MTLIBS} ${XLIBS} -o butc
+
+libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
+	-$(RM) -f $@
+	$(AR) crv $@ vsprocs.o ${VOLSERLIBOBJ}
+	$(RANLIB) $@
+
+libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
+	-$(RM) -f libbutm.a
+	$(AR) crv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
+	${RANLIB} libbutm.a
+
+dbentries.o: ${BUTC}/dbentries.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/dbentries.c
+
+tcprocs.o: ${BUTC}/tcprocs.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcprocs.c
+
+lwps.o: ${BUTC}/lwps.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/lwps.c
+
+tcmain.o: ${BUTC}/tcmain.c ${BUTCINCLS} AFS_component_version_number.c
+	${CC} ${CFLAGS} -c ${BUTC}/tcmain.c
+
+list.o: ${BUTC}/list.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/list.c
+
+recoverDb.o: ${BUTC}/recoverDb.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/recoverDb.c
+
+tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcudbprocs.c
+
+dump.o: ${BUTC}/dump.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/dump.c
+
+tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcstatus.c
+
+butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/butc_xbsa.c
+
+ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
+	${CC} ${CFLAGS} -c ${BUCOORD}/ubik_db_if.c
+
+status.o: ${BUCOORD}/status.c
+	${CC} ${CFLAGS} -c ${BUCOORD}/status.c
+
+vsprocs.o: ${VOLSER}/vsprocs.c
+	${CC} ${CFLAGS} -c ${VOLSER}/vsprocs.c
+
+lock.o: ${LWP}/lock.c
+	${CC} ${CFLAGS} -c ${LWP}/lock.c
+
+file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
+	${CC} ${CFLAGS} -c ${BUTM}/file_tm.c
+
+#
+# Install targets
+#
+install: ${DESTDIR}${sbindir}/butc
+dest: ${DEST}/etc/butc
+
+${DEST}/etc/butc: butc
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/butc: butc
+	${INSTALL} $? $@
+
+#
+# Misc targets
+#
+include ../config/Makefile.version
+
+clean:
+	$(RM) -f *.o *.a core AFS_component_version_number.c butc
+

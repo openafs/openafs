@@ -1,0 +1,28 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+The testlocking scripts are really EXPECT scripts, not merely TCL.
+They are used by running "expect testlocking.general.tcl" and "expect
+testlocking.boundaries.tcl".  I don't recommend running them simultaneously,
+as they modify the same user records.  That would not be too difficult to
+change if necessary.
+
+The output from the scripts is a trace of the entire test, punctuated by lines
+of the form:
+SUCCESS  blah blah blah
+or 
+FAILED:  blah blah blah
+
+The easiest way to use these at present is to do something like:
+% expect testlocking.general.tcl | tee locklog.general | grep '^FAIL'
+This way, if you don't get any output, you know the test completed successfully,
+but if you do get output, you can still look at the traces.
+
+There are some aspects of this new feature that are not explicitly checked by
+the test scripts, but can be verified by examining the logs.  Also, the test
+scripts don't sleep for any period of time to determine whether an id will 
+automatically unlock properly or not.

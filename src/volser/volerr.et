@@ -1,0 +1,32 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+# NOTE: VOLSERBAD_ACCESS value is hardcoded in audit/audit.h, so if you
+# make changes here, make sure that audit/audit.h is kept up to date.
+
+error_table VOLS
+	ec VOLSERTRELE_ERROR, "internal error releasing transaction"
+	ec VOLSERNO_OP, "unknown internal error"
+	ec VOLSERREAD_DUMPERROR, "badly formatted dump"
+	ec VOLSERDUMPERROR, "badly formatted dump(2)"
+	ec VOLSERATTACH_ERROR, "could not attach volume"
+	ec VOLSERILLEGAL_PARTITION, "illegal partition"
+	ec VOLSERDETACH_ERROR, "could not detach volume"
+	ec VOLSERBAD_ACCESS, "insufficient privilege for volume operation"
+	ec VOLSERVLDB_ERROR, "error from volume location database"
+	ec VOLSERBADNAME, "bad volume name"
+	ec VOLSERVOLMOVED, "volume moved"
+	ec VOLSERBADOP, "illegal volume operation"
+	ec VOLSERBADRELEASE, "volume release failed"
+	ec VOLSERVOLBUSY, "volume still in use by volserver"
+	ec VOLSERNO_MEMORY, "out of virtual memory in volserver"
+	ec VOLSERNOVOL, "no such volume"
+	ec VOLSERMULTIRWVOL, "more than one read/write volume"
+	ec VOLSERFAILEDOP, "failed volume server operation"
+end

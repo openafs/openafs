@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_LISTACL" HREF="auarf002.htm#ToC_162">fs listacl</A></H2>
+<A NAME="IDX4854"></A>
+<A NAME="IDX4855"></A>
+<A NAME="IDX4856"></A>
+<A NAME="IDX4857"></A>
+<A NAME="IDX4858"></A>
+<A NAME="IDX4859"></A>
+<P><STRONG>目的</STRONG>
+<P>ACL を表示します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs listacl</B> [<B>-path</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-help</B>]
+   
+<B>fs la</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-h</B>]
+   
+<B>fs lista</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-id</B>]  [<B>-if</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs listacl</B> コマンドは、それぞれの指定されたファイル、ディレクトリー、または記号リンクに関連したアクセス制御リスト (ACL) を表示します。指定された要素は、発行者が AFS/DFS 移行ツールキット・プロトコル変換プログラムを使用して
+DFS データにアクセスする (および DFS がファイルごとの ACL をインプリメントしない) 場合には、
+DFS ファイル・スペースに常駐することができます。現行作業ディレクトリーの ACL を表示するには、<B>-path</B> 引き数を省略します。
+<P>ACL を更新するには、<B>fs setacl</B> コマンドを使用します。ACL を別のディレクトリーにコピーするには、<B>fs copyacl</B> コマンドを使用します。古くなった項目 を ACL から削除するには、<B>fs cleanacl</B> コマンドを使用します。
+<P><STRONG>注意</STRONG>
+<P>ACL の <TT>Normal rights</TT> セクションで、
+<B>system:anyuser</B> グループのメンバーにアクセス権が許可されている場合には、
+<TT>Negative rights</TT> セクションにユーザーまたはグループを配置しても、アクセス権の拒否は認められません。このような場合、ユーザーは <B>unlog</B> コマンドを発行するだけで、<B>system:anyuser</B> グループに許可されたアクセス権を得ることができます。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>ACL を表示する各ディレクトリーまたはファイルを指定します。AFS
+ファイルについては、出力がファイルの親ディレクトリーから ACL を表示します。DFS ファイルには ACL があります。不完全なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P><DT><B>-id
+</B><DD>各 DFS ディレクトリーの初期コンテナーACL を表示します。この引き数は、AFS/DFS Migration Toolkit Protocol Translator 経由でアクセスされた DFS ディレクトリーでのみサポートされています。
+<P><DT><B>-if
+</B><DD>各 DFS ディレクトリーの初期オブジェクト ACL を表示します。この引き数は、AFS/DFS Migration Toolkit Protocol Translator 経由でアクセスされた DFS ディレクトリーでのみサポートされています。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>各ファイル、ディレクトリー、または記号リンクの出力の先頭行を読み取ると、以下のようになります。
+<PRE>   Access list for <VAR>directory</VAR> is
+   
+</PRE>
+<P>発行者が、ピリオド (<B>.</B>) のような省略表現をパス名に使用して、現在のディレクトリーを表した場合、その表記がディレクトリーの全パス名のかわりに表示されることがあります。
+<P>次に、<TT>Normal rights</TT> ヘッダーが、ユーザーまたはグループと各行でのアクセス権の 1 つの組み合わせた、指示されたアクセス権を許可されたユーザーおよびグループのリストの前に付きます。任意のユーザーまたはグループに負のアクセス権を割り当てた場合には、これらの項目は <TT>Negative rights</TT> ヘッダーの後にきます。負の符号入力の形式は、ACL の <TT>Normal rights</TT> セクションの形式と同じですが、ユーザーまたはグループには、指示されたアクセス権は許可されず、そのアクセス権は拒否されます。
+<P>AFS は、ファイルごとの ACL をインプリメントしません。したがって、ファイルの場合、このコマンドはディレクトリーの ACL を表示します。記号リンクの出力には、記号リンクを格納するディレクトリーの ACL ではなく、ターゲット・ファイルまたはディレクトリーに適用される ACL が表示されます。
+<P>AFS に対するアクセス権を使用すると、プロセッサーは指示されたアクションを実行することができます。
+<DL>
+<P><DT><B><TT>a</TT>
+</B><DD>(<B>管理</B>): ACL の項目を変更します。
+<P><DT><B><TT>d</TT>
+</B><DD>(<B>削除</B>): ファイルおよびサブディレクトリーをディレクトリーから削除するか、別のディレクトリーに移動します。
+<P><DT><B><TT>i</TT>
+</B><DD>(<B>挿入</B>): ファイルまたはサブディレクトリーをコピー、移動、または作成してディレクトリーに追加します。
+<P><DT><B><TT>k</TT>
+</B><DD>(<B>ロック</B>): ディレクトリーのファイルに、読み取りロックまたは書き込みロックを設定します。
+<P><DT><B><TT>l</TT>
+</B><DD>(<B>検索</B>): ディレクトリーのファイルおよびサブディレクトリーをリストします。ディレクトリーそのものを提示し、<B>fs listacl</B> コマンドを発行してディレクトリーの ACL を調べます。
+<P><DT><B><TT>r</TT>
+</B><DD>(<B>読み取り</B>): ディレクトリーにあるファイルの内容を読み取ります。ディレクトリーにある要素を提示するには、<B>ls -l</B> コマンドを発行します。
+<P><DT><B><TT>w</TT>
+</B><DD>(<B>書き込み</B>): ディレクトリーにあるファイルの内容を変更し、UNIX の <B>chmod</B> コマンドを発行してそのモード・ビットを変更します。
+<P><DT><B><TT>A</TT>、<TT>B</TT>、<TT>C</TT>、<TT>D</TT>、<TT>E</TT>、<TT>F</TT>、<TT>G</TT>、<TT>H</TT>:
+</B><DD>AFS サーバー・プロセスではデフォルトでの意味はありません。これは、アプリケーションがディレクトリーの内容へのアクセスを制御する方法を追加できるように作成されたものです。この文字は、英大文字でなくてはなりません。
+</DL>
+<P>DFS ファイルおよびディレクトリーの場合、
+DFS <B>x</B> (<B>実行</B>) アクセス権が、
+AFS <B>l</B> (<B>検索</B>) アクセス権を置き換え、
+DFS <B>c</B> (<B>制御</B>) が
+AFS <B>a</B> (<B>管理</B>) を置き換えること、および AFS <B>k</B> (<B>ロック</B>) アクセス権に相当する DFS はないことを除いて、アクセス権は同じです。多様なアクセス権の意味もまたわずかに異なり、DFS は拒否のアクセス権を導入していません。DFS アクセス権についての詳しい説明は、DFS 資料および <I>AFS/DFS Migration Toolkit Administration Guide and Reference</I> を参照してください。
+<P><STRONG>例</STRONG>
+<P>次のコマンドは、ユーザーのホーム・ディレクトリー <B>pat</B> (現行作業ディレクトリー) およびその <B>private</B> サブディレクトリーの ACL を表示します。
+<PRE>   % <B>fs listacl -path . private</B>
+   Access list for . is
+   Normal rights:
+      system:authuser rl
+      pat rlidwka
+      pat:friends rlid
+   Negative rights:
+      smith rlidwka
+   Access list for private is
+   Normal rights:
+      pat rlidwka
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P><B>-path</B> 引き数で AFS ディレクトリーに名前を付ける場合には、発行者は、その ACL と、パス名でその前にくるすべてのディレクトリーの ACL で、
+<B>l</B> (<B>検索</B>) アクセス権が必要です。
+<P><B>-path</B> 引き数で AFS ファイルに名前を付ける場合には、発行者は、ファイルのディレクトリーの ACL で <B>l</B>
+(<B>検索</B>) アクセス権と
+<B>r</B> (<B>読み取り</B>) アクセス権が、パス名でその前にくる各ディレクトリーの ACL で
+<B>l</B> 許可が必要です。
+<P><B>-path</B> 引き数で DFS ディレクトリーまたはファイルに名前を付ける場合には、発行者は、その ACL と、パス名でその前にくる各ディレクトリーの ACL で、
+<B>x</B> (<B>実行</B>) アクセス権が必要です。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf135.htm#HDRFS_CLEANACL">fs cleanacl</A>
+<P><A HREF="auarf136.htm#HDRFS_COPYACL">fs copyacl</A>
+<P><A HREF="auarf157.htm#HDRFS_SETACL">fs setacl</A>
+<P><I>AFS/DFS Migration Toolkit Administration Guide and Reference</I>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf147.htm">前ページ</A> &#124; <A HREF="auarf149.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

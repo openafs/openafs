@@ -1,0 +1,30 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+{
+    global:
+	kas_ServerOpen;
+	kas_ServerClose;
+	kas_PrincipalCreate;
+	kas_PrincipalDelete;
+	kas_PrincipalGet;
+	kas_PrincipalGetBegin;
+	kas_PrincipalGetNext;
+	kas_PrincipalGetDone;
+	kas_PrincipalKeySet;
+	kas_PrincipalLockStatusGet;
+	kas_PrincipalUnlock;
+	kas_PrincipalFieldsSet;
+	kas_ServerStatsGet;
+	kas_ServerDebugGet;
+	kas_ServerRandomKeyGet;
+	kas_StringToKey;
+	kas_KeyCheckSum;
+
+    local:
+	*;
+};

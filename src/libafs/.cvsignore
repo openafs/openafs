@@ -1,0 +1,17 @@
+MODLOAD-*
+MODLOAD32
+MODLOAD64
+Makefile
+MakefileProto.AIX
+MakefileProto.DARWIN
+MakefileProto.DUX
+MakefileProto.FBSD
+MakefileProto.HPUX
+MakefileProto.IRIX
+MakefileProto.LINUX
+MakefileProto.OBSD
+MakefileProto.SOLARIS
+afs
+afsint
+config
+rx

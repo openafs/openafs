@@ -1,0 +1,52 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for dynamic kernel loaded libraries
+# For SGI systems running IRIX 6.x
+#
+
+sub modkernel {
+my($chip, $ip_type, $os_vers, $chipcount, $nfs, $libafs);
+&ErrorsAreFatal(1);
+
+# Find out what kind of chip the machine has (Rx000)
+$chip = `hinv -t cpu`;
+$chip =~ /R[4581][046]0*/;
+$chip = $&;
+&ErrorMsg("Could not determine chip type with", "hinv") unless ($chip =~ /^R/);
+substr($chip, -3,3) = "000";
+$ip_type = `uname -m`;
+$os_vers = `uname -r`;
+if ($chip =~ /R5/) { $chip = "R4000_32";  }
+elsif ($chip =~ /R4/ && $os_vers =~ /6.2/ && $ip_type =~ /17|20|22/) {
+  $chip = "R4000_32"; }
+
+# Find out if there is more than one processor (eg "2 150 MHZ IP19 Processors")
+$chipcount = `hinv -c processor`;
+$chipcount =~ s/ .*//;
+&ErrorMsg("Could not determine chip count with", "hinv") unless ($chipcount);
+
+# NFS support
+if ($Configuration{"NFSEXTENSIONS"}) {
+  $nfs = ""; }
+else {
+  $nfs = ".nonfs"; };
+
+# From the above, put together the name of the kernel library to use
+$libafs = "libafs.SP.$chip$nfs.o" if ($chipcount == 1);
+$libafs = "libafs.MP.$chip$nfs.o" if ($chipcount >  1);
+
+&CreateDir("/usr/vice/etc/sgiload");
+&ErrorsAreFatal(0);
+
+&Copy("root.client/usr/vice/etc/sgiload/$libafs", "/usr/vice/etc/sgiload");
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+system("/etc/chkconfig -f afsml on");
+system("/etc/chkconfig -f afsclient on");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+}

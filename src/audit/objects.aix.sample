@@ -1,0 +1,14 @@
+* Copyright 2000, International Business Machines Corporation and others.
+* All Rights Reserved.
+* 
+* This software has been released under the terms of the IBM Public
+* License.  For details, see the LICENSE file in the top-level source
+* directory or online at http://www.openafs.org/dl/license10.html
+
+* The /usr/afs/local/Audit file contains information as to whether AFS
+* should submit audit events. Modifications of the file should be
+* detected and audited. This file should be appended to the 
+* "/etc/security/audit/objects" file.
+
+/usr/afs/local/Audit:
+	w = "AFS_Audit_WR"

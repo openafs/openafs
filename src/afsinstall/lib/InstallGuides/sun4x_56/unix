@@ -1,0 +1,85 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for the AFS modified Unix commands
+# For Sun systems running Solaris 5.6
+#
+
+sub unix {
+  &Copy("etc/inetd",   "/usr/sbin/inetd.afs");
+
+  &ErrorsAreFatal(1);
+  &Patch::Verbose if ($InstallVerbose);
+  &CreateDir("/usr/vice/bin");
+
+  &Copy("bin/rsh", "/usr/vice/bin");
+  &Chown (0,2,   "/usr/vice/bin/rsh");
+  &Chmod (04755, "/usr/vice/bin/rsh");
+
+  &Copy("lib/pam_afs.so.1", "/usr/lib/security");
+  &Chmod(0755, "/usr/lib/security/pam_afs.so.1");
+  &Chown(0,3, "/usr/lib/security/pam_afs.so.1");
+
+  $PamConf = "/etc/pam.conf";
+  &Patch::FileOpen($PamConf);
+
+  $RloginSubSearch = "^(rlogin.+)required(.+)";
+  $RloginSubReplace = '$1.optional.$2';
+
+  $RLoginAuthSearch = "^rlogin\\s+auth\\s+.+pam_unix.so.1";
+  $RLoginAuthNew = <<"xxENDxx";
+rlogin	auth optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  $RshSubSearch = "^(rsh.+)required(.+)";
+  $RshSubReplace = '$1.optional.$2';
+
+  $RshSearch = "^rsh\\s+auth\\s+.*pam_rhosts_auth.so.1";
+  $RshNew = <<"xxENDxx";
+rsh	auth optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  if (!&Patch::Patch($PamConf, [[1, "Substitution", $RloginSubSearch, $RloginSubReplace],
+				[1, "Insert", $RLoginAuthSearch, $RLoginAuthNew],
+				[1, "Substitution", $RshSubSearch, $RshSubReplace],
+				[1, "Insert", $RshSearch, $RshNew]])) {
+    &ErrorMsg("Did not succeed with patch", $PamConf);
+  }
+
+  # Create the inetd.conf.afs file
+  $InetdConfAfs = "/etc/inet/inetd.conf.afs";
+  open(INETD, ">$InetdConfAfs") || &ErrorMsg("Can't open file", $InetdConfAfs);
+  print INETD <<"EOINETD";
+shell           stream tcp nowait root /usr/sbin/in.rshd   in.rshd
+ta-rauth        stream tcp nowait root internal         ta-rauth
+EOINETD
+  &Symlink("./inet/inetd.conf.afs", "/etc/inetd.conf.afs");
+
+  # comment out the rshd line in inetd.conf
+  $InetdConf = "/etc/inet/inetd.conf";
+  &CopyStat($InetdConf, $InetdConfAfs);
+  &Patch::FileOpen($InetdConf);
+
+  $Search = "^(shell\\s+.+)";
+  $Replace = '"#".$1';
+
+  if (!&Patch::Patch($InetdConf, [[1, "Substitution", $Search, $Replace]])) {
+    &ErrorMsg("Did not succeed with patch", $InetdConf);
+  }
+
+  # Modify the /etc/inet/services file
+  # append the ta-rauth to the services file
+  $Services = "/etc/inet/services";
+  &Patch::FileOpen($Services);
+
+  $ServicesAppend = "ta-rauth	601/tcp rauth";
+
+  if (!&Patch::Patch($Services, [[0, "EOF", "", $ServicesAppend]])) {
+    &ErrorMsg("Did not succeed with patch", $Services);
+  }
+}
+

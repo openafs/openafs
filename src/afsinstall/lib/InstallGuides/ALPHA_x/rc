@@ -1,0 +1,16 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the initialization script
+# For Alpha systems running Digital Unix 3.x
+#
+
+sub rc {
+&Copy("root.client/usr/vice/etc/dkload/afs.rc", "/sbin/init.d/afs");
+&Symlink("../init.d/afs", "/sbin/rc0.d/K66afs");
+&Symlink("../init.d/afs", "/sbin/rc3.d/S90afs");
+}

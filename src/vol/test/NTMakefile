@@ -1,0 +1,38 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+############################################################################
+# External libraries
+
+EXEC_LIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsvol.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsacl.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+
+############################################################################
+# build inode lister
+ILIST = ilist.exe
+
+$(ILIST): ilist_nt.obj $(EXEC_LIBS)
+	$(EXECONLINK)
+
+
+############################################################################
+# build link table lister
+LTLIST = ltlist.exe
+
+$(LTLIST): ltlist.obj $(EXEC_LIBS)
+	$(EXECONLINK)

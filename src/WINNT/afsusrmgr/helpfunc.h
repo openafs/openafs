@@ -1,0 +1,27 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#ifndef HELPFUNC_H
+#define HELPFUNC_H
+
+
+/*
+ * PROTOTYPES _________________________________________________________________
+ *
+ */
+
+void Help_FindCommand (void);
+void Help_FindError (void);
+void Help_About (void);
+
+void Main_ConfigureHelp (void);
+
+
+#endif
+

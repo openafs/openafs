@@ -1,0 +1,175 @@
+#!/bin/sh
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# afs.rc: rc script for AFS on SGI Irix platforms
+#
+# Install this script as /etc/init.d/afs
+# then make links like this:
+# ln -s ../init.d/afs /etc/rc0.d/K35afs
+# ln -s ../init.d/afs /etc/rc2.d/S35afs 
+#
+# Config Files (in /etc/config)
+#	afsclient - machine should be an AFS client
+#	afsserver - machine should be an AFS server
+#	afsxnfs   - machine should be an AFS/NFS translator (must also be
+#			an AFS client)
+#	afsml	  - dynamically load afs (using ml(1M))
+#
+# Option files (in /etc/config)
+#	afsd.options - options to pass to afsd. If present it overrides
+#			the defaults here.
+#
+# The following are 'recommended' values for various sized machines.
+# These options should be given in /etc/config/afsd.options.
+# If afsd.options does not exist then $OPTIONS is used.
+#
+LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+OPTIONS=$MEDIUM
+
+CONFIG=/etc/config
+IS_ON=/etc/chkconfig
+AFSDOPT=$CONFIG/afsd.options
+AFSMT=/afs
+COMMON_CLIENT=0
+
+# The verbose flag controls the printing of the names of daemons as they
+# are started 
+
+if $IS_ON verbose ; then
+    ECHO=echo
+    VERBOSE=-v
+else		# For a quiet startup and shutdown
+    ECHO=:
+    VERBOSE=
+fi
+
+#
+# Run afsd in -nosettime mode if we have an alternative time sync
+# OR we are a server and a client machine
+#
+if $IS_ON timed || $IS_ON timeslave || \
+		( $IS_ON afsserver && $IS_ON afsclient ) ; then
+    TIMESYNC=-nosettime
+fi
+
+case "$1" in
+'netstart')
+	# The network startup script (/etc/init.d/network) still runs
+	# "/etc/init.d/afs netstart" to accomodate the loading of AFS 3.3
+	# at a particular time relative to NFS. Post AFS 3.3, we need to
+	# start up after the network script has completed, so the 'netstart'
+	# option is now a no-op and the 'start' option loads AFS.
+	# Note that this option could be used to start inetd.afs if we run
+	# into cases where other servers got ports we want.
+	;;
+'start')
+
+	if $IS_ON afsml
+	then
+		#
+		# Figure out what kind of machine we're on.
+		#
+		IPNO=`uname -m`
+		#
+		# Figure out if we need load the NFS translator
+		#
+		if  $IS_ON afsxnfs && test -x /etc/havenfs && /etc/havenfs ;
+		then
+			NAME="libafs.${IPNO}.o"
+		else
+			NAME="libafs.${IPNO}.nonfs.o"
+		fi
+
+		if [ -r /usr/afs/bin/sgiload/$NAME ]
+		then
+			MOD=/usr/afs/bin/sgiload/$NAME
+		elif [ -r /usr/vice/etc/sgiload/$NAME ]
+		then
+			MOD=/usr/vice/etc/sgiload/$NAME
+		else
+			echo "Cannot find afs kernel library: $NAME"
+			echo "Aborting AFS start"
+			exit 1
+		fi
+
+		$ECHO "Loading AFS from $MOD...\c"
+		if ml ld $VERBOSE -j $MOD -p Afs_ -a afs
+		then
+			:
+		else
+			echo "Dynamic load of AFS failed - Aborting AFS start"
+			exit 1
+		fi
+	else
+		$ECHO "Not loading AFS kernel extensions - afsml config option is off"
+	fi
+
+	if $IS_ON afsserver && test -x /usr/afs/bin/bosserver 
+	then
+		$ECHO "Starting AFS bosserver"
+		/usr/afs/bin/bosserver >/dev/console 2>&1
+	fi
+
+	if $IS_ON afsclient && test -x /usr/vice/etc/afsd ; then
+		if test -s /usr/vice/etc/ThisCell ; then
+			MYCELL=`cat /usr/vice/etc/ThisCell`
+		else
+			echo "/usr/vice/etc/ThisCell not valid - Aborting AFS start"
+			exit 1
+		fi
+		if test -r $AFSDOPT ; then
+			OPTIONS=`cat $AFSDOPT`
+		fi
+		if $IS_ON afsxnfs ; then
+			OPTIONS="$OPTIONS -rmtsys"
+		fi
+		/usr/vice/etc/afsd $TIMESYNC $OPTIONS >/dev/console 2>&1
+
+		# Let AFS think for a while
+		i=30
+		while test ! -x $AFSMT/$MYCELL -a $i -gt 0 ; do
+			sleep 1
+			i=`expr $i - 1`
+		done
+		if test ! -x $AFSMT/$MYCELL ; then
+			echo "Warning AFS initialization did not complete correctly"
+		fi
+
+		# now that /afs is mounted - start up alternate inetd
+		AFSWS=$AFSMT/$MYCELL/@sys/usr/afsws
+		if test -x $AFSWS/etc/inetd.afs -a -r $AFSWS/etc/inetd.conf ; then
+			$ECHO "Starting AFS inetd"
+			$AFSWS/etc/inetd.afs $AFSWS/etc/inetd.conf 2>/dev/null </dev/null&
+		fi
+	fi
+
+    ;;
+
+'stop')
+	#
+	# Stop the AFS inetd and server processes
+	# Note that the afsd processes cannot be killed
+	#
+	if $IS_ON afsclient ; then
+		killall inetd.afs
+	fi
+
+	if $IS_ON afsserver && test -x /usr/afs/bin/bos
+	then
+		$ECHO "Stopping AFS bosserver"
+		/usr/afs/bin/bos shutdown localhost -localauth -wait
+		killall -HUP bosserver
+	fi
+    ;;
+
+*)
+    echo "usage: $0 {start|stop}"
+    ;;
+esac

@@ -1,0 +1,124 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+	EXPORT is an aix3.1 kernel extension whose sole purpose in
+	life is to provide access to kernel symbols that were mistakenly
+	(or purposefully) omitted from the kernel exports list.
+
+	The way EXPORT works is as follows:
+
+		/etc/cfgexport -a /etc/export.ext
+
+	loads in the EXPORT kernel extension, and passes all relevant info
+	from the /unix symbol table.  THIS HAD BETTER BE THE SAME KERNEL
+	THAT WAS BOOTED FROM!
+
+	/etc/export.ext is the load module for the EXPORT kernel extension.
+	When it is loaded, is slurps in the symbol table information, and
+	makes available the following:
+
+		import_kfunc(struct k_func *kfp)
+		import_kvar(struct k_var *kvp, ulong *toc)
+
+	The relevant data structures are defined in "export.h":
+
+/*
+ * kernel function import
+ */
+struct k_func {
+	void	*(**fpp)();	/* ^ to ^ to function we import	*/
+	char	*name;		/* ^ to symbol name		*/
+	ulong	fdesc[3];	/* function descriptor storage	*/
+};
+
+/*
+ * kernel variable import
+ */
+struct k_var {
+	void	*varp;		/* ^ to surrogate variable	*/
+	char	*name;		/* ^ to symbol name		*/
+};
+
+
+	import_kfunc() can be used to acquire a function pointer to
+	most kernel functions.
+	import_kvar() can be used to redirect references to a local
+	surrogate variable to the kernel variable.
+
+	An example of usage would be:
+
+#include "export.h"
+
+static void (*kluge_iput)();	/* ^ to kernel's `iput()'	*/
+void *u;			/* surrogate `u.' variable	*/
+void *vnodefops;		/* surrogate `vnodefops' var	*/
+
+struct k_func kfuncs[] = {
+	{	&kluge_iput,	".iput"		},
+	{	0				}
+};
+
+struct k_var kvars[] = {
+	{	(void *) &u,		"u"		},
+	{	(void *) &vnodefops,	"vnodefops"	},
+	{	0					},
+};
+
+kluge_init() {
+	register struct k_func *kfp;
+	register struct k_var  *kvp;
+	register ulong *toc;
+
+	toc = (ulong *) get_toc();
+
+	for (kfp = kfuncs; kfp->name; ++kfp)
+		import_kfunc(kfp);
+
+	for (kvp = kvars; kvp->name; ++kvp)
+		import_kvar(kvp, toc);
+}
+
+iput(ip)
+struct inode *ip; {
+
+	return (*kluge_iput)(ip);
+}
+
+
+	Note the call to `get_toc()'.  This returns the value that will be
+	in the TOC register (a dedicated general purpose register, R2, that
+	is used as the base register to the `table-of-contents' area that
+	is where references to all global variables is placed).  The TOC
+	is distinct for each kernel extension.  There is code for
+	`get_toc' in afs/misc.s.
+
+	It is not possible to import functions the same as variables.  If
+	one were to replace a TOC entry for a function, one would most
+	likely panic very soon after calling that function, if one were
+	lucky!  The calling sequence for inter-module (inter-extension)
+	differs from that of intra-module (intra-extension), in order to
+	save/restore the TOC register, and load the correct TOC
+	register value for the called code.  Calls through pointers to
+	functions must already handle this, so importing functions is done
+	by constructing function pointers, and calling into the kernel
+	with them.
+
+	Note also that is is not possible (currently) to import functions
+	(in the above manner) that are provided by other kernel extensions.
+	This is due to the fact that import_kfunc() uses the kernel's TOC
+	register value when constructing the function descriptors, rather
+	than the correct one for the kernel extension in which the target
+	function resides.  Since the set of functions that is available
+	is restricted (normally) to those described in /unix's symbol table,
+	this is not usually a problem.  When the /unix symbol table explicitly
+	refers to a function that it knows to be provided by subsequently
+	loaded extension, there may or may not be a problem, depending on
+	how the glue code generated in the kernel to make the external
+	call interacts/conflicts with the `call thru pointer' code.  I can't
+	remember this off the top of my head just now...
+
+Enjoy!

@@ -1,0 +1,38 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Header files to install
+
+INCFILES =\
+	$(DESTDIR)\include\afs\afssyscalls.h \
+	$(DESTDIR)\include\afs\pioctl_nt.h
+
+# Library to install
+
+LIBFILE = $(DESTDIR)\lib\afs\afspioctl.lib
+
+LIBOBJS =\
+	pioctl_nt.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(INCFILES) $(LIBFILE)
+install9x: install
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+   $(DEL) $(LIBFILE)

@@ -1,0 +1,43 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Backup BUTX error table
+#
+
+error_table BUTX
+        ec BUTX_RCSID, "Version 1"
+	ec BUTX_NOLIBRARY,           "XBSA couldn't mount shared library"
+	ec BUTX_ILLEGALINIT,         "XBSA handle already initialized"
+	ec BUTX_INVALIDSERVERTYPE,   "XBSA invalid serverType specified"
+	ec BUTX_INVALIDSERVERNAME,   "XBSA invalid serverName specified"
+	ec BUTX_INVALIDBSANAME,      "XBSA invalid bsaObjectOwner specified"
+	ec BUTX_INVALIDAPPNAME,      "XBSA invalid appObjectOwner specified"
+	ec BUTX_INVALIDSECTOKEN,     "XBSA invalid secToken specified"
+	ec BUTX_INVALIDOBJECTSPNAME, "XBSA invalid objectSpaceName specified" 
+	ec BUTX_INVALIDPATHNAME,     "XBSA invalid pathName specified"
+	ec BUTX_INVALIDBUFFERSIZE,   "XBSA invalid bufferSize specified"
+	ec BUTX_INVALIDDATABUFFER,   "XBSA invalid dataBuffer specified"
+	ec BUTX_INVALIDLGNAME,       "XBSA invalid lGName specified"
+	ec BUTX_INVALIDOBJDESC,      "XBSA invalid objectDescription specified"
+	ec BUTX_INVALIDOBJINFO,      "XBSA invalid objectInfo specified"
+	ec BUTX_INVALIDVERSION,      "XBSA version mismatch"
+	ec BUTX_MOUNTLIBRARYFAIL,    "XBSA unable to mount the XBSA library"
+        ec BUTX_INITFAIL,            "XBSA initialization of the XBSA interface failed"
+	ec BUTX_BEGINTXNFAIL,        "XBSA begin transaction failed"
+	ec BUTX_NOHANDLE,            "XBSA has not been initialized, no handle"
+	ec BUTX_ENDTXNFAIL,          "XBSA end transaction failed"
+	ec BUTX_TERMFAIL,            "XBSA terminate session failed"
+	ec BUTX_QUERYFAIL,           "XBSA query object failed"
+	ec BUTX_GETOBJFAIL,          "XBSA get object failed"
+	ec BUTX_ENDDATAFAIL,         "XBSA end data failed"
+	ec BUTX_CREATEOBJFAIL,       "XBSA create object failed"
+	ec BUTX_DELETEOBJFAIL,       "XBSA delete object failed"
+	ec BUTX_SENDDATAFAIL,        "XBSA send data failed"
+	ec BUTX_GETDATAFAIL,         "XBSA get data failed"
+	ec BUTX_GETENVFAIL,          "XBSA get environment failed"
+	ec BUTX_DELETENOVOL,         "XBSA volume to delete not found"
+end

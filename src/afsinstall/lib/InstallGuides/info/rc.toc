@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# rc
+#
+# An InstallGuide for AFS startup scripts
+#
+
+sub rc {
+&Print("Installs the following into /usr/vice/etc/dkload:");
+&Print("  root.client/usr/vice/etc/dkload/rc.afsd.small");
+&Print("  root.client/usr/vice/etc/dkload/rc.afsd.medium");
+&Print("  root.client/usr/vice/etc/dkload/rc.afsd.large");
+&Print("Creates a script to be run with the system rc scripts.");
+&Print("  * For most BSD  systems, it is stored as /etc/rc.afs");
+&Print("  * For most SYSV systems, it is stored as /etc/init.d/afs");
+&Print("    or /sbin/init.d/afs, and symlinks are made in /etc/rc?.d/");
+&Print("    or /sbin/rc?.d/ so that it runs in the right order.");
+&Print("  * On AIX systems, an entry is added to /etc/inittab so that AFS");
+&Print("    is started at runlevel 2 after NFS starts.");
+&Print("  * On HP-UX 9.x systems, a command is also added into the");
+&Print("    localrc() function in /etc/rc to run /etc/rc.afs");
+}

@@ -1,0 +1,58 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+{
+    global:
+	vos_BackupVolumeCreate;
+	vos_BackupVolumeCreateMultiple;
+	vos_PartitionGet;
+	vos_PartitionGetBegin;
+	vos_PartitionGetNext;
+	vos_PartitionGetDone;
+	vos_ServerOpen;
+	vos_ServerClose;
+	vos_ServerSync;
+	vos_FileServerAddressChange;
+	vos_FileServerAddressRemove;
+	vos_FileServerGetBegin;
+	vos_FileServerGetNext;
+	vos_FileServerGetDone;
+	vos_ServerTransactionStatusGetBegin;
+	vos_ServerTransactionStatusGetNext;
+	vos_ServerTransactionStatusGetDone;
+	vos_VLDBGet;
+	vos_VLDBGetBegin;
+	vos_VLDBGetNext;
+	vos_VLDBGetDone;
+	vos_VLDBEntryRemove;
+	vos_VLDBEntryLock;
+	vos_VLDBEntryUnlock;
+	vos_VLDBReadOnlySiteCreate;
+	vos_VLDBReadOnlySiteDelete;
+	vos_VLDBSync;
+	vos_VolumeCreate;
+	vos_VolumeDelete;
+	vos_VolumeRename;
+	vos_VolumeDump;
+	vos_VolumeRestore;
+	vos_VolumeOnline;
+	vos_VolumeOffline;
+	vos_VolumeGet;
+	vos_VolumeGetBegin;
+	vos_VolumeGetNext;
+	vos_VolumeGetDone;
+	vos_VolumeMove;
+	vos_VolumeRelease;
+	vos_VolumeZap;
+	vos_VolumeQuotaChange;
+	vos_PartitionNameToId;
+	vos_PartitionIdToName;
+	vos_VLDBUnlock;
+
+    local:
+	*;
+};

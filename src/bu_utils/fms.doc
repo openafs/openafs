@@ -1,0 +1,25 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+fms - file mark size evaluation
+
+Fms takes a single argument, the tape device to be used.
+To use fms:
+ 	1) place a scratch tape in the selected tape drive
+	2) fms <tape special file>
+	   e.g.
+	   fms /dev/rmt0
+
+Fms provides a visual trace of its activity. It runs for quite some time,
+possibly in excess of 6 hours on 8mm tape drives. Upon termination, a
+brief summary of results will be found in the log file, fms.log, which
+is created in the current directory.
+
+The tape size and file mark sizes should be adjusted before being used in the
+backup system's configuration files. The tape size should be reduced, to 
+provide a safety margin (e.g. 10-15% reduction), and the file mark size
+should be rounded up or increased.

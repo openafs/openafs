@@ -1,0 +1,39 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+{
+    global:
+	afsclient_TokenGetExisting;
+	afsclient_TokenGetNew;
+	afsclient_TokenQuery;
+	afsclient_CellOpen;
+	afsclient_CellClose;
+	afsclient_TokenClose;
+	afsclient_LocalCellGet;
+	afsclient_MountPointCreate;
+	afsclient_ACLEntryAdd;
+	afsclient_Init;
+	afsclient_NullCellOpen;
+	afsclient_CellNameGet;
+	afsclient_AFSServerGet;
+	afsclient_AFSServerGetBegin;
+	afsclient_AFSServerGetNext;
+	afsclient_AFSServerGetDone;
+	afsclient_TokenSet;
+	afsclient_RPCStatOpen;
+	afsclient_RPCStatOpenPort;
+	afsclient_RPCStatClose;
+	afsclient_CMStatOpen;
+	afsclient_CMStatOpenPort;
+	afsclient_CMStatClose;
+	afsclient_RXDebugOpen;
+	afsclient_RXDebugOpenPort;
+	afsclient_RXDebugClose;
+
+    local:
+	*;
+};

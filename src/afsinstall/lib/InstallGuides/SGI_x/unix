@@ -1,0 +1,57 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for the AFS modified Unix commands
+# For SGI systems running IRIX 
+#
+
+sub IRIXunix {
+  &Copy("etc/inetd", "/usr/etc/inetd.afs");
+
+  &ErrorsAreFatal(1);
+  &Patch::Verbose if ($InstallVerbose);
+
+  # Create the inetd.conf.afs file
+  $InetdConfAfs = "/etc/inetd.conf.afs";
+  open(INETD, ">$InetdConfAfs") || &ErrorMsg("Can't open file", $InetdConfAfs);
+  print INETD <<"EOINETD";
+ftp	stream	tcp	nowait	root	/usr/etc/ftpd	ftpd -l
+shell	stream	tcp	nowait	root	/usr/etc/rshd	rshd -L
+login	stream	tcp	nowait	root	/usr/etc/rlogind	rlogind
+ta-rauth	stream	tcp	nowait	root	internal	ta-rauth
+EOINETD
+
+  # comment out the lines in inetd.conf
+  $InetdConf = "/etc/inetd.conf";
+  &CopyStat($InetdConf, $InetdConfAfs);
+  &Patch::FileOpen($InetdConf);
+
+  $Search1 = "^(ftp\\s+.+)";
+  $Replace1 = '"#".$1';
+
+  $Search2 = "^(shell\\s+.+)";
+  $Replace2 = '"#".$1';
+
+  $Search3 = "^(login\\s+.+)";
+  $Replace3 = '"#".$1';
+
+  if (!&Patch::Patch($InetdConf, [[1, "Substitution", $Search1, $Replace1],
+				  [1, "Substitution", $Search2, $Replace2],
+				  [1, "Substitution", $Search3, $Replace3]])) {
+    &ErrorMsg("Did not succeed with patch", $InetdConf);
+  }
+
+  # Modify the /etc/services file
+  &ReadInstallGuide("$InstallGuideDir/GENERIC/unix");
+  &unix;
+}
+
+sub unix {
+  goto &IRIXunix;
+}
+
+

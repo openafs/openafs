@@ -1,0 +1,78 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+{
+    global:
+	bos_ServerOpen;
+	bos_ServerClose;
+	bos_ProcessCreate;
+	bos_ProcessDelete;
+	bos_ProcessExecutionStateGet;
+	bos_ProcessExecutionStateSet;
+	bos_ProcessExecutionStateSetTemporary;
+	bos_ProcessNameGetBegin;
+	bos_ProcessNameGetNext;
+	bos_ProcessNameGetDone;
+	bos_ProcessInfoGet;
+	bos_ProcessParameterGetBegin;
+	bos_ProcessParameterGetNext;
+	bos_ProcessParameterGetDone;
+	bos_ProcessNotifierGet;
+	bos_ProcessRestart;
+	bos_ProcessAllStop;
+	bos_ProcessAllStart;
+	bos_ProcessAllWaitStop;
+	bos_ProcessAllStopAndRestart;
+	bos_AdminCreate;
+	bos_AdminDelete;
+	bos_AdminGetBegin;
+	bos_AdminGetNext;
+	bos_AdminGetDone;
+	bos_KeyCreate;
+	bos_KeyDelete;
+	bos_KeyGetBegin;
+	bos_KeyGetNext;
+	bos_KeyGetDone;
+	bos_CellSet;
+	bos_CellGet;
+	bos_HostCreate;
+	bos_HostDelete;
+	bos_HostGetBegin;
+	bos_HostGetNext;
+	bos_HostGetDone;
+	bos_ExecutableCreate;
+	bos_ExecutableRevert;
+	bos_ExecutableTimestampGet;
+	bos_ExecutablePrune;
+	bos_ExecutableRestartTimeSet;
+	bos_ExecutableRestartTimeGet;
+	bos_LogGet;
+	bos_AuthSet;
+	bos_CommandExecute;
+	isValidServerHandle;
+	bos_Salvage;
+	bos_ProcessAllWaitTransition;
+	bos_FSProcessCreate;
+	bos_ProcessRPCStatsGetBegin;
+	bos_ProcessRPCStatsGetNext;
+	bos_ProcessRPCStatsGetDone;
+	bos_PeerRPCStatsGetBegin;
+	bos_PeerRPCStatsGetNext;
+	bos_PeerRPCStatsGetDone;
+	bos_ProcessRPCStatsStateGet;
+	bos_PeerRPCStatsStateGet;
+	bos_ProcessRPCStatsStateEnable;
+	bos_PeerRPCStatsStateEnable;
+	bos_ProcessRPCStatsStateDisable;
+	bos_PeerRPCStatsStateDisable;
+	bos_ProcessRPCStatsClear;
+	bos_PeerRPCStatsClear;
+	bos_RPCStatsVersionGet;
+
+    local:
+	*;
+};

@@ -1,0 +1,11 @@
+LIBRARY AFSLOGON
+
+DESCRIPTION 'AFS Client Credential Provider DLL'
+
+EXPORTS
+
+    DllEntryPoint
+    NPGetCaps
+    NPLogonNotify
+    NPPasswordChangeNotify
+

@@ -1,0 +1,23 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# build
+#
+# An InstallGuide for installing a new kernel
+# For SUN systems running SunOS 4.x
+#
+
+sub installkernel {
+my ($arch, $hostname);
+$arch = `/bin/uname -m`;
+chop $arch;
+$hostname = `/bin/uname -n`;
+chop $hostname;
+$hostname =~ tr/a-z/A-Z/;
+
+&VersionCopyFile("/usr/sys/$arch/$hostname/vmunix", "/vmunix");
+}

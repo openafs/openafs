@@ -1,0 +1,37 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table AP
+        ec ADMPTSSERVERNULL, "the protection server parameter cannot be NULL"
+        ec ADMPTSUSERNAMENULL, "the user name parameter cannot be NULL"
+        ec ADMPTSUSERNAMETOOLONG, "the user name parameter is too long"
+        ec ADMPTSGROUPNAMENULL, "the group name parameter cannot be NULL"
+        ec ADMPTSGROUPNAMETOOLONG, "the group name parameter is too long"
+        ec ADMPTSFAILEDNAMETRANSLATE, "failed to translate a name to an identifier"
+        ec ADMPTSNEWOWNERNULL, "the new owner parameter cannot be NULL"
+        ec ADMPTSNEWOWNERTOOLONG, "the new owner parameter is too long"
+        ec ADMPTSNEWGROUPNULL, "the new group parameter cannot be NULL"
+        ec ADMPTSNEWGROUPIDPOSITIVE, "the new group id parameter cannot be positive"
+        ec ADMPTSTARGETGROUPNULL, "the target group parameter cannot be NULL"
+        ec ADMPTSTARGETGROUPTOOLONG, "the target group parameter is too long"
+        ec ADMPTSGROUPPNULL, "the group parameter cannot be NULL"
+        ec ADMPTSGROUPMEMEXCEEDED, "the group membership list is longer than the maximum retrievable"
+        ec ADMPTSMEMBERNAMENULL, "the member name parameter cannot be NULL"
+        ec ADMPTSOLDNAMENULL, "the old name parameter cannot be NULL"
+        ec ADMPTSOLDNAMETOOLONG, "the old name is too long"
+        ec ADMPTSNEWNAMENULL, "the new name parameter cannot be NULL"
+        ec ADMPTSNEWNAMETOOLONG, "the new name is too long"
+        ec ADMPTSINVALIDGROUPDELETEPERM, "PTS_GROUP_ANYUSER_ACCESS is an invalid value for the list delete parameter"
+        ec ADMPTSINVALIDGROUPSOWNEDPERM, "PTS_GROUP_OWNER_ACCESS is an invalid value for the list groups owned parameter"
+        ec ADMPTSINVALIDGROUPSOWNEDPERM2, "PTS_USER_ANYUSER_ACCESS is an invalid value for the list groups owned parameter"
+        ec ADMPTSNEWENTRYPNULL, "the new entry parameter cannot be NULL"
+        ec ADMPTSUSERPNULL, "the user parameter cannot be NULL"
+        ec ADMPTSNEWGROUPIDNULL, "the new group id parameter cannot be NULL"
+        ec ADMPTSMAXGROUPIDNULL, "the maximum group id parameter cannot be NULL"
+        ec ADMPTSNEWUSERIDNULL, "the new user id parameter cannot be NULL"
+        ec ADMPTSMAXUSERIDNULL, "the maximum user id parameter cannot be NULL"
+end

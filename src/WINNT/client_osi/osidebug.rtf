@@ -1,0 +1,228 @@
+{\rtf1\ansi
+
+{\fonttbl
+\f0\froman Times New Roman;
+\f1\fdecor Courier New;}
+
+{\colortbl
+\red0\green0\blue0;
+\red255\green0\blue0;
+\red0\green0\blue255;
+\red255\green255\blue0;}
+
+\sb200
+
+\f0
+\fs25
+
+#{\footnote contents}
+${\footnote Contents}
+
+\fs40
+{\uldb Introduction}{\v intro}
+\par
+
+{\uldb Starting and Connecting OSIDebug}{\v startup}
+\par
+
+{\uldb Sleep Info}{\v sleep}
+\par
+
+{\uldb Lock Info}{\v lock}
+\par
+
+\fs25
+\page
+
+#{\footnote intro}
+${\footnote Introduction}
++{\footnote x:010}
+
+\fs40\cf2 Introduction\cf0\fs25
+\par
+
+The osidebug program retrieves information from running programs using 
+the OSI package (libosi.lib).  The information you can retrieve depends 
+partly upon the information that the programmer is gathering, but can include 
+information on blocked processes and held locks. 
+\par
+
+\page
+
+#{\footnote startup}
+${\footnote Starting OSIDebug}
++{\footnote x:020}
+
+\fs40\cf2 Starting OSIDebug\cf0\fs25
+\par
+
+The osidebug program is started by running it through the program manager 
+or the command line:
+\par
+
+\f1
+    osidebug\line
+\f0
+\par
+
+It starts by bringing up a window.
+\par
+
+To debug any program, you must know the RPC NSI name space entry that the 
+program has exported its debugging interface to; this is the name parameter that 
+was passed to \f1 osi_InitDebug()\f0  in the application program.
+\par
+
+You specify this name to \f1osidebug\f0  by clicking on the RPC NSI name entry window 
+(it will have a default name beginning with "/.:/<something>" in it already) and typing 
+the RPC NSI name, including the "/.:", that your server is using.
+\par
+
+Your next step is to connect the \f1osidebug\f0  to the program by clicking on the 
+\f1Debug Server\f0 button.  At this time, \f1osidebug\f0  will bind to the server, or 
+display an error number in the status line at the bottom of the window if it fails.
+\par
+
+If the program succeeds at binding to your application, it will display "Done." at the 
+bottom of the display, and will display a set of collection names in the "Collections" 
+window.
+\par
+
+You can click on any of the collection names and \f1osidebug\f0  will retrieve that collection 
+and place it in the "Results" window.  There are three collections exported generically, the
+"types" collection, which lists the collection names, the "sleep" collection, which provides 
+information on sleeping threads, and the "lock" collection, which provides information on 
+locking statistics, assuming that the application is gathering that information.
+\par
+
+There isn't much more to say about the "types" collection.  The remaining collections are 
+described in more detail in the next sections.
+\par
+
+You can quit the program by clicking on the \f1Quit\f0  button.
+\par
+
+You can rebind to the server at any time by clicking on the \f1Debug Server\f0   button again.  
+The \f1osidebug\f0  program will reload the set of collection names at this time, and 
+re-establish the RPC bindings.  You will also need to use this button if the application being 
+debugged is restarted, since the old RPC binding will go bad at this time, and attempts to 
+view collections of information will fail.
+\par
+
+It is also possible for users to define their own named collections of data to be viewed by 
+the \f1osidebug\f0  program.  See the documentation from your application program for the 
+detailed information on those information collections.
+\par
+
+\page
+
+#{\footnote sleep}
+${\footnote Sleep Information}
++{\footnote x:030}
+
+\fs40\cf2 Getting Sleep Information\cf0\fs25
+\par
+
+You can click on the "sleep" collection name and \f1osidebug\f0  will retrieve 
+information on sleeping threads, if any.
+\par
+
+For each blocked thread, \f1osidebug\f0  will display several lines.  The first line is 
+labelled "Sleep address", and gives the hex value of the sleep value passed to the 
+OSI sleep function; if the thread is sleeping waiting for a lock or mutex to become 
+available, this will be the address of the lock.
+\par
+
+The second line gives the thread ID of the blocked thread.
+\par
+
+The third line, labelled "States", gives the state of the sleeping thread's sleep control 
+block.  This is an OR-ed bit mask of the following bits:
+\par
+
+\f1
+#define OSI_SLEEPINFO_SIGNALLED 1 /* thread has been signalled */ \line
+#define OSI_SLEEPINFO_INHASH    2 /* sleep info is in hash table */ \line
+#define OSI_SLEEPINFO_DELETED   4 /* sleep info will be deleted when refcount is 0 */ \line
+\f0
+\par
+
+Typically, you'll just see the INHASH state set, indicating that the block is in the hash 
+table (where it is while the thread is blocked); this will be reported as a States value of 
+2.  Infrequently, you may see the other state bits set, which typically indicates that 
+the \f1osidebug\f0  program caught the system between the time that the thread was woken by 
+a call to \f1osiwakeup\f0  and the time that the newly woken thread started executing.  These 
+other states should be transient; if a block stays in one of these states for an appreciable 
+amount of time, it probably indicates a bug in the OSI package.
+\par
+
+\page
+
+#{\footnote lock}
+${\footnote Lock Information}
++{\footnote x:040}
+
+\fs40\cf2 Getting Lock Information\cf0\fs25
+\par
+
+You can click on the "lock" collection name and \f1osidebug\f0  will retrieve 
+information on locks initialized in statistics gathering mode (created after the 
+application programmer calls osi_LockTypeSetDefault("stat")).
+\par
+
+When you do so, \f1osidebug\f0 will retrieve information about the currently known 
+locks and display this information in the "Results" window.  The information consists of 
+several lines:
+\par
+
+The "Lock name" gives the name passed in as the second parameter to the lock's initialization 
+call, when the programmer called \f1lock_InitializeMutex\f0   or \f1lock_InitializeRWLock\f0.  
+The programmer should choose a usefully mnemonic name.
+\par
+
+The "Lock address" field gives the address of the lock structure in hex.  If some thread 
+is waiting for this lock, it will be sleeping with the same address as its sleep value.
+\par
+
+The "Writer count" is the count of the number of threads holding this lock for writing.  
+Since write locks can be held by at most one thread at a time, this count will be either 0,
+if the lock is not held, or 1 if it is held.  If the lock is a mutex object, rather than a 
+read/write lock, this field will be used to indicate whether someone is holding the mutex.
+\par
+
+The "Reader count" is the count of the number of threads holding the lock for reading.  
+Since multiple readers can lock a read/write lock concurrently, this count may be anything from 
+0, indicating that the lock isn't read locked at all, to any number.  This field should never 
+be non-zero at the same time that the "Writer count" field is also non-zero.  For mutex locks, 
+this counter is always zero.
+\par
+
+The "Are waiters" field is zero if there are no threads waiting to obtain this lock in a 
+mode incompatible with the way that it is currently held, or 1 if there are threads waiting for 
+the lock.
+\par
+
+The "Write-locked time" field gives the number of milliseconds that this lock has been write 
+locked (or locked at all, if this is a mutex) by any thread.
+\par
+
+The "Write-locked count" field gives the number of calls that obtained this lock for writing 
+(or that obtained the mutex at all, if this is a mutex).
+\par
+
+The "Write-blocked time" field gives the number of milliseconds that threads trying to 
+obtain a write lock (or any mutex) have been waiting for this lock or mutex.
+\par
+
+The "Write-blocked count" gives the number of calls to write-lock a read/write lock, or
+the number of calls to obtain a mutex, that blocked due to a lock conflict.
+\par
+
+The "Read-locked time", "Read-locked count", "Read-blocked time" and "Read-blocked count" fields 
+give the corresponding information for readers obtaining read/write locks.  These fields are 
+not displayed for mutexes, since their information is inapplicable to those types of locks.
+\par
+
+\page
+
+}

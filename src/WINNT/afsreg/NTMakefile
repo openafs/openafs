@@ -1,0 +1,34 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+
+INCFILES = \
+	$(DESTDIR)\include\WINNT\afsreg.h \
+	$(DESTDIR)\include\WINNT\syscfg.h \
+	$(DESTDIR)\include\WINNT\afssw.h \
+	$(DESTDIR)\include\WINNT\vptab.h
+
+LIBFILE = $(DESTDIR)\lib\afs\afsreg.lib
+
+LIBOBJS = \
+	afsreg.obj \
+	syscfg.obj \
+	afssw.obj \
+	vptab.obj
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+install_headers: $(INCFILES)
+
+install: install_headers $(LIBFILE)
+
+install9x: install
+
+clean::
+	$(DEL) $(LIBFILE)

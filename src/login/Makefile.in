@@ -1,0 +1,122 @@
+#
+# Copyright (c) 1988 Regents of the University of California.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms are permitted
+# provided that the above copyright notice and this paragraph are
+# duplicated in all such forms and that any documentation, advertising
+# materials, and other materials related to such redistribution and
+# use acknowledge that the software was developed by the University
+# of California, Berkeley.  The name of the University may not be
+# used to endorse or promote products derived from this software
+# without specific prior written permission.  THIS SOFTWARE IS PROVIDED
+# ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+# WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
+# FITNESS FOR A PARTICULAR PURPOSE.
+#
+# @(#)Makefile	5.1 (Berkeley) 10/18/88
+#
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+
+include ../config/Makefile.${SYS_NAME}
+
+AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+
+KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.krb.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} 
+CFLAGS=	${DBG} ${XCFLAGS} ${INCLUDES}
+LIBC=	/lib/libc.a
+SRCS=	login.c 
+OBJS=   login.o setenv.o getenv.o libutil.a
+KOBJS=  login.krb.o setenv.o getenv.o libutil.a
+LIBS=   ${AFSLIBS} 
+KLIBS=   ${KAFSLIBS}
+SLIBS=   ${AFSLIBS} ${LIBC}
+SKLIBS=   ${KAFSLIBS} ${LIBC}
+UTILOBJS = util_login.o util_logout.o util_logwtmp.o
+
+include ../config/Makefile.version
+
+all: login login.krb
+
+login:	${OBJS} ${LIBS}
+	case ${SYS_NAME} in \
+	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
+	esac 
+
+login.krb: ${KOBJS} ${KLIBS}
+	case ${SYS_NAME} in \
+	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
+	esac 
+
+libutil.a : ${UTILOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${UTILOBJS}
+	$(RANLIB) $@
+
+login.o: login.c AFS_component_version_number.c
+	${CC} ${CFLAGS} -c login.c
+
+login.krb.o: login.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c login.c
+	mv login.o login.krb.o
+
+clean:
+	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
+
+cleandir: clean
+	$(RM) -f ${MAN} tags .depend
+
+depend: ${SRCS}
+	mkdep -p ${CFLAGS} ${SRCS}
+
+install:  ${DESTDIR}${bindir}/login  ${DESTDIR}${bindir}/login.krb
+
+${DEST}/bin/login: login
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/login: login
+	${INSTALL} $? $@
+
+
+${DEST}/bin/login.krb: login.krb
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/login.krb: login.krb
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/bin/login ${DEST}/bin/login.krb
+

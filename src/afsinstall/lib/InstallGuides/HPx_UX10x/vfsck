@@ -1,0 +1,16 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the AFS aware file system checker
+# For HP systems running HPUX 10.x
+#
+
+sub vfsck {
+&ErrorsAreFatal(1);
+&Copy ("root.server/etc/vfsck", "/sbin/fs/hfs/vfsck");
+&Symlink ("vfsck", "/sbin/fs/hfs/fsck");
+}

@@ -1,0 +1,50 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+A very basic document describing some test ideas for AFS Web Secure (Apache)
+
+1. HTTP tests
+
+	Ensure corect return codes (as per HTTP standards) are being reported for all methods (GET, HEAD, PUT, POST, etc.).
+
+2. Authentication tests
+	
+	Ensure ACL's and return codes match. ie. ensure that if the AFS acl
+permits access then the return code from the web server reflcts it and vice 
+versa.
+
+3. Cache consistency tests
+
+	Ensure that the token caches are updated and expiration times checked
+and expired tokens purged.
+
+4. PAG tests
+
+	Ensure that each child process for the Apache Server has it's own PAG
+and authentication credentials for PAG's do not get mixed up.
+
+5. CGI tests
+
+	Ensure that AFS acls permit or forbid CGI scripts executing.
+
+6. Locking
+
+	Apache child processes use a shared pipe (synchromized by file locking)
+for inter process communication with the weblog process. This test would 
+ensure that this communication is indeed synchronized and the request for 
+an AFS token from one child process does indeed allow the token to be returned
+to that same child process with a unique PAG.
+
+7. Performance testing
+
+	Memory leaks, speed.
+
+
+8. Propogate changes (release) from a read-write colume to read-only volumes 
+and ensure the web server gives consistent file updates.
+
+

@@ -1,0 +1,37 @@
+In this file you'll find notes to help you build OpenAFS on various platforms.
+
+Redhat 7.0 (i386_linux22): 
+	src/venus/kdump.c may fail to compile with the gcc included with 
+	RedHat 7.0; You'll need to use kgcc to compile it.  You should 
+	be able to use kgcc to compile all of AFS. Just add CC=kgcc 
+	to your make arguments.
+
+	When building for multiple kernels in one dest tree,
+	if the kernel version string which UTS_RELEASE is defined to in 
+	include/linux/version.h matches the last kernel you built for, 
+        the previous kernel module will be overwritten.
+
+Redhat 7.1 (i386_linux24): 
+	src/venus/kdump.c may fail to compile.
+
+	You will need pam-devel installed to compile the included
+	PAM module.
+
+	When building for multiple kernels in one dest tree,
+	if the kernel version string which UTS_RELEASE is defined to in 
+	include/linux/version.h matches the last kernel you built for, 
+        the previous kernel module will be overwritten.
+
+HPUX 11.0 (hp_ux110):
+	Does not currently build libafs, which means no afs client support,
+	however, the client tools, and all of the server code does get built.
+	
+	For future kernel development, the KernDevKit package from the CoreOS
+	media is required.
+
+HPUX 10.2 (hp_ux102):
+	Does not currently build libafs, which means no afs client support,
+	however, the client tools, and all of the server code does get built.
+	
+	Requires that the DCE-CoreTools and possible the KernDevKit package
+	from CoreOS media be installed.

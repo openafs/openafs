@@ -1,0 +1,17 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+The files in this directory can be made (use make or build) into a simple system
+to demonstrate the Rx parallel call facility (multi_Rx).
+
+To run the program, you will need to find several machines to run sample_server on (no arguments).  Then run sample_client on a single machine.
+
+Sample_client is run by:
+
+	sample_client [-verbose] [-count N] [-abort] host1 host2 ...
+
+If any errors are detected, they are printed regardless of whether the -verbose flags is set, or not.  The verbose flag is forwarded to the server process(es).  The abort flag causes each multi call to be aborted immediately when any of the parallel calls returns an error (it then goes on to the next iteration of the loop).

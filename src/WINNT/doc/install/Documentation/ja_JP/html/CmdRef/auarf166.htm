@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>管理解説書</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- C:\IDWB\TEMP\idwt1068\AUARF000.SCR converted by idb2h R4.2 (359) -->
+<!-- ID Workbench Version (OS2) on 24 Dec 1999 at 21:46:04            -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=Shift_JIS">
+<META HTTP-EQUIV="updated" CONTENT="Fri, 24 Dec 1999 21:46:02">
+<META HTTP-EQUIV="review" CONTENT="Sun, 24 Dec 2000 21:46:02">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 24 Dec 2001 21:46:02">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>管理解説書</H1>
+<P>
+<H2><A NAME="HDRFS_WHEREIS" HREF="auarf002.htm#ToC_180">fs whereis</A></H2>
+<A NAME="IDX5001"></A>
+<A NAME="IDX5002"></A>
+<A NAME="IDX5003"></A>
+<A NAME="IDX5004"></A>
+<A NAME="IDX5005"></A>
+<A NAME="IDX5006"></A>
+<A NAME="IDX5007"></A>
+<P><STRONG>目的</STRONG>
+<P>ファイルまたはディレクトリーを格納する各ファイル・サーバー・マシンを報告または指定します。
+<P><STRONG>構文</STRONG>
+<PRE><B>fs whereis</B> [<B>-path</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-help</B>]
+   
+<B>fs whe</B> [<B>-p</B> &lt;<VAR>dir/file path</VAR>><SUP>+</SUP>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>構文</STRONG>
+<P><B>fs whereis</B> コマンドは、<B>-path</B> 引き数が指定した各ディレクトリーまたはファイルを含むボリュームを格納する各ファイル・サーバー・マシンの名前を戻します。
+<P><STRONG>オプション </STRONG>
+<DL>
+<P><DT><B>-path
+</B><DD>ホスト・ファイル・サーバー・マシンに戻す各 AFS ファイルまたはディレクトリーを指定します。部分的なパス名は、現行作業ディレクトリーに相対するものと解釈され、この引き数が省略された場合にもデフォルト値となります。
+<P><DT><B>-help
+</B><DD>このコマンドのオンライン・ヘルプを出力します。これ以外の有効なオプションはすべて無視されます。
+</DL>
+<P><STRONG>出力</STRONG>
+<P>出力は、指定の各ディレクトリーまたはファイルにつき 1 行を組み込みます。これは、常駐する指定のディレクトリーまたはファイルを格納しているボリュームのファイル・サーバー・マシンを指定します。ディレクトリーまたはファイルを示す複数のマシンのリストは、複製されたボリュームにあります。
+<P>通常、マシン名には、そのセル・メンバーシップを示すサフィックスが付いています。セルがクリアされていない場合は、<B>fs whichcell</B> コマンドを使用して、ディレクトリーまたはファイルが常駐するセルを表示します。ローカル・マシンのセル・メンバーシップを表示するには、<B>fs wscell</B> コマンドを使用します。
+<P><STRONG>例</STRONG>
+<P>次の例では、常駐するディレクトリー <B>/afs/abc.com</B> を格納するボリュームを指示します。これは <B>fs1.abc.com</B> および <B>fs3.abc.com</B> の両方に複製されます。
+<PRE>   % <B>fs whereis -path /afs/abc.com</B>
+   File /afs/abc.com is on hosts fs1.abc.com fs3.abc.com
+   
+</PRE>
+<P><STRONG>必要となる特権</STRONG>
+<P>なし。
+<P><STRONG>関連情報 </STRONG>
+<P><A HREF="auarf167.htm#HDRFS_WHICHCELL">fs whichcell</A>
+<P><A HREF="auarf168.htm#HDRFS_WSCELL">fs wscell</A>
+<P>
+<P><HR><B>&#91; <A HREF="#Top_Of_Page">ページのトップ</A> &#124; <A HREF="auarf165.htm">前ページ</A> &#124; <A HREF="auarf167.htm">次ページ</A> &#124; <A HREF="auarf002.htm#ToC">目次</A> &#124; <A HREF="auarf284.htm#HDRINDEX">索引</A> &#93;</B> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>(C) <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

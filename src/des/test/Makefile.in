@@ -1,0 +1,37 @@
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+include ../../config/Makefile.${SYS_NAME}
+
+
+#  Test programs
+PROGS = \
+	key_test \
+	testit \
+	verify
+
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I.. 
+LIBS=-L.. -ldes
+CFLAGS = ${INCDIRS} ${XCFLAGS}
+
+all test: $(PROGS)
+
+clean:
+	$(RM) -f *.o *.a testit verify key_test core
+
+install:
+
+kinstall:
+	@echo No kernel source here.
+
+testit: testit.o 
+	${CC} ${CFLAGS} testit.o ${LIBS} -o testit
+verify: verify.o ../libdes.a
+	${CC} ${CFLAGS} verify.o ${LIBS} -o verify
+key_test: key_test.o ../libdes.a
+	${CC} ${CFLAGS} key_test.o ${LIBS} -o key_test
+

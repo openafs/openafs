@@ -1,0 +1,109 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+include ../../config/Makefile.${SYS_NAME}
+
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+
+CFLAGS=${DBG} -I. -I${TOP_SRCDIR} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+
+HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
+
+LIBS=${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a
+
+LIBRPC = ../../librpc/libafsrpc.so
+THLIBS= ${LDIR}/afs/libcmd.a  ${LDIR}/afs/libcom_err.a \
+	${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
+
+THFLAGS = -mt -DAFS_PTHREAD_ENV
+
+THRULE = ${CC} ${CFLAGS} ${THFLAGS} -c $?
+
+noversion all test system: stress
+
+clean:
+	$(RM) -f *.o stress.cs.c stress.ss.c stress.xdr.c stress.h \
+		stress_errs.c stress_errs.h stress th_*
+
+stress.ss.o: stress.ss.c
+stress.cs.o: stress.cs.c
+stress.xdr.o: stress.xdr.c stress.h
+
+th_stress.ss.o: stress.ss.c
+	${THRULE} -o th_stress.ss.o
+
+th_stress.cs.o: stress.cs.c
+	${THRULE} -o th_stress.cs.o
+
+th_stress.xdr.o: stress.xdr.c stress.h
+	${THRULE} -o th_stress.xdr.o
+
+stress.ss.c stress.cs.c stress.xdr.c stress.h: stress.rg
+	${RXGEN} stress.rg
+
+stress_errs.o: stress_errs.c
+
+th_stress_errs.o: stress_errs.c
+	${THRULE} -o th_stress_errs.o
+
+stress_errs.c stress_errs.h: stress_errs.et
+	$(RM) -f stress_errs.h stress_errs.c; ${COMPILE_ET} stress_errs -h stress_errs
+
+stress.o stress_c.o stress_s.o: ${HEADERS}
+
+th_stress.o: stress.c ${HEADERS}
+	${THRULE} -o th_stress.o
+
+th_stress_c.o: stress_c.c ${HEADERS}
+	${THRULE} -o th_stress_c.o
+
+th_stress_s.o: stress_s.c ${HEADERS}
+	${THRULE} -o th_stress_s.o
+
+stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
+		stress.ss.o stress_errs.o 
+	$(CC) $(CFLAGS) -o stress stress.o stress.xdr.o stress_c.o \
+		stress_s.o stress.cs.o stress.ss.o stress_errs.o ${LIBS}
+
+th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
+		th_stress.cs.o th_stress.ss.o stress_errs.o \
+		${LIBRPC}
+	${CC} ${CFLAGS} ${THFLAGS} -o th_stress th_stress.o th_stress.xdr.o \
+		th_stress_c.o th_stress_s.o th_stress.cs.o th_stress.ss.o \
+		stress_errs.o ${THLIBS}
+

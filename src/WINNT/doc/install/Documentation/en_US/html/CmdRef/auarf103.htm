@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf102.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf104.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_GETRESTART" HREF="auarf002.htm#ToC_117">bos getrestart</A></H2>
+<A NAME="IDX4536"></A>
+<A NAME="IDX4537"></A>
+<A NAME="IDX4538"></A>
+<A NAME="IDX4539"></A>
+<A NAME="IDX4540"></A>
+<A NAME="IDX4541"></A>
+<A NAME="IDX4542"></A>
+<A NAME="IDX4543"></A>
+<A NAME="IDX4544"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays the automatic restart times for server processes
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>bos getrestart -server</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+               [<B>-noauth</B>]  [<B>-localauth</B>]  [<B>-help</B>]
+   
+<B>bos getr -s</B> &lt;<VAR>machine&nbsp;name</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-n</B>]  [<B>-l</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>bos getrestart</B> command displays two restart times from the
+<B>/usr/afs/local/BosConfig</B> file on the server machine named by the
+<B>-server</B> argument&#58;
+<UL>
+<P><LI>The <I>general restart</I> time at which the BOS Server process
+automatically restarts itself and all processes marked with status
+<TT>Run</TT> in the <B>BosConfig</B> file. The default is Sunday
+at 4&#58;00 a.m.
+<P><LI>The <I>binary restart</I> time at which the BOS Server automatically
+restarts any process for which the time stamp on the binary file in the
+<B>/usr/afs/bin</B> directory is later than the last restart time for the
+process. The default is 5&#58;00 a.m. Use the <B>bos
+getdate</B> command to list a binary file&#39;s timestamp, and the
+<B>-long</B> flag to the <B>bos status</B> command to display a
+process&#39;s most recent restart time.
+</UL>
+<P>Use the <B>bos setrestart</B> command to set the restart times.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><B>-server</B>
+</B><DD>Indicates the server machine for which to display the restart
+times. Identify the machine by IP address or its host name (either
+fully-qualified or abbreviated unambiguously). For details, see the
+introductory reference page for the <B>bos</B> command suite.
+<P><DT><B><B>-cell</B>
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>bos</B> reference page.
+<P><DT><B><B>-noauth</B>
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. Do not combine this flag with the <B>-localauth</B>
+flag. For more details, see the introductory <B>bos</B> reference
+page.
+<P><DT><B><B>-localauth</B>
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>bos</B> command
+interpreter presents the ticket to the BOS Server during mutual
+authentication. Do not combine this flag with the <B>-cell</B> or
+<B>-noauth</B> options. For more details, see the introductory
+<B>bos</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>The output consists of two lines&#58;
+<PRE>   Server <VAR>machine_name</VAR> restarts at <VAR>time</VAR>
+   Server <VAR>machine_name</VAR> restarts for new binaries at <VAR>time</VAR>
+   
+</PRE>
+<P>Possible values for <I>time</I> include&#58;
+<UL>
+<P><LI><TT>never</TT>, indicating that the BOS Server never performs that type
+of restart
+<P><LI><TT>now</TT>, indicating that the BOS Server performs that type of
+restart only each time it restarts
+<P><LI>A specified day and time, indicating that the BOS Server performs that
+type of restart once per week. Example&#58; <TT>sun 4&#58;00
+am</TT>.
+<P><LI>A specified time, indicating that the BOS Server performs that type of
+restart once per day. Examples&#58; <TT>11&#58;00 pm</TT>,
+<TT>3&#58;00  am</TT>.
+</UL>
+<P><STRONG>Examples</STRONG>
+<P>The following example displays the restart times for the machine
+<B>db2.abc.com</B>&#58;
+<PRE>   % <B>bos getrestart db2.abc.com</B>
+   Server db2.abc.com restarts at sun 4&#58;00 am
+   Server db2.abc.com restarts for new binaries at 2&#58;15 am
+   
+</PRE>
+<P>In the following example, the issuer abbreviates the machine name
+<B>fs1.abc.com</B> to <B>fs1</B>, relying on the
+cell&#39;s name server to resolve the name. The output echoes the
+abbreviated form.
+<PRE>   % <B>bos getrestart fs1</B>
+   Server fs1 restarts at sat 5&#58;00 am
+   Server fs1 restarts for new binaries at 11&#58;30 pm
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf093.htm#HDRBOS_INTRO">bos</A>
+<P><A HREF="auarf101.htm#HDRBOS_GETDATE">bos getdate</A>
+<P><A HREF="auarf117.htm#HDRBOS_SETRESTART">bos setrestart</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf102.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf104.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

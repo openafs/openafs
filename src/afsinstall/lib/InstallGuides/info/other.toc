@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# other
+#
+# An InstallGuide for generic binaries not specifically listed in other
+# packages
+#
+
+sub other {
+&Print("Installs the following into /usr/afs/bin:");
+&Print("  bin/compile_et");
+&Print("  bin/kpwvalid");
+&Print("  bin/install");
+&Print("  bin/pagsh");
+&Print("  etc/rmtsysd");
+&Print("  bin/rxgen");
+&Print("  bin/sys");
+&Print("  bin/up");
+&Print("  bin/washtool");
+&Print("  bin/xstat_cm_test");
+&Print("  bin/xstat_fs_test");
+}

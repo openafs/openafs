@@ -1,0 +1,29 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for compiling a new kernel
+# For HP 9000 systems running HPUX 10.01
+#
+
+sub build {
+my ($hostname);
+$hostname = `/bin/uname -n`;
+chop $hostname;
+$hostname = tr/a-z/A-Z/;
+&Print("Compiling with command \"/usr/sbin/config systems\"");
+&Print("in directory /stnad");
+&Print("New kernel will be /stand/vmunix_test");
+&Print("Install kernel as  /stand/vmunix");
+
+&ErrorsAreFatal(1);
+$rc = chdir("/stand");
+&ErrorMsg("Could not change to dir", "/stand") if (!$rc);
+
+$rc = system("/usr/sbin/config system");
+$rc = $rc >> 8;
+&Print("Returned code $rc");
+}

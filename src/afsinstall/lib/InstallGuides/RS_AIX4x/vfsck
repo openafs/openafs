@@ -1,0 +1,14 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the AFS aware file system checker
+# For IBM RS/6000 systems running AIX 4.x
+#
+
+sub vfsck {
+&Copy("root.server/etc/v3fshelper",  "/sbin/helpers");
+}

@@ -1,0 +1,119 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the initialization script
+# For IBM RS/6000 systems running AIX 4.x
+#
+
+sub rc {
+my($rcfile,$initfile, $method,$line,$method,%Method);
+
+# Defaults
+$rcfile   = "/etc/rc.afs";
+$initfile = "/etc/inittab";
+
+&ErrorsAreFatal(1);
+
+# Add AFS kernel loader to RC file
+&VPrint("Creating $rcfile file");
+&DisplaceFile($rcfile);
+$rc = open(RC, "> $rcfile");
+&ErrorMsg("Could not overwrite", $rcfile) if (!$rc);
+
+
+$method = "none";
+if ($Configuration{"NFSEXTENSIONS"}) {
+  $method = "nfs";
+  # Determine if this AIX system uses the iauth system
+  #   AIX 4.1.x  for x>=5
+  #   AIX 4.2.x  for x>=1
+  #   AIX 4.x    for x>=3
+  open(LPP, "/bin/lslpp -L |");
+  while ($line = <LPP>) {
+    next unless ($line =~ /bos.rte\s/);
+    $line =~ /bos.rte\s+(\d)\.(\d)\.(\d)/;
+    ($a,$b,$c) = ($1,$2,$3);
+    $method = "iauth" if ($a == 4 && $b == 1 && $c >= 5); 
+    $method = "iauth" if ($a == 4 && $b == 2 && $c >= 1); 
+    $method = "iauth" if ($a == 4 && $b >= 3);
+    last; };
+  close(LPP); };
+
+$Method{"none"}  = "#USENFS=\"none\"";
+$Method{"nfs"}   = "#USENFS=\"nfs\"";
+$Method{"iauth"} = "#USENFS=\"iauth\"";
+$Method{$method} =~ s:#::;
+
+print RC <<"EORC";
+#!/bin/sh
+
+
+# Choose one depending on how much usage this client gets
+#OPTIONS="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+#OPTIONS="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
+OPTIONS="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
+
+# Choose one depending on how you want NFS requests handled by AFS
+$Method{"none"}
+$Method{"nfs"}
+$Method{"iauth"}
+
+if [ "\$USENFS" = "nfs" ]; then
+  ExportExt=""
+  AFSExt=".trans"
+  NFS="-rmtsys"
+elif [ "\$USENFS" = "iauth" ]; then
+  ExportExt=".nonfs"
+  AFSExt=".iauth"
+  NFS="-rmtsys"
+else
+  ExportExt=".nonfs"
+  AFSExt=""
+  NFS=""
+fi
+
+# Load AFS into the kernel
+cd /usr/vice/etc/dkload
+/usr/vice/etc/dkload/cfgexport -a /usr/vice/etc/dkload/export.ext\${ExportExt}
+/usr/vice/etc/dkload/cfgafs -a /usr/vice/etc/dkload/afs.ext\${AFSExt}
+
+# Start bosserver
+if [ -x /usr/afs/bin/bosserver ]; then
+  echo 'Starting bosserver' > /dev/console
+  /usr/afs/bin/bosserver &
+fi
+
+# Start afsd
+/usr/vice/etc/afsd \$OPTIONS \$NFS
+
+# Start AFS inetd services
+if [ -f /etc/inetd.afs -a -f /etc/inetd.conf.afs ]; then
+    /etc/inetd.afs /etc/inetd.conf.afs
+fi
+
+EORC
+close(RC);
+
+# Add AFS entry to the inittab file
+&VPrint("Adding AFS entry to $initfile");
+
+&Patch::Verbose if ($InstallVerbose);
+&Patch::FileOpen($initfile);
+$SearchString = <<"xxENDxx";
+rcnfs:2:wait:/etc/rc.nfs > /dev/console 2>&1 # Start NFS Daemons
+xxENDxx
+
+$NewString = <<"xxENDxx";
+rcafs:2:wait:/etc/rc.afs > /dev/console 2>&1 # Start AFS Daemons
+xxENDxx
+
+if (!&Patch::Patch($initfile, [[0, "Insert", $SearchString, $NewString]])) {
+  &ErrorMsg("Did not succeed with patch", $initfile);
+}
+&Chmod (0755, $rcfile);
+&Chown (0,0, $rcfile);
+}

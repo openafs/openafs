@@ -1,0 +1,19 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# fileserver
+#
+# An InstallGuide for fileserver processes
+#
+
+sub fileserver {
+&Print("Installs the following into /usr/afs/bin:");
+&Print("  root.server/usr/afs/bin/bosserver");
+&Print("  root.server/usr/afs/bin/fileserver");
+&Print("  root.server/usr/afs/bin/volserver");
+&Print("  root.server/usr/afs/bin/salvager");
+}

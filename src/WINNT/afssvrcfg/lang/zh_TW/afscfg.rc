@@ -1,0 +1,1159 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <windows.h>
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Configuration application and wizard"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x404
+#define AFS_VERINFO_CHARSET 950
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARD DIALOGEX 0, 0, 320, 246
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP | WS_EX_CONTROLPARENT
+CAPTION "AFS 伺服器快速啟動精靈"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "取消(&L)",IDCANCEL,101,225,50,14
+    PUSHBUTTON      "< 上一步(&B)",IDBACK,155,225,50,14
+    DEFPUSHBUTTON   "下一步(&N) >",IDNEXT,209,225,50,14
+    PUSHBUTTON      "說明(&H)",9,263,225,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,8,214,305,1
+    LTEXT           "",IDC_WIZARD_LEFTPANE,7,7,91,200,SS_SUNKEN
+    LTEXT           "",IDC_WIZARD_RIGHTPANE,103,7,210,200
+END
+
+IDD_PARTITION_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    CONTROL         "是(&Y)，建立分割區。",IDC_CREATE_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,94,87,10
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,12,121,
+                    186,38,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_PARTITION_NAME,124,165,33,12,ES_AUTOHSCROLL
+    CONTROL         "否(&O)，不要建立分割區。",IDC_DONT_CREATE_PARTITION,
+                    "Button",BS_AUTORADIOBUTTON,0,184,102,8
+    LTEXT           "「檔案伺服器」會儲存並傳送檔案與程式到 AFS 用戶端。如果要透過 AFS 共享儲存在本系統的資料，至少有一個 NTFS 容體必須是專屬的 AFS 分割區。",
+                    -1,4,15,198,25
+    LTEXT           "選取作為分割區使用的容體(&S)：",IDC_SELECT_DRIVE,12,106,
+                    163,9
+    LTEXT           "AFS 分割區名稱(&M)：  /vicep",IDC_NAME_LABEL,11,167,107,
+                    8
+    LTEXT           "在本「檔案伺服器」上建立 AFS 分割區。",IDC_TITLE,4,2,
+                    198,8
+    LTEXT           "AFS 分割區實際上相當於 NTFS 容體，然而它還包括分割區上，有關資訊結構與位置的特定 meta 資料。",
+                    -1,4,42,198,25
+    LTEXT           "您要在這個「檔案伺服器」上建立分割區嗎？",
+                    IDC_ASK_CREATE_PARTITION,4,75,198,18
+    LTEXT           "必要時，於執行期間設定訊息。",IDC_PARTITION_MSG,3,167,
+                    186,31,NOT WS_VISIBLE
+    LTEXT           "",IDC_PARTITION_COVER,0,75,210,92,NOT WS_VISIBLE
+END
+
+IDD_FILE_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "是(&Y)，架構為「檔案伺服器」。",
+                    IDC_SHOULD_CONFIG_FILE_SERVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,0,178,114,10
+    CONTROL         "否(&O)，不要架構為「檔案伺服器」。",
+                    IDC_DONT_CONFIG_FILE_SERVER,"Button",BS_AUTORADIOBUTTON,
+                    0,189,133,10
+    LTEXT           "「AFS 檔案服務」將從此伺服器上將所要求的檔案與程式傳送到 AFS 用戶端。這項服務同時也處理所有的容體管理作業，例如建立、刪除、移除與複製容體。",
+                    -1,4,38,198,34
+    LTEXT           "將本機器架構為「檔案伺服器」。",IDC_TITLE,4,1,198,8
+    LTEXT           "您要將本機器架構為「檔案伺服器」嗎？",
+                    IDC_CREATE_FS_QUESTION,4,166,198,8
+    LTEXT           "如要將本機器架構為「檔案伺服器」，您必須架構「檔案服務」。",
+                    -1,4,15,198,17
+    LTEXT           "附註：此機器目前沒有可用的磁碟機，因此無法將檔案儲存到 AFS。雖然您可以將本機器架構為「檔案伺服器」，但是您不能將 AFS 資料儲存在此機器上。",
+                    IDC_NO_DRIVES_NOTE,4,77,198,32,NOT WS_VISIBLE
+    LTEXT           "如要建立磁碟機，請使用 Windows NT 磁碟系統管理者。",
+                    IDC_DISK_ADMIN_NOTE,4,112,198,16,NOT WS_VISIBLE
+    LTEXT           "此機器已架構為「檔案伺服器」。",IDC_MSG,10,166,199,34,
+                    NOT WS_VISIBLE
+END
+
+IDD_INTRO_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "歡迎使用「AFS 伺服器快速啟動精靈」，本精靈將幫助您快速地在此 Windows NT 系統上架構「AFS 伺服器」。",
+                    IDC_TITLE,2,4,198,25
+    LTEXT           "請按「下一步」，開始架構「AFS 伺服器」。",IDC_STATIC,0,
+                    166,209,8
+END
+
+IDD_REPLICATION_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "是(&Y)，複製根容體。",IDC_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,4,178,198,10
+    CONTROL         "否(&O)，不要複製根容體。",IDC_DONT_REPLICATE,"Button",
+                    BS_AUTORADIOBUTTON,4,189,198,10
+    LTEXT           "複製就是在數個分割區，通常是在其他的「檔案伺服器」上，建立容體唯讀複本的程序。在網路或伺服器發生運作中斷的情況下，複製可以增加容體的可用性，",
+                    IDC_STATIC,4,38,198,25
+    LTEXT           "您要複製根容體嗎？",IDC_REPLICATE_QUESTION,4,165,198,8
+    LTEXT           "複製也可避免任一伺服器因容體存取頻率過高而負荷過重。",
+                    IDC_STATIC,4,85,187,25
+    LTEXT           "複製 Cell 根容體。",IDC_TITLE,4,2,198,8
+    LTEXT           "若您計畫複製此 AFS Cell 的其他容體，您必須先複製根容體。",
+                    IDC_STATIC,4,17,191,16
+    LTEXT           "萬一此容體所在的伺服器之一變得無法使用，您仍可從其他伺服器上存取該容體。",
+                    IDC_STATIC,4,64,198,21
+    LTEXT           "必要時，於執行期間設定訊息。",IDC_CANT_REPLICATE_MSG,7,
+                    166,202,34,NOT WS_VISIBLE | NOT WS_GROUP
+END
+
+IDD_ROOT_VOLUMES_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "是(&Y)，建立根容體。",IDC_CREATE_ROOT_VOLUMES,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,4,177,203,10
+    CONTROL         "否(&O)，不要建立根容體。",IDC_DONT_CREATE_ROOT_VOLUMES,
+                    "Button",BS_AUTORADIOBUTTON,4,188,203,10
+    LTEXT           "在 AFS 中，容體為相關檔案的集合，而這些檔案則組織成單一且易於管理的單元，以利系統管理。",
+                    IDC_STATIC,4,15,198,17
+    LTEXT           "您要建立根容體嗎？",IDC_ROOT_AFS_QUESTION,4,164,203,8
+    LTEXT           "建立 Cell 的根容體。",IDC_TITLE,4,0,203,8
+    LTEXT           "一旦建立之後，即可在 AFS 檔案空間中自動存取根容體。",
+                    IDC_STATIC,4,67,202,17
+    LTEXT           "必要時，於執行期間設定的訊息。",IDC_ROOT_AFS_MSG,5,164,
+                    202,33,NOT WS_VISIBLE
+    LTEXT           "root.afs 容體是 AFS 檔案空間的根。root.Cell 容體為 AFS 檔案空間之 Cell 子樹的根，並且從 root.afs 透過裝載點來存取。",
+                    IDC_STATIC,4,36,198,25
+END
+
+IDD_GET_CURRENT_CONFIG DIALOG DISCARDABLE  0, 0, 198, 84
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "AFS 伺服器架構"
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    36,38,148,14
+    LTEXT           "作業文字 - 於執行時期設定。",IDC_OPERATION,35,20,145,10
+    ICON            "",IDC_LOGO,7,7,20,20
+    PUSHBUTTON      "取消",IDCANCEL,73,63,50,14
+    LTEXT           "決定目前的架構：",IDC_OPERATION2,35,7,156,10
+END
+
+IDD_BACKUP_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 213, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "是(&Y)，架構為「備份伺服器」。",
+                    IDC_CONFIG_BACKUP_SERVER,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,3,156,128,10
+    CONTROL         "不(&O)，不要架構為「備份伺服器」。",
+                    IDC_DONT_CONFIG_BACKUP_SERVER,"Button",
+                    BS_AUTORADIOBUTTON,3,174,147,10
+    LTEXT           "「備份伺服器」只能在架構為「資料庫伺服器」的機器上執行。另外，如果「備份伺服器」是在 Cell 裡的一個「資料庫伺服器」上執行，那麼也必須在 Cell 裡的所有「資料庫伺服器」上執行。",
+                    -1,3,38,199,32
+    LTEXT           "您要將本機器架構為「備份伺服器」嗎？",
+                    IDC_BACKUP_SERVER_QUESTION,4,142,177,10
+    LTEXT           "將本機器架構為「備份伺服器」。",IDC_TITLE,4,6,207,8
+    LTEXT           "「備份伺服器」為「資料庫服務」的選用功能。",-1,3,20,209,
+                    16
+    LTEXT           "此機器已架構為「資料庫伺服器」。",IDC_CANT_BACKUP_MSG,
+                    14,157,168,15,NOT WS_VISIBLE
+END
+
+IDD_SYS_CONTROL_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "架構為「系統控制伺服器」(&S)。",IDC_SYS_CONTROL_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,4,146,141,10
+    CONTROL         "架構為「系統控制用戶端」(&C)。",IDC_SYS_CONTROL_CLIENT,
+                    "Button",BS_AUTORADIOBUTTON,4,159,131,9
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,91,171,118,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    CONTROL         "不要架構為系統控制用戶端或伺服器(&O)。",
+                    IDC_DONT_CONFIGURE,"Button",BS_AUTORADIOBUTTON,4,187,183,
+                    9
+    LTEXT           "「系統控制伺服器」提供一般的架構檔給其他作為「系統控制用戶端」的「AFS 伺服器」機器。AFS Cell 僅可執行單一的「系統控制伺服器」。",
+                    -1,4,20,200,25
+    LTEXT           "架構為「系統控制伺服器」或「用戶端」。",IDC_TITLE,4,4,
+                    200,8
+    LTEXT           "您要將此機器架構為「系統控制伺服器」或「用戶端」嗎？",
+                    IDC_SYS_CONTROL_MACHINE_QUESTION,4,127,205,17
+    LTEXT           "「系統控制用戶端」接收任何從 Cell 的「系統控制伺服器」在 AFS 架構檔上的可用更新。",
+                    IDC_SYS_CONTROL_CLIENT_DESC,4,49,200,18
+    LTEXT           "系統控制伺服器(&Y)：",IDC_SYS_CONTROL_MACHINE_LABEL,11,
+                    173,78,8,WS_DISABLED
+    LTEXT           "",IDC_CANT_CONFIG_MSG,7,163,197,34,NOT WS_VISIBLE
+    LTEXT           "警告：未使用 AFS 美國分送的網站，不得透過「系統控制伺服器」分送架構檔案，否則會以未加密的方式傳送敏感的系統資訊。",
+                    -1,9,79,183,34
+END
+
+IDD_CONFIG_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "已具有在此系統上架構「AFS 伺服器」時所需的全部資訊。",
+                    IDC_ALL_NEEDED_MSG,1,13,209,17
+    LTEXT           "將此機器架構至 Cell <於執行期間設定>",IDC_TITLE,2,2,198,
+                    8
+    LTEXT           "將會執行以下的架構步驟：",IDC_FOLLOWING_STEPS_MSG,1,36,
+                    187,8
+    LTEXT           "步驟 1 - 執行期間設定的文字",IDC_STEP1,22,49,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 3 - 執行期間設定的文字",IDC_STEP3,22,73,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 2 - 執行期間設定的文字",IDC_STEP2,22,61,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 4 - 執行期間設定的文字",IDC_STEP4,22,85,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 5 - 執行期間設定的文字",IDC_STEP5,22,97,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 6 - 執行期間設定的文字",IDC_STEP6,22,109,179,8,NOT 
+                    WS_VISIBLE
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,1,178,200,11
+    LTEXT           "步驟 8 - 執行期間設定的文字",IDC_STEP8,22,133,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "步驟 7 - 執行期間設定的文字",IDC_STEP7,22,121,179,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "必要時，於執行期間設定的訊息。",IDC_CANT_CONFIG_MSG,1,
+                    13,209,17,NOT WS_VISIBLE
+    LTEXT           "完成百分比：",IDC_PERCENT_COMPLETE_LABEL,1,191,61,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "目前的作業：",IDC_CURRENT_STEP_LABEL,1,157,50,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "目前的步驟說明 - 於執行期間設定",IDC_CURRENT_STEP,1,167,
+                    208,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,63,191,49,8,NOT WS_VISIBLE
+    LTEXT           "如要開始架構此電腦，請按「架構」按鈕。如要變更所執行的架構步驟，請按「上一步」按鈕。",
+                    IDC_STATUS_MSG,1,159,200,41
+    LTEXT           "",IDC_STEP1_GRAPHIC,10,49,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP2_GRAPHIC,10,61,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP3_GRAPHIC,10,73,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP4_GRAPHIC,10,85,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP5_GRAPHIC,10,97,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP6_GRAPHIC,10,109,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP7_GRAPHIC,10,121,9,9,NOT WS_VISIBLE
+    LTEXT           "",IDC_STEP8_GRAPHIC,10,133,9,9,NOT WS_VISIBLE
+END
+
+IDD_INFO_PAGE2_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,64,55,138,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,64,71,138,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_VERIFY_ADMIN_PW,64,87,138,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_AFS_UID,94,156,37,12,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_AFS_UID_SPINNER,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,132,155,11,14
+    LTEXT           "管理上的資訊",IDC_TITLE,0,2,189,8
+    LTEXT           "名稱(&M)：",IDC_ADMIN_NAME_LABEL,7,57,38,8
+    LTEXT           "密碼(&P)：",IDC_ADMIN_PW_LABEL,7,73,34,8
+    GROUPBOX        "帳戶名稱與密碼",IDC_ADMIN_INFO_FRAME,0,41,210,65
+    LTEXT           "驗證密碼(&V)：",IDC_VERIFY_ADMIN_PW_LABEL,7,90,52,8
+    LTEXT           "下列是建立新 Cell 時所需的管理帳戶資訊。",IDC_STATIC,0,
+                    15,209,17
+    CONTROL         "使用此 AFS UID (&S)：",IDC_USE_THIS_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,157,85,10
+    CONTROL         "使用下個可用的 AFS UID (&U)",IDC_USE_NEXT_UID,"Button",
+                    BS_AUTORADIOBUTTON,6,144,136,10
+    GROUPBOX        "AFS UID",IDC_STATIC,0,118,209,57
+    LTEXT           "輸入 AFS 管理帳戶的使用者 ID：",IDC_STATIC,6,130,196,9
+END
+
+IDD_DB_SERVER_PAGE DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    CONTROL         "是，架構為「資料庫伺服器」(&Y)。",IDC_CONFIG_DB_SERVER,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,2,145,134,10
+    CONTROL         "不，不要架構為「資料庫伺服器」(&O)。",
+                    IDC_DONT_CONFIG_DB_SERVER,"Button",BS_AUTORADIOBUTTON,0,
+                    187,153,10
+    LTEXT           "「資料庫服務」維護 AFS Cell 所需的複製資料庫集。此服務維護 Cell 所有帳戶、容體位置以及（選用性的）備份資訊。",
+                    -1,4,37,191,54
+    LTEXT           "您要將本機器架構為「資料庫伺服器」嗎？",
+                    IDC_DB_SERVER_QUESTION,4,135,205,10
+    LTEXT           "將本機器架構為「資料庫伺服器」。",IDC_TITLE,4,4,204,8
+    LTEXT           "如要將本機器架構為「資料庫伺服器」，您必須架構「資料庫服務」。",
+                    -1,4,15,186,16
+    LTEXT           "此機器已架構為「資料庫伺服器」。",IDC_MSG,10,177,194,23,
+                    NOT WS_VISIBLE
+    EDITTEXT        IDC_SYS_CONTROL_MACHINE,97,174,108,12,ES_AUTOHSCROLL
+    LTEXT           "系統控制伺服器(&S)：",IDC_SYS_CONTROL_MACHINE_LABEL,9,
+                    175,77,8
+    LTEXT           "如果您的 Cell 具有「系統控制伺服器」，請在下方輸入其主電腦名稱。AFS 架構檔會透過此伺服器加以更新。",
+                    IDC_SCM_PROMPT,13,155,195,17
+END
+
+IDD_INFO_PAGE DIALOGEX 0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    CONTROL         "在現有的 AFS Cell  中，將此主電腦變成伺服器(&M)",
+                    IDC_JOIN_EXISTING_CELL,"Button",BS_AUTORADIOBUTTON,3,37,
+                    187,10
+    CONTROL         "這將是新的 AFS Cell 中的第一個伺服器(&T)",
+                    IDC_FIRST_SERVER,"Button",BS_AUTORADIOBUTTON,3,49,167,10
+    EDITTEXT        IDC_CELL_NAME,64,91,139,12,ES_LOWERCASE | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SERVER_PW,64,166,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_VERIFY_PW,64,180,139,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "Cell 與伺服器資訊",IDC_TITLE,3,1,203,8
+    LTEXT           "Cell 名稱(&C)：",IDC_CELL_NAME_LABEL,7,93,57,8
+    LTEXT           "密碼(&P)：",IDC_SERVER_PW_LABEL,7,167,34,8,WS_DISABLED
+    LTEXT           "輸入 AFS Cell 名稱。",IDC_CELL_NAME_PROMPT,8,78,195,11
+    LTEXT           "輸入 AFS 主體的密碼。所有的 AFS 伺服器都會取得此主體的記號。",
+                    IDC_SERVER_PW_PROMPT,7,130,196,19,WS_DISABLED
+    GROUPBOX        "Cell 名稱",IDC_CELL_NAME_FRAME,0,67,210,43
+    GROUPBOX        "伺服器密碼",IDC_SERVER_PW_FRAME,0,119,210,81,
+                    WS_DISABLED
+    LTEXT           "驗證密碼(&V)：",IDC_VERIFY_PW_LABEL,7,180,52,8,
+                    WS_DISABLED
+    LTEXT           "AFS Cell 是提供檔案存取統一宣告名稱儲存區的伺服器集合。",
+                    IDC_CELL_NAME_PROMPT2,3,15,191,17
+    LTEXT           "名稱：",IDC_PRINCIPAL_LABEL,7,152,34,8,WS_DISABLED
+    LTEXT           "afs",IDC_PRINCIPAL,64,150,139,12,WS_DISABLED,
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_INFO_PAGE2_NOT_FIRST_SERVER DIALOG DISCARDABLE  0, 0, 210, 200
+STYLE DS_CONTROL | WS_CHILD | WS_BORDER
+FONT 9, "新細明體"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,65,43,138,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,65,59,138,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,65,132,138,12,ES_AUTOHSCROLL
+    LTEXT           "管理上的資訊",IDC_TITLE,4,2,198,8
+    LTEXT           "在下方輸入管理帳戶資訊：",IDC_ADMIN_INFO_PROMPT,7,30,
+                    196,10
+    LTEXT           "名稱(&N)：",IDC_ADMIN_NAME_LABEL,7,46,37,8
+    LTEXT           "密碼(&P)：",IDC_ADMIN_PW_LABEL,7,62,34,8
+    GROUPBOX        "帳戶名稱與密碼",IDC_ADMIN_INFO_FRAME,0,17,210,62
+    GROUPBOX        "現有的 AFS 伺服器",IDC_HOSTNAME_FRAME,1,92,209,60
+    LTEXT           "AFS 伺服器：",IDC_HOSTNAME_LABEL,9,134,53,8
+    LTEXT           "輸入其他要加在 Cell 中的 AFS 伺服器主電腦名稱。將從此伺服器上取得 AFS 架構資訊。",
+                    IDC_HOSTNAME_PROMPT,7,105,195,25
+END
+
+IDD_SERVICES_PAGE DIALOG DISCARDABLE  0, 0, 295, 265
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "服務"
+FONT 9, "新細明體"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,25,281,35
+    GROUPBOX        "",IDC_STATIC,7,72,281,37
+    GROUPBOX        "",IDC_STATIC,7,120,281,35
+    GROUPBOX        "",IDC_STATIC,7,166,281,35
+    CONTROL         "檔案服務",IDC_FS_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,19,60,10
+    CONTROL         "資料庫服務",IDC_DB_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,65,82,10
+    PUSHBUTTON      "明細...",IDC_DB_DETAILS,230,88,50,14,NOT WS_VISIBLE
+    CONTROL         "備份伺服器",IDC_BK_SERVICE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,114,71,10
+    CONTROL         "系統控制伺服器",IDC_SCS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,160,98,10
+    EDITTEXT        IDC_SC_MACHINE,107,230,119,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "選取在此 AFS 伺服器上執行的服務：",IDC_STATIC,7,7,144,8
+    LTEXT           "目前正在執行「檔案服務」。",IDC_FS_STATUS_MSG,14,32,261,
+                    8
+    LTEXT           "目前已部份安裝「資料庫服務」。",IDC_DB_STATUS_MSG,14,78,
+                    195,8
+    LTEXT           "系統控制伺服器(&Y)：",IDC_SC_MACHINE_LABEL,25,232,79,8,
+                    WS_DISABLED
+    LTEXT           "如要停止「檔案服務」，請取消上面的方塊勾選。",
+                    IDC_FS_ACTION_MSG,14,44,262,8
+    LTEXT           "按一下明細，以查閱詳細資訊。",IDC_DB_ACTION_MSG,14,92,
+                    208,8
+    LTEXT           "目前正在執行「備份伺服器」。",IDC_BK_STATUS_MSG,14,127,
+                    259,8
+    LTEXT           "如要停止「備份伺服器」，請取消上面的方塊勾選。",
+                    IDC_BK_ACTION_MSG,14,139,262,8
+    LTEXT           "如要啟動此伺服器，您必須執行「檔案服務」或「資料庫服務」。",
+                    IDC_SCS_ACTION_MSG,14,185,268,9
+    LTEXT           "目前並未執行「系統控制」服務。",IDC_SCS_STATUS_MSG,14,
+                    172,263,9
+    GROUPBOX        "",IDC_STATIC,7,213,281,45
+    CONTROL         "系統控制用戶端",IDC_SCC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,206,95,10
+    LTEXT           "如要啟動此伺服器，您必須執行「檔案服務」或「資料庫服務」。",
+                    IDC_SCC_ACTION_MSG,14,245,268,9
+    LTEXT           "目前並未執行「系統控制」服務。",IDC_SCC_STATUS_MSG,14,
+                    219,263,9
+END
+
+IDD_PARTITIONS_PAGE DIALOGEX 0, 0, 295, 265
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "分割區"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    LTEXT           "您的電腦上有下列  AFS 分割區(&A)：",IDC_STATIC,8,7,175,
+                    8
+    PUSHBUTTON      "建立(&C)...",IDC_CREATE_PARTITIONS,17,118,53,14
+    LTEXT           "如要援救分割區或分割區上的容體，請選擇清單上的分割區，並按上面的按鈕。如要援救此伺服器上的所有分割區，請按上面的按鈕。",
+                    IDC_SALVAGE_MSG,30,179,250,25
+    PUSHBUTTON      "援救(&S)...",IDC_SALVAGE,17,159,53,14
+    LTEXT           "如要移除分割區，請選擇清單上的分割區，並按一下上面的按鈕。",
+                    IDC_REMOVE_MSG,30,235,253,8,WS_DISABLED
+    PUSHBUTTON      "移除(&M)",IDC_REMOVE,17,217,53,14,WS_DISABLED
+    GROUPBOX        "分割區",IDC_AGGR_FRAME,7,103,281,155
+    CONTROL         "",IDC_PARTITION_LIST,"FastList",WS_TABSTOP | 0x83,7,16,
+                    281,79,WS_EX_CLIENTEDGE
+    LTEXT           "如要在此伺服器上建立新的分割區，請按上面的按鈕。",
+                    IDC_CREATE_MSG,30,136,254,8
+END
+
+IDD_CREATE_PARTITION DIALOGEX 0, 0, 264, 177
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "建立 AFS 分割區"
+FONT 9, "新細明體", 0, 0, 0x1
+BEGIN
+    LTEXT           "在下方清單中選取 NTFS 容體，以建立新的分割區：",
+                    IDC_TITLE,7,5,250,8
+    LTEXT           "AFS 分割區名稱：",IDC_NAME_STATIC,17,131,66,8
+    EDITTEXT        IDC_PARTITION_NAME,112,129,20,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "建立(&C)",IDC_CREATE,96,158,50,14,WS_DISABLED
+    PUSHBUTTON      "關閉(&O)",IDC_CLOSE,152,158,50,14
+    PUSHBUTTON      "說明",9,207,158,50,14
+    GROUPBOX        "分割區參數",IDC_ARGS_FRAME,7,117,250,33
+    CONTROL         "",IDC_DRIVE_LIST,"FastList",WS_TABSTOP | 0x8b,7,15,250,
+                    95,WS_EX_CLIENTEDGE
+    LTEXT           "/vicep",IDC_VICEP_STATIC,90,131,22,8
+END
+
+IDD_ADMIN_INFO DIALOG DISCARDABLE  0, 0, 225, 157
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 伺服器架構"
+FONT 9, "新細明體"
+BEGIN
+    EDITTEXT        IDC_ADMIN_NAME,80,33,130,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ADMIN_PW,80,49,130,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_HOSTNAME,80,110,130,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "架構(&C)",IDOK,109,132,50,14,WS_DISABLED
+    PUSHBUTTON      "取消",IDCANCEL,49,132,50,14
+    PUSHBUTTON      "說明",9,169,132,50,14
+    LTEXT           "在下方輸入管理帳戶資訊：",IDC_ADMIN_INFO_PROMPT,14,20,
+                    196,10
+    LTEXT           "名稱(&N)：",IDC_ADMIN_NAME_LABEL,15,36,44,8
+    LTEXT           "密碼(&P)：",IDC_ADMIN_PW_LABEL,15,52,34,8
+    GROUPBOX        "帳戶名稱與密碼",IDC_ADMIN_INFO_FRAME,7,7,211,62
+    GROUPBOX        "系統控制伺服器",IDC_HOSTNAME_FRAME,7,76,211,54
+    LTEXT           "主電腦名稱(&H)：",IDC_HOSTNAME_LABEL,15,112,62,8
+    LTEXT           "如果您的 Cell 具有「系統控制伺服器」，請在下方輸入其主電腦名稱。AFS 架構檔會透過此伺服器加以更新。",
+                    IDC_HOSTNAME_PROMPT,13,88,197,18
+    LTEXT           "轉換程式：請仔細閱\\讀以下說明！此對話方塊會在執行期間會重新調整大小。在特定情況下，對話方塊會重新調整大小，而屬於底端群組方塊的一切都會隱藏起來。",
+                    IDC_STATIC,7,140,211,16,NOT WS_VISIBLE
+END
+
+IDD_CONFIG_SERVER DIALOG DISCARDABLE  0, 0, 257, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AFS 伺服器架構"
+FONT 9, "新細明體"
+BEGIN
+    PUSHBUTTON      "取消",IDCANCEL,74,75,50,14
+    CONTROL         "Progress1",IDC_CONFIG_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE,40,44,200,11
+    LTEXT           "完成百分比：",IDC_PERCENT_COMPLETE_LABEL,40,60,61,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "目前的作業：",IDC_CURRENT_STEP_LABEL,39,24,60,8,NOT 
+                    WS_VISIBLE
+    LTEXT           "目前步驟的說明 - 於執行期間設定",IDC_CURRENT_STEP,40,33,
+                    210,8,NOT WS_VISIBLE
+    LTEXT           "",IDC_PERCENT_COMPLETE,101,50,49,8,NOT WS_VISIBLE
+    ICON            "",IDC_LOGO,7,7,20,20
+    LTEXT           "若要開始架構此電腦，請按「架構」按鈕。若要變更所執行的架構步驟，請按「上一步」按鈕。",
+                    IDC_STATUS_MSG,40,7,210,50
+    PUSHBUTTON      "檢視日誌(&V)",IDNEXT,130,75,50,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+END
+
+IDD_CELLSERVDB_ERRORS DIALOG DISCARDABLE  0, 0, 187, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "CellServCB 更新錯誤"
+FONT 9, "新細明體"
+BEGIN
+    LISTBOX         IDC_LIST,7,26,173,127,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "確定",IDOK,22,162,50,14
+    PUSHBUTTON      "取消",IDCANCEL,75,162,50,14
+    PUSHBUTTON      "說明",9,130,162,50,14
+    LTEXT           "無法自動更新下列 AFS 伺服器上的 CellServDB 檔案：",
+                    IDC_STATIC,12,7,165,18
+END
+
+IDD_SALVAGE DIALOG DISCARDABLE  0, 0, 243, 179
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "援救"
+FONT 9, "新細明體"
+BEGIN
+    DEFPUSHBUTTON   "確定",IDOK,67,93,50,14
+    PUSHBUTTON      "取消",IDCANCEL,127,93,50,14
+    PUSHBUTTON      "說明(&H)",9,187,93,50,14
+    CONTROL         "援救此「檔案伺服器」上的所有分割區(&S)",IDC_SERVER,
+                    "Button",BS_AUTORADIOBUTTON,14,29,176,10
+    CONTROL         "援救選取分割區上的所有容體(&P)",IDC_PARTITION,"Button",
+                    BS_AUTORADIOBUTTON,14,42,177,10
+    CONTROL         "援救選取分割區上的特定容體(&V)",IDC_VOLUME,"Button",
+                    BS_AUTORADIOBUTTON,14,55,177,10
+    EDITTEXT        IDC_VOLUME_NAME,93,68,133,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    PUSHBUTTON      "<< 進階(&A) ",IDC_ADVANCED,7,93,50,14
+    GROUPBOX        "",IDC_STATIC,7,19,229,67
+    LTEXT           "容體名稱(&N)：",IDC_VOLUME_NAME_LABEL,27,69,56,8,
+                    WS_DISABLED
+    GROUPBOX        "進階援救選項",IDC_ADVANCED_FRAME,7,113,229,62
+    LTEXT           "暫存檔路徑(&T)：",IDC_TEMP_DIR_LABEL,17,159,74,8
+    EDITTEXT        IDC_LOG_FILE,106,141,120,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NUM_PROCESSES,140,124,86,12,ES_AUTOHSCROLL
+    LTEXT           "結果日誌的檔案名稱(&L)：",IDC_LOG_FILE_LABEL,17,143,90,
+                    8
+    EDITTEXT        IDC_TEMP_DIR,93,157,133,12,ES_AUTOHSCROLL
+    CONTROL         "平行援救作業；處理數目(&R)：",
+                    IDC_NUM_PROCESSES_CHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,17,126,125,10
+    LTEXT           "若您援救伺服器或整個分割區，伺服器會暫時離線。",
+                    IDC_STATIC,38,1,198,17
+    LTEXT           "附註：",IDC_STATIC,7,1,26,8
+    LTEXT           "轉換程式：請仔細閱\\讀以下說明！此對話方塊會在執行期間重新調整大小。在特定情況下，對話方塊會重新調整大小，而屬於底端群組方塊的一切都會隱藏起來。",
+                    IDC_STATIC,14,171,229,8,NOT WS_VISIBLE
+END
+
+IDD_GET_PW DIALOG DISCARDABLE  0, 0, 197, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "AFS 主體密碼"
+FONT 9, "新細明體"
+BEGIN
+    EDITTEXT        IDC_PW,48,39,142,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "確定",IDOK,31,61,50,14
+    PUSHBUTTON      "取消",IDCANCEL,85,61,50,14
+    PUSHBUTTON      "說明",9,140,61,50,14
+    LTEXT           "無法從 pre-3.5 「鑑別伺服器」上取得 AFS 主體金鑰。請在下方輸入 AFS 主體密碼。",
+                    IDC_STATIC,7,7,183,26
+    LTEXT           "密碼：",IDC_STATIC,7,41,35,8
+END
+
+IDD_SALVAGE_RESULTS DIALOG DISCARDABLE  0, 0, 337, 287
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "援救容體 - 結果"
+FONT 9, "新細明體"
+BEGIN
+    EDITTEXT        IDC_LOG,7,48,323,211,ES_MULTILINE | ES_READONLY | 
+                    WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "關閉(&C)",IDC_CLOSE,225,266,50,14,WS_DISABLED
+    PUSHBUTTON      "說明",9,280,266,50,14
+    LTEXT           "<於執行期間設定>",IDC_LOG_TITLE,7,38,263,8
+    ICON            "",IDC_LOGO,7,7,21,20
+    LTEXT           "<於執行期間設定>",IDC_SALVAGE_STATUS,37,15,185,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 239
+        HORZGUIDE, 207
+    END
+
+    IDD_INTRO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 209
+    END
+
+    IDD_GET_CURRENT_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 191
+        VERTGUIDE, 35
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_BACKUP_SERVER_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 212
+        BOTTOMMARGIN, 197
+    END
+
+    IDD_CONFIG_SERVER_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        VERTGUIDE, 11
+        VERTGUIDE, 22
+        VERTGUIDE, 201
+    END
+
+    IDD_INFO_PAGE2_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 6
+        VERTGUIDE, 64
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 203
+        VERTGUIDE, 64
+        VERTGUIDE, 203
+        TOPMARGIN, 7
+    END
+
+    IDD_INFO_PAGE2_NOT_FIRST_SERVER, DIALOG
+    BEGIN
+        VERTGUIDE, 53
+        VERTGUIDE, 202
+        TOPMARGIN, 7
+    END
+
+    IDD_SERVICES_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 288
+        VERTGUIDE, 14
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_PARTITIONS_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 17
+        VERTGUIDE, 30
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 258
+    END
+
+    IDD_ADMIN_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 59
+        VERTGUIDE, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 150
+    END
+
+    IDD_CONFIG_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 90
+    END
+
+    IDD_CELLSERVDB_ERRORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_SALVAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 172
+        HORZGUIDE, 7
+    END
+
+    IDD_GET_PW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 190
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_SALVAGE_RESULTS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 330
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#define  AFS_VERINFO_FILE_DESCRIPTION ""AFS Configuration application and wizard""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_GRAPHIC_16          BITMAP  DISCARDABLE     "status_16.bmp"
+IDB_GRAPHIC_256         BITMAP  DISCARDABLE     "status_256.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DISABLED_DISK_DRIVE ICON    DISCARDABLE     "disabled.ico"
+IDI_DISK_DRIVE          ICON    DISCARDABLE     "disk_dri.ico"
+IDI_APP_ICON            ICON    DISCARDABLE     "app_icon.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FILE                ICON    DISCARDABLE     "file.ico"
+IDI_DISK_DRIVE_WITH_WARNING ICON    DISCARDABLE     "warn_dri.ico"
+IDI_AFS_DISK_DRIVE      ICON    DISCARDABLE     "afsdrive.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEXT                "下一步(&N) >"
+    IDS_FINISH              "完成(&F)"
+    IDS_HELP_TITLE          "已按下說明按鈕"
+    IDS_HELP_DESC           "目前無法提供說明。"
+    IDS_CANCEL_DESC         "要取消「AFS 快速啟動精靈」嗎？"
+    IDS_PARTITION_ALREADY_CREATED "此機器上已有 AFS 分割區。"
+    IDS_NOT_A_FS_SERVER     "此機器並未架構為「檔案伺服器」。容體只能建立在「檔案伺服器」機器上。"
+    IDS_ROOT_AFS_ALREADY_EXISTS "根容體已經存在。"
+    IDS_NO_PARTITION_EXISTS "沒有可建立根容體的分割區。要建立之前，分割區必須先存在。"
+    IDS_ALREADY_REPLICATED  "已經複製根容體。"
+    IDS_ROOT_AFS_DOESNT_EXIST "根容體並不存在。必須先有根容體，才能加以複製。"
+    IDS_ALREADY_CONFIGURED  "此機器已架構為「AFS 伺服器」。"
+    IDS_NOTHING_TO_CONFIGURE "您尚未選擇所要架構的項目。"
+    IDS_EXIT                "結束"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_FS_STEP       "啟動檔案服務"
+    IDS_CANCEL_CONFIG_MSG   "如果現在取消，電腦僅會完成部份的 AFS 伺服器架構。確定要取消？"
+    IDS_WIZARD_APP_TITLE    "AFS 伺服器快速啟動精靈"
+    IDS_CANCEL_PENDING      "*** 取消擱置 - 請稍待... ***"
+    IDS_CHECK_FS_CONFIG     "檔案伺服器檢查..."
+    IDS_CHECK_DB_CONFIG     "資料庫伺服器檢查..."
+    IDS_CHECK_BAK_CONFIG    "備份伺服器檢查..."
+    IDS_CHECK_PARTITION     "AFS 分割區檢查..."
+    IDS_CHECK_ROOT_AFS      "根容體檢查..."
+    IDS_CHECK_REP           "根容體複製檢查..."
+    IDS_CANCEL_GET_CONFIG   "取消中...請稍待..."
+    IDS_ALREADY_A_BACKUP_SERVER "此機器已架構為「備份伺服器」。"
+    IDS_NOT_A_DB_SERVER     "此機器並未架構為「資料庫伺服器」。「備份伺服器」只能在「資料庫伺服器」機器上執行。"
+    IDS_ALREADY_A_SYS_CONTROL_SERVER "此機器已架構為「系統控制伺服器」。"
+    IDS_ALREADY_A_SYS_CONTROL_CLIENT "此機器已架構為「系統控制用戶端」。"
+    IDS_SC_NOT_A_DB_OR_FS_SERVER 
+                            "此機器並未架構為「資料庫」或「檔案伺服器」。電腦必須同時架構為「資料庫」或「檔案伺服器」機器，才能架構為「系統控制」機器。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRIVE               "容體"
+    IDS_NAME_OR_ERROR       "名稱（或錯誤訊息）"
+    IDS_BIN_NOT_A_DB_OR_FS_SERVER 
+                            "此機器並未架構為「資料庫」或「檔案伺服器」。電腦必須同時架構為「資料庫」或「檔案伺服器」機器，才能架構為「二進位分配」機器。"
+    IDS_CHECK_SCS           "系統控制伺服器檢查..."
+    IDS_CHECK_SCC           "系統控制用戶端檢查..."
+    IDS_SIZE                "大小"
+    IDS_ERROR_SEP           ",   "
+    IDS_MUST_CONFIG_FS      "由於這是 Cell 中的第一個「AFS 伺服器」，因此將依預設來架構「檔案服務」。"
+    IDS_MUST_CONFIG_DB      "由於這是 Cell 中的第一個「 AFS 伺服器」，因此將依預設來架構「資料庫服務」。"
+    IDS_MUST_MAKE_PARTITION "由於這是 Cell 中的第一個「AFS 伺服器」，因此必須建立分割區。"
+    IDS_MUST_CREATE_ROOT_AFS 
+                            "由於這是 Cell 中的第一個「AFS 伺服器」，因此將依預設建立 root.afs 與 root.cell 容體。"
+    IDS_MUST_REPLICATE      "由於這是 Cell 中的第一個「AFS 伺服器」，因此將依預設複製 root.afs 與 root.cell 容體。"
+    IDS_CHECK_AFS_CLIENT    "AFS 用戶端安裝檢查..."
+    IDS_ERROR_HOST_NAME     "無法決定此機器的主電腦名稱。"
+    IDS_ERROR_DRIVE_COMPRESSED "已壓縮磁碟機"
+    IDS_ERROR_CFG_HOST_OPEN "無法起始設定「伺服器架構程式庫」。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STOP_CLIENT_STEP    "停止 AFS 用戶端"
+    IDS_ERROR_LOCAL_HOST_NAME "無法決定此機器的本端主電腦名稱。"
+    IDS_GET_TOKENS_ERROR    "無法取得記號。請確認您所輸入的使用者名稱與密碼是否正確。"
+    IDS_CANT_SALVAGE_WHEN_FS_NOT_CONFIGURED 
+                            "由於尚未啟動檔案服務，因此無法進行援救。請啟動檔案服務，然後重新執行援救。"
+    IDS_SALVAGING           "正進行援救中。請稍待..."
+    IDS_CURRENT_SALVAGE_LOG "援救日誌目前的內容："
+    IDS_FINAL_SALVAGE_LOG   "援救日誌的最終內容："
+    IDS_SALVAGE_COMPLETE    "援救已完成。"
+    IDS_CANT_GET_SALVAGE_LOG "無法取出援救日誌。"
+    IDS_ERROR_SAVING_SALVAGE_LOG_TO_DISK "無法將援救日誌儲存到磁碟上。"
+    IDS_VALIDATION_ERROR_TEMPLATE "指定的 %1 無效。請重新輸入 %2。"
+    IDS_CELL_NAME_VALIDATION_TYPE "Cell 名稱"
+    IDS_SERVER_NAME_VALIDATION_TYPE "伺服器名稱"
+    IDS_PASSWORD_VALIDATION_TYPE "密碼"
+    IDS_UID_VALIDATION_TYPE "UID"
+    IDS_USER_NAME_VALIDATION_TYPE "使用者名稱"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_AFS_CLIENT_NOT_INSTALLED 
+                            "尚未安裝「AFS 用戶端」。必須先安裝「AFS 用戶端」，才能架構「AFS 伺服器」。"
+    IDS_ERROR_AFS_CLIENT_CHECK "無法決定是否已安裝了「AFS 用戶端」。"
+    IDS_ERROR_FS_IS_NOT_NTFS "檔案系統並非 NTFS"
+    IDS_ERROR_DRIVE_HAS_DATA "磁碟機包含資料"
+    IDS_PARTITION_STEP_DESC "建立 AFS 分割區"
+    IDS_ERROR_DRIVE_CONTAINS_NT "磁碟機包括 NT 安裝"
+    IDS_DB_STEP_DESC        "啟動資料庫服務"
+    IDS_FS_STEP_DESC        "啟動檔案服務"
+    IDS_SCC_STEP_DESC       "啟動系統控制用戶端"
+    IDS_SCS_STEP_DESC       "啟動系統控制伺服器"
+    IDS_ROOT_AFS_STEP_DESC  "建立根容體"
+    IDS_REP_STEP_DESC       "複製根容體"
+    IDS_PARTITIONS_PAGE_TITLE "分割區"
+    IDS_CONFIGURE           "架構(&C)"
+    IDS_DB_AND_BK_STEP_DESC "啟動資料庫服務（包括備份伺服器）"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_STEP      "建立 AFS 分割區"
+    IDS_CONFIG_COMMON_FUNCS "架構所有服務共通的功能"
+    IDS_START_DB_STEP       "啟動資料庫服務"
+    IDS_START_SCC_STEP      "將系統控制伺服器啟動為系統控制用戶端"
+    IDS_START_SCS_STEP      "將系統控制伺服器啟動為系統控制伺服器"
+    IDS_CREATE_ROOT_AFS_STEP "建立 root.afs 容體"
+    IDS_REP_STEP            "複製根容體"
+    IDS_START_AUTH_STEP     "取得此伺服器的記號"
+    IDS_SERVICES_PAGE_TITLE "服務"
+    IDS_CONFIG_SUCCEEDED    "已順利完成架構。"
+    IDS_CONFIG_CANCELED     "已取消架構。"
+    IDS_CONFIG_FAILED       "架構失敗。\r\n\r\n詳細的日誌檔 %1 已在位置 %2 建立。"
+    IDS_ERROR_NO_LICENSE_NUM "找不到 AFS 授權號碼。"
+    IDS_VERIFY_CLIENT_INSTALL_STEP "驗證 AFS 用戶端的安裝"
+    IDS_SET_SERVER_LICENSE_STEP "設定此伺服器的授權"
+    IDS_DEFINE_CELL_NAME_STEP "定義本 Cell 的名稱"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFINE_CELL_MEMBERSHIP_STEP "將此伺服器變成 Cell  的一員"
+    IDS_START_BOS_SERVER_STEP "啟動 BOS 伺服器"
+    IDS_START_AUTH_SERVER_STEP "啟動鑑別伺服器"
+    IDS_CREATE_PRINCIPAL_AND_KEY_STEP "為此伺服器建立主體與金鑰"
+    IDS_START_DB_AND_BK_STEP "啟動資料庫服務（包括備份伺服器）"
+    IDS_CREATE_ADMIN_PRINCIPAL_STEP "建立 Cell 管理者主體"
+    IDS_START_CLIENT_STEP   "啟動 AFS 用戶端"
+    IDS_SET_ROOT_ACL_STEP   "在 root.afs 容體上設定 ACL"
+    IDS_CREATE_ROOT_CELL_STEP "建立 root.cell 容體"
+    IDS_MOUNT_ROOT_CELL_STANDARD_STEP "使用標準裝載點裝載 root.cell 容體"
+    IDS_SET_ROOT_CELL_ACL_STEP "在 root.cell 容體上設定 ACL"
+    IDS_MOUNT_ROOT_CELL_RW_STEP "使用讀取 / 寫入裝載點裝載 root.cell"
+    IDS_ENABLE_AUTH_CHECKING_STEP "啟動鑑別檢查"
+    IDS_OBTAIN_ADMIN_CREDS_STEP "取得管理記號"
+    IDS_RESTART_SERVERS_STEP "重新將此機器上的所有伺服器啟動為鑑別伺服器"
+    IDS_ALREADY_A_FS_SERVER "此機器已架構為「檔案伺服器」。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALREADY_A_DB_SERVER "此機器已架構為「資料庫伺服器」。"
+    IDS_INTRO_PAGE          "簡介"
+    IDS_INFO_PAGE           "Cell 與伺服器資訊"
+    IDS_FS_PAGE             "檔案服務"
+    IDS_DB_PAGE             "資料庫服務"
+    IDS_CFG_TOOL_APP_TITLE  "AFS 伺服器架構"
+    IDS_BK_PAGE             "備份伺服器"
+    IDS_ROOT_AFS_PAGE       "根 AFS 容體"
+    IDS_NAME                "名稱"
+    IDS_REP_PAGE            "複製"
+    IDS_SC_PAGE             "系統控制伺服器"
+    IDS_CONFIG_PAGE         "架構系統"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_PAGE      "AFS 分割區"
+    IDS_GRAPHIC_FONT        "新細明體, 9, B"
+    IDS_CURRENT_STEP        "目前的步驟："
+    IDS_ADD_TO_CELLSERVDB_STEP "將此伺服器新增至 CellServDB"
+    IDS_RESTART_ALL_DB_SERVERS_STEP "重新啟動 Cell 上所有的資料庫伺服器"
+    IDS_CONFIG_SUCCEEDED_NEED_CELLSERVDB_UPDATE 
+                            "已完成架構。附註：必須更新 Cell 中所有的 AFS 用戶端 CellServDB 檔案。如果您的 Cell 要供其他網站使用，請將最新的「資料庫伺服器」清單提供給「AFS 產品支援」。"
+    IDS_SYS_CONTROL_SERVER_ONLY_MSG "您要將此機器架構為「系統控制伺服器」嗎？"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DONT_CONFIG_SYS_CONTROL_SERVER_MSG "不要架構為系統控制伺服器(&O)。"
+    IDS_CLIENT_CELL_WILL_CHANGE 
+                            "如要架構「AFS 伺服器」，「AFS 用戶端」也必須在相同的 Cell 中架構為「伺服器」。將會自動完成此步驟。"
+    IDS_INFO_PAGE2          "管理上的資訊"
+    IDS_CONFIG_SUCCEEDED_FIRST_SERVER 
+                            "已完成架構。\r\n\r\n附註：如果您的 Cell 要供其他網站使用，請將最新的「資料庫伺服器」清單提供給「AFS 產品支援」。"
+    IDS_CONFIG_SCS          "架構為 Cell 的「系統控制伺服器」。"
+    IDS_CONFIG_INTO_CELL_MSG "將此主電腦架構為 Cell"
+    IDS_VIEW_LOG            "檢視日誌(&V)"
+    IDS_VIEW_LOG_ERROR      "無法檢視日誌檔"
+    IDS_ERROR_NO_LOG_FILE   "日誌檔不存在。"
+    IDS_UPDATING_CELLSERVDB_HOST_SUCCEEDED "更新主電腦上的 CellServDB "
+    IDS_UPDATING_CELLSERVDB_HOST_FAILED "無法更新主電腦上的 CellServDB "
+    IDS_CELL_NAME_LEN_ERROR "您所輸入的 Cell 名稱太長。Cell 名稱不得超過 64 個字元。"
+    IDS_CONFIG_CHECK_FAILED "無法決定此機器目前的架構。"
+    IDS_YES                 "是"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NO                  "否"
+    IDS_FREE                "可用空間"
+    IDS_TOTAL               "總計大小"
+    IDS_DRIVE2              "磁碟機"
+    IDS_SERVICE_STATUS      "狀態"
+    IDS_SERVICE             "服務"
+    IDS_FS_RUNNING          "目前正在執行「檔案服務」。"
+    IDS_FS_STOPPED          "目前並未執行「檔案服務」。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DB_RUNNING          "目前正在執行「資料庫服務」。"
+    IDS_DB_STOPPED          "目前並未執行「資料庫服務」。"
+    IDS_BK_RUNNING          "目前正在執行「備份服務」。"
+    IDS_BK_STOPPED          "目前並未執行「備份服務」。"
+    IDS_SCS_STOPPED         "目前並未執行「系統控制伺服器」。"
+    IDS_SCC_STOPPED         "目前並未執行「系統控制用戶端」。"
+    IDS_FS_HOW_TO_RUN       "如要啟動「檔案服務」，請勾選上面的方塊。"
+    IDS_FS_HOW_TO_STOP      "如要停止「檔案服務」，請取消上面的方塊勾選。"
+    IDS_DB_HOW_TO_RUN       "如要啟動「資料庫服務」，請勾選上面的方塊。"
+    IDS_DB_HOW_TO_STOP      "如要停止「資料庫服務」，請取消上面的方塊勾選。"
+    IDS_BK_HOW_TO_RUN       "如要啟動「備份服務」，請勾選上面的方塊。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BK_HOW_TO_STOP      "如要停止「備份服務」，請取消上面的方塊勾選。"
+    IDS_SCS_HOW_TO_RUN      "如要啟動「系統控制伺服器」，請勾選上面的方塊。"
+    IDS_SCS_HOW_TO_STOP     "如要停止「系統控制伺服器」，請取消上面的方塊勾選。"
+    IDS_DB_PARTIAL_CONFIG   "已部份架構「資料庫服務」。"
+    IDS_DB_DETAILS          "按一下「明細」按鈕，查閱詳細資訊。"
+    IDS_BK_DISABLED         "已停用「備份服務」。"
+    IDS_BK_ENABLE           "如要啟動「備份服務」，您必須執行「資料庫服務」。"
+    IDS_SC_DISABLED         "已停用此伺服器。"
+    IDS_SC_ENABLE           "如要啟動此伺服器，您必須執行「檔案服務」或「資料庫服務」。"
+    IDS_FS_WILL_RUN         "將會啟動「檔案服務」。"
+    IDS_FS_WILL_STOP        "將會停止「檔案服務」。"
+    IDS_DB_WILL_RUN         "將會啟動「資料庫服務」。"
+    IDS_DB_WILL_STOP        "將會停止「資料庫服務」。"
+    IDS_BK_WILL_RUN         "將會啟動「備份服務」。"
+    IDS_BK_WILL_STOP        "將會停止「備份服務」。"
+    IDS_SCS_WILL_RUN        "將會啟動「系統控制伺服器」。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCS_WILL_STOP       "將會停止「系統控制伺服器」。"
+    IDS_ERROR_DRIVE_ALREADY_HAS_AFS "磁碟機已是 AFS 分割區"
+    IDS_VOLUME_HAS_NO_NAME  "<容體沒有名稱>"
+    IDS_PARTITION_CREATED   "已順利建立新的「AFS 分割區」。"
+    IDS_PARTITION_EXISTS    "您所輸入的分割區名稱已有其他分割區在使用。"
+    IDS_SCS_RUNNING         "目前正在執行「系統控制伺服器」。"
+    IDS_WARNING_DRIVE_HAS_RECYCLE_BIN "此磁碟機只包含「資源回收筒」。"
+    IDS_SCC_WILL_RUN        "將會啟動「系統控制用戶端」。"
+    IDS_SCC_WILL_STOP       "將會停止「系統控制用戶端」。"
+    IDS_SCC_RUNNING         "目前正在執行「系統控制用戶端」。"
+    IDS_SCC_HOW_TO_RUN      "如要啟動「系統控制用戶端」，請勾選上面的方塊。"
+    IDS_SCC_HOW_TO_STOP     "如要停止「系統控制用戶端」，請取消勾選上面的方塊。"
+    IDS_SCS_ENABLE          "如要啟動此伺服器，您必須停止執行「系統控制用戶端」。"
+    IDS_SCC_ENABLE          "如要啟動此伺服器，您必須停止執行「系統控制伺服器」。"
+    IDS_UNCONFIG_DB_STEP    "取消架構資料庫服務"
+    IDS_UNCONFIG_DB_STEP_DESC "取消架構資料庫服務"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNCONFIG_DB_AND_BK_STEP "取消架構資料庫服務（與備份伺服器）"
+    IDS_UNCONFIG_DB_AND_BK_STEP_DESC "取消架構資料庫服務（與備份伺服器）"
+    IDS_UNCONFIG_BK_STEP    "取消架構備份伺服器"
+    IDS_UNCONFIG_BK_STEP_DESC "取消架構備份伺服器"
+    IDS_UNCONFIG_FS_STEP    "取消架構檔案服務"
+    IDS_UNCONFIG_FS_STEP_DESC "取消架構檔案服務"
+    IDS_UNCONFIG_SCS_STEP   "取消架構系統控制伺服器"
+    IDS_UNCONFIG_SCS_STEP_DESC "取消架構系統控制伺服器"
+    IDS_UNCONFIG_SCC_STEP   "取消架構系統控制用戶端"
+    IDS_UNCONFIG_SCC_STEP_DESC "取消架構系統控制用戶端"
+    IDS_INVALIDATE_CONFIG_INFO_STEP "使此機器的架構資訊失效"
+    IDS_CLOSE               "關閉(&C)"
+    IDS_CELLSERVDB_UPDATE_ERR_MSG 
+                            "案無法在下列  AFS 伺服器上更新 CellServDB 檔。這並非嚴重的錯誤。\r\n"
+    IDS_DELETE_PARTITION_PROMPT "真的要刪除分割區 '%1'？"
+    IDS_INVALIDATE_CFG_INFO "目前此電腦並沒有正在執行的 AFS 伺服器處理。您要將架構資訊從此機器上移除嗎？"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CELL_IS_GONE_MUST_EXIT 
+                            "Cell 已經不存在。「AFS 架構」應用程式只能用來架構已架構在 AFS Cell 之伺服器機器。「AFS 架構精靈」可用來啟動新的 Cell。"
+    IDS_CFG_MAN_CANT_CONTINUE 
+                            "「AFS 架構」應用程式必須立即終止，因為該程式只能在已架構為 AFS伺服器之機器上執行。如要將此機器再次架構為 AFS 伺服器，請執行「AFS 架構精靈」。"
+    IDS_CONFIG_INFO_INVALIDATED 
+                            "此機器已不再架構為「AFS 伺服器」。「AFS 架構」應用程式只能用來架構「AFS 伺服器」機器。「AFS 架構精靈」可將此機器再次架構為「AFS 伺服器」。"
+    IDS_GET_TOKENS_FAILED   "無法取得指定 Cell 的記號。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_BK_STEP       "啟動備份伺服器"
+    IDS_BK_STEP_DESC        "啟動備份伺服器"
+    IDS_CONFIG_ERROR        "發生了架構錯誤"
+    IDS_CREATE_PARTITION_ERROR "無法建立分割區"
+    IDS_REMOVE_PARTITION_ERROR "無法移除分割區"
+    IDS_READ_PARTITIONS_ERROR "無法讀取分割區表格"
+    IDS_CELLSERVDB_UPDATE_PROBLEM 
+                            "\r\n 過早終止 CellServDB 更新處理。部份伺服器可能尚未更新。"
+    IDS_GET_PARTITION_LIST_ERROR "無法決定此伺服器的分割區"
+    IDS_EXPORTED            "匯出"
+    IDS_CANT_DELETE_EXPORTED_PARTITION 
+                            "匯出的分割區在「檔案服務」執行期間無法移除。移除此分割區之前，您必須停止「檔案服務」。"
+    IDS_CHECK_CONFIG_INFO   "檢查有效的架構資訊..."
+    IDS_ERROR_CFG_HOST_CLOSE "無法關閉「伺服器架構程式庫」。"
+    IDS_FAILED_OPEN_CELL    "無法開啟 Cell。"
+    IDS_FAILED_OPEN_NULL_CELL "無法開啟 NULL Cell 控點"
+    IDS_CREATE_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "如果根容體不存在，您要加以建立嗎？"
+    IDS_REP_ROOT_VOLUMES_IF_NECESSARY_PROMPT 
+                            "如果根容體未複製，您要加以複製嗎？"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TRANSARC_AFS_SERVER "AFS 伺服器"
+    IDS_CANT_INIT_ADMIN_LIBS "無法執行此應用程式：程式庫起始設定已失敗。"
+    IDS_CANT_OPEN_LOG_FILE  "無法開啟日誌檔。"
+    IDS_NEED_CLIENT_INFO    "由於此電腦並未架構「AFS 用戶端」，因此無法執行「AFS 架構」應用程式。在這種情形下，可以使用「AFS 架構精靈」。要執行「AFS 架構精靈」嗎？"
+    IDS_NEED_SERVER_INFO    "此電腦未架構為「AFS 伺服器」。如要將此電腦架構為「AFS 伺服器」，首先必須使用「AFS 架構精靈」，然後才能使用「AFS 架構」應用程式。要先執行「AFS 架構精靈」以架構此電腦嗎？"
+    IDS_ADVANCED_OPEN       "<< 進階(&A)"
+    IDS_ADVANCED_CLOSED     "進階(&A) >>"
+    IDS_BOS_OPEN_FAILED     "無法連接伺服器（bos 開啟失敗）。"
+    IDS_SALVAGE_ERROR       "援救作業失敗。"
+    IDS_INVALID_NUM_SALVAGE_PROCESSSES 
+                            "所指定的援救處理數目無效。援救處理的數目必須介於 1 到 32 之間。"
+    IDS_WRONG_CELL          "您在前項步驟指定了取得架構資訊的伺服器。所指定的伺服器並不屬於您要加入的 Cell 中！"
+    IDS_CELLSERVDB_UPDATE_ERRORS_ARE_IN_LOG_FILE 
+                            "無法更新一些在 Cell 中伺服器上的 CellServDB 檔。如要檢視已更新與未更新的伺服器清單，請檢視儲存在檔案上的架構日誌"
+    IDS_GET_CREDENTIALS_STEP "取得管理記號"
+    IDS_MUST_ENTER_SCS_NAME "展開架構之前，必須先輸入「系統控制機器」名稱。"
+    IDS_NOT_SAME_CELL       "「AFS 用戶端」架構在「AFS 伺服器」以外的不同 Cell 中。在您架構「 AFS 伺服器」之前，您必須先將「AFS 用戶端」重新架構在「伺服器」的 Cell 中。"
+    IDS_LAST_DB_SERVER      "此機器正在執行 Cell 上最後的資料庫伺服器。若您繼續並取消在此機器上的資料庫服務架構，Cell 將不再存在，而且其他在此機器上執行的 AFS 服務將取消架構。您確定要繼續？"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BAD_PW              "AFS 主體的密碼無效。"
+    IDS_ERROR_CLIENT_VERSION 
+                            "此電腦上「AFS 用戶端」的版本與「AFS 伺服器」不相容。「AFS 伺服器」至少需要「AFS 用戶端」3.5 以上的版本。"
+    IDS_CANT_MAP_ROOT_AFS   "如要在根容體上設定 ACL，磁碟機代號必須對應至 AFS 上。目前並沒有可用的磁碟機代號。請釋放一個磁碟機代號並按一下「確定」。"
+    IDS_NO_MSG_STEP         " "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARTITION_NAME_VALIDATION_TYPE "分割區名稱"
+    IDS_VOLUME_NAME_VALIDATION_TYPE "容體名稱"
+    IDS_NUM_SALVAGE_PROCS_VALIDATION_TYPE "援救處理的數目"
+    IDS_PATH_NAME_VALIDATION_TYPE "路徑名稱"
+    IDS_FILE_NAME_VALIDATION_TYPE "檔名"
+    IDS_GENERIC_VALIDATION_TYPE "值"
+END
+
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,199 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# MakefileProto for Solaris systems
+#
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
+SYS_NAME=@AFS_SYSNAME@
+
+include config/Makefile.${SYS_NAME}
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_inode.o \
+	osi_file.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+# System specific build commands and flags
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+#These are redundant
+#LD = /usr/ccs/bin/ld
+#LORDER = /usr/ccs/bin/lorder
+#CC = /opt/SUNWspro/bin/cc
+KDEFS= -Dsun4c -DSUN4C_60 -DNFSCLIENT -DSYSACCT -DOLDSCSI -DVDDRV -D_KERNEL \
+	-DSYSV -dn ${ARCH_DEFS}
+
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59>
+KDEFS_32 = 
+<sun4x_57 sun4x_58 sun4x_59>
+KDEFS_64 = -xarch=v9
+
+<all>
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+# Name of directory to hold object files and libraries.
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sunx86_57 -sunx86_58 -sunx86_59>
+KOBJ = MODLOAD
+<sun4x_57 sun4x_58 sun4x_59>
+KOBJ = MODLOAD32 MODLOAD64
+<sunx86_57 sunx86_58 sunx86_59>
+KOBJ = MODLOAD32
+
+
+# This tells Makefile.common to use it's single directory build target.
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sunx86_57 -sunx86_58 -sunx86_59>
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59>
+COMPDIRS = solaris_compdirs
+INSTDIRS = solaris_instdirs
+DESTDIRS = solaris_destdirs
+
+<all>
+include Makefile.common
+
+
+setup:
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	for t in ${KOBJ} ; do \
+		echo Making directory: $$t; \
+		mkdir -p $$t; \
+		$(RM) -f $$t/Makefile.common $$t/Makefile $$t/config ; \
+		ln -s ../Makefile.common $$t/Makefile.common ; \
+		ln -s ../Makefile $$t/Makefile ;\
+		ln -s ../config $$t/config ;\
+	done
+
+
+## This is the target for a Solaris 7. Here we build both the 32 bit and
+## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
+
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59>
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for t in ${KOBJ} ; do \
+		echo Building directory: $$t ; \
+		case $$t in \
+			MODLOAD32) \
+			 ARCH_DEFS="${KDEFS_32}" ; \
+			 BITS="" ;; \
+			MODLOAD64) \
+			 ARCH_DEFS="${KDEFS_64}" ; \
+			 BITS="64" ;; \
+		esac ; \
+		export ARCH_DEFS ; \
+		export BITS ; \
+		cd $$t  ; \
+		$(MAKE) $@_libafs ; \
+		cd ../ ;\
+	done
+
+solaris_compdirs_libafs: libafs
+solaris_instdirs_libafs: install_libafs
+solaris_destdirs_libafs: dest_libafs
+
+<all>
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.o
+LIBAFSNONFS = libafs.nonfs.o
+
+<all -sun4x_57 -sun4x_58 -sun4x_59 -sunx86_57 -sunx86_58 -sunx86_59>
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
+
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59>
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.o
+
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
+
+<all>
+# Without this line, gmake tries to build libafs.o
+.PHONY: libafs
+
+libafs:	$(LIBAFSNONFS) $(LIBAFS)
+install_libafs:	$(INST_LIBAFSNONFS) $(INST_LIBAFS)
+dest_libafs:	$(DEST_LIBAFSNONFS) $(DEST_LIBAFS)
+
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
+
+<all>
+
+# Solaris specific objects
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1)
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1)
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1)
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1)
+osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -o osi_vfsops_nfs.o
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1)
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)

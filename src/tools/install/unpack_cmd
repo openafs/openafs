@@ -1,0 +1,42 @@
+#!/bin/sh
+#
+# unpack
+# unpacks some of the necessary files for the OpenAFS command line tools.
+# 
+# openafs-tools, Version 1.2.2
+#
+# Copyright 2001, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# Directory to put all installation scripts, etc.
+buildRoot=/var/tmp/openafs-tools-cmd-buildroot
+rootDir=$buildRoot/usr/afs/tools
+mainFileDir=$rootDir/install
+#
+mkdir -p $mainFileDir/
+#
+cp openafs-tools-cmd.README $rootDir/ 
+cp -f afs_state $mainFileDir/.afs_state
+cp -f afsinit_both $mainFileDir/
+cp -f afsinit_client $mainFileDir/
+cp -f afsinit_server $mainFileDir/
+cp -f afs_uninstall $mainFileDir/
+cp -f install_afs $mainFileDir/
+cp -f K5_README $mainFileDir/
+cp -f check_udebug.pl $mainFileDir/
+cp -f write_fstab.pl $mainFileDir/
+cp -f write_pam.pl $mainFileDir/
+#
+chmod 600 $mainFileDir/.afs_state
+chmod 744 $mainFileDir/afs_uninstall
+chmod 744 $mainFileDir/install_afs
+chmod a+w $mainFileDir
+#
+
+
+
+

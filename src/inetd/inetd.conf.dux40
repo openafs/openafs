@@ -1,0 +1,7 @@
+#
+# AFS version of Internet server configuration database
+#
+# The "shell" line should be commented out in the vendor inetd.conf.
+#
+ta-rauth	stream	tcp	nowait	root	internal 	ta-rauth
+shell		stream	tcp	nowait	root	/usr/sbin/rshd	rshd

@@ -1,0 +1,26 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for compiling a new kernel
+# For HP 9000 systems running HPUX 9.x
+#
+
+sub build {
+&Print("Compiling with command \"/etc/uxgen SAFS\"");
+&Print("in directory /etc/conf/gen");
+&Print("New kernel will be /etc/conf/SAFS/hp-ux");
+&Print("and should be installed as /hp-ux");
+
+&ErrorsAreFatal(1);
+$rc = chdir("/etc/conf/gen");
+&ErrorMsg("Could not change to dir", "/etc/conf/gen") if (!$rc);
+
+$rc = system("/etc/uxgen SAFS");
+$rc = $rc >> 8;
+&Print("Returned code $rc");
+}
+

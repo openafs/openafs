@@ -1,0 +1,72 @@
+#!/bin/csh -f -e
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+set db=/tmp/db
+set host=`hostname`
+
+if (! -d $db) then
+  mkdir $db
+else
+  set nonomatch
+  rm -f $db/kaserver*
+  unset nonomatch
+endif
+
+
+rm -f /tmp/pid
+background kaserver -cellservdb /usr/vice/etc -servers $host -database $db/kaserver -noauth >/tmp/pid
+alias kasu './kas \!* -admin_username $user -password $user -servers $host'
+kasu cr $user $user
+kasu sf $user +admin
+kasu cr afs afs
+kasu ex $user
+kasu sp AuthServer.Admin authserv
+
+sleep 1
+kill `cat /tmp/pid`
+echo killing off kaserver
+echo restarting w/o NoAuth
+background kaserver -cellservdb /usr/vice/etc -servers $host -database $db/kaserver -fastkeys>/tmp/pid
+
+rm -f /tmp/foo
+echo '#! /bin/csh -f' >/tmp/foo
+echo '/usr/andy/bin/tokens>/dev/null' >>/tmp/foo
+#echo '/usr/andy/bin/unlog' >> /tmp/foo
+echo "./klog $user $user -servers $host">>/tmp/foo
+echo '/usr/andy/bin/tokens' >>/tmp/foo
+echo 'exit 0'>>/tmp/foo
+chmod +x /tmp/foo
+
+./test_badtix /tmp/foo
+
+kasu cr a b
+./kpasswd -x a b zzzsab -servers $host
+./kpasswd -x a zzzsab wxyzzy -servers $host
+kasu cr b c
+kasu cr c d
+kasu delete a
+kasu delete b
+kasu delete c
+kasu cr sample.holmes foo
+kasu setkey sample.holmes -kvno 17 -new_key '\362\367\316\326\370\304\3738'
+kasu cr kazam kazam
+kasu sf kazam +admin
+kasu cr smn smn
+kasu sf smn +admin
+kasu cr dousti dousti
+kasu sf dousti +admin
+kasu sf dousti noadmin
+kasu sf dousti +admin
+kasu sf kazam -exp 2/20/2020
+kasu sf kazam -exp never
+kasu ex afs
+kasu ls
+
+sleep 1
+kill `cat /tmp/pid`
+echo killing off kaserver

@@ -1,0 +1,50 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!IF (EXIST(..\config\NTMakefile.version))
+!include ..\config\NTMakefile.version
+!ENDIF
+
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES = \
+	$(INCFILEDIR)\usd.h
+
+
+############################################################################
+# build afsusd.lib
+
+LIBFILE = $(DESTDIR)\lib\afs\afsusd.lib
+
+LIBOBJS =\
+	usd_nt.obj \
+	AFS_component_version_number.obj
+
+$(LIBFILE): $(LIBOBJS) 
+	$(LIBARCH) 
+
+############################################################################
+# make and install 
+
+install: $(INCFILES) $(LIBFILE)
+
+install9x: install
+
+clean::
+	$(DEL) $(LIBFILE)
+
+test: 
+	$(CD) test
+	$(MAKECMD) /fNTMakefile test
+	$(CD) ..
+
+

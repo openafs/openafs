@@ -1,0 +1,331 @@
+
+Help on the GUI Installer
+==========================
+
+
+Table of Contents
+------------------
+Introduction
+Install Guides
+    Sysname directories
+    Wildcard directories
+    .skip files
+The RC File
+The Main Window
+ Hostname
+    Local installs
+    Remote installs
+    Multiple installations
+ Path
+    Finding the AFS distribution
+    Finding the AFS sysname
+    Accelerator buttons
+    Setting default path from command line
+ Packages
+    Default vs Custom installation
+    List of available packages and where it comes from
+    Command line list of packages
+    Adding new packages to the list
+ Options
+    Verbose
+    Backup files
+    Setting default values from command line
+Installation
+ Info Only
+ Install
+    The Progress window
+    Default installations
+    Seeing the command output
+    Finishing up the installation
+    Why those two buttons are disabled
+Exit
+Errors
+
+
+
+INTRODUCTION
+------------
+This program is designed to install AFS on a machine from a
+standard AFS distribution directory. The AFS distribution is
+logically divided into sections called "packages", and one or more
+packages can be installed at a time. AFS can be installed on the
+local machine or to one or more remote machines on which AFS aware
+inetd is running.
+
+INSTALL GUIDES
+--------------
+  The installation of packages is controlled by perl subscripts
+called Install Guides. The complete set of Install Guides is kept
+under the lib/InstallGuides directory. There is one Install Guide
+per package, and it provides all of the Perl code that is necessary
+to install that package. Because different systems have different
+requirements for installation, the InstallGuides/ directory has in
+it different subdirectories for different systems. The
+subdirectories match the AFS sysnames, such as "sgi_64". Inside
+each system name subdirectory are package files that are specific
+to the system. 
+  There are also wildcard subdirectories, such as SGI_x, which can
+be searched if a desired package is NOT in its sysname
+subdirectory. The wildcarding consists of capitalizing the letters
+in the sysname, and using the letter "x" to match one or more
+characters. In the case of multiple wildcard directories matching a
+sysname, the longest wildcard directory wins.
+  As a catchall wildcard, there is also a subdirectory "GENERIC"
+that can be searched if all other matches fail.
+  If a file exists whose name is a package name with ".skip"
+appended, that package will not be installed on machines of that
+system type. This is useful to prevent GENERIC Installation Guides
+from being used, such as "bldkernel" on Solaris machines or "vfsck"
+on SGI machines.
+
+RC FILE
+--------
+  This installer program uses an rc script named "afsinstall.rc"
+located in the InstallGuides/ subdirectories. Locating the right one
+follows the same rules as locating an InstallGuide: look in the
+sysname subdirectory, then look in the wildcard directories, and
+lastly look in GENERIC.
+  The GENERIC afsinstall.rc file is always read in, followed by the
+most system specific one available, if any. There can also be an
+afsinstall.rc file in the user's home directory given by the
+environment variable "HOME", and if it exists it will be read in
+last. If more than one of these afsinstall.rc files are read in, the
+files read later will merge with and overwrite the values and options
+from the earlier files.
+  The rc file consists of three sections separated by a blank
+line. The first section sets up Path accelerator buttons, the second
+describes available packages. Both are described in the appropriate
+sections below. The third section sets configuration options similar
+to environment variables. Each line is of the form
+
+NAME=VALUE
+
+The InstallGuide files can then access the VALUE by referencing the
+key NAME in the hash Configuration.  This is intended for use as
+options such as use of NFS aware kernel libraries, default cache size,
+etc. The VALUE can be omitted after the equals sign to signify a NULL
+value.
+
+  The personal afsinstall.rc file in the user's home directory is
+intended to let the user select default packages to install and
+default options such as usage of NFS libraries. Because the user may
+want to set different options for different system types, system
+specific options can be put into an afsinstall.rc file. To make a
+given line in the file apply only to certain system types, the line
+can be prepended with an AFS system name followed by a colon, such as:
+
+sun4x_56 :modkernel 1 Dynamic kernel libraries and afsd
+ ALPHA_x :modkernel 0 Dynamic kernel libraries and afsd
+
+The first line shows that Solaris 2.6 systems should have the
+"modkernel" package installed by default, while the wildcarded second
+line shows the same option should be off by default on all Alpha
+platforms. All systems that were not running Solaris 2.6 would
+completely skip the first line, such that the determination of
+installing the "modkernel" package by default would have to be
+resolved by one of the other afsinstall.rc files that was read in.
+The same applies for the second line in the example above for non
+Alpha machines.
+
+
+THE MAIN WINDOW
+----------------
+The install window is divided into four sections. From top to
+bottom, these sections select the host or hosts on which to
+install, locate the AFS distribution, select the packages to
+install, and set certain options.
+
+
+HOSTNAME
+--------
+  The top section first appears as an entry box labelled "Hostname"
+with the local hostname filled in. The local hostname was taken
+from the HOST environment variable.  If an install is begun by
+pressing the "INSTALL" button, AFS will be installed on the local
+machine using the same user identity by which this program was run.
+  If a new value is typed in and entered with the RETURN key, a
+second entry box will appear labelled "rsh as username:", and a
+default username is filled in. This value came from the RSHas
+variable set at the top of this program. When an installation is
+started, the program will attempt to make an rsh connection to the
+hostname entered under the identity given in the "rsh as username:"
+box. Note that rsh will still be used if the hostname entered does
+not match the HOST environment variable but still refers to the
+local host (eg entering "localhost" or the FQDN). Also note that
+setting up an AFS aware inetd on the remote machine requires that
+the AFS client is already running, so this feature is primarily
+intended for AFS upgrades and not first time installs.
+  If the value entered into the "Hostname" box is a filename, the
+label for that box becomes "Filename". If an install is then
+started by pressing the "INSTALL" button, the entered file is read
+and each line of the file is used as a remote hostname on which to
+install AFS using rsh.
+
+PATH
+----
+  The Path section is divided into two parts. The upper part is an
+entry box and the lower half is several default value buttons. The
+path to the distribution of AFS is entered into the upper entry
+box. When an install is started by pressing the "INSTALL" button,
+the path given is inspected, searching for signs of an AFS
+distribution. Namely, the existence of a "root.client" directory is
+used to determine if there is an AFS distribution. If the path
+given does not have an AFS distribution, the installer will also
+look for one under a directory matching the host's AFS sysname (eg
+sun4x_55) and a directory under that named "dest". If no AFS
+distribution can be found, the installation exits with an error.
+  The AFS sysname is determined automatically using the output of
+/bin/uname and NOT via "fs sysname". If an installation is being
+done on a remote machine, the remote machine's AFS sysname is used,
+allowing installations on heterogeneous networks.
+  The buttons in the lower half of the Path section will enter in
+path names for you into the upper entry box. By clicking on any of
+the buttons, the entry box is cleared and a new value is
+inserted. A special button "CLEAR" is automatically provided which
+simply clears the entry box. The other buttons are taken from the
+top half of the installer rc script. The lines from that file
+consist of a key word to put into the button, followed by a pathname. If
+one of the accelerator buttons has the key word "default", the
+pathname given will be entered into the entry box when the program
+starts, and no button is rendered for it.
+  If the "-path" flag was given on the command line, whatever
+string followed that flag will be filled in as the default install
+path.
+
+PACKAGES
+--------
+  The Packages area is also divided into two halves. The upper half
+consists of two radio buttons which allow you to install either a
+default set of packages or a hand selected set of packages. The
+lower half lists the packages that can be hand selected, and is
+only used if the "Custom installation:" radio button is selected.
+  The list of packages available is read from the lower section of
+the afsinstall.rc file. Each line consists of three parts: the
+package name (and, therefore, matching InstallGuide filename), the
+default mode for that package, and a brief explanation of the
+package. If the "Default Installation" radio button is selected,
+all those packages with a "mode" of "1" will be installed. These
+default packages are also initially selected in the "custom"
+packages area when the program starts.
+  Note that the list of default packages can change from system to
+sytem, depending on which afsinstall.rc file in the
+lib/InstallGuides/ directories matches the system name on which AFS
+is being installed. Thus the default packages on the local machine
+may be different from those on remote machines if the remote
+machines are of different system types.
+  If the "-pkg" flag was given on the command line when the
+installer was invoked, the list of package names provided will be
+selected and the "Custom installation" radio button will select
+itself.
+  See the "INFO ONLY" button (below) for details about what each
+package does.
+  New packages can be added by creating Perl subscripts in the
+InstallGuides/ directories and appending an entry to the
+afsinstall.rc file. The Install Guide subscript file is given the
+same name as the package name. Within the file is a function also
+with the same name as the package. Whatever code is within that
+function will be loaded in and executed when that package is
+installed. Several "smart" functions are available in the body of
+the installer program itself, such as &Copy(), &Symlink(), and
+&CreateDir(). Following the code of other existing Install Guides
+will show how these functions can be used.
+
+
+OPTIONS
+-------
+  There are two option buttons. The first option, labelled "Verbose"
+turns on verbose output. When selected, the installations will provide
+more output about what they are doing. Without this option, only the
+package names and error messages are output during the install. The
+second option button, "Don't keep backup files", instructs the
+installer to not keep a backup of files being overwritten. When the
+option is off, a file that is about to be overwritten will be moved
+aside by appending .old to the filename.
+  Both options are off by default. The "-v" flag can be given on the
+command line to turn on the Verbose option, and the "-nobackup" flag
+will disable backup file creation.
+
+
+
+INSTALLATION
+=============
+
+INFO ONLY
+---------
+  If this button is pressed, no installation of AFS will actually
+occur. Instead, a window appears and gives details about what each
+selected package does. The information is derived from the "info"
+subdirectory in the InstallGuides/ area. The window has a "DISMISS"
+button for when you are finished reading.
+  This help guide is actually the info guide named "gui".
+
+INSTALL
+--------
+  This button begins the actual installation. When pressed, a new
+window will appear, called the Progress window. The window will
+contain a column of boxes for each machine on which an
+installation is running. Note that multiple installations is only
+available by entering a filename in the "Hostname:" box (see
+above). At the top of the column(s) will be a button labelled with
+the hostname on which the installation is running. Under the
+hostname(s) there will be a box for each package that has been
+selected. When the machine begins installation of a package, the
+box contains the word "WORKING". If an error occurs with the
+installation of that package, the box says "ERROR". Installation of
+later packages will still occur despite errors in previous
+packages. When a package completes without errors the box will
+say "SUCCESS". When the installation finishes, the last box in the
+column, labelled "done" will turn to either "SUCCESS" or "ERRORS"
+depending on the outcome of all the packages.
+  Note that if the "Default installation" radio button in the
+Packages area is selected, a row of boxes will be created for ALL
+available packages. If an available package is not a default
+package for a particular machine, that box will never be filled in for
+that machine. This was done because the set of default packages can
+vary if multiple installations are in progress.
+  To see the full text output of a machine's installation, press
+the hostname button at the top of the column of boxes. A window
+will appear with all of the output. A scrollbar is attached for
+when the output exceeds the height of the window. The window size
+can be changed by using the window manager. At the bottom of the
+output window will be two buttons, named "STOP INSTALL" and
+"DISMISS". The first will kill the install job on that machine,
+whether it is the local host or a remote host. this is for use when
+you see things going very wrong. The second button closes the
+output window but leaves the installation running. When the
+installation is complete the "STOP INSTALL" button is removed. If
+the output window is closed, it can be reopened again by pressing
+the hostname button again in the Progress window.
+  The Progress window also has a "DISMISS" button, and if this button
+is pressed the Progress window will close itself. If there are
+installations still in progress they will be terminated, and all
+output from the installs is deleted from memory. Use this button
+only when you are satisfied with the completion of the
+installation.
+  While the Progress window is still open the "INSTALL" and "INFO
+ONLY" buttons in the main window are disabled. This is a safety
+feature to prevent simultaneous installation processes on the same
+machine. Closing the Progress window will reenable the two buttons.
+
+
+EXIT
+====
+  The EXIT button at the bottom closes all windows and exits the
+program. 
+
+
+ERRORS
+======
+  There are a few errors that are checked for and are handled in
+the installation process. Error windows will appear for a certain
+set of these errors. 
+  If an installation is to be performed on a
+remoted machine, and that machine does not have an AFS aware inetd
+running the rsh daemon, an error window will appear telling you
+so.
+  The installation program is a Perl script that requires Perl
+5. The path to the perl program is the very first line of the
+install program. If that path is to a Version 4 copy of Perl, an
+error window will appear telling you so. This can be fixed either
+by changing the first line of the installer or by upgrading the
+copy of Perl to at least Version 5.00.

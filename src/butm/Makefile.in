@@ -1,0 +1,77 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+CFLAGS=${DBG} -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
+INCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
+
+LIBS=${TOP_LIBDIR}/libbubasics.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libbutm.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${XLIBS}
+
+include ../config/Makefile.${SYS_NAME}
+
+all: ${TOP_LIBDIR}/libbutm.a
+
+install: ${DESTDIR}${libdir}/afs/libbutm.a
+
+${DEST}/lib/afs/libbutm.a: libbutm.a
+	${INSTALL} $? $@
+
+libbutm.a: file_tm.o AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ file_tm.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c
+
+test_ftm.o: test_ftm.c ${INCLS} AFS_component_version_number.c
+
+test_ftm: test_ftm.o libbutm.a
+	${CC} ${LDFLAGS} -o test_ftm test_ftm.o libbutm.a ${LIBS}
+
+test: test_ftm
+	echo 'Usage: ./test_ftm -conf config -tape xxx *'
+
+clean:
+	$(RM) -f *.o *.a core test_ftm AFS_component_version_number.c
+
+include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libbutm.a: libbutm.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbutm.a: libbutm.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libbutm.a
+

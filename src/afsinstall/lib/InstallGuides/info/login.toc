@@ -1,0 +1,21 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# login
+#
+# An InstallGuide for installing the AFS integrated login
+#
+
+sub login {
+&Print("Installs /bin/login.afs and makes /bin/login a symlink to it.");
+&Print("This should be installed on all client machines so that logging");
+&Print("into a system at the usual Unix login prompt will authenticate");
+&Print("the user with AFS and store a token in the kernel.");
+&Print("Note that this option is different on certain systems, such as");
+&Print("AIX and SGI, where helper files are installed in /usr/vice/etc");
+&Print("and on systems which use authentication modules such as PAM and SIA");
+}

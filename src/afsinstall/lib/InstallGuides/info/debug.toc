@@ -1,0 +1,24 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# debug
+#
+# An InstallGuide for installing debugging programs
+#
+
+sub debug {
+&Print("Installs the following into /usr/vice/bin:");
+&Print("  bin/afsmonitor");
+&Print("  bin/cmdebug");
+&Print("  etc/fstrace");
+&Print("  etc/kdump");
+&Print("  etc/rxdebug");
+&Print("  bin/scout");
+&Print("  bin/udebug");
+&Print("Install root.server/usr/afs/bin/volinfo into /usr/afs/bin");
+&Print("Install root.client/usr/vice/etc/C/afszcm.cat into /usr/vice/etc/C");
+}

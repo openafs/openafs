@@ -1,0 +1,55 @@
+
+EXPORTS
+	bos_ServerOpen						@1
+	bos_ServerClose						@2
+	bos_ProcessCreate					@3
+	bos_ProcessDelete					@4
+	bos_ProcessExecutionStateGet				@5
+	bos_ProcessExecutionStateSet				@6
+	bos_ProcessExecutionStateSetTemporary			@7
+	bos_ProcessNameGetBegin					@8
+	bos_ProcessNameGetNext					@9
+	bos_ProcessNameGetDone					@10
+	bos_ProcessInfoGet					@11
+	bos_ProcessParameterGetBegin				@12
+	bos_ProcessParameterGetNext				@13
+	bos_ProcessParameterGetDone				@14
+	bos_ProcessNotifierGet					@15
+	bos_ProcessRestart					@16
+	bos_ProcessAllStop					@17
+	bos_ProcessAllStart					@18
+	bos_ProcessAllWaitStop					@19
+	bos_ProcessAllStopAndRestart				@20
+	bos_AdminCreate						@21
+	bos_AdminDelete						@22
+	bos_AdminGetBegin					@23
+	bos_AdminGetNext					@24
+	bos_AdminGetDone					@25
+	bos_KeyCreate						@26
+	bos_KeyDelete						@27
+	bos_KeyGetBegin						@28
+	bos_KeyGetNext						@29
+	bos_KeyGetDone						@30
+	bos_CellSet						@31
+	bos_CellGet						@32
+	bos_HostCreate						@33
+	bos_HostDelete						@34
+	bos_HostGetBegin					@35
+	bos_HostGetNext						@36
+	bos_HostGetDone						@37
+	bos_ExecutableCreate					@38
+	bos_ExecutableRevert					@39
+	bos_ExecutableTimestampGet				@40
+	bos_ExecutablePrune					@41
+	bos_ExecutableRestartTimeSet				@42
+	bos_ExecutableRestartTimeGet				@43
+	bos_LogGet						@44
+	bos_AuthSet						@45
+	bos_CommandExecute					@46
+	isValidServerHandle					@47
+	bos_Salvage						@48
+	bos_ProcessAllWaitTransition				@49
+	bos_FSProcessCreate					@50
+
+
+	BOZO_function_names					@53 DATA

@@ -1,0 +1,105 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for static kernel built libraries
+# For Alpha systems running Digital Unix 3.x
+#
+
+sub bldkernel {
+my($host);
+
+if ($Configuration{"NFSEXTENSIONS"}) {
+  &Copy("root.client/bin/libafs.o", "/usr/sys/BINARY"); }
+else {
+  &Copy("root.client/bin/libafs.nonfs.o", "/usr/sys/BINARY/libafs.o"); };
+
+&CreateDir("/usr/vice/etc");
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+
+&ErrorsAreFatal(1);
+# Patch the files
+if (!-f "/usr/sys/conf/AFS") {
+  $host = $ENV{HOST};
+  $host =~ tr/a-z/A-Z/;
+  &Copy("/usr/sys/conf/$host", "/usr/sys/conf/AFS");  };  
+
+$AFS="/sys/conf/AFS";
+$FILES="/sys/conf/files";
+$VFSCONF="/sys/vfs/vfs_conf.c";
+
+&Patch::Verbose if ($InstallVerbose);
+
+&Patch::FileOpen($AFS);
+&Patch::FileOpen($FILES);
+&Patch::FileOpen($VFSCONF);
+
+$AFSSearchInsert = <<"xxENDxx";
+options		UFS
+options		NFS
+xxENDxx
+$AFSNewInsert = <<"xxENDxx";
+options		AFS
+xxENDxx
+
+$AFSSearchReplace = "ident\\s+.+";
+$AFSNewReplace = "ident\t\t\"AFS\"";
+
+if (!&Patch::Patch($AFS, [[0, "Insert", $AFSSearchInsert, $AFSNewInsert],
+                          [1, "Replace", $AFSSearchReplace, $AFSNewReplace]])) {
+    &ErrorMsg("Did not succeed with patch", $AFS);
+}
+
+$FILESSearch1 = "OPTIONS/nfs\\s.*";
+$FILESNew1 = "OPTIONS/afs \t\t\toptional afs define_dynamic";
+
+#$FILESSearch2 = "nfs/nfs3_server.c\\s.*";
+#$FILESNew2 = << "xxENDxx";
+#MODULE/afs			optional afs Binary
+#afs/libafs.c			module afs
+#xxENDxx
+$FILESNew2 = "afs/libafs.c\t\t\toptional afs if_dynamic afs Binary";
+
+#if (!&Patch::Patch($FILES, [[1, "Insert", $FILESSearch1, $FILESNew1],
+#                            [1, "Insert", $FILESSearch2, $FILESNew2]])) {
+#    &ErrorMsg("Did not succeed with patch", $FILES);
+#}
+if (!&Patch::Patch($FILES, [[1, "Insert", $FILESSearch1, $FILESNew1],
+                            [0, "EOF", $FILESSearch2, $FILESNew2]])) {
+    &ErrorMsg("Did not succeed with patch", $FILES);
+}
+
+$VFSSearch1 = "#include <cdfs.h>";
+$VFSNew1 = << "xxENDxx";
+#include <afs.h>
+#if     defined(AFS) && AFS
+extern struct vfsops afs_vfsops;
+#endif
+
+#include <cdfs.h>
+xxENDxx
+
+$VFSSearch2 = << "xxENDxx";
+        (struct vfsops *)0,     "",		/* 13 = MOUNT_ADDON */
+xxENDxx
+
+$VFSNew2 = << "xxENDxx";
+#if     defined(AFS)
+        &afs_vfsops,            "afs",
+#else
+        (struct vfsops *)0,     "",		/* 13 = MOUNT_ADDON */
+#endif
+xxENDxx
+
+
+
+if (!&Patch::Patch($VFSCONF, [[0, "Replace", $VFSSearch1, $VFSNew1],
+                              [0, "Replace", $VFSSearch2, $VFSNew2]])) {
+    &ErrorMsg("Did not succeed with patch", $VFSCONF);
+}
+}

@@ -1,0 +1,83 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Test input file for uss bulk processing, doing both adds and deletes.
+# Note: there are some lines with intentional errors, so that this file
+# may be used for testing.
+#
+# Formats:
+#
+#	add <user>:[<real name>]:[<passwd>]:[<expires>]:[<server>]:
+#		[<partition>]:[<mtpt>]:[<uid>]:[<$1>]:[<$2>]:...:[<$9>]
+#
+#	delete <user>:<mtpt>:<restoredir>:[savevolume | delvolume]
+#
+#	delvolume
+#
+#	exec <string to execute>
+#
+#	savevolume
+#
+#
+# Note: Command lines can be ended anywhere after the last required
+#	argument.  Any arguments not provided will take on their
+#	default values.  A null argument may appear embedded in the
+#	command line by still using its leading and trailing colon
+#	separator.  Null arguments are usually replaced by defaults or
+#	by switches specified in the uss command invocation.  For
+#	instance, if you do not specify an "expires" option, the value
+#	specified to the "-pwexpires" switch will take effect.  If you
+#	do not use the "-pwexpires" switch, the default will be not to
+#	expire.  Expiration times specified here are in turn used as
+#	PWEXPIRES values when processing the template file.  Optional
+#	arguments appear above surrounded by square brackets [].
+#
+#	Anyone running this bulk file must have administrative powers
+#	within the cell, or you'll be rejected faster
+#	than politicians deny the truth.
+#
+#
+
+exec echo "This command is being executed at the start of the bulk file"
+
+add usstst1:::0:ernie:a:/afs/cellname/usr/usstst1
+add usstst2:USS Test 2::0:ernie:a:/afs/cellname/usr/usstst2
+add usstst3:USS Test 3:xyzzy:0:ernie:a:/afs/cellname/usr/usstst3
+add usstst4:USS Test 4:xyzzy:0:ernie:a:/afs/cellname/usr/usstst4
+add usstst5:USS Test 5:xyzzy:0:ernie:a:/afs/cellname/usr/usstst5
+add usstst6:USS Test 6:xyzzy:0:ernie:a:/afs/cellname/usr/usstst6
+add usstst7:USS Test 7:xyzzy:0:ernie:a:/afs/cellname/usr/usstst7
+add usstst8:USS Test 8:xyzzy:0:ernie:a:/afs/cellname/usr/usstst8
+add usstst9:USS Test 9:xyzzy:0:ernie:a:/afs/cellname/usr/usstst9
+add usstst10:USS Test 10:xyzzy:0:ernie:a:/afs/cellname/usr/usstst10
+
+exec echo "We're now starting the deletions"
+
+delete usstst1:/afs/cellname/usr/usstst1:/afs/cellname/common/uss
+delete usstst2:/afs/cellname/usr/usstst2:/afs/cellname/common/uss
+delete usstst3:/afs/cellname/usr/usstst3:/afs/cellname/common/uss
+delete usstst4:/afs/cellname/usr/usstst4:/afs/cellname/common/uss
+delete usstst5:/afs/cellname/usr/usstst5:/afs/cellname/common/uss
+delete usstst6:/afs/cellname/usr/usstst6:/afs/cellname/common/uss
+delete usstst7:/afs/cellname/usr/usstst7:/afs/cellname/common/uss
+delete usstst8:/afs/cellname/usr/usstst8:/afs/cellname/common/uss
+delete usstst9:/afs/cellname/usr/usstst9:/afs/cellname/common/uss
+delete usstst10:/afs/cellname/usr/usstst10:/afs/cellname/common/uss
+
+exec echo "This command being executed at the end of the (normal) bulk file"
+
+#
+# Now for some illegal additions
+#
+exec echo "The next bulk line has an illegal dot in the user name"
+add uss.tst:USS Dot Test:xyzzy:0:ernie:a:/afs/cellname/usr/uss.tst
+
+exec echo "The next lines have a vocabulary error"
+exec echo "The next bulk line has an illegal ampersand in the user name"
+add uss@tst:USS Ampersand Test:xyzzy:0:ernie:a:/afs/cellname/usr/uss@tst
+
+exec echo "This command executed after the end of the (entire) bulk file"

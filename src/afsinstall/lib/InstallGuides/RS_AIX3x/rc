@@ -1,0 +1,72 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the initialization script
+# For IBM RS/6000 systems running AIX 3.x
+#
+
+sub AIXrc {
+
+# Defaults
+$rcfile   = "/etc/rc.afs";
+$initfile = "/etc/inittab";
+
+&ErrorsAreFatal(1);
+
+# Add AFS kernel loader to RC file
+&VPrint("Creating $rcfile file");
+&DisplaceFile($rcfile);
+$rc = open(RC, "> $rcfile");
+&ErrorMsg("Could not overwrite", $rcfile) if (!$rc);
+
+print RC <<"EORC";
+#!/bin/sh
+
+USENFS=\"$Configuration{"NFSEXTENSIONS"}\"
+
+if [ \"\$NFS\" = 1 ]; then
+  ExportExt=\"\"
+  AFSExt=\".trans\"
+else
+  ExportExt=\".nonfs\"
+  AFSExt=\"\"
+fi
+
+# Load AFS into the kernel
+/usr/vice/etc/dkload/cfgexport -a /usr/vice/etc/dkload/export.ext\${ExportExt}
+/usr/vice/etc/dkload/cfgafs -a /usr/vice/etc/dkload/afs.ext\${AFSExt}
+
+EORC
+close(RC);
+
+# Append the generic RC file
+&ReadInstallGuide("$InstallGuideDir/GENERIC/rc");
+&Appendrc;
+
+# Add AFS entry to the inittab file
+&VPrint("Adding AFS entry to $initfile");
+
+&Patch::Verbose if ($InstallVerbose);
+&Patch::FileOpen($initfile);
+$SearchString = <<"xxENDxx";
+rcnfs:2:wait:/etc/rc.nfs > /dev/console 2>&1 # Start NFS Daemons
+xxENDxx
+
+$NewString = <<"xxENDxx";
+rcafs:2:wait:/etc/rc.afs > /dev/console 2>&1 # Start AFS daemons
+xxENDxx
+
+if (!&Patch::Patch($initfile, [[0, "Insert", $SearchString, $NewString]])) {
+  &ErrorMsg("Did not succeed with patch", $initfile);  }
+}
+
+
+
+
+sub rc {
+goto &AIXrc;
+}

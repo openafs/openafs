@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing debugging programs
+#
+
+sub debug {
+&ErrorsAreFatal(1);
+&CreateDir ("/usr/vice/bin", "/usr/vice/etc/C", "/usr/afs/bin");
+&ErrorsAreFatal(0);
+&Copy ("bin/afsmonitor", "/usr/vice/bin");
+&Copy ("bin/cmdebug",    "/usr/vice/bin");
+&Copy ("etc/fstrace",    "/usr/vice/bin");
+&Copy ("etc/kdump",      "/usr/vice/bin");
+&Copy ("etc/rxdebug",    "/usr/vice/bin");
+&Copy ("bin/scout",      "/usr/vice/bin");
+&Copy ("bin/udebug",     "/usr/vice/bin");
+&Copy ("root.server/usr/afs/bin/volinfo", "/usr/afs/bin");
+&Copy ("root.client/usr/vice/etc/C/afszcm.cat", "/usr/vice/etc/C");
+&Chmod(0744, "/usr/afs/bin/volinfo");
+&Chmod(0744, "/usr/vice/bin/fstrace");
+&Chmod(0644, "/usr/vice/etc/C/afszcm.cat");
+}

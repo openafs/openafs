@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf151.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf153.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_MESSAGES" HREF="auarf002.htm#ToC_166">fs messages</A></H2>
+<A NAME="IDX4889"></A>
+<A NAME="IDX4890"></A>
+<A NAME="IDX4891"></A>
+<A NAME="IDX4892"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Sets whether the Cache Manager writes log messages
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs messages</B> [<B>-show</B> &lt;[<B>user</B>|<B>console</B>|<B>all</B>|<B>none</B>]>]  [<B>-help</B>]
+    
+<B>fs me</B> [<B>-s</B> &lt;[<B>user</B>|<B>console</B>|<B>all</B>|<B>none</B>]>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs messages</B> command controls whether the Cache Manager
+displays status and warning messages on user screens, the client machine
+console, on both, or on neither.
+<P>There are two types of Cache Manager messages&#58;
+<UL>
+<P><LI>User messages provide user-level status and warning information, and the
+Cache Manager directs them to user screens.
+<P><LI>Console messages provide system-level status and warning information, and
+the Cache Manager directs them to the client machine&#39;s designated
+console.
+</UL>
+<P>Disabling messaging completely is not recommended, because the messages
+provide useful status and warning information.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-show
+</B><DD>Specifies the types of messages to display. Choose one of the
+following values&#58; 
+<DL>
+<P><DT><B>user
+</B><DD>Send user messages to user screens
+<P><DT><B>console
+</B><DD>Send console messages to the console
+<P><DT><B>all
+</B><DD>Send user messages to user screens and console messages to the console
+(the default if the <B>-show</B> argument is omitted)
+<P><DT><B>none
+</B><DD>Do not send any messages to user screens or the console
+</DL>
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following command instructs the Cache Manager to display both types of
+messages&#58;
+<PRE>   % <B>fs messages -show all</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf058.htm#HDRAFSD">afsd</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf151.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf153.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

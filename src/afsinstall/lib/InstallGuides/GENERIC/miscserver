@@ -1,0 +1,27 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for fileserver processes
+#
+
+sub miscserver {
+&CreateDir ("/usr/afs/backup", "/usr/afs/etc");
+&CreateDir ("/usr/afs/local", "/usr/afs/logs");
+&ErrorsAreFatal(1);
+&CreateDir ("/usr/afs/bin");
+&ErrorsAreFatal(0);
+&Copy ("root.server/usr/afs/bin/buserver", "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/upserver", "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/upclient", "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/runntp",   "/usr/afs/bin");
+&Copy ("root.server/usr/afs/bin/ntpd",     "/usr/afs/bin");
+&Chmod(0744, "/usr/afs/bin/buserver");
+&Chmod(0744, "/usr/afs/bin/upserver");
+&Chmod(0744, "/usr/afs/bin/upclient");
+&Chmod(0744, "/usr/afs/bin/runntp");
+&Chmod(0744, "/usr/afs/bin/ntpd");
+}

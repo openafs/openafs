@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf164.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf166.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRFS_SYSNAME" HREF="auarf002.htm#ToC_179">fs sysname</A></H2>
+<A NAME="IDX4987"></A>
+<A NAME="IDX4988"></A>
+<A NAME="IDX4989"></A>
+<A NAME="IDX4990"></A>
+<A NAME="IDX4991"></A>
+<A NAME="IDX4992"></A>
+<A NAME="IDX4993"></A>
+<A NAME="IDX4994"></A>
+<A NAME="IDX4995"></A>
+<A NAME="IDX4996"></A>
+<A NAME="IDX4997"></A>
+<A NAME="IDX4998"></A>
+<A NAME="IDX4999"></A>
+<A NAME="IDX5000"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Reports or sets the CPU/operating system type
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>fs sysname</B> [<B>-newsys</B> &lt;<VAR>new&nbsp;sysname</VAR>>]  [<B>-help</B>]
+    
+<B>fs sy</B> [<B>-n</B> &lt;<VAR>new&nbsp;sysname</VAR>>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>fs sysname</B> command sets or displays the local machine&#39;s
+CPU/operating system type as recorded in kernel memory. The Cache
+Manager substitutes the string for the <VAR>@sys</VAR> variable which can occur
+in AFS pathnames; the <I>AFS Quick Beginnings</I> and <I>AFS
+Administration Guide</I> explain how using <VAR>@sys</VAR> can simplify cell
+configuration. It is best to use it sparingly, however, because it can
+make the effect of changing directories unpredictable.
+<P>The command always applies to the local machine only. If issued on
+an NFS client machine accessing AFS via the NFS/AFS Translator, the string is
+set or reported for the NFS client machine. The Cache Manager on the
+AFS client machine serving as the NFS client&#39;s NFS/AFS translator machine
+stores the value in its kernel memory, and so can provide the NFS client with
+the proper version of program binaries when the user issues commands for which
+the pathname to the binaries includes <I>@sys</I>. There is a
+separate record for each user logged into the NFS client, which implies that
+if a user adopts a new identity (UNIX UID) during a login session on the NFS
+client--perhaps by using the UNIX <B>su</B> command--he or she
+must verify that the correct string is set for the new identity also.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-newsys
+</B><DD>Sets the CPU/operating system indicator string for the local
+machine. If this argument is omitted, the output displays the current
+setting instead. AFS uses a standardized set of strings; consult
+the <I>AFS Quick Beginnings</I> or <I>AFS Release Notes</I>.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>When the <B>-newsys</B> argument is omitted, the output reports the
+machine&#39;s system type in the following format&#58;
+<PRE>   Current sysname is &#39;<VAR>system_type</VAR>&#39;
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the output produced on a Sun SPARCStation
+running Solaris 5.7&#58;
+<PRE>   % <B>fs sysname</B>
+   Current sysname is &#39;sun4x_57&#39;
+   
+</PRE>
+<P>The following command defines a machine to be a IBM RS/6000 running AIX
+4.2&#58;
+<PRE>   % <B>fs sysname -newsys rs_aix42</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>To display the current setting, no privilege is required. To include
+the <B>-newsys</B> argument on an AFS client machine, the issuer must be
+logged in as the local superuser <B>root</B>.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf139.htm#HDRFS_EXPORTAFS">fs exportafs</A>
+<P><A HREF="auarf234.htm#HDRSYS">sys</A>
+<P><I>AFS Quick Beginnings</I>
+<P><I>AFS Administration Guide</I>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf164.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf166.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

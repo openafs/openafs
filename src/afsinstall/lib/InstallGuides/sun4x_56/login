@@ -1,0 +1,69 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the AFS integrated login
+#
+
+sub login {
+  &ErrorsAreFatal(1);
+  &Copy("lib/pam_afs.so.1", "/usr/lib/security");
+  &Chmod(0755, "/usr/lib/security/pam_afs.so.1");
+  &Chown(0,3, "/usr/lib/security/pam_afs.so.1");
+
+  $PamConf = "/etc/pam.conf";
+  &Patch::Verbose if ($InstallVerbose);
+  &Patch::FileOpen($PamConf);
+
+  $LoginSubSearch = "^(login.+)required(.+)";
+  $LoginSubReplace = '$1.optional.$2';
+
+  $LoginAuthSearch = "^login\\s+auth\\s+.*pam_unix.so.1";
+  $LoginAuthNew = <<"xxENDxx";
+login	auth optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  $LoginAccountSearch = "^login\\s+account\\s+.*pam_unix.so.1";
+  $LoginAccountNew = <<"xxENDxx";
+login	account optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  $OtherSubSearch = "^(other.+)required(.+)";
+  $OtherSubReplace = '$1.optional.$2';
+
+  $OtherAuthSearch = "^other\\s+auth\\s+.*pam_unix.so.1";
+  $OtherAuthNew = <<"xxENDxx";
+other	auth optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  $OtherAccountSearch = "^other\\s+account\\s+.*pam_unix.so.1";
+  $OtherAccountNew = <<"xxENDxx";
+other	account optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  $DtLoginSubSearch = "^(dtlogin.+)required(.+)";
+  $DtLoginSubReplace = '$1.optional.$2';
+
+  $DtLoginAccountSearch = "^dtlogin\\s+account\\s+.*pam_unix.so.1";
+  $DtLoginAccountNew = <<"xxENDxx";
+dtlogin	account optional	/usr/lib/security/pam_afs.so.1 try_first_pass ignore_root
+xxENDxx
+
+  &VPrint("Patching \"$PamConf\"");
+  if (!&Patch::Patch($PamConf, [[1, "Substitution", $LoginSubSearch, $LoginSubReplace],
+				[1, "Insert", $LoginAuthSearch, $LoginAuthNew],
+				[1, "Insert", $LoginAccountSearch, $LoginAccountNew],
+				[1, "Substitution", $OtherSubSearch, $OtherSubReplace],
+				[1, "Insert", $OtherAuthSearch, $OtherAuthNew],
+				[1, "Insert", $OtherAccountSearch, $OtherAccountNew],
+				[1, "Substitution", $DtLoginSubSearch, $DtLoginSubReplace],
+				[1, "Insert", $DtLoginAccountSearch, $DtLoginAccountNew]])) {
+    &ErrorMsg("Did not succeed with patch", $PamConf);
+  }
+  &Chmod(0644, $PamConf);
+  &Chown(0,0, "/usr/lib/security/pam_afs.so.1");
+  
+}

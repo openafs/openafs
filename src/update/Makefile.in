@@ -1,0 +1,88 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+LIBS=${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a
+
+CFLAGS=-I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
+
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+
+all: upserver upclient
+
+#
+# Build targets
+#
+upclient: client.o update.cs.o utils.o ${LIBS} 
+	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} ${XLIBS}
+
+upserver: server.o utils.o update.ss.o ${LIBS}
+	${CC} ${CFLAGS} -o upserver server.o utils.o update.ss.o ${LIBS} ${XLIBS}
+
+utils.o: utils.c update.h global.h
+
+client.o server.o: update.h global.h AFS_component_version_number.c
+
+update.cs.c update.ss.c update.er.c update.h: update.xg
+	${RXGEN} update.xg
+
+#
+# Installation targets
+#
+install : ${DESTDIR}${afssrvlibexecdir}/upserver ${DESTDIR}${afssrvlibexecdir}/upclient
+
+${DEST}/root.server/usr/afs/bin/upserver: upserver
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/upclient: upclient
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean: 
+	$(RM) -f *.o upclient upserver update.ss.c update.cs.c update.xdr.c update.h core \
+	AFS_component_version_number.c
+
+include ../config/Makefile.version
+
+${DESTDIR}${afssrvlibexecdir}/upserver: upserver
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/upclient: upclient
+	${INSTALL} $? $@
+
+dest: ${DEST}/root.server/usr/afs/bin/upserver ${DEST}/root.server/usr/afs/bin/upclient
+

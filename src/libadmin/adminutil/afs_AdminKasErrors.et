@@ -1,0 +1,35 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table AK
+        ec ADMKASSERVERHANDLENULL, "the server handle parameter cannot be NULL"
+        ec ADMKASSERVERHANDLEBADMAGIC, "the server handle parameter failed to pass the magic number test.  Most likely the server handle is invalid, or has been overwritten by mistake."
+        ec ADMKASSERVERHANDLENOTVALID, "the server handle parameter is marked invalid"
+        ec ADMKASSERVERHANDLENOSERVERS, "the server handle parameter contains no servers"
+        ec ADMKASCELLHANDLEANDSERVERHANDLENULL, "the cell handle and the server handle parameter cannot both be NULL"
+        ec ADMKASCELLHANDLEANDSERVERHANDLENOTNULL, "the cell handle and the server handle parameter cannot both be non-NULL"
+        ec ADMKASKASHANDLENULL, "the authentication server handle parameter cannot be NULL"
+        ec ADMKASFROMNULL, "the from parameter cannot be NULL"
+        ec ADMKASTONULL, "the to parameter cannot be NULL"
+        ec ADMKASSERVERLISTNULL, "the server list parameter cannot be NULL"
+        ec ADMKASSERVERLISTTOOLONG, "the server list parameter contains too many servers"
+        ec ADMKASSERVERHANDLEPNULL, "the server handle parameter cannot be NULL nor can it point to NULL"
+        ec ADMKASWHONULL, "the who parameter cannot be NULL"
+        ec ADMKASPASSWORDNULL, "the password parameter cannot be NULL"
+        ec ADMKASKASERVERNULL, "the authentication server parameter cannot be NULL"
+        ec ADMKASLOCKEDUNTILNULL, "the locked until parameter cannot be NULL"
+        ec ADMKASPRINCIPALNULL, "the principal parameter cannot be NULL"
+        ec ADMKASKEYNULL, "the key parameter cannot be NULL"
+        ec ADMKASLOCKENDTIMEPNULL, "the lock end time parameter cannot be NULL"
+        ec ADMKASPASSWORDEXPIRESTOOBIG, "the password expires parameter cannot be greater than 255"
+        ec ADMKASFAILEDPASSWORDATTEMPTSTOOBIG, "the failed password attempts parameter cannot be greater than 255"
+        ec ADMKASFAILEDPASSWORDLOCKTIME, "the failed password lock time parameter cannot be greater than 129600"
+        ec ADMKASSTATSNULL, "the stats parameter cannot be NULL"
+        ec ADMKASDEBUGNULL, "the debug parameter cannot be NULL"
+        ec ADMKASSERVERLISTEMPTY, "the server list parameter didn't contain any servers"
+        ec ADMKASPRINCIPALFIELDSNOCHANGE, "at least one principal field to set must be specified"
+end

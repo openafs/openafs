@@ -1,0 +1,747 @@
+#!/bin/sh
+#
+# A command line interface to execute the installation of OpenAFS.
+#
+# openafs-tools, Version 1.2.2
+
+# Copyright 2001, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+
+afscodeDir=/usr/afs/tools/install/
+
+firstServer=1
+addServer=2
+notServer=3
+
+isClient=1
+notClient=2
+
+if [ $# -gt 0 ]; then 
+if [ $1 = "help" ]; then 
+
+  echo -e "OpenAFS Installation for Linux: Help Mode\n"
+  echo -e "The command install_afs takes the following optional arguments.  If any\nneeded information is not provided on the command line, it will be\nprompted for the user to input.\n"
+  echo -e "\t-machineName (or -m) name: where name specifies\n\t  the name of the machine the command is being run on"
+  echo -e "\t-cellName (or -c) cell: where cell specifies the\n\t  name of the home cell of this machine"
+  echo -e "\t-shortCell (or -s) scell: where scell is the shortcut\n\t   name desired for the home cell.  Ignored if this\n\t   is not the first server"
+  echo -e "\t-hardDrive (or -h) hd: where hd is the device name on\n\t   which to mount the first AFS partition.  Ignored if this\n\t   is not a server"
+  echo -e "\t-serverType (or -st) type: where type can be \"first\",\n\t   \"additional\", or \"not\", specifying whether this is\n\t   to be the first server in a cell, an additional server\n\t   for the cell, or not a server at all"
+  echo -e "\t-clientType (or -ct) type: where type can be \"client\"\n\t   or \"not\", specifying whether this machine is to be an\n\t   AFS client or not"
+  echo -e "\t-adminPassword (or -p) password: the administrative\n\t    password of the cell.  Ignored if this is not a server"
+  echo -e "\t-existingServer (or -e) name: the name of an\n\t   existing server already in the cell.  Ignored if\n\t   this is not an additional server"
+  echo -e "\t-scriptDirectory (or -d) name: the name of the\n\t   directory containing these OpenAFS installation\n\t   scripts"
+  echo -e "\t-krb5 (or -k): Set up Kerberos 5 authentication on this\n\t   machine.  Assumes this machine is a client of a Kerberos\n\t   realm that has the same name as the cell being created,\n\t   but all caps.  Ignored if this is not a first server."
+  echo -e "\t-kadminPassword (or -ka) password: the administrative\n\t   password of the kerberos realm.  Ignored if the -krb5\n\t   flag is not set."
+  echo -e "\t-noConf (or -n): Do not ask for confirmation before\n\t    performing the installation."
+  echo -e "\thelp: Display this help dialogue"
+  echo
+  exit 0
+
+fi fi
+
+# Check the state file to ensure AFS is not installed already
+if [ -r $afscodeDir/.afs_state ]; then
+  read state < $afscodeDir/.afs_state
+  if [ $state = "Install" ]; then
+    echo -e "You have already run the OpenAFS installation program.  You must uninstall OpenAFS before you install it again."
+    exit 0
+  fi
+fi
+
+while [ $# -gt 0 ]; do
+
+  flag=$1
+  if [ $# -ne 0 ]; then 
+    shift
+  fi
+  if [ $flag != "-noConf" -a $flag != "-n" -a $flag != "-krb5" -a $flag != "-k" ]; then
+    val=$1
+    if [ $# -ne 0 ]; then 
+      shift
+    fi
+  else 
+    val=1
+  fi
+
+  # if the value is empty
+  if [ -z $val ]; then
+    echo -e No value given to $flag flag.  Use \"install_afs help\" for syntax.
+    exit 0
+  fi
+  # if the value is a flag
+  if [ -z ${val##-*} ]; then
+    echo -e No value given to $flag flag.  Use \"install_afs help\" for syntax.
+    exit 0
+  fi
+
+  if [ $flag = "-machineName" -o $flag = "-m" ]; then
+     machineName=$val
+  else
+  if [ $flag = "-cellName" -o $flag = "-c" ]; then
+     cellName=$val
+  else
+  if [ $flag = "-shortCell" -o $flag = "-s" ]; then
+     shortCell=$val
+  else
+  if [ $flag = "-hardDrive" -o $flag = "-h" ]; then
+     hardDrive=$val
+  else
+  if [ $flag = "-scriptDirectory" -o $flag = "-d" ]; then
+     scriptDir=$val
+  else
+  if [ $flag = "-serverType" -o $flag = "-st" ]; then
+     server=$val
+     if [ $val = "first" ]; then
+       serverType=$firstServer
+     else if [ $val = "additional" ]; then
+       serverType=$addServer
+     else if [ $val = "not" ]; then
+       serverType=$notServer
+     else 
+       echo -e Invalid value for -serverType flag.  Use \"install_afs help\" for syntax.
+       exit 0;
+     fi fi fi
+      
+  else
+  if [ $flag = "-clientType" -o $flag = "-ct" ]; then
+     client=$val
+     if [ $val = "client" ]; then
+       clientType=$isClient
+     else if [ $val = "not" ]; then
+       clientType=$notClient
+     else 
+       echo -e Invalid value for $flag flag.  Use \"install_afs help\" for syntax.
+       exit 0;
+     fi fi
+      
+  else
+  if [ $flag = "-adminPassword" -o $flag = "-p" ]; then
+     adminPassword=$val
+  else 
+  if [ $flag = "-existingServer" -o $flag = "-e" ]; then
+     existingServer=$val
+  else
+  if [ $flag = "-noConf"  -o $flag = "-n" ]; then
+     noConf=$val
+  else 
+  if [ $flag = "-krb5"  -o $flag = "-k" ]; then
+     krb5=$val
+  else
+  if [ $flag = "-kadminPassword" -o $flag = "-ka" ]; then
+     kadminPassword=$val
+  else
+    echo Invalid flag $flag.  Use \"install_afs help\" for syntax.
+    exit 0;
+  fi fi fi fi fi fi fi fi fi fi fi fi
+done
+
+# Collect variables not given:
+
+echo
+while [ -z $server ]; do
+  echo -ne "Provide the server type for this machine (\"first\", \"additional\", or \"not\"),\n   or hit enter to accept the default (\"first\"): "
+  read server
+
+  if [ -z $server ]; then
+    server="first"
+  fi
+
+  if [ $server = "first" ]; then
+    serverType=$firstServer
+  else if [ $server = "additional" ]; then
+    serverType=$addServer
+  else if [ $server = "not" ]; then
+    serverType=$notServer
+  else 
+    echo -e Invalid value for server type.  Please choose \"first\", \"additional\", or \"not\".
+    server=""
+  fi fi fi
+
+done
+
+while [ -z $client ]; do
+  echo -ne "Provide the client type for this machine (\"client\" or \"not\"), or hit enter to\n   accept the default (\"client\"): "
+  read client
+
+  if [ -z $client ]; then
+    client="client"
+  fi
+
+  if [ $client = "client" ]; then
+    clientType=$isClient
+  else if [ $client = "not" ]; then
+    clientType=$notClient
+  else 
+    echo -e Invalid value for client type.  Please choose \"client\" or \"not\".
+    client=""
+  fi fi
+
+done
+
+if [ $serverType -eq $notServer ]; then
+  if [ $clientType -eq $notClient ]; then
+     echo -e "This machine must be either a server or a client."
+     exit 0
+  fi
+fi
+
+while [ -z $cellName ]; do
+  echo -ne "Provide the name of the cell (in the form of cellname.domainname):\n   "
+  read cellName
+done
+
+while [ -z $machineName ]; do
+  read default < /etc/HOSTNAME
+  echo -ne "Provide the name of this machine, or hit enter to accept the\n   default ($default): "
+  read machineName
+
+  if [ -z $machineName ]; then
+    machineName=$default
+  fi
+
+done
+
+if [ $serverType -ne $notServer ]; then 
+    
+  while [ -z $hardDrive ]; do
+    echo -ne "Provide the name of the device on which to mount the AFS partition,\n   i.e. hda5: "
+    read hardDrive
+  done
+
+fi
+
+if [ $serverType -eq $firstServer ]; then 
+    
+  while [ -z $shortCell  ]; do
+    default=${cellName%%.*}
+    echo -ne "Provide a shortcut name for your cell, or press Enter to accept the\n   default ($default): "
+    read shortCell
+ 
+    if [ -z $shortCell ]; then
+      shortCell=$default
+    fi
+
+  done
+
+fi
+
+if [ $serverType -eq $addServer ]; then 
+    
+  while [ -z $existingServer ]; do
+    echo -ne "Provide the name of the first server in this cell:\n   "
+    read existingServer
+  done
+
+fi
+
+while [ -z $scriptDir ]; do
+  default=$afscodeDir
+  echo -ne "Provide the directory of this installation script, or press Enter to accept\n   the default ($default): "
+  read scriptDir
+
+  if [ -z $scriptDir ]; then
+    scriptDir=$default
+  fi
+
+done
+
+if [ $serverType -ne $notServer ]; then 
+  while [ -z $adminPassword ]; do
+    echo -ne "Provide the administrative password of this cell: "
+    stty -echo echonl
+    read adminPassword
+    stty echo
+    echo -ne "Please confirm the password: "
+    stty -echo echonl
+    read adminPassword2
+    stty echo
+
+    if [ -z $adminPassword ]; then
+      echo -e "You must give a password"
+    else 
+    if [ -z $adminPassword2 ]; then
+      echo -e "You must confirm the password"
+      adminPassword=""
+    else
+    if [ $adminPassword != $adminPassword2 ]; then
+      echo -e "Passwords do not match"
+      adminPassword=""
+    fi fi fi
+  done
+fi
+
+if [ $krb5 -ne 0 ]; then 
+  while [ -z $kadminPassword ]; do
+    echo -ne "Provide the administrative password of the Kerberos realm: "
+    stty -echo echonl
+    read kadminPassword
+    stty echo
+    echo -ne "Please confirm the password: "
+    stty -echo echonl
+    read kadminPassword2
+    stty echo
+
+    if [ -z $kadminPassword ]; then
+      echo -e "You must give a password"
+    else 
+    if [ -z $kadminPassword2 ]; then
+      echo -e "You must confirm the password"
+      adminPassword=""
+    else
+    if [ $kadminPassword != $kadminPassword2 ]; then
+      echo -e "Passwords do not match"
+      kadminPassword=""
+    fi fi fi
+  done
+fi
+
+# Make sure the needed files exist:
+if [ $serverType -eq $addServer ]; then
+  while [ ! -e $scriptDir/afs/ -o ! -e $scriptDir/afs/ThisCell -o ! -e $scriptDir/afs/CellServDB -o ! -e $scriptDir/afs/KeyFile -o  ! -e $scriptDir/afs/UserList ]; do
+    echo -e "Needed files in $scriptDir/afs do not exist."
+    echo -e "Copy the following files from $existingServer to the specified locations:"
+    echo -e "- $existingServer:/usr/afs/etc/ThisCell to $machineName:$scriptDir/afs/ThisCell"
+    echo -e "- $existingServer:/usr/afs/etc/CellServDB to $machineName:$scriptDir/afs/CellServDB"
+    echo -e "- $existingServer:/usr/afs/etc/KeyFile to $machineName:$scriptDir/afs/KeyFile"
+    echo -e "- $existingServer:/usr/afs/etc/UserList to $machineName:$scriptDir/afs/UserList"
+    echo -e "- $existingServer:/usr/vice/etc/CellServDB to $machineName:$scriptDir/vice/CellServDB"
+    echo -e "Press Enter when ready"
+    read anykey
+  done
+fi
+if [ $serverType -ne $firstServer ]; then
+  while [ ! -e $scriptDir/vice/ -o  ! -e $scriptDir/vice/CellServDB ]; do
+    echo "Needed file in $scriptDir/vice does not exist."
+    echo -e "Copy the following file from an existing server to the specified location:"
+    echo -e "- CellServDB from $cellName to $machineName:$scriptDir/vice/CellServDB"
+    echo -e "Press Enter when ready"
+    read anykey
+  done
+fi
+echo
+echo -e "You're about to install OpenAFS with the following configuration:"
+echo -e "Machine name: $machineName"
+echo -e "Cell name: $cellName"
+if [ $serverType -eq $firstServer ]; then
+  echo -e "Shortcut cell name: $shortCell"
+fi
+if [ $serverType -ne $notServer ]; then
+  echo -e "Hard drive: $hardDrive"
+  echo -ne "adminPassword: "
+  i=0;
+  while [ $i -lt ${#adminPassword} ]; do
+    echo -ne "*"
+    i=$[i+1]
+  done
+  echo
+fi
+echo -e "Server: $server"
+echo -e "Client: $client"
+if [ $serverType -eq $addServer ]; then
+  echo -e "Existing server: $existingServer"
+fi
+echo -e "Script directory: $scriptDir"
+echo
+if [ -z $noConf ]; then
+  echo -ne "Would you like to continue with the installation? "
+  while [ -z $goAhead ]; do
+    echo -ne "(y/n): "
+    read goAhead
+
+    if [ -z $goAhead ]; then
+      :
+    else 
+    if [ $goAhead = "n" ]; then
+      echo -e "Aborting installation"
+      exit 0
+    else
+    if [ $goAhead != "y" ]; then
+      goAhead=""
+    fi fi fi
+
+  done
+fi
+
+#Start the installation
+
+# the directory on which the hard drive partition will be mounted:
+partition=/vicepa
+#
+#
+# the password for the afs account:
+afsPassword=$adminPassword
+#
+# Make sure the needed files exist:
+if [ $serverType -eq $addServer ]; then
+  if [ ! -e $scriptDir/afs/ ]; then
+    echo "Needed directory $scriptDir/afs does not exist.  Aborting."
+    exit 1
+  fi
+  if [ ! -e $scriptDir/afs/ThisCell ]; then
+    echo "Needed file $scriptDir/afs/ThisCell does not exist.  Aborting."
+    exit 1
+  fi
+  if [ ! -e $scriptDir/afs/CellServDB ]; then
+    echo "Needed file $scriptDir/afs/CellServDB does not exist.  Aborting."
+    exit 1
+  fi
+  if [ ! -e $scriptDir/afs/KeyFile ]; then
+    echo "Needed file $scriptDir/afs/KeyFile does not exist.  Aborting."
+    exit 1
+  fi
+  if [ ! -e $scriptDir/afs/UserList ]; then
+    echo "Needed file $scriptDir/afs/UserList does not exist.  Aborting."
+    exit 1
+  fi
+fi
+if [ $serverType -ne $firstServer ]; then
+  if [ ! -e $scriptDir/vice/ ]; then
+    echo "Needed directory $scriptDir/vice does not exist.  Aborting."
+    exit 1
+  fi
+  if [ ! -e $scriptDir/vice/CellServDB ]; then
+    echo "Needed file $scriptDir/vice/CellServDB does not exist.  Aborting."
+    exit 1
+  fi
+fi
+# Write to the state file
+echo "Install" > $scriptDir/.afs_state
+echo "begin" >> $scriptDir/.afs_state
+#
+#
+#
+if [ $clientType -eq $isClient ]; then
+  echo Configuring /etc/pam.d/login
+  perl $scriptDir/write_pam.pl enable
+  cd /lib/security 
+  echo ln -s pam_afs.so.1 pam_afs.so
+  ln -s pam_afs.so.1 pam_afs.so
+fi
+#
+# Remove files installed by OpenAFS rpms that are intrusive
+echo "Removing troublesome files"
+rm -f /usr/vice/etc/ThisCell
+rm -f /usr/vice/etc/CellServDB
+#
+if [ $serverType -ne $notServer ]; then 
+  mkdir $partition
+  echo Configuring /etc/fstab 
+  perl $scriptDir/write_fstab.pl $hardDrive $partition
+  mount -a
+#
+#
+  echo Starting the BOS server
+  mkdir -p /usr/afs/etc
+  if [ $serverType -eq $addServer ]; then
+    # Move the needed file to /usr/afs/etc
+    echo Copying /usr/afs/etc/ files for additional server
+    cp -f $scriptDir/afs/ThisCell /usr/afs/etc/
+    cp -f $scriptDir/afs/CellServDB /usr/afs/etc/
+    cp -f $scriptDir/afs/KeyFile /usr/afs/etc/
+    cp -f $scriptDir/afs/UserList /usr/afs/etc/
+  fi     
+#
+  if [ $serverType -eq $firstServer ]; then
+
+    echo /usr/afs/bin/bosserver -noauth
+    /usr/afs/bin/bosserver -noauth
+    echo bos setcellname $machineName $cellName -noauth
+    bos setcellname $machineName $cellName -noauth
+    echo bos listhosts $machineName -noauth
+    bos listhosts $machineName -noauth
+    echo bos addkey $machineName -key $afsPassword -kvno 0 -cell $cellName -noauth
+    bos addkey $machineName -key $afsPassword -kvno 0 -cell $cellName -noauth
+    
+    echo bos shutdown $machineName -noauth
+    bos shutdown $machineName -noauth
+    bosserver_process=$(ps -Ao pid,cmd | grep boss)
+    echo kill ${bosserver_process%% /*}
+    kill ${bosserver_process%% /*}
+
+    if [ -z $krb5 ]; then
+      /usr/afs/bin/kaserver -noauth &
+ 
+      echo Configuring kaserver
+      kas create afs -initial_password $afsPassword -cell $cellName -noauth
+      kas examine -name afs -cell $cellName -noauth
+      kas create admin -initial_password $adminPassword -cell $cellName -noauth
+      kas setfields admin -flags admin -cell $cellName -noauth
+      kas examine -name admin -cell $cellName -noauth
+    
+      kaserver_process=$(ps -Ao pid,cmd | grep kaserver)
+      echo kill ${kaserver_process%% /*}
+      kill ${kaserver_process%% /*}
+   
+    else 
+
+      echo Setting up krb5
+      kadmin -p admin/admin -w $kadminPassword -q "addprinc -pw $adminPassword afs"
+      kadmin -p admin/admin -w $kadminPassword -q "modprinc -kvno 0 afs"
+      kadmin -p admin/admin -w $kadminPassword -q "ktadd -k /etc/krb5.keytab -e des-cbc-crc:afs3 afs"
+      asetkey add 1 /etc/krb5.keytab afs
+      kadmin -p admin/admin -w $kadminPassword -q "ktremove -k /etc/krb5.keytab afs all"
+      kadmin -p admin/admin -w $kadminPassword -q "addprinc -pw $adminPassword admin"
+      kadmin -p admin/admin -w $kadminPassword -q "ktadd -k /etc/krb5.keytab admin" 
+
+    fi
+
+    echo Bootstrapping ptserver
+    echo -e "admin 128/20 1 -204 -204\nsystem:administrators 130/20 -204 -204 -204\n   admin   1\n" | /usr/afs/bin/pt_util -p /usr/afs/db/prdb.DB0 -w
+
+  fi
+
+  /usr/afs/bin/bosserver
+
+  if [ $serverType -ne $firstServer ]; then
+    # Define the upclients
+    echo bos create $machineName upclientetc simple "/usr/afs/bin/upclient $existingServer /usr/afs/etc" -cell $cellName -localauth
+    bos create $machineName upclientetc simple "/usr/afs/bin/upclient $existingServer /usr/afs/etc" -cell $cellName -localauth
+    echo bos create $machineName upclientbin simple "/usr/afs/bin/upclient $existingServer -clear /usr/afs/bin" -cell $cellName -localauth
+    bos create $machineName upclientbin simple "/usr/afs/bin/upclient $existingServer -clear /usr/afs/bin" -cell $cellName -localauth
+  fi
+fi
+#
+#
+if [ $serverType -eq $firstServer ]; then
+#
+  echo Starting the Database Server Processes
+#
+  if [ -z $krb5 ]; then
+    echo bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
+    bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
+  fi
+  echo bos create -server $machineName -instance buserver -type simple -cmd /usr/afs/bin/buserver -cell $cellName -localauth
+  bos create -server $machineName -instance buserver -type simple -cmd /usr/afs/bin/buserver -cell $cellName -localauth
+  echo bos create -server $machineName -instance ptserver -type simple -cmd /usr/afs/bin/ptserver -cell $cellName -localauth
+  bos create -server $machineName -instance ptserver -type simple -cmd /usr/afs/bin/ptserver -cell $cellName -localauth
+  echo bos create -server $machineName -instance vlserver -type simple -cmd /usr/afs/bin/vlserver -cell $cellName -localauth
+  bos create -server $machineName -instance vlserver -type simple -cmd /usr/afs/bin/vlserver -cell $cellName -localauth
+#
+  echo bos adduser $machineName admin -cell $cellName -localauth
+  bos adduser $machineName admin -cell $cellName -localauth
+  echo bos restart $machineName -all -cell $cellName -localauth
+  bos restart $machineName -all -cell $cellName -localauth
+#
+fi
+#
+if [ $serverType -ne $notServer ]; then
+  echo Starting the File Server, Volume Server, and Salvager
+#
+  echo bos create $machineName fs fs /usr/afs/bin/fileserver /usr/afs/bin/volserver /usr/afs/bin/salvager -cell $cellName -localauth
+  bos create $machineName fs fs /usr/afs/bin/fileserver /usr/afs/bin/volserver /usr/afs/bin/salvager -cell $cellName -localauth
+# Verify success of fs:
+  echo bos status $machineName fs -long -localauth
+  bos status $machineName fs -long -localauth
+#
+  if [ $serverType -eq $firstServer ]; then
+    # Wait for Ubik to elect a quorum
+    echo Waiting for a quorum election . . .
+    perl $scriptDir/check_udebug.pl $machineName
+    echo vos create $machineName $partition root.afs -cell $cellName -localauth 
+    vos create $machineName $partition root.afs -cell $cellName -localauth
+#
+  else 
+    vos syncvldb $machineName -cell $cellName -verbose -localauth
+    vos syncserv $machineName -cell $cellName -verbose -localauth
+  fi
+fi
+#
+if [ $serverType -eq $firstServer ]; then
+  echo Starting the Server Portion of the Update Server
+#
+  echo bos create $machineName upserver simple "/usr/afs/bin/upserver -crypt /usr/afs/etc -clear /usr/afs/bin" -cell $cellName -localauth
+  bos create $machineName upserver simple "/usr/afs/bin/upserver -crypt /usr/afs/etc -clear /usr/afs/bin" -cell $cellName -localauth
+#
+#
+fi
+#
+# Installing Client Functionality
+#
+echo Defining Cell Membership for Client Processes
+#
+if [ $serverType -eq $notServer ]; then
+  echo $cellName > /usr/vice/etc/ThisCell
+fi
+#
+echo Creating the Client CellServDB File
+
+cd /usr/vice/etc
+if [ $serverType -ne $firstServer ]; then
+    # Move the CellServDB file to /usr/vice/etc
+    cp -f $scriptDir/vice/CellServDB /usr/vice/etc
+fi
+#
+# copy correct afs setup file to etc/sysconfig
+if [ $serverType -eq $notServer ]; then
+  cp -f $scriptDir/afsinit_client /etc/sysconfig/afs
+else
+  cp -f $scriptDir/afsinit_both /etc/sysconfig/afs
+fi
+#
+# Overview: Completing the Installation of the First AFS Machine
+#
+echo Verifying the AFS Initialization Script
+#
+if [ $serverType -ne $notServer ]; then
+  echo bos shutdown $machineName -localauth
+  bos shutdown $machineName -localauth
+  bosserver_process=$(ps -Ao pid,cmd | grep boss)
+  echo kill ${bosserver_process%% /*}
+  kill ${bosserver_process%% /*}
+fi
+
+#
+echo Continuing with Verifying ths AFS Initialization Script
+#
+echo /etc/rc.d/init.d/afs start
+/etc/rc.d/init.d/afs start
+if [ $serverType -ne $notServer ]; then
+ 
+  if [ -z $krb5 ]; then
+    # klog in as admin
+    echo klog admin -password 
+    klog admin -password $adminPassword
+  else
+    kinit -t /etc/krb5.keytab admin
+    aklog
+  fi
+
+  # verify klog worked correctly:
+  echo tokens
+  tokens
+  # verify each process is running normally:
+  echo bos status $machineName
+  bos status $machineName
+  cd /
+  echo fs checkvolumes
+  fs checkvolumes
+fi
+#
+echo Activating the AFS Initialization Script
+#
+echo /sbin/chkconfig --add afs
+/sbin/chkconfig --add afs
+cd /usr/vice/etc
+rm afs.rc afs.conf
+ln -s /etc/rc.d/init.d/afs afs.rc
+ln -s /etc/sysconfig/afs afs.conf
+#
+if [ $serverType -eq $firstServer ]; then
+  echo Configuring the Top Levels of the AFS Filespace
+#
+  # Wait for Ubik to elect a quorum
+  echo Waiting for a quorum election . . .
+  perl $scriptDir/check_udebug.pl $machineName
+  
+  echo fs setacl /afs system:anyuser rl
+  fs setacl /afs -acl system:anyuser rl
+  echo vos create $machineName $partition root.cell
+  vos create $machineName $partition root.cell
+  echo fs mkmount /afs/$cellName root.cell
+  fs mkmount /afs/$cellName root.cell
+  echo fs setacl /afs/$cellName system:anyuser rl
+  fs setacl /afs/$cellName -acl system:anyuser rl
+  cd /afs
+  ln -s $cellName $shortCell
+  echo fs mkmount /afs/.$cellName root.cell -rw
+  fs mkmount /afs/.$cellName root.cell -rw
+
+# stop the client
+  echo Stopping the client to replicate
+  cd /
+  umount /afs
+  /usr/vice/etc/afsd -shutdown
+  
+  echo vos addsite $machineName $partition root.afs -localauth
+  vos addsite $machineName $partition root.afs -localauth
+  echo vos addsite $machineName $partition root.cell -localauth
+  vos addsite $machineName $partition root.cell -localauth
+  echo vos release root.afs -localauth
+  vos release root.afs -localauth
+  echo vos release root.cell -localauth
+  vos release root.cell -localauth
+
+  /etc/rc.d/init.d/afs stop
+  # start the client again
+  echo Starting client again
+  /etc/rc.d/init.d/afs start
+  cd /afs
+
+  if [ -z $krb5 ]; then
+    # klog in as admin
+    echo klog admin -password 
+    klog admin -password $adminPassword
+  else
+    kinit -t /etc/krb5.keytab admin
+    aklog
+    kadmin -p admin/admin -w $kadminPassword -q "ktremove -k /etc/krb5.keytab admin all"
+    kadmin -p admin/admin -w $kadminPassword -q "cpw -pw $adminPassword admin"
+  fi
+
+  # Wait for Ubik to elect a quorum
+  echo Waiting for a quorum election . . .
+  perl $scriptDir/check_udebug.pl $machineName
+  
+  echo fs examine /afs
+  fs examine /afs
+  echo fs examine /afs/$cellName
+  fs examine /afs/$cellName
+
+fi
+fs checkvolumes
+#
+if [ $clientType -ne $isClient ]; then
+#
+  echo Removing Client Functionality
+#
+  # Install correct config file  
+  cp -f $scriptDir/afsinit_server /etc/sysconfig/afs
+#
+  cd /usr/vice/etc
+  ln -fs /usr/afs/etc/ThisCell ThisCell
+  ln -fs /usr/afs/etc/CellServDB CellServDB
+#
+  /etc/rc.d/init.d/afs stop
+  /etc/rc.d/init.d/afs start
+#
+fi
+# remove the tokens
+unlog
+#
+# Write the done file
+echo "Here is a summary of what was done:<br><ul>" > $scriptDir/done.txt
+if [ $serverType -eq $firstServer ]; then 
+  echo "<li>Configured $machineName as the first server to the cell $cellName</li>" >> $scriptDir/done.txt
+  echo "<li>Created the server processes (vlserver, buserver, kaserver, and ptserver)</li>" >> $scriptDir/done.txt
+  echo "<li>Created /vicepa as a server partition</li>" >> $scriptDir/done.txt
+  echo "<li>Created an admin account</li>" >> $scriptDir/done.txt
+  echo "<li>Mounted a read-write version of root.cell at /afs/.$cellName</li>" >> $scriptDir/done.txt
+fi
+if [ $serverType -eq $addServer ]; then 
+  echo "<li>Configured $machineName as an additional server to the cell $cellName</li>" >> $scriptDir/done.txt
+  echo "<li>Created the update processes, using $existingServer as the first server</li>" >> $scriptDir/done.txt
+  echo "<li>Created /vicepa as a server partition</li>" >> $scriptDir/done.txt
+fi
+if [ $clientType -eq $isClient ]; then 
+  echo "<li>Configured $machineName as a client to the cell $cellName</li>" >> $scriptDir/done.txt
+fi
+  echo "</ul><br>" >> $scriptDir/done.txt
+if [ $serverType -eq $firstServer ]; then 
+  echo "<br>Here are some suggestions about how to get started using your cell:<br><ul>" >> $scriptDir/done.txt
+  echo "<li>Read the <a href=\"http://oss.software.ibm.com/developerworks/opensource/afs/docs.html\">OpenAFS documentation</a></li>" >> $scriptDir/done.txt
+  echo "<li>Create users for your cell</li>" >> $scriptDir/done.txt
+  echo "<li>Create volumes</li>" >> $scriptDir/done.txt
+  echo "<li>Configure other machines to be additional servers for this cell</li>" >> $scriptDir/done.txt
+  echo "<li>Make another partition (i.e. /vicepb) on which to store volumes</li>" >> $scriptDir/done.txt
+  echo "<li>Mount other cells in root.afs</li>" >> $scriptDir/done.txt
+  echo "</ul>" >> $scriptDir/done.txt
+fi
+# Write the state file
+echo "Install" > $scriptDir/.afs_state
+echo "complete" >> $scriptDir/.afs_state
+#

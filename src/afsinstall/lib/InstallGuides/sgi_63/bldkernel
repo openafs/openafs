@@ -1,0 +1,43 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for static AFS kernel libraries
+# For SGI systems running IRIX 6.3
+#
+
+sub bldkernel {
+my ($chip, $nfs, $libafs);
+&ErrorsAreFatal(1);
+
+# Find out what kind of chip the machine has (Rx000)
+$chip = `hinv -t cpu`;
+$chip =~ /R[51]0*/;
+$chip = $&;
+&ErrorMsg("Couldn't determine chip type with", "hinv") unless ($chip =~ /^R/);
+
+# NFS support
+if ($Configuration{"NFSEXTENSIONS"}) {
+  $nfs = ""; }
+else {
+  $nfs = ".nonfs"; };
+
+# From the above, put together the name of the kernel library to use
+$libafs = "libafs.SP.$chip$nfs.a";
+
+&CreateDir("/usr/vice/etc/sgiload");
+&ErrorsAreFatal(0);
+
+&Copy("root.client/bin/$libafs", "/var/sysgen/boot/afs.a");
+&Copy("root.client/usr/vice/etc/sgiload/afs",    "/usr/vice/etc/sgiload");
+&Copy("root.client/usr/vice/etc/sgiload/afs.rc", "/usr/vice/etc/sgiload");
+&Copy("root.client/usr/vice/etc/sgiload/afs.sm", "/usr/vice/etc/sgiload");
+
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+system("/etc/chkconfig -f afsml off");
+}

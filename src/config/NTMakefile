@@ -1,0 +1,185 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+!INCLUDE NTMakefile.$(SYS_NAME)
+
+# Relative path to src directory depends on how we got to current directory.
+
+!IF (EXIST(..\..\src))
+SRCROOT = ..\..\src
+!ELSE IF (EXIST(..\..\..\src))
+SRCROOT = ..\..\..\src
+!ELSE
+!ERROR Can not find src directory from current directory.
+!ENDIF
+
+INCFILEDIR = $(DESTDIR)\include\afs
+
+INCFILES =\
+	$(INCFILEDIR)\afs_args.h \
+	$(INCFILEDIR)\debug.h \
+	$(INCFILEDIR)\param.h \
+	$(INCFILEDIR)\afsconfig.h \
+	$(INCFILEDIR)\afs_sysnames.h \
+	$(INCFILEDIR)\stds.h \
+	$(INCFILEDIR)\icl.h 
+
+
+$(INCFILEDIR)\param.h: param.$(SYS_NAME).h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\afsconfig.h: afsconfig-windows.h
+	$(COPY) $? $@
+
+idirs: doclink
+!	IF (!EXIST($(DESTDIR)))
+		$(MKDIR) $(DESTDIR)
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include))
+		$(MKDIR) $(DESTDIR)\include
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\afs))
+		$(MKDIR) $(DESTDIR)\include\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\rx))
+		$(MKDIR) $(DESTDIR)\include\rx
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\include\WINNT))
+		$(MKDIR) $(DESTDIR)\include\WINNT
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib))
+		$(MKDIR) $(DESTDIR)\lib
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib\afs))
+		$(MKDIR) $(DESTDIR)\lib\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\lib\win95))
+		$(MKDIR) $(DESTDIR)\lib\win95
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\bin))
+		$(MKDIR) $(DESTDIR)\bin
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\etc))
+		$(MKDIR) $(DESTDIR)\etc
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall))
+		$(MKDIR) $(DESTDIR)\WinInstall
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall\Config))
+		$(MKDIR) $(DESTDIR)\WinInstall\Config
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall\Dll))
+		$(MKDIR) $(DESTDIR)\WinInstall\Dll
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server))
+		$(MKDIR) $(DESTDIR)\root.server
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr))
+		$(MKDIR) $(DESTDIR)\root.server\usr
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr\afs))
+		$(MKDIR) $(DESTDIR)\root.server\usr\afs
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.server\usr\afs\bin))
+		$(MKDIR) $(DESTDIR)\root.server\usr\afs\bin
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client))
+		$(MKDIR) $(DESTDIR)\root.client
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr))
+		$(MKDIR) $(DESTDIR)\root.client\usr
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr\vice))
+		$(MKDIR) $(DESTDIR)\root.client\usr\vice
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
+		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
+!	ENDIF
+	$(COPY) AFSCONFIG-WINDOWS.H $(DESTDIR)\include\afs\afsconfig.h
+
+INCCOPY = \
+	$(DESTDIR)\bin\rmbat.bat \
+	$(DESTDIR)\bin\rmbat.rsp \
+	$(DESTDIR)\bin\NTBUILD.bat
+
+$(DESTDIR)\bin\rmbat.bat:..\rmbat.bat
+	$(COPY) $? $@
+	util_cr + $@
+
+$(DESTDIR)\bin\rmbat.rsp:..\rmbat.rsp
+	$(COPY) $? $@
+
+$(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
+	$(COPY) $? $@
+	util_cr + $@
+
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe 
+	$(COPY) NTLang.bat $(DESTDIR)\bin
+	util_cr + $(DESTDIR)\bin\NTLang.bat
+
+$(DESTDIR)\NTDllmap.txt:NTDllmap.txt
+	$(COPY) $? $@
+
+# Create link to docs needed for media build; allow to fail in case
+# symlink not available, e.g. if using a 3.4a client, since most builds
+# aren't media builds.
+doclink:
+!	IF (EXIST($(DESTDIR)\doc))
+		- symlink rm $(DESTDIR)\doc
+!	ENDIF
+	- symlink make $(DESTDIR)\doc doc-pathname
+
+
+version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
+
+NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
+	$(DEL) NTMakefile.version
+!	IF (EXIST(..\..\src\CML\state) || EXIST(..\..\..\src\CML\state))
+		$(COPY) NTMakefile.version-CML NTMakefile.version
+!	ELSE
+		$(COPY) NTMakefile.version-NOCML NTMakefile.version
+!	ENDIF
+
+INCTOOLS = \
+	$(DESTDIR)\bin\mkvers.exe \
+	$(DESTDIR)\bin\util_cr.exe \
+	$(DESTDIR)\bin\touch.exe
+
+#mkvers.exe : mkvers.obj
+#	$(EXECONLINK)
+
+$(DESTDIR)\bin\mkvers.exe:mkvers.exe
+	$(COPY) mkvers.exe $(DESTDIR)\bin\.
+
+$(DESTDIR)\bin\util_cr.exe:util_cr.exe
+	$(COPY) util_cr.exe $(DESTDIR)\bin\.
+
+util_cr.exe : util_cr.obj
+	$(EXECONLINK)
+
+$(DESTDIR)\bin\touch.exe:touch.exe
+	$(COPY) touch.exe $(DESTDIR)\bin\.
+
+langsetup: $(DESTDIR)\bin\NTLang.bat
+
+install: idirs $(INCTOOLS) $(INCCOPY) version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
+
+install9x: install
+
+# This clean target must be named something different than the universal
+# 'clean' so that the version file can be removed last.
+clean_version:
+	$(DEL) NTMakefile.version
+
+clean::
+	$(DEL) $(DESTDIR)\LIB\*.DLL
+	$(DEL) $(DESTDIR)\bin\mkver.exe
+	$(DEL) $(DESTDIR)\bin\touch.exe
+	$(DEL) $(DESTDIR)\bin\util_cr.exe
+	$(DEL) mkver.exe
+	$(DEL) touch.exe
+	$(DEL) util_cr.exe

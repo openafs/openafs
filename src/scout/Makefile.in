@@ -1,0 +1,102 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+# Makefile for Scout, the AFS navigation and monitoring tool.
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+CFLAGS=${DBUG} -I. \
+	-I${TOP_SRCDIR}/config \
+	-I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs \
+	${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
+
+INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
+	${TOP_INCDIR}/afs/gtxwindows.h \
+	${TOP_INCDIR}/afs/gtxcurseswin.h \
+	${TOP_INCDIR}/afs/gtxdumbwin.h \
+	${TOP_INCDIR}/afs/gtxX11win.h \
+	${TOP_INCDIR}/afs/gtxobjects.h \
+	${TOP_INCDIR}/afs/gtxlightobj.h \
+	${TOP_INCDIR}/afs/gtxtextobj.h \
+	${TOP_INCDIR}/afs/gtxobjdict.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h
+ 
+LIBS=${TOP_LIBDIR}/libgtx.a \
+	${TOP_LIBDIR}/libfsprobe.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
+        ${TOP_LIBDIR}/libvldb.a \
+        ${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a
+
+all: scout
+
+#
+# Build targets
+#
+scout.o: scout.c ${INCLS} AFS_component_version_number.c
+
+scout: scout.o $(LIBS)
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${TOP_LIBDIR}/libtermlib.a ${XLIBS}
+
+#
+# Installation targets
+#
+install: ${DESTDIR}${bindir}/scout
+
+${DEST}/bin/scout: scout
+	${INSTALL} $? $@
+
+#
+# Misc targets
+#
+clean:
+	$(RM) -f *.o scout core AFS_component_version_number.c
+
+include ../config/Makefile.version
+
+${DESTDIR}${bindir}/scout: scout
+	${INSTALL} $? $@
+
+dest: ${DEST}/bin/scout
+

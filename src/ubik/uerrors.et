@@ -1,0 +1,53 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+# Ubik error table
+
+error_table U
+	ec UNOQUORUM, "no quorum elected"
+	ec UNOTSYNC, "not synchronization site (should work on sync site)"
+	ec UNHOSTS, "too many hosts"
+	ec UIOERROR, "I/O error writing dbase or log"
+	ec UINTERNAL, "mysterious internal error"
+	ec USYNC, "major synchronization error"
+	ec UNOENT, "file not found when processing dbase"
+	ec UBADLOCK, "bad lock range size (must be 1)"
+	ec UBADLOG, "read error reprocessing log"
+	ec UBADHOST, "problems with host name"
+	ec UBADTYPE, "bad operation for this transaction type"
+	ec UTWOENDS, "two commits or aborts done to transaction"
+	ec UDONE, "operation done after abort (or commmit)"
+	ec UNOSERVERS, "no servers appear to be up"
+	ec UEOF, "premature EOF"
+	ec ULOGIO, "error writing log file"
+        ec UBADFAM, "unsupported address family -- bogus error"
+        ec UBADCELL, "inconsistent cell name -- bogus error"
+        ec UBADSECGRP, "security group bad or missing -- bogus error"
+        ec UBADGROUP,   "server group name bad or missing -- bogus error"
+        ec UBADUUID,    "server uuid bad or missing -- bogus error"
+        ec UNOMEM,      "memory allocation failure -- bogus error"
+        ec UNOTMEMBER, "host not a member of server group -- bogus error"
+        ec UNBINDINGS, "too many bindings per server -- bogus error"
+        ec UBADPRINNAME, "inconsistent principal name from binding -- bogus error"
+        ec UPIPE, "I/O error in ubik pipe -- bogus error"
+        ec UDEADLOCK, "operation aborted to prevent dead lock (two sync sites?)"
+        ec UEXCEPTION, "rpc runtime exception caught -- bogus error"
+        ec UTPQFAIL, "vote thread pool queue operation failed -- bogus error"
+        ec USKEWED, "clock skew among servers too high -- bogus error"
+        ec UNOLOCK, "repeatedly failed to obtain ubik lock -- bogus error"
+        ec UNOACCESS, "permission denied for attempted operation -- bogus error"
+        ec UNOSPC, "no space left on database device -- bogus error"
+        ec UBADPATH, "invalid DB pathname -- bogus error"
+        ec UBADF, "bad file descriptor -- bogus error"
+        ec UREINITIALIZE, "Reinitialize called before initialize"
+        ec UMUTEXINIT, "failed to initialize per client mutex"
+        ec UMUTEXDESTROY, "failed to destroy per client mutex"
+end
+
+

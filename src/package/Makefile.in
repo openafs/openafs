@@ -1,0 +1,130 @@
+# (C) Copyright Transarc Corporation 1989
+# Licensed Materials - Property of Transarc
+# All Rights Reserved
+#
+# Makefile for package, the AFS workstation configuration tool.
+#
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL    = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}
+DBGFLAG  = -UDEBUG
+CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
+YFLAGS   = -vd
+#LFLAGS  = -ll
+
+HFILES = package.h \
+	 validupdates.h \
+	 systype.h \
+	 globals.h
+
+SRCS = package.c \
+	conftree.c \
+	check.c \
+	update.c \
+	fileops.c \
+	messages.c \
+	misc.c \
+	globfuncs.c
+
+TEST_SRCS = test.c \
+	conftree.c \
+	messages.c \
+	misc.c \
+	globfuncs.c
+
+OTHERSRCS = gram.y
+
+OBJS =  package.o \
+	gram.o \
+	lex.o \
+	conftree.o \
+	check.o \
+	update.o \
+	fileops.o \
+	messages.o \
+	misc.o \
+	globfuncs.o
+
+TEST_OBJS = test.o \
+	test_gram.o \
+	lex.o \
+	conftree.o \
+	messages.o \
+	misc.o \
+	globfuncs.o
+
+LIBS=${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+        ${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${XLIBS}
+
+include ../config/Makefile.version
+
+all	: package package_test
+
+package	: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(NON_SHARED) ${LIBS}
+
+package_test : $(TEST_OBJS)
+	$(CC) $(CFLAGS) -o package_test $(TEST_OBJS) ${LIBS}
+
+package.o: package.c AFS_component_version_number.o
+test.o: test.c AFS_component_version_number.o
+
+lex.c:
+	-$(RM) -f lex.c
+	$(LEX)  -t lex.l > lex.c
+
+clean	:
+	$(RM) -f *.o gram.c test_gram.c core package package_test *.BAK y.output yacc.tmp yacc.acts\
+	AFS_component_version_number.c lex.c y.tab.h
+
+install:   ${DESTDIR}${sbindir}/package ${DESTDIR}${sbindir}/package_test ${DESTDIR}${sbindir}/makepkgfiles
+
+
+${DEST}/etc/package: package
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/package: package
+	${INSTALL} $? $@
+
+${DEST}/etc/package_test: package_test
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/package_test: package_test
+	${INSTALL} $? $@
+
+${DEST}/etc/makepkgfiles: makepkgfiles
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/makepkgfiles: makepkgfiles
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/etc/package ${DEST}/etc/package_test ${DEST}/etc/makepkgfiles
+

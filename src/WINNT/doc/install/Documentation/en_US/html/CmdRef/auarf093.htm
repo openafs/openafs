@@ -1,0 +1,254 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 3//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3190/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 5 Nov 1999 at 13:58:29                -->
+<META HTTP-EQUIV="updated" CONTENT="Fri, 05 Nov 1999 13:58:29">
+<META HTTP-EQUIV="review" CONTENT="Sun, 05 Nov 2000 13:58:29">
+<META HTTP-EQUIV="expires" CONTENT="Mon, 05 Nov 2001 13:58:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf092.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf094.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBOS_INTRO" HREF="auarf002.htm#ToC_107">bos</A></H2>
+<A NAME="IDX4435"></A>
+<A NAME="IDX4436"></A>
+<A NAME="IDX4437"></A>
+<A NAME="IDX4438"></A>
+<A NAME="IDX4439"></A>
+<A NAME="IDX4440"></A>
+<A NAME="IDX4441"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Introduction to the <B>bos</B> command suite
+<P><STRONG>Description</STRONG>
+<P>The commands in the <B>bos</B> command suite are the administrative
+interface to the Basic OverSeer (BOS) Server, which runs on every file server
+machine to monitor the other server processes on it. If a process
+fails, the BOS Server can restart it automatically, taking into account
+interdependencies between it and other processes. The BOS Server frees
+system administrators from constantly monitoring the status of server machines
+and processes.
+<P>There are several categories of commands in the <B>bos</B> command
+suite&#58;
+<UL>
+<P><LI>Commands to administer server process binary files&#58; <B>bos
+getdate</B>, <B>bos install</B>, <B>bos prune</B>, and <B>bos
+uninstall</B>
+<P><LI>Commands to maintain system configuration files&#58; <B>bos
+addhost</B>, <B>bos addkey</B>, <B>bos adduser</B>, <B>bos
+listhosts</B>, <B>bos listkeys</B>, <B>bos listusers</B>, <B>bos
+removehost</B>, <B>bos removekey</B>, <B>bos removeuser</B>, and
+<B>bos setcellname</B>
+<P><LI>Commands to start and stop processes&#58; <B>bos create</B>,
+<B>bos delete</B>, <B>bos restart</B>, <B>bos shutdown</B>,
+<B>bos start</B>, <B>bos startup</B>, and <B>bos stop</B>
+<P><LI>Commands to set and verify server process and server machine status&#58;
+<B>bos getlog</B>, <B>bos getrestart</B>, <B>bos setauth</B>,
+<B>bos setrestart</B>, and <B>bos status</B>
+<P><LI>A command to restore file system consistency&#58; <B>bos salvage</B>
+<P><LI>Commands to obtain help&#58; <B>bos apropos</B> and <B>bos
+help</B>
+</UL>
+<P>The BOS Server and the <B>bos</B> commands use and maintain the
+following configuration and log files&#58;
+<UL>
+<P><LI>The <B>/usr/afs/etc/CellServDB</B> file lists the local cell&#39;s
+database server machines. These machines run the Authentication,
+Backup, Protection and Volume Location (VL) Server processes, which maintain
+databases of administrative information. The database server processes
+consult the file to learn about their peers, whereas the other server
+processes consult it to learn where to access database information as
+needed. To administer the <B>CellServDB</B> file, use the following
+commands&#58; <B>bos addhost</B>, <B>bos listhosts</B>, <B>bos
+removehost</B>, and <B>bos setcellname</B>.
+<P><LI>The <B>/usr/afs/etc/KeyFile</B> file lists the server encryption keys
+that the server processes use to decrypt tickets presented by client processes
+and one another. To administer the <B>KeyFile</B> file, use the
+following commands&#58; <B>bos addkey</B>, <B>bos listkeys</B>, and
+<B>bos removekey</B>.
+<P><LI>The <B>/usr/afs/etc/ThisCell</B> file defines the cell to which the
+server machine belongs for the purposes of server-to-server
+communication. Administer it with the <B>bos setcellname</B>
+command. There is also a <B>/usr/vice/etc/ThisCell</B> file that
+defines the machine&#39;s cell membership with respect to the AFS command
+suites and Cache Manager access to AFS data.
+<P><LI>The <B>/usr/afs/etc/UserList</B> file lists the user name of each
+administrator authorized to issue privileged <B>bos</B> and <B>vos</B>
+commands. To administer the <B>UserList</B> file, use the following
+commands&#58; <B>bos adduser</B>, <B>bos listusers</B>, and <B>bos
+removeuser</B>.
+<P><LI>The <B>/usr/afs/local/BosConfig</B> file defines which AFS server
+processes run on the server machine, and whether the BOS Server restarts them
+automatically if they fail. It also defines when all processes restart
+automatically (by default once per week), and when the BOS Server restarts
+processes that have new binary files (by default once per day). To
+administer the <B>BosConfig</B> file, use the following commands&#58;
+<B>bos create</B>, <B>bos delete</B>, <B>bos getrestart</B>,
+<B>bos setrestart</B>, <B>bos start</B>, and <B>bos
+stop</B>.
+<P><LI>The <B>/usr/afs/log/BosLog</B> file records important operations the
+BOS Server performs and error conditions it encounters.
+</UL>
+<P>For more details, see the reference page for each file.
+<P><STRONG>Options</STRONG>
+<P>The following arguments and flags are available on many commands in the
+<B>bos</B> suite. The reference page for each command also lists
+them, but they are described here in greater detail.
+<A NAME="IDX4442"></A>
+<A NAME="IDX4443"></A>
+<A NAME="IDX4444"></A>
+<DL>
+<P><DT><B>-cell &lt;<VAR>cell name</VAR>>
+</B><DD>Names the cell in which to run the command. It is acceptable to
+abbreviate the cell name to the shortest form that distinguishes it from the
+other entries in the <B>/usr/vice/etc/CellServDB</B> file on the local
+machine. If the <B>-cell</B> argument is omitted, the command
+interpreter determines the name of the local cell by reading the following in
+order&#58; 
+<OL TYPE=1>
+<P><LI>The value of the AFSCELL environment variable
+<P><LI>The local <B>/usr/vice/etc/ThisCell</B> file
+</OL>
+<P>
+<P>Do not combine the <B>-cell</B> and <B>-localauth</B>
+options. A command on which the <B>-localauth</B> flag is included
+always runs in the local cell (as defined in the server machine&#39;s local
+<B>/usr/afs/etc/ThisCell</B> file), whereas a command on which the
+<B>-cell</B> argument is included runs in the specified foreign
+cell.
+<A NAME="IDX4445"></A>
+<P><DT><B>-help
+</B><DD>Prints a command&#39;s online help message on the standard output
+stream. Do not combine this flag with any of the command&#39;s other
+options; when it is provided, the command interpreter ignores all other
+options, and only prints the help message.
+<P><DT><B>
+<A NAME="IDX4446"></A>
+<B>-localauth</B>
+</B><DD>Constructs a server ticket using the server encryption key with the
+highest key version number in the local <B>/usr/afs/etc/KeyFile</B>
+file. The <B>bos</B> command interpreter presents the ticket, which
+never expires, to the BOS Server during mutual authentication. 
+<P>Use this flag only when issuing a command on a server machine; client
+machines do not usually have a <B>/usr/afs/etc/KeyFile</B> file.
+The issuer of a command that includes this flag must be logged on to the
+server machine as the local superuser <B>root</B>. The flag is
+useful for commands invoked by an unattended application program, such as a
+process controlled by the UNIX <B>cron</B> utility or by a cron entry in
+the machine&#39;s <B>/usr/afs/local/BosConfig</B> file. It is also
+useful if an administrator is unable to authenticate to AFS but is logged in
+as the local superuser <B>root</B>. 
+<P>Do not combine the <B>-cell</B> and <B>-localauth</B>
+options. A command on which the <B>-localauth</B> flag is included
+always runs in the local cell (as defined in the server machine&#39;s local
+<B>/usr/afs/etc/ThisCell</B> file), whereas a command on which the
+<B>-cell</B> argument is included runs in the specified foreign
+cell. Also, do not combine the <B>-localauth</B> and
+<B>-noauth</B> flags.
+<P><DT><B>
+<A NAME="IDX4447"></A>
+<B>-noauth</B>
+</B><DD>Establishes an unauthenticated connection to the BOS Server, in which the
+BOS Server treats the issuer as the unprivileged user
+<B>anonymous</B>. It is useful only when authorization checking is
+disabled on the server machine (during the installation of a file server
+machine or when the <B>bos setauth</B> command has been used during other
+unusual circumstances). In normal circumstances, the BOS Server allows
+only privileged users to issue commands that change the status of a server or
+configuration file, and refuses to perform such an action even if the
+<B>-noauth</B> flag is provided. Do not combine the
+<B>-noauth</B> and <B>-localauth</B> flags.
+<P><DT><B><B>-server</B> &lt;<VAR>machine name</VAR>>
+<A NAME="IDX4448"></A>
+</B><DD>Indicates the AFS server machine on which to run the command.
+Identify the machine by its IP address in dotted decimal format, its
+fully-qualified host name (for example, <B>fs1.abc.com</B>),
+or by an abbreviated form of its host name that distinguishes it from other
+machines. Successful use of an abbreviated form depends on the
+availability of a name service (such as the Domain Name Service or a local
+host table) at the time the command is issued.
+<P>For the commands that alter the administrative files shared by all server
+machines in the cell (the <B>bos addhost</B>, <B>bos addkey</B>,
+<B>bos adduser</B>, <B>bos removehost</B>, <B>bos removekey</B>,
+and <B>bos removeuser</B> commands), the appropriate machine depends on
+whether the cell uses the United States or international version of AFS&#58;
+<UL>
+<P><LI>If the cell runs the United States edition of AFS and (as recommended)
+uses the Update Server to distribute the contents of the
+<B>/usr/afs/etc</B> directory, provide the name of the system control
+machine. After issuing the command, allow up to five minutes for the
+Update Server to distribute the changed file to the other AFS server machines
+in the cell. If the specified machine is not the system control machine
+but is running an <B>upclientetc</B> process that refers to the system
+control machine, then the change will be overwritten when the process next
+brings over the relevant file from the system control machine.
+<P><LI>If the cell runs the international edition of AFS, do not use the Update
+Server to distribute the contents of the <B>/usr/afs/etc</B>
+directory. Instead, repeatedly issue the command, naming each of the
+cell&#39;s server machines in turn. To avoid possible inconsistency
+problems, finish issuing the commands within a fairly short time.
+</UL>
+</DL>
+<P><STRONG>Privilege Required</STRONG>
+<A NAME="IDX4449"></A>
+<A NAME="IDX4450"></A>
+<P>To issue any <B>bos</B> command that changes a configuration file or
+alters process status, the issuer must be listed in the
+<B>/usr/afs/etc/UserList</B> file on the server machine named by the
+<B>-server</B> argument. Alternatively, if the
+<B>-localauth</B> flag is included the issuer must be logged on as the
+local superuser <B>root</B>.
+<P>To issue a <B>bos</B> command that only displays information (other
+than the <B>bos listkeys</B> command), no privilege is required.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf019.htm#HDRCLI_CSDB">CellServDB (client version)</A>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (server version)</A>
+<P><A HREF="auarf023.htm#HDRKEYFILE">KeyFile</A>
+<P><A HREF="auarf032.htm#HDRCLI_THISCELL">ThisCell (client version)</A>
+<P><A HREF="auarf033.htm#HDRSV_THISCELL">ThisCell (server version)</A>
+<P><A HREF="auarf035.htm#HDRUSERLIST">UserList</A>
+<P><A HREF="auarf094.htm#HDRBOS_ADDHOST">bos addhost</A>
+<P><A HREF="auarf095.htm#HDRBOS_ADDKEY">bos addkey</A>
+<P><A HREF="auarf096.htm#HDRBOS_ADDUSER">bos adduser</A>
+<P><A HREF="auarf097.htm#HDRBOS_APROPOS">bos apropos</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf099.htm#HDRBOS_DELETE">bos delete</A>
+<P><A HREF="auarf100.htm#HDRBOS_EXEC">bos exec</A>
+<P><A HREF="auarf101.htm#HDRBOS_GETDATE">bos getdate</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P><A HREF="auarf103.htm#HDRBOS_GETRESTART">bos getrestart</A>
+<P><A HREF="auarf104.htm#HDRBOS_HELP">bos help</A>
+<P><A HREF="auarf105.htm#HDRBOS_INSTALL">bos install</A>
+<P><A HREF="auarf106.htm#HDRBOS_LISTHOSTS">bos listhosts</A>
+<P><A HREF="auarf107.htm#HDRBOS_LISTKEYS">bos listkeys</A>
+<P><A HREF="auarf108.htm#HDRBOS_LISTUSERS">bos listusers</A>
+<P><A HREF="auarf109.htm#HDRBOS_PRUNE">bos prune</A>
+<P><A HREF="auarf110.htm#HDRBOS_REMOVEHOST">bos removehost</A>
+<P><A HREF="auarf111.htm#HDRBOS_REMOVEKEY">bos removekey</A>
+<P><A HREF="auarf112.htm#HDRBOS_REMOVEUSER">bos removeuser</A>
+<P><A HREF="auarf113.htm#HDRBOS_RESTART">bos restart</A>
+<P><A HREF="auarf114.htm#HDRBOS_SALVAGE">bos salvage</A>
+<P><A HREF="auarf115.htm#HDRBOS_SETAUTH">bos setauth</A>
+<P><A HREF="auarf116.htm#HDRBOS_SETCELLNAME">bos setcellname</A>
+<P><A HREF="auarf117.htm#HDRBOS_SETRESTART">bos setrestart</A>
+<P><A HREF="auarf118.htm#HDRBOS_SHUTDOWN">bos shutdown</A>
+<P><A HREF="auarf119.htm#HDRBOS_START">bos start</A>
+<P><A HREF="auarf120.htm#HDRBOS_STARTUP">bos startup</A>
+<P><A HREF="auarf121.htm#HDRBOS_STATUS">bos status</A>
+<P><A HREF="auarf122.htm#HDRBOS_STOP">bos stop</A>
+<P><A HREF="auarf123.htm#HDRBOS_UNINSTALL">bos uninstall</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf092.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf094.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

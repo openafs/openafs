@@ -1,0 +1,40 @@
+#!/bin/sh
+# OpenAFS uninstallation script for Linux
+# openafs-tools, Version 1.2.2
+#
+# Copyright 2001, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+# the directory with the openafs-tools files:
+afscodeFileDir=/usr/afs/tools/install/
+#
+echo "Uninstall" > $afscodeFileDir/.afs_state
+echo "begin" >> $afscodeFileDir/.afs_state
+bosserver_process=$(ps -Ao pid,cmd | grep boss)
+kill ${bosserver_process%% /*}
+rm -rf /vicep*/*
+rm -rf /etc/rc.d/rc*.d/*afs*
+perl $afscodeFileDir/write_pam.pl disable
+rm -f /lib/security/pam_afs.so
+rm -rf /usr/afs/db
+rm -rf /usr/afs/etc
+rm -rf /usr/afs/local
+rm -rf /usr/afs/logs
+rm -f /usr/vice/etc/CellServDB
+rm -f /usr/vice/etc/ThisCell
+rm -f /usr/vice/etc/AFSLog
+rm -rf /usr/vice/cache
+rm -f $afscodeFileDir/install_output
+rm -f $afscodeFileDir/done.txt
+mkdir /usr/vice/cache
+echo "If you were using K5 authentication, make sure you delete all AFS related principals."
+echo "Uninstall" > $afscodeFileDir/.afs_state
+echo "complete" >> $afscodeFileDir/.afs_state
+
+
+
+

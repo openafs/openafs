@@ -1,0 +1,332 @@
+#!/bin/perl
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# afs_rtsymtab.pl	(For IRIX 5.3 only)
+# 	This script modifies /var/sysgen/master.d/rtsymtab file so that 
+# AFS kernel extentions can be dynamically loaded using /sbin/ml.
+# The original version of rtsymtab is saved as 
+# /var/sysgen/master.d/rtsymtab.orig. This script must be run only 
+# once on each SGI IRIX 5.3 machine that is to be an AFS 3.4 client.
+# 
+# Usage: afs_rtsymtab.pl -run [-force] [-help]
+#
+
+
+
+@scriptnameparts = split('/', $0);
+$scriptname = pop @scriptnameparts;
+
+$FILE = "/var/sysgen/master.d/rtsymtab";
+$LOG = "/tmp/$scriptname.log";
+
+#
+# This script must be run by the superuser
+# 
+die ("\n$scriptname: Sorry, this script must be run by root.\n\n") 
+	if ($< != 0);
+
+$USAGE="\nUsage: $scriptname -run [-force] [-help]
+
+	This script modifies $FILE in IRIX 5.3 so that 
+	AFS 3.4 kernel extentions may be dynamically loaded using 
+	/sbin/ml. A copy of $FILE is saved 
+	as $FILE.orig before it is changed. 
+	You will need to run this script only once after you install 
+	AFS 3.4 on your clients. 
+
+	This script will exit if it determines that 
+	$FILE has already been modifed for AFS. 
+	If this is incorrect, run this script again with the 
+	-force flag.\n\n";
+	
+#
+# Parse command line
+#
+$run = $force = 0;
+for $_ (@ARGV) {
+	if (/-run/) {
+		$run = 1;
+	} elsif (/-force/) {
+		$force = 1;
+	} else {
+		die $USAGE	
+	}
+}
+die $USAGE if (! $run);
+
+#
+# The following extern definitions are required by AFS and 
+# must be added to $FILE
+# These headers are part of the mimimal OS configuration. They should always
+# be present on the system.
+#
+$ExternHeaders = 
+"#include <sys/vnode.h>
+#include <sys/file.h>
+#include <netinet/in.h>
+#include <netinet/ip_var.h>
+#include <sys/fs_subr.h>
+#include <sys/sema.h>";
+
+$ExternDefns =
+"extern time(), remapf(), exit(), iget(), iput(), efs_ialloc(),
+	iunlock(), estgroups(), setgroups(), setgroupsp(), afs_vfsopsp(),
+	afs_vnodeopsp(), afsidestroyp(), afsdptoipp(), afsiptodpp(),
+	hostintable(), idbg_prafsnodep(), idbg_afsvfslistp(), idbg_addfunc(),
+	qprintf(), checkauth(), __ll_rem(), exported_lock(), rfsdisptab_v3(),
+	vattr_to_wcc_data(), vattr_to_wcc_attr(), vattr_to_fattr3(),
+	puterrno3(), makefh3(), xdr_string(), xdr_u_long(), xdr_char(),
+	xdr_long(), xdr_short(), xdr_bytes(), xdr_opaque(), xdr_u_short(),
+	xdr_u_int(), xdr_int(), xdr_array(), vsync(),
+	assfail(), doass(), in_cksum(), convoff(), debug(), copyinstr(),
+	stime(), sysent(), syscallsw() ;";
+#
+# For each member of @NewSymtabEntries, an entry of the following type must be
+# added (if one does not exist) to the rtsymtab[] array.
+#
+#  {(long) &time,         "time"},                /* DDI/DKI */
+#
+@NewSymtabEntries = (
+"time",
+"vmonitor",
+"pmonitor",
+"rmonitor",
+"amonitor",
+"spunlock_psema",
+"spunlockspl_psema",
+"vn_rele",
+"vn_hold",
+"vn_rdwr",
+"vn_initlist",
+"ptossvp",
+"cleanlocks",
+"crget",
+"crdup",
+"crhold",
+"crfree",
+"remapf",
+"lookupname",
+"exit",
+"sys_cred",
+"vfs_devsearch",
+"iget",
+"iput",
+"efs_ialloc",
+"falloc",
+"iunlock",
+"fready",
+"vrelvm",
+"settime",
+"wtodc",
+"socreate",
+"soreserve",
+"sobind",
+"soclose",
+"xdr_string",
+"xdr_u_long",
+"xdr_char",
+"xdr_long",
+"xdr_short",
+"xdr_bytes",
+"xdr_opaque",
+"xdr_u_short",
+"xdr_u_int",
+"xdr_int",
+"xdr_array",
+"inetdomain",
+"udpcksum",
+"ifcksum",
+"ip_stripoptions",
+"in_cksum",
+"stime",
+"sysent",
+"syscallsw",
+"estgroups",
+"setgroups",
+"setgroupsp",
+"afs_vfsopsp",
+"afs_vnodeopsp",
+"afsidestroyp",
+"afsdptoipp",
+"afsiptodpp",
+"idbg_prafsnodep",
+"idbg_afsvfslistp",
+"idbg_addfunc",
+"initmonitor",
+"pflushinvalvp",
+"pflushvp",
+"pdflush",
+"ngroups_max",
+"pinvalfree",
+"fs_setfl",
+"fs_cmp",
+"fs_nosys",
+"fs_poll",
+"fs_pathconf",
+"fs_frlock",
+"convoff",
+"__ll_rem",
+"chunkread",
+"getchunk",
+"debug",
+"bp_mapin",
+"bawrite",
+"bwrite",
+"fs_map_subr",
+"cpsema",
+"qprintf",
+"copyinstr",
+"checkauth",
+"imon_event",
+"imon_enabled",
+"exported_lock",
+"rfsdisptab_v3",
+"getvfs",
+"mrunlock",
+"vattr_to_wcc_data",
+"vattr_to_wcc_attr",
+"vattr_to_fattr3",
+"hostintable",
+"puterrno3",
+"makefh3",
+"vsync"
+);
+
+#
+# Check that /var/sysgen/master.d/rtsymtab exists and does not contain
+# AFS symbols
+#
+
+die ("\n\tError: Cannot find $FILE\n" .
+     "\tCheck your Operating System installation documentation.\n") 
+    if (! -f $FILE); 
+if (! $force && ! system("/bin/grep afs_vnodeops $FILE > /dev/null")) {
+	die ("\n\tError: It looks like $FILE has already been 
+	modified for dynamically loading AFS. If this is incorrect, run 
+	this script again with the -force flag\n\n");
+}
+
+#
+# Read all the symbols in the rtsymtab[] table from  $FILE
+# and mark them in an associative array indexed by the symbol name.
+#
+
+open(SYMTAB, "<$FILE") || die("\nError: failed to open $FILE: $!\n");
+$found = 0;
+while (<SYMTAB>) {		# Skip ahead to rtsymtab definition
+	last if /rtsymtab\[\]/;
+}
+while (<SYMTAB>) {		# Extract the name of each symbol
+	if (/{.*,.*"(.*)"}/) {
+		$OldSymtabEntries{$1} = 1;
+		$found++;
+	}
+}
+#
+# Make sure that the above loop worked! 
+#
+die("Error: Could not locate the rtsymtab\[\] table in $FILE\n\n")
+	if (! $found); 
+
+close(SYMTAB);
+
+
+#
+# Check if any of the new symbols that we need to add exist in the rtsymtab
+# table. Keep track of all symbols that we delete from NewSymtabEntries.
+#
+
+$offset=0;
+for $var (@NewSymtabEntries) {
+	if ($OldSymtabEntries{$var}) {
+		$del = splice(@NewSymtabEntries,$offset,1);
+		push(@DelSymtabEntries, $del);
+		#print "debug: $var exists\n";
+	}
+	$offset++;
+}
+
+#
+# Create the new rtsymtab file.
+# Place the new extern definitions just before the rtsymtab[] table 
+# definition. Append new entries to the rtsymtab table to the end 
+# of the file.
+#
+
+open(NEWSYMTAB, ">$FILE.new") || die("Error: Could not open $File.new: $!\n");
+open(OLDSYMTAB, "<$FILE") || die("Error: Could not open $FILE: $!\n");
+
+print "Creating $FILE.new\n";
+
+while (<OLDSYMTAB>) {
+	if (/rtsymtab\[\] = {/) {
+		print NEWSYMTAB "\n /*\n  * The following extern definitions";
+		print NEWSYMTAB " are required by AFS\n  */\n";
+		print NEWSYMTAB "$ExternHeaders\n\n";
+		print NEWSYMTAB "$ExternDefns\n\n";
+		print NEWSYMTAB "#define DEBUG 1    /* Required by AFS */\n\n";
+		print NEWSYMTAB $_;
+	} else {
+		print NEWSYMTAB $_;
+	}
+} 
+
+#
+# Append the new rtsymtab[] entries to the end of the file
+#
+
+print NEWSYMTAB "\t/*\n\t  * The following symbols are required by AFS\n";
+print NEWSYMTAB "\t  */\n\n";
+
+foreach $var (@NewSymtabEntries) {
+	printf(NEWSYMTAB "\t {(long) &%s,%15s},\t\t%s\n",
+			$var, "\"$var\"", "/* DDI/DDK */");
+}
+
+close(NEWSYMTAB);
+close(OLDSYMTAB);
+
+#
+# Replace $FILE with $FILE.new
+# 
+#print "NOT renaming files!\n";
+
+die ("Error: Could not move $FILE to $FILE.orig: $!\n")
+	if (! rename($FILE, "$FILE.orig"));
+print "Moved $FILE to $FILE.orig\n";
+die ("Error: Could not move $FILE.new to $FILE: $!\n")
+	if (! rename("$FILE.new", $FILE));
+print "Moved $FILE.new to $FILE\n";
+
+
+#
+# List rtsymtab[] entries that were not added to the new file.
+# 
+
+if ($#DelSymtabEntries >= 0) {
+
+	open(LOGFILE,">$LOG") || die("Error: Could not open $LOG: $!");
+
+	print LOGFILE "\n\n\tThe following entries were already defined 
+	in the rtsymtab\[\] table in $FILE.
+	View $FILE and verify the correctness of these entries.
+	Make sure that these entries are correctly defined for this 
+	machine. \n\n";
+
+	for $var (@DelSymtabEntries) {
+		printf(LOGFILE "\t {(long) &%s,%15s},\t\t%s\n",
+				$var, "\"$var\"", "/* DDI/DDK */");
+	}
+	print LOGFILE "\n\tNOTE: This message has been saved in $LOG\n";
+	close(LOGFILE);
+	system("/bin/cat $LOG");
+}
+
+print "\n$scriptname Done. $FILE has been modified to allow 
+AFS 3.4 kernel extentions to be dynamically loaded using /sbin/ml.\n\n"; 
+

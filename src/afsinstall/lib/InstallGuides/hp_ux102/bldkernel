@@ -1,0 +1,45 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing static AFS kernel libraries
+# For HP systems running HPUX 10.20
+#
+
+sub bldkernel {
+if ($Configuration{"NFSEXTENSIONS"}) {
+  &Copy("root.client/bin/libafs.a", "/usr/conf/lib");  }
+else {
+  &Copy("root.client/bin/libafs.nonfs.a", "/usr/conf/lib/libafs.a"); };
+
+&CreateDir("/usr/vice/etc");
+&Copy("root.client/usr/vice/etc/afsd", "/usr/vice/etc");
+&Chmod(0744, "/usr/vice/etc/afsd");
+&Copy("root.client/usr/vice/etc/afs.driver", "/usr/conf/master.d/afs");
+&Copy("bin/fs", "/usr/vice/etc/fs");
+
+
+# Patch the files
+&ErrorsAreFatal(1);
+$FILE="/stand/system";
+
+&Patch::Verbose if ($InstallVerbose);
+
+&Patch::FileOpen($FILE);
+
+$Search = <<"xxENDxx";
+nfs
+xxENDxx
+
+$Add = <<"xxENDxx";
+afs
+xxENDxx
+
+if (!&Patch::Patch($FILE, [[0, "Insert", $Search, $Add]])) {
+    &ErrorMsg("Did not succeed with patch", $FILE);
+}
+}
+

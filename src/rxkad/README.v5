@@ -1,0 +1,90 @@
+#
+#  This code depends on heimdal's asn1_compile generated krb5 decoding
+#  stuff. The code is orignally from rxkad that Björn Grönvall
+#  <bg@sics.se> for kth-krb and was included in Arla.
+# 
+#  The first file, v5der.c are part for of support functions
+#  that all generated files depends on.
+# 
+#  The second file (v5gen.h) is the headerfile that is generated for
+#  the decoding functions.
+# 
+#  The third file (v5gen.c) is the subset of the genrated functions we
+#  need to decode the authenticator.
+# 
+#  The forth file (v5gen-rewrite.h) is used to make sure we don't
+#  polute the namespace.
+# 
+#  All files are modified to build within OpenAFS enviroment without
+#  any external dependencies. Below is the shellscript that is used to
+#  import the code into the four files.
+# 
+#  All internal symbols are rewritten to _rxkad_v5_.
+#
+
+# Make sure we don't export too much
+# 
+# : lha@nutcracker ; nm ticket5.o | grep T | grep -v _rxkad_v5 
+# 00005748 T tkt_DecodeTicket5
+#
+
+
+htree=/home/lha/src/cvs/heimdal
+hotree=/sources/obj/heimdal
+otree=/sources/afs/openafs-rxkad5
+
+export htree otree
+
+(cd $htree/lib/asn1 ; \
+ echo '#include "asn1_err.h"'; 
+ echo '#include <errno.h>'; 
+ cat der_get.c \
+ der_put.c \
+ der_free.c \
+ der_length.c \
+ der_copy.c \
+ timegm.c \
+    )  \
+| grep -v 'include "der_locl.h"' \
+| grep -v 'include <version.h>' \
+| sed 's!\(RCSID.*\)!/* \1 */!' \
+| sed 's!$Id: !Heimdal: !' \
+| cat > $otree/src/rxkad/v5der.c
+
+grep -v 'struct units'  $hotree/lib/asn1/krb5_asn1.h \
+   > $otree/src/rxkad/v5gen.h
+
+(cd $hotree/lib/asn1 ; \
+ cat asn1_Ticket.c \
+    asn1_EncryptedData.c \
+    asn1_PrincipalName.c \
+    asn1_HostAddresses.c \
+    asn1_HostAddress.c \
+    asn1_AuthorizationData.c \
+    asn1_EncTicketPart.c \
+    asn1_KerberosTime.c \
+    asn1_TransitedEncoding.c \
+    asn1_EncryptionKey.c \
+    asn1_TicketFlags.c \
+    asn1_Realm.c \
+    asn1_ENCTYPE.c \
+    asn1_NAME_TYPE.c \
+    ) \
+ | grep -v 'include <krb5_asn1.h>' \
+ | grep -v 'include <der.h>' \
+ | grep -v 'include <parse_units.h>' \
+ | perl \
+   -e '$f=0; while(<>){$f=1 if(/struct units/);print if($f eq 0);$f=0 if(/^};/);}' \
+ | cat > $otree/src/rxkad/v5gen.c
+
+( \
+ perl -p -e 's/^(encode_|decode_|free_|copy_|length_)([^(]*)\([^)]*\)\n$/#define $1$2 _rxkad_v5_$1$2\n/' $otree/src/rxkad/v5gen.c ; \
+  perl -p -e 's/^(der_|copy_|encode_|decode_|len_|length_|free_|fix_dce|time2generalizedtime)([^(]*).*/#define $1$2 _rxkad_v5_$1$2/' /sources/afs/openafs-krb5/src/rxkad/v5der.c ; \
+  echo '#define TicketFlags2int _rxkad_v5_TicketFlags2int' ; \
+  echo '#define int2TicketFlags _rxkad_v5_int2TicketFlags' ; \
+  : ) | \
+ (grep _rxkad_v5 ; \
+  echo '#ifndef HAVE_TIMEGM' ; \
+  echo '#define timegm	_rxkad_timegm' ; \
+  echo '#endif' ; \
+  :) > $otree/src/rxkad/v5gen-rewrite.h

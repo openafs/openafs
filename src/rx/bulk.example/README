@@ -1,0 +1,18 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+The files in this directory can be made (use make or build) into a simple system
+to demonstrate a means of doing bulk transfer with Rx.
+
+Run the server, bulk_server, with no arguments.
+
+Bulk_client is run by:
+
+	bulk_client [-verbose] -store/-fetch localFile remoteHost remoteFile
+
+The verbose flag is forwarded to the server process.  The specified local file is stored or fetched from the remote file at the indicated host.
+

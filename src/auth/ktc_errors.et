@@ -1,0 +1,23 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# */
+
+# Kerberos Ticket Cache error table
+
+error_table KTC
+  ec KTC_ERROR, "an unexpected error was encountered"
+  ec KTC_TOOBIG, "a buffer was too small for the response"
+  ec KTC_INVAL, "an invalid argument was passed in"
+  ec KTC_NOENT, "no such entry"
+  ec KTC_PIOCTLFAIL, "a pioctl failed"
+  ec KTC_NOPIOCTL, "AFS kernel pioctl doesn't exist"
+  ec KTC_NOCELL, "unknown cell was passed to SetToken"
+  ec KTC_NOCM,   "Cache Manager is not initialized / afsd is not running"
+  ec KTC_RPC,  "failed to send or receive session key via remote procedure call"
+  ec KTC_NOCMRPC, "Cache Manager RPC server is not responding"
+end

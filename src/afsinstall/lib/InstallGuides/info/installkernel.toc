@@ -1,0 +1,22 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# installkernel
+#
+# An InstallGuide for installing static kernels
+#
+
+sub installernel {
+&Print("Take a kernel that has been statically built and installs it");
+&Print("in place so that it will be used after the next reboot. This");
+&Print("is intended only for use on those machines that enable");
+&Print("building AFS into the kernel instead of dynamically loading.");
+&Print("A hard link is made between the new kernel and a copy of it");
+&Print("with the AFS revision appended to the filename. If the");
+&Print("previous kernel did NOT have AFS built into it, that vendor");
+&Print("kernel is moved aside with \".orig\" appended to the filename.");
+}

@@ -1,0 +1,87 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for AFS login 
+# For IBM RS/6000 systems running AIX 4.x
+#
+
+sub login {
+  &Copy ("root.client/usr/vice/etc/afs_dynamic_auth", "/usr/vice/etc");
+  &Copy ("root.client/usr/vice/etc/afs_dynamic_kerbauth", "/usr/vice/etc");
+
+  $File1="/etc/security/user";
+  $File2="/etc/security/login.cfg";
+  &Patch::Verbose if ($InstallVerbose);
+  &Patch::FileOpen($File1);
+  &Patch::FileOpen($File2);
+
+  $Search = << "xxENDxx";
+	expires = 0
+	SYSTEM = "compat"
+xxENDxx
+
+  $New = << "xxENDxx";
+	expires = 0
+	SYSTEM = "AFS OR (AFS[UNAVAIL] OR compat[SUCCESS])"
+	registry = DCE
+xxENDxx
+
+  $Search1 = << "xxENDxx";
+root:
+xxENDxx
+
+  $New1 = << "xxENDxx";
+root:
+	registry = files
+xxENDxx
+
+  $New2 = << "xxENDxx";
+rootl:
+	admin = true
+	SYSTEM = "compat"
+	loginretries = 0
+	registry = files
+	account_locked = false
+
+xxENDxx
+
+  $Search3 = << "xxENDxx";
+daemon:
+	admin = true
+	expires = 0101000070
+xxENDxx
+
+  $New3 = << "xxENDxx";
+daemon:
+	admin = true
+	account_locked = false
+xxENDxx
+
+  if (!&Patch::Patch($File1, [[0, "Replace", $Search, $New],
+			      [0, "Replace", $Search1, $New1],
+			      [0, "EOF", "", $New2],
+			      [0, "Replace", $Search3, $New3]])) {
+    &VPrint("Did not succeed in patching $File1");
+  }
+
+  $New = << "xxENDxx";
+DCE:
+        program = /usr/vice/etc/afs_dynamic_auth
+
+AFS:
+        program = /usr/vice/etc/afs_dynamic_auth
+        retry = 3
+        timeout = 30
+        retry_delay = 10
+xxENDxx
+
+  if (!&Patch::Patch($File2, [[0, "EOF", "", $New]])) {
+    &VPrint("Did not succeed in patching $File2");
+  }
+
+}
+

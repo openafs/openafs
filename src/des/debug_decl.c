@@ -1,0 +1,16 @@
+/*
+ * Copyright 1988 by the Massachusetts Institute of Technology.
+ *
+ * For copying and distribution information, please see the file
+ * <mit-cpyright.h>.
+ *
+ * Declaration of debugging flag.
+ */
+
+#include <afsconfig.h>
+#include <afs/param.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/debug_decl.c,v 1.1.1.3 2001/07/14 22:21:31 hartmans Exp $");
+
+#include <mit-cpyright.h>
+int	des_debug	= 0;

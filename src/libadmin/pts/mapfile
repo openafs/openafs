@@ -1,0 +1,39 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+{
+    global:
+	pts_GroupMemberAdd;
+	pts_GroupOwnerChange;
+	pts_GroupCreate;
+	pts_GroupGet;
+	pts_GroupDelete;
+	pts_GroupMaxGet;
+	pts_GroupMaxSet;
+	pts_GroupMemberListBegin;
+	pts_GroupMemberListNext;
+	pts_GroupMemberListDone;
+	pts_GroupMemberRemove;
+	pts_GroupRename;
+	pts_GroupModify;
+	pts_UserCreate;
+	pts_UserDelete;
+	pts_UserGet;
+	pts_UserRename;
+	pts_UserModify;
+	pts_UserMaxGet;
+	pts_UserMaxSet;
+	pts_UserMemberListBegin;
+	pts_UserMemberListNext;
+	pts_UserMemberListDone;
+	pts_OwnedGroupListBegin;
+	pts_OwnedGroupListNext;
+	pts_OwnedGroupListDone;
+
+    local:
+	*;
+};

@@ -1,0 +1,25 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing tokens related commands
+#
+
+sub tokens {
+# Where commands get installed
+$installdir = "/usr/afs/bin";
+
+&ErrorsAreFatal(1);
+&CreateDir($installdir);
+&ErrorsAreFatal(0);
+
+&Copy("bin/klog",    $installdir);
+&Copy("bin/knfs",    $installdir);
+&Copy("bin/kpasswd", $installdir);
+&Copy("bin/pagsh",   $installdir);
+&Copy("bin/tokens",  $installdir);
+&Copy("bin/unlog",   $installdir);
+}

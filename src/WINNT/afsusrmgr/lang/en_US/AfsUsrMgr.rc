@@ -1,0 +1,1766 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <WINNT\al_resource.h>
+#ifndef APSTUDIO_INVOKED
+#define AFS_VERINFO_FILE_DESCRIPTION "AFS Account Manager"
+#define AFS_VERINFO_NAME "AfsUsrMgr"
+#define AFS_VERINFO_FILENAME "AfsUsrMgr.exe"
+#define AFS_VERINFO_LANG_CODE 0x409
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOG DISCARDABLE  0, 0, 310, 220
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+CAPTION "AFS Account Manager"
+MENU MENU_MAIN
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,4,32,302,184
+    LTEXT           "Selected Cell:",IDC_STATIC,4,7,55,8
+    LTEXT           "(none selected)",IDC_CELL,63,7,212,8
+    LTEXT           "AFS Tokens:",IDC_STATIC,4,18,55,8
+    LTEXT           "(no tokens)",IDC_CREDS,63,18,212,8
+    ICON            IDI_MAIN,IDC_ANIM,285,7,20,20,SS_SUNKEN
+    CONTROL         "",IDC_BAR,"Static",SS_ETCHEDHORZ,1,0,308,1
+END
+
+IDD_TAB_USERS DIALOG DISCARDABLE  0, 0, 242, 144
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_USERS_PATTERN,185,4,41,13,ES_AUTOHSCROLL
+    RTEXT           "Pattern:",IDC_USERS_PATTERN_PROMPT,152,6,28,8
+    LTEXT           "Querying; please wait...",IDC_USERS_TITLE,4,6,142,8
+    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x313,4,21,234,103
+    PUSHBUTTON      "&Create...",M_USER_CREATE,65,126,55,14
+    PUSHBUTTON      "&Membership...",M_MEMBERSHIP,124,126,55,14
+    PUSHBUTTON      "P&roperties...",M_PROPERTIES,183,126,55,14
+    PUSHBUTTON      "...",IDC_ADVANCED,229,4,9,13
+END
+
+IDD_TAB_GROUPS DIALOG DISCARDABLE  0, 0, 242, 144
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_GROUPS_PATTERN,197,4,41,13,ES_AUTOHSCROLL
+    RTEXT           "Pattern:",IDC_GROUPS_PATTERN_PROMPT,163,6,28,8
+    LTEXT           "Querying; please wait...",IDC_GROUPS_TITLE,4,6,142,8
+    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x313,4,21,234,103
+    PUSHBUTTON      "&Create...",M_GROUP_CREATE,65,126,55,14
+    PUSHBUTTON      "&Members...",M_MEMBERSHIP,124,126,55,14
+    PUSHBUTTON      "P&roperties...",M_PROPERTIES,183,126,55,14
+END
+
+IDD_ACTIONS DIALOGEX 0, 0, 236, 58
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Operations In Progress - AFS Account Manager"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Querying; please wait...",IDC_ACTION_DESC,2,2,232,8
+    CONTROL         "",IDC_ACTION_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x3,2,14,232,43
+END
+
+IDD_HELP_ABOUT DIALOG DISCARDABLE  0, 0, 226, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "About AFS Account Manager"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_MAIN,IDC_HELPABOUT_ICON,4,8,21,20
+    LTEXT           "AFS Account Manager version 3.5",IDC_STATIC,33,8,189,
+                    8
+    LTEXT           "Copyright © IBM Corporation 1989, 1999",
+                    IDC_STATIC,33,20,189,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,37,218,1
+    CTEXT           "",IDC_HELPABOUT_DESC,4,48,218,56
+    PUSHBUTTON      "&Close",IDOK,87,123,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,4,114,218,1
+END
+
+IDD_HELP_ERROR DIALOG DISCARDABLE  0, 0, 218, 141
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Look Up Error Code"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Error number:",IDC_STATIC,4,41,45,8
+    EDITTEXT        IDC_ERROR_NUMBER,59,39,78,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&Translate",IDC_ERROR_TRANSLATE,147,39,67,14
+    PUSHBUTTON      "&Close",IDCANCEL,85,123,48,14
+    LTEXT           "(text set at runtime)",IDC_ERROR_DESC,4,71,210,42
+    LTEXT           "To find out what an error code means, type in the code below and click the ""Translate"" button.",
+                    IDC_STATIC,4,4,210,25
+    CONTROL         "",IDC_ADVANCED_BOX,"Static",SS_ETCHEDHORZ,4,60,211,1
+END
+
+IDD_HELP_FIND DIALOG DISCARDABLE  0, 0, 231, 74
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Find Command"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDC_FIND_COMMAND,4,38,150,170,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Display &Help",IDOK,160,39,67,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,160,55,67,14
+    LTEXT           "To find out how to use the AFS Account Manager to perform a task, select a command-line below and click the Display Help button.",
+                    IDC_STATIC,4,4,223,25
+END
+
+IDD_COLUMNS DIALOG DISCARDABLE  0, 0, 286, 148
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "Columns"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select columns to display when listing:",IDC_STATIC,5,
+                    7,126,8
+    COMBOBOX        IDC_COLUMNS,134,5,147,104,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Available &Columns:",IDC_STATIC,12,40,100,8
+    LISTBOX         IDC_COL_AVAIL,12,49,100,71,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Columns to D&isplay:",IDC_STATIC,173,41,100,8
+    LISTBOX         IDC_COL_SHOWN,173,50,100,71,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Add >>",IDC_COL_INSERT,119,68,46,14
+    PUSHBUTTON      "<< &Remove",IDC_COL_DELETE,119,88,46,14
+    PUSHBUTTON      "Move &Up",IDC_COL_UP,173,122,48,14
+    PUSHBUTTON      "Move &Down",IDC_COL_DOWN,224,122,48,14
+    GROUPBOX        "List Columns",IDC_STATIC,5,25,276,118
+END
+
+IDD_USER_ADVANCED DIALOGEX 0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Advanced"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Current Key:",IDC_STATIC,5,5,40,8
+    LTEXT           "Querying; please wait...",IDC_USER_KEY,52,5,173,20,0,
+                    WS_EX_STATICEDGE
+    CONTROL         "This is a &system account (no encryption)",
+                    IDC_USER_NOSEAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,
+                    35,160,10
+    CONTROL         "User has &administrative privileges",IDC_USER_ADMIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,52,120,10
+    CONTROL         "&Grant tickets; lifetime:",IDC_USER_TGS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,69,84,10
+    CONTROL         "",IDC_USER_LIFETIME,"Elapsed",WS_BORDER | WS_TABSTOP,92,
+                    68,66,12
+    CONTROL         "Group creation &quota:",IDC_USER_GROUP_HASQUOTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,86,85,10
+    EDITTEXT        IDC_USER_GROUP_QUOTA,92,85,27,13,ES_AUTOHSCROLL
+    LTEXT           "View account &status:",IDC_STATIC,12,140,67,8
+    COMBOBOX        IDC_USER_PERM_STATUS,91,138,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List groups o&wned:",IDC_STATIC,12,156,60,8
+    COMBOBOX        IDC_USER_PERM_OWNED,91,154,112,67,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &membership:",IDC_STATIC,12,172,73,8
+    COMBOBOX        IDC_USER_PERM_MEMBER,91,170,112,82,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",IDC_STATIC,5,109,220,82
+    LTEXT           "These settings specify which users can view this account.",
+                    IDC_STATIC,11,124,204,8
+END
+
+IDD_USER_GENERAL DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "User can &change password",IDC_USER_CPW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,47,103,10
+    PUSHBUTTON      "Change &Password",IDC_USER_CPW_NOW,144,45,73,14
+    CONTROL         "User can &reuse old passwords",IDC_USER_RPW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,62,111,10
+    CONTROL         "Password &expires after",IDC_USER_PWEXPIRES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,78,87,10
+    LTEXT           "days",IDC_STATIC,168,79,16,8
+    EDITTEXT        IDC_USER_PWEXPIRATION,115,77,37,13,ES_AUTOHSCROLL
+    CONTROL         "Account &expires on:",IDC_USER_EXPIRES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,97,77,10
+    CONTROL         "",IDC_USER_EXPIRE_DATE,"Date",WS_BORDER | WS_TABSTOP,91,
+                    96,61,12
+    LTEXT           "a&t",IDC_USER_EXPIRE_AT,155,98,8,8
+    CONTROL         "",IDC_USER_EXPIRE_TIME,"Time",WS_BORDER | WS_TABSTOP,
+                    166,96,53,12
+    CONTROL         "&Lock account after",IDC_USER_FAILLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,140,76,10
+    LTEXT           "consecutive failed logins",IDC_STATIC,133,141,78,8
+    EDITTEXT        IDC_USER_FAILLOCK_COUNT,90,139,32,13,ES_AUTOHSCROLL
+    CONTROL         "&Lock account indefinitely (until unlocked by administrator)",
+                    IDC_USER_FAILLOCK_INFINITE,"Button",BS_AUTORADIOBUTTON,
+                    25,156,195,10
+    CONTROL         "Lock account &for",IDC_USER_FAILLOCK_FINITE,"Button",
+                    BS_AUTORADIOBUTTON,25,172,70,10
+    CONTROL         "",IDC_USER_FAILLOCK_DURATION,"Elapsed",WS_BORDER | 
+                    WS_TABSTOP,98,171,56,12
+    PUSHBUTTON      "&Unlock",IDC_USER_UNLOCK,167,170,50,14
+    GROUPBOX        "Failed Login Attempts",IDC_STATIC,5,124,220,67
+    ICON            IDI_USER,IDC_STATIC,5,5,20,20
+    LTEXT           "User %1",IDC_USER_NAME,37,13,188,8
+    GROUPBOX        "Account",IDC_STATIC,5,32,220,85
+END
+
+IDD_GROUP_GENERAL DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_GROUP,IDC_STATIC,5,5,18,20
+    LTEXT           "Group %1",IDC_GROUP_NAME,37,13,188,8
+    LTEXT           "View account &status:",IDC_STATIC,12,108,67,8
+    COMBOBOX        IDC_GROUP_PERM_STATUS,91,106,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "View &groups owned:",IDC_STATIC,12,124,67,8
+    COMBOBOX        IDC_GROUP_PERM_GROUPS,91,122,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &members:",IDC_STATIC,12,140,69,8
+    COMBOBOX        IDC_GROUP_PERM_MEMBERS,91,138,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Add members:",IDC_STATIC,12,156,73,8
+    COMBOBOX        IDC_GROUP_PERM_ADD,91,154,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Remove members:",IDC_STATIC,12,172,67,8
+    COMBOBOX        IDC_GROUP_PERM_REMOVE,91,170,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",IDC_STATIC,5,77,220,114
+    LTEXT           "These settings specify which users can view this group.",
+                    IDC_STATIC,11,92,204,8
+    LTEXT           "Owner:",IDC_STATIC,5,31,24,8
+    LTEXT           "%1",IDC_GROUP_OWNER,37,31,113,8
+    PUSHBUTTON      "Change &Owner...",IDC_GROUP_CHANGEOWNER,159,29,66,12
+    LTEXT           "Creator:",IDC_STATIC,5,46,27,8
+    LTEXT           "%1",IDC_GROUP_CREATOR,37,46,113,8
+END
+
+IDD_USER_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Groups"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Groups",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to change the list of groups to which this user belongs, as well as the list of groups which this user owns.",
+                    IDC_STATIC,5,5,220,17
+    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the groups to which this user belongs",
+                    IDC_USER_SHOW_MEMBER,"Button",BS_AUTORADIOBUTTON,12,45,
+                    195,10
+    CONTROL         "S&how the groups which this user owns",
+                    IDC_USER_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_GROUPS_TITLE,12,74,205,
+                    8
+END
+
+IDD_GROUP_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Membership"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Group Membership",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to choose the members of this group, as well as to choose the groups which this group should own.",
+                    IDC_STATIC,5,5,220,18
+    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the members of this group",IDC_GROUP_SHOW_MEMBER,
+                    "Button",BS_AUTORADIOBUTTON,12,45,195,10
+    CONTROL         "S&how the groups which this group owns",
+                    IDC_GROUP_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_USERS_TITLE,12,74,205,8
+END
+
+IDD_BROWSE DIALOG DISCARDABLE  0, 0, 281, 150
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "(This title selected at runtime)"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    RTEXT           "(runtime)",IDC_BROWSE_TYPE,7,115,49,8,SS_NOTIFY
+    EDITTEXT        IDC_BROWSE_NAMED,60,113,140,14,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "&Select",IDC_BROWSE_SELECT,224,112,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,224,129,50,14
+    CONTROL         "(text specified at runtime)",IDC_BROWSE_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,59,133,146,10
+    RTEXT           "Look in &cell:",IDC_STATIC,7,8,41,8,SS_NOTIFY
+    COMBOBOX        IDC_BROWSE_CELL,56,6,140,91,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    RTEXT           "Pattern:",IDC_GROUPS_PATTERN_PROMPT,198,8,29,8
+    EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
+    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x12,7,23,267,84
+END
+
+IDD_USER_PASSWORD DIALOG DISCARDABLE  0, 0, 281, 145
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Change Account Password"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Automatically select a version number for the new password",
+                    IDC_CPW_VERSION_AUTO,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,42,36,203,10
+    CONTROL         "&Use key version:",IDC_CPW_VERSION_MANUAL,"Button",
+                    BS_AUTORADIOBUTTON,42,52,69,10
+    EDITTEXT        IDC_CPW_VERSION,120,51,43,14,ES_AUTOHSCROLL
+    CONTROL         "Encrypt this string:",IDC_CPW_BYSTRING,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,42,78,73,10
+    CONTROL         "Use this key:",IDC_CPW_BYDATA,"Button",
+                    BS_AUTORADIOBUTTON,42,95,57,10
+    EDITTEXT        IDC_CPW_STRING,119,76,155,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    EDITTEXT        IDC_CPW_DATA,119,94,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Random",IDC_CPW_RANDOM,226,94,48,14
+    DEFPUSHBUTTON   "OK",IDOK,116,124,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,124,50,14
+    PUSHBUTTON      "Help",9,224,124,50,14
+    LTEXT           "New password for user %1",IDC_CPW_TITLE,43,14,231,8
+    ICON            IDI_USER,-1,7,6,21,20
+    LTEXT           "Version:",-1,7,37,26,8
+    LTEXT           "Value:",-1,7,78,21,8
+END
+
+IDD_GROUP_RENAME DIALOG DISCARDABLE  0, 0, 274, 150
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Rename Group"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "New group &name:",IDC_STATIC,35,103,57,8
+    EDITTEXT        IDC_RENAME_NEWNAME,109,101,104,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,109,129,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,163,129,50,14
+    PUSHBUTTON      "Help",9,217,129,50,14
+    LTEXT           "Current owner:",IDC_STATIC,35,65,47,8
+    PUSHBUTTON      "&Change Owner...",IDC_RENAME_CHOWN,198,63,69,14
+    LTEXT           "Current group name:",IDC_STATIC,35,83,65,8
+    ICON            IDI_GROUP,IDC_STATIC,7,6,20,20
+    LTEXT           "Rename group %1",IDC_RENAME_TITLE,35,14,222,8
+    LTEXT           "Note: Unless a group's name is prefix-less, the name should accurately reflect the group's current owner (e.g., ""owner:groupname"").",
+                    IDC_STATIC,35,34,231,16
+    LTEXT           "(querying)",IDC_RENAME_OWNER,109,65,82,8
+    LTEXT           "(querying)",IDC_RENAME_OLDNAME,109,83,104,8
+END
+
+IDD_BROWSE_COMBO DIALOG DISCARDABLE  0, 0, 281, 153
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "(This title selected at runtime)"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    RTEXT           "(runtime)",IDC_BROWSE_TYPE,7,115,49,8,SS_NOTIFY
+    EDITTEXT        IDC_BROWSE_NAMED,60,113,140,14,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "&Select",IDC_BROWSE_SELECT,224,113,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,224,132,50,14
+    RTEXT           "Show:",IDC_STATIC,7,134,49,8
+    COMBOBOX        IDC_BROWSE_COMBO,60,132,140,68,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    RTEXT           "Look in &cell:",IDC_STATIC,7,8,41,8,SS_NOTIFY
+    COMBOBOX        IDC_BROWSE_CELL,56,6,140,91,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    RTEXT           "Pattern:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
+    EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
+    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x12,7,23,267,84
+END
+
+IDD_BROWSE_BOTH DIALOG DISCARDABLE  0, 0, 281, 169
+STYLE DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "(This title selected at runtime)"
+CLASS "AFSAccountManagerClass"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    RTEXT           "(runtime)",IDC_BROWSE_TYPE,7,115,49,8,SS_NOTIFY
+    EDITTEXT        IDC_BROWSE_NAMED,60,113,140,14,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "&Select",IDC_BROWSE_SELECT,224,113,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,224,132,50,14
+    RTEXT           "Show:",IDC_STATIC,7,134,49,8
+    COMBOBOX        IDC_BROWSE_COMBO,60,132,140,68,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "(text specified at runtime)",IDC_BROWSE_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,60,151,140,10
+    RTEXT           "Look in &cell:",IDC_STATIC,7,8,41,8,SS_NOTIFY
+    COMBOBOX        IDC_BROWSE_CELL,56,6,140,91,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    RTEXT           "Pattern:",IDC_GROUPS_PATTERN_PROMPT,199,8,28,8
+    EDITTEXT        IDC_BROWSE_PATTERN,233,6,41,13,ES_AUTOHSCROLL
+    CONTROL         "",IDC_BROWSE_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x12,7,23,267,84
+END
+
+IDD_NEWUSER_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Groups"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Groups",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to change the initial list of groups to which this user will belong, as well as the groups which this user will own.",
+                    IDC_STATIC,5,5,220,17
+    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the groups to which this user will belong",
+                    IDC_USER_SHOW_MEMBER,"Button",BS_AUTORADIOBUTTON,12,45,
+                    195,10
+    CONTROL         "S&how the groups which this user will own",
+                    IDC_USER_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_GROUPS_TITLE,12,74,205,
+                    8
+END
+
+IDD_NEWUSER DIALOG DISCARDABLE  0, 0, 238, 170
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create User"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,7,37,22,8
+    EDITTEXT        IDC_NEWUSER_NAME,46,35,127,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,7,57,34,8
+    EDITTEXT        IDC_NEWUSER_PW1,46,55,90,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "(&re-enter:)",IDC_STATIC,7,77,31,8
+    EDITTEXT        IDC_NEWUSER_PW2,46,75,90,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "A&utomatically use the next available user ID",
+                    IDC_NEWUSER_ID_AUTO,"Button",BS_AUTORADIOBUTTON,45,97,
+                    186,10
+    CONTROL         "U&se a specific user ID:",IDC_NEWUSER_ID_MANUAL,"Button",
+                    BS_AUTORADIOBUTTON,45,113,87,10
+    EDITTEXT        IDC_NEWUSER_ID,134,112,39,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Groups...",IDC_ADVANCED,7,149,54,14
+    DEFPUSHBUTTON   "OK",IDOK,94,149,43,14
+    PUSHBUTTON      "Cancel",IDCANCEL,141,149,43,14
+    PUSHBUTTON      "Help",9,188,149,43,14
+    ICON            IDI_USER,IDC_STATIC,7,6,20,20
+    LTEXT           "New user in cell %1",IDC_NEWUSER_TITLE,46,14,185,8
+    LTEXT           "User ID:",IDC_STATIC,7,97,27,8
+END
+
+IDD_NEWGROUP_GENERAL DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_GROUP,IDC_STATIC,5,5,20,20
+    LTEXT           "New group in cell %1",IDC_GROUP_NAME,37,13,188,8
+    LTEXT           "View account &status:",IDC_STATIC,12,108,67,8
+    COMBOBOX        IDC_GROUP_PERM_STATUS,91,106,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "View &groups owned:",IDC_STATIC,12,124,67,8
+    COMBOBOX        IDC_GROUP_PERM_GROUPS,91,122,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &members:",IDC_STATIC,12,140,69,8
+    COMBOBOX        IDC_GROUP_PERM_MEMBERS,91,138,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Add members:",IDC_STATIC,12,156,73,8
+    COMBOBOX        IDC_GROUP_PERM_ADD,91,154,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Remove members:",IDC_STATIC,12,172,67,8
+    COMBOBOX        IDC_GROUP_PERM_REMOVE,91,170,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",IDC_STATIC,5,68,220,123
+    LTEXT           "These settings specify which users can view information about this group.",
+                    IDC_STATIC,11,83,204,17
+    LTEXT           "Owner:",IDC_STATIC,5,35,24,8
+    LTEXT           "%1",IDC_GROUP_OWNER,37,35,113,8
+    PUSHBUTTON      "Change &Owner...",IDC_GROUP_CHANGEOWNER,159,33,66,12
+END
+
+IDD_NEWGROUP_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Membership"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Group Membership",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to choose the initial members of this group, as well as to choose the groups which this group should own.",
+                    IDC_STATIC,5,5,220,18
+    CONTROL         "",IDC_USERS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the initial members of this group",
+                    IDC_GROUP_SHOW_MEMBER,"Button",BS_AUTORADIOBUTTON,12,45,
+                    195,10
+    CONTROL         "S&how the groups which this group owns",
+                    IDC_GROUP_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_USERS_TITLE,12,74,205,8
+END
+
+IDD_NEWGROUP DIALOG DISCARDABLE  0, 0, 238, 135
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create Group"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",-1,7,37,22,8
+    EDITTEXT        IDC_NEWGROUP_NAME,46,35,127,14,ES_AUTOHSCROLL
+    CONTROL         "A&utomatically use the next available group ID",
+                    IDC_NEWGROUP_ID_AUTO,"Button",BS_AUTORADIOBUTTON,45,60,
+                    186,10
+    CONTROL         "U&se a specific group ID:",IDC_NEWGROUP_ID_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,45,75,87,10
+    EDITTEXT        IDC_NEWGROUP_ID,134,74,39,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Members...",IDC_ADVANCED,7,114,54,14
+    DEFPUSHBUTTON   "OK",IDOK,94,114,43,14
+    PUSHBUTTON      "Cancel",IDCANCEL,141,114,43,14
+    PUSHBUTTON      "Help",9,188,114,43,14
+    ICON            IDI_USER,-1,7,6,20,20
+    LTEXT           "New group in cell %1",IDC_NEWGROUP_TITLE,46,14,185,8
+    LTEXT           "Group ID:",-1,7,60,32,8
+END
+
+IDD_USER_DELETE DIALOG DISCARDABLE  0, 0, 281, 114
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Delete User"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",IDOK,116,93,50,14
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,170,93,50,14
+    PUSHBUTTON      "Help",9,224,93,50,14
+    LTEXT           "Caution!\n\nThis operation will permanently delete the account for user %1.",
+                    IDC_DELETE_TITLE,36,14,238,32
+    ICON            32515,-1,7,6,21,20
+    CONTROL         "Delete &KAS database entry for this account",
+                    IDC_DELETE_KAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,
+                    53,203,10
+    CONTROL         "Delete &PTS database entry for this account",
+                    IDC_DELETE_PTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,57,
+                    69,203,10
+END
+
+IDD_GROUP_DELETE DIALOG DISCARDABLE  0, 0, 281, 82
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Delete Group"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",IDOK,116,61,50,14
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,170,61,50,14
+    PUSHBUTTON      "Help",9,224,61,50,14
+    LTEXT           "Caution!\n\nThis operation will permanently delete the group %1.",
+                    IDC_DELETE_TITLE,36,14,238,32
+    ICON            32515,-1,7,6,21,20
+END
+
+IDD_CELL_GENERAL DIALOG DISCARDABLE  0, 0, 230, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Maximum &user identifier:",IDC_STATIC,11,87,76,8
+    EDITTEXT        IDC_CELL_USERMAX,102,85,40,14,ES_AUTOHSCROLL
+    LTEXT           "Maximum &group identifier:",IDC_STATIC,11,105,80,8
+    EDITTEXT        IDC_CELL_GROUPMAX,102,103,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "User and Group Identifiers",IDC_STATIC,5,31,220,97
+    LTEXT           "These settings reflect the highest user and group identifiers ever used. It is safe to increase these values; however, they should not be decreased unless you are confident the new values do not conflict with existing accounts.",
+                    IDC_STATIC,11,43,204,32
+    ICON            IDI_CELL,IDC_STATIC,5,5,21,20
+    LTEXT           "Cell %1",IDC_CELL_NAME,37,13,188,8
+END
+
+IDD_NEWUSER_GENERAL DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "User can &change password",IDC_USER_CPW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,47,103,10
+    PUSHBUTTON      "Change &Password",IDC_USER_CPW_NOW,144,45,73,14
+    CONTROL         "User can &reuse old passwords",IDC_USER_RPW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,62,111,10
+    CONTROL         "Password &expires after",IDC_USER_PWEXPIRES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,25,78,87,10
+    LTEXT           "days",IDC_STATIC,168,79,16,8
+    EDITTEXT        IDC_USER_PWEXPIRATION,115,77,37,13,ES_AUTOHSCROLL
+    CONTROL         "Account &expires on:",IDC_USER_EXPIRES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,97,77,10
+    CONTROL         "",IDC_USER_EXPIRE_DATE,"Date",WS_BORDER | WS_TABSTOP,91,
+                    96,61,12
+    LTEXT           "a&t",IDC_USER_EXPIRE_AT,155,98,8,8
+    CONTROL         "",IDC_USER_EXPIRE_TIME,"Time",WS_BORDER | WS_TABSTOP,
+                    166,96,53,12
+    CONTROL         "&Lock account after",IDC_USER_FAILLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,140,76,10
+    LTEXT           "consecutive failed logins",IDC_STATIC,133,141,78,8
+    EDITTEXT        IDC_USER_FAILLOCK_COUNT,90,139,32,13,ES_AUTOHSCROLL
+    CONTROL         "&Lock account indefinitely (until unlocked by administrator)",
+                    IDC_USER_FAILLOCK_INFINITE,"Button",BS_AUTORADIOBUTTON,
+                    25,156,195,10
+    CONTROL         "Lock account &for",IDC_USER_FAILLOCK_FINITE,"Button",
+                    BS_AUTORADIOBUTTON,25,172,70,10
+    CONTROL         "",IDC_USER_FAILLOCK_DURATION,"Elapsed",WS_BORDER | 
+                    WS_TABSTOP,98,171,56,12
+    PUSHBUTTON      "&Unlock",IDC_USER_UNLOCK,167,170,50,14
+    GROUPBOX        "Failed Login Attempts",IDC_STATIC,5,124,220,67
+    ICON            IDI_USER,IDC_STATIC,5,5,20,20
+    LTEXT           "New user in cell %1",IDC_USER_NAME,37,13,188,8
+    GROUPBOX        "Account",IDC_STATIC,5,32,220,85
+END
+
+IDD_NEWUSER_ADVANCED DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Advanced"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Create a &KAS database entry for this account (recommended)",
+                    IDC_USER_CREATE_KAS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,6,210,11
+    CONTROL         "Create a &PTS database entry for this account (recommended)",
+                    IDC_USER_CREATE_PTS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,5,23,210,10
+    CONTROL         "This will be a &system account (no encryption)",
+                    IDC_USER_NOSEAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,
+                    40,160,10
+    CONTROL         "User will have &administrative privileges",
+                    IDC_USER_ADMIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,
+                    57,136,10
+    CONTROL         "&Grant tickets; lifetime:",IDC_USER_TGS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,74,84,10
+    CONTROL         "",IDC_USER_LIFETIME,"Elapsed",WS_BORDER | WS_TABSTOP,92,
+                    73,66,12
+    CONTROL         "Group creation &quota:",IDC_USER_GROUP_HASQUOTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,5,91,85,10
+    EDITTEXT        IDC_USER_GROUP_QUOTA,92,90,27,13,ES_AUTOHSCROLL
+    LTEXT           "View account &status:",-1,12,140,67,8
+    COMBOBOX        IDC_USER_PERM_STATUS,91,138,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List groups o&wned:",-1,12,156,60,8
+    COMBOBOX        IDC_USER_PERM_OWNED,91,154,112,67,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &membership:",-1,12,172,73,8
+    COMBOBOX        IDC_USER_PERM_MEMBER,91,170,112,82,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",-1,5,109,220,82
+    LTEXT           "These settings specify which users can view this account.",
+                    -1,11,124,204,8
+END
+
+IDD_TAB_MACHINES DIALOG DISCARDABLE  0, 0, 242, 144
+STYLE WS_CHILD
+FONT 9, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_MACHINES_PATTERN,197,4,41,13,ES_AUTOHSCROLL
+    RTEXT           "Pattern:",IDC_MACHINES_PATTERN_PROMPT,163,6,28,8
+    LTEXT           "Querying; please wait...",IDC_MACHINES_TITLE,4,6,142,8
+    CONTROL         "",IDC_MACHINES_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x313,4,21,234,103
+    PUSHBUTTON      "&Create...",M_MACHINE_CREATE,65,126,55,14
+    PUSHBUTTON      "&Membership...",M_MEMBERSHIP,124,126,55,14
+    PUSHBUTTON      "P&roperties...",M_PROPERTIES,183,126,55,14
+END
+
+IDD_NEWMACHINE_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Groups"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Groups",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to select the initial list of groups to which this account will belong, as well as the groups which it will own.",
+                    IDC_STATIC,5,5,220,17,NOT WS_GROUP
+    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the groups to which this account will belong",
+                    IDC_USER_SHOW_MEMBER,"Button",BS_AUTORADIOBUTTON,12,45,
+                    195,10
+    CONTROL         "S&how the groups which this account will own",
+                    IDC_USER_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_GROUPS_TITLE,12,74,205,
+                    8
+END
+
+IDD_NEWMACHINE_ADVANCED DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Advanced"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "View account &status:",IDC_STATIC,12,88,67,8
+    COMBOBOX        IDC_USER_PERM_STATUS,91,86,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List groups o&wned:",IDC_STATIC,12,104,60,8
+    COMBOBOX        IDC_USER_PERM_OWNED,91,102,112,67,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &membership:",IDC_STATIC,12,120,73,8
+    COMBOBOX        IDC_USER_PERM_MEMBER,91,118,112,82,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",IDC_STATIC,5,57,220,82
+    LTEXT           "These settings specify which users can view this account.",
+                    IDC_STATIC,11,72,204,8
+    ICON            IDI_SERVER,IDC_STATIC,5,5,20,20
+    LTEXT           "New IP address account in cell %1",IDC_USER_NAME,37,13,
+                    188,8
+END
+
+IDD_NEWMACHINE DIALOG DISCARDABLE  0, 0, 247, 126
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create IP Address Account"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "IP &Address:",-1,7,37,37,8
+    EDITTEXT        IDC_NEWUSER_NAME,50,35,127,14,ES_AUTOHSCROLL
+    CONTROL         "A&utomatically use the next available account ID",
+                    IDC_NEWUSER_ID_AUTO,"Button",BS_AUTORADIOBUTTON,49,60,
+                    191,10
+    CONTROL         "U&se a specific account ID:",IDC_NEWUSER_ID_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,49,76,98,10
+    EDITTEXT        IDC_NEWUSER_ID,151,75,39,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Groups...",IDC_ADVANCED,7,105,54,14
+    DEFPUSHBUTTON   "OK",IDOK,103,105,43,14
+    PUSHBUTTON      "Cancel",IDCANCEL,151,105,43,14
+    PUSHBUTTON      "Help",9,197,105,43,14
+    ICON            IDI_SERVER,-1,7,6,21,20
+    LTEXT           "New IP address account in cell %1",IDC_NEWUSER_TITLE,50,
+                    14,190,8
+    LTEXT           "Account ID:",-1,7,60,39,8
+END
+
+IDD_MACHINE_DELETE DIALOG DISCARDABLE  0, 0, 318, 84
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Delete IP Address Account"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",IDOK,153,63,50,14
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,207,63,50,14
+    PUSHBUTTON      "Help",9,261,63,50,14
+    LTEXT           "Caution!\n\nThis operation will permanently delete the IP address account %1.",
+                    IDC_DELETE_TITLE,36,14,275,37
+    ICON            32515,-1,7,6,21,20
+END
+
+IDD_MACHINE_ADVANCED DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Advanced"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT           "View account &status:",IDC_STATIC,12,89,67,8
+    COMBOBOX        IDC_USER_PERM_STATUS,91,86,112,76,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List groups o&wned:",IDC_STATIC,12,105,60,8
+    COMBOBOX        IDC_USER_PERM_OWNED,91,102,112,67,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "List group &membership:",IDC_STATIC,12,121,73,8
+    COMBOBOX        IDC_USER_PERM_MEMBER,91,118,112,82,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Other-Account Permissions",IDC_STATIC,5,57,220,82
+    LTEXT           "These settings specify which users can view this account.",
+                    IDC_STATIC,11,73,204,8
+    ICON            IDI_SERVER,IDC_STATIC,5,5,20,20
+    LTEXT           "IP address account %1",IDC_USER_NAME,37,13,188,8
+END
+
+IDD_MACHINE_MEMBER DIALOG DISCARDABLE  0, 0, 230, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Groups"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Groups",IDC_STATIC,5,31,220,160
+    LTEXT           "These settings allow you to change the list of groups to which this account belongs, as well as the groups which this account owns.",
+                    IDC_STATIC,5,5,220,17,NOT WS_GROUP
+    CONTROL         "",IDC_GROUPS_LIST,"FastList",WS_BORDER | WS_TABSTOP | 
+                    0x312,12,84,205,82
+    PUSHBUTTON      "&Remove",IDC_MEMBER_REMOVE,167,169,50,14
+    PUSHBUTTON      "&Add...",IDC_MEMBER_ADD,113,169,50,14
+    CONTROL         "&Show the groups to which this account belongs",
+                    IDC_USER_SHOW_MEMBER,"Button",BS_AUTORADIOBUTTON,12,45,
+                    195,10
+    CONTROL         "S&how the groups which this account owns",
+                    IDC_USER_SHOW_OWNER,"Button",BS_AUTORADIOBUTTON,12,58,
+                    195,10
+    LTEXT           "(Querying; please wait...)",IDC_GROUPS_TITLE,12,74,205,
+                    8
+END
+
+IDD_OPTIONS DIALOG DISCARDABLE  0, 0, 235, 162
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Options"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Use &Unix-style regular expressions (""^mar[ky]son\\..*$"")",
+                    IDC_REGEXP_UNIX,"Button",BS_AUTORADIOBUTTON,11,53,191,10
+    CONTROL         "Use &Windows-style regular expressions (""mar?son.*"")",
+                    IDC_REGEXP_WINDOWS,"Button",BS_AUTORADIOBUTTON,11,69,182,
+                    10
+    CONTROL         "Display a warning if working without administrative tokens",
+                    IDC_WARN_BADCREDS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    11,116,209,10
+    CONTROL         "&Automatically refresh information every",IDC_REFRESH,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,134,136,10
+    LTEXT           "minutes",IDC_STATIC,190,135,25,8
+    EDITTEXT        IDC_REFRESH_RATE,149,133,30,14,ES_AUTOHSCROLL
+    ICON            IDI_MAIN,IDC_STATIC,5,5,21,20
+    LTEXT           "Afs Account Manager Options",IDC_STATIC,37,12,96,8
+    GROUPBOX        "Regular Expressions",IDC_STATIC,5,37,225,57
+    GROUPBOX        "General",IDC_STATIC,5,100,225,57
+END
+
+IDD_SEARCH_USERS DIALOG DISCARDABLE  0, 0, 284, 129
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select Users To Display"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Show entries for &all user accounts",IDC_SEARCH_ALL,
+                    "Button",BS_AUTORADIOBUTTON,29,40,119,10
+    CONTROL         "Only show user accounts which &expire before",
+                    IDC_SEARCH_EXPIRE,"Button",BS_AUTORADIOBUTTON,29,55,156,
+                    10
+    CONTROL         "Only show accounts whose passwords &expire before",
+                    IDC_SEARCH_PWEXPIRE,"Button",BS_AUTORADIOBUTTON,29,70,
+                    179,10
+    CONTROL         "",IDC_SEARCH_EXPIRE_DATE,"Date",WS_BORDER | WS_TABSTOP,
+                    192,54,61,12
+    CONTROL         "",IDC_SEARCH_PWEXPIRE_DATE,"Date",WS_BORDER | 
+                    WS_TABSTOP,212,69,61,12
+    DEFPUSHBUTTON   "OK",IDOK,119,108,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,173,108,50,14
+    PUSHBUTTON      "Help",9,227,108,50,14
+    LTEXT           "These controls allow you to specify which users should be shown on the Users tab. You can further restrict the list of users shown by typing a partial account-name in the Pattern control on the Users tab.",
+                    IDC_STATIC,7,6,270,25
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 306
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 216
+    END
+
+    IDD_TAB_USERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 238
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_TAB_GROUPS, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 238
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_ACTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 234
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_HELP_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 222
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_HELP_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 214
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 137
+    END
+
+    IDD_HELP_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 227
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 70
+    END
+
+    IDD_COLUMNS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 281
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_USER_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_USER_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_GROUP_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_USER_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_GROUP_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_BROWSE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 143
+        HORZGUIDE, 23
+        HORZGUIDE, 107
+    END
+
+    IDD_USER_PASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_GROUP_RENAME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 267
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_BROWSE_COMBO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 146
+        HORZGUIDE, 23
+        HORZGUIDE, 107
+    END
+
+    IDD_BROWSE_BOTH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 162
+        HORZGUIDE, 23
+        HORZGUIDE, 107
+    END
+
+    IDD_NEWUSER_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWUSER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 231
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_NEWGROUP_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWGROUP_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWGROUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 231
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_USER_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 107
+    END
+
+    IDD_GROUP_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 274
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 75
+    END
+
+    IDD_CELL_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 129
+    END
+
+    IDD_NEWUSER_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWUSER_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_TAB_MACHINES, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 238
+        TOPMARGIN, 4
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_NEWMACHINE_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWMACHINE_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_NEWMACHINE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 240
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 119
+    END
+
+    IDD_MACHINE_DELETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 77
+    END
+
+    IDD_MACHINE_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_MACHINE_MEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 225
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 230
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_SEARCH_USERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 277
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 130
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <WINNT\\al_resource.h>\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#define AFS_VERINFO_FILE_DESCRIPTION ""AFS Account Manager""\r\n"
+    "#include ""AFS_component_version_number.h""\r\n"
+    "#include ""..\\..\\config\\NTVersioninfo.rc""\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+32513                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\error.ico"
+IDI_MAIN                ICON    DISCARDABLE     "resource\\afsusrmgr.ico"
+32515                   ICON    DISCARDABLE     "..\\afsapplib\\resource\\warning.ico"
+IDI_USER                ICON    DISCARDABLE     "..\\afsapplib\\resource\\user.ico"
+IDI_GROUP               ICON    DISCARDABLE     "..\\afsapplib\\resource\\group.ico"
+IDI_CELL                ICON    DISCARDABLE     "..\\afsapplib\\resource\\cell.ico"
+IDI_SERVER              ICON    DISCARDABLE     "..\\afsapplib\\resource\\server.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_MAIN MENU DISCARDABLE 
+BEGIN
+    POPUP "&Cell"
+    BEGIN
+        MENUITEM "&Select...",                  M_OPENCELL
+        MENUITEM "&Authentication...",          M_CREDENTIALS
+        MENUITEM SEPARATOR
+        MENUITEM "Cell P&roperties...",         M_CELL_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       M_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Create User...",             M_USER_CREATE
+        MENUITEM "&Create Group...",            M_GROUP_CREATE
+        MENUITEM SEPARATOR
+        MENUITEM "Re&name...",                  M_RENAME
+        MENUITEM "&Delete...",                  M_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl+A",         M_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Re&fresh\tF5",                M_REFRESH
+        MENUITEM "&Membership...\tCtrl+M",      M_MEMBERSHIP
+        MENUITEM "P&roperties\tAlt+Enter",      M_PROPERTIES
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Icons"
+        BEGIN
+            MENUITEM "Lar&ge Icons",                M_VIEW_LARGE, CHECKED
+            MENUITEM "S&mall Icons",                M_VIEW_SMALL, CHECKED
+            MENUITEM "&Details",                    M_VIEW_DETAILS, CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "&Normal",                     M_VIEW_ONE, CHECKED
+            MENUITEM "&All Icons",                  M_VIEW_TWO, CHECKED
+            MENUITEM "&Status Only",                M_VIEW_STATUS, CHECKED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "O&perations in Progress",     M_ACTIONS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Columns...",                 M_COLUMNS
+        MENUITEM "&Options...",                 M_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "Re&fresh All",                M_REFRESHALL
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   M_CONTENTS
+        MENUITEM "&Find Command...",            M_FIND
+        MENUITEM "&Look Up Error Code...",      M_LOOKUP
+        MENUITEM SEPARATOR
+        MENUITEM "&About AFS Account Manager...", M_ABOUT
+    END
+END
+
+MENU_USER_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Lar&ge Icons",                M_VIEW_LARGE, CHECKED
+        MENUITEM "S&mall Icons",                M_VIEW_SMALL, CHECKED
+        MENUITEM "&Details",                    M_VIEW_DETAILS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Normal",                     M_VIEW_ONE, CHECKED
+        MENUITEM "&All Icons",                  M_VIEW_TWO, CHECKED
+        MENUITEM "&Status Only",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Create User...",             M_USER_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "Re&fresh All",                M_REFRESHALL
+END
+
+MENU_GROUP_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Lar&ge Icons",                M_VIEW_LARGE, CHECKED
+        MENUITEM "S&mall Icons",                M_VIEW_SMALL, CHECKED
+        MENUITEM "&Details",                    M_VIEW_DETAILS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Normal",                     M_VIEW_ONE, CHECKED
+        MENUITEM "&All Icons",                  M_VIEW_TWO, CHECKED
+        MENUITEM "&Status Only",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Create Group...",            M_GROUP_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "Re&fresh All",                M_REFRESHALL
+END
+
+MENU_USER MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Groups...",                  M_MEMBERSHIP
+    MENUITEM SEPARATOR
+    MENUITEM "Change &Password...",         M_CPW
+    MENUITEM "&Unlock",                     M_UNLOCK
+    MENUITEM "&Delete...",                  M_DELETE
+    MENUITEM "Re&fresh",                    M_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties...",              M_PROPERTIES
+END
+
+MENU_GROUP MENU DISCARDABLE 
+BEGIN
+    MENUITEM "Group &Members...",           M_MEMBERSHIP
+    MENUITEM SEPARATOR
+    MENUITEM "&Rename...",                  M_RENAME
+    MENUITEM "&Delete...",                  M_DELETE
+    MENUITEM "Re&fresh",                    M_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties...",              M_PROPERTIES
+END
+
+MENU_COLUMNS MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Columns...",                 M_COLUMNS
+END
+
+MENU_MACHINE_NONE MENU DISCARDABLE 
+BEGIN
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Lar&ge Icons",                M_VIEW_LARGE, CHECKED
+        MENUITEM "S&mall Icons",                M_VIEW_SMALL, CHECKED
+        MENUITEM "&Details",                    M_VIEW_DETAILS, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Normal",                     M_VIEW_ONE, CHECKED
+        MENUITEM "&All Icons",                  M_VIEW_TWO, CHECKED
+        MENUITEM "&Status Only",                M_VIEW_STATUS, CHECKED
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Create Account...",          M_MACHINE_CREATE
+    MENUITEM SEPARATOR
+    MENUITEM "Re&fresh All",                M_REFRESHALL
+END
+
+MENU_MACHINE MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Groups...",                  M_MEMBERSHIP
+    MENUITEM SEPARATOR
+    MENUITEM "&Delete...",                  M_DELETE
+    MENUITEM "Re&fresh",                    M_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties...",              M_PROPERTIES
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_MAIN ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            M_SELECTALL,            VIRTKEY, CONTROL, NOINVERT
+    "M",            M_MEMBERSHIP,           VIRTKEY, CONTROL, NOINVERT
+    VK_APPS,        M_KEY_MENU,             VIRTKEY, NOINVERT
+    VK_ESCAPE,      M_KEY_ESC,              VIRTKEY, NOINVERT
+    VK_F10,         M_KEY_MENU,             VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          M_REFRESH,              VIRTKEY, NOINVERT
+    VK_RETURN,      M_KEY_RETURN,           VIRTKEY, NOINVERT
+    VK_RETURN,      M_KEY_PROPERTIES,       VIRTKEY, ALT, NOINVERT
+    VK_TAB,         M_KEY_TAB,              VIRTKEY, NOINVERT
+    VK_TAB,         M_KEY_CTRLTAB,          VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         M_KEY_BACKTAB,          VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         M_KEY_CTRLBACKTAB,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "AFS Account Manager"
+    IDS_USRCOL_NAME         "User Name"
+    IDS_GRPCOL_NAME         "Group Name"
+    IDS_BADCREDS_DESC       "Unless you are logged in as an administrator, you may have insufficient privileges to successfully administer the %1 cell."
+    IDS_TAB_USERS           "Users"
+    IDS_TAB_GROUPS          "Groups"
+    IDS_CELL_NONE           "(no cell selected)"
+    IDS_CRED_NONE           "(no tokens in this cell)"
+    IDS_CRED_EXP            "%1 (tokens expired %2)"
+    IDS_CRED_OK             "%1 (tokens will expire %2)"
+    IDS_USERS_ALL           "All users in cell %1:"
+    IDS_USERS_PATTERN       "Selected users in cell %1:"
+    IDS_GROUPS_ALL          "All groups in cell %1:"
+    IDS_GROUPS_PATTERN      "Selected groups in cell %1:"
+    IDS_QUERYING_LONG       "Querying; please wait..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_DESC_NONE    "There are no operations in progress."
+    IDS_ACTION_DESC_ONE     "The following operation is currently in progress:"
+    IDS_ACTION_DESC_MULT    "The following operations are currently in progress:"
+    IDS_ACTCOL_OPERATION    "Operation"
+    IDS_ACTCOL_ELAPSED      "Elapsed Time"
+    IDS_ACTION_REFRESH_CELL "Refreshing information for cell %1"
+    IDS_ACTION_REFRESH_SERVER "Refreshing information for server %1"
+    IDS_ACTION_SCOUT_CELL   "Testing cell %1 for problems"
+    IDS_ACTION_SCOUT_SERVER "Testing server %1 for problems"
+    IDS_FIND_NOTHING_TITLE  "No Command Selected"
+    IDS_FIND_NOTHING_DESC   "To find out how to perform an operation, first select a command-line from the list or type in a keyword."
+    IDS_FIND_UNKNOWN_TITLE  "Unknown Command"
+    IDS_FIND_UNKNOWN_DESC   "The AFS Account Manager could not find any help topics for the ""%1"" command."
+    IDS_HELPABOUT_DESC1     "Warning: this computer program is protected by copyright and international treaties. +"
+    IDS_HELPABOUT_DESC2     "Unauthorized reproduction or distribution of this software may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under the law.\n\n+"
+    IDS_HELPABOUT_DESC3     "AFS is a trademark of Transarc Corporation, an IBM company."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COLUMNS_TITLE       "Columns - AFS Account Manager"
+    IDS_USER_PROPERTIES_TITLE_MULTIPLE "Multiple Users - Properties"
+    IDS_USER_PROPERTIES_TITLE "User %1 - Properties"
+    IDS_USER_NAME_MULTIPLE  "Users "
+    IDS_ACCOUNTACCESS_OWNER "Account owner only"
+    IDS_ACCOUNTACCESS_GROUP "Group members only"
+    IDS_ACCOUNTACCESS_ANYONE "Anyone"
+    IDS_ACCOUNTACCESS_MIXED "(multiple settings)"
+    IDS_USER_KEY            "%1\nVersion %2, Checksum %3"
+    IDS_USER_KEY_HIDDEN     "(actual key value hidden)"
+    IDS_USER_KEY_UNKNOWN    "(unknown)"
+    IDS_USER_KEY_MULTIPLE   "(multiple keys)"
+    IDS_ACTION_USER_CHANGE  "Changing properties for user %1"
+    IDS_COUNT_WEEKS         "%1w"
+    IDS_COUNT_DAYS          "%1d"
+    IDS_COUNT_HOURS         "%1h"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COUNT_MINUTES       "%1m"
+    IDS_COUNT_SECONDS       "%1s"
+    IDS_GROUP_PROPERTIES_TITLE_MULTIPLE "Multiple Groups - Properties"
+    IDS_GROUP_PROPERTIES_TITLE "Group %1 - Properties"
+    IDS_GROUP_NAME_MULTIPLE "Groups "
+    IDS_ACCOUNTACCESS_OWNGROUP "Group owner only"
+    IDS_OWNER_MIXED         "Multiple Owners"
+    IDS_CREATOR_MIXED       "Multiple Creators"
+    IDS_GROUP_CHANGEOWNER_TITLE "Change Group Owner"
+    IDS_GROUP_CHANGEOWNER_PROMPT "Owner:"
+    IDS_MEMBER_MIXED        " (Some)"
+    IDS_USER_SHOW_MEMBER_TITLE "All groups to which this user belongs:"
+    IDS_USER_SHOW_OWNER_TITLE "All groups which this user owns:"
+    IDS_GROUP_SHOW_MEMBER_TITLE "All members of this group:"
+    IDS_USER_SHOW_MEMBER_TITLE_MULTIPLE 
+                            "All groups to which these users belong:"
+    IDS_GROUP_SHOW_MEMBER_TITLE_MULTIPLE "All members of these groups:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_GROUP_RENAME "Renaming group %1 to %2"
+    IDS_RENAME_TITLE        "Rename group %1"
+    IDS_GROUP_TITLE         "Group %1"
+    IDS_SHOW_USERS          "All users in this cell"
+    IDS_SHOW_GROUPS         "All groups in this cell"
+    IDS_GROUP_SHOW_OWNED_TITLE "All groups which this group owns:"
+    IDS_BROWSE_TITLE_OWNED  "Select Groups To Own"
+    IDS_BROWSE_PROMPT_OWNED "Groups:"
+    IDS_BROWSE_CHECK_OWNED  "Show only groups not currently owned"
+    IDS_NEWUSER_PROPERTIES_TITLE "Create User - Advanced"
+    IDS_NEWUSER_SHOW_MEMBER_TITLE "All groups to which this user will belong:"
+    IDS_NEWUSER_SHOW_OWNER_TITLE "All groups which this user will own:"
+    IDS_ACTION_CELL_CHANGE  "Changing properties for cell %1"
+    IDS_ACTION_USER_CREATE  "Creating account for user %1"
+    IDS_NEWGROUP_PROPERTIES_TITLE "Create Group - Advanced"
+    IDS_NEWGROUP_SHOW_MEMBER_TITLE "Initial members of this new group:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USRCOL_FLAGS        "Flags"
+    IDS_USRCOL_ADMIN        "Admin?"
+    IDS_USRCOL_TICKET       "Tickets?"
+    IDS_USRCOL_SYSTEM       "System?"
+    IDS_USRCOL_CHANGEPW     "Change Passwords?"
+    IDS_USRCOL_REUSEPW      "Reuse Passwords?"
+    IDS_USRCOL_EXPIRES      "Account Expiration"
+    IDS_USRCOL_LASTPW       "Last Password Change"
+    IDS_USRCOL_LASTMOD      "Last Modified"
+    IDS_USRCOL_LASTMODBY    "Last Modified By"
+    IDS_USRCOL_LIFETIME     "Ticket Lifetime"
+    IDS_USRCOL_CDAYPW       "Password Expiration"
+    IDS_USRCOL_CFAILLOGIN   "Login Failures"
+    IDS_USRCOL_CSECLOCK     "Login Failure Lock Time"
+    IDS_USRCOL_CGROUPMAX    "Group Creation Quota"
+    IDS_USRCOL_UID          "UID"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USRCOL_OWNER        "Owner"
+    IDS_USRCOL_CREATOR      "Creator"
+    IDS_USRCOL_STATUS       "Status"
+    IDS_USRFLAG_ADMIN       "A "
+    IDS_USRFLAG_TICKET      "T "
+    IDS_USRFLAG_ENCRYPT     "E "
+    IDS_USRFLAG_CHANGEPW    "C "
+    IDS_USRFLAG_REUSEPW     "R "
+    IDS_YES                 "Yes"
+    IDS_NO                  "No"
+    IDS_GRPCOL_CMEMBERS     "Membership Count"
+    IDS_GRPCOL_UID          "UID"
+    IDS_GRPCOL_OWNER        "Owner"
+    IDS_GRPCOL_CREATOR      "Creator"
+    IDS_COL_USERS           "Users in a Cell"
+    IDS_COL_GROUPS          "Groups in a Cell"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEWGROUP_SHOW_OWNED_TITLE "Groups which this new group will own:"
+    IDS_USER_DELETE_MULTIPLE 
+                            "Caution!\n\nThis operation will permanently delete the accounts for the following users: %1"
+    IDS_GROUP_DELETE_MULTIPLE 
+                            "Caution!\n\nThis operation will permanently delete the following groups: %1."
+    IDS_ACTION_GROUP_CREATE "Creating group %1"
+    IDS_ACTION_USER_DELETE  "Deleting account for user %1"
+    IDS_ACTION_GROUP_DELETE "Deleting group %1"
+    IDS_CELL_PROPERTIES_TITLE "Cell %1 - Properties"
+    IDS_MACHINES_ALL        "All IP address accounts in cell %1:"
+    IDS_MACHINES_PATTERN    "Selected IP address accounts in cell %1:"
+    IDS_TAB_MACHINES        "Addresses"
+    IDS_MACHINE_DELETE_MULTIPLE 
+                            "Caution!\n\nThis operation will permanently delete the following IP address accounts: %1"
+    IDS_NEWMACHINE_PROPERTIES_TITLE "Create IP Address Account - Advanced"
+    IDS_MACHINE_PROPERTIES_TITLE_MULTIPLE 
+                            "Multiple IP Address Accounts - Properties"
+    IDS_MACHINE_PROPERTIES_TITLE "IP Address Account %1 - Properties"
+    IDS_COL_MACHINES        "IP Address Accounts in a Cell"
+    IDS_MCHCOL_NAME         "IP Address"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BROWSE_TITLE_JOIN   "Select Groups To Join"
+    IDS_BROWSE_PROMPT_JOIN  "Groups:"
+    IDS_BROWSE_CHECK_JOIN   "Show only groups not currently joined"
+    IDS_BROWSE_TITLE_OWN    "Select Groups To Own"
+    IDS_BROWSE_PROMPT_OWN   "Groups:"
+    IDS_BROWSE_CHECK_OWN    "Show only groups not currently owned"
+    IDS_BROWSE_TITLE_MEMBER "Select Users To Join"
+    IDS_BROWSE_PROMPT_MEMBER "Users:"
+    IDS_BROWSE_CHECK_MEMBER "Show only users who are not members"
+    IDS_SEPARATORS          ",;"
+    IDS_ACTION_GROUP_CHANGE "Changing properties for group %1"
+    IDS_ACTION_GROUP_MEMBER_ADD "Adding user %2 to group %1"
+    IDS_ACTION_GROUP_MEMBER_REMOVE "Removing user %2 from group %1"
+    IDS_ACTION_USER_PW_CHANGE "Setting password for user %1"
+    IDS_UNKNOWN_NAME        "(unknown)"
+    IDS_ACTION_USER_UNLOCK  "Unlocking account for user %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MCHCOL_CGROUPMAX    "Group Creation Quota"
+    IDS_MCHCOL_UID          "Account ID"
+    IDS_MCHCOL_OWNER        "Owner"
+    IDS_MCHCOL_CREATOR      "Creator"
+    IDS_OPTIONS_TITLE       "AFS Account Manager Options"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_PTS_ADDUSER "pts adduser"
+    IDS_COMMAND_PTS_CHOWN   "pts chown"
+    IDS_COMMAND_PTS_CREATEGROUP "pts creategroup"
+    IDS_COMMAND_PTS_CREATEUSER "pts createuser"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_PTS_DELETE  "pts delete"
+    IDS_COMMAND_PTS_EXAMINE "pts examine"
+    IDS_COMMAND_PTS_LISTMAX "pts listmax"
+    IDS_COMMAND_PTS_LISTOWNED "pts listowned"
+    IDS_COMMAND_PTS_MEMBERSHIP "pts membership"
+    IDS_COMMAND_PTS_REMOVEUSER "pts removeuser"
+    IDS_COMMAND_PTS_RENAME  "pts rename"
+    IDS_COMMAND_PTS_SETFIELDS "pts setfields"
+    IDS_COMMAND_PTS_SETMAX  "pts setmax"
+    IDS_COMMAND_KAS_CREATE  "kas create"
+    IDS_COMMAND_KAS_DELETE  "kas delete"
+    IDS_COMMAND_KAS_EXAMINE "kas examine"
+    IDS_COMMAND_KAS_GETRANDOMKEY "kas getrandomkey"
+    IDS_COMMAND_KAS_LIST    "kas list"
+    IDS_COMMAND_KAS_SETFIELDS "kas setfields"
+    IDS_COMMAND_KAS_SETKEY  "kas setkey"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMMAND_KAS_SETPASSWORD "kas setpassword"
+    IDS_COMMAND_KAS_STRINGTOKEY "kas stringtokey"
+    IDS_COMMAND_KAS_UNLOCK  "kas unlock"
+    IDS_MACHINE_SHOW_MEMBER_TITLE "All groups to which this account belongs:"
+    IDS_MACHINE_SHOW_OWNER_TITLE "All groups which this account owns:"
+    IDS_MACHINE_SHOW_MEMBER_TITLE_MULTIPLE 
+                            "All groups to which these accounts belong:"
+    IDS_NEWMACHINE_SHOW_MEMBER_TITLE 
+                            "All groups to which this account will belong:"
+    IDS_NEWMACHINE_SHOW_OWNER_TITLE "All groups which this account will own:"
+    IDS_WARNING_TITLE       "Caution"
+    IDS_WARNING_SYSTEM_ACCOUNT "Changes should be made to the %1 account with caution, as inappropriate changes to this account can prevent some features of AFS from functioning properly.\n\nAre you sure you want to proceed?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_BAD_REMOTE_SERVER 
+                            "The AFS Account Manager was unable to contact an administration process running on the %1 computer.\n\nYou can perform administrative tasks remotely by running the TaAfsAdmSvr.exe program on the other computer."
+    IDS_ERROR_BAD_LOCAL_SERVER 
+                            "The AFS Account Manager was unable to find the TaAfsAdmSvr.exe program, or was unable to prepare your computer to perform AFS administration."
+    IDS_ERROR_CANT_OPEN_CELL 
+                            "The AFS Account Manager was unable to contact any servers in the %1 cell.\n\nPlease recheck to ensure you have typed the name of the cell correctly."
+    IDS_ERROR_BADCREDENTIALS 
+                            "The AFS identity you have entered is unrecognized, or the password you have specified is incorrect."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_TRANSLATED    "Error number 0x%1 (%2):\n\n%3"
+    IDS_ERROR_NOTTRANSLATED "Error number 0x%1 (%2) is unrecognized."
+    IDS_ERROR_USER_MULTIPROP 
+                            "The AFS Account Manager cannot display the window requested because a properties window is already open for one or more of the selected users."
+    IDS_ERROR_CANT_CHANGE_USER 
+                            "The AFS Account Manager was unable to change the properties for user %1."
+    IDS_ERROR_GROUP_MULTIPROP 
+                            "The AFS Account Manager cannot display the window requested because a properties window is already open for one or more of the selected group."
+    IDS_ERROR_CANT_CHANGE_GROUP 
+                            "The AFS Account Manager was unable to change the properties for group %1."
+    IDS_ERROR_CANT_TRANSLATE_USER 
+                            "The AFS Account Manager was unable to find a user by the name you specified.\n\nPlease check to make sure you typed the name correctly."
+    IDS_ERROR_CANT_TRANSLATE_GROUP 
+                            "The AFS Account Manager was unable to find a user by the name you specified.\n\nPlease check to make sure you typed the name correctly."
+    IDS_ERROR_CANT_GET_USERPROP 
+                            "The AFS Account Manager was unable to find properties for user %1."
+    IDS_ERROR_CANT_CHANGE_PASSWORD 
+                            "The AFS Account Manager was unable to change the password for user %1."
+    IDS_ERROR_CANT_GET_RANDOM_KEY 
+                            "The AFS Account Manager was unable to generate a random encryption key."
+    IDS_ERROR_CANT_SET_GROUPS 
+                            "The AFS Account Manager was unable to change the specified group list for user %1."
+    IDS_ERROR_CANT_SET_GROUPS_MULTIPLE 
+                            "The AFS Account Manager was unable to change the specified group list for the following users: %1."
+    IDS_ERROR_CANT_UNLOCK   "The AFS Account Manager was unable to unlock user %1's account."
+    IDS_ERROR_CANT_UNLOCK_MULTIPLE 
+                            "The AFS Account Manager was unable to unlock the accounts for the following users: %1."
+    IDS_ERROR_CANT_SET_MEMBERS 
+                            "The AFS Account Manager was unable to change the list of members for group %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CANT_SET_MEMBERS_MULTIPLE 
+                            "The AFS Account Manager was unable to change the lists of members for the following groups: %1."
+    IDS_ERROR_CANT_RENAME_GROUP 
+                            "The AFS Account Manager was unable to rename the %1 group to ""%2""."
+    IDS_ERROR_CANT_CHANGE_OWNER 
+                            "The AFS Account Manager was unable to change the owner of the %1 group."
+    IDS_ERROR_CANT_CHANGE_OWNER_MULTIPLE 
+                            "The AFS Account Manager was unable to change the owners of the following groups: %1."
+    IDS_ERROR_CANT_CHANGE_CELL 
+                            "The AFS Account Manager was unable to change the properties of the %1 cell."
+    IDS_ERROR_NO_PASSWORD_GIVEN 
+                            "You must specify a password for the user account you are creating."
+    IDS_ERROR_MISMATCH_PASSWORD_GIVEN 
+                            "The passwords you entered for the new user account do not match."
+    IDS_ERROR_CANT_CREATE_USER 
+                            "The AFS Account Manager was unable to create an account for user %1."
+    IDS_ERROR_CANT_CREATE_GROUP 
+                            "The AFS Account Manager was unable to create group %1."
+    IDS_ERROR_CANT_DELETE_USER 
+                            "The AFS Account Manager was unable to delete the account for user %1."
+    IDS_ERROR_CANT_DELETE_USER_MULTIPLE 
+                            "The AFS Account Manager was unable to delete the accounts for the following users: %1."
+    IDS_ERROR_CANT_DELETE_GROUP 
+                            "The AFS Account Manager was unable to delete group %1."
+    IDS_ERROR_CANT_DELETE_GROUP_MULTIPLE 
+                            "The AFS Account Manager was unable to delete the following groups: %1."
+    IDS_ERROR_BAD_REMOTE_SERVER_INSTALL 
+                            "The AFS Account Manager was unable to start because the AFS Control Center was not properly installed.\n\nYou may need to reinstall the AFS Control Center."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CMDLINE_TITLE       "Error - AFS Account Manager"
+    IDS_CMDLINE_SYNTAX      "The command-line you have specified for the AFS Account Manager is invalid."
+    IDS_CMDLINE_UNRECOGNIZED 
+                            "The command-line you have specified for the AFS Account Manager is invalid.\n\nThe ""%1"" parameter is not recognized."
+    IDS_CMDLINE_DUPLICATE   "The command-line you have specified for the AFS Account Manager is invalid.\n\nThe ""%1"" parameter is specified more than once."
+    IDS_CMDLINE_UNEXPECTVALUE 
+                            "The command-line you have specified for the AFS Account Manager is invalid.\n\nThe ""%1"" parameter should not be given a value."
+    IDS_CMDLINE_MISSINGVAL  "The command-line you have specified for the AFS Account Manager is invalid.\n\nThe ""%1"" parameter must be followed by a value."
+    IDS_CMDLINE_USERPASSWORD 
+                            "The command-line you have specified for the AFS Account Manager is invalid.\n\nTo obtain new AFS tokens, the ""/USER"" and ""/PASSWORD"" parameters must both be specified."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

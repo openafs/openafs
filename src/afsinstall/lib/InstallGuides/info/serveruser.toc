@@ -1,0 +1,23 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# serveruser
+#
+# An InstallGuide for user programs for controlling server processes
+#
+
+sub serveruser {
+&Print("Installs the following into /usr/afs/bin:");
+&Print("  root.server/usr/afs/bin/bos");
+&Print("  root.server/usr/afs/bin/fs");
+&Print("  root.server/usr/afs/bin/kas");
+&Print("  root.server/usr/afs/bin/pts");
+&Print("  root.server/usr/afs/bin/vos");
+&Print("  etc/butc");
+&Print("  etc/backup");
+&Print("  root.server/usr/afs/bin/ntpdc");
+}

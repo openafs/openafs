@@ -1,0 +1,16 @@
+#!/bin/sh
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+## Wrapper script for kdump on HP-UX 11.
+
+BITS=32
+if	ans=`[ -x /usr/bin/getconf ] && /usr/bin/getconf KERNEL_BITS 2>/dev/null`
+then	BITS=$ans
+fi
+
+exec $0${BITS} ${1+"$@"}

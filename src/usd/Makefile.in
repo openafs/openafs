@@ -1,0 +1,75 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+CFLAGS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+
+all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
+
+#
+# Build targets
+#
+libusd.a: usd_file.o AFS_component_version_number.o
+	$(RM) -f $@
+	$(AR) crv $@ usd_file.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+usd_file.o: usd_file.c usd.h
+
+#
+# Installation targets
+#
+install: ${DESTDIR}${libdir}/afs/libusd.a ${DESTDIR}${includedir}/afs/usd.h
+
+${DEST}/lib/afs/libusd.a: libusd.a
+	${INSTALL} $? $@
+
+${DEST}/include/afs/usd.h: usd.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o libusd.a core AFS_component_version_number.c
+
+include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libusd.a: libusd.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libusd.a: libusd.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/usd.h: usd.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/usd.h: usd.h
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libusd.a ${DEST}/include/afs/usd.h
+

@@ -1,0 +1,37 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+error_table AC
+    ec ADMNOMEM, "couldn't allocate memory necessary to fulfill request"
+    ec ADMNOPRIV, "insufficient privilege to complete operation"
+    ec ADMMUTEXINIT, "failed to initialize a mutex"
+    ec ADMMUTEXLOCK, "failed to lock a mutex"
+    ec ADMMUTEXUNLOCK, "failed to unlock a mutex"
+    ec ADMMUTEXDESTROY, "failed to destroy a mutex"
+    ec ADMCONDINIT, "failed to initialize a condition variable"
+    ec ADMCONDWAIT, "failed to wait on a condition variable"
+    ec ADMCONDDESTROY, "failed to destroy a condition variable"
+    ec ADMCONDSIGNAL, "failed to signal a condition variable"
+    ec ADMTHREADATTRINIT, "failed to initialize a thread attribute"
+    ec ADMTHREADATTRSETDETACHSTATE, "failed to set thread detach state"
+    ec ADMTHREADCREATE, "failed to create a thread"
+    ec ADMTHREADJOIN, "failed to join a thread"
+    ec ADMITERATORTERMINATED, "the iterator has been marked terminated (most likely by calling done).  Next cannot be called after calling done."
+    ec ADMITERATORDONE, "the iterator has been marked completed."
+    ec ADMITERATORNULL, "the iterator parameter cannot be NULL."
+    ec ADMITERATORRPCSPECIFICNULL, "the rpc specific data parameter cannot be NULL."
+    ec ADMITERATORBADMAGICNULL, "the iterator parameter failed to pass the magic number test.  Most likely the iterator is invalid, or has been overwritten by mistake."
+    ec ADMITERATORINVALID, "the iterator parameter is marked invalid"
+    ec ADMITERATIONIDPNULL, "the iterator parameter cannot be NULL nor can it point to NULL"
+    ec ADMSERVERNAMENULL, "the server name parameter cannot be NULL"
+    ec ADMSERVERADDRESSNULL, "the server address parameter cannot be NULL"
+    ec ADMCANTGETSERVERNAME, "the server name parameter cannot translated to an address"
+    ec ADMCANTGETLOCALNAME, "unable to determine the name of the local host"
+    ec ADMMOREDATA, "more data is available"
+    ec ADMSOCKFAIL, "failed to create a socket"
+    ec ADMTYPEINVALID, "the server type is invalid"
+end

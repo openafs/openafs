@@ -1,0 +1,32 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+package BULK_
+
+%#include <rx/rx.h>
+%#include <rx/rx_null.h>
+
+%#define BULK_SERVER_PORT	htonl(5000)
+%#define BULK_SERVICE_PORT	htonl(0) /* i.e. user server's port */
+%#define BULK_SERVICE_ID	4
+
+/* Maximum number of requests that will be handled by this service simultaneously */
+/* This number will also be guaranteed to execute in parallel if no services' requests are being processed */
+%#define BULK_MAX	2
+/* Minimum number of requests that are guaranteed to be handled immediately */
+%#define BULK_MIN	1
+
+/* Index of the "null" security class in the BULK service.  This must be 0 (there are N classes, numbered from 0.  In this case, N is 1) */
+%#define BULK_NULL	0
+
+%#define BULK_ERROR	1		/* Error used to abort a bulk transfer */
+
+
+FetchFile(IN int verbose, string name<256>) split = 1;
+StoreFile(IN int verbose, string name<256>) split = 2;

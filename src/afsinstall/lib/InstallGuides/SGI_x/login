@@ -1,0 +1,15 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# An InstallGuide for installing the AFS integrated login
+# For SGI systems running IRIX
+#
+
+sub login {
+&Copy ("root.client/usr/vice/etc/afsauthlib.so",  "/usr/vice/etc");
+&Copy ("root.client/usr/vice/etc/afskauthlib.so", "/usr/vice/etc");
+}

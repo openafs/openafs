@@ -1,0 +1,9 @@
+AFS_component_version_number.c
+Makefile
+pagsh
+pagsh.krb
+rmtsys.cs.c
+rmtsys.h
+rmtsys.ss.c
+rmtsys.xdr.c
+rmtsysd
