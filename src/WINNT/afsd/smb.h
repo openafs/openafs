@@ -569,6 +569,8 @@ extern BOOL smb_IsLegalFilename(char *filename);
 
 extern char *smb_GetSharename(void);
 
+extern DWORD smb_ServerExceptionFilter(void);
+
 /* include other include files */
 #include "smb3.h"
 #include "smb_ioctl.h"

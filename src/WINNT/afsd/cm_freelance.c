@@ -332,7 +332,7 @@ int cm_FakeRootFid(cm_fid_t *fidp)
   
 /* called directly from ioctl */
 /* called while not holding freelance lock */
-int cm_noteLocalMountPointChange() {
+int cm_noteLocalMountPointChange(void) {
     lock_ObtainMutex(&cm_Freelance_Lock);
     cm_fakeDirVersion++;
     cm_localMountPointChangeFlag = 1;
@@ -640,7 +640,7 @@ long cm_InitLocalMountPoints() {
 #endif
 
     if (!fp) {
-#if !defined(DJGPP);
+#if !defined(DJGPP)
         RegCloseKey(hkFreelance);
 #endif
         rootCellName[0] = '.';
@@ -1141,11 +1141,8 @@ long cm_FreelanceRemoveMount(char *toremove)
 
 long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 {
-    FILE *fp;
-    char hfile[120];
     char line[512];
     char fullname[200];
-    int n;
     int alias = 0;
 #if !defined(DJGPP)
     HKEY hkFreelanceSymlinks = 0;
@@ -1252,12 +1249,9 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
 long cm_FreelanceRemoveSymlink(char *toremove)
 {
-    int i, n;
     char* cp;
     char line[512];
     char shortname[200];
-    char hfile[120], hfile2[120];
-    FILE *fp1, *fp2;
     int found=0;
 #if !defined(DJGPP)
     HKEY hkFreelanceSymlinks = 0;

@@ -260,4 +260,6 @@ extern cm_scache_t **cm_hashTablep;
 
 extern void cm_DiscardSCache(cm_scache_t *scp);
 
+extern int cm_FindFileType(cm_fid_t *fidp);
+
 #endif /*  __CM_SCACHE_H_ENV__ */

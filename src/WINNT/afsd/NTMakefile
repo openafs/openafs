@@ -349,7 +349,9 @@ AFSD_SDKLIBS =\
         secur32.lib \
         ole32.lib \
         oleaut32.lib \
-        psapi.lib wintrust.lib
+        psapi.lib \
+        wintrust.lib \
+        crypt32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
