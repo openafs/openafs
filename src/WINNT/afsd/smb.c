@@ -392,14 +392,7 @@ unsigned int smb_Attributes(cm_scache_t *scp)
     {
         attrs = SMB_ATTR_DIRECTORY;
 #ifdef SPECIAL_FOLDERS
-#ifdef AFS_FREELANCE_CLIENT
-        if ( cm_freelanceEnabled &&
-             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && 
-             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
-             scp->fid.vnode==0x1 && scp->fid.unique==0x1) {
-            attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
-        }
-#endif /* AFS_FREELANCE_CLIENT */
+        attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
 #endif /* SPECIAL_FOLDERS */
     } else
         attrs = 0;
@@ -4020,6 +4013,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
      */
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastComp, pathp);
+#ifndef SPECIAL_FOLDERS
     if (lastComp && stricmp(lastComp, "\\desktop.ini") == 0) {
         code = cm_NameI(rootScp, spacep->data,
                         caseFold | CM_FLAG_DIRSEARCH | CM_FLAG_FOLLOW,
@@ -4042,6 +4036,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
             }
         }
     }
+#endif /* SPECIAL_FOLDERS */
 
     code = cm_NameI(rootScp, pathp, caseFold | CM_FLAG_FOLLOW, userp,
                     tidPathp, &req, &newScp);

@@ -91,13 +91,13 @@ void cm_ResetACLCache(cm_user_t *userp)
     lock_ObtainWrite(&cm_scacheLock);
     for (hash=0; hash < cm_hashTableSize; hash++) {
         for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
-            scp->refCount++;
+            cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             lock_ObtainMutex(&scp->mx);
             cm_InvalidateACLUser(scp, userp);
             lock_ReleaseMutex(&scp->mx);
             lock_ObtainWrite(&cm_scacheLock);
-            scp->refCount--;
+            cm_ReleaseSCacheNoLock(scp);
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
@@ -548,7 +548,7 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     for (i=0; i<cm_hashTableSize; i++) {
         for (scp = cm_hashTablep[i]; scp; scp = scp->nextp) {
             if (scp->fid.volume == volume) {
-                scp->refCount++;
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
 
                 /* now flush the file */
@@ -556,7 +556,7 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if ( code )
                     afsi_log("cm_FlushFile returns error: [%x]",code);
                 lock_ObtainWrite(&cm_scacheLock);
-                scp->refCount--;
+                cm_ReleaseSCacheNoLock(scp);
             }
         }
     }

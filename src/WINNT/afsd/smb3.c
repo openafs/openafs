@@ -75,14 +75,7 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
     {
         attrs = SMB_ATTR_DIRECTORY;
 #ifdef SPECIAL_FOLDERS
-#ifdef AFS_FREELANCE_CLIENT
-        if ( cm_freelanceEnabled &&
-             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && 
-             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
-             scp->fid.vnode==0x1 && scp->fid.unique==0x1) {
-            attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
-        }
-#endif /* AFS_FREELANCE_CLIENT */
+        attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
 #endif /* SPECIAL_FOLDERS */
     } else
         attrs = 0;
@@ -2590,9 +2583,10 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         spacep = cm_GetSpace();
         smb_StripLastComponent(spacep->data, &lastComp,
                                 (char *)(&p->parmsp[3]));
+#ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
         if (lastComp) {
-            if (strcmp(lastComp, "\\desktop.ini") == 0) {
+            if (stricmp(lastComp, "\\desktop.ini") == 0) {
                 code = cm_NameI(cm_rootSCachep, spacep->data,
                                  CM_FLAG_CASEFOLD
                                  | CM_FLAG_DIRSEARCH
@@ -2620,6 +2614,8 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 }
             }
         }
+#endif /* SPECIAL_FOLDERS */
+
         cm_FreeSpace(spacep);
     }
 

@@ -21,29 +21,30 @@
  * corresponding userp's userp->mx mutex.
  */
 typedef struct cm_ucell {
-	struct cm_ucell *nextp;		/* next cell in the list */
-        struct cm_cell *cellp;		/* the cell this applies to */
-	char *ticketp;			/* locked by mx */
-        int ticketLen;			/* by mx */
-        struct ktc_encryptionKey sessionKey;	/* by mx */
-        long kvno;			/* key version in ticket */
-        long expirationTime;		/* when tix expire */
-	int gen;			/* generation number */
-	int iterator;			/* for use as ListTokens cookie */
-        long flags;			/* flags */
-	char userName[MAXKTCNAMELEN];	/* user name */
+    struct cm_ucell *nextp;		/* next cell in the list */
+    struct cm_cell *cellp;		/* the cell this applies to */
+    char *ticketp;			/* locked by mx */
+    int ticketLen;			/* by mx */
+    struct ktc_encryptionKey sessionKey;/* by mx */
+    long kvno;			        /* key version in ticket */
+    long expirationTime;		/* when tix expire */
+    int gen;			        /* generation number */
+    int iterator;			/* for use as ListTokens cookie */
+    long flags;			        /* flags */
+    char userName[MAXKTCNAMELEN];	/* user name */
 } cm_ucell_t;
 
 #define CM_UCELLFLAG_HASTIX	1	/* has Kerberos tickets */
 #define CM_UCELLFLAG_RXKAD	2	/* an rxkad connection */
 #define CM_UCELLFLAG_BADTIX	4	/* tickets are bad or expired */
+#define CM_UCELLFLAG_RXGK       8       /* an rxgk connection */
 
 typedef struct cm_user {
-	unsigned long refCount;			/* ref count */
-	cm_ucell_t *cellInfop;		/* list of cell info */
-        osi_mutex_t mx;			/* mutex */
-        int vcRefs;			/* count of references from virtual circuits */
-        long flags;
+    unsigned long refCount;             /* ref count - cm_userLock */
+    cm_ucell_t *cellInfop;	        /* list of cell info */
+    osi_mutex_t mx;		        /* mutex */
+    int vcRefs;			        /* count of references from virtual circuits */
+    long flags;
 } cm_user_t;
 
 #define CM_USERFLAG_DELETE	1	/* delete on last reference */
