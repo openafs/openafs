@@ -15,8 +15,8 @@
  *
  *------------------------------------------------------------------------*/
 #define	IGNORE_STDS_H
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

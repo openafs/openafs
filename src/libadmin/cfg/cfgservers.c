@@ -15,8 +15,8 @@
  *   cfg_UpdateClient*() - configure update clients.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

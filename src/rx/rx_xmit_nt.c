@@ -14,8 +14,8 @@
  * This is true if rx_packets are being sent, so we should be ok.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>				/* for machine/host info */
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

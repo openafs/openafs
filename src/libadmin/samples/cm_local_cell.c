@@ -11,8 +11,8 @@
  * This file contains sample code for the client admin interface 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

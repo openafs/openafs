@@ -9,8 +9,8 @@
 
 /* profile.c -- routines to deal with profiling.   2 June 1986 */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

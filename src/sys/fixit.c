@@ -29,8 +29,8 @@ ups the ref count on the #<inode-no> files, so they're not returned
 to the free list when the files are removed from lost+found
 */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

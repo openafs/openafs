@@ -18,8 +18,8 @@
  * eliminate the practice of reporting errors to STDOUT.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -11,8 +11,8 @@
  * cb_test: A test of the gator text circular buffer package.
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

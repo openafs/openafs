@@ -15,8 +15,8 @@
  */
 
 /* First we have the kernel hacks' include files. */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

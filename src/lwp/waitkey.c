@@ -19,8 +19,8 @@
  * Return 1 if data available.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

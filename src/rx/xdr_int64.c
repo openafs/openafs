@@ -3,8 +3,8 @@
  *  XDR routine for int64 (long long or struct)
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

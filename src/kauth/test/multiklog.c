@@ -14,8 +14,8 @@
 
 /* These two needed for rxgen output to work */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

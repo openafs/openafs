@@ -3,8 +3,8 @@
  * For copying and distribution information, please see the file <mit-copyright.h>.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

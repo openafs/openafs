@@ -26,8 +26,8 @@
 #define	VIRTUE	    1
 #define	VICE	    1
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

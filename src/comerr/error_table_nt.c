@@ -12,8 +12,8 @@
 
 #line 1 "error_table.y"
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

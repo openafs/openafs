@@ -11,8 +11,8 @@
  * This file contains sample code for the rxstats interface 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

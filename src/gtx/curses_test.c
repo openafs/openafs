@@ -11,8 +11,8 @@
  * Test of the curses package, to make sure I really understand how to use it.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

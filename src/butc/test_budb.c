@@ -10,8 +10,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

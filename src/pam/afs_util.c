@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <security/pam_appl.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

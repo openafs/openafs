@@ -43,8 +43,8 @@
  * The other 31 bits encode the byte length of the fragment.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

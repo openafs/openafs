@@ -11,8 +11,8 @@
  *   cfg_CellServDb*()   - manage the cell-wide server CellServDb database.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

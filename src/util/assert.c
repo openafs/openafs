@@ -8,8 +8,8 @@
  */
 
 /* ReallyAbort:  called from assert. May/85 */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

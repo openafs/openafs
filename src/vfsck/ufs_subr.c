@@ -17,8 +17,8 @@
  *	@(#)ufs_subr.c	7.11 (Berkeley) 12/30/89
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

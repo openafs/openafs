@@ -15,8 +15,8 @@
  * rx_pthread.c is used for the thread safe RX package.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -32,8 +32,8 @@
  * rpc_parse.c, Parser for the RPC protocol compiler 
  * Copyright (C) 1987 Sun Microsystems, Inc.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

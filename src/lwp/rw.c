@@ -14,8 +14,8 @@ Created: 11/1/83, J. Rosenberg
 
 */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

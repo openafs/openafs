@@ -16,8 +16,8 @@
  * required lib is kernel32.lib, header is winbase.h
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -11,12 +11,12 @@
 
 This file is now obsolete.
 
+#include <afsconfig.h>
 #ifdef KERNEL
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID("$Header$");
 

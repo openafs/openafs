@@ -10,8 +10,8 @@
 /* Elapsed time package */
 /* See rx_clock.h for calling conventions */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

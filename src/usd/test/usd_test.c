@@ -13,8 +13,8 @@
  *         writing a few blocks of data to it, doing a fsf, bsf
  */
 
-#include <afs/param.h> 
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

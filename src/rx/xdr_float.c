@@ -26,8 +26,8 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

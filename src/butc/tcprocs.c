@@ -9,8 +9,8 @@
 
 /* procedures invoked by the rpc stub */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

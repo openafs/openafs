@@ -8,8 +8,8 @@
  * originally written 8/85 by Steve Miller.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

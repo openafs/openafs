@@ -5,8 +5,8 @@
  * see the file <mit-cpyright.h>.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

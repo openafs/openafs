@@ -11,8 +11,8 @@
  * Scout: A quick and (semi-)dirty attempt at the old CMU vopcon.
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

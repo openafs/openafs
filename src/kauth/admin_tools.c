@@ -12,8 +12,8 @@
    make small changes as well as subroutines to permit specialized programs to
    update the database, change the server passwords, etc. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

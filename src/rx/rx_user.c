@@ -9,8 +9,8 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

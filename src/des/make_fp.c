@@ -8,8 +8,8 @@
  * implementing the final permutation of the DES.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

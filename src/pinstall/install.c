@@ -46,8 +46,8 @@ Generic install command.  Options are:
 
 #define MAXFILES 200
 #define BUFSIZE 32768
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

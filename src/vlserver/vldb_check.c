@@ -21,8 +21,8 @@
 #define MHC 0x100      /* on multihomed chain */
 #define FRC 0x200      /* on free chain */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

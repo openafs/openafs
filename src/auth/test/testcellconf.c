@@ -22,8 +22,8 @@ Creation date:
     17 August 1987
 
 --------------------------------------------------------------------------------------------------------------*/
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

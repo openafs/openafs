@@ -11,8 +11,8 @@
  * Kerberos-style ticket.  These are the server-only routines. */
 
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

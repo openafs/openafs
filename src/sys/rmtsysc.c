@@ -12,8 +12,8 @@
  * the rpc version (via rx) of non-standard system calls. Currently only rpc
  * calls of setpag, and pioctl are supported.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

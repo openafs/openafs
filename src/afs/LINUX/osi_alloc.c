@@ -11,8 +11,8 @@
  * osi_alloc.c - Linux memory allocation routines.
  *
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

@@ -9,8 +9,8 @@
 
 /* This is a placeholder for routines unique to the port of AFS to hp-ux*/
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

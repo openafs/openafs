@@ -15,8 +15,8 @@
 
 /* Clone a volume.  Assumes the new volume is already created */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

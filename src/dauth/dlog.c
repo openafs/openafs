@@ -68,8 +68,8 @@
  * may be called by another program (such as login), using the -pipe switch.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

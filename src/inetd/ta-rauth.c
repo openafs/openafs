@@ -11,8 +11,8 @@
  * This code is used for application programs who want to transfer a
  * token from the local system to the remote system.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

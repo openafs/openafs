@@ -10,8 +10,8 @@
  *	workstation configuration facility.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -18,8 +18,8 @@
  * login -r hostname (for rlogind)
  * login -h hostname (for telnetd, etc.)
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

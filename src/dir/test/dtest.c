@@ -8,8 +8,8 @@
  */
 
 #define PAGESIZE 2048
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

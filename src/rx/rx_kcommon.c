@@ -11,8 +11,8 @@
  * rx_kcommon.c - Common kernel RX code for all system types.
  */
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

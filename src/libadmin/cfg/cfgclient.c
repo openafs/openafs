@@ -11,8 +11,8 @@
  *   cfg_Client*()       - perform minimally necessary client configuration.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

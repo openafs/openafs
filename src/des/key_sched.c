@@ -27,8 +27,8 @@
  * Originally written 6/85 by Steve Miller, MIT Project Athena.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

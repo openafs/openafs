@@ -17,8 +17,8 @@
  *	spm	8/85	MIT project athena
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

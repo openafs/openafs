@@ -14,8 +14,8 @@
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

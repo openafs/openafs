@@ -12,8 +12,8 @@
    handle authentication and get ticket requests to provide read-only protocol
    level compatibility with the standard Kerberos servers. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -11,8 +11,8 @@
  * afs_xsetgroups (asserts FALSE)
  * setpag (aliased to use_setpag in sysincludes.h)
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

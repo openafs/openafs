@@ -11,8 +11,8 @@
  * object_test: A test of the gator object operations.
  *--------------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

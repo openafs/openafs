@@ -14,8 +14,8 @@
  *  Date:	    December, 88
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

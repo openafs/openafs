@@ -23,8 +23,8 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <des.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

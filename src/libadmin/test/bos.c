@@ -11,8 +11,8 @@
  * This file implements the bos related funtions for afscp
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

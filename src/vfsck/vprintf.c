@@ -10,8 +10,8 @@
 /* I don't really need all thes, but I can't tell which ones I need 
  * and which I don't.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -23,8 +23,8 @@
  *		  This saves a (precious) file descriptor.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

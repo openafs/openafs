@@ -12,8 +12,8 @@
  *
  * super_block operations should return negated errno to Linux.
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

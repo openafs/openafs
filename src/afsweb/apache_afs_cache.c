@@ -9,8 +9,8 @@
 
 /* This code borrows from nsafs.c - slightly modified - names,etc. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

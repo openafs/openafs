@@ -18,8 +18,8 @@
  * osi_VM_Truncate(avc, alen, acred)
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

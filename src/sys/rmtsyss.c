@@ -12,8 +12,8 @@
  * currently fires up this module, when the "-rmtsys" flag is given.
  * This module resides in the lib/afs/librmtsys.a library.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -9,8 +9,8 @@
 
 /* I/O operations for the Windows NT platforms. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

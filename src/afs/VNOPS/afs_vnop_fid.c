@@ -14,8 +14,8 @@
  * afs_vptofh (DUX) is now in DUX/osi_vfsops.c
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

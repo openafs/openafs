@@ -10,8 +10,8 @@
 /*
  * osi_vfsops.c for AIX
  */
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
 RCSID("$Header$");
 

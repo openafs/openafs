@@ -8,8 +8,8 @@
  *			-1 ==> error
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

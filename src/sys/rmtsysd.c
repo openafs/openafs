@@ -13,8 +13,8 @@
  * This is the main routine for rmtsysd, which can be used separately from
  * afsd.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

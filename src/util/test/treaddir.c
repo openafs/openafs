@@ -16,8 +16,8 @@
  * 2) Read empty <drive:>
  * 3) Try to read a file.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

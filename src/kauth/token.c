@@ -11,12 +11,12 @@
    kernel.  Principally it handles cache misses by requesting the desired token
    from the AuthServer. */
 
+#include <afsconfig.h>
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID("$Header$");
 

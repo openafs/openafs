@@ -21,8 +21,8 @@
  *	need to be ``visible'' to anyone else.
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

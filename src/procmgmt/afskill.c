@@ -12,8 +12,8 @@
  * linked with the process management library (except SIGKILL).
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -17,8 +17,8 @@
  *	@(#)ufs_tables.c	7.3 (Berkeley) 4/24/89
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

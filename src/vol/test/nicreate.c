@@ -11,8 +11,8 @@
  * Test "inode" creation in the user space file system.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

@@ -9,12 +9,12 @@
 
 /* ticket caching code */
 
+#include <afsconfig.h>
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID("$Header$");
 

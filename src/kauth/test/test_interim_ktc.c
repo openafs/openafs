@@ -15,8 +15,8 @@
 #include <sys/file.h>
 #include <arpa/inet.h>
 #include <afs/prs_fs.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

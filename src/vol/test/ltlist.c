@@ -9,8 +9,8 @@
 
 /* ltlist - a standalone program to dump the link count table. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

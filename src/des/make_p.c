@@ -7,8 +7,8 @@
  * This routine generates the P permutation code for the DES.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 

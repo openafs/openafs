@@ -44,8 +44,8 @@
 /* Inspite of what the above comment suggests the fields are not fixed length
    but null terminated as you might figure, except for the ticket which is
    preceded by a 4 byte length.  All fields in host order. 890306 */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
 RCSID("$Header$");
 
