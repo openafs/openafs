@@ -129,7 +129,6 @@ int afs_nbsd_setattr(struct vop_setattr_args *);
 int afs_nbsd_read(struct vop_read_args *);
 int afs_nbsd_write(struct vop_write_args *);
 int afs_nbsd_ioctl(struct vop_ioctl_args *);
-int afs_nbsd_select(struct vop_select_args *);
 int afs_nbsd_fsync(struct vop_fsync_args *);
 int afs_nbsd_remove(struct vop_remove_args *);
 int afs_nbsd_link(struct vop_link_args *);
@@ -161,33 +160,37 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_default_desc, vn_default_error},
     {&vop_lookup_desc, afs_nbsd_lookup},	/* lookup */
     {&vop_create_desc, afs_nbsd_create},	/* create */
-    {&vop_mknod_desc, afs_nbsd_mknod},	/* mknod */
-    {&vop_open_desc, afs_nbsd_open},	/* open */
-    {&vop_close_desc, afs_nbsd_close},	/* close */
+    {&vop_mknod_desc, afs_nbsd_mknod},		/* mknod */
+    {&vop_open_desc, afs_nbsd_open},		/* open */
+    {&vop_close_desc, afs_nbsd_close},		/* close */
     {&vop_access_desc, afs_nbsd_access},	/* access */
     {&vop_getattr_desc, afs_nbsd_getattr},	/* getattr */
     {&vop_setattr_desc, afs_nbsd_setattr},	/* setattr */
-    {&vop_read_desc, afs_nbsd_read},	/* read */
-    {&vop_write_desc, afs_nbsd_write},	/* write */
-    {&vop_ioctl_desc, afs_nbsd_ioctl},	/* XXX ioctl */
-    {&vop_select_desc, afs_nbsd_select},	/* select */
-    {&vop_fsync_desc, afs_nbsd_fsync},	/* fsync */
+    {&vop_read_desc, afs_nbsd_read},		/* read */
+    {&vop_write_desc, afs_nbsd_write},		/* write */
+    {&vop_ioctl_desc, afs_nbsd_ioctl},		/* XXX ioctl */
+#ifdef AFS_OBSD35_ENV
+    {&vop_poll_desc, seltrue},			/* select */
+#else
+    {&vop_select_desc, seltrue},		/* select */
+#endif
+    {&vop_fsync_desc, afs_nbsd_fsync},		/* fsync */
     {&vop_remove_desc, afs_nbsd_remove},	/* remove */
-    {&vop_link_desc, afs_nbsd_link},	/* link */
+    {&vop_link_desc, afs_nbsd_link},		/* link */
     {&vop_rename_desc, afs_nbsd_rename},	/* rename */
-    {&vop_mkdir_desc, afs_nbsd_mkdir},	/* mkdir */
-    {&vop_rmdir_desc, afs_nbsd_rmdir},	/* rmdir */
+    {&vop_mkdir_desc, afs_nbsd_mkdir},		/* mkdir */
+    {&vop_rmdir_desc, afs_nbsd_rmdir},		/* rmdir */
     {&vop_symlink_desc, afs_nbsd_symlink},	/* symlink */
     {&vop_readdir_desc, afs_nbsd_readdir},	/* readdir */
     {&vop_readlink_desc, afs_nbsd_readlink},	/* readlink */
     {&vop_abortop_desc, vop_generic_abortop},	/* abortop */
     {&vop_inactive_desc, afs_nbsd_inactive},	/* inactive */
     {&vop_reclaim_desc, afs_nbsd_reclaim},	/* reclaim */
-    {&vop_lock_desc, afs_nbsd_lock},	/* lock */
+    {&vop_lock_desc, afs_nbsd_lock},		/* lock */
     {&vop_unlock_desc, afs_nbsd_unlock},	/* unlock */
-    {&vop_bmap_desc, afs_nbsd_bmap},	/* bmap */
+    {&vop_bmap_desc, afs_nbsd_bmap},		/* bmap */
     {&vop_strategy_desc, afs_nbsd_strategy},	/* strategy */
-    {&vop_print_desc, afs_nbsd_print},	/* print */
+    {&vop_print_desc, afs_nbsd_print},		/* print */
     {&vop_islocked_desc, afs_nbsd_islocked},	/* islocked */
     {&vop_pathconf_desc, afs_nbsd_pathconf},	/* pathconf */
     {&vop_advlock_desc, afs_nbsd_advlock},	/* advlock */
@@ -514,23 +517,6 @@ afs_nbsd_ioctl(ap)
 	code = ENOTTY;
     AFS_GUNLOCK();
     return code;
-}
-
-/* ARGSUSED */
-int
-afs_nbsd_select(ap)
-     struct vop_select_args	/* {
-				 * struct vnode *a_vp;
-				 * int  a_which;
-				 * int  a_fflags;
-				 * struct ucred *a_cred;
-				 * struct proc *a_p;
-				 * } */ *ap;
-{
-    /*
-     * We should really check to see if I/O is possible.
-     */
-    return (1);
 }
 
 int
