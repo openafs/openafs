@@ -32,7 +32,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2000-2004"
+VIAddVersionKey "LegalCopyright" "(C)2004"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -281,6 +281,9 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !insertmacro MUI_RESERVEFILE_LANGDLL ;Language selection dialog
 ;--------------------------------
 ; Macros
+
+!include "ServiceLib.nsh"
+
 ; Macro - Upgrade DLL File
 ; Written by Joost Verburg
 ; ------------------------
@@ -455,6 +458,13 @@ var REG_DATA_3
 Section "AFS Client" secClient
 
   SetShellVarContext all
+  
+  ; Check for bad previous installation (if we are doing a new install)
+  Call IsAnyAFSInstalled
+  Pop $R0
+  StrCmp $R0 "0" +1 skipCheck
+  Call CheckPathForAFS
+skipCheck:
   ; Stop any running services or we can't replace the files
   ; Stop the running processes
   GetTempFileName $R0
@@ -468,8 +478,8 @@ Section "AFS Client" secClient
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
 
-  nsExec::Exec "net stop TransarcAFSDaemon"
-  nsExec::Exec "net stop TransarcAFSServer"
+  !insertmacro SERVICE "stop" "TransarcAFSDaemon" ""
+  !insertmacro SERVICE "stop" "TransarcAFSServer" ""
   
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
@@ -613,15 +623,16 @@ Section "AFS Client" secClient
    
   ; Create the AFS service
   SetOutPath "$INSTDIR\Common"
-  File "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec "net stop TransarcAFSDaemon"
+  ;File "${AFS_WININSTALL_DIR}\Service.exe"
+  !insertmacro SERVICE "stop" "TransarcAFSDaemon" ""
   ;IMPORTANT!  If we are not refreshing the config files, do NOT remove the service
   ;Don't re-install because it must be present or we wouldn't have passed the Reg check
  
   ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell"
   StrCmp $R2 "" +1 skipremove
-  nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
+  !insertmacro SERVICE "delete" "TransarcAFSDaemon" ""
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
+  ;insertmacro SERVICE "create" "TransarcAFSDaemon" "path=$INSTDIR\Client\Program\afsd_service.exe;autostart=1;interact=1;machine=;user=;password="
 skipremove:
   Delete "$INSTDIR\Common\service.exe"
 
@@ -632,6 +643,10 @@ skipremove:
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10
+  ; Must also add HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NetworkProvider\HwOrder
+  ; and HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order
+  ; to also include the service name.
+  Call AddProvider
   ReadINIStr $R0 $1 "Field 7" "State"
   ReadINIStr $R1 $1 "Field 9" "State"
   ; Complicated way to do $R1 = ($R1 *2) + $R0
@@ -649,7 +664,7 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
   ReadINIStr $R0 $1 "Field 5" "State"  
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
-  ReadINIStr $R0 $1 "Field 11" "State"  
+  ReadINIStr $R0 $1 "Field 11" "State"   
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NetbiosName" "AFS"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "MountRoot" "/afs"
@@ -802,7 +817,8 @@ Section "AFS Server" secServer
   File "${AFS_WININSTALL_DIR}\Service.pdb"
 !endif
   ;Don't want to whack existing settings... Make users un-install and then re-install if they want that
-  ;nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
+  !insertmacro SERVICE "delete" "TransarcAFSServer" ""
+  ;insertmacro SERVICE "create" "TransarcAFSServer" "path=$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe;autostart=1"
   nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
   Delete "$INSTDIR\Common\service.exe"
   
@@ -1600,16 +1616,15 @@ StartRemove:
 !ENDIF
 
   ; Delete the AFS service
-  GetTempFileName $R0
-  File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec "net stop TransarcAFSDaemon"
-  nsExec::Exec "net stop TransarcAFSServer"
-  nsExec::Exec '$R0 u TransarcAFSDaemon'
-  ; After we stop the service, but before we delete it, we have to remove the volume data
-  ; This is because the storage locations are in the registry under the service key.
-  ; Call un.RemoveAFSVolumes
-  nsExec::Exec '$R0 u TransarcAFSServer'
-  Delete $R0
+  ; New method for service manipulation
+  !undef "UN"
+  !define "UN" "un."
+  !insertmacro SERVICE "stop" "TransarcAFSDaemon" ""
+  !insertmacro SERVICE "stop" "TransarcAFSDaemon" ""
+  !insertmacro SERVICE "delete" "TransarcAFSDaemon" ""
+  !insertmacro SERVICE "delete" "TransarcAFSServer" ""
+  
+  Call un.RemoveProvider
   
   Push "$INSTDIR\Client\Program"
   Call un.RemoveFromPath
@@ -2009,8 +2024,8 @@ StrCmp $R0 "1" done
 ReadINIStr $R0 $0 "Field 3" "State"
 StrCmp $R0 "1" UsePackaged
 
-ReadINIStr $R0 $0 "Field 6" "State"
-StrCmp $R0 "1" CheckOther
+ReadINIStr $R0 $0 "Field 6" "State" 
+   StrCmp $R0 "1" CheckOther 
 
 ; If none of these, grab file from other location
 goto UsePackaged
@@ -3591,4 +3606,118 @@ noClose:
   Pop $2
   Pop $1
   Exch $R0
+FunctionEnd
+
+Function AddProvider
+   Push $R0
+   Push $R1
+   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder"
+   Push $R0
+   StrCpy $R0 "TransarcAFSDaemon"
+   Push $R0
+   Call StrStr
+   Pop $R0
+   StrCmp $R0 "" +1 DoOther
+   ReadRegStr $R1 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder"   
+   StrCpy $R0 "$R1,TransarcAFSDaemon"
+   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder" "ProviderOrder" $R0
+DoOther:
+   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder"
+   Push $R0
+   StrCpy $R0 "TransarcAFSDaemon"
+   Push $R0
+   Call StrStr
+   Pop $R0
+   StrCmp $R0 "" +1 End
+   ReadRegStr $R1 HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder"   
+   StrCpy $R0 "$R1,TransarcAFSDaemon"
+   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order" "ProviderOrder" $R0   
+End:
+   Pop $R1
+   Pop $R0
+FunctionEnd
+
+Function un.RemoveProvider
+   Push $R0
+   StrCpy $R0 "TransarcAFSDaemon"
+   Push $R0
+   StrCpy $R0 "SYSTEM\CurrentControlSet\Control\NetworkProvider\HWOrder"
+   Call un.RemoveFromProvider
+   StrCpy $R0 "TransarcAFSDaemon"
+   Push $R0
+   StrCpy $R0 "SYSTEM\CurrentControlSet\Control\NetworkProvider\Order"
+   Call un.RemoveFromProvider
+   Pop $R0
+FunctionEnd
+
+Function un.RemoveFromProvider
+  Exch $0
+  Push $1
+  Push $2
+  Push $3
+  Push $4
+  Push $5
+  Push $6
+
+  ReadRegStr $1 HKLM "$R0" "ProviderOrder"
+    StrCpy $5 $1 1 -1 # copy last char
+    StrCmp $5 "," +2 # if last char != ,
+      StrCpy $1 "$1," # append ,
+    Push $1
+    Push "$0,"
+    Call un.StrStr ; Find `$0,` in $1
+    Pop $2 ; pos of our dir
+    StrCmp $2 "" unRemoveFromPath_done
+      ; else, it is in path
+      # $0 - path to add
+      # $1 - path var
+      StrLen $3 "$0,"
+      StrLen $4 $2
+      StrCpy $5 $1 -$4 # $5 is now the part before the path to remove
+      StrCpy $6 $2 "" $3 # $6 is now the part after the path to remove
+      StrCpy $3 $5$6
+
+      StrCpy $5 $3 1 -1 # copy last char
+      StrCmp $5 "," 0 +2 # if last char == ,
+        StrCpy $3 $3 -1 # remove last char
+
+      WriteRegStr HKLM "$R0" "ProviderOrder" $3
+      
+  unRemoveFromPath_done:
+    Pop $6
+    Pop $5
+    Pop $4
+    Pop $3
+    Pop $2
+    Pop $1
+    Pop $0
+FunctionEnd
+
+Function CheckPathForAFS
+   Push $0
+   Push $1
+   Push $2
+   Push $3
+   ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PATH"
+   StrCpy $1 "$1;"
+loop:
+   Push $1
+   Push ";"
+   Call StrStr
+   Pop $0
+   StrLen $2 $0
+   StrCpy $3 $1 -$2
+   IfFileExists "$3\afsd_service.exe" Error
+   StrCpy $1 $0 32768 1
+   StrLen $2 $1
+   IntCmp $2 0 Done Done loop
+   goto Done
+Error:
+   MessageBox MB_ICONSTOP|MB_OK|MB_TOPMOST "This installer is unable to upgrade the previous version of AFS. Please uninstall the current AFS version before continuing."
+   Abort "Unable to install OpenAFS"
+Done:
+   Pop $3
+   Pop $2
+   Pop $1
+   Pop $0
 FunctionEnd
