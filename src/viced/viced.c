@@ -88,6 +88,7 @@ RCSID
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
 #include "softsig.h"
+char *(*threadNameProgram) ();
 #endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
@@ -315,6 +316,18 @@ ResetCheckDescriptors(void)
 #endif
 }
 
+#if defined(AFS_PTHREAD_ENV)
+char *
+threadName(void)
+{
+    char threadid[16];
+    if (LogLevel > 999) {
+	afs_snprintf(threadid, 16, "%d", pthread_getspecific(rx_thread_id_key));
+	return threadid;
+    } else 
+	return NULL;
+}
+#endif
 
 /* proc called by rxkad module to get a key */
 static int
@@ -1702,6 +1715,10 @@ main(int argc, char *argv[])
     if (!novbc) {
 	V_BreakVolumeCallbacks = BreakVolumeCallBacksLater;
     }
+
+#if defined(AFS_PTHREAD_ENV)
+    threadNameProgram = threadName;
+#endif
 
     /* initialize libacl routines */
     acl_Initialize(ACL_VERSION);
