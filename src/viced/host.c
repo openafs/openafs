@@ -990,7 +990,7 @@ retry:
 	code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 	H_LOCK
 	if ( code == RXGEN_OPCODE ) {
-		identP = (struct Identity *)malloc(1);
+		identP = (struct Identity *)malloc(sizeof(struct Identity));
 		identP->valid = 0;
 		rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		/* The host on this connection was unable to respond to 
@@ -1075,7 +1075,7 @@ retry:
 		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 		H_LOCK
 		if ( code == RXGEN_OPCODE ) {
-		    identP = (struct Identity *)malloc(1);
+		  identP = (struct Identity *)malloc(sizeof(struct Identity));
 		    identP->valid = 0;
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		    ViceLog(25,
