@@ -126,7 +126,8 @@ struct coda_inode_info {};
 #include "afsincludes.h"
 #endif
 #if defined(AFS_OBSD_ENV)
-#include "../netinet/in_pcb.h"
+#include "afs/sysincludes.h"
+#include "netinet/in_pcb.h"
 #endif
 
 #define        MAXRXPORTS  20
