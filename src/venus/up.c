@@ -18,6 +18,13 @@ RCSID("$Header$");
 #define false 0
 
 #include <errno.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #undef	_NONSTD_TYPES
@@ -44,13 +51,6 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #endif
 #include <afs/venus.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 
 /* ************************************************************* */
 

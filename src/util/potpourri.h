@@ -92,6 +92,7 @@ Abstract:	Contains miscellaneous general-purpose macros.
 	BEWARE:  avoid quotes in the assertion!!
 	Also beware: you cannot make the NOASSERT case a null macro, because of side effects */
 
+#undef assert
 #ifndef NOASSERT
 #define assert(ex) {if (!(ex)){fprintf(stderr,"Assertion failed: file %s, line %d\n", __FILE__, __LINE__);fprintf(stderr, "\t%s\n", # ex); abort();}}
 #else

@@ -45,8 +45,8 @@ char **argv; {
         perror("chmod back to RW");
         return 1;
     }
-    gettimeofday(&tv[0], (char *) 0);
-    gettimeofday(&tv[1], (char *) 0);
+    gettimeofday(&tv[0], (void *) 0);
+    gettimeofday(&tv[1], (void *) 0);
     tv[0].tv_sec -= 10000;
     tv[0].tv_usec = 0;
     tv[1].tv_sec -= 20000;

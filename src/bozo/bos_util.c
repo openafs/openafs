@@ -187,7 +187,7 @@ main(int argc, char **argv)
 		printf("kvno %4d: key is '%s' '", tkeys.key[i].kvno, tbuffer);
 		strcpy(x,(char *)tbuffer);
 		for(count=0;count<8;count++)
-		    printf("\\%03o",(unsigned char *)x[count]);
+		    printf("\\%03o", x[count]);
 		printf("'\n");
 	    }
 	}

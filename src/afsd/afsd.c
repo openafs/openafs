@@ -2088,7 +2088,7 @@ long param1, param2, param3, param4, param5, param6, param7;
     eparm[2] = param6;
     eparm[3] = param7;
 
-    param4 = eparm;
+    param4 = (long) eparm;
 #endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);
