@@ -119,12 +119,13 @@ Variable: traceOnPanic
   Issues a breakpoint in the event of a panic. (breakpoint: _asm int 3).
 
 Value   : NetbiosName
-Type    : REG_SZ
+Type    : REG_EXPAND_SZ
 Default : "AFS"
 Variable: cm_NetbiosName
 
   Specifies the NetBIOS name to be used when binding to a Loopback
-  adapter.
+  adapter.  To provide the old behavior specify a value of 
+  "%COMPUTERNAME%-AFS"
 
 Value	: IsGateway
 Type	: DWORD {1,0}

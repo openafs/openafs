@@ -439,11 +439,17 @@ int afsd_InitCM(char **reasonP)
 	}
 #endif /* AFS_FREELANCE_CLIENT */
 
-    dummyLen = sizeof(cm_NetBiosName);
+    dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
-                           (BYTE *) &cm_NetBiosName, &dummyLen);
+                           (BYTE *) &buf, &dummyLen);
     if (code == ERROR_SUCCESS) {
-        afsi_log("Explicit NetBios name is used %s", cm_NetBiosName);
+        DWORD len = ExpandEnvironmentStrings(buf, cm_NetBiosName, MAX_NB_NAME_LENGTH);
+        if ( len > 0 && len <= MAX_NB_NAME_LENGTH ) {
+            afsi_log("Explicit NetBios name is used %s", cm_NetBiosName);
+        } else {
+            afsi_log("Unable to Expand Explicit NetBios name: %s", buf);
+            cm_NetBiosName[0] = 0;  /* turn it off */
+        }
     }
     else {
         cm_NetBiosName[0] = 0;   /* default off */
