@@ -41,11 +41,14 @@ int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 
     AFS_STATCNT(afs_mount);
 
-    if (!suser(credp))
+    if (!suser(credp)) {
+	AFS_GUNLOCK();
 	return EPERM;
+    }
     afsp->vfs_fstype = afsfstype;
 
     if (afs_globalVFS) { /* Don't allow remounts. */
+	AFS_GUNLOCK();
 	return EBUSY;
     }
 
@@ -68,8 +71,10 @@ int afs_unmount (struct vfs *afsp, struct AFS_UCRED *credp)
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
-    if (!suser(credp))
+    if (!suser(credp)) {
+	AFS_GUNLOCK();
 	return EPERM;
+    }
     afs_globalVFS = 0;
     afs_shutdown();
 
