@@ -4,7 +4,7 @@ i[3456]86)
 	echo i386_linux22
 ;;
     ppc)
-	echo ppc_linux24
+	echo ppc_linux22
 	;;
     sparc|sparc64)
 	echo sparc_linux22
