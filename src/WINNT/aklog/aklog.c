@@ -526,6 +526,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 
 	if (usev5) 
 	{ /* using krb5 */
+        int retry = 1;
+
+      try_v5:
 		if (dflag)
 			printf("Getting v5 tickets: %s/%s@%s\n", name, instance, realm_of_cell);
 		status = get_v5cred(context, name, instance, realm_of_cell, NULL, &v5cred);
@@ -534,6 +537,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 				printf("Getting v5 tickets: %s@%s\n", name, realm_of_cell);
 			status = get_v5cred(context, name, "", realm_of_cell, NULL, &v5cred);
 		}
+        if ( status == KRB5KRB_AP_ERR_MSG_TYPE && retry ) {
+            retry = 0;
+            goto try_v5;
+        }
 	}
 	else 
 	{
