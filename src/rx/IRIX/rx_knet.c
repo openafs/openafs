@@ -319,26 +319,28 @@ static int rxi_MatchIfnet(struct hashbucket *h, caddr_t key, caddr_t arg1,
 }
 
     
-struct ifnet * rxi_FindIfnet(addr, pifad) 
-     afs_uint32 addr;
-     struct in_ifaddr **pifad;
+struct ifnet *
+rxi_FindIfnet(afs_uint32 addr, afs_uint32 *maskp)
 {
-  afs_uint32 ppaddr;
-  int match_value = 0;
+    afs_uint32 ppaddr;
+    int match_value = 0;
+    struct in_ifaddr *ifad;
 
-  if (numMyNetAddrs == 0)
-    (void) rxi_GetIFInfo();
+    if (numMyNetAddrs == 0)
+	(void) rxi_GetIFInfo();
 
-  ppaddr = ntohl(addr);
-  *pifad = (struct in_ifaddr*)&hashinfo_inaddr;
+    ppaddr = ntohl(addr);
+    ifad = (struct in_ifaddr*)&hashinfo_inaddr;
 
-  (void) hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
-		   (caddr_t)&ppaddr, (caddr_t)&match_value, (caddr_t)pifad);
-   
-  if (match_value)
-      return (*pifad)->ia_ifp;
-  else
-      return NULL;
+    (void) hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
+		     (caddr_t)&ppaddr, (caddr_t)&match_value, (caddr_t)&ifad);
+
+    if (match_value) {
+	if (maskp)
+	    *maskp = ifad->ia_subnetmask;
+	return ifad->ia_ifp;
+    } else
+	return NULL;
 }
 
 static int rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,

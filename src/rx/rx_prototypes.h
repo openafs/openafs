@@ -269,6 +269,7 @@ extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 #ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
+extern struct ifnet *rxi_FindIfnet(afs_uint32 addr, afs_uint32 *maskp);
 #endif
 extern void osi_StopListener(void);
 

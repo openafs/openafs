@@ -24,8 +24,6 @@ RCSID("$Header$");
 #endif
 #include "afsint.h"
 
-struct ifnet *rxi_FindIfnet(afs_uint32 addr);
-
 #ifndef RXK_LISTENER_ENV
 int (*rxk_PacketArrivalProc)(register struct rx_packet *ahandle,
         register struct sockaddr_in *afrom, char *arock,
@@ -379,7 +377,7 @@ void rxi_InitPeerParams(register struct rx_peer *pp)
 	(void) rxi_GetIFInfo();
 #endif
 
-    ifn = rxi_FindIfnet(pp->host);
+    ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -647,7 +645,7 @@ int rxi_GetIFInfo(void)
 #if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
 struct ifnet *
-rxi_FindIfnet(afs_uint32 addr) 
+rxi_FindIfnet(afs_uint32 addr, afs_uint32 *maskp)
 {
     struct sockaddr_in s;
     struct ifaddr *ifad;
@@ -656,6 +654,8 @@ rxi_FindIfnet(afs_uint32 addr)
     s.sin_addr.s_addr = addr;
     ifad = ifa_ifwithnet((struct sockaddr *) &s);
 
+    if (ifad && maskp)
+	*maskp = ((struct sockaddr_in *)ifad->ifa_netmask)->sin_addr.s_addr;
     return (ifad ? ifad->ifa_ifp : NULL);
 }
 
@@ -663,7 +663,7 @@ rxi_FindIfnet(afs_uint32 addr)
 
 /* Returns ifnet which best matches address */
 struct ifnet *
-rxi_FindIfnet(afs_uint32 addr)
+rxi_FindIfnet(afs_uint32 addr, afs_uint32 *maskp)
 {
     int match_value = 0;
     extern struct in_ifaddr *in_ifaddr;
@@ -697,6 +697,8 @@ rxi_FindIfnet(afs_uint32 addr)
     } /* for all in_ifaddrs */
 
  done:
+    if (ifad && maskp)
+	*maskp = ifad->ia_subnetmask;
     return (ifad ? ifad->ia_ifp : NULL);
 }
 #endif /* else DARWIN60 || XBSD */
