@@ -16,6 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <sys/wait.h>
+#include <limits.h>
 
 RCSID("$Header$");
 
