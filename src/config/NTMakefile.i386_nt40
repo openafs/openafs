@@ -388,21 +388,21 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 
 
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+EXECONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
 
 # EXE link macro for GUI applications
-EXEGUILINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
+EXEGUILINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
 
 # EXE link macro for MFC applications
-EXEMFCLINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
+EXEMFCLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for console applications
-DLLCONLINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
+DLLCONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
 
 # DLL link macro for GUI applications
-DLLGUILINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
-EXECONLINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
-DLLMFCLINK = $(link) /OUT:$@ /PDB:$*.pdb $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
+DLLGUILINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
+EXECONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
+DLLMFCLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 
 # DLL link macro for resource-only DLLs
