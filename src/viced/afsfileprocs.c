@@ -5564,8 +5564,6 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 		    /* grant admins fetch on all directories */
 		    && VanillaUser(client)
 #endif /* ADMIN_IMPLICIT_LOOKUP */
-		    && !OWNSp(client, targetptr)
-		    && !acl_IsAMember(targetptr->disk.owner, &client->CPS)
 		    && !VolumeOwner(client, targetptr))
 		    return(EACCES);
 	    } else {    /* file */
@@ -5623,8 +5621,6 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 	  else {
 	    if (CallingRoutine == CHK_STOREACL) {
 	      if (!(rights & PRSFS_ADMINISTER) &&
-		  !OWNSp(client, targetptr) && 
-		  !acl_IsAMember(targetptr->disk.owner, &client->CPS) &&
 		  !VolumeOwner(client, targetptr)) return(EACCES);
 	    }
 	    else {	/* store data or status */
