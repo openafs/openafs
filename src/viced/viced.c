@@ -76,8 +76,10 @@ RCSID("$Header$");
 #endif
 #include "viced.h"
 #include "host.h"
+#ifndef AFS_NT40_ENV
 #ifdef AFS_PTHREAD_ENV
 #include "softsig.h"
+#endif
 #endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
@@ -226,13 +228,13 @@ static void ResetCheckSignal(void)
 
 #if defined(AFS_HPUX_ENV)
     signo = SIGPOLL;
-#elsif defined(AFS_NT40_ENV)
+#elif defined(AFS_NT40_ENV)
     signo = SIGUSR2;
 #else
     signo = SIGXCPU;
 #endif
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     softsig_signal(signo, CheckSignal_Signal);
 #else
     signal(signo, CheckSignal_Signal);
@@ -384,7 +386,7 @@ main(argc, argv)
     ViceLog(0, ("File server starting\n"));
 #endif
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */
     softsig_init();
 #endif
@@ -635,7 +637,7 @@ main(argc, argv)
     /* Install handler to catch the shutdown signal;
      * bosserver assumes SIGQUIT shutdown
      */
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     softsig_signal(SIGQUIT, ShutDown_Signal);
 #else
     signal(SIGQUIT, ShutDown_Signal);
