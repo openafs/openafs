@@ -299,6 +299,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\afs_setup_utils\GetWebDll))
 		$(MKDIR) $(OJT)\WINNT\afs_setup_utils\GetWebDll
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\aklog))
+		$(MKDIR) $(OJT)\WINNT\aklog
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\bosctlsvc))
 		$(MKDIR) $(OJT)\WINNT\bosctlsvc
 !	ENDIF
