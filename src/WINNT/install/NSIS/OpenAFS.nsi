@@ -554,10 +554,26 @@ Section "AFS Client" SecClient
 !IFDEF DEBUG
    ;File "${SDK_DIR}\REDIST\msvcrtd.dll"
    ;File "${SDK_DIR}\REDIST\msvcrtd.pdb"
+!IFDEF CL_1310
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc71d.dll" "$SYSDIR\mfc71d.dll"
+!ELSE
+!IFDEF CL_1300
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc70d.dll" "$SYSDIR\mfc70d.dll"
+!ELSE
    !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42d.dll" "$SYSDIR\mfc42d.dll"
+!ENDIF
+!ENDIF
 !ELSE
    ;File "${SDK_DIR}\REDIST\msvcrt.dll"
+!IFDEF CL_1310
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc71.dll" "$SYSDIR\mfc71.dll"
+!ELSE
+!IFDEF CL_1300
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc70.dll" "$SYSDIR\mfc70.dll"
+!ELSE
    !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42.dll" "$SYSDIR\mfc42.dll"
+!ENDIF
+!ENDIF
 !ENDIF
    
   ; Do WINDOWSDIR components

@@ -20,31 +20,50 @@ prebuild:
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 !IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71.dll $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC71.DLL $(EXEDIR)
 !ELSE IF ("$(AFSVER_CL)"=="1300")
    $(COPY) %SystemRoot%\System32\Msvcp70.dll $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC71.DLL $(EXEDIR)
 !ELSE IF ("$(AFSVER_CL)"=="1200")
    $(COPY) %SystemRoot%\System32\MSVCRT.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC42.DLL $(EXEDIR)
 !ELSE
 !ERROR Unknown Compiler Version
 !ENDIF
-   $(COPY) %SystemRoot%\System32\MFC42.DLL $(EXEDIR)
 !ELSE
 !IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71d.dll $(EXEDIR)
    $(COPY) %SystemRoot%\System32\Msvcr71d.pdb $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC71D.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC71D.pdb $(EXEDIR)
 !ELSE IF ("$(AFSVER_CL)"=="1300")
    $(COPY) %SystemRoot%\System32\Msvcp70d.dll $(EXEDIR)
    $(COPY) %SystemRoot%\System32\Msvcp70d.pdb $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC70D.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC70D.pdb $(EXEDIR)
 !ELSE IF ("$(AFSVER_CL)"=="1200")
    $(COPY) %SystemRoot%\System32\MSVCRTD.DLL $(EXEDIR)
    $(COPY) %SystemRoot%\System32\MSVCRTD.pdb $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC42D.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC42D.pdb $(EXEDIR)
 !ELSE
 !ERROR Unknown Compiler Version
 !ENDIF
-   $(COPY) %SystemRoot%\System32\MFC42D.DLL $(EXEDIR)
-   $(COPY) %SystemRoot%\System32\MFC42D.pdb $(EXEDIR)
 !ENDIF
-   MakeCommon.bat "$(AFSPRODUCT_VERSION)"
+   $(DEL) nsi-includes.nsi
+   echo !define AFS_DESTDIR $(DESTDIR) > nsi-includes.nsi
+   echo !define MUI_VERSION $(AFSPRODUCT_VERSION) >> nsi-includes.nsi
+   echo !define MUI_MAJORVERSION $(AFSPRODUCT_VER_MAJOR) >>nsi-includes.nsi
+   echo !define MUI_MINORVERSION $(AFSPRODUCT_VER_MINOR) >>nsi-includes.nsi
+   echo !define MUI_PATCHLEVEL $(AFSPRODUCT_VER_PATCH) >>nsi-includes.nsi
+!if ("$(AFSDEV_CL)" == "1310")
+   echo !define CL1310 1 >> nsi-includes.nsi
+!else if ("$(AFSDEV_CL)" == "1300")
+   echo !define CL1300 1 >> nsi-includes.nsi
+!endif
+!if ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+   echo !define DEBUG 1 >>nsi-includes.nsi
+!endif
 
 build: prebuild
    "C:\Program Files\NSIS\makensis.exe" OpenAFS.nsi
