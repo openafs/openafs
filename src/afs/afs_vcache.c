@@ -703,6 +703,22 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
                }
             }
 #endif
+#if defined(AFS_FBSD_ENV)
+	   if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
+	       && (tvc->states & CUnlinkedDel) == 0) {
+               if (!(VOP_LOCK(&tvc->v, LK_EXCLUSIVE, curproc))) {
+	          if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
+	              && (tvc->states & CUnlinkedDel) == 0) {
+                      VREFCOUNT_DEC(tvc);
+                      AFS_GUNLOCK(); /* perhaps inline inactive for locking */
+                      VOP_INACTIVE(&tvc->v, curproc);
+                      AFS_GLOCK();
+                  } else {
+                     VOP_UNLOCK(&tvc->v, 0, curproc);
+                  }
+               }
+           }
+#endif
 	   if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 	       && (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
@@ -883,13 +899,8 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     cache_purge((struct vnode *)tvc); 
     tvc->v.v_data=tvc;
     tvc->v.v_tag=VT_AFS;
-#ifndef VSTANDARD
     tvc->v.v_usecount++; /* steal an extra ref for now so vfree never happens */
-                         /* this will prevent the vfs layer from reusing
-                          * afs vnodes, but afs will eventually run out of
-                          * vcache's and panic...
-                          */
-#endif
+                         /* This extra ref is dealt with above... */
 #endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
