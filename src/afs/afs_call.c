@@ -497,8 +497,10 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *cnamep = 0;
 	int cflags = parm4;
 
-	/* wait for basic init */
+#if 0
+	/* wait for basic init - XXX can't find any reason we need this? */
 	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
+#endif
 
 	AFS_COPYIN((char *)parm2, (char *)tcell.hosts, sizeof(tcell.hosts), code);
 	if (!code) {
