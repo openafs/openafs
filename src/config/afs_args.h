@@ -85,6 +85,18 @@
 /* For SGI, this can't interfere with any of the 64 bit inode calls. */
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
 
+#define AFSOP_VCACHEINFO         50     /* the vcacheinfo file */
+#define AFSOP_DCELLINFO          51     /* the cellinfo file */
+#define AFSOP_DSERVERINFO        52     /* the serverinfo file */
+#define AFSOP_DVOLUMEINFO        53     /* the volumeinfo file */
+#define AFSOP_DLOG               54     /* the Log file */
+#define AFSOP_DBLOG              55     /* the Log file */
+#define AFSOP_SETVSLOTS          56     /* the Log file */
+#define AFSOP_SETREPLAYLOG       57     /* the Log file */
+#define AFSOP_SETSTATFILE        58     /* the Log file */
+#define AFSOP_SETNAMEFILE        59     /* File to store symlink info */
+#define AFSOP_SETTRANSFILE       60     /* File to store translation info */
+#define AFSOP_SETTRANSDATA       61     /* File to store name translation info*/
 /* these are for initialization flags */
 
 #define AFSCALL_INIT_MEMCACHE 0x1

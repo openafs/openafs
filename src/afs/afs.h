@@ -224,6 +224,10 @@ struct cell {
     time_t timeout;		/* data expire time, if non-zero */
     struct cell_name *cnamep;	/* pointer to our cell_name */
     afs_rwlock_t lock;		/* protects cell data */
+#ifdef DISCONN
+    afs_int32 dindex;               /* disconnected index */
+    afs_int32 dflags;               /* flags for disconnected operation */
+#endif
 };
 
 struct cell_name {
@@ -390,6 +394,10 @@ struct server {
     afs_int32 sumOfDowntimes;	/* Total downtime experienced, in seconds */
     struct srvAddr *addr;
     afs_uint32 flags;		/* Misc flags */
+#ifdef DISCONN
+    afs_int32 dindex;               /* disconnected index */
+    afs_int32 dflags;               /* flags for disconnected operation */
+#endif
 };
 
 #define	afs_PutServer(servp, locktype)
@@ -487,6 +495,10 @@ struct volume {
     afs_int32 expireTime;	/* for per-volume callbacks... */
     short refCount;		/* reference count for allocation */
     char states;		/* here for alignment reasons */
+#ifdef DISCONN
+    short dindex;               /* disconnected index */
+    short dflags;               /* flags for disconnected operation */
+#endif
 };
 
 #define afs_PutVolume(av, locktype) ((av)->refCount--)
@@ -720,6 +732,16 @@ struct vcache {
 #ifdef AFS_SUN5_ENV
     short multiPage;		/* count of multi-page getpages in progress */
 #endif
+#ifdef DISCONN
+    afs_int32 dhnext;                        /* Hash next for disconnected */
+    afs_int32 dflags;                        /* flags to use for disconnected*/
+    afs_int32 index;                         /* index into the backing file */
+    afs_int32 name_idx;                      /* index for name */
+    afs_int32 ref_time;                    /* reference time for LRU */
+    afs_int32 last_mod_op;                 /* id of last modifying operation */
+    afs_int32 last_replay_op;              /* id of last operation replayed */
+    struct VenusFid dmvid;              /* storage for mvid */
+#endif
 };
 
 #define afs_symhint_inval(avc)
@@ -847,6 +869,7 @@ struct cm_initparams {
 #define	IFDirtyPages	16
 #define	IFAnyPages	32
 #define	IFDiscarded	64	/* index entry in discardDCList */
+#define IFFKeep_DC      128     /* flag that says not to flush */
 
 struct afs_ioctl {
     char *in;			/* input buffer */
@@ -913,6 +936,9 @@ struct fcache {
     afs_inode_t inode;		/* Unix inode for this chunk */
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
+#ifdef DISCONN
+    afs_int32 dflags;
+#endif
 };
 
 /* magic numbers to specify the cache type */
@@ -1038,7 +1064,9 @@ extern afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
 extern afs_int32 afs_cacheFiles;	/*Size of afs_indexTable */
 extern afs_int32 afs_cacheBlocks;	/*1K blocks in cache */
 extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
+#ifndef DISCONN
 extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
+#endif
 extern afs_int32 afs_initState;	/*Initialization state */
 extern afs_int32 afs_termState;	/* Termination state */
 extern struct VenusFid afs_rootFid;	/*Root for whole file system */

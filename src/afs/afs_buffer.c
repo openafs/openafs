@@ -523,6 +523,9 @@ DNew(register struct dcache *adc, register int page)
     MObtainWriteLock(&tb->lock, 265);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
+#ifdef DISCONN
+    tb->dirty++;
+#endif
     MReleaseWriteLock(&tb->lock);
     return tb->data;
 }

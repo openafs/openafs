@@ -104,6 +104,10 @@ static int
 extern int afs_vfs_mount();
 #endif /* defined(AFS_HPUX_ENV) */
 
+#ifdef DISCONN
+extern afs_int32 afs_num_vslots;
+#endif
+
 /* This is code which needs to be called once when the first daemon enters
  * the client. A non-zero return means an error and AFS should not start.
  */
@@ -653,9 +657,24 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    AFS_COPYINSTR((char *)parm2, afs_rootVolumeName,
 			  sizeof(afs_rootVolumeName), &bufferSize, code);
 	    afs_rootVolumeName[sizeof(afs_rootVolumeName) - 1] = 0;
-	} else
+	} else {
 	    code = 0;
+#ifdef DISCONN
+	} else if (parm == AFSOP_SETVSLOTS) {
+	    AFS_COPYIN((char *)parm2, (caddr_t) &afs_num_vslots,
+			      sizeof(afs_num_vslots), code);
+	    if (!code && afs_num_vslots <= 0)
+		code = EINVAL;
+#endif
     } else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO
+#ifdef DISCONN
+	       parm == AFSOP_VCACHEINFO || parm == AFSOP_DCELLINFO || 
+	       parm == AFSOP_DSERVERINFO || parm == AFSOP_DVOLUMEINFO ||
+	       parm == AFSOP_DLOG || parm == AFSOP_DBLOG ||
+	       parm == AFSOP_SETREPLAYLOG || parm == AFSOP_SETSTATFILE ||
+	       parm == AFSOP_SETNAMEFILE || parm == AFSOP_SETTRANSFILE ||
+	       parm == AFSOP_SETTRANSDATA ||
+#endif
 	       || parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG
 	       || parm == AFSOP_CELLINFO) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
@@ -678,6 +697,30 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 		code = afs_InitVolumeInfo(tbuffer);
 	    else if (parm == AFSOP_CELLINFO)
 		code = afs_InitCellInfo(tbuffer);
+#ifdef DISCONN
+	    else if (parm == AFSOP_DBLOG) 
+		code = afs_InitDBLog(tbuffer);
+	    else if (parm == AFSOP_DLOG)  
+		code = afs_InitDLog(tbuffer);
+	    else if (parm == AFSOP_VCACHEINFO)  
+		code = afs_InitVCacheInfo(tbuffer);
+	    else if (parm == AFSOP_DCELLINFO) 
+		code = afs_InitDCellInfo(tbuffer);
+	    else if (parm == AFSOP_DSERVERINFO) 
+		code = afs_InitDServerInfo(tbuffer);
+	    else if (parm == AFSOP_DVOLUMEINFO) 
+		code = afs_InitDVolumeInfo(tbuffer);
+	    else if (parm == AFSOP_SETREPLAYLOG) 
+		code = afs_InitReplayLog(tbuffer);
+	    else if (parm == AFSOP_SETSTATFILE) 
+		code = afs_InitStatFile(tbuffer);
+            else if (parm == AFSOP_SETNAMEFILE) 
+                code = afs_InitDNameInfo(tbuffer);
+            else if (parm == AFSOP_SETTRANSFILE) 
+                code = afs_InitDTransFile(tbuffer);
+            else if (parm == AFSOP_SETTRANSDATA) 
+                code = afs_InitDTransData(tbuffer);
+#endif
 	}
 	osi_FreeSmallSpace(tbuffer);
     } else if (parm == AFSOP_GO) {
@@ -1614,6 +1657,9 @@ afs_shutdown(void)
     shutdown_osifile();
     shutdown_vnodeops();
     shutdown_vfsops();
+#ifdef DISCONN
+    shutdown_discon();
+#endif
     shutdown_exporter();
     shutdown_memcache();
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)

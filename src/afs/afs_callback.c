@@ -24,6 +24,15 @@ RCSID
 #include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/afs_args.h"
 
+#ifdef DISCONN
+#include "discon.h"
+
+extern int afs_vchashTable[DVHASHSIZE];      /*Data cache hash table*/
+extern struct vcache *afs_GetVSlot();
+extern long    afs_num_vslots;
+extern char *afs_VindexFlags;
+#endif
+
 afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */
 afs_int32 afs_oddCBs = 0;	/*Break callbacks on dirs */
 afs_int32 afs_evenCBs = 0;	/*Break callbacks received on files */
@@ -99,6 +108,9 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     register int i;		/*Loop variable */
     register struct vcache *tvc;	/*Ptr to current cache entry */
     int code;			/*Return code */
+#ifdef DISCONN
+    struct vcache tmpvc;
+#endif
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -106,13 +118,20 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETCE);
 
     AFS_STATCNT(SRXAFSCB_GetCE);
+#ifndef DISCONN
     for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+        for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    if (a_index == 0)
 		goto searchDone;
 	    a_index--;
 	}			/*Zip through current hash chain */
     }				/*Zip through hash chains */
+#else   /* DISCONN */
+    if (a_index < 0 || a_index >= afs_num_vslots)
+      tvc = 0;
+    else
+      tvc = afs_GetVSlot(a_index, &tmpvc);
+#endif
 
   searchDone:
     if (tvc == NULL) {
@@ -366,6 +385,9 @@ ClearCallBack(register struct rx_connection *a_conn,
     register int i;
     struct VenusFid localFid;
     struct volume *tv;
+#ifdef DISCONN
+    struct vcache tmpvc;
+#endif
 
     AFS_STATCNT(ClearCallBack);
 
@@ -388,8 +410,15 @@ ClearCallBack(register struct rx_connection *a_conn,
 	     * Clear callback for the whole volume.  Zip through the
 	     * hash chain, nullifying entries whose volume ID matches.
 	     */
+#ifdef DISCONN
+            for (i = 0; i < afs_num_vslots; i++) {
+                    if (!(afs_VindexFlags[i] & VC_HAVECB))
+                        continue;
+                    tvc = afs_GetVSlot(i, &tmpvc);
+#else
 	    for (i = 0; i < VCSIZE; i++)
-		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+                for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+#endif
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			tvc->quick.stamp = 0;
@@ -399,6 +428,10 @@ ClearCallBack(register struct rx_connection *a_conn,
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
+#ifdef DISCONN
+                        afs_SaveVCache(tvc, 0);
+                        afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+#endif
 			afs_allCBs++;
 			if (tvc->fid.Fid.Vnode & 1)
 			    afs_oddCBs++;
@@ -439,7 +472,15 @@ ClearCallBack(register struct rx_connection *a_conn,
 	    else
 		afs_evenCBs++;	/*A particular fid was specified */
 	    i = VCHash(&localFid);
-	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+#ifndef DISCONN
+            for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) 
+#else
+	    for (i = afs_vchashTable[i]; i != NULLIDX; i = tvc->dhnext)
+#endif
+	    {
+#ifdef DISCONN
+		tvc = afs_GetVSlot(i, &tmpvc);
+#endif
 		if (tvc->fid.Fid.Vnode == a_fid->Vnode
 		    && tvc->fid.Fid.Volume == a_fid->Volume
 		    && tvc->fid.Fid.Unique == a_fid->Unique) {
@@ -449,6 +490,10 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
+#ifdef DISCONN
+                    afs_SaveVCache(tvc, 0);
+                    afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+#endif
 		    ReleaseWriteLock(&afs_xcbhash);
 		    if (a_fid->Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
@@ -460,6 +505,10 @@ ClearCallBack(register struct rx_connection *a_conn,
 		    lastCallBack_dv = tvc->mstat.DataVersion.low;
 		    osi_GetuTime(&lastCallBack_time);
 #endif /* CBDEBUG */
+#ifdef DISCONN
+		    }
+		    index = tvc->dhnext;
+#endif
 		}
 	    }			/*Walk through hash table */
 	}			/*Clear callbacks for one file */
@@ -601,6 +650,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
     register struct rx_peer *peer;
     struct server *ts;
     int code = 0;
+#ifdef DISCONN
+    struct vcache tempvc;
+#endif
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -620,6 +672,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 	ts = afs_FindServer(rx_HostOf(peer), rx_PortOf(peer), (afsUUID *) 0,
 			    0);
 	if (ts) {
+#ifndef DISCONN
 	    for (i = 0; i < VCSIZE; i++)
 		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 		    if (tvc->callback == ts) {
@@ -630,6 +683,21 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 			ReleaseWriteLock(&afs_xcbhash);
 		    }
 		}
+#else
+	    /* XXX check lock status */
+	    for (i = 0; i < afs_num_vslots; i++) {
+		if (!(afs_VindexFlags[i] & VC_HAVECB))
+		    continue;
+		tvc = afs_GetVSlot(i, &tempvc);
+		if (tvc->callback == otherHost) {
+		    tvc->callback = 0;
+		    tvc->dflags |= VC_DIRTY;
+		    afs_SaveVCache(tvc, 0);
+		    /* clear callback flag */
+		    afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+		}
+	    }
+#endif
 	}
 
 
