@@ -62,6 +62,8 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_LISTSYMLINK] = cm_IoctlListlink;
 	smb_ioctlProcsp[VIOC_DELSYMLINK] = cm_IoctlDeletelink;
 	smb_ioctlProcsp[VIOC_MAKESUBMOUNT] = cm_IoctlMakeSubmount;
+	smb_ioctlProcsp[VIOC_GETRXKCRYPT] = cm_IoctlGetRxkcrypt;
+	smb_ioctlProcsp[VIOC_SETRXKCRYPT] = cm_IoctlSetRxkcrypt;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */

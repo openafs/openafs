@@ -23,6 +23,8 @@ osi_rwlock_t cm_connLock;
 
 long RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 
+afs_int32 cryptall = 0;
+
 void cm_PutConn(cm_conn_t *connp)
 {
 	lock_ObtainWrite(&cm_connLock);
@@ -329,6 +331,7 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         int serviceID;
         int secIndex;
         struct rx_securityClass *secObjp;
+	afs_int32 level;
 
 	if (serverp->type == CM_SERVER_VLDB) {
 		port = htons(7003);
@@ -341,7 +344,13 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         }
 	if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
 		secIndex = 2;
-                secObjp = rxkad_NewClientSecurityObject(rxkad_clear,
+		if (cryptall) {
+			level = rxkad_crypt;
+			tcp->cryptlevel = rxkad_crypt;
+		} else {
+			level = rxkad_clear;
+		}
+                secObjp = rxkad_NewClientSecurityObject(level,
 			&ucellp->sessionKey, ucellp->kvno,
 			ucellp->ticketLen, ucellp->ticketp);
         }
@@ -382,11 +391,13 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
                 cm_HoldUser(userp);
                 lock_InitializeMutex(&tcp->mx, "cm_conn_t mutex");
                 tcp->serverp = serverp;
+		tcp->cryptlevel = rxkad_clear;
 		cm_NewRXConnection(tcp, ucellp, serverp);
 		tcp->refCount = 1;
         }
 	else {
-		if (tcp->ucgen < ucellp->gen) {
+		if ((tcp->ucgen < ucellp->gen) || (tcp->cryptlevel != cryptall))
+		{
 			rx_DestroyConnection(tcp->callp);
 			cm_NewRXConnection(tcp, ucellp, serverp);
 		}
