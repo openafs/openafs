@@ -113,7 +113,7 @@ static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     struct wait_queue wait = { current, NULL };
 #endif
  
-    add_wait_queue((wait_queue_head_t *)cv, &wait);
+    add_wait_queue(cv, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
@@ -150,7 +150,7 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     struct wait_queue wait = { current, NULL };
 #endif
  
-    add_wait_queue((wait_queue_head_t *)cv, &wait);
+    add_wait_queue(cv, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
