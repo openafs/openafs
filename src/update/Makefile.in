@@ -14,19 +14,24 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBRX=${SRCDIR}/lib/librx.a
-LIBS = ${SRCDIR}/lib/afs/libauth.a ${SRCDIR}/lib/librxkad.a \
-       ${SRCDIR}/lib/libdes.a ${LIBRX} ${SRCDIR}/lib/liblwp.a \
-       ${SRCDIR}/lib/afs/libcom_err.a ${SRCDIR}/lib/afs/util.a \
-       ${SRCDIR}/lib/afs/libsys.a 
-CFLAGS= ${DBUG}  -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+LIBS = 	${SRCDIR}/lib/afs/libauth.a \
+	${SRCDIR}/lib/librxkad.a \
+	${SRCDIR}/lib/libdes.a \
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/afs/libcom_err.a \
+	${SRCDIR}/lib/afs/util.a \
+	${SRCDIR}/lib/afs/libsys.a 
 
-PROGS=upclient upserver
+CFLAGS= -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-include ../config/Makefile.version
+RXGEN=${SRCDIR}/bin/rxgen
 
-all:  ${PROGS}
+all: install
 
+#
+# Build targets
+#
 upclient: client.o update.cs.o utils.o ${LIBS} 
 	${CC} ${CFLAGS} -o upclient client.o update.cs.o utils.o ${LIBS} ${XLIBS}
 
@@ -38,12 +43,26 @@ utils.o: utils.c update.h global.h
 client.o server.o: update.h global.h AFS_component_version_number.c
 
 update.cs.c update.ss.c update.er.c update.h: update.xg
-	${SRCDIR}/bin/rxgen update.xg
+	${RXGEN} update.xg
+
+#
+# Installation targets
+#
+install : ${DESTDIR}/root.server/usr/afs/bin/upserver \
+	${DESTDIR}/root.server/usr/afs/bin/upclient
+
+${DESTDIR}/root.server/usr/afs/bin/upserver: upserver
+	${INSTALL} $? $@
+
+${DESTDIR}/root.server/usr/afs/bin/upclient: upclient
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
 clean: 
-	rm -f upclient upserver *.o update.ss.c update.cs.c update.xdr.c update.h core\
+	$(RM) -f *.o upclient upserver update.ss.c update.cs.c update.xdr.c update.h core \
 	AFS_component_version_number.c
 
-system: install
-install : all
-	${INSTALL} upserver ${DESTDIR}root.server/usr/afs/bin
-	${INSTALL} upclient ${DESTDIR}root.server/usr/afs/bin
+include ../config/Makefile.version
+

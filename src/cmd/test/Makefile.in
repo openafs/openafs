@@ -41,5 +41,5 @@ kinstall:
 	@echo No kernel source here.
 
 clean:
-	rm -f  *.a *.o ctest dtest itest core
+	$(RM) -f  *.a *.o ctest dtest itest core
 

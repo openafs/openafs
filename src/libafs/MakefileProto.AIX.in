@@ -76,11 +76,11 @@ include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
 	ln -s ../config $(KOBJ)/config
-	-rm -f  h net netinet rpc ufs nfs  machine sys
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys
 	ln -s /usr/include/sys h
 	ln -s /usr/include/net net
 	ln -s /usr/include/netinet netinet
@@ -119,12 +119,12 @@ $(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
 	
 
 $(LIBAFSIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
-	${LD} ${LDSTUFF}  -bloadmap:afs.ext.iauth.loadmap \
+	${LD} ${LDSTUFF} -bloadmap:afs.ext.iauth.loadmap \
 	 -bmap:afs.ext.iauth.map -o afs.ext.iauth \
 	${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS}
 
 $(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
-	${LD} ${LDSTUFF}  -bloadmap:afs.ext.loadmap \
+	${LD} ${LDSTUFF} -bloadmap:afs.ext.loadmap \
 	 -bmap:afs.ext.map -o afs.ext \
 	${AFSAOBJS} $(AFSNOIAUTHOBJS) ${LIBS} ${LDFLAGS}
 

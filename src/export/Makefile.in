@@ -33,12 +33,12 @@ all: export.ext export.ext.nonfs cfgexport cfgafs
 noversion system: install
 
 install: all kinstall ukinstall
-	${INSTALL} export.ext ${DESTDIR}root.client/usr/vice/etc/dkload
-	${INSTALL} export.ext.nonfs ${DESTDIR}root.client/usr/vice/etc/dkload
+	${INSTALL} export.ext ${DESTDIR}/root.client/usr/vice/etc/dkload
+	${INSTALL} export.ext.nonfs ${DESTDIR}/root.client/usr/vice/etc/dkload
 	${INSTALL} export.exp ${DESTDIR}/lib/afs/export.exp
 	${INSTALL} extras.exp ${DESTDIR}/lib/afs/extras.exp
-	${INSTALL} cfgexport  ${DESTDIR}root.client/usr/vice/etc/dkload/cfgexport
-	${INSTALL} cfgafs     ${DESTDIR}root.client/usr/vice/etc/dkload/cfgafs
+	${INSTALL} cfgexport  ${DESTDIR}/root.client/usr/vice/etc/dkload/cfgexport
+	${INSTALL} cfgafs     ${DESTDIR}/root.client/usr/vice/etc/dkload/cfgafs
 
 kinstall:
 	${INSTALL} export.h ${DESTDIR}/include
@@ -70,4 +70,4 @@ cfgexport.o: cfgexport.c AFS_component_version_number.c
 cfgafs.o: cfgafs.c AFS_component_version_number.c
 
 clean:
-	rm -f *.o *.Zlst *.map *.out cfgexport cfgafs *.ext AFS_component_version_number.c
+	$(RM) -f *.o *.Zlst *.map *.out cfgexport cfgafs *.ext AFS_component_version_number.c

@@ -16,7 +16,6 @@ include ../config/Makefile.${SYS_NAME}
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 RXGEN=${SRCDIR}/bin/rxgen
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
 
@@ -33,8 +32,8 @@ rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 	${RXGEN} -x rxstat.xg
 
 librxstat.a: ${LIBOBJS} AFS_component_version_number.o
-	-rm -f $@
-	$(AR) rv $@ AFS_component_version_number.o ${LIBOBJS}
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 Krxstat.cs.c: rxstat.xg
@@ -105,6 +104,6 @@ ${UKERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
 # Misc. targets
 #
 clean:
-	rm -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core AFS_component_version_number.c
+	$(RM) -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version

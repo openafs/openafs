@@ -15,7 +15,6 @@ include ../config/Makefile.${SYS_NAME}
 SHELL = /bin/sh
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o
 CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
@@ -32,8 +31,8 @@ noversion: install
 all: libafsint.a $(KSRCS)
 
 libafsint.a: ${OBJS} AFS_component_version_number.o
-	-rm -f $@
-	$(AR) rv $@ ${OBJS} AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 afsaux.o: afsaux.c afsint.h
@@ -88,19 +87,23 @@ afscbint.h: common.xg afscbint.xg $(UTILS)
 
 system: install
 
-kinstall: ${KSRCS}
-	set ${KERNELDIR}/afsint; $(MKDIR_IF_NEEDED)
+kinstall: ${KSRCS} ${KERNELDIR}/afsint
 	${INSTALL} $(KSRCS) ${KERNELDIR}/afsint
-	${INSTALL} $(SRCDIR)include/afs/rxgen_consts.h ${KERNELDIR}/afsint
-	-${INSTALL} ${KERNELDIR}rx/rx.h ${KERNELDIR}/afsint/rx.h
+	${INSTALL} ${SRCDIR}/include/afs/rxgen_consts.h ${KERNELDIR}/afsint
+	-${INSTALL} ${KERNELDIR}/rx/rx.h ${KERNELDIR}/afsint/rx.h
 	${INSTALL} afscbint.h ${KERNELDIR}/afs
 
-ukinstall webinstall: ${UKSRCS}
-	set ${UKERNELDIR}/afsint; $(MKDIR_IF_NEEDED)
+${KERNELDIR}/afsint:
+	mkdir -p $@
+
+ukinstall webinstall: ${UKERNELDIR}/afsint ${UKSRCS}
 	${INSTALL} $(UKSRCS) ${UKERNELDIR}/afsint
-	${INSTALL} $(SRCDIR)include/afs/rxgen_consts.h ${UKERNELDIR}/afsint
-	-${INSTALL} ${UKERNELDIR}rx/rx.h ${UKERNELDIR}/afsint/rx.h
+	${INSTALL} ${SRCDIR}/include/afs/rxgen_consts.h ${UKERNELDIR}/afsint
+	-${INSTALL} ${UKERNELDIR}/rx/rx.h ${UKERNELDIR}/afsint/rx.h
 	${INSTALL} afscbint.h ${UKERNELDIR}/afs
+
+${UKERNELDIR}/afsint:
+	mkdir -p $@
 
 install:  all  kinstall ukinstall
 	${INSTALL} libafsint.a ${DESTDIR}/lib/afs
@@ -108,4 +111,4 @@ install:  all  kinstall ukinstall
 	${INSTALL} afscbint.h ${DESTDIR}/include/afs
 
 clean:
-	rm -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c afscbint.xdr.c
+	$(RM) -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c afscbint.xdr.c

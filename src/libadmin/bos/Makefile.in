@@ -14,7 +14,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS} 
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS} 
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 BOZO = ../../bozo/
@@ -30,11 +30,11 @@ LIBBOSADMIN = ${DESTDIR}/lib/afs/libbosadmin.a
 system install: ${LIBBOSADMIN}
 
 ${LIBBOSADMIN}: libbosadmin.a
-	${INSTALL} afs_bosAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_bosAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libbosadmin.a ${LIBBOSADMIN}
 
 libbosadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
@@ -47,4 +47,4 @@ bosint.cs.o: ${BOZO}/bosint.cs.c
 	${CCRULE}
 
 clean:
-	rm -f *.o libbosadmin*
+	$(RM) -f *.o libbosadmin*

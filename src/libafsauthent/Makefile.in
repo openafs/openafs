@@ -100,99 +100,99 @@ ${DESTDIR}/lib/libafsauthent.a: libafsauthent.a
 	${INSTALL} libafsauthent.a ${DESTDIR}/lib/libafsauthent.a
 
 libafsauthent.a: ${LIBOBJS}
-	rm -f libafsauthent.a
-	${AR} -r libafsauthent.a ${LIBOBJS}
-	${RANLIB} libafsauthent.a
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
-	${CCRULE};
+	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c
-	${CCRULE};
+	${CCRULE}
 
 ktc.o: ${AUTH}/ktc.c
-	${CCRULE};
+	${CCRULE}
 
 userok.o: ${AUTH}/userok.c
-	${CCRULE};
+	${CCRULE}
 
 writeconfig.o: ${AUTH}/writeconfig.c
-	${CCRULE};
+	${CCRULE}
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE};
+	${CCRULE}
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
-	${CCRULE};
+	${CCRULE}
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
-	${CCRULE};
+	${CCRULE}
 
 kauth.xdr.o: ${KAUTH}/kauth.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 kauth.cs.o: ${KAUTH}/kauth.cs.c
-	${CCRULE};
+	${CCRULE}
 
 kaaux.o: ${KAUTH}/kaaux.c
-	${CCRULE};
+	${CCRULE}
 
 client.o: ${KAUTH}/client.c
-	${CCRULE};
+	${CCRULE}
 
 authclient.o: ${KAUTH}/authclient.c
-	${CCRULE};
+	${CCRULE}
 
 token.o: ${KAUTH}/token.c
-	${CCRULE};
+	${CCRULE}
 
 kautils.o: ${KAUTH}/kautils.c
-	${CCRULE};
+	${CCRULE}
 
 kalocalcell.o: ${KAUTH}/kalocalcell.c
-	${CCRULE};
+	${CCRULE}
 
 kaerrors.o: ${KAUTH}/kaerrors.c
-	${CCRULE};
+	${CCRULE}
 
 user.o: ${KAUTH}/user.c
-	${CCRULE};
+	${CCRULE}
 
 read_passwd.o: ${KAUTH}/read_passwd.c
-	${CCRULE};
+	${CCRULE}
 
 ubikclient.o: ${UBIK}/ubikclient.c
-	${CCRULE};
+	${CCRULE}
 
 uerrors.o: ${UBIK}/uerrors.c
-	${CCRULE};
+	${CCRULE}
 
 ubik_int.cs.o: ${UBIK}/ubik_int.cs.c
-	${CCRULE};
+	${CCRULE}
 
 ubik_int.xdr.o: ${UBIK}/ubik_int.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 get_krbrlm.o: ${UTIL}/get_krbrlm.c
-	${CCRULE};
+	${CCRULE}
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE};
+	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE};
+	${CCRULE}
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
 
 pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE};
+	${CCRULE}
 
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
-	${CCRULE};
+	${CCRULE}
 
 ptclient.o: ${PTSERVER}/ptclient.c
-	${CCRULE};
+	${CCRULE}
 
 # The special treatment of this file for hp_ux110 is because of a bug
 # in version A.11.01.00 of the HP C compiler.  This bug appears to be
@@ -214,31 +214,31 @@ ptuser.o: ${PTSERVER}/ptuser.c
 	esac
 
 display.o: ${PTSERVER}/display.c
-	${CCRULE};
+	${CCRULE}
 
 ptint.cs.o: ${PTSERVER}/ptint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 ptint.xdr.o: ${PTSERVER}/ptint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 pterror.o: ${PTSERVER}/pterror.c
-	${CCRULE};
+	${CCRULE}
 
 rmtsysc.o: ${SYS}/rmtsysc.c
-	${CCRULE};
+	${CCRULE}
 
 rmtsys.xdr.o: ${SYS}/rmtsys.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 rmtsys.cs.o: ${SYS}/rmtsys.cs.c
-	${CCRULE};
+	${CCRULE}
 
 afssyscalls.o: ${SYS}/afssyscalls.c
-	${CCRULE};
+	${CCRULE}
 
 rmtsysnet.o: ${SYS}/rmtsysnet.c
-	${CCRULE};
+	${CCRULE}
 
 clean:
-	rm -f *.o libafsauthent*
+	$(RM) -f *.o *.a libafsauthent*

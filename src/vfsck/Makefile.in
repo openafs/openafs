@@ -24,7 +24,7 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=	${DBUG} -w -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=	${DBUG} -w -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 LIBC=	/lib/libc.a
 SRCS=	dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c pass4.c \
 	pass5.c setup.c utilities.c ufs_subr.c ufs_tables.c dirutils.c\
@@ -45,7 +45,7 @@ vfsck: main.o ${OBJS}
 ${OBJS}:	${SRCS}
 	case ${SYS_NAME} in 					\
 	  hp_ux11? )                                            \
-	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${SRCDIR}include ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
+	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${SRCDIR}/include ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
 			;;					\
 	  hp?00_ux101 | hp_ux10? )				\
 	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS} -D_FILE64\
@@ -61,10 +61,10 @@ main.o: main.c AFS_component_version_number.c
 #	${CC} ${CFLAGS} -c $*.c
 
 clean:
-	rm -f ${OBJS} vfsck core AFS_component_version_number.c
+	$(RM) -f ${OBJS} vfsck core AFS_component_version_number.c
 
 cleandir: clean
-	rm -f ${MAN} tags .depend
+	$(RM) -f ${MAN} tags .depend
 
 depend: ${SRCS}
 	mkdep ${CFLAGS} ${SRCS}

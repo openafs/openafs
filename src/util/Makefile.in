@@ -14,7 +14,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I. -I$(SRCDIR)include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I. -I${SRCDIR}/include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
@@ -25,8 +25,8 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 all: install
 
 util.a: ${objects} AFS_component_version_number.o
-	rm -f util.a
-	$(AR) r util.a ${objects} AFS_component_version_number.o
+	$(RM) -f util.a
+	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
 volparse.o: volparse.c
@@ -53,7 +53,7 @@ get_krbrlm.o: get_krbrlm.c
 uuid.o: uuid.c
 	${CC} ${CFLAGS} -c uuid.c
 
-sys.o: sys.c ${SRCDIR}include/afs/param.h AFS_component_version_number.c
+sys.o: sys.c ${SRCDIR}/include/afs/param.h AFS_component_version_number.c
 	${CC} ${CFLAGS} -c sys.c
 
 sys: sys.o 
@@ -266,8 +266,8 @@ ${UKDIR}/afs_lhash.h: afs_lhash.h
 #
 
 clean:
-	rm -f ${objects} sys
-	rm -f util.a *.o core AFS_component_version_number.c
+	$(RM) -f ${objects} sys
+	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

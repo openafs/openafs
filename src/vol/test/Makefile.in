@@ -82,5 +82,5 @@ nino: nino.o
 	${CC} ${CFLAGS} -o nino nino.o ${DESTDIR}/lib/afs/util.a
 
 clean:
-	rm -f *.o *.a 
-	rm -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode
+	$(RM) -f *.o *.a 
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode

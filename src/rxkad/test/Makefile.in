@@ -29,7 +29,7 @@ LIBRPC = ../../librpc/libafsrpc.so
 THLIBS= ${LDIR}/afs/libcmd.a  ${LDIR}/afs/libcom_err.a \
 	${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS}  ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS}
 
 
 THFLAGS = -mt -DAFS_PTHREAD_ENV
@@ -41,7 +41,7 @@ COMPILE_ET = ${SRCDIR}/bin/compile_et
 noversion all test system: stress
 
 clean:
-	rm -f *.o stress.cs.c stress.ss.c stress.xdr.c stress.h \
+	$(RM) -f *.o stress.cs.c stress.ss.c stress.xdr.c stress.h \
 		stress_errs.c stress_errs.h stress th_*
 
 stress.ss.o: stress.ss.c
@@ -66,7 +66,7 @@ th_stress_errs.o: stress_errs.c
 	${THRULE} -o th_stress_errs.o
 
 stress_errs.c stress_errs.h: stress_errs.et
-	rm -f stress_errs.h stress_errs.c; ${COMPILE_ET} stress_errs -h stress_errs
+	$(RM) -f stress_errs.h stress_errs.c; ${COMPILE_ET} stress_errs -h stress_errs
 
 stress.o stress_c.o stress_s.o: ${HEADERS}
 

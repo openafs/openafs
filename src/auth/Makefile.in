@@ -47,12 +47,12 @@ ktc.krb.o: ktc.c ${INCLS} ${SRCDIR}/include/afs/vice.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ktc.c -o ktc.krb.o
 
 libauth.a: $(OBJS) AFS_component_version_number.o
-	-rm -f libauth.a
+	-$(RM) -f libauth.a
 	ar rv libauth.a $(OBJS) AFS_component_version_number.o
 	$(RANLIB) libauth.a
 
 libauth.krb.a: $(KOBJS) AFS_component_version_number.o
-	-rm -f libauth.krb.a
+	-$(RM) -f libauth.krb.a
 	ar rv libauth.krb.a $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) libauth.krb.a
 
@@ -65,12 +65,12 @@ setkey: setkey.o
 acfg_errors.o: acfg_errors.c
 
 acfg_errors.c cellconfig.h: acfg_errors.et cellconfig.p.h
-	rm -f cellconfig.h acfg_errors.c; ${COMPILE_ET} acfg_errors -h cellconfig
+	$(RM) -f cellconfig.h acfg_errors.c; ${COMPILE_ET} acfg_errors -h cellconfig
 
 ktc_errors.o: ktc_errors.c
 
 ktc_errors.c auth.h: ktc_errors.et auth.p.h
-	rm -f auth.h ktc_errors.c; ${COMPILE_ET} ktc_errors -h auth
+	$(RM) -f auth.h ktc_errors.c; ${COMPILE_ET} ktc_errors -h auth
 
 #
 # Install targets
@@ -148,7 +148,7 @@ test:
 	cd test; $(MAKE)
 
 clean:
-	rm -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core\
+	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core\
 	AFS_component_version_number.c
 
 include ../config/Makefile.version

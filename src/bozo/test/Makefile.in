@@ -10,24 +10,29 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-SRCDIR=
-
-BACKDIR=../../../../PARENT/dest/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L.. -L${BACKDIR}/lib -L${BACKDIR}/lib/afs
+INCDIRS= -I${DESTDIR}/include -I.. 
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 
-system:	testproc smail-notifier
+all: install
 
+install: testproc smail-notifier
+
+#
+# Build targets
+#
 testproc: testproc.c 
 	$(CC) $(CFLAGS) -o testproc testproc.c
 
 smail-notifier: smail-notifier.c 
 	$(CC) $(CFLAGS) -o smail-notifier smail-notifier.c
 
+#
+# Misc targets
+#
 clean:
-	rm -f  *.a *.o testproc smail-notifier core
+	$(RM) -f  *.a *.o testproc smail-notifier core
 

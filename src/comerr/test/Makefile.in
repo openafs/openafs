@@ -3,38 +3,37 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-
-
-BACKDIR=../../../../PARENT/dest/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L.. -L${BACKDIR}/lib -L${BACKDIR}/lib/afs
-LIBS= -lcom_err
+INCDIRS= -I${DESTDIR}/include -I..
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} -lcom_err ${XCFLAGS}
 
-system:	test 
+all: install
 
-clean:
-	rm -f *.o *.a test core
+install: test
 
+#
+# Build targets
+#
 test:	test.o test1.o test2.o 
 	$(CC)  ${CFLAGS} -o test test.o test1.o test2.o 
+
 test.o:	test1.h test2.h
 test1.o : test1.c
 test1.c : test1.et
 test2.o : test2.c
 test2.c : test2.et
 
-kinstall:
-	@echo No kernel source here.
-
+#
+# Misc targets
+#
 clean:
-	rm -f *~ \#* *.bak \
+	$(RM) -f *~ \#* *.bak \
 		*.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr \
-		*.o libcom_err.a \
+		*.o *.a libcom_err.a \
 		com_err.o compile_et \
 		et.ar TAGS y.tab.c lex.yy.c error_table.c \
 		et_lex.lex.c \

@@ -35,9 +35,9 @@ ${DESTDIR}/lib/afs/libbutm.a: libbutm.a
 	${INSTALL} $? $@
 
 libbutm.a: file_tm.o AFS_component_version_number.o
-	-rm -f libbutm.a
-	${AR} rv libbutm.a file_tm.o AFS_component_version_number.o
-	${RANLIB} libbutm.a
+	-$(RM) -f $@
+	$(AR) crv $@ file_tm.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c
 
@@ -50,6 +50,6 @@ test: test_ftm
 	echo 'Usage: ./test_ftm -conf config -tape xxx *'
 
 clean:
-	rm -f *.o *.a core test_ftm AFS_component_version_number.c
+	$(RM) -f *.o *.a core test_ftm AFS_component_version_number.c
 
 include ../config/Makefile.version

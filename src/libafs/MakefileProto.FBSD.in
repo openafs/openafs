@@ -52,11 +52,11 @@ include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
 	ln -s ../config $(KOBJ)/config
-	-rm -f  h net netinet rpc ufs nfs  machine sys vm
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -s /usr/src/sys/net net
 	-ln -s /usr/src/sys/i386/include machine
 	-ln -s /usr/src/sys/netinet netinet

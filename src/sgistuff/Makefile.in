@@ -35,15 +35,15 @@ AUTHLIBS=afsauthlib.so afskauthlib.so
 TARGETS=$(AUTHLIBS) 
 
 default:$(TARGETS)
-	${INSTALL} afsauthlib.so ${DESTDIR}root.client/usr/vice/etc
-	${INSTALL} afskauthlib.so ${DESTDIR}root.client/usr/vice/etc
+	${INSTALL} afsauthlib.so ${DESTDIR}/root.client/usr/vice/etc
+	${INSTALL} afskauthlib.so ${DESTDIR}/root.client/usr/vice/etc
 
 all:$(TARGETS)
 
 install install.noversion: all default
 
 clean:
-	rm -f $(AUTHLIBS) $(AUTHFILES) 
+	$(RM) -f $(AUTHLIBS) $(AUTHFILES) 
 
 afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
 	$(LD) ${LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o $(AFSLIBS) ${AUTHFILES}

@@ -14,17 +14,17 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET = ${SRCDIR}bin/compile_et
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 all: install
 
 cmd.h cmd_errors.c: cmd_errors.et cmd.p.h
-	rm -f cmd.h cmd_errors.c
+	$(RM) -f cmd.h cmd_errors.c
 	${COMPILE_ET} cmd_errors -h cmd
 
 cmd_errors.o: cmd_errors.c
@@ -32,24 +32,24 @@ cmd_errors.o: cmd_errors.c
 cmd.o: cmd.c cmd.h
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -c -o cmd64.o cmd.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS64} -c -o cmd64.o cmd.c
 
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
-	-rm -f libcmd64.a
-	$(AR) r libcmd64.a ${LIB64OBJS} AFS_component_version_number64.o
-	$(RANLIB) libcmd64.a
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
+	$(RANLIB) $@
 
 libcmd.a: ${LIBOBJS} AFS_component_version_number.o
-	-rm -f libcmd.a
-	$(AR) r libcmd.a ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) libcmd.a
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
+	$(RANLIB) $@
 
 AFS_component_version_number64.o: AFS_component_version_number.c
-	${CC} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
+	${CC} ${OPTMZ} -I${SRCDIR}/include ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
 
 #
 # Install targets
@@ -74,6 +74,6 @@ test tests:
 	(cd test; $(MAKE) )
 
 clean:
-	rm -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
+	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
 
 include ../config/Makefile.version

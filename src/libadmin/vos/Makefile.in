@@ -14,7 +14,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 VLSERVER = ../../vlserver/
@@ -46,11 +46,11 @@ LIBVOSADMIN = ${DESTDIR}/lib/afs/libvosadmin.a
 system install: ${LIBVOSADMIN}
 
 ${LIBVOSADMIN}: libvosadmin.a
-	${INSTALL} afs_vosAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_vosAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libvosadmin.a ${LIBVOSADMIN}
 
 libvosadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
@@ -75,4 +75,4 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${CCRULE};
 
 clean:
-	rm -f *.o libvosadmin*
+	$(RM) -f *.o libvosadmin*

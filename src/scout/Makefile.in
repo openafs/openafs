@@ -22,9 +22,6 @@ CFLAGS= ${DBUG} -I. \
 	-I${SRCDIR} ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
-#RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h bosint.h
-RPCINCLS=
-
 INCLS=${SRCDIR}/include/afs/gtxobjects.h \
 	${SRCDIR}/include/afs/gtxwindows.h \
 	${SRCDIR}/include/afs/gtxcurseswin.h \
@@ -34,7 +31,6 @@ INCLS=${SRCDIR}/include/afs/gtxobjects.h \
 	${SRCDIR}/include/afs/gtxlightobj.h \
 	${SRCDIR}/include/afs/gtxtextobj.h \
 	${SRCDIR}/include/afs/gtxobjdict.h \
-	${RPCINCLS} \
 	${SRCDIR}/include/afs/keys.h \
 	${SRCDIR}/include/afs/cellconfig.h \
 	${SRCDIR}/include/afs/cmd.h
@@ -59,24 +55,29 @@ LIBS= 	${SRCDIR}/lib/afs/libgtx.a \
 	${SRCDIR}/lib/liblwp.a \
 	${SRCDIR}/lib/afs/util.a
 
-EXTRA_LIBS= ${TXLIBS} ${SRCDIR}/lib/afs/libtermlib.a  ${XLIBS}
+all: install
 
-include ../config/Makefile.version
-
-all: scout
-
+#
+# Build targets
+#
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${EXTRA_LIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${SRCDIR}/lib/afs/libtermlib.a ${XLIBS}
 
 #
-# Misc others
+# Installation targets
 #
-system: install
+install: ${DESTDIR}/bin/scout
 
-install: all
-	${INSTALL} scout ${DESTDIR}/bin
+${DESTDIR}/bin/scout: scout
+	${INSTALL} $? $@
 
+#
+# Misc targets
+#
 clean:
-	rm -f  *.o scout core AFS_component_version_number.c
+	$(RM) -f *.o scout core AFS_component_version_number.c
+
+include ../config/Makefile.version
+

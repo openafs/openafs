@@ -14,7 +14,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 PTSERVER = ../../ptserver/
@@ -33,11 +33,11 @@ LIBPTSADMIN = ${DESTDIR}/lib/afs/libptsadmin.a
 system install: ${LIBPTSADMIN}
 
 ${LIBPTSADMIN}: libptsadmin.a
-	${INSTALL} afs_ptsAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_ptsAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libptsadmin.a ${LIBPTSADMIN}
 
 libptsadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
@@ -50,4 +50,4 @@ ptint.cs.o: ${PTSERVER}/ptint.cs.c
 	${CCRULE};
 
 clean:
-	rm -f *.o libptsadmin*
+	$(RM) -f *.o libptsadmin*

@@ -13,7 +13,7 @@ SYS_NAME=@AFS_SYSNAME@
 include ../../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -DAFS_PTHREAD_ENV -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -DAFS_PTHREAD_ENV -I${SRCDIR}/include ${MT_CFLAGS}
 
 
 ########################################################################

@@ -67,7 +67,7 @@ include Makefile.common
 
 
 setup:
-	-rm -f  h net netinet rpc ufs nfs  machine sys inet
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net net
 	-ln -s /usr/include/netinet netinet
@@ -79,7 +79,7 @@ setup:
 	for t in ${KOBJ} ; do \
 		echo Making directory: $$t; \
 		mkdir -p $$t; \
-		rm -f $$t/Makefile.common $$t/Makefile $$t/config ; \
+		$(RM) -f $$t/Makefile.common $$t/Makefile $$t/config ; \
 		ln -s ../Makefile.common $$t/Makefile.common ; \
 		ln -s ../Makefile $$t/Makefile ;\
 		ln -s ../config $$t/config ;\
@@ -145,7 +145,7 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
 
 <sun4x_57 sun4x_58>
-MODLOADDIR = ${DESTDIR}root.client/usr/vice/etc/modload
+MODLOADDIR = ${DESTDIR}/root.client/usr/vice/etc/modload
 
 libafs: ${LIBAFSNONFS}
 install_libafs: ${LIBAFSNONFS}

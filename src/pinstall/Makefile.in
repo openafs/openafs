@@ -48,7 +48,7 @@ install: ${DESTDIR}/bin/install
 	@echo -n
 
 clean:
-	rm -f *.o pinstall AFS_component_version_number.c
+	$(RM) -f *.o pinstall AFS_component_version_number.c
 
 include ../config/Makefile.version
 

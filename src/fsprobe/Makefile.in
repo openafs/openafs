@@ -47,9 +47,9 @@ all: install
 # Build targets
 #
 libfsprobe.a: fsprobe.o fsprobe_callback.o AFS_component_version_number.o
-	-rm -f libfsprobe.a
-	${AR} rv libfsprobe.a fsprobe.o fsprobe_callback.o AFS_component_version_number.o
-	${RANLIB} libfsprobe.a
+	-$(RM) -f $@
+	$(AR) crv $@ fsprobe.o fsprobe_callback.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 fsprobe.o: fsprobe.c ${INCLS} AFS_component_version_number.c
 
@@ -76,7 +76,7 @@ ${DESTDIR}/lib/afs/libfsprobe.a: libfsprobe.a
 # Misc others
 #
 clean:
-	rm -f *.o fsprobe_test libfsprobe.a core AFS_component_version_number.c
+	$(RM) -f *.o fsprobe_test libfsprobe.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
 

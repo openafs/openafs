@@ -33,10 +33,9 @@ LIBS=${SRCDIR}/lib/afs/libbudb.a ${SRCDIR}/lib/afs/libbubasics.a \
 all: install
 
 libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
-	-rm -f libbxdb.a
-	${AR} r libbxdb.a dsstub.o ubik_db_if.o status.o dlq.o \
-		bucoord_errs.o volstub.o AFS_component_version_number.o
-	${RANLIB} libbxdb.a
+	-$(RM) -f $@
+	$(AR) crv $@ dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 ttest: ttest.o ${SRCDIR}/lib/librx.a ${SRCDIR}/lib/liblwp.a libbxdb.a
 	${CC} ${CFLAGS} -o ttest ttest.o libbxdb.a \
@@ -69,7 +68,7 @@ backup:  $(BACKOBJS) ${LIBS}
 	${CC} ${CFLAGS} -o backup $(BACKOBJS) ${LIBS} ${XLIBS}
 
 bucoord_errs.c bc.h:	bucoord_errs.et bc.p.h
-	rm -f bc.h bucoord_errs.c
+	$(RM) -f bc.h bucoord_errs.c
 	${COMPILE_ET} bucoord_errs -h bc
 
 #
@@ -90,6 +89,6 @@ ${DESTDIR}/etc/backup: backup
 #
 
 clean:
-	rm -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
+	$(RM) -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
 
 include ../config/Makefile.version

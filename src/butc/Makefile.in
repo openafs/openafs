@@ -63,7 +63,7 @@ SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 all: install
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	${CC}  ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
+	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
 
 tdump: tdump.c AFS_component_version_number.c
 	${CC} ${CFLAGS} tdump.c -o tdump
@@ -92,7 +92,7 @@ read_tape: read_tape.c
 	${INSTALL} read_tape ${SRCDIR}/etc
 
 clean:
-	rm -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
+	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
 
 install: butc read_tape
 	@case ${SYS_NAME} in \

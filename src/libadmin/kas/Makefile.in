@@ -14,7 +14,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 KAUTH= ../../kauth/
@@ -33,11 +33,11 @@ LIBKASADMIN = ${DESTDIR}/lib/afs/libkasadmin.a
 system install: ${LIBKASADMIN}
 
 ${LIBKASADMIN}: libkasadmin.a
-	${INSTALL} afs_kasAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_kasAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libkasadmin.a ${LIBKASADMIN}
 
 libkasadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
@@ -53,4 +53,4 @@ kaaux.o: ${KAUTH}/kaaux.c
 	${CCRULE};
 
 clean:
-	rm -f *.o libkasadmin*
+	$(RM) -f *.o libkasadmin*

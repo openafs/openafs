@@ -38,17 +38,17 @@ LIBS=	${SRCDIR}/lib/afs/libacl.a	\
 	${SRCDIR}/lib/afs/util.a		\
 	${SRCDIR}/lib/liblwp.a 
 
-headers=${SRCDIR}include/lwp.h		\
-	${SRCDIR}include/afs/acl.h	\
-	${SRCDIR}include/afs/errors.h	\
-	${SRCDIR}include/afs/ptclient.h \
-	${SRCDIR}include/lock.h		\
-	${SRCDIR}include/afs/volume.h	\
-	${SRCDIR}include/afs/vnode.h	\
-	${SRCDIR}include/rx/rx.h	\
-	${SRCDIR}include/rx/xdr.h	\
-	${SRCDIR}include/afs/auth.h	\
-	${SRCDIR}include/afs/afsint.h	\
+headers=${SRCDIR}/include/lwp.h		\
+	${SRCDIR}/include/afs/acl.h	\
+	${SRCDIR}/include/afs/errors.h	\
+	${SRCDIR}/include/afs/ptclient.h \
+	${SRCDIR}/include/lock.h		\
+	${SRCDIR}/include/afs/volume.h	\
+	${SRCDIR}/include/afs/vnode.h	\
+	${SRCDIR}/include/rx/rx.h	\
+	${SRCDIR}/include/rx/xdr.h	\
+	${SRCDIR}/include/afs/auth.h	\
+	${SRCDIR}/include/afs/afsint.h	\
 	viced.h				\
 	host.h				\
 	fs_stats.h
@@ -83,13 +83,13 @@ fsprobe.o: fsprobe.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c fsprobe.c
 
 fsprobe: fsprobe.o
-	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS}  
+	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} 
 
 cbd.o: callback.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o callback.c
 
 cbd: cbd.o
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS}  
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
 
 ${DESTDIR}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \
@@ -107,6 +107,6 @@ install: cbd fsprobe check_sysid ${DESTDIR}/root.server/usr/afs/bin/fileserver \
 	${DESTDIR}/include/afs/fs_stats.h
 
 clean:
-	rm -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
+	$(RM) -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
 include ../config/Makefile.version

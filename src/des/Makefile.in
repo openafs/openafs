@@ -60,7 +60,7 @@ all: install
 	${CC} -c -I. -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS} $<
 
 libdes.a: ${OBJS} AFS_component_version_number.o
-	rm -f libdes.a
+	$(RM) -f libdes.a
 	ar r libdes.a ${OBJS} AFS_component_version_number.o
 	$(RANLIB) libdes.a
 
@@ -200,10 +200,11 @@ test: libdes.a
 	cd test; $(MAKE)
 
 clean:
-	rm -f *.a *.s *.o *.b core *~ *.com *.ld
-	rm -f make_fp make_ip make_keyperm make_odd make_p \
+	$(RM) -f *.a *.s *.o *.b core *~ *.com *.ld
+	$(RM) -f make_fp make_ip make_keyperm make_odd make_p \
 		make_p_table make_s_table key_perm.h p_table.h \
 		s_table.h odd.h p.c s.c fp.c ip.c AFS_component_version_number.c
+	cd test; $(MAKE) clean
 
 include ../config/Makefile.version
 

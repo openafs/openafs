@@ -14,7 +14,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
 
 ADMINOBJS = afs_clientAdmin.o
 
@@ -25,15 +25,15 @@ LIBCLIENTADMIN = ${DESTDIR}/lib/afs/libclientadmin.a
 system install: ${LIBCLIENTADMIN}
 
 ${LIBCLIENTADMIN}: libclientadmin.a
-	${INSTALL} afs_clientAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_clientAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libclientadmin.a ${LIBCLIENTADMIN}
 
 libclientadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_clientAdmin.o: afs_clientAdmin.h
 
 clean:
-	rm -f *.o libclientadmin*
+	$(RM) -f *.o libclientadmin*

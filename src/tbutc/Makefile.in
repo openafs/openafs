@@ -217,9 +217,9 @@ ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
 # for is is vsprocs.c. The rest are from the VOLSER dir.
 
 libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
-	-rm -f libvolser.a
-	ar rv libvolser.a ${VOLSERLIBOBJ}
-	$(RANLIB) libvolser.a
+	-$(RM) -f $@
+	$(AR) crv $@ vsprocs.o ${VOLSERLIBOBJ}
+	$(RANLIB) $@
 
 vsprocs.o: ${VOLSER}/vsprocs.c
 	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
@@ -256,13 +256,13 @@ file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
 	${CC} ${CFLAGS} $$xbsaflags ${BUTMINCLUDE} $$hdrdir -c ${BUTM}/file_tm.c
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
-	-rm -f libbutm.a
-	${AR} rv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
+	-$(RM) -f libbutm.a
+	$(AR) crv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
 	${RANLIB} libbutm.a
 
 #-----------------------------------------------
 clean:
-	rm -f *.o *.a core AFS_component_version_number.c butc
+	$(RM) -f *.o *.a core AFS_component_version_number.c butc
 
 pre:
 	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \

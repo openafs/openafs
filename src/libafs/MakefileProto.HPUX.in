@@ -80,7 +80,7 @@ include Makefile.common
 BITS = 64 32
 
 setup:
-	-rm -f  h net dux machine netinet nfs rpc s200 ufs sys
+	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys
 	ln -s /usr/include/sys h
 	ln -s /etc/conf/net net
 	ln -s /etc/conf/dux dux
@@ -96,7 +96,7 @@ setup:
 		dir=$$t.$$b; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
-		rm -f $$dir/Makefile $$dir/Makefile.common $$dir/config; \
+		$(RM) -f $$dir/Makefile $$dir/Makefile.common $$dir/config; \
 		ln -s ../Makefile $$dir/Makefile; \
 		ln -s ../Makefile.common $$dir/Makefile.common; \
 		ln -s ../config $$dir/config; \
@@ -131,8 +131,8 @@ LIBAFS = libafs$(BITSUFFIX).a
 LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
 
 
-DEST_LIBAFS = ${DESTDIR}root.client/bin/${LIBAFS}
-DEST_LIBAFSNONFS = ${DESTDIR}root.client/bin/${LIBAFSNONFS}
+DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
 
 
 # libafs: ${DEST_LIBAFS} ${DEST_LIBAFSNONFS}

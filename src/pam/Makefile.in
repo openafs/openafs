@@ -31,13 +31,9 @@ LDFLAGS = ${SHARE_LDFLAGS}
    OBJS = $(SHOBJS) test_pam.o
 INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}/include \
 	-I/usr/include -I/usr/include/sys
-CFLAGS =  ${DEBUG}  ${INCLUDES} ${PAM_CFLAGS}
+CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
 
-TARGETS = pam_afs.so.1 test_pam pam_afs.krb.so.1
-
-include ../config/Makefile.version
-
-system all: $(TARGETS)
+all: install
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -c afs_setcred.c -o afs_setcred.o
@@ -94,14 +90,24 @@ test_pam: test_pam.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-clean:
-	/bin/rm -f $(TARGETS) $(OBJS) afs_setcred.o afs_setcred_krb.o core *~ AFS_component_version_number.c
+install: test_pam ${DESTDIR}/lib/pam_afs.so.1 ${DESTDIR}/lib/pam_afs.krb.so.1
 
-install:	all
-	${INSTALL} -s pam_afs.so.1 ${DESTDIR}/lib/pam_afs.so.1
-	${INSTALL} -s pam_afs.krb.so.1 ${DESTDIR}/lib/pam_afs.krb.so.1
+${DESTDIR}/lib/pam_afs.so.1: pam_afs.so.1
+	${INSTALL} $? $@
+
+${DESTDIR}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
+	${INSTALL} $? $@
 
 afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
 afs_util.o: afs_util.c afs_util.h
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.a *.o *.so.1 test_pam core *~ AFS_component_version_number.c
+
+include ../config/Makefile.version
+

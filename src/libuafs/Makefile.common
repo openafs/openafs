@@ -24,25 +24,25 @@ NS_INCL =SRC/../afsweb/netscape_includes
 install: ukinstall
 
 webinstall: AFSWEB/$(LIBAFSWEB) AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} AFSWEB/$(LIBAFSWEB) ${DESTDIR}root.afsweb/usr/lib
-	${INSTALL} AFSWEB/$(LIBAFSWEBKRB) ${DESTDIR}root.afsweb/usr/lib
+	${INSTALL} AFSWEB/$(LIBAFSWEB) ${DESTDIR}/root.afsweb/usr/lib
+	${INSTALL} AFSWEB/$(LIBAFSWEBKRB) ${DESTDIR}/root.afsweb/usr/lib
 
 ukinsthdrs:
-	${INSTALL} afs/param.h ${DESTDIR}root.perf/include/afs
-	${INSTALL} afs/stds.h ${DESTDIR}root.perf/include/afs
-	${INSTALL} afs/afs_sysnames.h ${DESTDIR}root.perf/include/afs
-	${INSTALL} afs/afs_stats.h ${DESTDIR}root.perf/include/afs
-	${INSTALL} afs/sysincludes.h ${DESTDIR}root.perf/include/afs
-	${INSTALL} afs/afs_usrops.h ${DESTDIR}root.perf/include/afs
+	${INSTALL} afs/param.h ${DESTDIR}/root.perf/include/afs
+	${INSTALL} afs/stds.h ${DESTDIR}/root.perf/include/afs
+	${INSTALL} afs/afs_sysnames.h ${DESTDIR}/root.perf/include/afs
+	${INSTALL} afs/afs_stats.h ${DESTDIR}/root.perf/include/afs
+	${INSTALL} afs/sysincludes.h ${DESTDIR}/root.perf/include/afs
+	${INSTALL} afs/afs_usrops.h ${DESTDIR}/root.perf/include/afs
 
 ukinstlibs:
-	${INSTALL} des/libdes.a ${DESTDIR}root.perf/lib
-	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib	
+	${INSTALL} des/libdes.a ${DESTDIR}/root.perf/lib
+	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}/root.perf/lib	
 
 ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest ukinstlibs
 
 linktest: UAFS/$(LIBUAFS) des/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${DESTDIR}/include/rx -I${DESTDIR}/root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
 
 CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
 CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?
@@ -889,6 +889,6 @@ $(WEBOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
 	$(CRULE2);
 
 clean:
-	-rm -rf UAFS* AFSWEB* nsapi des afs afsint config rx
-	-rm -f  h net netinet rpc ufs machine inet nfs sys des linktest
+	-$(RM) -rf UAFS* AFSWEB* nsapi des afs afsint config rx
+	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest
 

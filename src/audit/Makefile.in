@@ -23,7 +23,7 @@ include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR = ../libuafs/
 
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I$(SRCDIR)include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 all: install
 
@@ -52,7 +52,7 @@ ${DESTDIR}/lib/afs/libaudit.a: libaudit.a
 	${INSTALL} $? $@
 
 libaudit.a: audit.o AFS_component_version_number.o
-	rm -f libaudit.a
+	$(RM) -f libaudit.a
 	ar r libaudit.a audit.o AFS_component_version_number.o
 	$(RANLIB) libaudit.a
 
@@ -60,6 +60,6 @@ audit.o: audit.c audit.h
 	${CC} ${CFLAGS} -c audit.c
 
 clean:
-	rm -f *.a *.o core AFS_component_version_number.c
+	$(RM) -f *.a *.o core AFS_component_version_number.c
 
 include ../config/Makefile.version

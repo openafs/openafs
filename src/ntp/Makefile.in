@@ -142,11 +142,11 @@ runntp: runntp.o ${AFSLIBS}
 	${CC} ${LDFLAGS} -o runntp runntp.o ${AFSLIBS} ${XLIBS}
 
 install: AFS_component_version_number.c ntest ntpd ntp ntpdc runntp
-	${INSTALL} ntpd ${DESTDIR}root.server/usr/afs/bin/ntpd
-	${INSTALL} ntpdc ${DESTDIR}root.server/usr/afs/bin/ntpdc
+	${INSTALL} ntpd ${DESTDIR}/root.server/usr/afs/bin/ntpd
+	${INSTALL} ntpdc ${DESTDIR}/root.server/usr/afs/bin/ntpdc
 	${INSTALL} ntp ${DESTDIR}/etc/ntp
 	${INSTALL} ntpdc ${DESTDIR}/etc/ntpdc
-	${INSTALL} runntp ${DESTDIR}root.server/usr/afs/bin/runntp
+	${INSTALL} runntp ${DESTDIR}/root.server/usr/afs/bin/runntp
 
 #
 # If you don't want a symlink to the daemon, comment out the next line
@@ -156,7 +156,7 @@ install-man:
 	cd man; $(MAKE) ${MFLAGS} DESTDIR=${DESTDIR} install
 
 install-link:
-	rm -f ${BINDIR}/${LINKDIR}/ntpd
+	$(RM) -f ${BINDIR}/${LINKDIR}/ntpd
 	ln -s ${BINDIR}/ntpd ${DESTDIR}/${LINKDIR}/ntpd
 
 print:
@@ -172,7 +172,7 @@ test-dist:	ntp.tar.Z
 	mv ntp.tar.Z /usr/ftp/pub/ntp.${VERS}/ntp-test.tar.Z
 
 ntp.tar.Z:	${DIST}
-	rm -f ntp.tar ntp.tar.Z
+	$(RM) -f ntp.tar ntp.tar.Z
 	tar cf ntp.tar ${DIST}
 	compress  ntp.tar
 

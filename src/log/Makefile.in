@@ -99,7 +99,7 @@ ${DESTDIR}/etc/kseal: kseal
 # Misc. targets
 #
 clean:	
-	rm -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
+	$(RM) -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
 
 test:
 	cd test; $(MAKE)

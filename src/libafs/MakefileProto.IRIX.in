@@ -49,7 +49,7 @@ MPS=MP
 KDEFS=-D_K64U64 -D_KERNEL -DSTATIC=static -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE \
 	-DTFP -non_shared -elf -xansi -64 -mips4 -TENV:kernel \
 	-TENV:misalignment=1 -OPT:space \
-	-D${CPUBOARD} -D${MPSP}  -D${CPUARCH} -DAFS_SGIMP_ENV ${NODYNOPT} \
+	-D${CPUBOARD} -D${MPSP} -D${CPUARCH} -DAFS_SGIMP_ENV ${NODYNOPT} \
 	-jalr -woff 1209,1196,1496
 <sgi_62>
 # Turning off warnings regarding constant conditionals and not prototyped.
@@ -218,12 +218,12 @@ KOBJ = STATIC MODLOAD
 
 
 setup:
-	-rm -f  h net netinet rpc ufs nfs  machine sys 
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys 
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net /usr/include/netinet .
 	-ln -s /usr/include/rpc /usr/include/sys .
 	-ln -s /usr/include/sys/fs .
-	-mkdir ${DESTDIR}root.client/bin
+	-mkdir ${DESTDIR}/root.client/bin
 <all -sgi_65>
 	BUILDPROCS="${PROCESSORS}" ; \
 	BUILDMPS="${MPS}" ; \
@@ -237,7 +237,7 @@ setup:
 		dir=$$t.$$n.$$p ; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
-		rm -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
+		$(RM) -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
 		ln -s ../Makefile.common $$dir/Makefile.common; \
 		ln -s ../Makefile $$dir/Makefile; \
 		ln -s ../config $$dir/config; \
@@ -254,7 +254,7 @@ setup:
 		dir=$$t.$$p ; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
-		rm -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
+		$(RM) -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
 		ln -s ../Makefile.common $$dir/Makefile.common; \
 		ln -s ../Makefile $$dir/Makefile; \
 		ln -s ../config $$dir/config; \
@@ -365,8 +365,8 @@ LINKFILES = linkfiles
 
 ${INSTDIRS}: ${COPYFILES} ${LINKFILES}
 
-STATICCLIENTDIR = ${DESTDIR}root.client/bin
-MODLOADCLIENTDIR = ${DESTDIR}root.client/usr/vice/etc/sgiload
+STATICCLIENTDIR = ${DESTDIR}/root.client/bin
+MODLOADCLIENTDIR = ${DESTDIR}/root.client/usr/vice/etc/sgiload
 
 # Make the NFS and no-NFS clients for this directory.
 # STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
@@ -410,14 +410,14 @@ ${COPYFILES}:
 # If this changes, also change the kdump symlinks.
 ${LINKFILES}:
 <sgi_65>
-	ln -fs  libafs.IP20.a       ${DESTDIR}root.client/bin/libafs.IP22.a
-	ln -fs  libafs.IP20.a       ${DESTDIR}root.client/bin/libafs.IP32.a
-	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}root.client/bin/libafs.IP22.nonfs.a
-	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}root.client/bin/libafs.IP32.nonfs.a
-	ln -fs  libafs.IP20.o       ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP22.o
-	ln -fs  libafs.IP20.o       ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP32.o
-	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
-	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
+	ln -fs  libafs.IP20.a       ${DESTDIR}/root.client/bin/libafs.IP22.a
+	ln -fs  libafs.IP20.a       ${DESTDIR}/root.client/bin/libafs.IP32.a
+	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}/root.client/bin/libafs.IP22.nonfs.a
+	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}/root.client/bin/libafs.IP32.nonfs.a
+	ln -fs  libafs.IP20.o       ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP22.o
+	ln -fs  libafs.IP20.o       ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP32.o
+	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
+	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
 
 	
 

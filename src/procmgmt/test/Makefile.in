@@ -12,7 +12,7 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../../config/Makefile.${SYS_NAME}
 
-CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${SRCDIR}/include ${XCFLAGS}
 
 ########################################################################
 # build tests

@@ -12,11 +12,10 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR=../libuafs/
 
-CFLAGS= ${OPTMZ} -I${DESTDIR}include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${DESTDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
 
 all: install
 
@@ -33,10 +32,9 @@ compile_et:	compile_et.o error_table.o
 	esac
 
 libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
-	rm -f libcom_err.a
-	$(AR) cruv libcom_err.a error_msg.o et_name.o com_err.o AFS_component_version_number.o
-	$(RANLIB) libcom_err.a
-
+	$(RM) -f $@
+	$(AR) crv $@ error_msg.o et_name.o com_err.o AFS_component_version_number.o
+	$(RANLIB) $@
 #
 # Installation targets
 #
@@ -58,7 +56,7 @@ install: ukinstall \
 	${DESTDIR}/lib/afs/libcom_err.a
 
 ${UKERNELDIR}/afs:
-	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
+	mkdir -p $@
 
 ${UKERNELDIR}/afs/com_err.c: com_err.c
 	${INSTALL} $? $@
@@ -97,7 +95,7 @@ ${DESTDIR}/lib/afs/libcom_err.a: libcom_err.a
 	${INSTALL} $? $@
 
 clean:
-	rm -f *~ \#* *.bak *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
+	$(RM) -f *~ \#* *.bak *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
 		*.cp *.fn *.ky *.log *.pg *.tp *.vr *.o libcom_err.a \
 		com_err.o compile_et et.ar TAGS y.tab.c lex.yy.c error_table.c \
 		et_lex.lex.c test1.h test1.c test2.h test2.c \

@@ -40,7 +40,7 @@ MT_CC=gcc
 MV=mv
 RANLIB=ranlib
 RM=rm
-INSTALL=${DESTDIR}bin/install
+INSTALL=${DESTDIR}/bin/install
 #
 # Other OS specific requirements
 #

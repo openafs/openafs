@@ -120,12 +120,12 @@ ${DESTDIR}/lib/libafsrpc.a: libafsrpc.a
 	${INSTALL} libafsrpc.a ${DESTDIR}/lib/libafsrpc.a
 
 libafsrpc.a: ${LIBOBJS}
-	rm -f libafsrpc.a
-	${AR} -r libafsrpc.a ${LIBOBJS}
-	${RANLIB} libafsrpc.a
-	case "${SYS_NAME}" in					\
-	    rs_aix*)						\
-		${AR} r libafsrpc.a ../sys/afsl.exp;;		\
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
+	case "${SYS_NAME}" in \
+	    rs_aix*) \
+		$(AR) crv $@ ../sys/afsl.exp;; \
         esac
 
 rx_event.o: ${RX}/rx_event.c
@@ -318,19 +318,19 @@ syscall.o: ${SYS}/syscall.s
 	     sun4x_5*) \
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
-		rm syscall.ss;;				\
+		$(RM) syscall.ss;;				\
 	 sgi_* | ppc_darwin* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
-		rm -f syscall.ss syscall.i;; \
+		$(RM) -f syscall.ss syscall.i;; \
 	 *fbsd* ) \
 		touch syscall.o ;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
-		rm syscall.ss;;				\
+		$(RM) syscall.ss;;				\
 	esac
 
 rxstat.o: ${RXSTAT}/rxstat.c
@@ -361,4 +361,4 @@ afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE};
 
 clean:
-	rm -f *.o libafsrpc*
+	$(RM) -f *.o libafsrpc*

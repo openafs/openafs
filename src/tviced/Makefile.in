@@ -15,7 +15,7 @@ SHELL=/bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES=-I${TOP_SRCDIR}/config -I. -I.. -I${SRCDIR}include -I${SRCDIR}include/afs
+INCLUDES=-I${TOP_SRCDIR}/config -I. -I.. -I${SRCDIR}/include -I${SRCDIR}/include/afs
 CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
 LDFLAGS=${DBG} ${XLDFLAGS}
 
@@ -189,6 +189,6 @@ ${DESTDIR}/root.server/usr/afs/bin/fileserver: fileserver
 install: ${DESTDIR}/root.server/usr/afs/bin/fileserver
 
 clean:
-	rm -f *.o fileserver core AFS_component_version_number.c
+	$(RM) -f *.o fileserver core AFS_component_version_number.c
 
 include ../config/Makefile.version

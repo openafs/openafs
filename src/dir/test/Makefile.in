@@ -26,7 +26,7 @@ OBJS=test-salvage.o physio.o dtest.o
 install:	dtest 
 
 clean:
-	rm -f *.o *.a test dtest core
+	$(RM) -f *.o *.a test dtest core
 
 dtest:		dtest.o 
 	$(CC) $(LDFLAGS) -o dtest dtest.o $(LIBS)

@@ -30,7 +30,7 @@ installdoc: ${MANUAL}
 	${INSTALL} -c ${MANUAL} ${DESTDIR}man/man1
 
 clean:
-	-rm -f core a.out *.o *.out ${PROGRAM} AFS_component_version_number.c
+	-$(RM) -f core a.out *.o *.out ${PROGRAM} AFS_component_version_number.c
 
 ${PROGRAM}: AFS_component_version_number.c
 	${CC} ${CFLAGS} $@.c -o $@ ${LIBS}

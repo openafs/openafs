@@ -12,7 +12,7 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../../config/Makefile.${SYS_NAME}
 
-CFLAGS = -I. -I.. -I${SRCDIR}include ${XCFLAGS} -g
+CFLAGS = -I. -I.. -I${SRCDIR}/include ${XCFLAGS} -g
 
 tests: test_ktime ktest dirpath_test
 

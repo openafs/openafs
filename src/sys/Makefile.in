@@ -16,10 +16,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
-
 UKERNELDIR=../libuafs/
-CFLAGS= ${DBUG}  -I${TOP_SRCDIR}/config -I${SRCDIR}/include  ${XCFLAGS}
+CFLAGS= ${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include  ${XCFLAGS}
 SFLAGS=-P -I${SRCDIR}/include  
 LIBS= libsys.a ${SRCDIR}/lib/librx.a libsys.a ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/util.a ${XLIBS}
 UKSRCS=afsl.exp
@@ -45,12 +43,12 @@ ${DESTDIR}/include/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} afssyscalls.h ${DESTDIR}/include/afs/afssyscalls.h
 
 libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
-	-rm -f libsys.a
-	${AR} r libsys.a ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
-	$(RANLIB) libsys.a
+	-$(RM) -f $@
+	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
+	$(RANLIB) $@
 	case "${SYS_NAME}" in				\
 	    rs_aix*)		\
-		${AR} r libsys.a afsl.exp;;		\
+		$(AR) crv $@ afsl.exp;;		\
 	esac
 
 system: install
@@ -72,9 +70,11 @@ install: all kinstall ukinstall
 		${INSTALL} xfsattrs.h ${DESTDIR}/include/afs;; \
 	esac
 
-ukinstall webinstall: ${UKSRCS}
-	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
+ukinstall webinstall: ${UKERNELDIR}/afs ${UKSRCS}
 	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
+
+${UKERNELDIR}/afs:
+	mkdir -p $@
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 
@@ -83,13 +83,13 @@ syscall.o: syscall.s
 	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
 		/usr/ccs/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
-		rm syscall.ss;;				\
+		$(RM) syscall.ss;;				\
 	 sgi_* |ppc_darwin* ) \
                 ${CC} ${CFLAGS} -c syscall.s;;          \
 	 alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER syscall.s; \
 		${AS} -o syscall.o syscall.i; \
-		rm -f syscall.ss syscall.i;; \
+		$(RM) -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
 		touch syscall.o;; \
 	i386_fbsd* ) \
@@ -97,7 +97,7 @@ syscall.o: syscall.s
 	 *) \
 		/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
-		rm syscall.ss;;				\
+		$(RM) syscall.ss;;				\
 	esac
 
 
@@ -186,6 +186,6 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 
 
 clean:
-	rm -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
+	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c pagsh pagsh.krb

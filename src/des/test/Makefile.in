@@ -21,7 +21,7 @@ CFLAGS = ${INCDIRS} ${XCFLAGS}
 all system test: $(PROGS)
 
 clean:
-	rm -f *.o *.a testit verify key_test core
+	$(RM) -f *.o *.a testit verify key_test core
 
 install:
 
@@ -33,5 +33,5 @@ testit: testit.o
 verify: verify.o ../libdes.a
 	${CC} ${CFLAGS} verify.o ${LIBS} -o verify
 key_test: key_test.o ../libdes.a
-	${CC}  ${CFLAGS} key_test.o ${LIBS} -o key_test
+	${CC} ${CFLAGS} key_test.o ${LIBS} -o key_test
 

@@ -144,9 +144,9 @@ ${DESTDIR}/include/rx/rxkad.h: rxkad.h
 #
 
 librxkad.a: ${OBJS} AFS_component_version_number.o
-	-rm -f librxkad.a
-	$(AR) rv librxkad.a ${OBJS} AFS_component_version_number.o
-	$(RANLIB) librxkad.a
+	-$(RM) -f $@
+	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
+	$(RANLIB) $@
 
 crypt_conn.o: fcrypt.h private_data.h crypt_conn.c ${INCLS}
 
@@ -159,7 +159,7 @@ rxkad_common.o: fcrypt.h private_data.h rxkad_common.c ${INCLS}
 rxkad_errs.o: rxkad_errs.c
 
 rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
-	rm -f rxkad.h rxkad_errs.c
+	$(RM) -f rxkad.h rxkad_errs.c
 	${COMPILE_ET} rxkad_errs -h rxkad
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
@@ -177,7 +177,7 @@ tcrypt.o: tcrypt.c AFS_component_version_number.o
 #
 
 clean: 
-	rm -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
+	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
 		AFS_component_version_number.c \
 		crypt_conn.c fcrypt.c fcrypt.h sboxes.h
 

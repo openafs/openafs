@@ -205,11 +205,11 @@ null: project
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
 	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
-		rm -f ${DESTDIR}/lib/afs/libtermlib.a; \
+		$(RM) -f ${DESTDIR}/lib/afs/libtermlib.a; \
 		ln -s libnull.a ${DESTDIR}/lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	  *) \
-		rm -f ${DESTDIR}/lib/afs/libtermlib.a; \
+		$(RM) -f ${DESTDIR}/lib/afs/libtermlib.a; \
 		ln -s /usr/lib/libtermlib.a ${DESTDIR}/lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	esac

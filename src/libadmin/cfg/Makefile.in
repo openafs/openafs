@@ -13,7 +13,7 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 UBIKOBJS=\
@@ -37,11 +37,11 @@ LIBCFGADMIN = ${DESTDIR}/lib/afs/libcfgadmin.a
 system install: ${LIBCFGADMIN}
 
 ${LIBCFGADMIN}: libcfgadmin.a
-	${INSTALL} afs_cfgAdmin.h ${DESTDIR}include/afs
+	${INSTALL} afs_cfgAdmin.h ${DESTDIR}/include/afs
 	${INSTALL} libcfgadmin.a ${LIBCFGADMIN}
 
 libcfgadmin.a: ${LIBOBJS}
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS}
 	${RANLIB} $@
 
@@ -56,4 +56,4 @@ ubik_int.xdr.o: ${UBIKDIR}/ubik_int.xdr.c
 ${CFGOBJS}: afs_cfgAdmin.h
 
 clean:
-	rm -f *.o libcfgadmin*
+	$(RM) -f *.o libcfgadmin*

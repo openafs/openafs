@@ -20,9 +20,9 @@ all: install
 # Build targets
 #
 libprocmgmt.a: procmgmt_unix.o AFS_component_version_number.o
-	$(RM) -f libprocmgmt.a
-	$(AR) r libprocmgmt.a procmgmt_unix.o AFS_component_version_number.o
-	$(RANLIB) libprocmgmt.a
+	$(RM) -f $@
+	$(AR) crv $@ procmgmt_unix.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 procmgmt_unix.o: procmgmt_unix.c procmgmt.h
 

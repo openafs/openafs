@@ -38,7 +38,7 @@ LEX=lex
 MV=mv
 RANLIB=/bin/true
 RM=rm
-INSTALL=${DESTDIR}bin/install
+INSTALL=${DESTDIR}/bin/install
 #
 # This is for the vol package
 XFS_SIZE_CHECK = $(DESTDIR)root.server/usr/afs/bin/xfs_size_check

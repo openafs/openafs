@@ -117,7 +117,7 @@ depends :
 #	Removes all built files
 #
 clean :
-	-rm -f $(TARGETS) *.o *.ss core
+	-$(RM) -f $(TARGETS) *.o *.ss core
 
 #
 # IMPLICIT RULES
@@ -159,7 +159,7 @@ $(DESTBIN)/%.exe : %.exe
 #
 %.a :
 	-$(RM) $@
-	$(AR) rv $@ $^
+	$(AR) crv $@ $^
 	$(RANLIB) $@
 
 # new implicit rule to create executables

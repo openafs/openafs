@@ -47,7 +47,7 @@ inetd.o: inetd.c AFS_component_version_number.c
 ta-rauth.o: ta-rauth.c
 
 clean:
-	rm -f inetd *.o *.BAK *~ core AFS_component_version_number.c
+	$(RM) -f inetd *.o *.BAK *~ core AFS_component_version_number.c
 
 install: all
 	${INSTALL} -s -m 755 inetd ${DESTDIR}/etc/inetd

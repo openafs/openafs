@@ -14,7 +14,6 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c \
 	rpc_svcout.c rpc_clntout.c
@@ -30,6 +29,9 @@ all: install
 rxgen: $(OBJS) AFS_component_version_number.c
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
 
+#
+# Install targets
+#
 install: ukinstall \
 	${DESTDIR}/bin/rxgen \
 	${DESTDIR}/include/afs/rxgen_consts.h
@@ -50,7 +52,10 @@ ${DESTDIR}/bin/rxgen: rxgen
 ${DESTDIR}/include/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL} $? $@
 
+#
+# Misc. targets
+#
 clean:
-	rm -f *.o rxgen core AFS_component_version_number.c
+	$(RM) -f *.o rxgen core AFS_component_version_number.c
 
 include ../config/Makefile.version

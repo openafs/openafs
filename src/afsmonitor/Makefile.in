@@ -72,6 +72,6 @@ install: all
 	${INSTALL} afsmonitor ${DESTDIR}/bin
 
 clean:
-	rm -f *.o afsmonitor AFS_component_version_number.c
+	$(RM) -f *.o afsmonitor AFS_component_version_number.c
 
 include ../config/Makefile.version

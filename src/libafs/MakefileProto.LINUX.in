@@ -37,7 +37,7 @@ AFS_OS_NONFSOBJS =
 
 
 # System specific build commands and flags
-CC = gcc
+CC = kgcc
 LD = ld
 # -Wall
 <i386_linux22 i386_linux24>
@@ -93,7 +93,7 @@ LINUX_MODULE_NAME=
 LOCAL_SMP_DEF=
 
 setup:
-	-rm -f h net netinet sys rpc
+	-$(RM) -f h net netinet sys rpc
 	-ln -s rx rpc
 	for m in ${MPS} ; do \
 		KDIR=$(KOBJ)-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m; \
@@ -106,19 +106,19 @@ setup:
 # Compile SP and MP clients as requested
 
 ${COMPDIRS} ${INSTDIRS}:
-	rm -f h 
+	$(RM) -f h 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux h 
-	rm -f linux 
+	$(RM) -f linux 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux linux 
-	rm -f net 
+	$(RM) -f net 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux net 
-	rm -f netinet 
+	$(RM) -f netinet 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux netinet 
-	rm -f sys
+	$(RM) -f sys
 	ln -s ${LINUX_KERNEL_PATH}/include/linux sys
-	rm -f asm-generic
+	$(RM) -f asm-generic
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
-	rm -f asm
+	$(RM) -f asm
 <alpha_linux_22 alpha_linux_24>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-alpha asm
 <i386_linux22 i386_linux24>

@@ -28,7 +28,7 @@ system: all
 all test tests: multiklog 
 
 clean:
-	rm -f *.o core
+	$(RM) -f *.o core
 
 multiklog: multiklog.o
 	cc -o  multiklog ${CFLAGS} multiklog.o -lafsutil

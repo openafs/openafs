@@ -210,7 +210,7 @@ kdump:  kdump.o
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
 		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
 	sun4x_5? ) \
-		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a  ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 		do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -244,7 +244,7 @@ kdump64 : kdump64.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[78] | hp_ux11* )  \
-		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}/lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}/lib/afs/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
 #
@@ -263,7 +263,7 @@ install: ${DESTDIR}/bin/fs \
 #
 
 clean:
-	rm -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags
 
 test:
 	cd test; $(MAKE)

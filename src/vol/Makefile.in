@@ -13,7 +13,6 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 
 INCDIRS= -I${TOP_SRCDIR}/config -I. -I${DESTDIR}/include ${FSINCLUDES}
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
@@ -24,8 +23,6 @@ LIBS= ${DESTDIR}/lib/afs/libcmd.a vlib.a ${SRCDIR}/lib/afs/util.a \
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBG}
 
-PROGS = salvager volinfo
-
 PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h\
 	fssync.h ihandle.h namei_ops.h
 
@@ -33,24 +30,35 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
 	 namei_ops.o
 
-
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o 
 
-all:	${DESTDIR}/lib/afs/vlib.a \
+all: install
+
+#
+# Installation targets
+#
+install: gi \
+	${DESTDIR}/lib/afs/vlib.a \
 	${DESTDIR}/lib/afs/libvlib.a \
-	${DESTDIR}root.server/usr/afs/bin/salvager \
-	${DESTDIR}root.server/usr/afs/bin/volinfo \
-	gi
+	${DESTDIR}/root.server/usr/afs/bin/salvager \
+	${DESTDIR}/root.server/usr/afs/bin/volinfo \
+	$(FS_CONV_OSF40D) \
+	$(XFS_SIZE_CHECK) \
+	$(FS_CONV_SOL26) \
+	${DESTDIR}/include/afs/nfs.h \
+	${DESTDIR}/include/afs/vnode.h \
+	${DESTDIR}/include/afs/viceinode.h \
+	${DESTDIR}/include/afs/volume.h \
+	${DESTDIR}/include/afs/voldefs.h \
+	${DESTDIR}/include/afs/partition.h \
+	${DESTDIR}/include/afs/fssync.h \
+	${DESTDIR}/include/afs/ihandle.h \
+	${DESTDIR}/include/afs/namei_ops.h
 
-system: install
-
-kinstall ukinstall webinstall:
-	@echo No kernel source here.
-
-${DESTDIR}root.server/usr/afs/bin/salvager: salvager 
+${DESTDIR}/root.server/usr/afs/bin/salvager: salvager 
 	${INSTALL} -s $? $@
 
-${DESTDIR}root.server/usr/afs/bin/volinfo: volinfo
+${DESTDIR}/root.server/usr/afs/bin/volinfo: volinfo
 	${INSTALL} -s $? $@
 
 ${DESTDIR}/lib/afs/vlib.a: vlib.a
@@ -60,18 +68,44 @@ ${DESTDIR}/lib/afs/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
 $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
-	   ${INSTALL} -s $? $@
+	${INSTALL} -s $? $@
 
 $(DESTDIR)root.server/usr/afs/bin/xfs_size_check:  xfs_size_check
-	   ${INSTALL} -s $? $@
+	${INSTALL} -s $? $@
 
 $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26:  fs_conv_sol26
-	   ${INSTALL} -s $? $@
+	${INSTALL} -s $? $@
 
-install: all $(FS_CONV_OSF40D) $(XFS_SIZE_CHECK) $(FS_CONV_SOL26)
-	${INSTALL} ${PUBLICHEADERS} ${DESTDIR}/include/afs
+${DESTDIR}/include/afs/nfs.h: nfs.h
+	${INSTALL} $? $@
 
+${DESTDIR}/include/afs/vnode.h: vnode.h
+	${INSTALL} $? $@
 
+${DESTDIR}/include/afs/viceinode.h: viceinode.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/volume.h: volume.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/voldefs.h: voldefs.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/partition.h: partition.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/fssync.h: fssync.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/ihandle.h: ihandle.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/namei_ops.h: namei_ops.h
+	${INSTALL} $? $@
+
+#
+# Build targets
+#
 ${OBJECTS}: ${PUBLICHEADERS} ${SRCDIR}/include/lwp.h ${SRCDIR}/include/lock.h \
 	 ${SRCDIR}/include/afs/afsint.h vutils.h salvage.h\
 	AFS_component_version_number.c
@@ -79,9 +113,9 @@ ${OBJECTS}: ${PUBLICHEADERS} ${SRCDIR}/include/lwp.h ${SRCDIR}/include/lock.h \
 vol-salvage.o vutil.o: volinodes.h
 
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
-	rm -f vlib.a
-	$(AR) r vlib.a ${VLIBOBJS} AFS_component_version_number.o
-	$(RANLIB) vlib.a
+	$(RM) -f $@
+	$(AR) crv $@ ${VLIBOBJS} AFS_component_version_number.o
+	$(RANLIB) $@
 
 # new salvager:  remove references to /vice by linking with novice.o
 salvager: vol-salvage.o physio.o vlib.a
@@ -112,7 +146,7 @@ volinfo: vol-info.o physio.o ihandle.o
 	case ${SYS_NAME} in \
 		*linux* | *fbsd*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
-				ihandle.o ${LIBS}  ;; \
+				ihandle.o ${LIBS} ;; \
 		*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
 				 ihandle.o ${LIBS} ;; \
@@ -131,9 +165,14 @@ fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
 xfs_size_check: xfs_size_check.c
 	${CC} ${CFLAGS} -o xfs_size_check xfs_size_check.c
 
+#
+# Misc. targets
+#
 clean:
-	rm -f *.o *.a AFS_component_version_number.c
-	rm -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
+	$(RM) -f *.o *.a AFS_component_version_number.c
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
 
 test:
 	cd test; $(MAKE)
+
+include ../config/Makefile.version

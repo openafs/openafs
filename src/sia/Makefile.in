@@ -26,15 +26,15 @@ LIBS2 = ${DESTDIR}/lib/librxkad.a       ${DESTDIR}/lib/afs/libaudit.a \
 	${DESTDIR}/lib/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a \
 	${DESTDIR}/lib/afs/libsys.a
 
-LIBS  = ${DESTDIR}/lib/afs/libkauth.a ${LIBS1}     ${DESTDIR}/lib/afs/libauth.a ${LIBS2}
+LIBS  = ${DESTDIR}/lib/afs/libkauth.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.a ${LIBS2}
 KLIBS = ${DESTDIR}/lib/afs/libkauth.krb.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.krb.a ${LIBS2}
 
 all: test-reauth ${DESTDIR}/lib/afs/libafssiad.so ${DESTDIR}/lib/afs/libafssiad.krb.so
 
 clean:
-	rm -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
+	$(RM) -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
 
-CFLAGS = $(DEBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DEBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 ${DESTDIR}/lib/afs/libafssiad.so: libafssiad.so
 	${INSTALL} $? $@

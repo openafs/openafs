@@ -74,4 +74,4 @@ testqueue: ../librx.a testqueue.o
 ${RXTESTOBJS}: ${BASICINCLS} ../rx.h
 
 clean:
-	rm -f *.o *.a ${TESTS} ${TH_TESTS} core
+	$(RM) -f *.o *.a ${TESTS} ${TH_TESTS} core

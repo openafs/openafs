@@ -13,7 +13,6 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KERNELDIR=../libafs/
 UKERNELDIR=../libuafs/
@@ -96,9 +95,9 @@ Kvldbint.xdr.c: vldbint.xg
 	${RXGEN} -x -k -c -o $@ vldbint.xg
 
 libvldb.a: $(OBJS) AFS_component_version_number.o
-	-$(RM) -f libvldb.a
-	$(AR) r libvldb.a $(OBJS) AFS_component_version_number.o
-	$(RANLIB) libvldb.a
+	$(RM) -f $@
+	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 vlclient: vlclient.o libvldb.a $(LIBS)
 	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${DESTDIR}/lib/afs/libcmd.a
@@ -114,17 +113,19 @@ system: install
 kinstall: $(KSRCS)
 	${INSTALL} $(KSRCS) ${KERNELDIR}/afsint
 
-ukinstall webinstall: $(UKSRCS)
-	set ${UKERNELDIR}/afsint; $(MKDIR_IF_NEEDED)
+ukinstall webinstall: ${UKERNELDIR}/afsint $(UKSRCS)
 	${INSTALL} $(UKSRCS) ${TKERNELDIR}/afsint
 
-${DESTDIR}root.server/usr/afs/bin/vlserver: vlserver
-	${INSTALL} vlserver ${DESTDIR}root.server/usr/afs/bin
+${UKERNELDIR}/afsint:
+	mkdir -p $@
+
+${DESTDIR}/root.server/usr/afs/bin/vlserver: vlserver
+	${INSTALL} vlserver ${DESTDIR}/root.server/usr/afs/bin
 
 ${DESTDIR}/etc/vldb_convert: cnvldb
 	${INSTALL} -f cnvldb ${DESTDIR}/etc/vldb_convert
 
-install: kinstall ukinstall vlserver vlclient libvldb.a cnvldb ${DESTDIR}root.server/usr/afs/bin/vlserver ${DESTDIR}/etc/vldb_convert vldb_check
+install: kinstall ukinstall vlserver vlclient libvldb.a cnvldb ${DESTDIR}/root.server/usr/afs/bin/vlserver ${DESTDIR}/etc/vldb_convert vldb_check
 	${INSTALL} libvldb.a ${DESTDIR}/lib/afs
 	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}/include/afs
 	${INSTALL} cnvldb.h ${DESTDIR}/include/afs

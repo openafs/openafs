@@ -31,4 +31,4 @@ ktctest: ktctest.o
 	$(CC) $(CFLAGS) -o ktctest ktctest.o  ${LIBS}
 
 clean:
-	rm -f *.o *.a copyauth testcellconf ktctest setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core
+	$(RM) -f *.o *.a copyauth testcellconf ktctest setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core

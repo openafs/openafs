@@ -54,11 +54,11 @@ include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
 	ln -s ../config $(KOBJ)/config
-	-rm -f  h net netinet rpc ufs nfs  machine sys vm mach kern
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm mach kern
 	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
 	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
 	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet

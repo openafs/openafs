@@ -338,7 +338,7 @@ afs_pioctl_nfs.o:	$(AFS)/afs_pioctl.c
 
 
 clean:
-	-rm -rf STATIC* MODLOAD*
-	-rm -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx linux
+	-$(RM) -rf STATIC* MODLOAD*
+	-$(RM) -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx linux
 
 

@@ -47,7 +47,7 @@ all: rlogin rsh
 system: install
 
 rsh: rsh.o ${OBJS} ${LIBS}
-	${CC} -o $@ ${CFLAGS}  rsh.o ${OBJS} ${LIBS} ${XLIBS}
+	${CC} -o $@ ${CFLAGS} rsh.o ${OBJS} ${LIBS} ${XLIBS}
 
 rlogin: rlogin.o ${OBJS} ${LIBS}
 	${CC} -o $@ ${CFLAGS} rlogin.o ${OBJS} ${LIBS} ${XLIBS}
@@ -61,10 +61,10 @@ rsh.o: rsh.c AFS_component_version_number.c
 	(cd ../inetd ; $(MAKE) ta-rauth.o DESTDIR=${DESTDIR})
 
 clean:
-	rm -f ${OBJS} core rsh *.BAK AFS_component_version_number.c rlogin rlogin.o rsh.o
+	$(RM) -f ${OBJS} core rsh *.BAK AFS_component_version_number.c rlogin rlogin.o rsh.o
 
 cleandir: clean
-	rm -f ${MAN} tags .depend
+	$(RM) -f ${MAN} tags .depend
 
 depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}

@@ -10,28 +10,29 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-
-
-BACKDIR=../../../../PARENT/dest/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L.. -L${BACKDIR}/lib -L${BACKDIR}/lib/afs
+INCDIRS= -I${DESTDIR}/include -I..
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 LIBS= -lacl -lprot -lubik -lrx -llwp -lauth -lrxkad -lsys ${XLIBS}
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 
-system:	acltest
+all: install
 
-clean:
-	rm -f *.o *.a acltest core
+install: acltest
 
+#
+# Build targets
+#
 acltest: acltest.o
 	$(CC) -o acltest acltest.o $(CFLAGS)
 
 acltest.o: acltest.c 
 
-kinstall:
-	@echo No kernel source here.
-
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o *.a acltest core
 

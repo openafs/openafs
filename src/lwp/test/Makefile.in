@@ -14,7 +14,7 @@ SYS_NAME=@AFS_SYSNAME@
 
 OPTIMIZE= -g
 
-INCDIRS= -I.. -I${DESTDIR}include 
+INCDIRS= -I.. -I${DESTDIR}/include 
 LIBS= ../liblwp.a
 
 include ../../config/Makefile.${SYS_NAME}
@@ -53,4 +53,4 @@ test_key: test_key.o
 
 
 clean:
-	-rm -f *.o *.a test testlwp selclient selserver core
+	-$(RM) -f *.o *.a test testlwp selclient selserver core

@@ -78,10 +78,10 @@ rexecd: rexecd.o ${ALIBS}
 	( cd ../rsh ; $(MAKE) herror.o )
 
 clean:
-	rm -f ${OBJS} core rlogind AFS_component_version_number.c
+	$(RM) -f ${OBJS} core rlogind AFS_component_version_number.c
 
 cleandir: clean
-	rm -f ${MAN} tags .depend
+	$(RM) -f ${MAN} tags .depend
 
 depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}

@@ -5,8 +5,6 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# */
-
 DESTDIR=@DESTDIR@
 SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
@@ -49,12 +47,7 @@ LIBS=${SRCDIR}/lib/libubik.a \
 	${SRCDIR}/lib/libdes.a \
 	${XLIBS}
 
-include ../config/Makefile.version
-
-all:  translate_et
-
-clean:
-	rm -f *.o translate_et core AFS_component_version_number.c
+all: install
 
 translate_et: translate_et.o ${INCLS}
 	${CC} ${LDFLAGS} -o translate_et translate_et.o ${LIBS}
@@ -73,9 +66,22 @@ test: translate_et
 	./translate_et 19270407 >> /tmp/translate_et.output
 	./translate_et 180511 >> /tmp/translate_et.output
 	diff test.output /tmp/translate_et.output
-	rm /tmp/translate_et.output
+	$(RM) /tmp/translate_et.output
 
-system: install
+#
+# Install targets
+#
+install: ${DESTDIR}/bin/translate_et
 
-noversion install.noversion install: all
-	${INSTALL} translate_et ${DESTDIR}/bin/translate_et
+${DESTDIR}/bin/translate_et: translate_et
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+
+clean:
+	$(RM) -f *.o translate_et core AFS_component_version_number.c
+
+include ../config/Makefile.version
+

@@ -34,5 +34,5 @@ getinitparams: getinitparams.o
 	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
 
 clean:
-	rm -f *.o fulltest owntest idtest getinitparams
+	$(RM) -f *.o fulltest owntest idtest getinitparams
 

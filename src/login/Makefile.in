@@ -64,9 +64,9 @@ login.krb: ${KOBJS} ${KLIBS}
 	esac ;
 
 libutil.a : ${UTILOBJS}
-	@rm -f $@
-	ar cru $@ ${UTILOBJS}
-	${RANLIB} $@
+	$(RM) -f $@
+	$(AR) crv $@ ${UTILOBJS}
+	$(RANLIB) $@
 
 login.o: login.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -c login.c
@@ -76,10 +76,10 @@ login.krb.o: login.c
 	mv login.o login.krb.o
 
 clean:
-	rm -f ${OBJS} core login AFS_component_version_number.c
+	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
 
 cleandir: clean
-	rm -f ${MAN} tags .depend
+	$(RM) -f ${MAN} tags .depend
 
 depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}

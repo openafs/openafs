@@ -16,7 +16,7 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET=$(SRCDIR)bin/compile_et
+COMPILE_ET=${SRCDIR}/bin/compile_et
 CFLAGS= ${DBUG} -I. -I${TOP_SRCDIR}/config \
 	-I${SRCDIR}/include -I${SRCDIR}/include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
@@ -103,7 +103,7 @@ ${LIBSRCS}: ${INCLS}
 $(LIBOBJS): ${INCLS}
 
 err.c: err.et
-	rm -f err.h err.c; $(COMPILE_ET) err -h err
+	$(RM) -f err.h err.c; $(COMPILE_ET) err -h err
 
 keymap.o: keymap.c ${INCLS}
 
@@ -159,7 +159,7 @@ object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS}
 system: install
 
 libgtx.a: ${LIBOBJS} AFS_component_version_number.o
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS} AFS_component_version_number.o
 	${RANLIB} $@
 
@@ -168,4 +168,4 @@ install: all
 	${INSTALL} libgtx.a ${DESTDIR}/lib/afs
 
 clean:
-	rm -f  *.o *.a *.ln object_test screen_test curses_test err.c core cb_test gtxtest AFS_component_version_number.c
+	$(RM) -f  *.o *.a *.ln object_test screen_test curses_test err.c core cb_test gtxtest AFS_component_version_number.c

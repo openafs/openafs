@@ -21,9 +21,9 @@ all: install
 
 FMSLIBS=${DESTDIR}/lib/afs/libcmd.a \
 	${TXLIBS} \
-        $(SRCDIR)lib/afs/libusd.a \
-	$(SRCDIR)lib/afs/libtermlib.a ${XLIBS} \
-	$(SRCDIR)lib/afs/util.a
+        ${SRCDIR}/lib/afs/libusd.a \
+	${SRCDIR}/lib/afs/libtermlib.a ${XLIBS} \
+	${SRCDIR}/lib/afs/util.a
 
 fms: fms.o
 	${CC} ${LDFLAGS} -o fms fms.o ${FMSLIBS}
@@ -36,6 +36,6 @@ ${DESTDIR}/etc/fms: fms
 	${INSTALL} $? $@
 
 clean:
-	rm -f *.o fms AFS_component_version_number.c
+	$(RM) -f *.o fms AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -15,9 +15,8 @@ AFS_OSTYPE = LINUX
 LINUX_SRCDIR = /usr/src/linux-
 # Default list of Linux kernels to build. Build will run only if all
 # can be built. To build a different set, specify LINUX_VERS to make.
-LINUX_VERS = 2.2.5-15 2.2.10 2.2.12 2.2.12-20 2.2.13 2.2.14
+LINUX_VERS = @LINUX_VERSION@
 
-#
 # compilation and link editor flags
 DBG=-g
 OPTMZ=-O2
@@ -44,7 +43,7 @@ MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-INSTALL=${DESTDIR}bin/install
+INSTALL=${DESTDIR}/bin/install
 #
 # Other OS specific requirements
 #

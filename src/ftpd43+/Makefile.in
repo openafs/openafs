@@ -62,10 +62,10 @@ vers.o: ftpd.c ftpcmd.y
 	${CC} ${CFLAGS} -c vers.c
 
 clean:
-	rm -f ${OBJS} ftpd core ftpcmd.c AFS_component_version_number.c
+	$(RM) -f ${OBJS} ftpd core ftpcmd.c AFS_component_version_number.c
 
 cleandir: clean
-	rm -f ${MAN} .depend
+	$(RM) -f ${MAN} .depend
 
 depend: ${SRCS}
 	mkdep ${CFLAGS} ${SRCS}

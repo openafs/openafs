@@ -14,17 +14,17 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-RXGEN=${SRCDIR}bin/rxgen
-COMPILE_ET = ${SRCDIR}bin/compile_et
+RXGEN=${SRCDIR}/bin/rxgen
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
-CFLAGS= ${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS= ${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 all: install
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
 libbubasics.a: $(OBJS) AFS_component_version_number.o
-	-rm -f libbubasics.a
+	-$(RM) -f libbubasics.a
 	ar r libbubasics.a ${OBJS} AFS_component_version_number.o
 	${RANLIB} libbubasics.a
 
@@ -35,15 +35,15 @@ bumon.xdr.c bumon.ss.c bumon.cs.c bumon.h: bumon.xg
 	${RXGEN} bumon.xg
 
 butm_errs.c butm.h: butm_errs.et butm.p.h
-	rm -f butm.h butm_errs.c
+	$(RM) -f butm.h butm_errs.c
 	${COMPILE_ET} butm_errs -h butm
 
 butc_errs.c tcdata.h: butc_errs.et tcdata.p.h butm.h
-	rm -f tcdata.h butc_errs.c
+	$(RM) -f tcdata.h butc_errs.c
 	${COMPILE_ET} butc_errs -h tcdata
 
 butx_errs.c butx.h: butx_errs.et
-	rm -f butx.h butx_errs.c
+	$(RM) -f butx.h butx_errs.c
 	${COMPILE_ET} butx_errs -h butx
 
 #
@@ -83,7 +83,7 @@ ${DESTDIR}/include/afs/butx.h: butx.h
 #
 
 clean:
-	rm -f *.o *.a *.xdr.c *.ss.c *.cs.c butc.h butx.h butm.h bumon.h tcdata.h \
+	$(RM) -f *.o *.a *.xdr.c *.ss.c *.cs.c butc.h butx.h butm.h bumon.h tcdata.h \
 		butc_errs.c butx_errs.c butm_errs.c core AFS_component_version_number.c
 
 include ../config/Makefile.version

@@ -109,4 +109,4 @@ install: ${CONFIG}
 	cp ${CONFIG} ${wsadmin}/etc
 	
 clean:
-	rm -f ${CONFIG} *.BAK *.CKP
+	$(RM) -f ${CONFIG} *.BAK *.CKP

@@ -38,4 +38,4 @@ LEX=lex
 MV=mv
 RANLIB=/bin/true
 RM=rm
-INSTALL=${DESTDIR}bin/install
+INSTALL=${DESTDIR}/bin/install

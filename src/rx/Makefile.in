@@ -86,7 +86,7 @@ rx_conncache.o: rx.h
 rx_trace.o: rx_trace.h 
 
 rxdumptrace: rx_trace.c
-	rm -f rxdumptrace
+	$(RM) -f rxdumptrace
 	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o rx_trace.c
 	$(CC) $(CFLAGS) -o rxdumptrace rxdumptrace.o  ${LIBS} ${XLIBS}
 
@@ -99,13 +99,13 @@ xdr_rx.o: xdr.h rx.h
 xdr_refernce.o: xdr_refernce.c xdr.h
 
 librx.a: ${LIBOBJS} RX_component_version_number.o
-	-rm -f $@
-	$(AR) rv $@ RX_component_version_number.o ${LIBOBJS}
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS} RX_component_version_number.o
 	$(RANLIB) $@
 
 librx-djgpp.a: ${LIBOBJS_djgpp} RX_component_version_number.o
-	-rm -f librx-djgpp.a
-	$(AR) rv librx-djgpp.a RX_component_version_number.o ${LIBOBJS_djgpp}
+	-$(RM) -f librx-djgpp.a
+	$(AR) crv librx-djgpp.a RX_component_version_number.o ${LIBOBJS_djgpp}
 	$(RANLIB) librx-djgpp.a
 
 ${DESTDIR}/etc/rxdebug: rxdebug
@@ -208,7 +208,7 @@ ${DESTDIR}/include/rx/rx_xmit_nt.h: rx_xmit_nt.h ${DESTDIR}/include/rx
 # Misc. targets
 #
 clean:
-	rm -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
+	$(RM) -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
 
 include ../config/Makefile.version
 

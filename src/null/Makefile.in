@@ -26,11 +26,11 @@ ${DESTDIR}/lib/afs/libnull.a: libnull.a
 null.o: null.c AFS_component_version_number.o
 
 libnull.a: null.o
-	-rm -f $@
+	-$(RM) -f $@
 	ar rv $@ null.o
 	$(RANLIB) $@
 
 clean:
-	rm -f *.o *.a AFS_component_version_number.c
+	$(RM) -f *.o *.a AFS_component_version_number.c
 
 include ../config/Makefile.version

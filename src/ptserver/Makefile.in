@@ -16,7 +16,6 @@ include ../config/Makefile.${SYS_NAME}
 UKERNELDIR=../libuafs/
 RXGEN=${SRCDIR}/bin/rxgen
 COMPILE_ET = ${SRCDIR}/bin/compile_et
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = $(DBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 INCLS=${SRCDIR}/include/ubik.h \
@@ -48,22 +47,14 @@ LIBS = 	${SRCDIR}/lib/libubik.a \
 	${SRCDIR}/lib/afs/util.a \
 	${SRCDIR}/lib/afs/libsys.a 
 
-auditlib=${SRCDIR}/lib/afs/libaudit.a
 
-LIBOBJS=ptuser.o pterror.o ptint.cs.o ptint.xdr.o
- 
-UKSRCS=ptuser.c ptclient.h pterror.c pterror.h ptserver.h
+all: install
 
-include ../config/Makefile.version
-
-
-clean:
-	$(RM) -f *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
-	libprot.a  pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
-	 core  AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
-
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${auditlib}
-	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o  ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${XLIBS} ${auditlib}
+#
+# Build targets
+#
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${SRCDIR}/lib/afs/libaudit.a
+	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${XLIBS} ${SRCDIR}/lib/afs/libaudit.a
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
@@ -87,7 +78,7 @@ Kptint.xdr.c: ptint.xg
 	${RXGEN} -x -k -c -o Kptint.xdr.c ptint.xg
  
 Kptint.h: ptint.xg
-	${RXGEN}  -x -k -h -o Kptint.h ptint.xg
+	${RXGEN} -x -k -h -o Kptint.h ptint.xg
 
 display.o: display.c ${INCLS}
 
@@ -104,12 +95,13 @@ ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 ptuser.o: ptuser.c ${LINCLS}
 
 pterror.h pterror.c: pterror.et
-	$(RM) -f pterror.h pterror.c; ${COMPILE_ET} pterror
+	$(RM) -f pterror.h pterror.c
+	${COMPILE_ET} pterror
 
-libprot.a: ${LIBOBJS} AFS_component_version_number.o
-	$(RM) -f libprot.a
-	$(AR) r libprot.a ${LIBOBJS} AFS_component_version_number.o
-	$(RANLIB) libprot.a
+libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
+	$(RM) -f $@
+	$(AR) crv $@ ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 pts: pts.o libprot.a ${SRCDIR}/lib/afs/libcmd.a $(LIBS)
 	$(CC) ${CFLAGS} -o pts pts.o ${SRCDIR}/lib/afs/libcmd.a libprot.a ${LIBS} ${XLIBS}
@@ -141,48 +133,112 @@ pt_util: pt_util.o ptutils.o ubik.o utils.o libprot.a $(LIBS)
 
 ubik.o: ubik.c ${INCLS}
 
-system: install
+prerror.h: pterror.h
+	${INSTALL} $? $@
+	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt' >> $@
 
-kinstall:
-	@echo No $@ source here.
+#
+# Installation targets
+#
+ukinstall: ${UKERNELDIR}/afs \
+	${UKERNELDIR}/afsint/ptint.h \
+	${UKERNELDIR}/afsint/ptint.cs.c \
+	${UKERNELDIR}/afsint/ptint.xdr.c \
+	${UKERNELDIR}/afs/ptuser.c \
+	${UKERNELDIR}/afs/ptclient.h \
+	${UKERNELDIR}/afs/pterror.c \
+	${UKERNELDIR}/afs/pterror.h \
+	${UKERNELDIR}/afs/ptserver.h
 
-ukinstall webinstall: ${UKSRCS} Kptint.h Kptint.cs.c Kptint.xdr.c
-	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
-	${INSTALL} Kptint.h ${UKERNELDIR}/afsint/ptint.h
-	${INSTALL} Kptint.cs.c ${UKERNELDIR}/afsint/ptint.cs.c
-	${INSTALL} Kptint.xdr.c ${UKERNELDIR}/afsint/ptint.xdr.c
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
+install: ukinstall \
+	${DESTDIR}/root.server/usr/afs/bin/ptserver \
+	${DESTDIR}/root.server/usr/afs/bin/pts \
+	${DESTDIR}/bin/pts \
+	${DESTDIR}/root.server/usr/afs/bin/pt_util \
+	${DESTDIR}/etc/prdb_check \
+	${DESTDIR}/lib/afs/libprot.a \
+	${DESTDIR}/include/afs/prclient.h \
+	${DESTDIR}/include/afs/prerror.h \
+	${DESTDIR}/include/afs/print.h \
+	${DESTDIR}/include/afs/prserver.h \
+	${DESTDIR}/include/afs/ptclient.h \
+	${DESTDIR}/include/afs/pterror.h \
+	${DESTDIR}/include/afs/ptint.h \
+	${DESTDIR}/include/afs/ptserver.h \
+	readgroup readpwd testpt
 
-all: ptclient libprot.a pts db_verify readgroup readpwd testpt pt_util
+${UKERNELDIR}/afs:
+	mkdir -p $@
 
-${DESTDIR}root.server/usr/afs/bin/ptserver: ptserver
+${UKERNELDIR}/afs/ptuser.c: ptuser.c
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/pts ${DESTDIR}root.server/usr/afs/bin/pts: pts
+${UKERNELDIR}/afs/ptclient.h: ptclient.h
 	${INSTALL} $? $@
 
-${DESTDIR}root.server/usr/afs/bin/pt_util: pt_util
+${UKERNELDIR}/afs/pterror.c: pterror.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/pterror.h: pterror.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/ptserver.h: ptserver.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/ptint.h: Kptint.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/ptint.cs.c: Kptint.cs.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/ptint.xdr.c: Kptint.xdr.c
+	${INSTALL} $? $@
+
+${DESTDIR}/root.server/usr/afs/bin/ptserver: ptserver
+	${INSTALL} $? $@
+
+${DESTDIR}/bin/pts ${DESTDIR}/root.server/usr/afs/bin/pts: pts
+	${INSTALL} $? $@
+
+${DESTDIR}/root.server/usr/afs/bin/pt_util: pt_util
 	${INSTALL} $? $@
 
 ${DESTDIR}/lib/afs/libprot.a: libprot.a
-	${INSTALL}   $? $@
+	${INSTALL} $? $@
 
+${DESTDIR}/etc/prdb_check: db_verify
+	${INSTALL} -f $? $@
 
-install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root.server/usr/afs/bin/pts ${DESTDIR}/bin/pts ${DESTDIR}/lib/afs/libprot.a ${DESTDIR}root.server/usr/afs/bin/pt_util
-	${INSTALL} libprot.a ${DESTDIR}/lib/afs/libprot.a
-	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}/include/afs
-	${INSTALL} ptserver.h ${DESTDIR}/include/afs/prserver.h
-	${INSTALL} ptint.h ${DESTDIR}/include/afs/print.h
-	${INSTALL} pterror.h ${DESTDIR}/include/afs/prerror.h
-	${INSTALL} ptclient.h ${DESTDIR}/include/afs/prclient.h
-	${INSTALL} -f db_verify ${DESTDIR}/etc/prdb_check
-	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt' >> ${DESTDIR}/include/afs/prerror.h
+${DESTDIR}/include/afs/prclient.h: ptclient.h
+	${INSTALL} $? $@
 
-libinstall: ${DESTDIR}/lib/afs/libprot.a
-	${INSTALL} libprot.a ${DESTDIR}/lib/afs/libprot.a
-	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}/include/afs
-	${INSTALL} ptserver.h ${DESTDIR}/include/afs/prserver.h
-	${INSTALL} ptint.h ${DESTDIR}/include/afs/print.h
-	${INSTALL} pterror.h ${DESTDIR}/include/afs/prerror.h
-	${INSTALL} ptclient.h ${DESTDIR}/include/afs/prclient.h
+${DESTDIR}/include/afs/prerror.h: pterror.h
+	${INSTALL} $? $@
 
+${DESTDIR}/include/afs/print.h: ptint.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/prserver.h: ptserver.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/ptserver.h: ptserver.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/ptint.h: ptint.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/pterror.h: pterror.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/ptclient.h: ptclient.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
+	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
+	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
+
+include ../config/Makefile.version

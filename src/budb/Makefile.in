@@ -56,14 +56,12 @@ COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-LIB_BUDB_OBJS = budb_errs.o budb.cs.o budb.xdr.o struct_ops.o
-
 all: install
 
 budb_errs.o: budb_errs.c
 
 budb_errs.c budb_client.h: budb_errs.et budb_client.p.h
-	rm -f budb_client.h budb_errs.c; ${COMPILE_ET} budb_errs -h budb_client
+	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} budb_errs -h budb_client
 
 budb_errs.h: budb_errs.et
 	${COMPILE_ET} budb_errs
@@ -85,15 +83,14 @@ budb_server: $(SERVER_OBJS) ${LIBS}
 budb.xdr.c budb.cs.c budb.ss.c budb.h: budb.rg
 	${RXGEN} budb.rg
 
-libbudb.a: ${LIB_BUDB_OBJS} AFS_component_version_number.o
-	-rm -f libbudb.a
-	${AR} rv libbudb.a $(LIB_BUDB_OBJS) AFS_component_version_number.o
-	${RANLIB} libbudb.a
+libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
+	$(RANLIB) $@
 
 #
 # Install targets
 #
-
 install: ${DESTDIR}/lib/afs/libbudb.a \
 	${DESTDIR}/include/afs/budb.h \
 	${DESTDIR}/include/afs/budb_errs.h \
@@ -119,7 +116,7 @@ ${DESTDIR}/root.server/usr/afs/bin/buserver: budb_server
 # Misc targets
 #
 clean:
-	rm -f *.o *~ budb_errs.[ch] budb.h budb_client.h *.a *.xdr.c \
+	$(RM) -f *.o *~ budb_errs.[ch] budb.h budb_client.h *.a *.xdr.c \
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
