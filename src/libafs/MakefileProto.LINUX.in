@@ -117,6 +117,8 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f asm-generic
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
+<parisc_linux22 parisc_linux24>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
 <alpha_linux_22 alpha_linux_24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
 <i386_linux22 i386_linux24>
