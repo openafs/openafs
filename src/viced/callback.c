@@ -1396,7 +1396,7 @@ restart:
 		    }
 		    TDel(cb);
 		    HDel(cb);
-		    FreeCB(cb);
+		    CDel(cb, 0); /* Don't let CDel clean up the fe */
 		    /* leave hold for MultiBreakVolumeCallBack to clear */
 		}
 		/* relink chain */
