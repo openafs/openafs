@@ -14,9 +14,7 @@ if [ -n "$KVERS" ] && [ -n "$KDREV" ]; then
   kernversion=$KDREV
 
 elif [ ! -f $changelog ]; then
-        linuxversion=`awk '{ if (NR==1) v=$3; else if (NR==2) p=$3; else if (NR==3) s=$3; \
-                else if (NR==4) { e=$3; exit; } } \
-                END { printf("%s.%s.%s%s\n",v,p,s,e); }' $1/Makefile`
+        linuxversion=`perl -e '$_ = <>; $_ =~ m/"(.+)"/; print "$1\n";' < $1/include/linux/version.h`
 
         if [ -z "$KDREV" ]; then
           kernversion=$linuxversion-0

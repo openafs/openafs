@@ -1,3 +1,10 @@
+openafs (1.2.9-3) unstable; urgency=low
+
+  * Add support for kernel headers, thanks to Patrick Sodre, 
+    Closes: #173137 
+
+ --
+
 openafs (1.2.9-2) unstable; urgency=low
 
   * Fix   to not build PAM krb since we don't install it and it breaks alpha, Closes: #189548

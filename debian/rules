@@ -16,9 +16,7 @@ export DH_COMPAT=2
 export DH_OPTIONS
 
 # The AFS sysname is determined by a script
-KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
-       else if (NR==4) { e=$$3; exit; } } \
-       END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
+KVERS=`perl -e '$_ = <>; $_ =~ m/"(.+)"/; print "$1\n";' < $(KSRC)/include/linux/version.h`
 SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
 package=openafs
 srcpkg = openafs-modules-source
