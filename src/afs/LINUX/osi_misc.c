@@ -51,7 +51,8 @@ int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	if (nd.dentry->d_inode) {
 	    *dpp = dget(nd.dentry);
 	    code = 0;
-	}
+	} else
+	    code = ENOENT;
 	path_release(&nd);
     }
 #else
