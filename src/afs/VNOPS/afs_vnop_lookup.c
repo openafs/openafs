@@ -1099,6 +1099,7 @@ afs_lookup(adp, aname, avcp, acred)
     struct sysname_info sysState;   /* used only for @sys checking */
     int dynrootRetry = 1;
     struct afs_fakestat_state fakestate;
+    int tryEvalOnly = 0;
 
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
@@ -1106,14 +1107,32 @@ afs_lookup(adp, aname, avcp, acred)
     if (code = afs_InitReq(&treq, acred))
 	goto done;
 
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
-    if (code)
-	goto done;
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = AFSTOV(adp);
     memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
+
+#if defined(AFS_DARWIN_ENV)
+    /* Workaround for MacOSX Finder, which tries to look for
+     * .DS_Store and Contents under every directory.
+     */
+    if (afs_fakestat_enable && adp->mvstat == 1) {
+	if (strcmp(aname, ".DS_Store") == 0)
+	    tryEvalOnly = 1;
+	if (strcmp(aname, "Contents") == 0)
+	    tryEvalOnly = 1;
+    }
+#endif
+
+    if (tryEvalOnly)
+	code = afs_TryEvalFakeStat(&adp, &fakestate, &treq);
+    else
+	code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    if (tryEvalOnly && adp->mvstat == 1)
+	code = ENOENT;
+    if (code)
+	goto done;
 
     *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
 

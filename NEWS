@@ -1,6 +1,11 @@
-OpenAFS News -- history of user-visible changes. October 19, 2001
+OpenAFS News -- history of user-visible changes.  July 22, 2002.
 
 * Changes incorporated in OpenAFS 1.3
+
+** When fakestat is enabled on MacOSX, the Finder can be used to browse
+   a fully-populated /afs directory.  However, this precludes reliable
+   use of entire volumes as MacOS bundles (i.e. containing a Contents
+   directory in the root of the volume).
 
 ** Mountpoint directory information can be faked by the cache manager,
    making operations such as stat'ing all cells under /afs much faster.
