@@ -225,7 +225,8 @@ void WizStarting_OnInitDialog (HWND hDlg)
       SC_HANDLE hService;
       if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), SERVICE_ALL_ACCESS)) != NULL)
          {
-         StartService (hService, 0, 0);
+         if (StartService (hService, 0, 0))
+			TestAndDoMapShare(SERVICE_START_PENDING);
 
          CloseServiceHandle (hService);
          }
@@ -253,6 +254,7 @@ void WizStarting_OnTimer (HWND hDlg)
          {
          QueryServiceStatus (hService, &Status);
          CloseServiceHandle (hService);
+		 TestAndDoMapShare(Status.dwCurrentState);
          }
 
       CloseServiceHandle (hManager);

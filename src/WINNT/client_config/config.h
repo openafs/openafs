@@ -57,9 +57,6 @@ BOOL Config_SetGatewayName (LPCTSTR pszName, ULONG *pStatus = NULL);
 BOOL Config_ContactGateway (LPTSTR pszGateway, LPTSTR pszCell);
 void Config_FixGatewayDrives (void);
 
-void Config_GetAuthentFlag (BOOL *pfFlag);
-BOOL Config_SetAuthentFlag (BOOL fFlag, ULONG *pStatus = NULL);
-
 void Config_GetTrayIconFlag (BOOL *pfFlag);
 BOOL Config_SetTrayIconFlag (BOOL fFlag, ULONG *pStatus = NULL);
 

@@ -14,6 +14,7 @@ extern "C" {
 
 #include "afscreds.h"
 #include "..\afsreg\afsreg.h" // So we can see if the server's installed
+#include "drivemap.h"
 
 
 /*
@@ -111,10 +112,18 @@ BOOL InitApp (LPSTR pszCmdLineA)
          case 'U':
             fUninstall = TRUE;
             break;
+		 case ':':
+			 MapShareName(pszCmdLineA);
+			 break;
+         case 'x':
+         case 'X':
+			 DoMapShare();
+			 return 0;
          }
 
       while (*pszCmdLineA && (*pszCmdLineA != ' '))
          ++pszCmdLineA;
+	  if (*pszCmdLineA==' ') ++pszCmdLineA;
       }
 
    if (fInstall)

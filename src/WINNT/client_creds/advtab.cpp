@@ -122,6 +122,7 @@ void Advanced_OnServiceTimer (HWND hDlg)
          DWORD dwSize = sizeof(Config);
          QueryServiceConfig (hService, (QUERY_SERVICE_CONFIG*)&Config, sizeof(Config), &dwSize);
          QueryServiceStatus (hService, &Status);
+		 TestAndDoMapShare(Status.dwCurrentState);
 
          CloseServiceHandle (hService);
          }
@@ -156,6 +157,7 @@ void Advanced_OnServiceTimer (HWND hDlg)
       GetString (szStatus, IDS_SERVICE_STARTING);
    else
       GetString (szStatus, IDS_SERVICE_UNKNOWN);
+   TestAndDoMapShare(Status.dwCurrentState);
    SetDlgItemText (hDlg, IDC_SERVICE_STATUS, szStatus);
 
    if (fFinal && GetWindowLong (hDlg, DWL_USER))
@@ -194,12 +196,16 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
 
             case IDC_SERVICE_START:
                if (StartService (hService, 0, 0))
+			   {
+				  TestAndDoMapShare(SERVICE_START_PENDING);
                   fSuccess = TRUE;
+			   }
                break;
 
             case IDC_SERVICE_STOP:
                SERVICE_STATUS Status;
                if (ControlService (hService, SERVICE_CONTROL_STOP, &Status))
+				   TestAndDoUnMapShare();
                   fSuccess = TRUE;
                break;
             }

@@ -283,9 +283,14 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
 			     uidp->userID, userp,
 			     osi_LogSaveString(afsd_logp, uidp->unp->name));
-		else
+		else {
+			if (uidp)
 		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
 			     uidp->userID, userp);
+			else
+		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
+			     userp);
+		}
 		smb_ReleaseUID(uidp);
 	}
 

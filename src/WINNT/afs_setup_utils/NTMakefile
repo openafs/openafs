@@ -90,8 +90,6 @@ DIRLANG= ZH_TW ZH_CN PT_BR KO_KR JA_JP ES_ES EN_US DE_DE
 
 install : $(INSTALL_UTILS_DLLFILE) $(SERVER_UNINST_DLLFILE) $(CLIENT_UNINST_DLLFILE) \
           $(CC_UNINST_DLLFILE) $(LIGHT_CLIENT_UNINST_DLLFILE) $(DOCS_UNINST_DLLFILE) \
-
-media : install
           $(AFSRM_EXEFILE) $(DIRLANG)
 		  cd _isuser
 		  nmake -fntmakefile install

@@ -95,6 +95,13 @@ BOOL CALLBACK Misc_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
             case IDCANCEL:
                 Misc_OnCancel(hDlg);
                 break;
+			case IDC_AUTOLANA:
+				if (IsDlgButtonChecked(hDlg,IDC_AUTOLANA))
+					nLanAdapter=-1;
+				else
+					nLanAdapter=0;
+				SP_SetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER),nLanAdapter);
+				EnableWindow(GetDlgItem(hDlg,IDC_LAN_ADAPTER),(nLanAdapter!=-1));
             }
          break;
 
@@ -129,7 +136,7 @@ void Misc_OnInitDialog (HWND hDlg)
       fFirstTime = FALSE;
    }
 
-   CreateSpinner (GetDlgItem (hDlg, IDC_LAN_ADAPTER), 10, FALSE, nLANA_MIN, nLanAdapter, nLANA_MAX);
+   CreateSpinner (GetDlgItem (hDlg, IDC_LAN_ADAPTER), 99, FALSE, nLANA_MIN, nLanAdapter, nLANA_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_PROBE), 10, FALSE, csecPROBE_MIN, csecProbe, csecPROBE_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_THREADS), 10, FALSE, cTHREADS_MIN, nThreads, cTHREADS_MAX);
    CreateSpinner (GetDlgItem (hDlg, IDC_DAEMONS), 10, FALSE, cDAEMONS_MIN, nDaemons, cDAEMONS_MAX);
@@ -137,11 +144,14 @@ void Misc_OnInitDialog (HWND hDlg)
    SetDlgItemText (hDlg, IDC_SYSNAME, szSysName);
    SetDlgItemText (hDlg, IDC_ROOTVOLUME, szRootVolume);
    SetDlgItemText (hDlg, IDC_MOUNTDIR, szMountDir);
+   CheckDlgButton (hDlg, IDC_AUTOLANA, (nLanAdapter==-1));
+   EnableWindow(GetDlgItem(hDlg,IDC_LAN_ADAPTER),(nLanAdapter!=-1));
 }
 
 void Misc_OnOK (HWND hDlg)
 {
-   nLanAdapter = SP_GetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER));
+	nLanAdapter =  (IsDlgButtonChecked(hDlg,IDC_AUTOLANA))?-1
+		:SP_GetPos (GetDlgItem (hDlg, IDC_LAN_ADAPTER));
 
    csecProbe = SP_GetPos (GetDlgItem (hDlg, IDC_PROBE));
   
@@ -161,7 +171,7 @@ BOOL Misc_OnApply()
 {
    if (fFirstTime)
       return TRUE;
-   
+
    if (nLanAdapter != g.Configuration.nLanAdapter) {
       if (!Config_SetLanAdapter (nLanAdapter))
          return FALSE;

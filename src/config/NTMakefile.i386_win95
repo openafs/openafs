@@ -327,7 +327,7 @@ C2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
 CPP2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) $(afscppdefs) /c
 
 # Resource compiler macro
-RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS)
+RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\""
 
 # Lex/Yacc macros
 LEX = flex -l

@@ -37,10 +37,11 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.1.1 a
+AFSPRODUCT_VERSION=1.2.2 a
 CELLNAME_DEFAULT=Your Cell Name
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+#NMAKE_DEFINES=-DDEBUG_VERBOSE
 
 !IFNDEF TARGETOS
 TARGETOS = WINNT
@@ -156,7 +157,7 @@ afscdefs =\
      -DAFS_AFSDB_ENV \
      -DAFS_FREELANCE_CLIENT
 
-afscdefs = $(afscdefs) $(AFSDEV_AUXCDEFINES)
+afscdefs = $(afscdefs) $(AFSDEV_AUXCDEFINES) $(NMAKE_DEFINES)
 
 
 # Compiler switches (except include paths and preprocessor defines)
@@ -308,7 +309,7 @@ C2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
 CPP2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
 
 # Resource compiler macro
-RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS)
+RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\""
 
 # Lex/Yacc macros
 LEX = flex -l

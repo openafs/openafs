@@ -330,3 +330,55 @@ void osi_LogDisable(osi_log_t *logp)
 	if (logp)
 		logp->enabled = 0;
 }
+
+#define REG_CLIENT_PARMS_KEY  "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
+#define TRACE_OPTION_EVENT 1
+#define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
+
+DWORD osi_TraceOption=0;
+
+void osi_InitTraceOption()
+{
+	DWORD LSPtype, LSPsize;
+	HKEY NPKey;
+	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
+		    0, KEY_QUERY_VALUE, &NPKey);
+	LSPsize=sizeof(osi_TraceOption);
+	RegQueryValueEx(NPKey, "TraceOption", NULL,
+				&LSPtype, (LPBYTE)&osi_TraceOption, &LSPsize);
+}
+
+
+#define MAXBUF_ 131
+void osi_LogEvent0(char *a,char *b) 
+{
+	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+	if (!ISLOGONTRACE(osi_TraceOption))
+		return;
+	h = RegisterEventSource(NULL, a);
+	ptbuf[0] = b;
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+	DeregisterEventSource(h);
+}
+
+
+void osi_LogEvent(char *a,char *b,char *c,...) 
+{
+	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+	va_list marker;
+	if (!ISLOGONTRACE(osi_TraceOption))
+		return;
+	if (b)
+	{
+		wsprintf(buf,a,b);
+		h = RegisterEventSource(NULL, buf);
+	}
+	else
+		h = RegisterEventSource(NULL, a);
+	va_start(marker,c);
+	_vsnprintf(buf,MAXBUF_,c,marker);
+	ptbuf[0] = buf;
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
+	DeregisterEventSource(h);
+	va_end(marker);
+}

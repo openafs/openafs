@@ -12,24 +12,22 @@ OUTDIR = $(DESTDIR)\WinInstall
 ############################################################################
 
 COMPONENTS = \
-	INSTALL.BAT \
 	afsd.pif \
 	readme.RTF \
-	license.txt \
-	templet.reg \
-	runonce.pif \
 	$(DESTDIR)\bin\util_cr.exe \
 	$(DESTDIR)\root.client\usr\vice\etc\unlog.exe \
-	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext_1033.dll \
-	$(DESTDIR)\lib\afsauthent.dll \
 	$(DESTDIR)\root.client\usr\vice\etc\afsshare.exe \
 	$(DESTDIR)\root.client\usr\vice\etc\fs.exe \
 	$(DESTDIR)\root.client\usr\vice\etc\klog.exe \
 	$(DESTDIR)\bin\kpasswd.exe \
+	$(DESTDIR)\bin\pts.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\tokens.exe
+		
+DLLCOMPONENTS = \
+	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext_1033.dll \
+	$(DESTDIR)\lib\afsauthent.dll \
 	$(DESTDIR)\root.client\usr\vice\etc\libosi.dll \
 	$(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll \
-	$(DESTDIR)\bin\pts.exe \
-	$(DESTDIR)\root.client\usr\vice\etc\tokens.exe \
 	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll \
 	$(DESTDIR)\lib\win95\pthread.dll \
 	$(DESTDIR)\lib\afsrpc.dll
@@ -38,14 +36,17 @@ $(COMPONENTS)::
 	$(DESTDIR)\bin\util_cr.exe ~ $@
 	$(COPY) $@ $(DESTDIR)\WinInstall\.
 
+$(DLLCOMPONENTS)::
+	$(DESTDIR)\bin\util_cr.exe ~ $@
+	$(COPY) $@ $(DESTDIR)\WinInstall\Dll\.
+
 !IF (EXIST(ISBUILD.MAK))
 !INCLUDE ISBUILD.MAK
 !ENDIF
 
 build:
-	copy install.bat $(OUTDIR)\.
 
-install: prep $(COMPONENTS) build
+install: prep $(COMPONENTS) $(DLLCOMPONENTS) build
 
 install9x: install
 
@@ -54,6 +55,9 @@ clean ::
     $(DEL) $(OUTDIR)\DiskIm~1\WebInstall\*
 
 prep :
+	$(COPY) "$(DESTDIR)\WinInstall\config\sock.vxd" "$(DESTDIR)\WinInstall\."
+	$(COPY) "$(DESTDIR)\WinInstall\config\MMAP.vxd" "$(DESTDIR)\WinInstall\."
+	$(COPY) "$(DESTDIR)\WinInstall\config\AFSD.EXE" "$(DESTDIR)\WinInstall\."
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\sock.vxd"
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\MMAP.vxd"
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\AFSD.EXE"

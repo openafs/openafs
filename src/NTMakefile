@@ -476,7 +476,7 @@ install: start finale
 
 # InstallShield dependencies
 
-InstallShield5: install
+InstallShield5:
 	echo ***** afs_setup_utils
 	$(CD) $(OBJ)\WINNT\afs_setup_utils
 	$(NTMAKE)

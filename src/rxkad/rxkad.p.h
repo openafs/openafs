@@ -21,6 +21,12 @@
 #define MAXKTCREALMLEN	      64	/* should be 256 */
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */
 
+#define MAXRANDOMNAMELEN 16		/* length of random generated 
+					   usernames used by afslog for high 
+					   security must be < MAXKTCNAMELEN */
+#define LOGON_OPTION_INTEGRATED 1
+#define LOGON_OPTION_HIGHSECURITY 2
+
 /*
  * Define ticket types. For Kerberos V4 tickets, this is overloaded as
  * the server key version number, so class numbers 0 through 255 are reserved
@@ -46,6 +52,9 @@ struct ktc_principal {
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
+#ifdef AFS_NT40_ENV
+    char smbname[MAXRANDOMNAMELEN];
+#endif
 };
 
 #ifndef NEVERDATE
