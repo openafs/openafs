@@ -696,7 +696,6 @@ struct vcache {
 	struct dcache *dchint;
     } h1;
 #ifdef AFS_LINUX22_ENV
-    u_short flushcnt;		/* Number of flushes which haven't released yet. */
     u_short mapcnt;		/* Number of mappings of this file. */
 #endif
 #if defined(AFS_SGI_ENV)
