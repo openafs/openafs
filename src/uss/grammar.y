@@ -60,31 +60,31 @@ entry	:	DIR_TKN
 		STRING_TKN	/*3-mode*/
 		STRING_TKN	/*4-owner*/
 		accesslist	/*5-access list*/
-			{$$ = uss_perr = uss_procs_BuildDir($2,$3,$4,$5);};
+			{$$ = uss_perr = uss_procs_BuildDir($2,$3,$4,$5);}
 	|	FILE_TKN
 		STRING_TKN	/*2-filename*/
 		STRING_TKN	/*3-mode*/
 		STRING_TKN	/*4-owner*/
 		STRING_TKN	/*5-rototype*/
-			{$$ = uss_perr = uss_procs_CpFile($2, $3, $4, $5);};
+			{$$ = uss_perr = uss_procs_CpFile($2, $3, $4, $5);}
 	|	ECHO_TKN
 		STRING_TKN	/*2-filename*/
 		STRING_TKN	/*3-mode*/
 		STRING_TKN	/*4-owner*/
 		STRING_TKN	/*5-file content*/
-			{$$ = uss_perr = uss_procs_EchoToFile($2, $3, $4, $5);};
+			{$$ = uss_perr = uss_procs_EchoToFile($2, $3, $4, $5);}
 	|	EXEC_TKN
 		STRING_TKN	/*2-command string*/
-			{$$ = uss_perr = uss_procs_Exec($2);};
+			{$$ = uss_perr = uss_procs_Exec($2);}
 	|	LINK_TKN
 		STRING_TKN	/*2-filename1*/
 		STRING_TKN	/*3-filename2*/
-			{$$ = uss_perr = uss_procs_SetLink($2, $3,'h');};
+			{$$ = uss_perr = uss_procs_SetLink($2, $3,'h');}
 
 	|	SYMLINK_TKN
 		STRING_TKN	/*2-filename1*/
 		STRING_TKN	/*3-filename2*/
-			{$$ = uss_perr = uss_procs_SetLink($2, $3,'s');};
+			{$$ = uss_perr = uss_procs_SetLink($2, $3,'s');}
 	|	VOL_TKN
 		STRING_TKN	/*2-vol name*/
 		STRING_TKN	/*3-server*/
@@ -93,17 +93,17 @@ entry	:	DIR_TKN
 		STRING_TKN	/*6-Mount point*/
 		STRING_TKN	/*7-Owner*/
 		accesslist	/*8-access list*/
-			{$$ = uss_perr = uss_vol_CreateVol($2, $3, $4, $5, $6, $7, $8);};
+			{$$ = uss_perr = uss_vol_CreateVol($2, $3, $4, $5, $6, $7, $8);}
 	|	GROUP_TKN
 		STRING_TKN	/*2-declared dir*/
-			{$$ = uss_perr = uss_procs_AddToDirPool($2);};
+			{$$ = uss_perr = uss_procs_AddToDirPool($2);}
 	|	AUTH_TKN
 		STRING_TKN	/*2-user name*/
 		STRING_TKN	/*3-password lifetime (days<255)*/
                 STRING_TKN      /*4-reuse/noreuse */
                 STRING_TKN      /*5-failed login attempts */
                 STRING_TKN      /*6-lockout time */
-			{$$ = uss_perr = uss_kauth_SetFields($2, $3, $4, $5, $6);};
+			{$$ = uss_perr = uss_kauth_SetFields($2, $3, $4, $5, $6);}
 	|	VOL1_TKN
 		STRING_TKN	/*2-vol name*/
 		STRING_TKN	/*3-server*/
@@ -112,9 +112,9 @@ entry	:	DIR_TKN
 		STRING_TKN	/*6-Mount point*/
 		STRING_TKN	/*7-Owner*/
 		STRING_TKN	/*8-access list*/
-			{$$ = uss_perr = uss_vol_CreateVol($2, $3, $4, $5, $6, $7, $8);};
+			{$$ = uss_perr = uss_vol_CreateVol($2, $3, $4, $5, $6, $7, $8);}
 	|	EOL_TKN	/*End of line */
-			{$$=0;};
+			{$$=0;}
 	|	error entry
 		    {uss_procs_PrintErr(line-1, " near \"%s\"\n",yylval.strval);}
 	;
