@@ -257,6 +257,9 @@ FdHandle_t *ih_open(IHandle_t *ihP)
     FD_t fd;
     FD_t closeFd;
 
+    if (!ihP) /* XXX should log here in the fileserver */
+	return NULL;
+
     IH_LOCK
 
     /* Do we already have an open file handle for this Inode? */
