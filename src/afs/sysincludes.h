@@ -142,6 +142,12 @@ typedef unsigned short etap_event_t;
 #include "sys/cmn_err.h"
 #ifdef AFS_SGI64_ENV
 #include <ksys/behavior.h>
+/* in 6.5.20f, ksys/behavior.h doesn't bother to define BHV_IS_BHVL,
+ * but sys/vnode.h uses it in VNODE_TO_FIRST_BHV. It looks like from
+ * older headers like we want the old behavior, so we fake it. */
+#if defined(BHV_PREPARE) && !defined(CELL_CAPABLE)
+#define BHV_IS_BHVL(bhp) (0)
+#endif
 #endif /* AFS_SGI64_ENV */
 #include "fs/efs_inode.h"
 #ifdef AFS_SGI_EFS_IOPS_ENV
