@@ -121,8 +121,9 @@ extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno,
         char akey[8], afs_int32 overwrite);
 extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
 
-
-extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir, void *astr, afs_int32 *aindex);
+struct rx_securityClass;
+extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir, 
+        struct rx_securityClass **astr, afs_int32 *aindex);
 
 
 
