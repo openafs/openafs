@@ -3,10 +3,12 @@ openafs (1.3.64-1) experimental; urgency=low
   * New upstream version
   * Add 2.6 to kern-sysname for i386
   * Apply patch from
-    /afs/cs.cmu.edu/user/jhutz/junk/openafs-patches/openafs-build-on-linux26  which correctly generates 2.6 modules.
+    /afs/cs.cmu.edu/user/jhutz/junk/openafs-patches/openafs-build-on-linux26  which correctly generates 2.6 modules, Closes: #234284
   * use make only_libafs not dest_only_libafs
+    - AS a result, build times are much faster, Closes: #144781
+  * Correct module build scripts to install module package from new location
 
- -- Sam Hartman <hartmans@debian.org>  Sun, 30 May 2004 16:02:19 -0400
+ --
 
 openafs (1.2.11-1) unstable; urgency=high
 

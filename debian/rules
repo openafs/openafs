@@ -240,7 +240,7 @@ binary-modules: build-modules
 
 # Install the software
 	install -d -g root -o root -m 755 debian/$(modulepkg)/lib/modules/$(KVERS)/fs
-	install -g root -o root -m 755  dest/root.client/usr/vice/etc/modload/*.o \
+	install -g root -o root -m 755  debian/tmp/lib/openafs/*o \
 		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 # Fix some stuff up
 	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc

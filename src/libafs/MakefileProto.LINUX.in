@@ -201,8 +201,8 @@ linux_destdirs_libafs.bm: dest_libafs.bm
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = libafs-${CLIENT}.${LINUX_MODULE_EXT}
-LIBAFS_MP = libafs-${CLIENT}.mp.${LINUX_MODULE_EXT}
+LIBAFS = openafs.${LINUX_MODULE_EXT}
+LIBAFS_MP = openafs.${LINUX_MODULE_EXT}
 LIBAFS_EP = libafs-${CLIENT}.ep.${LINUX_MODULE_EXT}
 LIBAFS_BM = libafs-${CLIENT}.bm.${LINUX_MODULE_EXT}
 
