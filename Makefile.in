@@ -269,7 +269,11 @@ login: cmd comerr kauth rxkad
 	amd64_linux24) \
 		echo Skipping pam/login for amd64_linux24 ;; \
 	sun4x_* | sunx86_* | hp_ux11* | ia64_hpux* | *linux* | *fbsd* ) \
-		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
+		if test "@HAVE_PAM@" = "yes"; then \
+			${COMPILE_PART1} pam ${COMPILE_PART2} ; \
+		else \
+			echo Skipping pam for ${SYS_NAME} ; \
+		fi ;; \
 	ppc_darwin* | *_obsd* | *_nbsd* | hp_ux* | rs_aix5* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
