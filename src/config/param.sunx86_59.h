@@ -1,6 +1,15 @@
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
@@ -19,17 +28,13 @@
 #define	AFS_SUN56_ENV		1
 #define AFS_SUN57_ENV		1
 #define AFS_SUN58_ENV		1
+#define AFS_SUN59_ENV		1
+#define AFS_X86_ENV		1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT	1	
 
 #define AFS_HAVE_FLOCK_SYSID    1
-
-#ifdef AFS_NAMEI_ENV
-#define AFS_64BIT_IOPS_ENV     1	/* needed for NAMEI... */
-#else /* AFS_NAMEI_ENV */
-#define AFS_3DISPARES           1	/* Utilize the 3 available disk inode 'spares' */
-#endif /* AFS_NAMEI_ENV */
 
 #include <afs/afs_sysnames.h>
 
@@ -37,16 +42,22 @@
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
+#ifdef AFS_NAMEI_ENV
+#define AFS_64BIT_IOPS_ENV	1	/* needed for NAMEI... */
+#else /* AFS_NAMEI_ENV */
+#define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
+#endif /* AFS_NAMEI_ENV */
+
 #define	AFS_SYSCALL		65
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
 
 /* Machine / Operating system information */
-#define sys_sun4x_58	1
-#define SYS_NAME	"sun4x_58"
-#define SYS_NAME_ID	SYS_NAME_ID_sun4x_58
-#define AFSBIG_ENDIAN	1
+#define sys_sunx86_59	1
+#define SYS_NAME	"sunx86_59"
+#define SYS_NAME_ID	SYS_NAME_ID_sunx86_59
+#define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS    1	/* Use system's ffs. */
 #define AFS_HAVE_VXFS	1	/* Support cache on Veritas vxfs file system */
 #define AFS_HAVE_STATVFS 1	/* System supports statvfs */
@@ -121,6 +132,15 @@
 
 /* This section for user space compiles only */
 
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
@@ -135,10 +155,9 @@
 #define AFS_ENV			1
 #define AFS_USR_SUN5_ENV	1
 #define AFS_USR_SUN6_ENV	1
-#define AFS_USR_SUN7_ENV	1
-#define AFS_USR_SUN8_ENV	1
-
-#define AFS_64BIT_ENV          1
+#define AFS_USR_SUN7_ENV        1
+#define AFS_USR_SUN8_ENV        1
+#define AFS_USR_SUN9_ENV        1
 
 #include <afs/afs_sysnames.h>
 
@@ -153,10 +172,10 @@
 #define AFS_MOUNT_AFS	 1
 
 /* Machine / Operating system information */
-#define sys_sun4x_58	1
-#define SYS_NAME	"sun4x_58"
-#define SYS_NAME_ID	SYS_NAME_ID_sun4x_58
-#define AFSBIG_ENDIAN	1
+#define sys_sunx86_59	1
+#define SYS_NAME	"sunx86_59"
+#define SYS_NAME_ID	SYS_NAME_ID_sunx86_59
+#define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS      0	/* System doesn't support statvfs */
 
