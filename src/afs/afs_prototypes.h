@@ -173,6 +173,7 @@ extern int afs_CellOrAliasExists(char *aname);
 extern int afs_CellNumValid(afs_int32 cellnum);
 extern afs_int32 afs_NewCellAlias(char *alias, char *cell);
 extern struct cell_alias *afs_GetCellAlias(int index);
+extern void afs_PutCellAlias(struct cell_alias *a);
 extern int afs_AFSDBHandler(char *acellName, int acellNameLen,
 	afs_int32 *kernelMsg);
 extern void afs_LookupAFSDB(char *acellName);
@@ -436,7 +437,8 @@ extern void osi_iput(struct inode *ip);
 extern void afs_osi_SetTime(osi_timeval_t *atv);
 
 /* LINUX/osi_misc.c */
-#if AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
+#ifdef AFS_LINUX24_ENV
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
                vnode_t **dirvpp, struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
@@ -454,7 +456,15 @@ extern void check_bad_parent(struct dentry *dp);
 extern void osi_linux_mask(void);
 extern void osi_linux_unmask(void);
 extern void osi_linux_rxkreg(void);
+extern int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag, int change_parent);
+#endif
 
+
+/* OBSD/osi_misc.c */
+#ifdef AFS_OBSD_ENV
+extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+		  afs_uint32 *newpag, int change_parent);
+#endif
 
 /* ARCH/osi_sleep.c */
 extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);

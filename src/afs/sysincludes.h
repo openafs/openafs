@@ -42,7 +42,6 @@
 #include <sys/protosw.h>
 #include <sys/ioctl.h> 
 #include <sys/timeout.h>
-#include <rpc/rpc.h>
 #else /* AFS_OBSD_ENV */
 #ifdef AFS_LINUX22_ENV
 #include <linux/version.h>

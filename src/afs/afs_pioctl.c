@@ -516,7 +516,7 @@ int afs_xioctl (void)
 #endif
 #else
       fd = getf(uap->fd);
-      if (!fd) return;
+      if (!fd) return(EBADF);
 #endif
 #endif
 #endif
@@ -1126,14 +1126,12 @@ int afs_HandlePioctl(struct vcache *avc, afs_int32 acom,
   
 DECL_PIOCTL(PGetFID)
 {
-    register afs_int32 code;
-    
     AFS_STATCNT(PGetFID);
     if (!avc) return EINVAL;
     memcpy(aout, (char *)&avc->fid, sizeof(struct VenusFid));
     *aoutSize = sizeof(struct VenusFid);
     return 0;
-  }
+}
   
 DECL_PIOCTL(PSetAcl)
 {
@@ -1401,12 +1399,12 @@ DECL_PIOCTL(PSetTokens)
     i = tcell->cellNum;
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
-	int pag;
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	afs_int32 pag;
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
-        struct proc *p=current_proc(); /* XXX */
+        struct proc *p = current_proc(); /* XXX */
 #else
-        struct proc *p=curproc; /* XXX */
+        struct proc *p = curproc; /* XXX */
 #endif
         uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
                 p->p_pid, p->p_comm);
@@ -2077,7 +2075,7 @@ DECL_PIOCTL(PGetCacheSize)
 DECL_PIOCTL(PRemoveCallBack)
 {
     register struct conn *tc;
-    register afs_int32 code;
+    register afs_int32 code = 0;
     struct AFSCallBack CallBacks_Array[1];
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
@@ -2124,7 +2122,6 @@ DECL_PIOCTL(PNewCell)
 {
     /* create a new cell */
     afs_int32 cellHosts[MAXCELLHOSTS], *lp, magic=0;
-    register struct cell *tcell;
     char *newcell=0, *linkedcell=0, *tp= ain;
     register afs_int32 code, linkedstate=0, ls;
     u_short fsport = 0, vlport = 0;
@@ -2693,7 +2690,7 @@ DECL_PIOCTL(PSetSysName)
  * l - array of cell ids which have volumes that need to be sorted
  * vlonly - sort vl servers or file servers?
  */
-static void *ReSortCells_cb(struct cell *cell, void *arg)
+static void ReSortCells_cb(struct cell *cell, void *arg)
 {
     afs_int32 *p = (afs_int32 *) arg;
     afs_int32 *l = p + 1;
@@ -2710,33 +2707,33 @@ static void *ReSortCells_cb(struct cell *cell, void *arg)
 
 static void ReSortCells(int s, afs_int32 *l, int vlonly)  
 {
-  int i;
-  struct volume *j;
-  register int  k;
+    int i;
+    struct volume *j;
+    register int  k;
 
-  if (vlonly) {
-      afs_int32 *p;
-      p = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * (s+1));
-      p[0] = s;
-      memcpy(p+1, l, s * sizeof(afs_int32));
-      afs_TraverseCells(&ReSortCells_cb, p);
-      afs_osi_Free(p, sizeof(afs_int32) * (s+1));
-      return;
-  }
+    if (vlonly) {
+	afs_int32 *p;
+	p = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * (s+1));
+	p[0] = s;
+	memcpy(p+1, l, s * sizeof(afs_int32));
+	afs_TraverseCells(&ReSortCells_cb, p);
+	afs_osi_Free(p, sizeof(afs_int32) * (s+1));
+	return;
+    }
 
-  ObtainReadLock(&afs_xvolume);
-  for (i= 0; i< NVOLS; i++) {
-      for (j=afs_volumes[i];j;j=j->next) {
-	  for (k=0;k<s;k++)
-	      if (j->cell == l[k]) {
-		  ObtainWriteLock(&j->lock,233);
-		  afs_SortServers(j->serverHost, MAXHOSTS);
-		  ReleaseWriteLock(&j->lock);
-		  break; 
-	      }
-      }
-  }
-  ReleaseReadLock(&afs_xvolume);
+    ObtainReadLock(&afs_xvolume);
+    for (i= 0; i< NVOLS; i++) {
+	for (j=afs_volumes[i];j;j=j->next) {
+	    for (k=0;k<s;k++)
+		if (j->cell == l[k]) {
+		    ObtainWriteLock(&j->lock,233);
+		    afs_SortServers(j->serverHost, MAXHOSTS);
+		    ReleaseWriteLock(&j->lock);
+		    break; 
+		}
+	}
+    }
+    ReleaseReadLock(&afs_xvolume);
 }
 
 
@@ -2868,7 +2865,6 @@ DECL_PIOCTL(PGetSPrefs)
    int i,j;                   /* counters for hash table traversal */
    struct server *srvr;       /* one of CM's server structs */
    struct srvAddr *sa;
-   afs_uint32 prevh;
    int vlonly;                /* just return vlservers ? */
    int isfs;
    
@@ -3491,7 +3487,6 @@ DECL_PIOCTL(PPrefetchFromTape)
     struct VenusFid tfid;
     struct AFSFid *Fid;
     struct vcache *tvc;
-    XSTATS_DECLS;
 
     AFS_STATCNT(PSetAcl);
     if (!avc)
