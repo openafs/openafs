@@ -2365,8 +2365,9 @@ nextEntry:
          * or if something went wrong, close the search.
          */
         /* ((searchFlags & 1) || ((searchFlags & 2) && eos) */
-	if ((searchFlags & 1) || (returnedNames == 0)
-        	|| code != 0) smb_DeleteDirSearch(dsp);
+	if ((searchFlags & 1) || (returnedNames == 0) || ((searchFlags & 2) &&
+							  eos) || code != 0)
+	    smb_DeleteDirSearch(dsp);
 	if (code)
         	smb_SendTran2Error(vcp, p, opx, code);
 	else {
