@@ -190,8 +190,8 @@ case $AFS_SYSNAME in
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
-	
-	i386_obsd29)
+
+	*_obsd*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
