@@ -1,9 +1,13 @@
-openafs (1.0.1-4) unstable; urgency=low
+openafs (1.0.2-1) unstable; urgency=low
 
-  * Add support for ppc and sparc.
+  * Add support for ppc and sparc, closes: #80835
   * Update maintainer address for modules.
+  * Support for 2.4.0 final (and not just prereleases as before), closes: #82751
+  * New upstream version.
+  * Conflict with openafs-ptutil since it is now included
+  * Fix message in RC script, closes: #82489
 
- --
+ -- Sam Hartman <hartmans@debian.org>  Fri, 19 Jan 2001 17:58:04 -0500
 
 openafs (1.0.1-3) unstable; urgency=low
 
