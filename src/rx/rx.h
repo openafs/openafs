@@ -204,6 +204,9 @@ int ntoh_syserr_conv(int error);
 /* Set the connection dead time for any connections created for this service (server only) */
 #define rx_SetServiceDeadTime(service, seconds) ((service)->secondsUntilDead = (seconds))
 
+/* Enable or disable asymmetric client checking for a service */
+#define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
+
 /* Set connection dead time, for a specific client or server connection */
 extern void rx_SetConnDeadTime();
 
@@ -346,6 +349,7 @@ struct rx_service {
     u_short minProcs;		    /* Minimum # of requests guaranteed executable simultaneously */
     u_short connDeadTime;		    /* Seconds until a client of this service will be declared dead, if it is not responding */
     u_short idleDeadTime;		    /* Time a server will wait for I/O to start up again */
+    u_char checkReach;		    /* Check for asymmetric clients? */
 };
 
 #endif /* KDUMP_RX_LOCK */
