@@ -91,7 +91,7 @@ system	: install
 
 clean	:
 	rm -f *.o gram.c test_gram.c core package package_test *.BAK y.output yacc.tmp yacc.acts\
-	AFS_component_version_number.c
+	AFS_component_version_number.c lex.c y.tab.h
 
 install: package package_test
 	$(INSTALL) -s  -c -m 755 package      ${DESTDIR}etc
