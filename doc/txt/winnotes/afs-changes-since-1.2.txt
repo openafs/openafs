@@ -1,4 +1,44 @@
 Since 1.3.74:
+  * There is currently a maximum cache size of 1.3GB.  The limit is imposed
+    by the largest contiguous block of unused memory within the 2GB process
+    space which can be assigned to the memory mapped file.  Unfortunately,
+    when the executable digital signature verification code is activated
+    Windows sees fit to further segment the process memory which in turn
+    reduces the size of the maximum cache file to less then 800MB.  If
+    larger cache sizes are desired, a new registry value should be set:
+
+      HKLM\SOFTWARE\OpenAFS\Client (DWORD) "VerifyServiceSignature" = 0x0
+
+    Setting this value will disable the runtime verification of digital
+    signatures on afsd_service.exe and the afs dlls which it loads.  It
+    will not disable the the version number check on those same files.
+    The signature verification is not a security messure and is only meant
+    to enhance the ability to afsd_service.exe to detect potential
+    destablizing mixtures of DLLs from incompatible distributions.
+
+    Added code to auto-disable the signature verification check if 
+    the desired cache size is greater then 700MB.
+
+  * Windows' WinTrustVerify(WIN_SPUB_ACTION_PUBLISHED_SOFTWARE) is 
+    used to verify the validity of the afsd_service.exe binary 
+    as well as each of the AFS DLLs loaded by the service.  Not only
+    must the digital signature be valid but the signatures of the 
+    DLL must be signed by the same entity as the service.
+
+  * Implement new functions: cm_freelanceMountPointExists and
+    cm_freelanceSymlinkExists.  Use them along with other validity
+    checks in cm_freelanceAddMount and cm_freelanceAddSymlink to
+    ensure that name collisions do not occur and that empty strings
+    are not valid file names.
+
+    A symlink may not have a name which would resolve to a valid 
+    cell name.  Doing so would prevent access to the cell.
+
+  * Add missing cm_HoldSCacheNoLock call to Freelance mount point
+    re-initialization code.  The reference counts of the fake root.afs
+    volume scache object(s) would become invalid when the mount point
+    or symlink lists were altered.
+
   * Add registry entries to provide mappings from the afsdsbmt.ini
     to the new locations for applications which count on the use
     of the old Profile file APIs.  These apps are likely to fail

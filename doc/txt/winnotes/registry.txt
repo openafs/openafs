@@ -434,6 +434,21 @@ Default : <not defined>
   directory is used.
 
 
+Value   : VerifyServiceSignature
+Type	: REG_DWORD
+Default : 0x1
+
+  This value can be used to disable the runtime verification of 
+  the digital signatures applied to afsd_service.exe and the 
+  OpenAFS DLLs it loads.  This test is performed to verify that 
+  the DLLs which are loaded by afsd_service.exe are from the 
+  same distribution as afsd_service.exe.  This is to prevent
+  random errors caused when DLLs from one distribution of AFS
+  are loaded by another one.  This is not a security test.  The
+  reason for disabling this test is to free up additional memory
+  which can be used for a large cache size.
+
+
 Value   : IoctlDebug
 Type	: REG_DEBUG
 Default : 0x0

@@ -392,6 +392,30 @@ TCP/IP" is disabled on the machine, then communication with the AFS Client
 Service will be impossible.
 
 
+27. The AFS Client Service and related binaries are digitally signed by
+"Secure Endpoints Inc." beginning with the 1.3.7400 release of OpenAFS
+for Windows.  Starting in the 1.3.7500 release, the AFS Client Service
+will perform a run-time verification check to ensure that all AFS related
+DLLs loaded by the service match the same file version number and were
+signed by the same entity.  This check has been added to prevent the
+stability problems caused by more then one version of AFS being installed
+on a machine at the same time.  Many hours of support time have been wasted
+tracking down problems caused by the mixture of files from different 
+releases.  
+
+The registry.txt file documents the "VerifyServiceSignature" registry
+value which can be used to disable the signature check.  The file version
+check cannot be disabled.
+
+
+28. The maximum cache size is approximately 1.3GB.  This is the largest
+contiguous block of memory in the 2GB process address space which can be
+used for the memory mapped file.  Due to fragmentation of the process 
+spaced caused by the digital signature verification code, any attempt to
+specify a cache size greater then 700MB will result in the automatic
+disabling of the signature check.
+
+
 ------------------------------------------------------------------------
 
 Reporting Bugs:
