@@ -21,6 +21,7 @@ RCSID
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #endif
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
