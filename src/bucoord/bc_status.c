@@ -133,7 +133,7 @@ cmdDispatch()
 
 statusWatcher()
 {
-    rtruct rx_connection *tconn = (struct rc_connection *)0;
+     struct rx_connection *tconn = (struct rc_connection *)0;
     statusP curPollPtr = 0;
 
     struct tciStatusS statusPtr;
