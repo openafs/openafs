@@ -42,6 +42,9 @@ typedef struct socket *osi_socket;
 #define	osi_rxSleep(a)	afs_osi_Sleep(a)
 #define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
 #endif /* RX_KERNEL_TRACE */
+#else /* AFS_GLOBAL_SUNLOCK || RX_ENABLE_LOCKS */
+#define	osi_rxSleep(a)	afs_osi_Sleep(a)
+#define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
 #endif
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
