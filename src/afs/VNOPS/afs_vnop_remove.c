@@ -258,7 +258,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     }
 
     /* Check if this is dynroot */
-    if (afs_isDynroot(adp)) {
+    if (afs_IsDynroot(adp)) {
 	code = afs_DynrootVOPRemove(adp, acred, aname);
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
