@@ -8,8 +8,8 @@
 AFS_component_version_number.o: AFS_component_version_number.c
 
 AFS_component_version_number.c: 
-	echo 'char cml_version_number[]="@(#)CML not accessible: No version Information";' >AFS_component_version_number.c;
-	echo 'char* AFSVersion = "afs??"; ' >>AFS_component_version_number.c;
+	echo 'char cml_version_number[]="@(#) OpenAFS devel built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c;
+	echo 'char* AFSVersion = "openafs devel"; ' >>AFS_component_version_number.c;
 
 noversion: install
 
