@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
 	}
 
 
+   if(*argv[1]!='u' && *argv[1]!='U')
+   {
 		hService = CreateService(hSCM, argv[1],
 		_T(argv[3]),
 		SERVICE_ALL_ACCESS,
@@ -38,12 +40,19 @@ int main(int argc, char *argv[])
 		argv[2],
 		NULL,NULL,NULL, NULL, NULL );
 
-	if (hService == NULL)
-	{
-		printf("Create Service failed (%d)\n", GetLastError() );
-		CloseServiceHandle(hSCM);
-	}
-
+		if (hService == NULL) 
+		{
+		    printf("Create Service failed (%d)\n", GetLastError() );
+		    CloseServiceHandle(hSCM);
+		}
+   }
+   else
+   {
+       hService = OpenService( hSCM, argv[1], DELETE);
+       if(hService!=NULL)
+	   DeleteService( hService );
+   }
+   
 	CloseServiceHandle(hService);
 
 

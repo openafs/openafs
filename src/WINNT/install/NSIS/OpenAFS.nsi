@@ -27,18 +27,18 @@
   !define MUI_UNICON "c:\Program Files\NSIS\Contrib\Icons\normal-uninstall.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
-  !define AFS_REGKEY_ROOT "Software\OpenAFS"
+  !define AFS_REGKEY_ROOT "Software\TransarcCorporation"
   CRCCheck force
 
   ;Folder selection page
   InstallDir "$PROGRAMFILES\OpenAFS\AFS"
   
   ;Remember install folder
-  InstallDirRegKey HKCU "Software\OpenAFS\AFS" ""
+  InstallDirRegKey HKCU "Software\TransarcCorporation" ""
   
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
-  !define MUI_LANGDLL_REGISTRY_KEY "Software\OpenAFS" 
+  !define MUI_LANGDLL_REGISTRY_KEY "Software\TransarcCorporation" 
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
   
   ;Where are the files?
@@ -70,6 +70,7 @@
   !insertmacro MUI_PAGECOMMAND_COMPONENTS
   !insertmacro MUI_PAGECOMMAND_DIRECTORY
   Page custom AFSPageGetCellServDB
+  Page custom AFSPageGetCellName
   !insertmacro MUI_PAGECOMMAND_INSTFILES
   !insertmacro MUI_PAGECOMMAND_FINISH
   
@@ -186,6 +187,8 @@
    LangString REINSTALL_SERVER ${LANG_ENGLISH} "Re-install AFS Server"
   
 ;--------------------------------
+; Macros
+
 
 ;--------------------------------
 ;Reserve Files
@@ -201,6 +204,7 @@
 ; OpenAFS CLIENT
 Section "AFS Client" SecClient
 
+  SetShellVarContext all
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
@@ -212,7 +216,7 @@ Section "AFS Client" SecClient
   File "${AFS_CLIENT_BUILDDIR}\tokens.exe"
   File "${AFS_CLIENT_BUILDDIR}\unlog.exe"
   File "${AFS_CLIENT_BUILDDIR}\fs.exe"
-  File "${AFS_CLIENT_BUILDDIR}\libafsconf.dll"
+  File "${AFS_CLIENT_LIBDIR}\libafsconf.lib"
   File "${AFS_CLIENT_LIBDIR}\afsauthent.lib"
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll"
@@ -384,23 +388,15 @@ Section "AFS Client" SecClient
    SetOutPath "$INSTDIR\Client\Program\Sample"
    File "..\..\afsd\sample\token.c"
    
-   ; Client Common
-   SetOutPath "$INSTDIR\Common"
-   File "${AFS_CLIENT_BUILDDIR}\afs_config.exe"
-   File "${AFS_CLIENT_LIBDIR}\afsrpc.dll"
-   File "${AFS_CLIENT_LIBDIR}\afsauthent.dll"
-   File "${AFS_CLIENT_LIBDIR}\afspthread.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
-   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"
-   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
+   Call AFSLangFiles
    
    ; Do SYSTEM32 DIR
    SetOutPath "$SYSDIR"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl"
    ;File "${SDK_DIR}\REDIST\msvcrt.dll"
    ;File "${SDK_DIR}\REDIST\mfc42.dll"
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
    
   ; Do WINDOWSDIR components
   ; Get AFS CellServDB file
@@ -432,34 +428,54 @@ DontUseFile:
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "(Default)" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   
   ; AFS Reg entries
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Title" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Description" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PathName" "$INSTDIR\Client\Program"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Software Type" "File System"
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Title" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Description" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Software Type" "File System"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "PathName" "$INSTDIR\Client\Program"
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
 
   ; Daemon entries
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon" "(Default)" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "Class" 2
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "LogonOptions" 0
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\OpenAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "(Default)" ""
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" 0
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+   
   ;Write start menu entries
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Programs\afscreds.exe"
-  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Programs\afscreds.exe"
+  CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
+  CreateShortCut '"$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"' '"$INSTDIR\Uninstall.exe"'
+  CreateShortCut '"$SMPROGRAMS\OpenAFS\Client\Authentication.lnk"' '"$INSTDIR\Client\Program\afscreds.exe"'
+  CreateShortCut '"$SMSTARTUP\AFS Credentials.lnk"' '"$INSTDIR\Client\Program\afscreds.exe"'
 
+  Push "$INSTDIR\Client\Program"
+  Call AddToPath
+  Push "$INSTDIR\Common"
+  Call AddToPath
+  
   ; Create the AFS service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec "$R0 OpenAFSDaemon ""$INSTDIR\Client\Program\afsd_service.exe"" ""OpenAFS Client Service"""
+  nsExec::Exec '$R0 TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
   Delete $R0
+
+  ;Write cell name
+  ReadINIStr $R0 $1 "Field 2" "State"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   
@@ -468,6 +484,8 @@ SectionEnd
 ;------------------------
 ; OpenAFS SERVER  
 Section "AFS Server" SecServer
+
+  SetShellVarContext all
 
    SetOutPath "$INSTDIR\Server\usr\afs\bin"  
   File "${NSISDIR}\Contrib\UIs\modern.exe"
@@ -487,6 +505,8 @@ SectionEnd
 ; OpenAFS Control Center
 Section "AFS Control Center" SecControl
 
+  SetShellVarContext all
+
    SetOutPath "$INSTDIR\Control"
   File "${NSISDIR}\Contrib\UIs\modern.exe"
    
@@ -501,6 +521,7 @@ SectionEnd
 ;----------------------------
 ; OpenAFS Supplemental Documentation
 Section "Supplemental Documentation" SecDocs
+  SetShellVarContext all
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
@@ -513,8 +534,6 @@ Section "Supplemental Documentation" SecDocs
    
    
 DoEnglish:
-   SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\en_US\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\en_US\html\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef"
@@ -730,6 +749,8 @@ skipServer:
   
   GetTempFilename $0
   File /oname=$0 CellServPage.ini
+  GetTempFilename $1
+  File /oname=$1 AFSCell.ini
    
   
 FunctionEnd
@@ -766,6 +787,19 @@ FunctionEnd
 
 Section "Uninstall"
   
+  SetShellVarContext all
+  ; Delete the AFS service
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
+  nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec '$R0 u TransarcAFSDaemon'
+  Delete $R0
+  
+  Push "$INSTDIR\Client\Program"
+  Call un.RemoveFromPath
+  Push "$INSTDIR\Common"
+  Call un.RemoveFromPath
+  
   Delete "$INSTDIR\modern.exe"
   Delete "$INSTDIR\Client\modern.exe"
   Delete "$INSTDIR\Control_Center\modern.exe"
@@ -784,21 +818,27 @@ Section "Uninstall"
   RMDir "$INSTDIR\Client"
   RMDir "$INSTDIR\Server"
   
-  RMDir "$INSTDIR\Documentation\html\CmdRef"
-  RMDir "$INSTDIR\Documentation\html\InstallGd"
-  RMDir "$INSTDIR\Documentation\html\ReleaseNotes"
-  RMDir "$INSTDIR\Documentation\html\SysAdminGd"
-  RMDIr "$INSTDIR\Documentation\html"
+  RMDir /r "$INSTDIR\Documentation\html\CmdRef"
+  RMDir /r "$INSTDIR\Documentation\html\InstallGd"
+  RMDir /r "$INSTDIR\Documentation\html\ReleaseNotes"
+  RMDir /r "$INSTDIR\Documentation\html\SysAdminGd"
+  RMDIr /r "$INSTDIR\Documentation\html"
   
   RMDir "$INSTDIR\Documentation"
   ; Delete DOC short cut
+  RMDir /r "$INSTDIR\Client\Program"
+  RMDir /r "$INSTDIR\Client"
+  RMDir /r "$INSTDIR\Common"
+
   Delete "$SMPROGRAMS\OpenAFS\Documentation.lnk"
 
   RMDir "$INSTDIR\Control Center"
   RMDir "$INSTDIR"
 
   Delete "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"
-  RMDir "$SMPROGRAMS\OpenAFS"
+  Delete "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk"
+  RMDir /r "$SMPROGRAMS\OpenAFS\Client"
+  RMDir /r "$SMPROGRAMS\OpenAFS"
   
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation"
@@ -828,14 +868,25 @@ Function afs.GetCellServDB
 
 ;Check if we should download CellServDB
 ReadINIStr $R0 $0 "Field 4" "State"
-StrCmp $R0 "0" done
+StrCmp $R0 "0" CheckIncl
 
    ReadINIStr $R0 $0 "Field 5" "State"
    NSISdl::download $R0 "$WINDIR\afsdcell.ini"
    Pop $R0 ;Get the return value
    StrCmp $R0 "success" +2
       MessageBox MB_OK|MB_ICONSTOP "Download failed: $R0"
-
+   goto done
+CheckIncl:
+   ReadINIStr $R0 $0 "Field 3" "State"
+   StrCmp $R0 "0" CheckOther
+   SetOutPath "$WINDIR"
+   File "afsdcell.ini"
+   goto done
+   
+CheckOther:
+   ReadINIStr $R0 $0 "Field 7" "State"
+   CopyFiles $R0 "$WINDIR\afsdcell.ini"
+   
 done:
 
 FunctionEnd
@@ -873,6 +924,20 @@ CheckFileName:
    
    Skip:
    
+FunctionEnd
+
+
+Function AFSPageGetCellName
+   Call IsSilent
+   Pop $R1
+   StrCmp $R1 "/S" exit
+  InstallOptions::dialog $1
+  Pop $R1
+  StrCmp $R1 "cancel" exit
+  StrCmp $R1 "back" done
+  StrCmp $R1 "success" done
+exit: Quit
+done:
 FunctionEnd
 
 ;-------------
@@ -1098,6 +1163,19 @@ FunctionEnd
 
 ;Install English Language Files
 Function AFSLangFiles
+   ; Common files
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config.exe"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"
+   File "${AFS_DESTDIR}\lib\afsauthent.dll"
+   File "${AFS_DESTDIR}\lib\afspthread.dll"
+   File "${AFS_DESTDIR}\lib\afsrpc.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"
+
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
 ;   StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
 ;   StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
@@ -1108,10 +1186,220 @@ Function AFSLangFiles
 ;   StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
    
 DoEnglish:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\en_US\README.TXT"
+
    SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1033.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"
+   goto done
    
 
+done:
 FunctionEnd
+
+
+
+;====================================================
+; AddToPath - Adds the given dir to the search path.
+;        Input - head of the stack
+;        Note - Win9x systems requires reboot
+;====================================================
+Function AddToPath
+  Exch $0
+  Push $1
+  
+  Call IsNT
+  Pop $1
+  StrCmp $1 1 AddToPath_NT
+    ; Not on NT
+    StrCpy $1 $WINDIR 2
+    FileOpen $1 "$1\autoexec.bat" a
+    FileSeek $1 0 END
+    GetFullPathName /SHORT $0 $0
+    FileWrite $1 "$\r$\nSET PATH=%PATH%;$0$\r$\n"
+    FileClose $1
+    Goto AddToPath_done
+
+  AddToPath_NT:
+    ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PATH"
+    StrCmp $1 "" AddToPath_NTdoIt
+      StrCpy $0 "$1;$0"
+      Goto AddToPath_NTdoIt
+    AddToPath_NTdoIt:
+      WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PATH" $0
+      SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+  
+  AddToPath_done:
+    Pop $1
+    Pop $0
+FunctionEnd
+
+;====================================================
+; RemoveFromPath - Remove a given dir from the path
+;     Input: head of the stack
+;====================================================
+Function un.RemoveFromPath
+  Exch $0
+  Push $1
+  Push $2
+  Push $3
+  Push $4
+  
+  Call un.IsNT
+  Pop $1
+  StrCmp $1 1 unRemoveFromPath_NT
+    ; Not on NT
+    StrCpy $1 $WINDIR 2
+    FileOpen $1 "$1\autoexec.bat" r
+    GetTempFileName $4
+    FileOpen $2 $4 w
+    GetFullPathName /SHORT $0 $0
+    StrCpy $0 "SET PATH=%PATH%;$0"
+    SetRebootFlag true
+    Goto unRemoveFromPath_dosLoop
+    
+    unRemoveFromPath_dosLoop:
+      FileRead $1 $3
+      StrCmp $3 "$0$\r$\n" unRemoveFromPath_dosLoop
+      StrCmp $3 "$0$\n" unRemoveFromPath_dosLoop
+      StrCmp $3 "$0" unRemoveFromPath_dosLoop
+      StrCmp $3 "" unRemoveFromPath_dosLoopEnd
+      FileWrite $2 $3
+      Goto unRemoveFromPath_dosLoop
+    
+    unRemoveFromPath_dosLoopEnd:
+      FileClose $2
+      FileClose $1
+      StrCpy $1 $WINDIR 2
+      Delete "$1\autoexec.bat"
+      CopyFiles /SILENT $4 "$1\autoexec.bat"
+      Delete $4
+      Goto unRemoveFromPath_done
+
+  unRemoveFromPath_NT:
+    StrLen $2 $0
+    ReadRegStr $1 HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PATH"
+    Push $1
+    Push $0
+    Call un.StrStr ; Find $0 in $1
+    Pop $0 ; pos of our dir
+    IntCmp $0 -1 unRemoveFromPath_done
+      ; else, it is in path
+      StrCpy $3 $1 $0 ; $3 now has the part of the path before our dir
+      IntOp $2 $2 + $0 ; $2 now contains the pos after our dir in the path (';')
+      IntOp $2 $2 + 1 ; $2 now containts the pos after our dir and the semicolon.
+      StrLen $0 $1
+      StrCpy $1 $1 $0 $2
+      StrCpy $3 "$3$1"
+
+      WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment" "PATH" $3
+      SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+  
+  unRemoveFromPath_done:
+    Pop $4
+    Pop $3
+    Pop $2
+    Pop $1
+    Pop $0
+FunctionEnd
+
+;====================================================
+; IsNT - Returns 1 if the current system is NT, 0
+;        otherwise.
+;     Output: head of the stack
+;====================================================
+Function IsNT
+  Push $0
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+  StrCmp $0 "" 0 IsNT_yes
+  ; we are not NT.
+  Pop $0
+  Push 0
+  Return
+
+  IsNT_yes:
+    ; NT!!!
+    Pop $0
+    Push 1
+FunctionEnd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Uninstall sutff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;====================================================
+; StrStr - Finds a given string in another given string.
+;               Returns -1 if not found and the pos if found.
+;          Input: head of the stack - string to find
+;                      second in the stack - string to find in
+;          Output: head of the stack
+;====================================================
+Function un.StrStr
+  Push $0
+  Exch
+  Pop $0 ; $0 now have the string to find
+  Push $1
+  Exch 2
+  Pop $1 ; $1 now have the string to find in
+  Exch
+  Push $2
+  Push $3
+  Push $4
+  Push $5
+
+  StrCpy $2 -1
+  StrLen $3 $0
+  StrLen $4 $1
+  IntOp $4 $4 - $3
+
+  unStrStr_loop:
+    IntOp $2 $2 + 1
+    IntCmp $2 $4 0 0 unStrStrReturn_notFound
+    StrCpy $5 $1 $3 $2
+    StrCmp $5 $0 unStrStr_done unStrStr_loop
+
+  unStrStrReturn_notFound:
+    StrCpy $2 -1
+
+  unStrStr_done:
+    Pop $5
+    Pop $4
+    Pop $3
+    Exch $2
+    Exch 2
+    Pop $0
+    Pop $1
+FunctionEnd
+
+;====================================================
+; IsNT - Returns 1 if the current system is NT, 0
+;        otherwise.
+;     Output: head of the stack
+;====================================================
+Function un.IsNT
+  Push $0
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+  StrCmp $0 "" 0 unIsNT_yes
+  ; we are not NT.
+  Pop $0
+  Push 0
+  Return
+
+  unIsNT_yes:
+    ; NT!!!
+    Pop $0
+    Push 1
+FunctionEnd
+
+

@@ -9,10 +9,12 @@ $(OJT)\Service.obj: Service.cpp
 $(EXEDIR)\Service.exe: $(OJT)\Service.obj
       $(EXECONLINK) $(OJT)\Service.obj
 
+prebuild:
+   $(COPY) %SystemRoot%\System32\Msvcr71.dll $(EXEDIR)
 
-build:
+build: prebuild
    "C:\Program Files\NSIS\makensis.exe" OpenAFS.nsi
-   copy OpenAFSforWindows.exe $(DESTDIR)\Wininstall\
+   $(COPY) OpenAFSforWindows.exe $(DESTDIR)\Wininstall\
 
 install: $(OJT)\Service.obj $(EXEDIR)\Service.exe build
 
