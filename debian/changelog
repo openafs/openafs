@@ -1,7 +1,9 @@
 openafs (1.0.snap20001106-2) unstable; urgency=low
 
+  * Fix directories for servers to be FHS-reasonable
   * Fix init.d script to actually work for stop this time--tested and works
-  * Add server packages; fairly useless right now but at least we ship the binaries
+  * Add server packages; fairly useless right now but at least we
+      ship the binaries
   * Check to make sure home cell exists and warn user if not
   * Fix purge for openafs-client
 
