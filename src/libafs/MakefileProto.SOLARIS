@@ -111,6 +111,8 @@ LIBAFSNONFS = libafs.nonfs.o
 DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
+# Without this line, gmake tries to build libafs.o
+.PHONY: libafs
 
 # libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
 libafs:	$(DEST_LIBAFSNONFS)
