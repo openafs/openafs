@@ -145,22 +145,6 @@ afs_Daemon(void)
 	afs_FlushVCBs(1);	/* flush queued callbacks */
 	afs_MaybeWakeupTruncateDaemon();	/* free cache space if have too */
 	rx_CheckPackets();	/* Does RX need more packets? */
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-	/* 
-	 * Hack: We always want to make sure there are plenty free
-	 * entries in the small free pool so that we don't have to
-	 * worry about rx (with disabled interrupts) to have to call
-	 * malloc). So we do the dummy call below...
-	 */
-	if (((afs_stats_cmperf.SmallBlocksAlloced -
-	      afs_stats_cmperf.SmallBlocksActive)
-	     <= AFS_SALLOC_LOW_WATER))
-	    osi_FreeSmallSpace(osi_AllocSmallSpace(AFS_SMALLOCSIZ));
-	if (((afs_stats_cmperf.MediumBlocksAlloced -
-	      afs_stats_cmperf.MediumBlocksActive)
-	     <= AFS_MALLOC_LOW_WATER + 50))
-	    osi_AllocMoreMSpace(AFS_MALLOC_LOW_WATER * 2);
-#endif
 
 	now = osi_Time();
 	if (lastCBSlotBump + CBHTSLOTLEN < now) {	/* pretty time-dependant */

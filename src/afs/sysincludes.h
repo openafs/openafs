@@ -304,10 +304,6 @@ MALLOC_DECLARE(M_AFS);
 #include "rpc/types.h"
 #include "rx/xdr.h"
 
-#ifdef AFS_AIX32_ENV
-#  include "net/spl.h"
-#endif
-
 /* Miscellaneous headers */
 #include "h/proc.h"
 #if !defined(AFS_FBSD_ENV)
