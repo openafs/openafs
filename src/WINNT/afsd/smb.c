@@ -51,6 +51,8 @@ int smbShutdownFlag = 0;
 int smb_LogoffTokenTransfer;
 time_t smb_LogoffTransferTimeout;
 
+int smb_StoreAnsiFilenames = 0;
+
 DWORD last_msg_time = 0;
 
 long ongoingOps = 0;
@@ -1653,7 +1655,7 @@ void smb_GCDirSearches(int isV3)
     int i;
         
     victimCount = 0;	/* how many have we got so far */
-    for(tp = smb_lastDirSearchp; tp; tp=prevp) {
+    for (tp = smb_lastDirSearchp; tp; tp=prevp) {
         /* we'll move tp from queue, so
          * do this early.
          */
@@ -2998,6 +3000,8 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     /* parse input parameters */
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     passwordp = smb_ParseASCIIBlock(tp, &tp);
     tp = strrchr(pathp, '\\');
     if (!tp)
@@ -3174,6 +3178,8 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, (char **) &tp);
     osi_assert(pathp != NULL);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     statBlockp = smb_ParseVblBlock(tp, (char **) &tp, &statLen);
     osi_assert(statBlockp != NULL);
     if (statLen == 0) {
@@ -3355,6 +3361,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     inCookiep = smb_ParseVblBlock(tp, &tp, &dataLength);
 
     /* bail out if request looks bad */
@@ -3657,7 +3665,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * attributes */
 
             /* no hidden files */
-            if(smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && smb_IsDotFile(actualName))
+            if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && smb_IsDotFile(actualName))
                 goto nextEntry;
 
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
@@ -3726,6 +3734,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * never hurts to be sure.
              */
             strncpy(op, actualName, 13);
+            if (smb_StoreAnsiFilenames)
+                CharToOem(op, op);
 
             /* Uppercase if requested by client */
             if ((((smb_t *)inp)->flg2 & 1) == 0)
@@ -3809,12 +3819,12 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
+    if (!pathp)
+        return CM_ERROR_BADFD;
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     osi_Log1(smb_logp, "SMB receive check path %s",
              osi_LogSaveString(smb_logp, pathp));
-
-    if (!pathp) {
-        return CM_ERROR_BADFD;
-    }
         
     rootScp = cm_rootSCachep;
         
@@ -3881,11 +3891,11 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
-
-    if (!pathp) {
+    if (!pathp)
         return CM_ERROR_BADSMB;
-    }
-        
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
+               
     osi_Log2(smb_logp, "SMB receive setfile attributes time %d, attr 0x%x",
              dosTime, attribute);
 
@@ -3979,13 +3989,14 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
-
-    if (!pathp) {
+    if (!pathp)
         return CM_ERROR_BADSMB;
-    }
         
     if (*pathp == 0)		/* null path */
         pathp = "\\";
+    else
+        if (smb_StoreAnsiFilenames)
+            OemToChar(pathp,pathp);
 
     osi_Log1(smb_logp, "SMB receive getfile attributes path %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -4139,6 +4150,8 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 	
     osi_Log1(smb_logp, "SMB receive open file [%s]", osi_LogSaveString(smb_logp, pathp));
 
@@ -4324,6 +4337,8 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     osi_Log1(smb_logp, "SMB receive unlink %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -4745,7 +4760,11 @@ smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     tp = smb_GetSMBData(inp, NULL);
     oldPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(oldPathp,oldPathp);
     newPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(newPathp,newPathp);
 
     osi_Log2(smb_logp, "smb rename [%s] to [%s]",
               osi_LogSaveString(smb_logp, oldPathp),
@@ -4822,6 +4841,8 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5843,6 +5864,8 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     if (strcmp(pathp, "\\") == 0)
         return CM_ERROR_EXISTS;
@@ -5957,6 +5980,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5981,8 +6006,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* otherwise, scp points to the parent directory.  Do a lookup, and
      * truncate the file if we find it, otherwise we create the file.
      */
-    if (!lastNamep) lastNamep = pathp;
-    else lastNamep++;
+    if (!lastNamep) 
+        lastNamep = pathp;
+    else 
+        lastNamep++;
 
     if (!smb_IsLegalFilename(lastNamep))
         return CM_ERROR_BADNTFILENAME;

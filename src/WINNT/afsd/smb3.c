@@ -936,6 +936,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     tp = smb_GetSMBData(inp, NULL);
     passwordp = smb_ParseString(tp, &tp);
     pathp = smb_ParseString(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     servicep = smb_ParseString(tp, &tp);
 
     tp = strrchr(pathp, '\\');
@@ -1202,7 +1204,7 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
     smb_SetSMBParm(tp, 7, dataOffset);	/* offset of data */
     smb_SetSMBParm(tp, 8, 0);		/* data displacement */
     smb_SetSMBParm(tp, 9, 0);		/* low: setup word count *
-    * high: resvd */
+                                         * high: resvd */
 
     datap = smb_GetSMBData(tp, NULL);
     *datap++ = 0;				/* we rounded to even */
@@ -2036,7 +2038,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     if (attributes & 1) initialModeBits &= ~0222;
         
     pathp = (char *) (&p->parmsp[14]);
-        
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
+    
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
 
     spacep = cm_GetSpace();
@@ -3578,6 +3582,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         dsp = smb_NewDirSearch(1);
         dsp->attribute = attribute;
         pathp = ((char *) p->parmsp) + 12;	/* points to path */
+        if (smb_StoreAnsiFilenames)
+            OemToChar(pathp,pathp);
         nextCookie = 0;
         maskp = strrchr(pathp, '\\');
         if (maskp == NULL) 
@@ -3974,11 +3980,15 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             else
                 *((u_long *)(op + 60)) = onbytes;
             strcpy(origOp+ohbytes, dep->name);
+            if (smb_StoreAnsiFilenames)
+                CharToOem(origOp+ohbytes, origOp+ohbytes);
 
             /* Short name if requested and needed */
             if (infoLevel == 0x104) {
                 if (NeedShortName) {
                     strcpy(op + 70, shortName);
+                    if (smb_StoreAnsiFilenames)
+                        CharToOem(op + 70, op + 70);
                     *(op + 68) = shortNameEnd - shortName;
                 }
             }
@@ -3996,7 +4006,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* now we emit the attribute.  This is tricky, since
              * we need to really stat the file to find out what
              * type of entry we've got.  Right now, we're copying
-             * out data from * a buffer, while holding the scp
+             * out data from a buffer, while holding the scp
              * locked, so it isn't really convenient to stat
              * something now.  We'll put in a place holder
              * now, and make a second pass before returning this
@@ -4208,6 +4218,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (attributes & 1) initialModeBits &= ~0222;
         
     pathp = smb_GetSMBData(inp, NULL);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -4851,6 +4863,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     realPathp = malloc(nameLength+1);
     memcpy(realPathp, pathp, nameLength);
     realPathp[nameLength] = 0;
+    if (smb_StoreAnsiFilenames)
+        OemToChar(realPathp,realPathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
@@ -5472,6 +5486,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     realPathp = malloc(nameLength+1);
     memcpy(realPathp, pathp, nameLength);
     realPathp[nameLength] = 0;
+    if (smb_StoreAnsiFilenames)
+        OemToChar(realPathp,realPathp);
 
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
@@ -5978,16 +5994,16 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 unsigned char nullSecurityDesc[36] = {
     0x01,				/* security descriptor revision */
     0x00,				/* reserved, should be zero */
-    0x00, 0x80,			/* security descriptor control;
-    * 0x8000 : self-relative format */
+    0x00, 0x80,			        /* security descriptor control;
+                                         * 0x8000 : self-relative format */
     0x14, 0x00, 0x00, 0x00,		/* offset of owner SID */
     0x1c, 0x00, 0x00, 0x00,		/* offset of group SID */
     0x00, 0x00, 0x00, 0x00,		/* offset of DACL would go here */
     0x00, 0x00, 0x00, 0x00,		/* offset of SACL would go here */
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    /* "null SID" owner SID */
+                                        /* "null SID" owner SID */
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    /* "null SID" group SID */
+                                        /* "null SID" group SID */
 };      
 
 long smb_ReceiveNTTranQuerySecurityDesc(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -6214,6 +6230,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
         smb_SetSMBDataLength(watch, parmCount + 1);
 
         if (parmCount != 0) {
+            char * p;
             outData = smb_GetSMBData(watch, NULL);
             outData++;	/* round to get to parmOffset */
             oldOutData = outData;
@@ -6223,7 +6240,11 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             /* Action */
             *((DWORD *)outData) = nameLen*2; outData += 4;
             /* File Name Length */
-            mbstowcs((WCHAR *)outData, filename, nameLen);
+            p = strdup(filename);
+            if (smb_StoreAnsiFilenames)
+                CharToOem(p,p);
+            mbstowcs((WCHAR *)outData, p, nameLen);
+            free(p);
             /* File Name */
             if (twoEntries) {
                 outData = oldOutData + oldParmCount;
@@ -6233,8 +6254,11 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
                 /* Action */
                 *((DWORD *)outData) = otherNameLen*2;
                 outData += 4;	/* File Name Length */
-                mbstowcs((WCHAR *)outData, otherFilename,
-                          otherNameLen);	/* File Name */
+                p = strdup(otherFilename);
+                if (smb_StoreAnsiFilenames)
+                    CharToOem(p,p);
+                mbstowcs((WCHAR *)outData, p, otherNameLen);	/* File Name */
+                free(p);
             }       
         }       
 
@@ -6346,7 +6370,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-    char *oldname, *newname;
+    char *oldPathp, *newPathp;
     long code = 0;
     cm_user_t *userp;
     char * tp;
@@ -6362,18 +6386,22 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     tp = smb_GetSMBData(inp, NULL);
-    oldname = smb_ParseASCIIBlock(tp, &tp);
-    newname = smb_ParseASCIIBlock(tp, &tp);
+    oldPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(oldPathp,oldPathp);
+    newPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(newPathp,newPathp);
 
     osi_Log3(smb_logp, "NTRename for [%s]->[%s] type [%s]",
-             osi_LogSaveString(smb_logp, oldname),
-             osi_LogSaveString(smb_logp, newname),
+             osi_LogSaveString(smb_logp, oldPathp),
+             osi_LogSaveString(smb_logp, newPathp),
              ((rename_type==RENAME_FLAG_RENAME)?"rename":"hardlink"));
 
     if (rename_type == RENAME_FLAG_RENAME) {
-        code = smb_Rename(vcp,inp,oldname,newname,attrs);
+        code = smb_Rename(vcp,inp,oldPathp,newPathp,attrs);
     } else { /* RENAME_FLAG_HARD_LINK */
-        code = smb_Link(vcp,inp,oldname,newname);
+        code = smb_Link(vcp,inp,oldPathp,newPathp);
     }
     return code;
 }
