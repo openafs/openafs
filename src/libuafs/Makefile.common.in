@@ -53,6 +53,39 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_INCDIR} \
         -I${TOP_INCDIR}/afs 
 
+TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
+TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
+TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
+
+TOP_SRC_AFS = ${TOP_SRCDIR}/afs
+TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
+TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
+TOP_SRC_RX = ${TOP_SRCDIR}/rx
+TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
+TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+
+COMMON_INCLUDE = -I. -I.. -I../nfs \
+        -I${TOP_SRCDIR} \
+        -I${TOP_SRCDIR}/afs \
+        -I${TOP_SRCDIR}/afs/UKERNEL \
+        -I${TOP_SRCDIR}/config \
+        -I${TOP_SRCDIR}/rx \
+        -I${TOP_SRCDIR}/rx/UKERNEL \
+        -I${TOP_SRCDIR}/rxkad \
+        -I${TOP_SRCDIR}/rxkad/domestic \
+        -I${TOP_SRCDIR}/util \
+        -I${TOP_OBJDIR}/src \
+        -I${TOP_OBJDIR}/src/afs/UKERNEL \
+        -I${TOP_OBJDIR}/src/afs \
+        -I${TOP_OBJDIR}/src/util \
+        -I${TOP_OBJDIR}/src/rxkad \
+        -I${TOP_OBJDIR}/src/config \
+        -I${TOP_OBJDIR}/src/fsint \
+        -I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/libuafs \
+        -I${TOP_INCDIR} \
+        -I${TOP_INCDIR}/afs \
+
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
 all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) linktest

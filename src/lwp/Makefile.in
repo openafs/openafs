@@ -19,6 +19,9 @@ all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDI
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
+depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+	
+
 #
 # Build rules
 #

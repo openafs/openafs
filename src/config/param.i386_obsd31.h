@@ -1,3 +1,6 @@
+#ifndef UKERNEL
+/* This section for kernel libafs compiles only */
+
 /*
  * Jim Rees, University of Michigan CITI
  */
