@@ -43,7 +43,7 @@ fi
 
 # Need the commands ps, awk, kill, sleep
 PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin
-if $KMODSTAT | grep -q openafs ; then
+if $KMODSTAT | perl -e 'exit not grep /openafs/, <>' ; then
 :
 else
 if [ -d $VICEETC/afs.kext ]; then
@@ -54,7 +54,7 @@ else
 	exit 1
 fi
 fi
-if $KMODSTAT | grep -q openafs ; then
+if $KMODSTAT | perl -e 'exit not grep /openafs/, <>' ; then
 :
 else
 	echo "AFS kernel extensions failed to initialize. Skipping AFS startup."
