@@ -1,14 +1,18 @@
 #!/bin/sh -e
+set -e
 
 
 # This script reads in  a set of lines in the form
 # destination sources
 # andmoves sources to destination
 # destination is relative to the debian directory
+target=`pwd`
+
+cd dest
 
 while read dest srcs ; do
-    mkdir -p debian/$dest ||true
-    for foo in $srcs; do
-	cp -rp  dest/$foo debian/$dest
+    mkdir -p ${target}/debian/$dest ||true
+    for foo in "$srcs"; do
+	cp -rp $foo ${target}/debian/$dest
 	    done
 done
