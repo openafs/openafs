@@ -995,8 +995,19 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
      * that we stopped early, probably because we found the entry we're
      * looking for.  Any other non-zero code is an error.
      */
-    if (code && code != CM_ERROR_STOPNOW) 
+    if (code && code != CM_ERROR_STOPNOW) { 
+        /* if the cm_scache_t we are searching in is not a directory 
+         * we must return path not found because the error 
+         * is to describe the final component not an intermediary
+         */
+        if (code == CM_ERROR_NOTDIR) {
+            if (flags & CM_FLAG_CHECKPATH)
+                return CM_ERROR_NOSUCHPATH;
+            else
+                return CM_ERROR_NOSUCHFILE;
+        }
         return code;
+    }
 
     getroot = (dscp==cm_rootSCachep) ;
     if (!rock.found) {
