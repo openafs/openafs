@@ -310,15 +310,25 @@ uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop)
 void
 afs_osi_SetTime(osi_timeval_t * tvp)
 {
-    extern int (*sys_settimeofdayp) (struct timeval * tv,
-				     struct timezone * tz);
-#ifdef AFS_LINUX_64BIT_KERNEL
+#if defined(AFS_LINUX24_ENV)
+
+#if defined(AFS_LINUX26_ENV)
+    struct timespec tv;
+    tv.tv_sec = tvp->tv_sec;
+    tv.tv_nsec = tvp->tv_usec * NSEC_PER_USEC;
+#else
     struct timeval tv;
-    AFS_STATCNT(osi_SetTime);
     tv.tv_sec = tvp->tv_sec;
     tv.tv_usec = tvp->tv_usec;
-    (void)(*sys_settimeofdayp) (&tv, NULL);
+#endif
+
+    AFS_STATCNT(osi_SetTime);
+
+    do_settimeofday(&tv);
 #else
+    extern int (*sys_settimeofdayp) (struct timeval * tv,
+				     struct timezone * tz);
+
     KERNEL_SPACE_DECL;
 
     AFS_STATCNT(osi_SetTime);
