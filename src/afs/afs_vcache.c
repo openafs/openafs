@@ -957,7 +957,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif /* AFS_SGI_ENV */
 #if defined(AFS_LINUX22_ENV)
     {
-	struct inode *ip = AFSTOV(tvc);
+	struct inode *ip = AFSTOI(tvc);
 	sema_init(&ip->i_sem, 1);
 #if defined(AFS_LINUX24_ENV)
 	sema_init(&ip->i_zombie, 1);
