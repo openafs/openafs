@@ -137,7 +137,8 @@ asmlinkage long afs_xsetgroups(int gidsetsize, gid_t *grouplist)
     crfree(cr);
     unlock_kernel();
 
-    return code;
+    /* Linux syscall ABI returns errno as negative */
+    return (- code);
 }
 
 #if defined(AFS_LINUX24_ENV)
@@ -169,7 +170,8 @@ asmlinkage int afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
     crfree(cr);
     unlock_kernel();
 
-    return code;
+    /* Linux syscall ABI returns errno as negative */
+    return (- code);
 }
 #endif
 
@@ -202,7 +204,8 @@ asmlinkage int afs32_xsetgroups(int gidsetsize, __kernel_gid_t32 *grouplist)
     crfree(cr);
     unlock_kernel();
 
-    return code;
+    /* Linux syscall ABI returns errno as negative */
+    return (- code);
 }
 #ifdef AFS_LINUX24_ENV
 /* Intercept the uid32 system call as used by 32bit programs. */
@@ -233,7 +236,8 @@ asmlinkage int afs32_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
     crfree(cr);
     unlock_kernel();
 
-    return code;
+    /* Linux syscall ABI returns errno as negative */
+    return (- code);
 }
 #endif
 #endif
