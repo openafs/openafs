@@ -31,6 +31,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
+		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
 
 	alpha_dux50)
@@ -42,6 +43,7 @@ case $AFS_SYSNAME in
 		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
+		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
 
 	alpha_linux_22)
@@ -53,6 +55,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	alpha_linux_24)
@@ -64,6 +67,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	hp_ux102)
@@ -90,6 +94,7 @@ case $AFS_SYSNAME in
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		YACC="/opt/langtools/bin/yacc"
+		SHLIB_LINKER="ld -b"
 		;;
 
 	hp_ux110)
@@ -119,6 +124,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBS="${LIB_AFSDB} -lnsl"
 		YACC="/opt/langtools/bin/yacc"
+		SHLIB_LINKER="ld -b"
 		;;
 
 	i386_fbsd_4*)
@@ -155,6 +161,7 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -G0"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	i386_linux22)
@@ -168,6 +175,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	i386_linux24)
@@ -180,6 +188,7 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 	
 	i386_obsd29)
@@ -204,6 +213,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc_darwin_12)
@@ -246,6 +256,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	ppc_linux24)
@@ -257,6 +268,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	rs_aix42)
@@ -272,6 +284,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		;;
 
 	s390_linux22)
@@ -287,6 +300,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	s390_linux24)
@@ -302,6 +316,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	sgi_62)
@@ -316,6 +331,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-o32"
 		XLDFLAGS64="-64"
 		XLDFLAGS="-o32"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sgi_63)
@@ -330,6 +346,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -o32"
 		XLDFLAGS64="-64"
 		XLDFLAGS="-o32"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sgi_64)
@@ -344,6 +361,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -n32 -woff 1009,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552"
 		XLDFLAGS64="-64"
 		XLDFLAGS="-n32"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sgi_65)
@@ -360,6 +378,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-n32 -mips3 -woff 1009,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552"
 		XLDFLAGS64="-64 -mips3"
 		XLDFLAGS="-n32 -mips3"
+		SHLIB_LINKER="${CC} -shared"
 		;;
 
 	sparc64_linux22)
@@ -371,6 +390,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	sparc64_linux24)
@@ -382,6 +402,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	sparc_linux22)
@@ -393,6 +414,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libncurses.so"
 		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
 	sun4_413)
@@ -424,6 +446,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		LD="/usr/ccs/bin/ld"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 	sun4x_56)
@@ -444,6 +467,7 @@ case $AFS_SYSNAME in
 		LD="/usr/ccs/bin/ld"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 	sun4x_57)
@@ -465,6 +489,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 	sun4x_58)
@@ -486,6 +511,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 	sun4x_59)
@@ -507,6 +533,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 	sunx86_57)
@@ -528,6 +555,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 
@@ -550,6 +578,7 @@ case $AFS_SYSNAME in
 		XLIBELFA="-lelf"
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text"
 		;;
 
 

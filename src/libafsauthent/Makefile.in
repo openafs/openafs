@@ -1,3 +1,8 @@
+# API version. When something changes, increment as appropriate. 
+# Ignore at your own risk.
+LIBAFSAUTHENTMAJOR=1
+LIBAFSAUTHENTMINOR=0
+
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -93,6 +98,22 @@ LIBOBJS = \
 all: ${TOP_LIBDIR}/libafsauthent.a
 
 install: ${DESTDIR}${libdir}/libafsauthent.a
+
+LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
+
+${DEST}${libdir}/libafsauthent.${SHLIB_SUFFIX}: ${LIBAFSAUTHENT}
+        ${INSTALL} ${LIBAFSAUTHENT} ${DEST}${libdir}/${LIBAFSAUTHENT}
+        -ln -f -s ${LIBAFSAUTHENT} ${DEST}${libdir}/libafsauthent.${SHLIB_SUFFIX}
+
+${LIBAFSAUTHENT}: ${LIBOBJS}
+	case ${SYS_NAME} in \
+	rs_aix4*) \
+		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -bE:afsauthent.exp -lafsrpc ${MT_LIBS};; \
+	sun*_5*) \
+		${SHLIB_LINKER} -h ${LIBAFSAUTHENT} -o ${LIBAFSAUTHENT} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+	*) \
+		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
+	esac
 
 ${DEST}/lib/libafsauthent.a: libafsauthent.a
 	${INSTALL} $? $@
@@ -244,8 +265,16 @@ clean:
 ${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a
 	${INSTALL} $? $@
 
+${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}: ${LIBAFSAUTHENT}
+        ${INSTALL} ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
+        -ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
+
 ${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
 	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}: ${LIBAFSAUTHENT}
+        ${INSTALL} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
+        -ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
 
 dest: ${DEST}/lib/libafsauthent.a
 
