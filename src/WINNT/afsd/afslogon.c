@@ -611,7 +611,7 @@ DWORD APIENTRY NPLogonNotify(
     DWORD code;
 
     int pw_exp;
-    char *reason;
+    char *reason = 0;
     char *ctemp;
 
     BOOLEAN interactive;
@@ -623,7 +623,7 @@ DWORD APIENTRY NPLogonNotify(
 
     BOOLEAN afsWillAutoStart;
 
-    BOOLEAN uppercased_name = TRUE;
+    BOOLEAN lowercased_name = TRUE;
 
     LogonOptions_t opt; /* domain specific logon options */
     int retryInterval;
@@ -654,10 +654,10 @@ DWORD APIENTRY NPLogonNotify(
     ctemp = strchr(uname, '@');
     if (ctemp) *ctemp = 0;
 
-    /* is the name all uppercase? */
+    /* is the name all lowercase? */
     for ( ctemp = uname; *ctemp ; ctemp++) {
-        if ( islower(*ctemp) ) {
-            uppercased_name = FALSE;
+        if ( !islower(*ctemp) ) {
+            lowercased_name = FALSE;
             break;
         }
     }
@@ -739,38 +739,44 @@ DWORD APIENTRY NPLogonNotify(
 		
         /* if Integrated Logon  */
         if (ISLOGONINTEGRATED(opt.LogonOption))
-        {			
+        {	
             if ( KFW_is_available() ) {
                 code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
-                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",uname,opt.smbName,cell,code);
-            }
-            else {
+                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+                           uname,opt.smbName,cell,code);
+            } else {
                 code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                     uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
                                                     &reason);
-                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x]",
-                            code);
+
+                DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s] Reason[%s]",
+                            code,uname,cell,reason ? reason : "<none>");
+                {
+                    char msg[2048];
+                    sprintf(msg, "Code[%x] uname[%s] Cell[%s] Reason[%s]",
+                            code,uname,cell,reason ? reason : "<none>");
+                    MessageBox(hwndOwner,
+                                msg,
+                                "AFS Logon",
+                                MB_ICONINFORMATION | MB_OK);
+                }
             }       
-            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && uppercased_name ) {
+            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
                 for ( ctemp = uname; *ctemp ; ctemp++) {
                     *ctemp = tolower(*ctemp);
                 }
-                uppercased_name = FALSE;
+                lowercased_name = TRUE;
                 goto sleeping;
             }
 
             /* is service started yet?*/
-            DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s]",
-                        code,uname,cell);
-
             /* If we've failed because the client isn't running yet and the
             * client is set to autostart (and therefore it makes sense for
             * us to wait for it to start) then sleep a while and try again. 
             * If the error was something else, then give up. */
             if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
                 break;
-        }
-        else {  
+        } else {  
             /*JUST check to see if its running*/
             if (IsServiceRunning())
                 break;

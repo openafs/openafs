@@ -100,7 +100,7 @@ int smb_V3IsStarMask(char *maskp)
     char tc;
 
     while (tc = *maskp++)
-        if (tc == '?' || tc == '*') 
+        if (tc == '?' || tc == '*' || tc == '<' || tc == '>') 
             return 1;
     return 0;
 }
