@@ -45,7 +45,9 @@ RCSID("$Header$");
  */
 
 #include "xdr.h"
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+#include <limits.h>
+#else
 #include <netinet/in.h>
 #endif
 
@@ -114,7 +116,7 @@ xdrmem_putint32(xdrs, lp)
 	afs_int32 *lp;
 {
     if (xdrs->x_handy -= sizeof(afs_int32))
-	eturn (FALSE);
+	return (FALSE);
     else
 	xdrs->x_handy -= sizeof(afs_int32);
     

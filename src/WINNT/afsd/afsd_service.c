@@ -281,7 +281,12 @@ void main()
 	return ;
 }
 #else
+
+#ifdef _CRTAPI1
 void _CRTAPI1 main()
+#else
+void  main()
+#endif
 {
 	LONG status = ERROR_SUCCESS;
 	SERVICE_TABLE_ENTRY dispatchTable[] = {
