@@ -515,25 +515,25 @@ char *name; {
     double QuotaUsed =0.0;
     double PartUsed =0.0;
     int WARN = 0;
-    printf("%-20s",name);
+    printf("%-25.25s",name);
 
     if (status->MaxQuota != 0) {
-	printf("%8d%8d", status->MaxQuota, status->BlocksInUse);
+	printf("%10d%10d", status->MaxQuota, status->BlocksInUse);
 	QuotaUsed = ((((double)status->BlocksInUse)/status->MaxQuota) * 100.0);
     } else {
-	printf("no limit%8d", status->BlocksInUse);
+	printf("no limit%10d", status->BlocksInUse);
     }
     if (QuotaUsed > 90.0){
-	printf(" %8.0f%%<<", QuotaUsed);
+	printf(" %5.0f%%<<", QuotaUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", QuotaUsed);
+    else printf(" %5.0f%%  ", QuotaUsed);
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 97.0){
-	printf(" %8.0f%%<<", PartUsed);
+	printf(" %9.0f%%<<", PartUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", PartUsed);
+    else printf(" %9.0f%%  ", PartUsed);
     if (WARN){
 	printf("\t<<WARNING\n");
     }
@@ -545,16 +545,16 @@ VolumeStatus *status;
 char *name; {
     double PartUsed =0.0;
     int WARN = 0;
-    printf("%-20s",name);
+    printf("%-25.25s",name);
 
-    printf("%8d%8d%8d", status->PartMaxBlocks, status->PartMaxBlocks - status->PartBlocksAvail, status->PartBlocksAvail);
+    printf("%10d%10d%10d", status->PartMaxBlocks, status->PartMaxBlocks - status->PartBlocksAvail, status->PartBlocksAvail);
 	
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 90.0){
-	printf(" %8.0f%%<<", PartUsed);
+	printf(" %4.0f%%<<", PartUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", PartUsed);
+    else printf(" %4.0f%%  ", PartUsed);
     if (WARN){
 	printf("\t<<WARNING\n");
     }
@@ -1110,8 +1110,8 @@ register struct cmd_syndesc *as; {
     struct VolumeStatus *status;
     char *name;
     
-    printf("%-20s%-9s%-8s%-11s%-11s\n",
-	    "Volume Name","   Quota", "   Used", "   % Used", " Partition");
+    printf("%-25s%-10s%-10s%-7s%-11s\n", 
+           "Volume Name", "     Quota", "      Used", " %Used", "  Partition");
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -1172,8 +1172,8 @@ register struct cmd_syndesc *as; {
     char *name;
     struct VolumeStatus *status;
     
-    printf("%-20s%-9s%-8s%-11s%-11s\n",
-	    "Volume Name","  kbytes ", " used", "  avail ", " %used");
+    printf("%-25s%-10s%-10s%-10s%-6s\n", "Volume Name", "    kbytes",
+	   "      used", "     avail", " %used");
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
