@@ -335,8 +335,8 @@ int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
 void 
 afs_umount_begin(struct super_block *sbp)
 {
-    afs_shuttingdown=1;
     afs_put_super(sbp);      
+    afs_shuttingdown=1;
     afs_was_mounted=0;
 }
 
