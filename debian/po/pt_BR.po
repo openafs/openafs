@@ -13,10 +13,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs_1.2.8-4\n"
+"Project-Id-Version: openafs_1.2.10-1\n"
 "POT-Creation-Date: 2003-07-26 17:26-0400\n"
-"PO-Revision-Date: 2003-04-06 18:03-0300\n"
-"Last-Translator: André Luís Lopes <andrelop@ig.com.br>\n"
+"PO-Revision-Date: 2003-08-31 13:28-0300\n"
+"Last-Translator: André Luís Lopes <andrelop@debian.org>\n"
 "Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-1\n"
@@ -59,15 +59,14 @@ msgstr "A qual célula AFS esta estação de trabalho pertence ?"
 
 #. Description
 #: ../openafs-client.templates:16
-#, fuzzy
 msgid ""
 "AFS filespace is organized into cells or administrative domains. Each "
 "workstation belongs to one cell.  Usually the cell is the DNS domain name of "
 "the site."
 msgstr ""
-"O espaço de arquivo AFS é organizado em células ou domínios administrativos. "
-"Cada estação de trabalho pertence a uma célula. Normalmente a  célula é o "
-"nome de domínio DNS do site."
+"O espaço de arquivo AFS é organizado em células ou domínios "
+"administrativos. Cada estação de trabalho pertence a uma célula. "
+"Normalmente a célula é o nome de domínio DNS do site."
 
 #. Description
 #: ../openafs-client.templates:24
@@ -76,17 +75,17 @@ msgstr "Qual o tamanho de seu cache AFS (em kb) ?"
 
 #. Description
 #: ../openafs-client.templates:24
-#, fuzzy
 msgid ""
 "AFS uses a  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
 msgstr ""
-"O AFS usa uma àrea do disco para fazer cache de arquivos remotos para acesso "
-"mais rápido. Esse cache será montando em /var/cache/openafs. É importante "
-"que o cache não ocupe toda a partrição na qual está localizado. GEralmente, "
-"os usuários AFS acham útil dedicar uma partição para seus caches AFS."
+"O AFS usa uma àrea do disco para fazer cache de arquivos remotos para "
+"acesso mais rápido. Esse cache será montando em /var/cache/openafs. É "
+"importante que o cache não ocupe toda a partrição na qual está "
+"localizado. Geralmente, os usuários AFS acham útil dedicar uma partição "
+"para seus caches AFS."
 
 #. Description
 #: ../openafs-client.templates:34
@@ -131,9 +130,8 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:54
-#, fuzzy
 msgid "Encrypt authenticated traffic with AFS fileserver?"
-msgstr "Encriptar o tráfego de autenticação com o servidor de arquivos AFS ?"
+msgstr "Encriptar o tráfego autenticado com o servidor de arquivos AFS ?"
 
 #. Description
 #: ../openafs-client.templates:54

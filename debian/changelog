@@ -1,3 +1,9 @@
+openafs (1.2.10-2) unstable; urgency=low
+
+  * New Brazilian Portuguese (pt_BR) translations, Closes: #208035
+
+ --
+
 openafs (1.2.10-1) unstable; urgency=low
 
   * New upstream version
