@@ -171,10 +171,10 @@ O) Bosserver tests
 200) Salvage a server (bossalvageserver)
 
 P) Regression
-10) Restore volume with a bad uniquifier in it, salvage, check. (?)
-20) Check for bad dentry caching on Linux taking advantage of last test. (?)
-30) Write a file larger than the cache. (fcachesize-write-file)
-40) Read a file larger than the cache. (fcachesize-read-file)
+10) Write a file larger than the cache. (fcachesize-write-file)
+20) Read a file larger than the cache. (fcachesize-read-file)
+30) Restore volume with a bad uniquifier in it, salvage, check. (baduniq)
+40) Check for bad dentry caching on Linux taking advantage of last test. (?)
 
 ---
 Copyright information
