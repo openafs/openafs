@@ -2473,11 +2473,7 @@ int afs_InitCacheFile(afile, ainode)
 	tdc->f.inode = VTOI(filevp->d_inode)->i_number;
 	dput(filevp);
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
-	tdc->f.inode = VnodeToIno(filevp);
-#else
-	tdc->f.inode = VTOI(filevp)->i_number;
-#endif
+	tdc->f.inode = afs_vnodeToInumber(filevp);
 #ifdef AFS_DEC_ENV
 	grele(filevp);
 #else

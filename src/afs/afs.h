@@ -1062,5 +1062,31 @@ extern int afs_norefpanic;
 #define VN_UNLOCK(vp)           simple_unlock(&(vp)->v_lock)
 #endif
 
+/* get a file's serial number from a vnode */
+#ifndef afs_vnodeToInumber
+#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
+#define afs_vnodeToInumber(V) VnodeToIno(V)
+#else
+#ifdef AFS_DECOSF_ENV
+#define afs_vnodeToInumber(V) osi_vnodeToInumber(V)
+#else
+#define afs_vnodeToInumber(V) (VTOI(V)->i_number)
+#endif /* AFS_DECOSF_ENV */
+#endif /* AFS_SGI62_ENV */
+#endif
+
+/* get a file's device number from a vnode */
+#ifndef afs_vnodeToDev
+#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
+#define afs_vnodeToDev(V) VnodeToDev(V)
+#else
+#ifdef AFS_DECOSF_ENV
+#define afs_vnodeToDev(V) osi_vnodeToDev(V)
+#else
+#define afs_vnodeToDev(V) (VTOI(V)->i_dev)
+#endif /* AFS_DECOSF_ENV */
+#endif /* AFS_SGI62_ENV */
+#endif
+
 #endif	/* _AFS_H_ */
 
