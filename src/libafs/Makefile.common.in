@@ -46,9 +46,9 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -P -c $<
 
 .c.o:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -c $<
-CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) ${DBG} $(CFLAGS) -c $?
-CRULE_OPT=	$(CC) $(COMMON_INCLUDE) ${DBG} ${OPTMZ} $(CFLAGS) -c $?
+	$(CC) $(COMMON_INCLUDE) $(CFLAGS) $(KERN_DBG) -c $<
+CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) -c $?
+CRULE_OPT=	$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) -c $?
 
 system:	all
 
