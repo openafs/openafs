@@ -899,7 +899,7 @@ static void rxi_DestroyConnectionNoLock(conn)
 				   RX_CALL_REFCOUNT_DELAY);
 		    if (call->state == RX_STATE_PRECALL ||
 			call->state == RX_STATE_ACTIVE) {
-			rxi_SendDelayedAck(call->delayedAckEvent, call, 0);
+			rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
 		    } else {
 			rxi_AckAll((struct rxevent *)0, call, 0);
 		    }
@@ -4285,12 +4285,15 @@ void rxi_ConnectionError(conn, error)
 {
     if (error) {
 	register int i;
+	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
 	    rxevent_Cancel(conn->challengeEvent, (struct rx_call*)0, 0);
 	if (conn->checkReachEvent) {
 	    rxevent_Cancel(conn->checkReachEvent, (struct rx_call*)0, 0);
 	    conn->checkReachEvent = 0;
+	    conn->refCount--;
 	}
+	MUTEX_EXIT(&conn->conn_data_lock);
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
