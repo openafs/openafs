@@ -898,7 +898,7 @@ parse_threshEntry(a_line)
 	    fprintf(stderr, "[ %s ] Programming error 2\n", rn);
 	    return (-1);
 	}
-    } else if ((strcasecmp(arg1, "cm")) != 0 && (strcasecmp(arg1, "cm")) != 0) {
+    } else {
 	fprintf(stderr,
 		"[ %s ] Syntax error. Second argument should be \"fs\" or \"cm\" \n",
 		rn);
