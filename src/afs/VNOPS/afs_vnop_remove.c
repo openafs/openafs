@@ -402,11 +402,16 @@ OSI_VC_DECL(adp);
 	Ttvcr = VREFCOUNT(tvc);
 #ifdef	AFS_AIX_ENV
     if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) {
+	&& !(tvc->states & CUnlinked)) 
+#else
+#ifdef AFS_DARWIN14_ENV
+    if (tvc && (VREFCOUNT(tvc) > 1 + DARWIN_REFBASE) && tvc->opens > 0 && !(tvc->states & CUnlinked)) 
 #else
     if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) {
+	&& !(tvc->states & CUnlinked)) 
 #endif
+#endif
+    {
 	char *unlname = newname();
 
 	ReleaseWriteLock(&adp->lock);
@@ -454,6 +459,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
     struct VenusFid dirFid;
     register struct dcache *tdc;
     afs_int32 code = 0;
+    int oldref;
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;
@@ -470,7 +476,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN14_ENV)
 	    /* this is called by vrele (via VOP_INACTIVE) when the refcount
 	     * is 0. we can't just call VN_HOLD since vref will panic.
 	     * we can't just call osi_vnhold because a later AFS_RELE will call
@@ -488,6 +494,12 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	     */
 	    avc->states &= ~(CUnlinked | CUnlinkedDel);
 
+#ifdef AFS_DARWIN14_ENV
+           if (VREFCOUNT(avc) < 4) {
+               oldref = 4 - VREFCOUNT(avc);
+               VREFCOUNT_SET(avc, 4);
+           }
+#endif
 	    ReleaseWriteLock(&avc->lock);
 
 	    dirFid.Cell = avc->fid.Cell;
@@ -512,8 +524,15 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);
 #ifdef AFS_DARWIN_ENV
+#ifndef AFS_DARWIN14_ENV
 	    osi_Assert(VREFCOUNT(avc) == 1);
 	    VREFCOUNT_SET(avc, 0);
+#else
+	    if (oldref) {
+	        int newref = VREFCOUNT(avc) - oldref;
+		VREFCOUNT_SET(avc, newref);
+	    }
+#endif
 #endif
 	}
     } else {

@@ -371,6 +371,17 @@ afs_vop_close(ap)
 	    printf("afs: WARNING: ui_refcount panic averted\n");
 	}
     }
+    if (UBCINFOMISSING(ap->a_vp) ||
+	UBCINFORECLAIMED(ap->a_vp)) {
+	if (UBCINFORECLAIMED(ap->a_vp) && ISSET(ap->a_vp->v_flag, 
+						(VXLOCK|VORECLAIM))) {
+	    printf("no ubc for %x in close, reclaim set\n", ap->a_vp);
+	    return (ENXIO);
+	} else {
+	    printf("no ubc for %x in close, put back\n", ap->a_vp);
+	    ubc_info_init(ap->a_vp);
+	}
+    }
 #endif
 
     return code;
@@ -852,7 +863,8 @@ afs_vop_remove(ap)
     cache_purge(vp);
     if (!error && UBCINFOEXISTS(vp)) {
 #ifdef AFS_DARWIN14_ENV
-	(void)ubc_uncache(vp);
+	/* If crashes continue in ubc_hold, comment this out */
+	/* (void)ubc_uncache(vp);*/
 #else
 	int wasmapped = ubc_issetflags(vp, UI_WASMAPPED);
 	int hasobjref = ubc_issetflags(vp, UI_HASOBJREF);
