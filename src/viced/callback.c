@@ -358,7 +358,12 @@ static TAdd(cb, thead)
 
 	cb->tprev = thp->tprev;
 	cb->tnext = *thead;
-	thp->tprev = (itocb(thp->tprev)->tnext = cbtoi(cb));
+	if (thp) {
+	  if (thp->tprev) 
+	    thp->tprev = (itocb(thp->tprev)->tnext = cbtoi(cb));
+	  else 
+	    thp->tprev = cbtoi(cb);
+	}
     }
     cb->thead = ttoi(thead);
 
@@ -374,8 +379,10 @@ static TDel(cb)
 
     if (*thead == cbtoi(cb))
 	*thead = (*thead == cb->tnext? 0: cb->tnext);
-    itocb(cb->tprev)->tnext = cb->tnext;
-    itocb(cb->tnext)->tprev = cb->tprev;
+    if (itocb(cb->tprev)) 
+      itocb(cb->tprev)->tnext = cb->tnext;
+    if (itocb(cb->tnext)) 
+      itocb(cb->tnext)->tprev = cb->tprev;
 
 } /*TDel*/
 
