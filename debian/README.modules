@@ -2,7 +2,8 @@
 ----------------------------------------
 
 
-The easiest way to  get AFS modules is to install prebuilt modules.  Fore example if you are running kernel 2.2.18 you might try
+ The easiest way to get AFS modules is to install prebuilt modules.
+Fore example if you are running kernel 2.2.18 you might try
 
 apt-get install openafs-modules-2.2.18
 
@@ -27,8 +28,8 @@ Debian kernel packages store a copy of their kernel configuration in
 make-kpkg configure
 make-kpkg modules_image
 
-You may need to use the --apend_version switch to add version suffixes
-like 686 if your modules install into /lib/modules/version-686.
+You may need to use the --append_version switch to add version suffixes
+like -686 if your modules install into /lib/modules/version-686.
 Ignore any errors about genchanges.sh failing.  An openafs-modules deb
 should be created.  Use dpkg -i to install this version.
 
