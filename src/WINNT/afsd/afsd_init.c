@@ -708,17 +708,32 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
 	char hostName[200];
 	char *ctemp;
-    lana_number_t lana;
+    lana_number_t lana = LANA_INVALID;
 
 	/* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
     if (LANadapter == -1) {
+        DWORD noFindByName = 0;
+        HKEY parmKey;
+        DWORD dummyLen;
+        long code;
+
         /* Find the default LAN adapter to use.  First look for
          * the adapter named AFS; otherwise, unless we are doing
          * gateway service, look for any valid loopback adapter.
          */
-        lana = lana_FindLanaByName("AFS");
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code == ERROR_SUCCESS) {
+            dummyLen = sizeof(LANadapter);
+            code = RegQueryValueEx(parmKey, "NoFindLanaByName", NULL, NULL,
+                                    (BYTE *) &noFindByName, &dummyLen);
+            RegCloseKey(parmKey);
+        }
+
+        if ( !noFindByName )
+            lana = lana_FindLanaByName("AFS");
         if (lana == LANA_INVALID && !isGateway)
             lana = lana_FindLoopback();
         if (lana != LANA_INVALID)
