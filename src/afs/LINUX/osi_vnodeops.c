@@ -146,6 +146,7 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
 static int afs_linux_readdir(struct file *fp,
 			     void *dirbuf, filldir_t filldir)
 {
+    extern struct DirEntry * afs_dir_GetBlob();
     struct vcache *avc = (struct vcache*)FILE_INODE(fp);
     struct vrequest treq;
     register struct dcache *tdc;
@@ -525,7 +526,7 @@ int afs_linux_flush(struct file *fp)
 }
 
 /* Not allowed to directly read a directory. */
-int afs_linux_dir_read(struct file *fp, char *buf, size_t count, loff_t *ppos)
+ssize_t afs_linux_dir_read(struct file *fp, char *buf, size_t count, loff_t *ppos)
 {
     return -EISDIR;
 }

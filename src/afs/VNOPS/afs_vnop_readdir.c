@@ -59,7 +59,11 @@ extern struct DirEntry * afs_dir_GetBlob();
 #if defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV)
 int BlobScan(ino64_t *afile, afs_int32 ablob)
 #else
+#ifdef AFS_LINUX_64BIT_KERNEL
+int BlobScan(long *afile, afs_int32 ablob)
+#else
 int BlobScan(afs_int32 *afile, afs_int32 ablob)
+#endif
 #endif
 {
     register afs_int32 relativeBlob;

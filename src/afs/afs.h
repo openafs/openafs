@@ -809,7 +809,11 @@ struct fcache {
      */
     ino64_t inode;			/* Unix inode for this chunk */
 #else
+#if defined(AFS_LINUX_64BIT_KERNEL)
+    long inode;	 			/* Unix inode for this chunk */
+#else
     afs_int32 inode;			/* Unix inode for this chunk */
+#endif
 #endif
     afs_int32 chunkBytes;		/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */

@@ -193,7 +193,7 @@ typedef struct lwp_pcb {
 #else
 struct lwp_context {	/* saved context for dispatcher */
     char *topstack;	/* ptr to top of process stack */
-#ifdef sparc
+#if defined(sparc) && !defined(__linux__)
 #ifdef	save_allregs
     int globals[7+1+32+2+32+2];    /* g1-g7, y reg, f0-f31, fsr, fq, c0-c31, csr, cq. */
 #else

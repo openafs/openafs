@@ -83,7 +83,7 @@ extern void clock_UpdateTime();
 #else /* KERNEL */
 #include "../afs/afs_osi.h"
 #define clock_Init()
-#if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
 #define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)
 #else
 #define clock_GetTime(cv) osi_GetTime((struct timeval *)cv)

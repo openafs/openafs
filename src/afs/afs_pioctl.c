@@ -180,6 +180,21 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
+#if defined(AFS_LINUX_64BIT_KERNEL)
+	struct afs_ioctl32 dst32;
+
+#ifdef AFS_SPARC64_LINUX20_ENV
+	if (current->tss.flags & SPARC_FLAG_32BIT) {
+#else
+#error Not done for this linux type
+#endif
+		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
+		if (!code)
+			afs_ioctl32_to_afs_ioctl(&dst32, dst);
+		return code;
+	}
+#endif /* defined(AFS_LINUX_64BIT_KERNEL) */
+
 	AFS_COPYIN(cmarg, (caddr_t) dst, sizeof *dst, code);
 	return code;
 }
@@ -3318,8 +3333,10 @@ afs_int32 *aoutSize;
 
 	if ( ainSize < sizeof(struct setspref) )
 		return EINVAL;
+#if 0	/* num_servers is unsigned */
 	if ( sin->num_servers < 0 )
 		return EINVAL;
+#endif
 	if ( sin->num_servers > AFS_MAX_INTERFACE_ADDR)
 		return ENOMEM;
 

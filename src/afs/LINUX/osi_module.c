@@ -26,7 +26,7 @@ asmlinkage int (*sys_socketcallp)(int call, long *args);
 asmlinkage int (*sys_killp)(int pid, int signal);
 asmlinkage int (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
-extern void *sys_call_table[];
+extern unsigned int sys_call_table[];  /* changed to uint because SPARC64 has syscaltable of 32bit items */
 extern struct file_system_type afs_file_system;
 
 static long get_page_offset(void);
@@ -42,12 +42,37 @@ unsigned long afs_linux_page_offset = 0; /* contains the PAGE_OFFSET value */
 /* Since sys_ni_syscall is not exported, I need to cache it in order to restore
  * it.
  */
-static void *afs_ni_syscall = NULL;
+static unsigned int afs_ni_syscall = 0;
+
+#ifdef AFS_SPARC64_LINUX20_ENV
+static unsigned int afs_ni_syscall32 = 0;
+asmlinkage int (*sys_setgroupsp32)(int gidsetsize, __kernel_gid_t32 *grouplist);
+extern unsigned int sys_call_table32[];
+
+asmlinkage int afs_syscall32(long syscall, long parm1, long parm2, long parm3,
+			     long parm4, long parm5)
+{
+__asm__ __volatile__ ("
+	srl %o4, 0, %o4
+	mov %o7, %i7
+	call afs_syscall
+	srl %o5, 0, %o5
+	ret
+	nop
+");
+}
+#endif
+
+#define POINTER2SYSCALL (unsigned int)(unsigned long)
+#define SYSCALL2POINTER (void *)(long)
 
 int init_module(void)
 {
     extern int afs_syscall();
     extern int afs_xsetgroups();
+#ifdef AFS_SPARC64_LINUX20_ENV
+    extern int afs_xsetgroups32();
+#endif
 
     /* obtain PAGE_OFFSET value */
     afs_linux_page_offset = get_page_offset();
@@ -59,26 +84,34 @@ int init_module(void)
     }
 
     /* Initialize pointers to kernel syscalls. */
-    sys_settimeofdayp = sys_call_table[__NR_settimeofday];
-    sys_socketcallp = sys_call_table[__NR_socketcall];
-    sys_killp = sys_call_table[__NR_kill];
+    sys_settimeofdayp = SYSCALL2POINTER sys_call_table[__NR_settimeofday];
+    sys_socketcallp = SYSCALL2POINTER sys_call_table[__NR_socketcall];
+    sys_killp = SYSCALL2POINTER sys_call_table[__NR_kill];
 
     /* setup AFS entry point. */
-    if (sys_call_table[__NR_afs_syscall] == afs_syscall) {
+    if (SYSCALL2POINTER sys_call_table[__NR_afs_syscall] == afs_syscall) {
 	printf("AFS syscall entry point already in use!\n");
 	return -EBUSY;
     }
 
 
     afs_ni_syscall = sys_call_table[__NR_afs_syscall];
-    sys_call_table[__NR_afs_syscall] = afs_syscall;
+    sys_call_table[__NR_afs_syscall] = POINTER2SYSCALL afs_syscall;
+#ifdef AFS_SPARC64_LINUX20_ENV
+    afs_ni_syscall32 = sys_call_table32[__NR_afs_syscall];
+    sys_call_table32[__NR_afs_syscall] = POINTER2SYSCALL afs_syscall32;
+#endif
 
     osi_Init();
     register_filesystem(&afs_file_system);
 
     /* Intercept setgroups calls */
-    sys_setgroupsp = sys_call_table[__NR_setgroups];
-    sys_call_table[__NR_setgroups] = afs_xsetgroups;
+    sys_setgroupsp = SYSCALL2POINTER sys_call_table[__NR_setgroups];
+    sys_call_table[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups;
+#ifdef AFS_SPARC64_LINUX20_ENV
+    sys_setgroupsp32 = SYSCALL2POINTER sys_call_table32[__NR_setgroups];
+    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups32;
+#endif
 
     return 0;
 }
@@ -87,8 +120,12 @@ void cleanup_module(void)
 {
     struct task_struct *t;
 
-    sys_call_table[__NR_setgroups] = sys_setgroupsp;
+    sys_call_table[__NR_setgroups] = POINTER2SYSCALL sys_setgroupsp;
     sys_call_table[__NR_afs_syscall] = afs_ni_syscall;
+#ifdef AFS_SPARC64_LINUX20_ENV
+    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL sys_setgroupsp32;
+    sys_call_table32[__NR_afs_syscall] = afs_ni_syscall32;
+#endif
 
     unregister_filesystem(&afs_file_system);
 
@@ -100,7 +137,7 @@ void cleanup_module(void)
 
 static long get_page_offset(void)
 {
-#if defined(AFS_PPC_LINUX22_ENV)
+#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
     return PAGE_OFFSET;
 #else
     struct task_struct *p;
