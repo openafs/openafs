@@ -103,7 +103,7 @@ static inline void MUTEX_EXIT(afs_kmutex_t *l)
  * a global lock. Thus we can safely drop our locks before calling the
  * kernel sleep services.
  */
-static inline CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
+static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
 {
     int isAFSGlocked = ISAFS_GLOCK(); 
 
@@ -122,7 +122,7 @@ static inline CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     return 0;
 }
 
-static inline CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
+static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
 {
     int isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
