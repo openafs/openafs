@@ -771,6 +771,15 @@ void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 
     cellp = afs_GetCell(acell, 0);
 
+    /* This volume, av, is locked. Zero out the serverHosts[] array 
+     * so that if afs_GetServer() decides to replace the server 
+     * struct, we don't deadlock trying to afs_ResetVolumeInfo()
+     * this volume.
+     */
+    for (j=0; j<MAXHOSTS; j++) {
+       av->serverHost[j] = 0;
+    }
+
     /* Step through the VLDB entry making sure each server listed is there */
     for (i=0,j=0; i<ve->nServers; i++) {
 	if ( ((ve->serverFlags[i] & mask) == 0) || (ve->serverFlags[i] & VLSF_DONTUSE) ) {
@@ -837,6 +846,15 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 	av->states |= VForeign;
 
     cellp = afs_GetCell(acell, 0);
+
+    /* This volume, av, is locked. Zero out the serverHosts[] array 
+     * so that if afs_GetServer() decides to replace the server 
+     * struct, we don't deadlock trying to afs_ResetVolumeInfo()
+     * this volume.
+     */
+    for (j=0; j<MAXHOSTS; j++) {
+       av->serverHost[j] = 0;
+    }
 
     /* Step through the VLDB entry making sure each server listed is there */
     for (i=0,j=0; i<ve->nServers; i++) {
