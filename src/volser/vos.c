@@ -23,6 +23,7 @@ RCSID
 #include <sys/file.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 #include <sys/stat.h>
 #ifdef AFS_AIX_ENV
