@@ -3155,7 +3155,7 @@ int UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afr
 			if (!error) error = code;
 		}	
 	}
-	if (fromtid) {
+	if (clonetid) {
 		VPRINT1("Ending transaction on cloned volume %u...", clonevol);
 		code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 		if (code || rcode) {
