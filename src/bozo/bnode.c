@@ -528,6 +528,12 @@ static int bproc() {
 			    RememberProcName(tp);
 			    tb->errorSignal = 0;
 			}
+			if (tp->coreName)
+			    bozo_Log("%s:%s exited with code %d",
+				tb->name, tp->coreName, tp->lastExit);
+			else
+			    bozo_Log("%s exited with code %d",
+				tb->name, tp->lastExit);
 		    }
 		    else {
 			/* Signal occurred, perhaps spurious due to shutdown request.
@@ -542,6 +548,14 @@ static int bproc() {
 			    tb->lastErrorExit = FT_ApproxTime();
 			    RememberProcName(tp);
 			}
+			if (tp->coreName)
+			    bozo_Log("%s:%s exited on signal %d%s",
+				tb->name, tp->coreName, tp->lastSignal,
+				WCOREDUMP(status) ? " (core dumped)" : "");
+			else
+			    bozo_Log("%s exited on signal %d%s",
+				tb->name, tp->lastSignal,
+				WCOREDUMP(status) ? " (core dumped)" : "");
 			SaveCore(tb, tp);
 		    }
 		    tb->lastAnyExit = FT_ApproxTime();
