@@ -487,17 +487,17 @@ int fast,longlist, disp;
 	    fprintf(STDOUT,"    MaxQuota %10d K \n",pntr->maxquota);
 	    fprintf(STDOUT,"    Creation    %s",
 		    ctime((time_t *)&pntr->creationDate));
-#if 0
+#ifdef FULL_LISTVOL_SWITCH
 	    fprintf(STDOUT,"    Copy        %s",
 		    ctime((time_t *)&pntr->copyDate));
 	    if(!pntr->backupDate)
-		fprintf(STDOUT,"    Backup      Never\n");
+	      fprintf(STDOUT,"    Backup      Never\n");
 	    else
-		fprintf(STDOUT,"    Backup      %s",
-			ctime((time_t *)&pntr->backupDate));
+	      fprintf(STDOUT,"    Backup      %s",
+		      ctime((time_t *)&pntr->backupDate));
 	    if (pntr->accessDate)
-		fprintf(STDOUT,"    Last Access %s",
-			ctime((time_t *)&pntr->accessDate));
+	      fprintf(STDOUT,"    Last Access %s",
+		      ctime((time_t *)&pntr->accessDate));
 #endif
 	    if(pntr->updateDate < pntr->creationDate)
 		fprintf(STDOUT,"    Last Update %s",
@@ -636,14 +636,14 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 			a_xInfoP->maxquota);
 		fprintf(STDOUT, "    Creation    %s",
 			ctime((time_t *)&a_xInfoP->creationDate));
-#if 0
+#ifdef FULL_LISTVOL_SWITCH
 		fprintf(STDOUT,"    Copy        %s",
 			ctime((time_t *)&a_xInfoP->copyDate));
 		if(!a_xInfoP->backupDate)
 		    fprintf(STDOUT,"    Backup      Never\n");
 		else
 		    fprintf(STDOUT,"    Backup      %s",
-			ctime((time_t *)&a_xInfoP->backupDate));
+			    ctime((time_t *)&a_xInfoP->backupDate));
 		if (a_xInfoP->accessDate)
 		    fprintf(STDOUT,"    Last Access %s",
 			    ctime((time_t *)&a_xInfoP->accessDate));
