@@ -504,13 +504,15 @@ void afs_CheckServers(adown, acellp)
     struct server *ts;
     struct srvAddr *sa;
     struct conn *tc;
-    afs_int32 i;
+    afs_int32 i, j;
     afs_int32 code;
     afs_int32 start, end, delta;
     osi_timeval_t tv;
     int setTimer;
     struct unixuser *tu;
     char tbuffer[CVBS];
+    int srvAddrCount;
+    struct srvAddr **addrs;
     XSTATS_DECLS;
 
     AFS_STATCNT(afs_CheckServers);
@@ -518,128 +520,152 @@ void afs_CheckServers(adown, acellp)
     ObtainReadLock(&afs_xserver);  /* Necessary? */
     ObtainReadLock(&afs_xsrvAddr);	
 
+    srvAddrCount = 0;
     for (i=0;i<NSERVERS;i++) {
-       for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) { 
-	  ts = sa->server;
-	  if (!ts)
-	     continue;
-	  /* See if a cell to check was specified.  If it is spec'd and not
-	   * this server's cell, just skip the server.
-	   */
-	  if (acellp && acellp != ts->cell)
-	       continue;
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) { 
+	    srvAddrCount++;
+	}
+    }
 
-	  if ((!adown && (sa->sa_flags & SRVADDR_ISDOWN)) 
-	      || (adown && !(sa->sa_flags & SRVADDR_ISDOWN)))
-	       continue;
-	  /* check vlserver with special code */
-	  if (sa->sa_portal == AFS_VLPORT) {
-	     CheckVLServer(sa, &treq);
-	     continue;
-	  }
+    addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    j = 0;
+    for (i=0;i<NSERVERS;i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) { 
+	    if (j >= srvAddrCount) break;
+	    addrs[j++] = sa;
+	}
+    }
 
-	  if (!ts->cell) /* not really an active server, anyway, it must */
-	     continue;   /* have just been added by setsprefs */ 
-	  
-	  /* get a connection, even if host is down; bumps conn ref count */
-	  tu = afs_GetUser(treq.uid, ts->cell, SHARED_LOCK);
-	  tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cell, tu,
-			    1/*force*/, 1/*create*/, SHARED_LOCK);
-	  afs_PutUser(tu, SHARED_LOCK);
-	  if (!tc)
-	       continue;
+    ReleaseReadLock(&afs_xsrvAddr);	
+    ReleaseReadLock(&afs_xserver);
 
-	  if ((sa->sa_flags & SRVADDR_ISDOWN) || HaveCallBacksFrom(ts) ||
-	      (tc->srvr->server == afs_setTimeHost)) {
-	     if (sa->sa_flags & SRVADDR_ISDOWN) {
+    for (i=0; i<j; i++) {
+	sa = addrs[i];
+	ts = sa->server;
+	if (!ts)
+	    continue;
+
+	/* See if a cell to check was specified.  If it is spec'd and not
+	 * this server's cell, just skip the server.
+	 */
+	if (acellp && acellp != ts->cell)
+	    continue;
+
+	if ((!adown && (sa->sa_flags & SRVADDR_ISDOWN)) ||
+	    (adown && !(sa->sa_flags & SRVADDR_ISDOWN)))
+	    continue;
+
+	/* check vlserver with special code */
+	if (sa->sa_portal == AFS_VLPORT) {
+	    CheckVLServer(sa, &treq);
+	    continue;
+	}
+
+	if (!ts->cell) /* not really an active server, anyway, it must */
+	    continue;  /* have just been added by setsprefs */ 
+
+	/* get a connection, even if host is down; bumps conn ref count */
+	tu = afs_GetUser(treq.uid, ts->cell, SHARED_LOCK);
+	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cell, tu,
+			  1/*force*/, 1/*create*/, SHARED_LOCK);
+	afs_PutUser(tu, SHARED_LOCK);
+	if (!tc) continue;
+
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || HaveCallBacksFrom(ts) ||
+	    (tc->srvr->server == afs_setTimeHost)) {
+	    if (sa->sa_flags & SRVADDR_ISDOWN) {
 		rx_SetConnDeadTime(tc->id, 3);
 		setTimer = 1;
-	     } else
-		  setTimer = 0;
-	     XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETTIME);
-	     start = osi_Time();	/* time the gettimeofday call */
+	    } else {
+		setTimer = 0;
+	    }
+
+	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETTIME);
+	    start = osi_Time();		/* time the gettimeofday call */
 #ifdef RX_ENABLE_LOCKS
-	     AFS_GUNLOCK();
+	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
-	     code = RXAFS_GetTime(tc->id, &tv.tv_sec, &tv.tv_usec);
+	    code = RXAFS_GetTime(tc->id, &tv.tv_sec, &tv.tv_usec);
 #ifdef RX_ENABLE_LOCKS
-	     AFS_GLOCK();
+	    AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
-	     end = osi_Time();
-	     XSTATS_END_TIME;
-	     /*
-	      * If we're supposed to set the time, and the call worked
-	      * quickly (same second response) and this is the host we
-	      * use for the time and the time is really different, then
-	      * really set the time
-	      */
-	     if (code == 0 && start == end && afs_setTime != 0 &&
-		 (tc->srvr->server == afs_setTimeHost ||
-		  /*
-		   * Sync only to a server in the local cell: cell(id)==1
-		   * or CPrimary.
-		   */
-		  (afs_setTimeHost == (struct server *)0 &&
-		   (ts->cell->cell == 1 || (ts->cell->states&CPrimary))))) {
-		char msgbuf[90];	/* strlen("afs: setting clock...") + slop */
+	    end = osi_Time();
+	    XSTATS_END_TIME;
+	    /*
+	     * If we're supposed to set the time, and the call worked
+	     * quickly (same second response) and this is the host we
+	     * use for the time and the time is really different, then
+	     * really set the time
+	     */
+	    if (code == 0 && start == end && afs_setTime != 0 &&
+		(tc->srvr->server == afs_setTimeHost ||
+		/*
+		 * Sync only to a server in the local cell: cell(id)==1
+		 * or CPrimary.
+		 */
+		(afs_setTimeHost == (struct server *)0 &&
+		 (ts->cell->cell == 1 || (ts->cell->states&CPrimary))))) {
+
+		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
 		/* set the time */
 		delta = end - tv.tv_sec;   /* how many secs fast we are */
 		/* see if clock has changed enough to make it worthwhile */
 		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
-		   if (delta > AFS_MAXCHANGEBACK) {
-		      /* setting clock too far back, just do it a little */
-		      tv.tv_sec = end - AFS_MAXCHANGEBACK;
-		   }
-		   afs_osi_SetTime(&tv);
-		   if (delta > 0) {
-		      strcpy(msgbuf, "afs: setting clock back ");
-		      if (delta > AFS_MAXCHANGEBACK) {
-			 afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], AFS_MAXCHANGEBACK));
-			 afs_strcat(msgbuf, " seconds (of ");
-			 afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], delta - AFS_MAXCHANGEBACK));
-			 afs_strcat(msgbuf, ", via ");
-			 print_internet_address(msgbuf, sa, "); clock is still fast.", 0);
-		      } else {
-			 afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], delta));
-			 afs_strcat(msgbuf, " seconds (via ");
-			 print_internet_address(msgbuf, sa, ").", 0);
-		      }
-		   }
-		   else {
-		      strcpy(msgbuf, "afs: setting clock ahead ");
-		      afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], -delta));
-		      afs_strcat(msgbuf, " seconds (via ");
-		      print_internet_address(msgbuf, sa, ").", 0);
-		   }
+		    if (delta > AFS_MAXCHANGEBACK) {
+			/* setting clock too far back, just do it a little */
+			tv.tv_sec = end - AFS_MAXCHANGEBACK;
+		    }
+		    afs_osi_SetTime(&tv);
+		    if (delta > 0) {
+			strcpy(msgbuf, "afs: setting clock back ");
+			if (delta > AFS_MAXCHANGEBACK) {
+			    afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], AFS_MAXCHANGEBACK));
+			    afs_strcat(msgbuf, " seconds (of ");
+			    afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], delta - AFS_MAXCHANGEBACK));
+			    afs_strcat(msgbuf, ", via ");
+			    print_internet_address(msgbuf, sa, "); clock is still fast.", 0);
+			} else {
+			    afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], delta));
+			    afs_strcat(msgbuf, " seconds (via ");
+			    print_internet_address(msgbuf, sa, ").", 0);
+			}
+		    } else {
+			strcpy(msgbuf, "afs: setting clock ahead ");
+			afs_strcat(msgbuf, afs_cv2string(&tbuffer[CVBS], -delta));
+			afs_strcat(msgbuf, " seconds (via ");
+			print_internet_address(msgbuf, sa, ").", 0);
+		    }
 		}
 		afs_setTimeHost = tc->srvr->server;
-	     }
-	     if (setTimer)
-		  rx_SetConnDeadTime(tc->id, 50);
-	     if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
+	    }
+	    if (setTimer)
+		rx_SetConnDeadTime(tc->id, 50);
+	    if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 		/* server back up */
 		print_internet_address("afs: file server ", sa, " is back up", 2);
-		/* 
-		 * XXX We should hold a server write lock here XXX
-		 */
-		afs_MarkServerUpOrDown(sa, 0);
-		if (afs_waitForeverCount) {
-		   afs_osi_Wakeup(&afs_waitForever);
-		}
-	     }
-	     else
-		  if (code < 0) {
-		     /* server crashed */
-		     afs_ServerDown(sa);
-		     ForceNewConnections(sa);  /* multi homed clients */
-		  }
-	  }
 
-	  afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
-       }   /* for each server loop */
-    }	    /* for each server hash bucket loop */
-    ReleaseReadLock(&afs_xsrvAddr);	
-    ReleaseReadLock(&afs_xserver);
+		ObtainWriteLock(&afs_xserver, 244);
+		ObtainWriteLock(&afs_xsrvAddr, 245);	
+		afs_MarkServerUpOrDown(sa, 0);
+		ReleaseWriteLock(&afs_xsrvAddr);
+		ReleaseWriteLock(&afs_xserver);
+
+		if (afs_waitForeverCount) {
+		    afs_osi_Wakeup(&afs_waitForever);
+		}
+	    } else {
+		if (code < 0) {
+		    /* server crashed */
+		    afs_ServerDown(sa);
+		    ForceNewConnections(sa);  /* multi homed clients */
+		}
+	    }
+	}
+
+	afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
+    } /* Outer loop over addrs */
+
+    afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
 
 } /*afs_CheckServers*/
 
