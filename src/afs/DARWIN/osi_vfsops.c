@@ -1,7 +1,10 @@
+/*
+ * Portions Copyright (c) 2003 Apple Computer, Inc.  All rights reserved.
+ */
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vfsops.c,v 1.1.1.6 2003/07/30 17:08:05 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vfsops.c,v 1.1.1.7 2004/01/10 20:52:50 hartmans Exp $");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
 #include <afs/afsincludes.h>            /* Afs-based standard headers */
@@ -10,6 +13,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vfsops.c,v 1.1.1.6 2003/
 #include <sys/namei.h>
 #include <sys/conf.h>
 #include <sys/syscall.h>
+#include <sys/sysctl.h>
+#include "../afs/sysctl.h"
 
 struct vcache *afs_globalVp = 0;
 struct mount *afs_globalVFS = 0;
@@ -275,8 +280,39 @@ struct prioc *p;
 return 0;
 }
 
-int afs_sysctl() {
-   return EOPNOTSUPP;
+u_int32_t afs_darwin_realmodes = 0;
+
+int afs_sysctl(name, namelen, oldp, oldlenp, newp, newlen, p)
+int *name;
+u_int namelen;
+void *oldp;
+size_t *oldlenp;
+void *newp;
+size_t newlen;
+struct proc *p;
+{
+    int error;
+
+    switch (name[0]) {
+    case AFS_SC_ALL:
+	/* nothing defined */
+	break;
+    case AFS_SC_DARWIN:
+	if (namelen < 3)
+	    return ENOENT;
+	switch (name[1]) {
+	case AFS_SC_DARWIN_ALL:
+	    switch (name[2]) {
+	    case AFS_SC_DARWIN_ALL_REALMODES:
+		return sysctl_int(oldp, oldlenp, newp, newlen,
+		  &afs_darwin_realmodes);
+	    }
+	    break;
+	/* darwin version specific sysctl's goes here */
+	}
+	break;
+    }
+    return EOPNOTSUPP;
 }
 
 

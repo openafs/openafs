@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.11 2003/07/30 17:13:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.12 2004/01/10 20:58:04 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -209,7 +209,7 @@ static CheckDescriptors()
 #ifdef AFS_PTHREAD_ENV
 void CheckSignal_Signal(x)       {CheckSignal(0);}
 void ShutDown_Signal(x)          {ShutDown(0);}
-void CheckDescriptors_Signal(x)  {CheckDescriptors(0);}
+void CheckDescriptors_Signal(x)  {CheckDescriptors();}
 #else /* AFS_PTHREAD_ENV */
 void CheckSignal_Signal(x)       {IOMGR_SoftSig(CheckSignal, 0);}
 void ShutDown_Signal(x)          {IOMGR_SoftSig(ShutDown, 0);}

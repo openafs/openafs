@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.9 2003/07/30 17:13:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.10 2004/01/10 20:58:11 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1317,6 +1317,9 @@ struct restoreCookie *cookie;
     }
     strcpy(tt->lastProcName,"Restore");
     tt->rxCallPtr = acid;
+
+    DFlushVolume(V_parentId(tt->volume)); /* Ensure dir buffers get dropped */
+
     code = RestoreVolume(acid, tt->volume, (aflags & 1),cookie);   /* last is incrementalp */
     FSYNC_askfs(tt->volid, (char *) 0, FSYNC_RESTOREVOLUME, 0l);/*break call backs on the
 						     restored volume */

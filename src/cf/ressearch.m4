@@ -15,7 +15,6 @@ res_init();
  */
 r =  res_search( host, C_IN, T_MX, (u_char *)&ans, sizeof(ans));
 return 0;
-res_close();
   ],
   ac_cv_func_res_search=yes)
 ])

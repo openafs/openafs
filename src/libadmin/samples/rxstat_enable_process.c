@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -14,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxstat_enable_process.c,v 1.1.1.4 2001/07/14 22:22:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxstat_enable_process.c,v 1.1.1.5 2004/01/10 20:56:47 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -23,6 +25,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxstat_enable_process.
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
+
+#ifdef AFS_DARWIN_ENV
+pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif /* AFS_DARWIN_ENV */
 
 extern int RXSTATS_EnableProcessRPCStats();
 

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.7 2002/06/10 11:39:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.8 2004/01/10 20:52:47 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/

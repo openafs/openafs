@@ -1,5 +1,6 @@
 #/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
-# $Header: /tmp/cvstemp/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.1.1.6 2002/09/26 19:06:44 hartmans Exp $
+#/* Portions Copyright (c) 2003 Apple Computer, Inc. */
+# $Header: /tmp/cvstemp/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.1.1.7 2004/01/10 20:56:51 hartmans Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
@@ -46,6 +47,8 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
+<ppc_darwin_70>
+KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <ppc_darwin_60>
 KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <ppc_darwin_14 ppc_darwin_13 ppc_darwin_12>

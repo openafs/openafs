@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/beacon.c,v 1.1.1.12 2003/07/30 17:13:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/beacon.c,v 1.1.1.13 2004/01/10 20:57:50 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -367,7 +367,7 @@ ubeacon_Interact() {
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		    /* count how many to ensure we have quorum */
-	oldestYesVote =	0x3fffffff; /* time quorum expires */
+	oldestYesVote =	0x7fffffff; /* time quorum expires */
 	syncsite= ubeacon_AmSyncSite();
 	startTime = FT_ApproxTime();
 	/*

@@ -32,10 +32,12 @@
  * rpc_scan.c, Scanner for the RPC protocol compiler 
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
+
+/* Portions Copyright (c) 2003 Apple Computer, Inc. */
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_scan.c,v 1.1.1.5 2001/09/11 14:34:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_scan.c,v 1.1.1.6 2004/01/10 20:57:25 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -208,6 +210,10 @@ get_token(tokp)
 				if (commenting) {
 					break;
 				} else if (cppline(curline)) {
+#if defined(AFS_DARWIN_ENV)
+					if (strncmp(curline, "#pragma", 7) == 0)
+						continue;
+#endif /* defined(AFS_DARWIN_ENV) */
 					docppline(curline, &linenum, 
 						  &infilename);
 				} else if (directive(curline)) {

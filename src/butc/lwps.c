@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/lwps.c,v 1.1.1.5 2001/09/11 14:31:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/lwps.c,v 1.1.1.6 2004/01/10 20:56:07 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -743,7 +743,7 @@ afs_int32 PromptForTape(flag, name, dbDumpId, taskId, tapecount)
 	    if ( time(0) > start+BELLTIME )
 	    {
 	        start = time(0);
-		FFlushInput(stdin);
+		FFlushInput();
 		putchar(BELLCHAR);
 		fflush(stdout);
 	    }
