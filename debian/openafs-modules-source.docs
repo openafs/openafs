@@ -1,4 +1,5 @@
-src/README
+README
 debian/README.servers
 debian/configuration-transcript.txt
 debian/README.modules
+NEWS
