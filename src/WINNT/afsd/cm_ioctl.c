@@ -1356,6 +1356,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	afs_uuid_t uuid;
 	int flags;
 	char sessionKey[8];
+	char *smbname;
 
 	saveDataPtr = ioctlp->inDatap;
 
@@ -1400,6 +1401,13 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		uname = tp;
 		tp += strlen(tp) + 1;
 
+        if (flags & PIOCTL_LOGON) {
+		  /* SMB user name with which to associate tokens */
+		  smbname = tp;
+		  fprintf(stderr, "SMB name = %s\n", smbname);
+		  tp += strlen(tp) + 1;
+        }
+
 #ifndef DJGPP   /* for win95, session key is back in pioctl */
 		/* uuid */
 		memcpy(&uuid, tp, sizeof(uuid));
@@ -1410,8 +1418,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		cellp = cm_rootCellp;
 
 	if (flags & PIOCTL_LOGON) {
-          userp = smb_FindCMUserByName(/*ioctlp->fidp->vcp,*/ uname,
-                                                              ioctlp->fidp->vcp->rname);
+          userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
 	}
 	
 	/* store the token */
@@ -1875,4 +1882,16 @@ long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp) {
   return 0;
 }
 #endif /* DJGPP */
+
+long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+  smb_user_t *uidp = ioctlp->uidp;
+
+  if (uidp && uidp->unp) {
+    memcpy(ioctlp->outDatap, uidp->unp->name, strlen(uidp->unp->name));
+    ioctlp->outDatap += strlen(uidp->unp->name);
+	}
+
+  return 0;
+}
 

@@ -907,7 +907,7 @@ void TestAndDoUnMapShare()
 	DoUnMapShare(FALSE);	
 }
 
-void DoUnMapShare(BOOL force)
+void DoUnMapShare(BOOL drivemap)	//disconnect drivemap 
 {
 	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
 	DWORD rc=28;
@@ -933,9 +933,10 @@ void DoUnMapShare(BOOL force)
 				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath))
 				{
 					if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
-						if (force)
+					{
+						if (drivemap)
 							WNetCancelConnection(lpnrLocal[i].lpLocalName,TRUE);
-					else
+					} else
 						WNetCancelConnection(lpnrLocal[i].lpRemoteName,TRUE);
 					DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
 				}

@@ -208,6 +208,10 @@ typedef struct smb_ioctl {
 
         /* fid pointer */
         struct smb_fid *fidp;
+
+  /* uid pointer */
+  smb_user_t *uidp;
+
 } smb_ioctl_t;
 
 /* flags for smb_ioctl_t */

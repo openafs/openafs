@@ -333,6 +333,19 @@ int ktc_SetToken(
 	strcpy(tp, client->name);
 	tp += temp+1;
 
+    /* we need the SMB user name to associate the tokens with in the
+    integrated logon case. */
+    if (flags & AFS_SETTOK_LOGON) {
+    if (client->smbname == NULL)
+      temp = 0;
+    else
+	    temp = strlen(client->smbname);
+        if (temp == 0 || temp >= MAXKTCNAMELEN)
+          return KTC_INVAL;
+	    strcpy(tp, client->smbname);
+          tp += temp+1;
+    }
+           
 	/* uuid */
 	status = UuidCreate((UUID *)&uuid);
 	memcpy(tp, &uuid, sizeof(uuid));
