@@ -998,22 +998,7 @@ int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
  */
 int rxk_ListenerPid; /* Used to signal process to wakeup at shutdown */
 
-#ifdef AFS_SUN5_ENV
-/*
- * Run the listener as a kernel process.
- */
 void rxk_Listener(void)
-{
-    extern id_t syscid;
-    void rxk_ListenerProc(void);
-    if (newproc(rxk_ListenerProc, syscid, 59))
-	osi_Panic("rxk_Listener: failed to fork listener process!\n");
-}
-
-void rxk_ListenerProc(void)
-#else /* AFS_SUN5_ENV */
-void rxk_Listener(void)
-#endif /* AFS_SUN5_ENV */
 {
     struct rx_packet *rxp = NULL;
     int code;
@@ -1028,9 +1013,9 @@ void rxk_Listener(void)
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
-#if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
+#if defined(RX_ENABLE_LOCKS)
     AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS && !AFS_SUN5_ENV */
+#endif /* RX_ENABLE_LOCKS */
 
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	if (rxp) {
@@ -1062,14 +1047,6 @@ void rxk_Listener(void)
 #if defined(AFS_LINUX22_ENV) || defined(AFS_SUN5_ENV)
     afs_osi_Wakeup(&rxk_ListenerPid);
 #endif
-#ifdef AFS_SUN5_ENV
-    AFS_GUNLOCK();
-#ifdef HAVE_P_COREFILE
-    if (!curproc->p_corefile)  /* newproc doesn't set it, but exit frees it */
-	curproc->p_corefile = refstr_alloc("core");
-#endif
-    exit(CLD_EXITED, 0);
-#endif /* AFS_SUN5_ENV */
 }
 
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
