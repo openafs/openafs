@@ -1,21 +1,20 @@
 AC_DEFUN(LINUX_NEED_RHCONFIG,[
+RHCONFIG_SP=""
+RHCONFIG_MP=""
 if test "x$enable_redhat_buildsys" = "xyes"; then
-  RHCONFIG_SP=""
-  RHCONFIG_MP=""
+  AC_MSG_WARN(Configured to build from a Red Hat SPEC file)
 else
   AC_MSG_CHECKING(for redhat kernel configuration)
   if test -f "${LINUX_KERNEL_PATH}/include/linux/rhconfig.h"; then
     ac_linux_rhconfig=yes
-    RHCONFIG_SP="-D__BOOT_KERNEL_UP=1 -D__BOOT_KERNEL_SMP=0 -U__SMP__"
-    RHCONFIG_MP="-D__BOOT_KERNEL_UP=0 -D__BOOT_KERNEL_SMP=1 -D__SMP__"
+    RHCONFIG_SP="-D__BOOT_KERNEL_UP=1 -D__BOOT_KERNEL_SMP=0"
+    RHCONFIG_MP="-D__BOOT_KERNEL_UP=0 -D__BOOT_KERNEL_SMP=1"
     AC_MSG_RESULT($ac_linux_rhconfig)
     if test ! -f "/boot/kernel.h"; then
         AC_MSG_WARN([/boot/kernel.h does not exist. build may fail])
     fi
   else
     ac_linux_rhconfig=no
-    RHCONFIG_SP="-U__SMP__"
-    RHCONFIG_MP="-D__SMP__"
     AC_MSG_RESULT($ac_linux_rhconfig)
   fi
 fi
