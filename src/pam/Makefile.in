@@ -92,6 +92,8 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
 	sun*_5*) \
 		$(LD) $(LDFLAGS) -M mapfile -o $@ \
 			afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
+	parisc*_linux*) \
+		echo Skipping pam_afs.krb.so.1 link on parisc. ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
 	*fbsd*) \
@@ -121,7 +123,13 @@ ${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
 
 ${DEST}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
+	set -x; \
+	case "$(SYS_NAME)" in \
+	parisc*_linux*) \
+		echo Skipping install of $@. ;; \
+	*) \
+		${INSTALL} $? $@ ;; \
+	esac
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
@@ -141,10 +149,22 @@ ${TOP_LIBDIR}/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
+	set -x; \
+	case "$(SYS_NAME)" in \
+	parisc*_linux*) \
+		echo Skipping install of $@. ;; \
+	*) \
+		${INSTALL} $? $@ ;; \
+	esac
 
 ${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
-	${INSTALL} $? $@
+	set -x; \
+	case "$(SYS_NAME)" in \
+	parisc*_linux*) \
+		echo Skipping install of $@. ;; \
+	*) \
+		${INSTALL} $? $@ ;; \
+	esac
 
 dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
 
