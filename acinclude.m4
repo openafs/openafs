@@ -363,9 +363,17 @@ else
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
 			;;
+		powerpc-*-netbsd*1.6[[M-Z]]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
+			;;
 		i?86-*-netbsd*2.0*)
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="i386_nbsd20"
+			;;
+		powerpc-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
 			;;
 		i?86-*-netbsd*1.6*)
 			AFS_PARAM_COMMON=param.nbsd16.h
@@ -374,6 +382,10 @@ else
 		alpha-*-netbsd*1.6*)
 			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="alpha_nbsd16"
+			;;
+		powerpc-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="ppc_nbsd16"
 			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
