@@ -2764,6 +2764,61 @@ static StoreBehindCmd(as)
     return error;
 }
 
+
+static afs_int32 SetCryptCmd(as)
+    struct cmd_syndesc *as;
+{
+    afs_int32 code = 0, flag;
+    struct ViceIoctl blob;
+    char *tp;
+ 
+    tp = as->parms[0].items->data;
+    if (strcmp(tp, "on") == 0)
+      flag = 1;
+    else if (strcmp(tp, "off") == 0)
+      flag = 0;
+    else {
+      fprintf (stderr, "%s: %s must be \"on\" or \"off\".\n", pn, tp);
+      return EINVAL;
+    }
+
+    blob.in = (char *) &flag;
+    blob.in_size = sizeof(flag);
+    blob.out_size = 0;
+    code = pioctl(0, VIOC_SETRXKCRYPT, &blob, 1);
+    if (code)
+      Die(code, (char *) 0);
+    return 0;
+}
+
+
+static afs_int32 GetCryptCmd(as)
+    struct cmd_syndesc *as;
+{
+    afs_int32 code = 0, flag;
+    struct ViceIoctl blob;
+    char *tp;
+ 
+    blob.in = (char *) 0;
+    blob.in_size = 0;
+    blob.out_size = sizeof(flag);
+    blob.out = space;
+
+    code = pioctl(0, VIOC_GETRXKCRYPT, &blob, 1);
+
+    if (code) Die(code, (char *) 0);
+    else {
+      tp = space;
+      bcopy(tp, &foo, sizeof(int32));
+      printf("Security level is currently ");
+      if (foo == 1)
+        printf("crypt (data security).\n");
+      else
+        printf("clear.\n");
+    }
+    return 0;
+}
+
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
@@ -2986,6 +3041,9 @@ defect 3069
     cmd_AddParm(ts, "-allfiles", CMD_SINGLE, CMD_OPTIONAL, "new default (KB)");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "show status");
     cmd_CreateAlias(ts, "sb");
+
+    ts = cmd_CreateSyntax("setcrypt", SetCryptCmd, 0, "set cache manager encryption flag");
+    cmd_AddParm(ts, "-crypt", CMD_SINGLE, 0, "on or off");
 
     ts = cmd_CreateSyntax("rxstatproc", RxStatProcCmd, 0,
 			  "Manage per process RX statistics");
