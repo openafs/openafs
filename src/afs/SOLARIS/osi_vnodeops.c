@@ -926,10 +926,10 @@ struct AFS_UCRED *acred;
 
     didFakeOpen=0;	/* keep track of open so we can do close */
     if (arw == UIO_WRITE) {
-	/* do ulimit processing; shrink resid or fail */
-#if	defined(AFS_SUN56_ENV)
-	if (auio->uio_loffset + auio->afsio_resid > auio->uio_llimit) {
-	    if (auio->uio_llimit >= auio->uio_llimit) {
+      /* do ulimit processing; shrink resid or fail */
+#if   defined(AFS_SUN56_ENV)
+        if (auio->uio_loffset + auio->afsio_resid > auio->uio_llimit) {
+	    if (auio->uio_loffset >= auio->uio_llimit) {
                 ReleaseWriteLock(&avc->lock);
                 afs_BozonUnlock(&avc->pvnLock, avc);
                 return EFBIG;
