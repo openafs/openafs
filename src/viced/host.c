@@ -1283,7 +1283,7 @@ ticket name length != 64
        h_Hold_r(client->host);
        if (client->prfail != 2) {  /* Could add shared lock on client here */
 	  /* note that we don't have to lock entry in this path to
-	   * ensure CPS is initialized, since we don't call rxr_SetSpecific
+	   * ensure CPS is initialized, since we don't call rx_SetSpecific
 	   * until initialization is done, and we only get here if
 	   * rx_GetSpecific located the client structure.
 	   */
@@ -1352,6 +1352,16 @@ ticket name length != 64
 	     if (client->tcon && (client->tcon != tcon)) {
 	        ViceLog(0, ("*** Vid=%d, sid=%x, tcon=%x, Tcon=%x ***\n", 
 			    client->ViceId, client->sid, client->tcon, tcon));
+		oldClient = (struct client *) rx_GetSpecific(client->tcon,
+							     rxcon_client_key);
+		if (oldClient) {
+		    if (oldClient == client)
+			rx_SetSpecific(client->tcon, rxcon_client_key, NULL);
+		    else
+			ViceLog(0,
+			    ("Client-conn mismatch: CL1=%x, CN=%x, CL2=%x\n",
+			     client, client->tcon, oldClient));
+		}
 		client->tcon = (struct rx_connection *)0;
 	     }
 	     client->refCount++;
@@ -1435,7 +1445,8 @@ ticket name length != 64
      * required).  So, before setting the RPC's rock, we should disconnect
      * the RPC from the other client structure's rock.
      */
-    if ((oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key))) {
+    oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key);
+    if (oldClient && oldClient->tcon == tcon) {
 	oldClient->tcon = (struct rx_connection *) 0;
 	/* rx_SetSpecific will be done immediately below */
     }
