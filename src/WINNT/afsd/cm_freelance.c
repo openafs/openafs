@@ -618,6 +618,13 @@ long cm_InitLocalMountPoints() {
     strcat(hdir, AFS_FREELANCE_INI);
     // open the ini file for reading
     fp = fopen(hdir, "r");
+    if (!fp) {
+        /* look in the Windows directory where we used to store the file */
+        GetWindowsDirectory(hdir, sizeof(hdir));
+        strcat(hdir,"\\");
+        strcat(hdir, AFS_FREELANCE_INI);
+        fp = fopen(hdir, "r");
+    }
 
 #if !defined(DJGPP)
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
