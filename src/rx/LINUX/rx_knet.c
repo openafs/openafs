@@ -40,7 +40,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     /* We need a better test for this. if you need it back, tell us
      * how to detect it. 
      */
-#if 0/*def LINUX_KERNEL_IS_SELINUX*/
+#ifdef LINUX_KERNEL_SOCK_CREATE_V
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
 #else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);

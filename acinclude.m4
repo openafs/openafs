@@ -185,6 +185,7 @@ case $system in
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_SELINUX
+		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -295,6 +296,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
+		 fi
+		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
+		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
