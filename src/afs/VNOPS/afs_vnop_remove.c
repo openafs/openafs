@@ -459,7 +459,7 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 	    adp = afs_GetVCache(&dirFid, &treq, NULL, NULL);
 	    
 	    if (adp) {
-		tdc = afs_FindDCache(adp, 0);
+		tdc = afs_FindDCache(adp, (afs_size_t)0);
 		ObtainWriteLock(&adp->lock, 159);
 		if (tdc) ObtainSharedLock(&tdc->lock, 639);
 

@@ -594,8 +594,13 @@ struct ucred	*cred;
      * We map the segment into our address space using the handle returned by vm_create.
      */
     if (!vcp->vmh) {
+        afs_uint32 tlen = vcp->m.Length;
+#ifdef AFS_64BIT_CLIENT
+        if (vcp->m.Length > afs_vmMappingEnd)
+            tlen = afs_vmMappingEnd;
+#endif
 	/* Consider  V_INTRSEG too for interrupts */
-	if (error = vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode, vcp->m.Length, 0, 0)) {
+	if (error = vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode, tlen, 0, 0)) {
 	    ReleaseWriteLock(&vcp->lock);
 	    return(EOPNOTSUPP);
 	}
@@ -1040,8 +1045,8 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     register afs_int32 code = 0;
     register int i;
     afs_int32 blockSize;
-    afs_size_t fileSize, xfrOffset, offset, old_offset;
-    afs_int32 xfrSize;
+    afs_size_t fileSize, xfrOffset, offset, old_offset, xfrSize;
+    afs_int32 txfrSize;
 #ifdef AFS_64BIT_CLIENT
     afs_size_t finalOffset;
     afs_int32 toffset;
@@ -1092,8 +1097,9 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    mixed = 1;
 	    finalOffset = xfrOffset + xfrSize;
 	    tsize = (afs_size_t) (xfrOffset + xfrSize - afs_vmMappingEnd); 
+	    txfrSize = xfrSize;
 	    afsio_copy(uiop, &tuio, tvec);
-	    afsio_skip(&tuio, xfrSize - tsize);
+	    afsio_skip(&tuio, txfrSize - tsize);
 	    afsio_trim(&tuio, tsize);
 	    tuio.afsio_offset = afs_vmMappingEnd;
 	    ReleaseReadLock(&vcp->lock);
@@ -1106,8 +1112,9 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    ReleaseWriteLock(&vcp->lock);
 	    ObtainReadLock(&vcp->lock);
 	    if (code) goto fail; 
-	    xfrSize = (afs_size_t) (afs_vmMappingEnd - xfrOffset); 
-	    afsio_trim(uiop, xfrSize);
+	    xfrSize = afs_vmMappingEnd - xfrOffset; 
+	    txfrSize = xfrSize;
+	    afsio_trim(uiop, txfrSize);
 	} else {
 	    ReleaseReadLock(&vcp->lock);
             code = afs_direct_rdwr(vp, uiop, rw, ioflag, credp);
@@ -1117,13 +1124,19 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 #endif /* AFS_64BIT_CLIENT */
 
     if (!vcp->vmh) {
+        afs_uint32 tlen = vcp->m.Length;
+#ifdef AFS_64BIT_CLIENT
+        if (vcp->m.Length > afs_vmMappingEnd)
+            tlen = afs_vmMappingEnd;
+#endif
 	/* Consider  V_INTRSEG too for interrupts */
 	if (code = vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode,
-			      vcp->m.Length, 0, 0)) {
+			      tlen, 0, 0)) {
 	    goto fail;
 	}
 	vcp->vmh = SRVAL(vcp->segid, 0, 0);	
     }
+    vcp->v.v_gnode->gn_seg = vcp->segid;
     if (rw == UIO_READ) {
 	/* don't read past EOF */
 	if (xfrSize+xfrOffset > fileSize)
@@ -1136,9 +1149,10 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
         afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
 			ICL_TYPE_POINTER, vcp,  
 	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrOffset),
-	       		ICL_TYPE_INT32, xfrSize);
+	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
 	AFS_GUNLOCK();
-	code = vm_move(vcp->segid, toffset, xfrSize, rw, uiop);
+	txfrSize = xfrSize;
+	code = vm_move(vcp->segid, toffset, txfrSize, rw, uiop);
 #else /* AFS_64BIT_CLIENT */
 	AFS_GUNLOCK();
 	code = vm_move(vcp->segid, xfrOffset, xfrSize, rw, uiop);
@@ -1172,13 +1186,17 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
 			ICL_TYPE_POINTER, vcp,  
 	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(start_offset),
-	       		ICL_TYPE_INT32, xfrSize);
+	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
     ReleaseReadLock(&vcp->lock);
     ObtainWriteLock(&vcp->lock,400);
     vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
     /* extend file */
     /* un-protect last page. */
     last_page = vcp->m.Length/PAGESIZE;
+#ifdef AFS_64BIT_CLIENT
+    if (vcp->m.Length > afs_vmMappingEnd)
+        last_page = afs_vmMappingEnd/PAGESIZE;
+#endif
     vm_protectp(vcp->vmh, last_page, 1, FILEKEY);
     if (xfrSize + xfrOffset > fileSize) {
 	vcp->m.Length = xfrSize+xfrOffset;
@@ -1210,7 +1228,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	len = xfrSize;
 	
 	if (AFS_CHUNKSIZE(xfrOffset) <= len)
-	    len = AFS_CHUNKSIZE(xfrOffset) - (xfrOffset - offset);
+	    len = (afs_size_t)AFS_CHUNKSIZE(xfrOffset) - (xfrOffset - offset);
 	
 	if (len == xfrSize) {
 	    /* All data goes to this one chunk. */
@@ -1219,7 +1237,8 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 #ifdef AFS_64BIT_CLIENT
 	    uiop->afsio_offset = xfrOffset;
 	    toffset = xfrOffset;
-	    code = vm_move(vcp->segid, toffset, xfrSize, rw, uiop);
+	    txfrSize = xfrSize;
+	    code = vm_move(vcp->segid, toffset, txfrSize, rw, uiop);
 #else /* AFS_64BIT_CLIENT */
 	    code = vm_move(vcp->segid, xfrOffset, xfrSize, rw, uiop);
 #endif /* AFS_64BIT_CLIENT */
@@ -1265,8 +1284,8 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    xfrOffset += len;
 	}
 	
-	first_page = old_offset >> PGSHIFT;
-	pages = 1 + ((old_offset + (len - 1)) >> PGSHIFT) - first_page;
+	first_page = (afs_size_t)old_offset >> PGSHIFT;
+	pages = 1 + (((afs_size_t)old_offset + (len - 1)) >> PGSHIFT) - first_page;
         afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE2, 
 		ICL_TYPE_POINTER, (afs_int32) vcp,
 		ICL_TYPE_INT32, first_page,
@@ -1333,8 +1352,7 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
     struct ucred *credp;
 { 
     register afs_int32 code = 0;
-    afs_int32 xfrSize;
-    afs_size_t fileSize, xfrOffset, offset, old_offset;
+    afs_size_t fileSize, xfrOffset, offset, old_offset, xfrSize;
     struct vcache *vcp = VTOAFS(vp);
     afs_int32 save_resid = uiop->afsio_resid;
     struct vrequest treq;
@@ -1370,9 +1388,8 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
         ObtainWriteLock(&vcp->lock,400);
         vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
         /* extend file */
-        if (xfrSize + xfrOffset > fileSize) {
-	    vcp->m.Length = xfrSize+xfrOffset;
-        }	    
+        if (xfrSize + xfrOffset > fileSize)
+	    vcp->m.Length = xfrSize + xfrOffset;
         ReleaseWriteLock(&vcp->lock);
     }	    
     afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, 

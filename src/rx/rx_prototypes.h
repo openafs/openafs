@@ -484,7 +484,7 @@ extern void *afs_osi_Alloc(size_t x);
 extern void *afs_osi_Alloc_NoSleep(size_t x);
 extern void afs_osi_Free(void *x, size_t asize);
 #ifndef afs_osi_Wakeup
-extern void afs_osi_Wakeup(void *event);
+extern int afs_osi_Wakeup(void *event);
 #endif
 #ifndef afs_osi_Sleep
 extern void afs_osi_Sleep(void *event);

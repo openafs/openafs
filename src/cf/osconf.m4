@@ -313,6 +313,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lcurses"
 		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		;;
 
 	s390_linux22)

@@ -477,7 +477,7 @@ int afs_osi_SleepSig(void *x)
     return 0;
 }
 
-void afs_osi_Wakeup(void *x)
+int afs_osi_Wakeup(void *x)
 {
     int index;
     osi_wait_t *waitp;

@@ -134,7 +134,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_FETCH64CODE, "StartRX_FetchData64 for vp 0x%x returned %d"
 	ec	CM_TRACE_FETCH64LENG, "FetchData64 for vp 0x%x code = %d, length = (0x%x, 0x%x)"
 	ec	CM_TRACE_FETCH64READ, "FetchData64 for vp 0x%x code = %d, length = 0x%x"
-	ec	CM_TRACE_VMWRITE, "afs_vm_rdwr: vp 0x%x offset (0x%x, 0x%x) length 0x%x"
+	ec	CM_TRACE_VMWRITE, "afs_vm_rdwr: vp 0x%x offset (0x%x, 0x%x) length (0x%x, 0x%x)"
 	ec	CM_TRACE_VMWRITE2, "afs_vm_rdwr: vp 0x%x first page 0x%x pages %d"
 	ec	CM_TRACE_VMSTOREALL, "osi_VM_StoreAllSegments for vp 0x%x call %d"
 	ec	CM_TRACE_PARTIALWRITE0, "Partial write currDirty %d maxDirty %d"

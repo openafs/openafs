@@ -1126,8 +1126,16 @@ afs_BioDaemon (nbiods)
 	if (bp->b_flags & B_PFSTORE) {
 	    ObtainWriteLock(&vcp->lock,210);	    
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
-		if (vcp->m.Length < bp->b_bcount + (u_int)dbtob(bp->b_blkno))
-		    vcp->m.Length = bp->b_bcount + (u_int)dbtob(bp->b_blkno);
+	    	afs_offs_t newlength = 
+			(afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
+		if (vcp->m.Length < newlength) {
+		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_LONG, __LINE__,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(vcp->m.Length),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
+		    vcp->m.Length = newlength;
+		}
 	    }
 	    ReleaseWriteLock(&vcp->lock);
 	}

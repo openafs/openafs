@@ -98,7 +98,7 @@ tagain:
     else if (andp->fid.Fid.Vnode < aodp->fid.Fid.Vnode) {
 	ObtainWriteLock(&andp->lock,148);	/* lock smaller one first */
 	ObtainWriteLock(&aodp->lock,149);
-	tdc2 = afs_FindDCache(andp, 0);
+	tdc2 = afs_FindDCache(andp, (afs_size_t)0);
 	if (tdc2) ObtainWriteLock(&tdc2->lock, 644);
 	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (tdc1)
@@ -114,7 +114,7 @@ tagain:
 	    ObtainWriteLock(&tdc1->lock, 646);
 	else
 	    code = ENOENT;
-	tdc2 = afs_FindDCache(andp, 0);
+	tdc2 = afs_FindDCache(andp, (afs_size_t)0);
 	if (tdc2) ObtainWriteLock(&tdc2->lock, 647);
     }
 
@@ -332,7 +332,7 @@ tagain:
 	    tvc = afs_GetVCache(&fileFid, areq, NULL, (struct vcache*)0);
 	if (tvc && (vType(tvc) == VDIR)) {
 	    ObtainWriteLock(&tvc->lock,152);
-	    tdc1 = afs_FindDCache(tvc, 0);
+	    tdc1 = afs_FindDCache(tvc, (afs_size_t)0);
 	    if (tdc1) {
 		ObtainWriteLock(&tdc1->lock, 648);
 		ZapDCE(tdc1);	/* mark as unknown */

@@ -471,7 +471,7 @@ int afs_UFSReadFast(register struct vcache *avc, struct uio *auio,
 	}
 
 	if ((tdc->stamp == avc->quick.stamp)                /* hint matches */
-	    && ((offDiff = (auio->afsio_offset - avc->quick.minLoc)) >= 0)
+	    && ((offDiff = (afs_size_t)(auio->afsio_offset - avc->quick.minLoc)) >= 0)
 	    && (tdc->f.chunkBytes >= auio->afsio_resid + offDiff)
 	    && !(tdc->dflags & DFFetching)) { /* fits in chunk */
 
