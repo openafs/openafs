@@ -86,6 +86,8 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 	/*
 	 * Different conf dir; force re-evaluation.
 	 */
+	if (tdir) 
+	    afsconf_Close(tdir);
 	tdir = (struct afsconf_dir *)0;
 	pruclient = (struct ubik_client *)0;
     }
