@@ -836,6 +836,7 @@ struct stat *status;
 #endif
 
 #ifdef AFS_AIX42_ENV
+#ifndef AFS_NAMEI_ENV
 /* We don't want to salvage big files filesystems, since we can't put volumes on
  * them.
  */
@@ -863,6 +864,7 @@ int CheckIfBigFilesFS(mountPoint, devName)
     }
     return 0;
 }
+#endif
 #endif
 
 #ifdef AFS_NT40_ENV
