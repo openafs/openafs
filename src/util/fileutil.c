@@ -24,13 +24,24 @@ RCSID("$Header$");
 #include <windows.h>
 #include <io.h>
 #include "errmap_nt.h"
-#else
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #include "fileutil.h"
 
 

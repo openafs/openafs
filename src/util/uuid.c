@@ -37,6 +37,17 @@ RCSID("$Header$");
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #include <net/if.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <stdlib.h>
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
