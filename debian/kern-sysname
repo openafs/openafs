@@ -10,7 +10,7 @@ i[3456]86)
 		;;
 	    esac
 ;;
-ialpha)
+alpha)
 	case $KVERS in
 	    2.2*)
 		echo alpha_linux_22
