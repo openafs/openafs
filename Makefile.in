@@ -59,6 +59,14 @@ dest_nolibafs: all_nolibafs dest_dirs
 dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 
+packages: dest
+	@case ${SYS_NAME} in \
+	ppc_darwin* ) \
+		${COMPILE_PART1} packaging/MacOS && ./buildpkg.sh ${DEST} ;; \
+	*) \
+		echo Not building packages for ${SYS_NAME} ;; \
+	esac
+
 ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
