@@ -106,6 +106,8 @@ ${COMPDIRS}:
 		ln -s $${IDIR} netinet; \
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
+		rm -f asm-generic; \
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-generic asm-generic; \
 		rm -f asm; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
