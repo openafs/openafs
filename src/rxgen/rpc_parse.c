@@ -33,20 +33,22 @@
  * Copyright (C) 1987 Sun Microsystems, Inc.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
 #include <string.h>
-#if defined(AFS_SUN5_ENV)
-#include <strings.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
 #endif
-#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #include "rpc_util.h"
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 
+RCSID("$Header$");
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
 char *SplitStart = NULL;

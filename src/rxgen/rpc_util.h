@@ -34,13 +34,6 @@
  */
 
 #include "rxgen_consts.h"
-#ifndef AFS_NT40_ENV
-#ifdef	AFS_OSF_ENV
-extern void *malloc();
-#else
-extern char *malloc();
-#endif /* osf */
-#endif /* nt40 */
 #define alloc(size)		malloc((unsigned)(size))
 #define ALLOC(object)   (object *) malloc(sizeof(object))
 

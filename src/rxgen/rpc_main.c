@@ -34,23 +34,28 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <limits.h>
 #include <stdio.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <stdlib.h>
 #include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifndef AFS_NT40_ENV
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
 #include "rpc_util.h"
 #include "rpc_parse.h"
 #include "rpc_scan.h"
+
+RCSID("$Header$");
 
 #define EXTEND	1		/* alias for TRUE */
 
@@ -120,17 +125,18 @@ static char *XTRA_CPPFLAGS[] = {
 };
 #endif
 
-static c_output();
-static h_output();
-static s_output();
-static l_output();
-static do_registers();
-static parseargs();
+static int c_output();
+static int h_output();
+static int s_output();
+static int l_output();
+static int do_registers();
+static int parseargs();
 
 static int allc = sizeof(allv)/sizeof(allv[0]);
 
 #include "AFS_component_version_number.c"
 
+int
 main(argc, argv)
 	int argc;
 	char *argv[];

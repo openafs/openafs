@@ -33,10 +33,19 @@
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
+
+RCSID("$Header$");
 
 char curline[MAXLINESIZE];	/* current read line */
 char *where = curline;	/* current point in line */

@@ -27,23 +27,19 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#ifndef lint
-static char sccsid[] = "@(#)rpc_clntout.c 1.2 87/06/24 (C) 1987 SMI";
-#endif
 
 /*
  * rpc_clntout.c, Client-stub outputter for the RPC protocol compiler
  * Copyright (C) 1987, Sun Microsytsems, Inc.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
 #include <string.h>
-#else
-#include <strings.h>
-#endif
 #include "rpc_parse.h"
 #include "rpc_util.h"
+
+RCSID("$Header$");
 
 #define DEFAULT_TIMEOUT 25	/* in seconds */
 

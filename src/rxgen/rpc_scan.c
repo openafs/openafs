@@ -33,15 +33,20 @@
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #include "rpc_scan.h"
 #include "rpc_util.h"
+
+RCSID("$Header$");
 
 #define startcomment(where) (where[0] == '/' && where[1] == '*')
 #define endcomment(where) (where[-1] == '*' && where[0] == '/')

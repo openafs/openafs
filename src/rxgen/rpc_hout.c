@@ -32,10 +32,14 @@
  * rpc_hout.c, Header file outputter for the RPC protocol compiler 
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
+#include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
 #include <ctype.h>
 #include "rpc_util.h"
 #include "rpc_parse.h"
+
+RCSID("$Header$");
 
 static pconstdef();
 static pstructdef();
