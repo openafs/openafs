@@ -261,7 +261,6 @@ afs_int32 SpareComp(Volume *avolp)
 
 } /*SpareComp*/
 
-
 /*
  * Set the volume synchronization parameter for this volume.  If it changes,
  * the Cache Manager knows that the volume must be purged from the stat cache.
@@ -375,18 +374,22 @@ retry:
 } /*CallPreamble*/
 
 
-static void CallPostamble(register struct rx_connection *aconn)
+static afs_int32 CallPostamble(register struct rx_connection *aconn,
+			       afs_int32 ret)
 {
     struct host *thost;
     struct client *tclient;
+    int translate = 0;
 
     H_LOCK
     tclient = h_FindClient_r(aconn);
     thost = tclient->host;
+    if (thost->hostFlags & HERRORTRANS) translate = 1;
     h_ReleaseClient_r(tclient);
     h_Release_r(thost);
     H_UNLOCK
 
+    return (translate ? sys_error_to_et(ret) : ret);
 } /*CallPostamble*/
 
 /*
@@ -2228,7 +2231,7 @@ Bad_FetchData:
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode)); 
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -2385,7 +2388,7 @@ Bad_FetchACL:
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     ViceLog(2, ("SAFS_FetchACL returns %d (ACL=%s)\n",
 	    errorCode, AccessList->AFSOpaque_val));
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -2599,7 +2602,7 @@ afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
 Bad_BulkStatus: 
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -2755,7 +2758,7 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 Bad_InlineBulkStatus: 
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -2815,7 +2818,7 @@ afs_int32 SRXAFS_FetchStatus (struct rx_call *acall,
     code = SAFSS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync);
 
 Bad_FetchStatus:    
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -3067,7 +3070,7 @@ Bad_StoreData:
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     ViceLog(2, ("SAFS_StoreData	returns	%d\n", errorCode));
 
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -3231,7 +3234,7 @@ Bad_StoreACL:
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     ViceLog(2, ("SAFS_StoreACL returns %d\n", errorCode)); 
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -3371,7 +3374,7 @@ afs_int32 SRXAFS_StoreStatus (struct rx_call *acall,
     code = SAFSS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync);
 
 Bad_StoreStatus:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -3529,7 +3532,7 @@ afs_int32 SRXAFS_RemoveFile (struct rx_call *acall,
     code = SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync);
 
 Bad_RemoveFile:    
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -3695,7 +3698,7 @@ afs_int32 SRXAFS_CreateFile (struct rx_call *acall,
 			    OutFidStatus, OutDirStatus, CallBack, Sync);
 
 Bad_CreateFile:    
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -4166,7 +4169,7 @@ afs_int32 SRXAFS_Rename (struct rx_call *acall,
 			 OutOldDirStatus, OutNewDirStatus, Sync);
 
 Bad_Rename:    
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -4365,7 +4368,7 @@ afs_int32 SRXAFS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, O
 			 OutFidStatus, OutDirStatus, Sync);
 
 Bad_Symlink:    
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -4564,7 +4567,7 @@ afs_int32 SRXAFS_Link (struct rx_call *acall,
 		      OutDirStatus, Sync);
     
 Bad_Link:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -4761,7 +4764,7 @@ afs_int32 SRXAFS_MakeDir (struct rx_call *acall,
 			 OutFidStatus, OutDirStatus, CallBack, Sync);
     
 Bad_MakeDir:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -4918,7 +4921,7 @@ afs_int32 SRXAFS_RemoveDir (struct rx_call *acall,
     code = SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync);
     
 Bad_RemoveDir:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -5049,7 +5052,7 @@ afs_int32 SRXAFS_SetLock (struct rx_call *acall,
     code = SAFSS_SetLock (acall, Fid, type, Sync);
     
 Bad_SetLock:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0); 
@@ -5171,7 +5174,7 @@ afs_int32 SRXAFS_ExtendLock (struct rx_call *acall,
     code = SAFSS_ExtendLock (acall, Fid, Sync);
 
 Bad_ExtendLock:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -5303,7 +5306,7 @@ afs_int32 SRXAFS_ReleaseLock (struct rx_call *acall,
     code = SAFSS_ReleaseLock (acall, Fid, Sync);
     
 Bad_ReleaseLock:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -5430,7 +5433,7 @@ afs_int32 SRXAFS_GetStatistics (struct rx_call *acall,
     SetSystemStats((struct AFSStatistics *)Statistics);
     
 Bad_GetStatistics:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -5789,7 +5792,7 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 	 */
 
 	dataBytes = sizeof(struct afs_PerfStats);
-	dataBuffP = (afs_int32 *)osi_Alloc(dataBytes);
+	dataBuffP = (afs_int32 *)malloc(dataBytes);
 	memcpy(dataBuffP, &afs_perfstats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes>>2;
 	a_dataP->AFS_CollData_val = dataBuffP;
@@ -5816,7 +5819,7 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 	 */
 
 	dataBytes = sizeof(struct fs_stats_FullPerfStats);
-	dataBuffP = (afs_int32 *)osi_Alloc(dataBytes);
+	dataBuffP = (afs_int32 *)malloc(dataBytes);
 	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes>>2;
 	a_dataP->AFS_CollData_val = dataBuffP;
@@ -5915,7 +5918,7 @@ static afs_int32 common_GiveUpCallBacks (struct rx_call *acall,
     }
 
 Bad_GiveUpCallBacks:
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -5986,10 +5989,12 @@ afs_int32 SRXAFS_GetCapabilities(struct rx_call *acall,
     afs_int32 *dataBuffP;               
     afs_int32 dataBytes;   
 
+    dataBytes = (((CAPABILITY_BITS-1)>>5)+1) * sizeof(afs_int32);
     dataBuffP = (afs_int32 *)malloc(dataBytes);
-    memcpy((char *)dataBuffP, "1", dataBytes);
+    dataBytes = CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes/sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
+
     return 0;
 } 
 
@@ -6202,7 +6207,7 @@ afs_int32 SRXAFS_GetVolumeInfo (struct rx_call *acall,
     avolinfo->Type4	= 0xabcd9999;	/* tell us to try new vldb */
 
 Bad_GetVolumeInfo:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -6292,7 +6297,7 @@ Bad_GetVolumeStatus:
     if (*Name == 0) {*Name = (char *) malloc(1); **Name = 0;}
     if (*Motd == 0) {*Motd = (char *) malloc(1); **Motd = 0;}
     if (*OfflineMsg == 0) {*OfflineMsg = (char *) malloc(1); **OfflineMsg = 0;}
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -6383,7 +6388,7 @@ afs_int32 SRXAFS_SetVolumeStatus (struct rx_call *acall,
  Bad_SetVolumeStatus:
     PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     ViceLog(2,("SAFS_SetVolumeStatus returns %d\n",errorCode));
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -6467,7 +6472,7 @@ afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
     *VolumeName	= temp;	    /* freed by rx server-side stub */
 
 Bad_GetRootVolume:
-    CallPostamble(tcon);
+    errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -6523,7 +6528,7 @@ afs_int32 SRXAFS_CheckToken (struct rx_call *acall,
     code = FSERR_ECONNREFUSED;
     
 Bad_CheckToken:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -6586,7 +6591,7 @@ afs_int32 SRXAFS_GetTime (struct rx_call *acall,
     ViceLog(2, ("SAFS_GetTime returns %d, %d\n", *Seconds, *USeconds));
     
 Bad_GetTime:
-    CallPostamble(tcon);
+    code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
@@ -7119,4 +7124,18 @@ StoreData_RXStyle(Volume *volptr,
 
 } /*StoreData_RXStyle*/
 
+static int sys2et[512];
 
+void init_sys_error_to_et(void) {
+    int uae = 49733376L;
+    int uaf = 49733632L;
+    memset(&sys2et, 0, sizeof(sys2et));
+    sys2et[EPERM] = 1 + uae;
+    sys2et[EEXIST] = 17 +  uae;
+    sys2et[ENOTEMPTY] = 39 +  uae;
+}
+
+afs_int32 sys_error_to_et(afs_int32 in) {
+    if (sys2et[in] != 0) return sys2et[in];
+    return in;
+}

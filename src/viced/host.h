@@ -222,3 +222,4 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);  /* Used by h_itoh */
 #define CLIENTDELETED			0x20 /* client deleted */
 #define RESETDONE			0x40 /* callback reset done */
 #define HFE_LATER                       0x80 /* host has FE_LATER callbacks */
+#define HERRORTRANS                    0x100 /* do error translation */

@@ -930,10 +930,18 @@ struct host *h_GetHost_r(struct rx_connection *tcon)
     afs_int32 hport;
     int i, j, count;
     char hoststr[16], hoststr2[16];
+    Capabilities caps;
+
+    caps.Capabilities_val = NULL;
 
     haddr = rxr_HostOf(tcon);
     hport = rxr_PortOf(tcon);
 retry:
+    if (caps.Capabilities_val)
+	free(caps.Capabilities_val);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
+
     code = 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     host = h_Lookup_r(haddr, hport, &held);
@@ -954,7 +962,10 @@ retry:
 	}
 	host->hostFlags &= ~ALTADDR;
 	H_UNLOCK
-	code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
+	code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf,
+					   &caps);
+	if ( code == RXGEN_OPCODE )
+	    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 	H_LOCK
 	if ( code == RXGEN_OPCODE ) {
 		identP = (struct Identity *)malloc(sizeof(struct Identity));
@@ -1008,6 +1019,11 @@ retry:
 		       hoststr, ntohs(host->port), code));
 	    host->hostFlags |= VENUSDOWN;
 	}
+	if (caps.Capabilities_val && 
+	    (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS)) 
+	    host->hostFlags |= HERRORTRANS;
+	else
+	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;
 	h_Unlock_r(host);
     } else if (host) {
@@ -1055,7 +1071,10 @@ retry:
         if (!(host->Console&1)) {
 	    if (!identP || !interfValid) {
 		H_UNLOCK
-		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
+		code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, 
+						   &interf, &caps);
+		if ( code == RXGEN_OPCODE )
+		    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 		H_LOCK
 		if ( code == RXGEN_OPCODE ) {
 		    identP = (struct Identity *)malloc(sizeof(struct Identity));
@@ -1129,9 +1148,18 @@ retry:
 		host->hostFlags |= RESETDONE;
 
         }
+	if (caps.Capabilities_val && 
+	    (caps.Capabilities_val[0] & CAPABILITY_ERRORTRANS)) 
+	    host->hostFlags |= HERRORTRANS;
+	else
+	    host->hostFlags &= ~(HERRORTRANS);
 	host->hostFlags |= ALTADDR;/* host structure iniatilisation complete */
 	h_Unlock_r(host);
     }
+    if (caps.Capabilities_val)
+	free(caps.Capabilities_val);
+    caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
     return host;
 
 } /*h_GetHost_r*/

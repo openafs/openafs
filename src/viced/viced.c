@@ -1578,6 +1578,7 @@ main(int argc, char * argv[])
 	if (eventlog) rxevent_debugFile = debugFile;
     }
 
+    init_sys_error_to_et(); /* Set up error table translation */
     h_InitHostPackage();  /* set up local cellname and realmname */
     InitCallBack(numberofcbs);
     ClearXStatValues();
