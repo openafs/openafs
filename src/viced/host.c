@@ -1426,8 +1426,15 @@ int GetClient(struct rx_connection * tcon, struct client **cp)
     H_LOCK
 
     *cp = client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key);
-    /* XXXX debug */
-    assert(client && client->tcon && rxr_CidOf(client->tcon) == client->sid);
+    if (!(client && client->tcon && rxr_CidOf(client->tcon) == client->sid)) {
+	if (!client)
+	    ViceLog(0, ("GetClient: no client in conn %x\n", tcon));
+	else
+	    ViceLog(0, ("GetClient: tcon %x tcon sid %d client sid %d\n", 
+			client->tcon, client->tcon ? rxr_CidOf(client->tcon)
+			: -1, client->sid));
+	assert(0);
+    }
     if (client &&
 	client->LastCall > client->expTime && client->expTime) {
 	char hoststr[16];
