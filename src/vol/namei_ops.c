@@ -42,6 +42,7 @@ RCSID("$Header$");
 #include "viceinode.h"
 #include "voldefs.h"
 #include "partition.h"
+#include <afs/errors.h>
 
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 
@@ -1462,7 +1463,213 @@ static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     }
     return 0;
 }
+/*
+ * Convert the VolumeInfo file from RO to RW
+ * this routine is called by namei_convertROtoRWvolume()
+ */
 
+static afs_int32 convertVolumeInfo(fdr, fdw, vid)
+    int fdr;
+    int fdw;
+    afs_uint32 vid;
+{
+    struct VolumeDiskData vd;
+    char *p;
+
+    if (read(fdr, &vd, sizeof(struct VolumeDiskData)) != sizeof(struct VolumeDiskData)) {
+        Log("1 convertVolumeInfo: read failed for %lu with code %d\n",
+                        vid, errno);
+        return -1;
+    }
+    vd.restoredFromId = vd.id; /* remember the RO volume here */
+    vd.cloneId = vd.id;
+    vd.id = vd.parentId;
+    vd.type = RWVOL;
+    vd.dontSalvage = 0;
+    vd.uniquifier += 5000; /* just in case there are still file copies from
+                                the old RW volume around */
+    p = strrchr(vd.name, '.');
+    if (p && !strcmp(p, ".readonly")) {
+        bzero(p, 8);
+    }
+        if (write(fdw, &vd, sizeof(struct VolumeDiskData)) != sizeof(struct VolumeDiskData)) {
+        Log("1 convertVolumeInfo: write failed for %lu with code %d\n",
+                        vid, errno);
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * Convert a RO-volume into a RW-volume
+ *
+ * This function allows to recover very fast from the loss of a partition
+ * from RO-copies if all RO-Copies exist on another partition.
+ * Then these RO-volumes can be made to the new RW-volumes.
+ * Backup of RW-volumes then consists in "vos release".
+ *
+ * We must make sure in this partition exists only the RO-volume which
+ * is typical for remote replicas.
+ *
+ * Then the linktable is already ok,
+ *      the vnode files need to be renamed
+ *      the volinfo file needs to be replaced by another one with
+ *                      slightly different contents and new name.
+ * The volume header file of the RO-volume in the /vicep<x> directory
+ * is destroyed by this call. A new header file for the RW-volume must
+ * be created after return from this routine.
+ */
+
+int namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
+{
+    namei_t n;
+    char dir_name[512], oldpath[512], newpath[512];
+    char smallName[64];
+    char largeName[64];
+    char infoName[64];
+    IHandle_t t_ih;
+    char infoSeen = 0;
+    char smallSeen = 0;
+    char largeSeen = 0;
+    char linkSeen = 0;
+    int code, fd, fd2;
+    char *p;
+    DIR *dirp;
+    struct dirent *dp;
+    struct ViceInodeInfo info;
+
+    namei_HandleToName(&n, h);
+    strcpy(dir_name, n.n_path);
+    p = strrchr(dir_name, '/');
+    *p = 0;
+    dirp = opendir(dir_name);
+    if (!dirp) {
+        Log("1 namei_ConvertROtoRWvolume: Could not opendir(%s)\n",
+            dir_name);
+        return EIO;
+    }
+
+    while (dp = readdir(dirp)) {
+        /* struct ViceInodeInfo info; */
+
+        if (*dp->d_name == '.') continue;
+        if (DecodeInode(dir_name, dp->d_name, &info, h->ih_vid)<0) {
+            Log("1 namei_ConvertROtoRWvolume: DecodeInode failed for %s/%s\n",
+                dir_name, dp->d_name);
+            closedir(dirp);
+            return -1;
+        }
+        if (info.u.param[1] != -1) {
+            Log("1 namei_ConvertROtoRWvolume: found other than volume special file %s/%s\n",
+                dir_name, dp->d_name);
+            closedir(dirp);
+            return -1;
+        }
+        if (info.u.param[0] != vid) {
+            if (info.u.param[0] == h->ih_vid) {
+                if (info.u.param[2] == VI_LINKTABLE) {   /* link table */
+                    linkSeen = 1;
+                    continue;
+                }
+            }
+            Log("1 namei_ConvertROtoRWvolume: found special file %s/%s for volume %lu\n",
+                dir_name, dp->d_name, info.u.param[0]);
+            closedir(dirp);
+            return VVOLEXISTS;
+        }
+        if (info.u.param[2] == VI_VOLINFO) {   /* volume info file */
+            strcpy(infoName, dp->d_name);
+            infoSeen = 1;
+        }
+        else if (info.u.param[2] == VI_SMALLINDEX) {   /* small vnodes file */
+            strcpy(smallName, dp->d_name);
+            smallSeen = 1;
+        }
+        else if (info.u.param[2] == VI_LARGEINDEX) {   /* large vnodes file */
+            strcpy(largeName, dp->d_name);
+            largeSeen = 1;
+        }
+        else {
+            closedir(dirp);
+            Log("1 namei_ConvertROtoRWvolume: unknown type %d of special file found : %s/%s\n",
+                info.u.param[2], dir_name, dp->d_name);
+            return -1;
+        }
+    }
+    closedir(dirp);
+
+    if (!infoSeen || !smallSeen || !largeSeen || !linkSeen) {
+        Log("1 namei_ConvertROtoRWvolume: not all special files found in %s\n",
+            dir_name);
+            return -1;
+    }
+
+    /*
+     * If we come here then there was only a RO-volume and we can safely
+     * proceed.
+     */
+
+    bzero(&t_ih, sizeof(t_ih));
+    t_ih.ih_dev = h->ih_dev;
+    t_ih.ih_vid = h->ih_vid;
+
+    sprintf(oldpath, "%s/%s", dir_name, infoName);
+    fd = open(oldpath, O_RDWR, 0);
+    if (fd < 0) {
+        Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
+            oldpath);
+        return -1;
+    }
+    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_VOLINFO);
+    namei_HandleToName(&n, &t_ih);
+    fd2 = open(n.n_path, O_CREAT|O_EXCL|O_TRUNC|O_RDWR, 0);
+    if (fd2 < 0) {
+        Log("1 namei_ConvertROtoRWvolume: could not create RW info file: %s\n",
+            n.n_path);
+        close(fd);
+        return -1;
+    }
+    code = convertVolumeInfo(fd, fd2, h->ih_vid);
+    close(fd);
+    if (code) {
+        close(fd2);
+        unlink(n.n_path);
+        return -1;
+    }
+    SetOGM(fd2, h->ih_vid, 1);
+    close(fd2);
+
+    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_SMALLINDEX);
+    namei_HandleToName(&n, &t_ih);
+    sprintf(newpath, "%s/%s", dir_name, smallName);
+    fd = open(newpath, O_RDWR, 0);
+    if (fd < 0) {
+        Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n",
+            newpath);
+        return -1;
+    }
+    SetOGM(fd, h->ih_vid, 2);
+    close(fd);
+    link(newpath, n.n_path);
+    unlink(newpath);
+
+    t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_LARGEINDEX);
+    namei_HandleToName(&n, &t_ih);
+    sprintf(newpath, "%s/%s", dir_name, largeName);
+    fd = open(newpath, O_RDWR, 0);
+    if (fd < 0) {
+        Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n",
+            newpath);
+        return -1;
+    }
+    SetOGM(fd, h->ih_vid, 3);
+    close(fd);
+    link(newpath, n.n_path);
+    unlink(newpath);
+
+    unlink(oldpath);
+    return 0;
+}
 
 /* PrintInode
  *

@@ -2691,6 +2691,113 @@ fail:
     return error;
 }
 
+#ifdef AFS_NAMEI_ENV
+/* 
+ * Inode number format  (from namei_ops.c): 
+ * low 26 bits - vnode number - all 1's if volume special file.
+ * next 3 bits - tag
+ * next 3 bits spare (0's)
+ * high 32 bits - uniquifier (regular) or type if spare
+ */
+#define NAMEI_VNODEMASK    0x003ffffff
+#define NAMEI_TAGMASK      0x7
+#define NAMEI_TAGSHIFT     26
+#define NAMEI_UNIQMASK     0xffffffff
+#define NAMEI_UNIQSHIFT    32
+#define NAMEI_INODESPECIAL ((Inode)NAMEI_VNODEMASK)
+#define NAMEI_VNODESPECIAL NAMEI_VNODEMASK
+#endif /* AFS_NAMEI_ENV */
+
+afs_int32 SAFSVolConvertROtoRWvolume(acid, partId, volumeId)
+    struct rx_call *acid;
+    afs_int32 partId;
+    afs_int32 volumeId;
+{
+#ifdef AFS_NAMEI_ENV
+    DIR *dirp;
+    char pname[16];
+    char volname[20];
+    afs_int32 error = 0;
+    afs_int32 volid;
+    int found = 0;
+    char caller[MAXKTCNAMELEN];
+    char headername[16];
+    char opath[256];
+    char npath[256];
+    struct VolumeDiskHeader h;
+    int fd;
+    IHandle_t *ih;
+    Inode ino;
+    struct DiskPartition *dp;
+
+    if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;/*not a super user*/
+    if(GetPartName(partId, pname)) return VOLSERILLEGAL_PARTITION;
+    dirp = opendir(pname);
+    if(dirp == NULL) return VOLSERILLEGAL_PARTITION;
+    strcpy(volname,"");
+
+    while(strcmp(volname,"EOD") && !found) { /*while there are more volumes in the partition */
+        GetNextVol(dirp,volname,&volid);
+        if(strcmp(volname,"")) {/* its a volume */
+	    if(volid == volumeId) found = 1;
+	}
+    }
+    if (!found) return ENOENT;
+    sprintf(headername, VFORMAT, volumeId);
+    sprintf(opath,"%s/%s", pname, headername);
+    fd = open(opath, O_RDONLY);
+    if (fd < 0) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
+        return ENOENT;
+    }
+    if (read(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't read header for RO-volume %lu.\n", volumeId);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    FSYNC_askfs(volumeId, pname, FSYNC_RESTOREVOLUME, 0);
+
+    for(dp = DiskPartitionList; dp && strcmp(dp->name, pname); dp = dp->next) ;
+    if (!dp) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't find DiskPartition for %s\n", pname);
+       return EIO;
+    }
+    ino = namei_MakeSpecIno(h.parent, VI_LINKTABLE);
+    IH_INIT(ih, dp->device, h.parent, ino);
+
+    error = namei_ConvertROtoRWvolume(ih, volumeId);
+    if (error)
+        return error;
+    h.id = h.parent;
+    h.volumeInfo_hi = h.id;
+    h.smallVnodeIndex_hi = h.id;
+    h.largeVnodeIndex_hi = h.id;
+    h.linkTable_hi = h.id;
+    sprintf(headername, VFORMAT, h.id);
+    sprintf(npath, "%s/%s", pname, headername);
+    fd = open(npath, O_CREAT | O_EXCL | O_RDWR, 0644);
+    if (fd < 0) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);
+        return EIO;
+    }
+    if (write(fd, &h, sizeof(h)) != sizeof(h)) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't write header for RW-volume %lu.\n", h.id);
+        close(fd);
+        return EIO;
+    }
+    close(fd);
+    if (unlink(opath) < 0) {
+        Log("1 SAFS_VolConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", error);
+    }
+    FSYNC_askfs(volumeId, pname, FSYNC_DONE, 0);
+    FSYNC_askfs(h.id, pname, FSYNC_ON, 0);
+    return 0;
+#else /* AFS_NAMEI_ENV */
+    return EINVAL;
+#endif /* AFS_NAMEI_ENV */
+}
+
 /* GetPartName - map partid (a decimal number) into pname (a string)
  * Since for NT we actually want to return the drive name, we map through the
  * partition struct.

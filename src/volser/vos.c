@@ -4159,6 +4159,147 @@ register struct cmd_syndesc *as;
     return 0;
 }
 
+static ConvertRO(as)
+register struct cmd_syndesc *as;
+
+{
+    afs_int32 partition = -1;
+    afs_int32 server, volid, code, i, same;
+    struct nvldbentry entry, storeEntry;
+    afs_int32 vcode;
+    afs_int32 rwindex;
+    afs_int32 rwserver = 0;
+    afs_int32 rwpartition;
+    afs_int32 roindex;
+    afs_int32 roserver = 0;
+    afs_int32 ropartition;
+    int force = 0;
+    struct rx_connection *aconn;
+    char c, dc;
+
+    server = GetServer(as->parms[0].items->data);
+    if (!server) {
+        fprintf(STDERR,"vos: host '%s' not found in host table\n",as->parms[0].items->data );
+        return ENOENT;
+    }
+     partition = volutil_GetPartitionID(as->parms[1].items->data);
+    if (partition < 0) {
+        fprintf(STDERR,"vos: could not interpret partition name '%s'\n",as->parms[1].items->data );
+        return ENOENT;
+    }
+    if (!IsPartValid(partition, server, &code)) {
+        if(code) PrintError("",code);
+        else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[1].items->data);
+        return ENOENT;
+    }
+    volid = vsu_GetVolumeID(as->parms[2].items->data, cstruct, &code);
+    if (volid == 0) {
+        if (code) PrintError("", code);
+        else fprintf(STDERR, "Unknown volume ID or name '%s'\n", as->parms[0].items->data);
+        return -1;
+    }
+    if (as->parms[3].items)
+        force = 1;
+
+    vcode = VLDB_GetEntryByID (volid, -1, &entry);
+    if(vcode) {
+        fprintf(STDERR,"Could not fetch the entry for volume %u from VLDB\n",
+                volid);
+        PrintError("convertROtoRW", code);
+        return vcode;
+    }
+
+    /* use RO volid even if user specified RW or BK volid */
+
+    if (volid != entry.volumeId[ROVOL])
+        volid = entry.volumeId[ROVOL];
+
+    MapHostToNetwork(&entry);
+    for (i=0; i< entry.nServers; i++) {
+        if (entry.serverFlags[i] & ITSRWVOL) {
+            rwindex = i;
+            rwserver = entry.serverNumber[i];
+            rwpartition = entry.serverPartition[i];
+        }
+        if (entry.serverFlags[i] & ITSROVOL) {
+            same = VLDB_IsSameAddrs(server, entry.serverNumber[i], &code);
+            if (code) {
+                fprintf(STDERR, "Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
+                                server, code);
+                return ENOENT;
+            }
+            if (same) {
+                roindex = i;
+                roserver = entry.serverNumber[i];
+                ropartition = entry.serverPartition[i];
+                break;
+            }
+        }
+    }
+    if (!roserver) {
+        fprintf(STDERR, "Warning: RO volume didn't exist in vldb!\n");
+    }
+    if (ropartition != partition) {
+        fprintf(STDERR, "Warning: RO volume should be in partition %d instead of %d (vldb)\n", ropartition, partition);
+    }
+
+    if (rwserver) {
+        fprintf(STDERR,
+                "VLDB indicates that a RW volume exists already on %s in partition %s.\n", hostutil_GetNameByINet(rwserver), volutil_PartitionName(rwpartition));
+        if (!force) {
+            fprintf(STDERR, "Overwrite this VLDB entry? [y|n] (n)\n");
+            dc = c = getchar();
+            while (!(dc==EOF || dc=='\n')) dc=getchar(); /* goto end of line */
+            if ((c != 'y') && (c != 'Y')) {
+               fprintf(STDERR, "aborted.\n");
+               return -1;
+            }
+        }
+    }
+
+    vcode = ubik_Call(VL_SetLock, cstruct, 0, entry.volumeId[RWVOL], RWVOL,
+                                                        VLOP_MOVE);
+    aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
+    code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
+    if (code) {
+        fprintf(STDERR,"Converting RO volume %u to RW volume failed with code %d\n", volid, code);
+        PrintError("convertROtoRW ", code);
+        return -1;
+    }
+    entry.serverFlags[roindex] = ITSRWVOL;
+    entry.flags |= RW_EXISTS;
+    entry.flags &= ~BACK_EXISTS;
+    if (rwserver) {
+        (entry.nServers)--;
+        if (rwindex != entry.nServers) {
+            entry.serverNumber[rwindex] = entry.serverNumber[entry.nServers];
+            entry.serverPartition[rwindex] = entry.serverPartition[entry.nServers];
+            entry.serverFlags[rwindex] = entry.serverFlags[entry.nServers];
+            entry.serverNumber[entry.nServers] = 0;
+            entry.serverPartition[entry.nServers] = 0;
+            entry.serverFlags[entry.nServers] = 0;
+        }
+    }
+    entry.flags &= ~RO_EXISTS;
+    for (i=0; i<entry.nServers; i++) {
+        if (entry.serverFlags[i] & ITSROVOL) {
+            if (!(entry.serverFlags[i] & (RO_DONTUSE | NEW_REPSITE)))
+                entry.flags |= RO_EXISTS;
+        }
+    }
+    MapNetworkToHost(&entry, &storeEntry);
+    code = VLDB_ReplaceEntry(entry.volumeId[RWVOL], RWVOL, &storeEntry,
+                       (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
+    if (code)  {
+        fprintf(STDERR, "Warning: volume converted, but vldb update failed with code %d!\n", code);
+    }
+    vcode = UV_LockRelease(entry.volumeId[RWVOL]);
+    if (vcode) {
+        PrintDiagnostics("unlock", vcode);
+    }
+    return code;
+}
+
 PrintDiagnostics(astring, acode)
     char *astring;
     afs_int32 acode;
@@ -4458,6 +4599,13 @@ char **argv; {
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_OPTIONAL, "address of host");
     cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses");
     cmd_AddParm(ts, "-printuuid", CMD_FLAG, CMD_OPTIONAL, "print uuid of hosts");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("convertROtoRW", ConvertRO, 0, "convert a RO volume into a RW volume (after loss of old RW volume)");
+    cmd_AddParm(ts, "-server", CMD_SINGLE,0,  "machine name");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE,0, "partition name");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "don't ask");
     COMMONPARMS;
 
     code = cmd_Dispatch(argc, argv);
