@@ -284,33 +284,42 @@ afs_gfs_FlushText(vp)
 void afs_osi_Invisible() {
 #ifndef	AFS_AIX32_ENV
     /* called once per "kernel" lwp to make it invisible */
+#ifdef AFS_LINUX22_ENV
+    spin_lock_irq(&current->sigmask_lock);
+    sigfillset(&current->blocked);
+    recalc_sigpending(current);
+    spin_unlock_irq(&current->sigmask_lock);
+    
+    daemonize();
+#else /* AFS_LINUX22_ENV */
 #ifdef AFS_DEC_ENV
     u.u_procp->p_type |= SSYS;
-#else
+#else /* AFS_DEC_ENV */
 #if	defined(AFS_SUN5_ENV)
     curproc->p_flag |= SSYS;
-#else
+#else /* AFS_SUN5_ENV */
 #if defined(AFS_SGI_ENV)
     vrelvm();
-#endif
+#endif /* AFS_SGI_ENV */
 #ifdef	AFS_SUN_ENV
     relvm(u.u_procp); 	/* release all the resources */
-#endif
+#endif /* AFS_SUN_ENV */
 #if	defined(AFS_HPUX101_ENV)
     set_system_proc(u.u_procp);
-#else
+#else /* AFS_HPUX101_ENV */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
-#else
+#else /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
     u.u_procp->p_flag |= SSYS;
-#endif /* AFS_SGI64_ENV */
-#endif
-#endif
-#endif
-#endif
-#endif
+#endif /* !AFS_SGI64_ENV && !AFS_LINUX20_ENV */
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
+#endif /* AFS_HPUX101_ENV */
+#endif /* AFS_SUN5_ENV */
+#endif /* AFS_DEC_ENV */
+#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_AIX32_ENV */
     AFS_STATCNT(osi_Invisible);
 }
 
