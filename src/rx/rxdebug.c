@@ -256,7 +256,7 @@ MainCommand(as, arock)
     withRxStats = (supportedDebugValues & RX_SERVER_DEBUG_RX_STATS);
     withWaiters = (supportedDebugValues & RX_SERVER_DEBUG_WAITER_CNT);
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
-    withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
+    withWaited = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
 
     printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
