@@ -874,13 +874,14 @@ Check_PermissionRights(Vnode *targetptr,
 			} else
 #endif
 		if ((targetptr->disk.type != vDirectory)
-		    && (!(targetptr->disk.modeBits & OWNERWRITE)))
+		    && (!(targetptr->disk.modeBits & OWNERWRITE))) {
 		  if (readonlyServer)
 		    return(VREADONLY);
 		  if (VanillaUser(client))
 		    return(EACCES);
 		  else osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
 				                     AUD_INT, CallingRoutine, AUD_END);
+		}
 	      }
 	      else {  /* a status store */
 		if (readonlyServer)
