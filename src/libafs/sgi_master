@@ -1,0 +1,8 @@
+* Format defined by:
+* master(4)
+*
+* bc dkip 4 - io
+*FLAG 	PREFIX 	SOFT 	#DEV 	DEPENDENCIESi
+jnsw	Afs_	-	-	specfs,bsd
+
+$$$
