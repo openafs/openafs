@@ -1060,7 +1060,8 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	vlonly     = spin->flags;
 	if ( vlonly )
 		type = CM_SERVER_VLDB;
-	else    type = CM_SERVER_FILE;
+	else    
+        type = CM_SERVER_FILE;
 
 	for ( i=0; i < noServers; i++) 
 	{
@@ -1070,7 +1071,7 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		tmp.sin_family = AF_INET;
 
 		tsp = cm_FindServer(&tmp, type);
-		if ( tsp )		/* an existing server */
+		if ( tsp )		/* an existing server - ref count increased */
 		{
 			tsp->ipRank = rank; /* no need to protect by mutex*/
 
@@ -1086,13 +1087,13 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 			    /* set preferences for an existing vlserver */
 			    cm_ChangeRankCellVLServer(tsp);
 			}
+            cm_PutServer(tsp);  /* decrease refcount */
 		}
-		else			/* add a new server without a cell*/
+		else	/* add a new server without a cell */
 		{
-			tsp = cm_NewServer(&tmp, type, NULL);
+			tsp = cm_NewServer(&tmp, type, NULL); /* refcount = 1 */
 			tsp->ipRank = rank;
 		}
-		cm_PutServer(tsp);
 	}
 	return 0;
 }

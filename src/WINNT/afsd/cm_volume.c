@@ -43,14 +43,14 @@ void cm_InitVolume(void)
 long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 	cm_volume_t *volp)
 {
-        cm_conn_t *connp;
-        int i;
+    cm_conn_t *connp;
+    int i;
 	cm_serverRef_t *tsrp;
-        cm_server_t *tsp;
-        struct sockaddr_in tsockAddr;
-        long tflags;
-        u_long tempAddr;
-        struct vldbentry vldbEntry;	/* don't use NVLDB yet; they're not common */
+    cm_server_t *tsp;
+    struct sockaddr_in tsockAddr;
+    long tflags;
+    u_long tempAddr;
+    struct vldbentry vldbEntry;	/* don't use NVLDB yet; they're not common */
 	int ROcount = 0;
 	long code;
 
@@ -71,34 +71,34 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 		free(tsrp);
 	}
 
-        /* now we have volume structure locked and held; make RPC to fill it */
-        do {
+    /* now we have volume structure locked and held; make RPC to fill it */
+    do {
 		code = cm_ConnByMServers(cellp->vlServersp, userp, reqp,
-					 &connp);
-                if (code) continue;
+                                  &connp);
+        if (code) continue;
 		osi_Log1(afsd_logp, "CALL VL_GetEntryByNameO name %s",
-			 volp->namep);
-                code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
+                  volp->namep);
+        code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
 	} while (cm_Analyze(connp, userp, reqp, NULL, NULL, NULL, code));
-        code = cm_MapVLRPCError(code, reqp);
+    code = cm_MapVLRPCError(code, reqp);
 
-        if (code == 0) {
+    if (code == 0) {
 		/* decode the response */
 		lock_ObtainWrite(&cm_volumeLock);
-                if (vldbEntry.flags & VLF_RWEXISTS)
-                	volp->rwID = vldbEntry.volumeId[0];
+        if (vldbEntry.flags & VLF_RWEXISTS)
+            volp->rwID = vldbEntry.volumeId[0];
 		else
-                	volp->rwID = 0;
-                if (vldbEntry.flags & VLF_ROEXISTS)
-                	volp->roID = vldbEntry.volumeId[1];
-                else
-                	volp->roID = 0;
-                if (vldbEntry.flags & VLF_BACKEXISTS)
-                	volp->bkID = vldbEntry.volumeId[2];
+            volp->rwID = 0;
+        if (vldbEntry.flags & VLF_ROEXISTS)
+            volp->roID = vldbEntry.volumeId[1];
+        else
+            volp->roID = 0;
+        if (vldbEntry.flags & VLF_BACKEXISTS)
+            volp->bkID = vldbEntry.volumeId[2];
 		else
-                	volp->bkID = 0;
+            volp->bkID = 0;
 		lock_ReleaseWrite(&cm_volumeLock);
-                for(i=0; i<vldbEntry.nServers; i++) {
+        for(i=0; i<vldbEntry.nServers; i++) {
 			/* create a server entry */
 			tflags = vldbEntry.serverFlags[i];
 			if (tflags & VLSF_DONTUSE) continue;
@@ -107,44 +107,44 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 			tsockAddr.sin_addr.s_addr = tempAddr;
 			tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
 			if (!tsp)
-                        	tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE,
-						   cellp);
+                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE,
+                                    cellp);
 
 			/* if this server was created by fs setserverprefs */
 			if ( !tsp->cellp ) 
 				tsp->cellp = cellp;
 
-                        osi_assert(tsp != NULL);
+            osi_assert(tsp != NULL);
                         
-                        /* and add it to the list(s). */
+            /* and add it to the list(s). */
 			/*
-			 * Each call to cm_NewServerRef() increments the
-			 * ref count of tsp.  These reference will be dropped,
+             * Each call to cm_NewServerRef() increments the
+             * ref count of tsp.  These reference will be dropped,
 			 * if and when the volume is reset; see reset code
 			 * earlier in this function.
 			 */
 			if ((tflags & VLSF_RWVOL)
-			    && (vldbEntry.flags & VLF_RWEXISTS)) {
+                 && (vldbEntry.flags & VLF_RWEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
 				tsrp->next = volp->rwServersp;
-	                        volp->rwServersp = tsrp;
+                volp->rwServersp = tsrp;
 			}
-                        if ((tflags & VLSF_ROVOL)
-			    && (vldbEntry.flags & VLF_ROEXISTS)) {
+            if ((tflags & VLSF_ROVOL)
+                 && (vldbEntry.flags & VLF_ROEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
 				cm_InsertServerList(&volp->roServersp, tsrp);
 				ROcount++;
-                        }
+            }
 			/* We don't use VLSF_BACKVOL !?! */
-                        if ((tflags & VLSF_RWVOL)
-			    && (vldbEntry.flags & VLF_BACKEXISTS)) {
+            if ((tflags & VLSF_RWVOL)
+                 && (vldbEntry.flags & VLF_BACKEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
-                        	tsrp->next = volp->bkServersp;
-                                volp->bkServersp = tsrp;
+                tsrp->next = volp->bkServersp;
+                volp->bkServersp = tsrp;
 			}
 			/* Drop the reference obtained by cm_FindServer() */
 			cm_PutServer(tsp);
-                }
+        }
 
 		/*
 		 * Randomize RO list
