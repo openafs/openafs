@@ -662,7 +662,7 @@ void
 rx_StartServer(int donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs = 0;
+    register int i;
     SPLVAR;
     clock_NewTime();
 
@@ -701,6 +701,7 @@ rx_StartServer(int donateMe)
 #ifndef AFS_NT40_ENV
 #ifndef KERNEL
 	char name[32];
+	static int nProcs;
 #ifdef AFS_PTHREAD_ENV
 	pid_t pid;
 	pid = (pid_t) pthread_self();
