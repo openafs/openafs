@@ -210,9 +210,19 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #undef ULONG_MAX
 #define _LINUX_TIME_H
 #define _LINUX_FCNTL_H
-#define _I386_STATFS_H
-#define _SPARC_STATFS_H
+#ifdef AFS_S390_LINUX20_ENV
+#define _S390_STATFS_H
+#else
+#ifdef AFS_SPARC64_LINUX20_ENV
 #define _SPARC64_STATFS_H
+#else
+#ifdef AFS_SPARC_LINUX20_ENV
+#define _SPARC_STATFS_H
+#else
+#define _I386_STATFS_H
+#endif /* AFS_SPARC_LINUX20_ENV */
+#endif /* AFS_SPARC64_LINUX20_ENV */
+#endif /* AFS_S390_LINUX20_ENV */
 struct timezone {
     int a,b;
 };
@@ -220,8 +230,11 @@ typedef struct timeval {
     int tv_sec;
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
-#define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
+#if defined(AFSBIG_ENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
+#else
+#define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
+#endif
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <afs/osi_vfs.h>

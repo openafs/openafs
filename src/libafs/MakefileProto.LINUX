@@ -41,6 +41,11 @@ CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<s390_linux22 s390_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+	-fno-strict-aliasing -fsigned-char -pipe \
+	-fno-builtin
+DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <sparc_linux22 sparc_linux24>
 LD = ld -m elf32_sparc
 CCFLAGS =   -O2 -fomit-frame-pointer \
