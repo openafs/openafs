@@ -12,6 +12,7 @@
 
 typedef struct smb_tran2Packet {
 	osi_queue_t q;			/* queue of all packets */
+		int com;			/* Trans or Trans2 (0x25 or 0x32) */
         int totalData;			/* total # of expected data bytes */
         int totalParms;			/* total # of expected parm bytes */
 	int oldTotalParms;		/* initial estimate of parm bytes */
@@ -86,11 +87,25 @@ typedef struct smb_tran2QFSInfo {
 
 extern smb_tran2Dispatch_t smb_tran2DispatchTable[SMB_TRAN2_NOPCODES];
 
+#define SMB_RAP_NOPCODES	64
+
+extern smb_tran2Dispatch_t smb_rapDispatchTable[SMB_RAP_NOPCODES];
+
 extern long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 extern long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
+extern long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
 extern long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
+
+extern long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
+
+extern long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op);
 
 extern long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p,
 	smb_packet_t *outp);

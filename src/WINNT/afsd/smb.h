@@ -213,6 +213,7 @@ typedef struct smb_tid {
 } smb_tid_t;
 
 #define SMB_TIDFLAG_DELETE	1	/* delete struct when ref count zero */
+#define SMB_TIDFLAG_IPC	2 /* IPC$ */
 
 /* one per process ID */
 typedef struct smb_pid {
@@ -471,6 +472,7 @@ extern void smb_MapNTError(long code, unsigned long *NTStatusp);
 extern void smb_HoldVC(smb_vc_t *vcp);
 
 /* some globals, too */
+extern char *smb_localNamep;
 extern int loggedOut;
 extern unsigned long loggedOutTime;
 extern char *loggedOutName;
@@ -527,9 +529,11 @@ extern long smb_GetNormalizedUsername(char * usern, const char * accountName, co
 extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
 
-extern char *myCrt_2Dispatch(int i); 
+extern char *myCrt_Dispatch(int i); 
 
 extern char *myCrt_2Dispatch(int i);
+
+extern char *myCrt_RapDispatch(int i);
 
 extern unsigned int smb_Attributes(cm_scache_t *scp);
 

@@ -9,8 +9,6 @@
 
 //#define NOSERVICE 1
 
-#define NOMOREFILESFIX 1
-
 #include <afs/param.h>
 #include <afs/stds.h>
 
@@ -200,6 +198,7 @@ int smb_ServerOSLength = sizeof(smb_ServerOS);
 char smb_ServerLanManager[] = "Windows 2000 LAN Manager"; /* Faux LAN Manager string */
 int smb_ServerLanManagerLength = sizeof(smb_ServerLanManager);
 
+/* Faux server GUID. This is never checked. */
 GUID smb_ServerGUID = { 0x40015cb8, 0x058a, 0x44fc, { 0xae, 0x7e, 0xbb, 0x29, 0x52, 0xee, 0x7e, 0xff }};
 
 /*
@@ -266,6 +265,10 @@ char * myCrt_Dispatch(int i)
 		return "(23)ReceiveV3GetAttributes";
 	case 0x24:
 		return "(24)ReceiveV3LockingX";
+	case 0x25:
+		return "(25)ReceiveV3Trans";
+	case 0x26:
+		return "(26)ReceiveV3Trans[aux]";
 	case 0x29:
 		return "(29)SendCoreBadOp";
 	case 0x2b:
@@ -277,7 +280,7 @@ char * myCrt_Dispatch(int i)
 	case 0x32:
 		return "(32)ReceiveV3Tran2A";
 	case 0x33:
-		return "(33)ReceiveV3Tran2A";
+		return "(33)ReceiveV3Tran2A[aux]";
 	case 0x34:
 		return "(34)ReceiveV3FindClose";
 	case 0x35:
@@ -349,6 +352,23 @@ char * myCrt_2Dispatch(int i)
 		return "S(0c)_ReceiveTran2FindNotifyNext";
 	case 13:
 		return "S(0d)CreateDirectory_ReceiveTran2MKDir";
+	}
+}
+
+char * myCrt_RapDispatch(int i)
+{
+	switch(i)
+	{
+	default:
+		return "unknown RAP OP";
+	case 0:
+		return "RAP(0)NetShareEnum";
+	case 1:
+		return "RAP(1)NetShareGetInfo";
+	case 13:
+		return "RAP(13)NetServerGetInfo";
+	case 63:
+		return "RAP(63)NetWkStaGetInfo";
 	}
 }
 
@@ -2566,43 +2586,6 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         namep += entryLength;
         tcounter++;		/* which proto entry we're looking at */
 	}
-#ifndef NOMOREFILESFIX
-	/* 
-	 * NOTE: We can determine what OS (NT4.0, W2K, W9X, etc)
-	 * the client is running by reading the protocol signature.
-	 * ie. the order in which it sends us the protocol list.
-	 *
-	 * Special handling for Windows 2000 clients (defect 11765 )
-     * <asanka:11Jun03> Proto signature is the same for Win XP. </>
-	 */
-	if (tcounter == 6) {
-		int i = 0;
-		smb_t *ip = (smb_t *) inp;
-		smb_t *op = (smb_t *) outp;
-
-		if ((strcmp("PC NETWORK PROGRAM 1.0", protocol_array[0]) == 0) &&
-			 (strcmp("LANMAN1.0", protocol_array[1]) == 0) &&
-			 (strcmp("Windows for Workgroups 3.1a", protocol_array[2]) == 0) &&
-			 (strcmp("LM1.2X002", protocol_array[3]) == 0) &&
-			 (strcmp("LANMAN2.1", protocol_array[4]) == 0) &&
-			 (strcmp("NT LM 0.12", protocol_array[5]) == 0)) {
-			isWindows2000 = TRUE;
-			osi_Log0(smb_logp, "Looks like a Windows 2000 client");
-			/* 
-			 * HACK: for now - just negotiate a lower protocol till we 
-			 * figure out which flag/flag2 or some other field 
-			 * (capabilities maybe?) to set in order for this to work
-			 * correctly with Windows 2000 clients (defect 11765)
-			 */
-			NTProtoIndex = -1;
-			/* Things to try (after looking at tcpdump output could be
-			 * setting flags and flags2 to 0x98 and 0xc853 like this
-			 * op->reb = 0x98; op->flg2 = 0xc853;
-			 * osi_Log2(smb_logp, "Flags:0x%x Flags2:0x%x", ip->reb, ip->flg2);
-			 */
-		}	
-	}	
-#endif /* NOMOREFILESFIX */
 
 	if (NTProtoIndex != -1) {
 		protoIndex = NTProtoIndex;
@@ -7256,6 +7239,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	smb_dispatchTable[0x23].procp = smb_ReceiveV3GetAttributes;
 	smb_dispatchTable[0x24].procp = smb_ReceiveV3LockingX;
 	smb_dispatchTable[0x24].flags |= SMB_DISPATCHFLAG_CHAINED;
+	smb_dispatchTable[0x25].procp = smb_ReceiveV3Trans;
+	smb_dispatchTable[0x25].flags |= SMB_DISPATCHFLAG_NORESPONSE;
+	smb_dispatchTable[0x26].procp = smb_ReceiveV3Trans;
+	smb_dispatchTable[0x26].flags |= SMB_DISPATCHFLAG_NORESPONSE;
 	smb_dispatchTable[0x29].procp = smb_SendCoreBadOp;	/* copy file */
 	smb_dispatchTable[0x2b].procp = smb_ReceiveCoreEcho;
 	/* Set NORESPONSE because smb_ReceiveCoreEcho() does the responses itself */
@@ -7310,6 +7297,13 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
 	smb_tran2DispatchTable[13].procp = smb_ReceiveTran2MKDir;
 
+    /* setup the rap dispatch table */
+    memset(smb_rapDispatchTable, 0, sizeof(smb_rapDispatchTable));
+    smb_rapDispatchTable[0].procp = smb_ReceiveRAPNetShareEnum;
+    smb_rapDispatchTable[1].procp = smb_ReceiveRAPNetShareGetInfo;
+    smb_rapDispatchTable[63].procp = smb_ReceiveRAPNetWkstaGetInfo;
+    smb_rapDispatchTable[13].procp = smb_ReceiveRAPNetServerGetInfo;
+
 	smb3_Init();
 
 	/* if we are doing SMB authentication we have register outselves as a logon process */
@@ -7317,7 +7311,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
         NTSTATUS nts;
 		LSA_STRING afsProcessName;
 		LSA_OPERATIONAL_MODE dummy; /*junk*/
-		DWORD bufsize;
 
 		afsProcessName.Buffer = "OpenAFSClientDaemon";
 		afsProcessName.Length = strlen(afsProcessName.Buffer);
@@ -7333,16 +7326,6 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 			packageName.MaximumLength = packageName.Length + 1;
 			nts = LsaLookupAuthenticationPackage(smb_lsaHandle, &packageName , &smb_lsaSecPackage);
 			if (nts == STATUS_SUCCESS) {
-				/* Now get ourselves a domain name. */
-				/* For now we are using the local computer name as the domain name.
-				 * It is actually the domain for local logins, and we are acting as
-				 * a local SMB server. 
-                 */
-				bufsize = sizeof(smb_ServerDomainName) - 1;
-				GetComputerName(smb_ServerDomainName, &bufsize);
-				smb_ServerDomainNameLength = bufsize + 1; /* bufsize doesn't include terminator */
-				afsi_log("Setting SMB server domain name to [%s]", smb_ServerDomainName);
-
 				smb_lsaLogonOrigin.Buffer = "OpenAFS";
 				smb_lsaLogonOrigin.Length = strlen(smb_lsaLogonOrigin.Buffer);
 				smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
@@ -7373,6 +7356,19 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
             } else
                 free(secBlob);
         }
+	}
+
+	{
+		DWORD bufsize;
+		/* Now get ourselves a domain name. */
+		/* For now we are using the local computer name as the domain name.
+		* It is actually the domain for local logins, and we are acting as
+		* a local SMB server. 
+		*/
+		bufsize = sizeof(smb_ServerDomainName) - 1;
+		GetComputerName(smb_ServerDomainName, &bufsize);
+		smb_ServerDomainNameLength = bufsize + 1; /* bufsize doesn't include terminator */
+		afsi_log("Setting SMB server domain name to [%s]", smb_ServerDomainName);
 	}
 
 	/* Start listeners, waiters, servers, and daemons */

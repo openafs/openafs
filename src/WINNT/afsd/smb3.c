@@ -14,6 +14,7 @@
 #include <windows.h>
 #define SECURITY_WIN32
 #include <security.h>
+#include <lmaccess.h>
 #endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
@@ -33,6 +34,8 @@ smb_packet_t *smb_Directory_Watches = NULL;
 osi_mutex_t smb_Dir_Watch_Lock;
 
 smb_tran2Dispatch_t smb_tran2DispatchTable[SMB_TRAN2_NOPCODES];
+
+smb_tran2Dispatch_t smb_rapDispatchTable[SMB_RAP_NOPCODES];
 
 /* protected by the smb_globalLock */
 smb_tran2Packet_t *smb_tran2AssemblyQueuep;
@@ -110,7 +113,6 @@ unsigned char *smb_ParseString(unsigned char *inp, char **chainpp)
 
 /*DEBUG do not checkin*/
 void OutputDebugF(char * format, ...) {
-#ifdef COMMENT
     va_list args;
     int len;
     char * buffer;
@@ -123,11 +125,9 @@ void OutputDebugF(char * format, ...) {
     strcat(buffer, "\n");
     OutputDebugString(buffer);
     free( buffer );
-#endif
 }
 
 void OutputDebugHexDump(unsigned char * buffer, int len) {
-#ifdef COMMENT
     int i,j,k;
     char buf[256];
     static char tr[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
@@ -157,7 +157,6 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
     }    
     if(i)
         OutputDebugString(buf);
-#endif
 }   
 /**/
 
@@ -925,6 +924,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     char *passwordp;
 	char *servicep;
     cm_user_t *userp;
+	int ipc = 0;
         
 	osi_Log0(smb_logp, "SMB3 receive tree connect");
 
@@ -940,8 +940,14 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     }
     strcpy(shareName, tp+1);
 
-	if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0)
+	if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0) {
+#ifndef NO_IPC
+		osi_Log0(smb_logp, "TreeConnectX connecting to IPC$");
+		ipc = 1;
+#else
 		return CM_ERROR_NOIPC;
+#endif
+	}
 
     userp = smb_GetUser(vcp, inp);
 
@@ -950,6 +956,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	lock_ReleaseMutex(&vcp->mx);
         
 	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
+
+	if(!ipc) {
     uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
     if (uidp)
@@ -958,25 +966,36 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 		smb_ReleaseTID(tidp);
 		return CM_ERROR_BADSHARENAME;
 	}
-    lock_ObtainMutex(&tidp->mx);
-    tidp->userp = userp;
-	tidp->pathname = sharePath;
-    lock_ReleaseMutex(&tidp->mx);
-    smb_ReleaseTID(tidp);
 
 	if (vcp->flags & SMB_VCFLAG_USENT)
     {
         int policy = smb_FindShareCSCPolicy(shareName);
         smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | (policy << 2));
     }
+	} else {
+		smb_SetSMBParm(outp, 2, 0);
+		sharePath = NULL;
+	}
+
+    lock_ObtainMutex(&tidp->mx);
+    tidp->userp = userp;
+	tidp->pathname = sharePath;
+	if(ipc) tidp->flags |= SMB_TIDFLAG_IPC;
+    lock_ReleaseMutex(&tidp->mx);
+    smb_ReleaseTID(tidp);
 
 	((smb_t *)outp)->tid = newTid;
 	((smb_t *)inp)->tid = newTid;
 	tp = smb_GetSMBData(outp, NULL);
+	if(!ipc) {
     *tp++ = 'A';
     *tp++ = ':';
     *tp++ = 0;
     smb_SetSMBDataLength(outp, 3);
+	} else {
+		strcpy(tp, "IPC");
+		smb_SetSMBDataLength(outp, 4);
+	}
 
     osi_Log1(smb_logp, "SMB3 tree connect created ID %d", newTid);
     return 0;
@@ -1016,11 +1035,16 @@ smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
     tp->pid = smbp->pid;
 	tp->res[0] = smbp->res[0];
 	osi_QAdd((osi_queue_t **)&smb_tran2AssemblyQueuep, &tp->q);
-    tp->opcode = smb_GetSMBParm(inp, 14);
 	if (totalParms != 0)
         tp->parmsp = malloc(totalParms);
 	if (totalData != 0)
         tp->datap = malloc(totalData);
+	if (smbp->com == 0x25 || smbp->com == 0x26)
+		tp->com = 0x25;
+	else {
+	    tp->opcode = smb_GetSMBParm(inp, 14);
+		tp->com = 0x32;
+	}
 	tp->flags |= SMB_TRAN2PFLAG_ALLOC;
     return tp;
 }
@@ -1047,6 +1071,7 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
     tp->pid = inp->pid;
 	tp->res[0] = inp->res[0];
     tp->opcode = inp->opcode;
+	tp->com = inp->com;
 
 	/*
 	 * We calculate where the parameters and data will start.
@@ -1103,7 +1128,7 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
 		smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
         
     /* now copy important fields from the tran 2 packet */
-    smbp->com = 0x32;		/* tran 2 response */
+    smbp->com = t2p->com;
     smbp->tid = t2p->tid;
     smbp->mid = t2p->mid;
     smbp->pid = t2p->pid;
@@ -1143,7 +1168,7 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
 		smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
 
     /* now copy important fields from the tran 2 packet */
-    smbp->com = 0x32;		/* tran 2 response */
+    smbp->com = t2p->com;
     smbp->tid = t2p->tid;
     smbp->mid = t2p->mid;
     smbp->pid = t2p->pid;
@@ -1180,6 +1205,560 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
     /* next, send the datagram */
     smb_SendPacket(vcp, tp);
 }   
+
+long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
+{
+    smb_tran2Packet_t *asp;
+    int totalParms;
+    int totalData;
+    int parmDisp;
+    int dataDisp;
+    int parmOffset;
+    int dataOffset;
+    int parmCount;
+    int dataCount;
+    int firstPacket;
+	int rapOp;
+    long code = 0;
+
+	/* We sometimes see 0 word count.  What to do? */
+	if (*inp->wctp == 0) {
+#ifndef DJGPP
+		HANDLE h;
+		char *ptbuf[1];
+
+		osi_Log0(smb_logp, "TRANSACTION word count = 0"); 
+
+		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+		ptbuf[0] = "Transaction2 word count = 0";
+		ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1003, NULL,
+			    1, inp->ncb_length, ptbuf, inp);
+		DeregisterEventSource(h);
+#else /* DJGPP */
+		osi_Log0(smb_logp, "TRANSACTION word count = 0"); 
+#endif /* !DJGPP */
+
+        smb_SetSMBDataLength(outp, 0);
+        smb_SendPacket(vcp, outp);
+		return 0;
+	}
+
+    totalParms = smb_GetSMBParm(inp, 0);
+    totalData = smb_GetSMBParm(inp, 1);
+        
+    firstPacket = (inp->inCom == 0x25);
+        
+	/* find the packet we're reassembling */
+	lock_ObtainWrite(&smb_globalLock);
+    asp = smb_FindTran2Packet(vcp, inp);
+    if (!asp) {
+        asp = smb_NewTran2Packet(vcp, inp, totalParms, totalData);
+	}
+    lock_ReleaseWrite(&smb_globalLock);
+        
+    /* now merge in this latest packet; start by looking up offsets */
+	if (firstPacket) {
+		parmDisp = dataDisp = 0;
+        parmOffset = smb_GetSMBParm(inp, 10);
+        dataOffset = smb_GetSMBParm(inp, 12);
+        parmCount = smb_GetSMBParm(inp, 9);
+        dataCount = smb_GetSMBParm(inp, 11);
+		asp->maxReturnParms = smb_GetSMBParm(inp, 2);
+        asp->maxReturnData = smb_GetSMBParm(inp, 3);
+
+		osi_Log3(smb_logp, "SMB3 received Trans init packet total data %d, cur data %d, max return data %d",
+                 totalData, dataCount, asp->maxReturnData);
+    }
+    else {
+        parmDisp = smb_GetSMBParm(inp, 4);
+        parmOffset = smb_GetSMBParm(inp, 3);
+        dataDisp = smb_GetSMBParm(inp, 7);
+        dataOffset = smb_GetSMBParm(inp, 6);
+        parmCount = smb_GetSMBParm(inp, 2);
+        dataCount = smb_GetSMBParm(inp, 5);
+
+        osi_Log2(smb_logp, "SMB3 received Trans aux packet parms %d, data %d",
+                 parmCount, dataCount);
+    }   
+
+    /* now copy the parms and data */
+    if ( parmCount != 0 )
+    {
+        memcpy(((char *)asp->parmsp) + parmDisp, inp->data + parmOffset, parmCount);
+    }
+    if ( dataCount != 0 ) {
+        memcpy(asp->datap + dataDisp, inp->data + dataOffset, dataCount);
+    }
+
+    /* account for new bytes */
+    asp->curData += dataCount;
+    asp->curParms += parmCount;
+
+    /* finally, if we're done, remove the packet from the queue and dispatch it */
+    if (asp->totalData <= asp->curData && asp->totalParms <= asp->curParms) {
+		/* we've received it all */
+        lock_ObtainWrite(&smb_globalLock);
+		osi_QRemove((osi_queue_t **) &smb_tran2AssemblyQueuep, &asp->q);
+        lock_ReleaseWrite(&smb_globalLock);
+
+        /* now dispatch it */
+		rapOp = asp->parmsp[0];
+
+        if ( rapOp >= 0 && rapOp < SMB_RAP_NOPCODES && smb_rapDispatchTable[rapOp].procp) {
+            osi_LogEvent("AFS-Dispatch-RAP[%s]",myCrt_RapDispatch(rapOp),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%x] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
+            code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
+        }
+        else {
+            osi_LogEvent("AFS-Dispatch-RAP [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
+            code = CM_ERROR_BADOP;
+        }
+
+		/* if an error is returned, we're supposed to send an error packet,
+         * otherwise the dispatched function already did the data sending.
+         * We give dispatched proc the responsibility since it knows how much
+         * space to allocate.
+         */
+        if (code != 0) {
+            smb_SendTran2Error(vcp, asp, outp, code);
+        }
+
+		/* free the input tran 2 packet */
+		lock_ObtainWrite(&smb_globalLock);
+        smb_FreeTran2Packet(asp);
+		lock_ReleaseWrite(&smb_globalLock);
+    }
+    else if (firstPacket) {
+		/* the first packet in a multi-packet request, we need to send an
+         * ack to get more data.
+         */
+        smb_SetSMBDataLength(outp, 0);
+        smb_SendPacket(vcp, outp);
+    }
+
+	return 0;
+}
+
+/* ANSI versions.  The unicode versions support arbitrary length
+   share names, but we don't support unicode yet. */
+
+typedef struct smb_rap_share_info_0 {
+	char			shi0_netname[13];
+} smb_rap_share_info_0_t;
+
+typedef struct smb_rap_share_info_1 {
+	char			shi1_netname[13];
+	char			shi1_pad;
+	WORD			shi1_type;
+	DWORD			shi1_remark; /* char *shi1_remark; data offset */
+} smb_rap_share_info_1_t;
+
+typedef struct smb_rap_share_info_2 {
+	char				shi2_netname[13];
+	char				shi2_pad;
+	unsigned short		shi2_type;
+	DWORD				shi2_remark; /* char *shi2_remark; data offset */
+	unsigned short		shi2_permissions;
+	unsigned short		shi2_max_uses;
+	unsigned short		shi2_current_uses;
+	DWORD				shi2_path;  /* char *shi2_path; data offset */
+	unsigned short		shi2_passwd[9];
+	unsigned short		shi2_pad2;
+} smb_rap_share_info_2_t;
+
+#define SMB_RAP_MAX_SHARES 512
+
+typedef struct smb_rap_share_list {
+	int cShare;
+	int maxShares;
+	smb_rap_share_info_0_t * shares;
+} smb_rap_share_list_t;
+
+int smb_rapCollectSharesProc(cm_scache_t *dscp, cm_dirEntry_t *dep, void *vrockp, osi_hyper_t *offp) {
+	smb_rap_share_list_t * sp;
+	char * name;
+
+	name = dep->name;
+
+	if(name[0] == '.' && (!name[1] || (name[1] == '.' && !name[2])))
+		return 0; /* skip over '.' and '..' */
+
+	sp = (smb_rap_share_list_t *) vrockp;
+
+	strncpy(sp->shares[sp->cShare].shi0_netname, name, 12);
+	sp->shares[sp->cShare].shi0_netname[12] = 0;
+
+	sp->cShare++;
+
+	if(sp->cShare >= sp->maxShares)
+		return CM_ERROR_STOPNOW;
+	else
+		return 0;
+}
+
+long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+	smb_tran2Packet_t *outp;
+	unsigned short * tp;
+	int len;
+	int infoLevel;
+	int bufsize;
+	int outParmsTotal;	/* total parameter bytes */
+	int outDataTotal;	/* total data bytes */
+	int code = 0;
+	DWORD rv;
+	DWORD allSubmount;
+	DWORD nShares;
+	DWORD nRegShares;
+	DWORD nSharesRet;
+	HKEY hkParam;
+	HKEY hkSubmount = NULL;
+	smb_rap_share_info_1_t * shares;
+	int cshare = 0;
+	char * cstrp;
+	char thisShare[256];
+	int i,j;
+	int nonrootShares;
+	smb_rap_share_list_t rootShares;
+	cm_req_t req;
+	cm_user_t * userp;
+	osi_hyper_t thyper;
+
+	tp = p->parmsp + 1; /* skip over function number (always 0) */
+	(void) smb_ParseString((char *) tp, (char **) &tp); /* skip over parm descriptor */
+	(void) smb_ParseString((char *) tp, (char **) &tp); /* skip over data descriptor */
+	infoLevel = tp[0];
+    bufsize = tp[1];
+
+	if(infoLevel != 1) {
+		return CM_ERROR_INVAL;
+	}
+
+	/* first figure out how many shares there are */
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0,
+		KEY_QUERY_VALUE, &hkParam);
+	if (rv == ERROR_SUCCESS) {
+        len = sizeof(allSubmount);
+        rv = RegQueryValueEx(hkParam, "AllSubmount", NULL, NULL,
+                                (BYTE *) &allSubmount, &len);
+		if (rv != ERROR_SUCCESS || allSubmount != 0) {
+			allSubmount = 1;
+		}
+        RegCloseKey (hkParam);
+	}
+
+	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client\\Submounts",
+		0, KEY_QUERY_VALUE, &hkSubmount);
+	if (rv == ERROR_SUCCESS) {
+        rv = RegQueryInfoKey(hkSubmount, NULL, NULL, NULL, NULL,
+			NULL, NULL, &nRegShares, NULL, NULL, NULL, NULL);
+		if (rv != ERROR_SUCCESS)
+			nRegShares = 0;
+	} else {
+		hkSubmount = NULL;
+	}
+
+	/* fetch the root shares */
+	rootShares.maxShares = SMB_RAP_MAX_SHARES;
+	rootShares.cShare = 0;
+	rootShares.shares = malloc( sizeof(smb_rap_share_info_0_t) * SMB_RAP_MAX_SHARES );
+
+	cm_InitReq(&req);
+
+	userp = smb_GetTran2User(vcp,p);
+
+	thyper.HighPart = 0;
+	thyper.LowPart = 0;
+
+	cm_HoldSCache(cm_rootSCachep);
+	cm_ApplyDir(cm_rootSCachep, smb_rapCollectSharesProc, &rootShares, &thyper, userp, &req, NULL);
+	cm_ReleaseSCache(cm_rootSCachep);
+
+	cm_ReleaseUser(userp);
+
+	nShares = rootShares.cShare + nRegShares + allSubmount;
+
+	outParmsTotal = 8; /* 4 dwords */
+	outDataTotal = (sizeof(smb_rap_share_info_1_t) + 1) * nShares ;
+	if(outDataTotal > bufsize) {
+		nSharesRet = bufsize / (sizeof(smb_rap_share_info_1_t) + 1);
+		outDataTotal = (sizeof(smb_rap_share_info_1_t) + 1) * nSharesRet;
+	}
+	else {
+		nSharesRet = nShares;
+	}
+    
+	outp = smb_GetTran2ResponsePacket(vcp, p, op, outParmsTotal, outDataTotal);
+
+	/* now for the submounts */
+    shares = (smb_rap_share_info_1_t *) outp->datap;
+	cstrp = outp->datap + sizeof(smb_rap_share_info_1_t) * nSharesRet;
+
+	memset(outp->datap, 0, (sizeof(smb_rap_share_info_1_t) + 1) * nSharesRet);
+
+	if(allSubmount) {
+		strcpy( shares[cshare].shi1_netname, "all" );
+		shares[cshare].shi1_remark = cstrp - outp->datap;
+		/* type and pad are zero already */
+		cshare++;
+		cstrp++;
+	}
+
+	if(hkSubmount) {
+		for(i=0; i < nRegShares && cshare < nSharesRet; i++) {
+			len = sizeof(thisShare);
+            rv = RegEnumValue(hkSubmount, i, thisShare, &len, NULL, NULL, NULL, NULL);
+			if(rv == ERROR_SUCCESS && strlen(thisShare)) {
+				strncpy(shares[cshare].shi1_netname, thisShare, sizeof(shares->shi1_netname)-1);
+				shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
+				shares[cshare].shi1_remark = cstrp - outp->datap;
+				cshare++;
+				cstrp++;
+			}
+			else
+				nShares--; /* uncount key */
+		}
+
+		RegCloseKey(hkSubmount);
+	}
+
+	nonrootShares = cshare;
+
+	for(i=0; i < rootShares.cShare && cshare < nSharesRet; i++) {
+        /* in case there are collisions with submounts, submounts have higher priority */		
+		for(j=0; j < nonrootShares; j++)
+			if(!stricmp(shares[j].shi1_netname, rootShares.shares[i].shi0_netname))
+				break;
+		
+		if(j < nonrootShares) {
+			nShares--; /* uncount */
+			continue;
+		}
+
+		strcpy(shares[cshare].shi1_netname, rootShares.shares[i].shi0_netname);
+		shares[cshare].shi1_remark = cstrp - outp->datap;
+		cshare++;
+		cstrp++;
+	}
+
+	outp->parmsp[0] = ((cshare == nShares)? ERROR_SUCCESS : ERROR_MORE_DATA);
+	outp->parmsp[1] = 0;
+	outp->parmsp[2] = cshare;
+	outp->parmsp[3] = nShares;
+
+	outp->totalData = (sizeof(smb_rap_share_info_1_t) + 1) * cshare;
+	outp->totalParms = outParmsTotal;
+
+	smb_SendTran2Packet(vcp, outp, op);
+	smb_FreeTran2Packet(outp);
+
+	free(rootShares.shares);
+
+	return code;
+}
+
+long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+	smb_tran2Packet_t *outp;
+	unsigned short * tp;
+	char * shareName;
+	BOOL shareFound = FALSE;
+	unsigned short infoLevel;
+	unsigned short bufsize;
+	int totalData;
+	int totalParam;
+	DWORD len;
+	HKEY hkParam;
+	HKEY hkSubmount;
+	DWORD allSubmount;
+	LONG rv;
+	long code = 0;
+
+	tp = p->parmsp + 1; /* skip over function number (always 1) */
+	(void) smb_ParseString( (char *) tp, (char **) &tp); /* skip over param descriptor */
+	(void) smb_ParseString( (char *) tp, (char **) &tp); /* skip over data descriptor */
+	shareName = smb_ParseString( (char *) tp, (char **) &tp);
+    infoLevel = *tp++;
+    bufsize = *tp++;
+    
+	totalParam = 6;
+
+	if(infoLevel == 0)
+		totalData = sizeof(smb_rap_share_info_0_t);
+	else if(infoLevel == 1)
+		totalData = sizeof(smb_rap_share_info_1_t) + 1; /* + empty string */
+	else if(infoLevel == 2)
+		totalData = sizeof(smb_rap_share_info_2_t) + 2; /* + two empty strings */
+	else
+		return CM_ERROR_INVAL;
+
+	outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParam, totalData);
+
+	if(!stricmp(shareName,"all")) {
+		rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0,
+			KEY_QUERY_VALUE, &hkParam);
+		if (rv == ERROR_SUCCESS) {
+			len = sizeof(allSubmount);
+			rv = RegQueryValueEx(hkParam, "AllSubmount", NULL, NULL,
+									(BYTE *) &allSubmount, &len);
+			if (rv != ERROR_SUCCESS || allSubmount != 0) {
+				allSubmount = 1;
+			}
+			RegCloseKey (hkParam);
+		}
+
+		if(allSubmount)
+			shareFound = TRUE;
+
+	} else {
+		rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client\\Submounts", 0,
+			KEY_QUERY_VALUE, &hkSubmount);
+		if(rv == ERROR_SUCCESS) {
+            rv = RegQueryValueEx(hkSubmount, shareName, NULL, NULL, NULL, NULL);
+			if(rv == ERROR_SUCCESS) {
+				shareFound = TRUE;
+			}
+			RegCloseKey(hkSubmount);
+		}
+	}
+
+	if(!shareFound) {
+		smb_FreeTran2Packet(outp);
+		return CM_ERROR_BADSHARENAME;
+	}
+
+	memset(outp->datap, 0, totalData);
+
+	outp->parmsp[0] = 0;
+	outp->parmsp[1] = 0;
+	outp->parmsp[2] = totalData;
+
+	if(infoLevel == 0) {
+		smb_rap_share_info_0_t * info = (smb_rap_share_info_0_t *) outp->datap;
+		strncpy(info->shi0_netname, shareName, sizeof(info->shi0_netname)-1);
+		info->shi0_netname[sizeof(info->shi0_netname)-1] = 0;
+	} else if(infoLevel == 1) {
+		smb_rap_share_info_1_t * info = (smb_rap_share_info_1_t *) outp->datap;
+        strncpy(info->shi1_netname, shareName, sizeof(info->shi1_netname)-1);
+		info->shi1_netname[sizeof(info->shi1_netname)-1] = 0;
+		info->shi1_remark = ((unsigned char *) (info + 1)) - outp->datap;
+		/* type and pad are already zero */
+	} else { /* infoLevel==2 */
+		smb_rap_share_info_2_t * info = (smb_rap_share_info_2_t *) outp->datap;
+		strncpy(info->shi2_netname, shareName, sizeof(info->shi2_netname)-1);
+		info->shi2_netname[sizeof(info->shi2_netname)-1] = 0;
+		info->shi2_remark = ((unsigned char *) (info + 1)) - outp->datap;
+        info->shi2_permissions = ACCESS_ALL;
+		info->shi2_max_uses = (unsigned short) -1;
+        info->shi2_path = 1 + (((unsigned char *) (info + 1)) - outp->datap);
+	}
+
+	outp->totalData = totalData;
+	outp->totalParms = totalParam;
+
+	smb_SendTran2Packet(vcp, outp, op);
+	smb_FreeTran2Packet(outp);
+
+	return code;
+}
+
+typedef struct smb_rap_wksta_info_10 {
+	DWORD	wki10_computername;	/*char *wki10_computername;*/
+	DWORD	wki10_username; /* char *wki10_username; */
+	DWORD  	wki10_langroup;	/* char *wki10_langroup;*/
+	unsigned char  	wki10_ver_major;
+	unsigned char	wki10_ver_minor;
+	DWORD	wki10_logon_domain;	/*char *wki10_logon_domain;*/
+	DWORD	wki10_oth_domains; /* char *wki10_oth_domains;*/
+} smb_rap_wksta_info_10_t;
+
+
+long smb_ReceiveRAPNetWkstaGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+	smb_tran2Packet_t *outp;
+    long code = 0;
+	int infoLevel;
+	int bufsize;
+	unsigned short * tp;
+	int totalData;
+	int totalParams;
+	smb_rap_wksta_info_10_t * info;
+	char * cstrp;
+	smb_user_t *uidp;
+
+	tp = p->parmsp + 1; /* Skip over function number */
+	(void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over param descriptor */
+	(void) smb_ParseString((unsigned char*) tp, (char **) &tp); /* skip over data descriptor */
+	infoLevel = *tp++;
+	bufsize = *tp++;
+
+	if(infoLevel != 10) {
+		return CM_ERROR_INVAL;
+	}
+
+	totalParams = 6;
+	
+	/* infolevel 10 */
+	totalData = sizeof(*info) +		/* info */
+		MAX_COMPUTERNAME_LENGTH +	/* wki10_computername */
+		SMB_MAX_USERNAME_LENGTH +	/* wki10_username */
+		MAX_COMPUTERNAME_LENGTH +	/* wki10_langroup */
+		MAX_COMPUTERNAME_LENGTH +	/* wki10_logon_domain */
+		1;							/* wki10_oth_domains (null)*/
+
+	outp = smb_GetTran2ResponsePacket(vcp, p, op, totalParams, totalData);
+
+	memset(outp->parmsp,0,totalParams);
+	memset(outp->datap,0,totalData);
+
+    info = (smb_rap_wksta_info_10_t *) outp->datap;
+	cstrp = (char *) (info + 1);
+
+	info->wki10_computername = (DWORD) (cstrp - outp->datap);
+	strcpy(cstrp, smb_localNamep);
+	cstrp += strlen(cstrp) + 1;
+
+	info->wki10_username = (DWORD) (cstrp - outp->datap);
+	uidp = smb_FindUID(vcp, p->uid, 0);
+	if(uidp) {
+		lock_ObtainMutex(&uidp->mx);
+		if(uidp->unp && uidp->unp->name)
+			strcpy(cstrp, uidp->unp->name);
+		lock_ReleaseMutex(&uidp->mx);
+		smb_ReleaseUID(uidp);
+	}
+	cstrp += strlen(cstrp) + 1;
+
+	info->wki10_langroup = (DWORD) (cstrp - outp->datap);
+	strcpy(cstrp, "WORKGROUP");
+	cstrp += strlen(cstrp) + 1;
+
+	/* TODO: Not sure what values these should take, but these work */
+	info->wki10_ver_major = 5;
+	info->wki10_ver_minor = 1;
+
+	info->wki10_logon_domain = (DWORD) (cstrp - outp->datap);
+	strcpy(cstrp, smb_ServerDomainName);
+	cstrp += strlen(cstrp) + 1;
+
+	info->wki10_oth_domains = (DWORD) (cstrp - outp->datap);
+	cstrp ++; /* no other domains */
+
+	outp->totalData = (unsigned short) (cstrp - outp->datap); /* actual data size */
+	outp->parmsp[2] = outp->totalData;
+	outp->totalParms = totalParams;
+
+	smb_SendTran2Packet(vcp,outp,op);
+	smb_FreeTran2Packet(outp);
+
+	return code;
+}
+
+long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+	return CM_ERROR_BADOP;
+}
 
 long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
