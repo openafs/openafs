@@ -692,40 +692,49 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     cred_t *credp;
     struct vrequest treq;
     struct vcache *vcp = (struct vcache*)dp->d_inode;
+    struct vcache *dvcp = (struct vcache*)dp->d_parent->d_inode;
 
-    /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp) {
-	goto out_valid;
-    }
 
     AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
 
-    /* Drop the dentry if the callback is broken */
-    if (!(vcp->states & CStatd)) {
-        d_drop(dp);
-#ifdef AFS_LINUX24_ENV
-        unlock_kernel();
-#endif
-	AFS_GUNLOCK();
-        return 0;
-    }
-
     /* Make this a fast path (no crref), since it's called so often. */
+    if ((dvcp->states & CStatd)) {
+         if (dp->d_time != hgetlo(dvcp->m.DataVersion))
+              goto out_bad;
+         goto out_valid;
+    }
+    credp = crref();
+    code = afs_InitReq(&treq, credp);
+    if (!code)
+        code = afs_VerifyVCache(dvcp, &treq);
+    crfree(credp);
+    if (code)
+        goto out_bad;
+    if (dp->d_time != hgetlo(dvcp->m.DataVersion))
+        goto out_bad;
+
+out_valid:
+    if (vcp) {
     if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
 	check_bad_parent(dp); /* check and correct mvid */
-    vcache2inode(vcp);
+        /*vcache2inode(vcp);*/
+    }
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
     AFS_GUNLOCK();
 
-out_valid:
     return 1;
 
 out_bad:
+    d_drop(dp);
+#ifdef AFS_LINUX24_ENV
+    unlock_kernel();
+#endif
+    AFS_GUNLOCK();
     return 0;
 }
 
@@ -806,6 +815,9 @@ int afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 
 	dp->d_op = afs_dops;
+        /* This DV is probably wrong, unfortunately, Perhaps we should 
+           VerifyVCache the directory  */
+        dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
 	d_instantiate(dp, ip);
     }
 
@@ -852,6 +864,8 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    ip->i_op = &afs_symlink_iops;
 #endif
     }
+    /* directory ought to be stat'd here.... */
+    dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
     dp->d_op = afs_dops;
     d_add(dp, (struct inode*)vcp);
 
@@ -917,8 +931,12 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     AFS_GUNLOCK();
     if (!code) {
 	d_delete(dp);
-	if (putback)
+	if (putback) {
+           /* This DV is probably wrong, unfortunately, Perhaps we should 
+              VerifyVCache the directory  */
+            dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
 	    d_add(dp, NULL); /* means definitely does _not_ exist */
+    }
     }
     crfree(credp);
     return -code;
@@ -966,6 +984,9 @@ int afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
 	dp->d_op = afs_dops;
+        /* This DV is probably wrong, unfortunately, Perhaps we should 
+           VerifyVCache the directory  */
+        dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
 	d_instantiate(dp, (struct inode*)tvcp);
     }
     AFS_GUNLOCK();
@@ -1025,8 +1046,13 @@ int afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 		      newname, credp);
     AFS_GUNLOCK();
 
-    if (!code)
+    if (!code) {
+        /* update time so it doesn't expire immediately */
+        /* This DV is probably wrong, unfortunately, Perhaps we should 
+           VerifyVCache the directory  */
+        newdp->d_time=hgetlo(((struct vcache *)newdp->d_parent->d_inode)->m.DataVersion);
 	d_move(olddp, newdp);
+    }
 
     crfree(credp);
     return -code;
