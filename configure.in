@@ -426,6 +426,7 @@ if test "x$enable_transarc_paths" = "xyes"  ; then
     afslocaldir=${afslocaldir=/usr/afs/local}
     afsbackupdir=${afsbackupdir=/usr/afs/backup}
     afsbosconfigdir=${afsbosconfigdir=/usr/afs/local}
+afsperldir=${afsperldir=/usr/afs/lib/perl5}
     else 
     afsconfdir=${afsconfdir=$sysconfdir/openafs/server}
     viceetcdir=${viceetcdir=$sysconfdir/openafs}
@@ -438,9 +439,9 @@ if test "x$enable_transarc_paths" = "xyes"  ; then
     afslocaldir=${afslocaldir=$localstatedir/openafs}
     afsbackupdir=${afsbackupdir=$localstatedir/openafs/backup}
     afsbosconfigdir=${afsbosconfigdir=$sysconfdir/openafs}
+afsperldir=${afsperldir=$libdir/perl5/site_perl}
 
 fi
-afsperldir=${afsperldir=$libdir/perl5/site_perl}
 
 AC_SUBST(afsconfdir)
 AC_SUBST(viceetcdir)
