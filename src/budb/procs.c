@@ -152,6 +152,7 @@ tailCompPtr(pathNamePtr)
  *	1 - yes
  */
 
+int
 callPermitted(call)
      struct rx_call *call;
 {
@@ -165,7 +166,6 @@ callPermitted(call)
     if (afsconf_SuperUser(acdir, call, NULL))
 	permitted = 1;
 
-  exit:
     if (acdir)
 	afsconf_Close(acdir);
     return (permitted);
@@ -899,9 +899,8 @@ deleteDump(call, id, dumps)
     struct dump dump;
     struct tape tape;
     dumpId dumpid;
-    int firstdump;
     afs_int32 eval, code = 0;
-    int partialDel;
+    int partialDel = 0;
 
     /* iterate until the dump is truly deleted */
 
@@ -1033,6 +1032,7 @@ struct wantDumpRock {
 };
 
 
+int
 wantDump(dumpAddrParam, dumpParam, dumpListPtrParam)
      char *dumpAddrParam;
      char *dumpParam;
@@ -1057,6 +1057,7 @@ wantDump(dumpAddrParam, dumpParam, dumpListPtrParam)
     return (0);
 }
 
+int
 rememberDump(dumpAddrParam, dumpParam, dumpListPtrParam)
      char *dumpAddrParam;
      char *dumpParam;
@@ -1611,8 +1612,7 @@ ListDumps(call, sflags, groupid, fromTime, toTime, dumps, flags)
     dbadr dbAddr, dbAppAddr;
 
     afs_int32 eval, code = 0;
-    int old, hash, length, entrySize, j, k, count = 0;
-    afs_uint32 toList, toFlag;
+    int old, hash, length, entrySize, count = 0;
 
     if (!callPermitted(call))
 	return BUDB_NOTPERMITTED;
@@ -1912,7 +1912,7 @@ FindClone(call, dumpID, volName, clonetime)
      afs_int32 *clonetime;
 {
     struct ubik_trans *ut;
-    dbadr da, ta, hvia, via, vfa;
+    dbadr da, hvia, via, vfa;
     struct dump d;
     struct tape t;
     struct volFragment vf;
@@ -2693,7 +2693,6 @@ GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
     if (eval)
 	ABORT(eval);
 
-  error_exit:
     FreeReturnList(&list);
     code = ubik_EndTrans(ut);
     return code;
@@ -3655,7 +3654,7 @@ T_DumpDatabase(call, filename)
     char *path = 0;
     dbadr dbAddr;
     int type, old, length, hash;
-    int block, index;
+    int block = 0, index = 0;
     struct memoryHashTable *mht;
     afs_int32 eval, code = 0;
 
@@ -3800,6 +3799,7 @@ T_DumpDatabase(call, filename)
     return (code);
 }
 
+int
 volFragsDump(ut, dumpfid, dbAddr)
      struct ubik_trans *ut;
      FILE *dumpfid;
@@ -3807,7 +3807,6 @@ volFragsDump(ut, dumpfid, dbAddr)
 {
     struct volFragment hostVolFragment, diskVolFragment;
     afs_int32 code;
-    int block, index;
 
     while (dbAddr) {
 	code =
@@ -3819,7 +3818,7 @@ volFragsDump(ut, dumpfid, dbAddr)
 	}
 
 	fprintf(dumpfid, "\nvolfragment entry at %u: block %d, index %d\n",
-		dbAddr, block, index);
+		dbAddr, 0, 0);
 	fprintf(dumpfid, "----------------------------\n");
 	volFragment_ntoh(&diskVolFragment, &hostVolFragment);
 	printVolFragment(dumpfid, &hostVolFragment);
@@ -3907,6 +3906,7 @@ dumpDiskToHost(diskDumpPtr, hostDumpPtr)
 
 #endif /* notdef */
 
+int
 checkHash(ut, hashType)
      struct ubik_trans *ut;
      int hashType;
@@ -3915,7 +3915,7 @@ checkHash(ut, hashType)
     int entrySize, hashTableLength;
     int bucket;
     int old;
-    afs_int32 code;
+    afs_int32 code = 0;
 
     mhtPtr = ht_GetType(hashType, &entrySize);
     if (mhtPtr == 0)

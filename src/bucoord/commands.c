@@ -3097,7 +3097,6 @@ printRecentDumps(ndumps)
     afs_int32 code = 0;
     afs_int32 nextindex, index = 0;
     afs_int32 dbTime;
-    afs_int32 tapedumpid;
     budb_dumpList dl;
     struct budb_dumpEntry *dumpPtr;
     int i;
@@ -3136,7 +3135,7 @@ printRecentDumps(ndumps)
 		printf("%10u %10u %-2d %16s %2d %5d %s", dumpPtr->id,
 		       dumpPtr->parent, dumpPtr->level, ds,
 		       dumpPtr->tapes.maxTapes - dumpPtr->tapes.b + 1,
-		       dumpPtr->nVolumes, dumpPtr->name, tapedumpid);
+		       dumpPtr->nVolumes, dumpPtr->name);
 	    if (dumpPtr->initialDumpID)	/* an appended dump */
 		printf(" (%u)", dumpPtr->initialDumpID);
 	    else if (dumpPtr->appendedDumpID)	/* has appended dumps */
