@@ -665,11 +665,19 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 
 
 /* afs_util.c */
+#ifndef afs_cv2string
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
+#endif
+#ifndef afs_strcasecmp
 extern int afs_strcasecmp(char *s1, char *s2);
-extern char *afs_strdup(char *s);
+#endif
+#ifndef afs_strcat
 extern char *afs_strcat(char *s1, char *s2);
+#endif
+#ifndef afs_strchr
 extern char *afs_strchr(char *s, int c);
+#endif
+extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);

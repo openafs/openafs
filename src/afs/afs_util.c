@@ -48,6 +48,7 @@ RCSID("$Header$");
 #include <sys/fp_io.h>
 #endif
 
+#ifndef afs_cv2string
 char *afs_cv2string(char *ttp, afs_uint32 aval)
 {
     register char *tp = ttp;
@@ -68,7 +69,9 @@ char *afs_cv2string(char *ttp, afs_uint32 aval)
     return tp;
 
 } /*afs_cv2string*/
+#endif
 
+#ifndef afs_strcasecmp
 int afs_strcasecmp(char *s1, char *s2)
 {
     while (*s1 && *s2) {
@@ -84,7 +87,9 @@ int afs_strcasecmp(char *s1, char *s2)
 
     return *s1 - *s2;
 }
+#endif
 
+#ifndef afs_strcat
 char *afs_strcat(char *s1, char *s2)
 {
     char *os1;
@@ -97,7 +102,9 @@ char *afs_strcat(char *s1, char *s2)
 	;
     return (os1);
 }
+#endif
 
+#ifndef afs_strchr
 char *afs_strchr(char *s, int c)
 {
     char *p;
@@ -107,6 +114,7 @@ char *afs_strchr(char *s, int c)
 	    return p;
     return NULL;
 }
+#endif
 
 char *afs_strdup(char *s)
 {

@@ -303,7 +303,7 @@ static void afs_RebuildDynroot(void)
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
-	strcat(dotCell, c->cellName);
+	afs_strcat(dotCell, c->cellName);
 
 	afs_dynroot_computeDirEnt(c->cellName, &curPage, &curChunk);
 	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
@@ -320,7 +320,7 @@ static void afs_RebuildDynroot(void)
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
-	strcat(dotCell, ca->alias);
+	afs_strcat(dotCell, ca->alias);
 
 	afs_dynroot_computeDirEnt(ca->alias, &curPage, &curChunk);
 	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
@@ -374,7 +374,7 @@ static void afs_RebuildDynroot(void)
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
-	strcat(dotCell, c->cellName);
+	afs_strcat(dotCell, c->cellName);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      c->cellName, VNUM_FROM_CIDX_RW(cellidx, 0));
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
@@ -392,7 +392,7 @@ static void afs_RebuildDynroot(void)
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
-	strcat(dotCell, ca->alias);
+	afs_strcat(dotCell, ca->alias);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      ca->alias, VNUM_FROM_CAIDX_RW(aliasidx, 0));
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
@@ -554,7 +554,7 @@ int afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 		linklen = rw + namelen;
 		avc->linkData = afs_osi_Alloc(linklen + 1);
 		strcpy(avc->linkData, rw ? "." : "");
-		strcat(avc->linkData, realName);
+		afs_strcat(avc->linkData, realName);
 	    }
 
 	    status->UnixModeBits = 0755;
@@ -574,8 +574,8 @@ int afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    linklen = 1 + namelen + 10;
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
 	    strcpy(avc->linkData, rw ? "%" : "#");
-	    strcat(avc->linkData, c->cellName);
-	    strcat(avc->linkData, ":root.cell");
+	    afs_strcat(avc->linkData, c->cellName);
+	    afs_strcat(avc->linkData, ":root.cell");
 
 	    status->UnixModeBits = 0644;
 	    afs_PutCell(c, READ_LOCK);

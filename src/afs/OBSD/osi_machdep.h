@@ -80,6 +80,10 @@ extern struct timeval time;
 #define osi_GetTime(x)	microtime(x)
 #define osi_Time()	(time.tv_sec)
 
+/* str */
+#define afs_strcasecmp(s1, s2)	strncasecmp((s1), (s2), 65535)
+#define afs_strcat(s1, s2)	strcat((s1), (s2))
+
 /* other */
 #define afs_bufferpages bufpages
 #ifndef iodone
