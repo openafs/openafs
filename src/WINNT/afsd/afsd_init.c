@@ -726,6 +726,7 @@ int afsd_InitDaemons(char **reasonP)
 	/* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
+		osi_Log0(afsd_logp, "Loading Root Volume from cell");
         code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
                                   &req, CM_FLAG_CREATE, &cm_rootVolumep);
         afsi_log("cm_GetVolumeByName code %x root vol %x", code,

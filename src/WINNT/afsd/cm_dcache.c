@@ -1112,7 +1112,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 	// handle it differently, since it's local rather than on any
 	// server
 
-	getroot = (scp==cm_rootSCachep) ;
+	getroot = (scp==cm_rootSCachep);
+	if (getroot)
+		osi_Log1(afsd_logp,"GetBuffer returns cm_rootSCachep=%x",cm_rootSCachep);
 #endif
 
 	cm_AFSFidFromFid(&tfid, &scp->fid);
@@ -1188,9 +1190,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 		// 0. 
 		
 		lock_ObtainMutex(&cm_Freelance_Lock);
-#ifdef DEBUG
-		afsi_log("bufp->offset is %d", bufp->offset);
-#endif
 		t1 = bufp->offset.LowPart;
 		qdp = biod.bufListEndp;
 		while (qdp) {
@@ -1199,9 +1198,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 			memset(bufferp, 0, buf_bufferSize);
 			t2 = cm_fakeDirSize - t1;
 			if (t2>buf_bufferSize) t2=buf_bufferSize;
-#ifdef DEBUG
-			afsi_log("t1:%d, t2:%d", t1, t2);
-#endif
 			if (t2 > 0) {
 				memcpy(bufferp, cm_FakeRootDir+t1, t2);
 			} else {
@@ -1237,7 +1233,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
                                     biod.length);
 
 		/* now copy the data out of the pipe and put it in the buffer */
-		temp  = rx_Read(callp, &nbytes, 4);
+		temp  = rx_Read(callp, (char *)&nbytes, 4);
 		if (temp == 4) {
 			nbytes = ntohl(nbytes);
             if (nbytes > biod.length) 

@@ -34,6 +34,12 @@ void cm_InitFakeRootDir();
 
 void cm_InitFreelance() {
   
+#ifdef COMMENT
+    while ( !IsDebuggerPresent() ) {
+        Sleep(1000);
+    }
+#endif
+
 	lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
   
 	// yj: first we make a call to cm_initLocalMountPoints
@@ -102,8 +108,6 @@ void cm_InitFakeRootDir() {
 	dirSize = (curPage+1) *  CM_DIR_PAGESIZE;
 	cm_FakeRootDir = malloc(dirSize);
 	cm_fakeDirSize = dirSize;
-
-	
 
 	// yj: when we get here, we've figured out how much memory we need and 
 	// allocated the appropriate space for it. we now prceed to fill
@@ -223,14 +227,12 @@ void cm_InitFakeRootDir() {
 	cm_fakeDirCallback=1;
 
 	// when we get here, we've set up everything! done!
-
-
 }
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
       fidp->cell = 0x1;            /* root cell */
-      fidp->volume = 0x20000001;   /* root.afs ? */
+      fidp->volume = AFS_FAKE_ROOT_VOL_ID;   /* root.afs ? */
       fidp->vnode = 0x1;
       fidp->unique = 0x1;
       return 0;
@@ -261,16 +263,15 @@ int cm_reInitLocalMountPoints() {
 	cm_scache_t *scp, **lscpp, *tscp;
 
 	
-	printf("\n\n----- reinitialization starts ----- \n");
-
+	osi_Log0(afsd_logp,"----- freelance reinitialization starts ----- ");
 
 	// first we invalidate all the SCPs that were created
 	// for the local mount points
 
-	printf("Invalidating local mount point scp...  ");
+	osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
 	aFid.cell = 0x1;
-	aFid.volume=0x20000001;
+	aFid.volume=AFS_FAKE_ROOT_VOL_ID;
 	aFid.unique=0x1;
 	aFid.vnode=0x2;
 
@@ -307,33 +308,33 @@ int cm_reInitLocalMountPoints() {
 		aFid.vnode = aFid.vnode + 1;
 	}
 	lock_ReleaseWrite(&cm_scacheLock);
-	printf("\tall old scp cleared!\n");
+	osi_Log0(afsd_logp,"\tall old scp cleared!");
 
 	// we must free the memory that was allocated in the prev
 	// cm_InitLocalMountPoints call
-	printf("Removing old localmountpoints...  ");
+	osi_Log0(afsd_logp,"Removing old localmountpoints...  ");
 	free(cm_localMountPoints);
-	printf("\tall old localmountpoints cleared!\n");
+	osi_Log0(afsd_logp,"\tall old localmountpoints cleared!");
 
 	// now re-init the localmountpoints
-	printf("Creating new localmountpoints...  ");
+	osi_Log0(afsd_logp,"Creating new localmountpoints...  ");
 	cm_InitLocalMountPoints();
-	printf("\tcreated new set of localmountpoints!\n");
+	osi_Log0(afsd_logp,"\tcreated new set of localmountpoints!");
 	
 	
 	// now we have to free the memory allocated in cm_initfakerootdir
-	printf("Removing old fakedir...  ");
+	osi_Log0(afsd_logp,"Removing old fakedir...  ");
 	free(cm_FakeRootDir);
-	printf("\t\told fakedir removed!\n");
+	osi_Log0(afsd_logp,"\t\told fakedir removed!");
 
 	// then we re-create that dir
-	printf("Creating new fakedir...  ");
+	osi_Log0(afsd_logp,"Creating new fakedir...  ");
 	cm_InitFakeRootDir();
-	printf("\t\tcreated new fakedir!\n");	
+	osi_Log0(afsd_logp,"\t\tcreated new fakedir!");
 
 	lock_ReleaseMutex(&cm_Freelance_Lock);
 
-	printf("----- reinit complete -----\n\n");
+	osi_Log0(afsd_logp,"----- freelance reinit complete -----");
 	return 0;
 }
 
@@ -365,9 +366,7 @@ long cm_InitLocalMountPoints() {
 	}
 
 	// we successfully opened the file
-#ifdef DEBUG
-	fprintf(stderr, "opened afs_freelance.ini\n");
-#endif
+	osi_Log0(afsd_logp,"opened afs_freelance.ini");
 	
 	// now we read the first line to see how many entries
 	// there are
@@ -418,14 +417,12 @@ long cm_InitLocalMountPoints() {
 		aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
 		memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-2);
 		*(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
-#ifdef DEBUG
-		fprintf(stderr, "found mount point: name %s, string %s\n",
+    
+        osi_Log2(afsd_logp,"found mount point: name %s, string %s",
 			aLocalMountPoint->namep,
 			aLocalMountPoint->mountPointStringp);
-#endif
-		
-		aLocalMountPoint++;
 
+        aLocalMountPoint++;
 	}
 	fclose(fp);
 	return 0;
@@ -447,17 +444,25 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t
     char line[200];
     char fullname[200];
     int n;
+    int alias = 0;
 
     /* before adding, verify the cell name; if it is not a valid cell,
-       don't add the mount point */
+       don't add the mount point.
+       allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
-    if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
-      return -1;
-#if 0
-    if (strcmp(cellname, fullname) != 0)   /* no partial matches allowed */
-      return -1;
-#endif
+    osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s",
+              filename, cellname, volume);
+    if (cellname[0] == '.') {
+        if (!cm_GetCell_Gen(&cellname[1], &fullname[1], CM_FLAG_CREATE))
+            return -1;
+        fullname[0]='.';
+    } else {
+        if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
+            return -1;
+    }
     
+    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", cellname);
+
     lock_ObtainMutex(&cm_Freelance_Lock);
 
      cm_GetConfigDir(hfile);
@@ -475,13 +480,13 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t
      fclose(fp);
      lock_ReleaseMutex(&cm_Freelance_Lock);
 
-     /*cm_reInitLocalMountPoints(&vnode);*/
+     /* cm_reInitLocalMountPoints(); */
      if (fidp) {
        fidp->unique = 1;
        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
      }
      cm_noteLocalMountPointChange();
-     
+    
      return 0;
 }
 
