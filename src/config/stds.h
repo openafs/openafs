@@ -55,10 +55,49 @@ typedef unsigned short   afs_uint16;
 #ifdef  AFS_64BIT_ENV
 typedef int              afs_int32;
 typedef unsigned int     afs_uint32;
+typedef long long 	 afs_int64;
+typedef  unsigned long long afs_uint64;
+ #define ZeroInt64(a)       (a) = 0
+ #define AssignInt64(a, b)   *(a) = (b)
+ #define AddInt64(a,b,c) *(c) = (a) + (b)
+ #define SubtractInt64(a,b,c) *(c) = (a) - (b)
+ #define CompareInt64(a,b) (a) - (b)
+ #define NonZeroInt64(a)                (a)
+ #define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
+ #define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
+ #define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
 #else   /* AFS_64BIT_ENV */
 typedef long             afs_int32;
 typedef unsigned long    afs_uint32;
+
+ struct Int64 {
+    afs_int32 high;
+    afs_uint32 low;
+ };
+ typedef struct Int64 afs_int64;
+
+ struct u_Int64 {
+    afs_uint32 high;
+    afs_uint32 low;
+ };
+ typedef struct u_Int64 afs_uint64;
+ #define ZeroInt64(a) (a).high = (a).low = 0
+ #define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
+ #define NonZeroInt64(a)   (a).low || (a).high
+ #define Int64ToInt32(a)    (a).low
+ #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
+ #define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
 #endif  /* AFS_64BIT_ENV */
+
+/* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */
+
+#ifdef AFS_64BIT_CLIENT
+typedef afs_int64 afs_size_t;
+typedef afs_uint64 afs_offs_t;
+#else /* AFS_64BIT_CLIENT */
+typedef afs_int32 afs_size_t;
+typedef afs_uint32 afs_offs_t;
+#endif /* AFS_64BIT_CLIENT */
 
 /* you still have to include <netinet/in.h> to make these work */
 

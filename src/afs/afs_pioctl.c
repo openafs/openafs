@@ -61,6 +61,7 @@ static int PSetSPrefs33(), PStoreBehind(), PGCPAGs();
 static int PGetCPrefs(), PSetCPrefs(); /* client network addresses */
 static int PGetInitParams(), PFlushMount(), PRxStatProc(), PRxStatPeer();
 static int PGetRxkcrypt(), PSetRxkcrypt();
+static int PPrefetchFromTape(), PResidencyCmd();
 int PExportAfs();
 
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp);
@@ -134,6 +135,8 @@ static int (*(pioctlSw[]))() = {
   PNoop,			/* 63 -- arla: print xfs status */
   PNoop,			/* 64 -- arla: force cache check */
   PNoop,			/* 65 -- arla: break callback */
+  PPrefetchFromTape,            /* 66 -- MR-AFS: prefetch file from tape */
+  PResidencyCmd,                /* 67 -- MR-AFS: generic commnd interface */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3555,3 +3558,163 @@ out:
     return code;
 }
 
+static PPrefetchFromTape(avc, afun, areq, ain, aout, ainSize, aoutSize)
+  struct vcache *avc;
+  int afun;
+  struct vrequest *areq;
+  char *ain, *aout;
+  afs_int32 ainSize;
+  afs_int32 *aoutSize;  /* set this */
+{
+    register afs_int32 code, code1;
+    afs_int32 bytes;
+    struct conn *tc;
+    struct rx_call *tcall;
+    struct AFSVolSync tsync;
+    struct AFSFetchStatus OutStatus;
+    struct AFSCallBack CallBack;
+    struct VenusFid tfid;
+    struct AFSFid *Fid;
+    struct vcache *tvc;
+    XSTATS_DECLS;
+
+    AFS_STATCNT(PSetAcl);
+    if (!avc)
+      return EINVAL;
+
+    if (ain && (ainSize == 3 * sizeof(afs_int32)))
+        Fid = (struct AFSFid *) ain;
+    else
+        Fid = &avc->fid.Fid;
+    tfid.Cell = avc->fid.Cell;
+    tfid.Fid.Volume = Fid->Volume;
+    tfid.Fid.Vnode = Fid->Vnode;
+    tfid.Fid.Unique = Fid->Unique;
+
+    tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache *)0,
+                                WRITE_LOCK);
+    if (!tvc) {
+        afs_Trace3(afs_iclSetp, CM_TRACE_PREFETCHCMD,
+                ICL_TYPE_POINTER, tvc,
+                ICL_TYPE_FID, &tfid,
+                ICL_TYPE_FID, &avc->fid);
+        return ENOENT;
+    }
+    afs_Trace3(afs_iclSetp, CM_TRACE_PREFETCHCMD,
+                ICL_TYPE_POINTER, tvc,
+                ICL_TYPE_FID, &tfid,
+                ICL_TYPE_FID, &tvc->fid);
+
+    do {
+        tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+        if (tc) {
+
+#ifdef RX_ENABLE_LOCKS
+            AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+            tcall = rx_NewCall(tc->id);
+            code = StartRXAFS_FetchData(tcall,
+                                (struct AFSFid *) &tvc->fid.Fid, 0, 0);
+            if (!code) {
+                bytes = rx_Read(tcall, (char *) aout, sizeof(afs_int32));
+                code = EndRXAFS_FetchData(tcall, &OutStatus, &CallBack, &tsync);
+            }
+            code1 = rx_EndCall(tcall, code);
+#ifdef RX_ENABLE_LOCKS
+            AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+        } else
+            code = -1;
+    } while
+        (afs_Analyze(tc, code, &tvc->fid, areq, 
+		AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK, 
+		(struct cell *)0));
+    /* This call is done only to have the callback things handled correctly */
+    afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
+    afs_PutVCache(tvc, WRITE_LOCK);
+
+    if (!code) {
+        *aoutSize = sizeof(afs_int32);
+    }
+    return code;
+}
+
+static PResidencyCmd(avc, afun, areq, ain, aout, ainSize, aoutSize)
+struct vcache *avc;
+int afun;
+struct vrequest *areq;
+char *ain, *aout;
+afs_int32 ainSize;
+afs_int32 *aoutSize;        /* set this */
+{
+    register afs_int32 code;
+    struct conn *tc;
+    struct vcache *tvc;
+    struct ResidencyCmdInputs *Inputs;
+    struct ResidencyCmdOutputs *Outputs;
+    struct VenusFid tfid;
+    struct AFSFid *Fid;
+
+    Inputs = (struct ResidencyCmdInputs *) ain;
+    Outputs = (struct ResidencyCmdOutputs *) aout;
+    if (!avc) return EINVAL;
+    if (!ain || ainSize != sizeof(struct ResidencyCmdInputs)) return EINVAL;
+
+    Fid = &Inputs->fid;
+    if (!Fid->Volume)
+        Fid = &avc->fid.Fid;
+
+    tfid.Cell = avc->fid.Cell;
+    tfid.Fid.Volume = Fid->Volume;
+    tfid.Fid.Vnode = Fid->Vnode;
+    tfid.Fid.Unique = Fid->Unique;
+
+    tvc = afs_GetVCache(&tfid, areq, (afs_int32 *)0, (struct vcache *)0,
+                                WRITE_LOCK);
+    afs_Trace3(afs_iclSetp, CM_TRACE_RESIDCMD,
+                ICL_TYPE_POINTER, tvc,
+                ICL_TYPE_INT32, Inputs->command,
+                ICL_TYPE_FID, &tfid);
+    if (!tvc)
+        return ENOENT;
+
+    if (Inputs->command) {
+        do {
+            tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+            if (tc) {
+#ifdef RX_ENABLE_LOCKS
+                AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+                code = RXAFS_ResidencyCmd(tc->id, Fid,
+                                 Inputs,
+                                 (struct ResidencyCmdOutputs *) aout);
+#ifdef RX_ENABLE_LOCKS
+                AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+            } else
+                code = -1;
+        } while
+          (afs_Analyze(tc, code, &tvc->fid, areq, 
+		AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK,
+                (struct cell *)0));
+       /* This call is done to have the callback things handled correctly */
+       afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
+    } else { /* just a status request, return also link data */
+        code = 0;
+        Outputs->code = afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
+        Outputs->chars[0] = 0;
+        if (vType(tvc) == VLNK) {
+            ObtainWriteLock(&tvc->lock,555);
+            if (afs_HandleLink(tvc, areq) == 0)
+                strncpy((char *) &Outputs->chars, tvc->linkData, MAXCMDCHARS);
+            ReleaseWriteLock(&tvc->lock);
+        }
+    }
+
+    afs_PutVCache(tvc, WRITE_LOCK);
+
+    if (!code) {
+        *aoutSize = sizeof(struct ResidencyCmdOutputs);
+    }
+    return code;
+}                                  

@@ -127,5 +127,7 @@ error_table 2 zcm
 	ec	CM_TRACE_READPAGE, "Ireadpage ip 0x%lx pp 0x%x count 0x%x code %x"
 	ec	CM_TRACE_UPDATEPAGE, "Iupdatepage ip 0x%lx pp 0x%x count 0x%x code %d"
 	ec	CM_TRACE_VM_CLOSE, "VMclose ip 0x%lx mapcnt %d opens %d XoW %d"
+	ec      CM_TRACE_PREFETCHCMD, "PrefetchCmd tvc 0x%x tfid (%d:%d.%d.%d) fid (%d:%d.%d.%d)"
+	ec      CM_TRACE_RESIDCMD, "ResidencyCmd tvc 0x%x command %d fid (%d:%d.%d.%d)"
 end
 

@@ -298,6 +298,26 @@ const FLUSHMAX = 10;
 typedef afs_int32 ViceIds<FLUSHMAX>;
 typedef	afs_int32 IPAddrs<FLUSHMAX>;
 
+%#define MAXCMDINT64S                           3
+%#define MAXCMDINT32S                           200
+%#define MAXCMDCHARS                            256
+
+struct ResidencyCmdInputs {
+    afs_int32  command;
+    struct AFSFid fid;
+    afs_int64  int64s[MAXCMDINT64S];
+    afs_uint32 int32s[MAXCMDINT32S];
+    char       chars[MAXCMDCHARS];
+};
+
+struct ResidencyCmdOutputs {
+    afs_int32  code;
+    struct AFSFetchStatus status;
+    afs_int64  int64s[MAXCMDINT64S];
+    afs_uint32 int32s[MAXCMDINT32S];
+    char       chars[MAXCMDCHARS];
+}; 
+
 package RXAFS_
 prefix S
 statindex 7
@@ -544,3 +564,9 @@ DFSSymlink(
   AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) = 163;
+
+ResidencyCmd(
+  IN AFSFid *Fid,
+  IN struct ResidencyCmdInputs *Inputs,
+  OUT struct ResidencyCmdOutputs *Outputs
+) = 220; 
