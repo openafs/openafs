@@ -115,23 +115,23 @@ cmd: comerr
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
-lwp: util
+lwp: util lwp_depinstall
 	${COMPILE_PART1} lwp ${COMPILE_PART2}
 
 rxgen: pinstall 
 	${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: pinstall lwp rxgen 
+rx: pinstall lwp rxgen rx_depinstall
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
-rxstat: rx
+rxstat: rx rxstat_depinstall
 	${COMPILE_PART1} rxstat ${COMPILE_PART2}
 
 rxtests: rxdebug
 rxdebug: rx sys
 	${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
-fsint: cmd comerr rxgen rx lwp 
+fsint: cmd comerr rxgen rx lwp fsint_depinstall
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
 
 export2: project 
@@ -145,7 +145,7 @@ export:
 export_build: fsint
 	${COMPILE_PART1} export ${COMPILE_PART2}
 
-afs: export pinstall comerr
+afs: export pinstall comerr afs_depinstall
 	${COMPILE_PART1} afs ${COMPILE_PART2}
 
 des: config pinstall
@@ -154,30 +154,30 @@ des: config pinstall
 sys: cmd comerr afs des rx rxstat fsint
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: cmd comerr sys des rx
+rxkad: cmd comerr sys des rx rxkad_depinstall
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: cmd comerr comerr des lwp rx sys rxkad audit
+auth: cmd comerr comerr des lwp rx sys rxkad audit auth_depinstall
 	${COMPILE_PART1} auth ${COMPILE_PART2}
 
-ubik: cmd comerr auth 
+ubik: cmd comerr auth ubik_depinstall
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
 ubiktests: ubik
 
-ptserver: cmd comerr ubik cmd comerr auth audit
+ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
 
-kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl
+kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
 dauth: cmd comerr ubik cmd auth kauth comerr
 	${COMPILE_PART1} dauth ${COMPILE_PART2}
 
-libacl: cmd comerr ptserver
+libacl: cmd comerr ptserver libacl_depinstall
 	${COMPILE_PART1} libacl ${COMPILE_PART2}
 
-dir: cmd comerr libacl
+dir: cmd comerr libacl dir_depinstall
 	${COMPILE_PART1} dir ${COMPILE_PART2}
 
 # Removed from sgi_* case below:
@@ -193,7 +193,7 @@ sgiefs:
 vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
-vlserver: cmd comerr vol audit
+vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
 viced: cmd comerr vlserver audit
