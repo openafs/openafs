@@ -41,6 +41,7 @@
 #include <afs/vlserver.h>
 #include <afs/pterror.h>
 #include <afs/bnode.h>
+#include <afs/volser.h>
 #include <ubik.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -51,6 +52,7 @@
 
 #include "AFS_component_version_number.c"
 
+int
 main (argc, argv)
   int   argc;
   char *argv[];
@@ -93,7 +95,7 @@ main (argc, argv)
 	code = atoi(argv[i]);
 	offset = code & ((1<<ERRCODE_RANGE)-1);
 
-	printf ("%d (%s).%d = %s\n", code, error_table_name (code), offset,
+	printf ("%d (%s).%d = %s\n", (int) code, error_table_name (code), (int) offset,
 		error_message (code));
     }
     return 0;
