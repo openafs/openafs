@@ -190,7 +190,7 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((avc->states & CBackup) && (tvp->states & VBackup)) {
 	afs_PutVolume(tvp, WRITE_LOCK);
-	return ELOOP;
+	return ENODEV;
     }
 
     /* If we want (prefetched) the RO and it exists, then drop the
