@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 extern char *malloc();
-extern char *rindex();
 
 #define	maxinputdepth	16
 #define	maxlinesize	1024
@@ -215,7 +214,7 @@ static directive(what)
 
 	if (*what++ != specialchar)
 		return nestp->status;
-	if (cp = rindex(what,'\n'))
+	if (cp = strrchr(what, '\n'))
 		*cp = 0;
 	for (n = 0; n <	2; n++)
 	{
@@ -382,7 +381,7 @@ main( argc, argv )
 				char	*cp, *cp2;
 
 				cp = &argv[0][sizeof("-D")-1];
-				if (cp2 = rindex(cp,'='))
+				if (cp2 = strrchr(cp, '='))
 					*cp2++ = 0;
 				if (cp2 == 0)
 					cp2 = "";

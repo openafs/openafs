@@ -96,7 +96,7 @@ pass1()
 	/*
 	 * Find all allocated blocks.
 	 */
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	idesc.id_type = ADDR;
 	idesc.id_func = pass1check;
 	inumber = 0;
@@ -110,10 +110,9 @@ pass1()
 				continue;
 			dp = ginode(inumber);
 			if ((dp->di_mode & IFMT) == 0) {
-				if (bcmp((char *)dp->di_db, (char *)zino.di_db,
+				if (memcmp((char *)dp->di_db, (char *)zino.di_db,
 					NDADDR * sizeof(daddr_t)) ||
-				    bcmp((char *)dp->di_ib, (char *)zino.di_ib,
-					NIADDR * sizeof(daddr_t)) ||
+				    memcmp((char *)dp->di_ib, (char *)zino.di_ib, NIADDR * sizeof(daddr_t)) ||
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
 				    dp->di_mode || dp->di_size || dp->di_contin) {
 				            if (dp->di_contin != 0) 

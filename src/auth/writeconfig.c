@@ -51,7 +51,7 @@ register struct afsconf_cell *aci; {
 			printf("Host %s not found in host database...\n", aci->hostName[i]);
 			return AFSCONF_FAILURE;
 		}
-		bcopy(th->h_addr, &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
+		memcpy(&aci->hostAddr[i].sin_addr, th->h_addr, sizeof(afs_int32));
 	    }
 	    /* otherwise we're deleting this entry */
 	}

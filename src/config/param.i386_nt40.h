@@ -34,14 +34,16 @@ typedef int ssize_t;
 /* these macros define Unix-style functions missing in  VC++5.0/NT4.0 */
 #define MAXPATHLEN _MAX_PATH
 
-#define bzero(A, S) memset((void*)(A), 0, (size_t)(S))
-#define bcopy(A, B, S) memcpy((void*)(B), (void*)(A), (size_t)(S))
+#if 0
+#define memset(A, 0, S) memset((void*)(A), 0, (size_t)(S))
+#define memcpy(B, A, S) memcpy((void*)(B), (void*)(A), (size_t)(S))
 /* There is a minor syntactic difference between memcmp and bcmp... */
-#define bcmp(A,B,S) (memcmp((void*)(A), (void*)(B), (size_t)(S)) ? 1 : 0)
+#define memcmp(A, B, S) (memcmp((void*)(A), (void*)(B), (size_t)(S)) ? 1 : 0)
+#define strchr(s, c)             strchr(s, c)
+#define strrchr(s, c)            strrchr(s, c)
+#endif
 #define strcasecmp(s1,s2)       _stricmp(s1,s2) 
 #define strncasecmp(s1,s2,n)    _strnicmp(s1,s2,n)
-#define index(s, c)             strchr(s, c)
-#define rindex(s, c)            strrchr(s, c)
 #define sleep(seconds)          Sleep((seconds) * 1000)
 #define fsync(fileno)           _commit(fileno)
 #define ftruncate(fd, size)     _chsize((fd), (long)(size))

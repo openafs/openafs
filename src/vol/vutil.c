@@ -124,7 +124,7 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     
 
     *ec = 0;
-    bzero(&vol, sizeof (vol));
+    memset(&vol, 0, sizeof (vol));
     vol.id = volumeId;
     vol.parentId = parentId;
     vol.copyDate = time(0);	/* The only date which really means when this
@@ -145,7 +145,7 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
     nearInode %= partition->f_files;
 #endif
     VLockPartition(partname);
-    bzero(&tempHeader, sizeof (tempHeader));
+    memset(&tempHeader, 0, sizeof (tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
     tempHeader.id = vol.id;
@@ -317,7 +317,7 @@ afs_int32 CopyVolumeHeader_r(from, to)
     id = to->id;
     parent = to->parentId;
     copydate = to->copyDate;
-    bcopy(from, to, sizeof(*from));
+    memcpy(to, from, sizeof(*from));
     to->id = id;
     to->parentId = parent;
     to->copyDate = copydate;
@@ -349,7 +349,7 @@ ClearVolumeStats(vol)
 ClearVolumeStats_r(vol)
     register VolumeDiskData *vol;
 {
-    bzero(vol->weekUse, sizeof(vol->weekUse));
+    memset(vol->weekUse, 0, sizeof(vol->weekUse));
     vol->dayUse = 0;
     vol->dayUseDate = 0;
 }

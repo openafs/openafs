@@ -60,7 +60,7 @@ void *osi_UFSOpen(ainode)
        struct utask_nd utnd = { NULL, NULL };
        struct vattr attr;
 
-       bzero(&nd, sizeof(nd));
+       memset(&nd, 0, sizeof(nd));
        ndp->ni_utnd = &utnd;
        ndp->ni_nameiop = LOOKUP;
        ndp->ni_cred = &afs_osi_cred;

@@ -30,7 +30,6 @@ RCSID("$Header$");
 
 extern int errno;
 extern afs_int32 KAM_CreateUser();
-extern char *index();
 
 #define uss_kauth_MAX_SIZE	2048
 
@@ -150,7 +149,7 @@ static char *getpipepass() {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
     register int i, tc;
-    bzero(gpbuf, sizeof(gpbuf));
+    memset(gpbuf, 0, sizeof(gpbuf));
     for(i=0; i<(sizeof(gpbuf)-1); i++) {
 	tc = fgetc(stdin);
 	if (tc == '\n' || tc == EOF) break;
@@ -555,7 +554,7 @@ afs_int32 uss_kauth_CheckUserName()
 		uss_whoami, UserCell);
 	return(-1);
     }
-    if (index(UserPrincipal, ':') != NULL) {
+    if (strchr(UserPrincipal, ':') != NULL) {
 	fprintf(stderr, "%s: User name '%s' can't have a colon\n",
 		uss_whoami, UserPrincipal);
 	return(-1);

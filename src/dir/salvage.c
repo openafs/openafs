@@ -398,8 +398,8 @@ int DirSalvage (fromFile, toFile, vn, vu, pvn, pvu)
     struct DirEntry *ep;
     int entry;
 
-    bzero(dot, sizeof(dot));
-    bzero(dotdot, sizeof(dotdot));
+    memset(dot, 0, sizeof(dot));
+    memset(dotdot, 0, sizeof(dotdot));
     dot[1]    = vn;
     dot[2]    = vu;
     dotdot[1] = pvn;

@@ -250,7 +250,7 @@ static char *Parent(apath)
 {
     char *tp;
     strcpy(tspace, apath);
-    tp = rindex(tspace, '/');
+    tp = strrchr(tspace, '/');
     if (tp) {
 	*tp = 0;
     }
@@ -1099,7 +1099,7 @@ static SetQuotaCmd(as)
     struct cmd_syndesc ts;
 
     /* copy useful stuff from our command slot; we may later have to reorder */
-    bcopy(as, &ts, sizeof(ts));	/* copy whole thing */
+    memcpy(&ts, as, sizeof(ts));	/* copy whole thing */
     return SetVolCmd(&ts);
 }
 
@@ -1234,7 +1234,7 @@ static WhereIsCmd(as)
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
-	bzero(space, sizeof(space));
+	memset(space, 0, sizeof(space));
 	code = pioctl(ti->data, VIOCWHEREIS, &blob, 1);
 	if (code) {
 	    Die(errno, ti->data);
@@ -1373,7 +1373,7 @@ static ListMountCmd(as)
 	     * name (we know there is one) and splice in the symlink value.
 	     */
 	    if (true_name[0] != '/') {
-		last_component = (char *) rindex(orig_name, '/');
+		last_component = (char *) strrchr(orig_name, '/');
 		strcpy(++last_component, true_name);
 		strcpy(true_name, orig_name);
 	    }
@@ -1384,7 +1384,7 @@ static ListMountCmd(as)
 	/*
 	 * Find rightmost slash, if any.
 	 */
-	last_component = (char *) rindex(true_name, '/');
+	last_component = (char *) strrchr(true_name, '/');
 	if (last_component) {
 	    /*
 	     * Found it.  Designate everything before it as the parent directory,
@@ -1414,7 +1414,7 @@ static ListMountCmd(as)
 	blob.in_size = strlen(last_component)+1;
 	blob.out_size = MAXSIZE;
 	blob.out = space;
-	bzero(space, MAXSIZE);
+	memset(space, 0, MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 
@@ -1470,7 +1470,7 @@ defect #3069
 
     /* Check for a cellname in the volume specification, and complain
      * if it doesn't match what was specified with -cell */
-    if (tmpName = index(volName, ':')) {
+    if (tmpName = strchr(volName, ':')) {
 	*tmpName = '\0';
 	if (cellName) {
 	    if (strcasecmp(cellName,volName)) {
@@ -1550,7 +1550,7 @@ static RemoveMountCmd(as)
 
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
-	tp = (char *) rindex(ti->data, '/');
+	tp = (char *) strrchr(ti->data, '/');
 	if (tp) {
 	    strncpy(tbuffer, ti->data, code=tp-ti->data);  /* the dir name */
 	    tbuffer[code] = 0;
@@ -1603,13 +1603,13 @@ static CheckServersCmd(as)
     struct afsconf_cell info;
     struct chservinfo checkserv;
 
-    bzero(&checkserv,sizeof(struct chservinfo));
+    memset(&checkserv, 0, sizeof(struct chservinfo));
     blob.in_size=sizeof(struct chservinfo);
     blob.in=(caddr_t)&checkserv;
 
     blob.out_size = MAXSIZE;
     blob.out = space;
-    bzero(space, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
+    memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
     /* prepare flags for checkservers command */
     temp = 2;	/* default to checking local cell only */
@@ -1659,7 +1659,7 @@ static CheckServersCmd(as)
 	Die(errno, 0);
 	return 1;
     }
-    bcopy(space, &temp, sizeof(afs_int32));
+    memcpy(&temp, space, sizeof(afs_int32));
     if (checkserv.tinterval >= 0) {
 	if (checkserv.tinterval > 0)
 	    printf("The new down server probe interval (%d secs) is now in effect (old interval was %d secs)\n",
@@ -1674,7 +1674,7 @@ static CheckServersCmd(as)
     else {
 	printf("These servers unavailable due to network or server problems: ");
 	for(j=0; ; j++) {
-	    bcopy(space + j*sizeof(afs_int32), &temp, sizeof(afs_int32));
+	    memcpy(&temp, space + j*sizeof(afs_int32), sizeof(afs_int32));
 	    if (temp == 0) break;
 	    tp = hostutil_GetNameByINet(temp);
 	    printf(" %s", tp);
@@ -1695,12 +1695,12 @@ static MessagesCmd(as)
     struct gaginfo gagflags;
     struct cmd_item *show;
 
-    bzero (&gagflags, sizeof(struct gaginfo));
+    memset(&gagflags, 0, sizeof(struct gaginfo));
     blob.in_size = sizeof(struct gaginfo);
     blob.in = (caddr_t) &gagflags;
     blob.out_size = MAXSIZE;
     blob.out = space;
-    bzero(space, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
+    memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
     if (show = as->parms[0].items) {
 	if (!strcasecmp (show->data, "user"))
@@ -1826,7 +1826,7 @@ static ListCellsCmd(as)
 
     for(i=0;;i++) {
         tp = space;
-	bcopy(&i, tp, sizeof(afs_int32));
+	memcpy(tp, &i, sizeof(afs_int32));
 	blob.out_size = MAXSIZE;
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
@@ -1843,7 +1843,7 @@ static ListCellsCmd(as)
 	    afs_int32 addr;
 	    char *name, tbuffer[20];
 
-	    bcopy(tp + j*sizeof(afs_int32), &addr, sizeof(afs_int32));
+	    memcpy(&addr, tp + j*sizeof(afs_int32), sizeof(afs_int32));
 	    if (addr == 0) break;
 
 	    if (resolve) {
@@ -1899,7 +1899,7 @@ static NewCellCmd(as)
     scount = ((cellname[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
 
     /* Now setup and do the NEWCELL pioctl call */
-    bzero(space, (scount+1) * sizeof(afs_int32));
+    memset(space, 0, (scount+1) * sizeof(afs_int32));
     tp = space;
     lp = (afs_int32 *)tp;
     *lp++ = 0x12345678;
@@ -1911,7 +1911,7 @@ static NewCellCmd(as)
 		   pn, ti->data);
 	}
 	else {
-	    bcopy(thp->h_addr, tp, sizeof(afs_int32));
+	    memcpy(tp, thp->h_addr, sizeof(afs_int32));
 	    tp += sizeof(afs_int32);
 	}
     }
@@ -2048,7 +2048,7 @@ static MonitorCmd(as)
 		    return 1;
 		}
 	    }
-	    else bcopy(thp->h_addr, &hostAddr, sizeof(afs_int32));
+	    else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
 	}
     }
     else {
@@ -2108,7 +2108,7 @@ static SysNameCmd(as)
 	input += strlen(ti->data);
 	*(input++) = '\0';
     }
-    bcopy(&setp, space, sizeof(afs_int32));
+    memcpy(space, &setp, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
 	Die(errno, 0);
@@ -2119,7 +2119,7 @@ static SysNameCmd(as)
 	return 0;
     }
     input = space;
-    bcopy(input, &setp, sizeof(afs_int32));
+    memcpy(&setp, input, sizeof(afs_int32));
     input += sizeof(afs_int32);
     if (!setp) {
 	fprintf(stderr, "No sysname name value was found\n");
@@ -2398,7 +2398,7 @@ static VLDBInit(noAuthFlag, info)
 		pn, info->numServers, VLDB_MAXSERVERS);
 	exit(1);
     }
-    bzero(serverconns, sizeof(serverconns));
+    memset(serverconns, 0, sizeof(serverconns));
     for (i = 0;i<info->numServers;i++)
 	serverconns[i] = rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
 					  info->hostAddr[i].sin_port, USER_SERVICE_ID,
@@ -2493,7 +2493,7 @@ static addServer(name, rank)
 	}
 
 	sp = (struct spref *) (gblob.in + gblob.in_size);
-	bcopy (thostent->h_addr_list[t], &(sp->server.s_addr), sizeof(afs_uint32));
+	memcpy(&(sp->server.s_addr), thostent->h_addr_list[t], sizeof(afs_uint32));
 	sp->rank = (rank > MAXUSHORT ? MAXUSHORT : rank);
 	gblob.in_size += sizeof(struct spref);
 	ssp->num_servers++;
@@ -2724,7 +2724,7 @@ static StoreBehindCmd(as)
     blob.in  = (char *)&tsb;
     blob.out = (char *)&tsb2;
     blob.in_size = blob.out_size = sizeof(struct sbstruct);
-    bzero (&tsb2, sizeof(tsb2));
+    memset(&tsb2, 0, sizeof(tsb2));
 
     /* once per -file */
     for (ti=as->parms[1].items; ti; ti=ti->next) {
@@ -2822,7 +2822,7 @@ static afs_int32 GetCryptCmd(as)
     if (code) Die(errno, (char *) 0);
     else {
       tp = space;
-      bcopy(tp, &flag, sizeof(afs_int32));
+      memcpy(&flag, tp, sizeof(afs_int32));
       printf("Security level is currently ");
       if (flag == 1)
         printf("crypt (data security).\n");
@@ -3306,7 +3306,7 @@ FlushMountCmd(as)
 	     * name (we know there is one) and splice in the symlink value.
 	     */
 	    if (true_name[0] != '/') {
-		last_component = (char *) rindex(orig_name, '/');
+		last_component = (char *) strrchr(orig_name, '/');
 		strcpy(++last_component, true_name);
 		strcpy(true_name, orig_name);
 	    }
@@ -3317,7 +3317,7 @@ FlushMountCmd(as)
 	/*
 	 * Find rightmost slash, if any.
 	 */
-	last_component = (char *) rindex(true_name, '/');
+	last_component = (char *) strrchr(true_name, '/');
 	if (last_component) {
 	    /*
 	     * Found it.  Designate everything before it as the parent directory,
@@ -3346,7 +3346,7 @@ FlushMountCmd(as)
 	blob.in = last_component;
 	blob.in_size = strlen(last_component)+1;
 	blob.out_size = 0;
-	bzero(space, MAXSIZE);
+	memset(space, 0, MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
 

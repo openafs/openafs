@@ -91,7 +91,7 @@ char *acommand; {
     }
 
     te = (struct ezbnode *) malloc(sizeof(struct ezbnode));
-    bzero(te, sizeof(struct ezbnode));
+    memset(te, 0, sizeof(struct ezbnode));
     bnode_InitBnode(te, &ezbnode_ops, ainstance);
     te->command = cmdpath;
     return (struct bnode *) te;

@@ -105,8 +105,8 @@ static int CommandProc (as, arock)
 
     sParms = (struct serverParms *) osi_Alloc (sizeof(*sParms));
     cParms = (struct clientParms *) osi_Alloc (sizeof(*cParms));
-    bzero (sParms, sizeof(*sParms));
-    bzero (cParms, sizeof(*cParms));
+    memset(sParms, 0, sizeof(*sParms));
+    memset(cParms, 0, sizeof(*cParms));
     sParms->whoami = cParms->whoami = whoami;
 
     if (!(startServer || startClient)) {

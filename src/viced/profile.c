@@ -58,7 +58,7 @@ void StartProfiling()
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
     AllocProfBuf();
-    bzero (profBuf, profBufSize);
+    memset(profBuf, 0, profBufSize);
   /* the following code is to replace the monitor call below  */
   /*  monitor (PROFSTART, &etext, profBuf, profBufSize, 0); */
     profileHeader.startpc = PROFSTART;

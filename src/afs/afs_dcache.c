@@ -2650,18 +2650,18 @@ void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
     /* Allocate and zero the pointer array to the dcache entries */
     afs_indexTable = (struct dcache **)
 	afs_osi_Alloc(sizeof(struct dcache *) * afiles);
-    bzero((char *)afs_indexTable, sizeof(struct dcache *) * afiles);
+    memset((char *)afs_indexTable, 0, sizeof(struct dcache *) * afiles);
     afs_indexTimes = (afs_hyper_t *) afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
-    bzero((char *)afs_indexTimes, afiles * sizeof(afs_hyper_t));
+    memset((char *)afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
     afs_indexUnique = (afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_uint32));
-    bzero((char *)afs_indexUnique, afiles * sizeof(afs_uint32));
+    memset((char *)afs_indexUnique, 0, afiles * sizeof(afs_uint32));
     afs_indexFlags = (u_char *) afs_osi_Alloc(afiles * sizeof(u_char));
-    bzero((char *)afs_indexFlags, afiles * sizeof(char));
+    memset((char *)afs_indexFlags, 0, afiles * sizeof(char));
     
     /* Allocate and thread the struct dcache entries themselves */
     tdp = afs_Initial_freeDSList =
 	(struct dcache *) afs_osi_Alloc(aDentries * sizeof(struct dcache));
-    bzero((char *)tdp, aDentries * sizeof(struct dcache));
+    memset((char *)tdp, 0, aDentries * sizeof(struct dcache));
 #ifdef	AFS_AIX32_ENV
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);/* XXX */    
     pin((char *)afs_indexTimes, sizeof(afs_hyper_t) * afiles);	/* XXX */    

@@ -71,7 +71,7 @@ afs_int32 GetTickets (
     struct ktc_token token;
 
     code = ka_GetAuthToken (name, instance, realm, key, lifetime, pwexpires);
-    bzero (key, sizeof(*key));
+    memset(key, 0, sizeof(*key));
     if (code) return code;
     code = ka_GetAFSTicket (name, instance, realm, lifetime, flags);
     return code;
@@ -238,7 +238,7 @@ afs_int32 ka_UserAuthenticateGeneral (
 	    strncpy (pass8, password, 8);
 	    pass8[8] = 0;
 	    ka_StringToKey (pass8, realm, &key);
-	    bzero (pass8, sizeof(pass8));
+	    memset(pass8, 0, sizeof(pass8));
 	    code = GetTickets (name, instance, realm, &key, lifetime, 
 			       password_expires, dosetpag);
 	    if (code == 0) {

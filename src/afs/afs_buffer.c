@@ -536,6 +536,6 @@ void shutdown_bufferpackage() {
       nbuffers = 0;
       timecounter = 1;
       for(i=0;i<PHSIZE;i++) phTable[i] = 0;
-      bzero((char *)&afs_bufferLock, sizeof(afs_lock_t));
+      memset((char *)&afs_bufferLock, 0, sizeof(afs_lock_t));
   }
 }  

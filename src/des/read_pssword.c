@@ -108,7 +108,7 @@ des_read_password(k,prompt,verify)
 #ifdef BSDUNIX
 lose:
 #endif
-    bzero(key_string, sizeof (key_string));
+    memset(key_string, 0, sizeof (key_string));
     return ok;
 }
 
@@ -216,7 +216,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 #else
 #ifdef	BSDUNIX
     /* XXX assume jmp_buf is typedef'ed to an array */
-    bcopy((char *)old_env, (char *)env, sizeof(env));
+    memcpy((char *)env, (char *)old_env, sizeof(env));
     if (setjmp(env))
 	goto lose;
     /* save terminal state*/
@@ -224,7 +224,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 	return -1;
     push_signals();
     /* Turn off echo */
-    bcopy (&tty_state, &echo_off_tty_state, sizeof (tty_state));
+    memcpy(&echo_off_tty_state, &tty_state, sizeof (tty_state));
     echo_off_tty_state.sg_flags &= ~ECHO;
     if (ioctl(0,TIOCSETP,(char *)&echo_off_tty_state) == -1)
 	return -1;
@@ -277,7 +277,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 	    }
 	    continue;
 	}
-	if ((ptr = index(s, '\n')))
+	if ((ptr = strchr(s, '\n')))
 	    *ptr = '\0';
 #endif
 	if (verify) {
@@ -292,7 +292,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 		clearerr(stdin);
 		continue;
 	    }
-            if ((ptr = index(key_string, '\n')))
+            if ((ptr = strchr(key_string, '\n')))
 	    *ptr = '\0';
 #endif
 	    if (strcmp(s,key_string)) {
@@ -308,7 +308,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 lose:
 #endif
     if (!ok)
-	bzero(s, maxa);
+	memset(s, 0, maxa);
     printf("\n");
 #if defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV)
     /*
@@ -339,7 +339,7 @@ lose:
     if (ioctl(0,TIOCSETP,(char *)&tty_state))
 	ok = 0;
     pop_signals();
-    bcopy((char *)env, (char *)old_env, sizeof(env));
+    memcpy((char *)old_env, (char *)env, sizeof(env));
 #else
 #if	defined	(AFS_AIX_ENV) /*|| defined (AFS_HPUX_ENV)*/ || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
     ttyb.c_lflag = flags;
@@ -362,7 +362,7 @@ lose:
 #endif
 #endif
     if (verify)
-	bzero(key_string, sizeof (key_string));
+	memset(key_string, 0, sizeof (key_string));
     s[maxa-1] = 0;		/* force termination */
     return !ok;			/* return nonzero if not okay */
 }

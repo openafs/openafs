@@ -201,14 +201,14 @@ dev_t adev; {
 #endif
 	    if (wpath) {
 		strcpy(pbuf, pbuffer);
-		ptr = (char *)rindex(pbuf, '/');
+		ptr = (char *)strrchr(pbuf, '/');
 		if (ptr) {
 		    *ptr = '\0';
 		    strcpy(wpath, pbuf);
 		} else
 		    return (char *)0;
 	    }
-	    ptr = (char *)rindex(pbuffer, '/');	    
+	    ptr = (char *)strrchr(pbuffer, '/');	    
 	    if (ptr) {
 		strcpy(pbuffer, ptr+1);
 		return pbuffer;

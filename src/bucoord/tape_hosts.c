@@ -269,7 +269,7 @@ int bc_ParseHosts()
 	the = (struct bc_hostEntry *) malloc(sizeof(struct bc_hostEntry));
 	if (the == (struct bc_hostEntry *)0)
 	    return (BC_NOMEM);
-	bzero(the, sizeof(struct bc_hostEntry));
+	memset(the, 0, sizeof(struct bc_hostEntry));
 	if (tlast) 
 	{
 	    tlast->next = the;
@@ -284,7 +284,7 @@ int bc_ParseHosts()
 	strcpy(the->name, hostName);
 	the->portOffset = port;
 	if (th) {
-	    bcopy(th->h_addr, &the->addr.sin_addr.s_addr, 4);
+	    memcpy(&the->addr.sin_addr.s_addr, th->h_addr, 4);
 	    the->addr.sin_family = AF_INET;
 	    the->addr.sin_port = 0;
 	}

@@ -129,7 +129,7 @@ Volume *avp; {
 
     /* next, obliterate the index and fflush (and fsync) it */
     STREAM_SEEK(afile, *aoffset, 0);	/* seek back to start of vnode index region */
-    bzero(buf, sizeof(buf));	/* zero out our proto-vnode */
+    memset(buf, 0, sizeof(buf));	/* zero out our proto-vnode */
     for(i=0;i<nscanned;i++) {
 	if (STREAM_WRITE(buf, vcp->diskSize, 1, afile) != 1)
 	    goto fail;

@@ -620,7 +620,7 @@ writeDatabase(ut, fid)
 		    /* Read the dump entry */
 		    if (dbAddr == dbAppAddr) {
 		       /* First time through, don't need to read the dump entry again */
-		       bcopy(&diskDump, &apDiskDump, sizeof(diskDump));
+		       memcpy(&apDiskDump, &diskDump, sizeof(diskDump));
 		    }
 		    else {
 		       if (badEntry(dbAppAddr)) {

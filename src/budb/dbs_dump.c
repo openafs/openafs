@@ -143,7 +143,7 @@ afs_int32 DumpDB (call, firstcall, maxLength, charListPtr, done)
 	LogDebug(5, "Setup dump\n");
 
 	/* no dump in progress - setup and retake lock */
-	bzero(dumpSyncPtr, sizeof(*dumpSyncPtr));
+	memset(dumpSyncPtr, 0, sizeof(*dumpSyncPtr));
 /*	ObtainWriteLock(&dumpSyncPtr->ds_lock); */
 
 	/* mark dump in progress */
@@ -320,7 +320,7 @@ dumpWatcher()
 		if (code) LogError(code, "Aborting dump transaction\n");
 	    }
 
-	    bzero(dumpSyncPtr, sizeof(*dumpSyncPtr));
+	    memset(dumpSyncPtr, 0, sizeof(*dumpSyncPtr));
 	    goto exit;
 	} /*i*/
 

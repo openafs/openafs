@@ -77,7 +77,7 @@ afs_int32 avolid; {
     /* record the info */
     if (!allInodes || allInodes->freePtr >= MAXATONCE) {
 	ti = (struct ilist *) malloc(sizeof(struct ilist));
-	bzero(ti, sizeof(*ti));
+	memset(ti, 0, sizeof(*ti));
 	ti->next = allInodes;
 	allInodes = ti;
     }

@@ -112,7 +112,7 @@ printbody(proc)
 	}
 	f_print(fout, "res;\n");
 	f_print(fout, "\n");
-	f_print(fout, "\tbzero(%sres, sizeof(res));\n", ampr(proc->res_type));
+	f_print(fout, "\tmemset(%sres, 0, sizeof(res));\n", ampr(proc->res_type));
 	f_print(fout,
 		"\tif (clnt_call(clnt, %s, xdr_%s, argp, xdr_%s, %sres, TIMEOUT) != RPC_SUCCESS) {\n",
 		proc->proc_name, stringfix(proc->arg_type),

@@ -78,8 +78,8 @@ struct proc *p;
     mp->mnt_stat.f_iosize=8192;
     
     (void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN-1, &size);
-    bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
-    bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
+    memset(mp->mnt_stat.f_mntonname + size, 0, MNAMELEN - size);
+    memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, "afs");
@@ -191,10 +191,8 @@ int afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p)
     abp->f_fsid.val[1] = mp->mnt_stat.f_fsid.val[1];
     if (abp != &mp->mnt_stat) {
 	abp->f_type = mp->mnt_vfc->vfc_typenum;
-	bcopy((caddr_t)mp->mnt_stat.f_mntonname,
-	      (caddr_t)&abp->f_mntonname[0], MNAMELEN);
-	bcopy((caddr_t)mp->mnt_stat.f_mntfromname,
-	      (caddr_t)&abp->f_mntfromname[0], MNAMELEN);
+	memcpy((caddr_t)&abp->f_mntonname[0], (caddr_t)mp->mnt_stat.f_mntonname, MNAMELEN);
+	memcpy((caddr_t)&abp->f_mntfromname[0], (caddr_t)mp->mnt_stat.f_mntfromname, MNAMELEN);
     }
 
     AFS_GUNLOCK();
@@ -227,7 +225,7 @@ int afs_init(struct vfsconf *vfc) {
 
         MALLOC(afs_vnodeop_p, PFI *, vfs_opv_numops*sizeof(PFI), M_TEMP, M_WAITOK);
 
-        bzero (afs_vnodeop_p, vfs_opv_numops*sizeof(PFI));
+        memset(afs_vnodeop_p, 0, vfs_opv_numops*sizeof(PFI));
 
         opv_desc_vector = afs_vnodeop_p;
         for (j=0; afs_vnodeop_opv_desc.opv_desc_ops[j].opve_op; j++) {

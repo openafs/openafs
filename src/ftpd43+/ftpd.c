@@ -347,7 +347,7 @@ nextopt:
 		syslog(LOG_ERR, MSGSTR(SOCKOPT, "setsockopt: %m"));
 
 	/* set-up signal handler routines for SRC TRACE ON/OFF support */
-	bzero((char *)&sa, sizeof(sa));
+	memset((char *)&sa, 0, sizeof(sa));
 	sa.sa_mask.losigs = sigmask(SIGUSR2);
 	sa.sa_handler = trace_handler;
 	sigaction(SIGUSR1, &sa, (struct sigaction *)0);

@@ -1546,7 +1546,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
       * Fill in the top fields (except the disk fields, which will be
       * done elsewhere), then create the light onodes.
       */
-    bcopy((char *)a_skt, (char *)&(a_line->skt), sizeof(struct sockaddr_in));
+    memcpy((char *)&(a_line->skt), (char *)a_skt, sizeof(struct sockaddr_in));
     a_line->numDisks  = 0;
     a_line->base_line = a_lineNum + scout_screen.base_line_num;
     a_line->num_lines = 1;
@@ -1752,7 +1752,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 	rn, a_numservers, sktbytes);
       scout_CleanExit(-1);
     }
-    bzero(FSSktArray, sktbytes);
+    memset(FSSktArray, 0, sktbytes);
 
     /*
       * Sweep through the server names provided, filling in the socket
@@ -1772,7 +1772,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 		rn, fullsrvname);
 	return(-1);
       }
-      bcopy(he->h_addr, &(curr_skt->sin_addr.s_addr), 4);
+      memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
       curr_skt->sin_family = htons(AF_INET);	/*Internet family*/
       curr_skt->sin_port   = htons(7000);	/*FileServer port*/
 
@@ -1794,7 +1794,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 	      rn, mini_line_bytes, a_numservers);
       return(-1);
     }
-    bzero(mini_lines, mini_line_bytes);
+    memset(mini_lines, 0, mini_line_bytes);
 
     /*
       * Set up each line in the mini_lines, creating and initializing

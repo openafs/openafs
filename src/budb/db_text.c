@@ -172,7 +172,7 @@ afs_int32 GetText (call, lockHandle, textType, maxLength, offset,
 	textRemaining = BLOCK_DATA_SIZE - blockOffset;
 	chunkSize = min(textRemaining, transferSize);
 
-	bcopy(&block.a[blockOffset], textPtr, chunkSize);
+	memcpy(textPtr, &block.a[blockOffset], chunkSize);
 
 	/* LogDebug(5, "transfering %d bytes: %s\n", chunkSize, textPtr); */
 
@@ -400,7 +400,7 @@ afs_int32 SaveText (call, lockHandle, textType, offset, flags, charListPtr)
 	chunkSize = MIN(remainingInBlock, textLength);	
 
 	/* copy in the data */
-	bcopy(textptr, &diskBlock.a[offset % BLOCK_DATA_SIZE], chunkSize);
+	memcpy(&diskBlock.a[offset % BLOCK_DATA_SIZE], textptr, chunkSize);
 
         /* LogDebug(5, "text is %s\n", textptr); */
 

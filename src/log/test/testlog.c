@@ -193,7 +193,7 @@ main (argc, argv)
 	         */
 	    foundPassword = TRUE;
 	    strcpy(passwd, argv[currArg]);
-	    bzero(argv[currArg], strlen(passwd));
+	    memset(argv[currArg], 0, strlen(passwd));
 	    currArg++;
 #if DB_ARGPARSE
 	    fprintf(stderr, "Found password: '%s' (%d chars), erased from arg list (now '%s').\n",

@@ -328,7 +328,7 @@ char *syms;
 	kstr_size = 0;
 	nksyms    = 0;
 
-	bzero(xsq = &xcoff_sym, sizeof (*xsq));
+	memset(xsq = &xcoff_sym, 0, sizeof (*xsq));
 
 	for (i = 1; i < nxsyms; ++i, xsq = xsp++) {
 		if (xsp->n_zeroes != xsq->n_zeroes

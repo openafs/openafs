@@ -431,14 +431,14 @@ int rx_Init(u_int port)
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
     rx_tranquil     = 0;	/* reset flag */
-    bzero((char *)&rx_stats, sizeof(struct rx_stats));
+    memset((char *)&rx_stats, 0, sizeof(struct rx_stats));
     htable = (char *)
 	osi_Alloc(rx_hashTableSize*sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize*sizeof(struct rx_connection *));  /* XXXXX */
-    bzero(htable, rx_hashTableSize*sizeof(struct rx_connection *));
+    memset(htable, 0, rx_hashTableSize*sizeof(struct rx_connection *));
     ptable =  (char *) osi_Alloc(rx_hashTableSize*sizeof(struct rx_peer *));   
     PIN(ptable, rx_hashTableSize*sizeof(struct rx_peer *));	  /* XXXXX */
-    bzero(ptable, rx_hashTableSize*sizeof(struct rx_peer *));
+    memset(ptable, 0, rx_hashTableSize*sizeof(struct rx_peer *));
 
     /* Malloc up a bunch of packets & buffers */
     rx_nFreePackets = 0;
@@ -2103,7 +2103,7 @@ register size_t size;
     p = (char *) osi_Alloc(size);
 #endif
     if (!p) osi_Panic("rxi_Alloc error");
-    bzero(p, size);
+    memset(p, 0, size);
     return p;
 }
 
@@ -5988,8 +5988,8 @@ static int MakeDebugCall(
 	theader.flags = RX_CLIENT_INITIATED | RX_LAST_PACKET;
 	theader.serviceId = 0;
 	
-	bcopy(&theader, tbuffer, sizeof(theader));
-	bcopy(inputData, tp, inputLength);
+	memcpy(tbuffer, &theader, sizeof(theader));
+	memcpy(tp, inputData, inputLength);
 	code = sendto(socket, tbuffer, inputLength+sizeof(struct rx_header), 0,
 		      (struct sockaddr *) &taddr, sizeof(struct sockaddr_in));
 	
@@ -6005,7 +6005,7 @@ static int MakeDebugCall(
 	    code = recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
 			    (struct sockaddr *) &faddr, &faddrLen);
 
-	    bcopy(tbuffer, &theader, sizeof(struct rx_header));
+	    memcpy(&theader, tbuffer, sizeof(struct rx_header));
 	    if (counter == ntohl(theader.callNumber)) break;
 	}
 
@@ -6014,7 +6014,7 @@ static int MakeDebugCall(
     }
     code -= sizeof(struct rx_header);
     if (code > outputLength) code = outputLength;
-    bcopy(tp, outputData, code);
+    memcpy(outputData, tp, code);
     return code;
 }
 

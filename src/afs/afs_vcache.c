@@ -752,7 +752,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif /* AFS_MACH_ENV */
 #if defined(AFS_SGI_ENV)
 	{ char name[METER_NAMSZ];
-	bzero(tvc, sizeof(struct vcache));
+	memset(tvc, 0, sizeof(struct vcache));
 	tvc->v.v_number = ++afsvnumbers;
 	tvc->vc_rwlockid = OSI_NO_LOCKID;
 	initnsema(&tvc->vc_rwlock, 1, makesname(name, "vrw", tvc->v.v_number));
@@ -777,7 +777,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif /* AFS_MACH_ENV */
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV)
-    bzero((char *)tvc, sizeof(struct vcache));
+    memset((char *)tvc, 0, sizeof(struct vcache));
 #else
     tvc->uncred = 0;
 #endif
@@ -851,10 +851,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #ifdef	AFS_AIX_ENV
     /* Don't forget to free the gnode space */
     tvc->v.v_gnode = gnodepnt = (struct gnode *) osi_AllocSmallSpace(sizeof(struct gnode));
-    bzero((char *)gnodepnt, sizeof(struct gnode));
+    memset((char *)gnodepnt, 0, sizeof(struct gnode));
 #endif
 #ifdef AFS_SGI64_ENV
-    bzero((void*)&(tvc->vc_bhv_desc), sizeof(tvc->vc_bhv_desc));
+    memset((void*)&(tvc->vc_bhv_desc), 0, sizeof(tvc->vc_bhv_desc));
     bhv_desc_init(&(tvc->vc_bhv_desc), tvc, tvc, &Afs_vnodeops);
 #ifdef AFS_SGI65_ENV
     vn_bhv_head_init(&(tvc->v.v_bh), "afsvp");
@@ -974,8 +974,8 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif
     tvc->h1.dchint = 0;
     osi_dnlc_purgedp(tvc);  /* this may be overkill */
-    bzero((char *)&(tvc->quick),sizeof(struct vtodc));
-    bzero((char *)&(tvc->callsort),sizeof(struct afs_q));
+    memset((char *)&(tvc->quick), 0, sizeof(struct vtodc));
+    memset((char *)&(tvc->callsort), 0, sizeof(struct afs_q));
     tvc->slocks = (struct SimpleLocks *)0;
     i = VCHash(afid);
 
@@ -2602,7 +2602,7 @@ void afs_vcacheInit(int astatSize)
 #if	!defined(AFS_OSF_ENV)
     /* Allocate and thread the struct vcache entries */
     tvp = (struct vcache *) afs_osi_Alloc(astatSize * sizeof(struct vcache));
-    bzero((char *)tvp, sizeof(struct vcache)*astatSize);
+    memset((char *)tvp, 0, sizeof(struct vcache)*astatSize);
 
     Initial_freeVCList = tvp;
     freeVCList = &(tvp[0]);

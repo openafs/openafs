@@ -151,7 +151,7 @@ char *acommand; {
     }
 
     te = (struct cronbnode *) malloc(sizeof(struct cronbnode));
-    bzero(te, sizeof(struct cronbnode));
+    memset(te, 0, sizeof(struct cronbnode));
     code = ktime_ParsePeriodic(awhen, &te->whenToRun);
     if (code < 0) {
 	free(te);

@@ -224,7 +224,7 @@ register char *adir; {
     LOCK_GLOBAL_MUTEX
     /* zero structure and fill in name; rest is done by internal routine */
     tdir = (struct afsconf_dir *) malloc(sizeof(struct afsconf_dir));
-    bzero(tdir, sizeof(struct afsconf_dir));
+    memset(tdir, 0, sizeof(struct afsconf_dir));
     tdir->name = (char *) malloc(strlen(adir)+1);
     strcpy(tdir->name, adir);
 
@@ -401,7 +401,7 @@ char clones[];
 		curEntry = 0;
 	    }
 	    curEntry = (struct afsconf_entry *) malloc(sizeof(struct afsconf_entry));
-	    bzero(curEntry, sizeof(struct afsconf_entry));
+	    memset(curEntry, 0, sizeof(struct afsconf_entry));
 	    code = ParseCellLine(tbuffer, curEntry->cellInfo.name, linkedcell);
 	    if (code) {
 		afsconf_CloseInternal(adir);
@@ -781,7 +781,7 @@ register struct afsconf_dir *adir; {
     if (adir->keystr) free(adir->keystr);
 
     /* reinit */
-    bzero(adir, sizeof(struct afsconf_dir));
+    memset(adir, 0, sizeof(struct afsconf_dir));
     adir->name = tname;	    /* restore it */
     return 0;
 }
@@ -858,7 +858,7 @@ struct afsconf_keys *astr;
     code = afsconf_Check(adir);
     if (code)
 	return AFSCONF_FAILURE;
-    bcopy(adir->keystr, astr, sizeof(struct afsconf_keys));
+    memcpy(astr, adir->keystr, sizeof(struct afsconf_keys));
     UNLOCK_GLOBAL_MUTEX
     return 0;
 }
@@ -892,7 +892,7 @@ afs_int32 afsconf_GetLatestKey(adir, avno, akey)
 	}
     }
     if (bestk) {    /* found any  */
-	if (akey) bcopy(bestk->key, akey, 8); /* copy out latest key */
+	if (akey) memcpy(akey, bestk->key, 8); /* copy out latest key */
 	if (avno) *avno = bestk->kvno;	/* and kvno to caller */
 	UNLOCK_GLOBAL_MUTEX
 	return 0;
@@ -919,7 +919,7 @@ char *akey;
 
     for(tk = adir->keystr->key,i=0;i<maxa;i++,tk++) {
 	if (tk->kvno == avno) {
-	    bcopy(tk->key, akey, 8);
+	    memcpy(akey, tk->key, 8);
 	    UNLOCK_GLOBAL_MUTEX
 	    return 0;
 	}
@@ -938,7 +938,7 @@ struct afsconf_dir *adir;
     register afs_int32 i;
     char tbuffer[256];
 
-    bcopy(adir->keystr, &tkeys, sizeof(struct afsconf_keys));
+    memcpy(&tkeys, adir->keystr, sizeof(struct afsconf_keys));
 
     /* convert it to net byte order */
     for(i = 0; i<tkeys.nkeys; i++ )
@@ -996,7 +996,7 @@ char akey[8];
 	tkey = &tk->key[tk->nkeys++];
     }
     tkey->kvno = akvno;
-    bcopy(akey, tkey->key, 8);
+    memcpy(tkey->key, akey, 8);
     i = SaveKeys(adir);
     afsconf_Touch(adir);
     UNLOCK_GLOBAL_MUTEX
@@ -1032,7 +1032,7 @@ afs_int32 akvno;
     /* otherwise slide the others down.  i and tkey point at the guy to delete */
     for(;i<tk->nkeys-1; i++,tkey++) {
 	tkey->kvno = (tkey+1)->kvno;
-	bcopy((tkey+1)->key, tkey->key, 8);
+	memcpy(tkey->key, (tkey+1)->key, 8);
     }
     tk->nkeys--;
     i = SaveKeys(adir);

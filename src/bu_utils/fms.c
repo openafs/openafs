@@ -58,7 +58,7 @@ main(argc, argv)
     struct sigaction intaction, oldaction;
     struct cmd_syndesc *cptr;
 
-    bzero((char *)&intaction, sizeof(intaction));
+    memset((char *)&intaction, 0, sizeof(intaction));
     intaction.sa_handler = (int (*)())quitFms;
 
     sigaction(SIGINT, &intaction, &oldaction);
@@ -280,7 +280,7 @@ dataBlock(usd_handle_t hTape, afs_int32 reqSize)
 	if ( dB_buffer == 0 )
 	    ERROR(-1);
 	dB_buffersize = reqSize;
-	bzero(dB_buffer, dB_buffersize);
+	memset(dB_buffer, 0, dB_buffersize);
     }
 
     ptr = (int *) dB_buffer;

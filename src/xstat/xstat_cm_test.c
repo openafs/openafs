@@ -1282,7 +1282,7 @@ int RunTheTest(a_s)
 		    rn, curr_item->data);
 	    exit(-1);
 	}
-	bcopy(he->h_addr, &(CMSktArray[currCM].sin_addr.s_addr), 4);
+	memcpy(&(CMSktArray[currCM].sin_addr.s_addr), he->h_addr, 4);
 
 	/*
 	 * Move to the next CM name.

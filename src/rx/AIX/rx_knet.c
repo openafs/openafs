@@ -109,7 +109,7 @@ void ip_stripoptions(struct mbuf *m, STRIP_ARG2_TYPE mopt)
 	olen = (ip->ip_hl<<2) - sizeof (struct ip);
 	opts = (caddr_t)(ip + 1);
 	i = m->m_len - (sizeof (struct ip) + olen);
-	bcopy(opts  + olen, opts, (unsigned)i);
+	memcpy(opts, opts  + olen, (unsigned)i);
 	m->m_len -= olen;
 	if (m->m_flags & M_PKTHDR)
 		m->m_pkthdr.len -= olen;
@@ -382,7 +382,7 @@ int istack;
 	m->m_len = 0;
 	while (len) {
 	  rlen = MIN(len, tl);
-	  bcopy(tdata, tpa, rlen);
+	  memcpy(tpa, tdata, rlen);
 	  asize -= rlen;
 	  len -= rlen;
 	  tpa += rlen;
@@ -416,7 +416,7 @@ int istack;
 		m_freem(top);	/* free mbuf chain */
 	    return 1;
 	}
-	bcopy(addr, mtod(um, caddr_t), sizeof(*addr));
+	memcpy(mtod(um, caddr_t), addr, sizeof(*addr));
 	um->m_len = sizeof(*addr);
 	um->m_pkthdr.len = sizeof(*addr);
 	um->m_flags |= M_PKTHDR;

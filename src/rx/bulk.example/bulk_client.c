@@ -35,7 +35,7 @@ static u_long GetIpAddress(hostname)
 	printf("host address is disagreeable length (%d)", hostent->h_length);
 	exit(1);
     }
-    bcopy(hostent->h_addr, (char *)&host, sizeof(host));
+    memcpy((char *)&host, hostent->h_addr, sizeof(host));
     return host;
 }
 

@@ -107,7 +107,7 @@ int afs_initialize(struct secmethod_table *meths) {
      * each time we call the authenticate routine.	
      */
     ka_Init(0);
-    bzero(meths, sizeof(struct secmethod_table));
+    memset(meths, 0, sizeof(struct secmethod_table));
     /*
      * Initialize the exported interface routines. Except the authenticate one
      * the others are currently mainly noops.

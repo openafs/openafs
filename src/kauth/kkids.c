@@ -95,7 +95,7 @@ static int simplify_name(
        * name (we know there is one) and splice in the symlink contents.
        */
       if (true_name[0] != '/') {
-	last_component = (char *) rindex(orig_name, '/');
+	last_component = (char *) strrchr(orig_name, '/');
 	strcpy(++last_component, true_name);
 	strcpy(true_name, orig_name);
       }
@@ -147,7 +147,7 @@ static int find_me(
     simplify_name(orig_name, truename);
   }
   else {
-    bp = (char *) rindex(arg, '/');
+    bp = (char *) strrchr(arg, '/');
     if (bp) {
       orig_name[0] = '.';
       orig_name[1] = '/';
@@ -182,7 +182,7 @@ static int find_me(
   /*
    * Find rightmost slash, if any.
    */
-  bp = (char *) rindex(truename, '/');
+  bp = (char *) strrchr(truename, '/');
   if (bp) {
     /*
      * Found it.  Designate everything before it as the parent directory,

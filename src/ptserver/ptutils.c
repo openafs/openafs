@@ -56,7 +56,7 @@ static int CorrectUserName (name)
     extern int pr_realmNameLen;
 
     /* We accept foreign names, so we will deal with '@' later */
-    if (index (name, ':') || index(name, '\n')) return 0;
+    if (strchr (name, ':') || strchr(name, '\n')) return 0;
     if (strlen (name) >= PR_MAXNAMELEN - pr_realmNameLen - 1) return 0; 
     return 1;
 }
@@ -104,7 +104,7 @@ static afs_int32 CorrectGroupName (ut, aname, cid, oid, cname)
 	if (ntohl(tentry.flags) & PRGRP) {
 	    if ((tentry.count == 0) && !admin) return PRGROUPEMPTY;
 	    /* terminate prefix at colon if there is one */
-	    if (prefix = index(tentry.name, ':')) *prefix = 0;
+	    if (prefix = strchr(tentry.name, ':')) *prefix = 0;
 	}
 	prefix = tentry.name;
     }
@@ -112,7 +112,7 @@ static afs_int32 CorrectGroupName (ut, aname, cid, oid, cname)
     if ((strcmp (prefix, "system") == 0) && !admin) return PRPERM;
 
     strcpy (name, aname);		/* in case aname & cname are same */
-    suffix = index(name, ':');
+    suffix = strchr(name, ':');
     if (suffix == 0) {
 	/* sysadmin can make groups w/o ':', but they must still look like
          * legal user names. */
@@ -126,10 +126,10 @@ static afs_int32 CorrectGroupName (ut, aname, cid, oid, cname)
     }
   done:
     /* check for legal name with either group rules or user rules */
-    if (suffix = index(cname, ':')) {
+    if (suffix = strchr(cname, ':')) {
 	/* check for confusing characters */
-	if (index(cname, '\n') ||	/* restrict so recreate can work */
-	    index(suffix+1, ':'))	/* avoid multiple colons */
+	if (strchr(cname, '\n') ||	/* restrict so recreate can work */
+	    strchr(suffix+1, ':'))	/* avoid multiple colons */
 	    return PRBADNAM;
     } else {
 	if (!CorrectUserName (cname)) return PRBADNAM;
@@ -193,7 +193,7 @@ afs_int32 CreateEntry (at, aname, aid, idflag, flag, oid, creator)
     struct prentry tentry, tent;
     char *atsign;
     
-    bzero(&tentry, sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
 
     if ((oid == 0) || (oid == ANONYMOUSID)) oid = creator;
 
@@ -224,7 +224,7 @@ afs_int32 CreateEntry (at, aname, aid, idflag, flag, oid, creator)
         return PRBADARG;
     }
 
-    atsign = index(aname,'@');
+    atsign = strchr(aname, '@');
     if (!atsign) {
        /* A normal user or group. Pick an id for it */
        if (idflag) 
@@ -431,7 +431,7 @@ afs_int32 RemoveFromEntry (at, aid, bid)
     afs_int32 hloc;
     
     if (aid == bid) return PRINCONSISTENT;
-    bzero(&hentry,sizeof(hentry));
+    memset(&hentry, 0, sizeof(hentry));
     temp = FindByID(at,bid);
     if (temp == 0) return PRNOENT;
     code = pr_ReadEntry(at, 0, temp, &tentry);
@@ -487,7 +487,7 @@ afs_int32 RemoveFromEntry (at, aid, bid)
 	} /* for all coentry slots */
 	hloc = nptr;
 	nptr = centry.next;
-	bcopy(&centry,&hentry,sizeof(centry));
+	memcpy(&hentry, &centry, sizeof(centry));
     } /* while there are coentries */
     return PRNOENT;
 }
@@ -505,7 +505,7 @@ afs_int32 DeleteEntry (at, tentry, loc)
     afs_int32  i;
     afs_int32 nptr;
 
-    if (index(tentry->name,'@')) {
+    if (strchr(tentry->name,'@')) {
        if (tentry->flags & PRGRP) {
 	/* If there are still foreign user accounts from that cell
 	   don't delete the group */
@@ -594,7 +594,7 @@ afs_int32 DeleteEntry (at, tentry, loc)
 	if (inc_header_word (at, instcount, -1)) return PRDBFAIL;
     }
     else {
-        if (index(tentry->name,'@')) {
+        if (strchr(tentry->name,'@')) {
 	   if (inc_header_word (at, foreigncount, -1)) return PRDBFAIL;
 	} else {
           if (inc_header_word (at, usercount, -1)) return PRDBFAIL;
@@ -698,7 +698,7 @@ afs_int32 AddToEntry (tt, entry, loc, aid)
     else {
 	entry->next = nptr;
     }
-    bzero(&aentry,sizeof(aentry));
+    memset(&aentry, 0, sizeof(aentry));
     aentry.flags |= PRCONT;
     aentry.id = entry->id;
     aentry.next = 0;
@@ -1091,8 +1091,8 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
     char oldname[PR_MAXNAMELEN];
     char *atsign;
 
-    bzero(holder,PR_MAXNAMELEN);
-    bzero(temp,PR_MAXNAMELEN);
+    memset(holder, 0, PR_MAXNAMELEN);
+    memset(temp, 0, PR_MAXNAMELEN);
     loc = FindByID(at,aid);
     if (!loc) return PRNOENT;
     code = pr_ReadEntry(at,0,loc,&tentry);
@@ -1163,7 +1163,7 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
        }
     }
 
-    atsign = index(tentry.name, '@'); /* check for foreign entry */
+    atsign = strchr(tentry.name, '@'); /* check for foreign entry */
 
     /* Change the owner */
     if (oid && (oid != tentry.owner)) {
@@ -1216,7 +1216,7 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
 	{
             char *newatsign;
 
-	    newatsign = index (name, '@');
+	    newatsign = strchr(name, '@');
 	    if (newatsign != atsign){ /* if they are the same no problem*/
 	       /*if the pointers are not equal the strings better be */
 	       if ((atsign == NULL) || (newatsign == NULL) ||
@@ -1301,7 +1301,7 @@ AddAuthGroup(tentry, alist, size)
   prlist *alist;
   afs_int32 *size;
 {
-	if (!(index(tentry->name, '@'))) 
+	if (!(strchr(tentry->name, '@'))) 
              return (AddToPRList (alist, size, AUTHUSERID));
 	else 
 	     return PRSUCCESS;

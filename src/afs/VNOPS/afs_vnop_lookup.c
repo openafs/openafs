@@ -562,8 +562,7 @@ tagain:
 		 * preserve the value of the file size. We could
 		 * flush the pages, but it wouldn't be worthwhile.
 		 */
-		bcopy((char *) &tfid.Fid, (char *)(fidsp+fidIndex),
-		      sizeof(*fidsp));
+		memcpy((char *)(fidsp+fidIndex), (char *) &tfid.Fid, sizeof(*fidsp));
 		tvcp->states |= CBulkFetching;
 		tvcp->m.Length = statSeqNo;
 		fidIndex++;
@@ -897,7 +896,7 @@ afs_lookup(adp, aname, avcp, acred)
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = (struct vnode *)adp;
-    bcopy(ndp->ni_ptr, aname, ndp->ni_namelen);
+    memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
 

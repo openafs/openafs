@@ -1631,7 +1631,7 @@ main(argc, argv)
     register struct CallBack *cb;
     time_t now;
 
-    bzero(&fid, sizeof(fid));
+    memset(&fid, 0, sizeof(fid));
     argc--; argv++;
     while (argc && **argv == '-') {
 	noptions++;

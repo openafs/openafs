@@ -1260,7 +1260,7 @@ static int Parent(
     int rc = 0;
 
     strcpy(parentDirectory, directory);
-    tp = rindex(parentDirectory, '/');
+    tp = strrchr(parentDirectory, '/');
     if (tp) {
         *tp = 0;
 	rc = 1;

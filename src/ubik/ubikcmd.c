@@ -48,7 +48,7 @@ ubik_ParseServerList(argc, argv, ahost, aothers)
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) return UBADHOST;
-    bcopy(th->h_addr, &myHost, sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
     *ahost = myHost;
 
     inServer = 0;	/* haven't seen -servers yet */
@@ -66,7 +66,7 @@ ubik_ParseServerList(argc, argv, ahost, aothers)
 		/* otherwise this is a new host name */
 		th = gethostbyname(tp);
 		if (!th) return UBADHOST;
-		bcopy(th->h_addr, &temp, sizeof(afs_int32));
+		memcpy(&temp, th->h_addr, sizeof(afs_int32));
 		if (temp != myHost) {
 		    if (counter++ >= MAXSERVERS) return UNHOSTS;
 		    *aothers++ = temp;

@@ -1252,7 +1252,7 @@ static PROCESS lwp_alloc_process(name, ep, arg)
 {
     PROCESS lp;
     assert(lp = (PROCESS) malloc(sizeof (*lp)));
-    bzero((char *) lp, sizeof(*lp));
+    memset((char *) lp, 0, sizeof(*lp));
     if (!name) {
 	char temp[100];
 	static procnum;

@@ -15,7 +15,6 @@ RCSID("$Header$");
 
 #include "y.tab.h"
 #include "uss_common.h"
-extern char *index();
 int line=1;
 #ifdef DEBUG
 #define dprint(x)	{fprintf(stderr, x); fflush(stderr);}
@@ -92,7 +91,7 @@ Replace(in, out)
     }
     out_cp = out;
     
-    while ((in_var = index(in_text, '$')) != NULL) {
+    while ((in_var = strchr(in_text, '$')) != NULL) {
 	while(in_text < in_var)
 	    *out_cp++ = *in_text++;
 	VarNo = *(in_var+1);
@@ -185,7 +184,7 @@ Replace(in, out)
 	*out_cp++ = *in_text++;
     
     if (isQuotedString) {
-	nullP = index(out, '"');
+	nullP = strchr(out, '"');
 	if (nullP == (char *)0)
 	    nullP = out_cp;
     }

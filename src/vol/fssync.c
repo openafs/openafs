@@ -234,7 +234,7 @@ static int getport(addr)
 {
     int sd;
 
-    bzero(addr, sizeof(*addr));
+    memset(addr, 0, sizeof(*addr));
     assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
     addr->sin_addr.s_addr = htonl(0x7f000001);
     addr->sin_family = AF_INET; /* was localhost->h_addrtype */

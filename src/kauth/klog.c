@@ -135,7 +135,7 @@ static char *getpipepass(void)
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
     register int i, tc;
-    bzero(gpbuf, sizeof(gpbuf));
+    memset(gpbuf, 0, sizeof(gpbuf));
     for(i=0; i<(sizeof(gpbuf)-1); i++) {
 	tc = fgetc(stdin);
 	if (tc == '\n' || tc == EOF) break;
@@ -178,7 +178,7 @@ int CommandProc (
     char *reason;			/* string describing errors */
 
     /* blow away command line arguments */
-    for (i=1; i<zero_argc; i++) bzero (zero_argv[i], strlen(zero_argv[i]));
+    for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
 
     /* first determine quiet flag based on -silent switch */
@@ -290,8 +290,7 @@ int CommandProc (
 	 */
 	foundPassword = 1;
 	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd));
-	bzero (as->parms[aPASSWORD].items->data,
-	       strlen(as->parms[aPASSWORD].items->data));
+	memset(as->parms[aPASSWORD].items->data, 0, strlen(as->parms[aPASSWORD].items->data));
     }
 
     if (as->parms[aLIFETIME].items) {
@@ -345,7 +344,7 @@ bad_lifetime:
 
     code = ka_UserAuthenticateGeneral (KA_USERAUTH_VERSION + (dosetpag ? KA_USERAUTH_DOSETPAG2:0), pw->pw_name,
 	     instance, realm, passwd, lifetime, &password_expires, 0, &reason);
-    bzero (passwd, sizeof(passwd));
+    memset(passwd, 0, sizeof(passwd));
     if (code) {
 	if (!Silent) {
 	    fprintf (stderr,

@@ -121,7 +121,7 @@ struct cmd_syndesc *as; {
 	    printf("udebug: host %s not found in host table\n", hostName);
 	    exit(1);
 	}
-	bcopy(th->h_addr, &hostAddr, sizeof(afs_int32));
+	memcpy(&hostAddr, th->h_addr, sizeof(afs_int32));
     }
     else hostAddr = htonl(0x7f000001);	/* IP localhost */
 

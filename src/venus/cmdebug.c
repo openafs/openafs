@@ -165,7 +165,7 @@ struct cmd_syndesc *as; {
 	printf("cmdebug: can't resolve address for host %s.\n", hostName);
 	exit(1);
     }
-    bcopy(thp->h_addr, &addr, sizeof(afs_int32));
+    memcpy(&addr, thp->h_addr, sizeof(afs_int32));
     secobj = rxnull_NewServerSecurityObject();
     conn = rx_NewConnection(addr, htons(port), 1, secobj, 0);
     if (!conn) {

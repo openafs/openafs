@@ -403,7 +403,7 @@ void HandlePart(struct DiskPartition *partP)
     if (dsizeOnly && !saveinodes)
 	printf("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
     while (dp = readdir(dirp)) {
-	p = (char *)rindex(dp->d_name, '.');
+	p = (char *)strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    HandleVolume(partP, dp->d_name);		
 	    Totvolsize += totvolsize;

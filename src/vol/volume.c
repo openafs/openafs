@@ -423,7 +423,7 @@ static void ReadHeader(Error *ec, IHandle_t *h, char *to, int size,
 void VolumeHeaderToDisk(VolumeDiskHeader_t *dh, VolumeHeader_t *h)
 {
 
-    bzero((char*)dh, sizeof(VolumeDiskHeader_t));
+    memset((char*)dh, 0, sizeof(VolumeDiskHeader_t));
     dh->stamp = h->stamp;
     dh->id = h->id;
     dh->parent = h->parent;
@@ -453,7 +453,7 @@ void VolumeHeaderToDisk(VolumeDiskHeader_t *dh, VolumeHeader_t *h)
  */
 void DiskToVolumeHeader(VolumeHeader_t *h, VolumeDiskHeader_t *dh)
 {
-    bzero((char*)h, sizeof(VolumeHeader_t));
+    memset((char*)h, 0, sizeof(VolumeHeader_t));
     h->stamp = dh->stamp;
     h->id = dh->id;
     h->parent = dh->parent;
@@ -721,7 +721,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	 * area and mark it as initialized.
 	 */
 	if (! (V_stat_initialized(vp))) {
-	    bzero((char *)(V_stat_area(vp)), VOL_STATS_BYTES);
+	    memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
 	    V_stat_initialized(vp) = 1;
 	}
 #endif /* TRANSARC_VOL_STATS */
@@ -1299,7 +1299,7 @@ int VAllocBitmapEntry_r(ec,vp,index)
     assert(bp != NULL);
     index->bitmap = bp;
     bp += index->bitmapSize;
-    bzero(bp, VOLUME_BITMAP_GROWSIZE);
+    memset(bp, 0, VOLUME_BITMAP_GROWSIZE);
     index->bitmapOffset = index->bitmapSize;
     index->bitmapSize += VOLUME_BITMAP_GROWSIZE;
     *bp = 1;
@@ -1594,7 +1594,7 @@ VAdjustVolumeStatistics_r(vp)
 	 * All we need to do is bzero the entire VOL_STATS_BYTES of
 	 * the detailed volume statistics area.
 	 */
-	bzero((char *)(V_stat_area(vp)), VOL_STATS_BYTES);
+	memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
 #endif /* TRANSARC_VOL_STATS */
     } /*It's been more than a day of collection*/
 

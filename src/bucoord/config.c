@@ -72,7 +72,7 @@ bc_InitConfig(apath)
     if (!tb) return(BC_NOMEM);
 
     bc_globalConfig = tb;
-    bzero(tb, sizeof(struct bc_config));
+    memset(tb, 0, sizeof(struct bc_config));
     tb->path = (char *) malloc(strlen(apath)+1);
     if (!tb->path) 
     {
@@ -108,13 +108,13 @@ char *aname; {
 
     /* tlast now points to the next pointer (or head pointer) we should overwrite */
     tentry = (struct bc_hostEntry *) malloc(sizeof(struct bc_hostEntry));
-    bzero(tentry, sizeof(*tentry));
+    memset(tentry, 0, sizeof(*tentry));
     tentry->name = (char *) malloc(strlen(aname)+1);
     strcpy(tentry->name, aname);
     *tlast = tentry;
     tentry->next = (struct bc_hostEntry *) 0;
     tentry->addr.sin_family = AF_INET;
-    bcopy(th->h_addr, &tentry->addr.sin_addr.s_addr, sizeof(afs_int32));
+    memcpy(&tentry->addr.sin_addr.s_addr, th->h_addr, sizeof(afs_int32));
     tentry->addr.sin_port = 0;
     tentry->portOffset = aport;
     return 0;

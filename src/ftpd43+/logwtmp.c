@@ -49,7 +49,7 @@ logwtmp(line, name, host)
 		return;
 	}
 
-        bzero((char *)&ut, sizeof(ut));
+        memset((char *)&ut, 0, sizeof(ut));
 	if (!fstat(fd, &buf)) {
 		(void)strncpy(ut.ut_line, line, sizeof(ut.ut_line));
 		(void)strncpy(ut.ut_name, name, sizeof(ut.ut_name));

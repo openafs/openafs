@@ -178,7 +178,7 @@ struct cmd_syndesc *as; {
 	printf("bos: can't find address for host '%s'\n", hostname);
 	exit(1);
     }
-    bcopy(th->h_addr, &addr, sizeof(afs_int32));
+    memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
     /* get tokens for making authenticated connections */
     localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
@@ -289,7 +289,7 @@ afs_int32 alen; {
     register char *tp;
 
     strcpy(aresult, adir);
-    tp = rindex(aname, '/');
+    tp = strrchr(aname, '/');
     if (!tp) {
 	/* no '/' in name */
 	strcat(aresult, "/");
@@ -785,7 +785,7 @@ register struct cmd_syndesc *as; {
     char buf[BUFSIZ], ver[BUFSIZ];
     
     tconn = GetConn(as, 1);
-    bzero(&tkey, sizeof(struct ktc_encryptionKey));
+    memset(&tkey, 0, sizeof(struct ktc_encryptionKey));
 
 	if(as->parms[1].items)
 		strcpy(buf,as->parms[1].items->data);
@@ -1350,7 +1350,7 @@ struct cmd_syndesc *as; {
     char *orphans;
     char *tp;
 
-    bzero(&mrafsParm, sizeof(mrafsParm));
+    memset(&mrafsParm, 0, sizeof(mrafsParm));
     
     /* parm 0 is machine name, 1 is partition, 2 is volume, 3 is -all flag */
     tconn = GetConn(as, 0);

@@ -19,7 +19,7 @@ afs_int32 glong(cp, index)
 int index;
 char *cp; {
     afs_int32 temp;
-    bcopy(cp+index*4, &temp, sizeof(afs_int32));
+    memcpy(&temp, cp+index*4, sizeof(afs_int32));
     return temp;
 }
 

@@ -45,7 +45,7 @@ static int OldVLDB_to_NewVLDB(
     int rc = 0;
     afs_status_t tst = 0;
 
-    bzero(dest, sizeof(struct nvldbentry));
+    memset(dest, 0, sizeof(struct nvldbentry));
     strncpy(dest->name, source->name, sizeof(dest->name));
     for (i = 0; i < source->nServers; i++) {
 	dest->serverNumber[i] = source->serverNumber[i];
@@ -81,7 +81,7 @@ static int NewVLDB_to_OldVLDB(
     afs_status_t tst = 0;
     int rc = 0;
 
-    bzero(dest, sizeof(struct vldbentry));
+    memset(dest, 0, sizeof(struct vldbentry));
     strncpy(dest->name, source->name, sizeof(dest->name));
     if (source->nServers <= OMAXNSERVERS) {
 	for (i = 0; i < source->nServers; i++) {
@@ -358,11 +358,11 @@ int VLDB_IsSameAddrs(
 	goto fail_VLDB_IsSameAddrs;
     }
 
-    bzero(&attrs, sizeof(attrs));
+    memset(&attrs, 0, sizeof(attrs));
     attrs.Mask = VLADDR_IPADDR;
     attrs.ipaddr = serv1;
-    bzero(&addrs, sizeof(addrs));
-    bzero(&uuid, sizeof(uuid));
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&uuid, 0, sizeof(uuid));
     tst = ubik_Call(VL_GetAddrsU, cellHandle->vos, 0, &attrs, &uuid,
 	            &unique, &nentries, &addrs);
     if (tst) {

@@ -181,15 +181,15 @@ static int decode_athena_ticket (ticket, ticketLen, name, inst, realm,
     getstr (inst, 0);
     getstr (realm, 0);
 
-    bcopy (ticket, host, sizeof (*host));
+    memcpy(host, ticket, sizeof (*host));
     ticket += sizeof(*host);
     *host = ktohl (flags, *host);
 
-    bcopy (ticket, sessionKey, sizeof (struct ktc_encryptionKey));
+    memcpy(sessionKey, ticket, sizeof (struct ktc_encryptionKey));
     ticket += sizeof (struct ktc_encryptionKey);
 
     lifetime = *ticket++;
-    bcopy (ticket, start, sizeof (*start));
+    memcpy(start, ticket, sizeof (*start));
     ticket += sizeof(*start);
     *start = ktohl (flags, *start);
     *end = life_to_time (*start, lifetime);
@@ -208,7 +208,7 @@ static int decode_athena_ticket (ticket, ticketLen, name, inst, realm,
     strcpy (ticket, name); \
     ticket += slen+1
 #define putint(num) num = htonl(num);\
-		    bcopy (&num, ticket, sizeof(num));\
+		    memcpy(ticket, &num, sizeof(num));\
 		    ticket += sizeof(num)
 
 static int assemble_athena_ticket (ticket, ticketLen, name, inst, realm,
@@ -234,7 +234,7 @@ static int assemble_athena_ticket (ticket, ticketLen, name, inst, realm,
     putstr (realm, 0);
     putint (host);
 
-    bcopy (sessionKey, ticket, sizeof(struct ktc_encryptionKey));
+    memcpy(ticket, sessionKey, sizeof(struct ktc_encryptionKey));
     ticket += sizeof(struct ktc_encryptionKey);
 
     life = time_to_life (start, end);

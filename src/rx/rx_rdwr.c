@@ -250,7 +250,7 @@ MTUXXX  doesn't there need to be an "else" here ???
 	while (nbytes && cp) {
 	  t = MIN((int)call->curlen, nbytes);
 	  t = MIN(t, (int)call->nLeft);
-	  bcopy (call->curpos, buf, t);
+	  memcpy(buf, call->curpos, t);
 	  buf += t;
 	  nbytes -= t;
 	  call->curpos += t;
@@ -325,7 +325,7 @@ int rx_ReadProc(call, buf, nbytes)
     tnLeft = call->nLeft;
     if (!call->error && tcurlen > nbytes && tnLeft > nbytes) {
 	tcurpos = call->curpos;
-	bcopy(tcurpos, buf, nbytes);
+	memcpy(buf, tcurpos, nbytes);
 	call->curpos = tcurpos + nbytes;
 	call->curlen = tcurlen - nbytes;
 	call->nLeft = tnLeft - nbytes;
@@ -383,7 +383,7 @@ int rx_ReadProc32(call, value)
 	if (!((long)tcurpos & (sizeof(afs_int32)-1))) {
 	    *value = *((afs_int32 *)(tcurpos));
 	} else {
-	    bcopy(tcurpos, (char *)value, sizeof(afs_int32));
+	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
 	call->curlen = tcurlen - sizeof(afs_int32);
@@ -795,7 +795,7 @@ int rxi_WriteProc(call, buf, nbytes)
 	
 	  t = MIN((int)call->curlen, nbytes);
 	  t = MIN((int)call->nFree, t);
-	  bcopy (buf, call->curpos, t);
+	  memcpy(call->curpos, buf, t);
 	  buf += t;
 	  nbytes -= t;
 	  call->curpos += t;
@@ -862,7 +862,7 @@ int rx_WriteProc(call, buf, nbytes)
     tnFree = (int)call->nFree;
     if (!call->error && tcurlen >= nbytes && tnFree >= nbytes) {
 	tcurpos = call->curpos;
-	bcopy(buf, tcurpos, nbytes);
+	memcpy(tcurpos, buf, nbytes);
 	call->curpos = tcurpos + nbytes;
 	call->curlen = tcurlen - nbytes;
 	call->nFree = tnFree - nbytes;
@@ -920,7 +920,7 @@ int rx_WriteProc32(call, value)
 	if (!((long)tcurpos & (sizeof(afs_int32)-1))) {
 	    *((afs_int32 *)(tcurpos)) = *value;
 	} else {
-	    bcopy((char *)value, tcurpos, sizeof(afs_int32));
+	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
 	call->curpos = tcurpos + sizeof(afs_int32);
 	call->curlen = tcurlen - sizeof(afs_int32);

@@ -410,7 +410,7 @@ afs_int32 gid;
     if (code) ABORT_WITH(tt,PRPERM);
     tempu = FindByID(tt,aid);
     if (!tempu) ABORT_WITH(tt,PRNOENT);
-    bzero(&uentry,sizeof(uentry));
+    memset(&uentry, 0, sizeof(uentry));
     code = pr_ReadEntry(tt,0,tempu,&uentry);
     if (code != 0)  ABORT_WITH(tt,code);
     /* we don't allow groups as members of groups at present */
@@ -790,8 +790,8 @@ afs_int32 gid;
     if (!tempu) ABORT_WITH(tt,PRNOENT);
     tempg = FindByID(tt,gid);
     if (!tempg) ABORT_WITH(tt,PRNOENT);
-    bzero(&uentry,sizeof(uentry));
-    bzero(&gentry,sizeof(gentry));
+    memset(&uentry, 0, sizeof(uentry));
+    memset(&gentry, 0, sizeof(gentry));
     code = pr_ReadEntry(tt,0,tempu,&uentry);
     if (code != 0) ABORT_WITH(tt,code);
     code = pr_ReadEntry(tt,0,tempg,&gentry);
@@ -1164,7 +1164,7 @@ struct prcheckentry *aentry;
     aentry->ngroups = tentry.ngroups;
     aentry->nusers = tentry.nusers;
     aentry->count = tentry.count;
-    bzero (aentry->reserved, sizeof(aentry->reserved));
+    memset(aentry->reserved, 0, sizeof(aentry->reserved));
     code = ubik_EndTrans(tt);
     if (code) return code;
     return PRSUCCESS;
@@ -1292,7 +1292,7 @@ afs_int32 put_prentries(tentry, bulkentries)
   entry->nusers  = tentry->nusers;
   entry->count   = tentry->count;
   strncpy(entry->name,tentry->name,PR_MAXNAMELEN);
-  bzero(entry->reserved, sizeof(entry->reserved));
+  memset(entry->reserved, 0, sizeof(entry->reserved));
   bulkentries->prentries_len++;
   return 0;
 }

@@ -85,7 +85,7 @@ char *volutil_PartitionName_r(int avalue, char *tbuffer, int buflen)
 	    tbuffer[0] = '\0';
 	return tbuffer;
     }
-    bzero(tbuffer, buflen);
+    memset(tbuffer, 0, buflen);
     tempString[1] = tempString[2] = 0;
     strcpy(tbuffer, "/vicep");
     if (avalue < 0 || avalue >= (26*26+26)) {

@@ -266,7 +266,7 @@ static long Main (as, arock)
 	
     if (as->parms[13].items) { /* if password specified */
 	strncpy (passwd, as->parms[13].items->data, sizeof(passwd));
-	bzero (as->parms[13].items->data, strlen (as->parms[13].items->data));
+	memset(as->parms[13].items->data, 0, strlen (as->parms[13].items->data));
     } else {
 	char msg[sizeof(name)+15];
 	if (as->parms[12].items) strcpy (msg, "Admin Password: ");

@@ -37,7 +37,7 @@ char *data;
     }
     length = (size ? size : sizeof(struct afs_exporter));
     ex = (struct afs_exporter *) afs_osi_Alloc(length);
-    bzero((char *)ex, length);
+    memset((char *)ex, 0, length);
     MObtainWriteLock(&afs_xexp,308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)

@@ -139,7 +139,7 @@ readDumps(taskId, tapeInfoPtr, scanInfoPtr)
 {
     afs_int32 code, c;
 
-    bcopy(&scanInfoPtr->tapeLabel, &scanInfoPtr->dumpLabel, sizeof(struct butm_tapeLabel));
+    memcpy(&scanInfoPtr->dumpLabel, &scanInfoPtr->tapeLabel, sizeof(struct butm_tapeLabel));
 
     while(1)
     {
@@ -280,10 +280,10 @@ ScanDumps(ptr)
     if (ptr->addDbFlag) TLog(taskId, "ScanTape and add to the database\n");
     else                TLog(taskId, "Scantape\n");
 
-    bzero(&tapeScanInfo, sizeof(tapeScanInfo));
+    memset(&tapeScanInfo, 0, sizeof(tapeScanInfo));
     tapeScanInfo.addDbFlag = ptr->addDbFlag;
 
-    bzero(&curTapeInfo, sizeof(curTapeInfo));
+    memset(&curTapeInfo, 0, sizeof(curTapeInfo));
     curTapeInfo.structVersion = BUTM_MAJORVERSION;
     code = butm_file_Instantiate (&curTapeInfo, &globalTapeConfig);
     if (code)
@@ -359,7 +359,7 @@ scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer, bytesR
     afs_int32 code = 0;
     afs_int32 rcode, tcode;
 
-    bzero(volumeHeader, sizeof(struct volumeHeader));
+    memset(volumeHeader, 0, sizeof(struct volumeHeader));
 
     block = (char *) malloc(2*BUTM_BLOCKSIZE);
     if (!block) return(TC_NOMEMORY);
@@ -488,7 +488,7 @@ nextTapeLabel(prevTapeName)
 
     /* extract information from previous tape label */
     strcpy(buffer, prevTapeName);
-    prevdot = rindex(buffer, '.');
+    prevdot = strrchr(buffer, '.');
     if (!prevdot) return(retval);
     prevdot++;
 
@@ -800,11 +800,11 @@ validatePath(labelptr, pathptr)
 
     strcpy(tapeName, labelptr->AFSName);
 
-    tp = rindex(tapeName, '.');
+    tp = strrchr(tapeName, '.');
     if ( !tp ) return(1);
     tp++;
 
-    up = rindex(pathptr, '/');
+    up = strrchr(pathptr, '/');
     if ( !up )
     {
 	fprintf(stderr, "Invalid path name, missing /\n");
@@ -839,7 +839,7 @@ volumesetNamePtr(ptr)
     char *dotPtr;
     int dotIndex;
 
-    dotPtr = index(ptr, '.');
+    dotPtr = strchr(ptr, '.');
     if ( !dotPtr ) return(0);
 
     dotIndex = dotPtr - ptr;
@@ -859,7 +859,7 @@ extractDumpName(ptr)
     char *dotPtr;
     int dotIndex;
 
-    dotPtr = rindex(ptr, '.');
+    dotPtr = strrchr(ptr, '.');
     if (!dotPtr) return(0);
 
     dotIndex = dotPtr - ptr;
@@ -887,7 +887,7 @@ extractTapeSeq(tapename)
 {
     char *sptr;
 
-    sptr = rindex(tapename, '.');
+    sptr = strrchr(tapename, '.');
     if ( !sptr ) return(-1);
     sptr++;
     return(atol(sptr));
@@ -903,7 +903,7 @@ int databaseTape(tapeName)
     char *sptr;
     int  c;
 
-    sptr = rindex(tapeName, '.');
+    sptr = strrchr(tapeName, '.');
     if ( !sptr ) return(0);
     
     c = (int)( (afs_int32)sptr - (afs_int32)tapeName );
@@ -922,7 +922,7 @@ afs_int32 RcreateDump(tapeScanInfoPtr, volHeaderPtr)
     struct budb_dumpEntry    *dumpEntryPtr  = &tapeScanInfoPtr->dumpEntry;
 
     /* construct dump entry */
-    bzero(dumpEntryPtr, sizeof(struct budb_dumpEntry));
+    memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
     dumpEntryPtr->id            = volHeaderPtr->dumpID;
     dumpEntryPtr->initialDumpID = tapeScanInfoPtr->initialDumpId;
     dumpEntryPtr->parent        = volHeaderPtr->parentID;

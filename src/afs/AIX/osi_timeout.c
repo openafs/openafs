@@ -233,7 +233,7 @@ int timeoutcf(
 				break;
 			}
 			else  {
-				bzero(tos, sizeof(struct tos));
+				memset(tos, 0, sizeof(struct tos));
 			}
 
 			/*  The trb and the tos were both allocated.  */

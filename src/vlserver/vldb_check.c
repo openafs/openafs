@@ -636,7 +636,7 @@ CheckIpAddrs(header)
   int ipindex, ipaddrs;
   afsUUID nulluuid;
 
-  bzero(&nulluuid, sizeof(nulluuid));
+  memset(&nulluuid, 0, sizeof(nulluuid));
 
   if (verbose)
      printf("Check Multihomed blocks\n");
@@ -828,8 +828,8 @@ WorkerBee(as, arock)
 
   maxentries = (header.vital_header.eofPtr / sizeof(vlentry)) + 1;
   record = (struct er *)malloc(maxentries * sizeof(struct er));
-  bzero((char *)record, (maxentries * sizeof(struct er)));
-  bzero((char *)serveraddrs, sizeof(serveraddrs));
+  memset((char *)record, 0, (maxentries * sizeof(struct er)));
+  memset((char *)serveraddrs, 0, sizeof(serveraddrs));
 
   /* Will fill in the record array of entries it found */
   ReadAllEntries(&header);

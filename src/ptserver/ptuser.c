@@ -181,7 +181,7 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 	com_err (whoami, code,
 		 "Could not get afs tokens, running unauthenticated.");
 
-    bzero (serverconns, sizeof(serverconns)); /* terminate list!!! */
+    memset(serverconns, 0, sizeof(serverconns)); /* terminate list!!! */
     for (i = 0;i<info.numServers;i++) 
 	serverconns[i] = rx_NewConnection
 	    (info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,

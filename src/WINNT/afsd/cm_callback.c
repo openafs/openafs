@@ -425,7 +425,7 @@ int SRXAFSCB_GetCellServDB(
     t_name = (char *)malloc(AFSNAMEMAX);
     t_name[0] = '\0';
     *a_name = t_name;
-    bzero(a_hosts, AFSMAXCELLHOSTS * sizeof(afs_int32));
+    memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
     return 0;
 }
 

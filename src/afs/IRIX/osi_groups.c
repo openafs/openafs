@@ -89,7 +89,7 @@ int fixup_pags(int **credpp, int ngroups, gid_t *gidset, int old_afs_pag,
 	return EINVAL; /* sorry */
 
     cr = crdup(OSI_GET_CURRENT_CRED()); /* we will replace all the groups. */
-    bzero((char*)&cr->cr_groups, ngroups_max * sizeof(gid_t));
+    memset((char*)&cr->cr_groups, 0, ngroups_max * sizeof(gid_t));
 
     /* Now cobble the new groups list together. */
     new = 0;

@@ -1165,7 +1165,7 @@ char **argv;
      */
     if (argc == 1) {
 	ts = (struct cmd_syndesc *) malloc(sizeof(struct cmd_syndesc));
-	bzero(ts, sizeof(*ts));
+	memset(ts, 0, sizeof(*ts));
 	
 	ti = (struct cmd_item *) malloc(sizeof(struct cmd_item));
 	ti->next = 0;

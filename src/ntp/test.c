@@ -198,8 +198,8 @@ test5(v)
     struct sysdata sys;
     double delay;
 
-    bzero (&peer, sizeof(peer));
-    bzero (&sys, sizeof(sys));
+    memset(&peer, 0, sizeof(peer));
+    memset(&sys, 0, sizeof(sys));
     pkt.precision = -6;
     peer.precision = pkt.precision;
     sys.precision = pkt.precision;

@@ -635,7 +635,7 @@ SRXAFS_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
 	SetCallBackStruct(AddCallBack(client->host, Fid), CallBack);
     else {
       struct AFSFid myFid;		
-      bzero(&myFid, sizeof(struct AFSFid));
+      memset(&myFid, 0, sizeof(struct AFSFid));
       myFid.Volume = Fid->Volume;
       SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
       }
@@ -836,7 +836,7 @@ SAFSS_FetchStatus (tcon, Fid, OutStatus, CallBack, Sync)
 	SetCallBackStruct(AddCallBack(client->host, Fid), CallBack);
     else {
       struct AFSFid myFid;		
-      bzero(&myFid, sizeof(struct AFSFid));
+      memset(&myFid, 0, sizeof(struct AFSFid));
       myFid.Volume = Fid->Volume;
       SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
       }
@@ -939,7 +939,7 @@ SRXAFS_BulkStatus(tcon, Fids, OutStats, CallBacks, Sync)
 			      &CallBacks->AFSCBs_val[i]);
 	else {
 	  struct AFSFid myFid;		
-	  bzero(&myFid, sizeof(struct AFSFid));
+	  memset(&myFid, 0, sizeof(struct AFSFid));
 	  myFid.Volume = tfid->Volume;
 	  SetCallBackStruct(AddVolCallBack(client->host, &myFid),
 			      &CallBacks->AFSCBs_val[i]);
@@ -2802,7 +2802,7 @@ SAFSS_MakeDir (tcon, DirFid, Name, InStatus, OutFid, OutFidStatus,
     assert((SetAccessList(&targetptr, &volptr, &newACL, &newACLSize,
 			  &parentwhentargetnotdir, (AFSFid *)0, 0)) == 0);
     assert(parentwhentargetnotdir == 0);
-    bcopy((char *)VVnodeACL(parentptr), (char *)newACL, VAclSize(parentptr));
+    memcpy((char *)newACL, (char *)VVnodeACL(parentptr), VAclSize(parentptr));
 
     /* update the status for the target vnode */
     Update_TargetVnodeStatus(targetptr, TVS_MKDIR, client, InStatus,
@@ -3463,7 +3463,7 @@ static GetStatistics (tcon, Statistics)
     FS_LOCK
     AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    bzero(Statistics, sizeof(*Statistics));
+    memset(Statistics, 0, sizeof(*Statistics));
     SetAFSStats(Statistics);
     SetVolumeStats(Statistics);
     SetSystemStats(Statistics);
@@ -3842,7 +3842,7 @@ int SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersio
 	 */
 	dataBytes = sizeof(struct afs_Stats);
 	dataBuffP = (afs_int32 *)malloc(dataBytes);
-	bcopy(&afs_cmstats, dataBuffP, dataBytes);
+	memcpy(dataBuffP, &afs_cmstats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes>>2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 #else
@@ -3869,7 +3869,7 @@ int SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersio
 
 	dataBytes = sizeof(struct afs_PerfStats);
 	dataBuffP = (afs_int32 *)osi_Alloc(dataBytes);
-	bcopy(&afs_perfstats, dataBuffP, dataBytes);
+	memcpy(dataBuffP, &afs_perfstats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes>>2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 	break;
@@ -3896,7 +3896,7 @@ int SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVersio
 
 	dataBytes = sizeof(struct fs_stats_FullPerfStats);
 	dataBuffP = (afs_int32 *)osi_Alloc(dataBytes);
-	bcopy(&afs_FullPerfStats, dataBuffP, dataBytes);
+	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
 	a_dataP->AFS_CollData_len = dataBytes>>2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 #endif
@@ -5457,7 +5457,7 @@ RXStore_AccessList(targetptr, AccessList)
 	return(EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
 	return(E2BIG);
-    bcopy((char *) newACL,(char *) VVnodeACL(targetptr),(int)(newACL->size));
+    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
     acl_FreeACL(&newACL);
     return(0);
 
@@ -5504,7 +5504,7 @@ Store_AccessList(targetptr, AccessList)
 	return(EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
 	return(E2BIG);
-    bcopy((char *) newACL,(char *) VVnodeACL(targetptr),(int)(newACL->size));
+    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
     acl_FreeACL(&newACL);
     return(0);
 
@@ -6718,7 +6718,7 @@ void SetVolumeStats(stats)
     for (part = DiskPartitionList; part && i < AFS_MSTATDISKS; part = part->next) {
 	stats->Disks[i].TotalBlocks = part->totalUsable;
 	stats->Disks[i].BlocksAvailable = part->free;
-	bzero(stats->Disks[i].Name, AFS_DISKNAMESIZE);
+	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
 	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
 	i++;
     }

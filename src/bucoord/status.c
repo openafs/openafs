@@ -100,7 +100,7 @@ createStatusNode()
     {
 	return(0);
     }
-    bzero(ptr, sizeof(*ptr));
+    memset(ptr, 0, sizeof(*ptr));
 
     /* link it onto the chain of status entries */
     ObtainWriteLock(&statusQueueLock);

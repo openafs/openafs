@@ -30,7 +30,6 @@ extern int errno;
 #undef USS_PTSERVER_DB
 
 extern int line;
-extern char *rindex();
 
 
 /*

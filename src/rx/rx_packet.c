@@ -173,7 +173,7 @@ afs_int32 rx_SlowReadPacket(struct rx_packet *packet, unsigned int offset,
   r = resid;
   while ((resid > 0) && (i < packet->niovecs)) {
     j = MIN (resid, packet->wirevec[i].iov_len - (offset - l));
-    bcopy ((char *)(packet->wirevec[i].iov_base) + (offset - l), out, j);
+    memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
     resid -= j;
     l += packet->wirevec[i].iov_len;
     i++;  
@@ -213,7 +213,7 @@ afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
     
     b = (char*)(packet->wirevec[i].iov_base) + (offset - l);
     j = MIN (resid, packet->wirevec[i].iov_len - (offset - l));
-    bcopy (in, b, j);
+    memcpy(b, in, j);
     resid -= j;
     l += packet->wirevec[i].iov_len;
     i++;  
@@ -365,7 +365,7 @@ void rxi_MorePackets(int apackets)
   p = rx_mallocedP = (struct rx_packet *) osi_Alloc(getme);
 
   PIN(p, getme);	/* XXXXX */
-  bzero((char *)p, getme);
+  memset((char *)p, 0, getme);
   NETPRI;
   AFS_RXGLOCK();
   MUTEX_ENTER(&rx_freePktQ_lock);
@@ -403,7 +403,7 @@ void rxi_MorePacketsNoLock(int apackets)
   getme = apackets * sizeof(struct rx_packet);
   p = rx_mallocedP = (struct rx_packet *) osi_Alloc(getme);
 
-  bzero((char *)p, getme);
+  memset((char *)p, 0, getme);
 
   for (e = p + apackets; p<e; p++) {
     p->wirevec[0].iov_base = (char *) (p->wirehead);
@@ -789,7 +789,7 @@ int rxi_ReadPacket(socket, p, host, port)
     savelen = p->wirevec[p->niovecs].iov_len;
     p->wirevec[p->niovecs].iov_len += RX_EXTRABUFFERSIZE;
 
-    bzero((char *)&msg, sizeof(msg));
+    memset((char *)&msg, 0, sizeof(msg));
     msg.msg_name = (char *) &from;
     msg.msg_namelen = sizeof(struct sockaddr_in);
     msg.msg_iov = p->wirevec;
@@ -977,7 +977,7 @@ static int cpytoc(mp, off, len, cp)
 	    return -1;
 	}
 	n = MIN(len, (mp->b_wptr - mp->b_rptr));
-	bcopy((char *)mp->b_rptr, cp, n);
+	memcpy(cp, (char *)mp->b_rptr, n);
 	cp += n;
 	len -= n;
 	mp->b_rptr += n;
@@ -1009,7 +1009,7 @@ static int cpytoiovec(mp, off, len, iovs, niovs)
 	    t = iovs[i].iov_len;
 	  }
 	  m = MIN(n,t);
-	  bcopy((char *)mp->b_rptr, iovs[i].iov_base + o, m);
+	  memcpy(iovs[i].iov_base + o, (char *)mp->b_rptr, m);
 	  mp->b_rptr += m;
 	  o += m;
 	  t -= m;
@@ -1052,7 +1052,7 @@ static int m_cpytoiovec(m, off, len, iovs, niovs)
   
   while (len) {
     t = MIN(l1, MIN(l2, (unsigned int)len));
-    bcopy (p1, p2, t);
+    memcpy(p2, p1, t);
     p1 += t;    p2 += t;
     l1 -= t;    l2 -= t;
     len -= t;
@@ -1135,7 +1135,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    struct rx_debugStats tstat;
 
 	    /* get basic stats */
-	    bzero ((char *)&tstat, sizeof(tstat)); /* make sure spares are zero */
+	    memset((char *)&tstat, 0, sizeof(tstat)); /* make sure spares are zero */
 	    tstat.version = RX_DEBUGI_VERSION;
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
@@ -1176,7 +1176,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    if (tl > 0)
 	      return ap;
 
-	    bzero ((char *)&tconn, sizeof(tconn)); /* make sure spares are zero */
+	    memset((char *)&tconn, 0, sizeof(tconn)); /* make sure spares are zero */
 	    /* get N'th (maybe) "interesting" connection info */
 	    for(i=0;i<rx_hashTableSize;i++) {
 #if !defined(KERNEL)
@@ -1277,7 +1277,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    if (tl > 0)
 	      return ap;
 
-	    bzero ((char *)&tpeer, sizeof(tpeer));
+	    memset((char *)&tpeer, 0, sizeof(tpeer));
 	    for(i=0;i<rx_hashTableSize;i++) {
 #if !defined(KERNEL)
 		/* the time complexity of the algorithm used here
@@ -1406,7 +1406,7 @@ struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
 
 	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
 	rxi_EncodePacketHeader(ap);
-	bzero(buf, sizeof(buf));
+	memset(buf, 0, sizeof(buf));
 	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
 	rx_packetwrite(ap, 0, 65, buf);
 	tl = ap->length;
@@ -1832,7 +1832,7 @@ register struct rx_packet *p;
 {
     register afs_uint32 *buf = (afs_uint32 *)(p->wirevec[0].iov_base);      /* MTUXXX */
 
-    bzero((char *)buf, RX_HEADER_SIZE);
+    memset((char *)buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
     *buf++ = htonl(p->header.cid);
     *buf++ = htonl(p->header.callNumber);

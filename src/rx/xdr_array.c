@@ -46,7 +46,9 @@ RCSID("$Header$");
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "../h/string.h"
+#if 0
 #define bzero(A,C) memset((A), 0, (C))
+#endif
 #else
 #include <sys/systm.h>
 #endif /* AFS_LINUX20_ENV */
@@ -107,7 +109,7 @@ xdr_array(xdrs, addrp, sizep, maxsize, elsize, elproc)
 			if (target == NULL) {
 				return (FALSE);
 			}
-			bzero(target, (u_int)nodesize);
+			memset(target, 0, (u_int)nodesize);
 			break;
 
 		case XDR_FREE:

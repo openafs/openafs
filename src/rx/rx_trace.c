@@ -119,7 +119,7 @@ void rxi_calltrace(event, call)
 	 break;
     }
 
-  bcopy(&rxtinfo, rxi_tracebuf+rxi_tracepos, sizeof(struct rx_trace));
+  memcpy(rxi_tracebuf+rxi_tracepos, &rxtinfo, sizeof(struct rx_trace));
   rxi_tracepos += sizeof(struct rx_trace);
   if (rxi_tracepos >= (4096 - sizeof(struct rx_trace)))
     rxi_flushtrace();

@@ -106,7 +106,7 @@ localtime_r(t, tm)
    time_t *t;
    struct tm *tm;
 {
-   bcopy(localtime(t), tm, sizeof(struct tm));
+   memcpy(tm, localtime(t), sizeof(struct tm));
 }
 #endif
 
@@ -910,7 +910,7 @@ dumpPass(dparamsPtr, passNumber)
 	    }
 
 	    /* Remember the server and partition the volume exists on */
-	    bzero (&server, sizeof(server));
+	    memset(&server, 0, sizeof(server));
 	    server.sin_addr.s_addr = vldbEntry.serverNumber[e];
 	    server.sin_port        = 0;
 	    server.sin_family      = AF_INET;
@@ -1124,7 +1124,7 @@ Dumper(nodePtr)
     TapeLog(2, taskId, 0, 0, "Dump %s\n", nodePtr->dumpSetName);
 
     /* setup the dump parameters */
-    bzero(&dparams, sizeof(dparams));
+    memset(&dparams, 0, sizeof(dparams));
     dparams.node = nodePtr;
     dparams.tapeInfoPtr = &tapeInfo;
     dlqInit(&savedEntries);
@@ -1180,7 +1180,7 @@ Dumper(nodePtr)
 	  ErrorLog(0, taskId, code, 0, "Can't read backup database\n");
 	  ERROR_EXIT(code);
        }
-       bzero(&dparams.lastDump, sizeof(dparams.lastDump));
+       memset(&dparams.lastDump, 0, sizeof(dparams.lastDump));
     }
 
     code = createDump(&dparams);			/* enter dump into database */
@@ -1535,7 +1535,7 @@ getDumpTape(dparamsPtr, interactiveFlag, append)
 	      ErrorLog(0, taskId, code, tapeInfoPtr->error, 
 		       "Warning: Tape error while reading label (will proceed with dump)\n");
 	   }
-	   bzero(&oldTapeLabel, sizeof(oldTapeLabel));
+	   memset(&oldTapeLabel, 0, sizeof(oldTapeLabel));
 	}
 
 	/* Check if null tape. Prior 3.3, backup tapes have no dump id */
@@ -1689,8 +1689,8 @@ getDumpTape(dparamsPtr, interactiveFlag, append)
 		 */
 		for (dmp=oldTapeLabel.dumpid; dmp; dmp=de.appendedDumpID) {
 		    if (dmp == dparamsPtr->lastDump.id) {
-			bcopy(&dparamsPtr->lastDump, &de,  sizeof(de));
-			bcopy(&dparamsPtr->lastDump, &de2, sizeof(de2));
+			memcpy(&de, &dparamsPtr->lastDump, sizeof(de));
+			memcpy(&de2, &dparamsPtr->lastDump, sizeof(de2));
 		    }
 		    else {
 		        code = bcdb_FindDumpByID(dmp, &de);
@@ -1831,7 +1831,7 @@ makeVolumeHeader(vhptr, dparamsPtr, fragmentNumber)
 
     curDump = &nodePtr->dumps[dparamsPtr->curVolume];
 
-    bzero(vhptr, sizeof(*vhptr));
+    memset(vhptr, 0, sizeof(*vhptr));
     strcpy(vhptr->volumeName, curDump->name);
     vhptr->volumeID = curDump->vid;
     vhptr->cloneDate = curDump->cloneDate;
@@ -1876,7 +1876,7 @@ volumeHeader_hton(hostPtr, netPtr)
     volHdr.versionflags = htonl(hostPtr->versionflags);
     volHdr.cloneDate    = htonl(hostPtr->cloneDate);
 
-    bcopy(&volHdr, netPtr, sizeof(struct volumeHeader));
+    memcpy(netPtr, &volHdr, sizeof(struct volumeHeader));
 }
 
 /* database related routines */
@@ -1890,7 +1890,7 @@ createDump(dparamsPtr)
     afs_int32 code = 0;
 
     dumpPtr = &dparamsPtr->dump;
-    bzero(dumpPtr, sizeof(*dumpPtr));
+    memset(dumpPtr, 0, sizeof(*dumpPtr));
 
     /* id filled in by database */
     dumpPtr->parent = nodePtr->parent;

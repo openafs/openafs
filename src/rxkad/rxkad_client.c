@@ -130,15 +130,14 @@ rxkad_AllocCID(aobj, aconn)
 	if (aobj) {
 	    /* block is ready for encryption with session key, let's go for it. */
 	    tcp = (struct rxkad_cprivate *) aobj->privateData;
-	    bcopy((void *)tcp->ivec, (void *)xor, 2*sizeof(afs_int32));
+	    memcpy((void *)xor, (void *)tcp->ivec, 2*sizeof(afs_int32));
 	    fc_cbc_encrypt((char *) &tgen, (char *) &tgen, sizeof(tgen),
 			   tcp->keysched, xor, ENCRYPT);
 	} else {
 	    /* Create a session key so that we can encrypt it */
 
 	}
-	bcopy(((char *)&tgen) + sizeof(tgen) - ENCRYPTIONBLOCKSIZE,
-	      (void *)Cuid, ENCRYPTIONBLOCKSIZE);
+	memcpy((void *)Cuid, ((char *)&tgen) + sizeof(tgen) - ENCRYPTIONBLOCKSIZE, ENCRYPTIONBLOCKSIZE);
 	Cuid[0] = (Cuid[0] & ~0x40000000) | 0x80000000;
 	Cuid[1] &= RX_CIDMASK;
 	rx_SetEpoch (Cuid[0]);		/* for future rxnull connections */
@@ -174,22 +173,22 @@ rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
 
     size = sizeof(struct rx_securityClass);
     tsc = (struct rx_securityClass *) rxi_Alloc (size);
-    bzero ((void *)tsc, size);
+    memset((void *)tsc, 0, size);
     tsc->refCount = 1;			/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
     size = sizeof(struct rxkad_cprivate);
     tcp = (struct rxkad_cprivate *) rxi_Alloc (size);
-    bzero ((void *)tcp, size);
+    memset((void *)tcp, 0, size);
     tsc->privateData = (char *) tcp;
     tcp->type |= rxkad_client;
     tcp->level = level;
     code = fc_keysched (sessionkey, tcp->keysched);
     if (code) return 0;			/* bad key */
-    bcopy ((void *)sessionkey, (void *)tcp->ivec, sizeof(tcp->ivec));
+    memcpy((void *)tcp->ivec, (void *)sessionkey, sizeof(tcp->ivec));
     tcp->kvno = kvno;			/* key version number */
     tcp->ticketLen = ticketLen;		/* length of ticket */
-    bcopy(ticket, tcp->ticket, ticketLen);
+    memcpy(tcp->ticket, ticket, ticketLen);
 
     LOCK_RXKAD_STATS
     rxkad_stats_clientObjects++;
@@ -244,7 +243,7 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
     if (v2) {
 	int i;
 	afs_uint32 xor[2];
-	bzero ((void *)&r_v2, sizeof(r_v2));
+	memset((void *)&r_v2, 0, sizeof(r_v2));
 	r_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
 	r_v2.spare   = 0;
 	(void) rxkad_SetupEndpoint (aconn, &r_v2.encrypted.endpoint);
@@ -258,13 +257,13 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
 	r_v2.kvno                     = htonl(tcp->kvno);
 	r_v2.ticketLen                = htonl(tcp->ticketLen);
 	r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse (&r_v2);
-	bcopy((void *)tcp->ivec, (void *)xor, 2*sizeof(afs_int32));
+	memcpy((void *)xor, (void *)tcp->ivec, 2*sizeof(afs_int32));
 	fc_cbc_encrypt (&r_v2.encrypted, &r_v2.encrypted, 
 			sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
 	response     = (char *)&r_v2;
 	responseSize = sizeof(r_v2);
     } else {
-	bzero ((void *)&r_old, sizeof(r_old));
+	memset((void *)&r_old, 0, sizeof(r_old));
 	r_old.encrypted.incChallengeID = htonl(challengeID + 1);
 	r_old.encrypted.level          = htonl((afs_int32)tcp->level);
 	r_old.kvno                     = htonl(tcp->kvno);

@@ -48,10 +48,9 @@ void afs_InitStats()
     /*
      * First step is to zero everything out.
      */
-    bzero((char *)(&afs_cmstats), sizeof(struct afs_CMStats));
-    bzero((char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
-    bzero((char *)(&afs_stats_cmfullperf),
-	  sizeof(struct afs_stats_CMFullPerf));
+    memset((char *)(&afs_cmstats), 0, sizeof(struct afs_CMStats));
+    memset((char *)(&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
+    memset((char *)(&afs_stats_cmfullperf), 0, sizeof(struct afs_stats_CMFullPerf));
 
     /*
      * Some fields really should be non-zero at the start, so set 'em up.

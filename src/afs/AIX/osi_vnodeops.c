@@ -735,7 +735,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_fclear);
     if (!fclear_init) {
-	bzero(zero_buffer, PAGESIZE);
+	memset(zero_buffer, 0, PAGESIZE);
 	fclear_init = 1;
     }
     /*

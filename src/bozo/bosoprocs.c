@@ -60,11 +60,11 @@ struct ktime *aktime; {
     code = 0;		/* assume success */
     switch (atype) {
       case 1:
-	bcopy(&bozo_nextRestartKT, aktime, sizeof(struct ktime));
+	memcpy(aktime, &bozo_nextRestartKT, sizeof(struct ktime));
 	break;
 
       case 2:
-	bcopy(&bozo_nextDayKT, aktime, sizeof(struct ktime));
+	memcpy(aktime, &bozo_nextDayKT, sizeof(struct ktime));
 	break;
 
       default:
@@ -92,11 +92,11 @@ struct ktime *aktime; {
     code = 0;		/* assume success */
     switch (atype) {
       case 1:
-	bcopy(aktime, &bozo_nextRestartKT, sizeof(struct ktime));
+	memcpy(&bozo_nextRestartKT, aktime, sizeof(struct ktime));
 	break;
 
       case 2:
-	bcopy(aktime, &bozo_nextDayKT, sizeof(struct ktime));
+	memcpy(&bozo_nextDayKT, aktime, sizeof(struct ktime));
 	break;
 
       default:
@@ -472,8 +472,8 @@ char *aname; {
       goto fail;
     }
 
-    bzero(&tcell.hostAddr[which], sizeof(struct sockaddr_in));
-    bzero(tcell.hostName[which], MAXHOSTCHARS);
+    memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
+    memset(tcell.hostName[which], 0, MAXHOSTCHARS);
     code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
 
   fail:
@@ -534,7 +534,7 @@ char *aname; {
 	}
     }
 
-    bzero(&tcell.hostAddr[which], sizeof(struct sockaddr_in));
+    memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
     strcpy(tcell.hostName[which], aname);
     code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
 
@@ -572,7 +572,7 @@ struct bozo_key *akey;
       goto fail;
     }
     *akvno = tkeys.key[an].kvno;
-    bzero(akeyinfo, sizeof(struct bozo_keyInfo));
+    memset(akeyinfo, 0, sizeof(struct bozo_keyInfo));
 
     noauth = afsconf_GetNoAuthFlag(bozo_confdir);
     rxkad_GetServerInfo(acall->conn, &enc_level, 0, 0, 0, 0, 0);
@@ -581,9 +581,9 @@ struct bozo_key *akey;
      */
 
     if ((noauth) || (enc_level == rxkad_crypt)) {
-	bcopy(tkeys.key[an].key, akey, 8);
+	memcpy(akey, tkeys.key[an].key, 8);
     }
-    else bzero (akey, 8);
+    else memset(akey, 0, 8);
 
     code = stat(AFSDIR_SERVER_KEY_FILEPATH, &tstat);
     if (code == 0) {
@@ -1281,7 +1281,7 @@ BOZO_GetInstanceInfo(acall, ainstance, atype, astatus)
 	strcpy(*atype, tb->type->name);
     else
 	(*atype)[0] = 0;    /* null string */
-    bzero(astatus, sizeof(struct bozo_status));	/* good defaults */
+    memset(astatus, 0, sizeof(struct bozo_status));	/* good defaults */
     astatus->goal = tb->goal;
     astatus->fileGoal = tb->fileGoal;
     astatus->procStartTime = tb->procStartTime;
@@ -1316,7 +1316,7 @@ char **aparm; {
     bnode_Hold(tb);
     if (anum == 999) {
 	if (tb->notifier) {
-	    bcopy(tb->notifier, tp, strlen(tb->notifier)+1);
+	    memcpy(tp, tb->notifier, strlen(tb->notifier)+1);
 	    code = 0;
 	} else
 	    code = BZNOENT;	/* XXXXX */

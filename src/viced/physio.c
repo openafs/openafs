@@ -154,14 +154,14 @@ DirHandle     *	file;
 
 {
     IH_RELEASE(file->dirh_handle);
-    bzero((char *)file, sizeof(DirHandle));
+    memset((char *)file, 0, sizeof(DirHandle));
 }
 
 FidZero (file)
 DirHandle     *	file;
 
 {
-    bzero((char *)file, sizeof(DirHandle));
+    memset((char *)file, 0, sizeof(DirHandle));
 }
 
 FidEq (afile, bfile)

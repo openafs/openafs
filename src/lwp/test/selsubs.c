@@ -39,7 +39,7 @@ RCSID("$Header$");
 fd_set *IOMGR_AllocFDSet(void)
 {
     fd_set *tmp = (fd_set*)malloc(sizeof(fd_set));
-    bzero((char*)tmp, sizeof(fd_set));
+    memset((char*)tmp, 0, sizeof(fd_set));
     return tmp;
 }
 

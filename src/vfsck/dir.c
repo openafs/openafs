@@ -116,7 +116,7 @@ descend(parentino, inumber)
 	register struct dinode *dp;
 	struct inodesc curino;
 
-	bzero((char *)&curino, sizeof(struct inodesc));
+	memset((char *)&curino, 0, sizeof(struct inodesc));
 	if (statemap[inumber] != DSTATE)
 		errexit("BAD INODE %d TO DESCEND", statemap[inumber]);
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
@@ -202,11 +202,11 @@ dirscan(idesc)
 	idesc->id_loc = 0;
 	for (dp = fsck_readdir(idesc); dp != NULL; dp = fsck_readdir(idesc)) {
 		dsize = dp->d_reclen;
-		bcopy((char *)dp, dbuf, dsize);
+		memcpy(dbuf, (char *)dp, dsize);
 		idesc->id_dirp = (struct direct *)dbuf;
 		if ((n = (*idesc->id_func)(idesc)) & ALTERED) {
 			bp = getdirblk(idesc->id_blkno, blksiz);
-			bcopy(dbuf, (char *)dp, dsize);
+			memcpy((char *)dp, dbuf, dsize);
 			dirty(bp);
 			sbdirty();
 		}
@@ -378,7 +378,7 @@ mkentry(idesc)
 	dirp->d_ino = idesc->id_parent;	/* ino to be entered is in id_parent */
 	dirp->d_reclen = newent.d_reclen;
 	dirp->d_namlen = strlen(idesc->id_name);
-	bcopy(idesc->id_name, dirp->d_name, (int)dirp->d_namlen + 1);
+	memcpy(dirp->d_name, idesc->id_name, (int)dirp->d_namlen + 1);
 	return (ALTERED|STOP);
 }
 
@@ -387,7 +387,7 @@ chgino(idesc)
 {
 	register struct direct *dirp = idesc->id_dirp;
 
-	if (bcmp(dirp->d_name, idesc->id_name, (int)dirp->d_namlen + 1))
+	if (memcmp(dirp->d_name, idesc->id_name, (int)dirp->d_namlen + 1))
 		return (KEEPON);
 	dirp->d_ino = idesc->id_parent;
 	return (ALTERED|STOP);
@@ -404,7 +404,7 @@ linkup(orphan, parentdir)
 	char tempname[BUFSIZ];
 	extern int pass4check();
 
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	dp = ginode(orphan);
 	lostdir = (dp->di_mode & IFMT) == IFDIR;
 	pwarn("UNREF %s ", lostdir ? "DIR" : "FILE");
@@ -482,7 +482,7 @@ linkup(orphan, parentdir)
 		return (0);
 	}
 	len = strlen(lfname);
-	bcopy(lfname, pathp, len + 1);
+	memcpy(pathp, lfname, len + 1);
 	pathp += len;
 	len = lftempname(tempname, orphan);
 	if (makeentry(lfdir, orphan, tempname) == 0) {
@@ -492,7 +492,7 @@ linkup(orphan, parentdir)
 	}
 	lncntp[orphan]--;
 	*pathp++ = '/';
-	bcopy(tempname, pathp, len + 1);
+	memcpy(pathp, tempname, len + 1);
 	pathp += len;
 	if (lostdir) {
 		dp = ginode(orphan);
@@ -528,7 +528,7 @@ makeentry(parent, ino, name)
 	if (parent < ROOTINO || parent >= maxino ||
 	    ino < ROOTINO || ino >= maxino)
 		return (0);
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	idesc.id_type = DATA;
 	idesc.id_func = mkentry;
 	idesc.id_number = parent;
@@ -570,21 +570,21 @@ expanddir(dp)
 		dblksize(&sblock, dp, lastbn + 1));
 	if (bp->b_errs)
 		goto bad;
-	bcopy(bp->b_un.b_buf, firstblk, DIRBLKSIZ);
+	memcpy(firstblk, bp->b_un.b_buf, DIRBLKSIZ);
 	bp = getdirblk(newblk, sblock.fs_bsize);
 	if (bp->b_errs)
 		goto bad;
-	bcopy(firstblk, bp->b_un.b_buf, DIRBLKSIZ);
+	memcpy(bp->b_un.b_buf, firstblk, DIRBLKSIZ);
 	for (cp = &bp->b_un.b_buf[DIRBLKSIZ];
 	     cp < &bp->b_un.b_buf[sblock.fs_bsize];
 	     cp += DIRBLKSIZ)
-		bcopy((char *)&emptydir, cp, sizeof emptydir);
+		memcpy(cp, (char *)&emptydir, sizeof emptydir);
 	dirty(bp);
 	bp = getdirblk(dp->di_db[lastbn + 1],
 		dblksize(&sblock, dp, lastbn + 1));
 	if (bp->b_errs)
 		goto bad;
-	bcopy((char *)&emptydir, bp->b_un.b_buf, sizeof emptydir);
+	memcpy(bp->b_un.b_buf, (char *)&emptydir, sizeof emptydir);
 	pwarn("NO SPACE LEFT IN %s", pathname);
 	if (preen)
 		printf(" (EXPANDED)\n");
@@ -623,11 +623,11 @@ allocdir(parent, request, mode)
 		freeino(ino);
 		return (0);
 	}
-	bcopy((char *)&dirhead, bp->b_un.b_buf, sizeof dirhead);
+	memcpy(bp->b_un.b_buf, (char *)&dirhead, sizeof dirhead);
 	for (cp = &bp->b_un.b_buf[DIRBLKSIZ];
 	     cp < &bp->b_un.b_buf[sblock.fs_fsize];
 	     cp += DIRBLKSIZ)
-		bcopy((char *)&emptydir, cp, sizeof emptydir);
+		memcpy(cp, (char *)&emptydir, sizeof emptydir);
 	dirty(bp);
 	dp->di_nlink = 2;
 	inodirty();
@@ -645,8 +645,7 @@ allocdir(parent, request, mode)
 		inp->i_isize = dp->di_size;
 		inp->i_numblks = dp->di_blocks * sizeof(daddr_t);
 		inp->i_parent = parent;
-		bcopy((char *)&dp->di_db[0], (char *)&inp->i_blks[0],
-		    (int)inp->i_numblks);
+		memcpy((char *)&inp->i_blks[0], (char *)&dp->di_db[0], (int)inp->i_numblks);
 	}
 #endif
 	if (ino == ROOTINO) {

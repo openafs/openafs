@@ -19,8 +19,8 @@ RCSID("$Header$");
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
-#define uuid_memcmp(A,B,C)	bcmp(A,B,C)
-#define uuid_memcpy(A,B,C)	bcopy(B,A,C)
+#define uuid_memcmp(A,B,C)	memcmp(A, B, C)
+#define uuid_memcpy(A,B,C)	memcpy(A, B, C)
 #else /* KERNEL */
 #include <stdio.h>
 #include <errno.h>

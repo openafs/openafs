@@ -96,11 +96,10 @@ rxkad_DeriveXORInfo(aconnp, aschedule, aivec, aresult)
     afs_uint32 xor[2];
 
     rxkad_SetupEndpoint(aconnp, &tendpoint);
-    bcopy(aivec, (void *)xor, 2*sizeof(afs_int32));
+    memcpy((void *)xor, aivec, 2*sizeof(afs_int32));
     fc_cbc_encrypt(&tendpoint, &tendpoint, sizeof(tendpoint),
 		   aschedule, xor, ENCRYPT);
-    bcopy(((char *)&tendpoint) + sizeof(tendpoint) - ENCRYPTIONBLOCKSIZE,
-	  aresult, ENCRYPTIONBLOCKSIZE);
+    memcpy(aresult, ((char *)&tendpoint) + sizeof(tendpoint) - ENCRYPTIONBLOCKSIZE, ENCRYPTIONBLOCKSIZE);
     return 0;
 }
 
@@ -215,7 +214,7 @@ rxs_return_t rxkad_NewConnection (aobj, aconn)
     if (rx_IsServerConn(aconn)) {
 	int size = sizeof(struct rxkad_sconn);
 	aconn->securityData = (char *) rxi_Alloc (size);
-	bzero(aconn->securityData, size); /* initialize it conveniently */
+	memset(aconn->securityData, 0, size); /* initialize it conveniently */
     }
     else { /* client */
 	struct rxkad_cprivate *tcp;
@@ -223,7 +222,7 @@ rxs_return_t rxkad_NewConnection (aobj, aconn)
 	int size = sizeof(struct rxkad_cconn);
 	tccp = (struct rxkad_cconn *) rxi_Alloc (size);
 	aconn->securityData = (char *) tccp;
-	bzero(aconn->securityData, size); /* initialize it conveniently */
+	memset(aconn->securityData, 0, size); /* initialize it conveniently */
 	tcp = (struct rxkad_cprivate *) aobj->privateData;
 	if (!(tcp->type & rxkad_client)) return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level); /* set header and trailer sizes */

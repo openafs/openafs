@@ -131,7 +131,7 @@ static char *ParentAndComponent(a_path, a_parentBuff, a_componentPP)
      * we cheat and return ``.''.
      */
     strcpy(a_parentBuff, a_path);
-    rightSlashP = (char *) rindex(a_parentBuff, '/');
+    rightSlashP = (char *) strrchr(a_parentBuff, '/');
     if (rightSlashP) {
 	*rightSlashP = 0;
 	*a_componentPP = rightSlashP+1;

@@ -243,8 +243,7 @@ static afs_int32
 des_set_sequence_number(des_cblock new_sequence_number)
 {
     LOCK_RANDOM
-    bcopy((char *)new_sequence_number, (char *)sequence_number,
-	  sizeof(sequence_number));
+    memcpy((char *)sequence_number, (char *)new_sequence_number, sizeof(sequence_number));
     UNLOCK_RANDOM
     return 0;
 }

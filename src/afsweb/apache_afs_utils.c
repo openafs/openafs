@@ -74,17 +74,17 @@ flipPrimary(char *tokenBuf)
   char * temp = tokenBuf;
 
   /* skip over the secret token */
-  bcopy(temp, &i, sizeof(afs_int32));
+  memcpy(&i, temp, sizeof(afs_int32));
   temp += (i + sizeof(afs_int32));
 
   /* skip over the clear token */
-  bcopy(temp, &i, sizeof(afs_int32));
+  memcpy(&i, temp, sizeof(afs_int32));
   temp += (i + sizeof(afs_int32));
   
   /* set the primary flag */
-  bcopy(temp, &i, sizeof(afs_int32)); 
+  memcpy(&i, temp, sizeof(afs_int32)); 
   i |= 0x8000;
-  bcopy(&i, temp, sizeof(afs_int32));
+  memcpy(temp, &i, sizeof(afs_int32));
   temp += sizeof(afs_int32);
   return 0;
 }
@@ -222,21 +222,21 @@ void parseToken(char *buf)
   assert ( buf != NULL );
 
   tp = buf;
-  bcopy(tp, &len, sizeof(afs_int32));    /* get size of secret token */
+  memcpy(&len, tp, sizeof(afs_int32));    /* get size of secret token */
   tp += (sizeof(afs_int32)+ len);        /* skip secret token */
 
-  bcopy(tp, &len, sizeof(afs_int32));    /* get size of clear token */
+  memcpy(&len, tp, sizeof(afs_int32));    /* get size of clear token */
   if (len != sizeof(struct ClearToken)) {
     fprintf(stderr, "weblog:parseToken: error getting length of ClearToken\n");
     return;
   }
   
   tp += sizeof(afs_int32);	            /* skip length of cleartoken */
-  bcopy(tp, &clearToken, sizeof(struct ClearToken)); /* copy cleartoken */
+  memcpy(&clearToken, tp, sizeof(struct ClearToken)); /* copy cleartoken */
   
   tp += len;		            /* skip clear token itself */
 
-  bcopy(tp, &len, sizeof(afs_int32));   /* copy the primary flag */
+  memcpy(&len, tp, sizeof(afs_int32));   /* copy the primary flag */
   tp += sizeof(afs_int32);	            /* skip primary flag */
 
   /* tp now points to the cell name */

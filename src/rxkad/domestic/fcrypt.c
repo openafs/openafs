@@ -130,8 +130,8 @@ afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
 #endif
 
 #if 0
-    bcopy (clear, &L, sizeof(afs_int32));
-    bcopy (clear+1, &R, sizeof(afs_int32));
+    memcpy(&L, clear, sizeof(afs_int32));
+    memcpy(&R, clear+1, sizeof(afs_int32));
 #else
     L = ntohl(*clear);
     R = ntohl(*(clear+1));
@@ -181,8 +181,8 @@ afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
 	}
     }
 #if 0
-    bcopy (&L, cipher, sizeof(afs_int32));
-    bcopy (&R, cipher+1, sizeof(afs_int32));
+    memcpy(cipher, &L, sizeof(afs_int32));
+    memcpy(cipher+1, &R, sizeof(afs_int32));
 #else
     *cipher = htonl(L);
     *(cipher+1) = htonl(R);
@@ -210,7 +210,7 @@ afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
     if (encrypt) {
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
-	    bcopy (input, t_input, sizeof(t_input));
+	    memcpy(t_input, input, sizeof(t_input));
 	    input += sizeof(t_input);
 
 	    /* zero pad */
@@ -224,7 +224,7 @@ afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
 	    fc_ecb_encrypt (xor, t_output, key, encrypt);
 
 	    /* copy temp output and save it for cbc */
-	    bcopy (t_output, output, sizeof(t_output));
+	    memcpy(output, t_output, sizeof(t_output));
 	    output += sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
@@ -240,7 +240,7 @@ afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
 	/* decrypt */
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
-	    bcopy (input, t_input, sizeof(t_input));
+	    memcpy(t_input, input, sizeof(t_input));
 	    input += sizeof(t_input);
 
 	    /* no padding for decrypt */
@@ -251,7 +251,7 @@ afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
 	    t_output[1] ^= xor[1] ;
 
 	    /* copy temp output */
-	    bcopy (t_output, output, sizeof(t_output));
+	    memcpy(output, t_output, sizeof(t_output));
 	    output += sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */

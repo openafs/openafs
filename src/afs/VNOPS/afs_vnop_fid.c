@@ -130,12 +130,12 @@ struct fid **fidpp;
 	    ||  USE_SMALLFID(credp)
 #endif
 	    ) {
-	    bcopy((caddr_t)&Sfid, fidpp->fid_data, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
 	} else {
-	    bcopy((caddr_t)addr, fidpp->fid_data, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t)addr, SizeOfSmallFid);   
 	}
     } else {
-	bcopy((caddr_t)&Sfid, fidpp->fid_data, SizeOfSmallFid);   
+	memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
     }
 #else
     /* malloc a fid pointer ourselves. */
@@ -143,12 +143,12 @@ struct fid **fidpp;
     (*fidpp)->fid_len = SizeOfSmallFid;
     if (afs_NFSRootOnly) {
 	if (rootvp) {
-	    bcopy((char *)&Sfid, (*fidpp)->fid_data, SizeOfSmallFid);
+	    memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);
 	} else {
-	    bcopy((char *)addr, (*fidpp)->fid_data, SizeOfSmallFid);   
+	    memcpy((*fidpp)->fid_data, (char *)addr, SizeOfSmallFid);   
 	}
     } else {
-	bcopy((char *)&Sfid, (*fidpp)->fid_data, SizeOfSmallFid);
+	memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);
     }
 #endif
     return (0);

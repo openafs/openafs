@@ -719,7 +719,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	 */
 	dataBytes = sizeof(struct afs_CMStats);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)&afs_cmstats, (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)&afs_cmstats, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -739,7 +739,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	afs_CountServers();
 	dataBytes = sizeof(afs_stats_cmperf);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)&afs_stats_cmperf, (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)&afs_stats_cmperf, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -757,14 +757,12 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	 */
 	afs_stats_cmperf.numPerfCalls++;
 	afs_CountServers();
-	bcopy((char *)(&afs_stats_cmperf),
-	      (char *)(&(afs_stats_cmfullperf.perf)),
-	      sizeof(struct afs_stats_CMPerf));
+	memcpy((char *)(&(afs_stats_cmfullperf.perf)), (char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
 	afs_stats_cmfullperf.numFullPerfCalls++;
 
 	dataBytes = sizeof(afs_stats_cmfullperf);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)(&afs_stats_cmfullperf), (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)(&afs_stats_cmfullperf), dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -1142,7 +1140,7 @@ int SRXAFSCB_GetCellServDB(
     }
 
     t_name[0] = '\0';
-    bzero(a_hosts, AFSMAXCELLHOSTS * sizeof(afs_int32));
+    memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
 
     /* search the list for the cell with this index */
     ObtainReadLock(&afs_xcell);

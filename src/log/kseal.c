@@ -74,8 +74,8 @@ char **argv; {
     string_to_key(argv[2], skey);
 
     now = time(0);
-    bcopy(&now,	session, 4);	/* but this is only a test pgm */
-    bcopy(&now, session+4, 4);
+    memcpy(session, &now, 4);	/* but this is only a test pgm */
+    memcpy(session+4, &now, 4);
     code = tkt_MakeTicket(token.ticket, &token.ticketLen, skey, argv[1], "", cellName,
 	now-300, now+25*3600, session, /* host */ 0, "afs", "");
     if (code) {
@@ -89,7 +89,7 @@ char **argv; {
     strcpy(sname.cell, cellName);
     token.startTime = 0;
     token.endTime = 0x7fffffff;
-    bcopy(session, &token.sessionKey, 8);
+    memcpy(&token.sessionKey, session, 8);
     token.kvno = 0;
     code = ktc_SetToken (&sname, &token, (char *) 0, 0);
     if (code) {

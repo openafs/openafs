@@ -380,26 +380,22 @@ void afs_CountServers()
     afs_stats_cmperf.fs_UpDown[0].sumOfRecordAges     = 0;
     afs_stats_cmperf.fs_UpDown[0].ageOfYoungestRecord = 0;
     afs_stats_cmperf.fs_UpDown[0].ageOfOldestRecord   = 0;
-    bzero((char *) afs_stats_cmperf.fs_UpDown[0].downIncidents,
-          AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
+    memset((char *) afs_stats_cmperf.fs_UpDown[0].downIncidents, 0, AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
 
     afs_stats_cmperf.fs_UpDown[1].sumOfRecordAges     = 0;
     afs_stats_cmperf.fs_UpDown[1].ageOfYoungestRecord = 0;
     afs_stats_cmperf.fs_UpDown[1].ageOfOldestRecord   = 0;
-    bzero((char *) afs_stats_cmperf.fs_UpDown[1].downIncidents,
-          AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
+    memset((char *) afs_stats_cmperf.fs_UpDown[1].downIncidents, 0, AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
 
     afs_stats_cmperf.vl_UpDown[0].sumOfRecordAges     = 0;
     afs_stats_cmperf.vl_UpDown[0].ageOfYoungestRecord = 0;
     afs_stats_cmperf.vl_UpDown[0].ageOfOldestRecord   = 0;
-    bzero((char *) afs_stats_cmperf.vl_UpDown[0].downIncidents,
-          AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
+    memset((char *) afs_stats_cmperf.vl_UpDown[0].downIncidents, 0, AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
 
     afs_stats_cmperf.vl_UpDown[1].sumOfRecordAges     = 0;
     afs_stats_cmperf.vl_UpDown[1].ageOfYoungestRecord = 0;
     afs_stats_cmperf.vl_UpDown[1].ageOfOldestRecord   = 0;
-    bzero((char *) afs_stats_cmperf.vl_UpDown[1].downIncidents,
-          AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
+    memset((char *) afs_stats_cmperf.vl_UpDown[1].downIncidents, 0, AFS_STATS_NUM_DOWNTIME_INCIDENTS_BUCKETS * sizeof(afs_int32));
 
     /*
      * Compute the current time, used to figure out server record ages.
@@ -661,7 +657,7 @@ struct server *afs_FindServer (afs_int32 aserver, ushort aport,
 	i = afs_uuid_hash(uuidp) % NSERVERS;
 	for (ts = afs_servers[i]; ts; ts = ts->next) {
 	    if ( (ts->flags & SRVR_MULTIHOMED) &&
-		 (bcmp((char *)uuidp, (char *)&ts->sr_uuid, sizeof(*uuidp)) == 0) &&
+		 (memcmp((char *)uuidp, (char *)&ts->sr_uuid, sizeof(*uuidp)) == 0) &&
 		 (!ts->addr || (ts->addr->sa_portal == aport)) )
 		return ts;
 	}
@@ -1382,7 +1378,7 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
        newts = (struct server *) afs_osi_Alloc(sizeof(struct server));
        if (!newts) panic("malloc of server struct");
        afs_totalServers++;
-       bzero((char *)newts, sizeof(struct server));
+       memset((char *)newts, 0, sizeof(struct server));
 
        /* Add the server struct to the afs_servers[] hash chain */
        srvhash = (uuidp ? (afs_uuid_hash(uuidp)%NSERVERS) : SHash(aserverp[0]));
@@ -1423,7 +1419,7 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
 	  newsa = (struct srvAddr *) afs_osi_Alloc(sizeof(struct srvAddr));
 	  if (!newsa) panic("malloc of srvAddr struct");
 	  afs_totalSrvAddrs++;
-	  bzero((char *)newsa, sizeof(struct srvAddr));
+	  memset((char *)newsa, 0, sizeof(struct srvAddr));
 
 	  /* Add the new srvAddr to the afs_srvAddrs[] hash chain */
 	  newsa->next_bkt = afs_srvAddrs[iphash];
@@ -1471,7 +1467,7 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
 	  if (!orphts) {
 	     orphts = (struct server *) afs_osi_Alloc(sizeof(struct server));
 	     if (!orphts) panic("malloc of lo server struct");
-	     bzero((char *)orphts, sizeof(struct server));
+	     memset((char *)orphts, 0, sizeof(struct server));
 	     afs_totalServers++;
 
 	     /* Add the orphaned server to the afs_servers[] hash chain.

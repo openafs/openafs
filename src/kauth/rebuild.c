@@ -414,7 +414,7 @@ WorkerBee (as, arock)
 
     nentries = (info.st_size-(UBIK_HEADERSIZE + header.headerSize)) / sizeof(struct kaentry);
     entrys = (int *)malloc(nentries * sizeof(int));
-    bzero(entrys, nentries * sizeof(int));
+    memset(entrys, 0, nentries * sizeof(int));
 
     for (i=0, index=sizeof(header); i<nentries; i++, index+=sizeof(struct kaentry)) {
 	readDB (index, &entry, sizeof(entry));

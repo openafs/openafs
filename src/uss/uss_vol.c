@@ -405,7 +405,7 @@ afs_int32 uss_vol_GetServer(a_name)
     th = gethostbyname(a_name);
     if (!th)
 	return(0);
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return(addr);
 
 }  /*uss_vol_GetServer*/

@@ -32,7 +32,7 @@ RCSID("$Header$");
 # define TIOCPKT_WINDOW 0x80
 # endif /* TIOCPKT_WINDOW */
 
-char	*index(), *rindex(), *malloc(), *getenv();
+char	*malloc(), *getenv();
 struct	passwd *getpwuid();
 char	*name;
 int	rem;
@@ -78,7 +78,7 @@ main(argc, argv)
 	setlocale(LC_ALL,"");
 #endif
 
-	host = rindex(argv[0], '/');
+	host = strrchr(argv[0], '/');
 	if (host)
 		host++;
 	else
@@ -372,7 +372,7 @@ sigwinch()
 	struct winsize ws;
 
 	if (dosigwinch && !nosigwin && ioctl(0, TIOCGWINSZ, &ws) == 0 &&
-	    bcmp(&ws, &winsize, sizeof (ws))) {
+	    memcmp(&ws, &winsize, sizeof (ws))) {
 		winsize = ws;
 		sendwindow();
 	}

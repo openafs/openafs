@@ -46,7 +46,7 @@ afs_int32 apart; {
 	}
     }
     tt = (struct volser_trans *) malloc(sizeof(struct volser_trans));
-    bzero(tt, sizeof(struct volser_trans));
+    memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
     tt->next = allTrans;

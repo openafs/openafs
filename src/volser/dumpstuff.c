@@ -205,7 +205,7 @@ static int ReadVolumeHeader(register struct iod *iodp, VolumeDiskData *vol)
 {
     register tag;
     afs_uint32 trash;
-    bzero(vol, sizeof(*vol));
+    memset(vol, 0, sizeof(*vol));
     while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
 	switch (tag) {
 	    case 'i':
@@ -488,7 +488,7 @@ static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
 	   /* Pad the rest of the buffer with zeros. Remember offset we started 
 	    * padding. Keep total tally of padding.
 	    */
-	   bzero(p+n, howMany-n);
+	   memset(p+n, 0, howMany-n);
 	   if (!pad)
 	      offset = (status.st_size - nbytes) + n;
 	   pad += (howMany-n);
@@ -737,7 +737,7 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
     char buf[SIZEOF_LARGEDISKVNODE], zero[SIZEOF_LARGEDISKVNODE];
     register struct VnodeDiskObject *vnode = (struct VnodeDiskObject *) buf;
     
-    bzero(zero, sizeof(zero));	/* zero out our proto-vnode */
+    memset(zero, 0, sizeof(zero));	/* zero out our proto-vnode */
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     if (fdP == NULL)
 	return -1;
@@ -782,7 +782,7 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 	if (nVnodes > 0) {
 	    Buf = (afs_int32 *) malloc(nVnodes * sizeof(afs_int32));
 	    if (Buf == NULL) return 1;
-	    bzero((char *)Buf, nVnodes * sizeof(afs_int32));
+	    memset((char *)Buf, 0, nVnodes * sizeof(afs_int32));
 	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
@@ -916,7 +916,7 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
     V_pref(vp, nearInode);
     while (tag == D_VNODE) {
         int haveStuff = 0;
-	bzero(buf, sizeof (buf));
+	memset(buf, 0, sizeof (buf));
 	if (!ReadInt32(iodp, (afs_uint32 *)&vnodeNumber))
 	    break;
 

@@ -126,12 +126,12 @@ char *timesource;
 	tty.c_iflag = ICRNL;
 	tty.c_oflag = 0;
 	tty.c_lflag = 0;
-	bzero((char *)tty.c_cc, sizeof tty.c_cc);
+	memset((char *)tty.c_cc, 0, sizeof tty.c_cc);
 	tty.c_cc[VMIN] = MIN_READ;
 	tty.c_cc[VTIME] = 0;
 	if (ioctl(cfd, TCSETA, &tty) < 0) {
 #else /* TCSETA	 Use older Berkeley style IOCTL's */
-	bzero((char *)&tty, sizeof tty);
+	memset((char *)&tty, 0, sizeof tty);
 	tty.sg_ispeed = tty.sg_ospeed = B9600;
 	tty.sg_flags = ANYP|CRMOD;
 	tty.sg_erase = tty.sg_kill = '\0';

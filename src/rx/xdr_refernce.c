@@ -79,7 +79,7 @@ xdr_reference(xdrs, pp, size, proc)
 			if (loc == NULL) {
 				return (FALSE);
 			}
-			bzero(loc, (int)size);
+			memset(loc, 0, (int)size);
 			break;
 	}
 

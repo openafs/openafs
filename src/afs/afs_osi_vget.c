@@ -37,7 +37,7 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
     register afs_int32 code = 0, cellindex;
     afs_int32 ret;
 
-    bcopy(afidp->fid_data, (char *)&Sfid, SIZEOF_SMALLFID);
+    memcpy((char *)&Sfid, afidp->fid_data, SIZEOF_SMALLFID);
 #ifdef AFS_OSF_ENV
     Sfid.Vnode = afidp->fid_reserved;
 #endif

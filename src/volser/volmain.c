@@ -342,7 +342,7 @@ usage:
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);
-    bzero(busyFlags, sizeof(busyFlags));
+    memset(busyFlags, 0, sizeof(busyFlags));
 
     /* Open FileLog and map stdout, stderr into it */
     OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);

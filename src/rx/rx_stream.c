@@ -58,11 +58,11 @@ int rx_stream_ReadProc(sd, buf, nbytes)
 	}
 	if (nbytes < sd->sd.rd.nLeft) {
 	    sd->sd.rd.nLeft -= nbytes;
-	    bcopy(sd->sd.rd.nextByte, buf, nbytes);
+	    memcpy(buf, sd->sd.rd.nextByte, nbytes);
 	    sd->sd.rd.nextByte += nbytes;
 	    return totalBytes;
 	}
-	bcopy(sd->sd.rd.nextByte, buf, sd->sd.rd.nLeft);
+	memcpy(buf, sd->sd.rd.nextByte, sd->sd.rd.nLeft);
 	buf += sd->sd.rd.nLeft;
 	nbytes -= sd->sd.rd.nLeft;
 	tp = queue_First(&sd->sd.rd.rq, rx_packet);
@@ -152,13 +152,13 @@ int rx_stream_WriteProc(sd, buf, nbytes)
 	    sd->sd.wd.freePtr = rx_DataOf(queue_First(&sd->sd.wd.wq, rx_packet));
 	}
 	if (nbytes < sd->sd.wd.nFree) {
-	    if (buf) bcopy(buf, sd->sd.wd.freePtr, nbytes), buf += nbytes;
+	    if (buf) memcpy(sd->sd.wd.freePtr, buf, nbytes), buf += nbytes;
 	    sd->sd.wd.nFree -= nbytes;
 	    sd->sd.wd.freePtr += nbytes;
 	    nbytes = 0;
 	    break;
 	}
-	if (buf) bcopy(buf, sd->sd.wd.freePtr, sd->sd.wd.nFree), buf += sd->sd.wd.nFree;
+	if (buf) memcpy(sd->sd.wd.freePtr, buf, sd->sd.wd.nFree), buf += sd->sd.wd.nFree;
 	nbytes -= sd->sd.wd.nFree;	
 	sd->sd.wd.nFree = 0;
 	if (rx_stream_FlushWrite(sd)) break;

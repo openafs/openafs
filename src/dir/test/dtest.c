@@ -157,7 +157,7 @@ int count; {
     dirhandle dir;
 
     CreateDir(dname, &dir);
-    bzero(fid, sizeof(fid));
+    memset(fid, 0, sizeof(fid));
     MakeDir(&dir, fid, fid);
     for(i=0;i<count;i++) {
 	sprintf(tbuffer, "%s%d", ename, i);

@@ -243,7 +243,7 @@ char *aname; {
     }
     th = gethostbyname(aname);
     if (!th) return 0;
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 
@@ -297,9 +297,9 @@ static handleit(as)
     while (1) {
 	char line[500];
 	int nargs, releasetype;
-	bzero(&entry, sizeof(entry));
-	bzero(&updateentry, sizeof(updateentry));
-	bzero(&listbyattributes, sizeof(listbyattributes));
+	memset(&entry, 0, sizeof(entry));
+	memset(&updateentry, 0, sizeof(updateentry));
+	memset(&listbyattributes, 0, sizeof(listbyattributes));
 	printf("vl> ");
 	if (fgets(line, 499, stdin) == NULL) {
 	    printf("\n");
@@ -346,7 +346,7 @@ static handleit(as)
 	    } else if (!strcmp(oper,"ls")) {
 		 afs_int32 index, count, next_index;
 		 for (index = 0; 1; index = next_index) {
-		     bzero(&entry, sizeof(entry));
+		     memset(&entry, 0, sizeof(entry));
 		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
 		     if (code) {
 			 printf("VL_ListEntry returned code = %d\n", code);
@@ -366,7 +366,7 @@ static handleit(as)
 		 }
 		 printf("Enumerating all entries in vldb...\n");
 		 for (index = 0; 1; index = next_index) {
-		     bzero(&entry, sizeof(entry));
+		     memset(&entry, 0, sizeof(entry));
 		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
 		     if (code) {
 			 printf("VL_ListEntry returned code = %d\n", code);
@@ -404,7 +404,7 @@ static handleit(as)
 		 }
 		 printf("Volumes not found in main hash tables in vldb...\n");
 		 for (index = 0; 1; index = next_index) {
-		     bzero(&entry, sizeof(entry));
+		     memset(&entry, 0, sizeof(entry));
 		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
 		     if (code) {
 			 printf("VL_ListEntry returned code = %d\n", code);
@@ -456,10 +456,10 @@ static handleit(as)
 		     exit(1);
 		 }
 		 printf("Volumes not found in main hash tables in vldb will be fixed...\n");
-		 bzero(&updateentry, sizeof(updateentry));
+		 memset(&updateentry, 0, sizeof(updateentry));
 		 for (index = 0; 1; index = next_index) {
 		     int n1=0, n2=0, n3=0, n4=0;
-		     bzero(&entry, sizeof(entry));
+		     memset(&entry, 0, sizeof(entry));
 		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
 		     if (code) {
 			 printf("VL_ListEntry returned code = %d\n", code);
@@ -531,7 +531,7 @@ static handleit(as)
 		bulkentries entries;
 		struct vldbentry *entry;
 
-		bzero(&entries,sizeof(entries));
+		memset(&entries, 0, sizeof(entries));
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
 		code = ubik_Call(VL_ListAttributes, cstruct, 0, &listbyattributes, &nentries, &entries);
@@ -563,7 +563,7 @@ static handleit(as)
 
 		for (si=0; si!=-1; si=nsi) {
 		   nentries = 0;
-		   bzero(&entries,sizeof(entries));
+		   memset(&entries, 0, sizeof(entries));
 		   code = ubik_Call(VL_ListAttributesN2, cstruct, 0, 
 				    &listbyattributes, name, si, 
 				    &nentries, &entries, &nsi);
@@ -586,7 +586,7 @@ static handleit(as)
 
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
-		bzero(&linkedvldbs, sizeof(vldb_list));
+		memset(&linkedvldbs, 0, sizeof(vldb_list));
 		code = ubik_Call(VL_LinkedList, cstruct, 0, &listbyattributes,
 				 &netries, &linkedvldbs);
 		if (code) {
@@ -606,7 +606,7 @@ static handleit(as)
 
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
-		bzero(&linkedvldbs, sizeof(vldb_list));
+		memset(&linkedvldbs, 0, sizeof(vldb_list));
 		code = ubik_Call(VL_LinkedListN, cstruct, 0, &listbyattributes,
 				 &netries, &linkedvldbs);
 		if (code) {
@@ -632,7 +632,7 @@ static handleit(as)
 		 sscanf(&(*argp)[0], "%d", &voltype);
 		 code = ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype, &entry);
 		 display_entry(&entry, code);
-		 bzero(&updateentry, sizeof(updateentry));
+		 memset(&updateentry, 0, sizeof(updateentry));
 		 updateentry.Mask = VLUPDATE_VOLNAMEHASH;
 		 printf("\tRehashing namehash table for %s (%d)\n", entry.name, entry.volumeId[RWVOL]);
 		 code = ubik_Call(VL_UpdateEntry, cstruct, 0, entry.volumeId[RWVOL], -1, &updateentry, 0);
@@ -643,7 +643,7 @@ static handleit(as)
 	     } else if (!strcmp(oper,"undelete")) {
 		 afs_int32 index, count, next_index;
 
-		 bzero(&updateentry, sizeof(updateentry));
+		 memset(&updateentry, 0, sizeof(updateentry));
 		 sscanf(&(*argp)[0], "%d", &id);
 		 ++argp, --nargs;
 		 sscanf(&(*argp)[0], "%d", &voltype);
@@ -653,7 +653,7 @@ static handleit(as)
 		 }
 		 printf("Searching vldb for volume %d...\n", id);
 		 for (index = 0; 1; index = next_index) {
-		     bzero(&entry, sizeof(entry));
+		     memset(&entry, 0, sizeof(entry));
 		     code = ubik_Call(VL_ListEntry,cstruct,0,index,&count,&next_index,&entry);
 		     if (code) {
 			 printf("VL_ListEntry returned code = %d\n", code);
@@ -873,10 +873,10 @@ static handleit(as)
 		struct vldbentry *entry;
 		afsUUID uuid;
 
-		bzero(&uuid,sizeof(uuid));
+		memset(&uuid, 0, sizeof(uuid));
 		sscanf(&(*argp)[0], "%d", &i);
 		++argp, --nargs;
-		bcopy(&i, uuid.node, sizeof(i));
+		memcpy(uuid.node, &i, sizeof(i));
 
 		if (nargs < 0 || nargs > 16) {
 		    printf("Illegal # entries = %d\n", nargs);
@@ -907,7 +907,7 @@ static handleit(as)
 		 printf("cmdebug: can't resolve address for host %s");
 		 continue;
 	       }
-	       bcopy((afs_int32 *)h1->h_addr, &a1, sizeof(afs_uint32));
+	       memcpy(&a1, (afs_int32 *)h1->h_addr, sizeof(afs_uint32));
 
 	       ++argp, --nargs;
 	       printf(" to %s\n", *argp);
@@ -916,7 +916,7 @@ static handleit(as)
 		 printf("cmdebug: can't resolve address for host %s", *argp);
 		 continue;
 	       }
-	       bcopy((afs_int32 *)h2->h_addr, &a2, sizeof(afs_uint32));
+	       memcpy(&a2, (afs_int32 *)h2->h_addr, sizeof(afs_uint32));
 
 	       printf("changing 0x%x to 0x%x\n", ntohl(a1), ntohl(a2));
 	       code = ubik_Call(VL_ChangeAddr, cstruct, 0, ntohl(a1), ntohl(a2));

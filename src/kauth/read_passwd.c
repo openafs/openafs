@@ -74,7 +74,7 @@ des_read_password(k,prompt,verify)
 	string_to_key(key_string, k);
 
 lose:
-    bzero(key_string, sizeof (key_string));
+    memset(key_string, 0, sizeof (key_string));
     return ok;
 }
 
@@ -137,7 +137,7 @@ read_pw_string(s,max,prompt,verify)
     }
 
 #ifdef	BSDUNIX
-    bcopy(env, old_env, sizeof(env));
+    memcpy(old_env, env, sizeof(env));
     if (setjmp(env))
 	goto lose;
 
@@ -204,14 +204,14 @@ read_pw_string(s,max,prompt,verify)
 
 lose:
     if (!ok)
-	bzero(s, max);
+	memset(s, 0, max);
 #ifdef	BSDUNIX
     /* turn echo back on */
     tty_state.sg_flags |= ECHO;
     if (ioctl(0,TIOCSETP,&tty_state))
 	ok = 0;
     pop_signals();
-    bcopy(old_env, env, sizeof(env));
+    memcpy(env, old_env, sizeof(env));
 #else
 #if	defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
     ttyb.c_lflag = flags;
@@ -225,7 +225,7 @@ lose:
 #endif
 #endif
     if (verify)
-	bzero(key_string, sizeof (key_string));
+	memset(key_string, 0, sizeof (key_string));
     s[max-1] = 0;		/* force termination */
     return !ok;			/* return nonzero if not okay */
 }

@@ -342,7 +342,7 @@ char *ascancmd; {
     }
 
     te = (struct fsbnode *) malloc(sizeof(struct fsbnode));
-    bzero(te, sizeof(struct fsbnode));
+    memset(te, 0, sizeof(struct fsbnode));
     te->filecmd = fileCmdpath;
     te->volcmd = volCmdpath;
     te->salcmd = salCmdpath;

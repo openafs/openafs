@@ -74,7 +74,7 @@ struct dumpNode **newNode;
     /* get space */
     *newNode = (struct dumpNode *) (malloc (sizeof (struct dumpNode)));
 
-    bzero(*newNode, sizeof(struct dumpNode));
+    memset(*newNode, 0, sizeof(struct dumpNode));
 
     (*newNode)->next = dumpQHeader->next;
     dumpQHeader->next = *newNode;

@@ -637,7 +637,7 @@ int SetFields (
 
       hrs = 0;
       s = as->parms[7].items->data;
-      if (index(s, ':'))
+      if (strchr(s, ':'))
 	sscanf(s, "%d:%d", &hrs, &mins);
       else
 	sscanf(s, "%d", &mins);
@@ -1328,7 +1328,7 @@ static int MyBeforeProc(
        if (code) {			/* if not then get key and try again */
 	  if (as->parms[13].items) { /* if password specified */
 	     strncpy (passwd, as->parms[13].items->data, sizeof(passwd));
-	     bzero (as->parms[13].items->data, strlen (as->parms[13].items->data));
+	     memset(as->parms[13].items->data, 0, strlen (as->parms[13].items->data));
 	  } else {
 	     char msg[MAXKTCNAMELEN+50];
 	     if (as->parms[12].items) sprintf (msg, "Administrator's (%s) Password: ", name);
@@ -1391,7 +1391,7 @@ static int MyBeforeProc(
 			"getting Authentication token for %s",
 			PrintedName (name, instance, cell));
 	  }
-	  bzero (&key, sizeof(key));
+	  memset(&key, 0, sizeof(key));
        }
     }
 

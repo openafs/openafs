@@ -76,7 +76,7 @@ main(argc, argv)
 	sigaction(SIGSEGV, &nsa, NULL);
 #endif
 	(void) gethostname(LocalHostName, sizeof LocalHostName);
-	if (p = index(LocalHostName, '.')) {
+	if (p = strchr(LocalHostName, '.')) {
 		*p++ = '\0';
 		LocalDomain = p;
 	}
@@ -213,7 +213,7 @@ query(host)
 	static struct servent *sp = NULL;
 	afs_int32 HostAddr;
 
-	bzero((char *) &watcher, sizeof(watcher));
+	memset((char *) &watcher, 0, sizeof(watcher));
 	watcher.sin_family = AF_INET;
 	HostAddr = inet_addr(host);
 	watcher.sin_addr.s_addr = (afs_uint32) HostAddr;
@@ -223,7 +223,7 @@ query(host)
 			fprintf(stderr,"%s: unknown\n", host);
 			return 0;
 		}
-		bcopy(hp->h_addr, (char *) &watcher.sin_addr, hp->h_length);
+		memcpy((char *) &watcher.sin_addr, hp->h_addr, hp->h_length);
 	}
 	sp = getservbyname("ntp", "udp");
 	if (sp == 0) {
@@ -363,7 +363,7 @@ cvthname(f)
 	if (hp == 0)
 		return (inet_ntoa(f->sin_addr));
 
-	if ((p = index(hp->h_name, '.')) && strcmp(p + 1, LocalDomain) == 0)
+	if ((p = strchr(hp->h_name, '.')) && strcmp(p + 1, LocalDomain) == 0)
 		*p = '\0';
 	return (hp->h_name);
 }

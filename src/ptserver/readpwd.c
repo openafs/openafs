@@ -82,12 +82,12 @@ char **argv;
 	exit(2);
     }
     while ((tmp = fgets(buf,150,fp)) != NULL) {
-	bzero(name,PR_MAXNAMELEN);
-	bzero(uid,8);
-	ptr = index(buf,':');
+	memset(name, 0, PR_MAXNAMELEN);
+	memset(uid, 0, 8);
+	ptr = strchr(buf, ':');
 	strncpy(name,buf,ptr-buf);
-	aptr = index(++ptr,':');
-	ptr = index(++aptr,':');
+	aptr = strchr(++ptr, ':');
+	ptr = strchr(++aptr, ':');
 	strncpy(uid,aptr,ptr-aptr);
 	id = atoi(uid);
 	if (verbose)

@@ -99,7 +99,7 @@ STC_LabelTape(acid, label, taskId)
 
     ptr = (struct labelTapeIf *) malloc(sizeof(*ptr));
     if (!ptr) ERROR_EXIT(TC_NOMEMORY);
-    bcopy(label, &ptr->label, sizeof(ptr->label));
+    memcpy(&ptr->label, label, sizeof(ptr->label));
 
     /* set up the status node */
     *taskId = allocTaskId();			/* for bucoord */

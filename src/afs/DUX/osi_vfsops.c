@@ -90,10 +90,10 @@ int mp_afs_mount(struct mount *afsp,char * path, caddr_t data,
     if ( !afsp->m_stat.f_mntonname || !afsp->m_stat.f_mntfromname)
 	panic("malloc failure in afs_mount\n");
 
-    bzero(afsp->m_stat.f_mntonname, MNAMELEN);
-    bzero(afsp->m_stat.f_mntfromname, MNAMELEN);
+    memset(afsp->m_stat.f_mntonname, 0, MNAMELEN);
+    memset(afsp->m_stat.f_mntfromname, 0, MNAMELEN);
     AFS_COPYINSTR(path, (caddr_t)afsp->m_stat.f_mntonname, MNAMELEN, &size, code);
-    bcopy("AFS", afsp->m_stat.f_mntfromname, 4);
+    memcpy(afsp->m_stat.f_mntfromname, "AFS", 4);
     AFS_GUNLOCK();
     (void) mp_afs_statfs(afsp);
     AFS_GLOCK();
@@ -307,12 +307,12 @@ int mp_afs_vptofh(struct vnode *avn, struct fid *fidp)
     fidp->fid_len = AFS_SIZEOFSMALLFID;
     if (afs_NFSRootOnly) {
 	if (rootvp) {
-	    bcopy((caddr_t)&Sfid, fidp->fid_data, AFS_FIDDATASIZE);   
+	    memcpy(fidp->fid_data, (caddr_t)&Sfid, AFS_FIDDATASIZE);   
 	} else {
-	    bcopy((caddr_t)addr, fidp->fid_data, AFS_FIDDATASIZE);   
+	    memcpy(fidp->fid_data, (caddr_t)addr, AFS_FIDDATASIZE);   
 	}
     } else {
-	bcopy((caddr_t)&Sfid, fidp->fid_data, AFS_FIDDATASIZE);   
+	memcpy(fidp->fid_data, (caddr_t)&Sfid, AFS_FIDDATASIZE);   
     }
     AFS_GUNLOCK();
     return 0;

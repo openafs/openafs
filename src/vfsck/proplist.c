@@ -173,8 +173,7 @@ int proplist_blkscan(dp, idesc, entry_list)
 	       return(SKIP);
 	    entry->next = NULL;
 	    entry->flags = 0;
-	    bcopy((char *)&pl_descp[1], entry->name,
-		  pl_descp->pl_namelen);
+	    memcpy(entry->name, (char *)&pl_descp[1], pl_descp->pl_namelen);
 	    entry->blkno = idesc->id_blkno;
 	    entry->blksize = blksize;
 	    entry->offset = idesc->id_loc;

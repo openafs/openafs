@@ -41,7 +41,7 @@ char *name; {
 		 */
 		if (sym = symsrch(name))
 			return sym;
-		bcopy(name, buf+1, sizeof (buf) - 2);
+		memcpy(buf+1, name, sizeof (buf) - 2);
 		buf[0] = '.';
 
 		if (sym = symsrch(buf))

@@ -134,9 +134,9 @@ rmtbulk *InData, *OutData;
     data.in = (char *)malloc(InData->rmtbulk_len + PIOCTL_HEADER*sizeof(afs_int32));
     if (!data.in) return (-1); /* helpless here */
     if (!strcmp(path, NIL_PATHP)) pathp	= (char	*)0;	/* It meant to be NIL */
-    bcopy(blob, data.in, sizeof(blob));
+    memcpy(data.in, blob, sizeof(blob));
     inparam_conversion(cmd, InData->rmtbulk_val, 1);
-    bcopy(InData->rmtbulk_val, data.in+sizeof(blob), InData->rmtbulk_len);
+    memcpy(data.in+sizeof(blob), InData->rmtbulk_val, InData->rmtbulk_len);
     data.in_size = InData->rmtbulk_len + PIOCTL_HEADER*sizeof(afs_int32);
     data.out = OutData->rmtbulk_val;
     data.out_size = OutData->rmtbulk_len;

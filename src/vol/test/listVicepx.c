@@ -124,7 +124,6 @@ char*	orphan_NoUnique = "ORPHANED_NoUnique";
 #define contentsDInode	0x08  /* list contents of dir inode */
 #define volInfo		0x10  /* list info from vol header */
 
-extern char *rindex();
 extern DirEnt *lookup();
 extern char	*getFileName(), *getDirName(), *printStack();
 extern DirEnt*               hash[];

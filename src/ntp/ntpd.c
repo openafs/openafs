@@ -753,7 +753,7 @@ init_ntp(config)
 	double j;
 	extern double drift_comp;
 
-	bzero((char *) &sin, sizeof(sin));
+	memset((char *) &sin, 0, sizeof(sin));
 	fp = fopen(config, "r");
 	if (fp == NULL) {
 		fprintf(stderr,"Problem opening NTP initialization file %s\n",
@@ -1296,8 +1296,7 @@ GetHostName(name, sin)
 	if (hp = gethostbyname(name)) {
 		if (hp->h_addrtype != AF_INET)
 			return (0);
-		bcopy((char *) hp->h_addr, (char *) &sin->sin_addr,
-		      hp->h_length);
+		memcpy((char *) &sin->sin_addr, (char *) hp->h_addr, hp->h_length);
 		sin->sin_family = hp->h_addrtype;
 		return (1);
 	}

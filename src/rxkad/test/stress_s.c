@@ -41,7 +41,7 @@ static long GetKey (rock, kvno, key)
   IN long  kvno;
   OUT struct ktc_encryptionKey *key;
 {
-    bcopy (&serviceKey, key, sizeof(*key));
+    memcpy(key, &serviceKey, sizeof(*key));
     return 0;
 }
 

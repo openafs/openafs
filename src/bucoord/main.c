@@ -195,7 +195,7 @@ bc_InitTextConfig()
 
     for ( i = 0; i < TB_NUM; i++ )
     {
-	bzero(ctPtr, sizeof(*ctPtr));
+	memset(ctPtr, 0, sizeof(*ctPtr));
 	ctPtr->textType = i;
 	ctPtr->textVersion = -1;
 	ctPtr++;

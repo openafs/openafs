@@ -44,7 +44,7 @@ afs_int32 InitDB ()
 
     pollCount = 0;
 
-    bzero (&db, sizeof(db));
+    memset(&db, 0, sizeof(db));
     Lock_Init (&db.lock);
     if ((code = InitDBalloc ()) || (code = InitDBhash ())) 
         return code;
@@ -225,7 +225,7 @@ CheckInit (ut, db_init)
 		LogDebug(0, "No data base - Building new one\n");
 
 		/* try to write a good header */
-		bzero(&db.h,sizeof(db.h));
+		memset(&db.h, 0, sizeof(db.h));
 		db.h.version = htonl(BUDB_VERSION);
 		db.h.checkVersion = htonl(BUDB_VERSION);
 		db.h.lastUpdate = db.h.lastDumpId = htonl(time(0));

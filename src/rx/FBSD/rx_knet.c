@@ -44,7 +44,7 @@ rxk_init() {
 	/* force UDP checksumming on for AFS	*/
 	 extern int udpcksum;
 	 udpcksum = 1;	
-          bcopy(tpro, &parent_proto, sizeof(parent_proto));
+          memcpy(&parent_proto, tpro, sizeof(parent_proto));
           tpro->pr_input = rxk_input;
           tpro->pr_fasttimo = rxk_fasttimo;
           /*
@@ -303,7 +303,7 @@ nopages:
 	tpa = mtod(m, caddr_t);
 	while (len) {
 	  rlen = MIN(len, tl);
-	  bcopy(tdata, tpa, rlen);
+	  memcpy(tpa, tdata, rlen);
 	  asize -= rlen;
 	  len -= rlen;
 	  tpa += rlen;
@@ -339,7 +339,7 @@ nopages:
 	splx(s);
 	return 1;
     }
-    bcopy(addr, mtod(um, caddr_t), sizeof(*addr));
+    memcpy(mtod(um, caddr_t), addr, sizeof(*addr));
     um->m_len = sizeof(*addr);
     /* note that udp_usrreq frees funny mbuf.  We hold onto data, but mbuf
      * around it is gone.  we free address ourselves.  */

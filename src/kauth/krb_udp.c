@@ -85,12 +85,12 @@ char udptgsServerPrincipal[256];
 #define putstr(name) if ((slen = strlen(name)) >= MAXKTCNAMELEN) return -1;\
 		     else strcpy (answer, name), answer += slen+1
 #define putint(num) num = htonl(num), \
-		    bcopy (&num, answer, sizeof(afs_int32)), \
+		    memcpy(answer, &num, sizeof(afs_int32)), \
 		    answer += sizeof(afs_int32)
 
 #define getstr(name) if ((slen = strlen(packet)) >= sizeof(name)) return -1;\
 		     strcpy (name, packet), packet += slen+1
-#define getint(num) bcopy (packet, &num, sizeof(afs_int32)), \
+#define getint(num) memcpy(&num, packet, sizeof(afs_int32)), \
 		    num = ktohl (byteOrder, num), \
 		    packet += sizeof(afs_int32)
 
@@ -139,7 +139,7 @@ static afs_int32 create_cipher (cipher, cipherLen, sessionKey, sname, sinst,
     if (ticketLen > 255) return KAANSWERTOOLONG;
     if (kvno > 255) return KAANSWERTOOLONG;
 
-    bcopy (sessionKey, answer, sizeof(*sessionKey));
+    memcpy(answer, sessionKey, sizeof(*sessionKey));
     answer += sizeof(*sessionKey);
     putstr (sname);
     putstr (sinst);
@@ -147,7 +147,7 @@ static afs_int32 create_cipher (cipher, cipherLen, sessionKey, sname, sinst,
     *answer++ = life;
     *answer++ = (unsigned char) kvno;
     *answer++ = (unsigned char) ticketLen;
-    bcopy (ticket, answer, ticketLen);
+    memcpy(answer, ticket, ticketLen);
     answer += ticketLen;
     putint (start);
 
@@ -201,10 +201,10 @@ static afs_int32 create_reply (ans, name, inst, startTime, endTime, kvno,
     *answer++ = (unsigned char) kvno;
     {   short w = (short) cipherLen;
 	w = htons(w);
-	bcopy (&w, answer, sizeof(short));
+	memcpy(answer, &w, sizeof(short));
 	answer += sizeof(short);
     }
-    bcopy (cipher, answer, cipherLen);
+    memcpy(answer, cipher, cipherLen);
     return 0;
 }
 
@@ -634,7 +634,7 @@ process_udp_auth (ksoc, pkt)
 		    "null realm name not allowed");
 	return;
     }
-    bcopy (packet, &startTime, sizeof(startTime));
+    memcpy(&startTime, packet, sizeof(startTime));
     packet += sizeof(startTime);
     startTime = ktohl (pkt->byteOrder, startTime);
     pkt->time = startTime;
@@ -691,13 +691,13 @@ process_udp_appl (ksoc, pkt)
 	err_packet (ksoc, pkt, KERB_ERR_TEXT_LENGTH, "ticket too long");
 	return;
     }
-    bcopy (packet, ticket, ticketLen);
+    memcpy(ticket, packet, ticketLen);
     packet += ticketLen;
     if (authLen > sizeof(auth)) {
 	err_packet (ksoc, pkt, KERB_ERR_TEXT_LENGTH, "authenticator too long");
 	return;
     }
-    bcopy (packet, auth, authLen);
+    memcpy(auth, packet, authLen);
     pkt->rest = packet + authLen;
     code = UDP_GetTicket (ksoc, pkt, kvno, realm, ticket, ticketLen, auth, authLen);
     if (code) {
@@ -826,7 +826,7 @@ afs_int32 init_krb_udp ()
     if (inited) return -1;
     inited = 1;
 
-    bzero (&taddr, sizeof(taddr));
+    memset(&taddr, 0, sizeof(taddr));
     krb4name = "kerberos4";
     sp = getservbyname(krb4name, "udp");
     taddr.sin_family = AF_INET;  /* added for NCR port */

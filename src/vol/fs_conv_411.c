@@ -930,14 +930,13 @@ char *vol_DevName(adev)
     return (char *) 0;	/* failed */
 }
   
-extern char *rindex();
 char *unrawname(name)
 	char *name;
 {
 	char *dp;
 	struct stat stb;
 
-	if ((dp = rindex(name, '/')) == 0)
+	if ((dp = strrchr(name, '/')) == 0)
 		return (name);
 	if (stat(name, &stb) < 0)
 		return (name);
@@ -956,7 +955,7 @@ rawname(name)
 	static char rawbuf[32];
 	char *dp;
 
-	if ((dp = rindex(name, '/')) == 0)
+	if ((dp = strrchr(name, '/')) == 0)
 		return (0);
 	*dp = 0;
 	(void)strcpy(rawbuf, name);

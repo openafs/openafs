@@ -98,7 +98,7 @@ main(argc, argv)
 	printf("usage: pxclient <serverHost>\n");
 	exit(1);
     }
-    bzero((char *)&host, sizeof(struct sockaddr_in));
+    memset((char *)&host, 0, sizeof(struct sockaddr_in));
     host.sin_family = AF_INET;
     host.sin_addr.s_addr = inet_addr(av[0]);
     if (host.sin_addr.s_addr != -1) {
@@ -108,7 +108,7 @@ main(argc, argv)
 	hp = gethostbyname(av[0]);
 	if (hp) {
 	    host.sin_family = hp->h_addrtype;
-	    bcopy(hp->h_addr, (caddr_t)&host.sin_addr, hp->h_length);
+	    memcpy((caddr_t)&host.sin_addr, hp->h_addr, hp->h_length);
 	    hostname = hp->h_name;
 	} else {
 	    printf("unknown server host %s\n", av[0]);
@@ -272,7 +272,7 @@ FetchData(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -332,7 +332,7 @@ FetchStatus(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -357,7 +357,7 @@ FetchACL(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -384,7 +384,7 @@ StoreData(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -394,7 +394,7 @@ StoreData(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &filelength);
     ++argp;    
-    bzero(&InStatus, sizeof(struct afsStoreStatus));
+    memset(&InStatus, 0, sizeof(struct afsStoreStatus));
     sscanf(&(*argp)[0], "%d", &mode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &owner);
@@ -462,11 +462,11 @@ StoreStatus(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
-    bzero(&InStatus, sizeof(struct afsStoreStatus));
+    memset(&InStatus, 0, sizeof(struct afsStoreStatus));
     sscanf(&(*argp)[0], "%d", &mode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &owner);
@@ -507,7 +507,7 @@ StoreACL(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -536,13 +536,13 @@ RemoveFile(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
     name = &argp[0][0];
     ++argp;    
-    bzero(&nameFid, sizeof(struct afsFidName));
+    memset(&nameFid, 0, sizeof(struct afsFidName));
     strcpy(nameFid.name, name);
     code = ubik_Call(AFS_RemoveFile, cstruct, 0, &fid, &nameFid, &hyp0, 0,
 		     &OutDirStatus, &OutFidStatus, &outFid, &tsync);
@@ -566,13 +566,13 @@ CreateFile(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
     name = &argp[0][0];
     ++argp;    
-    bzero(&InStatus, sizeof(struct afsStoreStatus));
+    memset(&InStatus, 0, sizeof(struct afsStoreStatus));
     sscanf(&(*argp)[0], "%d", &mode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &owner);
@@ -613,25 +613,25 @@ Rename(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &ounique);
     ++argp;    
-    bzero(&OldDirFid, sizeof(struct afsFid));
+    memset(&OldDirFid, 0, sizeof(struct afsFid));
     OldDirFid.Volume.low = 10;	/* XXX */
     OldDirFid.Vnode = ovnode;
     OldDirFid.Unique = ounique;
     oname = &argp[0][0];
     ++argp;    
-    bzero(&OldName, sizeof(struct afsFidName));
+    memset(&OldName, 0, sizeof(struct afsFidName));
     strcpy(OldName.name, oname);
     sscanf(&(*argp)[0], "%d", &nvnode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &nunique);
     ++argp;    
-    bzero(&NewDirFid, sizeof(struct afsFid));
+    memset(&NewDirFid, 0, sizeof(struct afsFid));
     NewDirFid.Volume.low = 10;	/* XXX */
     NewDirFid.Vnode = nvnode;
     NewDirFid.Unique = nunique;
     nname = &argp[0][0];
     ++argp;    
-    bzero(&NewName, sizeof(struct afsFidName));
+    memset(&NewName, 0, sizeof(struct afsFidName));
     strcpy(NewName.name, nname);
     code = ubik_Call(AFS_Rename, cstruct, 0, &OldDirFid, &OldName, &NewDirFid, &NewName, &hyp0, 0,
 		     &OutOldDirStatus, &OutNewDirStatus,
@@ -657,7 +657,7 @@ Symlink(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -665,7 +665,7 @@ Symlink(argp)
     ++argp;    
     linkcontents = &argp[0][0];
     ++argp;    
-    bzero(&InStatus, sizeof(struct afsStoreStatus));
+    memset(&InStatus, 0, sizeof(struct afsStoreStatus));
     sscanf(&(*argp)[0], "%d", &mode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &owner);
@@ -704,7 +704,7 @@ HardLink(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -714,7 +714,7 @@ HardLink(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&existingFid, sizeof(struct afsFid));
+    memset(&existingFid, 0, sizeof(struct afsFid));
     existingFid.Volume.low = 10;	/* XXX */
     existingFid.Vnode = vnode;
     existingFid.Unique = unique;
@@ -740,13 +740,13 @@ MakeDir(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
     name = &argp[0][0];
     ++argp;    
-    bzero(&InStatus, sizeof(struct afsStoreStatus));
+    memset(&InStatus, 0, sizeof(struct afsStoreStatus));
     sscanf(&(*argp)[0], "%d", &mode);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &owner);
@@ -786,13 +786,13 @@ RemoveDir(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
     name = &argp[0][0];
     ++argp;    
-    bzero(&nameFid, sizeof(struct afsFidName));
+    memset(&nameFid, 0, sizeof(struct afsFidName));
     strcpy(nameFid.name, name);
     code = ubik_Call(AFS_RemoveDir, cstruct, 0, &fid, &nameFid, &hyp0, 0,
 		     &OutDirStatus, &outFid, &tsync);
@@ -820,7 +820,7 @@ Readdir(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &length);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -882,7 +882,7 @@ Lookup(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
@@ -908,13 +908,13 @@ GetToken(argp)
     ++argp;    
     sscanf(&(*argp)[0], "%d", &unique);
     ++argp;    
-    bzero(&fid, sizeof(struct afsFid));
+    memset(&fid, 0, sizeof(struct afsFid));
     fid.Volume.low = 10;	/* XXX */
     fid.Vnode = vnode;
     fid.Unique = unique;
     sscanf(&(*argp)[0], "%d", &tokenId);
     ++argp;    
-    bzero(&MinToken, sizeof(struct afsToken));
+    memset(&MinToken, 0, sizeof(struct afsToken));
     MinToken.tokenID.low = tokenId;	/* XXX */
     code = ubik_Call(AFS_GetToken, cstruct, 0, &fid, &MinToken, &hyp0, 0,
 		     &RealToken, &OutStatus, &tsync);
@@ -945,7 +945,7 @@ KeepAlive(argp)
     struct afsFidExp fx;
     int code;
 
-    bzero(&fx, sizeof(struct afsFidExp));
+    memset(&fx, 0, sizeof(struct afsFidExp));
     sscanf(&(*argp)[0], "%d", &fx.fid.Volume.low);
     ++argp;    
     sscanf(&(*argp)[0], "%d", &fx.fid.Vnode);
@@ -955,7 +955,7 @@ KeepAlive(argp)
     sscanf(&(*argp)[0], "%d", &numExec);
     ++argp;
     sscanf(&(*argp)[0], "%d", &fx.keepAliveTime);
-    bzero(&fex, sizeof(struct afsBulkFEX));
+    memset(&fex, 0, sizeof(struct afsBulkFEX));
     fex.afsBulkFEX_val = &fx;
     fex.afsBulkFEX_len = 1;
     code = ubik_Call(AFS_BulkKeepAlive, cstruct, 0, &fex, numExec, 0, 0, 0, &spare4);

@@ -23,7 +23,7 @@ kern_return_t afs_modload(struct kmod_info *ki, void *data)
       printf("AFS_SYSCALL in use. aborting\n");
       return KERN_FAILURE;
    }
-   bzero(&afs_vfsconf, sizeof(struct vfsconf));
+   memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
    strcpy(afs_vfsconf.vfc_name, "afs");
    afs_vfsconf.vfc_vfsops=&afs_vfsops;
    afs_vfsconf.vfc_typenum=VT_AFS;

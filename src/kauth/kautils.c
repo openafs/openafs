@@ -142,11 +142,11 @@ afs_int32 ka_KeyCheckSum (
     afs_int32 code;
 
     *cksumP = 0;
-    bzero (block, 8);
+    memset(block, 0, 8);
     code = des_key_sched (key, s);
     if (code) return KABADKEY;
     des_ecb_encrypt (block, block, s, ENCRYPT);
-    bcopy (block, &cksum, sizeof(afs_int32));
+    memcpy(&cksum, block, sizeof(afs_int32));
     *cksumP = ntohl(cksum);
     return 0;
 }

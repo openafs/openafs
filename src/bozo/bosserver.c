@@ -866,7 +866,7 @@ char **envp;
 	    bozo_Log("try the 'hostname' command\n");
 	    exit(1);
 	}
-	bzero(tcell.hostAddr, sizeof(tcell.hostAddr));	/* not computed */
+	memset(tcell.hostAddr, 0, sizeof(tcell.hostAddr));	/* not computed */
 	code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
 	if (code) {
 	    bozo_Log("could not create cell database in '%s' (code %d), quitting\n", AFSDIR_SERVER_ETC_DIRPATH, code);

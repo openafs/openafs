@@ -77,7 +77,7 @@ register char *ahost; {
 	/* decimal address, return fake hostent with only hostaddr field good */
 	tval = 0;
 	dots = 0;
-	bzero(addr, sizeof(addr));
+	memset(addr, 0, sizeof(addr));
 	while ((tc = *ahost++)) {
 	    if (tc == '.') {
 		if (dots >= 3) return (struct hostent *) 0; /* too many dots */

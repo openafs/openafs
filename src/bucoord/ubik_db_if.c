@@ -234,7 +234,7 @@ bcdb_FindDumpByID(dumpID, deptr)
 	goto error;
     }
 
-    bcopy(dl.budb_dumpList_val, deptr, sizeof(*deptr));
+    memcpy(deptr, dl.budb_dumpList_val, sizeof(*deptr));
 
 exit:
     if ( dl.budb_dumpList_val )
@@ -245,7 +245,7 @@ exit:
     return(code);
 
 error:
-    bzero(deptr, sizeof(*deptr));
+    memset(deptr, 0, sizeof(*deptr));
     goto exit;
 }
 
@@ -327,7 +327,7 @@ bcdb_FindTape(dumpid, tapeName, teptr)
     afs_int32 dbTime;
     afs_int32 code = 0;
 
-    bzero(teptr, sizeof(*teptr));
+    memset(teptr, 0, sizeof(*teptr));
     tl.budb_tapeList_len = 0;
     tl.budb_tapeList_val = 0;
 
@@ -341,7 +341,7 @@ bcdb_FindTape(dumpid, tapeName, teptr)
     if (tl.budb_tapeList_len != 1)
 	ERROR(BC_NOTUNIQUE);	/* expecting a single descriptor */
 
-    bcopy(tl.budb_tapeList_val, teptr, sizeof(*teptr));
+    memcpy(teptr, tl.budb_tapeList_val, sizeof(*teptr));
 
 error_exit:		     
     if ( tl.budb_tapeList_val )
@@ -359,7 +359,7 @@ bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
     afs_int32 dbTime;
     afs_int32 code = 0;
 
-    bzero(teptr, sizeof(*teptr));
+    memset(teptr, 0, sizeof(*teptr));
     tl.budb_tapeList_len = 0;
     tl.budb_tapeList_val = 0;
 
@@ -372,7 +372,7 @@ bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
     if (tl.budb_tapeList_len != 1)
 	ERROR(BC_NOTUNIQUE);	/* expecting a single descriptor */
 
-    bcopy(tl.budb_tapeList_val, teptr, sizeof(*teptr));
+    memcpy(teptr, tl.budb_tapeList_val, sizeof(*teptr));
 
 error_exit:		     
     if ( tl.budb_tapeList_val )
@@ -1191,14 +1191,14 @@ ubik_Call_SingleServer(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p
 	    if ( code )
 	    {
 		/* error. Clean up single server state */
-		bzero(&uServer, sizeof(uServer));
+		memset(&uServer, 0, sizeof(uServer));
 	    }
 	    return(code);
 	}
 	else
 	if ( (aflags & UF_END_SINGLESERVER) != 0 )
 	{
-	    bzero(&uServer, sizeof(uServer));
+	    memset(&uServer, 0, sizeof(uServer));
 	    return(0);
 	}
     }

@@ -36,7 +36,7 @@ RCSID("$Header$");
 
 extern	errno;
 struct	passwd *getpwnam();
-char	*crypt(), *rindex(), *strncat();
+char	*crypt(), *strncat();
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SUN5_ENV)
 char *sprintf();
 #endif
@@ -326,7 +326,7 @@ doit(f, fromp)
 		addenvvar("PASSWORD_EXPIRES", pwd_expires_str);
 	} 
 #endif
-	cp = rindex(pwd->pw_shell, '/');
+	cp = strrchr(pwd->pw_shell, '/');
 	if (cp)
 		cp++;
 	else

@@ -275,7 +275,7 @@ afs_int32 flags;
 		else /* valid, but no match */ ;
 	    } else found = i;		/* remember this empty slot */
 	if (found == -1) return KTC_NOENT;
-	bcopy (atoken, &local_tokens[found].token, sizeof(struct ktc_token));
+	memcpy(&local_tokens[found].token, atoken, sizeof(struct ktc_token));
 	local_tokens[found].server = *aserver;
 	local_tokens[found].client = *aclient;
 	local_tokens[found].valid = 1;
@@ -284,13 +284,13 @@ afs_int32 flags;
     tp = tbuffer;   /* start copying here */
     if ((atoken->ticketLen < MINKTCTICKETLEN) ||
 	(atoken->ticketLen > MAXKTCTICKETLEN)) return KTC_TOOBIG;
-    bcopy(&atoken->ticketLen, tp, sizeof(afs_int32));    /* copy in ticket length */
+    memcpy(tp, &atoken->ticketLen, sizeof(afs_int32));    /* copy in ticket length */
     tp += sizeof(afs_int32);
-    bcopy(atoken->ticket, tp, atoken->ticketLen);   /* copy in ticket */
+    memcpy(tp, atoken->ticket, atoken->ticketLen);   /* copy in ticket */
     tp += atoken->ticketLen;
     /* next, copy in the "clear token", describing who we are */
     ct.AuthHandle = atoken->kvno;	/* hide auth handle here */
-    bcopy(&atoken->sessionKey, ct.HandShakeKey, 8);
+    memcpy(ct.HandShakeKey, &atoken->sessionKey, 8);
 
     ct.BeginTimestamp = atoken->startTime;
     ct.EndTimestamp = atoken->endTime;
@@ -326,9 +326,9 @@ not_vice_id:
 #endif
 
     temp = sizeof(struct ClearToken);
-    bcopy(&temp, tp, sizeof(afs_int32));
+    memcpy(tp, &temp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
-    bcopy(&ct, tp, sizeof(struct ClearToken));
+    memcpy(tp, &ct, sizeof(struct ClearToken));
     tp += sizeof(struct ClearToken);
 
     /* next copy in primary flag */
@@ -344,7 +344,7 @@ not_vice_id:
     if (flags & AFS_SETTOK_SETPAG)	
 	temp |= 0x8000;
 
-    bcopy(&temp, tp, sizeof(afs_int32));
+    memcpy(tp, &temp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
 
     /* finally copy in the cell name */
@@ -478,7 +478,7 @@ struct ktc_token *atoken; {
 		(strcmp (local_tokens[i].server.name, aserver->name) == 0) &&
 		(strcmp (local_tokens[i].server.instance, aserver->instance) == 0) &&
 		(strcmp (local_tokens[i].server.cell, aserver->cell) == 0)) {
-		bcopy (&local_tokens[i].token, atoken, min (atokenLen, sizeof(struct ktc_token)));
+		memcpy (atoken, &local_tokens[i].token, min (atokenLen, sizeof(struct ktc_token)));
 		if (aclient)
 		    *aclient = local_tokens[i].client;
 		UNLOCK_GLOBAL_MUTEX
@@ -508,7 +508,7 @@ struct ktc_token *atoken; {
  
 		    if (aclient)
 			strcpy(aclient->cell, lcell);
- 		    bcopy(&ctoken, atoken,
+ 		    memcpy(atoken, &ctoken, 
  			  min (atokenLen, sizeof(struct ktc_token)));
  		    
  		    afs_tf_close();
@@ -762,10 +762,10 @@ struct ktc_principal *aserver; {
     /* next iterator determined by earlier loop */
     *aindex = index+1;
 
-    bcopy(tp, &temp, sizeof(afs_int32)); /* get size of secret token */
+    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of secret token */
     tp += sizeof(afs_int32);
     tp += temp;	/* skip ticket for now */
-    bcopy(tp, &temp, sizeof(afs_int32)); /* get size of clear token */
+    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of clear token */
     if (temp != sizeof(struct ClearToken)) {
 	UNLOCK_GLOBAL_MUTEX
 	return KTC_ERROR;
@@ -1164,7 +1164,7 @@ afs_tf_close()
 	(void) close(fd);
 	fd = -1;		/* see declaration of fd above */
     }
-    bzero(tfbfr, sizeof(tfbfr));
+    memset(tfbfr, 0, sizeof(tfbfr));
 }
 
 /*
@@ -1446,7 +1446,7 @@ afs_tf_create(pname,pinst)
 	if ((fd = open(file, O_RDWR, 0)) < 0)
 	    goto out; /* can't zero it, but we can still try truncating it */
 
-	bzero(zerobuf, sizeof(zerobuf));
+	memset(zerobuf, 0, sizeof(zerobuf));
 
 	for (i = 0; i < sbuf.st_size; i += sizeof(zerobuf))
 	    if (write(fd, zerobuf, sizeof(zerobuf)) != sizeof(zerobuf)) {
@@ -1517,7 +1517,7 @@ afs_tf_dest_tkt()
     if ((fd = open(file, O_RDWR, 0)) < 0)
 	goto out;
 
-    bzero(buf, BUFSIZ);
+    memset(buf, 0, BUFSIZ);
 
     for (i = 0; i < statb.st_size; i += BUFSIZ)
 	if (write(fd, buf, BUFSIZ) != BUFSIZ) {

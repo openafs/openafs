@@ -1087,7 +1087,7 @@ static PGetFID(avc, afun, areq, ain, aout, ainSize, aoutSize)
     
     AFS_STATCNT(PGetFID);
     if (!avc) return EINVAL;
-    bcopy((char *)&avc->fid, aout, sizeof(struct VenusFid));
+    memcpy(aout, (char *)&avc->fid, sizeof(struct VenusFid));
     *aoutSize = sizeof(struct VenusFid);
     return 0;
   }
@@ -1387,23 +1387,23 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     if (!afs_resourceinit_flag) {
       return EIO;
     }
-    bcopy(ain, (char *)&i, sizeof(afs_int32));
+    memcpy((char *)&i, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     stp	= ain;	/* remember where the ticket is */
     if (i < 0 || i > 2000) return EINVAL;	/* malloc may fail */
     stLen = i;
     ain	+= i;	/* skip over ticket */
-    bcopy(ain, (char *)&i, sizeof(afs_int32));
+    memcpy((char *)&i, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (i != sizeof(struct ClearToken)) {
       return EINVAL;
     }
-    bcopy(ain, (char *)&clear, sizeof(struct ClearToken));
+    memcpy((char *)&clear, ain, sizeof(struct ClearToken));
     if (clear.AuthHandle == -1)	clear.AuthHandle = 999;	/* more rxvab compat stuff */
     ain += sizeof(struct ClearToken);
     if (ainSize != 2*sizeof(afs_int32) + stLen + sizeof(struct ClearToken)) {
       /* still stuff left?  we've got primary flag and cell name.  Set these */
-      bcopy(ain, (char *)&flag, sizeof(afs_int32));		/* primary id flag */
+      memcpy((char *)&flag, ain, sizeof(afs_int32));		/* primary id flag */
       ain += sizeof(afs_int32);			/* skip id field */
       /* rest is cell name, look it up */
       if (flag & 0x8000) {			/* XXX Use Constant XXX */
@@ -1452,7 +1452,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
     tu->stp = (char *) afs_osi_Alloc(stLen);
     tu->stLen = stLen;
-    bcopy(stp, tu->stp, stLen);
+    memcpy(tu->stp, stp, stLen);
     tu->ct = clear;
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
@@ -1523,7 +1523,7 @@ static PGetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (code) return code;
     /* Copy all this junk into msg->im_data, keeping track of the lengths. */
     cp = aout;
-    bcopy((char *)&volstat, cp, sizeof(VolumeStatus));
+    memcpy(cp, (char *)&volstat, sizeof(VolumeStatus));
     cp += sizeof(VolumeStatus);
     strcpy(cp, volName);
     cp += strlen(volName)+1;
@@ -1567,7 +1567,7 @@ static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	return ENODEV;
     /* Copy the junk out, using cp as a roving pointer. */
     cp = ain;
-    bcopy(cp, (char *)&volstat, sizeof(AFSFetchVolumeStatus));
+    memcpy((char *)&volstat, cp, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
     if (strlen(cp) >= sizeof(volName))
 	return E2BIG;
@@ -1613,7 +1613,7 @@ static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     /* we are sending parms back to make compat. with prev system.  should
       change interface later to not ask for current status, just set new status */
     cp = aout;
-    bcopy((char *)&volstat, cp, sizeof(VolumeStatus));
+    memcpy(cp, (char *)&volstat, sizeof(VolumeStatus));
     cp += sizeof(VolumeStatus);
     strcpy(cp, volName);
     cp += strlen(volName)+1;
@@ -1760,7 +1760,7 @@ static PGetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	at the end, in that order.
     */
     if (newStyle = (ainSize > 0)) {
-	bcopy(ain, (char *)&iterator, sizeof(afs_int32));
+	memcpy((char *)&iterator, ain, sizeof(afs_int32));
     }
     i = UHash(areq->uid);
     ObtainReadLock(&afs_xuser);
@@ -1794,19 +1794,19 @@ static PGetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize)
     cp = aout;
     iterator = tu->stLen;	/* for compat, we try to return 56 byte tix if they fit */
     if (iterator < 56) iterator	= 56;	/* # of bytes we're returning */
-    bcopy((char *)&iterator, cp, sizeof(afs_int32));
+    memcpy(cp, (char *)&iterator, sizeof(afs_int32));
     cp += sizeof(afs_int32);
-    bcopy(tu->stp, cp, tu->stLen);	/* copy out st */
+    memcpy(cp, tu->stp, tu->stLen);	/* copy out st */
     cp += iterator;
     iterator = sizeof(struct ClearToken);
-    bcopy((char *)&iterator, cp, sizeof(afs_int32));
+    memcpy(cp, (char *)&iterator, sizeof(afs_int32));
     cp += sizeof(afs_int32);
-    bcopy((char *)&tu->ct, cp, sizeof(struct ClearToken));
+    memcpy(cp, (char *)&tu->ct, sizeof(struct ClearToken));
     cp += sizeof(struct ClearToken);
     if (newStyle) {
 	/* put out primary id and cell name, too */
 	iterator = (tu->states & UPrimary ? 1 : 0);
-	bcopy((char *)&iterator, cp, sizeof(afs_int32));
+	memcpy(cp, (char *)&iterator, sizeof(afs_int32));
 	cp += sizeof(afs_int32);
 	tcell = afs_GetCell(tu->cell, READ_LOCK);
 	if (tcell) {
@@ -1842,7 +1842,7 @@ static PUnlog(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    /* security is not having to say you're sorry */
-	    bzero((char *)&tu->ct, sizeof(struct ClearToken));
+	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 	    /* We have to drop the lock over the call to afs_ResetUserConns, since
@@ -1881,11 +1881,11 @@ static PMariner(avc, afun, areq, ain, aout, ainSize, aoutSize)
     
     AFS_STATCNT(PMariner);
     if (afs_mariner)
-	bcopy((char *)&afs_marinerHost, (char *)&oldHostAddr, sizeof(afs_int32));
+	memcpy((char *)&oldHostAddr, (char *)&afs_marinerHost, sizeof(afs_int32));
     else
 	oldHostAddr = 0xffffffff;   /* disabled */
     
-    bcopy(ain, (char *)&newHostAddr, sizeof(afs_int32));
+    memcpy((char *)&newHostAddr, ain, sizeof(afs_int32));
     if (newHostAddr == 0xffffffff) {
 	/* disable mariner operations */
 	afs_mariner = 0;
@@ -1894,7 +1894,7 @@ static PMariner(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	afs_mariner = 1;
 	afs_marinerHost = newHostAddr;
     }
-    bcopy((char *)&oldHostAddr, aout, sizeof(afs_int32));
+    memcpy(aout, (char *)&oldHostAddr, sizeof(afs_int32));
     *aoutSize = sizeof(afs_int32);
     return 0;
 }
@@ -1924,7 +1924,7 @@ static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	pcheck=(struct chservinfo *)ain;
 	if (pcheck->tinterval >= 0) {
 	    cp = aout;	    
-	    bcopy((char *)&PROBE_INTERVAL, cp, sizeof(afs_int32));
+	    memcpy(cp, (char *)&PROBE_INTERVAL, sizeof(afs_int32));
 	    *aoutSize = sizeof(afs_int32);
 	    if (pcheck->tinterval > 0) {
 		if (!afs_osi_suser(acred))
@@ -1938,7 +1938,7 @@ static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	temp=pcheck->tflags;
 	cp = pcheck->tbuffer;
     } else {	/* For pre afs3.3 versions */
-	bcopy(ain, (char *)&temp, sizeof(afs_int32));
+	memcpy((char *)&temp, ain, sizeof(afs_int32));
 	cp = ain+sizeof(afs_int32);
 	if (ainSize > sizeof(afs_int32)) 
 	    havecell = 1;
@@ -1969,7 +1969,7 @@ static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	for(ts = afs_servers[i]; ts; ts=ts->next) {
 	    if (cellp && ts->cell != cellp) continue;	/* cell spec'd and wrong */
 	    if ((ts->flags & SRVR_ISDOWN) && ts->addr->sa_portal != ts->cell->vlport) {
-		bcopy((char *)&ts->addr->sa_ip, cp, sizeof(afs_int32));
+		memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
 		cp += sizeof(afs_int32);
 	    }
 	}
@@ -2040,7 +2040,7 @@ static PCheckAuth(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	ReleaseReadLock(&afs_xconn);
 	afs_PutUser(tu, READ_LOCK);
     }
-    bcopy((char *)&retValue, aout, sizeof(afs_int32));
+    memcpy(aout, (char *)&retValue, sizeof(afs_int32));
     *aoutSize = sizeof(afs_int32);
     return 0;
 }
@@ -2095,13 +2095,13 @@ static PFindVolume(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	for(i=0;i<MAXHOSTS;i++) {
 	    ts = tvp->serverHost[i];
 	    if (!ts) break;
-	    bcopy((char *)&ts->addr->sa_ip, cp, sizeof(afs_int32));
+	    memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
 	if (i<MAXHOSTS) {
 	    /* still room for terminating NULL, add it on */
 	    ainSize = 0;	/* reuse vbl */
-	    bcopy((char *)&ainSize, cp, sizeof(afs_int32));
+	    memcpy(cp, (char *)&ainSize, sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
 	*aoutSize = cp - aout;
@@ -2125,7 +2125,7 @@ static PViceAccess(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (!avc) return EINVAL;
     code = afs_VerifyVCache(avc, areq);
     if (code) return code;
-    bcopy(ain, (char *)&temp, sizeof(afs_int32));
+    memcpy((char *)&temp, ain, sizeof(afs_int32));
     code = afs_AccessOK(avc,temp, areq, CHECK_MODE_BITS);
     if (code) return 0;
     else return EACCES;
@@ -2148,7 +2148,7 @@ static PSetCacheSize(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	return EACCES;
     /* too many things are setup initially in mem cache version */
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM) return EROFS;
-    bcopy(ain, (char *)&newValue, sizeof(afs_int32));
+    memcpy((char *)&newValue, ain, sizeof(afs_int32));
     if (newValue == 0) afs_cacheBlocks = afs_stats_cmperf.cacheBlocksOrig;
     else {
 	extern u_int afs_min_cache;
@@ -2178,10 +2178,10 @@ afs_int32 *aoutSize;	/* set this */ {
     afs_int32 results[MAXGCSTATS];
 
     AFS_STATCNT(PGetCacheSize);
-    bzero((char *)results, sizeof(results));
+    memset((char *)results, 0, sizeof(results));
     results[0] = afs_cacheBlocks;
     results[1] = afs_blocksUsed;
-    bcopy((char *)results, aout, sizeof(results));
+    memcpy(aout, (char *)results, sizeof(results));
     *aoutSize = sizeof(results);
     return 0;
 }
@@ -2265,7 +2265,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     if (!afs_osi_suser(acred))
 	return EACCES;
 
-    bcopy(tp, (char *)&magic, sizeof(afs_int32));
+    memcpy((char *)&magic, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
     if (magic != 0x12345678)
         return EINVAL;
@@ -2279,7 +2279,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     scount = ((newcell[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
 
     /* MAXCELLHOSTS (=8) is less than MAXHOSTS (=13) */
-    bcopy(tp, (char *)cellHosts, MAXCELLHOSTS * sizeof(afs_int32));
+    memcpy((char *)cellHosts, tp, MAXCELLHOSTS * sizeof(afs_int32));
     tp += (scount * sizeof(afs_int32));
 
     lp = (afs_int32 *)tp;
@@ -2316,7 +2316,7 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
-    bcopy(tp, (char *)&whichCell, sizeof(afs_int32));
+    memcpy((char *)&whichCell, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
     ObtainReadLock(&afs_xcell);
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
@@ -2327,10 +2327,10 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     }
     if (tcell) {
 	cp = aout;
-	bzero(cp, MAXCELLHOSTS * sizeof(afs_int32));
+	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
 	for(i=0;i<MAXCELLHOSTS;i++) {
 	    if (tcell->cellHosts[i] == 0) break;
-	    bcopy((char *)&tcell->cellHosts[i]->addr->sa_ip, cp, sizeof(afs_int32));
+	    memcpy(cp, (char *)&tcell->cellHosts[i]->addr->sa_ip, sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
 	cp = aout + MAXCELLHOSTS * sizeof(afs_int32);
@@ -2495,7 +2495,7 @@ static PGetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (!tcell) return ENOENT;
     temp = tcell->states;
     afs_PutCell(tcell, READ_LOCK);
-    bcopy((char *)&temp, aout, sizeof(afs_int32));
+    memcpy(aout, (char *)&temp, sizeof(afs_int32));
     *aoutSize = sizeof(afs_int32);
     return 0;
 }
@@ -2518,7 +2518,7 @@ static PSetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 
     tcell = afs_GetCellByName(ain+2*sizeof(afs_int32), WRITE_LOCK);
     if (!tcell) return ENOENT;
-    bcopy(ain, (char *)&temp, sizeof(afs_int32));
+    memcpy((char *)&temp, ain, sizeof(afs_int32));
     if (temp & CNoSUID)
 	tcell->states |= CNoSUID;
     else
@@ -2681,7 +2681,7 @@ static PGetVnodeXStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     stat.flockCount = avc->flockCount;
     stat.mvstat = avc->mvstat;
     stat.states = avc->states;
-    bcopy((char *)&stat, aout, sizeof(struct vcxstat));
+    memcpy(aout, (char *)&stat, sizeof(struct vcxstat));
     *aoutSize = sizeof(struct vcxstat);
     return 0;
 }
@@ -2721,8 +2721,8 @@ register struct AFS_UCRED *acred;
 	return (setuerror(EINVAL), EINVAL);
 #endif
     }
-    bzero(inname, MAXSYSNAME);
-    bcopy(ain, (char *)&setsysname, sizeof(afs_int32));
+    memset(inname, 0, MAXSYSNAME);
+    memcpy((char *)&setsysname, ain, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (setsysname) {
 
@@ -2743,7 +2743,7 @@ register struct AFS_UCRED *acred;
 
       /* inname gets first entry in case we're being a translater */
       t = strlen(ain);
-      bcopy(ain, inname, t+1);  /* include terminating null */
+      memcpy(inname, ain, t+1);  /* include terminating null */
       ain += t + 1;
     }
     if (acred->cr_gid == RMTUSER_REQ) { /* Handles all exporters */
@@ -2789,7 +2789,7 @@ register struct AFS_UCRED *acred;
 		if (!afs_sysnamelist[count])
 		  osi_Panic("PSetSysName: no afs_sysnamelist entry to write\n");
 		t = strlen(cp);
-		bcopy(cp, afs_sysnamelist[count], t+1); /* include null */
+		memcpy(afs_sysnamelist[count], cp, t+1); /* include null */
 		cp += t+1;
 	      }
 	    }
@@ -2798,7 +2798,7 @@ register struct AFS_UCRED *acred;
     }
     if (!setsysname) {
 	cp = aout;  /* not changing so report back the count and ... */
-	bcopy((char *)&foundname, cp, sizeof(afs_int32));
+	memcpy(cp, (char *)&foundname, sizeof(afs_int32));
 	cp += sizeof(afs_int32);
 	if (foundname) {
 	    strcpy(cp, outname);		/* ... the entry, ... */
@@ -3094,7 +3094,7 @@ struct AFS_UCRED *acred;
     register struct afs_exporter *exporter;
 
     AFS_STATCNT(PExportAfs);
-    bcopy(ain, (char *)&handleValue, sizeof(afs_int32));
+    memcpy((char *)&handleValue, ain, sizeof(afs_int32));
     type = handleValue >> 24;
     if (type == 0x71) {
 	newint = 1;
@@ -3120,7 +3120,7 @@ struct AFS_UCRED *acred;
     }
     if (!changestate) {
 	handleValue = exporter->exp_states;
-	bcopy((char *)&handleValue, aout, sizeof(afs_int32));
+	memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
 	*aoutSize = sizeof(afs_int32);
     } else {
 	if (!afs_osi_suser(acred))
@@ -3154,7 +3154,7 @@ struct AFS_UCRED *acred;
 		}
 	    }
 	    handleValue = exporter->exp_states;
-	    bcopy((char *)&handleValue, aout, sizeof(afs_int32));
+	    memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
 	    *aoutSize = sizeof(afs_int32);
 	} else {
 	    if (export)
@@ -3258,7 +3258,7 @@ static int PGetInitParams(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (sizeof(struct cm_initparams) > PIGGYSIZE)
 	return E2BIG;
 
-    bcopy((char*)&cm_initParams, aout, sizeof(struct cm_initparams));
+    memcpy(aout, (char*)&cm_initParams, sizeof(struct cm_initparams));
     *aoutSize = sizeof(struct cm_initparams);
     return 0;
 }
@@ -3269,7 +3269,7 @@ static cred_t *crget(void)
 {
     cred_t *cr;
     cr = crdup(get_current_cred());
-    bzero((char*)cr, sizeof(cred_t));
+    memset((char*)cr, 0, sizeof(cred_t));
 #if CELL || CELL_PREPARE
     cr->cr_id = -1;
 #endif
@@ -3287,7 +3287,7 @@ afs_int32 ainSize;
 afs_int32 *aoutSize;
 struct AFS_UCRED *acred;
 {
-    bcopy((char *)&cryptall, aout, sizeof(afs_int32));
+    memcpy(aout, (char *)&cryptall, sizeof(afs_int32));
     *aoutSize=sizeof(afs_int32);
     return 0;
 }
@@ -3308,7 +3308,7 @@ struct AFS_UCRED *acred;
       return EPERM;
     if (ainSize != sizeof(afs_int32) || ain == NULL)
       return EINVAL;
-    bcopy(ain, (char *)&tmpval, sizeof(afs_int32));
+    memcpy((char *)&tmpval, ain, sizeof(afs_int32));
     /* if new mappings added later this will need to be changed */
     if (tmpval != 0 && tmpval != 1)
       return EINVAL;
@@ -3642,7 +3642,7 @@ static PRxStatProc(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	code = EINVAL;
 	goto out;
     }
-    bcopy(ain, (char *)&flags, sizeof(afs_int32));
+    memcpy((char *)&flags, ain, sizeof(afs_int32));
     if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
 	code = EINVAL;
 	goto out;
@@ -3682,7 +3682,7 @@ static PRxStatPeer(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	code = EINVAL;
 	goto out;
     }
-    bcopy(ain, (char *)&flags, sizeof(afs_int32));
+    memcpy((char *)&flags, ain, sizeof(afs_int32));
     if (!(flags & AFSCALL_RXSTATS_MASK) || (flags & ~AFSCALL_RXSTATS_MASK)) {
 	code = EINVAL;
 	goto out;

@@ -45,7 +45,7 @@ static u_long GetIpAddress(hostname)
 	printf("host address is disagreeable length (%d)", hostent->h_length);
 	exit(1);
     }
-    bcopy(hostent->h_addr, (char *)&host, sizeof(host));
+    memcpy((char *)&host, hostent->h_addr, sizeof(host));
     return host;
 }
 
@@ -116,7 +116,7 @@ async_BulkTest(host, conn, store, count, verbose, file)
     work->store = store;
     work->count = count;
     work->verbose = verbose;
-    name = (char *)rindex(file, '/');
+    name = strrchr(file, '/');
     if (!name) name = file; else name++;
 /*   sprintf(tempfile, "/usr/tmp/%s.%s", myHostName, name);*/
     sprintf(tempfile, "/usr/tmp/%s", name);

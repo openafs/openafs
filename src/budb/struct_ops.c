@@ -547,7 +547,7 @@ dumpToBudbDump(dumpPtr, budbDumpPtr)
     budbDumpPtr->created = dumpPtr->created;
     budbDumpPtr->nVolumes = dumpPtr->nVolumes;
 
-    bcopy(&dumpPtr->tapes, &budbDumpPtr->tapes, sizeof(struct budb_tapeSet));
+    memcpy(&budbDumpPtr->tapes, &dumpPtr->tapes, sizeof(struct budb_tapeSet));
     copy_ktcPrincipal_to_budbPrincipal(&dumpPtr->dumper, &budbDumpPtr->dumper);
     return(0);
 }
@@ -611,7 +611,7 @@ default_tapeset(tapesetPtr, dumpname)
      struct budb_tapeSet *tapesetPtr;
      char *dumpname;
 {
-    bzero(tapesetPtr, sizeof(*tapesetPtr));
+    memset(tapesetPtr, 0, sizeof(*tapesetPtr));
 
     strcpy(tapesetPtr->format, dumpname);
     strcat(tapesetPtr->format, ".%d");

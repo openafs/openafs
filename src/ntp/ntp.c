@@ -160,10 +160,10 @@ main(argc, argv)
 					argv[host]);
 				continue;
 			}
-			bcopy(hp->h_addr, (char *) &dst.sin_addr,hp->h_length);
+			memcpy((char *) &dst.sin_addr, hp->h_addr, hp->h_length);
 		}
 
-		bzero((char *)pkt, sizeof(ntp_data));
+		memset((char *)pkt, 0, sizeof(ntp_data));
 
 		pkt->status = NTPVERSION_1 | NO_WARNING | MODE_CLIENT;
 		pkt->stratum = UNSPECIFIED;

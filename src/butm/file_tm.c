@@ -808,7 +808,7 @@ WriteTapeBlock(info, buffer, length, blockType)
    {
        if (length == 0) ERROR_EXIT(0);
        bmark = (struct blockMark *)buffer;
-       bzero(bmark, sizeof(struct blockMark));
+       memset(bmark, 0, sizeof(struct blockMark));
        bmark->magic = htonl(BLOCK_MAGIC);
        bmark->count = htonl(length);
    }
@@ -899,7 +899,7 @@ ReadTapeBlock(info, buffer, blockType)
 
    p = (struct progress *)info->tmRock;
 
-   bzero(buffer, BUTM_BLOCKSIZE);
+   memset(buffer, 0, BUTM_BLOCKSIZE);
    label = (struct tapeLabel *)buffer;
    fmark = (struct fileMark  *)buffer;
    bmark = (struct blockMark *)buffer;
@@ -1209,12 +1209,12 @@ static afs_int32 file_WriteLabel (info, label, rewind)
 
     /* Copy the label into the tape block
      * ---------------------------------- */
-    bzero(tapeBlock, BUTM_BLOCKSIZE);
+    memset(tapeBlock, 0, BUTM_BLOCKSIZE);
 
     if (!label->creationTime) label->creationTime = time(0);
 
     tlabel = (struct tapeLabel *)tapeBlock;
-    bcopy(label, &tlabel->label, sizeof(struct butm_tapeLabel));
+    memcpy(&tlabel->label, label, sizeof(struct butm_tapeLabel));
     tlabel->label.structVersion  = htonl(CUR_TAPE_VERSION);
     tlabel->label.creationTime   = htonl(tlabel->label.creationTime);
     tlabel->label.expirationDate = htonl(tlabel->label.expirationDate);
@@ -1312,7 +1312,7 @@ file_ReadLabel (info, label, rewind)
     if (label) 
     {
         tlabel = (struct tapeLabel *) tapeBlock;
-	bcopy(&tlabel->label, label, sizeof(struct butm_tapeLabel));
+	memcpy(label, &tlabel->label, sizeof(struct butm_tapeLabel));
 	label->structVersion  = ntohl(label->structVersion);
 	label->creationTime   = ntohl(label->creationTime);
 	label->expirationDate = ntohl(label->expirationDate);
@@ -1413,7 +1413,7 @@ file_WriteFileData (info, data, blocks, len)
 
         if (len < BUTM_BLKSIZE)
 	{
-	    bzero(&dstart[len], BUTM_BLKSIZE - len);
+	    memset(&dstart[len], 0, BUTM_BLKSIZE - len);
 	    length = len;
 	}
 	else
@@ -1430,7 +1430,7 @@ file_WriteFileData (info, data, blocks, len)
 
 	if (b < (blocks-1)) b++;
 	else if (len) 
-	    bcopy(&dstart[BUTM_BLKSIZE], &dstart[0], len);
+	    memcpy(&dstart[0], &dstart[BUTM_BLKSIZE], len);
     }
 
 error_exit:
@@ -1745,7 +1745,7 @@ afs_int32 butm_file_Instantiate (info, file)
     if (!info)                                    ERROR_EXIT(BUTM_BADARGUMENT);
     if (info->structVersion != BUTM_MAJORVERSION) ERROR_EXIT(BUTM_OLDINTERFACE);
 
-    bzero (info, sizeof(struct butm_tapeInfo));
+    memset(info, 0, sizeof(struct butm_tapeInfo));
     info->structVersion      = BUTM_MAJORVERSION;
     info->ops.mount          = file_Mount;
     info->ops.dismount       = file_Dismount;

@@ -177,7 +177,7 @@ tailCompPtr(pathNamePtr)
      char *pathNamePtr;
 {
     char *ptr;
-    ptr = rindex(pathNamePtr, '/');
+    ptr = strrchr(pathNamePtr, '/');
     if ( ptr == 0 )
     {
     	/* this should never happen */

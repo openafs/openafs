@@ -82,7 +82,7 @@ afs_int32 es_Report(char *fmt, ...)
 
 static void initialize_dstats ()
 {
-    bzero (&dynamic_statistics, sizeof(dynamic_statistics));
+    memset(&dynamic_statistics, 0, sizeof(dynamic_statistics));
     dynamic_statistics.start_time = time(0);
     dynamic_statistics.host = myHost;
 }
@@ -102,7 +102,7 @@ static int convert_cell_to_ubik (cellinfo, myHost, serverList)
 	ViceLog(0, ("kaserver: couldn't get address of this host.\n"));
 	exit(1);
     }
-    bcopy(th->h_addr,myHost,sizeof(afs_int32));
+    memcpy(myHost, th->h_addr, sizeof(afs_int32));
 
     for (i=0; i<cellinfo->numServers; i++)
 	if (cellinfo->hostAddr[i].sin_addr.s_addr != *myHost) {

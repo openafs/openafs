@@ -102,7 +102,7 @@ struct restoreParams
 		magic == TC_VOLENDMAGIC ||				\
 		magic == TC_VOLCONTD )                 {		\
 									\
-		bcopy (&vhptr, header, sizeof(struct volumeHeader));	\
+		memcpy(header, &vhptr, sizeof(struct volumeHeader));	\
 		return (0);						\
 	    } /* magic */						\
 	} /* versionflags */				 		\
@@ -838,7 +838,7 @@ VolHeaderToHost(hostVolHeader, tapeVolHeader)
     {
         case TAPE_VERSION_0:
             /* sizes in bytes and fields in host order */
-            bcopy(hostVolHeader, tapeVolHeader, sizeof(struct volumeHeader));
+            memcpy(tapeVolHeader, hostVolHeader, sizeof(struct volumeHeader));
 	    break;
 
 	case TAPE_VERSION_1:
@@ -1110,7 +1110,7 @@ afs_int32 xbsaRestoreVolumeData(call, rparamsPtr)
 	     }
 	     /* fill tbuffer with end of buffer */
 	     bytesRead -= sizeof(tbuffer);
-	     bcopy(buffer+bytesRead, tbuffer, sizeof(tbuffer));
+	     memcpy(tbuffer, buffer+bytesRead, sizeof(tbuffer));
 	     tbuffersize = sizeof(tbuffer);
 	     /* Write out whatever is left over in buffer */
 	     if (bytesRead) {
@@ -1125,7 +1125,7 @@ afs_int32 xbsaRestoreVolumeData(call, rparamsPtr)
 	  }
 	  else if ((tbuffersize + bytesRead) <= sizeof(tbuffer)) {
 	     /* Copy all of buffer into tbuffer (it will fit) */
-	     bcopy(buffer, tbuffer+tbuffersize, bytesRead);
+	     memcpy(tbuffer+tbuffersize, buffer, bytesRead);
 	     tbuffersize += bytesRead;
 	     bytesRead = 0;
 	  }
@@ -1141,10 +1141,10 @@ afs_int32 xbsaRestoreVolumeData(call, rparamsPtr)
 	     tbuffersize  -= w;
 	    
 	     /* Move the data in tbuffer up */
-	     bcopy(tbuffer+towrite, tbuffer, tbuffersize);
+	     memcpy(tbuffer, tbuffer+towrite, tbuffersize);
 
 	     /* Now copy buffer in */
-	     bcopy(buffer, tbuffer+tbuffersize, bytesRead);
+	     memcpy(tbuffer+tbuffersize, buffer, bytesRead);
 	     tbuffersize += bytesRead;
 	     bytesRead = 0;
 	  }
@@ -1681,7 +1681,7 @@ Restorer (newNode)
     printf("\n\n");
     TLog (taskId, "Restore\n");
 
-    bzero(&tapeInfo, sizeof(tapeInfo));
+    memset(&tapeInfo, 0, sizeof(tapeInfo));
     if (!CONF_XBSA) {
        tapeInfo.structVersion = BUTM_MAJORVERSION;
        tcode = butm_file_Instantiate (&tapeInfo, &globalTapeConfig);
@@ -1694,7 +1694,7 @@ Restorer (newNode)
 
     if ( checkAbortByTaskId(taskId) ) ERROR_EXIT(TC_ABORTEDBYREQUEST);
 
-    bzero(&rparams, sizeof(rparams));
+    memset(&rparams, 0, sizeof(rparams));
     rparams.nodePtr     = newNode;
     rparams.tapeInfoPtr = &tapeInfo;
     Restore = newNode->restores;         /* Array of vol fragments to restore */
@@ -1711,7 +1711,7 @@ Restorer (newNode)
     bufferBlock = (struct TapeBlock *)0;
     bufferBlock = (struct TapeBlock *) malloc(allocbufferSize);
     if (!bufferBlock) ERROR_EXIT(TC_NOMEMORY);
-    bzero(bufferBlock, allocbufferSize);
+    memset(bufferBlock, 0, allocbufferSize);
 
     startTime = time(0);
     for (rparams.frag=0; (rparams.frag < newNode->arraySize); rparams.frag++) {
@@ -1846,7 +1846,7 @@ GetNewLabel(tapeInfoPtr, pName, AFSName, tapeLabel)
     struct timezone tzp;
     afs_uint32 size;
 
-    bzero(tapeLabel,sizeof(struct butm_tapeLabel));
+    memset(tapeLabel, 0, sizeof(struct butm_tapeLabel));
 
     if (!CONF_XBSA) {
        butm_GetSize(tapeInfoPtr, &size);
@@ -1955,9 +1955,9 @@ FindVolTrailer2(buffera, sizea, dataSizea, bufferb, sizeb, dataSizeb, volTrailer
 	    if (!s) return 0;
 	}
 	
-	bzero(tapeVolumeHT, sizeof(tapeVolumeHT));
-	if (headB) bcopy (buffera + sizea - headB, tapeVolumeHT        , headB);
-	if (tailB) bcopy (bufferb                , tapeVolumeHT + headB, tailB);
+	memset(tapeVolumeHT, 0, sizeof(tapeVolumeHT));
+	if (headB) memcpy(tapeVolumeHT        , buffera + sizea - headB, headB);
+	if (tailB) memcpy(tapeVolumeHT + headB, bufferb                , tailB);
 	if (ExtractTrailer (tapeVolumeHT, s, &offset, volTrailerPtr)) {
 	    found = 1;
 	    if (offset > headB) {
@@ -2152,7 +2152,7 @@ Labeller (labelIfPtr)
      printf("\n\n");
      TLog (taskId, "Labeltape\n");
      
-     bzero(&tapeInfo, sizeof(tapeInfo));
+     memset(&tapeInfo, 0, sizeof(tapeInfo));
      tapeInfo.structVersion = BUTM_MAJORVERSION;
      code = butm_file_Instantiate (&tapeInfo, &globalTapeConfig);
      if (code) 
@@ -2245,7 +2245,7 @@ struct tc_tapeLabel *label;
     printf("\n\n");
     TLog (taskId, "Readlabel\n");
 
-    bzero(&tapeInfo,sizeof(tapeInfo));
+    memset(&tapeInfo, 0, sizeof(tapeInfo));
     tapeInfo.structVersion = BUTM_MAJORVERSION;
     code = butm_file_Instantiate (&tapeInfo, &globalTapeConfig);
     if (code)
@@ -2253,7 +2253,7 @@ struct tc_tapeLabel *label;
 	ErrorLog(0, taskId, code, tapeInfo.error, "Can't initialize the tape module\n");
 	ERROR_EXIT(code);
     }
-    bzero(&newTapeLabel,sizeof(newTapeLabel));
+    memset(&newTapeLabel, 0, sizeof(newTapeLabel));
 
     interactiveFlag = autoQuery;
 
@@ -2354,20 +2354,20 @@ readVolumeHeader (buffer, bufloc, header)
 	 (strncmp(tempvhptr->postamble, "T--NAME#",8) == 0) )
     {
 	/* Handle Cases 2 & 3 */
-        bcopy (buffer+bufloc, &vhptr, sizeof(struct volumeHeader));
+        memcpy(&vhptr, buffer+bufloc, sizeof(struct volumeHeader));
 	HEADER_CHECKS(vhptr, header);
 	
 	/* Handle Case 4 */
-	bzero (&vhptr, sizeof(struct volumeHeader));
-	bcopy (buffer+bufloc, &vhptr, firstSplice);
-	bzero (&vhptr.pad, padLen);
-	bcopy (buffer+bufloc+firstSplice, &vhptr.volumeID, nextSplice);
+	memset(&vhptr, 0, sizeof(struct volumeHeader));
+	memcpy(&vhptr, buffer+bufloc, firstSplice);
+	memset(&vhptr.pad, 0, padLen);
+	memcpy(&vhptr.volumeID, buffer+bufloc+firstSplice, nextSplice);
 	HEADER_CHECKS(vhptr, header);
 
 	/* Handle Case 1 */
-	bzero (&vhptr, sizeof(struct volumeHeader));
-	bcopy (buffer+bufloc, &vhptr, firstSplice);
-	bcopy (buffer+bufloc+firstSplice+padLen, &vhptr+firstSplice, nextSplice);
+	memset(&vhptr, 0, sizeof(struct volumeHeader));
+	memcpy(&vhptr, buffer+bufloc, firstSplice);
+	memcpy(&vhptr+firstSplice, buffer+bufloc+firstSplice+padLen, nextSplice);
 	HEADER_CHECKS(vhptr, header);
 
     }

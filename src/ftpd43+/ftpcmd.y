@@ -980,7 +980,7 @@ yylex()
 			if (strncasecmp(cbuf, "PASS", 4) != NULL)
 				setproctitle("%s: %s", proctitle, cbuf);
 #endif /* SETPROCTITLE */
-			if ((cp = index(cbuf, '\r'))) {
+			if ((cp = strchr(cbuf, '\r'))) {
 				*cp++ = '\n';
 				*cp = '\0';
 			}

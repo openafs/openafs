@@ -80,7 +80,7 @@ udisk_Debug(aparm)
     struct buffer *tb;
     int i;
 
-    bcopy(&ubik_dbase->version, &aparm->localVersion, sizeof(struct ubik_version));
+    memcpy(&aparm->localVersion, &ubik_dbase->version, sizeof(struct ubik_version));
     aparm->lockedPages = 0;
     aparm->writeLockedPages = 0;
     tb = Buffers;
@@ -217,7 +217,7 @@ static int DInit (abuffers)
     int i;
     struct buffer *tb;
     Buffers = (struct buffer *) malloc(abuffers * sizeof(struct buffer));
-    bzero(Buffers, abuffers * sizeof(struct buffer));
+    memset(Buffers, 0, abuffers * sizeof(struct buffer));
     BufferData = (char *) malloc(abuffers * PAGESIZE);
     nbuffers = abuffers;
     for(i=0;i<PHSIZE;i++) phTable[i] = 0;
@@ -306,7 +306,7 @@ static char *DRead(dbase, fid, page)
     /* can't find it */
     tb = newslot(dbase, fid, page);
     if (!tb) return 0;
-    bzero(tb->data, PAGESIZE);
+    memset(tb->data, 0, PAGESIZE);
 
     tb->lockers++;
     code = (*dbase->read)(dbase, fid, tb->data, page*PAGESIZE, PAGESIZE);
@@ -558,7 +558,7 @@ static char *DNew (dbase, fid, page)
 
     if ((tb = newslot(dbase, fid, page)) == 0) return (char *) 0;
     tb->lockers++;
-    bzero(tb->data, PAGESIZE);
+    memset(tb->data, 0, PAGESIZE);
     return tb->data;
 }
 
@@ -582,7 +582,7 @@ udisk_read(atrans, afile, abuffer, apos, alen)
 	offset = apos & (PAGESIZE-1);
 	len = PAGESIZE - offset;
 	if (len > alen) len = alen;
-	bcopy(bp+offset, abuffer, len);
+	memcpy(abuffer, bp+offset, len);
 	abuffer += len;
 	apos += len;
 	alen -= len;
@@ -658,13 +658,13 @@ udisk_write(atrans, afile, abuffer, apos, alen)
 	if (!bp) {
 	    bp = DNew(dbase, afile, apos>>LOGPAGESIZE);
 	    if (!bp) return UIOERROR;
-	    bzero(bp, PAGESIZE);
+	    memset(bp, 0, PAGESIZE);
 	}
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
 	offset = apos & (PAGESIZE-1);
 	len = PAGESIZE-offset;
 	if (len > alen) len = alen;
-	bcopy(abuffer, bp+offset, len);
+	memcpy(bp+offset, abuffer, len);
 	abuffer += len;
 	apos += len;
 	alen -= len;
@@ -694,7 +694,7 @@ udisk_begin(adbase, atype, atrans)
 	if (code) return code;
     }
     tt = (struct ubik_trans *) malloc(sizeof(struct ubik_trans));
-    bzero(tt, sizeof(struct ubik_trans));
+    memset(tt, 0, sizeof(struct ubik_trans));
     tt->dbase = adbase;
     tt->next = adbase->activeTrans;
     adbase->activeTrans = tt;

@@ -203,7 +203,7 @@ int ktime_ParsePeriodic(
     register afs_int32 code;
     struct ptemp *tp;
 
-    bzero(ak, sizeof(*ak));
+    memset(ak, 0, sizeof(*ak));
     code = LocalParseLine(adate, &tt);
     if (code) return -1;
     for(;tt;tt=tt->next) {

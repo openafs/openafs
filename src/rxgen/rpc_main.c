@@ -201,7 +201,7 @@ main(argc, argv)
 	    OutFileFlag = NULL;
 	    S_output(cmd.infile, "-DRPC_SERVER", !EXTEND, cmd.outfile, 1);
 	} else {
-	    if (OutFileFlag && (rindex(OutFile,'.') == NULL))
+	    if (OutFileFlag && (strrchr(OutFile,'.') == NULL))
 		strcat(OutFile, ".");
 	    if (cmd.rflag) {
 		C_output((OutFileFlag ? OutFile : cmd.infile), "-DRPC_CLIENT", EXTEND, ".cs.c", 1);
@@ -286,11 +286,11 @@ extendfile(file, ext)
 	if (res == NULL) {
 		abort();
 	}
-	p = (char *) rindex(file, '.');
+	p = (char *) strrchr(file, '.');
 	if (p == NULL) {
 		p = file + strlen(file);
 	}
-	sname = (char *) rindex(file,'/');
+	sname = (char *) strrchr(file, '/');
 	if (sname == NULL)
 	    sname = file;
 	else
@@ -404,7 +404,7 @@ c_output(infile, define, extend, outfile, append)
 
     open_input(infile, define);	
     cflag = 1;
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -516,7 +516,7 @@ h_output(infile, define, extend, outfile, append)
 
 	open_input(infile, define);
 	hflag = 1;
-	bzero(fullname, sizeof(fullname));
+	memset(fullname, 0, sizeof(fullname));
 	if (append) {
 	    strcpy(fullname, prefix);
 	    strcat(fullname, infile);
@@ -525,7 +525,7 @@ h_output(infile, define, extend, outfile, append)
 	outfilename = extend ? extendfile(fullname, outfile) : outfile;
 	open_output(infile, outfilename);
 	strcpy(fullname, outfilename);
-	if (p = (char *)index(fullname, '.')) *p = '\0';
+	if (p = strchr(fullname, '.')) *p = '\0';
 	f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
 	f_print(fout, "#ifndef	_RXGEN_%s_\n", uppercase(fullname));
 	f_print(fout, "#define	_RXGEN_%s_\n\n", uppercase(fullname));
@@ -728,7 +728,7 @@ int append;
    
     Cflag = 1;
     open_input(infile, define);	
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -803,7 +803,7 @@ int append;
    
     Sflag = 1;
     open_input(infile, define);	
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -902,7 +902,7 @@ parseargs(argc, argv, cmd)
 	if (argc < 2) {
 		return (0);
 	}
-	bzero(flag, sizeof(flag));
+	memset(flag, 0, sizeof(flag));
 	cmd->outfile = NULL;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] != '-') {

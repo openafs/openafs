@@ -107,7 +107,7 @@ struct clone_head *ah; {
 /* initialize a clone header */
 int ci_InitHead(struct clone_head *ah)
 {
-    bzero(ah, sizeof(*ah));
+    memset(ah, 0, sizeof(*ah));
     return 0;
 }
 

@@ -80,7 +80,7 @@ int	timeout = 60;
 char	term[64];
 
 struct	passwd *pwd;
-char	*strcat(), *rindex(), *index(), *malloc(), *realloc();
+char	*strcat(), *malloc(), *realloc();
 static void timedout(void);
 static void showmotd(void);
 static void doremoteterm(char *term, struct sgttyb *tp);
@@ -152,7 +152,7 @@ int main(
 	quota(Q_SETUID, 0, 0, 0);
 
 	/* create a dummy user */
-	bzero (&nouser, sizeof(nouser));
+	memset(&nouser, 0, sizeof(nouser));
 	nouser.pw_name = "";
 	nouser.pw_passwd = "*";
 	nouser.pw_dir = nouser.pw_shell = "";
@@ -218,7 +218,7 @@ int main(
 	ttyn = ttyname(0);
 	if (ttyn == (char *)0 || *ttyn == '\0')
 		ttyn = "/dev/tty??";
-	tty = rindex(ttyn, '/');
+	tty = strrchr(ttyn, '/');
 	if (tty == NULL)
 		tty = ttyn;
 	else
@@ -426,7 +426,7 @@ int main(
 	setenv("USER=", pwd->pw_name, 1);
 	setenv("PATH=", ":/usr/ucb:/bin:/usr/bin", 0);
 
-	if ((namep = rindex(pwd->pw_shell, '/')) == NULL)
+	if ((namep = strrchr(pwd->pw_shell, '/')) == NULL)
 		namep = pwd->pw_shell;
 	else
 		namep++;
@@ -577,13 +577,13 @@ static void doremoteterm(
   char *term,
   struct sgttyb *tp)
 {
-	register char *cp = index(term, '/'), **cpp;
+	register char *cp = strchr(term, '/'), **cpp;
 	char *speed;
 
 	if (cp) {
 		*cp++ = '\0';
 		speed = cp;
-		cp = index(speed, '/');
+		cp = strchr(speed, '/');
 		if (cp)
 			*cp++ = '\0';
 		for (cpp = speeds; cpp < &speeds[NSPEEDS]; cpp++)

@@ -182,7 +182,7 @@ goto start;
     code = tapeInfo.ops.mount(&tapeInfo, "TAPE_NAME");
     PASSq ("Mount tape", 0);
 
-    bzero(tapeLabelWrite, sizeof(tapeLabelWrite));
+    memset(tapeLabelWrite, 0, sizeof(tapeLabelWrite));
     tapeLabelWrite.structVersion  = CUR_TAPE_VERSION;
     tapeLabelWrite.creationTime   = time(0);
     tapeLabelWrite.expirationDate = time(0);
@@ -201,7 +201,7 @@ goto start;
     code = tapeInfo.ops.readLabel(&tapeInfo, &tapeLabelRead, REWIND);
     PASS ("Read a label", 0);
 
-    if ( bcmp(&tapeLabelWrite, &tapeLabelRead, sizeof(tapeLabelWrite)) )
+    if ( memcmp(&tapeLabelWrite, &tapeLabelRead, sizeof(tapeLabelWrite)) )
         printf("FAILURE: Label Read is not same as label Written\n");
     else
         printf("PASSED: Label Read is same as label Written\n");

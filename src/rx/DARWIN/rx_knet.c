@@ -153,7 +153,7 @@ osi_NetSend(asocket, addr, dvec, nvecs, alength, istack)
         goto bad;
     }
     nam->m_len=addr->sin_len=sizeof(struct sockaddr_in);
-    bcopy((caddr_t)addr, mtod(nam, caddr_t), addr->sin_len);
+    memcpy(mtod(nam, caddr_t), (caddr_t)addr, addr->sin_len);
     code = sosend(asocket, mtod(nam, struct sockaddr *), &u, NULL, NULL, 0);
     m_freem(nam);
 bad:

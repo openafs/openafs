@@ -192,7 +192,7 @@ VL_CreateEntry(rxcall, newentry)
       goto abort;
     }
 
-    bzero(&tentry, sizeof(struct nvlentry));
+    memset(&tentry, 0, sizeof(struct nvlentry));
     /* Convert to its internal representation; both in host byte order */
     if (errorcode = vldbentry_to_vlentry(trans, newentry, &tentry))	{  
 	FreeBlock(trans, blockindex);
@@ -265,7 +265,7 @@ VL_CreateEntryN(rxcall, newentry)
       goto abort;
     }
 
-    bzero(&tentry, sizeof(struct nvlentry));
+    memset(&tentry, 0, sizeof(struct nvlentry));
     /* Convert to its internal representation; both in host byte order */
     if (errorcode = nvldbentry_to_vlentry(trans, newentry, &tentry))	{  
 	FreeBlock(trans, blockindex);
@@ -1701,8 +1701,8 @@ vital_vlheader	*vital_header;
     if (errorcode = Init_VLdbase(&trans, LOCKREAD, this_op))
 	return errorcode;
     VLog(5, ("GetStats %\n", rxinfo(rxcall)));
-    bcopy((char *)&cheader.vital_header, (char *) vital_header, sizeof(vital_vlheader));
-    bcopy((char *)&dynamic_statistics, (char *) stats, sizeof(vldstats));
+    memcpy((char *) vital_header, (char *)&cheader.vital_header, sizeof(vital_vlheader));
+    memcpy((char *) stats, (char *)&dynamic_statistics, sizeof(vldstats));
     return(ubik_EndTrans(trans));
 }
 
@@ -1724,7 +1724,7 @@ bulkaddrs		    *addrsp;
     COUNT_REQ(VLGETADDRS);
     addrsp->bulkaddrs_len = *nentries = 0;
     addrsp->bulkaddrs_val = 0;
-    bzero (spare3, sizeof (struct VLCallBack));
+    memset(spare3, 0, sizeof (struct VLCallBack));
 
     if (errorcode = Init_VLdbase(&trans, LOCKREAD, this_op))
 	return errorcode;
@@ -2579,7 +2579,7 @@ struct vldbentry    *VldbEntry;
 {
     int i, j;
     
-    bzero(VldbEntry, sizeof(struct vldbentry));
+    memset(VldbEntry, 0, sizeof(struct vldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i=0; i < OMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID) break;
@@ -2617,7 +2617,7 @@ struct nvldbentry    *VldbEntry;
 {
     int i, j;
     
-    bzero(VldbEntry, sizeof(struct vldbentry));
+    memset(VldbEntry, 0, sizeof(struct vldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i=0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID) break;
@@ -2653,7 +2653,7 @@ struct uvldbentry    *VldbEntry;
 {
     int i, j;
     
-    bzero(VldbEntry, sizeof(struct vldbentry));
+    memset(VldbEntry, 0, sizeof(struct vldbentry));
     strncpy(VldbEntry->name, VlEntry->name, sizeof(VldbEntry->name));
     for (i=0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID) break;
@@ -2889,7 +2889,7 @@ register afs_uint32	ipaddr1, ipaddr2;
 
     /* Change the registered uuuid addresses */
     if (exp) {
-       bzero(&tuuid, sizeof(afsUUID));
+       memset(&tuuid, 0, sizeof(afsUUID));
        afs_htonuuid(&tuuid);
        exp->ex_hostuuid = tuuid;
        code = vlwrite(atrans, DOFFSET(ntohl(ex_addr[0]->ex_contaddrs[base]),

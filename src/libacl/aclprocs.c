@@ -38,10 +38,6 @@ pthread_mutex_t acl_list_mutex;
 static int AddToList();
 static int GetFromList();
 
-#ifdef	AFS_ALPHA_ENV
-extern char *index();
-#endif
-
 struct freeListEntry {
     struct freeListEntry *next;
     int size;
@@ -177,7 +173,7 @@ char **elist;
     acl_NewExternalACL(acl->total, elist);
     nextc = *elist;
     lids.idlist_val = (afs_int32 *)malloc(ACL_MAXENTRIES *sizeof(afs_int32));
-    bzero(lids.idlist_val, ACL_MAXENTRIES * sizeof(afs_int32));
+    memset(lids.idlist_val, 0, ACL_MAXENTRIES * sizeof(afs_int32));
     lids.idlist_len = acl->total;
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *)0;
@@ -252,14 +248,14 @@ struct acl_accessList **acl;
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2)
 	    return(-1);
 	(*acl)->entries[i].rights = k;
-	nextc = (char *) (index(nextc, '\n'));
+	nextc = (strchr(nextc, '\n'));
 	nextc ++;       /* 1 + index can cast ptr to integer */
     }
     j=i;
     for (i = (*acl)->total - 1; i >= (*acl)->total -  (*acl)->negative; i--,j++) {
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[j], &((*acl)->entries[j].rights)) != 2)
 	    return(-1);
-	nextc = (char *) (index(nextc, '\n'));
+	nextc = (strchr(nextc, '\n'));
 	nextc ++;
     }
     lids.idlist_len = 0;

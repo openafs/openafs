@@ -530,7 +530,7 @@ FetchEndCall:
 	   if (!code) {
 	      /* we got a new file, set up its header */
 	      urecovery_state |= UBIK_RECHAVEDB;
-	      bcopy(&tversion, &ubik_dbase->version, sizeof(struct ubik_version));
+	      memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
 	      (*ubik_dbase->sync)(ubik_dbase, 0);	/* get data out first */
 	      /* after data is good, sync disk with correct label */
 	      code = (*ubik_dbase->setlabel)(ubik_dbase, 0, &ubik_dbase->version);

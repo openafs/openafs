@@ -146,7 +146,7 @@ afs_int32 ReadDumpHeader(dh)
   char              tag, c;
   afs_int32             magic;
 
-/*  bzero(&dh, sizeof(dh)); */
+/*  memset(&dh, 0, sizeof(dh)); */
 
   magic   = ntohl(readvalue(4));
   dh->version = ntohl(readvalue(4));
@@ -219,7 +219,7 @@ afs_int32 ReadVolumeHeader(count)
   int               code, i, done, entries;
   char              tag, c;
 
-/*  bzero(&vh, sizeof(vh)); */
+/*  memset(&vh, 0, sizeof(vh)); */
 
   done = 0;
   while (!done) {
@@ -393,7 +393,7 @@ afs_int32 ReadVNode(count)
   afs_int32             vnode;
   afs_int32             mode=0;
 
-/*  bzero(&vn, sizeof(vn)); */
+/*  memset(&vn, 0, sizeof(vn)); */
   vn.dataSize = 0;
   vn.vnode = 0;
   vn.parent = 0;

@@ -67,7 +67,7 @@ int PRE_InitPreempt(slice)
 	itv.it_interval = itv.it_value = *slice;
 	}
 
-    bzero((char *)&action, sizeof(action));
+    memset((char *)&action, 0, sizeof(action));
     action.sa_sigaction = AlarmHandler;
     action.sa_flags = SA_SIGINFO;
 
@@ -87,7 +87,7 @@ int PRE_EndPreempt()
     
     itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
 
-    bzero((char *)&action, sizeof(action));
+    memset((char *)&action, 0, sizeof(action));
     action.sa_handler = SIG_DFL;
 
     if ((setitimer(ITIMER_REAL, &itv, (struct itimerval *) 0) == -1) ||

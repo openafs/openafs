@@ -74,7 +74,7 @@ main(argc,argv)
     }
     ivec[0] = 0;
     ivec[1] = 0;
-    bcopy(key,sum,sizeof(C_Block));
+    memcpy(sum, key, sizeof(C_Block));
     for (;;) {
 	if ((length = read (ind, inbuf, 512)) < 0) {
 	    fprintf (stderr, "%s: Error reading from input.\n",

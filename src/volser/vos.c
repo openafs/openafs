@@ -101,7 +101,7 @@ static struct tqHead busyHead, notokHead;
 static void qInit(ahead)
 struct tqHead *ahead;
 {
-    bzero((char *)ahead, sizeof(struct tqHead));
+    memset((char *)ahead, 0, sizeof(struct tqHead));
     return;
 }
 
@@ -216,7 +216,7 @@ char *aname; {
     } else {
         th = gethostbyname(aname);
 	if (!th) return 0;
-	bcopy(th->h_addr, &addr, sizeof(addr));
+	memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
     if (addr == htonl(0x7f000001)) {                /* local host */
@@ -224,7 +224,7 @@ char *aname; {
        if (code) return 0;
        th = gethostbyname(hostname); /* returns host byte order */
        if (!th) return 0;
-       bcopy(th->h_addr, &addr, sizeof(addr));
+       memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
     return (addr); 
@@ -2193,7 +2193,7 @@ register struct cmd_syndesc *as;
     fprintf(STDOUT,"The partitions on the server are:\n");
     for(i = 0 ; i < cnt ; i++){
 	if(dummyPartList.partFlags[i] & PARTVALID){
-	    bzero(pname,sizeof(pname));
+	    memset(pname, 0, sizeof(pname));
 	    MapPartIdIntoName(dummyPartList.partId[i],pname);
 	    fprintf(STDOUT," %10s ",pname);
 	    total++;
@@ -2914,7 +2914,7 @@ register struct cmd_syndesc *as;
     }
 
     /* Zero out search attributes */
-    bzero(&attributes,sizeof(struct VldbListByAttributes));
+    memset(&attributes, 0, sizeof(struct VldbListByAttributes));
 
     if (as->parms[1].items) { /* -prefix */
        strncpy(prefix, as->parms[1].items->data, VOLSER_MAXVOLNAME);
@@ -2968,7 +2968,7 @@ register struct cmd_syndesc *as;
     fflush(STDOUT);
 
     /* Get all the VLDB entries on a server and/or partition */
-    bzero(&arrayEntries, sizeof(arrayEntries));
+    memset(&arrayEntries, 0, sizeof(arrayEntries));
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
        fprintf(STDERR,"Could not access the VLDB for attributes\n");
@@ -3144,7 +3144,7 @@ static ListVLDB(as)
     }
 
     for (thisindex = 0; (thisindex != -1); thisindex = nextindex) {
-       bzero(&arrayEntries, sizeof(arrayEntries));
+       memset(&arrayEntries, 0, sizeof(arrayEntries));
        centries = 0;
        nextindex = -1;
 
@@ -3194,8 +3194,7 @@ static ListVLDB(as)
 	     tarray = ttarray;
 	     
 	     /* Copy them in */
-	     bcopy((char *)arrayEntries.nbulkentries_val,
-		   ((char *)tarray)+tarraysize, parraysize);
+	     memcpy(((char *)tarray)+tarraysize, (char *)arrayEntries.nbulkentries_val, parraysize);
 	     tarraysize += parraysize;
 	  }
        }
@@ -3247,7 +3246,7 @@ static BackSys(as)
     char *ccode;
     int match;
 
-    bzero(&attributes,sizeof(struct VldbListByAttributes));
+    memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
 
     seenprefix  = (as->parms[0].items ? 1 : 0);
@@ -3301,7 +3300,7 @@ static BackSys(as)
        }
     }
 
-    bzero(&arrayEntries, sizeof(arrayEntries)); /* initialize to hint the stub to alloc space */
+    memset(&arrayEntries, 0, sizeof(arrayEntries)); /* initialize to hint the stub to alloc space */
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
 	fprintf(STDERR,"Could not access the VLDB for attributes\n");
@@ -3510,7 +3509,7 @@ register struct cmd_syndesc *as;
     }
     attributes.flag = VLOP_ALLOPERS;
     attributes.Mask |=  VLLIST_FLAG;
-    bzero(&arrayEntries, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
+    memset(&arrayEntries, 0, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if(vcode) {
 	fprintf(STDERR,"Could not access the VLDB for attributes\n");

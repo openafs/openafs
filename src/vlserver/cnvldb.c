@@ -48,7 +48,7 @@ static char *Parent(apath)
 char *apath; {
     register char *tp;
     strcpy(tspace, apath);
-    tp = rindex(tspace, '/');
+    tp = strrchr(tspace, '/');
     if (tp) {
 	*tp = 0;
     }
@@ -584,7 +584,7 @@ convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
 
   if (fromv == 1) {
      if (tov == 1) {
-        bcopy (fromaddr, toaddr, sizeof(struct vlheader_1));
+        memcpy(toaddr, fromaddr, sizeof(struct vlheader_1));
 	tvp1 = (struct vlheader_1 *) toaddr;
 	
 	w = write (fd, tvp1, sizeof(struct vlheader_1));
@@ -600,7 +600,7 @@ convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
      } else if (tov == 2 || tov == 3) {
         tvp1 = (struct vlheader_1 *) fromaddr;
 	tvp2 = (struct vlheader_2 *) toaddr;
-	bzero(tvp2, sizeof(struct vlheader_2));
+	memset(tvp2, 0, sizeof(struct vlheader_2));
 	tvp2->vital_header.vldbversion = htonl(tov);
 	tvp2->vital_header.headersize = htonl(sizeof(struct vlheader_2));
 	diff = ntohl(tvp2->vital_header.headersize) -
@@ -643,7 +643,7 @@ convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
         return EINVAL;
   } else if (fromv == 2 || fromv == 3 || fromv == 4) {
      if (tov == 2 || tov == 3 || tov == 4) {
-        bcopy (fromaddr, toaddr, sizeof(struct vlheader_2));
+        memcpy(toaddr, fromaddr, sizeof(struct vlheader_2));
 	tvp2 = (struct vlheader_2 *) toaddr;
 	tvp2->vital_header.vldbversion = htonl(tov);
 	w = write (fd, tvp2, sizeof(struct vlheader_2));
@@ -655,7 +655,7 @@ convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
      } else if (tov == 1) {
         tvp2 = (struct vlheader_2 *) fromaddr;
 	tvp1 = (struct vlheader_1 *) toaddr;
-	bzero(tvp1, sizeof(struct vlheader_1));
+	memset(tvp1, 0, sizeof(struct vlheader_1));
 	tvp1->vital_header.vldbversion = htonl(1);
 	tvp1->vital_header.headersize = htonl(sizeof(struct vlheader_1));
 	diff = ntohl(tvp1->vital_header.headersize) - ntohl(tvp2->vital_header.headersize);
@@ -771,7 +771,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	vl.nextIdHash[1] = vlentryp->nextIdHash[1];
 	vl.nextIdHash[2] = vlentryp->nextIdHash[2];
 	vl.nextNameHash = vlentryp->nextNameHash;
-	bcopy(vlentryp->name, vl.name, 65);
+	memcpy(vl.name, vlentryp->name, 65);
 	for (i = 0; i < 8; i++) {
 	    vl.serverNumber[i] = vlentryp->serverNumber[i];
 	    vl.serverPartition[i] = vlentryp->serverPartition[i];
@@ -790,7 +790,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	struct vlentry_2 vl;
 	struct vlentry_3 *xnvlentry = (struct vlentry_3 *) vlentryp;
 
-	bzero((char *)&vl, sizeof (struct vlentry_2));
+	memset((char *)&vl, 0, sizeof (struct vlentry_2));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];
@@ -804,7 +804,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	}
 	if (ntohl(xnvlentry->nextNameHash))
 	    vl.nextNameHash = xnvlentry->nextNameHash;
-	bcopy(xnvlentry->name, vl.name, 65);
+	memcpy(vl.name, xnvlentry->name, 65);
 	for (i = 0; i < 8; i++) {
 	    vl.serverNumber[i] = xnvlentry->serverNumber[i];
 	    vl.serverPartition[i] = xnvlentry->serverPartition[i];
@@ -822,7 +822,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 
 	diff = (tovers == 1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2))
 	    - (fromvers == 1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2));
-	bzero((char *)&vl, sizeof (struct vlentry_1));
+	memset((char *)&vl, 0, sizeof (struct vlentry_1));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];
@@ -837,7 +837,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	if (ntohl(xnvlentry->nextNameHash))
 	    vl.nextNameHash = htonl(ntohl(xnvlentry->nextNameHash) + diff);	
 
-	bcopy(xnvlentry->name, vl.name, 65);
+	memcpy(vl.name, xnvlentry->name, 65);
 	for (i = 0; i < 8; i++) {
 	    vl.serverNumber[i] = xnvlentry->serverNumber[i];
 	    vl.serverPartition[i] = xnvlentry->serverPartition[i];
@@ -865,7 +865,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	 * blocks go away and all vlentries after them move up in the vldb file.
 	 * When this happens, the linked list pointers need to be updated.
 	 */
-	bcopy(vlentryp, &vl, sizeof(vl));
+	memcpy(&vl, vlentryp, sizeof(vl));
 	for (i=0; i<3; i++) {
 	   vl.nextIdHash[i] = Conv4to3(vl.nextIdHash[i]);
 	}

@@ -240,7 +240,7 @@ int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
 	if (msg.msg_name == NULL) {
 	    error = -1;
 	} else {
-	    bcopy(msg.msg_name, addr, msg.msg_namelen);
+	    memcpy(addr, msg.msg_name, msg.msg_namelen);
 	    kmem_free(msg.msg_name, msg.msg_namelen);
 	    *alength = *alength - uio.uio_resid;
 	}
@@ -350,7 +350,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 	t_kclose(udp_tiptr, 0);
 	return (struct osi_socket *)0;
     }
-    if (bcmp(reqp->addr.buf, rspp->addr.buf, rspp->addr.len)) {
+    if (memcmp(reqp->addr.buf, rspp->addr.buf, rspp->addr.len)) {
 	t_kfree(udp_tiptr, (char *)reqp, T_BIND);
 	t_kfree(udp_tiptr, (char *)rspp, T_BIND);
 	t_kclose(udp_tiptr, 0);
@@ -422,7 +422,7 @@ int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack)
     }
 
     /* Copy the data into the buffer */
-    bcopy((char *)dvec[0].iov_base, (char *)bp->b_wptr, dvec[0].iov_len);
+    memcpy((char *)bp->b_wptr, (char *)dvec[0].iov_base, dvec[0].iov_len);
     bp->b_datap->db_type = M_DATA;
     bp->b_wptr += dvec[0].iov_len;
 
@@ -439,7 +439,7 @@ int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack)
 	}
 
 	/* Copy the data into the buffer */
-	bcopy((char *)dvec[i].iov_base, (char *)dbp->b_wptr, dvec[i].iov_len);
+	memcpy((char *)dbp->b_wptr, (char *)dvec[i].iov_base, dvec[i].iov_len);
 	dbp->b_datap->db_type = M_DATA;
 	dbp->b_wptr += dvec[i].iov_len;
 
@@ -461,7 +461,7 @@ int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack)
     udreq->addr.buf = (char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
     udreq->opt.len = 0;
     udreq->opt.maxlen = 0;
-    bcopy((char *)&sin, udreq->addr.buf, sizeof(struct sockaddr_in));
+    memcpy(udreq->addr.buf, (char *)&sin, sizeof(struct sockaddr_in));
     udreq->udata.udata_mp = bp;
     udreq->udata.len = asize;
 
@@ -563,7 +563,7 @@ int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
 	/*
 	 * Save the source address
 	 */
-	bcopy(udreq->addr.buf, (char *)addr, sizeof(struct sockaddr_in));
+	memcpy((char *)addr, udreq->addr.buf, sizeof(struct sockaddr_in));
 
 	/*
 	 * Copy out the message buffers, take care not to overflow
@@ -580,12 +580,12 @@ int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
 	    while (dbp != NULL && tlen > 0) {
 		blen = dbp->b_wptr - dbp->b_rptr;
 		if (blen > tlen) {
-		    bcopy((char *)dbp->b_rptr, tbase, tlen);
+		    memcpy(tbase, (char *)dbp->b_rptr, tlen);
 		    length -= tlen;
 		    dbp->b_rptr += tlen;
 		    tlen = 0;
 		} else {
-		    bcopy((char *)dbp->b_rptr, tbase, blen);
+		    memcpy(tbase, (char *)dbp->b_rptr, blen);
 		    length -= blen;
 		    tlen -= blen;
 		    tbase += blen;

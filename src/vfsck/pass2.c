@@ -83,7 +83,7 @@ pass2()
 	register struct dinode *dp;
 	struct inodesc rootdesc;
 
-	bzero((char *)&rootdesc, sizeof(struct inodesc));
+	memset((char *)&rootdesc, 0, sizeof(struct inodesc));
 	rootdesc.id_type = ADDR;
 	rootdesc.id_func = pass2check;
 	rootdesc.id_number = ROOTINO;
@@ -207,17 +207,17 @@ pass2check(idesc)
 #endif
 	} else if (dirp->d_reclen < 2 * entrysize) {
 		proto.d_reclen = dirp->d_reclen;
-		bcopy((char *)&proto, (char *)dirp, entrysize);
+		memcpy((char *)dirp, (char *)&proto, entrysize);
 		if (reply("FIX") == 1)
 			ret |= ALTERED;
 	} else {
 		n = dirp->d_reclen - entrysize;
 		proto.d_reclen = entrysize;
-		bcopy((char *)&proto, (char *)dirp, entrysize);
+		memcpy((char *)dirp, (char *)&proto, entrysize);
 		idesc->id_entryno++;
 		lncntp[dirp->d_ino]--;
 		dirp = (struct direct *)((char *)(dirp) + entrysize);
-		bzero((char *)dirp, n);
+		memset((char *)dirp, 0, n);
 		dirp->d_reclen = n;
 		if (reply("FIX") == 1)
 			ret |= ALTERED;
@@ -238,7 +238,7 @@ chk1:
 		idesc->id_entryno++;
 		lncntp[dirp->d_ino]--;
 		dirp = (struct direct *)((char *)(dirp) + n);
-		bzero((char *)dirp, n);
+		memset((char *)dirp, 0, n);
 		dirp->d_reclen = n;
 	}
 	if (dirp->d_ino != 0 && strcmp(dirp->d_name, "..") == 0) {
@@ -264,7 +264,7 @@ chk1:
 #endif
 	} else {
 		proto.d_reclen = dirp->d_reclen;
-		bcopy((char *)&proto, (char *)dirp, entrysize);
+		memcpy((char *)dirp, (char *)&proto, entrysize);
 		if (reply("FIX") == 1)
 			ret |= ALTERED;
 	}
@@ -295,7 +295,7 @@ chk2:
 		*pathp = '\0';
 		errexit("NAME TOO LONG %s%s\n", pathname, dirp->d_name);
 	}
-	bcopy(dirp->d_name, pathp, (int)dirp->d_namlen + 1);
+	memcpy(pathp, dirp->d_name, (int)dirp->d_namlen + 1);
 	pathp += dirp->d_namlen;
 	idesc->id_entryno++;
 	n = 0;

@@ -109,7 +109,6 @@ struct bufarea *pbp;
     /* block map */	howmany((fs)->fs_cpg * (fs)->fs_spc / NSPF(fs), NBBY))
 
 char	*malloc(), *calloc();
-char	*index();
 struct	disklabel *getdisklabel();
 
 setup(dev)
@@ -485,8 +484,7 @@ restat:
 	}
 #endif /* AFS_NEWCG_ENV */
 	if (asblk.b_dirty) {
-		bcopy((char *)&sblock, (char *)&altsblock,
-			(int)sblock.fs_sbsize);
+		memcpy((char *)&altsblock, (char *)&sblock, (int)sblock.fs_sbsize);
 		flush(fswritefd, &asblk);
 	}
 	/*
@@ -695,23 +693,18 @@ readsb(listerr)
 #if	!defined(__alpha) && !defined(AFS_SUN56_ENV)
 #if !defined(AFS_HPUX110_ENV)
 	/* HPUX110 will use UpdateAlternateSuper() below */
-	bcopy((char *)sblock.fs_csp, (char *)altsblock.fs_csp,
-		sizeof sblock.fs_csp);
+	memcpy((char *)altsblock.fs_csp, (char *)sblock.fs_csp, sizeof sblock.fs_csp);
 #endif  /* ! AFS_HPUX110_ENV */
 #endif	/* ! __alpha */
 #if	defined(AFS_SUN56_ENV)
-	bcopy((char *)sblock.fs_u.fs_csp_pad, (char *)altsblock.fs_u.fs_csp_pad,
-		sizeof (sblock.fs_u.fs_csp_pad));
+	memcpy((char *)altsblock.fs_u.fs_csp_pad, (char *)sblock.fs_u.fs_csp_pad, sizeof (sblock.fs_u.fs_csp_pad));
 #endif
-	bcopy((char *)sblock.fs_fsmnt, (char *)altsblock.fs_fsmnt,
-		sizeof sblock.fs_fsmnt);
+	memcpy((char *)altsblock.fs_fsmnt, (char *)sblock.fs_fsmnt, sizeof sblock.fs_fsmnt);
 #ifndef	AFS_HPUX_ENV
-	bcopy((char *)sblock.fs_sparecon, (char *)altsblock.fs_sparecon,
-		sizeof sblock.fs_sparecon);
+	memcpy((char *)altsblock.fs_sparecon, (char *)sblock.fs_sparecon, sizeof sblock.fs_sparecon);
 #endif
 #if defined(AFS_DEC_ENV)
-	bcopy((char *)sblock.fs_extra, (char *)altsblock.fs_extra,
-		sizeof sblock.fs_extra);
+	memcpy((char *)altsblock.fs_extra, (char *)sblock.fs_extra, sizeof sblock.fs_extra);
 	altsblock.fs_deftimer = sblock.fs_deftimer;
 	altsblock.fs_lastfsck = sblock.fs_lastfsck;
 	altsblock.fs_gennum = sblock.fs_gennum;
@@ -728,13 +721,12 @@ readsb(listerr)
 #if     defined(AFS_HPUX110_ENV)
 	UpdateAlternateSuper(&sblock, &altsblock);
 #endif  /* AFS_HPUX110_ENV */
-	if (bcmp((char *)&sblock, (char *)&altsblock, (int)sblock.fs_sbsize)) {
+	if (memcmp((char *)&sblock, (char *)&altsblock, (int)sblock.fs_sbsize)) {
 #ifdef	__alpha
-                if (bcmp((char *)&sblock.fs_blank[0],
+                if (memcmp((char *)&sblock.fs_blank[0],
 			 (char *)&altsblock.fs_blank[0],
 			 MAXCSBUFS*sizeof(int))) {
-		    bzero((char *)sblock.fs_blank,
-			  sizeof(sblock.fs_blank));
+		    memset((char *)sblock.fs_blank, 0, sizeof(sblock.fs_blank));
 		} else {
 #endif	/* __alpha */
 		badsb(listerr,

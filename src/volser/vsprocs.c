@@ -443,7 +443,7 @@ afs_int32 *anewid;
     tid = 0;
     aconn = (struct rx_connection *)0;
     error = 0;
-    bzero (&tstatus, sizeof(struct volintInfo));
+    memset(&tstatus, 0, sizeof(struct volintInfo));
     tstatus.dayUse = -1;
     tstatus.maxquota = aquota;
 
@@ -1955,8 +1955,8 @@ UV_ReleaseVolume(afromvol, afromserver, afrompart, forceflag)
   int releasecount = 0;
   struct volser_status volstatus;
 
-  bzero((char *)remembertime, sizeof(remembertime));
-  bzero((char *)&results, sizeof(results));
+  memset((char *)remembertime, 0, sizeof(remembertime));
+  memset((char *)&results, 0, sizeof(results));
 
   vcode = ubik_Call(VL_SetLock, cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
   if (vcode != VL_RERELEASE) 
@@ -2147,7 +2147,7 @@ UV_ReleaseVolume(afromvol, afromserver, afrompart, forceflag)
 
   strcpy(vname, entry.name);
   strcat(vname, ".readonly");
-  bzero(&cookie,sizeof(cookie));
+  memset(&cookie, 0, sizeof(cookie));
   strncpy(cookie.name, vname, VOLSER_OLDMAXVOLNAME);
   cookie.type   = ROVOL;
   cookie.parent = entry.volumeId[RWVOL];
@@ -2161,10 +2161,10 @@ UV_ReleaseVolume(afromvol, afromserver, afrompart, forceflag)
   if ( !replicas || !times || !! !results.manyResults_val || !toconns ) 
       ONERROR(ENOMEM, 0, "Failed to create transaction on the release clone\n");
 
-  bzero (replicas,   (sizeof(struct replica)*nservers+1));
-  bzero (times,      (sizeof(struct release)*nservers+1));
-  bzero (toconns,    (sizeof(struct rx_connection *)*nservers+1));
-  bzero (results.manyResults_val, (sizeof(afs_int32)*nservers+1));
+  memset(replicas, 0, (sizeof(struct replica)*nservers+1));
+  memset(times, 0, (sizeof(struct release)*nservers+1));
+  memset(toconns, 0, (sizeof(struct rx_connection *)*nservers+1));
+  memset(results.manyResults_val, 0, (sizeof(afs_int32)*nservers+1));
 
   /* Create a transaction on the cloned volume */
   code = AFSVolTransCreate(fromconn, cloneVolId, afrompart, ITBusy, &fromtid);
@@ -2566,7 +2566,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
     char apartName[10];
 
 
-    bzero(&cookie,sizeof(cookie));
+    memset(&cookie, 0, sizeof(cookie));
     islocked  = 0;
     success = 0;
     error = 0;
@@ -3525,7 +3525,7 @@ static afs_int32 CheckVolume(volumeinfo, aserver, apart, modentry, maxvolid)
 	 ERROR_EXIT(code);
       }
 
-      bzero(&entry, sizeof(entry));
+      memset(&entry, 0, sizeof(entry));
       vsu_ExtractName(entry.name, volumeinfo->name); /* Store name of RW */
 
       createentry = 1;
@@ -4553,7 +4553,7 @@ UV_SyncServer(aserver, apart, flags, force)
 
     /* While we need to collect more VLDB entries */
     for (si=0; si != -1; si=nsi) {
-       bzero(&arrayEntries, sizeof(arrayEntries));
+       memset(&arrayEntries, 0, sizeof(arrayEntries));
 
        /* Collect set of VLDB entries */
        code = VLDB_ListAttributesN2(&attributes, 0, si,

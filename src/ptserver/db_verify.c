@@ -269,7 +269,7 @@ afs_int32 WalkHashTable (hashtable, hashType, map, misc)
 	    id = ntohl(e.id);
 
 	    if ( ((ntohl(e.flags) & (PRGRP | PRINST)) == 0) &&
-		 (index(e.name,'@')) ) {
+		 (strchr(e.name,'@')) ) {
 	       /* Foreign user */
 	       if (id > misc->maxForId) misc->maxForId = id;
 	    } else {
@@ -613,7 +613,7 @@ afs_int32 WalkChains (map, misc)
 	    if (code) return code;
 	    code = WalkNextChain (map, misc, ea, &e);
 	    if (code) return code;
-	    if (index(e.name,'@') == 0) {
+	    if (strchr(e.name,'@') == 0) {
 	        misc->nusers++;             /* Not a foreign user */
 	    } else {
 	        misc->nforeigns++;          /* A foreign user */
@@ -724,7 +724,7 @@ afs_int32 DumpRecreate (map, misc)
 
     rc = misc->recreate;
     idmap = misc->idmap;
-    bzero (idmap, misc->idRange*sizeof(misc->idmap[0]));
+    memset(idmap, 0, misc->idRange*sizeof(misc->idmap[0]));
     do {
 	found = 0;
 	for (ei=createLow; ei<misc->nEntries; ei++) {
@@ -927,7 +927,7 @@ afs_int32 CheckPrDatabase (misc)
     if (misc->verbose)
        printf ("Database has %d entries\n", n);
     map = (char *)malloc (n);
-    bzero (map, n);
+    memset(map, 0, n);
     misc->nEntries = n;
 
     if (misc->verbose) {
@@ -959,7 +959,7 @@ afs_int32 CheckPrDatabase (misc)
 	code = -1;
 	goto abort;
     }
-    bzero (misc->idmap, misc->idRange*sizeof(misc->idmap[0]));
+    memset(misc->idmap, 0, misc->idRange*sizeof(misc->idmap[0]));
 
     if (misc->verbose) {
        printf ("\nChecking entry chains\n");
@@ -1052,7 +1052,7 @@ WorkerBee (as, arock)
     initialize_u_error_table();
     
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
-    bzero (&misc, sizeof(misc));
+    memset(&misc, 0, sizeof(misc));
 
     pr_dbaseName     =  as->parms[0].items->data;        /* -database */
     misc.listuheader = (as->parms[1].items ? 1 : 0);     /* -uheader  */

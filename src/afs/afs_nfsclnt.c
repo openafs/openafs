@@ -72,9 +72,9 @@ register afs_int32 uid, host;
 	}
     }
     np = (struct nfsclientpag *) afs_osi_Alloc(sizeof (struct nfsclientpag));
-    bzero((char *)np, sizeof(struct nfsclientpag));
+    memset((char *)np, 0, sizeof(struct nfsclientpag));
     /* Copy the necessary afs_exporter fields */
-    bcopy((char *)afs_nfsexporter, (char *)np, sizeof(struct afs_exporter));
+    memcpy((char *)np, (char *)afs_nfsexporter, sizeof(struct afs_exporter));
     np->next = afs_nfspags[i];
     afs_nfspags[i] = np;
     np->uid = uid;

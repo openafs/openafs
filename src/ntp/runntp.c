@@ -212,7 +212,7 @@ main (argc, argv)
     /* handle bozo kills right */
 
     {	struct sigaction sa;
-	bzero((char *)&sa, sizeof(sa));
+	memset((char *)&sa, 0, sizeof(sa));
 	sa.sa_handler = terminate;
 	code = sigaction (SIGTERM, &sa, NULL);
 	if (code) {

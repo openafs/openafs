@@ -44,10 +44,6 @@ extern void bc_HandleMisc();
 extern char *whoami;
 extern struct rx_connection *bc_GetConn();
 
-#ifdef AFS_SGI64_ENV
-extern char *rindex();
-#endif
-
 #define	BC_MAXLEVELS	    20
 #define	MAXTAPESATONCE	    10
 
@@ -139,7 +135,7 @@ extractTapeSeq(tapename)
 {
     char *sptr;
 
-    sptr = rindex(tapename, '.');
+    sptr = strrchr(tapename, '.');
     if ( !sptr ) return(-1);
     sptr++;
     return(atol(sptr));
@@ -277,7 +273,7 @@ bc_Restorer(aindex)
 	        com_err(whoami,BC_NOMEM,"");
 		ERROR(BC_NOMEM);
 	    }
-	    bzero (di, sizeof(struct dumpinfo));
+	    memset(di, 0, sizeof(struct dumpinfo));
 
 	    di->DumpId        = dumpDescr->id;
 	    di->initialDumpId = dumpDescr->initialDumpID;
@@ -303,7 +299,7 @@ bc_Restorer(aindex)
 	    com_err(whoami,BC_NOMEM,"");
 	    ERROR(BC_NOMEM);
 	}
-	bzero (vi, sizeof(struct volinfo));
+	memset(vi, 0, sizeof(struct volinfo));
 	
 	vi->volname = (char*)malloc(strlen(vname)+1);
 	if (!vi->volname)
@@ -337,7 +333,7 @@ bc_Restorer(aindex)
     for (di=dumpinfolist; di; di=di->next)
     {
 	/* Find each of the parent dumps */
-        bcopy(di, &dlevels[0], sizeof(struct dumpinfo));
+        memcpy(&dlevels[0], di, sizeof(struct dumpinfo));
 	for (lvl=1, parent=dlevels[0].parentDumpId; parent; 
 	     parent=dlevels[lvl].parentDumpId, lvl++)
 	{
@@ -479,7 +475,7 @@ bc_Restorer(aindex)
 			        com_err(whoami,BC_NOMEM,"");
 				return(BC_NOMEM);
 			    }
-			    bzero(tle, sizeof(struct bc_tapeList));
+			    memset(tle, 0, sizeof(struct bc_tapeList));
 
 			    tle->tapeName = (char*)malloc(strlen(volumeEntries[ve].tape)+1);
 			    if (!tle->tapeName)
@@ -531,7 +527,7 @@ bc_Restorer(aindex)
 			        com_err(whoami,BC_NOMEM,"");
 				return(BC_NOMEM);
 			    }
-			    bzero(ti, sizeof(struct bc_tapeItem));
+			    memset(ti, 0, sizeof(struct bc_tapeItem));
 
 			    ti->volumeName = (char*)malloc(strlen(volumeEntries[ve].name)+1);
 			    if (!ti->volumeName)
@@ -630,7 +626,7 @@ bc_Restorer(aindex)
         com_err(whoami,BC_NOMEM,"");
 	ERROR(BC_NOMEM);
     }
-    bzero(tcarray, nentries*sizeof(struct tc_restoreDesc));
+    memset(tcarray, 0, nentries*sizeof(struct tc_restoreDesc));
 
     /* Fill in the array with the list above */
     i = 0;

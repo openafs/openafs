@@ -101,14 +101,14 @@ int main (argc, argv)
 	afs_uint32 xor[2];
 
 	for (i=0; i<10; i++) msg[i]=htonl(i);
-	bcopy ("abcdefgh", &key, sizeof(struct ktc_encryptionKey));
+	memcpy(&key, "abcdefgh", sizeof(struct ktc_encryptionKey));
 	fc_keysched (&key, schedule);
 	print_msg ("Starting msg is:", msg, sizeof(msg));
-	bcopy(&key, xor, 2*sizeof(afs_int32));
+	memcpy(xor, &key, 2*sizeof(afs_int32));
 	fc_cbc_encrypt (msg, out, sizeof(msg), schedule, &key, ENCRYPT);
-	bcopy(&key, xor, 2*sizeof(afs_int32));
+	memcpy(xor, &key, 2*sizeof(afs_int32));
 	fc_cbc_encrypt (out, dec, sizeof(msg), schedule, &key, DECRYPT);
-	if (bcmp (msg, dec, sizeof(msg)) != 0)
+	if (memcmp (msg, dec, sizeof(msg)) != 0)
 	    printf ("Encryption FAILED!\n");
 	print_msg ("Encrypted is:", out, sizeof(out));
 	print_msg ("Decrypted is:", dec, sizeof(dec));
@@ -120,7 +120,7 @@ int main (argc, argv)
 #endif
 	e[0] = 0x11111111;
 	e[1] = 0xaaaaaaaa;
-	bcopy ("abcdefgh", &key, sizeof(struct ktc_encryptionKey));
+	memcpy(&key, "abcdefgh", sizeof(struct ktc_encryptionKey));
 	for (rounds=2; rounds<=MAXROUNDS; rounds +=2) {
 #ifdef TCRYPT
 	    ROUNDS = rounds;

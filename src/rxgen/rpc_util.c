@@ -72,7 +72,7 @@ static printwhere();
 reinitialize()
 {
     int i;
-	bzero(curline, MAXLINESIZE);
+	memset(curline, 0, MAXLINESIZE);
 	where = curline;
 	linenum = 0;
 	defined = NULL;

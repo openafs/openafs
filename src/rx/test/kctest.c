@@ -36,8 +36,8 @@ static MakeVTest(akey, aticket, asession)
 struct rxvab_EncryptionKey *akey, *asession;
 struct rxvab_Ticket *aticket; {
     aticket->ViceId = htonl(71);
-    bcopy("testkeyx", &aticket->HandShakeKey, 8);
-    bcopy("testkeyx", asession, 8);
+    memcpy(&aticket->HandShakeKey, "testkeyx", 8);
+    memcpy(asession, "testkeyx", 8);
     bcrypt_encrypt(aticket, aticket, sizeof(struct rxvab_Ticket), akey);
     return 0;
 }
@@ -71,7 +71,7 @@ char **argv; {
 		printf("could not find host '%s' in host table\n", argv[i+1]);
 		return -1;
 	    }
-	    bcopy(th->h_addr, &host, sizeof(long));
+	    memcpy(&host, th->h_addr, sizeof(long));
 	    i++;
 	}
 	else if (!strcmp(argv[i],"-count")) {

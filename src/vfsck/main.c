@@ -1092,7 +1092,7 @@ n	printf("(%d frags, %d blocks, %.1f%% fragmentation)\n",
 
 	    msgprintf("%s: AFS file system partition was modified; forcing full salvage\n", devname);
 	    devname = unrawname(devname);
-	    special = (char *) rindex(devname, '/');
+	    special = (char *) strrchr(devname, '/');
 	    if (!special++) special = devname;
 	    strcpy(pname, "/etc/vfsck."); /* Using /etc, rather than /tmp, since
 		/tmp is a link to /usr/tmp on some systems, and isn't mounted now */

@@ -93,7 +93,7 @@ static CTREEPTR AllocConfigNode()
     register CTREEPTR np;
 
     np = (CTREEPTR) emalloc(sizeof(CTREE));
-    bzero((char *)np, sizeof(CTREE));
+    memset((char *)np, 0, sizeof(CTREE));
     return(np);
 
 } /*AllocConfigNode*/

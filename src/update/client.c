@@ -77,7 +77,7 @@ char *aname; {
 	printf("host %s not found \n", aname);
 	exit(1);
     }
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 

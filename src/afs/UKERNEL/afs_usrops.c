@@ -1419,7 +1419,7 @@ struct afsconf_dir *adir; {
 
     /* build address list */
     for(i=0;i<MAXHOSTSPERCELL;i++)
-	bcopy(&aci->hostAddr[i].sin_addr, &hosts[i], sizeof(afs_int32));
+	memcpy(&hosts[i], &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
 
     if (aci->linkedCell) cellFlags |= 4; /* Flag that linkedCell arg exists,
 					    for upwards compatibility */
@@ -1649,7 +1649,7 @@ void uafs_Init(
 	       rn, cacheFiles);
 	exit(1);
     }
-    bzero(pathname_for_V, (cacheFiles * sizeof(char *)));
+    memset(pathname_for_V, 0, (cacheFiles * sizeof(char *)));
     if (afsd_debug)
 	printf("%s: %d pathname_for_V entries at 0x%x, %d bytes\n",
 	       rn, cacheFiles, (cacheFiles * sizeof(AFSD_INO_T)));
@@ -1747,7 +1747,7 @@ void uafs_Init(
 	       " flags = 0x%x, dcache entries %d\n",
 	       rn, cacheStatEntries, cacheFiles, cacheBlocks, cacheFlags,
 	       dCacheSize);
-    bzero(&cparams, sizeof(cparams));
+    memset(&cparams, 0, sizeof(cparams));
     cparams.cacheScaches = cacheStatEntries;
     cparams.cacheFiles = cacheFiles;
     cparams.cacheBlocks = cacheBlocks;

@@ -319,7 +319,7 @@ char *name;
 #ifdef AFS_SUN5_ENV
 	/* On solaris the above does not resolve hostnames to full names */
 	if (he != (struct hostent *)0) {
-		bcopy(he->h_addr, ip_addr, he->h_length);
+		memcpy(ip_addr, he->h_addr, he->h_length);
 		he = gethostbyaddr(ip_addr, he->h_length, he->h_addrtype);
 	}
 #endif
@@ -1507,7 +1507,7 @@ char *a_config_filename;
 			fprintf(stderr,"[ %s ] Memory Allocation error 1",rn);
 			afsmon_Exit(25);
 		}
-		bzero(curr_host->thresh,numBytes);
+		memset(curr_host->thresh, 0, numBytes);
 	} 
 	curr_host = curr_host->next;;
    }
@@ -1525,7 +1525,7 @@ char *a_config_filename;
 			fprintf(stderr,"[ %s ] Memory Allocation error 2",rn);
 			afsmon_Exit(35);
 		}
-		bzero(curr_host->thresh,numBytes);
+		memset(curr_host->thresh, 0, numBytes);
 	} 
 	curr_host = curr_host->next;;
    }
@@ -1710,8 +1710,7 @@ int a_newProbeCycle;	/* start of a new probe cycle ? */
    /* copy hostname and probe number and probe time and probe status.
    if the probe failed return now */
 
-   bcopy(xstat_fs_Results.connP->hostName, tmp_fsPR->connP->hostName,
-	 sizeof(xstat_fs_Results.connP->hostName));
+   memcpy(tmp_fsPR->connP->hostName, xstat_fs_Results.connP->hostName, sizeof(xstat_fs_Results.connP->hostName));
    tmp_fsPR->probeNum = xstat_fs_Results.probeNum;
    tmp_fsPR->probeTime = xstat_fs_Results.probeTime;
    tmp_fsPR->probeOK = xstat_fs_Results.probeOK;
@@ -1722,23 +1721,14 @@ int a_newProbeCycle;	/* start of a new probe cycle ? */
    }
 
    /* copy connection information */
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-   bcopy(&(xstat_fs_Results.connP->skt), &(tmp_fsPR->connP->skt), 
-		sizeof(struct sockaddr_in));
-#else
-   bcopy(xstat_fs_Results.connP->skt, tmp_fsPR->connP->skt, 
-		sizeof(struct sockaddr_in));
-#endif
+   memcpy(&(tmp_fsPR->connP->skt), &(xstat_fs_Results.connP->skt), sizeof(struct sockaddr_in));
 
-   bcopy(xstat_fs_Results.connP->hostName, tmp_fsPR->connP->hostName,
-	 sizeof(xstat_fs_Results.connP->hostName));
+   memcpy(tmp_fsPR->connP->hostName, xstat_fs_Results.connP->hostName, sizeof(xstat_fs_Results.connP->hostName));
    tmp_fsPR->collectionNumber = xstat_fs_Results.collectionNumber;
 
    /* copy the probe data information */
    tmp_fsPR->data.AFS_CollData_len = xstat_fs_Results.data.AFS_CollData_len;
-   bcopy(xstat_fs_Results.data.AFS_CollData_val, 
-	tmp_fsPR->data.AFS_CollData_val,
-	xstat_fs_Results.data.AFS_CollData_len * sizeof(afs_int32));
+   memcpy(tmp_fsPR->data.AFS_CollData_val, xstat_fs_Results.data.AFS_CollData_val, xstat_fs_Results.data.AFS_CollData_len * sizeof(afs_int32));
 
 		
    /* we have a valid results structure so mark the list item used */
@@ -2198,8 +2188,7 @@ struct xstat_fs_ProbeResults *a_fsResults;
 	/* backup the display data of the probe cycle that just completed -
 	ie., store curr_fsData in prev_fsData */
 
-	bcopy((char *)curr_fsData, (char *)prev_fsData, 
-			(numFS * sizeof(struct fs_Display_Data)) );
+	memcpy((char *)prev_fsData, (char *)curr_fsData, (numFS * sizeof(struct fs_Display_Data)) );
 
 
 	/* initialize curr_fsData but retain the threshold flag information.
@@ -2210,7 +2199,7 @@ struct xstat_fs_ProbeResults *a_fsResults;
 	for(i=0; i<numFS; i++) {
 		curr_fsDataP->probeOK = 0; 
 		curr_fsDataP->ovfCount = 0;
-		bzero((char *)curr_fsDataP->data, numBytes);
+		memset((char *)curr_fsDataP->data, 0, numBytes);
 		curr_fsDataP++;
 	}
 
@@ -2439,8 +2428,7 @@ int a_newProbeCycle;	/* start of new probe cycle ? */
    /* copy hostname and probe number and probe time and probe status.
    if the probe failed return now */
 
-   bcopy(xstat_cm_Results.connP->hostName, tmp_cmPR->connP->hostName,
-	 sizeof(xstat_cm_Results.connP->hostName));
+   memcpy(tmp_cmPR->connP->hostName, xstat_cm_Results.connP->hostName, sizeof(xstat_cm_Results.connP->hostName));
    tmp_cmPR->probeNum = xstat_cm_Results.probeNum;
    tmp_cmPR->probeTime = xstat_cm_Results.probeTime;
    tmp_cmPR->probeOK = xstat_cm_Results.probeOK;
@@ -2452,25 +2440,16 @@ int a_newProbeCycle;	/* start of new probe cycle ? */
 
 
    /* copy connection information */
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-   bcopy(&(xstat_cm_Results.connP->skt), &(tmp_cmPR->connP->skt), 
-		sizeof(struct sockaddr_in));
-#else
-   bcopy(xstat_cm_Results.connP->skt, tmp_cmPR->connP->skt, 
-		sizeof(struct sockaddr_in));
-#endif
+   memcpy(&(tmp_cmPR->connP->skt), &(xstat_cm_Results.connP->skt), sizeof(struct sockaddr_in));
 
    /**** NEED TO COPY rx_connection INFORMATION HERE ******/
 
-   bcopy(xstat_cm_Results.connP->hostName, tmp_cmPR->connP->hostName,
-	 sizeof(xstat_cm_Results.connP->hostName));
+   memcpy(tmp_cmPR->connP->hostName, xstat_cm_Results.connP->hostName, sizeof(xstat_cm_Results.connP->hostName));
    tmp_cmPR->collectionNumber = xstat_cm_Results.collectionNumber;
 
    /* copy the probe data information */
    tmp_cmPR->data.AFSCB_CollData_len = xstat_cm_Results.data.AFSCB_CollData_len;
-   bcopy(xstat_cm_Results.data.AFSCB_CollData_val, 
-	tmp_cmPR->data.AFSCB_CollData_val,
-	xstat_cm_Results.data.AFSCB_CollData_len * sizeof(afs_int32));
+   memcpy(tmp_cmPR->data.AFSCB_CollData_val, xstat_cm_Results.data.AFSCB_CollData_val, xstat_cm_Results.data.AFSCB_CollData_len * sizeof(afs_int32));
 
 		
    /* we have a valid results structure so mark the list item used */
@@ -2953,8 +2932,7 @@ struct xstat_cm_ProbeResults *a_cmResults;
 	/* backup the display data of the probe cycle that just completed -
 	ie., store curr_cmData in prev_cmData */
 
-	bcopy((char *)curr_cmData, (char *)prev_cmData, 
-			(numCM * sizeof(struct cm_Display_Data)) );
+	memcpy((char *)prev_cmData, (char *)curr_cmData, (numCM * sizeof(struct cm_Display_Data)) );
 
 
 	/* initialize curr_cmData but retain the threshold flag information.
@@ -2965,7 +2943,7 @@ struct xstat_cm_ProbeResults *a_cmResults;
 	for(i=0; i<numCM; i++) {
 		curr_cmDataP->probeOK = 0; 
 		curr_cmDataP->ovfCount = 0;
-		bzero((char *)curr_cmDataP->data, numBytes);
+		memset((char *)curr_cmDataP->data, 0, numBytes);
 		curr_cmDataP++;
 	}
 
@@ -3359,7 +3337,7 @@ init_print_buffers()
 	fprintf(stderr,"[ %s ] Memory allocation failure\n",rn);
 	return(-1);
    }
-   bzero(curr_fsData,numBytes);
+   memset(curr_fsData, 0, numBytes);
 
    numBytes = numFS * sizeof(struct fs_Display_Data);
    prev_fsData = (struct fs_Display_Data *) malloc(numBytes); 
@@ -3367,7 +3345,7 @@ init_print_buffers()
 	fprintf(stderr,"[ %s ] Memory allocation failure\n",rn);
 	return(-5);
    }
-   bzero(prev_fsData,numBytes);
+   memset(prev_fsData, 0, numBytes);
 
    /* fill in the host names */
    tmp_fsData1 = curr_fsData;
@@ -3394,7 +3372,7 @@ init_print_buffers()
 	fprintf(stderr,"[ %s ] Memory allocation failure\n",rn);
 	return(-10);
    }
-   bzero(curr_cmData,numBytes);
+   memset(curr_cmData, 0, numBytes);
 
    numBytes = numCM * sizeof(struct cm_Display_Data);
    prev_cmData = (struct cm_Display_Data *) malloc(numBytes); 
@@ -3402,7 +3380,7 @@ init_print_buffers()
 	fprintf(stderr,"[ %s ] Memory allocation failure\n",rn);
 	return(-15);
    }
-   bzero(prev_cmData,numBytes);
+   memset(prev_cmData, 0, numBytes);
 
    /* fill in the host names */
    tmp_cmData1 = curr_cmData;
@@ -3496,7 +3474,7 @@ afsmon_execute()
 	return(-1);
    }
 
-   bzero(FSSktArray, FSsktbytes);
+   memset(FSSktArray, 0, FSsktbytes);
 
    /* Fill in the socket information for each fileserve	*/
    
@@ -3510,7 +3488,7 @@ afsmon_execute()
 	   return(-1);
 	}
 	strncpy(curr_FS->hostName,he->h_name,HOST_NAME_LEN); /* complete name*/
-	bcopy(he->h_addr, &(curr_skt->sin_addr.s_addr), 4);
+	memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
 	curr_skt->sin_family = htons(AF_INET);    /*Internet family*/
 	curr_skt->sin_port   = htons(7000);       /*FileServer port*/
 
@@ -3567,7 +3545,7 @@ afsmon_execute()
 	return(-1);
    }
 
-   bzero(CMSktArray, CMsktbytes);
+   memset(CMSktArray, 0, CMsktbytes);
 
    /* Fill in the socket information for each CM	*/
    
@@ -3581,7 +3559,7 @@ afsmon_execute()
 	   return(-1);
 	}
 	strncpy(curr_CM->hostName,he->h_name,HOST_NAME_LEN); /* complete name*/
-	bcopy(he->h_addr, &(curr_skt->sin_addr.s_addr), 4);
+	memcpy(&(curr_skt->sin_addr.s_addr), he->h_addr, 4);
 	curr_skt->sin_family = htons(AF_INET);    /*Internet family*/
 	curr_skt->sin_port   = htons(7001);       /*Cache Manager port*/
 

@@ -139,7 +139,7 @@ main(argc, argv0)
      */
     check_and_run_afs_vers(argv);
 #endif
-	bzero(&ign_act, sizeof(ign_act));
+	memset(&ign_act, 0, sizeof(ign_act));
 	ign_act.sa_handler=SIG_IGN;
 #endif
 	host = strrchr(argv[0], '/');
@@ -331,7 +331,7 @@ another:
 	}
 	(void) setuid(getuid());
 
-	bzero((char *)someSignals, sizeof(someSignals));
+	memset((char *)someSignals, 0, sizeof(someSignals));
 #ifdef	AFS_HPUX_ENV
 	someSignals[0] = mask(SIGINT)|mask(SIGQUIT)|mask(SIGTERM)|mask(SIGHUP);
 #else

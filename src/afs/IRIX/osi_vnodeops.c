@@ -810,7 +810,7 @@ afs_strategy(OSI_VC_ARG(avc), bp)
 	    /* we are responsible for zero'ing the page */
 	    caddr_t c;
 	    c = bp_mapin(bp);
-	    bzero(c, bp->b_bcount);
+	    memset(c, 0, bp->b_bcount);
 	    iodone(bp);
 	    ReleaseReadLock(&avc->lock);
 	    return;

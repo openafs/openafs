@@ -287,7 +287,7 @@ ZeroAIXcum()
     if (debug > 6)
 	printf ("Zeroing aix_adjtime accumulation: %d %d\n",
 		cum.tv_sec, cum.tv_usec);
-    bzero (&cum, sizeof(cum));
+    memset(&cum, 0, sizeof(cum));
 }
 
 int adjtime(newdelta, olddelta)

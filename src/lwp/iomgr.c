@@ -244,7 +244,7 @@ static struct IoRequest *NewRequest()
 #else
 #define FDS_P_POS (sizeof(int)*8)
 #define INTS_PER_FDS(x) (((x)+(FDS_P_POS-1)) / FDS_P_POS)
-#define FD_N_ZERO(nfds, x) bzero((char*)(x), (INTS_PER_FDS(nfds))*sizeof(int))
+#define FD_N_ZERO(nfds, x) memset((char*)(x), 0, (INTS_PER_FDS(nfds))*sizeof(int))
 #endif
 
 #if defined(AFS_LINUX22_ENV) && (__GLIBC_MINOR__ > 0)
