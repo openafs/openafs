@@ -268,9 +268,8 @@ void main (argc, argv)
     }
     else sc[2] = sc[0];
 
-    /* These two lines disallow jumbograms */
-    rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-    rxi_nSendFrags = rxi_nRecvFrags = 1;
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
 
     tservice = rx_NewService(0,PRSRV,"Protection Server",sc,3,PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {

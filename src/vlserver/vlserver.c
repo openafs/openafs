@@ -262,8 +262,7 @@ char	**argv;
 	exit(2);
     }
     if (!rxJumbograms) {
-        rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-	rxi_nSendFrags = rxi_nRecvFrags = 1;
+	rx_SetNoJumbo();
     }
     rx_SetRxDeadTime(50);
 
