@@ -24,7 +24,7 @@ typedef struct
    TCHAR szParams[ cchNAME ];
    TCHAR szNotifier[ cchNAME ];
    TCHAR szLogFile[ cchNAME ];
-   SERVICETYPE type;
+   AFSSERVICETYPE type;
    BOOL fRunNow;
    SYSTEMTIME stIfCron;
    } SVC_CREATE_PARAMS, *LPSVC_CREATE_PARAMS;
