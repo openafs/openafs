@@ -73,7 +73,7 @@ char *aname; {
     }
     th = gethostbyname(aname);
     if (!th) return 0;
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 

@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.6 2001/07/14 22:23:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.7 2001/09/11 14:34:43 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -120,12 +120,12 @@ rxkad_NewServerSecurityObject (level, get_key_rock, get_key, user_ok)
     
     size = sizeof(struct rx_securityClass);
     tsc = (struct rx_securityClass *) osi_Alloc (size);
-    bzero (tsc, size);
+    memset(tsc, 0, size);
     tsc->refCount = 1;			/* caller has one reference */
     tsc->ops = &rxkad_server_ops;
     size = sizeof(struct rxkad_sprivate);
     tsp = (struct rxkad_sprivate *) osi_Alloc (size);
-    bzero (tsp, size);
+    memset(tsp, 0, size);
     tsc->privateData = (char *) tsp;
 
     tsp->type |= rxkad_server;		/* so can identify later */
@@ -190,7 +190,7 @@ rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
     if (rx_IsUsingPktCksum(aconn)) sconn->cksumSeen = 1;
 
     if (sconn->cksumSeen) {
-	bzero (&c_v2, sizeof(c_v2));
+	memset(&c_v2, 0, sizeof(c_v2));
 	c_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
 	c_v2.challengeID = htonl(sconn->challengeID);
 	c_v2.level = htonl((afs_int32)sconn->level);
@@ -198,7 +198,7 @@ rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
 	challenge = (char *)&c_v2;
 	challengeSize = sizeof(c_v2);
     } else {
-	bzero (&c_old, sizeof(c_old));
+	memset(&c_old, 0, sizeof(c_old));
 	c_old.challengeID = htonl(sconn->challengeID);
 	c_old.level = htonl((afs_int32)sconn->level);
 	challenge = (char *)&c_old;
@@ -313,7 +313,7 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
 
     code = fc_keysched (&sessionkey, sconn->keysched);
     if (code) return RXKADBADKEY;
-    bcopy (&sessionkey, sconn->ivec, sizeof(sconn->ivec));
+    memcpy(sconn->ivec, &sessionkey, sizeof(sconn->ivec));
 
     if (sconn->cksumSeen) {
 	/* using v2 response */
@@ -322,7 +322,7 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
 	int i;
 	afs_uint32 xor[2];
 
-	bcopy(sconn->ivec, xor, 2*sizeof(afs_int32));
+	memcpy(xor, sconn->ivec, 2*sizeof(afs_int32));
 	fc_cbc_encrypt (&v2r.encrypted, &v2r.encrypted, sizeof(v2r.encrypted),
 			sconn->keysched, xor, DECRYPT);
 	cksum = rxkad_CksumChallengeResponse (&v2r);
@@ -330,7 +330,7 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
 	    return RXKADSEALEDINCON;
 	(void) rxkad_SetupEndpoint (aconn, &endpoint);
 	v2r.encrypted.endpoint.cksum = 0;
-	if (bcmp (&endpoint, &v2r.encrypted.endpoint, sizeof(endpoint)) != 0)
+	if (memcmp (&endpoint, &v2r.encrypted.endpoint, sizeof(endpoint)) != 0)
 	    return RXKADSEALEDINCON;
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    v2r.encrypted.callNumbers[i] = ntohl(v2r.encrypted.callNumbers[i]);
@@ -370,9 +370,9 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
     else {				/* save the info for later retreival */
 	int size = sizeof(struct rxkad_serverinfo);
 	rock = (struct rxkad_serverinfo *) osi_Alloc (size);
-	bzero (rock, size);
+	memset(rock, 0, size);
 	rock->kvno = kvno;
-	bcopy (&client, &rock->client, sizeof(rock->client));
+	memcpy(&rock->client, &client, sizeof(rock->client));
 	sconn->rock = rock;
     }
     return 0;

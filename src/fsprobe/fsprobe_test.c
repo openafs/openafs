@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe_test.c,v 1.1.1.4 2001/07/14 22:21:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe_test.c,v 1.1.1.5 2001/09/11 14:32:40 hartmans Exp $");
 
 #include <fsprobe.h>		/*Interface for fsprobe module*/
 
@@ -158,7 +158,7 @@ main(argc, argv)
       fprintf(stderr, "[%s] Can't get host info for servername1\n", rn);
       exit(-1);
     }
-    bcopy(he->h_addr, &(FSSktArray[0].sin_addr.s_addr), 4);
+    memcpy(&(FSSktArray[0].sin_addr.s_addr), he->h_addr, 4);
 
     FSSktArray[1].sin_family = htons(AF_INET);	/*Internet address family*/
     FSSktArray[1].sin_port   = htons(7000);	/*FileServer port*/
@@ -167,7 +167,7 @@ main(argc, argv)
       fprintf(stderr, "[%s] Can't get host info for servername2\n", rn);
       exit(-1);
     }
-    bcopy(he->h_addr, &(FSSktArray[1].sin_addr.s_addr), 4);
+    memcpy(&(FSSktArray[1].sin_addr.s_addr), he->h_addr, 4);
 
     FSSktArray[2].sin_family = htons(AF_INET);	/*Internet address family*/
     FSSktArray[2].sin_port   = htons(7000);	/*FileServer port*/
@@ -176,7 +176,7 @@ main(argc, argv)
       fprintf(stderr, "[%s] Can't get host info for servername3\n", rn);
       exit(-1);
     }
-    bcopy(he->h_addr, &(FSSktArray[2].sin_addr.s_addr), 4);
+    memcpy(&(FSSktArray[2].sin_addr.s_addr), he->h_addr, 4);
 
     printf("Sockets for the 3 AFS FileServers to be probed:\n");
     printf("\t Host servername1: IP addr 0x%lx, port %d\n",

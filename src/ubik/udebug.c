@@ -10,15 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/udebug.c,v 1.1.1.7 2001/07/14 22:24:09 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/udebug.c,v 1.1.1.8 2001/09/11 14:34:58 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdlib.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef AFS_NT40_ENV
@@ -121,7 +121,7 @@ struct cmd_syndesc *as; {
 	    printf("udebug: host %s not found in host table\n", hostName);
 	    exit(1);
 	}
-	bcopy(th->h_addr, &hostAddr, sizeof(afs_int32));
+	memcpy(&hostAddr, th->h_addr, sizeof(afs_int32));
     }
     else hostAddr = htonl(0x7f000001);	/* IP localhost */
 

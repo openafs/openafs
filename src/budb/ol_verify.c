@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/ol_verify.c,v 1.1.1.4 2001/07/14 22:20:59 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/ol_verify.c,v 1.1.1.5 2001/09/11 14:31:43 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -723,12 +723,12 @@ verifyBlocks(ut)
 	bmsize = sizeof(*ablockMap) + (blockEntries[blocktype]-1) * sizeof(ablockMap->entries[0]);
 	ablockMap = (struct blockMap *) malloc(bmsize);
 	if (!ablockMap) ERROR(BUDB_NOMEM);
-	bzero(ablockMap, bmsize);
+	memset(ablockMap, 0, bmsize);
 
 	ablockMap->nEntries = blockEntries[blocktype];
 
 	/* save the block header in the block map */
-	bcopy(&block.h, &ablockMap->header, sizeof(ablockMap->header));
+	memcpy(&ablockMap->header, &block.h, sizeof(ablockMap->header));
 	blockMap[i] = ablockMap;
     }
 
@@ -1276,7 +1276,7 @@ verifyDatabase(ut, recreateFile)
 
     /* clear verification statistics */
     misc = &miscData;
-    bzero (&miscData, sizeof(miscData));
+    memset(&miscData, 0, sizeof(miscData));
 
 #ifdef PDEBUG
     miscData.maxErrors = 1000000;
@@ -1309,7 +1309,7 @@ verifyDatabase(ut, recreateFile)
     bmsize = nBlocks*sizeof(struct blockMap *);
     blockMap = (struct blockMap **) malloc(bmsize);
     if (!blockMap) ERROR(BUDB_NOMEM);
-    bzero(blockMap, bmsize);
+    memset(blockMap, 0, bmsize);
 
      /* verify blocks and construct the block map */
     Log("Read header of every block\n");
@@ -1462,7 +1462,7 @@ error_exit:
     if (!th) *host = 0;
     else
     {
-	bcopy(th->h_addr, host, sizeof(afs_int32));
+	memcpy(host, th->h_addr, sizeof(afs_int32));
 	*host = ntohl(*host);
     }
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bnode.c,v 1.1.1.5 2001/07/14 22:20:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bnode.c,v 1.1.1.6 2001/09/11 14:31:25 hartmans Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -281,7 +281,7 @@ struct bnode_ops *aprocs; {
     }
     if (!tt) {
 	tt = (struct bnode_type *) malloc(sizeof(struct bnode_type));
-	bzero(tt, sizeof(struct bnode_type));
+	memset(tt, 0, sizeof(struct bnode_type));
 	tt->next = allTypes;
 	allTypes = tt;
 	tt->name = atype;
@@ -425,7 +425,7 @@ struct bnode_ops *abnodeops; {
     struct bnode **lb, *nb;
 
     /* format the bnode properly */
-    bzero(abnode, sizeof(struct bnode));
+    memset(abnode, 0, sizeof(struct bnode));
     abnode->ops = abnodeops;
     abnode->name = (char *) malloc(strlen(aname)+1);
     strcpy(abnode->name, aname);
@@ -733,13 +733,13 @@ int bnode_Init() {
 
     if (initDone) return 0;
     initDone = 1;
-    bzero(&bnode_stats, sizeof(bnode_stats));
+    memset(&bnode_stats, 0, sizeof(bnode_stats));
     LWP_InitializeProcessSupport(1, &junk); /* just in case */
     IOMGR_Initialize();
     code = LWP_CreateProcess(bproc, BNODE_LWP_STACKSIZE,
 			     /* priority */ 1, /* parm */0, "bnode-manager", &bproc_pid);
     if (code) return code;
-    bzero((char *)&newaction, sizeof(newaction));
+    memset((char *)&newaction, 0, sizeof(newaction));
     newaction.sa_handler = bnode_Int;
     code = sigaction(SIGCHLD, &newaction, NULL);
     if (code) return errno;
@@ -831,7 +831,7 @@ char *aexecString; {
     code = bnode_ParseLine(aexecString, &tlist);  /* try parsing first */
     if (code) return code;
     tp = (struct bnode_proc *) malloc(sizeof(struct bnode_proc));
-    bzero(tp, sizeof(struct bnode_proc));
+    memset(tp, 0, sizeof(struct bnode_proc));
     tp->next = allProcs;
     allProcs = tp;
     *aproc = tp;

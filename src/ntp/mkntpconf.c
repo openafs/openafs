@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/mkntpconf.c,v 1.1.1.4 2001/07/14 22:23:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/mkntpconf.c,v 1.1.1.5 2001/09/11 14:33:52 hartmans Exp $");
 
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -97,7 +97,7 @@ main(ac, av)
 
 	name = (ac > 0) ? (ac--, *av++) : (ac = 0, "mkntpconf");
 	(void) strcpy(tempfn, name);
-	if ((p = rindex(tempfn, '/')) == 0)
+	if ((p = strrchr(tempfn, '/')) == 0)
 		p = tempfn;
 	else
 		p += 1;
@@ -137,7 +137,7 @@ main(ac, av)
 		peerline(guava, f);
 		peerline(cluster1, f);
 	} else {
-		if ((p = index(hostname, '.')) != 0
+		if ((p = strchr(hostname, '.')) != 0
 		&& strcmp(p+1, "srv.cs.cmu.edu") == 0) {
 			peerline(papaya, f);
 			peerline(guava, f);
@@ -146,12 +146,12 @@ main(ac, av)
 		serv.s_addr = 0;
 		if ((g = fopen("/etc/attributes", "r")) != NULL) {
 			while (fgets(line, sizeof(line), g) != NULL) {
-				if ((p = index(line, ':')) != 0)
+				if ((p = strchr(line, ':')) != 0)
 					*p = 0;
 				if (strcmp(line, papaya.s_name) == 0
 				|| strcmp(line, guava.s_name) == 0)
 					continue;
-				if ((p = index(line, '.')) == 0
+				if ((p = strchr(line, '.')) == 0
 				|| strcmp(p+1, "srv.cs.cmu.edu") != 0)
 					continue;
 				peerline(serv, f);

@@ -35,14 +35,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.4 2001/07/14 22:23:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.5 2001/09/11 14:34:41 hartmans Exp $");
 
 #include <stdio.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include "rpc_scan.h"
@@ -72,7 +72,7 @@ static printwhere();
 reinitialize()
 {
     int i;
-	bzero(curline, MAXLINESIZE);
+	memset(curline, 0, MAXLINESIZE);
 	where = curline;
 	linenum = 0;
 	defined = NULL;

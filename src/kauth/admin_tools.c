@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.7 2001/07/14 22:22:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.8 2001/09/11 14:32:52 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>
@@ -637,7 +637,7 @@ int SetFields (
 
       hrs = 0;
       s = as->parms[7].items->data;
-      if (index(s, ':'))
+      if (strchr(s, ':'))
 	sscanf(s, "%d:%d", &hrs, &mins);
       else
 	sscanf(s, "%d", &mins);
@@ -1328,7 +1328,7 @@ static int MyBeforeProc(
        if (code) {			/* if not then get key and try again */
 	  if (as->parms[13].items) { /* if password specified */
 	     strncpy (passwd, as->parms[13].items->data, sizeof(passwd));
-	     bzero (as->parms[13].items->data, strlen (as->parms[13].items->data));
+	     memset(as->parms[13].items->data, 0, strlen (as->parms[13].items->data));
 	  } else {
 	     char msg[MAXKTCNAMELEN+50];
 	     if (as->parms[12].items) sprintf (msg, "Administrator's (%s) Password: ", name);
@@ -1391,7 +1391,7 @@ static int MyBeforeProc(
 			"getting Authentication token for %s",
 			PrintedName (name, instance, cell));
 	  }
-	  bzero (&key, sizeof(key));
+	  memset(&key, 0, sizeof(key));
        }
     }
 

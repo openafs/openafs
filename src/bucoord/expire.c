@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/expire.c,v 1.1.1.4 2001/07/14 22:20:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/expire.c,v 1.1.1.5 2001/09/11 14:31:36 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -63,7 +63,7 @@ LongTo_ktimeRelDate(longDate, kdptr)
      afs_int32 longDate;
      struct ktime_date *kdptr;
 {
-    bzero(kdptr, sizeof(*kdptr));
+    memset(kdptr, 0, sizeof(*kdptr));
     
     kdptr->day = longDate % (MAX_DAY_VALUE + 1);
     if ( kdptr->day != 0 )
@@ -264,7 +264,7 @@ ParseRelDate(dateStr, relDatePtr)
     afs_int32 value, digit_limit;
     afs_int32 type_index;
 
-    bzero(relDatePtr, sizeof(*relDatePtr));
+    memset(relDatePtr, 0, sizeof(*relDatePtr));
     type_index = 0;
 
     while ( 1 )

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.5 2001/07/14 22:20:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.6 2001/09/11 14:31:23 hartmans Exp $");
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
@@ -51,7 +51,7 @@ register struct afsconf_cell *aci; {
 			printf("Host %s not found in host database...\n", aci->hostName[i]);
 			return AFSCONF_FAILURE;
 		}
-		bcopy(th->h_addr, &aci->hostAddr[i].sin_addr, sizeof(afs_int32));
+		memcpy(&aci->hostAddr[i].sin_addr, th->h_addr, sizeof(afs_int32));
 	    }
 	    /* otherwise we're deleting this entry */
 	}

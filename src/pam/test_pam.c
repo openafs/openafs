@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/test_pam.c,v 1.1.1.5 2001/07/14 22:23:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/test_pam.c,v 1.1.1.6 2001/09/11 14:34:02 hartmans Exp $");
 
 #include <stdio.h>
 #include <security/pam_appl.h>
@@ -43,6 +43,7 @@ void main(int argc, char *argv[])
     int authenticated = 0;
     int retcode;
     char *username;
+    int setcred = 1;
 
     if (argc < 2 || argc > 3) {
 	fprintf(stderr, "Usage: %s [-u] <user>\n", argv[0]);
@@ -53,7 +54,8 @@ void main(int argc, char *argv[])
 	    fprintf(stderr, "Usage: %s [-u] <user>\n", argv[0]);
 	    exit(1);
 	}
-	service = "unixtest";
+	/* service = "unixtest"; */
+        setcred = 0;
 	username = argv[2];
     } else {
 	username = argv[1];
@@ -81,12 +83,18 @@ void main(int argc, char *argv[])
 
     /* pam_open_session */
 
+    if (setcred)
     if ((retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED)) != PAM_SUCCESS) {
 	fprintf(stderr, "pam_setcred returned %d.\n", retcode);
 	pam_end(pamh, PAM_ABORT);
 	exit(1);
     }
 
+    if ((retcode = pam_open_session(pamh, PAM_SILENT)) != PAM_SUCCESS) {
+	fprintf(stderr, "pam_open_session returned %d.\n", retcode);
+	pam_end(pamh, PAM_ABORT);
+	exit(1);
+    }
     pam_end(pamh, PAM_SUCCESS);
 
     putenv(new_envstring);

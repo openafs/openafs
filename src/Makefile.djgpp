@@ -17,11 +17,11 @@ includes: afsdinc osiinc authinc
 libs: fsint cmd lwp osi rx rxkad vldb rxstat acl
 
 clean:
-	-rm -f $(SYS_NAME)/dest/include/*
-	-rm -f $(SYS_NAME)/dest/include/afs/*
-	-rm -f $(SYS_NAME)/dest/lib/*
-	-rm -f $(SYS_NAME)/dest/lib/afs/*
-	-rm -f $(SYS_NAME)/dest/bin/*
+	-$(RM) -f $(SYS_NAME)/dest/include/*
+	-$(RM) -f $(SYS_NAME)/dest/include/afs/*
+	-$(RM) -f $(SYS_NAME)/dest/lib/*
+	-$(RM) -f $(SYS_NAME)/dest/lib/afs/*
+	-$(RM) -f $(SYS_NAME)/dest/bin/*
 
 config:
 	-make -C $(OBJ)/config install

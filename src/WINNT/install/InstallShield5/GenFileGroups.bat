@@ -69,7 +69,7 @@ echo Version=1.00.000 >> Client_Common_Files.fgl
 rem -------------- Client_WinDir_Files.fgl -----------------------------
 
 echo [TopDir] > Client_WinDir_Files.fgl
-echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Client_WinDir_Files.fgl
+rem echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Client_WinDir_Files.fgl
 echo.  >> Client_WinDir_Files.fgl
 echo [General] >> Client_WinDir_Files.fgl
 echo Type=FILELIST >> Client_WinDir_Files.fgl
@@ -145,7 +145,7 @@ echo Version=1.00.000 >> Light_Client_Common_Files.fgl
 rem -------------- Light_Client_WinDir_Files.fgl -----------------------
 
 echo [TopDir] > Light_Client_WinDir_Files.fgl
-echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Light_Client_WinDir_Files.fgl
+rem echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Light_Client_WinDir_Files.fgl
 echo.  >> Light_Client_WinDir_Files.fgl
 echo [General] >> Light_Client_WinDir_Files.fgl
 echo Type=FILELIST >> Light_Client_WinDir_Files.fgl
@@ -201,7 +201,7 @@ echo Version=1.00.000 >> Light95_Client_Common_Files.fgl
 rem -------------- Light95_Client_WinDir_Files.fgl -----------------------
 
 echo [TopDir] > Light95_Client_WinDir_Files.fgl
-echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Light95_Client_WinDir_Files.fgl
+rem echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Light95_Client_WinDir_Files.fgl
 echo.  >> Light95_Client_WinDir_Files.fgl
 echo [General] >> Light95_Client_WinDir_Files.fgl
 echo Type=FILELIST >> Light95_Client_WinDir_Files.fgl
@@ -324,7 +324,7 @@ echo Version=1.00.000 >> Control_Center_Common_Files.fgl
 rem -------------- Control_Center_WinDir_Files.fgl ---------------------
 
 echo [TopDir] > Control_Center_WinDir_Files.fgl
-echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Control_Center_Windir_Files.fgl
+rem echo file0=%IS5_DEST%\root.client\usr\vice\etc\afsdcell.ini >> Control_Center_Windir_Files.fgl
 echo.  >> Control_Center_WinDir_Files.fgl
 echo [General] >> Control_Center_WinDir_Files.fgl
 echo Type=FILELIST >> Control_Center_WinDir_Files.fgl

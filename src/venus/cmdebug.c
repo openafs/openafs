@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/cmdebug.c,v 1.1.1.4 2001/07/14 22:24:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/cmdebug.c,v 1.1.1.5 2001/09/11 14:35:22 hartmans Exp $");
 
 
 #include <sys/types.h>
@@ -165,7 +165,7 @@ struct cmd_syndesc *as; {
 	printf("cmdebug: can't resolve address for host %s.\n", hostName);
 	exit(1);
     }
-    bcopy(thp->h_addr, &addr, sizeof(afs_int32));
+    memcpy(&addr, thp->h_addr, sizeof(afs_int32));
     secobj = rxnull_NewServerSecurityObject();
     conn = rx_NewConnection(addr, htons(port), 1, secobj, 0);
     if (!conn) {

@@ -22,7 +22,7 @@ NTMAKE = nmake /nologo /f ntmakefile install
 NTMAKELANG = nmake /nologo /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
 MKDIR = mkdir
-OBJ = obj
+OBJ = src
 
 # Standard install directory.
 !IFDEF AFSDEV_DESTDIR
@@ -326,37 +326,37 @@ libadmin: tbutc
 	$(CD) $(OBJ)\$@
 	$(NTMAKE)
 	$(CD) ..\..
-	
+
 adminutil: libadmin
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-	
+
 vos: adminutil
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-	
+
 client: vos
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-	
+
 kas: client
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-	
+
 pts: kas
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
-	
+
 bos: pts
      echo ***** $@
 	$(CD) $(OBJ)\libadmin\$@
@@ -417,13 +417,7 @@ afssvrcpa: afssvrcfg
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-afs_setup_utils: afssvrcpa
-     echo ***** $@
-	$(CD) $(OBJ)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-client_talocale: afs_setup_utils
+client_talocale: afssvrcpa
      echo ***** $@
 	$(CD) $(OBJ)\WINNT\talocale
 	$(NTMAKE)
@@ -476,6 +470,11 @@ install: start finale
 # InstallShield dependencies
 
 InstallShield5: install
+	echo ***** afs_setup_utils
+	$(CD) $(OBJ)\WINNT\afs_setup_utils
+	$(NTMAKE)
+	$(CD) ..\..\..
+
 	$(CD) $(OBJ)\WINNT\install\$@
 	$(NTMAKE)
 	$(CD) ..\..\..\..

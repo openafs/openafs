@@ -141,7 +141,9 @@ char *mktemp(char *template);
 #include <sys/time.h>
 #define NEED_STRERROR
 typedef int rlim_t;
-#define memmove(a,b,c) bcopy(b,a,c)
+#ifndef HAVE_MEMMOVE
+#define memmove(a,b,c) memcpy(a, b, c)
+#endif
 #define NO_LINGCLOSE
 #define USE_FLOCK_SERIALIZED_ACCEPT
 #define NEED_DIFFTIME
@@ -151,7 +153,6 @@ typedef int rlim_t;
 #undef HAVE_GMTOFF
 #define NO_KILLPG
 #undef NO_SETSID
-#define bzero(a,b) memset(a,0,b)
 #if !defined(USE_SYSVSEM_SERIALIZED_ACCEPT) && \
     !defined(USE_PTHREAD_SERIALIZED_ACCEPT)
 #define USE_FCNTL_SERIALIZED_ACCEPT
@@ -252,7 +253,7 @@ typedef int rlim_t;
 #endif
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #ifdef USEBCOPY
-#define memmove(a,b,c) bcopy(b,a,c)
+#define memmove(a,b,c) memcpy(a, b, c)
 #endif
 #if AIX >= 42
 #define NET_SIZE_T size_t
@@ -446,7 +447,7 @@ extern int strncasecmp(const char *, const char *, unsigned);
 /* These are to let -Wall compile more cleanly */
 extern int strcasecmp(const char *, const char *);
 extern int strncasecmp(const char *, const char *, unsigned);
-extern int set42sig(), getopt(), getpeername(), bzero();
+extern int set42sig(), getopt(), getpeername();
 extern int listen(), bind(), socket(), getsockname();
 extern int accept(), gethostname(), connect(), lstat();
 extern int select(), killpg(), shutdown();
@@ -489,7 +490,6 @@ extern char *crypt();
 #define NEED_STRNCASECMP
 #endif /* ENCORE */
 #endif /* MPRAS */
-#define bzero(a,b) memset(a,0,b)
 /* A lot of SVR4 systems need this */
 #ifndef USE_SYSVSEM_SERIALIZED_ACCEPT
 #define USE_FCNTL_SERIALIZED_ACCEPT
@@ -513,7 +513,6 @@ extern char *crypt();
 #undef NEED_STRDUP
 #define NEED_STRCASECMP
 #define NEED_STRNCASECMP
-#define bzero(a,b) memset(a,0,b)
 #define HAVE_MMAP 1
 #define USE_MMAP_SCOREBOARD
 #define USE_MMAP_FILES
@@ -533,7 +532,6 @@ extern char *crypt();
 #undef NEED_STRDUP
 #define NEED_STRCASECMP
 #define NEED_STRNCASECMP
-#define bzero(a,b) memset(a,0,b)
 /* A lot of SVR4 systems need this */
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #define ap_inet_addr inet_network
@@ -653,7 +651,6 @@ typedef int rlim_t;
 #undef HAVE_GMTOFF
 #define NO_KILLPG
 #undef NO_SETSID
-#define bzero(a,b) memset(a,0,b)
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #define HAVE_MMAP 1
 #define USE_MMAP_SCOREBOARD

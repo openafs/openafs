@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_getticket.c,v 1.1.1.4 2001/07/14 22:22:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_getticket.c,v 1.1.1.5 2001/09/11 14:33:04 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -266,7 +266,7 @@ static long Main (as, arock)
 	
     if (as->parms[13].items) { /* if password specified */
 	strncpy (passwd, as->parms[13].items->data, sizeof(passwd));
-	bzero (as->parms[13].items->data, strlen (as->parms[13].items->data));
+	memset(as->parms[13].items->data, 0, strlen (as->parms[13].items->data));
     } else {
 	char msg[sizeof(name)+15];
 	if (as->parms[12].items) strcpy (msg, "Admin Password: ");

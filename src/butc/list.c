@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/list.c,v 1.1.1.4 2001/07/14 22:21:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/list.c,v 1.1.1.5 2001/09/11 14:31:48 hartmans Exp $");
 
 #ifndef AFS_NT40_ENV
 #include <sys/time.h>
@@ -74,7 +74,7 @@ struct dumpNode **newNode;
     /* get space */
     *newNode = (struct dumpNode *) (malloc (sizeof (struct dumpNode)));
 
-    bzero(*newNode, sizeof(struct dumpNode));
+    memset(*newNode, 0, sizeof(struct dumpNode));
 
     (*newNode)->next = dumpQHeader->next;
     dumpQHeader->next = *newNode;

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/physio.c,v 1.1.1.4 2001/07/14 22:24:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/physio.c,v 1.1.1.5 2001/09/11 14:35:35 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -154,14 +154,14 @@ DirHandle     *	file;
 
 {
     IH_RELEASE(file->dirh_handle);
-    bzero((char *)file, sizeof(DirHandle));
+    memset((char *)file, 0, sizeof(DirHandle));
 }
 
 FidZero (file)
 DirHandle     *	file;
 
 {
-    bzero((char *)file, sizeof(DirHandle));
+    memset((char *)file, 0, sizeof(DirHandle));
 }
 
 FidEq (afile, bfile)

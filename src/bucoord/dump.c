@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dump.c,v 1.1.1.4 2001/07/14 22:20:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dump.c,v 1.1.1.5 2001/09/11 14:31:35 hartmans Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -120,7 +120,7 @@ bc_Dumper(aindex)
     baseNamePtr = tailCompPtr(dumpTaskPtr->dumpName);
 
     /* setup the interface structure */
-    bzero(tcdiPtr, sizeof(*tcdiPtr));
+    memset(tcdiPtr, 0, sizeof(*tcdiPtr));
 
     /* general */
     strcpy(tcdiPtr->dumpPath, dumpTaskPtr->dumpName);
@@ -273,7 +273,7 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer, adestPartition
 	return(BC_NOTLOCKED);
     }
     
-    bzero(&bc_dumpTasks[i], sizeof(struct bc_dumpTask));
+    memset(&bc_dumpTasks[i], 0, sizeof(struct bc_dumpTask));
     bc_dumpTasks[i].callProc      = aproc;
     bc_dumpTasks[i].config        = aconfig;
     bc_dumpTasks[i].volumes       = avolsToDump;
@@ -298,9 +298,9 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer, adestPartition
 	bc_dumpTasks[i].expType = dsptr->expType;
     }
     if (adestServer)
-	bcopy(adestServer, &bc_dumpTasks[i].destServer, sizeof(struct sockaddr_in));
+	memcpy(&bc_dumpTasks[i].destServer, adestServer, sizeof(struct sockaddr_in));
     else
-        bzero(&bc_dumpTasks[i].destServer, sizeof(struct sockaddr_in));
+        memset(&bc_dumpTasks[i].destServer, 0, sizeof(struct sockaddr_in));
  
     code = LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY, i, "helper", &junk);
     if (code)
@@ -373,7 +373,7 @@ afs_int32 size;
     code = ConnectButc(config, port, &tconn);
     if (code) return(code);
     
-    bzero(&label,sizeof(label));
+    memset(&label, 0, sizeof(label));
     if (afsname)
        strcpy(label.afsname, afsname);
     if (pname)
@@ -421,7 +421,7 @@ bc_ReadLabel(config,port)
     code = ConnectButc(config, port, &tconn);
     if (code) return(code);
     
-    bzero(&label,sizeof(label));
+    memset(&label, 0, sizeof(label));
     code = TC_ReadLabel(tconn, &label, &taskId);
     if (code) {
         if (code == BUTM_NOLABEL) {

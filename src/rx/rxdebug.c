@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rxdebug.c,v 1.1.1.6 2001/07/14 22:23:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rxdebug.c,v 1.1.1.7 2001/09/11 14:34:25 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -30,11 +30,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rxdebug.c,v 1.1.1.6 2001/07/14 22:23
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <string.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include <sys/stat.h>
@@ -159,7 +159,7 @@ struct cmd_syndesc *as;
 	    printf("rxdebug: host %s not found in host table\n", name);
 	    exit(1);
 	}
-	bcopy(th->h_addr, &onlyHost, sizeof(afs_int32));
+	memcpy(&onlyHost, th->h_addr, sizeof(afs_int32));
     } else onlyHost = -1;
 
     if (as->parms[9].items) {
@@ -184,7 +184,7 @@ struct cmd_syndesc *as;
 	    printf("rxdebug: host %s not found in host table\n", hostName);
 	    exit(1);
 	}
-	bcopy(th->h_addr, &host, sizeof(afs_int32));
+	memcpy(&host, th->h_addr, sizeof(afs_int32));
     }
     else host = htonl(0x7f000001);	/* IP localhost */
 

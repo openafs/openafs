@@ -29,7 +29,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_refernce.c,v 1.1.1.3 2001/07/14 22:23:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_refernce.c,v 1.1.1.4 2001/09/11 14:34:28 hartmans Exp $");
 
 #ifndef	NeXT
 
@@ -79,7 +79,7 @@ xdr_reference(xdrs, pp, size, proc)
 			if (loc == NULL) {
 				return (FALSE);
 			}
-			bzero(loc, (int)size);
+			memset(loc, 0, (int)size);
 			break;
 	}
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/testpt.c,v 1.1.1.5 2001/07/14 22:23:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/testpt.c,v 1.1.1.6 2001/09/11 14:34:10 hartmans Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -464,12 +464,12 @@ TestManyMembers (as, arock)
     population = (char *)malloc (sqr(number)*sizeof(char));
 
     nFilled = 0;
-    bzero (filled, number);
+    memset(filled, 0, number);
     nCleaned = 0;
-    bzero (cleaned, number);
-    bzero (population, sqr(number));
-    bzero (users, number*sizeof(afs_int32));
-    bzero (groups, number*sizeof(afs_int32));
+    memset(cleaned, 0, number);
+    memset(population, 0, sqr(number));
+    memset(users, 0, number*sizeof(afs_int32));
+    memset(groups, 0, number*sizeof(afs_int32));
 
     ownerUser = lastGroup = 0;
     groupOwners = (afs_int32 *) malloc (number*sizeof(afs_int32));
@@ -898,7 +898,7 @@ static int MyBeforeProc (as, arock)
 	    strncpy (cellinfo.hostName[i], serverList->data, MAXHOSTCHARS);
 	    th = gethostbyname(cellinfo.hostName[i]);
 	    if (!th) return UBADHOST;
-	    bcopy(th->h_addr, &cellinfo.hostAddr[i].sin_addr, sizeof(afs_int32));
+	    memcpy(&cellinfo.hostAddr[i].sin_addr, th->h_addr, sizeof(afs_int32));
 	    cellinfo.hostAddr[i].sin_family = AF_INET;
 	    cellinfo.hostAddr[i].sin_port = 0;
 	}

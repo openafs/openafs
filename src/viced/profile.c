@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/profile.c,v 1.1.1.4 2001/07/14 22:24:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/profile.c,v 1.1.1.5 2001/09/11 14:35:36 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/file.h>
@@ -58,7 +58,7 @@ void StartProfiling()
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
     AllocProfBuf();
-    bzero (profBuf, profBufSize);
+    memset(profBuf, 0, profBufSize);
   /* the following code is to replace the monitor call below  */
   /*  monitor (PROFSTART, &etext, profBuf, profBufSize, 0); */
     profileHeader.startpc = PROFSTART;

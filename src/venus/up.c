@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/up.c,v 1.1.1.6 2001/07/14 22:24:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/up.c,v 1.1.1.7 2001/09/11 14:35:26 hartmans Exp $");
 
 /* missing type from C language */
 #define Boolean short
@@ -49,8 +49,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/venus/up.c,v 1.1.1.6 2001/07/14 22:24:3
 
 #define MAXACL 400
 
-extern char *index ();
-extern char *rindex ();
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern sys_nerr;
 extern char *sys_errlist[];
@@ -191,7 +189,7 @@ Boolean MakeParent(file, owner)
     
     strcpy(parent, file);
     
-    p = rindex(parent, '/');
+    p = strrchr(parent, '/');
     if (!p) {
 	strcpy(parent, ".");
     }
@@ -684,7 +682,7 @@ int isMountPoint( name, blob )
     /*
      * Find rightmost slash, if any.
      */
-    last_component = (char *) rindex(true_name, '/');
+    last_component = (char *) strrchr(true_name, '/');
     if (last_component) {
         /*
          * Found it.  Designate everything before it as the parent directory,
@@ -713,7 +711,7 @@ int isMountPoint( name, blob )
     blob->in_size = strlen(last_component)+1;
     blob->out_size = MAXSIZE;
     blob->out = space;
-    bzero(space, MAXSIZE);
+    memset(space, 0, MAXSIZE);
 
     code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, blob, 0);
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/vol_sets.c,v 1.1.1.6 2001/07/14 22:20:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/vol_sets.c,v 1.1.1.7 2001/09/11 14:31:40 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -496,7 +496,7 @@ bc_ParseVolumeSet()
 	     * global configuration structure.
 	     */
 	    tvs = (struct bc_volumeSet *) malloc(sizeof(struct bc_volumeSet));
-	    bzero(tvs, sizeof(*tvs));
+	    memset(tvs, 0, sizeof(*tvs));
 	    tvs->name = (char *) malloc(strlen(vsname)+1);
 	    strcpy(tvs->name, vsname);
 
@@ -531,7 +531,7 @@ bc_ParseVolumeSet()
 		com_err(whoami,0, "Can't malloc() a new volume spec record!");
 		return(-1);
 	    }
-	    bzero(tve, sizeof(*tve));
+	    memset(tve, 0, sizeof(*tve));
 	    if (bc_ParseHost(serverName, &(tve->server)))
 		com_err(whoami,0, "Can't get required info on host '%s'", serverName);
 

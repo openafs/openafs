@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/dbentries.c,v 1.1.1.4 2001/07/14 22:21:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/dbentries.c,v 1.1.1.5 2001/09/11 14:31:47 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -75,7 +75,7 @@ afs_int32 threadEntryDir(anEntry, size, type)
     entryPtr->dlq_type      = type;
     entryPtr->dlq_structPtr = entry;
 
-    bcopy (anEntry, entry, size);
+    memcpy(entry, anEntry, size);
     dlqLinkb (&entries_to_flush, entryPtr);
     return(0);
 }
@@ -119,7 +119,7 @@ threadEntry(anEntry, size, type)
     entryPtr->dlq_type      = type;
     entryPtr->dlq_structPtr = entry;
 
-    bcopy (anEntry, entry, size);
+    memcpy(entry, anEntry, size);
     dlqLinkb (&savedEntries, (dlqlinkP)entryPtr);
     return(0);
 }
@@ -164,7 +164,7 @@ afs_int32 useTape (aTapeEntryPtr, dumpID, tapename, tapeSeq, useCount, written, 
 {
     afs_int32 code = 0;
 
-    bzero(aTapeEntryPtr, sizeof(struct budb_tapeEntry));
+    memset(aTapeEntryPtr, 0, sizeof(struct budb_tapeEntry));
     strcpy(aTapeEntryPtr->name, tapename);
     aTapeEntryPtr->flags    = BUDB_TAPE_BEINGWRITTEN;
     aTapeEntryPtr->written  = written;                  /* When label was written */
@@ -221,7 +221,7 @@ afs_int32 addVolume(aVolEntryPtr, dumpID, tapename, volname, volid, cloneDate,
 	allo = 1;
     }
 	
-    bzero(aVolEntryPtr, sizeof(struct budb_volumeEntry));
+    memset(aVolEntryPtr, 0, sizeof(struct budb_volumeEntry));
     strcpy(aVolEntryPtr->name, volname);
     aVolEntryPtr->flags    = flags;
     aVolEntryPtr->id       = volid;
@@ -417,7 +417,7 @@ dbWatcher()
 			break;
 		     }
 
-		     bcopy(volPtr, &volumes[c], sizeof(struct budb_volumeEntry));
+		     memcpy(&volumes[c], volPtr, sizeof(struct budb_volumeEntry));
 		     free(volPtr);
 		     free(entryPtr);
 		     entryPtr = (dlqlinkP)0;

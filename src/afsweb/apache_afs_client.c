@@ -376,17 +376,17 @@ static int setToken(char *tokenBuf, int tokenLen)
 #ifdef OLDSETPAG
     /* skip over the secret token */
     temp = tokenBuf;
-    bcopy(temp, &i, sizeof(afs_int32));
+    memcpy(&i, temp, sizeof(afs_int32));
     temp += (i + sizeof(afs_int32));
     
     /* skip over the clear token */
-    bcopy(temp, &i, sizeof(afs_int32));
+    memcpy(&i, temp, sizeof(afs_int32));
     temp += (i + sizeof(afs_int32));
     
     doneSETPAG = 1;
-    bcopy(temp, &i, sizeof(afs_int32)); 
+    memcpy(&i, temp, sizeof(afs_int32)); 
     i |= 0x8000;
-    bcopy(&i, temp, sizeof(afs_int32));
+    memcpy(temp, &i, sizeof(afs_int32));
     temp += sizeof(afs_int32);
 #endif
 
@@ -455,9 +455,9 @@ int authenticateUser(request_rec *r, char *defaultCell,
     strcpy(global_default_cell, defaultCell);
   }
 
-  bzero(user,APACHEAFS_USERNAME_MAX);
-  bzero(passwd,APACHEAFS_PASSWORD_MAX);
-  bzero(cell,APACHEAFS_CELLNAME_MAX);
+  memset(user, 0, APACHEAFS_USERNAME_MAX);
+  memset(passwd, 0, APACHEAFS_PASSWORD_MAX);
+  memset(cell, 0, APACHEAFS_CELLNAME_MAX);
 
   if (auth_line == NULL) { /* No Authorization field - we don't do anything */ 
     /* 
@@ -468,9 +468,9 @@ int authenticateUser(request_rec *r, char *defaultCell,
     afslog(15, ("%s: No authline recieved", module_name));
     haveAuth = 0;
     userChanged=1;
-    bzero(lastUser, APACHEAFS_USERNAME_MAX);
-    bzero(lastCell, APACHEAFS_CELLNAME_MAX);
-    bzero(lastCksum, SHA_HASH_BYTES);
+    memset(lastUser, 0, APACHEAFS_USERNAME_MAX);
+    memset(lastCell, 0, APACHEAFS_CELLNAME_MAX);
+    memset(lastCksum, 0, SHA_HASH_BYTES);
     rc = unlog();
     afslog(25, ("%s: pid:%d No Authorization field. Unlogging ...",
 		module_name, getpid()));
@@ -503,9 +503,9 @@ int authenticateUser(request_rec *r, char *defaultCell,
 		module_name, getpid()));
     haveAuth = 0;
     userChanged = 1;
-    bzero(lastUser, APACHEAFS_USERNAME_MAX);
-    bzero(lastCell, APACHEAFS_CELLNAME_MAX);
-    bzero(lastCksum, SHA_HASH_BYTES);
+    memset(lastUser, 0, APACHEAFS_USERNAME_MAX);
+    memset(lastCell, 0, APACHEAFS_CELLNAME_MAX);
+    memset(lastCksum, 0, SHA_HASH_BYTES);
     rc = unlog();
     if (rc) {
       sprintf(err_msg, "%s: Error unlogging from AFS cell - rc: %d, errno:%d",
@@ -773,7 +773,7 @@ static int geturi(request_rec *r, char *buf)
   afsassert(r);
   afsassert(buf);
 
-  bzero(buf, APACHEAFS_CELLNAME_MAX);
+  memset(buf, 0, APACHEAFS_CELLNAME_MAX);
   pos = strchr(r->uri,'/');
   if (pos != NULL) {
     pos++;
@@ -820,7 +820,7 @@ static int parseAuthName_int(request_rec *r, char *buf, char *msg)
   afsassert(buf);
   afsassert(msg);
 
-  bzero(blank, sizeof(blank));
+  memset(blank, 0, sizeof(blank));
   afslog(50, ("%s: Parsing Authorization Required reply. buf:%s", module_name, buf));
 
   pos = strchr(buf, '<');
@@ -873,7 +873,7 @@ static int parseAuthName_int(request_rec *r, char *buf, char *msg)
       pos++;
       strcat(msg, pos);
       strcpy(buf, msg);
-      bzero(msg, 1024);
+      memset(msg, 0, 1024);
       parseAuthName_int(r, buf, msg);
       return 0;
     }
@@ -899,7 +899,7 @@ static int parseAuthName(request_rec *r, char *buf)
   afsassert(r);
   afsassert(buf);
 
-  bzero(msg, sizeof(msg));
+  memset(msg, 0, sizeof(msg));
 
   pos=strchr(buf,'<');
   while (pos != NULL) {
@@ -910,7 +910,7 @@ static int parseAuthName(request_rec *r, char *buf)
       return -1;
     }
     strcpy(buf, msg);
-    bzero(msg, sizeof(msg));
+    memset(msg, 0, sizeof(msg));
     pos = strchr(buf, '<');
   }
   afslog(50, ("%s: Parsing WWW Auth required reply. final message:%s", 

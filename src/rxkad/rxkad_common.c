@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.5 2001/07/14 22:23:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.6 2001/09/11 14:34:42 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -59,9 +59,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.5 2001/07/
 
 char *rxi_Alloc();
 
-#ifndef max
-#define	max(a,b)    ((a) < (b)? (b) : (a))
-#endif /* max */
+#ifndef afs_max
+#define	afs_max(a,b)    ((a) < (b)? (b) : (a))
+#endif /* afs_max */
 
 #ifndef KERNEL
 #define osi_Time() time(0)
@@ -96,11 +96,10 @@ rxkad_DeriveXORInfo(aconnp, aschedule, aivec, aresult)
     afs_uint32 xor[2];
 
     rxkad_SetupEndpoint(aconnp, &tendpoint);
-    bcopy(aivec, (void *)xor, 2*sizeof(afs_int32));
+    memcpy((void *)xor, aivec, 2*sizeof(afs_int32));
     fc_cbc_encrypt(&tendpoint, &tendpoint, sizeof(tendpoint),
 		   aschedule, xor, ENCRYPT);
-    bcopy(((char *)&tendpoint) + sizeof(tendpoint) - ENCRYPTIONBLOCKSIZE,
-	  aresult, ENCRYPTIONBLOCKSIZE);
+    memcpy(aresult, ((char *)&tendpoint) + sizeof(tendpoint) - ENCRYPTIONBLOCKSIZE, ENCRYPTIONBLOCKSIZE);
     return 0;
 }
 
@@ -215,7 +214,7 @@ rxs_return_t rxkad_NewConnection (aobj, aconn)
     if (rx_IsServerConn(aconn)) {
 	int size = sizeof(struct rxkad_sconn);
 	aconn->securityData = (char *) rxi_Alloc (size);
-	bzero(aconn->securityData, size); /* initialize it conveniently */
+	memset(aconn->securityData, 0, size); /* initialize it conveniently */
     }
     else { /* client */
 	struct rxkad_cprivate *tcp;
@@ -223,7 +222,7 @@ rxs_return_t rxkad_NewConnection (aobj, aconn)
 	int size = sizeof(struct rxkad_cconn);
 	tccp = (struct rxkad_cconn *) rxi_Alloc (size);
 	aconn->securityData = (char *) tccp;
-	bzero(aconn->securityData, size); /* initialize it conveniently */
+	memset(aconn->securityData, 0, size); /* initialize it conveniently */
 	tcp = (struct rxkad_cprivate *) aobj->privateData;
 	if (!(tcp->type & rxkad_client)) return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level); /* set header and trailer sizes */
@@ -453,7 +452,7 @@ rxs_return_t rxkad_PreparePacket (aobj, acall, apacket)
     switch (level) {
       case rxkad_clear: return 0;	/* shouldn't happen */
       case rxkad_auth:
-	nlen = max (ENCRYPTIONBLOCKSIZE,
+	nlen = afs_max (ENCRYPTIONBLOCKSIZE,
 		    len + rx_GetSecurityHeaderSize(tconn));
 	if (nlen > (len + rx_GetSecurityHeaderSize(tconn))) {
 	  rxi_RoundUpPacket(apacket, nlen - (len + rx_GetSecurityHeaderSize(tconn)));

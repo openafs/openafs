@@ -91,7 +91,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.6 2001/07/14 22:25:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.7 2001/09/11 14:35:48 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -923,7 +923,7 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 	  Log("Can't salvage '%s'. Not enough memory\n", partP->name);
 	  return;
        }
-       bzero(thisjob, sizeof(struct job));
+       memset(thisjob, 0, sizeof(struct job));
        thisjob->partP = partP;
        thisjob->jobnumb = jobcount;
        jobcount++;
@@ -2002,7 +2002,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 
     if (deleteMe)
         *deleteMe = 0;
-    bzero(&tempHeader, sizeof(tempHeader));
+    memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
     tempHeader.id = isp->volumeId;
@@ -2083,7 +2083,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	isp->volSummary->header.volumeAcl        = 0;
 	isp->volSummary->header.volumeMountTable = 0;
 
-	if (bcmp(&isp->volSummary->header, &tempHeader, sizeof(struct VolumeHeader))) {
+	if (memcmp(&isp->volSummary->header, &tempHeader, sizeof(struct VolumeHeader))) {
 	    /* We often remove the name before calling us, so we make a fake one up */
 	    if (isp->volSummary->fileName) {
 		strcpy(name, isp->volSummary->fileName);
@@ -2102,7 +2102,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	  }
     }
     if (headerFd) {
-	bcopy(&tempHeader,&isp->volSummary->header,sizeof(struct VolumeHeader));
+	memcpy(&isp->volSummary->header, &tempHeader, sizeof(struct VolumeHeader));
 	if (Testing) {
 	    if (!Showmode) Log("It would have written a new header file for volume %u\n", isp->volumeId);
 	} else {
@@ -2203,7 +2203,7 @@ int SalvageHeader(register struct stuff *sp, struct InodeSummary *isp,
 	/* The following code should be moved into vutil.c */
 	if (sp->inodeType == VI_VOLINFO) {
 	    struct timeval tp;
-	    bzero(&header.volumeInfo, sizeof (header.volumeInfo));
+	    memset(&header.volumeInfo, 0, sizeof (header.volumeInfo));
 	    header.volumeInfo.stamp = sp->stamp;
 	    header.volumeInfo.id = isp->volumeId;
 	    header.volumeInfo.parentId = isp->RWvolumeId;
@@ -2334,7 +2334,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 	    if (VNDISK_GET_INO(vnode) == 0) {
 		if (RW) {
 		    /* Log("### DEBUG ### Deleted Vnode with 0 inode (vnode %d)\n", vnodeNumber); */
-		    bzero(vnode, vcp->diskSize);
+		    memset(vnode, 0, vcp->diskSize);
 		    vnodeChanged = 1;
 		}
 	    }
@@ -2342,7 +2342,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 		if (vcp->magic != vnode->vnodeMagic) {
 		    /* bad magic #, probably partially created vnode */
 		    Log("Partially allocated vnode %d deleted.\n", vnodeNumber);
-		    bzero(vnode, vcp->diskSize);
+		    memset(vnode, 0, vcp->diskSize);
 		    vnodeChanged = 1;
 		    goto vnodeDone;
 		}
@@ -2512,7 +2512,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 			} else {
 			    if (!Showmode) Log("Vnode %d (unique %d): bad directory vnode (no inode number listed); vnode deleted, vnode mod time=%s", vnodeNumber, vnode->uniquifier, ctime((time_t *)&(vnode->serverModifyTime)));
 			}
-			bzero(vnode, vcp->diskSize);
+			memset(vnode, 0, vcp->diskSize);
 			vnodeChanged = 1;
 		    } else {
 		       /* Should not reach here becuase we checked for 
@@ -2844,7 +2844,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    assert(fdP != NULL);
 	    size = FDH_SIZE(fdP);
 	    assert(size != -1);
-	    bzero(buf, 1024);
+	    memset(buf, 0, 1024);
 	    if (size > 1024) size = 1024;
 	    code = FDH_READ(fdP, buf, size);
 	    assert(code == size);
@@ -3087,7 +3087,7 @@ void SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
 
     /* Remember rootdir DirSummary _after_ it has been judged */
     if (dir.vnodeNumber == 1 && dir.unique == 1) {
-	bcopy(&dir, rootdir, sizeof(struct DirSummary));
+	memcpy(rootdir, &dir, sizeof(struct DirSummary));
 	*rootdirfound = 1;
     }
 
@@ -3299,7 +3299,7 @@ int SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t *alinkH)
 			   code = IH_DEC(alinkH, VNDISK_GET_INO(&vnode), vid);
 			   assert(code == 0);
 		       }
-		       bzero(&vnode, sizeof(vnode));
+		       memset(&vnode, 0, sizeof(vnode));
 		    }
 		} else if (vnp->count) {
 		    if (!Showmode) {

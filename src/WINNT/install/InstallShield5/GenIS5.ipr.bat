@@ -20,9 +20,9 @@ echo [OperatingSystem] >> InstallShield5.ipr
 echo OSSupport=0000000000010000 >> InstallShield5.ipr
 echo. >> InstallShield5.ipr
 echo [Data] >> InstallShield5.ipr
-echo CurrentMedia=Transarc AFS >> InstallShield5.ipr
+echo CurrentMedia=OpenAFS >> InstallShield5.ipr
 echo set_mifserial= >> InstallShield5.ipr
-echo ProductName=AFS for Windows >> InstallShield5.ipr
+echo ProductName=OpenAFS for Windows >> InstallShield5.ipr
 echo CurrentComponentDef=Default.cdf >> InstallShield5.ipr
 echo set_dlldebug=No >> InstallShield5.ipr
 echo AppExe= >> InstallShield5.ipr
@@ -55,13 +55,13 @@ echo set_compileb4build=No >> InstallShield5.ipr
 echo set_crc=Yes >> InstallShield5.ipr
 echo set_maxwarn=50 >> InstallShield5.ipr
 echo Description=Description.txt >> InstallShield5.ipr
-echo CompanyName=Transarc Corpration >> InstallShield5.ipr
+echo CompanyName=OpenAFS >> InstallShield5.ipr
 echo CurrentLanguage=English >> InstallShield5.ipr
 echo. >> InstallShield5.ipr
 echo [MediaInfo] >> InstallShield5.ipr
-echo mediadata0=Transarc AFS/Media\Transarc AFS >> InstallShield5.ipr
+echo mediadata0=OpenAFS/Media\OpenAFS >> InstallShield5.ipr
 echo. >> InstallShield5.ipr
 echo [General] >> InstallShield5.ipr
 echo Type=INSTALLMAIN >> InstallShield5.ipr
-echo Version=1.10.000 >> InstallShield5.ipr
+echo Version=1.20.000 >> InstallShield5.ipr
 

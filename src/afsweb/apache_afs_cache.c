@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/apache_afs_cache.c,v 1.1.1.4 2001/07/14 22:20:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/apache_afs_cache.c,v 1.1.1.5 2001/09/11 14:31:09 hartmans Exp $");
 
 #include "apache_afs_cache.h"
 
@@ -473,10 +473,10 @@ int getTokenLen(char *buf)
     afs_int32 EndTimestamp;
   } token;
   tp=buf;
-  bcopy(tp, &len, sizeof(afs_int32)); /* get size of secret token */
+  memcpy(&len, tp, sizeof(afs_int32)); /* get size of secret token */
   rc=(len+sizeof(afs_int32));
   tp += (sizeof(afs_int32) + len);    /* skip secret token and its length */
-  bcopy(tp, &len, sizeof(afs_int32)); /* get size of clear token */
+  memcpy(&len, tp, sizeof(afs_int32)); /* get size of clear token */
   if (len != sizeof(struct ClearToken)) {
 #ifdef DEBUG
     fprintf(stderr, "apache_afs_cache.c:getExpiration:"
@@ -508,9 +508,9 @@ long getExpiration(char *buf)
   } token;
   
   tp = buf;
-  bcopy(tp, &len, sizeof(afs_int32)); /* get size of secret token */
+  memcpy(&len, tp, sizeof(afs_int32)); /* get size of secret token */
   tp += (sizeof(afs_int32) + len);    /* skip secret token and its length */
-  bcopy(tp, &len, sizeof(afs_int32)); /* get size of clear token */
+  memcpy(&len, tp, sizeof(afs_int32)); /* get size of clear token */
   if (len != sizeof(struct ClearToken)) {
 #ifdef DEBUG
     fprintf(stderr, "apache_afs_cache.c:getExpiration:"
@@ -520,6 +520,6 @@ long getExpiration(char *buf)
   }
   
   tp += sizeof(afs_int32);	    /* skip length of clear token */  
-  bcopy(tp, &token, sizeof(struct ClearToken)); /* copy the token */
+  memcpy(&token, tp, sizeof(struct ClearToken)); /* copy the token */
   return token.EndTimestamp;
 }

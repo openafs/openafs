@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.4 2001/07/14 22:23:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.5 2001/09/11 14:34:09 hartmans Exp $");
 
 #include <stdio.h>
 #ifndef AFS_NT40_ENV
@@ -82,12 +82,12 @@ char **argv;
 	exit(2);
     }
     while ((tmp = fgets(buf,150,fp)) != NULL) {
-	bzero(name,PR_MAXNAMELEN);
-	bzero(uid,8);
-	ptr = index(buf,':');
+	memset(name, 0, PR_MAXNAMELEN);
+	memset(uid, 0, 8);
+	ptr = strchr(buf, ':');
 	strncpy(name,buf,ptr-buf);
-	aptr = index(++ptr,':');
-	ptr = index(++aptr,':');
+	aptr = strchr(++ptr, ':');
+	ptr = strchr(++aptr, ':');
 	strncpy(uid,aptr,ptr-aptr);
 	id = atoi(uid);
 	if (verbose)

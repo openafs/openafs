@@ -55,7 +55,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/inetd.c,v 1.1.1.4 2001/07/14 22:22:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/inetd.c,v 1.1.1.5 2001/09/11 14:32:48 hartmans Exp $");
 
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -194,7 +194,7 @@ main(argc, argv, envp)
 #endif /* defined(AFS_HPUX_ENV) */
 
 	memset((char *)allZeroes, '\0', sizeof(allZeroes));
-	bzero((char *)allZeroes, sizeof(allZeroes));
+	memset((char *)allZeroes, 0, sizeof(allZeroes));
 
 	sigNone = *((sigset_t *) allZeroes);
 	allZeroes[0] = (1<<(SIGCHLD-1)) + (1<<(SIGHUP-1)) + (1<<(SIGALRM-1));
@@ -475,7 +475,7 @@ main(argc, argv, envp)
 						inet_ntoa(his_addr.sin_addr.s_addr),
 						ntohs(his_addr.sin_port));
 					execl(sep->se_server,
-					      rindex(sep->se_server, '/')+1,
+					      strrchr(sep->se_server, '/')+1,
 					      sep->se_socktype == SOCK_DGRAM
 					      ? (char *)0 : addrbuf, (char *)0);
 				    } else

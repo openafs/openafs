@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.1.1.6 2001/07/14 22:19:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.1.1.7 2001/09/11 14:25:03 hartmans Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -810,7 +810,7 @@ afs_strategy(OSI_VC_ARG(avc), bp)
 	    /* we are responsible for zero'ing the page */
 	    caddr_t c;
 	    c = bp_mapin(bp);
-	    bzero(c, bp->b_bcount);
+	    memset(c, 0, bp->b_bcount);
 	    iodone(bp);
 	    ReleaseReadLock(&avc->lock);
 	    return;

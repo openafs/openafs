@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.5 2001/07/14 22:19:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.6 2001/09/11 14:24:48 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -464,7 +464,7 @@ static struct volume *afs_SetupVolume(volid, aname, ve, tcell, agood, type, areq
 	struct fvolume *tf=0;
 
 	tv = afs_GetVolSlot();
-	bzero((char *)tv, sizeof(struct volume));
+	memset((char *)tv, 0, sizeof(struct volume));
 	tv->cell = tcell->cell;
 	RWLOCK_INIT(&tv->lock, "volume lock");
 	tv->next = afs_volumes[i];	/* thread into list */
@@ -912,11 +912,11 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		ListAddrByAttributes attrs;
 		afsUUID uuid;
 
-		bzero((char *)&attrs, sizeof(attrs));
+		memset((char *)&attrs, 0, sizeof(attrs));
 		attrs.Mask = VLADDR_UUID;
 		attrs.uuid = ve->serverNumber[i];
-		bzero((char *)&uuid, sizeof(uuid));
-		bzero((char *)&addrs, sizeof(addrs));
+		memset((char *)&uuid, 0, sizeof(uuid));
+		memset((char *)&addrs, 0, sizeof(addrs));
 		do {
 		    tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
 					     tcell->cell, areq, SHARED_LOCK);

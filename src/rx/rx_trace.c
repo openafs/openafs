@@ -10,14 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_trace.c,v 1.1.1.5 2001/07/14 22:23:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_trace.c,v 1.1.1.6 2001/09/11 14:34:23 hartmans Exp $");
 
 #ifdef RXDEBUG
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef AFS_NT40_ENV
@@ -119,7 +119,7 @@ void rxi_calltrace(event, call)
 	 break;
     }
 
-  bcopy(&rxtinfo, rxi_tracebuf+rxi_tracepos, sizeof(struct rx_trace));
+  memcpy(rxi_tracebuf+rxi_tracepos, &rxtinfo, sizeof(struct rx_trace));
   rxi_tracepos += sizeof(struct rx_trace);
   if (rxi_tracepos >= (4096 - sizeof(struct rx_trace)))
     rxi_flushtrace();

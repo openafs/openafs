@@ -15,15 +15,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/weak_key.c,v 1.1.1.5 2001/07/14 22:21:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/weak_key.c,v 1.1.1.6 2001/09/11 14:32:33 hartmans Exp $");
 
 #include <des.h>
 #include "des_internal.h"
-#if defined(HAVE_STRINGS_H)
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#if defined(HAVE_STRING_H)
-#include <string.h>
 #endif
 
 /*
@@ -69,7 +70,7 @@ des_is_weak_key(key)
     const des_cblock *weak_p = weak;
 
     for (i = 0; i < (sizeof(weak)/sizeof(des_cblock)); i++) {
-	if (!bcmp((char *)weak_p++,(char *)key,sizeof(des_cblock)))
+	if (!memcmp((char *)weak_p++,(char *)key,sizeof(des_cblock)))
 	    return 1;
     }
 

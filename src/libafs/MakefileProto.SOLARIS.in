@@ -7,7 +7,25 @@
 
 # MakefileProto for Solaris systems
 #
-include ../config/Makefile.${SYS_NAME}
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
+SYS_NAME=@AFS_SYSNAME@
+
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -16,7 +34,8 @@ AFS_OS_OBJS = \
 	osi_file.o \
 	osi_sleep.o \
 	osi_vm.o \
-	osi_vnodeops.o 
+	osi_vnodeops.o \
+	xdr_int64.o
 
 AFS_OS_NFSOBJS = \
 	osi_vfsops_nfs.o
@@ -50,16 +69,20 @@ KOBJ = MODLOAD32 MODLOAD64
 # This tells Makefile.common to use it's single directory build target.
 <all -sun4x_57 -sun4x_58>
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
 
 <sun4x_57 sun4x_58>
 COMPDIRS = solaris_compdirs
+INSTDIRS = solaris_instdirs
+DESTDIRS = solaris_destdirs
 
 <all>
 include Makefile.common
 
 
 setup:
-	-rm -f  h net netinet rpc ufs nfs  machine sys inet
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net net
 	-ln -s /usr/include/netinet netinet
@@ -71,9 +94,10 @@ setup:
 	for t in ${KOBJ} ; do \
 		echo Making directory: $$t; \
 		mkdir -p $$t; \
-		rm -f $$t/Makefile.common $$t/Makefile ; \
+		$(RM) -f $$t/Makefile.common $$t/Makefile $$t/config ; \
 		ln -s ../Makefile.common $$t/Makefile.common ; \
 		ln -s ../Makefile $$t/Makefile ;\
+		ln -s ../config $$t/config ;\
 	done
 
 
@@ -81,7 +105,7 @@ setup:
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
 <sun4x_57 sun4x_58>
-${COMPDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
 		case $$t in \
@@ -95,9 +119,13 @@ ${COMPDIRS}:
 		export ARCH_DEFS ; \
 		export BITS ; \
 		cd $$t  ; \
-		$(MAKE) DESTDIR=${DESTDIR}  libafs ; \
+		$(MAKE) $@_libafs ; \
 		cd ../ ;\
 	done
+
+solaris_compdirs_libafs: libafs
+solaris_instdirs_libafs: install_libafs
+solaris_destdirs_libafs: dest_libafs
 
 <all>
 
@@ -106,15 +134,25 @@ LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
 <all -sun4x_57 -sun4x_58>
-DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
-DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
 # Without this line, gmake tries to build libafs.o
 .PHONY: libafs
 
-# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-libafs:	$(DEST_LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
 
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
@@ -132,27 +170,33 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
 
 <sun4x_57 sun4x_58>
-MODLOADDIR = ${DESTDIR}root.client/usr/vice/etc/modload
 
 libafs: ${LIBAFSNONFS}
-	${INSTALL} -f ${LIBAFSNONFS} ${MODLOADDIR}/libafs${BITS}.nonfs.o
+
+install_libafs: ${LIBAFSNONFS}
+	${INSTALL} -f ${LIBAFSNONFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
+
+dest_libafs: ${LIBAFSNONFS}
+	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
 
 <all>
 
 # Solaris specific objects
 osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1);
+	$(CRULE1)
 osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1);
+	$(CRULE1)
 osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1);
+	$(CRULE1)
 osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o;
+	$(CRULE1) -o osi_vfsops_nfs.o
 osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS;
+	$(CRULE1) -DAFS_NONFSTRANS
 osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1);
+	$(CRULE1)
+xdr_int64.o: $(RX)/xdr_int64.c
+	$(CRULE1)

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.4 2001/07/14 22:19:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.5 2001/09/11 14:24:37 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -719,7 +719,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	 */
 	dataBytes = sizeof(struct afs_CMStats);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)&afs_cmstats, (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)&afs_cmstats, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -739,7 +739,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	afs_CountServers();
 	dataBytes = sizeof(afs_stats_cmperf);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)&afs_stats_cmperf, (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)&afs_stats_cmperf, dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -757,14 +757,12 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 	 */
 	afs_stats_cmperf.numPerfCalls++;
 	afs_CountServers();
-	bcopy((char *)(&afs_stats_cmperf),
-	      (char *)(&(afs_stats_cmfullperf.perf)),
-	      sizeof(struct afs_stats_CMPerf));
+	memcpy((char *)(&(afs_stats_cmfullperf.perf)), (char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
 	afs_stats_cmfullperf.numFullPerfCalls++;
 
 	dataBytes = sizeof(afs_stats_cmfullperf);
 	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-	bcopy((char *)(&afs_stats_cmfullperf), (char *)dataBuffP, dataBytes);
+	memcpy((char *)dataBuffP, (char *)(&afs_stats_cmfullperf), dataBytes);
 	a_dataP->AFSCB_CollData_len = dataBytes>>2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
@@ -1126,23 +1124,14 @@ int SRXAFSCB_GetCellServDB(
     afs_int32 i, j;
     struct cell *tcell;
     struct afs_q *cq, *tq;
-    char *t_name;
+    char *t_name, *p_name = NULL;
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetCellServDB);
 
-    t_name = (char *)rxi_Alloc(AFSNAMEMAX);
-    if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	return ENOMEM;
-    }
-
-    t_name[0] = '\0';
-    bzero(a_hosts, AFSMAXCELLHOSTS * sizeof(afs_int32));
+    memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
 
     /* search the list for the cell with this index */
     ObtainReadLock(&afs_xcell);
@@ -1150,12 +1139,29 @@ int SRXAFSCB_GetCellServDB(
         tq = QNext(cq);
 	if (i == a_index) {
 	    tcell = QTOC(cq);
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	    for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) {
 		a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
 	    }
 	}
     }
+
+    if (p_name)
+	i = strlen(p_name);
+    else
+	i = 0;
+    t_name = (char *)rxi_Alloc(i+1);
+    if (t_name == NULL) {
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	return ENOMEM;
+    }
+
+    t_name[i] = '\0';
+    if (p_name)
+	bcopy(p_name, t_name, i);
+
     ReleaseReadLock(&afs_xcell);
 
 #ifdef RX_ENABLE_LOCKS
@@ -1191,24 +1197,15 @@ int SRXAFSCB_GetLocalCell(
     struct rx_call *a_call,
     char **a_name)
 {
+    int plen;
     struct cell *tcell;
     struct afs_q *cq, *tq;
-    char *t_name;
+    char *t_name, *p_name = NULL;
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetLocalCell);
-
-    t_name = (char *)rxi_Alloc(AFSNAMEMAX);
-    if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	return ENOMEM;
-    }
-
-    t_name[0] = '\0';
 
     /* Search the list for the primary cell. Cell number 1 is only
      * the primary cell is when no other cell is explicitly marked as
@@ -1218,13 +1215,30 @@ int SRXAFSCB_GetLocalCell(
         tq = QNext(cq);
 	tcell = QTOC(cq);
 	if (tcell->states & CPrimary) {
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	    break;
 	}
         if (tcell->cell == 1) {
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	}
     }
+
+    if (p_name)
+	plen = strlen(p_name);
+    else
+	plen = 0;
+    t_name = (char *)rxi_Alloc(plen+1);
+    if (t_name == NULL) {
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	return ENOMEM;
+    }
+
+    t_name[plen] = '\0';
+    if (p_name)
+	bcopy(p_name, t_name, plen);
+
     ReleaseReadLock(&afs_xcell);
 
 #ifdef RX_ENABLE_LOCKS

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/keymap.c,v 1.1.1.4 2001/07/14 22:22:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/keymap.c,v 1.1.1.5 2001/09/11 14:32:46 hartmans Exp $");
 
 #include "gtxkeymap.h"
 
@@ -19,7 +19,7 @@ struct keymap_map *keymap_Create() {
 
     tmap = (struct keymap_map *) malloc(sizeof(struct keymap_map));
     if (tmap != (struct keymap_map *)0)
-      bzero(tmap, sizeof(*tmap));
+      memset(tmap, 0, sizeof(*tmap));
     return(tmap);
 }
 
@@ -125,7 +125,7 @@ register struct keymap_map *amap; {
 keymap_InitState(astate, amap)
 register struct keymap_state *astate;
 struct keymap_map *amap; {
-    bzero(astate, sizeof(*astate));
+    memset(astate, 0, sizeof(*astate));
     astate->initMap = amap;
     astate->currentMap = amap;
     return 0;

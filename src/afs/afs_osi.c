@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.6 2001/07/14 22:19:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.7 2001/09/11 14:24:42 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -72,7 +72,7 @@ void osi_Init()
 
 	if ( !afs_osicred_initialized )
 	{
-		bzero((char *)&afs_osi_cred, sizeof(struct AFS_UCRED));
+		memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
 		crhold(&afs_osi_cred);      /* don't let it evaporate */
 		afs_osicred_initialized = 1;
 	}
@@ -935,7 +935,7 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
        cr.cr_ref=1;
        cr.cr_uid=pr->p_cred->pc_ucred->cr_uid;
        cr.cr_ngroups=pr->p_cred->pc_ucred->cr_ngroups;
-       bcopy(pr->p_cred->pc_ucred->cr_groups, cr.cr_groups,NGROUPS *
+       memcpy(cr.cr_groups, pr->p_cred->pc_ucred->cr_groups, NGROUPS *
              sizeof(gid_t));
        pcred_unlock(pr);
        rv = &cr;

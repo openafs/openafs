@@ -9,8 +9,6 @@
 #
 # AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
 AFS_OSTYPE = DJGPP
-DESTDIR=DEST/
-SRCDIR=DEST/
 
 # compilation and link editor flags
 #DBG=-g
@@ -33,18 +31,15 @@ XLIBS=
 AR=dos-ar
 AS=dos-as
 CP=cp
-INSTALL=${SRCDIR}bin/install
+INSTALL=${SRCDIR}/bin/install
 LD=dos-ld   
 CC=dos-gcc -bmmap
 RANLIB=dos-ranlib
 MT_CC=dos-gcc -bmmap
 MV=mv
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
 #
 # Other OS specific requirements
 #
 YACC = bison -y
 LEX = flex -l
-# Used in des library.
-CRYPT_OBJ = crypt.o

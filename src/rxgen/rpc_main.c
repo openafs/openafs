@@ -36,17 +36,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_main.c,v 1.1.1.6 2001/07/14 22:23:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_main.c,v 1.1.1.7 2001/09/11 14:34:39 hartmans Exp $");
 
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_SIGNAL_H
@@ -201,7 +201,7 @@ main(argc, argv)
 	    OutFileFlag = NULL;
 	    S_output(cmd.infile, "-DRPC_SERVER", !EXTEND, cmd.outfile, 1);
 	} else {
-	    if (OutFileFlag && (rindex(OutFile,'.') == NULL))
+	    if (OutFileFlag && (strrchr(OutFile,'.') == NULL))
 		strcat(OutFile, ".");
 	    if (cmd.rflag) {
 		C_output((OutFileFlag ? OutFile : cmd.infile), "-DRPC_CLIENT", EXTEND, ".cs.c", 1);
@@ -286,11 +286,11 @@ extendfile(file, ext)
 	if (res == NULL) {
 		abort();
 	}
-	p = (char *) rindex(file, '.');
+	p = (char *) strrchr(file, '.');
 	if (p == NULL) {
 		p = file + strlen(file);
 	}
-	sname = (char *) rindex(file,'/');
+	sname = (char *) strrchr(file, '/');
 	if (sname == NULL)
 	    sname = file;
 	else
@@ -404,7 +404,7 @@ c_output(infile, define, extend, outfile, append)
 
     open_input(infile, define);	
     cflag = 1;
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -516,7 +516,7 @@ h_output(infile, define, extend, outfile, append)
 
 	open_input(infile, define);
 	hflag = 1;
-	bzero(fullname, sizeof(fullname));
+	memset(fullname, 0, sizeof(fullname));
 	if (append) {
 	    strcpy(fullname, prefix);
 	    strcat(fullname, infile);
@@ -525,12 +525,13 @@ h_output(infile, define, extend, outfile, append)
 	outfilename = extend ? extendfile(fullname, outfile) : outfile;
 	open_output(infile, outfilename);
 	strcpy(fullname, outfilename);
-	if (p = (char *)index(fullname, '.')) *p = '\0';
+	if (p = strchr(fullname, '.')) *p = '\0';
 	f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
 	f_print(fout, "#ifndef	_RXGEN_%s_\n", uppercase(fullname));
 	f_print(fout, "#define	_RXGEN_%s_\n\n", uppercase(fullname));
 	f_print(fout, "#ifdef	KERNEL\n");
 	f_print(fout, "/* The following 'ifndefs' are not a good solution to the vendor's omission of surrounding all system includes with 'ifndef's since it requires that this file is included after the system includes...*/\n");
+	f_print(fout, "#include <afsconfig.h>\n");
 	f_print(fout, "#include \"../afs/param.h\"\n");
 	f_print(fout, "#ifdef	UKERNEL\n");
 	f_print(fout, "#include \"../afs/sysincludes.h\"\n");
@@ -728,7 +729,7 @@ int append;
    
     Cflag = 1;
     open_input(infile, define);	
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -803,7 +804,7 @@ int append;
    
     Sflag = 1;
     open_input(infile, define);	
-    bzero(fullname, sizeof(fullname));
+    memset(fullname, 0, sizeof(fullname));
     if (append) {
 	strcpy(fullname, prefix);
 	strcat(fullname, infile);
@@ -902,7 +903,7 @@ parseargs(argc, argv, cmd)
 	if (argc < 2) {
 		return (0);
 	}
-	bzero(flag, sizeof(flag));
+	memset(flag, 0, sizeof(flag));
 	cmd->outfile = NULL;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] != '-') {

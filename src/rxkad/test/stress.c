@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.4 2001/07/14 22:23:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.5 2001/09/11 14:34:43 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -105,8 +105,8 @@ static int CommandProc (as, arock)
 
     sParms = (struct serverParms *) osi_Alloc (sizeof(*sParms));
     cParms = (struct clientParms *) osi_Alloc (sizeof(*cParms));
-    bzero (sParms, sizeof(*sParms));
-    bzero (cParms, sizeof(*cParms));
+    memset(sParms, 0, sizeof(*sParms));
+    memset(cParms, 0, sizeof(*cParms));
     sParms->whoami = cParms->whoami = whoami;
 
     if (!(startServer || startClient)) {

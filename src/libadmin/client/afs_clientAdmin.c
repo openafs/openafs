@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/client/afs_clientAdmin.c,v 1.1.1.6 2001/07/14 22:22:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/client/afs_clientAdmin.c,v 1.1.1.7 2001/09/11 14:33:12 hartmans Exp $");
 
 #include <afs/stds.h>
 #include "afs_clientAdmin.h"
@@ -1260,7 +1260,7 @@ static int Parent(
     int rc = 0;
 
     strcpy(parentDirectory, directory);
-    tp = rindex(parentDirectory, '/');
+    tp = strrchr(parentDirectory, '/');
     if (tp) {
         *tp = 0;
 	rc = 1;

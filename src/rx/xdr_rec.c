@@ -46,7 +46,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rec.c,v 1.1.1.3 2001/07/14 22:23:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rec.c,v 1.1.1.4 2001/09/11 14:34:27 hartmans Exp $");
 
 #include <stdio.h>
 #include "xdr.h"
@@ -269,7 +269,7 @@ xdrrec_putbytes(xdrs, addr, len)
 	while (len > 0) {
 		current = (u_int)rstrm->out_boundry - (u_int)rstrm->out_finger;
 		current = (len < current) ? len : current;
-		bcopy(addr, rstrm->out_finger, current);
+		memcpy(rstrm->out_finger, addr, current);
 		rstrm->out_finger += current;
 		addr += current;
 		len -= current;
@@ -520,7 +520,7 @@ get_input_bytes(rstrm, addr, len)
 			continue;
 		}
 		current = (len < current) ? len : current;
-		bcopy(rstrm->in_finger, addr, current);
+		memcpy(addr, rstrm->in_finger, current);
 		rstrm->in_finger += current;
 		addr += current;
 		len -= current;

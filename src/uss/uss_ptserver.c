@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_ptserver.c,v 1.1.1.4 2001/07/14 22:24:16 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_ptserver.c,v 1.1.1.5 2001/09/11 14:35:07 hartmans Exp $");
 
 #include "uss_ptserver.h"	/*Module interface*/
 #include <afs/ptclient.h>	/*Protection Server client interface*/
@@ -30,7 +30,6 @@ extern int errno;
 #undef USS_PTSERVER_DB
 
 extern int line;
-extern char *rindex();
 
 
 /*

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlutils.c,v 1.1.1.4 2001/07/14 22:24:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlutils.c,v 1.1.1.5 2001/09/11 14:35:40 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -106,13 +106,13 @@ afs_int32		    length; {
 	for (i=0;i<MAXTYPES;i++)
 	    nentry.nextIdHash[i] = htonl(nep->nextIdHash[i]);
 	nentry.nextNameHash = htonl(nep->nextNameHash);
-	bcopy(nep->name, nentry.name, VL_MAXNAMELEN);
-	bcopy(nep->serverNumber, nentry.serverNumber, NMAXNSERVERS);
-	bcopy(nep->serverPartition, nentry.serverPartition, NMAXNSERVERS);
-	bcopy(nep->serverFlags, nentry.serverFlags, NMAXNSERVERS);
+	memcpy(nentry.name, nep->name, VL_MAXNAMELEN);
+	memcpy(nentry.serverNumber, nep->serverNumber, NMAXNSERVERS);
+	memcpy(nentry.serverPartition, nep->serverPartition, NMAXNSERVERS);
+	memcpy(nentry.serverFlags, nep->serverFlags, NMAXNSERVERS);
 	bufp = (char *)&nentry;
     } else {
-	bzero(&oentry, sizeof(struct vlentry));
+	memset(&oentry, 0, sizeof(struct vlentry));
 	nep = (struct nvlentry *)buffer;
 	for (i=0;i<MAXTYPES;i++)
 	    oentry.volumeId[i] = htonl(nep->volumeId[i]);
@@ -123,10 +123,10 @@ afs_int32		    length; {
 	for (i=0;i<MAXTYPES;i++)
 	    oentry.nextIdHash[i] = htonl(nep->nextIdHash[i]);
 	oentry.nextNameHash = htonl(nep->nextNameHash);
-	bcopy(nep->name, oentry.name, VL_MAXNAMELEN);
-	bcopy(nep->serverNumber, oentry.serverNumber, OMAXNSERVERS);
-	bcopy(nep->serverPartition, oentry.serverPartition, OMAXNSERVERS);
-	bcopy(nep->serverFlags, oentry.serverFlags, OMAXNSERVERS);
+	memcpy(oentry.name, nep->name, VL_MAXNAMELEN);
+	memcpy(oentry.serverNumber, nep->serverNumber, OMAXNSERVERS);
+	memcpy(oentry.serverPartition, nep->serverPartition, OMAXNSERVERS);
+	memcpy(oentry.serverFlags, nep->serverFlags, OMAXNSERVERS);
 	bufp = (char *)&oentry;	
     }
     return vlwrite(trans, offset, bufp, length);
@@ -158,14 +158,14 @@ afs_int32		    length; {
 	for(i=0;i<MAXTYPES;i++)
 	    nbufp->nextIdHash[i] = ntohl(nep->nextIdHash[i]);
 	nbufp->nextNameHash = ntohl(nep->nextNameHash);
-	bcopy(nep->name, nbufp->name, VL_MAXNAMELEN);
-	bcopy(nep->serverNumber, nbufp->serverNumber, NMAXNSERVERS);
-	bcopy(nep->serverPartition, nbufp->serverPartition, NMAXNSERVERS);
-	bcopy(nep->serverFlags, nbufp->serverFlags, NMAXNSERVERS);
+	memcpy(nbufp->name, nep->name, VL_MAXNAMELEN);
+	memcpy(nbufp->serverNumber, nep->serverNumber, NMAXNSERVERS);
+	memcpy(nbufp->serverPartition, nep->serverPartition, NMAXNSERVERS);
+	memcpy(nbufp->serverFlags, nep->serverFlags, NMAXNSERVERS);
     } else {
 	oep = (struct vlentry *)bufp;
 	nbufp = (struct nvlentry *)buffer;
-	bzero(nbufp, sizeof (struct nvlentry));
+	memset(nbufp, 0, sizeof (struct nvlentry));
 	for(i=0;i<MAXTYPES;i++)
 	    nbufp->volumeId[i] = ntohl(oep->volumeId[i]);
 	nbufp->flags = ntohl(oep->flags);
@@ -175,10 +175,10 @@ afs_int32		    length; {
 	for(i=0;i<MAXTYPES;i++)
 	    nbufp->nextIdHash[i] = ntohl(oep->nextIdHash[i]);
 	nbufp->nextNameHash = ntohl(oep->nextNameHash);
-	bcopy(oep->name, nbufp->name, VL_MAXNAMELEN);
-	bcopy(oep->serverNumber, nbufp->serverNumber, NMAXNSERVERS);
-	bcopy(oep->serverPartition, nbufp->serverPartition, NMAXNSERVERS);
-	bcopy(oep->serverFlags, nbufp->serverFlags, NMAXNSERVERS);
+	memcpy(nbufp->name, oep->name, VL_MAXNAMELEN);
+	memcpy(nbufp->serverNumber, oep->serverNumber, NMAXNSERVERS);
+	memcpy(nbufp->serverPartition, oep->serverPartition, NMAXNSERVERS);
+	memcpy(nbufp->serverFlags, oep->serverFlags, NMAXNSERVERS);
     }
     return 0;
 }
@@ -303,7 +303,7 @@ afs_int32 CheckInit (trans, builddb)
 	vldbversion = ntohl(cheader.vital_header.vldbversion);
 
 	if (!ubcode && (vldbversion != 0)) {
-	    bcopy(cheader.IpMappedAddr, HostAddress, sizeof(cheader.IpMappedAddr));
+	    memcpy(HostAddress, cheader.IpMappedAddr, sizeof(cheader.IpMappedAddr));
 	    for (i=0; i<MAXSERVERID+1; i++) {  /* cvt HostAddress to host order */
 	        HostAddress[i] = ntohl(HostAddress[i]);
 	    }
@@ -322,7 +322,7 @@ afs_int32 CheckInit (trans, builddb)
 	    printf("Can't read VLDB header, re-initialising...\n");
 
 	    /* try to write a good header */
-	    bzero(&cheader,sizeof(cheader));
+	    memset(&cheader, 0, sizeof(cheader));
 	    cheader.vital_header.vldbversion = htonl(VLDBVERSION);
 	    cheader.vital_header.headersize = htonl(sizeof(cheader));
 	    /* DANGER: Must get this from a master place!! */
@@ -373,7 +373,7 @@ afs_int32 GetExtentBlock(trans, base)
 	    if (!ex_addr[base])
 	       ERROR_EXIT(VL_NOMEM);
 	}
-	bzero((char *)ex_addr[base], VL_ADDREXTBLK_SIZE);
+	memset((char *)ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
 
 	/* Write the full extension block at end of vldb */
 	ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);
@@ -515,7 +515,7 @@ struct nvlentry		    *tentry;
     }
     cheader.vital_header.allocs++;
     if (write_vital_vlheader(trans))   return 0;
-    bzero (tentry, sizeof(nvlentry));	/* zero new entry */
+    memset(tentry, 0, sizeof(nvlentry));	/* zero new entry */
     return blockindex;
 }
 
@@ -528,7 +528,7 @@ afs_int32			blockindex;
 
     /* check validity of blockindex just to be on the safe side */
     if (!index_OK (trans, blockindex)) return VL_BADINDEX;
-    bzero (&tentry, sizeof(nvlentry));
+    memset(&tentry, 0, sizeof(nvlentry));
     tentry.nextIdHash[0] = cheader.vital_header.freePtr; /* already in network order */
     tentry.flags = htonl(VLFREE);
     cheader.vital_header.freePtr = htonl(blockindex);

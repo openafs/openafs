@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.5 2001/07/14 22:23:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.6 2001/09/11 14:34:10 hartmans Exp $");
 
 #include <sys/types.h>
 #include <lock.h>
@@ -90,7 +90,7 @@ struct prentry *tentry;
     struct prentry nentry;
 
     if (ntohl(1) != 1) {	/* Need to swap bytes. */
-      bzero (&nentry, sizeof(nentry));	/* make sure reseved fields are zero */
+      memset(&nentry, 0, sizeof(nentry));	/* make sure reseved fields are zero */
       nentry.flags = htonl(tentry->flags);
       nentry.id = htonl(tentry->id);
       nentry.cellid = htonl(tentry->cellid);
@@ -140,7 +140,7 @@ struct prentry *tentry;
     }
     code = ubik_Read(tt, (char *) &nentry, sizeof(struct prentry));
     if (code) return (code);
-    bzero (tentry, sizeof(*tentry));	/* make sure reseved fields are zero */
+    memset(tentry, 0, sizeof(*tentry));	/* make sure reseved fields are zero */
     tentry->flags = ntohl(nentry.flags);
     tentry->id = ntohl(nentry.id);
     tentry->cellid = ntohl(nentry.cellid);
@@ -181,7 +181,7 @@ pr_WriteCoEntry(tt, afd, pos, tentry)
     struct contentry nentry;
 
     if (ntohl(1) != 1) {	/* No need to swap */
-	bzero (&nentry, sizeof(nentry)); /* make reseved fields zero */
+	memset(&nentry, 0, sizeof(nentry)); /* make reseved fields zero */
 	nentry.flags = htonl(tentry->flags);
 	nentry.id = htonl(tentry->id);
 	nentry.cellid = htonl(tentry->cellid);
@@ -211,7 +211,7 @@ struct contentry *tentry;
     }
     code = ubik_Read(tt, (char *) &nentry, sizeof(struct contentry));
     if (code) return (code);
-    bzero (tentry, sizeof(*tentry)); /* make reseved fields zero */
+    memset(tentry, 0, sizeof(*tentry)); /* make reseved fields zero */
     tentry->flags = ntohl(nentry.flags);
     tentry->id = ntohl(nentry.id);
     tentry->cellid = ntohl(nentry.cellid);
@@ -259,7 +259,7 @@ afs_int32 pos;
     register afs_int32 code;
     struct prentry tentry;
 
-    bzero(&tentry,sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
     tentry.next = ntohl(cheader.freePtr);
     tentry.flags |= PRFREE;
     cheader.freePtr = htonl(pos);
@@ -284,13 +284,13 @@ afs_int32 aid;
     i = IDHash(aid);
     entry = ntohl(cheader.idHash[i]);
     if (entry == 0) return entry;
-    bzero(&tentry,sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
     code = pr_ReadEntry(at, 0, entry, &tentry);
     if (code != 0) return 0;
     if (aid == tentry.id) return entry;
     entry = tentry.nextID;
     while (entry != 0) {
-	bzero(&tentry,sizeof(tentry));
+	memset(&tentry, 0, sizeof(tentry));
 	code = pr_ReadEntry(at,0,entry,&tentry);
 	if (code != 0) return 0;
 	if (aid == tentry.id) return entry;
@@ -314,13 +314,13 @@ struct prentry *tentryp;
     i = NameHash(aname);
     entry = ntohl(cheader.nameHash[i]);
     if (entry == 0) return entry;
-    bzero(tentryp,sizeof(struct prentry));
+    memset(tentryp, 0, sizeof(struct prentry));
     code = pr_ReadEntry(at, 0, entry, tentryp);
     if (code != 0) return 0;
     if ((strncmp(aname,tentryp->name,PR_MAXNAMELEN)) == 0) return entry;
     entry = tentryp->nextName;
     while (entry != 0) {
-	bzero(tentryp, sizeof(struct prentry));
+	memset(tentryp, 0, sizeof(struct prentry));
 	code = pr_ReadEntry(at,0,entry, tentryp);
 	if (code != 0) return 0;
 	if ((strncmp(aname,tentryp->name,PR_MAXNAMELEN)) == 0) return entry;
@@ -436,8 +436,8 @@ afs_int32 *loc;				/* ??? in case ID hashed twice ??? */
     if ((aid == PRBADID) || (aid == 0)) return PRINCONSISTENT;
     i = IDHash(aid);
     current = ntohl(cheader.idHash[i]);
-    bzero(&tentry,sizeof(tentry));
-    bzero(&bentry,sizeof(bentry));
+    memset(&tentry, 0, sizeof(tentry));
+    memset(&bentry, 0, sizeof(bentry));
     trail = 0;
     if (current == 0) return PRSUCCESS; /* already gone */
     code = pr_ReadEntry(tt,0,current,&tentry);
@@ -478,7 +478,7 @@ afs_int32 loc;				/* ??? */
 
     if ((aid == PRBADID) || (aid == 0)) return PRINCONSISTENT;
     i = IDHash(aid);
-    bzero(&tentry,sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
     code = pr_ReadEntry(tt,0,loc,&tentry);
     if (code) return PRDBFAIL;
     tentry.nextID = ntohl(cheader.idHash[i]);
@@ -503,8 +503,8 @@ afs_int32 *loc;
 
     i = NameHash(aname);
     current = ntohl(cheader.nameHash[i]);
-    bzero(&tentry,sizeof(tentry));
-    bzero(&bentry,sizeof(bentry));
+    memset(&tentry, 0, sizeof(tentry));
+    memset(&bentry, 0, sizeof(bentry));
     trail = 0;
     if (current == 0) return PRSUCCESS;  /* already gone */
     code = pr_ReadEntry(tt,0,current,&tentry);
@@ -544,7 +544,7 @@ afs_int32 loc;
     struct prentry tentry;
 
     i = NameHash(aname);
-    bzero(&tentry,sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
     code = pr_ReadEntry(tt,0,loc,&tentry);
     if (code) return PRDBFAIL;
     tentry.nextName = ntohl(cheader.nameHash[i]);
@@ -690,7 +690,7 @@ afs_int32 gid;
 	return PRSUCCESS;
     }
     nptr = ntohl(cheader.orphan);
-    bzero(&bentry,sizeof(bentry));
+    memset(&bentry, 0, sizeof(bentry));
     loc = 0;
     while (nptr != 0) {
 	code = pr_ReadEntry(at,0,nptr,&tentry);
@@ -707,7 +707,7 @@ afs_int32 gid;
 	}
 	loc = nptr;
 	nptr = tentry.nextOwned;
-	bcopy(&tentry,&bentry, sizeof(tentry));
+	memcpy(&bentry, &tentry, sizeof(tentry));
     }
     return PRSUCCESS;
 }
@@ -765,7 +765,7 @@ afs_int32 gid;
     if ((gid == 0) || (aid == 0)) return 0;
     loc = FindByID(at,gid);
     if (!loc) return 0;
-    bzero(&tentry,sizeof(tentry));
+    memset(&tentry, 0, sizeof(tentry));
     code = pr_ReadEntry(at, 0, loc,&tentry);
     if (code) return 0;
     if (!(tentry.flags & PRGRP)) return 0;
@@ -776,7 +776,7 @@ afs_int32 gid;
     if (tentry.next) {
 	loc = tentry.next;
 	while (loc) {
-	    bzero(&centry,sizeof(centry));
+	    memset(&centry, 0, sizeof(centry));
 	    code = pr_ReadCoEntry(at,0,loc,&centry);
 	    if (code) return 0;
 	    for (i=0;i<COSIZE;i++) {

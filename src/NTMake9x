@@ -23,7 +23,7 @@ NTMAKELANG = nmake /nologo /f ntmakefile en_install
 NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
 NTMAKE_LIBUTILS = nmake /nologo /f ntmakefile install_libutils
 MKDIR = mkdir
-#OBJ = src
+OBJ = src
 
 # Standard install directory.
 !IFDEF AFSDEV_DESTDIR
@@ -292,10 +292,15 @@ install9x: install
 
 #Leave last echo in - it helps the build reconize the last $(CD)
 Win9x::
-	$(CD) $(OBJ)\WINNT\install\$@
-    nmake /nologo /f NTMakefile  install9x
+	echo ***** afs_setup_utils
+	$(CD) $(OBJ)\WINNT\afs_setup_utils 
+	nmake -f ntmakefile      install
+	$(CD) ..\..\..
+	echo ***** Win9x
+	$(CD) $(OBJ)\WINNT\install\Win9x
+	nmake /nologo /f NTMakefile  isinstall
 	$(CD) ..\..\..\..
-	echo **** End of Install Scripts
+	eho **** End of Install Scripts
 
 media: Win9x
 
@@ -307,9 +312,9 @@ clean: start
 	$(CD) $(OBJ)\WINNT\install\Win9x
 	nmake /nologo /f NTMakefile clean
 	$(CD) ..\..\..\..
-	.\src\rmbat $(DESTDIR)\include\*.* $(DESTDIR)\include\afs\*.* $(DESTDIR)\include\WINNT\*.* $(DESTDIR)\include\rx\*.*
-	.\src\rmbat $(DESTDIR)\LIB\*.LIB $(DESTDIR)\LIB\*.DLL $(DESTDIR)\LIB\AFS\*.LIB
-	.\src\RMBAT $(DESTDIR)\root.client\usr\vice\etc\*.*
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\include\*.* $(DESTDIR)\include\afs\*.* $(DESTDIR)\include\WINNT\*.* $(DESTDIR)\include\rx\*.*
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\LIB\*.LIB $(DESTDIR)\LIB\*.DLL $(DESTDIR)\LIB\AFS\*.LIB
+	$(DESTDIR)\BIN\rmbat $(DESTDIR)\root.client\usr\vice\etc\*.*
 	$(CD) $(OBJ)\config
 	nmake /nologo /f ntmakefile clean_version
 	$(CD) ..\..

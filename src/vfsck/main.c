@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/main.c,v 1.1.1.4 2001/07/14 22:24:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/main.c,v 1.1.1.5 2001/09/11 14:35:28 hartmans Exp $");
 
 #define VICE	/* allow us to put our changes in at will */
 #include <stdio.h>
@@ -1092,7 +1092,7 @@ n	printf("(%d frags, %d blocks, %.1f%% fragmentation)\n",
 
 	    msgprintf("%s: AFS file system partition was modified; forcing full salvage\n", devname);
 	    devname = unrawname(devname);
-	    special = (char *) rindex(devname, '/');
+	    special = (char *) strrchr(devname, '/');
 	    if (!special++) special = devname;
 	    strcpy(pname, "/etc/vfsck."); /* Using /etc, rather than /tmp, since
 		/tmp is a link to /usr/tmp on some systems, and isn't mounted now */

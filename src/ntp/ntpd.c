@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpd.c,v 1.1.1.4 2001/07/14 22:23:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpd.c,v 1.1.1.5 2001/09/11 14:33:53 hartmans Exp $");
 
 #if defined(AFS_SGI_ENV)
 #define NOSWAP 1
@@ -284,12 +284,12 @@ main(argc, argv)
 #endif	/* DEBUG */
 		setlogmask(LOG_UPTO(LOG_INFO));
 
-	syslog(LOG_NOTICE, "%s version $Revision: 1.1.1.4 $", prog_name);
+	syslog(LOG_NOTICE, "%s version $Revision: 1.1.1.5 $", prog_name);
 	syslog(LOG_NOTICE, "patchlevel %d", PATCHLEVEL);
 
 #ifdef	DEBUG
 	if (debug)
-		printf("%s version $Revision: 1.1.1.4 $ patchlevel %d\n",
+		printf("%s version $Revision: 1.1.1.5 $ patchlevel %d\n",
 		       prog_name, PATCHLEVEL);
 #endif
 #if defined(AFS_AIX_ENV)
@@ -753,7 +753,7 @@ init_ntp(config)
 	double j;
 	extern double drift_comp;
 
-	bzero((char *) &sin, sizeof(sin));
+	memset((char *) &sin, 0, sizeof(sin));
 	fp = fopen(config, "r");
 	if (fp == NULL) {
 		fprintf(stderr,"Problem opening NTP initialization file %s\n",
@@ -1296,8 +1296,7 @@ GetHostName(name, sin)
 	if (hp = gethostbyname(name)) {
 		if (hp->h_addrtype != AF_INET)
 			return (0);
-		bcopy((char *) hp->h_addr, (char *) &sin->sin_addr,
-		      hp->h_length);
+		memcpy((char *) &sin->sin_addr, (char *) hp->h_addr, hp->h_length);
 		sin->sin_family = hp->h_addrtype;
 		return (1);
 	}

@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kpasswd.c,v 1.1.1.5 2001/07/14 22:22:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kpasswd.c,v 1.1.1.6 2001/09/11 14:33:00 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -140,7 +140,7 @@ static void getpipepass(gpbuf, len)
 {
     /* read a password from stdin, stop on \n or eof */
     register int i, tc;
-    bzero(gpbuf, len);
+    memset(gpbuf, 0, len);
     for(i=0;i<len;i++) {
 	tc = fgetc(stdin);
 	if (tc == '\n' || tc == EOF) break;
@@ -226,7 +226,7 @@ CommandProc (as, arock)
 #endif
 
     /* blow away command line arguments */
-    for (i=1; i<zero_argc; i++) bzero (zero_argv[i], strlen(zero_argv[i]));
+    for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
 
     /* first determine quiet flag based on -pipe switch */
@@ -331,8 +331,7 @@ CommandProc (as, arock)
 	 */
 	foundPassword = 1;
 	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd));
-	bzero (as->parms[aPASSWORD].items->data,
-	       strlen(as->parms[aPASSWORD].items->data));
+	memset(as->parms[aPASSWORD].items->data, 0, strlen(as->parms[aPASSWORD].items->data));
     }
 
     if (as->parms[aNEWPASSWORD].items) {
@@ -344,8 +343,7 @@ CommandProc (as, arock)
 	foundNewPassword = 1;
 	strncpy (npasswd, as->parms[aNEWPASSWORD].items->data,
 		 sizeof(npasswd));
-	bzero (as->parms[aNEWPASSWORD].items->data,
-	       strlen(as->parms[aNEWPASSWORD].items->data));
+	memset(as->parms[aNEWPASSWORD].items->data, 0, strlen(as->parms[aNEWPASSWORD].items->data));
     }
 
     if (!foundExplicitCell) strcpy (realm, lcell);
@@ -365,9 +363,9 @@ CommandProc (as, arock)
 	    code = read_pass (passwd, sizeof(passwd), "Old password: ", 0);
 	    if (code || (strlen (passwd) == 0)) {
 		if (code) code = KAREADPW;
-		bzero (&mitkey, sizeof(mitkey));
-		bzero (&key, sizeof(key));
-		bzero (passwd, sizeof(passwd));
+		memset(&mitkey, 0, sizeof(mitkey));
+		memset(&key, 0, sizeof(key));
+		memset(passwd, 0, sizeof(passwd));
 		if (code) com_err (rn, code, "reading password");
 		exit (1);
 	    }
@@ -404,7 +402,7 @@ CommandProc (as, arock)
 	      printf ("Mismatch - ");
 	      goto no_change;
 	    }
-	    bzero (verify, sizeof(verify));
+	    memset(verify, 0, sizeof(verify));
 	  }
       }
     if (code = password_bad (npasswd)) {  /* assmt here! */
@@ -423,7 +421,7 @@ CommandProc (as, arock)
 #endif
     ka_StringToKey (npasswd, realm, &newkey);
     des_string_to_key(npasswd, &newmitkey);
-    bzero (npasswd, sizeof(npasswd));
+    memset(npasswd, 0, sizeof(npasswd));
 
     if (lexplicit) ka_ExplicitCell (realm, serverList);
 
@@ -448,8 +446,8 @@ CommandProc (as, arock)
 	    strncpy (pass8, passwd, 8);
 	    pass8[8] = 0;
 	    ka_StringToKey (pass8, realm, &key);
-	    bzero (pass8, sizeof(pass8));
-	    bzero (passwd, sizeof(passwd));
+	    memset(pass8, 0, sizeof(pass8));
+	    memset(passwd, 0, sizeof(passwd));
 	    code = ka_GetAdminToken (pw->pw_name, instance, realm,
 				     &key, ADMIN_LIFETIME, &token, /*!new*/0);
 #ifdef notdef
@@ -471,8 +469,8 @@ CommandProc (as, arock)
 	    dess2k=0;
     } 
 
-    bzero (&mitkey, sizeof(mitkey));
-    bzero (&key, sizeof(key));
+    memset(&mitkey, 0, sizeof(mitkey));
+    memset(&key, 0, sizeof(key));
     if (code == KAUBIKCALL) com_err (rn, code, "(Authentication Server unavailable, try later)");
     else if (code) {
 	if (code == KABADREQUEST)
@@ -488,8 +486,8 @@ CommandProc (as, arock)
 		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newmitkey);
 	    else
 		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newkey);
-	    bzero (&newkey, sizeof(newkey));
-	    bzero (&newmitkey, sizeof(newmitkey));
+	    memset(&newkey, 0, sizeof(newkey));
+	    memset(&newmitkey, 0, sizeof(newmitkey));
 	    if (code) {
 	      char * reason;
 	      reason = (char *) error_message(code);
@@ -498,8 +496,8 @@ CommandProc (as, arock)
 	    else printf("Password changed.\n\n");
 	}
     }
-    bzero (&newkey, sizeof(newkey));
-    bzero (&newmitkey, sizeof(newmitkey));
+    memset(&newkey, 0, sizeof(newkey));
+    memset(&newmitkey, 0, sizeof(newmitkey));
 
     /* Might need to close down the ubik_Client connection */
     if (conn) {
@@ -513,8 +511,8 @@ CommandProc (as, arock)
   no_change:                       /* yuck, yuck, yuck */
     if (code) com_err (rn, code, "getting new password");
  no_change_no_msg:
-    bzero (&key, sizeof(key));
-    bzero (npasswd, sizeof(npasswd));
+    memset(&key, 0, sizeof(key));
+    memset(npasswd, 0, sizeof(npasswd));
     printf("Password for '%s' in cell '%s' unchanged.\n\n", pw->pw_name, cell);
     terminate_child();
     exit (code ? code : 1);

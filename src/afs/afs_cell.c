@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.6 2001/07/14 22:19:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.7 2001/09/11 14:24:38 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -386,7 +386,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     tc->states |= aflags;
     tc->timeout = timeout;
  
-    bzero((char *)tc->cellHosts, sizeof(tc->cellHosts));
+    memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
     for (i=0; i<MAXCELLHOSTS; i++) {
         struct server *ts;
 	afs_uint32 temp = acellHosts[i];

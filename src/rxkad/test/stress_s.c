@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_s.c,v 1.1.1.4 2001/07/14 22:23:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_s.c,v 1.1.1.5 2001/09/11 14:34:45 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -41,7 +41,7 @@ static long GetKey (rock, kvno, key)
   IN long  kvno;
   OUT struct ktc_encryptionKey *key;
 {
-    bcopy (&serviceKey, key, sizeof(*key));
+    memcpy(key, &serviceKey, sizeof(*key));
     return 0;
 }
 

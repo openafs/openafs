@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass5.c,v 1.1.1.3 2001/07/14 22:24:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass5.c,v 1.1.1.4 2001/09/11 14:35:30 hartmans Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -101,7 +101,7 @@ pass5()
 	struct cg *ocg = (struct cg *) buf;
 #endif /* AFS_NEWCG_ENV */
 
-	bzero((char *)newcg, (int)fs->fs_cgsize);
+	memset((char *)newcg, 0, (int)fs->fs_cgsize);
 	newcg->cg_niblk = fs->fs_ipg;
 #ifdef AFS_NEWCG_ENV
 	postype = (int) fs->fs_postblformat;
@@ -157,10 +157,10 @@ pass5()
 #endif /* AFS_NEWCG_ENV */
 
 	}
-	bzero((char *)&idesc[0], sizeof idesc);
+	memset((char *)&idesc[0], 0, sizeof idesc);
 	for (i = 0; i < 3; i++)
 		idesc[i].id_type = ADDR;
-	bzero((char *)&cstotal, sizeof(struct csum));
+	memset((char *)&cstotal, 0, sizeof(struct csum));
 	(void)time(&now);
 #ifdef notdef
 	/* this is the original from UCB/McKusick, but it is clearly wrong.  It is
@@ -216,14 +216,14 @@ pass5()
 			newcg->cg_irotor = cg->cg_irotor;
 		else
 			newcg->cg_irotor = 0;
-		bzero((char *)&newcg->cg_frsum[0], sizeof newcg->cg_frsum);
+		memset((char *)&newcg->cg_frsum[0], 0, sizeof newcg->cg_frsum);
 #ifdef AFS_NEWCG_ENV
-		bzero((char *)&cg_blktot(newcg)[0], sumsize + mapsize);
+		memset((char *)&cg_blktot(newcg)[0], 0, sumsize + mapsize);
 #else /* AFS_NEWCG_ENV */
-		bzero((char *)newcg->cg_btot, sizeof(newcg->cg_btot));
-		bzero((char *)newcg->cg_b, sizeof(newcg->cg_b));
-		bzero((char *)newcg->cg_iused, sizeof(newcg->cg_iused));
-		bzero((char *)newcg->cg_free, howmany(fs->fs_fpg, NBBY));
+		memset((char *)newcg->cg_btot, 0, sizeof(newcg->cg_btot));
+		memset((char *)newcg->cg_b, 0, sizeof(newcg->cg_b));
+		memset((char *)newcg->cg_iused, 0, sizeof(newcg->cg_iused));
+		memset((char *)newcg->cg_free, 0, howmany(fs->fs_fpg, NBBY));
 #endif /* AFS_NEWCG_ENV */
 #ifdef AFS_NEWCG_ENV
 		if (fs->fs_postblformat == FS_42POSTBLFMT)
@@ -319,49 +319,46 @@ pass5()
 		cstotal.cs_nifree += newcg->cg_cs.cs_nifree;
 		cstotal.cs_ndir += newcg->cg_cs.cs_ndir;
 		cs = &fs->fs_cs(fs, c);
-		if (bcmp((char *)&newcg->cg_cs, (char *)cs, sizeof *cs) != 0 &&
+		if (memcmp((char *)&newcg->cg_cs, (char *)cs, sizeof *cs) != 0 &&
 		    dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN CYL GROUP (SUPERBLK)")) {
-			bcopy((char *)&newcg->cg_cs, (char *)cs, sizeof *cs);
+			memcpy((char *)cs, (char *)&newcg->cg_cs, sizeof *cs);
 			sbdirty();
 		}
 #ifdef AFS_NEWCG_ENV
 		if (cvtflag) {
-			bcopy((char *)newcg, (char *)cg, (int)fs->fs_cgsize);
+			memcpy((char *)cg, (char *)newcg, (int)fs->fs_cgsize);
 			cgdirty();
 			continue;
 		}
 #endif /* AFS_NEWCG_ENV */
 #ifdef AFS_NEWCG_ENV
-		if (bcmp(cg_inosused(newcg),
+		if (memcmp(cg_inosused(newcg),
 			 cg_inosused(cg), mapsize) != 0 &&
 		    dofix(&idesc[1], "BLK(S) MISSING IN BIT MAPS")) {
-			bcopy(cg_inosused(newcg), cg_inosused(cg), mapsize);
+			memcpy(cg_inosused(cg), cg_inosused(newcg), mapsize);
 			cgdirty();
 		}
 #else /* AFS_NEWCG_ENV */
-		if (bcmp(newcg->cg_iused,
+		if (memcmp(newcg->cg_iused,
 			 cg->cg_iused, mapsize) != 0 &&
 		    dofix(&idesc[1], "BLK(S) MISSING IN BIT MAPS")) {
-			bcopy(newcg->cg_iused, cg->cg_iused, mapsize);
+			memcpy(cg->cg_iused, newcg->cg_iused, mapsize);
 			cgdirty();
 		}
 #endif /* AFS_NEWCG_ENV */
-		if ((bcmp((char *)newcg, (char *)cg, basesize) != 0 ||
+		if ((memcmp((char *)newcg, (char *)cg, basesize) != 0 ||
 #ifdef AFS_NEWCG_ENV
-		     bcmp((char *)&cg_blktot(newcg)[0],
-			  (char *)&cg_blktot(cg)[0], sumsize) != 0) &&
+		     memcmp((char *)&cg_blktot(newcg)[0], (char *)&cg_blktot(cg)[0], sumsize) != 0) &&
 #else /* AFS_NEWCG_ENV */
-		     bcmp((char *)newcg->cg_btot,
-			  (char *)cg->cg_btot, sumsize) != 0) &&
+		     memcmp((char *)newcg->cg_btot, (char *)cg->cg_btot, sumsize) != 0) &&
 #endif /* AFS_NEWCG_ENV */
 		    dofix(&idesc[2], "SUMMARY INFORMATION BAD")) {
 #ifdef AFS_NEWCG_ENV
-			bcopy((char *)newcg, (char *)cg, basesize);
-			bcopy((char *)&cg_blktot(newcg)[0],
-			      (char *)&cg_blktot(cg)[0], sumsize);
+			memcpy((char *)cg, (char *)newcg, basesize);
+			memcpy((char *)&cg_blktot(cg)[0], (char *)&cg_blktot(newcg)[0], sumsize);
 #else /* AFS_NEWCG_ENV */
-			bcopy((char *)newcg, (char *)cg, basesize);
-			bcopy((char *)newcg->cg_btot, (char *)cg->cg_btot, sumsize);
+			memcpy((char *)cg, (char *)newcg, basesize);
+			memcpy((char *)cg->cg_btot, (char *)newcg->cg_btot, sumsize);
 #endif /* AFS_NEWCG_ENV */
 			cgdirty();
 		}
@@ -370,9 +367,9 @@ pass5()
 	if (fs->fs_postblformat == FS_42POSTBLFMT)
 		fs->fs_nrpos = savednrpos;
 #endif /* AFS_NEWCG_ENV */
-	if (bcmp((char *)&cstotal, (char *)&fs->fs_cstotal, sizeof *cs) != 0
+	if (memcmp((char *)&cstotal, (char *)&fs->fs_cstotal, sizeof *cs) != 0
 	    && dofix(&idesc[0], "FREE BLK COUNT(S) WRONG IN SUPERBLK")) {
-		bcopy((char *)&cstotal, (char *)&fs->fs_cstotal, sizeof *cs);
+		memcpy((char *)&fs->fs_cstotal, (char *)&cstotal, sizeof *cs);
 		fs->fs_ronly = 0;
 		sbfine(fs);
 		sbdirty();

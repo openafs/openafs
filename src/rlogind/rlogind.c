@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rlogind.c,v 1.1.1.3 2001/07/14 22:23:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rlogind.c,v 1.1.1.4 2001/09/11 14:34:12 hartmans Exp $");
 
 #ifdef MSG
 #include "rlogind_msg.h"
@@ -239,7 +239,7 @@ main(argc, argv)
 		syslog(LOG_WARNING,MSGSTR(SETDEBUG,"setsockopt (SO_DEBUG): %m")); /*MSG*/
 
 	/* set-up signal handler routines for SRC TRACE ON/OFF support */
-	bzero((char *)&sa, sizeof(sa));
+	memset((char *)&sa, 0, sizeof(sa));
 	sa.sa_mask.losigs = sigmask(SIGUSR2);
 	sa.sa_handler = trace_handler;
 	sa.sa_flags = SA_RESTART;
@@ -378,11 +378,11 @@ doit(f, fromp)
 		hp = gethostbyname(remotehost);
 		if (hp)
 #if defined(BSD_42)
-		    if (!bcmp(hp->h_addr, (caddr_t)&fromp->sin_addr,
+		    if (!memcmp(hp->h_addr, (caddr_t)&fromp->sin_addr,
 			    sizeof(fromp->sin_addr))) {
 #else /* BSD_42 */
 		    for (; hp->h_addr_list[0]; hp->h_addr_list++)
-			if (!bcmp(hp->h_addr_list[0], (caddr_t)&fromp->sin_addr,
+			if (!memcmp(hp->h_addr_list[0], (caddr_t)&fromp->sin_addr,
 			    sizeof(fromp->sin_addr))) {
 #endif /* BSD_42 */
 				hostok++;
@@ -745,7 +745,7 @@ gotpty:
  
                 {
                 struct sigaction sa;
-                bzero((char *)&sa, sizeof(sa));
+                memset((char *)&sa, 0, sizeof(sa));
                 sa.sa_handler = SIG_DFL;
                 sigaction(SIGQUIT, &sa, (struct sigaction *)0);
                 sa.sa_handler = SIG_DFL;
@@ -779,7 +779,7 @@ gotpty:
                 {
                 struct sigaction sa;
 
-                bzero((char *)&sa, sizeof(sa));
+                memset((char *)&sa, 0, sizeof(sa));
                 sa.sa_mask.losigs = sigmask(SIGUSR2);
                 sa.sa_handler = trace_handler;
                 sigaction(SIGUSR1, &sa, (struct sigaction *)0);
@@ -911,7 +911,7 @@ control(pty, cp, n)
 	if (n < 4+sizeof (w) || cp[2] != 's' || cp[3] != 's')
 		return (0);
 	oobdata[0] &= ~TIOCPKT_WINDOW;	/* we know he heard */
-	bcopy(cp+4, (char *)&w, sizeof(w));
+	memcpy((char *)&w, cp+4, sizeof(w));
 	w.ws_row = ntohs(w.ws_row);
 	w.ws_col = ntohs(w.ws_col);
 	w.ws_xpixel = ntohs(w.ws_xpixel);
@@ -1031,7 +1031,7 @@ protocol(f, p)
 						if (n) {
 							left -= n;
 							if (left > 0)
-								bcopy(cp+n, cp, left);
+								memcpy(cp, cp+n, left);
 							fcc -= n;
 							goto top; /* n^2 */
 						}
@@ -1274,7 +1274,7 @@ setup_term(fd)
 	int fd;
 {
 #ifndef	AFS_OSF_ENV
-	register char *cp = index(term, '/'), **cpp;
+	register char *cp = strchr(term, '/'), **cpp;
 #endif
 #ifdef	AFS_AIX32_ENV
 #ifdef _AIX
@@ -1301,7 +1301,7 @@ setup_term(fd)
 	if (cp) {
 		*cp++ = '\0';
 		speed = cp;
-		cp = index(speed, '/');
+		cp = strchr(speed, '/');
 		if (cp)
 			*cp++ = '\0';
 #ifdef _AIX
@@ -1364,7 +1364,7 @@ setup_term(fd)
 #else /* AFS_AIX32_ENV */
 
 #ifdef	AFS_OSF_ENV
-	register char *cp = index(term+ENVSIZE, '/');
+	register char *cp = strchr(term+ENVSIZE, '/');
 	char *speed;
 	struct termios tt;
 
@@ -1372,7 +1372,7 @@ setup_term(fd)
         if (cp) {
                 *cp++ = '\0';
                 speed = cp;
-                cp = index(speed, '/');
+                cp = strchr(speed, '/');
                 if (cp)
                         *cp++ = '\0';
                 cfsetspeed(&tt, atoi(speed));
@@ -1381,7 +1381,7 @@ setup_term(fd)
         tt.c_iflag = TTYDEF_IFLAG;
         tt.c_oflag = TTYDEF_OFLAG;
         tt.c_lflag = TTYDEF_LFLAG;
-	bcopy(ttydefchars, tt.c_cc, sizeof(tt.c_cc));
+	memcpy(tt.c_cc, ttydefchars, sizeof(tt.c_cc));
         tcsetattr(fd, TCSAFLUSH, &tt);
 #else
 	struct sgttyb sgttyb;
@@ -1391,7 +1391,7 @@ setup_term(fd)
 	if (cp) {
 		*cp++ = '\0';
 		speed = cp;
-		cp = index(speed, '/');
+		cp = strchr(speed, '/');
 		if (cp)
 			*cp++ = '\0';
 		for (cpp = speeds; cpp < &speeds[NSPEEDS]; cpp++)
@@ -1421,7 +1421,7 @@ local_domain(h)
 	char *h;
 {
 	char localhost[MAXHOSTNAMELEN];
-	char *p1, *p2 = index(h, '.');
+	char *p1, *p2 = strchr(h, '.');
 #ifdef	AFS_OSF_ENV
 	char *topdomain();
 
@@ -1433,7 +1433,7 @@ local_domain(h)
         p1 = topdomain(localhost);
         p2 = topdomain(h);
 #else
-	p1 = index(localhost, '.');
+	p1 = strchr(localhost, '.');
 #endif
 	if (p1 == NULL || p2 == NULL || !strcasecmp(p1, p2))
 		return(1);
@@ -1793,7 +1793,7 @@ int s;
 		/* (5) sessionKey */
 
 		bp = bp + index + 1;
-		bcopy(bp, token.sessionKey.data, 8);
+		memcpy(token.sessionKey.data, bp, 8);
     
 		/* (6) kvno */
     
@@ -1843,7 +1843,7 @@ int s;
 			exit(1);
 		}
 
-		bcopy(bp, token.ticket, token.ticketLen);
+		memcpy(token.ticket, bp, token.ticketLen);
 
 		bp = bp + token.ticketLen;
 

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_cm_test.c,v 1.1.1.4 2001/07/14 22:25:16 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_cm_test.c,v 1.1.1.5 2001/09/11 14:36:04 hartmans Exp $");
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module*/
 #include <cmd.h>		/*Command line interpreter*/
@@ -1282,7 +1282,7 @@ int RunTheTest(a_s)
 		    rn, curr_item->data);
 	    exit(-1);
 	}
-	bcopy(he->h_addr, &(CMSktArray[currCM].sin_addr.s_addr), 4);
+	memcpy(&(CMSktArray[currCM].sin_addr.s_addr), he->h_addr, 4);
 
 	/*
 	 * Move to the next CM name.

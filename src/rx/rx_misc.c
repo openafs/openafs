@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_misc.c,v 1.1.1.5 2001/07/14 22:23:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_misc.c,v 1.1.1.6 2001/09/11 14:34:18 hartmans Exp $");
 
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
@@ -29,11 +29,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_misc.c,v 1.1.1.5 2001/07/14 22:23
 #include "rx.h"
 #endif /* AFS_PTHREAD_ENV */
 #include <stdlib.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_UNISTD_H

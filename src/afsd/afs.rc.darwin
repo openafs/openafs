@@ -50,6 +50,7 @@ if kmodstat | grep -q openafs ; then
 :
 else
 	echo "AFS kernel extensions failed to initialize. Skipping AFS startup."
+	exit 1
 fi
 
 #

@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_c.c,v 1.1.1.5 2001/07/14 22:23:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_c.c,v 1.1.1.6 2001/09/11 14:34:44 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -48,7 +48,7 @@ static long GetServer(aname)
 	fprintf (stderr, "host %s not found\n", aname);
 	return errno;
     }
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 
@@ -252,7 +252,7 @@ static long CallSimultaneously (threads, rock, proc)
 #endif
 	assert (i < MAX_CTHREADS);
 	w = (struct worker *) osi_Alloc (sizeof(struct worker));
-	bzero (w, sizeof(*w));
+	memset(w, 0, sizeof(*w));
 	w->next = workers;
 	workers = w;
 	w->index = i;
@@ -353,7 +353,7 @@ static long RunLoadTest (parms, conn)
     DivideUpCalls (parms->slowCalls, parms->threads, slowCalls);
     DivideUpCalls (parms->copiousCalls, parms->threads, copiousCalls);
 
-    bzero (&c, sizeof(c));
+    memset(&c, 0, sizeof(c));
     c.conn = conn;
     c.sendLen = parms->sendLen;
     c.recvLen = parms->recvLen;
@@ -519,7 +519,7 @@ static long MakeMultiChannelCall (conn, each, expectedCode, codes)
     int i;
     struct multiChannel mc;
 
-    bzero (&mc, sizeof(mc));
+    memset(&mc, 0, sizeof(mc));
     mc.conn = conn;
     for (i=0; i<RX_MAXCALLS; i++) {
 	codes[i] = RXKST_PROCESSRUNNING;

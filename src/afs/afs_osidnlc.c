@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osidnlc.c,v 1.1.1.4 2001/07/14 22:19:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osidnlc.c,v 1.1.1.5 2001/09/11 14:24:43 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -174,7 +174,7 @@ retry:
     tnc->dirp = adp;
     tnc->vp = avc;
     tnc->key = key;
-    bcopy (aname, (char *)tnc->name, ts-aname+1); /* include the NULL */
+    memcpy((char *)tnc->name, aname, ts-aname+1); /* include the NULL */
 
     InsertEntry(tnc);
   } else {
@@ -446,8 +446,8 @@ int osi_dnlc_purge()
   }
   else {  /* did get the lock */
     ncfreelist = (struct nc *) 0;
-    bzero ((char *)nameCache, sizeof(struct nc) * NCSIZE);
-    bzero ((char *)nameHash, sizeof(struct nc *) * NHSIZE);
+    memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
+    memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
     for (i=0; i<NCSIZE; i++) {
       nameCache[i].next = ncfreelist;
       ncfreelist = &nameCache[i];
@@ -475,13 +475,13 @@ int osi_dnlc_init()
 int i;
 
   Lock_Init(&afs_xdnlc);
-  bzero ((char *)&dnlcstats, sizeof(dnlcstats));
-  bzero ((char *)dnlctracetable, sizeof(dnlctracetable));
+  memset((char *)&dnlcstats, 0, sizeof(dnlcstats));
+  memset((char *)dnlctracetable, 0, sizeof(dnlctracetable));
   dnlct=0;
   ObtainWriteLock(&afs_xdnlc,223);
   ncfreelist = (struct nc *) 0;
-  bzero ((char *)nameCache, sizeof(struct nc) * NCSIZE);
-  bzero ((char *)nameHash, sizeof(struct nc *) * NHSIZE);
+  memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
+  memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
   for (i=0; i<NCSIZE; i++) {
     nameCache[i].next = ncfreelist;
     ncfreelist = &nameCache[i];

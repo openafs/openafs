@@ -29,7 +29,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.3 2001/07/14 22:23:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.4 2001/09/11 14:34:27 hartmans Exp $");
 
 #ifndef	NeXT
 
@@ -128,7 +128,7 @@ xdrmem_getbytes(xdrs, addr, len)
 
 	if ((xdrs->x_handy -= len) < 0)
 		return (FALSE);
-	bcopy(xdrs->x_private, addr, len);
+	memcpy(addr, xdrs->x_private, len);
 	xdrs->x_private += len;
 	return (TRUE);
 }
@@ -142,7 +142,7 @@ xdrmem_putbytes(xdrs, addr, len)
 
 	if ((xdrs->x_handy -= len) < 0)
 		return (FALSE);
-	bcopy(addr, xdrs->x_private, len);
+	memcpy(xdrs->x_private, addr, len);
 	xdrs->x_private += len;
 	return (TRUE);
 }

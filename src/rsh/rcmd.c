@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rcmd.c,v 1.1.1.5 2001/07/14 22:23:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rcmd.c,v 1.1.1.6 2001/09/11 14:34:12 hartmans Exp $");
 
 #ifdef aiws		/*AIX*/
 #include <sys/types.h>
@@ -76,8 +76,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rcmd.c,v 1.1.1.5 2001/07/14 22:23:2
 #	define	DPRINTF(args)
 #endif
 
-char	*index();
-
 #include <syslog.h>
 
 static _checkhost();
@@ -116,7 +114,7 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
 	struct hostent *hp;
 	fd_set reads;
 
-	bzero((char *)someSignals, sizeof(someSignals));
+	memset((char *)someSignals, 0, sizeof(someSignals));
 	someSignals[0] = 1<<(SIGURG-1);
 	sigBlock = *((sigset_t *)someSignals);
 
@@ -156,9 +154,9 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
 #endif
 		sin.sin_family = hp->h_addrtype;
 #ifdef	AFS_OSF_ENV
-		bcopy(hp->h_addr_list[0], (caddr_t)&sin.sin_addr, hp->h_length);
+		memcpy((caddr_t)&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
 #else
-		bcopy(hp->h_addr, (caddr_t)&sin.sin_addr, hp->h_length);
+		memcpy((caddr_t)&sin.sin_addr, hp->h_addr, hp->h_length);
 #endif
 		sin.sin_port = rport;
 		/* attempt to remote authenticate first... */
@@ -231,8 +229,7 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
 		    errno = oerrno;
 		    perror(0);
 		    hp->h_addr_list++;
-		    bcopy(hp->h_addr_list[0], (caddr_t)&sin.sin_addr,
-			  hp->h_length);
+		    memcpy((caddr_t)&sin.sin_addr, hp->h_addr_list[0], hp->h_length);
 		    fprintf(stderr, "Trying %s...\n",
 			    inet_ntoa(sin.sin_addr));
 		    continue;
@@ -597,7 +594,7 @@ _checkhost(rhost, lhost, len)
 			return(0);
 		}
 		ldomain[MAXHOSTNAMELEN] = '\0';
-		if ((domainp = index(ldomain, '.')) == (char *)NULL) {
+		if ((domainp = strchr(ldomain, '.')) == (char *)NULL) {
 			nodomain = 1;
 			return(0);
 		}

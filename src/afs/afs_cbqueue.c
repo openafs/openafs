@@ -74,7 +74,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cbqueue.c,v 1.1.1.4 2001/07/14 22:19:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cbqueue.c,v 1.1.1.5 2001/09/11 14:24:37 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -367,7 +367,7 @@ int doLockInit;
 {
 register int i;
 
-bzero((char *)cbHashT, CBHTSIZE*sizeof(struct bucket));
+memset((char *)cbHashT, 0, CBHTSIZE*sizeof(struct bucket));
 for (i=0;i<CBHTSIZE;i++) {
   QInit(&(cbHashT[i].head));
   /* Lock_Init(&(cbHashT[i].lock)); only if you want lots of locks, which 

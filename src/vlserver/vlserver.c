@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlserver.c,v 1.1.1.8 2001/07/14 22:24:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlserver.c,v 1.1.1.9 2001/09/11 14:35:40 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -229,7 +229,7 @@ char	**argv;
 	printf("vlserver: couldn't get address of this host (%s).\n", hostname);
 	exit(1);
     }
-    bcopy(th->h_addr,&myHost,sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     signal(SIGXCPU, CheckSignal_Signal);
@@ -244,7 +244,7 @@ char	**argv;
 
     vldb_confdir = tdir;		/* Preserve our configuration dir */
     /* rxvab no longer supported */
-    bzero(&tkey, sizeof(tkey));
+    memset(&tkey, 0, sizeof(tkey));
 
     if (noAuth) afsconf_SetNoAuthFlag(tdir, 1);
 
@@ -267,7 +267,7 @@ char	**argv;
     }
     rx_SetRxDeadTime(50);
 
-    bzero(HostAddress, sizeof(HostAddress));
+    memset(HostAddress, 0, sizeof(HostAddress));
     initialize_dstats();
 
     sc[0] = rxnull_NewServerSecurityObject();

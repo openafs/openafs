@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_badtix.c,v 1.1.1.4 2001/07/14 22:22:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_badtix.c,v 1.1.1.5 2001/09/11 14:33:03 hartmans Exp $");
 
 #include <sys/types.h>
 #include <des.h>
@@ -327,7 +327,7 @@ int main (argc, argv)
 	password[truncate[i]] = 0;
 	ka_StringToKey (password, "andy.edu", &key);
 	ka_ReadBytes (answer[i], &correct_key, sizeof(key));
-	if (bcmp (&key, &correct_key, sizeof(key)) != 0) {
+	if (memcmp (&key, &correct_key, sizeof(key)) != 0) {
 	    printf ("String to key error converting '%s'; should be '%s' instead got '",
 		    password, answer[i]);
 	    ka_PrintBytes (&key, sizeof(key));
@@ -335,7 +335,7 @@ int main (argc, argv)
 	    exit (1);
 	}
     }
-    bzero (password, sizeof(password));
+    memset(password, 0, sizeof(password));
     j=0;				/* current password length */
     for (i=(sizeof(truncate)/sizeof(int))-1; i>=0; i--) {
 	while (j<truncate[i]) {
@@ -344,7 +344,7 @@ int main (argc, argv)
 	}
 	ka_StringToKey (password, "andy.edu", &key);
 	ka_ReadBytes (answer[i], &correct_key, sizeof(key));
-	if (bcmp (&key, &correct_key, sizeof(key)) != 0) {
+	if (memcmp (&key, &correct_key, sizeof(key)) != 0) {
 	    printf ("String to key error converting '%s'; should be '%s' instead got '",
 		    password, answer[i]);
 	    ka_PrintBytes (&key, sizeof(key));
@@ -432,7 +432,7 @@ abort_1:
     
     {   struct ktc_encryptionKey badkey;
 
-	bcopy (&key, &badkey, sizeof(badkey));
+	memcpy(&badkey, &key, sizeof(badkey));
 	*(int *)&badkey ^= 1;		/* toggle some bit */
 	code = ubik_Call (KAM_SetPassword, conn, 0, name, inst, 0, badkey);
 	if (code != KABADKEY) {
@@ -440,7 +440,7 @@ abort_1:
 	    com_err (whoami, code, "Trying to set bad key");
 	    exit(1);
 	}
-	bzero (&badkey, sizeof(badkey));
+	memset(&badkey, 0, sizeof(badkey));
 	code = ubik_Call (KAM_SetPassword, conn, 0, name, inst, 0, badkey);
 	if (code != KABADKEY) goto abort_5;
 	code = ubik_Call (KAM_SetPassword, conn, 0, name, inst, 9999, key);
@@ -505,14 +505,14 @@ abort_3:
 
 	code = ubik_Call (KAM_GetEntry, conn, 0, name, inst, KAMAJORVERSION, &entry);
 	if (code) goto abort_3;
-	if (bcmp (&tentry, &entry, sizeof(entry)) != 0) {
+	if (memcmp (&tentry, &entry, sizeof(entry)) != 0) {
 	    printf ("Entries obtained not the same!\n");
 	    print_entry (&entry, name, inst);
 	}
     }
 
     /* try bashing a ticket to make sure it fails to work */
-    bzero (atoken.ticket+10, 1);
+    memset(atoken.ticket+10, 0, 1);
     code = ka_AuthServerConn (localCell, KA_MAINTENANCE_SERVICE, &atoken, &conn);
     if (code) {
 	com_err (whoami, code, "contacting admin server with bashed ticket");

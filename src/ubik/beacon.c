@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/beacon.c,v 1.1.1.7 2001/07/14 22:24:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/beacon.c,v 1.1.1.8 2001/09/11 14:34:55 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -201,7 +201,7 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
         for (i = 0; i < info->numServers; i++) {
             if (i == me) continue;
 	    ts = (struct ubik_server *) malloc(sizeof(struct ubik_server));
-	    bzero(ts, sizeof(struct ubik_server));
+	    memset(ts, 0, sizeof(struct ubik_server));
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
             ts->addr[0] = info->hostAddr[i].sin_addr.s_addr;
@@ -232,7 +232,7 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
         while (servAddr = *aservers++) {
 	    if (i >= MAXSERVERS) return UNHOSTS;	    /* too many hosts */
 	    ts = (struct ubik_server *) malloc(sizeof(struct ubik_server));
-	    bzero(ts, sizeof(struct ubik_server));
+	    memset(ts, 0, sizeof(struct ubik_server));
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = servAddr;	/* primary address in  net byte order */

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/status.c,v 1.1.1.4 2001/07/14 22:20:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/status.c,v 1.1.1.5 2001/09/11 14:31:37 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -100,7 +100,7 @@ createStatusNode()
     {
 	return(0);
     }
-    bzero(ptr, sizeof(*ptr));
+    memset(ptr, 0, sizeof(*ptr));
 
     /* link it onto the chain of status entries */
     ObtainWriteLock(&statusQueueLock);

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.4 2001/07/14 22:19:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.5 2001/09/11 14:24:45 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -237,7 +237,7 @@ afs_StoreAllSegments(avc, areq, sync)
     minj = 0 ; 
 
     do {
-      bzero ((char *)dcList, NCHUNKSATONCE * sizeof(struct dcache *));
+      memset((char *)dcList, 0, NCHUNKSATONCE * sizeof(struct dcache *));
       high = 0;
       moredata = FALSE;
 
@@ -448,7 +448,7 @@ afs_StoreAllSegments(avc, areq, sync)
  
                        while (sbytes > 0) {
                            tlen = (sbytes > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : sbytes);
-                           bzero(tbuffer, tlen);
+                           memset(tbuffer, 0, tlen);
 #ifdef RX_ENABLE_LOCKS
 			   AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */

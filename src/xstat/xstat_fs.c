@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_fs.c,v 1.1.1.4 2001/07/14 22:25:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_fs.c,v 1.1.1.5 2001/09/11 14:36:05 hartmans Exp $");
 
 #include "xstat_fs.h"			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/
@@ -299,8 +299,7 @@ static void xstat_fs_LWP()
 			       rn, *currCollIDP);
 		    xstat_fs_Results.collectionNumber = *currCollIDP;
 		    xstat_fs_Results.data.AFS_CollData_len = AFS_MAX_XSTAT_LONGS;
-		    bzero(xstat_fs_Results.data.AFS_CollData_val,
-			  AFS_MAX_XSTAT_LONGS * 4);
+		    memset(xstat_fs_Results.data.AFS_CollData_val, 0, AFS_MAX_XSTAT_LONGS * 4);
 		    
 		    xstat_fs_Results.connP = curr_conn;
 		    
@@ -514,7 +513,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
     xstat_fs_numCollections  = a_numCollections;
     collIDBytes = xstat_fs_numCollections * sizeof(afs_int32);
     xstat_fs_collIDP	     = (afs_int32 *)(malloc(collIDBytes));
-    bcopy(a_collIDP, xstat_fs_collIDP, collIDBytes);
+    memcpy(xstat_fs_collIDP, a_collIDP, collIDBytes);
     if (xstat_fs_debug) {
 	printf("[%s] Asking for %d collection(s): ", rn, xstat_fs_numCollections);
 	for (curr_srv = 0; curr_srv < xstat_fs_numCollections; curr_srv++)
@@ -616,9 +615,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
 		   (a_socketArray + curr_srv)->sin_addr.s_addr,
 		   (a_socketArray + curr_srv)->sin_port);
 	}
-	bcopy(a_socketArray + curr_srv,
-	      &(curr_conn->skt),
-	      sizeof(struct sockaddr_in));
+	memcpy(&(curr_conn->skt), a_socketArray + curr_srv, sizeof(struct sockaddr_in));
 	
 	hostNameFound =
 	    hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);

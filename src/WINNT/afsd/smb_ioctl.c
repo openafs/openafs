@@ -149,6 +149,10 @@ void smb_IoctlPrepareWrite(smb_fid_t *fidp, smb_ioctl_t *ioctlp)
 	if (!ioctlp->inAllocp) ioctlp->inAllocp = malloc(SMB_IOCTL_MAXDATA);
         if (!ioctlp->outAllocp) ioctlp->outAllocp = malloc(SMB_IOCTL_MAXDATA);
 
+	/* Fixes fs la problem.  We do a StrToOEM later and if this data isn't initialized we get memory issues. */
+       (void) memset(ioctlp->inAllocp, 0, SMB_IOCTL_MAXDATA);
+       (void) memset(ioctlp->outAllocp, 0, SMB_IOCTL_MAXDATA);
+
 	/* and make sure that we've reset our state for the new incoming request */
 	if (!(ioctlp->flags & SMB_IOCTLFLAG_DATAIN)) {
 	        ioctlp->inCopied = 0;

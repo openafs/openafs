@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_stat.c,v 1.1.1.4 2001/07/14 22:19:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_stat.c,v 1.1.1.5 2001/09/11 14:24:46 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -48,10 +48,9 @@ void afs_InitStats()
     /*
      * First step is to zero everything out.
      */
-    bzero((char *)(&afs_cmstats), sizeof(struct afs_CMStats));
-    bzero((char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
-    bzero((char *)(&afs_stats_cmfullperf),
-	  sizeof(struct afs_stats_CMFullPerf));
+    memset((char *)(&afs_cmstats), 0, sizeof(struct afs_CMStats));
+    memset((char *)(&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
+    memset((char *)(&afs_stats_cmfullperf), 0, sizeof(struct afs_stats_CMFullPerf));
 
     /*
      * Some fields really should be non-zero at the start, so set 'em up.

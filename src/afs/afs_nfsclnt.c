@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_nfsclnt.c,v 1.1.1.4 2001/07/14 22:19:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_nfsclnt.c,v 1.1.1.5 2001/09/11 14:24:41 hartmans Exp $");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #ifndef	AFS_DEC_ENV
@@ -72,9 +72,9 @@ register afs_int32 uid, host;
 	}
     }
     np = (struct nfsclientpag *) afs_osi_Alloc(sizeof (struct nfsclientpag));
-    bzero((char *)np, sizeof(struct nfsclientpag));
+    memset((char *)np, 0, sizeof(struct nfsclientpag));
     /* Copy the necessary afs_exporter fields */
-    bcopy((char *)afs_nfsexporter, (char *)np, sizeof(struct afs_exporter));
+    memcpy((char *)np, (char *)afs_nfsexporter, sizeof(struct afs_exporter));
     np->next = afs_nfspags[i];
     afs_nfspags[i] = np;
     np->uid = uid;

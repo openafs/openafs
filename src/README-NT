@@ -3,7 +3,7 @@ All Rights Reserved.
 
 This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level source
-directory or online at http://www.openafs.org/dl/license10.html
+directory or on-line at http://www.openafs.org/dl/license10.html
 
 Building OpenAFS on Windows NT
 ------------------------------
@@ -22,10 +22,10 @@ Each step is explained in detail below:
 
 A. Install a compiler
 
-   You must install a copy of Microsoft Visual C++ 5.0 (6 might also
-   work). The "Typical" install setting is sufficient. It may be
-   possible to use other compilers, but the source code as provided
-   will work with MS VC++ 5.0.
+   You must install a copy of Microsoft Visual C++ 5.0 or 6.0. The
+   "Typical" install setting is sufficient. It may be possible to use
+   other compilers, but the source code as provided will work with MS
+   VC++ 5.0/6.0.
 
 B. Add missing header files
 
@@ -53,8 +53,16 @@ C. Optional: Install Installshield 5.x
       2. build of the product plus an installer package
 
    In order to do the build that includes the installer package, a
-   copy of InstallShield 5.x must be installed. NOTE: InstallShield
+   copy of Installshield 5.x must be installed. NOTE: Installshield
    versions 6 and higher WILL NOT WORK.
+
+   Optional DLL's missing for Install Script
+   Two Microsoft DLL's must be included at DEST\WinInstall\Config\.
+   	SHLWAPI.DLL
+	WININET.DLL  
+
+	These files are only used for the Install, they will not be left 
+	on the target machine.
 
 D. Optional: Install flex and bison
 
@@ -91,63 +99,76 @@ E. Configure the OpenAFS build environment
    settings for you. Within this file there are the following lines
    that must be set to match your system settings:
 
-   set MSVCDIR=<path to vc directory of MS Visual C++>
+   * set SYS_NAME=<sys type>
+
+   * set MSVCDIR=<path to vc directory of MS Visual C++>
    Ex: set MSVCDIR=c:\progra~1\DevStudio\vc
 
-      This is the path to the compiler directory of the Microsot Visual
+      This is the path to the compiler directory of the Microsoft Visual
       C++ installation.
 
-   set AFSDEV_INCLUDE=<default include directories>
+   * set AFSDEV_INCLUDE=<default include directories>
    Ex: set AFSDEV_INCLUDE=%MSVCDIR%\include;%MSVCDIR%\mfc\include
 
       This contains a semicolon separated list of directories that
-      contain compiler provided include files. You do not need to add paths
-      here of AFS include files.
+      contain compiler provided include files. You should not need to 
+      edit this other than to point to the DDK includes not provided 
+      with the distribution
 
-   set AFSDEV_LIB=<default library directories>
-   Ex: set AFSDEV_LIB=%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
-
-      This contains a semicolon separated list of directories that
-      contain compiler provided library files. You do not need to add
-      paths here of AFS library files.
-
-   set AFSDEV_BIN=<compiler binaries directory>
-   Ex: set AFSDEV_BIN=%MSVCDIR%\bin
-
-      This is the path to the compiler binary files.
-
-   set AFSROOT=<Root directory of OpenAFS - parent of the src directory>
+   * set AFSROOT=<Root directory of OpenAFS - parent of the src directory>
    Ex: set AFSROOT=d:\OpenAFS
 
       This is the root directory of OpenAFS, which is the parent
       directory of the src directory.
 
-   set IS5ROOT=<root directory of the InstallShield5 program files>
+   * set IS5ROOT=<root directory of the Installshield5 program files>
    Ex: set IS5ROOT=d:\progra~1\instal~1\instal~1.1pr
 
-      This is the path to the InstallShield5 program directory. You
-      should only define this if you have InstallShield installed on
-      your computer and want to create the install package as part of
+      This is the path to the Installshield5 program directory. You
+      should only define this if you have Installshield installed on
+      your computer and want to create the install script as part of
       the build.
 
-   set BISON_SIMPLE=<path to bison.simple>
-   set BISON_HAIRY=<path to bison.hairy>
-   Ex: set BISON_SIMPLE=c:\bin\bison.simple
-   Ex: set BISON_HAIRY=c:\bin\bison.hairy
-
-      bison has two files (in addition to the bison executable) that
-      must be on the system. In order for bison to find these files,
-      you must set the environment variables listed above to the paths
-      to these files. There are other ways to do this, but this is
-      what the build system expects.
-
-   NOTE: There are other settings in ntbuild.bat, but the ones listed
+   NOTES: There are other settings in ntbuild.bat, but the ones listed
          above must be set correctly for the build to succeed.
 
-   As can be seen in the examples above, all paths in ntbuild.bat must
-   be in the old MSDOS 8.3 format.
+          As can be seen in the examples above, all paths in
+          ntbuild.bat must be in the old MSDOS 8.3 format.
 
-F. Begin the build
+F. Set version and installation options
+
+	Modify .\src\config\NTMakefile.i386_nt40
+		AFSPRODUCT_VERSION  - Product version
+		CELLNAME_DEFAULT - The default AFS cell name
+		CELLSERVDB_INSTALL - The default name for the CellServDB included in the install script
+		CELLSERVDB_WEB  - The default web address to obtain CellServDB
+
+For Example:
+
+ .\src\config\NTMakefile.i386_nt40
+
+   AFSPRODUCT_VERSION=1.1.1a
+   CELLNAME_DEFAULT=openafs.org
+   CELLSERVDB_INSTALL=CellServDB.GrandCentral
+   CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+
+NOTE: If CELLNAME_DEFAULT has a '.' in cell name, then the name is assumed to be 
+a valid cell name and when the user installs AFS the AFS Control Center 
+will default to NOT installed!
+
+Version level may be specified in different formats, for example the following
+forms all have the same version level; however will be displayed differently:
+
+AFSPRODUCT_VERSION=1.1.1a
+AFSPRODUCT_VERSION=1.1.1 a
+AFSPRODUCT_VERSION=1.1.1.1
+AFSPRODUCT_VERSION=1.1.101
+
+Add CellServDB file to install area.
+	 For the previous example you would add file:
+	 	 DEST\Winistall\Config\CellServDB.GrandCentral
+
+G. Begin the build
 
  1. Make sure you are running the default NT command shell, cmd.exe.
     Other shells may work, but many do not.
@@ -166,8 +187,11 @@ F. Begin the build
  3. Copy the file src/NTMakefile to the parent of the src directory.
     You only need to do this once.
 
- 4. Begin the build. You can choose to build just the product bits,
-    or, if InstallShield is installed, the product bits and the
+ 4. If you have not created a separate object build directory, edit NTMakefile and  
+    OBJ=obj to OBJ=src.
+
+ 5. Begin the build. You can choose to build just the product bits,
+    or, if Installshield is installed, the product bits and the
     install package.
 
     To build just the product bits, run:

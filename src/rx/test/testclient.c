@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/testclient.c,v 1.1.1.4 2001/07/14 22:23:46 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/testclient.c,v 1.1.1.5 2001/09/11 14:34:37 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -179,7 +179,7 @@ char **argv;
     if (!hostent) Abort("host %s not found", hostname);
     if (hostent->h_length != 4)
 	Abort("host address is disagreeable length (%d)", hostent->h_length);
-    bcopy(hostent->h_addr, (char *)&host, sizeof(host));
+    memcpy((char *)&host, hostent->h_addr, sizeof(host));
     if (setFD>0)
 	OpenFD(setFD);
     if (rx_Init(0) != 0) {

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_memcache.c,v 1.1.1.4 2001/07/14 22:19:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_memcache.c,v 1.1.1.5 2001/09/11 14:24:41 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
@@ -73,7 +73,7 @@ afs_InitMemCache(size, blkSize, flags)
 	  if (blk == NULL)
 	      goto nomem;
 	  (memCache+index)->data = blk;
-	  bzero((memCache+index)->data, memCacheBlkSize);
+	  memset((memCache+index)->data, 0, memCacheBlkSize);
       }
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
       afs_InitDualFSCacheOps((struct vnode*)0);
@@ -132,7 +132,7 @@ afs_MemReadBlk(mceP, offset, dest, size)
       
       if(bytesRead > 0) {
 	  AFS_GUNLOCK();
-	  bcopy(mceP->data + offset, dest, bytesRead);
+	  memcpy(dest, mceP->data + offset, bytesRead);
 	  AFS_GLOCK();
       }
       else
@@ -170,7 +170,7 @@ afs_MemReadvBlk(mceP, offset, iov, nio, size)
 	  for (i = 0 , size = bytesRead ; i < nio && size > 0 ; i++) {
 	      bytesToRead = (size < iov[i].iov_len) ? size : iov[i].iov_len;
 	      AFS_GUNLOCK();
-	      bcopy(mceP->data + offset, iov[i].iov_base, bytesToRead);
+	      memcpy(iov[i].iov_base, mceP->data + offset, bytesToRead);
 	      AFS_GLOCK();
 	      offset += bytesToRead;
 	      size -= bytesToRead;
@@ -227,15 +227,15 @@ afs_MemWriteBlk(mceP, offset, src, size)
 	  
 	  /* may overlap, but this is OK */
 	  AFS_GUNLOCK();
-	  bcopy(oldData, mceP->data, mceP->size);
+	  memcpy(mceP->data, oldData, mceP->size);
 	  AFS_GLOCK();
 	  afs_osi_Free(oldData,mceP->dataSize);
 	  mceP->dataSize = size+offset;
       }
       AFS_GUNLOCK();
       if (mceP->size < offset)
-	  bzero(mceP->data+mceP->size, offset-mceP->size);
-      bcopy(src, mceP->data + offset, size);
+	  memset(mceP->data+mceP->size, 0, offset-mceP->size);
+      memcpy(mceP->data + offset, src, size);
       AFS_GLOCK();
       mceP->size = (size+offset < mceP->size) ? mceP->size :
 	  size + offset;
@@ -264,17 +264,17 @@ afs_MemWritevBlk(mceP, offset, iov, nio, size)
 	  
 	  /* may overlap, but this is OK */
 	  AFS_GUNLOCK();
-	  bcopy(oldData, mceP->data, mceP->size);
+	  memcpy(mceP->data, oldData, mceP->size);
 	  AFS_GLOCK();
 	  afs_osi_Free(oldData,mceP->dataSize);
 	  mceP->dataSize = size+offset;
       }
       if (mceP->size < offset)
-	  bzero(mceP->data+mceP->size, offset-mceP->size);
+	  memset(mceP->data+mceP->size, 0, offset-mceP->size);
       for (bytesWritten = 0, i = 0 ; i < nio && size > 0 ; i++) {
 	  bytesToWrite = (size < iov[i].iov_len) ? size : iov[i].iov_len;
 	  AFS_GUNLOCK();
-	  bcopy(iov[i].iov_base, mceP->data + offset, bytesToWrite);
+	  memcpy(mceP->data + offset, iov[i].iov_base, bytesToWrite);
 	  AFS_GLOCK();
  	  offset += bytesToWrite;
  	  bytesWritten += bytesToWrite;
@@ -301,14 +301,14 @@ afs_MemWriteUIO(blkno, uioP)
 	  mceP->data = afs_osi_Alloc(uioP->uio_resid + uioP->uio_offset);
 
 	  AFS_GUNLOCK();
-	  bcopy(oldData, mceP->data, mceP->size);
+	  memcpy(mceP->data, oldData, mceP->size);
 	  AFS_GLOCK();
 
 	  afs_osi_Free(oldData,mceP->dataSize);
 	  mceP->dataSize = uioP->uio_resid + uioP->uio_offset;
       }
       if (mceP->size < uioP->uio_offset)
-	  bzero(mceP->data+mceP->size, (int)(uioP->uio_offset-mceP->size));
+	  memset(mceP->data+mceP->size, 0, (int)(uioP->uio_offset-mceP->size));
       AFS_UIOMOVE(mceP->data+uioP->uio_offset, uioP->uio_resid, UIO_WRITE, uioP, code);
       if (uioP->uio_offset > mceP->size)
 	  mceP->size = uioP->uio_offset;

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.1.1.4 2001/07/14 22:24:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.1.1.5 2001/09/11 14:35:06 hartmans Exp $");
 
 #include "uss_fs.h"		/*Interface to this module*/
 #include <sys/types.h>
@@ -131,7 +131,7 @@ static char *ParentAndComponent(a_path, a_parentBuff, a_componentPP)
      * we cheat and return ``.''.
      */
     strcpy(a_parentBuff, a_path);
-    rightSlashP = (char *) rindex(a_parentBuff, '/');
+    rightSlashP = (char *) strrchr(a_parentBuff, '/');
     if (rightSlashP) {
 	*rightSlashP = 0;
 	*a_componentPP = rightSlashP+1;

@@ -26,7 +26,6 @@
 
 char *emalloc();
 char *strcpy();
-char *rindex();
 CTREEPTR LocateChildNode();
 
 static char path2[MAXPATHLEN+1];    /* $$get rid of this */
@@ -71,7 +70,7 @@ static CheckMount(path)
       * Copy out the candidate mountpoint's pathname into dir, throwing
       * off any leaf component from the original path.
       */
-    ep = rindex(path, '/');
+    ep = strrchr(path, '/');
     for (sp = path, dp = dir; sp < ep; *dp++ = *sp++);
     if (dp == dir)
 	*dp++ = '/';
@@ -80,7 +79,7 @@ static CheckMount(path)
     /*
       * Copy out the parent's pathname into parent.
       */
-    ep = rindex(dir, '/');
+    ep = strrchr(dir, '/');
     for (sp = dir, dp = parent; sp < ep; *dp++ = *sp++);
     if (dp == parent)
 	*dp++ = '/';

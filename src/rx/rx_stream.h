@@ -64,7 +64,7 @@ int rx_stream_AllocIov();
 /* If it returns 0, the call status should be checked with rx_Error. */
 #define	rx_stream_Write(iod, buf, nbytes)				\
     (iod)->sd.wd.nFree > (nbytes) ?					\
-	(buf) && bcopy((buf), (iod)->sd.wd.freePtr, (nbytes)),		\
+	(buf) && memcpy((iod)->sd.wd.freePtr, (buf), (nbytes)),		\
 	(iod)->sd.wd.nFree -= (nbytes),					\
 	(iod)->sd.wd.freePtr += (nbytes), (nbytes)			\
       : rx_stream_WriteProc((iod), (buf), (nbytes))
@@ -74,7 +74,7 @@ int rx_stream_AllocIov();
 /* If it returns less than requested, the call status should be checked with rx_Error */
 #define	rx_stream_Read(iod, buf, nbytes)					\
     (iod)->sd.rd.nLeft > (nbytes) ?						\
-    bcopy((iod)->sd.rd.nextByte, (buf), (nbytes)),				\
+    memcpy((buf), (iod)->sd.rd.nextByte, (nbytes)),				\
     (iod)->sd.rd.nLeft -= (nbytes), (iod)->sd.rd.nextByte += (nbytes), (nbytes)	\
    : rx_stream_ReadProc((iod), (buf), (nbytes))
 

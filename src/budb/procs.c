@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/procs.c,v 1.1.1.4 2001/07/14 22:21:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/procs.c,v 1.1.1.5 2001/09/11 14:31:45 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -123,7 +123,7 @@ tailCompPtr(pathNamePtr)
      char *pathNamePtr;
 {
     char *ptr;
-    ptr = rindex(pathNamePtr, '/');
+    ptr = strrchr(pathNamePtr, '/');
     if ( ptr == 0 )
     {
         /* this should never happen */
@@ -516,7 +516,7 @@ SendReturnList (ut, list, FillProc, e_size, index, nextIndexP, dbTimeP, eList)
        eList->budb_dumpList_val = (struct budb_dumpEntry *)malloc (e_size * to_return);
        if (!eList->budb_dumpList_val) return(BUDB_NOMEM);
     }
-    bzero(eList->budb_dumpList_val, e_size * to_return);
+    memset(eList->budb_dumpList_val, 0, e_size * to_return);
     eList->budb_dumpList_len = to_return;
 
     e = (char *)(eList->budb_dumpList_val);
@@ -707,7 +707,7 @@ static afs_int32 GetVolInfo (ut, volP, viaP, viP)
     else if ( !VolInfoMatch(volP,viP) )         /* Not the head volinfo struct */
     {
         hvia = via;                             /* remember the head volinfo struct */
-	bcopy(viP, &hvi, sizeof(hvi));
+	memcpy(&hvi, viP, sizeof(hvi));
 
         /* Search the same name chain for the correct volinfo structure */
         for (via=ntohl(viP->sameNameChain); via; via=ntohl(viP->sameNameChain))
@@ -998,7 +998,7 @@ rememberDump(dumpAddrParam, dumpParam,  dumpListPtrParam)
     ptr = (struct chosenDump *) malloc(sizeof(*ptr));
     if (!ptr)
        return(0);
-    bzero(ptr, sizeof(*ptr));
+    memset(ptr, 0, sizeof(*ptr));
     ptr->addr = dumpAddr;
     ptr->date = (afs_uint32) ntohl(dumpPtr->created);    
 
@@ -1385,7 +1385,7 @@ afs_int32 CreateDump(call, dump)
     }
 	    
     /* Allocate a dump structure */
-    bzero (&d, sizeof(d));
+    memset(&d, 0, sizeof(d));
     eval = AllocStructure (ut, dump_BLOCK, 0, &da, &d);
     if (eval) ABORT(eval);
 
@@ -2040,7 +2040,7 @@ afs_int32 FindLatestDump (call, vsname, dumpPath, dumpentry)
         /* Construct a database dump name */
 	strcpy(dumpName, DUMP_TAPE_NAME);
     }
-    else if (index(dumpPath,'/') == 0) {
+    else if (strchr(dumpPath,'/') == 0) {
         int                    level, old, length, hash;
 	struct dump            hostDump, diskDump;
 	struct memoryHashTable *mht;
@@ -2450,7 +2450,7 @@ afs_int32 GetDumps (call, majorVersion, flags, name, start, end,
 	/* end specifies how many dumps */
 	if (!end) ABORT(BUDB_BADFLAGS);
 
-	bzero(&rock, sizeof(rock));
+	memset(&rock, 0, sizeof(rock));
 	rock.maxDumps = end;
 
 	scanHashTable(ut, &db.dumpName, wantDump, rememberDump, (char *) &rock);
@@ -2737,7 +2737,7 @@ afs_int32 FindLastTape (call, dumpID, dumpEntry, tapeEntry, volEntry)
 
      /* Zero volume entry if the last tape has no volumes */
      if (!lastVol) {
-        bzero(volEntry, sizeof(*volEntry));
+        memset(volEntry, 0, sizeof(*volEntry));
      } else {
         /* Follow the volumes until we reach the last volume */
         eval = dbread (ut,lastVol,&vf,sizeof(vf));
@@ -3138,7 +3138,7 @@ afs_int32 UseTape (call, tape, new)
 
     *new = 0;
 
-    bzero (&t, sizeof(t));
+    memset(&t, 0, sizeof(t));
     eval = AllocStructure (ut, tape_BLOCK, 0, &a, &t);
     if (eval) ABORT(eval);
 

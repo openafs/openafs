@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.5 2001/07/14 22:24:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.6 2001/09/11 14:35:00 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -35,11 +35,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.5 2001/07/14 22
 #include <sys/time.h>
 #include <dirent.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_UNISTD_H
@@ -77,7 +77,7 @@ char *aname; {
 	printf("host %s not found \n", aname);
 	exit(1);
     }
-    bcopy(th->h_addr, &addr, sizeof(addr));
+    memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 

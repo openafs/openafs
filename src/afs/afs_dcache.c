@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.5 2001/07/14 22:19:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.6 2001/09/11 14:24:39 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -1432,14 +1432,18 @@ struct tlocal1 {
 
 /* these fields are protected by the lock on the vcache and luck 
  * on the dcache */
-#define updateV2DC(l,v,d,src) { if (l) ObtainWriteLock(&((v)->lock),src);\
-    if (hsame((v)->m.DataVersion, (d)->f.versionNo) && (v)->callback) { \
-	(v)->quick.dc = (d);                                          \
-	(v)->quick.stamp = (d)->stamp = MakeStamp();                  \
-	(v)->quick.minLoc = AFS_CHUNKTOBASE((d)->f.chunk);            \
-  /* Don't think I need these next two lines forever */       \
-	(v)->quick.len = (d)->f.chunkBytes;                           \
-	(v)->h1.dchint = (d); }  if(l) ReleaseWriteLock(&((v)->lock)); }
+#define updateV2DC(l,v,d,src) { \
+    if (!l || 0 == NBObtainWriteLock(&((v)->lock),src)) { \
+	if (hsame((v)->m.DataVersion, (d)->f.versionNo) && (v)->callback) { \
+	    (v)->quick.dc = (d);                                          \
+	    (v)->quick.stamp = (d)->stamp = MakeStamp();                  \
+	    (v)->quick.minLoc = AFS_CHUNKTOBASE((d)->f.chunk);            \
+	    /* Don't think I need these next two lines forever */         \
+	    (v)->quick.len = (d)->f.chunkBytes;                           \
+	    (v)->h1.dchint = (d);                                         \
+	}                                                                 \
+	if(l) ReleaseWriteLock(&((v)->lock));                             \
+    } }
 
 struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
     register struct vcache *avc;    /*Held*/
@@ -2646,18 +2650,18 @@ void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
     /* Allocate and zero the pointer array to the dcache entries */
     afs_indexTable = (struct dcache **)
 	afs_osi_Alloc(sizeof(struct dcache *) * afiles);
-    bzero((char *)afs_indexTable, sizeof(struct dcache *) * afiles);
+    memset((char *)afs_indexTable, 0, sizeof(struct dcache *) * afiles);
     afs_indexTimes = (afs_hyper_t *) afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
-    bzero((char *)afs_indexTimes, afiles * sizeof(afs_hyper_t));
+    memset((char *)afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
     afs_indexUnique = (afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_uint32));
-    bzero((char *)afs_indexUnique, afiles * sizeof(afs_uint32));
+    memset((char *)afs_indexUnique, 0, afiles * sizeof(afs_uint32));
     afs_indexFlags = (u_char *) afs_osi_Alloc(afiles * sizeof(u_char));
-    bzero((char *)afs_indexFlags, afiles * sizeof(char));
+    memset((char *)afs_indexFlags, 0, afiles * sizeof(char));
     
     /* Allocate and thread the struct dcache entries themselves */
     tdp = afs_Initial_freeDSList =
 	(struct dcache *) afs_osi_Alloc(aDentries * sizeof(struct dcache));
-    bzero((char *)tdp, aDentries * sizeof(struct dcache));
+    memset((char *)tdp, 0, aDentries * sizeof(struct dcache));
 #ifdef	AFS_AIX32_ENV
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);/* XXX */    
     pin((char *)afs_indexTimes, sizeof(afs_hyper_t) * afiles);	/* XXX */    

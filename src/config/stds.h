@@ -189,7 +189,9 @@ typedef struct afs_hyper_t { /* unsigned 64 bit integers */
 #if defined(AFS_LINUX20_ENV) && defined(KERNEL)
 /* This is here instead of osi_machdep.h so fcrypt.c can pick it up. */
 #include "../h/string.h"
-#define bcopy(F,T,C) memcpy((T), (F), (C))
+#if 0
+#define bcopy(F, T, C) memcpy((T), (F), (C))
+#endif
 #endif
 
 

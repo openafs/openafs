@@ -35,16 +35,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.5 2001/07/14 22:23:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.6 2001/09/11 14:34:40 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include "rpc_util.h"
@@ -148,7 +148,7 @@ get_definition()
 	token tok;
 
 	defp = ALLOC(definition);
-	bzero((char *)defp, sizeof(definition));
+	memset((char *)defp, 0, sizeof(definition));
 	get_token(&tok);
 	switch (tok.kind) {
 	case TOK_STRUCT:
@@ -882,7 +882,7 @@ token *tokp;
     do {
 	get_token(tokp);
 	Proc_list = ALLOC(proc1_list);
-	bzero((char *)Proc_list, sizeof(proc1_list));
+	memset((char *)Proc_list, 0, sizeof(proc1_list));
 	Proc_list->pl.param_flag = 0;
 	switch (tokp->kind) {
 	    case TOK_IN:
@@ -904,7 +904,7 @@ token *tokp;
 	*Proc_listp = Proc_list;
 	Proc_listp = &Proc_list->next;
 	decls = ALLOC(decl_list);
-	bzero((char *)decls, sizeof(decl_list));
+	memset((char *)decls, 0, sizeof(decl_list));
 	decls->decl = dec;
 	*tailp = decls;
 	tailp = &decls->next;
@@ -1172,7 +1172,7 @@ int split_flag;
 	    for (plist1 = defp->pc.plists; plist1; plist1 = plist1->next) {
 		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    char *star="";
-		    char *pntr = index(plist1->pl.param_type, '*');
+		    char *pntr = strchr(plist1->pl.param_type, '*');
 		    if (pntr) star = "*";
 		    if (plist1->pl.param_flag & OUT_STRING) {
 			f_print(fout, ", *%s%s", star, plist1->pl.param_name);
@@ -1399,11 +1399,11 @@ int *somefrees;
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if ((plist->component_kind == DEF_PARAM) && !(plist->pl.param_flag & PROCESSED_PARAM)) {
 	    if (plist->pl.param_flag & INDIRECT_PARAM) {
-		    char pres, *pntr = index(plist->pl.param_type, '*');
+		    char pres, *pntr = strchr(plist->pl.param_type, '*');
 		    if (pntr){ --pntr; pres = *pntr; *pntr = (char)0; }
 		    f_print(fout, "\t%s %s", plist->pl.param_type, plist->pl.param_name);
 		    *pntr = pres;
-	    } else if (index(plist->pl.param_type, '*') == 0) {
+	    } else if (strchr(plist->pl.param_type, '*') == 0) {
 		f_print(fout, "\t%s %s", plist->pl.param_type, plist->pl.param_name);
 	    } else {
 		plist->pl.param_flag |= FREETHIS_PARAM;
@@ -1415,7 +1415,7 @@ int *somefrees;
 		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    if (plist1->pl.param_flag & INDIRECT_PARAM) {
 			    f_print(fout, ", %s", plist1->pl.param_name);
-		    } else if (index(plist1->pl.param_type, '*') == 0) {
+		    } else if (strchr(plist1->pl.param_type, '*') == 0) {
 			f_print(fout, ", %s", plist1->pl.param_name);
 		    } else {
 			plist1->pl.param_flag |= FREETHIS_PARAM;

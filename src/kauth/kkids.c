@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kkids.c,v 1.1.1.4 2001/07/14 22:22:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kkids.c,v 1.1.1.5 2001/09/11 14:32:58 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -95,7 +95,7 @@ static int simplify_name(
        * name (we know there is one) and splice in the symlink contents.
        */
       if (true_name[0] != '/') {
-	last_component = (char *) rindex(orig_name, '/');
+	last_component = (char *) strrchr(orig_name, '/');
 	strcpy(++last_component, true_name);
 	strcpy(true_name, orig_name);
       }
@@ -147,7 +147,7 @@ static int find_me(
     simplify_name(orig_name, truename);
   }
   else {
-    bp = (char *) rindex(arg, '/');
+    bp = (char *) strrchr(arg, '/');
     if (bp) {
       orig_name[0] = '.';
       orig_name[1] = '/';
@@ -182,7 +182,7 @@ static int find_me(
   /*
    * Find rightmost slash, if any.
    */
-  bp = (char *) rindex(truename, '/');
+  bp = (char *) strrchr(truename, '/');
   if (bp) {
     /*
      * Found it.  Designate everything before it as the parent directory,

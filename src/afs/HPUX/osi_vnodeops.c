@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.4 2001/07/14 22:19:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.5 2001/09/11 14:25:01 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -77,14 +77,14 @@ m_cpytoc(m, off, len, cp)
 		return (len);
 
 	ml = MIN(len, m->m_len - off);
-	bcopy(mtod(m, caddr_t)+off, cp, (u_int)ml);
+	memcpy(cp, mtod(m, caddr_t)+off, (u_int)ml);
 	cp += ml;
 	len -= ml;
 	m = m->m_next;
 
 	while (len && m) {
 		ml = m->m_len;
-		bcopy(mtod(m, caddr_t), cp, (u_int)ml);
+		memcpy(cp, mtod(m, caddr_t), (u_int)ml);
 		cp += ml;
 		len -= ml;
 		m = m->m_next;
@@ -1350,7 +1350,7 @@ afs_pageout(vp,prp, start, end, flags)
     filevp = VM_GET_PAGEOUT_VNODE(&vm_info); /* always page out to back store */
     VASSERT(filevp != NULL);
 
-    bzero((caddr_t)&args, sizeof(fsdata_t));
+    memset((caddr_t)&args, 0, sizeof(fsdata_t));
     args.remote_down = 0;	/* assume remote file servers are up */
     args.remote = 1;		/* we are remote */
     args.bsize = 0;		/* filled up later by afs_vm_checkpage() */
@@ -2039,7 +2039,7 @@ afs_readdir(vp, uiop, cred)
                 if ((caddr_t) odp + odp->d_reclen > obufend)
                         break;
 		/* record offset *after* we're sure to use this entry */
-                bcopy((char *)&idp->__d_off, (char *)&tmp_offset, sizeof tmp_offset);
+                memcpy((char *)&tmp_offset, (char *)&idp->__d_off, sizeof tmp_offset);
                 offset = tmp_offset;
         }
 
@@ -2098,7 +2098,7 @@ afs_readdir3(vp, uiop, cred)
              (caddr_t)idp < ibufend;
              idp = (struct __dirent32 *) ((caddr_t) idp  + idp->__d_reclen),
              odp = (struct __dirent64 *) ((caddr_t) odp  + odp->__d_reclen)) {
-		bcopy((char *)&idp->__d_off, (char *)&odp->__d_off, sizeof odp->__d_off);
+		memcpy((char *)&odp->__d_off, (char *)&idp->__d_off, sizeof odp->__d_off);
                 odp->__d_ino = idp->__d_ino;
                 odp->__d_namlen = idp->__d_namlen;
                 (void) strcpy(odp->__d_name, idp->__d_name);
@@ -2223,7 +2223,7 @@ printf("afsHash: enter\n");
 		osi_Panic("afs: cannot create SEMA Hashtable\n");
 
 	/* initialize the hash table and associated locks */
-	bzero((char *)hashTable, sizeOfHashTable * sizeof(Bucket ));	
+	memset((char *)hashTable, 0, sizeOfHashTable * sizeof(Bucket ));	
 	for ( i=0;i < sizeOfHashTable; i ++)
 		hashLockInit( hashTable[i].lock);
 	hashLockInit(afsHashLock);
@@ -2289,7 +2289,7 @@ printf("afsHashInsertFind: %d FOUND\n", key);
 		osi_Panic("afs: SEMA Hashtable cannot create new entry\n");
 					/* create new entry */
 	ptr->key     = key;
- 	bzero((char *)&ptr->element, sizeof(ptr->element));
+ 	memset((char *)&ptr->element, 0, sizeof(ptr->element));
 	ptr->refCnt  = 1;		/* this guy */
 
 					/* insert new entry in bucket */

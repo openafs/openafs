@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.5 2001/07/14 22:25:09 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.6 2001/09/11 14:35:55 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -190,7 +190,7 @@ Volume	* vp;
     int code;
     int length;
 
-    bzero(vnode, SIZEOF_LARGEDISKVNODE);    
+    memset(vnode, 0, SIZEOF_LARGEDISKVNODE);    
 
     V_pref(vp, nearInode);
     inodeNumber = IH_CREATE(V_linkHandle(vp), V_device(vp),
@@ -1146,7 +1146,7 @@ afs_int32 SAFSVolForwardMultiple (acid, fromTrans, fromDate, destinations,
   int i, nconns, is_incremental;
 
   if (results)
-     bzero(results, sizeof(manyResults));
+     memset(results, 0, sizeof(manyResults));
 
   if (!afsconf_SuperUser(tdir, acid, caller))
     return VOLSERBAD_ACCESS;/*not a super user*/
@@ -1659,7 +1659,7 @@ struct partEntries *pEntries;
 	    partList.partId[j++] = i;
     }
     pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
-    bcopy((char *)&partList, (char *)pEntries->partEntries_val, j * sizeof(int));
+    memcpy((char *)pEntries->partEntries_val, (char *)&partList, j * sizeof(int));
     pEntries->partEntries_len = j;
 #else
     code = stat("/",&rbuf);	/*interested in buf->st_dev*/
@@ -1680,7 +1680,7 @@ struct partEntries *pEntries;
 	}
     } 
     pEntries->partEntries_val = (afs_int32 *) malloc(j * sizeof(int));
-    bcopy((char *)&partList, (char *)pEntries->partEntries_val, j * sizeof(int));
+    memcpy((char *)pEntries->partEntries_val, (char *)&partList, j * sizeof(int));
     pEntries->partEntries_len = j;
 #endif
     return 0;
@@ -2049,9 +2049,7 @@ afs_int32 VolXListOneVolume (a_rxCidP, a_partID, a_volID, a_volumeXInfoP)
 	    /*
 	     * Copy out the stat fields in a single operation.
 	     */
-	    bcopy((char *)&(volDiskDataP->stat_reads[0]),
-		  (char *)&(xInfoP->stat_reads[0]),
-		  numStatBytes);
+	    memcpy((char *)&(xInfoP->stat_reads[0]), (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
 
 	    /*
 	     * We're done copying.  Detach the volume and iterate (at this
@@ -2445,9 +2443,7 @@ afs_int32 VolXListVolumes (a_rxCidP, a_partID, a_flags, a_volumeXInfoP)
 	    /*
 	     * Copy out the stat fields in a single operation.
 	     */
-	    bcopy((char *)&(volDiskDataP->stat_reads[0]),
-		  (char *)&(xInfoP->stat_reads[0]),
-		  numStatBytes);
+	    memcpy((char *)&(xInfoP->stat_reads[0]), (char *)&(volDiskDataP->stat_reads[0]), numStatBytes);
 
 	    /*
 	     * We're done copying.  Detach the volume and iterate.

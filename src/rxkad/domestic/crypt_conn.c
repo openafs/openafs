@@ -18,7 +18,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/domestic/crypt_conn.c,v 1.1.1.5 2001/07/14 22:23:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/domestic/crypt_conn.c,v 1.1.1.6 2001/09/11 14:34:45 hartmans Exp $");
 
 #ifdef KERNEL
 #include "../afs/stds.h"
@@ -63,7 +63,7 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
     UNLOCK_RXKAD_STATS
 
-    bcopy ((void *)ivec, (void *)xor, sizeof(xor));
+    memcpy((void *)xor, (void *)ivec, sizeof(xor));
     for (i = 0; len ; i++) {
       data = rx_data(packet, i, tlen);
       if (!data || !tlen)
@@ -106,7 +106,7 @@ afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
     */
     rx_PutInt32(packet, 1*sizeof(afs_int32), 0); 
 
-    bcopy ((void *)ivec, (void *)xor, sizeof(xor));
+    memcpy((void *)xor, (void *)ivec, sizeof(xor));
     for (i = 0; len ; i++) {
       data = rx_data(packet, i, tlen);
       if (!data || !tlen)

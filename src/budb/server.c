@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/server.c,v 1.1.1.4 2001/07/14 22:21:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/server.c,v 1.1.1.5 2001/09/11 14:31:45 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -94,7 +94,7 @@ convert_cell_to_ubik (cellinfo, myHost, serverList)
 	printf("prserver: couldn't get address of this host.\n");
 	BUDB_EXIT(1);
     }
-    bcopy(th->h_addr,myHost,sizeof(afs_int32));
+    memcpy(myHost, th->h_addr, sizeof(afs_int32));
 
     for (i=0; i<cellinfo->numServers; i++)
 	/* omit my host from serverList */
@@ -351,7 +351,7 @@ main(argc, argv)
 	exit(2);
     }
 
-    bzero(globalConfPtr, sizeof(*globalConfPtr));
+    memset(globalConfPtr, 0, sizeof(*globalConfPtr));
 
     /* set default configuration values */
     strcpy(dbDir, AFSDIR_SERVER_DB_DIRPATH);
@@ -494,7 +494,7 @@ main(argc, argv)
     /* misc. initialization */
 
     /* database dump synchronization */
-    bzero(dumpSyncPtr, sizeof(*dumpSyncPtr));
+    memset(dumpSyncPtr, 0, sizeof(*dumpSyncPtr));
     Lock_Init(&dumpSyncPtr->ds_lock);
 
     rx_StartServer(0);			/* start handling requests */

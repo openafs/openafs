@@ -1,10 +1,26 @@
 #/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
 #
-# MakefileProto for Digital Unix systems
+# MakefileProto for FreeBSD systems
 #
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
+SYS_NAME=@AFS_SYSNAME@
 
-DESTDIR=DEST/
-# include ../config/Makefile.${SYS_NAME}
+# include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -14,7 +30,8 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vm.o \
-	osi_vnodeops.o 
+	osi_vnodeops.o \
+	xdr_int64.o
 
 AFS_OS_NFSOBJS = \
 	osi_vfsops_nfs.o
@@ -42,15 +59,18 @@ KOBJ = STATIC
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
 
 include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	-rm -f  h net netinet rpc ufs nfs  machine sys vm
+	ln -s ../config $(KOBJ)/config
+	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -s /usr/src/sys/net net
 	-ln -s /usr/src/sys/i386/include machine
 	-ln -s /usr/src/sys/netinet netinet
@@ -67,15 +87,34 @@ setup:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
-DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
+INST_LIBAFS ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 
-# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-# libafs:	$(DEST_LIBAFSNONFS)
+# libafs:	$(LIBAFS) $(LIBAFSNONFS)
+# libafs:	$(LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFSNONFS)
 libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
 
+install_libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+dest_libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)
 	$(INSTALL) -f $? $@
@@ -108,4 +147,6 @@ osi_vfsops.o: $(AFS)/osi_vfsops.c
 osi_vm.o: $(AFS)/osi_vm.c
 	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)
+xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE1)

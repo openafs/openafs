@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.6 2001/07/14 22:24:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.7 2001/09/11 14:35:36 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -256,7 +256,7 @@ static int get_key(arock, akvno, akey)
     code = afsconf_GetKey(confDir, akvno, tkey.key);
     if (code)
 	return code;
-    bcopy(tkey.key, akey, sizeof(tkey.key));
+    memcpy(akey, tkey.key, sizeof(tkey.key));
     return 0;
 
 } /*get_key*/
@@ -604,7 +604,7 @@ main(argc, argv)
     }
     else {
 	char hoststr[16];
-	bcopy(he->h_addr, &FS_HostAddr_NBO, 4);
+	memcpy(&FS_HostAddr_NBO, he->h_addr, 4);
 	afs_inet_ntoa_r(FS_HostAddr_NBO, hoststr);
 	FS_HostAddr_HBO = ntohl(FS_HostAddr_NBO);
 	ViceLog(0,("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
@@ -742,9 +742,9 @@ static void ClearXStatValues()
     /*
      * Zero all xstat-related structures.
      */
-    bzero((char *)(&afs_perfstats), sizeof(struct afs_PerfStats));
+    memset((char *)(&afs_perfstats), 0, sizeof(struct afs_PerfStats));
 #if FS_STATS_DETAILED
-    bzero((char *)(&afs_FullPerfStats), sizeof(struct fs_stats_FullPerfStats));
+    memset((char *)(&afs_FullPerfStats), 0, sizeof(struct fs_stats_FullPerfStats));
 
     /*
      * That's not enough.  We have to set reasonable minima for

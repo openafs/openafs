@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/physio.c,v 1.1.1.4 2001/07/14 22:25:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/physio.c,v 1.1.1.5 2001/09/11 14:35:54 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -113,7 +113,7 @@ Inode inode;
 afs_int32 device;
 {
     private SalvageCacheCheck = 1;
-    bzero(dir, sizeof(DirHandle));
+    memset(dir, 0, sizeof(DirHandle));
 
     dir->dirh_volume = volume;
     dir->dirh_device = device;
@@ -129,14 +129,14 @@ DirHandle     *	file;
 
 {
     IH_RELEASE(file->dirh_handle);
-    bzero(file, sizeof(DirHandle));
+    memset(file, 0, sizeof(DirHandle));
 }
 
 FidZero (file)
 DirHandle     *	file;
 
 {
-    bzero(file, sizeof(DirHandle));
+    memset(file, 0, sizeof(DirHandle));
 }
 
 FidEq (afile, bfile)

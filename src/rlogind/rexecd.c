@@ -7,7 +7,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rexecd.c,v 1.1.1.3 2001/07/14 22:23:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rexecd.c,v 1.1.1.4 2001/09/11 14:34:11 hartmans Exp $");
 
 #include <afs/kautils.h>	/* for UserAuthGeneral */
 #include <sys/types.h>
@@ -36,7 +36,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rexecd.c,v 1.1.1.3 2001/07/14 2
 
 extern	errno;
 struct	passwd *getpwnam();
-char	*crypt(), *rindex(), *strncat();
+char	*crypt(), *strncat();
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SUN5_ENV)
 char *sprintf();
 #endif
@@ -326,7 +326,7 @@ doit(f, fromp)
 		addenvvar("PASSWORD_EXPIRES", pwd_expires_str);
 	} 
 #endif
-	cp = rindex(pwd->pw_shell, '/');
+	cp = strrchr(pwd->pw_shell, '/');
 	if (cp)
 		cp++;
 	else

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/recovery.c,v 1.1.1.5 2001/07/14 22:24:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/recovery.c,v 1.1.1.6 2001/09/11 14:34:56 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -26,6 +26,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/recovery.c,v 1.1.1.5 2001/07/14 22
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <errno.h>
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -529,7 +530,7 @@ FetchEndCall:
 	   if (!code) {
 	      /* we got a new file, set up its header */
 	      urecovery_state |= UBIK_RECHAVEDB;
-	      bcopy(&tversion, &ubik_dbase->version, sizeof(struct ubik_version));
+	      memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
 	      (*ubik_dbase->sync)(ubik_dbase, 0);	/* get data out first */
 	      /* after data is good, sync disk with correct label */
 	      code = (*ubik_dbase->setlabel)(ubik_dbase, 0, &ubik_dbase->version);

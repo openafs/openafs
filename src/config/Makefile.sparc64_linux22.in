@@ -39,12 +39,9 @@ MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${DESTDIR}bin/washtool
-INSTALL=${DESTDIR}bin/install
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 #
 # Other OS specific requirements
 #
 YACC = bison -y
 LEX = flex -l
-# Used in des library.
-CRYPT_OBJ = crypt.o

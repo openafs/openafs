@@ -7,14 +7,14 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_event.c,v 1.1.1.4 2001/07/11 03:10:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_event.c,v 1.1.1.5 2001/09/11 14:34:16 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -420,6 +420,7 @@ void shutdown_rxevent(void)
 	osi_Free((char *)xp, sizeof(struct xfreelist));
 	xp = nxp;
     }
+    xfreemallocs = (struct xfreelist *) 0;
 #endif
 
 }

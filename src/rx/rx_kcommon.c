@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.6 2001/07/14 22:23:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.7 2001/09/11 14:34:17 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -440,8 +440,8 @@ void shutdown_rxkernel(void)
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
 	if (tpro->pr_protocol == IPPROTO_UDP) {
 	    /* restore original udp protocol switch */
-	    bcopy((void *)&parent_proto, (void *)tpro, sizeof(parent_proto));
-	    bzero((void *)&parent_proto, sizeof(parent_proto));
+	    memcpy((void *)tpro, (void *)&parent_proto, sizeof(parent_proto));
+	    memset((void *)&parent_proto, 0, sizeof(parent_proto));
 	    rxk_initDone = 0;
 	    rxk_shutdownPorts();
 	    return;
@@ -468,8 +468,8 @@ int rxi_GetcbiInfo()
    afs_uint32 addrs[ADDRSPERSITE];
    int     mtus[ADDRSPERSITE];
 
-   bzero((void *)addrs, sizeof(addrs));
-   bzero((void *)mtus,  sizeof(mtus));
+   memset((void *)addrs, 0, sizeof(addrs));
+   memset((void *)mtus, 0, sizeof(mtus));
 
    for (i=0; i<afs_cb_interface.numberOfInterfaces; i++) {
       rxmtu    = (ntohl(afs_cb_interface.mtu[i]) - RX_IPUDP_SIZE);
@@ -570,8 +570,8 @@ int rxi_GetIFInfo()
     struct ifaddr *ifad;  /* ifnet points to a if_addrlist of ifaddrs */
     afs_uint32 ifinaddr;
 
-    bzero(addrs, sizeof(addrs));
-    bzero(mtus, sizeof(mtus));
+    memset(addrs, 0, sizeof(addrs));
+    memset(mtus, 0, sizeof(mtus));
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
@@ -748,7 +748,7 @@ struct osi_socket *rxk_NewSocket(short aport)
        setuerror(ENOBUFS);
        goto bad;
     }
-    bcopy((caddr_t)&myaddr, (caddr_t)bindnam->b_rptr+SO_MSGOFFSET, addrsize);
+    memcpy((caddr_t)bindnam->b_rptr+SO_MSGOFFSET, (caddr_t)&myaddr, addrsize);
     bindnam->b_wptr = bindnam->b_rptr + (addrsize+SO_MSGOFFSET+1);
 
     code = sobind(newSocket, bindnam, addrsize);
@@ -794,7 +794,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 #ifdef  AFS_OSF_ENV
     myaddr.sin_len = nam->m_len;
 #endif  /* AFS_OSF_ENV */
-    bcopy(&myaddr, mtod(nam, caddr_t), sizeof(myaddr));
+    memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
 #ifdef AFS_SGI65_ENV
     BHV_PDATA(&bhv) = (void*)newSocket;
     code = sobind(&bhv, nam);

@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_password.c,v 1.1.1.5 2001/07/14 22:23:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_password.c,v 1.1.1.6 2001/09/11 14:34:01 hartmans Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>
@@ -93,8 +93,11 @@ pam_sm_chauthtok(
 
     if (use_first_pass) try_first_pass = 0;
 
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass, try_first_pass);
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
+    if (logmask && LOG_MASK(LOG_DEBUG))
+      {
+	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass, try_first_pass);
+	pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
+      }
 
     /* Try to get the user-interaction info, if available. */
     errcode = pam_get_item(pamh, PAM_CONV, (const void **) &pam_convp);
@@ -109,7 +112,8 @@ pam_sm_chauthtok(
 	RET(PAM_USER_UNKNOWN);
     }
 
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
+    if (logmask && LOG_MASK(LOG_DEBUG))
+      pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
      * If the user has a "local" (or via nss, possibly nss_dce) pwent,
@@ -129,7 +133,7 @@ pam_sm_chauthtok(
 	RET(PAM_AUTH_ERR);
     }
 #else
-#ifdef AFS_LINUX20_ENV
+#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
     upwd = getpwnam(user);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -147,13 +151,15 @@ pam_sm_chauthtok(
 	    RET(PAM_AUTH_ERR);
 	}
 	password = NULL;	/* In case it isn't already NULL */
-	pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
+	if (logmask && LOG_MASK(LOG_DEBUG))
+	  pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
 	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
+      if (logmask && LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
 	torch_password = 0;
 	got_authtok = 1;

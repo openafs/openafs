@@ -48,13 +48,14 @@
   *		   This option is now disabled.
   *	-logfile   Place where to put the logfile (default in <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
+  *	-files_per_subdir [n]	number of files per cache subdir. (def=2048)
   *	-shutdown  Shutdown afs daemons
   *---------------------------------------------------------------------------*/
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.8 2001/07/14 22:20:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.9 2001/09/11 14:30:47 hartmans Exp $");
 
 #define VFS 1
 
@@ -201,7 +202,7 @@ char fullpn_VolInfoFile[1024];		/*Full pathname of VOLINFOFILE*/
 char fullpn_AFSLogFile[1024];		/*Full pathname of AFSLOGFILE*/
 char fullpn_CacheInfo[1024];		/*Full pathname of CACHEINFO*/
 char fullpn_VFile[1024];		/*Full pathname of data cache files*/
-char *vFileNumber;			/*Ptr to the number part of above pathname*/
+char *vFilePtr;				/*Ptr to the number part of above pathname*/
 int sawCacheMountDir = 0;		/* from cmd line */
 int sawCacheBaseDir = 0;
 int sawCacheBlocks = 0;
@@ -215,6 +216,7 @@ afs_int32 lookingForHomeCell;		/*Are we still looking for the home cell?*/
 int createAndTrunc = O_CREAT | O_TRUNC; /*Create & truncate on open*/
 int ownerRWmode	= 0600;			/*Read/write OK by owner*/
 static int filesSet = 0;		/*True if number of files explicitly set*/
+static int nFilesPerDir = 2048;		/* # files per cache dir */
 static int nDaemons = 2;		/* Number of background daemons */
 static int chunkSize = 0;               /* 2^chunkSize bytes per chunk */
 static int dCacheSize = 300;            /* # of dcache entries */
@@ -241,6 +243,17 @@ int afsd_CloseSynch = 0;		/*Are closes synchronous or not? */
 #else
 #define AFSD_INO_T afs_uint32
 #endif
+struct afsd_file_list {
+  int			fileNum;
+  struct afsd_file_list	*next;
+};
+struct afsd_file_list **cache_dir_filelist = NULL;
+int *cache_dir_list = NULL;		/* Array of cache subdirs */
+int *dir_for_V = NULL;			/* Array: dir of each cache file.
+					 * -1: file does not exist
+					 * -2: file exists in top-level
+					 * >=0: file exists in Dxxx
+					 */
 AFSD_INO_T *inode_for_V;		/* Array of inodes for desired
 					 * cache files */
 int missing_DCacheFile	= 1;		/*Is the DCACHEFILE missing?*/
@@ -403,6 +416,7 @@ int cs;
   *
   * Arguments:
   *	fname : Char ptr to the filename to parse.
+  *	max   : integer for the highest number to accept
   *
   * Returns:
   *	>= 0 iff the file is really a data cache file numbered from 0 to cacheFiles-1, or
@@ -415,21 +429,23 @@ int cs;
   *	None.
   *---------------------------------------------------------------------------*/
 
-int GetVFileNumber(fname)
+static int doGetXFileNumber(fname, filechar, maxNum)
     char *fname;
+    char filechar;
+    int maxNum;
 {
     int	computedVNumber;    /*The computed file number we return*/
     int	filenameLen;	    /*Number of chars in filename*/
     int	currDigit;	    /*Current digit being processed*/
 
     /*
-     * The filename must have at least two characters, the first of which must be a ``V''
+     * The filename must have at least two characters, the first of which must be a ``filechar''
      * and the second of which cannot be a zero unless the file is exactly two chars long.
      */
     filenameLen = strlen(fname);
     if (filenameLen < 2)
 	return(-1);
-    if (fname[0] != 'V')
+    if (fname[0] != filechar)
 	return(-1);
     if ((filenameLen > 2) && (fname[1] == '0'))
 	return(-1);
@@ -453,6 +469,21 @@ int GetVFileNumber(fname)
 	return(-1);
 }
 
+int GetVFileNumber(fname, maxFile)
+    char *fname;
+    int maxFile;
+{
+    return doGetXFileNumber(fname, 'V', maxFile);
+}
+
+int GetDDirNumber(fname, maxDir)
+    char *fname;
+    int maxDir;
+{
+    return doGetXFileNumber(fname, 'D', maxDir);
+}
+
+
 /*-----------------------------------------------------------------------------
   * CreateCacheFile
   *
@@ -462,6 +493,8 @@ int GetVFileNumber(fname)
   *
   * Arguments:
   *	fname : Full pathname of file to create.
+  *	statp : A pointer to a stat buffer which, if NON-NULL, will be
+  *		filled by fstat()
   *
   * Returns:
   *	0   iff the file was created,
@@ -474,8 +507,81 @@ int GetVFileNumber(fname)
   *	As described.
   *---------------------------------------------------------------------------*/
 
-int CreateCacheFile(fname)
+static int CreateCacheSubDir (basename, dirNum)
+     char *basename;
+     int dirNum;
+{
+    static char rn[] = "CreateCacheSubDir"; /* Routine Name */
+    char dir[1024];
+    int ret;
+
+    /* Build the new cache subdirectory */
+    sprintf (dir, "%s/D%d", basename, dirNum);
+
+    if (afsd_verbose)
+	printf("%s: Creating cache subdir '%s'\n",
+	       rn, dir);
+
+    if ((ret = mkdir(dir, 0700)) != 0) {
+        printf("%s: Can't create '%s', error return is %d (%d)\n",
+	       rn, dir, ret, errno);
+        if (errno != EEXIST)
+	    return (-1);
+    }
+
+    /* Mark this directory as created */
+    cache_dir_list[dirNum] = 0;
+
+    /* And return success */
+    return (0);
+}
+
+static int MoveCacheFile (basename, fromDir, toDir, cacheFile, maxDir)
+     char *basename;
+     int fromDir, toDir, cacheFile, maxDir;
+{
+  static char rn[] = "MoveCacheFile";
+  char from[1024], to[1024];
+  int ret;
+
+  if (cache_dir_list[toDir] < 0 &&
+      (ret = CreateCacheSubDir(basename, toDir))) {
+    printf("%s: Can't create directory '%s/D%d'\n", rn, basename, toDir);
+    return ret;
+  }
+
+  /* Build the from,to dir */
+  if (fromDir < 0) {
+    /* old-style location */
+    snprintf (from, sizeof(from), "%s/V%d", basename, cacheFile);
+  } else {
+    snprintf (from, sizeof(from), "%s/D%d/V%d", basename, fromDir, cacheFile);
+  }
+
+  snprintf (to, sizeof(from), "%s/D%d/V%d", basename, toDir, cacheFile);
+
+  if (afsd_verbose)
+    printf("%s: Moving cacheFile from '%s' to '%s'\n",
+	   rn, from, to);
+  
+  if ((ret = rename (from, to)) != 0) {
+    printf("%s: Can't rename '%s' to '%s', error return is %d (%d)\n",
+	   rn, from, to, ret, errno);
+    return -1;
+  }
+
+  /* Reset directory pointer; fix file counts */
+  dir_for_V[cacheFile] = toDir;
+  cache_dir_list[toDir]++;
+  if (fromDir < maxDir && fromDir >= 0)
+    cache_dir_list[fromDir]--;
+  
+  return 0;
+}
+
+int CreateCacheFile(fname, statp)
     char *fname;
+    struct stat *statp;
 {
     static char	rn[] = "CreateCacheFile";   /*Routine name*/
     int	cfd;				    /*File descriptor to AFS cache file*/
@@ -489,6 +595,14 @@ int CreateCacheFile(fname)
 	printf("%s: Can't create '%s', error return is %d (%d)\n",
 	       rn, fname, cfd, errno);
 	return(-1);
+    }
+    if (statp != NULL) {
+        closeResult = fstat (cfd, statp);
+	if (closeResult) {
+	    printf("%s: Can't stat newly-created AFS cache file '%s' (code %d)\n",
+		   rn, fname, errno);
+	    return(-1);
+	}
     }
     closeResult = close(cfd);
     if	(closeResult) {
@@ -505,7 +619,7 @@ int CreateCacheFile(fname)
   *
   * Description:
   *	Sweep through the AFS cache directory, recording the inode number for
-  *	each valid data cache file there.  Also, delete any file that doesn't beint32
+  *	each valid data cache file there.  Also, delete any file that doesn't belong
   *	in the cache directory during this sweep, and remember which of the other
   *	residents of this directory were seen.  After the sweep, we create any data
   *	cache files that were missing.
@@ -528,10 +642,14 @@ int CreateCacheFile(fname)
   *	explained above.
   *---------------------------------------------------------------------------*/
 
-int SweepAFSCache(vFilesFound)
-    int *vFilesFound;
+
+static int doSweepAFSCache(vFilesFound,directory,dirNum,maxDir)
+     int *vFilesFound;
+     char *directory;		/* /path/to/cache/directory */
+     int dirNum;		/* current directory number */
+     int maxDir;		/* maximum directory number */
 {
-    static char	rn[] = "SweepAFSCache";	/*Routine name*/
+    static char rn[] = "doSweepAFSCache"; /* Routine Name */
     char fullpn_FileToDelete[1024];	/*File to be deleted from cache*/
     char *fileToDelete;			/*Ptr to last component of above*/
     DIR	*cdirp;				/*Ptr to cache directory structure*/
@@ -541,36 +659,30 @@ int SweepAFSCache(vFilesFound)
     struct dirent *currp;		/*Current directory entry*/
 #endif
     int	vFileNum;			/*Data cache file's associated number*/
-
-    if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
-	if (afsd_debug)
-	    printf("%s: Memory Cache, no cache sweep done\n", rn);
-	*vFilesFound = 0;
-	return 0;
-    }
+    int thisDir;			/* A directory number */
+    int highDir = 0;
 
     if (afsd_debug)
-	printf("%s: Opening cache directory '%s'\n",
-	       rn, cacheBaseDir);
+	printf("%s: Opening cache directory '%s'\n", rn, directory);
 
-    if (chmod(cacheBaseDir, 0700)) {		/* force it to be 700 */
-	printf("%s: Can't 'chmod 0700' the cache dir, '%s'.\n",
-	       rn, cacheBaseDir);
+    if (chmod(directory, 0700)) {		/* force it to be 700 */
+	printf("%s: Can't 'chmod 0700' the cache dir, '%s'.\n", rn, directory);
 	return (-1);
     }
-    cdirp = opendir(cacheBaseDir);
+    cdirp = opendir(directory);
     if (cdirp == (DIR *)0) {
-	printf("%s: Can't open AFS cache directory, '%s'.\n",
-	       rn, cacheBaseDir);
+	printf("%s: Can't open AFS cache directory, '%s'.\n", rn, directory);
 	return(-1);
     }
 
     /*
-     * Scan the directory entries, remembering data cache file inodes and the existance
-     * of other important residents.  Delete all files that don't belong here.
+     * Scan the directory entries, remembering data cache file inodes
+     * and the existance of other important residents.  Recurse into
+     * the data subdirectories.
+     *
+     * Delete all files and directories that don't belong here.
      */
-    *vFilesFound = 0;
-    sprintf(fullpn_FileToDelete, "%s/", cacheBaseDir);
+    sprintf(fullpn_FileToDelete, "%s/", directory);
     fileToDelete = fullpn_FileToDelete + strlen(fullpn_FileToDelete);
 
 #ifdef AFS_SGI62_ENV
@@ -592,24 +704,87 @@ int SweepAFSCache(vFilesFound)
 	}
 
 	/*
-	 * Guess current entry is for a data cache file.
+	 * If dirNum < 0, we are a top-level cache directory and should
+	 * only contain sub-directories and other sundry files.  Therefore,
+	 * V-files are valid only if dirNum >= 0, and Directories are only
+	 * valid if dirNum < 0.
 	 */
-	vFileNum = GetVFileNumber(currp->d_name);
-	if (vFileNum >= 0) {
+
+	if (*(currp->d_name) == 'V' &&
+	    ((vFileNum = GetVFileNumber(currp->d_name, cacheFiles)) >= 0)) {
 	    /*
-	     * Found a valid data cache filename.  Remember this file's inode and bump
-	     * the number of files found.
+	     * Found a valid data cache filename.  Remember this
+	     * file's inode, directory, and bump the number of files found
+	     * total and in this directory.
 	     */
 	    inode_for_V[vFileNum] = currp->d_ino;
+	    dir_for_V[vFileNum] = dirNum; /* remember this directory */
+
+	    if (!maxDir) {
+	      /* If we're in a real subdir, mark this file to be moved
+	       * if we've already got too many files in this directory
+	       */
+	      assert(dirNum >= 0);
+	      cache_dir_list[dirNum]++; /* keep directory's file count */
+	      if (cache_dir_list[dirNum] > nFilesPerDir) {
+		/* Too many files -- add to filelist */
+		struct afsd_file_list *tmp = (struct afsd_file_list *)
+		  malloc(sizeof(*tmp));
+		if (!tmp)
+		  printf ("%s: MALLOC FAILED allocating file_list entry\n",
+			  rn);
+		else {
+		  tmp->fileNum = vFileNum;
+		  tmp->next = cache_dir_filelist[dirNum];
+		  cache_dir_filelist[dirNum] = tmp;
+		}
+	      }
+	    }
 	    (*vFilesFound)++;
 	}
-	else if (strcmp(currp->d_name, DCACHEFILE) == 0) {
+	else if (dirNum < 0 && (*(currp->d_name) == 'D') &&
+		 GetDDirNumber(currp->d_name, 1<<30) >= 0) {
+	  int retval = 0;
+	  if ((vFileNum = GetDDirNumber(currp->d_name, maxDir)) >= 0) {
+	    /* Found a valid cachefile sub-Directory.  Remember this number
+	     * and recurse into it.  Note that subdirs cannot have subdirs.
+	     */
+	    retval = 1;
+	  } else if ((vFileNum = GetDDirNumber(currp->d_name,  1<<30)) >= 0) {
+	    /* This directory is going away, but figure out if there
+	     * are any cachefiles in here that should be saved by
+	     * moving them to other cache directories.  This directory
+	     * will be removed later.
+	     */
+	    retval = 2;
+	  }
+
+	  /* Save the highest directory number we've seen */
+	  if (vFileNum > highDir)
+	    highDir = vFileNum;
+
+	  /* If this directory is staying, be sure to mark it as 'found' */
+	  if (retval == 1) cache_dir_list[vFileNum] = 0;
+
+	  /* Print the dirname for recursion */
+	  sprintf(fileToDelete, "%s", currp->d_name);
+
+	  /* Note: vFileNum is the directory number */
+	  retval = doSweepAFSCache(vFilesFound, fullpn_FileToDelete,
+				   vFileNum, (retval == 1 ? 0 : -1));
+	  if (retval) {
+	    printf ("%s: Recursive sweep failed on directory %s\n",
+		    rn, currp->d_name);
+	    return retval;
+	  }
+	}
+	else if (dirNum < 0 && strcmp(currp->d_name, DCACHEFILE) == 0) {
 	    /*
 	     * Found the file holding the dcache entries.
 	     */
 	    missing_DCacheFile = 0;
 	}
-	else if (strcmp(currp->d_name, VOLINFOFILE) == 0) {
+	else if (dirNum < 0 && strcmp(currp->d_name, VOLINFOFILE) == 0) {
 	    /*
 	     * Found the file holding the volume info.
 	     */
@@ -630,55 +805,149 @@ int SweepAFSCache(vFilesFound)
 	}
 	else {
 	    /*
-	     * This file doesn't belong in the cache.  Nuke it.
+	     * This file/directory doesn't belong in the cache.  Nuke it.
 	     */
 	    sprintf(fileToDelete, "%s", currp->d_name);
 	    if (afsd_verbose)
 		printf("%s: Deleting '%s'\n",
 		       rn, fullpn_FileToDelete);
 	    if (unlink(fullpn_FileToDelete)) {
-		printf("%s: Can't unlink '%s', errno is %d\n",
-		       rn, fullpn_FileToDelete, errno);
+	        if (errno == EISDIR && *fileToDelete == 'D') {
+		    if (rmdir(fullpn_FileToDelete)) {
+		        printf("%s: Can't rmdir '%s', errno is %d\n",
+			       rn, fullpn_FileToDelete, errno);
+		    }
+		} else
+		    printf("%s: Can't unlink '%s', errno is %d\n",
+			   rn, fullpn_FileToDelete, errno);
 	    }
 	}
     }
 
-    /*
-     * Create all the cache files that are missing.
-     */
-    if (missing_DCacheFile) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n",
-		   rn, fullpn_DCacheFile);
-	if (CreateCacheFile(fullpn_DCacheFile))
-	    printf("%s: Can't create '%s'\n",
-		   rn, fullpn_DCacheFile);
-    }
-    if (missing_VolInfoFile) {
-	if (afsd_verbose)
-	    printf("%s: Creating '%s'\n",
-		   rn, fullpn_VolInfoFile);
-	if (CreateCacheFile(fullpn_VolInfoFile))
-	    printf("%s: Can't create '%s'\n",
-		   rn, fullpn_VolInfoFile);
-    }
+    if (dirNum < 0) {
 
-    if (*vFilesFound < cacheFiles) {
-	/*
-	 * We came up short on the number of data cache files found.  Scan through the inode
-	 * list and create all missing files.
+        /*
+	 * Create all the cache files that are missing.
 	 */
-	for (vFileNum = 0; vFileNum < cacheFiles; vFileNum++)
-	    if (inode_for_V[vFileNum] == (AFSD_INO_T)0) {
-		sprintf(vFileNumber, "%d", vFileNum);
-		if (afsd_verbose)
-		    printf("%s: Creating '%s'\n",
-			   rn, fullpn_VFile);
-		if (CreateCacheFile(fullpn_VFile))
-		    printf("%s: Can't create '%s'\n",
-			   rn, fullpn_VFile);
+        if (missing_DCacheFile) {
+	    if (afsd_verbose)
+	        printf("%s: Creating '%s'\n",
+		       rn, fullpn_DCacheFile);
+	    if (CreateCacheFile(fullpn_DCacheFile, NULL))
+	        printf("%s: Can't create '%s'\n",
+		       rn, fullpn_DCacheFile);
+	}
+	if (missing_VolInfoFile) {
+	    if (afsd_verbose)
+	        printf("%s: Creating '%s'\n",
+		       rn, fullpn_VolInfoFile);
+	    if (CreateCacheFile(fullpn_VolInfoFile, NULL))
+	        printf("%s: Can't create '%s'\n",
+		       rn, fullpn_VolInfoFile);
+	}
+
+	/* ADJUST CACHE FILES */
+
+	/* First, let's walk through the list of files and figure out
+	 * if there are any leftover files in extra directories or
+	 * missing files.  Move the former and create the latter in
+	 * subdirs with extra space.
+	 */
+
+	thisDir = 0;		/* Keep track of which subdir has space */
+
+	for (vFileNum = 0; vFileNum < cacheFiles; vFileNum++) {
+	  if (dir_for_V[vFileNum] == -1) {
+	    /* This file does not exist.  Create it in the first
+	     * subdir that still has extra space.
+	     */
+	    while (thisDir < maxDir &&
+		   cache_dir_list[thisDir] >= nFilesPerDir)
+	      thisDir++;
+	    if (thisDir >= maxDir)
+	      printf("%s: can't find directory to create V%d\n", rn, vFileNum);
+	    else {
+	      struct stat statb;
+	      assert (inode_for_V[vFileNum] == (AFSD_INO_T)0);
+	      sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
+	      if (afsd_verbose)
+		printf("%s: Creating '%s'\n", rn, fullpn_VFile);
+	      if (cache_dir_list[thisDir] < 0 &&
+		  CreateCacheSubDir(directory, thisDir))
+		printf("%s: Can't create directory for '%s'\n",
+		       rn, fullpn_VFile);
+	      if (CreateCacheFile(fullpn_VFile, &statb))
+		printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
+	      else {
+		inode_for_V[vFileNum] = statb.st_ino;
+		dir_for_V[vFileNum] = thisDir;
+		cache_dir_list[thisDir]++;
+		(*vFilesFound)++;
+	      }
 	    }
-    }
+
+	  } else if (dir_for_V[vFileNum] >= maxDir ||
+		     dir_for_V[vFileNum] == -2) {
+	    /* This file needs to move; move it to the first subdir
+	     * that has extra space.  (-2 means it's in the toplevel)
+	     */
+	    while (thisDir < maxDir && cache_dir_list[thisDir] >= nFilesPerDir)
+	      thisDir++;
+	    if (thisDir >= maxDir)
+	      printf("%s: can't find directory to move V%d\n", rn, vFileNum);
+	    else {
+	      if (MoveCacheFile (directory, dir_for_V[vFileNum], thisDir,
+				 vFileNum, maxDir)) {
+		/* Cannot move.  Ignore this file??? */
+		/* XXX */
+	      }
+	    }
+	  }
+	} /* for */
+
+	/* At this point, we've moved all of the valid cache files
+	 * into the valid subdirs, and created all the extra
+	 * cachefiles we need to create.  Next, rebalance any subdirs
+	 * with too many cache files into the directories with not
+	 * enough cache files.  Note that thisDir currently sits at
+	 * the lowest subdir that _may_ have room.
+	 */
+
+	for (dirNum = 0; dirNum < maxDir; dirNum++) {
+	  struct afsd_file_list *thisFile;
+
+	  for (thisFile = cache_dir_filelist[dirNum];
+	       thisFile && cache_dir_list[dirNum] >= nFilesPerDir;
+	       thisFile = thisFile->next) {
+	    while (thisDir < maxDir && cache_dir_list[thisDir] >= nFilesPerDir)
+	      thisDir++;
+	    if (thisDir >= maxDir)
+	      printf("%s: can't find directory to move V%d\n", rn, vFileNum);
+	    else {
+	      if (MoveCacheFile (directory, dirNum, thisDir,
+				 thisFile->fileNum, maxDir)) {
+		/* Cannot move.  Ignore this file??? */
+		/* XXX */
+	      }
+	    }
+	  } /* for each file to move */
+	} /* for each directory */
+
+	/* Remove any directories >= maxDir -- they should be empty */
+	for (; highDir >= maxDir; highDir--) {
+	  sprintf(fileToDelete, "D%d", highDir);
+	  if (unlink(fullpn_FileToDelete)) {
+	    if (errno == EISDIR && *fileToDelete == 'D') {
+	      if (rmdir(fullpn_FileToDelete)) {
+		printf("%s: Can't rmdir '%s', errno is %d\n",
+		       rn, fullpn_FileToDelete, errno);
+	      }
+	    } else
+	      printf("%s: Can't unlink '%s', errno is %d\n",
+		     rn, fullpn_FileToDelete, errno);
+	  }
+	}
+    } /* dirNum < 0 */
     
     /*
      * Close the directory, return success.
@@ -688,6 +957,61 @@ int SweepAFSCache(vFilesFound)
 	       rn);
     closedir(cdirp);
     return(0);
+}
+
+int SweepAFSCache(vFilesFound)
+    int *vFilesFound;
+{
+    static char	rn[] = "SweepAFSCache";	/*Routine name*/
+    int maxDir = (cacheFiles + nFilesPerDir - 1 ) / nFilesPerDir;
+    int i;
+
+    *vFilesFound = 0;
+
+    if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
+	if (afsd_debug)
+	    printf("%s: Memory Cache, no cache sweep done\n", rn);
+	return 0;
+    }
+
+    if (cache_dir_list == NULL) {
+        cache_dir_list = (int *) malloc (maxDir * sizeof(*cache_dir_list));
+	if (cache_dir_list == NULL) {
+	    printf("%s: Malloc Failed!\n", rn);
+	    return (-1);
+	}
+	for (i=0; i < maxDir; i++)
+	  cache_dir_list[i] = -1; /* Does not exist */
+    }
+
+    if (cache_dir_filelist == NULL) {
+        cache_dir_filelist = (struct afsd_file_list **)
+	  malloc (maxDir * sizeof(*cache_dir_filelist));
+	if (cache_dir_filelist == NULL) {
+	    printf("%s: Malloc Failed!\n", rn);
+	    return (-1);
+	}
+	memset (cache_dir_filelist, 0, maxDir * sizeof(*cache_dir_filelist));
+    }
+
+    if (dir_for_V == NULL) {
+        dir_for_V = (int *) malloc (cacheFiles * sizeof(*dir_for_V));
+	if (dir_for_V == NULL) {
+	    printf("%s: Malloc Failed!\n", rn);
+	    return (-1);
+	}
+	for (i=0; i < cacheFiles; i++)
+	  dir_for_V[i] = -1;	/* Does not exist */
+    }
+
+    /* Note, setting dirNum to -2 here will cause cachefiles found in
+     * the toplevel directory to be marked in directory "-2".  This
+     * allows us to differentiate between 'file not seen' (-1) and
+     * 'file seen in top-level' (-2).  Then when we try to move the
+     * file into a subdirectory, we know it's in the top-level instead
+     * of some other cache subdir.
+     */
+    return doSweepAFSCache (vFilesFound, cacheBaseDir, -2, maxDir);
 }
 
 static ConfigCell(aci, arock, adir)
@@ -955,6 +1279,15 @@ mainproc(as, arock)
 	printf("afsd: No AFSDB support; ignoring -afsdb");
 #endif
     }
+    if (as->parms[25].items) {
+        /* -files_per_subdir */
+        int res = atoi(as->parms[25].items->data);
+	if ( res < 10 || res > 2^30) {
+	    printf("afsd:invalid number of files per subdir, \"%s\". Ignored\n", as->parms[25].items->data);
+	} else {
+	    nFilesPerDir = res;
+	}
+    }
 
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -984,7 +1317,7 @@ mainproc(as, arock)
 
     if ((logfd = fopen(fullpn_AFSLogFile,"r+")) == 0) {
 	if (afsd_verbose)  printf("%s: Creating '%s'\n",  rn, fullpn_AFSLogFile);
-	if (CreateCacheFile(fullpn_AFSLogFile)) {
+	if (CreateCacheFile(fullpn_AFSLogFile, NULL)) {
 	    printf("%s: Can't create '%s' (You may want to use the -logfile option)\n",  rn, fullpn_AFSLogFile);
 	    exit(1);
 	}
@@ -1088,8 +1421,8 @@ mainproc(as, arock)
      */
     sprintf(fullpn_DCacheFile,  "%s/%s", cacheBaseDir, DCACHEFILE);
     sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
-    sprintf(fullpn_VFile,       "%s/V",  cacheBaseDir);
-    vFileNumber = fullpn_VFile + strlen(fullpn_VFile);
+    sprintf(fullpn_VFile,       "%s/",  cacheBaseDir);
+    vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
 #if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout); 
@@ -1536,6 +1869,7 @@ char **argv; {
 		| CMD_HIDE
 #endif
 		), "Enable AFSDB support");
+    cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL, "log(2) of the number of cache files per cache subdirectory");
     return (cmd_Dispatch(argc, argv));
 }
 

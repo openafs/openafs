@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/bulk.example/bulk_client.c,v 1.1.1.4 2001/07/14 22:23:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/bulk.example/bulk_client.c,v 1.1.1.5 2001/09/11 14:34:33 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,7 +35,7 @@ static u_long GetIpAddress(hostname)
 	printf("host address is disagreeable length (%d)", hostent->h_length);
 	exit(1);
     }
-    bcopy(hostent->h_addr, (char *)&host, sizeof(host));
+    memcpy((char *)&host, hostent->h_addr, sizeof(host));
     return host;
 }
 

@@ -14,11 +14,12 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.7 2001/07/14 22:19:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.8 2001/09/11 14:25:03 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../h/mm.h"
+#include "../h/slab.h"
 
 #include "../afs/afs_atomlist.h"
 #include "../afs/afs_lhash.h"
@@ -86,7 +87,7 @@ static void *linux_alloc(unsigned int asize)
 
     /*  if we can use kmalloc use it to allocate the required memory. */
     if (asize <  MAX_KMALLOC_SIZE) {
-        new = (void *)(long)kmalloc(asize, GFP_KERNEL);
+        new = (void *)(unsigned long)kmalloc(asize, GFP_KERNEL);
         if (new) /* piggy back alloc type */
             (unsigned long)new |= KM_TYPE;
     }

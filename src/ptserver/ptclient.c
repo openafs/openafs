@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptclient.c,v 1.1.1.4 2001/07/14 22:23:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptclient.c,v 1.1.1.5 2001/09/11 14:34:06 hartmans Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -284,7 +284,7 @@ char **argv;
 	    else printf("location %d\n",pos);
 	}
 	else if (!strcmp(op,"du")) {
-	    bzero(&entry,sizeof(entry));
+	    memset(&entry, 0, sizeof(entry));
 	    /* scanf("%d",&pos); */
 	    if (GetInt32 (&pos)) code = PRBADARG;
 	    else code = ubik_Call(PR_DumpEntry, pruclient, 0, pos, &entry);
@@ -458,7 +458,7 @@ char **argv;
 	else if (!strcmp(op,"fih")) {
 	    char tname[128];
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%s",name); */
 	    if (GetString (name, sizeof(name))) {
 		code = PRBADARG;
@@ -484,7 +484,7 @@ char **argv;
 	else if (!strcmp(op,"fnh")) {
 	    int tid;
 	    struct PrUpdateEntry uentry;
-	    bzero(&uentry, sizeof(uentry));
+	    memset(&uentry, 0, sizeof(uentry));
 	    /* scanf("%d", &id); */
 	    if (GetInt32 (&id)) {
 		code = PRBADARG;

@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.8 2001/07/14 22:19:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.9 2001/09/11 14:25:07 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -244,9 +244,7 @@ void afs_delete_inode(struct inode *ip)
     struct vcache *vc = (struct vcache*)ip;
 
     AFS_GLOCK();
-    ObtainWriteLock(&vc->lock, 504);
     osi_clear_inode(ip);
-    ReleaseWriteLock(&vc->lock);
     AFS_GUNLOCK();
 }
 
@@ -334,6 +332,14 @@ int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
 }
 
 
+void 
+afs_umount_begin(struct super_block *sbp)
+{
+    afs_shuttingdown=1;
+    afs_put_super(sbp);      
+    afs_was_mounted=0;
+}
+
 #if defined(AFS_LINUX24_ENV)
 struct super_operations afs_sops = {
     read_inode:        afs_read_inode,
@@ -341,6 +347,7 @@ struct super_operations afs_sops = {
     delete_inode:      afs_delete_inode,
     put_super:         afs_put_super,
     statfs:            afs_statfs,
+    umount_begin:      afs_umount_begin,
 };
 #else
 struct super_operations afs_sops = {
@@ -354,7 +361,7 @@ struct super_operations afs_sops = {
     afs_statfs,
     NULL,		/* afs_remount_fs - see doc above */
     NULL,		/* afs_clear_inode */
-    NULL,		/* afs_umount_begin */
+    afs_umount_begin,
 };
 #endif
 

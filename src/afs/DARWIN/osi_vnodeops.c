@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.3 2001/07/14 22:20:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.4 2001/09/11 14:24:55 hartmans Exp $");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
 #include <afs/afsincludes.h>            /* Afs-based standard headers */
@@ -121,7 +121,7 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
     struct componentname *cnp = ap->a_cnp; \
     char *name; \
     MALLOC(name, char *, cnp->cn_namelen+1, M_TEMP, M_WAITOK); \
-    bcopy(cnp->cn_nameptr, name, cnp->cn_namelen); \
+    memcpy(name, cnp->cn_nameptr, cnp->cn_namelen); \
     name[cnp->cn_namelen] = '\0'
 
 #define DROPNAME() FREE(name, M_TEMP)
@@ -604,7 +604,7 @@ afs_vop_pageout(ap)
                 if ((f_offset < tvc->m.Length) && (f_offset + size) > tvc->m.Length) {
                         size_t io = tvc->m.Length - f_offset;
 
-                        bzero((caddr_t)(ioaddr + pl_offset + io), size - io);
+                        memset((caddr_t)(ioaddr + pl_offset + io), 0, size - io);
                 }
         }
 #endif /* ] USV */
@@ -888,10 +888,10 @@ abortit:
 	goto abortit;
 
     MALLOC(fname, char *, fcnp->cn_namelen+1, M_TEMP, M_WAITOK);
-    bcopy(fcnp->cn_nameptr, fname, fcnp->cn_namelen);
+    memcpy(fname, fcnp->cn_nameptr, fcnp->cn_namelen);
     fname[fcnp->cn_namelen] = '\0';
     MALLOC(tname, char *, tcnp->cn_namelen+1, M_TEMP, M_WAITOK);
-    bcopy(tcnp->cn_nameptr, tname, tcnp->cn_namelen);
+    memcpy(tname, tcnp->cn_nameptr, tcnp->cn_namelen);
     tname[tcnp->cn_namelen] = '\0';
 
 

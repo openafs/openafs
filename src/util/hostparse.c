@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/hostparse.c,v 1.1.1.6 2001/07/14 22:24:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/hostparse.c,v 1.1.1.7 2001/09/11 14:35:12 hartmans Exp $");
 
 #ifdef UKERNEL
 #include "../afs/sysincludes.h"
@@ -33,11 +33,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/hostparse.c,v 1.1.1.6 2001/07/14 2
 #include <netdb.h>
 #include <ctype.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include <errno.h>
@@ -77,7 +77,7 @@ register char *ahost; {
 	/* decimal address, return fake hostent with only hostaddr field good */
 	tval = 0;
 	dots = 0;
-	bzero(addr, sizeof(addr));
+	memset(addr, 0, sizeof(addr));
 	while ((tc = *ahost++)) {
 	    if (tc == '.') {
 		if (dots >= 3) return (struct hostent *) 0; /* too many dots */

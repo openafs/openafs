@@ -32,17 +32,14 @@ XLIBS=@LIB_AFSDB@
 AR=ar
 AS=as
 CP=cp
-INSTALL=${SRCDIR}bin/install
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 LD=ld   
 MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
 #
 # Other OS specific requirements
 #
 YACC = bison -y
 LEX = flex -l
-# Used in des library.
-CRYPT_OBJ = crypt.o

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.1.1.6 2001/07/14 22:22:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.1.1.7 2001/09/11 14:33:08 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -3112,7 +3112,7 @@ int ADMINAPI bos_ExecutableRestartTimeSet(
     restartTime.sec = time.sec;
     restartTime.day = time.day;
 
-    tst = BOZO_SetRestartTime(b_handle->server, restartType, restartTime);
+    tst = BOZO_SetRestartTime(b_handle->server, restartType, &restartTime);
 
     if (tst == 0) {
 	rc = 1;

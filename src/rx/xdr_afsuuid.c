@@ -14,12 +14,14 @@
 #include "afs/param.h"
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_afsuuid.c,v 1.1.1.3 2001/07/11 03:10:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_afsuuid.c,v 1.1.1.4 2001/09/11 14:34:26 hartmans Exp $");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV
 #include "../h/string.h"
-#define bzero(A,C) memset((A), 0, (C))
+#if 0
+#define bzero(A, C) memset((A), 0, (C))
+#endif
 #else
 #include <sys/param.h>
 #include <sys/systm.h>

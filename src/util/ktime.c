@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/ktime.c,v 1.1.1.4 2001/07/14 22:24:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/ktime.c,v 1.1.1.5 2001/09/11 14:35:14 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -169,7 +169,7 @@ register char *astr;
 {
 struct ktime tk;
 
-bzero(&tk, sizeof(tk));
+memset(&tk, 0, sizeof(tk));
 if ( ParseTime(&tk, astr) )
   return (-1);    /* syntax error */
 
@@ -243,7 +243,7 @@ char *adate; {
     register afs_int32 code;
     struct ptemp *tp;
     
-    bzero(ak, sizeof(*ak));
+    memset(ak, 0, sizeof(*ak));
     code = LocalParseLine(adate, &tt);
     if (code) return -1;
     for(;tt;tt=tt->next) {

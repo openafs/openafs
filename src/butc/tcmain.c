@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcmain.c,v 1.1.1.4 2001/07/14 22:21:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcmain.c,v 1.1.1.5 2001/09/11 14:31:51 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1165,7 +1165,7 @@ char **argv;
      */
     if (argc == 1) {
 	ts = (struct cmd_syndesc *) malloc(sizeof(struct cmd_syndesc));
-	bzero(ts, sizeof(*ts));
+	memset(ts, 0, sizeof(*ts));
 	
 	ti = (struct cmd_item *) malloc(sizeof(struct cmd_item));
 	ti->next = 0;

@@ -81,6 +81,10 @@
 #define SYS_NAME_ID_sun4x_57		 938
 #define SYS_NAME_ID_sun4x_58		 939
 
+/* Sigh. If I leave a gap here IBM will do this sequentially. If I don't
+   they won't allocate sunx86 IDs at all. So leave a gap and pray. */
+#define SYS_NAME_ID_sunx86_57            950
+#define SYS_NAME_ID_sunx86_58            951
 
 #define SYS_NAME_ID_vax_ul4		1003
 #define SYS_NAME_ID_vax_ul40		1004
@@ -134,6 +138,10 @@
 #define SYS_NAME_ID_alpha_linux_24      2002
 
 #define SYS_NAME_ID_i386_fbsd_42        2100
+
+#define SYS_NAME_ID_ia64_linux2		2200
+#define SYS_NAME_ID_ia64_linux22	2201
+#define SYS_NAME_ID_ia64_linux24	2202
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bu_utils/fms.c,v 1.1.1.4 2001/07/14 22:20:46 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bu_utils/fms.c,v 1.1.1.5 2001/09/11 14:31:30 hartmans Exp $");
 
 #undef	IN
 #include <stdio.h>
@@ -58,7 +58,7 @@ main(argc, argv)
     struct sigaction intaction, oldaction;
     struct cmd_syndesc *cptr;
 
-    bzero((char *)&intaction, sizeof(intaction));
+    memset((char *)&intaction, 0, sizeof(intaction));
     intaction.sa_handler = (int (*)())quitFms;
 
     sigaction(SIGINT, &intaction, &oldaction);
@@ -280,7 +280,7 @@ dataBlock(usd_handle_t hTape, afs_int32 reqSize)
 	if ( dB_buffer == 0 )
 	    ERROR(-1);
 	dB_buffersize = reqSize;
-	bzero(dB_buffer, dB_buffersize);
+	memset(dB_buffer, 0, dB_buffersize);
     }
 
     ptr = (int *) dB_buffer;

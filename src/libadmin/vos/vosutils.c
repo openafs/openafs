@@ -10,17 +10,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vosutils.c,v 1.1.1.5 2001/07/14 22:22:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vosutils.c,v 1.1.1.6 2001/09/11 14:33:23 hartmans Exp $");
 
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"
 #include <afs/afs_AdminErrors.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 
@@ -45,7 +45,7 @@ static int OldVLDB_to_NewVLDB(
     int rc = 0;
     afs_status_t tst = 0;
 
-    bzero(dest, sizeof(struct nvldbentry));
+    memset(dest, 0, sizeof(struct nvldbentry));
     strncpy(dest->name, source->name, sizeof(dest->name));
     for (i = 0; i < source->nServers; i++) {
 	dest->serverNumber[i] = source->serverNumber[i];
@@ -81,7 +81,7 @@ static int NewVLDB_to_OldVLDB(
     afs_status_t tst = 0;
     int rc = 0;
 
-    bzero(dest, sizeof(struct vldbentry));
+    memset(dest, 0, sizeof(struct vldbentry));
     strncpy(dest->name, source->name, sizeof(dest->name));
     if (source->nServers <= OMAXNSERVERS) {
 	for (i = 0; i < source->nServers; i++) {
@@ -358,11 +358,11 @@ int VLDB_IsSameAddrs(
 	goto fail_VLDB_IsSameAddrs;
     }
 
-    bzero(&attrs, sizeof(attrs));
+    memset(&attrs, 0, sizeof(attrs));
     attrs.Mask = VLADDR_IPADDR;
     attrs.ipaddr = serv1;
-    bzero(&addrs, sizeof(addrs));
-    bzero(&uuid, sizeof(uuid));
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&uuid, 0, sizeof(uuid));
     tst = ubik_Call(VL_GetAddrsU, cellHandle->vos, 0, &attrs, &uuid,
 	            &unique, &nentries, &addrs);
     if (tst) {

@@ -23,7 +23,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/cbc_encrypt.c,v 1.1.1.4 2001/07/14 22:21:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/cbc_encrypt.c,v 1.1.1.5 2001/09/11 14:32:26 hartmans Exp $");
 
 
 #define XPRT_CBC_ENCRYPT
@@ -73,8 +73,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
     if (encrypt) {
 #ifdef MUSTALIGN
 	if ((afs_int32) ivec & 3) {
-	    bcopy((char *)ivec++, (char *)&t_output[0], sizeof(t_output[0]));
-	    bcopy((char *)ivec, (char *)&t_output[1], sizeof(t_output[1]));
+	    memcpy((char *)&t_output[0], (char *)ivec++, sizeof(t_output[0]));
+	    memcpy((char *)&t_output[1], (char *)ivec, sizeof(t_output[1]));
 	}
 	else
 #endif
@@ -87,8 +87,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
 	    /* get input */
 #ifdef MUSTALIGN
 	    if ((afs_int32) input & 3) {
-		bcopy((char *)input++,(char *)&t_input[0],sizeof(t_input[0]));
-		bcopy((char *)input++,(char *)&t_input[1],sizeof(t_input[1]));
+		memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
+		memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[1]));
 	    }
 	    else
 #endif
@@ -114,10 +114,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
 	    /* copy temp output and save it for cbc */
 #ifdef MUSTALIGN
 	    if ((afs_int32) output & 3) {
-		bcopy((char *)&t_output[0],(char *)output++,
-		      sizeof(t_output[0]));
-		bcopy((char *)&t_output[1],(char *)output++,
-		      sizeof(t_output[1]));
+		memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
+		memcpy((char *)output++, (char *)&t_output[1], sizeof(t_output[1]));
 	    }
 	    else
 #endif
@@ -140,8 +138,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
 	/* decrypt */
 #ifdef MUSTALIGN
 	if ((afs_int32) ivec & 3) {
-	    bcopy((char *)ivec++,(char *)&xor_0,sizeof(xor_0));
-	    bcopy((char *)ivec,(char *)&xor_1,sizeof(xor_1));
+	    memcpy((char *)&xor_0, (char *)ivec++, sizeof(xor_0));
+	    memcpy((char *)&xor_1, (char *)ivec, sizeof(xor_1));
 	}
 	else
 #endif
@@ -154,8 +152,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
 	    /* get input */
 #ifdef MUSTALIGN
 	    if ((afs_int32) input & 3) {
-		bcopy((char *)input++,(char *)&t_input[0],sizeof(t_input[0]));
-		bcopy((char *)input++,(char *)&t_input[1],sizeof(t_input[0]));
+		memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
+		memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[0]));
 	    }
 	    else
 #endif
@@ -185,10 +183,8 @@ des_cbc_encrypt(in,out,length,key,iv,encrypt)
 	    /* copy temp output */
 #ifdef MUSTALIGN
 	    if ((afs_int32) output & 3) {
-		bcopy((char *)&t_output[0],(char *)output++,
-		      sizeof(t_output[0]));
-		bcopy((char *)&t_output[1],(char *)output++,
-		      sizeof(t_output[1]));
+		memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
+		memcpy((char *)output++, (char *)&t_output[1], sizeof(t_output[1]));
 	    }
 	    else
 #endif

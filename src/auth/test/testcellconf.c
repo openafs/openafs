@@ -25,7 +25,7 @@ Creation date:
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/testcellconf.c,v 1.1.1.4 2001/07/14 22:20:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/testcellconf.c,v 1.1.1.5 2001/09/11 14:31:24 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stddef.h>
@@ -48,7 +48,7 @@ struct afsconf_dir *adir; {
 
     printf("Cell %s:\n", ainfo->name);
     for(i=0;i<ainfo->numServers;i++) {
-	bcopy(&ainfo->hostAddr[i].sin_addr, &temp, sizeof(long));
+	memcpy(&temp, &ainfo->hostAddr[i].sin_addr, sizeof(long));
 	printf("    host %s at %x.%x\n", ainfo->hostName[i], temp, ainfo->hostAddr[i].sin_port);
     }
     return 0;

@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.3 2001/07/14 22:20:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.4 2001/09/11 14:24:54 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -17,16 +17,17 @@ extern int afs3_syscall();
 
 extern int ioctl();
 extern int setgroups();
+extern int maxvfsconf;
 kern_return_t afs_modload(struct kmod_info *ki, void *data)
 {
    if (sysent[AFS_SYSCALL].sy_call != nosys) {
       printf("AFS_SYSCALL in use. aborting\n");
       return KERN_FAILURE;
    }
-   bzero(&afs_vfsconf, sizeof(struct vfsconf));
+   memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
    strcpy(afs_vfsconf.vfc_name, "afs");
    afs_vfsconf.vfc_vfsops=&afs_vfsops;
-   afs_vfsconf.vfc_typenum=VT_AFS;
+   afs_vfsconf.vfc_typenum=maxvfsconf++;/* oddly not VT_AFS */
    afs_vfsconf.vfc_flags=MNT_NODEV;
    if (vfsconf_add(&afs_vfsconf)) {
        printf("AFS: vfsconf_add failed. aborting\n"); 

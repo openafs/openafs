@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.1.1.5 2001/07/14 22:19:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.1.1.6 2001/09/11 14:25:12 hartmans Exp $");
 
 #if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -130,12 +130,12 @@ struct fid **fidpp;
 	    ||  USE_SMALLFID(credp)
 #endif
 	    ) {
-	    bcopy((caddr_t)&Sfid, fidpp->fid_data, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
 	} else {
-	    bcopy((caddr_t)addr, fidpp->fid_data, SizeOfSmallFid);   
+	    memcpy(fidpp->fid_data, (caddr_t)addr, SizeOfSmallFid);   
 	}
     } else {
-	bcopy((caddr_t)&Sfid, fidpp->fid_data, SizeOfSmallFid);   
+	memcpy(fidpp->fid_data, (caddr_t)&Sfid, SizeOfSmallFid);   
     }
 #else
     /* malloc a fid pointer ourselves. */
@@ -143,12 +143,12 @@ struct fid **fidpp;
     (*fidpp)->fid_len = SizeOfSmallFid;
     if (afs_NFSRootOnly) {
 	if (rootvp) {
-	    bcopy((char *)&Sfid, (*fidpp)->fid_data, SizeOfSmallFid);
+	    memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);
 	} else {
-	    bcopy((char *)addr, (*fidpp)->fid_data, SizeOfSmallFid);   
+	    memcpy((*fidpp)->fid_data, (char *)addr, SizeOfSmallFid);   
 	}
     } else {
-	bcopy((char *)&Sfid, (*fidpp)->fid_data, SizeOfSmallFid);
+	memcpy((*fidpp)->fid_data, (char *)&Sfid, SizeOfSmallFid);
     }
 #endif
     return (0);

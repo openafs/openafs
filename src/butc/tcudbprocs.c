@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcudbprocs.c,v 1.1.1.5 2001/07/14 22:21:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcudbprocs.c,v 1.1.1.6 2001/09/11 14:31:53 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -58,7 +58,7 @@ afs_int32 CreateDBDump(dumpEntryPtr)
 {
     afs_int32 code = 0;
 
-    bzero(dumpEntryPtr, sizeof(struct budb_dumpEntry));
+    memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
 
     strcpy(dumpEntryPtr->name,          DUMP_TAPE_NAME);
     strcpy(dumpEntryPtr->tapes.format,  DUMP_TAPE_NAME);
@@ -140,7 +140,7 @@ afs_int32 GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag, w
 	    goto getNewTape;
 	}
 
-	bzero(&oldTapeLabel, sizeof(oldTapeLabel));
+	memset(&oldTapeLabel, 0, sizeof(oldTapeLabel));
 	code = butm_ReadLabel(tapeInfoPtr, &oldTapeLabel, 1);   /* rewind tape */
 	if (code)
 	{
@@ -192,8 +192,8 @@ afs_int32 GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag, w
 		 */
 		for (dmp=oldTapeLabel.dumpid; dmp; dmp=de.appendedDumpID) {
 		    if (dmp == lastDump.id) {
-		        bcopy(&lastDump, &de,  sizeof(de));
-			bcopy(&lastDump, &de2, sizeof(de2));
+		        memcpy(&de, &lastDump, sizeof(de));
+			memcpy(&de2, &lastDump, sizeof(de2));
 		    }
 		    else {
 		        code = bcdb_FindDumpByID(dmp, &de);
@@ -259,7 +259,7 @@ afs_int32 GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag, w
 	/* Initialize a tapeEntry for later inclusion into the database*/
 	listEntryPtr = (struct tapeEntryList *)malloc(sizeof(struct tapeEntryList));
 	if (!listEntryPtr) ERROR_EXIT(TC_NOMEMORY);
-	bzero(listEntryPtr, sizeof(struct tapeEntryList));
+	memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
 	/* Remember dumpid so we can delete it later */
         if ( (oldTapeLabel.structVersion >= TAPE_VERSION_3) && oldTapeLabel.dumpid )
@@ -404,14 +404,14 @@ saveDbToTape(saveDbIfPtr)
     }
 
     /* Determine what the last database dump was */
-    bzero(&lastDump, sizeof(lastDump));
+    memset(&lastDump, 0, sizeof(lastDump));
     code = bcdb_FindLatestDump("", "", &lastDump);
     if (code) {
        if (code != BUDB_NODUMPNAME) {
 	  ErrorLog(0, taskId, code, 0, "Can't read backup database\n");
 	  ERROR_EXIT(code);
        }
-       bzero(&lastDump, sizeof(lastDump));
+       memset(&lastDump, 0, sizeof(lastDump));
     }
 
     code = CreateDBDump(&dumpEntry);            /* Create a dump for this tape */
@@ -513,7 +513,7 @@ afs_int32 makeDbDumpEntry(tapeEntPtr, dumpEntryPtr)
 {
     afs_int32 code;
 
-    bzero(dumpEntryPtr, sizeof(struct budb_dumpEntry));
+    memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
 
     dumpEntryPtr->id             = tapeEntPtr->dump;
     dumpEntryPtr->initialDumpID  = 0;
@@ -627,7 +627,7 @@ afs_int32 readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
     /* Initialize a tapeEntry for later inclusion into the database*/
     listEntryPtr = (struct tapeEntryList *) malloc(sizeof(struct tapeEntryList));
     if (!listEntryPtr) ERROR_EXIT(TC_NOMEMORY);
-    bzero(listEntryPtr, sizeof(struct tapeEntryList));
+    memset(listEntryPtr, 0, sizeof(struct tapeEntryList));
 
     /* Fill in tape entry so we can save it later */
     strcpy(tapeEntryPtr->name, TNAME(&oldTapeLabel));
@@ -840,7 +840,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
     if (!writeBlock) ERROR_EXIT(TC_NOMEMORY);
 
     writeBuffer = writeBlock + sizeof(struct blockMark);
-    bzero(writeBuffer, BUTM_BLKSIZE);
+    memset(writeBuffer, 0, BUTM_BLKSIZE);
     maxReadSize = 1024;
 
     /* 
@@ -927,7 +927,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
 	transferSize = (charList.charListT_len < (blockSize - writeBufNbytes)) ?
 	               charList.charListT_len  : (blockSize - writeBufNbytes);
 
-	bcopy(readBufPtr, writeBufPtr, transferSize);
+	memcpy(writeBufPtr, readBufPtr, transferSize);
 	charList.charListT_len -= transferSize;
 	writeBufPtr += transferSize;
 	readBufPtr += transferSize;
@@ -943,7 +943,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
 		ERROR_EXIT(code);
 	    }
 	    
-	    bzero(writeBuffer, blockSize);
+	    memset(writeBuffer, 0, blockSize);
 	    writeBufPtr = &writeBuffer[0];
 	    writeBufNbytes = 0;
 
@@ -1061,7 +1061,7 @@ restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
     }
 
     /* get the first item-header */
-    bzero(&netItemHeader, sizeof(netItemHeader));
+    memset(&netItemHeader, 0, sizeof(netItemHeader));
     code = getTapeData(tapeInfoPtr, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
     if (code) ERROR_EXIT(code);
     structDumpHeader_ntoh(&netItemHeader, &hostItemHeader);
@@ -1138,7 +1138,7 @@ restoreDbHeader(tapeInfo, rstTapeInfoPtr, nextHeader)
     extern struct udbHandleS udbHandle;
 
     /* Read the database header */
-    bzero(&netDbHeader, sizeof(netDbHeader));
+    memset(&netDbHeader, 0, sizeof(netDbHeader));
     code = getTapeData(tapeInfo, rstTapeInfoPtr, &netDbHeader, sizeof(netDbHeader));
     if (code) ERROR_EXIT(code);
     DbHeader_ntoh(&netDbHeader, &hostDbHeader);
@@ -1152,7 +1152,7 @@ restoreDbHeader(tapeInfo, rstTapeInfoPtr, nextHeader)
     }
 
     /* get the next item-header */
-    bzero(nextHeader, sizeof(*nextHeader));
+    memset(nextHeader, 0, sizeof(*nextHeader));
     code = getTapeData(tapeInfo, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
     if (code) ERROR_EXIT(code);
     structDumpHeader_ntoh(&netItemHeader, nextHeader);
@@ -1192,7 +1192,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
     taskId = rstTapeInfoPtr->taskId;
 
     /* read dump entry */
-    bzero(&netDumpEntry, sizeof(netDumpEntry));
+    memset(&netDumpEntry, 0, sizeof(netDumpEntry));
     code = getTapeData(tapeInfo, rstTapeInfoPtr, &netDumpEntry, sizeof(netDumpEntry));
     if (code) ERROR_EXIT(code);
 
@@ -1216,7 +1216,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
     }
 
     /* get the next item-header */
-    bzero(nextHeader, sizeof(*nextHeader));
+    memset(nextHeader, 0, sizeof(*nextHeader));
     code = getTapeData(tapeInfo, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
     if (code) ERROR_EXIT(code);
     structDumpHeader_ntoh(&netItemHeader, nextHeader);
@@ -1226,7 +1226,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
     { /*t*/
       
         /* read the tape entry */
-	bzero(&netTapeEntry, sizeof(netTapeEntry));
+	memset(&netTapeEntry, 0, sizeof(netTapeEntry));
 	code = getTapeData(tapeInfo, rstTapeInfoPtr, &netTapeEntry, sizeof(netTapeEntry));
 	if (code) ERROR_EXIT(code);
 	tapeEntry_ntoh(&netTapeEntry, &hostTapeEntry);
@@ -1238,7 +1238,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
 	}
 	
 	/* get the next item-header */
-	bzero(nextHeader, sizeof(*nextHeader));
+	memset(nextHeader, 0, sizeof(*nextHeader));
 	code = getTapeData(tapeInfo, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
 	if (code) ERROR_EXIT(code);
 	structDumpHeader_ntoh(&netItemHeader, nextHeader);
@@ -1248,7 +1248,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
 	{ /*v*/
 	  
 	    /* read the volume entry */
-	    bzero(&netVolumeEntry, sizeof(netVolumeEntry));
+	    memset(&netVolumeEntry, 0, sizeof(netVolumeEntry));
 	    code = getTapeData(tapeInfo, rstTapeInfoPtr, &netVolumeEntry, sizeof(netVolumeEntry));
 	    if (code) ERROR_EXIT(code);
 	    volumeEntry_ntoh(&netVolumeEntry, &hostVolumeEntry);
@@ -1259,7 +1259,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
 	    }
 	    
 	    /* get the next item-header */
-	    bzero(nextHeader, sizeof(*nextHeader));
+	    memset(nextHeader, 0, sizeof(*nextHeader));
 	    code = getTapeData(tapeInfo, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
 	    if (code) ERROR_EXIT(code);
 	    structDumpHeader_ntoh(&netItemHeader, nextHeader);
@@ -1301,7 +1301,7 @@ saveTextFile(taskId, textType, fileName)
     ctPtr = (udbClientTextP) malloc(sizeof(*ctPtr));
     if (!ctPtr) ERROR_EXIT(TC_NOMEMORY);
 
-    bzero(ctPtr, sizeof(*ctPtr));
+    memset(ctPtr, 0, sizeof(*ctPtr));
     ctPtr->textType = textType;
 
     /* lock the text in the database */
@@ -1435,7 +1435,7 @@ restoreText(tapeInfo, rstTapeInfoPtr, nextHeader)
     unlink(filename);	
 
     /* get the next item-header */
-    bzero(nextHeader, sizeof(*nextHeader));
+    memset(nextHeader, 0, sizeof(*nextHeader));
     code = getTapeData(tapeInfo, rstTapeInfoPtr, &netItemHeader, sizeof(netItemHeader));
     if (code) ERROR_EXIT(code);
     structDumpHeader_ntoh(&netItemHeader, nextHeader);
@@ -1541,7 +1541,7 @@ getTapeData(tapeInfoPtr, rstTapeInfoPtr, buffer, requestedBytes)
 	
 	/* copy out data */
 	transferBytes = (nbytes < requestedBytes ) ? nbytes : requestedBytes;
-	bcopy(tapeReadBufferPtr, buffer, transferBytes);
+	memcpy(buffer, tapeReadBufferPtr, transferBytes);
 	tapeReadBufferPtr += transferBytes;
 	buffer += transferBytes;
 	nbytes -= transferBytes;

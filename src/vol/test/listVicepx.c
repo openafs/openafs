@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/listVicepx.c,v 1.1.1.4 2001/07/14 22:25:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/listVicepx.c,v 1.1.1.5 2001/09/11 14:35:52 hartmans Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -124,7 +124,6 @@ char*	orphan_NoUnique = "ORPHANED_NoUnique";
 #define contentsDInode	0x08  /* list contents of dir inode */
 #define volInfo		0x10  /* list info from vol header */
 
-extern char *rindex();
 extern DirEnt *lookup();
 extern char	*getFileName(), *getDirName(), *printStack();
 extern DirEnt*               hash[];

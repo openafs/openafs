@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vsprocs.c,v 1.1.1.5 2001/07/14 22:22:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vsprocs.c,v 1.1.1.6 2001/09/11 14:33:23 hartmans Exp $");
 
 #include "vsprocs.h"
 #include "vosutils.h"
@@ -29,11 +29,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vsprocs.c,v 1.1.1.5 2001/0
 #include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>
 #include "afs_vosAdmin.h"
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_UNISTD_H
@@ -1468,8 +1468,8 @@ int UV_ReleaseVolume(
   int releasecount = 0;
   struct volser_status volstatus;
 
-  bzero((char *)remembertime, sizeof(remembertime));
-  bzero((char *)&results, sizeof(results));
+  memset((char *)remembertime, 0, sizeof(remembertime));
+  memset((char *)&results, 0, sizeof(results));
 
   tst = ubik_Call(VL_SetLock, cellHandle->vos, 0, afromvol, RWVOL, VLOP_RELEASE);
   if ((tst) && (tst != VL_RERELEASE)) {
@@ -1675,7 +1675,7 @@ int UV_ReleaseVolume(
 
   strcpy(vname, entry.name);
   strcat(vname, ".readonly");
-  bzero(&cookie,sizeof(cookie));
+  memset(&cookie, 0, sizeof(cookie));
   strncpy(cookie.name, vname, VOLSER_OLDMAXVOLNAME);
   cookie.type   = ROVOL;
   cookie.parent = entry.volumeId[RWVOL];
@@ -1691,10 +1691,10 @@ int UV_ReleaseVolume(
       goto fail_UV_ReleaseVolume;
   } 
 
-  bzero (replicas,   (sizeof(struct replica)*nservers+1));
-  bzero (times,      (sizeof(struct release)*nservers+1));
-  bzero (toconns,    (sizeof(struct rx_connection *)*nservers+1));
-  bzero (results.manyResults_val, (sizeof(afs_int32)*nservers+1));
+  memset(replicas, 0, (sizeof(struct replica)*nservers+1));
+  memset(times, 0, (sizeof(struct release)*nservers+1));
+  memset(toconns, 0, (sizeof(struct rx_connection *)*nservers+1));
+  memset(results.manyResults_val, 0, (sizeof(afs_int32)*nservers+1));
 
   /* Create a transaction on the cloned volume */
   tst = AFSVolTransCreate(fromconn, cloneVolId, afrompart, ITBusy, &fromtid);
@@ -2249,7 +2249,7 @@ int UV_RestoreVolume(
     int index, same;
 
 
-    bzero(&cookie,sizeof(cookie));
+    memset(&cookie, 0, sizeof(cookie));
     islocked  = 0;
     success = 0;
     error = 0;
@@ -2922,7 +2922,7 @@ static afs_int32 ProcessEntries(
 	}
 	else if(tst && (tst == VL_NOENT)) { /*entry doesnot exist */
 	    /*set up a vldb entry for elem */
-	    bzero(&entry, sizeof(entry));
+	    memset(&entry, 0, sizeof(entry));
 	    strncpy(entry.name,elem.name,VOLSER_OLDMAXVOLNAME);
 	    if(elem.isValid[RWVOL]) { /*rw exists */
 		entry.flags |= RW_EXISTS;
@@ -3512,7 +3512,7 @@ int UV_SyncServer(
 
     for(si = 0;si != -1; si=nsi) {
 	    /*initialize to hint the stub  to alloc space */
-	    bzero(&arrayEntries, sizeof(arrayEntries)); 
+	    memset(&arrayEntries, 0, sizeof(arrayEntries)); 
 	    if (!VLDB_ListAttributes(cellHandle, &attributes, &nentries,
 				     &arrayEntries, &tst)) {
 		goto fail_UV_SyncServer;

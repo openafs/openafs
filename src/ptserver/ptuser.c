@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptuser.c,v 1.1.1.5 2001/07/14 22:23:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptuser.c,v 1.1.1.6 2001/09/11 14:34:08 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -181,7 +181,7 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 	com_err (whoami, code,
 		 "Could not get afs tokens, running unauthenticated.");
 
-    bzero (serverconns, sizeof(serverconns)); /* terminate list!!! */
+    memset(serverconns, 0, sizeof(serverconns)); /* terminate list!!! */
     for (i = 0;i<info.numServers;i++) 
 	serverconns[i] = rx_NewConnection
 	    (info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,

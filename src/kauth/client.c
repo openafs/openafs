@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/client.c,v 1.1.1.5 2001/07/14 22:22:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/client.c,v 1.1.1.6 2001/09/11 14:32:53 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -58,7 +58,7 @@ static void Andrew_StringToKey (
     int	  i;
     int   passlen;
 
-    bzero (key, sizeof(struct ktc_encryptionKey));
+    memset(key, 0, sizeof(struct ktc_encryptionKey));
 
     strncpy (password, cell, 8);
     passlen = strlen (str);
@@ -106,13 +106,13 @@ static void StringToKey (
     if ((passlen = strlen(password)) > sizeof(password))
 	passlen = sizeof(password);
     
-    bcopy ("kerberos", ivec, 8);
-    bcopy ("kerberos", temp_key, 8);
+    memcpy(ivec, "kerberos", 8);
+    memcpy(temp_key, "kerberos", 8);
     des_fixup_key_parity (temp_key);
     des_key_sched (temp_key, schedule);
     des_cbc_cksum (password, ivec, passlen, schedule, ivec);
 
-    bcopy (ivec, temp_key, 8);
+    memcpy(temp_key, ivec, 8);
     des_fixup_key_parity (temp_key);
     des_key_sched (temp_key, schedule);
     des_cbc_cksum (password, key, passlen, schedule, ivec);
@@ -158,7 +158,7 @@ afs_int32 ka_ReadPassword (
     afs_int32  code;
 
     LOCK_GLOBAL_MUTEX
-    bzero (key, sizeof(struct ktc_encryptionKey));
+    memset(key, 0, sizeof(struct ktc_encryptionKey));
     code = read_pw_string (password, sizeof(password), prompt, verify);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.5 2001/07/14 22:24:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.6 2001/09/11 14:35:35 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -143,7 +143,7 @@ static struct client *GetCE()
     entry = CEFree;
     CEFree = entry->next;
     CEs++;
-    bzero((char *)entry, CLIENT_TO_ZERO(entry));
+    memset((char *)entry, 0, CLIENT_TO_ZERO(entry));
     return(entry);
 
 } /*GetCE*/
@@ -225,7 +225,7 @@ static struct host *GetHT()
     entry = HTFree;
     HTFree = entry->next;
     HTs++;
-    bzero((char *)entry, HOST_TO_ZERO(entry));
+    memset((char *)entry, 0, HOST_TO_ZERO(entry));
     return(entry);
 
 } /*GetHT*/
@@ -1981,7 +1981,7 @@ h_CheckHosts() {
 
     afs_uint32 now = FT_ApproxTime();
 
-    bzero((char *)&zerofid, sizeof(zerofid));
+    memset((char *)&zerofid, 0, sizeof(zerofid));
     /*
      * Send a probe to the workstation if it hasn't been heard from in
      * 15 minutes

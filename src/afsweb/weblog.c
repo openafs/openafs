@@ -24,7 +24,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/weblog.c,v 1.1.1.5 2001/07/14 22:20:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/weblog.c,v 1.1.1.6 2001/09/11 14:31:11 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -338,7 +338,7 @@ static int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
 
     token.startTime = starttime;
     token.endTime = endtime;
-    bcopy(session_key, (char *) &token.sessionKey, sizeof(token.sessionKey));
+    memcpy((char *) &token.sessionKey, session_key, sizeof(token.sessionKey));
     token.kvno = tkt_type;
     token.ticketLen = ticket_len;
     if (ticket_len > MAXKTCTICKETLEN) {
@@ -346,7 +346,7 @@ static int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
 		"Maximum length accepted by AFS cache manager is %d\n", MAXKTCTICKETLEN);
 	return -1;
     }
-    bcopy((char *) ticket_p, (char *) token.ticket, ticket_len);
+    memcpy((char *) token.ticket, (char *) ticket_p, ticket_len);
 
     sprintf(client.name, "AFS ID %d", unix_id);
     strcpy(client.instance, "");
@@ -370,7 +370,7 @@ static char *make_string(s_p, length)
 	fprintf(stderr, "dlog: out of memory\n");
 	exit(1);
     }
-    bcopy(s_p, new_p, length);
+    memcpy(new_p, s_p, length);
     new_p[length] = '\0';
     return new_p;
 }
@@ -493,7 +493,7 @@ static int decode_reply(buf, buflen, reply_p)
 	  case ASN_OCTET_STRING:
 	    if (context == 1 && len == sizeof(reply_p->session_key)) {
 		saw_session_key++;
-		bcopy(buf, reply_p->session_key, len);
+		memcpy(reply_p->session_key, buf, len);
 	    }
 	    buf += len;
 	    break;
@@ -710,7 +710,7 @@ static int getDFScreds(char *name, char *realm, char *passwd,
   des_string_to_key(passwd, passwd_key);
 
   /* Destroy the password. */
-   bzero(passwd, strlen(passwd));
+   memset(passwd, 0, strlen(passwd));
 
 
    /*
@@ -731,8 +731,8 @@ static int getDFScreds(char *name, char *realm, char *passwd,
    /*
     * Destroy the key block: it's no longer needed.
     */
-   bzero(schedule, sizeof(schedule));
-   bzero(passwd_key, sizeof(passwd_key));
+   memset(schedule, 0, sizeof(schedule));
+   memset(passwd_key, 0, sizeof(passwd_key));
 
 
    /*
@@ -811,7 +811,7 @@ CommandProc (as, arock)
   char type[10];              /* authentication type AFS or DFS */
 
   /* blow away command line arguments */
-  for (i=1; i<zero_argc; i++) bzero (zero_argv[i], strlen(zero_argv[i]));
+  for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
   zero_argc = 0;
 
   /* first determine quiet flag based on -silent switch */

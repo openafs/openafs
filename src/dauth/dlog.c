@@ -71,7 +71,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dauth/dlog.c,v 1.1.1.5 2001/07/14 22:21:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dauth/dlog.c,v 1.1.1.6 2001/09/11 14:32:24 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -108,7 +108,7 @@ static char *getpipepass() {
     static char gpbuf[MAX_PASSWD_LEN];
 
     register int i, tc;
-    bzero(gpbuf, sizeof(gpbuf));
+    memset(gpbuf, 0, sizeof(gpbuf));
     for(i=0; i<(sizeof(gpbuf)-1); i++) {
 	tc = fgetc(stdin);
 	if (tc == '\n' || tc == EOF) break;
@@ -156,14 +156,14 @@ int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
 
     token.startTime = starttime;
     token.endTime = endtime;
-    bcopy(session_key, (char *) &token.sessionKey, sizeof(token.sessionKey));
+    memcpy((char *) &token.sessionKey, session_key, sizeof(token.sessionKey));
     token.kvno = tkt_type;
     token.ticketLen = ticket_len;
     if (ticket_len > MAXKTCTICKETLEN) {
 	fprintf(stderr, "dlog: DCE ticket is too long (length %d). Maximum length accepted by AFS cache manager is %d\n", MAXKTCTICKETLEN);
 	exit(1);
     }
-    bcopy((char *) ticket_p, (char *) token.ticket, ticket_len);
+    memcpy((char *) token.ticket, (char *) ticket_p, ticket_len);
 
     sprintf(client.name, "AFS ID %d", unix_id);
     strcpy(client.instance, "");
@@ -186,7 +186,7 @@ char *make_string(s_p, length)
 	fprintf(stderr, "dlog: out of memory\n");
 	exit(1);
     }
-    bcopy(s_p, new_p, length);
+    memcpy(new_p, s_p, length);
     new_p[length] = '\0';
     return new_p;
 }
@@ -316,7 +316,7 @@ int decode_reply(buf, buflen, reply_p)
 	  case ASN_OCTET_STRING:
 	    if (context == 1 && len == sizeof(reply_p->session_key)) {
 		saw_session_key++;
-		bcopy(buf, reply_p->session_key, len);
+		memcpy(reply_p->session_key, buf, len);
 	    }
 	    buf += len;
 	    break;
@@ -467,7 +467,7 @@ CommandProc (as, arock)
      * Discard command line arguments, in case the password is on the
      * command line (to avoid it showing up from a ps command).
      */
-    for (i=1; i<zero_argc; i++) bzero (zero_argv[i], strlen(zero_argv[i]));
+    for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
 
 #ifdef DLOG_TEST
@@ -568,8 +568,7 @@ CommandProc (as, arock)
 	foundPassword = 1;
 	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd) - 1);
 	passwd[sizeof(passwd) - 1] = '\0';
-	bzero (as->parms[aPASSWORD].items->data,
-	       strlen(as->parms[aPASSWORD].items->data));
+	memset(as->parms[aPASSWORD].items->data, 0, strlen(as->parms[aPASSWORD].items->data));
     }
 
     if (as->parms[aLIFETIME].items) {
@@ -704,7 +703,7 @@ bad_lifetime:
     }
     strcat(passwd, reply_p->salt);
     des_string_to_key(passwd, passwd_key);
-    bzero(passwd, strlen(passwd));
+    memset(passwd, 0, strlen(passwd));
     
     /*
      * Decrypt the private data returned by the DCE KDC, and forwarded
@@ -724,8 +723,8 @@ bad_lifetime:
     /*
      * Destroy the key block: it's no longer needed.
      */
-    bzero(schedule, sizeof(schedule));
-    bzero(passwd_key, sizeof(passwd_key));
+    memset(schedule, 0, sizeof(schedule));
+    memset(passwd_key, 0, sizeof(passwd_key));
 
     /*
      * Do a very quick and dirty ASN.1 decode of the relevant parts

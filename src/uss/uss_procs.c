@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.1.1.4 2001/07/14 22:24:16 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.1.1.5 2001/09/11 14:35:06 hartmans Exp $");
 
 #include "uss_procs.h"		/*Module interface*/
 #include "uss_common.h"		/*Common defs & operations*/
@@ -43,7 +43,6 @@ extern int errno;
 
 char temp[1000];
 extern int line;
-extern char *rindex();
 
 static int Copy();
 static int Echo();
@@ -234,7 +233,7 @@ afs_int32 uss_procs_CpFile(a_path, a_mode, a_owner, a_proto)
     }
 
     if (stbuf.st_mode & S_IFDIR) {
-	if ((cp = rindex(a_path, '/')) == NULL) {
+	if ((cp = strrchr(a_path, '/')) == NULL) {
 	    strcat(a_proto, "/");
 	    strcat(a_proto, a_path);
 	}
@@ -812,7 +811,7 @@ FILE *uss_procs_FindAndOpen(a_fileToOpen)
     /*
      * If a full pathname was given, just take it as is.
      */
-    if (index(a_fileToOpen, '/')) {
+    if (strchr(a_fileToOpen, '/')) {
 	strcpy(tmp_str, a_fileToOpen);
 	rv = fopen(a_fileToOpen, "r");
     }

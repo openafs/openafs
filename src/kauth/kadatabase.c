@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.5 2001/09/11 14:32:54 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -166,7 +166,7 @@ afs_int32 CheckInit (at, db_init)
     printf ("Error discovered in header, rebuilding.\n");
 
     /* try to write a good header */
-    bzero(&cheader,sizeof(cheader));
+    memset(&cheader, 0, sizeof(cheader));
     cheader.version = htonl(KADBVERSION);
     cheader.checkVersion = htonl(KADBVERSION);
     cheader.headerSize = htonl(sizeof(cheader));
@@ -208,7 +208,7 @@ afs_int32 AllocBlock (at, tentry)
 
     code = inc_header_word (at, stats.allocs);
     if (code) return 0;
-    bzero (tentry, sizeof(kaentry));	/* zero new entry */
+    memset(tentry, 0, sizeof(kaentry));	/* zero new entry */
     return temp;
 }
 
@@ -224,7 +224,7 @@ afs_int32 FreeBlock (at, index)
     /* check index just to be on the safe side */
     if (!index_OK (index)) return KABADINDEX;
 
-    bzero (&tentry, sizeof(kaentry));
+    memset(&tentry, 0, sizeof(kaentry));
     tentry.next = cheader.freePtr;
     tentry.flags = htonl(KAFFREE);
     code = set_header_word (at, freePtr, htonl(index));
@@ -444,7 +444,7 @@ afs_int32 ka_NewKey (tt, tentryaddr, tentry, key)
 	       ((now - ntohl(okeys.keys[i].superseded) > maxKeyLifetime)) ) {
 	     okeys.keys[i].superseded = 0;
 	     okeys.keys[i].version    = htonl(-1);
-	     bzero(&okeys.keys[i].key, sizeof(struct ktc_encryptionKey));
+	     memset(&okeys.keys[i].key, 0, sizeof(struct ktc_encryptionKey));
 	     modified = 1;
 
 	     es_Report ("Dropped oldkey %d seconds old with kvno %d\n",
@@ -456,7 +456,7 @@ afs_int32 ka_NewKey (tt, tentryaddr, tentry, key)
 	  if (!addednewkey && (okeys.keys[i].superseded == 0)) {
 	     okeys.keys[i].version    = htonl(newkeyver);
 	     okeys.keys[i].superseded = htonl(NEVERDATE);
-	     bcopy (key, &okeys.keys[i].key, sizeof(struct ktc_encryptionKey));
+	     memcpy(&okeys.keys[i].key, key, sizeof(struct ktc_encryptionKey));
 	     modified = 1;
 	     addednewkey = okeysaddr;
 	  }
@@ -498,7 +498,7 @@ afs_int32 ka_NewKey (tt, tentryaddr, tentry, key)
        okeys.entry              = htonl(tentryaddr);
        okeys.keys[0].version    = htonl(newkeyver);
        okeys.keys[0].superseded = htonl(NEVERDATE);
-       bcopy (key, &okeys.keys[0].key, sizeof(struct ktc_encryptionKey));
+       memcpy(&okeys.keys[0].key, key, sizeof(struct ktc_encryptionKey));
        newtotalkeyentries++;
        
        /* Thread onto the header's chain of oldkeys */
@@ -525,7 +525,7 @@ afs_int32 ka_NewKey (tt, tentryaddr, tentry, key)
     tentry->misc.asServer.oldKeys  = htonl(addednewkey);
     tentry->misc.asServer.nOldKeys = htonl(newtotalkeyentries);
     tentry->key_version            = htonl(newkeyver);
-    bcopy (key, &tentry->key, sizeof (tentry->key));
+    memcpy(&tentry->key, key, sizeof (tentry->key));
 
     /* invalidate key caches everywhere */
     code = inc_header_word (tt, specialKeysVersion);
@@ -594,8 +594,8 @@ void ka_debugKeyCache (info)
   struct ka_debugInfo *info;
 {   int i;
 
-    bcopy (&cheader_lock, &info->cheader_lock, sizeof (info->cheader_lock));
-    bcopy (&keycache_lock, &info->keycache_lock, sizeof (info->keycache_lock));
+    memcpy(&info->cheader_lock, &cheader_lock, sizeof (info->cheader_lock));
+    memcpy(&info->keycache_lock, &keycache_lock, sizeof (info->keycache_lock));
 
     info->kcVersion = keyCacheVersion;
     info->kcSize = maxCachedKeys;
@@ -649,7 +649,7 @@ ka_Encache (name, inst, kvno, key, superseded)
 	    strncpy (keyCache[i].name, name, sizeof (keyCache[i].name));
 	    strncpy (keyCache[i].inst, inst, sizeof (keyCache[i].inst));
 	    keyCacheVersion = ntohl(cheader.specialKeysVersion);
-	    bcopy (key, &keyCache[i].key, sizeof(*key));
+	    memcpy(&keyCache[i].key, key, sizeof(*key));
 	    keyCache[i].superseded = superseded;
 	    keyCache[i].used = time(0);
 
@@ -697,7 +697,7 @@ afs_int32 ka_LookupKvno (tt, name, inst, kvno, key)
 		if ((keyCache[i].kvno == kvno) &&
 		    (strcmp(keyCache[i].name, name) == 0) &&
 		    (strcmp(keyCache[i].inst, inst) == 0)) {
-		    bcopy (&keyCache[i].key, key, sizeof(*key));
+		    memcpy(key, &keyCache[i].key, sizeof(*key));
 		    keyCache[i].used = time(0);
 		    ReleaseReadLock (&keycache_lock);
 		    return 0;
@@ -717,7 +717,7 @@ afs_int32 ka_LookupKvno (tt, name, inst, kvno, key)
 
     /* first check the current key */
     if (tentry.key_version == htonl(kvno)) {
-	bcopy (&tentry.key, key, sizeof(*key));
+	memcpy(key, &tentry.key, sizeof(*key));
 	ka_Encache (name, inst, kvno, key, NEVERDATE);
 	return 0;
     }
@@ -728,7 +728,7 @@ afs_int32 ka_LookupKvno (tt, name, inst, kvno, key)
 	    for (i=0; i<NOLDKEYS; i++)
 		if (okeys.keys[i].superseded &&
 		    (ntohl(okeys.keys[i].version) == kvno)) {
-		    bcopy (&okeys.keys[i].key, key, sizeof(*key));
+		    memcpy(key, &okeys.keys[i].key, sizeof(*key));
 		    ka_Encache (name, inst, kvno, key,
 				ntohl(okeys.keys[i].superseded));
 		    return 0;
@@ -759,7 +759,7 @@ afs_int32 ka_LookupKey (tt, name, inst, kvno, key)
 		if ((keyCache[i].superseded == NEVERDATE) &&
 		    (strcmp(keyCache[i].name, name) == 0) &&
 		    (strcmp(keyCache[i].inst, inst) == 0)){
-		    bcopy (&keyCache[i].key, key, sizeof(*key));
+		    memcpy(key, &keyCache[i].key, sizeof(*key));
 		    *kvno = keyCache[i].kvno;
 		    keyCache[i].used = time(0);
 		    ReleaseReadLock (&keycache_lock);
@@ -777,7 +777,7 @@ afs_int32 ka_LookupKey (tt, name, inst, kvno, key)
     code = FindBlock (tt, name, inst, &to, &tentry);
     if (code) return code;
     if (to == 0) return KANOENT;
-    bcopy (&tentry.key, key, sizeof(*key));
+    memcpy(key, &tentry.key, sizeof(*key));
     *kvno = ntohl(tentry.key_version);
     ka_Encache (name, inst, *kvno, key, NEVERDATE);
     return 0;

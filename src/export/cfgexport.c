@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.1.1.4 2001/07/14 22:21:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.1.1.5 2001/09/11 14:32:37 hartmans Exp $");
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -328,7 +328,7 @@ char *syms;
 	kstr_size = 0;
 	nksyms    = 0;
 
-	bzero(xsq = &xcoff_sym, sizeof (*xsq));
+	memset(xsq = &xcoff_sym, 0, sizeof (*xsq));
 
 	for (i = 1; i < nxsyms; ++i, xsq = xsp++) {
 		if (xsp->n_zeroes != xsq->n_zeroes

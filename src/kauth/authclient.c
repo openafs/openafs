@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.6 2001/07/14 22:22:09 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.7 2001/09/11 14:32:52 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -365,7 +365,7 @@ static afs_int32 CheckTicketAnswer(
 
     cksum = ntohl(answer->cksum);
     if (challenge != ntohl(answer->challenge)) return KABADPROTOCOL;
-    bcopy (&answer->sessionKey, &token->sessionKey, sizeof(token->sessionKey));
+    memcpy(&token->sessionKey, &answer->sessionKey, sizeof(token->sessionKey));
     token->startTime = ntohl(answer->startTime);
     token->endTime = ntohl(answer->endTime);
     token->kvno = (short) ntohl(answer->kvno);
@@ -401,9 +401,9 @@ static afs_int32 CheckTicketAnswer(
            )
 	  return KABADPROTOCOL;
 
-	bcopy (strings, token->ticket, token->ticketLen);
+	memcpy(token->ticket, strings, token->ticketLen);
 	strings += token->ticketLen;
-	if (bcmp (strings, label, KA_LABELSIZE) != 0) return KABADPROTOCOL;
+	if (memcmp (strings, label, KA_LABELSIZE) != 0) return KABADPROTOCOL;
 
 	if (pwexpires) {
 	  afs_int32 temp;
@@ -412,7 +412,7 @@ static afs_int32 CheckTicketAnswer(
 	  
 	  if (oanswer->SeqLen > temp) {
 	    strings = oanswer->SeqBody + temp;
-	    bcopy (strings, &temp, sizeof(afs_int32));
+	    memcpy(&temp, strings, sizeof(afs_int32));
 	    tempc = ntohl(temp) >> 24;
 	    /* don't forget this if you add any more fields!
 	    strings += sizeof(afs_int32);
@@ -525,7 +525,7 @@ afs_int32 ka_Authenticate (
 
     request_time = time(0);
     request.time = htonl(request_time);
-    bcopy (req_label, request.label, sizeof(request.label));
+    memcpy(request.label, req_label, sizeof(request.label));
     arequest.SeqLen = sizeof(request);
     arequest.SeqBody = (char *)&request;
     des_pcbc_encrypt (arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
@@ -599,9 +599,8 @@ afs_int32 ka_Authenticate (
 	    token->endTime = end;
 	    token->kvno = ntohl(answer_old.kvno);
 	    token->ticketLen = answer_old.ticket_len;
-	    bcopy (answer_old.ticket, token->ticket, sizeof(token->ticket));
-	    bcopy (&answer_old.sessionkey, &token->sessionKey,
-		   sizeof(struct ktc_encryptionKey));
+	    memcpy(token->ticket, answer_old.ticket, sizeof(token->ticket));
+	    memcpy(&token->sessionKey, &answer_old.sessionkey, sizeof(struct ktc_encryptionKey));
 	}
 	break;
       default:
@@ -705,8 +704,7 @@ afs_int32 ka_GetToken (
 	token->endTime = ntohl(answer_old.endTime);
 	token->ticketLen = ntohl(answer_old.ticketLen);
 	token->kvno = ntohl(answer_old.kvno);
-	bcopy (&answer_old.sessionKey, &token->sessionKey,
-	       sizeof(token->sessionKey));
+	memcpy(&token->sessionKey, &answer_old.sessionKey, sizeof(token->sessionKey));
 	
 	if (tkt_CheckTimes (token->startTime, token->endTime, time(0)) < 0) {
 	    UNLOCK_GLOBAL_MUTEX
@@ -756,7 +754,7 @@ afs_int32 ka_GetToken (
 	    UNLOCK_GLOBAL_MUTEX
 	    return KABADPROTOCOL;
 	}
-	bcopy (strings, token->ticket, token->ticketLen);
+	memcpy(token->ticket, strings, token->ticketLen);
 	
 	break;
       default:

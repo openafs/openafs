@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_buffer.c,v 1.1.1.4 2001/07/14 22:19:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_buffer.c,v 1.1.1.5 2001/09/11 14:24:36 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #if !defined(UKERNEL)
@@ -536,6 +536,6 @@ void shutdown_bufferpackage() {
       nbuffers = 0;
       timecounter = 1;
       for(i=0;i<PHSIZE;i++) phTable[i] = 0;
-      bzero((char *)&afs_bufferLock, sizeof(afs_lock_t));
+      memset((char *)&afs_bufferLock, 0, sizeof(afs_lock_t));
   }
 }  

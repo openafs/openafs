@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selsubs.c,v 1.1.1.4 2001/07/14 22:22:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selsubs.c,v 1.1.1.5 2001/09/11 14:33:42 hartmans Exp $");
 
 
 #include "../lwp.h"
@@ -39,7 +39,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selsubs.c,v 1.1.1.4 2001/07/14
 fd_set *IOMGR_AllocFDSet(void)
 {
     fd_set *tmp = (fd_set*)malloc(sizeof(fd_set));
-    bzero((char*)tmp, sizeof(fd_set));
+    memset((char*)tmp, 0, sizeof(fd_set));
     return tmp;
 }
 

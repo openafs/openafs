@@ -10,8 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/buffer.c,v 1.1.1.4 2001/07/14 22:21:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/buffer.c,v 1.1.1.5 2001/09/11 14:32:35 hartmans Exp $");
 
+#include <stdlib.h>
 #include <lock.h>
 
 #include "dir.h"

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.6 2001/07/14 22:25:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.7 2001/09/11 14:35:58 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -57,7 +57,7 @@ static void ovlentry_to_nvlentry(oentryp, nentryp)
 {
     register int i;
 
-    bzero(nentryp, sizeof(struct nvldbentry));
+    memset(nentryp, 0, sizeof(struct nvldbentry));
     strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
     for (i=0; i < oentryp->nServers; i++) {
 	nentryp->serverNumber[i] = oentryp->serverNumber[i];
@@ -77,7 +77,7 @@ static nvlentry_to_ovlentry(nentryp, oentryp)
 {
     register int i;
 
-    bzero(oentryp, sizeof(struct vldbentry));
+    memset(oentryp, 0, sizeof(struct vldbentry));
     strncpy(oentryp->name, nentryp->name, sizeof(oentryp->name));
     if (nentryp->nServers > OMAXNSERVERS) {
 	/*
@@ -218,7 +218,7 @@ VLDB_ListAttributes(attrp, entriesp, blkentriesp)
 
     if (newvlserver == 1) {
 tryold:
-	bzero(&arrayEntries, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
+	memset(&arrayEntries, 0, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
 	code = ubik_Call(VL_ListAttributes, cstruct, 0, attrp, entriesp, &arrayEntries);
 	if (!code) {
 	    blkentriesp->nbulkentries_val = (nvldbentry *)malloc(*entriesp * sizeof(struct nvldbentry));
@@ -306,11 +306,11 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
 	  return 0;
   }
 
-    bzero(&attrs, sizeof(attrs));
+    memset(&attrs, 0, sizeof(attrs));
     attrs.Mask = VLADDR_IPADDR;
     attrs.ipaddr = serv1;
-    bzero(&addrs, sizeof(addrs));
-    bzero(&uuid, sizeof(uuid));
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&uuid, 0, sizeof(uuid));
     code = ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid, &unique, &nentries, &addrs);
     if (vlserverv4 == -1) {
 	if (code == RXGEN_OPCODE) {

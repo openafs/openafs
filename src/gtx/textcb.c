@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textcb.c,v 1.1.1.4 2001/07/14 22:22:05 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textcb.c,v 1.1.1.5 2001/09/11 14:32:47 hartmans Exp $");
 
 #include "gtxtextcb.h"		/*Module interface*/
 #include <stdio.h>			/*Standard I/O stuff*/
@@ -169,7 +169,7 @@ struct gator_textcb_hdr *gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEn
       */
     if (gator_textcb_debug)
       fprintf(stderr, "[%s] Zeroing %d bytes in text buffer at 0x%x\n", rn, numBuffBytes, newBuff);
-    bzero(newBuff, numBuffBytes);
+    memset(newBuff, 0, numBuffBytes);
 
     if (gator_textcb_debug)
       fprintf(stderr, "[%s] Initializing blank line buffer at 0x%x\n", rn, blankLine);
@@ -190,7 +190,7 @@ struct gator_textcb_hdr *gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEn
       curr_ent->numInversions = 0;
       curr_ent->charsUsed     = 0;
       curr_ent->textp	      = curr_buff;
-      bcopy(blankLine, curr_ent->textp, a_maxCharsPerEntry+1);
+      memcpy(curr_ent->textp, blankLine, a_maxCharsPerEntry+1);
       for (curr_inv = 0; curr_inv < GATOR_TEXTCB_MAXINVERSIONS; curr_inv++)
 	   curr_ent->inversion[curr_inv] = 0;
 
@@ -266,7 +266,7 @@ static struct gator_textcb_entry *bumpEntry(a_cbhdr)
       * Copy over a blank line into the one we're initializing.  We
       * copy over the trailing null, too.
       */
-    bcopy(a_cbhdr->blankLine, curr_ent->textp, a_cbhdr->maxCharsPerEntry+1);
+    memcpy(curr_ent->textp, a_cbhdr->blankLine, a_cbhdr->maxCharsPerEntry+1);
     for (inv=0; inv < GATOR_TEXTCB_MAXINVERSIONS; inv++)
       curr_ent->inversion[inv] = 0;
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.6 2001/07/14 22:24:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.7 2001/09/11 14:34:57 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -222,8 +222,8 @@ int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, db
     tdb->pathName = (char *) malloc(strlen(pathName)+1);
     strcpy(tdb->pathName, pathName);
     tdb->activeTrans = (struct ubik_trans *) 0;
-    bzero(&tdb->version, sizeof(struct ubik_version));
-    bzero(&tdb->cachedVersion, sizeof(struct ubik_version));
+    memset(&tdb->version, 0, sizeof(struct ubik_version));
+    memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
     Lock_Init(&tdb->versionLock);
     tdb->flags = 0;
     tdb->read = uphys_read;
@@ -399,7 +399,7 @@ int ubik_AbortTrans(transPtr)
     
     dbase = transPtr->dbase;
     DBHOLD(dbase);
-    bzero(&dbase->cachedVersion, sizeof(struct ubik_version));
+    memset(&dbase->cachedVersion, 0, sizeof(struct ubik_version));
     /* see if we're still up-to-date */
     if (!urecovery_AllBetter(dbase, transPtr->flags & TRREADANY)) {
 	udisk_abort(transPtr);
@@ -451,7 +451,7 @@ int ubik_EndTrans(transPtr)
 
     dbase = transPtr->dbase;
     DBHOLD(dbase);
-    bzero(&dbase->cachedVersion, sizeof(struct ubik_version));
+    memset(&dbase->cachedVersion, 0, sizeof(struct ubik_version));
 
     /* give up if no longer current */
     if (!urecovery_AllBetter(dbase, transPtr->flags & TRREADANY)) {
@@ -530,7 +530,7 @@ int ubik_EndTrans(transPtr)
   success:
     udisk_end(transPtr);
     /* update version on successful EndTrans */
-    bcopy(&dbase->version, &dbase->cachedVersion, sizeof(struct ubik_version));
+    memcpy(&dbase->cachedVersion, &dbase->version, sizeof(struct ubik_version));
     
     DBRELE(dbase);
     return 0;
@@ -667,9 +667,7 @@ int ubik_Write(transPtr, buffer, length)
     iovec[transPtr->iovec_info.iovec_wrt_len].position = transPtr->seekPos;
     iovec[transPtr->iovec_info.iovec_wrt_len].length   = length;
     
-    bcopy(buffer, 
-	  &transPtr->iovec_data.iovec_buf_val[transPtr->iovec_data.iovec_buf_len],
-	  length);
+    memcpy(&transPtr->iovec_data.iovec_buf_val[transPtr->iovec_data.iovec_buf_len], buffer, length);
 
     transPtr->iovec_info.iovec_wrt_len++;
     transPtr->iovec_data.iovec_buf_len += length;

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/bc_status.c,v 1.1.1.4 2001/07/14 22:20:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/bc_status.c,v 1.1.1.5 2001/09/11 14:31:32 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -133,7 +133,7 @@ cmdDispatch()
 
 statusWatcher()
 {
-    struct rx_connection *tconn = (struct rc_connection *)0;
+     struct rx_connection *tconn = (struct rc_connection *)0;
     statusP curPollPtr = 0;
 
     struct tciStatusS statusPtr;

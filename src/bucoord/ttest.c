@@ -87,7 +87,7 @@ afs_int32 *adumpID; {
     printf("tape controller received request to start dump %s.\n", adumpName);
     *adumpID = ++transID;	/* send result back to caller */
     
-    bzero(&tdentry, sizeof(tdentry));
+    memset(&tdentry, 0, sizeof(tdentry));
     tdentry.created = time(0);
     strcpy(tdentry.name, atapeSet->format);
     strcat(tdentry.name, ".");
@@ -111,7 +111,7 @@ afs_int32 *adumpID; {
     printf("created dump %d\n", tdentry.id);
 
     /* start tape (preent all fits on one tape at first */
-    bzero(&ttentry, sizeof(ttentry));
+    memset(&ttentry, 0, sizeof(ttentry));
     sprintf(ttentry.name, tdentry.tapes.format, 1);
     ttentry.written = time(0);
     ttentry.dump = tdentry.id;		/* dump we're in */
@@ -126,10 +126,10 @@ afs_int32 *adumpID; {
 
     tdescr = adumpArray->tc_dumpArray_val;
     for(i=0;i<adumpArray->tc_dumpArray_len;i++, tdescr++) {
-	bcopy(tdescr->hostID, &taddr, sizeof(taddr));
+	memcpy(&taddr, tdescr->hostID, sizeof(taddr));
 	printf("dumping volid %s(%d) from host %08x since date %d\n", tdescr->name,
 	       tdescr->vid, taddr.sin_addr.s_addr, tdescr->date);
-	bzero(&tventry, sizeof(tventry));
+	memset(&tventry, 0, sizeof(tventry));
 	strcpy(tventry.name, tdescr->name);
 	tventry.clone = tdescr->date;
 	tventry.seq = 0;	/* frag in volume */
@@ -174,7 +174,7 @@ afs_int32 *adumpID; {
     printf("tape controller received request to start restore %s.\n", aname);
     tdescr = arestore->tc_restoreArray_val;
     for(i=0;i<arestore->tc_restoreArray_len; i++, tdescr++) {
-	bcopy(tdescr->hostID, &taddr, sizeof(taddr));
+	memcpy(&taddr, tdescr->hostID, sizeof(taddr));
 	printf("restoring frag %d of volume %s from tape %s at position %d.\n    New name is '%s', new vid is %d, new host is %08x, new partition is %d\n",
 	       tdescr->frag, tdescr->oldName, tdescr->tapeName, tdescr->position, tdescr->newName,
 	       tdescr->vid, taddr.sin_addr.s_addr, tdescr->partition);

@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/frame.c,v 1.1.1.4 2001/07/14 22:21:59 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/frame.c,v 1.1.1.5 2001/09/11 14:32:44 hartmans Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>
@@ -200,7 +200,7 @@ struct gtx_frame *aframe; {
 	tmenu = (struct gtxframe_menu *) malloc(sizeof(*tmenu));
 	if (tmenu == (struct gtxframe_menu *)0)
 	  return(-1);
-	bzero(tmenu, sizeof(*tmenu));
+	memset(tmenu, 0, sizeof(*tmenu));
 	tmenu->next = aframe->menus;
 	aframe->menus = tmenu;
 	tmenu->name = gtx_CopyString(alabel);
@@ -342,7 +342,7 @@ struct gtx_frame *aframe; {
     WOP_GETDIMENSIONS(aframe->window, &sizeparms);
 
     if (aframe->promptLine) {
-	bzero(&strparms, sizeof(strparms));
+	memset(&strparms, 0, sizeof(strparms));
 	strparms.x = 0;
 	strparms.y = sizeparms.maxy-1;
 	strparms.highlight = 1;
@@ -354,7 +354,7 @@ struct gtx_frame *aframe; {
     }
     else if (aframe->messageLine) {
 	/* Otherwise we're visible, print the message at the bottom */
-	bzero(&strparms, sizeof(strparms));
+	memset(&strparms, 0, sizeof(strparms));
 	strparms.highlight = 1;
 	strparms.x = 0;
 	strparms.y = sizeparms.maxy-1;
@@ -418,7 +418,7 @@ struct gtx_frame *gtxframe_Create() {
       * Now that all the pieces exist, fill them in and stick them in
       * the right places.
       */
-    bzero(tframe, sizeof(struct gtx_frame));
+    memset(tframe, 0, sizeof(struct gtx_frame));
     tframe->keymap   = newkeymap;
     tframe->keystate = newkeystate;
     keymap_InitState(tframe->keystate, tframe->keymap);
@@ -460,7 +460,7 @@ register struct gtx_frame *aframe; {
 	strcat(menubuffer, " ");
     }
     if (menubuffer[0] != 0) {
-      bzero(&strparms, sizeof(strparms));
+      memset(&strparms, 0, sizeof(strparms));
       strparms.x = 0;
       strparms.y = 0;
       strparms.s = menubuffer;

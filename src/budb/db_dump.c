@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.4 2001/07/14 22:20:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.5 2001/09/11 14:31:41 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -620,7 +620,7 @@ writeDatabase(ut, fid)
 		    /* Read the dump entry */
 		    if (dbAddr == dbAppAddr) {
 		       /* First time through, don't need to read the dump entry again */
-		       bcopy(&diskDump, &apDiskDump, sizeof(diskDump));
+		       memcpy(&apDiskDump, &diskDump, sizeof(diskDump));
 		    }
 		    else {
 		       if (badEntry(dbAppAddr)) {

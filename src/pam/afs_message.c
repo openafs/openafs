@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_message.c,v 1.1.1.5 2001/07/14 22:23:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_message.c,v 1.1.1.6 2001/09/11 14:34:00 hartmans Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>
@@ -40,13 +40,13 @@ static char *fallback_messages[] = {
     "AFS not available",			/* 10: AFS_UNAVAIL	*/
     "AFS error code 0x%x",			/* 11: AFS_ERROR	*/
     "AFS Authentication succeeded.\n",		/* 12: LOGIN_OK		*/
-    "AFS Authentication failed for user %s %s\n",
+    "AFS Authentication failed for user %s. %s\n",
 						/* 13: LOGIN_FAILED	*/
     "AFS PAM error, code=%d",			/* 14: PAMERROR		*/
     "AFS uid exceeds OS bounds.\n",		/* 15: UID_OVERFLOW	*/
     "The AFS PAM module may not be used from a non-MT program.\n",
 						/* 16: NON_MT_PROG	*/
-    "AFS Options: nowarn=%d, use_first_pass=%d, try_first_pass=%d",
+    "AFS Options: nowarn=%d, use_first_pass=%d, try_first_pass=%d, ignore_uid = %d, ignore_uid_id = %d, refresh_token=%d, set_token=%d, dont_fork=%d, use_klog=%d",
 						/* 17: OPTIONS		*/
     "AFS No pam_conv conversation structure found; no user interaction",
 						/* 18: NO_USER_INT	*/
@@ -68,17 +68,23 @@ static char *fallback_messages[] = {
     "AFS ReInitializing creds for user %s\n",	/* 31: REINITCRED	*/
     "AFS Failed to set PASSWORD_EXPIRES for user %s\n",
 						/* 32: PASSEXPFAIL      */
-    "",
-						/* 33: */
-    "",
-						/* 34: */
-    "AFS blindly trusting user %s\n",		/* 35: TRUSTROOT	*/
-    "New AFS Password: ",                       /* 36: NEW_PWD_PROMPT   */
-    "New AFS Password (again): ",               /* 37: VERIFY_PWD_PROMPT */
-    "Failed to change AFS password",            /* 38: KRBPASS_FAIL     */
-    "Missing PAM flag: %s",                     /* 39: FLAGS            */
-    "ka error, code=%d",                        /* 40: KAERROR          */
-    "Passwords are not equal"                   /* 41: NE_PASSWORD      */
+    "AFS Failed to chown krb ticketfile\n",     /* 33: CHOWNKRB         */
+    "AFS Failed to set KRBTKTFILE\n",           /* 34: KRBFAIL          */
+    "AFS Unknown remaining lifetime %s using default %d seconds\n",
+                                                /* 35: REMAINLIFETIME   */
+    "AFS Session closed",                       /* 36: SESSIONCLOSED1   */
+    "AFS Session closed, Tokens destroyed\n",   /* 37: SESSIONCLOSED2   */
+    "AFS Option conflict dont_fork and use_klog: %s\n",
+                                                /* 38: CONFLICTOPT      */
+    "AFS Unknown uid: %s, option ignored\n",
+                                                /* 39: IGNOREUID        */
+    "New AFS Password: ",                       /* 40: NEW_PWD_PROMPT   */
+    "New AFS Password (again): ",               /* 41: VERIFY_PWD_PROMPT */
+    "Failed to change AFS password",            /* 42: KRBPASS_FAIL     */
+    "Missing PAM flag: %s",                     /* 43: FLAGS            */
+    "ka error, code=%d",                        /* 44: KAERROR          */
+    "Passwords are not equal",                  /* 45: NE_PASSWORD      */
+    "AFS ignoring unregistered user %s\n"       /* 46: IGNORE_UNREG     */
 };
 
 static int num_fallbacks = sizeof(fallback_messages)/sizeof(char *);

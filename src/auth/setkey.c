@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
  
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/setkey.c,v 1.1.1.4 2001/07/14 22:20:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/setkey.c,v 1.1.1.5 2001/09/11 14:31:23 hartmans Exp $");
  
 #include <sys/types.h>
 #include <stdio.h>
@@ -20,11 +20,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/setkey.c,v 1.1.1.4 2001/07/14 22:2
 #include <WINNT/afsreg.h>
 #include <WINNT/afsevent.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_NETINET_IN_H
@@ -77,7 +77,7 @@ char **argv; {
 	  printf("  Ex: setkey add 0 \"80b6a7cd7a9dadb6\"\n");
 	  exit(1);
 	}
-	bzero(tkey, sizeof(tkey));
+	memset(tkey, 0, sizeof(tkey));
 	for(i=7, cp = argv[3] + 15;i>=0; i--,cp-=2)
 	  tkey[i] = char2hex(*cp) + char2hex(*(cp-1))*16;
 
@@ -115,7 +115,7 @@ char **argv; {
 	    char hexbuf[17];
 	    unsigned char c;
 	    int j;
-	    bcopy(tkeys.key[i].key, tbuffer, 8);
+	    memcpy(tbuffer, tkeys.key[i].key, 8);
 	    tbuffer[8] = 0;
 	    for(j=0;j<8;j++) {
 	      c = tbuffer[j];

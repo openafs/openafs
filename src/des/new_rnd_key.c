@@ -18,18 +18,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/new_rnd_key.c,v 1.1.1.5 2001/07/14 22:21:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/new_rnd_key.c,v 1.1.1.6 2001/09/11 14:32:32 hartmans Exp $");
 
 #include <des.h>
 #include "des_internal.h"
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
-#if defined(HAVE_STRINGS_H)
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#if defined(HAVE_STRING_H)
-#include <string.h>
 #endif
 #include "stats.h"
 
@@ -242,8 +243,7 @@ static afs_int32
 des_set_sequence_number(des_cblock new_sequence_number)
 {
     LOCK_RANDOM
-    bcopy((char *)new_sequence_number, (char *)sequence_number,
-	  sizeof(sequence_number));
+    memcpy((char *)sequence_number, (char *)new_sequence_number, sizeof(sequence_number));
     UNLOCK_RANDOM
     return 0;
 }

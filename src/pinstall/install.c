@@ -49,7 +49,7 @@ Generic install command.  Options are:
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.1.1.5 2001/07/14 22:23:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.1.1.6 2001/09/11 14:34:03 hartmans Exp $");
 
 #include <stdio.h>
 #include <pwd.h>
@@ -94,10 +94,6 @@ extern struct passwd *getpwnam();
 int stripcalled = 0;
 #endif
 
-#ifndef rindex
-extern char *rindex();   /* this should always be defined, shouldn't it? */
-#endif
-
 #if defined(AFS_HPUX_ENV) && !defined(AFS_HPUX102_ENV)
 utimes(file,tvp)
 char *file;
@@ -118,7 +114,7 @@ static char *strrpbrk (s, set)
     char sets[256];
     int  i;
 
-    bzero (sets, sizeof(sets));
+    memset(sets, 0, sizeof(sets));
     while (*set) sets[(int) *set++] = 1;
     i = strlen (s);
     while (i > 0) if (sets[(int)s[--i]]) return &s[i];
@@ -139,7 +135,7 @@ char *ErrorString(aerrno)
 int
 stripName(aname)
     char *aname;
-    {if (rindex(aname, '.') == 0) return 1;
+    {if (strrchr(aname, '.') == 0) return 1;
     else return 0;
     }
 
@@ -642,7 +638,7 @@ main (argc, argv)
 
     for (i=0;i<fptr;i++)
 	{/* figure out name to put as entry name for file */
-	tp = rindex(fnames[i], '/');
+	tp = strrchr(fnames[i], '/');
 	if (tp) newNames[i] = tp+1;
 	else newNames[i] = fnames[i];
 	}

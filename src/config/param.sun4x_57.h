@@ -11,7 +11,7 @@
 #define	AFS_PARAM_H
 
 #define AFS_VFS_ENV	1
-/* Used only in vfsck/* code; is it needed any more???? */
+/* Used only in vfsck code; is it needed any more???? */
 
 #define AFS_VFSINCL_ENV	1	/* NOBODY uses this.... */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
@@ -102,6 +102,9 @@
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null
+#define memset(A, B, S) bzero(A, S)
+#define memcpy(B, A, S) bcopy(A, B, S)
+#define memcmp(A, B, S) bcmp(A, B, S)
 #endif /* KERNEL */
 #define	AFS_DIRENT	
 #ifndef CMSERVERPREF

@@ -27,6 +27,11 @@ void nil_cleanup(
 
 extern char*	cv2string();
 
+#define KLOG "/usr/afsws/bin/klog"
+#define KLOGKRB "/usr/afsws/bin/klog.krb"
+#define UNLOG "/usr/afsws/bin/unlog"
+#define IGNORE_MAX 1000
+
 #if	defined(AFS_HPUX_ENV)
 
 #if !defined(AFS_HPUX110_ENV)

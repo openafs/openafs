@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe.c,v 1.1.1.4 2001/07/14 22:21:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe.c,v 1.1.1.5 2001/09/11 14:32:40 hartmans Exp $");
 
 #include <fsprobe.h>			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/
@@ -95,7 +95,7 @@ static int fsprobe_CleanupInit()
     struct interfaceAddr *interfaceAddr; /*Bogus param*/
 
     fsprobe_ConnInfo = (struct fsprobe_ConnectionInfo *)0;
-    bzero(fsprobe_Results, sizeof(struct fsprobe_ProbeResults));
+    memset(&fsprobe_Results, 0, sizeof(struct fsprobe_ProbeResults));
 
     rxcall 	   = (struct rx_call *)0;
     Fids_Array	   = (AFSCBFids *)0;
@@ -253,8 +253,8 @@ static void fsprobe_LWP()
       curr_stats   = fsprobe_Results.stats;
       curr_probeOK = fsprobe_Results.probeOK;
       fsprobe_Results.probeNum++;
-      bzero(fsprobe_Results.stats,   fsprobe_statsBytes);
-      bzero(fsprobe_Results.probeOK, fsprobe_probeOKBytes);
+      memset(fsprobe_Results.stats, 0, fsprobe_statsBytes);
+      memset(fsprobe_Results.probeOK, 0, fsprobe_probeOKBytes);
 
       for (conn_idx = 0; conn_idx < fsprobe_numServers; conn_idx++) {
 	  /*
@@ -553,8 +553,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 
     fsprobe_Results.probeNum  = 0;
     fsprobe_Results.probeTime = 0;
-    bzero(fsprobe_Results.stats,
-	  (a_numServers * sizeof(struct ProbeViceStatistics)));
+    memset(fsprobe_Results.stats, 0, (a_numServers * sizeof(struct ProbeViceStatistics)));
 
     /*
      * Initialize the Rx subsystem, just in case nobody's done it.
@@ -624,9 +623,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 		(a_socketArray + curr_srv)->sin_addr.s_addr,
 		(a_socketArray + curr_srv)->sin_port);
       }
-      bcopy(a_socketArray + curr_srv,
-	    &(curr_conn->skt),
-	    sizeof(struct sockaddr_in));
+      memcpy(&(curr_conn->skt), a_socketArray + curr_srv, sizeof(struct sockaddr_in));
 
       hostNameFound = hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
       if (hostNameFound == (char *)0) {
@@ -687,7 +684,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
       } else {
 	  int i, cnt;
 
-	  bzero(&curr_conn->partList, sizeof(struct partList));
+	  memset(&curr_conn->partList, 0, sizeof(struct partList));
 	  curr_conn->partCnt = 0;
 	  i = XListPartitions(curr_conn->rxVolconn, &curr_conn->partList, &cnt);
 	  if (!i) {

@@ -28,6 +28,9 @@ typedef struct vnode {
 #if defined(AFS_LINUX24_ENV)
         struct list_head        i_dirty_buffers;
 #endif
+#if defined(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+        struct list_head        i_dirty_data_buffers;
+#endif
 	unsigned long		i_ino;
 	unsigned int		i_count;
 	kdev_t			i_dev;
@@ -54,6 +57,9 @@ typedef struct vnode {
         unsigned short          i_bytes;
 #endif
 	struct semaphore	i_sem;
+#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+        struct rw_semaphore     i_truncate_sem;
+#endif
 #if defined(AFS_LINUX24_ENV)
         struct semaphore        i_zombie;
 #else
@@ -75,12 +81,21 @@ typedef struct vnode {
         struct address_space    i_data;
 #else
 	struct vm_area_struct	*i_mmap;
+#if defined(STRUCT_INODE_HAS_I_MMAP_SHARED)
+        struct vm_area_struct   *i_mmap_shared;
+#endif
 	struct page		*i_pages;
+#endif
+#if defined(STRUCT_INODE_HAS_I_MAPPING_OVERLOAD)
+        int                     i_mapping_overload;
 #endif
 	struct dquot		*i_dquot[MAXQUOTAS];
 #if defined(AFS_LINUX24_ENV)
         struct pipe_inode_info  *i_pipe;
         struct block_device     *i_bdev;
+#if defined(STRUCT_INODE_HAS_I_CDEV)
+        struct char_device      *i_cdev;
+#endif
         unsigned long           i_dnotify_mask;
         struct dnotify_struct   *i_dnotify;
 #endif

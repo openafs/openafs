@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.6 2001/07/14 22:22:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.7 2001/09/11 14:32:56 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <errno.h>
@@ -115,8 +115,8 @@ static afs_int32 get_time (timeP, tt, admin)
 
     if (nextAutoCPWTime == 0) {	/* initialize things */
 	nextAutoCPWTime = time.tv_sec + autoCPWInterval;
-	bcopy (&time, &random_value[0], 8);
-	bcopy (&time, &random_value[2], 8);
+	memcpy(&random_value[0], &time, 8);
+	memcpy(&random_value[2], &time, 8);
     }
 	
     if ((++totalUpdates >= autoCPWUpdates) &&
@@ -137,7 +137,7 @@ static afs_int32 get_time (timeP, tt, admin)
 	if (code) return code;
 	if (to) {			/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
-		bcopy (&random_value[0], &key, sizeof(key));
+		memcpy(&key, &random_value[0], sizeof(key));
 		des_fixup_key_parity (&key);
 		code = set_password (tt, KA_ADMIN_NAME, KA_ADMIN_INST,
 				     &key, 0, 0);
@@ -157,7 +157,7 @@ static afs_int32 get_time (timeP, tt, admin)
 	if (code) return code;
 	if (to) {			/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
-		bcopy (&random_value[2], &key, sizeof(key));
+		memcpy(&key, &random_value[2], sizeof(key));
 		des_fixup_key_parity (&key);
 		code = set_password (tt, KA_TGS_NAME, lrealm, &key, 0, 0);
 		if (code == 0) {
@@ -518,7 +518,7 @@ static int create_user (tt, name, instance, key, caller, flags)
 	if (code = ka_NewKey (tt, to, &tentry, key)) return code;
     }
     else {
-	bcopy(key, &tentry.key, sizeof(tentry.key));
+	memcpy(&tentry.key, key, sizeof(tentry.key));
 	tentry.key_version = htonl(0);
     }
     tentry.user_expiration = htonl(NEVERDATE);
@@ -669,9 +669,9 @@ afs_int32 ChangePassWord (call, aname, ainstance, arequest, oanswer)
     oanswer->SeqLen = answer_len;
     answer = oanswer->SeqBody;
     request.time = htonl (request_time+1);
-    bcopy ((char *)&request.time, answer, sizeof(Date));
+    memcpy(answer, (char *)&request.time, sizeof(Date));
     answer += sizeof(Date);
-    bcopy (KA_CPW_ANS_LABEL, answer, KA_LABELSIZE);
+    memcpy(answer, KA_CPW_ANS_LABEL, KA_LABELSIZE);
 
     des_pcbc_encrypt (oanswer->SeqBody, oanswer->SeqBody, answer_len,
 		      user_schedule, &tentry.key, ENCRYPT);
@@ -720,7 +720,7 @@ impose_reuse_limits ( password, tentry )
   if ((now - ntohl(tentry->change_password_time)) < MinHours*60*60) 
     return KATOOSOON;
 
-  if (!bcmp(password, &(tentry->key), sizeof(EncryptionKey)))
+  if (!memcmp(password, &(tentry->key), sizeof(EncryptionKey)))
       return KAREUSED;
 
   code = ka_KeyCheckSum ((char *)password, &newsum);
@@ -776,7 +776,7 @@ set_password (tt, name, instance, password, kvno, caller)
 	if (code = ka_NewKey (tt, to, &tentry, password)) return(code);
     }
     else {
-	bcopy (password, &tentry.key, sizeof(tentry.key));
+	memcpy(&tentry.key, password, sizeof(tentry.key));
 	if (!kvno) {
 	    kvno = ntohl(tentry.key_version);
 	    if ((kvno < 1) || (kvno >= MAXKAKVNO))
@@ -934,7 +934,7 @@ PrepareTicketAnswer
 
     answer = (struct ka_ticketAnswer *)oanswer->SeqBody;
     answer->challenge = htonl(challenge);
-    bcopy (sessionKey, &answer->sessionKey, sizeof(struct ktc_encryptionKey));
+    memcpy(&answer->sessionKey, sessionKey, sizeof(struct ktc_encryptionKey));
     answer->startTime = htonl(start);
     answer->endTime = htonl(end);
     answer->kvno = server->key_version;
@@ -956,10 +956,10 @@ PrepareTicketAnswer
 	putstr (server->userID.name);
 	putstr (server->userID.instance);
 	if (rem < ticketLen+KA_LABELSIZE) return code;
-	bcopy (ticket, ans, ticketLen);
+	memcpy(ans, ticket, ticketLen);
 	ans += ticketLen;
-	if (label) bcopy (label, ans, KA_LABELSIZE);
-	else bzero (ans, KA_LABELSIZE);
+	if (label) memcpy(ans, label, KA_LABELSIZE);
+	else memset(ans, 0, KA_LABELSIZE);
 	ans += KA_LABELSIZE;
 	oanswer->SeqLen = (ans - oanswer->SeqBody);
     }
@@ -1085,7 +1085,7 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
 	else {				/* return our time if possible */
 	    oanswer->SeqLen = sizeof(afs_int32);
 	    request.time = htonl(now);
-	    bcopy (&request.time, oanswer->SeqBody, sizeof(afs_int32));
+	    memcpy(oanswer->SeqBody, &request.time, sizeof(afs_int32));
 	}
 #endif
 	code = KACLOCKSKEW;
@@ -1098,7 +1098,7 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
     if (to == 0) {code = KANOENT; goto abort; }
 
     tgskvno = ntohl(server.key_version);
-    bcopy (&server.key, &tgskey, sizeof(tgskey));
+    memcpy(&tgskey, &server.key, sizeof(tgskey));
 
     code = des_random_key (&sessionKey);
     if (code) {
@@ -1127,20 +1127,19 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
 	oanswer->SeqLen = answer_len;
 	answer = oanswer->SeqBody;
 	answer_time = htonl(request.time+1);
-	bcopy ((char *)&answer_time, answer, sizeof(Date));
+	memcpy(answer, (char *)&answer_time, sizeof(Date));
 	answer += sizeof(Date);
-	bcopy ((char *)&sessionKey, answer, sizeof(struct ktc_encryptionKey));
+	memcpy(answer, (char *)&sessionKey, sizeof(struct ktc_encryptionKey));
 	answer += sizeof(struct ktc_encryptionKey);
 	temp = htonl(tgskvno);
-	bcopy ((char *)&temp, answer, sizeof(afs_int32));
+	memcpy(answer, (char *)&temp, sizeof(afs_int32));
 	answer += sizeof(afs_int32);
 	temp = htonl(ticketLen);
-	bcopy ((char *)&temp, answer, sizeof(afs_int32));
+	memcpy(answer, (char *)&temp, sizeof(afs_int32));
 	answer += sizeof(afs_int32);
-	bcopy (ticket, answer, ticketLen);
+	memcpy(answer, ticket, ticketLen);
 	answer += ticketLen;
-	bcopy ((tgt ? KA_GETTGT_ANS_LABEL : KA_GETADM_ANS_LABEL), answer,
-	       KA_LABELSIZE);
+	memcpy(answer, (tgt ? KA_GETTGT_ANS_LABEL : KA_GETADM_ANS_LABEL), KA_LABELSIZE);
 	break;
       case 1:
       case 2:
@@ -1154,7 +1153,7 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
 	   temp = pwexpires << 24;    /* move it into the high byte */
 	   pwexpires = htonl(temp);
 
-	   bcopy (&pwexpires, (char * )oanswer->SeqBody + oanswer->SeqLen, sizeof(afs_int32));
+	   memcpy((char * )oanswer->SeqBody + oanswer->SeqLen, &pwexpires, sizeof(afs_int32));
 	   oanswer->SeqLen += sizeof(afs_int32);
 	   oanswer->SeqLen = round_up_to_ebs(oanswer->SeqLen);
 	   if (oanswer->SeqLen > oanswer->MaxSeqLen) {
@@ -1347,7 +1346,7 @@ afs_int32 kamSetFields (call, aname, ainstance, aflags,
 
        if (newvals[REUSEFLAGS]) {
 	  if (newvals[REUSEFLAGS] & KA_REUSEPW) 
-	    bzero(tentry.pwsums, KA_NPWSUMS);
+	    memset(tentry.pwsums, 0, KA_NPWSUMS);
 	  else if ((newvals[REUSEFLAGS] & KA_NOREUSEPW) && !tentry.pwsums[0])
 	     tentry.pwsums[0] = 0xff;
        }
@@ -1527,7 +1526,7 @@ afs_int32 kamGetEntry (call, aname, ainstance, aversion, aentry)
 
     get_time (0,0,0);			/* generate random update */
 
-    bzero (aentry, sizeof(*aentry));
+    memset(aentry, 0, sizeof(*aentry));
     aentry->minor_version = KAMINORVERSION;
     aentry->flags = ntohl(tentry.flags);
     aentry->user_expiration = ntohl(tentry.user_expiration);
@@ -1550,8 +1549,8 @@ afs_int32 kamGetEntry (call, aname, ainstance, aversion, aentry)
     rxkad_GetServerInfo(call->conn, &enc_level, 0, 0, 0, 0, 0);
     if ((noAuthenticationRequired) ||
 	(callerIsAdmin && enc_level == rxkad_crypt))
-	bcopy (&tentry.key, &aentry->key, sizeof(struct ktc_encryptionKey));
-    else bzero (&aentry->key, sizeof(aentry->key));
+	memcpy(&aentry->key, &tentry.key, sizeof(struct ktc_encryptionKey));
+    else memset(&aentry->key, 0, sizeof(aentry->key));
     code = ka_KeyCheckSum ((char *)&tentry.key, &aentry->keyCheckSum);
     if (!tentry.pwsums[0] && npwSums > 1 && !tentry.pwsums[1]) {
 	aentry->reserved3 = 0x12340000;
@@ -1764,8 +1763,7 @@ static afs_int32 GetTicket (version, call, kvno, authDomain, aticket,
 	    sizeof(struct ka_getTicketAnswer) - 5*MAXKTCNAMELEN) goto abort;
 	
 	answer = (struct ka_getTicketAnswer *)oanswer->SeqBody;
-	bcopy (&sessionKey, &answer->sessionKey,
-	       sizeof(struct ktc_encryptionKey));
+	memcpy(&answer->sessionKey, &sessionKey, sizeof(struct ktc_encryptionKey));
 	answer->startTime = htonl(times.start);
 	answer->endTime = htonl(end);
 	answer->kvno = server.key_version;
@@ -1788,7 +1786,7 @@ static afs_int32 GetTicket (version, call, kvno, authDomain, aticket,
 	    putstr (sname);
 	    putstr (sinstance);
 	    if (rem < ticketLen) goto abort;
-	    bcopy (ticket, ans, ticketLen);
+	    memcpy(ans, ticket, ticketLen);
 	    oanswer->SeqLen = (ans - oanswer->SeqBody) + ticketLen;
 	}
 	oanswer->SeqLen = round_up_to_ebs(oanswer->SeqLen);
@@ -1891,7 +1889,7 @@ afs_int32 kamGetStats (call, version, admin_accounts, statics, dynamics)
     }
 
     *admin_accounts = ntohl(cheader.admin_accounts);
-    /* bcopy ((char *)&cheader.stats, (char *)statics, sizeof(kasstats)); */
+    /* memcpy((char *)statics, (char *)&cheader.stats, sizeof(kasstats)); */
     /* these are stored in network byte order and must be copied */
     statics->allocs = ntohl(cheader.stats.allocs);
     statics->frees = ntohl(cheader.stats.frees);
@@ -1900,7 +1898,7 @@ afs_int32 kamGetStats (call, version, admin_accounts, statics, dynamics)
     check that the statistics command copies all the fields
 #endif
 
-    bcopy ((char *)&dynamic_statistics, (char *)dynamics, sizeof(kadstats));
+    memcpy((char *)dynamics, (char *)&dynamic_statistics, sizeof(kadstats));
     statics->minor_version = KAMINORVERSION;
     dynamics->minor_version = KAMINORVERSION;
 
@@ -1921,8 +1919,8 @@ afs_int32 kamGetStats (call, version, admin_accounts, statics, dynamics)
          * ignore this for aix till v3.1... */
 	getrusage(RUSAGE_SELF, &ru);
 #if (KAMAJORVERSION>5)
-	bcopy (&ru.ru_utime, &dynamics->utime, sizeof(struct katimeval));
-	bcopy (&ru.ru_stime, &dynamics->stime, sizeof(struct katimeval));
+	memcpy(&dynamics->utime, &ru.ru_utime, sizeof(struct katimeval));
+	memcpy(&dynamics->stime, &ru.ru_stime, sizeof(struct katimeval));
 	dynamics->dataSize = ru.ru_idrss;
 	dynamics->stackSize = ru.ru_isrss;
 	dynamics->pageFailts = ru.ru_majflt;
@@ -1984,7 +1982,7 @@ afs_int32 kamGetPassword (call, name, password)
 	return code;
     }
 
-    bcopy (&tentry.key, password, sizeof (*password));
+    memcpy(password, &tentry.key, sizeof (*password));
     code = ubik_EndTrans (tt);
 #endif
     return code;
@@ -2038,7 +2036,7 @@ afs_int32 kamDebug (call, version, checkDB, info)
     if (sizeof(struct ka_cpwRequest) % 8) return KAINTERNALERROR;
     if (version != KAMAJORVERSION) return KAOLDINTERFACE;
 
-    bzero (info, sizeof(*info));
+    memset(info, 0, sizeof(*info));
 
     info->minorVersion = KAMINORVERSION;
     info->host = dynamic_statistics.host;

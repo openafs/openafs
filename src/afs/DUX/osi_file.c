@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_file.c,v 1.1.1.5 2001/07/14 22:19:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_file.c,v 1.1.1.6 2001/09/11 14:24:56 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -60,7 +60,7 @@ void *osi_UFSOpen(ainode)
        struct utask_nd utnd = { NULL, NULL };
        struct vattr attr;
 
-       bzero(&nd, sizeof(nd));
+       memset(&nd, 0, sizeof(nd));
        ndp->ni_utnd = &utnd;
        ndp->ni_nameiop = LOOKUP;
        ndp->ni_cred = &afs_osi_cred;

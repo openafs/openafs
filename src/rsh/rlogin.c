@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rlogin.c,v 1.1.1.3 2001/07/14 22:23:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rlogin.c,v 1.1.1.4 2001/09/11 14:34:13 hartmans Exp $");
 
 #if	!defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
 #include <sys/param.h>
@@ -32,7 +32,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rlogin.c,v 1.1.1.3 2001/07/14 22:23
 # define TIOCPKT_WINDOW 0x80
 # endif /* TIOCPKT_WINDOW */
 
-char	*index(), *rindex(), *malloc(), *getenv();
+char	*malloc(), *getenv();
 struct	passwd *getpwuid();
 char	*name;
 int	rem;
@@ -78,7 +78,7 @@ main(argc, argv)
 	setlocale(LC_ALL,"");
 #endif
 
-	host = rindex(argv[0], '/');
+	host = strrchr(argv[0], '/');
 	if (host)
 		host++;
 	else
@@ -372,7 +372,7 @@ sigwinch()
 	struct winsize ws;
 
 	if (dosigwinch && !nosigwin && ioctl(0, TIOCGWINSZ, &ws) == 0 &&
-	    bcmp(&ws, &winsize, sizeof (ws))) {
+	    memcmp(&ws, &winsize, sizeof (ws))) {
 		winsize = ws;
 		sendwindow();
 	}

@@ -25,15 +25,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/strng_to_key.c,v 1.1.1.5 2001/07/14 22:21:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/strng_to_key.c,v 1.1.1.6 2001/09/11 14:32:33 hartmans Exp $");
 
 #include <des.h>
 #include "des_internal.h"
-#if defined(HAVE_STRINGS_H)
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#if defined(HAVE_STRING_H)
-#include <string.h>
 #endif
 
 extern int des_debug;
@@ -67,7 +68,7 @@ des_string_to_key(str,key)
     length = strlen(str);
 
     /* init key array for bits */
-    bzero(k_char,sizeof(k_char));
+    memset(k_char, 0, sizeof(k_char));
 
 #ifdef DEBUG
     if (des_debug)
@@ -116,7 +117,7 @@ des_string_to_key(str,key)
     (void) des_key_sched(key,key_sked);
     (void) des_cbc_cksum((des_cblock *)in_str,key,length,key_sked,key);
     /* erase key_sked */
-    bzero((char *)key_sked,sizeof(key_sked));
+    memset((char *)key_sked, 0, sizeof(key_sked));
 
     /* now fix up key parity again */
     des_fixup_key_parity(key);

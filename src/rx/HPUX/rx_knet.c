@@ -5,7 +5,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/HPUX/rx_knet.c,v 1.1.1.3 2001/07/14 22:23:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/HPUX/rx_knet.c,v 1.1.1.4 2001/09/11 14:34:31 hartmans Exp $");
 
 #include "../h/types.h"
 #include "../h/param.h"
@@ -74,7 +74,7 @@ rxk_init() {
 	    /* force UDP checksumming on for AFS        */
 	    int udpcksum;
 	    udpcksum = 1;
-	    bcopy(tpro, &parent_proto, sizeof(parent_proto));
+	    memcpy(&parent_proto, tpro, sizeof(parent_proto));
 	    tpro->pr_input = rxk_input;
 	    tpro->pr_fasttimo = rxk_fasttimo;
 	    rxk_initDone = 1;
@@ -227,14 +227,14 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     /* Guess based on rxk_NewSocket */
     bp = allocb((size+SO_MSGOFFSET+1), BPRI_MED);
     if (!bp) return ENOBUFS;        
-    bcopy((caddr_t)addr, (caddr_t)bp->b_rptr+SO_MSGOFFSET, size);
+    memcpy((caddr_t)bp->b_rptr+SO_MSGOFFSET, (caddr_t)addr, size);
     bp->b_wptr = bp->b_rptr + (size+SO_MSGOFFSET+1);
 
-    bcopy((caddr_t)dvec, (caddr_t)temp, nvec * sizeof(struct iovec));
+    memcpy((caddr_t)temp, (caddr_t)dvec, nvec * sizeof(struct iovec));
     
     /* devresource.hp.com/Drivers/Docs/Refs/11i/ddRef/Chap02R.pdf has details
        on use of uio */
-    bzero((caddr_t)&uio, sizeof(uio));
+    memset((caddr_t)&uio, 0, sizeof(uio));
     uio.uio_resid   = asize;
     uio.uio_iov     = temp;         
     uio.uio_iovcnt  = nvec;
@@ -258,7 +258,7 @@ int osi_NetReceive(struct socket *so, struct sockaddr_in *from,
     if (iovcnt > RX_MAXWVECS+2) {
         osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
-    bcopy((char*)iov, tmpvec, iovcnt/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
+    memcpy(tmpvec, (char*)iov, iovcnt/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
     tuio.uio_iov     = tmpvec;
     tuio.uio_iovcnt  = iovcnt;
     tuio.uio_fpflags = 0;
@@ -270,7 +270,7 @@ int osi_NetReceive(struct socket *so, struct sockaddr_in *from,
     if (!code) {
         *lengthp = *lengthp - tuio.uio_resid;
         if (bp) {
-            bcopy((char*)bp->b_rptr, (char*)from, sizeof(struct sockaddr_in));
+            memcpy((char*)from, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
         } else {
             code = -1;
         }

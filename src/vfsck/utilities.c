@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/utilities.c,v 1.1.1.3 2001/07/14 22:24:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/utilities.c,v 1.1.1.4 2001/09/11 14:35:32 hartmans Exp $");
 
 #include <sys/param.h>
 #define VICE    /* allow us to put our changes in at will */
@@ -419,7 +419,7 @@ bread(fd, buf, blk, size)
 #endif
 		rwerror("SEEK", blk);
 	errs = 0;
-	bzero(buf, (int)size);
+	memset(buf, 0, (int)size);
 	printf("THE FOLLOWING DISK SECTORS COULD NOT BE READ:");
 #ifdef	AFS_SUN5_ENV
 	for (cp = buf, i = 0; i < btodb(size); i++, cp += DEV_BSIZE) {
@@ -578,7 +578,7 @@ getpathname(namebuf, curdir, ino)
 		strcpy(namebuf, "?");
 		return;
 	}
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	idesc.id_type = DATA;
 	cp = &namebuf[BUFSIZ - 1];
 	*cp = '\0';
@@ -609,7 +609,7 @@ getpathname(namebuf, curdir, ino)
 		cp -= len;
 		if (cp < &namebuf[MAXNAMLEN])
 			break;
-		bcopy(namebuf, cp, len);
+		memcpy(cp, namebuf, len);
 		*--cp = '/';
 		ino = idesc.id_number;
 	}
@@ -617,7 +617,7 @@ getpathname(namebuf, curdir, ino)
 		strcpy(namebuf, "?");
 		return;
 	}
-	bcopy(cp, namebuf, &namebuf[BUFSIZ] - cp);
+	memcpy(namebuf, cp, &namebuf[BUFSIZ] - cp);
 }
 
 void

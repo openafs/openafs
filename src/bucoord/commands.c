@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/commands.c,v 1.1.1.5 2001/07/14 22:20:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/commands.c,v 1.1.1.6 2001/09/11 14:31:33 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -125,7 +125,7 @@ afs_int32 getSPEntries(server, partition, serverlist, ss, ps)
 	 *ss = 0;
 	 return(BC_NOMEM);
       }
-      bzero(*ss, sizeof(struct serversort));
+      memset(*ss, 0, sizeof(struct serversort));
       (*ss)->ipaddr = server;
       (*ss)->next = *serverlist;
       *serverlist = *ss;
@@ -148,7 +148,7 @@ afs_int32 getSPEntries(server, partition, serverlist, ss, ps)
 	 *ss = 0;
 	 return(BC_NOMEM);
       }
-      bzero(*ps, sizeof(struct partitionsort));
+      memset(*ps, 0, sizeof(struct partitionsort));
       (*ps)->part = partition;
       (*ps)->next = (*ss)->partitions;
       (*ss)->partitions = *ps;
@@ -305,7 +305,7 @@ int EvalVolumeSet2(aconfig, avs, avols, uclient)
 		 com_err(whoami, BC_NOMEM, "");
 		 ERROR(BC_NOMEM);
 	      }
-	      bzero(tvd, sizeof(*tvd));
+	      memset(tvd, 0, sizeof(*tvd));
 	      
 	      tvd->name = (char *) malloc(strlen(entries[e].name)+10);
 	      if (!(tvd->name)) {
@@ -428,7 +428,7 @@ int EvalVolumeSet1(aconfig, avs, avols, uclient)
      */
     for (index=0; 1; index=next_index)
     { /*w*/
-	bzero(&entry, sizeof(entry));
+	memset(&entry, 0, sizeof(entry));
 	code = ubik_Call(VL_ListEntry,	/*Routine to invoke*/
 			 uclient,	/*Ubik client structure*/
 			 0,		/*Ubik flags*/
@@ -551,7 +551,7 @@ int EvalVolumeSet1(aconfig, avs, avols, uclient)
 		    com_err(whoami, BC_NOMEM,"");
 		    return(BC_NOMEM);
 		}
-		bzero(tvd, sizeof(*tvd));
+		memset(tvd, 0, sizeof(*tvd));
 
 		tvd->name = (char *) malloc(strlen(entry.name)+10);
 	        if (!(tvd->name)) 
@@ -1044,7 +1044,7 @@ bc_KillCmd(as, arock)
 
 
     tp = as->parms[0].items->data;
-    if (index(tp, '.') == 0) 
+    if (strchr(tp, '.') == 0) 
     {
 	slot = bc_SafeATOI(tp);
 	if (slot == -1) 
@@ -1181,7 +1181,7 @@ bc_VolRestoreCmd(as, arock)
 	    com_err(whoami,BC_NOMEM,"");
 	    return BC_NOMEM;
 	}
-	bzero(tvol, sizeof(struct bc_volumeDump));
+	memset(tvol, 0, sizeof(struct bc_volumeDump));
 
 	tvol->name = (char *) malloc(VOLSER_MAXVOLNAME +1);
 	if (!tvol->name)
@@ -1301,8 +1301,8 @@ char *arock; {
     }
 
     /* create a volume set corresponding to the volume pattern we've been given */
-    bzero(&tvolumeSet, sizeof(tvolumeSet));
-    bzero(&tvolumeEntry, sizeof(tvolumeEntry));
+    memset(&tvolumeSet, 0, sizeof(tvolumeSet));
+    memset(&tvolumeEntry, 0, sizeof(tvolumeEntry));
     tvolumeSet.name = "TempVolumeSet";
     tvolumeSet.ventries = &tvolumeEntry;
     tvolumeEntry.serverName = as->parms[0].items->data;
@@ -1331,7 +1331,7 @@ char *arock; {
 	}
     }
     else	/* use destination host == original host */
-	bcopy(&tvolumeEntry.server, &destServ, sizeof(destServ));
+	memcpy(&destServ, &tvolumeEntry.server, sizeof(destServ));
 
     /* specified other destination partition */
     if (as->parms[9].items) 
@@ -1515,7 +1515,7 @@ bc_VolsetRestoreCmd (as, arock)
 
 	    /* Allocate a volumeDump structure and link it in */
 	    tvol = (struct bc_volumeDump *) malloc(sizeof(struct bc_volumeDump));
-	    bzero(tvol, sizeof(struct bc_volumeDump));
+	    memset(tvol, 0, sizeof(struct bc_volumeDump));
 
 	    tvol->name = (char *) malloc(VOLSER_MAXVOLNAME+1);
 	    if (!tvol->name)
@@ -1524,7 +1524,7 @@ bc_VolsetRestoreCmd (as, arock)
 		return BC_NOMEM;
 	    }
 	    strncpy(tvol->name, volume, VOLSER_OLDMAXVOLNAME);
-	    bcopy(&destServer, &tvol->server, sizeof(destServer));
+	    memcpy(&tvol->server, &destServer, sizeof(destServer));
 	    tvol->partition = destPartition;
 
 	    if (lastVol) lastVol->next = tvol;      /* thread onto end of list */
@@ -1904,7 +1904,7 @@ int bc_DumpCmd(as, arock)
 	       if (parent) problemFindingDump = 1;
 	       parent = dumpEntry.id;
 	       level  = dumpEntry.level+1;
-	       bcopy(&dumpEntry, &fde, sizeof(dumpEntry));
+	       memcpy(&fde, &dumpEntry, sizeof(dumpEntry));
 	    }
 	    else {
 	      /* Dump hierarchy not complete so can't base off the latest */
@@ -2763,7 +2763,7 @@ DBLookupByVolume(volumeName)
 	       tempPtr = (struct dumpedVol *) malloc(sizeof(struct dumpedVol));
 	       if (!tempPtr) ERROR(BC_NOMEM);
 
-	       bzero(tempPtr, sizeof(*tempPtr));
+	       memset(tempPtr, 0, sizeof(*tempPtr));
 	       tempPtr->incTime = volumeEntry[i].clone;
 	       tempPtr->dumpID = volumeEntry[i].dump;
 	       strncpy(tempPtr->tapeName, volumeEntry[i].tape, BU_MAXTAPELEN);
@@ -2925,7 +2925,7 @@ dumpInfo(dumpid, detailFlag)
 	    ERROR(BC_NOMEM);
 	}
 
-	bzero(tapeLinkPtr, sizeof(*tapeLinkPtr));
+	memset(tapeLinkPtr, 0, sizeof(*tapeLinkPtr));
 	code = bcdb_FindTapeSeq(dumpid, tapeNumber, &tapeLinkPtr->tapeEntry);
 	if (code)
 	{
@@ -2987,10 +2987,9 @@ dumpInfo(dumpid, detailFlag)
 		    com_err(whoami,BC_NOMEM,"");
 		    ERROR(BC_NOMEM);
 		}
-		bzero(volumeLinkPtr, sizeof(*volumeLinkPtr));
+		memset(volumeLinkPtr, 0, sizeof(*volumeLinkPtr));
 
-		bcopy(&vl.budb_volumeList_val[i], &volumeLinkPtr->volumeEntry,
-		      sizeof(struct budb_volumeEntry));
+		memcpy(&volumeLinkPtr->volumeEntry, &vl.budb_volumeList_val[i], sizeof(struct budb_volumeEntry));
 
 		/* now insert it onto the right place */
 		while ( (*link != 0) &&

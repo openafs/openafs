@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dsvs.c,v 1.1.1.4 2001/07/14 22:20:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dsvs.c,v 1.1.1.5 2001/09/11 14:31:35 hartmans Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -154,9 +154,9 @@ int bc_ParseHost(aname, asockaddr)
 	asockaddr->sin_family = AF_INET;
 	asockaddr->sin_port   = 0;
 	addr = (b1<<24) | (b2<<16) | (b3<<8) | b4;
-	bcopy(&addr,&tmp1,sizeof(afs_int32));
+	memcpy(&tmp1, &addr, sizeof(afs_int32));
 	tmp2 = htonl(tmp1);
-	bcopy(&tmp2, &asockaddr->sin_addr.s_addr, sizeof(afs_int32));
+	memcpy(&asockaddr->sin_addr.s_addr, &tmp2, sizeof(afs_int32));
 	return(0);
     }
 
@@ -166,7 +166,7 @@ int bc_ParseHost(aname, asockaddr)
      */
 
     if (strcmp(aname, ".*") == 0) {
-	bzero(asockaddr, sizeof(struct sockaddr_in));
+	memset(asockaddr, 0, sizeof(struct sockaddr_in));
 	return 0;
     }
 
@@ -182,10 +182,9 @@ int bc_ParseHost(aname, asockaddr)
      */
     asockaddr->sin_family = AF_INET;
     asockaddr->sin_port   = 0;
-    bcopy(th->h_addr,&tmp1,sizeof(afs_int32));
+    memcpy(&tmp1, th->h_addr, sizeof(afs_int32));
     tmp2 = htonl(tmp1);
-    bcopy(&tmp2,&(asockaddr->sin_addr.s_addr),
-	   sizeof(asockaddr->sin_addr.s_addr));
+    memcpy(&(asockaddr->sin_addr.s_addr), &tmp2, sizeof(asockaddr->sin_addr.s_addr));
     return(0);
 
 } /*bc_ParseHost*/
@@ -203,7 +202,7 @@ bc_CreateVolumeSet(aconfig, avolName, aflags)
     /* move to end of the list */
 
     nset = (struct bc_volumeSet *) malloc(sizeof(struct bc_volumeSet));
-    bzero(nset, sizeof(*nset));
+    memset(nset, 0, sizeof(*nset));
     nset->flags = aflags;
     nset->name  = (char *) malloc(strlen(avolName)+1);
     strcpy(nset->name, avolName);
@@ -314,7 +313,7 @@ bc_AddVolumeItem(aconfig, avolName, ahost, apart, avol)
     /* move to end of the list */
     for(tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
     tentry = (struct bc_volumeEntry *) malloc(sizeof(struct bc_volumeEntry));
-    bzero(tentry, sizeof(*tentry));
+    memset(tentry, 0, sizeof(*tentry));
     tentry->serverName = (char *) malloc(strlen(ahost)+1);
     strcpy(tentry->serverName, ahost);
     tentry->partname = (char *) malloc(strlen(apart)+1);
@@ -381,7 +380,7 @@ afs_int32	expType;
     	return -2;			/* name specification error */
 
     tdump = (struct bc_dumpSchedule *) malloc(sizeof(struct bc_dumpSchedule));
-    bzero(tdump, sizeof(*tdump));
+    memset(tdump, 0, sizeof(*tdump));
 
     /* prepend this node to the dump schedule list */
     tdump->next = aconfig->dsched;
@@ -568,7 +567,7 @@ FindDump(aconfig, nodeString, parentptr, nodeptr)
 
     matchLength = 0;
     curptr = &nodeString[1];				/* past first / */
-    separator = index(curptr, '/');
+    separator = strchr(curptr, '/');
     if ( separator == 0 )
     	matchLength = strlen(curptr) + 1;		/* +1 for leading / */
     else
@@ -613,7 +612,7 @@ FindDump(aconfig, nodeString, parentptr, nodeptr)
 	    return(-3);
 	}
 	
-	separator = index(curptr, '/');
+	separator = strchr(curptr, '/');
 	if ( separator == 0 )
         	matchLength = strlen(&nodeString[0]);
 	else

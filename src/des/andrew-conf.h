@@ -55,7 +55,11 @@
 #ifdef AFS_ALPHA_LINUX20_ENV
 #include "conf-alpha-linux.h"
 #else
+#ifdef AFS_IA64_LINUX20_ENV
+#include "conf-ia64-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif /* AFS_IA64_LINUX20_ENV */
 #endif /* AFS_ALPHA_LINUX20_ENV */
 #endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */

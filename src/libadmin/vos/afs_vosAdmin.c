@@ -10,15 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.1.1.5 2001/07/14 22:22:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.1.1.6 2001/09/11 14:33:21 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include <ctype.h>

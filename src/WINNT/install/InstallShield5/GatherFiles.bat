@@ -15,13 +15,16 @@ copy "Component Definitions\Default.fgl" .
 copy "File Groups\Default.fdf" .
 copy "File Groups\GenFileGroups.bat" .
 
-copy "Media\Transarc AFS\GenDefault.mda.bat" .
+copy "Media\OpenAFS\GenDefault.mda.bat" .
 
 copy "Registry Entries\Default.rge" .
 
 copy "Script Files\setup.rul" .
 
 copy "Setup Files\Uncompressed Files\Language Independent\OS Independent\setup.bmp" .
+
+
+copy "Setup Files\Uncompressed Files\Language Independent\OS Independent\_isuser.dll" .
 
 copy "Shell Objects\Default.shl" .\Default.shell
 

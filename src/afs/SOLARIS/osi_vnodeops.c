@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.1.1.6 2001/07/14 22:19:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.1.1.7 2001/09/11 14:25:09 hartmans Exp $");
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
@@ -265,10 +265,6 @@ struct AFS_UCRED *acred;
     afs_int32       toffset;
 #endif
 
-    if (!pl) return 0;			/* punt asynch requests */
-
-    len = PAGESIZE;
-    pl[0] = NULL;		 	/* Make sure it's empty */
     if (!acred) 
 #ifdef	AFS_SUN5_ENV
 	osi_Panic("GetOnePage: !acred");
@@ -276,8 +272,35 @@ struct AFS_UCRED *acred;
 	acred = u.u_cred;		/* better than nothing */
 #endif
 
-    /* first, obtain the proper lock for the VM system */
     avc = (struct vcache *) vp;	/* cast to afs vnode */
+
+#ifdef	AFS_SUN5_ENV
+    if (avc->credp /*&& AFS_NFSXLATORREQ(acred)*/ && AFS_NFSXLATORREQ(avc->credp)) {
+	acred = avc->credp;
+    }
+#endif
+    if (code = afs_InitReq(&treq, acred)) return code;
+
+    if (!pl) {
+	/*
+	 * This is a read-ahead request, e.g. due to madvise.
+	 */
+	tdc = afs_GetDCache(avc, (afs_int32)off, &treq, &offset, &nlen, 1);
+	if (!tdc) return 0;
+
+	if (!(tdc->flags & DFNextStarted)) {
+	    ObtainReadLock(&avc->lock);
+	    afs_PrefetchChunk(avc, tdc, acred, &treq);
+	    ReleaseReadLock(&avc->lock);
+	}
+	afs_PutDCache(tdc);
+	return 0;
+    }
+
+    len = PAGESIZE;
+    pl[0] = NULL;		 	/* Make sure it's empty */
+
+    /* first, obtain the proper lock for the VM system */
 
     /* if this is a read request, map the page in read-only.  This will
      * allow us to swap out the dcache entry if there are only read-only
@@ -290,12 +313,6 @@ struct AFS_UCRED *acred;
 	mapForRead = 1;
 
     if (protp) *protp = PROT_ALL;
-#ifdef	AFS_SUN5_ENV
-    if (avc->credp /*&& AFS_NFSXLATORREQ(acred)*/ && AFS_NFSXLATORREQ(avc->credp)) {
-	acred = avc->credp;
-    }
-#endif
-    if (code = afs_InitReq(&treq, acred)) return code;
 #ifndef	AFS_SUN5_ENV
     if (AFS_NFSXLATORREQ(acred)) {
 	if (rw == S_READ) {
@@ -323,7 +340,7 @@ retry:
     }
 
     afs_BozonLock(&avc->pvnLock, avc);
-    ObtainSharedLock(&avc->lock,566);
+    ObtainReadLock(&avc->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEIN, ICL_TYPE_POINTER, (afs_int32) vp,
 	       ICL_TYPE_LONG, (afs_int32) off, ICL_TYPE_LONG, (afs_int32) len,
@@ -337,7 +354,7 @@ retry:
      * the locks and try again when the VM purge is done. */
     ObtainWriteLock(&avc->vlock, 550);
     if (avc->activeV) {
-	ReleaseSharedLock(&avc->lock); 
+	ReleaseReadLock(&avc->lock); 
 	ReleaseWriteLock(&avc->vlock); 
 	afs_BozonUnlock(&avc->pvnLock, avc);
     	afs_PutDCache(tdc);
@@ -359,7 +376,7 @@ retry:
     /* Check to see whether the cache entry is still valid */
     if (!(avc->states & CStatd)
 	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
-	ReleaseSharedLock(&avc->lock); 
+	ReleaseReadLock(&avc->lock); 
 	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
 	goto retry;
@@ -438,19 +455,17 @@ retry:
 	    buf->b_blkno = btodb(toffset);
 	    bp_mapin(buf);		/* map it in to our address space */
 #ifndef	AFS_SUN5_ENV    
-	    ReleaseSharedLock(&avc->lock);
+	    ReleaseReadLock(&avc->lock);
 #endif
 #if	defined(AFS_SUN5_ENV)
 	    AFS_GLOCK();
-	    UpgradeSToWLock(&avc->lock, 564);
 	    code = afs_ustrategy(buf, acred);	/* do the I/O */
-            ConvertWToSLock(&avc->lock);
 	    AFS_GUNLOCK();
 #else
 	    code = afs_ustrategy(buf);	/* do the I/O */
 #endif
 #ifndef	AFS_SUN5_ENV    
-	    ObtainSharedLock(&avc->lock,245);
+	    ObtainReadLock(&avc->lock);
 #endif
 #ifdef	AFS_SUN5_ENV
 	    /* Before freeing unmap the buffer */
@@ -495,8 +510,13 @@ retry:
 
     AFS_GLOCK();
     pl[slot] = (struct page *) 0;
+    /*
+     * XXX This seems kind-of wrong: we shouldn't be modifying
+     *     avc->states while not holding the write lock (even
+     *     though nothing really uses CHasPages..)
+     */
     avc->states |= CHasPages;
-    ReleaseSharedLock(&avc->lock);
+    ReleaseReadLock(&avc->lock);
 #ifdef	AFS_SUN5_ENV
     ObtainWriteLock(&afs_xdcache,246);
     if (!mapForRead) {
@@ -526,7 +546,7 @@ retry:
     for(i=0; i<slot; i++)
 	PAGE_RELE(pl[i]);
 #endif
-    ReleaseSharedLock(&avc->lock);
+    ReleaseReadLock(&avc->lock);
     afs_BozonUnlock(&avc->pvnLock, avc);
 #ifdef	AFS_SUN5_ENV
     afs_PutDCache(tdc);

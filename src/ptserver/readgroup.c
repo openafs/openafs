@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readgroup.c,v 1.1.1.4 2001/07/14 22:23:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readgroup.c,v 1.1.1.5 2001/09/11 14:34:09 hartmans Exp $");
 
 #include <stdio.h>
 #ifndef AFS_NT40_ENV
@@ -107,14 +107,14 @@ char **argv;
 	if (buf[0] == '\n') break;
 	if (buf[0] != ' ' && buf[0] != '\t') {
 	    /* grab the group name */
-	    bzero(gname,PR_MAXNAMELEN);
-	    bzero(owner,PR_MAXNAMELEN);
+	    memset(gname, 0, PR_MAXNAMELEN);
+	    memset(owner, 0, PR_MAXNAMELEN);
 	    sscanf(buf,"%s %d",gname,&id);
 	    tmp = buf;
 	    skip(&tmp);
 	    skip(&tmp);
 	    stolower(gname);
-	    ptr = index(gname,':');
+	    ptr = strchr(gname, ':');
 	    strncpy(owner,gname,ptr-gname);
 	    if (strcmp(owner,"system") == 0)
 		strncpy(owner,"system:administrators",PR_MAXNAMELEN);
@@ -133,9 +133,9 @@ char **argv;
 	    }
 	    if (!fail) {
 		/* read members out of buf and add to the group */
-		bzero(name,PR_MAXNAMELEN);
+		memset(name, 0, PR_MAXNAMELEN);
 		while (sscanf(tmp,"%s",name) != EOF) {
-		    if (index(name,':') == NULL) {
+		    if (strchr(name,':') == NULL) {
 			/* then it's not a group */
 			code = pr_AddToGroup(name,gname);
 			report_error (code, name, gname);
@@ -155,7 +155,7 @@ char **argv;
 			}
 			if (lnames.namelist_val) free(lnames.namelist_val);
 		    }
-		    bzero(name,PR_MAXNAMELEN);
+		    memset(name, 0, PR_MAXNAMELEN);
 		    skip(&tmp);
 		}
 	    }
@@ -164,11 +164,11 @@ char **argv;
 	    /* if we couldn't create the group, and it wasn't already there, don't try to add more users */
 	    if (fail) continue;
 	    /* read members out of buf and add to the group */
-	    bzero(name,PR_MAXNAMELEN);
+	    memset(name, 0, PR_MAXNAMELEN);
 	    tmp = buf;
 	    tmp++;
 	    while (sscanf(tmp,"%s",name) != EOF) {
-		if (index(name,':') == NULL) {
+		if (strchr(name,':') == NULL) {
 		    /* then it's not a group */
 		    code = pr_AddToGroup(name,gname);
 		    report_error (code, name, gname);
@@ -188,7 +188,7 @@ char **argv;
 		    }
 		    if (lnames.namelist_val) free(lnames.namelist_val);
 		}
-		bzero(name,PR_MAXNAMELEN);
+		memset(name, 0, PR_MAXNAMELEN);
 		skip(&tmp);
 	    }
 	}

@@ -35,14 +35,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.4 2001/07/14 22:23:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.5 2001/09/11 14:34:40 hartmans Exp $");
 
 #include <stdio.h>
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #include "rpc_parse.h"
@@ -231,7 +231,7 @@ write_program(def, storage)
 		f_print(fout, "\t\treturn;\n");
 		f_print(fout, "\t}\n");
 
-		f_print(fout, "\tbzero(&%s, sizeof(%s));\n", ARG, ARG);
+		f_print(fout, "\tmemset(&%s, 0, sizeof(%s));\n", ARG, ARG);
 		printif("getargs", TRANSP, "&", ARG);
 		printerr("decode", TRANSP);
 		f_print(fout, "\t\treturn;\n");

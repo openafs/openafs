@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fs_conv_411.c,v 1.1.1.4 2001/07/14 22:24:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fs_conv_411.c,v 1.1.1.5 2001/09/11 14:35:41 hartmans Exp $");
 
 #if	defined(AFS_DUX40_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_SUN54_ENV)
 #if defined AFS_DUX40_ENV
@@ -930,14 +930,13 @@ char *vol_DevName(adev)
     return (char *) 0;	/* failed */
 }
   
-extern char *rindex();
 char *unrawname(name)
 	char *name;
 {
 	char *dp;
 	struct stat stb;
 
-	if ((dp = rindex(name, '/')) == 0)
+	if ((dp = strrchr(name, '/')) == 0)
 		return (name);
 	if (stat(name, &stb) < 0)
 		return (name);
@@ -956,7 +955,7 @@ rawname(name)
 	static char rawbuf[32];
 	char *dp;
 
-	if ((dp = rindex(name, '/')) == 0)
+	if ((dp = strrchr(name, '/')) == 0)
 		return (0);
 	*dp = 0;
 	(void)strcpy(rawbuf, name);

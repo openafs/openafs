@@ -87,7 +87,9 @@ char *mktemp(char *template);
 #include <sys/time.h>     
 #define NEED_STRERROR
 typedef int rlim_t;
-#define memmove(a,b,c) bcopy(b,a,c)
+#ifndef HAVE_MEMMOVE
+#define memmove(a,b,c) memcpy(a, b, c)
+#endif
 #define NO_LINGCLOSE
 #define USE_FLOCK_SERIALIZED_ACCEPT
 
@@ -96,7 +98,6 @@ typedef int rlim_t;
 #define NO_KILLPG
 #undef NO_SETSID
 #define HAVE_SYS_RESOURCE_H
-#define bzero(a,b) memset(a,0,b)
 #define JMP_BUF sigjmp_buf
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #define HAVE_MMAP
@@ -299,7 +300,7 @@ extern int strncasecmp(const char *,const char *,unsigned);
 /* These are to let -Wall compile more cleanly */
 extern int strcasecmp(const char *, const char *);
 extern int strncasecmp(const char *,const char *,unsigned);
-extern int set42sig(), getopt(), getpeername(), bzero();
+extern int set42sig(), getopt(), getpeername();
 extern int listen(), bind(), socket(), getsockname();
 extern int accept(), gethostname(), connect(), lstat();
 extern int select(), killpg(), shutdown();
@@ -335,7 +336,6 @@ extern char *crypt();
 #undef NEED_STRDUP
 #define NEED_STRCASECMP
 #define NEED_STRNCASECMP
-#define bzero(a,b) memset(a,0,b)
 #define JMP_BUF sigjmp_buf
 /* A lot of SVR4 systems need this */
 #define USE_FCNTL_SERIALIZED_ACCEPT
@@ -347,7 +347,6 @@ extern char *crypt();
 #undef NEED_STRDUP
 #define NEED_STRCASECMP
 #define NEED_STRNCASECMP
-#define bzero(a,b) memset(a,0,b)
 #define JMP_BUF sigjmp_buf
 #define HAVE_RESOURCE
 #define HAVE_MMAP
@@ -364,7 +363,6 @@ extern char *crypt();
 #undef NEED_STRDUP
 #define NEED_STRCASECMP
 #define NEED_STRNCASECMP
-#define bzero(a,b) memset(a,0,b)
 #define JMP_BUF sigjmp_buf
 /* A lot of SVR4 systems need this */
 #define USE_FCNTL_SERIALIZED_ACCEPT
@@ -447,7 +445,6 @@ int initgroups (char *, int);
 #define NO_KILLPG
 #undef NO_SETSID
 #define HAVE_RESOURCE 1
-#define bzero(a,b) memset(a,0,b)
 #define JMP_BUF sigjmp_buf
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #define HAVE_MMAP

@@ -57,7 +57,7 @@ ftpd_popen(program, type)
 		if (!(pids =
 		    (uid_t *)malloc((u_int)(fds * sizeof(uid_t)))))
 			return(NULL);
-		bzero(pids, fds * sizeof(uid_t));
+		memset(pids, 0, fds * sizeof(uid_t));
 	}
 	if (pipe(pdes) < 0)
 		return(NULL);
@@ -137,7 +137,7 @@ ftpd_pclose(iop)
 	if (pids[fdes = fileno(iop)] == 0)
 		return(-1);
 	(void)fclose(iop);
-	bzero((char *)someSignals, sizeof(someSignals));
+	memset((char *)someSignals, 0, sizeof(someSignals));
 	someSignals[0] = (1<<(SIGINT-1)) + (1<<(SIGQUIT-1)) + (1<<(SIGHUP-1));
 	sigBlock = *((sigset_t *) someSignals);
 	sigprocmask(SIG_BLOCK, &sigBlock, &oset);

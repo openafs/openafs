@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/IRIX/rx_knet.c,v 1.1.1.4 2001/07/14 22:23:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/IRIX/rx_knet.c,v 1.1.1.5 2001/09/11 14:34:31 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 #include "../h/tcp-param.h"
@@ -68,7 +68,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
     if (iovcnt > RX_MAXWVECS+2) {
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
     }
-    bcopy((char*)iov, tmpvec, (RX_MAXWVECS+1) * sizeof(struct iovec));
+    memcpy(tmpvec, (char*)iov, (RX_MAXWVECS+1) * sizeof(struct iovec));
 #ifdef AFS_SGI65_ENV
     code = soreceive(&bhv, &maddr, &tuio, NULL, NULL);
 #else
@@ -103,7 +103,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
     else {
 	*lengthp = *lengthp - tuio.uio_resid;
 	if (maddr) {
-	    bcopy((char*)mtod(maddr, struct sockaddr_in *), (char*)from,
+	    memcpy((char*)from, (char*)mtod(maddr, struct sockaddr_in *),
 		  sizeof(struct sockaddr_in));
 	    m_freem(maddr);
 	}
@@ -262,7 +262,7 @@ void rxk_init(void) {
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++) {
 	if (tpro->pr_protocol == IPPROTO_UDP) {
-	    bcopy(tpro, &parent_proto, sizeof(parent_proto));
+	    memcpy(&parent_proto, tpro, sizeof(parent_proto));
 	    tpro->pr_input = rxk_input;
 	    tpro->pr_fasttimo = rxk_fasttimo;
 	    rxk_initDone = 1;
@@ -424,7 +424,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     if (nvec > RX_MAXWVECS+1) {
 	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvec);
     }
-    bcopy((char*)dvec, (char*)tvecs, nvec * sizeof(struct iovec));
+    memcpy((char*)tvecs, (char*)dvec, nvec * sizeof(struct iovec));
 
     tuio.uio_iov = tvecs;
     tuio.uio_iovcnt = nvec;
@@ -441,7 +441,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 
     to = m_get(M_WAIT, MT_SONAME);
     to->m_len = sizeof(struct sockaddr_in);
-    bcopy((char*)addr, mtod(to, caddr_t), to->m_len);
+    memcpy(mtod(to, caddr_t), (char*)addr, to->m_len);
 
     BHV_PDATA(&bhv) = (void*)asocket;
     code = sosend(&bhv, to, &tuio, 0, NULL);
@@ -522,7 +522,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 	tpa = mtod(m, caddr_t);
 	while (len) {
 	  rlen = MIN(len, tl);
-	  bcopy(tdata, tpa, rlen);
+	  memcpy(tpa, tdata, rlen);
 	  asize -= rlen;
 	  len -= rlen;
 	  tpa += rlen;
@@ -559,7 +559,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 	AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
 	return 1;
     }
-    bcopy(addr, mtod(um, caddr_t), sizeof(*addr));
+    memcpy(mtod(um, caddr_t), addr, sizeof(*addr));
     um->m_len = sizeof(*addr);
     /* note that udp_usrreq frees funny mbuf.  We hold onto data, but mbuf
      * around it is gone.  we free address ourselves.  */

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.6 2001/07/14 22:22:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.7 2001/09/11 14:33:02 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -414,7 +414,7 @@ WorkerBee (as, arock)
 
     nentries = (info.st_size-(UBIK_HEADERSIZE + header.headerSize)) / sizeof(struct kaentry);
     entrys = (int *)malloc(nentries * sizeof(int));
-    bzero(entrys, nentries * sizeof(int));
+    memset(entrys, 0, nentries * sizeof(int));
 
     for (i=0, index=sizeof(header); i<nentries; i++, index+=sizeof(struct kaentry)) {
 	readDB (index, &entry, sizeof(entry));

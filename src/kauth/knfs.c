@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/knfs.c,v 1.1.1.4 2001/07/14 22:22:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/knfs.c,v 1.1.1.5 2001/09/11 14:33:00 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -26,6 +26,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/knfs.c,v 1.1.1.4 2001/07/14 22:22
 #include <netdb.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
@@ -73,7 +80,7 @@ char *sysname;
     pheader[5] = 1;			/* NFS protocol exporter # */
 	
     /* copy stuff in */
-    bcopy(pheader, space, sizeof(pheader));
+    memcpy(space, pheader, sizeof(pheader));
     tp = space + sizeof(pheader);
 
     /* finally setup the pioctl call's parameters */
@@ -81,7 +88,7 @@ char *sysname;
     blob.in = space;
     blob.out_size = 0;
     blob.out = (char *) 0;
-    bcopy(&setp, tp, sizeof(afs_int32));
+    memcpy(tp, &setp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
     strcpy(tp, sysname);
     blob.in_size += sizeof(afs_int32) + strlen(sysname) + 1;
@@ -141,9 +148,9 @@ static GetTokens(ahost, auid)
 	if (strcmp(clientName.name, "afs") != 0) continue;	/* wrong ticket service */
 
 	/* copy stuff in */
-	bcopy(pheader, tbuffer, sizeof(pheader));
+	memcpy(tbuffer, pheader, sizeof(pheader));
 	tp = tbuffer + sizeof(pheader);
-	bcopy(&index, tp, sizeof(afs_int32));
+	memcpy(tp, &index, sizeof(afs_int32));
 	tp += sizeof(afs_int32);
 	iob.in = tbuffer;
 	iob.in_size = sizeof(afs_int32) + sizeof(pheader);
@@ -154,15 +161,15 @@ static GetTokens(ahost, auid)
 	else if (code == 0) {
 	    /* check to see if this is the right cell/realm */
 	    tp = tbuffer;
-	    bcopy(tp, &temp, sizeof(afs_int32)); /* get size of secret token */
+	    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of secret token */
 	    tktLen = temp;  /* remember size of ticket */
 	    tp += sizeof(afs_int32);
 	    stp	= tp;	    /* remember where ticket is, for later */
 	    tp += temp;	/* skip ticket for now */
-	    bcopy(tp, &temp, sizeof(afs_int32)); /* get size of clear token */
+	    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of clear token */
 	    if (temp != sizeof(struct ClearToken)) return KTC_ERROR;
 	    tp += sizeof(afs_int32);	    /* skip length */
-	    bcopy(tp, &ct, temp);   /* copy token for later use */
+	    memcpy(&ct, tp, temp);   /* copy token for later use */
 	    tp += temp;		    /* skip clear token itself */
 	    tp += sizeof(afs_int32);	    /* skip primary flag */
 	    /* tp now points to the cell name */
@@ -171,12 +178,12 @@ static GetTokens(ahost, auid)
 		gotit = 1;
 		maxLen = sizeof(token) - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
 		if (maxLen < tktLen) return KTC_TOOBIG;
-		bcopy(stp, token.ticket, tktLen);
+		memcpy(token.ticket, stp, tktLen);
 		token.startTime = ct.BeginTimestamp;
 		token.endTime = ct.EndTimestamp;
 		if (ct.AuthHandle == -1) ct.AuthHandle = 999;
 		token.kvno = ct.AuthHandle;
-		bcopy(ct.HandShakeKey, &token.sessionKey, sizeof(struct ktc_encryptionKey));
+		memcpy(&token.sessionKey, ct.HandShakeKey, sizeof(struct ktc_encryptionKey));
 		token.ticketLen = tktLen;
 		if ((token.kvno == 999) || /* old style bcrypt ticket */
 		    (ct.BeginTimestamp &&    /* new w/ prserver lookup */
@@ -242,7 +249,7 @@ afs_int32 auid; {
     pheader[5] = 1;		/* NFS protocol exporter # */
 	
     /* copy stuff in */
-    bcopy(pheader, space, sizeof(pheader));
+    memcpy(space, pheader, sizeof(pheader));
 
     /* finally setup the pioctl call's parameters */
     blob.in_size = sizeof(pheader);
@@ -293,30 +300,30 @@ afs_int32 auid; {
 	pheader[5] = 1;		/* NFS protocol exporter # */
 	
 	/* copy in the header */
-	bcopy(pheader, space, sizeof(pheader));
+	memcpy(space, pheader, sizeof(pheader));
 	tp = space + sizeof(pheader);
 	/* copy in the size of the encrypted part */
-	bcopy(&theTicket.ticketLen, tp, sizeof(afs_int32));
+	memcpy(tp, &theTicket.ticketLen, sizeof(afs_int32));
 	tp += sizeof(afs_int32);
 	/* copy in the ticket itself */
-	bcopy(theTicket.ticket, tp, theTicket.ticketLen);
+	memcpy(tp, theTicket.ticket, theTicket.ticketLen);
 	tp += theTicket.ticketLen;
 	/* copy in "clear token"'s size */
 	temp = sizeof(struct ClearToken);
-	bcopy(&temp, tp, sizeof(afs_int32));
+	memcpy(tp, &temp, sizeof(afs_int32));
 	tp += sizeof(afs_int32);
 	/* create the clear token and copy *it* in */
 	ct.AuthHandle = theTicket.kvno;	/* where we hide the key version # */
-	bcopy(&theTicket.sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
+	memcpy(ct.HandShakeKey, &theTicket.sessionKey, sizeof(ct.HandShakeKey));
 
 	ct.ViceId = auid;
 	ct.BeginTimestamp = theTicket.startTime;
 	ct.EndTimestamp = theTicket.endTime;
-	bcopy(&ct, tp, sizeof(ct));
+	memcpy(tp, &ct, sizeof(ct));
 	tp += sizeof(ct);
 	/* copy in obsolete primary flag */
 	temp = 0;
-	bcopy(&temp, tp, sizeof(afs_int32));
+	memcpy(tp, &temp, sizeof(afs_int32));
 	tp += sizeof(afs_int32);
 	/* copy in cell name, null terminated */
 	strcpy(tp, server.cell);
@@ -350,7 +357,7 @@ afs_int32 arock; {
 	printf("knfs: unknown host '%s'.\n", tp);
 	return -1;
     }
-    bcopy(the->h_addr, &addr, sizeof(afs_int32));
+    memcpy(&addr, the->h_addr, sizeof(afs_int32));
     uid = -1;
     if (as->parms[1].items) {
 	code = util_GetInt32(tp = as->parms[1].items->data, &uid);

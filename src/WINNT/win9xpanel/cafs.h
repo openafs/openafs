@@ -13,13 +13,14 @@
 #define DOSTITLEFINISH "Finished - AFS Client Console"
 #define APPTITLE "AFS"
 #define APPTITLEFINISH "Finished - AFSD"
-#ifdef _DEBUG 
-#define CMDLINE "AFSD.PIF -startup"
-//#define CMDLINE ".//debug//AFSD.EXE -startup"
-#else
+#ifdef DEV_IDE
+#ifdef _DEBUG
 #define CMDLINE "AFSD.EXE -startup"
-//#define CMDLINE "AFSD.PIF -startup"
-//#define CMDLINE "AFSD.EXE"
+#else
+#define CMDLINE ".//release//AFSD.EXE -startup"
+#endif
+#else
+#define CMDLINE "AFSD.PIF -startup"
 #endif
 
 #ifndef __CAFS__

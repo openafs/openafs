@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vos.c,v 1.1.1.5 2001/07/14 22:25:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vos.c,v 1.1.1.6 2001/09/11 14:35:57 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -101,7 +101,7 @@ static struct tqHead busyHead, notokHead;
 static void qInit(ahead)
 struct tqHead *ahead;
 {
-    bzero((char *)ahead, sizeof(struct tqHead));
+    memset((char *)ahead, 0, sizeof(struct tqHead));
     return;
 }
 
@@ -216,7 +216,7 @@ char *aname; {
     } else {
         th = gethostbyname(aname);
 	if (!th) return 0;
-	bcopy(th->h_addr, &addr, sizeof(addr));
+	memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
     if (addr == htonl(0x7f000001)) {                /* local host */
@@ -224,7 +224,7 @@ char *aname; {
        if (code) return 0;
        th = gethostbyname(hostname); /* returns host byte order */
        if (!th) return 0;
-       bcopy(th->h_addr, &addr, sizeof(addr));
+       memcpy(&addr, th->h_addr, sizeof(addr));
     }
 
     return (addr); 
@@ -764,6 +764,97 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 	} /*Default listing*/
 } /*XDisplayFormat*/
 
+#ifdef FULL_LISTVOL_SWITCH
+static void  DisplayFormat2(server, partition, pntr)
+    long    server, partition;
+    volintInfo *pntr;
+{
+  static long server_cache = -1, partition_cache = -1;
+  static char hostname[256],
+  address[32],
+  pname[16];
+
+  if (server != server_cache) {
+    struct in_addr s;
+    
+    s.s_addr = server;
+    strcpy(hostname, hostutil_GetNameByINet(server));
+    strcpy(address, inet_ntoa(s));
+    server_cache = server;
+  }
+  if (partition != partition_cache) {
+    MapPartIdIntoName(partition, pname);
+    partition_cache = partition;
+  }
+  fprintf(STDOUT, "name\t\t%s\n", pntr->name);
+  fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
+  fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
+  fprintf(STDOUT, "part\t\t%s\n", pname);
+  switch (pntr->status) {
+  case VOK:
+    fprintf(STDOUT, "status\t\tOK\n");
+    break;
+  case VBUSY:
+    fprintf(STDOUT, "status\t\tBUSY\n");
+    return;
+  default:
+    fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
+    return;
+  }
+  fprintf(STDOUT, "backupID\t%lu\n", pntr->backupID);
+  fprintf(STDOUT, "parentID\t%lu\n", pntr->parentID);
+  fprintf(STDOUT, "cloneID\t\t%lu\n", pntr->cloneID);
+  fprintf(STDOUT, "inUse\t\t%s\n", pntr->inUse ? "Y" : "N");
+  fprintf(STDOUT, "needsSalvaged\t%s\n", pntr->needsSalvaged ? "Y" : "N");
+  /* 0xD3 is from afs/volume.h since I had trouble including the file */
+  fprintf(STDOUT, "destroyMe\t%s\n", pntr->destroyMe == 0xD3 ? "Y" : "N");
+  switch (pntr->type) {
+  case 0:
+    fprintf(STDOUT, "type\t\tRW\n");
+    break;
+  case 1:
+    fprintf(STDOUT, "type\t\tRO\n");
+    break;
+  case 2:
+    fprintf(STDOUT, "type\t\tBK\n");
+    break;
+  default:
+    fprintf(STDOUT, "type\t\t?\n");
+    break;
+  }
+  fprintf(STDOUT, "creationDate\t%-9lu\t%s", pntr->creationDate, ctime(&pntr->creationDate));
+  fprintf(STDOUT, "accessDate\t%-9lu\t%s", pntr->accessDate, ctime(&pntr->accessDate));
+  fprintf(STDOUT, "updateDate\t%-9lu\t%s", pntr->updateDate, ctime(&pntr->updateDate));
+  fprintf(STDOUT, "backupDate\t%-9lu\t%s", pntr->backupDate, ctime(&pntr->backupDate));
+  fprintf(STDOUT, "copyDate\t%-9lu\t%s", pntr->copyDate, ctime(&pntr->copyDate));
+  fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", pntr->flags);
+  fprintf(STDOUT, "diskused\t%u\n", pntr->size);
+  fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
+  fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", pntr->spare0);
+  fprintf(STDOUT, "filecount\t%u\n", pntr->filecount);
+  fprintf(STDOUT, "dayUse\t\t%u\n", pntr->dayUse);
+  fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n", pntr->spare1);
+  fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", pntr->spare2);
+  fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", pntr->spare3);
+  return;
+}
+
+static void DisplayVolumes2(server, partition, pntr, count)
+    volintInfo *pntr;
+    long    server, partition, count;
+{
+  long    i;
+  
+  for (i = 0; i < count; i++) {
+    fprintf(STDOUT, "BEGIN_OF_ENTRY\n");
+    DisplayFormat2(server, partition, pntr);
+    fprintf(STDOUT, "END_OF_ENTRY\n\n");
+    pntr++;
+  }
+  return;
+}
+#endif /* FULL_LISTVOL_SWITCH */
+
 static void DisplayVolumes(server,part,pntr,count,longlist,fast,quiet)
 afs_int32 server,part;
 volintInfo *pntr;
@@ -1155,6 +1246,12 @@ register struct cmd_syndesc *as;
 	  if (wantExtendedInfo)
 	     XVolumeStats(xInfoP, &entry, aserver, apart, voltype);
 	  else
+#ifdef FULL_LISTVOL_SWITCH
+            if (as->parms[2].items) {
+              DisplayFormat2(aserver, apart, pntr);
+              EnumerateEntry(&entry);
+            } else
+#endif /* FULL_LISTVOL_SWITCH */
 	     VolumeStats(pntr, &entry, aserver, apart, voltype);
 
 	  if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
@@ -2096,7 +2193,7 @@ register struct cmd_syndesc *as;
     fprintf(STDOUT,"The partitions on the server are:\n");
     for(i = 0 ; i < cnt ; i++){
 	if(dummyPartList.partFlags[i] & PARTVALID){
-	    bzero(pname,sizeof(pname));
+	    memset(pname, 0, sizeof(pname));
 	    MapPartIdIntoName(dummyPartList.partId[i],pname);
 	    fprintf(STDOUT," %10s ",pname);
 	    total++;
@@ -2355,6 +2452,12 @@ register struct cmd_syndesc *as;
 		xInfoP = (volintXInfo *)0;
 	    }
 	    else {
+#ifdef FULL_LISTVOL_SWITCH
+              if (as->parms[6].items)
+                DisplayVolumes2(aserver, dummyPartList.partId[i], oldpntr, 
+                                count);
+              else
+#endif /* FULL_LISTVOL_SWITCH */
 		DisplayVolumes(aserver,
 			       dummyPartList.partId[i],
 			       oldpntr,
@@ -2377,7 +2480,7 @@ static SyncVldb(as)
   afs_int32 pname, code;	/* part name */
   char part[10];
   int flags = 0;
-  char *volname;
+  char *volname = 0;
 
   tserver = 0;
   if (as->parms[0].items) {
@@ -2811,7 +2914,7 @@ register struct cmd_syndesc *as;
     }
 
     /* Zero out search attributes */
-    bzero(&attributes,sizeof(struct VldbListByAttributes));
+    memset(&attributes, 0, sizeof(struct VldbListByAttributes));
 
     if (as->parms[1].items) { /* -prefix */
        strncpy(prefix, as->parms[1].items->data, VOLSER_MAXVOLNAME);
@@ -2865,7 +2968,7 @@ register struct cmd_syndesc *as;
     fflush(STDOUT);
 
     /* Get all the VLDB entries on a server and/or partition */
-    bzero(&arrayEntries, sizeof(arrayEntries));
+    memset(&arrayEntries, 0, sizeof(arrayEntries));
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
        fprintf(STDERR,"Could not access the VLDB for attributes\n");
@@ -3041,7 +3144,7 @@ static ListVLDB(as)
     }
 
     for (thisindex = 0; (thisindex != -1); thisindex = nextindex) {
-       bzero(&arrayEntries, sizeof(arrayEntries));
+       memset(&arrayEntries, 0, sizeof(arrayEntries));
        centries = 0;
        nextindex = -1;
 
@@ -3091,8 +3194,7 @@ static ListVLDB(as)
 	     tarray = ttarray;
 	     
 	     /* Copy them in */
-	     bcopy((char *)arrayEntries.nbulkentries_val,
-		   ((char *)tarray)+tarraysize, parraysize);
+	     memcpy(((char *)tarray)+tarraysize, (char *)arrayEntries.nbulkentries_val, parraysize);
 	     tarraysize += parraysize;
 	  }
        }
@@ -3144,7 +3246,7 @@ static BackSys(as)
     char *ccode;
     int match;
 
-    bzero(&attributes,sizeof(struct VldbListByAttributes));
+    memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
 
     seenprefix  = (as->parms[0].items ? 1 : 0);
@@ -3198,7 +3300,7 @@ static BackSys(as)
        }
     }
 
-    bzero(&arrayEntries, sizeof(arrayEntries)); /* initialize to hint the stub to alloc space */
+    memset(&arrayEntries, 0, sizeof(arrayEntries)); /* initialize to hint the stub to alloc space */
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if (vcode) {
 	fprintf(STDERR,"Could not access the VLDB for attributes\n");
@@ -3407,7 +3509,7 @@ register struct cmd_syndesc *as;
     }
     attributes.flag = VLOP_ALLOPERS;
     attributes.Mask |=  VLLIST_FLAG;
-    bzero(&arrayEntries, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
+    memset(&arrayEntries, 0, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
     vcode = VLDB_ListAttributes(&attributes, &nentries, &arrayEntries);
     if(vcode) {
 	fprintf(STDERR,"Could not access the VLDB for attributes\n");
@@ -3825,6 +3927,10 @@ char **argv; {
     cmd_AddParm(ts, "-quiet", CMD_FLAG, CMD_OPTIONAL, "generate minimal information");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
+#ifdef FULL_LISTVOL_SWITCH
+    cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL, 
+              "machine readable format");
+#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("syncvldb", SyncVldb, 0, "synchronize VLDB with server");
@@ -3842,6 +3948,10 @@ char **argv; {
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
+#ifdef FULL_LISTVOL_SWITCH
+    cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL, 
+              "machine readable format");
+#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
     cmd_CreateAlias (ts, "volinfo");
 

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_user.c,v 1.1.1.6 2001/07/14 22:19:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_user.c,v 1.1.1.7 2001/09/11 14:24:47 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -479,7 +479,7 @@ struct unixuser *afs_GetUser(auid, acell, locktype)
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
-    bzero((char *)tu, sizeof(struct unixuser));
+    memset((char *)tu, 0, sizeof(struct unixuser));
     tu->next = afs_users[i];
     afs_users[i] = tu;
     if (RmtUser) {

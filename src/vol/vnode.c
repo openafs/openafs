@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vnode.c,v 1.1.1.4 2001/07/14 22:25:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vnode.c,v 1.1.1.5 2001/09/11 14:35:47 hartmans Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -382,7 +382,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
 	  } else {
 	      /* growing file - grow in a reasonable increment */
 	      char *buf = (char *)malloc(16*1024);
-	      bzero(buf, 16*1024);
+	      memset(buf, 0, 16*1024);
 	      FDH_WRITE(fdP, buf, 16*1024);
 	      free(buf);
 	  }
@@ -398,7 +398,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
 #else /* AFS_PTHREAD_ENV */
     LWP_CurrentProcess(&vnp->writer);
 #endif /* AFS_PTHREAD_ENV */
-    bzero(&vnp->disk, sizeof(vnp->disk));
+    memset(&vnp->disk, 0, sizeof(vnp->disk));
     vnp->changed_newTime = 0; /* set this bit when vnode is updated */
     vnp->changed_oldTime = 0; /* set this on CopyOnWrite. */
     vnp->delete = 0;
@@ -698,7 +698,7 @@ VPutVnode_r(ec,vnp)
 
 	    if (vnp->delete) {
 	        /* No longer any directory entries for this vnode. Free the Vnode */
-		bzero(&vnp->disk, sizeof (vnp->disk));
+		memset(&vnp->disk, 0, sizeof (vnp->disk));
 		mlkLastDelete = vnp->vnodeNumber;
 		/* delete flag turned off further down */
 		VNLog(202, 2, vnp->vnodeNumber, (afs_int32) vnp);

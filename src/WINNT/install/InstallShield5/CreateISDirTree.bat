@@ -14,7 +14,7 @@ echo Creating the IS dir tree...
 if not exist "Component Definitions" mkdir "Component Definitions"
 if not exist "File Groups" mkdir "File Groups"
 if not exist Media mkdir Media
-if not exist "Media\Transarc AFS" mkdir "Media\Transarc AFS"
+if not exist "Media\OpenAFS" mkdir "Media\OpenAFS"
 if not exist "Registry Entries" mkdir "Registry Entries"
 if not exist "Script Files" mkdir "Script Files"
 if not exist "Setup Files" mkdir "Setup Files"

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass3.c,v 1.1.1.3 2001/07/14 22:24:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass3.c,v 1.1.1.4 2001/09/11 14:35:30 hartmans Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -75,7 +75,7 @@ pass3()
 	ino_t inumber, orphan;
 	int loopcnt;
 
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	idesc.id_type = DATA;
 	for (inumber = ROOTINO; inumber <= lastino; inumber++) {
 #if defined(ACLS) && defined(AFS_HPUX_ENV)

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.4 2001/07/14 22:22:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.5 2001/09/11 14:33:05 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/com_err.h>
@@ -234,9 +234,9 @@ static int CheckAuth2 (server)
 
     /*Copy in the sizes and bodies of the secret and clear tokens*/
     inbuff.sTokenSize = sizeof(EncryptedSecretToken);
-    bcopy(&sToken, (char *)&inbuff.stoken, sizeof(EncryptedSecretToken));
+    memcpy((char *)&inbuff.stoken, &sToken, sizeof(EncryptedSecretToken));
     inbuff.cTokenSize = sizeof(ClearToken);
-    bcopy(&cToken, (char*)&inbuff.ctoken, sizeof(ClearToken));
+    memcpy((char*)&inbuff.ctoken, &cToken, sizeof(ClearToken));
 
     /* Copy in the Primary ID flag and the cell name */
 #if DB_CELLS
@@ -271,8 +271,8 @@ static int CheckAuth2 (server)
 	(token.startTime != 0) ||
 	(token.endTime != cToken.EndTimestamp) ||
 	(token.ticketLen != sizeof(sToken)) ||
-	(bcmp (&cToken.HandShakeKey, &token.sessionKey, sizeof(struct ktc_encryptionKey)) != 0) ||
-	(bcmp (&sToken, token.ticket, sizeof(sToken)) != 0)) {
+	(memcmp (&cToken.HandShakeKey, &token.sessionKey, sizeof(struct ktc_encryptionKey)) != 0) ||
+	(memcmp (&sToken, token.ticket, sizeof(sToken)) != 0)) {
 	fprintf (stdout, "Auth2 token was bad\n");
 	PrintAuthentication (stdout, server, &token, &client);
 	return 1;
@@ -302,7 +302,7 @@ static void ListCellsCmd ()
 	blob.in_size = sizeof(long);
 	blob.in = space;
 	blob.out = space;
-	bcopy(&i, space, sizeof(long));
+	memcpy(space, &i, sizeof(long));
 	code = pioctl(0, VIOCGETCELL, &blob, 1);
 	if (code < 0) {
 	    if (errno == EDOM) break;	/* done with the list */
@@ -315,7 +315,7 @@ static void ListCellsCmd ()
 	if (verbose > 1) {
 	    printf("Cell %s on hosts", cellname);
 	    for (j=0; j < 8; j++) {
-		bcopy(space + j*sizeof(long), &clear, sizeof(long));
+		memcpy(&clear, space + j*sizeof(long), sizeof(long));
 		if (clear == 0) break;
 #if SLOW
 		tcp = hostutil_GetNameByINet(clear);
@@ -820,7 +820,7 @@ main (argc, argv)
     /* First check for various pathological cases */
 
     strcpy (server.cell, "foo.bar.baz");
-    bcopy (&token, &ntoken, sizeof(ntoken));
+    memcpy(&ntoken, &token, sizeof(ntoken));
     code = ktc_SetToken (&server, &ntoken, &client, 0);
     if (code != KTC_NOCELL) {
 	com_err (whoami, code, "should have gotten bad pioctl error calling SetToken with bogus cell name");
@@ -849,7 +849,7 @@ main (argc, argv)
 	com_err (whoami, code, "calling SetToken with bogus client cell");
 	goto failed;
     }
-    bcopy (&token, &ntoken, sizeof(ntoken));
+    memcpy(&ntoken, &token, sizeof(ntoken));
     if (token.kvno == 999) ntoken.kvno = 99;
 
     /* Now check out SetToken parsing of specially formed names */

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/inode.c,v 1.1.1.3 2001/07/14 22:24:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/inode.c,v 1.1.1.4 2001/09/11 14:35:27 hartmans Exp $");
 
 #define VICE	/* control whether AFS changes are present */
 #include <stdio.h>
@@ -423,7 +423,7 @@ findname(idesc)
 
 	if (dirp->d_ino != idesc->id_parent)
 		return (KEEPON);
-	bcopy(dirp->d_name, idesc->id_name, (int)dirp->d_namlen + 1);
+	memcpy(idesc->id_name, dirp->d_name, (int)dirp->d_namlen + 1);
 	return (STOP|FOUND);
 }
 
@@ -607,7 +607,7 @@ freeino(ino)
 	extern int pass4check();
 	struct dinode *dp;
 
-	bzero((char *)&idesc, sizeof(struct inodesc));
+	memset((char *)&idesc, 0, sizeof(struct inodesc));
 	idesc.id_type = ADDR;
 	idesc.id_func = pass4check;
 	idesc.id_number = ino;

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_exporter.c,v 1.1.1.4 2001/07/14 22:19:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_exporter.c,v 1.1.1.5 2001/09/11 14:24:40 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -37,7 +37,7 @@ char *data;
     }
     length = (size ? size : sizeof(struct afs_exporter));
     ex = (struct afs_exporter *) afs_osi_Alloc(length);
-    bzero((char *)ex, length);
+    memset((char *)ex, 0, length);
     MObtainWriteLock(&afs_xexp,308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)

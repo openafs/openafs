@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_conn.c,v 1.1.1.6 2001/07/14 22:19:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_conn.c,v 1.1.1.7 2001/09/11 14:24:38 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -172,7 +172,7 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 	*/
 	UpgradeSToWLock(&afs_xconn,37);
 	tc = (struct conn *) afs_osi_Alloc(sizeof(struct conn));
-	bzero((char *)tc, sizeof(struct conn));
+	memset((char *)tc, 0, sizeof(struct conn));
 
 	tc->user = tu;
 	tc->port = aport;

@@ -5,8 +5,6 @@
 #	License.  For details, see the LICENSE file in the top-level source
 #	directory or online at http://www.openafs.org/dl/license10.html
 
-
-
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 OUTDIR = $(DESTDIR)\WinInstall
@@ -16,7 +14,6 @@ OUTDIR = $(DESTDIR)\WinInstall
 COMPONENTS = \
 	INSTALL.BAT \
 	afsd.pif \
-	cellservdb \
 	readme.RTF \
 	license.txt \
 	templet.reg \
@@ -38,7 +35,7 @@ COMPONENTS = \
 	$(DESTDIR)\lib\afsrpc.dll
 		
 $(COMPONENTS)::
-	$(DESTDIR)\bin\util_cr.exe ~ $@ "Missing $@"
+	$(DESTDIR)\bin\util_cr.exe ~ $@
 	$(COPY) $@ $(DESTDIR)\WinInstall\.
 
 !IF (EXIST(ISBUILD.MAK))
@@ -57,6 +54,6 @@ clean ::
     $(DEL) $(OUTDIR)\DiskIm~1\WebInstall\*
 
 prep :
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\sock.vxd" "SOCK.VXD is missing from $(DESTDIR)\WinInstall\."
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\MMAP.vxd" "MMAP.VXD is missing from $(DESTDIR)\WinInstall\."
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\AFSD.EXE" "AFSD.EXE is missing from $(DESTDIR)\WinInstall\."
+	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\sock.vxd"
+	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\MMAP.vxd"
+	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\AFSD.EXE"

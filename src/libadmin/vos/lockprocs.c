@@ -10,14 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/lockprocs.c,v 1.1.1.5 2001/07/14 22:22:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/lockprocs.c,v 1.1.1.6 2001/09/11 14:33:22 hartmans Exp $");
 
 #include "lockprocs.h"
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 
