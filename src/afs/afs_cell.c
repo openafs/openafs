@@ -319,28 +319,46 @@ struct cell *afs_GetCellByName(acellName, locktype)
 
 } /*afs_GetCellByName*/
 
-
 struct cell *afs_GetCell(acell, locktype)
     register afs_int32 acell;
     afs_int32 locktype;
+{
+    return afs_GetCellInternal(acell, locktype, 1);
+}
+
+/* This is only to be called if the caller is already holding afs_xcell */
+struct cell *afs_GetCellNoLock(acell, locktype)
+    register afs_int32 acell;
+    afs_int32 locktype;
+{
+    return afs_GetCellInternal(acell, locktype, 0);
+}
+
+static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
+    register afs_int32 acell;
+    afs_int32 locktype;
+    int holdxcell;
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
 
     AFS_STATCNT(afs_GetCell);
     if (acell == 1 && afs_rootcell) return afs_rootcell;
-    ObtainWriteLock(&afs_xcell,101);
+    if (holdxcell)
+	ObtainWriteLock(&afs_xcell,101);
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq); tq = QNext(cq);
 	if (tc->cell == acell) {
 	    QRemove(&tc->lruq);
 	    QAdd(&CellLRU, &tc->lruq);
-	    ReleaseWriteLock(&afs_xcell);
+	    if (holdxcell)
+		ReleaseWriteLock(&afs_xcell);
 	    afs_RefreshCell(tc);
 	    return tc;
 	}
     }
-    ReleaseWriteLock(&afs_xcell);
+    if (holdxcell)
+	ReleaseWriteLock(&afs_xcell);
     return (struct cell *) 0;
 
 } /*afs_GetCell*/
