@@ -1772,6 +1772,10 @@ rxi_SendSpecial(call, conn, optionalPacket, type, data, nbytes, istack)
     if (call) {
 	channel = call->channel;
 	callNumber = *call->callNumber;
+	/* BUSY packets refer to the next call on this connection */
+	if (type == RX_PACKET_TYPE_BUSY) {
+	    callNumber++;
+	}
     } else {
 	channel = 0;
 	callNumber = 0;
@@ -1780,12 +1784,6 @@ rxi_SendSpecial(call, conn, optionalPacket, type, data, nbytes, istack)
     if (!p) {
 	p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (!p) osi_Panic("rxi_SendSpecial failure");
-    } else if (type == RX_PACKET_TYPE_BUSY) {
-	/* BUSY packets refer to some subsequent call on this connection
-	 * and we need to match the callNumber used by the other side. */
-	if (p->header.callNumber > callNumber) {
-	    callNumber = p->header.callNumber;
-	}
     }
 
     if (nbytes != -1) 
