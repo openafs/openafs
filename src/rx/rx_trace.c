@@ -10,11 +10,13 @@
 #ifdef RXDEBUG
 
 #include <afs/param.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>
 #else
 #include <sys/file.h>
+#include <unistd.h>
 #endif
 #include "rx.h"
 #include "rx_globals.h"
@@ -120,7 +122,7 @@ void rxi_calltrace(event, call)
 #include <afs/afsutil.h>
 #endif
 
-main(argc, argv)
+int main(argc, argv)
 char **argv;
 {
   struct rx_trace ip;
