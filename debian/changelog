@@ -1,3 +1,13 @@
+openafs (1.2.8-4) unstable; urgency=low
+
+  * Fix from Eduard Bloch to compile on kernels with variable numbers of
+    CPUs; he is not sure it actually works yet though, Closes: #178505
+  * Patch that might possibly fix the fails to build on recent unstable;
+    definitely fixes a bug in include path handling, but I am not sure it
+    is a correct patch since I cannot reproduce the problem, Closes: #178154
+
+ -- Sam Hartman <hartmans@debian.org>  Sun,  2 Feb 2003 14:08:14 -0500
+
 openafs (1.2.8-3) unstable; urgency=medium
 
   * Patch from Eduard Bloch <blade@debian.org> to build the PAM module for
