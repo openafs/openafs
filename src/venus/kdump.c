@@ -263,7 +263,7 @@ typedef struct timeval {
 #endif
 #include <linux/version.h>
 #include <linux/fs.h>
-#include <afs/osi_vfs.h>
+#include <osi_vfs.h>
 #else /* AFS_LINUX20_ENV */
 #ifdef AFS_HPUX110_ENV
 #define	KERNEL

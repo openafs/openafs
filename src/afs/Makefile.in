@@ -35,12 +35,6 @@ all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
 	esac
-	case ${SYS_NAME} in \
-		*linux* ) \
-			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${TOP_INCDIR}/afs ;;\
-		* ) \
-			echo No vfs headers to install for ${SYS_NAME};; \
-	esac
 
 # NOTE: linux case uses --new as well to work around bug in some versions of
 # gencat.
