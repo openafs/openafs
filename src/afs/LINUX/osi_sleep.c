@@ -224,11 +224,6 @@ void afs_osi_Sleep(char *event)
     seq = evp->seq;
 
     while (seq == evp->seq) {
-        afs_Trace4(afs_iclSetp, CM_TRACE_SLEEP,
-		ICL_TYPE_POINTER, evp,
-		   ICL_TYPE_INT32, 0/*count*/,
-		ICL_TYPE_INT32, seq,
-		ICL_TYPE_INT32, evp->seq);
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	interruptible_sleep_on(&evp->cond);
@@ -285,9 +280,6 @@ void afs_osi_Wakeup(char *event)
 
     if (evp->refcount > 1) {
 	evp->seq++;    
-        afs_Trace2(afs_iclSetp, CM_TRACE_WAKE,
-		ICL_TYPE_POINTER, evp,
-		ICL_TYPE_INT32, evp->seq);
 	wake_up(&evp->cond);
     }
     relevent(evp);
