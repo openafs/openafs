@@ -357,7 +357,7 @@ BOOL NewCreds_OnOK (HWND hDlg)
    GetDlgItemText (hDlg, IDC_NEWCREDS_PASSWORD, szPassword, cchRESOURCE);
 
    int rc;
-   if ((rc = ObtainNewCredentials (szCell, szUser, szPassword)) != 0)
+   if ((rc = ObtainNewCredentials (szCell, szUser, szPassword, FALSE)) != 0)
       {
       EnableWindow (GetDlgItem (hDlg, IDOK), TRUE);
       EnableWindow (GetDlgItem (hDlg, IDCANCEL), TRUE);

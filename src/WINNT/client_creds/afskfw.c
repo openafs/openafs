@@ -3354,7 +3354,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         code = pkrb5_c_random_make_octets(ctx, &pwdata);
         if (code) {
             int i;
-            for ( i=0 ; i<PROBE_PASSWORD_LEN ; i )
+            for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
                 password[i] = 'x';
         }
         password[PROBE_PASSWORD_LEN] = '\0';
@@ -3382,11 +3382,21 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         }
     } else {
         int i;
-        for ( i=0 ; i<PROBE_PASSWORD_LEN ; i )
+
+        for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
             password[i] = 'x';
 
-        code = ObtainNewCredentials(rootcell, PROBE_USERNAME, password);
-        serverReachable = 1;
+        code = ObtainNewCredentials(rootcell, PROBE_USERNAME, password, TRUE);
+        switch ( code ) {
+        case INTK_BADPW:
+        case KERB_ERR_PRINCIPAL_UNKNOWN:
+        case KERB_ERR_SERVICE_EXP:
+        case RD_AP_TIME:
+            serverReachable = TRUE;
+            break;
+        default:
+            serverReachable = FALSE;
+        }
     }
 #endif
     if ( !serverReachable ) {

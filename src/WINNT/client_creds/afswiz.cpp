@@ -313,7 +313,7 @@ BOOL CALLBACK WizCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
                      WizCreds_OnEnable (hDlg, FALSE);
 
-                     if (ObtainNewCredentials (szCell, szUser, szPassword) == 0)
+                     if (ObtainNewCredentials (szCell, szUser, szPassword, FALSE) == 0)
                         {
                         g.pWizard->SetState (STEP_MOUNT);
                         }

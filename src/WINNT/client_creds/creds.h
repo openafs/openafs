@@ -27,7 +27,7 @@ int GetCurrentCredentials (void);
 
 int DestroyCurrentCredentials (LPCTSTR pszCell);
 
-int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword);
+int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, BOOL Silent);
 
 int GetDefaultCell (LPTSTR pszCell);
 

@@ -275,4 +275,18 @@ int  KFW_AFS_klog(krb5_context, krb5_ccache, char*, char*, char*, int);
 void KFW_import_ccache_data(void);
 void KFW_import_windows_lsa(void);
 BOOL MSLSA_IsKerberosLogon();
+
+/* From afs/krb_prot.h */
+/* values for kerb error codes */
+#define         KERB_ERR_OK                              0
+#define         KERB_ERR_NAME_EXP                        1
+#define         KERB_ERR_SERVICE_EXP                     2
+#define         KERB_ERR_AUTH_EXP                        3
+#define         KERB_ERR_PKT_VER                         4
+#define         KERB_ERR_NAME_MAST_KEY_VER               5
+#define         KERB_ERR_SERV_MAST_KEY_VER               6
+#define         KERB_ERR_BYTE_ORDER                      7
+#define         KERB_ERR_PRINCIPAL_UNKNOWN               8
+#define         KERB_ERR_PRINCIPAL_NOT_UNIQUE            9
+#define         KERB_ERR_NULL_KEY                       10
 #endif /* AFSKFW_INT_H */

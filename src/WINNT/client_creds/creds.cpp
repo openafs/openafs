@@ -370,7 +370,7 @@ int DestroyCurrentCredentials (LPCTSTR pszCell)
 }
 
 
-int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword)
+int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, BOOL Silent)
 {
    int rc = KTC_NOCM;
    char *Result = NULL;
@@ -398,7 +398,7 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword)
           rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
       }
 
-   if (rc != 0)
+   if (!Silent && rc != 0)
       {
       int idsTitle = (g.fIsWinNT) ? IDS_ERROR_TITLE : IDS_ERROR_TITLE_95;
       int idsDesc = (g.fIsWinNT) ? IDS_ERROR_OBTAIN : IDS_ERROR_OBTAIN_95;
