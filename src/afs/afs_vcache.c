@@ -928,7 +928,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->v.v_vm_info->pager = MEMORY_OBJECT_NULL;
 #endif /* AFS_MACH_ENV */
 #ifdef AFS_OBSD_ENV
+    AFS_GUNLOCK();
     afs_nbsd_getnewvnode(tvc);	/* includes one refcount */
+    AFS_GLOCK();
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
 #endif
     tvc->parentVnode = 0;
