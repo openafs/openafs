@@ -58,7 +58,7 @@ dest_nolibafs: all_nolibafs dest_dirs
 dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 
-${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
+${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -434,6 +434,20 @@ libadmin: libafsauthent bozo
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
+libjafs: libadmin
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} JAVA/libjafs  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libjafs for ${SYS_NAME} ;; \
+	esac
+
+libjafsadm: libjafs
+
+jafs: libjafs
+
+jafsadm: libjafsadm
+
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
@@ -547,6 +561,7 @@ clean2:
 	-${COMPILE_PART1} libadmin/cfg ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
+	-${COMPILE_PART1} JAVA/libjafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
 	-${COMPILE_PART1} mpp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} package ${COMPILE_CLEAN}
@@ -560,7 +575,7 @@ clean2:
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
-	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
+	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
  
@@ -620,6 +635,7 @@ distclean: clean
 	src/libadmin/samples/Makefile \
 	src/libadmin/test/Makefile \
 	src/libadmin/vos/Makefile \
+	src/JAVA/libjafs/Makefile \
 	src/libafs/Makefile \
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
@@ -761,5 +777,7 @@ rcp: project rsh inetd
 	esac
 
 allrcmds: project rcp rlogind
+
+
 
 
