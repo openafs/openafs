@@ -10,8 +10,7 @@ COMPONENT=venus
 LINUX_VERS=dummy
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${DESTDIR}bin/install
-INSTALLex = ${DESTDIR}bin/install -m 755
+INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
 CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS}
@@ -77,7 +76,7 @@ ${DESTDIR}bin/cmdebug: cmdebug
 # 	set -x; \
 # 	case ${SYS_NAME} in \
 # 	sgi_6? ) \
-# 		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
+# 		${INSTALLex} kdump.sh.sgi_ipnos $@; \
 # 		ln -fs kdump ${DESTDIR}etc/kdump32; \
 # 		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP22; \
 # 		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP32; \
@@ -85,19 +84,54 @@ ${DESTDIR}bin/cmdebug: cmdebug
 # 		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
 # 		done ;; \
 # 	sun4x_57 ) \
-# 		${INSTALLex} -f kdump.sh.solaris7 $@; \
+# 		${INSTALLex} kdump.sh.solaris7 $@; \
 # 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
 # 	*linux* ) \
 # 		for lv in ${LINUX_VERS}; do \
 # 			${INSTALL} -s kdump-$$lv ${DESTDIR}etc/kdump-$$lv ; \
 # 		done ;; \
 # 	hp_ux11* ) \
-# 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
+# 		${INSTALLex} kdump.sh.hp_ux11 $@; \
 # 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
 # 	*) \
 # 		${INSTALL} -s $? $@ ;; \
 # 	esac
 
+${DESTDIR}etc/kdump: kdump
+	-set -x; \
+	case ${SYS_NAME} in \
+	sgi_6? ) \
+		${INSTALLex}  kdump.sh.sgi_ipnos $@; \
+		ln -fs kdump ${DESTDIR}etc/kdump32; \
+		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP22; \
+		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP32; \
+		for f in kdump.IP??; \
+		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
+		done ;; \
+	sun4x_57 ) \
+		${INSTALLex} kdump.sh.solaris7 $@; \
+		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+	*linux* ) \
+		for lv in ${LINUX_VERS}; do \
+			${INSTALL} -s kdump-$$lv ${DESTDIR}etc/kdump-$$lv ; \
+		done ;; \
+	hp_ux11* ) \
+		${INSTALLex} kdump.sh.hp_ux11 $@; \
+		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+	*) \
+		${INSTALL} -s $? $@ ;; \
+	esac
+
+${DESTDIR}etc/kdump64: kdump64
+	-set -x; \
+	case ${SYS_NAME} in \
+	sun4x_57 | hp_ux11* ) \
+		${INSTALL} -s $? $@ ;;\
+	* ) \
+		echo skipping kdump64 for ${SYS_NAME} ;; \
+	esac
+from
+r
 
 
 install: all ${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
@@ -153,8 +187,12 @@ cmdebug: cmdebug.o ${CMLIBS}
 	$(CC) -o cmdebug cmdebug.o ${CFLAGS} ${CMLIBS} ${XLIBS}
 
 kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
+		alpha_linux* ) \
+			for lv in ${LINUX_VERS}; do \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
+				done ;; \
 		*linux* ) \
 			for lv in ${LINUX_VERS}; do \
 				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
@@ -188,14 +226,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* ) \
 		${CC} -g -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
 	esac
 
 kdump:  kdump.o
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
 		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
@@ -233,7 +271,7 @@ kdump:  kdump.o
 ## kdump to read from 64 bit kernel dumps
 
 kdump64 : kdump64.o
-	set -x; \
+	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_57 | hp_ux11* )  \
 		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \

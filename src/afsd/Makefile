@@ -12,14 +12,13 @@ DESTDIR = DEST/
 SRCDIR = DEST/
 
 SOURCES = afsd.c sys.c
-INSTALL = ${SRCDIR}bin/install
-INSTALLro = ${SRCDIR}bin/install -m 644
-INSTALLex = ${SRCDIR}bin/install -m 755
 
 COMPONENT=afsd
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
+INSTALLro = ${INSTALL} -m 644
+INSTALLex = ${INSTALL} -m 755
 CFLAGS = -g -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 
@@ -38,8 +37,6 @@ AFSLIBS=$(SRCDIR)lib/afs/libauth.a ${SRCDIR}lib/afs/libcmd.a $(SRCDIR)lib/afs/li
 
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
-	rs_aix*) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
 	sgi_61 | sgi_62 | sgi_63) \
 		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
 	sgi_64 | sgi_65 ) \
@@ -102,8 +99,19 @@ install: all
                 hp?00_ux10? ) \
 			${INSTALL} afs.rc.hpux10 ${DESTDIR}root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
-			${INSTALLex} -f afs.rc.linux ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
-			${INSTALL} afs.conf.linux ${DESTDIR}root.client/usr/vice/etc/afs.conf ;; \
+			${INSTALLex}  afs.rc.linux ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
+			${INSTALL}  afs.conf.linux ${DESTDIR}root.client/usr/vice/etc/afs.conf ;; \
+		ppc_darwin*) \
+			mkdir -p ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/MacOS ;\
+			${INSTALL} -f afs.ppc_darwin.plist ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/Info.plist ; \
+			${INSTALLex} -f afs.rc.darwin ${DESTDIR}root.client/usr/vice/etc/afs.rc ; \
+			${INSTALL} -f afs.rc.darwin.plist ${DESTDIR}root.client/usr/vice/etc/StartupParameters.plist ;; \
+		*fbsd*) \
+			mkdir -p ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
+			${INSTALL} -f afs.rc.fbsd ${DESTDIR}root.client/usr/vice/etc/afs.rc.fbsd ;; \
 		* )  \
 			echo No rc scripts installed for ${SYS_NAME} ;; \
 	esac
+
+
+

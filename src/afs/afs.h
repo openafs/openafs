@@ -509,7 +509,11 @@ struct SimpleLocks {
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
 #define	CPSIZE	    2
+#if !defined(AFS_FBSD_ENV)
 #define	vrefCount   v.v_count
+#else
+#define vrefCount   v.v_usecount
+#endif /* AFS_FBSD_ENV */
 
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
 #define	AFS_NOTRUNC 0x7fffffff	    /* largest dataversion number */
@@ -557,7 +561,7 @@ struct vcache {
      * Do not try to get the vcache lock when the vlock is held */
     afs_rwlock_t vlock;
 #endif /* defined(AFS_SUN5_ENV) */
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_DARWIN_ENV)
 #if	defined(AFS_SUN5_ENV)
     krwlock_t rwlock;
     struct cred *credp;
@@ -572,6 +576,9 @@ struct vcache {
 #endif
 #ifdef AFS_AIX_ENV
     int ownslock;	/* pid of owner of excl lock, else 0 - defect 3083 */
+#endif
+#ifdef AFS_DARWIN_ENV
+    struct lock__bsd__      rwlock;
 #endif
     afs_int32 parentVnode;			/* Parent dir, if a file. */
     afs_int32 parentUnique;
@@ -974,8 +981,14 @@ extern void shutdown_osifile();
   (((avc)->states & CStatd) ? (vcache2inode(avc), 0) : \
    afs_VerifyVCache2((avc),areq))
 #else
+#ifdef AFS_DARWIN_ENV
+#define afs_VerifyVCache(avc, areq)  \
+  (((avc)->states & CStatd) ? (osi_VM_Setup(avc), 0) : \
+   afs_VerifyVCache2((avc),areq))
+#else
 #define afs_VerifyVCache(avc, areq)  \
   (((avc)->states & CStatd) ? 0 : afs_VerifyVCache2((avc),areq))
+#endif
 #endif
 
 #define DO_STATS 1  /* bits used by FindVCache */
@@ -1060,6 +1073,32 @@ extern int afs_norefpanic;
 #if	defined(AFS_AIX41_ENV)
 #define VN_LOCK(vp)             simple_lock(&(vp)->v_lock)
 #define VN_UNLOCK(vp)           simple_unlock(&(vp)->v_lock)
+#endif
+
+/* get a file's serial number from a vnode */
+#ifndef afs_vnodeToInumber
+#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#define afs_vnodeToInumber(V) VnodeToIno(V)
+#else
+#ifdef AFS_DECOSF_ENV
+#define afs_vnodeToInumber(V) osi_vnodeToInumber(V)
+#else
+#define afs_vnodeToInumber(V) (VTOI(V)->i_number)
+#endif /* AFS_DECOSF_ENV */
+#endif /* AFS_SGI62_ENV */
+#endif
+
+/* get a file's device number from a vnode */
+#ifndef afs_vnodeToDev
+#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#define afs_vnodeToDev(V) VnodeToDev(V)
+#else
+#ifdef AFS_DECOSF_ENV
+#define afs_vnodeToDev(V) osi_vnodeToDev(V)
+#else
+#define afs_vnodeToDev(V) (VTOI(V)->i_dev)
+#endif /* AFS_DECOSF_ENV */
+#endif /* AFS_SGI62_ENV */
 #endif
 
 #endif	/* _AFS_H_ */

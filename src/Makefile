@@ -19,6 +19,10 @@ COMPILE_PART1=cd obj; cd
 COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=$(shell pwd)/${SYS_NAME}/dest/ SRCDIR=$(shell pwd)/${SYS_NAME}/dest/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
+# Enable build+install of obsolete and insecure packages
+# Set to anything other than YES, or comment out to disable the build
+WITH_DEPRECATED=YES
+
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -68,7 +72,7 @@ comerr: basics util
 cmd: basics comerr
 	${COMPILE_PART1} cmd ${COMPILE_PART2}
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* ) \
+	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} install64 ;; \
 	esac
 
@@ -180,7 +184,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -201,7 +205,7 @@ null: project
 
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
-	  rs_aix* | sun4x_5? | sgi_6? | *linux*) \
+	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
 		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
 		ln -s libnull.a ${DESTDIR}lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
@@ -217,27 +221,8 @@ fsprobe: project util fsint
 scout: project gtx fsprobe
 	${COMPILE_PART1} scout ${COMPILE_PART2}
 
-mpp: project
-	${COMPILE_PART1} mpp ${COMPILE_PART2}
-
-package: project mpp
-	${COMPILE_PART1} package ${COMPILE_PART2}
-
-package.files: package
-	${DESTDIR}/bin/makepkgfiles afs.dev
-
 uss: des kauth project rx vlserver vol
 	${COMPILE_PART1} uss ${COMPILE_PART2}
-
-ntp: project volser
-	case ${SYS_NAME} in \
-	  sun4x_58 ) echo skipping ntp for ${SYS_NAME} ;; \
-	  *linux* ) echo skipping ntp for ${SYS_NAME} ;; \
-	  * ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
-	esac
-
-#convert: project ntp
-#	${COMPILE_PART1} convert ${COMPILE_PART2}
 
 bozo: project ntp audit
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
@@ -251,11 +236,7 @@ bozo: project ntp audit
 vfsck:	minproject vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux*) \
-		echo skip vfsck for ${SYS_NAME} ;; \
-	rs_aix42)	\
-		echo skip vfsck for ${SYS_NAME} ;; \
-	sun4x_58 )  \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -273,45 +254,13 @@ login: project kauth rxkad
 		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
 	sun4x_55 ) \
 		 ${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	sun4x_* | hp_ux11* | *linux* ) \
+	sun4x_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
+	ppc_darwin* ) \
+		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	esac
-
-ftpd43+: project kauth rxkad
-	case ${SYS_NAME} in \
-	rs_aix* | sun4x_55 | *linux*) \
-		${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
-	* )	echo skip ftpd43+ for ${SYS_NAME} ;; \
-	esac
-
-inetd: project kauth rxkad
-	${COMPILE_PART1} inetd ${COMPILE_PART2} 
-
-rsh: project inetd
-	${COMPILE_PART1} rsh ${COMPILE_PART2} 
-
-rlogind: project rsh ftpd43+ login
-	case ${SYS_NAME} in \
-	rs_aix*) \
-		${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
-	* )	echo skipping rlogind for ${SYS_NAME} ;; \
-	esac
-
-sgistuff: project rlogind
-	case ${SYS_NAME} in \
-	sgi_* )	${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
-	* )	echo skipping sgistuff for ${SYS_NAME} ;; \
-	esac
-
-rcp: project rsh inetd
-	case ${SYS_NAME} in \
-	sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
-	*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \
-	esac
-
-allrcmds: project rcp rlogind
 
 KERNELDIR= \
   afs \
@@ -346,7 +295,13 @@ libafs: minproject libafs_setup  ${KERNELDIR}
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
 libuafs: minproject libuafs_setup ${UKERNELDIR}
-	${COMPILE_PART1} libuafs ${COMPILE_PART2}
+	set -x; \
+	case ${SYS_NAME} in \
+	hp_ux102* ) \
+		echo Skipping libuafs for ${SYS_NAME} ;; \
+	* ) \
+		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
+	esac
 
 afsweb: minproject kauth dauth 
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
@@ -374,7 +329,7 @@ butc: project bubasics butm budb bucoord cmd
 
 tbutc: project bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
@@ -392,6 +347,9 @@ xstat: project
 afsmonitor: project gtx xstat
 	${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
+#
+# Washtool internal targets
+#
 ircs: project
 	case ${SYS_NAME} in \
 	sgi_* ) \
@@ -412,12 +370,22 @@ tests: rxtests ubiktests
 
 # pthread based user space RX library
 libafsrpc: rx rxkad des
-	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2}
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	esac
 
 libafsauthent: ubik auth kauth libafsrpc
-	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2}
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	esac
 
-libadmin: libafsauthent bozo
+libadmin_real: 
 	${COMPILE_PART1} libadmin ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/adminutil ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/vos ${COMPILE_PART2}
@@ -428,7 +396,18 @@ libadmin: libafsauthent bozo
 	${COMPILE_PART1} libadmin/cfg ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
-
+libadmin: libafsauthent bozo
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+			$(MAKE) libadmin_real SYS_NAME=$(SYS_NAME) \
+			WASHTOOL="$(WASHTOOL)" \
+			COMPILE_PART1="$(COMPILE_PART1)" \
+			COMPILE_PART2="$(COMPILE_PART2)" \
+			SRCDIR=$(SRCDIR) DESTDIR=$(DESTDIR) \
+			DBG_DEFS=$(DBG_DEFS) ;; \
+	*) \
+		echo Not building MT libadmin for ${SYS_NAME} ;; \
+	esac
 finale: project cmd comerr afsd allrcmds butc tbutc  libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth tests libafsrpc \
@@ -450,12 +429,16 @@ libafs_setup: config minproject export
 		MKAFS_OSTYPE=HPUX;; \
 	*linux*) \
 		MKAFS_OSTYPE=LINUX;; \
+	*fbsd*) \
+		MKAFS_OSTYPE=FBSD;; \
 	rs_aix* ) \
 		MKAFS_OSTYPE=AIX;; \
 	sgi_* ) \
 		MKAFS_OSTYPE=IRIX;; \
 	sun4x_5* ) \
 		MKAFS_OSTYPE=SOLARIS;; \
+	ppc_darwin* ) \
+		MKAFS_OSTYPE=DARWIN;; \
 	* ) \
 		echo WARNING: No MakefileProto for sys ${SYS_NAME} ; \
 	esac; \
@@ -471,6 +454,8 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=HPUX;; \
 	*linux*) \
 		MKAFS_OSTYPE=LINUX;; \
+	*fbsd*) \
+		MKAFS_OSTYPE=FBSD;; \
 	rs_aix* ) \
 		MKAFS_OSTYPE=AIX;; \
 	sun4x_5* ) \
@@ -479,6 +464,8 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=DUX;; \
 	sgi_6* ) \
 		MKAFS_OSTYPE=IRIX;; \
+	ppc_darwin* ) \
+		MKAFS_OSTYPE=DARWIN;; \
 	* ) \
 		echo WARNING: No MakefileProto for sys ${SYS_NAME} ; \
 	esac; \
@@ -486,8 +473,9 @@ libuafs_setup: config minproject export
 
 # "COMPILE_PART1=${COMPILE_PART1}" "COMPILE_PART2=${COMPILE_PART2}" SYS_NAME=${SYS_NAME} ;; 
 
+TARGET=finale
 install:
-	$(MAKE) finale "SYS_NAME=${SYS_NAME}" "WASHTOOL=${WASHTOOL}" \
+	$(MAKE) $(TARGET) "SYS_NAME=${SYS_NAME}" "WASHTOOL=${WASHTOOL}" \
 		"COMPILE_PART1=${COMPILE_PART1}" \
 		"COMPILE_PART2=${COMPILE_PART2}" \
 		 DESTDIR=`pwd`/${SYS_NAME}/dest/ \
@@ -533,3 +521,88 @@ links:
 	for file in `find [!NW]* -type f -print` ; do \
 		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
 	done;
+
+#
+# Below targets are all deprecated, insecure, or obsolte, 
+# see README.OBSOLETE and README.INSECURE for more info
+#
+
+mpp: project
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} mpp ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: mpp ;; \
+	esac
+
+package: project mpp
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} package ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: package ;; \
+	esac
+
+package.files: package
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${DESTDIR}/bin/makepkgfiles afs.dev ;; \
+	*)	echo skipping deprecated target: package.files ;; \
+	esac
+
+ntp: project volser
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sun4x_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
+		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: ntp ;; \
+	esac
+
+sgistuff: project rlogind
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sgi_* )	${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
+		* ) echo skipping sgistuff for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: sgistuff ;; \
+	esac
+
+ftpd43+: project kauth rxkad
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		rs_aix* | sun4x_55 | *linux*) \
+			${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
+		*) echo skip ftpd43+ for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: ftpd43+ ;; \
+	esac
+
+inetd: project kauth rxkad
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} inetd ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: inetd ;; \
+	esac
+
+rsh: project inetd
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} rsh ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: rsh ;; \
+	esac
+
+rlogind: project rsh ftpd43+ login
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		rs_aix*) ${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
+		*) echo skipping rlogind for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: rlogind ;; \
+	esac
+
+rcp: project rsh inetd
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
+		*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: rcp ;; \
+	esac
+
+allrcmds: project rcp rlogind
+
+

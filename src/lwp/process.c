@@ -44,9 +44,16 @@ extern char PRE_Block;             /* used in lwp.c and process.s */
 #elif   defined(AFS_SPARC64_LINUX20_ENV) && defined(AFS_32BIT_USR_ENV)
 #define LWP_SP 0
 #define LWP_FP 1
+#elif defined(AFS_ALPHA_LINUX20_ENV)
+#define LWP_SP 8
+#define LWP_FP 7
 #else
 #error Unsupported linux LWP system type.
 #endif
+#elif   defined(AFS_X86_FBSD_ENV)
+#define LWP_SP 4
+#elif   defined(AFS_DARWIN_ENV)
+#define LWP_SP 16
 #else
      Need offset to SP in jmp_buf for this platform.
 #endif
@@ -62,8 +69,12 @@ extern char PRE_Block;             /* used in lwp.c and process.s */
 typedef __uint64_t jmp_buf_type;
 #endif
 #else
+#ifdef AFS_ALPHA_LINUX20_ENV
+typedef long jmp_buf_type;
+#else
 typedef int jmp_buf_type;
-#endif
+#endif /*AFS_ALPHA_LINUX20_ENV*/
+#endif /*SGI*/
 
 static jmp_buf	jmp_tmp;
 static char	(*EP)();

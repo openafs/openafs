@@ -10,6 +10,7 @@
 #ifndef lint
 #endif
 /*
+
 	System:		VICE-TWO
 	Module:		partition.c
 	Institution:	The Information Technology Center, Carnegie-Mellon University
@@ -24,10 +25,14 @@
 #include <winioctl.h>
 #else
 #include <sys/param.h>
-
+#include <sys/types.h>
+ 
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#include <sys/mount.h>
+#endif
 
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
@@ -39,10 +44,15 @@
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#include <ufs/ufs/dinode.h>
+#include <ufs/ffs/fs.h>
+#else
 #include <ufs/fs.h>
 #endif
+#endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -101,7 +111,12 @@
 #include "ntops.h"
 #else
 #include "namei_ops.h"
-#endif
+#if defined(AFS_SGI_ENV)
+#include <sys/dir.h>
+#else
+#include <dirent.h>
+#endif /* AFS_SGI_ENV */
+#endif /* AFS_NT40_ENV */
 #endif /* AFS_NAMEI_ENV */
 #include "vnode.h"
 #include "volume.h"
@@ -226,6 +241,9 @@ int VCheckPartition(part, devname)
      char *devname;
 {
     struct stat status;
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+    char AFSIDatPath[MAXPATHLEN];
+#endif
 
     /* Only keep track of "/vicepx" partitions since it can get hairy
      * when NFS mounts are involved.. */
@@ -247,6 +265,33 @@ int VCheckPartition(part, devname)
 	    return -1;
 	}
     }
+#endif
+
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+    strcpy(AFSIDatPath, part);
+    strcat(AFSIDatPath, "/AFSIDat");
+#ifdef AFS_NAMEI_ENV
+    if (stat(AFSIDatPath, &status) < 0) {
+	DIR *dirp;
+	struct dirent *dp;
+
+	dirp = opendir(part);
+	assert(dirp);
+	while (dp = readdir(dirp)) {
+	    if (dp->d_name[0] == 'V') {
+		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
+		closedir(dirp);
+	        return -1;
+	    }
+	}
+	closedir(dirp);
+    }
+#else /* AFS_NAMEI_ENV */
+    if (stat(AFSIDatPath, &status) == 0) {
+	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
+	return -1;
+    }
+#endif /* AFS_NAMEI_ENV */f
 #endif
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
@@ -409,7 +454,7 @@ int VAttachPartitions(void)
 
 }
 #endif
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int VAttachPartitions(void)
 {
     int errors = 0;

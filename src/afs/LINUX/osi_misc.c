@@ -302,7 +302,13 @@ void osi_linux_free_inode_pages(void)
 #else
 	    if (ip->i_nrpages) {
 #endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	        truncate_inode_pages(&ip->i_data, 0);
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
+	        truncate_inode_pages(ip, 0);
+#else
 		invalidate_inode_pages(ip);
+#endif
 #if defined(AFS_LINUX24_ENV)
 		if (ip->i_data.nrpages) {
 #else
@@ -411,7 +417,9 @@ void check_bad_parent(struct dentry *dp)
 		 ICL_TYPE_POINTER, avc,
 		 ICL_TYPE_POINTER, dp);
     }
-    
+    if (avc)
+	AFS_RELE(avc);
+    crfree(credp);
   } /* if bad parent */
  
   return;

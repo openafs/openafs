@@ -132,8 +132,14 @@ osi_UFSTruncate(afile, asize)
     lock_kernel();
     code = inode_change_ok(inode, &newattrs);
     if (!code)
+#ifdef INODE_SETATTR_NOT_VOID
+	code = inode_setattr(inode, &newattrs);
+#else
 	inode_setattr(inode, &newattrs);
+#endif
     unlock_kernel();
+    if (!code)
+	truncate_inode_pages(&inode->i_data, asize);
 #else
     if (inode->i_sb->s_op && inode->i_sb->s_op->notify_change) {
 	code = inode->i_sb->s_op->notify_change(&afile->dentry, &newattrs);

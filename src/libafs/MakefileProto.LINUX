@@ -38,11 +38,14 @@ LD = ld
 # -Wall
 <i386_linux22 i386_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer \
-	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
+	-fno-strength-reduce -pipe -march=i486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
-DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
+<alpha_linux_22 alpha_linux_24>
+CCFLAGS = -O2 -fomit-frame-pointer -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
+DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <s390_linux22 s390_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+CCFLAGS =   -O -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char 
 DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 
@@ -71,6 +74,9 @@ CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 KOBJ = MODLOAD
 MPS = MP SP
 
+# To pick up anything we might have missed
+include Makefile.extradefs
+
 # COMPDIRS is called in Makefile.common to do the actual builds.
 COMPDIRS=linux_compdirs
 
@@ -86,6 +92,9 @@ setup:
 			mkdir -p $${KDIR}; \
 			ln -fs ../Makefile $${KDIR}/Makefile ; \
 			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+<i386_linux22 i386_linux24>
+			sh ./redhat.sh ${LINUX_VERS} $${KDIR}/Makefile.extradefs; \
+<all>
 		done \
 	done
 	
@@ -109,8 +118,12 @@ ${COMPDIRS}:
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
 		rm -f asm; \
+<alpha_linux_22 alpha_linux_24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-alpha asm ; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-i386 asm ; \
+<s390_linux22 s390_linux24>
+		ln -s ${LINUX_SRCDIR}/include/asm-s390 asm ; \
 <ppc_linux22 ppc_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-ppc asm ; \
 <sparc_linux22 sparc_linux24>
@@ -122,14 +135,14 @@ ${COMPDIRS}:
 			KDIR=${KOBJ}-$$m ; \
 			echo Building in directory: $${KDIR} ; \
 			if [ "$$m" = "MP" ] ; then \
-				SMP_DEF="-DAFS_SMP" ; \
+				SMP_DEF="-DAFS_SMP -D__BOOT_KERNEL_SMP=1 -D__BOOT_KERNEL_UP=0 -D__SMP__" ; \
 				TARG="libafs.mp" ; \
 			else  \
-				SMP_DEF="" ; \
+				SMP_DEF="-D__BOOT_KERNEL_SMP=0 -D__BOOT_KERNEL_UP=1 -U__SMP__" ; \
 				TARG=libafs ; \
 			fi ; \
 			cd $${KDIR} ; \
-			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF=$${SMP_DEF} $${TARG} CLIENT="" || exit $$?; \
+			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF="$${SMP_DEF}" $${TARG} CLIENT= || exit $$?; \
 			cd ../ ; \
 		done \
 	done

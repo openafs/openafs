@@ -95,6 +95,9 @@ extern afs_int32 afs_termState;
 extern afs_uint32 LWP_ThreadId();
 #endif /* RXDEBUG */
 
+int (*registerProgram)() = 0;
+int (*swapNameProgram)() = 0;
+
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
     afs_int32 rxi_start_aborted; /* rxi_start awoke after rxi_Send in error. */
@@ -252,7 +255,7 @@ void rxi_StartUnlocked();
 ** pretty good that the next packet coming in is from the same connection 
 ** as the last packet, since we're send multiple packets in a transmit window.
 */
-struct rx_connection *rxLastConn; 
+struct rx_connection *rxLastConn = 0; 
 
 #ifdef RX_ENABLE_LOCKS
 /* The locking hierarchy for rx fine grain locking is composed of five
@@ -618,7 +621,7 @@ void rxi_StartServerProcs(nExistingProcs)
 void rx_StartServer(donateMe)
 {
     register struct rx_service *service;
-    register int i;
+    register int i, nProcs;
     SPLVAR;
     clock_NewTime();
 
@@ -652,7 +655,26 @@ void rx_StartServer(donateMe)
     AFS_RXGUNLOCK();
     USERPRI;
 
-    if (donateMe) rx_ServerProc(); /* Never returns */
+    if (donateMe) {
+#ifndef AFS_NT40_ENV
+#ifndef KERNEL
+	int code;
+        char name[32];
+#ifdef AFS_PTHREAD_ENV
+        pid_t pid;
+        pid = pthread_self();
+#else /* AFS_PTHREAD_ENV */
+        PROCESS pid;
+        code = LWP_CurrentProcess(&pid);
+#endif /* AFS_PTHREAD_ENV */
+
+        sprintf(name,"srv_%d", ++nProcs);
+	if (registerProgram)
+            (*registerProgram)(pid, name);
+#endif /* KERNEL */
+#endif /* AFS_NT40_ENV */
+	rx_ServerProc(); /* Never returns */
+    }
     return;
 }
 
@@ -3151,7 +3173,7 @@ nextloop:;
     } else if (call->nSoftAcks > (u_short)rxi_SoftAckRate) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
 	np = rxi_SendAck(call, np, seq, serial, flags,
-			 RX_ACK_DELAY, istack);
+			 RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
 	clock_GetTime(&when);
 	if (haveLast && !(flags & RX_CLIENT_INITIATED)) {
@@ -3267,13 +3289,17 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 	if (tp->header.seq >= first) break;
 	call->tfirst = tp->header.seq + 1;
 	if (tp->header.serial == serial) {
-	  rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
+	  /* Use RTT if not delayed by client. */
+	  if (ap->reason != RX_ACK_DELAY)
+	      rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
 	}
-	else if ((tp->firstSerial == serial)) {
-	  rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
+	else if (tp->firstSerial == serial) {
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
@@ -3334,13 +3360,17 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	if (tp->header.serial == serial) {
-	  rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
 	}
 	else if ((tp->firstSerial == serial)) {
-	  rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
+	    /* Use RTT if not delayed by client. */
+	    if (ap->reason != RX_ACK_DELAY)
+		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
 #ifdef ADAPT_WINDOW
 	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
 #endif
@@ -3820,7 +3850,7 @@ register struct rx_call **newcallp;
 	if (call->flags & RX_CALL_CLEARED) {
 	    /* send an ack now to start the packet flow up again */
 	    call->flags &= ~RX_CALL_CLEARED;
-	    rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+	    rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_IDLE, 0);
 	}
 #ifdef	RX_ENABLE_LOCKS
 	CV_SIGNAL(&sq->cv);
@@ -4447,7 +4477,7 @@ struct rx_packet *rxi_SendAck(call, optionalPacket, seq, serial, pflags, reason,
 }
 
 /* Send all of the packets in the list in single datagram */
-static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
+static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime, resending)
   struct rx_call *call;
   struct rx_packet **list;
   int len;
@@ -4455,6 +4485,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
   int moreFlag;
   struct clock *now;
   struct clock *retryTime;
+  int resending;
 {
     int i;
     int requestAck = 0;
@@ -4464,6 +4495,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
 
     MUTEX_ENTER(&peer->peer_lock);
     peer->nSent += len;
+    if (resending) peer->reSends += len;
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.dataPacketsSent += len;
     MUTEX_EXIT(&rx_stats_mutex);
@@ -4517,6 +4549,7 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
 
 	MUTEX_ENTER(&peer->peer_lock);
 	peer->nSent++;
+	if (resending) peer->reSends++;
 	MUTEX_ENTER(&rx_stats_mutex);
 	rx_stats.dataPacketsSent++;
 	MUTEX_EXIT(&rx_stats_mutex);
@@ -4565,13 +4598,14 @@ static void rxi_SendList(call, list, len, istack, moreFlag, now, retryTime)
  * We always keep the last list we should have sent so we
  * can set the RX_MORE_PACKETS flags correctly.
  */
-static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
+static void rxi_SendXmitList(call, list, len, istack, now, retryTime, resending)
   struct rx_call *call;
   struct rx_packet **list;
   int len;
   int istack;
   struct clock *now;
   struct clock *retryTime;
+  int resending;
 {
     int i, cnt, lastCnt = 0;
     struct rx_packet **listP, **lastP = 0;
@@ -4585,7 +4619,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 		|| list[i]->acked
 		|| list[i]->length > RX_JUMBOBUFFERSIZE)) {
 	    if (lastCnt > 0) {
-		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime);
+		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime, resending);
 		/* If the call enters an error state stop sending, or if
 		 * we entered congestion recovery mode, stop sending */
 		if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
@@ -4608,7 +4642,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 		|| list[i]->length != RX_JUMBOBUFFERSIZE) {
 		if (lastCnt > 0) {
 		    rxi_SendList(call, lastP, lastCnt, istack, 1,
-				 now, retryTime);
+				 now, retryTime, resending);
 		    /* If the call enters an error state stop sending, or if
 		     * we entered congestion recovery mode, stop sending */
 		    if (call->error || (call->flags&RX_CALL_FAST_RECOVER_WAIT))
@@ -4643,17 +4677,17 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime)
 	}
 	if (lastCnt > 0) {
 	    rxi_SendList(call, lastP, lastCnt, istack, morePackets,
-			 now, retryTime);
+			 now, retryTime, resending);
 	    /* If the call enters an error state stop sending, or if
 	     * we entered congestion recovery mode, stop sending */
 	    if (call->error || (call->flags & RX_CALL_FAST_RECOVER_WAIT))
 	        return;
 	}
 	if (morePackets) {
-	    rxi_SendList(call, listP, cnt, istack, 0, now, retryTime);
+	    rxi_SendList(call, listP, cnt, istack, 0, now, retryTime, resending);
 	}
     } else if (lastCnt > 0) {
-	rxi_SendList(call, lastP, lastCnt, istack, 0, now, retryTime);
+	rxi_SendList(call, lastP, lastCnt, istack, 0, now, retryTime, resending);
     }
 }
 
@@ -4688,6 +4722,7 @@ void rxi_Start(event, call, istack)
     int nXmitPackets;
     int maxXmitPackets;
     struct rx_packet **xmitList;
+    int resending = 0;
 
     /* If rxi_Start is being called as a result of a resend event,
      * then make sure that the event pointer is removed from the call
@@ -4696,6 +4731,7 @@ void rxi_Start(event, call, istack)
     if (event && event == call->resendEvent) {
 	CALL_RELE(call, RX_CALL_REFCOUNT_RESEND);
 	call->resendEvent = NULL;
+	resending = 1;
 	if (queue_IsEmpty(&call->tq)) {
 	    /* Nothing to do */
 	    return;
@@ -4845,7 +4881,7 @@ void rxi_Start(event, call, istack)
 	 * ready to send. Now we loop to send the packets */
 	if (nXmitPackets > 0) {
 	    rxi_SendXmitList(call, xmitList, nXmitPackets, istack,
-			     &now, &retryTime);
+			     &now, &retryTime, resending);
 	}
 	osi_Free(xmitList, maxXmitPackets * sizeof(struct rx_packet *));
 
@@ -5265,10 +5301,21 @@ void rxi_ComputeRoundTripTime(p, sentp, peer)
 {
 	struct clock thisRtt, *rttp = &thisRtt;
 
+#if defined(AFS_ALPHA_LINUX22_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+	/* making year 2038 bugs to get this running now - stroucki */
+	struct timeval temptime;
+#endif
       register int rtt_timeout;
       static char id[]="@(#)adaptive RTO";
 
-    clock_GetTime(rttp);
+#if defined(AFS_ALPHA_LINUX20_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+      /* yet again. This was the worst Heisenbug of the port - stroucki */
+      clock_GetTime(&temptime);
+      rttp->sec=(afs_int32)temptime.tv_sec;
+      rttp->usec=(afs_int32)temptime.tv_usec;
+#else
+      clock_GetTime(rttp);
+#endif
     if (clock_Lt(rttp, sentp)) {
       clock_Zero(rttp);
       return;     /* somebody set the clock back, don't count this time. */
