@@ -280,6 +280,18 @@ Default : 0
   Disables the attempt to identity the network adapter to use by 
   looking for an adapter with a display name of "AFS".
 
+Value   : MaxCPUs
+Type    : DWORD {1..32} or {1..64} depending on the architecture
+Default : <no default>
+
+  If this value is specified, afsd_service.exe will restrict itself
+  to executing on the specified number of CPUs if there are a greater
+  number installed in the machine.  
+
+  NOTE: Setting this entry to "1" may be required on hyperthreaded 
+  systems to avoid crashes in the RX library.
+
+
 
 
 Regkey:
