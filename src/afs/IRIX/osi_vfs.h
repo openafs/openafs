@@ -88,7 +88,7 @@ extern off_t VnodeToSize(vnode_t *vp);
  */
 #ifdef AFS_SGI65_ENV
 #define	PTOSSVP(vp, off, len)  VOP_TOSS_PAGES((vp), (off), (len), 0)
-#define PFLUSHINVALVP(vp, off, len) VOP_INVALFREE_PAGES((vp), (len))
+#define PFLUSHINVALVP(vp, off, len) VOP_FLUSHINVAL_PAGES((vp), (off), (len), 0)
 #define PFLUSHVP(vp, len, flags, code) \
 		VOP_FLUSH_PAGES((vp), 0, (len), (flags), 0, code)
 #define PINVALFREE(vp, off)    VOP_INVALFREE_PAGES((vp), (off))
