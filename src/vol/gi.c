@@ -20,6 +20,13 @@ int statflag;
 
 #include "AFS_component_version_number.c"
 
+void Perror(char *err, int a1, int a2, int a3)
+{
+    char msg[200];
+    sprintf(msg, err, a1, a2, a3);
+    perror(msg);
+}
+
 int main(int argc, char **argv)
 {
 	int error=0;
@@ -53,12 +60,12 @@ int main(int argc, char **argv)
 	inode = atoi(*++argv);
 	fd = iopen(dev, inode, 0);
 	if (fd < 0) {
-		Perror("Unable to open inode %d", inode);
+		Perror("Unable to open inode %d", inode, 0, 0);
 		exit(1);
 	}
 	if (statflag) {
 		if (fstat(fd, &status) != 0) {
-			Perror("Unable to fstat the inode!");			
+			Perror("Unable to fstat the inode!", 0, 0, 0);
 			exit(1);
 		}
 		printf("Inode status: dev=%d, ino=%d, mode=%o, nlink=%d, uid=%d, gid=%d, size=%d, mtime=%d, blocks=%d\n", status.st_dev, status.st_ino, status.st_mode, status.st_nlink, status.st_uid, status.st_gid, status.st_size, status.st_mtime);
@@ -71,12 +78,5 @@ int main(int argc, char **argv)
 	}
 	exit(0);
 #endif /* AFS_NT40_ENV || AFS_NAMEI_ENV */
-}
-
-void Perror(char *err, int a1, int a2, int a3)
-{
-    char msg[200];
-    sprintf(msg, err, a1, a2, a3);
-    perror(msg);
 }
 
