@@ -20,6 +20,7 @@
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <afs/cellconfig.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -145,7 +146,8 @@ afs_int32 ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, a
 	    ts->beaconSinceDown = 0;
 	    urecovery_LostServer(); /* tell recovery to try to resend dbase later */
 	} else {            /* success */
-	    okcalls++;	    /* count up how many worked */
+            if (!ts->isClone)
+	        okcalls++;	    /* count up how many worked */
 	    if (aflags & CStampVersion) {
 		ts->version = atrans->dbase->version;
 	    }
@@ -161,12 +163,43 @@ afs_int32 ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, a
     Note that the host named by myHost should not also be listed in serverList.
 */
 
-int ubik_ServerInit(myHost, myPort, serverList, pathName, dbase)
+int ubik_ServerInitByInfo(myHost, myPort, info, clones, pathName, dbase)
+    struct afsconf_cell *info;  /* in */
+    char clones[];
     afs_int32 myHost;
     short myPort;
+    char *pathName;	/* in */
+    struct ubik_dbase **dbase; /* out */ 
+{
+     afs_int32 code;
+    
+     code = ubik_ServerInitCommon(myHost, myPort, info, clones, 0, pathName, dbase);
+     return code;
+}
+
+int ubik_ServerInit(myHost, myPort, serverList, pathName, dbase)
+    afs_int32 serverList[];    /* in */
+    afs_int32 myHost;
+    short myPort;
+    char *pathName;	/* in */
+    struct ubik_dbase **dbase; /* out */ 
+{
+     afs_int32 code;
+    
+     code = ubik_ServerInitCommon(myHost, myPort, (struct afsconf_cell *)0, 0,
+			serverList, pathName, dbase);
+     return code;
+}
+
+int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, dbase)
+    afs_int32 myHost;
+    short myPort;
+    struct afsconf_cell *info;  /* in */
+    char clones[];
     afs_int32 serverList[];    /* in */
     char *pathName;	/* in */
-    struct ubik_dbase **dbase; /* out */ {
+    struct ubik_dbase **dbase; /* out */ 
+{
     register struct ubik_dbase *tdb;
     register afs_int32 code;
     PROCESS junk;
@@ -245,7 +278,10 @@ int ubik_ServerInit(myHost, myPort, serverList, pathName, dbase)
     if (code) return code;
     code = urecovery_Initialize(tdb);
     if (code) return code;
-    code = ubeacon_InitServerList(myHost, serverList);
+    if (info)
+        code = ubeacon_InitServerListByInfo(myHost, info, clones);
+    else 
+        code = ubeacon_InitServerList(myHost, serverList);
     if (code) return code;
 
     /* now start up async processes */

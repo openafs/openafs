@@ -248,6 +248,7 @@ struct ubik_server {
     char beaconSinceDown;		/* did beacon get through since last crash? */
     char currentDB;			/* is dbase up-to-date */
     char magic;				/* the one whose vote counts twice */
+    char isClone;                       /* is only a clone, doesn't vote */
 };
 
 /* hold and release functions on a database */
@@ -258,6 +259,7 @@ struct ubik_server {
 
 /* list of all servers in the system */
 extern struct ubik_server *ubik_servers;
+extern char amIClone;
 
 /* network port info */
 extern short ubik_callPortal;
