@@ -59,7 +59,7 @@ extern HANDLE afsi_file;
  */
 static void afsd_notifier(char *msgp, char *filep, long line)
 {
-	char tbuffer[100];
+	char tbuffer[512];
 	char *ptbuf[1];
 	HANDLE h;
 
@@ -104,7 +104,7 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 /*
  * For use miscellaneously in smb.c; need to do better
  */
-static int DummyMessageBox(HWND h, LPCTSTR l1, LPCTSTR l2, UINT ui)
+static int _stdcall DummyMessageBox(HWND h, LPCTSTR l1, LPCTSTR l2, UINT ui)
 {
 	return 0;
 }
@@ -474,7 +474,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         ServiceStatus.dwWaitHint -= 5000;
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
-		code = afsd_InitSMB(&reason, DummyMessageBox);
+		code = afsd_InitSMB(&reason, MessageBox);
 		if (code != 0) {
             afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
 			osi_panic(reason, __FILE__, __LINE__);

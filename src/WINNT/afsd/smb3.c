@@ -151,7 +151,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         userp = unp->userp;
         newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
 		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,usern);
-		osi_Log3(afsd_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
+		osi_Log3(smb_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
     else {
@@ -177,7 +177,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
 		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",(int)vcp,vcp->lana,vcp->lsn,newUid,usern);
-		osi_Log4(afsd_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
+		osi_Log4(smb_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
     }
@@ -187,8 +187,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     /* Also to the next chained message */
     ((smb_t *)inp)->uid = newUid;
 
-    osi_Log3(afsd_logp, "SMB3 session setup name %s creating ID %d%s",
-             osi_LogSaveString(afsd_logp, usern), newUid, osi_LogSaveString(afsd_logp, s1));
+    osi_Log3(smb_logp, "SMB3 session setup name %s creating ID %d%s",
+             osi_LogSaveString(smb_logp, usern), newUid, osi_LogSaveString(smb_logp, s1));
     smb_SetSMBParm(outp, 2, 0);
     smb_SetSMBDataLength(outp, 0);
     return 0;
@@ -212,9 +212,9 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 		if (s2 == NULL) s2 = " ";
 		if (s1 == NULL) {s1 = s2; s2 = " ";}
 
-		osi_Log4(afsd_logp, "SMB3 user logoffX uid %d name %s%s%s",
+		osi_Log4(smb_logp, "SMB3 user logoffX uid %d name %s%s%s",
                   uidp->userID,
-                  osi_LogSaveString(afsd_logp,
+                  osi_LogSaveString(smb_logp,
                                     (uidp->unp) ? uidp->unp->name: " "), s1, s2);
 
 		lock_ObtainMutex(&uidp->mx);
@@ -226,7 +226,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         lock_ReleaseMutex(&uidp->mx);
     }
 	else    
-		osi_Log0(afsd_logp, "SMB3 user logoffX");
+		osi_Log0(smb_logp, "SMB3 user logoffX");
 
     smb_SetSMBDataLength(outp, 0);
     return 0;
@@ -245,7 +245,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	char *servicep;
     cm_user_t *userp;
         
-	osi_Log0(afsd_logp, "SMB3 receive tree connect");
+	osi_Log0(smb_logp, "SMB3 receive tree connect");
 
 	/* parse input parameters */
 	tp = smb_GetSMBData(inp, NULL);
@@ -291,7 +291,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     *tp++ = 0;
     smb_SetSMBDataLength(outp, 3);
 
-    osi_Log1(afsd_logp, "SMB3 tree connect created ID %d", newTid);
+    osi_Log1(smb_logp, "SMB3 tree connect created ID %d", newTid);
     return 0;
 }
 
@@ -514,7 +514,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		HANDLE h;
 		char *ptbuf[1];
 
-		osi_Log0(afsd_logp, "TRANSACTION2 word count = 0"); 
+		osi_Log0(smb_logp, "TRANSACTION2 word count = 0"); 
 
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 		ptbuf[0] = "Transaction2 word count = 0";
@@ -522,7 +522,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			    1, inp->ncb_length, ptbuf, inp);
 		DeregisterEventSource(h);
 #else /* DJGPP */
-		osi_Log0(afsd_logp, "TRANSACTION2 word count = 0"); 
+		osi_Log0(smb_logp, "TRANSACTION2 word count = 0"); 
 #endif /* !DJGPP */
 
         smb_SetSMBDataLength(outp, 0);
@@ -553,7 +553,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		asp->maxReturnParms = smb_GetSMBParm(inp, 2);
         asp->maxReturnData = smb_GetSMBParm(inp, 3);
 
-		osi_Log3(afsd_logp, "SMB3 received T2 init packet total data %d, cur data %d, max return data %d",
+		osi_Log3(smb_logp, "SMB3 received T2 init packet total data %d, cur data %d, max return data %d",
                  totalData, dataCount, asp->maxReturnData);
     }
     else {
@@ -564,7 +564,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         parmCount = smb_GetSMBParm(inp, 2);
         dataCount = smb_GetSMBParm(inp, 5);
 
-        osi_Log2(afsd_logp, "SMB3 received T2 aux packet parms %d, data %d",
+        osi_Log2(smb_logp, "SMB3 received T2 aux packet parms %d, data %d",
                  parmCount, dataCount);
     }   
 
@@ -591,12 +591,12 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* now dispatch it */
         if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
             osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-            osi_Log4(afsd_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
             code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
         }
         else {
             osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
-            osi_Log4(afsd_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
+            osi_Log4(smb_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
             code = CM_ERROR_BADOP;
         }
 
@@ -734,7 +734,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	userp = smb_GetTran2User(vcp, p);
     /* In the off chance that userp is NULL, we log and abandon */
     if(!userp) {
-        osi_Log1(afsd_logp, "ReceiveTran2Open user [%d] not resolvable", p->uid);
+        osi_Log1(smb_logp, "ReceiveTran2Open user [%d] not resolvable", p->uid);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_BADSMB;
     }
@@ -940,7 +940,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 	osi_hyper_t temp;
 	static char FSname[6] = {'A', 0, 'F', 0, 'S', 0};
         
-	osi_Log1(afsd_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
+	osi_Log1(smb_logp, "T2 QFSInfo type 0x%x", p->parmsp[0]);
 
 	switch (p->parmsp[0]) {
 	case 1: responseSize = sizeof(qi.u.allocInfo); break;
@@ -1129,13 +1129,13 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	else if (infoLevel == 0x103) nbytesRequired = 4;
 	else if (infoLevel == 0x108) nbytesRequired = 30;
     else {
-		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
         return 0;
     }
-	osi_Log2(afsd_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
-             osi_LogSaveString(afsd_logp, (char *)(&p->parmsp[3])));
+	osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
+             osi_LogSaveString(smb_logp, (char *)(&p->parmsp[3])));
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
@@ -1157,7 +1157,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         
     userp = smb_GetTran2User(vcp, p);
     if(!userp) {
-        osi_Log1(afsd_logp, "ReceiveTran2QPathInfo unable to resolve user [%d]", p->uid);
+        osi_Log1(smb_logp, "ReceiveTran2QPathInfo unable to resolve user [%d]", p->uid);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_BADSMB;
     }
@@ -1340,13 +1340,13 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	else if (infoLevel == 0x103) nbytesRequired = 4;
 	else if (infoLevel == 0x104) nbytesRequired = 6;
 	else {
-		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                  p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
         smb_ReleaseFID(fidp);
 		return 0;
 	}
-	osi_Log2(afsd_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
+	osi_Log2(smb_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
 
 	outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
@@ -1358,7 +1358,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 	userp = smb_GetTran2User(vcp, p);
     if(!userp) {
-    	osi_Log1(afsd_logp, "ReceiveTran2QFileInfo unable to resolve user [%d]", p->uid);
+    	osi_Log1(smb_logp, "ReceiveTran2QFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
     }
@@ -1444,7 +1444,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
 	infoLevel = p->parmsp[1];
 	if (infoLevel > 0x104 || infoLevel < 0x101) {
-		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+		osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
 			 p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, op, CM_ERROR_INVAL);
         smb_ReleaseFID(fidp);
@@ -1463,7 +1463,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		return 0;
 	}
 
-	osi_Log1(afsd_logp, "T2 SFileInfo type 0x%x", infoLevel);
+	osi_Log1(smb_logp, "T2 SFileInfo type 0x%x", infoLevel);
 
 	outp = smb_GetTran2ResponsePacket(vcp, p, op, 2, 0);
 
@@ -1472,7 +1472,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
 	userp = smb_GetTran2User(vcp, p);
     if(!userp) {
-    	osi_Log1(afsd_logp,"ReceiveTran2SetFileInfo unable to resolve user [%d]", p->uid);
+    	osi_Log1(smb_logp,"ReceiveTran2SetFileInfo unable to resolve user [%d]", p->uid);
     	code = CM_ERROR_BADSMB;
     	goto done;
     }
@@ -1629,7 +1629,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 				 * target of the symbolic link).  Otherwise,
 				 * we'll just use the symlink anyway.
                  */
-				osi_Log2(afsd_logp, "symlink vp %x to vp %x",
+				osi_Log2(smb_logp, "symlink vp %x to vp %x",
                          scp, targetScp);
 				cm_ReleaseSCache(scp);
                 scp = targetScp;
@@ -1962,11 +1962,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 		starPattern = 1;	/* assume, since required a Find Next */
     }
 
-	osi_Log4(afsd_logp,
+	osi_Log4(smb_logp,
               "T2 search dir attr 0x%x, info level %d, max count %d, flags 0x%x",
               attribute, infoLevel, maxCount, searchFlags);
 
-	osi_Log2(afsd_logp, "...T2 search op %d, nextCookie 0x%x",
+	osi_Log2(smb_logp, "...T2 search op %d, nextCookie 0x%x",
               p->opcode, nextCookie);
 
 	if (infoLevel >= 0x101)
@@ -1988,8 +1988,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
                                       maxReturnData);
 
-    osi_Log1(afsd_logp, "T2 receive search dir %s",
-             osi_LogSaveString(afsd_logp, pathp));
+    osi_Log1(smb_logp, "T2 receive search dir %s",
+             osi_LogSaveString(smb_logp, pathp));
         
     /* bail out if request looks bad */
     if (p->opcode == 1 && !pathp) {
@@ -1998,12 +1998,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         return CM_ERROR_BADSMB;
     }
         
-	osi_Log2(afsd_logp, "T2 dir search cookie 0x%x, connection %d",
+	osi_Log2(smb_logp, "T2 dir search cookie 0x%x, connection %d",
              nextCookie, dsp->cookie);
 
  	userp = smb_GetTran2User(vcp, p);
     if (!userp) {
-    	osi_Log1(afsd_logp, "T2 dir search unable to resolve user [%d]", p->uid);
+    	osi_Log1(smb_logp, "T2 dir search unable to resolve user [%d]", p->uid);
     	smb_ReleaseDirSearch(dsp);
     	smb_FreeTran2Packet(outp);
     	return CM_ERROR_BADSMB;
@@ -2257,7 +2257,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 fid.vnode = ntohl(dep->fid.vnode);
                 fid.unique = ntohl(dep->fid.unique);
                 fileType = cm_FindFileType(&fid);
-                /*osi_Log2(afsd_logp, "smb_ReceiveTran2SearchDir: file %s "
+                /*osi_Log2(smb_logp, "smb_ReceiveTran2SearchDir: file %s "
                  "has filetype %d", dep->name,
                  fileType);*/
                 if (fileType == CM_SCACHETYPE_DIRECTORY)
@@ -2432,7 +2432,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	/* return # of bytes in the buffer */
     outp->totalData = bytesInBuffer;
 
-	osi_Log2(afsd_logp, "T2 search dir done, %d names, code %d",
+	osi_Log2(smb_logp, "T2 search dir done, %d names, code %d",
               returnedNames, code);
 
 	/* Return error code if unsuccessful on first request */
@@ -2466,7 +2466,7 @@ long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
     dirHandle = smb_GetSMBParm(inp, 0);
 	
-    osi_Log1(afsd_logp, "SMB3 find close handle %d", dirHandle);
+    osi_Log1(smb_logp, "SMB3 find close handle %d", dirHandle);
 
     dsp = smb_FindDirSearch(dirHandle);
         
@@ -2541,7 +2541,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * (since IOCTL calls themselves aren't getting through).
          */
 #ifdef NOTSERVICE
-        osi_Log0(afsd_logp, "IOCTL Open");
+        osi_Log0(smb_logp, "IOCTL Open");
 #endif
 
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
@@ -2656,8 +2656,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
     else {
 		osi_assert(dscp != NULL);
-		osi_Log1(afsd_logp, "smb_ReceiveV3OpenX creating file %s",
-                 osi_LogSaveString(afsd_logp, lastNamep));
+		osi_Log1(smb_logp, "smb_ReceiveV3OpenX creating file %s",
+                 osi_LogSaveString(smb_logp, lastNamep));
 		openAction = 2;	/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
@@ -2747,7 +2747,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	lock_ReleaseMutex(&scp->mx);
     smb_SetSMBDataLength(outp, 0);
 
-	osi_Log1(afsd_logp, "SMB OpenX opening fid %d", fidp->fid);
+	osi_Log1(smb_logp, "SMB OpenX opening fid %d", fidp->fid);
 
     cm_ReleaseUser(userp);
     /* leave scp held since we put it in fidp->scp */
@@ -2986,9 +2986,9 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             attrs.clientModTime = unixTime;
             code = cm_SetAttr(scp, &attrs, userp, &req);
 
-            osi_Log1(afsd_logp, "SMB receive V3SetAttributes [fid=%ld]", fid);
+            osi_Log1(smb_logp, "SMB receive V3SetAttributes [fid=%ld]", fid);
         } else {
-            osi_Log1(afsd_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
+            osi_Log1(smb_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
         }
     }
     else code = 0;
@@ -3014,7 +3014,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     offset.HighPart = 0;	/* too bad */
     offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
 
-    osi_Log3(afsd_logp, "smb_ReceiveV3Read fd %d, off 0x%x, size 0x%x",
+    osi_Log3(smb_logp, "smb_ReceiveV3Read fd %d, off 0x%x, size 0x%x",
              fd, offset.LowPart, count);
         
 	fd = smb_ChainFID(fd, inp);
@@ -3174,8 +3174,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	spacep = inp->spacep;
 	smb_StripLastComponent(spacep->data, &lastNamep, realPathp);
 
-    osi_Log1(afsd_logp,"NTCreateX for [%s]",osi_LogSaveString(afsd_logp,realPathp));
-    osi_Log4(afsd_logp,"NTCreateX da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
+    osi_Log1(smb_logp,"NTCreateX for [%s]",osi_LogSaveString(smb_logp,realPathp));
+    osi_Log4(smb_logp,"NTCreateX da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
 
 	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
 		/* special case magic file name for receiving IOCTL requests
@@ -3224,7 +3224,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
     userp = smb_GetUser(vcp, inp);
     if (!userp) {
-    	osi_Log1(afsd_logp, "NTCreateX Invalid user [%d]", ((smb_t *) inp)->uid);
+    	osi_Log1(smb_logp, "NTCreateX Invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);
     	return CM_ERROR_INVAL;
     }
@@ -3236,7 +3236,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
-        	osi_Log1(afsd_logp, "NTCreateX Invalid base fid [%d]", baseFid);
+        	osi_Log1(smb_logp, "NTCreateX Invalid base fid [%d]", baseFid);
         	free(realPathp);
         	cm_ReleaseUser(userp);
         	return CM_ERROR_INVAL;
@@ -3245,7 +3245,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		tidPathp = NULL;
 	}
 
-    osi_Log1(afsd_logp, "NTCreateX tidPathp=[%s]", (tidPathp==NULL)?"null": osi_LogSaveString(afsd_logp,tidPathp));
+    osi_Log1(smb_logp, "NTCreateX tidPathp=[%s]", (tidPathp==NULL)?"null": osi_LogSaveString(smb_logp,tidPathp));
 	
     /* compute open mode */
 	fidflags = 0;
@@ -3298,7 +3298,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if (baseFid != 0) smb_ReleaseFID(baseFidp);
 
         if (code) {
-            osi_Log0(afsd_logp,"NTCreateX parent not found");
+            osi_Log0(smb_logp,"NTCreateX parent not found");
             cm_ReleaseUser(userp);
             free(realPathp);
             return code;
@@ -3382,8 +3382,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	}
 	else if (realDirFlag == 0 || realDirFlag == -1) {
 		osi_assert(dscp != NULL);
-		osi_Log1(afsd_logp, "smb_ReceiveNTCreateX creating file %s",
-				osi_LogSaveString(afsd_logp, lastNamep));
+		osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating file %s",
+				osi_LogSaveString(smb_logp, lastNamep));
 		openAction = 2;		/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		setAttr.clientModTime = time(NULL);
@@ -3423,8 +3423,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* create directory */
 		if ( !treeCreate ) treeStartp = lastNamep;
         osi_assert(dscp != NULL);
-        osi_Log1(afsd_logp, "smb_ReceiveNTCreateX creating directory [%s]",
-				osi_LogSaveString(afsd_logp, treeStartp));
+        osi_Log1(smb_logp, "smb_ReceiveNTCreateX creating directory [%s]",
+				osi_LogSaveString(smb_logp, treeStartp));
 		openAction = 2;		/* created directory */
 
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
@@ -3555,8 +3555,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	lock_ReleaseMutex(&scp->mx);
 	smb_SetSMBDataLength(outp, 0);
 
-	osi_Log2(afsd_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
-		 osi_LogSaveString(afsd_logp, realPathp));
+	osi_Log2(smb_logp, "SMB NT CreateX opening fid %d path %s", fidp->fid,
+		 osi_LogSaveString(smb_logp, realPathp));
 
 	smb_ReleaseFID(fidp);
 
@@ -3656,9 +3656,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	nameLength = lparmp[11];
 
 #ifdef DEBUG_VERBOSE
-	osi_Log4(afsd_logp,"NTTransCreate with da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
-	osi_Log2(afsd_logp,"... co[%x],sdl[%x],as[%x]",createOptions,sdLen,allocSize);
-	osi_Log1(afsd_logp,"... flags[%x]",flags);
+	osi_Log4(smb_logp,"NTTransCreate with da[%x],ea[%x],sa[%x],cd[%x]",desiredAccess,extAttributes,shareAccess,createDisp);
+	osi_Log2(smb_logp,"... co[%x],sdl[%x],as[%x]",createOptions,sdLen,allocSize);
+	osi_Log1(smb_logp,"... flags[%x]",flags);
 #endif
 
 	/* mustBeDir is never set; createOptions directory bit seems to be
@@ -3704,7 +3704,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
 	userp = smb_GetUser(vcp, inp);
     if(!userp) {
-    	osi_Log1(afsd_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
+    	osi_Log1(smb_logp, "NTTranCreate invalid user [%d]", ((smb_t *) inp)->uid);
     	free(realPathp);
     	return CM_ERROR_INVAL;
     }
@@ -3716,7 +3716,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if(!baseFidp) {
-        	osi_Log1(afsd_logp, "NTTranCreate Invalid fid [%d]", baseFid);
+        	osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
         	free(realPathp);
         	cm_ReleaseUser(userp);
         	return CM_ERROR_INVAL;
@@ -3828,8 +3828,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	}
 	else if (realDirFlag == 0 || realDirFlag == -1) {
 		osi_assert(dscp != NULL);
-		osi_Log1(afsd_logp, "smb_ReceiveNTTranCreate creating file %s",
-                 osi_LogSaveString(afsd_logp, lastNamep));
+		osi_Log1(smb_logp, "smb_ReceiveNTTranCreate creating file %s",
+                 osi_LogSaveString(smb_logp, lastNamep));
 		openAction = 2;		/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		setAttr.clientModTime = time(NULL);
@@ -3862,9 +3862,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	else {
 		/* create directory */
 		osi_assert(dscp != NULL);
-		osi_Log1(afsd_logp,
+		osi_Log1(smb_logp,
 				"smb_ReceiveNTTranCreate creating directory %s",
-				osi_LogSaveString(afsd_logp, lastNamep));
+				osi_LogSaveString(smb_logp, lastNamep));
 		openAction = 2;		/* created directory */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		setAttr.clientModTime = time(NULL);
@@ -4036,7 +4036,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         lock_ReleaseMutex(&scp->mx);
     }
 
-	osi_Log1(afsd_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
+	osi_Log1(smb_logp, "SMB NTTranCreate opening fid %d", fidp->fid);
 
 	smb_ReleaseFID(fidp);
 
@@ -4062,7 +4062,7 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp) {
-        osi_Log1(afsd_logp, "ERROR: NotifyChange given invalid fid [%d]", fid);
+        osi_Log1(smb_logp, "ERROR: NotifyChange given invalid fid [%d]", fid);
         return CM_ERROR_BADFD;
     }
 
@@ -4073,8 +4073,8 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_Directory_Watches = savedPacketp;
 	lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
-    osi_Log4(afsd_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
-             filter, fid, watchtree, osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
+    osi_Log4(smb_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
+             filter, fid, watchtree, osi_LogSaveString(smb_logp, fidp->NTopen_wholepathp));
 
     scp = fidp->scp;
     lock_ObtainMutex(&scp->mx);
@@ -4178,7 +4178,7 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	function = smb_GetSMBParm(inp, 18);
 
-	osi_Log1(afsd_logp, "SMB NT Transact function %d", function);
+	osi_Log1(smb_logp, "SMB NT Transact function %d", function);
 
 	/* We can handle long names */
 	if (vcp->flags & SMB_VCFLAG_USENT)
@@ -4259,9 +4259,9 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 		}
 		smb_ReleaseFID(fidp);
 
-		osi_Log4(afsd_logp,
+		osi_Log4(smb_logp,
 			 "Sending Change Notification for fid %d filter 0x%x wtree %d file %s",
-			 fid, filter, wtree, osi_LogSaveString(afsd_logp, filename));
+			 fid, filter, wtree, osi_LogSaveString(smb_logp, filename));
 
 		nextWatch = watch->nextp;
 		if (watch == smb_Directory_Watches)
@@ -4378,7 +4378,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	smb_fid_t *fidp;
 	cm_scache_t *scp;
 
-	osi_Log0(afsd_logp, "SMB3 receive NT cancel");
+	osi_Log0(smb_logp, "SMB3 receive NT cancel");
 
 	lock_ObtainMutex(&smb_Dir_Watch_Lock);
 	watch = smb_Directory_Watches;
@@ -4399,9 +4399,9 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 			fidp = smb_FindFID(vcp, fid, 0);
             if (fidp) {
-                osi_Log3(afsd_logp, "Cancelling change notification for fid %d wtree %d file %s", 
+                osi_Log3(smb_logp, "Cancelling change notification for fid %d wtree %d file %s", 
                          fid, watchtree,
-                         osi_LogSaveString(afsd_logp, (fidp)?fidp->NTopen_wholepathp:""));
+                         osi_LogSaveString(smb_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
                 scp = fidp->scp;
                 lock_ObtainMutex(&scp->mx);
@@ -4412,7 +4412,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 lock_ReleaseMutex(&scp->mx);
                 smb_ReleaseFID(fidp);
             } else {
-                osi_Log2(afsd_logp,"NTCancel unable to resolve fid [%d] in vcp[%x]", fid,vcp);
+                osi_Log2(smb_logp,"NTCancel unable to resolve fid [%d] in vcp[%x]", fid,vcp);
             }
 
 			/* assume STATUS32; return 0xC0000120 (CANCELED) */
