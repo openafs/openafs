@@ -206,13 +206,13 @@ static char *GetCellName(struct rx_connection *aconn, afs_int32 cellnum)
     return cellname;
 }
 
-static PrintCacheEntries(struct rx_connection *aconn, int aint32)
+static int PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 {
     register int i;
     register afs_int32 code;
     struct AFSDBCacheEntry centry;
     char *cellname;
-
+    
     for(i=0;i<10000;i++) {
 	code = RXAFSCB_GetCE(aconn, i, &centry);
 	if (code) {
@@ -268,6 +268,87 @@ static PrintCacheEntries(struct rx_connection *aconn, int aint32)
 	printf("\n");
     }
     return 0;
+}
+
+static int PrintCacheEntries64(struct rx_connection *aconn, int aint32)
+{
+    register int i;
+    register afs_int32 code;
+    struct AFSDBCacheEntry64 centry;
+    char *cellname;
+    int ce64 = 0;
+    
+    for(i=0;i<10000;i++) {
+	code = RXAFSCB_GetCE64(aconn, i, &centry);
+	if (code) {
+	    if (code == 1) break;
+	    printf("cmdebug: failed to get cache entry %d (%s)\n", i,
+		   error_message(code));
+	    return code;
+	}
+
+	if (centry.addr == 0) {
+	    /* PS output */
+	    printf("Proc %4d sleeping at %08x, pri %3d\n",
+		   centry.netFid.Vnode, centry.netFid.Volume, centry.netFid.Unique-25);
+	    continue;
+	}
+
+	if (!aint32 && !IsLocked(&centry.lock)) continue;
+
+	/* otherwise print this entry */
+	printf("** Cache entry @ 0x%08x for %d.%d.%d.%d", centry.addr,
+	       centry.cell, centry.netFid.Volume, centry.netFid.Vnode,
+	       centry.netFid.Unique);
+
+	cellname = GetCellName(aconn, centry.cell);
+	if (cellname)
+	    printf(" [%s]\n", cellname);
+	else
+	    printf("\n");
+
+	if (IsLocked(&centry.lock)) {
+	    printf("    locks: ");
+	    PrintLock(&centry.lock);
+	    printf("\n");
+	}
+#ifdef AFS_64BIT_ENV
+	printf("    %lld bytes\tDV %d refcnt %d\n", centry.Length, centry.DataVersion, centry.refCount);
+#else
+	printf("    %d bytes\tDV %d refcnt %d\n", centry.Length, centry.DataVersion, centry.refCount);
+#endif
+	printf("    callback %08x\texpires %u\n", centry.callback, centry.cbExpires);
+	printf("    %d opens\t%d writers\n", centry.opens, centry.writers);
+
+	/* now display states */
+	printf("    ");
+	if (centry.mvstat == 0) printf("normal file");
+	else if (centry.mvstat == 1) printf("mount point");
+	else if (centry.mvstat == 2) printf("volume root");
+	else printf("bogus mvstat %d", centry.mvstat);
+	printf("\n    states (0x%x)", centry.states);
+	if (centry.states & 1) printf(", stat'd");
+	if (centry.states & 2) printf(", backup");
+	if (centry.states & 4) printf(", read-only");
+	if (centry.states & 8) printf(", mt pt valid");
+	if (centry.states & 0x10) printf(", pending core");
+	if (centry.states & 0x40) printf(", wait-for-store");
+	if (centry.states & 0x80) printf(", mapped");
+	printf("\n");
+    }
+    return 0;
+}
+
+static int PrintCacheEntries(struct rx_connection *aconn, int aint32)
+{
+    register afs_int32 code;
+    struct AFSDBCacheEntry64 centry64;
+    
+    code = RXAFSCB_GetCE64(aconn, 0, &centry64);
+    if (code != RXGEN_OPCODE) 
+	return PrintCacheEntries64(aconn, aint32);
+    else
+	return PrintCacheEntries32(aconn, aint32);
 }
 
 static CommandProc(as)
