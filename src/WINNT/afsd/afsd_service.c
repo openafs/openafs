@@ -44,8 +44,10 @@ HANDLE WaitToTerminate;
 
 int GlobalStatus;
 
+#ifdef JUMP
 unsigned int MainThreadId;
 jmp_buf notifier_jmp;
+#endif /* JUMP */
 
 extern int traceOnPanic;
 extern HANDLE afsi_file;
@@ -89,9 +91,11 @@ static void afsd_notifier(char *msgp, char *filep, long line)
 
 	SetEvent(WaitToTerminate);
 
+#ifdef JUMP
 	if (GetCurrentThreadId() == MainThreadId)
 		longjmp(notifier_jmp, 1);
 	else
+#endif /* JUMP */
 		ExitThread(1);
 }
 
@@ -402,10 +406,13 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 
+#ifdef JUMP
     MainThreadId = GetCurrentThreadId();
 	jmpret = setjmp(notifier_jmp);
 
-	if (jmpret == 0) {
+	if (jmpret == 0) 
+#endif /* JUMP */
+    {
 		code = afsd_InitCM(&reason);
 		if (code != 0)
 			osi_panic(reason, __FILE__, __LINE__);
