@@ -4,6 +4,7 @@ MakefileProto.HPUX
 MakefileProto.LINUX
 MakefileProto.SOLARIS
 UAFS
+JUAFS
 afs
 afsint
 config
