@@ -1413,11 +1413,12 @@ static int lih_r(host, held, hostp)
 /* first pass: find the oldest host which isn't held by anyone */
 /* second pass: find the oldest host who isn't "me" */
 /* always called with hostp unlocked */
+extern struct host *hostList;
 static int GetSomeSpace_r(hostp, locked)
     struct host *hostp;
     int locked;
 {
-    register struct host *hp, *hp1 = NULL;
+    register struct host *hp, *hp1 = (struct host *)0, *hp2 = hostList;
     int i=0;
 
     cbstuff.GotSomeSpaces++;
@@ -1428,14 +1429,15 @@ static int GetSomeSpace_r(hostp, locked)
     }
     do {
 	lih_host = 0;
-	h_Enumerate_r(lih_r, (char *)hp1);
+	h_Enumerate_r(lih_r, hp2, (char *)hp1);
 	hp = lih_host;
 	if (hp) {
 	    cbstuff.GSS4++;
 	    if ( ! ClearHostCallbacks_r(hp, 0 /* not locked or held */) )
 		return;
-	    hp1 = hp;
+	    hp2 = hp->next;
 	} else {
+	    hp2 = hostList;
 	    hp1 = hostp;
 	    cbstuff.GSS1++;
 	    ViceLog(5,("GSS: Try harder for longest inactive host cnt= %d\n", i));
