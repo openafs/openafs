@@ -490,6 +490,9 @@ else
 	esac
 	case $AFS_SYSNAME in
 		*_linux* | *_umlinux*)
+			if test "x$enable_kernel_module" = "xyes"; then
+			 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
+			fi
 			if test "x${AFS_SYSKVERS}" = "x"; then
 			 AC_MSG_ERROR(Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname.)
 			fi
@@ -525,10 +528,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		esac
 
 		if test "x$enable_kernel_module" = "xyes"; then
-		 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $[]1 $[]2}'`
-		 if test "x${AFS_SYSKVERS}" = "x"; then
-		  AC_MSG_ERROR(Couldn't guess your Linux version [2])
-		 fi
 		 if test "x$enable_debug_kernel" = "xno"; then
 			LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
 		 fi
