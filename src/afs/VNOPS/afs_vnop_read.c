@@ -922,7 +922,7 @@ tagain:
 #if defined(AFS_FBSD_ENV)
             AFS_GUNLOCK();
             VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
-            code = VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred);
+            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
             VOP_UNLOCK(tfile->vnode, 0, curproc);
             AFS_GLOCK();
 #else
