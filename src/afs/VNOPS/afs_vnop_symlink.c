@@ -125,7 +125,7 @@ afs_symlink
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     volp = afs_FindVolume(&adp->fid, READ_LOCK); /*parent is also in same vol*/
     ObtainWriteLock(&adp->lock,156);
-    ObtainWriteLock(&tdc->lock, 636);
+    if (tdc) ObtainWriteLock(&tdc->lock, 636);
     ObtainSharedLock(&afs_xvcache,17);  /* prevent others from creating this entry */
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
     do {

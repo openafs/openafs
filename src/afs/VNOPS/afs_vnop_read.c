@@ -253,7 +253,7 @@ tagain:
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
-		ObtainReadLock(&tdc->lock);
+		if (tdc) ObtainReadLock(&tdc->lock);
 	    }
 	}
 
@@ -786,7 +786,7 @@ tagain:
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
-		ObtainReadLock(&tdc->lock);
+		if (tdc) ObtainReadLock(&tdc->lock);
 	    }
 	}
 	
