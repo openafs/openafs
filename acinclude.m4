@@ -32,7 +32,7 @@ AC_ARG_ENABLE( fast-restart,
 AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_ENABLE( full-vos-listvol-switch,
-[  --enable-full-vos-listvol-switch     enable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="no")
+[  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
