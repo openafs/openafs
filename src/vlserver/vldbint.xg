@@ -15,7 +15,7 @@ statindex 15
 %#include	"vl_opcodes.h"	/* directly to other places */
 
 %#ifdef KERNEL
-%#define	xdr_array(a,b,c,d,e,f)	xdr_arrayN(a,b,c,d,e,f)
+%#define	afs_xdr_array(a,b,c,d,e,f)	afs_xdr_arrayN(a,b,c,d,e,f)
 %#include "../afs/longc_procs.h"
 %#endif
 

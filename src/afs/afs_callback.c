@@ -1175,7 +1175,7 @@ int SRXAFSCB_GetCellServDB(
     struct rx_call *a_call,
     afs_int32 a_index,
     char **a_name,
-    afs_int32 *a_hosts)
+    serverList *a_hosts)
 {
     afs_int32 i, j;
     struct cell *tcell;
@@ -1185,27 +1185,27 @@ int SRXAFSCB_GetCellServDB(
     RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_GetCellServDB);
 
-    memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
-
-    /* search the list for the cell with this index */
-    ObtainReadLock(&afs_xcell);
-
     tcell = afs_GetCellByIndex(a_index, READ_LOCK, 0);
 
     if (!tcell) {
 	i = 0;
+	a_hosts->serverList_val = 0;
+	a_hosts->serverList_len = 0;
     } else {
 	p_name = tcell->cellName;
-	for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) {
-	    a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
-	}
+	for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) 
+	  ;
 	i = strlen(p_name);
+	a_hosts->serverList_val = (afs_int32 *)afs_osi_Alloc(j*sizeof(afs_int32));
+	a_hosts->serverList_len = j;
+	for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) 
+	    a_hosts->serverList_val[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
 	afs_PutCell(tcell, READ_LOCK);
     }
 
     t_name = (char *)afs_osi_Alloc(i+1);
     if (t_name == NULL) {
-	ReleaseReadLock(&afs_xcell);
+	afs_osi_Free(a_hosts->serverList_val, (j*sizeof(afs_int32)));
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
@@ -1213,8 +1213,6 @@ int SRXAFSCB_GetCellServDB(
     t_name[i] = '\0';
     if (p_name)
 	memcpy(t_name, p_name, i);
-
-    ReleaseReadLock(&afs_xcell);
 
     RX_AFS_GUNLOCK();
 

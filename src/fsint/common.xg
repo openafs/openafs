@@ -152,7 +152,7 @@ struct interfaceAddr {		/* for multihomed clients */
 };
 
 const AFSMAXCELLHOSTS = 8;	/*Max VLDB servers per cell*/
-typedef afs_int32 serverList[AFSMAXCELLHOSTS];
+typedef afs_int32 serverList<AFSMAXCELLHOSTS>;
 
 typedef afs_uint32 cacheConfig<>;
 
