@@ -59,7 +59,7 @@ $(RXOBJS): $(RX)\$$(@B).c
 	$(C2OBJ) -I$(RX) $**
 
 $(IDLFILES):afsrpc.idl
-	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config $?
+	midl $(MIDL_FLAGS) /no_robust $(AFSDEV_AUXMIDLFLAGS) /app_config $?
 
 
 AFSDOBJS=\

@@ -322,7 +322,9 @@ main(int argc, char **argv)
 #endif
     }
 
+#ifndef AFS_NT40_ENV
     serverLogSyslogTag = "ptserver";
+#endif
     OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);	/* set up logging */
     SetupLogSignals();
 

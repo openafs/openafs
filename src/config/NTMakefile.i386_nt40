@@ -54,7 +54,8 @@ AFSDEV_BUILDTYPE = NONE
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.8 a
+AFSPRODUCT_VERSION=1.2.11
+AFSPRODUCT_FILE_VERSION=1,2,1100,0
 CELLNAME_DEFAULT=Your Cell Name
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
@@ -244,6 +245,9 @@ CPP2OBJ = $(C2OBJ)
 
 .c{$(OJT)\}.obj:
 	$(C2OBJ) $<
+   
+.c.obj:
+   $(C2OBJ) $<
 
 .cpp{$(OJT)\}.obj:
 	$(CPP2OBJ) $<

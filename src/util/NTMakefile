@@ -47,6 +47,7 @@ LIBOBJS = \
 	$(OJT)\regex.obj \
 	$(OJT)\readdir_nt.obj \
 	$(OJT)\serverLog.obj \
+   $(OJT)\snprintf.obj \
 	$(OJT)\uuid.obj \
 	$(OJT)\volparse.obj \
 	$(OJT)\winsock_nt.obj \

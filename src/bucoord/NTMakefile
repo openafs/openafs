@@ -19,16 +19,13 @@ INCFILES = bc.h
 LIBFILE = $(DESTDIR)\lib\afs\afsbxdb.lib
 
 LIBOBJS =\
-	$(OJT)dsstub.obj \
-	$(OJT)ubik_db_if.obj \
-	$(OJT)status.obj \
-	$(OJT)dlq.obj \
-	$(OJT)bucoord_errs.obj \
-	$(OJT)volstub.obj \
-	$(OJT)AFS_component_version_number.obj
-
-$(LIBOBJS):$$(@B).c
-	$(C2OBJ) $**
+	$(OJT)/dsstub.obj \
+	$(OJT)/ubik_db_if.obj \
+	$(OJT)/status.obj \
+	$(OJT)/dlq.obj \
+	$(OJT)/bucoord_errs.obj \
+	$(OJT)/volstub.obj \
+	$(OJT)/AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -40,30 +37,27 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
 EXEOBJS =\
-	$(OJT)main.obj \
-	$(OJT)config.obj \
-	$(OJT)dsstub.obj \
-	$(OJT)volstub.obj \
-	$(OJT)commands.obj \
-	$(OJT)regex.obj \
-	$(OJT)server.obj \
-	$(OJT)dsvs.obj \
-	$(OJT)dump.obj \
-	$(OJT)restore.obj \
-	$(OJT)ubik_db_if.obj \
-	$(OJT)dump_sched.obj \
-	$(OJT)vol_sets.obj \
-	$(OJT)tape_hosts.obj \
-	$(OJT)bucoord_errs.obj \
-	$(OJT)bc_status.obj \
-	$(OJT)status.obj \
-	$(OJT)dlq.obj 
+	$(OJT)\main.obj \
+	$(OJT)\config.obj \
+	$(OJT)\dsstub.obj \
+	$(OJT)\volstub.obj \
+	$(OJT)\commands.obj \
+	$(OJT)\regex.obj \
+	$(OJT)\server.obj \
+	$(OJT)\dsvs.obj \
+	$(OJT)\dump.obj \
+	$(OJT)\restore.obj \
+	$(OJT)\ubik_db_if.obj \
+	$(OJT)\dump_sched.obj \
+	$(OJT)\vol_sets.obj \
+	$(OJT)\tape_hosts.obj \
+	$(OJT)\bucoord_errs.obj \
+	$(OJT)\bc_status.obj \
+	$(OJT)\status.obj \
+	$(OJT)\dlq.obj \
 
-$(EXEOBJS):$$(@B).c
-	$(C2OBJ) $**
 
-$(OJT)backup.res:AFS_component_version_number.h
-
+$(OJT)/backup.res:AFS_component_version_number.h
 	$(RC) backup.rc
 
 $(EXEOBJS):$$(@B).c
@@ -110,7 +104,7 @@ bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)backup.res: AFS_component_version_number.h
+$(OJT)/backup.res: AFS_component_version_number.h
 
 ############################################################################
 # Install 

@@ -11,7 +11,6 @@ INCFILES = \
 	$(DESTDIR)\include\WINNT\afsreg.h \
 	$(DESTDIR)\include\WINNT\syscfg.h \
 	$(DESTDIR)\include\WINNT\afssw.h \
-	$(DESTDIR)\include\WINNT\osi_malloc.h \
 	$(DESTDIR)\include\WINNT\vptab.h
 
 
