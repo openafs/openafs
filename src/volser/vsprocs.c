@@ -179,7 +179,7 @@ void MapPartIdIntoName(afs_int32 partId, char *partName)
 
 int yesprompt(char *str)
 {
-    char response, c;
+    int response, c;
     int code;
 
     fprintf(STDERR, "Do you want to %s? [yn](n): ", str);

@@ -260,7 +260,7 @@ int LWP_GetResponseKey(int seconds, char *key)
 #ifdef AFS_NT40_ENV
   *key = getche(); /* get char and echo it to screen */
 #else
-  *key = getchar();
+  *key = (char ) getchar();
 #endif
 
   return rc;

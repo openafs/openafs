@@ -113,7 +113,7 @@ afs_int32
 Ask(st)
      char *st;
 {
-    char response;
+    int  response;
 
     while (1)
     {
@@ -123,7 +123,7 @@ Ask(st)
 	fflush(stdout);
 	response = getchar();
 	if      ( response == 'y' ) return(1);
-	else if ( response == 'n' ) return(0);
+	else if ( response == 'n' || response == EOF) return(0);
 	printf("please answer y/n\n");
     }
 }

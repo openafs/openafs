@@ -163,7 +163,7 @@ int openOutFile(headerPtr)
   struct volumeHeader *headerPtr;
 {
   afs_int32 len;
-  char ch;
+  int ch;
   int rc;
   int oflag;
   int  skip, first;
