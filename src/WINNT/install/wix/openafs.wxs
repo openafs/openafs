@@ -62,31 +62,29 @@
          Id="BIN_Instloop"
          src="$(var.MediaBinDir)instloop.exe"/>
         <Binary
+         Id="BIN_afsLoopback"
+         src="$(var.MediaBinDir)afsloopback.dll"/>
+        <Binary
 		 Id="BIN_afsCustom"
 		 src="$(var.MediaDllDir)afscustom.dll"/>
         <CustomAction
          Id="InstallLoopback"
-         BinaryKey="BIN_Instloop"
-         ExeCommand="-i"
-         Execute="deferred"
-         Impersonate="no"
+         BinaryKey="BIN_afsLoopback"
+         DllEntry="installLoopbackMSI"
+         Execute="deferred" 
          />
 	<?ifdef RemoveLoopback?>
         <CustomAction
          Id="RemoveLoopback"
-         BinaryKey="BIN_Instloop"
-         ExeCommand="-u"
-         Execute="deferred"
-         Return="ignore"
-         Impersonate="no"
+         BinaryKey="BIN_afsLoopback"
+         DllEntry="uninstallLoopbackMSI"
+         Execute="deferred" 
          />
         <CustomAction
          Id="RollbackLoopback"
-         BinaryKey="BIN_Instloop"
-         ExeCommand="-u"
-         Execute="rollback"
-         Return="ignore"
-         Impersonate="no"
+         BinaryKey="BIN_afsLoopback"
+         DllEntry="uninstallLoopbackMSI"
+         Execute="deferred" 
          />
 	<?endif?>
         <CustomAction
