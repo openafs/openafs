@@ -120,6 +120,10 @@
 #define SYS_NAME_ID_sparc64_linux2	1800
 #define SYS_NAME_ID_sparc64_linux22	1801
 
+#define SYS_NAME_ID_s390_linux2         1900
+#define SYS_NAME_ID_s390_linux22        1901
+#define SYS_NAME_ID_s390_linux24        1902
+
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
