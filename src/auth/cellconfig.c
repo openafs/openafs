@@ -218,7 +218,7 @@ register char *adir; {
     tdir->name = (char *) malloc(strlen(adir)+1);
     strcpy(tdir->name, adir);
 
-    code = afsconf_OpenInternal(tdir);
+    code = afsconf_OpenInternal(tdir, 0, 0);
     if (code) {
 	char *afsconf_path, *getenv(), afs_confdir[128];
 
@@ -272,7 +272,7 @@ register char *adir; {
 	}
 	tdir->name = (char *) malloc(strlen(afsconf_path)+1);
 	strcpy(tdir->name, afsconf_path);
-	code = afsconf_OpenInternal(tdir);
+	code = afsconf_OpenInternal(tdir, 0, 0);
 	if (code) {
 	    free(tdir->name);
 	    free(tdir);
@@ -322,8 +322,11 @@ static int GetCellNT(struct afsconf_dir *adir)
 #endif /* AFS_NT40_ENV */
 
 
-static int afsconf_OpenInternal(adir)
-register struct afsconf_dir *adir; {
+static int afsconf_OpenInternal(adir, cell, clones)
+register struct afsconf_dir *adir; 
+char *cell;
+char clones[];
+{
     FILE *tf;
     register char *tp, *bp;
     register struct afsconf_entry *curEntry;
@@ -409,7 +412,10 @@ register struct afsconf_dir *adir; {
 		return -1;
 	    }
 	    i = curEntry->cellInfo.numServers;
-	    code = ParseHostLine(tbuffer, (char *) &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i]);
+           if (cell && !strcmp(cell, curEntry->cellInfo.name)) 
+                code = ParseHostLine(tbuffer, (char *) &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], &clones[i]);
+           else
+                code = ParseHostLine(tbuffer, (char *) &curEntry->cellInfo.hostAddr[i], curEntry->cellInfo.hostName[i], 0);
 	    if (code) {
 		if (code == AFSCONF_SYNTAX) {
 		    for (bp=tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
@@ -442,17 +448,26 @@ register struct afsconf_dir *adir; {
 }
 
 /* parse a line of the form
- *"128.2.1.3	#hostname"
+ *"128.2.1.3   #hostname" or
+ *"[128.2.1.3]  #hostname" for clones
  * into the appropriate pieces.  
  */
-static ParseHostLine(aline, addr, aname)
-register struct sockaddr_in *addr;
-char *aline, *aname; {
+static ParseHostLine(aline, addr, aname, aclone)
+    char *aclone;
+    register struct sockaddr_in *addr;
+    char *aline, *aname; 
+{
     int c1, c2, c3, c4;
     register afs_int32 code;
     register char *tp;
 
-    code = sscanf(aline, "%d.%d.%d.%d #%s", &c1, &c2, &c3, &c4, aname);
+    if (*aline == '[') {
+        if (aclone) *aclone = 1;
+        code = sscanf(aline, "[%d.%d.%d.%d] #%s", &c1, &c2, &c3, &c4, aname);
+    } else {
+        if (aclone) *aclone = 0;
+        code = sscanf(aline, "%d.%d.%d.%d #%s", &c1, &c2, &c3, &c4, aname);
+    }
     if (code != 5) return AFSCONF_SYNTAX;
     addr->sin_family = AF_INET;
     addr->sin_port = 0;
@@ -501,6 +516,30 @@ char *arock; {
 }
 
 afs_int32 afsconf_SawCell = 0;
+
+afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
+    struct afsconf_dir *adir;
+    char *aservice;
+    char *acellName;
+    struct afsconf_cell *acellInfo; 
+    char clones[];
+{
+    afs_int32 code;
+    char *cell;
+
+    code = afsconf_GetCellInfo(adir, acellName, aservice, acellInfo);
+    if (code) 
+       return code;
+
+    if (acellName) 
+       cell = acellName;
+    else
+       cell = (char *) &acellInfo->name;
+
+    code = afsconf_OpenInternal(adir, cell, clones);
+    return code;
+}
+
 afsconf_GetCellInfo(adir, acellName, aservice, acellInfo)
 struct afsconf_dir *adir;
 char *aservice;
@@ -520,8 +559,8 @@ struct afsconf_cell *acellInfo; {
 	tcell = acellName;
 	cnLen = strlen(tcell)+1;
 	lcstring (tcell, tcell, cnLen);
-	afsconf_SawCell = 1;                       /* will ignore the AFSCELL switch on future */
-	                                           /* call to afsconf_GetLocalCell: like klog  */
+	afsconf_SawCell = 1;    /* will ignore the AFSCELL switch on future */
+	                        /* call to afsconf_GetLocalCell: like klog  */
     } else {
 	i = afsconf_GetLocalCell(adir, tbuffer, sizeof(tbuffer));
 	if (i) {
@@ -643,7 +682,7 @@ register struct afsconf_dir *adir; {
     register afs_int32 code;
     code = afsconf_CloseInternal(adir);
     if (code) return code;
-    code = afsconf_OpenInternal(adir);
+    code = afsconf_OpenInternal(adir, 0, 0);
     return code;
 }
 

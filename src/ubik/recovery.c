@@ -425,6 +425,7 @@ urecovery_Interact() {
 	    bestDBVersion.counter = 0;
 	    for(ts=ubik_servers; ts; ts=ts->next) {
 	        if (!ts->up) continue;  /* don't bother with these guys */
+                if (ts->isClone) continue;
 		code = DISK_GetVersion(ts->disk_rxcid, &ts->version);
 		if (code == 0) {
 		    /* perhaps this is the best version */

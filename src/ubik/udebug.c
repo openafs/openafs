@@ -86,6 +86,7 @@ struct cmd_syndesc *as; {
     struct ubik_debug udebug;
     struct ubik_sdebug usdebug;
     int		oldServer =0;	/* are we talking to a pre 3.5 server? */
+    afs_int32 isClone = 0;
 
     int32p = (as->parms[2].items ? 1 : 0);
 
@@ -128,7 +129,8 @@ struct cmd_syndesc *as; {
     tconn = rx_NewConnection(hostAddr, port, VOTE_SERVICE_ID, sc, 0);
     
     /* now do the main call */
-    code = VOTE_Debug(tconn, &udebug);
+    code = VOTE_XDebug(tconn, &udebug, &isClone);
+    if (code) code = VOTE_Debug(tconn, &udebug);
     if ( code == RXGEN_OPCODE )	
     {
 	oldServer = 1;			/* talking to a pre 3.5 server */
@@ -205,7 +207,10 @@ struct cmd_syndesc *as; {
 		   udebug.epochTime, udebug.tidCounter);
 	}
     } else {
-	printf("I am not sync site\n");
+        if (isClone) 
+	    printf("I am a clone and never can become sync site\n");
+        else
+	    printf("I am not sync site\n");
 	inhostAddr.s_addr = htonl(udebug.lowestHost);
 	diff = udebug.now - udebug.lowestTime;
 	printf("Lowest host %s was set %d secs ago\n", inet_ntoa(inhostAddr), diff);
@@ -239,13 +244,16 @@ struct cmd_syndesc *as; {
     if (int32p || udebug.amSyncSite) {
 	/* now do the subcalls */
 	for(i=0;;i++) {
-	    if ( oldServer )
-	    {				/* pre 3.5 server */
-		memset(&usdebug, 0, sizeof(usdebug)); 
-		code = VOTE_SDebugOld(tconn, i, &usdebug);
+            isClone = 0;
+            code = VOTE_XSDebug(tconn, i, &usdebug, &isClone);
+            if (code < 0) {
+	        if ( oldServer ) {			/* pre 3.5 server */
+		    memset(&usdebug, 0, sizeof(usdebug)); 
+		    code = VOTE_SDebugOld(tconn, i, &usdebug);
+	        }
+	        else
+		    code = VOTE_SDebug(tconn, i, &usdebug);
 	    }
-	    else
-		code = VOTE_SDebug(tconn, i, &usdebug);
 	    if (code > 0) break;	/* done */
 	    if (code < 0) {
 		printf("error code %d from VOTE_SDebug\n", code);
@@ -253,12 +261,15 @@ struct cmd_syndesc *as; {
 	    }
 	    inhostAddr.s_addr = htonl(usdebug.addr);
 	    /* otherwise print the structure */
-	    printf("\nServer( %s", afs_inet_ntoa(htonl(usdebug.addr))); 
+	    printf("\nServer (%s", afs_inet_ntoa(htonl(usdebug.addr))); 
 	    for ( j=0;((usdebug.altAddr[j]) && 
 				(j<UBIK_MAX_INTERFACE_ADDR-1)); j++)
 		printf(" %s", afs_inet_ntoa(htonl(usdebug.altAddr[j])));
-	    printf(" ): (db %d.%d)\n",
+	    printf("): (db %d.%d)",
 		   usdebug.remoteVersion.epoch, usdebug.remoteVersion.counter);
+            if (isClone)
+                printf("    is only a clone!");
+	    printf("\n");
 
 	    if (usdebug.lastVoteTime == 0) {
 	       printf("    last vote never rcvd \n");

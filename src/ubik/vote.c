@@ -172,6 +172,8 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
     afs_int32 vote;
     struct rx_connection *aconn;
     struct rx_peer *rxp;
+    struct ubik_server *ts;
+    int isClone = 0;
 
     now = FT_ApproxTime();			/* close to current time */
     if (rxcall)	{				/* caller's host */
@@ -188,8 +190,15 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
 					afs_inet_ntoa(rx_HostOf(rxp)));
                 return 0; /* I don't know about you: vote no */
         }
-    } else
+        for (ts = ubik_servers; ts; ts = ts->next) {
+            if (ts->addr[0] == otherHost) break;
+        }
+        if (!ts) ubik_dprint("Unknown host %x has sent a beacon\n", otherHost);
+        if (ts && ts->isClone) isClone = 1;
+    } else {
 	otherHost = ubik_host[0];			/* this host */
+        isClone = amIClone;
+    }
 
     ubik_dprint("Received beacon type %d from host %s\n", astate, 
 				afs_inet_ntoa(otherHost));
@@ -211,8 +220,11 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
        seconds, we ignore its presence in lowestHost: it may have crashed.
        Note that we don't ever let anyone appear in our lowestHost if we're
        lower than them, 'cause we know we're up. */
-    if (ntohl((afs_uint32) otherHost) <= ntohl((afs_uint32) lowestHost)
-	|| lowestTime + BIGTIME < now) {
+    /* But do not consider clones for lowesHost since they never may become
+       sync site */
+    if (!isClone &&
+        (ntohl((afs_uint32) otherHost) <= ntohl((afs_uint32) lowestHost)
+        || lowestTime + BIGTIME < now)) {
 	lowestTime = now;
 	lowestHost = otherHost;
     }
@@ -223,8 +235,9 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
        lowest.  Need to prove: if one guy in the system is lowest and knows
        he's lowest, these loops don't occur.  because if someone knows he's
        lowest, he will send out beacons telling others to vote for him. */
-    if (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32) lowestHost)
-	|| lowestTime + BIGTIME < now) {
+    if (!amIClone &&
+        (ntohl((afs_uint32) ubik_host) <= ntohl((afs_uint32) lowestHost)
+        || lowestTime + BIGTIME < now)) {
 	lowestTime = now;
 	lowestHost = ubik_host[0];
     }
@@ -261,7 +274,18 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
 	/* someone else *is* a sync site, just say no */
 	if (syncHost && syncHost != otherHost)
 	    return 0;
+    } else  /* fast startup if this is the only non-clone */
+    if (lastYesHost == 0xffffffff && otherHost == ubik_host[0]) {
+	int i = 0;
+        for (ts = ubik_servers; ts; ts = ts->next) {
+            if (ts->addr[0] == otherHost) continue;
+	    if (!ts->isClone) i++;
+	}
+	if (!i) lastYesHost = otherHost;
     }
+	
+
+    if (isClone) return 0; /* clone never can become sync site */
 
     /* Don't promise sync site support to more than one host every BIGTIME
        seconds.  This is the heart of our invariants in this system. */
@@ -293,7 +317,19 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
 SVOTE_SDebug(rxcall, awhich, aparm)
     struct rx_call *rxcall;
     afs_int32 awhich;
-    register struct ubik_sdebug *aparm; {
+    register struct ubik_sdebug *aparm;
+{
+    afs_int32 code, isClone;
+    code = SVOTE_XSDebug(rxcall, awhich, aparm, &isClone);
+    return code;
+}
+
+SVOTE_XSDebug(rxcall, awhich, aparm, isclone)
+    afs_int32 *isclone;
+    struct rx_call *rxcall;
+    afs_int32 awhich;
+    register struct ubik_sdebug *aparm; 
+{
     register struct ubik_server *ts;
     register int i;
     for(ts=ubik_servers; ts; ts=ts->next) {
@@ -309,12 +345,24 @@ SVOTE_SDebug(rxcall, awhich, aparm)
 	    aparm->up = ts->up;
 	    aparm->beaconSinceDown = ts->beaconSinceDown;
 	    aparm->currentDB = ts->currentDB;
+            *isclone = ts->isClone;
 	    return 0;
 	}
     }
     return 2;
 }
 
+SVOTE_XDebug(rxcall, aparm, isclone)
+    struct rx_call *rxcall;
+    register struct ubik_debug *aparm;
+    afs_int32 *isclone;
+{
+    afs_int32 code;
+
+    code = SVOTE_Debug(rxcall, aparm);
+    *isclone = amIClone;
+    return code;
+}
 
 /* handle basic network debug command.  This is the global state dumper */
 SVOTE_Debug(rxcall, aparm)

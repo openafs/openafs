@@ -707,10 +707,21 @@ register struct cmd_syndesc *as; {
     register struct rx_connection *tconn;
     register afs_int32 code;
     register struct cmd_item *ti;
+    char name[MAXHOSTCHARS];
     
     tconn = GetConn(as, 0);
     for(ti = as->parms[1].items; ti; ti=ti->next) {
-	code = BOZO_AddCellHost(tconn, ti->data);
+        if (as->parms[2].items) {
+           if (strlen(ti->data) > MAXHOSTCHARS - 3) {
+               fprintf(stderr, "bos: host name too long\n");
+               return E2BIG;
+           }
+            name[0] = '[';
+            strcpy(&name[1],ti->data);
+            strcat((char *)&name, "]");
+            code = BOZO_AddCellHost(tconn, name);
+        } else 
+           code = BOZO_AddCellHost(tconn, ti->data);
 	if (code)
 	    printf("bos: failed to add host %s (%s)\n", ti->data, em(code));
     }
@@ -1885,6 +1896,7 @@ main(argc, argv)
     ts = cmd_CreateSyntax("addhost", AddHost, 0, "add host to cell dbase");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-host", CMD_LIST, 0, "host name");
+    cmd_AddParm(ts, "-clone", CMD_FLAG, CMD_OPTIONAL, "vote doesn't count");
     add_std_args (ts);
 
     ts = cmd_CreateSyntax("removehost", RemoveHost, 0,
