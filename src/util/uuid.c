@@ -141,6 +141,7 @@ uuid_time_p_t           time2; {
     return (0);
 }
 
+#if !defined(KERNEL) && !defined(UKERNEL)
 /*
  *    Converts a string UUID to binary representation.
  */
@@ -198,6 +199,7 @@ afsUUID_to_string(const afsUUID *uuid, char *str, size_t strsz)
 
     return 0;
 }
+#endif
 
 afs_int32 afs_uuid_create (uuid)
 afsUUID *uuid; {
