@@ -411,7 +411,9 @@ void check_bad_parent(struct dentry *dp)
 		 ICL_TYPE_POINTER, avc,
 		 ICL_TYPE_POINTER, dp);
     }
-    
+    if (avc)
+	AFS_RELE(avc);
+    crfree(credp);
   } /* if bad parent */
  
   return;
