@@ -1084,7 +1084,11 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
 	return EINVAL;	/* out of range */
     }
     inSize = ablob->in_size;
-    if (inSize >= PIGGYSIZE) return E2BIG;
+    
+    /* Do all range checking before continuing */
+    if ((inSize >= PIGGYSIZE) || (inSize < 0)) return E2BIG;
+    if ((ablob->out_size >= PIGGYSIZE) || (ablob->out_size < 0)) return E2BIG;
+
     inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     if (inSize > 0) {
       AFS_COPYIN(ablob->in, inData, inSize, code);
