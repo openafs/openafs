@@ -398,6 +398,9 @@ char * ToString(char *s);
 void AskOffline(VolumeId volumeId);
 void AskOnline(VolumeId volumeId, char *partition);
 void CheckLogFile(void);
+#ifndef AFS_NT40_ENV
+void TimeStampLogFile(void);
+#endif
 void ClearROInUseBit(struct VolumeSummary *summary);
 void CopyAndSalvage(register struct DirSummary *dir);
 int CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume);
@@ -571,11 +574,13 @@ static handleit(as)
 	if ( ti = as->parms[17].items) { /* -syslogfacility */
 		useSyslogFacility = atoi(ti->data);
 	}
+        if (ti = as->parms[18].items) {  /* -datelogs */
+                TimeStampLogFile();
+        }
 #endif
 
-
 #ifdef FAST_RESTART
-    if (ti = as->parms[18].items) {  /* -DontSalvage */
+    if (ti = as->parms[19].items) {  /* -DontSalvage */
       printf("Exiting immediately without salvage. Look into the FileLog");
       printf(" to find volumes which really need to be salvaged!\n");
       Exit(0);
@@ -753,6 +758,7 @@ char **argv;
 		to deal with screwy offsets for cmd params */
     cmd_AddParm(ts, "-syslog", CMD_FLAG, CMD_OPTIONAL, "Write salvage log to syslogs");
     cmd_AddParm(ts, "-syslogfacility", CMD_SINGLE, CMD_OPTIONAL, "Syslog facility number to use");
+    cmd_AddParm(ts, "-datelogs", CMD_FLAG, CMD_OPTIONAL, "Include timestamp in logfile filename");
 
 #ifdef FAST_RESTART
     cmd_AddParm(ts, "-DontSalvage", CMD_FLAG, CMD_OPTIONAL, "Don't salvage. This my be set in BosConfig to let the fileserver restart immediately after a crash. Bad volumes will be taken offline");
@@ -3587,6 +3593,26 @@ void CheckLogFile(void)
 #endif
     }
 }
+
+#ifndef AFS_NT40_ENV
+void TimeStampLogFile(void)
+{
+  char stampSlvgLog[AFSDIR_PATH_MAX];
+  struct tm *lt;
+  time_t now;
+
+  now = time(0);
+  lt = localtime(&now);
+  sprintf(stampSlvgLog, "%s.%04d-%02d-%02d.%02d:%02d:%02d",
+          AFSDIR_SERVER_SLVGLOG_FILEPATH,
+          lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
+          lt->tm_hour, lt->tm_min, lt->tm_sec);
+
+  /* try to link the logfile to a timestamped filename */
+  /* if it fails, oh well, nothing we can do */
+  link(AFSDIR_SERVER_SLVGLOG_FILEPATH, stampSlvgLog);
+}
+#endif
 
 void showlog(void)
 {
