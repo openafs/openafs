@@ -53,9 +53,6 @@ all: \
 #
 # Build rules
 #
-.c.o:
-	${CC} -c ${CFLAGS} $<
-
 libdes.a: ${OBJS} AFS_component_version_number.o
 	$(RM) -f libdes.a
 	$(AR) crv libdes.a ${OBJS} AFS_component_version_number.o

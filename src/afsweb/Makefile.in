@@ -168,7 +168,7 @@ LIBOBJS=$(LIBCOMMON_OBJS) $(LIBAPACHE_OBJS)
 OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
+	$(CCOBJ) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
 
 
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB) $(DCE_ADK_LIB)
