@@ -532,6 +532,9 @@ int afs_xioctl (void)
 	/* good, this is a vnode; next see if it is an AFS vnode */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
+#elif defined(AFS_OBSD_ENV)
+	tvc = IsAfsVnode((struct vnode *) fd->f_data) ?
+	    VTOAFS((struct vnode *) fd->f_data) : NULL;
 #else
 	tvc = VTOAFS((struct vnode*)fd->f_data);	/* valid, given a vnode */
 #endif

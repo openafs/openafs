@@ -17,7 +17,7 @@ OPTF2= ${OPT2}
 CFLAGS= ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
-KOBJ = COMMON
+KOBJ = MODLOAD
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -81,6 +81,7 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
+	touch libafs
 # install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
 install_libafs:	$(INST_LIBAFSNONFS)
 # dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)

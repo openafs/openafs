@@ -32,6 +32,9 @@ RCSID("$Header$");
 #if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
 #include "afs/sysincludes.h"
 #endif
+#if defined(AFS_OBSD_ENV)
+#include "h/proc.h"
+#endif
 #include "h/socket.h"
 #if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV)
 #if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
