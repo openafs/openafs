@@ -5,6 +5,7 @@ dnl defaults, override in case below as needed
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
 CC="cc"
+CCOBJ="cc"
 MT_CC="cc"
 XLIBS="${LIB_AFSDB}"
 
@@ -123,6 +124,7 @@ case $AFS_SYSNAME in
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"
+		CCOBJ="/opt/ansic/bin/cc"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
@@ -154,6 +156,7 @@ case $AFS_SYSNAME in
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"
+		CCOBJ="/opt/ansic/bin/cc"
 		DBM="/lib/hpux32/libndbm.so"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
@@ -252,6 +255,7 @@ case $AFS_SYSNAME in
 
 	i386_linux22)
 		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -267,6 +271,7 @@ case $AFS_SYSNAME in
 
 	i386_umlinux22)
 		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -282,6 +287,7 @@ case $AFS_SYSNAME in
 
 	i386_linux24)
 		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -301,6 +307,7 @@ case $AFS_SYSNAME in
 
 	i386_umlinux24)
 		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -447,6 +454,7 @@ case $AFS_SYSNAME in
 
 	s390_linux22)
 		CC="gcc"
+		CCOBJ="gcc"
 		LD="gcc"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -463,6 +471,7 @@ case $AFS_SYSNAME in
 
 	s390_linux24)
 		CC="gcc"
+		CCOBJ="gcc"
 		LD="gcc"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -524,6 +533,7 @@ case $AFS_SYSNAME in
 	sgi_65)
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		CC="/usr/bin/cc"
+		CCOBJ="/usr/bin/cc"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LD="/usr/bin/ld"
 		LEX="lex"
@@ -580,6 +590,7 @@ case $AFS_SYSNAME in
 	sun4_413)
 		CCXPG2="/usr/xpg2bin/cc"
 		CC="gcc"
+		CCOBJ="gcc"
 		LEX="lex"
 		SHLIB_CFLAGS="-PIC"
 		TXLIBS="-lcurses -ltermcap"
@@ -592,6 +603,7 @@ case $AFS_SYSNAME in
 
 	sun4x_55)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -608,6 +620,7 @@ case $AFS_SYSNAME in
 
 	sun4x_56)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		MT_CC="/opt/SUNWspro/bin/cc"
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -627,6 +640,7 @@ case $AFS_SYSNAME in
 
 	sun4x_57)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
@@ -647,6 +661,7 @@ case $AFS_SYSNAME in
 
 	sun4x_58)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
@@ -667,6 +682,7 @@ case $AFS_SYSNAME in
 
 	sun4x_59)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
@@ -687,6 +703,7 @@ case $AFS_SYSNAME in
 
 	sunx86_57)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
@@ -708,6 +725,7 @@ case $AFS_SYSNAME in
 
 	sunx86_58)
 		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
 		MT_CC="/opt/SUNWspro/bin/cc"
@@ -791,6 +809,7 @@ if test "x$enable_optimize_lwp" = "xno"; then
 fi
 
 AC_SUBST(CCXPG2)
+AC_SUBST(CCOBJ)
 AC_SUBST(AFSD_LIBS)
 AC_SUBST(AFSD_LDFLAGS)
 AC_SUBST(AIX64)
