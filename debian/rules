@@ -207,6 +207,7 @@ binary-source:
 		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	( cd debian/$(srcpkg)/usr/src/modules/$(package)&& \
 		$(MAKE) -f debian/rules clean && \
+	rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint; \
 		mv debian/kern-sysname debian/sysname)
 	chown -R root.root debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755

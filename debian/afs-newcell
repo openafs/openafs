@@ -87,6 +87,10 @@ eoreqs
     print "Run this script again when you meet the requirements\n";
     exit(1);
   }
+	
+		if ($> != 0) {
+die "This script should almost always be run as root.  Use the --requirements-met option to run as non-root.\n";
+}
 }
 open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
 while(<MOUNT>) {

@@ -1,3 +1,10 @@
+openafs (1.1.0-1) unstable; urgency=low
+
+  * New Upstream release.
+  * Warn if not running as root for afs-newcell|rootvol, closes: #103532
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 16 Jul 2001 06:13:41 -0400
+
 openafs (1.0.90.20010710.snapshot-1) experimental; urgency=low
 
   *  New upstream snapshot

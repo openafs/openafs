@@ -143,8 +143,8 @@ ${COMPDIRS}:
 LIBAFS = libafs-${CLIENT}.o
 LIBAFS_MP = libafs-${CLIENT}.mp.o
 
-DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
-DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
+DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/openafs.o
+DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/openafs.mp.o
 
 
 libafs:	$(DEST_LIBAFS) 

@@ -80,6 +80,10 @@ eotext
 	print "Please restart the script when you meet these conditions.\n";
 	exit(1);
     }
+	
+		if ($> != 0) {
+die "This script should almost always be run as root.  Use the --requirements-met option to run as non-root.\n";
+}
 
 }
 # Get configuration information we need
