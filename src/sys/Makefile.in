@@ -67,13 +67,13 @@ rmtsysd: AFS_component_version_number.o
 
 rmtsys.cs.c: rmtsys.xg
 	${RXGEN} -C -o $@ ${srcdir}/rmtsys.xg
-	
+
 rmtsys.ss.c: rmtsys.xg
 	${RXGEN} -S -o $@ ${srcdir}/rmtsys.xg
-	
+
 rmtsys.xdr.c: rmtsys.xg
 	${RXGEN} -c -o $@ ${srcdir}/rmtsys.xg
-	
+
 rmtsys.h: rmtsys.xg
 	${RXGEN} -h -o $@ ${srcdir}/rmtsys.xg
 
@@ -154,7 +154,7 @@ ${KERNELDIR}/afs:
 ${KERNELDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
 
-install: 
+install: \
 	${DESTDIR}${libdir}/afs/libsys.a \
 	${DESTDIR}${sbindir}/rmtsysd \
 	${DESTDIR}${includedir}/afs/afssyscalls.h \

@@ -432,7 +432,7 @@ ${UKERNELDIR}/rx/xdr_int64.c: xdr_int64.c
 ${UKERNELDIR}/rx/xdr_rx.c: xdr_rx.c
 	${INSTALL} $? $@
 
-install:
+install: \
 	${DESTDIR}${libdir}/librx.a \
 	${DESTDIR}${includedir}/rx/rx_packet.h \
 	${DESTDIR}${includedir}/rx/rx.h \
