@@ -137,9 +137,12 @@ load_client() {
 
 # start_client() -- run afsd
 start_client() {
-		start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
-		    -- ${OPTIONS}
-		echo -n " afsd"
+    		if pidof /usr/sbin/afsd >/dev/null ; then : 
+		    else
+		    start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
+			-- ${OPTIONS}
+		    echo -n " afsd"
+		    fi
 		if [ x$AFS_CRYPT = xtrue ] ; then
 		    fs setcrypt on
 		    fi
@@ -189,7 +192,7 @@ force-start)
 		umount /afs
 		echo -n " afsd"
 	fi
-	pidof afsd >/dev/null &&afsd -shutdown
+	pidof /usr/sbin/afsd >/dev/null &&afsd -shutdown
 
 	LIBAFS=`/sbin/lsmod | fgrep openafs`
 	if [ -n "$LIBAFS" ] ; then
