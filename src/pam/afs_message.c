@@ -64,6 +64,12 @@ static char *fallback_messages[] = {
     "AFS ReInitializing creds for user %s\n",	/* 31: REINITCRED	*/
     "AFS Failed to set PASSWORD_EXPIRES for user %s\n",
 						/* 32: PASSEXPFAIL      */
+    "",
+						/* 33: */
+    "",
+						/* 34: */
+    "AFS blindly trusting user %s\n",
+						/* 35: TRUSTROOT	*/
 };
 
 static int num_fallbacks = sizeof(fallback_messages)/sizeof(char *);

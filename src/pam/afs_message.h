@@ -45,6 +45,7 @@
 #define PAMAFS_PASSEXPFAIL	32 /* "Failed to set PASSWORD_EXPIRES"  */
 #define PAMAFS_CHOWNKRB		33 /* "Failed to chown krb ticketfile"  */
 #define PAMAFS_KRBFAIL		34 /* "Failed to set KRBTKTFILE"        */
+#define PAMAFS_TRUSTROOT	35 /* "Ignoring superuser %s"		*/
 
 
 char *pam_afs_message(int msgnum, int *freeit);
