@@ -3139,7 +3139,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	    || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
 		/* look up parent directory */
 		code = cm_NameI(baseDirp, spacep->data,
-				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_CHECKPATH,
 				userp, tidPathp, &req, &dscp);
 
 		if (baseFid != 0) smb_ReleaseFID(baseFidp);
