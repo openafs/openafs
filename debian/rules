@@ -52,7 +52,7 @@ build-stamp:
 	mkdir -p debian/openafs-dbserver/usr/share/man/man8
 		/usr/bin/docbook-to-man debian/pt_util.sgml  \
 		>debian/openafs-dbserver/usr/share/man/man8/pt_util.8
-
+	-rm $(SYS_NAME)/dest/include/crypt.h
 	touch build-stamp
 
 clean:
