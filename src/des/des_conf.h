@@ -16,7 +16,6 @@
  */
 
 #include <afs/param.h>
-#include <afsconfig.h>
 #include <mit-cpyright.h>
 
 /* Machine-type and OS-type based configuration */
