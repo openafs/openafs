@@ -25,7 +25,7 @@ afssrvlibexecdir=@afssrvlibexecdir@
 afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 KDEBUG=@KERN_DEBUG_OPT@
-FOMIT=@FOMIT_FRAME_POINTER@
+FOMIT=@OMIT_FRAME_POINTER@
 
 include config/Makefile.${SYS_NAME}
 
