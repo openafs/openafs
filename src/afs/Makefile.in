@@ -35,7 +35,9 @@ afszcm.cat: afs_trace.msf
 			/usr/etc/gencat afszcm.cat afs_trace.msf ;; \
 		*_linux* | *_umlinux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
-		*_darwin_* | i386_fbsd*) \
+		*_darwin_* ) \
+			gencat -new afszcm.cat afs_trace.msf ;; \
+		i386_fbsd*) \
 			echo No gencat for ${SYS_NAME} ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \

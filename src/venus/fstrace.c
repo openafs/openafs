@@ -18,7 +18,7 @@ RCSID
 
 #include <stdio.h>
 #include <sys/types.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) 
 #include <time.h>
 /*#ifdef	AFS_AIX_ENV*/
 #include <sys/time.h>
