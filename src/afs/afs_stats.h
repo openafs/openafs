@@ -14,8 +14,8 @@
  *  The remainder of this file contains the statistics gathering stuff.
  */
 
-#ifndef __TRANSARC_AFS_STATS_H__
-#define __TRANSARC_AFS_STATS_H__
+#ifndef __OPENAFS_AFS_STATS_H__
+#define __OPENAFS_AFS_STATS_H__
 
 #include "afs/param.h"
 
@@ -1159,4 +1159,4 @@ struct afs_stats_CMFullPerf {
 #endif /* AFS_NOSTATS */
 
 
-#endif /* __TRANSARC_AFS_STATS_H__ */
+#endif /* __OPENAFS_AFS_STATS_H__ */

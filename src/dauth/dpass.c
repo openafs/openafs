@@ -11,7 +11,7 @@
  * dpass
  *
  * This program allows a user to discover the password generated for him
- * by the transarc migration toolkit when migrating his password information
+ * by the migration toolkit when migrating his password information
  * to the DCE.
  */
 

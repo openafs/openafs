@@ -32,7 +32,7 @@ RCSID("$Header$");
 
 
 char	*pam_afs_ident		= "pam_afs";
-char	*pam_afs_lh		= "TRANSARC_PAM_AFS_AUTH_login_handle";
+char	*pam_afs_lh		= "OPENAFS_PAM_AFS_AUTH_login_handle";
 
 
 void lc_cleanup(

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_CFG_INTERNAL_H
-#define TRANSARC_AFS_CFG_INTERNAL_H
+#ifndef OPENAFS_CFG_INTERNAL_H
+#define OPENAFS_CFG_INTERNAL_H
 
 /* Define types, macros, etc., internal to the configuration library */
 
@@ -114,4 +114,4 @@ cfgutil_WindowsServiceQuery(LPCTSTR svcName,
 			    afs_status_p st);
 #endif /* AFS_NT40_ENV */
 
-#endif /* TRANSARC_AFS_CFG_INTERNAL_H */
+#endif /* OPENAFS_CFG_INTERNAL_H */

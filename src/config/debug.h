@@ -11,8 +11,8 @@
  * All Rights Reserved
  */
 
-#if !defined(TRANSARC_DEBUG_H)
-#define TRANSARC_DEBUG_H
+#if !defined(OPENAFS_DEBUG_H)
+#define OPENAFS_DEBUG_H
 
 /*
  * Define debugging levels, from 1 being lowest priority and 7 being
@@ -130,5 +130,5 @@ if(!(x)) { fprintf(stderr, "assertion failed: line %d, file %s\n",\
 
 #endif /* AFS_DEBUG */
 
-#endif /* TRANSARC_DEBUG_H */
+#endif /* OPENAFS_DEBUG_H */
 

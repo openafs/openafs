@@ -43,7 +43,7 @@ Reserved.
 You are hereby granted a worldwide, irrevocable, paid-up, right and
 license to use, execute, display, modify, copy and distribute MIT's
 Modifications, provided that (i) you abide by the terms and conditions
-of your Transarc AFS License Agreement, and (ii) you do not use the name
+of the OpenAFS License Agreement, and (ii) you do not use the name
 of MIT in any advertising or publicity without the prior written consent
 of MIT.  MIT disclaims all liability for your use of MIT's
 Modifications.  MIT's Modifications are provided "AS IS" WITHOUT

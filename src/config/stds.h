@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_CONFIG_STDS_H
-#define TRANSARC_AFS_CONFIG_STDS_H	1
+#ifndef OPENAFS_AFS_CONFIG_STDS_H
+#define OPENAFS_AFS_CONFIG_STDS_H	1
 
 #include <afs/param.h>
 #include <sys/types.h>
@@ -211,4 +211,4 @@ struct afsUUID {
 };
 typedef struct afsUUID afsUUID;
 
-#endif /* TRANSARC_CONFIG_AFS_STDS_H */
+#endif /* OPENAFS_CONFIG_AFS_STDS_H */

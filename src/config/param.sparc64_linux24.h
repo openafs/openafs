@@ -1,7 +1,14 @@
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 
-/* Copyright (C) 1998 by Transarc Corporation */
+/* 
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 
 #ifndef _PARAM_SPARC64_LINUX24_H_
@@ -93,8 +100,14 @@
 
 /* This section for user space compiles only */
 
-/* Copyright (C) 1998 by Transarc Corporation */
-
+/* 
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #ifndef _PARAM_USR_SPARC64_LINUX24_H_
 #define _PARAM_USR_SPARC64_LINUX24_H_

@@ -8,12 +8,8 @@
  */
 
 /*
- * All Rights Reserved
- * Licensed Materials - Property of Transarc
  *
  * COMPONENT_NAME: Delite Gateway
- *
- * ORIGINS: Transarc Corp.
  *
  */
 

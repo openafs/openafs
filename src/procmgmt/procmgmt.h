@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_PROCMGMT_H
-#define TRANSARC_PROCMGMT_H
+#ifndef OPENAFS_PROCMGMT_H
+#define OPENAFS_PROCMGMT_H
 
 
 #ifdef AFS_NT40_ENV
@@ -195,4 +195,4 @@ extern pid_t pmgt_ProcessSpawnVE(const char *spath,
 
 #endif /* AFS_NT40_ENV */
 
-#endif /* TRANSARC_PROCMGMT_H */
+#endif /* OPENAFS_PROCMGMT_H */

@@ -8,15 +8,8 @@
  */
 
 /*
- * All Rights Reserved
- * Licensed Materials - Property of Transarc
- *
- * For copyright information, see IPL which you accepted in order to
- * download this software.
  *
  * COMPONENT_NAME: nsafs
- *
- * ORIGINS: Transarc Corp.
  *
  */
 

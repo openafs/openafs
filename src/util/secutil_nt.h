@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_SECUTIL_NT_H
-#define TRANSARC_SECUTIL_NT_H
+#ifndef OPENAFS_SECUTIL_NT_H
+#define OPENAFS_SECUTIL_NT_H
 
 /* Security related utilities for the Windows platform */
 
@@ -28,4 +28,4 @@ ObjectDaclEntryAdd(HANDLE objectHandle,
 		   ACCESS_MODE accessMode,
 		   DWORD inheritance);
 
-#endif /* TRANSARC_SECUTIL_NT_H */
+#endif /* OPENAFS_SECUTIL_NT_H */

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_LIBADMIN_TEST_COMMON_H_
-#define TRANSARC_LIBADMIN_TEST_COMMON_H_
+#ifndef OPENAFS_LIBADMIN_TEST_COMMON_H_
+#define OPENAFS_LIBADMIN_TEST_COMMON_H_
 
 #define ERR_EXT(string) \
     fprintf(stderr, "%s\n", string);\
@@ -40,4 +40,4 @@ SetupCommonCmdArgs(struct cmd_syndesc *as);
 extern void *cellHandle;
 extern void *tokenHandle;
 
-#endif /* TRANSARC_LIBADMIN_TEST_COMMON_H_ */
+#endif /* OPENAFS_LIBADMIN_TEST_COMMON_H_ */

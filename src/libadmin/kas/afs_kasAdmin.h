@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_KAS_ADMIN_H
-#define TRANSARC_AFS_KAS_ADMIN_H
+#ifndef OPENAFS_KAS_ADMIN_H
+#define OPENAFS_KAS_ADMIN_H
 
 #include <afs/param.h>
 #include <afs/afs_Admin.h>
@@ -275,4 +275,4 @@ extern int ADMINAPI kas_KeyCheckSum(
   afs_status_p st
 );
 
-#endif /* TRANSARC_AFS_KAS_ADMIN_H */
+#endif /* OPENAFS_KAS_ADMIN_H */

@@ -120,7 +120,6 @@ STATIC void init_des();
 STATIC void permute();
 STATIC void init_perm();
 
-/* Hide these functions for Transarc use; only export crypt() */
 STATIC int des_setkey(const char *key);
 STATIC int des_cipher(const char *in, char *out, long salt, int num_iter);
 

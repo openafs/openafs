@@ -148,8 +148,8 @@ main(argc, argv)
 { /*Main routine*/
 
     static char rn[] = "fsprobe_test";	/*Routine name*/
-    register afs_int32 code;			/*Return code*/
-    struct sockaddr_in FSSktArray[3];	/*Transarc socket array*/
+    register afs_int32 code;		/*Return code*/
+    struct sockaddr_in FSSktArray[3];	/*socket array*/
     struct hostent *he;			/*Host entry*/
     struct timeval tv;			/*Time structure*/
     int sleep_secs;			/*Number of seconds to sleep*/

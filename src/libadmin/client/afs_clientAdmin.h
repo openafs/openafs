@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_CLIENT_ADMIN_H
-#define TRANSARC_AFS_CLIENT_ADMIN_H
+#ifndef OPENAFS_CLIENT_ADMIN_H
+#define OPENAFS_CLIENT_ADMIN_H
 
 #include <afs/afs_Admin.h>
 
@@ -224,4 +224,4 @@ extern int ADMINAPI afsclient_RXDebugClose(
   rxdebugHandle_p rxdebugHandle,
   afs_status_p st);
 
-#endif /* TRANSARC_AFS_CLIENT_ADMIN_H */
+#endif /* OPENAFS_CLIENT_ADMIN_H */

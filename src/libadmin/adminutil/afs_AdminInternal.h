@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_ADMIN_INTERNAL_H
-#define TRANSARC_AFS_ADMIN_INTERNAL_H
+#ifndef OPENAFS_ADMIN_INTERNAL_H
+#define OPENAFS_ADMIN_INTERNAL_H
 
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -129,4 +129,4 @@ int IteratorInit(
   destroy_specific_data_func destroy_specific_data,
   afs_status_p st
 );
-#endif /* TRANSARC_AFS_ADMIN_INTERNAL_H */
+#endif /* OPENAFS_ADMIN_INTERNAL_H */

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_BOS_ADMIN_H
-#define TRANSARC_AFS_BOS_ADMIN_H
+#ifndef OPENAFS_BOS_ADMIN_H
+#define OPENAFS_BOS_ADMIN_H
 
 #include <afs/param.h>
 #include <afs/afs_Admin.h>
@@ -455,4 +455,4 @@ extern int ADMINAPI bos_Salvage(
   afs_status_p st
 );
 
-#endif /* TRANSARC_AFS_BOS_ADMIN_H */
+#endif /* OPENAFS_BOS_ADMIN_H */

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_UTIL_ADMIN_H
-#define TRANSARC_AFS_UTIL_ADMIN_H
+#ifndef OPENAFS_UTIL_ADMIN_H
+#define OPENAFS_UTIL_ADMIN_H
 
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
@@ -231,4 +231,4 @@ extern int ADMINAPI util_RXDebugPeersDone(
   afs_status_p st
 );
 
-#endif /* TRANSARC_AFS_UTIL_ADMIN_H */
+#endif /* OPENAFS_UTIL_ADMIN_H */

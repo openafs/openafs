@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_FILEUTIL_H
-#define TRANSARC_FILEUTIL_H
+#ifndef OPENAFS_FILEUTIL_H
+#define OPENAFS_FILEUTIL_H
 
 /* File-oriented utility functions */
 
@@ -56,4 +56,4 @@ BufioGets(bufio_p bp, char *buf, int len);
 extern int
 BufioClose(bufio_p bp);
 
-#endif /* TRANSARC_FILEUTIL_H */
+#endif /* OPENAFS_FILEUTIL_H */

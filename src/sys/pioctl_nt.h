@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_PIOCTL_H
-#define TRANSARC_AFS_PIOCTL_H
+#ifndef OPENAFS_AFS_PIOCTL_H
+#define OPENAFS_AFS_PIOCTL_H
 
 /* define the basic DeviceIoControl structure for communicating with the
  * cache manager.
@@ -27,4 +27,4 @@ typedef struct ViceIoctl {
 
 extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob, int follow);
 
-#endif /* TRANSARC_AFS_PIOCTL_H */
+#endif /* OPENAFS_AFS_PIOCTL_H */

@@ -7,8 +7,8 @@
 ; * event.mc --(mc)--> event.[h|rc] --(logevent.h + event.h)--> afsevent.h
 ; */
 ;
-;#ifndef TRANSARC_AFSEVENT_H
-;#define TRANSARC_AFSEVENT_H
+;#ifndef OPENAFS_AFSEVENT_H
+;#define OPENAFS_AFSEVENT_H
 ;
 ;
 ;/* AFS event.mc format.
@@ -172,4 +172,4 @@ AFS BOS 제어 서비스가 AFS bosserver가 재시작을 요청하지 않고 종료되었음을 감지했
 
 
 ;
-;#endif /* TRANSARC_AFSEVENT_H */
+;#endif /* OPENAFS_AFSEVENT_H */

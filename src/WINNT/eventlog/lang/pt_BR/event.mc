@@ -7,8 +7,8 @@
 ; * event.mc --(mc)--> event.[h|rc] --(logevent.h + event.h)--> afsevent.h
 ; */
 ;
-;#ifndef TRANSARC_AFSEVENT_H
-;#define TRANSARC_AFSEVENT_H
+;#ifndef OPENAFS_AFSEVENT_H
+;#define OPENAFS_AFSEVENT_H
 ;
 ;
 ;/* AFS event.mc format.
@@ -167,4 +167,4 @@ O serviço de controle BOS do AFS detectou que o AFS bosserver saiu sem pedir um 
 
 
 ;
-;#endif /* TRANSARC_AFSEVENT_H */
+;#endif /* OPENAFS_AFSEVENT_H */

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_BUTC_XBSA_H
-#define TRANSARC_BUTC_XBSA_H
+#ifndef OPENAFS_BUTC_XBSA_H
+#define OPENAFS_BUTC_XBSA_H
 
 /* The following serverTypes are currently supported by this interface */
 #define XBSA_SERVER_TYPE_NONE       0x00    /* no server, use tape drive         */
@@ -125,4 +125,4 @@ extern afs_int32 xbsa_DeleteObject(struct butx_transactionInfo *info,
                              char *objectSpaceName, char *pathName);
 
 #endif /*xbsa*/
-#endif /* TRANSARC_BUTC_XBSA_H */
+#endif /* OPENAFS_BUTC_XBSA_H */

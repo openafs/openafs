@@ -10,8 +10,8 @@
 /* The Kerberos Authenticated DES security object. */
 
 
-#ifndef TRANSARC_RXKAD_RXKAD_H
-#define TRANSARC_RXKAD_RXKAD_H
+#ifndef OPENAFS_RXKAD_RXKAD_H
+#define OPENAFS_RXKAD_RXKAD_H
 
 		/* no ticket good for longer than 30 days */
 #define MAXKTCTICKETLIFETIME (30*24*3600)
@@ -138,4 +138,4 @@ extern int rxkad_EpochWasSet;		/* TRUE => we called rx_SetEpoch */
 
 #include "rxkad_prototypes.h"
 
-#endif /* TRANSARC_RXKAD_RXKAD_H */
+#endif /* OPENAFS_RXKAD_RXKAD_H */

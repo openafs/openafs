@@ -1,4 +1,11 @@
-/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
+/* 
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /* Some Cheap statistics which should be shared with the rxkad definitions, but
  * aren't.  The layout should match the layout in rxkad/rxkad.p.h. */

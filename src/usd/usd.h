@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_USD_H
-#define TRANSARC_USD_H
+#ifndef OPENAFS_USD_H
+#define OPENAFS_USD_H
  
 /* Define I/O functions that operate on both device and regular files.
  *
@@ -148,4 +148,4 @@ typedef struct {
 #define USDTAPE_PREPARE  4  /* ready tape drive for operation */
 #define USDTAPE_SHUTDOWN 5  /* decommission tape drive after operation */
 
-#endif /* TRANSARC_USD_H */
+#endif /* OPENAFS_USD_H */

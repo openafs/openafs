@@ -11,9 +11,9 @@
  * RCSID("$Header")
  */
 
-#ifndef TRANSARC_NETUTILS_H
-#define TRANSARC_NETUTILS_H
+#ifndef OPENAFS_NETUTILS_H
+#define OPENAFS_NETUTILS_H
 
 #include "afsutil_prototypes.h"
 
-#endif /* TRANSARC_NETUTILS_H */ 
+#endif /* OPENAFS_NETUTILS_H */ 

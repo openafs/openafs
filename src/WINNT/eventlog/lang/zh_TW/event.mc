@@ -7,8 +7,8 @@
 ; * event.mc --(mc)--> event.[h|rc] --(logevent.h + event.h)--> afsevent.h
 ; */
 ;
-;#ifndef TRANSARC_AFSEVENT_H
-;#define TRANSARC_AFSEVENT_H
+;#ifndef OPENAFS_AFSEVENT_H
+;#define OPENAFS_AFSEVENT_H
 ;
 ;
 ;/* AFS event.mc format.
@@ -169,4 +169,4 @@ AFS BOS 控制服務偵測到 AFS 主伺服器結束，並且未要求重新啟動。
 
 
 ;
-;#endif /* TRANSARC_AFSEVENT_H */
+;#endif /* OPENAFS_AFSEVENT_H */

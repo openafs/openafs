@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_ERRMAP_NT_H
-#define	TRANSARC_ERRMAP_NT_H
+#ifndef OPENAFS_ERRMAP_NT_H
+#define	OPENAFS_ERRMAP_NT_H
 
 /* Declare NT to Unix-ish error translation function */
 extern int nterr_nt2unix(long ntErr, int defaultErr);
@@ -36,4 +36,4 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define ENOMSG             (AFS_NT_ERRNO_BASE + 10)
 #define ETIME              (AFS_NT_ERRNO_BASE + 11)
 
-#endif	/* TRANSARC_ERRMAP_NT_H  */
+#endif	/* OPENAFS_ERRMAP_NT_H  */

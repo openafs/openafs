@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_AFS_ADMIN_H
-#define TRANSARC_AFS_ADMIN_H
+#ifndef OPENAFS_ADMIN_H
+#define OPENAFS_ADMIN_H
 
 #include <afs/param.h>
 #include <afs/afs_args.h>
@@ -87,4 +87,4 @@ typedef struct {
 
 #define AFS_STATUS_OK 0
 
-#endif /* TRANSARC_AFS_ADMIN_H */
+#endif /* OPENAFS_ADMIN_H */
