@@ -98,7 +98,7 @@ void
 afsi_start()
 {
 	char wd[100];
-	char t[100], u[100];
+	char t[100], u[100], *p, *path;
 	int zilch;
 	int code;
 
@@ -122,6 +122,11 @@ afsi_start()
 	strcat(u, ": Created log file\n");
 	WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
 	WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    p = "PATH=";
+    path = getenv("PATH");
+	WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
+	WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
+	WriteFile(afsi_file, "\n", 1, &zilch, NULL);
 }
 
 static int afsi_log_useTimestamp = 1;
@@ -550,11 +555,15 @@ int afsd_InitCM(char **reasonP)
 	cm_initParams.memCache = 0;
 
     /* Set RX parameters before initializing RX */
-    if ( rx_nojumbo )
+    if ( rx_nojumbo ) {
         rx_SetNoJumbo();
+        afsi_log("rx_SetNoJumbo successful");
+    }
 
-    if ( rx_mtu != -1 )
+    if ( rx_mtu != -1 ) {
         rx_SetMaxMTU(rx_mtu);
+        afsi_log("rx_SetMaxMTU %d successful", rx_mtu);
+    }
 
 	/* initialize RX, and tell it to listen to port 7001, which is used for
      * callback RPC messages.
