@@ -193,14 +193,14 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_secClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
-  LangString DESC_secLoopback ${LANG_ENGLISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_GERMAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_SPANISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_SIMPCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_TRADCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_JAPANESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_KOREAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
-  LangString DESC_secLoopback ${LANG_PORTUGUESEBR} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_ENGLISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_GERMAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_SPANISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_SIMPCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_TRADCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_JAPANESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_KOREAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
+  LangString DESC_secLoopback ${LANG_PORTUGUESEBR} "MS Loopback adapter: Installs the adapter for a more reliable AFS client."
 
   LangString DESC_secServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_GERMAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
@@ -1321,15 +1321,6 @@ contInstall:
 
 
 contInstall2:
-   ; Select the loopback only if it is NOT Windows 2000 (The user can still select it,
-   ; even though we warn them!)
-   Call GetWindowsVersion
-   Pop $R1
-   StrCmp $R1 "2000" +1 DoLoop
-   SectionGetFlags ${secLoopback} $0
-   IntOp $0 $0 & ${SECTION_OFF}
-   SectionSetFlags ${secLoopback} $0
-   
 DoLoop:
    ; If the Loopback is already installed, we mark the option OFF and Read Only
    ; so the user can not select it.
