@@ -246,11 +246,7 @@ write_int32_macros(fout)
 
 #if (INT_MAX == 0x7FFFFFFF) && (UINT_MAX == 0xFFFFFFFFu)
 	f_print(fout, "#ifndef xdr_afs_int32\n");
-	f_print(fout, "#ifdef AFS_64BIT_ENV\n");
 	f_print(fout, "#define xdr_afs_int32 xdr_int\n");
-	f_print(fout, "#else\n");
-	f_print(fout, "#define xdr_afs_int32 xdr_long\n");
-	f_print(fout, "#endif\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef xdr_afs_uint32\n");
 	f_print(fout, "#define xdr_afs_uint32 xdr_u_int\n");
