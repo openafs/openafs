@@ -31,7 +31,7 @@
 extern struct hostent *hostutil_GetHostByName(char *namep);
 #endif
 
-extern long util_GetInt32(char *stringp, long *valuep);
+// extern long util_GetInt32(char *stringp, long *valuep);
 
 extern long fs_StripDriveLetter(char *inPathp, char *outPathp, long outSize);
 
