@@ -4230,7 +4230,8 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
     }
 
 	savedPacketp = smb_CopyPacket(inp);
-	savedPacketp->vcp = vcp; /* TODO: refcount vcp? */
+    smb_HoldVC(vcp);
+	savedPacketp->vcp = vcp;
 	lock_ObtainMutex(&smb_Dir_Watch_Lock);
 	savedPacketp->nextp = smb_Directory_Watches;
 	smb_Directory_Watches = savedPacketp;
@@ -4527,6 +4528,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 		}
 
 		smb_SendPacket(vcp, watch);
+        smb_ReleaseVC(vcp);
 		smb_FreePacket(watch);
 		watch = nextWatch;
 	}
@@ -4560,6 +4562,10 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			fid = smb_GetSMBParm(watch, 21);
 			watchtree = smb_GetSMBParm(watch, 22) & 0xffff;
 
+            if (vcp != watch->vcp)
+                osi_Log2(smb_logp, "smb_ReceiveNTCancel: vcp %x not equal to watch vcp %x", 
+                         vcp, watch->vcp);
+
 			fidp = smb_FindFID(vcp, fid, 0);
             if (fidp) {
                 osi_Log3(smb_logp, "Cancelling change notification for fid %d wtree %d file %s", 
@@ -4589,6 +4595,8 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			((smb_t *)watch)->errHigh = 0xC0;
 			((smb_t *)watch)->flg2 |= 0x4000;
 			smb_SendPacket(vcp, watch);
+            if (watch->vcp)
+                smb_ReleaseVC(watch->vcp);
 			smb_FreePacket(watch);
 			return 0;
 		}
