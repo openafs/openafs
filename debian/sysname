@@ -12,6 +12,9 @@ i[3456]86)
     sparc|sparc64)
 	echo sparc_linux22
 	;;
+    s390)
+    echo s390_linux22
+    ;;
 	*)
 	echo ERROr:  sysname not yet known
 	exit 1

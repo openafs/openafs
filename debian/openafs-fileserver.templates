@@ -20,3 +20,12 @@ Description: Upgrading will move files to new locations; continue?
  you continue with this upgrade, these files will be moved. You should
  use the bos restart command to  reload your servers.  Any
  configuration changes made before you do so will be lost.
+
+template: openafs-fileserver/alpha-broken
+Type: Note
+Description: OpenAFS Fileserv Probably does not work!
+ You are running the OpenAFS file server package on an alpha.  This
+ probably doesn't work; the DES code is flaky on the alpha, along with
+ the threaded file server.  Likely, the fileserver will simply fail to
+ start, but if it does load, data corruption may result.  You have been
+ warned.

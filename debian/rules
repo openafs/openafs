@@ -22,7 +22,7 @@ KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
 SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
 package=openafs
 srcpkg = openafs-modules-source
-modulepkg=$(shell echo openafs-modules-$(KVERS))
+modulepkg=$(shell echo openafs-modules-$(KVERS)${INT_SUBARCH})
 ifndef KSRC
 KSRC=/usr/src/linux
 endif
@@ -81,6 +81,9 @@ install: build
 		done
 	# Add here commands to install the package into debian/tmp.
 	cat debian/filelist |sh debian/movefiles
+	mv debian/openafs-client/usr/bin/pagsh  \
+	debian/openafs-client/usr/bin/pagsh.openafs
+
 	cp debian/CellServDB debian/openafs-client/usr/share/openafs
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf

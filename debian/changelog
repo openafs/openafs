@@ -1,3 +1,12 @@
+openafs (1.2.2-3) unstable; urgency=low
+
+  * Support s390, closes: #123540
+  * Support update-alternatives for pagsh, closes: #122144
+  * Note that alpha port doesn't work for fileservers, closes: #127387
+  * Implement subarch, closes: #126192
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  7 Jan 2002 05:26:03 -0500
+
 openafs (1.2.2-2) unstable; urgency=low
 
   * Don't declare lseek in auth/ktc.c; sent upstream
