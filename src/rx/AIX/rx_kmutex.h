@@ -78,7 +78,7 @@ typedef int afs_kcondvar_t;
 				simple_unlock((void *)(a))
 
 #define CV_WAIT(_cv, _lck) \
-    do {
+    do { \
 	int haveGlock = ISAFS_GLOCK(); \
 	if (haveGlock) \
 	    AFS_GUNLOCK(); \
@@ -93,7 +93,7 @@ typedef int afs_kcondvar_t;
     } while(0)
 
 #define CV_TIMEDWAIT(_cv, _lck, _t) \
-    do {
+    do { \
 	int haveGlock = ISAFS_GLOCK(); \
 	if (haveGlock) \
 	    AFS_GUNLOCK(); \
