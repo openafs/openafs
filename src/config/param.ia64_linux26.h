@@ -50,13 +50,17 @@
 
 #include <linux/config.h>
 #ifdef CONFIG_SMP
-#undef CONFIG_SMP
+#ifndef AFS_SMP
+#define AFS_SMP 1
+#endif
 #endif
 /* Using "AFS_SMP" to map to however many #define's are required to get
  * MP to compile for Linux
  */
 #ifdef AFS_SMP
+#ifndef CONFIG_SMP
 #define CONFIG_SMP 1
+#endif
 #ifndef __SMP__
 #define __SMP__
 #endif
