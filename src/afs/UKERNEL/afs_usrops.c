@@ -2172,7 +2172,7 @@ int uafs_LookupName(
 	/*
 	 * terminate the current component and skip over slashes
 	 */
-	nextPathP = strchr(pathP, '/');
+	nextPathP = afs_strchr(pathP, '/');
 	if (nextPathP != NULL) {
 	    while (*nextPathP == '/') {
 		*(nextPathP++) = '\0';
