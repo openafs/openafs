@@ -11,10 +11,20 @@ $(EXEDIR)\Service.exe: $(OJT)\Service.obj
 
 prebuild:
    $(COPY) %SystemRoot%\System32\Msvcr71.dll $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC42.DLL $(EXEDIR)
+   MakeCommon.bat "$(AFSPRODUCT_VERSION)"
 
 build: prebuild
    "C:\Program Files\NSIS\makensis.exe" OpenAFS.nsi
    $(COPY) OpenAFSforWindows.exe $(DESTDIR)\Wininstall\
 
 install: $(OJT)\Service.obj $(EXEDIR)\Service.exe build
+
+#clean:
+#   $(DEL) $(OJT)\Service.obj
+#   $(DEL) $(EXEDIR)\Service.exe
+#   $(DEL) $(EXEDIR)\Msvcr71.dll
+#   $(DEL) $(EXEDIR)\MFC42.DLL
+#   $(DEL) OpenAFSforWindows.exe
+#   $(DEL) nsi-include.nsi
 

@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
    }
    else
    {
-       hService = OpenService( hSCM, argv[1], DELETE);
+       hService = OpenService( hSCM, argv[2], DELETE);
        if(hService!=NULL)
 	   DeleteService( hService );
    }

@@ -8,11 +8,11 @@
 ;Written by Joost Verburg
 
 !define MUI_PRODUCT "OpenAFS for Windows" ;Define your own software name here
-!define MUI_VERSION "1.2.11" ;Define your own software version here
-!define MUI_MAJORVERSION 1
-!define MUI_MINORVERSION 2
-!define MUI_PATCHLEVEL 110
-
+;!define MUI_VERSION "1.2.11" ;Define your own software version here
+;!define MUI_MAJORVERSION 1
+;!define MUI_MINORVERSION 2
+;!define MUI_PATCHLEVEL 110
+!include nsi-includes.nsi
 
 !include "MUI.nsh"
 !include Sections.nsh
@@ -23,6 +23,7 @@
   ;General
   OutFile "OpenAFSforWindows.exe"
   SilentInstall normal
+  SetCompressor bzip2
   !define MUI_ICON "..\..\client_cpa\afs_conf.ico"
   !define MUI_UNICON "c:\Program Files\NSIS\Contrib\Icons\normal-uninstall.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
@@ -42,14 +43,12 @@
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
   
   ;Where are the files?
-  !define AFS_DESTDIR "..\..\..\..\obj\DEST\free"
   !define AFS_CLIENT_BUILDDIR "${AFS_DESTDIR}\root.client\usr\vice\etc"
   !define AFS_WININSTALL_DIR "${AFS_DESTDIR}\WinInstall\Config"
   !define AFS_BUILD_INCDIR "${AFS_DESTDIR}\include"
   !define AFS_CLIENT_LIBDIR "${AFS_DESTDIR}\lib"
   !define AFS_SERVER_BUILDDIR "${AFS_DESTDIR}\root.server\usr\afs\bin"
   !define AFS_ETC_BUILDDIR "${AFS_DESTDIR}\etc"
-  !define SDK_DIR "X:"
   
 ;--------------------------------
 ;Modern UI Configuration
@@ -183,12 +182,141 @@
   
 ; Upgrade/re-install strings
    LangString UPGRADE_CLIENT ${LANG_ENGLISH} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_GERMAN} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_SPANISH} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_SIMPCHINESE} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_TRADCHINESE} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
+   LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
    
    
    LangString REINSTALL_SERVER ${LANG_ENGLISH} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_GERMAN} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_SPANISH} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_SIMPCHINESE} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_TRADCHINESE} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_JAPANESE} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
+   LangString REINSTALL_SERVER ${LANG_PORTUGUESEBR} "Re-install AFS Server"
   
 ;--------------------------------
 ; Macros
+; Macro - Upgrade DLL File
+ ; Written by Joost Verburg
+ ; ------------------------
+ ;
+ ; Example of usage:
+ ; !insertmacro UpgradeDLL "dllname.dll" "$SYSDIR\dllname.dll"
+ ;
+ ; !define UPGRADEDLL_NOREGISTER if you want to upgrade a DLL which cannot be registered
+ ;
+ ; Note that this macro sets overwrite to ON (the default) when it has been inserted.
+ ; If you are using another setting, set it again after inserting the macro.
+
+
+ !macro UpgradeDLL LOCALFILE DESTFILE
+
+   Push $R0
+   Push $R1
+   Push $R2
+   Push $R3
+
+   ;------------------------
+   ;Check file and version
+
+   IfFileExists "${DESTFILE}" "" "copy_${LOCALFILE}"
+
+   ClearErrors
+     GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
+     GetDLLVersion "${DESTFILE}" $R2 $R3
+   IfErrors "upgrade_${LOCALFILE}"
+
+   IntCmpU $R0 $R2 "" "done_${LOCALFILE}" "upgrade_${LOCALFILE}"
+   IntCmpU $R1 $R3 "done_${LOCALFILE}" "done_${LOCALFILE}" "upgrade_${LOCALFILE}"
+
+   ;------------------------
+   ;Let's upgrade the DLL!
+
+   SetOverwrite try
+
+   "upgrade_${LOCALFILE}:"
+     !ifndef UPGRADEDLL_NOREGISTER
+       ;Unregister the DLL
+       UnRegDLL "${DESTFILE}"
+     !endif
+
+   ;------------------------
+   ;Try to copy the DLL directly
+
+   ClearErrors
+     StrCpy $R0 "${DESTFILE}"
+     Call ":file_${LOCALFILE}"
+   IfErrors "" "noreboot_${LOCALFILE}"
+
+   ;------------------------
+   ;DLL is in use. Copy it to a temp file and Rename it on reboot.
+
+   GetTempFileName $R0
+     Call ":file_${LOCALFILE}"
+   Rename /REBOOTOK $R0 "${DESTFILE}"
+
+   ;------------------------
+   ;Register the DLL on reboot
+
+   !ifndef UPGRADEDLL_NOREGISTER
+     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
+     "Register ${DESTFILE}" '"$SYSDIR\rundll32.exe" "${DESTFILE},DllRegisterServer"'
+   !endif
+
+   Goto "done_${LOCALFILE}"
+
+   ;------------------------
+   ;DLL does not exist - just extract
+
+   "copy_${LOCALFILE}:"
+     StrCpy $R0 "${DESTFILE}"
+     Call ":file_${LOCALFILE}"
+
+   ;------------------------
+   ;Register the DLL
+
+   "noreboot_${LOCALFILE}:"
+     !ifndef UPGRADEDLL_NOREGISTER
+       RegDLL "${DESTFILE}"
+     !endif
+
+   ;------------------------
+   ;Done
+
+   "done_${LOCALFILE}:"
+
+   Pop $R3
+   Pop $R2
+   Pop $R1
+   Pop $R0
+
+   ;------------------------
+   ;End
+
+   Goto "end_${LOCALFILE}"
+
+   ;------------------------
+   ;Called to extract the DLL
+
+   "file_${LOCALFILE}:"
+     File /oname=$R0 "${LOCALFILE}"
+     Return
+
+   "end_${LOCALFILE}:"
+
+  ;------------------------
+  ;Set overwrite to default
+  ;(was set to TRY above)
+
+  SetOverwrite on
+
+ !macroend
 
 
 ;--------------------------------
@@ -395,9 +523,7 @@ Section "AFS Client" SecClient
    SetOutPath "$SYSDIR"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl"
    ;File "${SDK_DIR}\REDIST\msvcrt.dll"
-   ;File "${SDK_DIR}\REDIST\mfc42.dll"
-   SetOutPath "$INSTDIR\Common"
-   File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42.dll" "$SYSDIR\mfc42.dll"
    
   ; Do WINDOWSDIR components
   ; Get AFS CellServDB file
@@ -422,11 +548,11 @@ DontUseFile:
   
   
   ; Write registry entries
-  WriteRegStr HKCR "*\shellex\ContextMenuHandlers\AFS Client Shell Extension" "(Default)" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+  WriteRegStr HKCR "*\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "(Default)" "AFS Client Shell Extension"
-  WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "(Default)" "$INSTDIR\Client\Program\afs_shl_ext.dll"
+  WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "" "$INSTDIR\Client\Program\afs_shl_ext.dll"
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "ThreadingModel" "Apartment"
-  WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "(Default)" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+  WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -456,11 +582,14 @@ DontUseFile:
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
    
+   ; Set network settings
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
+  
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
-  CreateShortCut '"$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"' '"$INSTDIR\Uninstall.exe"'
-  CreateShortCut '"$SMPROGRAMS\OpenAFS\Client\Authentication.lnk"' '"$INSTDIR\Client\Program\afscreds.exe"'
-  CreateShortCut '"$SMSTARTUP\AFS Credentials.lnk"' '"$INSTDIR\Client\Program\afscreds.exe"'
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe"
+  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe"
 
   Push "$INSTDIR\Client\Program"
   Call AddToPath
@@ -470,13 +599,17 @@ DontUseFile:
   ; Create the AFS service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec '$R0 TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
+  ExecWait "net stop TransarcAFSDaemon"
+  ExecWait '$R0 u TransarcAFSDaemon'
+  ExecWait '$R0 TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
   Delete $R0
 
   ;Write cell name
   ReadINIStr $R0 $1 "Field 2" "State"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
+  
+  SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   
@@ -518,8 +651,10 @@ Section "AFS Server" SecServer
  File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
  File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
  SetOutPath "$INSTDIR\Common"
- File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
    Call AFSLangFiles
+   
+   SetOutPath "$WINDIR"
+   File "${AFS_SERVER_BUILDDIR}\afsserver.cpl"
    
   ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Server" "" $INSTDIR
@@ -545,10 +680,13 @@ Section "AFS Server" SecServer
   ; Install the service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec '$R0 TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
+  ExecWait "net stop TransarcAFSServer"
+  ExecWait '$R0 u TransarcAFSServer'
+  ExecWait '$R0 TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
   Delete $R0
   
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Configuration Wizard.lnk" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard'
+  CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Configuration Wizard.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" "/wizard"
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
@@ -570,11 +708,6 @@ Section "AFS Control Center" SecControl
  Call AFSCommon.Install
  Call AFSLangFiles
  SetOutPath "$INSTDIR\Common"
- File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
- File "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"
- File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
- File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
- File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 
   SetOutPath "$INSTDIR\Common"
   File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
@@ -875,10 +1008,10 @@ Section "Uninstall"
   ; Delete the AFS service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec "net stop TransarcAFSDaemon"
-  nsExec::Exec "net stop TransarcAFSServer"
-  nsExec::Exec '$R0 u TransarcAFSDaemon'
-  nsExec::Exec '$R0 u TransarcAFSServer'
+  ExecWait "net stop TransarcAFSDaemon"
+  ExecWait "net stop TransarcAFSServer"
+  ExecWait '$R0 u TransarcAFSDaemon'
+  ExecWait '$R0 u TransarcAFSServer'
   Delete $R0
   
   Push "$INSTDIR\Client\Program"
@@ -894,9 +1027,25 @@ Section "Uninstall"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
-
-  Delete "$WINDIR\afsdcell.ini"
+  Delete "$WINDIR\afs_cpa.cpl"
   
+   Call un.IsSilent
+   Pop $R1
+   StrCmp $R1 "/S" SkipAsk
+  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelCell
+  CellExists:
+  MessageBox MB_YESNO "Would you like to keep your Cell file?" IDYES SkipDelCell
+  SkipAsk:
+  Delete "$WINDIR\afsdcell.ini"
+
+  SkipDelCell:
+   StrCmp $R1 "/S" SkipAsk2  
+  MessageBox MB_YESNO "Would you like to keep your submount file?" IDYES SkipSubFile
+  SkipAsk2:
+  Delete "$WINDIR\afsdsbmt.ini"
+  
+  SkipSubFile:
+  Delete "$WINDIR\afsd_init.log"
   Delete "$INSTDIR\Uninstall.exe"
 
   ; Remove server
@@ -917,10 +1066,13 @@ Section "Uninstall"
   Delete "$INSTDIR\Server\usr\afs\bin\vlserver.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\volserver.exe"
-  RMDir "$INSTDIR\Server\usr\afs\bin"
+  RMDir /r "$INSTDIR\Server\usr\afs\bin"
   RmDir /r "$INSTDIR\Server\usr\afs\etc"
   RmDir /r "$INSTDIR\Server\usr\afs\local"
   RMDIR /r "$INSTDIR\Server\usr\afs\logs"
+  
+  Delete /REBOOTOK "$WINDIR\afsserver.cpl"
+  Delete /REBOOTOK "$WINDIR\afs_cpa.cpl"
   
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
@@ -932,6 +1084,9 @@ Section "Uninstall"
   ; Delete DOC short cut
   RMDir /r "$INSTDIR\Client\Program"
   RMDir /r "$INSTDIR\Client"
+  
+  Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
+  Delete /REBOOTOK "$INSTDIR\Common\*"
   RMDir /r "$INSTDIR\Common"
 
   Delete "$SMPROGRAMS\OpenAFS\Documentation.lnk"
@@ -953,6 +1108,10 @@ Section "Uninstall"
   RMDir /r "$SMPROGRAMS\OpenAFS\Client"
   RMDir /r "$SMPROGRAMS\OpenAFS"
   
+  ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "CachePath"
+  IfErrors +2
+  Delete "$R0\AFSCache"
+  Delete "C:\AFSCache"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion"
@@ -963,7 +1122,9 @@ Section "Uninstall"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server"
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
-
+  DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
+ 
+  
   ;Display the Finish header
   !insertmacro MUI_UNFINISHHEADER
 
@@ -1086,6 +1247,25 @@ Function IsSilent
   silent: StrCpy $0 1
   notsilent: Exch $0
 FunctionEnd
+
+
+
+; Check if uninstall should be silent
+Function un.IsSilent
+  Push $0
+  Push $CMDLINE
+  Push "/S"
+  Call un.StrStr
+  Pop $0
+  StrCpy $0 $0 3
+  StrCmp $0 "/S" silent
+  StrCmp $0 "/S " silent
+    StrCpy $0 0
+    Goto notsilent
+  silent: StrCpy $0 1
+  notsilent: Exch $0
+FunctionEnd
+
 
 
 ; StrStr function
@@ -1294,12 +1474,18 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
    File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+   File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-   StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+   ;StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
    StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
    StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
@@ -1313,13 +1499,26 @@ DoEnglish:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"
+   File "..\..\doc\help\en_US\afs-cc.CNT"
+   File "..\..\doc\help\en_US\afs-cc.hlp"
+   File "..\..\doc\help\en_US\afs-light.CNT"
+   File "..\..\doc\help\en_US\afs-light.hlp"
+   File "..\..\doc\help\en_US\afs-nt.CNT"
+   File "..\..\doc\help\en_US\afs-nt.HLP"
+   File "..\..\doc\help\en_US\taafscfg.CNT"
+   File "..\..\doc\help\en_US\taafscfg.hlp"
+   File "..\..\doc\help\en_US\taafssvrmgr.CNT"
+   File "..\..\doc\help\en_US\taafssvrmgr.hlp"
+   File "..\..\doc\help\en_US\taafsusrmgr.CNT"
+   File "..\..\doc\help\en_US\taafsusrmgr.hlp"
    goto done
 
 DoGerman:
@@ -1331,13 +1530,26 @@ DoGerman:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1032.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1032.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1032.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1032.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"
+   File "..\..\doc\help\de_DE\afs-cc.CNT"
+   File "..\..\doc\help\de_DE\afs-cc.hlp"
+   File "..\..\doc\help\de_DE\afs-light.CNT"
+   File "..\..\doc\help\de_DE\afs-light.hlp"
+   File "..\..\doc\help\de_DE\afs-nt.CNT"
+   File "..\..\doc\help\de_DE\afs-nt.HLP"
+   File "..\..\doc\help\de_DE\taafscfg.CNT"
+   File "..\..\doc\help\de_DE\taafscfg.hlp"
+   File "..\..\doc\help\de_DE\taafssvrmgr.CNT"
+   File "..\..\doc\help\de_DE\taafssvrmgr.hlp"
+   File "..\..\doc\help\de_DE\taafsusrmgr.CNT"
+   File "..\..\doc\help\de_DE\taafsusrmgr.hlp"
    goto done   
 
 DoSpanish:
@@ -1349,13 +1561,26 @@ DoSpanish:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1034.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1034.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1034.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1034.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"
+   File "..\..\doc\help\es_ES\afs-cc.CNT"
+   File "..\..\doc\help\es_ES\afs-cc.hlp"
+   File "..\..\doc\help\es_ES\afs-light.CNT"
+   File "..\..\doc\help\es_ES\afs-light.hlp"
+   File "..\..\doc\help\es_ES\afs-nt.CNT"
+   File "..\..\doc\help\es_ES\afs-nt.HLP"
+   File "..\..\doc\help\es_ES\taafscfg.CNT"
+   File "..\..\doc\help\es_ES\taafscfg.hlp"
+   File "..\..\doc\help\es_ES\taafssvrmgr.CNT"
+   File "..\..\doc\help\es_ES\taafssvrmgr.hlp"
+   File "..\..\doc\help\es_ES\taafsusrmgr.CNT"
+   File "..\..\doc\help\es_ES\taafsusrmgr.hlp"
    goto done
 
 DoJapanese:
@@ -1367,13 +1592,26 @@ DoJapanese:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1041.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1041.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1041.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1041.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"
+   File "..\..\doc\help\ja_JP\afs-cc.CNT"
+   File "..\..\doc\help\ja_JP\afs-cc.hlp"
+   File "..\..\doc\help\ja_JP\afs-light.CNT"
+   File "..\..\doc\help\ja_JP\afs-light.hlp"
+   File "..\..\doc\help\ja_JP\afs-nt.CNT"
+   File "..\..\doc\help\ja_JP\afs-nt.HLP"
+   File "..\..\doc\help\ja_JP\taafscfg.CNT"
+   File "..\..\doc\help\ja_JP\taafscfg.hlp"
+   File "..\..\doc\help\ja_JP\taafssvrmgr.CNT"
+   File "..\..\doc\help\ja_JP\taafssvrmgr.hlp"
+   File "..\..\doc\help\ja_JP\taafsusrmgr.CNT"
+   File "..\..\doc\help\ja_JP\taafsusrmgr.hlp"
    goto done
    
 DoKorean:
@@ -1385,13 +1623,26 @@ DoKorean:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1042.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1042.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1042.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1042.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"
+   File "..\..\doc\help\ko_KR\afs-cc.CNT"
+   File "..\..\doc\help\ko_KR\afs-cc.hlp"
+   File "..\..\doc\help\ko_KR\afs-light.CNT"
+   File "..\..\doc\help\ko_KR\afs-light.hlp"
+   File "..\..\doc\help\ko_KR\afs-nt.CNT"
+   File "..\..\doc\help\ko_KR\afs-nt.HLP"
+   File "..\..\doc\help\ko_KR\taafscfg.CNT"
+   File "..\..\doc\help\ko_KR\taafscfg.hlp"
+   File "..\..\doc\help\ko_KR\taafssvrmgr.CNT"
+   File "..\..\doc\help\ko_KR\taafssvrmgr.hlp"
+   File "..\..\doc\help\ko_KR\taafsusrmgr.CNT"
+   File "..\..\doc\help\ko_KR\taafsusrmgr.hlp"
    goto done
 
 
@@ -1404,13 +1655,26 @@ DoPortugueseBR:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1046.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1046.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1046.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1046.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"
+   File "..\..\doc\help\pt_BR\afs-cc.CNT"
+   File "..\..\doc\help\pt_BR\afs-cc.hlp"
+   File "..\..\doc\help\pt_BR\afs-light.CNT"
+   File "..\..\doc\help\pt_BR\afs-light.hlp"
+   File "..\..\doc\help\pt_BR\afs-nt.CNT"
+   File "..\..\doc\help\pt_BR\afs-nt.HLP"
+   File "..\..\doc\help\pt_BR\taafscfg.CNT"
+   File "..\..\doc\help\pt_BR\taafscfg.hlp"
+   File "..\..\doc\help\pt_BR\taafssvrmgr.CNT"
+   File "..\..\doc\help\pt_BR\taafssvrmgr.hlp"
+   File "..\..\doc\help\pt_BR\taafsusrmgr.CNT"
+   File "..\..\doc\help\pt_BR\taafsusrmgr.hlp"
    goto done
    
 DoSimpChinese:
@@ -1422,13 +1686,26 @@ DoSimpChinese:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_2052.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_2052.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_2052.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_2052.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"
+   File "..\..\doc\help\zh_CN\afs-cc.CNT"
+   File "..\..\doc\help\zh_CN\afs-cc.hlp"
+   File "..\..\doc\help\zh_CN\afs-light.CNT"
+   File "..\..\doc\help\zh_CN\afs-light.hlp"
+   File "..\..\doc\help\zh_CN\afs-nt.CNT"
+   File "..\..\doc\help\zh_CN\afs-nt.HLP"
+   File "..\..\doc\help\zh_CN\taafscfg.CNT"
+   File "..\..\doc\help\zh_CN\taafscfg.hlp"
+   File "..\..\doc\help\zh_CN\taafssvrmgr.CNT"
+   File "..\..\doc\help\zh_CN\taafssvrmgr.hlp"
+   File "..\..\doc\help\zh_CN\taafsusrmgr.CNT"
+   File "..\..\doc\help\zh_CN\taafsusrmgr.hlp"
    goto done
    
 DoTradChinese:
@@ -1440,13 +1717,26 @@ DoTradChinese:
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll"
    File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1028.dll"
    File "${AFS_SERVER_BUILDDIR}\afsserver_1028.dll"
    File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1028.dll"
    File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1028.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.dll"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"
+   File "..\..\doc\help\zh_TW\afs-cc.CNT"
+   File "..\..\doc\help\zh_TW\afs-cc.hlp"
+   File "..\..\doc\help\zh_TW\afs-light.CNT"
+   File "..\..\doc\help\zh_TW\afs-light.hlp"
+   File "..\..\doc\help\zh_TW\afs-nt.CNT"
+   File "..\..\doc\help\zh_TW\afs-nt.HLP"
+   File "..\..\doc\help\zh_TW\taafscfg.CNT"
+   File "..\..\doc\help\zh_TW\taafscfg.hlp"
+   File "..\..\doc\help\zh_TW\taafssvrmgr.CNT"
+   File "..\..\doc\help\zh_TW\taafssvrmgr.hlp"
+   File "..\..\doc\help\zh_TW\taafsusrmgr.CNT"
+   File "..\..\doc\help\zh_TW\taafsusrmgr.hlp"
    goto done
    
 done:
@@ -1647,4 +1937,56 @@ Function un.IsNT
     Push 1
 FunctionEnd
 
+; AddSharedDLL
+ ;
+ ; Increments a shared DLLs reference count.
+ ; Use by passing one item on the stack (the full path of the DLL).
+ ;
+ ; Usage:
+ ;   Push $SYSDIR\myDll.dll
+ ;   Call AddSharedDLL
+ ;
+
+ Function AddSharedDLL
+   Exch $R1
+   Push $R0
+   ReadRegDword $R0 HKLM Software\Microsoft\Windows\CurrentVersion\SharedDLLs $R1
+   IntOp $R0 $R0 + 1
+   WriteRegDWORD HKLM Software\Microsoft\Windows\CurrentVersion\SharedDLLs $R1 $R0
+   Pop $R0
+   Pop $R1
+ FunctionEnd
+
+ 
+; un.RemoveSharedDLL
+ ;
+ ; Decrements a shared DLLs reference count, and removes if necessary.
+ ; Use by passing one item on the stack (the full path of the DLL).
+ ; Note: for use in the main installer (not the uninstaller), rename the
+ ; function to RemoveSharedDLL.
+ ;
+ ; Usage:
+ ;   Push $SYSDIR\myDll.dll
+ ;   Call un.RemoveSharedDLL
+ ;
+
+ Function un.RemoveSharedDLL
+   Exch $R1
+   Push $R0
+   ReadRegDword $R0 HKLM Software\Microsoft\Windows\CurrentVersion\SharedDLLs $R1
+   StrCmp $R0 "" remove
+     IntOp $R0 $R0 - 1
+     IntCmp $R0 0 rk rk uk
+     rk:
+       DeleteRegValue HKLM Software\Microsoft\Windows\CurrentVersion\SharedDLLs $R1
+     goto Remove
+     uk:
+       WriteRegDWORD HKLM Software\Microsoft\Windows\CurrentVersion\SharedDLLs $R1 $R0
+     Goto noremove
+   remove:
+     Delete /REBOOTOK $R1
+   noremove:
+   Pop $R0
+   Pop $R1
+ FunctionEnd
 
