@@ -1154,6 +1154,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	} else {
 	    osi_FreeLargeSpace(inData);
 	}
+	afs_PutFakeStat(&fakestate);
 	return ENOMEM;
     }
     outSize = 0;
