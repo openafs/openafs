@@ -3,7 +3,7 @@
 #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000
 #   Free Software Foundation, Inc.
 
-version='2000-09-05'
+version='2004-08-19'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -459,13 +459,13 @@ EOF
 		echo rs6000-ibm-aix3.2
 	fi
 	exit 0 ;;
-    *:AIX:*:4)
+    *:AIX:*:[45])
 	IBM_CPU_ID=`/usr/sbin/lsdev -C -c processor -S available | head -1 | awk '{ print $1 }'`
-	if /usr/sbin/lsattr -EHl ${IBM_CPU_ID} | grep POWER >/dev/null 2>&1; then
-		IBM_ARCH=rs6000
-	else
+	if /usr/sbin/lsattr -EHl ${IBM_CPU_ID} | grep -i PowerPC >/dev/null 2>&1; then
 		IBM_ARCH=powerpc
-	fi
+	else
+		IBM_ARCH=rs6000
+        fi
 	if [ -x /usr/bin/oslevel ] ; then
 		IBM_REV=`/usr/bin/oslevel`
 	else
