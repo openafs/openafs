@@ -30,6 +30,9 @@ AC_ARG_WITH(linux-kernel-headers,
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
 )
+AC_ARG_ENABLE(redhat-buildsys,
+[  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
+)
 
 AC_PROG_CC
 
@@ -68,8 +71,19 @@ case $system in
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'|tail -1`
 		  if test "x$linux_kvers" = "x"; then
-		    AC_MSG_ERROR(Linux headers lack version definition)
-		    exit 1
+		    if test -f "$LINUX_KERNEL_PATH/include/linux/version-up.h"; then
+		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $2 }'|tail -1`
+		      if test "x$linux_kvers" = "x"; then
+
+		        AC_MSG_ERROR(Linux headers lack version definition [2])
+		        exit 1
+		      else
+		        LINUX_VERSION="$linux_kvers"
+                      fi
+                    else
+                      AC_MSG_ERROR(Linux headers lack version definition)
+		      exit 1
+		    fi
 		  else
 		    LINUX_VERSION="$linux_kvers"
 		  fi

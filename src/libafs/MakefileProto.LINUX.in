@@ -80,12 +80,14 @@ include Makefile.common
 
 LINUX_VERS=@LINUX_VERSION@
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+LINUX_MODULE_NAME=
+LOCAL_SMP_DEF=
 
 setup:
 	-rm -f h net netinet sys rpc
 	-ln -s rx rpc
 	for m in ${MPS} ; do \
-		KDIR=$(KOBJ)-${LINUX_VERS}-$$m; \
+		KDIR=$(KOBJ)-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m; \
 		mkdir -p $${KDIR}; \
 		ln -fs ../Makefile $${KDIR}/Makefile ; \
 		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
@@ -121,17 +123,17 @@ ${COMPDIRS}:
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
 <all>
 	for m in ${MPS} ; do \
-		KDIR=${KOBJ}-${LINUX_VERS}-$$m ; \
+		KDIR=${KOBJ}-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ -D__SMP__" ; \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.mp" ; \
 		else  \
-			SMP_DEF="@RHCONFIG_SP@ -U__SMP__" ; \
+			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
-		$(MAKE) DESTDIR=${DESTDIR} SMP_DEF="$${SMP_DEF}" $${TARG} CLIENT=${LINUX_VERS} || exit $$?; \
+		$(MAKE) DESTDIR=${DESTDIR} SMP_DEF="$${SMP_DEF}" $${TARG} CLIENT=${LINUX_VERS}${LINUX_MODULE_NAME} || exit $$?; \
 		cd ../ ; \
 	done
 

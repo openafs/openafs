@@ -44,6 +44,14 @@ all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
 	$(MAKE) install "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
 
+all_nolibafs:
+	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+	$(MAKE) install TARGET=finale_nolibafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+
+only_libafs:
+	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+	$(MAKE) install TARGET=libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+
 project: cmd comerr 
 
 config: 
@@ -378,6 +386,12 @@ libadmin: libafsauthent bozo
 	esac
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
+	ptserver scout bu_utils ubik uss bozo vfsck volser \
+	venus update xstat afsmonitor dauth tests libafsrpc \
+	libafsauthent libadmin
+	${COMPILE_PART1} finale ${COMPILE_PART2}
+
+finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth tests libafsrpc \
 	libafsauthent libadmin
