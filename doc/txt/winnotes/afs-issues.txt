@@ -29,36 +29,33 @@ is imposing significant delays in the movement of data from between the SMB
 and RX protocol operations. There was also an issue with large numbers of 
 page faults which have since been fixed.
 
-(7) There appear to be directory locking problems associated with renaming 
-directories.
+(7) File termination differences between Win9x and nt/w2k/xp (Jim Peterson)
 
-(8) File termination differences between Win9x and nt/w2k/xp (Jim Peterson)
+(8) How to silence "Explorer" when the mapped drive is not available?
 
-(9) How to silence "Explorer" when the mapped drive is not available?
+(9) Convert to IFS!!!!!!
 
-(10) Convert to IFS!!!!!!
-
-(11) Kerberos 5 integration:
-(11f) allow arbitrary cell to realm mappings
-(11g) modify UI to allow user to choose whether to authenticate
+(10) Kerberos 5 integration:
+(10f) allow arbitrary cell to realm mappings
+(10g) modify UI to allow user to choose whether to authenticate
       using Kerberos or AFS 
-(11h) modify UI to allow user to select an existing principal to
+(10h) modify UI to allow user to select an existing principal to
       be used to request AFS tokens
-(11i) modify UI to display Kerberos 5 ticket info (principal, 
+(10i) modify UI to display Kerberos 5 ticket info (principal, 
       ticket lifetimes, etc) 
 
-(12) Default cell is system global just like everything else.  Different
+(11) Default cell is system global just like everything else.  Different
      users logging in via Integrated Logon or using afscreds.exe cannot
      be automatically prompted for different cells
 
-(13) AFS Integrated Logon:
-(13b) If using Kerberos, need to figure out a means of passing credentials
+(12) AFS Integrated Logon:
+(12b) If using Kerberos, need to figure out a means of passing credentials
       into the user space until such time as I finish the new credential
       cache service.
-(13c) If network is not available must store the username and password 
+(12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
 
-(14) Loopback adapter is not always installed with bindings to "File and 
+(13) Loopback adapter is not always installed with bindings to "File and 
      Printer Sharing for Microsoft Networks" or "Client for Microsoft 
      Networks".   If these are not bound then SMB names will successfully
      be published to a list of zero which causes the AFS not to function.
@@ -67,7 +64,7 @@ directories.
      the bindings on Win2000 the loopback adapter frequently fails to publish
      SMB names.  Of course, the error messages report nothing.
 
-(15) If a drive mapping is "in use", then afscreds cannot be used to Modify
+(14) If a drive mapping is "in use", then afscreds cannot be used to Modify
      or Delete the Mapping.  If a map to "H:" to \afs\cell\foo" with 
      description "home" is modified to point to \afs\cell\bar, then the 
      description must be unique.  "home" cannot be reused.  We need a way 
@@ -75,57 +72,53 @@ directories.
 
      [Actually, an end user should not be able to modify the submount list]
 
-(16) WinAFS configuration values are still stored in old style INI files 
-     instead of using the Registry.  This is especially important for
-     per-user values such as drive mappings
-
-(17) Drive mappings are lost on WinXP after return from Standby.  (This could
+(15) Drive mappings are lost on WinXP after return from Standby.  (This could
      be because the AFS Client Service fails OR because the RX protocol is
      temporarily unable to access the Cell due to network restore timing
      issues.)
 
-(18) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
+(16) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
      the use of interoperable file names; force the use of paths no longer 
      than 256 characters; force share names to be no longer than 13 
      characters; restrict authentication to ASCII only names and passwords;
      etc.
 
-(19) No auto-restart on service failure
+(17) No auto-restart on service failure
 
-(20) Better EventLog handling
+(18) Better EventLog handling
 
-(21) Named Pipes Support [requires modifications to AFS servers to support]
+(19) Named Pipes Support [requires modifications to AFS servers to support]
 
-(22) Memory Mapped File support
+(20) Memory Mapped File support
 
-(23) Large file support [both SMB/CIFS and AFS]
+(21) Large file support [both SMB/CIFS and AFS]
 
-(24) Implement persistent disk based cache which survives restarts
+(22) Implement persistent disk based cache which survives restarts
 
-(25) NSIS Installer issues
+(23) NSIS Installer issues
      (a) integration with KFW install script
      (b) Optional removal of AFS Server volumes
 
-(26) The User Interface needs to be re-designed to separate the per-user
+(24) The User Interface needs to be re-designed to separate the per-user
      and per-machine settings.  All of the new registry items need to 
      be added to the UI
 
-(27) Thread initialization versus Global Drive Mapping.  There is no
+(25) Thread initialization versus Global Drive Mapping.  There is no
      mechanism in the afsd_init.c to ensure that all of the threads 
      complete initializing in the correct sequence.  In the case of 
      Global Drive Maps this is a problem because the Global Drive Maps
      can be executed prior to the completion of the SMB registration
      and service thread initialization.
 
-(28) CIFS Remote Administration Protocol implementation is incomplete.
+(26) CIFS Remote Administration Protocol implementation is incomplete.
      Notifications are not made to requestors when the view of a file
      or folder changes due to token acquisition; token expiration; or
      token destruction
 
-(29) The Cache Manager Flush routines do not return or check error 
+(27) The Cache Manager Flush routines do not return or check error 
      codes.       
 
-(30) Remove submount creation as a side effect of AFS drive mapping.
+(28) Remove submount creation as a side effect of AFS drive mapping.
      
      The AFS Submount is effectively a server side alias for a path 
      located in the AFS space.  This alias is exported by the AFS 
@@ -142,7 +135,7 @@ directories.
      or by the new AFS Client Service Administration tool when executed 
      by an authorized user.
 
-(31) Add support for multi-homed servers
+(29) Add support for multi-homed servers
 
 
 -------------------------------------------------------------------------
@@ -190,7 +183,7 @@ List of unfunded projects:
   10. Identify why 16-bit DOS applications executed out of AFS fail
   11. Add support for configurable Icon file representing AFS folders within the Explorer Shell
   12. Documentation Documentation Documentation
-  13. Large File support (> 2GB)
+  13. Large File support (> 2GB) in SMB/CIFS client
   14. Integrate KFW installation into the NSIS and MSI installers
   15. Add support for record locking to AFS (requires changes to the servers)
   16. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
@@ -223,5 +216,5 @@ List of unfunded projects:
   24. Add support for storing Extended Attributes on files
   25. Add support for storing Windows ACLs on files
   26. Remove submount creation as a side effect of drive creation
-  27. Finish conversion from string.h to strsafe.h
+  27. Finish conversion from string.h to strsafe.h for VS.NET 2005
   28. Add support for multi-homed servers
