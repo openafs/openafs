@@ -16,6 +16,7 @@ LIBOBJS = lock.obj \
 	  timer.obj\
 	  fasttime.obj \
 	  waitkey.obj \
+	  threadname.obj \
 	  AFS_component_version_number.obj
 
 LIBFILE = $(DESTDIR)\lib\afslwp.lib

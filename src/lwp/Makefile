@@ -21,8 +21,8 @@ CFLAGS=${OPTIMIZE} -I${SRCDIR}include ${XCFLAGS}
 include ../config/Makefile.version
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
-	waitkey.o AFS_component_version_number.o
-LIBTOBJS=tlwp.o process.o lock.o tiomgr.o timer.o fasttime.o preempt.o AFS_component_version_number.o pthread.o
+	waitkey.o threadname.o AFS_component_version_number.o
+LIBTOBJS=tlwp.o process.o lock.o tiomgr.o timer.o fasttime.o preempt.o AFS_component_version_number.o pthread.o threadname.o
 
 noversion: install
 
@@ -97,6 +97,7 @@ lwp.o		: lwp.c lwp.h
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c
 fasttime.o	: fasttime.c
+threadname.o    : threadname.c
 
 exc_handling.o	: exc_handling.c
 
