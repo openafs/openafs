@@ -15,6 +15,9 @@
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/afs_stats.h"
+#if defined(AFS_LINUX24_ENV)
+#include "../h/smp_lock.h"
+#endif
 
 char *crash_addr = 0; /* Induce an oops by writing here. */
 
@@ -313,16 +316,37 @@ void osi_linux_free_inode_pages(void)
     }
 }
 
+void osi_clear_inode(struct inode *ip)
+{
+    cred_t *credp = crref();
+    struct vcache *vc = (struct vcache*)ip;
+
+#if defined(AFS_LINUX24_ENV)
+    if (atomic_read(&ip->i_count) > 1)
+#else
+    if (ip->i_count > 1)
+#endif
+        printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip);
+
+    afs_InactiveVCache(vc, credp);
+#if defined(AFS_LINUX24_ENV)
+    atomic_set(&ip->i_count, 0);
+#else
+    ip->i_count = 0;
+#endif
+    ip->i_nlink = 0; /* iput checks this after calling this routine. */
+    crfree(credp);
+}
+
 /* iput an inode. Since we still have a separate inode pool, we don't want
  * to call iput on AFS inodes, since they would then end up on Linux's
  * inode_unsed list.
  */
 void osi_iput(struct inode *ip)
 {
-    extern void afs_delete_inode(struct inode *ip);
     extern struct vfs *afs_globalVFS;
 
-    
+    AFS_GLOCK();
 #if defined(AFS_LINUX24_ENV)
     if (atomic_read(&ip->i_count) == 0 || atomic_read(&ip->i_count) & 0xffff0000) {
 #else
@@ -343,9 +367,11 @@ void osi_iput(struct inode *ip)
 	ip->i_count --;
 	if (!ip->i_count)
 #endif
-	    afs_delete_inode(ip);
+	    osi_clear_inode(ip);
+        AFS_GUNLOCK();
     }
     else { 
+        AFS_GUNLOCK();
 	iput(ip);
     }
 }
