@@ -42,7 +42,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 /* don't set CDirty in here because RPC is called synchronously */
 int
-  afs_symlink
+afs_symlink
 #ifdef	AFS_OSF_ENV
   (ndp, attrs, atargetName)
      struct nameidata *ndp;
@@ -54,11 +54,12 @@ int
     struct ucred *acred = ndp->ni_cred;
 #else				/* AFS_OSF_ENV */
   (OSI_VC_ARG(adp), aname, attrs, atargetName, acred)
-  OSI_VC_DECL(adp);
-char *atargetName;
-char *aname;
-struct vattr *attrs;
-struct AFS_UCRED *acred; {
+     OSI_VC_DECL(adp);
+     char *atargetName;
+     char *aname;
+     struct vattr *attrs;
+     struct AFS_UCRED *acred;
+{
 #endif
     afs_uint32 now = 0;
     struct vrequest treq;
@@ -78,7 +79,7 @@ struct AFS_UCRED *acred; {
     struct afs_fakestat_state fakestate;
     XSTATS_DECLS OSI_VC_CONVERT(adp)
 
-      AFS_STATCNT(afs_symlink);
+    AFS_STATCNT(afs_symlink);
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
@@ -346,7 +347,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 
 int
 afs_readlink(OSI_VC_ARG(avc), auio, acred)
-OSI_VC_DECL(avc);
+     OSI_VC_DECL(avc);
      struct uio *auio;
      struct AFS_UCRED *acred;
 {
@@ -356,7 +357,7 @@ OSI_VC_DECL(avc);
     struct afs_fakestat_state fakestat;
     OSI_VC_CONVERT(avc)
 
-	AFS_STATCNT(afs_readlink);
+    AFS_STATCNT(afs_readlink);
     afs_Trace1(afs_iclSetp, CM_TRACE_READLINK, ICL_TYPE_POINTER, avc);
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
