@@ -128,7 +128,7 @@ main(argc, argv)
 	int nargs;
 
 	printf("fs> ");
-	if (gets(line) != NULL) {
+	if (fgets(line, 499, stdin) != NULL) {
 	    char *oper;
 	    register char **argp = args;
 	    GetArgs(line, argp, &nargs);

@@ -319,7 +319,7 @@ int main (void)
     char	  cell[MAXKTCREALMLEN];
 
     printf("Enter login:");
-    gets (line);
+    fgets (line, 255, stdin);
     ka_ParseLoginName (line, name, instance, cell);
     printf ("'%s' '%s' '%s'\n", name, instance, cell);
 

@@ -286,7 +286,7 @@ static handleit(as)
 	bzero(&updateentry, sizeof(updateentry));
 	bzero(&listbyattributes, sizeof(listbyattributes));
 	printf("vl> ");
-	if (gets(line) == NULL) {
+	if (fgets(line, 499, stdin) == NULL) {
 	    printf("\n");
 	    exit(0);
 	} else {
