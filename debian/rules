@@ -220,7 +220,7 @@ binary-source:
 
 build-modules: build-modules-stamp
 
-build-modules-stamp: configure
+build-modules-stamp: configure-stamp
 	$(MAKE) SYS_NAME=$(SYS_NAME) lwp 
 	$(MAKE) SYS_NAME=$(SYS_NAME) libafs
 	touch build-modules-stamp

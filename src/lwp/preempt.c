@@ -95,4 +95,4 @@ int PRE_EndPreempt()
     return(LWP_SUCCESS);
     }
 
-#endif /* AFS_I386_LINUX20_ENV */
+#endif /* AFS_LINUX20_ENV */

@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 2.1.16), libncurses5-dev, libpam0g-dev, bison
 Standards-Version: 3.1.1
 
 Package: openafs-client
-Architecture: i386
+Architecture: i386, powerpc, sparc
 Depends: ${shlibs:Depends}, debconf, dnsutils, openafs-modules
 Conflicts: arla
 Description: The AFS distributed filesystem- client support
@@ -19,7 +19,7 @@ Description: The AFS distributed filesystem- client support
 
 Package: openafs-kpasswd
 Priority: extra
-Architecture: i386
+Architecture: i386, powerpc, sparc
 Depends: ${shlibs:Depends}, openafs-client (= ${Source-Version})
 Conflicts: krb5-user, heimdal-clients
 Description: The AFS distributed filesystem- old password changing
@@ -31,7 +31,7 @@ Description: The AFS distributed filesystem- old password changing
  Transarc kaserver to create users and change passwords.
 
 Package: openafs-fileserver
-Architecture: i386
+Architecture: i386, powerpc, sparc
 Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
 Recommends: ntp
 Description: The AFS distributed filesystem- file server
@@ -43,7 +43,7 @@ Description: The AFS distributed filesystem- file server
  installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
-Architecture: i386
+Architecture: i386, powerpc, sparc
 Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5, openafs-ptutil
 Description: The AFS distributed filesystem- database server
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -55,7 +55,7 @@ Description: The AFS distributed filesystem- database server
  protection servers.
 
 Package: libopenafs-dev
-Architecture: i386
+Architecture: i386, powerpc, sparc
 Priority: extra
 Description: The AFS distributed filesystem- development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of

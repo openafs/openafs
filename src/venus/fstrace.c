@@ -2072,11 +2072,20 @@ long call, parm0, parm1, parm2, parm3, parm4, parm5, parm6;
 {
     int code;
 #ifdef AFS_LINUX20_ENV
+#if defined AFS_LINUX_64BIT_KERNEL
+    long long eparm[4];
+    /* don't want to sign extend it to 64bit, so using ulong */
+    eparm[0] = (unsigned long)parm3;
+    eparm[1] = (unsigned long)parm4;
+    eparm[2] = (unsigned long)parm5;
+    eparm[3] = (unsigned long)parm6;
+#else
     int eparm[4];
     eparm[0] = parm3;
     eparm[1] = parm4;
     eparm[2] = parm5;
     eparm[3] = parm6;
+#endif
     /* Linux can only handle 5 arguments in the actual syscall. */
     if (call == AFSCALL_ICL) {
 	code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
@@ -2084,6 +2093,14 @@ long call, parm0, parm1, parm2, parm3, parm4, parm5, parm6;
     else {
 	code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3);
     }
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+    /* on sparc this function returns none value, so do it myself */
+    __asm__ __volatile__ ("
+	mov	%o0, %i0
+	ret
+	restore
+");
+#endif
 #else
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
     code =  syscall(AFS_SYSCALL, call, parm0, parm1, parm2, parm3, parm4);

@@ -181,7 +181,7 @@ afs_osi_Read(afile, offset, aptr, asize)
     char *aptr;
     afs_int32 asize; {
     struct AFS_UCRED *oldCred;
-    unsigned int resid;
+    size_t resid;
     register afs_int32 code;
     register afs_int32 cnt1=0;
     AFS_STATCNT(osi_Read);
@@ -220,7 +220,7 @@ afs_osi_Write(afile, offset, aptr, asize)
     afs_int32 offset;
     afs_int32 asize; {
     struct AFS_UCRED *oldCred;
-    unsigned int resid;
+    size_t resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
     if ( !afile )

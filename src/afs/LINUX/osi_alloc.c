@@ -32,8 +32,8 @@ struct osi_linux_mem {
 };
 
 /* These assume 32-bit pointers */
-#define MEMTYPE(A) (((unsigned int)A) & 0x3)
-#define MEMADDR(A) (void *)((unsigned int)(A) & (~0x3))
+#define MEMTYPE(A) (((unsigned long)A) & 0x3)
+#define MEMADDR(A) (void *)((unsigned long)(A) & (~0x3))
 
 /* globals */
 afs_atomlist *al_mem_pool; /* pool of osi_linux_mem structures */
@@ -82,9 +82,9 @@ static void *linux_alloc(unsigned int asize)
 
     /*  if we can use kmalloc use it to allocate the required memory. */
     if (asize <  MAX_KMALLOC_SIZE) {
-        new = (void *)kmalloc(asize, GFP_KERNEL);
+        new = (void *)(long)kmalloc(asize, GFP_KERNEL);
         if (new) /* piggy back alloc type */
-            (unsigned int)new |= KM_TYPE;
+            (unsigned long)new |= KM_TYPE;
     }
     if (!new) { /* otherwise use vmalloc  */
 	int max_wait = 10;
@@ -95,7 +95,7 @@ static void *linux_alloc(unsigned int asize)
 	    schedule();
         }
 	if (new) /* piggy back alloc type */
-	    (unsigned int)new |= VM_TYPE;
+	    (unsigned long)new |= VM_TYPE;
     }
     if (new)
 	memset(MEMADDR(new), 0, asize);
@@ -139,7 +139,7 @@ static unsigned hash_chunk(void *p)
 {
     unsigned int key;
 
-    key = (unsigned int)p >> 2;
+    key = (unsigned int)(long)p >> 2;
     key = (key * HASH_CONST)%HASH_PRIME;
 
     return key;

@@ -264,6 +264,13 @@ int uiomove(char *dp, int length, uio_flag_t rw, uio_t *uiop)
 void afs_osi_SetTime(osi_timeval_t *tvp)
 {
     extern int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
+#ifdef AFS_LINUX_64BIT_KERNEL
+    struct timeval tv;
+    AFS_STATCNT(osi_SetTime);
+    tv.tv_sec = tvp->tv_sec;
+    tv.tv_usec = tvp->tv_usec;
+    (void) (*sys_settimeofdayp)(&tv, NULL);
+#else
     KERNEL_SPACE_DECL;
 
     AFS_STATCNT(osi_SetTime);
@@ -271,6 +278,7 @@ void afs_osi_SetTime(osi_timeval_t *tvp)
     TO_USER_SPACE();
     (void) (*sys_settimeofdayp)(tvp, NULL);
     TO_KERNEL_SPACE();
+#endif
 }
 
 /* Free all the pages on any of the vnodes in the vlru. Must be done before

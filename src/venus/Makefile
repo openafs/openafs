@@ -59,7 +59,7 @@ cacheout: cacheout.o
 
 cacheout.o: cacheout.c
 
-all: fs up cmdebug fstrace kdump gcpags kdump64
+all: fs up cmdebug fstrace  gcpags 
 
 ${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs: fs
 	${INSTALL} -s $? $@
@@ -73,40 +73,40 @@ ${DESTDIR}etc/fstrace: fstrace
 ${DESTDIR}bin/cmdebug: cmdebug
 	${INSTALL} -s $? $@
 
-${DESTDIR}etc/kdump: kdump
-	set -x; \
-	case ${SYS_NAME} in \
-	sgi_6? ) \
-		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
-		ln -fs kdump ${DESTDIR}etc/kdump32; \
-		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP22; \
-		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP32; \
-		for f in kdump.IP??; \
-		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
-		done ;; \
-	sun4x_57 ) \
-		${INSTALLex} -f kdump.sh.solaris7 $@; \
-		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
-	hp_ux11* ) \
-		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
-		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
-	*) \
-		${INSTALL} -s $? $@ ;; \
-	esac
+#${DESTDIR}etc/kdump: kdump
+#	set -x; \
+# 	case ${SYS_NAME} in \
+# 	sgi_6? ) \
+# 		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
+# 		ln -fs kdump ${DESTDIR}etc/kdump32; \
+# 		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP22; \
+# 		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP32; \
+# 		for f in kdump.IP??; \
+# 		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
+# 		done ;; \
+# 	sun4x_57 ) \
+# 		${INSTALLex} -f kdump.sh.solaris7 $@; \
+# 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+# 	hp_ux11* ) \
+# 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
+# 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+# 	*) \
+# 		${INSTALL} -s $? $@ ;; \
+# 	esac
 
-${DESTDIR}etc/kdump64: kdump64
-	set -x; \
-	case ${SYS_NAME} in \
-	sun4x_57 | hp_ux11* ) \
-		${INSTALL} -s $? $@ ;;\
-	* ) \
-		echo skipping kdump64 for ${SYS_NAME} ;; \
-	esac
+# ${DESTDIR}etc/kdump64: kdump64
+# 	set -x; \
+# 	case ${SYS_NAME} in \
+# 	sun4x_57 | hp_ux11* ) \
+# 		${INSTALL} -s $? $@ ;;\
+# 	* ) \
+# 		echo skipping kdump64 for ${SYS_NAME} ;; \
+# 	esac
 
 
 install: all ${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
 	${DESTDIR}bin/up ${DESTDIR}etc/fstrace ${DESTDIR}bin/cmdebug \
-	${DESTDIR}etc/kdump ${DESTDIR}etc/kdump64
+	 
 
 system: install
 

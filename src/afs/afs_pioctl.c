@@ -180,6 +180,21 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
+#if defined(AFS_LINUX_64BIT_KERNEL)
+	struct afs_ioctl32 dst32;
+
+#ifdef AFS_SPARC64_LINUX20_ENV
+	if (current->tss.flags & SPARC_FLAG_32BIT) {
+#else
+#error Not done for this linux type
+#endif
+		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
+		if (!code)
+			afs_ioctl32_to_afs_ioctl(&dst32, dst);
+		return code;
+	}
+#endif /* defined(AFS_LINUX_64BIT_KERNEL) */
+
 	AFS_COPYIN(cmarg, (caddr_t) dst, sizeof *dst, code);
 	return code;
 }
@@ -792,7 +807,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_LINUX22_ENV
 	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &dp);
 	if (!code)
-	    vp = (struct vcache *)dp->d_inode;
+	    vp = (struct vnode *)dp->d_inode;
 #else
 	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &vp);
 #endif /* AFS_LINUX22_ENV */
@@ -2753,7 +2768,7 @@ static int afs_setsprefs(sp, num, vlonly)
       /* Note that it doesn't have a cell yet...     */
       if (!matches) {
 	 afs_uint32 temp = sp->host.s_addr;
-	 srvr = afs_GetServer(&temp, 1, NULL, (vlonly ? AFS_VLPORT : AFS_FSPORT), 
+	 srvr = afs_GetServer(&temp, 1, 0, (vlonly ? AFS_VLPORT : AFS_FSPORT), 
 			      WRITE_LOCK, (afsUUID *)0,0);
 	 srvr->addr->sa_iprank = sp->rank + afs_randomMod15();
 	 afs_PutServer(srvr, WRITE_LOCK);
@@ -3318,8 +3333,10 @@ afs_int32 *aoutSize;
 
 	if ( ainSize < sizeof(struct setspref) )
 		return EINVAL;
+#if 0	/* num_servers is unsigned */
 	if ( sin->num_servers < 0 )
 		return EINVAL;
+#endif
 	if ( sin->num_servers > AFS_MAX_INTERFACE_ADDR)
 		return ENOMEM;
 

@@ -4927,7 +4927,7 @@ void rxi_Start(event, call, istack)
 					     (char *)call, istack);
 #else /* RX_ENABLE_LOCKS */
 	    call->resendEvent = rxevent_Post(&retryTime, rxi_Start,
-					     (char *)call, (void*)istack);
+					     (char *)call, (void*)(long)istack);
 #endif /* RX_ENABLE_LOCKS */
 	  }
 	}
