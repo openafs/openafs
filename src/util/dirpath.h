@@ -1,3 +1,7 @@
+/* Changed for Debian by Sam Hartman <hartmans@mit.edu>
+ * conform to FHS
+ */
+
 /* Copyright (C) 1998 Transarc Corporation - All rights reserved.
  */
 
@@ -88,7 +92,7 @@ ConstructLocalLogPath(const char *cpath,
 /* -----------------  Directory/file name macros ------------------ */
 
 /* afs installation dir names */
-#define AFSDIR_ETC_DIR   "etc"
+#define AFSDIR_ETC_DIR   ""
 #define AFSDIR_BIN_DIR   "bin"
 #define AFSDIR_CORES_DIR "cores"
 #define AFSDIR_DB_DIR    "db"
@@ -146,7 +150,7 @@ ConstructLocalLogPath(const char *cpath,
 
 #define AFSDIR_CANONICAL_USR_DIRPATH            "/usr"
 #define AFSDIR_CANONICAL_SERVER_AFS_DIRPATH     "/usr/afs"
-#define AFSDIR_CANONICAL_CLIENT_VICE_DIRPATH    "/usr/vice"
+#define AFSDIR_CANONICAL_CLIENT_VICE_DIRPATH    "/etc/openafs"
 
 #define AFSDIR_CANONICAL_SERVER_BIN_DIRPATH \
 AFSDIR_CANONICAL_SERVER_AFS_DIRPATH "/" AFSDIR_BIN_DIR
