@@ -1828,7 +1828,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     add_std_args (ts);
 
-    ts = cmd_CreateSyntax("restart", Restart, 0, "restart all processes");
+    ts = cmd_CreateSyntax("restart", Restart, 0, "restart processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_AddParm(ts, "-bosserver", CMD_FLAG, CMD_OPTIONAL, "restart bosserver");
