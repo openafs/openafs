@@ -52,6 +52,16 @@
 #include "afs/audit.h"
 
 
+#if !defined(UKERNEL)
+int afsconf_CheckAuth(adir, acall)
+register struct rx_call *acall;
+register struct afsconf_dir *adir; {
+    LOCK_GLOBAL_MUTEX
+    return ((afsconf_SuperUser(adir, acall, (char *)0) == 0)? 10029 : 0);
+    UNLOCK_GLOBAL_MUTEX
+}
+#endif /* !defined(UKERNEL) */
+
 static GetNoAuthFlag(adir)
 struct afsconf_dir *adir; {
     if (access(AFSDIR_SERVER_NOAUTH_FILEPATH, 0) == 0) {

@@ -74,16 +74,6 @@ extern struct rx_securityClass *rxkad_NewClientSecurityObject();
 #endif /* defined(UKERNEL) */
 
 
-#if !defined(UKERNEL)
-int afsconf_CheckAuth(adir, acall)
-register struct rx_call *acall;
-register struct afsconf_dir *adir; {
-    LOCK_GLOBAL_MUTEX
-    return ((afsconf_SuperUser(adir, acall, (char *)0) == 0)? 10029 : 0);
-    UNLOCK_GLOBAL_MUTEX
-}
-#endif /* !defined(UKERNEL) */
-
 /* return a null security object if nothing else can be done */
 static afs_int32 QuickAuth(astr, aindex)
 struct rx_securityClass **astr;
