@@ -1338,39 +1338,37 @@ static void afs_SimpleVStat(register struct vcache *avc,
 
 #ifdef AFS_SGI_ENV
     if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)
-	&& !AFS_VN_MAPPED((vnode_t*)avc))
+	&& !AFS_VN_MAPPED((vnode_t*)avc)) {
 #else
-    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc))
+    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)) {
 #endif
-
-	{
 #ifdef AFS_64BIT_ClIENT
-	    FillInt64(length, astat->Length_hi, astat->Length);
-#else /* AFS_64BIT_CLIENT */
-	    length = astat->Length;
+	FillInt64(length, astat->Length_hi, astat->Length);
+#else  /* AFS_64BIT_CLIENT */
+	length = astat->Length;
 #endif /* AFS_64BIT_CLIENT */
 #if defined(AFS_SGI_ENV)
-	    osi_Assert((valusema(&avc->vc_rwlock) <= 0) &&
+	osi_Assert((valusema(&avc->vc_rwlock) <= 0) &&
 		   (OSI_GET_LOCKID() == avc->vc_rwlockid));
-	    if (length < avc->m.Length) {
-		vnode_t *vp = (vnode_t *)avc;
+	if (length < avc->m.Length) {
+	    vnode_t *vp = (vnode_t *)avc;
 
-		osi_Assert(WriteLocked(&avc->lock));
-		ReleaseWriteLock(&avc->lock);
-		AFS_GUNLOCK();
-		PTOSSVP(vp, (off_t)length, (off_t)MAXLONG);
-		AFS_GLOCK();
-		ObtainWriteLock(&avc->lock,67);
-	    }
-#endif
-	    /* if writing the file, don't fetch over this value */
-	    afs_Trace3(afs_iclSetp, CM_TRACE_SIMPLEVSTAT,
-		       ICL_TYPE_POINTER, avc,
-		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
-		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
-	    avc->m.Length = length;
-	    avc->m.Date = astat->ClientModTime;
+	    osi_Assert(WriteLocked(&avc->lock));
+	    ReleaseWriteLock(&avc->lock);
+	    AFS_GUNLOCK();
+	    PTOSSVP(vp, (off_t)length, (off_t)MAXLONG);
+	    AFS_GLOCK();
+	    ObtainWriteLock(&avc->lock,67);
 	}
+#endif
+	/* if writing the file, don't fetch over this value */
+	afs_Trace3(afs_iclSetp, CM_TRACE_SIMPLEVSTAT,
+		   ICL_TYPE_POINTER, avc,
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
+	avc->m.Length = length;
+	avc->m.Date = astat->ClientModTime;
+    }
     avc->m.Owner = astat->Owner;
     avc->m.Group = astat->Group;
     avc->m.Mode = astat->UnixModeBits;
@@ -1381,9 +1379,6 @@ static void afs_SimpleVStat(register struct vcache *avc,
 	avc->m.Mode |= S_IFDIR;
     }
     else if (vType(avc) == VLNK) {
-
-
-
 	avc->m.Mode |= S_IFLNK;
 	if ((avc->m.Mode & 0111) == 0) avc->mvstat = 1;
     }
@@ -1514,7 +1509,7 @@ void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *
 
 #ifdef AFS_64BIT_CLIENT
     FillInt64(length, astat->Length_hi, astat->Length);
-#else /* AFS_64BIT_CLIENT */
+#else  /* AFS_64BIT_CLIENT */
     length = astat->Length;
 #endif /* AFS_64BIT_CLIENT */
     /* WARNING: afs_DoBulkStat uses the Length field to store a sequence
@@ -1525,20 +1520,19 @@ void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *
      * also need to change the conditional in afs_DoBulkStat.  */
 #ifdef AFS_SGI_ENV
     if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)
-	&& !AFS_VN_MAPPED((vnode_t*)avc))
+	&& !AFS_VN_MAPPED((vnode_t*)avc)) {
 #else
-    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc))
+    if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)) {
 #endif
-	{
-	    /* if we're writing or mapping this file, don't fetch over these
-	     *  values.
-	     */
-	    afs_Trace3(afs_iclSetp, CM_TRACE_PROCESSFS, ICL_TYPE_POINTER, avc,
-		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
-		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
-	    avc->m.Length = length;
-	    avc->m.Date = astat->ClientModTime;
-	}
+	/* if we're writing or mapping this file, don't fetch over these
+	 *  values.
+	 */
+	afs_Trace3(afs_iclSetp, CM_TRACE_PROCESSFS, ICL_TYPE_POINTER, avc,
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
+	avc->m.Length = length;
+	avc->m.Date = astat->ClientModTime;
+    }
     hset64(avc->m.DataVersion, astat->dataVersionHigh, astat->DataVersion);
     avc->m.Owner = astat->Owner;
     avc->m.Mode = astat->UnixModeBits;
@@ -1567,34 +1561,34 @@ void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *
     avc->anyAccess = astat->AnonymousAccess;
 #ifdef badidea
     if ((astat->CallerAccess & ~astat->AnonymousAccess))
-      /*   USED TO SAY :
-       * Caller has at least one bit not covered by anonymous, and
-       * thus may have interesting rights.
-       *
-       * HOWEVER, this is a really bad idea, because any access query
-       * for bits which aren't covered by anonymous, on behalf of a user
-       * who doesn't have any special rights, will result in an answer of
-       * the form "I don't know, lets make a FetchStatus RPC and find out!"
-       * It's an especially bad idea under Ultrix, since (due to the lack of
-       * a proper access() call) it must perform several afs_access() calls
-       * in order to create magic mode bits that vary according to who makes
-       * the call.  In other words, _every_ stat() generates a test for
-       * writeability...
-       */
+	/*   USED TO SAY :
+	 * Caller has at least one bit not covered by anonymous, and
+	 * thus may have interesting rights.
+	 *
+	 * HOWEVER, this is a really bad idea, because any access query
+	 * for bits which aren't covered by anonymous, on behalf of a user
+	 * who doesn't have any special rights, will result in an answer of
+	 * the form "I don't know, lets make a FetchStatus RPC and find out!"
+	 * It's an especially bad idea under Ultrix, since (due to the lack of
+	 * a proper access() call) it must perform several afs_access() calls
+	 * in order to create magic mode bits that vary according to who makes
+	 * the call.  In other words, _every_ stat() generates a test for
+	 * writeability...
+	 */
 #endif /* badidea */
-      {
+    {
 	struct axscache *ac;
 	if (avc->Access && (ac = afs_FindAxs(avc->Access, areq->uid)))
-	  ac->axess = astat->CallerAccess;
-	else  /* not found, add a new one if possible */
-	  afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
-      }
+	    ac->axess = astat->CallerAccess;
+	else			/* not found, add a new one if possible */
+	    afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
+    }
 
 #ifdef AFS_LINUX22_ENV
-    vcache2inode(avc);    /* Set the inode attr cache */
+    vcache2inode(avc);		/* Set the inode attr cache */
 #endif
 #ifdef AFS_DARWIN_ENV
-   osi_VM_Setup(avc,1);
+    osi_VM_Setup(avc,1);
 #endif
 
 } /*afs_ProcessFS*/
@@ -1698,12 +1692,12 @@ loop:
    }
 
     if (tvc) {
-      if (cached)
-	*cached = 1;
-      if (tvc->states & CStatd) {
-	ReleaseSharedLock(&afs_xvcache);
-	return tvc;
-      }
+	if (cached)
+	    *cached = 1;
+	if (tvc->states & CStatd) {
+	    ReleaseSharedLock(&afs_xvcache);
+	    return tvc;
+	}
     }
     else {
 	UpgradeSToWLock(&afs_xvcache,21);
@@ -1732,10 +1726,10 @@ loop:
     }
 
 #if defined(AFS_OSF_ENV)
-      if (afs_IsWired(tvc)) {
-	  ReleaseWriteLock(&tvc->lock);
-	  return tvc;
-      }
+    if (afs_IsWired(tvc)) {
+	ReleaseWriteLock(&tvc->lock);
+	return tvc;
+    }
 #endif /* AFS_OSF_ENV */
 #ifdef AFS_OBSD_ENV
     VOP_LOCK(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY, curproc);
@@ -1827,28 +1821,28 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     tvc = afs_FindVCache(afid, &retry, DO_STATS /* no vlru */);
 
     if (tvc) {
-      ReleaseReadLock(&afs_xvcache);
-      if (retry) {
+	ReleaseReadLock(&afs_xvcache);
+	if (retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-	spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-	goto loop1;
+	    spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
+	    goto loop1;
 #endif
-      }
-      ObtainReadLock(&tvc->lock);
-
-      if (tvc->states & CStatd) {
-	if (cached) {
-	  *cached = 1;
 	}
-	ReleaseReadLock(&tvc->lock);
-	return tvc;
-      }
-      tvc->states &= ~CUnique;
+	ObtainReadLock(&tvc->lock);
+
+	if (tvc->states & CStatd) {
+	    if (cached) {
+		*cached = 1;
+	    }
+	    ReleaseReadLock(&tvc->lock);
+	    return tvc;
+	}
+	tvc->states &= ~CUnique;
 
 	ReleaseReadLock(&tvc->lock);
 	ObtainReadLock(&afs_xvcache);
 	AFS_FAST_RELE(tvc);
-    }  /* if (tvc) */
+    } /* if (tvc) */
 
     ReleaseReadLock(&afs_xvcache);
 
@@ -1867,9 +1861,9 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     tvc = afs_FindVCache(&nfid, &retry, DO_VLRU /* no xstats now*/);
     if (tvc && retry) {
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-      ReleaseSharedLock(&afs_xvcache);
-      spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-      goto loop2;
+	ReleaseSharedLock(&afs_xvcache);
+	spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
+	goto loop2;
 #endif
     }
 
@@ -2078,10 +2072,10 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	return tvc;
     } else {
 
-      ObtainReadLock(&tvc->lock);
-      tvc->states &= ~CUnique;
-      tvc->callback = NULL;              /* redundant, perhaps */
-      ReleaseReadLock(&tvc->lock);
+	ObtainReadLock(&tvc->lock);
+	tvc->states &= ~CUnique;
+	tvc->callback = NULL;	/* redundant, perhaps */
+	ReleaseReadLock(&tvc->lock);
     }
 
     ObtainWriteLock(&tvc->lock,57);
@@ -2171,13 +2165,13 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 		      struct vrequest *areq, struct AFSFetchStatus *Outsp)
 {
-  int code;
-  afs_uint32 start = 0;
-  register struct conn *tc;
-  struct AFSCallBack CallBack;
-  struct AFSVolSync tsync;
-  struct volume*    volp;
-  XSTATS_DECLS
+    int code;
+    afs_uint32 start = 0;
+    register struct conn *tc;
+    struct AFSCallBack CallBack;
+    struct AFSVolSync tsync;
+    struct volume*    volp;
+    XSTATS_DECLS
 
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
@@ -2201,59 +2195,60 @@ afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 		     AFS_STATS_FS_RPCIDX_FETCHSTATUS,
 		     SHARED_LOCK, NULL));
 
-if (!code) {
-  afs_ProcessFS(avc, Outsp, areq);
-  volp = afs_GetVolume(afid, areq, READ_LOCK);
-  ObtainWriteLock(&afs_xcbhash, 469);
-  avc->states |= CTruth;
-  if (avc->callback /* check for race */) {
-    if (CallBack.ExpirationTime != 0) {
-      avc->cbExpires = CallBack.ExpirationTime+start;
-      avc->states |= CStatd;
-      avc->states &= ~CBulkFetching;
-      afs_QueueCallback(avc, CBHash(CallBack.ExpirationTime), volp);
+    if (!code) {
+	afs_ProcessFS(avc, Outsp, areq);
+	volp = afs_GetVolume(afid, areq, READ_LOCK);
+	ObtainWriteLock(&afs_xcbhash, 469);
+	avc->states |= CTruth;
+	if (avc->callback	/* check for race */) {
+	    if (CallBack.ExpirationTime != 0) {
+		avc->cbExpires = CallBack.ExpirationTime+start;
+		avc->states |= CStatd;
+		avc->states &= ~CBulkFetching;
+		afs_QueueCallback(avc, CBHash(CallBack.ExpirationTime), volp);
+	    }
+	    else if (avc->states & CRO)
+	    {			/* ordinary callback on a read-only volume -- AFS 3.2 style */
+		avc->cbExpires = 3600+start;
+		avc->states |= CStatd;
+		avc->states &= ~CBulkFetching;
+		afs_QueueCallback(avc, CBHash(3600), volp);
+	    }
+	    else {
+		afs_DequeueCallback(avc);
+		avc->callback = NULL;
+		avc->states &= ~(CStatd|CUnique);
+		if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+		    osi_dnlc_purgedp (avc); /* if it (could be) a directory */
+	    }
+	}
+	else {
+	    afs_DequeueCallback(avc);
+	    avc->callback = NULL;
+	    avc->states &= ~(CStatd|CUnique);
+	    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+		osi_dnlc_purgedp (avc);	/* if it (could be) a directory */
+	}
+	ReleaseWriteLock(&afs_xcbhash);
+	if ( volp )
+	    afs_PutVolume(volp, READ_LOCK);
     }
-    else if (avc->states & CRO)
-      { /* ordinary callback on a read-only volume -- AFS 3.2 style */
-	avc->cbExpires = 3600+start;
- 	avc->states |= CStatd;
-	avc->states &= ~CBulkFetching;
- 	afs_QueueCallback(avc, CBHash(3600), volp);
-       }
     else {
-      afs_DequeueCallback(avc);
-      avc->callback = NULL;
-      avc->states &= ~(CStatd|CUnique);
-      if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
-	osi_dnlc_purgedp (avc);  /* if it (could be) a directory */
+	/* used to undo the local callback, but that's too extreme.
+	 * There are plenty of good reasons that fetchstatus might return
+	 * an error, such as EPERM.  If we have the vnode cached, statd,
+	 * with callback, might as well keep track of the fact that we
+	 * don't have access...
+	 */
+	if (code == EPERM || code == EACCES) {
+	    struct axscache *ac;
+	    if (avc->Access && (ac = afs_FindAxs(avc->Access, areq->uid)))
+		ac->axess = 0;
+	    else		/* not found, add a new one if possible */
+		afs_AddAxs(avc->Access, areq->uid, 0);
+	}
     }
-  }
-  else {
-    afs_DequeueCallback(avc);
-    avc->callback = NULL;
-    avc->states &= ~(CStatd|CUnique);
-    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
-      osi_dnlc_purgedp (avc);  /* if it (could be) a directory */
-  }
-  ReleaseWriteLock(&afs_xcbhash);
-  if ( volp )
-    afs_PutVolume(volp, READ_LOCK);
-}
-else {     /* used to undo the local callback, but that's too extreme.
-	    * There are plenty of good reasons that fetchstatus might return
-	    * an error, such as EPERM.  If we have the vnode cached, statd,
-	    * with callback, might as well keep track of the fact that we
-	    * don't have access...
-	    */
-     if (code == EPERM || code == EACCES) {
-       struct axscache *ac;
-       if (avc->Access && (ac = afs_FindAxs(avc->Access, areq->uid)))
-	 ac->axess = 0;
-       else  /* not found, add a new one if possible */
-	 afs_AddAxs(avc->Access, areq->uid, 0);
-     }
-}
-return code;
+    return code;
 }
 
 #if 0
