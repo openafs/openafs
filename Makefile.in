@@ -28,6 +28,8 @@ LIB_AFSDB=@LIB_AFSDB@
 WITH_OBSOLETE=@WITH_OBSOLETE@
 WITH_INSECURE=@WITH_INSECURE@
 
+ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
+
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -375,7 +377,7 @@ libadmin: libafsauthent bozo
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
-finale: project cmd comerr afsd allrcmds butc tbutc libafs libuafs audit kauth log package \
+finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth tests libafsrpc \
 	libafsauthent libadmin
