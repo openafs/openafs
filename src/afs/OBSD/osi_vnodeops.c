@@ -246,9 +246,12 @@ struct vop_lookup_args /* {
     GETNAME();
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT|WANTPARENT);
+#ifdef PDIRUNLOCK
+    cnp->cn_flags &= ~PDIRUNLOCK;
+#endif
 
     if (ap->a_dvp->v_type != VDIR) {
-	*ap->a_vpp = 0;
+	*ap->a_vpp = NULL;
 	DROPNAME();
 	return ENOTDIR;
     }
@@ -265,14 +268,16 @@ struct vop_lookup_args /* {
 	if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))
 	    cnp->cn_flags |= SAVENAME;
 	DROPNAME();
-	*ap->a_vpp = 0;
+	*ap->a_vpp = NULL;
 	return (code);
     }
     vp = AFSTOV(vcp);			/* always get a node if no error */
 
-    /* The parent directory comes in locked.  We unlock it on return
-       unless the caller wants it left locked.
-       we also always return the vnode locked. */
+    /*
+     * The parent directory comes in locked.  We unlock it on return
+     * unless the caller wants it left locked.
+     * we also always return the vnode locked.
+     */
 
     if (vp == dvp) {
 	/* they're the same; afs_lookup() already ref'ed the leaf.
@@ -280,9 +285,13 @@ struct vop_lookup_args /* {
 	if (afs_debug & AFSDEB_VNLAYER)
 	    printf("ref'ed %p as .\n", dvp);
     } else {
-	if (!lockparent || !(flags & ISLASTCN))
+	if (!lockparent || !(flags & ISLASTCN)) {
 	    VOP_UNLOCK(dvp, 0, curproc);		/* done with parent. */
-	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);			/* always return the child locked */
+#ifdef PDIRUNLOCK
+	    cnp->cn_flags |= PDIRUNLOCK;
+#endif
+	}
+	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);	/* always return the child locked */
 	if (afs_debug & AFSDEB_VNLAYER)
 	    printf("locked ret %p from lookup\n", vp);
     }
