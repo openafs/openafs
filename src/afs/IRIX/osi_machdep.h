@@ -26,7 +26,8 @@ extern kmutex_t afs_global_lock;
 extern time_t time;
 #define osi_Time() (time)
 
-#define	AFS_UCRED	ucred
+/* This gets redefined from ucred to cred in osi_vfs.h, just do it right */
+#define	AFS_UCRED	cred
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 

@@ -40,10 +40,7 @@ lock_t afs_event_lock;
 flid_t osi_flid;
 #endif
 
-#ifndef AFS_SGI_ENV
-/* I'm unsure where it's really coming from on Irix; afs_osi.h conflicts... */
 struct AFS_UCRED *afs_osi_credp;
-#endif
 
 void
 osi_Init(void)
