@@ -214,23 +214,6 @@ int afs_debug;
 #undef VREF
 #define VREF afs_nbsd_ref
 
-#if 0
-extern int afs_lookup();
-extern int afs_open();
-extern int afs_close();
-extern int HandleIoctl(struct vcache *avc, afs_int32 acom,
-		       struct afs_ioctl *adata);
-extern int afs_fsync();
-extern int afs_remove();
-extern int afs_link();
-extern int afs_rename();
-extern int afs_mkdir();
-extern int afs_rmdir();
-extern int afs_symlink();
-extern int afs_readdir();
-extern int afs_readlink();
-#endif
-
 int
 afs_nbsd_lookup(ap)
      struct vop_lookup_args	/* {
