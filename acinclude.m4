@@ -268,6 +268,7 @@ case $system in
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
+		SOLARIS_FS_HAS_FS_ROLLED
                 ;;
         *-sunos*)
 		MKAFS_OSTYPE=SUNOS
