@@ -31,8 +31,8 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
      DEFS =
      INCS = -I${TOP_SRCDIR}/config -I${TOP_INCDIR}
    CFLAGS = ${OPTMZ} ${DEFS} ${INCS}

@@ -29,8 +29,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -DRXDEBUG ${XCFLAGS}
 

@@ -44,7 +44,7 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-UKERNELDIR=../libuafs/
+UKERNELDIR=../libuafs
 
 LDFLAGS = ${XLDFLAGS}
 

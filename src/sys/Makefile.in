@@ -30,7 +30,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-UKERNELDIR=../libuafs/
+UKERNELDIR=../libuafs
 CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR}  ${XCFLAGS}
 SFLAGS=-P -I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}

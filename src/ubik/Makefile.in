@@ -27,7 +27,7 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} ${XCFLAGS}
-UKERNELDIR=../libuafs/
+UKERNELDIR=../libuafs
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \

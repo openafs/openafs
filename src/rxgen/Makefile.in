@@ -27,7 +27,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-UKERNELDIR=../libuafs/
+UKERNELDIR=../libuafs
 
 SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c \
 	rpc_svcout.c rpc_clntout.c

@@ -25,8 +25,8 @@ TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 SHELL=/bin/sh
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 include ../config/Makefile.${SYS_NAME}
 
