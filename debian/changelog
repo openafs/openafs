@@ -1,3 +1,14 @@
+openafs (1.2.7-3) unstable; urgency=low
+
+  * Apparently OpenAFS and  ircd conflict on a UDP port, so you can't use
+    both at once, Closes: #150242
+  * Patch from seph to add -nosettime when ntp is installed, Closes: #155123
+  * Fix bosserver  shutdown on restart after upgrade, Closes :#155586
+  * Install translate_et, Closes: #138672
+  * Allow byacc instead of bison
+  
+ -- Sam Hartman <hartmans@debian.org>  Tue,  3 Dec 2002 22:30:44 -0500
+
 openafs (1.2.7-2) unstable; urgency=low
 
   * Fix uss to build with bison 1.50 and 1.75 so we can throw away the

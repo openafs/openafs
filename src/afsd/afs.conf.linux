@@ -11,6 +11,8 @@
 # AFS_CLIENT and AFS_SERVER determine if we should start the client and or
 # the bosserver. Possible values are true and false.
 # These are loaded from files written by debconf
+# AFS_NOSETTIME is currently defaulted to auto because we believe  this is a reasonable default
+AFS_NOSETTIME=auto
 test -f /etc/openafs/afs.conf.client && . /etc/openafs/afs.conf.client
 
 AFS_SERVER=off
@@ -32,6 +34,9 @@ SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
 CACHESIZE=
 OPTIONS=$MEDIUM
 
+# if we're looking for ntp, what files do we look for?
+TIME_SBIN_PROGS="ntptime ntpd  "
+
 # Should we support afsdb?
 if [ "x$AFS_AFSDB" = "xtrue" ] ; then
     AFSDB="-afsdb"
@@ -45,13 +50,25 @@ if [ "x$AFS_FAKESTAT" = "xtrue" ] ; then
     FAKESTAT="-fakestat"
     else FAKESTAT=""
     fi
+if [ "x$AFS_NOSETTIME" = "xtrue" ] ; then
+    NOSETTIME="-nosettime"
+  elif [ "x$AFS_NOSETTIME" = "xauto" ] ; then
+    for f in $TIME_SBIN_PROGS; do
+       test -e "/usr/sbin/$f" && {
+           NOSETTIME="-nosettime"
+           break
+       }
+    done
+  else
+    NOSETTIME=""
+  fi
 
 # Set to "-verbose" for a lot of debugging information from afsd. Only
 # useful for debugging as it prints _a lot_ of information.
 VERBOSE=
 
 # OPTIONS are the options passed to afsd.
-OPTIONS="$OPTIONS $VERBOSE $DYNROOT $FAKESTAT $AFSDB"
+OPTIONS="$OPTIONS $VERBOSE $DYNROOT $FAKESTAT $AFSDB $NOSETTIME"
 
 
 # Sample server preferences function. Set server preferences using this.
