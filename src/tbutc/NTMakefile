@@ -47,7 +47,7 @@ BUTMINCLUDE = -I$(DESTDIR)\include
 BUTCOBJS   = dbentries.obj tcprocs.obj lwps.obj tcmain.obj list.obj recoverDb.obj \
 	     tcudbprocs.obj dump.obj tcstatus.obj butc_xbsa.obj \
              $(LWPOBJS) $(BUCOORDOBJS)
-BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)\ 
+BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)\
 BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
 	     $(VOLSERLIBS) \
@@ -57,6 +57,7 @@ BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
 	     $(DESTDIR)\lib\afsubik.lib \
 	     $(DESTDIR)\lib\afs\afsauth.lib \
 \
+	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
 	     $(DESTDIR)\lib\afsrx.lib \
              $(DESTDIR)\lib\afslwp.lib \
@@ -64,7 +65,6 @@ BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
              $(DESTDIR)\lib\afs\afsutil.lib \
              $(DESTDIR)\lib\afs\afsusd.lib \
 	     $(DESTDIR)\lib\afs\afspioctl.lib \
-	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afs\afscmd.lib \
              $(DESTDIR)\lib\afs\afscom_err.lib \
 	     $(DESTDIR)\lib\afs\afsreg.lib \
