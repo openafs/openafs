@@ -7,7 +7,7 @@
 
 srcdir=@srcdir@
 KDEBUG=@KERN_DEBUG_OPT@
-FOMIT=@FOMIT_FRAME_POINTER@
+FOMIT=@OMIT_FRAME_POINTER@
 
 include @TOP_OBJDIR@/src/config/Makefile.config
 
