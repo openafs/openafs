@@ -1,4 +1,35 @@
 Since 1.3.71:
+  * fix the Windows cache manager to prevent it from replacing the 
+    rx_connection object associated with the cm_conn_t object on each
+    and every operation if "fs crypt" was set.  This explains the 
+    dramatic performance difference when crypt is used vs clear.
+    The problem: 'cryptall', a boolean flag indicating whether or not 
+    "fs crypt" is set, was being compared to the rx_connection 
+    cryptlevel which is either rxkad_clear:0 or rxkad_crypt:2.
+    1 != 2 and therefore the rx_connection was always destroyed 
+    and replaced on each and every operation.
+
+    Lock the cm_conn_t object around every call to RXAFS_xxxx functions.
+    It is not safe for the cm_conn_t object to not be locked because
+    rx_DestroyConnection might be called from another thread if:
+        - the user's tokens have changed or expired
+        - the crypt mode has changed
+
+  * fix NSIS installer's AdminGroup.exe to properly create and
+    remove groups when given -create or -remove.  The string comparison
+    test was wrong.
+
+  * fs sysname now accepts a list of sysname values 
+
+  * added a new registry value HKLM\SOFTWARE\OpenAFS\Client "IoctlDebug"
+    DWORD which when set to a non-zero value will cause error message
+    text to be output to stderr from the pioctl() routine.  Useful in 
+    debugging failures of fs.exe, tokens.exe, etc.
+
+  * added a test to the power management code to only perform a 
+    flush operation if there is at least one network adapter which
+    is not a loopback adapter.
+
   * Fix bug in loading of registry value HKLM\SOFTWARE\OpenAFS\Client
     "EnableKFW".  This value will not be read if the key
     HKCU\SOFTWARE\OpenAFS\Client exists; even if the "EnableKFW" 
@@ -39,6 +70,9 @@ Since 1.3.71:
   
   * Update list of known CIFS operations to include all those listed
     in CIFS-TR-1p00_FINAL.pdf.
+
+  * Modify the handling of HKLM\SOFTWARE\OpenAFS\Client\Submounts
+    to support the REG_EXPAND_SZ type.
 
 Since 1.3.70:
   * A new Windows authorization group "AFS Client Admins" is now 
