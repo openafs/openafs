@@ -314,7 +314,7 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
 				  kvno,
 				  client.name, client.instance, client.cell,
 				  &sessionkey, &host, &start, &end);
-	if (code) return RXKADBADTICKET;
+	if (code) return code;
     }
 
     /*
