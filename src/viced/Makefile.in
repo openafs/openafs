@@ -7,6 +7,7 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
 
 
 CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} \
@@ -122,8 +123,8 @@ ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
 
 dest:    ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/include/afs/fs_stats.h
 
-splint::
-	splint $(CFLAGS) \
+check-splint::
+	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    viced.c		\
 	    afsfileprocs.c	\
 	    host.c		\

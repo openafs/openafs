@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
@@ -369,8 +371,8 @@ dest: \
 	${DEST}/lib/afs/libafsutil.a \
 	${DEST}/bin/sys
 
-splint:
-	splint $(CFLAGS) \
+check-splint:
+	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
 	    hputil.c kreltime.c isathing.c get_krbrlm.c uuid.c serverLog.c \
 	    dirpath.c fileutil.c netutils.c flipbase64.c \

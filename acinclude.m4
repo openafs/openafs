@@ -883,5 +883,10 @@ if test "${DEST}x" = "x"; then
         DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
 fi
 
+HELPER_SPLINT="${TOP_SRCDIR}/helper-splint.sh"
+HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
+AC_SUBST(HELPER_SPLINT)
+AC_SUBST(HELPER_SPLINTCFG)
+
 
 ])

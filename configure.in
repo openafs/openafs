@@ -123,4 +123,5 @@ src/vol/test/Makefile \
 src/volser/Makefile \
 src/wsadmin.src/Makefile \
 src/xstat/Makefile \
+src/helper-splint.sh \
 )

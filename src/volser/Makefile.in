@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
 
 VINCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h
@@ -179,8 +181,8 @@ dest: \
 	${DEST}/lib/afs/libvolser.a
 
 
-splint::
-	splint $(CFLAGS) \
+check-splint::
+	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    vos.c restorevol.c \
 	    vsprocs.c vsutils.c lockprocs.c volerr.c \
 	    volmain.c volprocs.c physio.c common.c voltrans.c \

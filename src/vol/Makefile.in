@@ -7,6 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
 
 LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
@@ -280,8 +282,8 @@ dest: \
 	${DEST}/include/afs/ihandle.h \
 	${DEST}/include/afs/namei_ops.h
 
-splint::
-	splint $(CFLAGS) \
+check-splint::
+	sh $(HELPER_SPLINT) $(CFLAGS) \
 	    vnode.c volume.c vutil.c partition.c fssync.c purge.c \
 	    clone.c nuke.c devname.c listinodes.c common.c ihandle.c \
 	    namei_ops.c \
