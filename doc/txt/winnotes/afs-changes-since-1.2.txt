@@ -1,4 +1,44 @@
 Since 1.3.64:
+   * A second MSI based installer option is now available.
+
+   * Fixed Kerberos 5 kinit functionality in afscreds.exe to properly
+     request tickets for user/instance@REALM instead of just user@REALM
+
+   * Modify the Power Management Notify routine to wait for the Hard Dead
+     timeout period instead of a fixed 19 seconds.  With the longer timeout
+     periods Hibernation and Standby could never succeed when network 
+     connectivity is not available.
+
+   * The following fs.exe commands are now restricted to Administrator:
+     - checkservers with a non-zero timer value
+     - setcachesize
+     - newcell
+     - sysname with a new sysname list
+     - exportafs 
+     - setcell
+     - setserverprefs
+     - storebehind
+     - setcrypt
+     - cscpolicy
+     - trace
+
+     setting the default sysname for a machine should be done via the
+     registry and not via "fs sysname".
+
+   * NSIS installer adds options to install Debugging Symbols
+     and the Microsoft Loopback Adapter; the user is now also
+     given the ability to select the afscreds.exe startup options.
+
+   * Build system modified to generate symbols for FREE (aka RELEASE)
+     builds as well as CHECKED (aka DEBUG) builds
+
+   * Sites which have a volume ID of 0x20000001 assigned to their
+     root.afs volumes have been experiencing problems with accessing
+     the root.afs volume of their cell when Freelance mode has been
+     active.  This was because 0x20000001 was assigned to the fake
+     root.afs volume created by freelance.  The fake volume id is
+     now set to 0x00000001 to prevent conflicts.
+
    * The timeout logic in the AFS Client Service has been wrong
      for sometime.  It is based on two different assumptions.
      First, the SMB client timeout is a fix value as was the case

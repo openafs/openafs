@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.3.63 release of OpenAFS
+This file is a rough list of known issues with the 1.3.65 release of OpenAFS
 on Windows.  This list is not complete.  There are probably other issues 
 which can be found in the RT database or on the mailing list.
 
@@ -35,13 +35,6 @@ is imposing significant delays in the movement of data from between the SMB
 and RX protocol operations. There was also an issue with large numbers of 
 page faults which have since been fixed.
 
-(5) The AFS SMB code logs numerous 1002 events each day.  This is caused 
-when an invalid SMB message are being processed from within the client.  
-It is unclear if the invalid SMB message has been received or is being sent.
-
-(6) The AFS client service causes MRxSMB to produce 3019 events.  This is probably 
-the result of either malformed messages or invalid LANA values being used.
-
 (7) There appear to be directory locking problems associated with renaming 
 directories.
 
@@ -65,7 +58,6 @@ directories.
      be automatically prompted for different cells
 
 (13) AFS Integrated Logon:
-(13a) Obtain tokens via Kerberos 5
 (13b) If using Kerberos, need to figure out a means of passing credentials
       into the user space until such time as I finish the new credential
       cache service.
@@ -108,13 +100,6 @@ directories.
 
 (23) Large file support
 
-(24) Execution of debug builds indicates corruption of run time library 
-     allocated memory blocks due to buffer overruns.  This may be the 
-     result of improper object locking or out of bounds access.
-
-(25) AFS Shell Extensions do not work on UNC paths of the form \\AFS\...
-     They only work on mapped drives.
-
 (26) Implement persistent disk based cache which survives restarts
 
 (27) NSIS Installer issues
@@ -130,18 +115,63 @@ directories.
      Internet Connection Firewall to the ports needed by the various
      AFS services.
 
-(30) It has been discovered that there is a lack of proper thread locking
-     when "crypt" mode is used on Windows.  This can be reproduced by
-     performing multiple read operations simultaneous.  The symptoms will
-     be a memory followed by an eventual crash resulting from a stack 
-     overwrite.  First step is to enable the use of RX_ENABLE_LOCKS when
-     building on Windows.
+(30) There appears to be a thread safety issue in the Rx library when
+     running on Intel processors which support hyper-threading
 
-(31) There are remaining issues with the Freelance support.  There appears
-     to be an initialization issue related to whether the Freelance fake
-     root.afs is constructed before or after the first access to a cell 
-     name via \\afs\cellname\.  Accessing \\afs\cellname via cmd.exe 
-     appears to trigger the problem on a regular basis whereas 4nt.exe
-     does not.
+(32) Thread initialization versus Global Drive Mapping.  There is no
+     mechanism in the afsd_init.c to ensure that all of the threads 
+     complete initializing in the correct sequence.  In the case of 
+     Global Drive Maps this is a problem because the Global Drive Maps
+     can be executed prior to the completion of the SMB registration
+     and service thread initialization.
 
+(35) Should we allow the AFSCACHE file to be stored in the Virtual Paging
+     file as long as we do not support persistent caches?
+
+
+-------------------------------------------------------------------------
+List sent to SLAC:
+
+   1. Convert from use of .INI files to appropriate places in the registry
+   2. No longer use AFS Client Service "cell" as the default cell for individual users
+   3. Re-write afsd_service.exe to perform synchronized thread startup and shutdown.  Currently there is no synchronization of thread creation which results in timing conflicts; and there is no attempt to cleanly shutdown the service which causes problems when restarting and prevents the implementation of a persistent cache
+   4. Implement a persistent cache
+   5. Prevent panic situation when the root.afs volume is not reachable
+   6. Prevent panic situation when the IP address to which the SMB server is bound is removed from the local machine's network configuration
+   7. Only use Local RPC mechanism unless Gateway mode is on
+   8. Identify and fix the problems with running the RX library on Hyperthreaded systems
+   9. Add support for Named Pipes within the afs filesystem
+  10. Add support for Windows XP2 - dynamically open/close ports in the firewall
+  11. Add support for r/w mounts in the Freelance fake root.afs volume.
+  12. Re-write afscreds.exe to support:
+         1. choosing between Kerberos 5 and Kerberos 4 on a per principal basis
+         2. providing users with the ability to map multiple cells to a single principal
+         3. providing change password functionality on a per principal basis
+         4. no longer include drive mapping
+         5. configuration of afscreds startup options in shortcut
+  13. Re-write afs_config.exe to be only "per user" functionality which does not require admin privileges
+         1. default cell and principal for the user
+         2. drive mappings
+         3. visibility of afs creds and setting of afs creds startup options
+  14. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) which contains
+         1. afs client service cell name
+         2. integrated logon configuration
+         3. Gateway configuration
+         4. start/stop service
+         5. global drive mapping
+         6. submount management
+         7. file/volume server preferences
+         8. afs cells
+         9. cache configuration
+        10. diagnostics
+        11. network configuration
+        12. miscellaneous
+        13. need to add support for all of the new registry values since 1.2.8
+  15. Identify why 16-bit DOS applications executed out of AFS fail
+  16. Create new Windows Security Group to which users can be added for them to become AFS Client Administrators
+  17. Add support for configurable Icon file representing AFS folders within the Explorer Shell
+  18. Documentation Documentation Documentation
+  19. Large File support (> 2GB)
+  20. Integrate KFW installation into the NSIS installer
+  21. Fix High Security mode (prevents SMB shares from being shared by more than one session)
 
