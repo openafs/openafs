@@ -236,6 +236,22 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK], [
+AC_MSG_CHECKING(for inotify_lock in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_inotify_lock, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.inotify_lock);], 
+ac_cv_linux_fs_struct_inode_has_inotify_lock=yes,
+ac_cv_linux_fs_struct_inode_has_inotify_lock=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_lock)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
 AC_MSG_CHECKING(for i_mapping_overload in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
