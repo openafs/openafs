@@ -37,11 +37,11 @@ if [[ -d /usr/newconfig/usr/vice/etc && ! -f /usr/vice/etc/cacheinfo ]]; then
 
 fi
 #
-# Add CellDB info only if it does not locally exist
+# Add CellServDB info only if it does not locally exist
 # 
-if [[ -f /usr/newconfig/usr/vice/etc/CellDB && ! -f /usr/afs/etc/CellDB ]]; then
-    print "Adding CellDB hosts into /usr/afs/etc/CellDB"
-    cat /usr/newconfig/usr/vice/etc/CellDB >> /usr/afs/etc/CellDB
+if [[ -f /usr/newconfig/usr/vice/etc/CellServDB && ! -f /usr/afs/etc/CellServDB ]]; then
+    print "Adding CellServDB hosts into /usr/afs/etc/CellServDB"
+    cat /usr/newconfig/usr/vice/etc/CellServDB >> /usr/afs/etc/CellServDB
 fi
 
 exit $exitval

@@ -34,7 +34,7 @@ exitval=$SUCCESS                # Anticipate success
 RMDIRS="/usr/afs/db \
 	/usr/afs/local \
 	/usr/afs/etc/ThisCell \
-	/usr/afs/etc/CellDB \
+	/usr/afs/etc/CellServDB \
 	/usr/afs/logs"
 
 for dir in $RMDIRS
