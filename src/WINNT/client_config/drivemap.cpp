@@ -949,11 +949,14 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 				{
 					if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
 					{
-						if (drivemap)
+						if (drivemap) {
 						    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
-					} else
+                            DEBUG_EVENT1("AFS DriveUnMap","UnMap-Local=%x",res);
+                        }
+					} else {
 					    DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
-					DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
+                        DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
+                    }
 				}
 			}
 		}
