@@ -1717,7 +1717,7 @@ DECL_PIOCTL(PNewStatMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */
@@ -2397,7 +2397,7 @@ DECL_PIOCTL(PRemoveMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     bufp = sysState.name;
@@ -2468,10 +2468,10 @@ DECL_PIOCTL(PRemoveMount)
 	ObtainWriteLock(&tdc->lock, 661);
 	if (afs_LocalHero(avc, tdc, &OutDirStatus, 1)) {
 	    /* we can do it locally */
-	    code = afs_dir_Delete(&tdc->f, bufp);
+	    code = afs_dir_Delete(tdc, bufp);
 	    if (code) {
 		ZapDCE(tdc);	/* surprise error -- invalid value */
-		DZap(&tdc->f);
+		DZap(tdc);
 	    }
 	}
 	ReleaseWriteLock(&tdc->lock);
@@ -3503,7 +3503,7 @@ DECL_PIOCTL(PFlushMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */
