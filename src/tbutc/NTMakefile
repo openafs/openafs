@@ -106,8 +106,6 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 #	$(DESTDIR)\lib\afs\afseventlog.lib \
 #	$(DESTDIR)\lib\pthread.lib
 
-include ..\config\NTMakefile.version
-
 # rm $(OUT)\tcstatus.obj
 # nmake /nologo /f ntmakefile install
 #----------------------------------------------- BUTC
