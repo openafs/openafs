@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Include>
-    <Directory Id="SystemFolder">
+    <Directory Id="SystemFolder" SourceName="System" LongSource="System">
         <Component Id="cmf_afslogon_DLL" Guid="123197FE-4F53-4035-8D51-FCFB6B50A777">
             <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
             <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
@@ -17,9 +17,9 @@
         </Component>
     <?endif?>
     </Directory>
-    <Directory Id="ProgramFilesFolder" Name=".">
+    <Directory Id="ProgramFilesFolder">
         <Directory Id="AFSDIR" Name="OpenAFS" SourceName=".">
-            <Directory Id="dirCommon" Name="Common" LongName="Common" SourceName=".">
+            <Directory Id="dirCommon" Name="Common" LongName="Common" SourceName="Common">
                 <Component Id="cmp_CommonDir" Guid="C86B03A1-AE97-48B1-A77B-1B2395F1E117" KeyPath="yes">
                     <Environment Id="envCommon" Name="PATH" Action="create" System="yes" Permanent="no" Part="last" Separator=";" Value="[AFSDIR]Common" />
                     <CreateFolder />
@@ -119,7 +119,7 @@
                     <File Id="fileafs_shl_ext_1033_DLL" Name="ashl1033.dll" LongName="afs_shl_ext_1033.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_shl_ext_1033.dll"/>
                 </Component>
 
-                <Directory Id="dirCommon_en_US" Name="en_US" LongName="en_US" SourceName="." src="$(var.SrcDir)\WINNT\doc\help\en_US\">
+                <Directory Id="dirCommon_en_US" Name="en_US" LongName="en_US" SourceName="en_US" src="$(var.SrcDir)\WINNT\doc\help\en_US\">
                     <Component Id="cmf_afs_nt_HLP_en_US" Guid="A59FF1E3-984F-47E0-8A65-590A01B6E1C4">
                         <File Id="fileafs_nt_HLP_en_US" Name="afs-nt.hlp" LongName="afs-nt.hlp" KeyPath="yes" DiskId="1">
 							<Shortcut Id="scClientHelp_en_US" Directory="dirShortCut" Name="CliHelp.lnk" LongName="Client Help.lnk" Description="$(loc.StrHlpFileDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
@@ -289,7 +289,7 @@
           <?endif?>
             </Directory> <!-- /common -->
             
-            <Directory Id="dirControl_Center" Name="Contr" LongName="Control Center" SourceName=".">
+            <Directory Id="dirControl_Center" Name="Contr" LongName="Control Center" SourceName="ControlC" LongSource="Control Center">
                 <Component Id="cmf_TaAfsServerManager_EXE" Guid="B890FB93-2EFD-44B6-8CB3-7A6AFABFF029">
                     <File Id="fileTaAfsServerManager_EXE" Name="TaAfsSvM.exe" LongName="TaAfsServerManager.exe" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.exe">
 						<Shortcut Id="scServerManager" Directory="dirShortCut" Name="SvrMgr.lnk" LongName="Server Manager.lnk" Description="$(loc.StrSvrMgrDesc)" Icon="ico_ServerManager" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
@@ -360,10 +360,10 @@
             </Component>
          <?endif?>
 
-            <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName=".">
+            <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName="Docs">
 				<!-- The following directory and everything below it is language dependent. -->
-                <Directory Id="dirDoc_$(var.Language)" Name="$(var.Language)" LongName="$(var.Language)" SourceName=".">
-                    <Directory Id="dirHtml_$(var.Language)" Name="Html" LongName="Html" SourceName="." src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
+                <Directory Id="dirDoc_$(var.Language)" Name="$(var.Language)" LongName="$(var.Language)" SourceName="$(var.Language)">
+                    <Directory Id="dirHtml_$(var.Language)" Name="Html" LongName="Html" SourceName="html" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
                         <Component Id="cmf_index2_HTM_$(var.Language)" Guid="$(var.DocHtmlIndexGuid)">
                             <File Id="fileindex2_HTM_$(var.Language)" Name="index.htm" LongName="index.htm" KeyPath="yes" DiskId="1">
 								<Shortcut Id="scDoc_$(var.Language)" Directory="dirShortCut" Name="Doc$(var.Language).lnk" LongName="Documentation ($(var.Language)).lnk" Description="$(loc.StrDocLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
@@ -380,7 +380,7 @@
                             <File Id="filetop_GIF_$(var.Language)" Name="top.gif" LongName="top.gif" DiskId="1" />
                             <File Id="file$(var.Language)_RTF" Name="$(var.Language).rtf" LongName="$(var.Language).rtf" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\license\lang\$(var.Language).rtf"/>
                         </Component>
-                        <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" LongName="CmdRef" SourceName="." src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
+                        <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" LongName="CmdRef" SourceName="CmdRef" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
                             <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
                                 <File Id="fileauarf000_HTM_$(var.Language)" Name="auarf000.htm" LongName="auarf000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileauarf002_HTM_$(var.Language)" Name="auarf002.htm" LongName="auarf002.htm" DiskId="1" />
@@ -668,7 +668,7 @@
                                 <File Id="fileauarf284_HTM_$(var.Language)" Name="auarf284.htm" LongName="auarf284.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- CmdRef -->
-                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="." src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
+                        <Directory Id="dirInstallGd_$(var.Language)" Name="InstalGd" LongName="InstallGd" SourceName="InstGd" LongSource="InstallGuide" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\InstallGd\">
                             <Component Id="cmp_Install_Guide_$(var.Language)" Guid="$(var.DocHtmlInstallGuid)">
                                 <File Id="fileawqbg000_HTM_$(var.Language)" Name="awqbg000.htm" LongName="awqbg000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileawqbg002_HTM_$(var.Language)" Name="awqbg002.htm" LongName="awqbg002.htm" DiskId="1" />
@@ -676,7 +676,7 @@
                                 <File Id="fileawqbg004_HTM_$(var.Language)" Name="awqbg004.htm" LongName="awqbg004.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- InstallGd -->
-                        <Directory Id="dirSysAdminGd_$(var.Language)" Name="SysAd" LongName="SysAdminGd" SourceName="." src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\SysAdminGd\">
+                        <Directory Id="dirSysAdminGd_$(var.Language)" Name="SysAd" LongName="SysAdminGd" SourceName="SysAdm" LongSource="SysAdminGd" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\SysAdminGd\">
                             <Component Id="cmp_Sys_Admin_Guide_$(var.Language)" Guid="$(var.DocHtmlSysAdminGuid)">
                                 <File Id="fileauagd000_HTM_$(var.Language)" Name="auagd.htm" LongName="auagd000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileauagd002_HTM_$(var.Language)" Name="auagd~2.htm" LongName="auagd002.htm" DiskId="1" />
@@ -715,7 +715,7 @@
                                 <File Id="filecachmgr_GIF_$(var.Language)" Name="cachm.gif" LongName="cachmgr.gif" DiskId="1" />
                             </Component>
                         </Directory> <!-- Sys Admin guide -->
-                        <Directory Id="dirReleaseNotes_$(var.Language)" Name="Relea" LongName="ReleaseNotes" SourceName="." src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\">
+                        <Directory Id="dirReleaseNotes_$(var.Language)" Name="Relea" LongName="ReleaseNotes" SourceName="Relea" LongSource="ReleaseNotes" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\">
                             <Component Id="cmp_Release_Notes_$(var.Language)" Guid="$(var.DocHtmlRelNotesGuid)">
                                 <File Id="fileawrns000_HTM_$(var.Language)" Name="awrns.htm" LongName="awrns000.htm" KeyPath="yes" DiskId="1" />
                                 <File Id="fileawrns002_HTM_$(var.Language)" Name="awrns~2.htm" LongName="awrns002.htm" DiskId="1" />
@@ -730,7 +730,7 @@
                 </Directory> <!-- $(var.Language) -->
             </Directory> <!-- Documentation -->
 
-            <Directory Id="dirClient" Name="Client" LongName="Client" SourceName=".">
+            <Directory Id="dirClient" Name="Client" LongName="Client" SourceName="Client">
                 <Component Id="efl_CellServDB" Guid="8E69FDAB-08C5-4927-B1AA-57FCEEB065F2" NeverOverwrite="yes" Permanent="yes">
                     <File Id="file_CellServDB" Name="CelSrvDB" LongName="CellServDB" KeyPath="yes" DiskId="1" src="$(var.CellDbFile)"/>
                     <Condition>OLDCELLSERVDB = ""</Condition>
@@ -740,7 +740,7 @@
                     <CopyFile Id="copy_CellServDB" Delete="yes" DestinationDirectory="dirClient" DestinationName="CellServ|CellServDB" SourceDirectory="WindowsFolder" SourceName="afsdcell.ini" />
                     <Condition>OLDCELLSERVDB &lt;&gt; ""</Condition>
                 </Component>
-                <Directory Id="dirProgram" Name="Program" LongName="Program" SourceName="." src="$(var.ClientDir)">
+                <Directory Id="dirProgram" Name="Program" LongName="Program" SourceName="Program" src="$(var.ClientDir)">
                     <Component Id="cmf_afsshare_EXE" Guid="E972DA35-E950-4736-AE48-E6DDCE8C97D0">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
                     </Component>
@@ -783,7 +783,7 @@
                     <Component Id="cmf_afsd_service_EXE" Guid="37A90054-505D-4C57-B489-7EF4D97B86F6">
                         <File Id="fileafsd_service_EXE" Name="afsd_svc.exe" LongName="afsd_service.exe" KeyPath="yes" DiskId="1" />
                         <ServiceControl Id="TransarcAFSDaemon" Name="TransarcAFSDaemon" Stop="both" Remove="both" Wait="yes" />
-                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS">
+                        <ServiceInstall Id="svc_Client" Name="TransarcAFSDaemon" DisplayName="OpenAFS Client" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Provides access to files and directories stored in AFS" Interactive="yes">
 							<!-- ServiceConfig doesn't currently do what you think it does.
 							     We instead use a custom action to set the service failure actions.
                             <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="10" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
@@ -860,12 +860,12 @@
                     </Component>
                 <?endif?>
                     
-                    <Directory Id="dirSample" Name="Sampl" LongName="Sample" SourceName=".">
+                    <Directory Id="dirSample" Name="Sampl" LongName="Sample" SourceName="Sample">
                         <Component Id="cmp_SDK_Sample" Guid="F9373E95-F410-4AA5-AA79-07C11EE00334">
                             <File Id="filetoken_C" Name="token.c" LongName="token.c" KeyPath="yes" DiskId="1" src="$(var.SrcDir)WINNT\afsd\sample\token.c"/>
                         </Component>
                     </Directory>
-                    <Directory Id="dirInclude" Name="Include" LongName="Include" SourceName=".">
+                    <Directory Id="dirInclude" Name="Include" LongName="Include" SourceName="Include">
                         <Component Id="cmp_SDK_Include" Guid="9B12B216-B104-4E49-BE31-4042F2CBD318">
                             <File Id="filebasic_H" Name="basic.h" LongName="basic.h" DiskId="1" src="$(var.IncDir)basic.h" /> 
                             <File Id="filecrypt_H" Name="crypt.h" LongName="crypt.h" DiskId="1" src="$(var.IncDir)crypt.h" /> 
@@ -898,7 +898,7 @@
                             <File Id="fileubik_H" Name="ubik.h" LongName="ubik.h" DiskId="1" src="$(var.IncDir)ubik.h" /> 
                             <File Id="fileubik_int_H" Name="ubik_int.h" LongName="ubik_int.h" DiskId="1" src="$(var.IncDir)ubik_int.h" /> 
                         </Component>
-                        <Directory Id="dirIncludeAfs" Name="afs" LongName="afs" SourceName=".">
+                        <Directory Id="dirIncludeAfs" Name="afs" LongName="afs" SourceName="afs">
                             <Component Id="cmp_SDK_Include_afs" Guid="692D18AD-4901-4124-8B1F-5D414E65A7D0">
                                 <File Id="fileacl_H" Name="acl.h" LongName="acl.h" DiskId="1" src="$(var.IncDir)afs\acl.h" /> 
                                 <File Id="fileafscbint_H" Name="afscbint.h" LongName="afscbint.h" DiskId="1" src="$(var.IncDir)afs\afscbint.h" /> 
@@ -1034,7 +1034,7 @@
                                 <File Id="filevolume_H" Name="volume.h" LongName="volume.h" DiskId="1" src="$(var.IncDir)afs\volume.h" />
                             </Component>
                         </Directory>
-                        <Directory Id="dirIncludeRx" Name="rx" LongName="rx" SourceName=".">
+                        <Directory Id="dirIncludeRx" Name="rx" LongName="rx" SourceName="rx">
                             <Component Id="cmp_SDK_Include_rx" Guid="2E215D10-C080-42A3-B692-AFF94C7A1A2B">
                                 <File Id="fileasn1_err_H" Name="asn1_err.h" LongName="asn1_err.h" DiskId="1" src="$(var.IncDir)rx\asn1_err.h" /> 
                                 <File Id="filefcrypt_H" Name="fcrypt.h" LongName="fcrypt.h" DiskId="1" src="$(var.IncDir)rx\fcrypt.h" /> 
@@ -1063,7 +1063,7 @@
                                 <File Id="filexdr_prototypes_H" Name="XDR_PR~1.h" LongName="xdr_prototypes.h" DiskId="1" src="$(var.IncDir)rx\xdr_prototypes.h" /> 
                             </Component>
                         </Directory>
-                        <Directory Id="dirIncludeWinnt" Name="WINNT" LongName="WINNT" SourceName=".">
+                        <Directory Id="dirIncludeWinnt" Name="WINNT" LongName="WINNT" SourceName="WINNT">
                             <Component Id="cmp_SDK_Include_Winnt" Guid="BAAF0193-5C33-4EC1-9D40-DD4595F176E6">
                                 <File Id="fileafsapplib_H" Name="AFSAPP~1.h" LongName="afsapplib.h" DiskId="1" src="$(var.IncDir)WINNT\afsapplib.h" /> 
                                 <File Id="fileafsclass_H" Name="afsclass.h" LongName="afsclass.h" DiskId="1" src="$(var.IncDir)WINNT\afsclass.h" /> 
@@ -1115,7 +1115,7 @@
                             </Component>
                         </Directory>
                     </Directory>
-                    <Directory Id="dirLib" Name="lib" LongName="lib" SourceName=".">
+                    <Directory Id="dirLib" Name="lib" LongName="lib" SourceName="lib">
                         <Component Id="cmp_SDK_Lib" Guid="71BC1B4E-4C4C-4FF8-8DDA-C6AB2BE22142">
                             <File Id="fileafsauthent_LIB" Name="AFSAUT~1.lib" LongName="afsauthent.lib" DiskId="1" src="$(var.LibDir)afsauthent.lib" /> 
                             <File Id="fileafsdes_LIB" Name="afsdes.lib" LongName="afsdes.lib" DiskId="1" src="$(var.LibDir)afsdes.lib" /> 
@@ -1134,7 +1134,7 @@
                             <File Id="filecm_config_OBJ" Name="CM_CON~1.obj" LongName="cm_config.obj" DiskId="1" src="$(var.LibDir)cm_config.obj" /> 
                             <File Id="filecm_dns_OBJ" Name="cm_dns.obj" LongName="cm_dns.obj" DiskId="1" src="$(var.LibDir)cm_dns.obj" /> 
                         </Component>
-                        <Directory Id="dirLibAfs" Name="afs" LongName="afs" SourceName=".">
+                        <Directory Id="dirLibAfs" Name="afs" LongName="afs" SourceName="afs">
                             <Component Id="cmp_SDK_Lib_Afs" Guid="CD671A64-D491-4363-A7AD-645482B481BE">
                                 <File Id="fileafsacl_LIB" Name="afsacl.lib" LongName="afsacl.lib" DiskId="1" src="$(var.LibDir)afs\afsacl.lib" /> 
                                 <File Id="fileafsadminutil_LIB" Name="AFSADM~1.lib" LongName="afsadminutil.lib" DiskId="1" src="$(var.LibDir)afs\afsadminutil.lib" /> 
@@ -1178,10 +1178,10 @@
                     </Directory>
                 </Directory> <!-- /Program -->
             </Directory> <!-- /Client -->
-            <Directory Id="dirServer" Name="Server" LongName="Server" SourceName=".">
-                <Directory Id="dirusr" Name="usr" LongName="usr" SourceName=".">
-                    <Directory Id="dirafs" Name="afs" LongName="afs" SourceName=".">
-                        <Directory Id="dirbin" Name="bin" LongName="bin" SourceName="." src="$(var.ServerDir)">
+            <Directory Id="dirServer" Name="Server" LongName="Server" SourceName="Server">
+                <Directory Id="dirusr" Name="usr" LongName="usr" SourceName="usr">
+                    <Directory Id="dirafs" Name="afs" LongName="afs" SourceName="afs">
+                        <Directory Id="dirbin" Name="bin" LongName="bin" SourceName="bin" src="$(var.ServerDir)">
                             <Component Id="cmf_vlserver_EXE" Guid="F6A43B78-EE17-4483-AA81-4B6C6957977D">
                                 <File Id="filevlserver_EXE" Name="vlser.exe" LongName="vlserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
@@ -1202,7 +1202,7 @@
                             <Component Id="cmf_bosctlsvc_EXE" Guid="8F6F62A8-BB6D-46C1-BA80-4F207AA24F0D">
                                 <File Id="filebosctlsvc_EXE" Name="bosct.exe" LongName="bosctlsvc.exe" KeyPath="yes" DiskId="1" />
                                 <ServiceControl Id="TransarcAFSServer" Name="TransarcAFSServer" Stop="both" Remove="both" Wait="yes" />
-                                <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes">
+                                <ServiceInstall Id="svc_Server" Name="TransarcAFSServer" DisplayName="OpenAFS Server" Type="ownProcess" Start="auto" ErrorControl="normal" Description="Manages AFS server processes" Interactive="yes">
 									<!-- ServiceConfig does nothing 
                                     <ServiceConfig FirstFailureActionType="restart" RestartServiceDelayInSeconds="5" SecondFailureActionType="restart" ThirdFailureActionType="none"/>
                                     -->
