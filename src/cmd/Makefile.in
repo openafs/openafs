@@ -50,7 +50,7 @@ cmd_errors.o: cmd_errors.c
 cmd.o: cmd.c cmd.h
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o ${srcdir}/cmd_errors.c
+	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
 	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o ${srcdir}/cmd.c
