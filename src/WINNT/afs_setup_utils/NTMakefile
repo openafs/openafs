@@ -90,10 +90,10 @@ install : $(INSTALL_UTILS_DLLFILE) $(SERVER_UNINST_DLLFILE) $(CLIENT_UNINST_DLLF
           $(CC_UNINST_DLLFILE) $(LIGHT_CLIENT_UNINST_DLLFILE) $(DOCS_UNINST_DLLFILE) \
           $(AFSRM_EXEFILE) lang
 		  cd _isuser
-		  nmake -fntmakefile
+		  nmake -fntmakefile install
           $(CD) ..
 		  cd getwebdll
-		  nmake -fntmakefile
+		  nmake -fntmakefile install
           $(CD) ..
 		  echo 
 
@@ -171,6 +171,13 @@ clean::
    nmake -fntmakefile clean
    $(CD) ..
    echo done clean
+   cd _isuser
+   nmake -fntmakefile clean
+   $(CD) ..
+   cd getwebdll
+   nmake -fntmakefile clean
+   $(CD) ..
+   echo
 
 ############################################################################
 #

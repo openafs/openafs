@@ -11,12 +11,11 @@ INTDIR=.
 OutDir=.
 # End Custom Macros
 
-ALL : "$(OUTDIR)\GetWebDll.dll"
+INSTALL : "$(OUTDIR)\GetWebDll.dll"
 
 
 CLEAN :
 	-@erase "$(INTDIR)\GetWebDll.pch"
-	-@erase "$(INTDIR)\GetWebDll.res"
 	-@erase "$(INTDIR)\*.obj"
 	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(OUTDIR)\GetWebDll.dll"
@@ -29,7 +28,7 @@ CLEAN :
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /D "_USRDLL" /Fp"$(INTDIR)\GetWebDll.pch" /Yu"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /D "_USRDLL" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
 
 .c{$(INTDIR)}.obj::
    $(CPP) @<<
@@ -68,14 +67,13 @@ RSC_PROJ=/l 0x409 /fo"$(INTDIR)\GetWebDll.res" /d "NDEBUG"
 BSC32=bscmake.exe
 BSC32_FLAGS=/nologo /o"$(OUTDIR)\GetWebDll.bsc" 
 BSC32_SBRS= \
-	
+
 LINK32=link.exe
 LINK32_FLAGS=/nologo /subsystem:windows /dll /incremental:no /pdb:"$(OUTDIR)\GetWebDll.pdb" /machine:I386 /def:".\GetWebDll.def" /out:"$(OUTDIR)\GetWebDll.dll" /implib:"$(OUTDIR)\GetWebDll.lib" 
 DEF_FILE= \
 	".\GetWebDll.def"
 LINK32_OBJS= \
 	"$(INTDIR)\GetWebDll.obj" \
-	"$(INTDIR)\StdAfx.obj" \
 	"$(INTDIR)\GetWebDll.res"
 
 "$(OUTDIR)\GetWebDll.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
@@ -95,21 +93,11 @@ LINK32_OBJS= \
 
 SOURCE=.\GetWebDll.cpp
 
-"$(INTDIR)\GetWebDll.obj" : $(SOURCE) "$(INTDIR)" "$(INTDIR)\GetWebDll.pch"
+"$(INTDIR)\GetWebDll.obj" : $(SOURCE) "$(INTDIR)"
 
 
 SOURCE=.\GetWebDll.rc
 
 "$(INTDIR)\GetWebDll.res" : $(SOURCE) "$(INTDIR)"
 	$(RSC) $(RSC_PROJ) $(SOURCE)
-
-
-SOURCE=.\StdAfx.cpp
-
-CPP_SWITCHES=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /D "_USRDLL" /Fp"$(INTDIR)\GetWebDll.pch" /Yc"stdafx.h" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
-
-"$(INTDIR)\StdAfx.obj"	"$(INTDIR)\GetWebDll.pch" : $(SOURCE) "$(INTDIR)"
-	$(CPP) @<<
-  $(CPP_SWITCHES) $(SOURCE)
-<<
 

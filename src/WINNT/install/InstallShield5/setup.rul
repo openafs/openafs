@@ -331,7 +331,7 @@ end;
 ////////////////////////////////////////////////////////////////////////////////
 
 number nvSection,nFileIsLocked;
-STRING szTemp;
+STRING szTemp,szCellName;
 
 #define IDC_HOMEPATH                    301
 #define IDC_ROOTPATH                    302
@@ -771,7 +771,6 @@ function SetDriveMaps(szPath,szRootDrive,szRootPath,szHomeDrive,szHomePath)
 HWND   handle;
 begin
 	VarSave(SRCTARGETDIR);
-	TARGETDIR=WINDIR;
 	DeleteFile("afsdsbmt.ini");
 	VarRestore(SRCTARGETDIR);
     CreateFile(handle, szPath, "afsdsbmt.ini");
@@ -1154,11 +1153,13 @@ program
 			MessageBox ("RegDBCreateKeyEx failed.", SEVERE);
 		    abort;
 		endif;
-
 		pApp = &appFullClient;
 		if (InstallApp(pApp) < 0) goto end_install;
 	endif;
-
+        if RegDBSetKeyValueEx("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters","Cell", REGDB_STRING, szCellName, -1) < 0 then
+             MessageBox ("RegDBCreateKeyEx failed.", SEVERE);
+             abort;
+        endif;
 	// Install the Light Client
 	if (bLightClientSel) then
 		pApp = &appLightClient;
@@ -1303,6 +1304,9 @@ begin
 			,szDefaultInstall);
 		Logit("SetCellServDB");
 	    if (nResult=BACK) goto Dlg_SdSelectFolder;
+            Dlg_SdSelectCellName:
+            nResult=SdShowDlgEdit1 ("Select AFS Cell Name","A valid cell name should be entered here.\nIf you don't know your cell name, you may enter one after installation using the AFS Control Center.","Enter Cell Name:", szCellName);
+            if (nResult = BACK) goto Dlg_SdSelectCellName;
 		if (Is(FILE_EXISTS, WINDIR^"afsdsbmt.ini")) then
 			Logit("AskYesNo next");
 			if (AskYesNo("Previous Drive Mapping Configuration already exist.\n\nPress Yes to keep previous configuration\nPress No to change previous configuration.",YES)=YES) then
@@ -1314,7 +1318,7 @@ begin
 		sRootDrive="Z:";
 		sHomeDrive="U:";
 	   	rootPath="/";
-	    homePath = "/afs/" + @CELLNAME_DEFAULT + "/u/" + userID;
+	    homePath = "/afs/" + szCellName + "/u/" + userID;
 	    nResult=SetHomeRoot( "Home and Root Drive Assignment\nThese drives will be mapped each time AFS is connected!",sRootDrive,rootPath,sHomeDrive,homePath );
 		Logit("SetHomeRoot");
 		if (nResult = BACK) goto Dlg_SdSelectCellServDB;
@@ -2229,6 +2233,7 @@ function SetupInstall()
 begin
     Enable( CORECOMPONENTHANDLING );
 
+    szCellName=@CELLNAME_DEFAULT;
     bInstallAborted = FALSE;
 
     //  Create list of end user selections to be displayed by DialogShowSdStartCopy()

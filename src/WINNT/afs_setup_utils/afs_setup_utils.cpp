@@ -195,8 +195,7 @@ struct REGVALUE clientRegValues[] = {
 
 struct REGVALUE clientWinNTRegValues[] = {
     { "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\File Manager\\AddOns", "AFS Client FME" },
-    { "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Paramet
-ers", "SMBDeviceEnabled" },
+    { "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters", "SMBDeviceEnabled" },
     { 0, 0 }
 };
 

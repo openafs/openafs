@@ -3,9 +3,3 @@
 .\GetWebDll.cpp : \
 	".\GetWebDll.h"\
 	".\GetWebDllFun.h"\
-	
-
-.\StdAfx.cpp : \
-	".\StdAfx.h"\
-	"c:\program files\microsoft visual studio\vc98\include\basetsd.h"\
-	

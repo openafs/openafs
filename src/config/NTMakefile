@@ -92,7 +92,7 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
 		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
 !	ENDIF
-	$(COPY) AFSCONFIG-WINDOWS.H $(DESTDIR)\include\afs\.
+	$(COPY) AFSCONFIG-WINDOWS.H $(DESTDIR)\include\afs\afsconfig.h
 
 INCCOPY = \
 	$(DESTDIR)\bin\rmbat.bat \

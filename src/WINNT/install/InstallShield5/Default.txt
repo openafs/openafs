@@ -1,8 +1,3 @@
-[Client:HKLM:SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
-Cell=S,CELLNAME_DEFAULT
-(Default)=S,
----Comment---=
-
 [Client:HKCR:CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32]
 (Default)=S,<TARGETDIR>\Client\Program\afs_shl_ext.dll
 ---Comment---=
