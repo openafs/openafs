@@ -11,7 +11,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 # System specific build commands and flags
-KSRC = /usr/src/sys
+KSRC = @BSD_KERNEL_PATH@
 KFLAGS= -Wall -nostdinc
 <i386_obsd33>
 KFLAGS+= -fno-stack-protector

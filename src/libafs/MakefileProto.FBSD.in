@@ -28,7 +28,7 @@ AFS_OS_NONFSOBJS = \
 
 
 # System specific build commands and flags
-KSRC = /usr/src/sys
+KSRC = @BSD_KERNEL_PATH@
 KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
 	-DKLD_MODULE -elf -mpreferred-stack-boundary=2
 DBUG = -O2

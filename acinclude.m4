@@ -39,6 +39,9 @@ AC_ARG_WITH(dux-kernel-headers,
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
 )
+AC_ARG_WITH(bsd-kernel-headers,
+[  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
+)
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
 )
@@ -694,6 +697,12 @@ if test "$enable_insecure" = "yes"; then
 	WITH_INSECURE=YES
 fi
 
+if test "x$with_bsd_kernel_headers" != "x"; then
+	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
+else
+	BSD_KERNEL_PATH="/usr/src/sys"
+fi
+
 # Fast restart
 if test "$enable_supergroups" = "yes"; then
 	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
@@ -814,6 +823,7 @@ AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(BSD_KERNEL_PATH)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
 AC_SUBST(TOP_OBJDIR)
