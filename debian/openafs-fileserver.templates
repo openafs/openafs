@@ -4,7 +4,7 @@ Description: What cell does this server serve files for?
  AFS fileservers belong to a cell.  They have the key for that cell's
  Kerberos service and serve volumes into that cell.  Normally, this
  cell is the same cell as the workstation's client belongs to.
-bch	Description-de: Für welche Zelle liefert der Server Dateien?
+Description-de: Für welche Zelle liefert der Server Dateien?
  AFS-Dateiserver gehören zu einer Zelle. Die Server haben den Schlüssel
  für den Kerberos-Service der Zelle und stellen Volumes für die Zelle
  bereit. Normalerweise ist die Zelle identisch mit der des Clients
