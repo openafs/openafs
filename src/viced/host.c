@@ -814,6 +814,7 @@ h_TossStuff_r(host)
 				*hp = th->next;
 				h_DeleteList_r(host); 
 				FreeHT(host);
+				free(th);
 				break;
 			}		
 		}
