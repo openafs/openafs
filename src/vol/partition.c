@@ -353,7 +353,7 @@ VCheckPartition(char *part, char *devname)
 #endif
 
 #if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)
-    if (afs_status.st_ino != ROOTINO) {
+    if (status.st_ino != ROOTINO) {
 	Log("%s is not a mounted file system; ignored.\n", part);
 	return 0;
     }
