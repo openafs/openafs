@@ -792,8 +792,6 @@ skipCheck:
  File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
  File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 
-!ifdef DEBUG
-!endif
  SetOutPath "$INSTDIR\Common"
    Call AFSLangFiles
    
@@ -1628,7 +1626,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
-
+!IFDEF DEBUG
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
@@ -1651,6 +1649,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.pdb"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
+!ENDIF
 !ENDIF
 !ELSE
 !IFDEF CL_1310
