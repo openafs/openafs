@@ -54,13 +54,6 @@ RCSID
 static char waitV;
 
 
-void
-afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
-{
-    AFS_STATCNT(osi_InitWaitHandle);
-    achandle->proc = NULL;
-}
-
 /* cancel osi_Wait */
 void
 afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
