@@ -685,6 +685,82 @@ static int afs_linux_revalidate(struct dentry *dp)
     return -code ;
 }
 
+
+/* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
+ * In kernels 2.2.10 and above, we are passed an additional flags var which
+ * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
+ * we are advised to follow the entry if it is a link or to make sure that 
+ * it is a directory. But since the kernel itself checks these possibilities
+ * later on, we shouldn't have to do it until later. Perhaps in the future..
+ */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
+static int afs_linux_dentry_revalidate(struct dentry *dp, int flags)
+#else
+static int afs_linux_dentry_revalidate(struct dentry *dp)
+#endif
+{
+    char *name;
+    cred_t *credp = crref();
+    struct vrequest treq;
+    struct vcache *lookupvcp = NULL;
+    int code, bad_dentry = 1;
+    struct sysname_info sysState;
+    struct vcache *vcp = (struct vcache*) dp->d_inode;
+    struct vcache *parentvcp = (struct vcache*) dp->d_parent->d_inode;
+
+    AFS_GLOCK();
+
+    /* If it's a negative dentry, then there's nothing to do. */
+    if (!vcp || !parentvcp)
+        goto done;
+
+    if (code = afs_InitReq(&treq, credp))
+        goto done;
+
+    Check_AtSys(parentvcp, dp->d_name.name, &sysState, &treq);
+    name = sysState.name;
+
+    /* First try looking up the DNLC */
+    if (lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK)) {
+        /* Verify that the dentry does not point to an old inode */
+        if (vcp != lookupvcp)
+            goto done;
+        /* Check and correct mvid */
+        if (*name != '/' && vcp->mvstat == 2) 
+            check_bad_parent(dp);
+	vcache2inode(vcp);
+        bad_dentry = 0;
+        goto done;
+    }
+
+    /* A DNLC lookup failure cannot be trusted. Try a real lookup */
+    code = afs_lookup(parentvcp, name, &lookupvcp, credp);
+
+    /* Verify that the dentry does not point to an old inode */
+    if (vcp != lookupvcp)
+        goto done;
+
+    bad_dentry = 0;
+
+done:
+    /* Clean up */
+    if (lookupvcp)
+        afs_PutVCache(lookupvcp, WRITE_LOCK);
+    if (sysState.allocked)
+        osi_FreeLargeSpace(name);
+
+    AFS_GUNLOCK();
+    crfree(credp);
+
+    if (bad_dentry) {
+        shrink_dcache_parent(dp);
+        d_drop(dp);
+    }
+
+    return !bad_dentry;
+}
+
+#ifdef notdef
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
 static int afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 #else
@@ -698,6 +774,9 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     
     unsigned long timeout = 3*HZ; /* 3 seconds */
     
+    if (!ip)
+	printk("negative dentry: %s\n", dp->d_name.name);
+ 
     if (!(flags & LOOKUP_CONTINUE)) {
 	long diff = CURRENT_TIME - dp->d_parent->d_inode->i_mtime;
 	
@@ -714,6 +793,7 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
  out_bad:
     return 0;
 }
+#endif
 
 /* afs_dentry_iput */
 static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
@@ -831,17 +911,17 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
            ip->i_data.a_ops = &afs_symlink_aops;
            ip->i_mapping = &ip->i_data;
 	} else
-           printk("afs_linux_lookup: FIXME\n");
+           printk("afs_linux_lookup: ip->i_mode 0x%x  dp->d_name.name %s  code %d\n", ip->i_mode, dp->d_name.name, code);
 #else
 	if (S_ISDIR(ip->i_mode))
 	    ip->i_op = &afs_dir_iops;
 	else if (S_ISLNK(ip->i_mode))
 	    ip->i_op = &afs_symlink_iops;
 #endif
-    }
     dp->d_time = jiffies;
     dp->d_op = afs_dops;
     d_add(dp, (struct inode*)vcp);
+    } 
 
     AFS_GUNLOCK();
     crfree(credp);
@@ -889,27 +969,11 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     const char *name = dp->d_name.name;
     int putback = 0;
 
-    if (!list_empty(&dp->d_hash)) {
-	d_drop(dp);
-	/* Install a definite non-existence if we're the only user. */
-#if defined(AFS_LINUX24_ENV)
-	if (atomic_read(&dp->d_count) == 1)
-#else
-	if (dp->d_count == 1)
-#endif
-	    putback = 1;
-    }
-
     AFS_GLOCK();
     code = afs_remove((struct vcache*)dip, name, credp);
     AFS_GUNLOCK();
-    if (!code) {
-	d_delete(dp);
-	if (putback) {
-	    dp->d_time = jiffies;
-	    d_add(dp, NULL); /* means definitely does _not_ exist */
-    }
-    }
+    if (!code)
+	d_drop(dp);
     crfree(credp);
     return -code;
 }
@@ -959,6 +1023,7 @@ int afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	dp->d_time = jiffies;
 	d_instantiate(dp, (struct inode*)tvcp);
     }
+
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -982,7 +1047,7 @@ int afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     }
     
     if (!code) {
-	d_delete(dp);
+	d_drop(dp);
     }
 
     AFS_GUNLOCK();
