@@ -21,8 +21,6 @@ XLIBS=@LIB_AFSDB@
 TXLIBS=-lcurses -ltermcap
 XLIBELFA=-lelf
 XLIBKVM=-lkvm
-SHLIB_SUFFIX=so
-SHLIB_CFLAGS=-PIC
 #
 # programs
 AR=ar

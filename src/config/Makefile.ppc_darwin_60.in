@@ -25,9 +25,6 @@ TXLIBS=-lncurses
 #XLIBELFA=
 #XLIBKVM=
 #
-SHLIB_SUFFIX=
-SHLIB_CFLAGS=
-#
 # programs
 AR=ar
 AS=as

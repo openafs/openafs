@@ -24,9 +24,6 @@ MTLIBS=-lpthread -lsocket
 XLIBELFA=-lelf
 XLIBKVM=-lkvm
 #
-SHLIB_SUFFIX=so
-SHLIB_CFLAGS=-KPIC
-#
 # programs
 AR=/usr/ccs/bin/ar
 AS=as

@@ -395,6 +395,20 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
+	sun4_413)
+		CC="gcc"
+		LEX="lex"
+		LWP_OPTMZ="-O"
+		OPTMZ="-O"
+		SHLIB_CFLAGS="-PIC"
+		TXLIBS="-lcurses -ltermcap"
+		XCFLAGS=""
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB}"
+		LD="ld"
+		;;
+
 	sun4x_55)
 		CC="/opt/SUNWspro/bin/cc"
 		LEX="lex"
@@ -494,6 +508,28 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		;;
+
+	sunx86_57)
+		CC="/opt/SUNWspro/bin/cc"
+		LEX="lex"
+		LWP_OPTMZ="-g"
+		LD="/usr/ccs/bin/ld"
+		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread -lsocket"
+		OPTMZ="-O"
+		PAM_CFLAGS="-KPIC"
+		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LDFLAGS="-G -Bsymbolic"
+		TXLIBS="-lcurses"
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS="-dy -Bdynamic"
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		;;
+
 
 	sunx86_58)
 		CC="/opt/SUNWspro/bin/cc"
