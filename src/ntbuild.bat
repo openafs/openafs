@@ -30,7 +30,7 @@ SET _WIN32_IE=0x400
 REM ########################################################################
 REM Location of base folder where source lies, build directory
 REM e.g. AFSROOT\SRC is source directory of the build tree (8.3 short name)
-set AFSROOT=D:\Dev\AfsSorce\OpenAF~2.2
+set AFSROOT=C:\SRC\OpenAFS
 
 REM ########################################################################
 REM NTMakefile required definitions:
@@ -38,7 +38,8 @@ REM     AFSVER_CL  = version of the Microsoft compiler:
 REM                  "1200" for VC6
 REM                  "1300" for VC7 (.NET)
 REM                  "1310" for .NET 2003
-set AFSVER_CL=1200
+REM                  "1400" for VC8
+set AFSVER_CL=1310
 
 REM Location of Microsoft Visual C++ development folder (8.3 short name)
 set MSVCDIR=c:\progra~1\micros~2\vc98
@@ -101,12 +102,14 @@ REM     AFSDEV_BIN = default build binary directories
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
 set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include
+IF "%AFSVER_CL%" == "1400" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1300" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF "%AFSVER_CL%" == "1200" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atl\include;%MSVCDIR%\mfc\include
 set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%W9XDDKDIR%\include
 
 set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib
+IF "%AFSVER_CL%" == "1400" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1310" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1300" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF "%AFSVER_CL%" == "1200" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\mfc\lib

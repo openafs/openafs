@@ -196,3 +196,4 @@ List of unfunded projects:
       afsmap.exe <drive> <afs-path> [/PERSISTENT]
       afsmap.exe <drive> <unc-path> [/PERSISTENT]
       afsmap.exe <drive> /DELETE
+  23. Fix/Identify cause of WinLogon event handler problems with XP SP2 Gold

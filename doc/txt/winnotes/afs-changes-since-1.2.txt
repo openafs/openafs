@@ -1,4 +1,10 @@
 Since 1.3.66:
+   * The WinLogon Event Handlers for "Startup" and "Logoff" have been
+     removed at the very last moment due to problems caused with the
+     final release version of XP SP2.  This means that tokens will 
+     not be destroyed on logoff.  The code is not being removed it
+     is simply not going to be enabled.
+
    * file and directory names beginning with "." will now be given the
      hidden attribute when the volume access is anonymous.  this matches
      the behavior when the volume access is via an authenticated user.
