@@ -319,6 +319,9 @@ ldebug = /NODEFAULTLIB:LIBC
 #ldebug = $(ldebug) -debugtype:cv 
 #!ENDIF
 
+# Disable optimization; generate full debug info in obj.
+afscflags = $(afscflags) /Od /Zi
+
 !IFDEF VADUMP
 ldebug = $(ldebug) -debugtype:both
 ldebug = $(ldebug:-debugtype:cv=)
