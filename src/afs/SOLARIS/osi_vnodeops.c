@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.1.1.9 2002/05/10 23:44:14 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.1.1.10 2002/08/02 04:28:59 hartmans Exp $");
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
@@ -79,6 +79,25 @@ AFS_TRYUP(lock)
 }
 #endif
 #endif
+
+
+/* Translate a faultcode_t as returned by some of the vm routines
+ * into a suitable errno value.
+ */
+static int
+afs_fc2errno(faultcode_t fc)
+{
+    switch (FC_CODE(fc)) {
+    case 0:
+	return 0;
+
+    case FC_OBJERR:
+	return FC_ERRNO(fc);
+
+    default:
+	return EIO;
+    }
+}
 
 
 extern struct as kas;	/* kernel addr space */
@@ -1070,7 +1089,8 @@ struct AFS_UCRED *acred;
 	data = segmap_getmap(segkmap, AFSTOV(avc), pageBase);
 #endif
 #ifndef	AFS_SUN5_ENV
-	code = as_fault(&kas, data+pageOffset, tsize, F_SOFTLOCK, mode);
+	code = afs_fc2errno(as_fault(&kas, data+pageOffset, tsize,
+				     F_SOFTLOCK, mode));
 	if (code == 0) {
 	    AFS_UIOMOVE(data+pageOffset, tsize, arw, auio, code);
 	    as_fault(&kas, data+pageOffset, tsize, F_SOFTUNLOCK, mode);
@@ -1131,7 +1151,8 @@ struct AFS_UCRED *acred;
 		AFS_GUNLOCK();
 	    }
 	    if (!created)
-		code = segmap_fault(kas.a_hat, segkmap, raddr, rsize, F_SOFTLOCK, mode);
+		code = afs_fc2errno(segmap_fault(kas.a_hat, segkmap, raddr,
+						 rsize, F_SOFTLOCK, mode));
 	}
 	if (code == 0) {
 	    AFS_UIOMOVE(data+pageOffset, tsize, arw, auio, code);

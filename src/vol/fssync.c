@@ -38,7 +38,7 @@ static int newVLDB = 1;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.5 2001/09/11 14:35:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.6 2002/08/02 04:37:35 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -317,7 +317,7 @@ static void FSYNC_com(fd)
     int fd;
 {
     byte rc = FSYNC_OK;
-    int n, i;
+    int n, i, ack = 1;
     Error error;
     struct command command;
     int leaveonline;
@@ -503,6 +503,12 @@ defect #2080 for details.
 		vp->specialStatus = VMOVED;
 		VPutVolume_r(vp);
 	    }
+#ifdef AFS_NT40_ENV
+	    send(fd, &rc, 1, 0);
+#else
+	    write(fd, &rc, 1);
+#endif
+	    ack = 0;
 	    if (V_BreakVolumeCallbacks) {
 		Log("fssync: volume %u moved to %x; breaking all call backs\n",
 		    command.volume, command.reason);
@@ -515,6 +521,12 @@ defect #2080 for details.
 	    break;
 	case FSYNC_RESTOREVOLUME:
 	    /* if the volume is being restored, break all callbacks on it*/
+#ifdef AFS_NT40_ENV
+	    send(fd, &rc, 1, 0);
+#else
+	    write(fd, &rc, 1);
+#endif
+	    ack = 0;
 	    if (V_BreakVolumeCallbacks) {
 		VOL_UNLOCK
 		VATTACH_UNLOCK
@@ -529,11 +541,13 @@ defect #2080 for details.
     }
     VOL_UNLOCK
     VATTACH_UNLOCK
+    if (ack) {
 #ifdef AFS_NT40_ENV
-    send(fd, &rc, 1, 0);
+	send(fd, &rc, 1, 0);
 #else
-    write(fd, &rc, 1);
+	write(fd, &rc, 1);
 #endif
+    }
 }
 
 static void FSYNC_Drop(fd)

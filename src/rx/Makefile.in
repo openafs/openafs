@@ -38,7 +38,7 @@ CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -DRXDEBUG ${XCFLAGS}
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
 # Really the xdr stuff should be in its own directory.
 #
-XDROBJS = xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
+XDROBJS = xdr.o xdr_array.o xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \

@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.8 2001/07/14 22:23:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.9 2002/08/02 04:36:22 hartmans Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -431,7 +431,9 @@ int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #elif defined(AFS_LINUX22_ENV)
 	  /* linux unfortunately returns ECONNREFUSED if the target port
 	   * is no longer in use */
-	if (errno != EWOULDBLOCK && errno != ENOBUFS && errno != ECONNREFUSED)
+	  /* and EAGAIN if a UDP checksum is incorrect */
+	if (errno != EWOULDBLOCK && errno != ENOBUFS &&
+	    errno != ECONNREFUSED && errno != EAGAIN)
 #else
 	if (errno != EWOULDBLOCK && errno != ENOBUFS)
 #endif

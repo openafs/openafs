@@ -33,7 +33,7 @@
  * MP to compile for Linux
  */
 #ifdef AFS_SMP
-#define CONFIG_SMP
+#define CONFIG_SMP 1
 #ifndef CONFIG_S390_LOCAL_APIC
 #define CONFIG_S390_LOCAL_APIC
 #endif
@@ -52,7 +52,7 @@
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS       2 /* Set to Userdisabled, allow sysctl to override */
 
 /* Machine / Operating system information */
 #define SYS_NAME	"s390_linux24"

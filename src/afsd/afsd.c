@@ -55,7 +55,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.13 2002/06/10 11:44:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.14 2002/08/02 04:33:53 hartmans Exp $");
 
 #define VFS 1
 
@@ -240,6 +240,7 @@ static int enable_process_stats = 0;	/* enable rx stats */
 static int enable_afsdb = 0;		/* enable AFSDB support */
 #endif
 static int enable_dynroot = 0;		/* enable dynroot support */
+static int enable_fakestat = 0;		/* enable fakestat support */
 #ifdef notdef
 static int inodes = 60;		        /* VERY conservative, but has to be */
 #endif
@@ -341,8 +342,6 @@ int ParseCacheInfoFile()
 	    printf("\t%d out of 3 fields successfully parsed.\n",
 		   parseResult);
 
-	printf("\tcacheMountDir: '%s'\n\tcacheBaseDir: '%s'\n\tcacheBlocks: %d\n",
-	       cacheMountDir, cacheBaseDir, cacheBlocks);
 	return(1);
     }
 
@@ -1330,6 +1329,10 @@ mainproc(as, arock)
 	/* -dynroot */
 	enable_dynroot = 1;
     }
+    if (as->parms[27].items) {
+	/* -fakestat */
+	enable_fakestat = 1;
+    }
 
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -1567,6 +1570,14 @@ mainproc(as, arock)
 	code = call_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
+    }
+
+    if (enable_fakestat) {
+	if (afsd_verbose)
+	    printf("%s: Enabling fakestat support in kernel.\n", rn);
+	code = call_syscall(AFSOP_SET_FAKESTAT, 1);
+	if (code)
+	    printf("%s: Error enabling fakestat support.\n", rn);
     }
 
     /* Initialize AFS daemon threads. */
@@ -1922,6 +1933,7 @@ char **argv; {
 		), "Enable AFSDB support");
     cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL, "log(2) of the number of cache files per cache subdirectory");
     cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL, "Enable dynroot support");
+    cmd_AddParm(ts, "-fakestat", CMD_FLAG, CMD_OPTIONAL, "Enable fakestat support");
     return (cmd_Dispatch(argc, argv));
 }
 

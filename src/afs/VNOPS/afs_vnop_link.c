@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.1.1.5 2002/05/10 23:44:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.1.1.6 2002/08/02 04:29:02 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -32,9 +32,9 @@ extern afs_rwlock_t afs_xcbhash;
 
 #ifdef	AFS_OSF_ENV
 afs_link(avc, ndp)
-    register struct vcache *avc;
+    struct vcache *avc;
     struct nameidata *ndp; {
-    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -44,7 +44,7 @@ afs_link(OSI_VC_ARG(adp), avc, aname, acred)
 afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 #endif
     OSI_VC_DECL(adp);
-    register struct vcache *avc;
+    struct vcache *avc;
     char *aname;
     struct AFS_UCRED *acred;
 {
@@ -56,6 +56,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_int32 offset, len;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;
+    struct afs_fakestat_state vfakestate, dfakestate;
     XSTATS_DECLS
     OSI_VC_CONVERT(adp)
 
@@ -65,6 +66,13 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     /* create a hard link; new entry is aname in dir adp */
     if (code = afs_InitReq(&treq, acred)) 
 	goto done2;
+
+    afs_InitFakeStat(&vfakestate);
+    afs_InitFakeStat(&dfakestate);
+    code = afs_EvalFakeStat(&avc, &vfakestate, &treq);
+    if (code) goto done;
+    code = afs_EvalFakeStat(&adp, &dfakestate, &treq);
+    if (code) goto done;
 
     if (avc->fid.Cell != adp->fid.Cell || avc->fid.Fid.Volume != adp->fid.Fid.Volume) {
 	code = EXDEV;
@@ -151,6 +159,8 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     code = 0;
 done:
     code = afs_CheckCode(code, &treq, 24);
+    afs_PutFakeStat(&vfakestate);
+    afs_PutFakeStat(&dfakestate);
 done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, WRITE_LOCK);

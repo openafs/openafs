@@ -435,14 +435,14 @@ int SRXAFSCB_GetCellServDB(
     struct rx_call *a_call,
     afs_int32 a_index,
     char **a_name,
-    afs_int32 *a_hosts)
+    serverList *a_hosts)
 {
     char *t_name;
 
     t_name = (char *)malloc(AFSNAMEMAX);
     t_name[0] = '\0';
     *a_name = t_name;
-    memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
+    a_hosts->serverList_len = 0;
     return 0;
 }
 
@@ -472,10 +472,11 @@ int SRXAFSCB_GetLocalCell(
 {
     char *t_name;
 
-    t_name = (char *)malloc(AFSNAMEMAX);
     if (cm_rootCellp) {
+	t_name = (char *)malloc(strlen(cm_rootCellp->namep)+1);
         strcpy(t_name, cm_rootCellp->namep);
     } else {
+	t_name = (char *)malloc(1);
 	t_name[0] = '\0';
     }
     *a_name = t_name;

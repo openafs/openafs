@@ -42,7 +42,7 @@
  * MP to compile for Linux
  */
 #ifdef AFS_SMP
-#define CONFIG_SMP
+#define CONFIG_SMP 1
 #define __SMP__
 #define AFS_GLOBAL_SUNLOCK
 #endif

@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.1.1.5 2001/07/14 22:19:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.1.1.6 2002/08/02 04:29:00 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -188,21 +188,31 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
     struct AFS_UCRED *acred; {
     register afs_int32 code;
     struct vrequest treq;
+    struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc)
 
     AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_INT32, amode, ICL_TYPE_INT32, avc->m.Length);
+    afs_InitFakeStat(&fakestate);
     if (code = afs_InitReq(&treq, acred)) return code;
+
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (code) {
+      afs_PutFakeStat(&fakestate);
+      return code;
+    }
 
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
+      afs_PutFakeStat(&fakestate);
       code = afs_CheckCode(code, &treq, 16);
       return code; 
     }
 
     /* if we're looking for write access and we have a read-only file system, report it */
     if ((amode & VWRITE) && (avc->states & CRO)) {
+        afs_PutFakeStat(&fakestate);
 	return EROFS;
     }
     code = 1;		/* Default from here on in is access ok. */
@@ -269,11 +279,12 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
 	       code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
 	}
     }
-    if (code)
+    afs_PutFakeStat(&fakestate);
+    if (code) {
 	return 0;		/* if access is ok */
-    else {
-      code = afs_CheckCode(EACCES, &treq, 17);	     /* failure code */
-      return code;
+    } else {
+	code = afs_CheckCode(EACCES, &treq, 17);	     /* failure code */
+	return code;
     }
 }
 

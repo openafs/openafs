@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.10 2002/05/10 23:43:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.11 2002/08/02 04:28:40 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -420,7 +420,7 @@ void *afs_osi_Alloc(size_t x)
     AFS_STATS(afs_stats_cmperf.OutStandingAllocs++);
     AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
 #ifdef AFS_LINUX20_ENV
-    return osi_linux_alloc(x);
+    return osi_linux_alloc(x, 1);
 #else
     size = x;
     tm = (struct osimem *) AFS_KALLOC(size);
@@ -775,6 +775,22 @@ void afs_osi_TraverseProcTable()
 }   
 #endif
 
+#if defined(AFS_LINUX22_ENV)
+void afs_osi_TraverseProcTable()
+{   
+    struct task_struct *p;
+    for_each_task(p) if (p->pid) {
+        if (p->state & TASK_ZOMBIE)
+            continue;
+#if 0
+        if (p->flags & )
+            continue;
+#endif
+	afs_GCPAGs_perproc_func(p);
+    }
+}   
+#endif
+
 /* return a pointer (sometimes a static copy ) to the cred for a
  * given AFS_PROC.
  * subsequent calls may overwrite the previously returned value.
@@ -951,6 +967,31 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
        memcpy(cr.cr_groups, pr->p_cred->pc_ucred->cr_groups, NGROUPS *
              sizeof(gid_t));
        pcred_unlock(pr);
+       rv = &cr;
+    }
+    
+    return rv;
+}  
+#elif defined(AFS_LINUX22_ENV)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
+{   
+    struct AFS_UCRED *rv=NULL;
+    static struct AFS_UCRED cr;
+
+    if(pr == NULL) {
+       return NULL;
+    }
+   
+    if ((pr->state == TASK_RUNNING) ||
+	(pr->state == TASK_INTERRUPTIBLE) ||
+	(pr->state == TASK_UNINTERRUPTIBLE) ||
+	(pr->state == TASK_STOPPED)) {
+	read_lock(&tasklist_lock);
+       cr.cr_ref=1;
+       cr.cr_uid=pr->uid;
+       cr.cr_ngroups=pr->ngroups;
+       memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
+       read_unlock(&tasklist_lock);  
        rv = &cr;
     }
     

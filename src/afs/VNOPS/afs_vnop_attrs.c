@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.9 2002/06/10 11:40:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.10 2002/08/02 04:29:00 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -37,20 +37,24 @@ extern struct vcache *afs_globalVp;
 /* copy out attributes from cache entry */
 afs_CopyOutAttrs(avc, attrs)
     register struct vattr *attrs;
-    register struct vcache *avc; {
+    register struct vcache *avc;
+{
     register struct volume *tvp;
     register struct cell *tcell;
     register afs_int32 i;
+    int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);
+    if (afs_fakestat_enable && avc->mvstat == 1)
+	fakedir = 1;
 #if	defined(AFS_MACH_ENV )
-    attrs->va_mode = vType(avc) | (avc->m.Mode&~VFMT);
+    attrs->va_mode = fakedir ? VDIR | 0755 : vType(avc) | (avc->m.Mode&~VFMT);
 #else /* AFS_MACH_ENV */
-    attrs->va_type = vType(avc);
+    attrs->va_type = fakedir ? VDIR : vType(avc);
 #if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
-    attrs->va_mode = (mode_t)(avc->m.Mode & 0xffff);
+    attrs->va_mode = fakedir ? 0755 : (mode_t)(avc->m.Mode & 0xffff);
 #else
-    attrs->va_mode = avc->m.Mode;
+    attrs->va_mode = fakedir ? VDIR | 0755 : avc->m.Mode;
 #endif
 #endif /* AFS_MACH_ENV */
 
@@ -60,8 +64,8 @@ afs_CopyOutAttrs(avc, attrs)
 	if (tcell && (tcell->states & CNoSUID))
 	    attrs->va_mode &= ~(VSUID|VSGID);
     }
-    attrs->va_uid = avc->m.Owner;
-    attrs->va_gid = avc->m.Group;   /* yeah! */
+    attrs->va_uid = fakedir ? 0 : avc->m.Owner;
+    attrs->va_gid = fakedir ? 0 : avc->m.Group;   /* yeah! */
 #if	defined(AFS_SUN56_ENV)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
 #else
@@ -90,10 +94,10 @@ afs_CopyOutAttrs(avc, attrs)
     }
     else attrs->va_nodeid = avc->fid.Fid.Vnode + (avc->fid.Fid.Volume << 16);
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
-    attrs->va_nlink = avc->m.LinkCount;
-    attrs->va_size = avc->m.Length;
+    attrs->va_nlink = fakedir ? 100 : avc->m.LinkCount;
+    attrs->va_size = fakedir ? 4096 : avc->m.Length;
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
-	(int)avc->m.Date;
+	fakedir ? 0 : (int)avc->m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
      * use of mtime as a dataversion #.  We take it mod 512K because
      * microseconds *must* be less than a million, and 512K is the biggest
@@ -191,6 +195,23 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
     AFS_STATCNT(afs_getattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_INT32, avc->m.Length);
+
+    if (afs_fakestat_enable && avc->mvstat == 1) {
+	struct afs_fakestat_state fakestat;
+
+	code = afs_InitReq(&treq, acred);
+	if (code) return code;
+	afs_InitFakeStat(&fakestat);
+	code = afs_TryEvalFakeStat(&avc, &fakestat, &treq);
+	if (code) {
+	    afs_PutFakeStat(&fakestat);
+	    return code;
+	}
+
+	code = afs_CopyOutAttrs(avc, attrs);
+	afs_PutFakeStat(&fakestat);
+	return code;
+    }
 
 #if defined(AFS_SUN5_ENV)
     if (flags & ATTR_HINT) {
@@ -392,12 +413,19 @@ afs_setattr(avc, attrs, acred)
     struct vrequest treq;
     struct AFSStoreStatus astat;
     register afs_int32 code;
+    struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc)
 
     AFS_STATCNT(afs_setattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_INT32, avc->m.Length);
     if (code = afs_InitReq(&treq, acred)) return code;
+
+    afs_InitFakeStat(&fakestate);
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (code)
+      goto done;
+
     if (avc->states & CRO) {
 	code=EROFS;
 	goto done;
@@ -516,6 +544,7 @@ afs_setattr(avc, attrs, acred)
     AFS_RWUNLOCK((vnode_t *)avc, VRWLOCK_WRITE);
 #endif
 done:
+    afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 15);
     return code;
 }

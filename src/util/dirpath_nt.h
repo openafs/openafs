@@ -96,6 +96,9 @@ ConstructLocalLogPath(const char *cpath,
 /* afs installation dir names */
 #define AFSDIR_ETC_DIR   "etc"
 #define AFSDIR_BIN_DIR   "bin"
+#define AFSDIR_SERVER_ETC_DIR   "etc"
+#define AFSDIR_SERVER_BIN_DIR   "bin"
+#define AFSDIR_CLIENT_ETC_DIR   "etc"
 #define AFSDIR_CORES_DIR "cores"
 #define AFSDIR_DB_DIR    "db"
 #define AFSDIR_LOGS_DIR  "logs"
@@ -103,10 +106,13 @@ ConstructLocalLogPath(const char *cpath,
 #define AFSDIR_BACKUP_DIR "backup"
 #define AFSDIR_MIGR_DIR  "local/migrate"
 #define AFSDIR_BIN_FILE_DIR  "local/migrate/bin_files"
+#define AFSDIR_BOSCONFIG_DIR "local"
+#define AFSDIR_BOSSERVER_DIR "bin"
 
 /* file names */ 
 #define AFSDIR_THISCELL_FILE    "ThisCell"
 #define AFSDIR_CELLSERVDB_FILE  "CellServDB"
+#define AFSDIR_CELLALIAS_FILE   "CellAlias"
 #define AFSDIR_KEY_FILE         "KeyFile"
 #define AFSDIR_ULIST_FILE       "UserList"
 #define AFSDIR_NOAUTH_FILE      "NoAuth"
@@ -248,6 +254,7 @@ typedef enum afsdir_id {
       AFSDIR_SERVER_MIGRATE_DIRPATH_ID,
       AFSDIR_SERVER_MIGRATELOG_FILEPATH_ID,
       AFSDIR_SERVER_BIN_FILE_DIRPATH_ID,
+      AFSDIR_CLIENT_CELLALIAS_FILEPATH_ID,
       AFSDIR_PATHSTRING_MAX } afsdir_id_t;
 
 /* getDirPath() returns a pointer to a string from an internal array of path strings 

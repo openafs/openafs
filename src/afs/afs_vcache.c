@@ -38,7 +38,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.12 2002/05/10 23:43:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.13 2002/08/02 04:28:44 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -495,7 +495,7 @@ restart:
 	repeat:
 	    next = this_parent->d_subdirs.next;
 	resume:
-	    while (next != &this_parent->d_subdirs) {
+	    while (next && next != &this_parent->d_subdirs) {
 		struct list_head *tmp = next;
 		struct dentry *dchld = list_entry(tmp, struct dentry, d_child);
 		
@@ -977,6 +977,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	INIT_LIST_HEAD(&ip->i_devices);
 #endif
 	ip->i_data.host = (void*) ip;
+#ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+	ip->i_data.gfp_mask = GFP_HIGHUSER;
+#endif
 	ip->i_mapping = &ip->i_data;
 #ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 	init_rwsem(&ip->i_truncate_sem);
@@ -1486,9 +1489,16 @@ afs_ProcessFS(avc, astat, areq)
 	avc->m.Mode |= S_IFDIR;
     }
     else if (astat->FileType == SymbolicLink) {
-	vSetType(avc, VLNK);
-	avc->m.Mode |= S_IFLNK;
-	if ((avc->m.Mode & 0111) == 0) avc->mvstat = 1;
+	if (afs_fakestat_enable && (avc->m.Mode & 0111) == 0) {
+	    vSetType(avc, VDIR);
+	    avc->m.Mode |= S_IFDIR;
+	} else {
+	    vSetType(avc, VLNK);
+	    avc->m.Mode |= S_IFLNK;
+	}
+	if ((avc->m.Mode & 0111) == 0) {
+	    avc->mvstat = 1;
+	}
     }
     avc->anyAccess = astat->AnonymousAccess;
 #ifdef badidea

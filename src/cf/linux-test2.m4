@@ -1,3 +1,18 @@
+AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK, [
+AC_MSG_CHECKING(for gfp_mask in struct address_space)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_address_space_has_gfp_mask, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct address_space _a;
+printf("%d\n", _a.gfp_mask);], 
+ac_cv_linux_fs_struct_address_space_has_gfp_mask=yes,
+ac_cv_linux_fs_struct_address_space_has_gfp_mask=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_gfp_mask)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_BYTES, [
 AC_MSG_CHECKING(for i_bytes in struct inode)
 save_CPPFLAGS="$CPPFLAGS"

@@ -28,6 +28,8 @@ cp $mainFileDir/afsinit_client .
 cp $mainFileDir/afsinit_server .
 cp $mainFileDir/afs_uninstall .
 cp $mainFileDir/install_afs .
+cp $mainFileDir/K5_README .
+cp $mainFileDir/check_udebug.pl .
 cp $mainFileDir/write_fstab.pl .
 cp $mainFileDir/write_pam.pl .
 #

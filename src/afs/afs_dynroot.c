@@ -299,12 +299,13 @@ afs_RefreshDynroot()
 
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
-	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
-			      c->cellName, VNUM_FROM_CIDX_RW(cellidx, 0));
+	if (!c) continue;
 
 	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
+	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
+			      c->cellName, VNUM_FROM_CIDX_RW(cellidx, 0));
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
 			      dotCell, VNUM_FROM_CIDX_RW(cellidx, 1));
 

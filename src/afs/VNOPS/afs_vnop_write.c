@@ -20,7 +20,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.10 2002/05/10 23:44:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.11 2002/08/02 04:29:04 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -283,7 +283,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	if (filePos > avc->m.Length)
 	    avc->m.Length = filePos;
 #endif
-#ifndef AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -580,7 +580,7 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	}
 #endif
 	osi_UFSClose(tfile);
-#ifndef	AFS_VM_RDWR_ENV
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -685,10 +685,12 @@ afs_closex(afd)
     afs_int32 flags;
     int closeDone;
     afs_int32 code = 0;
+    struct afs_fakestat_state fakestat;
 
     AFS_STATCNT(afs_closex);
     /* setup the credentials */
     if (code = afs_InitReq(&treq, u.u_cred)) return code;
+    afs_InitFakeStat(&fakestat);
 
     closeDone = 0;
     /* we're the last one.  If we're an AFS vnode, clear the flags,
@@ -697,6 +699,11 @@ afs_closex(afd)
     if (afd->f_type == DTYPE_VNODE) {
 	tvc = VTOAFS(afd->f_data);
 	if (IsAfsVnode(AFSTOV(tvc))) {
+	    code = afs_EvalFakeStat(&tvc, &fakestat, &treq);
+	    if (code) {
+	      afs_PutFakeStat(&fakestat);
+	      return code;
+	    }
 	    VN_HOLD(AFSTOV(tvc));
 	    flags = afd->f_flag & (FSHLOCK | FEXLOCK);
 	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
@@ -720,6 +727,7 @@ afs_closex(afd)
     if (!closeDone) {
 	code = vno_close(afd);
     }
+    afs_PutFakeStat(&fakestat);
     return code;	/* return code from vnode layer */
 }
 #endif
@@ -760,41 +768,44 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     afs_int32 aflags;
     struct AFS_UCRED *acred; 
 {
-    register afs_int32 code, initreq=0;
+    register afs_int32 code;
     register struct brequest *tb;
     struct vrequest treq;
 #ifdef AFS_SGI65_ENV
     struct flid flid;
 #endif
+    struct afs_fakestat_state fakestat;
     OSI_VC_CONVERT(avc)
 
     AFS_STATCNT(afs_close);
     afs_Trace2(afs_iclSetp, CM_TRACE_CLOSE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, aflags);
+    code = afs_InitReq(&treq, acred);
+    if (code) return code;
+    afs_InitFakeStat(&fakestat);
+    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    if (code) {
+	afs_PutFakeStat(&fakestat);
+	return code;
+    }
 #ifdef	AFS_SUN5_ENV
     if (avc->flockCount) {
-	if (code = afs_InitReq(&treq, acred)) return code;
-	initreq = 1;
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1/*onlymine*/);
     }
 #endif
 #if defined(AFS_SGI_ENV)
-    if (!lastclose)
+    if (!lastclose) {
+	afs_PutFakeStat(&fakestat);
  	return 0;
+    }
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
+	afs_PutFakeStat(&fakestat);
 	return 0;
     }
 #endif
-#ifdef	AFS_SUN5_ENV
-    if (!initreq) {
-#endif
-#endif
-	if (code = afs_InitReq(&treq, acred)) return code;
-#ifdef	AFS_SUN5_ENV
-    }
 #endif
 #ifndef	AFS_SUN5_ENV
 #if defined(AFS_SGI_ENV)
@@ -916,6 +927,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif
+    afs_PutFakeStat(&fakestat);
     code = afs_CheckCode(code, &treq, 5);
     return code;
 }

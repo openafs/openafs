@@ -15,12 +15,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_udp.c,v 1.1.1.11 2001/10/14 18:05:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_udp.c,v 1.1.1.12 2002/08/02 04:35:18 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
+#include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#include <afs/errmap_nt.h>
 #define snprintf _snprintf
 #else
 #include <sys/socket.h>
@@ -778,6 +780,8 @@ static SocketListener ()
 	    code = recvfrom(sock_kerb, packet.data, sizeof(packet.data), 0,
 			    (struct sockaddr *) &packet.from, &fromLen);
 	    if (code < 0) {
+		if (errno == EAGAIN || errno == ECONNREFUSED) 
+		    goto try_kerb5;
 		perror ("calling recvfrom");
 		break;
 	    }
@@ -792,10 +796,13 @@ static SocketListener ()
 	    packet.time = 0;
 	    process_udp_request (sock_kerb, &packet);
 	} 
+try_kerb5:
 	if ((sock_kerb5 >= 0) && FD_ISSET(sock_kerb5, &rfds)) {
 	    code = recvfrom(sock_kerb5, packet.data, sizeof(packet.data), 0,
 			    (struct sockaddr *) &packet.from, &fromLen);
 	    if (code < 0) {
+		if (errno == EAGAIN || errno == ECONNREFUSED) 
+		    continue;
 		perror ("calling recvfrom");
 		break;
 	    }
@@ -811,6 +818,15 @@ static SocketListener ()
 	    process_udp_request (sock_kerb5, &packet);
 	} 
     }
+    if (sock_kerb >= 0) {
+	close(sock_kerb);
+	sock_kerb = -1;
+    }
+    if (sock_kerb5 >= 0) {
+	close(sock_kerb5);
+	sock_kerb5 = -1;
+    }
+    printf("UDP SocketListener exiting due to error\n");
 }
 
 #if MAIN

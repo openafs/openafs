@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.9 2002/01/22 19:47:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.10 2002/08/02 04:28:38 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -46,8 +46,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.9 2002/01/22 19:
 afs_rwlock_t afs_xcell;			/* allocation lock for cells */
 struct afs_q CellLRU;
 afs_int32 afs_cellindex=0;
+afs_int32 afs_realcellindex=0;
 afs_uint32 afs_nextCellNum = 0x100;
-
 
 /* Local variables. */
 struct cell *afs_rootcell = 0;
@@ -417,6 +417,31 @@ struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
 } /*afs_GetCellByIndex*/
 
 
+struct cell *afs_GetRealCellByIndex(cellindex, locktype, refresh)
+    register afs_int32 cellindex;
+    afs_int32 locktype;
+    afs_int32 refresh;
+{
+    register struct cell *tc;
+    register struct afs_q *cq, *tq;
+
+    AFS_STATCNT(afs_GetCellByIndex);
+    ObtainWriteLock(&afs_xcell,102);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	tc = QTOC(cq); tq = QNext(cq);
+	if (tc->realcellIndex == cellindex) {
+	    QRemove(&tc->lruq);
+	    QAdd(&CellLRU, &tc->lruq);
+	    ReleaseWriteLock(&afs_xcell);
+	    if (refresh) afs_RefreshCell(tc);
+	    return tc;
+	}
+    }
+    ReleaseWriteLock(&afs_xcell);
+    return (struct cell *) 0;
+} /*afs_GetRealCellByIndex*/
+
+
 afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport, timeout, aliasFor)
     int aflags;
     char *acellName;
@@ -484,6 +509,11 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
 	tc->vlport = (vlport ? vlport : AFS_VLPORT);
 	afs_stats_cmperf.numCellsVisible++;
 	newc++;
+	if (!aflags & CAlias) {
+	    tc->realcellIndex = afs_realcellindex++;
+	} else {
+	    tc->realcellIndex = -1;
+	}
     }
 
     if (aflags & CLinkedCell) {
@@ -513,7 +543,10 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     tc->timeout = timeout;
 
     /* Allow converting an alias into a real cell */
-    if (!(aflags & CAlias)) tc->states &= ~CAlias;
+    if (!(aflags & CAlias)) {
+	tc->states &= ~CAlias;
+	tc->realcellIndex = afs_realcellindex++;
+    }
  
     memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
     if (aflags & CAlias) {

@@ -105,7 +105,7 @@ ${DEST}/etc/kdump: kdump
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
-	sun4x_5[789] ) \
+	sun*_5[789] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*linux* ) \
@@ -228,7 +228,7 @@ kdump:  kdump.o
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
 		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
-	sun4x_5? ) \
+	sun*_5? ) \
 		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
@@ -320,7 +320,7 @@ ${DESTDIR}${sbindir}/kdump: kdump
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
 		done ;; \
-	sun4x_5[789] ) \
+	sun*_5[789] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}${sbindir}/kdump32;; \
 	*linux* ) \

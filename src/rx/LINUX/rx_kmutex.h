@@ -75,12 +75,10 @@ static inline void MUTEX_ENTER(afs_kmutex_t *l)
 /* And how to do a good tryenter? */
 static inline int MUTEX_TRYENTER(afs_kmutex_t *l)
 {
-    if (!l->owner) {
-	MUTEX_ENTER(l);
-	return 1;
-    }
-    else
-	return 0;
+    if (down_trylock(&l->sem))
+        return 0;
+    l->owner = current->pid;
+    return 1;
 }
 
 static inline void MUTEX_EXIT(afs_kmutex_t *l)
@@ -99,14 +97,26 @@ static inline void MUTEX_EXIT(afs_kmutex_t *l)
 #endif
 #define CV_DESTROY(cv)
 
-/* CV_WAIT and CV_TIMEDWAIT rely on the fact that the Linux kernel has
- * a global lock. Thus we can safely drop our locks before calling the
- * kernel sleep services.
+/* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the
+ * case of CV_TIMEDWAIT, until the specified timeout occurs.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
  */
 static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
 {
     int isAFSGlocked = ISAFS_GLOCK(); 
     sigset_t saved_set;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
+ 
+    add_wait_queue(cv, &wait);
+    set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
@@ -117,19 +127,16 @@ static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-#if defined(AFS_LINUX24_ENV)
-    interruptible_sleep_on((wait_queue_head_t *)cv);
-#else
-    interruptible_sleep_on((struct wait_queue**)cv);
-#endif
+    schedule();
+    remove_wait_queue(cv, &wait);
 
     spin_lock_irq(&current->sigmask_lock);
     current->blocked = saved_set;
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-    MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
+    MUTEX_ENTER(l);
 
     return 0;
 }
@@ -139,6 +146,14 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     int isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
     sigset_t saved_set;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
+ 
+    add_wait_queue(cv, &wait);
+    set_current_state(TASK_INTERRUPTIBLE);
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
@@ -149,19 +164,16 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-#if defined(AFS_LINUX24_ENV)
-    t = interruptible_sleep_on_timeout((wait_queue_head_t *)cv, t);
-#else
-    t = interruptible_sleep_on_timeout((struct wait_queue**)cv, t);
-#endif
+    t = schedule_timeout(t);
+    remove_wait_queue(cv, &wait);
     
     spin_lock_irq(&current->sigmask_lock);
     current->blocked = saved_set;
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
 
-    MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
+    MUTEX_ENTER(l);
 
     return 0;
 }
