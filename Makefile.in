@@ -455,6 +455,8 @@ libafsauthent: ubik auth kauth libafsrpc
 
 shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
+	amd64_linux24) \
+		echo Skipping shlibafsprc for amd64_linux24 ;; \
 	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
@@ -463,6 +465,8 @@ shlibafsrpc: rx rxkad des
 
 shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
+	amd64_linux24) \
+		echo Skipping shlibafsauthent for amd64_linux24 ;; \
 	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
