@@ -140,6 +140,12 @@ case $system in
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+		 fi
                 :
 		fi
                 ;;
