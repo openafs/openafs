@@ -102,15 +102,14 @@ extern struct timeval time;
 struct vcache;
 
 extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg,
-			       int followlink, struct vnode **dirvpp,
-			       struct vnode **compvpp);
+			       int followlink, struct vnode **compvpp);
 extern void afs_nbsd_getnewvnode(struct vcache *tvc);
 extern void *afs_nbsd_Alloc(size_t asize);
 extern void afs_nbsd_Free(void *p, size_t asize);
 extern int afs_vget();
 
-#define	gop_lookupname(fnamep, segflg, followlink, dirvpp, compvpp) \
-	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (dirvpp), (compvpp))
+#define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
+	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
 #ifdef KERNEL
 extern int (**afs_vnodeop_p) ();

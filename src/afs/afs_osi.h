@@ -135,13 +135,13 @@ extern struct vnodeops *afs_ops;
 #endif
 
 #ifdef AFS_SGI65_ENV
-#define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp),\
+#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
+             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp),\
 			NULL)
 #else
 #ifndef AFS_OBSD_ENV
-#define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp))
+#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
+             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 #endif
 #endif
 

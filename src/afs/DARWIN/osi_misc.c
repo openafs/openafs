@@ -19,7 +19,7 @@ RCSID
 
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	       struct vnode **dirvpp, struct vnode **vpp)
+	       struct vnode **vpp)
 {
     struct nameidata n;
     int flags, error;
@@ -29,15 +29,10 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-    /*   if (dirvpp) flags|=WANTPARENT; *//* XXX LOCKPARENT? */
     NDINIT(&n, LOOKUP, flags, seg, aname, current_proc());
     if (error = namei(&n))
 	return error;
     *vpp = n.ni_vp;
-/*
-   if (dirvpp)
-      *dirvpp = n.ni_dvp;
-#/
    /* should we do this? */
     VOP_UNLOCK(n.ni_vp, 0, current_proc());
     return 0;

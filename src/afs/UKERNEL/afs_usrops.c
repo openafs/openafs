@@ -650,7 +650,7 @@ int max_osi_files = 0;
  */
 int
 lookupname(char *fnamep, int segflg, int followlink,
-	   struct usr_vnode **dirvpp, struct usr_vnode **compvpp)
+	   struct usr_vnode **compvpp)
 {
     int i;
     int code;
@@ -658,7 +658,6 @@ lookupname(char *fnamep, int segflg, int followlink,
     struct usr_vnode *vp;
 
     /*usr_assert(followlink == 0); */
-    usr_assert(dirvpp == NULL);
 
     /*
      * Assume relative pathnames refer to files in AFS

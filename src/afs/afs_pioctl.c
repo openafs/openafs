@@ -956,11 +956,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 		       foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
-	code = gop_lookupname(path, AFS_UIOUSER, follow, NULL, &dp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
-	code = gop_lookupname(path, AFS_UIOUSER, follow, NULL, &vp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow, &vp);
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();

@@ -60,7 +60,7 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     return code;
 }
 int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
+osi_lookupname(char *aname, uio_seg_t seg, int followlink, 
 			struct dentry **dpp)
 {
     int code;
@@ -81,7 +81,7 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
 }
 #else
 int
-osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp, struct dentry **dpp)
+osi_lookupname(char *aname, uio_seg_t seg, int followlink, struct dentry **dpp)
 {
     struct dentry *dp = NULL;
     int code;
