@@ -53,6 +53,7 @@
 #include "keys.h"
 #include "afs/audit.h"
 
+afs_int32 afsconf_SuperUser();
 
 #if !defined(UKERNEL)
 int afsconf_CheckAuth(adir, acall)
