@@ -231,7 +231,7 @@ tagain:
 
 	/* filldir returns -EINVAL when the buffer is full. */
 #ifdef AFS_LINUX24_ENV
-	code = (*filldir)(dirbuf, de->name, len, offset, ino, DT_DIR);
+	code = (*filldir)(dirbuf, de->name, len, offset, ino, DT_UNKNOWN);
 #else
 	code = (*filldir)(dirbuf, de->name, len, offset, ino); 
 #endif
