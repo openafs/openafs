@@ -49,6 +49,8 @@ static long rx_pthread_n_event_wakeups;
  */
 static int rx_pthread_event_rescheduled = 0;
 
+static void rx_ListenerProc(void *);
+
 /*
  * We supply an event handling thread for Rx's event processing.
  * The condition variable is used to wakeup the thread whenever a new

@@ -274,7 +274,6 @@ struct rx_peer *rxi_FindPeer();
 struct rx_call *rxi_NewCall();
 void rxi_FreeCall();
 struct rx_call *rxi_FindCall();
-void rx_ListenerProc();
 int rxi_ReadPacket();
 struct rx_packet *rxi_ReceivePacket();
 struct rx_packet *rxi_ReceiveDataPacket();

@@ -1114,7 +1114,7 @@ afs_shutdown()
 {
     extern short afs_brsDaemons;
     extern afs_int32 afs_CheckServerDaemonStarted;
-    extern struct osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
+    extern struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
     extern struct osi_file *afs_cacheInodep;
 
     AFS_STATCNT(afs_shutdown);

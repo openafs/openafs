@@ -101,7 +101,7 @@ asmlinkage int afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
     int code;
     cred_t *cr = crref();
-    int junk;
+    afs_uint32 junk;
     int old_pag;
 
     lock_kernel();

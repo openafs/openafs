@@ -40,6 +40,9 @@
 
 static ParseHostLine();
 static ParseCellLine();
+static afsconf_OpenInternal();
+static afsconf_CloseInternal();
+static afsconf_Reopen();
 
 static struct afsconf_servPair serviceTable [] = {
     "afs",	7000,
@@ -195,7 +198,7 @@ register struct afsconf_dir *adir; {
 #ifdef AFS_NT40_ENV
     return _utime(tbuffer, NULL);
 #else
-    gettimeofday(&tvp[0], (char *) 0);
+    gettimeofday(&tvp[0], NULL);
     tvp[1] = tvp[0];
     return utimes(tbuffer, tvp);
 #endif  /* AFS_NT40_ENV */

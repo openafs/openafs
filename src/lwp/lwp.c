@@ -914,7 +914,7 @@ static void Initialize_PCB(temp, priority, stack, stacksize, ep, parm, name)
     temp -> misc = NULL;	/* currently unused */
     temp -> next = NULL;
     temp -> prev = NULL;
-    temp -> lwp_rused = NULL;
+    temp -> lwp_rused = 0;
     temp -> level = 1;		/* non-preemptable */
 }
 

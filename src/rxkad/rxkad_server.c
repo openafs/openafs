@@ -76,7 +76,7 @@ pthread_mutex_t rxkad_random_mutex;
 static void init_random_int32 ()
 {   struct timeval key;
 
-    gettimeofday (&key, (char *) 0);
+    gettimeofday (&key, NULL);
     LOCK_RM
     fc_keysched (&key, random_int32_schedule);
     UNLOCK_RM

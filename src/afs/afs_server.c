@@ -702,7 +702,7 @@ NB:  Has to be unsigned, since shifts on signed quantities may preserve
    clients.  This is probably OK, but I don't want to see too much of it.
 */
 
-#define	ranstage(x)	(x)= (afs_uint32) (3141592621*((afs_uint32)x)+1)
+#define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
 extern afs_int32 rxi_getaddr();
 
 unsigned int afs_random()

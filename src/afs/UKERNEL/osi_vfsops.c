@@ -49,7 +49,7 @@ afs_mount(afsp, path, data)
     afs_globalVFS = afsp;
     afsp->vfs_bsize = 8192;
     afsp->vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-    afsp->vfs_fsid.val[1] = AFS_VFSFSID; 
+    afsp->vfs_fsid.val[1] = (afs_int32) AFS_VFSFSID; 
 
     return 0;
 }
@@ -113,7 +113,7 @@ afs_statfs(afsp, abp)
 	abp->f_type = 0;
 	abp->f_bsize = afsp->vfs_bsize;
 	abp->f_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-	abp->f_fsid.val[1] = AFS_VFSFSID;
+	abp->f_fsid.val[1] = (afs_int32) AFS_VFSFSID;
 	return 0;
 }
 

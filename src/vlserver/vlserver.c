@@ -58,7 +58,7 @@ int LogLevel = 0;
 int smallMem = 0;
 int rxJumbograms = 1;  /* default is to send and receive jumbo grams */
 
-CheckSignal_Signal()       {IOMGR_SoftSig(CheckSignal, 0);}
+static void CheckSignal_Signal()       {IOMGR_SoftSig(CheckSignal, 0);}
 
 static CheckSignal()
 {

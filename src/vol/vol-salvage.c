@@ -431,7 +431,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 void showlog(void);
 int UseTheForceLuke(char *path);
 
-
+static int IsVnodeOrphaned(VnodeId vnode);
 
 /* Uniquifier stored in the Inode */
 static Unique IUnique(u)

@@ -78,13 +78,15 @@ int GetGlobals (as)
     return code;
 }
 
-void CleanUp (as)
+int CleanUp (as)
   register struct cmd_syndesc *as;
 {
     if (!strcmp(as->name,"help")) return;
     /* Need to shutdown the ubik_client & other connections */
     pr_End();
     rx_Finalize();
+
+    return 0;
 }
 
 CreateGroup (as)

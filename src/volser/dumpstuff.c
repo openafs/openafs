@@ -673,7 +673,7 @@ static int DumpDumpHeader(register struct iod *iodp, register Volume *vp,
     if (!code) code = DumpString(iodp, 'n',V_name(vp));
     dumpTimes[0] = fromtime;
     dumpTimes[1] = V_backupDate(vp);	/* Until the time the clone was made */
-    if (!code) code = DumpArrayInt32(iodp, 't', (unsigned int *)dumpTimes, 2);
+    if (!code) code = DumpArrayInt32(iodp, 't', (afs_uint32 *)dumpTimes, 2);
     return code;
 }
 
@@ -811,7 +811,7 @@ int RestoreVolume(register struct rx_call *call, Volume *avp,
     register Volume *vp;
     struct iod iod;
     register struct iod *iodp = &iod;
-    int *b1=0, *b2=0;
+    afs_int32 *b1=0, *b2=0;
     int s1=0, s2=0, delo=0, tdelo;
     int tag;
 
@@ -913,7 +913,7 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
     while (tag == D_VNODE) {
         int haveStuff = 0;
 	bzero(buf, sizeof (buf));
-	if (!ReadInt32(iodp, (unsigned int *)&vnodeNumber))
+	if (!ReadInt32(iodp, (afs_uint32 *)&vnodeNumber))
 	    break;
 
 	ReadInt32(iodp, &vnode->uniquifier);
@@ -946,7 +946,7 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 		    ReadInt32(iodp, &vnode->owner);
 		    break;
 	        case 'g':
-		    ReadInt32(iodp, (unsigned int *)&vnode->group);
+		    ReadInt32(iodp, (afs_uint32 *)&vnode->group);
 		    break;
 		case 'b': {
 		    unsigned short modeBits;
@@ -1101,7 +1101,7 @@ static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
     register tag;
     afs_uint32 beginMagic;
     if (iod_getc(iodp) != D_DUMPHEADER || !ReadInt32(iodp, &beginMagic)
-       || !ReadInt32(iodp, (unsigned int *)&hp->version)
+       || !ReadInt32(iodp, (afs_uint32 *)&hp->version)
        || beginMagic != DUMPBEGINMAGIC
        ) return 0;
     hp->volumeId = 0;
@@ -1122,7 +1122,8 @@ static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
 		    return 0;
 		hp->nDumpTimes = (arrayLength >> 1);
 		for (i = 0; i<hp->nDumpTimes; i++)
-		    if (!ReadInt32(iodp, (unsigned int *)&hp->dumpTimes[i].from) || !ReadInt32(iodp, (unsigned int *)&hp->dumpTimes[i].to))
+		    if (!ReadInt32(iodp, (afs_uint32 *)&hp->dumpTimes[i].from)
+			|| !ReadInt32(iodp, (afs_uint32 *)&hp->dumpTimes[i].to))
 		        return 0;
 		break;
 	}

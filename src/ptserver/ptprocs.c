@@ -45,6 +45,7 @@ afs_int32 listEntries(), changeEntry(), setFieldsEntry(), put_prentries();
 afs_int32 listElements(), listOwned(), isAMemberOf(), idToName();
 
 static stolower();
+extern afs_int32 IDCmp();
 
 /* When abort, reset initd so that the header is read in on next call.
  * Abort the transarction and return the code.
@@ -593,7 +594,7 @@ afs_int32 Delete (call, aid)
     /* Delete each continuation block as a separate transaction so that no one
      * transaction become to large to complete. */
     nptr = tentry.next;
-    while (nptr != NULL) {
+    while (nptr != (afs_int32)NULL) {
 	struct contentry centry;
 	int i;
 
@@ -636,7 +637,7 @@ afs_int32 Delete (call, aid)
      * transaction, we start a new transaction every 50 entries. */
     count = 0;
     nptr = tentry.owned;
-    while (nptr != NULL) {
+    while (nptr != (afs_int32)NULL) {
 	struct prentry nentry;
 
 	code = pr_ReadEntry (tt, 0, nptr, &nentry);
@@ -1650,7 +1651,6 @@ afs_int32 addWildCards(tt,alist,host)
     afs_int32 hostid;
     int size = 0, i, code;
     int added = 0;
-    extern afs_int32 IDCmp();
  
     while (host = (host & wild)) {
 	wild = htonl ( ntohl(wild) << 8) ;
