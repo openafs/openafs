@@ -1,3 +1,9 @@
+openafs (1.2.8-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 10 Dec 2002 23:43:46 -0500
+
 openafs (1.2.7-3) unstable; urgency=low
 
   * Apparently OpenAFS and  ircd conflict on a UDP port, so you can't use
