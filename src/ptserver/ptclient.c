@@ -22,6 +22,7 @@ RCSID("$Header$");
 #else
 #include <netinet/in.h>
 #endif
+#include <netdb.h>
 #include <stdio.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -163,6 +164,8 @@ char **argv;
     prlist alist;
     idlist lid;
     namelist lnames;
+    struct hostent *hostinfo;
+    struct in_addr *hostaddr;
     afs_int32 *ptr;
     char *foo;
     afs_int32 over;
@@ -404,6 +407,31 @@ char **argv;
 		alist.prlist_val = 0;
 	    }
 	}
+	else if (!strcmp(op,"lh")) {
+	    alist.prlist_len = 0;
+	    alist.prlist_val = 0;
+	    /* scanf("%d",&id); */
+	    if (GetString(name, sizeof(name))) code = PRBADARG;
+	    else if (!(hostinfo = gethostbyname(name))) code = PRBADARG;
+	    else {
+		hostaddr = hostinfo->h_addr_list[0];
+		id = ntohl(hostaddr->s_addr);
+		code = ubik_Call(PR_GetHostCPS,pruclient,0,id, &alist, &over);
+	    }
+	    if (CodeOk(code)) printf("%s\n",pr_ErrorMsg(code));
+	    if (code == PRSUCCESS) {
+		ptr = alist.prlist_val;
+		if (over) {
+		    printf("Number of groups greater than PR_MAXGROUPS!\n");
+		    printf("Excess of %d.\n",over);
+		}
+		for (i=0;i<alist.prlist_len;i++,ptr++)
+		    printf("%d\n",*ptr);
+		free(alist.prlist_val);
+		alist.prlist_len = 0;
+		alist.prlist_val = 0;
+	    }
+	}
 	else if (!strcmp(op,"nu")) {
 	    /* scanf("%s",name); */
 	    if (GetString (name, sizeof(name))) code = PRBADARG;
@@ -527,6 +555,7 @@ PrintHelp()
     printf("dg gid - delete the entry for group gid.\n");
     printf("rm id gid - remove user id from group gid.\n");
     printf("l id - get the CPS for id.\n");
+    printf("lh host - get the host CPS for host.\n");
     printf("nu name - create new user with name - returns an id.\n");
     printf("ng name - create new group with name - returns an id.\n");
     printf("lm  - list max user id and max (really min) group id.\n");

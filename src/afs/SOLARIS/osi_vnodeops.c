@@ -1419,7 +1419,11 @@ afs_seek(vnp, ooff, noffp)
     return code;
 }
 
-int afs_frlock(vnp, cmd, ap, flag, off, credp)
+int afs_frlock(vnp, cmd, ap, flag, off,
+#ifdef AFS_SUN59_ENV
+	       flkcb,
+#endif
+	       credp)
     struct vnode *vnp;
     int cmd;
 #if	defined(AFS_SUN56_ENV)
@@ -1429,6 +1433,9 @@ int afs_frlock(vnp, cmd, ap, flag, off, credp)
 #endif
     int flag;
     offset_t off;
+#ifdef AFS_SUN59_ENV
+    struct flk_callback *flkcb;
+#endif
     struct AFS_UCRED *credp;
 {
     register afs_int32 code = 0;
@@ -1436,6 +1443,10 @@ int afs_frlock(vnp, cmd, ap, flag, off, credp)
      * Implement based on afs_lockctl
      */
     AFS_GLOCK();
+#ifdef AFS_SUN59_ENV
+    if (flkcb)
+	afs_warn("Don't know how to deal with flk_callback's!\n");
+#endif
     if ((cmd == F_GETLK) || (cmd == F_O_GETLK) || (cmd == F_SETLK) || (cmd ==  F_SETLKW)) {
 #ifdef	AFS_SUN53_ENV
 	ap->l_pid = ttoproc(curthread)->p_pid;
@@ -1533,9 +1544,16 @@ struct cred *credp;
     return EINVAL;
 }
 
-int  afs_dumpctl(vp, i)
+int  afs_dumpctl(vp, i
+#ifdef AFS_SUN59_ENV
+		 , blkp
+#endif
+		 )
 struct vnode *vp;
 int i;
+#ifdef AFS_SUN59_ENV
+int *blkp;
+#endif
 {
     afs_warn("afs_dumpctl: Not implemented\n");
     return EINVAL;

@@ -317,12 +317,12 @@ tagain:
     osi_dnlc_remove ( adp, aname, tvc);
     if (tvc) afs_symhint_inval(tvc);
 
-    Tadp1 = adp; Tadpr = adp->vrefCount; Ttvc = tvc; Tnam = aname; Tnam1 = 0;
-    if (tvc) Ttvcr = tvc->vrefCount;
+    Tadp1 = adp; Tadpr = VREFCOUNT(adp); Ttvc = tvc; Tnam = aname; Tnam1 = 0;
+    if (tvc) Ttvcr = VREFCOUNT(tvc);
 #ifdef	AFS_AIX_ENV
-    if (tvc && (tvc->vrefCount > 2) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
+    if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
 #else
-    if (tvc && (tvc->vrefCount > 1) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
+    if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
 #endif
 	char *unlname = newname();
 

@@ -113,6 +113,14 @@ RCSID("$Header$");
 #include <sys/vfs.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+
 #include <netinet/in.h>
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
@@ -231,6 +239,7 @@ static int enable_process_stats = 0;	/* enable rx stats */
 #ifdef AFS_AFSDB_ENV
 static int enable_afsdb = 0;		/* enable AFSDB support */
 #endif
+static int enable_dynroot = 0;		/* enable dynroot support */
 #ifdef notdef
 static int inodes = 60;		        /* VERY conservative, but has to be */
 #endif
@@ -1058,6 +1067,10 @@ static AfsdbLookupHandler()
     struct afsconf_cell acellInfo;
     int i;
 
+    kernelMsg[0] = 0;
+    kernelMsg[1] = 0;
+    acellName[0] = '\0';
+
     while (1) {
 	/* On some platforms you only get 4 args to an AFS call */
 	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
@@ -1066,6 +1079,9 @@ static AfsdbLookupHandler()
 	    sleep(1);
 	    continue;
 	}
+
+	if (*acellName == 1)	/* Shutting down */
+	    break;
 
 	code = afsconf_GetAfsdbInfo(acellName, 0, &acellInfo);
 	if (code) {
@@ -1079,8 +1095,12 @@ static AfsdbLookupHandler()
 		kernelMsg[1] = 0;
 	    for (i=0; i<acellInfo.numServers; i++)
 		kernelMsg[i+2] = acellInfo.hostAddr[i].sin_addr.s_addr;
+	    strncpy(acellName, acellInfo.name, sizeof(acellName));
+	    acellName[sizeof(acellName) - 1] = '\0';
 	}    
     }
+
+    exit(1);
 }
 #endif
 
@@ -1287,6 +1307,10 @@ mainproc(as, arock)
 	} else {
 	    nFilesPerDir = res;
 	}
+    }
+    if (as->parms[26].items) {
+	/* -dynroot */
+	enable_dynroot = 1;
     }
 
     /*
@@ -1518,6 +1542,14 @@ mainproc(as, arock)
 	}
     }
 #endif
+
+    if (enable_dynroot) {
+	if (afsd_verbose)
+	    printf("%s: Enabling dynroot support in kernel.\n", rn);
+	code = call_syscall(AFSOP_SET_DYNROOT, 1);
+	if (code)
+	    printf("%s: Error enabling dynroot support.\n", rn);
+    }
 
     /* Initialize AFS daemon threads. */
     if (afsd_verbose)
@@ -1870,6 +1902,7 @@ char **argv; {
 #endif
 		), "Enable AFSDB support");
     cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL, "log(2) of the number of cache files per cache subdirectory");
+    cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL, "Enable dynroot support");
     return (cmd_Dispatch(argc, argv));
 }
 
@@ -1951,6 +1984,16 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 long param1, param2, param3, param4, param5, param6, param7;
 {
     int error;
+#ifdef AFS_LINUX20_ENV
+    long eparm[4];
+
+    eparm[0] = param4;
+    eparm[1] = param5;
+    eparm[2] = param6;
+    eparm[3] = param7;
+
+    param4 = eparm;
+#endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);
     if (afsd_verbose) printf("SScall(%d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, error);

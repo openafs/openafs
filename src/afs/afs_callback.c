@@ -157,7 +157,7 @@ int SRXAFSCB_GetCE(a_call, a_index, a_result)
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
-    a_result->refCount = tvc->vrefCount;
+    a_result->refCount = VREFCOUNT(tvc);
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;

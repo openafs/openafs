@@ -81,8 +81,8 @@
 #define vfs_fsid	mnt_stat.f_fsid
 #define va_nodeid	va_fileid
 #define vfs_vnodecovered mnt_vnodecovered
-#define direct		dirent
 #define vnode_t		struct vnode
+#define setgroups	sys_setgroups
 
 #ifndef MUTEX_DEFAULT
 #define MUTEX_DEFAULT   0

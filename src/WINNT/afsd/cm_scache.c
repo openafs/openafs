@@ -43,6 +43,10 @@ osi_rwlock_t cm_scacheLock;
 /* Dummy scache entry for use with pioctl fids */
 cm_scache_t cm_fakeSCache;
 
+#ifdef AFS_FREELANCE_CLIENT
+extern osi_mutex_t cm_Freelance_Lock;
+#endif
+
 /* must be called with cm_scacheLock write-locked! */
 void cm_AdjustLRU(cm_scache_t *scp)
 {
@@ -236,11 +240,16 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         long code;
         cm_volume_t *volp;
         cm_cell_t *cellp;
+	char* mp;
+	int special; // yj: boolean variable to test if file is on root.afs
+	int isRoot;
         
         hash = CM_SCACHE_HASH(fidp);
         
 	osi_assert(fidp->cell != 0);
 
+	// yj: check if we have the scp, if so, we don't need
+	// to do anything else
         lock_ObtainWrite(&cm_scacheLock);
 	for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
 		if (cm_FidCmp(fidp, &scp->fid) == 0) {
@@ -252,18 +261,85 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
                 }
         }
         
-        /* otherwise, we need to find the volume */
-        lock_ReleaseWrite(&cm_scacheLock);	/* for perf. reasons */
-        cellp = cm_FindCellByID(fidp->cell);
-        if (!cellp) return CM_ERROR_NOSUCHCELL;
+	// yj: when we get here, it means we don't have an scp
+	// so we need to either load it or fake it, depending
+	// on whether the file is "special", see below.
 
-        code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
-        if (code) return code;
+	// yj: if we're trying to get an scp for a file that's
+	// on root.afs of homecell, we want to handle it specially
+	// because we have to fill in the status stuff 'coz we
+	// don't want trybulkstat to fill it in for us
+#ifdef AFS_FREELANCE_CLIENT
+	special = (fidp->cell==0x1 && fidp->volume==0x20000001 && 
+			   !(fidp->vnode==0x1 && fidp->unique==0x1));
+	isRoot = (fidp->cell==0x1 && fidp->volume==0x20000001 && 
+			   fidp->vnode==0x1 && fidp->unique==0x1);
+	if (cm_freelanceEnabled && isRoot) {
+          /* freelance: if we are trying to get the root scp for the first
+             time, we will just put in a place holder entry. */
+	  volp = NULL;
+	}
+	  
+	if (cm_freelanceEnabled && special) {
+	  /*afsi_log("cm_getscache: special"); */
+	        lock_ObtainMutex(&cm_Freelance_Lock);
+		mp =(cm_localMountPoints+fidp->vnode-2)->mountPointStringp;
+		lock_ReleaseMutex(&cm_Freelance_Lock);
+		
+		scp = cm_GetNewSCache();
+		
+		scp->fid = *fidp;
+		scp->volp = cm_rootSCachep->volp;
+		if (scp->dotdotFidp == (cm_fid_t *) NULL)
+			scp->dotdotFidp = (cm_fid_t *) malloc (sizeof(cm_fid_t));
+		scp->dotdotFidp->cell=0x1;
+		scp->dotdotFidp->volume=0x20000001;
+		scp->dotdotFidp->unique=1;
+		scp->dotdotFidp->vnode=1;
+		scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
+		scp->nextp=cm_hashTablep[hash];
+		cm_hashTablep[hash]=scp;
+		scp->flags |= CM_SCACHEFLAG_INHASH;
+		scp->refCount = 1;
+		scp->fileType = CM_SCACHETYPE_MOUNTPOINT;
+
+		lock_ObtainMutex(&cm_Freelance_Lock);
+		scp->length.LowPart = strlen(mp)+4;
+		scp->mountPointStringp=malloc(strlen(mp));
+		strcpy(scp->mountPointStringp,mp);
+		lock_ReleaseMutex(&cm_Freelance_Lock);
+
+		scp->owner=0x0;
+		scp->unixModeBits=0x1ff;
+		scp->clientModTime=0x3b49f6e2;
+		scp->serverModTime=0x3b49f6e2;
+		scp->parentUnique = 0x1;
+		scp->parentVnode=0x1;
+		scp->group=0;
+		scp->dataVersion=0x8;
+		*outScpp = scp;
+		lock_ReleaseWrite(&cm_scacheLock);
+		/*afsi_log("   getscache done");*/
+		return 0;
+
+	}
+	// end of yj code
+#endif /* AFS_FREELANCE_CLIENT */
+
+        /* otherwise, we need to find the volume */
+	if (!cm_freelanceEnabled || !isRoot) {
+	  lock_ReleaseWrite(&cm_scacheLock);	/* for perf. reasons */
+	  cellp = cm_FindCellByID(fidp->cell);
+	  if (!cellp) return CM_ERROR_NOSUCHCELL;
+
+	  code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
+	  if (code) return code;
+          lock_ObtainWrite(&cm_scacheLock);
+	}
         
         /* otherwise, we have the volume, now reverify that the scp doesn't
          * exist, and proceed.
          */
-        lock_ObtainWrite(&cm_scacheLock);
 	for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
 		if (cm_FidCmp(fidp, &scp->fid) == 0) {
 			scp->refCount++;
@@ -281,20 +357,22 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	scp->fid = *fidp;
 	scp->volp = volp;	/* a held reference */
 
-	/* if this scache entry represents a volume root then we need 
-	 * to copy the dotdotFipd from the volume structure where the 
-	 * "master" copy is stored (defect 11489)
-	 */
-	if(scp->fid.vnode == 1 && scp->fid.unique == 1 && volp->dotdotFidp) {
-	        if (scp->dotdotFidp == (cm_fid_t *) NULL)
-		        scp->dotdotFidp = (cm_fid_t *) malloc(sizeof(cm_fid_t));
-		*(scp->dotdotFidp) = *volp->dotdotFidp;
+	if (!cm_freelanceEnabled || !isRoot) {
+	  /* if this scache entry represents a volume root then we need 
+	   * to copy the dotdotFipd from the volume structure where the 
+	   * "master" copy is stored (defect 11489)
+	   */
+	  if(scp->fid.vnode == 1 && scp->fid.unique == 1 && volp->dotdotFidp) {
+	    if (scp->dotdotFidp == (cm_fid_t *) NULL)
+	      scp->dotdotFidp = (cm_fid_t *) malloc(sizeof(cm_fid_t));
+	    *(scp->dotdotFidp) = *volp->dotdotFidp;
+	  }
+	  
+	  if (volp->roID == fidp->volume)
+	    scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
+	  else if (volp->bkID == fidp->volume)
+	    scp->flags |= CM_SCACHEFLAG_RO;
 	}
-
-	if (volp->roID == fidp->volume)
-		scp->flags |= (CM_SCACHEFLAG_PURERO | CM_SCACHEFLAG_RO);
-	else if (volp->bkID == fidp->volume)
-               	scp->flags |= CM_SCACHEFLAG_RO;
 	scp->nextp = cm_hashTablep[hash];
 	cm_hashTablep[hash] = scp;
         scp->flags |= CM_SCACHEFLAG_INHASH;
@@ -504,7 +582,16 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
                         	goto sleep;
                 }
 
-                if (flags & CM_SCACHESYNC_NEEDCALLBACK) {
+		// yj: modified this so that callback only checked if we're
+		// not checking something on /afs
+		if (  (flags & CM_SCACHESYNC_NEEDCALLBACK)
+#ifdef AFS_FREELANCE_CLIENT
+			&& (!cm_freelanceEnabled || !(!(scp->fid.vnode==0x1 &&
+				                         scp->fid.unique==0x1) &&
+				                         scp->fid.cell==0x1 &&
+				                         scp->fid.volume==0x20000001))
+#endif /* AFS_FREELANCE_CLIENT */
+		    ) {
 			if (!cm_HaveCallback(scp)) {
 				osi_Log1(afsd_logp, "CM SyncOp getting callback on scp %x",
                                 	(long) scp);
@@ -703,6 +790,31 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, long flags)
 void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 	cm_user_t *userp, int flags)
 {
+	// yj: i want to create some fake status for the /afs directory and the
+	// entries under that directory
+#ifdef AFS_FREELANCE_CLIENT
+	if (cm_freelanceEnabled && scp == cm_rootSCachep) {
+		statusp->InterfaceVersion = 0x1;
+		statusp->FileType = 0x2;
+		statusp->LinkCount = scp->linkCount;
+		statusp->Length = cm_fakeDirSize;
+		statusp->DataVersion = cm_fakeDirVersion;
+		statusp->Author = 0x1;
+		statusp->Owner = 0x0;
+		statusp->CallerAccess = 0x9;
+		statusp->AnonymousAccess = 0x9;
+		statusp->UnixModeBits = 0x1ff;
+		statusp->ParentVnode = 0x1;
+		statusp->ParentUnique = 0x1;
+		statusp->SegSize = 0;
+		statusp->ClientModTime = 0x3b49f6e2;
+		statusp->ServerModTime = 0x3b49f6e2;
+		statusp->Group = 0;
+		statusp->SyncCounter = 0;
+		statusp->dataVersionHigh = 0;
+	}
+#endif /* AFS_FREELANCE_CLIENT */
+
 	if (!(flags & CM_MERGEFLAG_FORCE)
                	&& statusp->DataVersion < (unsigned long) scp->dataVersion) {
 		struct cm_cell *cellp;

@@ -35,7 +35,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 
 #include "krb.h"
 #include "krb_prot.h"
-#include <crypt.h>
+/*#include <crypt.h>*/
 #include <afs/prs_fs.h>
 
 #include <osi.h>
@@ -60,6 +60,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_ioctl.h"
 #include "cm_dnlc.h"
 #include "cm_buf.h"
+#include "cm_freelance.h"
 #ifdef DJGPP
 #include "afs/afsmsg95.h"
 #endif
@@ -95,5 +96,31 @@ extern char cm_CachePath[];
 extern BOOL isGateway;
 
 extern BOOL reportSessionStartups;
+
+#ifdef AFS_FREELANCE_CLIENT
+
+// yj: Variables used by Freelance Client
+extern char *cm_FakeRootDir;						// the fake root.afs directory
+
+extern int cm_noLocalMountPoints;					// no. of fake mountpoints
+
+extern cm_localMountPoint_t* cm_localMountPoints;	// array of fake mountpoints
+
+extern int cm_fakeDirSize;							// size (in bytes) of fake root.afs directory
+
+extern int cm_fakeDirCallback;						// state of the fake root.afs directory. indicates
+													// if it needs to be refreshed
+
+extern int cm_fakeGettingCallback;					// 1 if currently updating the fake root.afs directory,
+													// 0 otherwise
+
+extern int cm_fakeDirVersion;						// the version number of the root.afs directory. used 
+													// invalidate all the buffers containing root.afs data
+													// after reinitialization
+// ------------------------------------------
+#endif /* AFS_FREELANCE_CLIENT */
+
+extern int cm_dnsEnabled;
+extern int cm_freelanceEnabled;
 
 #endif /* AFSD_H_ENV */

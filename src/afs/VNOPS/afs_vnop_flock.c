@@ -831,7 +831,7 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
     if (code) {
 	return(0);              /* failed, say it is 'unlocked' */
     } else {
-	return((int)OutStatus.spare2);
+	return((int)OutStatus.lockCount);
     }
 }
 #endif

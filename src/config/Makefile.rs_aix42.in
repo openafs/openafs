@@ -35,7 +35,3 @@ MV=mv
 RANLIB=ranlib
 RM=rm
 INSTALL=${TOP_SRCDIR}/pinstall/pinstall
-#
-# This is the XBSA make flag and pathname to XBSA header files (xbsa.h)
-XBSA_FLAGS=-Dxbsa
-XBSADIR=/usr/tivoli/tsm/client/api/bin/xopen

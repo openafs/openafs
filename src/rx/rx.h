@@ -224,6 +224,9 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_SetConnAbortThreshold(A) (rxi_connAbortThreshhold = (A))
 #define rx_SetConnAbortDelay(A) (rxi_connAbortDelay = (A))
 
+#define rx_GetCallAbortCode(call) ((call)->abortCode)
+#define rx_SetCallAbortCode(call, code) ((call)->abortCode = (code))
+
 #define cpspace(call) ((call)->curlen)
 #define cppos(call) ((call)->curpos)
 
@@ -291,7 +294,7 @@ struct rx_securityClass {
     int refCount;
 };
 
-#define RXS_OP(obj,op,args) ((obj->ops->op_ ## op) ? (*(obj)->ops->op_ ## op)args : 0)
+#define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
 
 #define RXS_Close(obj) RXS_OP(obj,Close,(obj))
 #define RXS_NewConnection(obj,conn) RXS_OP(obj,NewConnection,(obj,conn))

@@ -39,8 +39,8 @@ struct PageHeader
     };
 
 struct DirHeader
-    {/* A directory header object.
-     */struct PageHeader header;
+    {/* A directory header object. */
+    struct PageHeader header;
     char alloMap[MAXPAGES];    /* one byte per 2K page */
     unsigned short hashTable[NHASHENT];
     };

@@ -189,6 +189,7 @@ struct afs_cbr {
 #define	CNoSUID		    2	    /* 1 if no suid progs can run from this cell */
 #define CHasVolRef	   16	    /* Volumes were referenced in this cell*/
 #define CLinkedCell	   32
+#define CAlias		   64	    /* This cell entry is an alias */
 
 struct cell {
     struct afs_q lruq;			     /* lru q next and prev */
@@ -201,6 +202,7 @@ struct cell {
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
     time_t timeout;			    /* data expire time, if non-zero */
+    struct cell *alias;			    /* what this cell is an alias for */
 };
 
 #define	afs_PutCell(cellp, locktype)
@@ -521,6 +523,18 @@ struct SimpleLocks {
 #else
 #define vrefCount   v.v_usecount
 #endif /* AFS_FBSD_ENV */
+
+#ifdef AFS_LINUX24_ENV
+#define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
+#define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
+#define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
+#define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
+#else
+#define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
+#define VREFCOUNT_DEC(v)	(v)->vrefCount--;
+#define VREFCOUNT_INC(v)	(v)->vrefCount++;
+#endif
 
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
 #define	AFS_NOTRUNC 0x7fffffff	    /* largest dataversion number */
@@ -946,6 +960,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 
 extern struct cell	    *afs_GetCell();
 extern struct cell	    *afs_GetCellByName();
+extern struct cell	    *afs_GetCellByIndex();
 extern struct unixuser	    *afs_GetUser();
 extern struct volume	    *afs_GetVolume();
 extern struct volume	    *afs_GetVolumeByName();
@@ -977,6 +992,17 @@ extern void shutdown_cache();
 extern void afs_shutdown();
 /* afs_osifile.c */
 extern void shutdown_osifile();
+
+/* afs_dynroot.c */
+extern int afs_IsDynrootFid();
+extern void afs_GetDynrootFid();
+extern int afs_IsDynroot();
+extern void afs_RefreshDynroot();
+extern void afs_GetDynroot();
+extern void afs_PutDynroot();
+extern int afs_DynrootNewVnode();
+extern int afs_SetDynrootEnable();
+extern int afs_GetDynrootEnable();
 
 
 /* Performance hack - we could replace VerifyVCache2 with the appropriate
@@ -1036,6 +1062,7 @@ extern int afs_CacheTooFull;
  * afs_GetDownD wakes those processes once the cache is 95% full
  * (CM_CACHESIZEDRAINEDPCT).
  */
+extern void afs_MaybeWakeupTruncateDaemon();
 extern void afs_CacheTruncateDaemon();
 extern int afs_WaitForCacheDrain;
 #define CM_MAXDISCARDEDCHUNKS	16      /* # of chunks */
@@ -1050,19 +1077,6 @@ extern int afs_WaitForCacheDrain;
 	(CM_DCACHECOUNTFREEPCT*afs_cacheBlocks)/100 || \
      afs_freeDCCount - afs_discardDCCount < \
 	((100-CM_DCACHECOUNTFREEPCT)*afs_cacheFiles)/100)
-
-#define	afs_MaybeWakeupTruncateDaemon()	\
-    do { \
-	if (!afs_CacheTooFull && afs_CacheIsTooFull()) { \
-	    afs_CacheTooFull = 1; \
-            if (!afs_TruncateDaemonRunning) { \
-		afs_osi_Wakeup((char *)afs_CacheTruncateDaemon); \
-	    } \
-	} else if (!afs_TruncateDaemonRunning && \
-		   afs_blocksDiscarded > CM_MAXDISCARDEDCHUNKS) { \
-	    afs_osi_Wakeup((char *)afs_CacheTruncateDaemon); \
-	} \
-    } while (0)
 
 /* Handy max length of a numeric string. */
 #define	CVBS	12  /* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */

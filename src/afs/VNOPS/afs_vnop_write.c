@@ -909,7 +909,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	ReleaseWriteLock(&avc->lock);
     }
 #ifdef	AFS_OSF_ENV
-    if ((avc->vrefCount <= 2) && (avc->states & CUnlinked)) {
+    if ((VREFCOUNT(avc) <= 2) && (avc->states & CUnlinked)) {
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif

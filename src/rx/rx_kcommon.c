@@ -343,6 +343,7 @@ register struct rx_peer *pp;
     u_short rxmtu;
     afs_int32 i, mtu;
 
+#ifndef AFS_SUN5_ENV
 #ifdef AFS_USERSPACE_IP_ADDR	
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
@@ -402,6 +403,30 @@ register struct rx_peer *pp;
       pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #endif/* else AFS_USERSPACE_IP_ADDR */
+#else /* AFS_SUN5_ENV */
+    mtu = rxi_FindIfMTU(pp->host);
+
+    if (mtu <= 0) {
+	pp->timeout.sec = 3;
+	/* pp->timeout.usec = 0; */
+	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+    } else {
+	pp->timeout.sec = 2;
+	/* pp->timeout.usec = 0; */
+	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
+    }
+
+    if (mtu > 0) {
+	/* Diminish the packet size to one based on the MTU given by
+	 * the interface. */
+	if (mtu > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
+	    rxmtu = mtu - RX_IPUDP_SIZE;
+	    if (rxmtu < pp->ifMTU) pp->ifMTU = rxmtu;
+	}
+    } else {   /* couldn't find the interface, so assume the worst */
+	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+    }
+#endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */
     pp->rateFlag = 2;   /* start timing after two full packets */
     pp->timeout.sec = 2;

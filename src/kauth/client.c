@@ -37,6 +37,13 @@ RCSID("$Header$");
 #include <winsock2.h>
 #include <crypt.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>

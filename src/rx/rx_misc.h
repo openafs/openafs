@@ -14,14 +14,10 @@
 #ifndef _RX_MISC_H_
 #define _RX_MISC_H_
 
-#ifndef	AFS_SUN5_ENV
 #define MISCMTU
 #define ADAPT_MTU
-#endif
 
-#if defined(AFS_SUN5_ENV) && !defined(KERNEL)
-#define MISCMTU
-#define ADAPT_MTU
+#if defined(AFS_SUN5_ENV)
 #include <sys/sockio.h>
 #include <sys/fcntl.h>
 #endif

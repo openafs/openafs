@@ -43,7 +43,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct inode *ip = (struct inode*)avc;
 
-    if (avc->vrefCount != 0)
+    if (VREFCOUNT(avc) != 0)
 	return EBUSY;
 
     if (avc->opens != 0)

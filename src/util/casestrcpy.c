@@ -12,6 +12,13 @@
 
 RCSID("$Header$");
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <ctype.h>
 #include <stddef.h>
 #include <stdarg.h>

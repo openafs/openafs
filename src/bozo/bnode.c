@@ -34,6 +34,11 @@ RCSID("$Header$");
 #include <afs/fileutil.h>
 #include "bnode.h"
 
+#ifdef AFS_AIX_ENV
+/* All known versions of AIX lack WCOREDUMP but this works */
+#define WCOREDUMP(x) ((x) & 0x80)
+#endif
+
 #define BNODE_LWP_STACKSIZE	(16 * 1024)
 
 int bnode_waiting = 0;
@@ -528,6 +533,12 @@ static int bproc() {
 			    RememberProcName(tp);
 			    tb->errorSignal = 0;
 			}
+			if (tp->coreName)
+			    bozo_Log("%s:%s exited with code %d",
+				tb->name, tp->coreName, tp->lastExit);
+			else
+			    bozo_Log("%s exited with code %d",
+				tb->name, tp->lastExit);
 		    }
 		    else {
 			/* Signal occurred, perhaps spurious due to shutdown request.
@@ -542,6 +553,14 @@ static int bproc() {
 			    tb->lastErrorExit = FT_ApproxTime();
 			    RememberProcName(tp);
 			}
+			if (tp->coreName)
+			    bozo_Log("%s:%s exited on signal %d%s",
+				tb->name, tp->coreName, tp->lastSignal,
+				WCOREDUMP(status) ? " (core dumped)" : "");
+			else
+			    bozo_Log("%s exited on signal %d%s",
+				tb->name, tp->lastSignal,
+				WCOREDUMP(status) ? " (core dumped)" : "");
 			SaveCore(tb, tp);
 		    }
 		    tb->lastAnyExit = FT_ApproxTime();

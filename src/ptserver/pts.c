@@ -833,7 +833,14 @@ int main (argc, argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
+#ifdef WIN32
+    WSADATA WSAjunk;
+#endif
 
+#ifdef WIN32
+    WSAStartup(0x0101, &WSAjunk);
+#endif
+    
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 

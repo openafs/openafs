@@ -31,6 +31,15 @@
 #define VICE_PARTITION_PREFIX	"/vicep"
 #define VICE_PREFIX_SIZE	(sizeof(VICE_PARTITION_PREFIX)-1)
 
+/* If a file by this name exists in a /vicepX directory, it means that
+ * this directory should be used as an AFS partition even if it's not
+ * on a separate partition (for instance if it's part of a large /).
+ * This feature only works with the NAMEI fileserver.
+ */
+#ifdef AFS_NAMEI_ENV
+#define VICE_ALWAYSATTACH_FILE	"AlwaysAttach"
+#endif
+
 /* For NT, the roles of "name" and "devName" are reversed. That is, "name"
  * refers to the drive letter name and "devName" refers to the /vicep style
  * or name. The reason for this is that a lot of places assume that "name"

@@ -44,6 +44,9 @@
 #define MAX_PATH 260
 
 osi_mutex_t cm_Afsdsbmt_Lock;
+#ifdef AFS_FREELANCE_CLIENT
+extern osi_mutex_t cm_Freelance_Lock;
+#endif
 
 extern afs_int32 cryptall;
 
@@ -1130,6 +1133,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         char fullCell[256];
 	char volume[256];
 	char cell[256];
+	int ttl;
 
 	cm_InitReq(&req);
         
@@ -1155,7 +1159,11 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	
 	        /* Get the full name for this cell */
 	        code = cm_SearchCellFile(cell, fullCell, 0, 0);
-		if (code)
+#ifdef AFS_AFSDB_ENV
+		if (code && cm_dnsEnabled)
+                  code = cm_SearchCellByDNS(cell, fullCell, &ttl, 0, 0);
+#endif
+		  if (code)
 			return CM_ERROR_NOSUCHCELL;
 	
 	        sprintf(mpInfo, "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
@@ -1164,6 +1172,14 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	        strcpy(mpInfo, ioctlp->inDatap);
         }
 
+#ifdef AFS_FREELANCE_CLIENT
+	if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+	  /* we are adding the mount point to the root dir., so call
+	     the freelance code to do the add. */
+	  code = cm_FreelanceAddMount(leaf, fullCell, volume);
+	  return code;
+	}
+#endif
 	/* create the symlink with mode 644.  The lack of X bits tells
          * us that it is a mount point.
          */
@@ -1854,9 +1870,9 @@ long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
 extern int afsd_shutdown(int);
 extern int afs_shutdown;
 
-long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp)
-{
+long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp) {
   afs_shutdown = 1;   /* flag to shut down */
   return 0;
 }
 #endif /* DJGPP */
+

@@ -61,11 +61,12 @@ sigvec(int sig, const struct sigvec* vec, struct sigvec* ovec)
 {
 	assert(0);
 }
-#endif  /* AFS_HPUX110_ENV */
+
 sigsetmask(int mask)
 {
 	assert(0);
 }
+#endif  /* AFS_HPUX110_ENV */
 
 /* converts string to integer */
 

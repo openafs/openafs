@@ -48,6 +48,9 @@ char cm_mountRoot[1024];
 DWORD cm_mountRootLen;
 int cm_logChunkSize;
 int cm_chunkSize;
+#ifdef AFS_FREELANCE_CLIENT
+char *cm_FakeRootDir;
+#endif /* freelance */
 
 int smb_UseV3;
 
@@ -81,6 +84,16 @@ cm_initparams_v1 cm_initParams;
  */
 
 HANDLE afsi_file;
+
+#ifdef AFS_AFSDB_ENV
+int cm_dnsEnabled = 1;
+#endif
+
+/*#ifdef AFS_FREELANCE_CLIENT
+extern int cm_freelanceEnabled;
+#endif*/
+
+void cm_InitFakeRootDir();
 
 void
 afsi_start()
@@ -167,6 +180,7 @@ int afsd_InitCM(char **reasonP)
 	HKEY parmKey;
 	DWORD dummyLen;
 	long code;
+	/*int freelanceEnabled;*/
 	WSADATA WSAjunk;
 
 	WSAStartup(0x0101, &WSAjunk);
@@ -392,6 +406,32 @@ int afsd_InitCM(char **reasonP)
 		afsi_log("Default SecurityLevel is clear");
 	}
 
+#ifdef AFS_AFSDB_ENV
+	dummyLen = sizeof(cm_dnsEnabled);
+	code = RegQueryValueEx(parmKey, "UseDNS", NULL, NULL,
+				(BYTE *) &cm_dnsEnabled, &dummyLen);
+	if (code == ERROR_SUCCESS) {
+		afsi_log("DNS %s be used to find AFS cell servers",
+			 cm_dnsEnabled ? "will" : "will not");
+	}
+	else {
+	  cm_dnsEnabled = 1;   /* default on */
+	}
+#endif /* AFS_AFSDB_ENV */
+
+#ifdef AFS_FREELANCE_CLIENT
+	dummyLen = sizeof(cm_freelanceEnabled);
+	code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
+				(BYTE *) &cm_freelanceEnabled, &dummyLen);
+	if (code == ERROR_SUCCESS) {
+		afsi_log("Freelance client feature %s activated",
+			 cm_freelanceEnabled ? "is" : "is not");
+	}
+	else {
+	  cm_freelanceEnabled = 0;  /* default off */
+	}
+#endif /* AFS_FREELANCE_CLIENT */
+
 	RegCloseKey (parmKey);
 
 	/* setup early variables */
@@ -497,20 +537,35 @@ int afsd_InitCM(char **reasonP)
 		return -1;
 	}
 
+#ifdef AFS_AFSDB_ENV
+	if (cm_InitDNS(cm_dnsEnabled) == -1)
+	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
+	afsi_log("cm_InitDNS %d", cm_dnsEnabled);
+#endif
+
 	code = cm_GetRootCellName(rootCellName);
 	afsi_log("cm_GetRootCellName code %d rcn %s", code,
 		 (code ? "<none>" : rootCellName));
-	if (code != 0) {
-        	*reasonP = "can't find root cell name in afsd.ini";
-		return -1;
+	if (code != 0 && !cm_freelanceEnabled) {
+	    *reasonP = "can't find root cell name in afsd.ini";
+	    return -1;
+        }
+        else if (cm_freelanceEnabled)
+          cm_rootCellp = NULL;
+
+        if (code == 0 && !cm_freelanceEnabled) {
+	  cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
+          afsi_log("cm_GetCell addr %x", cm_rootCellp);
+	  if (cm_rootCellp == NULL) {
+	    *reasonP = "can't find root cell in afsdcell.ini";
+	    return -1;
+	  }
 	}
 
-	cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-	afsi_log("cm_GetCell addr %x", cm_rootCellp);
-	if (cm_rootCellp == NULL) {
-		*reasonP = "can't find root cell in afsdcell.ini";
-		return -1;
-	}
+#ifdef AFS_FREELANCE_CLIENT
+	if (cm_freelanceEnabled)
+	  cm_InitFreelance();
+#endif
 
 	return 0;
 }
@@ -524,19 +579,26 @@ int afsd_InitDaemons(char **reasonP)
 
 	/* this should really be in an init daemon from here on down */
 
-	code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,		&req, CM_FLAG_CREATE, &cm_rootVolumep);
-	afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-		 (code ? 0xffffffff : cm_rootVolumep));
-	if (code != 0) {
-		*reasonP = "can't find root volume in root cell";
-		return -1;
+        if (!cm_freelanceEnabled) {
+          code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
+                                    &req, CM_FLAG_CREATE, &cm_rootVolumep);
+          afsi_log("cm_GetVolumeByName code %x root vol %x", code,
+                   (code ? 0xffffffff : cm_rootVolumep));
+          if (code != 0) {
+            *reasonP = "can't find root volume in root cell";
+            return -1;
+          }
         }
 
-        /* compute the root fid */
-	cm_rootFid.cell = cm_rootCellp->cellID;
-        cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
-        cm_rootFid.vnode = 1;
-        cm_rootFid.unique = 1;
+	/* compute the root fid */
+	if (!cm_freelanceEnabled) {
+	  cm_rootFid.cell = cm_rootCellp->cellID;
+	  cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
+	  cm_rootFid.vnode = 1;
+	  cm_rootFid.unique = 1;
+	}
+	else
+	  cm_FakeRootFid(&cm_rootFid);
         
         code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
 	afsi_log("cm_GetSCache code %x scache %x", code,
@@ -575,3 +637,4 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 
 	return 0;
 }
+

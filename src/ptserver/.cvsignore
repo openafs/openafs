@@ -16,3 +16,4 @@ ptserver
 readgroup
 readpwd
 testpt
+ptclient

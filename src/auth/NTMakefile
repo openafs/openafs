@@ -74,7 +74,8 @@ EXELIBS =\
 	$(EXELIBDIR)\afslwp.lib \
 	$(EXELIBDIR)\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(EXELIBDIR)\afs\afsreg.lib
+	$(EXELIBDIR)\afs\afsreg.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)

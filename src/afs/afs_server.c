@@ -801,10 +801,13 @@ void afs_SortServers(struct server *aservers[], int count)
     for (i=0; i<count; i++) {
        if (!aservers[i]) break;
        for (low=i,j=i+1; j<=count; j++) {
-	  if (!aservers[j]) break;
-	  if (aservers[j]->addr->sa_iprank < aservers[low]->addr->sa_iprank) {
-	     low = j;
-	  }
+	   if ((!aservers[j]) || (!aservers[j]->addr)) 
+	       break;
+	   if ((!aservers[low]) || (!aservers[low]->addr))
+	       break;
+	   if (aservers[j]->addr->sa_iprank < aservers[low]->addr->sa_iprank) {
+	       low = j;
+	   }
        }
        if (low != i) {
 	  ts = aservers[i]; 
@@ -1084,6 +1087,10 @@ static afs_SetServerPrefs(sa)
 
     if (sa) sa->sa_iprank= 0;
     for (ill = (struct ill_s *)*addr /*ill_g_headp*/; ill; ill = ill->ill_next ) {
+#ifdef AFS_SUN58_ENV
+	/* Make sure this is an IPv4 ILL */
+	if (ill->ill_isv6) continue;
+#endif
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next ) {
 	    subnet = ipif->ipif_local_addr & ipif->ipif_net_mask;
 	    subnetmask = ipif->ipif_net_mask;

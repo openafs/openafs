@@ -36,7 +36,7 @@ char rxi_tracename[80]="/tmp/rxcalltrace";
 #else
 char rxi_tracename[80]="\0Change This pathname (and preceding NUL) to initiate tracing";
 #endif
-int rxi_logfd = 0;
+int rxi_logfd = -1;
 char rxi_tracebuf[4096];
 afs_uint32 rxi_tracepos = 0;
 
@@ -52,7 +52,7 @@ struct rx_trace {
 
 void rxi_flushtrace()
 {
-    if (rxi_logfd)
+    if (rxi_logfd >= 0)
 	write(rxi_logfd, rxi_tracebuf, rxi_tracepos);
     rxi_tracepos = 0;
 }
@@ -67,9 +67,9 @@ void rxi_calltrace(event, call)
   if (!rxi_tracename[0])
     return;
 
-  if (!rxi_logfd) {
+  if (rxi_logfd < 0) {
     rxi_logfd = open(rxi_tracename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-    if (!rxi_logfd)
+    if (rxi_logfd < 0)
       rxi_tracename[0] = '\0';
   }
   clock_GetTime(&now);
@@ -153,7 +153,7 @@ char **argv;
   }
 
   rxi_logfd = open(rxi_tracename, O_RDONLY);
-  if (!rxi_logfd) {
+  if (rxi_logfd < 0) {
     perror("");
     exit(errno);
   }

@@ -353,7 +353,7 @@ extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
  * CForeign bit set.
  */
 struct vcache * BStvc = (struct vcache *) 0;
-void afs_DoBulkStat(adp, dirCookie, areqp)
+int afs_DoBulkStat(adp, dirCookie, areqp)
   struct vcache *adp;
   long dirCookie;
   struct vrequest *areqp;
@@ -397,6 +397,7 @@ void afs_DoBulkStat(adp, dirCookie, areqp)
     struct volume *volp=0;	/* volume ptr */
     struct VenusFid dotdot;
     int	flagIndex;		/* First file with bulk fetch flag set */
+    int inlinebulk=0;           /* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS
 
     /* first compute some basic parameters.  We dont want to prefetch more
@@ -607,8 +608,16 @@ tagain:
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
-	    code = RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
-				    &volSync);
+	    code = RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
+					  &cbParm, &volSync);
+	    if (code == RXGEN_OPCODE) {
+		code = RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
+					&volSync);
+		inlinebulk=0;
+	    } else {
+		inlinebulk=1;
+	    }
+
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
@@ -680,6 +689,8 @@ tagain:
      * We also have to take into account racing token revocations.
      */
     for(i=0; i<fidIndex; i++) {
+	if ((&statsp[i])->errorCode) 
+	    continue;
 	afid.Cell = adp->fid.Cell;
 	afid.Fid.Volume = adp->fid.Fid.Volume;
 	afid.Fid.Vnode = fidsp[i].Vnode;
@@ -846,8 +857,20 @@ tagain:
     if ( volp )
 	afs_PutVolume(volp, READ_LOCK);
     
+    /* If we did the InlineBulk RPC pull out the return code */
+    if (inlinebulk) {
+	if ((&statsp[0])->errorCode) {
+	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp, 
+			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, 
+			(struct cell *)0);
+	    code = (&statsp[0])->errorCode;
+	}
+    } else {
+	code = 0;
+    }
     osi_FreeLargeSpace(statMemp);
     osi_FreeLargeSpace(cbfMemp);
+    return code;
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
@@ -885,6 +908,7 @@ afs_lookup(adp, aname, avcp, acred)
     char *tname = (char *)0;
     register struct vcache *tvc=0;
     register afs_int32 code;
+    register afs_int32 bulkcode = 0;
     int pass = 0, hit = 0;
     long dirCookie;
     extern afs_int32 afs_mariner;			/*Writing activity to log?*/
@@ -892,6 +916,7 @@ afs_lookup(adp, aname, avcp, acred)
     afs_hyper_t versionNo;
     int no_read_access = 0;
     struct sysname_info sysState;   /* used only for @sys checking */
+    int dynrootRetry = 1;
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
@@ -903,7 +928,7 @@ afs_lookup(adp, aname, avcp, acred)
     *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
 
     if (code = afs_InitReq(&treq, acred)) { 
-      goto done;
+	goto done;
     }
 
     /* come back to here if we encounter a non-existent object in a read-only
@@ -911,10 +936,12 @@ afs_lookup(adp, aname, avcp, acred)
 
   redo:
     *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
+    bulkcode = 0;
 
     if (!(adp->states & CStatd)) {
-	if (code = afs_VerifyVCache2(adp, &treq))
-	  goto done;
+	if (code = afs_VerifyVCache2(adp, &treq)) {
+	    goto done;
+	}
     }
     else code = 0;
 
@@ -947,7 +974,7 @@ afs_lookup(adp, aname, avcp, acred)
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
-	if (tvc && !tvc->vrefCount) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT1");
 	}
 	if (code) {
@@ -980,13 +1007,13 @@ afs_lookup(adp, aname, avcp, acred)
 	ObtainReadLock(&afs_xvcache);	
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);	
-      code = 0;
-      *avcp = tvc = adp;
-      hit = 1;
-	if (adp && !adp->vrefCount) {
+	code = 0;
+	*avcp = tvc = adp;
+	hit = 1;
+	if (adp && !VREFCOUNT(adp)) {
 	    osi_Panic("TT2");
 	}
-      goto done;
+	goto done;
     }
 
     Check_AtSys(adp, aname, &sysState, &treq);
@@ -1090,8 +1117,26 @@ afs_lookup(adp, aname, avcp, acred)
     }
     tname = sysState.name;
 
-    ReleaseReadLock(&adp->lock);
     afs_PutDCache(tdc);
+
+    if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
+	struct cell *tcell;
+
+	ReleaseReadLock(&adp->lock);
+	dynrootRetry = 0;
+	if (*tname == '.')
+	    tcell = afs_GetCellByName(tname + 1, READ_LOCK);
+	else
+	    tcell = afs_GetCellByName(tname, READ_LOCK);
+	if (tcell) {
+	    afs_PutCell(tcell, READ_LOCK);
+	    afs_RefreshDynroot();
+	    if (tname != aname && tname) osi_FreeLargeSpace(tname);
+	    goto redo;
+	}
+    } else {
+	ReleaseReadLock(&adp->lock);
+    }
 
     /* new fid has same cell and volume */
     tfid.Cell = adp->fid.Cell;
@@ -1110,7 +1155,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* prefetch some entries, if the dir is currently open.  The variable
      * dirCookie tells us where to start prefetching from.
      */
-    if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)) {
+    if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign) && !afs_IsDynroot(adp)) {
         afs_int32 retry;
 	/* if the entry is not in the cache, or is in the cache,
 	 * but hasn't been statd, then do a bulk stat operation.
@@ -1122,23 +1167,26 @@ afs_lookup(adp, aname, avcp, acred)
 	   ReleaseReadLock(&afs_xvcache);	
         } while (tvc && retry);
 
-	if (!tvc || !(tvc->states & CStatd)) {
-	    afs_DoBulkStat(adp, dirCookie, &treq);
-	}
+	if (!tvc || !(tvc->states & CStatd)) 
+	    bulkcode = afs_DoBulkStat(adp, dirCookie, &treq);
+	else 
+	    bulkcode = 0;
 
 	/* if the vcache isn't usable, release it */
 	if (tvc && !(tvc->states & CStatd)) {
 	    afs_PutVCache(tvc);
 	    tvc = (struct vcache *) 0;
 	}
+    } else {
+	tvc = (struct vcache *) 0;
+	bulkcode = 0;
     }
-    else tvc = (struct vcache *) 0;
-    
+
     /* now get the status info, if we don't already have it */
     /* This is kind of weird, but we might wind up accidentally calling
      * RXAFS_Lookup because we happened upon a file which legitimately
      * has a 0 uniquifier. That is the result of allowing unique to wrap
-     * to 0. This was fixed in AFS 3.4. For CForeigh, Unique == 0 means that
+     * to 0. This was fixed in AFS 3.4. For CForeign, Unique == 0 means that
      * the file has not yet been looked up.
      */
     if (!tvc) {
@@ -1147,10 +1195,10 @@ afs_lookup(adp, aname, avcp, acred)
 	    tvc = afs_LookupVCache(&tfid, &treq, &cached, WRITE_LOCK, 
 				   adp, tname);
        } 
-       if (!tvc) {  /* lookup failed or wasn't called */
-	    tvc = afs_GetVCache(&tfid, &treq, &cached, (struct vcache*)0,
-				WRITE_LOCK);
-       }
+       if (!tvc && !bulkcode) {  /* lookup failed or wasn't called */
+	   tvc = afs_GetVCache(&tfid, &treq, &cached, (struct vcache*)0,
+			       WRITE_LOCK);
+       } 
     } /* if !tvc */
     } /* sub-block just to reduce stack usage */
 
@@ -1174,6 +1222,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    ReleaseWriteLock(&tvc->lock);
 
 	    if (code) {
+		afs_PutVCache(tvc, WRITE_LOCK);
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
 	    }
@@ -1225,7 +1274,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    }
 	}
 	*avcp = tvc;
-	if (tvc && !tvc->vrefCount) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT3");
 	}
 	code = 0;
@@ -1293,6 +1342,7 @@ done:
 #endif
 	}
     }
+    if (bulkcode) code = bulkcode; else 
     code = afs_CheckCode(code, &treq, 19);
     if (code) {
        /* If there is an error, make sure *avcp is null.

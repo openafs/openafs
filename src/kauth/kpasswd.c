@@ -28,6 +28,13 @@ RCSID("$Header$");
 #ifndef AFS_NT40_ENV
 #include <pwd.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <signal.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
@@ -240,8 +247,10 @@ CommandProc (as, arock)
     code = ka_Init(0);
     if (code ||
 	!(lcell = ka_LocalCell())) {
+#ifndef AFS_FREELANCE_CLIENT
 	if (!Pipe) com_err (rn, code , "Can't get local cell name!");
 	exit (1);
+#endif
     }
 
     code = rx_Init(0);
@@ -346,7 +355,15 @@ CommandProc (as, arock)
 	memset(as->parms[aNEWPASSWORD].items->data, 0, strlen(as->parms[aNEWPASSWORD].items->data));
     }
 
+#ifdef AFS_FREELANCE_CLIENT
+    if (!foundExplicitCell && !lcell) {
+	if (!Pipe) com_err (rn, code, "no cell name provided");
+        exit(1);
+    }
+#else
     if (!foundExplicitCell) strcpy (realm, lcell);
+#endif /* freelance */
+    
     if (code = ka_CellToRealm (realm, realm, &local)) {
 	if (!Pipe) com_err (rn, code, "Can't convert cell to realm");
 	exit (1);

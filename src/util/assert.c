@@ -10,6 +10,10 @@
 /* ReallyAbort:  called from assert. May/85 */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <stdlib.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 RCSID("$Header$");
 
@@ -25,7 +29,14 @@ void afs_NTAbort(void)
 
 void AssertionFailed(char *file, int line)
 {
-    fprintf(stderr, "Assertion failed! file %s, line %d.\n", file, line);
+    char tdate[26];
+    time_t when;
+
+    time(&when);
+    strcpy(tdate, ctime(&when));
+    tdate[24] = '0';
+    fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n",
+	tdate, file, line);
     fflush(stderr);
 #ifdef AFS_NT40_ENV
     afs_NTAbort();

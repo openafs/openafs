@@ -19,6 +19,13 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -58,7 +65,7 @@ SDISK_Begin(rxcall, atid)
 {
     register afs_int32 code;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
     DBHOLD(ubik_dbase);
@@ -87,7 +94,7 @@ SDISK_Commit(rxcall, atid)
     register afs_int32 code;
     register struct ubik_dbase *dbase;
     
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
 
@@ -125,7 +132,7 @@ SDISK_ReleaseLocks(rxcall, atid)
     register struct ubik_dbase *dbase;
     register afs_int32 code;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
 
@@ -161,7 +168,7 @@ SDISK_Abort(rxcall, atid)
     register afs_int32 code;
     register struct ubik_dbase *dbase;
     
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
 
@@ -200,7 +207,7 @@ SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
     register struct ubik_dbase *dbase;
     struct ubik_trans *ubik_thisTrans;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
     if (!ubik_currentTrans) {
@@ -249,7 +256,7 @@ SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
     struct ubik_iovec *iovec;
     char              *iobuf;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
     if (!ubik_currentTrans) {
@@ -296,7 +303,7 @@ SDISK_Write(rxcall, atid, afile, apos, adata)
     register afs_int32 code;
     register struct ubik_dbase *dbase;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
     if (!ubik_currentTrans) {
@@ -328,7 +335,7 @@ SDISK_Truncate(rxcall, atid, afile, alen)
     register afs_int32 code;
     register struct ubik_dbase *dbase;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
     if (!ubik_currentTrans) { 
@@ -357,7 +364,7 @@ SDISK_GetVersion(rxcall, aversion)
 {
     register afs_int32 code;
 
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
 
@@ -401,7 +408,7 @@ SDISK_GetFile(rxcall, file, version)
     afs_int32 tlen;
     afs_int32 length;
     
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       return code;
     }
 /* temporarily disabled because it causes problems for migration tool.  Hey, it's just
@@ -463,7 +470,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 
     /* send the file back to the requester */
     
-    if (code = ubik_CheckAuth(rxcall)) {
+    if ((code = ubik_CheckAuth(rxcall))) {
       goto failed;
     }
 
@@ -640,7 +647,7 @@ SDISK_SetVersion(rxcall, atid, oldversionp, newversionp)
   afs_int32               code=0;
   struct ubik_dbase   *dbase;
 
-  if (code = ubik_CheckAuth(rxcall)) {
+  if ((code = ubik_CheckAuth(rxcall))) {
      return(code);
   }
 

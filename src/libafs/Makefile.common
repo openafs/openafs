@@ -55,6 +55,7 @@ AFSAOBJS = \
 	afs_daemons.o	\
 	afs_dcache.o \
 	afs_dir.o		\
+	afs_dynroot.o		\
 	afs_init.o \
 	afs_lock.o	\
 	afs_mariner.o \
@@ -151,6 +152,8 @@ afs_cell.o: $(AFS)/afs_cell.c
 afs_conn.o: $(AFS)/afs_conn.c
 	$(CRULE2);
 afs_dcache.o: $(AFS)/afs_dcache.c
+	$(CRULE2);
+afs_dynroot.o: 	$(AFS)/afs_dynroot.c
 	$(CRULE2);
 afs_init.o: $(AFS)/afs_init.c
 	$(CRULE2);

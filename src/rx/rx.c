@@ -3460,7 +3460,7 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 
     /* if the ack packet has a receivelen field hanging off it,
      * update our state */
-    if ( np->length >= rx_AckDataSize(ap->nAcks) +sizeof(afs_int32)) {
+    if ( np->length >= rx_AckDataSize(ap->nAcks) + 2*sizeof(afs_int32)) {
       afs_uint32 tSize;
 
       /* If the ack packet has a "recommended" size that is less than 

@@ -9,26 +9,83 @@
 # AFS	Start and stop AFS components
 # 
 # 
-# chkconfig: 345 60 20
+# chkconfig: 35 60 20
 # description:  AFS is a distributed file system which provides location
 #		transparency, caching and secure authentication.
 #		Additional configuration can be done in the /etc/sysconfig/afs
 #		file. Read the documentation in that file for more information.
 #
+# The following section is used at least by SuSE insserv(8)
+### BEGIN INIT INFO
+# Provides: afs
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 3 5
+# Default-Stop: 0 1 2 6
+# Description:  AFS is a distributed file system which provides location
+#              transparency, caching and secure authentication.
+#              Additional configuration can be done in the /etc/sysconfig/afs
+#              file. Read the documentation in that file for more information.
+### END INIT INFO
+#
 # Note that AFS does not use a pid file in /var/run. It is turned off by
 # unmounting /afs.
 
 
-# Gather up options and post startup script name, if present
-if [ -f /etc/sysconfig/afs ]; then
-	. /etc/sysconfig/afs
+# check for special bootup functions
+if [ -f /etc/rc.d/init.d/functions ] ; then
+	. /etc/rc.d/init.d/functions
+	afs_rh=1
+else
+	# special (RedHat) functions not available...
+	# so I provide neccessary replacements (e.g. for SuSE)
+
+	function echo_failure () { echo -n " - failed." ; }
+
+	function echo_success () { echo -n " - successful." ; }
+
+	# these are hopefully all functions I use...
 fi
+
+runcmd() {
+   echo -n "$1 "
+   shift
+   if [ "$BOOTUP" = "color" ]; then
+      $* && echo_success || echo_failure
+   else
+      $*
+   fi
+   echo
+}
+
+SYSCNF=/etc/sysconfig/afs
+
+# Gather up options and post startup script name, if present
+if [ -f $SYSCNF ] ; then
+	. $SYSCNF
+fi
+
+CACHEINFO=${CACHEINFO:-/usr/vice/etc/cacheinfo}
+CACHE=${CACHEDIR:-/usr/vice/cache}
+AFS=${AFSDIR:-/afs}
 
 # is_on returns 1 if value of arg is "on"
 is_on() {
 	if  test "$1" = "on" ; then return 0
 	else return 1
-	fi
+        fi
+}
+
+on_network() {
+    ADDRS=`ifconfig -a | grep 'inet addr' | grep -v 127.0.0.1 | wc -l`
+    if [ "$ADDRS" = "" ]; then
+       echo afs: No interfaces with IP address 1>&2
+       return 1
+    elif [ $ADDRS = 0 ]; then
+       echo afs: No interfaces with IP address 1>&2
+       return 1
+    fi
+    return 0
 }
 
 # If choose_client can't correctly determine which client to use, set
@@ -106,7 +163,6 @@ set_prefix()
 	esac
 }
 
-
 MODLOADDIR=/usr/vice/etc/modload
 # load_client loads the AFS client module if it's not already loaded. 
 load_client() {
@@ -126,8 +182,48 @@ load_client() {
 	/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
 }
 
+generate_cacheinfo() {
+    if [ "$CACHESIZE" = "AUTOMATIC" ]; then
+	LINE=`df -k $CACHE | tail -1`
+	PART=`echo $LINE | awk '{ if ( ($NF != "/usr")  && ($NF != "/") ) print $NF; else print "NONE";}'`
+	if [ "$PART" = "NONE" ]; then
+	    echo "$CACHE or /usr/vice is not a separate partition"
+	    echo "you have to change the cachesize in $SYSCNF by hand"
+	    exit 1
+	else
+	    PARTSIZE=`echo $LINE | awk '{print $2}'`
+	    CACHESIZE=`echo $PARTSIZE | awk '{printf "%d",int(($1*.8)/1000)*1000}'`
+	fi
+    fi
+    if [ "x$CACHESIZE" != "x" ]; then
+	echo $AFS:$CACHE:$CACHESIZE >$CACHEINFO
+	chmod 0644 $CACHEINFO
+    else
+	CACHESIZE=`awk -F: '{print $3}' < $CACHEINFO`
+    fi
+}
+
+choose_afsdoptions() {
+	if [ -z "$OPTIONS" -o "$OPTIONS" = "AUTOMATIC" ]; then
+		if [ $CACHESIZE -lt 131072 ]; then
+			OPTIONS=$SMALL
+		elif [ $CACHESIZE -lt 524288 ]; then
+			OPTIONS=$MEDIUM
+		elif [ $CACHESIZE -lt 1048576 ]; then
+			OPTIONS=$LARGE
+		elif [ $CACHESIZE -lt 2097152 ]; then
+			OPTIONS=$XLARGE
+		else
+			OPTIONS=$XXLARGE
+		fi
+	fi
+	AFSD_OPTIONS="$OPTIONS $VERBOSE"
+}
+
 case "$1" in 
   start)
+    if [ ! "$afs_rh" -o ! -f /var/lock/subsys/afs ]; then
+	on_network || exit 1
 	# Load kernel extensions
 	if  load_client  ; then :
 	else
@@ -139,33 +235,36 @@ case "$1" in
 	# Start bosserver, it if exists
 	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
 		/usr/afs/bin/bosserver 
+		test "$afs_rh" && touch /var/lock/subsys/afs
 	fi
 
 	# Start AFS client
 	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
-		/usr/vice/etc/afsd ${OPTIONS}
-
-		# Start AFS version of inetd.conf if present.
-		if  test -f /usr/afsws/etc/inetd.conf -a -x /usr/afsws/etc/inetd.afs ; then
-			/usr/afsws/etc/inetd.afs /usr/afsws/etc/inetd.conf
-		fi
+		generate_cacheinfo
+		choose_afsdoptions
+		/usr/vice/etc/afsd ${AFSD_OPTIONS}
+		test "$afs_rh" && touch /var/lock/subsys/afs
 		$AFS_POST_INIT
 	fi
-
+    fi
 	;;
 
   stop)
+    if [ ! "$afs_rh" -o -f /var/lock/subsys/afs ]; then
 	# Stop AFS
 	echo "Stopping AFS services..... "
 
 	if  is_on $AFS_CLIENT  ; then
-		killall inetd.afs
+		if [ -x /usr/vice/etc/killafs ] ; then
+			runcmd "Sending all processes using /afs the TERM signal ..." /usr/vice/etc/killafs TERM
+			runcmd "Sending all processes using /afs the KILL signal ..." /usr/vice/etc/killafs KILL
+		fi
 		umount /afs
 	fi
 
-	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bos ; then
+	if  is_on $AFS_SERVER && test -x /usr/bin/bos ; then
 		echo "Stopping AFS bosserver"
-		/usr/afs/bin/bos shutdown localhost -localauth -wait
+		/usr/bin/bos shutdown localhost -localauth -wait
 		killall -HUP bosserver
 	fi
 
@@ -175,10 +274,21 @@ case "$1" in
 		/sbin/rmmod $LIBAFS
 	fi
 
+	rm -f /var/lock/subsys/afs
+    fi
+	;;
+
+  restart)
+	# Restart AFS
+	$0 stop
+	$0 start
 	;;
 
   *)
-	echo Usage: 'afs <start|stop>'
+	echo Usage: 'afs <start|stop|restart>'
 
 esac
 
+exit 0
+
+action fool the Red Hat initscripts

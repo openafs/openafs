@@ -180,9 +180,9 @@ void afs_CheckLocks()
 	for(i=0;i<VCSIZE;i++) {
 	    for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
 #ifdef	AFS_OSF_ENV
-		if (tvc->vrefCount > 1)
+		if (VREFCOUNT(tvc) > 1)
 #else	/* AFS_OSF_ENV */
-		if (tvc->vrefCount)
+		if (VREFCOUNT(tvc))
 #endif
 		    afs_warn("Stat cache entry at %x is held\n", tvc);
 		if (CheckLock(&tvc->lock))

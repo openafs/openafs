@@ -5,8 +5,6 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# */
-
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
 TOP_LIBDIR=@TOP_LIBDIR@
@@ -30,30 +28,21 @@ SHELL    =/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CC      =${MT_CC}
-CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS}
+BUTMOBJS    =file_tm.o
+BUTMLIBS    =libbutm.a
+BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
+BUTMINCLUDE =-I${TOP_INCDIR}
+
+CC      = ${MT_CC}
+CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE}
 
 LDFLAGS = ${DBG} ${XLDFLAGS}
 
-VICED   =../viced
-VLSERVER=../vlserver
 LWP     =../lwp
-LIBACL  =../libacl
-UTIL    =../util
-DIR     =../dir
-VOL     =../vol
-FSINT   =../fsint
 BUTM    =../butm
 BUTC    =../butc
 BUCOORD = ../bucoord
 VOLSER  = ../volser
-
-# ----------------------------------------------------------------
-# The default is to build butc without using the TSM API libraries. 
-# To build with TSM support, set XBSA_NOBUILD="". Be sure you have
-#  the TSM API version 3.7.1 installed.
-# ----------------------------------------------------------------
-XBSA_NOBUILD="true"
 
 BUCOORDOBJS=ubik_db_if.o ${BUCOORD}/volstub.o ${BUCOORD}/dlq.o \
 	    ${BUCOORD}/status.o ${BUCOORD}/bucoord_errs.o
@@ -61,18 +50,14 @@ BUCOORDOBJS=ubik_db_if.o ${BUCOORD}/volstub.o ${BUCOORD}/dlq.o \
 VOLSERLIBOBJ=${VOLSER}/volint.cs.o  vsprocs.o              ${VOLSER}/vsutils.o \
             ${VOLSER}/lockprocs.o  ${VOLSER}/volint.xdr.o ${VOLSER}/volerr.o \
             ${VOLSER}/volint.ss.o  AFS_component_version_number.o 
-VOLSERLIBS=libvolser.a
+VOLSERLIBS  =libvolser.a
 
-LWPOBJS    =lock.o
-
-BUTMOBJS   =file_tm.o
-BUTMLIBS   =libbutm.a
-BUTMINCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
-BUTMINCLUDE=-I${TOP_INCDIR}
+LWPOBJS     =lock.o
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
             ${LWPOBJS} ${BUCOORDOBJS}
+
 BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/volume.h \
 	    ${TOP_INCDIR}/afs/vlserver.h \
@@ -86,6 +71,7 @@ BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
 	    ${TOP_INCDIR}/afs/tcdata.h \
 	    ${TOP_INCDIR}/afs/bubasics.h \
 	    ${TOP_INCDIR}/afs/butm.h
+
 BUTCINCLUDE=-I. -I${TOP_INCDIR}
 BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libbubasics.a \
@@ -100,220 +86,84 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 	    ${TOP_LIBDIR}/libprocmgmt.a \
 	    ${TOP_LIBDIR}/librx.a
 
-include ../config/Makefile.version
+#
+# Build targets
+#
 
-#----------------------------------------------- BUTC
+all: butc
 
-butc: pre ${BUTCOBJS} ${BUTCLIBS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCOBJS} ${BUTCLIBS} $$hdrdir ${MTLIBS} ${XLIBS} -o butc
-
-dbentries.o: ${BUTC}/dbentries.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/dbentries.c
-
-tcprocs.o: ${BUTC}/tcprocs.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/tcprocs.c
-
-lwps.o: ${BUTC}/lwps.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/lwps.c
-
-tcmain.o: ${BUTC}/tcmain.c ${BUTCINCLS} AFS_component_version_number.c
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/tcmain.c
-
-list.o: ${BUTC}/list.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/list.c
-
-recoverDb.o: ${BUTC}/recoverDb.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/recoverDb.c
-
-tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/tcudbprocs.c
-
-dump.o: ${BUTC}/dump.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/dump.c
-
-tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/tcstatus.c
-
-butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUTC}/butc_xbsa.c
-
-#----------------------------------------------- BUCOORD
-
-ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${BUCOORD}/ubik_db_if.c
-
-#----------------------------------------------- VOLSER
-# Build the libvolser.a library here. The file compiled
-# for is is vsprocs.c. The rest are from the VOLSER dir.
+butc: ${BUTCOBJS} ${BUTCLIBS}
+	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MTLIBS} ${XLIBS} -o butc
 
 libvolser.a: vsprocs.o ${VOLSERLIBOBJ}
 	-$(RM) -f $@
 	$(AR) crv $@ vsprocs.o ${VOLSERLIBOBJ}
 	$(RANLIB) $@
 
-vsprocs.o: ${VOLSER}/vsprocs.c
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${VOLSER}/vsprocs.c
-
-#----------------------------------------------- LWP
-
-lock.o: ${LWP}/lock.c
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTCINCLUDE} $$hdrdir -c ${LWP}/lock.c
-
-#----------------------------------------------- BUTC
-
-file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir=-I"${XBSADIR}" ; \
-	else                               hdrdir=-I"${XBSA_HDRDIR}" ; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then hdrdir="" ; fi; \
-	${CC} ${CFLAGS} $$xbsaflags ${BUTMINCLUDE} $$hdrdir -c ${BUTM}/file_tm.c
-
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a
 	$(AR) crv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
 	${RANLIB} libbutm.a
 
-#-----------------------------------------------
-clean:
-	$(RM) -f *.o *.a core AFS_component_version_number.c butc
+dbentries.o: ${BUTC}/dbentries.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/dbentries.c
 
-pre:
-	if [ "${XBSA_NOBUILD}" = "" ]; then xbsaflags="${XBSA_FLAGS}" ; \
-	else                                xbsaflags=""; \
-	fi; \
-	if [ "$$xbsaflags" = "" ]; then \
-		echo 'Will not build with XBSA'; \
-	else \
-		if [ "${XBSA_HDRDIR}" = "" ]; then hdrdir="${XBSADIR}" ; \
-		else                               hdrdir="${XBSA_HDRDIR}" ; \
-		fi; \
-		if test "$$hdrdir" != "" -a ! -f "$$hdrdir/xbsa.h"; then \
-			echo '*** This build of butc cannot support XBSA because'; \
-			echo '*** the required header file "'$$hdrdir'/xbsa.h"'; \
-			echo '*** does not exist. If you know the pathname to the'; \
-			echo '*** header file, then use XBSA_HDRDIR="<path>" as a make'; \
-			echo '*** argument.'; \
-			echo '*** If you do not want to build an XBSA version of butc,'; \
-			echo '*** then use XBSA_NOBUILD="true" as a make argument.'; \
-			exit 2; \
-		else \
-			echo 'Will use XBSA header files from "'$$hdrdir'" (XBSA_HDRDIR)'; \
-		fi; \
-	fi
+tcprocs.o: ${BUTC}/tcprocs.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcprocs.c
 
-all: butc
+lwps.o: ${BUTC}/lwps.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/lwps.c
 
-install install.noversion:  ${DESTDIR}${sbindir}/butc
+tcmain.o: ${BUTC}/tcmain.c ${BUTCINCLS} AFS_component_version_number.c
+	${CC} ${CFLAGS} -c ${BUTC}/tcmain.c
 
-noversion: install
-system: install
+list.o: ${BUTC}/list.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/list.c
+
+recoverDb.o: ${BUTC}/recoverDb.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/recoverDb.c
+
+tcudbprocs.o: ${BUTC}/tcudbprocs.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcudbprocs.c
+
+dump.o: ${BUTC}/dump.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/dump.c
+
+tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/tcstatus.c
+
+butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
+	${CC} ${CFLAGS} -c ${BUTC}/butc_xbsa.c
+
+ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
+	${CC} ${CFLAGS} -c ${BUCOORD}/ubik_db_if.c
+
+vsprocs.o: ${VOLSER}/vsprocs.c
+	${CC} ${CFLAGS} -c ${VOLSER}/vsprocs.c
+
+lock.o: ${LWP}/lock.c
+	${CC} ${CFLAGS} -c ${LWP}/lock.c
+
+file_tm.o: ${BUTM}/file_tm.c ${BUTMINCLS}
+	${CC} ${CFLAGS} -c ${BUTM}/file_tm.c
+
+#
+# Install targets
+#
+install: ${DESTDIR}${sbindir}/butc
+dest: ${DEST}/etc/butc
+
 ${DEST}/etc/butc: butc
 	${INSTALL} $? $@
 
 ${DESTDIR}${sbindir}/butc: butc
 	${INSTALL} $? $@
 
+#
+# Misc targets
+#
+include ../config/Makefile.version
 
-dest:  ${DEST}/etc/butc
+clean:
+	$(RM) -f *.o *.a core AFS_component_version_number.c butc
 

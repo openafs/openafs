@@ -47,6 +47,14 @@ int cm_chunkSize;
 int afs_diskCacheChunks;
 char cm_cachePath[128];
 int cm_diskCacheEnabled = 0;
+#ifdef AFS_AFSDB_ENV
+extern int cm_dnsEnabled;
+#endif
+
+#ifdef AFS_FREELANCE_CLIENT
+extern int cm_freelanceEnabled;
+char *cm_FakeRootDir;
+#endif /* freelance */
 
 int smb_UseV3;
 
@@ -83,6 +91,7 @@ BOOL reportSessionStartups = FALSE;
 
 int afsd_debug;
 cm_initparams_v1 cm_initParams;
+
 
 /*
  * AFSD Initialization Log
@@ -555,6 +564,16 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
           afsi_log("Default disk cache size %d", diskCacheSize);
         }
 
+        if (as->parms[22].items) {
+           /* -noafsdb */
+           cm_dnsEnabled = 0;
+        }
+
+        if (as->parms[23].items) {
+           /* -freelance */
+           cm_freelanceEnabled = 1;
+        }
+
         if (ParseCacheInfoFile()) {
           exit(1);
         }
@@ -638,6 +657,13 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
         rx_StartServer(0);
 	afsi_log("rx_StartServer");
 
+#ifdef AFS_AFSDB_ENV
+	/* initialize dns lookup */
+	if (cm_InitDNS(cm_dnsEnabled) == -1)
+	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
+	afsi_log("cm_InitDNS %d", cm_dnsEnabled);
+#endif
+
 	/* init user daemon, and other packages */
 	cm_InitUser();
 
@@ -670,17 +696,26 @@ int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock)
 	code = cm_GetRootCellName(rootCellName);
 	afsi_log("cm_GetRootCellName code %d rcn %s", code,
 		 (code ? "<none>" : rootCellName));
-	if (code != 0) {
+	if (code != 0 && !cm_freelanceEnabled) {
         	*reasonP = "can't find root cell name in ThisCell";
 		return -1;
 	}
-
-	cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-	afsi_log("cm_GetCell addr %x", cm_rootCellp);
-	if (cm_rootCellp == NULL) {
-		*reasonP = "can't find root cell in CellServDB";
-		return -1;
+	else if (cm_freelanceEnabled)
+	  cm_rootCellp = NULL;
+	
+	if (code == 0 && !cm_freelanceEnabled) {
+	  cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
+	  afsi_log("cm_GetCell addr %x", cm_rootCellp);
+	  if (cm_rootCellp == NULL) {
+	    *reasonP = "can't find root cell in CellServDB";
+	    return -1;
+	  }
 	}
+
+#ifdef AFS_FREELANCE_CLIENT
+	if (cm_freelanceEnabled)
+	  cm_InitFreelance();
+#endif
 
 	return 0;
 }
@@ -694,19 +729,25 @@ int afsd_InitDaemons(char **reasonP)
 
 	/* this should really be in an init daemon from here on down */
 
-	code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,		&req, CM_FLAG_CREATE, &cm_rootVolumep);
-	afsi_log("cm_GetVolumeByName code %x root vol %x", code,
-		 (code ? 0xffffffff : cm_rootVolumep));
-	if (code != 0) {
-		*reasonP = "can't find root volume in root cell";
-		return -1;
-        }
+	if (!cm_freelanceEnabled) { 
+	  code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,		&req, CM_FLAG_CREATE, &cm_rootVolumep);
+	  afsi_log("cm_GetVolumeByName code %x root vol %x", code,
+		   (code ? 0xffffffff : cm_rootVolumep));
+	  if (code != 0) {
+	    *reasonP = "can't find root volume in root cell";
+	    return -1;
+	  }
+	}
 
         /* compute the root fid */
-	cm_rootFid.cell = cm_rootCellp->cellID;
-        cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
-        cm_rootFid.vnode = 1;
-        cm_rootFid.unique = 1;
+	if (!cm_freelanceEnabled) {
+	  cm_rootFid.cell = cm_rootCellp->cellID;
+	  cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
+	  cm_rootFid.vnode = 1;
+	  cm_rootFid.unique = 1;
+	}
+	else
+	  cm_FakeRootFid(&cm_rootFid);
         
         code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
 	afsi_log("cm_GetSCache code %x scache %x", code,
@@ -744,3 +785,4 @@ int afsd_InitSMB(char **reasonP)
 
 	return 0;
 }
+

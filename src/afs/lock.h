@@ -86,7 +86,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define BEGINMAC do {
 #define ENDMAC   } while (0)
 
-#if defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_OBSD_ENV)
 #define MyPidxx (curproc->p_pid)
 #else
 #if defined(AFS_AIX41_ENV)

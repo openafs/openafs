@@ -308,7 +308,7 @@ afsinit(struct vfssw *vfsswp, int fstype)
     if ( !nfs_checkauth ) afs_warn("nfs_checkauth not initialised");
 #endif
     ufs_iallocp = (int (*)()) modlookup("ufs", "ufs_ialloc");    
-    ufs_iupdatp = (int (*)()) modlookup("ufs", "ufs_iupdat");
+    ufs_iupdatp = (void (*)()) modlookup("ufs", "ufs_iupdat");
     ufs_igetp = (int (*)()) modlookup("ufs", "ufs_iget");    
     ufs_itimes_nolockp = (void (*)()) modlookup("ufs", "ufs_itimes_nolock");
     udp_infop = (struct streamtab *) modlookup("udp", "udpinfo");    

@@ -82,8 +82,10 @@ extern void osi_SleepSpin(long value, Crit_Sec *counterp);
 /* spin lock version of wakeup, used internally only */
 extern void osi_WakeupSpin(long value);
 
+#ifndef DJGPP
 /* exported function to sleep on a value */
 extern void osi_Sleep (long);
+#endif
 
 extern void osi_FreeSleepInfo(osi_sleepInfo_t *);
 

@@ -339,8 +339,13 @@ afs_osi_Write(afile, offset, aptr, asize)
         osi_Panic("afs_osi_Write called with null param");
     if (offset != -1) afile->offset = offset;
     AFS_GUNLOCK();
+#ifdef AFS_SUN59_ENV
+    code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+		  AFS_UIOSYS, 0, curproc->p_fsz_ctl.rlim_cur, &afs_osi_cred, &resid);
+#else
     code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
 		  AFS_UIOSYS, 0,  (u.u_rlimit[RLIMIT_FSIZE].rlim_cur), &afs_osi_cred, &resid);
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;

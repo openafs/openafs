@@ -23,6 +23,13 @@ RCSID("$Header$");
 #endif
 #include <time.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lock.h>

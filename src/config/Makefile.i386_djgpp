@@ -15,7 +15,7 @@ AFS_OSTYPE = DJGPP
 OPTMZ=-O2
 #PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
 # Put -O2 here to _ensure_ all Makefiles pick it up.
-XCFLAGS= ${DBG} -Dfds_bits=fd_bits
+XCFLAGS= ${DBG} -Dfds_bits=fd_bits -DAFS_AFSDB_ENV -DAFS_FREELANCE_CLIENT
 MT_CFLAGS=${XCFLAGS}
 XLDFLAGS=
 SHARE_LDFLAGS = -shared -Xlinker -x

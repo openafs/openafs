@@ -17,6 +17,16 @@ RCSID("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "des_internal.h"
 
 extern void gen PROTOTYPE((FILE * stream));

@@ -448,7 +448,7 @@ StreamHandle_t *stream_fdopen(FD_t fd)
 }
 
 /* Open a file for buffered I/O */
-StreamHandle_t *stream_open(char *filename, char *mode)
+StreamHandle_t *stream_open(const char *filename, const char *mode)
 {
     FD_t fd;
 

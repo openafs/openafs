@@ -48,9 +48,19 @@ RCSID("$Header$");
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/vice.h>
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 #include "auth.h"
 #include <afs/venus.h>

@@ -67,6 +67,7 @@ cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
 cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
 cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
+cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
@@ -79,6 +80,8 @@ const char *confdir;
 extern struct rx_connection *UV_Bind();
 extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int UV_SetSecurity();
+extern int UV_SetVolumeInfo();
+extern int vsu_SetCrypt();
 extern VL_SetLock();
 extern VL_ReleaseLock();
 extern VL_DeleteEntry();
@@ -1275,6 +1278,86 @@ register struct cmd_syndesc *as;
 }
 
 /*------------------------------------------------------------------------
+ * PRIVATE SetFields
+ *
+ * Description:
+ *	Routine used to change the status of a single volume.
+ *
+ * Arguments:
+ *	as : Ptr to parsed command line arguments.
+ *
+ * Returns:
+ *	0 for a successful operation,
+ *	Otherwise, one of the ubik or VolServer error values.
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------
+ */
+static SetFields(as)
+register struct cmd_syndesc *as;
+{
+    struct nvldbentry entry;
+    afs_int32 vcode = 0;
+    volintInfo info;
+    afs_int32 volid;
+    afs_int32 code, err;
+    afs_int32 aserver, apart;
+    int previdx = -1;
+
+    volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);    /* -id */
+    if (volid == 0) {
+	if (err) PrintError("", err);
+	else fprintf(STDERR, "Unknown volume ID or name '%s'\n", as->parms[0].items->data);
+	return -1;
+    }
+
+    code = VLDB_GetEntryByID (volid, RWVOL, &entry);
+    if (code) {
+	fprintf(STDERR, "Could not fetch the entry for volume number %u from VLDB \n",volid);
+	return (code);
+    }
+    MapHostToNetwork(&entry);
+
+    GetServerAndPart(&entry, RWVOL, &aserver, &apart, &previdx);
+    if (previdx == -1) {
+	fprintf(STDERR,"Volume %s does not exist in VLDB\n\n", as->parms[0].items->data);
+	return (ENOENT);
+    }
+
+    memset(&info, 0, sizeof(info));
+    info.volid    = volid;
+    info.type     = RWVOL;
+    info.dayUse   = -1;
+    info.maxquota = -1;
+    info.flags    = -1;
+    info.spare0   = -1;
+    info.spare1   = -1;
+    info.spare2   = -1;
+    info.spare3   = -1;
+
+    if (as->parms[1].items) {
+	/* -max <quota> */
+	code = util_GetInt32(as->parms[1].items->data, &info.maxquota);
+	if (code) {
+	    fprintf(STDERR,"invalid quota value\n");
+	    return code;
+	}
+    }
+    if (as->parms[2].items) {
+	/* -clearuse */
+	info.dayUse = 0;
+    }
+    code = UV_SetVolumeInfo(aserver, apart, volid, &info);
+    if (code)
+	fprintf(STDERR,"Could not update volume info fields for volume number %u\n",volid);
+    return (code);
+}
+
+/*------------------------------------------------------------------------
  * PRIVATE volOnline
  *
  * Description:
@@ -1882,7 +1965,7 @@ register struct cmd_syndesc *as;
 {    
         afs_int32 avolid, aserver, apart, code,vcode, err;
 	afs_int32 aoverwrite = ASK;
-	int restoreflags;
+	int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
 	char prompt;
 	char afilename[NameLen], avolname[VOLSER_MAXVOLNAME +1],apartName[10];
 	char volname[VOLSER_MAXVOLNAME +1];
@@ -1921,6 +2004,11 @@ register struct cmd_syndesc *as;
 			as->parms[5].items->data);
 		exit(1);
 	    }
+	}
+	if (as->parms[6].items) offline = 1;
+	if (as->parms[7].items) {
+	    readonly = 1;
+	    voltype = ROVOL;
 	}
 
 	aserver = GetServer(as->parms[0].items->data);
@@ -1968,17 +2056,19 @@ register struct cmd_syndesc *as;
 	        fprintf(STDERR,"Volume does not exist; Will perform a full restore\n");
 	}
 
-	else if (Lp_GetRwIndex(&entry) == -1) {	   /* RW volume does not exist - do a full */
-	   restoreflags = RV_FULLRST;
-	   if ( (aoverwrite == INC) || (aoverwrite == ABORT) )
-	      fprintf(STDERR,"RW Volume does not exist; Will perform a full restore\n");
+	else if ((!readonly && Lp_GetRwIndex(&entry) == -1)	   /* RW volume does not exist - do a full */
+	     ||  (readonly && !Lp_ROMatch(0, 0, &entry))) {	   /* RO volume does not exist - do a full */
+	    restoreflags = RV_FULLRST;
+	    if ( (aoverwrite == INC) || (aoverwrite == ABORT) )
+		fprintf(STDERR,"%s Volume does not exist; Will perform a full restore\n",
+			readonly ? "RO" : "RW");
 
-	   if (avolid == 0) {
-	      avolid = entry.volumeId[RWVOL];
-	   }
-	   else if (entry.volumeId[RWVOL] != 0  && entry.volumeId[RWVOL] != avolid) {
-	      avolid = entry.volumeId[RWVOL];
-	   }
+	    if (avolid == 0) {
+		avolid = entry.volumeId[voltype];
+	    }
+	    else if (entry.volumeId[voltype] != 0  && entry.volumeId[voltype] != avolid) {
+		avolid = entry.volumeId[voltype];
+	    }
 	}
 
 	else {                    /* volume exists - do we do a full incremental or abort */
@@ -1987,10 +2077,10 @@ register struct cmd_syndesc *as;
 	    char   c, dc;
 
 	    if(avolid == 0) {
-		avolid = entry.volumeId[RWVOL];
+		avolid = entry.volumeId[voltype];
 	    }
-	    else if(entry.volumeId[RWVOL] != 0  && entry.volumeId[RWVOL] != avolid) {
-		avolid = entry.volumeId[RWVOL];
+	    else if(entry.volumeId[voltype] != 0  && entry.volumeId[voltype] != avolid) {
+		avolid = entry.volumeId[voltype];
 	    }
 	    
 	    /* A file name was specified  - check if volume is on another partition */
@@ -2014,14 +2104,14 @@ register struct cmd_syndesc *as;
 		/* Ask what to do */
 	        if (vol_elsewhere) {
 		    fprintf(STDERR,"The volume %s %u already exists on a different server/part\n",
-			    volname, entry.volumeId[RWVOL]);
+			    volname, entry.volumeId[voltype]);
 		    fprintf(STDERR, 
 			    "Do you want to do a full restore or abort? [fa](a): ");
 		}
 		else
 		{
 		    fprintf(STDERR,"The volume %s %u already exists in the VLDB\n",
-			    volname, entry.volumeId[RWVOL]);
+			    volname, entry.volumeId[voltype]);
 		    fprintf(STDERR, 
 			    "Do you want to do a full/incremental restore or abort? [fia](a): ");
 		}
@@ -2044,12 +2134,14 @@ register struct cmd_syndesc *as;
 	        restoreflags = 0;
 	        if (vol_elsewhere) {
 		    fprintf(STDERR,
-			    "RW volume %u already exists on a different server/part; not allowed\n",
-			    avolid);
+			    "%s volume %u already exists on a different server/part; not allowed\n",
+			    readonly ? "RO" : "RW", avolid);
 		    exit(1);
 		}
 	    }
 	}
+	if (offline)  restoreflags |= RV_OFFLINE;
+	if (readonly) restoreflags |= RV_RDONLY;
 	code = UV_RestoreVolume(aserver, apart, avolid, avolname,
 				restoreflags, WriteData, afilename);
 	if (code) {
@@ -2166,6 +2258,42 @@ register struct cmd_syndesc *as;
 	MapPartIdIntoName(apart,apartName);
 	fprintf(STDOUT,"Removed replication site %s %s for volume %s\n",as->parms[0].items->data,apartName,as->parms[2].items->data);
     return 0;
+}
+static ChangeLocation(as)
+register struct cmd_syndesc *as;
+{
+   afs_int32 avolid, aserver, apart,code, err;
+   char apartName[10];
+
+	avolid = vsu_GetVolumeID(as->parms[2].items->data, cstruct, &err);
+	if (avolid == 0) {
+	    if (err) PrintError("", err);
+	    else fprintf(STDERR, "vos: can't find volume '%s'\n", as->parms[2].items->data);
+	    exit(1);
+	}
+	aserver = GetServer(as->parms[0].items->data);
+	if (aserver == 0) {
+	    fprintf(STDERR,"vos: server '%s' not found in host table\n", as->parms[0].items->data);
+	    exit(1);
+	}
+	apart = volutil_GetPartitionID(as->parms[1].items->data);
+	if (apart < 0) {
+	    fprintf(STDERR,"vos: could not interpret partition name '%s'\n",as->parms[1].items->data );
+	    exit(1);
+	}
+	if (!IsPartValid(apart,aserver,&code)){/*check for validity of the partition */
+	    if(code) PrintError("",code);
+	    else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[1].items->data);
+	    exit(1);
+	}
+	code = UV_ChangeLocation(aserver, apart, avolid);
+	if (code) {
+	    PrintDiagnostics("addsite", code);
+	    exit(1);
+	}
+	MapPartIdIntoName(apart,apartName);
+	fprintf(STDOUT,"Changed location to %s %s for volume %s\n",as->parms[0].items->data, apartName,as->parms[2].items->data);
+   return 0;
 }
 
 static ListPartitions(as)
@@ -3799,6 +3927,8 @@ char *arock; {
 	tcell = as->parms[12].items->data;
     if(as->parms[14].items)	/* -serverauth specified */
 	sauth = 1;
+    if(as->parms[16].items)	/* -crypt specified */
+	vsu_SetCrypt(1);
     if (code = vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
 			      &cstruct, UV_SetSecurity)) {
 	fprintf(STDERR,"could not initialize VLDB library (code=%u) \n",code);
@@ -3896,9 +4026,19 @@ char **argv; {
     cmd_AddParm(ts, "-file", CMD_SINGLE,CMD_OPTIONAL, "dump file");
     cmd_AddParm(ts, "-id", CMD_SINGLE,CMD_OPTIONAL,  "volume ID");
     cmd_AddParm(ts, "-overwrite", CMD_SINGLE,CMD_OPTIONAL,  "abort | full | incremental");
+    cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL,
+		"leave restored volume offline");
+    cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
+		"make restored volume read-only");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("unlock", LockReleaseCmd, 0, "release lock on VLDB entry for a volume");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("changeloc", ChangeLocation, 0, "change an RW volume's location in the VLDB");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name for new location");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name for new location");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     COMMONPARMS;
 
@@ -3954,6 +4094,12 @@ char **argv; {
 #endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
     cmd_CreateAlias (ts, "volinfo");
+
+    ts = cmd_CreateSyntax("setfields", SetFields, 0, "change volume info fields");
+    cmd_AddParm(ts, "-id",        CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL, "quota (KB)");
+    cmd_AddParm(ts, "-clearuse",  CMD_FLAG,   CMD_OPTIONAL, "clear dayUse");
+    COMMONPARMS;
 
     ts = cmd_CreateSyntax("offline", volOffline, 0, (char *) CMD_HIDDEN);
     cmd_AddParm(ts, "-server",    CMD_SINGLE, 0, "server name");

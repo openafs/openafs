@@ -28,3 +28,14 @@ ac_cv_linux_fs_struct_address_space_has_page_lock=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_page_lock)
 CPPFLAGS="$save_CPPFLAGS"])
 
+
+dnl LINUX_BUILD_VNODE_FROM_INODE (configdir, outputdir)
+dnl		defaults: (src/config, src/afs/LINUX)
+
+AC_DEFUN(LINUX_BUILD_VNODE_FROM_INODE, [
+AC_MSG_CHECKING(whether to build osi_vfs.h)
+configdir=ifelse([$1], ,src/config,$1)
+outputdir=ifelse([$2], ,src/afs/LINUX,$2)
+chmod +x $configdir/make_vnode.pl
+$configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -o $outputdir
+])

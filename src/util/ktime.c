@@ -19,11 +19,14 @@ RCSID("$Header$");
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
 #endif
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#ifdef HAVE_STRING_H
 #include <string.h>
 #else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#endif
+#include <stdlib.h>
 #include "afsutil.h"
 
 #include "ktime.h"
@@ -50,6 +53,7 @@ static char *day[] = {
 };
 
 /* free token list returned by parseLine */
+#ifdef undef
 static LocalFreeTokens(alist)
     register struct token *alist; {
     register struct token *nlist;
@@ -60,6 +64,7 @@ static LocalFreeTokens(alist)
     }
     return 0;
 }
+#endif
 
 static space(x)
 int x; {
@@ -71,7 +76,7 @@ static LocalParseLine(aline, alist)
     char *aline;
     struct token **alist; {
     char tbuffer[256];
-    register char *tptr;
+    register char *tptr = NULL;
     int inToken;
     struct token *first, *last;
     register struct token *ttok;
@@ -121,26 +126,26 @@ static struct ptemp {
     char *key;
     afs_int32 value;
 } ptkeys [] = {
-    "sun", 0x10000,
-    "mon", 0x10001,
-    "tue", 0x10002,
-    "wed", 0x10003,
-    "thu", 0x10004,
-    "fri", 0x10005,
-    "sat", 0x10006,
-    "sunday", 0x10000,
-    "monday", 0x10001,
-    "tuesday", 0x10002,
-    "wednesday", 0x10003,
-    "thursday", 0x10004,
-    "thur", 0x10004,
-    "friday", 0x10005,
-    "saturday", 0x10006,
-    "am", 0x20000,
-    "pm", 0x20001,
-    "a.m.", 0x20000,
-    "p.m.", 0x20001,
-    0, 0,
+    { "sun", 0x10000, },
+    { "mon", 0x10001, },
+    { "tue", 0x10002, },
+    { "wed", 0x10003, },
+    { "thu", 0x10004, },
+    { "fri", 0x10005, },
+    { "sat", 0x10006, },
+    { "sunday", 0x10000, },
+    { "monday", 0x10001, },
+    { "tuesday", 0x10002, },
+    { "wednesday", 0x10003, },
+    { "thursday", 0x10004, },
+    { "thur", 0x10004, },
+    { "friday", 0x10005, },
+    { "saturday", 0x10006, },
+    { "am", 0x20000, },
+    { "pm", 0x20001, },
+    { "a.m.", 0x20000, },
+    { "p.m.", 0x20001, },
+    { 0, 0, }
 };
 
 /* ktime_DateOf
@@ -395,6 +400,7 @@ struct ktime *aktime; {
 
 
 /* compare date in both formats, and return as in strcmp */
+#ifdef undef
 static KTimeCmp(aktime, atm)
 register struct ktime *aktime;
 register struct tm *atm; {
@@ -418,6 +424,7 @@ register struct tm *atm; {
     }
     return 0;
 }
+#endif
 
 /* compare date in both formats, and return as in strcmp */
 static KDateCmp(akdate, atm)

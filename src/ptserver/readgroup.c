@@ -13,12 +13,17 @@
 RCSID("$Header$");
 
 #include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <strings.h>
-#else
+#ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
 #include <ctype.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
