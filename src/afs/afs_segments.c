@@ -284,6 +284,8 @@ afs_StoreAllSegments(avc, areq, sync)
       if (j) {
 	static afs_uint32 lp1 = 10000, lp2 = 10000;
 	struct AFSStoreStatus InStatus;
+	struct AFSFetchStatus OutStatus;
+	int doProcessFS = 0;
 	afs_uint32 base, bytes, nchunks;
 	int nomore;
 	unsigned int first;
@@ -475,7 +477,6 @@ afs_StoreAllSegments(avc, areq, sync)
                      * one which has the writing bit turned on. */
 		}
 		if (!code) {
-		    struct AFSFetchStatus OutStatus;
 		    struct AFSVolSync tsync;
 #ifdef RX_ENABLE_LOCKS
 		    AFS_GUNLOCK();
@@ -486,19 +487,7 @@ afs_StoreAllSegments(avc, areq, sync)
 #endif /* RX_ENABLE_LOCKS */
 		    hadd32(newDV, 1);
 		    XSTATS_END_TIME;
-      
-		    /* Now copy out return params */
-		    UpgradeSToWLock(&avc->lock,28);    /* keep out others for a while */
-		    if (!code) {  /* must wait til RPC completes to be sure of this info */
-			afs_ProcessFS(avc, &OutStatus, areq);
-			/* Keep last (max) size of file on server to see if
-			 * we need to call afs_StoreMini to extend the file.
-			 */
-			if (!moredata)
-			    maxStoredLength = OutStatus.Length;
-
-		    }
-		    ConvertWToSLock(&avc->lock);
+		    if (!code) doProcessFS = 1; /* Flag to run afs_ProcessFS() later on */		    
 		}
 		if (tcall) {
 #ifdef RX_ENABLE_LOCKS
@@ -536,6 +525,19 @@ afs_StoreAllSegments(avc, areq, sync)
 		tdc->f.states &= ~DWriting;  /* correct?*/
 		tdc->flags |= DFEntryMod;
 		lockedPutDCache(tdc);
+	    }
+
+	    if (doProcessFS) {
+		/* Now copy out return params */
+		UpgradeSToWLock(&avc->lock,28);    /* keep out others for a while */
+		afs_ProcessFS(avc, &OutStatus, areq);
+		/* Keep last (max) size of file on server to see if
+		 * we need to call afs_StoreMini to extend the file.
+		 */
+		if (!moredata)
+		    maxStoredLength = OutStatus.Length;
+		ConvertWToSLock(&avc->lock);
+		doProcessFS = 0;
 	    }
 
 	    if (code) {
