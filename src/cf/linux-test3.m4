@@ -116,7 +116,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
 AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-default -Werror-implicit-function-declaration -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
 [
 AC_TRY_COMPILE(

@@ -455,7 +455,7 @@ else
 			AFS_SYSNAME="ia64_linuxXX"
 			;;
 		powerpc-*-linux*)
-			AFS_SYSNAME="ppc_linuxXX"
+			AFS_SYSNAME="`/bin/arch`_linuxXX"
 			;;
 		powerpc64-*-linux*)
 			AFS_SYSNAME="ppc64_linuxXX"
