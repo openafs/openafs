@@ -1,3 +1,10 @@
+openafs (1.2.3final2-4) unstable; urgency=low
+
+  * Move from non-us to main.
+  * Fix ultrasparc 2.4 build to actually work.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 16 Mar 2002 15:33:33 -0500
+
 openafs (1.2.3final2-3) unstable; urgency=medium
 
   * Oops, install backup
