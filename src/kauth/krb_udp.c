@@ -568,7 +568,7 @@ static err_packet (ksoc, pkt, code, reason)
     }
 
     ans.len = 2 + strlen(pkt->name) + strlen(pkt->inst) + strlen(pkt->realm) +
-	3/* nulls */ + sizeof(afs_int32) + strlen (buf) + 1;
+	3/* nulls */ + (2 * sizeof(afs_int32)) + strlen (buf) + 1;
     if (ans.len > sizeof(ans.data)) {
 	printf ("Answer packet too long\n");
 	return;
@@ -827,7 +827,13 @@ afs_int32 init_krb_udp ()
     taddr.sin_family = AF_INET;  /* added for NCR port */
     if ( !sp )	
     {
-	/* if kerberos-4 is not available, try "kerberos" */
+	/* if kerberos-4 is not available, try "kerberos-iv" */
+	krb4name = "kerberos-iv";
+	sp = getservbyname(krb4name, "udp");
+    }
+    if ( !sp )	
+    {
+	/* if kerberos-iv is not available, try "kerberos" */
 	krb4name = "kerberos";
 	sp = getservbyname(krb4name, "udp");
     }
