@@ -134,6 +134,10 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
     ObtainWriteLock(&vcp->lock, 530);
     vcp->m.Date = osi_Time(); /* set modification time */
     afs_FakeClose(vcp, credp);
+    if (code>=0)
+	code2 = afs_DoPartialWrite(vcp, &treq);
+    if (code2 && code >=0)
+	code = (ssize_t) -code2;
     ReleaseWriteLock(&vcp->lock);
 	
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITEOP, ICL_TYPE_POINTER, vcp,
