@@ -38,7 +38,7 @@ LD = ld
 # -Wall
 <i386_linux22 i386_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer \
-	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
+	-fno-strength-reduce -pipe -march=i486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <alpha_linux_22 alpha_linux_24>
