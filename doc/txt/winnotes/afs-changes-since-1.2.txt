@@ -1,3 +1,90 @@
+Since 1.3.63:
+   * afsd_service.exe will now display a message box to the 
+     desktop when it terminates due to an IP Address Change.
+  
+   * installer no longer deletes AFS Server configuration data
+     on uninstall
+
+   * installer generates a warning dialog if the RPC service 
+     is not properly configured
+
+   * installer compressed with lzma instead of bzip2
+
+   * afsd_service.exe shutdown crash solved once and for all
+ 
+   * reference counting of smb_vc_t data structures improved
+ 
+   * name space collision of smb_fid_t event objects corrected
+
+   * the output of "fs memdump" is now written to 
+     %WINDIR%\TEMP\afsd_alloc.log
+
+   * the file TaAfsApp_1033.dll is now properly installed allowing
+     the User Manager to start
+  
+   * a new algorithm is used for computing filename pattern matches
+
+   * afscreds.exe now accepts user names containing instance
+     fields.
+
+   * Fix the Directory Name Lookup Cache to be case-sensitive.
+     This is crucial in environments in which a Windows client
+     is accessing a directory with more than one filename that
+     differs only by case.  If the directory contains "FOO" 
+     and "Foo".  You want "DEL Foo" to delete the correct one.
+     We still have a problem in that "DEL foo" will delete a
+     random filename.  This will be addressed in a future release.
+
+   * Fix afscreds.exe -M option (renewMaps) to work when High
+     Security mode is off.  Also, remember to disable the ActiveMap
+     flag in afsdsbmt.ini when a drive mapping is removed.
+
+   * Updates to NSIS installer script.  AFS Server configuration
+     data will not be destroyed on un-install or re-install.  
+     Use a better compression algorithm.
+   
+   * afslogon.dll now uses KFW to obtain tokens when available
+   
+   * afslogon.dll when given an all uppercase username will
+     attempt to authenticate with both the uppercase name
+     and an all lowercase variation
+
+   * DST modification removed.  The fix appears to make things
+     worse after a reboot of the machine.
+
+   * fs.exe:  added "cscpolicy" which is used to 
+     change client side caching policy for AFS shares
+
+     Usage: fs cscpolicy [-share <AFS share>] [-manual] [-programs] 
+                         [-documents] [-disable] [-help]
+
+   * Several uninitialized variables have been initialized
+
+   * It is now possible to obtain tokens using cross realm
+     Kerberos within afscreds.exe:
+        cell:      dementia.org
+        user:      jaltman@ATHENA.MIT.EDU
+        password:  xxxxxxxx
+     Will obtain a cross realm ticket for jaltman/DEMENTIA.ORG@ATHENA.MIT.EDU
+     will will in turn be used to obtain afs@DEMENTIA.ORG.
+     The resulting token will be stored with the display name 
+       jaltman@ATHENA.MIT.EDU@dementia.org
+
+   * aklog.exe has been added to the client
+
+     Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]] 
+                  [[-p | -path] pathname]
+                  [-noprdb] [-force]
+                  [-5 | -4]
+
+        -d gives debugging information.
+        krb_realm is the kerberos realm of a cell.
+        pathname is the name of a directory to which you wish to authenticate.
+        -noprdb means don't try to determine AFS ID.
+        -5 or -4 selects whether to use Kerberos V or Kerberos IV.
+           (default is Kerberos V)
+        No commandline arguments means authenticate to the local cell.
+
 Since 1.3.62:
    * All of the resource files have been restructured to adhere to
      a set of rules IBM implemented for loading string resources.

@@ -117,10 +117,9 @@ directories.
 
 (26) Implement persistent disk based cache which survives restarts
 
-(27) NSIS Installer issues for re-installs 
-     (a) AFS Server Configurator should not start on update
-     (b) AFS Server Volumes and Configuration Data should not be 
-         removed on uninstall
+(27) NSIS Installer issues
+     (a) integration with KFW install script
+     (b) Optional removal of AFS Server volumes
 
 (28) The User Interface needs to be re-designed to separate the per-user
      and per-machine settings.  All of the new registry items need to 
@@ -130,3 +129,19 @@ directories.
      machine.  We need to add code to programatically open the 
      Internet Connection Firewall to the ports needed by the various
      AFS services.
+
+(30) It has been discovered that there is a lack of proper thread locking
+     when "crypt" mode is used on Windows.  This can be reproduced by
+     performing multiple read operations simultaneous.  The symptoms will
+     be a memory followed by an eventual crash resulting from a stack 
+     overwrite.  First step is to enable the use of RX_ENABLE_LOCKS when
+     building on Windows.
+
+(31) There are remaining issues with the Freelance support.  There appears
+     to be an initialization issue related to whether the Freelance fake
+     root.afs is constructed before or after the first access to a cell 
+     name via \\afs\cellname\.  Accessing \\afs\cellname via cmd.exe 
+     appears to trigger the problem on a regular basis whereas 4nt.exe
+     does not.
+
+
