@@ -33,6 +33,7 @@ Description: The AFS distributed filesystem- old password changing
 Package: openafs-fileserver
 Architecture: i386
 Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
+Recommends: ntp
 Description: The AFS distributed filesystem- file server
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access

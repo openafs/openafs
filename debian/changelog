@@ -1,3 +1,11 @@
+openafs (1.0.1-1) unstable; urgency=low
+
+  * New upstream version
+  * Fix typo in openafs-client templates.
+  * Clarify that afs-newcell sets up for afs-rootvol 
+
+ -- Sam Hartman <hartmans@mit.edu>  Sun,  3 Dec 2000 02:04:50 -0500
+
 openafs (1.0.snap20001106-10) unstable; urgency=low
 
   * Release (Closes: BUG#69336)

@@ -17,7 +17,7 @@ Type: string
 Description:  What AFS cell does this workstation belong to?
    AFS filespace is organized into cells or administrative domains.
    Each workstation belongs to one cell.  Usually the cell is the DNS
-   domain name of thesite.
+   domain name of the site.
 
 Template: openafs-client/cachesize
 Type: string

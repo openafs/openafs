@@ -58,15 +58,17 @@ unless ($requirements_met) {
 In order to set up the root.afs volume, you must meet the following pre-conditions:
 
 1) The cell must be configured, running a database server with a
-   volume location and protection server.
+   volume location and protection server.  The afs-newcell script will
+   set up these services.
 
 2)  You must be logged into the cell with  tokens in
-    system:administrators and with a principal that is in the susers
-    file of the servers in the cell.
+   system:administrators and with a principal that is in the susers
+   file of the servers in the cell.
 
-3) You need a fileserver in the cell with partitions mounted and a root.afs volume created.
-   Presumably, it has no volumes on it, although the script will work
-   so long as nothing besides root.afs exists.
+3) You need a fileserver in the cell with partitions mounted and a
+   root.afs volume created.   Presumably, it has no volumes on it,
+   although the script will work so long as nothing besides root.afs
+   exists.  The afs-newcell script will set up the file server.
 
 4) The AFS client must be running pointed at the new cell.
 eotext
