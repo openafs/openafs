@@ -77,6 +77,7 @@ case $system in
 		  else
 		   AC_MSG_WARN(No linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
 		   enable_kernel_module="no"
+		  fi
 		 fi
 		fi
 		AC_MSG_RESULT(linux)
