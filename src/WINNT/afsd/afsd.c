@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <winsock2.h>
 
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 HANDLE main_inst;
 HWND main_wnd;
