@@ -14,6 +14,7 @@ extern "C" {
 
 #include <afxpriv.h>
 #include "stdafx.h"
+#include <atlconv.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "afs_shl_ext.h"
