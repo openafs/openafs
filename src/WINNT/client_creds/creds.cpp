@@ -7,16 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include "afscreds.h"
-#include "afskfw.h"
-
 extern "C" {
 #include <afs\stds.h>
 #include <afs\param.h>
 #include <afs\auth.h>
 #include <afs\kautils.h>
+#include <rxkad.h>
 #include <afs\cm_config.h>
+#include <afs\afskfw.h>
+#include "ipaddrchg.h"
 }
+
+#include "afscreds.h"
 
 
 /*
@@ -390,11 +392,17 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword,
       char szPasswordA[ 256 ];
       CopyStringToAnsi (szPasswordA, pszPassword);
 
+      char szSmbNameA[ MAXRANDOMNAMELEN ];
+      CopyStringToAnsi (szSmbNameA, g.SmbName);
+
       int Expiration = 0;
 
       if ( KFW_is_available() )
-          rc = KFW_AFS_get_cred(szNameA, NULL, szCellA, szPasswordA, 0, &Result);
-      else
+          rc = KFW_AFS_get_cred(szNameA, NULL, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
+      else if ( szSmbNameA[0] )
+          rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
+                                           szNameA, "", szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
+      else 
           rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
       }
 

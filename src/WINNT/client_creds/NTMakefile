@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\krb5 
 
 # include the primary makefile
 RELDIR=WINNT\client_creds
@@ -35,7 +35,7 @@ EXEOBJS = \
 	$(OUT)\window.obj
 
 EXECOBJS = \
-    $(OUT)\afskfw.obj
+    $(OUT)\ipaddrchg.obj
 
 EXERES = \
 	$(OUT)\afscreds_stub.res
@@ -67,7 +67,10 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
     $(DESTDIR)\lib\lanahelper.lib \
     $(DESTDIR)\lib\afsrxkad.lib \
-    $(DESTDIR)\lib\afsdes.lib
+    $(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\afskfw.lib
 
 ############################################################################
 #

@@ -30,6 +30,7 @@ extern "C" {
 #include <osithrdnt.h>
 #include <osisleep.h>
 #include <osibasel.h>
+#include <rxkad.h>
 #ifdef __cplusplus
 }
 #endif
@@ -92,6 +93,7 @@ typedef struct
    TCHAR szHelpFile[ MAX_PATH ];
    osi_mutex_t expirationCheckLock;
    osi_mutex_t credsLock;
+   TCHAR SmbName[ MAXRANDOMNAMELEN ];
    } GLOBALS;
 
 extern GLOBALS g;

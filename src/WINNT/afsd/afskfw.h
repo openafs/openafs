@@ -33,6 +33,16 @@
 #ifdef  __cplusplus
 extern "C" {
 #endif
+#include <afs/stds.h>
+#include <afs/auth.h>
+#include <afs/cellconfig.h>
+#include <rxkad.h>
+
+#define MAXCELLCHARS   64
+#define MAXHOSTCHARS   64
+#define MAXHOSTSPERCELL 8
+#define TRANSARCAFSDAEMON "TransarcAFSDaemon"
+
 void KFW_initialize(void);
 void KFW_cleanup(void);
 int  KFW_is_available(void);
@@ -43,15 +53,35 @@ int  KFW_AFS_get_cred( char * username,
                         char * cell,
                         char * password,
                         int lifetime,
+                        char * smbname,
                         char ** reasonP );
 int  KFW_AFS_renew_token_for_cell(char * cell);
 int  KFW_AFS_renew_tokens_for_all_cells(void);
 BOOL KFW_AFS_wait_for_service_start(void);
+BOOL KFW_probe_kdc(struct afsconf_cell *);
+int  KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
+void KFW_import_windows_lsa(void);
 
-#define WM_OBTAIN_TOKENS (WM_USER+77)
-#define WM_START_SERVICE (WM_USER+78)
-void  ObtainTokensFromUserIfNeeded(HWND hWnd);
-DWORD IpAddrChangeMonitorInit(HWND hWnd);
+/* From afs/krb_prot.h */
+/* values for kerb error codes */
+#define         KERB_ERR_OK                              0
+#define         KERB_ERR_NAME_EXP                        1
+#define         KERB_ERR_SERVICE_EXP                     2
+#define         KERB_ERR_AUTH_EXP                        3
+#define         KERB_ERR_PKT_VER                         4
+#define         KERB_ERR_NAME_MAST_KEY_VER               5
+#define         KERB_ERR_SERV_MAST_KEY_VER               6
+#define         KERB_ERR_BYTE_ORDER                      7
+#define         KERB_ERR_PRINCIPAL_UNKNOWN               8
+#define         KERB_ERR_PRINCIPAL_NOT_UNIQUE            9
+#define         KERB_ERR_NULL_KEY                       10
+
+/* From afs/krb.h */
+#define           RD_AP_TIME     37       /* delta_t too big */
+#define           INTK_BADPW     62       /* Incorrect password */
+
+#define PROBE_USERNAME               "OPENAFS-KDC-PROBE"
+#define PROBE_PASSWORD_LEN           16
 
 #ifdef  __cplusplus
 }

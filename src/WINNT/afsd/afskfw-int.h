@@ -104,31 +104,6 @@ typedef BOOL (WINAPI *FP_CloseServiceHandle)(SC_HANDLE);
 #define KRB5_DEFAULT_LIFE            60*60*10 /* 10 hours */
 #define LSA_CCNAME                   "MSLSA:"
 
-#define PROBE_USERNAME               "OPENAFS-KDC-PROBE"
-#define PROBE_PASSWORD_LEN           16
-
-#define MAXCELLCHARS   64
-#define MAXHOSTCHARS   64
-#define MAXHOSTSPERCELL 8
-#define TRANSARCAFSDAEMON "TransarcAFSDaemon"
-typedef struct {
-    char name[MAXCELLCHARS];
-    short numServers;
-    short flags;
-    struct sockaddr_in hostAddr[MAXHOSTSPERCELL];
-    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];
-    char *linkedCell;
-} afsconf_cell;
-
-struct ktc_token {
-        time_t startTime;
-        time_t endTime;
-        struct ktc_encryptionKey sessionKey;
-        short kvno;                     /* XXX UNALIGNED */
-        int ticketLen;
-        char ticket[MAXKTCTICKETLEN];
-};
-
 #define KTC_ERROR      11862784L
 #define KTC_TOOBIG     11862785L
 #define KTC_INVAL      11862786L
@@ -266,27 +241,12 @@ int  KFW_get_ccache(krb5_context, krb5_principal, krb5_ccache *);
 int  KFW_error(krb5_error_code, LPCSTR, int, krb5_context *, krb5_ccache *);
 int  KFW_kinit(krb5_context, krb5_ccache, HWND, char *, char *, krb5_deltat,
                 DWORD, DWORD, krb5_deltat, DWORD, DWORD);
-int  KFW_AFS_get_cred(char *, char *, char *, char *, int, char **);
 int  KFW_renew(krb5_context, krb5_ccache);
 int  KFW_destroy(krb5_context, krb5_ccache);
 BOOL KFW_ms2mit(krb5_context, krb5_ccache, BOOL);
 int  KFW_AFS_unlog(void);
-int  KFW_AFS_klog(krb5_context, krb5_ccache, char*, char*, char*, int);
+int  KFW_AFS_klog(krb5_context, krb5_ccache, char*, char*, char*, int, char*);
 void KFW_import_ccache_data(void);
-void KFW_import_windows_lsa(void);
 BOOL MSLSA_IsKerberosLogon();
-
-/* From afs/krb_prot.h */
-/* values for kerb error codes */
-#define         KERB_ERR_OK                              0
-#define         KERB_ERR_NAME_EXP                        1
-#define         KERB_ERR_SERVICE_EXP                     2
-#define         KERB_ERR_AUTH_EXP                        3
-#define         KERB_ERR_PKT_VER                         4
-#define         KERB_ERR_NAME_MAST_KEY_VER               5
-#define         KERB_ERR_SERV_MAST_KEY_VER               6
-#define         KERB_ERR_BYTE_ORDER                      7
-#define         KERB_ERR_PRINCIPAL_UNKNOWN               8
-#define         KERB_ERR_PRINCIPAL_NOT_UNIQUE            9
-#define         KERB_ERR_NULL_KEY                       10
+char *afs_realm_of_cell(struct afsconf_cell *);
 #endif /* AFSKFW_INT_H */

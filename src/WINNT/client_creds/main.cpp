@@ -12,6 +12,9 @@ extern "C" {
 #include <afs/stds.h>
 #include <osilog.h>
 #include <afs/fs_utils.h>
+#include <rxkad.h>
+#include <afs/afskfw.h>
+#include "ipaddrchg.h"
 }
 
 #include "afscreds.h"
@@ -19,8 +22,6 @@ extern "C" {
 #include "drivemap.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "rxkad.h"
-#include "afskfw.h"
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -93,6 +94,11 @@ BOOL InitApp (LPSTR pszCmdLineA)
    BOOL fNetDetect = FALSE;
    BOOL fRenewMaps = FALSE;
 
+   // Initialize our global variables and window classes
+   //
+   memset (&g, 0x00, sizeof(g));
+   g.fStartup = TRUE;
+
    // Parse the command-line
    //
    while (pszCmdLineA && *pszCmdLineA)
@@ -143,6 +149,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
             break;
 
 		 case ':':
+             CopyAnsiToString(g.SmbName,pszCmdLineA);
 			 MapShareName(pszCmdLineA);
 			 break;
 
@@ -204,11 +211,6 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
    if (fExit || fUninstall || fInstall)
       return FALSE;
-
-   // Initialize our global variables and window classes
-   //
-   memset (&g, 0x00, sizeof(g));
-   g.fStartup = TRUE;
 
    HKEY hk;
     if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)

@@ -427,8 +427,11 @@ DWORD APIENTRY NPLogonNotify(
         /* if Integrated Logon only */
         if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))
 		{			
-			code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
-                                                uname, "", cell, password,uname, 0, &pw_exp, 0,
+            if ( KFW_is_available() )
+                code = KFW_AFS_get_cred(uname, "", cell, password, 0, uname, &reason);
+            else
+                code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+                                                uname, "", cell, password, uname, 0, &pw_exp, 0,
                                                 &reason);
 			DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x]",
                         code);
@@ -443,7 +446,10 @@ DWORD APIENTRY NPLogonNotify(
         /* if Integrated Logon and High Security pass random generated name*/
         else if (ISLOGONINTEGRATED(LogonOption) && ISHIGHSECURITY(LogonOption))
 		{
-			code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+            if ( KFW_is_available() )
+                code = KFW_AFS_get_cred(uname, "", cell, password, 0, RandomName, &reason);
+            else
+                code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                 uname, "", cell, password,RandomName, 0, &pw_exp, 0,
                                                 &reason);
 			DebugEvent("AFS AfsLogon - (Both)ka_UserAuthenticateGeneral2","Code[%x] RandomName[%s]",
@@ -498,6 +504,10 @@ DWORD APIENTRY NPLogonNotify(
 
         retryInterval -= sleepInterval;
     }
+
+    /* remove any kerberos 5 tickets currently held by the SYSTEM account */
+    if ( KFW_is_available() )
+        KFW_AFS_destroy_tickets_for_cell(cell);
 
 	if (code) {
         char msg[128];

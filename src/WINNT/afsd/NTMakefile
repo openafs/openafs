@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" 
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash
 AFSDEV_NETGUI = 1
 RELDIR=WINNT\afsd
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -63,7 +63,8 @@ INCFILES =\
 	$(INCFILEDIR)\cm_buf.h \
 	$(INCFILEDIR)\cm_freelance.h \
     $(INCFILEDIR)\afsd_eventlog.h \
-    $(INCFILEDIR)\afsd_eventmessages.h
+    $(INCFILEDIR)\afsd_eventmessages.h \
+    $(INCFILEDIR)\afskfw.h
 
 IDLFILES =\
 	afsrpc.h $(OUT)\afsrpc_c.obj
@@ -175,6 +176,32 @@ $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
 	$(DEL) $*.lib $*.exp
 
 ############################################################################
+# lanahelper.lib
+
+LANAHELPERLIB = $(DESTDIR)\lib\lanahelper.lib
+
+LANAHELPERLIB_OBJS =\
+      $(OUT)\lanahelper.obj
+
+$(LANAHELPERLIB_OBJS):
+
+$(LANAHELPERLIB): $(LANAHELPERLIB_OBJS)
+      $(LIBARCH) netapi32.lib
+
+############################################################################
+# afskfw.lib
+
+AFSKFWLIB = $(DESTDIR)\lib\afskfw.lib
+
+AFSKFWLIB_OBJS =\
+      $(OUT)\afskfw.obj
+
+$(AFSKFWLIB_OBJS):
+
+$(AFSKFWLIB): $(AFSKFWLIB_OBJS)
+      $(LIBARCH)
+
+############################################################################
 # afslogon.dll
 
 LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
@@ -185,7 +212,10 @@ LOGON_DLLOBJS =\
 
 LOGON_DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\afsrxkad.lib \
+    $(DESTDIR)\lib\afsdes.lib \
+    $(AFSKFWLIB)
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def dnsapi.lib secur32.lib
@@ -211,19 +241,6 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS) $(LOG95_DLLLIBS)
 	$(DLLPREP)
 	$(COPY) $*.lib $(DESTDIR)\lib
 	$(DEL) $*.lib $*.exp
-
-############################################################################
-# lanahelper.lib
-
-LANAHELPERLIB = $(DESTDIR)\lib\lanahelper.lib
-
-LANAHELPERLIB_OBJS =\
-      $(OUT)\lanahelper.obj
-
-$(LANAHELPERLIB_OBJS):
-
-$(LANAHELPERLIB): $(LANAHELPERLIB_OBJS)
-      $(LIBARCH) netapi32.lib
 
 ############################################################################
 # Install target; primary makefile target

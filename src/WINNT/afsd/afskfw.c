@@ -59,7 +59,6 @@
 #define USE_KRB4
 #include "afskfw-int.h"
 #include "afskfw.h"
-#include "creds.h"
 
 #include <osilog.h>
 #include <rxkad_prototypes.h>   /* for life_to_time */
@@ -365,9 +364,9 @@ FUNC_INFO afsc_fi[] = {
 };
 
 /* Static Prototypes */
-static char *afs_realm_of_cell(afsconf_cell *);
+char *afs_realm_of_cell(struct afsconf_cell *);
 static long get_cellconfig_callback(void *, struct sockaddr_in *, char *);
-static int get_cellconfig(char *, afsconf_cell *, char *);
+int KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
 static krb5_error_code KRB5_CALLCONV KRB5_prompter( krb5_context context,
            void *data, const char *name, const char *banner, int num_prompts,
            krb5_prompt prompts[]);
@@ -926,7 +925,7 @@ KFW_import_windows_lsa(void)
     }
 	cell[i] = '\0';
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm->data, pLeash_get_default_lifetime());
+    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm->data, pLeash_get_default_lifetime(),NULL);
     if ( IsDebuggerPresent() ) {
         char message[256];
         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1099,7 +1098,7 @@ KFW_import_ccache_data(void)
                         OutputDebugString("Calling KFW_AFS_klog() to obtain token\n");
                     }
 
-                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, pLeash_get_default_lifetime());
+                    code = KFW_AFS_klog(ctx, cc, "afs", cell->data, realm->data, pLeash_get_default_lifetime(),NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1154,6 +1153,7 @@ KFW_AFS_get_cred(char * username,
                   char * cell,
                   char * password,
                   int lifetime,
+                  char * smbname,
                   char ** reasonP )
 {
     krb5_context ctx = 0;
@@ -1166,7 +1166,7 @@ KFW_AFS_get_cred(char * username,
 	char local_cell[MAXCELLCHARS+1];
     char **cells = NULL;
     int  cell_count=0;
-    afsconf_cell cellconfig;
+    struct afsconf_cell cellconfig;
 
     if (!pkrb5_init_context)
         return 0;
@@ -1186,7 +1186,7 @@ KFW_AFS_get_cred(char * username,
     code = pkrb5_init_context(&ctx);
     if ( code ) goto cleanup;
 
-    code = get_cellconfig( cell, (void*)&cellconfig, local_cell);
+    code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
     if ( code ) goto cleanup;
 
     realm = strchr(username,'@');
@@ -1235,7 +1235,7 @@ KFW_AFS_get_cred(char * username,
                    
     KFW_AFS_update_princ_ccache_data(ctx, cc, FALSE);
 
-    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime);
+    code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime,smbname);
     if ( IsDebuggerPresent() ) {
         char message[256];
         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1256,7 +1256,7 @@ KFW_AFS_get_cred(char * username,
                     sprintf(message,"found another cell for the same principal: %s\n",cell);
                     OutputDebugString(message);
                 }
-                code = get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
+                code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                 if ( code ) continue;
     
                 realm = afs_realm_of_cell(&cellconfig);  // do not free
@@ -1266,7 +1266,7 @@ KFW_AFS_get_cred(char * username,
                     OutputDebugString("\n");
                 }
                 
-                code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime);
+                code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], realm, lifetime,smbname);
                 if ( IsDebuggerPresent() ) {
                     char message[256];
                     sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1369,7 +1369,7 @@ KFW_AFS_renew_expiring_tokens(void)
     char ** cells=NULL;
     const char * realm = NULL;
     char local_cell[MAXCELLCHARS+1]="";
-    afsconf_cell cellconfig;
+    struct afsconf_cell cellconfig;
 
     if (!pkrb5_init_context)
         return 0;
@@ -1422,7 +1422,7 @@ KFW_AFS_renew_expiring_tokens(void)
                         OutputDebugString(cells[cell_count]);
                         OutputDebugString("\n");
                     }
-                    code = get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
+                    code = KFW_AFS_get_cellconfig( cells[cell_count], (void*)&cellconfig, local_cell);
                     if ( code ) continue;
                     realm = afs_realm_of_cell(&cellconfig);  // do not free
                     if ( IsDebuggerPresent() ) {
@@ -1430,7 +1430,7 @@ KFW_AFS_renew_expiring_tokens(void)
                         OutputDebugString(realm);
                         OutputDebugString("\n");
                     }
-                    code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, pLeash_get_default_lifetime());
+                    code = KFW_AFS_klog(ctx, cc, "afs", cells[cell_count], (char *)realm, pLeash_get_default_lifetime(),NULL);
                     if ( IsDebuggerPresent() ) {
                         char message[256];
                         sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -1495,7 +1495,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
 #endif /* COMMENT */
         krb5_ccache			cc  = 0;
         const char * realm = NULL;
-        afsconf_cell cellconfig;
+        struct afsconf_cell cellconfig;
         char local_cell[MAXCELLCHARS+1];
 
         while ( count-- ) {
@@ -1505,7 +1505,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
             code = KFW_get_ccache(ctx, princ, &cc);
             if (code) goto loop_cleanup;
 
-            code = get_cellconfig( cell, (void*)&cellconfig, local_cell);
+            code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
             if ( code ) goto loop_cleanup;
 
             realm = afs_realm_of_cell(&cellconfig);  // do not free
@@ -1548,7 +1548,7 @@ KFW_AFS_renew_token_for_cell(char * cell)
             }
 #endif /* COMMENT */
 
-            code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, pLeash_get_default_lifetime());
+            code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, pLeash_get_default_lifetime(),NULL);
             if ( IsDebuggerPresent() ) {
                 char message[256];
                 sprintf(message,"KFW_AFS_klog() returns: %d\n",code);
@@ -2403,7 +2403,8 @@ KFW_AFS_klog(
     char *service,
     char *cell,
     char *realm,
-    int LifeTime
+    int LifeTime,
+    char *smbname
     )
 {
     long	rc = 0;
@@ -2417,7 +2418,7 @@ KFW_AFS_klog(
     char	Dmycell[MAXCELLCHARS+1];
     struct ktc_token	atoken;
     struct ktc_token	btoken;
-    afsconf_cell	ak_cellconfig; /* General information about the cell */
+    struct afsconf_cell	ak_cellconfig; /* General information about the cell */
     char	RealmName[128];
     char	CellName[128];
     char	ServiceName[128];
@@ -2461,7 +2462,7 @@ KFW_AFS_klog(
 		memset(Dmycell, '\0', sizeof(Dmycell));
 
     // NULL or empty cell returns information on local cell
-    if (rc = get_cellconfig(Dmycell, &ak_cellconfig, local_cell))
+    if (rc = KFW_AFS_get_cellconfig(Dmycell, &ak_cellconfig, local_cell))
     {
         // KFW_AFS_error(rc, "get_cellconfig()");
         return(rc);
@@ -2529,8 +2530,7 @@ KFW_AFS_klog(
     memset(&creds, '\0', sizeof(creds));
 
     if ( try_krb5 ) {
-        int i, len;
-        char *p;
+        int len;
 
         /* First try service/cell@REALM */
         if (code = pkrb5_build_principal(ctx, &increds.server,
@@ -2737,7 +2737,12 @@ KFW_AFS_klog(
             p[len] = '\0';
         }
 
-		aclient.smbname[0] = '\0';
+        if ( smbname ) {
+            strncpy(aclient.smbname, smbname, MAXRANDOMNAMELEN);
+            aclient.smbname[MAXRANDOMNAMELEN-1] = '\0';
+        } else {
+            aclient.smbname[0] = '\0';
+        }
 
         rc = pktc_SetToken(&aserver, &atoken, &aclient, 0);
         if (!rc)
@@ -2843,13 +2848,19 @@ KFW_AFS_klog(
 
     if ( strcmp(realm_of_cell, creds.realm) ) 
     {
-        char * p;
         strncat(aclient.name, "@", MAXKTCNAMELEN - 1);
         strncpy(aclient.name, creds.realm, MAXKTCREALMLEN - 1);
     }
     aclient.name[MAXKTCREALMLEN-1] = '\0';
 
     strcpy(aclient.cell, CellName);
+
+    if ( smbname ) {
+        strncpy(aclient.smbname, smbname, MAXRANDOMNAMELEN);
+        aclient.smbname[MAXRANDOMNAMELEN-1] = '\0';
+    } else {
+        aclient.smbname[0] = '\0';
+    }
 
     if (rc = pktc_SetToken(&aserver, &atoken, &aclient, 0))
     {
@@ -2880,7 +2891,7 @@ KFW_AFS_klog(
 /* afs_realm_of_cell():               */
 /**************************************/
 static char *
-afs_realm_of_cell(afsconf_cell *cellconfig)
+afs_realm_of_cell(struct afsconf_cell *cellconfig)
 {
     static char krbrlm[REALM_SZ+1]="";
     krb5_context  ctx = 0;
@@ -2920,10 +2931,10 @@ afs_realm_of_cell(afsconf_cell *cellconfig)
 }
 
 /**************************************/
-/* get_cellconfig():                  */
+/* KFW_AFS_get_cellconfig():                  */
 /**************************************/
-static int 
-get_cellconfig(char *cell, afsconf_cell *cellconfig, char *local_cell)
+int 
+KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell)
 {
     int	rc;
     char newcell[MAXCELLCHARS+1];
@@ -2952,7 +2963,7 @@ get_cellconfig(char *cell, afsconf_cell *cellconfig, char *local_cell)
 static long 
 get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep)
 {
-    afsconf_cell *cc = (afsconf_cell *)cellconfig;
+    struct afsconf_cell *cc = (struct afsconf_cell *)cellconfig;
 
     cc->hostAddr[cc->numServers] = *addrp;
     strcpy(cc->hostName[cc->numServers], namep);
@@ -3127,471 +3138,72 @@ LoadFuncs(
     return 1;
 }
 
-#ifdef USE_FSPROBE
-// Cell Accessibility Functions
-// based on work originally submitted to the CMU Computer Club
-// by Jeffrey Hutzelman
-//
-// These would work great if the fsProbe interface had been 
-// ported to Windows
-
-static 
-void probeComplete()
+BOOL KFW_probe_kdc(struct afsconf_cell * cellconfig)
 {
-    fsprobe_Cleanup(1);
-    rx_Finalize();
-}
-
-struct ping_params {
-    unsigned short port;            // in
-    int            retry_delay;     // in seconds
-    int            verbose;         // in
-    struct {
-        int        wait;            // in seconds
-        int        retry;           // in attempts
-    }   host;
-    int            max_hosts;       // in
-    int            hosts_attempted; // out
-}
-
-// the fsHandler is where we receive the answer to the probe
-static 
-int fsHandler(void)
-{
-    ping_count = fsprobe_Results.probeNum;
-    if (!*fsprobe_Results.probeOK)
-    {
-        ok_count++;
-        if (waiting) complete();
-    }
-    if (ping_count == retry) 
-        complete();
-    return 0;
-}
-
-// ping_fs is a callback routine meant to be called from within
-// cm_SearchCellFile() or cm_SearchCellDNS()
-static long 
-pingFS(void *ping_params, struct sockaddr_in *addrp, char *namep)
-{
-    int rc;
-    struct ping_params * pp = (struct ping_params *) ping_params;
-
-    if ( pp->max_hosts && pp->hosts_attempted >= pp->max_hosts )
-        return 0;
-
-    pp->hosts_attempted++;
-
-    if (pp->port && addrp->sin_port != htons(pp->port))
-        addrp->sin_port = htons(pp->port);
-
-    rc = fsprobe_Init(1, addrp, pp->retry_delay, fsHandler, pp->verbose);
-    if (rc)
-    {
-        fprintf(stderr, "fsprobe_Init failed (%d)\n", rc);
-        fsprobe_Cleanup(1);
-        return 0;
-    }
-
-    for (;;)
-    {
-        tv.tv_sec = pp->host.wait;
-        tv.tv_usec = 0;
-        if (IOMGR_Select(0, 0, 0, 0, &tv)) 
-            break;
-    }
-    probeComplete();
-    return(0);
-}
-
-
-static BOOL
-pingCell(char *cell)
-{
-    int	rc;
-    char rootcell[MAXCELLCHARS+1];
-    char newcell[MAXCELLCHARS+1];
-    struct ping_params pp;
-
-    memset(&pp, 0, sizeof(struct ping_params));
-
-    if (!cell || strlen(cell) == 0) {
-        /* WIN32 NOTE: no way to get max chars */
-        if (rc = pcm_GetRootCellName(rootcell))
-            return(FALSE);
-        cell = rootcell;
-    }
-
-    pp.port = 7000; // AFS FileServer
-    pp.retry_delay = 10;
-    pp.max_hosts = 3;
-    pp.host.wait = 30;
-    pp.host.retry = 0;
-    pp.verbose = 1;
-
-    /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
-    rc = pcm_SearchCellFile(cell, newcell, pingFS, (void *)&pp);
-}
-#endif /* USE_FSPROBE */
- 
-// These two items are imported from afscreds.h 
-// but it cannot be included without causing conflicts
-#define c100ns1SECOND        (LONGLONG)10000000
-static void 
-TimeToSystemTime (SYSTEMTIME *pst, time_t TimeT)
-{
-    struct tm *pTime;
-    memset (pst, 0x00, sizeof(SYSTEMTIME));
-
-    if ((pTime = localtime (&TimeT)) != NULL)
-    {
-        pst->wYear = pTime->tm_year + 1900;
-        pst->wMonth = pTime->tm_mon + 1;
-        pst->wDayOfWeek = pTime->tm_wday;
-        pst->wDay = pTime->tm_mday;
-        pst->wHour = pTime->tm_hour;
-        pst->wMinute = pTime->tm_min;
-        pst->wSecond = pTime->tm_sec;
-        pst->wMilliseconds = 0;
-    }
-}
-
-void
-ObtainTokensFromUserIfNeeded(HWND hWnd)
-{
-    char * rootcell = NULL;
-    char   cell[MAXCELLCHARS+1] = "";
-    char   password[PROBE_PASSWORD_LEN+1];
-    krb5_data pwdata;
-    afsconf_cell cellconfig;
-    struct ktc_principal    aserver;
-    struct ktc_principal    aclient;
-    struct ktc_token	atoken;
     krb5_context ctx = 0;
-    krb5_timestamp now = 0;
-    krb5_error_code code;
-    int serverReachable = 0;
-    int rc;
-#ifndef USE_FSPROBE
     krb5_ccache cc = 0;
+    krb5_error_code code;
+    krb5_data pwdata;
     const char * realm = 0;
     krb5_principal principal = 0;
     char * pname = 0;
-#endif /* USE_FSPROBE */
-    DWORD       CurrentState;
-    char        HostName[64];
-    int         use_kfw = KFW_is_available();
+    char   password[PROBE_PASSWORD_LEN+1];
+    BOOL serverReachable = 0;
 
-    CurrentState = 0;
-    memset(HostName, '\0', sizeof(HostName));
-    gethostname(HostName, sizeof(HostName));
-    if (GetServiceStatus(HostName, TRANSARCAFSDAEMON, &CurrentState) != NOERROR)
-        return;
-    if (CurrentState != SERVICE_RUNNING) {
-        SendMessage(hWnd, WM_START_SERVICE, FALSE, 0L);
-        return;
-    }
+    realm = afs_realm_of_cell(cellconfig);  // do not free
 
-    if (!pkrb5_init_context)
-        return;
-
-    if ( use_kfw ) {
-        code = pkrb5_init_context(&ctx);
-        if ( code ) goto cleanup;
-    }
-
-    rootcell = (char *)GlobalAlloc(GPTR,MAXCELLCHARS+1);
-    if ( !rootcell ) goto cleanup;
-
-    code = get_cellconfig(cell, (void*)&cellconfig, rootcell);
+    code = pkrb5_build_principal(ctx, &principal, strlen(realm),
+                                  realm, PROBE_USERNAME, NULL, NULL);
     if ( code ) goto cleanup;
 
-    memset(&aserver, '\0', sizeof(aserver));
-    strcpy(aserver.name, "afs");
-    strcpy(aserver.cell, rootcell);
+    code = KFW_get_ccache(ctx, principal, &cc);
+    if ( code ) goto cleanup;
 
-    rc = pktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
+    code = pkrb5_unparse_name(ctx, principal, &pname);
+    if ( code ) goto cleanup;
 
-    if ( use_kfw ) {
-        code = pkrb5_timeofday(ctx, &now);
-        if ( code ) 
-            now = 0;
-
-        if (!rc && (now < atoken.endTime))
-            goto cleanup;
-
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            sprintf(message,"KFW_AFS_klog() returns: %d  now = %ul  endTime = %ul\n",
-                     rc, now, atoken.endTime);
-            OutputDebugString(message);
-        }
-    } else {
-        SYSTEMTIME stNow;
-        FILETIME ftNow;
-        FILETIME ftExpires;
-        LONGLONG llNow;
-        LONGLONG llExpires;
-        SYSTEMTIME stExpires;
-
-        TimeToSystemTime (&stExpires, atoken.endTime);
-        GetLocalTime (&stNow);
-        SystemTimeToFileTime (&stNow, &ftNow);
-        SystemTimeToFileTime (&stExpires, &ftExpires);
-
-        llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
-        llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
-
-        llNow /= c100ns1SECOND;
-        llExpires /= c100ns1SECOND;
-
-        if (!rc && (llNow < llExpires))
-            goto cleanup;
-
-        if ( IsDebuggerPresent() ) {
-            char message[256];
-            sprintf(message,"KFW_AFS_klog() returns: %d  now = %ul  endTime = %ul\n",
-                     rc, llNow, llExpires);
-            OutputDebugString(message);
-        }
-    }
-
-
-#ifdef USE_FSPROBE
-    serverReachable = cellPing(NULL);
-#else
-    if ( use_kfw ) {
-        // If we can't use the FSProbe interface we can attempt to forge
-        // a kinit and if we can back an invalid user error we know the
-        // kdc is at least reachable
-        realm = afs_realm_of_cell(&cellconfig);  // do not free
-
-        code = pkrb5_build_principal(ctx, &principal, strlen(realm),
-                                     realm, PROBE_USERNAME, NULL, NULL);
-        if ( code ) goto cleanup;
-
-        code = KFW_get_ccache(ctx, principal, &cc);
-        if ( code ) goto cleanup;
-
-        code = pkrb5_unparse_name(ctx, principal, &pname);
-        if ( code ) goto cleanup;
-
-        pwdata.data = password;
-        pwdata.length = PROBE_PASSWORD_LEN;
-        code = pkrb5_c_random_make_octets(ctx, &pwdata);
-        if (code) {
-            int i;
-            for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
-                password[i] = 'x';
-        }
-        password[PROBE_PASSWORD_LEN] = '\0';
-
-        code = KFW_kinit(NULL, NULL, HWND_DESKTOP, 
-                           pname, 
-                           password,
-                           5,
-                           0,
-                           0,
-                           0,
-                           1,
-                           0);
-        switch ( code ) {
-        case KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN:
-        case KRB5KDC_ERR_CLIENT_REVOKED:
-        case KRB5KDC_ERR_CLIENT_NOTYET:
-        case KRB5KDC_ERR_PREAUTH_FAILED:
-        case KRB5KDC_ERR_PREAUTH_REQUIRED:
-        case KRB5KDC_ERR_PADATA_TYPE_NOSUPP:
-            serverReachable = TRUE;
-            break;
-        default:
-            serverReachable = FALSE;
-        }
-    } else {
+    pwdata.data = password;
+    pwdata.length = PROBE_PASSWORD_LEN;
+    code = pkrb5_c_random_make_octets(ctx, &pwdata);
+    if (code) {
         int i;
-
         for ( i=0 ; i<PROBE_PASSWORD_LEN ; i++ )
             password[i] = 'x';
-
-        code = ObtainNewCredentials(rootcell, PROBE_USERNAME, password, TRUE);
-        switch ( code ) {
-        case INTK_BADPW:
-        case KERB_ERR_PRINCIPAL_UNKNOWN:
-        case KERB_ERR_SERVICE_EXP:
-        case RD_AP_TIME:
-            serverReachable = TRUE;
-            break;
-        default:
-            serverReachable = FALSE;
-        }
     }
-#endif
-    if ( !serverReachable ) {
-        if ( IsDebuggerPresent() )
-            OutputDebugString("Server Unreachable\n");
-        goto cleanup;
+    password[PROBE_PASSWORD_LEN] = '\0';
+
+    code = KFW_kinit(NULL, NULL, HWND_DESKTOP, 
+                      pname, 
+                      password,
+                      5,
+                      0,
+                      0,
+                      0,
+                      1,
+                      0);
+    switch ( code ) {
+    case KRB5KDC_ERR_C_PRINCIPAL_UNKNOWN:
+    case KRB5KDC_ERR_CLIENT_REVOKED:
+    case KRB5KDC_ERR_CLIENT_NOTYET:
+    case KRB5KDC_ERR_PREAUTH_FAILED:
+    case KRB5KDC_ERR_PREAUTH_REQUIRED:
+    case KRB5KDC_ERR_PADATA_TYPE_NOSUPP:
+        serverReachable = TRUE;
+        break;
+    default:
+        serverReachable = FALSE;
     }
-
-    if ( IsDebuggerPresent() )
-        OutputDebugString("Server Reachable\n");
-
-    if ( use_kfw ) {
-#ifdef USE_MS2MIT
-        KFW_import_windows_lsa();
-#endif /* USE_MS2MIT */
-        KFW_AFS_renew_expiring_tokens();
-        KFW_AFS_renew_token_for_cell(rootcell);
-
-        rc = pktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
-        if (!rc && (now < atoken.endTime))
-            goto cleanup;
-    }
-
-    SendMessage(hWnd, WM_OBTAIN_TOKENS, FALSE, (long)rootcell);
-    rootcell = NULL;    // rootcell freed by message receiver
 
   cleanup:
-    if (rootcell)
-        GlobalFree(rootcell);
-
-#ifndef USE_FSPROBE
-	if (KFW_is_available()) {
     if ( pname )
         pkrb5_free_unparsed_name(ctx,pname);
     if ( principal )
         pkrb5_free_principal(ctx,principal);
     if (cc)
         pkrb5_cc_close(ctx,cc);
-#endif /* USE_FSPROBE */
     if (ctx)
         pkrb5_free_context(ctx);
-	}
-    return;
-}
 
-// IP Change Monitoring Functions
-#include <Iphlpapi.h>
-
-DWORD
-GetNumOfIpAddrs(void)
-{
-    PMIB_IPADDRTABLE pIpAddrTable = NULL;
-    ULONG            dwSize;
-    DWORD            code;
-    DWORD            index;
-    DWORD            validAddrs = 0;
-
-    dwSize = 0;
-    code = GetIpAddrTable(NULL, &dwSize, 0);
-    if (code == ERROR_INSUFFICIENT_BUFFER) {
-        pIpAddrTable = malloc(dwSize);
-        code = GetIpAddrTable(pIpAddrTable, &dwSize, 0);
-        if ( code == NO_ERROR ) {
-            for ( index=0; index < pIpAddrTable->dwNumEntries; index++ ) {
-                if (pIpAddrTable->table[index].dwAddr != 0)
-                    validAddrs++;
-            }
-        }
-        free(pIpAddrTable);
-    }
-    return validAddrs;
-}
-
-void
-IpAddrChangeMonitor(void * hWnd)
-{
-#ifdef USE_OVERLAPPED
-    HANDLE Handle = INVALID_HANDLE_VALUE;   /* Do Not Close This Handle */
-    OVERLAPPED Ovlap;
-#endif /* USE_OVERLAPPED */
-    DWORD Result;
-    DWORD prevNumOfAddrs = GetNumOfIpAddrs();
-    DWORD NumOfAddrs;
-    char message[256];
-
-    if ( !hWnd )
-        return;
-
-    while ( TRUE ) {
-#ifdef USE_OVERLAPPED
-        ZeroMemory(&Ovlap, sizeof(OVERLAPPED));
-
-        Result = NotifyAddrChange(&Handle,&Ovlap);
-        if (Result != ERROR_IO_PENDING)
-        {        
-            if ( IsDebuggerPresent() ) {
-                sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
-                OutputDebugString(message);
-            }
-            break;
-        }
-
-        if ((Result = WaitForSingleObject(Handle,INFINITE)) != WAIT_OBJECT_0)
-        {
-            if ( IsDebuggerPresent() ) {
-                sprintf(message, "WaitForSingleObject() failed with error %d\n",
-                        GetLastError());
-                OutputDebugString(message);
-            }
-            continue;
-        }
-
-        if (GetOverlappedResult(Handle, &Ovlap,
-                                 &DataTransfered, TRUE) == 0)
-        {
-            if ( IsDebuggerPresent() ) {
-                sprintf(message, "GetOverlapped result failed %d \n",
-                        GetLastError());
-                OutputDebugString(message);
-            }
-            break;
-        }
-#else
-        Result = NotifyAddrChange(NULL,NULL);
-        if (Result != NO_ERROR)
-        {        
-            if ( IsDebuggerPresent() ) {
-                sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
-                OutputDebugString(message);
-            }
-            break;
-        }
-#endif
-        
-        NumOfAddrs = GetNumOfIpAddrs();
-
-        if ( IsDebuggerPresent() ) {
-            sprintf(message,"IPAddrChangeMonitor() NumOfAddrs: now %d was %d\n",
-                    NumOfAddrs, prevNumOfAddrs);
-            OutputDebugString(message);
-        }
-
-        if ( NumOfAddrs != prevNumOfAddrs ) {
-            // Give AFS Client Service a chance to notice and die
-            // Or for network services to startup
-            Sleep(2000);
-            // this call should probably be mutex protected
-            ObtainTokensFromUserIfNeeded(hWnd);
-        }
-        prevNumOfAddrs = NumOfAddrs;
-    }
-}
-
-
-DWORD 
-IpAddrChangeMonitorInit(HWND hWnd)
-{
-    DWORD status = ERROR_SUCCESS;
-    HANDLE thread;
-    ULONG  threadID = 0;
-
-    thread = CreateThread(NULL, 0, (PTHREAD_START_ROUTINE)IpAddrChangeMonitor,
-                                    hWnd, 0, &threadID);
-
-    if (thread == NULL) {
-        status = GetLastError();
-    }
-    CloseHandle(thread);
-    return status;
+    return serverReachable;
 }
 

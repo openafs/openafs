@@ -10,11 +10,11 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afskfw.h>
+#include "ipaddrchg.h"
 }
 
 #include "afscreds.h"
-#include "afskfw.h"
-
 
 /*
  * DEFINITIONS ________________________________________________________________
