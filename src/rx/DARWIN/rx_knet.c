@@ -24,7 +24,7 @@ int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
     struct uio u;
     int i;
     struct iovec iov[RX_MAXIOVECS];
-    struct sockaddr *sa;
+    struct sockaddr *sa = NULL;
     int code;
 
     int haveGlock = ISAFS_GLOCK();
@@ -60,13 +60,16 @@ int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
     if (haveGlock) {
         AFS_GLOCK();
     }
-    *alength=*alength-u.uio_resid;
+    if (code)
+	return code;
+    *alength -= u.uio_resid;
     if (sa) {
        if (sa->sa_family == AF_INET) {
           if (addr) *addr=*(struct sockaddr_in *)sa;
        } else {
           printf("Unknown socket family %d in NetReceive\n");
        }
+       FREE(sa, M_SONAME);
     }
     return code;
 }

@@ -26,6 +26,7 @@
 RCSID("$Header$");
 
 #ifdef AFS_FBSD40_ENV
+#include <sys/malloc.h>
 #include "../rx/rx_kcommon.h"
 
 
@@ -37,7 +38,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct uio u;
     int i;
     struct iovec iov[RX_MAXIOVECS];
-    struct sockaddr *sa;
+    struct sockaddr *sa = NULL;
     int code;
 
     int haveGlock = ISAFS_GLOCK();
@@ -75,13 +76,16 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     if (haveGlock) {
         AFS_GLOCK();
     }
-    *alength=*alength-u.uio_resid;
+    if (code)
+	return code;
+    *alength -= u.uio_resid;
     if (sa) {
        if (sa->sa_family == AF_INET) {
           if (addr) *addr=*(struct sockaddr_in *)sa;
        } else {
           printf("Unknown socket family %d in NetReceive\n", sa->sa_family);
        }
+       FREE(sa, M_SONAME);
     }
     return code;
 }
@@ -141,7 +145,8 @@ osi_NetSend(asocket, addr, dvec, nvecs, alength, istack)
 #if KNET_DEBUG
     printf("+");
 #endif
-    code = sosend(asocket, addr, &u, NULL, NULL, 0, curproc);
+    code = sosend(asocket, (struct sockaddr *)addr, &u, NULL, NULL, 0, 
+		  curproc);
 #if KNET_DEBUG
     if (code) {
         if (code == EINVAL)
