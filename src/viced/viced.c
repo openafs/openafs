@@ -898,7 +898,7 @@ int dopanic;
     }
 #endif
     DFlush();
-    PrintCounters();
+    if (!dopanic) PrintCounters();
 
     /* do not allows new reqests to be served from now on, all new requests
        are returned with an error code of RX_RESTARTING ( transient failure ) */

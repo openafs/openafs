@@ -442,7 +442,7 @@ static CDel(cb)
 	assert(0);
 	ViceLog(0,("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",cbi,fe->firstcb,*cbp));
 	DumpCallBackState();
-	ShutDown();
+	ShutDownAndCore(PANIC);
       }
     }
     CDelPtr(fe, cbp);
@@ -492,7 +492,7 @@ static u_short *FindCBPtr(fe, host)
 	if (safety > cbstuff.nblks) {
 	  ViceLog(0,("FindCBPtr: Internal Error -- shutting down.\n"));
 	  DumpCallBackState();
-	  ShutDown();
+	  ShutDownAndCore(PANIC);
 	}
 	cb = itocb(*cbp);
 	if (cb->hhead == hostindex)
@@ -695,7 +695,7 @@ AddCallBack1_r(host, fid, thead, type, locked)
 	if (safety > cbstuff.nblks) {
 	  ViceLog(0,("AddCallBack1: Internal Error -- shutting down.\n"));
 	  DumpCallBackState();
-	  ShutDown();
+	  ShutDownAndCore(PANIC);
 	}
 	if (cb->hhead == h_htoi(host))
 	    break;
@@ -1361,7 +1361,7 @@ CleanupTimedOutCallBacks_r()
 		if (ntimedout > cbstuff.nblks) {
 		  ViceLog(0,("CCB: Internal Error -- shutting down...\n"));
 		  DumpCallBackState();
-		  ShutDown();
+		  ShutDownAndCore(PANIC);
 		}
 	    } while (cbi != *thead);
 	    *thead = 0;
