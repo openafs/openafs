@@ -191,6 +191,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	    afs_osi_Invisible();
 	    afs_RX_Running = 2;
 	    afs_osi_Wakeup(&afs_RX_Running);
+#ifndef UKERNEL
+	    afs_osi_RxkRegister();
+#endif
 	    rxk_Listener();
 	}
 #ifdef	AFS_SGI_ENV
@@ -1257,6 +1260,9 @@ afs_shutdown()
 	afs_osi_Sleep(&afs_termState);
 #if defined(RXK_LISTENER_ENV)
     afs_warn("RxListener... ");
+#ifndef UKERNEL
+    afs_osi_UnmaskRxkSignals();
+#endif
     /* cancel rx listener */
     osi_StopListener(); /* This closes rx_socket. */
     while (afs_termState == AFSOP_STOP_RXK_LISTENER) 
