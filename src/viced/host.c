@@ -745,7 +745,7 @@ int h_TossStuff_r(register struct host *host)
 	    free(host->hcps.prlist_val);
 	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;
-	DeleteAllCallBacks_r(host);
+	DeleteAllCallBacks_r(host, 1);
 	host->hostFlags &= ~RESETDONE;	/* just to be safe */
 
 	/* if alternate addresses do not exist */

@@ -343,7 +343,7 @@ retry:
       ViceLog(3,("Discarded a packet for deleted host %s\n",afs_inet_ntoa_r(thost->host,hoststr)));
       code = VBUSY; /* raced, so retry */
     }
-    else if (thost->hostFlags & VENUSDOWN) {
+    else if ((thost->hostFlags & VENUSDOWN) || (thost->hostFlags & HFE_LATER)){
       if (BreakDelayedCallBacks_r(thost)) {
 	ViceLog(0,("BreakDelayedCallbacks FAILED for host %s which IS UP.  Possible network or routing failure.\n",
 		afs_inet_ntoa_r(thost->host, hoststr)));

@@ -93,6 +93,8 @@ RCSID("$Header$");
 
 
 extern int      BreakVolumeCallBacks(), InitCallBack();
+extern int      BreakVolumeCallBacks(), InitCallBack(), BreakLaterCallBacks();
+extern int BreakVolumeCallBacksLater();
 extern	int     LogLevel, etext;
 extern afs_int32	BlocksSpare, PctSpare;
 
@@ -107,6 +109,13 @@ extern int RXSTATS_ExecuteRequest();
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
 FILE * console = NULL;
+
+#ifdef AFS_PTHREAD_ENV
+pthread_mutex_t fsync_glock_mutex;
+pthread_cond_t fsync_cond;
+#else 
+char fsync_wait[1];
+#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
 #define AFS_QUIETFS_ENV 1
@@ -332,6 +341,10 @@ static void FiveMinuteCheckLWP()
 	ViceLog(2, ("Set disk usage statistics\n"));
 	VSetDiskUsage();
 	if (FS_registered == 1) Do_VLRegisterRPC();
+	/* Force wakeup in case we missed something; pthreads does timedwait */
+#ifndef AFS_PTHREAD_ENV
+	LWP_NoYieldSignal(&fsync_wait);
+#endif
 	if(printBanner && (++msg&1)) { /* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
 	    if (console != NULL) {
@@ -365,6 +378,44 @@ static void HostCheckLWP()
     }
 } /*HostCheckLWP*/
 
+/* This LWP does fsync checks every 5 minutes:  it should not be used for
+ * other 5 minute activities because it may be delayed by timeouts when
+ * it probes the workstations
+ */
+static FsyncCheckLWP()
+{
+    afs_int32 code;
+#ifdef AFS_PTHREAD_ENV
+    struct timespec fsync_next;
+#endif
+    ViceLog(1, ("Starting fsync check process\n"));
+
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_init(&fsync_cond, NULL) == 0);
+    assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
+#endif
+
+    FSYNC_LOCK
+    while(1) {
+#ifdef AFS_PTHREAD_ENV
+	/* rounding is fine */
+	fsync_next.tv_nsec = 0;
+	fsync_next.tv_sec = time(0) + fiveminutes;
+	
+	code = pthread_cond_timedwait(&fsync_cond, &fsync_glock_mutex, 
+				      &fsync_next);
+	if (code != 0 && code != ETIMEDOUT) 
+	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
+#else /* AFS_PTHREAD_ENV */
+	if (( code = LWP_WaitProcess(&fsync_wait)) != LWP_SUCCESS)
+	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
+#endif /* AFS_PTHREAD_ENV */
+	ViceLog(2, ("Checking for fsync events\n"));
+	do {
+	    code = BreakLaterCallBacks();
+	} while (code != 0);
+    }
+} 
 
 /*------------------------------------------------------------------------
  * PRIVATE ClearXStatValues
@@ -1423,7 +1474,7 @@ main(int argc, char * argv[])
 
     /* Initialize volume support */
     if (!novbc) {
-	V_BreakVolumeCallbacks = BreakVolumeCallBacks;
+	V_BreakVolumeCallbacks = BreakVolumeCallBacksLater;
     }
 
     /* initialize libacl routines */
@@ -1562,6 +1613,7 @@ main(int argc, char * argv[])
     AFS_SIGSET_CLEAR();
     assert(pthread_create(&serverPid, &tattr, (void *)FiveMinuteCheckLWP, &fiveminutes) == 0);
     assert(pthread_create(&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
+    assert(pthread_create(&serverPid, &tattr, (void *)FsyncCheckLWP, &fiveminutes) == 0);
     AFS_SIGSET_RESTORE();
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_CreateProcess(FiveMinuteCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
@@ -1569,6 +1621,8 @@ main(int argc, char * argv[])
 	    
     assert(LWP_CreateProcess(HostCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
 	    (void *) &fiveminutes, "HostCheck", &serverPid) == LWP_SUCCESS);
+    assert(LWP_CreateProcess(FsyncCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
+	    (void *) &fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
     TM_GetTimeOfDay(&tp, 0);

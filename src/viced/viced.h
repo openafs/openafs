@@ -208,7 +208,14 @@ extern pthread_mutex_t fileproc_glock_mutex;
     assert(pthread_mutex_lock(&fileproc_glock_mutex) == 0);
 #define FS_UNLOCK \
     assert(pthread_mutex_unlock(&fileproc_glock_mutex) == 0);
+extern pthread_mutex_t fsync_glock_mutex;
+#define FSYNC_LOCK \
+    assert(pthread_mutex_lock(&fsync_glock_mutex) == 0);
+#define FSYNC_UNLOCK \
+    assert(pthread_mutex_unlock(&fsync_glock_mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 #define FS_LOCK
 #define FS_UNLOCK
+#define FSYNC_LOCK
+#define FSYNC_UNLOCK
 #endif /* AFS_PTHREAD_ENV */

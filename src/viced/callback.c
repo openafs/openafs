@@ -120,7 +120,7 @@ RCSID("$Header$");
 #include <afs/ptclient.h>  /* need definition of prlist for host.h */
 #include "host.h"
 
-
+extern afsUUID FS_HostUUID;
 extern int hostCount;
 int ShowProblems = 1;
 
@@ -146,12 +146,15 @@ struct cbstruct {
 
 struct FileEntry {
     afs_uint32	    vnode;	
-    afs_uint32         unique;
+    afs_uint32      unique;
     afs_uint32	    volid;
     afs_uint32	    fnext;
     afs_uint32	    ncbs;
     afs_uint32	    firstcb;
+    afs_uint32      status;
+    afs_uint32      spare;
 } *FE;	/* Don't use FE[0] */
+#define FE_LATER 0x1
 
 struct CallBack {
     afs_uint32	    cnext;		/* Next call back entry */
@@ -281,14 +284,15 @@ static int TAdd(register struct CallBack *cb, register afs_uint32 *thead);
 static int TDel(register struct CallBack *cb);
 static int HAdd(register struct CallBack *cb, register struct host *host);
 static int HDel(register struct CallBack *cb);
-static int CDel(struct CallBack *cb);
-static int CDelPtr(register struct FileEntry *fe, register afs_uint32 *cbp);
+static int CDel(struct CallBack *cb, int deletefe);
+static int CDelPtr(register struct FileEntry *fe, register afs_uint32 *cbp, int deletefe);
 static afs_uint32 *FindCBPtr(struct FileEntry *fe, struct host *host);
 static int FDel(register struct FileEntry *fe);
 static int AddCallBack1_r(struct host *host, AFSFid *fid, afs_uint32 *thead, int type, int locked);
 static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas, struct AFSCBFids *afidp, struct host *xhost);
-static int MultiBreakVolumeCallBack_r(struct host *host, int isheld, struct VCBParams *parms);
+static int MultiBreakVolumeCallBack_r(struct host *host, int isheld, struct VCBParams *parms, int deletefe);
 static int MultiBreakVolumeCallBack(struct host *host, int isheld, struct VCBParams *parms);
+static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld, struct VCBParams *parms);
 static int lih_r(register struct host *host, register int held, register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 
@@ -428,7 +432,7 @@ static int HDel(register struct CallBack *cb)
 /* N.B.  This one also deletes the CB, and also possibly parent FE, so
  * make sure that it is not on any other list before calling this
  * routine */
-static int CDel(struct CallBack *cb)
+static int CDel(struct CallBack *cb, int deletefe)
 {
     int cbi = cbtoi(cb);
     struct FileEntry *fe = itofe(cb->fhead);
@@ -444,7 +448,7 @@ static int CDel(struct CallBack *cb)
 	ShutDown();
       }
     }
-    CDelPtr(fe, cbp);
+    CDelPtr(fe, cbp, deletefe);
     return 0;
 }
 
@@ -456,7 +460,7 @@ static int CDel(struct CallBack *cb)
 int Ccdelpt=0, CcdelB=0;
 
 static int CDelPtr(register struct FileEntry *fe, 
-	register afs_uint32 *cbp)
+	register afs_uint32 *cbp, int deletefe)
 {
     register struct CallBack *cb;
 
@@ -468,7 +472,7 @@ static int CDelPtr(register struct FileEntry *fe,
 	CcdelB++;
     *cbp = cb->cnext;
     FreeCB(cb);
-    if (--fe->ncbs == 0)
+    if (deletefe && (--fe->ncbs == 0))
 	FDel(fe);
     return 0;
 }
@@ -511,8 +515,7 @@ int InitCallBack(int nblks)
 {
     H_LOCK
     tfirst = CBtime(FT_ApproxTime());
-    /* N.B. FE's, CB's share same free list.  If the sizes of either change,
-      FE and CB will have to be separated.  The "-1", below, is because
+    /* N.B. The "-1", below, is because
       FE[0] and CB[0] are not used--and not allocated */
     FE = ((struct FileEntry *)(malloc(sizeof(struct FileEntry)*nblks)))-1;
     cbstuff.nFEs = nblks;
@@ -878,8 +881,8 @@ int BreakCallBack(struct host *xhost, AFSFid *fid, int flag)
 	    ncbas++;
 	    TDel(cb);
 	    HDel(cb);
-	    CDel(cb); /* Usually first; so this delete */
-		      /* is reasonably inexpensive */
+	    CDel(cb, 1); /* Usually first; so this delete 
+			    is reasonably inexpensive */
 	  }
 	}
       }
@@ -934,7 +937,7 @@ int DeleteCallBack(struct host *host, AFSFid *fid)
     }
     HDel(itocb(*pcb));
     TDel(itocb(*pcb));
-    CDelPtr(fe, pcb);
+    CDelPtr(fe, pcb, 1);
     h_Unlock_r(host);
     H_UNLOCK
     return 0;
@@ -976,16 +979,7 @@ int DeleteFileCallBacks(AFSFid *fid)
 
 /* Delete (do not break) all call backs for host.  The host should be
  * locked. */
-int DeleteAllCallBacks(struct host *host)
-{
-    int retVal;
-    H_LOCK
-    retVal = DeleteAllCallBacks_r(host);
-    H_UNLOCK
-    return retVal;
-}
-
-int DeleteAllCallBacks_r(struct host *host)
+int DeleteAllCallBacks_r(struct host *host, int deletefe)
 {
     register struct CallBack *cb;
     register int cbi, first;
@@ -1000,7 +994,7 @@ int DeleteAllCallBacks_r(struct host *host)
 	cb = itocb(cbi);
 	cbi = cb->hnext;
 	TDel(cb);
-	CDel(cb);
+	CDel(cb, deletefe);
     } while (cbi != first);
     host->cblist = 0;
     return 0;
@@ -1019,8 +1013,6 @@ int BreakDelayedCallBacks(struct host *host)
     H_UNLOCK
     return retVal;
 }
-
-extern afsUUID FS_HostUUID;
 
 int BreakDelayedCallBacks_r(struct host *host)
 {
@@ -1080,7 +1072,7 @@ int BreakDelayedCallBacks_r(struct host *host)
 		nfids++;
 		HDel(cb);
 		TDel(cb);
-		CDel(cb);
+		CDel(cb, 1);
 	    }
 	} while (cbi && cbi != first && nfids < AFSCBMAX);
 
@@ -1119,6 +1111,9 @@ int BreakDelayedCallBacks_r(struct host *host)
     }
 
     cbstuff.nbreakers--;
+    /* If we succeeded it's always ok to unset HFE_LATER */
+    if (!host->hostFlags & VENUSDOWN)
+	host->hostFlags &= ~HFE_LATER;
     return (host->hostFlags & VENUSDOWN);
 }
 
@@ -1127,7 +1122,7 @@ int BreakDelayedCallBacks_r(struct host *host)
 ** isheld is 1 if the host is held in BreakVolumeCallBacks
 */
 static int MultiBreakVolumeCallBack_r(struct host *host, 
-	int isheld, struct VCBParams *parms)
+	int isheld, struct VCBParams *parms, int deletefe)
 {
     char hoststr[16];
 
@@ -1148,9 +1143,11 @@ static int MultiBreakVolumeCallBack_r(struct host *host,
 	    ViceLog(0, ("CB: volume callback for host %s:%d failed\n",
 		    afs_inet_ntoa_r(host->host,hoststr), host->port));
 	}
-	DeleteAllCallBacks_r(host); /* Delete all callback state rather than
-				     attempting to selectively remember to
-				     delete the volume callbacks later */
+	DeleteAllCallBacks_r(host, deletefe); /* Delete all callback state 
+						 rather than attempting to 
+						 selectively remember to
+						 delete the volume callbacks
+						 later */
 	host->hostFlags &= ~RESETDONE; /* Do InitCallBackState when host returns */
 	h_Unlock_r(host);
 	return 0; /* release hold */
@@ -1185,7 +1182,21 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld,
 {
     int retval;
     H_LOCK
-    retval = MultiBreakVolumeCallBack_r(host, isheld, parms);
+    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
+    H_UNLOCK
+    return retval;
+}
+
+/*
+** isheld is 0 if the host is held in h_Enumerate
+** isheld is 1 if the host is held in BreakVolumeCallBacks
+*/
+static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld, 
+	struct VCBParams *parms)
+{
+    int retval;
+    H_LOCK
+    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
     H_UNLOCK
     return retval;
 }
@@ -1267,6 +1278,157 @@ int BreakVolumeCallBacks(afs_uint32 volume)
     return 0;
 }
 
+#ifdef AFS_PTHREAD_ENV
+extern pthread_cond_t fsync_cond;
+#else
+extern char fsync_wait[];
+#endif
+
+int BreakVolumeCallBacksLater(afs_uint32 volume)
+{
+    int hash;
+    u_short *feip;
+    struct FileEntry *fe;
+    struct CallBack *cb;
+    struct host *host;
+    int found = 0;
+
+    ViceLog(25, ("Setting later on volume %d\n", volume));
+    H_LOCK
+    for (hash=0; hash<VHASH; hash++) {
+	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
+	    if (fe->volid == volume) {
+		register struct CallBack *cbnext;
+                for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
+		    host = h_itoh(cb->hhead);
+		    host->hostFlags |= HFE_LATER;
+		    cb->status = CB_DELAYED;
+                    cbnext = itocb(cb->cnext);
+                }
+		FSYNC_LOCK
+		fe->status |= FE_LATER;
+		FSYNC_UNLOCK
+		found++;
+	    }
+	    feip = &fe->fnext;
+	}
+    }
+    H_UNLOCK
+
+    if (!found) {
+	/* didn't find any callbacks, so return right away. */
+	return 0;
+    }
+
+    ViceLog(25, ("Fsync thread wakeup\n"));
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_broadcast(&fsync_cond) == 0);
+#else
+    LWP_NoYieldSignal(&fsync_wait);
+#endif
+    return 0;
+}
+
+int BreakLaterCallBacks(void)
+{
+    struct AFSFid fid;
+    int hash;
+    u_short *feip;
+    struct CallBack *cb;
+    struct FileEntry *fe = NULL;
+    struct FileEntry *myfe = NULL;
+    struct FileEntry *tmpfe;
+    struct host *host;
+    struct VCBParams henumParms;
+    unsigned short tthead = 0;  /* zero is illegal value */
+    
+    /* Unchain first */
+    ViceLog(25, ("Looking for FileEntries to unchain\n"));
+    H_LOCK
+restart:
+    tthead = 0;
+    for (hash=0; hash<VHASH; hash++) {
+	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
+	    if (fe && fe->status & FE_LATER) {
+		ViceLog(125, ("Unchaining for %d:%d:%d\n", fe->vnode, 
+			      fe->unique, fe->volid));
+		*feip = fe->fnext;
+		/* Works since volid is deeper than the largest pointer */
+		((struct object *)fe)->next = (struct object *)myfe;
+		myfe = fe;
+	    } else {
+		feip = &fe->fnext;
+	    }
+	}
+    }
+    
+    if (!myfe) {
+       H_UNLOCK
+       return 0;
+    }
+
+    /* loop over myfe and free/break */
+    FSYNC_UNLOCK
+    while (myfe) {
+	/* Clear for next pass */
+	fid.Volume = 0, fid.Vnode = fid.Unique = 0;
+	tthead = 0;
+	for (fe = myfe; fe; ) {
+	    /* Pick up first volid we see and break callbacks for it */
+	    if (fid.Volume == 0 || fid.Volume == fe->volid) {
+		register struct CallBack *cbnext;
+		ViceLog(125, ("Caught volume %d for breaking\n", fe->volid));
+		fid.Volume = fe->volid;
+		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
+		    host = h_itoh(cb->hhead);
+		    h_Hold_r(host);
+		    cbnext = itocb(cb->cnext);
+		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
+			tthead = cb->thead;
+		    }
+		    TDel(cb);
+		    HDel(cb);
+		    FreeCB(cb);
+		    /* leave hold for MultiBreakVolumeCallBack to clear */
+		}
+		/* if we delete the head element, relink chain */
+		if (myfe == fe) 
+		    (struct object *)myfe = ((struct object *)fe)->next;
+		tmpfe = fe;
+		(struct object *)fe = ((struct object *)fe)->next;
+		FreeFE(tmpfe);
+	    } else {
+		(struct object *)fe = ((struct object *)fe)->next;
+	    }
+	}
+
+	if (tthead) {
+	    ViceLog(125, ("Breaking volume %d\n", fid.Volume));
+	    henumParms.ncbas = 0;
+	    henumParms.fid = &fid;
+	    henumParms.thead = tthead;
+	    H_UNLOCK
+	    h_Enumerate(MultiBreakVolumeLaterCallBack, (char *) &henumParms);
+	    H_LOCK
+
+	    if (henumParms.ncbas) {    /* do left-overs */
+		struct AFSCBFids tf;
+		tf.AFSCBFids_len = 1;
+		tf.AFSCBFids_val = &fid;
+		
+		MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0 );
+		henumParms.ncbas = 0;
+	    }
+	}  
+    }
+    FSYNC_LOCK
+
+    if (tthead) goto restart;
+    H_UNLOCK
+
+    return 1;
+}
+
 /*
  * Delete all timed-out call back entries (to be called periodically by file
  * server)
@@ -1298,7 +1460,7 @@ int CleanupTimedOutCallBacks_r(void)
 			itofe(cb->fhead)->volid, itofe(cb->fhead)->vnode,
 			itofe(cb->fhead)->unique));
 		HDel(cb);
-		CDel(cb);
+		CDel(cb, 1);
 		ntimedout++;
 		if (ntimedout > cbstuff.nblks) {
 		  ViceLog(0,("CCB: Internal Error -- shutting down...\n"));
@@ -1428,7 +1590,7 @@ int ClearHostCallbacks_r(struct host *hp, int locked)
          */
 	cbstuff.GSS5++;
     }
-    DeleteAllCallBacks_r(hp);
+    DeleteAllCallBacks_r(hp, 1);
     if (hp->hostFlags & VENUSDOWN) {
 	hp->hostFlags &= ~RESETDONE;	/* remember that we must do a reset */
     } else {
@@ -1681,9 +1843,9 @@ int PrintCB(register struct CallBack *cb, afs_uint32 now)
     struct FileEntry *fe = itofe(cb->fhead);
     time_t expires = TIndexToTime(cb->thead);
 
-    printf("vol=%u vn=%u cbs=%d hi=%d st=%d, exp in %d secs at %s", 
+    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s", 
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status,
-	   expires - now, ctime(&expires));
+	   fe->status, expires - now, ctime(&expires));
 }
 
 #endif
