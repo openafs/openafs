@@ -15,7 +15,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2003-04-06 17:25-0300\n"
+"POT-Creation-Date: 2003-07-26 17:12-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,9 +51,9 @@ msgstr "Für welche Zelle liefert der Server Dateien?"
 #. Description
 #: ../openafs-client.templates:16
 msgid ""
-"  AFS filespace is organized into cells or administrative domains.\n"
-"  Each workstation belongs to one cell.  Usually the cell is the DNS\n"
-"  domain name of the site."
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
 msgstr ""
 
 #. Default
@@ -69,11 +69,10 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:24
 msgid ""
-"  AFS uses a  area of the disk to cache remote files for faster\n"
-"  access.  This cache will be mounted on /var/cache/openafs.  It is\n"
-"  important that the cache not overfill the partition it is located\n"
-"  on.  Often, people find it useful to dedicate a partition to their\n"
-"  AFS cache."
+"AFS uses a  area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
 msgstr ""
 
 #. Description
@@ -107,7 +106,7 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:54
-msgid "ENcrypt authenticated traffic with AFS fileserver?"
+msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
 
 #. Description

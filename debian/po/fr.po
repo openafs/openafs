@@ -14,7 +14,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
-"POT-Creation-Date: 2003-04-06 17:25-0300\n"
+"POT-Creation-Date: 2003-07-26 17:12-0400\n"
 "PO-Revision-Date: 2003-06-24 10:08+0200\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
@@ -61,10 +61,11 @@ msgstr "À quelle cellule AFS ce poste de travail appartient-elle ?"
 
 #. Description
 #: ../openafs-client.templates:16
+#, fuzzy
 msgid ""
-"  AFS filespace is organized into cells or administrative domains.\n"
-"  Each workstation belongs to one cell.  Usually the cell is the DNS\n"
-"  domain name of the site."
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
 msgstr ""
 "L'espace des fichiers AFS est organisé en cellules ou domaines "
 "administratifs. Chaque poste de travail appartient à une cellule. "
@@ -82,12 +83,12 @@ msgstr "Quelle est la taille de votre cache pour AFS (en kilo-octets) ?"
 
 #. Description
 #: ../openafs-client.templates:24
+#, fuzzy
 msgid ""
-"  AFS uses a  area of the disk to cache remote files for faster\n"
-"  access.  This cache will be mounted on /var/cache/openafs.  It is\n"
-"  important that the cache not overfill the partition it is located\n"
-"  on.  Often, people find it useful to dedicate a partition to their\n"
-"  AFS cache."
+"AFS uses a  area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
 msgstr ""
 "AFS utilise une partie du disque pour mettre en cache des fichiers distants "
 "et accélérer les accès. Ce cache sera monté sur /var/cache/openafs. Il est "
@@ -139,7 +140,8 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:54
-msgid "ENcrypt authenticated traffic with AFS fileserver?"
+#, fuzzy
+msgid "Encrypt authenticated traffic with AFS fileserver?"
 msgstr ""
 "Faut-il chiffrer le trafic authentifié avec le serveur de fichiers AFS ?"
 
