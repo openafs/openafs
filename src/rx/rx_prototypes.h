@@ -288,11 +288,7 @@ extern void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime);
 
 
 
-/* rx_knet.c */
-#ifndef AFS_NT40_ENV
-extern struct osi_socket *rxk_NewSocket(short aport);
-#endif
-extern int rxk_FreeSocket(register osi_socket asocket);
+/* ARCH/rx_knet.c */
 #if defined(KERNEL) && !defined(AFS_SGI_ENV)
 extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 		       struct iovec *dvec, int nvecs, afs_int32 asize, int istack);
