@@ -26,6 +26,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 #undef BITMAP_LATER
 #undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 
