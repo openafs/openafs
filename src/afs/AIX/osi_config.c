@@ -147,7 +147,14 @@ afs_config(cmd, uiop)
 	 */
 	if (err == ENOENT)
 	    err = 0;
-	else if (!err) {
+#ifndef AFS_AIX51_ENV
+	else
+#endif
+	if (!err) {
+#ifdef AFS_AIX51_ENV
+	    if (err = unpin(&afs_callout_lock))
+		err = 0;
+#endif
 	    if (err = unpincode(afs_config))
 		err = 0;
 

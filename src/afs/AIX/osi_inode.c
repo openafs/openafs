@@ -236,13 +236,13 @@ igetinode(dev, vfsp, inode, vpp, perror)
 	ip = 0;
 	goto out;
     }
-    IREAD_UNLOCK(ip);
     if (vpp) {
 	if (nvfsp)
 	    *vpp = ip->i_gnode.gn_vnode;
 	else
 	    setuerror(iptovp(vfsp, ip, vpp));
     }
+    IREAD_UNLOCK(ip);
   out:
     return ip;
 }

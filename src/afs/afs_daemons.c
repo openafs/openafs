@@ -1338,7 +1338,7 @@ shutdown_daemons(void)
 #ifdef AFS_AIX41_ENV
 	lock_free(&afs_asyncbuf_lock);
 	unpin(&afs_asyncbuf, sizeof(struct buf *));
-	pin(&afs_asyncbuf_cv, sizeof(afs_int32));
+	unpin(&afs_asyncbuf_cv, sizeof(afs_int32));
 #else /* AFS_AIX41_ENV */
 	afs_busyq = NULL;
 	afs_biodcnt = 0;

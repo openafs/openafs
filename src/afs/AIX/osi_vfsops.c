@@ -34,6 +34,7 @@ extern struct afs_exporter *afs_nfsexporter;
 struct vfs *afs_globalVFS = 0;
 struct vcache *afs_globalVp = 0;
 
+extern int afs_cold_shutdown;
 
 static int afs_root_nolock(struct vfs *afsp, struct vnode **avpp);
 
@@ -81,6 +82,10 @@ afs_mount(afsp, path, data)
     afsp->vfs_mntdover->v_mvfsp = afsp;
     afsp->vfs_mdata->vmt_flags |= MNT_REMOTE;
 
+#ifdef AFS_AIX51_ENV
+    afsp->vfs_count = 1;
+    afsp->vfs_mntd->v_count = 1;
+#endif
 #ifdef AFS_AIX_IAUTH_ENV
     if (afs_iauth_register() < 0)
 	afs_warn("Can't register AFS iauth interface.\n");
@@ -97,6 +102,7 @@ afs_unmount(struct vfs *afsp, int flag)
     AFS_STATCNT(afs_unmount);
 
     afs_globalVFS = 0;
+    afs_cold_shutdown = 1;
     afs_shutdown();
 
     AFS_VFSUNLOCK();
