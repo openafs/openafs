@@ -2,7 +2,9 @@
 #ifndef	AFS_PARAM_COMMON_H
 #define	AFS_PARAM_COMMON_H
 
+#ifndef ASSEMBLER
 #include <sys/param.h>
+#endif
 
 #define AFS_XBSD_ENV 1             /* {Free,Open,Net}BSD */
 
@@ -33,6 +35,8 @@
 #define AFS_ENV  	1
 
 #define AFS_MOUNT_AFS	"afs"
+#define AFS_SYSCALL 210
+
 
 #ifndef MOUNT_UFS
 #define MOUNT_UFS "ufs"

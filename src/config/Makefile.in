@@ -138,7 +138,7 @@ ukinstall: \
 	${UKERNELDIR}/afs/AFS_component_version_number.c
 
 clean:
-	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c
+	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c param.h.new
 
 dest: ${DEST}/include/afs/param.h \
 	${DEST}/include/afs/stds.h \

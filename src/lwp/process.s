@@ -1074,7 +1074,9 @@ returnto:
 #define	fs5	$f7
 #define	fs6	$f8
 #define	fs7	$f9
-#else	/* OSF */
+#elif defined(AFS_XBSD_ENV)
+#include <machine/asm.h>
+#else	/* !OSF && !XBSD */
 #include <mach/alpha/asm.h>
 #endif	/* OSF */
 
@@ -1084,7 +1086,9 @@ returnto:
 #define returnaddr (FRAMESIZE-8)
 #define topstack 0
 
+#ifdef AFS_OSF_ENV
 IMPORT(PRE_Block,4)
+#endif
 .align	4
 #ifdef	AFS_OSF_ENV
 NESTED(savecontext,FRAMESIZE,ra)
@@ -1161,7 +1165,7 @@ LEAF(returnto,1)
 	END(returnto)
 #endif
 
-#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV)
 /* Sun 386i... I hope this does the right thing!!!
  * 
  * Written by Derek Atkins <warlord@MIT.EDU>

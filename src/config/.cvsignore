@@ -13,3 +13,5 @@ Makefile.i386_linux22
 Makefile.i386_linux24
 Makefile.sun4x_56
 Makefile.sun4x_57
+param.h.new
+Makefile.config

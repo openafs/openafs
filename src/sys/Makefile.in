@@ -51,7 +51,7 @@ syscall.o: syscall.s
 		$(RM) -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
 		touch syscall.o;; \
-	i386_*bsd* ) \
+	i386_*bsd*|*nbsd*) \
 		touch syscall.o;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \

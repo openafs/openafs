@@ -128,7 +128,7 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
-	i386_nbsd15)
+	*nbsd15)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS}'
 		MT_LIBS=""

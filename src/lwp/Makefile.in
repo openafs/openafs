@@ -54,6 +54,10 @@ process.o	: process.s process.c
 		/usr/bin/cpp -P ${srcdir}/process.fbsd.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
+	alpha_nbsd* ) \
+		/usr/bin/cpp -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
+		${AS} -o process.o process.ss; \
+		$(RM) process.ss ;; \
 	hp* | *_linux* | sgi_64 | sgi_65 ) \
 		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
 	ncrx86_*) \

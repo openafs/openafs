@@ -7,8 +7,6 @@
 
 #define AFS_X86_ENV 1
 
-#define AFS_MOUNT_AFS	"afs"
-
 #define SYS_NAME       "i386_nbsd15"
 #define SYS_NAME_ID    SYS_NAME_ID_i386_nbsd15
 
