@@ -97,6 +97,7 @@
    they won't allocate sunx86 IDs at all. So leave a gap and pray. */
 #define SYS_NAME_ID_sunx86_57            950
 #define SYS_NAME_ID_sunx86_58            951
+#define SYS_NAME_ID_sunx86_59            952
 
 #define SYS_NAME_ID_vax_ul4		1003
 #define SYS_NAME_ID_vax_ul40		1004
