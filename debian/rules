@@ -37,7 +37,8 @@ configure-stamp:
 	dh_testdir
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
-	sh configure --with-afs-sysname=$(SYS_NAME)
+	sh regen.sh
+	sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
 
@@ -59,7 +60,7 @@ clean:
 	dh_testroot
 	rm -f build-stamp configure-stamp
 	# Add here commands to clean up after the build process.
-	-$(MAKE) -ki clean
+	-$(MAKE) -ki distclean
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
 	-rm -f config.status config.cache
 
@@ -167,7 +168,7 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary:  binary-arch binary-indep
+binary:   binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure
 
 ############################Module package support
@@ -224,7 +225,7 @@ build-modules-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
-	$(MAKE) libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+	$(MAKE) libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
 	touch build-modules-stamp
 
 binary-modules: build-modules

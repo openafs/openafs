@@ -10,6 +10,16 @@ i[3456]86)
 		;;
 	    esac
 ;;
+ialpha)
+	case $KVERS in
+	    2.2*)
+		echo alpha_linux_22
+		;;
+	    2.4*)
+		echo alpha_linux_24
+		;;
+	    esac
+;;
     sparc)
 	case $KVERS in
 	    2.2*)

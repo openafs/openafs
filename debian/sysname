@@ -1,5 +1,8 @@
 #!/bin/sh
 case `arch` in
+    alpha)
+	echo alpha_linux_22
+	;;
 i[3456]86)
 	echo i386_linux22
 ;;

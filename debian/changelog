@@ -1,3 +1,15 @@
+openafs (1.0.90.20010710.snapshot-1) experimental; urgency=low
+
+  *  New upstream snapshot
+  * Fix module package to not have build cruft
+  * Use --disable-kernel-module option except for module sources
+  * Attempt to build modules correctly, although still not in right place
+  * Pretend we build for alpha. This is mostly not a fiction, although I
+    don't really know that much more than the kernel module and afsd
+    work.  The pointer cast warnings are frightening.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 11 Jul 2001 11:41:22 -0400
+
 openafs (1.0.90.20010704.snapshot-1) experimental; urgency=low
 
   * New upstream snapshot.  Support AFSDB records and many other
@@ -11,7 +23,7 @@ openafs (1.0.4-3) unstable; urgency=medium
   * Fix patch introduced in -2 to be consistent with what is sent upstream.
   * openafs-modules-source depends on debhelper
 
- -- Sam Hartman <hartmansdebian.org>  Wed,  4 Jul 2001 03:52:37 -0400
+ -- Sam Hartman <hartmans@debian.org>  Wed,  4 Jul 2001 03:52:37 -0400
 
 openafs (1.0.4-2) unstable; urgency=low
 
