@@ -47,17 +47,6 @@ RCSID("$Header$");
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
 
-/* static prototypes */
-static int decode_athena_ticket (char *ticket, int ticketLen, char *name, 
-        char *inst, char *realm, afs_int32 *host, struct ktc_encryptionKey *sessionKey, 
-        afs_uint32 *start, afs_uint32 *end);
-static int assemble_athena_ticket (char *ticket, int *ticketLen, char *name, 
-        char *inst, char *realm, afs_int32 host, struct ktc_encryptionKey *sessionKey, 
-        afs_uint32 start, afs_uint32 end, char *sname, char *sinst);
-
-#define ANDREWFLAGSVALUE (0x80)
-#define TICKET_LABEL "TicketEnd"
-
 /* This union is used to insure we allocate enough space for a key
  * schedule even if we are linked against a library that uses OpenSSL's
  * larger representation.  This is necessary so we don't lose if an
@@ -74,102 +63,6 @@ union Key_schedule_safe {
   } openssl_schedule[16];
 };
  
-/* This is called to interpret a ticket.  It is assumed that the necessary keys
-   have been added so that the key version number in the ticket will indicate a
-   valid key for decrypting the ticket.  The various fields inside the ticket
-   are copied into the return arguments.  An error code indicate some problem
-   interpreting the ticket and the values of the output parameters are
-   undefined. */
-
-int tkt_DecodeTicket (char *asecret, afs_int32 ticketLen, 
-	struct ktc_encryptionKey *key, char *name, char *inst, char *cell, 
-	char *sessionKey, afs_int32 *host, afs_int32 *start, afs_int32 *end)
-{   char	   clear_ticket[MAXKTCTICKETLEN];
-    char	  *ticket;
-    union Key_schedule_safe   schedule;
-    /* unsigned char  flags; */
-    int		   code;
-
-    if (ticketLen == 0) return RXKADBADTICKET; /* no ticket */
-    if ((ticketLen < MINKTCTICKETLEN) || /* minimum legal ticket size */
-	(ticketLen > MAXKTCTICKETLEN) || /* maximum legal ticket size */
-	((ticketLen) % 8 != 0))		/* enc. part must be (0 mod 8) bytes */
-	return RXKADBADTICKET;
-
-    if (key_sched (key, schedule.schedule)) return RXKADBADKEY;
-
-    ticket = clear_ticket;
-    pcbc_encrypt (asecret, ticket, ticketLen, schedule.schedule, key, DECRYPT);
-
-    /* flags = *ticket; */		/* get the first byte: the flags */
-#if 0
-    if (flags == ANDREWFLAGSVALUE) {
-	code = decode_andrew_ticket (ticket, ticketLen, name, inst, cell,
-				     host, sessionKey, start, end);
-	if (code) {
-	    code = decode_athena_ticket (ticket, ticketLen, name, inst, cell,
-					 host, sessionKey, start, end);
-	    flags = 0;
-	}
-    }
-    else {
-	code = decode_athena_ticket (ticket, ticketLen, name, inst, cell,
-				     host, sessionKey, start, end);
-	if (code) {
-	    code = decode_andrew_ticket (ticket, ticketLen, name, inst, cell,
-					 host, sessionKey, start, end);
-	    flags = ANDREWFLAGSVALUE;
-	}
-    }
-#else
-    code = decode_athena_ticket
-	(ticket, ticketLen, name, inst, cell, host, sessionKey, start, end);
-    /* flags = 0; */
-
-#endif
-    if (code) return RXKADBADTICKET;
-    if (tkt_CheckTimes (*start, *end, time(0)) < -1) return RXKADBADTICKET;
-
-    return 0;
-}
-
-/* This makes a Kerberos ticket */
-/*
-  char		*ticket;		* ticket is constructed here *
-  int		*ticketLen;		* output length of finished ticket *
-  struct ktc_encryptionKey *key;	* key ticket should be sealed with *
-  char		*name;			* user of this ticket *
-  char		*inst;
-  char		*cell;			* cell of authentication *
-  afs_uint32	 start,end;		* life of ticket *
-  struct ktc_encryptionKey *sessionKey;	* session key invented for ticket *
-  afs_uint32	 host;			* caller's host address *
-  char		*sname;			* server *
-  char		*sinst;
-*/
-
-int tkt_MakeTicket (char *ticket, int *ticketLen, 
-	struct ktc_encryptionKey *key, char *name, char *inst, char *cell,
-	afs_uint32 start, afs_uint32 end, struct ktc_encryptionKey *sessionKey, 
-	afs_uint32 host, char *sname, char *sinst)
-{   int		 code;
-    union Key_schedule_safe schedule;
-
-    *ticketLen = 0;			/* in case we return early */
-    code = assemble_athena_ticket (ticket, ticketLen, name, inst, cell,
-				   host, sessionKey, start, end, sname, sinst);
-    *ticketLen = round_up_to_ebs(*ticketLen); /* round up */
-    if (code) return -1;
-
-    /* encrypt ticket */
-    if (code = key_sched (key, schedule.schedule)) {
-        printf ("In tkt_MakeTicket: key_sched returned %d\n", code);
-        return RXKADBADKEY;
-    }
-    pcbc_encrypt (ticket, ticket, *ticketLen, schedule.schedule, key, ENCRYPT);
-    return 0;
-}
-
 #define getstr(name,min) \
     slen = strlen(ticket); \
     if ((slen < min) || (slen >= MAXKTCNAMELEN)) return -1; \
@@ -213,6 +106,56 @@ static int decode_athena_ticket (char *ticket, int ticketLen, char *name,
     return 0;
 }
 
+/* This is called to interpret a ticket.  It is assumed that the necessary keys
+   have been added so that the key version number in the ticket will indicate a
+   valid key for decrypting the ticket.  The various fields inside the ticket
+   are copied into the return arguments.  An error code indicate some problem
+   interpreting the ticket and the values of the output parameters are
+   undefined. */
+
+int tkt_DecodeTicket (char *asecret, afs_int32 ticketLen, 
+	struct ktc_encryptionKey *key, char *name, char *inst, char *cell, 
+	char *sessionKey, afs_int32 *host, afs_int32 *start, afs_int32 *end)
+{   char	   clear_ticket[MAXKTCTICKETLEN];
+    char	  *ticket;
+    union Key_schedule_safe   schedule;
+    int		   code;
+
+    if (ticketLen == 0) return RXKADBADTICKET; /* no ticket */
+    if ((ticketLen < MINKTCTICKETLEN) || /* minimum legal ticket size */
+	(ticketLen > MAXKTCTICKETLEN) || /* maximum legal ticket size */
+	((ticketLen) % 8 != 0))		/* enc. part must be (0 mod 8) bytes */
+	return RXKADBADTICKET;
+
+    if (key_sched (key, schedule.schedule)) return RXKADBADKEY;
+
+    ticket = clear_ticket;
+    pcbc_encrypt (asecret, ticket, ticketLen, schedule.schedule, key, DECRYPT);
+
+    code = decode_athena_ticket
+	(ticket, ticketLen, name, inst, cell, host, sessionKey, start, end);
+
+    if (code) return RXKADBADTICKET;
+    if (tkt_CheckTimes (*start, *end, time(0)) < -1) return RXKADBADTICKET;
+
+    return 0;
+}
+
+/* This makes a Kerberos ticket */
+/*
+  char		*ticket;		* ticket is constructed here *
+  int		*ticketLen;		* output length of finished ticket *
+  struct ktc_encryptionKey *key;	* key ticket should be sealed with *
+  char		*name;			* user of this ticket *
+  char		*inst;
+  char		*cell;			* cell of authentication *
+  afs_uint32	 start,end;		* life of ticket *
+  struct ktc_encryptionKey *sessionKey;	* session key invented for ticket *
+  afs_uint32	 host;			* caller's host address *
+  char		*sname;			* server *
+  char		*sinst;
+*/
+
 #define putstr(name,min) \
     slen = strlen(name); \
     if ((slen < min) || (slen >= MAXKTCNAMELEN)) return -1; \
@@ -247,6 +190,28 @@ static int assemble_athena_ticket (char *ticket, int *ticketLen, char *name,
     putstr (sinst, 0);
 
     *ticketLen = ticket - ticketBeg;
+    return 0;
+}
+
+int tkt_MakeTicket (char *ticket, int *ticketLen, 
+	struct ktc_encryptionKey *key, char *name, char *inst, char *cell,
+	afs_uint32 start, afs_uint32 end, struct ktc_encryptionKey *sessionKey, 
+	afs_uint32 host, char *sname, char *sinst)
+{   int		 code;
+    union Key_schedule_safe schedule;
+
+    *ticketLen = 0;			/* in case we return early */
+    code = assemble_athena_ticket (ticket, ticketLen, name, inst, cell,
+				   host, sessionKey, start, end, sname, sinst);
+    *ticketLen = round_up_to_ebs(*ticketLen); /* round up */
+    if (code) return -1;
+
+    /* encrypt ticket */
+    if (code = key_sched (key, schedule.schedule)) {
+        printf ("In tkt_MakeTicket: key_sched returned %d\n", code);
+        return RXKADBADKEY;
+    }
+    pcbc_encrypt (ticket, ticket, *ticketLen, schedule.schedule, key, ENCRYPT);
     return 0;
 }
 
