@@ -711,9 +711,8 @@ afs_pioctl(struct pioctlargs *uap, rval_t *rvp)
     return u.u_error;
 #endif
 }
-#endif /* AFS_SGI_ENV */
 
-#ifdef AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
 afs_pioctl(p, args, retval)
         struct proc *p;
         void *args;
@@ -730,8 +729,25 @@ afs_pioctl(p, args, retval)
     return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow));
 }
 
-#else	/* AFS_OSF_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+int
+afs_pioctl(td, args, retval)
+        struct thread *td;
+        void *args;
+        int *retval;
+{
+    struct a {
+        char    *path;
+        int     cmd;
+        caddr_t cmarg;
+        int     follow;
+    } *uap = (struct a *) args;
+
+    AFS_STATCNT(afs_pioctl);
+    return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow, td->td_ucred));
+}
+
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs_pioctl(p, args, retval)
         struct proc *p;
@@ -749,8 +765,6 @@ afs_pioctl(p, args, retval)
     return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow, p->p_cred->pc_ucred));
 }
 
-#else   /* AFS_OSF_ENV */
-#endif
 #endif
 
 /* macro to avoid adding any more #ifdef's to pioctl code. */

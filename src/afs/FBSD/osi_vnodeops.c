@@ -31,7 +31,9 @@ int afs_vop_getpages(struct vop_getpages_args *);
 int afs_vop_putpages(struct vop_putpages_args *);
 int afs_vop_ioctl(struct vop_ioctl_args *);
 int afs_vop_poll(struct vop_poll_args *);
+#ifndef AFS_FBSD50_ENV
 int afs_vop_mmap(struct vop_mmap_args *);
+#endif
 int afs_vop_fsync(struct vop_fsync_args *);
 int afs_vop_remove(struct vop_remove_args *);
 int afs_vop_link(struct vop_link_args *);
@@ -80,7 +82,9 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 	{ &vop_lookup_desc, (vop_t *) afs_vop_lookup },          /* lookup */
 	{ &vop_mkdir_desc, (vop_t *) afs_vop_mkdir },            /* mkdir */
 	{ &vop_mknod_desc, (vop_t *) afs_vop_mknod },            /* mknod */
+#ifndef AFS_FBSD50_ENV
 	{ &vop_mmap_desc, (vop_t *) afs_vop_mmap },              /* mmap */
+#endif
 	{ &vop_open_desc, (vop_t *) afs_vop_open },              /* open */
 	{ &vop_poll_desc, (vop_t *) afs_vop_poll },          /* select */
 	{ &vop_print_desc, (vop_t *) afs_vop_print },            /* print */
@@ -111,6 +115,11 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
     name[cnp->cn_namelen] = '\0'
 
 #define DROPNAME() FREE(name, M_TEMP)
+
+/* This is a bit of a cheat... */
+#ifdef AFS_FBSD50_ENV
+#define a_p a_td
+#endif
 	
 
 
@@ -303,12 +312,12 @@ afs_vop_close(ap)
 	} */ *ap;
 {
     int code;
-    struct vcache *avc=ap->a_vp;
+    struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
     if (ap->a_cred) 
-        code=afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
+        code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
     else
-        code=afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
+        code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);
@@ -327,7 +336,7 @@ afs_vop_access(ap)
 {
     int code;
     AFS_GLOCK();
-    code=afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
+    code = afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }
@@ -342,7 +351,7 @@ afs_vop_getattr(ap)
 {
     int code;
     AFS_GLOCK();
-    code=afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
+    code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }
@@ -357,7 +366,7 @@ afs_vop_setattr(ap)
 {
     int code;
     AFS_GLOCK();
-    code=afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
+    code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }int
@@ -375,7 +384,7 @@ afs_vop_read(ap)
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
-    code=afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
+    code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
@@ -441,7 +450,7 @@ afs_vop_getpages(ap)
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, osi_curcred());  /* hold bozon lock, but not basic vnode lock */
-    code=afs_read(avc, &uio, osi_curcred(), 0, 0, 0);
+    code = afs_read(avc, &uio, osi_curcred(), 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
@@ -515,11 +524,11 @@ afs_vop_write(ap)
 	} */ *ap;
 {
     int code;
-    struct vcache *avc=VTOAFS(ap->a_vp);
+    struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
-    code=afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
+    code = afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
@@ -1030,13 +1039,14 @@ afs_vop_reclaim(ap)
 	        struct vnode *a_vp;
 	} */ *ap;
 {
-    int error;
-    int sl;
+#ifdef AFS_DO_FLUSH_IN_RECLAIM
+    int error, sl;
+#endif
     register struct vnode *vp = ap->a_vp;
 
     cache_purge(vp);                    /* just in case... */
 
-#if 0 
+#ifdef AFS_DO_FLUSH_IN_RECLAIM
     AFS_GLOCK();
     error = afs_FlushVCache(VTOAFS(vp), &sl); /* tosses our stuff from vnode */
     AFS_GUNLOCK();
@@ -1133,9 +1143,15 @@ afs_vop_print(ap)
     register struct vnode *vp = ap->a_vp;
     register struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->states;
+#ifdef AFS_FBSD50_ENV
+    printf("tag %s, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag, vc->fid.Cell,
+	   (u_int) vc->fid.Fid.Volume, (u_int) vc->fid.Fid.Vnode, (u_int) vc->fid.Fid.Unique,
+	   vc->opens, vc->execsOrWriters);
+#else
     printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag, vc->fid.Cell,
-	   vc->fid.Fid.Volume, vc->fid.Fid.Vnode, vc->fid.Fid.Unique, vc->opens,
-	   vc->execsOrWriters);
+	   (u_int) vc->fid.Fid.Volume, (u_int) vc->fid.Fid.Vnode, (u_int) vc->fid.Fid.Unique,
+	   vc->opens, vc->execsOrWriters);
+#endif
     printf("\n  states%s%s%s%s%s", (s&CStatd) ? " statd" : "", (s&CRO) ? " readonly" : "",(s&CDirty) ? " dirty" : "",(s&CMAPPED) ? " mapped" : "", (s&CVFlushed) ? " flush in progress" : "");
     printf("\n");
     return 0;

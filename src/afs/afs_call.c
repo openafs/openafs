@@ -581,11 +581,10 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	/* initialize the ICL system */
 	code = afs_icl_CreateLog("cmfx", 60*1024, &logp);
 	if (code == 0)
-	    code = afs_icl_CreateSetWithFlags("cm", logp,
-					      (struct icl_log *) 0,
+	    code = afs_icl_CreateSetWithFlags("cm", logp, NULL,
 					      ICL_CRSET_FLAG_DEFAULT_OFF,
 					      &afs_iclSetp);
-	    code = afs_icl_CreateSet("cmlongterm", logp, (struct icl_log*) 0,
+	    code = afs_icl_CreateSet("cmlongterm", logp, NULL,
 				 &afs_iclLongTermSetp);
     }
 	afs_setTime = cparms.setTimeFlag;
@@ -1131,19 +1130,23 @@ Afs_syscall(register struct afssysa *uap, rval_t *rvp)
 #if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(p, args, retval)
-	struct proc *p;
-	void *args;
-	int *retval;
+#ifdef AFS_FBSD50_ENV
+    struct thread *p;
+#else
+    struct proc *p;
+#endif
+    void *args;
+    int *retval;
 {
     register struct a {
-	    long syscall;
-	    long parm1;
-	    long parm2;
-	    long parm3;
-	    long parm4;
-	    long parm5;
-	    long parm6;
-	} *uap = (struct a *)args;
+	long syscall;
+	long parm1;
+	long parm2;
+	long parm3;
+	long parm4;
+	long parm5;
+	long parm6;
+    } *uap = (struct a *)args;
 #else	/* AFS_OSF_ENV */
 #ifdef AFS_LINUX20_ENV
 struct afssysargs {
@@ -1293,14 +1296,14 @@ Afs_syscall ()
 #endif
     } else if (uap->syscall == AFSCALL_PIOCTL) {
 	AFS_GLOCK();
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV)
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, rvp, CRED());
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+        code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, p->td_ucred);
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
         code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4, p->p_cred->pc_ucred);
 #else
 	code = afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3, uap->parm4);
-#endif
 #endif
 	AFS_GUNLOCK();
     } else if (uap->syscall == AFSCALL_ICREATE) {

@@ -60,7 +60,6 @@ struct proc *p;
     /* ndp contains the mounted-from device.  Just ignore it.
        we also don't care about our proc struct. */
     size_t size;
-    int error;
 
     if (mp->mnt_flag & MNT_UPDATE)
 	return EINVAL;
@@ -111,11 +110,15 @@ afs_root(struct mount *mp,
 {
     int error;
     struct vrequest treq;
-    register struct vcache *tvp=0;
-    struct proc *p=curproc;
-    struct ucred cr;
+    register struct vcache *tvp = 0;
+#ifdef AFS_FBSD50_ENV
+    struct thread *td = curthread;
+    struct ucred cr = *td->td_ucred;
+#else
+    struct proc *p = curproc;
+    struct ucred cr = *p->p_cred->pc_ucred;
+#endif
 
-    cr=*p->p_cred->pc_ucred;
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
@@ -140,7 +143,11 @@ afs_root(struct mount *mp,
     if (tvp) {
         osi_vnhold(tvp,0);
     AFS_GUNLOCK();
+#ifdef AFS_FBSD50_ENV
+        vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, td);
+#else
         vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
+#endif
     AFS_GLOCK();
 	afs_globalVFS = mp;
 	*vpp = AFSTOV(tvp);
@@ -160,12 +167,17 @@ struct vnode *vp;
 int lfl;
 {
     int error;
+
     printf("vget called. help!\n");
     if (vp->v_usecount < 0) {
 	vprint("bad usecount", vp);
 	panic("afs_vget");
     }
+#ifdef AFS_FBSD50_ENV
+    error = vget(vp, lfl, curthread);
+#else
     error = vget(vp, lfl, curproc);
+#endif
     if (!error)
 	insmntque(vp, afs_globalVFS);   /* take off free list */
     return error;
