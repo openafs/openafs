@@ -1105,6 +1105,7 @@ retry:
 		    assert(0);
 		}
 		identP->valid = 1;
+		interfValid = 1;
 		identP->uuid = interf.uuid;
 		if (!pident)
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
@@ -1112,7 +1113,6 @@ retry:
 			     afs_inet_ntoa_r(host->host, hoststr), 
 			     ntohs(host->port)));
 	    }
-	    interfValid=identP->valid;
 	    if (code == 0 && !identP->valid) {
 	 	H_UNLOCK
 		code = RXAFSCB_InitCallBackState(host->callback_rxcon);
