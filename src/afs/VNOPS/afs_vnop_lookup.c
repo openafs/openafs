@@ -1003,8 +1003,8 @@ afs_lookup(adp, aname, avcp, acred)
     tvc = osi_dnlc_lookup (adp, tname, WRITE_LOCK);
     *avcp = tvc;  /* maybe wasn't initialized, but it is now */
     if (tvc) {
-	if (no_read_access && vType(tvc) != VDIR) {
-	    /* need read access on dir to stat non-directory */
+	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
+	    /* need read access on dir to stat non-directory / non-link */
 	    afs_PutVCache(tvc, WRITE_LOCK);
 	    *avcp = (struct vcache *)0;
 	    code = EACCES;
