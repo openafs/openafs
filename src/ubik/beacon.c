@@ -381,7 +381,7 @@ ubeacon_Interact()
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		/* count how many to ensure we have quorum */
-	oldestYesVote = 0x3fffffff;	/* time quorum expires */
+	oldestYesVote = 0x7fffffff;	/* time quorum expires */
 	syncsite = ubeacon_AmSyncSite();
 	startTime = FT_ApproxTime();
 	/*
