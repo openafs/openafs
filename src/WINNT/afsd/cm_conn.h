@@ -23,6 +23,7 @@ typedef struct cm_conn {
         int refCount;			/* locked by cm_connLock */
 	int ucgen;			/* ucellp's generation number */
         long flags;			/* locked by mx */
+	int cryptlevel;			/* encrytion status */
 } cm_conn_t;
 
 /* structure used for tracking RPC progress */
