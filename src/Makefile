@@ -11,9 +11,8 @@ WASHTOOL=${SRCDIR}bin/washtool
 WASHTOOLCMD=make
 WASHTOOLFLAGS=-argument install
 
-COMPILE_PART1=${WASHTOOL} ${WASHTOOLCMD}
-COMPILE_PART2=${WASHTOOLFLAGS}
-
+COMPILE_PART1=cd obj; cd 
+COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
