@@ -62,6 +62,9 @@ system=$host
 case $system in
         *-linux*)
 		MKAFS_OSTYPE=LINUX
+		if test "x$enable_redhat_buildsys" = "xyes"; then
+		 AC_DEFINE(ENABLE_REDHAT_BUILDSYS)
+		fi
 		if test "x$enable_kernel_module" = "xyes"; then
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
