@@ -7,15 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include "afscreds.h"
-
 extern "C" {
 #include <afs\stds.h>
 #include <afs\param.h>
 #include <afs\auth.h>
 #include <afs\kautils.h>
+#include <rxkad.h>
 #include <afs\cm_config.h>
+#include <afs\afskfw.h>
+#include "ipaddrchg.h"
 }
+
+#include "afscreds.h"
 
 
 /*
@@ -43,6 +46,7 @@ extern "C" {
    typedef int (*ktc_ForgetToken_t)(struct ktc_principal *server);
    typedef int (*ka_UserAuthenticateGeneral_t)(int flags, char *name, char *instance, char *realm, char *password, int lifetime, int *password_expiresP, int spare, char **reasonP);
    typedef long (*cm_GetRootCellName_t)(char *namep);
+   typedef int (*ka_ParseLoginName_t)(char *login, char *name, char *inst, char *cell); 
 }
 
 static struct l
@@ -57,6 +61,7 @@ static struct l
    ktc_ListTokens_t ktc_ListTokensP;
    ktc_ForgetToken_t ktc_ForgetTokenP;
    ka_UserAuthenticateGeneral_t ka_UserAuthenticateGeneralP;
+   ka_ParseLoginName_t ka_ParseLoginNameP; 
    cm_GetRootCellName_t cm_GetRootCellNameP;
    } l;
 
@@ -82,6 +87,7 @@ BOOL Creds_OpenLibraries (void)
          l.ktc_GetTokenP = (ktc_GetToken_t)GetProcAddress (l.hInstLibTokens, "ktc_GetToken");
          l.ktc_ListTokensP = (ktc_ListTokens_t)GetProcAddress (l.hInstLibTokens, "ktc_ListTokens");
          l.ktc_ForgetTokenP = (ktc_ForgetToken_t)GetProcAddress (l.hInstLibTokens, "ktc_ForgetToken");
+         l.ka_ParseLoginNameP = (ka_ParseLoginName_t)GetProcAddress (l.hInstLibTokens, "ka_ParseLoginName");
          l.ka_UserAuthenticateGeneralP = (ka_UserAuthenticateGeneral_t)GetProcAddress (l.hInstLibTokens, "ka_UserAuthenticateGeneral");
 
          if (!l.initAFSDirPathP ||
@@ -90,6 +96,7 @@ BOOL Creds_OpenLibraries (void)
              !l.ktc_GetTokenP ||
              !l.ktc_ListTokensP ||
              !l.ktc_ForgetTokenP ||
+             !l.ka_ParseLoginNameP ||
              !l.ka_UserAuthenticateGeneralP)
             {
             FreeLibrary (l.hInstLibTokens);
@@ -177,10 +184,12 @@ BOOL IsServiceRunning (void)
             {
             QueryServiceStatus (hService, &Status);
             CloseServiceHandle (hService);
-            }
+            } else if ( IsDebuggerPresent() )
+                OutputDebugString("Unable to open Transarc AFS Daemon Service\n");
 
          CloseServiceHandle (hManager);
-         }
+         } else if ( IsDebuggerPresent() )
+             OutputDebugString("Unable to open SC Manager\n");
 
       return (Status.dwCurrentState == SERVICE_RUNNING);
       }
@@ -250,6 +259,8 @@ BOOL IsServiceConfigured (void)
 int GetCurrentCredentials (void)
 {
    int rc = KTC_NOCM;
+
+   lock_ObtainMutex(&g.credsLock);
 
    // Free any knowledge we currently have about the user's credentials
    //
@@ -324,6 +335,8 @@ int GetCurrentCredentials (void)
          }
       }
 
+   lock_ReleaseMutex(&g.credsLock);
+
    // We've finished updating g.aCreds. Update the tray icon to reflect
    // whether the user currently has any credentials at all, and
    // re-enable the Remind timer.
@@ -348,6 +361,8 @@ int DestroyCurrentCredentials (LPCTSTR pszCell)
       CopyStringToAnsi (Principal.cell, pszCell);
       CopyStringToAnsi (Principal.name, TEXT("afs"));
       rc = ktc_ForgetToken (&Principal);
+      if ( KFW_is_available() )
+          KFW_AFS_destroy_tickets_for_cell(Principal.cell);
       }
 
    if (rc != 0)
@@ -361,7 +376,7 @@ int DestroyCurrentCredentials (LPCTSTR pszCell)
 }
 
 
-int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword)
+int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, BOOL Silent)
 {
    int rc = KTC_NOCM;
    char *Result = NULL;
@@ -381,12 +396,35 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword)
       char szPasswordA[ 256 ];
       CopyStringToAnsi (szPasswordA, pszPassword);
 
+      char szSmbNameA[ MAXRANDOMNAMELEN ];
+      CopyStringToAnsi (szSmbNameA, g.SmbName);
+
       int Expiration = 0;
 
-      rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
-      }
+	  if ( KFW_is_available() ) {
+		  // KFW_AFS_get_cred() parses the szNameA field as complete princial including potentially 
+		  // a different realm then the specified cell name.
+          rc = KFW_AFS_get_cred(szNameA, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
+	  } else {
+		char  name[sizeof(szNameA)];
+		char  instance[sizeof(szNameA)];
+		char  cell[sizeof(szNameA)];
+      
+		name[0] = '\0';
+		instance[0] = '\0';
+		cell[0] = '\0';
+		ka_ParseLoginName(szNameA, name, instance, cell); 
 
-   if (rc != 0)
+		if ( szSmbNameA[0] ) {
+			  rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
+				                               name, instance, szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
+		} else { 
+			  rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, name, instance, szCellA, szPasswordA, 0, &Expiration, 0, &Result);
+		}
+	  }
+	}
+
+   if (!Silent && rc != 0)
       {
       int idsTitle = (g.fIsWinNT) ? IDS_ERROR_TITLE : IDS_ERROR_TITLE_95;
       int idsDesc = (g.fIsWinNT) ? IDS_ERROR_OBTAIN : IDS_ERROR_OBTAIN_95;

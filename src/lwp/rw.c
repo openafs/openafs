@@ -17,7 +17,8 @@ Created: 11/1/83, J. Rosenberg
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/rw.c,v 1.1.1.4 2001/07/14 22:22:56 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/lwp/rw.c,v 1.6 2003/07/15 23:15:45 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
@@ -27,6 +28,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/rw.c,v 1.1.1.4 2001/07/14 22:22:56 
 extern char *calloc();
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "lwp.h"
 #include "lock.h"
@@ -39,40 +41,44 @@ extern char *calloc();
 
 /* The shared queue */
 typedef struct QUEUE {
-    struct QUEUE	*prev, *next;
-    char		*data;
-    struct Lock		lock;
+    struct QUEUE *prev, *next;
+    char *data;
+    struct Lock lock;
 } queue;
 
-queue *init()
+queue *
+init()
 {
     queue *q;
 
     q = (queue *) malloc(sizeof(queue));
-    q -> prev = q -> next = q;
-    return(q);
+    q->prev = q->next = q;
+    return (q);
 }
 
-char empty(q)
-    queue *q;
+char
+empty(q)
+     queue *q;
 {
     return (q->prev == q && q->next == q);
 }
 
-void insert(queue *q, char *s)
+void
+insert(queue * q, char *s)
 {
     queue *new;
 
     new = (queue *) malloc(sizeof(queue));
-    new -> data = s;
-    new -> prev = q -> prev;
-    q -> prev -> next = new;
-    q -> prev = new;
-    new -> next = q;
+    new->data = s;
+    new->prev = q->prev;
+    q->prev->next = new;
+    q->prev = new;
+    new->next = q;
 }
 
-char *Remove(q)
-    queue *q;
+char *
+Remove(q)
+     queue *q;
 {
     queue *old;
     char *s;
@@ -82,28 +88,29 @@ char *Remove(q)
 	assert(0);
     }
 
-    old = q -> next;
-    q -> next = old -> next;
-    q -> next -> prev = q;
-    s = old -> data;
+    old = q->next;
+    q->next = old->next;
+    q->next->prev = q;
+    s = old->data;
     free(old);
-    return(s);
+    return (s);
 }
 
 queue *q;
 
-int asleep;	/* Number of processes sleeping -- used for
-		   clean termination */
+int asleep;			/* Number of processes sleeping -- used for
+				 * clean termination */
 
-static int read_process(id)
-    int id;
+static int
+read_process(id)
+     int *id;
 {
-    printf("\t[Reader %d]\n", id);
-    LWP_DispatchProcess();		/* Just relinquish control for now */
+    printf("\t[Reader %d]\n", *id);
+    LWP_DispatchProcess();	/* Just relinquish control for now */
 
     PRE_PreemptMe();
     for (;;) {
-        register int i;
+	register int i;
 
 	/* Wait until there is something in the queue */
 	asleep++;
@@ -114,9 +121,9 @@ static int read_process(id)
 	    ObtainReadLock(&q->lock);
 	}
 	asleep--;
-	for (i=0; i<10000; i++) ;
+	for (i = 0; i < 10000; i++);
 	PRE_BeginCritical();
-	printf("[%d: %s]\n", id, Remove(q));
+	printf("[%d: %s]\n", *id, Remove(q));
 	PRE_EndCritical();
 	ReleaseReadLock(&q->lock);
 	LWP_DispatchProcess();
@@ -124,10 +131,10 @@ static int read_process(id)
     return 0;
 }
 
-static int write_process()
+static int
+write_process()
 {
-    static char *messages[] =
-    {
+    static char *messages[] = {
 	"Mary had a little lamb,",
 	"Its fleece was white as snow,",
 	"And everywhere that Mary went,",
@@ -176,7 +183,7 @@ static int write_process()
     PRE_PreemptMe();
 
     /* Now loop & write data */
-    for (mesg=messages; *mesg!=0; mesg++) {
+    for (mesg = messages; *mesg != 0; mesg++) {
 	ObtainWriteLock(&q->lock);
 	insert(q, *mesg);
 	ReleaseWriteLock(&q->lock);
@@ -198,11 +205,14 @@ static int write_process()
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-   int argc; char **argv;
+     int argc;
+     char **argv;
 {
     int nreaders, i;
-    afs_int32 interval;	/* To satisfy Brad */
+    PROCESS pid;
+    afs_int32 interval;		/* To satisfy Brad */
     PROCESS *readers;
+    int *readerid;
     PROCESS writer;
     struct timeval tv;
 
@@ -216,10 +226,11 @@ main(argc, argv)
 	sscanf(*++argv, "%d", &nreaders);
     printf("[There will be %d readers]\n", nreaders);
 
-    interval = (argc >= 3 ? atoi(*++argv)*1000 : 50000);
+    interval = (argc >= 3 ? atoi(*++argv) * 1000 : 50000);
 
-    if (argc == 4) lwp_debug = 1;
-    LWP_InitializeProcessSupport(0, (PROCESS*)&i);
+    if (argc == 4)
+	lwp_debug = 1;
+    LWP_InitializeProcessSupport(0, &pid);
     printf("[Support initialized]\n");
     tv.tv_sec = 0;
     tv.tv_usec = interval;
@@ -235,9 +246,10 @@ main(argc, argv)
     /* Now create readers */
     printf("[Creating Readers...\n");
     readers = (PROCESS *) calloc(nreaders, sizeof(PROCESS));
-    for (i=0; i<nreaders; i++)
-	LWP_CreateProcess(read_process, STACK_SIZE, 0, (void*)i, "Reader",
-			  &readers[i]);
+    readerid = (int *)calloc(nreaders, sizeof(i));
+    for (i = 0; i < nreaders; i++)
+	LWP_CreateProcess(read_process, STACK_SIZE, 0, (void *)&readerid[i],
+			  "Reader", &readers[i]);
     printf("done]\n");
 
     printf("\t[Creating Writer...\n");
@@ -245,9 +257,10 @@ main(argc, argv)
     printf("done]\n");
 
     /* Now loop until everyone's done */
-    while (asleep != nreaders+1) LWP_DispatchProcess();
+    while (asleep != nreaders + 1)
+	LWP_DispatchProcess();
     /* Destroy the readers */
-    for (i=nreaders-1; i>=0; i--) LWP_DestroyProcess(readers[i]);
+    for (i = nreaders - 1; i >= 0; i--)
+	LWP_DestroyProcess(readers[i]);
     printf("\n*Exiting*\n");
 }
-

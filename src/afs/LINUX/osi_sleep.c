@@ -8,37 +8,37 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_sleep.c,v 1.1.1.10 2003/04/13 19:02:46 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.21 2003/07/15 23:14:24 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
-
-
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-void afs_osi_Wakeup(char *event);
-void afs_osi_Sleep(char *event);
 
 static char waitV, dummyV;
 
-void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
+void
+afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
     AFS_STATCNT(osi_InitWaitHandle);
     achandle->proc = (caddr_t) 0;
 }
 
 /* cancel osi_Wait */
-void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
+void
+afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 {
     caddr_t proc;
 
     AFS_STATCNT(osi_CancelWait);
     proc = achandle->proc;
-    if (proc == 0) return;
-    achandle->proc = (caddr_t) 0;   /* so dude can figure out he was signalled */
+    if (proc == 0)
+	return;
+    achandle->proc = (caddr_t) 0;	/* so dude can figure out he was signalled */
     afs_osi_Wakeup(&waitV);
 }
 
@@ -46,23 +46,23 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
  * Waits for data on ahandle, or ams ms later.  ahandle may be null.
  * Returns 0 if timeout and EINTR if signalled.
  */
-int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
+int
+afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
-    int code;
-    afs_int32 endTime, tid;
+    afs_int32 endTime;
     struct timer_list *timer = NULL;
+    int code;
 
     AFS_STATCNT(osi_Wait);
-    endTime = osi_Time() + (ams/1000);
+    endTime = osi_Time() + (ams / 1000);
     if (ahandle)
 	ahandle->proc = (caddr_t) current;
 
     do {
-        AFS_ASSERT_GLOCK();
-        code = 0;
-        code = osi_TimedSleep(&waitV, ams, aintok);
-
-        if (code) break;
+	AFS_ASSERT_GLOCK();
+	code = osi_TimedSleep(&waitV, ams, 1);
+	if (code)
+	    break;
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
 	    break;
@@ -79,8 +79,8 @@ typedef struct afs_event {
     char *event;		/* lwp event: an address */
     int refcount;		/* Is it in use? */
     int seq;			/* Sequence number: this is incremented
-				   by wakeup calls; wait will not return until
-				   it changes */
+				 * by wakeup calls; wait will not return until
+				 * it changes */
 #if defined(AFS_LINUX24_ENV)
     wait_queue_head_t cond;
 #else
@@ -89,13 +89,14 @@ typedef struct afs_event {
 } afs_event_t;
 
 #define HASHSIZE 128
-afs_event_t *afs_evhasht[HASHSIZE];/* Hash table for events */
+afs_event_t *afs_evhasht[HASHSIZE];	/* Hash table for events */
 #define afs_evhash(event)	(afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
 int afs_evhashcnt = 0;
 
 /* Get and initialize event structure corresponding to lwp event (i.e. address)
  * */
-static afs_event_t *afs_getevent(char *event)
+static afs_event_t *
+afs_getevent(char *event)
 {
     afs_event_t *evp, *newp = 0;
     int hashcode;
@@ -132,11 +133,12 @@ static afs_event_t *afs_getevent(char *event)
  *     a deadlock).
  */
 
-static void afs_addevent(char *event)
+static void
+afs_addevent(char *event)
 {
     int hashcode;
     afs_event_t *newp;
-    
+
     AFS_ASSERT_GLOCK();
     hashcode = afs_evhash(event);
     newp = osi_linux_alloc(sizeof(afs_event_t), 0);
@@ -149,7 +151,7 @@ static void afs_addevent(char *event)
     init_waitqueue(&newp->cond);
 #endif
     newp->seq = 0;
-    newp->event = &dummyV;  /* Dummy address for new events */
+    newp->event = &dummyV;	/* Dummy address for new events */
     newp->refcount = 0;
 }
 
@@ -160,17 +162,16 @@ static void afs_addevent(char *event)
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
 
-/* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
- * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
- *   can wake up, even if all signals are blocked
- * - TODO: handle signals correctly by passing an indication back to the
- *   caller that the wait has been interrupted and the stack should be cleaned
- *   up preparatory to signal delivery
+/* afs_osi_SleepSig
+ *
+ * Waits for an event to be notified, returning early if a signal
+ * is received.  Returns EINTR if signaled, and 0 otherwise.
  */
-void afs_osi_Sleep(char *event)
+int
+afs_osi_SleepSig(void *event)
 {
     struct afs_event *evp;
-    int seq;
+    int seq, retval;
 #ifdef DECLARE_WAITQUEUE
     DECLARE_WAITQUEUE(wait, current);
 #else
@@ -179,38 +180,56 @@ void afs_osi_Sleep(char *event)
 
     evp = afs_getevent(event);
     if (!evp) {
-        afs_addevent(event);
+	afs_addevent(event);
 	evp = afs_getevent(event);
     }
 
     seq = evp->seq;
+    retval = 0;
 
     add_wait_queue(&evp->cond, &wait);
     while (seq == evp->seq) {
-	sigset_t saved_set;
-
 	set_current_state(TASK_INTERRUPTIBLE);
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
-
-	SIG_LOCK(current);
-	saved_set = current->blocked;
-	sigfillset(&current->blocked);
-	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
-
 	schedule();
-
-	SIG_LOCK(current);
-	current->blocked = saved_set;
-	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
 	AFS_GLOCK();
+	if (signal_pending(current)) {
+	    retval = EINTR;
+	    break;
+	}
     }
     remove_wait_queue(&evp->cond, &wait);
     set_current_state(TASK_RUNNING);
 
     relevent(evp);
+    return retval;
+}
+
+/* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
+ */
+void
+afs_osi_Sleep(void *event)
+{
+    sigset_t saved_set;
+
+    SIG_LOCK(current);
+    saved_set = current->blocked;
+    sigfillset(&current->blocked);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
+
+    afs_osi_SleepSig(event);
+
+    SIG_LOCK(current);
+    current->blocked = saved_set;
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 }
 
 /* osi_TimedSleep
@@ -223,7 +242,8 @@ void afs_osi_Sleep(char *event)
  * Returns 0 if timeout, EINTR if signalled, and EGAIN if it might
  * have raced.
  */
-static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
+static int
+osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     int code = 0;
     long ticks = (ams * HZ / 1000) + 1;
@@ -236,23 +256,23 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 
     evp = afs_getevent(event);
     if (!evp) {
-        afs_addevent(event);
+	afs_addevent(event);
 	evp = afs_getevent(event);
     }
 
     add_wait_queue(&evp->cond, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
     /* always sleep TASK_INTERRUPTIBLE to keep load average
-       from artifically increasing. */
-
+     * from artifically increasing. */
     AFS_GUNLOCK();
-    if (aintok) {
-        if (schedule_timeout(ticks))
-            code = EINTR;
-    } else
-        schedule_timeout(ticks);
-    AFS_GLOCK();
 
+    if (aintok) {
+	if (schedule_timeout(ticks))
+	    code = EINTR;
+    } else
+	schedule_timeout(ticks);
+
+    AFS_GLOCK();
     remove_wait_queue(&evp->cond, &wait);
     set_current_state(TASK_RUNNING);
 
@@ -262,17 +282,21 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 }
 
 
-void afs_osi_Wakeup(char *event)
+int
+afs_osi_Wakeup(void *event)
 {
+    int ret = 2;
     struct afs_event *evp;
 
     evp = afs_getevent(event);
-    if (!evp)                          /* No sleepers */
-	return;
+    if (!evp)			/* No sleepers */
+	return 1;
 
     if (evp->refcount > 1) {
-	evp->seq++;    
+	evp->seq++;
 	wake_up(&evp->cond);
+	ret = 0;
     }
     relevent(evp);
+    return ret;
 }

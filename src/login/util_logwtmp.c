@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/login/util_logwtmp.c,v 1.1.1.3 2001/07/14 22:22:53 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/login/util_logwtmp.c,v 1.4 2003/07/15 23:15:44 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -39,24 +40,24 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/login/util_logwtmp.c,v 1.1.1.3 2001/07/
 
 void
 logwtmp(line, name, host)
-	char *line, *name, *host;
+     char *line, *name, *host;
 {
-	struct utmp ut;
-	struct stat buf;
-	int fd;
+    struct utmp ut;
+    struct stat buf;
+    int fd;
 
-	if ((fd = open(WTMPFILE, O_WRONLY|O_APPEND, 0)) < 0)
-		return;
-	if (!fstat(fd, &buf)) {
-		(void)strncpy(ut.ut_line, line, sizeof(ut.ut_line));
-		(void)strncpy(ut.ut_name, name, sizeof(ut.ut_name));
+    if ((fd = open(WTMPFILE, O_WRONLY | O_APPEND, 0)) < 0)
+	return;
+    if (!fstat(fd, &buf)) {
+	(void)strncpy(ut.ut_line, line, sizeof(ut.ut_line));
+	(void)strncpy(ut.ut_name, name, sizeof(ut.ut_name));
 #if	!defined(AIX) && !defined(AFS_SUN5_ENV)
-		(void)strncpy(ut.ut_host, host, sizeof(ut.ut_host));
+	(void)strncpy(ut.ut_host, host, sizeof(ut.ut_host));
 #endif
-		(void)time(&ut.ut_time);
-		if (write(fd, (char *)&ut, sizeof(struct utmp)) !=
-		    sizeof(struct utmp))
-			(void)ftruncate(fd, buf.st_size);
-	}
-	(void)close(fd);
+	(void)time(&ut.ut_time);
+	if (write(fd, (char *)&ut, sizeof(struct utmp)) !=
+	    sizeof(struct utmp))
+	    (void)ftruncate(fd, buf.st_size);
+    }
+    (void)close(fd);
 }

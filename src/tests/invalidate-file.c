@@ -52,7 +52,7 @@
 
 #include <err.h>
 
-RCSID("$Id: invalidate-file.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: invalidate-file.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)
@@ -61,133 +61,133 @@ RCSID("$Id: invalidate-file.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
 #ifdef KERBEROS
 
 static void
-create_write_file (char *filename)
+create_write_file(char *filename)
 {
     int ret;
     int fd;
 
-    fs_invalidate (filename);
+    fs_invalidate(filename);
 
-    fd = open(filename, O_RDWR|O_CREAT, 0666);
+    fd = open(filename, O_RDWR | O_CREAT, 0666);
     if (fd < 0)
-	err (1, "open(rw): %s", filename);
+	err(1, "open(rw): %s", filename);
 
-    ret = write (fd, "foo", 3);
+    ret = write(fd, "foo", 3);
     if (ret < 0)
-	err (1, "write");
-    
-    fs_invalidate (filename);
-    
-    ret = write (fd, "foo", 3);
+	err(1, "write");
+
+    fs_invalidate(filename);
+
+    ret = write(fd, "foo", 3);
     if (ret < 0)
-	err (1, "write2");
-    
-    ret = close (fd);
+	err(1, "write2");
+
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close");
+	err(1, "close");
 }
 
 static void
-read_file (char *filename)
+read_file(char *filename)
 {
     int ret;
     int fd;
     char buf[3];
 
-    fs_invalidate (filename);
+    fs_invalidate(filename);
 
     fd = open(filename, O_RDONLY, 0666);
     if (fd < 0)
-	err (1, "open(ro)");
+	err(1, "open(ro)");
 
-    ret = read (fd, buf, sizeof(buf));
+    ret = read(fd, buf, sizeof(buf));
     if (ret < 0)
-	err (1, "read");
-    
-    fs_invalidate (filename);
-    
-    ret = read (fd, buf, sizeof(buf));
+	err(1, "read");
+
+    fs_invalidate(filename);
+
+    ret = read(fd, buf, sizeof(buf));
     if (ret < 0)
-	err (1, "read");
-    
-    ret = close (fd);
+	err(1, "read");
+
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close");
+	err(1, "close");
 }
 
 static void
-mmap_read_file (char *filename)
+mmap_read_file(char *filename)
 {
     int fd;
     void *v;
     char buf[6];
 
-    fs_invalidate (filename);
+    fs_invalidate(filename);
 
     fd = open(filename, O_RDONLY, 0666);
     if (fd < 0)
-	err (1, "open(ro-mmap)");
+	err(1, "open(ro-mmap)");
 
-    v = mmap (NULL, 6, PROT_READ, MAP_SHARED, fd, 0);
+    v = mmap(NULL, 6, PROT_READ, MAP_SHARED, fd, 0);
     if (v == (void *)MAP_FAILED)
-	err (1, "mmap(ro) %s", filename);
+	err(1, "mmap(ro) %s", filename);
 
-    memcpy (buf, v, 3);
-    fs_invalidate (filename);
-    memcpy (buf, v, 3);
+    memcpy(buf, v, 3);
+    fs_invalidate(filename);
+    memcpy(buf, v, 3);
 
-    munmap (v, 6);
+    munmap(v, 6);
 }
 
 static void
-mmap_write_file (char *filename)
+mmap_write_file(char *filename)
 {
     int fd;
     void *v;
 
-    fs_invalidate (filename);
+    fs_invalidate(filename);
 
-    fd = open (filename, O_RDWR, 0666);
+    fd = open(filename, O_RDWR, 0666);
     if (fd < 0)
-	err (1, "open(rw-mmap)");
+	err(1, "open(rw-mmap)");
 
-    v = mmap (NULL, 6, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    v = mmap(NULL, 6, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (v == (void *)MAP_FAILED)
-	err (1, "mmap(rw) %s", filename);
+	err(1, "mmap(rw) %s", filename);
 
-    memcpy (v, "foo", 3);
-    fs_invalidate (filename);
-    memcpy (v, "foo", 3);
+    memcpy(v, "foo", 3);
+    fs_invalidate(filename);
+    memcpy(v, "foo", 3);
 
-    munmap (v, 6);
-    close (fd);
+    munmap(v, 6);
+    close(fd);
 }
 
 int
 main(int argc, char **argv)
 {
     char *filename = "foo";
-    
+
 
 #ifdef KERBEROS
     if (!k_hasafs())
 #endif
-	exit (1);
-    
-    create_write_file (filename);
-    read_file (filename);
-    read_file (filename);
-    read_file (filename);
-    read_file (filename);
-    mmap_read_file (filename);
-    mmap_read_file (filename);
-    mmap_read_file (filename);
-    mmap_read_file (filename);
-    mmap_write_file (filename);
-    mmap_write_file (filename);
-    mmap_write_file (filename);
-    mmap_write_file (filename);
-    
+	exit(1);
+
+    create_write_file(filename);
+    read_file(filename);
+    read_file(filename);
+    read_file(filename);
+    read_file(filename);
+    mmap_read_file(filename);
+    mmap_read_file(filename);
+    mmap_read_file(filename);
+    mmap_read_file(filename);
+    mmap_write_file(filename);
+    mmap_write_file(filename);
+    mmap_write_file(filename);
+    mmap_write_file(filename);
+
     return 0;
 }
 
@@ -197,6 +197,6 @@ int
 main(int argc, char **argv)
 {
 
-    errx (1, "no kafs support");
+    errx(1, "no kafs support");
 }
 #endif

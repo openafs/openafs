@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_LOGEVENT_H
-#define TRANSARC_LOGEVENT_H
+#ifndef OPENAFS_LOGEVENT_H
+#define OPENAFS_LOGEVENT_H
 
 #define AFSEVT_MAXARGS  16   /* max number of text insertion strings */
 
@@ -21,4 +21,4 @@ ReportWarningEventAlt(unsigned int eventId, int status, char *str, ...);
 extern int
 ReportInformationEventAlt(unsigned int eventId, char *str, ...);
 
-#endif /* TRANSARC_LOGEVENT_H */
+#endif /* OPENAFS_LOGEVENT_H */

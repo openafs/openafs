@@ -37,6 +37,8 @@ class CShellExt : public CCmdTarget
 	BOOL m_bDirSelected;
 	BOOL m_bIsSymlink;	// is symbolic link!
 	TCHAR m_szFile[MAX_PATH];
+	BOOL m_bIsOverlayEnabled;
+	BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
 
     CStringArray m_astrFileNames;
 
@@ -85,7 +87,7 @@ protected:
 
     // IShellExtInit interface
     BEGIN_INTERFACE_PART(ShellInit, IShellExtInit)
-        STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,LPDATAOBJECT lpdobj, HKEY hkeyProgID);
+        STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,IDataObject *lpdobj, HKEY hkeyProgID);
     END_INTERFACE_PART(ShellInit)
 
     BEGIN_INTERFACE_PART(IconExt, IShellIconOverlayIdentifier)

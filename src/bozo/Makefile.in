@@ -5,30 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL=/bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
 INCLS=bnode.h \
@@ -68,11 +47,25 @@ bosint.ss.o: bosint.ss.c ${RPCINCLS}
 bosint.xdr.o: bosint.xdr.c ${RPCINCLS}
 bosint.cs.o: bosint.cs.c ${RPCINCLS}
 
-bosint.xdr.c bosint.ss.c bosint.cs.c bosint.h: bosint.xg
-	${RXGEN} -x bosint.xg
+bosint.cs.c: bosint.xg
+	${RXGEN} -x -C -o $@ ${srcdir}/bosint.xg
+
+bosint.ss.c: bosint.xg
+	${RXGEN} -x -S -o $@ ${srcdir}/bosint.xg
+
+bosint.xdr.c: bosint.xg
+	${RXGEN} -x -c -o $@ ${srcdir}/bosint.xg
+
+bosint.h: bosint.xg
+	${RXGEN} -x -h -o $@ ${srcdir}/bosint.xg
+
+bosint.cs.c: bosint.h
+bosint.ss.c: bosint.h
+bosint.xdr.c: bosint.h
 
 bnode.h boserr.c: bnode.p.h boserr.et
-	$(RM) -f boserr.c bnode.h; $(COMPILE_ET) boserr -h bnode
+	$(RM) -f boserr.c bnode.h
+	${COMPILE_ET} -p ${srcdir} boserr -h bnode
 
 bosserver.o: bosserver.c ${INCLS} AFS_component_version_number.o
 

@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass1.c,v 1.1.1.5 2002/05/11 00:03:19 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vfsck/pass1.c,v 1.6 2003/07/15 23:17:27 shadow Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -34,7 +35,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass1.c,v 1.1.1.5 2002/05/11 00:0
 #undef	_KERNEL
 #undef	_BSD
 #include <stdio.h>
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
@@ -62,7 +63,7 @@ extern int ge_danger;
 #endif
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 
 #include <afs/osi_inode.h>
 #include "fsck.h"
@@ -71,392 +72,397 @@ static daddr_t badblk;
 static daddr_t dupblk;
 int pass1check();
 static int oldreported;
- 
+
 pass1()
 {
-	register int c, i, j;
-	register struct dinode *dp;
-	struct zlncnt *zlnp;
-	int ndb, cgd;
-	struct inodesc idesc;
-	ino_t inumber;
+    register int c, i, j;
+    register struct dinode *dp;
+    struct zlncnt *zlnp;
+    int ndb, cgd;
+    struct inodesc idesc;
+    ino_t inumber;
 
-	/*
-	 * Set file system reserved blocks in used block map.
-	 */
-	for (c = 0; c < sblock.fs_ncg; c++) {
-		cgd = cgdmin(&sblock, c);
-		if (c == 0) {
-			i = cgbase(&sblock, c);
-			cgd += howmany(sblock.fs_cssize, sblock.fs_fsize);
-		} else
-			i = cgsblock(&sblock, c);
-		for (; i < cgd; i++)
-			setbmap(i);
-	}
-	/*
-	 * Find all allocated blocks.
-	 */
-	memset((char *)&idesc, 0, sizeof(struct inodesc));
-	idesc.id_type = ADDR;
-	idesc.id_func = pass1check;
-	inumber = 0;
-	n_files = n_blks = 0;
+    /*
+     * Set file system reserved blocks in used block map.
+     */
+    for (c = 0; c < sblock.fs_ncg; c++) {
+	cgd = cgdmin(&sblock, c);
+	if (c == 0) {
+	    i = cgbase(&sblock, c);
+	    cgd += howmany(sblock.fs_cssize, sblock.fs_fsize);
+	} else
+	    i = cgsblock(&sblock, c);
+	for (; i < cgd; i++)
+	    setbmap(i);
+    }
+    /*
+     * Find all allocated blocks.
+     */
+    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    idesc.id_type = ADDR;
+    idesc.id_func = pass1check;
+    inumber = 0;
+    n_files = n_blks = 0;
 #ifdef VICE
-	nViceFiles = 0;
+    nViceFiles = 0;
 #endif /* VICE */
-	for (c = 0; c < sblock.fs_ncg; c++) {
-		for (i = 0; i < sblock.fs_ipg; i++, inumber++) {
-			if (inumber < ROOTINO)
-				continue;
-			dp = ginode(inumber);
-			if ((dp->di_mode & IFMT) == 0) {
-				if (memcmp((char *)dp->di_db, (char *)zino.di_db,
-					NDADDR * sizeof(daddr_t)) ||
-				    memcmp((char *)dp->di_ib, (char *)zino.di_ib, NIADDR * sizeof(daddr_t)) ||
+    for (c = 0; c < sblock.fs_ncg; c++) {
+	for (i = 0; i < sblock.fs_ipg; i++, inumber++) {
+	    if (inumber < ROOTINO)
+		continue;
+	    dp = ginode(inumber);
+	    if ((dp->di_mode & IFMT) == 0) {
+		if (memcmp
+		    ((char *)dp->di_db, (char *)zino.di_db,
+		     NDADDR * sizeof(daddr_t))
+		    || memcmp((char *)dp->di_ib, (char *)zino.di_ib,
+			      NIADDR * sizeof(daddr_t)) ||
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-				    dp->di_mode || dp->di_size || dp->di_contin) {
-				            if (dp->di_contin != 0) 
-						pwarn("UNALLOCATED INODE HAS BAD ic_contin VALUE %d", dp->di_contin);
-					    else
+		    dp->di_mode || dp->di_size || dp->di_contin) {
+		    if (dp->di_contin != 0)
+			pwarn("UNALLOCATED INODE HAS BAD ic_contin VALUE %d",
+			      dp->di_contin);
+		    else
 #else
-				    dp->di_mode || dp->di_size) {
+		    dp->di_mode || dp->di_size) {
 #endif
 
-					pfatal("PARTIALLY ALLOCATED INODE I=%u", inumber);
-					if (reply("CLEAR") == 1) {
+		    pfatal("PARTIALLY ALLOCATED INODE I=%u", inumber);
+		    if (reply("CLEAR") == 1) {
 #ifdef VICE
-					        zapino(dp);
+			zapino(dp);
 #else /* VICE */
-						clearinode(dp);
+			clearinode(dp);
 #endif /* VICE */
-						inodirty();
-					}
-				}
-				statemap[inumber] = USTATE;
-				continue;
-			    }
-			lastino = inumber;
+			inodirty();
+		    }
+		}
+		statemap[inumber] = USTATE;
+		continue;
+	    }
+	    lastino = inumber;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-			/* 
-			 * Don't check blocks and sizes of  
-			 * continuation inodes 
-			 */
-			if (CONT) {
-			    statemap[inumber] = CSTATE;
-			    lncntp[inumber] = dp->di_nlink;
-			    n_cont++;
-			    continue;
-			} 
+	    /* 
+	     * Don't check blocks and sizes of  
+	     * continuation inodes 
+	     */
+	    if (CONT) {
+		statemap[inumber] = CSTATE;
+		lncntp[inumber] = dp->di_nlink;
+		n_cont++;
+		continue;
+	    }
 #endif /* ACLS */
 #if	defined(AFS_SUN56_ENV)
-                        if (dp->di_size < 0 || 
-			    dp->di_size > (UOFF_T)UFS_MAXOFFSET_T) {
-				if (debug)
-					printf("bad size %llu:", dp->di_size);
-				goto unknown;
-			}
+	    if (dp->di_size < 0 || dp->di_size > (UOFF_T) UFS_MAXOFFSET_T) {
+		if (debug)
+		    printf("bad size %llu:", dp->di_size);
+		goto unknown;
+	    }
 #else
-			if (dp->di_size < 0 ||
-			    dp->di_size + sblock.fs_bsize - 1 < 0) {
-				if (debug)
-					printf("bad size %d:", dp->di_size);
-				goto unknown;
-			}
+	    if (dp->di_size < 0 || dp->di_size + sblock.fs_bsize - 1 < 0) {
+		if (debug)
+		    printf("bad size %d:", dp->di_size);
+		goto unknown;
+	    }
 #endif
 #if defined(AFS_HPUX_ENV)
-			/* initialize all R/W activities of FIFO file */
-			/* make sure FIFO is empty (everything is 0) */
-			if ((dp->di_mode & IFMT) == IFIFO && (dp->di_frcnt!=0 || dp->di_fwcnt!=0)) {
-			    if (!qflag)
-				pwarn("NON-ZERO READER/WRITER COUNT(S) ON PIPE I=%u",inumber);
-			    if (preen && !qflag)
-				printf(" (CORRECTED)\n");
-			    else if (!qflag) {
-				if (reply("CORRECT") == 0)
-				    goto no_reset;
-			    }
-			    dp->di_size = 0;
-			    dp->di_frptr = 0;
-			    dp->di_fwptr = 0;
-			    dp->di_frcnt = 0;
-			    dp->di_fwcnt = 0;
-			    dp->di_fflag = 0;
-			    dp->di_fifosize = 0;
-			    inodirty();
-			    ndb = 0;
-			    for (j = ndb; j < NDADDR; j++)
-				dp->di_db[j] = 0;
-			} 
+	    /* initialize all R/W activities of FIFO file */
+	    /* make sure FIFO is empty (everything is 0) */
+	    if ((dp->di_mode & IFMT) == IFIFO
+		&& (dp->di_frcnt != 0 || dp->di_fwcnt != 0)) {
+		if (!qflag)
+		    pwarn("NON-ZERO READER/WRITER COUNT(S) ON PIPE I=%u",
+			  inumber);
+		if (preen && !qflag)
+		    printf(" (CORRECTED)\n");
+		else if (!qflag) {
+		    if (reply("CORRECT") == 0)
+			goto no_reset;
+		}
+		dp->di_size = 0;
+		dp->di_frptr = 0;
+		dp->di_fwptr = 0;
+		dp->di_frcnt = 0;
+		dp->di_fwcnt = 0;
+		dp->di_fflag = 0;
+		dp->di_fifosize = 0;
+		inodirty();
+		ndb = 0;
+		for (j = ndb; j < NDADDR; j++)
+		    dp->di_db[j] = 0;
+	    }
 #ifdef IC_FASTLINK
-			else if (FASTLNK) {
-			    /*
-			     * Fast symlink -- verify that the size is valid and that the length
-			     * of the path is correct.
-			     */
+	    else if (FASTLNK) {
+		/*
+		 * Fast symlink -- verify that the size is valid and that the length
+		 * of the path is correct.
+		 */
 
-			    if (dp->di_size >= MAX_FASTLINK_SIZE) {
-				if (debug)
-				    printf("bad fastlink size %d:", dp->di_size);
-				goto unknown;
-			    }
-			    dp->di_symlink[MAX_FASTLINK_SIZE-1] = '\0';
-			    if (strlen(dp->di_symlink) != dp->di_size) {
-				int len = strlen(dp->di_symlink);
-				pwarn("BAD SYMLINK SIZE, SHOULD BE %d: size = %d", len, dp->di_size);
-				if (preen)
-				    printf(" (CORRECTED)\n");
-				else {
-				    printf("\n");
-				    pinode(inumber);
-				    if (reply("CORRECT") == 0)
-					continue;
-				}
-				dp->di_size = len;
-				inodirty();
-			    }
-			    goto ignore_direct_block_check;
-			}
+		if (dp->di_size >= MAX_FASTLINK_SIZE) {
+		    if (debug)
+			printf("bad fastlink size %d:", dp->di_size);
+		    goto unknown;
+		}
+		dp->di_symlink[MAX_FASTLINK_SIZE - 1] = '\0';
+		if (strlen(dp->di_symlink) != dp->di_size) {
+		    int len = strlen(dp->di_symlink);
+		    pwarn("BAD SYMLINK SIZE, SHOULD BE %d: size = %d", len,
+			  dp->di_size);
+		    if (preen)
+			printf(" (CORRECTED)\n");
+		    else {
+			printf("\n");
+			pinode(inumber);
+			if (reply("CORRECT") == 0)
+			    continue;
+		    }
+		    dp->di_size = len;
+		    inodirty();
+		}
+		goto ignore_direct_block_check;
+	    }
 #endif /* IC_FASTLINK */
 #endif
-no_reset:
-			if (!preen && (dp->di_mode & IFMT) == IFMT &&
-			    reply("HOLD BAD BLOCK") == 1) {
-				dp->di_size = sblock.fs_fsize;
-				dp->di_mode = IFREG|0600;
-				inodirty();
-			}
-			ndb = howmany(dp->di_size, (UOFF_T)sblock.fs_bsize);
+	  no_reset:
+	    if (!preen && (dp->di_mode & IFMT) == IFMT
+		&& reply("HOLD BAD BLOCK") == 1) {
+		dp->di_size = sblock.fs_fsize;
+		dp->di_mode = IFREG | 0600;
+		inodirty();
+	    }
+	    ndb = howmany(dp->di_size, (UOFF_T) sblock.fs_bsize);
 #ifdef	AFS_SUN5_ENV
-			if (dp->di_oeftflag == oEFT_MAGIC) {
-				dp->di_oeftflag = 0; /* XXX migration aid */
-				inodirty();
-			}
+	    if (dp->di_oeftflag == oEFT_MAGIC) {
+		dp->di_oeftflag = 0;	/* XXX migration aid */
+		inodirty();
+	    }
 #endif
 
-			if (ndb < 0) {
-				if (debug)
+	    if (ndb < 0) {
+		if (debug)
 #if	defined(AFS_SUN56_ENV)
-					printf("bad size %lld ndb %d:",
+		    printf("bad size %lld ndb %d:",
 #else
-					printf("bad size %d ndb %d:",
+		    printf("bad size %d ndb %d:",
 #endif
-						dp->di_size, ndb);
-				goto unknown;
-			}
-			if ((dp->di_mode & IFMT) == IFBLK ||
-			    (dp->di_mode & IFMT) == IFCHR)
-				ndb++;
+			   dp->di_size, ndb);
+		goto unknown;
+	    }
+	    if ((dp->di_mode & IFMT) == IFBLK
+		|| (dp->di_mode & IFMT) == IFCHR)
+		ndb++;
 #ifdef	AFS_OSF_ENV
-		    if ((dp->di_flags & IC_FASTLINK) == 0) {
-#endif	/* AFS_OSF_ENV */
-			for (j = ndb; j < NDADDR; j++) {
+	    if ((dp->di_flags & IC_FASTLINK) == 0) {
+#endif /* AFS_OSF_ENV */
+		for (j = ndb; j < NDADDR; j++) {
 #if defined(AFS_HPUX_ENV) && (defined(DUX) || defined(CNODE_DEV))
-			    /*  
-			     * DUX uses db[2] on cnode-specific
-			     * device files, so skip 'em 
-			     */
-			    if (j == 2 && SPECIAL)
-				continue;
+		    /*  
+		     * DUX uses db[2] on cnode-specific
+		     * device files, so skip 'em 
+		     */
+		    if (j == 2 && SPECIAL)
+			continue;
 #endif
-				if (dp->di_db[j] != 0) {
-					if (debug)
-						printf("bad direct addr: %d\n",
-							dp->di_db[j]);
-					goto unknown;
-				}
-			    }
-			for (j = 0, ndb -= NDADDR; ndb > 0; j++)
-				ndb /= NINDIR(&sblock);
-			for (; j < NIADDR; j++)
-				if (dp->di_ib[j] != 0) {
+		    if (dp->di_db[j] != 0) {
+			if (debug)
+			    printf("bad direct addr: %d\n", dp->di_db[j]);
+			goto unknown;
+		    }
+		}
+		for (j = 0, ndb -= NDADDR; ndb > 0; j++)
+		    ndb /= NINDIR(&sblock);
+		for (; j < NIADDR; j++)
+		    if (dp->di_ib[j] != 0) {
 #ifdef	AFS_HPUX_ENV
-					if ((dp->di_mode & IFMT) != IFIFO) {
+			if ((dp->di_mode & IFMT) != IFIFO) {
 #endif
-					if (debug)
-						printf("bad indirect addr: %d\n",
-							dp->di_ib[j]);
-					goto unknown;
+			    if (debug)
+				printf("bad indirect addr: %d\n",
+				       dp->di_ib[j]);
+			    goto unknown;
 #ifdef	AFS_HPUX_ENV
-					}
+			}
 #endif
 
-				}
+		    }
 #if	defined(AFS_HPUX_ENV)
-ignore_direct_block_check:
+	      ignore_direct_block_check:
 #endif
 #ifdef	AFS_OSF_ENV
+	    }
+#endif /* AFS_OSF_ENV */
+	    if (ftypeok(dp) == 0)
+		goto unknown;
+	    n_files++;
+	    lncntp[inumber] = dp->di_nlink;
+	    if (dp->di_nlink <= 0) {
+		zlnp = (struct zlncnt *)malloc(sizeof *zlnp);
+		if (zlnp == NULL) {
+		    pfatal("LINK COUNT TABLE OVERFLOW");
+		    if (reply("CONTINUE") == 0)
+			errexit("");
+		} else {
+		    zlnp->zlncnt = inumber;
+		    zlnp->next = zlnhead;
+		    zlnhead = zlnp;
+		}
+	    }
+#if	defined(AFS_SUN56_ENV)
+	    if (OLDVICEINODE) {
+		if (yflag) {
+		    if (!oldreported) {
+			printf
+			    ("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
+			printf
+			    ("You should run the AFS file conversion utility before installing Sol 2.6\n");
+			printf("Continuing anyway.\n");
+			oldreported++;
 		    }
-#endif	/* AFS_OSF_ENV */
-			if (ftypeok(dp) == 0)
-				goto unknown;
-			n_files++;
-			lncntp[inumber] = dp->di_nlink;
-			if (dp->di_nlink <= 0) {
-				zlnp = (struct zlncnt *)malloc(sizeof *zlnp);
-				if (zlnp == NULL) {
-					pfatal("LINK COUNT TABLE OVERFLOW");
-					if (reply("CONTINUE") == 0)
-						errexit("");
-				} else {
-					zlnp->zlncnt = inumber;
-					zlnp->next = zlnhead;
-					zlnhead = zlnp;
-				}
-			}
-#if	defined(AFS_SUN56_ENV) 
-			if ( OLDVICEINODE )
-			{
-			    if (yflag) {
-				if (!oldreported) {
-				    printf("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
-				    printf("You should run the AFS file conversion utility before installing Sol 2.6\n");
-				    printf("Continuing anyway.\n");
-				    oldreported++;
-				}
-			    } else {
-				/* This looks like a sol 2.5 AFS inode */
-				printf("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
-				printf("You should run the AFS file conversion utility before installing Sol 2.6\n");
-				exit(100); /* unique return code? */
-			    }
-			}
+		} else {
+		    /* This looks like a sol 2.5 AFS inode */
+		    printf
+			("This vicep partition seems to contain pre Sol2.6 AFS inodes\n");
+		    printf
+			("You should run the AFS file conversion utility before installing Sol 2.6\n");
+		    exit(100);	/* unique return code? */
+		}
+	    }
 #endif
-			statemap[inumber] =
+	    statemap[inumber] =
 #ifdef VICE
-			    (dp->di_mode & IFMT) == IFDIR ? DSTATE : (VICEINODE? VSTATE : FSTATE);
+		(dp->di_mode & IFMT) ==
+		IFDIR ? DSTATE : (VICEINODE ? VSTATE : FSTATE);
 #else /* VICE */
-			    (dp->di_mode & IFMT) == IFDIR ? DSTATE : FSTATE;
+		(dp->di_mode & IFMT) == IFDIR ? DSTATE : FSTATE;
 #endif /* VICE */
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-			/* 
-			 * keep track of associated contin inodes 
-			 */
-			if (dp->di_contin != 0)
-			    statemap[inumber] |= HASCINODE;
+	    /* 
+	     * keep track of associated contin inodes 
+	     */
+	    if (dp->di_contin != 0)
+		statemap[inumber] |= HASCINODE;
 #endif /* ACLS */
-			badblk = dupblk = 0;
-			idesc.id_number = inumber;
-			idesc.id_entryno = 0;
+	    badblk = dupblk = 0;
+	    idesc.id_number = inumber;
+	    idesc.id_entryno = 0;
 #ifdef	AFS_SUN5_ENV
-			idesc.id_fix = DONTKNOW;
+	    idesc.id_fix = DONTKNOW;
 #endif
-			(void)ckinode(dp, &idesc);
+	    (void)ckinode(dp, &idesc);
 
-			idesc.id_entryno *= btodb(sblock.fs_fsize);
+	    idesc.id_entryno *= btodb(sblock.fs_fsize);
 
-			if (dp->di_blocks != idesc.id_entryno) {
-				pwarn("INCORRECT BLOCK COUNT I=%u (%ld should be %ld)",
-				    inumber, dp->di_blocks, idesc.id_entryno);
-				if (preen)
-					printf(" (CORRECTED)\n");
-				else if (reply("CORRECT") == 0)
-					continue;
+	    if (dp->di_blocks != idesc.id_entryno) {
+		pwarn("INCORRECT BLOCK COUNT I=%u (%ld should be %ld)",
+		      inumber, dp->di_blocks, idesc.id_entryno);
+		if (preen)
+		    printf(" (CORRECTED)\n");
+		else if (reply("CORRECT") == 0)
+		    continue;
 #ifdef	AFS_SUN5_ENV
-				dp = ginode(inumber);
+		dp = ginode(inumber);
 #endif
-				dp->di_blocks = idesc.id_entryno;
-				inodirty();
-			}
+		dp->di_blocks = idesc.id_entryno;
+		inodirty();
+	    }
 #ifdef	AFS_SUN5_ENV
-			if ((dp->di_mode & IFMT) == IFDIR)
-				if (dp->di_blocks == 0)
-					statemap[inumber] = DCLEAR;
+	    if ((dp->di_mode & IFMT) == IFDIR)
+		if (dp->di_blocks == 0)
+		    statemap[inumber] = DCLEAR;
 #endif
-			continue;
-	unknown:
-			pfatal("UNKNOWN FILE TYPE I=%u", inumber);
+	    continue;
+	  unknown:
+	    pfatal("UNKNOWN FILE TYPE I=%u", inumber);
 #ifdef	AFS_SUN5_ENV
-			if ((dp->di_mode & IFMT) == IFDIR) {
-				statemap[inumber] = DCLEAR;
+	    if ((dp->di_mode & IFMT) == IFDIR) {
+		statemap[inumber] = DCLEAR;
 #ifdef	notdef
-				cacheino(dp, inumber);
+		cacheino(dp, inumber);
 #endif
-			} else
+	    } else
 #endif
-			statemap[inumber] = FCLEAR;
-			if (reply("CLEAR") == 1) {
-				statemap[inumber] = USTATE;
+		statemap[inumber] = FCLEAR;
+	    if (reply("CLEAR") == 1) {
+		statemap[inumber] = USTATE;
 #ifdef VICE
-				zapino(dp);
+		zapino(dp);
 #else /* VICE */
-				clearinode(dp);
+		clearinode(dp);
 #endif /* VICE */
-				inodirty();
-			}
-		}
+		inodirty();
+	    }
 	}
+    }
 }
 
 pass1check(idesc)
-	register struct inodesc *idesc;
+     register struct inodesc *idesc;
 {
-	int res = KEEPON;
-	int anyout, nfrags;
-	daddr_t blkno = idesc->id_blkno;
-	register struct dups *dlp;
-	struct dups *new;
+    int res = KEEPON;
+    int anyout, nfrags;
+    daddr_t blkno = idesc->id_blkno;
+    register struct dups *dlp;
+    struct dups *new;
 
-	if ((anyout = chkrange(blkno, idesc->id_numfrags)) != 0) {
-		blkerror(idesc->id_number, "BAD", blkno);
-		if (++badblk >= MAXBAD) {
-			pwarn("EXCESSIVE BAD BLKS I=%u",
-				idesc->id_number);
-			if (preen)
-				printf(" (SKIPPING)\n");
-			else if (reply("CONTINUE") == 0)
-				errexit("");
+    if ((anyout = chkrange(blkno, idesc->id_numfrags)) != 0) {
+	blkerror(idesc->id_number, "BAD", blkno);
+	if (++badblk >= MAXBAD) {
+	    pwarn("EXCESSIVE BAD BLKS I=%u", idesc->id_number);
+	    if (preen)
+		printf(" (SKIPPING)\n");
+	    else if (reply("CONTINUE") == 0)
+		errexit("");
 #ifdef	AFS_HPUX_ENV
-			ge_danger = 1;
+	    ge_danger = 1;
 #endif
-			return (STOP);
-		}
+	    return (STOP);
 	}
-	for (nfrags = idesc->id_numfrags; nfrags > 0; blkno++, nfrags--) {
-		if (anyout && chkrange(blkno, 1)) {
-			res = SKIP;
-		} else if (!testbmap(blkno)) {
-			n_blks++;
-			setbmap(blkno);
-		} else {
-			blkerror(idesc->id_number, "DUP", blkno);
-			if (++dupblk >= MAXDUP) {
-				pwarn("EXCESSIVE DUP BLKS I=%u",
-					idesc->id_number);
-				if (preen)
-					printf(" (SKIPPING)\n");
-				else if (reply("CONTINUE") == 0)
-					errexit("");
+    }
+    for (nfrags = idesc->id_numfrags; nfrags > 0; blkno++, nfrags--) {
+	if (anyout && chkrange(blkno, 1)) {
+	    res = SKIP;
+	} else if (!testbmap(blkno)) {
+	    n_blks++;
+	    setbmap(blkno);
+	} else {
+	    blkerror(idesc->id_number, "DUP", blkno);
+	    if (++dupblk >= MAXDUP) {
+		pwarn("EXCESSIVE DUP BLKS I=%u", idesc->id_number);
+		if (preen)
+		    printf(" (SKIPPING)\n");
+		else if (reply("CONTINUE") == 0)
+		    errexit("");
 #ifdef	AFS_HPUX_ENV
-				ge_danger = 1;
+		ge_danger = 1;
 #endif
-				return (STOP);
-			}
-			new = (struct dups *)malloc(sizeof(struct dups));
-			if (new == NULL) {
-				pfatal("DUP TABLE OVERFLOW.");
-				if (reply("CONTINUE") == 0)
-					errexit("");
-				return (STOP);
-			}
-			new->dup = blkno;
-			if (muldup == 0) {
-				duplist = muldup = new;
-				new->next = 0;
-			} else {
-				new->next = muldup->next;
-				muldup->next = new;
-			}
-			for (dlp = duplist; dlp != muldup; dlp = dlp->next)
-				if (dlp->dup == blkno)
-					break;
-			if (dlp == muldup && dlp->dup != blkno)
-				muldup = new;
-		}
-		/*
-		 * count the number of blocks found in id_entryno
-		 */
-		idesc->id_entryno++;
+		return (STOP);
+	    }
+	    new = (struct dups *)malloc(sizeof(struct dups));
+	    if (new == NULL) {
+		pfatal("DUP TABLE OVERFLOW.");
+		if (reply("CONTINUE") == 0)
+		    errexit("");
+		return (STOP);
+	    }
+	    new->dup = blkno;
+	    if (muldup == 0) {
+		duplist = muldup = new;
+		new->next = 0;
+	    } else {
+		new->next = muldup->next;
+		muldup->next = new;
+	    }
+	    for (dlp = duplist; dlp != muldup; dlp = dlp->next)
+		if (dlp->dup == blkno)
+		    break;
+	    if (dlp == muldup && dlp->dup != blkno)
+		muldup = new;
 	}
-	return (res);
+	/*
+	 * count the number of blocks found in id_entryno
+	 */
+	idesc->id_entryno++;
+    }
+    return (res);
 }

@@ -44,34 +44,34 @@
 #include <err.h>
 
 static void
-create_and_write (char *name, const char *buf)
+create_and_write(char *name, const char *buf)
 {
     int fd, ret;
     int len = strlen(buf);
 
-    fd = open (name, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    fd = open(name, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0)
-	err (1, "open");
-    ret = write (fd, buf, len);
+	err(1, "open");
+    ret = write(fd, buf, len);
     if (ret != len)
-	err (1, "write");
-    ret = close (fd);
+	err(1, "write");
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close");
+	err(1, "close");
 }
 
 static void
-check_size (char *name, int len)
+check_size(char *name, int len)
 {
     struct stat sb;
     int ret;
 
     ret = stat(name, &sb);
     if (ret < 0)
-	err (1, "stat");
+	err(1, "stat");
 
     if (len != sb.st_size)
-	errx (1, "len != sb.st_size");
+	errx(1, "len != sb.st_size");
 }
 
 int
@@ -80,29 +80,29 @@ main(int argc, char **argv)
     int ret;
 
 
-    create_and_write ("foo", "hej\n");
+    create_and_write("foo", "hej\n");
 
-    ret = truncate ("foo", 0);
+    ret = truncate("foo", 0);
     if (ret < 0)
-	err (1, "truncate(0)");
+	err(1, "truncate(0)");
 
-    check_size ("foo", 0);
+    check_size("foo", 0);
 
     ret = unlink("foo");
     if (ret < 0)
-	errx (1, "unlink");
+	errx(1, "unlink");
 
-    create_and_write ("bar", "hej\nhej\n");
+    create_and_write("bar", "hej\nhej\n");
 
-    ret = truncate ("bar", 16);
+    ret = truncate("bar", 16);
     if (ret < 0)
-	err (1, "truncate(16)");
+	err(1, "truncate(16)");
 
-    check_size ("bar", 16);
+    check_size("bar", 16);
 
     ret = unlink("bar");
     if (ret < 0)
-	errx (1, "unlink");
+	errx(1, "unlink");
 
     return 0;
 }

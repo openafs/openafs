@@ -10,17 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_account.c,v 1.1.1.4 2001/07/14 22:23:11 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/pam/afs_account.c,v 1.5 2003/07/15 23:15:56 shadow Exp $");
 
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
 extern int
-pam_sm_acct_mgmt(
-	pam_handle_t	*pamh,
-	int		flags,
-	int		argc,
-	const char	**argv)
+pam_sm_acct_mgmt(pam_handle_t * pamh, int flags, int argc, const char **argv)
 {
     return PAM_SUCCESS;
 }

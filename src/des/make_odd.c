@@ -10,13 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_odd.c,v 1.1.1.3 2001/07/14 22:21:34 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/make_odd.c,v 1.4 2003/07/15 23:15:00 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
 
-void gen(stream)
-    FILE *stream;
+void
+gen(stream)
+     FILE *stream;
 {
     /*
      * map a byte into its equivalent with odd parity, where odd
@@ -24,26 +26,25 @@ void gen(stream)
      */
     register int i, j, k, odd;
 
-    fprintf(stream,
-            "static unsigned char const odd_parity[256] = {\n");
+    fprintf(stream, "static unsigned char const odd_parity[256] = {\n");
 
     for (i = 0; i < 256; i++) {
-        odd = 0;
-        /* shift out the lsb parity bit */
-        k = i >> 1;
-        /* then count the other bits */
-        for (j = 0; j < 7; j++) {
-            odd ^= (k&1);
-            k = k >> 1;
-        }
-        k = i&~1;
-        if (!odd)
-            k |= 1;
-        fprintf(stream, "%3d", k);
-        if (i < 255)
-            fprintf(stream, ", ");
-        if (i%8 == 0)
-            fprintf(stream, "\n");
+	odd = 0;
+	/* shift out the lsb parity bit */
+	k = i >> 1;
+	/* then count the other bits */
+	for (j = 0; j < 7; j++) {
+	    odd ^= (k & 1);
+	    k = k >> 1;
+	}
+	k = i & ~1;
+	if (!odd)
+	    k |= 1;
+	fprintf(stream, "%3d", k);
+	if (i < 255)
+	    fprintf(stream, ", ");
+	if (i % 8 == 0)
+	    fprintf(stream, "\n");
     }
     fprintf(stream, "};\n");
 }

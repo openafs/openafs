@@ -280,7 +280,7 @@ void Filesets_Clonesys_OnSelect (HWND hDlg, LPSET_CLONESYS_PARAMS pcsp)
    if (!fEnable)
       CheckDlgButton (hDlg, IDC_CLONE_AGG_LIMIT, FALSE);
 
-   fEnable &= IsDlgButtonChecked (hDlg, IDC_CLONE_AGG_LIMIT) && pcsp->fEnumedAggregs;
+   fEnable = fEnable && IsDlgButtonChecked (hDlg, IDC_CLONE_AGG_LIMIT) && pcsp->fEnumedAggregs;
    EnableWindow (GetDlgItem (hDlg, IDC_CLONE_AGG), fEnable);
 
    fEnable = IsDlgButtonChecked (hDlg, IDC_CLONE_PREFIX_LIMIT);

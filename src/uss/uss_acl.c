@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_acl.c,v 1.1.1.4 2001/07/14 22:24:14 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/uss/uss_acl.c,v 1.6 2003/07/15 23:17:12 shadow Exp $");
 
 #include "uss_acl.h"
 #include "uss_common.h"
@@ -28,6 +29,15 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_acl.c,v 1.1.1.4 2001/07/14 22:2
 #include <sys/types.h>
 #include <netdb.h>
 #include <errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #undef VIRTUE
 #undef VICE
 #include <afs/afsint.h>
@@ -76,25 +86,28 @@ static int PruneList();
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static foldcmp(a_str1, a_str2)
-    register char *a_str1;
-    register char *a_str2;
+static
+foldcmp(a_str1, a_str2)
+     register char *a_str1;
+     register char *a_str2;
 
-{ /*foldcmp*/
+{				/*foldcmp */
 
     register char t, u;
 
     while (1) {
-        t = *a_str1++;
-        u = *a_str2++;
-        if (t >= 'A' && t <= 'Z') t += 0x20;
-        if (u >= 'A' && u <= 'Z') u += 0x20;
-        if (t != u)
-	    return(1);  /*Difference*/
-        if (t == 0)
-	    return(0);  /*Match*/
+	t = *a_str1++;
+	u = *a_str2++;
+	if (t >= 'A' && t <= 'Z')
+	    t += 0x20;
+	if (u >= 'A' && u <= 'Z')
+	    u += 0x20;
+	if (t != u)
+	    return (1);		/*Difference */
+	if (t == 0)
+	    return (0);		/*Match */
     }
-} /*foldcmp*/
+}				/*foldcmp */
 
 
 /*------------------------------------------------------------------------
@@ -118,63 +131,59 @@ static foldcmp(a_str1, a_str2)
  *	passed in.
  *------------------------------------------------------------------------*/
 
-static afs_int32 Convert(a_rights)
-    register char *a_rights;
+static afs_int32
+Convert(a_rights)
+     register char *a_rights;
 
-{ /*Convert*/
+{				/*Convert */
 
     register int i, len;
     afs_int32 mode;
     register char tc;
 
-    if (!strcmp(a_rights,"read"))
-	return(PRSFS_READ | PRSFS_LOOKUP);
+    if (!strcmp(a_rights, "read"))
+	return (PRSFS_READ | PRSFS_LOOKUP);
 
     if (!strcmp(a_rights, "write"))
-	return(PRSFS_READ
-	       | PRSFS_LOOKUP
-	       | PRSFS_INSERT
-	       | PRSFS_DELETE
-	       | PRSFS_WRITE
-	       | PRSFS_LOCK);
+	return (PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
+		PRSFS_WRITE | PRSFS_LOCK);
 
     if (!strcmp(a_rights, "mail"))
-	return(PRSFS_INSERT
-	       | PRSFS_LOCK
-	       | PRSFS_LOOKUP);
+	return (PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP);
 
     if (!strcmp(a_rights, "all"))
-	return(PRSFS_READ
-	       | PRSFS_LOOKUP
-	       | PRSFS_INSERT
-	       | PRSFS_DELETE
-	       | PRSFS_WRITE
-	       | PRSFS_LOCK
-	       | PRSFS_ADMINISTER);
+	return (PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
+		PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER);
 
     if (!strcmp(a_rights, "none"))
-	return(0);
+	return (0);
 
     len = strlen(a_rights);
     mode = 0;
     for (i = 0; i < len; i++) {
-        tc = *a_rights++;
-        if (tc == 'r')      mode |= PRSFS_READ;
-        else if (tc == 'l') mode |= PRSFS_LOOKUP;
-        else if (tc == 'i') mode |= PRSFS_INSERT;
-        else if (tc == 'd') mode |= PRSFS_DELETE;
-        else if (tc == 'w') mode |= PRSFS_WRITE;
-        else if (tc == 'k') mode |= PRSFS_LOCK;
-        else if (tc == 'a') mode |= PRSFS_ADMINISTER;
-        else {
-            printf("%s: Bogus rights character '%c'.\n",
-		   uss_whoami, tc);
-            exit(1);
+	tc = *a_rights++;
+	if (tc == 'r')
+	    mode |= PRSFS_READ;
+	else if (tc == 'l')
+	    mode |= PRSFS_LOOKUP;
+	else if (tc == 'i')
+	    mode |= PRSFS_INSERT;
+	else if (tc == 'd')
+	    mode |= PRSFS_DELETE;
+	else if (tc == 'w')
+	    mode |= PRSFS_WRITE;
+	else if (tc == 'k')
+	    mode |= PRSFS_LOCK;
+	else if (tc == 'a')
+	    mode |= PRSFS_ADMINISTER;
+	else {
+	    printf("%s: Bogus rights character '%c'.\n", uss_whoami, tc);
+	    exit(1);
 	}
     }
-    return(mode);
+    return (mode);
 
-} /*Convert*/
+}				/*Convert */
 
 
 /*------------------------------------------------------------------------
@@ -197,20 +206,21 @@ static afs_int32 Convert(a_rights)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static struct AclEntry *FindList(a_alist, a_name)
-    register struct AclEntry *a_alist;
-    char *a_name;
+static struct AclEntry *
+FindList(a_alist, a_name)
+     register struct AclEntry *a_alist;
+     char *a_name;
 
-{ /*FindList*/
+{				/*FindList */
 
     while (a_alist) {
-        if (!foldcmp(a_alist->name, a_name))
-	    return(a_alist);
-        a_alist = a_alist->next;
+	if (!foldcmp(a_alist->name, a_name))
+	    return (a_alist);
+	a_alist = a_alist->next;
     }
-    return(0);
+    return (0);
 
-} /*FindList*/
+}				/*FindList */
 
 
 /*------------------------------------------------------------------------
@@ -237,51 +247,51 @@ static struct AclEntry *FindList(a_alist, a_name)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static void ChangeList (a_al, a_plus, a_name, a_rights)
-    struct Acl *a_al;
-    afs_int32 a_plus;
-    char *a_name;
-    afs_int32 a_rights;
+static void
+ChangeList(a_al, a_plus, a_name, a_rights)
+     struct Acl *a_al;
+     afs_int32 a_plus;
+     char *a_name;
+     afs_int32 a_rights;
 
-{ /*ChangeList*/
+{				/*ChangeList */
 
     struct AclEntry *tlist;
 
     tlist = (a_plus ? a_al->pluslist : a_al->minuslist);
     tlist = FindList(tlist, a_name);
     if (tlist) {
-        /*
+	/*
 	 * Found the item already in the list.
 	 */
-        tlist->rights = a_rights;
-        if (a_plus)
-            a_al->nplus -= PruneList(&a_al->pluslist);
-        else
-            a_al->nminus -= PruneList(&a_al->minuslist);
-        return;
+	tlist->rights = a_rights;
+	if (a_plus)
+	    a_al->nplus -= PruneList(&a_al->pluslist);
+	else
+	    a_al->nminus -= PruneList(&a_al->minuslist);
+	return;
     }
 
     /*
      * Otherwise, we make a new item and plug in the new data.
      */
-    tlist = (struct AclEntry *) malloc(sizeof(struct AclEntry));
+    tlist = (struct AclEntry *)malloc(sizeof(struct AclEntry));
     strcpy(tlist->name, a_name);
     tlist->rights = a_rights;
     if (a_plus) {
-        tlist->next = a_al->pluslist;
-        a_al->pluslist = tlist;
-        a_al->nplus++;
-        if (a_rights == 0)
+	tlist->next = a_al->pluslist;
+	a_al->pluslist = tlist;
+	a_al->nplus++;
+	if (a_rights == 0)
 	    a_al->nplus -= PruneList(&a_al->pluslist);
-    }
-    else {
-        tlist->next = a_al->minuslist;
-        a_al->minuslist = tlist;
-        a_al->nminus++;
-        if (a_rights == 0)
+    } else {
+	tlist->next = a_al->minuslist;
+	a_al->minuslist = tlist;
+	a_al->nminus++;
+	if (a_rights == 0)
 	    a_al->nminus -= PruneList(&a_al->minuslist);
     }
-} /*ChangeList*/
+}				/*ChangeList */
 
 
 /*------------------------------------------------------------------------
@@ -303,10 +313,11 @@ static void ChangeList (a_al, a_plus, a_name, a_rights)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int PruneList (a_aclPP)
-    struct AclEntry **a_aclPP;
+static int
+PruneList(a_aclPP)
+     struct AclEntry **a_aclPP;
 
-{ /*PruneList*/
+{				/*PruneList */
 
     struct AclEntry **lPP;
     struct AclEntry *tP, *nP;
@@ -315,21 +326,20 @@ static int PruneList (a_aclPP)
     ctr = 0;
     lPP = a_aclPP;
     for (tP = *a_aclPP; tP; tP = nP) {
-        if (tP->rights == 0) {
-            *lPP = tP->next;
-            nP = tP->next;
-            free(tP);
-            ctr++;
-	}
-        else {
-            nP = tP->next;
-            lPP = &tP->next;
+	if (tP->rights == 0) {
+	    *lPP = tP->next;
+	    nP = tP->next;
+	    free(tP);
+	    ctr++;
+	} else {
+	    nP = tP->next;
+	    lPP = &tP->next;
 	}
     }
 
-    return(ctr);
+    return (ctr);
 
-} /*PruneList*/
+}				/*PruneList */
 
 
 /*------------------------------------------------------------------------
@@ -351,16 +361,18 @@ static int PruneList (a_aclPP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static char *SkipLine(a_str)
-    register char *a_str;
+static char *
+SkipLine(a_str)
+     register char *a_str;
 
-{ /*SkipLine*/
+{				/*SkipLine */
 
-    while (*a_str !='\n') a_str++;
+    while (*a_str != '\n')
+	a_str++;
     a_str++;
-    return(a_str);
+    return (a_str);
 
-} /*SkipLine*/
+}				/*SkipLine */
 
 
 /*------------------------------------------------------------------------
@@ -382,18 +394,18 @@ static char *SkipLine(a_str)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static struct Acl *EmptyAcl()
-
-{ /*EmptyAcl*/
+static struct Acl *
+EmptyAcl()
+{				/*EmptyAcl */
 
     register struct Acl *tp;
 
-    tp = (struct Acl *) malloc(sizeof (struct Acl));
+    tp = (struct Acl *)malloc(sizeof(struct Acl));
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
-    return(tp);
+    return (tp);
 
-} /*EmptyAcl*/
+}				/*EmptyAcl */
 
 
 /*------------------------------------------------------------------------
@@ -416,10 +428,11 @@ static struct Acl *EmptyAcl()
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static struct Acl *ParseAcl(a_str)
-    char *a_str;
+static struct Acl *
+ParseAcl(a_str)
+     char *a_str;
 
-{ /*ParseAcl*/
+{				/*ParseAcl */
 
     int nplus, nminus, i, trights;
     char tname[MAXNAME];
@@ -438,7 +451,7 @@ static struct Acl *ParseAcl(a_str)
     /*
      * Allocate and initialize the first entry.
      */
-    ta = (struct Acl *) malloc(sizeof (struct Acl));
+    ta = (struct Acl *)malloc(sizeof(struct Acl));
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -447,18 +460,18 @@ static struct Acl *ParseAcl(a_str)
      */
     last = 0;
     first = 0;
-    for(i = 0; i < nplus; i++) {
-        sscanf(a_str, "%100s %d", tname, &trights);
-        a_str = SkipLine(a_str);
-        tl = (struct AclEntry *) malloc(sizeof(struct AclEntry));
-        if (!first)
+    for (i = 0; i < nplus; i++) {
+	sscanf(a_str, "%100s %d", tname, &trights);
+	a_str = SkipLine(a_str);
+	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	if (!first)
 	    first = tl;
-        strcpy(tl->name, tname);
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
+	strcpy(tl->name, tname);
+	tl->rights = trights;
+	tl->next = 0;
+	if (last)
 	    last->next = tl;
-        last = tl;
+	last = tl;
     }
     ta->pluslist = first;
 
@@ -468,23 +481,23 @@ static struct Acl *ParseAcl(a_str)
     last = 0;
     first = 0;
     for (i = 0; i < nminus; i++) {
-        sscanf(a_str, "%100s %d", tname, &trights);
-        a_str = SkipLine(a_str);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
-        if (!first)
+	sscanf(a_str, "%100s %d", tname, &trights);
+	a_str = SkipLine(a_str);
+	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	if (!first)
 	    first = tl;
-        strcpy(tl->name, tname);
-        tl->rights = trights;
-        tl->next = 0;
-        if (last)
+	strcpy(tl->name, tname);
+	tl->rights = trights;
+	tl->next = 0;
+	if (last)
 	    last->next = tl;
-        last = tl;
+	last = tl;
     }
     ta->minuslist = first;
 
-    return(ta);
+    return (ta);
 
-} /*ParseAcl*/
+}				/*ParseAcl */
 
 
 /*------------------------------------------------------------------------
@@ -507,10 +520,11 @@ static struct Acl *ParseAcl(a_str)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static char *AclToString(a_acl)
-    struct Acl *a_acl;
+static char *
+AclToString(a_acl)
+     struct Acl *a_acl;
 
-{ /*AclToString*/
+{				/*AclToString */
 
     static char mydata[MAXSIZE];
     char tstring[MAXSIZE];
@@ -525,20 +539,20 @@ static char *AclToString(a_acl)
      * Externalize the positive list.
      */
     for (tp = a_acl->pluslist; tp; tp = tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
+	sprintf(tstring, "%s %d\n", tp->name, tp->rights);
+	strcat(mydata, tstring);
     }
 
     /*
      * Externalize the negative list.
      */
     for (tp = a_acl->minuslist; tp; tp = tp->next) {
-        sprintf(tstring, "%s %d\n", tp->name, tp->rights);
-        strcat(mydata, tstring);
+	sprintf(tstring, "%s %d\n", tp->name, tp->rights);
+	strcat(mydata, tstring);
     }
-    return(mydata);
+    return (mydata);
 
-}  /*AclToString*/
+}				/*AclToString */
 
 
 /*------------------------------------------------------------------------
@@ -553,12 +567,13 @@ static char *AclToString(a_acl)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
-    char *a_access;
-    int a_clear;
-    int a_negative;
+afs_int32
+uss_acl_SetAccess(a_access, a_clear, a_negative)
+     char *a_access;
+     int a_clear;
+     int a_negative;
 
-{ /*uss_acl_SetAccess*/
+{				/*uss_acl_SetAccess */
 
     register afs_int32 code;
     static char rn[] = "uss_acl_SetAccess";
@@ -578,10 +593,9 @@ afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
     tp = uss_common_FieldCp(path_field, a_access, ' ', sizeof(path_field),
 			    &overflow);
     if (overflow) {
-	fprintf(stderr,
-		"%s: * Pathname field too long (max is %d chars)\n",
+	fprintf(stderr, "%s: * Pathname field too long (max is %d chars)\n",
 		uss_whoami, sizeof(path_field));
-	return(-1);
+	return (-1);
     }
 
     /*
@@ -590,18 +604,18 @@ afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
      */
     code = uss_fs_GetACL(path_field, tmp_str, MAXSIZE);
     if (code) {
-	com_err(uss_whoami, code,
-		"while getting access list for %s", path_field);
+	com_err(uss_whoami, code, "while getting access list for %s",
+		path_field);
 #ifdef USS_ACL_DB
-	printf("%s: Error code from uss_fs_GetACL %d, errno %d\n",
-	       rn, code, errno);
+	printf("%s: Error code from uss_fs_GetACL %d, errno %d\n", rn, code,
+	       errno);
 #endif /* USS_ACL_DB */
-	return(code);
+	return (code);
     }
 #ifdef USS_ACL_DB
     else
-	printf("%s: ACL for pathname '%s' is: '%s'\n",
-	       rn, path_field, tmp_str);
+	printf("%s: ACL for pathname '%s' is: '%s'\n", rn, path_field,
+	       tmp_str);
 #endif /* USS_ACL_DB */
 
     /*
@@ -616,25 +630,23 @@ afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
      * For each given entry, pull out the information and alter the
      * internalized ACL to reflect it.
      */
-    while(*tp != '\0') {
+    while (*tp != '\0') {
 	tp = uss_common_FieldCp(user_field, tp, ' ', 64, &overflow);
 	if (overflow) {
-	    fprintf(stderr,
-		    "%s: * User field too long (max is 64 chars)\n",
+	    fprintf(stderr, "%s: * User field too long (max is 64 chars)\n",
 		    uss_whoami);
-	    return(-1);
+	    return (-1);
 	}
 	if (*tp == '\0') {
 	    printf("%s: Missing second half of user/access pair.\n",
 		   uss_whoami);
-	    return(1);
+	    return (1);
 	}
 	tp = uss_common_FieldCp(rights_field, tp, ' ', 64, &overflow);
 	if (overflow) {
-	    fprintf(stderr,
-		    "%s: * Rights field too long (max is 64 chars)\n",
+	    fprintf(stderr, "%s: * Rights field too long (max is 64 chars)\n",
 		    uss_whoami);
-	    return(-1);
+	    return (-1);
 	}
 	rights = Convert(rights_field);
 	ChangeList(ta, plusp, user_field, rights);
@@ -645,30 +657,30 @@ afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
      * to the Cache Manager.
      */
     externalizedACL = AclToString(ta);
-    code = uss_fs_SetACL(path_field, externalizedACL,
-			 strlen(externalizedACL)+1);
+    code =
+	uss_fs_SetACL(path_field, externalizedACL,
+		      strlen(externalizedACL) + 1);
     if (code) {
 #ifdef USS_ACL_DB
-	printf("%s: uss_fs_SetACL() failed, code is %d, errno is %d\n",
-	       rn, code, errno);
+	printf("%s: uss_fs_SetACL() failed, code is %d, errno is %d\n", rn,
+	       code, errno);
 #endif /* USS_ACL_DB */
 	if (errno == EINVAL) {
-	    printf("Can't set ACL for directory '%s' to '%s'\n",
-		   path_field, externalizedACL);
+	    printf("Can't set ACL for directory '%s' to '%s'\n", path_field,
+		   externalizedACL);
 	    printf("Invalid argument, possible reasons include:\n");
 	    printf("\t1. File not in AFS, or\n");
 	    printf("\t2. Too many users on the ACL, or\n");
 	    printf("\t3. Non-existent user or group on ACL.\n");
-	    return(code);
-	}
-	else {
+	    return (code);
+	} else {
 	    com_err(uss_whoami, code, "while setting the access list");
-	    return(code);
+	    return (code);
 	}
     }
-    return(0);
+    return (0);
 
-} /*uss_acl_SetAccess*/
+}				/*uss_acl_SetAccess */
 
 
 /*------------------------------------------------------------------------
@@ -681,11 +693,12 @@ afs_int32 uss_acl_SetAccess(a_access, a_clear, a_negative)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_acl_SetDiskQuota(a_path, a_q)
-    char *a_path;
-    int a_q;
+afs_int32
+uss_acl_SetDiskQuota(a_path, a_q)
+     char *a_path;
+     int a_q;
 
-{ /*uss_acl_SetDiskQuota*/
+{				/*uss_acl_SetDiskQuota */
 
     register afs_int32 code;
     static char rn[] = "uss_acl_SetDiskQuota";
@@ -699,29 +712,29 @@ afs_int32 uss_acl_SetDiskQuota(a_path, a_q)
 		"Setting disk quota on volume mounted at '%s' to %d blocks\n",
 		a_path, a_q);
 
-    status = (uss_VolumeStatus_t *)tmp_str;
+    status = (uss_VolumeStatus_t *) tmp_str;
     status->MinQuota = status->MaxQuota = -1;
-    name = motd = offmsg = (char *) 0;
+    name = motd = offmsg = NULL;
     status->MaxQuota = a_q;
 
     input = (char *)status + sizeof(*status);
-    *(input++) = '\0';  
-    *(input++) = '\0';  
-    *(input++) = '\0';  
+    *(input++) = '\0';
+    *(input++) = '\0';
+    *(input++) = '\0';
 
-    code = uss_fs_SetVolStat(a_path, tmp_str, sizeof(*status)+3);    
+    code = uss_fs_SetVolStat(a_path, tmp_str, sizeof(*status) + 3);
     if (code) {
 	com_err(uss_whoami, code, "while setting disk quota");
 #ifdef USS_ACL_DB
-	printf("%s: uss_fs_SetVolStat() error code: %d, errno is %d\n",
-	       rn, code, errno);
+	printf("%s: uss_fs_SetVolStat() error code: %d, errno is %d\n", rn,
+	       code, errno);
 #endif /* USS_ACL_DB */
-	return(code);
+	return (code);
     }
 
-    return(0);
+    return (0);
 
-} /*uss_acl_SetDiskQuota*/
+}				/*uss_acl_SetDiskQuota */
 
 
 /*-----------------------------------------------------------------------
@@ -735,9 +748,9 @@ afs_int32 uss_acl_SetDiskQuota(a_path, a_q)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 uss_acl_CleanUp()
-
-{ /*uss_acl_CleanUp*/
+afs_int32
+uss_acl_CleanUp()
+{				/*uss_acl_CleanUp */
 
     static char rn[] = "uss_acl_CleanUp";
     struct uss_subdir *t, *old_t = NULL;
@@ -755,21 +768,20 @@ afs_int32 uss_acl_CleanUp()
 	if (!uss_DryRun)
 	    uss_acl_SetAccess(tmp_str, 1, 0);
 	else
-	    fprintf(stderr,
-		    "\t[Dry run: uss_acl_SetAccess(%s) on '%s']\n",
+	    fprintf(stderr, "\t[Dry run: uss_acl_SetAccess(%s) on '%s']\n",
 		    tmp_str, t->path);
 	free(t->path);
 	if (old_t)
 	    free(old_t);
 	old_t = t;
-    } /*Remove caller from user directory ACL*/
-    
+    }				/*Remove caller from user directory ACL */
+
     if (old_t)
 	free(old_t);
 
     /*
      * Return successfully.
      */
-    return(0);
+    return (0);
 
-} /*uss_acl_CleanUp*/
+}				/*uss_acl_CleanUp */

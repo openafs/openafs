@@ -59,7 +59,7 @@ void ExitApplication (void);
  *
  */
 
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR pszCmdLineA, int nCmdShow)
+extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR pszCmdLineA, int nCmdShow)
 {
    LPTSTR pszCmdLine = AnsiToString (pszCmdLineA);
 

@@ -2396,23 +2396,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVER_SERVICE      "%1:%2"
-    IDS_SERVICETYPE_SIMPLE  "シンプル"
-    IDS_SERVICETYPE_CRON    "Cron"
-    IDS_SERVICESTATE_STOPPED "停止"
-    IDS_SERVICESTATE_STOPPING "停止中"
-    IDS_SERVICESTATE_STARTING "開始中"
-    IDS_SERVICESTATE_RUNNING "実行中"
-    IDS_SERVICETYPE_FS_LONG "FS (ファイル・システム)"
-    IDS_SERVICETYPE_FS      "FS"
-    IDS_SERVICE_LASTERROR   "%1"
-    IDS_SERVICES_IN_CELL    "セル %1 のすべてのサービス:"
-    IDS_SERVICE_STARTDATE   "開始 %1"
-    IDS_SERVICE_STOPDATE    "停止 %1"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_PERCENTAGE          "%1 %%"
     IDS_AGGREGATES_IN_SERVER "サーバー %1 のパーティション:"
     IDS_AGGREGATES_IN_CELL  "セル %1 のすべてのパーティション:"
@@ -2460,11 +2443,11 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_BAD_CREDENTIALS 
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
                             "入力した AFS ID が認識されないか、または指定したパスワードが正しくありません。"
-    IDS_CREDS_NONE          "(トークンなし)"
-    IDS_CREDS_VALID         "%2, 期限切れ %3"
-    IDS_CREDS_EXPIRED       "(トークンが期限切れ %3)"
+    IDS_SVR_CREDS_NONE          "(トークンなし)"
+    IDS_SVR_CREDS_VALID         "%2, 期限切れ %3"
+    IDS_SVR_CREDS_EXPIRED       "(トークンが期限切れ %3)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -2991,6 +2974,23 @@ BEGIN
                             "不明な問題のために AFS サーバー・マネージャーを開始できませんでした。\n\nAFS コントロール・センターの再インストールが必要である可能性があります。"
     IDS_ERROR_CANT_CHANGEADDR 
                             "AFS サーバー・マネージャーがサーバー %1 の VLDB 内の IP アドレスを変更できませんでした。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "シンプル"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "停止"
+    IDS_SERVICESTATE_STOPPING "停止中"
+    IDS_SERVICESTATE_STARTING "開始中"
+    IDS_SERVICESTATE_RUNNING "実行中"
+    IDS_SERVICETYPE_FS_LONG "FS (ファイル・システム)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "セル %1 のすべてのサービス:"
+    IDS_SERVICE_STARTDATE   "開始 %1"
+    IDS_SERVICE_STOPDATE    "停止 %1"
 END
 
 #endif    // Japanese resources

@@ -5,27 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# MakefileProto for HP systems
-#
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -39,9 +21,15 @@ AFS_OS_OBJS = \
 	osi_vm.o
 
 AFS_OS_NFSOBJS = \
+<ia64_hpux1123>
+	hpux_mod_nfs.modmeta.o \
+<all>
 	osi_vfsops_nfs.o
 
 AFS_OS_NONFSOBJS = \
+<ia64_hpux1123>
+	hpux_mod.modmeta.o \
+<all>
 	osi_vfsops.o
 
 
@@ -66,6 +54,9 @@ AFS_OS_NONFSOBJS = \
 # seems to hang).  When the compiler sees the +ES1.Xindirect_calls
 # option, however, it issues a warning and turns off +Z.
 #
+# for 11.23, see the DDK BE/Sample_makefiles/Makefile.bld
+# for mod drivers.
+#
 <hp_ux110 hp_ux102 hp_ux11i>
 KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
 	-DMP +R500 -Wl,+k $(CPU_KDEFS)
@@ -75,6 +66,8 @@ KDEFS_32 = +DA1.0 +DS1.0
 # warning 530: LP64 migration: Casting from loose to strict alignment: Resulting pointer may be misaligned.
 KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
 
+<all>
+
 <ia64_hpux1122>
 KDEFS= +kernel -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
   -DFINE_GRAINED_PROTO_FILES \
@@ -82,18 +75,43 @@ KDEFS= +kernel -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
 KDEFS_32 =
 KDEFS_64 = +DD64
 
+<ia64_hpux1123>
+
+CCOPTS_common= -Ae +DD64 +O2
+
+IDENTS_common= -DACLS -DAUDIT -DHPONCPLUS -DIDDS -DIPSEC -DIVT_INTERCEPT \
+    -DLWSYSCALL -DPGPROF -DSTCP -D_CLEAN_BE -D_HPUX_SOURCE -D_KERNEL \
+    -D_LARGEFILE64_SOURCE -D_NO_USER_PROTOS -D_UNSUPPORTED \
+    -D__BIGMSGQUEUE_ENABLED -D__ROSE__ -U__hp9000s700 \
+    -D_XPG4_EXTENDED -D__STDC_EXT__
+
+# Definitions which apply to IPF only
+
+CCOPTS_ipf= +DSitanium2 +kernel +objstatvars +Olit=all +Oshortdata=0 +W863
+
+IDENTS_ipf= -DKERNEL_DEBUGGER -DVARIABLE_UAREA -D_SYSCALL_64 -D__NO_PA_HDRS
+
+LDOPTS_ipf= +noobjdebug
+
+# above from the Makefile.bld example
+
+LDOPTS= $(LDOPTS_ipf)
+KDEFS= $(CCOPTS_common) $(IDENTS_common) $(CPU_KDEFS) 
+KDEFS_64= $(CCOPTS_ipf) $(IDENTS_ipf)
+
+MODLINK=/opt/ddk/11.23/BE/bin/modlink
+MODMETA=/opt/ddk/11.23/BE/bin/modmeta
+
 <all>
 
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ=STATIC
 
-# This tells Makefile.common to use its single directory build target.
-#COMPDIRS = single_compdir
 # This is the hpux multiple directory target.
 COMPDIRS = hpux_compdirs
 INSTDIRS = hpux_instdirs
@@ -103,40 +121,47 @@ include Makefile.common
 
 <hp_ux11i hp_ux110 hp_ux102>
 BITS = 64 32
-<ia64_hpux1122>
+<ia64_hpux1122 ia64_hpux1123>
 BITS = 64
 <all>
 
 setup:
-	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys conf
+	-$(RM) -f  h conf net dux machine netinet nfs rpc s200 ufs sys
 <hp_ux102>
-	ln -s /usr/include/sys h
+	ln -fs /usr/include/sys h
 <hp_ux110 hp_ux11i ia64_hpux1122>
-	ln -s /etc/conf/h h
-<all>
-	ln -s /etc/conf conf
-	ln -s /etc/conf/net net
-	ln -s /etc/conf/dux dux
-	ln -s /etc/conf/machine machine
-	ln -s /etc/conf/netinet netinet
-	ln -s /etc/conf/nfs nfs
-	ln -s /usr/include/rpc rpc
-	ln -s /etc/conf/machine s200
+	ln -fs /etc/conf/h h
+<hp_ux102 hp_ux110 hp_ux11i ia64_hpux1122>
+	ln -fs /etc/conf conf
+	ln -fs /etc/conf/net net
+	ln -fs /etc/conf/dux dux
+	ln -fs /etc/conf/machine machine
+	ln -fs /etc/conf/netinet netinet
+	ln -fs /etc/conf/nfs nfs
+	ln -fs /usr/include/rpc rpc
+	ln -fs /etc/conf/machine s200
 <hp_ux11i hp_ux110 hp_ux102>
-	ln -s /etc/conf/ufs ufs
+	ln -fs /etc/conf/ufs ufs
 <ia64_hpux1122>
-	ln -s /etc/conf/sys ufs
+	ln -fs /etc/conf/sys ufs
+<ia64_hpux1123>
+	ln -fs /usr/include/sys h
+	ln -fs /usr/include/net net
+	ln -fs /usr/include/netinet netinet
+	ln -fs /usr/include/nfs nfs
+	ln -fs /usr/include/rpc rpc
+	ln -fs /usr/include/sys ufs
 <all>
-	ln -s /usr/include/sys sys
+	ln -fs /usr/include/sys sys
 	for b in $(BITS); do \
 	    for t in $(KOBJ); do \
 		dir=$$t.$$b; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
 		$(RM) -f $$dir/Makefile $$dir/Makefile.common $$dir/config; \
-		ln -s ../Makefile $$dir/Makefile; \
-		ln -s ../Makefile.common $$dir/Makefile.common; \
-		ln -s ../config $$dir/config; \
+		ln -fs ../Makefile $$dir/Makefile; \
+		ln -fs ../Makefile.common $$dir/Makefile.common; \
+		ln -fs ../config $$dir/config; \
 	    done; \
 	done
 	echo Setup complete.
@@ -159,20 +184,25 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	done; \
 	fi
 
-hpux_compdirs_libafs: libafs
+hpux_compdirs_libafs: depsrcs libafs
 hpux_instdirs_libafs: install_libafs
 hpux_destdirs_libafs: dest_libafs
 
 
 # Below this line are targets when in the static directory:
+<all -ia64_hpux1123>
 LIBAFS = libafs$(BITSUFFIX).a
 LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
+<ia64_hpux1123>
+LIBAFS = afs$(BITSUFFIX)_nfs
+LIBAFSNONFS =afs$(BITSUFFIX)
+<all>
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 
-DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
-DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+DEST_LIBAFS = ${DEST}/root.client/usr/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/bin/${LIBAFSNONFS}
 
 
 libafs: ${LIBAFSNONFS}
@@ -192,36 +222,29 @@ $(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
 	${INSTALL} -f $? $@
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+<all -ia64_hpux1123>
 	$(AR) cru $@ $?
 	$(RANLIB) $@
+<ia64_hpux1123>
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNFSOBJS)
+<all>
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+<all -ia64_hpux1123>
 	$(AR) cru $@ $?
 	$(RANLIB) $@
+<ia64_hpux1123>
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+<all>
 
+<ia64_hpux1123>
+hpux_mod.modmeta.c: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta
+	$(MODMETA) ${IDENTS_common} ${IDENTS_ipf} \
+		-DAFSLIB_NAME=${LIBAFSNONFS} \
+		$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta > hpux_mod.modmeta.c
 
-# HP specific objects
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)
-
-# This is a list of header files compiled with the -g option. It allows
-# examination of AFS structures in a dump.
-osi_debug.o: $(AFS)/osi_debug.c
-	$(CRULE4)
-
+hpux_mod_nfs.modmeta.c: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta
+	$(MODMETA) ${IDENTS_common} ${IDENTS_ipf} \
+		-DAFSLIB_NAME=${LIBAFS} \
+		$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/hpux_mod.modmeta > hpux_mod_nfs.modmeta.c
+<all>

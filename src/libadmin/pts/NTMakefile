@@ -7,21 +7,26 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\pts
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
-PTSERVER = ..\..\ptserver\
+PTSERVER = ..\..\ptserver
+RX = ..\..\rx
+
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
 PTSERVEROBJS = \
-	ptint.xdr.obj ptint.cs.obj
+	$(OUT)\ptint.xdr.obj $(OUT)\ptint.cs.obj
 
 ADMINOBJS = \
-	afs_ptsAdmin.obj
+	$(OUT)\afs_ptsAdmin.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
 	$(PTSERVEROBJS) \
-	afsptsadmin.res
+	$(RXOBJS) \
+	$(OUT)\afsptsadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_ptsAdmin.h
@@ -45,14 +50,15 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 
 install: $(DLLFILE) $(LIBINCLUDES)
 
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
-
-ptint.xdr.obj: $(PTSERVER)\ptint.xdr.c
-	$(C2OBJ) $(PTSERVER)\ptint.xdr.c
-
-ptint.cs.obj: $(PTSERVER)\ptint.cs.c
-	$(C2OBJ) $(PTSERVER)\ptint.cs.c
+$(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
+	$(C2OBJ) $**
 
 # Definitions for generating versioninfo resources
-afsptsadmin.res: afsptsadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
+
+$(OUT)\afsptsadmin.res: AFS_component_version_number.h
+
+mkdir:
+	

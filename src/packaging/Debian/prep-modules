@@ -1,0 +1,55 @@
+#! /bin/sh
+
+set -e
+
+if [ $# -ne 2 ]; then
+	echo Usage: $0 kernelsource-location control-template
+	exit 1
+fi
+
+
+changelog="$1/debian/changelog"
+if [ -n "$KVERS" ] && [ -n "$KDREV" ]; then
+  linuxversion=$KVERS${INT_SUBARCH}
+  kernversion=$KDREV
+
+elif [ ! -f $changelog ]; then
+        linuxversion=`awk '{ if (NR==1) v=$3; else if (NR==2) p=$3; else if (NR==3) s=$3; \
+                else if (NR==4) { e=$3; exit; } } \
+                END { printf("%s.%s.%s%s\n",v,p,s,e); }' $1/Makefile`
+
+        if [ -z "$KDREV" ]; then
+          kernversion=$linuxversion-0
+        else
+	    linuxversion=${linuxversion}${INT_SUBARCH}
+          kernversion=$KDREV
+        fi
+
+else
+        linuxversion=`head -1 $changelog | \
+                sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\1/'`
+        kernversion=`head -1 $changelog | \
+                sed -e 's/.*source-\([^ ]*\) (\([^)]*\)).*/\2/'`
+fi
+
+pkgversion=`head -1 debian/changelog | \
+	sed -e 's/.*(\([^)]*\)).*/\1/'`
+
+pkgupversion=`echo $pkgversion | cut -d- -f 1`
+pkgupversion2=`perl -e "\"$pkgupversion\" =~ /(.*?)(\d+)\D*$/;"'printf $1 . ($2+1);'`
+
+sed -e s/=KVERS/$linuxversion/g -e s/=KREVS/$kernversion/g -e s/=AVERS/$pkgupversion/g -e s/=2AVERS/$pkgupversion2/g $2
+
+mprefix=`grep Package: $2 | cut -d' ' -f 2 | cut -d= -f 1`
+
+rm -f debian/tmp/usr/share/doc/$mprefix$linuxversion
+
+
+epochversion=`echo $kernversion | sed -n -e 's/^\([0-9]*\):.*/\1/p' -e 's/.*//'`
+kernversion="$pkgversion+`echo $kernversion | sed -e 's/^[0-9]*://'`"
+
+if [ -n "$epochversion" ]; then
+  kernversion=$epochversion:$kernversion
+fi
+echo "$kernversion" > debian/VERSION
+echo "$linuxversion" > debian/KVERS

@@ -42,28 +42,28 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: write-ro-file.c,v 1.1 2002/01/22 19:54:43 hartmans Exp $");
+RCSID("$Id: write-ro-file.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
 #endif
 
 int
 main(int argc, char *argv[])
 {
-  int fd;
-  int ret;
+    int fd;
+    int ret;
 
-  fd = open("foo", O_RDWR|O_CREAT, 0);
-  if (fd < 0)
-      err (1, "open foo");
-  ret = write (fd, "foo", 3);
-  if (ret < 0) {
-      unlink("foo");
-      err (1, "write foo");
-  }
-  ret = close (fd);
-  if (ret < 0) {
-      unlink("foo");
-      err (1, "close foo");
-  }
-  unlink("foo");
-  return 0;
+    fd = open("foo", O_RDWR | O_CREAT, 0);
+    if (fd < 0)
+	err(1, "open foo");
+    ret = write(fd, "foo", 3);
+    if (ret < 0) {
+	unlink("foo");
+	err(1, "write foo");
+    }
+    ret = close(fd);
+    if (ret < 0) {
+	unlink("foo");
+	err(1, "close foo");
+    }
+    unlink("foo");
+    return 0;
 }

@@ -10,16 +10,26 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_pam_msg.c,v 1.1.1.4 2001/07/14 22:23:12 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/pam/afs_pam_msg.c,v 1.6 2003/07/15 23:15:56 shadow Exp $");
 
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#include <stdlib.h>
 #include <security/pam_appl.h>
 #include "afs_pam_msg.h"
 #include "afs_message.h"
 #include <stdarg.h>
 
 
-int pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
+int
+pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
 {
     va_list args;
     char buf[PAM_MAX_MSG_SIZE];
@@ -37,21 +47,24 @@ int pam_afs_printf(struct pam_conv *pam_convp, int error, int fmt_msgid, ...)
     va_start(args, fmt_msgid);
     vsprintf(buf, fmt_msg, args);
     va_end(args);
-    if (freeit) free(fmt_msg);
+    if (freeit)
+	free(fmt_msg);
 
     mesg.msg_style = error ? PAM_ERROR_MSG : PAM_TEXT_INFO;
     mesg.msg = buf;
-    errcode = (*(pam_convp->conv))(1, &mesgp, &resp, pam_convp->appdata_ptr);
+    errcode = (*(pam_convp->conv)) (1, &mesgp, &resp, pam_convp->appdata_ptr);
     if (resp) {
-	if (resp->resp) free(resp->resp);
+	if (resp->resp)
+	    free(resp->resp);
 	free(resp);
     }
     return errcode;
 }
 
 
-int pam_afs_prompt(struct pam_conv *pam_convp, char **response,
-		   int echo, int fmt_msgid, ...)
+int
+pam_afs_prompt(struct pam_conv *pam_convp, char **response, int echo,
+	       int fmt_msgid, ...)
 {
     va_list args;
     char buf[PAM_MAX_MSG_SIZE];
@@ -71,12 +84,13 @@ int pam_afs_prompt(struct pam_conv *pam_convp, char **response,
     va_start(args, fmt_msgid);
     vsprintf(buf, fmt_msg, args);
     va_end(args);
-    if (freeit) free(fmt_msg);
+    if (freeit)
+	free(fmt_msg);
 
     mesg.msg_style = echo ? PAM_PROMPT_ECHO_ON : PAM_PROMPT_ECHO_OFF;
     mesg.msg = buf;
 
-    errcode = (*(pam_convp->conv))(1, &mesgp, &resp, pam_convp->appdata_ptr);
+    errcode = (*(pam_convp->conv)) (1, &mesgp, &resp, pam_convp->appdata_ptr);
     if (resp) {
 	*response = resp->resp;
 
@@ -84,4 +98,3 @@ int pam_afs_prompt(struct pam_conv *pam_convp, char **response,
     }
     return errcode;
 }
-

@@ -46,7 +46,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: test-setpag.c,v 1.1 2002/01/22 19:54:43 hartmans Exp $");
+RCSID("$Id: test-setpag.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
 #endif
 
 #if !defined(NGROUPS) && defined(NGROUPS_MAX)
@@ -54,15 +54,15 @@ RCSID("$Id: test-setpag.c,v 1.1 2002/01/22 19:54:43 hartmans Exp $");
 #endif
 
 static void
-print_groups (int ngroups, gid_t groups[NGROUPS])
+print_groups(int ngroups, gid_t groups[NGROUPS])
 {
     int i;
 
-    printf ("groups: ");
+    printf("groups: ");
     for (i = 0; i < ngroups; ++i)
-	printf ("%d%s", groups[i], (i < ngroups - 1) ? ", " : "");
-    printf ("\n");
-}    
+	printf("%d%s", groups[i], (i < ngroups - 1) ? ", " : "");
+    printf("\n");
+}
 
 int
 main(int argc, char **argv)
@@ -74,40 +74,39 @@ main(int argc, char **argv)
     pid_t pid;
 
     if (argc != 1)
-	errx (1, "Usage: %s", argv[0]);
+	errx(1, "Usage: %s", argv[0]);
 
-    ngroups = getgroups (NGROUPS, groups);
+    ngroups = getgroups(NGROUPS, groups);
     if (ngroups < 0)
-	err (1, "getgroups %d", NGROUPS);
+	err(1, "getgroups %d", NGROUPS);
     pag1 = groups[1];
     pag2 = groups[2];
-    printf ("in parent ");
-    print_groups (ngroups, groups);
-    pid = fork ();
+    printf("in parent ");
+    print_groups(ngroups, groups);
+    pid = fork();
     if (pid < 0)
-	err (1, "fork");
+	err(1, "fork");
     if (pid == 0) {
-	ret = setpag ();
+	ret = setpag();
 	if (ret < 0)
-	    err (1, "setpag");
-	ngroups = getgroups (NGROUPS, groups);
+	    err(1, "setpag");
+	ngroups = getgroups(NGROUPS, groups);
 	if (ngroups < 0)
-	    err (1, "getgroups %d", NGROUPS);
-	printf ("in child ");
-	print_groups (ngroups, groups);
+	    err(1, "getgroups %d", NGROUPS);
+	printf("in child ");
+	print_groups(ngroups, groups);
 	return 0;
     } else {
 	int status;
 
-	while(waitpid (pid, &status, WNOHANG | WUNTRACED) != pid)
-	    ;
+	while (waitpid(pid, &status, WNOHANG | WUNTRACED) != pid);
 	if (status)
 	    return 1;
-	ngroups = getgroups (NGROUPS, groups);
+	ngroups = getgroups(NGROUPS, groups);
 	if (ngroups < 0)
-	    err (1, "getgroups %d", NGROUPS);
-	printf ("in parent ");
-	print_groups (ngroups, groups);
+	    err(1, "getgroups %d", NGROUPS);
+	printf("in parent ");
+	print_groups(ngroups, groups);
 	if (groups[1] == pag1 && groups[2] == pag2)
 	    return 0;
 	else

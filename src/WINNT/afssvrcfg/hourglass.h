@@ -27,4 +27,3 @@ typedef class HOURGLASS
       }
 
 } HOURGLASS, *PHOURGLASS;
-

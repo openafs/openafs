@@ -47,7 +47,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: kill-softer.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: kill-softer.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 #endif
 
 static FILE *verbose;
@@ -58,64 +58,64 @@ struct entry {
 };
 
 static void
-kill_one (struct entry *ents, int ind, int curents);
+  kill_one(struct entry *ents, int ind, int curents);
 
 static void
-do_dir (const char *dirname);
+  do_dir(const char *dirname);
 
 static void
-kill_dir (const char *dirname);
+  kill_dir(const char *dirname);
 
 static void
-kill_one (struct entry *ents, int ind, int curents)
+kill_one(struct entry *ents, int ind, int curents)
 {
     int ret;
     int i;
 
-    ret = unlink (ents[ind].name);
+    ret = unlink(ents[ind].name);
     if (ret < 0) {
 	if (errno == EISDIR || errno == EPERM)
-	    do_dir (ents[ind].name);
+	    do_dir(ents[ind].name);
 	else
-	    err (1, "unlink %s", ents[ind].name);
+	    err(1, "unlink %s", ents[ind].name);
     }
     ents[ind].status = 0;
     for (i = 0; i <= ind; ++i) {
 	struct stat sb;
 
-	ret = lstat (ents[i].name, &sb);
+	ret = lstat(ents[i].name, &sb);
 	if (ret == 0 || errno != ENOENT)
-	    err (1, "%s still exists?", ents[i].name);
+	    err(1, "%s still exists?", ents[i].name);
     }
 
     for (i = ind + 1; i < curents; ++i) {
 	struct stat sb;
 
-	ret = lstat (ents[i].name, &sb);
+	ret = lstat(ents[i].name, &sb);
 	if (ret < 0)
-	    err (1, "stat %s", ents[i].name);
+	    err(1, "stat %s", ents[i].name);
     }
 }
 
 static void
-do_dir (const char *dirname)
+do_dir(const char *dirname)
 {
     int ret;
 
-    ret = chdir (dirname);
+    ret = chdir(dirname);
     if (ret < 0)
-	err (1, "chdir %s", dirname);
-    kill_dir (dirname);
-    ret = chdir ("..");
+	err(1, "chdir %s", dirname);
+    kill_dir(dirname);
+    ret = chdir("..");
     if (ret < 0)
-	err (1, "chdir ..");
-    ret = rmdir (dirname);
+	err(1, "chdir ..");
+    ret = rmdir(dirname);
     if (ret < 0)
-	err (1, "rmdir %s", dirname);
+	err(1, "rmdir %s", dirname);
 }
 
 static void
-kill_dir (const char *dirname)
+kill_dir(const char *dirname)
 {
     struct entry *ents;
     int maxents;
@@ -124,68 +124,66 @@ kill_dir (const char *dirname)
     struct dirent *dp;
     int i;
 
-    fprintf (verbose, "reading %s\n", dirname);
+    fprintf(verbose, "reading %s\n", dirname);
 
-    dir = opendir (".");
+    dir = opendir(".");
     if (dir == NULL)
-	err (1, "opendir %s", dirname);
+	err(1, "opendir %s", dirname);
     maxents = 10;
-    ents = malloc (sizeof (*ents) * maxents);
+    ents = malloc(sizeof(*ents) * maxents);
     if (ents == NULL)
-	err (1, "malloc");
-    while ((dp = readdir (dir)) != NULL) {
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+	err(1, "malloc");
+    while ((dp = readdir(dir)) != NULL) {
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 
 	if (curents >= maxents) {
 	    maxents *= 2;
-	    ents = realloc (ents, sizeof(*ents) * maxents);
+	    ents = realloc(ents, sizeof(*ents) * maxents);
 	    if (ents == NULL)
-		err (1, "realloc");
+		err(1, "realloc");
 	}
-	ents[curents].name   = strdup (dp->d_name);
+	ents[curents].name = strdup(dp->d_name);
 	ents[curents].status = 1;
 	++curents;
-	fprintf (verbose, "  adding %s\n", dp->d_name);
+	fprintf(verbose, "  adding %s\n", dp->d_name);
     }
-    closedir (dir);
-    dir = opendir (".");
+    closedir(dir);
+    dir = opendir(".");
     if (dir == NULL)
-	err (1, "opendir %s", dirname);
+	err(1, "opendir %s", dirname);
     i = 0;
-    while((dp = readdir (dir)) != NULL) {
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+    while ((dp = readdir(dir)) != NULL) {
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 
-	if (strcmp (ents[i].name, dp->d_name) != 0) {
-	    errx (1, "%s != %s", ents[i].name, dp->d_name);
+	if (strcmp(ents[i].name, dp->d_name) != 0) {
+	    errx(1, "%s != %s", ents[i].name, dp->d_name);
 	}
-	fprintf (verbose, "  deleting %s\n", ents[i].name);
-	kill_one (ents, i, curents);
+	fprintf(verbose, "  deleting %s\n", ents[i].name);
+	kill_one(ents, i, curents);
 	++i;
     }
     if (i != curents)
-	errx (1, "missing %d entries in %s", curents - i, dirname);
-    closedir (dir);
-    free (ents);
-    fprintf (verbose, "end of %s\n", dirname);
+	errx(1, "missing %d entries in %s", curents - i, dirname);
+    closedir(dir);
+    free(ents);
+    fprintf(verbose, "end of %s\n", dirname);
 }
 
 int
 main(int argc, char **argv)
 {
 
-    verbose = fdopen (4, "w");
+    verbose = fdopen(4, "w");
     if (verbose == NULL) {
-	verbose = fopen ("/dev/null", "w");
+	verbose = fopen("/dev/null", "w");
 	if (verbose == NULL)
-	    err (1, "fopen /dev/null");
+	    err(1, "fopen /dev/null");
     }
 
     if (argc != 2)
-	errx (1, "usage: %s directory", argv[0]);
-    do_dir (argv[1]);
+	errx(1, "usage: %s directory", argv[0]);
+    do_dir(argv[1]);
     return 0;
 }

@@ -28,61 +28,67 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selsubs.c,v 1.1.1.6 2003/04/13 19:07:04 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/lwp/test/selsubs.c,v 1.8 2003/07/15 23:15:47 shadow Exp $");
 
 
-#include "../lwp.h"
+#include "lwp.h"
 #include "seltest.h"
 
 #ifdef NEEDS_ALLOCFDSET
 /* Include these if testing against 32 bit fd_set IOMGR. */
-fd_set *IOMGR_AllocFDSet(void)
+fd_set *
+IOMGR_AllocFDSet(void)
 {
-    fd_set *tmp = (fd_set*)malloc(sizeof(fd_set));
-    memset((char*)tmp, 0, sizeof(fd_set));
+    fd_set *tmp = (fd_set *) malloc(sizeof(fd_set));
+    memset((char *)tmp, 0, sizeof(fd_set));
     return tmp;
 }
 
-void IOMGR_FreeFDSet(fd_set *fds)
+void
+IOMGR_FreeFDSet(fd_set * fds)
 {
-    free((char*)fds);
+    free((char *)fds);
 }
 #endif
 
 /* The TCP spec calls for writing at least one byte of OOB data which is
  * read by the receiver using recv with the MSG_OOB flag set.
  */
-void sendOOB(int fd)
+void
+sendOOB(int fd)
 {
     char c = (char)1;
 
     Log("Sending OOB.\n");
-    if (send(fd, &c, 1, MSG_OOB)<0) {
+    if (send(fd, &c, 1, MSG_OOB) < 0) {
 	Die(1, "sendOOB");
     }
 }
 
-void recvOOB(int fd)
+void
+recvOOB(int fd)
 {
     char c;
 
     Log("Received OOB\n");
-    if (recv(fd, &c, 1, MSG_OOB)<0) {
+    if (recv(fd, &c, 1, MSG_OOB) < 0) {
 	Die(1, "recvOOB");
     }
     Log("Handled OOB\n");
 }
 
-void assertNullFDSet(int fd, fd_set *fds)
+void
+assertNullFDSet(int fd, fd_set * fds)
 {
     int i;
-    int n = sizeof(*fds)/sizeof(int);
-    int *j = (int*)fds;
+    int n = sizeof(*fds) / sizeof(int);
+    int *j = (int *)fds;
 
     if (fd >= 0)
 	FD_CLR(fd, fds);
 
-    for (i=0; i<n; i++)
+    for (i = 0; i < n; i++)
 	assert(j[i] == 0);
 }
 
@@ -91,29 +97,28 @@ void assertNullFDSet(int fd, fd_set *fds)
  * Open file descriptors until file descriptor n or higher is returned.
  */
 #include <sys/stat.h>
-void OpenFDs(n)
-int n;
+void
+OpenFDs(n)
+     int n;
 {
     int i;
     struct stat sbuf;
     int fd, lfd;
 
     lfd = -1;
-    for (i=0; i<n; i++) {
-	if (fstat(i, &sbuf)==0)
+    for (i = 0; i < n; i++) {
+	if (fstat(i, &sbuf) == 0)
 	    continue;
 	if ((fd = open("/dev/null", 0, 0)) < 0) {
-	    if (lfd >=0) {
+	    if (lfd >= 0) {
 		close(lfd);
 		return;
 	    }
-	}
-	else {
+	} else {
 	    if (fd >= n) {
 		close(fd);
 		return;
-	    }
-	    else {
+	    } else {
 		lfd = fd;
 	    }
 	}
@@ -121,12 +126,13 @@ int n;
 }
 
 /* If flag is set, abort. */
-void Die(int flag, char *msg)
+void
+Die(int flag, char *msg)
 {
     char tmp[1024];
     extern char *program;
 
-    (void) sprintf(tmp, "%s: %s: ", program ? program : "", msg);
+    (void)sprintf(tmp, "%s: %s: ", program ? program : "", msg);
     perror(tmp);
     fflush(stderr);
     if (flag)
@@ -137,7 +143,8 @@ void Die(int flag, char *msg)
 
 
 
-void Log(char *fmt, ...)
+void
+Log(char *fmt, ...)
 {
     va_list args;
     struct timeval now;
@@ -146,15 +153,15 @@ void Log(char *fmt, ...)
     int code;
     PROCESS pid;
     extern char *program;
-    
-    code = gettimeofday(&now,&tz);
-    assert (code == 0);
 
-    ltime = localtime((time_t*)&now.tv_sec);
+    code = gettimeofday(&now, &tz);
+    assert(code == 0);
+
+    ltime = localtime((time_t *) & now.tv_sec);
 
     LWP_CurrentProcess(&pid);
-    fprintf(stderr, "%s 0x%x %02d:%02d:%02d.%d: ", program ? program : "", pid,
-	    ltime->tm_hour, ltime->tm_min, ltime->tm_sec, now.tv_usec);
+    fprintf(stderr, "%s 0x%x %02d:%02d:%02d.%d: ", program ? program : "",
+	    pid, ltime->tm_hour, ltime->tm_min, ltime->tm_sec, now.tv_usec);
 
     va_start(args, fmt);
 
@@ -162,4 +169,3 @@ void Log(char *fmt, ...)
     fflush(stdout);
     va_end(args);
 }
-

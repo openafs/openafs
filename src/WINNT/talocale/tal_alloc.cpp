@@ -354,7 +354,7 @@ void SetDlgItemBytes (HWND hDlg, int idc, double lfValue)
 void MemMgr_ShowWarning (PMEMCHUNK pChunk, LPSTR pszFile, DWORD dwLine, LPTSTR pszDesc)
 {
    TCHAR szMessage[ 1024 ];
-   wsprintf (szMessage, TEXT("%s\n\n   Address: 0x%08lX (%s)\n   Allocated: %s line %ld\n   Freed: %s line %ld\n\nClick OK for memory details."), pszDesc, pChunk->pData, pChunk->pszExpr, pChunk->pszFile, pChunk->dwLine, pszFile, dwLine);
+   wsprintf (szMessage, TEXT("%s\n\n   Address: 0x%08lX (%s)\n   Allocated: %s line %ld\n   Freed: %s line %ld\n\nClick OK for memory details."), pszDesc, (long)pChunk->pData, pChunk->pszExpr, pChunk->pszFile, pChunk->dwLine, pszFile, dwLine);
    if (MessageBox (NULL, szMessage, cszTITLE, MB_ICONHAND | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       {
       // TODO: Show Details
@@ -666,10 +666,10 @@ void MemMgr_OnListAdd (PMEMCHUNK pCopy)
       wsprintf (szLocation, TEXT("%s, %ld"), pszFile, pCopy->dwLine);
 
    TCHAR szBytes[256];
-   FormatBytes (szBytes, pCopy->cbData);
+   FormatBytes (szBytes, (double)pCopy->cbData);
 
    TCHAR szAddress[256];
-   wsprintf (szAddress, TEXT("0x%08lX"), pCopy->pData);
+   wsprintf (szAddress, TEXT("0x%08lX"), (long)pCopy->pData);
 
    LPTSTR pszKey = NULL;
    switch (lr.iColSort)

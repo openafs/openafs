@@ -2378,23 +2378,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVER_SERVICE      "%1:%2"
-    IDS_SERVICETYPE_SIMPLE  "간단"
-    IDS_SERVICETYPE_CRON    "크론"
-    IDS_SERVICESTATE_STOPPED "정지됨"
-    IDS_SERVICESTATE_STOPPING "정지 중"
-    IDS_SERVICESTATE_STARTING "시작 중"
-    IDS_SERVICESTATE_RUNNING "실행 중"
-    IDS_SERVICETYPE_FS_LONG "FS(파일 시스템)"
-    IDS_SERVICETYPE_FS      "FS"
-    IDS_SERVICE_LASTERROR   "%1"
-    IDS_SERVICES_IN_CELL    "%1 셀의 모든 서비스:"
-    IDS_SERVICE_STARTDATE   "%1 시작됨"
-    IDS_SERVICE_STOPDATE    "%1 정지됨"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_PERCENTAGE          "%1 %%"
     IDS_AGGREGATES_IN_SERVER "%1 서버의 파티션:"
     IDS_AGGREGATES_IN_CELL  "%1 셀에서의 모든 파티션:"
@@ -2442,11 +2425,11 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_BAD_CREDENTIALS 
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
                             "입력한 AFS 식별을 인식할 수 없거나 지정한 암호가 틀렸습니다."
-    IDS_CREDS_NONE          "(토큰 없음)"
-    IDS_CREDS_VALID         "%2, %3 만기"
-    IDS_CREDS_EXPIRED       "(토큰 %3 만기)"
+    IDS_SVR_CREDS_NONE          "(토큰 없음)"
+    IDS_SVR_CREDS_VALID         "%2, %3 만기"
+    IDS_SVR_CREDS_EXPIRED       "(토큰 %3 만기)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -2968,6 +2951,23 @@ BEGIN
                             "AFS 서버 관리 프로그램은 알 수 없는 문제점으로 시작될 수 없습니다.\n\nAFS 제어 센터를 다시 설치해야 합니다."
     IDS_ERROR_CANT_CHANGEADDR 
                             "AFS 서버 관리 프로그램이 %1 서버용 VLDB에서 IP 주소를 변경할 수 없습니다."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "간단"
+    IDS_SERVICETYPE_CRON    "크론"
+    IDS_SERVICESTATE_STOPPED "정지됨"
+    IDS_SERVICESTATE_STOPPING "정지 중"
+    IDS_SERVICESTATE_STARTING "시작 중"
+    IDS_SERVICESTATE_RUNNING "실행 중"
+    IDS_SERVICETYPE_FS_LONG "FS(파일 시스템)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "%1 셀의 모든 서비스:"
+    IDS_SERVICE_STARTDATE   "%1 시작됨"
+    IDS_SERVICE_STOPDATE    "%1 정지됨"
 END
 
 #endif    // Korean resources

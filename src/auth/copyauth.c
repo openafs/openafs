@@ -10,7 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/copyauth.c,v 1.1.1.4 2001/07/14 22:20:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/auth/copyauth.c,v 1.6 2003/07/15 23:14:41 shadow Exp $");
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 #include <sys/types.h>
 #include "auth.h"
@@ -27,8 +36,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/copyauth.c,v 1.1.1.4 2001/07/14 22
 char whoami[256];
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     char localName[64];
     register afs_int32 code;
     register char *cname;
@@ -39,8 +49,10 @@ char **argv; {
     strcpy(whoami, argv[0]);
 
     if (argc <= 1) {
-	printf("%s: copies a file system ticket from the local cell to another cell\n",whoami);
-	printf("%s: usage is 'setauth <new-cell>\n",whoami);
+	printf
+	    ("%s: copies a file system ticket from the local cell to another cell\n",
+	     whoami);
+	printf("%s: usage is 'setauth <new-cell>\n", whoami);
 	exit(1);
     }
 
@@ -54,28 +66,32 @@ char **argv; {
     }
     code = afsconf_GetLocalCell(tdir, localName, sizeof(localName));
     if (code) {
-	printf("%s: can't determine local cell name\n",whoami);
+	printf("%s: can't determine local cell name\n", whoami);
 	exit(1);
     }
     /* done with configuration stuff now */
     afsconf_Close(tdir);
-    
-    
+
+
     /* get ticket in local cell */
     strcpy(tserver.cell, localName);
     strcpy(tserver.name, "afs");
     tserver.instance[0] = 0;
-    code = ktc_GetToken(&tserver, &token, sizeof(token), (char *) 0);
+    code = ktc_GetToken(&tserver, &token, sizeof(token), NULL);
     if (code) {
-	printf("%s: failed to get '%s' service ticket in cell '%s' (code %d)\n", whoami, tserver.name, tserver.cell, code);
+	printf
+	    ("%s: failed to get '%s' service ticket in cell '%s' (code %d)\n",
+	     whoami, tserver.name, tserver.cell, code);
 	exit(1);
     }
-    
+
     /* and now set the ticket in the new cell */
     strcpy(tserver.cell, argv[1]);
-    code = ktc_SetToken(&tserver, &token, (char *) 0, 0);
+    code = ktc_SetToken(&tserver, &token, NULL, 0);
     if (code) {
-	printf("%s: failed to set ticket (code %d), are you sure you're authenticated?\n", whoami, code);
+	printf
+	    ("%s: failed to set ticket (code %d), are you sure you're authenticated?\n",
+	     whoami, code);
 	exit(1);
     }
 

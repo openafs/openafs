@@ -9,8 +9,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.6 2003/07/30 17:13:33 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/venus/test/owntest.c,v 1.8 2003/07/15 23:17:24 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -21,45 +25,47 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.6 2003/07/
 extern int errno;
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     struct timeval tv[2];
     struct stat tstat;
     register long code;
-    register char *pn;	/* path name we're dealing with */
+    register char *pn;		/* path name we're dealing with */
 
     if (argc != 2) {
-	printf("usage: owntest <file owned by somoneelse, but still writable>\n");
+	printf
+	    ("usage: owntest <file owned by somoneelse, but still writable>\n");
 	exit(1);
     }
 
     pn = argv[1];
     printf("Starting tests on %s.\n", pn);
     code = chmod(pn, 0444);
-    if (code<0) {
-        perror("chmod to RO");
-	return 1;
+    if (code < 0) {
+	perror("chmod to RO");
+	exit(errno);
     }
     code = chmod(pn, 0666);
-    if (code<0) {
-        perror("chmod back to RW");
-        return 1;
+    if (code < 0) {
+	perror("chmod back to RW");
+	exit(errno);
     }
-    gettimeofday(&tv[0], (void *) 0);
-    gettimeofday(&tv[1], (void *) 0);
+    gettimeofday(&tv[0], NULL);
+    gettimeofday(&tv[1], NULL);
     tv[0].tv_sec -= 10000;
     tv[0].tv_usec = 0;
     tv[1].tv_sec -= 20000;
     tv[1].tv_usec = 0;
     code = utimes(pn, tv);
-    if (code<0) {
-        perror("utimes");
-        return 1;
+    if (code < 0) {
+	perror("utimes");
+	exit(errno);
     }
     code = stat(pn, &tstat);
-    if (code<0) {
-        perror("stat");
-	return 1;
+    if (code < 0) {
+	perror("stat");
+	exit(errno);
     }
     if (tstat.st_mtime != tv[1].tv_sec) {
 	printf("modtime didn't stick\n");

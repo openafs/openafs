@@ -10,28 +10,18 @@
 #ifndef	_RX_MULTI_
 #define _RX_MULTI_
 
-#ifdef	KERNEL
-#include "../rx/rx.h"
-#else /* KERNEL */
-# include "rx.h"
-#endif /* KERNEL */
-
 struct multi_handle {
     int nConns;
     struct rx_call **calls;
     short *ready;
-    short nReady;        /* XXX UNALIGNED */
+    short nReady;		/* XXX UNALIGNED */
     short *nextReady;
     short *firstNotReady;
 #ifdef RX_ENABLE_LOCKS
     afs_kmutex_t lock;
     afs_kcondvar_t cv;
-#endif /* RX_ENABLE_LOCKS */
+#endif				/* RX_ENABLE_LOCKS */
 };
-
-extern struct multi_handle *multi_Init();
-extern int multi_Select();
-extern void multi_Finalize();
 
 #define multi_Rx(conns, nConns) \
     do {\
@@ -63,4 +53,4 @@ extern void multi_Finalize();
 	multi_Finalize_Ignore(multi_h);\
     } while (0)
 
-#endif /* _RX_MULTI_	 End of rx_multi.h */
+#endif /* _RX_MULTI_     End of rx_multi.h */

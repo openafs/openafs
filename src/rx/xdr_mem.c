@@ -29,7 +29,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.6 2003/07/30 17:12:49 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/xdr_mem.c,v 1.9 2003/07/15 23:16:12 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -45,30 +46,30 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.6 2003/07/30 17:12
  */
 
 #include "xdr.h"
-#ifdef AFS_NT40_ENV
-#include <limits.h>
-#else
+#ifndef AFS_NT40_ENV
 #include <netinet/in.h>
+#else
+#include <limits.h>
 #endif
 
-static bool_t	xdrmem_getint32();
-static bool_t	xdrmem_putint32();
-static bool_t	xdrmem_getbytes();
-static bool_t	xdrmem_putbytes();
-static u_int	xdrmem_getpos();
-static bool_t	xdrmem_setpos();
-static afs_int32 *	xdrmem_inline();
-static void	xdrmem_destroy();
+static bool_t xdrmem_getint32();
+static bool_t xdrmem_putint32();
+static bool_t xdrmem_getbytes();
+static bool_t xdrmem_putbytes();
+static u_int xdrmem_getpos();
+static bool_t xdrmem_setpos();
+static afs_int32 *xdrmem_inline();
+static void xdrmem_destroy();
 
-static struct	xdr_ops xdrmem_ops = {
-	xdrmem_getint32,
-	xdrmem_putint32,
-	xdrmem_getbytes,
-	xdrmem_putbytes,
-	xdrmem_getpos,
-	xdrmem_setpos,
-	xdrmem_inline,
-	xdrmem_destroy
+static struct xdr_ops xdrmem_ops = {
+    xdrmem_getint32,
+    xdrmem_putint32,
+    xdrmem_getbytes,
+    xdrmem_putbytes,
+    xdrmem_getpos,
+    xdrmem_setpos,
+    xdrmem_inline,
+    xdrmem_destroy
 };
 
 /*
@@ -76,122 +77,96 @@ static struct	xdr_ops xdrmem_ops = {
  * memory buffer.  
  */
 void
-xdrmem_create(xdrs, addr, size, op)
-	register XDR *xdrs;
-	caddr_t addr;
-	u_int size;
-	enum xdr_op op;
+xdrmem_create(register XDR * xdrs, caddr_t addr, u_int size, enum xdr_op op)
 {
-
-	xdrs->x_op = op;
-	xdrs->x_ops = &xdrmem_ops;
-	xdrs->x_private = xdrs->x_base = addr;
-	xdrs->x_handy = (size > INT_MAX) ? INT_MAX : size; /* XXX */
+    xdrs->x_op = op;
+    xdrs->x_ops = &xdrmem_ops;
+    xdrs->x_private = xdrs->x_base = addr;
+    xdrs->x_handy = (size > INT_MAX) ? INT_MAX : size;	/* XXX */
 }
 
 static void
-xdrmem_destroy(/*xdrs*/)
-	/*XDR *xdrs;*/
+xdrmem_destroy(void)
 {
 }
 
 static bool_t
-xdrmem_getint32(xdrs, lp)
-	register XDR *xdrs;
-	afs_int32 *lp;
+xdrmem_getint32(register XDR * xdrs, afs_int32 * lp)
 {
-    if (xdrs->x_handy -= sizeof(afs_int32))
+    if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
 	xdrs->x_handy -= sizeof(afs_int32);
-
-    *lp = ntohl(*((afs_int32 *)(xdrs->x_private)));
+    *lp = ntohl(*((afs_int32 *) (xdrs->x_private)));
     xdrs->x_private += sizeof(afs_int32);
     return (TRUE);
 }
 
 static bool_t
-xdrmem_putint32(xdrs, lp)
-	register XDR *xdrs;
-	afs_int32 *lp;
+xdrmem_putint32(register XDR * xdrs, afs_int32 * lp)
 {
-    if (xdrs->x_handy -= sizeof(afs_int32))
+    if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
     else
 	xdrs->x_handy -= sizeof(afs_int32);
-    
-    *(afs_int32 *)xdrs->x_private = htonl(*lp);
+    *(afs_int32 *) xdrs->x_private = htonl(*lp);
     xdrs->x_private += sizeof(afs_int32);
     return (TRUE);
 }
 
 static bool_t
-xdrmem_getbytes(xdrs, addr, len)
-	register XDR *xdrs;
-	caddr_t addr;
-	register u_int len;
+xdrmem_getbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 {
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
 	xdrs->x_handy -= len;
-
     memcpy(addr, xdrs->x_private, len);
     xdrs->x_private += len;
     return (TRUE);
 }
 
 static bool_t
-xdrmem_putbytes(xdrs, addr, len)
-	register XDR *xdrs;
-	caddr_t addr;
-	register u_int len;
+xdrmem_putbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 {
     if (xdrs->x_handy < len)
 	return (FALSE);
     else
 	xdrs->x_handy -= len;
-
     memcpy(xdrs->x_private, addr, len);
     xdrs->x_private += len;
     return (TRUE);
 }
 
 static u_int
-xdrmem_getpos(xdrs)
-	register XDR *xdrs;
+xdrmem_getpos(register XDR * xdrs)
 {
-
-	return ((u_int)xdrs->x_private - (u_int)xdrs->x_base);
+    return ((u_int) xdrs->x_private - (u_int) xdrs->x_base);
 }
 
 static bool_t
-xdrmem_setpos(xdrs, pos)
-	register XDR *xdrs;
-	u_int pos;
+xdrmem_setpos(register XDR * xdrs, u_int pos)
 {
-	register caddr_t newaddr = xdrs->x_base + pos;
-	register caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
+    register caddr_t newaddr = xdrs->x_base + pos;
+    register caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
 
-	if ((afs_int32)newaddr > (afs_int32)lastaddr)
-		return (FALSE);
-	xdrs->x_private = newaddr;
-	xdrs->x_handy = (int)lastaddr - (int)newaddr;
-	return (TRUE);
+    if ((afs_int32) newaddr > (afs_int32) lastaddr)
+	return (FALSE);
+    xdrs->x_private = newaddr;
+    xdrs->x_handy = (int)lastaddr - (int)newaddr;
+    return (TRUE);
 }
 
 static afs_int32 *
-xdrmem_inline(xdrs, len)
-	register XDR *xdrs;
-	int len;
+xdrmem_inline(register XDR * xdrs, int len)
 {
-	afs_int32 *buf = 0;
+    afs_int32 *buf = 0;
 
-	if (len >= 0 && xdrs->x_handy >= len) {
-		xdrs->x_handy -= len;
-		buf = (afs_int32 *) xdrs->x_private;
-		xdrs->x_private += len;
-	}
-	return (buf);
+    if (len >= 0 && xdrs->x_handy >= len) {
+	xdrs->x_handy -= len;
+	buf = (afs_int32 *) xdrs->x_private;
+	xdrs->x_private += len;
+    }
+    return (buf);
 }
 #endif /* NeXT */

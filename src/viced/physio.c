@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/physio.c,v 1.1.1.6 2002/05/11 00:03:29 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/viced/physio.c,v 1.14 2003/12/08 01:45:34 jaltman Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -27,6 +28,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/physio.c,v 1.1.1.6 2002/05/11 00:
 #include <sys/time.h>
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/nfs.h>
 #include <afs/assert.h>
 #include <lwp.h>
@@ -36,21 +44,18 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/physio.c,v 1.1.1.6 2002/05/11 00:
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
+#include "viced_prototypes.h"
 #include "viced.h"
 #ifdef PAGESIZE
 #undef PAGESIZE
 #endif
 #define PAGESIZE 2048
 
-extern int LogLevel;
-
 afs_int32 lpErrno, lpCount;
 
 /* returns 0 on success, errno on failure */
-int ReallyRead (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int
+ReallyRead(DirHandle * file, int block, char *data)
 {
     int code;
     FdHandle_t *fdP;
@@ -58,18 +63,20 @@ char	      *	data;
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
 	code = errno;
-        ViceLog (0,
-		 ("ReallyRead(): open failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), code));
+	ViceLog(0,
+		("ReallyRead(): open failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), code));
 	return code;
     }
     if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
-        ViceLog (0,
-		 ("ReallyRead(): lseek failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), code));
+	ViceLog(0,
+		("ReallyRead(): lseek failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), code));
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
@@ -79,10 +86,11 @@ char	      *	data;
 	    code = errno;
 	else
 	    code = EIO;
-        ViceLog (0,
-		 ("ReallyRead(): read failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), code));
+	ViceLog(0,
+		("ReallyRead(): read failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), code));
 	FDH_REALLYCLOSE(fdP);
 	return code;
     }
@@ -92,37 +100,38 @@ char	      *	data;
 }
 
 /* returns 0 on success, errno on failure */
-int ReallyWrite (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int
+ReallyWrite(DirHandle * file, int block, char *data)
 {
     afs_int32 count;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
-        ViceLog (0,
-		 ("ReallyWrite(): open failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), errno));
+	ViceLog(0,
+		("ReallyWrite(): open failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), errno));
 	lpErrno = errno;
 	return 0;
     }
     if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
-        ViceLog (0,
-		 ("ReallyWrite(): lseek failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), errno));
+	ViceLog(0,
+		("ReallyWrite(): lseek failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), errno));
 	lpErrno = errno;
 	FDH_REALLYCLOSE(fdP);
 	return 0;
     }
     if ((count = FDH_WRITE(fdP, data, PAGESIZE)) != PAGESIZE) {
-        ViceLog (0,
-		 ("ReallyWrite(): write failed device %X inode %s errno %d\n",
-		  file->dirh_handle->ih_dev,
-		  PrintInode(NULL, file->dirh_handle->ih_ino), errno));
+	ViceLog(0,
+		("ReallyWrite(): write failed device %X inode %s errno %d\n",
+		 file->dirh_handle->ih_dev, PrintInode(NULL,
+						       file->dirh_handle->
+						       ih_ino), errno));
 	lpCount = count;
 	lpErrno = errno;
 	FDH_REALLYCLOSE(fdP);
@@ -133,9 +142,8 @@ char	      *	data;
 }
 
 
-SetDirHandle(dir, vnode)
-register DirHandle *dir;
-register Vnode *vnode;
+void
+SetDirHandle(register DirHandle * dir, register Vnode * vnode)
 {
     register Volume *vp = vnode->volumePtr;
     register IHandle_t *h;
@@ -149,50 +157,50 @@ register Vnode *vnode;
     dir->dirh_handle = h;
 }
 
-FidZap (file)
-DirHandle     *	file;
-
+void
+FidZap(DirHandle * file)
 {
     IH_RELEASE(file->dirh_handle);
     memset((char *)file, 0, sizeof(DirHandle));
 }
 
-FidZero (file)
-DirHandle     *	file;
-
+void
+FidZero(DirHandle * file)
 {
     memset((char *)file, 0, sizeof(DirHandle));
 }
 
-FidEq (afile, bfile)
-DirHandle      * afile;
-DirHandle      * bfile;
-
+int
+FidEq(DirHandle * afile, DirHandle * bfile)
 {
-    if (afile->dirh_ino != bfile->dirh_ino) return 0;
-    if (afile->dirh_dev != bfile->dirh_dev) return 0;
-    if (afile->dirh_vid != bfile->dirh_vid) return 0;
-    if (afile->dirh_cacheCheck != bfile->dirh_cacheCheck) return 0;
-    if (afile->dirh_unique != bfile->dirh_unique) return 0;
-    if (afile->dirh_vnode != bfile->dirh_vnode) return 0;
+    if (afile->dirh_ino != bfile->dirh_ino)
+	return 0;
+    if (afile->dirh_dev != bfile->dirh_dev)
+	return 0;
+    if (afile->dirh_vid != bfile->dirh_vid)
+	return 0;
+    if (afile->dirh_cacheCheck != bfile->dirh_cacheCheck)
+	return 0;
+    if (afile->dirh_unique != bfile->dirh_unique)
+	return 0;
+    if (afile->dirh_vnode != bfile->dirh_vnode)
+	return 0;
 
     return 1;
 }
 
-FidVolEq (afile, vid)
-DirHandle      * afile;
-afs_int32            vid;
-
+int
+FidVolEq(DirHandle * afile, afs_int32 vid)
 {
-    if (afile->dirh_vid != vid) return 0;
+    if (afile->dirh_vid != vid)
+	return 0;
     return 1;
 }
 
-FidCpy (tofile, fromfile)
-DirHandle      * tofile;
-DirHandle      * fromfile;
-
+int
+FidCpy(DirHandle * tofile, DirHandle * fromfile)
 {
     *tofile = *fromfile;
     IH_COPY(tofile->dirh_handle, fromfile->dirh_handle);
+    return 0;
 }

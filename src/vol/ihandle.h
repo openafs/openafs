@@ -155,12 +155,12 @@ typedef int FD_t;
 
 /* file descriptor handle */
 typedef struct FdHandle_s {
-    int fd_status; /* status flags */
-    FD_t fd_fd; /* file descriptor */
-    struct IHandle_s *fd_ih; /* Pointer to Inode handle */
+    int fd_status;		/* status flags */
+    FD_t fd_fd;			/* file descriptor */
+    struct IHandle_s *fd_ih;	/* Pointer to Inode handle */
     struct FdHandle_s *fd_next;	/* LRU/Avail list pointers */
     struct FdHandle_s *fd_prev;
-    struct FdHandle_s *fd_ihnext; /* Inode handle's list of file descriptors */
+    struct FdHandle_s *fd_ihnext;	/* Inode handle's list of file descriptors */
     struct FdHandle_s *fd_ihprev;
 } FdHandle_t;
 
@@ -170,17 +170,17 @@ typedef struct FdHandle_s {
 #define FD_HANDLE_INUSE		3	/* handle is open and in use */
 
 /* buffered file descriptor handle */
-#define STREAM_HANDLE_BUFSIZE	2048    /* buffer size for STR_READ/STR_WRITE */
+#define STREAM_HANDLE_BUFSIZE	2048	/* buffer size for STR_READ/STR_WRITE */
 typedef struct StreamHandle_s {
-    FD_t str_fd;			/* file descriptor */
-    int str_direction;			/* current read/write direction */
-    int str_buflen;			/* bytes remaining in buffer */
-    int str_bufoff;			/* current offset into buffer */
-    int str_error;			/* error code */
-    int str_eof;			/* end of file flag */
-    struct StreamHandle_s *str_next;    /* Avail list pointers */
+    FD_t str_fd;		/* file descriptor */
+    int str_direction;		/* current read/write direction */
+    afs_sfsize_t str_buflen;	/* bytes remaining in buffer */
+    afs_foff_t str_bufoff;	/* current offset into buffer */
+    int str_error;		/* error code */
+    int str_eof;		/* end of file flag */
+    struct StreamHandle_s *str_next;	/* Avail list pointers */
     struct StreamHandle_s *str_prev;
-    char str_buffer[STREAM_HANDLE_BUFSIZE]; /* data buffer */
+    char str_buffer[STREAM_HANDLE_BUFSIZE];	/* data buffer */
 } StreamHandle_t;
 
 #define STREAM_DIRECTION_NONE	1	/* stream is in initial mode */
@@ -208,14 +208,14 @@ typedef struct StreamHandle_s {
 
 /* Inode handle */
 typedef struct IHandle_s {
-    int ih_vid;	/* Parent volume id. */
-    int ih_dev;	/* device id. */
-    int ih_flags; /* Flags */
-    Inode ih_ino; /* Inode number */
-    int ih_refcnt; /* reference count */
-    struct FdHandle_s *ih_fdhead;   /* List of open file desciptors */
+    int ih_vid;			/* Parent volume id. */
+    int ih_dev;			/* device id. */
+    int ih_flags;		/* Flags */
+    Inode ih_ino;		/* Inode number */
+    int ih_refcnt;		/* reference count */
+    struct FdHandle_s *ih_fdhead;	/* List of open file desciptors */
     struct FdHandle_s *ih_fdtail;
-    struct IHandle_s *ih_next;	    /* Links for avail list/hash chains */
+    struct IHandle_s *ih_next;	/* Links for avail list/hash chains */
     struct IHandle_s *ih_prev;
 } IHandle_t;
 
@@ -231,8 +231,8 @@ typedef struct IHandle_s {
  * Hash buckets for inode handles
  */
 typedef struct IHashBucket_s {
-    IHandle_t		*ihash_head;
-    IHandle_t		*ihash_tail;
+    IHandle_t *ihash_head;
+    IHandle_t *ihash_tail;
 } IHashBucket_t;
 
 /* Prototypes for handle support routines. */
@@ -242,33 +242,37 @@ typedef struct IHashBucket_s {
 #else
 #include "namei_ops.h"
 #endif
-extern void ih_clear(IHandle_t *h);
-extern Inode ih_create(IHandle_t *h, int dev, char *part, Inode nI, int p1,
-		     int p2, int p3, int p4);
-extern FILE *ih_fdopen(FdHandle_t *h, char *fdperms);
+extern void ih_clear(IHandle_t * h);
+extern Inode ih_create(IHandle_t * h, int dev, char *part, Inode nI, int p1,
+		       int p2, int p3, int p4);
+extern FILE *ih_fdopen(FdHandle_t * h, char *fdperms);
 #endif /* AFS_NAMEI_ENV */
 
 /*
- * Prototypes for file descriptor cache routined
+ * Prototypes for file descriptor cache routines
  */
+extern void ih_Initialize(void);
 extern void ih_UseLargeCache(void);
-extern IHandle_t *ih_init(int dev, int vid, Inode ino);
-extern IHandle_t *ih_copy(IHandle_t *ihP);
-extern FdHandle_t *ih_open(IHandle_t *ihP);
-extern int fd_close(FdHandle_t *fdP);
-extern int fd_reallyclose(FdHandle_t *fdP);
+extern IHandle_t *ih_init(int /*@alt Device@ */ dev, int /*@alt VolId@ */ vid,
+			  Inode ino);
+extern IHandle_t *ih_copy(IHandle_t * ihP);
+extern FdHandle_t *ih_open(IHandle_t * ihP);
+extern int fd_close(FdHandle_t * fdP);
+extern int fd_reallyclose(FdHandle_t * fdP);
 extern StreamHandle_t *stream_fdopen(FD_t fd);
 extern StreamHandle_t *stream_open(const char *file, const char *mode);
-extern int stream_read(void *ptr, int size, int nitems,
-		       StreamHandle_t *streamP);
-extern int stream_write(void *ptr, int size, int nitems,
-			StreamHandle_t *streamP);
-extern int stream_seek(StreamHandle_t *streamP, int offset, int whence);
-extern int stream_flush(StreamHandle_t *streamP);
-extern int stream_close(StreamHandle_t *streamP, int reallyClose);
-extern int ih_reallyclose(IHandle_t *ihP);
-extern int ih_release(IHandle_t *ihP);
-extern int ih_condsync(IHandle_t *ihP);
+extern afs_sfsize_t stream_read(void *ptr, afs_fsize_t size,
+				afs_fsize_t nitems, StreamHandle_t * streamP);
+extern afs_sfsize_t stream_write(void *ptr, afs_fsize_t size,
+				 afs_fsize_t nitems,
+				 StreamHandle_t * streamP);
+extern int stream_seek(StreamHandle_t * streamP, afs_foff_t offset,
+		       int whence);
+extern int stream_flush(StreamHandle_t * streamP);
+extern int stream_close(StreamHandle_t * streamP, int reallyClose);
+extern int ih_reallyclose(IHandle_t * ihP);
+extern int ih_release(IHandle_t * ihP);
+extern int ih_condsync(IHandle_t * ihP);
 
 /* Macros common to user space and inode API's. */
 #define IH_INIT(H, D, V, I) ((H) = ih_init((D), (V), (I)))
@@ -335,29 +339,73 @@ extern int ih_condsync(IHandle_t *ihP);
 #define IH_IWRITE(H, O, B, S) nt_iwrite(H, O, B, S)
 
 #else /* AFS_NT40_ENV */
+
+/*@+fcnmacros +macrofcndecl@*/
+#ifdef S_SPLINT_S
+extern Inode IH_CREATE(IHandle_t * H, int /*@alt Device @ */ D,
+		       char *P, Inode N, int /*@alt VolumeId @ */ P1,
+		       int /*@alt VnodeId @ */ P2,
+		       int /*@alt Unique @ */ P3,
+		       int /*@alt unsigned @ */ P4);
+extern FD_t OS_IOPEN(IHandle_t * H);
+extern int OS_OPEN(const char *F, int M, mode_t P);
+extern int OS_CLOSE(int FD);
+extern ssize_t OS_READ(int FD, void *B, size_t S);
+extern ssize_t OS_WRITE(int FD, void *B, size_t S);
+extern int OS_SYNC(int FD);
+extern afs_sfsize_t OS_SIZE(int FD);
+extern int IH_INC(IHandle_t * H, Inode I, int /*@alt VolId, VolumeId @ */ P);
+extern int IH_DEC(IHandle_t * H, Inode I, int /*@alt VolId, VolumeId @ */ P);
+extern afs_sfsize_t IH_IREAD(IHandle_t * H, afs_foff_t O, void *B,
+			     afs_fsize_t S);
+extern afs_sfsize_t IH_IWRITE(IHandle_t * H, afs_foff_t O, void *B,
+			      afs_fsize_t S);
+#ifdef O_LARGEFILE
+extern off64_t OS_SEEK(int FD, off64_t O, int F);
+extern int OS_TRUNC(int FD, off64_t L);
+#else /* !O_LARGEFILE */
+extern off_t OS_SEEK(int FD, off_t O, int F);
+extern int OS_TRUNC(int FD, off_t L);
+#endif /* !O_LARGEFILE */
+#endif /*S_SPLINT_S */
+
 #define IH_CREATE(H, D, P, N, P1, P2, P3, P4) \
 	namei_icreate(H, P, P1, P2, P3, P4)
 
 #define OS_IOPEN(H) namei_iopen(H)
+#ifdef O_LARGEFILE
+#define OS_OPEN(F, M, P) open64(F, M, P)
+#else /* !O_LARGEFILE */
 #define OS_OPEN(F, M, P) open(F, M, P)
+#endif /* !O_LARGEFILE */
 #define OS_CLOSE(FD) close(FD)
 
 #define OS_READ(FD, B, S) read(FD, B, S)
 #define OS_WRITE(FD, B, S) write(FD, B, S)
-#define OS_SEEK(FD, O, F) lseek(FD, O, F)
+#ifdef O_LARGEFILE
+#define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
+#else /* !O_LARGEFILE */
+#define OS_SEEK(FD, O, F) lseek(FD, (off_t) (O), F)
+#endif /* !O_LARGEFILE */
 
 #define OS_SYNC(FD) fsync(FD)
-#define OS_TRUNC(FD, L) ftruncate(FD, L)
+#ifdef O_LARGEFILE
+#define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) (L))
+#else /* !O_LARGEFILE */
+#define OS_TRUNC(FD, L) ftruncate(FD, (off_t) (L))
+#endif /* !O_LARGEFILE */
 #define OS_SIZE(FD) ih_size(FD)
+extern afs_sfsize_t ih_size(int fd);
 
 #define IH_INC(H, I, P) namei_inc(H, I, P)
 #define IH_DEC(H, I, P) namei_dec(H, I, P)
 #define IH_IREAD(H, O, B, S) namei_iread(H, O, B, S)
 #define IH_IWRITE(H, O, B, S) namei_iwrite(H, O, B, S)
+/*@=fcnmacros =macrofcndecl@*/
 #endif /* AFS_NT40_ENV */
 
 #else /* AFS_NAMEI_ENV */
-extern Inode ih_icreate(IHandle_t *ih, int dev, char *part, Inode nI, int p1,\
+extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 			int p2, int p3, int p4);
 
 #define IH_CREATE(H, D, P, N, P1, P2, P3, P4) \
@@ -366,18 +414,31 @@ extern Inode ih_icreate(IHandle_t *ih, int dev, char *part, Inode nI, int p1,\
 #ifdef AFS_LINUX22_ENV
 #define OS_IOPEN(H) -1
 #else
+#ifdef O_LARGEFILE
+#define OS_IOPEN(H) (IOPEN((H)->ih_dev, (H)->ih_ino, O_RDWR|O_LARGEFILE))
+#else
 #define OS_IOPEN(H) (IOPEN((H)->ih_dev, (H)->ih_ino, O_RDWR))
+#endif
 #endif
 #define OS_OPEN(F, M, P) open(F, M, P)
 #define OS_CLOSE(FD) close(FD)
 
 #define OS_READ(FD, B, S) read(FD, B, S)
 #define OS_WRITE(FD, B, S) write(FD, B, S)
-#define OS_SEEK(FD, O, F) lseek(FD, O, F)
+#ifdef O_LARGEFILE
+#define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
+#else /* !O_LARGEFILE */
+#define OS_SEEK(FD, O, F) lseek(FD, (off_t) (O), F)
+#endif /* !O_LARGEFILE */
 
 #define OS_SYNC(FD) fsync(FD)
-#define OS_TRUNC(FD, L) ftruncate(FD, L)
+#ifdef O_LARGEFILE
+#define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) (L))
+#else /* !O_LARGEFILE */
+#define OS_TRUNC(FD, L) ftruncate(FD, (off_t) (L))
+#endif /* !O_LARGEFILE */
 #define OS_SIZE(FD) ih_size(FD)
+extern afs_sfsize_t ih_size(int fd);
 
 #ifdef AFS_LINUX22_ENV
 #define IH_INC(H, I, P) -1

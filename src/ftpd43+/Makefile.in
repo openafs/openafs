@@ -14,30 +14,11 @@
 # IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 # WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 #
-#	@(#)Makefile	5.8 (Berkeley) 9/22/88
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 include ../config/Makefile.version
-include ../config/Makefile.${SYS_NAME}
 
 AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
@@ -46,7 +27,6 @@ AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
           ${TOP_LIBDIR}/libaudit.a
 
 LIBS = ${AFSLIBS} 
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} ${XCFLAGS}
 LIBC=	/lib/libc.a 
 SRCS=	ftpd.c ftpcmd.c getusershell.c glob.c logwtmp.c popen.c vers.c
 OBJS=	ftpd.o ftpcmd.o getusershell.o glob.o logwtmp.o popen.o vers.o
@@ -59,7 +39,7 @@ all: ${MAN}
 
 ftpd: ${OBJS} ${LIBS}
 	case ${SYS_NAME} in \
-	sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
+	sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_*) \
 		${CC} -o $@ ${OBJS} ${LIBS} ${XLIBS} -lsocket -lnsl -lauth -ldl ;; \
 	rs_aix*) \
 		${CC} -o $@ ${OBJS} ${LIBS} ${XLIBS} -ls  ;; \

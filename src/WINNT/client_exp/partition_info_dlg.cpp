@@ -59,9 +59,11 @@ END_MESSAGE_MAP()
 
 BOOL CPartitionInfoDlg::OnInitDialog() 
 {
+    double percentUsed;     // because partition sizes are big
+
 	CDialog::OnInitDialog();
 	
-	ASSERT(m_nFree != 0);
+	ASSERT(m_nSize != 0);
 
 	CString strSize;
 	strSize.Format("%ld", m_nSize);
@@ -74,7 +76,8 @@ BOOL CPartitionInfoDlg::OnInitDialog()
 
 	m_Size.SetWindowText(strSize);
 	m_Free.SetWindowText(strFree);
-	m_PercentUsed.SetWindowText(strPerUsed);
+    percentUsed = ( double(m_nSize - m_nFree) * 100.0l ) / double(m_nSize);
+    strPerUsed.Format("%2.2lf", percentUsed );
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/iwrite.c,v 1.1.1.4 2001/07/14 22:24:03 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/iwrite.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,10 +20,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/iwrite.c,v 1.1.1.4 2001/07/14 22:24
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-char **argv;
+main(argc, argv)
+     char **argv;
 {
-    
+
     struct stat status;
     int count;
 
@@ -34,7 +35,9 @@ char **argv;
 	printf("Usage: iwrite inode offset string count\n");
 	exit(1);
     }
-    count = xiwrite(status.st_dev, atoi(argv[1]), 17, atoi(argv[2]), argv[3], atoi(argv[4]));
+    count =
+	xiwrite(status.st_dev, atoi(argv[1]), 17, atoi(argv[2]), argv[3],
+		atoi(argv[4]));
     if (count == -1) {
 	perror("iwrite");
 	exit(1);

@@ -954,7 +954,7 @@ BOOL AfsAppLib_IsUserAdmin (PVOID hCreds, LPTSTR pszUser)
                kas_principalEntry_t Entry;
                if (kas_PrincipalGet (hCell, NULL, &Identity, &Entry, &status))
                   {
-                  if (Entry.adminSetting == ADMIN)
+                  if (Entry.adminSetting == KAS_ADMIN)
                      rc = TRUE;
                   }
 

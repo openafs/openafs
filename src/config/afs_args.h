@@ -45,6 +45,7 @@
 #define	AFSOP_CELLINFO		 34	/* set the cellinfo file name */
 #define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
+#define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -76,7 +77,7 @@
 #ifdef	AFS_SGI53_ENV
 #define AFSOP_NFSSTATICADDR	 32	/* to contents addr of nfs kernel addr */
 #define AFSOP_NFSSTATICADDRPTR	 33	/* pass addr of variable containing 
-					   address into kernel. */
+					 * address into kernel. */
 #define AFSOP_NFSSTATICADDR2	 34	/* pass address in as hyper. */
 #define AFSOP_SBLOCKSTATICADDR2  35	/* for sblock and sbunlock */
 #endif
@@ -92,10 +93,10 @@
 
 /* flags for rxstats pioctl */
 
-#define AFSCALL_RXSTATS_MASK	0x7 /* Valid flag bits */
-#define AFSCALL_RXSTATS_ENABLE	0x1 /* Enable RX stats */
-#define AFSCALL_RXSTATS_DISABLE	0x2 /* Disable RX stats */
-#define AFSCALL_RXSTATS_CLEAR	0x4 /* Clear RX stats */
+#define AFSCALL_RXSTATS_MASK	0x7	/* Valid flag bits */
+#define AFSCALL_RXSTATS_ENABLE	0x1	/* Enable RX stats */
+#define AFSCALL_RXSTATS_DISABLE	0x2	/* Disable RX stats */
+#define AFSCALL_RXSTATS_CLEAR	0x4	/* Clear RX stats */
 
 #define	AFSOP_GO		100	/* whether settime is being done */
 /* not for initialization: debugging assist */
@@ -139,11 +140,11 @@ struct afs_cacheParams {
 /* Used in rx.c as well as afs directory. */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
 /* XXX Because of rxkad_cprivate... XXX */
-#define	AFS_MDALLOCSIZ 	(127*sizeof(void *))	    /* "Medium" allocated size */
-#define	AFS_MALLOC_LOW_WATER	50 /* Min free blocks before allocating more */
-#define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	    /* "Small" allocated size */
+#define	AFS_MDALLOCSIZ 	(127*sizeof(void *))	/* "Medium" allocated size */
+#define	AFS_MALLOC_LOW_WATER	50	/* Min free blocks before allocating more */
+#define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
 #else
-#define	AFS_SMALLOCSIZ 	(64*sizeof(void *))         /*  "Small" allocated size */
+#define	AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
 #endif
 
 /* Cache configuration available through the client callback interface */
@@ -170,5 +171,26 @@ typedef struct cm_initparams_v1 {
 
 #define AFS_CLIENT_RETRIEVAL_VERSION		1	/* latest version */
 #define AFS_CLIENT_RETRIEVAL_FIRST_EDITION	1	/* first version */
+
+/* Defines and structures for the AFS proc replacement layer for the original syscall (AFS_SYSCALL) strategy */
+
+#ifdef AFS_LINUX20_ENV
+ 
+#define PROC_FSDIRNAME "openafs"
+#define PROC_SYSCALL_NAME "afs_ioctl"
+#define PROC_SYSCALL_FNAME "/proc/fs/openafs/afs_ioctl"
+#define VIOC_SYSCALL_TYPE 'C' 
+#define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
+ 
+struct afsprocdata {
+  long param4;
+  long param3;
+  long param2;
+  long param1;
+  long syscall;
+};
+ 
+#endif
+
 
 #endif /* _AFS_ARGS_H_ */

@@ -47,32 +47,32 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: create-dirs.c,v 1.1 2002/01/22 19:54:40 hartmans Exp $");
+RCSID("$Id: create-dirs.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
 #endif
 
 static int
-creat_dirs (int count)
+creat_dirs(int count)
 {
     int i;
-    
+
     for (i = 0; i < count; ++i) {
 	char num[17];
 	int ret;
 
-	snprintf (num, sizeof(num), "%d", i);
-	
-	ret = mkdir (num, 0777);
+	snprintf(num, sizeof(num), "%d", i);
+
+	ret = mkdir(num, 0777);
 	if (ret < 0)
-	    err (1, "mkdir %s", num);
+	    err(1, "mkdir %s", num);
     }
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s number-of-dirs\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s number-of-dirs\n", __progname);
+    exit(ret);
 }
 
 int
@@ -83,11 +83,11 @@ main(int argc, char **argv)
 
 
     if (argc != 2)
-	usage (1);
+	usage(1);
 
-    count = strtol (argv[1], &ptr, 0);
+    count = strtol(argv[1], &ptr, 0);
     if (count == 0 && ptr == argv[1])
-	errx (1, "'%s' not a number", argv[1]);
+	errx(1, "'%s' not a number", argv[1]);
 
-    return creat_dirs (count);
+    return creat_dirs(count);
 }

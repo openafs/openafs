@@ -20,13 +20,13 @@
 
 
 #ifdef	AFS_HPUX_ENV
-#define	MAXDUP		5000	 /* limit on dup blks (per inode) */
-#define	MAXBAD		5000	 /* limit on bad blks (per inode) */
+#define	MAXDUP		5000	/* limit on dup blks (per inode) */
+#define	MAXBAD		5000	/* limit on bad blks (per inode) */
 #else
-#define	MAXDUP		10	 /* limit on dup blks (per inode) */
-#define	MAXBAD		10	 /* limit on bad blks (per inode) */
+#define	MAXDUP		10	/* limit on dup blks (per inode) */
+#define	MAXBAD		10	/* limit on bad blks (per inode) */
 #endif
-#define MAXBUFSPACE	128*1024 /* maximum space to allocate to buffers */
+#define MAXBUFSPACE	128*1024	/* maximum space to allocate to buffers */
 
 #ifndef BUFSIZ
 #define BUFSIZ 1024
@@ -47,11 +47,11 @@
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
 #define	CSTATE	8		/* inode is a continuation inode */
 #define	CRSTATE	16		/* continuation inode has been referenced */
-#define	HASCINODE 32	/* has continuation inode associated with it */
+#define	HASCINODE 32		/* has continuation inode associated with it */
 #ifdef	VICE
-#define	STATE	(USTATE|FSTATE|DSTATE|DCLEAR|CSTATE|CRSTATE|VSTATE)	
+#define	STATE	(USTATE|FSTATE|DSTATE|DCLEAR|CSTATE|CRSTATE|VSTATE)
 #else
-#define	STATE	(USTATE|FSTATE|DSTATE|DCLEAR|CSTATE|CRSTATE)	
+#define	STATE	(USTATE|FSTATE|DSTATE|DCLEAR|CSTATE|CRSTATE)
 #endif
 #endif /* ACLS */
 
@@ -79,26 +79,26 @@
 #else
 #define		OFF_T		long
 #define		UOFF_T		long
-#endif	/* AFS_SUN56_ENV */
+#endif /* AFS_SUN56_ENV */
 
 /*
  * buffer cache structure.
  */
 struct bufarea {
-	struct bufarea	*b_next;		/* free list queue */
-	struct bufarea	*b_prev;		/* free list queue */
-	daddr_t	b_bno;
-	int	b_size;
-	int	b_errs;
-	int	b_flags;
-	union {
-		char	*b_buf;			/* buffer space */
-		daddr_t	*b_indir;		/* indirect block */
-		struct	fs *b_fs;		/* super block */
-		struct	cg *b_cg;		/* cylinder group */
-		struct	dinode *b_dinode;	/* inode block */
-	} b_un;
-	char	b_dirty;
+    struct bufarea *b_next;	/* free list queue */
+    struct bufarea *b_prev;	/* free list queue */
+    daddr_t b_bno;
+    int b_size;
+    int b_errs;
+    int b_flags;
+    union {
+	char *b_buf;		/* buffer space */
+	daddr_t *b_indir;	/* indirect block */
+	struct fs *b_fs;	/* super block */
+	struct cg *b_cg;	/* cylinder group */
+	struct dinode *b_dinode;	/* inode block */
+    } b_un;
+    char b_dirty;
 };
 
 #define	B_INUSE 1
@@ -125,23 +125,23 @@ struct bufarea *getdatablk();
  * struct direct -> struct dirent
 */
 #define	direct	dirent
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 
-enum fixstate {DONTKNOW, NOFIX, FIX};
+enum fixstate { DONTKNOW, NOFIX, FIX };
 
 struct inodesc {
-	enum fixstate id_fix;	/* policy on fixing errors */
-	int (*id_func)();	/* function to be applied to blocks of inode */
-	ino_t id_number;	/* inode number described */
-	ino_t id_parent;	/* for DATA nodes, their parent */
-	daddr_t id_blkno;	/* current block number being examined */
-	int id_numfrags;	/* number of frags contained in block */
-	OFF_T id_filesize;	/* for DATA nodes, the size of the directory */
-	int id_loc;		/* for DATA nodes, current location in dir */
-	int id_entryno;		/* for DATA nodes, current entry number */
-	struct direct *id_dirp;	/* for DATA nodes, ptr to current entry */
-	char *id_name;		/* for DATA nodes, name to find or enter */
-	char id_type;		/* type of descriptor, DATA or ADDR */
+    enum fixstate id_fix;	/* policy on fixing errors */
+    int (*id_func) ();		/* function to be applied to blocks of inode */
+    ino_t id_number;		/* inode number described */
+    ino_t id_parent;		/* for DATA nodes, their parent */
+    daddr_t id_blkno;		/* current block number being examined */
+    int id_numfrags;		/* number of frags contained in block */
+    OFF_T id_filesize;		/* for DATA nodes, the size of the directory */
+    int id_loc;			/* for DATA nodes, current location in dir */
+    int id_entryno;		/* for DATA nodes, current entry number */
+    struct direct *id_dirp;	/* for DATA nodes, ptr to current entry */
+    char *id_name;		/* for DATA nodes, name to find or enter */
+    char id_type;		/* type of descriptor, DATA or ADDR */
 };
 /* file types */
 #define	DATA	1
@@ -169,8 +169,8 @@ struct inodesc {
  * duplist	  muldup
  */
 struct dups {
-	struct dups *next;
-	daddr_t dup;
+    struct dups *next;
+    daddr_t dup;
 };
 struct dups *duplist;		/* head of dup list */
 struct dups *muldup;		/* end of unique duplicate dup block numbers */
@@ -179,51 +179,51 @@ struct dups *muldup;		/* end of unique duplicate dup block numbers */
  * Linked list of inodes with zero link counts.
  */
 struct zlncnt {
-	struct zlncnt *next;
-	ino_t zlncnt;
+    struct zlncnt *next;
+    ino_t zlncnt;
 };
 struct zlncnt *zlnhead;		/* head of zero link count list */
 
-char	*devname;		/* name of device being checked */
-long	dev_bsize;		/* computed value of DEV_BSIZE */
-long	secsize;		/* actual disk sector size */
-char	nflag;			/* assume a no response */
-char	yflag;			/* assume a yes response */
-int	bflag;			/* location of alternate super block */
-int	qflag;			/* less verbose flag */
-int	debug;			/* output debugging info */
-int	cvtflag;		/* convert to old file system format */
-char	preen;			/* just fix normal inconsistencies */
+char *devname;			/* name of device being checked */
+long dev_bsize;			/* computed value of DEV_BSIZE */
+long secsize;			/* actual disk sector size */
+char nflag;			/* assume a no response */
+char yflag;			/* assume a yes response */
+int bflag;			/* location of alternate super block */
+int qflag;			/* less verbose flag */
+int debug;			/* output debugging info */
+int cvtflag;			/* convert to old file system format */
+char preen;			/* just fix normal inconsistencies */
 #if	defined(AFS_DEC_ENV)
-char	only_when_needed;	/* check filesystems only when needed */
+char only_when_needed;		/* check filesystems only when needed */
 #endif
 
-char	hotroot;		/* checking root device */
-char	havesb;			/* superblock has been read */
-int	fsmodified;		/* 1 => write done to file system */
-int	fsreadfd;		/* file descriptor for reading file system */
-int	fswritefd;		/* file descriptor for writing file system */
+char hotroot;			/* checking root device */
+char havesb;			/* superblock has been read */
+int fsmodified;			/* 1 => write done to file system */
+int fsreadfd;			/* file descriptor for reading file system */
+int fswritefd;			/* file descriptor for writing file system */
 
-daddr_t	maxfsblock;		/* number of blocks in the file system */
-char	*blockmap;		/* ptr to primary blk allocation map */
-ino_t	maxino;			/* number of inodes in file system */
-ino_t	lastino;		/* last inode in use */
-char	*statemap;		/* ptr to inode state table */
-short	*lncntp;		/* ptr to link count table */
+daddr_t maxfsblock;		/* number of blocks in the file system */
+char *blockmap;			/* ptr to primary blk allocation map */
+ino_t maxino;			/* number of inodes in file system */
+ino_t lastino;			/* last inode in use */
+char *statemap;			/* ptr to inode state table */
+short *lncntp;			/* ptr to link count table */
 
-char	pathname[BUFSIZ];	/* current pathname */
-char	*pathp;			/* ptr to current position in pathname */
-char	*endpathname;		/* ptr to current end of pathname */
+char pathname[BUFSIZ];		/* current pathname */
+char *pathp;			/* ptr to current position in pathname */
+char *endpathname;		/* ptr to current end of pathname */
 
-ino_t	lfdir;			/* lost & found directory inode number */
-char	*lfname;		/* lost & found directory name */
-int	lfmode;			/* lost & found directory creation mode */
+ino_t lfdir;			/* lost & found directory inode number */
+char *lfname;			/* lost & found directory name */
+int lfmode;			/* lost & found directory creation mode */
 
-daddr_t	n_blks;			/* number of blocks in use */
-daddr_t	n_files;		/* number of files in use */
+daddr_t n_blks;			/* number of blocks in use */
+daddr_t n_files;		/* number of files in use */
 
 #define	clearinode(dp)	(*(dp) = zino)
-struct	dinode zino;
+struct dinode zino;
 
 /* only change i_gen if this is a VFS but not VICE fsck */
 #ifdef VICE
@@ -232,24 +232,24 @@ struct	dinode zino;
 #define zapino(x)	zino.di_gen = (x)->di_gen+1; (*(x) = zino)
 #endif /* VICE */
 
-int	isconvert;		/* converting */
+int isconvert;			/* converting */
 
 #ifdef VICE
 int nViceFiles;			/* number of vice files seen */
 #if	defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV)
-int	iscorrupt;		/* known to be corrupt/inconsistent */
+int iscorrupt;			/* known to be corrupt/inconsistent */
 #endif
 #ifdef	AFS_SUN_ENV
-char	fixstate;		/* is FsSTATE to be fixed */	
-char	rebflg;			/* needs reboot if set */
-int	isdirty;		/* 1 => write pending to file system */
-#endif	/* AFS_SUN_ENV */
+char fixstate;			/* is FsSTATE to be fixed */
+char rebflg;			/* needs reboot if set */
+int isdirty;			/* 1 => write pending to file system */
+#endif /* AFS_SUN_ENV */
 #ifdef	AFS_SUN5_ENV
 #define	FSTYPE_MAX	8
 char *fstype;
 				/* remount okay if clear */
-char fflag;		/* force fsck to check a mounted fs */
-char	mountedfs;		/* checking mounted device */
+char fflag;			/* force fsck to check a mounted fs */
+char mountedfs;			/* checking mounted device */
 int oflag;
 int mflag;
 int exitstat;
@@ -258,14 +258,14 @@ int fsflag;
 int rflag;			/* check raw file systems */
 #include <sys/sysmacros.h>
 FILE *logfile;			/* additional place for log message, for non-root file systems */
-#else	/* AFS_SUN5_ENV */
+#else /* AFS_SUN5_ENV */
 #ifdef	AFS_OSF_ENV
-FILE *logfile;		/* additional place for log message, for non-root file systems */
-char fflag;		/* force fsck to check a mounted fs */
-#else	/* AFS_OSF_ENV */
+FILE *logfile;			/* additional place for log message, for non-root file systems */
+char fflag;			/* force fsck to check a mounted fs */
+#else /* AFS_OSF_ENV */
 struct _iobuf *logfile;		/* additional place for log message, for non-root file systems */
-#endif	/* AFS_OSF_ENV */
-#endif	/* AFS_SUN5_ENV */
+#endif /* AFS_OSF_ENV */
+#endif /* AFS_SUN5_ENV */
 #endif /* VICE */
 
 #define	setbmap(blkno)	setbit(blockmap, blkno)
@@ -278,7 +278,7 @@ struct _iobuf *logfile;		/* additional place for log message, for non-root file 
 #define	ALTERED	0x08
 #define	FOUND	0x10
 
-#include <time.h>	/* for time() */
+#include <time.h>		/* for time() */
 struct dinode *ginode();
 struct bufarea *getblk();
 ino_t allocino();
@@ -298,7 +298,7 @@ int pclean;
 #endif
 
 #ifdef	AFS_HPUX_ENV
-char fflag;		/* force fsck to check a mounted fs */
+char fflag;			/* force fsck to check a mounted fs */
 int pclean;
 int mflag;
 #define	BLK	((dp->di_mode & IFMT) == IFBLK)
@@ -310,12 +310,12 @@ int mflag;
 #define FASTLNK (0)
 #endif
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-daddr_t	n_cont;			/* number of continuation inodes seen */
-#define	CONT	((dp->di_mode & IFMT) == IFCONT)  /* continuation inode */
+daddr_t n_cont;			/* number of continuation inodes seen */
+#define	CONT	((dp->di_mode & IFMT) == IFCONT)	/* continuation inode */
 #define	SPECIAL	(BLK || CHR || CONT)
-#else 
+#else
 #define	SPECIAL	(BLK || CHR)
-#endif 
+#endif
 #endif /* AFS_HPUX_ENV */
 
 #if defined(AFS_HPUX110_ENV)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: visit-volumes,v 1.1 2002/01/22 19:54:43 hartmans Exp $
+# $Id: visit-volumes,v 1.1 2002/01/14 07:49:18 shadow Exp $
 ls ${AFSROOT}/nada.kth.se/* >&4 2>&4 || exit 1
 ls -l ${AFSROOT}/nada.kth.se/* >&4 2>&4 || exit 1
 ls ${AFSROOT}/nada.kth.se/*/* >&4 2>&4 || exit 1

@@ -9,10 +9,6 @@
  * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
-#define SYS_NAME_ID_i386_umlinux2	2700
-#define SYS_NAME_ID_i386_umlinux22	2701
-#define SYS_NAME_ID_i386_umlinux24	2702
-
 /*
  * File: afs_sysnames.h
  *
@@ -31,7 +27,7 @@
 
 #define	SYS_NAME_ID_UNDEFINED		   0
 
-	
+
 #define SYS_NAME_ID_aux_10		 200
 
 #define SYS_NAME_ID_pmax_ul4		 305
@@ -49,11 +45,11 @@
 #define SYS_NAME_ID_hp800_ux101	 	 413
 #define SYS_NAME_ID_hp_ux102	 	 414
 #define SYS_NAME_ID_hp_ux110	 	 415
-#define SYS_NAME_ID_hp_ux11i		 416
-#define SYS_NAME_ID_ia64_hpux1122	 417
+#define SYS_NAME_ID_hp_ux11i             416
+#define SYS_NAME_ID_ia64_hpux1122		 417
+#define SYS_NAME_ID_ia64_hpux1123		 418
 
-
-#define SYS_NAME_ID_mac2_51		 500	
+#define SYS_NAME_ID_mac2_51		 500
 #define SYS_NAME_ID_mac_aux10		 501
 #define SYS_NAME_ID_mac_mach51		 502
 #define SYS_NAME_ID_ppc_darwin_12        503
@@ -68,6 +64,9 @@
 #define SYS_NAME_ID_rs_aix32		 701
 #define SYS_NAME_ID_rs_aix41		 702
 #define SYS_NAME_ID_rs_aix42		 703
+#define SYS_NAME_ID_rs_aix51		 704
+#define SYS_NAME_ID_rs_aix43		 705
+#define SYS_NAME_ID_rs_aix52		 706
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912
@@ -121,7 +120,7 @@
 #define SYS_NAME_ID_alpha_osf32c	1204
 #define SYS_NAME_ID_alpha_dux40		1205
 #define SYS_NAME_ID_alpha_dux50		1206
-#define SYS_NAME_ID_alpha_dux51		1206
+#define SYS_NAME_ID_alpha_dux51		1207
 
 #define SYS_NAME_ID_ncrx86_20		1300
 #define SYS_NAME_ID_ncrx86_30		1301
@@ -132,6 +131,7 @@
 #define SYS_NAME_ID_i386_linux2		1500
 #define SYS_NAME_ID_i386_linux22	1501
 #define SYS_NAME_ID_i386_linux24        1502
+#define SYS_NAME_ID_i386_linux26        1503
 
 #define SYS_NAME_ID_ppc_linux2          1600
 #define SYS_NAME_ID_ppc_linux22         1601
@@ -158,6 +158,10 @@
 #define SYS_NAME_ID_i386_fbsd_44        2102
 #define SYS_NAME_ID_i386_fbsd_45        2103
 #define SYS_NAME_ID_i386_fbsd_46        2103
+#define SYS_NAME_ID_i386_fbsd_47        2104
+#define SYS_NAME_ID_i386_fbsd_50        2105
+#define SYS_NAME_ID_i386_fbsd_51        2106
+#define SYS_NAME_ID_i386_fbsd_52        2107
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201
@@ -169,18 +173,50 @@
 #define SYS_NAME_ID_parisc_linux22      2401
 #define SYS_NAME_ID_parisc_linux24      2402
 
+#define SYS_NAME_ID_i386_nbsd15         2501
+#define SYS_NAME_ID_alpha_nbsd15        2502
+#define SYS_NAME_ID_sparc_nbsd15        2503
+#define SYS_NAME_ID_sparc64_nbsd15      2504
+
+#define SYS_NAME_ID_i386_nbsd16		2510
+#define SYS_NAME_ID_alpha_nbsd16	2511
+#define SYS_NAME_ID_sparc_nbsd16	2512
+#define SYS_NAME_ID_sparc64_nbsd16	2513
+#define SYS_NAME_ID_macppc_nbsd16	2514
+
+#define SYS_NAME_ID_i386_nbsd20		2520
+#define SYS_NAME_ID_alpha_nbsd20	2521
+#define SYS_NAME_ID_sparc_nbsd20	2522
+#define SYS_NAME_ID_sparc64_nbsd20	2523
+#define SYS_NAME_ID_macppc_nbsd20	2524
+
+#define SYS_NAME_ID_i386_obsd31		2600
+#define SYS_NAME_ID_i386_obsd32		2601
+#define SYS_NAME_ID_i386_obsd33		2602
+#define SYS_NAME_ID_i386_obsd34		2603
+#define SYS_NAME_ID_i386_obsd35		2604
+
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
 #define SYS_NAME_ID_amd64_linux24       2702
+
+#define SYS_NAME_ID_i386_umlinux2	2800
+#define SYS_NAME_ID_i386_umlinux22	2801
+#define SYS_NAME_ID_i386_umlinux24	2802
+
+#define SYS_NAME_ID_ppc64_linux2	2900
+#define SYS_NAME_ID_ppc64_linux22	2901
+#define SYS_NAME_ID_ppc64_linux24	2902
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)
  */
-#ifdef	notdef	
+#ifdef	notdef
 /* Should be enabled by src sites that are compiling afs in a kerberos environment
  * (i.e. use their headers and libs) and want to use the realm-related kerberos code
  */
-#define	AFS_ATHENA_STDENV		1   
+#define	AFS_ATHENA_STDENV		1
 #endif
 #ifdef	AFS_ATHENA_STDENV
 /* So that they don't get our own version of the kerb-related function  in libutil.a */
@@ -191,7 +227,7 @@
 /* Should be enabled by src sites that are compiling afs without the kerb headers/libs
  * but want to use the kerberos realm-related code
  */
-#define	AFS_KERBREALM_ENV	1   
+#define	AFS_KERBREALM_ENV	1
 #ifdef	AFS_KERBREALM_ENV
 #define	AFS_REALM_SZ		64
 #endif

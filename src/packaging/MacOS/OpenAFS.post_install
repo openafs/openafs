@@ -27,6 +27,11 @@ if [ ! -f cacheinfo ]; then
    cp cacheinfo.sample cacheinfo
 fi
 
+if [ `grep /Network/afs cacheinfo` ]; then
+    cat cacheinfo |sed s#/Network/afs#/afs# > cacheinfo.new
+    mv cacheinfo.new cacheinfo
+fi
+
 # testing case -- upgrading from pre 1.2.7, but .last file exists.
 # merge the .save and .last....
 if [ ! -f CellServDB -a -f CellServDB.save -a -f CellServDB.master.last ]; then
@@ -73,3 +78,4 @@ elif [ -e config/afssettings ]; then
   # turn off execution of afssettings
   chmod a-x config/afssettings
 fi
+

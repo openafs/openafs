@@ -47,6 +47,8 @@ statindex 16
 #define	    VOLSETINFO		126
 #define	    VOLXLISTPARTITIONS	127
 #define	    VOLFORWARDMULTIPLE  128
+#define     VOLCONVERTRO        65536
+#define     VOLGETSIZE          65537
 
 const SIZE = 1024;
 
@@ -213,6 +215,11 @@ struct restoreCookie {
 struct replica {
 	afs_int32 trans;
 	struct destServer server;
+};
+
+/*  Various size parameters of the volume  */
+struct volintSize {
+    afs_uint64 dump_size;
 };
 
 typedef  replica manyDests<>;
@@ -390,3 +397,14 @@ proc ForwardMultiple(
   IN struct restoreCookie *cookie,
   OUT manyResults *results
 ) = VOLFORWARDMULTIPLE;
+
+proc ConvertROtoRWvolume(
+  IN afs_int32 partid,
+  IN afs_int32 volid
+) = VOLCONVERTRO;
+
+proc GetSize(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate,
+  OUT struct volintSize *size
+) = VOLGETSIZE;

@@ -2365,23 +2365,6 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SERVER_SERVICE      "%1:%2"
-    IDS_SERVICETYPE_SIMPLE  "簡式"
-    IDS_SERVICETYPE_CRON    "Cron"
-    IDS_SERVICESTATE_STOPPED "已停止"
-    IDS_SERVICESTATE_STOPPING "正在停止"
-    IDS_SERVICESTATE_STARTING "正在啟動"
-    IDS_SERVICESTATE_RUNNING "正在執行"
-    IDS_SERVICETYPE_FS_LONG "FS（檔案系統）"
-    IDS_SERVICETYPE_FS      "FS"
-    IDS_SERVICE_LASTERROR   "%1"
-    IDS_SERVICES_IN_CELL    "Cell %1 中的所有服務："
-    IDS_SERVICE_STARTDATE   "已啟動 %1"
-    IDS_SERVICE_STOPDATE    "已停止 %1"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
     IDS_PERCENTAGE          "%1 %%"
     IDS_AGGREGATES_IN_SERVER "伺服器 %1 上的分割區： "
     IDS_AGGREGATES_IN_CELL  "Cell %1 中的所有分割區："
@@ -2429,11 +2412,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR_BAD_CREDENTIALS
+    IDS_SVR_ERROR_BAD_CREDENTIALS
                             "無法識別您所輸入的 AFS 身份，或是您所指定的密碼有誤。"
-    IDS_CREDS_NONE          "（沒有記號）"
-    IDS_CREDS_VALID         "%2, 過期 %3"
-    IDS_CREDS_EXPIRED       "（記號已過期 %3）"
+    IDS_SVR_CREDS_NONE          "（沒有記號）"
+    IDS_SVR_CREDS_VALID         "%2, 過期 %3"
+    IDS_SVR_CREDS_EXPIRED       "（記號已過期 %3）"
 END
 
 STRINGTABLE DISCARDABLE
@@ -2946,6 +2929,23 @@ BEGIN
                             "由於產生不明原因的問題，因此無法啟動「AFS 伺服器管理程式」。\n\n您必須重新安裝「AFS 控制中心」。"
     IDS_ERROR_CANT_CHANGEADDR
                             "「AFS 伺服器管理程式」無法為伺服器 %1 變更 VLDB 的 IP 位址。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "簡式"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "已停止"
+    IDS_SERVICESTATE_STOPPING "正在停止"
+    IDS_SERVICESTATE_STARTING "正在啟動"
+    IDS_SERVICESTATE_RUNNING "正在執行"
+    IDS_SERVICETYPE_FS_LONG "FS（檔案系統）"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "Cell %1 中的所有服務："
+    IDS_SERVICE_STARTDATE   "已啟動 %1"
+    IDS_SERVICE_STOPDATE    "已停止 %1"
 END
 
 #endif    // Chinese (Taiwan) resources

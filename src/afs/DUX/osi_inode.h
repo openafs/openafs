@@ -34,7 +34,7 @@
 #define di_vicep2	di_gid
 #define di_vicep3a	di_bcuid
 #define di_vicep3b	di_bcgid
-#define di_vicep4	di_spare[0]		/* not used */
+#define di_vicep4	di_spare[0]	/* not used */
 
 #define  IS_VICEMAGIC(ip)        ((ip)->i_vicemagic == VICEMAGIC)
 #define  IS_DVICEMAGIC(dp)       ((dp)->di_vicemagic == VICEMAGIC)

@@ -19,12 +19,14 @@
 #include <lwp.h>
 #include <afs/afsint.h>
 
+/*extern void afsi_log(char *pattern, ...);*/
+
 extern int errno;
 static char dns_addr[30];
 #ifdef DJGPP
 extern char cm_confDir[];
 #endif
-int cm_dnsEnabled = -1;
+static int cm_dnsEnabled = -1;
 
 void DNSlowerCase(char *str)
 {
@@ -41,7 +43,6 @@ int cm_InitDNS(int enabled)
   char configpath[100];
   int len;
   int code;
-  char *path;
   char *addr;
   
   if (!enabled) { fprintf(stderr, "DNS support disabled\n"); cm_dnsEnabled = 0; return 0; }
@@ -55,7 +56,7 @@ int cm_InitDNS(int enabled)
 #ifdef DJGPP
     strcpy(configpath, cm_confDir);
 #elif defined(AFS_WIN95_ENV)
-    path = getenv("AFSCONF");
+    char *path = getenv("AFSCONF");
     if (path) strcpy(configpath, path);
     else strcpy(configpath, "c:\\afscli");
 #else  /* nt */
@@ -250,7 +251,6 @@ PDNS_HDR get_DNS_Response(SOCKET commSock, SOCKADDR_IN sockAddr, char *buffer)
   /*static char buffer[BUFSIZE];*/
 
   int         addrLen = sizeof(SOCKADDR_IN);
-  int         res;
   int size;
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -548,7 +548,6 @@ u_char * processReplyBuffer_Addr(PDNS_HDR replyBuff)
 {
   u_char *ptr = (u_char *) replyBuff;
   int    answerCount = ntohs((replyBuff)->rr_count);
-  u_char i;
   PDNS_A_RR_HDR 
          rrPtr;
 
@@ -597,9 +596,11 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
 #endif
 
+#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
   if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
     cm_InitDNS(1);    /* assume enabled */
   }
+#endif
   if (cm_dnsEnabled == 0) {  /* possibly we failed in cm_InitDNS above */
     fprintf(stderr, "DNS initialization failed, disabled\n");
     *numServers = 0;
@@ -640,7 +641,7 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   else
     *numServers = 0;
   
-  close(commSock);
+  closesocket(commSock);
   if (*numServers == 0)
     return(-1);
 
@@ -655,8 +656,6 @@ int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
 
   SOCKADDR_IN sockAddr;
   char buffer[BUFSIZE];
-  
-  int     i;
   u_char *addr;
   u_long *aPtr;
   int rc;

@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.1.1.5 2004/01/10 20:56:46 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_conns.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -32,18 +33,15 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxdebug_conns <host> <port>\n");
+    fprintf(stderr, "Usage: rxdebug_conns <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -59,7 +57,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -105,14 +104,16 @@ int main(int argc, char *argv[])
 
     printf("\n");
     if (allconns) {
-	printf("Listing all connections for server %s (port %d)\n",
-	       srvrName, srvrPort);
+	printf("Listing all connections for server %s (port %d)\n", srvrName,
+	       srvrPort);
     } else {
-	printf("Listing only interesting connections for server %s (port %d)\n",
-	       srvrName, srvrPort);
+	printf
+	    ("Listing only interesting connections for server %s (port %d)\n",
+	     srvrName, srvrPort);
     }
 
-    while(util_RXDebugConnectionsNext(iterator, &conn, &supportedValues, &st)) {
+    while (util_RXDebugConnectionsNext
+	   (iterator, &conn, &supportedValues, &st)) {
 	printf("\n");
 	printf("host:                     %u.%u.%u.%u\n",
 	       (conn.host >> 24) & 0xff, (conn.host >> 16) & 0xff,
@@ -124,7 +125,7 @@ int main(int argc, char *argv[])
 	printf("flags:                    %x\n", conn.flags);
 	printf("type:                     %u\n", conn.type);
 	printf("securityIndex:            %u\n", conn.securityIndex);
-	for (i = 0 ; i < RX_MAXCALLS ; i++) {
+	for (i = 0; i < RX_MAXCALLS; i++) {
 	    printf("callNumber[%u]:            %u\n", i, conn.callNumber[i]);
 	    printf("callState[%u]:             %u\n", i, conn.callState[i]);
 	    printf("callMode[%u]:              %u\n", i, conn.callMode[i]);
@@ -138,7 +139,8 @@ int main(int argc, char *argv[])
 	    printf("secStats.expires:         %x\n", conn.secStats.expires);
 	    printf("secStats.packetsReceived: %x\n",
 		   conn.secStats.packetsReceived);
-	    printf("secStats.packetsSent:     %x\n", conn.secStats.packetsSent);
+	    printf("secStats.packetsSent:     %x\n",
+		   conn.secStats.packetsSent);
 	    printf("secStats.bytesReceived:   %x\n",
 		   conn.secStats.bytesReceived);
 	    printf("secStats.bytesSent:       %x\n", conn.secStats.bytesSent);

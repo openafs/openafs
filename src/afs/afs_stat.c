@@ -10,12 +10,13 @@
 /* statistics-gathering package */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_stat.c,v 1.1.1.5 2001/09/11 14:24:46 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_stat.c,v 1.9 2003/07/15 23:14:13 shadow Exp $");
 
-#include "../afs/sysincludes.h" /*Standard vendor system headers*/
-#include "../afs/afsincludes.h" /*AFS-based standard headers*/
+#include "afs/sysincludes.h"	/*Standard vendor system headers */
+#include "afsincludes.h"	/*AFS-based standard headers */
 #include "afs_stats.h"
 
 struct afs_CMStats afs_cmstats;
@@ -37,20 +38,20 @@ afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
  * Environment:
  *	This routine should only be called once, at initialization time.
  */
-void afs_InitStats()
-
-{ /*afs_InitStats*/
-
-    struct afs_stats_opTimingData *opTimeP;	/*Ptr to curr timing struct*/
-    struct afs_stats_xferData *xferP;		/*Ptr to curr xfer struct*/
-    int currIdx;				/*Current index*/
+void
+afs_InitStats(void)
+{
+    struct afs_stats_opTimingData *opTimeP;	/*Ptr to curr timing struct */
+    struct afs_stats_xferData *xferP;	/*Ptr to curr xfer struct */
+    int currIdx;		/*Current index */
 
     /*
      * First step is to zero everything out.
      */
     memset((char *)(&afs_cmstats), 0, sizeof(struct afs_CMStats));
     memset((char *)(&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
-    memset((char *)(&afs_stats_cmfullperf), 0, sizeof(struct afs_stats_CMFullPerf));
+    memset((char *)(&afs_stats_cmfullperf), 0,
+	   sizeof(struct afs_stats_CMFullPerf));
 
     /*
      * Some fields really should be non-zero at the start, so set 'em up.
@@ -58,11 +59,13 @@ void afs_InitStats()
     afs_stats_cmperf.srvNumBuckets = NSERVERS;
 
     opTimeP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[0]);
-    for (currIdx = 0; currIdx < AFS_STATS_NUM_FS_RPC_OPS; currIdx++, opTimeP++)
+    for (currIdx = 0; currIdx < AFS_STATS_NUM_FS_RPC_OPS;
+	 currIdx++, opTimeP++)
 	opTimeP->minTime.tv_sec = 999999;
 
     opTimeP = &(afs_stats_cmfullperf.rpc.cmRPCTimes[0]);
-    for (currIdx = 0; currIdx < AFS_STATS_NUM_CM_RPC_OPS; currIdx++, opTimeP++)
+    for (currIdx = 0; currIdx < AFS_STATS_NUM_CM_RPC_OPS;
+	 currIdx++, opTimeP++)
 	opTimeP->minTime.tv_sec = 999999;
 
     xferP = &(afs_stats_cmfullperf.rpc.fsXferTimes[0]);
@@ -70,25 +73,20 @@ void afs_InitStats()
 	xferP->minTime.tv_sec = 999999;
 	xferP->minBytes = 999999999;
     }
-    
-} /*afs_InitStats*/
+}
 
-
-
-afs_GetCMStat(ptr, size)
-     char **ptr; /* memory area */
-     unsigned *size; /* # of bytes */
-  {
+void
+afs_GetCMStat(char **ptr, unsigned *size)
+{
 #ifndef AFS_NOSTATS
-      AFS_STATCNT(afs_GetCMStat);
-      *ptr = (char *)&afs_cmstats;
-      *size = sizeof(afs_cmstats);
+    AFS_STATCNT(afs_GetCMStat);
+    *ptr = (char *)&afs_cmstats;
+    *size = sizeof(afs_cmstats);
 #endif /* AFS_NOSTATS */
-  }
+}
 
-afs_AddToMean(oldMean, newValue)
-     struct afs_MeanStats *oldMean;
-     afs_int32 newValue;
-  {
-      AFS_STATCNT(afs_AddToMean);
-  }
+void
+afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue)
+{
+    AFS_STATCNT(afs_AddToMean);
+}

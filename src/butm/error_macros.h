@@ -18,4 +18,3 @@
             code = evalue;                                      \
             goto abort_exit;                                    \
         }
-

@@ -35,40 +35,40 @@ static int fd = 0;
 
 #ifdef AFS_LINUX20_ENV
 /* Need to conform to declaration in utmp.h */
-void logwtmp(const char *line, const char *name, const char *host)
+void
+logwtmp(const char *line, const char *name, const char *host)
 #else
 logwtmp(line, name, host)
-	char *line, *name, *host;
+     char *line, *name, *host;
 #endif
 {
-	struct utmp ut;
-	struct stat buf;
+    struct utmp ut;
+    struct stat buf;
 
-	if (!fd && (fd = open(WTMPFILE, O_WRONLY|O_APPEND, 0)) < 0) {
-	    if ((fd = open(WTMPFILEALT, O_WRONLY|O_APPEND, 0)) < 0)
-		return;
-	}
+    if (!fd && (fd = open(WTMPFILE, O_WRONLY | O_APPEND, 0)) < 0) {
+	if ((fd = open(WTMPFILEALT, O_WRONLY | O_APPEND, 0)) < 0)
+	    return;
+    }
 
-        memset((char *)&ut, 0, sizeof(ut));
-	if (!fstat(fd, &buf)) {
-		(void)strncpy(ut.ut_line, line, sizeof(ut.ut_line));
-		(void)strncpy(ut.ut_name, name, sizeof(ut.ut_name));
+    memset((char *)&ut, 0, sizeof(ut));
+    if (!fstat(fd, &buf)) {
+	(void)strncpy(ut.ut_line, line, sizeof(ut.ut_line));
+	(void)strncpy(ut.ut_name, name, sizeof(ut.ut_name));
 #if !defined(AFS_SUN5_ENV)
-		(void)strncpy(ut.ut_host, host, sizeof(ut.ut_host));
+	(void)strncpy(ut.ut_host, host, sizeof(ut.ut_host));
 #endif /* !defined(AFS_SUN5_ENV) */
 #ifdef AFS_AIX32_ENV
-		(void)strncpy(ut.ut_id, line, sizeof(ut.ut_id));
-		ut.ut_exit.e_termination = 0;
-		ut.ut_exit.e_exit = 0;
+	(void)strncpy(ut.ut_id, line, sizeof(ut.ut_id));
+	ut.ut_exit.e_termination = 0;
+	ut.ut_exit.e_exit = 0;
 #endif
 #if	!defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
-		ut.ut_type = ((name && strlen(name)) ? USER_PROCESS : DEAD_PROCESS);
-		ut.ut_pid = getpid();
+	ut.ut_type = ((name && strlen(name)) ? USER_PROCESS : DEAD_PROCESS);
+	ut.ut_pid = getpid();
 #endif
-		(void)time(&ut.ut_time);
-		if (write(fd, (char *)&ut, sizeof(struct utmp)) !=
-		    sizeof(struct utmp))
-			(void)ftruncate(fd, buf.st_size);
-	}
+	(void)time(&ut.ut_time);
+	if (write(fd, (char *)&ut, sizeof(struct utmp)) !=
+	    sizeof(struct utmp))
+	    (void)ftruncate(fd, buf.st_size);
+    }
 }
-

@@ -17,7 +17,7 @@
 #define	_ITC
 
 /* C language patches */
-typedef	int	boolean;
+typedef int boolean;
 #define	private	static
 
 /* parameter usage description tags */

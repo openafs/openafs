@@ -361,10 +361,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "Would you like to log in as an administrator instead?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "Your tokens within the %1 cell are no longer valid.\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "The AFS identity you have entered is unrecognized, or the password you have specified is incorrect."
     IDS_BROWSE_WAITING      "querying server--please wait..."

@@ -34,13 +34,13 @@ extern "C" {
  */
 
 rwWindowData awdFilesets[] = {
-    { IDC_SET_DESC,        raSizeX           },
-    { IDC_SET_LIST,        raSizeX | raSizeY },
-    { IDC_SET_CREATE,      raMoveX | raMoveY },
-    { IDC_SET_DELETE,      raMoveX | raMoveY },
-    { IDC_SET_REP,         raMoveX | raMoveY },
-    { IDC_SET_SETQUOTA,    raMoveX | raMoveY },
-    { idENDLIST,           0                 }
+    { IDC_SET_DESC,        raSizeX,		0,	0 },
+    { IDC_SET_LIST,        raSizeX | raSizeY,	0,	0 },
+    { IDC_SET_CREATE,      raMoveX | raMoveY,	0,	0 },
+    { IDC_SET_DELETE,      raMoveX | raMoveY,	0,	0 },
+    { IDC_SET_REP,         raMoveX | raMoveY,	0,	0 },
+    { IDC_SET_SETQUOTA,    raMoveX | raMoveY,	0,	0 },
+    { idENDLIST,           0,			0,	0 }
  };
 
 

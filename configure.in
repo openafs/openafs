@@ -1,22 +1,9 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.2.11)
+AM_INIT_AUTOMAKE(openafs,devel)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
-
-TOP_SRCDIR="${SRCDIR_PARENT}/src"
-TOP_INCDIR="${SRCDIR_PARENT}/include"
-TOP_LIBDIR="${SRCDIR_PARENT}/lib"
-if test "${DEST}x" = "x"; then
-	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
-fi
-
-# Check for files involved in porting.  Report errors, don't make the
-# user hunt through the configure log after the build fails!
-if test ! -r src/config/Makefile.${AFS_SYSNAME}.in ; then
-  AC_MSG_ERROR(no source file src/config/Makefile.${AFS_SYSNAME}.in)
-fi
 
 AC_OUTPUT(             \
 Makefile               \
@@ -40,8 +27,8 @@ src/cmd/Makefile \
 src/comerr/test/Makefile \
 src/comerr/Makefile \
 src/config/Makefile \
+src/config/Makefile.config \
 src/config/Makefile.version-NOCML \
-src/config/Makefile.${AFS_SYSNAME} \
 src/dauth/Makefile \
 src/des/test/Makefile \
 src/des/Makefile \
@@ -55,6 +42,7 @@ src/fsprobe/Makefile \
 src/ftpd43+/Makefile \
 src/gtx/Makefile \
 src/inetd/Makefile \
+src/JAVA/libjafs/Makefile \
 src/kauth/test/Makefile \
 src/kauth/Makefile \
 src/libacl/test/Makefile \
@@ -70,10 +58,12 @@ src/libadmin/pts/Makefile \
 src/libadmin/samples/Makefile \
 src/libadmin/test/Makefile \
 src/libadmin/vos/Makefile \
+src/libafs/Makefile.common \
 src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 ${DARWIN_PLIST} \
 src/libafsauthent/Makefile \
 src/libafsrpc/Makefile \
+src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/test/Makefile \
 src/log/Makefile \
@@ -116,6 +106,7 @@ src/tests/run-tests \
 src/tests/OpenAFS/Dirpath.pm \
 src/tsm41/Makefile \
 src/tviced/Makefile \
+src/tvolser/Makefile \
 src/ubik/Makefile \
 src/update/Makefile \
 src/usd/test/Makefile \
@@ -133,4 +124,5 @@ src/vol/test/Makefile \
 src/volser/Makefile \
 src/wsadmin.src/Makefile \
 src/xstat/Makefile \
+src/helper-splint.sh \
 )

@@ -1,29 +1,15 @@
-#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
-#/* Portions Copyright (c) 2003 Apple Computer, Inc. */
-# $Header: /tmp/cvstemp/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.1.1.7 2004/01/10 20:56:51 hartmans Exp $
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+# $Header: /cvs/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.20 2003/10/24 06:26:11 shadow Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
-DARWIN_INFOFILE=../@DARWIN_INFOFILE@
-
-include config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 
 # OS specific object files:
@@ -54,9 +40,8 @@ KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -f
 <ppc_darwin_14 ppc_darwin_13 ppc_darwin_12>
 KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 <all>
-#CFLAGS=-Werror-implicit-function-declaration -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-#CFLAGS=-framework Kernel -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
+KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.Framework/Headers
 
 
 # Name of directory to hold object files and libraries.
@@ -72,18 +57,18 @@ include Makefile.common
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm mach kern
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
-	-ln -s /usr/include/rpc rpc
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
-	-ln -s $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/net net
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/machine machine
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/netinet netinet
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys sys
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/ufs ufs
+	-ln -fs $(KROOT)/System/Library/Frameworks/Kernel.framework/Headers/sys h
 
 
 # Below this line are targets when in the COMMON directory:
@@ -100,14 +85,14 @@ libafs: $(LIBAFSNONFS) ;
 install_libafs: $(LIBAFSNONFS) ;
 	-mkdir -p ${INST_LIBAFSNONFS}
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents
-	$(INSTALL) -f ${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -f ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -f ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
 
 dest_libafs: $(LIBAFSNONFS) ;
 	-mkdir -p ${DEST_LIBAFSNONFS}
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents
-	$(INSTALL) -f ${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -f ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -f ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
 
@@ -117,26 +102,3 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
-
-
-# Object build rules:
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)
-osi_module.o: $(AFS)/osi_module.c
-	$(CRULE1)

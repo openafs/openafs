@@ -14,11 +14,10 @@
 #include "AFS_component_version_number.c"
 
 main()
+{				/*main */
 
-{ /*main*/
+    /*
+     * Shortest routine in history.
+     */
 
-  /*
-    * Shortest routine in history.
-    */
-
-} /*main*/
+}				/*main */

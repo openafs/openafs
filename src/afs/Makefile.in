@@ -7,48 +7,25 @@
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL=/bin/sh
-KERNELDIR = ../libafs
-UKERNELDIR = ../libuafs
+all: depinstall
 
-include ../config/Makefile.${SYS_NAME}
-
-all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h ${TOP_INCDIR}/afs/sysctl.h
+depinstall: ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h \
+	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h ${TOP_INCDIR}/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
 	esac
 
-kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afs_trace.h afszcm.cat
-	-chmod 666 ${KERNELDIR}/afs/*
-	${INSTALL} *.[csh] ${KERNELDIR}/afs
-	${INSTALL} VNOPS/*.[csh] ${KERNELDIR}/afs
-	${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+afs_trace.h afs_trace.msf: afs_trace.et
+	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
 
-afs_trace.h: afs_trace.et
-	${COMPILE_ET} -v 2 afs_trace.et
+unified_afs.c unified_afs.h: unified_afs.et
+	$(RM) -f unified_afs.c unified_afs.h
+	${COMPILE_ET} -p ${srcdir} unified_afs -h unified_afs
 
-# NOTE: linux case uses --new as well to work around bug in some versions of
-# gencat.
 afszcm.cat: afs_trace.msf
 	-$(RM) -f afszcm.cat
 	case ${SYS_NAME} in \
@@ -64,26 +41,14 @@ afszcm.cat: afs_trace.msf
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
 
-${KERNELDIR}/afs:
-	mkdir -p $@
-
-ukinstall: ${UKERNELDIR}/afs AFS_component_version_number.c afs_trace.h
-	-chmod 666 ${UKERNELDIR}/afs/*
-	${INSTALL} *.[csh] ${UKERNELDIR}/afs
-	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}/afs
-	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/sysctl.h
+install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h ${DESTDIR}${includedir}/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs || true ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs || true ;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac
@@ -98,18 +63,27 @@ ${DEST}/include/afs/afs.h: afs.h
 ${DESTDIR}${includedir}/afs/afs.h: afs.h
 	${INSTALL} $? $@
 
-
 ${TOP_INCDIR}/afs/afs.h: afs.h
 	${INSTALL} $? $@
 
 
-${DEST}/include/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${DEST}/include/afs/unified_afs.h: unified_afs.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${DESTDIR}${includedir}/afs/unified_afs.h: unified_afs.h
 	${INSTALL} $? $@
 
-${TOP_INCDIR}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+${TOP_INCDIR}/afs/unified_afs.h: unified_afs.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/osi_inode.h: ${MKAFS_OSTYPE}/osi_inode.h
 	${INSTALL} $? $@
 
 
@@ -155,20 +129,20 @@ ${TOP_INCDIR}/afs/nfsclient.h: nfsclient.h
 	${INSTALL} $? $@
 
 
-dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/sysctl.h
+dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h ${DEST}/include/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
 	esac
 	case ${SYS_NAME} in \
-		next_mach30 | vax_ul43 | *_darwin_* | i386_fbsd* ) \
+		next_mach30 | vax_ul43 | *_darwin* | i386_fbsd* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
 			${INSTALL} afszcm.cat ${DEST}/root.client/usr/vice/etc/C ;; \
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs || true ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs || true;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac

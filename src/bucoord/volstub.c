@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/volstub.c,v 1.1.1.4 2001/07/14 22:20:56 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/bucoord/volstub.c,v 1.6 2003/12/07 22:49:19 jaltman Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -22,29 +23,30 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/volstub.c,v 1.1.1.4 2001/07/14 
 #include <netdb.h>
 #endif
 #include <rx/xdr.h>
-#include <afs/vlserver.h>   /*Misc server-side Volume Location stuff*/
+#include <afs/vlserver.h>	/*Misc server-side Volume Location stuff */
 #include <ubik.h>
 #include "volser.h"
 #include "bc.h"
 #include <afs/volint.h>
 
-extern int VL_GetEntryByID();
 extern char *whoami;
 
 /* ********************************************************************* */
 /* Volserver routines */
 /* ********************************************************************* */
 
-afs_int32 bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
-    struct ubik_client *uclient;
-    afs_int32              volID;
-    afs_int32              volType;
-    struct vldbentry   *vldbEntryPtr;
+afs_int32
+bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
+     struct ubik_client *uclient;
+     afs_int32 volID;
+     afs_int32 volType;
+     struct vldbentry *vldbEntryPtr;
 {
     afs_int32 code = 0;
 
-    code = ubik_Call(VL_GetEntryByID, uclient, 0, volID, volType, vldbEntryPtr);
-    return(code);
+    code =
+	ubik_Call(VL_GetEntryByID, uclient, 0, volID, volType, vldbEntryPtr);
+    return (code);
 }
 
 /* volImageTime
@@ -58,51 +60,49 @@ afs_int32 bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
  */
 
 afs_int32
-volImageTime (serv, part, volid, voltype, clDatePtr)
-    afs_int32 serv;
-    afs_int32 part;
-    afs_int32 volid;
-    afs_int32 voltype;
-    afs_int32 *clDatePtr;
+volImageTime(serv, part, volid, voltype, clDatePtr)
+     afs_int32 serv;
+     afs_int32 part;
+     afs_int32 volid;
+     afs_int32 voltype;
+     afs_int32 *clDatePtr;
 {
     afs_int32 code = 0;
     struct volintInfo *viptr;
 
-    if (voltype == RWVOL)
-    {
-        *clDatePtr = time(0);
-	return(0);
+    if (voltype == RWVOL) {
+	*clDatePtr = time(0);
+	return (0);
     }
 
     code = UV_ListOneVolume(htonl(serv), part, volid, &viptr);
-    if (code)
-    {
-        com_err(whoami, code,
-		"Warning: Can't get clone time of volume %u - using 0", volid);
+    if (code) {
+	com_err(whoami, code,
+		"Warning: Can't get clone time of volume %u - using 0",
+		volid);
 	*clDatePtr = 0;
-	return(0);
+	return (0);
     }
 
     /* volume types from vol/voldefs.h */
-    switch ( viptr->type )
-    {
-      case RWVOL:
+    switch (viptr->type) {
+    case RWVOL:
 	/* For a r/w volume there may not be any foolproof way of
 	 * preventing anomalies in the backups. Use the current time;
 	 */
 	*clDatePtr = time(0);
 	break;
 
-      case ROVOL:
-      case BACKVOL:
-	*clDatePtr = viptr->creationDate;     /* use the creation time */
+    case ROVOL:
+    case BACKVOL:
+	*clDatePtr = viptr->creationDate;	/* use the creation time */
 	break;
-	
-      default:
-        com_err(whoami, 0,
-		"Can't get clone time of volume %u - unknown volume type", volid);
-	return(-1);
-    }
-    return(0);
-}
 
+    default:
+	com_err(whoami, 0,
+		"Can't get clone time of volume %u - unknown volume type",
+		volid);
+	return (-1);
+    }
+    return (0);
+}

@@ -24,7 +24,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/iomgr.c,v 1.1.1.6 2001/09/11 14:33:35 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.12 2003/11/29 22:08:14 jaltman Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +88,7 @@ typedef unsigned char bool;
 #define TRUE	1
 
 #ifndef MIN
-#define MIN(a,b) ((a)>(b)) ? b : a
+#define MIN(a,b) (((a)>(b)) ? (b) : (a))
 #endif
 
 #ifndef NSIG
@@ -307,8 +307,7 @@ static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
     if (nfds == 0)
 	return;
 
-    n = INTS_PER_FDS(nfds);
-    for (i=0; i<n; i++) {
+    for (i = 0, n = INTS_PER_FDS(nfds); i < n; i++) {
 	fd_set1->FDS_BITS[i] |= fd_set2->FDS_BITS[i];
     }
 #endif
@@ -722,7 +721,7 @@ static void SigHandler (signo)
 
 /* Alright, this is the signal signalling routine.  It delivers LWP signals
    to LWPs waiting on Unix signals. NOW ALSO CAN YIELD!! */
-static int SignalSignals ()
+static int SignalSignals (void)
 {
     bool gotone = FALSE;
     register int i;
@@ -736,8 +735,8 @@ static int SignalSignals ()
     for (i=0; i < NSOFTSIG; i++) {
 	PROCESS pid;
 	if (p=sigProc[i]) /* This yields!!! */
-	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, sigRock[i],
-		"SignalHandler", &pid);
+	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, 
+			       (void *) sigRock[i], "SignalHandler", &pid);
 	sigProc[i] = 0;
     }
 
@@ -807,8 +806,8 @@ int IOMGR_Initialize(void)
     install_ncb_handler();
 #endif /* AFS_DJGPP_ENV */
 
-    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, 0, "IO MANAGER",
-			     &IOMGR_Id);
+    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
+			     "IO MANAGER", &IOMGR_Id);
 }
 
 int IOMGR_Finalize()
@@ -1023,9 +1022,7 @@ int IOMGR_Cancel(PROCESS pid)
 #ifndef AFS_NT40_ENV
 /* Cause delivery of signal signo to result in a LWP_SignalProcess of
    event. */
-IOMGR_Signal (signo, event)
-    int signo;
-    char *event;
+int IOMGR_Signal (int signo, char *event)
 {
     struct sigaction sa;
 
@@ -1045,12 +1042,11 @@ IOMGR_Signal (signo, event)
 }
 
 /* Stop handling occurrences of signo. */
-IOMGR_CancelSignal (signo)
-    int signo;
+int IOMGR_CancelSignal (int signo)
 {
     if (badsig(signo) || (sigsHandled & mysigmask(signo)) == 0)
 	return LWP_EBADSIG;
-    sigaction (signo, &oldActions[signo], (struct sigaction *)0);
+    sigaction (signo, &oldActions[signo], NULL);
     sigsHandled &= ~mysigmask(signo);
     return LWP_SUCCESS;
 }
@@ -1086,10 +1082,7 @@ void IOMGR_Sleep (int seconds)
 
 /* Netbios code for djgpp port */
 
-int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
-  NCB *ncbp;
-  dos_ptr dos_ncb;
-  struct timeval *timeout;
+int IOMGR_NCBSelect(NCB *ncbp, dos_ptr dos_ncb, struct timeval *timeout)
 {
   struct IoRequest *request;
   int result;
@@ -1170,7 +1163,7 @@ int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
   }
 }
       
-int IOMGR_CheckNCB()
+int IOMGR_CheckNCB(void)
 {
   int woke_someone = FALSE;
   EVENT_HANDLE ev;
@@ -1213,7 +1206,7 @@ int ncb_handler(__dpmi_regs *r)
   return;
 }
 
-int install_ncb_handler()
+int install_ncb_handler(void)
 {
   callback_info.pm_offset = (long) ncb_handler;
   if (_go32_dpmi_allocate_real_mode_callback_retf(&callback_info,

@@ -1,7 +1,7 @@
 AC_DEFUN(LINUX_COMPLETION_H_EXISTS, [
 AC_MSG_CHECKING(for linux/completion.h existance)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_completion_h_exists,
 [
 AC_TRY_COMPILE(
@@ -21,7 +21,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_DEFINES_FOR_EACH_PROCESS, [
 AC_MSG_CHECKING(for defined for_each_process)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_defines_for_each_process,
 [
 AC_TRY_COMPILE(
@@ -38,7 +38,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_DEFINES_PREV_TASK, [
 AC_MSG_CHECKING(for defined prev_task)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_defines_prev_task,
 [
 AC_TRY_COMPILE(
@@ -55,7 +55,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_INIT_MM, [
 AC_MSG_CHECKING(for exported init_mm)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_init_mm,
 [
 AC_TRY_COMPILE(
@@ -72,7 +72,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_KALLSYMS_ADDRESS, [
 AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_address,
 [
 AC_TRY_COMPILE(
@@ -89,7 +89,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_KALLSYMS_SYMBOL, [
 AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_symbol,
 [
 AC_TRY_COMPILE(
@@ -106,7 +106,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_SYS_CALL_TABLE, [
 AC_MSG_CHECKING(for exported sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_call_table,
 [
 AC_TRY_COMPILE(
@@ -123,7 +123,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_IA32_SYS_CALL_TABLE, [
 AC_MSG_CHECKING(for exported ia32_sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_ia32_sys_call_table,
 [
 AC_TRY_COMPILE(
@@ -140,7 +140,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_SYS_CHDIR, [
 AC_MSG_CHECKING(for exported sys_chdir)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_chdir,
 [
 AC_TRY_COMPILE(
@@ -157,7 +157,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_SYS_CLOSE, [
 AC_MSG_CHECKING(for exported sys_close)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_close,
 [
 AC_TRY_COMPILE(
@@ -174,7 +174,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_SYS_WAIT4, [
 AC_MSG_CHECKING(for exported sys_wait4)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_sys_wait4,
 [
 AC_TRY_COMPILE(
@@ -191,7 +191,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_EXPORTS_TASKLIST_LOCK, [
 AC_MSG_CHECKING(for exported tasklist_lock)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
 [
 AC_TRY_COMPILE(
@@ -208,7 +208,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_CDEV, [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
 [
 AC_TRY_COMPILE(
@@ -224,7 +224,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DEVICES, [
 AC_MSG_CHECKING(for i_devices in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
 [
 AC_TRY_COMPILE(
@@ -240,7 +240,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, [
 AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers, 
 [
 AC_TRY_COMPILE(
@@ -256,7 +256,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD, [
 AC_MSG_CHECKING(for i_mapping_overload in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mapping_overload, 
 [
 AC_TRY_COMPILE(
@@ -272,7 +272,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED, [
 AC_MSG_CHECKING(for i_mmap_shared in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mmap_shared,
 [
 AC_TRY_COMPILE(
@@ -288,7 +288,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_RECALC_SIGPENDING_ARG_TYPE,[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_recalc_sigpending_takes_void,
 [
 AC_TRY_COMPILE(
@@ -303,7 +303,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT, [
 AC_MSG_CHECKING(for parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_parent,
 [
 AC_TRY_COMPILE(
@@ -319,7 +319,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT, [
 AC_MSG_CHECKING(for real_parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_real_parent,
 [
 AC_TRY_COMPILE(
@@ -335,7 +335,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG, [
 AC_MSG_CHECKING(for sig in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sig,
 [
 AC_TRY_COMPILE(
@@ -350,7 +350,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, [
 AC_MSG_CHECKING(for sigmask_lock in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sigmask_lock,
 [
 AC_TRY_COMPILE(
@@ -365,7 +365,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND, [
 AC_MSG_CHECKING(for sighand in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sighand,
 [
 AC_TRY_COMPILE(

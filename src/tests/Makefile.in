@@ -1,18 +1,12 @@
-SYS_NAME=@AFS_SYSNAME@
-MKAFS_OSTYPE=@MKAFS_OSTYPE@
-TOP_SRCDIR=@TOP_SRCDIR@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 srcdir		= @srcdir@
-include ../config/Makefile.${SYS_NAME}
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 SHELL		= /bin/sh
 
-CFLAGS		= -I. -I${srcdir} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS=${DBG} ${OPTMZ} ${XLDFLAGS}
+CFLAGS		= ${DBG} ${OPTMZ} -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS=${XLDFLAGS}
 
-INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
+INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
 INCLIBS=-L${SRCDIR}/lib/afs -L${TOP_LIBDIR}
 
 LIBS=\
@@ -345,7 +339,7 @@ mmap-cat: mmap-cat.o $(EXTRA_OBJS)
 	$(CC) $(LDFLAGS) -o $@ mmap-cat.o $(EXTRA_OBJS) $(LIBS)
 
 run-tests: run-tests.in
-	(cd ../..; CONFIG_FILES=src/tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_SRCDIR@/../config.status)
+	(cd ../..; CONFIG_FILES=src/tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_OBJDIR@/config.status)
 	@chmod +x run-tests
 
 #.c.o:

@@ -23,13 +23,13 @@ extern afs_int32 uss_acl_SetAccess();
      *    Set the value of the given ACL.
      *
      * Args:
-     *	  a_access   : Ptr to the pathname & ACL to set.
-     *	  a_clear    : Should we clear out the ACL first?
-     *	  a_negative : Set the negative list?
+     *    a_access   : Ptr to the pathname & ACL to set.
+     *    a_clear    : Should we clear out the ACL first?
+     *    a_negative : Set the negative list?
      *
      * Returns:
-     *	  0 if everything went well,
-     *	  Lower-level code otherwise.
+     *    0 if everything went well,
+     *    Lower-level code otherwise.
      */
 
 extern afs_int32 uss_acl_SetDiskQuota();
@@ -38,12 +38,12 @@ extern afs_int32 uss_acl_SetDiskQuota();
      *    Set the initial disk quota for a user.
      *
      * Args:
-     *	  a_path : Pathname for volume mountpoint.
-     *	  a_q    : Quota value.
+     *    a_path : Pathname for volume mountpoint.
+     *    a_q    : Quota value.
      *
      * Returns:
-     *	  0 if everything went well,
-     *	  Lower-level code otherwise.
+     *    0 if everything went well,
+     *    Lower-level code otherwise.
      */
 
 extern afs_int32 uss_acl_CleanUp();
@@ -54,10 +54,10 @@ extern afs_int32 uss_acl_CleanUp();
      *    manipulation.
      *
      * Args:
-     *	  None.
+     *    None.
      *
      * Returns:
-     *	  0 (always)
+     *    0 (always)
      */
 
 #endif /* _USS_ACL_H_ */

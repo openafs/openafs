@@ -44,7 +44,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: mkdir2.c,v 1.1 2002/01/22 19:54:42 hartmans Exp $");
+RCSID("$Id: mkdir2.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
 #endif
 
 int
@@ -54,29 +54,29 @@ main(int argc, char *argv[])
     struct stat dot_sb, sb;
 
 
-    ret = mkdir ("foo", 0777);
+    ret = mkdir("foo", 0777);
     if (ret < 0)
-	err (1, "mkdir foo");
-    ret = lstat (".", &dot_sb);
+	err(1, "mkdir foo");
+    ret = lstat(".", &dot_sb);
     if (ret < 0)
-	err (1, "lstat .");
-    ret = lstat ("foo", &sb);
+	err(1, "lstat .");
+    ret = lstat("foo", &sb);
     if (ret < 0)
-	err (1, "lstat foo");
+	err(1, "lstat foo");
     if (sb.st_nlink != 2)
-	errx (1, "sb.st_link != 2");
-    ret = lstat ("foo/.", &sb);
+	errx(1, "sb.st_link != 2");
+    ret = lstat("foo/.", &sb);
     if (ret < 0)
-	err (1, "lstat foo/.");
+	err(1, "lstat foo/.");
     if (sb.st_nlink != 2)
-	errx (1, "sb.st_link != 2");
-    ret = lstat ("foo/..", &sb);
+	errx(1, "sb.st_link != 2");
+    ret = lstat("foo/..", &sb);
     if (ret < 0)
-	err (1, "lstat foo");
+	err(1, "lstat foo");
     if (sb.st_nlink != dot_sb.st_nlink)
-	errx (1, "sb.st_link != dot_sb.st_nlink");
-    ret = rmdir ("foo");
+	errx(1, "sb.st_link != dot_sb.st_nlink");
+    ret = rmdir("foo");
     if (ret < 0)
-	err (1, "rmdir foo");
+	err(1, "rmdir foo");
     return 0;
 }

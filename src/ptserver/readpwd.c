@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.6 2001/10/14 18:06:13 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ptserver/readpwd.c,v 1.8 2004/04/18 06:13:50 kolya Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -29,20 +30,21 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.6 2001/10/14
 #include <afs/afsutil.h>
 #include "ptclient.h"
 
-int osi_audit()
+int
+osi_audit()
 {
 /* OK, this REALLY sucks bigtime, but I can't tell who is calling
  * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
  * anyway.  It's gonna give somebody fits to debug, I know, I know.
  */
-return 0;
+    return 0;
 }
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-afs_int32 argc;
-char **argv;
+main(argc, argv)
+     afs_int32 argc;
+     char **argv;
 {
 
     register afs_int32 code;
@@ -59,48 +61,48 @@ char **argv;
     char *cellname;
 
     if (argc < 2) {
-	fprintf(stderr,"Usage: readpwd [-v] [-c cellname] passwdfile.\n");
+	fprintf(stderr, "Usage: readpwd [-v] [-c cellname] passwdfile.\n");
 	exit(1);
     }
     cellname = 0;
-    for (i = 1;i<argc;i++) {
-	if (!strcmp(argv[i],"-v"))
+    for (i = 1; i < argc; i++) {
+	if (!strcmp(argv[i], "-v"))
 	    verbose = 1;
 	else {
-	    if (!strcmp(argv[i],"-c")) {
+	    if (!strcmp(argv[i], "-c")) {
 		cellname = (char *)malloc(100);
-		strncpy(cellname,argv[++i],100);
-	    }
-	    else
-		strncpy(buf,argv[i],150);
+		strncpy(cellname, argv[++i], 100);
+	    } else
+		strncpy(buf, argv[i], 150);
 	}
     }
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
+    free(cellname);
     if (code) {
-	fprintf(stderr,"pr_Initialize failed, code %d.\n",code);
+	fprintf(stderr, "pr_Initialize failed, code %d.\n", code);
 	exit(1);
     }
 
 
-    if ((fp= fopen(buf,"r")) == NULL) {
-	fprintf(stderr,"Couldn't open %s.\n",argv[1]);
+    if ((fp = fopen(buf, "r")) == NULL) {
+	fprintf(stderr, "Couldn't open %s.\n", argv[1]);
 	exit(2);
     }
-    while ((tmp = fgets(buf,150,fp)) != NULL) {
+    while ((tmp = fgets(buf, 150, fp)) != NULL) {
 	memset(name, 0, PR_MAXNAMELEN);
 	memset(uid, 0, 8);
 	ptr = strchr(buf, ':');
-	strncpy(name,buf,ptr-buf);
+	strncpy(name, buf, ptr - buf);
 	aptr = strchr(++ptr, ':');
 	ptr = strchr(++aptr, ':');
-	strncpy(uid,aptr,ptr-aptr);
+	strncpy(uid, aptr, ptr - aptr);
 	id = atoi(uid);
 	if (verbose)
-	    printf("Adding %s with id %d.\n",name,id);
-	code = pr_CreateUser(name,&id);
+	    printf("Adding %s with id %d.\n", name, id);
+	code = pr_CreateUser(name, &id);
 	if (code) {
-	    fprintf(stderr,"Failed to add user %s with id %d!\n",name,id);
-	    fprintf(stderr,"%s (%d).\n",pr_ErrorMsg(code),code);
+	    fprintf(stderr, "Failed to add user %s with id %d!\n", name, id);
+	    fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);
 	}
     }
 }

@@ -34,10 +34,9 @@
  * if _SUN is defined, this is in vnode.h (at least today... who knows where
  * they will hide it tomorrow)
  */
-enum vcexcl {NONEXCL, EXCL};	/* (non)exclusive create */
+enum vcexcl { NONEXCL, EXCL };	/* (non)exclusive create */
 #endif
 
-struct buf	*getblk(), *geteblk(), *breada(), *bread();
+struct buf *getblk(), *geteblk(), *breada(), *bread();
 #define	b_actf		av_forw
 #define	dbtob(db)	((unsigned)(db) << 9)	/* (db * 512) */
-

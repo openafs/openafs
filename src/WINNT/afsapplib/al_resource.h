@@ -7,24 +7,24 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define IDC_COVERDLG                    0
-#define IDS_BADCREDS_DESC_GENERAL       5001
-#define IDS_BADCREDS_DESC_EXPIRED       5002
-#define IDS_BADCREDS_DESC_BADCHOICE     5003
-#define IDS_BADCREDS_DESC2              5004
-#define IDS_BADCREDS_DESC3              5005
-#define IDS_BADCREDS_DESC3_ADM          5006
-#define IDS_BADCREDS_DESC_DESTROYED     5007
-#define IDS_ERROR_BAD_CREDENTIALS       5008
-#define IDS_BROWSE_WAITING              5009
-#define IDS_BROWSE_BADCELL_TITLE        5010
-#define IDS_BROWSE_BADCELL_DESC         5011
-#define IDS_CREDS_NONE                  5012
-#define IDS_CREDS_VALID                 5013
-#define IDS_CREDS_EXPIRED               5014
+#define IDS_BADCREDS_DESC_GENERAL       800
+#define IDS_BADCREDS_DESC_EXPIRED       801
+#define IDS_BADCREDS_DESC_BADCHOICE     802
+#define IDS_BADCREDS_DESC2              803
+#define IDS_BADCREDS_DESC3              804
+#define IDS_BADCREDS_DESC3_ADM          805
+#define IDS_BADCREDS_DESC_DESTROYED     806
+#define IDS_ERROR_BAD_CREDENTIALS       807
+#define IDS_BROWSE_WAITING              808
+#define IDS_BROWSE_BADCELL_TITLE        809
+#define IDS_BROWSE_BADCELL_DESC         810
+#define IDS_CREDS_NONE                  811
+#define IDS_CREDS_VALID                 812
+#define IDS_CREDS_EXPIRED               813
 #define IDC_OPENCELL_CELL               11000
 #define IDC_ERROR_STATUS                11001
 #define IDC_ERROR_DESC                  11002
+#define IDC_COVERDLG                    11003
 #define IDC_OPENCELL_ID                 11004
 #define IDC_OPENCELL_PASSWORD           11005
 #define IDC_CREDS_CURRENTID             11006

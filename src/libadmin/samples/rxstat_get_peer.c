@@ -16,12 +16,22 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxstat_get_peer.c,v 1.1.1.5 2004/01/10 20:56:47 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/samples/rxstat_get_peer.c,v 1.7 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <pthread.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
@@ -49,23 +59,20 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <ubik.h>
 #include <ubik_int.h>
 #ifndef AFS_NT40_ENV
-#include <arpa/inet.h>	/* for inet_ntoa() */
+#include <arpa/inet.h>		/* for inet_ntoa() */
 #endif
 
 extern int RXSTATS_RetrievePeerRPCStats();
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxstat_get_peer <cell> <host> <port>\n");
+    fprintf(stderr, "Usage: rxstat_get_peer <cell> <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -81,13 +88,9 @@ void ParseArgs(
 	Usage();
 }
 
-void GetPrintStrings(
-    afs_RPCStats_p statp,
-    char *ifName,
-    char *ifRole,
-    char *hostName,
-    const char ***funcList,
-    int *funcListLen)
+void
+GetPrintStrings(afs_RPCStats_p statp, char *ifName, char *ifRole,
+		char *hostName, const char ***funcList, int *funcListLen)
 {
     struct in_addr ina;
 
@@ -100,68 +103,68 @@ void GetPrintStrings(
 	strcpy(ifRole, "server");
     }
 
-    switch(statp->s.stats_v1.interfaceId) {
-      case RXSTATS_STATINDEX:
+    switch (statp->s.stats_v1.interfaceId) {
+    case RXSTATS_STATINDEX:
 	strcpy(ifName, "rxstats interface");
 	*funcList = RXSTATS_function_names;
 	*funcListLen = RXSTATS_NO_OF_STAT_FUNCS;
 	break;
-      case RXAFS_STATINDEX:
+    case RXAFS_STATINDEX:
 	strcpy(ifName, "fileserver interface");
 	*funcList = RXAFS_function_names;
 	*funcListLen = RXAFS_NO_OF_STAT_FUNCS;
 	break;
-      case RXAFSCB_STATINDEX:
+    case RXAFSCB_STATINDEX:
 	strcpy(ifName, "callback interface");
 	*funcList = RXAFSCB_function_names;
 	*funcListLen = RXAFSCB_NO_OF_STAT_FUNCS;
 	break;
-      case PR_STATINDEX:
+    case PR_STATINDEX:
 	strcpy(ifName, "ptserver interface");
 	*funcList = PR_function_names;
 	*funcListLen = PR_NO_OF_STAT_FUNCS;
 	break;
-      case DISK_STATINDEX:
+    case DISK_STATINDEX:
 	strcpy(ifName, "ubik disk interface");
 	*funcList = DISK_function_names;
 	*funcListLen = DISK_NO_OF_STAT_FUNCS;
 	break;
-      case VOTE_STATINDEX:
+    case VOTE_STATINDEX:
 	strcpy(ifName, "ubik vote interface");
 	*funcList = VOTE_function_names;
 	*funcListLen = VOTE_NO_OF_STAT_FUNCS;
 	break;
-      case VL_STATINDEX:
+    case VL_STATINDEX:
 	strcpy(ifName, "volserver interface");
 	*funcList = VL_function_names;
 	*funcListLen = VL_NO_OF_STAT_FUNCS;
 	break;
-      case AFSVolSTATINDEX:
+    case AFSVolSTATINDEX:
 	strcpy(ifName, "volserver interface");
 	*funcList = AFSVolfunction_names;
 	*funcListLen = AFSVolNO_OF_STAT_FUNCS;
 	break;
-      case BOZO_STATINDEX:
+    case BOZO_STATINDEX:
 	strcpy(ifName, "bosserver interface");
 	*funcList = BOZO_function_names;
 	*funcListLen = BOZO_NO_OF_STAT_FUNCS;
 	break;
-      case KAA_STATINDEX:
+    case KAA_STATINDEX:
 	strcpy(ifName, "KAA interface");
 	*funcList = KAA_function_names;
 	*funcListLen = KAA_NO_OF_STAT_FUNCS;
 	break;
-      case KAM_STATINDEX:
+    case KAM_STATINDEX:
 	strcpy(ifName, "KAM interface");
 	*funcList = KAM_function_names;
 	*funcListLen = KAM_NO_OF_STAT_FUNCS;
 	break;
-      case KAT_STATINDEX:
+    case KAT_STATINDEX:
 	strcpy(ifName, "KAT interface");
 	*funcList = KAT_function_names;
 	*funcListLen = KAT_NO_OF_STAT_FUNCS;
 	break;
-      default:
+    default:
 	sprintf(ifName, "interface 0x%x", statp->s.stats_v1.interfaceId);
 	*funcList = NULL;
 	*funcListLen = 0;
@@ -169,7 +172,8 @@ void GetPrintStrings(
     }
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -200,14 +204,15 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn, &st);
+    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
+				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
 	exit(1);
     }
 
-    rc = util_RPCStatsGetBegin(conn, RXSTATS_RetrievePeerRPCStats,
-			       &iterator, &st);
+    rc = util_RPCStatsGetBegin(conn, RXSTATS_RetrievePeerRPCStats, &iterator,
+			       &st);
     if (!rc) {
 	fprintf(stderr, "util_RPCStatsGetBegin, status %d\n", st);
 	exit(1);
@@ -217,11 +222,11 @@ int main(int argc, char *argv[])
 	index = stats.s.stats_v1.func_index;
 
 	if (index == 0) {
-	    GetPrintStrings(&stats, ifName, role, hostName,
-			    &funcList, &funcListLen);
+	    GetPrintStrings(&stats, ifName, role, hostName, &funcList,
+			    &funcListLen);
 	    printf("\nPeer stats for %s accessed as a %s\n"
-	           "    host %s, port %d\n\n",
-		   ifName, role, hostName, stats.s.stats_v1.remote_port);
+		   "    host %s, port %d\n\n", ifName, role, hostName,
+		   stats.s.stats_v1.remote_port);
 	}
 
 	if (index >= funcListLen) {
@@ -232,32 +237,32 @@ int main(int argc, char *argv[])
 
 	if (!hiszero(stats.s.stats_v1.invocations)) {
 	    printf("\tinvoc (%u.%u) bytes_sent (%u.%u) bytes_rcvd (%u.%u)\n",
-                   hgethi(stats.s.stats_v1.invocations),
-                   hgetlo(stats.s.stats_v1.invocations),
-                   hgethi(stats.s.stats_v1.bytes_sent),
-                   hgetlo(stats.s.stats_v1.bytes_sent),
-                   hgethi(stats.s.stats_v1.bytes_rcvd),
-                   hgetlo(stats.s.stats_v1.bytes_rcvd));
+		   hgethi(stats.s.stats_v1.invocations),
+		   hgetlo(stats.s.stats_v1.invocations),
+		   hgethi(stats.s.stats_v1.bytes_sent),
+		   hgetlo(stats.s.stats_v1.bytes_sent),
+		   hgethi(stats.s.stats_v1.bytes_rcvd),
+		   hgetlo(stats.s.stats_v1.bytes_rcvd));
 	    printf("\tqsum %d.%06d qsqr %d.%06d"
-                   " qmin %d.%06d qmax %d.%06d\n",
-                   stats.s.stats_v1.queue_time_sum.sec,
-                   stats.s.stats_v1.queue_time_sum.usec,
-                   stats.s.stats_v1.queue_time_sum_sqr.sec,
-                   stats.s.stats_v1.queue_time_sum_sqr.usec,
-                   stats.s.stats_v1.queue_time_min.sec,
-                   stats.s.stats_v1.queue_time_min.usec,
-                   stats.s.stats_v1.queue_time_max.sec,
-                   stats.s.stats_v1.queue_time_max.usec);
+		   " qmin %d.%06d qmax %d.%06d\n",
+		   stats.s.stats_v1.queue_time_sum.sec,
+		   stats.s.stats_v1.queue_time_sum.usec,
+		   stats.s.stats_v1.queue_time_sum_sqr.sec,
+		   stats.s.stats_v1.queue_time_sum_sqr.usec,
+		   stats.s.stats_v1.queue_time_min.sec,
+		   stats.s.stats_v1.queue_time_min.usec,
+		   stats.s.stats_v1.queue_time_max.sec,
+		   stats.s.stats_v1.queue_time_max.usec);
 	    printf("\txsum %d.%06d xsqr %d.%06d"
-	           " xmin %d.%06d xmax %d.%06d\n",
-                   stats.s.stats_v1.execution_time_sum.sec,
-                   stats.s.stats_v1.execution_time_sum.usec,
-                   stats.s.stats_v1.execution_time_sum_sqr.sec,
-                   stats.s.stats_v1.execution_time_sum_sqr.usec,
-                   stats.s.stats_v1.execution_time_min.sec,
-                   stats.s.stats_v1.execution_time_min.usec,
-                   stats.s.stats_v1.execution_time_max.sec,
-                   stats.s.stats_v1.execution_time_max.usec);
+		   " xmin %d.%06d xmax %d.%06d\n",
+		   stats.s.stats_v1.execution_time_sum.sec,
+		   stats.s.stats_v1.execution_time_sum.usec,
+		   stats.s.stats_v1.execution_time_sum_sqr.sec,
+		   stats.s.stats_v1.execution_time_sum_sqr.usec,
+		   stats.s.stats_v1.execution_time_min.sec,
+		   stats.s.stats_v1.execution_time_min.usec,
+		   stats.s.stats_v1.execution_time_max.sec,
+		   stats.s.stats_v1.execution_time_max.usec);
 	} else {
 	    printf("\tNever invoked\n");
 	}

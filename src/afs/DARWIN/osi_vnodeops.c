@@ -4,11 +4,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.10 2004/01/10 20:52:51 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.16 2004/04/05 06:21:33 shadow Exp $");
 
-#include <afs/sysincludes.h>            /* Standard vendor system headers */
-#include <afs/afsincludes.h>            /* Afs-based standard headers */
-#include <afs/afs_stats.h>              /* statistics */
+#include <afs/sysincludes.h>	/* Standard vendor system headers */
+#include <afsincludes.h>	/* Afs-based standard headers */
+#include <afs/afs_stats.h>	/* statistics */
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/ubc.h>
@@ -69,65 +70,65 @@ int afs_vop_cmap __P((struct vop_cmap_args *));
 #define afs_vop_reallocblks afs_vop_opnotsupp
 
 /* Global vfs data structures for AFS. */
-int (**afs_vnodeop_p)();
+int (**afs_vnodeop_p) ();
 struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
-	{ &vop_default_desc, vn_default_error },
-	{ &vop_lookup_desc, afs_vop_lookup },          /* lookup */
-	{ &vop_create_desc, afs_vop_create },          /* create */
-	{ &vop_mknod_desc, afs_vop_mknod },            /* mknod */
-	{ &vop_open_desc, afs_vop_open },              /* open */
-	{ &vop_close_desc, afs_vop_close },            /* close */
-	{ &vop_access_desc, afs_vop_access },          /* access */
-	{ &vop_getattr_desc, afs_vop_getattr },        /* getattr */
-	{ &vop_setattr_desc, afs_vop_setattr },        /* setattr */
-	{ &vop_read_desc, afs_vop_read },              /* read */
-	{ &vop_write_desc, afs_vop_write },            /* write */
-	{ &vop_pagein_desc, afs_vop_pagein },              /* read */
-	{ &vop_pageout_desc, afs_vop_pageout },            /* write */
-	{ &vop_ioctl_desc, afs_vop_ioctl }, /* XXX ioctl */
-	{ &vop_select_desc, afs_vop_select },          /* select */
-	{ &vop_mmap_desc, afs_vop_mmap },              /* mmap */
-	{ &vop_fsync_desc, afs_vop_fsync },            /* fsync */
-	{ &vop_seek_desc, afs_vop_seek },              /* seek */
-	{ &vop_remove_desc, afs_vop_remove },          /* remove */
-	{ &vop_link_desc, afs_vop_link },              /* link */
-	{ &vop_rename_desc, afs_vop_rename },          /* rename */
-	{ &vop_mkdir_desc, afs_vop_mkdir },            /* mkdir */
-	{ &vop_rmdir_desc, afs_vop_rmdir },            /* rmdir */
-	{ &vop_symlink_desc, afs_vop_symlink },        /* symlink */
-	{ &vop_readdir_desc, afs_vop_readdir },        /* readdir */
-	{ &vop_readlink_desc, afs_vop_readlink },      /* readlink */
+    {&vop_default_desc, vn_default_error},
+    {&vop_lookup_desc, afs_vop_lookup},	/* lookup */
+    {&vop_create_desc, afs_vop_create},	/* create */
+    {&vop_mknod_desc, afs_vop_mknod},	/* mknod */
+    {&vop_open_desc, afs_vop_open},	/* open */
+    {&vop_close_desc, afs_vop_close},	/* close */
+    {&vop_access_desc, afs_vop_access},	/* access */
+    {&vop_getattr_desc, afs_vop_getattr},	/* getattr */
+    {&vop_setattr_desc, afs_vop_setattr},	/* setattr */
+    {&vop_read_desc, afs_vop_read},	/* read */
+    {&vop_write_desc, afs_vop_write},	/* write */
+    {&vop_pagein_desc, afs_vop_pagein},	/* read */
+    {&vop_pageout_desc, afs_vop_pageout},	/* write */
+    {&vop_ioctl_desc, afs_vop_ioctl},	/* XXX ioctl */
+    {&vop_select_desc, afs_vop_select},	/* select */
+    {&vop_mmap_desc, afs_vop_mmap},	/* mmap */
+    {&vop_fsync_desc, afs_vop_fsync},	/* fsync */
+    {&vop_seek_desc, afs_vop_seek},	/* seek */
+    {&vop_remove_desc, afs_vop_remove},	/* remove */
+    {&vop_link_desc, afs_vop_link},	/* link */
+    {&vop_rename_desc, afs_vop_rename},	/* rename */
+    {&vop_mkdir_desc, afs_vop_mkdir},	/* mkdir */
+    {&vop_rmdir_desc, afs_vop_rmdir},	/* rmdir */
+    {&vop_symlink_desc, afs_vop_symlink},	/* symlink */
+    {&vop_readdir_desc, afs_vop_readdir},	/* readdir */
+    {&vop_readlink_desc, afs_vop_readlink},	/* readlink */
 #if defined(AFS_DARWIN70_ENV)
-	{ &vop_abortop_desc, nop_abortop },             /* abortop */
+    { &vop_abortop_desc, nop_abortop },             /* abortop */
 #else /* ! defined(AFS_DARWIN70_ENV) */
-	/* Yes, we use the ufs_abortop call.  It just releases the namei
-	   buffer stuff */
-	{ &vop_abortop_desc, ufs_abortop },             /* abortop */
+    /* Yes, we use the ufs_abortop call.  It just releases the namei
+     * buffer stuff */
+    {&vop_abortop_desc, ufs_abortop},	/* abortop */
 #endif /* defined(AFS_DARWIN70_ENV) */
-	{ &vop_inactive_desc, afs_vop_inactive },      /* inactive */
-	{ &vop_reclaim_desc, afs_vop_reclaim },        /* reclaim */
-	{ &vop_lock_desc, afs_vop_lock },              /* lock */
-	{ &vop_unlock_desc, afs_vop_unlock },          /* unlock */
-	{ &vop_bmap_desc, afs_vop_bmap },              /* bmap */
-	{ &vop_strategy_desc, afs_vop_strategy },      /* strategy */
-	{ &vop_print_desc, afs_vop_print },            /* print */
-	{ &vop_islocked_desc, afs_vop_islocked },      /* islocked */
-	{ &vop_pathconf_desc, afs_vop_pathconf },      /* pathconf */
-	{ &vop_advlock_desc, afs_vop_advlock },        /* advlock */
-	{ &vop_blkatoff_desc, afs_vop_blkatoff },      /* blkatoff */
-	{ &vop_valloc_desc, afs_vop_valloc },          /* valloc */
-	{ &vop_reallocblks_desc, afs_vop_reallocblks }, /* reallocblks */
-	{ &vop_vfree_desc, afs_vop_vfree },            /* vfree */
-	{ &vop_truncate_desc, afs_vop_truncate },      /* truncate */
-	{ &vop_update_desc, afs_vop_update },          /* update */
-	{ &vop_blktooff_desc, afs_vop_blktooff },           /* blktooff */
-	{ &vop_offtoblk_desc, afs_vop_offtoblk },           /* offtoblk */
-	{ &vop_cmap_desc, afs_vop_cmap },           /* cmap */
-	{ &vop_bwrite_desc, vn_bwrite },
-	{ (struct vnodeop_desc*)NULL, (int(*)())NULL }
+    {&vop_inactive_desc, afs_vop_inactive},	/* inactive */
+    {&vop_reclaim_desc, afs_vop_reclaim},	/* reclaim */
+    {&vop_lock_desc, afs_vop_lock},	/* lock */
+    {&vop_unlock_desc, afs_vop_unlock},	/* unlock */
+    {&vop_bmap_desc, afs_vop_bmap},	/* bmap */
+    {&vop_strategy_desc, afs_vop_strategy},	/* strategy */
+    {&vop_print_desc, afs_vop_print},	/* print */
+    {&vop_islocked_desc, afs_vop_islocked},	/* islocked */
+    {&vop_pathconf_desc, afs_vop_pathconf},	/* pathconf */
+    {&vop_advlock_desc, afs_vop_advlock},	/* advlock */
+    {&vop_blkatoff_desc, afs_vop_blkatoff},	/* blkatoff */
+    {&vop_valloc_desc, afs_vop_valloc},	/* valloc */
+    {&vop_reallocblks_desc, afs_vop_reallocblks},	/* reallocblks */
+    {&vop_vfree_desc, afs_vop_vfree},	/* vfree */
+    {&vop_truncate_desc, afs_vop_truncate},	/* truncate */
+    {&vop_update_desc, afs_vop_update},	/* update */
+    {&vop_blktooff_desc, afs_vop_blktooff},	/* blktooff */
+    {&vop_offtoblk_desc, afs_vop_offtoblk},	/* offtoblk */
+    {&vop_cmap_desc, afs_vop_cmap},	/* cmap */
+    {&vop_bwrite_desc, vn_bwrite},
+    {(struct vnodeop_desc *)NULL, (int (*)())NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
-	{ &afs_vnodeop_p, afs_vnodeop_entries };
+    { &afs_vnodeop_p, afs_vnodeop_entries };
 
 #define GETNAME()       \
     struct componentname *cnp = ap->a_cnp; \
@@ -137,29 +138,29 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
     name[cnp->cn_namelen] = '\0'
 
 #define DROPNAME() FREE(name, M_TEMP)
-	
+
 
 
 int
 afs_vop_lookup(ap)
-struct vop_lookup_args /* {
-	                  struct vnodeop_desc * a_desc;
-	                  struct vnode *a_dvp;
-	                  struct vnode **a_vpp;
-	                  struct componentname *a_cnp;
-	                  } */ *ap;
+     struct vop_lookup_args	/* {
+				 * struct vnodeop_desc * a_desc;
+				 * struct vnode *a_dvp;
+				 * struct vnode **a_vpp;
+				 * struct componentname *a_cnp;
+				 * } */ *ap;
 {
     int error;
     struct vcache *vcp;
     struct vnode *vp, *dvp;
     register int flags = ap->a_cnp->cn_flags;
-    int lockparent;                     /* 1 => lockparent flag is set */
-    int wantparent;                     /* 1 => wantparent or lockparent flag */
+    int lockparent;		/* 1 => lockparent flag is set */
+    int wantparent;		/* 1 => wantparent or lockparent flag */
     struct proc *p;
     GETNAME();
-    p=cnp->cn_proc;
+    p = cnp->cn_proc;
     lockparent = flags & LOCKPARENT;
-    wantparent = flags & (LOCKPARENT|WANTPARENT);
+    wantparent = flags & (LOCKPARENT | WANTPARENT);
 
     if (ap->a_dvp->v_type != VDIR) {
 	*ap->a_vpp = 0;
@@ -167,16 +168,16 @@ struct vop_lookup_args /* {
 	return ENOTDIR;
     }
     dvp = ap->a_dvp;
-    if (flags & ISDOTDOT) 
-       VOP_UNLOCK(dvp, 0, p);
+    if (flags & ISDOTDOT)
+	VOP_UNLOCK(dvp, 0, p);
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
     if (error) {
-        if (flags & ISDOTDOT) 
-           VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
-	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME) &&
-	    (flags & ISLASTCN) && error == ENOENT)
+	if (flags & ISDOTDOT)
+	    VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
+	    && (flags & ISLASTCN) && error == ENOENT)
 	    error = EJUSTRETURN;
 	if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))
 	    cnp->cn_flags |= SAVENAME;
@@ -184,35 +185,35 @@ struct vop_lookup_args /* {
 	*ap->a_vpp = 0;
 	return (error);
     }
-    vp = AFSTOV(vcp);  /* always get a node if no error */
+    vp = AFSTOV(vcp);		/* always get a node if no error */
     vp->v_vfsp = dvp->v_vfsp;
 
     /* The parent directory comes in locked.  We unlock it on return
-       unless the caller wants it left locked.
-       we also always return the vnode locked. */
+     * unless the caller wants it left locked.
+     * we also always return the vnode locked. */
 
     if (flags & ISDOTDOT) {
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-        /* always return the child locked */
-        if (lockparent && (flags & ISLASTCN) &&
-           (error = vn_lock(dvp, LK_EXCLUSIVE, p))) {
-            vput(vp);
-            DROPNAME();
-            return (error);
-        }
+	/* always return the child locked */
+	if (lockparent && (flags & ISLASTCN)
+	    && (error = vn_lock(dvp, LK_EXCLUSIVE, p))) {
+	    vput(vp);
+	    DROPNAME();
+	    return (error);
+	}
     } else if (vp == dvp) {
 	/* they're the same; afs_lookup() already ref'ed the leaf.
-	   It came in locked, so we don't need to ref OR lock it */
+	 * It came in locked, so we don't need to ref OR lock it */
     } else {
 	if (!lockparent || !(flags & ISLASTCN))
-	    VOP_UNLOCK(dvp, 0, p);         /* done with parent. */
+	    VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-        /* always return the child locked */
+	/* always return the child locked */
     }
     *ap->a_vpp = vp;
 
-    if ((cnp->cn_nameiop == RENAME && wantparent && (flags & ISLASTCN) ||
-	 (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))))
+    if ((cnp->cn_nameiop == RENAME && wantparent && (flags & ISLASTCN)
+	 || (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))))
 	cnp->cn_flags |= SAVENAME;
 
     DROPNAME();
@@ -221,42 +222,41 @@ struct vop_lookup_args /* {
 
 int
 afs_vop_create(ap)
-	struct vop_create_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode **a_vpp;
-	        struct componentname *a_cnp;
-	        struct vattr *a_vap;
-	} */ *ap;
+     struct vop_create_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode **a_vpp;
+				 * struct componentname *a_cnp;
+				 * struct vattr *a_vap;
+				 * } */ *ap;
 {
     int error = 0;
     struct vcache *vcp;
     register struct vnode *dvp = ap->a_dvp;
     struct proc *p;
     GETNAME();
-    p=cnp->cn_proc;
+    p = cnp->cn_proc;
 
     /* vnode layer handles excl/nonexcl */
     AFS_GLOCK();
-    error = afs_create(VTOAFS(dvp), name, ap->a_vap, NONEXCL,
-	               ap->a_vap->va_mode, &vcp,
-	               cnp->cn_cred);
+    error =
+	afs_create(VTOAFS(dvp), name, ap->a_vap, NONEXCL, ap->a_vap->va_mode,
+		   &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
     if (error) {
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
 	DROPNAME();
-	return(error);
+	return (error);
     }
 
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
 	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
-	vn_lock(*ap->a_vpp, LK_EXCLUSIVE| LK_RETRY, p);
-        if (UBCINFOMISSING(*ap->a_vpp) ||
-            UBCINFORECLAIMED(*ap->a_vpp))
-                ubc_info_init(*ap->a_vpp);
-    }
-    else *ap->a_vpp = 0;
+	vn_lock(*ap->a_vpp, LK_EXCLUSIVE | LK_RETRY, p);
+	if (UBCINFOMISSING(*ap->a_vpp) || UBCINFORECLAIMED(*ap->a_vpp))
+	    ubc_info_init(*ap->a_vpp);
+    } else
+	*ap->a_vpp = 0;
 
     if ((cnp->cn_flags & SAVESTART) == 0)
 	FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
@@ -267,26 +267,26 @@ afs_vop_create(ap)
 
 int
 afs_vop_mknod(ap)
-	struct vop_mknod_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode **a_vpp;
-	        struct componentname *a_cnp;
-	        struct vattr *a_vap;
-	} */ *ap;
+     struct vop_mknod_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode **a_vpp;
+				 * struct componentname *a_cnp;
+				 * struct vattr *a_vap;
+				 * } */ *ap;
 {
     FREE_ZONE(ap->a_cnp->cn_pnbuf, ap->a_cnp->cn_pnlen, M_NAMEI);
     vput(ap->a_dvp);
-    return(ENODEV);
+    return (ENODEV);
 }
 
 int
 afs_vop_open(ap)
-	struct vop_open_args /* {
-	        struct vnode *a_vp;
-	        int  a_mode;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_open_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_mode;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int error;
     struct vnode *vp = ap->a_vp;
@@ -325,32 +325,32 @@ afs_vop_open(ap)
 
 int
 afs_vop_close(ap)
-	struct vop_close_args /* {
-	        struct vnode *a_vp;
-	        int  a_fflag;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_close_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_fflag;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int code;
-    struct vcache *avc=ap->a_vp;
+    struct vcache *avc = ap->a_vp;
     AFS_GLOCK();
-    if (ap->a_cred) 
-        code=afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
+    if (ap->a_cred)
+	code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
     else
-        code=afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
+	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
     if (UBCINFOEXISTS(ap->a_vp) && ap->a_vp->v_ubcinfo->ui_refcount < 2) {
-      ubc_hold(ap->a_vp);
-      if (ap->a_vp->v_ubcinfo->ui_refcount < 2) {
-         printf("afs: Imminent ui_refcount panic\n");
-       } else {
-         printf("afs: WARNING: ui_refcount panic averted\n");
-       }
+	ubc_hold(ap->a_vp);
+	if (ap->a_vp->v_ubcinfo->ui_refcount < 2) {
+	    printf("afs: Imminent ui_refcount panic\n");
+	} else {
+	    printf("afs: WARNING: ui_refcount panic averted\n");
+	}
     }
 #endif
 
@@ -359,126 +359,130 @@ afs_vop_close(ap)
 
 int
 afs_vop_access(ap)
-	struct vop_access_args /* {
-	        struct vnode *a_vp;
-	        int  a_mode;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_access_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_mode;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int code;
     AFS_GLOCK();
-    code=afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
+    code = afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }
+
 int
 afs_vop_getattr(ap)
-	struct vop_getattr_args /* {
-	        struct vnode *a_vp;
-	        struct vattr *a_vap;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_getattr_args	/* {
+				 * struct vnode *a_vp;
+				 * struct vattr *a_vap;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int code;
     AFS_GLOCK();
-    code=afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
+    code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }
+
 int
 afs_vop_setattr(ap)
-	struct vop_setattr_args /* {
-	        struct vnode *a_vp;
-	        struct vattr *a_vap;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_setattr_args	/* {
+				 * struct vnode *a_vp;
+				 * struct vattr *a_vap;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int code;
     AFS_GLOCK();
-    code=afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
+    code = afs_setattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
     return code;
 }
+
 int
 afs_vop_read(ap)
-	struct vop_read_args /* {
-	        struct vnode *a_vp;
-	        struct uio *a_uio;
-	        int a_ioflag;
-	        struct ucred *a_cred;
-	} */ *ap;
+     struct vop_read_args	/* {
+				 * struct vnode *a_vp;
+				 * struct uio *a_uio;
+				 * int a_ioflag;
+				 * struct ucred *a_cred;
+				 * } */ *ap;
 {
     int code;
-    struct vcache *avc=VTOAFS(ap->a_vp);
+    struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
-    code=afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
+    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
+
 int
 afs_vop_pagein(ap)
-	struct vop_pagein_args /* {
-	        struct vnode *a_vp;
-        	upl_t a_pl;
-        	vm_offset_t a_pl_offset;
-        	off_t a_f_offset;
-        	size_t a_size;
-        	struct ucred *a_cred;
-        	int a_flags;
-	} */ *ap;
+     struct vop_pagein_args	/* {
+				 * struct vnode *a_vp;
+				 * upl_t a_pl;
+				 * vm_offset_t a_pl_offset;
+				 * off_t a_f_offset;
+				 * size_t a_size;
+				 * struct ucred *a_cred;
+				 * int a_flags;
+				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
-    size_t size= ap->a_size;
+    size_t size = ap->a_size;
     off_t f_offset = ap->a_f_offset;
     vm_offset_t pl_offset = ap->a_pl_offset;
-    int flags  = ap->a_flags;
+    int flags = ap->a_flags;
     struct ucred *cred;
     vm_offset_t ioaddr;
-    struct uio      auio;
-    struct iovec    aiov;
-    struct uio * uio = &auio;
+    struct uio auio;
+    struct iovec aiov;
+    struct uio *uio = &auio;
     int nocommit = flags & UPL_NOCOMMIT;
 
     int code;
-    struct vcache *tvc=VTOAFS(vp);
+    struct vcache *tvc = VTOAFS(vp);
 
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC
-        panic("afs_vop_pagein: invalid vp");
+	panic("afs_vop_pagein: invalid vp");
 #endif /* DIAGNOSTIC */
-        return (EPERM);
+	return (EPERM);
     }
 
     UBCINFOCHECK("afs_vop_pagein", vp);
-    if(pl == (upl_t)NULL) {
-            panic("afs_vop_pagein: no upl");
+    if (pl == (upl_t) NULL) {
+	panic("afs_vop_pagein: no upl");
     }
 
     cred = ubc_getcred(vp);
     if (cred == NOCRED)
-        cred = ap->a_cred;
+	cred = ap->a_cred;
 
     if (size == 0) {
-            if (!nocommit)
-                    kernel_upl_abort_range(pl, pl_offset, size, 
-                            UPL_ABORT_ERROR |  UPL_ABORT_FREE_ON_EMPTY);
-            return (0);
+	if (!nocommit)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	return (0);
     }
     if (f_offset < 0) {
-            if (!nocommit)
-                    kernel_upl_abort_range(pl, pl_offset, size, 
-                            UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
-            return (EINVAL);
+	if (!nocommit)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	return (EINVAL);
     }
     if (f_offset & PAGE_MASK)
-            panic("afs_vop_pagein: offset not page aligned");
+	panic("afs_vop_pagein: offset not page aligned");
 
     auio.uio_iov = &aiov;
     auio.uio_iovcnt = 1;
@@ -489,15 +493,15 @@ afs_vop_pagein(ap)
     kernel_upl_map(kernel_map, pl, &ioaddr);
     ioaddr += pl_offset;
     auio.uio_resid = aiov.iov_len = size;
-    aiov.iov_base = (caddr_t)ioaddr;
+    aiov.iov_base = (caddr_t) ioaddr;
     AFS_GLOCK();
     afs_BozonLock(&tvc->pvnLock, tvc);
-    osi_FlushPages(tvc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
-    code=afs_read(tvc, uio, cred, 0, 0, 0);
+    osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+    code = afs_read(tvc, uio, cred, 0, 0, 0);
     if (code == 0) {
-      ObtainWriteLock(&tvc->lock, 2);
-      tvc->states |= CMAPPED;
-      ReleaseWriteLock(&tvc->lock);
+	ObtainWriteLock(&tvc->lock, 2);
+	tvc->states |= CMAPPED;
+	ReleaseWriteLock(&tvc->lock);
     }
     afs_BozonUnlock(&tvc->pvnLock, tvc);
     AFS_GUNLOCK();
@@ -508,37 +512,41 @@ afs_vop_pagein(ap)
 
     kernel_upl_unmap(kernel_map, pl);
     if (!nocommit) {
-      if (code)
-	 kernel_upl_abort_range(pl, pl_offset, size, 
-			 UPL_ABORT_ERROR |  UPL_ABORT_FREE_ON_EMPTY);
-      else
-         kernel_upl_commit_range(pl, pl_offset, size,
-                          UPL_COMMIT_CLEAR_DIRTY | UPL_COMMIT_FREE_ON_EMPTY,
-                          UPL_GET_INTERNAL_PAGE_LIST(pl), MAX_UPL_TRANSFER);
+	if (code)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	else
+	    kernel_upl_commit_range(pl, pl_offset, size,
+				    UPL_COMMIT_CLEAR_DIRTY |
+				    UPL_COMMIT_FREE_ON_EMPTY,
+				    UPL_GET_INTERNAL_PAGE_LIST(pl),
+				    MAX_UPL_TRANSFER);
     }
     return code;
 }
 
 int
 afs_vop_write(ap)
-	struct vop_write_args /* {
-	        struct vnode *a_vp;
-	        struct uio *a_uio;
-	        int a_ioflag;
-	        struct ucred *a_cred;
-	} */ *ap;
+     struct vop_write_args	/* {
+				 * struct vnode *a_vp;
+				 * struct uio *a_uio;
+				 * int a_ioflag;
+				 * struct ucred *a_cred;
+				 * } */ *ap;
 {
     int code;
-    struct vcache *avc=VTOAFS(ap->a_vp);
+    struct vcache *avc = VTOAFS(ap->a_vp);
     void *object;
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     if (UBCINFOEXISTS(ap->a_vp))
-       ubc_clean(ap->a_vp, 1);
+	ubc_clean(ap->a_vp, 1);
     if (UBCINFOEXISTS(ap->a_vp))
-       osi_VM_NukePages(ap->a_vp, ap->a_uio->uio_offset, ap->a_uio->uio_resid);
-    code=afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
+	osi_VM_NukePages(ap->a_vp, ap->a_uio->uio_offset,
+			 ap->a_uio->uio_resid);
+    code =
+	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
@@ -546,94 +554,108 @@ afs_vop_write(ap)
 
 int
 afs_vop_pageout(ap)
-	struct vop_pageout_args /* {
-	        struct vnode *a_vp;
-                upl_t   a_pl,
-                vm_offset_t   a_pl_offset,
-                off_t         a_f_offset,
-                size_t        a_size,
-                struct ucred *a_cred,
-                int           a_flags
-	} */ *ap;
+     struct vop_pageout_args	/* {
+				 * struct vnode *a_vp;
+				 * upl_t   a_pl,
+				 * vm_offset_t   a_pl_offset,
+				 * off_t         a_f_offset,
+				 * size_t        a_size,
+				 * struct ucred *a_cred,
+				 * int           a_flags
+				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
-    size_t size= ap->a_size;
+    size_t size = ap->a_size;
     off_t f_offset = ap->a_f_offset;
     vm_offset_t pl_offset = ap->a_pl_offset;
-    int flags  = ap->a_flags;
+    int flags = ap->a_flags;
     struct ucred *cred;
     vm_offset_t ioaddr;
-    struct uio      auio;
-    struct iovec    aiov;
-    struct uio * uio = &auio;
+    struct uio auio;
+    struct iovec aiov;
+    struct uio *uio = &auio;
     int nocommit = flags & UPL_NOCOMMIT;
+    int iosize;
 
     int code;
-    struct vcache *tvc=VTOAFS(vp);
+    struct vcache *tvc = VTOAFS(vp);
 
     if (UBCINVALID(vp)) {
 #if DIAGNOSTIC
-        panic("afs_vop_pageout: invalid vp");
+	panic("afs_vop_pageout: invalid vp");
 #endif /* DIAGNOSTIC */
-        return (EPERM);
+	return (EPERM);
     }
 
     UBCINFOCHECK("afs_vop_pageout", vp);
-    if(pl == (upl_t)NULL) {
-            panic("afs_vop_pageout: no upl");
+    if (pl == (upl_t) NULL) {
+	panic("afs_vop_pageout: no upl");
     }
 #if 1
-    { int lbn, iosize, s;
-      struct buf *bp;
-      int biosize = DEV_BSIZE;
+    {
+	int lbn, s;
+	struct buf *bp;
+	int biosize = DEV_BSIZE;
 
-      lbn = f_offset / DEV_BSIZE;
+	lbn = f_offset / DEV_BSIZE;
 
-        for (iosize = size; iosize > 0; iosize -= biosize, lbn++) {
+	for (iosize = size; iosize > 0; iosize -= biosize, lbn++) {
 
-                s = splbio();
-                if (bp = incore(vp, lbn)) {
-                        if (ISSET(bp->b_flags, B_BUSY))
-                                panic("nfs_pageout: found BUSY buffer incore\n")
-;
-                        
-                        bremfree(bp);
-                        SET(bp->b_flags, (B_BUSY | B_INVAL));
-                        brelse(bp);
-                }
-                splx(s);
-        }
+	    s = splbio();
+	    if (bp = incore(vp, lbn)) {
+		if (ISSET(bp->b_flags, B_BUSY))
+		    panic("nfs_pageout: found BUSY buffer incore\n");
+
+		bremfree(bp);
+		SET(bp->b_flags, (B_BUSY | B_INVAL));
+		brelse(bp);
+	    }
+	    splx(s);
+	}
     }
 #endif
     cred = ubc_getcred(vp);
     if (cred == NOCRED)
-        cred = ap->a_cred;
+	cred = ap->a_cred;
 
     if (size == 0) {
-            if (!nocommit)
-                    kernel_upl_abort_range(pl, pl_offset, size, 
-                            UPL_ABORT_FREE_ON_EMPTY);
-            return (0);
+	if (!nocommit)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_FREE_ON_EMPTY);
+	return (0);
     }
     if (flags & (IO_APPEND | IO_SYNC))
-                panic("nfs_pageout: (IO_APPEND | IO_SYNC)");
+	panic("nfs_pageout: (IO_APPEND | IO_SYNC)");
     if (f_offset < 0) {
-            if (!nocommit)
-                    kernel_upl_abort_range(pl, pl_offset, size, 
-                            UPL_ABORT_FREE_ON_EMPTY);
-            return (EINVAL);
+	if (!nocommit)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_FREE_ON_EMPTY);
+	return (EINVAL);
     }
     if (f_offset >= tvc->m.Length) {
-            if (!nocommit)
-                    kernel_upl_abort_range(pl, pl_offset, size,
-                            UPL_ABORT_FREE_ON_EMPTY);
-            return (EINVAL);
+	if (!nocommit)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_FREE_ON_EMPTY);
+	return (EINVAL);
     }
 
     if (f_offset & PAGE_MASK)
-            panic("afs_vop_pageout: offset not page aligned");
+	panic("afs_vop_pageout: offset not page aligned");
 
+    /* size will always be a multiple of PAGE_SIZE */
+    /* pageout isn't supposed to extend files */
+    if (f_offset + size > tvc->m.Length) 
+        iosize = tvc->m.Length - f_offset;
+    else
+        iosize = size;
+
+    if (size > (iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK && !nocommit)  {
+            int iosize_rnd=(iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK;
+	    kernel_upl_abort_range(pl, pl_offset + iosize_rnd,
+                                   size - iosize_rnd,
+				   UPL_ABORT_FREE_ON_EMPTY);
+    }
     auio.uio_iov = &aiov;
     auio.uio_iovcnt = 1;
     auio.uio_offset = f_offset;
@@ -642,31 +664,31 @@ afs_vop_pageout(ap)
     auio.uio_procp = NULL;
     kernel_upl_map(kernel_map, pl, &ioaddr);
     ioaddr += pl_offset;
-    auio.uio_resid = aiov.iov_len = size;
-    aiov.iov_base = (caddr_t)ioaddr;
-#if 1 /* USV [ */
-        {
-                /* 
-                 * check for partial page and clear the
-                 * contents past end of the file before
-                 * releasing it in the VM page cache
-                 */
-                if ((f_offset < tvc->m.Length) && (f_offset + size) > tvc->m.Length) {
-                        size_t io = tvc->m.Length - f_offset;
+    auio.uio_resid = aiov.iov_len = iosize;
+    aiov.iov_base = (caddr_t) ioaddr;
+#if 1				/* USV [ */
+    {
+	/* 
+	 * check for partial page and clear the
+	 * contents past end of the file before
+	 * releasing it in the VM page cache
+	 */
+	if ((f_offset < tvc->m.Length) && (f_offset + size) > tvc->m.Length) {
+	    size_t io = tvc->m.Length - f_offset;
 
-                        memset((caddr_t)(ioaddr + pl_offset + io), 0, size - io);
-                }
-        }
+	    memset((caddr_t) (ioaddr + pl_offset + io), 0, size - io);
+	}
+    }
 #endif /* ] USV */
 
     AFS_GLOCK();
     afs_BozonLock(&tvc->pvnLock, tvc);
-    osi_FlushPages(tvc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);
 
-    code=afs_write(tvc, uio, flags, cred, 0);
+    code = afs_write(tvc, uio, flags, cred, 0);
 
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeClose(tvc, cred);
@@ -675,64 +697,68 @@ afs_vop_pageout(ap)
     AFS_GUNLOCK();
     kernel_upl_unmap(kernel_map, pl);
     if (!nocommit) {
-            if(code)
-                    kernel_upl_abort_range(pl, pl_offset, size, 
-                        UPL_ABORT_FREE_ON_EMPTY);
-            else
-                    kernel_upl_commit_range(pl, pl_offset, size,
-                         UPL_COMMIT_CLEAR_DIRTY | UPL_COMMIT_FREE_ON_EMPTY,
-                         UPL_GET_INTERNAL_PAGE_LIST(pl), MAX_UPL_TRANSFER);
+	if (code)
+	    kernel_upl_abort_range(pl, pl_offset, size,
+				   UPL_ABORT_FREE_ON_EMPTY);
+	else
+	    kernel_upl_commit_range(pl, pl_offset, size,
+				    UPL_COMMIT_CLEAR_DIRTY |
+				    UPL_COMMIT_FREE_ON_EMPTY,
+				    UPL_GET_INTERNAL_PAGE_LIST(pl),
+				    MAX_UPL_TRANSFER);
     }
 
     return code;
 }
+
 int
 afs_vop_ioctl(ap)
-	struct vop_ioctl_args /* {
-	        struct vnode *a_vp;
-	        int  a_command;
-	        caddr_t  a_data;
-	        int  a_fflag;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_ioctl_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_command;
+				 * caddr_t  a_data;
+				 * int  a_fflag;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     struct vcache *tvc = VTOAFS(ap->a_vp);
     struct afs_ioctl data;
     int error = 0;
-  
+
     /* in case we ever get in here... */
 
     AFS_STATCNT(afs_ioctl);
     if (((ap->a_command >> 8) & 0xff) == 'V') {
 	/* This is a VICEIOCTL call */
-    AFS_GLOCK();
-	error = HandleIoctl(tvc, (struct file *)0/*Not used*/,
-	                    ap->a_command, ap->a_data);
-    AFS_GUNLOCK();
-	return(error);
+	AFS_GLOCK();
+	error = HandleIoctl(tvc, (struct file *)0 /*Not used */ ,
+			    ap->a_command, ap->a_data);
+	AFS_GUNLOCK();
+	return (error);
     } else {
 	/* No-op call; just return. */
-	return(ENOTTY);
+	return (ENOTTY);
     }
 }
 
 /* ARGSUSED */
 int
 afs_vop_select(ap)
-	struct vop_select_args /* {
-	        struct vnode *a_vp;
-	        int  a_which;
-	        int  a_fflags;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_select_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_which;
+				 * int  a_fflags;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
-	/*
-	 * We should really check to see if I/O is possible.
-	 */
-	return (1);
+    /*
+     * We should really check to see if I/O is possible.
+     */
+    return (1);
 }
+
 /*
  * Mmap a file
  *
@@ -741,60 +767,60 @@ afs_vop_select(ap)
 /* ARGSUSED */
 int
 afs_vop_mmap(ap)
-	struct vop_mmap_args /* {
-	        struct vnode *a_vp;
-	        int  a_fflags;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_mmap_args	/* {
+				 * struct vnode *a_vp;
+				 * int  a_fflags;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
-	return (EINVAL);
+    return (EINVAL);
 }
 
 int
 afs_vop_fsync(ap)
-	struct vop_fsync_args /* {
-	        struct vnode *a_vp;
-	        struct ucred *a_cred;
-	        int a_waitfor;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_fsync_args	/* {
+				 * struct vnode *a_vp;
+				 * struct ucred *a_cred;
+				 * int a_waitfor;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     int wait = ap->a_waitfor == MNT_WAIT;
     int error;
     register struct vnode *vp = ap->a_vp;
 
     AFS_GLOCK();
-    /*vflushbuf(vp, wait);*/
+    /*vflushbuf(vp, wait); */
     if (ap->a_cred)
-      error=afs_fsync(VTOAFS(vp), ap->a_cred);
+	error = afs_fsync(VTOAFS(vp), ap->a_cred);
     else
-      error=afs_fsync(VTOAFS(vp), &afs_osi_cred);
+	error = afs_fsync(VTOAFS(vp), &afs_osi_cred);
     AFS_GUNLOCK();
     return error;
 }
 
 int
 afs_vop_seek(ap)
-	struct vop_seek_args /* {
-	        struct vnode *a_vp;
-	        off_t  a_oldoff;
-	        off_t  a_newoff;
-	        struct ucred *a_cred;
-	} */ *ap;
+     struct vop_seek_args	/* {
+				 * struct vnode *a_vp;
+				 * off_t  a_oldoff;
+				 * off_t  a_newoff;
+				 * struct ucred *a_cred;
+				 * } */ *ap;
 {
-    if (ap->a_newoff > ULONG_MAX)       /* AFS doesn't support 64-bit offsets */
+    if (ap->a_newoff > ULONG_MAX)	/* AFS doesn't support 64-bit offsets */
 	return EINVAL;
     return (0);
 }
 
 int
 afs_vop_remove(ap)
-	struct vop_remove_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode *a_vp;
-	        struct componentname *a_cnp;
-	} */ *ap;
+     struct vop_remove_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode *a_vp;
+				 * struct componentname *a_cnp;
+				 * } */ *ap;
 {
     int error = 0;
     register struct vnode *vp = ap->a_vp;
@@ -802,20 +828,20 @@ afs_vop_remove(ap)
 
     GETNAME();
     AFS_GLOCK();
-    error =  afs_remove(VTOAFS(dvp), name, cnp->cn_cred);
+    error = afs_remove(VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
     cache_purge(vp);
     if (!error && UBCINFOEXISTS(vp)) {
 #ifdef AFS_DARWIN14_ENV
-             (void) ubc_uncache(vp); 
+	(void)ubc_uncache(vp);
 #else
-             int wasmapped=ubc_issetflags(vp, UI_WASMAPPED);
-             int hasobjref=ubc_issetflags(vp, UI_HASOBJREF);
-             if (wasmapped)
-                (void) ubc_uncache(vp); 
-             if (hasobjref)
-                ubc_release(vp);
-             /* WARNING vp may not be valid after this */
+	int wasmapped = ubc_issetflags(vp, UI_WASMAPPED);
+	int hasobjref = ubc_issetflags(vp, UI_HASOBJREF);
+	if (wasmapped)
+	    (void)ubc_uncache(vp);
+	if (hasobjref)
+	    ubc_release(vp);
+	/* WARNING vp may not be valid after this */
 #endif
     }
     if (dvp == vp)
@@ -831,11 +857,11 @@ afs_vop_remove(ap)
 
 int
 afs_vop_link(ap)
-	struct vop_link_args /* {
-	        struct vnode *a_vp;
-	        struct vnode *a_tdvp;
-	        struct componentname *a_cnp;
-	} */ *ap;
+     struct vop_link_args	/* {
+				 * struct vnode *a_vp;
+				 * struct vnode *a_tdvp;
+				 * struct componentname *a_cnp;
+				 * } */ *ap;
 {
     int error = 0;
     register struct vnode *dvp = ap->a_tdvp;
@@ -843,7 +869,7 @@ afs_vop_link(ap)
     struct proc *p;
 
     GETNAME();
-    p=cnp->cn_proc;
+    p = cnp->cn_proc;
     if (vp->v_type == VDIR) {
 	VOP_ABORTOP(vp, cnp);
 	error = EISDIR;
@@ -858,8 +884,8 @@ afs_vop_link(ap)
     AFS_GUNLOCK();
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
     if (dvp != vp)
-	VOP_UNLOCK(vp,0, p);
-out:
+	VOP_UNLOCK(vp, 0, p);
+  out:
     vput(dvp);
     DROPNAME();
     return error;
@@ -867,14 +893,14 @@ out:
 
 int
 afs_vop_rename(ap)
-	struct vop_rename_args  /* {
-	        struct vnode *a_fdvp;
-	        struct vnode *a_fvp;
-	        struct componentname *a_fcnp;
-	        struct vnode *a_tdvp;
-	        struct vnode *a_tvp;
-	        struct componentname *a_tcnp;
-	} */ *ap;
+     struct vop_rename_args	/* {
+				 * struct vnode *a_fdvp;
+				 * struct vnode *a_fvp;
+				 * struct componentname *a_fcnp;
+				 * struct vnode *a_tdvp;
+				 * struct vnode *a_tvp;
+				 * struct componentname *a_tcnp;
+				 * } */ *ap;
 {
     int error = 0;
     struct componentname *fcnp = ap->a_fcnp;
@@ -885,7 +911,16 @@ afs_vop_rename(ap)
     register struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
     register struct vnode *fdvp = ap->a_fdvp;
-    struct proc *p=fcnp->cn_proc;
+    struct proc *p = fcnp->cn_proc;
+
+	/* Check for cross-device rename.
+	 * For AFS, this means anything not in AFS-space
+	 */
+	if ((0 != strcmp(tdvp->v_mount->mnt_stat.f_fstypename, "afs")) ||
+		(tvp && (0 != strcmp(tvp->v_mount->mnt_stat.f_fstypename, "afs")))) {
+			error = EXDEV;
+			goto abortit;
+	}
 
     /*
      * if fvp == tvp, we're just removing one name of a pair of
@@ -895,15 +930,15 @@ afs_vop_rename(ap)
     if (fvp == tvp) {
 	if (fvp->v_type == VDIR) {
 	    error = EINVAL;
-	abortit:
-	    VOP_ABORTOP(tdvp, tcnp); /* XXX, why not in NFS? */
+	  abortit:
+	    VOP_ABORTOP(tdvp, tcnp);	/* XXX, why not in NFS? */
 	    if (tdvp == tvp)
 		vrele(tdvp);
 	    else
 		vput(tdvp);
 	    if (tvp)
 		vput(tvp);
-	    VOP_ABORTOP(fdvp, fcnp); /* XXX, why not in NFS? */
+	    VOP_ABORTOP(fdvp, fcnp);	/* XXX, why not in NFS? */
 	    vrele(fdvp);
 	    vrele(fvp);
 	    return (error);
@@ -922,30 +957,31 @@ afs_vop_rename(ap)
 	if ((fcnp->cn_flags & SAVESTART) == 0)
 	    panic("afs_rename: lost from startdir");
 	fcnp->cn_nameiop = DELETE;
-	(void) relookup(fdvp, &fvp, fcnp);
+	(void)relookup(fdvp, &fvp, fcnp);
 	return (VOP_REMOVE(fdvp, fvp, fcnp));
     }
     if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
 	goto abortit;
 
-    MALLOC(fname, char *, fcnp->cn_namelen+1, M_TEMP, M_WAITOK);
+    MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     memcpy(fname, fcnp->cn_nameptr, fcnp->cn_namelen);
     fname[fcnp->cn_namelen] = '\0';
-    MALLOC(tname, char *, tcnp->cn_namelen+1, M_TEMP, M_WAITOK);
+    MALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     memcpy(tname, tcnp->cn_nameptr, tcnp->cn_namelen);
     tname[tcnp->cn_namelen] = '\0';
 
 
     AFS_GLOCK();
     /* XXX use "from" or "to" creds? NFS uses "to" creds */
-    error = afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, tcnp->cn_cred);
+    error =
+	afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, tcnp->cn_cred);
     AFS_GUNLOCK();
 
     VOP_UNLOCK(fvp, 0, p);
     FREE(fname, M_TEMP);
     FREE(tname, M_TEMP);
     if (error)
-	goto abortit;                   /* XXX */
+	goto abortit;		/* XXX */
     if (tdvp == tvp)
 	vrele(tdvp);
     else
@@ -959,12 +995,12 @@ afs_vop_rename(ap)
 
 int
 afs_vop_mkdir(ap)
-	struct vop_mkdir_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode **a_vpp;
-	        struct componentname *a_cnp;
-	        struct vattr *a_vap;
-	} */ *ap;
+     struct vop_mkdir_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode **a_vpp;
+				 * struct componentname *a_cnp;
+				 * struct vattr *a_vap;
+				 * } */ *ap;
 {
     register struct vnode *dvp = ap->a_dvp;
     register struct vattr *vap = ap->a_vap;
@@ -973,7 +1009,7 @@ afs_vop_mkdir(ap)
     struct proc *p;
 
     GETNAME();
-    p=cnp->cn_proc;
+    p = cnp->cn_proc;
 #ifdef DIAGNOSTIC
     if ((cnp->cn_flags & HASBUF) == 0)
 	panic("afs_vop_mkdir: no name");
@@ -985,12 +1021,12 @@ afs_vop_mkdir(ap)
 	VOP_ABORTOP(dvp, cnp);
 	vput(dvp);
 	DROPNAME();
-	return(error);
+	return (error);
     }
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
 	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
-	vn_lock(*ap->a_vpp, LK_EXCLUSIVE|LK_RETRY, p);
+	vn_lock(*ap->a_vpp, LK_EXCLUSIVE | LK_RETRY, p);
     } else
 	*ap->a_vpp = 0;
     DROPNAME();
@@ -1001,11 +1037,11 @@ afs_vop_mkdir(ap)
 
 int
 afs_vop_rmdir(ap)
-	struct vop_rmdir_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode *a_vp;
-	        struct componentname *a_cnp;
-	} */ *ap;
+     struct vop_rmdir_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode *a_vp;
+				 * struct componentname *a_cnp;
+				 * } */ *ap;
 {
     int error = 0;
     register struct vnode *vp = ap->a_vp;
@@ -1031,13 +1067,13 @@ afs_vop_rmdir(ap)
 
 int
 afs_vop_symlink(ap)
-	struct vop_symlink_args /* {
-	        struct vnode *a_dvp;
-	        struct vnode **a_vpp;
-	        struct componentname *a_cnp;
-	        struct vattr *a_vap;
-	        char *a_target;
-	} */ *ap;
+     struct vop_symlink_args	/* {
+				 * struct vnode *a_dvp;
+				 * struct vnode **a_vpp;
+				 * struct componentname *a_cnp;
+				 * struct vattr *a_vap;
+				 * char *a_target;
+				 * } */ *ap;
 {
     register struct vnode *dvp = ap->a_dvp;
     int error = 0;
@@ -1045,8 +1081,8 @@ afs_vop_symlink(ap)
 
     GETNAME();
     AFS_GLOCK();
-    error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target,
-	                cnp->cn_cred);
+    error =
+	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, cnp->cn_cred);
     AFS_GUNLOCK();
     DROPNAME();
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
@@ -1056,23 +1092,23 @@ afs_vop_symlink(ap)
 
 int
 afs_vop_readdir(ap)
-	struct vop_readdir_args /* {
-	        struct vnode *a_vp;
-	        struct uio *a_uio;
-	        struct ucred *a_cred;
-	        int *a_eofflag;
-	        u_long *a_cookies;
-	        int ncookies;
-	} */ *ap;
+     struct vop_readdir_args	/* {
+				 * struct vnode *a_vp;
+				 * struct uio *a_uio;
+				 * struct ucred *a_cred;
+				 * int *a_eofflag;
+				 * u_long *a_cookies;
+				 * int ncookies;
+				 * } */ *ap;
 {
     int error;
     off_t off;
 /*    printf("readdir %x cookies %x ncookies %d\n", ap->a_vp, ap->a_cookies,
 	   ap->a_ncookies); */
-    off=ap->a_uio->uio_offset;
+    off = ap->a_uio->uio_offset;
     AFS_GLOCK();
-    error= afs_readdir(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred,
-	               ap->a_eofflag);
+    error =
+	afs_readdir(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, ap->a_eofflag);
     AFS_GUNLOCK();
     if (!error && ap->a_ncookies != NULL) {
 	struct uio *uio = ap->a_uio;
@@ -1085,17 +1121,15 @@ afs_vop_readdir(ap)
 	dp = (const struct dirent *)
 	    ((const char *)uio->uio_iov->iov_base - (uio->uio_offset - off));
 
-	dp_end = (const struct dirent *) uio->uio_iov->iov_base;
-	for (dp_start = dp, ncookies = 0;
-	     dp < dp_end;
-	     dp = (const struct dirent *)((const char *) dp + dp->d_reclen))
+	dp_end = (const struct dirent *)uio->uio_iov->iov_base;
+	for (dp_start = dp, ncookies = 0; dp < dp_end;
+	     dp = (const struct dirent *)((const char *)dp + dp->d_reclen))
 	    ncookies++;
 
-	MALLOC(cookies, u_long *, ncookies * sizeof(u_long),
-	       M_TEMP, M_WAITOK);
-	for (dp = dp_start, cookiep = cookies;
-	     dp < dp_end;
-	     dp = (const struct dirent *)((const char *) dp + dp->d_reclen)) {
+	MALLOC(cookies, u_long *, ncookies * sizeof(u_long), M_TEMP,
+	       M_WAITOK);
+	for (dp = dp_start, cookiep = cookies; dp < dp_end;
+	     dp = (const struct dirent *)((const char *)dp + dp->d_reclen)) {
 	    off += dp->d_reclen;
 	    *cookiep++ = off;
 	}
@@ -1108,16 +1142,16 @@ afs_vop_readdir(ap)
 
 int
 afs_vop_readlink(ap)
-	struct vop_readlink_args /* {
-	        struct vnode *a_vp;
-	        struct uio *a_uio;
-	        struct ucred *a_cred;
-	} */ *ap;
+     struct vop_readlink_args	/* {
+				 * struct vnode *a_vp;
+				 * struct uio *a_uio;
+				 * struct ucred *a_cred;
+				 * } */ *ap;
 {
     int error;
 /*    printf("readlink %x\n", ap->a_vp);*/
     AFS_GLOCK();
-    error= afs_readlink(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred);
+    error = afs_readlink(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred);
     AFS_GUNLOCK();
     return error;
 }
@@ -1126,10 +1160,10 @@ extern int prtactive;
 
 int
 afs_vop_inactive(ap)
-	struct vop_inactive_args /* {
-	        struct vnode *a_vp;
-                struct proc *a_p;
-	} */ *ap;
+     struct vop_inactive_args	/* {
+				 * struct vnode *a_vp;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;
 
@@ -1137,7 +1171,7 @@ afs_vop_inactive(ap)
 	vprint("afs_vop_inactive(): pushing active", vp);
 
     AFS_GLOCK();
-    afs_InactiveVCache(VTOAFS(vp), 0);   /* decrs ref counts */
+    afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
     AFS_GUNLOCK();
     VOP_UNLOCK(vp, 0, ap->a_p);
     return 0;
@@ -1145,74 +1179,74 @@ afs_vop_inactive(ap)
 
 int
 afs_vop_reclaim(ap)
-	struct vop_reclaim_args /* {
-	        struct vnode *a_vp;
-	} */ *ap;
+     struct vop_reclaim_args	/* {
+				 * struct vnode *a_vp;
+				 * } */ *ap;
 {
     int error;
     int sl;
     register struct vnode *vp = ap->a_vp;
 
-    cache_purge(vp);                    /* just in case... */
+    cache_purge(vp);		/* just in case... */
 
-#if 0 
+#if 0
     AFS_GLOCK();
-    error = afs_FlushVCache(VTOAFS(vp), &sl); /* tosses our stuff from vnode */
+    error = afs_FlushVCache(VTOAFS(vp), &sl);	/* tosses our stuff from vnode */
     AFS_GUNLOCK();
     ubc_unlink(vp);
     if (!error && vp->v_data)
 	panic("afs_reclaim: vnode not cleaned");
     return error;
 #else
-   if (vp->v_usecount == 2) {
-        vprint("reclaim count==2", vp);
-   } else if (vp->v_usecount == 1) {
-        vprint("reclaim count==1", vp);
-   } else 
-        vprint("reclaim bad count", vp);
+    if (vp->v_usecount == 2) {
+	vprint("reclaim count==2", vp);
+    } else if (vp->v_usecount == 1) {
+	vprint("reclaim count==1", vp);
+    } else
+	vprint("reclaim bad count", vp);
 
-   return 0;
+    return 0;
 #endif
 }
 
 int
 afs_vop_lock(ap)
-	struct vop_lock_args /* {
-	        struct vnode *a_vp;
-	} */ *ap;
+     struct vop_lock_args	/* {
+				 * struct vnode *a_vp;
+				 * } */ *ap;
 {
-	register struct vnode *vp = ap->a_vp;
-	register struct vcache *avc = VTOAFS(vp);
+    register struct vnode *vp = ap->a_vp;
+    register struct vcache *avc = VTOAFS(vp);
 
-	if (vp->v_tag == VT_NON)
-	        return (ENOENT);
-	return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock,
-                ap->a_p));
+    if (vp->v_tag == VT_NON)
+	return (ENOENT);
+    return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock, ap->a_p));
 }
 
 int
 afs_vop_unlock(ap)
-	struct vop_unlock_args /* {
-	        struct vnode *a_vp;
-	} */ *ap;
+     struct vop_unlock_args	/* {
+				 * struct vnode *a_vp;
+				 * } */ *ap;
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
-    return (lockmgr(&avc->rwlock, ap->a_flags | LK_RELEASE,
-            &vp->v_interlock, ap->a_p));
+    return (lockmgr
+	    (&avc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
+	     ap->a_p));
 
 }
 
 int
 afs_vop_bmap(ap)
-	struct vop_bmap_args /* {
-	        struct vnode *a_vp;
-	        daddr_t  a_bn;
-	        struct vnode **a_vpp;
-	        daddr_t *a_bnp;
-	        int *a_runp;
-	        int *a_runb;
-	} */ *ap;
+     struct vop_bmap_args	/* {
+				 * struct vnode *a_vp;
+				 * daddr_t  a_bn;
+				 * struct vnode **a_vpp;
+				 * daddr_t *a_bnp;
+				 * int *a_runp;
+				 * int *a_runb;
+				 * } */ *ap;
 {
     struct vcache *vcp;
     int error;
@@ -1222,52 +1256,58 @@ afs_vop_bmap(ap)
     if (ap->a_vpp) {
 	*ap->a_vpp = ap->a_vp;
     }
-	if (ap->a_runp != NULL)
-	        *ap->a_runp = 0;
+    if (ap->a_runp != NULL)
+	*ap->a_runp = 0;
 #ifdef notyet
-	if (ap->a_runb != NULL)
-	        *ap->a_runb = 0;
+    if (ap->a_runb != NULL)
+	*ap->a_runb = 0;
 #endif
- 
+
     return 0;
 }
+
 int
 afs_vop_strategy(ap)
-	struct vop_strategy_args /* {
-	        struct buf *a_bp;
-	} */ *ap;
+     struct vop_strategy_args	/* {
+				 * struct buf *a_bp;
+				 * } */ *ap;
 {
     int error;
     AFS_GLOCK();
-    error= afs_ustrategy(ap->a_bp);
+    error = afs_ustrategy(ap->a_bp);
     AFS_GUNLOCK();
     return error;
 }
+
 int
 afs_vop_print(ap)
-	struct vop_print_args /* {
-	        struct vnode *a_vp;
-	} */ *ap;
+     struct vop_print_args	/* {
+				 * struct vnode *a_vp;
+				 * } */ *ap;
 {
     register struct vnode *vp = ap->a_vp;
     register struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->states;
-    printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag, vc->fid.Cell,
-	   vc->fid.Fid.Volume, vc->fid.Fid.Vnode, vc->fid.Fid.Unique, vc->opens,
-	   vc->execsOrWriters);
-    printf("\n  states%s%s%s%s%s", (s&CStatd) ? " statd" : "", (s&CRO) ? " readonly" : "",(s&CDirty) ? " dirty" : "",(s&CMAPPED) ? " mapped" : "", (s&CVFlushed) ? " flush in progress" : "");
+    printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag,
+	   vc->fid.Cell, vc->fid.Fid.Volume, vc->fid.Fid.Vnode,
+	   vc->fid.Fid.Unique, vc->opens, vc->execsOrWriters);
+    printf("\n  states%s%s%s%s%s", (s & CStatd) ? " statd" : "",
+	   (s & CRO) ? " readonly" : "", (s & CDirty) ? " dirty" : "",
+	   (s & CMAPPED) ? " mapped" : "",
+	   (s & CVFlushed) ? " flush in progress" : "");
     if (UBCISVALID(vp)) {
-        printf("\n  UBC: ");
-        if (UBCINFOEXISTS(vp)) {
-               printf("exists, ") ;
+	printf("\n  UBC: ");
+	if (UBCINFOEXISTS(vp)) {
+	    printf("exists, ");
 #ifdef AFS_DARWIN14_ENV
-                 printf("refs %d%s%s", vp->v_ubcinfo->ui_refcount,
-                         ubc_issetflags(vp, UI_HASOBJREF) ? " HASOBJREF" : "",
-                         ubc_issetflags(vp, UI_WASMAPPED) ? " WASMAPPED" : "");
+	    printf("refs %d%s%s", vp->v_ubcinfo->ui_refcount,
+		   ubc_issetflags(vp, UI_HASOBJREF) ? " HASOBJREF" : "",
+		   ubc_issetflags(vp, UI_WASMAPPED) ? " WASMAPPED" : "");
 #else
-                 printf("holdcnt %d", vp->v_ubcinfo->ui_holdcnt);
+	    printf("holdcnt %d", vp->v_ubcinfo->ui_holdcnt);
 #endif
-        } else printf("does not exist");
+	} else
+	    printf("does not exist");
     }
     printf("\n");
     return 0;
@@ -1275,9 +1315,9 @@ afs_vop_print(ap)
 
 int
 afs_vop_islocked(ap)
-	struct vop_islocked_args /* {
-	        struct vnode *a_vp;
-	} */ *ap;
+     struct vop_islocked_args	/* {
+				 * struct vnode *a_vp;
+				 * } */ *ap;
 {
     struct vcache *vc = VTOAFS(ap->a_vp);
     return lockstatus(&vc->rwlock);
@@ -1287,44 +1327,44 @@ afs_vop_islocked(ap)
  * Return POSIX pathconf information applicable to ufs filesystems.
  */
 afs_vop_pathconf(ap)
-	struct vop_pathconf_args /* {
-	        struct vnode *a_vp;
-	        int a_name;
-	        int *a_retval;
-	} */ *ap;
+     struct vop_pathconf_args	/* {
+				 * struct vnode *a_vp;
+				 * int a_name;
+				 * int *a_retval;
+				 * } */ *ap;
 {
     AFS_STATCNT(afs_cntl);
     switch (ap->a_name) {
-      case _PC_LINK_MAX:
+    case _PC_LINK_MAX:
 	*ap->a_retval = LINK_MAX;
 	break;
-      case _PC_NAME_MAX:
+    case _PC_NAME_MAX:
 	*ap->a_retval = NAME_MAX;
 	break;
-      case _PC_PATH_MAX:
+    case _PC_PATH_MAX:
 	*ap->a_retval = PATH_MAX;
 	break;
-      case _PC_CHOWN_RESTRICTED:
+    case _PC_CHOWN_RESTRICTED:
 	*ap->a_retval = 1;
 	break;
-      case _PC_NO_TRUNC:
+    case _PC_NO_TRUNC:
 	*ap->a_retval = 1;
 	break;
-      case _PC_PIPE_BUF:
+    case _PC_PIPE_BUF:
 	return EINVAL;
 	break;
 #if defined(AFS_DARWIN70_ENV)
-      case _PC_NAME_CHARS_MAX:
-	*ap->a_retval = NAME_MAX;
+    case _PC_NAME_CHARS_MAX:
+        *ap->a_retval = NAME_MAX;
 	break;
-      case _PC_CASE_SENSITIVE:
-	*ap->a_retval = 1;
+    case _PC_CASE_SENSITIVE:
+        *ap->a_retval = 1;
 	break;
-      case _PC_CASE_PRESERVING:
-	*ap->a_retval = 1;
+    case _PC_CASE_PRESERVING:
+        *ap->a_retval = 1;
 	break;
 #endif /* defined(AFS_DARWIN70_ENV) */
-      default:
+    default:
 	return EINVAL;
     }
     return 0;
@@ -1335,36 +1375,36 @@ afs_vop_pathconf(ap)
  */
 int
 afs_vop_advlock(ap)
-	struct vop_advlock_args /* {
-	        struct vnode *a_vp;
-	        caddr_t  a_id;
-	        int  a_op;
-	        struct flock *a_fl;
-	        int  a_flags;
-	} */ *ap;
+     struct vop_advlock_args	/* {
+				 * struct vnode *a_vp;
+				 * caddr_t  a_id;
+				 * int  a_op;
+				 * struct flock *a_fl;
+				 * int  a_flags;
+				 * } */ *ap;
 {
     int error;
-    struct proc *p=current_proc();
+    struct proc *p = current_proc();
     struct ucred cr;
     pcred_readlock(p);
-    cr=*p->p_cred->pc_ucred;
+    cr = *p->p_cred->pc_ucred;
     pcred_unlock(p);
     AFS_GLOCK();
-    error= afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, &cr,
-	               (int) ap->a_id);
+    error =
+	afs_lockctl(VTOAFS(ap->a_vp), ap->a_fl, ap->a_op, &cr, (int)ap->a_id);
     AFS_GUNLOCK();
     return error;
 }
 
 int
 afs_vop_truncate(ap)
-	struct vop_truncate_args /* {
-	        struct vnode *a_vp;
-	        off_t a_length;
-	        int a_flags;
-	        struct ucred *a_cred;
-	        struct proc *a_p;
-	} */ *ap;
+     struct vop_truncate_args	/* {
+				 * struct vnode *a_vp;
+				 * off_t a_length;
+				 * int a_flags;
+				 * struct ucred *a_cred;
+				 * struct proc *a_p;
+				 * } */ *ap;
 {
     printf("stray afs_vop_truncate\n");
     return EOPNOTSUPP;
@@ -1372,52 +1412,54 @@ afs_vop_truncate(ap)
 
 int
 afs_vop_update(ap)
-	struct vop_update_args /* {
-	        struct vnode *a_vp;
-	        struct timeval *a_access;
-	        struct timeval *a_modify;
-	        int a_waitfor;
-	} */ *ap;
+     struct vop_update_args	/* {
+				 * struct vnode *a_vp;
+				 * struct timeval *a_access;
+				 * struct timeval *a_modify;
+				 * int a_waitfor;
+				 * } */ *ap;
 {
     printf("stray afs_vop_update\n");
     return EOPNOTSUPP;
 }
 
-int afs_vop_blktooff(ap)
-        struct vop_blktooff_args /* {
-                struct vnode *a_vp;
-                daddr_t a_lblkno;
-                off_t *a_offset;    
-        } */ *ap;
+int
+afs_vop_blktooff(ap)
+     struct vop_blktooff_args	/* {
+				 * struct vnode *a_vp;
+				 * daddr_t a_lblkno;
+				 * off_t *a_offset;    
+				 * } */ *ap;
 {
-	*ap->a_offset = (off_t)(ap->a_lblkno *  DEV_BSIZE);
-        return 0;
+    *ap->a_offset = (off_t) (ap->a_lblkno * DEV_BSIZE);
+    return 0;
 }
 
-int afs_vop_offtoblk(ap)
-        struct vop_offtoblk_args /* {
-                struct vnode *a_vp;
-                off_t a_offset;    
-                daddr_t *a_lblkno;
-        } */ *ap;
+int
+afs_vop_offtoblk(ap)
+     struct vop_offtoblk_args	/* {
+				 * struct vnode *a_vp;
+				 * off_t a_offset;    
+				 * daddr_t *a_lblkno;
+				 * } */ *ap;
 {
-	*ap->a_lblkno = (daddr_t)(ap->a_offset /  DEV_BSIZE);
+    *ap->a_lblkno = (daddr_t) (ap->a_offset / DEV_BSIZE);
 
-        return (0);
+    return (0);
 }
 
-int afs_vop_cmap(ap)
-        struct vop_cmap_args /* {
-                struct vnode *a_vp;
-                off_t a_foffset;    
-                size_t a_size;
-                daddr_t *a_bpn;
-                size_t *a_run;
-                void *a_poff;
-        } */ *ap;
+int
+afs_vop_cmap(ap)
+     struct vop_cmap_args	/* {
+				 * struct vnode *a_vp;
+				 * off_t a_foffset;    
+				 * size_t a_size;
+				 * daddr_t *a_bpn;
+				 * size_t *a_run;
+				 * void *a_poff;
+				 * } */ *ap;
 {
-        *ap->a_bpn = (daddr_t)(ap->a_foffset /  DEV_BSIZE);	
-        *ap->a_run= MAX(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
-	return 0;
+    *ap->a_bpn = (daddr_t) (ap->a_foffset / DEV_BSIZE);
+    *ap->a_run = MAX(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
+    return 0;
 }
-

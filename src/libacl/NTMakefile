@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=libacl
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -24,9 +25,9 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsacl.lib 
 
 LIBOBJS =\
-	aclprocs.obj \
-	netprocs.obj \
-	AFS_component_version_number.obj
+	$(OUT)\aclprocs.obj \
+	$(OUT)\netprocs.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -51,3 +52,6 @@ test:
 	$(CD) test
 	$(MAKECMD) /f NTMakefile acltest
 
+
+mkdir:
+	

@@ -7,10 +7,112 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ *                      A general description of the supergroup changes
+ *                      to ptserver:
+ *
+ *                      In AFS users can be members of groups. When you add
+ *                      a user, u1, to a group, g1, you add the user id for u1
+ *                      to an entries list in g1. This is a list of all the
+ *                      members of g1.
+ *                      You also add the id for g1 to an entries list in u1.
+ *                      This is a list of all the groups this user is a
+ *                      member of.
+ *                      The list has room for 10 entries. If more are required,
+ *                      a continuation record is created.
+ *
+ *                      With UMICH mods, u1 can be a group. When u1 is a group
+ *                      a new field is required to list the groups this group
+ *                      is a member of (since the entries field is used to
+ *                      list it's members). This new field is supergroups and
+ *                      has two entries. If more are required, a continuation
+ *                      record is formed. 
+ *                      There are two additional fields required, nextsg is
+ *                      an address of the next continuation record for this
+ *                      group, and countsg is the count for the number of 
+ *                      groups this group is a member of.
+ *                   
+ *
+ *
+ *      09/18/95 jjm    Add mdw's changes to afs-3.3a Changes:
+ *                      (1) Add the parameter -groupdepth or -depth to
+ *                          define the maximum search depth for supergroups.
+ *                          Define the variable depthsg to be the value of
+ *                          the parameter. The default value is set to 5.
+ *
+ *                      (3) Make sure the sizes of the struct prentry and
+ *                          struct prentryg are equal. If they aren't equal
+ *                          the pt database will be corrupted.
+ *                          The error is reported with an fprintf statement,
+ *                          but this doesn't print when ptserver is started by
+ *                          bos, so all you see is an error message in the
+ *                          /usr/afs/logs/BosLog file. If you start the
+ *                          ptserver without bos the fprintf will print
+ *                          on stdout.
+ *                          The program will terminate with a PT_EXIT(1).
+ *
+ *
+ *                      Transarc does not currently use opcodes past 520, but
+ *                      they *could* decide at any time to use more opcodes.
+ *                      If they did, then one part of our local mods,
+ *                      ListSupergroups, would break.  I've therefore
+ *                      renumbered it to 530, and put logic in to enable the
+ *                      old opcode to work (for now).
+ *
+ *      2/1/98 jjm      Add mdw's changes for bit mapping for supergroups
+ *                      Overview:
+ *                      Before fetching a supergroup, this version of ptserver
+ *                      checks to see if it was marked "found" and "not a
+ *                      member".  If and only if so, it doesn't fetch the group.
+ *                      Since this should be the case with most groups, this
+ *                      should save a significant amount of CPU in redundant
+ *                      fetches of the same group.  After fetching the group,
+ *                      it sets "found", and either sets or clears "not a
+ *                      member", depending on if the group was a member of
+ *                      other groups.  When it writes group entries to the
+ *                      database, it clears the "found" flag.
+ */
+
+#if defined(SUPERGROUPS)
+/*
+ *  A general description of the supergroup changes
+ *  to ptserver:
+ *
+ *  In AFS users can be members of groups. When you add a user, u1,
+ *  to a group, g1, you add the user id for u1 to an entries list
+ *  in g1. This is a list of all the members of g1.  You also add
+ *  the id for g1 to an entries list in u1.  This is a list of all
+ *  the groups this user is a member of.  The list has room for 10
+ *  entries. If more are required, a continuation record is created.
+ *
+ *  With UMICH mods, u1 can be a group. When u1 is a group a new
+ *  field is required to list the groups this group is a member of
+ *  (since the entries field is used to list it's members). This
+ *  new field is supergroups and has two entries. If more are
+ *  required, a continuation record is formed.
+ *
+ *  There are two additional fields required, nextsg is an address
+ *  of the next continuation record for this group, and countsg is
+ *  the count for the number of groups this group is a member of.
+ *
+ *  Bit mapping support for supergroups:
+ *
+ *  Before fetching a supergroup, this version of ptserver checks to
+ *  see if it was marked "found" and "not a member".  If and only if
+ *  so, it doesn't fetch the group.  Since this should be the case
+ *  with most groups, this should save a significant amount of CPU in
+ *  redundant fetches of the same group.  After fetching the group, it
+ *  sets "found", and either sets or clears "not a member", depending
+ *  on if the group was a member of other groups.  When it writes
+ *  group entries to the database, it clears the "found" flag.
+ */
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.1.1.12 2003/07/30 17:12:42 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.19 2003/11/29 22:08:15 jaltman Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -18,7 +120,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.1.1.12 2003/07/
 #endif
 #include <sys/types.h>
 #include <stdio.h>
-#ifdef AFS_NT40_ENV 
+#ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
 #else
@@ -51,27 +153,30 @@ struct prheader cheader;
 struct ubik_dbase *dbase;
 struct afsconf_dir *prdir;
 
-extern afs_int32 ubik_lastYesTime;
-extern afs_int32 ubik_nBuffers;
+#if defined(SUPERGROUPS)
+extern afs_int32 depthsg;
+#endif
 
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
-int   pr_realmNameLen;
+int pr_realmNameLen;
 char *pr_realmName;
+
+static struct afsconf_cell info;
 
 #include "AFS_component_version_number.c"
 
 /* check whether caller is authorized to manage RX statistics */
-int pr_rxstat_userok(call)
-    struct rx_call *call;
+int
+pr_rxstat_userok(call)
+     struct rx_call *call;
 {
-    return afsconf_SuperUser(prdir, call, (char *)0);
+    return afsconf_SuperUser(prdir, call, NULL);
 }
 
-int main (argc, argv)
-  int argc;
-  char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     afs_int32 myHost;
@@ -79,24 +184,21 @@ int main (argc, argv)
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-    extern struct rx_securityClass *rxkad_NewServerSecurityObject();
     extern int RXSTATS_ExecuteRequest();
     extern int PR_ExecuteRequest();
 #if 0
     struct ktc_encryptionKey tkey;
 #endif
-    struct afsconf_cell info;
-    int kerberosKeys;			/* set if found some keys */
+    int kerberosKeys;		/* set if found some keys */
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
 
     const char *pr_dbaseName;
     char *whoami = "ptserver";
 
-    int   a;
-    char  arg[100];
-    
+    int a;
+    char arg[100];
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -105,136 +207,178 @@ int main (argc, argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    osi_audit (PTS_StartEvent, 0, AUD_END);
+    osi_audit(PTS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
 #ifdef AFS_NT40_ENV
-	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0],0);
+	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
 #endif
-	fprintf(stderr,"%s: Unable to obtain AFS server directory.\n", argv[0]);
+	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
+		argv[0]);
 	exit(2);
     }
 
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
 
-    for (a=1; a<argc; a++) {
+#if defined(SUPERGROUPS)
+    /* make sure the structures for database records are the same size */
+    if ((sizeof(struct prentry) != ENTRYSIZE)
+	|| (sizeof(struct prentryg) != ENTRYSIZE)) {
+	fprintf(stderr,
+		"The structures for the database records are different"
+		" sizes\n" "struct prentry = %d\n" "struct prentryg = %d\n"
+		"ENTRYSIZE = %d\n", sizeof(struct prentry),
+		sizeof(struct prentryg), ENTRYSIZE);
+	PT_EXIT(1);
+    }
+#endif
+
+    for (a = 1; a < argc; a++) {
 	int alen;
-	lcstring (arg, argv[a], sizeof(arg));
-	alen = strlen (arg);
-	if ((strncmp (arg, "-database", alen) == 0) ||
-	    (strncmp (arg, "-db", alen) == 0)) {
+	lcstring(arg, argv[a], sizeof(arg));
+	alen = strlen(arg);
+	if ((strncmp(arg, "-database", alen) == 0)
+	    || (strncmp(arg, "-db", alen) == 0)) {
 	    pr_dbaseName = argv[++a];	/* specify a database */
+	} else if (strncmp(arg, "-p", alen) == 0) {
+	    lwps = atoi(argv[++a]);
+	    if (lwps > 16) {	/* maximum of 16 */
+		printf("Warning: '-p %d' is too big; using %d instead\n",
+		       lwps, 16);
+		lwps = 16;
+	    } else if (lwps < 3) {	/* minimum of 3 */
+		printf("Warning: '-p %d' is too small; using %d instead\n",
+		       lwps, 3);
+		lwps = 3;
+	    }
+	} else if (strncmp(arg, "-rebuild", alen) == 0)	/* rebuildDB++ */
+	    ;
+#if defined(SUPERGROUPS)
+	else if ((strncmp(arg, "-groupdepth", alen) == 0)
+		 || (strncmp(arg, "-depth", alen) == 0)) {
+	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
 	}
-	else if (strncmp(arg, "-p", alen) == 0) {
-	   lwps = atoi(argv[++a]);
-	   if (lwps > 16) {       /* maximum of 16 */
-	      printf("Warning: '-p %d' is too big; using %d instead\n",
-		     lwps, 16);
-	      lwps = 16;
-	   } else if (lwps < 3) { /* minimum of 3 */
-	      printf("Warning: '-p %d' is too small; using %d instead\n",
-		     lwps, 3);
-	      lwps = 3;
-	   }
-	}
-	else if (strncmp (arg, "-rebuild", alen) == 0) /* rebuildDB++ */ ;
-	else if (strncmp (arg, "-enable_peer_stats", alen) == 0) {
+#endif
+	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
-	}
-	else if (strncmp (arg, "-enable_process_stats", alen) == 0) {
+	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
 	    rx_enableProcessRPCStats();
 	}
 #ifndef AFS_NT40_ENV
-	else if (strncmp(arg, "-syslog", alen)==0) {
+	else if (strncmp(arg, "-syslog", alen) == 0) {
 	    /* set syslog logging flag */
 	    serverLogSyslog = 1;
-	} 
-	else if (strncmp(arg, "-syslog=", MIN(8,alen))==0) {
+	} else if (strncmp(arg, "-syslog=", MIN(8, alen)) == 0) {
 	    serverLogSyslog = 1;
-	    serverLogSyslogFacility = atoi(arg+8);
+	    serverLogSyslogFacility = atoi(arg + 8);
 	}
 #endif
 	else if (*arg == '-') {
-		/* hack in help flag support */
+	    /* hack in help flag support */
 
+#if defined(SUPERGROUPS)
 #ifndef AFS_NT40_ENV
-	    	printf ("Usage: ptserver [-database <db path>] "
-			"[-syslog[=FACILITY]] "
-			"[-p <number of processes>] [-rebuild] "
-			"[-enable_peer_stats] [-enable_process_stats] "
-			"[-help]\n");
-#else
-	    	printf ("Usage: ptserver [-database <db path>] "
-			"[-p <number of processes>] [-rebuild] "
-			"[-help]\n");
+	    printf("Usage: ptserver [-database <db path>] "
+		   "[-syslog[=FACILITY]] "
+		   "[-p <number of processes>] [-rebuild] "
+		   "[-groupdepth <depth>] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#else /* AFS_NT40_ENV */
+	    printf("Usage: ptserver [-database <db path>] "
+		   "[-p <number of processes>] [-rebuild] "
+		   "[-groupdepth <depth>] " "[-help]\n");
 #endif
-		fflush(stdout);
+#else
+#ifndef AFS_NT40_ENV
+	    printf("Usage: ptserver [-database <db path>] "
+		   "[-syslog[=FACILITY]] "
+		   "[-p <number of processes>] [-rebuild] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#else /* AFS_NT40_ENV */
+	    printf("Usage: ptserver [-database <db path>] "
+		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
+#endif
+#endif
+	    fflush(stdout);
 
 	    PT_EXIT(1);
 	}
+#if defined(SUPERGROUPS)
+	else {
+	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
+	}
+#endif
     }
 
-    OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);     /* set up logging */
+#ifndef AFS_NT40_ENV
+    serverLogSyslogTag = "ptserver";
+#endif
+    OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);	/* set up logging */
     SetupLogSignals();
- 
+
     prdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!prdir) {
-	fprintf (stderr, "ptserver: can't open configuration directory.\n");
+	fprintf(stderr, "ptserver: can't open configuration directory.\n");
 	PT_EXIT(1);
     }
     if (afsconf_GetNoAuthFlag(prdir))
-	printf ("ptserver: running unauthenticated\n");
+	printf("ptserver: running unauthenticated\n");
 
-#ifdef AFS_NT40_ENV 
+#ifdef AFS_NT40_ENV
     /* initialize winsock */
-    if (afs_winsockInit()<0) {
-      ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0,
-			  argv[0],0);
-      
-      fprintf(stderr, "ptserver: couldn't initialize winsock. \n");
-      PT_EXIT(1);
+    if (afs_winsockInit() < 0) {
+	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
+
+	fprintf(stderr, "ptserver: couldn't initialize winsock. \n");
+	PT_EXIT(1);
     }
 #endif
     /* get this host */
-    gethostname(hostname,sizeof(hostname));
+    gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) {
-	fprintf (stderr, "ptserver: couldn't get address of this host.\n");
+	fprintf(stderr, "ptserver: couldn't get address of this host.\n");
 	PT_EXIT(1);
     }
     memcpy(&myHost, th->h_addr, sizeof(afs_int32));
-        
+
     /* get list of servers */
-    code = afsconf_GetExtendedCellInfo(prdir,(char *)0,"afsprot",
-                       &info, &clones);
+    code =
+	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, &clones);
     if (code) {
-	com_err (whoami, code, "Couldn't get server list");
+	com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
-    pr_realmNameLen = strlen (pr_realmName);
+    pr_realmNameLen = strlen(pr_realmName);
 
 #if 0
     /* get keys */
-    code = afsconf_GetKey(prdir,999,&tkey);
+    code = afsconf_GetKey(prdir, 999, &tkey);
     if (code) {
-	com_err (whoami, code, "couldn't get bcrypt keys from key file, ignoring.");
+	com_err(whoami, code,
+		"couldn't get bcrypt keys from key file, ignoring.");
     }
 #endif
-    {   afs_int32 kvno;			/* see if there is a KeyFile here */
+    {
+	afs_int32 kvno;		/* see if there is a KeyFile here */
 	struct ktc_encryptionKey key;
-	code = afsconf_GetLatestKey (prdir, &kvno, &key);
+	code = afsconf_GetLatestKey(prdir, &kvno, &key);
 	kerberosKeys = (code == 0);
 	if (!kerberosKeys)
-	    printf ("ptserver: can't find any Kerberos keys, code = %d, ignoring\n", code);
+	    printf
+		("ptserver: can't find any Kerberos keys, code = %d, ignoring\n",
+		 code);
     }
     if (kerberosKeys) {
 	/* initialize ubik */
@@ -253,44 +397,52 @@ int main (argc, argv)
      * CoEntry this adds up to as much as 1+1+39*3 = 119.  If all these entries
      * and the header are in separate Ubik buffers then 120 buffers may be
      * required. */
-    ubik_nBuffers = 120 + /*fudge*/40;
-    code = ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info,
-                           &clones, pr_dbaseName, &dbase);
+    ubik_nBuffers = 120 + /*fudge */ 40;
+    code =
+	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
+			      pr_dbaseName, &dbase);
     if (code) {
-	com_err (whoami, code, "Ubik init failed");
+	com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
+#if defined(SUPERGROUPS)
+    pt_hook_write();
+#endif
+
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;
     if (kerberosKeys) {
-	sc[2] = rxkad_NewServerSecurityObject
-	    (0, prdir, afsconf_GetKey, (char *)0);
-    }
-    else sc[2] = sc[0];
+	sc[2] = rxkad_NewServerSecurityObject(0, prdir, afsconf_GetKey, NULL);
+    } else
+	sc[2] = sc[0];
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
-    tservice = rx_NewService(0,PRSRV,"Protection Server",sc,3,PR_ExecuteRequest);
+    tservice =
+	rx_NewService(0, PRSRV, "Protection Server", sc, 3,
+		      PR_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	fprintf (stderr, "ptserver: Could not create new rx service.\n");
+	fprintf(stderr, "ptserver: Could not create new rx service.\n");
 	PT_EXIT(3);
     }
-    rx_SetMinProcs(tservice,2);
-    rx_SetMaxProcs(tservice,lwps);
+    rx_SetMinProcs(tservice, 2);
+    rx_SetMaxProcs(tservice, lwps);
 
-    tservice = rx_NewService(0,RX_STATS_SERVICE_ID,"rpcstats",sc,3,RXSTATS_ExecuteRequest);
+    tservice =
+	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
+		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	fprintf (stderr, "ptserver: Could not create new rx service.\n");
+	fprintf(stderr, "ptserver: Could not create new rx service.\n");
 	PT_EXIT(3);
     }
-    rx_SetMinProcs(tservice,2);
-    rx_SetMaxProcs(tservice,4);
+    rx_SetMinProcs(tservice, 2);
+    rx_SetMaxProcs(tservice, 4);
 
     /* allow super users to manage RX statistics */
     rx_SetRxStatUserOk(pr_rxstat_userok);
 
     rx_StartServer(1);
-    osi_audit (PTS_FinishEvent, -1, AUD_END);
-    return 0;
+    osi_audit(PTS_FinishEvent, -1, AUD_END);
+    exit(0);
 }

@@ -35,7 +35,7 @@
 #define	VHDREXT	".vol"
 #endif
 #define VMAXPATHLEN 64		/* Maximum length (including null) of a volume
-				   external path name */
+				 * external path name */
 
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
 /* INODEDIR holds all the inodes. Since it's name does not begin with "V"

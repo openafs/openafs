@@ -15,4 +15,3 @@
 
 /* These should be moved with the rest error codes */
 #define VICETOKENDEAD	1235
-

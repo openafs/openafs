@@ -6,7 +6,7 @@ rem This software has been released under the terms of the IBM Public
 rem License.  For details, see the LICENSE file in the top-level source
 rem directory or online at http://www.openafs.org/dl/license10.html
 
-rem This file runs the IS5 command line tools to create the Transarc AFS setup media.
+rem This file runs the IS5 command line tools to create the OpenAFS setup media.
 
 echo Building the setup media...
 

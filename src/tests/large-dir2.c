@@ -47,29 +47,29 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: large-dir2.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: large-dir2.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 #endif
 
 static int
-creat_files (const char *dirname, int count)
+creat_files(const char *dirname, int count)
 {
     struct stat sb;
     int i;
     DIR *d;
     struct dirent *dp;
-    
-    srand (time (NULL));
 
-    if (mkdir (dirname, 0777) < 0)
-	err (1, "mkdir %s", dirname);
+    srand(time(NULL));
 
-    if (chdir (dirname) < 0)
-	err (1, "chdir %s", dirname);
-    if (stat (".", &sb) < 0)
-	err (1, "stat .");
+    if (mkdir(dirname, 0777) < 0)
+	err(1, "mkdir %s", dirname);
+
+    if (chdir(dirname) < 0)
+	err(1, "chdir %s", dirname);
+    if (stat(".", &sb) < 0)
+	err(1, "stat .");
 #if 0
     if (sb.st_size != 2048)
-	errx (1, "size != 2048");
+	errx(1, "size != 2048");
 #endif
     for (i = 0; i < count; ++i) {
 	char fname[256];
@@ -77,45 +77,44 @@ creat_files (const char *dirname, int count)
 	int j;
 	int fd;
 
-	len = 1 + rand () % (sizeof(fname) - 2);
+	len = 1 + rand() % (sizeof(fname) - 2);
 
 	for (j = 0; j < len; ++j)
 	    fname[j] = 'A' + rand() % ('z' - 'A');
 	fname[j] = '\0';
 
-	fd = open (fname, O_CREAT | O_EXCL, 0777);
+	fd = open(fname, O_CREAT | O_EXCL, 0777);
 	if (fd < 0)
-	    err (1, "open %s", fname);
-	if (close (fd) < 0)
-	    err (1, "close %s", fname);
+	    err(1, "open %s", fname);
+	if (close(fd) < 0)
+	    err(1, "close %s", fname);
     }
-    if (stat (".", &sb) < 0)
-	err (1, "stat .");
+    if (stat(".", &sb) < 0)
+	err(1, "stat .");
 
-    d = opendir (".");
+    d = opendir(".");
     if (d == NULL)
-	err (1, "opendir .");
-    while ((dp = readdir (d)) != NULL) {
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+	err(1, "opendir .");
+    while ((dp = readdir(d)) != NULL) {
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 
-	if (unlink (dp->d_name) < 0)
-	    err (1, "unlink %s", dp->d_name);
+	if (unlink(dp->d_name) < 0)
+	    err(1, "unlink %s", dp->d_name);
     }
-    closedir (d);
-    if (chdir ("..") < 0)
-	err (1, "chdir ..");
-    if (rmdir (dirname) < 0)
-	err (1, "rmdir");
+    closedir(d);
+    if (chdir("..") < 0)
+	err(1, "chdir ..");
+    if (rmdir(dirname) < 0)
+	err(1, "rmdir");
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s directory number-of-files\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s directory number-of-files\n", __progname);
+    exit(ret);
 }
 
 int
@@ -126,11 +125,11 @@ main(int argc, char **argv)
 
 
     if (argc != 3)
-	usage (1);
+	usage(1);
 
-    count = strtol (argv[2], &ptr, 0);
+    count = strtol(argv[2], &ptr, 0);
     if (count == 0 && ptr == argv[2])
-	errx (1, "'%s' not a number", argv[2]);
+	errx(1, "'%s' not a number", argv[2]);
 
-    return creat_files (argv[1], count);
+    return creat_files(argv[1], count);
 }

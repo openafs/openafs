@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxstat_query_peer.c,v 1.1.1.5 2004/01/10 20:56:47 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/samples/rxstat_query_peer.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -34,18 +35,15 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 extern int RXSTATS_QueryPeerRPCStats();
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxstat_query_peer <host> <port>\n");
+    fprintf(stderr, "Usage: rxstat_query_peer <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -61,7 +59,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -85,7 +84,8 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn, &st);
+    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
+				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
 	exit(1);
@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
 
     printf("\n");
     printf("Peer RPC stats are ");
-    switch(state) {
-      case AFS_RPC_STATS_DISABLED:
+    switch (state) {
+    case AFS_RPC_STATS_DISABLED:
 	printf("disabled\n");
 	break;
-      case AFS_RPC_STATS_ENABLED:
+    case AFS_RPC_STATS_ENABLED:
 	printf("enabled\n");
 	break;
-      default:
+    default:
 	printf("INVALID\n");
 	break;
     }

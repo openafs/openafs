@@ -9,9 +9,16 @@
 	License.  For details, see the LICENSE file in the top-level source
 	directory or online at http://www.openafs.org/dl/license10.html
 */
+
+#define IDS_ABOUTBOX                    0
+#define IDS_HIDE                        1
+#define IDS_DISCONNECT                  2
+#define IDS_HIDEADVANCE                 3
+#define IDS_HIDELOG                     4
+#define IDS_FORGETUSERNAME              5
+
 #define IDM_ABOUTBOX                    0x0010
 #define IDD_ABOUTBOX                    100
-#define IDS_ABOUTBOX                    101
 #define IDD_WINAFSLOAD_DIALOG           102
 #define IDP_SOCKETS_INIT_FAILED         103
 #define IDR_MAINFRAME                   128
@@ -28,7 +35,6 @@
 #define IDD_SETTINGS                    252
 #define IDC_CONNECT                     1001
 #define IDC_CANCEL                      1002
-#define IDS_HIDE                        1003
 #define IDC_OPTIONLINE                  1005
 #define IDC_PICTURE                     1006
 #define IDC_EDIT                        1007
@@ -42,11 +48,7 @@
 #define IDC_ADD                         1018
 #define IDC_CHANGE                      1019
 #define IDC_REMOVE                      1020
-#define IDS_DISCONNECT                  1021
-#define IDS_HIDEADVANCE                 1023
 #define IDC_MOUNTDISPLAY                1024
-#define IDS_HIDELOG                     1024
-#define IDS_FORGETUSERNAME              1025
 #define IDC_DRIVE                       1027
 #define IDC_STATICMSG                   1029
 #define IDC_AUTH                        1033

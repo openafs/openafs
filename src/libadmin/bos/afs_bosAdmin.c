@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.1.1.8 2002/05/10 23:59:18 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.11 2003/12/07 22:49:29 jaltman Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -32,46 +33,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/bos/afs_bosAdmin.c,v 1.1.1.8 2
 #include <unistd.h>
 #endif
 
-
-/*
- * Prototypes for functions that don't exist in any header files
- */
-
-extern int BOZO_AddCellHost();
-extern int BOZO_AddKey();
-extern int BOZO_AddSUser();
-extern int BOZO_CreateBnode();
-extern int BOZO_DeleteBnode();
-extern int BOZO_DeleteCellHost();
-extern int BOZO_DeleteKey();
-extern int BOZO_DeleteSUser();
-extern int BOZO_EnumerateInstance();
-extern int BOZO_Exec();
-extern int BOZO_GetCellHost();
-extern int BOZO_GetCellName();
-extern int BOZO_GetDates();
-extern int BOZO_GetInstanceInfo();
-extern int BOZO_GetInstanceParm();
-extern int BOZO_GetInstanceParm();
-extern int BOZO_GetRestartTime();
-extern int BOZO_GetStatus();
-extern int BOZO_ListSUsers();
-extern int BOZO_ListKeys();
-extern int BOZO_Prune();
-extern int BOZO_ReBozo();
-extern int BOZO_Restart();
-extern int BOZO_RestartAll();
-extern int BOZO_SetCellName();
-extern int BOZO_SetNoAuthFlag();
-extern int BOZO_SetRestartTime();
-extern int BOZO_SetStatus(struct rx_connection *, char *, afs_int32);
-extern int BOZO_SetTStatus(struct rx_connection *, char *, afs_int32);
-extern int BOZO_ShutdownAll();
-extern int BOZO_StartupAll();
-extern int BOZO_UnInstall();
-extern int BOZO_WaitAll();
-extern int StartBOZO_GetLog();
-extern int StartBOZO_Install();
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 typedef struct bos_server {
     int begin_magic;
@@ -98,47 +66,47 @@ typedef struct bos_server {
  * Returns != 0 upon successful completion.
  */
 
-int isValidServerHandle (
-  const bos_server_p serverHandle,
-  afs_status_p st)
+int
+isValidServerHandle(const bos_server_p serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (serverHandle == NULL) {
-        tst = ADMBOSSERVERHANDLENULL;
-        goto fail_IsValidServerHandle;
+	tst = ADMBOSSERVERHANDLENULL;
+	goto fail_IsValidServerHandle;
     }
 
-    if ((serverHandle->begin_magic != BEGIN_MAGIC) ||
-        (serverHandle->end_magic != END_MAGIC)) {
-        tst = ADMBOSSERVERHANDLEBADMAGIC;
-        goto fail_IsValidServerHandle;
+    if ((serverHandle->begin_magic != BEGIN_MAGIC)
+	|| (serverHandle->end_magic != END_MAGIC)) {
+	tst = ADMBOSSERVERHANDLEBADMAGIC;
+	goto fail_IsValidServerHandle;
     }
 
     if (serverHandle->is_valid == 0) {
-        tst = ADMBOSSERVERHANDLEINVALID;
-        goto fail_IsValidServerHandle;
+	tst = ADMBOSSERVERHANDLEINVALID;
+	goto fail_IsValidServerHandle;
     }
 
     if (serverHandle->server == NULL) {
-        tst = ADMBOSSERVERHANDLENOSERVER;
-        goto fail_IsValidServerHandle;
+	tst = ADMBOSSERVERHANDLENOSERVER;
+	goto fail_IsValidServerHandle;
     }
 
     if (serverHandle->server_encrypt == NULL) {
-        tst = ADMBOSSERVERHANDLENOSERVER;
-        goto fail_IsValidServerHandle;
+	tst = ADMBOSSERVERHANDLENOSERVER;
+	goto fail_IsValidServerHandle;
     }
     rc = 1;
 
-fail_IsValidServerHandle:
- 
+  fail_IsValidServerHandle:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
+
 /*
  * IsValidCellHandle - verify that a cell handle can be used to make bos
  * requests.
@@ -155,32 +123,31 @@ fail_IsValidServerHandle:
  *
  * Returns != 0 upon successful completion.
  */
- 
-static int IsValidCellHandle(
-  afs_cell_handle_p cellHandle,
-  afs_status_p st)
+
+static int
+IsValidCellHandle(afs_cell_handle_p cellHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
- 
-    if (!CellHandleIsValid((void *) cellHandle, &tst)) {
-        goto fail_IsValidCellHandle;
+
+    if (!CellHandleIsValid((void *)cellHandle, &tst)) {
+	goto fail_IsValidCellHandle;
     }
- 
+
     if (cellHandle->tokens == NULL) {
-        tst = ADMBOSCELLHANDLENOTOKENS;
-        goto fail_IsValidCellHandle;
+	tst = ADMBOSCELLHANDLENOTOKENS;
+	goto fail_IsValidCellHandle;
     }
     rc = 1;
- 
-fail_IsValidCellHandle:
- 
+
+  fail_IsValidCellHandle:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * bos_ServerOpen - open a bos server for work.
  *
@@ -203,18 +170,16 @@ fail_IsValidCellHandle:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ServerOpen(
-  const void *cellHandle,
-  const char *serverName,
-  void **serverHandleP,
-  afs_status_p st)
+int ADMINAPI
+bos_ServerOpen(const void *cellHandle, const char *serverName,
+	       void **serverHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     bos_server_p bos_server = (bos_server_p) malloc(sizeof(bos_server_t));
     int serverAddress;
- 
+
     /*
      * Validate parameters
      */
@@ -233,7 +198,8 @@ int ADMINAPI bos_ServerOpen(
 	goto fail_bos_ServerOpen;
     }
 
-    if (util_AdminServerAddressGetFromName(serverName, &serverAddress, &tst) == 0) {
+    if (util_AdminServerAddressGetFromName(serverName, &serverAddress, &tst)
+	== 0) {
 	goto fail_bos_ServerOpen;
     }
 
@@ -242,18 +208,27 @@ int ADMINAPI bos_ServerOpen(
 	goto fail_bos_ServerOpen;
     }
 
-    bos_server->server = rx_GetCachedConnection(htonl(serverAddress),
-						htons(AFSCONF_NANNYPORT), 1,
-						c_handle->tokens->afs_sc[c_handle->tokens->sc_index], c_handle->tokens->sc_index);
+    bos_server->server =
+	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
+			       1,
+			       c_handle->tokens->afs_sc[c_handle->tokens->
+							sc_index],
+			       c_handle->tokens->sc_index);
 
-    bos_server->server_encrypt = rx_GetCachedConnection(htonl(serverAddress),
-						htons(AFSCONF_NANNYPORT), 1,
-						c_handle->tokens->afs_encrypt_sc[c_handle->tokens->sc_index], c_handle->tokens->sc_index);
-						
-    bos_server->server_stats = rx_GetCachedConnection(htonl(serverAddress),
-						htons(AFSCONF_NANNYPORT),
-						RX_STATS_SERVICE_ID,
-						c_handle->tokens->afs_sc[c_handle->tokens->sc_index], c_handle->tokens->sc_index);
+    bos_server->server_encrypt =
+	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
+			       1,
+			       c_handle->tokens->afs_encrypt_sc[c_handle->
+								tokens->
+								sc_index],
+			       c_handle->tokens->sc_index);
+
+    bos_server->server_stats =
+	rx_GetCachedConnection(htonl(serverAddress), htons(AFSCONF_NANNYPORT),
+			       RX_STATS_SERVICE_ID,
+			       c_handle->tokens->afs_sc[c_handle->tokens->
+							sc_index],
+			       c_handle->tokens->sc_index);
 
     if ((bos_server->server == NULL) || (bos_server->server_encrypt == NULL)) {
 	tst = ADMBOSSERVERNOCONNECTION;
@@ -264,10 +239,10 @@ int ADMINAPI bos_ServerOpen(
     bos_server->is_valid = 1;
     bos_server->end_magic = END_MAGIC;
 
-    *serverHandleP = (void *) bos_server;
+    *serverHandleP = (void *)bos_server;
     rc = 1;
 
-fail_bos_ServerOpen:
+  fail_bos_ServerOpen:
 
     if ((rc == 0) && (bos_server != NULL)) {
 	if (bos_server->server) {
@@ -280,7 +255,7 @@ fail_bos_ServerOpen:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -301,14 +276,13 @@ fail_bos_ServerOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ServerClose(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+bos_ServerClose(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (isValidServerHandle(b_handle, &tst)) {
 	rx_ReleaseCachedConnection(b_handle->server);
 	b_handle->is_valid = 0;
@@ -317,7 +291,7 @@ int ADMINAPI bos_ServerClose(
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -352,21 +326,17 @@ int ADMINAPI bos_ServerClose(
  * CAUTION - this list must match bos_ProcessType_t definition
  */
 
-static char *processTypes[] = {"simple", "fs", "cron", 0};
+static char *processTypes[] = { "simple", "fs", "cron", 0 };
 
-int ADMINAPI bos_ProcessCreate(
-  const void *serverHandle,
-  const char *processName, 
-  bos_ProcessType_t processType,
-  const char *process,
-  const char *cronTime,
-  const char *notifier, 
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessCreate(const void *serverHandle, const char *processName,
+		  bos_ProcessType_t processType, const char *process,
+		  const char *cronTime, const char *notifier, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessCreate;
     }
@@ -396,18 +366,18 @@ int ADMINAPI bos_ProcessCreate(
 	goto fail_bos_ProcessCreate;
     }
 
-    tst = BOZO_CreateBnode(b_handle->server, processTypes[processType],
-			   processName, process,
-			   (cronTime) ? cronTime : "", "", "", "", 
-			   (notifier) ? notifier : NONOTIFIER);
+    tst =
+	BOZO_CreateBnode(b_handle->server, processTypes[processType],
+			 processName, process, (cronTime) ? cronTime : "", "",
+			 "", "", (notifier) ? notifier : NONOTIFIER);
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessCreate:
+  fail_bos_ProcessCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -438,19 +408,16 @@ fail_bos_ProcessCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_FSProcessCreate(
-  const void *serverHandle,
-  const char *processName, 
-  const char *fileserverPath,
-  const char *volserverPath,
-  const char *salvagerPath,
-  const char *notifier, 
-  afs_status_p st)
+int ADMINAPI
+bos_FSProcessCreate(const void *serverHandle, const char *processName,
+		    const char *fileserverPath, const char *volserverPath,
+		    const char *salvagerPath, const char *notifier,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessCreate;
     }
@@ -475,23 +442,19 @@ int ADMINAPI bos_FSProcessCreate(
 	goto fail_bos_ProcessCreate;
     }
 
-    tst = BOZO_CreateBnode(b_handle->server,
-			   processTypes[BOS_PROCESS_FS],
-			   processName,
-			   fileserverPath,
-			   volserverPath,
-			   salvagerPath,
-			   "",
-			   "", 
-			   (notifier) ? notifier : NONOTIFIER);
+    tst =
+	BOZO_CreateBnode(b_handle->server, processTypes[BOS_PROCESS_FS],
+			 processName, fileserverPath, volserverPath,
+			 salvagerPath, "", "",
+			 (notifier) ? notifier : NONOTIFIER);
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessCreate:
+  fail_bos_ProcessCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -514,15 +477,14 @@ fail_bos_ProcessCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ProcessDelete(
-  const void *serverHandle,
-  const char *processName, 
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessDelete(const void *serverHandle, const char *processName,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessDelete;
     }
@@ -538,10 +500,10 @@ int ADMINAPI bos_ProcessDelete(
 	rc = 1;
     }
 
-fail_bos_ProcessDelete:
+  fail_bos_ProcessDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -570,18 +532,17 @@ fail_bos_ProcessDelete:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ProcessExecutionStateGet(
-  const void *serverHandle,
-  const char *processName, 
-  bos_ProcessExecutionState_p processStatusP,
-  char *auxiliaryProcessStatus,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessExecutionStateGet(const void *serverHandle,
+			     const char *processName,
+			     bos_ProcessExecutionState_p processStatusP,
+			     char *auxiliaryProcessStatus, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 state;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessExecutionStateGet;
     }
@@ -601,7 +562,9 @@ int ADMINAPI bos_ProcessExecutionStateGet(
 	goto fail_bos_ProcessExecutionStateGet;
     }
 
-    tst = BOZO_GetStatus(b_handle->server, processName, &state, &auxiliaryProcessStatus);
+    tst =
+	BOZO_GetStatus(b_handle->server, processName, &state,
+		       &auxiliaryProcessStatus);
 
     if (tst != 0) {
 	goto fail_bos_ProcessExecutionStateGet;
@@ -610,10 +573,10 @@ int ADMINAPI bos_ProcessExecutionStateGet(
     *processStatusP = (bos_ProcessExecutionState_t) state;
     rc = 1;
 
-fail_bos_ProcessExecutionStateGet:
+  fail_bos_ProcessExecutionStateGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -640,18 +603,17 @@ fail_bos_ProcessExecutionStateGet:
  * Returns != 0 upon successful completion.
  */
 
-static int SetExecutionState(
-  const void *serverHandle,
-  const char *processName, 
-  const bos_ProcessExecutionState_t processStatus,
-  int (*func)(struct rx_connection *, const char *, afs_int32),
-  afs_status_p st)
+static int
+SetExecutionState(const void *serverHandle, const char *processName,
+		  const bos_ProcessExecutionState_t processStatus,
+		  int (*func) (struct rx_connection *, const char *,
+			       afs_int32), afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 state;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_SetExecutionState;
     }
@@ -661,8 +623,8 @@ static int SetExecutionState(
 	goto fail_SetExecutionState;
     }
 
-    if ((processStatus != BOS_PROCESS_STOPPED) &&
-	(processStatus != BOS_PROCESS_RUNNING)) {
+    if ((processStatus != BOS_PROCESS_STOPPED)
+	&& (processStatus != BOS_PROCESS_RUNNING)) {
 	tst = ADMBOSPROCESSSTATUSSET;
 	goto fail_SetExecutionState;
     }
@@ -675,10 +637,10 @@ static int SetExecutionState(
 	rc = 1;
     }
 
-fail_SetExecutionState:
+  fail_SetExecutionState:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -703,11 +665,11 @@ fail_SetExecutionState:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ProcessExecutionStateSet(
-  const void *serverHandle,
-  const char *processName, 
-  bos_ProcessExecutionState_t processStatus,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessExecutionStateSet(const void *serverHandle,
+			     const char *processName,
+			     bos_ProcessExecutionState_t processStatus,
+			     afs_status_p st)
 {
     return SetExecutionState(serverHandle, processName, processStatus,
 			     BOZO_SetStatus, st);
@@ -734,11 +696,11 @@ int ADMINAPI bos_ProcessExecutionStateSet(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_ProcessExecutionStateSetTemporary(
-  const void *serverHandle,
-  const char *processName, 
-  bos_ProcessExecutionState_t processStatus,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessExecutionStateSetTemporary(const void *serverHandle,
+				      const char *processName,
+				      bos_ProcessExecutionState_t
+				      processStatus, afs_status_p st)
 {
     return SetExecutionState(serverHandle, processName, processStatus,
 			     BOZO_SetTStatus, st);
@@ -749,22 +711,19 @@ int ADMINAPI bos_ProcessExecutionStateSetTemporary(
  */
 
 typedef struct process_name_get {
-  int next;
-  struct rx_connection *server;
-  char process[CACHED_ITEMS][BOS_MAX_NAME_LEN];
+    int next;
+    struct rx_connection *server;
+    char process[CACHED_ITEMS][BOS_MAX_NAME_LEN];
 } process_name_get_t, *process_name_get_p;
 
-static int GetProcessNameRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetProcessNameRPC(void *rpc_specific, int slot, int *last_item,
+		  int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     process_name_get_p proc = (process_name_get_p) rpc_specific;
-    char *ptr = (char *) &proc->process[slot];
+    char *ptr = (char *)&proc->process[slot];
 
     tst = BOZO_EnumerateInstance(proc->server, proc->next++, &ptr);
 
@@ -783,17 +742,15 @@ static int GetProcessNameRPC(
     return rc;
 }
 
-static int GetProcessNameFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetProcessNameFromCache(void *rpc_specific, int slot, void *dest,
+			afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     process_name_get_p proc = (process_name_get_p) rpc_specific;
 
-    strcpy((char *) dest, (char *) &proc->process[slot]);
+    strcpy((char *)dest, (char *)&proc->process[slot]);
     rc = 1;
 
     if (st != NULL) {
@@ -801,7 +758,7 @@ static int GetProcessNameFromCache(
     }
     return rc;
 }
-  
+
 /*
  * bos_ProcessNameGetBegin - begin iterating over the list of processes
  * at a particular bos server.
@@ -823,17 +780,18 @@ static int GetProcessNameFromCache(
  *
  */
 
-int ADMINAPI bos_ProcessNameGetBegin(
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessNameGetBegin(const void *serverHandle, void **iterationIdP,
+			afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    process_name_get_p proc = (process_name_get_p) malloc(sizeof(process_name_get_t));
- 
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    process_name_get_p proc =
+	(process_name_get_p) malloc(sizeof(process_name_get_t));
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessNameGetBegin;
     }
@@ -851,14 +809,16 @@ int ADMINAPI bos_ProcessNameGetBegin(
     proc->next = 0;
     proc->server = b_handle->server;
 
-    if (IteratorInit(iter, (void *) proc, GetProcessNameRPC, GetProcessNameFromCache, NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)proc, GetProcessNameRPC, GetProcessNameFromCache, NULL,
+	 NULL, &tst)) {
+	*iterationIdP = (void *)iter;
     } else {
 	goto fail_bos_ProcessNameGetBegin;
     }
     rc = 1;
 
-fail_bos_ProcessNameGetBegin:
+  fail_bos_ProcessNameGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -870,11 +830,11 @@ fail_bos_ProcessNameGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
-  
+
 /*
  * bos_ProcessNameGetNext - retrieve the next process name from the bos server.
  *
@@ -895,15 +855,14 @@ fail_bos_ProcessNameGetBegin:
  *
  */
 
-int ADMINAPI bos_ProcessNameGetNext(
-  const void *iterationId,
-  char *processName,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessNameGetNext(const void *iterationId, char *processName,
+		       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (processName == NULL) {
 	tst = ADMBOSPROCESSNAMENULL;
 	goto fail_bos_ProcessNameGetNext;
@@ -914,12 +873,12 @@ int ADMINAPI bos_ProcessNameGetNext(
 	goto fail_bos_ProcessNameGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) processName, &tst);
+    rc = IteratorNext(iter, (void *)processName, &tst);
 
-fail_bos_ProcessNameGetNext:
+  fail_bos_ProcessNameGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -941,14 +900,13 @@ fail_bos_ProcessNameGetNext:
  *
  */
 
-int ADMINAPI bos_ProcessNameGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessNameGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_ProcessNameGetDone;
@@ -956,10 +914,10 @@ int ADMINAPI bos_ProcessNameGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_bos_ProcessNameGetDone:
+  fail_bos_ProcessNameGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -987,12 +945,10 @@ fail_bos_ProcessNameGetDone:
  *
  */
 
-int ADMINAPI bos_ProcessInfoGet(
-  const void *serverHandle,
-  const char *processName,
-  bos_ProcessType_p processTypeP, 
-  bos_ProcessInfo_p processInfoP,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessInfoGet(const void *serverHandle, const char *processName,
+		   bos_ProcessType_p processTypeP,
+		   bos_ProcessInfo_p processInfoP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1001,7 +957,7 @@ int ADMINAPI bos_ProcessInfoGet(
     char *ptr = type;
     struct bozo_status status;
     int i;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessInfoGet;
     }
@@ -1028,7 +984,7 @@ int ADMINAPI bos_ProcessInfoGet(
     }
 
 
-    for(i=0;(processTypes[i] != NULL); i++) {
+    for (i = 0; (processTypes[i] != NULL); i++) {
 	if (!strcmp(processTypes[i], type)) {
 	    *processTypeP = (bos_ProcessType_t) i;
 	    break;
@@ -1060,10 +1016,10 @@ int ADMINAPI bos_ProcessInfoGet(
     }
     rc = 1;
 
-fail_bos_ProcessInfoGet:
+  fail_bos_ProcessInfoGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1073,26 +1029,24 @@ fail_bos_ProcessInfoGet:
  */
 
 typedef struct param_get {
-  int next;
-  struct rx_connection *server;
-  char processName[BOS_MAX_NAME_LEN];
-  char param[CACHED_ITEMS][BOS_MAX_NAME_LEN];
+    int next;
+    struct rx_connection *server;
+    char processName[BOS_MAX_NAME_LEN];
+    char param[CACHED_ITEMS][BOS_MAX_NAME_LEN];
 } param_get_t, *param_get_p;
 
-static int GetParameterRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetParameterRPC(void *rpc_specific, int slot, int *last_item,
+		int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     param_get_p param = (param_get_p) rpc_specific;
-    char *ptr = (char *) &param->param[slot];
+    char *ptr = (char *)&param->param[slot];
 
-    tst = BOZO_GetInstanceParm(param->server, param->processName,
-			       param->next++, &ptr);
+    tst =
+	BOZO_GetInstanceParm(param->server, param->processName, param->next++,
+			     &ptr);
 
     if (tst == 0) {
 	rc = 1;
@@ -1109,17 +1063,15 @@ static int GetParameterRPC(
     return rc;
 }
 
-static int GetParameterFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetParameterFromCache(void *rpc_specific, int slot, void *dest,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     param_get_p param = (param_get_p) rpc_specific;
 
-    strcpy((char *) dest, (char *) &param->param[slot]);
+    strcpy((char *)dest, (char *)&param->param[slot]);
     rc = 1;
 
     if (st != NULL) {
@@ -1127,7 +1079,7 @@ static int GetParameterFromCache(
     }
     return rc;
 }
-  
+
 /*
  * bos_ProcessParameterGetBegin - begin iterating over the parameters
  * of a particular process.
@@ -1151,18 +1103,18 @@ static int GetParameterFromCache(
  *
  */
 
-int ADMINAPI bos_ProcessParameterGetBegin(
-  const void *serverHandle,
-  const char *processName,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessParameterGetBegin(const void *serverHandle,
+			     const char *processName, void **iterationIdP,
+			     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     param_get_p param = (param_get_p) malloc(sizeof(param_get_t));
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessParameterGetBegin;
     }
@@ -1186,15 +1138,16 @@ int ADMINAPI bos_ProcessParameterGetBegin(
     param->server = b_handle->server;
     strcpy(param->processName, processName);
 
-    if (IteratorInit(iter, (void *) param, GetParameterRPC,
-		     GetParameterFromCache, NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)param, GetParameterRPC, GetParameterFromCache, NULL,
+	 NULL, &tst)) {
+	*iterationIdP = (void *)iter;
     } else {
 	goto fail_bos_ProcessParameterGetBegin;
     }
     rc = 1;
 
-fail_bos_ProcessParameterGetBegin:
+  fail_bos_ProcessParameterGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -1206,7 +1159,7 @@ fail_bos_ProcessParameterGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1232,32 +1185,31 @@ fail_bos_ProcessParameterGetBegin:
  * Returns != 0 upon successful completion.
  *
  */
-  
-int ADMINAPI bos_ProcessParameterGetNext(
-  const void *iterationId,
-  char *parameter,
-  afs_status_p st)
+
+int ADMINAPI
+bos_ProcessParameterGetNext(const void *iterationId, char *parameter,
+			    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_ProcessParameterGetNext;
     }
- 
+
     if (parameter == NULL) {
 	tst = ADMBOSPARAMETERNULL;
 	goto fail_bos_ProcessParameterGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) parameter, &tst);
+    rc = IteratorNext(iter, (void *)parameter, &tst);
 
-fail_bos_ProcessParameterGetNext:
+  fail_bos_ProcessParameterGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1280,14 +1232,13 @@ fail_bos_ProcessParameterGetNext:
  *
  */
 
-int ADMINAPI bos_ProcessParameterGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessParameterGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_ProcessParameterGetDone;
@@ -1295,10 +1246,10 @@ int ADMINAPI bos_ProcessParameterGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_bos_ProcessParameterGetDone:
+  fail_bos_ProcessParameterGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1325,16 +1276,14 @@ fail_bos_ProcessParameterGetDone:
  *
  */
 
-int ADMINAPI bos_ProcessNotifierGet(
-  const void *serverHandle,
-  const char *processName,
-  char *notifier, 
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessNotifierGet(const void *serverHandle, const char *processName,
+		       char *notifier, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessNotifierGet;
     }
@@ -1343,7 +1292,7 @@ int ADMINAPI bos_ProcessNotifierGet(
 	tst = ADMBOSPROCESSNAMENULL;
 	goto fail_bos_ProcessNotifierGet;
     }
- 
+
     if (notifier == NULL) {
 	tst = ADMBOSNOTIFIERNULL;
 	goto fail_bos_ProcessNotifierGet;
@@ -1355,10 +1304,10 @@ int ADMINAPI bos_ProcessNotifierGet(
 	rc = 1;
     }
 
-fail_bos_ProcessNotifierGet:
+  fail_bos_ProcessNotifierGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1382,15 +1331,14 @@ fail_bos_ProcessNotifierGet:
  *
  */
 
-int ADMINAPI bos_ProcessRestart(
-  const void *serverHandle,
-  const char *processName,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessRestart(const void *serverHandle, const char *processName,
+		   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessRestart;
     }
@@ -1406,10 +1354,10 @@ int ADMINAPI bos_ProcessRestart(
 	rc = 1;
     }
 
-fail_bos_ProcessRestart:
+  fail_bos_ProcessRestart:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1431,28 +1379,27 @@ fail_bos_ProcessRestart:
  *
  */
 
-int ADMINAPI bos_ProcessAllStop(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessAllStop(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessAllStop;
     }
- 
+
     tst = BOZO_ShutdownAll(b_handle->server);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessAllStop:
+  fail_bos_ProcessAllStop:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1475,28 +1422,27 @@ fail_bos_ProcessAllStop:
  *
  */
 
-int ADMINAPI bos_ProcessAllStart(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessAllStart(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessAllStart;
     }
- 
+
     tst = BOZO_StartupAll(b_handle->server);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessAllStart:
+  fail_bos_ProcessAllStart:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1519,18 +1465,17 @@ fail_bos_ProcessAllStart:
  *
  */
 
-int ADMINAPI bos_ProcessAllWaitStop(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessAllWaitStop(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessAllWaitStop;
     }
- 
+
     if (!bos_ProcessAllStop(serverHandle, &tst)) {
 	goto fail_bos_ProcessAllWaitStop;
     }
@@ -1541,10 +1486,10 @@ int ADMINAPI bos_ProcessAllWaitStop(
 	rc = 1;
     }
 
-fail_bos_ProcessAllWaitStop:
+  fail_bos_ProcessAllWaitStop:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1567,28 +1512,27 @@ fail_bos_ProcessAllWaitStop:
  *
  */
 
-int ADMINAPI bos_ProcessAllWaitTransition(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessAllWaitTransition(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessAllWaitTransition;
     }
- 
+
     tst = BOZO_WaitAll(b_handle->server);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessAllWaitTransition:
+  fail_bos_ProcessAllWaitTransition:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1614,15 +1558,15 @@ fail_bos_ProcessAllWaitTransition:
  *
  */
 
-int ADMINAPI bos_ProcessAllStopAndRestart(
-  const void *serverHandle,
-  bos_RestartBosServer_t restartBosServer,
-  afs_status_p st)
+int ADMINAPI
+bos_ProcessAllStopAndRestart(const void *serverHandle,
+			     bos_RestartBosServer_t restartBosServer,
+			     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessAllStopAndRestart;
     }
@@ -1635,15 +1579,15 @@ int ADMINAPI bos_ProcessAllStopAndRestart(
     }
 
     tst = BOZO_RestartAll(b_handle->server);
-    
+
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_ProcessAllStopAndRestart:
+  fail_bos_ProcessAllStopAndRestart:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1667,15 +1611,14 @@ fail_bos_ProcessAllStopAndRestart:
  *
  */
 
-int ADMINAPI bos_AdminCreate(
-  const void *serverHandle,
-  const char *adminName,
-  afs_status_p st)
+int ADMINAPI
+bos_AdminCreate(const void *serverHandle, const char *adminName,
+		afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AdminCreate;
     }
@@ -1684,17 +1627,17 @@ int ADMINAPI bos_AdminCreate(
 	tst = ADMBOSADMINNAMENULL;
 	goto fail_bos_AdminCreate;
     }
- 
+
     tst = BOZO_AddSUser(b_handle->server, adminName);
-    
+
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_AdminCreate:
+  fail_bos_AdminCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1718,15 +1661,14 @@ fail_bos_AdminCreate:
  *
  */
 
-int ADMINAPI bos_AdminDelete(
-  const void *serverHandle,
-  const char *adminName,
-  afs_status_p st)
+int ADMINAPI
+bos_AdminDelete(const void *serverHandle, const char *adminName,
+		afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AdminDelete;
     }
@@ -1735,17 +1677,17 @@ int ADMINAPI bos_AdminDelete(
 	tst = ADMBOSADMINNAMENULL;
 	goto fail_bos_AdminDelete;
     }
- 
+
     tst = BOZO_DeleteSUser(b_handle->server, adminName);
-    
+
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_AdminDelete:
+  fail_bos_AdminDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1755,22 +1697,19 @@ fail_bos_AdminDelete:
  */
 
 typedef struct admin_get {
-  int next;
-  struct rx_connection *server;
-  char admin[CACHED_ITEMS][BOS_MAX_NAME_LEN];
+    int next;
+    struct rx_connection *server;
+    char admin[CACHED_ITEMS][BOS_MAX_NAME_LEN];
 } admin_get_t, *admin_get_p;
 
-static int GetAdminRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetAdminRPC(void *rpc_specific, int slot, int *last_item,
+	    int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     admin_get_p admin = (admin_get_p) rpc_specific;
-    char *ptr = (char *) &admin->admin[slot];
+    char *ptr = (char *)&admin->admin[slot];
 
     tst = BOZO_ListSUsers(admin->server, admin->next++, &ptr);
 
@@ -1793,17 +1732,14 @@ static int GetAdminRPC(
     return rc;
 }
 
-static int GetAdminFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetAdminFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     admin_get_p admin = (admin_get_p) rpc_specific;
 
-    strcpy((char *) dest, (char *) &admin->admin[slot]);
+    strcpy((char *)dest, (char *)&admin->admin[slot]);
     rc = 1;
 
     if (st != NULL) {
@@ -1811,7 +1747,7 @@ static int GetAdminFromCache(
     }
     return rc;
 }
-  
+
 /*
  * bos_AdminGetBegin - begin iterating over the administrators.
  *
@@ -1832,21 +1768,21 @@ static int GetAdminFromCache(
  *
  */
 
-int ADMINAPI bos_AdminGetBegin(
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+bos_AdminGetBegin(const void *serverHandle, void **iterationIdP,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     admin_get_p admin = (admin_get_p) malloc(sizeof(admin_get_t));
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AdminGetBegin;
     }
- 
+
     if (iterationIdP == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_AdminGetBegin;
@@ -1860,13 +1796,14 @@ int ADMINAPI bos_AdminGetBegin(
     admin->next = 0;
     admin->server = b_handle->server;
 
-    if (IteratorInit(iter, (void *) admin, GetAdminRPC,
-		     GetAdminFromCache, NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)admin, GetAdminRPC, GetAdminFromCache, NULL, NULL,
+	 &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_bos_AdminGetBegin:
+  fail_bos_AdminGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -1878,7 +1815,7 @@ fail_bos_AdminGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1904,16 +1841,14 @@ fail_bos_AdminGetBegin:
  * Returns != 0 upon successful completion.
  *
  */
-  
-int ADMINAPI bos_AdminGetNext(
-  const void *iterationId,
-  char *adminName,
-  afs_status_p st)
+
+int ADMINAPI
+bos_AdminGetNext(const void *iterationId, char *adminName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_AdminGetNext;
@@ -1924,12 +1859,12 @@ int ADMINAPI bos_AdminGetNext(
 	goto fail_bos_AdminGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) adminName, &tst);
+    rc = IteratorNext(iter, (void *)adminName, &tst);
 
-fail_bos_AdminGetNext:
+  fail_bos_AdminGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1952,14 +1887,13 @@ fail_bos_AdminGetNext:
  *
  */
 
-int ADMINAPI bos_AdminGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+bos_AdminGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_AdminGetDone;
@@ -1967,10 +1901,10 @@ int ADMINAPI bos_AdminGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_bos_AdminGetDone:
+  fail_bos_AdminGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1996,16 +1930,14 @@ fail_bos_AdminGetDone:
  *
  */
 
-int ADMINAPI bos_KeyCreate(
-  const void *serverHandle,
-  int keyVersionNumber,
-  const kas_encryptionKey_p key,
-  afs_status_p st)
+int ADMINAPI
+bos_KeyCreate(const void *serverHandle, int keyVersionNumber,
+	      const kas_encryptionKey_p key, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_KeyCreate;
     }
@@ -2014,17 +1946,17 @@ int ADMINAPI bos_KeyCreate(
 	tst = ADMBOSKEYNULL;
 	goto fail_bos_KeyCreate;
     }
- 
+
     tst = BOZO_AddKey(b_handle->server_encrypt, keyVersionNumber, key);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_KeyCreate:
+  fail_bos_KeyCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2048,29 +1980,27 @@ fail_bos_KeyCreate:
  *
  */
 
-int ADMINAPI bos_KeyDelete(
-  const void *serverHandle,
-  int keyVersionNumber,
-  afs_status_p st)
+int ADMINAPI
+bos_KeyDelete(const void *serverHandle, int keyVersionNumber, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_KeyDelete;
     }
- 
+
     tst = BOZO_DeleteKey(b_handle->server, keyVersionNumber);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_KeyDelete:
+  fail_bos_KeyDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2080,32 +2010,30 @@ fail_bos_KeyDelete:
  */
 
 typedef struct key_get {
-  int next;
-  struct rx_connection *server;
-  bos_KeyInfo_t key[CACHED_ITEMS];
+    int next;
+    struct rx_connection *server;
+    bos_KeyInfo_t key[CACHED_ITEMS];
 } key_get_t, *key_get_p;
 
-static int GetKeyRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetKeyRPC(void *rpc_specific, int slot, int *last_item,
+	  int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     key_get_p key = (key_get_p) rpc_specific;
     struct bozo_keyInfo keyInfo;
 
-    tst = BOZO_ListKeys(key->server, key->next++,
-			&key->key[slot].keyVersionNumber,
-			&key->key[slot].key, &keyInfo);
- 
+    tst =
+	BOZO_ListKeys(key->server, key->next++,
+		      &key->key[slot].keyVersionNumber, &key->key[slot].key,
+		      &keyInfo);
+
 
     if (tst == 0) {
 	key->key[slot].keyStatus.lastModificationDate = keyInfo.mod_sec;
-	key->key[slot].keyStatus.lastModificationMicroSeconds = 
-							      keyInfo.mod_usec;
+	key->key[slot].keyStatus.lastModificationMicroSeconds =
+	    keyInfo.mod_usec;
 	key->key[slot].keyStatus.checkSum = keyInfo.keyCheckSum;
 	rc = 1;
     } else if (tst == BZDOM) {
@@ -2121,11 +2049,8 @@ static int GetKeyRPC(
     return rc;
 }
 
-static int GetKeyFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetKeyFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2139,7 +2064,7 @@ static int GetKeyFromCache(
     }
     return rc;
 }
-  
+
 /*
  * bos_KeyGetBegin - begin iterating over the keys.
  *
@@ -2160,21 +2085,21 @@ static int GetKeyFromCache(
  *
  */
 
-int ADMINAPI bos_KeyGetBegin(
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+bos_KeyGetBegin(const void *serverHandle, void **iterationIdP,
+		afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     key_get_p key = (key_get_p) malloc(sizeof(key_get_t));
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_KeyGetBegin;
     }
- 
+
     if (iterationIdP == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_KeyGetBegin;
@@ -2188,13 +2113,13 @@ int ADMINAPI bos_KeyGetBegin(
     key->next = 0;
     key->server = b_handle->server_encrypt;
 
-    if (IteratorInit(iter, (void *) key, GetKeyRPC,
-		     GetKeyFromCache, NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)key, GetKeyRPC, GetKeyFromCache, NULL, NULL, &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_bos_KeyGetBegin:
+  fail_bos_KeyGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -2206,7 +2131,7 @@ fail_bos_KeyGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2233,31 +2158,29 @@ fail_bos_KeyGetBegin:
  *
  */
 
-int ADMINAPI bos_KeyGetNext(
-  const void *iterationId,
-  bos_KeyInfo_p keyP,
-  afs_status_p st)
+int ADMINAPI
+bos_KeyGetNext(const void *iterationId, bos_KeyInfo_p keyP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_KeyGetNext;
     }
- 
+
     if (keyP == NULL) {
 	tst = ADMBOSKEYPNULL;
 	goto fail_bos_KeyGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) keyP, &tst);
+    rc = IteratorNext(iter, (void *)keyP, &tst);
 
-fail_bos_KeyGetNext:
+  fail_bos_KeyGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2280,14 +2203,13 @@ fail_bos_KeyGetNext:
  *
  */
 
-int ADMINAPI bos_KeyGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+bos_KeyGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_KeyGetDone;
@@ -2295,10 +2217,10 @@ int ADMINAPI bos_KeyGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_bos_KeyGetDone:
+  fail_bos_KeyGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2321,15 +2243,13 @@ fail_bos_KeyGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_CellSet(
-  const void *serverHandle,
-  const char *cellName,
-  afs_status_p st)
+int ADMINAPI
+bos_CellSet(const void *serverHandle, const char *cellName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_CellSet;
     }
@@ -2338,17 +2258,17 @@ int ADMINAPI bos_CellSet(
 	tst = ADMCLIENTCELLNAMENULL;
 	goto fail_bos_CellSet;
     }
- 
+
     tst = BOZO_SetCellName(b_handle->server, cellName);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_CellSet:
+  fail_bos_CellSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2371,15 +2291,13 @@ fail_bos_CellSet:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_CellGet(
-  const void *serverHandle,
-  char *cellName,
-  afs_status_p st)
+int ADMINAPI
+bos_CellGet(const void *serverHandle, char *cellName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_CellGet;
     }
@@ -2388,21 +2306,21 @@ int ADMINAPI bos_CellGet(
 	tst = ADMCLIENTCELLNAMENULL;
 	goto fail_bos_CellGet;
     }
- 
+
     tst = BOZO_GetCellName(b_handle->server, &cellName);
 
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_CellGet:
+
+  fail_bos_CellGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * bos_HostCreate - add a new host to the cell.
  *
@@ -2421,15 +2339,14 @@ fail_bos_CellGet:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_HostCreate(
-  const void *serverHandle,
-  const char *hostName,
-  afs_status_p st)
+int ADMINAPI
+bos_HostCreate(const void *serverHandle, const char *hostName,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_HostCreate;
     }
@@ -2438,21 +2355,21 @@ int ADMINAPI bos_HostCreate(
 	tst = ADMBOSHOSTNAMENULL;
 	goto fail_bos_HostCreate;
     }
- 
+
     tst = BOZO_AddCellHost(b_handle->server, hostName);
 
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_HostCreate:
+
+  fail_bos_HostCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * bos_HostDelete - delete a host from the cell.
  *
@@ -2471,34 +2388,33 @@ fail_bos_HostCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI bos_HostDelete(
-  const void *serverHandle,
-  const char *hostName,
-  afs_status_p st)
+int ADMINAPI
+bos_HostDelete(const void *serverHandle, const char *hostName,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_HostDelete;
     }
- 
+
     if ((hostName == NULL) || (*hostName == 0)) {
 	tst = ADMBOSHOSTNAMENULL;
 	goto fail_bos_HostDelete;
     }
- 
+
     tst = BOZO_DeleteCellHost(b_handle->server, hostName);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_HostDelete:
+  fail_bos_HostDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2508,22 +2424,19 @@ fail_bos_HostDelete:
  */
 
 typedef struct host_get {
-  int next;
-  struct rx_connection *server;
-  char host[CACHED_ITEMS][BOS_MAX_NAME_LEN];
+    int next;
+    struct rx_connection *server;
+    char host[CACHED_ITEMS][BOS_MAX_NAME_LEN];
 } host_get_t, *host_get_p;
 
-static int GetHostRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetHostRPC(void *rpc_specific, int slot, int *last_item,
+	   int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     host_get_p host = (host_get_p) rpc_specific;
-    char *ptr = (char *) &host->host[slot];
+    char *ptr = (char *)&host->host[slot];
 
     tst = BOZO_GetCellHost(host->server, host->next++, &ptr);
 
@@ -2542,17 +2455,14 @@ static int GetHostRPC(
     return rc;
 }
 
-static int GetHostFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetHostFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     host_get_p host = (host_get_p) rpc_specific;
 
-    strcpy((char *) dest, (char *) &host->host[slot]);
+    strcpy((char *)dest, (char *)&host->host[slot]);
     rc = 1;
 
     if (st != NULL) {
@@ -2560,7 +2470,7 @@ static int GetHostFromCache(
     }
     return rc;
 }
-  
+
 /*
  * bos_HostGetBegin - begin iterating over the hosts in a cell
  * at a particular bos server.
@@ -2582,21 +2492,21 @@ static int GetHostFromCache(
  *
  */
 
-int ADMINAPI bos_HostGetBegin(
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+bos_HostGetBegin(const void *serverHandle, void **iterationIdP,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     host_get_p host = (host_get_p) malloc(sizeof(host_get_t));
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_HostGetBegin;
     }
- 
+
     if (iterationIdP == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_HostGetBegin;
@@ -2610,13 +2520,14 @@ int ADMINAPI bos_HostGetBegin(
     host->next = 0;
     host->server = b_handle->server;
 
-    if (IteratorInit(iter, (void *) host, GetHostRPC,
-		     GetHostFromCache, NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)host, GetHostRPC, GetHostFromCache, NULL, NULL,
+	 &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_bos_HostGetBegin:
+  fail_bos_HostGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -2628,7 +2539,7 @@ fail_bos_HostGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2655,31 +2566,29 @@ fail_bos_HostGetBegin:
  *
  */
 
-int ADMINAPI bos_HostGetNext(
-  const void *iterationId,
-  char *hostName,
-  afs_status_p st)
+int ADMINAPI
+bos_HostGetNext(const void *iterationId, char *hostName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_HostGetNext;
     }
- 
+
     if (hostName == NULL) {
 	tst = ADMBOSHOSTNAMENULL;
 	goto fail_bos_HostGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) hostName, &tst);
+    rc = IteratorNext(iter, (void *)hostName, &tst);
 
-fail_bos_HostGetNext:
+  fail_bos_HostGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2702,14 +2611,13 @@ fail_bos_HostGetNext:
  *
  */
 
-int ADMINAPI bos_HostGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+bos_HostGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATIONIDPNULL;
 	goto fail_bos_HostGetDone;
@@ -2717,10 +2625,10 @@ int ADMINAPI bos_HostGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_bos_HostGetDone:
+  fail_bos_HostGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2746,11 +2654,9 @@ fail_bos_HostGetDone:
  *
  */
 
-int ADMINAPI bos_ExecutableCreate(
-  const void *serverHandle,
-  const char *sourceFile,
-  const char *destFile,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutableCreate(const void *serverHandle, const char *sourceFile,
+		     const char *destFile, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2758,7 +2664,7 @@ int ADMINAPI bos_ExecutableCreate(
     int fd;
     struct stat estat;
     struct rx_call *tcall;
- 
+
     /*
      * Validate arguments
      */
@@ -2799,9 +2705,10 @@ int ADMINAPI bos_ExecutableCreate(
 
     tcall = rx_NewCall(b_handle->server);
 
-    tst = StartBOZO_Install(tcall, destFile, estat.st_size,
-			    (afs_int32) estat.st_mode, estat.st_mtime);
-    
+    tst =
+	StartBOZO_Install(tcall, destFile, estat.st_size,
+			  (afs_int32) estat.st_mode, estat.st_mtime);
+
     if (tst) {
 	rx_EndCall(tcall, tst);
 	goto fail_bos_ExecutableCreate;
@@ -2811,7 +2718,7 @@ int ADMINAPI bos_ExecutableCreate(
      * Copy the data to the server
      */
 
-    while(1) {
+    while (1) {
 	char tbuffer[512];
 	size_t len;
 	len = read(fd, tbuffer, sizeof(tbuffer));
@@ -2842,10 +2749,10 @@ int ADMINAPI bos_ExecutableCreate(
 	rc = 1;
     }
 
-fail_bos_ExecutableCreate:
+  fail_bos_ExecutableCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2869,15 +2776,14 @@ fail_bos_ExecutableCreate:
  *
  */
 
-int ADMINAPI bos_ExecutableRevert(
-  const void *serverHandle,
-  const char *execFile,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutableRevert(const void *serverHandle, const char *execFile,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableRevert;
     }
@@ -2893,10 +2799,10 @@ int ADMINAPI bos_ExecutableRevert(
 	rc = 1;
     }
 
-fail_bos_ExecutableRevert:
+  fail_bos_ExecutableRevert:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2922,22 +2828,19 @@ fail_bos_ExecutableRevert:
  *
  */
 
-int ADMINAPI bos_ExecutableTimestampGet(
-  const void *serverHandle,
-  const char *execFile,
-  unsigned long *newTime,
-  unsigned long *oldTime,
-  unsigned long *bakTime,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutableTimestampGet(const void *serverHandle, const char *execFile,
+			   unsigned long *newTime, unsigned long *oldTime,
+			   unsigned long *bakTime, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableTimestampGet;
     }
- 
+
     if ((execFile == NULL) || (*execFile == 0)) {
 	tst = ADMBOSEXECFILENULL;
 	goto fail_bos_ExecutableTimestampGet;
@@ -2957,17 +2860,18 @@ int ADMINAPI bos_ExecutableTimestampGet(
 	tst = ADMBOSBAKTIMENULL;
 	goto fail_bos_ExecutableTimestampGet;
     }
- 
-    tst = BOZO_GetDates(b_handle->server, execFile, newTime, bakTime, oldTime);
+
+    tst =
+	BOZO_GetDates(b_handle->server, execFile, newTime, bakTime, oldTime);
 
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_ExecutableTimestampGet:
+
+  fail_bos_ExecutableTimestampGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2996,18 +2900,16 @@ fail_bos_ExecutableTimestampGet:
  *
  */
 
-int ADMINAPI bos_ExecutablePrune(
-  const void *serverHandle,
-  bos_Prune_t oldFiles,
-  bos_Prune_t bakFiles,
-  bos_Prune_t coreFiles,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutablePrune(const void *serverHandle, bos_Prune_t oldFiles,
+		    bos_Prune_t bakFiles, bos_Prune_t coreFiles,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 flags = 0;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutablePrune;
     }
@@ -3029,11 +2931,11 @@ int ADMINAPI bos_ExecutablePrune(
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_ExecutablePrune:
+
+  fail_bos_ExecutablePrune:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3060,48 +2962,46 @@ fail_bos_ExecutablePrune:
  *
  */
 
-int ADMINAPI bos_ExecutableRestartTimeSet(
-  const void *serverHandle,
-  bos_Restart_t type,
-  bos_RestartTime_t time,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutableRestartTimeSet(const void *serverHandle, bos_Restart_t type,
+			     bos_RestartTime_t time, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 restartType = 0;
     struct ktime restartTime;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableRestartTimeSet;
     }
- 
+
     if (type == BOS_RESTART_WEEKLY) {
 	restartType = 1;
     } else {
 	restartType = 2;
     }
 
-    if ((time.mask & BOS_RESTART_TIME_HOUR) &&
-        ((time.hour < 0) || (time.hour > 23))) {
+    if ((time.mask & BOS_RESTART_TIME_HOUR)
+	&& ((time.hour < 0) || (time.hour > 23))) {
 	tst = ADMBOSHOURINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
-    if ((time.mask & BOS_RESTART_TIME_MINUTE) &&
-	((time.min < 0) || (time.min > 60))) {
+    if ((time.mask & BOS_RESTART_TIME_MINUTE)
+	&& ((time.min < 0) || (time.min > 60))) {
 	tst = ADMBOSMINUTEINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
-    if ((time.mask & BOS_RESTART_TIME_SECOND) &&
-	((time.sec < 0) || (time.sec > 60))) {
+    if ((time.mask & BOS_RESTART_TIME_SECOND)
+	&& ((time.sec < 0) || (time.sec > 60))) {
 	tst = ADMBOSSECONDINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
 
-    if ((time.mask & BOS_RESTART_TIME_DAY) &&
-	((time.day < 0) || (time.day > 6))) {
+    if ((time.mask & BOS_RESTART_TIME_DAY)
+	&& ((time.day < 0) || (time.day > 6))) {
 	tst = ADMBOSDAYINVALID;
 	goto fail_bos_ExecutableRestartTimeSet;
     }
@@ -3117,11 +3017,11 @@ int ADMINAPI bos_ExecutableRestartTimeSet(
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_ExecutableRestartTimeSet:
+
+  fail_bos_ExecutableRestartTimeSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3148,18 +3048,16 @@ fail_bos_ExecutableRestartTimeSet:
  *
  */
 
-int ADMINAPI bos_ExecutableRestartTimeGet(
-  const void *serverHandle,
-  bos_Restart_t type,
-  bos_RestartTime_p timeP,
-  afs_status_p st)
+int ADMINAPI
+bos_ExecutableRestartTimeGet(const void *serverHandle, bos_Restart_t type,
+			     bos_RestartTime_p timeP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 restartType = 0;
     struct ktime restartTime;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ExecutableRestartTimeGet;
     }
@@ -3168,7 +3066,7 @@ int ADMINAPI bos_ExecutableRestartTimeGet(
 	tst = ADMBOSTIMEPNULL;
 	goto fail_bos_ExecutableRestartTimeGet;
     }
- 
+
     if (type == BOS_RESTART_WEEKLY) {
 	restartType = 1;
     } else {
@@ -3187,11 +3085,11 @@ int ADMINAPI bos_ExecutableRestartTimeGet(
     timeP->sec = restartTime.sec;
     timeP->day = restartTime.day;
     rc = 1;
- 
-fail_bos_ExecutableRestartTimeGet:
+
+  fail_bos_ExecutableRestartTimeGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3220,12 +3118,9 @@ fail_bos_ExecutableRestartTimeGet:
  *
  */
 
-int ADMINAPI bos_LogGet(
-  const void *serverHandle,
-  const char *log,
-  unsigned long *logBufferSizeP,
-  char *logData,
-  afs_status_p st)
+int ADMINAPI
+bos_LogGet(const void *serverHandle, const char *log,
+	   unsigned long *logBufferSizeP, char *logData, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3235,7 +3130,7 @@ int ADMINAPI bos_LogGet(
     char buffer;
     int have_call = 0;
     unsigned long bytes_read = 0;
- 
+
     /*
      * Validate parameters
      */
@@ -3300,21 +3195,21 @@ int ADMINAPI bos_LogGet(
 	if (bytes_read <= *logBufferSizeP) {
 	    *logData++ = buffer;
 	} else {
-	   tst = ADMMOREDATA;
+	    tst = ADMMOREDATA;
 	}
     }
     if (tst == 0) {
 	rc = 1;
     }
- 
-fail_bos_LogGet:
+
+  fail_bos_LogGet:
 
     if (have_call) {
 	rx_EndCall(tcall, 0);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3338,16 +3233,14 @@ fail_bos_LogGet:
  *
  */
 
-int ADMINAPI bos_AuthSet(
-  const void *serverHandle,
-  bos_Auth_t auth,
-  afs_status_p st)
+int ADMINAPI
+bos_AuthSet(const void *serverHandle, bos_Auth_t auth, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 level = 0;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_AuthSet;
     }
@@ -3357,17 +3250,17 @@ int ADMINAPI bos_AuthSet(
     } else {
 	level = 1;
     }
- 
+
     tst = BOZO_SetNoAuthFlag(b_handle->server, level);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_AuthSet:
+  fail_bos_AuthSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3391,15 +3284,14 @@ fail_bos_AuthSet:
  *
  */
 
-int ADMINAPI bos_CommandExecute(
-  const void *serverHandle,
-  const char *command,
-  afs_status_p st)
+int ADMINAPI
+bos_CommandExecute(const void *serverHandle, const char *command,
+		   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
- 
+
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_CommandExecute;
     }
@@ -3408,17 +3300,17 @@ int ADMINAPI bos_CommandExecute(
 	tst = ADMBOSCOMMANDNULL;
 	goto fail_bos_CommandExecute;
     }
- 
+
     tst = BOZO_Exec(b_handle->server, command);
 
     if (tst == 0) {
 	rc = 1;
     }
 
-fail_bos_CommandExecute:
+  fail_bos_CommandExecute:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3467,21 +3359,16 @@ fail_bos_CommandExecute:
 
 #define INITIAL_LOG_LEN 4096
 
-int ADMINAPI bos_Salvage(
-  const void *cellHandle,
-  const void *serverHandle,
-  const char *partitionName,
-  const char *volumeName,
-  int numSalvagers,
-  const char *tmpDir,
-  const char *logFile,
-  vos_force_t force,
-  bos_SalvageDamagedVolumes_t salvageDamagedVolumes,
-  bos_WriteInodes_t writeInodes,
-  bos_WriteRootInodes_t writeRootInodes,
-  bos_ForceDirectory_t forceDirectory,
-  bos_ForceBlockRead_t forceBlockRead,
-  afs_status_p st)
+int ADMINAPI
+bos_Salvage(const void *cellHandle, const void *serverHandle,
+	    const char *partitionName, const char *volumeName,
+	    int numSalvagers, const char *tmpDir, const char *logFile,
+	    vos_force_t force,
+	    bos_SalvageDamagedVolumes_t salvageDamagedVolumes,
+	    bos_WriteInodes_t writeInodes,
+	    bos_WriteRootInodes_t writeRootInodes,
+	    bos_ForceDirectory_t forceDirectory,
+	    bos_ForceBlockRead_t forceBlockRead, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3499,7 +3386,7 @@ int ADMINAPI bos_Salvage(
     int poll_rc;
     char *logData = NULL;
     unsigned long logLen = INITIAL_LOG_LEN;
- 
+
     /*
      * Validate arguments
      */
@@ -3513,8 +3400,8 @@ int ADMINAPI bos_Salvage(
     }
 
     if (c_handle->vos_valid == 0) {
-        tst = ADMBOSCELLHANDLENOVOS;
-        goto fail_bos_Salvage;
+	tst = ADMBOSCELLHANDLENOVOS;
+	goto fail_bos_Salvage;
     }
 
     if ((partitionName != NULL) && (*partitionName != 0)) {
@@ -3553,10 +3440,10 @@ int ADMINAPI bos_Salvage(
      */
 
     if (try_to_stop_fileserver) {
-	if (bos_ProcessInfoGet(serverHandle, "fs", &procType, &procInfo,
-				&tst)) {
+	if (bos_ProcessInfoGet
+	    (serverHandle, "fs", &procType, &procInfo, &tst)) {
 	    if (procInfo.processGoal != BOS_PROCESS_RUNNING) {
-	       try_to_stop_fileserver = 0;
+		try_to_stop_fileserver = 0;
 	    }
 	}
     }
@@ -3566,9 +3453,8 @@ int ADMINAPI bos_Salvage(
      */
 
     if (try_to_stop_fileserver) {
-	if (!bos_ProcessExecutionStateSetTemporary(serverHandle, "fs",
-						   BOS_PROCESS_STOPPED,
-						   &tst)) {
+	if (!bos_ProcessExecutionStateSetTemporary
+	    (serverHandle, "fs", BOS_PROCESS_STOPPED, &tst)) {
 	    goto fail_bos_Salvage;
 	}
 	bos_ProcessAllWaitTransition(serverHandle, &tst);
@@ -3578,16 +3464,16 @@ int ADMINAPI bos_Salvage(
      * Create the salvage command line arguments
      */
 
-    command_len = sprintf(command, "%s ",
-			  AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH);
+    command_len =
+	sprintf(command, "%s ", AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH);
     if (have_partition) {
-	command_len += sprintf(&command[command_len], "-partition %s ",
-			       partitionName);
+	command_len +=
+	    sprintf(&command[command_len], "-partition %s ", partitionName);
     }
 
     if (have_volume) {
-	command_len += sprintf(&command[command_len], "-volumeid %s ",
-			       volumeName);
+	command_len +=
+	    sprintf(&command[command_len], "-volumeid %s ", volumeName);
     }
 
     if (salvageDamagedVolumes == BOS_DONT_SALVAGE_DAMAGED_VOLUMES) {
@@ -3614,7 +3500,8 @@ int ADMINAPI bos_Salvage(
 	command_len += sprintf(&command[command_len], "-blockreads ");
     }
 
-    command_len += sprintf(&command[command_len], "-parallel %d ", numSalvagers);
+    command_len +=
+	sprintf(&command[command_len], "-parallel %d ", numSalvagers);
 
     if ((tmpDir != NULL) && (*tmpDir != 0)) {
 	command_len += sprintf(&command[command_len], "-tmpdir %s ", tmpDir);
@@ -3629,13 +3516,15 @@ int ADMINAPI bos_Salvage(
      * Create the process at the bosserver and wait until it completes
      */
 
-    if (!bos_ProcessCreate(serverHandle, "salvage-tmp", BOS_PROCESS_CRON,
-			   command, "now", 0, &tst)) {
+    if (!bos_ProcessCreate
+	(serverHandle, "salvage-tmp", BOS_PROCESS_CRON, command, "now", 0,
+	 &tst)) {
 	goto fail_bos_Salvage;
     }
 
-    while ((poll_rc = bos_ProcessInfoGet(serverHandle, "salvage-tmp", &procType,
-			                &procInfo, &tst))) {
+    while ((poll_rc =
+	    bos_ProcessInfoGet(serverHandle, "salvage-tmp", &procType,
+			       &procInfo, &tst))) {
 	sleep(5);
     }
 
@@ -3649,17 +3538,17 @@ int ADMINAPI bos_Salvage(
 
     if (log != NULL) {
 
-	logData = (char *) malloc(INITIAL_LOG_LEN);
+	logData = (char *)malloc(INITIAL_LOG_LEN);
 	if (!logData) {
 	    tst = ADMNOMEM;
 	    goto fail_bos_Salvage;
 	}
 
-        while(!bos_LogGet(serverHandle,
-			  AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH,
-			  &logLen, logData, &tst)) {
+	while (!bos_LogGet
+	       (serverHandle, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH,
+		&logLen, logData, &tst)) {
 	    if (logLen > INITIAL_LOG_LEN) {
-		logData = (char *) realloc(logData, (logLen + (logLen / 10)));
+		logData = (char *)realloc(logData, (logLen + (logLen / 10)));
 		if (logData == NULL) {
 		    tst = ADMNOMEM;
 		    goto fail_bos_Salvage;
@@ -3677,15 +3566,14 @@ int ADMINAPI bos_Salvage(
 
     if (try_to_stop_fileserver) {
 	try_to_stop_fileserver = 0;
-	if (!bos_ProcessExecutionStateSetTemporary(serverHandle, "fs",
-						   BOS_PROCESS_RUNNING,
-						   &tst)) {
+	if (!bos_ProcessExecutionStateSetTemporary
+	    (serverHandle, "fs", BOS_PROCESS_RUNNING, &tst)) {
 	    goto fail_bos_Salvage;
 	}
     }
     rc = 1;
 
-fail_bos_Salvage:
+  fail_bos_Salvage:
 
     if (log != NULL) {
 	fclose(log);
@@ -3701,7 +3589,7 @@ fail_bos_Salvage:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }

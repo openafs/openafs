@@ -65,12 +65,12 @@
 extern "C" {
 #endif
 
-API_EXPORT(char *) ap_cpystrn(char *, const char *, size_t);
-int ap_slack(int, int);
-API_EXPORT(int) ap_snprintf(char *, size_t, const char *, ...);
-API_EXPORT(int) ap_vsnprintf(char *, size_t, const char *, va_list ap);
-int ap_execle(const char *, const char *, ...);
-int ap_execve(const char *, const char *argv[], const char *envp[]);
+    API_EXPORT(char *) ap_cpystrn(char *, const char *, size_t);
+    int ap_slack(int, int);
+      API_EXPORT(int) ap_snprintf(char *, size_t, const char *, ...);
+      API_EXPORT(int) ap_vsnprintf(char *, size_t, const char *, va_list ap);
+    int ap_execle(const char *, const char *, ...);
+    int ap_execve(const char *, const char *argv[], const char *envp[]);
 
 /* small utility macros to make things easier to read */
 
@@ -82,7 +82,7 @@ int ap_execve(const char *, const char *argv[], const char *envp[]);
 #else
 #define ap_killpg(x, y)		(killpg ((x), (y)))
 #endif
-#endif /* WIN32 */
+#endif				/* WIN32 */
 
 /* ap_vformatter() is a generic printf-style formatting routine
  * with some extensions.  The extensions are:
@@ -133,13 +133,14 @@ int ap_execve(const char *, const char *argv[], const char *envp[]);
  * or until ap_vformatter returns.
  */
 
-typedef struct {
-    char *curpos;
-    char *endpos;
-} ap_vformatter_buff;
+    typedef struct {
+	char *curpos;
+	char *endpos;
+    } ap_vformatter_buff;
 
-API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
-    ap_vformatter_buff *, const char *fmt, va_list ap);
+      API_EXPORT(int) ap_vformatter(int (*flush_func) (ap_vformatter_buff *),
+				    ap_vformatter_buff *, const char *fmt,
+				    va_list ap);
 
 /* These are snprintf implementations based on ap_vformatter().
  *
@@ -156,13 +157,13 @@ API_EXPORT(int) ap_vformatter(int (*flush_func)(ap_vformatter_buff *),
  * to distinguish between an output which was truncated, and an output which
  * exactly filled the buffer.
  */
-API_EXPORT(int) ap_snprintf(char *buf, size_t len, const char *format,...)
-			    __attribute__((format(printf,3,4)));
-API_EXPORT(int) ap_vsnprintf(char *buf, size_t len, const char *format,
-			     va_list ap);
+      API_EXPORT(int) ap_snprintf(char *buf, size_t len, const char *format,
+				  ...)
+	__attribute__ ((format(printf, 3, 4)));
+      API_EXPORT(int) ap_vsnprintf(char *buf, size_t len, const char *format,
+				   va_list ap);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif	/* !APACHE_AP_H */
+#endif				/* !APACHE_AP_H */

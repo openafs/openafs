@@ -8,16 +8,17 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_uio.c,v 1.1.1.5 2001/09/11 14:24:42 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_osi_uio.c,v 1.8 2003/07/15 23:14:12 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
-#include "../afs/afs_cbqueue.h"
-#include "../afs/nfsclient.h"
-#include "../afs/afs_osidnlc.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
+#include "afs/afs_cbqueue.h"
+#include "afs/nfsclient.h"
+#include "afs/afs_osidnlc.h"
 
 
 /*
@@ -25,29 +26,31 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_uio.c,v 1.1.1.5 2001/09/11 
  */
 
 /* routine to make copy of uio structure in ainuio, using aoutvec for space */
-afsio_copy(ainuio, aoutuio, aoutvec)
-struct uio *ainuio, *aoutuio;
-register struct iovec *aoutvec; {
+int
+afsio_copy(struct uio *ainuio, struct uio *aoutuio,
+	   register struct iovec *aoutvec)
+{
     register int i;
     register struct iovec *tvec;
 
     AFS_STATCNT(afsio_copy);
-    if (ainuio->afsio_iovcnt > AFS_MAXIOVCNT) return EINVAL;
+    if (ainuio->afsio_iovcnt > AFS_MAXIOVCNT)
+	return EINVAL;
     memcpy((char *)aoutuio, (char *)ainuio, sizeof(struct uio));
     tvec = ainuio->afsio_iov;
     aoutuio->afsio_iov = aoutvec;
-    for(i=0;i<ainuio->afsio_iovcnt;i++){
+    for (i = 0; i < ainuio->afsio_iovcnt; i++) {
 	memcpy((char *)aoutvec, (char *)tvec, sizeof(struct iovec));
-	tvec++;	    /* too many compiler bugs to do this as one expr */
+	tvec++;			/* too many compiler bugs to do this as one expr */
 	aoutvec++;
     }
     return 0;
 }
 
 /* trim the uio structure to the specified size */
-afsio_trim(auio, asize)
-register struct uio *auio;
-register afs_int32 asize; {
+int
+afsio_trim(register struct uio *auio, register afs_int32 asize)
+{
     register int i;
     register struct iovec *tv;
 
@@ -55,19 +58,19 @@ register afs_int32 asize; {
     auio->afsio_resid = asize;
     tv = auio->afsio_iov;
     /* It isn't clear that multiple iovecs work ok (hasn't been tested!) */
-    for(i=0;;i++,tv++) {
+    for (i = 0;; i++, tv++) {
 	if (i >= auio->afsio_iovcnt || asize <= 0) {
 	    /* we're done */
 	    auio->afsio_iovcnt = i;
 	    break;
 	}
-	if (tv->iov_len	<= asize)
+	if (tv->iov_len <= asize)
 	    /* entire iovec is included */
-	    asize -= tv->iov_len;   /* this many fewer bytes */
+	    asize -= tv->iov_len;	/* this many fewer bytes */
 	else {
 	    /* this is the last one */
 	    tv->iov_len = asize;
-	    auio->afsio_iovcnt = i+1;
+	    auio->afsio_iovcnt = i + 1;
 	    break;
 	}
     }
@@ -75,14 +78,14 @@ register afs_int32 asize; {
 }
 
 /* skip asize bytes in the current uio structure */
-afsio_skip(auio, asize)
-register struct uio *auio;
-register afs_int32 asize; {
+int
+afsio_skip(register struct uio *auio, register afs_int32 asize)
+{
     register struct iovec *tv;	/* pointer to current iovec */
     register int cnt;
 
     AFS_STATCNT(afsio_skip);
-   /* It isn't guaranteed that multiple iovecs work ok (hasn't been tested!) */
+    /* It isn't guaranteed that multiple iovecs work ok (hasn't been tested!) */
     while (asize > 0 && auio->afsio_resid) {
 	tv = auio->afsio_iov;
 	cnt = tv->iov_len;
@@ -101,4 +104,3 @@ register afs_int32 asize; {
     }
     return 0;
 }
-

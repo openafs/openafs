@@ -11,23 +11,24 @@
 
 #include <afsconfig.h>
 #if defined(UKERNEL)
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc.c,v 1.1.1.9 2003/07/30 17:11:22 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15 2004/04/14 23:26:13 jaltman Exp $");
 
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../afs/pthread_glock.h"
-#include "../afs/vice.h"
-#include "../afs/auth.h"
-#include "../afs/venus.h"
-#include "../afs/pthread_glock.h"
-#include "../afs/dirpath.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/stds.h"
+#include "afs/pthread_glock.h"
+#include "afs/vice.h"
+#include "afs/auth.h"
+#include "afs/venus.h"
+#include "afs/pthread_glock.h"
+#include "afs/dirpath.h"
 
 #if !defined(min)
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -77,33 +78,31 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc.c,v 1.1.1.9 2003/07/30 17:11:2
 #define AFS_KERBEROS_ENV
 #endif
 
-#ifdef AFS_KERBEROS_ENV 
+#ifdef AFS_KERBEROS_ENV
 #include <fcntl.h>
 #include <sys/file.h>
-extern afs_uint32 life_to_time();
-extern unsigned char time_to_life();
 #include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
- 
+
 #define TKT_ROOT "/tmp/tkt"
- 
+
 #define KSUCCESS 0
 #define KFAILURE 255
- 
+
 /* Definitions for ticket file utilities */
 #define	R_TKT_FIL	0
 #define	W_TKT_FIL	1
- 
+
 /* Error codes returned by ticket file utilities */
 #define		NO_TKT_FIL	76	/* No ticket file found */
 #define		TKT_FIL_ACC	77	/* Couldn't access tkt file */
 #define		TKT_FIL_LCK	78	/* Couldn't lock ticket file */
 #define		TKT_FIL_FMT	79	/* Bad ticket file format */
 #define		TKT_FIL_INI	80	/* afs_tf_init not called first */
-  
+
 /* Values returned by get_credentials */
 #define		RET_TKFIL      21	/* Can't read ticket file */
- 
+
 #ifndef BUFSIZ
 #define BUFSIZ 4096
 #endif
@@ -125,18 +124,16 @@ static struct flock fileUlock = { F_UNLCK, 0, 0, 0, 0 };
 #ifndef EOF
 #define EOF (-1)
 #endif
- 
+
 /* the following routines aren't static anymore on behalf of the kerberos IV
  * compatibility library built in subtree krb.
  */
-int afs_tf_init(), afs_tf_get_pname(), afs_tf_get_pinst(), afs_tf_get_cred(); 
-int afs_tf_save_cred(), afs_tf_close(), afs_tf_create(); 
+int afs_tf_init(), afs_tf_get_pname(), afs_tf_get_pinst(), afs_tf_get_cred();
+int afs_tf_save_cred(), afs_tf_close(), afs_tf_create();
 int afs_tf_dest_tkt();
-/* except ktc_LocalCell which is still static
- */
-static int ktc_LocalCell();
+static void ktc_LocalCell();
 char *ktc_tkt_string();
-#endif  /* AFS_KERBEROS_ENV */
+#endif /* AFS_KERBEROS_ENV */
 
 #ifdef AFS_DUX40_ENV
 #define PIOCTL afs_pioctl
@@ -199,7 +196,7 @@ static int kernelKTC = 0;
 /* printf ("returned from KTC_NO_OP kernelKTC <= %d; code=%d, errno=%d\n", kernelKTC, code, errno); */\
     }
 
-#else	/* AFS_DECOSF_ENV */
+#else /* AFS_DECOSF_ENV */
 
 #define CHECK_KERNEL   							\
     if (kernelKTC == 0) {						\
@@ -213,7 +210,7 @@ static int kernelKTC = 0;
 	else kernelKTC = 2;						\
 /* printf ("returned from KTC_NO_OP kernelKTC <= %d; code=%d, errno=%d\n", kernelKTC, code, errno); */\
     }
-#endif	/* AFS_DECOSF_ENV */
+#endif /* AFS_DECOSF_ENV */
 
 #define TRY_KERNEL(cmd,a1,a2,a3,a4)					\
 {   CHECK_KERNEL;							\
@@ -230,11 +227,11 @@ static int kernelKTC = 0;
 /* this is a structure used to communicate with the afs cache mgr, but is
  * otherwise irrelevant */
 struct ClearToken {
-	afs_int32 AuthHandle;
-	char HandShakeKey[8];
-	afs_int32 ViceId;
-	afs_int32 BeginTimestamp;
-	afs_int32 EndTimestamp;
+    afs_int32 AuthHandle;
+    char HandShakeKey[8];
+    afs_int32 ViceId;
+    afs_int32 BeginTimestamp;
+    afs_int32 EndTimestamp;
 };
 #endif /* !defined(UKERNEL) */
 
@@ -244,31 +241,40 @@ static struct {
     int valid;
     struct ktc_principal server;
     struct ktc_principal client;
-    struct ktc_token	 token;
-} local_tokens[MAXLOCALTOKENS] = {{0}, {0}, {0}, {0}};
+    struct ktc_token token;
+} local_tokens[MAXLOCALTOKENS] = { {
+0}, {
+0}, {
+0}, {
+0}};
 
 /* new interface routines to the ticket cache.  Only handle afs service right
  * now. */
 
-static int NewSetToken (aserver, atoken, aclient, flags)
-  struct ktc_principal *aserver;
-  struct ktc_principal *aclient;
-  struct ktc_token *atoken;
-  afs_int32 flags;
+static int
+NewSetToken(aserver, atoken, aclient, flags)
+     struct ktc_principal *aserver;
+     struct ktc_principal *aclient;
+     struct ktc_token *atoken;
+     afs_int32 flags;
 {
-    TRY_KERNEL (KTC_SETTOKEN_OP,
-		aserver, aclient, atoken, sizeof(struct ktc_token));
+    TRY_KERNEL(KTC_SETTOKEN_OP, aserver, aclient, atoken,
+	       sizeof(struct ktc_token));
     /* no kernel ticket cache */
     return EINVAL;
 }
 
-static int OldSetToken (aserver, atoken, aclient, flags)
-struct ktc_principal *aserver, *aclient;
-struct ktc_token *atoken; 
-afs_int32 flags;
+#define MAXPIOCTLTOKENLEN \
+(3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
+
+static int
+OldSetToken(aserver, atoken, aclient, flags)
+     struct ktc_principal *aserver, *aclient;
+     struct ktc_token *atoken;
+     afs_int32 flags;
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register char *tp;
     struct ClearToken ct;
     register afs_int32 code;
@@ -277,29 +283,36 @@ afs_int32 flags;
     if (strcmp(aserver->name, "afs") != 0) {
 	int found = -1;
 	int i;
-	for (i=0; i<MAXLOCALTOKENS; i++)
+	for (i = 0; i < MAXLOCALTOKENS; i++)
 	    if (local_tokens[i].valid) {
-		if ((strcmp (local_tokens[i].server.name, aserver->name) == 0) &&
-		    (strcmp (local_tokens[i].server.instance, aserver->instance) == 0) &&
-		    (strcmp (local_tokens[i].server.cell, aserver->cell) == 0)) {
-		    found = i;		/* replace existing entry */
+		if ((strcmp(local_tokens[i].server.name, aserver->name) == 0)
+		    &&
+		    (strcmp
+		     (local_tokens[i].server.instance,
+		      aserver->instance) == 0)
+		    && (strcmp(local_tokens[i].server.cell, aserver->cell) ==
+			0)) {
+		    found = i;	/* replace existing entry */
 		    break;
-		}
-		else /* valid, but no match */ ;
-	    } else found = i;		/* remember this empty slot */
-	if (found == -1) return KTC_NOENT;
+		} else		/* valid, but no match */
+		    ;
+	    } else
+		found = i;	/* remember this empty slot */
+	if (found == -1)
+	    return KTC_NOENT;
 	memcpy(&local_tokens[found].token, atoken, sizeof(struct ktc_token));
 	local_tokens[found].server = *aserver;
 	local_tokens[found].client = *aclient;
 	local_tokens[found].valid = 1;
 	return 0;
     }
-    tp = tbuffer;   /* start copying here */
-    if ((atoken->ticketLen < MINKTCTICKETLEN) ||
-	(atoken->ticketLen > MAXKTCTICKETLEN)) return KTC_TOOBIG;
-    memcpy(tp, &atoken->ticketLen, sizeof(afs_int32));    /* copy in ticket length */
+    tp = tbuffer;		/* start copying here */
+    if ((atoken->ticketLen < MINKTCTICKETLEN)
+	|| (atoken->ticketLen > MAXKTCTICKETLEN))
+	return KTC_TOOBIG;
+    memcpy(tp, &atoken->ticketLen, sizeof(afs_int32));	/* copy in ticket length */
     tp += sizeof(afs_int32);
-    memcpy(tp, atoken->ticket, atoken->ticketLen);   /* copy in ticket */
+    memcpy(tp, atoken->ticket, atoken->ticketLen);	/* copy in ticket */
     tp += atoken->ticketLen;
     /* next, copy in the "clear token", describing who we are */
     ct.AuthHandle = atoken->kvno;	/* hide auth handle here */
@@ -307,25 +320,31 @@ afs_int32 flags;
 
     ct.BeginTimestamp = atoken->startTime;
     ct.EndTimestamp = atoken->endTime;
-    if (ct.BeginTimestamp == 0) ct.BeginTimestamp = 1;
+    if (ct.BeginTimestamp == 0)
+	ct.BeginTimestamp = 1;
 
-    if ((strlen(aclient->name) > strlen ("AFS ID ")) &&
-	(aclient->instance[0] == 0)) {
+    if ((strlen(aclient->name) > strlen("AFS ID "))
+	&& (aclient->instance[0] == 0)) {
 	int sign = 1;
 	afs_int32 viceId = 0;
-	char *cp = aclient->name + strlen ("AFS ID ");
-	if (*cp == '-') { sign = -1; cp++; }
+	char *cp = aclient->name + strlen("AFS ID ");
+	if (*cp == '-') {
+	    sign = -1;
+	    cp++;
+	}
 	while (*cp) {
-	    if (isdigit(*cp)) viceId = viceId*10 + (int)(*cp - '0');
-	    else goto not_vice_id;
+	    if (isdigit(*cp))
+		viceId = viceId * 10 + (int)(*cp - '0');
+	    else
+		goto not_vice_id;
 	    cp++;
 	}
 	ct.ViceId = viceId * sign;	/* OK to let any value here? */
 	if (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 0)
 	    ct.BeginTimestamp++;	/* force lifetime to be odd */
     } else {
-not_vice_id:
-	ct.ViceId = getuid();		/* wrong, but works in primary cell */
+      not_vice_id:
+	ct.ViceId = getuid();	/* wrong, but works in primary cell */
 	if (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1)
 	    ct.BeginTimestamp++;	/* force lifetime to be even */
     }
@@ -354,7 +373,7 @@ not_vice_id:
      * The following means that setpag will affect the parent process as
      * well as the current process.
      */
-    if (flags & AFS_SETTOK_SETPAG)	
+    if (flags & AFS_SETTOK_SETPAG)
 	temp |= 0x8000;
 
     memcpy(tp, &temp, sizeof(afs_int32));
@@ -362,183 +381,193 @@ not_vice_id:
 
     /* finally copy in the cell name */
     temp = strlen(aserver->cell);
-    if (temp >= MAXKTCREALMLEN) return KTC_TOOBIG;
+    if (temp >= MAXKTCREALMLEN)
+	return KTC_TOOBIG;
     strcpy(tp, aserver->cell);
-    tp += temp+1;
+    tp += temp + 1;
 
     /* now setup for the pioctl */
     iob.in = tbuffer;
-    iob.in_size = tp-tbuffer;
+    iob.in_size = tp - tbuffer;
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
 #if defined(NO_AFS_CLIENT)
-    { int fd;  /* DEBUG */
-      char *tkfile;
-      if ((tkfile=getenv("TKTFILE")) &&
-          ((fd=open(tkfile, O_WRONLY|O_APPEND|O_TRUNC|O_CREAT, 0644)) >= 0)) {
-        printf("Writing ticket to: %s\n", tkfile);
-        code = (write(fd, iob.in, iob.in_size) != iob.in_size);
-        close(fd);
-      }
-      else
-        code = KTC_PIOCTLFAIL;
+    {
+	int fd;			/* DEBUG */
+	char *tkfile;
+	if ((tkfile = getenv("TKTFILE"))
+	    &&
+	    ((fd =
+	      open(tkfile, O_WRONLY | O_APPEND | O_TRUNC | O_CREAT,
+		   0644)) >= 0)) {
+	    printf("Writing ticket to: %s\n", tkfile);
+	    code = (write(fd, iob.in, iob.in_size) != iob.in_size);
+	    close(fd);
+	} else
+	    code = KTC_PIOCTLFAIL;
     }
 #else /* NO_AFS_CLIENT */
     code = PIOCTL(0, VIOCSETTOK, &iob, 0);
 #endif /* NO_AFS_CLIENT */
-    if (code) return KTC_PIOCTLFAIL;
+    if (code)
+	return KTC_PIOCTLFAIL;
     return 0;
 }
 
 
-ktc_SetToken (aserver, atoken, aclient, flags)
-  struct ktc_principal *aserver;
-  struct ktc_principal *aclient;
-  struct ktc_token *atoken;
-  afs_int32 flags;
+ktc_SetToken(aserver, atoken, aclient, flags)
+     struct ktc_principal *aserver;
+     struct ktc_principal *aclient;
+     struct ktc_token *atoken;
+     afs_int32 flags;
 {
     int ncode, ocode;
 
     LOCK_GLOBAL_MUTEX
 #ifdef AFS_KERBEROS_ENV
-    if (!lcell[0]) ktc_LocalCell();
- 
-    if (/*!strcmp(aclient->cell, lcell) && this would only store local creds*/
-	(strcmp(aserver->name, "AuthServer") ||
-					  strcmp(aserver->instance, "Admin"))){
- 	if (strcmp(aserver->name, "krbtgt") == 0) {
- 	    static char lrealm[MAXKTCREALMLEN];
- 
- 	    if (!lrealm[0]) ucstring(lrealm, lcell, MAXKTCREALMLEN);
- 	    if (strcmp(aserver->instance, lrealm) == 0) {
- 		afs_tf_create(aclient->name, aclient->instance);
- 	    }
- 	}
- 
- 	ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
- 	if (ncode == NO_TKT_FIL) {
- 	    (void) afs_tf_create(aclient->name, aclient->instance);
- 	    ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
- 	}
- 
- 	if (!ncode) {
- 	    afs_tf_save_cred(aserver, atoken, aclient);
- 	}
- 	afs_tf_close();
+	if (!lcell[0])
+	ktc_LocalCell();
+
+    if (			/*!strcmp(aclient->cell, lcell) && this would only store local creds */
+	   (strcmp(aserver->name, "AuthServer")
+	    || strcmp(aserver->instance, "Admin"))) {
+	if (strcmp(aserver->name, "krbtgt") == 0) {
+	    static char lrealm[MAXKTCREALMLEN];
+
+	    if (!lrealm[0])
+		ucstring(lrealm, lcell, MAXKTCREALMLEN);
+	    if (strcmp(aserver->instance, lrealm) == 0) {
+		afs_tf_create(aclient->name, aclient->instance);
+	    }
+	}
+
+	ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
+	if (ncode == NO_TKT_FIL) {
+	    (void)afs_tf_create(aclient->name, aclient->instance);
+	    ncode = afs_tf_init(ktc_tkt_string(), W_TKT_FIL);
+	}
+
+	if (!ncode) {
+	    afs_tf_save_cred(aserver, atoken, aclient);
+	}
+	afs_tf_close();
 #ifdef NO_AFS_CLIENT
-        UNLOCK_GLOBAL_MUTEX
-        return ncode;
+	UNLOCK_GLOBAL_MUTEX return ncode;
 #endif /* NO_AFS_CLIENT */
-     }
+    }
 #endif
 
 #ifndef NO_AFS_CLIENT
-    ncode = NewSetToken (aserver, atoken, aclient, flags);
-    if (ncode ||			/* new style failed */
-	(strcmp (aserver->name, "afs") == 0)) {	/* for afs tokens do both */
-	ocode = OldSetToken (aserver, atoken, aclient, flags);
-    } else ocode = 0;
+    ncode = NewSetToken(aserver, atoken, aclient, flags);
+    if (ncode ||		/* new style failed */
+	(strcmp(aserver->name, "afs") == 0)) {	/* for afs tokens do both */
+	ocode = OldSetToken(aserver, atoken, aclient, flags);
+    } else
+	ocode = 0;
     if (ncode && ocode) {
-	UNLOCK_GLOBAL_MUTEX
-	if (ocode == -1) ocode = errno;
-	else if (ocode == KTC_PIOCTLFAIL) ocode = errno;
-	if (ocode == ESRCH) return KTC_NOCELL;
-	if (ocode == EINVAL) return KTC_NOPIOCTL;
-	if (ocode == EIO) return KTC_NOCM;
+	UNLOCK_GLOBAL_MUTEX if (ocode == -1)
+	    ocode = errno;
+	else if (ocode == KTC_PIOCTLFAIL)
+	    ocode = errno;
+	if (ocode == ESRCH)
+	    return KTC_NOCELL;
+	if (ocode == EINVAL)
+	    return KTC_NOPIOCTL;
+	if (ocode == EIO)
+	    return KTC_NOCM;
 	return KTC_PIOCTLFAIL;
     }
 #endif /* NO_AFS_CLIENT */
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
 /* get token, given server we need and token buffer.  aclient will eventually
  * be set to our identity to the server.
  */
 ktc_GetToken(aserver, atoken, atokenLen, aclient)
-struct ktc_principal *aserver, *aclient;
-int atokenLen;
-struct ktc_token *atoken; {
+     struct ktc_principal *aserver, *aclient;
+     int atokenLen;
+     struct ktc_token *atoken;
+{
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register afs_int32 code;
     int index;
-    char *stp, *cellp; /* secret token ptr */
+    char *stp, *cellp;		/* secret token ptr */
     struct ClearToken ct;
     register char *tp;
     afs_int32 temp;
-    int	maxLen;	/* biggest ticket we can copy */
-    int	tktLen;	/* server ticket length */
+    int maxLen;			/* biggest ticket we can copy */
+    int tktLen;			/* server ticket length */
     char found = 0;
-    
+
     LOCK_GLOBAL_MUTEX
 #ifndef NO_AFS_CLIENT
-    TRY_KERNEL (KTC_GETTOKEN_OP, aserver, aclient, atoken, atokenLen);
+	TRY_KERNEL(KTC_GETTOKEN_OP, aserver, aclient, atoken, atokenLen);
 #endif /* NO_AFS_CLIENT */
 
 #ifdef AFS_KERBEROS_ENV
-    if (!lcell[0]) ktc_LocalCell();
+    if (!lcell[0])
+	ktc_LocalCell();
 #endif
 #ifndef NO_AFS_CLIENT
-    if (strcmp(aserver->name, "afs") != 0) 
+    if (strcmp(aserver->name, "afs") != 0)
 #endif /* NO_AFS_CLIENT */
-      {
+    {
 	int i;
 	/* try the local tokens */
-	for (i=0; i<MAXLOCALTOKENS; i++)
-	    if (local_tokens[i].valid &&
-		(strcmp (local_tokens[i].server.name, aserver->name) == 0) &&
-		(strcmp (local_tokens[i].server.instance, aserver->instance) == 0) &&
-		(strcmp (local_tokens[i].server.cell, aserver->cell) == 0)) {
-		memcpy (atoken, &local_tokens[i].token, min (atokenLen, sizeof(struct ktc_token)));
+	for (i = 0; i < MAXLOCALTOKENS; i++)
+	    if (local_tokens[i].valid
+		&& (strcmp(local_tokens[i].server.name, aserver->name) == 0)
+		&& (strcmp(local_tokens[i].server.instance, aserver->instance)
+		    == 0)
+		&& (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
+		memcpy(atoken, &local_tokens[i].token,
+		       min(atokenLen, sizeof(struct ktc_token)));
 		if (aclient)
 		    *aclient = local_tokens[i].client;
-		UNLOCK_GLOBAL_MUTEX
-		return 0;
+		UNLOCK_GLOBAL_MUTEX return 0;
 	    }
 #ifdef AFS_KERBEROS_ENV
-        if (!afs_tf_init(ktc_tkt_string(), R_TKT_FIL)) {
-            if  (aclient) {
-                if (!afs_tf_get_pname(aclient->name) &&
-                !afs_tf_get_pinst(aclient->instance))
-                    found = 1;
-            } else {
-                char tmpstring[MAXHOSTCHARS];
-                afs_tf_get_pname(&tmpstring);
-                afs_tf_get_pinst(&tmpstring);
-                found = 1;
-            }
-        }
-        if (found) {
- 	    struct ktc_principal cprincipal;
- 	    struct ktc_token ctoken;
- 
- 	    while (!afs_tf_get_cred(&cprincipal, &ctoken)) {
- 		if (strcmp(cprincipal.name, aserver->name) == 0 &&
- 		    strcmp(cprincipal.instance, aserver->instance) == 0 &&
- 		    strcmp(cprincipal.cell, aserver->cell) == 0) {
- 
+	if (!afs_tf_init(ktc_tkt_string(), R_TKT_FIL)) {
+	    if (aclient) {
+		if (!afs_tf_get_pname(aclient->name)
+		    && !afs_tf_get_pinst(aclient->instance))
+		    found = 1;
+	    } else {
+		char tmpstring[MAXHOSTCHARS];
+		afs_tf_get_pname(&tmpstring);
+		afs_tf_get_pinst(&tmpstring);
+		found = 1;
+	    }
+	}
+	if (found) {
+	    struct ktc_principal cprincipal;
+	    struct ktc_token ctoken;
+
+	    while (!afs_tf_get_cred(&cprincipal, &ctoken)) {
+		if (strcmp(cprincipal.name, aserver->name) == 0
+		    && strcmp(cprincipal.instance, aserver->instance) == 0
+		    && strcmp(cprincipal.cell, aserver->cell) == 0) {
+
 		    if (aclient)
 			strcpy(aclient->cell, lcell);
- 		    memcpy(atoken, &ctoken, 
- 			  min (atokenLen, sizeof(struct ktc_token)));
- 		    
- 		    afs_tf_close();
-		    UNLOCK_GLOBAL_MUTEX
- 		    return 0;
- 		}
- 	    }
- 	}
- 	afs_tf_close();
-#endif
-	UNLOCK_GLOBAL_MUTEX
-	return KTC_NOENT;
-    }
+		    memcpy(atoken, &ctoken,
+			   min(atokenLen, sizeof(struct ktc_token)));
 
+		    afs_tf_close();
+		    UNLOCK_GLOBAL_MUTEX return 0;
+		}
+	    }
+	}
+	afs_tf_close();
+#endif
+	UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+    }
 #ifndef NO_AFS_CLIENT
-    for (index=0; index<200; index++) {	/* sanity check in case pioctl fails */
-	iob.in = (char *) &index;
+    for (index = 0; index < 200; index++) {	/* sanity check in case pioctl fails */
+	iob.in = (char *)&index;
 	iob.in_size = sizeof(afs_int32);
 	iob.out = tbuffer;
 	iob.out_size = sizeof(tbuffer);
@@ -548,8 +577,7 @@ struct ktc_token *atoken; {
 	if (code) {
 	    /* failed to retrieve specified token */
 	    if (code < 0 && errno == EDOM) {
-		UNLOCK_GLOBAL_MUTEX
-		return KTC_NOENT;
+		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
 	    }
 	} else {
 	    /* token retrieved; parse buffer */
@@ -567,8 +595,7 @@ struct ktc_token *atoken; {
 	    /* get size of clear token and verify */
 	    memcpy(&temp, tp, sizeof(afs_int32));
 	    if (temp != sizeof(struct ClearToken)) {
-		UNLOCK_GLOBAL_MUTEX
-		return KTC_ERROR;
+		UNLOCK_GLOBAL_MUTEX return KTC_ERROR;
 	    }
 	    tp += sizeof(afs_int32);
 
@@ -588,10 +615,10 @@ struct ktc_token *atoken; {
 #endif
 		) {
 		/* got token for cell; check that it will fit */
-		maxLen = atokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
+		maxLen =
+		    atokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
 		if (maxLen < tktLen) {
-		    UNLOCK_GLOBAL_MUTEX
-		    return KTC_TOOBIG;
+		    UNLOCK_GLOBAL_MUTEX return KTC_TOOBIG;
 		}
 
 		/* set return values */
@@ -602,30 +629,30 @@ struct ktc_token *atoken; {
 		    ct.AuthHandle = 999;
 		}
 		atoken->kvno = ct.AuthHandle;
-		memcpy(&atoken->sessionKey, ct.HandShakeKey, sizeof(struct ktc_encryptionKey));
+		memcpy(&atoken->sessionKey, ct.HandShakeKey,
+		       sizeof(struct ktc_encryptionKey));
 		atoken->ticketLen = tktLen;
 
 		if (aclient) {
 		    strcpy(aclient->cell, cellp);
 		    aclient->instance[0] = 0;
 
-		    if ((atoken->kvno == 999) || /* old style bcrypt ticket */
-			(ct.BeginTimestamp &&    /* new w/ prserver lookup */
+		    if ((atoken->kvno == 999) ||	/* old style bcrypt ticket */
+			(ct.BeginTimestamp &&	/* new w/ prserver lookup */
 			 (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1))) {
 			sprintf(aclient->name, "AFS ID %d", ct.ViceId);
 		    } else {
 			sprintf(aclient->name, "Unix UID %d", ct.ViceId);
 		    }
 		}
-		UNLOCK_GLOBAL_MUTEX
-		return 0;
+		UNLOCK_GLOBAL_MUTEX return 0;
 	    }
 	}
     }
 #endif /* NO_AFS_CLIENT */
 
-    UNLOCK_GLOBAL_MUTEX
-    if ((code < 0) && (errno == EINVAL)) return KTC_NOPIOCTL;
+    UNLOCK_GLOBAL_MUTEX if ((code < 0) && (errno == EINVAL))
+	return KTC_NOPIOCTL;
     return KTC_PIOCTLFAIL;	/* probable cause */
 }
 
@@ -635,15 +662,14 @@ struct ktc_token *atoken; {
  */
 #ifndef NO_AFS_CLIENT
 ktc_ForgetToken(aserver)
-struct ktc_principal *aserver; {
+     struct ktc_principal *aserver;
+{
     int rc;
 
-    LOCK_GLOBAL_MUTEX
-    TRY_KERNEL (KTC_FORGETTOKEN_OP, aserver, 0,0,0);
+    LOCK_GLOBAL_MUTEX TRY_KERNEL(KTC_FORGETTOKEN_OP, aserver, 0, 0, 0);
 
     rc = ktc_ForgetAllTokens();	/* bogus, but better */
-    UNLOCK_GLOBAL_MUTEX
-    return rc;
+    UNLOCK_GLOBAL_MUTEX return rc;
 }
 #endif /* NO_AFS_CLIENT */
 
@@ -652,97 +678,96 @@ struct ktc_principal *aserver; {
  * success.  */
 
 ktc_ListTokens(aprevIndex, aindex, aserver)
-int aprevIndex, *aindex;
-struct ktc_principal *aserver; {
+     int aprevIndex, *aindex;
+     struct ktc_principal *aserver;
+{
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register afs_int32 code;
     register char *tp;
     afs_int32 temp, index;
 
+    memset(tbuffer, 0, sizeof(tbuffer));
+
     LOCK_GLOBAL_MUTEX
 #ifndef NO_AFS_CLIENT
-    TRY_KERNEL (KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
+	TRY_KERNEL(KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
 #endif /* NO_AFS_CLIENT */
 
     index = aprevIndex;
 #ifdef NO_AFS_CLIENT
-    if (index < 214) index = 214;
+    if (index < 214)
+	index = 214;
 #endif /* NO_AFS_CLIENT */
 #ifdef AFS_KERBEROS_ENV
-     if (index >= 214) {
- 	int i;
- 	struct ktc_principal cprincipal;
- 	struct ktc_token ctoken;
- 
- 	if (afs_tf_init(ktc_tkt_string(), R_TKT_FIL) ||
- 	    afs_tf_get_pname(tbuffer) ||
- 	    afs_tf_get_pinst(tbuffer)) {
- 	    afs_tf_close();
-	    UNLOCK_GLOBAL_MUTEX
- 	    return KTC_NOENT;
- 	}
- 
- 	for (i=214; i<index; i++) {
- 	    if (afs_tf_get_cred(&cprincipal, &ctoken)) {
- 		afs_tf_close();
-		UNLOCK_GLOBAL_MUTEX
- 		return KTC_NOENT;
- 	    }
- 	}
- 
-     again:
- 	if (afs_tf_get_cred(&cprincipal, &ctoken)) {
- 	    afs_tf_close();
-	    UNLOCK_GLOBAL_MUTEX
- 	    return KTC_NOENT;
- 	}	    
- 	index++;
- 
+    if (index >= 214) {
+	int i;
+	struct ktc_principal cprincipal;
+	struct ktc_token ctoken;
+
+	if (afs_tf_init(ktc_tkt_string(), R_TKT_FIL)
+	    || afs_tf_get_pname(tbuffer) || afs_tf_get_pinst(tbuffer)) {
+	    afs_tf_close();
+	    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	}
+
+	for (i = 214; i < index; i++) {
+	    if (afs_tf_get_cred(&cprincipal, &ctoken)) {
+		afs_tf_close();
+		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	    }
+	}
+
+      again:
+	if (afs_tf_get_cred(&cprincipal, &ctoken)) {
+	    afs_tf_close();
+	    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	}
+	index++;
+
 #ifndef NO_AFS_CLIENT
- 	if (!strcmp(cprincipal.name, "afs") && cprincipal.instance[0]==0) {
- 	    goto again;
- 	}
+	if (!strcmp(cprincipal.name, "afs") && cprincipal.instance[0] == 0) {
+	    goto again;
+	}
 #endif /* NO_AFS_CLIENT */
- 
- 	for (i=0; i < MAXLOCALTOKENS; i++) {
- 	    if (!strcmp(cprincipal.name, local_tokens[i].server.name) &&
- 		!strcmp(cprincipal.instance, local_tokens[i].server.instance) &&
- 		!strcmp(cprincipal.cell, local_tokens[i].server.cell)) {
- 		goto again;
- 		}
- 	}
- 
- 	*aserver = cprincipal;
- 	*aindex = index;
- 	afs_tf_close();
-	UNLOCK_GLOBAL_MUTEX
- 	return 0;
-     }
+
+	for (i = 0; i < MAXLOCALTOKENS; i++) {
+	    if (!strcmp(cprincipal.name, local_tokens[i].server.name)
+		&& !strcmp(cprincipal.instance,
+			   local_tokens[i].server.instance)
+		&& !strcmp(cprincipal.cell, local_tokens[i].server.cell)) {
+		goto again;
+	    }
+	}
+
+	*aserver = cprincipal;
+	*aindex = index;
+	afs_tf_close();
+	UNLOCK_GLOBAL_MUTEX return 0;
+    }
 #endif
 
 #ifndef NO_AFS_CLIENT
-    if (index >= 123) {			/* special hack for returning TCS */
-	while (index-123 < MAXLOCALTOKENS) {
-	    if (local_tokens[index-123].valid) {
-		*aserver = local_tokens[index-123].server;
-		*aindex = index+1;
-		UNLOCK_GLOBAL_MUTEX
-		return 0;
+    if (index >= 123) {		/* special hack for returning TCS */
+	while (index - 123 < MAXLOCALTOKENS) {
+	    if (local_tokens[index - 123].valid) {
+		*aserver = local_tokens[index - 123].server;
+		*aindex = index + 1;
+		UNLOCK_GLOBAL_MUTEX return 0;
 	    }
 	    index++;
 	}
 	UNLOCK_GLOBAL_MUTEX
 #ifdef AFS_KERBEROS_ENV
- 	return ktc_ListTokens(214, aindex, aserver);
+	    return ktc_ListTokens(214, aindex, aserver);
 #else
-	return KTC_NOENT;
+	    return KTC_NOENT;
 #endif
     }
 
     /* get tokens from the kernel */
-    while (index<200) {			/* sanity check in case pioctl fails */
-	iob.in = (char *) &index;
+    while (index < 200) {	/* sanity check in case pioctl fails */
+	iob.in = (char *)&index;
 	iob.in_size = sizeof(afs_int32);
 	iob.out = tbuffer;
 	iob.out_size = sizeof(tbuffer);
@@ -750,22 +775,20 @@ struct ktc_principal *aserver; {
 	if (code < 0 && errno == EDOM) {
 	    if (index < 123) {
 		int rc;
-		rc = ktc_ListTokens (123, aindex, aserver);
-		UNLOCK_GLOBAL_MUTEX
-		return rc;
-	    }
-	    else {
-		UNLOCK_GLOBAL_MUTEX
-		return KTC_NOENT;
+		rc = ktc_ListTokens(123, aindex, aserver);
+		UNLOCK_GLOBAL_MUTEX return rc;
+	    } else {
+		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
 	    }
 	}
-	if (code == 0) break;	/* got a ticket */
+	if (code == 0)
+	    break;		/* got a ticket */
 	/* otherwise we should skip this ticket slot */
 	index++;
     }
     if (code < 0) {
-	UNLOCK_GLOBAL_MUTEX
-	if (errno == EINVAL) return KTC_NOPIOCTL;
+	UNLOCK_GLOBAL_MUTEX if (errno == EINVAL)
+	    return KTC_NOPIOCTL;
 	return KTC_PIOCTLFAIL;
     }
 
@@ -773,45 +796,46 @@ struct ktc_principal *aserver; {
     tp = tbuffer;
 
     /* next iterator determined by earlier loop */
-    *aindex = index+1;
+    *aindex = index + 1;
 
-    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of secret token */
+    memcpy(&temp, tp, sizeof(afs_int32));	/* get size of secret token */
     tp += sizeof(afs_int32);
-    tp += temp;	/* skip ticket for now */
-    memcpy(&temp, tp, sizeof(afs_int32)); /* get size of clear token */
+    tp += temp;			/* skip ticket for now */
+    memcpy(&temp, tp, sizeof(afs_int32));	/* get size of clear token */
     if (temp != sizeof(struct ClearToken)) {
-	UNLOCK_GLOBAL_MUTEX
-	return KTC_ERROR;
+	UNLOCK_GLOBAL_MUTEX return KTC_ERROR;
     }
-    tp += sizeof(afs_int32);	    /* skip length */
-    tp += temp;		    /* skip clear token itself */
-    tp += sizeof(afs_int32);	    /* skip primary flag */
+    tp += sizeof(afs_int32);	/* skip length */
+    tp += temp;			/* skip clear token itself */
+    tp += sizeof(afs_int32);	/* skip primary flag */
     /* tp now points to the cell name */
     strcpy(aserver->cell, tp);
     aserver->instance[0] = 0;
     strcpy(aserver->name, "afs");
 #endif /* NO_AFS_CLIENT */
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
 /* discard all tokens from this user's cache */
 
-static int NewForgetAll ()
+static int
+NewForgetAll()
 {
 #ifndef NO_AFS_CLIENT
-    TRY_KERNEL (KTC_FORGETALLTOKENS_OP, 0,0,0,0);
+    TRY_KERNEL(KTC_FORGETALLTOKENS_OP, 0, 0, 0, 0);
 #endif /* NO_AFS_CLIENT */
     return EINVAL;
 }
 
-static int OldForgetAll ()
+static int
+OldForgetAll()
 {
     struct ViceIoctl iob;
     register afs_int32 code;
     int i;
 
-    for (i=0; i<MAXLOCALTOKENS; i++) local_tokens[i].valid = 0;
+    for (i = 0; i < MAXLOCALTOKENS; i++)
+	local_tokens[i].valid = 0;
 
     iob.in = 0;
     iob.in_size = 0;
@@ -819,48 +843,50 @@ static int OldForgetAll ()
     iob.out_size = 0;
 #ifndef NO_AFS_CLIENT
     code = PIOCTL(0, VIOCUNPAG, &iob, 0);
-    if (code) return KTC_PIOCTLFAIL;
+    if (code)
+	return KTC_PIOCTLFAIL;
 #endif /* NO_AFS_CLIENT */
     return 0;
 }
 
-int ktc_ForgetAllTokens()
+int
+ktc_ForgetAllTokens()
 {
     int ncode, ocode;
 
     LOCK_GLOBAL_MUTEX
 #ifdef AFS_KERBEROS_ENV
-     (void) afs_tf_dest_tkt();
+    (void) afs_tf_dest_tkt();
 #endif
 
-    ncode = NewForgetAll ();
-    ocode = OldForgetAll ();
+    ncode = NewForgetAll();
+    ocode = OldForgetAll();
     if (ncode && ocode) {
-	if (ocode == -1) ocode = errno;
-	else if (ocode == KTC_PIOCTLFAIL) ocode = errno;
-	UNLOCK_GLOBAL_MUTEX
-	if (ocode == EINVAL) return KTC_NOPIOCTL;
+	if (ocode == -1)
+	    ocode = errno;
+	else if (ocode == KTC_PIOCTLFAIL)
+	    ocode = errno;
+	UNLOCK_GLOBAL_MUTEX if (ocode == EINVAL)
+	    return KTC_NOPIOCTL;
 	return KTC_PIOCTLFAIL;
     }
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
 /* ktc_OldPioctl - returns a boolean true if the kernel supports only the old
  * pioctl interface for delivering AFS tickets to the cache manager. */
 
-ktc_OldPioctl ()
+ktc_OldPioctl()
 {
     int rc;
     LOCK_GLOBAL_MUTEX
 #ifdef	KERNEL_KTC_COMPAT
-    CHECK_KERNEL;
-    rc = (kernelKTC != 1);		/* old style interface */
+	CHECK_KERNEL;
+    rc = (kernelKTC != 1);	/* old style interface */
 #else
-    rc = 1;
+	rc = 1;
 #endif
-    UNLOCK_GLOBAL_MUTEX
-    return rc;
+    UNLOCK_GLOBAL_MUTEX return rc;
 }
 
 
@@ -871,7 +897,7 @@ ktc_OldPioctl ()
   * For copying and distribution information, please see the file
   * <mit-copyright.h>.
   */
- 
+
 #if 0
 #include <stdio.h>
 #include <errno.h>
@@ -880,12 +906,12 @@ ktc_OldPioctl ()
 #include <sys/file.h>
 #include <krb.h>
 #endif
- 
+
 #define TOO_BIG -1
 #define TF_LCK_RETRY ((unsigned)2)	/* seconds to sleep before
- 					 * retry if ticket file is
- 					 * locked */
- 
+					 * retry if ticket file is
+					 * locked */
+
 /*
  * fd must be initialized to something that won't ever occur as a real
  * file descriptor. Since open(2) returns only non-negative numbers as
@@ -899,13 +925,13 @@ ktc_OldPioctl ()
  *	c. In tf_close, be sure it gets reinitialized to a negative
  *	   number. 
  */
-static  fd = -1;
-static	curpos;				/* Position in tfbfr */
-static	lastpos;			/* End of tfbfr */
-static	char tfbfr[BUFSIZ];		/* Buffer for ticket data */
- 
+static fd = -1;
+static curpos;			/* Position in tfbfr */
+static lastpos;			/* End of tfbfr */
+static char tfbfr[BUFSIZ];	/* Buffer for ticket data */
+
 static tf_gets(), tf_read();
- 
+
 /*
  * This file contains routines for manipulating the ticket cache file.
  *
@@ -968,39 +994,39 @@ static tf_gets(), tf_read();
  * TKT_FIL_ACC  - file was in wrong mode, etc.
  * TKT_FIL_LCK  - couldn't lock the file, even after a retry
  */
- 
-afs_tf_init(tf_name, rw)
-    char   *tf_name;
-{
-    int     wflag;
-    int   me;
-     struct stat stat_buf;
 
-     switch (rw) {
-     case R_TKT_FIL:
- 	wflag = 0;
- 	break;
-     case W_TKT_FIL:
- 	wflag = 1;
- 	break;
-     default:
- 	return TKT_FIL_ACC;
-     }
-     if (lstat(tf_name, &stat_buf) < 0)
- 	switch (errno) {
- 	case ENOENT:
- 	    return NO_TKT_FIL;
- 	default:
- 	    return TKT_FIL_ACC;
- 	}
-     me = getuid();
-     if ((stat_buf.st_uid != me && me != 0) ||
- 	((stat_buf.st_mode & S_IFMT) != S_IFREG))
- 	return TKT_FIL_ACC;
- 
-     /*
-      * If "wflag" is set, open the ticket file in append-writeonly mode
-      * and lock the ticket file in exclusive mode.  If unable to lock
+afs_tf_init(tf_name, rw)
+     char *tf_name;
+{
+    int wflag;
+    int me;
+    struct stat stat_buf;
+
+    switch (rw) {
+    case R_TKT_FIL:
+	wflag = 0;
+	break;
+    case W_TKT_FIL:
+	wflag = 1;
+	break;
+    default:
+	return TKT_FIL_ACC;
+    }
+    if (lstat(tf_name, &stat_buf) < 0)
+	switch (errno) {
+	case ENOENT:
+	    return NO_TKT_FIL;
+	default:
+	    return TKT_FIL_ACC;
+	}
+    me = getuid();
+    if ((stat_buf.st_uid != me && me != 0)
+	|| ((stat_buf.st_mode & S_IFMT) != S_IFREG))
+	return TKT_FIL_ACC;
+
+    /*
+     * If "wflag" is set, open the ticket file in append-writeonly mode
+     * and lock the ticket file in exclusive mode.  If unable to lock
      * the file, sleep and try again.  If we fail again, return with the
      * proper error message. 
      */
@@ -1013,15 +1039,15 @@ afs_tf_init(tf_name, rw)
 	    return TKT_FIL_ACC;
 	}
 #if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)
-	if  (fcntl(fd, F_SETLK, &fileWlock) == -1) {
+	if (fcntl(fd, F_SETLK, &fileWlock) == -1) {
 	    sleep(TF_LCK_RETRY);
-	    if  (fcntl(fd, F_SETLK, &fileWlock) == -1) {
+	    if (fcntl(fd, F_SETLK, &fileWlock) == -1) {
 #else
 	if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
 	    sleep(TF_LCK_RETRY);
 	    if (flock(fd, LOCK_EX | LOCK_NB) < 0) {
 #endif
-		(void) close(fd);
+		(void)close(fd);
 		fd = -1;
 		return TKT_FIL_LCK;
 	    }
@@ -1038,15 +1064,15 @@ afs_tf_init(tf_name, rw)
 	return TKT_FIL_ACC;
     }
 #if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)
-    if  (fcntl(fd, F_SETLK, &fileRlock) == -1) {
+    if (fcntl(fd, F_SETLK, &fileRlock) == -1) {
 	sleep(TF_LCK_RETRY);
-	if  (fcntl(fd, F_SETLK, &fileRlock) == -1) {
+	if (fcntl(fd, F_SETLK, &fileRlock) == -1) {
 #else
     if (flock(fd, LOCK_SH | LOCK_NB) < 0) {
 	sleep(TF_LCK_RETRY);
 	if (flock(fd, LOCK_SH | LOCK_NB) < 0) {
 #endif
-	    (void) close(fd);
+	    (void)close(fd);
 	    fd = -1;
 	    return TKT_FIL_LCK;
 	}
@@ -1064,7 +1090,7 @@ afs_tf_init(tf_name, rw)
  */
 
 afs_tf_get_pname(p)
-    char   *p;
+     char *p;
 {
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1085,7 +1111,7 @@ afs_tf_get_pname(p)
  */
 
 afs_tf_get_pinst(inst)
-    char   *inst;
+     char *inst;
 {
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1107,11 +1133,11 @@ afs_tf_get_pinst(inst)
  */
 
 afs_tf_get_cred(principal, token)
-    struct ktc_principal *principal;
-    struct ktc_token *token;
+     struct ktc_principal *principal;
+     struct ktc_token *token;
 {
-    int     k_errno;
-    int     kvno, lifetime;
+    int k_errno;
+    int kvno, lifetime;
 
     if (fd < 0) {
 	return TKT_FIL_INI;
@@ -1140,17 +1166,16 @@ afs_tf_get_cred(principal, token)
 	    return EOF;
 	}
     lcstring(principal->cell, principal->cell, MAXKTCREALMLEN);
-    if (
-	tf_read((char *) &(token->sessionKey), 8) < 1 ||
-	tf_read((char *) &(lifetime), sizeof(lifetime)) < 1 ||
-	tf_read((char *) &(kvno), sizeof(kvno)) < 1 ||
-	tf_read((char *) &(token->ticketLen), sizeof(token->ticketLen))
+    if (tf_read((char *)&(token->sessionKey), 8) < 1
+	|| tf_read((char *)&(lifetime), sizeof(lifetime)) < 1
+	|| tf_read((char *)&(kvno), sizeof(kvno)) < 1
+	|| tf_read((char *)&(token->ticketLen), sizeof(token->ticketLen))
 	< 1 ||
-    /* don't try to read a silly amount into ticket->dat */
-	token->ticketLen > MAXKTCTICKETLEN ||
-	tf_read((char *) (token->ticket), token->ticketLen) < 1 ||
-	tf_read((char *) &(token->startTime), sizeof(token->startTime)) < 1
-	) {
+	/* don't try to read a silly amount into ticket->dat */
+	token->ticketLen > MAXKTCTICKETLEN
+	|| tf_read((char *)(token->ticket), token->ticketLen) < 1
+	|| tf_read((char *)&(token->startTime),
+		   sizeof(token->startTime)) < 1) {
 	return TKT_FIL_FMT;
     }
     token->endTime = life_to_time(token->startTime, lifetime);
@@ -1170,11 +1195,11 @@ afs_tf_close()
 {
     if (!(fd < 0)) {
 #if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)
-	(void) fcntl(fd, F_SETLK, &fileUlock);
+	(void)fcntl(fd, F_SETLK, &fileUlock);
 #else
-	(void) flock(fd, LOCK_UN);
-#endif 
-	(void) close(fd);
+	(void)flock(fd, LOCK_UN);
+#endif
+	(void)close(fd);
 	fd = -1;		/* see declaration of fd above */
     }
     memset(tfbfr, 0, sizeof(tfbfr));
@@ -1198,9 +1223,9 @@ afs_tf_close()
  *		file is seriously ill.
  */
 
-static 
+static
 tf_gets(s, n)
-    register char *s;
+     register char *s;
 {
     register count;
 
@@ -1216,7 +1241,7 @@ tf_gets(s, n)
 	    return 0;
 	}
 	*s = tfbfr[curpos++];
-	if (*s++== '\0')
+	if (*s++ == '\0')
 	    return (n - count);
     }
     return TOO_BIG;
@@ -1236,11 +1261,11 @@ tf_gets(s, n)
 
 static
 tf_read(s, n)
-    register char *s;
-    register n;
+     register char *s;
+     register n;
 {
     register count;
-    
+
     for (count = n; count > 0; --count) {
 	if (curpos >= sizeof(tfbfr)) {
 	    lastpos = read(fd, tfbfr, sizeof(tfbfr));
@@ -1253,8 +1278,8 @@ tf_read(s, n)
     }
     return n;
 }
-     
-char   *tkt_string();
+
+char *tkt_string();
 
 /*
  * afs_tf_save_cred() appends an incoming ticket to the end of the ticket
@@ -1268,47 +1293,50 @@ char   *tkt_string();
  */
 
 afs_tf_save_cred(aserver, atoken, aclient)
-    struct ktc_principal *aserver;
-    struct ktc_principal *aclient;
-    struct ktc_token *atoken;	/* Token */
+     struct ktc_principal *aserver;
+     struct ktc_principal *aclient;
+     struct ktc_token *atoken;	/* Token */
 {
-    char realm[MAXKTCREALMLEN+1];
+    char realm[MAXKTCREALMLEN + 1];
     char junk[MAXKTCNAMELEN];
     struct ktc_principal principal;
     struct ktc_token token;
-    int     status;
-    off_t   start;
-    int     lifetime, kvno;
-    int     count;		/* count for write */
+    int status;
+    off_t start;
+    int lifetime, kvno;
+    int count;			/* count for write */
 
     if (fd < 0) {		/* fd is ticket file as set by afs_tf_init */
-	  return TKT_FIL_INI;
+	return TKT_FIL_INI;
     }
 
     ucstring(realm, aserver->cell, MAXKTCREALMLEN);
     realm[MAXKTCREALMLEN] = '\0';
 
     /* Look for a duplicate ticket */
-    (void) lseek(fd, (off_t) 0L, 0);
+    (void)lseek(fd, (off_t) 0L, 0);
     curpos = sizeof(tfbfr);
 
-    if (afs_tf_get_pname(junk) || strcmp(junk, aclient->name) ||
-	afs_tf_get_pinst(junk) || strcmp(junk, aclient->instance)) goto bad;
+    if (afs_tf_get_pname(junk) || strcmp(junk, aclient->name)
+	|| afs_tf_get_pinst(junk) || strcmp(junk, aclient->instance))
+	goto bad;
 
     do {
 	start = lseek(fd, (off_t) 0L, 1) - lastpos + curpos;
 	status = afs_tf_get_cred(&principal, &token);
-    } while (status == 0 &&
-	     (strcmp(aserver->name, principal.name) != 0 ||
-	      strcmp(aserver->instance, principal.instance) != 0 ||
-	      strcmp(aserver->cell, principal.cell) != 0));
+    } while (status == 0
+	     && (strcmp(aserver->name, principal.name) != 0
+		 || strcmp(aserver->instance, principal.instance) != 0
+		 || strcmp(aserver->cell, principal.cell) != 0));
 
     /*
      * Two tickets for the same user authenticating to the same service
      * should be the same length, but we check here just to make sure.
      */
-    if (status == 0 && token.ticketLen != atoken->ticketLen) return KFAILURE;
-    if (status && status != EOF) return status;
+    if (status == 0 && token.ticketLen != atoken->ticketLen)
+	return KFAILURE;
+    if (status && status != EOF)
+	return status;
 
     /* Position over the credential we just matched (or the EOF) */
     lseek(fd, start, 0);
@@ -1328,32 +1356,31 @@ afs_tf_save_cred(aserver, atoken, aclient)
     if (write(fd, realm, count) != count)
 	goto bad;
     /* Session key */
-    if (write(fd, (char *) &atoken->sessionKey, 8) != 8)
+    if (write(fd, (char *)&atoken->sessionKey, 8) != 8)
 	goto bad;
     /* Lifetime */
     lifetime = time_to_life(atoken->startTime, atoken->endTime);
-    if (write(fd, (char *) &lifetime, sizeof(int)) != sizeof(int))
+    if (write(fd, (char *)&lifetime, sizeof(int)) != sizeof(int))
 	goto bad;
     /* Key vno */
     kvno = atoken->kvno;
-    if (write(fd, (char *) &kvno, sizeof(int)) != sizeof(int))
+    if (write(fd, (char *)&kvno, sizeof(int)) != sizeof(int))
 	goto bad;
     /* Tkt length */
-    if (write(fd, (char *) &(atoken->ticketLen), sizeof(int)) !=
-	sizeof(int))
+    if (write(fd, (char *)&(atoken->ticketLen), sizeof(int)) != sizeof(int))
 	goto bad;
     /* Ticket */
     count = atoken->ticketLen;
     if (write(fd, atoken->ticket, count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *) &atoken->startTime, sizeof(afs_int32))
+    if (write(fd, (char *)&atoken->startTime, sizeof(afs_int32))
 	!= sizeof(afs_int32))
 	goto bad;
 
     /* Actually, we should check each write for success */
     return (0);
-bad:
+  bad:
     return (KFAILURE);
 }
 
@@ -1383,24 +1410,23 @@ char *getenv();
 
 static char krb_ticket_string[4096] = "";
 
-char *ktc_tkt_string()
+char *
+ktc_tkt_string()
 {
     char *env;
 
-    LOCK_GLOBAL_MUTEX
-    if (!*krb_ticket_string) {
-        if (env = getenv("KRBTKFILE")) {
-	    (void) strncpy(krb_ticket_string, env,
-			   sizeof(krb_ticket_string)-1);
-	    krb_ticket_string[sizeof(krb_ticket_string)-1] = '\0';
+    LOCK_GLOBAL_MUTEX if (!*krb_ticket_string) {
+	if (env = getenv("KRBTKFILE")) {
+	    (void)strncpy(krb_ticket_string, env,
+			  sizeof(krb_ticket_string) - 1);
+	    krb_ticket_string[sizeof(krb_ticket_string) - 1] = '\0';
 	} else {
 	    /* 32 bits of signed integer will always fit in 11 characters
-	     (including the sign), so no need to worry about overflow */
-	    (void) sprintf(krb_ticket_string, "%s%d",TKT_ROOT,getuid());
-        }
+	     * (including the sign), so no need to worry about overflow */
+	    (void)sprintf(krb_ticket_string, "%s%d", TKT_ROOT, getuid());
+	}
     }
-    UNLOCK_GLOBAL_MUTEX
-    return krb_ticket_string;
+    UNLOCK_GLOBAL_MUTEX return krb_ticket_string;
 }
 
 /*
@@ -1416,15 +1442,13 @@ char *ktc_tkt_string()
 
 void
 ktc_set_tkt_string(val)
-char *val;
+     char *val;
 {
 
-    LOCK_GLOBAL_MUTEX
-    (void) strncpy(krb_ticket_string, val, sizeof(krb_ticket_string)-1);
-    krb_ticket_string[sizeof(krb_ticket_string)-1] = '\0';
-    UNLOCK_GLOBAL_MUTEX
-
-    return;
+    LOCK_GLOBAL_MUTEX(void) strncpy(krb_ticket_string, val,
+				    sizeof(krb_ticket_string) - 1);
+    krb_ticket_string[sizeof(krb_ticket_string) - 1] = '\0';
+    UNLOCK_GLOBAL_MUTEX return;
 }
 
 /*
@@ -1434,9 +1458,9 @@ char *val;
  * success, or KFAILURE if something goes wrong.
  */
 
-afs_tf_create(pname,pinst)
-    char *pname;
-    char *pinst;
+afs_tf_create(pname, pinst)
+     char *pname;
+     char *pinst;
 {
     int tktfile;
     int me, metoo;
@@ -1447,63 +1471,63 @@ afs_tf_create(pname,pinst)
     char zerobuf[1024];
     struct stat sbuf;
 
-    me = getuid ();
+    me = getuid();
     metoo = geteuid();
 
-    if (lstat(file,&sbuf) == 0) {
-	if ((sbuf.st_uid != me && me != 0) || ((sbuf.st_mode & S_IFMT) != S_IFREG) ||
-	    sbuf.st_mode & 077) {
+    if (lstat(file, &sbuf) == 0) {
+	if ((sbuf.st_uid != me && me != 0)
+	    || ((sbuf.st_mode & S_IFMT) != S_IFREG) || sbuf.st_mode & 077) {
 	    return KFAILURE;
 	}
 	/* file already exists, and permissions appear ok, so nuke it */
 	if ((fd = open(file, O_RDWR, 0)) < 0)
-	    goto out; /* can't zero it, but we can still try truncating it */
+	    goto out;		/* can't zero it, but we can still try truncating it */
 
 	memset(zerobuf, 0, sizeof(zerobuf));
 
 	for (i = 0; i < sbuf.st_size; i += sizeof(zerobuf))
 	    if (write(fd, zerobuf, sizeof(zerobuf)) != sizeof(zerobuf)) {
-		(void) fsync(fd);
-		(void) close(fd);
+		(void)fsync(fd);
+		(void)close(fd);
 		goto out;
 	    }
-	
-	(void) fsync(fd);
-	(void) close(fd);
+
+	(void)fsync(fd);
+	(void)close(fd);
     }
 
- out:
+  out:
     /* arrange so the file is owned by the ruid
-       (swap real & effective uid if necessary).
-       This isn't a security problem, since the ticket file, if it already
-       exists, has the right uid (== ruid) and mode. */
+     * (swap real & effective uid if necessary).
+     * This isn't a security problem, since the ticket file, if it already
+     * exists, has the right uid (== ruid) and mode. */
     if (me != metoo) {
 	if (setreuid(metoo, me) < 0) {
-	    return(KFAILURE);
+	    return (KFAILURE);
 	}
     }
     tktfile = creat(file, 0600);
     if (me != metoo) {
 	if (setreuid(me, metoo) < 0) {
 	    /* can't switch??? fail! */
-	    return(KFAILURE);
+	    return (KFAILURE);
 	}
     }
     if (tktfile < 0) {
-        return(KFAILURE);
+	return (KFAILURE);
     }
-    count = strlen(pname)+1;
-    if (write(tktfile,pname,count) != count) {
-        (void) close(tktfile);
-        return(KFAILURE);
+    count = strlen(pname) + 1;
+    if (write(tktfile, pname, count) != count) {
+	(void)close(tktfile);
+	return (KFAILURE);
     }
-    count = strlen(pinst)+1;
-    if (write(tktfile,pinst,count) != count) {
-        (void) close(tktfile);
-        return(KFAILURE);
+    count = strlen(pinst) + 1;
+    if (write(tktfile, pinst, count) != count) {
+	(void)close(tktfile);
+	return (KFAILURE);
     }
-    (void) close(tktfile);
-    return(KSUCCESS);
+    (void)close(tktfile);
+    return (KSUCCESS);
 }
 
 /*
@@ -1516,12 +1540,12 @@ afs_tf_create(pname,pinst)
 afs_tf_dest_tkt()
 {
     char *file = ktc_tkt_string();
-    int i,fd;
+    int i, fd;
     struct stat statb;
     char buf[BUFSIZ];
 
     errno = 0;
-    if (lstat(file,&statb) < 0)
+    if (lstat(file, &statb) < 0)
 	goto out;
 
     if (!(statb.st_mode & S_IFREG))
@@ -1534,32 +1558,36 @@ afs_tf_dest_tkt()
 
     for (i = 0; i < statb.st_size; i += BUFSIZ)
 	if (write(fd, buf, BUFSIZ) != BUFSIZ) {
-	    (void) fsync(fd);
-	    (void) close(fd);
+	    (void)fsync(fd);
+	    (void)close(fd);
 	    goto out;
 	}
 
-    (void) fsync(fd);
-    (void) close(fd);
+    (void)fsync(fd);
+    (void)close(fd);
 
-    (void) unlink(file);
+    (void)unlink(file);
 
-out:
-    if (errno == ENOENT) return RET_TKFIL;
-    else if (errno != 0) return KFAILURE;
+  out:
+    if (errno == ENOENT)
+	return RET_TKFIL;
+    else if (errno != 0)
+	return KFAILURE;
     return 0;
 }
 
-static afs_uint32 curpag()
+static afs_uint32
+curpag()
 {
     gid_t groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
 
-    if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
+    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	return 0;
 
-    g0 = groups[0]  & 0xffff;
-    g1 = groups[1]  & 0xffff;
+    g0 = groups[0] & 0xffff;
+    g1 = groups[1] & 0xffff;
     g0 -= 0x3f00;
     g1 -= 0x3f00;
     if (g0 < 0xc000 && g1 < 0xc000) {
@@ -1575,7 +1603,7 @@ static afs_uint32 curpag()
     }
     return -1;
 }
-  
+
 
 ktc_newpag()
 {
@@ -1587,25 +1615,25 @@ ktc_newpag()
     int numenv;
     char **newenv, **senv, **denv;
 
-    LOCK_GLOBAL_MUTEX
-    if (stat("/ticket", &sbuf) == -1) {
+    LOCK_GLOBAL_MUTEX if (stat("/ticket", &sbuf) == -1) {
 	prefix = "/tmp/tkt";
     }
 
     pag = curpag() & 0xffffffff;
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
-    }
-    else {
+    } else {
 	sprintf(fname, "%sp%ld", prefix, pag);
     }
     ktc_set_tkt_string(fname);
 
-    for (senv=environ, numenv=0; *senv; senv++) numenv++;
-    newenv = (char **)malloc((numenv+2) * sizeof(char *));
+    for (senv = environ, numenv = 0; *senv; senv++)
+	numenv++;
+    newenv = (char **)malloc((numenv + 2) * sizeof(char *));
 
-    for (senv=environ, denv=newenv; *senv; *senv++) {
-	if (strncmp(*senv, "KRBTKFILE=", 10) != 0) *denv++ = *senv;
+    for (senv = environ, denv = newenv; *senv; *senv++) {
+	if (strncmp(*senv, "KRBTKFILE=", 10) != 0)
+	    *denv++ = *senv;
     }
 
     *denv = (char *)malloc(10 + strlen(fname) + 1);
@@ -1613,22 +1641,22 @@ ktc_newpag()
     strcat(*denv, fname);
     *++denv = 0;
     environ = newenv;
-    UNLOCK_GLOBAL_MUTEX
-}
+UNLOCK_GLOBAL_MUTEX}
 
 /*
  * BLETCH!  We have to invoke the entire afsconf package just to
  * find out what the local cell is.
  */
-static ktc_LocalCell()
+static void
+ktc_LocalCell()
 {
     int code;
     struct afsconf_dir *conf;
 
-    if ((conf = afsconf_Open (AFSDIR_CLIENT_ETC_DIRPATH)) ||
-	(conf = afsconf_Open (AFSDIR_SERVER_ETC_DIRPATH ))) {
-	code = afsconf_GetLocalCell (conf, lcell, sizeof(lcell));
-	afsconf_Close (conf);
+    if ((conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))
+	|| (conf = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH))) {
+	code = afsconf_GetLocalCell(conf, lcell, sizeof(lcell));
+	afsconf_Close(conf);
     }
     if (!conf || code) {
 	printf("** Can't determine local cell name!\n");

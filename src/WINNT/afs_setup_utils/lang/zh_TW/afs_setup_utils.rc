@@ -50,6 +50,10 @@ BEGIN
     IDS_TITLE               "AFS for Windows"
     IDS_CANT_DETERMINE_APP_PATH 
                             "無法判斷應用程式的安裝目錄"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS 用戶端"
     IDS_SERVER_APP_NAME     "AFS 伺服器"
     IDS_CC_APP_NAME         "AFS 控制中心"
@@ -65,6 +69,10 @@ BEGIN
     IDS_PRESERVE_SERVER_CONFIG_INFO "您要保留伺服器的架構資訊嗎？若您要升級或重新安裝，就可能需要保留資訊。"
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "無法恢復先前的架構資訊"
     IDS_SAVE_OF_CONFIG_INFO_FAILED  "無法儲存架構資訊。繼續解除安裝嗎？"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "您要保留 AFS Light 的架構資訊嗎？若您要升級或重新安裝，就可能需要保留資訊。"
     IDS_PRESERVE_CC_CONFIG_INFO "您要保留控制中心的架構資訊嗎？若您要升級或重新安裝，就可能需要保留資訊。"
 END

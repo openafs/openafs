@@ -362,10 +362,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "Gostaria de efetuar logon como administrador?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "Seus tokens na célula %1 não são mais válidos.\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "A identidade do AFS informada não é reconhecida, ou a senha especificada está incorreta."
     IDS_BROWSE_WAITING      "consultando o servidor--aguarde..."

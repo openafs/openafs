@@ -50,6 +50,10 @@ BEGIN
     IDS_TITLE               "AFS(R) for Windows"
     IDS_CANT_DETERMINE_APP_PATH 
                             "アプリケーションがインストールされているディレクトリーを判別できません"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS クライアント"
     IDS_SERVER_APP_NAME     "AFS サーバー"
     IDS_CC_APP_NAME         "AFS コントロール・センター"
@@ -65,6 +69,10 @@ BEGIN
     IDS_PRESERVE_SERVER_CONFIG_INFO "サーバーの構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "前の構成情報の復元に失敗しました"
     IDS_SAVE_OF_CONFIG_INFO_FAILED  "構成情報の保管に失敗しました。アンインストールを続行しますか?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "AFS Light の構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
     IDS_PRESERVE_CC_CONFIG_INFO "コントロール・センターの構成情報を保持しますか? アップグレードまたは再インストールの場合には、これを行うと有用です。"
 END

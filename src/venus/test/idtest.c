@@ -10,9 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/idtest.c,v 1.1.1.4 2001/07/14 22:24:38 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/venus/test/idtest.c,v 1.5 2003/07/15 23:17:24 shadow Exp $");
 
-main(argc, argv) {
+main(argc, argv)
+{
     int uid;
 
     uid = geteuid();
@@ -21,4 +23,3 @@ main(argc, argv) {
     printf("and my real UID is %d.\n", uid);
     exit(0);
 }
-

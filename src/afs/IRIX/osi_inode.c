@@ -40,14 +40,15 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_inode.c,v 1.1.1.6 2001/09/11 14:25:02 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_inode.c,v 1.11 2003/07/15 23:14:23 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/osi_inode.h"
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/osi_inode.h"
+#include "afs/afs_stats.h"	/* statistics stuff */
 
 #define BAD_IGET	-1000
 
@@ -58,7 +59,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_inode.c,v 1.1.1.6 2001/09/
 /*
  * `INODESPECIAL' type inodes are ones that describe volumes.
  */
-#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h	*/
+#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h  */
 #endif
 /*
  * copy disk inode to incore inode and vice-versa
@@ -66,82 +67,84 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_inode.c,v 1.1.1.6 2001/09/
 void
 afsdptoip(struct efs_dinode *dp, struct inode *ip)
 {
-	struct afsparms *ap;
+    struct afsparms *ap;
 
-	ip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
-	osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
-	       || ip->i_version == EFS_IVER_AFSINO); 
-	ap = (struct afsparms *)ip->i_afs;
-	/* vicep1 is VOLid */
-	ap->vicep1 = dmag(dp, 0) << 24 | dmag(dp, 1) << 16 |
-					  dmag(dp, 2) << 8 | dmag(dp, 3) << 0;
-					   
-	if (ip->i_version == EFS_IVER_AFSSPEC) {
-		ap->vicep3 = dmag(dp, 8);	/* Type */
-		ap->vicep4 = dmag(dp, 4) << 24 | dmag(dp, 5) << 16 |
-					  dmag(dp, 6) << 8 | dmag(dp, 7) << 0;
+    ip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
+    osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
+	       || ip->i_version == EFS_IVER_AFSINO);
+    ap = (struct afsparms *)ip->i_afs;
+    /* vicep1 is VOLid */
+    ap->vicep1 =
+	dmag(dp, 0) << 24 | dmag(dp, 1) << 16 | dmag(dp, 2) << 8 | dmag(dp,
+									3) <<
+	0;
 
-	} else {
-		/* vnode number */
-		ap->vicep2 = dmag(dp, 4) << 16 |
-					  dmag(dp, 5) << 8 | dmag(dp, 6) << 0;
-		/* disk uniqifier */
-		ap->vicep3 = dmag(dp, 7) << 16 |
-					  dmag(dp, 8) << 8 | dmag(dp, 9) << 0;
-		/* data version */
-		ap->vicep4 = dmag(dp, 10) << 16 |
-					  dmag(dp, 11) << 8 | (dp)->di_spare;
-	}
+    if (ip->i_version == EFS_IVER_AFSSPEC) {
+	ap->vicep3 = dmag(dp, 8);	/* Type */
+	ap->vicep4 =
+	    dmag(dp, 4) << 24 | dmag(dp, 5) << 16 | dmag(dp,
+							 6) << 8 | dmag(dp,
+									7) <<
+	    0;
+
+    } else {
+	/* vnode number */
+	ap->vicep2 = dmag(dp, 4) << 16 | dmag(dp, 5) << 8 | dmag(dp, 6) << 0;
+	/* disk uniqifier */
+	ap->vicep3 = dmag(dp, 7) << 16 | dmag(dp, 8) << 8 | dmag(dp, 9) << 0;
+	/* data version */
+	ap->vicep4 = dmag(dp, 10) << 16 | dmag(dp, 11) << 8 | (dp)->di_spare;
+    }
 }
 
 void
 afsiptodp(struct inode *ip, struct efs_dinode *dp)
 {
-	struct afsparms *ap;
+    struct afsparms *ap;
 
-	if (ip->i_afs == NULL)
-		return;
+    if (ip->i_afs == NULL)
+	return;
 
-	osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
-	       || ip->i_version == EFS_IVER_AFSINO); 
-	ap = (struct afsparms *)ip->i_afs;
-	/* vicep1 is VOLid */
-	dmag(dp, 0) = ap->vicep1 >> 24;
-	dmag(dp, 1) = ap->vicep1 >> 16;
-	dmag(dp, 2) = ap->vicep1 >> 8;
-	dmag(dp, 3) = ap->vicep1 >> 0;
-					   
-	if (ip->i_version == EFS_IVER_AFSSPEC) {
-		/* Type */
-		dmag(dp, 8) = ap->vicep3;
-		/* ParentId */
-		dmag(dp, 4) = ap->vicep4 >> 24;
-		dmag(dp, 5) = ap->vicep4 >> 16;
-		dmag(dp, 6) = ap->vicep4 >> 8;
-		dmag(dp, 7) = ap->vicep4 >> 0;
-	} else {
-		/* vnode number */
-		dmag(dp, 4) = ap->vicep2 >> 16;
-		dmag(dp, 5) = ap->vicep2 >> 8;
-		dmag(dp, 6) = ap->vicep2 >> 0;
-		/* disk uniqifier */
-		dmag(dp, 7) = ap->vicep3 >> 16;
-		dmag(dp, 8) = ap->vicep3 >> 8;
-		dmag(dp, 9) = ap->vicep3 >> 0;
-		/* data version */
-		dmag(dp, 10) = ap->vicep4 >> 16;
-		dmag(dp, 11) = ap->vicep4 >> 8;
-		dp->di_spare = ap->vicep4 >> 0;
-	}
+    osi_Assert(ip->i_version == EFS_IVER_AFSSPEC
+	       || ip->i_version == EFS_IVER_AFSINO);
+    ap = (struct afsparms *)ip->i_afs;
+    /* vicep1 is VOLid */
+    dmag(dp, 0) = ap->vicep1 >> 24;
+    dmag(dp, 1) = ap->vicep1 >> 16;
+    dmag(dp, 2) = ap->vicep1 >> 8;
+    dmag(dp, 3) = ap->vicep1 >> 0;
+
+    if (ip->i_version == EFS_IVER_AFSSPEC) {
+	/* Type */
+	dmag(dp, 8) = ap->vicep3;
+	/* ParentId */
+	dmag(dp, 4) = ap->vicep4 >> 24;
+	dmag(dp, 5) = ap->vicep4 >> 16;
+	dmag(dp, 6) = ap->vicep4 >> 8;
+	dmag(dp, 7) = ap->vicep4 >> 0;
+    } else {
+	/* vnode number */
+	dmag(dp, 4) = ap->vicep2 >> 16;
+	dmag(dp, 5) = ap->vicep2 >> 8;
+	dmag(dp, 6) = ap->vicep2 >> 0;
+	/* disk uniqifier */
+	dmag(dp, 7) = ap->vicep3 >> 16;
+	dmag(dp, 8) = ap->vicep3 >> 8;
+	dmag(dp, 9) = ap->vicep3 >> 0;
+	/* data version */
+	dmag(dp, 10) = ap->vicep4 >> 16;
+	dmag(dp, 11) = ap->vicep4 >> 8;
+	dp->di_spare = ap->vicep4 >> 0;
+    }
 }
 
 void
 afsidestroy(struct inode *ip)
 {
-	if (ip->i_afs) {
-		kmem_free(ip->i_afs, sizeof(struct afsparms));
-		ip->i_afs = NULL;
-	}
+    if (ip->i_afs) {
+	kmem_free(ip->i_afs, sizeof(struct afsparms));
+	ip->i_afs = NULL;
+    }
 }
 
 extern int efs_fstype;
@@ -170,8 +173,9 @@ getinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct inode **ipp)
 	return ENOSYS;
 #endif
 
-    if (error = iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)), 
-		     (unsigned int)(inode&0xffffffff), &ip)) {
+    if (error =
+	iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
+	     (unsigned int)(inode & 0xffffffff), &ip)) {
 	return error;
     }
     *ipp = ip;
@@ -197,8 +201,8 @@ dev_t XFS_IGET_DEV;
 #define SET_XFS_ERROR(POS, DEV, INO) \
 	XFS_IGET_EPOS = (POS), XFS_IGET_DEV = (DEV), XFS_IGET_INO = (INO)
 
-int xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode,
-		 struct xfs_inode **ipp)
+int
+xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct xfs_inode **ipp)
 {
     struct xfs_inode *ip;
     int error;
@@ -222,9 +226,9 @@ int xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode,
 #endif
 
     if (error = xfs_iget((((struct mount *)
-			   ((vfsp)->vfs_bh.bh_first)->bd_pdata)),
-			 (void*)0, (xfs_ino_t)inode, 
-			 XFS_ILOCK_SHARED, &ip, (daddr_t)0)) {
+			   ((vfsp)->vfs_bh.bh_first)->bd_pdata)), (void *)0,
+			 (xfs_ino_t) inode, XFS_ILOCK_SHARED, &ip,
+			 (daddr_t) 0)) {
 	SET_XFS_ERROR(3, vfsp->vfs_dev, inode);
 	return error;
     }
@@ -236,8 +240,9 @@ int xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode,
 /* xfs_igetinode now returns an unlocked inode. This is fine, since we
  * have a refcount on the holding vnode.
  */
-int xfs_igetinode(struct vfs *vfsp, dev_t dev, ino_t inode,
-		  struct xfs_inode **ipp)
+int
+xfs_igetinode(struct vfs *vfsp, dev_t dev, ino_t inode,
+	      struct xfs_inode **ipp)
 {
     struct xfs_inode *ip;
     vnode_t *vp;
@@ -275,22 +280,23 @@ int xfs_igetinode(struct vfs *vfsp, dev_t dev, ino_t inode,
  *
  ***************************************************************************/
 struct icreateargs {
-	sysarg_t	dev;
-	sysarg_t	near_inode;
-	sysarg_t	param1;
-	sysarg_t	param2;
-	sysarg_t	param3;
-	sysarg_t	param4;
+    sysarg_t dev;
+    sysarg_t near_inode;
+    sysarg_t param1;
+    sysarg_t param2;
+    sysarg_t param3;
+    sysarg_t param4;
 };
 
 /* EFS only fs suite uses this entry point - icreate in afssyscalls.c. */
 int
-icreate(struct icreateargs *uap, rval_t *rvp)
+icreate(struct icreateargs *uap, rval_t * rvp)
 {
 #ifdef AFS_SGI_EFS_IOPS_ENV
     AFS_STATCNT(icreate);
-    return(afs_syscall_icreate(uap->dev, uap->near_inode, uap->param1,
-			       uap->param2, uap->param3, uap->param4, rvp));
+    return (afs_syscall_icreate
+	    (uap->dev, uap->near_inode, uap->param1, uap->param2, uap->param3,
+	     uap->param4, rvp));
 #else
     return ENOSYS;
 #endif
@@ -299,51 +305,51 @@ icreate(struct icreateargs *uap, rval_t *rvp)
 #ifdef AFS_SGI_EFS_IOPS_ENV
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
-afs_uint32 dev, near_inode, param1, param2, param3, param4;
-rval_t *rvp;
+     afs_uint32 dev, near_inode, param1, param2, param3, param4;
+     rval_t *rvp;
 {
-	struct inode *ip, *newip;
-	struct afsparms *ap;
-	struct cred cr;
-	int error;
+    struct inode *ip, *newip;
+    struct afsparms *ap;
+    struct cred cr;
+    int error;
 
-	AFS_STATCNT(afs_syscall_icreate);
-	if (!afs_suser())
-		return EPERM;
+    AFS_STATCNT(afs_syscall_icreate);
+    if (!afs_suser())
+	return EPERM;
 
-	if (error = getinode(0, (dev_t)dev, 2, &ip))
-		return error;
+    if (error = getinode(0, (dev_t) dev, 2, &ip))
+	return error;
 
-	cr.cr_uid = 0;
-	cr.cr_gid = -2;
-	if (error = efs_ialloc(ip, IFREG, 1, NODEV, &newip, &cr)) {	
-	    iput(ip);
-	    return error;
-	}
+    cr.cr_uid = 0;
+    cr.cr_gid = -2;
+    if (error = efs_ialloc(ip, IFREG, 1, NODEV, &newip, &cr)) {
 	iput(ip);
-	osi_Assert(newip);
-	newip->i_flags |= IACC|IUPD|ICHG;
+	return error;
+    }
+    iput(ip);
+    osi_Assert(newip);
+    newip->i_flags |= IACC | IUPD | ICHG;
 
-	osi_Assert(newip->i_afs == NULL);
-	newip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
-	if (param2 == INODESPECIAL)
-		newip->i_version = EFS_IVER_AFSSPEC;
-	else
-		newip->i_version = EFS_IVER_AFSINO;
-	ap = (struct afsparms *)newip->i_afs;
-	ap->vicep1 = param1;	/* VOLid */
-	ap->vicep2 = param2;	/* Vnode # */
-	ap->vicep3 = param3;	/* SPEC:type INO:vnode uniq */
-	ap->vicep4 = param4;	/* SPEC:parentId INO:data version */
-	rvp->r_val1 = newip->i_number;
-	iput(newip);
-	return 0;
+    osi_Assert(newip->i_afs == NULL);
+    newip->i_afs = kmem_alloc(sizeof(struct afsparms), KM_SLEEP);
+    if (param2 == INODESPECIAL)
+	newip->i_version = EFS_IVER_AFSSPEC;
+    else
+	newip->i_version = EFS_IVER_AFSINO;
+    ap = (struct afsparms *)newip->i_afs;
+    ap->vicep1 = param1;	/* VOLid */
+    ap->vicep2 = param2;	/* Vnode # */
+    ap->vicep3 = param3;	/* SPEC:type INO:vnode uniq */
+    ap->vicep4 = param4;	/* SPEC:parentId INO:data version */
+    rvp->r_val1 = newip->i_number;
+    iput(newip);
+    return 0;
 }
 #else /* !AFS_SGI_EFS_IOPS_ENV */
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
-afs_uint32 dev, near_inode, param1, param2, param3, param4;
-rval_t *rvp;
+     afs_uint32 dev, near_inode, param1, param2, param3, param4;
+     rval_t *rvp;
 {
     return ENOSYS;
 }
@@ -388,7 +394,7 @@ int afs_vol_create_lock_inited = 0;
  */
 int
 xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
-		  afs_inode_params_t params, ino_t *inop)
+		  afs_inode_params_t params, ino_t * inop)
 {
 #define AFS_PNAME_SIZE 16
     char path[64];
@@ -400,7 +406,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
     int code = 0, unused;
     struct vnode *vp;
     struct vnode *dvp;
-    int rw_vno;		/* volume ID of parent volume */
+    int rw_vno;			/* volume ID of parent volume */
     int i;
     int createdDir = 0;
     size_t junk;
@@ -411,7 +417,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
     if (datalen >= AFS_PNAME_SIZE)
 	return E2BIG;
 
-    AFS_COPYINSTR((char*)datap, path, AFS_PNAME_SIZE-1, &junk, unused);
+    AFS_COPYINSTR((char *)datap, path, AFS_PNAME_SIZE - 1, &junk, unused);
     if (*path != '/') {
 	return EINVAL;
     }
@@ -426,14 +432,13 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
     if (params[1] == INODESPECIAL)
 	AFS_LOCK_VOL_CREATE();
 
-    code = gop_lookupname(path, AFS_UIOSYS, FOLLOW, (struct vnode **) 0, &dvp);
+    code = gop_lookupname(path, AFS_UIOSYS, FOLLOW, NULL, &dvp);
     if (code == ENOENT) {
 	/* Maybe it's an old directory name format. */
-	AFS_COPYINSTR((char*)datap, name, AFS_PNAME_SIZE-1, &junk, unused);
+	AFS_COPYINSTR((char *)datap, name, AFS_PNAME_SIZE - 1, &junk, unused);
 	strcat(name, "/.");
 	strcat(name, int_to_base64(stmp1, rw_vno));
-	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, (struct vnode **) 0,
-			      &dvp);
+	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, NULL, &dvp);
 	if (!code) {
 	    /* Use old name format. */
 	    strcpy(path, name);
@@ -444,78 +449,78 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
     if (code == ENOENT) {
 	afs_xfs_dattr_t dattr;
 	/* make directory. */
-	
-	code = AFS_VN_OPEN(path, UIO_SYSSPACE, FCREAT|FEXCL, 0700, &dvp,
-			   CRMKDIR);
+
+	code =
+	    AFS_VN_OPEN(path, UIO_SYSSPACE, FCREAT | FEXCL, 0700, &dvp,
+			CRMKDIR);
 	if (code) {
 	    if (code == EEXIST) {
 		/* someone beat us to it? */
-		code = gop_lookupname(path, AFS_UIOSYS, 0, (struct vnode **) 0,
-				      &dvp);
+		code = gop_lookupname(path, AFS_UIOSYS, 0, NULL, &dvp);
 	    }
 	    if (code) {
 		AFS_UNLOCK_VOL_CREATE();
 		return code;
 	    }
-	}
-	else
+	} else
 	    createdDir = 1;
-	memset((char*)&dattr, 0, sizeof(dattr));
+	memset((char *)&dattr, 0, sizeof(dattr));
 	dattr.atd_version = AFS_XFS_ATD_VERS;
 	dattr.atd_volume = rw_vno;
-	AFS_VOP_ATTR_SET(dvp, AFS_XFS_DATTR, (char*)&dattr,
-			 SIZEOF_XFS_DATTR_T,
-			 ATTR_ROOT|ATTR_CREATE, OSI_GET_CURRENT_CRED(), code);
+	AFS_VOP_ATTR_SET(dvp, AFS_XFS_DATTR, (char *)&dattr,
+			 SIZEOF_XFS_DATTR_T, ATTR_ROOT | ATTR_CREATE,
+			 OSI_GET_CURRENT_CRED(), code);
 	if (code) {
 	    VN_RELE(dvp);
 	    if (createdDir)
-		(void) vn_remove(path, UIO_SYSSPACE, RMDIRECTORY);
+		(void)vn_remove(path, UIO_SYSSPACE, RMDIRECTORY);
 	    AFS_UNLOCK_VOL_CREATE();
 	    return code;
 	}
     }
 
-    vattr.va_mask = AT_FSID|AT_NODEID; /* gets a guick return using FSID*/
+    vattr.va_mask = AT_FSID | AT_NODEID;	/* gets a guick return using FSID */
     AFS_VOP_GETATTR(dvp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
     if (code) {
 	VN_RELE(dvp);
 	return code;
     }
 
-    memset((char*)&attrs, 0, sizeof(attrs));
+    memset((char *)&attrs, 0, sizeof(attrs));
     attrs.at_pino = vattr.va_nodeid;
     VN_RELE(dvp);
-	
+
     /* Create the desired file. Use up to ten tries to create a unique name. */
-    (void) strcpy(name, path);
-    (void) strcat(name, "/.");
-    (void) strcat(name, int_to_base64(stmp2, params[2]));
+    (void)strcpy(name, path);
+    (void)strcat(name, "/.");
+    (void)strcat(name, int_to_base64(stmp2, params[2]));
     s = &name[strlen(name)];
 
-    attrs.at_tag = 0;    /* Initial guess at a unique tag. */
-    for (i=0; i<10; i++) {
-	    *s = '\0';
-	    strcat(s, ".");
-	    strcat(s, int_to_base64(stmp1, attrs.at_tag));
-	code = AFS_VN_OPEN(name, UIO_SYSSPACE, FCREAT|FEXCL, 0600, &vp,
-			   CRCREAT);
+    attrs.at_tag = 0;		/* Initial guess at a unique tag. */
+    for (i = 0; i < 10; i++) {
+	*s = '\0';
+	strcat(s, ".");
+	strcat(s, int_to_base64(stmp1, attrs.at_tag));
+	code =
+	    AFS_VN_OPEN(name, UIO_SYSSPACE, FCREAT | FEXCL, 0600, &vp,
+			CRCREAT);
 	if (!code || code != EEXIST)
 	    break;
 
-	attrs.at_tag ++ ;
+	attrs.at_tag++;
     }
-    /* Unlock the creation process since the directory now has a file in it.*/
+    /* Unlock the creation process since the directory now has a file in it. */
     if (params[1] == INODESPECIAL)
 	AFS_UNLOCK_VOL_CREATE();
-	
+
     if (!code) {
 	/* Set attributes. */
-	memcpy((char*)attrs.at_param, (char*)params, sizeof(afs_inode_params_t));
+	memcpy((char *)attrs.at_param, (char *)params,
+	       sizeof(afs_inode_params_t));
 	attrs.at_attr_version = AFS_XFS_ATTR_VERS;
 	attrs.at_name_version = name_version;
-	AFS_VOP_ATTR_SET(vp, AFS_XFS_ATTR, (char*)&attrs,
-			 SIZEOF_XFS_ATTR_T,
-			 ATTR_ROOT|ATTR_CREATE, OSI_GET_CURRENT_CRED(),
+	AFS_VOP_ATTR_SET(vp, AFS_XFS_ATTR, (char *)&attrs, SIZEOF_XFS_ATTR_T,
+			 ATTR_ROOT | ATTR_CREATE, OSI_GET_CURRENT_CRED(),
 			 code);
 	if (!code) {
 	    vattr.va_mode = 1;
@@ -535,12 +540,12 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 
     if (code) {
 	/* remove partially created file. */
-	(void) vn_remove(name, UIO_SYSSPACE, RMFILE);
-	
+	(void)vn_remove(name, UIO_SYSSPACE, RMFILE);
+
 	/* and directory if volume special file. */
 	if (createdDir) {
 	    AFS_LOCK_VOL_CREATE();
-	    (void) vn_remove(path, UIO_SYSSPACE, RMDIRECTORY);
+	    (void)vn_remove(path, UIO_SYSSPACE, RMDIRECTORY);
 	    AFS_UNLOCK_VOL_CREATE();
 	}
     }
@@ -574,24 +579,25 @@ afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
 	return ENXIO;
     }
 
-    AFS_COPYIN((char*)paramp, (char*)param, sizeof(afs_inode_params_t), code);
+    AFS_COPYIN((char *)paramp, (char *)param, sizeof(afs_inode_params_t),
+	       code);
     if (vfsp->vfs_fstype == xfs_fstype) {
-	code =  xfs_icreatename64(vfsp, datap, datalen, param, &ino);
+	code = xfs_icreatename64(vfsp, datap, datalen, param, &ino);
 	if (code)
 	    return code;
 	else {
-	    AFS_COPYOUT((char*)&ino, (char*)inop, sizeof(ino_t), code);
+	    AFS_COPYOUT((char *)&ino, (char *)inop, sizeof(ino_t), code);
 	    return code;
 	}
-    }
-    else if (vfsp->vfs_fstype == efs_fstype) {
-	code = afs_syscall_icreate(dev, 0, param[0], param[1], param[2],
-				   param[3], &rval);
+    } else if (vfsp->vfs_fstype == efs_fstype) {
+	code =
+	    afs_syscall_icreate(dev, 0, param[0], param[1], param[2],
+				param[3], &rval);
 	if (code)
 	    return code;
 	else {
-	    ino = (ino_t)rval.r_val1;
-	    AFS_COPYOUT((char*)&ino, (char*)inop, sizeof(ino_t), code);
+	    ino = (ino_t) rval.r_val1;
+	    AFS_COPYOUT((char *)&ino, (char *)inop, sizeof(ino_t), code);
 	    return code;
 	}
     }
@@ -608,69 +614,66 @@ afs_syscall_icreatename64(int dev, int datap, int datalen, int paramp,
  * still in use.
  */
 struct iopenargs {
-        sysarg_t	dev;
-	sysarg_t	inode;
-	sysarg_t	usrmod;
+    sysarg_t dev;
+    sysarg_t inode;
+    sysarg_t usrmod;
 };
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 struct iopenargs64 {
-        sysarg_t	dev;
-	sysarg_t	inode_hi;
-	sysarg_t	inode_lo;
-	sysarg_t	usrmod;
+    sysarg_t dev;
+    sysarg_t inode_hi;
+    sysarg_t inode_lo;
+    sysarg_t usrmod;
 };
 
 #ifdef AFS_SGI65_ENV
 int
-afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t *rvp)
+afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
 {
-	struct file *fp;
-	int fd;
-	int error;
-	struct vfs* vfsp;
-	struct vnode *vp;
+    struct file *fp;
+    int fd;
+    int error;
+    struct vfs *vfsp;
+    struct vnode *vp;
 
-	AFS_STATCNT(afs_syscall_iopen);
-	if (!afs_suser())
-		return EPERM;
-	vfsp = vfs_devsearch(dev, xfs_fstype);
-	if (!vfsp)
-	    vfsp = vfs_devsearch(dev, efs_fstype);
-	if (!vfsp)
-	    return ENXIO;
+    AFS_STATCNT(afs_syscall_iopen);
+    if (!afs_suser())
+	return EPERM;
+    vfsp = vfs_devsearch(dev, xfs_fstype);
+    if (!vfsp)
+	vfsp = vfs_devsearch(dev, efs_fstype);
+    if (!vfsp)
+	return ENXIO;
 
 #ifdef AFS_SGI_EFS_IOPS_ENV
-	if (vfsp->vfs_fstype == efs_fstype) {
-	    struct inode *ip;
-	    if (error = igetinode(vfsp, (dev_t)dev, inode, &ip))
-		return error;
-	    vp = EFS_ITOV(ip);
-	    if (error = vfile_alloc((usrmod+1) & (FMASK), &fp, &fd)) {
-		iput(ip);
-		return error;
-	    }
-	    iunlock(ip);
+    if (vfsp->vfs_fstype == efs_fstype) {
+	struct inode *ip;
+	if (error = igetinode(vfsp, (dev_t) dev, inode, &ip))
+	    return error;
+	vp = EFS_ITOV(ip);
+	if (error = vfile_alloc((usrmod + 1) & (FMASK), &fp, &fd)) {
+	    iput(ip);
+	    return error;
 	}
-	else 
+	iunlock(ip);
+    } else
 #endif /* AFS_SGI_EFS_IOPS_ENV */
-	  if (vfsp->vfs_fstype == xfs_fstype) {
-	      struct xfs_inode *xip;
-	      if (error = xfs_igetinode(vfsp, (dev_t)dev, inode, &xip))
-		  return error;
-	      vp = XFS_ITOV(xip);
-	      if (error = vfile_alloc((usrmod+1) & (FMASK), &fp, &fd)) {
-		  VN_RELE(vp);
-		  return error;
-	      }
-	  }
-	  else {
-	      osi_Panic("afs_syscall_iopen: bad fstype = %d\n",
-			vfsp->vfs_fstype);
-	  }
-        vfile_ready(fp, vp);
-	rvp->r_val1 = fd;
-	return 0;
+    if (vfsp->vfs_fstype == xfs_fstype) {
+	struct xfs_inode *xip;
+	if (error = xfs_igetinode(vfsp, (dev_t) dev, inode, &xip))
+	    return error;
+	vp = XFS_ITOV(xip);
+	if (error = vfile_alloc((usrmod + 1) & (FMASK), &fp, &fd)) {
+	    VN_RELE(vp);
+	    return error;
+	}
+    } else {
+	osi_Panic("afs_syscall_iopen: bad fstype = %d\n", vfsp->vfs_fstype);
+    }
+    vfile_ready(fp, vp);
+    rvp->r_val1 = fd;
+    return 0;
 }
 #else
 /* afs_syscall_iopen
@@ -678,67 +681,64 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t *rvp)
  * 64 bit inode number.
  */
 int
-afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t *rvp)
+afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t * rvp)
 {
-	struct file *fp;
-	int fd;
-	int error;
-	struct vfs* vfsp;
+    struct file *fp;
+    int fd;
+    int error;
+    struct vfs *vfsp;
 
-	AFS_STATCNT(afs_syscall_iopen);
-	if (!afs_suser())
-		return EPERM;
-	vfsp = vfs_devsearch(dev);
-	if (!vfsp) {
-	    return ENXIO;
-	}
+    AFS_STATCNT(afs_syscall_iopen);
+    if (!afs_suser())
+	return EPERM;
+    vfsp = vfs_devsearch(dev);
+    if (!vfsp) {
+	return ENXIO;
+    }
 
-	if (vfsp->vfs_fstype == xfs_fstype) {
-	    struct xfs_inode *xip;
-	    struct vnode *vp;
-	    if (error = xfs_igetinode(vfsp, (dev_t)dev, inode, &xip))
-		return error;
-	    vp = XFS_ITOV(xip);
-	    if (error = falloc(vp, (usrmod+1) & (FMASK), &fp, &fd)) {
-		VN_RELE(vp);
-		return error;
-	    }
+    if (vfsp->vfs_fstype == xfs_fstype) {
+	struct xfs_inode *xip;
+	struct vnode *vp;
+	if (error = xfs_igetinode(vfsp, (dev_t) dev, inode, &xip))
+	    return error;
+	vp = XFS_ITOV(xip);
+	if (error = falloc(vp, (usrmod + 1) & (FMASK), &fp, &fd)) {
+	    VN_RELE(vp);
+	    return error;
 	}
-	else if (vfsp->vfs_fstype == efs_fstype) {
-	    struct inode *ip;
-	    if (error = igetinode(vfsp, (dev_t)dev, inode, &ip))
-		return error;
-	    if (error = falloc(EFS_ITOV(ip), (usrmod+1) & (FMASK), &fp, &fd)) {
-		iput(ip);
-		return error;
-	    }
-	    iunlock(ip);
+    } else if (vfsp->vfs_fstype == efs_fstype) {
+	struct inode *ip;
+	if (error = igetinode(vfsp, (dev_t) dev, inode, &ip))
+	    return error;
+	if (error = falloc(EFS_ITOV(ip), (usrmod + 1) & (FMASK), &fp, &fd)) {
+	    iput(ip);
+	    return error;
 	}
-	else {
-	    osi_Panic("afs_syscall_iopen: bad fstype = %d\n",
-		      vfsp->vfs_fstype);
-	}
-        fready(fp);
-	rvp->r_val1 = fd;
-	return 0;
+	iunlock(ip);
+    } else {
+	osi_Panic("afs_syscall_iopen: bad fstype = %d\n", vfsp->vfs_fstype);
+    }
+    fready(fp);
+    rvp->r_val1 = fd;
+    return 0;
 }
 #endif /* AFS_SGI65_ENV */
 
 int
-iopen(struct iopenargs *uap, rval_t *rvp)
+iopen(struct iopenargs *uap, rval_t * rvp)
 {
-     AFS_STATCNT(iopen);
-     return (afs_syscall_iopen(uap->dev, (ino_t)uap->inode, uap->usrmod,
-			       rvp));
+    AFS_STATCNT(iopen);
+    return (afs_syscall_iopen
+	    (uap->dev, (ino_t) uap->inode, uap->usrmod, rvp));
 }
 
 int
-iopen64(struct iopenargs64 *uap, rval_t *rvp)
+iopen64(struct iopenargs64 *uap, rval_t * rvp)
 {
-     AFS_STATCNT(iopen);
-     return (afs_syscall_iopen(uap->dev,
-			       (ino_t)((uap->inode_hi<<32) | uap->inode_lo),
-			       uap->usrmod, rvp));
+    AFS_STATCNT(iopen);
+    return (afs_syscall_iopen
+	    (uap->dev, (ino_t) ((uap->inode_hi << 32) | uap->inode_lo),
+	     uap->usrmod, rvp));
 }
 
 #else /* AFS_SGI_XFS_IOPS_ENV */
@@ -747,37 +747,37 @@ iopen64(struct iopenargs64 *uap, rval_t *rvp)
  * Original EFS only 32 bit iopen call.
  */
 int
-iopen(struct iopenargs *uap, rval_t *rvp)
+iopen(struct iopenargs *uap, rval_t * rvp)
 {
-     AFS_STATCNT(iopen);
-     return (afs_syscall_iopen(uap->dev, uap->inode, uap->usrmod, rvp));
+    AFS_STATCNT(iopen);
+    return (afs_syscall_iopen(uap->dev, uap->inode, uap->usrmod, rvp));
 }
 
 int
 afs_syscall_iopen(dev, inode, usrmod, rvp)
-int dev, inode, usrmod;
-rval_t *rvp;
+     int dev, inode, usrmod;
+     rval_t *rvp;
 {
-	struct file *fp;
-	struct inode *ip;
-	int fd;
-	int error;
+    struct file *fp;
+    struct inode *ip;
+    int fd;
+    int error;
 
-	AFS_STATCNT(afs_syscall_iopen);
-	if (!afs_suser())
-		return EPERM;
-	if (error = igetinode(0, (dev_t)dev, inode, &ip))
-		return error;
-	if (error = falloc(EFS_ITOV(ip), (usrmod+1) & (FMASK), &fp, &fd)) {
-		iput(ip);
-		return error;
-	}
-	iunlock(ip);
-	rvp->r_val1 = fd;
+    AFS_STATCNT(afs_syscall_iopen);
+    if (!afs_suser())
+	return EPERM;
+    if (error = igetinode(0, (dev_t) dev, inode, &ip))
+	return error;
+    if (error = falloc(EFS_ITOV(ip), (usrmod + 1) & (FMASK), &fp, &fd)) {
+	iput(ip);
+	return error;
+    }
+    iunlock(ip);
+    rvp->r_val1 = fd;
 #ifdef	AFS_SGI53_ENV
-        fready(fp);
+    fready(fp);
 #endif
-	return 0;
+    return 0;
 }
 #endif /* AFS_SGI_XFS_IOPS_ENV */
 
@@ -793,16 +793,17 @@ rval_t *rvp;
  *
  * XFS/EFS iinc/idec code for EFS. Uses 32 bit inode numbers. 
  */
-static int efs_iincdec(vfsp, inode, inode_p1, amount)
-struct vfs *vfsp;
-int inode, inode_p1, amount;
+static int
+efs_iincdec(vfsp, inode, inode_p1, amount)
+     struct vfs *vfsp;
+     int inode, inode_p1, amount;
 {
     struct inode *ip;
     int error;
 
     if (error = igetinode(vfsp, NULL, inode, &ip))
 	return error;
-    
+
     if (!IS_VICEMAGIC(ip))
 	error = EPERM;
     else if (((struct afsparms *)ip->i_afs)->vicep1 != inode_p1)
@@ -826,8 +827,8 @@ int inode, inode_p1, amount;
  *
  * XFS/EFS iinc/idec code for EFS. Uses 64 bit inode numbers. 
  */
-static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
-			 int amount)
+static int
+xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1, int amount)
 {
     vnode_t *vp;
     xfs_inode_t *ip;
@@ -838,24 +839,25 @@ static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
     struct vattr vattr;
     int nlink;
     int vol;
-    
-    code = xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
-		    (void*)0, (xfs_ino_t)inode, XFS_ILOCK_SHARED, &ip, 
-		    (daddr_t)0);
+
+    code =
+	xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
+		 (void *)0, (xfs_ino_t) inode, XFS_ILOCK_SHARED, &ip,
+		 (daddr_t) 0);
     if (code)
 	return code;
 
     vp = XFS_ITOV(ip);
     xfs_iunlock(ip, XFS_ILOCK_SHARED);
-    
+
     vattr.va_mask = AT_GID | AT_UID | AT_MODE;
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
-    if (code) 
+    if (code)
 	code = EPERM;
 
     if (!code && (vattr.va_gid != XFS_VICEMAGIC))
 	code = EPERM;
-	
+
     if (!code && (AFS_XFS_VNO_CLIP(inode_p1) != vattr.va_uid))
 	code = ENXIO;
 
@@ -876,16 +878,15 @@ static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
 	AFS_VOP_SETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
 	VN_RELE(vp);
 	return code;
-    }
-    else {
+    } else {
 	char path[64];
 	b64_string_t stmp1, stmp2;
 	vnode_t *dvp;
 	xfs_inode_t *ip;
-	    
+
 	length = SIZEOF_XFS_ATTR_T;
-	AFS_VOP_ATTR_GET(vp, AFS_XFS_ATTR, (char*)&attrs, &length,
-				ATTR_ROOT, OSI_GET_CURRENT_CRED(), code);
+	AFS_VOP_ATTR_GET(vp, AFS_XFS_ATTR, (char *)&attrs, &length, ATTR_ROOT,
+			 OSI_GET_CURRENT_CRED(), code);
 	VN_RELE(vp);
 	if (!code) {
 	    if (length != SIZEOF_XFS_ATTR_T
@@ -905,7 +906,7 @@ static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
 
 	/* Verify directory attributes. */
 	length = SIZEOF_XFS_DATTR_T;
-	AFS_VOP_ATTR_GET(dvp, AFS_XFS_DATTR , (char*)&dattr, &length,
+	AFS_VOP_ATTR_GET(dvp, AFS_XFS_DATTR, (char *)&dattr, &length,
 			 ATTR_ROOT, OSI_GET_CURRENT_CRED(), code);
 	if (!code) {
 	    if (length != SIZEOF_XFS_DATTR_T
@@ -921,35 +922,34 @@ static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
 	strcat(path, int_to_base64(stmp1, attrs.at_param[2]));
 	strcat(path, ".");
 	strcat(path, int_to_base64(stmp1, attrs.at_tag));
-	    
+
 	AFS_VOP_REMOVE(dvp, path, OSI_GET_CURRENT_CRED(), code);
-		
+
 	if (!code) {
 	    int code2;
 	    vattr.va_mask = AT_NLINK;
-	    AFS_VOP_GETATTR(dvp, &vattr, 0, OSI_GET_CURRENT_CRED(),
-			    code2);
+	    AFS_VOP_GETATTR(dvp, &vattr, 0, OSI_GET_CURRENT_CRED(), code2);
 	    if (!code2) {
 		if (vattr.va_nlink == 2) {
-		    vnode_t *ddvp; /* parent of volume directory. */
+		    vnode_t *ddvp;	/* parent of volume directory. */
 		    /* Try to remove the directory if this is a volume
 		     * special file. It's ok to fail.
 		     */
-		    AFS_VOP_LOOKUP(dvp, "..", &ddvp,
-				   (struct pathname *)NULL,
+		    AFS_VOP_LOOKUP(dvp, "..", &ddvp, (struct pathname *)NULL,
 				   0, OSI_GET_CURRENT_RDIR(),
 				   OSI_GET_CURRENT_CRED(), code2);
 		    if (!code2) {
 			VN_RELE(dvp);
-			dvp = (vnode_t*)0;
+			dvp = (vnode_t *) 0;
 			strcpy(path, ".");
 			if (attrs.at_name_version == AFS_XFS_NAME_VERS2)
 			    strcpy(path, AFS_INODE_DIR_NAME);
-			else 
+			else
 			    strcpy(path, ".");
 			int_to_base64(stmp1,
-				      (attrs.at_param[1] == INODESPECIAL) ?
-				      attrs.at_param[3] : attrs.at_param[0]);
+				      (attrs.at_param[1] ==
+				       INODESPECIAL) ? attrs.
+				      at_param[3] : attrs.at_param[0]);
 			strcat(path, stmp1);
 			AFS_LOCK_VOL_CREATE();
 			AFS_VOP_RMDIR(ddvp, path, OSI_GET_CURRENT_CDIR(),
@@ -1013,17 +1013,22 @@ afs_syscall_iinc64(int dev, int inode_hi, int inode_lo, int inode_p1)
 
 
 struct iincargs {
-	sysarg_t	dev;
-	sysarg_t	inode;
-	sysarg_t	inode_p1;
+    sysarg_t dev;
+    sysarg_t inode;
+    sysarg_t inode_p1;
 };
 
 #ifdef AFS_SGI65_ENV
-int iinc(struct iincargs *uap, rval_t *rvp) {
+int
+iinc(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(iinc);
     return ENOTSUP;
 }
-int idec(struct iincargs *uap, rval_t *rvp) {
+
+int
+idec(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(idec);
     return ENOTSUP;
 }
@@ -1035,10 +1040,10 @@ int idec(struct iincargs *uap, rval_t *rvp) {
  */
 int
 iincdec(dev, inode, inode_p1, amount)
-int dev, inode, inode_p1, amount;
+     int dev, inode, inode_p1, amount;
 {
     struct vfs *vfsp;
-    
+
     if (!afs_suser())
 	return EPERM;
     vfsp = vfs_devsearch(dev);
@@ -1050,14 +1055,17 @@ int dev, inode, inode_p1, amount;
 
     return efs_iincdec(vfsp, inode, inode_p1, amount);
 }
+
 int
-iinc(struct iincargs *uap, rval_t *rvp) {
+iinc(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(iinc);
     return (iincdec(uap->dev, uap->inode, uap->inode_p1, 1));
 }
 
 int
-idec(struct iincargs *uap, rval_t *rvp) {
+idec(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(idec);
     return (iincdec(uap->dev, uap->inode, uap->inode_p1, -1));
 }
@@ -1070,48 +1078,50 @@ idec(struct iincargs *uap, rval_t *rvp) {
  */
 int
 afs_syscall_iincdec(dev, inode, inode_p1, amount)
-int dev, inode, inode_p1, amount;
+     int dev, inode, inode_p1, amount;
 {
-	struct inode *ip;
-	int error = 0;
+    struct inode *ip;
+    int error = 0;
 
-	if (!afs_suser())
-		return EPERM;
-	if (error = igetinode(0, (dev_t)dev, inode, &ip))
-		return error;
-
-	if (!IS_VICEMAGIC(ip))
-	    error = EPERM;
-	else if (((struct afsparms *)ip->i_afs)->vicep1 != inode_p1)
-	    error = ENXIO;
-	else {
-		ip->i_nlink += amount;
-		osi_Assert(ip->i_nlink >= 0);
-		if (ip->i_nlink == 0) {
-		    CLEAR_VICEMAGIC(ip);
-		    afsidestroy(ip);
-		}
-		ip->i_flags |= ICHG;
-	}
-	/* XXX sync write?? */
-	iput(ip);
+    if (!afs_suser())
+	return EPERM;
+    if (error = igetinode(0, (dev_t) dev, inode, &ip))
 	return error;
+
+    if (!IS_VICEMAGIC(ip))
+	error = EPERM;
+    else if (((struct afsparms *)ip->i_afs)->vicep1 != inode_p1)
+	error = ENXIO;
+    else {
+	ip->i_nlink += amount;
+	osi_Assert(ip->i_nlink >= 0);
+	if (ip->i_nlink == 0) {
+	    CLEAR_VICEMAGIC(ip);
+	    afsidestroy(ip);
+	}
+	ip->i_flags |= ICHG;
+    }
+    /* XXX sync write?? */
+    iput(ip);
+    return error;
 }
 
 struct iincargs {
-	sysarg_t	dev;
-	sysarg_t	inode;
-	sysarg_t	inode_p1;
+    sysarg_t dev;
+    sysarg_t inode;
+    sysarg_t inode_p1;
 };
 
 int
-iinc(struct iincargs *uap, rval_t *rvp) {
+iinc(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(iinc);
     return (afs_syscall_iincdec(uap->dev, uap->inode, uap->inode_p1, 1));
 }
 
 int
-idec(struct iincargs *uap, rval_t *rvp) {
+idec(struct iincargs *uap, rval_t * rvp)
+{
     AFS_STATCNT(idec);
     return (afs_syscall_iincdec(uap->dev, uap->inode, uap->inode_p1, -1));
 }
@@ -1122,8 +1132,8 @@ idec(struct iincargs *uap, rval_t *rvp) {
  * Gathers up all required info for ListViceInodes in one system call.
  */
 int
-afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo,
-			 int datap, int datalenp)
+afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo, int datap,
+			 int datalenp)
 {
     int code = 0;
     ino_t inode;
@@ -1151,40 +1161,42 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo,
 	return ENOSYS;
 #endif
 
-    AFS_COPYIN((char*)datalenp, &idatalen, sizeof(int), code);
+    AFS_COPYIN((char *)datalenp, &idatalen, sizeof(int), code);
     if (idatalen < sizeof(i_list_inode_t)) {
 	idatalen = sizeof(i_list_inode_t);
-	AFS_COPYOUT((char*)datalenp, (char*)&idatalen, sizeof(int), code);
+	AFS_COPYOUT((char *)datalenp, (char *)&idatalen, sizeof(int), code);
 	return E2BIG;
     }
     idatalen = sizeof(i_list_inode_t);
-    AFS_COPYOUT((char*)datalenp, (char*)&idatalen, sizeof(int), code);
+    AFS_COPYOUT((char *)datalenp, (char *)&idatalen, sizeof(int), code);
 
-    AFS_COPYIN((char*)datap, (char*)&data, sizeof(i_list_inode_t), code);
+    AFS_COPYIN((char *)datap, (char *)&data, sizeof(i_list_inode_t), code);
     if (data.ili_version != AFS_XFS_ILI_VERSION) {
 	data.ili_version = AFS_XFS_ILI_VERSION;
-	AFS_COPYOUT((char*)&data, (char*)datap, sizeof(i_list_inode_t), code);
+	AFS_COPYOUT((char *)&data, (char *)datap, sizeof(i_list_inode_t),
+		    code);
 	return EINVAL;
     }
-    
-    
+
+
     inode = inode_hi;
     inode <<= 32;
     inode |= inode_lo;
-    code = xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)), 
-		    (void*)0, (xfs_ino_t)inode,
-		    XFS_ILOCK_SHARED, &ip, (daddr_t)0);
+    code =
+	xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
+		 (void *)0, (xfs_ino_t) inode, XFS_ILOCK_SHARED, &ip,
+		 (daddr_t) 0);
     if (code)
 	return code;
-    
+
     vp = XFS_ITOV(ip);
     xfs_iunlock(ip, XFS_ILOCK_SHARED);
-    
+
     length = SIZEOF_XFS_ATTR_T;
 
-    AFS_VOP_ATTR_GET(vp, AFS_XFS_ATTR, (char*)&attrs, &length,
-			    ATTR_ROOT, OSI_GET_CURRENT_CRED(), code);
-    if (code) { 
+    AFS_VOP_ATTR_GET(vp, AFS_XFS_ATTR, (char *)&attrs, &length, ATTR_ROOT,
+		     OSI_GET_CURRENT_CRED(), code);
+    if (code) {
 	code = EPERM;
     }
 
@@ -1192,25 +1204,26 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo,
 	if (attrs.at_attr_version != AFS_XFS_ATTR_VERS)
 	    code = EINVAL;
     }
-    
+
     if (!code) {
 	vattr.va_mask = AT_STAT;
 	AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
     }
-    
+
     if (!code) {
-	memset((char*)&data, 0, sizeof(data));
+	memset((char *)&data, 0, sizeof(data));
 	data.ili_info.inodeNumber = inode;
 	data.ili_info.byteCount = vattr.va_size;
 	data.ili_info.linkCount = (vattr.va_mode & AFS_XFS_MODE_LINK_MASK);
-	memcpy((char*)data.ili_info.param, (char*)attrs.at_param, sizeof(data.ili_info.param));
+	memcpy((char *)data.ili_info.param, (char *)attrs.at_param,
+	       sizeof(data.ili_info.param));
 	data.ili_attr_version = attrs.at_attr_version;
 	data.ili_name_version = attrs.at_name_version;
 	data.ili_tag = attrs.at_tag;
 	data.ili_pino = attrs.at_pino;
 	data.ili_vno = vattr.va_uid;
 	data.ili_magic = vattr.va_gid;
-	AFS_COPYOUT((char*)&data, (char*)datap, sizeof(data), code);
+	AFS_COPYOUT((char *)&data, (char *)datap, sizeof(data), code);
     }
     VN_RELE(vp);
     return code;

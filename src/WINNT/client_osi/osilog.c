@@ -1,9 +1,10 @@
 /* 
- * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
- *
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /* Copyright (C) 1994 Cazamar Systems, Inc. */
@@ -22,6 +23,8 @@
 #endif /* !DJGPP */
 #include <stdio.h>
 #include <assert.h>
+
+#define AFS_DAEMON_EVENT_NAME "TransarcAFSDaemon"
 
 /* the size; overrideable */
 long osi_logSize = OSI_LOG_DEFAULTSIZE;
@@ -202,6 +205,13 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, long p0, long p1, long p2, long 
         lep->parms[1] = p1;
         lep->parms[2] = p2;
         lep->parms[3] = p3;
+
+#ifdef NOTSERVICE
+		printf( "%9ld:", lep->micros );
+		printf( formatp, p0, p1, p2, p3);
+		printf( "\n" );
+#endif
+
 	thrd_LeaveCrit(&logp->cs);
 }
 
@@ -352,10 +362,11 @@ void osi_InitTraceOption()
 #define MAXBUF_ 131
 void osi_LogEvent0(char *a,char *b) 
 {
-	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+	HANDLE h; 
+    char *ptbuf[1];
 	if (!ISLOGONTRACE(osi_TraceOption))
 		return;
-	h = RegisterEventSource(NULL, a);
+	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	ptbuf[0] = b;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
 	DeregisterEventSource(h);
@@ -368,13 +379,7 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 	va_list marker;
 	if (!ISLOGONTRACE(osi_TraceOption))
 		return;
-	if (b)
-	{
-		wsprintf(buf,a,b);
-		h = RegisterEventSource(NULL, buf);
-	}
-	else
-		h = RegisterEventSource(NULL, a);
+    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,c);
 	_vsnprintf(buf,MAXBUF_,c,marker);
 	ptbuf[0] = buf;
@@ -382,3 +387,26 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 	DeregisterEventSource(h);
 	va_end(marker);
 }
+
+char *osi_HexifyString(char *s) {
+	int len,c;
+	char *hex = "0123456789abcdef";
+	char *buf, *counter, *bufp;
+
+	len = strlen(s);
+	
+	bufp = buf = malloc( len * 3 ); /* [xx.xx.xx.xx\0] */
+
+	if(!buf) return NULL;
+
+	for(counter = s; *counter; counter ++) {
+		if(counter != s) *bufp++ = '.';
+		c = *counter;
+		*bufp++ = hex[(c>>4) & 0xf];
+		*bufp++ = hex[c & 0xf];
+	}
+	*bufp = 0;
+
+	return buf;
+}
+

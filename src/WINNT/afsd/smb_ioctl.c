@@ -28,7 +28,6 @@
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
 /*extern unsigned char smb_LANadapter;*/
-extern LANA_ENUM lana_list;
 
 void smb_InitIoctl(void)
 {
@@ -69,9 +68,12 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_MAKESUBMOUNT] = cm_IoctlMakeSubmount;
 	smb_ioctlProcsp[VIOC_GETRXKCRYPT] = cm_IoctlGetRxkcrypt;
 	smb_ioctlProcsp[VIOC_SETRXKCRYPT] = cm_IoctlSetRxkcrypt;
+	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
 #ifdef DJGPP
 	smb_ioctlProcsp[VIOC_SHUTDOWN] = cm_IoctlShutdown;
 #endif
+	smb_ioctlProcsp[VIOC_TRACEMEMDUMP] = cm_IoctlMemoryDump;
+	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -203,8 +205,8 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 
         op = smb_GetSMBData(outp, NULL);
         *op++ = 1;
-        *op++ = count & 0xff;
-        *op++ = (count >> 8) & 0xff;
+        *op++ = (char)(count & 0xff);
+        *op++ = (char)((count >> 8) & 0xff);
         
 	/* now copy the data into the response packet */
         memcpy(op, iop->outCopied + iop->outAllocp, count);
@@ -291,7 +293,7 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
 			     userp);
 		}
-		smb_ReleaseUID(uidp);
+		if (uidp) smb_ReleaseUID(uidp);
 	}
 
 	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
@@ -379,10 +381,13 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
 			     uidp->userID, userp,
 			     osi_LogSaveString(afsd_logp, uidp->unp->name));
-		else
+		else if (uidp)
 		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
 			     uidp->userID, userp);
-		smb_ReleaseUID(uidp);
+        else 
+		    osi_Log1(afsd_logp, "Ioctl no uid user %x no name",
+			     userp);
+		if (uidp) smb_ReleaseUID(uidp);
 	}
 
 	iop->tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);

@@ -62,14 +62,14 @@ static struct
    }
 COLUMNS[] =
    {
-      { IDS_COL_SERVERS,      FALSE  },  // ceSERVERS
-      { IDS_COL_FILESETS,     FALSE  },  // ceFILESETS
-      { IDS_COL_AGGREGATES,   FALSE  },  // ceAGGREGATES
-      { IDS_COL_SERVICES,     FALSE  },  // ceSERVICES
-      { IDS_COL_REPLICAS,     FALSE  },  // ceREPLICAS
-      { IDS_COL_AGGS_MOVE,    TRUE   },  // ceAGG_MOVE
-      { IDS_COL_AGGS_CREATE,  TRUE   },  // ceAGG_CREATE
-      { IDS_COL_AGGS_RESTORE, TRUE   }   // ceAGG_RESTORE
+      { IDS_COL_SERVERS,      FALSE,	{0},	FALSE  },  // ceSERVERS
+      { IDS_COL_FILESETS,     FALSE,	{0},	FALSE  },  // ceFILESETS
+      { IDS_COL_AGGREGATES,   FALSE,	{0},	FALSE  },  // ceAGGREGATES
+      { IDS_COL_SERVICES,     FALSE,	{0},	FALSE  },  // ceSERVICES
+      { IDS_COL_REPLICAS,     FALSE,	{0},	FALSE  },  // ceREPLICAS
+      { IDS_COL_AGGS_MOVE,    TRUE,		{0},	FALSE  },  // ceAGG_MOVE
+      { IDS_COL_AGGS_CREATE,  TRUE,		{0},	FALSE  },  // ceAGG_CREATE
+      { IDS_COL_AGGS_RESTORE, TRUE,		{0},	FALSE  }   // ceAGG_RESTORE
    };
 
 #define nCOLUMNS (sizeof(COLUMNS)/sizeof(COLUMNS[0]))

@@ -30,8 +30,12 @@
 #if defined(sgi)
 #include "conf-sgi.h"
 #else
-#if defined(__alpha) && !defined(AFS_ALPHA_LINUX20_ENV)
+#ifdef AFS_OSF_ENV
+#if defined(__alpha)
 #include "conf-bsd-alpha.h"
+#else
+#error unknown osf
+#endif
 #else
 #if	defined(AFS_X86_ENV)
 #include "conf-bsd-ncr.h"
@@ -39,9 +43,17 @@
 #ifdef AFS_NT40_ENV
 #include "conf-winnt.h"
 #else
+
 #ifdef AFS_XBSD_ENV
+#ifdef AFS_X86_XBSD_ENV
 #include "conf-i386-obsd.h"
+#elif defined(AFS_ALPHA_ENV)
+#include "conf-alpha-bsd.h"
 #else
+#error unknown bsd
+#endif
+#else /* AFS_XBSD_ENV */
+
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_PARISC_LINUX20_ENV
 #include "conf-parisc-linux.h"
@@ -67,7 +79,11 @@
 #ifdef AFS_AMD64_LINUX20_ENV
 #include "conf-amd64-linux.h"
 #else
+#ifdef AFS_PPC64_LINUX20_ENV
+#include "conf-ppc64-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif /* AFS_PPC64_LINUX20_ENV */
 #endif /* AFS_AMD64_LINUX20_ENV */
 #endif /* AFS_IA64_LINUX20_ENV */
 #endif /* AFS_ALPHA_LINUX20_ENV */
@@ -80,8 +96,9 @@
 #if defined(AFS_DARWIN_ENV) && defined(AFS_PPC_ENV)
 #include "conf-ppc-darwin.h"
 #else
-Sorry, you lose.
-Figure out what the machine looks like and fix this file to include it.
+Sorry,
+    you lose.
+    Figure out what the machine looks like and fix this file to include it.
 #endif
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_NT40_ENV */
@@ -90,9 +107,9 @@ Figure out what the machine looks like and fix this file to include it.
 #endif /* __alpha */
 #endif /* SGI */
 #endif /* NeXT */
-#endif	/* HP/UX */
+#endif /* HP/UX */
 #endif /* mac */
-#endif	/* aix */
+#endif /* aix */
 #endif /* sun */
 #endif /* mips */
 #endif /* not vax */

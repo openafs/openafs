@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/curses_test.c,v 1.1.1.4 2001/07/14 22:21:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/gtx/curses_test.c,v 1.5 2003/07/15 23:15:12 shadow Exp $");
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
 #define __HP_CURSES
@@ -25,10 +26,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/curses_test.c,v 1.1.1.4 2001/07/14 
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-    int argc;
-    char **argv;
+     int argc;
+     char **argv;
 
-{ /*main*/
+{				/*main */
 
     WINDOW *mainscr;
     char str[128];
@@ -46,14 +47,13 @@ main(argc, argv)
     standend();
 
 #if 0
-    box
-    addstr("Enter a string and a number: ");
+    box addstr("Enter a string and a number: ");
     refresh();
     scanw(stdscr, "%s %d", str, &i);
     wprintw(stdscr, "String was '%s', number was %d\n", str, i);
     refresh();
-#endif 0
+#endif /* 0 */
 
     endwin();
 
-} /*main*/
+}				/*main */

@@ -7,33 +7,8 @@
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-CFLAGS=${DBG} -w ${INCDIRS} ${XCFLAGS} @XBSA_CFLAGS@
-
-INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
-	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
 	${TOP_INCDIR}/afs/vlserver.h ${TOP_INCDIR}/rx/rx.h \
@@ -80,7 +55,7 @@ butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
 	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
 
 tdump: tdump.c AFS_component_version_number.c
-	${CC} ${CFLAGS} tdump.c -o tdump
+	${CC} ${CFLAGS} ${srcdir}/tdump.c -o tdump
 
 butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 	@case ${SYS_NAME} in \
@@ -100,7 +75,7 @@ dump.o: dump.c ${INCLS}
 tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
-	${CC} ${CFLAGS} -o read_tape read_tape.c \
+	${CC} ${CFLAGS} -o read_tape ${srcdir}/read_tape.c \
 		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
 		${TOP_LIBDIR}/libusd.a
 
@@ -109,11 +84,11 @@ clean:
 
 install:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
-		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
+		echo ${INSTALL} butc ${DEST}/etc/butc ; \
+		${INSTALL} butc ${DEST}/etc/butc ;; \
 	*_darwin_*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
@@ -125,11 +100,11 @@ install:
 include ../config/Makefile.version
 dest:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*_darwin_[1-6][0-9]) \
-		echo ${INSTALL} butc ${DEST}/etc/butc ; \
-		${INSTALL} butc ${DEST}/etc/butc ;; \
+		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
 	*_darwin_*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \

@@ -31,4 +31,4 @@
 #include "common.h"
 
 void
-SetupBosAdminCmd(void);
+  SetupBosAdminCmd(void);

@@ -48,43 +48,43 @@
 #include <err.h>
 
 static void
-doit (const char *filename)
+doit(const char *filename)
 {
     int fd;
     int ret;
     struct timeval tv[2];
     struct stat sb;
 
-    fd = open (filename, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
-	err (1, "open %s", filename);
-    ret = write (fd, "hej\n", 4);
-    if(ret < 0)
-	err (1, "write %s", filename);
+	err(1, "open %s", filename);
+    ret = write(fd, "hej\n", 4);
+    if (ret < 0)
+	err(1, "write %s", filename);
     if (ret != 4)
-	errx (1, "short write to %s", filename);
-    gettimeofday (&tv[0], NULL);
+	errx(1, "short write to %s", filename);
+    gettimeofday(&tv[0], NULL);
     tv[1] = tv[0];
-    ret = utimes (filename, tv);
-    if(ret < 0)
-	err (1, "utimes %s", filename);
-    ret = chmod (filename, 0644);
+    ret = utimes(filename, tv);
     if (ret < 0)
-	err (1, "chmod %s", filename);
-    ret = chown (filename, 0, 0);
-    ret = fstat (fd, &sb);
+	err(1, "utimes %s", filename);
+    ret = chmod(filename, 0644);
     if (ret < 0)
-	err (1, "fstat %s", filename);
+	err(1, "chmod %s", filename);
+    ret = chown(filename, 0, 0);
+    ret = fstat(fd, &sb);
+    if (ret < 0)
+	err(1, "fstat %s", filename);
     if (sb.st_size != 4)
-	errx (1, "stat 1: size = %lu != 4", (unsigned long)sb.st_size);
-    ret = close (fd);
+	errx(1, "stat 1: size = %lu != 4", (unsigned long)sb.st_size);
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close %s", filename);
-    ret = stat (filename, &sb);
+	err(1, "close %s", filename);
+    ret = stat(filename, &sb);
     if (ret < 0)
-	err (1, "stat %s", filename);
+	err(1, "stat %s", filename);
     if (sb.st_size != 4)
-	errx (1, "stat 1: size = %lu != 4", (unsigned long)sb.st_size);
+	errx(1, "stat 1: size = %lu != 4", (unsigned long)sb.st_size);
 }
 
 int
@@ -93,9 +93,9 @@ main(int argc, char **argv)
     const char *file = "blaha";
 
     if (argc != 1 && argc != 2)
-	errx (1, "usage: %s [file]", argv[0]);
+	errx(1, "usage: %s [file]", argv[0]);
     if (argc == 2)
 	file = argv[1];
-    doit (file);
+    doit(file);
     return 0;
 }

@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgservers.c,v 1.1.1.4 2001/07/14 22:22:28 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/cfg/cfgservers.c,v 1.6 2004/04/02 06:54:05 jaltman Exp $");
 
 #include <afs/stds.h>
 
@@ -49,7 +50,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgservers.c,v 1.1.1.4 200
 #include <afs/bubasics.h>
 #include <rx/rx_null.h>
 
-#define UBIK_INTERNALS  /* need "internal" symbols from ubik.h */
+#define UBIK_INTERNALS		/* need "internal" symbols from ubik.h */
 #include <ubik.h>
 
 #include "cfginternal.h"
@@ -83,42 +84,29 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgservers.c,v 1.1.1.4 200
 
 
 static int
-SimpleProcessStart(void *bosHandle,
-		   const char *instance,
-		   const char *executable,
-		   const char *args,
-		   afs_status_p st);
+  SimpleProcessStart(void *bosHandle, const char *instance,
+		     const char *executable, const char *args,
+		     afs_status_p st);
 
 static int
-FsProcessStart(void *bosHandle,
-	       const char *instance,
-	       const char *fileserverExe,
-	       const char *volserverExe,
-	       const char *salvagerExe,
-	       afs_status_p st);
+  FsProcessStart(void *bosHandle, const char *instance,
+		 const char *fileserverExe, const char *volserverExe,
+		 const char *salvagerExe, afs_status_p st);
 
 static int
-BosProcessDelete(void *bosHandle,
-		 const char *instance,
-		 afs_status_p st);
+  BosProcessDelete(void *bosHandle, const char *instance, afs_status_p st);
 
 static void
-UpdateCommandParse(char *cmdString,
-		   short *hasSysPathP,
-		   short *hasBinPathP);
+  UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP);
 
 static int
-UbikQuorumCheck(cfg_host_p cfg_host,
-		const char *dbInstance,
-		short *hasQuorum,
-		afs_status_p st);
+  UbikQuorumCheck(cfg_host_p cfg_host, const char *dbInstance,
+		  short *hasQuorum, afs_status_p st);
 
 static int
-UbikVoteStatusFetch(int serverAddr,
-		    unsigned short serverPort,
-		    short *isSyncSite,
-		    short *isWriteReady,
-		    afs_status_p st);
+  UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
+		      short *isSyncSite, short *isWriteReady,
+		      afs_status_p st);
 
 
 
@@ -149,14 +137,14 @@ const char *cfg_upclientBinBosSuffix = "bin";
  *     Timeout is the maximum time, in seconds, to wait for BOS to start.
  */
 int ADMINAPI
-cfg_BosServerStart(void *hostHandle,      /* host config handle */
-		   short noAuth,          /* start in NoAuth mode */
-		   unsigned int timeout,  /* timeout (in seconds) */
-		   afs_status_p st)       /* completion status */
-{
+cfg_BosServerStart(void *hostHandle,	/* host config handle */
+		   short noAuth,	/* start in NoAuth mode */
+		   unsigned int timeout,	/* timeout (in seconds) */
+		   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     short wasRunning = 0;
 
     /* validate parameters */
@@ -190,17 +178,13 @@ cfg_BosServerStart(void *hostHandle,      /* host config handle */
 	    auxArgv = NULL;
 	}
 
-	if (!cfgutil_WindowsServiceStart(AFSREG_SVR_SVC_NAME,
-					 auxArgc,
-					 auxArgv,
-					 timeout,
-					 &wasRunning,
-					 &tst2)) {
+	if (!cfgutil_WindowsServiceStart
+	    (AFSREG_SVR_SVC_NAME, auxArgc, auxArgv, timeout, &wasRunning,
+	     &tst2)) {
 	    /* failed to start BOS control service */
 	    tst = tst2;
 	}
     }
-
 #else
     if (tst == 0) {
 	/* function not yet implemented for Unix */
@@ -234,13 +218,13 @@ cfg_BosServerStart(void *hostHandle,      /* host config handle */
  *     Timeout is the maximum time, in seconds, to wait for BOS to stop.
  */
 int ADMINAPI
-cfg_BosServerStop(void *hostHandle,      /* host config handle */
-		  unsigned int timeout,  /* timeout (in seconds) */
-		  afs_status_p st)       /* completion status */
-{
+cfg_BosServerStop(void *hostHandle,	/* host config handle */
+		  unsigned int timeout,	/* timeout (in seconds) */
+		  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -263,10 +247,8 @@ cfg_BosServerStop(void *hostHandle,      /* host config handle */
     if (tst == 0) {
 	short wasStopped;
 
-	if (!cfgutil_WindowsServiceStop(AFSREG_SVR_SVC_NAME,
-					timeout,
-					&wasStopped,
-					&tst2)) {
+	if (!cfgutil_WindowsServiceStop
+	    (AFSREG_SVR_SVC_NAME, timeout, &wasStopped, &tst2)) {
 	    /* failed to stop BOS control service */
 	    tst = tst2;
 	}
@@ -296,14 +278,14 @@ cfg_BosServerStop(void *hostHandle,      /* host config handle */
  *     are currently executing (as opposed to configured but stopped).
  */
 int ADMINAPI
-cfg_BosServerQueryStatus(void *hostHandle,    /* host config handle */
-			 short *isStartedP,   /* BOS server is started */
-			 short *isBosProcP,   /* BOS processes running */
-			 afs_status_p st)     /* completion status */
-{
+cfg_BosServerQueryStatus(void *hostHandle,	/* host config handle */
+			 short *isStartedP,	/* BOS server is started */
+			 short *isBosProcP,	/* BOS processes running */
+			 afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -334,9 +316,8 @@ cfg_BosServerQueryStatus(void *hostHandle,    /* host config handle */
 
 	*isStartedP = *isBosProcP = 0;
 
-	if (!cfgutil_WindowsServiceQuery(AFSREG_SVR_SVC_NAME,
-					 &svcState,
-					 &tst2)) {
+	if (!cfgutil_WindowsServiceQuery
+	    (AFSREG_SVR_SVC_NAME, &svcState, &tst2)) {
 	    tst = tst2;
 	} else if (svcState == SERVICE_RUNNING) {
 	    *isStartedP = 1;
@@ -357,9 +338,7 @@ cfg_BosServerQueryStatus(void *hostHandle,    /* host config handle */
 
 	*isBosProcP = 0;
 
-	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle,
-				     &procIter,
-				     &tst2)) {
+	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle, &procIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* iterate over process names, checking status of each */
@@ -369,19 +348,17 @@ cfg_BosServerQueryStatus(void *hostHandle,    /* host config handle */
 	    int procDone = 0;
 
 	    while (!procDone) {
-		if (!bos_ProcessNameGetNext(procIter,
-					    procName, &tst2)) {
+		if (!bos_ProcessNameGetNext(procIter, procName, &tst2)) {
 		    /* no more processes (or failure) */
 		    if (tst2 != ADMITERATORDONE) {
 			tst = tst2;
 		    }
 		    procDone = 1;
 
-		} else if (!bos_ProcessExecutionStateGet(cfg_host->bosHandle,
-							 procName,
-							 &procState,
-							 procAuxState,
-							 &tst2)) {
+		} else
+		    if (!bos_ProcessExecutionStateGet
+			(cfg_host->bosHandle, procName, &procState,
+			 procAuxState, &tst2)) {
 		    /* process removed (or failure) */
 		    if (tst2 != BZNOENT) {
 			tst = tst2;
@@ -428,12 +405,12 @@ cfg_BosServerQueryStatus(void *hostHandle,    /* host config handle */
  *     and configured before starting the remaining database servers.
  */
 int ADMINAPI
-cfg_AuthServerStart(void *hostHandle,  /* host config handle */
-		    afs_status_p st)   /* completion status */
-{
+cfg_AuthServerStart(void *hostHandle,	/* host config handle */
+		    afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -446,9 +423,9 @@ cfg_AuthServerStart(void *hostHandle,  /* host config handle */
     /* create and start authentication server instance */
 
     if (tst == 0) {
-	if (!SimpleProcessStart(cfg_host->bosHandle,
-				KASERVER_BOSNAME,
-				KASERVER_EXEPATH, NULL, &tst2)) {
+	if (!SimpleProcessStart
+	    (cfg_host->bosHandle, KASERVER_BOSNAME, KASERVER_EXEPATH, NULL,
+	     &tst2)) {
 	    tst = tst2;
 	}
     }
@@ -460,8 +437,8 @@ cfg_AuthServerStart(void *hostHandle,  /* host config handle */
 	short kaHasQuorum;
 
 	while (1) {
-	    if (!UbikQuorumCheck(cfg_host,
-				 KASERVER_BOSNAME, &kaHasQuorum, &tst2)) {
+	    if (!UbikQuorumCheck
+		(cfg_host, KASERVER_BOSNAME, &kaHasQuorum, &tst2)) {
 		tst = tst2;
 		break;
 
@@ -503,13 +480,13 @@ cfg_AuthServerStart(void *hostHandle,  /* host config handle */
  *         cfg_buserverBosName - backup server
  */
 int ADMINAPI
-cfg_DbServersStart(void *hostHandle,  /* host config handle */
-		   short startBkDb,   /* start backup server */
-		   afs_status_p st)   /* completion status */
-{
+cfg_DbServersStart(void *hostHandle,	/* host config handle */
+		   short startBkDb,	/* start backup server */
+		   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -523,25 +500,24 @@ cfg_DbServersStart(void *hostHandle,  /* host config handle */
 
     if (tst == 0) {
 	/* try all regardless of failures; last error code wins */
-	if (!SimpleProcessStart(cfg_host->bosHandle,
-				KASERVER_BOSNAME,
-				KASERVER_EXEPATH, NULL, &tst2)) {
+	if (!SimpleProcessStart
+	    (cfg_host->bosHandle, KASERVER_BOSNAME, KASERVER_EXEPATH, NULL,
+	     &tst2)) {
 	    tst = tst2;
 	}
-	if (!SimpleProcessStart(cfg_host->bosHandle,
-				PTSERVER_BOSNAME,
-				PTSERVER_EXEPATH, NULL, &tst2)) {
+	if (!SimpleProcessStart
+	    (cfg_host->bosHandle, PTSERVER_BOSNAME, PTSERVER_EXEPATH, NULL,
+	     &tst2)) {
 	    tst = tst2;
 	}
-	if (!SimpleProcessStart(cfg_host->bosHandle,
-				VLSERVER_BOSNAME,
-				VLSERVER_EXEPATH, NULL, &tst2)) {
+	if (!SimpleProcessStart
+	    (cfg_host->bosHandle, VLSERVER_BOSNAME, VLSERVER_EXEPATH, NULL,
+	     &tst2)) {
 	    tst = tst2;
 	}
-	if (startBkDb &&
-	    !SimpleProcessStart(cfg_host->bosHandle,
-				BUSERVER_BOSNAME,
-				BUSERVER_EXEPATH, NULL, &tst2)) {
+	if (startBkDb
+	    && !SimpleProcessStart(cfg_host->bosHandle, BUSERVER_BOSNAME,
+				   BUSERVER_EXEPATH, NULL, &tst2)) {
 	    tst = tst2;
 	}
     }
@@ -561,12 +537,12 @@ cfg_DbServersStart(void *hostHandle,  /* host config handle */
  * cfg_DbServersStop() -- Stop, and unconfigure, the database servers on host.
  */
 int ADMINAPI
-cfg_DbServersStop(void *hostHandle,  /* host config handle */
-		  afs_status_p st)   /* completion status */
-{
+cfg_DbServersStop(void *hostHandle,	/* host config handle */
+		  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -614,15 +590,15 @@ cfg_DbServersStop(void *hostHandle,  /* host config handle */
  *     inconsistent state; the remaining database servers should be configured.
  */
 int ADMINAPI
-cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
-			 short *isStdDbP,     /* std DB servers configured */
-			 short *isBkDbP,      /* backup DB server configured */
-			 cfg_dbServersStatus_t *detailsP,  /* config details */
-			 afs_status_p st)     /* completion status */
-{
+cfg_DbServersQueryStatus(void *hostHandle,	/* host config handle */
+			 short *isStdDbP,	/* std DB servers configured */
+			 short *isBkDbP,	/* backup DB server configured */
+			 cfg_dbServersStatus_t * detailsP,	/* config details */
+			 afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     short inCellServDb, isKaserver, isPtserver, isVlserver, isBuserver;
 
     inCellServDb = isKaserver = isPtserver = isVlserver = isBuserver = 0;
@@ -642,10 +618,8 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
     if (tst == 0) {
 	char hostNameAlias[MAXHOSTCHARS];
 
-	if (!cfgutil_HostNameGetCellServDbAlias(cfg_host->hostName,
-						cfg_host->hostName,
-						hostNameAlias,
-						&tst2)) {
+	if (!cfgutil_HostNameGetCellServDbAlias
+	    (cfg_host->hostName, cfg_host->hostName, hostNameAlias, &tst2)) {
 	    tst = tst2;
 	} else if (*hostNameAlias != '\0') {
 	    /* host in its own CellServDb */
@@ -659,18 +633,18 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
 	bos_ProcessType_t procType;
 	bos_ProcessInfo_t procInfo;
 
-	if (bos_ProcessInfoGet(cfg_host->bosHandle,
-			       KASERVER_BOSNAME,
-			       &procType, &procInfo, &tst2)) {
+	if (bos_ProcessInfoGet
+	    (cfg_host->bosHandle, KASERVER_BOSNAME, &procType, &procInfo,
+	     &tst2)) {
 	    isKaserver = 1;
 	} else if (tst2 != BZNOENT) {
 	    tst = tst2;
 	}
 
 	if (tst == 0) {
-	    if (bos_ProcessInfoGet(cfg_host->bosHandle,
-				   PTSERVER_BOSNAME,
-				   &procType, &procInfo, &tst2)) {
+	    if (bos_ProcessInfoGet
+		(cfg_host->bosHandle, PTSERVER_BOSNAME, &procType, &procInfo,
+		 &tst2)) {
 		isPtserver = 1;
 	    } else if (tst2 != BZNOENT) {
 		tst = tst2;
@@ -678,9 +652,9 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
 	}
 
 	if (tst == 0) {
-	    if (bos_ProcessInfoGet(cfg_host->bosHandle,
-				   VLSERVER_BOSNAME,
-				   &procType, &procInfo, &tst2)) {
+	    if (bos_ProcessInfoGet
+		(cfg_host->bosHandle, VLSERVER_BOSNAME, &procType, &procInfo,
+		 &tst2)) {
 		isVlserver = 1;
 	    } else if (tst2 != BZNOENT) {
 		tst = tst2;
@@ -688,9 +662,9 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
 	}
 
 	if (tst == 0) {
-	    if (bos_ProcessInfoGet(cfg_host->bosHandle,
-				   BUSERVER_BOSNAME,
-				   &procType, &procInfo, &tst2)) {
+	    if (bos_ProcessInfoGet
+		(cfg_host->bosHandle, BUSERVER_BOSNAME, &procType, &procInfo,
+		 &tst2)) {
 		isBuserver = 1;
 	    } else if (tst2 != BZNOENT) {
 		tst = tst2;
@@ -701,7 +675,7 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
     if (tst == 0) {
 	/* success; return results */
 	*isStdDbP = (inCellServDb && isKaserver && isPtserver && isVlserver);
-	*isBkDbP  = (inCellServDb && isBuserver);
+	*isBkDbP = (inCellServDb && isBuserver);
 
 	if (detailsP) {
 	    detailsP->inCellServDb = inCellServDb;
@@ -725,12 +699,12 @@ cfg_DbServersQueryStatus(void *hostHandle,    /* host config handle */
  * cfg_DbServersRestartAll() -- Restart all database servers in host's cell.
  */
 int ADMINAPI
-cfg_DbServersRestartAll(void *hostHandle,   /* host config handle */
-			afs_status_p st)    /* completion status */
-{
+cfg_DbServersRestartAll(void *hostHandle,	/* host config handle */
+			afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -745,9 +719,7 @@ cfg_DbServersRestartAll(void *hostHandle,   /* host config handle */
     if (tst == 0) {
 	void *dbIter;
 
-	if (!bos_HostGetBegin(cfg_host->bosHandle,
-			      &dbIter,
-			      &tst2)) {
+	if (!bos_HostGetBegin(cfg_host->bosHandle, &dbIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* iterate over server CellServDb, restarting db servers */
@@ -756,37 +728,36 @@ cfg_DbServersRestartAll(void *hostHandle,   /* host config handle */
 	    int dbhostDone = 0;
 
 	    while (!dbhostDone) {
-		if (!bos_HostGetNext(dbIter,
-				     dbhostName, &tst2)) {
+		if (!bos_HostGetNext(dbIter, dbhostName, &tst2)) {
 		    /* no more entries (or failure) */
 		    if (tst2 != ADMITERATORDONE) {
 			tst = tst2;
 		    }
 		    dbhostDone = 1;
 
-		} else if (!bos_ServerOpen(cfg_host->cellHandle,
-					   dbhostName,
-					   &dbhostHandle,
-					   &tst2)) {
+		} else
+		    if (!bos_ServerOpen
+			(cfg_host->cellHandle, dbhostName, &dbhostHandle,
+			 &tst2)) {
 		    /* failed to get bos handle; note error but keep going */
 		    tst = tst2;
 
 		} else {
 		    /* restart db servers; note errors, but keep going */
-		    if (!bos_ProcessRestart(dbhostHandle,
-					    KASERVER_BOSNAME, &tst2)) {
+		    if (!bos_ProcessRestart
+			(dbhostHandle, KASERVER_BOSNAME, &tst2)) {
 			tst = tst2;
 		    }
-		    if (!bos_ProcessRestart(dbhostHandle,
-					    PTSERVER_BOSNAME, &tst2)) {
+		    if (!bos_ProcessRestart
+			(dbhostHandle, PTSERVER_BOSNAME, &tst2)) {
 			tst = tst2;
 		    }
-		    if (!bos_ProcessRestart(dbhostHandle,
-					    VLSERVER_BOSNAME, &tst2)) {
+		    if (!bos_ProcessRestart
+			(dbhostHandle, VLSERVER_BOSNAME, &tst2)) {
 			tst = tst2;
 		    }
-		    if (!bos_ProcessRestart(dbhostHandle,
-					    BUSERVER_BOSNAME, &tst2)) {
+		    if (!bos_ProcessRestart
+			(dbhostHandle, BUSERVER_BOSNAME, &tst2)) {
 			/* may not be running a backup server */
 			if (tst2 != BZNOENT) {
 			    tst = tst2;
@@ -830,13 +801,13 @@ cfg_DbServersRestartAll(void *hostHandle,   /* host config handle */
  *           configuration does not require modifying the backup database.
  */
 int ADMINAPI
-cfg_DbServersWaitForQuorum(void *hostHandle,     /* host config handle */
-			   unsigned int timeout, /* timeout in sec. */
-			   afs_status_p st)      /* completion status */
-{
+cfg_DbServersWaitForQuorum(void *hostHandle,	/* host config handle */
+			   unsigned int timeout,	/* timeout in sec. */
+			   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -856,24 +827,24 @@ cfg_DbServersWaitForQuorum(void *hostHandle,     /* host config handle */
 
 	while (1) {
 	    if (!kaHasQuorum) {
-		if (!UbikQuorumCheck(cfg_host,
-				     KASERVER_BOSNAME, &kaHasQuorum, &tst2)) {
+		if (!UbikQuorumCheck
+		    (cfg_host, KASERVER_BOSNAME, &kaHasQuorum, &tst2)) {
 		    tst = tst2;
 		    break;
 		}
 	    }
 
 	    if (!ptHasQuorum) {
-		if (!UbikQuorumCheck(cfg_host,
-				     PTSERVER_BOSNAME, &ptHasQuorum, &tst2)) {
+		if (!UbikQuorumCheck
+		    (cfg_host, PTSERVER_BOSNAME, &ptHasQuorum, &tst2)) {
 		    tst = tst2;
 		    break;
 		}
 	    }
 
 	    if (!vlHasQuorum) {
-		if (!UbikQuorumCheck(cfg_host,
-				     VLSERVER_BOSNAME, &vlHasQuorum, &tst2)) {
+		if (!UbikQuorumCheck
+		    (cfg_host, VLSERVER_BOSNAME, &vlHasQuorum, &tst2)) {
 		    tst = tst2;
 		    break;
 		}
@@ -884,8 +855,8 @@ cfg_DbServersWaitForQuorum(void *hostHandle,     /* host config handle */
 		break;
 	    } else {
 		/* quorum not yet achieved for one or more dbservers */
-		if ((timeout == 0) ||
-		    (difftime(time(NULL), timeStart) > timeout)) {
+		if ((timeout == 0)
+		    || (difftime(time(NULL), timeStart) > timeout)) {
 		    tst = ADMCFGQUORUMWAITTIMEOUT;
 		    break;
 		} else {
@@ -912,12 +883,12 @@ cfg_DbServersWaitForQuorum(void *hostHandle,     /* host config handle */
  *     in host's cell.
  */
 int ADMINAPI
-cfg_DbServersStopAllBackup(void *hostHandle,  /* host config handle */
-			   afs_status_p st)   /* completion status */
-{
+cfg_DbServersStopAllBackup(void *hostHandle,	/* host config handle */
+			   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -932,9 +903,7 @@ cfg_DbServersStopAllBackup(void *hostHandle,  /* host config handle */
     if (tst == 0) {
 	void *dbIter;
 
-	if (!bos_HostGetBegin(cfg_host->bosHandle,
-			      &dbIter,
-			      &tst2)) {
+	if (!bos_HostGetBegin(cfg_host->bosHandle, &dbIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* iterate over server CellServDb, unconfiguring backup servers */
@@ -943,25 +912,24 @@ cfg_DbServersStopAllBackup(void *hostHandle,  /* host config handle */
 	    int dbhostDone = 0;
 
 	    while (!dbhostDone) {
-		if (!bos_HostGetNext(dbIter,
-				     dbhostName, &tst2)) {
+		if (!bos_HostGetNext(dbIter, dbhostName, &tst2)) {
 		    /* no more entries (or failure) */
 		    if (tst2 != ADMITERATORDONE) {
 			tst = tst2;
 		    }
 		    dbhostDone = 1;
 
-		} else if (!bos_ServerOpen(cfg_host->cellHandle,
-					   dbhostName,
-					   &dbhostHandle,
-					   &tst2)) {
+		} else
+		    if (!bos_ServerOpen
+			(cfg_host->cellHandle, dbhostName, &dbhostHandle,
+			 &tst2)) {
 		    /* failed to get bos handle; note error but keep going */
 		    tst = tst2;
 
 		} else {
 		    /* unconfig backup server; note errors, but keep going */
-		    if (!BosProcessDelete(dbhostHandle,
-					  BUSERVER_BOSNAME, &tst2)) {
+		    if (!BosProcessDelete
+			(dbhostHandle, BUSERVER_BOSNAME, &tst2)) {
 			tst = tst2;
 		    }
 
@@ -1004,12 +972,12 @@ cfg_DbServersStopAllBackup(void *hostHandle,  /* host config handle */
  *     The BOS instance name used is the string constant cfg_fileserverBosName.
  */
 int ADMINAPI
-cfg_FileServerStart(void *hostHandle,  /* host config handle */
-		    afs_status_p st)   /* completion status */
-{
+cfg_FileServerStart(void *hostHandle,	/* host config handle */
+		    afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1022,12 +990,9 @@ cfg_FileServerStart(void *hostHandle,  /* host config handle */
     /* create and start file server instance */
 
     if (tst == 0) {
-	if (!FsProcessStart(cfg_host->bosHandle,
-			    FILESERVER_BOSNAME,
-			    FILESERVER_EXEPATH,
-			    VOLSERVER_EXEPATH,
-			    SALVAGER_EXEPATH,
-			    &tst2)) {
+	if (!FsProcessStart
+	    (cfg_host->bosHandle, FILESERVER_BOSNAME, FILESERVER_EXEPATH,
+	     VOLSERVER_EXEPATH, SALVAGER_EXEPATH, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* TO BE DONE: need a reliable "is started and ready" check */
@@ -1050,12 +1015,12 @@ cfg_FileServerStart(void *hostHandle,  /* host config handle */
  * cfg_FileServerStop() -- Stop, and unconfigure, the file server on host.
  */
 int ADMINAPI
-cfg_FileServerStop(void *hostHandle,  /* host config handle */
-		   afs_status_p st)   /* completion status */
-{
+cfg_FileServerStop(void *hostHandle,	/* host config handle */
+		   afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1068,27 +1033,29 @@ cfg_FileServerStop(void *hostHandle,  /* host config handle */
     /* stop and delete file server instance */
 
     if (tst == 0) {
-	if (!BosProcessDelete(cfg_host->bosHandle,
-			      FILESERVER_BOSNAME, &tst2)) {
+	if (!BosProcessDelete(cfg_host->bosHandle, FILESERVER_BOSNAME, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* file server instance deleted; remove its addresses from VLDB */
 	    int addrCount, i;
-	    afs_int32 *addrList;
+	    afs_int32 *addrList = NULL;
 
 	    /* note: ignore any errors since address removal is optional;
 	     * e.g., a common source of errors will be attempting to remove
 	     * an address while volumes tied to that address are still listed
 	     * in the VLDB (in which case the address is not removed).
 	     */
-	    if (cfgutil_HostAddressFetchAll(cfg_host->hostName,
-					    &addrCount, &addrList, &tst2)) {
+	    if (cfgutil_HostAddressFetchAll
+		(cfg_host->hostName, &addrCount, &addrList, &tst2)) {
 		for (i = 0; i < addrCount; i++) {
 		    (void)vos_FileServerAddressRemove(cfg_host->cellHandle,
-						      NULL,
-						      addrList[i], &tst2);
+						      NULL, addrList[i],
+						      &tst2);
 		}
-		free(addrList);
+			if (addrList) {
+				free(addrList);
+				addrList = NULL;
+			}
 	    }
 	}
     }
@@ -1108,13 +1075,13 @@ cfg_FileServerStop(void *hostHandle,  /* host config handle */
  * cfg_FileServerQueryStatus() -- Query status of file server on host.
  */
 int ADMINAPI
-cfg_FileServerQueryStatus(void *hostHandle,   /* host config handle */
-			  short *isFsP,       /* file server configured */
-			  afs_status_p st)    /* completion status */
-{
+cfg_FileServerQueryStatus(void *hostHandle,	/* host config handle */
+			  short *isFsP,	/* file server configured */
+			  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1134,9 +1101,9 @@ cfg_FileServerQueryStatus(void *hostHandle,   /* host config handle */
 
 	*isFsP = 0;
 
-	if (bos_ProcessInfoGet(cfg_host->bosHandle,
-			       FILESERVER_BOSNAME,
-			       &procType, &procInfo, &tst2)) {
+	if (bos_ProcessInfoGet
+	    (cfg_host->bosHandle, FILESERVER_BOSNAME, &procType, &procInfo,
+	     &tst2)) {
 	    /* instance exists; check type for good measure */
 	    if (procType == BOS_PROCESS_FS) {
 		*isFsP = 1;
@@ -1172,14 +1139,14 @@ cfg_FileServerQueryStatus(void *hostHandle,   /* host config handle */
  *     The BOS instance name used is the string constant cfg_upserverBosName.
  */
 int ADMINAPI
-cfg_UpdateServerStart(void *hostHandle,         /* host config handle */
-		      const char *exportClear,  /* dirs to export in clear */
-		      const char *exportCrypt,  /* dirs to export encrypted */
-		      afs_status_p st)          /* completion status */
-{
+cfg_UpdateServerStart(void *hostHandle,	/* host config handle */
+		      const char *exportClear,	/* dirs to export in clear */
+		      const char *exportCrypt,	/* dirs to export encrypted */
+		      afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1229,21 +1196,21 @@ cfg_UpdateServerStart(void *hostHandle,         /* host config handle */
 		} else if (exportCrypt == NULL) {
 		    sprintf(args, "-clear %s", exportClear);
 		} else {
-		    sprintf(args,
-			    "-clear %s -crypt %s", exportClear, exportCrypt);
+		    sprintf(args, "-clear %s -crypt %s", exportClear,
+			    exportCrypt);
 		}
 	    }
 	}
 
 	if (tst == 0) {
-	    if (!SimpleProcessStart(cfg_host->bosHandle,
-				    UPSERVER_BOSNAME,
-				    UPSERVER_EXEPATH, args, &tst2)) {
+	    if (!SimpleProcessStart
+		(cfg_host->bosHandle, UPSERVER_BOSNAME, UPSERVER_EXEPATH,
+		 args, &tst2)) {
 		tst = tst2;
 	    }
 
 	    if (args != NULL && args != argsBuf) {
-		free(args);
+			free(args);
 	    }
 	}
     }
@@ -1263,12 +1230,12 @@ cfg_UpdateServerStart(void *hostHandle,         /* host config handle */
  * cfg_UpdateServerStop() -- Stop, and unconfigure, the Update server on host.
  */
 int ADMINAPI
-cfg_UpdateServerStop(void *hostHandle,   /* host config handle */
-		     afs_status_p st)    /* completion status */
-{
+cfg_UpdateServerStop(void *hostHandle,	/* host config handle */
+		     afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1301,22 +1268,22 @@ cfg_UpdateServerStop(void *hostHandle,   /* host config handle */
  * cfg_UpdateServerQueryStatus() -- Query status of Update server on host.
  */
 int ADMINAPI
-cfg_UpdateServerQueryStatus(void *hostHandle,   /* host config handle */
-			    short *isUpserverP, /* update server configured */
-			    short *isSysCtrlP,  /* system control configured */
-			    short *isBinDistP,  /* binary dist configured */
-			    afs_status_p st)    /* completion status */
-{
+cfg_UpdateServerQueryStatus(void *hostHandle,	/* host config handle */
+			    short *isUpserverP,	/* update server configured */
+			    short *isSysCtrlP,	/* system control configured */
+			    short *isBinDistP,	/* binary dist configured */
+			    afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
     if (!cfgutil_HostHandleValidate(cfg_host, &tst2)) {
 	tst = tst2;
-    } else if (isUpserverP == NULL ||
-	       isSysCtrlP == NULL || isBinDistP == NULL) {
+    } else if (isUpserverP == NULL || isSysCtrlP == NULL
+	       || isBinDistP == NULL) {
 	tst = ADMCFGUPSERVERCONFIGFLAGPNULL;
     } else if (!cfgutil_HostHandleBosInit(cfg_host, &tst2)) {
 	tst = tst2;
@@ -1329,9 +1296,8 @@ cfg_UpdateServerQueryStatus(void *hostHandle,   /* host config handle */
 
 	*isUpserverP = *isSysCtrlP = *isBinDistP = 0;
 
-	if (!bos_ProcessParameterGetBegin(cfg_host->bosHandle,
-					  UPSERVER_BOSNAME,
-					  &cmdIter, &tst2)) {
+	if (!bos_ProcessParameterGetBegin
+	    (cfg_host->bosHandle, UPSERVER_BOSNAME, &cmdIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    char cmdString[BOS_MAX_NAME_LEN];
@@ -1381,11 +1347,11 @@ cfg_UpdateServerQueryStatus(void *hostHandle,   /* host config handle */
  *     This function is a convenience wrapper for cfg_UpdateServerStart().
  */
 int ADMINAPI
-cfg_SysBinServerStart(void *hostHandle,    /* host config handle */
-		      short makeSysCtrl,   /* config as sys control mach */
-		      short makeBinDist,   /* config as binary dist mach */
-		      afs_status_p st)     /* completion status */
-{
+cfg_SysBinServerStart(void *hostHandle,	/* host config handle */
+		      short makeSysCtrl,	/* config as sys control mach */
+		      short makeBinDist,	/* config as binary dist mach */
+		      afs_status_p st)
+{				/* completion status */
     char *cryptSysDir = NULL;
     char *clearBinDir = NULL;
 
@@ -1417,17 +1383,17 @@ cfg_SysBinServerStart(void *hostHandle,    /* host config handle */
  *     cfg_upclientBosNamePrefix and the argument string bosSuffix.
  */
 int ADMINAPI
-cfg_UpdateClientStart(void *hostHandle,         /* host config handle */
-		      const char *bosSuffix,    /* BOS instance suffix */
-		      const char *upserver,     /* upserver to import from */
-		      short crypt,              /* import encrypted */
-		      const char *import,       /* dirs to import */
-		      unsigned int frequency,   /* import interval in sec. */
-		      afs_status_p st)          /* completion status */
-{
+cfg_UpdateClientStart(void *hostHandle,	/* host config handle */
+		      const char *bosSuffix,	/* BOS instance suffix */
+		      const char *upserver,	/* upserver to import from */
+		      short crypt,	/* import encrypted */
+		      const char *import,	/* dirs to import */
+		      unsigned int frequency,	/* import interval in sec. */
+		      afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     char upclientInstance[BOS_MAX_NAME_LEN];
 
     /* validate parameters and prepare host handle for bos functions */
@@ -1436,8 +1402,8 @@ cfg_UpdateClientStart(void *hostHandle,         /* host config handle */
 	tst = tst2;
     } else if (bosSuffix == NULL) {
 	tst = ADMCFGUPCLIENTSUFFIXNULL;
-    } else if ((strlen(UPCLIENT_BOSNAME) +
-		strlen(bosSuffix) + 1) > BOS_MAX_NAME_LEN) {
+    } else if ((strlen(UPCLIENT_BOSNAME) + strlen(bosSuffix) + 1) >
+	       BOS_MAX_NAME_LEN) {
 	tst = ADMCFGUPCLIENTSUFFIXTOOLONG;
     } else if (upserver == NULL || *upserver == '\0') {
 	tst = ADMCFGUPCLIENTTARGETSERVERNULL;
@@ -1474,7 +1440,7 @@ cfg_UpdateClientStart(void *hostHandle,         /* host config handle */
 	}
 
 	if (frequency != 0) {
-	    argsLen += strlen("-t ") + 10 /* max uint */ + 1;
+	    argsLen += strlen("-t ") + 10 /* max uint */  + 1;
 	}
 
 	argsLen += strlen(import) + 1;
@@ -1501,14 +1467,14 @@ cfg_UpdateClientStart(void *hostHandle,         /* host config handle */
 	    strcat(args, import);
 
 	    /* create and start instance */
-	    if (!SimpleProcessStart(cfg_host->bosHandle,
-				    upclientInstance,
-				    UPCLIENT_EXEPATH, args, &tst2)) {
+	    if (!SimpleProcessStart
+		(cfg_host->bosHandle, upclientInstance, UPCLIENT_EXEPATH,
+		 args, &tst2)) {
 		tst = tst2;
 	    }
 
 	    if (args != argsBuf) {
-		free(args);
+			free(args);
 	    }
 	}
     }
@@ -1528,13 +1494,13 @@ cfg_UpdateClientStart(void *hostHandle,         /* host config handle */
  * cfg_UpdateClientStop() -- Stop, and unconfigure, an Update client on host.
  */
 int ADMINAPI
-cfg_UpdateClientStop(void *hostHandle,       /* host config handle */
-		     const char *bosSuffix,  /* BOS instance suffix */
-		     afs_status_p st)        /* completion status */
-{
+cfg_UpdateClientStop(void *hostHandle,	/* host config handle */
+		     const char *bosSuffix,	/* BOS instance suffix */
+		     afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     char upclientInstance[BOS_MAX_NAME_LEN];
 
     /* validate parameters and prepare host handle for bos functions */
@@ -1543,8 +1509,8 @@ cfg_UpdateClientStop(void *hostHandle,       /* host config handle */
 	tst = tst2;
     } else if (bosSuffix == NULL) {
 	tst = ADMCFGUPCLIENTSUFFIXNULL;
-    } else if ((strlen(UPCLIENT_BOSNAME) +
-		strlen(bosSuffix) + 1) > BOS_MAX_NAME_LEN) {
+    } else if ((strlen(UPCLIENT_BOSNAME) + strlen(bosSuffix) + 1) >
+	       BOS_MAX_NAME_LEN) {
 	tst = ADMCFGUPCLIENTSUFFIXTOOLONG;
     } else if (!cfgutil_HostHandleBosInit(cfg_host, &tst2)) {
 	tst = tst2;
@@ -1576,12 +1542,12 @@ cfg_UpdateClientStop(void *hostHandle,       /* host config handle */
  *     on host.
  */
 int ADMINAPI
-cfg_UpdateClientStopAll(void *hostHandle,       /* host config handle */
-			afs_status_p st)        /* completion status */
-{
+cfg_UpdateClientStopAll(void *hostHandle,	/* host config handle */
+			afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1596,9 +1562,7 @@ cfg_UpdateClientStopAll(void *hostHandle,       /* host config handle */
     if (tst == 0) {
 	void *procIter;
 
-	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle,
-				     &procIter,
-				     &tst2)) {
+	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle, &procIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* iterate over process names, looking for update clients */
@@ -1606,21 +1570,20 @@ cfg_UpdateClientStopAll(void *hostHandle,       /* host config handle */
 	    int procDone = 0;
 
 	    while (!procDone) {
-		if (!bos_ProcessNameGetNext(procIter,
-					    procName, &tst2)) {
+		if (!bos_ProcessNameGetNext(procIter, procName, &tst2)) {
 		    /* no more processes (or failure) */
 		    if (tst2 != ADMITERATORDONE) {
 			tst = tst2;
 		    }
 		    procDone = 1;
 
-		} else if (!strncmp(UPCLIENT_BOSNAME,
-				    procName,
-				    (sizeof(UPCLIENT_BOSNAME) - 1))) {
+		} else
+		    if (!strncmp
+			(UPCLIENT_BOSNAME, procName,
+			 (sizeof(UPCLIENT_BOSNAME) - 1))) {
 		    /* upclient instance prefix; assume is upclient */
-		    if (!BosProcessDelete(cfg_host->bosHandle,
-					  procName,
-					  &tst2)) {
+		    if (!BosProcessDelete
+			(cfg_host->bosHandle, procName, &tst2)) {
 			tst = tst2;
 			procDone = 1;
 		    }
@@ -1648,15 +1611,15 @@ cfg_UpdateClientStopAll(void *hostHandle,       /* host config handle */
  * cfg_UpdateClientQueryStatus() -- Query status of Update clients on host.
  */
 int ADMINAPI
-cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
-			    short *isUpclientP, /* an upclient is configured */
-			    short *isSysP,      /* system control client */
-			    short *isBinP,      /* binary dist. client */
-			    afs_status_p st)    /* completion status */
-{
+cfg_UpdateClientQueryStatus(void *hostHandle,	/* host config handle */
+			    short *isUpclientP,	/* an upclient is configured */
+			    short *isSysP,	/* system control client */
+			    short *isBinP,	/* binary dist. client */
+			    afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters and prepare host handle for bos functions */
 
@@ -1675,9 +1638,7 @@ cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
 
 	*isUpclientP = *isSysP = *isBinP = 0;
 
-	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle,
-				     &procIter,
-				     &tst2)) {
+	if (!bos_ProcessNameGetBegin(cfg_host->bosHandle, &procIter, &tst2)) {
 	    tst = tst2;
 	} else {
 	    /* iterate over process names, looking for update clients */
@@ -1685,31 +1646,30 @@ cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
 	    int procDone = 0;
 
 	    while (!procDone) {
-		if (!bos_ProcessNameGetNext(procIter,
-					    procName, &tst2)) {
+		if (!bos_ProcessNameGetNext(procIter, procName, &tst2)) {
 		    /* no more processes (or failure) */
 		    if (tst2 != ADMITERATORDONE) {
 			tst = tst2;
 		    }
 		    procDone = 1;
 
-		} else if (!strncmp(UPCLIENT_BOSNAME,
-				    procName,
-				    (sizeof(UPCLIENT_BOSNAME) - 1))) {
+		} else
+		    if (!strncmp
+			(UPCLIENT_BOSNAME, procName,
+			 (sizeof(UPCLIENT_BOSNAME) - 1))) {
 		    /* upclient instance prefix; assume is upclient */
 		    void *cmdIter;
 
 		    *isUpclientP = 1;
 
-		    if (!bos_ProcessParameterGetBegin(cfg_host->bosHandle,
-						      procName,
-						      &cmdIter, &tst2)) {
+		    if (!bos_ProcessParameterGetBegin
+			(cfg_host->bosHandle, procName, &cmdIter, &tst2)) {
 			tst = tst2;
 		    } else {
 			char cmdString[BOS_MAX_NAME_LEN];
 
-			if (!bos_ProcessParameterGetNext(cmdIter,
-							 cmdString, &tst2)) {
+			if (!bos_ProcessParameterGetNext
+			    (cmdIter, cmdString, &tst2)) {
 			    /* instance deleted out from under us (or error) */
 			    if (tst2 != BZNOENT) {
 				tst = tst2;
@@ -1718,8 +1678,8 @@ cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
 			    /* parse command line to determine how config */
 			    short hasSysPath, hasBinPath;
 
-			    UpdateCommandParse(cmdString,
-					       &hasSysPath, &hasBinPath);
+			    UpdateCommandParse(cmdString, &hasSysPath,
+					       &hasBinPath);
 
 			    if (hasSysPath) {
 				*isSysP = 1;
@@ -1738,7 +1698,7 @@ cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
 			procDone = 1;
 		    }
 		}
-	    } /* while() */
+	    }			/* while() */
 
 	    if (!bos_ProcessNameGetDone(procIter, &tst2)) {
 		tst = tst2;
@@ -1765,16 +1725,14 @@ cfg_UpdateClientQueryStatus(void *hostHandle,   /* host config handle */
  *     The BOS instance suffix used is the constant cfg_upclientSysBosSuffix.
  */
 int ADMINAPI
-cfg_SysControlClientStart(void *hostHandle,      /* host config handle */
-			  const char *upserver,  /* upserver to import from */
-			  afs_status_p st)       /* completion status */
-{
-    return cfg_UpdateClientStart(hostHandle,
-				 cfg_upclientSysBosSuffix,
-				 upserver,
-				 1 /* crypt */,
+cfg_SysControlClientStart(void *hostHandle,	/* host config handle */
+			  const char *upserver,	/* upserver to import from */
+			  afs_status_p st)
+{				/* completion status */
+    return cfg_UpdateClientStart(hostHandle, cfg_upclientSysBosSuffix,
+				 upserver, 1 /* crypt */ ,
 				 AFSDIR_CANONICAL_SERVER_ETC_DIRPATH,
-				 0 /* default frequency */,
+				 0 /* default frequency */ ,
 				 st);
 }
 
@@ -1787,16 +1745,14 @@ cfg_SysControlClientStart(void *hostHandle,      /* host config handle */
  *     The BOS instance suffix used is the constant cfg_upclientBinBosSuffix.
  */
 int ADMINAPI
-cfg_BinDistClientStart(void *hostHandle,      /* host config handle */
-		       const char *upserver,  /* upserver to import from */
-		       afs_status_p st)       /* completion status */
-{
-    return cfg_UpdateClientStart(hostHandle,
-				 cfg_upclientBinBosSuffix,
-				 upserver,
-				 0 /* crypt */,
+cfg_BinDistClientStart(void *hostHandle,	/* host config handle */
+		       const char *upserver,	/* upserver to import from */
+		       afs_status_p st)
+{				/* completion status */
+    return cfg_UpdateClientStart(hostHandle, cfg_upclientBinBosSuffix,
+				 upserver, 0 /* crypt */ ,
 				 AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,
-				 0 /* default frequency */,
+				 0 /* default frequency */ ,
 				 st);
 }
 
@@ -1810,11 +1766,8 @@ cfg_BinDistClientStart(void *hostHandle,      /* host config handle */
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-SimpleProcessStart(void *bosHandle,
-		   const char *instance,
-		   const char *executable,
-		   const char *args,
-		   afs_status_p st)
+SimpleProcessStart(void *bosHandle, const char *instance,
+		   const char *executable, const char *args, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -1838,18 +1791,14 @@ SimpleProcessStart(void *bosHandle,
 	    sprintf(cmd, "%s %s", executable, args);
 	}
 
-	if (!bos_ProcessCreate(bosHandle,
-			       instance,
-			       BOS_PROCESS_SIMPLE,
-			       cmd,
-			       NULL, NULL, &tst2) &&
-	    tst2 != BZEXISTS) {
+	if (!bos_ProcessCreate
+	    (bosHandle, instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
+	    && tst2 != BZEXISTS) {
 	    /* failed to create instance (and not because existed) */
 	    tst = tst2;
-	} else if (!bos_ProcessExecutionStateSet(bosHandle,
-						 instance,
-						 BOS_PROCESS_RUNNING,
-						 &tst2)) {
+	} else
+	    if (!bos_ProcessExecutionStateSet
+		(bosHandle, instance, BOS_PROCESS_RUNNING, &tst2)) {
 	    /* failed to set instance state to running */
 	    tst = tst2;
 	}
@@ -1877,27 +1826,21 @@ SimpleProcessStart(void *bosHandle,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-FsProcessStart(void *bosHandle,
-	       const char *instance,
-	       const char *fileserverExe,
-	       const char *volserverExe,
-	       const char *salvagerExe,
-	       afs_status_p st)
+FsProcessStart(void *bosHandle, const char *instance,
+	       const char *fileserverExe, const char *volserverExe,
+	       const char *salvagerExe, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
 
-    if (!bos_FSProcessCreate(bosHandle,
-			     instance,
-			     fileserverExe, volserverExe, salvagerExe,
-			     NULL, &tst2) &&
-	tst2 != BZEXISTS) {
+    if (!bos_FSProcessCreate
+	(bosHandle, instance, fileserverExe, volserverExe, salvagerExe, NULL,
+	 &tst2) && tst2 != BZEXISTS) {
 	/* failed to create instance (and not because existed) */
 	tst = tst2;
-    } else if (!bos_ProcessExecutionStateSet(bosHandle,
-					     instance,
-					     BOS_PROCESS_RUNNING,
-					     &tst2)) {
+    } else
+	if (!bos_ProcessExecutionStateSet
+	    (bosHandle, instance, BOS_PROCESS_RUNNING, &tst2)) {
 	/* failed to set instance state to running */
 	tst = tst2;
     }
@@ -1920,17 +1863,13 @@ FsProcessStart(void *bosHandle,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-BosProcessDelete(void *bosHandle,
-		 const char *instance,
-		 afs_status_p st)
+BosProcessDelete(void *bosHandle, const char *instance, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
 
-    if (!bos_ProcessExecutionStateSet(bosHandle,
-				      instance,
-				      BOS_PROCESS_STOPPED,
-				      &tst2)) {
+    if (!bos_ProcessExecutionStateSet
+	(bosHandle, instance, BOS_PROCESS_STOPPED, &tst2)) {
 	/* failed to set instance state to stopped (or does not exist) */
 	if (tst2 != BZNOENT) {
 	    tst = tst2;
@@ -1966,9 +1905,7 @@ BosProcessDelete(void *bosHandle,
  *    NOTE: cmdString altered (made all lower case and forward slashes)
  */
 static void
-UpdateCommandParse(char *cmdString,
-		   short *hasSysPathP,
-		   short *hasBinPathP)
+UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP)
 {
     char *argp, *dirp;
 
@@ -2004,16 +1941,16 @@ UpdateCommandParse(char *cmdString,
 	char oneBefore, oneAfter, twoAfter;
 
 	oneBefore = *(dirp - 1);
-	oneAfter  = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH) - 1);
+	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH) - 1);
 
 	if (oneAfter != '\0') {
-	    twoAfter  = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH));
+	    twoAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH));
 	}
 
 	if (isspace(oneBefore)) {
-	    if ((isspace(oneAfter)) ||
-		(oneAfter == '\0') ||
-		(oneAfter == '/' && (isspace(twoAfter) || twoAfter == '\0'))) {
+	    if ((isspace(oneAfter)) || (oneAfter == '\0')
+		|| (oneAfter == '/'
+		    && (isspace(twoAfter) || twoAfter == '\0'))) {
 		*hasSysPathP = 1;
 	    }
 	}
@@ -2028,16 +1965,16 @@ UpdateCommandParse(char *cmdString,
 	char oneBefore, oneAfter, twoAfter;
 
 	oneBefore = *(dirp - 1);
-	oneAfter  = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH) - 1);
+	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH) - 1);
 
 	if (oneAfter != '\0') {
-	    twoAfter  = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH));
+	    twoAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH));
 	}
 
 	if (isspace(oneBefore)) {
-	    if ((isspace(oneAfter)) ||
-		(oneAfter == '\0') ||
-		(oneAfter == '/' && (isspace(twoAfter) || twoAfter == '\0'))) {
+	    if ((isspace(oneAfter)) || (oneAfter == '\0')
+		|| (oneAfter == '/'
+		    && (isspace(twoAfter) || twoAfter == '\0'))) {
 		*hasBinPathP = 1;
 	    }
 	}
@@ -2053,9 +1990,7 @@ UpdateCommandParse(char *cmdString,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-UbikQuorumCheck(cfg_host_p cfg_host,
-		const char *dbInstance,
-		short *hasQuorum,
+UbikQuorumCheck(cfg_host_p cfg_host, const char *dbInstance, short *hasQuorum,
 		afs_status_p st)
 {
     int rc = 1;
@@ -2064,9 +1999,7 @@ UbikQuorumCheck(cfg_host_p cfg_host,
 
     *hasQuorum = 0;
 
-    if (!bos_HostGetBegin(cfg_host->bosHandle,
-			  &dbIter,
-			  &tst2)) {
+    if (!bos_HostGetBegin(cfg_host->bosHandle, &dbIter, &tst2)) {
 	tst = tst2;
     } else {
 	/* iterate over server CellServDb, looking for dbserver sync site */
@@ -2087,8 +2020,7 @@ UbikQuorumCheck(cfg_host_p cfg_host,
 	}
 
 	while (!dbhostDone) {
-	    if (!bos_HostGetNext(dbIter,
-				 dbhostName, &tst2)) {
+	    if (!bos_HostGetNext(dbIter, dbhostName, &tst2)) {
 		/* no more entries (or failure) */
 		if (tst2 == ADMITERATORDONE) {
 		    if (dbhostQueries == 0) {
@@ -2103,9 +2035,9 @@ UbikQuorumCheck(cfg_host_p cfg_host,
 		}
 		dbhostDone = 1;
 
-	    } else if (!util_AdminServerAddressGetFromName(dbhostName,
-							   &dbhostAddr,
-							   &tst2)) {
+	    } else
+		if (!util_AdminServerAddressGetFromName
+		    (dbhostName, &dbhostAddr, &tst2)) {
 		tst = tst2;
 		dbhostDone = 1;
 	    } else {
@@ -2116,11 +2048,9 @@ UbikQuorumCheck(cfg_host_p cfg_host,
 		 */
 		dbhostQueries++;
 
-		if (UbikVoteStatusFetch(dbhostAddr,
-					dbhostPort,
-					&isSyncSite,
-					&isWriteReady,
-					&tst2)) {
+		if (UbikVoteStatusFetch
+		    (dbhostAddr, dbhostPort, &isSyncSite, &isWriteReady,
+		     &tst2)) {
 		    /* have quorum if is sync site AND is ready for updates */
 		    if (isSyncSite) {
 			if (isWriteReady) {
@@ -2155,24 +2085,19 @@ UbikQuorumCheck(cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-UbikVoteStatusFetch(int serverAddr,
-		    unsigned short serverPort,
-		    short *isSyncSite,
-		    short *isWriteReady,
-		    afs_status_p st)
+UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
+		    short *isSyncSite, short *isWriteReady, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
     struct rx_securityClass *nullSecurity;
     struct rx_connection *serverConn;
 
-    nullSecurity = rxnull_NewClientSecurityObject();  /* never fails */
+    nullSecurity = rxnull_NewClientSecurityObject();	/* never fails */
 
-    if ((serverConn = rx_GetCachedConnection(htonl(serverAddr),
-					     htons(serverPort),
-					     VOTE_SERVICE_ID,
-					     nullSecurity,
-					     0)) == NULL) {
+    if ((serverConn =
+	 rx_GetCachedConnection(htonl(serverAddr), htons(serverPort),
+				VOTE_SERVICE_ID, nullSecurity, 0)) == NULL) {
 	tst = ADMCFGUBIKVOTENOCONNECTION;
     } else {
 	int rpcCode;
@@ -2188,11 +2113,10 @@ UbikVoteStatusFetch(int serverAddr,
 		/* as of 3.5 the database is writeable if "labeled" or if all
 		 * prior recovery states have been achieved; see defect 9477.
 		 */
-		if (((udebugInfo.recoveryState & UBIK_RECLABELDB )) ||
-
-		    ((udebugInfo.recoveryState & UBIK_RECSYNCSITE) &&
-		     (udebugInfo.recoveryState & UBIK_RECFOUNDDB ) &&
-		     (udebugInfo.recoveryState & UBIK_RECHAVEDB  ))) {
+		if (((udebugInfo.recoveryState & UBIK_RECLABELDB))
+		    || ((udebugInfo.recoveryState & UBIK_RECSYNCSITE)
+			&& (udebugInfo.recoveryState & UBIK_RECFOUNDDB)
+			&& (udebugInfo.recoveryState & UBIK_RECHAVEDB))) {
 		    *isWriteReady = 1;
 		}
 	    }
@@ -2214,7 +2138,7 @@ UbikVoteStatusFetch(int serverAddr,
 	    }
 	}
 
-	(void) rx_ReleaseCachedConnection(serverConn);
+	(void)rx_ReleaseCachedConnection(serverConn);
 
 	tst = rpcCode;
     }

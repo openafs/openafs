@@ -41,6 +41,7 @@ PTSGROUP::PTSGROUP (LPCELL lpCellParent, LPTSTR pszGroup)
    m_mszMembers = NULL;
    m_mszMemberOf = NULL;
    m_mszOwnerOf = NULL;
+   memset(&m_gs, 0, sizeof(m_gs));
 }
 
 

@@ -10,7 +10,7 @@
 #include <mit-cpyright.h>
 
 /* WARNING: This is currently identical to conf-bsd-ibm032.h and should probably change for AIX!! */
-#define BSDUNIX /* This screwes us up in read_pssword */
+#define BSDUNIX			/* This screwes us up in read_pssword */
 #define IBMWS
 #define IBMWSASM
 #define BITS32

@@ -11,6 +11,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DEXPORT_AFSAPPLIB -DEXPORTED=_declsp
 
 # include the primary makefile
 
+RELDIR=WINNT\afsapplib
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -43,34 +44,34 @@ INCFILES = \
 	$(INCFILEDIR)\subclass.h
 
 DLLOBJS = \
-	afsapplib_stub.res \
-	afsapplib.obj \
-	al_admsvr.obj \
-	al_browse.obj \
-	al_browseset.obj \
-	al_cover.obj \
-	al_creds.obj \
-	al_dynlink.obj \
-	al_error.obj \
-	al_help.obj \
-	al_misc.obj \
-	al_progress.obj \
-	al_pump.obj \
-	al_task.obj \
-	al_wizard.obj \
-	checklist.obj \
-	ctl_date.obj \
-	ctl_elapsed.obj \
-	ctl_sockaddr.obj \
-	ctl_spinner.obj \
-	ctl_time.obj \
-	dialog.obj \
-	fastlist.obj \
-	hashlist.obj \
-	regexp.obj \
-	resize.obj \
-	settings.obj \
-	subclass.obj
+	$(OUT)\afsapplib_stub.res \
+	$(OUT)\afsapplib.obj \
+	$(OUT)\al_admsvr.obj \
+	$(OUT)\al_browse.obj \
+	$(OUT)\al_browseset.obj \
+	$(OUT)\al_cover.obj \
+	$(OUT)\al_creds.obj \
+	$(OUT)\al_dynlink.obj \
+	$(OUT)\al_error.obj \
+	$(OUT)\al_help.obj \
+	$(OUT)\al_misc.obj \
+	$(OUT)\al_progress.obj \
+	$(OUT)\al_pump.obj \
+	$(OUT)\al_task.obj \
+	$(OUT)\al_wizard.obj \
+	$(OUT)\checklist.obj \
+	$(OUT)\ctl_date.obj \
+	$(OUT)\ctl_elapsed.obj \
+	$(OUT)\ctl_sockaddr.obj \
+	$(OUT)\ctl_spinner.obj \
+	$(OUT)\ctl_time.obj \
+	$(OUT)\dialog.obj \
+	$(OUT)\fastlist.obj \
+	$(OUT)\hashlist.obj \
+	$(OUT)\regexp.obj \
+	$(OUT)\resize.obj \
+	$(OUT)\settings.obj \
+	$(OUT)\subclass.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -132,5 +133,11 @@ clean::
 # Dependencies
 #
 
-AfsAppLib_stub.res : AfsAppLib_stub.rc AFS_component_version_number.h
+$(OUT)\AfsAppLib_stub.res : AFS_component_version_number.h
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
 

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.9 2002/08/02 04:36:22 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.15 2003/11/29 22:08:16 jaltman Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -40,14 +41,16 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.9 2002/08/02 04:36:
 
 #define MAXTHREADNAMELENGTH 64
 
-extern int (*registerProgram)();
-extern int (*swapNameProgram)();
+extern int (*registerProgram) ();
+extern int (*swapNameProgram) ();
 
-int debugSelectFailure;	/* # of times select failed */
+int debugSelectFailure;		/* # of times select failed */
+
 /*
  * Sleep on the unique wait channel provided.
  */
-void rxi_Sleep(void *addr)
+void
+rxi_Sleep(void *addr)
 {
     LWP_WaitProcess(addr);
 }
@@ -56,7 +59,8 @@ void rxi_Sleep(void *addr)
  * Wakeup any threads on the channel provided.
  * They may be woken up spuriously, and must check any conditions.
  */
-void rxi_Wakeup(void *addr)
+void
+rxi_Wakeup(void *addr)
 {
     LWP_NoYieldSignal(addr);
 }
@@ -67,7 +71,8 @@ static void rx_ListenerProc(void *dummy);
 /*
  * Delay the current thread the specified number of seconds.
  */
-void rxi_Delay(int sec)
+void
+rxi_Delay(int sec)
 {
     IOMGR_Sleep(sec);
 }
@@ -76,7 +81,7 @@ static int quitListening = 0;
 
 /* This routine will kill the listener thread, if it exists. */
 void
-rxi_StopListener()
+rxi_StopListener(void)
 {
     quitListening = 1;
     rxi_ReScheduleEvents();
@@ -87,11 +92,15 @@ rxi_StopListener()
    is blocked in selects, this will unblock it.  It also can be called
    to force a new trip through the rxi_Listener select loop when the set
    of file descriptors it should be listening to changes... */
-void rxi_ReScheduleEvents() {
-    if (rx_listenerPid) IOMGR_Cancel(rx_listenerPid);
+void
+rxi_ReScheduleEvents(void)
+{
+    if (rx_listenerPid)
+	IOMGR_Cancel(rx_listenerPid);
 }
 
-void rxi_InitializeThreadSupport(void)
+void
+rxi_InitializeThreadSupport(void)
 {
     PROCESS junk;
 
@@ -100,27 +109,29 @@ void rxi_InitializeThreadSupport(void)
     FD_ZERO(&rx_selectMask);
 }
 
-void rxi_StartServerProc(proc, stacksize)
-    long (*proc)();
+void
+rxi_StartServerProc(void (*proc) (void), int stacksize)
 {
     PROCESS scratchPid;
     static int number = 0;
     char name[32];
 
     sprintf(name, "srv_%d", ++number);
-    LWP_CreateProcess(proc, stacksize, RX_PROCESS_PRIORITY,
-		      0, "rx_ServerProc", &scratchPid);
+    LWP_CreateProcess(proc, stacksize, RX_PROCESS_PRIORITY, (void *)0,
+		      "rx_ServerProc", &scratchPid);
     if (registerProgram)
-	(*registerProgram)(scratchPid, name);
+	(*registerProgram) (scratchPid, name);
 }
 
-void rxi_StartListener() {
+void
+rxi_StartListener(void)
+{
     /* Priority of listener should be high, so it can keep conns alive */
 #define	RX_LIST_STACK	24000
-    LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY, 0,
-		      "rx_Listener", &rx_listenerPid);
+    LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY,
+		      (void *)0, "rx_Listener", &rx_listenerPid);
     if (registerProgram)
-	(*registerProgram)(rx_listenerPid, "listener");
+	(*registerProgram) (rx_listenerPid, "listener");
 }
 
 /* The main loop which listens to the net for datagrams, and handles timeouts
@@ -140,17 +151,15 @@ void rxi_StartListener() {
    don't do a polling select again until several seconds later (via nextPollTime mechanism).
    */
 
-void rxi_ListenerProc(rfds, tnop, newcallp)
-    fd_set *rfds;
-    int *tnop;
-    struct rx_call **newcallp;
+static void
+rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 {
     afs_uint32 host;
     u_short port;
     register struct rx_packet *p = (struct rx_packet *)0;
     int socket;
     struct clock cv;
-    afs_int32 nextPollTime;		/* time to next poll FD before sleeping */
+    afs_int32 nextPollTime;	/* time to next poll FD before sleeping */
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
     struct timeval tv, *tvp;
     int code;
@@ -165,37 +174,37 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
     nextPollTime = 0;
     code = LWP_CurrentProcess(&pid);
     if (code) {
-        fprintf(stderr, "rxi_Listener: Can't get my pid.\n");
-        exit(1);
+	fprintf(stderr, "rxi_Listener: Can't get my pid.\n");
+	exit(1);
     }
     rx_listenerPid = pid;
     if (swapNameProgram)
-       (*swapNameProgram)(pid, "listener", &name);
+	(*swapNameProgram) (pid, "listener", &name[0]);
 
     for (;;) {
 	/* Grab a new packet only if necessary (otherwise re-use the old one) */
 	if (p) {
 	    rxi_RestoreDataBufs(p);
-	}
-	else {
+	} else {
 	    if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE)))
-		osi_Panic("rxi_ListenerProc: no packets!"); /* Shouldn't happen */
+		osi_Panic("rxi_ListenerProc: no packets!");	/* Shouldn't happen */
 	}
 	/* Wait for the next event time or a packet to arrive. */
 	/* event_RaiseEvents schedules any events whose time has come and
-	   then atomically computes the time to the next event, guaranteeing
-	   that this is positive.  If there is no next event, it returns 0 */
+	 * then atomically computes the time to the next event, guaranteeing
+	 * that this is positive.  If there is no next event, it returns 0 */
 	clock_NewTime();
-	if (!rxevent_RaiseEvents(&cv)) tvp = (struct timeval *) 0;
+	if (!rxevent_RaiseEvents(&cv))
+	    tvp = NULL;
 	else {
 	    /* It's important to copy cv to tv, because the 4.3 documentation
-	       for select threatens that *tv may be updated after a select, in
-	       future editions of the system, to indicate how much of the time
-	       period has elapsed.  So we shouldn't rely on tv not being altered. */
-	    tv.tv_sec =	cv.sec;	/* Time to next event */
+	     * for select threatens that *tv may be updated after a select, in
+	     * future editions of the system, to indicate how much of the time
+	     * period has elapsed.  So we shouldn't rely on tv not being altered. */
+	    tv.tv_sec = cv.sec;	/* Time to next event */
 	    tv.tv_usec = cv.usec;
 	    tvp = &tv;
-	}	
+	}
 	rx_stats.selects++;
 
 	*rfds = rx_selectMask;
@@ -204,13 +213,12 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 	    /* we're catching up, or haven't tried to for a few seconds */
 	    doingPoll = 1;
 	    nextPollTime = clock_Sec() + 4;	/* try again in 4 seconds no matter what */
-	    tv.tv_sec = tv.tv_usec = 0;		/* make sure we poll */
+	    tv.tv_sec = tv.tv_usec = 0;	/* make sure we poll */
 	    tvp = &tv;
-	    code = select(rx_maxSocketNumber+1, rfds, 0, 0, tvp);
-	}
-	else {
+	    code = select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
+	} else {
 	    doingPoll = 0;
-	    code = IOMGR_Select(rx_maxSocketNumber+1, rfds, 0, 0, tvp);
+	    code = IOMGR_Select(rx_maxSocketNumber + 1, rfds, 0, 0, tvp);
 	}
 	lastPollWorked = 0;	/* default is that it didn't find anything */
 
@@ -219,81 +227,82 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 	    LWP_DestroyProcess(pid);
 	}
 
-	switch(code) {
-	    case 0: 
-                /* Timer interrupt:
-		 * If it was a timer interrupt then we can assume that
-                 * the time has advanced by roughly the value of the
-                 * previous timeout, and that there is now at least
-                 * one pending event.
-                 */
-		clock_NewTime();
-		break;
-	    case -1: 
-                /* select or IOMGR_Select returned failure */
-		debugSelectFailure++;	/* update debugging counter */
-		clock_NewTime();
-		break;
-	    case -2:
-                /* IOMGR_Cancel:
-		 * IOMGR_Cancel is invoked whenever a new event is
-                 * posted that is earlier than any existing events.
-                 * So we re-evaluate the time, and then go back to
-                 * reschedule events
-                 */
-		clock_NewTime();
-		break;
+	switch (code) {
+	case 0:
+	    /* Timer interrupt:
+	     * If it was a timer interrupt then we can assume that
+	     * the time has advanced by roughly the value of the
+	     * previous timeout, and that there is now at least
+	     * one pending event.
+	     */
+	    clock_NewTime();
+	    break;
+	case -1:
+	    /* select or IOMGR_Select returned failure */
+	    debugSelectFailure++;	/* update debugging counter */
+	    clock_NewTime();
+	    break;
+	case -2:
+	    /* IOMGR_Cancel:
+	     * IOMGR_Cancel is invoked whenever a new event is
+	     * posted that is earlier than any existing events.
+	     * So we re-evaluate the time, and then go back to
+	     * reschedule events
+	     */
+	    clock_NewTime();
+	    break;
 
-	    default: 
-	        /* Packets have arrived, presumably:
-		 * If it wasn't a timer interrupt, then no event should have
-		 * timed out yet (well some event may have, but only just...), so
-		 * we don't bother looking to see if any have timed out, but just
-		 * go directly to reading the data packets
-                 */
-		clock_NewTime();
-		if (doingPoll) lastPollWorked = 1;
+	default:
+	    /* Packets have arrived, presumably:
+	     * If it wasn't a timer interrupt, then no event should have
+	     * timed out yet (well some event may have, but only just...), so
+	     * we don't bother looking to see if any have timed out, but just
+	     * go directly to reading the data packets
+	     */
+	    clock_NewTime();
+	    if (doingPoll)
+		lastPollWorked = 1;
 #ifdef AFS_NT40_ENV
-		for (i=0; p && i<rfds->fd_count; i++) {
-		    socket = rfds->fd_array[i];
-		    if (rxi_ReadPacket(socket, p, &host, &port)) {
-			*newcallp = NULL;
-			p = rxi_ReceivePacket(p, socket, host, port,
-					      tnop, newcallp);
-			if (newcallp && *newcallp) {
-			    if (p) {
-				rxi_FreePacket(p);
-			    }
-			    if (swapNameProgram) {
-				(*swapNameProgram)(rx_listenerPid, &name, 0);
-				rx_listenerPid = 0;
-			    }
-			    return;
+	    for (i = 0; p && i < rfds->fd_count; i++) {
+		socket = rfds->fd_array[i];
+		if (rxi_ReadPacket(socket, p, &host, &port)) {
+		    *newcallp = NULL;
+		    p = rxi_ReceivePacket(p, socket, host, port, tnop,
+					  newcallp);
+		    if (newcallp && *newcallp) {
+			if (p) {
+			    rxi_FreePacket(p);
 			}
+			if (swapNameProgram) {
+			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    rx_listenerPid = 0;
+			}
+			return;
 		    }
 		}
+	    }
 #else
-		for (socket = rx_minSocketNumber;
-		     p && socket <= rx_maxSocketNumber; socket++)  {
-		     if (!FD_ISSET(socket, rfds))
-			 continue;
-		     if (rxi_ReadPacket(socket, p, &host, &port)) {
-			 p = rxi_ReceivePacket(p, socket, host, port,
-					       tnop, newcallp);
-			if (newcallp && *newcallp) {
-			    if (p) {
-				rxi_FreePacket(p);
-			    }
-			    if (swapNameProgram) {
-				(*swapNameProgram)(rx_listenerPid, &name, 0);
-				rx_listenerPid = 0;
-			    }
-			    return;
+	    for (socket = rx_minSocketNumber;
+		 p && socket <= rx_maxSocketNumber; socket++) {
+		if (!FD_ISSET(socket, rfds))
+		    continue;
+		if (rxi_ReadPacket(socket, p, &host, &port)) {
+		    p = rxi_ReceivePacket(p, socket, host, port, tnop,
+					  newcallp);
+		    if (newcallp && *newcallp) {
+			if (p) {
+			    rxi_FreePacket(p);
 			}
+			if (swapNameProgram) {
+			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    rx_listenerPid = 0;
+			}
+			return;
 		    }
 		}
+	    }
 #endif
-		break;
+	    break;
 	}
     }
     /* NOTREACHED */
@@ -302,7 +311,8 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static void rx_ListenerProc(void *dummy)
+static void
+rx_ListenerProc(void *dummy)
 {
     int threadID;
     int sock;
@@ -313,7 +323,7 @@ static void rx_ListenerProc(void *dummy)
 	osi_Panic("rx_ListenerProc: no fd_sets!\n");
     }
 
-    while(1) {
+    while (1) {
 	newcall = NULL;
 	threadID = -1;
 	rxi_ListenerProc(rfds, &threadID, &newcall);
@@ -329,7 +339,8 @@ static void rx_ListenerProc(void *dummy)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc()
+void
+rx_ServerProc(void)
 {
     int sock;
     int threadID;
@@ -340,13 +351,13 @@ void rx_ServerProc()
 	osi_Panic("rxi_ListenerProc: no fd_sets!\n");
     }
 
-    rxi_MorePackets(rx_maxReceiveWindow+2); /* alloc more packets */
+    rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
     threadID = rxi_availProcs++;
 
-    while(1) {
+    while (1) {
 	sock = OSI_NULLSOCKET;
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* assert(sock != OSI_NULLSOCKET); */
@@ -363,8 +374,8 @@ void rx_ServerProc()
  * Called from a single thread at startup.
  * Returns 0 on success; -1 on failure.
  */
-int rxi_Listen(sock)
-    osi_socket sock;
+int
+rxi_Listen(osi_socket sock)
 {
 #ifndef AFS_NT40_ENV
     /*
@@ -378,62 +389,65 @@ int rxi_Listen(sock)
 	return -1;
     }
 #else
-    if ( __djgpp_set_socket_blocking_mode(sock, 1) < 0 ) {
-      perror("__djgpp_set_socket_blocking_mode");
-      (osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
-      return -1;
+    if (__djgpp_set_socket_blocking_mode(sock, 1) < 0) {
+	perror("__djgpp_set_socket_blocking_mode");
+	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
+	return -1;
     }
 #endif /* AFS_DJGPP_ENV */
 
-    if (sock > FD_SETSIZE-1) {
+    if (sock > FD_SETSIZE - 1) {
 	(osi_Msg "rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",
-	 FD_SETSIZE-1);
+	 FD_SETSIZE - 1);
 	return -1;
     }
 #endif
 
     FD_SET(sock, &rx_selectMask);
-    if (sock > rx_maxSocketNumber) rx_maxSocketNumber = sock;
-    if (sock < rx_minSocketNumber) rx_minSocketNumber = sock;
+    if (sock > rx_maxSocketNumber)
+	rx_maxSocketNumber = sock;
+    if (sock < rx_minSocketNumber)
+	rx_minSocketNumber = sock;
     return 0;
 }
 
 /*
  * Recvmsg
  */
-int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
+int
+rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
-    return recvmsg((int) socket, msg_p, flags);
+    return recvmsg((int)socket, msg_p, flags);
 }
 
 /*
  * Simulate a blocking sendmsg on the non-blocking socket.
  * It's non blocking because it was set that way for recvmsg.
  */
-int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
+int
+rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
-    fd_set *sfds = (fd_set*)0;
+    fd_set *sfds = (fd_set *) 0;
     while (sendmsg(socket, msg_p, flags) == -1) {
 	int err;
 	rx_stats.sendSelects++;
 
 	if (!sfds) {
-	    if ( !(sfds = IOMGR_AllocFDSet())) {
+	    if (!(sfds = IOMGR_AllocFDSet())) {
 		(osi_Msg "rx failed to alloc fd_set: ");
 		perror("rx_sendmsg");
 		return 3;
 	    }
 	    FD_SET(socket, sfds);
 	}
-	    
 #ifdef AFS_NT40_ENV
 	if (errno)
 #elif defined(AFS_LINUX22_ENV)
-	  /* linux unfortunately returns ECONNREFUSED if the target port
-	   * is no longer in use */
-	  /* and EAGAIN if a UDP checksum is incorrect */
-	if (errno != EWOULDBLOCK && errno != ENOBUFS &&
-	    errno != ECONNREFUSED && errno != EAGAIN)
+	/* linux unfortunately returns ECONNREFUSED if the target port
+	 * is no longer in use */
+	/* and EAGAIN if a UDP checksum is incorrect */
+	if (errno != EWOULDBLOCK && errno != ENOBUFS && errno != ECONNREFUSED
+	    && errno != EAGAIN)
 #else
 	if (errno != EWOULDBLOCK && errno != ENOBUFS)
 #endif
@@ -442,9 +456,9 @@ int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    perror("rx_sendmsg");
 	    return 3;
 	}
-	while ((err = select(socket+1, 0, sfds, 0, 0)) != 1) {
-	    if (err >= 0 || errno != EINTR) 
-	      osi_Panic("rxi_sendmsg: select error %d.%d", err, errno);
+	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {
+	    if (err >= 0 || errno != EINTR)
+		osi_Panic("rxi_sendmsg: select error %d.%d", err, errno);
 	}
     }
     if (sfds)

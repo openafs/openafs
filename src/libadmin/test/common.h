@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef TRANSARC_LIBADMIN_TEST_COMMON_H_
-#define TRANSARC_LIBADMIN_TEST_COMMON_H_
+#ifndef OPENAFS_LIBADMIN_TEST_COMMON_H_
+#define OPENAFS_LIBADMIN_TEST_COMMON_H_
 
 #define ERR_EXT(string) \
     fprintf(stderr, "%s\n", string);\
@@ -27,17 +27,17 @@
  */
 
 typedef enum {
-  USER_PARAM = 12,
-  PASSWORD_PARAM,
-  AUTHCELL_PARAM,
-  EXECCELL_PARAM,
-  NOAUTH_PARAM
+    USER_PARAM = 12,
+    PASSWORD_PARAM,
+    AUTHCELL_PARAM,
+    EXECCELL_PARAM,
+    NOAUTH_PARAM
 } CommonParm_t;
 
 extern void
-SetupCommonCmdArgs(struct cmd_syndesc *as);
+  SetupCommonCmdArgs(struct cmd_syndesc *as);
 
 extern void *cellHandle;
 extern void *tokenHandle;
 
-#endif /* TRANSARC_LIBADMIN_TEST_COMMON_H_ */
+#endif /* OPENAFS_LIBADMIN_TEST_COMMON_H_ */

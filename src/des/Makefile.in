@@ -22,31 +22,8 @@
 # target machine for run-time code (may cross-compile),
 # override as needed 
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = /bin/sh
-include ../config/Makefile.${SYS_NAME}
-
-UKERNELDIR=../libuafs
-
-LDFLAGS = ${XLDFLAGS}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 OBJS = \
 	des.o \
@@ -65,13 +42,19 @@ OBJS = \
 	crypt.o \
 	util.o
 
-all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf.h ${TOP_INCDIR}/mit-cpyright.h ${TOP_INCDIR}/des_odd.h
+all: \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/des_prototypes.h \
+	${TOP_INCDIR}/des_conf.h \
+	${TOP_INCDIR}/mit-cpyright.h \
+	${TOP_INCDIR}/des_odd.h
 
 #
 # Build rules
 #
 .c.o:
-	${CC} -c -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS} $<
+	${CC} -c ${CFLAGS} $<
 
 libdes.a: ${OBJS} AFS_component_version_number.o
 	$(RM) -f libdes.a
@@ -135,7 +118,7 @@ fp.c: make_fp
 #
 # Dependency rules
 #
-INCLS=des.h mit-cpyright.h des_conf.h des_internal.h conf.h
+INCLS=des.h des_prototypes.h mit-cpyright.h des_conf.h des_internal.h conf.h
 
 make_keyperm.o: make_keyperm.c ${INCLS}
 make_ip.o: make_ip.c tables.h ${INCLS}
@@ -168,12 +151,21 @@ make_e.o: make_e.c ${INCLS}
 #
 # Install targets
 #
-install:  ${DESTDIR}${libdir}/libdes.a ${DESTDIR}${includedir}/des.h ${DESTDIR}${includedir}/des_conf.h ${DESTDIR}${includedir}/mit-cpyright.h ${DESTDIR}${includedir}/des_odd.h
+install:  \
+	${DESTDIR}${libdir}/libdes.a \
+	${DESTDIR}${includedir}/des.h \
+	${DESTDIR}${includedir}/des_prototypes.h \
+	${DESTDIR}${includedir}/des_conf.h \
+	${DESTDIR}${includedir}/mit-cpyright.h \
+	${DESTDIR}${includedir}/des_odd.h
 
 ${DEST}/lib/libdes.a: libdes.a
 	${INSTALL} $? $@
 
 ${DEST}/include/des.h: des.h
+	${INSTALL} $? $@
+
+${DEST}/include/des_prototypes.h: des_prototypes.h
 	${INSTALL} $? $@
 
 ${DEST}/include/des_conf.h: des_conf.h
@@ -183,23 +175,6 @@ ${DEST}/include/mit-cpyright.h: mit-cpyright.h
 	${INSTALL} $? $@
 
 ${DEST}/include/des_odd.h: odd.h
-	${INSTALL} $? $@
-
-ukinstall: \
-	${UKERNELDIR}/des/libdes.a \
-	${UKERNELDIR}/des/des.h \
-	${UKERNELDIR}/des/mit-cpyright.h 
-
-${UKERNELDIR}/des:
-	mkdir -p $?
-
-${UKERNELDIR}/des/libdes.a: libdes.a
-	${INSTALL} $? $@
-
-${UKERNELDIR}/des/des.h: des.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/des/mit-cpyright.h: mit-cpyright.h
 	${INSTALL} $? $@
 
 #
@@ -229,6 +204,12 @@ ${DESTDIR}${includedir}/des.h: des.h
 ${TOP_INCDIR}/des.h: des.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/des_prototypes.h: des_prototypes.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_prototypes.h: des_prototypes.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/des_conf.h: des_conf.h
 	${INSTALL} $? $@
 
@@ -247,5 +228,11 @@ ${DESTDIR}${includedir}/des_odd.h: odd.h
 ${TOP_INCDIR}/des_odd.h: odd.h
 	${INSTALL} $? $@
 
-dest:  ${DEST}/lib/libdes.a ${DEST}/include/des.h ${DEST}/include/des_conf.h ${DEST}/include/mit-cpyright.h ${DEST}/include/des_odd.h
+dest:  \
+	${DEST}/lib/libdes.a \
+	${DEST}/include/des.h \
+	${DEST}/include/des_prototypes.h \
+	${DEST}/include/des_conf.h \
+	${DEST}/include/mit-cpyright.h \
+	${DEST}/include/des_odd.h
 

@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/procmgmt/test/pmgttest.c,v 1.1.1.4 2001/07/14 22:23:16 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/procmgmt/test/pmgttest.c,v 1.5 2003/07/15 23:16:01 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -37,7 +38,7 @@ extern char **environ;
 
 /* define constants */
 
-#define TEST_CHILD_MAX  20  /* max number of active child procs in test */
+#define TEST_CHILD_MAX  20	/* max number of active child procs in test */
 
 #if defined(AFS_NT40_ENV)
 /* Test for reset of signal() handler (i.e., unreliable signal() behavior).
@@ -51,10 +52,10 @@ extern char **environ;
 
 /* define globals */
 
-static volatile int lastSignalCaught;   /* last signo caught by sig handler */
-static volatile int chldSignalCaught;   /* SIGCHLD caught by sig handler */
+static volatile int lastSignalCaught;	/* last signo caught by sig handler */
+static volatile int chldSignalCaught;	/* SIGCHLD caught by sig handler */
 
-static pid_t childPid[TEST_CHILD_MAX];  /* pids of active child procs */
+static pid_t childPid[TEST_CHILD_MAX];	/* pids of active child procs */
 
 static char spawntestDataBuffer[] = "Four score and seven years ago...";
 
@@ -67,31 +68,32 @@ static char spawntestDataBuffer[] = "Four score and seven years ago...";
  *     argv[2] - test name
  *     argv[3...n] - arguments for specified test (argv[2])
  */
-#define CHILD_ARG_BAD   255  /* child got bad args for test (exit status) */
-#define CHILD_EXEC_FAILED   254  /* child failed exec() (Unix only) */
+#define CHILD_ARG_BAD   255	/* child got bad args for test (exit status) */
+#define CHILD_EXEC_FAILED   254	/* child failed exec() (Unix only) */
 
-#define CHILD_ARG1  "cHiLd" /* indicates that proc is a child */
+#define CHILD_ARG1  "cHiLd"	/* indicates that proc is a child */
 
-#define SPAWNTEST_ARG2  "spawntest"   /* spawn test child */
-#define SPAWNTEST_ARG_MAX 4           /* must match SPAWNTEST_ARG[] count */
-static char *SPAWNTEST_ARG[] = {"fred and wilma",
-				    "barney and betty",
-				    "",  /* test empty string arg */
-				    "flintstone and rubble"};
+#define SPAWNTEST_ARG2  "spawntest"	/* spawn test child */
+#define SPAWNTEST_ARG_MAX 4	/* must match SPAWNTEST_ARG[] count */
+static char *SPAWNTEST_ARG[] = { "fred and wilma",
+    "barney and betty",
+    "",				/* test empty string arg */
+    "flintstone and rubble"
+};
 
 #define SPAWNTEST_ENV_NAME      "PMGT_SPAWNTEST"
 #define SPAWNTEST_ENV_VALUE     "bambam"
 #define SPAWNTEST_ENV_SETSTR    SPAWNTEST_ENV_NAME "=" SPAWNTEST_ENV_VALUE
 
-#define SPAWNBUFTEST_ARG2  "spawnbuftest"  /* spawn with buffer test child */
+#define SPAWNBUFTEST_ARG2  "spawnbuftest"	/* spawn with buffer test child */
 
-#define WAITTEST_ARG2  "waittest"    /* wait test child */
+#define WAITTEST_ARG2  "waittest"	/* wait test child */
 
-#define WNOHANGTEST_ARG2  "wnohangtest"    /* wait w/ WNOHANG test child */
+#define WNOHANGTEST_ARG2  "wnohangtest"	/* wait w/ WNOHANG test child */
 
-#define SIGNALTEST_ARG2  "signaltest"  /* signal test child */
+#define SIGNALTEST_ARG2  "signaltest"	/* signal test child */
 
-#define ABORTTEST_ARG2  "aborttest"  /* abort test child */
+#define ABORTTEST_ARG2  "aborttest"	/* abort test child */
 
 
 /* define utility functions */
@@ -152,8 +154,8 @@ Bailout(void)
 
     /* kill any child processes */
     for (i = 0; i < TEST_CHILD_MAX; i++) {
-	if (childPid[i] > (pid_t)0) {
-	    (void) kill(childPid[i], SIGKILL);
+	if (childPid[i] > (pid_t) 0) {
+	    (void)kill(childPid[i], SIGKILL);
 	}
     }
 
@@ -173,8 +175,8 @@ ChildTableLookup(pid_t pid)
     int i;
 
     for (i = 0; i < TEST_CHILD_MAX; i++) {
-	if ((childPid[i] > (pid_t)0) &&
-	    (pid == (pid_t)-1 || childPid[i] == pid)) {
+	if ((childPid[i] > (pid_t) 0)
+	    && (pid == (pid_t) - 1 || childPid[i] == pid)) {
 	    break;
 	}
     }
@@ -196,7 +198,7 @@ ChildTableClear(void)
     int i;
 
     for (i = 0; i < TEST_CHILD_MAX; i++) {
-	childPid[i] = (pid_t)-1;
+	childPid[i] = (pid_t) - 1;
     }
 }
 
@@ -221,7 +223,7 @@ static void
 BasicAPITest(void)
 {
     sigset_t sigSet;
-    void (*sigDisp)(int);
+    void (*sigDisp) (int);
     struct sigaction newAction, oldAction;
 
     /* clear child pid vector for Bailout() */
@@ -235,38 +237,26 @@ BasicAPITest(void)
 
     sigemptyset(&sigSet);
 
-    if (sigismember(&sigSet, SIGHUP) ||
-	sigismember(&sigSet, SIGINT) ||
-	sigismember(&sigSet, SIGQUIT) ||
-	sigismember(&sigSet, SIGILL) ||
-	sigismember(&sigSet, SIGABRT) ||
-	sigismember(&sigSet, SIGFPE) ||
-	sigismember(&sigSet, SIGKILL) ||
-	sigismember(&sigSet, SIGSEGV) ||
-	sigismember(&sigSet, SIGTERM) ||
-	sigismember(&sigSet, SIGUSR1) ||
-	sigismember(&sigSet, SIGUSR2) ||
-	sigismember(&sigSet, SIGCHLD) ||
-	sigismember(&sigSet, SIGTSTP)) {
+    if (sigismember(&sigSet, SIGHUP) || sigismember(&sigSet, SIGINT)
+	|| sigismember(&sigSet, SIGQUIT) || sigismember(&sigSet, SIGILL)
+	|| sigismember(&sigSet, SIGABRT) || sigismember(&sigSet, SIGFPE)
+	|| sigismember(&sigSet, SIGKILL) || sigismember(&sigSet, SIGSEGV)
+	|| sigismember(&sigSet, SIGTERM) || sigismember(&sigSet, SIGUSR1)
+	|| sigismember(&sigSet, SIGUSR2) || sigismember(&sigSet, SIGCHLD)
+	|| sigismember(&sigSet, SIGTSTP)) {
 	printf("sigemptyset() did not clear all defined signals\n");
 	Bailout();
     }
 
     sigfillset(&sigSet);
 
-    if (!sigismember(&sigSet, SIGHUP) ||
-	!sigismember(&sigSet, SIGINT) ||
-	!sigismember(&sigSet, SIGQUIT) ||
-	!sigismember(&sigSet, SIGILL) ||
-	!sigismember(&sigSet, SIGABRT) ||
-	!sigismember(&sigSet, SIGFPE) ||
-	!sigismember(&sigSet, SIGKILL) ||
-	!sigismember(&sigSet, SIGSEGV) ||
-	!sigismember(&sigSet, SIGTERM) ||
-	!sigismember(&sigSet, SIGUSR1) ||
-	!sigismember(&sigSet, SIGUSR2) ||
-	!sigismember(&sigSet, SIGCHLD) ||
-	!sigismember(&sigSet, SIGTSTP)) {
+    if (!sigismember(&sigSet, SIGHUP) || !sigismember(&sigSet, SIGINT)
+	|| !sigismember(&sigSet, SIGQUIT) || !sigismember(&sigSet, SIGILL)
+	|| !sigismember(&sigSet, SIGABRT) || !sigismember(&sigSet, SIGFPE)
+	|| !sigismember(&sigSet, SIGKILL) || !sigismember(&sigSet, SIGSEGV)
+	|| !sigismember(&sigSet, SIGTERM) || !sigismember(&sigSet, SIGUSR1)
+	|| !sigismember(&sigSet, SIGUSR2) || !sigismember(&sigSet, SIGCHLD)
+	|| !sigismember(&sigSet, SIGTSTP)) {
 	printf("sigfillset() did not set all defined signals\n");
 	Bailout();
     }
@@ -275,9 +265,8 @@ BasicAPITest(void)
     sigaddset(&sigSet, SIGUSR2);
     sigaddset(&sigSet, SIGINT);
 
-    if (!sigismember(&sigSet, SIGINT) ||
-	!sigismember(&sigSet, SIGUSR1) ||
-	!sigismember(&sigSet, SIGUSR2)) {
+    if (!sigismember(&sigSet, SIGINT) || !sigismember(&sigSet, SIGUSR1)
+	|| !sigismember(&sigSet, SIGUSR2)) {
 	printf("sigaddset() did not add defined signal to set\n");
 	Bailout();
     }
@@ -286,9 +275,8 @@ BasicAPITest(void)
     sigdelset(&sigSet, SIGUSR2);
     sigdelset(&sigSet, SIGINT);
 
-    if (sigismember(&sigSet, SIGINT) ||
-	sigismember(&sigSet, SIGUSR1) ||
-	sigismember(&sigSet, SIGUSR2)) {
+    if (sigismember(&sigSet, SIGINT) || sigismember(&sigSet, SIGUSR1)
+	|| sigismember(&sigSet, SIGUSR2)) {
 	printf("sigdelset() did not delete defined signal from set\n");
 	Bailout();
     }
@@ -346,8 +334,8 @@ BasicAPITest(void)
     if (sigaction(SIGTERM, NULL, &oldAction)) {
 	printf("sigaction() failed to retrieve old signal handler\n");
 	Bailout();
-    } else if (oldAction.sa_handler != newAction.sa_handler ||
-	       oldAction.sa_flags   != newAction.sa_flags) {
+    } else if (oldAction.sa_handler != newAction.sa_handler
+	       || oldAction.sa_flags != newAction.sa_flags) {
 	printf("sigaction() returned incorrect old signal handler values\n");
 	Bailout();
     }
@@ -379,7 +367,8 @@ BasicAPITest(void)
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing signal catching (sigaction(), signal(), kill(), raise())\n");
+    printf
+	("Testing signal catching (sigaction(), signal(), kill(), raise())\n");
 
     newAction.sa_handler = SIG_DFL;
     sigemptyset(&newAction.sa_mask);
@@ -395,7 +384,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     /* if made it here means SIGCHLD was (correctly) ignored */
 
@@ -403,9 +392,9 @@ BasicAPITest(void)
     sigemptyset(&newAction.sa_mask);
     newAction.sa_flags = 0;
 
-    if (sigaction(SIGTERM, &newAction, NULL) ||
-	sigaction(SIGUSR1, &newAction, NULL) ||
-	sigaction(SIGUSR2, &newAction, NULL)) {
+    if (sigaction(SIGTERM, &newAction, NULL)
+	|| sigaction(SIGUSR1, &newAction, NULL)
+	|| sigaction(SIGUSR2, &newAction, NULL)) {
 	printf("sigaction() failed to install valid signal handler (2)\n");
 	Bailout();
     }
@@ -417,7 +406,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGTERM) {
 	printf("raise() failed to deliver SIGTERM\n");
@@ -429,7 +418,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGUSR1) {
 	printf("raise() failed to deliver SIGUSR1\n");
@@ -441,7 +430,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGUSR2) {
 	printf("raise() failed to deliver SIGUSR2\n");
@@ -451,8 +440,8 @@ BasicAPITest(void)
     if (sigaction(SIGTERM, NULL, &oldAction)) {
 	printf("sigaction() failed to retrieve old SIGTERM handler\n");
 	Bailout();
-    } else if (oldAction.sa_handler != newAction.sa_handler ||
-	       oldAction.sa_flags   != newAction.sa_flags) {
+    } else if (oldAction.sa_handler != newAction.sa_handler
+	       || oldAction.sa_flags != newAction.sa_flags) {
 	printf("sigaction() returned incorrect old SIGTERM handler values\n");
 	Bailout();
     }
@@ -460,8 +449,8 @@ BasicAPITest(void)
     if (sigaction(SIGUSR1, NULL, &oldAction)) {
 	printf("sigaction() failed to retrieve old SIGUSR1 handler\n");
 	Bailout();
-    } else if (oldAction.sa_handler != newAction.sa_handler ||
-	       oldAction.sa_flags   != newAction.sa_flags) {
+    } else if (oldAction.sa_handler != newAction.sa_handler
+	       || oldAction.sa_flags != newAction.sa_flags) {
 	printf("sigaction() returned incorrect old SIGUSR1 handler values\n");
 	Bailout();
     }
@@ -469,15 +458,15 @@ BasicAPITest(void)
     if (sigaction(SIGUSR2, NULL, &oldAction)) {
 	printf("sigaction() failed to retrieve old SIGUSR2 handler\n");
 	Bailout();
-    } else if (oldAction.sa_handler != newAction.sa_handler ||
-	       oldAction.sa_flags   != newAction.sa_flags) {
+    } else if (oldAction.sa_handler != newAction.sa_handler
+	       || oldAction.sa_flags != newAction.sa_flags) {
 	printf("sigaction() returned incorrect old SIGUSR2 handler values\n");
 	Bailout();
     }
 
-    if (signal(SIGTERM, SignalCatcher) == SIG_ERR ||
-	signal(SIGUSR1, SignalCatcher) == SIG_ERR ||
-	signal(SIGUSR2, SignalCatcher) == SIG_ERR) {
+    if (signal(SIGTERM, SignalCatcher) == SIG_ERR
+	|| signal(SIGUSR1, SignalCatcher) == SIG_ERR
+	|| signal(SIGUSR2, SignalCatcher) == SIG_ERR) {
 	printf("signal() failed to install valid signal handler (3)\n");
 	Bailout();
     }
@@ -489,7 +478,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGTERM) {
 	printf("kill() failed to deliver SIGTERM\n");
@@ -501,7 +490,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGUSR1) {
 	printf("kill() failed to deliver SIGUSR1\n");
@@ -513,7 +502,7 @@ BasicAPITest(void)
 	Bailout();
     }
 
-    TimedSleep(1);  /* wait for signal delivery */
+    TimedSleep(1);		/* wait for signal delivery */
 
     if (lastSignalCaught != SIGUSR2) {
 	printf("kill() failed to deliver SIGUSR2\n");
@@ -567,7 +556,7 @@ BasicAPITest(void)
     printf("Testing childless waiting (wait(), waitpid())\n");
 
     errno = 0;
-    if (waitpid((pid_t)17, NULL, 0) != -1) {
+    if (waitpid((pid_t) 17, NULL, 0) != -1) {
 	printf("waitpid(17,...) with no child did not return -1\n");
 	Bailout();
     } else if (errno != ECHILD) {
@@ -576,7 +565,7 @@ BasicAPITest(void)
     }
 
     errno = 0;
-    if (waitpid((pid_t)-1, NULL, 0) != -1) {
+    if (waitpid((pid_t) - 1, NULL, 0) != -1) {
 	printf("waitpid(-1,...) with no child did not return -1\n");
 	Bailout();
     } else if (errno != ECHILD) {
@@ -614,7 +603,8 @@ SingleThreadMgmtTest(char *exeName)
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing child spawning (spawnprocve(), wait(), WIFEXITED(), WEXITSTATUS())\n");
+    printf
+	("Testing child spawning (spawnprocve(), wait(), WIFEXITED(), WEXITSTATUS())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
@@ -652,13 +642,13 @@ SingleThreadMgmtTest(char *exeName)
 	childArgv[4 + j] = NULL;
 
 	if (i % 2 == 0) {
-	    childPid[1] = spawnprocve(exeName,
-				      childArgv, environ, CHILD_EXEC_FAILED);
+	    childPid[1] =
+		spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
 	} else {
 	    childPid[1] = spawnprocv(exeName, childArgv, CHILD_EXEC_FAILED);
 	}
 
-	if (childPid[1] == (pid_t)-1) {
+	if (childPid[1] == (pid_t) - 1) {
 	    printf("spawnprocve(%s,...) failed to start child (errno = %d)\n",
 		   exeName, errno);
 	    Bailout();
@@ -666,20 +656,21 @@ SingleThreadMgmtTest(char *exeName)
 
 	do {
 	    waitPid = wait(&waitStatus);
-	} while (waitPid == (pid_t)-1 && errno == EINTR);
+	} while (waitPid == (pid_t) - 1 && errno == EINTR);
 
 	if (waitPid != childPid[1]) {
-	    if (waitPid == (pid_t)-1) {
+	    if (waitPid == (pid_t) - 1) {
 		printf("wait() failed getting child status (errno = %d)\n",
 		       errno);
 	    } else {
-		printf("wait() returned wrong pid (expected = %d, got = %d)\n",
-		       (int)childPid[1], (int)waitPid);
+		printf
+		    ("wait() returned wrong pid (expected = %d, got = %d)\n",
+		     (int)childPid[1], (int)waitPid);
 	    }
 	    Bailout();
 	}
 
-	childPid[1] = (pid_t)-1;  /* clear child pid for Bailout() */
+	childPid[1] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
 	if (!WIFEXITED(waitStatus)) {
 	    printf("WIFEXITED() returned FALSE, expected TRUE\n");
@@ -704,7 +695,8 @@ SingleThreadMgmtTest(char *exeName)
 
 #if defined(AFS_NT40_ENV)
 
-    printf("Testing child spawning with data buffer (spawnprocveb(), wait(), WIFEXITED(), WEXITSTATUS())\n");
+    printf
+	("Testing child spawning with data buffer (spawnprocveb(), wait(), WIFEXITED(), WEXITSTATUS())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
@@ -742,32 +734,33 @@ SingleThreadMgmtTest(char *exeName)
 	childArgv[4 + j] = NULL;
 
 	childPid[1] =
-	    spawnprocveb(exeName,
-			 childArgv, environ,
-			 spawntestDataBuffer, sizeof(spawntestDataBuffer));
+	    spawnprocveb(exeName, childArgv, environ, spawntestDataBuffer,
+			 sizeof(spawntestDataBuffer));
 
-	if (childPid[1] == (pid_t)-1) {
-	    printf("spawnprocveb(%s,...) failed to start child (errno = %d)\n",
-		   exeName, errno);
+	if (childPid[1] == (pid_t) - 1) {
+	    printf
+		("spawnprocveb(%s,...) failed to start child (errno = %d)\n",
+		 exeName, errno);
 	    Bailout();
 	}
 
 	do {
 	    waitPid = wait(&waitStatus);
-	} while (waitPid == (pid_t)-1 && errno == EINTR);
+	} while (waitPid == (pid_t) - 1 && errno == EINTR);
 
 	if (waitPid != childPid[1]) {
-	    if (waitPid == (pid_t)-1) {
+	    if (waitPid == (pid_t) - 1) {
 		printf("wait() failed getting child status (errno = %d)\n",
 		       errno);
 	    } else {
-		printf("wait() returned wrong pid (expected = %d, got = %d)\n",
-		       (int)childPid[1], (int)waitPid);
+		printf
+		    ("wait() returned wrong pid (expected = %d, got = %d)\n",
+		     (int)childPid[1], (int)waitPid);
 	    }
 	    Bailout();
 	}
 
-	childPid[1] = (pid_t)-1;  /* clear child pid for Bailout() */
+	childPid[1] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
 	if (!WIFEXITED(waitStatus)) {
 	    printf("WIFEXITED() returned FALSE, expected TRUE\n");
@@ -790,12 +783,13 @@ SingleThreadMgmtTest(char *exeName)
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing child waiting (spawnprocve(), wait(), waitpid(), sigaction(), WIFEXITED(), WEXITSTATUS())\n");
+    printf
+	("Testing child waiting (spawnprocve(), wait(), waitpid(), sigaction(), WIFEXITED(), WEXITSTATUS())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     lastSignalCaught = NSIG;
     chldSignalCaught = 0;
@@ -821,7 +815,7 @@ SingleThreadMgmtTest(char *exeName)
 	childPid[i] =
 	    spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
 
-	if (childPid[i] == (pid_t)-1) {
+	if (childPid[i] == (pid_t) - 1) {
 	    printf("spawnprocve(%s,...) failed to start child (errno = %d)\n",
 		   exeName, errno);
 	    Bailout();
@@ -833,9 +827,9 @@ SingleThreadMgmtTest(char *exeName)
 	    /* wait() */
 	    do {
 		waitPid = wait(&waitStatus);
-	    } while (waitPid == (pid_t)-1 && errno == EINTR);
+	    } while (waitPid == (pid_t) - 1 && errno == EINTR);
 
-	    if (waitPid == (pid_t)-1) {
+	    if (waitPid == (pid_t) - 1) {
 		printf("wait() failed getting child status (errno = %d)\n",
 		       errno);
 		Bailout();
@@ -849,7 +843,7 @@ SingleThreadMgmtTest(char *exeName)
 	    }
 	} else {
 	    /* waitpid() */
-	    waitIdx = ChildTableLookup((pid_t)-1);
+	    waitIdx = ChildTableLookup((pid_t) - 1);
 
 	    if (waitIdx < 0) {
 		printf("Child table unexpectedly empty\n");
@@ -858,10 +852,10 @@ SingleThreadMgmtTest(char *exeName)
 
 	    do {
 		waitPid = waitpid(childPid[waitIdx], &waitStatus, 0);
-	    } while (waitPid == (pid_t)-1 && errno == EINTR);
+	    } while (waitPid == (pid_t) - 1 && errno == EINTR);
 
 	    if (waitPid != childPid[waitIdx]) {
-		if (waitPid == (pid_t)-1) {
+		if (waitPid == (pid_t) - 1) {
 		    printf("waitpid() failed getting status (errno = %d)\n",
 			   errno);
 		} else {
@@ -873,7 +867,7 @@ SingleThreadMgmtTest(char *exeName)
 	    }
 	}
 
-	childPid[waitIdx] = (pid_t)-1; /* clear child pid for Bailout() */
+	childPid[waitIdx] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
 	if (!WIFEXITED(waitStatus)) {
 	    printf("WIFEXITED() returned FALSE, expected TRUE\n");
@@ -893,7 +887,7 @@ SingleThreadMgmtTest(char *exeName)
 	}
     }
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     if (!chldSignalCaught) {
 	printf("SIGCHLD never caught (last signo = %d)\n", lastSignalCaught);
@@ -903,7 +897,8 @@ SingleThreadMgmtTest(char *exeName)
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing child waiting with WNOHANG (spawnprocve(), waitpid(), kill())\n");
+    printf
+	("Testing child waiting with WNOHANG (spawnprocve(), waitpid(), kill())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
@@ -927,7 +922,7 @@ SingleThreadMgmtTest(char *exeName)
 
     childPid[1] = spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
 
-    if (childPid[1] == (pid_t)-1) {
+    if (childPid[1] == (pid_t) - 1) {
 	printf("spawnprocve(%s,...) failed to start child (errno = %d)\n",
 	       exeName, errno);
 	Bailout();
@@ -936,10 +931,10 @@ SingleThreadMgmtTest(char *exeName)
     for (i = 0; i < 20; i++) {
 	do {
 	    waitPid = waitpid(childPid[1], &waitStatus, WNOHANG);
-	} while (waitPid == (pid_t)-1 && errno == EINTR);
+	} while (waitPid == (pid_t) - 1 && errno == EINTR);
 
-	if (waitPid != (pid_t)0) {
-	    if (waitPid == (pid_t)-1) {
+	if (waitPid != (pid_t) 0) {
+	    if (waitPid == (pid_t) - 1) {
 		printf("waitpid() failed getting child status (errno = %d)\n",
 		       errno);
 
@@ -950,7 +945,7 @@ SingleThreadMgmtTest(char *exeName)
 	}
     }
 
-    TimedSleep(2);  /* wait for child to init signal mechanism (NT only) */
+    TimedSleep(2);		/* wait for child to init signal mechanism (NT only) */
 
     if (kill(childPid[1], SIGKILL)) {
 	printf("kill() failed to send SIGKILL (errno = %d)\n", errno);
@@ -959,10 +954,10 @@ SingleThreadMgmtTest(char *exeName)
 
     do {
 	waitPid = waitpid(childPid[1], &waitStatus, 0);
-    } while (waitPid == (pid_t)-1 && errno == EINTR);
+    } while (waitPid == (pid_t) - 1 && errno == EINTR);
 
     if (waitPid != childPid[1]) {
-	if (waitPid == (pid_t)-1) {
+	if (waitPid == (pid_t) - 1) {
 	    printf("waitpid() failed getting child status (errno = %d)\n",
 		   errno);
 	} else {
@@ -972,17 +967,18 @@ SingleThreadMgmtTest(char *exeName)
 	Bailout();
     }
 
-    childPid[1] = (pid_t)-1; /* clear child pid for Bailout() */
+    childPid[1] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing child signaling (spawnprocve(), kill(), waitpid(), sigaction(), WIFSIGNALED(), WTERMSIG())\n");
+    printf
+	("Testing child signaling (spawnprocve(), kill(), waitpid(), sigaction(), WIFSIGNALED(), WTERMSIG())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     lastSignalCaught = NSIG;
     chldSignalCaught = 0;
@@ -1005,14 +1001,14 @@ SingleThreadMgmtTest(char *exeName)
 	childPid[i] =
 	    spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
 
-	if (childPid[i] == (pid_t)-1) {
+	if (childPid[i] == (pid_t) - 1) {
 	    printf("spawnprocve(%s,...) failed to start child (errno = %d)\n",
 		   exeName, errno);
 	    Bailout();
 	}
     }
 
-    TimedSleep(4);  /* wait for children to init signal mechanism (NT only) */
+    TimedSleep(4);		/* wait for children to init signal mechanism (NT only) */
 
     for (i = 0; i < TEST_CHILD_MAX; i++) {
 	if (i % 3 == 0) {
@@ -1040,21 +1036,21 @@ SingleThreadMgmtTest(char *exeName)
 
 	do {
 	    waitPid = waitpid(childPid[i], &waitStatus, 0);
-	} while (waitPid == (pid_t)-1 && errno == EINTR);
+	} while (waitPid == (pid_t) - 1 && errno == EINTR);
 
 	if (waitPid != childPid[i]) {
-	    if (waitPid == (pid_t)-1) {
+	    if (waitPid == (pid_t) - 1) {
 		printf("waitpid() failed getting child status (errno = %d)\n",
 		       errno);
 	    } else {
 		printf("waitpid() returned wrong pid "
-		       "(expected = %d, got = %d)\n",
-		       (int)childPid[i], (int)waitPid);
+		       "(expected = %d, got = %d)\n", (int)childPid[i],
+		       (int)waitPid);
 	    }
 	    Bailout();
 	}
 
-	childPid[i] = (pid_t)-1; /* clear child pid for Bailout() */
+	childPid[i] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
 	if (!WIFSIGNALED(waitStatus)) {
 	    printf("WIFSIGNALED() returned FALSE, expected TRUE\n");
@@ -1068,7 +1064,7 @@ SingleThreadMgmtTest(char *exeName)
 	}
     }
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     if (!chldSignalCaught) {
 	printf("SIGCHLD never caught (last signo = %d)\n", lastSignalCaught);
@@ -1083,12 +1079,13 @@ SingleThreadMgmtTest(char *exeName)
 
     /* -------------------------------------------------------------- */
 
-    printf("Testing child aborting (spawnprocve(), waitpid(), WIFSIGNALED(), WTERMSIG())\n");
+    printf
+	("Testing child aborting (spawnprocve(), waitpid(), WIFSIGNALED(), WTERMSIG())\n");
 
     /* clear child pid vector for Bailout() */
     ChildTableClear();
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     lastSignalCaught = NSIG;
     chldSignalCaught = 0;
@@ -1107,23 +1104,22 @@ SingleThreadMgmtTest(char *exeName)
     childArgv[2] = ABORTTEST_ARG2;
     childArgv[3] = NULL;
 
-    childPid[1] =
-	spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
+    childPid[1] = spawnprocve(exeName, childArgv, environ, CHILD_EXEC_FAILED);
 
-    if (childPid[1] == (pid_t)-1) {
+    if (childPid[1] == (pid_t) - 1) {
 	printf("spawnprocve(%s,...) failed to start child (errno = %d)\n",
 	       exeName, errno);
 	Bailout();
     }
 
-    TimedSleep(2);  /* wait for child to init signal mechanism (NT only) */
+    TimedSleep(2);		/* wait for child to init signal mechanism (NT only) */
 
     do {
 	waitPid = waitpid(childPid[1], &waitStatus, 0);
-    } while (waitPid == (pid_t)-1 && errno == EINTR);
+    } while (waitPid == (pid_t) - 1 && errno == EINTR);
 
     if (waitPid != childPid[1]) {
-	if (waitPid == (pid_t)-1) {
+	if (waitPid == (pid_t) - 1) {
 	    printf("waitpid() failed getting child status (errno = %d)\n",
 		   errno);
 	} else {
@@ -1133,7 +1129,7 @@ SingleThreadMgmtTest(char *exeName)
 	Bailout();
     }
 
-    childPid[1] = (pid_t)-1; /* clear child pid for Bailout() */
+    childPid[1] = (pid_t) - 1;	/* clear child pid for Bailout() */
 
     if (!WIFSIGNALED(waitStatus)) {
 	printf("WIFSIGNALED() returned FALSE, expected TRUE\n");
@@ -1146,7 +1142,7 @@ SingleThreadMgmtTest(char *exeName)
 	Bailout();
     }
 
-    TimedSleep(3);  /* wait for outstanding SIGCHLD's to get delivered */
+    TimedSleep(3);		/* wait for outstanding SIGCHLD's to get delivered */
 
     if (!chldSignalCaught) {
 	printf("SIGCHLD never caught (last signo = %d)\n", lastSignalCaught);
@@ -1187,9 +1183,9 @@ BehaveLikeAChild(int argc, char *argv[])
     /* Turn off debug message box used by abort()/assert() in debug
      * version of MSVC C run-time library.
      */
-    (void) _CrtSetReportMode(_CRT_WARN, 0);
-    (void) _CrtSetReportMode(_CRT_ERROR, 0);
-    (void) _CrtSetReportMode(_CRT_ASSERT, 0);
+    (void)_CrtSetReportMode(_CRT_WARN, 0);
+    (void)_CrtSetReportMode(_CRT_ERROR, 0);
+    (void)_CrtSetReportMode(_CRT_ASSERT, 0);
 #endif
 
     /* verify that argc and argv are in sync */
@@ -1215,8 +1211,8 @@ BehaveLikeAChild(int argc, char *argv[])
 	int i;
 	char *envstr;
 
-	if (((envstr = getenv(SPAWNTEST_ENV_NAME)) == NULL) ||
-	    (strcmp(envstr, SPAWNTEST_ENV_VALUE))) {
+	if (((envstr = getenv(SPAWNTEST_ENV_NAME)) == NULL)
+	    || (strcmp(envstr, SPAWNTEST_ENV_VALUE))) {
 	    exit(CHILD_ARG_BAD);
 	}
 
@@ -1244,8 +1240,8 @@ BehaveLikeAChild(int argc, char *argv[])
 	int i;
 	char *envstr;
 
-	if (((envstr = getenv(SPAWNTEST_ENV_NAME)) == NULL) ||
-	    (strcmp(envstr, SPAWNTEST_ENV_VALUE))) {
+	if (((envstr = getenv(SPAWNTEST_ENV_NAME)) == NULL)
+	    || (strcmp(envstr, SPAWNTEST_ENV_VALUE))) {
 	    exit(CHILD_ARG_BAD);
 	}
 
@@ -1259,8 +1255,8 @@ BehaveLikeAChild(int argc, char *argv[])
 	    }
 	}
 
-	if (spawnDataLen != sizeof(spawntestDataBuffer) ||
-	    strcmp(spawnDatap, spawntestDataBuffer)) {
+	if (spawnDataLen != sizeof(spawntestDataBuffer)
+	    || strcmp(spawnDatap, spawntestDataBuffer)) {
 	    exit(CHILD_ARG_BAD);
 	}
 
@@ -1284,13 +1280,13 @@ BehaveLikeAChild(int argc, char *argv[])
 	/* WNOHANG TEST child */
 	TimedSleep(FOREVER);
 	printf("\tchild unexpectedly returned from TimedSleep(FOREVER)\n");
-	exit(1);  /* should never execute */
+	exit(1);		/* should never execute */
 
     } else if (!strcmp(testName, SIGNALTEST_ARG2)) {
 	/* SIGNAL TEST child */
 	TimedSleep(FOREVER);
 	printf("\tchild unexpectedly returned from TimedSleep(FOREVER)\n");
-	exit(1);  /* should never execute */
+	exit(1);		/* should never execute */
 
     } else if (!strcmp(testName, ABORTTEST_ARG2)) {
 	/* ABORT TEST child */
@@ -1305,7 +1301,7 @@ BehaveLikeAChild(int argc, char *argv[])
 #endif
 	abort();
 	printf("\tchild unexpectedly returned from abort()\n");
-	exit(1);  /* should never execute */
+	exit(1);		/* should never execute */
 
     } else {
 	/* UNKNOWN TEST */
@@ -1317,7 +1313,8 @@ BehaveLikeAChild(int argc, char *argv[])
 /*
  * Main function.
  */
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     if (argc == 1) {
 	/* PARENT process */

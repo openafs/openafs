@@ -18,39 +18,30 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_inode.c,v 1.1.1.4 2001/07/14 22:19:46 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_inode.c,v 1.7 2004/04/05 22:39:53 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/osi_inode.h"
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/osi_inode.h"
+#include "afs/afs_stats.h"	/* statistics stuff */
 
-#define BAD_IGET	-1000
-
-/*
- * SGI dependent system calls
- */
-#ifndef INODESPECIAL
-/*
- * `INODESPECIAL' type inodes are ones that describe volumes.
- */
-#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h	*/
-#endif
-
-
-int afs_syscall_icreate(void)
+int
+afs_syscall_icreate(void)
 {
     return 0;
 }
 
-int afs_syscall_iopen(void)
+int
+afs_syscall_iopen(void)
 {
     return 0;
 }
 
-int afs_syscall_iincdec(void)
+int
+afs_syscall_iincdec(void)
 {
     return 0;
 }

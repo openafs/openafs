@@ -5,27 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# MakefileProto for Digital Unix systems
-#
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
-
-include config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 
 # OS specific object files:
@@ -56,7 +37,7 @@ DBUG = -O2 -g3
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 
 # Name of directory to hold object files and libraries.
@@ -72,19 +53,19 @@ include Makefile.common
 setup:
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -s /usr/sys/include/net net
-	-ln -s /usr/sys/include/machine machine
-	-ln -s /usr/sys/include/netinet netinet
-	-ln -s /usr/sys/include/nfs nfs
-	-ln -s /usr/sys/include/rpc rpc
-	-ln -s /usr/sys/include/sys sys
-	-ln -s /usr/sys/include/ufs ufs
-	-ln -s /usr/sys/include/sys h
-	-ln -s /usr/sys/include/vm vm
+	-ln -fs /usr/sys/include/net net
+	-ln -fs /usr/sys/include/machine machine
+	-ln -fs /usr/sys/include/netinet netinet
+	-ln -fs /usr/sys/include/nfs nfs
+	-ln -fs /usr/sys/include/rpc rpc
+	-ln -fs /usr/sys/include/sys sys
+	-ln -fs /usr/sys/include/ufs ufs
+	-ln -fs /usr/sys/include/sys h
+	-ln -fs /usr/sys/include/vm vm
 	-touch $(KOBJ)/sec_net.h
 
 
@@ -134,23 +115,3 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 
 ${AFSMOD}: ${LIBAFSNONFS}
 	$(LD) -dc -r -o ${AFSMOD} ${LIBAFSNONFS}
-
-# Object build rules:
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)

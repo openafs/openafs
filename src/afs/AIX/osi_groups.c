@@ -14,32 +14,28 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_groups.c,v 1.1.1.4 2001/07/14 22:19:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_groups.c,v 1.8 2003/07/15 23:14:17 shadow Exp $");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"	/* statistics */
 
-
-static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset);
 
 static int
-afs_setgroups(
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent);
+  afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset);
 
+static int
+  afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
+		int change_parent);
+
+#ifndef AFS_AIX51_ENV
 int
 setgroups(ngroups, gidset)
-    int ngroups;
-    gid_t *gidset;
+     int ngroups;
+     gid_t *gidset;
 {
     int code = 0;
     struct vrequest treq;
@@ -53,7 +49,8 @@ setgroups(ngroups, gidset)
     code = afs_InitReq(&treq, credp);
     AFS_GUNLOCK();
     crfree(credp);
-    if (code) return code;
+    if (code)
+	return code;
 
     code = osetgroups(ngroups, gidset);
 
@@ -77,45 +74,57 @@ setgroups(ngroups, gidset)
     }
     return code;
 }
-
+#endif
 
 int
 setpag(cred, pagvalue, newpag, change_parent)
-    struct ucred **cred;
-    afs_uint32 pagvalue;
-    afs_uint32 *newpag;
-    afs_uint32 change_parent;
+     struct ucred **cred;
+     afs_uint32 pagvalue;
+     afs_uint32 *newpag;
+     afs_uint32 change_parent;
 {
     gid_t gidset[NGROUPS];
     int ngroups, code;
     int j;
 
     AFS_STATCNT(setpag);
+#ifndef AFS_AIX51_ENV
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {
 	    return (setuerror(E2BIG), E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+#endif
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+#ifdef AFS_AIX51_ENV
+    if (change_parent) {
+	code = kcred_setpag(*cred, PAG_AFS, *newpag);
+    } else {
+	struct ucred *newcr = crdup(*cred);
+
+	crset(newcr);
+	code = kcred_setpag(newcr, PAG_AFS, *newpag);
+	*cred = newcr;
+    }
+#else
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
 	return (setuerror(code), code);
     }
+#endif
     return code;
 }
 
 
+#ifndef AFS_AIX51_ENV
 static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset)
+afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -134,9 +143,9 @@ afs_getgroups(
 
 static void
 copy_to_cred(newcr, ngroups, gidset)
-    struct ucred *newcr;
-    int ngroups;
-    gid_t *gidset;
+     struct ucred *newcr;
+     int ngroups;
+     gid_t *gidset;
 {
     gid_t *gp;
     int newngroups;
@@ -162,11 +171,8 @@ copy_to_cred(newcr, ngroups, gidset)
  */
 
 static int
-afs_setgroups(
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent)
+afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
+	      int change_parent)
 {
     AFS_STATCNT(afs_setgroups);
 
@@ -198,3 +204,4 @@ afs_setgroups(
     }
     return 0;
 }
+#endif

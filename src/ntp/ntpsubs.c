@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpsubs.c,v 1.1.1.5 2001/07/14 22:23:07 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ntp/ntpsubs.c,v 1.6 2003/07/15 23:15:51 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -38,35 +39,37 @@ extern int errno;
  */
 double
 ul_fixed_to_double(t)
-	struct l_fixedpt *t;
+     struct l_fixedpt *t;
 {
-	double a, b;
+    double a, b;
 #ifdef	GENERIC_UNS_BUG
-	register int i;
+    register int i;
 
-	i = ntohl(t->fraction);
-	a = (afs_int32)((i >> 1) & 0x7fffffff);
-	a *= 2.0;
-	if (i & 1)
-		a += 1.0;
-	a = a / (4.294967296e9);	/* shift dec point over by 32 bits */
-	i = ntohl(t->int_part);
-	b = (afs_int32)((i >> 1) & 0x7fffffff);
-	b *= 2.0;
-	if (i & 1)
-		b += 1.0;
-#else	/* GENERIC_UNS_BUG */
-	a = (afs_uint32) ntohl(t->fraction);
+    i = ntohl(t->fraction);
+    a = (afs_int32) ((i >> 1) & 0x7fffffff);
+    a *= 2.0;
+    if (i & 1)
+	a += 1.0;
+    a = a / (4.294967296e9);	/* shift dec point over by 32 bits */
+    i = ntohl(t->int_part);
+    b = (afs_int32) ((i >> 1) & 0x7fffffff);
+    b *= 2.0;
+    if (i & 1)
+	b += 1.0;
+#else /* GENERIC_UNS_BUG */
+    a = (afs_uint32) ntohl(t->fraction);
 #ifdef	VAX_COMPILER_FLT_BUG
-	if (a < 0.0) a += 4.294967296e9;
+    if (a < 0.0)
+	a += 4.294967296e9;
 #endif
-	a = a / (4.294967296e9);/* shift dec point over by 32 bits */
-	b = (afs_uint32) ntohl(t->int_part);
+    a = a / (4.294967296e9);	/* shift dec point over by 32 bits */
+    b = (afs_uint32) ntohl(t->int_part);
 #ifdef	VAX_COMPILER_FLT_BUG
-	if (b < 0.0) b += 4.294967296e9;
+    if (b < 0.0)
+	b += 4.294967296e9;
 #endif
-#endif	/* GENERIC_UNS_BUG */
-	return (a + b);
+#endif /* GENERIC_UNS_BUG */
+    return (a + b);
 }
 
 /*
@@ -76,35 +79,39 @@ ul_fixed_to_double(t)
 #if	0
 double
 l_fixed_to_double(t)
-	struct l_fixedpt *t;
+     struct l_fixedpt *t;
 {
-	double a,b;
+    double a, b;
 
-	if (ntohl(t->int_part) & 0x80000000) {
-		a = ntohl(~t->fraction);
+    if (ntohl(t->int_part) & 0x80000000) {
+	a = ntohl(~t->fraction);
 #ifdef	VAX_COMPILER_FLT_BUG
-		if (a < 0.0) a += 4.294967296e9;
+	if (a < 0.0)
+	    a += 4.294967296e9;
 #endif
-		a = a / (4.294967296e9);
-		b = ntohl(~t->int_part);
+	a = a / (4.294967296e9);
+	b = ntohl(~t->int_part);
 #ifdef	VAX_COMPILER_FLT_BUG
-		if (b < 0.0) b += 4.294967296e9;
+	if (b < 0.0)
+	    b += 4.294967296e9;
 #endif
-		a += b;
-		a = -a;
-	} else {
-		a = ntohl(t->fraction);
+	a += b;
+	a = -a;
+    } else {
+	a = ntohl(t->fraction);
 #ifdef	VAX_COMPILER_FLT_BUG
-		if (a < 0.0) a += 4.294967296e9;
+	if (a < 0.0)
+	    a += 4.294967296e9;
 #endif
-		a = a / (4.294967296e9);
-		b = ntohl(t->int_part);
+	a = a / (4.294967296e9);
+	b = ntohl(t->int_part);
 #ifdef	VAX_COMPILER_FLT_BUG
-		if (b < 0.0) b += 4.294967296e9;
+	if (b < 0.0)
+	    b += 4.294967296e9;
 #endif
-		a += b;
-	}
-	return (a);
+	a += b;
+    }
+    return (a);
 }
 #endif
 
@@ -113,98 +120,100 @@ l_fixed_to_double(t)
  */
 double
 s_fixed_to_double(t)
-	struct s_fixedpt *t;
+     struct s_fixedpt *t;
 {
-	double a;
+    double a;
 
-	if (ntohs(t->int_part) & 0x8000) {
-		a = ntohs(~t->fraction & 0xFFFF);
-		a = a / 65536.0;	/* shift dec point over by 16 bits */
-		a +=  ntohs(~t->int_part & 0xFFFF);
-		a = -a;
-	} else {
-		a = ntohs(t->fraction);
-		a = a / 65536.0;	/* shift dec point over by 16 bits */
-		a += ntohs(t->int_part);
-	}
-	return (a);
+    if (ntohs(t->int_part) & 0x8000) {
+	a = ntohs(~t->fraction & 0xFFFF);
+	a = a / 65536.0;	/* shift dec point over by 16 bits */
+	a += ntohs(~t->int_part & 0xFFFF);
+	a = -a;
+    } else {
+	a = ntohs(t->fraction);
+	a = a / 65536.0;	/* shift dec point over by 16 bits */
+	a += ntohs(t->int_part);
+    }
+    return (a);
 }
 
 void
 double_to_l_fixed(t, value)
-	struct l_fixedpt *t;
-	double value;
+     struct l_fixedpt *t;
+     double value;
 {
-	double temp;
+    double temp;
 
-	if (value >= (double) 0.0) {
-		t->int_part = value;
-		temp = value - t->int_part;
-		temp *= 4.294967296e9;
-		t->fraction = temp;
-		t->int_part = htonl(t->int_part);
-		t->fraction = htonl(t->fraction);
-	} else {
-		value = -value;
-		t->int_part = value;
-		temp = value - t->int_part;
-		temp *= 4.294967296e9;
-		t->fraction = temp;
-		t->int_part = htonl(~t->int_part);
-		t->fraction = htonl(~t->fraction);
-	}
+    if (value >= (double)0.0) {
+	t->int_part = value;
+	temp = value - t->int_part;
+	temp *= 4.294967296e9;
+	t->fraction = temp;
+	t->int_part = htonl(t->int_part);
+	t->fraction = htonl(t->fraction);
+    } else {
+	value = -value;
+	t->int_part = value;
+	temp = value - t->int_part;
+	temp *= 4.294967296e9;
+	t->fraction = temp;
+	t->int_part = htonl(~t->int_part);
+	t->fraction = htonl(~t->fraction);
+    }
 }
 
 void
 double_to_s_fixed(t, value)
-	struct s_fixedpt *t;
-	double value;
+     struct s_fixedpt *t;
+     double value;
 {
-	double temp;
+    double temp;
 
-	if (value >= (double) 0.0) {
-		t->int_part = value;
-		temp = value - t->int_part;
-		temp *= 65536.0;
-		t->fraction = temp;
-		t->int_part = htons(t->int_part);
-		t->fraction = htons(t->fraction);
-	} else {
-		value = -value;
-		t->int_part = value;
-		temp = value - t->int_part;
-		temp *= 65536.0;
-		t->fraction = temp;
-		t->int_part = htons(~t->int_part);
-		t->fraction = htons(~t->fraction);
-	}
+    if (value >= (double)0.0) {
+	t->int_part = value;
+	temp = value - t->int_part;
+	temp *= 65536.0;
+	t->fraction = temp;
+	t->int_part = htons(t->int_part);
+	t->fraction = htons(t->fraction);
+    } else {
+	value = -value;
+	t->int_part = value;
+	temp = value - t->int_part;
+	temp *= 65536.0;
+	t->fraction = temp;
+	t->int_part = htons(~t->int_part);
+	t->fraction = htons(~t->fraction);
+    }
 }
+
 /*
 	in the sun, trying to assign a float between 2^31 and 2^32
 	results in the value 2^31.  Neither 4.2bsd nor VMS have this
 	problem.  Reported it to Bob O'Brien of SMI
 */
 #ifndef AFS_SUN58_ENV
-#ifdef SUN_FLT_BUG 
+#ifdef SUN_FLT_BUG
 tstamp(stampp, tvp)
-	struct l_fixedpt *stampp;
-	struct timeval *tvp;
+     struct l_fixedpt *stampp;
+     struct timeval *tvp;
 {
-	int tt;
-	double dd;
+    int tt;
+    double dd;
 
-	stampp->int_part = ntohl(JAN_1970 + tvp->tv_sec);
-	dd = (float) tvp->tv_usec / 1000000.0;
-	tt = dd * 2147483648.0;
-	stampp->fraction = ntohl((tt << 1));
+    stampp->int_part = ntohl(JAN_1970 + tvp->tv_sec);
+    dd = (float)tvp->tv_usec / 1000000.0;
+    tt = dd * 2147483648.0;
+    stampp->fraction = ntohl((tt << 1));
 }
 #else
 tstamp(stampp, tvp)
-	struct l_fixedpt *stampp;
-	struct timeval *tvp;
+     struct l_fixedpt *stampp;
+     struct timeval *tvp;
 {
-	stampp->int_part = ntohl((afs_uint32) (JAN_1970 + tvp->tv_sec));
-	stampp->fraction = ntohl((afs_uint32) ((float) tvp->tv_usec * 4294.967295));
+    stampp->int_part = ntohl((afs_uint32) (JAN_1970 + tvp->tv_sec));
+    stampp->fraction =
+	ntohl((afs_uint32) ((float)tvp->tv_usec * 4294.967295));
 }
 #endif
 #endif /* AFS_SUN58_ENV */
@@ -215,22 +224,23 @@ tstamp(stampp, tvp)
  */
 
 char *
-ntoa (in_addr)
-struct in_addr in_addr;
+ntoa(in_addr)
+     struct in_addr in_addr;
 {
-	static int i = 0;
-	static char bufs[8][20];
-	unsigned char *p = (unsigned char *) &in_addr.s_addr;
+    static int i = 0;
+    static char bufs[8][20];
+    unsigned char *p = (unsigned char *)&in_addr.s_addr;
 
-	i = (i + 1) % (sizeof bufs / sizeof bufs[0]);
-	sprintf (bufs[i], "%d.%d.%d.%d", p[0], p[1], p[2], p[3]);
-	return bufs[i];
+    i = (i + 1) % (sizeof bufs / sizeof bufs[0]);
+    sprintf(bufs[i], "%d.%d.%d.%d", p[0], p[1], p[2], p[3]);
+    return bufs[i];
 }
 
 /* calculate effective precision, but repeated calls to gettimeofday */
 
-int MeasurePrecision (intervalP)
-  int *intervalP;
+int
+MeasurePrecision(intervalP)
+     int *intervalP;
 {
 #if	defined(AFS_SUN5_ENV)
 #define MAXTIMEDIFFS 100
@@ -245,14 +255,14 @@ int MeasurePrecision (intervalP)
     int q;
     struct timeval tv0;
 
-    gettimeofday (&tv0, 0);
+    gettimeofday(&tv0, 0);
     nDiff = 0;
     while (nDiff < MAXTIMEDIFFS) {
 	struct timeval tv, ntv;
-	int counting = 2;		/* a counting kernel */
-	gettimeofday (&tv, 0);
+	int counting = 2;	/* a counting kernel */
+	gettimeofday(&tv, 0);
 	do {
-	    gettimeofday (&ntv, 0);
+	    gettimeofday(&ntv, 0);
 
 	    /*
 	     * Bail if we are taking too long -- 30 seconds is arbitrary,
@@ -261,23 +271,29 @@ int MeasurePrecision (intervalP)
 	     * caused problems because the machines kept getting faster
 	     * and the count kept getting exceeded.
 	     */
-	    if (ntv.tv_sec - tv0.tv_sec > 30) return 0;
+	    if (ntv.tv_sec - tv0.tv_sec > 30)
+		return 0;
 
-	    interval = (ntv.tv_sec - tv.tv_sec)*1000000 +
-		ntv.tv_usec - tv.tv_usec;
-	    if (interval <= counting) counting = interval+2;
+	    interval =
+		(ntv.tv_sec - tv.tv_sec) * 1000000 + ntv.tv_usec - tv.tv_usec;
+	    if (interval <= counting)
+		counting = interval + 2;
 	} while (interval <= counting);	/* RT & sun4/280 kernels count */
-	if (interval < 0) return 0;	/* shouldn't happen but who knows... */
-	if (interval > 0) diff[nDiff++] = interval;
+	if (interval < 0)
+	    return 0;		/* shouldn't happen but who knows... */
+	if (interval > 0)
+	    diff[nDiff++] = interval;
     }
 
     /* find average interval */
     interval = 0;
-    for (i=0; i<MAXTIMEDIFFS; i++)
+    for (i = 0; i < MAXTIMEDIFFS; i++)
 	interval += diff[i];
-    interval = (interval + (MAXTIMEDIFFS/2)) / MAXTIMEDIFFS; /* round */
-    if (interval == 0) return 0;	/* some problem... */
-    if (intervalP) *intervalP = interval;
+    interval = (interval + (MAXTIMEDIFFS / 2)) / MAXTIMEDIFFS;	/* round */
+    if (interval == 0)
+	return 0;		/* some problem... */
+    if (intervalP)
+	*intervalP = interval;
 
     /* calculate binary exponent of interval in seconds */
     q = 1000000;

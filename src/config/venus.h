@@ -30,38 +30,38 @@ Definitions of Venus-specific ioctls for Venus 2.
 /* structs for Get/Set server preferences pioctl
  */
 struct spref {
-	struct in_addr server;
-	unsigned short rank;
+    struct in_addr server;
+    unsigned short rank;
 };
 
 struct sprefrequest_33 {
-	unsigned short offset;
-	unsigned short num_servers;
+    unsigned short offset;
+    unsigned short num_servers;
 };
 
-struct sprefrequest {             /* new struct for 3.4 */
-	unsigned short offset;
-	unsigned short num_servers;
-	unsigned short flags;
+struct sprefrequest {		/* new struct for 3.4 */
+    unsigned short offset;
+    unsigned short num_servers;
+    unsigned short flags;
 };
 #define DBservers 1
 
 struct sprefinfo {
-	unsigned short next_offset;
-	unsigned short num_servers;
-	struct spref servers[1];		/* we overrun this array intentionally...*/
+    unsigned short next_offset;
+    unsigned short num_servers;
+    struct spref servers[1];	/* we overrun this array intentionally... */
 };
 
 struct setspref {
-	unsigned short flags;
-	unsigned short num_servers;
-	struct spref servers[1];		/* we overrun this array intentionally...*/
+    unsigned short flags;
+    unsigned short num_servers;
+    struct spref servers[1];	/* we overrun this array intentionally... */
 };
 /* struct for GAG pioctl
  */
 struct gaginfo {
-	afs_uint32 showflags, logflags, logwritethruflag, spare[3];
-	unsigned char spare2[128];
+    afs_uint32 showflags, logflags, logwritethruflag, spare[3];
+    unsigned char spare2[128];
 };
 #define GAGUSER    1
 #define GAGCONSOLE 2
@@ -69,33 +69,31 @@ struct gaginfo {
 
 
 struct rxparams {
-	afs_int32 rx_initReceiveWindow, rx_maxReceiveWindow,
-	      rx_initSendWindow, rx_maxSendWindow, rxi_nSendFrags,
-	      rxi_nRecvFrags, rxi_OrphanFragSize;
-	afs_int32 rx_maxReceiveSize, rx_MyMaxSendSize;
-	afs_uint32 spare[21];
-      };
+    afs_int32 rx_initReceiveWindow, rx_maxReceiveWindow, rx_initSendWindow,
+	rx_maxSendWindow, rxi_nSendFrags, rxi_nRecvFrags, rxi_OrphanFragSize;
+    afs_int32 rx_maxReceiveSize, rx_MyMaxSendSize;
+    afs_uint32 spare[21];
+};
 
 /* struct for checkservers */
 
-struct chservinfo
-{
-        int magic;
-	char tbuffer[128];
-	int tsize;
-	afs_int32 tinterval;
-	afs_int32 tflags;
+struct chservinfo {
+    int magic;
+    char tbuffer[128];
+    int tsize;
+    afs_int32 tinterval;
+    afs_int32 tflags;
 };
 
 struct sbstruct {
-  int sb_thisfile;
-  int sb_default;
+    int sb_thisfile;
+    int sb_default;
 };
- 
+
 /* CM inititialization parameters. What CM actually used after calculations
  * based on passed in arguments.
  */
-#define CMI_VERSION 1 /* increment when adding new fields. */
+#define CMI_VERSION 1		/* increment when adding new fields. */
 struct cm_initparams {
     int cmi_version;
     int cmi_nChunkFiles;
@@ -104,14 +102,14 @@ struct cm_initparams {
     int cmi_nVolumeCaches;
     int cmi_firstChunkSize;
     int cmi_otherChunkSize;
-    int cmi_cacheSize;	/* The original cache size, in 1K blocks. */
+    int cmi_cacheSize;		/* The original cache size, in 1K blocks. */
     unsigned cmi_setTime:1;
     unsigned cmi_memCache:1;
-    int spare[16-9]; /* size of struct is 16 * 4 = 64 bytes */
+    int spare[16 - 9];		/* size of struct is 16 * 4 = 64 bytes */
 };
 
 #endif /* !defined(UKERNEL) */
-		
+
 /* IOCTLS to Venus.  Apply these to open file decriptors. */
 #define	VIOCCLOSEWAIT		_VICEIOCTL(1)	/* Force close to wait for store */
 #define	VIOCABORT		_VICEIOCTL(2)	/* Abort close on this fd */
@@ -155,31 +153,31 @@ struct cm_initparams {
 #define	VIOC_GETCELLSTATUS	_VICEIOCTL(35)	/* get cell status info */
 #define	VIOC_SETCELLSTATUS	_VICEIOCTL(36)	/* set corresponding info */
 #define	VIOC_FLUSHVOLUME	_VICEIOCTL(37)	/* flush whole volume's data */
-#define	VIOC_AFS_SYSNAME	_VICEIOCTL(38)  /* Change @sys value */
+#define	VIOC_AFS_SYSNAME	_VICEIOCTL(38)	/* Change @sys value */
 #define	VIOC_EXPORTAFS		_VICEIOCTL(39)	/* Export afs to nfs clients */
 #define VIOCGETCACHEPARMS	_VICEIOCTL(40)	/* Get cache stats */
-#define VIOCGETVCXSTATUS	_VICEIOCTL(41)	
+#define VIOCGETVCXSTATUS	_VICEIOCTL(41)
 #define VIOC_SETSPREFS33  	_VICEIOCTL(42)	/* Set server ranks */
 #define VIOC_GETSPREFS  	_VICEIOCTL(43)	/* Get server ranks */
 #define VIOC_GAG    	        _VICEIOCTL(44)	/* silence CM */
 #define VIOC_TWIDDLE    	_VICEIOCTL(45)	/* adjust RX knobs */
 #define VIOC_SETSPREFS  	_VICEIOCTL(46)	/* Set server ranks */
 #define VIOC_STORBEHIND  	_VICEIOCTL(47)	/* adjust store asynchrony */
-#define VIOC_GCPAGS		_VICEIOCTL(48)  /* disable automatic pag gc-ing */
+#define VIOC_GCPAGS		_VICEIOCTL(48)	/* disable automatic pag gc-ing */
 #define VIOC_GETINITPARAMS	_VICEIOCTL(49)	/* get initial cm params */
 #define VIOC_GETCPREFS  	_VICEIOCTL(50)	/* Get client interface */
 #define VIOC_SETCPREFS  	_VICEIOCTL(51)	/* Set client interface */
-#define VIOC_AFS_FLUSHMOUNT	_VICEIOCTL(52)  /* Flush mount symlink data */
+#define VIOC_AFS_FLUSHMOUNT	_VICEIOCTL(52)	/* Flush mount symlink data */
 #define VIOC_RXSTAT_PROC	_VICEIOCTL(53)	/* Control process RX stats */
 #define VIOC_RXSTAT_PEER	_VICEIOCTL(54)	/* Control peer RX stats */
-#define VIOC_GETRXKCRYPT        _VICEIOCTL(55)  /* Set rxkad enc flag */
-#define VIOC_SETRXKCRYPT        _VICEIOCTL(56)  /* Set rxkad enc flag */
-#define VIOC_PREFETCHTAPE       _VICEIOCTL(66)  /* MR-AFS prefetch from tape */
-#define VIOC_RESIDENCY_CMD      _VICEIOCTL(67)  /* generic MR-AFS cmds */
-#define VIOC_STATISTICS         _VICEIOCTL(68)  /* arla: fetch statistics */
+#define VIOC_GETRXKCRYPT        _VICEIOCTL(55)	/* Set rxkad enc flag */
+#define VIOC_SETRXKCRYPT        _VICEIOCTL(56)	/* Set rxkad enc flag */
+#define VIOC_PREFETCHTAPE       _VICEIOCTL(66)	/* MR-AFS prefetch from tape */
+#define VIOC_RESIDENCY_CMD      _VICEIOCTL(67)	/* generic MR-AFS cmds */
+#define VIOC_STATISTICS         _VICEIOCTL(68)	/* arla: fetch statistics */
 
 /* Coordinated 'C' pioctl's */
-#define VIOC_NEWALIAS		_CVICEIOCTL(1)  /* create new cell alias */
-#define VIOC_GETALIAS		_CVICEIOCTL(2)  /* get alias info */
+#define VIOC_NEWALIAS		_CVICEIOCTL(1)	/* create new cell alias */
+#define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 
 #endif /* AFS_VENUS_H */

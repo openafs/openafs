@@ -19,23 +19,35 @@ AC_ARG_ENABLE( insecure,
 [  --enable-insecure 			enable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="no")
 AC_ARG_ENABLE( afsdb,
 [  --disable-afsdb 			disable AFSDB RR support],, enable_afsdb="yes")
+AC_ARG_ENABLE( pam,
+[  --disable-pam 			disable PAM support],, enable_pam="yes")
 AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
+AC_ARG_ENABLE( largefile-fileserver,
+[  --enable-largefile-fileserver        enable large file support in fileserver],, enable_largefile_fileserver="no")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+AC_ARG_ENABLE( supergroups,
+[  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
 AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
 [  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_ENABLE( full-vos-listvol-switch,
-[  --enable-full-vos-listvol-switch     enable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="no")
+[  --disable-full-vos-listvol-switch    disable vos full listvol switch for formatted output],, enable_full_vos_listvol_switch="yes")
 AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+)
+AC_ARG_WITH(bsd-kernel-headers,
+[  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
+)
+AC_ARG_WITH(bsd-kernel-build,
+[  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
 )
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
@@ -52,6 +64,23 @@ AC_ARG_ENABLE(tivoli-tsm,
 AC_ARG_ENABLE(debug-kernel,
 [  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
 )
+AC_ARG_ENABLE(optimize-kernel,
+[  --disable-optimize-kernel		disable compilation of the kernel module with optimization (defaults based on platform)],, enable_optimize_kernel="yes"
+)
+AC_ARG_ENABLE(debug,
+[  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
+)
+AC_ARG_ENABLE(optimize,
+[  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
+)
+AC_ARG_ENABLE(debug-lwp,
+[  --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)],, enable_debug_lwp="no"
+)
+AC_ARG_ENABLE(optimize-lwp,
+[  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
+)
+
+enable_login="no"
 
 dnl weird ass systems
 AC_AIX
@@ -62,6 +91,7 @@ dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
 AC_PROG_INSTALL
@@ -71,11 +101,6 @@ AC_PROG_YACC
 AM_PROG_LEX
 
 OPENAFS_CHECK_BIGENDIAN
-
-KERN_DEBUG_OPT=
-if test "x$enable_debug_kernel" = "xyes"; then
-  KERN_DEBUG_OPT=-g
-fi
 
 AC_MSG_CHECKING(your OS)
 system=$host
@@ -95,10 +120,10 @@ case $system in
 		   fi
 		 fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -1`
+		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		  if test "x$linux_kvers" = "x"; then
 		    if test -f "$LINUX_KERNEL_PATH/include/linux/version-up.h"; then
-		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -1`
+		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		      if test "x$linux_kvers" = "x"; then
 
 		        AC_MSG_ERROR(Linux headers lack version definition [2])
@@ -127,23 +152,24 @@ case $system in
 		   AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
 		  fi
 		 fi
+                 dnl do we need to determine SUBARCH from autoconf.h
+                 SUBARCH=default
 		fi
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then
-		 OMIT_FRAME_POINTER=
 		 if test "x$enable_debug_kernel" = "xno"; then
-			OMIT_FRAME_POINTER=-fomit-frame-pointer
+			LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
 		 fi
-		 AC_SUBST(OMIT_FRAME_POINTER)
 		 OPENAFS_GCC_SUPPORTS_MARCH
 		 AC_SUBST(P5PLUS_KOPTS)
 		 OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE
 		 OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING
 		 OPENAFS_GCC_SUPPORTS_NO_COMMON
+		 OPENAFS_GCC_SUPPORTS_PIPE
 		 AC_SUBST(LINUX_GCC_KOPTS)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
-	           [LINUX_BUILD_VNODE_FROM_INODE(config,afs)],
-	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
+	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
+	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
 	         )
 		 LINUX_COMPLETION_H_EXISTS
 		 LINUX_DEFINES_FOR_EACH_PROCESS
@@ -166,8 +192,8 @@ case $system in
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno"; then
-                   AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
-                   ac_cv_linux_exports_sys_call_table=yes
+                   AC_MSG_WARN([Cannot determine sys_call_table status. assuming it isn't exported])
+                   ac_cv_linux_exports_sys_call_table=no
 		   if test -f "$LINUX_KERNEL_PATH/include/asm/ia32_unistd.h"; then
 		     ac_cv_linux_exports_ia32_sys_call_table=yes
 		   fi
@@ -324,6 +350,10 @@ case $system in
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
 		;;
+	*-netbsd*)
+		MKAFS_OSTYPE=NBSD
+		AC_MSG_RESULT(nbsd)
+		;;
 	*-openbsd*)
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
@@ -332,13 +362,27 @@ case $system in
                 AC_MSG_RESULT($system)
                 ;;
 esac
-AC_SUBST(KERN_DEBUG_OPT)
 
 if test "x$with_afs_sysname" != "x"; then
         AFS_SYSNAME="$with_afs_sysname"
 else
 	AC_MSG_CHECKING(your AFS sysname)
 	case $host in
+		i?86-*-openbsd3.1)
+			AFS_SYSNAME="i386_obsd31"
+			;;
+		i?86-*-openbsd3.2)
+			AFS_SYSNAME="i386_obsd32"
+			;;
+		i?86-*-openbsd3.3)
+			AFS_SYSNAME="i386_obsd33"
+			;;
+		i?86-*-openbsd3.4)
+			AFS_SYSNAME="i386_obsd34"
+			;;
+		i?86-*-openbsd3.5)
+			AFS_SYSNAME="i386_obsd35"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -354,14 +398,65 @@ else
 		i?86-*-freebsd4.6*)
 			AFS_SYSNAME="i386_fbsd_46"
 			;;
+		i?86-*-freebsd4.7*)
+			AFS_SYSNAME="i386_fbsd_47"
+			;;
+		i?86-*-freebsd5.0*)
+			AFS_SYSNAME="i386_fbsd_50"
+			;;
+		i?86-*-freebsd5.1*)
+			AFS_SYSNAME="i386_fbsd_51"
+			;;
+		i?86-*-freebsd5.2*)
+			AFS_SYSNAME="i386_fbsd_52"
+			;;
+		i?86-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
+			AFS_SYSNAME="i386_nbsd15"
+			;;
+		alpha-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
+			AFS_SYSNAME="alpha_nbsd15"
+			;;
+		i?86-*-netbsd*1.6[[M-Z]]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
+		powerpc-*-netbsd*1.6[[M-Z]]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
+			;;
+		i?86-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
+		powerpc-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
+			;;
+		i?86-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="i386_nbsd16"
+			;;
+		alpha-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="alpha_nbsd16"
+			;;
+		powerpc-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="ppc_nbsd16"
+			;;
 		hppa*-hp-hpux11.0*)
 			AFS_SYSNAME="hp_ux110"
 			;;
 		hppa*-hp-hpux11.11)
-			 AFS_SYSNAME="hp_ux11i"
+			AFS_SYSNAME="hp_ux11i"
+			;;
+		ia64-hp-hpux11.22)
+			AFS_SYSNAME="ia64_hpux1122"
 			;;
 		ia64-hp-hpux*)
-			AFS_SYSNAME="ia64_hpux1122"
+			AFS_SYSNAME="ia64_hpux1123"
 			;;
 		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"
@@ -408,8 +503,21 @@ else
 		powerpc-apple-darwin6.5*)
 			AFS_SYSNAME="ppc_darwin_60"
 			;;
+		powerpc-apple-darwin7.0*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.1*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.2*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.3*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
+			enable_login="yes"
 			;;
 		sparc-sun-solaris2.6)
 			AFS_SYSNAME="sun4x_56"
@@ -425,6 +533,7 @@ else
 			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
+			enable_login="yes"
 			;;
 		i386-pc-solaris2.7)
 			AFS_SYSNAME="sunx86_57"
@@ -453,6 +562,9 @@ else
 		powerpc-*-linux*)
 			AFS_SYSNAME="ppc_linuxXX"
 			;;
+		powerpc64-*-linux*)
+			AFS_SYSNAME="ppc64_linuxXX"
+			;;
 		alpha*-linux*)
 			AFS_SYSNAME="alpha_linux_XX"
 			;;
@@ -470,6 +582,7 @@ else
 			;;
 		parisc-*-linux-gnu)
 			AFS_SYSNAME="parisc_linuxXX"
+			enable_pam="no"
 			;;
 		power*-ibm-aix4.2*)
 			AFS_SYSNAME="rs_aix42"
@@ -477,8 +590,15 @@ else
 		power*-ibm-aix4.3*)
 			AFS_SYSNAME="rs_aix42"
 			;;
+		power*-ibm-aix5.1*)
+			AFS_SYSNAME="rs_aix51"
+			;;
+		power*-ibm-aix5.2*)
+			AFS_SYSNAME="rs_aix52"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
+			enable_pam="no"
 			;;
 		*)
 			AC_MSG_ERROR(An AFS sysname is required)
@@ -493,13 +613,19 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			if test -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
-			 AFS_ISUML=`awk '$[]2 == "CONFIG_USERMODE"{print $[]3}' $LINUX_KERNEL_PATH/include/linux/autoconf.h`
-			 if test "x${AFS_ISUML}" = "x1"; then
-			  _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
-			 fi
-			 AFS_SYSNAME="$_AFS_SYSNAME"
+			save_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
+			AC_TRY_COMPILE(
+			 [#include <linux/autoconf.h>],
+			 [#ifndef CONFIG_USERMODE
+			  #error not UML
+			  #endif],
+			 ac_cv_linux_is_uml=yes,)
+			if test "${ac_cv_linux_is_uml}" = yes; then
+			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
 			fi
+			CPPFLAGS="$save_CPPFLAGS"
+			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
@@ -511,7 +637,7 @@ KDUMP=kdump
 case $AFS_SYSNAME in
 	sgi_6?)
 		KDUMP=kdump.IP20;;
-	sun4x_5[789] | hp_ux11*)
+	sun4x_5[[789]] | hp_ux11*)
 		KDUMP=kdump32
 		KDUMP64=kdump64;;
 	*linux*)
@@ -524,8 +650,37 @@ case $AFS_SYSNAME in
 	*_darwin*)
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+                dnl the test below fails on darwin, even if the CPPFLAGS below
+                dnl are added. the headers from Kernel.Framework must be used
+                dnl when KERNEL is defined.
+
+                dnl really, such a thing isn't guaranteed to work on any 
+                dnl platform until the kernel cflags from MakefileProto are
+                dnl known to configure
+	        AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
 		;;
+        *)
+AC_MSG_CHECKING(for definition of struct buf)
+dnl save_CPPFLAGS="$CPPFLAGS"
+dnl CPPFLAGS="$CPPFLAGS -DKERNEL -D_KERNEL -D__KERNEL -D__KERNEL__"
+AC_CACHE_VAL(ac_cv_have_struct_buf, [
+	ac_cv_have_struct_buf=no
+	AC_TRY_COMPILE(
+		[#include <sys/buf.h>],
+		[struct buf x;
+		printf("%d\n", sizeof(x));],
+		ac_cv_have_struct_buf=yes,)
+	]
+)
+dnl CPPFLAGS="$save_CPPFLAGS"
+AC_MSG_RESULT($ac_cv_have_struct_buf)
+if test "$ac_cv_have_struct_buf" = yes; then
+	AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
+fi
+;;
 esac
+
+
 AC_CACHE_VAL(ac_cv_sockaddr_len,
 [
 AC_MSG_CHECKING([if struct sockaddr has sa_len field])
@@ -568,6 +723,24 @@ else
           fi
         done    
   fi    
+
+  dnl darwin wants it, aix hates it
+  AC_MSG_CHECKING(for the useability of arpa/nameser_compat.h)
+  AC_TRY_COMPILE([
+  #include <stdlib.h>
+  #include <stdio.h>
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+  #include <arpa/nameser.h>
+  #include <arpa/nameser_compat.h>
+  #include <resolv.h>
+  ], [static int i; i = 0;],
+  [AC_MSG_RESULT(yes)
+   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H)],
+  [AC_MSG_RESULT(no)
+   ])
 
   openafs_save_libs="$LIBS"
   AC_MSG_CHECKING([for res_search])
@@ -624,7 +797,30 @@ if test "$enable_insecure" = "yes"; then
 	WITH_INSECURE=YES
 fi
 
+if test "x$with_bsd_kernel_headers" != "x"; then
+	BSD_KERNEL_PATH="$with_bsd_kernel_headers"
+else
+	BSD_KERNEL_PATH="/usr/src/sys"
+fi
+
+if test "x$with_bsd_kernel_build" != "x"; then
+	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
+else
+	case $AFS_SYSNAME in
+		i386_fbsd_4?)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
+			;;
+		i386_fbsd_5?)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
+			;;
+	esac
+fi
+
 # Fast restart
+if test "$enable_supergroups" = "yes"; then
+	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
+fi
+
 if test "$enable_fast_restart" = "yes"; then
 	AC_DEFINE(FAST_RESTART, 1, [define if you want to have fast restart])
 fi
@@ -643,6 +839,10 @@ fi
 
 if test "$enable_bos_new_config" = "yes"; then
 	AC_DEFINE(BOS_NEW_CONFIG, 1, [define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup])
+fi
+
+if test "$enable_largefile_fileserver" = "yes"; then
+	AC_DEFINE(AFS_LARGEFILE_ENV, 1, [define if you want large file fileserver])
 fi
 
 if test "$enable_namei_fileserver" = "yes"; then
@@ -681,21 +881,42 @@ AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
-AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
+AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
-AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
+AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
 
-if test "$ac_cv_header_security_pam_modules_h" = "yes"; then
+if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
 else
 	HAVE_PAM="no"
 fi
 AC_SUBST(HAVE_PAM)
 
-AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp strerror)
+if test "$enable_login" = yes; then
+	BUILD_LOGIN="yes"
+else
+	BUILD_LOGIN="no"
+fi
+AC_SUBST(BUILD_LOGIN)
+
+AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
+
+AC_CHECK_FUNCS(regcomp regexec regerror)
+AC_MSG_CHECKING([for POSIX regex library])
+if test "$ac_cv_header_regex_h" = "yes" && \
+	test "$ac_cv_func_regcomp" = "yes" && \
+	test "$ac_cv_func_regexec" = "yes" && \
+	test "$ac_cv_func_regerror" = "yes"; then
+    AC_DEFINE(HAVE_POSIX_REGEX, 1, [define if you have POSIX regex library])
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+	
 AC_CHECK_TYPE(ssize_t, int)
+AC_SIZEOF_TYPE(long)
 
 AC_CHECK_FUNCS(timegm)
 
@@ -742,11 +963,15 @@ ENABLE_KERNEL_MODULE=libafs
 fi
 
 AC_SUBST(AFS_SYSNAME)
+AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(BSD_KERNEL_PATH)
+AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
+AC_SUBST(TOP_OBJDIR)
 AC_SUBST(TOP_SRCDIR)
 AC_SUBST(TOP_INCDIR)
 AC_SUBST(TOP_LIBDIR)
@@ -755,5 +980,32 @@ AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
+
+OPENAFS_OSCONF
+
+TOP_SRCDIR="${srcdir}/src"
+dnl
+dnl If we're using ./configure, need a more reasonable TOP_SRCDIR, since relative links don't work everywhere
+dnl
+case $TOP_SRCDIR in
+        /*)
+                ;;
+        *)
+		TOP_SRCDIR=`cd $TOP_SRCDIR; pwd`
+		;;
+esac
+
+TOP_OBJDIR="${SRCDIR_PARENT}"
+TOP_INCDIR="${SRCDIR_PARENT}/include"
+TOP_LIBDIR="${SRCDIR_PARENT}/lib"
+if test "${DEST}x" = "x"; then
+        DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+fi
+
+HELPER_SPLINT="${TOP_SRCDIR}/helper-splint.sh"
+HELPER_SPLINTCFG="${TOP_SRCDIR}/splint.cfg"
+AC_SUBST(HELPER_SPLINT)
+AC_SUBST(HELPER_SPLINTCFG)
+
 
 ])

@@ -1,0 +1,140 @@
+#!/unix
+*
+* $Locker:  $
+*
+*
+* Exports for the AFS kernel extension for AIX 3.1
+*
+icreate		syscall
+syscall		syscall
+iopen		syscall
+iinc		syscall
+idec		syscall
+* iread		syscall
+* iwrite		syscall
+lsetpag		syscall
+lpioctl		syscall
+
+*
+* Exported variables (useful for debugging)
+*
+* afs_debug
+
+*
+* We replace the following system calls
+*
+*setgroups	syscall
+kioctl32	syscall
+
+*
+*
+*
+root_exported
+afs_users
+CellLRU
+afs_servers
+afs_volumes
+afs_vhashT
+afs_cmstats
+afs_stats_cmperf
+afs_xvcache
+afs_xdcache
+afs_xserver
+afs_xvcb
+afs_xbrs
+afs_xcell
+afs_xconn
+afs_xuser
+afs_xvolume
+afs_setTimeHost
+afs_volCounter
+afs_cellindex
+afs_sysname
+afs_marinerHost
+* afs_marinerPort
+afs_mariner
+cacheInfoModTime
+freeVCList
+afs_freeDCList
+afs_freeDCCount
+afs_freeDSList
+cacheInode
+volumeInode
+cacheDiskType
+afs_indexCounter
+afs_cacheFiles
+afs_cacheBlocks
+afs_cacheStats
+afs_blocksUsed
+afs_fsfragsize
+osi_flplock
+rx_epoch
+rx_stats
+rx_extraQuota
+rx_extraPackets
+rx_stackSize
+rx_connDeadTime
+rx_idleConnectionTime
+rx_idlePeerTime
+rx_nPackets
+rx_nFreePackets
+rx_socket
+rx_port
+* rx_selectMask
+* rx_maxSocketNumber
+rx_packetQuota
+rx_nextCid
+rx_waitingForPackets
+rxi_nCalls
+rxi_dataQuota
+rxi_availProcs
+rxi_totalMin
+rxi_minDeficit
+rx_peerHashTable
+rx_connHashTable
+rx_services
+afs_indexTable
+afs_indexFlags
+afs_indexTimes
+rxi_Alloccnt
+rxi_Allocsize
+afs_dcentries
+rxevent_nFree
+rxevent_nPosted
+afs_brsWaiters
+afs_brsDaemons
+afs_brs
+afs_callo
+VLRU
+afs_DLRU
+afs_xcbhash
+rx_serverPool_lock
+rx_incomingCallQueue
+rx_freeCallQueue
+rx_idleServerQueue
+rx_freePktQ_lock
+freeSQEList_lock
+rx_freeCallQueue_lock
+rx_waitingForPackets_cv
+rx_peerHashTable_lock
+rx_connHashTable_lock
+rxevent_lock
+* rxdb_idHash
+* rxdb_lockList
+afs_duplicate_nfs_fids
+rx_tq_debug
+afs_totalServers
+afs_totalSrvAddrs
+afs_srvAddrs
+afs_global_lock
+afs_indexUnique
+afs_dvnextTbl
+afs_dcnextTbl
+afs_discardDCCount
+afs_TruncateDaemonRunning
+afs_CacheTooFull
+afs_blocksDiscarded
+afs_gcpags
+afs_gcpags_procsize
+afs_discardDCList
+afs_WaitForCacheDrain

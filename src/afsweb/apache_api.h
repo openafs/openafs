@@ -42,7 +42,7 @@
 #define FIND_LINKED_MODULE    ap_find_linked_module
 #else
 #include "1.2/httpd.h"
-#include "1.2/http_conf_globals.h"   /* for pid_fname */
+#include "1.2/http_conf_globals.h"	/* for pid_fname */
 
 #define OS_ESCAPE_PATH        os_escape_path
 #define TABLE_SET             table_set

@@ -31,13 +31,13 @@ extern "C" {
 #define cyMIN_SERVER 100
 
 static rwWindowData awdServer[] = {
-    { IDC_TABS,  raSizeX | raSizeY, MAKELONG(cxMIN_SERVER,cyMIN_SERVER) },
-    { idENDLIST, 0 }
+    { IDC_TABS,  raSizeX | raSizeY, 	MAKELONG(cxMIN_SERVER,cyMIN_SERVER), 	0 },
+    { idENDLIST, 0,			0,					0 }
  };
 
 static rwWindowData awdTabChild[] = {
-    { 0,         raSizeX | raSizeY },
-    { idENDLIST, 0  }
+    { 0,         raSizeX | raSizeY,	0,	0 },
+    { idENDLIST, 0,			0,	0  }
  };
 
 

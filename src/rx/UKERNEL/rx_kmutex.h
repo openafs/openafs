@@ -10,7 +10,7 @@
 /*
  * rx_kmutex.h - mutex and condition variable macros for kernel environment.
  *
- * Solaris implementation.
+ * User-space implementation.
  */
 
 #ifndef _RX_KMUTEX_H_
@@ -45,7 +45,9 @@
 				    } \
 				}
 
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+#ifndef UKERNEL
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
+#endif
 
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
@@ -57,4 +59,3 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #define USERPRI
 
 #endif /* _RX_KMUTEX_H_ */
-

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/usd/usd_nt.c,v 1.1.1.5 2001/09/11 14:35:03 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/usd/usd_nt.c,v 1.6 2003/07/15 23:17:10 shadow Exp $");
 
 #include <windows.h>
 #include <stdio.h>
@@ -40,11 +41,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/usd/usd_nt.c,v 1.1.1.5 2001/09/11 14:35
 
 /* Interface Functions */
 
-static int usd_DeviceRead(
-  usd_handle_t usd,
-  char *buf,
-  afs_uint32 nbytes,
-  afs_uint32 *xferdP)
+static int
+usd_DeviceRead(usd_handle_t usd, char *buf, afs_uint32 nbytes,
+	       afs_uint32 * xferdP)
 {
     HANDLE fd = usd->handle;
     DWORD bytesRead;
@@ -62,34 +61,31 @@ static int usd_DeviceRead(
 	return nterr_nt2unix(GetLastError(), EIO);
     }
 }
- 
-static int usd_DeviceWrite(
-  usd_handle_t usd,
-  char *buf,
-  afs_uint32 nbytes,
-  afs_uint32 *xferdP)
+
+static int
+usd_DeviceWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
+		afs_uint32 * xferdP)
 {
     HANDLE fd = usd->handle;
     DWORD bytesWritten;
     DWORD nterr;
 
     if (xferdP == NULL)
-      xferdP = &bytesWritten;
+	xferdP = &bytesWritten;
     else
-      *xferdP = 0;
+	*xferdP = 0;
 
     if (WriteFile(fd, buf, nbytes, xferdP, NULL)) {
-      /* write was successful */
+	/* write was successful */
 	return 0;
     } else {
-      /* write failed */
-      nterr = GetLastError();
-      if (nterr == ERROR_END_OF_MEDIA){
-	*xferdP = 0;
-	return 0;  /* indicate end of tape condition */
-      }
-      else
-	return nterr_nt2unix(nterr, EIO);
+	/* write failed */
+	nterr = GetLastError();
+	if (nterr == ERROR_END_OF_MEDIA) {
+	    *xferdP = 0;
+	    return 0;		/* indicate end of tape condition */
+	} else
+	    return nterr_nt2unix(nterr, EIO);
     }
 }
 
@@ -105,12 +101,10 @@ static int usd_DeviceWrite(
  * Win32 interface provides a way to determine the disk size.
  *
  * Add a check of the offset against the disk size to fix this problem. */
- 
-static int usd_DeviceSeek(
-  usd_handle_t usd,
-  afs_hyper_t reqOff,
-  int whence,
-  afs_hyper_t *curOffP)
+
+static int
+usd_DeviceSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
+	       afs_hyper_t * curOffP)
 {
     HANDLE fd = usd->handle;
     DWORD method, result;
@@ -132,23 +126,23 @@ static int usd_DeviceSeek(
     _ASSERT(sizeof(DWORD) == 4);
 
     /* attempt seek */
-    
+
     loOffset = hgetlo(reqOff);
     hiOffset = hgethi(reqOff);
 
     if (usd->privateData) {
 
-      /* For disk devices that know their size, check the offset against the
-       * limit provided by DeviceIoControl(). */
-      
-      DWORDLONG offset = ( (DWORDLONG)hgethi(reqOff)<<32 | 
-			   (DWORDLONG)hgetlo(reqOff) ); 
+	/* For disk devices that know their size, check the offset against the
+	 * limit provided by DeviceIoControl(). */
 
-      DWORDLONG k = (DWORDLONG)((afs_uint32)usd->privateData);
-      
-      /* _ASSERT(AFS_64BIT_ENV); */
-      if (offset >= (k<<10))
-	return EINVAL;
+	DWORDLONG offset =
+	    ((DWORDLONG) hgethi(reqOff) << 32 | (DWORDLONG) hgetlo(reqOff));
+
+	DWORDLONG k = (DWORDLONG) ((afs_uint32) usd->privateData);
+
+	/* _ASSERT(AFS_64BIT_ENV); */
+	if (offset >= (k << 10))
+	    return EINVAL;
     }
 
     result = SetFilePointer(fd, loOffset, &hiOffset, method);
@@ -160,7 +154,8 @@ static int usd_DeviceSeek(
     return 0;
 }
 
-static int usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
+static int
+usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 {
     HANDLE fd = usd->handle;
     DWORD result;
@@ -169,68 +164,70 @@ static int usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 
     switch (req) {
     case USD_IOCTL_GETTYPE:
-    {
-	int mode;
+	{
+	    int mode;
 
-	BY_HANDLE_FILE_INFORMATION info;
-	DISK_GEOMETRY geom;
-	DWORD nbytes;
-	DWORD fileError = 0;
-	DWORD diskError = 0;
+	    BY_HANDLE_FILE_INFORMATION info;
+	    DISK_GEOMETRY geom;
+	    DWORD nbytes;
+	    DWORD fileError = 0;
+	    DWORD diskError = 0;
 
-	if (!GetFileInformationByHandle(fd, &info))
-	    fileError = GetLastError();
+	    if (!GetFileInformationByHandle(fd, &info))
+		fileError = GetLastError();
 
-	if (!DeviceIoControl(fd, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0,
-			     &geom, sizeof(geom), &nbytes, NULL))
-	    diskError = GetLastError();
+	    if (!DeviceIoControl
+		(fd, IOCTL_DISK_GET_DRIVE_GEOMETRY, NULL, 0, &geom,
+		 sizeof(geom), &nbytes, NULL))
+		diskError = GetLastError();
 
-	mode = 0;
-	if ((fileError == ERROR_INVALID_PARAMETER ||
-	     fileError == ERROR_INVALID_FUNCTION)
-	    && diskError == 0) {
-	    mode = S_IFCHR;		/* a disk device */
-	    if ((afs_uint32)(usd->privateData) == 0) {
+	    mode = 0;
+	    if ((fileError == ERROR_INVALID_PARAMETER
+		 || fileError == ERROR_INVALID_FUNCTION)
+		&& diskError == 0) {
+		mode = S_IFCHR;	/* a disk device */
+		if ((afs_uint32) (usd->privateData) == 0) {
 
-		/* Fill in the device size from disk geometry info.  Note
-		 * that this is the whole disk, not just the partition, so
-		 * it will serve only as an upper bound. */
+		    /* Fill in the device size from disk geometry info.  Note
+		     * that this is the whole disk, not just the partition, so
+		     * it will serve only as an upper bound. */
 
-		DWORDLONG size = geom.Cylinders.QuadPart;
-		afs_uint32 k;
-		size *= geom.TracksPerCylinder;
-		size *= geom.SectorsPerTrack;
-		size *= geom.BytesPerSector;
-		if (size == 0)
-		    return ENODEV;
-		size >>= 10;	/* convert to Kilobytes */
-		if (size >> 31) k = 0x7fffffff;
-		else k = (afs_uint32) size;
-		usd->privateData = (void *)k;
+		    DWORDLONG size = geom.Cylinders.QuadPart;
+		    afs_uint32 k;
+		    size *= geom.TracksPerCylinder;
+		    size *= geom.SectorsPerTrack;
+		    size *= geom.BytesPerSector;
+		    if (size == 0)
+			return ENODEV;
+		    size >>= 10;	/* convert to Kilobytes */
+		    if (size >> 31)
+			k = 0x7fffffff;
+		    else
+			k = (afs_uint32) size;
+		    usd->privateData = (void *)k;
+		}
+	    } else if (diskError == ERROR_INVALID_PARAMETER && fileError == 0)
+		mode = S_IFREG;	/* a regular file */
+	    else {
+		/* check to see if device is a tape drive */
+		result = GetTapeStatus(fd);
+
+		if (result != ERROR_INVALID_FUNCTION
+		    && result != ERROR_INVALID_PARAMETER) {
+		    /* looks like a tape drive */
+		    mode = S_IFCHR;
+		}
 	    }
-	}
-	else if (diskError == ERROR_INVALID_PARAMETER && fileError == 0)
-	    mode = S_IFREG;		/* a regular file */
-	else {
-	    /* check to see if device is a tape drive */
-	    result = GetTapeStatus(fd);
 
-	    if (result != ERROR_INVALID_FUNCTION &&
-		result != ERROR_INVALID_PARAMETER) {
-		/* looks like a tape drive */
-		mode = S_IFCHR;
-	    }
+	    if (!mode)
+		return EINVAL;
+	    *(int *)arg = mode;
+	    return 0;
 	}
-
-	if (!mode)
-	    return EINVAL;
-	*(int *)arg = mode;
-	return 0;
-    }
 
     case USD_IOCTL_GETDEV:
 	return EINVAL;
-	*(dev_t *)arg = 0;
+	*(dev_t *) arg = 0;
 	break;
 
     case USD_IOCTL_GETFULLNAME:
@@ -241,11 +238,11 @@ static int usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 	result = GetFileSize(fd, &hiPart);
 	if (result == 0xffffffff && (code = GetLastError()) != NO_ERROR)
 	    return nterr_nt2unix(code, EIO);
-	hset64(*(afs_hyper_t *)arg, hiPart, result);
+	hset64(*(afs_hyper_t *) arg, hiPart, result);
 	return 0;
 
     case USD_IOCTL_SETSIZE:
-	code = usd_DeviceSeek(usd, *(afs_hyper_t *)arg, SEEK_SET, NULL);
+	code = usd_DeviceSeek(usd, *(afs_hyper_t *) arg, SEEK_SET, NULL);
 	if (!code) {
 	    if (!SetEndOfFile(fd))
 		code = nterr_nt2unix(GetLastError(), EIO);
@@ -253,137 +250,129 @@ static int usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 	return code;
 
     case USD_IOCTL_TAPEOPERATION:
-    {
-	TAPE_GET_MEDIA_PARAMETERS mediaParam;
-	TAPE_GET_DRIVE_PARAMETERS driveParam;
-	DWORD mediaParamSize = sizeof(TAPE_GET_MEDIA_PARAMETERS);
-	DWORD driveParamSize = sizeof(TAPE_GET_DRIVE_PARAMETERS);
-	DWORD reloffset, fmarkType;
-	int retrycount;
-	usd_tapeop_t *tapeOpp = (usd_tapeop_t *)arg;
+	{
+	    TAPE_GET_MEDIA_PARAMETERS mediaParam;
+	    TAPE_GET_DRIVE_PARAMETERS driveParam;
+	    DWORD mediaParamSize = sizeof(TAPE_GET_MEDIA_PARAMETERS);
+	    DWORD driveParamSize = sizeof(TAPE_GET_DRIVE_PARAMETERS);
+	    DWORD reloffset, fmarkType;
+	    int retrycount;
+	    usd_tapeop_t *tapeOpp = (usd_tapeop_t *) arg;
 
-	/* Execute specified tape command */
+	    /* Execute specified tape command */
 
-	switch (tapeOpp->tp_op) {
-	case USDTAPE_WEOF:
-	    /* Determine type of filemark supported by device */
-	    result = GetTapeParameters(fd,
-				       GET_TAPE_DRIVE_INFORMATION,
-				       &driveParamSize,
-				       &driveParam);
+	    switch (tapeOpp->tp_op) {
+	    case USDTAPE_WEOF:
+		/* Determine type of filemark supported by device */
+		result =
+		    GetTapeParameters(fd, GET_TAPE_DRIVE_INFORMATION,
+				      &driveParamSize, &driveParam);
 
-	    if (result == NO_ERROR) {
-		/* drive must support either normal or long filemarks */
-		if (driveParam.FeaturesHigh & TAPE_DRIVE_WRITE_FILEMARKS) {
-		    fmarkType = TAPE_FILEMARKS;
-		} else if (driveParam.FeaturesHigh &
-			   TAPE_DRIVE_WRITE_LONG_FMKS) {
-		    fmarkType = TAPE_LONG_FILEMARKS;
+		if (result == NO_ERROR) {
+		    /* drive must support either normal or long filemarks */
+		    if (driveParam.FeaturesHigh & TAPE_DRIVE_WRITE_FILEMARKS) {
+			fmarkType = TAPE_FILEMARKS;
+		    } else if (driveParam.
+			       FeaturesHigh & TAPE_DRIVE_WRITE_LONG_FMKS) {
+			fmarkType = TAPE_LONG_FILEMARKS;
+		    } else {
+			result = ERROR_NOT_SUPPORTED;
+		    }
+		}
+
+		/* Write specified number of filemarks */
+		if (result == NO_ERROR) {
+		    result =
+			WriteTapemark(fd, fmarkType, tapeOpp->tp_count,
+				      FALSE);
+		}
+		break;
+
+	    case USDTAPE_REW:
+		/* Rewind tape */
+		retrycount = 0;
+		do {
+		    /* absorb non-persistant errors, e.g. ERROR_MEDIA_CHANGED. */
+		    result = SetTapePosition(fd, TAPE_REWIND, 0, 0, 0, FALSE);
+		} while ((result != NO_ERROR)
+			 && (retrycount++ < TAPEOP_RETRYMAX));
+
+		break;
+
+	    case USDTAPE_FSF:
+	    case USDTAPE_BSF:
+		/* Space over specified number of file marks */
+		if (tapeOpp->tp_count < 0) {
+		    result = ERROR_INVALID_PARAMETER;
 		} else {
-		    result = ERROR_NOT_SUPPORTED;
+		    if (tapeOpp->tp_op == USDTAPE_FSF) {
+			reloffset = tapeOpp->tp_count;
+		    } else {
+			reloffset = 0 - tapeOpp->tp_count;
+		    }
+
+		    result =
+			SetTapePosition(fd, TAPE_SPACE_FILEMARKS, 0,
+					reloffset, 0, FALSE);
 		}
-	    }
+		break;
 
-	    /* Write specified number of filemarks */
-	    if (result == NO_ERROR) {
-		result = WriteTapemark(fd,
-				       fmarkType,
-				       tapeOpp->tp_count, FALSE);
-	    }
-	    break;
+	    case USDTAPE_PREPARE:
+		/* Prepare tape drive for operation; do after open. */
 
-	case USDTAPE_REW:
-	    /* Rewind tape */
-	    retrycount = 0;
-	    do {
-		/* absorb non-persistant errors, e.g. ERROR_MEDIA_CHANGED. */
-		result = SetTapePosition(fd,
-					 TAPE_REWIND,
-					 0, 0, 0,
-					 FALSE);
-	    } while ((result != NO_ERROR) && (retrycount++ < TAPEOP_RETRYMAX));
-
-	    break;
-
-	case USDTAPE_FSF:
-	case USDTAPE_BSF:
-	    /* Space over specified number of file marks */
-	    if (tapeOpp->tp_count < 0) {
-		result = ERROR_INVALID_PARAMETER;
-	    } else {
-		if (tapeOpp->tp_op == USDTAPE_FSF) {
-		    reloffset = tapeOpp->tp_count;
-		} else {
-		    reloffset = 0 - tapeOpp->tp_count;
-		}
-
-		result = SetTapePosition(fd,
-					 TAPE_SPACE_FILEMARKS,
-					 0,
-					 reloffset,
-					 0,
-					 FALSE);
-	    }
-	    break;
-
-	case USDTAPE_PREPARE:
-	    /* Prepare tape drive for operation; do after open. */
-
-	    retrycount = 0;
-	    do {
-		/* absorb non-persistant errors */
-		if (retrycount > 0) {
-		    Sleep(2 * 1000);
-		}
-		result = PrepareTape(fd, TAPE_LOCK, FALSE);
-	    } while (TRANSIENT_TAPE_ERROR(result) &&
-		     retrycount++ < TAPEOP_RETRYMAX);
-
-	    if (result == NO_ERROR) {
 		retrycount = 0;
 		do {
 		    /* absorb non-persistant errors */
 		    if (retrycount > 0) {
 			Sleep(2 * 1000);
 		    }
-		    result = GetTapeStatus(fd);
-		} while (TRANSIENT_TAPE_ERROR(result) &&
-			 retrycount++ < TAPEOP_RETRYMAX);
+		    result = PrepareTape(fd, TAPE_LOCK, FALSE);
+		} while (TRANSIENT_TAPE_ERROR(result)
+			 && retrycount++ < TAPEOP_RETRYMAX);
+
+		if (result == NO_ERROR) {
+		    retrycount = 0;
+		    do {
+			/* absorb non-persistant errors */
+			if (retrycount > 0) {
+			    Sleep(2 * 1000);
+			}
+			result = GetTapeStatus(fd);
+		    } while (TRANSIENT_TAPE_ERROR(result)
+			     && retrycount++ < TAPEOP_RETRYMAX);
+		}
+
+		/* Querying media/drive info seems to clear bad tape state */
+		if (result == NO_ERROR) {
+		    result =
+			GetTapeParameters(fd, GET_TAPE_MEDIA_INFORMATION,
+					  &mediaParamSize, &mediaParam);
+		}
+
+		if (result == NO_ERROR) {
+		    result =
+			GetTapeParameters(fd, GET_TAPE_DRIVE_INFORMATION,
+					  &driveParamSize, &driveParam);
+		}
+		break;
+
+	    case USDTAPE_SHUTDOWN:
+		/* Decommission tape drive after operation; do before close. */
+		result = PrepareTape(fd, TAPE_UNLOCK, FALSE);
+		break;
+
+	    default:
+		/* Invalid command */
+		result = ERROR_INVALID_PARAMETER;
+		break;
 	    }
 
-	    /* Querying media/drive info seems to clear bad tape state */
 	    if (result == NO_ERROR) {
-		result = GetTapeParameters(fd,
-					   GET_TAPE_MEDIA_INFORMATION,
-					   &mediaParamSize,
-					   &mediaParam);
+		return (0);
+	    } else {
+		return nterr_nt2unix(result, EIO);
 	    }
-
-	    if (result == NO_ERROR) {
-		result = GetTapeParameters(fd,
-					   GET_TAPE_DRIVE_INFORMATION,
-					   &driveParamSize,
-					   &driveParam);
-	    }
-	    break;
-
-	case USDTAPE_SHUTDOWN:
-	    /* Decommission tape drive after operation; do before close. */
-	    result = PrepareTape(fd, TAPE_UNLOCK, FALSE);
-	    break;
-
-	default:
-	    /* Invalid command */
-	    result = ERROR_INVALID_PARAMETER;
-	    break;
 	}
-
-	if (result == NO_ERROR) {
-	    return (0);
-	} else {
-	    return nterr_nt2unix(result, EIO);
-	}
-    }
 
     case USD_IOCTL_GETBLKSIZE:
 	*((long *)arg) = (long)4096;
@@ -396,7 +385,8 @@ static int usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 }
 
 
-static int usd_DeviceClose(usd_handle_t usd)
+static int
+usd_DeviceClose(usd_handle_t usd)
 {
     HANDLE fd = usd->handle;
     int code;
@@ -407,7 +397,7 @@ static int usd_DeviceClose(usd_handle_t usd)
 	code = nterr_nt2unix(GetLastError(), EIO);
 
     if (usd->fullPathName)
-	free(usd->fullPathName); 
+	free(usd->fullPathName);
     free(usd);
 
     return code;
@@ -425,16 +415,13 @@ static int usd_DeviceClose(usd_handle_t usd)
  * RETURN CODES -- On error a unix-style errno value is *returned*.  Else zero.
  */
 
-static int usd_DeviceOpen(
-  const char *path,
-  int oflag,
-  int pmode,
-  usd_handle_t *usdP)
+static int
+usd_DeviceOpen(const char *path, int oflag, int pmode, usd_handle_t * usdP)
 {
     HANDLE devhandle;
     DWORD access, share, create, attr;
     usd_handle_t usd;
-    int mode;				/* type of opened object */
+    int mode;			/* type of opened object */
     int code;
 
     if (usdP)
@@ -449,7 +436,7 @@ static int usd_DeviceOpen(
 
     /* should we always set:
      *     FILE_FLAG_NO_BUFFERING? 
-     *	   FILE_FLAG_RANDOM_ACCESS?
+     *     FILE_FLAG_RANDOM_ACCESS?
      */
 
     access = GENERIC_READ;
@@ -466,15 +453,16 @@ static int usd_DeviceOpen(
     }
 
 
-    if (oflag & (USD_OPEN_RLOCK|USD_OPEN_WLOCK)) {
+    if (oflag & (USD_OPEN_RLOCK | USD_OPEN_WLOCK)) {
 
 	/* make sure both lock bits aren't set */
-	_ASSERT(~oflag & (USD_OPEN_RLOCK|USD_OPEN_WLOCK));
+	_ASSERT(~oflag & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
 
-	share = ((oflag & USD_OPEN_RLOCK) ? FILE_SHARE_READ : 0/*no sharing*/);
+	share =
+	    ((oflag & USD_OPEN_RLOCK) ? FILE_SHARE_READ : 0 /*no sharing */ );
 
     } else {
-	share = FILE_SHARE_READ+FILE_SHARE_WRITE;
+	share = FILE_SHARE_READ + FILE_SHARE_WRITE;
     }
 
     /* attempt to open the device/file */
@@ -487,7 +475,7 @@ static int usd_DeviceOpen(
     usd = (usd_handle_t) malloc(sizeof(*usd));
     memset(usd, 0, sizeof(*usd));
 
-    
+
     _ASSERT(sizeof(devhandle) <= sizeof(usd->handle));
     usd->handle = (void *)devhandle;
 
@@ -497,7 +485,7 @@ static int usd_DeviceOpen(
     usd->ioctl = usd_DeviceIoctl;
     usd->close = usd_DeviceClose;
 
-    usd->fullPathName = (char *) malloc(strlen(path)+1);
+    usd->fullPathName = (char *)malloc(strlen(path) + 1);
     strcpy(usd->fullPathName, path);
     usd->openFlags = oflag;
 
@@ -522,18 +510,21 @@ static int usd_DeviceOpen(
     return code;
 }
 
-int usd_Open(const char *path, int oflag, int mode, usd_handle_t *usdP)
+int
+usd_Open(const char *path, int oflag, int mode, usd_handle_t * usdP)
 {
     return usd_DeviceOpen(path, oflag, mode, usdP);
 }
 
-static int usd_DeviceDummyClose(usd_handle_t usd)
+static int
+usd_DeviceDummyClose(usd_handle_t usd)
 {
     free(usd);
     return 0;
 }
 
-static int usd_DeviceStandardInput(usd_handle_t *usdP)
+static int
+usd_DeviceStandardInput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
@@ -554,13 +545,14 @@ static int usd_DeviceStandardInput(usd_handle_t *usdP)
     return 0;
 }
 
-int usd_StandardInput(usd_handle_t *usdP)
+int
+usd_StandardInput(usd_handle_t * usdP)
 {
     return usd_DeviceStandardInput(usdP);
 }
 
-static int usd_DeviceStandardOutput(
-  usd_handle_t *usdP)
+static int
+usd_DeviceStandardOutput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
@@ -581,7 +573,8 @@ static int usd_DeviceStandardOutput(
     return 0;
 }
 
-int usd_StandardOutput(usd_handle_t *usdP)
+int
+usd_StandardOutput(usd_handle_t * usdP)
 {
     return usd_DeviceStandardOutput(usdP);
 }

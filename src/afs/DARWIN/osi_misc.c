@@ -8,37 +8,39 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_misc.c,v 1.1.1.3 2001/07/14 22:20:01 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.5 2003/07/15 23:14:17 shadow Exp $");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #include <sys/namei.h>
 
-int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	                  struct vnode **dirvpp, struct vnode **vpp)
+int
+osi_lookupname(char *aname, enum uio_seg seg, int followlink,
+	       struct vnode **dirvpp, struct vnode **vpp)
 {
-   struct nameidata n;
-   int flags,error;
-   flags=0;
-   flags=LOCKLEAF;
-   if (followlink)
-     flags|=FOLLOW;
-   else 
-     flags|=NOFOLLOW;
-/*   if (dirvpp) flags|=WANTPARENT;*/ /* XXX LOCKPARENT? */
-   NDINIT(&n, LOOKUP, flags, seg, aname, current_proc());
-   if (error=namei(&n))
-      return error;
-   *vpp=n.ni_vp;
+    struct nameidata n;
+    int flags, error;
+    flags = 0;
+    flags = LOCKLEAF;
+    if (followlink)
+	flags |= FOLLOW;
+    else
+	flags |= NOFOLLOW;
+    /*   if (dirvpp) flags|=WANTPARENT; *//* XXX LOCKPARENT? */
+    NDINIT(&n, LOOKUP, flags, seg, aname, current_proc());
+    if (error = namei(&n))
+	return error;
+    *vpp = n.ni_vp;
 /*
    if (dirvpp)
       *dirvpp = n.ni_dvp;
 #/
    /* should we do this? */
-   VOP_UNLOCK(n.ni_vp, 0, current_proc());
-   return 0;
+    VOP_UNLOCK(n.ni_vp, 0, current_proc());
+    return 0;
 }
 
 /*
@@ -47,12 +49,13 @@ int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
  * Note that it must NOT set errno.
  */
 
-afs_suser() {
+afs_suser()
+{
     int error;
-    struct proc *p=current_proc();
+    struct proc *p = current_proc();
 
     if ((error = suser(p->p_ucred, &p->p_acflag)) == 0) {
-	return(1);
+	return (1);
     }
-    return(0);
+    return (0);
 }

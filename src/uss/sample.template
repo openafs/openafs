@@ -8,10 +8,6 @@
 # Sample template for use with the uss, the AFS user account facility.
 #
 #
-# Transarc Corporation
-# (C) Copyright 1990 Transarc Corporation
-# All rights reserved
-#
 # By convention:
 #	$USER   = User's login name
 #	$UID    = User's uid

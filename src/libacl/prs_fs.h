@@ -20,13 +20,13 @@
 An access list is associated with each directory.  Possession of each of the following rights allows
 the possessor the corresponding privileges on ALL files in that directory
 */
-#define PRSFS_READ            1 /*Read files*/
-#define PRSFS_WRITE           2 /*Write and write-lock existing files*/
-#define PRSFS_INSERT          4 /*Insert and write-lock new files*/
-#define PRSFS_LOOKUP          8 /*Enumerate files and examine access list */
-#define PRSFS_DELETE          16 /*Remove files*/
-#define PRSFS_LOCK            32 /*Read-lock files*/
-#define PRSFS_ADMINISTER      64 /*Set access list of directory*/
+#define PRSFS_READ            1	/*Read files */
+#define PRSFS_WRITE           2	/*Write and write-lock existing files */
+#define PRSFS_INSERT          4	/*Insert and write-lock new files */
+#define PRSFS_LOOKUP          8	/*Enumerate files and examine access list */
+#define PRSFS_DELETE          16	/*Remove files */
+#define PRSFS_LOCK            32	/*Read-lock files */
+#define PRSFS_ADMINISTER      64	/*Set access list of directory */
 
 /* user space rights */
 #define PRSFS_USR0	      0x01000000

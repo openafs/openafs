@@ -53,6 +53,7 @@
 				thread_block();		\
 				if (isGlockOwner) AFS_GLOCK();  \
 				MUTEX_ENTER(lck);	\
+				}
 
 #define CV_SIGNAL(cv)		thread_wakeup_one((vm_offset_t)(cv))
 #define CV_BROADCAST(cv)	thread_wakeup((vm_offset_t)(cv))
@@ -99,10 +100,9 @@ typedef int afs_kcondvar_t;
 #define MUTEX_ISMINE(a)	(((afs_kmutex_t *)(a))->owner == current_thread())
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
-#endif	/* DUX40 */
+#endif /* DUX40 */
 
 
 #endif /* _RX_KMUTEX_H_ */
-

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: run-tests.in,v 1.1.1.2 2002/05/11 00:02:31 hartmans Exp $
+# $Id: run-tests.in,v 1.5 2002/02/21 06:06:00 shadow Exp $
 #
 srcdir=@srcdir@
 objdir=`pwd`
@@ -304,7 +304,7 @@ do
   -help|--help) echo $usage; 
 	echo "tests available: $linebreak"; for a in "$ALL_TESTS"; do echo $a ; done;
 	exit 0;;
-  -version|--version) echo "$0 $Id: run-tests.in,v 1.1.1.2 2002/05/11 00:02:31 hartmans Exp $"; exit 0;;
+  -version|--version) echo "$0 $Id: run-tests.in,v 1.5 2002/02/21 06:06:00 shadow Exp $"; exit 0;;
   -*) echo "$0: Bad option $1"; echo $usage; exit 1;;
   *) break;;
   esac

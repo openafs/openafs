@@ -5,19 +5,11 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-
-
-OPTIMIZE= -g
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 INCDIRS= -I.. -I${DESTDIR}/include 
 LIBS= ../liblwp.a
-
-include ../../config/Makefile.${SYS_NAME}
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS}
 

@@ -177,9 +177,13 @@ load_client() {
 		exit 1
 	fi
 
-	# use the prefix command if required
-	set_prefix
-	/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	if [ -f $KSYMS_FILE ]; then
+		# use the prefix command if required
+		set_prefix
+		/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	else
+		/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	fi
 }
 
 generate_cacheinfo() {
@@ -218,6 +222,12 @@ choose_afsdoptions() {
 		fi
 	fi
 	AFSD_OPTIONS="$OPTIONS $VERBOSE"
+	if is_on $ENABLE_AFSDB; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
+	fi
+	if is_on $ENABLE_DYNROOT; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
+	fi
 }
 
 case "$1" in 

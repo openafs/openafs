@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=budb
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # install headers
@@ -26,11 +26,11 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsbudb.lib
 
 LIBOBJS =\
-	budb_errs.obj \
-	budb.cs.obj \
-	budb.xdr.obj \
-	struct_ops.obj \
-	AFS_component_version_number.obj
+	$(OUT)\budb_errs.obj \
+	$(OUT)\budb.cs.obj \
+	$(OUT)\budb.xdr.obj \
+	$(OUT)\struct_ops.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -42,21 +42,21 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\buserver.exe
 
 EXEOBJS =\
-	database.obj \
-	db_alloc.obj \
-	db_dump.obj \
-	db_hash.obj \
-	struct_ops.obj \
-	ol_verify.obj \
-	budb.ss.obj \
-	budb.xdr.obj \
-	dbs_dump.obj \
-	db_lock.obj \
-	db_text.obj \
-	procs.obj \
-	budb_errs.obj \
-	server.obj \
-	buserver.res
+	$(OUT)\database.obj \
+	$(OUT)\db_alloc.obj \
+	$(OUT)\db_dump.obj \
+	$(OUT)\db_hash.obj \
+	$(OUT)\struct_ops.obj \
+	$(OUT)\ol_verify.obj \
+	$(OUT)\budb.ss.obj \
+	$(OUT)\budb.xdr.obj \
+	$(OUT)\dbs_dump.obj \
+	$(OUT)\db_lock.obj \
+	$(OUT)\db_text.obj \
+	$(OUT)\procs.obj \
+	$(OUT)\budb_errs.obj \
+	$(OUT)\server.obj \
+	$(OUT)\buserver.res
 
 
 EXELIBS =\
@@ -86,8 +86,7 @@ $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-buserver.res: buserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OUT)\buserver.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen budb.rg
@@ -118,3 +117,6 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 clean::
 	$(DEL) budb_errs.c budb_errs.h budb.h budb_client.h	
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
+
+mkdir:
+	

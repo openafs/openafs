@@ -5,9 +5,13 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=dir\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
-tests: dtest.exe
+tests: $(OUT)\dtest.exe
 
-dtest.exe: dtest.obj DEST\lib\afs\afsdir.lib
+$(OUT)\dtest.exe: $(OUT)\dtest.obj $(DESTDIR)\lib\afs\afsdir.lib
 	$(EXECONLINK)
+
+mkdir:
+	

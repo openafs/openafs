@@ -53,6 +53,8 @@
  * SUCH DAMAGE.
  */
 
+#include <afs/param.h>
+
 #if defined(AFS_DARWIN_ENV)
 /*-----------------------------------------------------------------------
  * This version of fstab.c is intended to be used on Darwin systems to

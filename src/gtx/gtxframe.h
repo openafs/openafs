@@ -21,15 +21,15 @@ struct gtxframe_menu {
 };
 
 struct gtx_frame {
-    struct keymap_map *keymap;		/*Map for handling keystrokes */
-    struct keymap_map *savemap;		/* Map saved during recursive edit */
+    struct keymap_map *keymap;	/*Map for handling keystrokes */
+    struct keymap_map *savemap;	/* Map saved during recursive edit */
     struct keymap_state *keystate;	/*Associated key state */
     struct gtxframe_dlist *display;	/*Display list */
     struct gtxframe_menu *menus;	/* Menu list */
-    char *messageLine;			/* message line */
-    char *promptLine;			/* prompt for a response */
-    char *defaultLine;			/* default response */
-    struct gwin *window;		/* window we're currently showing on */
+    char *messageLine;		/* message line */
+    char *promptLine;		/* prompt for a response */
+    char *defaultLine;		/* default response */
+    struct gwin *window;	/* window we're currently showing on */
     int flags;
 };
 

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/test/cfgtest.c,v 1.1.1.4 2001/07/14 22:22:28 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/cfg/test/cfgtest.c,v 1.5 2003/07/15 23:15:28 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -35,14 +36,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/test/cfgtest.c,v 1.1.1.4 2
 
 /* define some globals */
 static char myCellName[MAXCELLCHARS];
-static void* myTokenHandle;
-static void* myCellHandle;
+static void *myTokenHandle;
+static void *myCellHandle;
 
 
 
 /* ------------------- Utility functions ---------------------- */
 
-static const char*
+static const char *
 GetErrorText(afs_status_t errorCode)
 {
     afs_status_t st;
@@ -61,27 +62,24 @@ GetErrorText(afs_status_t errorCode)
 
 #define CSDBCallBackId 42
 static pthread_mutex_t CSDBCallBackMutex;
-static pthread_cond_t  CSDBCallBackCond;
+static pthread_cond_t CSDBCallBackCond;
 static int CSDBCallBackDone;
 
 static void ADMINAPI
-CellServDbCallBack(void *callBackId,
-		   cfg_cellServDbStatus_t *statusItemP,
+CellServDbCallBack(void *callBackId, cfg_cellServDbStatus_t * statusItemP,
 		   afs_status_t st)
 {
     if (statusItemP != NULL) {
 	printf("Updated %s with result '%s' (tid = %u)\n",
-	       statusItemP->fsDbHost,
-	       GetErrorText(statusItemP->status),
+	       statusItemP->fsDbHost, GetErrorText(statusItemP->status),
 	       (unsigned)pthread_self());
     } else {
-	printf("Update termination (tid = %u)\n",
-	       (unsigned)pthread_self());
+	printf("Update termination (tid = %u)\n", (unsigned)pthread_self());
 
-	(void) pthread_mutex_lock(&CSDBCallBackMutex);
+	(void)pthread_mutex_lock(&CSDBCallBackMutex);
 	CSDBCallBackDone = 1;
-	(void) pthread_mutex_unlock(&CSDBCallBackMutex);
-	(void) pthread_cond_signal(&CSDBCallBackCond);
+	(void)pthread_mutex_unlock(&CSDBCallBackMutex);
+	(void)pthread_cond_signal(&CSDBCallBackCond);
     }
 
     if (callBackId != (void *)CSDBCallBackId) {
@@ -109,12 +107,9 @@ DoCellServDbAddHost(struct cmd_syndesc *as, char *arock)
     } else {
 	CSDBCallBackDone = 0;
 
-	if (!cfg_CellServDbAddHost(hostHandle,
-				   sysHost,
-				   CellServDbCallBack,
-				   (void *)CSDBCallBackId,
-				   &maxUpdates,
-				   &st)) {
+	if (!cfg_CellServDbAddHost
+	    (hostHandle, sysHost, CellServDbCallBack, (void *)CSDBCallBackId,
+	     &maxUpdates, &st)) {
 	    printf("cfg_CellServDbAddHost failed (%s)\n", GetErrorText(st));
 	    CSDBCallBackDone = 1;
 
@@ -123,13 +118,13 @@ DoCellServDbAddHost(struct cmd_syndesc *as, char *arock)
 		   maxUpdates);
 	}
 
-	(void) pthread_mutex_lock(&CSDBCallBackMutex);
+	(void)pthread_mutex_lock(&CSDBCallBackMutex);
 
 	while (!CSDBCallBackDone) {
-	    (void) pthread_cond_wait(&CSDBCallBackCond, &CSDBCallBackMutex);
+	    (void)pthread_cond_wait(&CSDBCallBackCond, &CSDBCallBackMutex);
 	}
 
-	(void) pthread_mutex_unlock(&CSDBCallBackMutex);
+	(void)pthread_mutex_unlock(&CSDBCallBackMutex);
 
 	if (!cfg_HostClose(hostHandle, &st)) {
 	    printf("cfg_HostClose failed (%s)\n", GetErrorText(st));
@@ -157,13 +152,11 @@ DoCellServDbRemoveHost(struct cmd_syndesc *as, char *arock)
     } else {
 	CSDBCallBackDone = 0;
 
-	if (!cfg_CellServDbRemoveHost(hostHandle,
-				      sysHost,
-				      CellServDbCallBack,
-				      (void *)CSDBCallBackId,
-				      &maxUpdates,
-				      &st)) {
-	    printf("cfg_CellServDbRemoveHost failed (%s)\n", GetErrorText(st));
+	if (!cfg_CellServDbRemoveHost
+	    (hostHandle, sysHost, CellServDbCallBack, (void *)CSDBCallBackId,
+	     &maxUpdates, &st)) {
+	    printf("cfg_CellServDbRemoveHost failed (%s)\n",
+		   GetErrorText(st));
 	    CSDBCallBackDone = 1;
 
 	} else {
@@ -171,13 +164,13 @@ DoCellServDbRemoveHost(struct cmd_syndesc *as, char *arock)
 		   maxUpdates);
 	}
 
-	(void) pthread_mutex_lock(&CSDBCallBackMutex);
+	(void)pthread_mutex_lock(&CSDBCallBackMutex);
 
 	while (!CSDBCallBackDone) {
-	    (void) pthread_cond_wait(&CSDBCallBackCond, &CSDBCallBackMutex);
+	    (void)pthread_cond_wait(&CSDBCallBackCond, &CSDBCallBackMutex);
 	}
 
-	(void) pthread_mutex_unlock(&CSDBCallBackMutex);
+	(void)pthread_mutex_unlock(&CSDBCallBackMutex);
 
 	if (!cfg_HostClose(hostHandle, &st)) {
 	    printf("cfg_HostClose failed (%s)\n", GetErrorText(st));
@@ -195,10 +188,7 @@ DoCellServDbEnumerate(struct cmd_syndesc *as, char *arock)
     char *cellName;
     char *cellDbHosts;
 
-    if (!cfg_CellServDbEnumerate(fsDbHost,
-				 &cellName,
-				 &cellDbHosts,
-				 &st)) {
+    if (!cfg_CellServDbEnumerate(fsDbHost, &cellName, &cellDbHosts, &st)) {
 	printf("cfg_CellServDbEnumerate failed (%s)\n", GetErrorText(st));
     } else {
 	char *mstrp;
@@ -224,29 +214,29 @@ DoCellServDbEnumerate(struct cmd_syndesc *as, char *arock)
 static void
 SetupCellServDbCmd(void)
 {
-    struct cmd_syndesc	*ts;
+    struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax("CellServDbAddHost", DoCellServDbAddHost, 0,
 			  "add configuration target to server CellServDB");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-syshost", CMD_SINGLE, CMD_OPTIONAL, "system control host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-syshost", CMD_SINGLE, CMD_OPTIONAL,
+		"system control host");
 
     ts = cmd_CreateSyntax("CellServDbRemoveHost", DoCellServDbRemoveHost, 0,
 			  "remove configuration target from server CellServDB");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-syshost", CMD_SINGLE, CMD_OPTIONAL, "system control host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-syshost", CMD_SINGLE, CMD_OPTIONAL,
+		"system control host");
 
     ts = cmd_CreateSyntax("CellServDbEnumerate", DoCellServDbEnumerate, 0,
 			  "enumerate server CellServDB from specified host");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
 
 
-    (void) pthread_mutex_init(&CSDBCallBackMutex, NULL);
-    (void) pthread_cond_init(&CSDBCallBackCond, NULL);
+    (void)pthread_mutex_init(&CSDBCallBackMutex, NULL);
+    (void)pthread_cond_init(&CSDBCallBackCond, NULL);
 }
 
 
@@ -269,9 +259,7 @@ DoDbServersWaitForQuorum(struct cmd_syndesc *as, char *arock)
     if (!cfg_HostOpen(myCellHandle, cfgHost, &hostHandle, &st)) {
 	printf("cfg_HostOpen failed (%s)\n", GetErrorText(st));
     } else {
-	if (!cfg_DbServersWaitForQuorum(hostHandle,
-					timeout,
-					&st)) {
+	if (!cfg_DbServersWaitForQuorum(hostHandle, timeout, &st)) {
 	    printf("cfg_DbServersWaitForQuorum failed (%s)\n",
 		   GetErrorText(st));
 	}
@@ -330,25 +318,24 @@ DoFileServerStart(struct cmd_syndesc *as, char *arock)
 static void
 SetupServerCmd(void)
 {
-    struct cmd_syndesc	*ts;
+    struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("DbServersWaitForQuorum",
-			  DoDbServersWaitForQuorum, 0,
-			  "wait for database servers to achieve quorum");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-timeout", CMD_SINGLE, CMD_OPTIONAL, "timeout in seconds");
+    ts = cmd_CreateSyntax("DbServersWaitForQuorum", DoDbServersWaitForQuorum,
+			  0, "wait for database servers to achieve quorum");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_OPTIONAL,
+		"timeout in seconds");
 
     ts = cmd_CreateSyntax("FileServerStop", DoFileServerStop, 0,
 			  "stop and unconfigure fileserver on specified host");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
 
     ts = cmd_CreateSyntax("FileServerStart", DoFileServerStart, 0,
 			  "start the fileserver on specified host");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
 }
 
 
@@ -368,10 +355,8 @@ DoHostPartitionTableEnumerate(struct cmd_syndesc *as, char *arock)
     if (!cfg_HostOpen(myCellHandle, cfgHost, &hostHandle, &st)) {
 	printf("cfg_HostOpen failed (%s)\n", GetErrorText(st));
     } else {
-	if (!cfg_HostPartitionTableEnumerate(hostHandle,
-					     &vptable,
-					     &tableCount,
-					     &st)) {
+	if (!cfg_HostPartitionTableEnumerate
+	    (hostHandle, &vptable, &tableCount, &st)) {
 	    printf("cfg_HostPartitionTableEnumerate failed (%s)\n",
 		   GetErrorText(st));
 	} else {
@@ -397,13 +382,13 @@ DoHostPartitionTableEnumerate(struct cmd_syndesc *as, char *arock)
 static void
 SetupHostCmd(void)
 {
-    struct cmd_syndesc	*ts;
+    struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax("HostPartitionTableEnumerate",
 			  DoHostPartitionTableEnumerate, 0,
 			  "enumerate vice partition table");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
 }
 
 
@@ -568,12 +553,8 @@ DoClientQueryStatus(struct cmd_syndesc *as, char *arock)
     afs_status_t clientSt;
     char *clientCell;
 
-    if (!cfg_ClientQueryStatus(cfgHost,
-			       &cmInstalled,
-			       &cmVersion,
-			       &clientSt,
-			       &clientCell,
-			       &st)) {
+    if (!cfg_ClientQueryStatus
+	(cfgHost, &cmInstalled, &cmVersion, &clientSt, &clientCell, &st)) {
 	printf("cfg_ClientQueryStatus failed (%s)\n", GetErrorText(st));
     } else {
 	if (cmInstalled) {
@@ -608,7 +589,8 @@ DoHostQueryStatus(struct cmd_syndesc *as, char *arock)
 	printf("cfg_HostQueryStatus failed (%s)\n", GetErrorText(st));
     } else {
 	if (serverSt == 0) {
-	    printf("Server configuration is valid; cell is %s.\n", serverCell);
+	    printf("Server configuration is valid; cell is %s.\n",
+		   serverCell);
 	} else {
 	    printf("Server configuration is not valid (%s).\n",
 		   GetErrorText(serverSt));
@@ -626,73 +608,58 @@ DoHostQueryStatus(struct cmd_syndesc *as, char *arock)
 static void
 SetupClientCmd(void)
 {
-    struct cmd_syndesc	*ts;
+    struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("ClientCellServDbAdd",
-			  DoClientCellServDbAdd, 0,
+    ts = cmd_CreateSyntax("ClientCellServDbAdd", DoClientCellServDbAdd, 0,
 			  "add host entry to client CellServDB");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
-    cmd_AddParm(ts,
-		"-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to add");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
+    cmd_AddParm(ts, "-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to add");
 
-    ts = cmd_CreateSyntax("ClientCellServDbRemove",
-			  DoClientCellServDbRemove, 0,
-			  "remove host entry from client CellServDB");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
-    cmd_AddParm(ts,
-		"-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to remove");
+    ts = cmd_CreateSyntax("ClientCellServDbRemove", DoClientCellServDbRemove,
+			  0, "remove host entry from client CellServDB");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
+    cmd_AddParm(ts, "-dbhost", CMD_SINGLE, CMD_REQUIRED, "host to remove");
 
-    ts = cmd_CreateSyntax("ClientSetCell",
-			  DoClientSetCell, 0,
+    ts = cmd_CreateSyntax("ClientSetCell", DoClientSetCell, 0,
 			  "set default client cell");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
-    cmd_AddParm(ts,
-		"-dbhosts", CMD_LIST, CMD_REQUIRED, "database hosts");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "cell name");
+    cmd_AddParm(ts, "-dbhosts", CMD_LIST, CMD_REQUIRED, "database hosts");
 
-    ts = cmd_CreateSyntax("ClientQueryStatus",
-			  DoClientQueryStatus, 0,
+    ts = cmd_CreateSyntax("ClientQueryStatus", DoClientQueryStatus, 0,
 			  "query status of client on host");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
 
-    ts = cmd_CreateSyntax("HostQueryStatus",
-			  DoHostQueryStatus, 0,
+    ts = cmd_CreateSyntax("HostQueryStatus", DoHostQueryStatus, 0,
 			  "query status of server on host");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
 
 
-    ts = cmd_CreateSyntax("ClientStart",
-			  DoClientStart, 0,
+    ts = cmd_CreateSyntax("ClientStart", DoClientStart, 0,
 			  "start the client");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");
 
 
-    ts = cmd_CreateSyntax("ClientStop",
-			  DoClientStop, 0,
-			  "stop the client");
-    cmd_AddParm(ts,
-		"-cfghost", CMD_SINGLE, CMD_REQUIRED, "configuration host");
-    cmd_AddParm(ts,
-		"-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");
+    ts = cmd_CreateSyntax("ClientStop", DoClientStop, 0, "stop the client");
+    cmd_AddParm(ts, "-cfghost", CMD_SINGLE, CMD_REQUIRED,
+		"configuration host");
+    cmd_AddParm(ts, "-timeout", CMD_SINGLE, CMD_REQUIRED, "wait timeout");
 }
 
 
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int code;
     afs_status_t st;
@@ -716,8 +683,8 @@ int main(int argc, char *argv[])
 	printf("afsclient_TokenGetExisting failed (%s)\n", GetErrorText(st));
 	printf("Test will run unauthenticated\n\n");
 
-	if (!afsclient_TokenGetNew(myCellName,
-				   NULL, NULL, &myTokenHandle, &st)) {
+	if (!afsclient_TokenGetNew
+	    (myCellName, NULL, NULL, &myTokenHandle, &st)) {
 	    printf("afsclient_TokenGetNew failed (%s)\n", GetErrorText(st));
 	    exit(1);
 	}

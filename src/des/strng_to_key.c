@@ -21,14 +21,20 @@
  */
 
 #include <mit-cpyright.h>
-#include <stdio.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/strng_to_key.c,v 1.1.1.6 2001/09/11 14:32:33 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/strng_to_key.c,v 1.12 2003/07/15 23:15:00 shadow Exp $");
+
+#ifndef KERNEL
+#include <stdio.h>
+#endif
 
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -37,24 +43,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/des/strng_to_key.c,v 1.1.1.6 2001/09/11
 #endif
 #endif
 
-extern int des_debug;
-extern int des_debug_print();
-extern void des_fixup_key_parity();
-extern afs_uint32 des_cbc_cksum();
-
-/* prototypes */
-int des_key_sched(register des_cblock *k, des_key_schedule schedule);
-
 /*
  * convert an arbitrary length string to a DES key
  */
 void
-des_string_to_key(str,key)
-    char *str;
-    register des_cblock *key;
+des_string_to_key(char *str, register des_cblock * key)
 {
     register char *in_str;
-    register unsigned temp,i,j;
+    register unsigned temp, i, j;
     register afs_int32 length;
     unsigned char *k_p;
     int forward;
@@ -74,48 +70,48 @@ des_string_to_key(str,key)
     if (des_debug)
 	fprintf(stdout,
 		"\n\ninput str length = %d  string = %s\nstring = 0x ",
-		length,str);
+		length, str);
 #endif
 
     /* get next 8 bytes, strip parity, xor */
     for (i = 1; i <= length; i++) {
 	/* get next input key byte */
-	temp = (unsigned int) *str++;
+	temp = (unsigned int)*str++;
 #ifdef DEBUG
 	if (des_debug)
-	    fprintf(stdout,"%02x ",temp & 0xff);
+	    fprintf(stdout, "%02x ", temp & 0xff);
 #endif
 	/* loop through bits within byte, ignore parity */
 	for (j = 0; j <= 6; j++) {
 	    if (forward)
-		*p_char++ ^= (int) temp & 01;
+		*p_char++ ^= (int)temp & 01;
 	    else
-		*--p_char ^= (int) temp & 01;
+		*--p_char ^= (int)temp & 01;
 	    temp = temp >> 1;
 	} while (--j > 0);
 
 	/* check and flip direction */
-	if ((i%8) == 0)
+	if ((i % 8) == 0)
 	    forward = !forward;
     }
 
     /* now stuff into the key des_cblock, and force odd parity */
     p_char = k_char;
-    k_p = (unsigned char *) key;
+    k_p = (unsigned char *)key;
 
     for (i = 0; i <= 7; i++) {
 	temp = 0;
 	for (j = 0; j <= 6; j++)
-	    temp |= *p_char++ << (1+j);
-	*k_p++ = (unsigned char) temp;
+	    temp |= *p_char++ << (1 + j);
+	*k_p++ = (unsigned char)temp;
     }
 
     /* fix key parity */
     des_fixup_key_parity(key);
 
     /* Now one-way encrypt it with the folded key */
-    (void) des_key_sched(key,key_sked);
-    (void) des_cbc_cksum((des_cblock *)in_str,key,length,key_sked,key);
+    (void)des_key_sched(key, key_sked);
+    (void)des_cbc_cksum((des_cblock *) in_str, key, length, key_sked, key);
     /* erase key_sked */
     memset((char *)key_sked, 0, sizeof(key_sked));
 
@@ -123,8 +119,6 @@ des_string_to_key(str,key)
     des_fixup_key_parity(key);
 
     if (des_debug)
-	fprintf(stdout,
-		"\nResulting string_to_key = 0x%lx 0x%lx\n",
-		*((afs_uint32 *) key),
-		*((afs_uint32 *) key+1));
+	fprintf(stdout, "\nResulting string_to_key = 0x%lx 0x%lx\n",
+		*((afs_uint32 *) key), *((afs_uint32 *) key + 1));
 }

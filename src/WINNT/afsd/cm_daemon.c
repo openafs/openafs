@@ -70,35 +70,35 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
 {
 	cm_bkgRequest_t *rp;
         
-        rp = malloc(sizeof(*rp));
-        memset(rp, 0, sizeof(*rp));
+    rp = malloc(sizeof(*rp));
+    memset(rp, 0, sizeof(*rp));
         
-        rp->scp = scp;
-        cm_HoldSCache(scp);
-        rp->userp = userp;
-        cm_HoldUser(userp);
-        rp->procp = procp;
-        rp->p1 = p1;
-        rp->p2 = p2;
-        rp->p3 = p3;
-        rp->p4 = p4;
-        
-        lock_ObtainWrite(&cm_daemonLock);
+    cm_HoldSCache(scp);
+    rp->scp = scp;
+    cm_HoldUser(userp);
+    rp->userp = userp;
+    rp->procp = procp;
+    rp->p1 = p1;
+    rp->p2 = p2;
+    rp->p3 = p3;
+    rp->p4 = p4;
+
+    lock_ObtainWrite(&cm_daemonLock);
 	cm_bkgQueueCount++;
-        osi_QAdd((osi_queue_t **) &cm_bkgListp, &rp->q);
-        if (!cm_bkgListEndp) cm_bkgListEndp = rp;
-        lock_ReleaseWrite(&cm_daemonLock);
-        
-        osi_Wakeup((long) &cm_bkgListp);
+    osi_QAdd((osi_queue_t **) &cm_bkgListp, &rp->q);
+    if (!cm_bkgListEndp) cm_bkgListEndp = rp;
+    lock_ReleaseWrite(&cm_daemonLock);
+
+    osi_Wakeup((long) &cm_bkgListp);
 }
 
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
-        long now;
+    long now;
 	long lastLockCheck;
-        long lastVolCheck;
-        long lastCBExpirationCheck;
+    long lastVolCheck;
+    long lastCBExpirationCheck;
 	long lastDownServerCheck;
 	long lastUpServerCheck;
 	long lastTokenCacheCheck;

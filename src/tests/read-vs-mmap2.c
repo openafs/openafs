@@ -47,48 +47,48 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: read-vs-mmap2.c,v 1.1 2002/01/22 19:54:42 hartmans Exp $");
+RCSID("$Id: read-vs-mmap2.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
 #endif
 
 static void
-generate_random_file (const char *filename, size_t sz)
+generate_random_file(const char *filename, size_t sz)
 {
     int fd;
     char *buf;
     int i;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
-    fd = open (filename, O_WRONLY | O_CREAT, 0666);
+    fd = open(filename, O_WRONLY | O_CREAT, 0666);
     if (fd < 0)
-	err (1, "open %s", filename);
+	err(1, "open %s", filename);
 
     for (i = 0; i < sz; ++i)
 	buf[i] = rand();
 
-    if (write (fd, buf, sz) != sz)
-	err (1, "write");
-    if (close (fd))
-	err (1, "close");
-    free (buf);
+    if (write(fd, buf, sz) != sz)
+	err(1, "write");
+    if (close(fd))
+	err(1, "close");
+    free(buf);
 }
 
 static char *
-read_file (int fd, size_t sz)
+read_file(int fd, size_t sz)
 {
     char *buf;
     ssize_t ret;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
     ret = read(fd, buf, sz);
-    if(ret < 0)
-        err(1, "read");
-    if(ret != sz)
-        errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
+    if (ret < 0)
+	err(1, "read");
+    if (ret != sz)
+	errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
     return buf;
 }
 
@@ -97,38 +97,38 @@ read_file (int fd, size_t sz)
 #endif
 
 static void *
-mmap_file (int fd, size_t sz)
+mmap_file(int fd, size_t sz)
 {
     void *ret;
 
-    ret = mmap (0, sz, PROT_READ, MAP_SHARED, fd, 0);
+    ret = mmap(0, sz, PROT_READ, MAP_SHARED, fd, 0);
     if (ret == (void *)MAP_FAILED)
-	err (1, "mmap");
+	err(1, "mmap");
     return ret;
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     const char *file = "foo";
-    const size_t sz  = 16384;
+    const size_t sz = 16384;
     char *malloc_buf;
     void *mmap_buf;
     int fd;
 
-    srand (time(NULL));
+    srand(time(NULL));
 
-    generate_random_file (file, sz);
+    generate_random_file(file, sz);
 
-    fd = open (file, O_RDONLY, 0);
+    fd = open(file, O_RDONLY, 0);
     if (fd < 0)
-	err (1, "open %s", file);
+	err(1, "open %s", file);
 
-    malloc_buf = read_file (fd, sz);
-    mmap_buf   = mmap_file (fd, sz);
-    close (fd);
-    unlink (file);
-    if (memcmp (malloc_buf, mmap_buf, sz) != 0)
+    malloc_buf = read_file(fd, sz);
+    mmap_buf = mmap_file(fd, sz);
+    close(fd);
+    unlink(file);
+    if (memcmp(malloc_buf, mmap_buf, sz) != 0)
 	return 1;
     return 0;
 }

@@ -5,29 +5,12 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-SHELL = /bin/sh
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+
+CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
 

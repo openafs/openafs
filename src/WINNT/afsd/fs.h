@@ -17,7 +17,7 @@ extern void ZapAcl(struct Acl *);
 
 extern int PruneList (struct AclEntry **, int);
 
-extern void ChangeList(struct Acl *, long, char *, long);
+extern void ChangeList(struct Acl *, afs_int32, char *, afs_int32);
 
 extern int CleanAcl(struct Acl *);
 

@@ -34,54 +34,65 @@
 #include "dumpscan_errs.h"
 #include "stagehdr.h"
 
-afs_uint32 try_backuphdr(XFILE *X, char *tag, tagged_field *field,
-                      afs_uint32 value, tag_parse_info *pi,
-                      void *g_refcon, void *l_refcon)
+afs_uint32
+try_backuphdr(XFILE * X, char *tag, tagged_field * field, afs_uint32 value,
+	      tag_parse_info * pi, void *g_refcon, void *l_refcon)
 {
-  dump_parser *p = (dump_parser *)g_refcon;
-  backup_system_header bh;
-  u_int64 where;
-  afs_uint32 r;
+    dump_parser *p = (dump_parser *) g_refcon;
+    backup_system_header bh;
+    u_int64 where;
+    afs_uint32 r;
 
-  /* Which header should we try (if any)? */
-  switch (*tag) {
-    case STAGE_VERSMIN: r = ParseStageHdr(X, tag, &bh); break;
-    default: return DSERR_MAGIC;
-  }
-  if (r) return r;
-
-  /* Do something with it... */
-  if (p->print_flags & DSPRINT_BCKHDR) PrintBackupHdr(&bh);
-  if (p->cb_bckhdr) {
-    r = xftell(X, &where);
-    if (!r && p->cb_bckhdr)
-      r = (p->cb_bckhdr)(&bh, X, p->refcon);
-    if (p->flags & DSFLAG_SEEK) {
-      if (!r) r = xfseek(X, &where);
-      else xfseek(X, &where);
+    /* Which header should we try (if any)? */
+    switch (*tag) {
+    case STAGE_VERSMIN:
+	r = ParseStageHdr(X, tag, &bh);
+	break;
+    default:
+	return DSERR_MAGIC;
     }
-  }
-  if (bh.server)  free(bh.server);
-  if (bh.part)    free(bh.part);
-  if (bh.volname) free(bh.volname);
-  return r;
+    if (r)
+	return r;
+
+    /* Do something with it... */
+    if (p->print_flags & DSPRINT_BCKHDR)
+	PrintBackupHdr(&bh);
+    if (p->cb_bckhdr) {
+	r = xftell(X, &where);
+	if (!r && p->cb_bckhdr)
+	    r = (p->cb_bckhdr) (&bh, X, p->refcon);
+	if (p->flags & DSFLAG_SEEK) {
+	    if (!r)
+		r = xfseek(X, &where);
+	    else
+		xfseek(X, &where);
+	}
+    }
+    if (bh.server)
+	free(bh.server);
+    if (bh.part)
+	free(bh.part);
+    if (bh.volname)
+	free(bh.volname);
+    return r;
 }
 
 
-void PrintBackupHdr(backup_system_header *hdr)
+void
+PrintBackupHdr(backup_system_header * hdr)
 {
-  time_t from = hdr->from_date, to = hdr->to_date, dd = hdr->dump_date;
+    time_t from = hdr->from_date, to = hdr->to_date, dd = hdr->dump_date;
 
-  printf("* BACKUP SYSTEM HEADER\n");
-  printf(" Version:    %d\n", hdr->version);
-  printf(" Volume:     %s (%d)\n", hdr->volname, hdr->volid);
-  printf(" Location:   %s %s\n", hdr->server, hdr->part);
-  printf(" Level:      %d\n", hdr->level);
-  printf(" Range:      %d => %d\n", hdr->from_date, hdr->to_date);
-  printf("          == %s", ctime(&from));
-  printf("          => %s", ctime(&to));
-  printf(" Dump Time:  %d == %s", hdr->dump_date, ctime(&dd));
-  printf(" Dump Flags: 0x%08x\n", hdr->flags);
-  printf(" Length:     %d\n", hdr->dumplen);
-  printf(" File Num:   %d\n", hdr->filenum);
+    printf("* BACKUP SYSTEM HEADER\n");
+    printf(" Version:    %d\n", hdr->version);
+    printf(" Volume:     %s (%d)\n", hdr->volname, hdr->volid);
+    printf(" Location:   %s %s\n", hdr->server, hdr->part);
+    printf(" Level:      %d\n", hdr->level);
+    printf(" Range:      %d => %d\n", hdr->from_date, hdr->to_date);
+    printf("          == %s", ctime(&from));
+    printf("          => %s", ctime(&to));
+    printf(" Dump Time:  %d == %s", hdr->dump_date, ctime(&dd));
+    printf(" Dump Flags: 0x%08x\n", hdr->flags);
+    printf(" Length:     %d\n", hdr->dumplen);
+    printf(" File Num:   %d\n", hdr->filenum);
 }

@@ -118,8 +118,8 @@ void Display_Servers_Internal (LPDISPLAYREQUEST pdr)
 
    // Add an entry in the Servers list for each server in the cell.
    //
-   LPIDENT lpiSelStart = (LPIDENT)FL_GetSelectedData (pdr->hList);
-   BOOL fRefresh = FALSE;
+//   LPIDENT lpiSelStart = (LPIDENT)FL_GetSelectedData (pdr->hList);
+//   BOOL fRefresh = FALSE;
 
    LPCELL lpCell;
    if (!g.lpiCell || !(lpCell = g.lpiCell->OpenCell()))

@@ -1,7 +1,10 @@
 /*
- * (C) Copyright Transarc Corporation 1989
- * Licensed Materials - Property of Transarc
+ * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*------------------------------------------------------------------------
@@ -11,8 +14,6 @@
  *	Generically useful functions for package, the AFS workstation
  *	configuration tool.
  *
- * Author:
- *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -38,24 +39,24 @@
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-char *emalloc(size)
-    unsigned size;
+char *
+emalloc(size)
+     unsigned size;
 
-{ /*emalloc*/
+{				/*emalloc */
 
     char *malloc();
     char *ptr;
 
     if ((ptr = malloc(size)) == NULL) {
-      fprintf(stderr,
-	      "Error: Out of memory; malloc() failed allocating %d bytes\n",
-	      size);
-      exit(ERR_OUTOFMEMORY);
-    }
-    else
-      return(ptr);
+	fprintf(stderr,
+		"Error: Out of memory; malloc() failed allocating %d bytes\n",
+		size);
+	exit(ERR_OUTOFMEMORY);
+    } else
+	return (ptr);
 
-} /*emalloc*/
+}				/*emalloc */
 
 /*------------------------------------------------------------------------
  * ecalloc
@@ -78,24 +79,24 @@ char *emalloc(size)
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-char *ecalloc(nelem, size)
-    unsigned nelem;
-    unsigned size;
+char *
+ecalloc(nelem, size)
+     unsigned nelem;
+     unsigned size;
 
-{ /*ecalloc*/
+{				/*ecalloc */
 
     char *calloc();
     char *ptr;
 
     if ((ptr = calloc(nelem, size)) == NULL) {
-      fprintf(stderr, "Error: Out of memory; calloc(%d, %d) failed\n",
-	      nelem, size);
-      exit(ERR_OUTOFMEMORY);
-    }
-    else
-      return(ptr);
+	fprintf(stderr, "Error: Out of memory; calloc(%d, %d) failed\n",
+		nelem, size);
+	exit(ERR_OUTOFMEMORY);
+    } else
+	return (ptr);
 
-} /*ecalloc*/
+}				/*ecalloc */
 
 /*------------------------------------------------------------------------
  * efopen
@@ -118,20 +119,20 @@ char *ecalloc(nelem, size)
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-FILE *efopen(filename, type)
-    char *filename;
-    char *type;
+FILE *
+efopen(filename, type)
+     char *filename;
+     char *type;
 
-{ /*efopen*/
+{				/*efopen */
 
     FILE *f;
 
     if ((f = fopen(filename, type)) == NULL) {
-      fprintf(stderr, "Error: Couldn't open file; fopen(%s, %s) failed\n",
-	      filename, type);
-      exit(ERR_FOPENFAILED);
-    }
-    else
-      return(f);
+	fprintf(stderr, "Error: Couldn't open file; fopen(%s, %s) failed\n",
+		filename, type);
+	exit(ERR_FOPENFAILED);
+    } else
+	return (f);
 
-} /*efopen*/
+}				/*efopen */

@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\afssvrcpa
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for building a DLL.
@@ -15,9 +15,9 @@
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsserver.cpl
 
 DLLOBJS =\
-	afssvrcpa_stub.res \
-	cpl_interface.obj \
-	AFS_component_version_number.obj
+	$(OUT)\cpl_interface.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\afssvrcpa_stub.res 
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
@@ -34,9 +34,7 @@ $(DLLFILE): $(DLLOBJS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-afssvrcpa_stub.res: afssvrcpa_stub.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
+$(OUT)\afssvrcpa_stub.res: afssvrcpa_stub.rc AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -49,7 +47,7 @@ install: $(DLLFILE) lang
 
 lang::
 	$(CD) lang
-	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /e /f NTMakefile install
 	$(CD) ..
 
 
@@ -57,4 +55,11 @@ lang::
 # Local clean target; augments predefined clean target
 
 clean::
+
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
 

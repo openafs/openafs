@@ -66,22 +66,27 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/quad_cksum.c,v 1.1.1.4 2001/07/14 22:21:37 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/quad_cksum.c,v 1.7 2003/11/29 22:08:12 jaltman Exp $");
 
 #include <mit-cpyright.h>
 
 /* System include files */
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #include <errno.h>
 
 /* Application include files */
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 /* Definitions for byte swapping */
 
 #ifdef LSBFIRST
-#define vaxtohl(x) *((afs_uint32 *)(x))
-#define vaxtohs(x) *((unsigned short *)(x))
+#define vaxtohl(x) (*((afs_uint32 *)(x)))
+#define vaxtohs(x) (*((unsigned short *)(x)))
 #else
 static afs_uint32 four_bytes_vax_to_nets();
 #define vaxtohl(x) four_bytes_vax_to_nets((char *)(x))
@@ -89,19 +94,19 @@ static unsigned short two_bytes_vax_to_nets();
 #define vaxtohs(x) two_bytes_vax_to_nets((char *)(x))
 #endif
 
-/* Externals */
-extern char *errmsg();
-extern int des_debug;
-
 /*** Routines ***************************************************** */
 
+/*
+    des_cblock *c_seed;		* secret seed, 8 bytes *
+    unsigned char *in;		* input block *
+    afs_uint32 *out;		* optional longer output *
+    int out_count;		* number of iterations *
+    afs_int32 length;		* original length in bytes *
+*/
+
 afs_uint32
-des_quad_cksum(in,out,length,out_count,c_seed)
-    des_cblock *c_seed;		/* secret seed, 8 bytes */
-    unsigned char *in;		/* input block */
-    afs_uint32 *out;		/* optional longer output */
-    int out_count;		/* number of iterations */
-    afs_int32 length;		/* original length in bytes */
+des_quad_cksum(unsigned char *in, afs_uint32 * out, afs_int32 length,
+	       int out_count, des_cblock * c_seed)
 {
 
     /*
@@ -122,12 +127,12 @@ des_quad_cksum(in,out,length,out_count,c_seed)
     /* use all 8 bytes of seed */
 
     z = vaxtohl(c_seed);
-    z2 = vaxtohl((char *)c_seed+4);
+    z2 = vaxtohl((char *)c_seed + 4);
     if (out == NULL)
 	out_count = 1;		/* default */
 
     /* This is repeated n times!! */
-    for (i = 1; i <=4 && i<= out_count; i++) {
+    for (i = 1; i <= 4 && i <= out_count; i++) {
 	len = length;
 	p = in;
 	while (len) {
@@ -135,16 +140,15 @@ des_quad_cksum(in,out,length,out_count,c_seed)
 		x = (z + vaxtohs(p));
 		p += 2;
 		len -= 2;
-	    }
-	    else {
+	    } else {
 		x = (z + *(char *)p++);
 		len = 0;
 	    }
 	    x2 = z2;
-	    z  = ((x * x) + (x2 * x2)) % 0x7fffffff;
-	    z2 = (x * (x2+83653421))   % 0x7fffffff; /* modulo */
+	    z = ((x * x) + (x2 * x2)) % 0x7fffffff;
+	    z2 = (x * (x2 + 83653421)) % 0x7fffffff;	/* modulo */
 	    if (des_debug & 8)
-		printf("%ld %ld\n",z,z2);
+		printf("%ld %ld\n", z, z2);
 	}
 
 	if (out != NULL) {
@@ -155,10 +159,11 @@ des_quad_cksum(in,out,length,out_count,c_seed)
     /* return final z value as 32 bit version of checksum */
     return z;
 }
+
 #ifdef MSBFIRST
 
-static unsigned short two_bytes_vax_to_nets(p)
-    char *p;
+static unsigned short
+two_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[2];
@@ -167,11 +172,11 @@ static unsigned short two_bytes_vax_to_nets(p)
 
     short_conv.pieces[0] = p[1];
     short_conv.pieces[1] = p[0];
-    return(short_conv.result);
+    return (short_conv.result);
 }
 
-static afs_uint32 four_bytes_vax_to_nets(p)
-    char *p;
+static afs_uint32
+four_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[4];
@@ -182,7 +187,7 @@ static afs_uint32 four_bytes_vax_to_nets(p)
     long_conv.pieces[1] = p[2];
     long_conv.pieces[2] = p[1];
     long_conv.pieces[3] = p[0];
-    return(long_conv.result);
+    return (long_conv.result);
 }
 
 #endif

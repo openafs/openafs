@@ -55,7 +55,7 @@ cflags = $(cflags) -DSTRICT
 guilflags = $(guilflags) -MACHINE:$(CPU)
 
 cflags = $(cflags) -Zi -Od -DDEBUG -D_DEBUG -DDBG
-lflags = $(lflags) -debug:full -debugtype:both
+lflags = $(lflags) -debug:full
 
 .rc.res :
 	$(rc) $(rcflags) $(rcvars) $*.rc

@@ -5,9 +5,12 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
+# include the AFSD source tree on our inclusion path
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\krb5 
 
 # include the primary makefile
+RELDIR=WINNT\client_creds
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -19,34 +22,55 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afscreds.exe
 
 EXEOBJS = \
-	afscreds_stub.res \
-	advtab.obj \
-	afswiz.obj \
-	al_wizard.obj \
-	checklist.obj \
-	creds.obj \
-	credstab.obj \
-	drivemap.obj \
-	fs_utils.obj \
-	main.obj \
-	misc.obj \
-	mounttab.obj \
-	settings.obj \
-	shortcut.obj \
-	subclass.obj \
-	trayicon.obj \
-	window.obj
+	$(OUT)\advtab.obj \
+	$(OUT)\afswiz.obj \
+	$(OUT)\creds.obj \
+	$(OUT)\main.obj \
+	$(OUT)\misc.obj \
+	$(OUT)\credstab.obj \
+	$(OUT)\mounttab.obj \
+	$(OUT)\settings.obj \
+	$(OUT)\shortcut.obj \
+	$(OUT)\trayicon.obj \
+	$(OUT)\window.obj
+
+EXECOBJS = \
+    $(OUT)\ipaddrchg.obj
+
+EXERES = \
+	$(OUT)\afscreds_stub.res
+
+AFSDOBJS = \
+	$(OUT)\fs_utils.obj
+	
+AFSAPPLIBOBJS= \
+	$(OUT)\checklist.obj \
+	$(OUT)\al_wizard.obj \
+	$(OUT)\subclass.obj 
+
+CLIENTOBJS = \
+	$(OUT)\drivemap.obj \
+    $(OUT)\RegistrySupport.obj 
 
 VCLIBS =\
+    iphlpapi.lib \
 	comctl32.lib \
 	shell32.lib \
 	uuid.lib \
 	ole32.lib \
-	mpr.lib
+	mpr.lib \
+    netapi32.lib 
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\afs\TaLocale.lib
+	$(DESTDIR)\lib\libosi.lib \
+	$(DESTDIR)\lib\afs\TaLocale.lib \
+    $(DESTDIR)\lib\lanahelper.lib \
+    $(DESTDIR)\lib\afsrxkad.lib \
+    $(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\afskfw.lib
 
 ############################################################################
 #
@@ -62,42 +86,34 @@ COPYHEADERS = \
 	$(DESTDIR)\include\WINNT\checklist.h \
 	$(DESTDIR)\include\WINNT\subclass.h
 
-COPYSOURCES = \
-	.\al_wizard.cpp \
-	.\al_wizard.h \
-	.\checklist.cpp \
-	.\checklist.h \
-	.\drivemap.cpp \
-	.\drivemap.h \
-	.\fs_utils.c \
-	.\subclass.cpp \
-	.\subclass.h
+############################################################################
+
+AFSD = ..\afsd
+AFSAPPLIB=..\afsapplib
+CLIENT= ..\client_config
+
+$(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
+	$(C2OBJ) -I$(*D) $**
+
+$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
+	$(C2OBJ) -I$(*D) $**
+
+$(AFSDOBJS): $(AFSD)\$$(@B).c
+	$(C2OBJ) -I$(*D) $**
+
+$(EXEOBJS): $$(@B).cpp
+	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**
+
+$(EXECOBJS): $$(@B).c
+	$(C2OBJ) -I$(*D) -I$(AFSAPPLIB) $**
 
 ############################################################################
 
-{..\afsd}.c{.\}.c:
-	$(COPY) ..\afsd\$(*B).c .
-
-{..\afsapplib}.h{.\}.h:
-	$(COPY) ..\afsapplib\$(*B).h .
-
-{..\afsapplib}.cpp{.\}.cpp:
-	$(COPY) ..\afsapplib\$(*B).cpp .
-
-{..\client_config}.h{.\}.h:
-	$(COPY) ..\client_config\$(*B).h .
-
-{..\client_config}.cpp{.\}.cpp:
-	$(COPY) ..\client_config\$(*B).cpp .
-
-
-############################################################################
-
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
-	$(EXEMFCLINK) $(VCLIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXECOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
+	$(EXEGUILINK) $(VCLIBS)
 	$(EXEPREP) 
 
-install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang
+install : $(COPYHEADERS) $(EXEFILE) lang
 
 lang ::
 	$(CD) lang
@@ -109,5 +125,11 @@ lang ::
 # Dependencies
 #
 
-afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+$(OUT)\afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
 

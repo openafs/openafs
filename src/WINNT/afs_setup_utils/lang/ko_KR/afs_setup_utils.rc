@@ -133,13 +133,13 @@ BEGIN
     IDS_EXTENSION_DLL_INSTALL_FAILED 
                             "파일세트 마운트/언마운트 쉘 확장 설치에 실패하였습니다."
     IDS_CANT_DETERMINE_PRODUCT "AFS 제품 설치 해제를 결정할 수 없습니다."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_TITLE               "Windows용 AFS"
     IDS_CANT_DETERMINE_APP_PATH 
                             "응용프로그램의 설치 디렉토리를 결정하는데 실패하였습니다. "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS 클라이언트"
     IDS_SERVER_APP_NAME     "AFS 서버"
     IDS_CC_APP_NAME         "AFS 제어 센터"
@@ -159,14 +159,14 @@ BEGIN
                             "클라이언트 구성 정보를 보존하시겠습니까? 업그레이드 또는 재설치하는 경우 이를 선택할 수 있습니다. "
     IDS_PRESERVE_SERVER_CONFIG_INFO 
                             "서버 구성 정보를 보존하시겠습니까? 업그레이드 또는 재설치하는 경우 이를 선택할 수 있습니다."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED 
                             "기존 구성 정보를 복원하는데 실패하였습니다. "
     IDS_SAVE_OF_CONFIG_INFO_FAILED 
                             "구성 정보를 저장하는데 실패하였습니다. 설치 해제를 계속하시겠습니까? "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO 
                             "AFS 라이트 구성 정보를 보존하시겠습니까? 업그레이드 또는 재설치하는 경우 이를 선택할 수 있습니다."
     IDS_PRESERVE_CC_CONFIG_INFO 

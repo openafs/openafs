@@ -109,9 +109,9 @@ void LogError(afs_status_t nErrorCode)
     const char *pszMsg = GetAdminLibErrorCodeMessage(nErrorCode);
     
     if (pszMsg)
-        g_LogFile.Write("Error %0xd has occurred:  %s.\r\n", (UINT)nErrorCode, pszMsg);
+        g_LogFile.Write("Error 0x%0x has occurred: %s.\r\n", (UINT)nErrorCode, pszMsg);
     else
-        g_LogFile.Write("Error %0xd has occurred.\r\n", (UINT)nErrorCode);
+        g_LogFile.Write("Error 0x%0x has occurred.\r\n", (UINT)nErrorCode);
 }
 
 void ShowError(HWND hDlg, afs_status_t nErrorCode, UINT uiErrorMsgID)

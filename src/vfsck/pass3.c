@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass3.c,v 1.1.1.4 2001/09/11 14:35:30 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vfsck/pass3.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -35,7 +36,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass3.c,v 1.1.1.4 2001/09/11 14:3
 #undef	_KERNEL
 #undef	_BSD
 #include <stdio.h>
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
@@ -61,84 +62,83 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass3.c,v 1.1.1.4 2001/09/11 14:3
 #endif
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 
 #include <afs/osi_inode.h>
 #include "fsck.h"
 
-int	pass2check();
+int pass2check();
 
 pass3()
 {
-	register struct dinode *dp;
-	struct inodesc idesc;
-	ino_t inumber, orphan;
-	int loopcnt;
+    register struct dinode *dp;
+    struct inodesc idesc;
+    ino_t inumber, orphan;
+    int loopcnt;
 
-	memset((char *)&idesc, 0, sizeof(struct inodesc));
-	idesc.id_type = DATA;
-	for (inumber = ROOTINO; inumber <= lastino; inumber++) {
+    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    idesc.id_type = DATA;
+    for (inumber = ROOTINO; inumber <= lastino; inumber++) {
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-		if (statemap[inumber] & HASCINODE) {
-		    if ((dp = ginode(inumber)) == NULL)
-			break;
-		    /* 
-		     * Make sure di_contin is not out of range and then
-		     * check and make sure that the inode #di_contin
-		     * is a continuation inode that has not already been
-		     * referenced.
-		     */
-		    if ((dp->di_contin < ROOTINO || dp->di_contin > maxino) ||
-		    	((statemap[dp->di_contin] & STATE) != CSTATE))
-		    {
-			/*  this is an error which must be cleared by hand. */
-			pfatal("BAD CONTINUATION INODE NUMBER ");
+	if (statemap[inumber] & HASCINODE) {
+	    if ((dp = ginode(inumber)) == NULL)
+		break;
+	    /* 
+	     * Make sure di_contin is not out of range and then
+	     * check and make sure that the inode #di_contin
+	     * is a continuation inode that has not already been
+	     * referenced.
+	     */
+	    if ((dp->di_contin < ROOTINO || dp->di_contin > maxino)
+		|| ((statemap[dp->di_contin] & STATE) != CSTATE)) {
+		/*  this is an error which must be cleared by hand. */
+		pfatal("BAD CONTINUATION INODE NUMBER ");
 #ifdef VICE
-			vprintf(" I=%u ", inumber);
+		vprintf(" I=%u ", inumber);
 #else
-			printf(" I=%u ", inumber);
+		printf(" I=%u ", inumber);
 #endif /* VICE */
-			if (reply("CLEAR") == 1) {
-				dp->di_contin = 0;
-				inodirty();
-			}
-		    } else {
-			statemap[dp->di_contin] = CRSTATE;
-		    }
+		if (reply("CLEAR") == 1) {
+		    dp->di_contin = 0;
+		    inodirty();
 		}
-		if ((statemap[inumber] & STATE) == DSTATE) {
-#else /* no ACLS */
-		if (statemap[inumber] == DSTATE) {
-#endif /* ACLS */
-			pathp = pathname;
-			*pathp++ = '?';
-			*pathp = '\0';
-			idesc.id_func = findino;
-			idesc.id_name = "..";
-			idesc.id_parent = inumber;
-			loopcnt = 0;
-			do {
-				orphan = idesc.id_parent;
-				if (orphan < ROOTINO || orphan > maxino)
-					break;
-				dp = ginode(orphan);
-				idesc.id_parent = 0;
-				idesc.id_number = orphan;
-				if ((ckinode(dp, &idesc) & FOUND) == 0)
-					break;
-				if (loopcnt >= sblock.fs_cstotal.cs_ndir)
-					break;
-				loopcnt++;
-#if defined(ACLS) && defined(AFS_HPUX_ENV)
-			} while ((statemap[idesc.id_parent] & STATE) == DSTATE);
-#else /* no ACLS */
-			} while (statemap[idesc.id_parent] == DSTATE);
-#endif /* ACLS */
-			if (linkup(orphan, idesc.id_parent) == 1) {
-				idesc.id_func = pass2check;
-				idesc.id_number = lfdir;
-				descend(&idesc, orphan);
-			}
-		}
+	    } else {
+		statemap[dp->di_contin] = CRSTATE;
+	    }
 	}
+	if ((statemap[inumber] & STATE) == DSTATE) {
+#else /* no ACLS */
+	if (statemap[inumber] == DSTATE) {
+#endif /* ACLS */
+	    pathp = pathname;
+	    *pathp++ = '?';
+	    *pathp = '\0';
+	    idesc.id_func = findino;
+	    idesc.id_name = "..";
+	    idesc.id_parent = inumber;
+	    loopcnt = 0;
+	    do {
+		orphan = idesc.id_parent;
+		if (orphan < ROOTINO || orphan > maxino)
+		    break;
+		dp = ginode(orphan);
+		idesc.id_parent = 0;
+		idesc.id_number = orphan;
+		if ((ckinode(dp, &idesc) & FOUND) == 0)
+		    break;
+		if (loopcnt >= sblock.fs_cstotal.cs_ndir)
+		    break;
+		loopcnt++;
+#if defined(ACLS) && defined(AFS_HPUX_ENV)
+	    } while ((statemap[idesc.id_parent] & STATE) == DSTATE);
+#else /* no ACLS */
+	    } while (statemap[idesc.id_parent] == DSTATE);
+#endif /* ACLS */
+	    if (linkup(orphan, idesc.id_parent) == 1) {
+		idesc.id_func = pass2check;
+		idesc.id_number = lfdir;
+		descend(&idesc, orphan);
+	    }
+	}
+    }
 }

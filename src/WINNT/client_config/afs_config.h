@@ -83,8 +83,8 @@ typedef struct
 
 extern GLOBALS g;
 
-extern const TCHAR AFSConfigKeyName[];
-
+extern const TCHAR AFSDConfigKeyName[];
+extern const TCHAR AFSClientKeyName[];
 
 /*
  * MACROS _____________________________________________________________________

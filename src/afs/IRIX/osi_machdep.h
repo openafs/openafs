@@ -26,7 +26,8 @@ extern kmutex_t afs_global_lock;
 extern time_t time;
 #define osi_Time() (time)
 
-#define	AFS_UCRED	ucred
+/* This gets redefined from ucred to cred in osi_vfs.h, just do it right */
+#define	AFS_UCRED	cred
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
@@ -129,7 +130,7 @@ extern flid_t osi_flid;
 
 #if defined(KERNEL)
 #if defined(MP)
-#define _MP_NETLOCKS			/* to get sblock to work right */
+#define _MP_NETLOCKS		/* to get sblock to work right */
 
 /* On SGI mutex_owned doesn't work, so simulate this by remembering the owning
  * thread explicitly.  This is only used for debugging so could be disabled for
@@ -284,6 +285,8 @@ extern long afs_global_owner;
 #if defined(AFS_SGI64_ENV)
 #define OSI_GET_CURRENT_CRED() get_current_cred()
 #endif /* AFS_SGI64_ENV */
+
+#define osi_curcred()		OSI_GET_CURRENT_CRED()
 
 /*
  * OSI_SET_CURRENT_CRED

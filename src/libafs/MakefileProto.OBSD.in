@@ -1,90 +1,86 @@
-#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
 #
-# MakefileProto for OpenBSD systems
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
 #
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
+# OpenBSD version by Jim Rees
 
-include ../config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+# System specific build commands and flags
+KSRC = @BSD_KERNEL_PATH@
+KFLAGS= -Wall -nostdinc
+<i386_obsd33>
+KFLAGS+= -fno-stack-protector
+<all>
+KDEFS= \
+    ${KFLAGS} \
+    -I/usr/include -I${KSRC}/sys \
+    -DLKM -DDIAGNOSTIC -DFIFO -DNFSCLIENT -DMFS -DFFS -D_KERNEL -DI586_CPU \
+    -DI686_CPU
+DBUG= -O2
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF= ${OPT}
+OPTF2= ${OPT2}
+CFLAGS= ${FSINCLUDES} ${DEFINES} ${KDEFS} ${KOPTS} ${DBUG}
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
 
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_groups.o \
 	osi_file.o \
-	osi_inode.o \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vm.o \
 	osi_vnodeops.o
 
-AFS_OS_NFSOBJS = \
-	osi_vfsops_nfs.o
+#AFS_OS_NFSOBJS = osi_vfsops_nfs.o
 
-AFS_OS_NONFSOBJS = \
-	osi_vfsops.o
-
-
-# System specific build commands and flags
-# KDEFS=-DLANGUAGE_C  -I/usr/sys/include -I../include \
-# 	 -I/usr/src/sys/${HEADER_RT} -I/usr/src/sys/sys \
-# 	-DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DUFS \
-#	-DRT -DKERNEL -D_KERNEL
-KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
-DBUG = -O2
-DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-OPTF=${OPT} 
-OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-
-
-# Name of directory to hold object files and libraries.
-KOBJ = STATIC
+AFS_OS_NONFSOBJS = osi_vfsops.o
 
 # This tells Makefile.common to use its single directory build target.
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
 DESTDIRS = single_destdir
 
+TOP_SRCDIR = ../..
+
 include Makefile.common
+
+COMMON_INCLUDE = \
+	-I.. \
+	-I../nfs \
+	-I${TOP_SRCDIR} \
+	-I${TOP_SRCDIR}/afs \
+	-I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/config \
+	-I${TOP_SRCDIR}/rx \
+	-I${TOP_SRCDIR}/rx/${MKAFS_OSTYPE} \
+	-I${TOP_SRCDIR}/rxkad \
+	-I${TOP_SRCDIR}/domestic \
+	-I${TOP_SRCDIR}/util \
+	-I${TOP_SRCDIR}/../include \
+	-I${TOP_SRCDIR}/../include/afs
 
 setup:
 	-mkdir $(KOBJ)
-	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -s /usr/src/sys/net net
-	-ln -s /usr/src/sys/i386/include machine
-	-ln -s /usr/src/sys/netinet netinet
-	-ln -s /usr/src/sys/nfs nfs
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/src/sys/sys sys
-	-ln -s /usr/src/sys/ufs/ufs ufs
-	-ln -s /usr/src/sys/sys h
-	-ln -s /usr/src/sys/vm vm
+	-$(RM) -f  $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
+	-$(RM) -f  h lib
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/lib .
 	-touch $(KOBJ)/sec_net.h
 
 
 # Below this line are targets when in the COMMON directory:
-LIBAFS = libafs.o
-LIBAFSNONFS = libafs.nonfs.o
+LIBAFS = libafs.nfs.o
+LIBAFSNONFS = libafs.o
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -93,21 +89,10 @@ DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 
-# libafs:	$(LIBAFS) $(LIBAFSNONFS)
-# libafs:	$(LIBAFSNONFS)
-# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
-# install_libafs:	$(INST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFSNONFS)
-libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
-
-install_libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
-
-dest_libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
-
+libafs:	$(LIBAFSNONFS)
+	ls -l libafs.o
+install_libafs:	$(INST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
 
 $(INST_LIBAFS): $(LIBAFS)
 	$(INSTALL) -f $? $@
@@ -126,24 +111,3 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
-
-
-# Object build rules:
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)

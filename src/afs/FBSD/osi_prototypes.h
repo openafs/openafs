@@ -9,12 +9,25 @@
 /*
  * osi_prototypes.h
  *
- * Exported macos support routines.
+ * Exported support routines.
  */
 #ifndef _OSI_PROTO_H_
 #define _OSI_PROTO_H_
 
+/* osi_file.c */
+extern afs_rwlock_t afs_xosi;
+
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	                  struct vnode **dirvpp, struct vnode **vpp);
+			  struct vnode **dirvpp, struct vnode **vpp);
+extern void *osi_fbsd_alloc(size_t size, int dropglobal);
+extern void osi_fbsd_free(void *p);
+
+/* osi_vfsops.c */
+#ifdef AFS_FBSD50_ENV
+extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *th);
+#else
+extern int afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p);
+#endif
+
 #endif /* _OSI_PROTO_H_ */

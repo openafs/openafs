@@ -46,27 +46,27 @@
 #include <fcntl.h>
 
 #ifdef RCSID
-RCSID("$Id: test-parallel1.c,v 1.1 2002/01/22 19:54:43 hartmans Exp $");
+RCSID("$Id: test-parallel1.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
 #endif
 
 #define WORKER_TIMES 100
 #define NUM_WORKER 10
 
 static int
-worker (int num)
+worker(int num)
 {
     int i, fd;
 
-    for (i = 0 ; i < WORKER_TIMES ; i++) {
-	fd = open ("foo", O_CREAT|O_RDWR, 0600);
+    for (i = 0; i < WORKER_TIMES; i++) {
+	fd = open("foo", O_CREAT | O_RDWR, 0600);
 	if (fd >= 0) {
-	    fchmod (fd, 0700);
-	    close (fd);
+	    fchmod(fd, 0700);
+	    close(fd);
 	}
 	unlink("foo");
 	if (i % 1000) {
-	    printf (" %d", num);
-	    fflush (stdout);
+	    printf(" %d", num);
+	    fflush(stdout);
 	}
     }
     return 0;
@@ -77,24 +77,24 @@ int
 main(int argc, char **argv)
 {
     int i, ret;
-    
 
-    for (i = 0; i < NUM_WORKER ; i++) {
+
+    for (i = 0; i < NUM_WORKER; i++) {
 	int ret;
-	
+
 	ret = fork();
 	switch (ret) {
 	case 0:
 	    return worker(i);
 	case -1:
-	    err (1, "fork");
+	    err(1, "fork");
 	}
     }
     i = NUM_WORKER;
-    while (i && wait (&ret)) {
+    while (i && wait(&ret)) {
 	i--;
 	if (ret)
-	    err (1, "wait: %d", ret);
+	    err(1, "wait: %d", ret);
     }
     return 0;
 }

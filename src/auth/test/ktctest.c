@@ -17,7 +17,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/ktctest.c,v 1.1.1.4 2001/07/14 22:20:42 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/auth/test/ktctest.c,v 1.5 2003/07/15 23:14:42 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>
@@ -25,16 +26,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/ktctest.c,v 1.1.1.4 2001/07/1
 
 extern int ktc_SetToken(struct ktc_principal *aserver,
 			struct ktc_token *atoken,
-			struct ktc_principal *aclient,
-			int flags);
+			struct ktc_principal *aclient, int flags);
 
 extern int ktc_GetToken(struct ktc_principal *aserver,
-			struct ktc_token *atoken,
-			int atokenLen,
+			struct ktc_token *atoken, int atokenLen,
 			struct ktc_principal *aclient);
 
-extern int ktc_ListTokens(int aprevIndex,
-			  int* aindex, struct ktc_principal *aserver);
+extern int ktc_ListTokens(int aprevIndex, int *aindex,
+			  struct ktc_principal *aserver);
 
 extern int ktc_ForgetAllTokens(void);
 
@@ -45,7 +44,8 @@ static int SameToken(struct ktc_token *t1, struct ktc_token *t2);
 
 #define MAXCELLS  20
 
-int main(void)
+int
+main(void)
 {
     struct ktc_principal oldServer[MAXCELLS], newServer[MAXCELLS];
     struct ktc_principal oldClient[MAXCELLS], newClient[MAXCELLS];
@@ -83,9 +83,9 @@ int main(void)
 	}
 
 	/* fetch token and client identity w.r.t. server */
-	code = ktc_GetToken(&oldServer[i],
-			    &oldToken[i], sizeof(struct ktc_token),
-			    &oldClient[i]);
+	code =
+	    ktc_GetToken(&oldServer[i], &oldToken[i],
+			 sizeof(struct ktc_token), &oldClient[i]);
 
 	if (code) {
 	    /* some unexpected error occured */
@@ -106,8 +106,8 @@ int main(void)
 
     for (i = 0; i < cellCount; i++) {
 	printf("Token[%d]: server = %s@%s, client = %s@%s\n", i,
-	       oldServer[i].name, oldServer[i].cell,
-	       oldClient[i].name, oldClient[i].cell);
+	       oldServer[i].name, oldServer[i].cell, oldClient[i].name,
+	       oldClient[i].cell);
     }
 
 
@@ -126,9 +126,9 @@ int main(void)
 	struct ktc_principal dummyPrincipal;
 	struct ktc_token dummyToken;
 
-	code = ktc_GetToken(&oldServer[i],
-			    &dummyToken, sizeof(struct ktc_token),
-			    &dummyPrincipal);
+	code =
+	    ktc_GetToken(&oldServer[i], &dummyToken, sizeof(struct ktc_token),
+			 &dummyPrincipal);
 
 	if (code != KTC_NOENT) {
 	    printf("ktc_ForgetAllTokens did not eliminate all tokens.\n");
@@ -137,7 +137,7 @@ int main(void)
 
 	cellIndex = 0;
 
-	code = ktc_ListTokens(cellIndex, &cellIndex,  &dummyPrincipal);
+	code = ktc_ListTokens(cellIndex, &cellIndex, &dummyPrincipal);
 
 	if (code != KTC_NOENT) {
 	    printf("ktc_ForgetAllTokens did not eliminate all tokens.\n");
@@ -182,9 +182,9 @@ int main(void)
 	}
 
 	/* fetch token and client identity w.r.t. server */
-	code = ktc_GetToken(&newServer[i],
-			    &newToken[i], sizeof(struct ktc_token),
-			    &newClient[i]);
+	code =
+	    ktc_GetToken(&newServer[i], &newToken[i],
+			 sizeof(struct ktc_token), &newClient[i]);
 
 	if (code) {
 	    /* some unexpected error occured */
@@ -208,9 +208,9 @@ int main(void)
 	found = 0;
 
 	for (k = 0; k < cellCount; k++) {
-	    if (SamePrincipal(&oldServer[i], &newServer[k]) &&
-		SamePrincipal(&oldClient[i], &newClient[k]) &&
-		SameToken(&oldToken[i], &newToken[k])) {
+	    if (SamePrincipal(&oldServer[i], &newServer[k])
+		&& SamePrincipal(&oldClient[i], &newClient[k])
+		&& SameToken(&oldToken[i], &newToken[k])) {
 		/* found a matching token */
 		found = 1;
 		break;
@@ -233,9 +233,8 @@ int main(void)
 static int
 SamePrincipal(struct ktc_principal *p1, struct ktc_principal *p2)
 {
-    if (strcmp(p1->name, p2->name) ||
-	strcmp(p1->instance, p2->instance) ||
-	strcmp(p1->cell, p2->cell)) {
+    if (strcmp(p1->name, p2->name) || strcmp(p1->instance, p2->instance)
+	|| strcmp(p1->cell, p2->cell)) {
 	/* principals do not match */
 	return 0;
     } else {
@@ -248,12 +247,10 @@ SamePrincipal(struct ktc_principal *p1, struct ktc_principal *p2)
 static int
 SameToken(struct ktc_token *t1, struct ktc_token *t2)
 {
-    if ((t1->startTime != t2->startTime) ||
-	(t1->endTime != t2->endTime) ||
-	memcmp(&t1->sessionKey, &t2->sessionKey, sizeof(t1->sessionKey)) ||
-	(t1->kvno != t2->kvno) ||
-	(t1->ticketLen != t2->ticketLen) ||
-	memcmp(t1->ticket, t2->ticket, t1->ticketLen)) {
+    if ((t1->startTime != t2->startTime) || (t1->endTime != t2->endTime)
+	|| memcmp(&t1->sessionKey, &t2->sessionKey, sizeof(t1->sessionKey))
+	|| (t1->kvno != t2->kvno) || (t1->ticketLen != t2->ticketLen)
+	|| memcmp(t1->ticket, t2->ticket, t1->ticketLen)) {
 	/* tokens do not match */
 	return 0;
     } else {

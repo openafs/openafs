@@ -104,10 +104,10 @@ static cm_aclent_t *GetFreeACLEnt(void)
 		aclp->backp = NULL;
 	}
 	
-        /* release the old user */
-        if (aclp->userp) {
+    /* release the old user */
+    if (aclp->userp) {
 		cm_ReleaseUser(aclp->userp);
-                aclp->userp = NULL;
+        aclp->userp = NULL;
 	}
 	return aclp;
 }
@@ -144,8 +144,8 @@ long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, long rights)
 	aclp->backp = scp;
 	aclp->nextp = scp->randomACLp;
 	scp->randomACLp = aclp;
+    cm_HoldUser(userp);
 	aclp->userp = userp;
-        cm_HoldUser(userp);
 	aclp->randomAccess = rights;
 	aclp->tgtLifetime = cm_TGTLifeTime(userp);
 	lock_ReleaseWrite(&cm_aclLock);
@@ -228,8 +228,8 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
 	for (aclp = *laclpp; aclp; laclpp = &aclp->nextp, aclp = *laclpp) {
 		if (userp == aclp->userp) {	/* One for a given user/scache */
 			*laclpp = aclp->nextp;
-                        cm_ReleaseUser(aclp->userp);
-                        aclp->userp = NULL;
+            cm_ReleaseUser(aclp->userp);
+            aclp->userp = NULL;
 			aclp->backp = (struct cm_scache *) 0;
 			break;
 		}

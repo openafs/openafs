@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_msg.c,v 1.1.1.3 2001/07/14 22:21:13 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5 2003/07/15 23:14:53 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>
@@ -18,13 +19,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_msg.c,v 1.1.1.3 2001/07/14
 #include "mit-sipb-cr.h"
 #include <afs/errors.h>
 #include <string.h>
+#include "com_err.h"
 
 static const char copyright[] =
     "Copyright 1986, 1987, 1988 by the Student Information Processing Board\nand the department of Information Systems\nof the Massachusetts Institute of Technology";
 
 static char buffer[64];
 
-static struct et_list * _et_list = (struct et_list *) NULL;
+static struct et_list *_et_list = (struct et_list *)NULL;
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
@@ -43,10 +45,14 @@ static pthread_once_t et_list_once = PTHREAD_ONCE_INIT;
  * Function to initialize the et_list_mutex
  */
 
-void et_mutex_once(void) {
-    assert(!pthread_mutex_init(&et_list_mutex, (const pthread_mutexattr_t*)0));
+void
+et_mutex_once(void)
+{
+    assert(!pthread_mutex_init
+	   (&et_list_mutex, (const pthread_mutexattr_t *)0));
     et_list_done = 1;
 }
+
 #define LOCK_ET_LIST \
 	(et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
 	assert(pthread_mutex_lock(&et_list_mutex)==0);
@@ -63,17 +69,18 @@ static char *vmsgs[] = {
     "volume does not exist / did not salvage",	/* 103 */
     "volume already exists",	/* 104 */
     "volume out of service",	/* 105 */
-    "volume offline (utility running)", /* 106 */
+    "volume offline (utility running)",	/* 106 */
     "volume already online",	/* 107 */
     "unknown volume error 108",	/* 108 */
     "unknown volume error 109",	/* 109 */
-    "volume temporarily busy", 	/* 110 */
+    "volume temporarily busy",	/* 110 */
     "volume moved",		/* 111 */
-    (char *) 0
+    (char *)0
 };
 
-static char *negative_message(code)
-int code; {
+static char *
+negative_message(int code)
+{
     if (code == -1)
 	return "server or network not responding";
     else if (code == -2)
@@ -85,23 +92,23 @@ int code; {
     else if (code <= -450 && code > -500) {
 	sprintf(buffer, "RPC interface mismatch (%d)", code);
 	return buffer;
-    }
-    else {
+    } else {
 	sprintf(buffer, "unknown RPC error (%d)", code);
 	return buffer;
     }
 }
 
-static char *volume_message(code)
-int code; {
-      if (code >= 101 && code <= 111)
-	  return vmsgs[code-101];
-      else
-	  return "unknown volume error";
+static char *
+volume_message(int code)
+{
+    if (code >= 101 && code <= 111)
+	return vmsgs[code - 101];
+    else
+	return "unknown volume error";
 }
 
-const char * error_message (code)
-  int code;
+const char *
+error_message(afs_int32 code)
 {
     int offset;
     struct et_list *et;
@@ -111,37 +118,34 @@ const char * error_message (code)
     char *err_msg;
 
     /* check for rpc errors first */
-    if (code < 0) return negative_message(code);
+    if (code < 0)
+	return negative_message(code);
 
-    offset = code & ((1<<ERRCODE_RANGE)-1);
+    offset = code & ((1 << ERRCODE_RANGE) - 1);
     table_num = code - offset;
     if (!table_num) {
-	if ( (err_msg = strerror(offset)) != NULL) 
-	    return(err_msg);
+	if ((err_msg = strerror(offset)) != NULL)
+	    return (err_msg);
 	else if (offset < 140)
 	    return volume_message(code);
 	else
 	    goto oops;
     }
-    LOCK_ET_LIST
-    for (et = _et_list; et; et = et->next) {
+    LOCK_ET_LIST for (et = _et_list; et; et = et->next) {
 	if (et->table->base == table_num) {
 	    /* This is the right table */
 	    if (et->table->n_msgs <= offset)
 		goto oops;
-	    UNLOCK_ET_LIST
-	    return(et->table->msgs[offset]);
+	    UNLOCK_ET_LIST return (et->table->msgs[offset]);
 	}
     }
-oops:
-    UNLOCK_ET_LIST
-    strcpy (buffer, "Unknown code ");
+  oops:
+    UNLOCK_ET_LIST strcpy(buffer, "Unknown code ");
     if (table_num) {
-	strcat (buffer, error_table_name (table_num));
-	strcat (buffer, " ");
+	strcat(buffer, error_table_name(table_num));
+	strcat(buffer, " ");
     }
-    for (cp = buffer; *cp; cp++)
-	;
+    for (cp = buffer; *cp; cp++);
     if (offset >= 100) {
 	*cp++ = '0' + offset / 100;
 	offset %= 100;
@@ -152,27 +156,28 @@ oops:
 	offset %= 10;
     }
     *cp++ = '0' + offset;
-    if (code > -10000) sprintf (cp, " (%d)", code);
-    else *cp = '\0';
-    return(buffer);
+    if (code > -10000)
+	sprintf(cp, " (%d)", code);
+    else
+	*cp = '\0';
+    return (buffer);
 }
 
-void add_to_error_table(struct et_list *new_table) {
+void
+add_to_error_table(struct et_list *new_table)
+{
     struct et_list *et;
 
     LOCK_ET_LIST
-    /*
-     * Protect against adding the same error table twice
-     */
-
-    for (et = _et_list; et; et = et->next) {
-        if (et->table->base == new_table->table->base) {
-            UNLOCK_ET_LIST
-            return;
-        }
+	/*
+	 * Protect against adding the same error table twice
+	 */
+	for (et = _et_list; et; et = et->next) {
+	if (et->table->base == new_table->table->base) {
+	    UNLOCK_ET_LIST return;
+	}
     }
 
     new_table->next = _et_list;
     _et_list = new_table;
-    UNLOCK_ET_LIST
-}
+UNLOCK_ET_LIST}

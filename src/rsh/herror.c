@@ -18,25 +18,26 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/herror.c,v 1.1.1.4 2001/07/14 22:23:26 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rsh/herror.c,v 1.5 2003/07/15 23:16:07 shadow Exp $");
 
 #ifndef AFS_DARWIN_ENV
 #include <sys/types.h>
 #include <sys/uio.h>
 
-char	*h_errlist[] = {
-	"Error 0",
-	"Unknown host",				/* 1 HOST_NOT_FOUND */
-	"Host name lookup failure",		/* 2 TRY_AGAIN */
-	"Unknown server error",			/* 3 NO_RECOVERY */
-	"No address associated with name",	/* 4 NO_ADDRESS */
+char *h_errlist[] = {
+    "Error 0",
+    "Unknown host",		/* 1 HOST_NOT_FOUND */
+    "Host name lookup failure",	/* 2 TRY_AGAIN */
+    "Unknown server error",	/* 3 NO_RECOVERY */
+    "No address associated with name",	/* 4 NO_ADDRESS */
 };
-int	h_nerr = { sizeof(h_errlist)/sizeof(h_errlist[0]) };
+int h_nerr = { sizeof(h_errlist) / sizeof(h_errlist[0]) };
 
 #if defined(AFS_SUN_ENV)
 int h_errno;
 #else
-extern int	h_errno;
+extern int h_errno;
 #endif
 
 /*
@@ -44,25 +45,25 @@ extern int	h_errno;
  *	print the error indicated by the h_errno value.
  */
 herror(s)
-	char *s;
+     char *s;
 {
-	struct iovec iov[4];
-	register struct iovec *v = iov;
+    struct iovec iov[4];
+    register struct iovec *v = iov;
 
-	if (s && *s) {
-		v->iov_base = s;
-		v->iov_len = strlen(s);
-		v++;
-		v->iov_base = ": ";
-		v->iov_len = 2;
-		v++;
-	}
-	v->iov_base = (u_int)h_errno < h_nerr ?
-	    h_errlist[h_errno] : "Unknown error";
-	v->iov_len = strlen(v->iov_base);
+    if (s && *s) {
+	v->iov_base = s;
+	v->iov_len = strlen(s);
 	v++;
-	v->iov_base = "\n";
-	v->iov_len = 1;
-	writev(2, iov, (v - iov) + 1);
+	v->iov_base = ": ";
+	v->iov_len = 2;
+	v++;
+    }
+    v->iov_base =
+	(u_int) h_errno < h_nerr ? h_errlist[h_errno] : "Unknown error";
+    v->iov_len = strlen(v->iov_base);
+    v++;
+    v->iov_base = "\n";
+    v->iov_len = 1;
+    writev(2, iov, (v - iov) + 1);
 }
 #endif

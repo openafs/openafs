@@ -28,6 +28,10 @@
 #define ROVOL	1
 #define BACKVOL	2
 
+#ifdef DEBUG
+extern void afsi_log(char *pattern, ...);
+#endif
+
 unsigned int cm_mountRootGen = 0;
 
 char cm_sysName[100];
@@ -430,207 +434,213 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **retscp)
 {
-        char *tp;
-        long code;
-        cm_dirEntry_t *dep;
-        cm_buf_t *bufferp;
-        long temp;
-        osi_hyper_t dirLength;
-        osi_hyper_t bufferOffset;
-        osi_hyper_t curOffset;
-        osi_hyper_t thyper;
-        long entryInDir;
-        long entryInBuffer;
+    char *tp;
+    long code;
+    cm_dirEntry_t *dep;
+    cm_buf_t *bufferp;
+    long temp;
+    osi_hyper_t dirLength;
+    osi_hyper_t bufferOffset;
+    osi_hyper_t curOffset;
+    osi_hyper_t thyper;
+    long entryInDir;
+    long entryInBuffer;
 	cm_pageHeader_t *pageHeaderp;
-        int slotInPage;
-        long nextEntryCookie;
-        int numDirChunks;	/* # of 32 byte dir chunks in this entry */
+    int slotInPage;
+    long nextEntryCookie;
+    int numDirChunks;	/* # of 32 byte dir chunks in this entry */
         
-        /* get the directory size */
+    /* get the directory size */
 	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) {
 		lock_ReleaseMutex(&scp->mx);
-                return code;
-        }
+        return code;
+    }
         
-        if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
 		lock_ReleaseMutex(&scp->mx);
 		return CM_ERROR_NOTDIR;
-        }
+    }
 
-	if (  retscp ) 			/* if this is a lookup call */
+	if (retscp) 			/* if this is a lookup call */
 	{
 		cm_lookupSearch_t*	sp = parmp;
+        int casefold = sp->caseFold;
+
+        sp->caseFold = 0; /* we have a strong preference for exact matches */
 		if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
 		{
+            sp->caseFold = casefold;
 			lock_ReleaseMutex(&scp->mx);
 			return 0;
 		}
+
+        sp->caseFold = casefold;
 	}	
 
 	/*
 	 * XXX We only get the length once.  It might change when we drop the
 	 * lock.
 	 */
-        dirLength = scp->length;
+    dirLength = scp->length;
 
 	lock_ReleaseMutex(&scp->mx);
 
-        bufferp = NULL;
-        bufferOffset.LowPart = bufferOffset.HighPart = 0;
+    bufferp = NULL;
+    bufferOffset.LowPart = bufferOffset.HighPart = 0;
 	if (startOffsetp)
-        	curOffset = *startOffsetp;
+        curOffset = *startOffsetp;
 	else {
-	        curOffset.HighPart = 0;
-	        curOffset.LowPart = 0;
-	}
+        curOffset.HighPart = 0;
+        curOffset.LowPart = 0;
+	}   
 
-        while (1) {
+    while (1) {
 		/* make sure that curOffset.LowPart doesn't point to the first
-                 * 32 bytes in the 2nd through last dir page, and that it
+         * 32 bytes in the 2nd through last dir page, and that it
 		 * doesn't point at the first 13 32-byte chunks in the first
 		 * dir page, since those are dir and page headers, and don't
 		 * contain useful information.
-                 */
+         */
 		temp = curOffset.LowPart & (2048-1);
-                if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
-			/* we're in the first page */
-                	if (temp < 13*32) temp = 13*32;
+        if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
+            /* we're in the first page */
+            if (temp < 13*32) temp = 13*32;
 		}
 		else {
 			/* we're in a later dir page */
-                        if (temp < 32) temp = 32;
-                }
+            if (temp < 32) temp = 32;
+        }
 		
-                /* make sure the low order 5 bits are zero */
-                temp &= ~(32-1);
+        /* make sure the low order 5 bits are zero */
+        temp &= ~(32-1);
                 
-                /* now put temp bits back ito curOffset.LowPart */
-                curOffset.LowPart &= ~(2048-1);
-                curOffset.LowPart |= temp;
+        /* now put temp bits back ito curOffset.LowPart */
+        curOffset.LowPart &= ~(2048-1);
+        curOffset.LowPart |= temp;
 
-                /* check if we've passed the dir's EOF */
-                if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength))
+        /* check if we've passed the dir's EOF */
+        if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength))
 			break;
                 
-                /* see if we can use the bufferp we have now; compute in which
-		 * page the current offset would be, and check whether that's
+        /* see if we can use the bufferp we have now; compute in which
+         * page the current offset would be, and check whether that's
 		 * the offset of the buffer we have.  If not, get the buffer.
 		 */
-                thyper.HighPart = curOffset.HighPart;
-                thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
-                if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
+        thyper.HighPart = curOffset.HighPart;
+        thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
+        if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
 			/* wrong buffer */
-                        if (bufferp) {
+            if (bufferp) {
 				lock_ReleaseMutex(&bufferp->mx);
-                        	buf_Release(bufferp);
-                                bufferp = NULL;
+                buf_Release(bufferp);
+                bufferp = NULL;
 			}
 
 			lock_ObtainRead(&scp->bufCreateLock);
-                        code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, &bufferp);
 			lock_ReleaseRead(&scp->bufCreateLock);
 
 			lock_ObtainMutex(&bufferp->mx);
-                        if (code) break;
-                        bufferOffset = thyper;
+            if (code) break;
+            bufferOffset = thyper;
 
-                        /* now get the data in the cache */
-                        while (1) {
-                        	lock_ObtainMutex(&scp->mx);
+            /* now get the data in the cache */
+            while (1) {
+                lock_ObtainMutex(&scp->mx);
 				code = cm_SyncOp(scp, bufferp, userp, reqp,
-					PRSFS_LOOKUP,
-                                	CM_SCACHESYNC_NEEDCALLBACK
-					| CM_SCACHESYNC_READ
-					| CM_SCACHESYNC_BUFLOCKED);
+                                 PRSFS_LOOKUP,
+                                 CM_SCACHESYNC_NEEDCALLBACK
+                                 | CM_SCACHESYNC_READ
+                                 | CM_SCACHESYNC_BUFLOCKED);
 				if (code) {
 					lock_ReleaseMutex(&scp->mx);
 					break;
 				}
                                 
-                                if (cm_HaveBuffer(scp, bufferp, 1)) {
+                if (cm_HaveBuffer(scp, bufferp, 1)) {
 					lock_ReleaseMutex(&scp->mx);
 					break;
 				}
                                 
-                                /* otherwise, load the buffer and try again */
-                                lock_ReleaseMutex(&bufferp->mx);
-                                code = cm_GetBuffer(scp, bufferp, NULL, userp,
-						    reqp);
-                                lock_ReleaseMutex(&scp->mx);
-                                lock_ObtainMutex(&bufferp->mx);
-                                if (code) break;
-                        }
-                        if (code) {
+                /* otherwise, load the buffer and try again */
+                lock_ReleaseMutex(&bufferp->mx);
+                code = cm_GetBuffer(scp, bufferp, NULL, userp,
+                                    reqp);
+                lock_ReleaseMutex(&scp->mx);
+                lock_ObtainMutex(&bufferp->mx);
+                if (code) break;
+            }
+            if (code) {
 				lock_ReleaseMutex(&bufferp->mx);
 				buf_Release(bufferp);
-                                bufferp = NULL;
-                        	break;
+                bufferp = NULL;
+                break;
 			}
-                }	/* if (wrong buffer) ... */
+        }	/* if (wrong buffer) ... */
                 
-                /* now we have the buffer containing the entry we're interested
-		 * in; copy it out if it represents a non-deleted entry.
-                 */
+        /* now we have the buffer containing the entry we're interested
+         * in; copy it out if it represents a non-deleted entry.
+         */
 		entryInDir = curOffset.LowPart & (2048-1);
-                entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
+        entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
 
 		/* page header will help tell us which entries are free.  Page
 		 * header can change more often than once per buffer, since
 		 * AFS 3 dir page size may be less than (but not more than) a
 		 * buffer package buffer.
-                 */
+         */
 		/* only look intra-buffer */
 		temp = curOffset.LowPart & (buf_bufferSize - 1);
-                temp &= ~(2048 - 1);	/* turn off intra-page bits */
+        temp &= ~(2048 - 1);	/* turn off intra-page bits */
 		pageHeaderp = (cm_pageHeader_t *) (bufferp->datap + temp);
 
 		/* now determine which entry we're looking at in the page.  If
 		 * it is free (there's a free bitmap at the start of the dir),
 		 * we should skip these 32 bytes.
-                 */
-                slotInPage = (entryInDir & 0x7e0) >> 5;
-                if (!(pageHeaderp->freeBitmap[slotInPage>>3]
-			& (1 << (slotInPage & 0x7)))) {
+         */
+        slotInPage = (entryInDir & 0x7e0) >> 5;
+        if (!(pageHeaderp->freeBitmap[slotInPage>>3]
+               & (1 << (slotInPage & 0x7)))) {
 			/* this entry is free */
-                        numDirChunks = 1;	/* only skip this guy */
-                        goto nextEntry;
-                }
+            numDirChunks = 1;	/* only skip this guy */
+            goto nextEntry;
+        }
 
 		tp = bufferp->datap + entryInBuffer;
-                dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
+        dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
 
-                /* while we're here, compute the next entry's location, too,
+        /* while we're here, compute the next entry's location, too,
 		 * since we'll need it when writing out the cookie into the
 		 * dir listing stream.
-                 */
+         */
 		numDirChunks = cm_NameEntries(dep->name, NULL);
 		
-                /* compute the offset of the cookie representing the next entry */
-                nextEntryCookie = curOffset.LowPart
+        /* compute the offset of the cookie representing the next entry */
+        nextEntryCookie = curOffset.LowPart
 			+ (CM_DIR_CHUNKSIZE * numDirChunks);
 
-                if (dep->fid.vnode != 0) {
+        if (dep->fid.vnode != 0) {
 			/* this is one of the entries to use: it is not deleted */
 			code = (*funcp)(scp, dep, parmp, &curOffset);
-                        if (code) break;
+            if (code) break;
 		}	/* if we're including this name */
                 
-nextEntry:
-                /* and adjust curOffset to be where the new cookie is */
+      nextEntry:
+        /* and adjust curOffset to be where the new cookie is */
 		thyper.HighPart = 0;
-                thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
-                curOffset = LargeIntegerAdd(thyper, curOffset);
-        }		/* while copying data for dir listing */
+        thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
+        curOffset = LargeIntegerAdd(thyper, curOffset);
+    }		/* while copying data for dir listing */
 
 	/* release the mutex */
-        if (bufferp) {
+    if (bufferp) {
 		lock_ReleaseMutex(&bufferp->mx);
-        	buf_Release(bufferp);
+        buf_Release(bufferp);
 	}
-        return code;
+    return code;
 }
 
 int cm_NoneUpper(char *s)
@@ -655,15 +665,15 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	osi_hyper_t *offp)
 {
 	cm_lookupSearch_t *sp;
-        int match;
+    int match;
 	char shortName[13];
 	char *matchName;
         
-        sp = rockp;
+    sp = (cm_lookupSearch_t *) rockp;
 
 	matchName = dep->name;
 	if (sp->caseFold)
-        	match = cm_stricmp(matchName, sp->searchNamep);
+        match = cm_stricmp(matchName, sp->searchNamep);
 	else
 		match = strcmp(matchName, sp->searchNamep);
 
@@ -682,12 +692,13 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 		return 0;
 
 	sp->found = 1;
+    if(!sp->caseFold) sp->ExactFound = 1;
 
 	if (!sp->caseFold || matchName == shortName) {
 		sp->fid.vnode = ntohl(dep->fid.vnode);
 		sp->fid.unique = ntohl(dep->fid.unique);
-                return CM_ERROR_STOPNOW;
-        }
+        return CM_ERROR_STOPNOW;
+    }
 
 	/*
 	 * If we get here, we are doing a case-insensitive search, and we
@@ -699,10 +710,11 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	/* Exact matches are the best. */
 	match = strcmp(matchName, sp->searchNamep);
 	if (match == 0) {
+        sp->ExactFound = 1;
 		sp->fid.vnode = ntohl(dep->fid.vnode);
 		sp->fid.unique = ntohl(dep->fid.unique);
-                return CM_ERROR_STOPNOW;
-        }
+        return CM_ERROR_STOPNOW;
+    }
 
 	/* Lower-case matches are next. */
 	if (sp->LCfound)
@@ -955,16 +967,16 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 {
 	long code;
 	int dnlcHit = 1;	/* did we hit in the dnlc? yes, we did */
-        cm_scache_t *tscp = NULL;
-        cm_scache_t *mountedScp;
-        cm_lookupSearch_t rock;
-        char tname[256];
+    cm_scache_t *tscp = NULL;
+    cm_scache_t *mountedScp;
+    cm_lookupSearch_t rock;
+    char tname[256];
 	int getroot;
 
 	if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
-	    && strcmp(namep, "..") == 0) {
+         && strcmp(namep, "..") == 0) {
 		if (dscp->dotdotFidp == (cm_fid_t *)NULL
-		    || dscp->dotdotFidp->volume == 0)
+             || dscp->dotdotFidp->volume == 0)
 			return CM_ERROR_NOSUCHVOLUME;
 		rock.fid = *dscp->dotdotFidp;
 		goto haveFid;
@@ -972,98 +984,100 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 
 	if (cm_ExpandSysName(namep, tname, sizeof(tname))) {
 		namep = tname;
-        }
+    }
 	memset(&rock, 0, sizeof(rock));
-        rock.fid.cell = dscp->fid.cell;
-        rock.fid.volume = dscp->fid.volume;
-        rock.searchNamep = namep;
-        rock.caseFold = (flags & CM_FLAG_CASEFOLD);
+    rock.fid.cell = dscp->fid.cell;
+    rock.fid.volume = dscp->fid.volume;
+    rock.searchNamep = namep;
+    rock.caseFold = (flags & CM_FLAG_CASEFOLD);
 	rock.hasTilde = ((strchr(namep, '~') != NULL) ? 1 : 0);
 
 	/* If NOMOUNTCHASE, bypass DNLC by passing NULL scp pointer */
 	code = cm_ApplyDir(dscp, cm_LookupSearchProc, &rock, NULL, userp, reqp,
-			   (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
+                       (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
 
 	/* code == 0 means we fell off the end of the dir, while stopnow means
-         * that we stopped early, probably because we found the entry we're
+     * that we stopped early, probably because we found the entry we're
 	 * looking for.  Any other non-zero code is an error.
-         */
-        if (code && code != CM_ERROR_STOPNOW) return code;
+     */
+    if (code && code != CM_ERROR_STOPNOW) 
+        return code;
 
 	getroot = (dscp==cm_rootSCachep) ;
-        if (!rock.found) {
-	  if (!cm_freelanceEnabled || !getroot) {
-		if (flags & CM_FLAG_CHECKPATH)
-			return CM_ERROR_NOSUCHPATH;
-		else
-			return CM_ERROR_NOSUCHFILE;
-	  }
-	  else {  /* nonexistent dir on freelance root, so add it */
-	    code = cm_FreelanceAddMount(namep, namep, "root.cell.",
+    if (!rock.found) {
+        if (!cm_freelanceEnabled || !getroot) {
+            if (flags & CM_FLAG_CHECKPATH)
+                return CM_ERROR_NOSUCHPATH;
+            else
+                return CM_ERROR_NOSUCHFILE;
+        }
+        else {  /* nonexistent dir on freelance root, so add it */
+            code = cm_FreelanceAddMount(namep, namep, "root.cell.",
 					&rock.fid);
-	    if (code < 0) {   /* add mount point failed, so give up */
-	      if (flags & CM_FLAG_CHECKPATH)
-		return CM_ERROR_NOSUCHPATH;
-	      else
-		return CM_ERROR_NOSUCHFILE;
-	    }
-	    tscp = NULL;   /* to force call of cm_GetSCache */
-	  }
+            if (code < 0) {   /* add mount point failed, so give up */
+                if (flags & CM_FLAG_CHECKPATH)
+                    return CM_ERROR_NOSUCHPATH;
+                else
+                    return CM_ERROR_NOSUCHFILE;
+            }
+            tscp = NULL;   /* to force call of cm_GetSCache */
+        }
 	}
-        
+
 haveFid:       
 	if ( !tscp )    /* we did not find it in the dnlc */
 	{
 		dnlcHit = 0;	
-        	code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
-        	if (code) return code;
+        code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
+        if (code) 
+            return code;
 	}
-        /* tscp is now held */
-        
+    /* tscp is now held */
+
 	lock_ObtainMutex(&tscp->mx);
 	code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
-        	CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-        if (code) {
+                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+    if (code) { 
 		lock_ReleaseMutex(&tscp->mx);
 		cm_ReleaseSCache(tscp);
-        	return code;
+        return code;
 	}
-        /* tscp is now locked */
+    /* tscp is now locked */
 
-        if (!(flags & CM_FLAG_NOMOUNTCHASE)
+    if (!(flags & CM_FLAG_NOMOUNTCHASE)
 	      && tscp->fileType == CM_SCACHETYPE_MOUNTPOINT) {
 		/* mount points are funny: they have a volume name to mount
-                 * the root of.
-                 */
+         * the root of.
+         */
 		code = cm_ReadMountPoint(tscp, userp, reqp);
-                if (code == 0)
+        if (code == 0)
 			code = cm_FollowMountPoint(tscp, dscp, userp, reqp,
-						   &mountedScp);
+                                        &mountedScp);
 		lock_ReleaseMutex(&tscp->mx);
 		cm_ReleaseSCache(tscp);
 		if (code) {
-                        return code;
-                }
-                tscp = mountedScp;
+            return code;
         }
+        tscp = mountedScp;
+    }
 	else {
 		lock_ReleaseMutex(&tscp->mx);
 	}
 
 	/* copy back pointer */
-        *outpScpp = tscp;
+    *outpScpp = tscp;
 
 	/* insert scache in dnlc */
-	if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) ) {
+	if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) && rock.ExactFound ) {
 	    /* lock the directory entry to prevent racing callback revokes */
 	    lock_ObtainMutex(&dscp->mx);
 	    if ( dscp->cbServerp && dscp->cbExpires )
-		cm_dnlcEnter(dscp, namep, tscp);
+            cm_dnlcEnter(dscp, namep, tscp);
 	    lock_ReleaseMutex(&dscp->mx);
 	}
 
 	/* and return */
-        return 0;
+    return 0;
 }
 
 long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
@@ -1268,140 +1282,140 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         cm_HoldSCache(tscp);
         symlinkCount = 0;
         while (1) {
-		tc = *tp++;
+            tc = *tp++;
 		
-                /* map Unix slashes into DOS ones so we can interpret Unix
-		 * symlinks properly
-                 */
-                if (tc == '/') tc = '\\';
-		
-                if (!haveComponent) {
+            /* map Unix slashes into DOS ones so we can interpret Unix
+             * symlinks properly
+             */
+            if (tc == '/') tc = '\\';
+
+            if (!haveComponent) {
 			if (tc == '\\') continue;
-                        else if (tc == 0) {
+            else if (tc == 0) {
 				if (phase == 1) {
 					phase = 2;
 					tp = pathp;
 					continue;
 				}
-                        	code = 0;
-                                break;
-                        }
-                        else {
+                code = 0;
+                break;
+            }
+            else {
 				haveComponent = 1;
-                                cp = component;
-                                *cp++ = tc;
+                cp = component;
+                *cp++ = tc;
+            }
+            }
+            else {
+                /* we have a component here */
+                if (tc == 0 || tc == '\\') {
+                    /* end of the component; we're at the last
+                     * component if tc == 0.  However, if the last
+                     * is a symlink, we have more to do.
+                     */
+                    *cp++ = 0;	/* add null termination */
+                    extraFlag = 0;
+                    if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
+                        extraFlag = CM_FLAG_NOMOUNTCHASE;
+                    code = cm_Lookup(tscp, component,
+                                      flags | extraFlag,
+                                      userp, reqp, &nscp);
+
+                    if (code) {
+                        cm_ReleaseSCache(tscp);
+                        if (psp) cm_FreeSpace(psp);
+                        return code;
+                    }
+                    haveComponent = 0;	/* component done */
+                    dirScp = tscp;		/* for some symlinks */
+                    tscp = nscp;	/* already held */
+                    if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
+                        code = 0;
+                        cm_ReleaseSCache(dirScp);
+                        break;
+                    }
+
+                    /* now, if tscp is a symlink, we should follow
+                     * it and assemble the path again.
+                     */
+                    lock_ObtainMutex(&tscp->mx);
+                    code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
+                                      CM_SCACHESYNC_GETSTATUS
+                                      | CM_SCACHESYNC_NEEDCALLBACK);
+                    if (code) {
+                        lock_ReleaseMutex(&tscp->mx);
+                        cm_ReleaseSCache(tscp);
+                        cm_ReleaseSCache(dirScp);
+                        break;
+                    }
+                    if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
+                        /* this is a symlink; assemble a new buffer */
+                        lock_ReleaseMutex(&tscp->mx);
+                        if (symlinkCount++ >= 16) {
+                            cm_ReleaseSCache(tscp);
+                            cm_ReleaseSCache(dirScp);
+                            if (psp) cm_FreeSpace(psp);
+                            return CM_ERROR_TOOBIG;
                         }
-                }
-		else {
-			/* we have a component here */
-                        if (tc == 0 || tc == '\\') {
-				/* end of the component; we're at the last
-				 * component if tc == 0.  However, if the last
-				 * is a symlink, we have more to do.
-                                 */
-                                *cp++ = 0;	/* add null termination */
-				extraFlag = 0;
-				if ((flags & CM_FLAG_DIRSEARCH) && tc == 0)
-					extraFlag = CM_FLAG_NOMOUNTCHASE;
-                                code = cm_Lookup(tscp, component,
-					flags | extraFlag,
-					userp, reqp, &nscp);
-                                if (code) {
-					cm_ReleaseSCache(tscp);
-                                        if (psp) cm_FreeSpace(psp);
-                                        return code;
-                                }
-                                haveComponent = 0;	/* component done */
-                                dirScp = tscp;		/* for some symlinks */
-                                tscp = nscp;	/* already held */
-                                if (tc == 0 && !(flags & CM_FLAG_FOLLOW) && phase == 2) {
-					code = 0;
-                                        cm_ReleaseSCache(dirScp);
-                                	break;
-				}
-                                
-                                /* now, if tscp is a symlink, we should follow
-				 * it and assemble the path again.
-                                 */
-				lock_ObtainMutex(&tscp->mx);
-				code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
-			        	CM_SCACHESYNC_GETSTATUS
-					 | CM_SCACHESYNC_NEEDCALLBACK);
-                                if (code) {
-					lock_ReleaseMutex(&tscp->mx);
-					cm_ReleaseSCache(tscp);
-                                        cm_ReleaseSCache(dirScp);
-                                        break;
-                                }
-                                if (tscp->fileType == CM_SCACHETYPE_SYMLINK) {
-					/* this is a symlink; assemble a new buffer */
-					lock_ReleaseMutex(&tscp->mx);
-                                        if (symlinkCount++ >= 16) {
-						cm_ReleaseSCache(tscp);
-                                                cm_ReleaseSCache(dirScp);
-						if (psp) cm_FreeSpace(psp);
-                                                return CM_ERROR_TOOBIG;
-                                        }
-                                        if (tc == 0) restp = "";
-                                        else restp = tp;
-                                        code = cm_AssembleLink(tscp, restp,
-						&linkScp, &tempsp, userp, reqp);
-                                        if (code) {
-						/* something went wrong */
-						cm_ReleaseSCache(tscp);
-                                                cm_ReleaseSCache(dirScp);
-	                                        break;
-                                        }
-                                        
-                                        /* otherwise, tempsp has the new path,
-					 * and linkScp is the new root from
-					 * which to interpret that path.
-					 * Continue with the namei processing,
-					 * also doing the bookkeeping for the
-					 * space allocation and tracking the
-                                         * vnode reference counts.
-                                         */
-					if (psp) cm_FreeSpace(psp);
-					psp = tempsp;
-                                        tp = psp->data;
-                                        cm_ReleaseSCache(tscp);
-                                        tscp = linkScp;	/* already held
-							 * by AssembleLink */
-                                        /* now, if linkScp is null, that's
-					 * AssembleLink's way of telling us that
-					 * the sym link is relative to the dir
-					 * containing the link.  We have a ref
-					 * to it in dirScp, and we hold it now
-					 * and reuse it as the new spot in the
-					 * dir hierarchy.
-                                         */
-                                        if (tscp == NULL) {
-						cm_HoldSCache(dirScp);
-                                                tscp = dirScp;
-                                        }
-                                }	/* if we have a sym link */
-                                else {
-					/* not a symlink, we may be done */
-                                	lock_ReleaseMutex(&tscp->mx);
-                                        if (tc == 0) {
-						if (phase == 1) {
-							phase = 2;
-							tp = pathp;
-							continue;
-						}
-						cm_ReleaseSCache(dirScp);
-                                                code = 0;
-                                                break;
-                                        }
-				}
-                                cm_ReleaseSCache(dirScp);
-                        } /* end of a component */
-                        else *cp++ = tc;
-                } /* we have a component */
-        }	/* big while loop over all components */
+                        if (tc == 0) restp = "";
+                        else restp = tp;
+                        code = cm_AssembleLink(tscp, restp, &linkScp, &tempsp, userp, reqp);
+                        if (code) {
+                            /* something went wrong */
+                            cm_ReleaseSCache(tscp);
+                            cm_ReleaseSCache(dirScp);
+                            break;
+                        }
+
+                        /* otherwise, tempsp has the new path,
+                         * and linkScp is the new root from
+                         * which to interpret that path.
+                         * Continue with the namei processing,
+                         * also doing the bookkeeping for the
+                         * space allocation and tracking the
+                         * vnode reference counts.
+                         */
+                        if (psp) cm_FreeSpace(psp);
+                        psp = tempsp;
+                        tp = psp->data;
+                        cm_ReleaseSCache(tscp);
+                        tscp = linkScp;	/* already held
+                                         * by AssembleLink */
+                        /* now, if linkScp is null, that's
+                         * AssembleLink's way of telling us that
+                         * the sym link is relative to the dir
+                         * containing the link.  We have a ref
+                         * to it in dirScp, and we hold it now
+                         * and reuse it as the new spot in the
+                         * dir hierarchy.
+                         */
+                        if (tscp == NULL) {
+                            cm_HoldSCache(dirScp);
+                            tscp = dirScp;
+                        }
+                    }	/* if we have a sym link */
+                    else {
+                        /* not a symlink, we may be done */
+                        lock_ReleaseMutex(&tscp->mx);
+                        if (tc == 0) {
+                            if (phase == 1) {
+                                phase = 2;
+                                tp = pathp;
+                                continue;
+                            }
+                            cm_ReleaseSCache(dirScp);
+                            code = 0;
+                            break;
+                        }
+                    }
+                    cm_ReleaseSCache(dirScp);
+                } /* end of a component */
+                else *cp++ = tc;
+            } /* we have a component */
+        } /* big while loop over all components */
 
 	/* already held */
-        if (psp) cm_FreeSpace(psp);
+    if (psp) cm_FreeSpace(psp);
 	if (code == 0) *outScpp = tscp;
         return code;
 }
@@ -2395,8 +2409,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
 	if (code == 0 || Timeout != 0) {
 		fileLock = malloc(sizeof(cm_file_lock_t));
 		fileLock->LockType = LockType;
-		fileLock->userp = userp;
 		cm_HoldUser(userp);
+		fileLock->userp = userp;
 		fileLock->fid = scp->fid;
 		fileLock->LOffset = LOffset;
 		fileLock->LLength = LLength;
@@ -2434,7 +2448,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
 	q = scp->fileLocks;
 	while (q) {
 		fileLock = (cm_file_lock_t *)
-				((char *) q - offsetof(cm_file_lock_t, fileq));
+            ((char *) q - offsetof(cm_file_lock_t, fileq));
 		if (!found
 		    && fileLock->userp == userp
 		    && LargeIntegerEqualTo(fileLock->LOffset, LOffset)
@@ -2474,7 +2488,8 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
 		lock_ReleaseMutex(&scp->mx);
 		do {
 			code = cm_Conn(&scp->fid, userp, reqp, &connp);
-			if (code) break;
+			if (code) 
+                break;
 			code = RXAFS_ReleaseLock(connp->callp, &tfid, &volSync);
 		} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
 				    NULL, code));
@@ -2590,7 +2605,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
 		code = cm_MapRPCError(code, &req);
 	}
 
-handleCode:
+  handleCode:
 	if (code != 0 && code != CM_ERROR_WOULDBLOCK) {
 		lock_ObtainMutex(&scp->mx);
 		osi_QRemove(&scp->fileLocks, &oldFileLock->fileq);
@@ -2602,6 +2617,7 @@ handleCode:
 	else if (code != CM_ERROR_WOULDBLOCK) {
 		oldFileLock->flags |= CM_FILELOCK_FLAG_INVALID;
 		cm_ReleaseUser(oldFileLock->userp);
+        oldFileLock->userp = NULL;
 	}
 	lock_ReleaseWrite(&cm_scacheLock);
 

@@ -10,10 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/afs_atomlist.c,v 1.1.1.4 2001/07/14 22:24:17 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/afs_atomlist.c,v 1.7 2003/08/08 21:54:48 shadow Exp $");
 
 #ifdef KERNEL
-#include "../afs/afs_atomlist.h"
+#include "afs_atomlist.h"
 #else /* KERNEL */
 #include "afs_atomlist.h"
 #endif /* KERNEL */
@@ -76,150 +77,141 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/afs_atomlist.c,v 1.1.1.4 2001/07/1
  */
 
 struct afs_atomlist {
-	size_t atom_size;
-	size_t block_size;
-	size_t atoms_per_block;
-	void *(*allocate)(size_t n);
-	void (*deallocate)(void *p, size_t n);
-	void *atom_head;	/* pointer to head of atom free list */
-	void *block_head;	/* pointer to block list */
+    size_t atom_size;
+    size_t block_size;
+    size_t atoms_per_block;
+    void *(*allocate) (size_t n);
+    void (*deallocate) (void *p, size_t n);
+    void *atom_head;		/* pointer to head of atom free list */
+    void *block_head;		/* pointer to block list */
 };
 
 afs_atomlist *
-afs_atomlist_create
-( size_t atom_size
-, size_t block_size
-, void *(*allocate)(size_t n)
-, void (*deallocate)(void *p, size_t n)
-)
+afs_atomlist_create(size_t atom_size, size_t block_size,
+		    void *(*allocate) (size_t n)
+		    , void (*deallocate) (void *p, size_t n)
+    )
 {
-	afs_atomlist *al;
-	size_t atoms_per_block;
-	size_t extra_space;
+    afs_atomlist *al;
+    size_t atoms_per_block;
+    size_t extra_space;
 
-	/*
-	 * Atoms must be at least as big as a pointer in order for
-	 * our implementation of the atom free list to work.
-	 */
-	if (atom_size < sizeof(void *)) {
-		atom_size = sizeof(void *);
+    /*
+     * Atoms must be at least as big as a pointer in order for
+     * our implementation of the atom free list to work.
+     */
+    if (atom_size < sizeof(void *)) {
+	atom_size = sizeof(void *);
+    }
+
+    /*
+     * Atoms must be a multiple of the size of a pointer
+     * so that the pointers in the atom free list will be
+     * properly aligned.
+     */
+    if (atom_size % sizeof(void *) != (size_t) 0) {
+	size_t pad = sizeof(void *) - (atom_size % sizeof(void *));
+	atom_size += pad;
+    }
+
+    /*
+     * Blocks are the unit of memory allocation.
+     *
+     * 1) Atoms are allocated out of blocks.
+     *
+     * 2) sizeof(void *) bytes in each block, aligned on a sizeof(void *)
+     * boundary, are used to chain together the blocks so that they can
+     * be freed later.  This reduces the space in each block for atoms.
+     * It is intended that atoms should be small relative to the size of
+     * a block, so this should not be a problem.
+     *
+     * At a minimum, a block must be big enough for one atom and
+     * a pointer to the next block.
+     */
+    if (block_size < atom_size + sizeof(void *))
+	return 0;
+
+    atoms_per_block = block_size / atom_size;
+    extra_space = block_size - (atoms_per_block * atom_size);
+    if (extra_space < sizeof(void *)) {
+	if (atoms_per_block < (size_t) 2) {
+	    return 0;		/* INTERNAL ERROR! */
 	}
+	atoms_per_block--;
+    }
 
-	/*
-	 * Atoms must be a multiple of the size of a pointer
-	 * so that the pointers in the atom free list will be
-	 * properly aligned.
-	 */
-	if (atom_size % sizeof(void *) != (size_t)0) {
-		size_t pad = sizeof(void *) - (atom_size % sizeof(void *));
-		atom_size += pad;
-	}
+    al = allocate(sizeof *al);
+    if (!al)
+	return 0;
 
-	/*
-	 * Blocks are the unit of memory allocation.
-	 *
-	 * 1) Atoms are allocated out of blocks.
-	 *
-	 * 2) sizeof(void *) bytes in each block, aligned on a sizeof(void *)
-	 * boundary, are used to chain together the blocks so that they can
-	 * be freed later.  This reduces the space in each block for atoms.
-	 * It is intended that atoms should be small relative to the size of
-	 * a block, so this should not be a problem.
-	 *
-	 * At a minimum, a block must be big enough for one atom and
-	 * a pointer to the next block.
-	 */
-	if (block_size < atom_size + sizeof(void *))
-		return 0;
+    al->atom_size = atom_size;
+    al->block_size = block_size;
+    al->allocate = allocate;
+    al->deallocate = deallocate;
+    al->atom_head = 0;
+    al->block_head = 0;
+    al->atoms_per_block = atoms_per_block;
 
-	atoms_per_block = block_size / atom_size;
-	extra_space     = block_size - (atoms_per_block * atom_size);
-	if (extra_space < sizeof(void *)) {
-		if (atoms_per_block < (size_t)2) {
-			return 0;		/* INTERNAL ERROR! */
-		}
-		atoms_per_block--;
-	}
-
-	al = allocate(sizeof *al);
-	if (!al)
-		return 0;
-
-	al->atom_size = atom_size;
-	al->block_size = block_size;
-	al->allocate = allocate;
-	al->deallocate = deallocate;
-	al->atom_head = 0;
-	al->block_head = 0;
-	al->atoms_per_block = atoms_per_block;
-
-	return al;
+    return al;
 }
 
 void
-afs_atomlist_destroy
-( afs_atomlist *al
-)
+afs_atomlist_destroy(afs_atomlist * al)
 {
-	void *cur;
-	void *next;
+    void *cur;
+    void *next;
 
-	for(cur = al->block_head; cur; cur = next) {
-		next = *(void **)((char *)cur + al->atoms_per_block * al->atom_size);
-		al->deallocate(cur, al->block_size);
-	}
-	al->deallocate(al, sizeof *al);
+    for (cur = al->block_head; cur; cur = next) {
+	next = *(void **)((char *)cur + al->atoms_per_block * al->atom_size);
+	al->deallocate(cur, al->block_size);
+    }
+    al->deallocate(al, sizeof *al);
 }
 
 void *
-afs_atomlist_get
-( afs_atomlist *al
-)
+afs_atomlist_get(afs_atomlist * al)
 {
-	void *data;
+    void *data;
 
-	/* allocate a new block if necessary */
-	if (!al->atom_head) {
-		void *block;
-		void *p;
-		size_t i;
+    /* allocate a new block if necessary */
+    if (!al->atom_head) {
+	void *block;
+	void *p;
+	size_t i;
 
-		block = al->allocate(al->block_size);
-		if (!block) {
-			return 0;
-		}
-
-		/* add this block to the chain of allocated blocks */
-		*(void **)((char *)block + al->atoms_per_block * al->atom_size) =
-			al->block_head;
-		al->block_head = block;
-
-		/* add this block's atoms to the atom free list */
-		p = block;
-		for (i = 0; i+1 < al->atoms_per_block; i++) {
-			*(void **)p = (char *)p + al->atom_size;
-			p = (char *)p + al->atom_size;
-		}
-		*(void **)p = 0;
-		al->atom_head = block;
+	block = al->allocate(al->block_size);
+	if (!block) {
+	    return 0;
 	}
 
-	if (!al->atom_head) {
-		return 0;	/* INTERNAL ERROR */
+	/* add this block to the chain of allocated blocks */
+	*(void **)((char *)block + al->atoms_per_block * al->atom_size) =
+	    al->block_head;
+	al->block_head = block;
+
+	/* add this block's atoms to the atom free list */
+	p = block;
+	for (i = 0; i + 1 < al->atoms_per_block; i++) {
+	    *(void **)p = (char *)p + al->atom_size;
+	    p = (char *)p + al->atom_size;
 	}
+	*(void **)p = 0;
+	al->atom_head = block;
+    }
 
-	data = al->atom_head;
-	al->atom_head = *(void **)data;
+    if (!al->atom_head) {
+	return 0;		/* INTERNAL ERROR */
+    }
 
-	return data;
+    data = al->atom_head;
+    al->atom_head = *(void **)data;
+
+    return data;
 }
 
 void
-afs_atomlist_put
-( afs_atomlist *al
-, void *data
-)
+afs_atomlist_put(afs_atomlist * al, void *data)
 {
-	*(void **)data = al->atom_head;
-	al->atom_head = data;
+    *(void **)data = al->atom_head;
+    al->atom_head = data;
 }

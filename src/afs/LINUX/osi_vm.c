@@ -8,13 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.9 2002/05/10 23:44:09 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vm.c,v 1.16 2004/04/12 16:04:32 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"	/* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 
 /* Linux VM operations
  *
@@ -39,7 +40,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.9 2002/05/10
  * is not dropped and re-acquired for any platform.  It may be that *slept is
  * therefore obsolescent.
  */
-int osi_VM_FlushVCache(struct vcache *avc, int *slept)
+int
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct inode *ip = AFSTOI(avc);
 
@@ -68,16 +70,24 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+void
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
-    invalidate_inode_pages(AFSTOI(avc));
+    struct inode *ip = AFSTOI(avc);
+
+#if defined(AFS_LINUX26_ENV)
+    invalidate_inode_pages(ip->i_mapping);
+#else
+    invalidate_inode_pages(ip);
+#endif
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag
  *
  * Locking:  only the global lock is held.
  */
-void osi_VM_FSyncInval(struct vcache *avc)
+void
+osi_VM_FSyncInval(struct vcache *avc)
 {
 
 }
@@ -87,7 +97,8 @@ void osi_VM_FSyncInval(struct vcache *avc)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void osi_VM_StoreAllSegments(struct vcache *avc)
+void
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct inode *ip = AFSTOI(avc);
 
@@ -95,7 +106,11 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
+#if defined(AFS_LINUX26_ENV)
+    filemap_fdatawrite(ip->i_mapping);
+#else
     filemap_fdatasync(ip->i_mapping);
+#endif
     filemap_fdatawait(ip->i_mapping);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 121);
@@ -106,7 +121,8 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+void
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOI(avc);
@@ -127,7 +143,8 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+void
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOI(avc);
