@@ -35,6 +35,8 @@
 #include <sys/stat.h>
 #include <stdlib.h>	/* for realpath() */
 #include <errno.h>
+#include <string.h>
+#include <ctype.h>
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -287,10 +289,52 @@ char *aname; {
     return code;
 }
 
+/* special CompFindUser routine that builds up a princ and then
+	calls finduser on it. If found, returns char * to user string, 
+	otherwise returns NULL. The resulting string should be immediately
+	copied to other storage prior to release of mutex. */
+static char *CompFindUser(adir, name, sep, inst, realm)
+    struct afsconf_dir *adir;
+    char *name;
+    char *sep;
+    char *inst;
+    char *realm;
+{
+    static char fullname[ MAXKTCNAMELEN + MAXKTCNAMELEN +
+	MAXKTCREALMLEN + 3 ];
+
+    /* always must have name */
+    if ( !name || !name[0] ) { return NULL; }
+    strcpy(fullname, name);
+
+    /* might have instance */
+    if ( inst && inst[0] ) {
+	if ( !sep || !sep[0] ) { return NULL; }
+
+	strcat(fullname, sep);
+	strcat(fullname, inst);
+    }
+
+    /* might have realm */
+    if ( realm && realm[0] )
+    {
+	strcat(fullname, "@");
+	strcat(fullname, realm);
+    }
+
+    if ( FindUser(adir, fullname) ) {
+	return fullname;
+    } else {
+	return NULL;
+    }
+}
+
+
 /* make sure user authenticated on rx call acall is in list of valid
-    users.
+    users. Copy the "real name" of the authenticated user into namep
+    if a pointer is passed.
 */
-afsconf_SuperUser(adir, acall, namep)
+afs_int32 afsconf_SuperUser(adir, acall, namep)
 struct afsconf_dir *adir;
 struct rx_call *acall;
 char *namep; {
@@ -303,11 +347,13 @@ char *namep; {
 	UNLOCK_GLOBAL_MUTEX
 	return 0;
     }
+
     if (afsconf_GetNoAuthFlag(adir)) {
-	if (namep) strcpy(namep, "<noauth>");
+	if (namep) strcpy(namep, "<NoAuth>");
 	UNLOCK_GLOBAL_MUTEX
 	return 1;
     }
+
     tconn = rx_ConnectionOf(acall);
     code = rx_SecurityClassOf(tconn);
     if (code ==	0) {
@@ -323,52 +369,26 @@ char *namep; {
 	char tname[MAXKTCNAMELEN];	/* authentication from ticket */
 	char tinst[MAXKTCNAMELEN];
 	char tcell[MAXKTCREALMLEN];
-	char uname[MAXKTCNAMELEN];	/* name.instance */
-	int  ilen;			/* length of instance */
-	afs_uint32 exp;
-	static char localcellname[MAXCELLCHARS] = "";
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	static char local_realm[AFS_REALM_SZ] = "";
-#endif
+	char tcell_l[MAXKTCREALMLEN];
+	char *tmp;
 	
-	/* des tokens */
+	/* keep track of which one actually authorized request */
+	char uname[MAXKTCNAMELEN+MAXKTCNAMELEN+MAXKTCREALMLEN+3];
+
+	afs_uint32 exp;
+	static char lcell[MAXCELLCHARS] = "";
+	static char lrealm[AFS_REALM_SZ] = "";
+	
+	/* get auth details from server connection */
 	code = rxkad_GetServerInfo
-	    (acall->conn, (afs_int32 *) 0, &exp, tname, tinst, tcell, (afs_int32 *) 0);
+	    (acall->conn, (afs_int32 *) 0, &exp, 
+		tname, tinst, tcell, (afs_int32 *) 0);
 	if (code) {
 	    UNLOCK_GLOBAL_MUTEX
-	    return 0; /* bogus */
+	    return 0; /* bogus connection/other error */
 	}
 
-	if (strlen (tcell)) {
-	    if (!localcellname[0])
-		afsconf_GetLocalCell
-		    (adir, localcellname, sizeof(localcellname));
-#if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
-	    if (!local_realm[0]) {
-		if (afs_krb_get_lrealm(local_realm, 0) != 0/*KSUCCESS*/)
-		    strncpy(local_realm, localcellname, AFS_REALM_SZ);
-	    }
-	    if (strcasecmp(local_realm, tcell) &&
-	       (strcasecmp(localcellname, tcell)))
-#else
-	    if (strcasecmp(localcellname, tcell))
-#endif
-		{
-		    UNLOCK_GLOBAL_MUTEX
-		    return 0;
-		}
-	}
-	ilen = strlen(tinst);
-	strncpy (uname, tname, sizeof(uname));
-	if (ilen) {
-	    if (strlen(uname) + 1 + ilen >= sizeof(uname)) {
-		UNLOCK_GLOBAL_MUTEX
-		return 0;
-	    }
-	    strcat (uname, ".");
-	    strcat (uname, tinst);
-	}
-
+	/* don't bother checking anything else if tix have expired */
 #ifdef AFS_PTHREAD_ENV
 	if (exp	< clock_Sec()) {
 #else
@@ -377,14 +397,75 @@ char *namep; {
 	    UNLOCK_GLOBAL_MUTEX
 	    return 0;	/* expired tix */
 	}
-	if (strcmp(AUTH_SUPERUSER, uname) == 0) flag = 1;
-	else flag = FindUser(adir, uname);	/* true iff in userlist file */
+
+	/* generate lowercased version of cell name */
+	strcpy(tcell_l, tcell);
+	tmp = tcell_l;
+	while ( *tmp ) { *tmp = tolower(*tmp); *tmp++; }
+
+	/* determine local cell name. It's static, so will only get
+	   calculated the first time through */
+	if (!lcell[0])
+	    afsconf_GetLocalCell(adir, lcell, sizeof(lcell));
+
+	/* if running a krb environment, also get the local realm */
+	/* note - this assumes AFS_REALM_SZ <= MAXCELLCHARS */
+	/* just set it to lcell if it fails */
+	if (!lrealm[0]) {
+	    if (afs_krb_get_lrealm(lrealm, 0) != 0) /* KSUCCESS */
+		strncpy(lrealm, lcell, AFS_REALM_SZ);
+	}
+
+
+	/* start with no uname and no authorization */
+	strcpy(uname, "");
+	flag = 0;
+
+	/* localauth special case */
+	if ( strlen(tinst) == 0 && strlen(tcell) == 0 && 
+		!strcmp(tname, AUTH_SUPERUSER) ) {
+	    strcpy(uname, "<LocalAuth>");
+	    flag = 1;
+
+	/* cell of connection matches local cell or krb4 realm */
+	} else if ( !strcasecmp(tcell, lcell) || !strcasecmp(tcell,lrealm) ) {
+	    if ( (tmp = CompFindUser(adir, tname, ".", tinst, NULL)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#ifdef notyet
+	    } else if ( (tmp = CompFindUser(adir, tname, "/", tinst, NULL)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#endif
+	    }
+
+	/* cell of conn doesn't match local cell or realm */
+	} else {
+	    if ( (tmp = CompFindUser(adir, tname, ".", tinst, tcell)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#ifdef notyet
+	    } else if ( (tmp = CompFindUser(adir, tname, "/", tinst, tcell)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#endif
+	    } else if ( (tmp = CompFindUser(adir, tname, ".", tinst, tcell_l)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#ifdef notyet
+	    } else if ( (tmp = CompFindUser(adir, tname, "/", tinst, tcell_l)) ) {
+		strcpy(uname, tmp);
+		flag = 1;
+#endif
+	    }
+	}
+
 	if (namep)
 	    strcpy(namep, uname);
 	UNLOCK_GLOBAL_MUTEX
 	return flag;
     }
-    else {
+    else { /* some other auth type */
 	UNLOCK_GLOBAL_MUTEX
 	return	0;	    /* mysterious, just say no */
     }
