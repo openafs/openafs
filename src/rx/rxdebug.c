@@ -463,6 +463,9 @@ struct cmd_syndesc *as;
 		break;
 	    }
 
+	    if ((onlyHost != -1) && (onlyHost != tpeer.host)) continue;
+	    if ((onlyPort != -1) && (onlyPort != tpeer.port)) continue;
+
 	    /* now display the peer */
 	    hostAddr.s_addr = tpeer.host;
 	    printf("Peer at host %s, port %hu\n",
@@ -475,6 +478,10 @@ struct cmd_syndesc *as;
 		   tpeer.bytesSent.high, tpeer.bytesSent.low);
 	    printf("\tbytes received high %d low %d\n",
 		   tpeer.bytesReceived.high, tpeer.bytesReceived.low);
+	    printf("\trtt %d msec, rtt_dev %d msec\n",
+		   tpeer.rtt >> 3, tpeer.rtt_dev >> 2);
+	    printf("\ttimeout %d.%03d sec\n",
+		   tpeer.timeout.sec, tpeer.timeout.usec / 1000);
 	}
     }
     exit(0);
