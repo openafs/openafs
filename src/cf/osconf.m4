@@ -122,7 +122,8 @@ case $AFS_SYSNAME in
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
 		XCFLAGS="${XCFLAGS0} +DA1.0"
 		XLIBELFA="-lelf"
-		XLIBS="${LIB_AFSDB} -lnsl"
+		#XLIBS="${LIB_AFSDB} -lnsl"
+		XLIBS="${LIB_AFSDB}"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
