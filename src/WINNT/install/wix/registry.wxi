@@ -123,13 +123,15 @@
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="UseDNS" Type="integer" Value="[USEDNS]" Id="reg_Full_Client10" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SecurityLevel" Type="integer" Value="[SECURITYLEVEL]" Id="reg_Full_Client12" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="SMBAuthType" Type="integer" Value="[SMBAUTHTYPE]" Id="reg_Full_Client13" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Mappings" Type="string" Value="USR:Software\OpenAFS\Client\mappings" Id="reg_Full_Client14" />
+        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" Name="AFS Submounts" Type="string" Value="SYS:OpenAFS\Client\Submounts" Id="reg_Full_Client15" />
     </Component>
     <Component Id="rcm_ClientCachePath" Guid="4080E08D-6649-4A06-B286-F5E737DF4D8A" Transitive="yes">
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CachePath" Type="expandable" Value="[AFSCACHEPATH]" Id="reg_Full_Client14" KeyPath="yes" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CachePath" Type="expandable" Value="[AFSCACHEPATH]" Id="reg_Full_Client16" KeyPath="yes" />
         <Condition>AFSCACHEPATH &lt;&gt; ""</Condition>
     </Component>
     <Component Id="rcm_ClientCacheSize" Guid="F3A12290-920B-42E9-8E49-4958D7C0B6E2" Transitive="yes">
-        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CacheSize" Type="integer" Value="[AFSCACHESIZE]" Id="reg_Full_Client15" KeyPath="yes" />
+        <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" Name="CacheSize" Type="integer" Value="[AFSCACHESIZE]" Id="reg_Full_Client17" KeyPath="yes" />
         <Condition>AFSCACHESIZE &lt;&gt; ""</Condition>
     </Component>
     <Component Id="rcm_Documentation" Guid="97493526-4A5C-4C55-A1D6-EA38841B1B85">
