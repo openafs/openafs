@@ -1822,33 +1822,32 @@ register struct cmd_syndesc *as;
 static CopyVolume(as)
 register struct cmd_syndesc *as;
 {
-    
-    afs_int32 volid, fromserver, toserver, tovolume, frompart, topart,code, err;
-    char fromPartName[10], toPartName[10];
+    afs_int32 volid, fromserver, toserver, frompart, topart,code, err;
+    char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
-	struct diskPartition partition;		/* for space check */
-	volintInfo *p;
+    struct diskPartition partition; /* for space check */
+    volintInfo *p;
 
-	volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
-	if (volid == 0) {
+    volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
+    if (volid == 0) {
 	if (err) PrintError("", err);
 	else  fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
-		    as->parms[0].items->data);
-	    return ENOENT;
-	}
-	fromserver = GetServer(as->parms[1].items->data);
-	if (fromserver == 0) {
-	    fprintf(STDERR,"vos: server '%s' not found in host table\n", as->parms[1].items->data);
-	    return ENOENT;
-	}
+		      as->parms[0].items->data);
+	return ENOENT;
+    }
+    fromserver = GetServer(as->parms[1].items->data);
+    if (fromserver == 0) {
+	fprintf(STDERR,"vos: server '%s' not found in host table\n", as->parms[1].items->data);
+	return ENOENT;
+    }
 
-	toserver = GetServer(as->parms[4].items->data);
-	if (toserver == 0) {
-	    fprintf(STDERR,"vos: server '%s' not found in host table\n", as->parms[3].items->data);
-	    return ENOENT;
-	}
+    toserver = GetServer(as->parms[4].items->data);
+    if (toserver == 0) {
+	fprintf(STDERR,"vos: server '%s' not found in host table\n", as->parms[3].items->data);
+	return ENOENT;
+    }
 
-	tovolume = as->parms[3].items->data;
+    tovolume = as->parms[3].items->data;
     if(!ISNAMEVALID(tovolume)) {
 	fprintf(STDERR,"vos: the name of the root volume %s exceeds the size limit of %d\n",
 		tovolume,VOLSER_OLDMAXVOLNAME - 10);
@@ -1869,79 +1868,79 @@ register struct cmd_syndesc *as;
 	return EEXIST;
     }
 
-	frompart = volutil_GetPartitionID(as->parms[2].items->data);
-	if (frompart < 0) {
-	    fprintf(STDERR,"vos: could not interpret partition name '%s'\n", as->parms[2].items->data);
-	    return EINVAL;
-	}
-	if (!IsPartValid(frompart,fromserver,&code)){/*check for validity of the partition */
-	    if(code) PrintError("",code);
-	    else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[2].items->data);
-	    return ENOENT;
-	}
+    frompart = volutil_GetPartitionID(as->parms[2].items->data);
+    if (frompart < 0) {
+	fprintf(STDERR,"vos: could not interpret partition name '%s'\n", as->parms[2].items->data);
+	return EINVAL;
+    }
+    if (!IsPartValid(frompart,fromserver,&code)){ /*check for validity of the partition */
+	if(code) PrintError("",code);
+	else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[2].items->data);
+	return ENOENT;
+    }
 
-	topart = volutil_GetPartitionID(as->parms[5].items->data);
-	if (topart < 0) {
-	    fprintf(STDERR,"vos: could not interpret partition name '%s'\n",as->parms[4].items->data);
-	    return EINVAL;
-	}
-	if (!IsPartValid(topart,toserver,&code)){/*check for validity of the partition */
-	    if(code) PrintError("",code);
-	    else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[4].items->data);
-	    return ENOENT;
-	}
+    topart = volutil_GetPartitionID(as->parms[5].items->data);
+    if (topart < 0) {
+	fprintf(STDERR,"vos: could not interpret partition name '%s'\n",as->parms[4].items->data);
+	return EINVAL;
+    }
+    if (!IsPartValid(topart,toserver,&code)){ /*check for validity of the partition */
+	if(code) PrintError("",code);
+	else fprintf(STDERR,"vos : partition %s does not exist on the server\n",as->parms[4].items->data);
+	return ENOENT;
+    }
 
-	/*
-		check source partition for space to clone volume
-	*/
+    /*
+     * check source partition for space to clone volume
+     */
 
-	MapPartIdIntoName(topart,toPartName);
-	MapPartIdIntoName(frompart, fromPartName);
+    MapPartIdIntoName(topart,toPartName);
+    MapPartIdIntoName(frompart, fromPartName);
 
-	/*
-		check target partition for space to move volume
-	*/
+    /*
+     * check target partition for space to move volume
+     */
 
-	code=UV_PartitionInfo(toserver,toPartName,&partition);
-	if(code)
-	{
-		fprintf(STDERR,"vos: cannot access partition %s\n",toPartName);
-		exit(1);
-	}
-	if(TESTM)
-		fprintf(STDOUT,"target partition %s free space %d\n",
-			toPartName,partition.free);
+    code=UV_PartitionInfo(toserver,toPartName,&partition);
+    if(code)
+    {
+	fprintf(STDERR,"vos: cannot access partition %s\n",toPartName);
+	exit(1);
+    }
+    if(TESTM)
+	fprintf(STDOUT,"target partition %s free space %d\n",
+		toPartName,partition.free);
 
-	p=(volintInfo *)0;
-	code=UV_ListOneVolume(fromserver,frompart,volid,&p);
-	if(code)
-	{
-		fprintf(STDERR,"vos:cannot access volume %u\n",volid);
-		free(p);
-		exit(1);
-	}
-
-	if(partition.free<=p->size)
-	{
-		fprintf(STDERR,"vos: no space on target partition %s to copy volume %u\n",
-			toPartName,volid);
-		free(p);
-		exit(1);
-	}
+    p=(volintInfo *)0;
+    code=UV_ListOneVolume(fromserver,frompart,volid,&p);
+    if(code)
+    {
+	fprintf(STDERR,"vos:cannot access volume %u\n",volid);
 	free(p);
+	exit(1);
+    }
 
-	/* successful copy still not guaranteed but shoot for it */
+    if(partition.free<=p->size)
+    {
+	fprintf(STDERR,"vos: no space on target partition %s to copy volume %u\n",
+		toPartName,volid);
+	free(p);
+	exit(1);
+    }
+    free(p);
 
-	code = UV_CopyVolume(volid, fromserver, frompart, tovolume, toserver, topart);
-	if (code) {
-	    PrintDiagnostics("copy", code);
-	    return code;
-	}
-	MapPartIdIntoName(topart,toPartName);
-	MapPartIdIntoName(frompart, fromPartName);
-	fprintf(STDOUT,"Volume %u copied from %s %s to %s on %s %s \n",volid,
-		as->parms[1].items->data,fromPartName,
-		tovolume, as->parms[4].items->data,toPartName);
+    /* successful copy still not guaranteed but shoot for it */
+
+    code = UV_CopyVolume(volid, fromserver, frompart, tovolume, toserver, topart);
+    if (code) {
+	PrintDiagnostics("copy", code);
+	return code;
+    }
+    MapPartIdIntoName(topart,toPartName);
+    MapPartIdIntoName(frompart, fromPartName);
+    fprintf(STDOUT,"Volume %u copied from %s %s to %s on %s %s \n",volid,
+	    as->parms[1].items->data,fromPartName,
+	    tovolume, as->parms[4].items->data,toPartName);
 
     return 0;
 }
