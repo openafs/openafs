@@ -492,7 +492,7 @@ struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
 };
-asmlinkage int
+int
 afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
