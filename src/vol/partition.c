@@ -234,6 +234,9 @@ int VCheckPartition(part, devname)
      char *devname;
 {
     struct stat status;
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+    char AFSIDatPath[MAXPATHLEN];
+#endif
 
     /* Only keep track of "/vicepx" partitions since it can get hairy
      * when NFS mounts are involved.. */
@@ -255,6 +258,33 @@ int VCheckPartition(part, devname)
 	    return -1;
 	}
     }
+#endif
+
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+    strcpy(AFSIDatPath, part);
+    strcat(AFSIDatPath, "/AFSIDat");
+#ifdef AFS_NAMEI_ENV
+    if (stat(AFSIDatPath, &status) < 0) {
+	DIR *dirp;
+	struct dirent *dp;
+
+	dirp = opendir(part);
+	assert(dirp);
+	while (dp = readdir(dirp)) {
+	    if (dp->d_name[0] == 'V') {
+		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
+		closedir(dirp);
+	        return -1;
+	    }
+	}
+	closedir(dirp);
+    }
+#else /* AFS_NAMEI_ENV */
+    if (stat(AFSIDatPath, &status) == 0) {
+	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
+	return -1;
+    }
+#endif /* AFS_NAMEI_ENV */f
 #endif
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
