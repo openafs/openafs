@@ -30,7 +30,7 @@ Format of the prototype files should look like:
 
 	Standard Copyright Notice
 
-	#ifdef AFS_SRC_DDD_PROTO_H
+	#ifndef AFS_SRC_DDD_PROTO_H
 	#define AFS_SRC_DDD_PROTO_H
 	
 	/* filename.c */
