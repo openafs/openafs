@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <stdio.h>
+#include <stdlib.h>	/* for malloc() */
+#include <string.h>
+
 #ifdef __linux__
 #define _CFS_HEADER_
 #define _AFFS_FS_I
@@ -45,10 +49,6 @@ struct ntfs_inode_info{};
 #define KDUMP_KERNEL
 
 #include <afs/param.h>
-
-#include <stdio.h>
-#include <stdlib.h>	/* for malloc() */
-#include <string.h>
 
 /*
  * Need to include <netdb.h> before _KERNEL is defined since on IRIX 6.5

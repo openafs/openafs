@@ -58,9 +58,18 @@ for VERS in $LINUX_VERS ; do
 	    echo "       No UTS_RELEASE string found in $header."
 	    continue
 	elif [ "$VERS" != "$vers" ] ; then
-	    echo "ERROR: Cannot build $VERS. Wrong version '('$vers')' in $header."
+# Redhat kernel source has the problem that they create one version.h for
+# all their builds; So, we have to be creative here.
+#	    echo "ERROR: Cannot build $VERS. Wrong version '('$vers')' in $header."
+#	    errors=true
+#	    continue
 	    errors=true
-	    continue
+	    for subvers in $vers ; do
+		if [ "x$subvers" = "x$VERS" ] ; then
+		    errors=false
+		    continue
+		fi
+	    done
 	fi
 	CAN_BUILD="$CAN_BUILD $VERS"
         found_one="true"
