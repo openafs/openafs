@@ -242,7 +242,7 @@ afscdefs = $(afscdefs) /G7 /GT /GS
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-afscflags = $(afscflags) /Ox
+afscflags = $(afscflags) /Ox /Zi
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
@@ -350,7 +350,7 @@ mfclibsdll = $(mfclibsdll:msvcrt.lib=)
 # Link with binmode.obj; files will be opened in binary mode by default.
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-ldebug=
+ldebug=/DEBUG /PDB:$*.pdb 
 EXEPREP = rebase -b 0x00400000 -x $(@D) -q $@
 DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -x $(@D) -q $@
 
