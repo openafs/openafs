@@ -3414,7 +3414,7 @@ FunctionEnd
 Function afs.InstallMSLoopback
    GetTempFileName $R0
    File /oname=$R0 "${AFS_WININSTALL_DIR}\afsloopback.dll"
-   nsExec::Exec "rundll32.exe $R0 doLoopBackEntry AFS  10.254.253.1 255.255.255.0"
+   nsExec::Exec "rundll32.exe $R0 doLoopBackEntry AFS 10.254.254.253 255.255.255.252"
    Delete $R0
 FunctionEnd
 
