@@ -640,7 +640,7 @@ struct host *h_Alloc_r(r_con)
 /* Lookup a host given an IP address and UDP port number. */
 struct host *h_Lookup(hostaddr, hport, heldp)
     afs_uint32 hostaddr, hport;     /* network byte order */
-    int heldp;
+    int *heldp;
 {
     struct host *retVal;
     H_LOCK
