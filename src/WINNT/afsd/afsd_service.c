@@ -381,7 +381,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
             ServiceStatus.dwWin32ExitCode = NO_ERROR;
             ServiceStatus.dwCheckPoint = 0;
             ServiceStatus.dwWaitHint = 0;
-            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+            ServiceStatus.dwControlsAccepted = 0;
             SetServiceStatus(StatusHandle, &ServiceStatus);
                        
             /* exit if initialization failed */
@@ -395,8 +395,9 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
             ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
             ServiceStatus.dwWin32ExitCode = NO_ERROR;
             ServiceStatus.dwCheckPoint = 2;
-            ServiceStatus.dwWaitHint = 15000;
-            ServiceStatus.dwControlsAccepted = 0;
+            ServiceStatus.dwWaitHint = 20000;
+            /* accept Power Events */
+            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_POWEREVENT;
             SetServiceStatus(StatusHandle, &ServiceStatus);
         }
     }
@@ -450,7 +451,14 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     CheckMountDrive();
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
-	
+
+    ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+	ServiceStatus.dwWin32ExitCode = NO_ERROR;
+	ServiceStatus.dwCheckPoint = 0;
+	ServiceStatus.dwWaitHint = 5000;
+	ServiceStatus.dwControlsAccepted = 0;
+	SetServiceStatus(StatusHandle, &ServiceStatus);
+
     {   
     HANDLE h; char *ptbuf[1];
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
@@ -460,21 +468,21 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     DeregisterEventSource(h);
     }
 
-	ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
-	ServiceStatus.dwCheckPoint = 0;
-	ServiceStatus.dwWaitHint = 0;
-	ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
- 
-    /* also now accept Power events - shutdown maybe? */
-  	ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
-
 #ifdef	REGISTER_POWER_NOTIFICATIONS
 	/* terminate thread used to flush cache */
 	PowerNotificationThreadExit();
 #endif
 
+    /* Remove the ExceptionFilter */
+    SetUnhandledExceptionFilter(NULL);
+
+	ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
+	ServiceStatus.dwCheckPoint = 0;
+	ServiceStatus.dwWaitHint = 0;
+	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
+    return;
 }
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
