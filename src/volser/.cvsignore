@@ -9,3 +9,4 @@ volint.xdr.c
 volser.h
 volserver
 vos
+voldump
