@@ -45,7 +45,7 @@ DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 CCFLAGS = -O2 -fomit-frame-pointer -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <s390_linux22 s390_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+CCFLAGS =   -O -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char 
 DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <sparc_linux22 sparc_linux24>
@@ -115,6 +115,8 @@ ${COMPDIRS}:
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-alpha asm ; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
+<s390_linux22 s390_linux24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-s390 asm ; \
 <ppc_linux22 ppc_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-ppc asm ; \
 <sparc_linux22 sparc_linux24>
