@@ -21,7 +21,7 @@
 #include <rx/rx_null.h>
 
 /*#include <krb.h>*/
-#include <com_err.h>
+#include <afs/com_err.h>
 
 struct VenusFid {
     afs_int32 Cell;

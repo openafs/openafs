@@ -164,8 +164,8 @@ TEST_SRCS     = write-ro-file.c read-vs-mmap.c read-vs-mmap2.c		   \
 
 EXTRA_OBJS = err.o errx.o warn.o warnx.o
 
-OS.pm: OS-$(MKAFS_OSTYPE).pm
-	$(CP) OS-$(MKAFS_OSTYPE).pm OS.pm
+OpenAFS/OS.pm: OpenAFS/OS-$(MKAFS_OSTYPE).pm
+	$(CP) OpenAFS/OS-$(MKAFS_OSTYPE).pm OpenAFS/OS.pm
 
 write-rand: write-rand.o $(EXTRA_OBJS)
 	$(CC) $(LDFLAGS) -o $@ write-rand.o $(EXTRA_OBJS) $(LIBS)
@@ -359,8 +359,7 @@ install:
 
 uninstall:
 
-all: run-tests $(TEST_PROGRAMS) OS.pm ${TOP_LIBDIR}/libxfiles.a \
-	${TOP_LIBDIR}/libdumpscan.a \
+all: run-tests OpenAFS/OS.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
 	afsdump_scan afsdump_dirlist afsdump_extract dumptool
 
 clean:
