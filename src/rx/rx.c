@@ -2275,6 +2275,7 @@ struct rx_connection *rxi_FindConnection(osi_socket socket,
 	conn->nSpecific = 0;
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
+	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
 	/* Notify security object of the new connection */
 	RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
@@ -5108,7 +5109,6 @@ int rxi_CheckCall(register struct rx_call *call)
 #endif /* RX_ENABLE_LOCKS */
 {
     register struct rx_connection *conn = call->conn;
-    register struct rx_service *tservice;
     afs_uint32 now;
     afs_uint32 deadTime;
 
@@ -5155,10 +5155,8 @@ int rxi_CheckCall(register struct rx_call *call)
          * attached process can die reasonably gracefully. */
     }
     /* see if we have a non-activity timeout */
-    tservice = conn->service;
-    if ((conn->type == RX_SERVER_CONNECTION) && call->startWait
-	&& tservice->idleDeadTime
-	&& ((call->startWait + tservice->idleDeadTime) < now)) {
+    if (call->startWait && conn->idleDeadTime
+	&& ((call->startWait + conn->idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
 	    return -1;

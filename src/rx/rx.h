@@ -162,8 +162,9 @@ int ntoh_syserr_conv(int error);
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
 
-/* Set connection hard timeout for a connection */
+/* Set connection hard and idle timeouts for a connection */
 #define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
+#define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -257,6 +258,7 @@ struct rx_connection {
     int	lastSendTime;		    /* Last send time for this connection */
     u_short secondsUntilDead;	    /* Maximum silence from peer before RX_CALL_DEAD */
     u_short hardDeadTime;	    /* hard max for call execution */
+    u_short idleDeadTime;	    /* max time a call can be idle (no data) */
     u_char ackRate;                 /* how many packets between ack requests */
     u_char makeCallWaiters;         /* how many rx_NewCalls are waiting */
     int nSpecific;		    /* number entries in specific data */
