@@ -1745,12 +1745,14 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 {
 	unsigned char tcp1, tcp2;	/* Pattern characters */
         unsigned char tcn1;		/* Name characters */
-	int sawDot = 0, sawStar = 0;
+	int sawDot = 0, sawStar = 0, req8dot3 = 0;
 	char *starNamep, *starMaskp;
 	static char nullCharp[] = {0};
 
 	/* make sure we only match 8.3 names, if requested */
-	if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) return 0;
+    req8dot3 = (flags & CM_FLAG_8DOT3);
+	if (req8dot3 && !cm_Is8Dot3(namep)) 
+        return 0;
 
 	/* loop */
 	while (1) {
@@ -1807,8 +1809,8 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 			tcp2 = *maskp++;
 			if (tcp2 == 0)
 				return 1;
-			else if (tcp2 == '.' || tcp2 == '"') {
-				while (tcn1 != '.' && tcn1 != 0)
+			else if ((req8dot3 && tcp2 == '.') || tcp2 == '"') {
+				while (req8dot3 && tcn1 != '.' && tcn1 != 0)
 					tcn1 = *++namep;
 				if (tcn1 == 0) {
 					if (sawDot)
@@ -1834,12 +1836,12 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 					tcp2 = *maskp++;
 
 				/* skip over characters that don't match tcp2 */
-				while (tcn1 != '.' && tcn1 != 0
+				while (req8dot3 && tcn1 != '.' && tcn1 != 0
 					&& cm_foldUpper[tcn1] != cm_foldUpper[tcp2])
 					tcn1 = *++namep;
 
 				/* No match */
-				if (tcn1 == '.' || tcn1 == 0)
+				if ((req8dot3 && tcn1 == '.') || tcn1 == 0)
 					return 0;
 
 				/* Remember where we are */
