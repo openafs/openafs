@@ -1,0 +1,126 @@
+* Copyright 2000, International Business Machines Corporation and others.
+* All Rights Reserved.
+* 
+* This software has been released under the terms of the IBM Public
+* License.  For details, see the LICENSE file in the top-level source
+* directory or online at http://www.openafs.org/dl/license10.html
+
+*
+* $Revision$
+*
+* The following devices are those that can be specified in the system
+* description file.  The name specified must agree with the name shown,
+* or with an alias.
+*
+* name          handle          type    mask    block   char
+*
+$DEVICE
+afs             afsc            10      100       -1      -1
+** Reserved for Third Party and User Drivers.
+*               ---             -       -       -1      38
+*               ---             -       -       -1      39
+*               ---             -       -       -1      40
+*               ---             -       -       -1      41
+*               ---             -       -       -1      42
+*               ---             -       -       -1      43
+*               ---             -       -       8       -1
+*               ---             -       -       15      -1
+*               ---             -       -       16      -1
+*               ---             -       -       17      -1
+*               ---             -       -       18      -1
+$$$
+
+$CDIO
+*
+* The following entries form the cdio table.
+* field 1: cdio name
+* field 2: required, optional
+*
+$$$
+
+$DRIVER_INSTALL
+***************************************************************************
+* Driver install table
+*
+* This table contains the name of drivers which have converged I/O header
+* structures and install entry points.  Drivers in this table should not
+* be defined in the driver table above.
+***************************************************************************
+* Driver     Block major     Char major
+$$$
+
+$ALIAS
+*
+* The following entries form the alias table.
+* field 1: product #    field 2: driver name
+*
+$$$
+
+$TUNABLE
+*
+* The following entries form the tunable parameter table.  Any of these
+* values can be overwritten in the dfile.  However, before changing any
+* value, know the ramifications of your change.
+*
+$$$
+
+$DRIVER_DEPENDENCY
+*
+* Driver dependency table, if one driver is present, what
+* other drivers should also be in the dfile.
+* NOTE: A maximum of 6 dependency entries my follow the driver name.
+* NOTE: This mechanism does not support chaining.  In other words, if
+*       a driver is included as a dependency, that driver will not be
+*       checked for its dependencies.
+*
+* Driver name   <dependency>  <dependency> .....
+*
+$$$
+
+$DRIVER_LIBRARY
+*
+* The driver/library table.  This table defines which libraries a given
+* driver depends on.  If the driver is included in the dfile, then the
+* libraries that driver depends on will be included on the ld(1) command
+* line.  Only optional libraries *need* to be specified in this table,
+* (but required ones can be included, as well).
+*
+* Driver handle    <libraries>
+*
+* subsystems first 
+afs             libafs64.nonfs.a
+$$$
+
+$LIBRARY
+*
+* The library table.  Each element in the library table describes
+* one unique library.  The flag member is a boolean value, it is
+* initialized to 1 if the library should *always* be included on
+* the ld(1) command line, or 0 if the library is optional (i.e. it
+* is only included when one or more drivers require it).  The order
+* of the library table determines the order of the libraries on the
+* ld(1) command line, (i.e. defines an implicit load order).  New
+* libraries must be added to this table.
+* Note: libhp-ux.a must be the last entry, do not place anything after it.
+*
+* Library   <required>
+*
+libafs64.nonfs.a        0
+$$$
+
+$SUBSYSTEMS_DEFINE
+* Subsystem #define table.  For any subsystem that is found in the dfile
+* and appears below, a #define is generated in the conf.c file.  This
+* is used to include any space defined in space.h.
+afs
+$$$
+
+$DRIVER_PRODUCT
+* 
+* Driver product table.  The following generates a table of supported products
+* for a given interface card.  The input is a driver handle followed by a list
+* of product/vendor id's. What is produced is a table of these product/vendor
+* id's to be used by the interface driver for further qualification during
+* booting and the setting of root device location.
+*
+$$$

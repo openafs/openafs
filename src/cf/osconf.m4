@@ -150,6 +150,37 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="ld -b"
 		;;
 
+	hp_ux1122)
+		AR="/usr/bin/ar"
+		AS="/usr/ccs/bin/as"
+		CC="/opt/ansic/bin/cc"
+		DBM="/lib/hpux32/libndbm.so"
+		LD="/bin/ld   "
+		LEX="/opt/langtools/bin/lex"
+		LWP_OPTMZ="-O"
+		MT_CC="$CC"
+		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		MV="/bin/mv"
+		OPTMZ="-O"
+		PAM_CFLAGS="-b +z -Wl,+k"
+		PAM_LIBS="/usr/lib/hpux32/libpam.so"
+		RANLIB="/usr/bin/ranlib"
+		RM="/bin/rm"
+		SHLIB_LDFLAGS="-b -Bsymbolic"
+		SHLIB_SUFFIX="sl"
+		TXLIBS="/usr/lib/hpux32/libcurses.so"
+		VFSCK_CFLAGS="-I/usr/old/usr/include -D_FILE64"
+		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive_shared -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
+		XCFLAGS64="${XCFLAGS0} +DD64"
+		XCFLAGS="${XCFLAGS0}"
+		XLIBELFA="-lelf"
+		#XLIBS="${LIB_AFSDB} -lnsl"
+		XLIBS="${LIB_AFSDB}"
+		YACC="/opt/langtools/bin/yacc"
+		SHLIB_LINKER="ld -b"
+		;;
+
 	i386_fbsd_4*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'

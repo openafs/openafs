@@ -293,10 +293,19 @@ extern
  * cases, and also between machines apparently running the same OS
  * version.
  */
+/*
+ * On ia64 where the ucontext is used, it can be an extra 48K
+ * Need to account for this.  There might be two of these on the
+ * stack too. This needs to be checked.
+ */
+#if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
+#define AFS_LWP_MINSTACKSIZE  (288 * 1024)
+#else
 #if defined(AFS_LINUX22_ENV)
 #define AFS_LWP_MINSTACKSIZE	(192 * 1024)
 #else
 #define AFS_LWP_MINSTACKSIZE	(48 * 1024)
+#endif
 #endif
 
 /* Action to take on stack overflow. */

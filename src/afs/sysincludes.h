@@ -230,6 +230,9 @@ typedef unsigned short                  etap_event_t;
 struct vfspage;			/* for vnode.h compiler warnings */
 #    include "h/swap.h"	/* for struct swpdbd, for vnode.h compiler warnings */
 #    include "h/dbd.h"	/* for union idbd, for vnode.h compiler warnings */
+#ifdef AFS_HPUX1122_ENV
+#    include "h/resource.h"
+#endif
 #  endif /* AFS_HPUX_ENV */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV)
 #  include <sys/uio.h>
@@ -281,7 +284,9 @@ MALLOC_DECLARE(M_AFS);
 #ifdef	AFS_SUN5_ENV
 #  include "h/time.h"
 #else
+#if !defined(AFS_HPUX_ENV)
 #  include "h/mbuf.h"
+#endif
 #endif /* AFS_SUN5_ENV */
 
 #include "rpc/types.h"

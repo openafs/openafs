@@ -78,6 +78,9 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
                         ${INSTALL} -f ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		alpha_osf* ) \
 			${INSTALL} -f ${srcdir}/afs.rc.alpha ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
+		hp_ux1122 ) \
+			${INSTALL} -f ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
+			${INSTALL} -f ${srcdir}/afs.hpux1122.driver ${DEST}/root.client/usr/vice/etc/afs.driver ;;\
 		hp_ux10? | hp_ux11? ) \
 			${INSTALL} -f ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
 			${INSTALL} -f ${srcdir}/afs.hpux102.driver ${DEST}/root.client/usr/vice/etc/afs.driver ;;\

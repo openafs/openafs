@@ -161,7 +161,11 @@ void afs_warn(char *a, long b, long c, long d, long e, long f,
 #else
 void afs_warn(a,b,c,d,e,f,g,h,i,j)
 char *a;
+#if defined( AFS_USE_VOID_PTR)
+void *b, *c, *d, *e, *f, *g, *h, *i, *j;
+#else
 long b,c,d,e,f,g,h,i,j;
+#endif
 #endif
 {
     AFS_STATCNT(afs_warn);

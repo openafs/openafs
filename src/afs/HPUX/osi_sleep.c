@@ -16,8 +16,10 @@ RCSID("$Header$");
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* afs statistics */
 
-
-
+#if defined(AFS_HPUX1122_ENV)
+void afs_osi_Wakeup(char *event);
+void afs_osi_Sleep(char *event);
+#endif
 
 static char waitV;
 
@@ -118,3 +120,88 @@ int afs_osi_Wakeup(void *event)
     wakeup((caddr_t) event);
     return 0;
 }
+
+#if defined(AFS_HPUX1122_ENV)
+
+/* on HP 11.22 we are using beta semiphore for AFS_GLOCK */
+
+typedef struct afs_event {
+    struct afs_event *next;     /* next in hash chain */
+    char *event;                /* lwp event: an address */
+    int refcount;               /* Is it in use? */
+    int seq;                    /* Sequence number: this is incremented
+                                   by wakeup calls; wait will not return until
+                                   it changes */
+} afs_event_t;
+
+#define HASHSIZE 128
+afs_event_t *afs_evhasht[HASHSIZE];/* Hash table for events */
+#define afs_evhash(event)       (afs_uint32) ((((long)event)>>2) & (HASHSIZE-1));
+int afs_evhashcnt = 0;
+
+/* Get and initialize event structure corresponding to lwp event (i.e. address)
+ * */
+static afs_event_t *afs_getevent(char *event)
+{
+    afs_event_t *evp, *newp = 0;
+    int hashcode;
+
+    AFS_ASSERT_GLOCK();
+    hashcode = afs_evhash(event);
+    evp = afs_evhasht[hashcode];
+    while (evp) {
+        if (evp->event == event) {
+            evp->refcount++;
+            return evp;
+        }
+        if (evp->refcount == 0)
+            newp = evp;
+        evp = evp->next;
+    }
+    if (!newp) {
+        newp = (afs_event_t *) osi_AllocSmallSpace(sizeof (afs_event_t));
+        afs_evhashcnt++;
+        newp->next = afs_evhasht[hashcode];
+        afs_evhasht[hashcode] = newp;
+        newp->seq = 0;
+    }
+    newp->event = event;
+    newp->refcount = 1;
+    return newp;
+}
+
+
+/* Release the specified event */
+#define relevent(evp) ((evp)->refcount--)
+
+void afs_osi_Sleep(char *event)
+{
+    struct afs_event *evp;
+    int seq;
+
+    evp = afs_getevent(event);
+    seq = evp->seq;
+    while (seq == evp->seq) {
+        AFS_ASSERT_GLOCK();
+	get_sleep_lock(event);
+        AFS_GUNLOCK();
+        sleep(event, PZERO-2);
+        AFS_GLOCK();
+    }
+    relevent(evp);
+}
+
+void afs_osi_Wakeup(char *event)
+{
+    struct afs_event *evp;
+    lock_t * sleep_lock;
+
+    evp = afs_getevent(event);
+    sleep_lock = get_sleep_lock(event);
+    if (evp->refcount > 1) {
+        evp->seq++;
+        wakeup(event);
+    }
+    spinunlock(sleep_lock);
+}
+#endif

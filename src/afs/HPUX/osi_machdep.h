@@ -51,10 +51,15 @@ extern struct timeval time;
  * HP uses global mutex to protect afs land
  */
 
+#if !defined(AFS_HPUX1122_ENV)
 extern sema_t afs_global_sema;
+#else
+extern b_sema_t afs_global_sema;
+#endif
 
 extern void osi_InitGlock(void);
 
+#if !defined(AFS_HPUX1122_ENV)
 extern void       afsHash(int nbuckets);
 extern sv_sema_t *afsHashInsertFind(tid_t key);
 extern sv_sema_t *afsHashFind(tid_t key);
@@ -63,11 +68,19 @@ extern void       afsHashRelease(tid_t key);
 #define AFS_GLOCK_PID   kt_tid(u.u_kthreadp)
 #define AFS_SAVE_SEMA   afsHashInsertFind(AFS_GLOCK_PID)
 #define AFS_FIND_SEMA   afsHashFind(AFS_GLOCK_PID)
+
 #define AFS_GLOCK()     MP_PXSEMA(&afs_global_sema, AFS_SAVE_SEMA)
 #define AFS_GUNLOCK()   (AFS_ASSERT_GLOCK(), MP_VXSEMA(&afs_global_sema,AFS_FIND_SEMA), (!uniprocessor ? (afsHashRelease(AFS_GLOCK_PID),0) : 0))
 #define ISAFS_GLOCK()   (!uniprocessor ? owns_sema(&afs_global_sema):1)
 
-#define AFS_RXGLOCK() 
+#else
+#define AFS_GLOCK()  b_psema(&afs_global_sema) 
+#define AFS_GUNLOCK() b_vsema(&afs_global_sema)
+#define ISAFS_GLOCK() b_owns_sema(&afs_global_sema)
+
+#endif
+
+#define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
 #define ISAFS_RXGLOCK() 1
 
@@ -77,19 +90,42 @@ extern void       afsHashRelease(tid_t key);
 #define USERPRI     NET_SPLX(splvar)
 #endif /* KERNEL */
 
+#if !defined(AFS_HPUX1122_ENV)
 /* 
  * On HP, the global lock is an alpha semaphore, hence it is automatically
  * released and reacquired aroubd a sleep() and wakeup().
  */
 
 #define	afs_osi_Sleep(x)	sleep((caddr_t) x,PZERO-2)
+#else
+/*
+ * On 11.22 global lock is a beta semaphore, hence we need to
+ * release and reacquire around sllep and wakeup. We also need to
+ * use the get_sleep_lock.
+ * afs_osi_Sleep and afs_osi_Wakeup are defined
+ */
+void afs_osi_Sleep(char *event);
+void afs_osi_Wakeup(char *event);
+#endif
+
 #define	osi_NullHandle(x)	((x)->proc == (caddr_t) 0)
 
+#if !defined(AFS_HPUX1122_ENV)
 extern caddr_t kmem_alloc();
+#else
+#undef kmem_alloc
+#undef kmem_free
+#define kmem_alloc(a) kmalloc(a, M_IHV, M_WAITOK)
+#define kmem_free(a,b)  kfree(a, M_IHV)
+#endif
 #include <sys/kthread_iface.h>	/* for kt_cred() */
 
 /* Expected to be available as a patch from HP */
 /* See section D of the top level README for details */
+#if defined(AFS_HPUX1122_ENV)
+#include <sys/vfs_vm.h>
+#else
 #include <vfs_vm.h>
+#endif
 
 #endif /* _OSI_MACHDEP_H_ */

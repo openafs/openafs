@@ -112,11 +112,18 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 
 #define MUTEX_TRYENTER(a) b_cpsema(a)
 
+#ifdef AFS_HPUX1122_ENV
+#define MUTEX_ENTER(a) \
+	((b_owns_sema(a)) ? osi_Panic("Already Held") : b_psema(a))
+#define MUTEX_EXIT(a) \
+	((b_owns_sema(a)) ? b_vsema(a) : osi_Panic("mutex not held"))
+#else
 #define MUTEX_ENTER(a) \
     ((b_owns_sema(a)) ? (osi_Panic("Already Held"), 0) : b_psema(a))
 
 #define MUTEX_EXIT(a) \
     ((b_owns_sema(a)) ? b_vsema(a) : (osi_Panic("mutex not held"), 0))
+#endif
 
 #undef MUTEX_ISMINE
 #define MUTEX_ISMINE(a) b_owns_sema(a)

@@ -385,12 +385,17 @@ void afs_osi_SetTime(osi_timeval_t *atv)
 #endif
 #ifdef AFS_HPUX_ENV
     {
+#if !defined(AFS_HPUX1122_ENV)
+ /* drop the setting of the clock for now. spl7 is not
+  * known on hpux11.22
+  */
 	register ulong_t s;
 	struct timeval t;
 	t.tv_sec = atv->tv_sec;
 	t.tv_usec = atv->tv_usec;
 	s = spl7(); time = t; (void) splx(s);
 	resettodr(atv);
+#endif
     }
 #else
     {

@@ -133,6 +133,9 @@ afs_setgroups(
     int *gp;
     struct ucred *newcr;
     ulong_t s;
+#if defined(AFS_HPUX1122_ENV)
+	register ulong_t context;
+#endif
 
     AFS_STATCNT(afs_setgroups);
     
@@ -147,17 +150,24 @@ afs_setgroups(
 	    /* somebody else might have a pointer to this structure.
 	     ** make sure we do not have a race condition */
 	    newcr = *cred;
+#if defined(AFS_HPUX1122_ENV)
+		/* all of the uniprocessor spinlocks are not defined. */
+		/* I assume the UP and MP are now handled together */
+		MP_SPINLOCK_USAV(cred_lock, context);
+#else
 	    s = UP_SPL6();
 	    SPINLOCK(cred_lock);
+#endif
 	}
     
+ 
     /* copy the group info */
     gp = newcr->cr_groups;
     while (ngroups--)
 	*gp++ = *gidset++;
     for ( ; gp < &(newcr)->cr_groups[NGROUPS]; gp++)
 	*gp = ((gid_t) -1);
-    
+ 
     if ( !change_parent)
 	{
 	    /* replace the new cred structure in the proc area */
@@ -168,8 +178,13 @@ afs_setgroups(
 	}
     else
 	{
+#if defined(AFS_HPUX1122_ENV)
+		MP_SPINUNLOCK_USAV(cred_lock, context);
+#else
 	    (void) UP_SPLX(s);
 	    SPINUNLOCK(cred_lock);
+#endif
 	}
+
     return (setuerror(0), 0);
 }

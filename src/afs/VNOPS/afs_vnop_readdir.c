@@ -32,6 +32,11 @@ RCSID("$Header$");
 #include "afs/afs_osidnlc.h"
 
 
+#if	defined(AFS_HPUX1122_ENV)
+#define DIRPAD 7
+#else
+#define DIRPAD 3
+#endif
 /**
  * A few definitions. This is until we have a proper header file
  * which ahs prototypes for all functions
@@ -172,7 +177,7 @@ struct minnfs_direct {
     u_short	d_reclen;
     u_short	d_namlen;
 };
-#define NDIRSIZ_LEN(len)   ((sizeof (struct dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
+#define NDIRSIZ_LEN(len)   ((sizeof (struct dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + DIRPAD) &~ DIRPAD))
 #endif
 #endif /* !defined(UKERNEL) */
 
@@ -198,9 +203,10 @@ int	afs_rd_stash_i = 0;
  *
  *
 */
+
 #if	defined(AFS_HPUX100_ENV)
 #define DIRSIZ_LEN(len) \
-    ((sizeof (struct __dirent) - (_MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
+    ((sizeof (struct __dirent) - (_MAXNAMLEN+1)) + (((len)+1 + DIRPAD) &~ DIRPAD))
 #else
 #if	defined(AFS_SUN56_ENV)
 #define DIRSIZ_LEN(len) ((18 + (len) + 1 + 7) & ~7 )
@@ -406,7 +412,7 @@ afs_size_t		off;
 
     /* pad out the remaining characters with zeros */
     if (code == 0) { 
-	AFS_UIOMOVE(bufofzeros, ((slen + 4) & ~3) - slen, UIO_READ,
+	AFS_UIOMOVE(bufofzeros, ((slen + 1 + DIRPAD) & ~DIRPAD) - slen, UIO_READ,
 		    auio, code);
     }
     AFS_MOVE_LOCK();
@@ -630,7 +636,7 @@ tagain:
 		    AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
 		/* pad out the remaining characters with zeros */
 		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen, UIO_READ, auio, code);
+		    AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen, UIO_READ, auio, code);
 		}
 		/* pad out the difference between rlen and slen... */
 		if (DIRSIZ_LEN(o_slen) < rlen) {
@@ -693,7 +699,7 @@ tagain:
 		    AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
 		/* pad out the remaining characters with zeros */
 		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen, UIO_READ, auio, code);
+		    AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen, UIO_READ, auio, code);
 		}
 		/* pad out the difference between rlen and slen... */
 		if (DIRSIZ_LEN(o_slen) < rlen) {
@@ -744,7 +750,7 @@ tagain:
 		AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
 	    /* pad out the remaining characters with zeros */
 	    if (code == 0) {
-		AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen,
+		AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen,
 			    UIO_READ, auio, code);
 	    }
 	    /* pad out the difference between rlen and slen... */
@@ -901,7 +907,7 @@ tagain:
 		}
 		/* pad out the remaining characters with zeros */
 		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen, UIO_READ, auio, code);
+		    AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen, UIO_READ, auio, code);
 		}
 		/* pad out the difference between rlen and slen... */
 		if (NDIRSIZ_LEN(o_slen) < rlen) {
@@ -950,7 +956,7 @@ tagain:
 		    AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
 		/* pad out the remaining characters with zeros */
 		if (code == 0) {
-		    AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen, UIO_READ, auio, code);
+		    AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen, UIO_READ, auio, code);
 		}
 		/* pad out the difference between rlen and slen... */
 		if (NDIRSIZ_LEN(o_slen) < rlen) {
@@ -996,7 +1002,7 @@ tagain:
 		AFS_UIOMOVE(ode->name, o_slen, UIO_READ, auio, code);
 	    /* pad out the remaining characters with zeros */
 	    if (code == 0) {
-		AFS_UIOMOVE(bufofzeros, ((o_slen + 4) & ~3) - o_slen, UIO_READ, auio, code);
+		AFS_UIOMOVE(bufofzeros, ((o_slen + 1 + DIRPAD) & ~DIRPAD) - o_slen, UIO_READ, auio, code);
 	    }
 	    /* pad out the difference between rlen and slen... */
 	    if (NDIRSIZ_LEN(o_slen) < rlen) {
