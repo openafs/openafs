@@ -53,7 +53,7 @@ void gen(stream)
 	for (j = 0; j < 64; j++) {
 	    fprintf(stream,"\n");
 	    for (k = 0; k < 4; k++) {
-		fprintf(stream,"0x%08X",P_prime[i][j*4+k]);
+		fprintf(stream,"0x%08lX",P_prime[i][j*4+k]);
 		if ((j == 63) && (k == 3))
 		    fprintf(stream, "}");
 		if ((i == 3) && (j == 63) && (k == 3))

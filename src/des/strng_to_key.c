@@ -114,7 +114,7 @@ des_string_to_key(str,key)
 
     if (des_debug)
 	fprintf(stdout,
-		"\nResulting string_to_key = 0x%x 0x%x\n",
+		"\nResulting string_to_key = 0x%lx 0x%lx\n",
 		*((afs_uint32 *) key),
 		*((afs_uint32 *) key+1));
 }

@@ -17,12 +17,10 @@
 #include "conf.h"
 
 #include <stdio.h>
-
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
+#if defined(AFS_SUN5_ENV)
 #include <strings.h>
 #endif
+#include <string.h>
 
 #ifdef	BSDUNIX
 #ifdef	AFS_SUN5_ENV

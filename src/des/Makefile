@@ -400,6 +400,8 @@ key_test.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/key_test.c
 testit.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/testit.c
+crypt.o:
+	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/crypt.c
 des.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/des.c
 cbc_encrypt.o:
