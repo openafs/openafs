@@ -551,7 +551,7 @@ struct SimpleLocks {
 #define vrefCount   v.v_count
 #endif /* AFS_XBSD_ENV */
 
-#ifdef AFS_LINUX24_ENV
+#if defined(AFS_LINUX24_ENV)
 #define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
 #define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)

@@ -24,16 +24,15 @@ RCSID
 #include "h/smp_lock.h"
 #endif
 
-char *crash_addr = 0;		/* Induce an oops by writing here. */
-
 #if defined(AFS_LINUX24_ENV)
 /* Lookup name and return vnode for same. */
 int
-osi_lookupname_internal(char *aname, uio_seg_t seg, int followlink,
-			vnode_t ** dirvpp, struct dentry **dpp,
-			struct nameidata *nd)
+osi_lookupname(char *aname, uio_seg_t seg, int followlink,
+			vnode_t ** dirvpp, struct dentry **dpp)
 {
     int code;
+    extern struct nameidata afs_cacheNd;
+    struct nameidata *nd = &afs_cacheNd;
 
     code = ENOENT;
     if (seg == AFS_UIOUSER) {
@@ -56,21 +55,11 @@ osi_lookupname_internal(char *aname, uio_seg_t seg, int followlink,
     }
     return code;
 }
-#endif
-
+#else
 int
 osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
 	       struct dentry **dpp)
 {
-#if defined(AFS_LINUX24_ENV)
-    struct nameidata nd;
-    int code = osi_lookupname_internal(aname, seg, followlink, dirvpp, dpp,
-				       &nd);
-    if (!code)
-	path_release(&nd);
-
-    return (code);
-#else
     struct dentry *dp = NULL;
     int code;
 
@@ -90,8 +79,8 @@ osi_lookupname(char *aname, uio_seg_t seg, int followlink, vnode_t ** dirvpp,
     }
 
     return code;
-#endif
 }
+#endif
 
 /* Intialize cache device info and fragment size for disk cache partition. */
 int
@@ -103,16 +92,12 @@ osi_InitCacheInfo(char *aname)
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
-    extern struct nameidata afs_cacheNd;
-
-    code =
-	osi_lookupname_internal(aname, AFS_UIOSYS, 1, NULL, &dp,
-				&afs_cacheNd);
+    code = osi_lookupname(aname, AFS_UIOSYS, 1, NULL, &dp);
     if (code)
 	return ENOENT;
 
     cacheInode = dp->d_inode->i_ino;
-    cacheDev.dev = dp->d_inode->i_dev;
+    cacheDev.dev = dp->d_inode->i_sb->s_dev;
     afs_fsfragsize = dp->d_inode->i_sb->s_blocksize - 1;
     afs_cacheSBp = dp->d_inode->i_sb;
 

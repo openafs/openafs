@@ -28,19 +28,6 @@ RCSID
 #include "afs/osi_inode.h"
 #include "afs/afs_stats.h"	/* statistics stuff */
 
-#define BAD_IGET	-1000
-
-/*
- * SGI dependent system calls
- */
-#ifndef INODESPECIAL
-/*
- * `INODESPECIAL' type inodes are ones that describe volumes.
- */
-#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h  */
-#endif
-
-
 int
 afs_syscall_icreate(void)
 {

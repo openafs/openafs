@@ -9,9 +9,7 @@
 
 /*
  * Linux specific vnodeops. Also includes the glue routines required to call
- * AFS vnodeops. The "NOTUSED" #define is used to indicate routines and
- * calling sequences present in an ops table that we don't actually use.
- * They are present solely for documentation purposes.
+ * AFS vnodeops.
  *
  * So far the only truly scary part is that Linux relies on the inode cache
  * to be up to date. Don't you dare break a callback and expect an fstat
@@ -54,13 +52,6 @@ struct address_space_operations afs_symlink_aops;
 extern struct inode_operations afs_dir_iops;
 extern struct inode_operations afs_symlink_iops;
 
-
-#ifdef NOTUSED
-static int
-afs_linux_lseek(struct inode *ip, struct file *fp, off_t, int)
-{
-}
-#endif
 
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
@@ -417,9 +408,6 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     return 0;
 }
 
-#ifdef NOTUSED
-int afs_linux_select(struct inode *ip, struct file *fp, int, select_table *);
-#endif
 
 /* in afs_pioctl.c */
 extern int afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
@@ -643,16 +631,6 @@ afs_linux_fsync(struct file *fp, struct dentry *dp)
 
 }
 
-#ifdef NOTUSED
-/* No support for async i/o */
-int afs_linux_fasync(struct inode *ip, struct file *fp, int);
-
-/* I don't think it will, at least not as can be detected here. */
-int afs_linux_check_media_change(kdev_t dev);
-
-/* Revalidate media and file system. */
-int afs_linux_file_revalidate(kdev_t dev);
-#endif /* NOTUSED */
 
 static int
 afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
@@ -737,74 +715,42 @@ afs_linux_flush(struct file *fp)
     return -code;
 }
 
+#if !defined(AFS_LINUX24_ENV)
 /* Not allowed to directly read a directory. */
 ssize_t
 afs_linux_dir_read(struct file * fp, char *buf, size_t count, loff_t * ppos)
 {
     return -EISDIR;
 }
-
-
-
-#if defined(AFS_LINUX24_ENV)
-struct file_operations afs_dir_fops = {
-  read:generic_read_dir,
-  readdir:afs_linux_readdir,
-  ioctl:afs_xioctl,
-  open:afs_linux_open,
-  release:afs_linux_release,
-};
-#else
-struct file_operations afs_dir_fops = {
-    NULL,			/* afs_linux_lseek */
-    afs_linux_dir_read,
-    NULL,			/* afs_linux_write */
-    afs_linux_readdir,
-    NULL,			/* afs_linux_select */
-    afs_xioctl,			/* close enough to use the ported AFS one */
-    NULL,			/* afs_linux_mmap */
-    afs_linux_open,
-    NULL,			/* afs_linux_flush */
-    afs_linux_release,
-    afs_linux_fsync,
-    NULL,			/* afs_linux_fasync */
-    NULL,			/* afs_linux_check_media_change */
-    NULL,			/* afs_linux_file_revalidate */
-    afs_linux_lock,
-};
 #endif
 
-#if defined(AFS_LINUX24_ENV)
-struct file_operations afs_file_fops = {
-  read:afs_linux_read,
-  write:afs_linux_write,
-  ioctl:afs_xioctl,
-  mmap:afs_linux_mmap,
-  open:afs_linux_open,
-  flush:afs_linux_flush,
-  release:afs_linux_release,
-  fsync:afs_linux_fsync,
-  lock:afs_linux_lock,
-};
+
+
+struct file_operations afs_dir_fops = {
+#if !defined(AFS_LINUX24_ENV)
+  .read =	afs_linux_dir_read,
+  .lock =	afs_linux_lock,
+  .fsync =	afs_linux_fsync,
 #else
-struct file_operations afs_file_fops = {
-    NULL,			/* afs_linux_lseek */
-    afs_linux_read,
-    afs_linux_write,
-    NULL,			/* afs_linux_readdir */
-    NULL,			/* afs_linux_select */
-    afs_xioctl,			/* close enough to use the ported AFS one */
-    afs_linux_mmap,
-    afs_linux_open,
-    afs_linux_flush,
-    afs_linux_release,
-    afs_linux_fsync,
-    NULL,			/* afs_linux_fasync */
-    NULL,			/* afs_linux_check_media_change */
-    NULL,			/* afs_linux_file_revalidate */
-    afs_linux_lock,
-};
+  .read =	generic_read_dir,
 #endif
+  .readdir =	afs_linux_readdir,
+  .ioctl =	afs_xioctl,
+  .open =	afs_linux_open,
+  .release =	afs_linux_release,
+};
+
+struct file_operations afs_file_fops = {
+  .read =	afs_linux_read,
+  .write =	afs_linux_write,
+  .ioctl =	afs_xioctl,
+  .mmap =	afs_linux_mmap,
+  .open =	afs_linux_open,
+  .flush =	afs_linux_flush,
+  .release =	afs_linux_release,
+  .fsync =	afs_linux_fsync,
+  .lock =	afs_linux_lock,
+};
 
 
 /**********************************************************************
@@ -989,24 +935,12 @@ afs_dentry_delete(struct dentry *dp)
     return 0;
 }
 
-#if defined(AFS_LINUX24_ENV)
 struct dentry_operations afs_dentry_operations = {
-  d_revalidate:afs_linux_dentry_revalidate,
-  d_iput:afs_dentry_iput,
-  d_delete:afs_dentry_delete,
+  .d_revalidate =	afs_linux_dentry_revalidate,
+  .d_iput =		afs_dentry_iput,
+  .d_delete =		afs_dentry_delete,
 };
 struct dentry_operations *afs_dops = &afs_dentry_operations;
-#else
-struct dentry_operations afs_dentry_operations = {
-    afs_linux_dentry_revalidate,	/* d_validate(struct dentry *) */
-    NULL,			/* d_hash */
-    NULL,			/* d_compare */
-    afs_dentry_delete,		/* d_delete(struct dentry *) */
-    NULL,			/* d_release(struct dentry *) */
-    afs_dentry_iput		/* d_iput(struct dentry *, struct inode *) */
-};
-struct dentry_operations *afs_dops = &afs_dentry_operations;
-#endif
 
 /**********************************************************************
  * AFS Linux inode operations
@@ -1485,24 +1419,6 @@ afs_linux_writepage(struct page *pp)
 }
 #endif
 
-#ifdef NOTUSED
-/* afs_linux_bmap - supports generic_readpage, but we roll our own. */
-int
-afs_linux_bmap(struct inode *ip, int)
-{
-    return -EINVAL;
-}
-
-/* afs_linux_truncate
- * Handles discarding disk blocks if this were a device. ext2 indicates we
- * may need to zero partial last pages of memory mapped files.
- */
-void
-afs_linux_truncate(struct inode *ip)
-{
-}
-#endif
-
 /* afs_linux_permission
  * Check access rights - returns error if can't check or permission denied.
  */
@@ -1527,15 +1443,6 @@ afs_linux_permission(struct inode *ip, int mode)
     return -code;
 }
 
-
-#ifdef NOTUSED
-/* msdos sector mapping hack for memory mapping. */
-int
-afs_linux_smap(struct inode *ip, int)
-{
-    return -EINVAL;
-}
-#endif
 
 #if defined(AFS_LINUX24_ENV)
 int
@@ -1668,88 +1575,50 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 #endif
 
-#if defined(AFS_LINUX24_ENV)
 struct inode_operations afs_file_iops = {
-  revalidate:afs_linux_revalidate,
-  setattr:afs_notify_change,
-  permission:afs_linux_permission,
-};
-struct address_space_operations afs_file_aops = {
-  readpage:afs_linux_readpage,
-  writepage:afs_linux_writepage,
-  commit_write:afs_linux_commit_write,
-  prepare_write:afs_linux_prepare_write,
-};
-
-struct inode_operations *afs_ops = &afs_file_iops;
+#if defined(AFS_LINUX24_ENV)
+  .permission =		afs_linux_permission,
+  .revalidate =		afs_linux_revalidate,
+  .setattr =		afs_notify_change,
 #else
-struct inode_operations afs_iops = {
-    &afs_file_fops,		/* file operations */
-    NULL,			/* afs_linux_create */
-    NULL,			/* afs_linux_lookup */
-    NULL,			/* afs_linux_link */
-    NULL,			/* afs_linux_unlink */
-    NULL,			/* afs_linux_symlink */
-    NULL,			/* afs_linux_mkdir */
-    NULL,			/* afs_linux_rmdir */
-    NULL,			/* afs_linux_mknod */
-    NULL,			/* afs_linux_rename */
-    NULL,			/* afs_linux_readlink */
-    NULL,			/* afs_linux_follow_link */
-    afs_linux_readpage,
-    NULL,			/* afs_linux_writepage */
-    NULL,			/* afs_linux_bmap */
-    NULL,			/* afs_linux_truncate */
-    afs_linux_permission,
-    NULL,			/* afs_linux_smap */
-    afs_linux_updatepage,
-    afs_linux_revalidate,
+  .default_file_ops =	&afs_file_fops,
+  .readpage =		afs_linux_readpage,
+  .revalidate =		afs_linux_revalidate,
+  .updatepage =		afs_linux_updatepage,
+#endif
 };
 
-struct inode_operations *afs_ops = &afs_iops;
+#if defined(AFS_LINUX24_ENV)
+struct address_space_operations afs_file_aops = {
+  .readpage =		afs_linux_readpage,
+  .writepage =		afs_linux_writepage,
+  .commit_write =	afs_linux_commit_write,
+  .prepare_write =	afs_linux_prepare_write,
+};
 #endif
+
 
 /* Separate ops vector for directories. Linux 2.2 tests type of inode
  * by what sort of operation is allowed.....
  */
-#if defined(AFS_LINUX24_ENV)
+
 struct inode_operations afs_dir_iops = {
-  create:afs_linux_create,
-  lookup:afs_linux_lookup,
-  link:afs_linux_link,
-  unlink:afs_linux_unlink,
-  symlink:afs_linux_symlink,
-  mkdir:afs_linux_mkdir,
-  rmdir:afs_linux_rmdir,
-  rename:afs_linux_rename,
-  revalidate:afs_linux_revalidate,
-  setattr:afs_notify_change,
-  permission:afs_linux_permission,
-};
+#if !defined(AFS_LINUX24_ENV)
+  .default_file_ops =	&afs_dir_fops,
 #else
-struct inode_operations afs_dir_iops = {
-    &afs_dir_fops,		/* file operations for directories */
-    afs_linux_create,
-    afs_linux_lookup,
-    afs_linux_link,
-    afs_linux_unlink,
-    afs_linux_symlink,
-    afs_linux_mkdir,
-    afs_linux_rmdir,
-    NULL,			/* afs_linux_mknod */
-    afs_linux_rename,
-    NULL,			/* afs_linux_readlink */
-    NULL,			/* afs_linux_follow_link */
-    NULL,			/* afs_linux_readpage */
-    NULL,			/* afs_linux_writepage */
-    NULL,			/* afs_linux_bmap */
-    NULL,			/* afs_linux_truncate */
-    afs_linux_permission,
-    NULL,			/* afs_linux_smap */
-    NULL,			/* afs_linux_updatepage */
-    afs_linux_revalidate,
-};
+  .setattr =		afs_notify_change,
 #endif
+  .create =		afs_linux_create,
+  .lookup =		afs_linux_lookup,
+  .link =		afs_linux_link,
+  .unlink =		afs_linux_unlink,
+  .symlink =		afs_linux_symlink,
+  .mkdir =		afs_linux_mkdir,
+  .rmdir =		afs_linux_rmdir,
+  .rename =		afs_linux_rename,
+  .revalidate =		afs_linux_revalidate,
+  .permission =		afs_linux_permission,
+};
 
 /* We really need a separate symlink set of ops, since do_follow_link()
  * determines if it _is_ a link by checking if the follow_link op is set.
@@ -1788,35 +1657,19 @@ afs_symlink_filler(struct file *file, struct page *page)
 }
 
 struct address_space_operations afs_symlink_aops = {
-  readpage:afs_symlink_filler
-};
-
-struct inode_operations afs_symlink_iops = {
-  readlink:page_readlink,
-  follow_link:page_follow_link,
-  setattr:afs_notify_change,
-};
-#else
-struct inode_operations afs_symlink_iops = {
-    NULL,			/* file operations */
-    NULL,			/* create */
-    NULL,			/* lookup */
-    NULL,			/* link */
-    NULL,			/* unlink */
-    NULL,			/* symlink */
-    NULL,			/* mkdir */
-    NULL,			/* rmdir */
-    NULL,			/* afs_linux_mknod */
-    NULL,			/* rename */
-    afs_linux_readlink,
-    afs_linux_follow_link,
-    NULL,			/* readpage */
-    NULL,			/* afs_linux_writepage */
-    NULL,			/* afs_linux_bmap */
-    NULL,			/* afs_linux_truncate */
-    afs_linux_permission,	/* tho the code appears to indicate not used? */
-    NULL,			/* afs_linux_smap */
-    NULL,			/* updatepage */
-    afs_linux_revalidate,	/* tho the code appears to indicate not used? */
+  .readpage =	afs_symlink_filler
 };
 #endif
+
+struct inode_operations afs_symlink_iops = {
+#if defined(AFS_LINUX24_ENV)
+  .readlink = 		page_readlink,
+  .follow_link =	page_follow_link,
+  .setattr =		afs_notify_change,
+#else
+  .readlink = 		afs_linux_readlink,
+  .follow_link =	afs_linux_follow_link,
+  .permission =		afs_linux_permission,
+  .revalidate =		afs_linux_revalidate,
+#endif
+};

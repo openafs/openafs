@@ -26,13 +26,15 @@ RCSID
 #include "h/smp_lock.h"
 #endif
 
-#define __NO_VERSION__		/* don't define kernel_verion in module.h */
+#define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h>
 
 
 struct vcache *afs_globalVp = 0;
 struct vfs *afs_globalVFS = 0;
+#if defined(AFS_LINUX24_ENV)
 struct nameidata afs_cacheNd;
+#endif
 int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
@@ -167,20 +169,6 @@ afs_root(struct super_block *afsp)
 
 /* super_operations */
 
-/* afs_read_inode
- * called via iget to read in the inode. The passed in inode has i_ino, i_dev
- * and i_sb setup on input. Linux file systems use this to get super block
- * inode information, so we don't really care what happens here.
- * For Linux 2.2, we'll be called if we participate in the inode pool.
- */
-void
-afs_read_inode(struct inode *ip)
-{
-    /* I don't think we ever get called with this. So print if we do. */
-    printf("afs_read_inode: Called for inode %d\n", ip->i_ino);
-}
-
-
 /* afs_notify_change
  * Linux version of setattr call. What to change is in the iattr struct.
  * We need to set bits in both the Linux inode as well as the vcache.
@@ -282,7 +270,9 @@ afs_put_super(struct super_block *sbp)
     afs_globalVFS = 0;
     afs_globalVp = 0;
     afs_shutdown();
+#if defined(AFS_LINUX24_ENV)
     path_release(&afs_cacheNd);
+#endif
 
     osi_linux_verify_alloced_memory();
   done:
@@ -294,23 +284,6 @@ afs_put_super(struct super_block *sbp)
     }
 }
 
-#ifdef NOTUSED
-/* afs_write_super
- * Not required since we don't write out a super block. */
-void
-afs_write_super(struct super_block *sbp)
-{
-}
-
-/* afs_remount_fs
- * Used to remount filesystems with different flags. Not relevant for AFS.
- */
-int
-afs_remount_fs(struct super_block *sbp, int *, char *)
-{
-    return -EINVAL;
-}
-#endif
 
 /* afs_statfs
  * statp is in user space, so we need to cobble together a statfs, then
@@ -357,30 +330,16 @@ afs_umount_begin(struct super_block *sbp)
     afs_shuttingdown = 1;
 }
 
-#if defined(AFS_LINUX24_ENV)
 struct super_operations afs_sops = {
-  read_inode:afs_read_inode,
-  write_inode:afs_write_inode,
-  delete_inode:afs_delete_inode,
-  put_super:afs_put_super,
-  statfs:afs_statfs,
-  umount_begin:afs_umount_begin
-};
-#else
-struct super_operations afs_sops = {
-    afs_read_inode,
-    afs_write_inode,		/* afs_write_inode - see doc above. */
-    NULL,			/* afs_put_inode */
-    afs_delete_inode,
-    afs_notify_change,
-    afs_put_super,
-    NULL,			/* afs_write_super - see doc above */
-    afs_statfs,
-    NULL,			/* afs_remount_fs - see doc above */
-    NULL,			/* afs_clear_inode */
-    afs_umount_begin
-};
+  .write_inode =	afs_write_inode,
+  .delete_inode =	afs_delete_inode,
+  .put_super =		afs_put_super,
+  .statfs =		afs_statfs,
+  .umount_begin =	afs_umount_begin
+#if !defined(AFS_LINUX24_ENV)
+  .notifY_change =	afs_notify_change,
 #endif
+};
 
 /************** Support routines ************************/
 
