@@ -456,6 +456,9 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 		continue;	/* ignore this address */
 	    }
 
+            if (a->sin_addr.s_addr == htonl(0x7f000001) )
+                continue;   /* skip loopback address as well. */
+
 	    if (count >= maxSize) {	/* no more space */
 		printf("Too many interfaces..ignoring 0x%x\n",
 		       a->sin_addr.s_addr);
