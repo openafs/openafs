@@ -1050,9 +1050,9 @@ retry:
 	{
 	    char uuid1[128], uuid2[128];
 	    if (identP->valid)
-		afsUUID_to_string(identP->uuid, uuid1, 127);
+		afsUUID_to_string(&identP->uuid, uuid1, 127);
 	    if (host->interface)
-		afsUUID_to_string(host->interface->uuid, uuid2, 127);
+		afsUUID_to_string(&host->interface->uuid, uuid2, 127);
 	    ViceLog(0, 
 		    ("CB: new identity for host %s:%d, deleting(%x %x %s %s)\n", 
 		     afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
