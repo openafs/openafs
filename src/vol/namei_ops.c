@@ -229,7 +229,8 @@ namei_HandleToName(namei_t * name, IHandle_t * ih)
  * name space.
  */
 #define VICE_README "These files and directories are a part of the AFS \
-namespace. Modifying them\nin any way will result in loss of AFS data.\n"
+namespace. Modifying them\nin any way will result in loss of AFS data,\n\
+ownership and permissions included.\n"
 int
 namei_ViceREADME(char *partition)
 {
