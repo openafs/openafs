@@ -1118,29 +1118,29 @@ static afs_offs_t volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP
 
 
     *status = 0;
-#ifdef AFS_LARGEFILE_ENV
+#ifdef AFS_64BIT_ENV
     {
-	afs_uint32 filesize_high, filesize_low;
+	afs_uint32 filesize_high = 0L, filesize_low = 0L;
+#ifdef AFS_LARGEFILE_ENV
 	if (tag == 'h') {
 	    if (!ReadInt32(iodp, &filesize_high) ) {
 		*status = 1;
 		return(0);
 	    }
-	} else {
-	    filesize_high = 0L;
 	}
+#endif
 	if (!ReadInt32(iodp, &filesize_low)) {
 	    *status = 1;
 	    return(0);
 	}
 	FillInt64(filesize, filesize_high, filesize_low);
     }
-#else /* !AFS_LARGEFILE_ENV */
+#else /* !AFS_64BIT_ENV */
     if (!ReadInt32(iodp, &filesize)) {
         *status = 1;
 	return(0);
     }
-#endif /* !AFS_LARGEFILE_ENV */
+#endif /* !AFS_64BIT_ENV */
     p = (unsigned char *) malloc(size);
     if (p == NULL) {
         *status = 2;
@@ -1151,7 +1151,7 @@ static afs_offs_t volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP
 	    size = nbytes;
 	
 	if ((code = iod_Read(iodp, p, size)) != size) {
-#ifdef AFS_LARGEFILE_ENV
+#ifdef AFS_64BIT_ENV
 	    Log("1 Volser: WriteFile: Error reading dump file %d size=(0X%x,0X%x) nbytes=%d (%d of %d); restore aborted\n", vn,
 		(unsigned) (filesize >> 32),
 		(unsigned) (filesize & 0xffffffff),
