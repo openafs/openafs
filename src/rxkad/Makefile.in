@@ -65,8 +65,6 @@ librxkad.a: ${OBJS} AFS_component_version_number.o
 	$(AR) crv $@ ${OBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
-crypt_conn.o: fcrypt.h private_data.h crypt_conn.c ${INCLS}
-
 rxkad_client.o: fcrypt.h private_data.h rxkad_client.c ${INCLS}
 
 rxkad_server.o: fcrypt.h private_data.h rxkad_server.c ${INCLS}
@@ -89,13 +87,17 @@ md4.o: md4.c ${INCLS}
  
 md5.o: md5.c ${INCLS}
 
-fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
-	${CCOBJ} ${CFLAGS} -c fcrypt.c
+fcrypt.o: domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
+	${CCOBJ} ${CFLAGS} -c domestic/fcrypt.c
+
+crypt_conn.o: domestic/crypt_conn.c fcrypt.h private_data.h ${INCLS}
+	${CCOBJ} ${CFLAGS} -c domestic/crypt_conn.c
+
+tcrypt.o: domestic/tcrypt.c AFS_component_version_number.o
+	${CCOBJ} ${CFLAGS} -c domestic/fcrypt.c
 
 tcrypt: tcrypt.o librxkad.a 
 	${CC} -o tcrypt tcrypt.o librxkad.a
-
-tcrypt.o: tcrypt.c AFS_component_version_number.o
 
 fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
 	${CC} ${CFLAGS} -o fc_test ${fc_test_OBJS} ${fc_test_LIBS} ${XLIBS}
@@ -109,7 +111,7 @@ fc_test.o: ${INCLS}
 clean: 
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
 		AFS_component_version_number.c \
-		crypt_conn.c fcrypt.c fcrypt.h sboxes.h \
+		fcrypt.h sboxes.h \
 		fc_test
 
 test:
@@ -117,19 +119,10 @@ test:
 # These sources are kept in a separate directory so that we can use an
 # ACL to comply with source export restrictions.
 
-crypt_conn.c: domestic/crypt_conn.c
-	${INSTALL} $? $@
-
-fcrypt.c: domestic/fcrypt.c
-	${INSTALL} $? $@
-
 fcrypt.h: domestic/fcrypt.h
 	${INSTALL} $? $@
 
 sboxes.h: domestic/sboxes.h
-	${INSTALL} $? $@
-
-tcrypt.c: domestic/tcrypt.c
 	${INSTALL} $? $@
 
 include ../config/Makefile.version
