@@ -71,8 +71,7 @@
 #else
 #ifdef AFS_LINUX22_ENV
 #include <mntent.h>
-#include <linux/fs.h>
-#include <linux/ext2_fs.h>
+#include <sys/statfs.h>
 #else
 #include <fstab.h>
 #endif
