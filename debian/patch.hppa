@@ -9,8 +9,6 @@ diff -u -r1.9 Makefile.in
  	sun*_5*) \
  		$(LD) $(LDFLAGS) -M mapfile -o $@ \
  			afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
-+	parisc*_linux*) \
-+		echo Skipping pam_afs.krb.so.1 link on parisc. ;; \
  	*linux*) \
  		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o $(SHOBJS) $(KLIBS) ;;\
  	*fbsd*) \
