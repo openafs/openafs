@@ -2125,7 +2125,7 @@ static SysNameCmd(as)
 	fprintf(stderr, "No sysname name value was found\n");
 	return 1;
     }
-    printf("Current sysname%s is:", setp>1 ? " list" : "");
+    printf("Current sysname%s is", setp>1 ? " list" : "");
     for(;setp>0;--setp) {
       printf(" \'%s\'", input);
       input += strlen(input) + 1;
