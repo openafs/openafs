@@ -179,7 +179,7 @@ void osi_StopListener(void)
     extern int rxk_ListenerPid;
 
     while (rxk_ListenerPid) {
-	(void) (*sys_killp)(rxk_ListenerPid, SIGTERM);
+	(void) (*sys_killp)(rxk_ListenerPid, SIGKILL);
 	afs_osi_Sleep(&rxk_ListenerPid); 
     }
     sock_release(rx_socket);
