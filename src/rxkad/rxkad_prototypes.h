@@ -97,5 +97,17 @@ extern afs_int32 ktohl (char flags, afs_int32 l);
 extern afs_uint32 life_to_time (afs_uint32 start, unsigned char life);
 extern unsigned char time_to_life (afs_uint32 start, afs_uint32 end);
 
+/* ticket5.c */
+extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len, 
+		      int (*get_key)(char *, int, struct ktc_encryptionKey *),
+		      char *get_key_rock,
+		      int serv_kvno,
+		      char *name, 
+		      char *inst, 
+		      char *cell, 
+		      char *session_key, 
+		      afs_int32 *host, 
+		      afs_int32 *start, 
+		      afs_int32 *end);
 
 #endif

@@ -36,6 +36,9 @@
  * passed to/from ktc_[SG]etToken.
  */
 #define RXKAD_TKT_TYPE_KERBEROS_V5		256
+#define RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY	213
+
+#define MAXKRB5TICKETLEN			1024
 
 /*
  * The AFS/DFS translator may also make use of additional ticket types in
