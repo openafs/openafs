@@ -11,13 +11,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=-I. -I${srcdir} ${DBUG} \
-	-I${TOP_OBJDIR}/src/config \
-	-I${TOP_INCDIR} \
-	-I${TOP_INCDIR}/afs \
-	-I/usr/include ${XCFLAGS}
-
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
 LIBS=${TOP_LIBDIR}/libafsint.a \

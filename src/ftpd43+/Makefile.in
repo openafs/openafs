@@ -18,7 +18,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
 include ../config/Makefile.version
 
 AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a \
@@ -28,7 +27,6 @@ AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
           ${TOP_LIBDIR}/libaudit.a
 
 LIBS = ${AFSLIBS} 
-CFLAGS=${OPTMZ} -I${TOP_INCDIR} ${XCFLAGS}
 LIBC=	/lib/libc.a 
 SRCS=	ftpd.c ftpcmd.c getusershell.c glob.c logwtmp.c popen.c vers.c
 OBJS=	ftpd.o ftpcmd.o getusershell.o glob.o logwtmp.o popen.o vers.o

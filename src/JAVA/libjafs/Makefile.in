@@ -34,10 +34,10 @@ OBJECT_FLAGS = -fPIC -c
 
 ifeq "$(BUILD_TYPE)" "admin"
 	INC := -I${TOP_INCDIR} -I${TOP_INCDIR}/afs/ -I${JAVA_HOME}/include ${JNI_INC}
-	CFLAGS := ${INC} ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
+	CFLAGS := ${INC} ${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 else
 	INC := -I${TOP_SRCDIR}/libuafs -I${TOP_INCDIR} -I${JAVA_HOME}/include ${JNI_INC}
-	CFLAGS := ${INC} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${DBUG} ${MT_CFLAGS}
+	CFLAGS := ${INC} ${DBG} ${OPTMZ} ${FSINCLUDES} -D_REENTRANT -DLIBJUAFS ${MT_CFLAGS}
 endif
 
 

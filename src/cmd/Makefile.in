@@ -11,8 +11,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-CFLAGS=${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-
 all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a

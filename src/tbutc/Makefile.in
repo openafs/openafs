@@ -8,18 +8,12 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-
 BUTMOBJS    =file_tm.o
 BUTMLIBS    =libbutm.a
 BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
-BUTMINCLUDE =-I${TOP_INCDIR}
 
 CC      = ${MT_CC}
-CFLAGS=-I. -I${srcdir} -I${TOP_SRCDIR}/volser ${DBG} -w -I${TOP_OBJDIR}/src/config ${MT_CFLAGS} @XBSA_CFLAGS@ ${BUTMINCLUDE} \
-	-I../bucoord -I../volser
-
-LDFLAGS = ${DBG} ${XLDFLAGS}
+CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I../bucoord -I../volser
 
 LWP     = ${srcdir}/../lwp
 BUTM    = ${srcdir}/../butm

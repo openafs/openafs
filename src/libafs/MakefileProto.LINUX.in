@@ -6,8 +6,6 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 srcdir=@srcdir@
-KDEBUG=@KERN_DEBUG_OPT@
-FOMIT=@OMIT_FRAME_POINTER@
 
 include @TOP_OBJDIR@/src/config/Makefile.config
 
@@ -30,42 +28,49 @@ AFS_OS_NFSOBJS =
 
 AFS_OS_NONFSOBJS =
 
-GCC_KOPTS=@LINUX_GCC_KOPTS@
+COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
+
+COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+
 # System specific build commands and flags
 <i386_linux22 i386_linux24>
-P5PLUS=@P5PLUS_KOPTS@
-CCFLAGS =  $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe $(P5PLUS)
-DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
+DEFINES = $(COMMON_DEFINES) -DCPU=586
+
 <alpha_linux_22 alpha_linux_24>
-CCFLAGS = $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -mno-fp-regs -ffixed-8
-DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
+DEFINES = $(COMMON_DEFINES)
+
 <s390_linux22 s390_linux24>
-CCFLAGS =   -O $(FOMIT) $(GCC_KOPTS) -fsigned-char
-DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
+DEFINES = $(COMMON_DEFINES) -D__s390__ 
+
 <sparc_linux22 sparc_linux24>
 LD = ld -m elf32_sparc
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) \
-      -pipe -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
-DEFINES = -D__KERNEL__  -DCPU=sparc -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc
+
 <sparc64_linux22 sparc64_linux24>
 CC = sparc64-linux-gcc
 LD = ld -m elf64_sparc
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) \
-      -pipe -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
-DEFINES = -D__KERNEL__  -DCPU=sparc64 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) \
+      -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
+
 <ppc_linux22 ppc_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -fsigned-char -msoft-float -pipe \
-      -fno-builtin -ffixed-r2
-DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
+DEFINES = $(COMMON_DEFINES) -D__powerpc__
+
 <parisc_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -fsigned-char -mno-space-regs \
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -mno-space-regs \
       -mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
       -march=1.1 -mschedule=7100
-DEFINES = -D__KERNEL__  -D__linux__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+DEFINES = $(COMMON_DEFINES) -D__linux__
+
 <ia64_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -ffixed-r13 \
-       -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
-DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
+CCFLAGS = $(COMMON_KERN_CFLAGS) -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
+DEFINES = $(COMMON_DEFINES)
+
 <all>
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config
 

@@ -10,10 +10,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
-	-I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
-LDFLAGS = ${XLDFLAGS}
-
 INCLS=gtxobjects.h \
 	gtxwindows.h \
 	gtxcurseswin.h \

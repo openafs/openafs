@@ -8,9 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=$(DBUG) -I${TOP_INCDIR} -I../config ${XCFLAGS}
-
 all: ${TOP_LIBDIR}/libprocmgmt.a ${TOP_INCDIR}/afs/procmgmt.h
 
 #

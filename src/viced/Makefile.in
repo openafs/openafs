@@ -9,8 +9,9 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS=-DNINTERFACE -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
-	 ${XCFLAGS} -DRXDEBUG
+CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
+	 ${XCFLAGS} -DRXDEBUG -DNINTERFACE
 
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 
@@ -30,8 +31,8 @@ LIBS=${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/libsys.a	\
 	${TOP_LIBDIR}/libdes.a		\
 	${TOP_LIBDIR}/libcom_err.a	\
-	${TOP_LIBDIR}/util.a		\
-	${TOP_LIBDIR}/liblwp.a
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libafsutil.a
 
 headers=${TOP_INCDIR}/lwp.h		\
 	${TOP_INCDIR}/afs/acl.h	\

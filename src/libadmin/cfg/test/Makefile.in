@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -DAFS_PTHREAD_ENV -I${SRCDIR}/include ${MT_CFLAGS}
+CFLAGS = ${DBG} ${OPTMZ} -DAFS_PTHREAD_ENV -I${SRCDIR}/include ${MT_CFLAGS}
 
 
 ########################################################################

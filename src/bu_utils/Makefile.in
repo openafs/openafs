@@ -8,10 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=$(DBG) -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
-LDFLAGS = ${XLDFLAGS}
-
 all: fms
 
 FMSLIBS=${TOP_LIBDIR}/libcmd.a \
@@ -34,6 +30,7 @@ clean:
 	$(RM) -f *.o fms AFS_component_version_number.c
 
 include ../config/Makefile.version
+
 ${DESTDIR}${sbindir}/fms: fms
 	${INSTALL} $? $@
 

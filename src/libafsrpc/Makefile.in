@@ -12,9 +12,9 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 
 CC=${MT_CC}
-INCLUDES=-I. -I${srcdir} -I${TOP_INCDIR} -I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
-	-I../rxkad -I${srcdir}/../rxkad -I../rxstat -I../fsint
-CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_OBJDIR}/src/config
+CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../rxkad \
+	-I../fsint -DRXDEBUG ${MT_CFLAGS}
+
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?

@@ -8,9 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS = -I. -I${srcdir} ${XCFLAGS}
-
 all: ${TOP_LIBDIR}/libnull.a
 
 install: ${DESTDIR}${libdir}/afs/libnull.a

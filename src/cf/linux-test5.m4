@@ -69,3 +69,19 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
+AC_DEFUN(OPENAFS_GCC_SUPPORTS_PIPE, [
+AC_MSG_CHECKING(if $CC supports -pipe)
+save_CFLAGS="$CFLAGS"
+CFLAGS="-pipe"
+AC_CACHE_VAL(openafs_gcc_supports_pipe,[
+AC_TRY_COMPILE(
+[],
+[int x;],
+openafs_gcc_supports_pipe=yes,
+openafs_gcc_supports_pipe=no)])
+AC_MSG_RESULT($openafs_gcc_supports_pipe)
+if test x$openafs_gcc_supports_pipe = xyes; then
+  LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -pipe"
+fi
+CFLAGS="$save_CFLAGS"
+])

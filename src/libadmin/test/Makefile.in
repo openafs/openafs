@@ -8,10 +8,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${MT_CFLAGS}
-
+CFLAGS = ${COMMON_CFLAGS} ${MT_CFLAGS}
 
 ########################################################################
 # build tests
@@ -25,7 +23,8 @@ AFSCPLIBS =\
 	$(TOP_LIBDIR)/libptsadmin.a \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsrpc.a \
-	$(TOP_LIBDIR)/libcmd.a  # static library
+	$(TOP_LIBDIR)/libcmd.a \
+	$(TOP_LIBDIR)/libafsutil.a
 
 AFSCPOBJS =\
 	bos.o \

@@ -20,7 +20,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
 AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
@@ -34,8 +33,6 @@ KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
-
-CFLAGS=	-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} 
 
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a

@@ -8,11 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs
-
-CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBUG}
-
 PROGRAMS=	unlog tokens tokens.krb kseal
 
 INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \

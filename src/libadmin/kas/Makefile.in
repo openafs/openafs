@@ -9,8 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC = ${MT_CC}
-CFLAGS=-I. -I${srcdir} ${OPTMZ} ${DBG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${MT_CFLAGS} \
-	-I../../kauth -I${srcdir}/../../kauth
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../../kauth -I${srcdir}/../../kauth
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 KAUTH= ${srcdir}/../../kauth/

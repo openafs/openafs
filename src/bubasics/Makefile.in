@@ -8,8 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-
 all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/butm.h ${TOP_INCDIR}/afs/butx.h
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o

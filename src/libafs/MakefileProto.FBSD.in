@@ -119,6 +119,6 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 
 # Object build rules:
 setdef0.o: setdef0.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 setdef1.o: setdef1.c
-	$(CRULE1)
+	$(CRULE_NOOPT)

@@ -47,10 +47,8 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 
 .c.o:
 	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -c $<
-CRULE1=	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -c $?
-CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(CFLAGS) -c $?
-CRULE3=	$(CC) $(COMMON_INCLUDE) $(OPTF2) $(CFLAGS) -c $?
-CRULE4=	$(CC) $(COMMON_INCLUDE) $(DBG) $(CFLAGS) -c $?
+CRULE_NOOPT=	$(CC) $(COMMON_INCLUDE) ${DBG} $(CFLAGS) -c $?
+CRULE_OPT=	$(CC) $(COMMON_INCLUDE) ${DBG} ${OPTMZ} $(CFLAGS) -c $?
 
 system:	all
 
@@ -172,227 +170,227 @@ AFSNONFSOBJS = \
 # Compilation rules
 # These files are to be optimized
 afs_base64.o: $(TOP_SRC_AFS)/afs_base64.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_dynroot.o: 	$(TOP_SRC_AFS)/afs_dynroot.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_init.o: $(TOP_SRC_AFS)/afs_init.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osi.o: 	$(TOP_SRC_AFS)/afs_osi.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osi_alloc.o: $(TOP_SRC_AFS)/afs_osi_alloc.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_osi_vget.o: $(TOP_SRC_AFS)/afs_osi_vget.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_server.o: $(TOP_SRC_AFS)/afs_server.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_util.o: $(TOP_SRC_AFS)/afs_util.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
-	$(CRULE2)
+	$(CRULE_OPT)
 rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
-	$(CRULE2)
+	$(CRULE_OPT)
 afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
-	$(CRULE2) -o afs_uuid.o
+	$(CRULE_OPT) -o afs_uuid.o
 xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
-	$(CRULE2)
+	$(CRULE_OPT)
 
 # these files are not to be optimized - subject to change.
 afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
-	$(CRULE1) -o afs_dir.o
+	$(CRULE_NOOPT) -o afs_dir.o
 AFS_component_version_number.o: AFS_component_version_number.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_exporter.o: $(TOP_SRC_AFS)/afs_exporter.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx.o: $(TOP_SRC_RX)/rx.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_event.o: $(TOP_SRC_RX)/rx_event.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_null.o: $(TOP_SRC_RX)/rx_null.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr_array.o: $(TOP_SRC_RX)/xdr_array.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 xdr.o: $(TOP_SRC_RX)/xdr.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 Kvldbint.xdr.o: ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
-	$(CRULE1) -DAFS_UUID_XG
+	$(CRULE_NOOPT) -DAFS_UUID_XG
 rx_kmutex.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 
 # Files which do not contain NFS translator code.
 afs_call.o: $(TOP_SRC_AFS)/afs_call.c
-	$(CRULE1) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT) -DAFS_NONFSTRANS
 afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE1) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT) -DAFS_NONFSTRANS
 
 # NFS Translator versions of the above code.
 afs_call_nfs.o:	$(TOP_SRC_AFS)/afs_call.c
-	$(CRULE1) -o afs_call_nfs.o
+	$(CRULE_NOOPT) -o afs_call_nfs.o
 afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
-	$(CRULE1) -o afs_pioctl_nfs.o
+	$(CRULE_NOOPT) -o afs_pioctl_nfs.o
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
 # in the per-platform Makefiles.
 osi_groups.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_groups.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_inode.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_inode.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_file.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_file.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
+	$(CRULE_NOOPT) -o osi_vfsops_nfs.o
 osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT) -DAFS_NONFSTRANS
 osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
-	$(CRULE4)
+	$(CRULE_OPT)
 osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_cred.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_idbg.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_idbg.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_config.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_config.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 
 
 

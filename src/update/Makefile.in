@@ -17,8 +17,6 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a
 
-CFLAGS=-I. -I${srcdir} -I${TOP_INCDIR} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
-
 all: upserver upclient
 
 #

@@ -8,14 +8,8 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${MT_CFLAGS}
-
-
-########################################################################
-# build tests
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 
 SAMPLEPROGS=\
 	cm_client_config \
@@ -46,7 +40,8 @@ SAMPLELIBS =\
 	${TOP_LIBDIR}/libvosadmin.a \
 	${TOP_LIBDIR}/libbosadmin.a \
 	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libafsrpc.a
+	${TOP_LIBDIR}/libafsrpc.a \
+	$(TOP_LIBDIR)/libafsutil.a
 
 cm_client_config: cm_client_config.o $(SAMPLELIBS)
 	$(CC) $(LDFLAGS) -o $@ $@.o $(SAMPLELIBS) $(MT_LIBS) $(XLIBS)

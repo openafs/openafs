@@ -13,12 +13,9 @@ HDRS= rpc_util.h rpc_parse.h rpc_scan.h
 OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
 	rpc_svcout.o rpc_clntout.o
 
-GOAL=rxgen
-CFLAGS=-I. -I${TOP_INCDIR} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
-
 all: rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
 
-rxgen: $(OBJS) AFS_component_version_number.c
+rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
 
 #
@@ -39,6 +36,7 @@ clean:
 	$(RM) -f *.o rxgen core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
 ${DESTDIR}${bindir}/rxgen: rxgen
 	${INSTALL} $? $@
 

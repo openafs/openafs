@@ -8,9 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=$(DBG) -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = $(DBG) ${XLDFLAGS}
 INCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 LIBS=${TOP_LIBDIR}/libbubasics.a \

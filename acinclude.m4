@@ -54,6 +54,21 @@ AC_ARG_ENABLE(tivoli-tsm,
 AC_ARG_ENABLE(debug-kernel,
 [  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
 )
+AC_ARG_ENABLE(optimize-kernel,
+[  --disable-optimize-kernel		disable compilation of the kernel module with optimization (defaults based on platform)],, enable_optimize_kernel="yes"
+)
+AC_ARG_ENABLE(debug,
+[  --enable-debug			enable compilation of the user space code with debugging information (defaults to disabled)],, enable_debug="no"
+)
+AC_ARG_ENABLE(optimize,
+[  --disable-optimize			disable optimization for compilation of the user space code (defaults to enabled)],, enable_optimize="yes"
+)
+AC_ARG_ENABLE(debug-lwp,
+[  --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)],, enable_debug_lwp="no"
+)
+AC_ARG_ENABLE(optimize-lwp,
+[  --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)],, enable_optimize_lwp="yes"
+)
 
 dnl weird ass systems
 AC_AIX
@@ -73,11 +88,6 @@ AC_PROG_YACC
 AM_PROG_LEX
 
 OPENAFS_CHECK_BIGENDIAN
-
-KERN_DEBUG_OPT=
-if test "x$enable_debug_kernel" = "xyes"; then
-  KERN_DEBUG_OPT=-g
-fi
 
 AC_MSG_CHECKING(your OS)
 system=$host
@@ -129,16 +139,15 @@ case $system in
 		fi
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then
-		 OMIT_FRAME_POINTER=
 		 if test "x$enable_debug_kernel" = "xno"; then
-			OMIT_FRAME_POINTER=-fomit-frame-pointer
+			LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
 		 fi
-		 AC_SUBST(OMIT_FRAME_POINTER)
 		 OPENAFS_GCC_SUPPORTS_MARCH
 		 AC_SUBST(P5PLUS_KOPTS)
 		 OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE
 		 OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING
 		 OPENAFS_GCC_SUPPORTS_NO_COMMON
+		 OPENAFS_GCC_SUPPORTS_PIPE
 		 AC_SUBST(LINUX_GCC_KOPTS)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
@@ -307,7 +316,6 @@ case $system in
                 AC_MSG_RESULT($system)
                 ;;
 esac
-AC_SUBST(KERN_DEBUG_OPT)
 
 if test "x$with_afs_sysname" != "x"; then
         AFS_SYSNAME="$with_afs_sysname"

@@ -7,7 +7,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} $(DBUG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
 	${TOP_INCDIR}/lwp.h \
@@ -33,9 +32,11 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libsys.a
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libafsutil.a
 
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
@@ -100,7 +101,7 @@ display.o: display.c ${INCLS}
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
 db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libcmd.a
+	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS}
 
 ptclient: ptclient.o display.o libprot.a $(LIBS)
 	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS}

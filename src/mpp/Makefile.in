@@ -4,34 +4,27 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS= ${OPTMZ} ${XCFLAGS}
-LIBS = ${XLIBS}
-
-PROGRAM=mpp
-MANUAL=mpp.1
-
 include ../config/Makefile.version
 
 all: ${PROGRAM}
 
-install: ${DESTDIR}${sbindir}/${PROGRAM}
+install: ${DESTDIR}${sbindir}/mpp
 
-dest: ${DEST}/etc/${PROGRAM} 
+dest: ${DEST}/etc/mpp
 
-${DESTDIR}${sbindir}/${PROGRAM}: ${PROGRAM}
+${DESTDIR}${sbindir}/mpp: mpp
 	${INSTALL} $? $@
 
-${DEST}/etc/${PROGRAM}: ${PROGRAM}
+${DEST}/etc/mpp: mpp
 	${INSTALL} $? $@
 
-installdoc: ${MANUAL}
-	${INSTALL} -c ${MANUAL} ${DEST}/man/man1
+installdoc: mpp.1
+	${INSTALL} -c mpp.1 ${DEST}/man/man1
 
 clean:
-	-$(RM) -f core a.out *.o *.out ${PROGRAM} AFS_component_version_number.c
+	-$(RM) -f core a.out *.o *.out mpp AFS_component_version_number.c
 
-${PROGRAM}: AFS_component_version_number.c
-	${CC} ${CFLAGS} $@.c -o $@ ${LIBS}
+mpp: AFS_component_version_number.c
+	${CC} ${CFLAGS} $@.c -o $@ ${XLIBS}
 
 mpp: mpp.c

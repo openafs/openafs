@@ -8,21 +8,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-LIBS= ${XLIBS}
-CFLAGS=${OPTMZ} $(DBG) -I. -I${TOP_INCDIR} -I../config ${XCFLAGS}
-
 all: pinstall
 
 pinstall: ${srcdir}/install.c AFS_component_version_number.c 
-	case ${SYS_NAME} in \
-                sgi_64 | sgi_65) \
-                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} ;; \
-                sgi_* ) \
-                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} -lmld ;; \
-                *) \
-                        ${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${LIBS} ;; \
-        esac
+	${CC} ${CFLAGS} ${srcdir}/install.c -o pinstall ${XLIBS} ${PINSTALL_LIBS}
 
 test: pinstall
 	csh ./test/test_install

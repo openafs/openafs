@@ -8,10 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-    OPTMZ = -g
-     DEFS =
-     INCS = -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}
-   CFLAGS = ${OPTMZ} ${DEFS} ${INCS}
   EXPORTS = -bexport:export.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp extras.exp
      KOBJ = export.o symtab.o

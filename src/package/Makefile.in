@@ -7,34 +7,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-INCLUDES=-I/usr/include -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}
-DBGFLAG  = -UDEBUG
-CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
-YFLAGS   = -vd
-#LFLAGS  = -ll
-
-HFILES = package.h \
-	 validupdates.h \
-	 systype.h \
-	 globals.h
-
-SRCS = package.c \
-	conftree.c \
-	check.c \
-	update.c \
-	fileops.c \
-	messages.c \
-	misc.c \
-	globfuncs.c
-
-TEST_SRCS = test.c \
-	conftree.c \
-	messages.c \
-	misc.c \
-	globfuncs.c
-
-OTHERSRCS = gram.y
+CFLAGS   = ${COMMON_CFLAGS} -DKFLAG -DANDREW -DVICE -UDEBUG
 
 OBJS =  package.o \
 	gram.o \

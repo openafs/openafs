@@ -11,8 +11,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC=${MT_CC}
-CFLAGS=-I. -I${srcdir} ${OPTMZ} ${DBG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${MT_CFLAGS} \
-	-I../auth -I../kauth -I../ptserver -I../sys
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit

@@ -8,10 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = ${OPTMZ} ${XLDFLAGS}
-
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \

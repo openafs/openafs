@@ -8,8 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS}
-
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
 all: depinstall ${TOP_LIBDIR}/librxstat.a 

@@ -9,11 +9,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-CFLAGS=$(DBG) -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
-
-INSTALLex = ${INSTALL} -m 755
 
 #
 # What to make
@@ -26,18 +22,11 @@ all: afsd vsys
 
 AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
 
-afsd: afsd.o $(AFSLIBS)
-	case ${SYS_NAME} in \
-	sgi_61 | sgi_62 | sgi_63) \
-		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
-	sgi_64 | sgi_65 ) \
-		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
-	* ) \
-		${CC} ${CFLAGS} $(DBG) -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
-	esac
+afsd: afsd.o $(AFSLIBS) $(AFSD_LIBS)
+	${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ${AFSD_LIBS}
 
 vsys: vsys.o
-	$(CC) $(DBG) -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
+	${CC} ${CFLAGS} -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
 
 #
 # Objects
@@ -97,10 +86,10 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
                 hp?00_ux10? ) \
 			${INSTALL} -f ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
-			${INSTALLex} -f ${srcdir}/afs.rc.linux ${DEST}/root.client/usr/vice/etc/afs.rc; \
+			${INSTALL} -f ${srcdir}/afs.rc.linux -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc; \
 			${INSTALL} -f ${srcdir}/afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
 		ppc_darwin*) \
-			${INSTALLex} -f ${srcdir}/afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
+			${INSTALL} -f ${srcdir}/afs.rc.darwin -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL} -f ${srcdir}/afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \
 			${INSTALL} -f ${srcdir}/afs.rc.fbsd ${DEST}/root.client/usr/vice/etc/afs.rc.fbsd ;; \

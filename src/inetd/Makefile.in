@@ -1,8 +1,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-INCLUDES = -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}
-DEFINES = ${INCLUDES}
 AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libubik.a\
 		   ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libsys.a \
 		   ${TOP_LIBDIR}/librx.a \
@@ -10,10 +8,8 @@ AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libubik.a\
 		   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/librxkad.a\
 		   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libcmd.a \
 		   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a 
-LIBRES = 
 LIBS = ${AFSLIBS} ${LIBRES} ${XLIBS}
 OBJS = inetd.o setenv.o getenv.o
-CFLAGS = ${DEFINES} ${DBUG} ${XCFLAGS}
 
 include ../config/Makefile.version
 
@@ -26,11 +22,9 @@ inetd: ${OBJS}
 	set -x; \
 	case "${SYS_NAME}" in \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_dux?? ) \
-		${CC} -o $@ ${DEFINES} ${OBJS} ${LIBS} -lutil ;; \
-	sgi_6* ) \
-		${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ;; \
+		${CC} ${CFLAGS} -o $@ ${OBJS} ${LIBS} -lutil ;; \
 	*) \
-		${CC} -o $@ ${DEFINES} ${OBJS} ${LIBS} ;; \
+		${CC} ${CFLAGS} -o $@ ${OBJS} ${LIBS} ;; \
 	esac
 
 inetd.o: inetd.c AFS_component_version_number.c

@@ -8,12 +8,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
-
 CC=${MT_CC}
-INCLUDES=-I${TOP_OBJDIR}/src/config -I. -I.. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs
-CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
-LDFLAGS=${DBG} ${XLDFLAGS}
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+
+CCRULE=${CC} ${CFLAGS} -c $?
 
 VICED=../viced
 VLSERVER=../vlserver
@@ -48,133 +46,131 @@ LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.
 
 all: fileserver
 
-COMPILE=${CC} ${CFLAGS} -c $?
-
 viced.o: ${VICED}/viced.c
-	${COMPILE}
+	${CCRULE}
 
 afsfileprocs.o: ${VICED}/afsfileprocs.c
-	${COMPILE}
+	${CCRULE}
 
 host.o: ${VICED}/host.c
-	${COMPILE}
+	${CCRULE}
 
 physio.o: ${VICED}/physio.c
-	${COMPILE}
+	${CCRULE}
 
 callback.o: ${VICED}/callback.c
-	${COMPILE}
+	${CCRULE}
 
 assert.o: ${UTIL}/assert.c
-	${COMPILE}
+	${CCRULE}
 
 uuid.o: ${UTIL}/uuid.c
-	${COMPILE}
+	${CCRULE}
 
 serverLog.o: ${UTIL}/serverLog.c
-	${COMPILE}
+	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${COMPILE}
+	${CCRULE}
 
 volparse.o: ${UTIL}/volparse.c
-	${COMPILE}
+	${CCRULE}
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${COMPILE}
+	${CCRULE}
 
 netutils.o: ${UTIL}/netutils.c
-	${COMPILE}
+	${CCRULE}
 
 dirpath.o: ${UTIL}/dirpath.c
-	${COMPILE}
+	${CCRULE}
 
 lock.o: ${LWP}/lock.c
-	${COMPILE}
+	${CCRULE}
 
 fasttime.o: ${LWP}/fasttime.c
-	${COMPILE}
+	${CCRULE}
 
 threadname.o: ${LWP}/threadname.c
-	${COMPILE}
+	${CCRULE}
 
 aclprocs.o: ${LIBACL}/aclprocs.c
-	${COMPILE}
+	${CCRULE}
 
 netprocs.o: ${LIBACL}/netprocs.c
-	${COMPILE}
+	${CCRULE}
 
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${COMPILE}
+	${CCRULE}
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${COMPILE}
+	${CCRULE}
 
 buffer.o: ${DIR}/buffer.c
-	${COMPILE}
+	${CCRULE}
 
 dir.o: ${DIR}/dir.c
-	${COMPILE}
+	${CCRULE}
 
 salvage.o: ${DIR}/salvage.c
-	${COMPILE}
+	${CCRULE}
 
 vnode.o: ${VOL}/vnode.c
-	${COMPILE}
+	${CCRULE}
 
 volume.o: ${VOL}/volume.c
-	${COMPILE}
+	${CCRULE}
 
 vutil.o: ${VOL}/vutil.c
-	${COMPILE}
+	${CCRULE}
 
 partition.o: ${VOL}/partition.c
-	${COMPILE}
+	${CCRULE}
 
 fssync.o: ${VOL}/fssync.c
-	${COMPILE}
+	${CCRULE}
 
 purge.o: ${VOL}/purge.c
-	${COMPILE}
+	${CCRULE}
 
 clone.o: ${VOL}/clone.c
-	${COMPILE}
+	${CCRULE}
 
 nuke.o: ${VOL}/nuke.c
-	${COMPILE}
+	${CCRULE}
 
 devname.o: ${VOL}/devname.c
-	${COMPILE}
+	${CCRULE}
 
 common.o: ${VOL}/common.c
-	${COMPILE}
+	${CCRULE}
 
 listinodes.o: ${VOL}/listinodes.c
-	${COMPILE}
+	${CCRULE}
 
 ihandle.o: ${VOL}/ihandle.c
-	${COMPILE}
+	${CCRULE}
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${COMPILE}
+	${CCRULE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${COMPILE}
+	${CCRULE}
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${COMPILE}
+	${CCRULE}
 
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.cs.o: ${FSINT}/afsint.cs.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.ss.o: ${FSINT}/afsint.ss.c
-	${COMPILE}
+	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${COMPILE}
+	${CCRULE}
 
 fileserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
@@ -188,6 +184,7 @@ clean:
 	$(RM) -f *.o fileserver core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
 ${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
 	${INSTALL} -ns $? $@
 
