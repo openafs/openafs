@@ -1118,7 +1118,7 @@ KFW_import_ccache_data(void)
 
 
 int
-KFW_AFS_get_cred(char * username, 
+KFW_AFS_get_cred( char * username, 
                   char * cell,
                   char * password,
                   int lifetime,
@@ -1136,6 +1136,8 @@ KFW_AFS_get_cred(char * username,
     char **cells = NULL;
     int  cell_count=0;
     struct afsconf_cell cellconfig;
+    char * dot;
+
 
     if (!pkrb5_init_context)
         return 0;
@@ -1155,12 +1157,30 @@ KFW_AFS_get_cred(char * username,
     if ( code ) goto cleanup;
 
     realm = strchr(username,'@');
-    if (realm) {
+    if ( realm ) {
+        pname = strdup(username);
+        realm = strchr(pname, '@');
         *realm = '\0';
-        realm++;
-    }
-    if ( !realm || !realm[0] )
+
+        /* handle kerberos iv notation */
+        while ( dot = strchr(pname,'.') ) {
+            *dot = '/';
+        }
+        *realm++ = '@';
+    } else {
         realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+        pname = malloc(strlen(username) + strlen(realm) + 2);
+
+        strcpy(pname, username);
+
+        /* handle kerberos iv notation */
+        while ( dot = strchr(pname,'.') ) {
+            *dot = '/';
+        }
+
+        strcat(pname,"@");
+        strcat(pname,realm);
+    }
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("Realm: ");
@@ -1168,15 +1188,10 @@ KFW_AFS_get_cred(char * username,
         OutputDebugString("\n");
     }
 
-    code = pkrb5_build_principal(ctx, &principal, strlen(realm),
-                                 realm, username,
-                                 NULL,
-                                 NULL);
-
-    code = KFW_get_ccache(ctx, principal, &cc);
+    code = pkrb5_parse_name(ctx, pname, &principal);
     if ( code ) goto cleanup;
 
-    code = pkrb5_unparse_name(ctx, principal, &pname);
+    code = KFW_get_ccache(ctx, principal, &cc);
     if ( code ) goto cleanup;
 
     if ( lifetime == 0 )
@@ -1248,7 +1263,7 @@ KFW_AFS_get_cred(char * username,
 
   cleanup:
     if ( pname )
-        pkrb5_free_unparsed_name(ctx,pname);
+        free(pname);
     if ( cc )
         pkrb5_cc_close(ctx, cc);
 
