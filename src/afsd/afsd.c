@@ -807,6 +807,10 @@ static int doSweepAFSCache(vFilesFound,directory,dirNum,maxDir)
 		  (strcmp(currp->d_name,         "quota.user") == 0) ||
 		  (strcmp(currp->d_name,         "quota.group") == 0) ||
 #endif
+#ifdef AFS_LINUX22_ENV
+		  /* this is the ext3 journal file */
+		  (strcmp(currp->d_name,         ".journal") == 0) ||
+#endif
 		  (strcmp(currp->d_name, "lost+found") == 0)) {
 	    /*
 	     * Don't do anything - this file is legit, and is to be left alone.
