@@ -62,10 +62,10 @@
 #ifdef AFS_LINUX_64BIT_KERNEL
 #define osi_GetTime(V)                                 \
     do {                                               \
-       struct timeval tv;                              \
-       do_gettimeofday(&tv);                           \
-       (V)->tv_sec = (afs_int32)tv.tv_sec;             \
-       (V)->tv_usec = (afs_int32)tv.tv_usec;           \
+       struct timeval __afs_tv;                              \
+       do_gettimeofday(&__afs_tv);                           \
+       (V)->tv_sec = (afs_int32)__afs_tv.tv_sec;             \
+       (V)->tv_usec = (afs_int32)__afs_tv.tv_usec;           \
     } while (0)
 #else
 #define osi_GetTime(V) do_gettimeofday((V))
