@@ -50,6 +50,7 @@ static long GetKey (rock, kvno, key)
     afs_int32 code;
     int fd;
 
+    fprintf(stderr, "GetKey called for kvno %d\n", kvno);
     if (!parms->keyfile) {
         memcpy(key, &serviceKey, sizeof(*key));
         return 0;
@@ -110,8 +111,10 @@ long rxkst_StartServer (parms)
     return 0;
 }
 
+static char test_client_name[MAXKTCNAMELEN];
+static char test_client_inst[MAXKTCNAMELEN];
 static char test_client_cell[MAXKTCREALMLEN];
-static int got_client_cell = 0;
+static int got_client_id = 0;
 static long CheckAuth (call)
   IN struct rx_call *call;
 {
@@ -140,16 +143,16 @@ static long CheckAuth (call)
 				name, inst, cell, &kvno);
     if (code) return code;
     if (minAuth > level) return -1;
-    if (kvno != serviceKeyVersion) return RXKST_BADKVNO;
-    if (strcmp (name, RXKST_CLIENT_NAME) ||
-	strcmp (inst, RXKST_CLIENT_INST) ||
-	strcmp (cell, RXKST_CLIENT_CELL))
-	    return RXKST_BADCLIENT;
-    if (got_client_cell) {
+    fprintf(stderr, "Test client is %s.%s@%s\n", name, inst, cell);
+    if (got_client_id) {
+        if (strcmp(name, test_client_name)) return RXKST_BADCLIENT;
+        if (strcmp(inst, test_client_inst)) return RXKST_BADCLIENT;
         if (strcmp(cell, test_client_cell)) return RXKST_BADCLIENT;
     } else {
+        strcpy(test_client_name, name);
+        strcpy(test_client_inst, inst);
         strcpy(test_client_cell, cell);
-        fprintf(stderr, "Test client's cell is \"%s\"\n", cell);
+        got_client_id = 1;
     }
     return 0;
 }
