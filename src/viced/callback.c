@@ -1376,16 +1376,22 @@ CleanupTimedOutCallBacks_r()
 
 
 static struct host *lih_host;
+static int lih_host_held = 0;
 
 static int lih_r(host, held, hostp)
     register struct host *host, *hostp;
     register int held;
 
 {
+    lih_host_held = 0;
     if (host->cblist
 	   && ((hostp && host != hostp) || (!held && !h_OtherHolds_r(host)))
            && (!lih_host || host->ActiveCall < lih_host->ActiveCall) ) {
 	lih_host = host;
+    }
+    if (!held) {
+        held = 1;
+        lih_host_held = 1;
     }
     return held;
 
@@ -1415,8 +1421,13 @@ static int GetSomeSpace_r(hostp, locked)
 	hp = lih_host;
 	if (hp) {
 	    cbstuff.GSS4++;
-	    if ( ! ClearHostCallbacks_r(hp, 0 /* not locked or held */) )
-		return;
+            if (!ClearHostCallbacks_r(hp, 0 /* not locked or held */ )) {
+                if (lih_host_held) 
+                    h_Release_r(hp);
+                return 0;
+            }
+            if (lih_host_held) 
+                h_Release_r(hp);
 	    hp2 = hp->next;
 	} else {
 	    hp2 = hostList;
