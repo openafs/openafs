@@ -115,15 +115,23 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 
        code = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT,
                             0, KEY_QUERY_VALUE, &hk);
-       if (code != ERROR_SUCCESS)
-           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT,
-                                0, KEY_QUERY_VALUE, &hk);
        if (code == ERROR_SUCCESS) {
            len = sizeof(szParams);
            type = REG_SZ;
            code = RegQueryValueEx(hk, "AfscredsShortcutParams", NULL, &type,
                                    (BYTE *) &szParams, &len);
            RegCloseKey (hk);
+       }
+       if (code != ERROR_SUCCESS) {
+           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT,
+                                0, KEY_QUERY_VALUE, &hk);
+           if (code == ERROR_SUCCESS) {
+               len = sizeof(szParams);
+               type = REG_SZ;
+               code = RegQueryValueEx(hk, "AfscredsShortcutParams", NULL, &type,
+                                       (BYTE *) &szParams, &len);
+               RegCloseKey (hk);
+           }
        }
        Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", szParams);
    }
