@@ -3,7 +3,7 @@ openafs (1.0.1-3) unstable; urgency=low
   * Add support for Linux Kernel 2.4.x.
   * Note that administration scripts are released under the GPL.
 
- -- Sam Hartman <hartmans@debian.org>  Mon,  18 Dec 200019:06:00 -0500
+ -- Sam Hartman <hartmans@debian.org>  Mon,  18 Dec 2000 19:06:00 -0500
 
 
 openafs (1.0.1-2) unstable; urgency=medium
