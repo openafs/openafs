@@ -72,6 +72,8 @@ extern lock_t*  rx_sleepLock;
                            MP_SPINUNLOCK(rx_sleepLock);                   \
                          }
 
+#define CV_DESTROY(a)
+
 typedef sync_t  afs_kmutex_t;
 typedef caddr_t afs_kcondvar_t;
 
@@ -96,8 +98,11 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #define MUTEX_DESTROY(a)        ( dealloc_spinlock((a)->s_lock) )
 #define MUTEX_ENTER(a)          psync(a)
 #define MUTEX_TRYENTER(a)       ( (valusync(a)==1)? (MUTEX_ENTER(a), 1):0 )
+#if 0
 #define MUTEX_EXIT(a)           ((valusync(a)<1)? vsync(a) : \
                                                 osi_Panic("mutex not held"))
+#endif
+#define MUTEX_EXIT(a)           vsync(a)
 #define MUTEX_INIT(a,b,c,d)     (initsync(a), vsync(a))
 
 #undef MUTEX_ISMINE
