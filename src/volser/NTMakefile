@@ -1,0 +1,168 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=volser
+!INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\config\NTMakefile.version
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+INCFILES = \
+	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\volser.h \
+	$(INCFILEDIR)\volint.h
+
+
+LOCAL_INCFILES = \
+	volser.h \
+	volint.h
+
+############################################################################
+# Build volser library.
+
+LIBFILE = $(DESTDIR)\lib\afs\afsvolser.lib
+
+LIBOBJS =\
+	$(OUT)\lockprocs.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\volint.cs.obj \
+	$(OUT)\volint.ss.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\vsprocs.obj \
+	$(OUT)\vsutils.obj \
+	$(OUT)\AFS_component_version_number.obj 
+
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# External libraries
+
+EXEC_LIBS = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afs\afsvol.lib \
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afs\afsvol.lib \
+	$(DESTDIR)\lib\afs\afsaudit.lib \
+	$(DESTDIR)\lib\afs\afsauth.lib \
+	$(DESTDIR)\lib\afs\afsvldb.lib \
+	$(DESTDIR)\lib\afs\afskauth.lib \
+	$(DESTDIR)\lib/afs/afscom_err.lib \
+	$(DESTDIR)\lib\afs\afsusd.lib \
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\afsrxstat.lib \
+	$(DESTDIR)\lib\afsdes.lib \
+	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)\lib\afs\afsacl.lib \
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\afs\afseventlog.lib \
+     $(DESTDIR)\lib\cm_dns.obj
+
+
+############################################################################
+# Build volserver
+
+VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\volserver.exe
+
+VOLSERVER_EXEOBJS = \
+	$(OUT)\common.obj \
+	$(OUT)\dumpstuff.obj \
+	$(OUT)\physio.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\volint.cs.obj \
+	$(OUT)\volint.ss.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\volmain.obj \
+	$(OUT)\volprocs.obj \
+	$(OUT)\voltrans.obj \
+	$(OUT)\volserver.res
+	
+
+VOLSERVER_EXELIBS = \
+	$(DESTDIR)\lib\afs\afsdir.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+############################################################################
+# Build vos
+
+RS_VOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\vos.exe
+CL_VOS_EXEFILE = $(DESTDIR)\etc\vos.exe
+
+VOS_EXEOBJS = \
+	$(OUT)\vos.obj \
+	$(OUT)\vsprocs.obj \
+	$(OUT)\vsutils.obj \
+	$(OUT)\lockprocs.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\vos.res
+
+VOS_EXELIBS = \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\afs\afsvolser.lib \
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\afs\afspioctl.lib
+
+$(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
+	$(EXECONLINK)
+	$(EXEPREP) 
+
+$(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)
+	$(COPY)  $** $@
+
+############################################################################
+# Generate versioninfo resources
+$(OUT)\volserver.res: AFS_component_version_number.h
+
+$(OUT)\vos.res: AFS_component_version_number.h
+
+############################################################################
+# Definitions for generating files via RXGEN
+
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
+
+volint.h volint.cs.c volint.ss.c volint.xdr.c: volint.xg
+	$(RXGEN) -x $**
+
+
+############################################################################
+# Definitions for generating files via COMPILE_ET
+
+volser.h volerr.c: volerr.et volser.p.h
+	$(DEL) volerr.c volser.h
+	$(COMPILE_ET) volerr -h volser
+
+
+
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(LOCAL_INCFILES) $(LIBFILE) $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
+		$(INCFILES)
+
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) volerr.c volser.h $(INCFILES)
+	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
+
+mkdir:
+	
