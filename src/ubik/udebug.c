@@ -45,6 +45,9 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
+/* needed by Irix. Include a header to get it, or leave it alone. */
+extern struct hostent *hostutil_GetHostByName();
+
 static short
 PortNumber(register char *aport)
 {
