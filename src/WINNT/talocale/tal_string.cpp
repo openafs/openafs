@@ -1515,11 +1515,10 @@ LPTSTR AnsiToString (LPCSTR pszOriginalA)
 #ifdef UNICODE
         CopyAnsiToUnicode (pszTarget, pszOriginalA);
 #else
-        lstrcpy (pszTargetA, (LPSTR)pszOriginal);
+        lstrcpy (pszTarget, (LPSTR)pszOriginalA);
 #endif
     }
     return pszTarget;
-#endif
 }
 
 
