@@ -214,7 +214,9 @@ char *syms;
 	    case U800WRMAGIC:
 	    case U800ROMAGIC:
 	    case U800TOCMAGIC:
+#ifdef __XCOFF64__
 	    case U64_TOCMAGIC:
+#endif
 		break;
 
 	    default:

@@ -57,10 +57,10 @@ ${TOP_INCDIR}/afs/audit.h: audit.h
 dest:  ${DEST}/lib/afs/libaudit.a ${DEST}/include/afs/audit.h
 	case ${SYS_NAME} in \
 	rs_aix*) \
-	   ${INSTALL} Audit              ${DEST}/root.server/usr/afs/local ;  \
-	   ${INSTALL} objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
-	   ${INSTALL} events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
-	   ${INSTALL} config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
+	   ${INSTALL} ${srcdir}/Audit              ${DEST}/root.server/usr/afs/local ;  \
+	   ${INSTALL} ${srcdir}/objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
+	   ${INSTALL} ${srcdir}/events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
+	   ${INSTALL} ${srcdir}/config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
         *) ;; \
         esac ;
 
