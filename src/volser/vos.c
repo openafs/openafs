@@ -115,8 +115,7 @@ extern void SubEnumerateEntry();
 static struct tqHead busyHead, notokHead;
 
 static void
-qInit(ahead)
-     struct tqHead *ahead;
+qInit(struct tqHead *ahead)
 {
     memset((char *)ahead, 0, sizeof(struct tqHead));
     return;
@@ -124,9 +123,7 @@ qInit(ahead)
 
 
 static void
-qPut(ahead, volid)
-     struct tqHead *ahead;
-     afs_int32 volid;
+qPut(struct tqHead *ahead, afs_int32 volid)
 {
     struct tqElem *elem;
 
@@ -139,9 +136,7 @@ qPut(ahead, volid)
 }
 
 static void
-qGet(ahead, volid)
-     struct tqHead *ahead;
-     afs_int32 *volid;
+qGet(struct tqHead *ahead, afs_int32 *volid)
 {
     struct tqElem *tmp;
 
@@ -156,9 +151,8 @@ qGet(ahead, volid)
 }
 
 /* returns 1 if <filename> exists else 0 */
-static
-FileExists(filename)
-     char *filename;
+static int
+FileExists(char *filename)
 {
     usd_handle_t ufd;
     int code;
@@ -177,9 +171,8 @@ FileExists(filename)
 }
 
 /* returns 1 if <name> doesnot end in .readonly or .backup, else 0 */
-static
-VolNameOK(name)
-     char *name;
+static int
+VolNameOK(char *name)
 {
     int total;
 
@@ -195,9 +188,8 @@ VolNameOK(name)
 }
 
 /* return 1 if name is a number else 0 */
-static
-IsNumeric(name)
-     char *name;
+static int
+IsNumeric(char *name)
 {
     int result, len, i;
     char *ptr;
@@ -214,8 +206,6 @@ IsNumeric(name)
 
     }
     return result;
-
-
 }
 
 
@@ -223,8 +213,7 @@ IsNumeric(name)
  * Parse a server name/address and return the address in HOST BYTE order
  */
 afs_int32
-GetServer(aname)
-     char *aname;
+GetServer(char *aname)
 {
     register struct hostent *th;
     afs_int32 addr;
@@ -257,8 +246,7 @@ GetServer(aname)
 }
 
 afs_int32
-GetVolumeType(aname)
-     char *aname;
+GetVolumeType(char *aname)
 {
 
     if (!strcmp(aname, "ro"))
@@ -272,14 +260,10 @@ GetVolumeType(aname)
 }
 
 int
-IsPartValid(partId, server, code)
-     afs_int32 server, partId, *code;
-
+IsPartValid(afs_int32 partId, afs_int32 server, afs_int32 *code)
 {
     struct partList dummyPartList;
     int i, success, cnt;
-
-
 
     success = 0;
     *code = 0;
@@ -299,10 +283,8 @@ IsPartValid(partId, server, code)
 
  /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream 
   * associated  with <call> */
-SendFile(ufd, call, blksize)
-     usd_handle_t ufd;
-     register struct rx_call *call;
-     long blksize;
+int 
+SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 {
     char *buffer = (char *)0;
     afs_int32 error = 0;
@@ -345,9 +327,7 @@ SendFile(ufd, call, blksize)
 /* function invoked by UV_RestoreVolume, reads the data from rx_trx_stream and
  * writes it out to the volume. */
 afs_int32
-WriteData(call, rock)
-     struct rx_call *call;
-     char *rock;
+WriteData(struct rx_call *call, char *rock)
 {
     char *filename;
     usd_handle_t ufd;
@@ -396,10 +376,7 @@ WriteData(call, rock)
  * with <fd> <blksize>
  */
 int
-ReceiveFile(ufd, call, blksize)
-     usd_handle_t ufd;
-     struct rx_call *call;
-     long blksize;
+ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = NULL;
     afs_int32 bytesread;
@@ -437,9 +414,7 @@ ReceiveFile(ufd, call, blksize)
 }
 
 afs_int32
-DumpFunction(call, filename)
-     struct rx_call *call;
-     char *filename;
+DumpFunction(struct rx_call *call, char *filename)
 {
     usd_handle_t ufd;		/* default is to stdout */
     afs_int32 error = 0, code;
