@@ -414,6 +414,23 @@ libafsauthent: ubik auth kauth libafsrpc
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
+# pthread based user space RX library
+shlibafsrpc: rx rxkad des
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
+	esac
+
+shlibafsauthent: ubik auth kauth shlibafsrpc
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
+	esac
+
 libadmin_real: 
 	${COMPILE_PART1} libadmin ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/adminutil ${COMPILE_PART2}
@@ -451,13 +468,13 @@ jafsadm: libjafsadm
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -551,6 +568,8 @@ clean2:
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
+	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}
@@ -675,6 +694,8 @@ distclean: clean
 	src/rxstat/Makefile \
 	src/scout/Makefile \
 	src/sgistuff/Makefile \
+	src/shlibafsauthent/Makefile \
+	src/shlibafsrpc/Makefile \
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \

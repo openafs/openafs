@@ -1,3 +1,8 @@
+# API version. When something changes, increment as appropriate. 
+# Ignore at your own risk.
+LIBAFSRPCMAJOR=1
+LIBAFSRPCMINOR=0
+
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -10,11 +15,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
 CC=${MT_CC}
 INCLUDES=-I. -I${srcdir} -I${TOP_INCDIR} -I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
 	-I../rxkad -I${srcdir}/../rxkad -I../rxstat -I../fsint
-CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_OBJDIR}/src/config
+CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_OBJDIR}/src/config ${SHLIB_CFLAGS}
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
@@ -113,21 +117,25 @@ LIBOBJS = \
 	${RXSTATOBJS} \
 	${FSINTOBJS}
 
-all: ${TOP_LIBDIR}/libafsrpc.a
+LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 
-install: ${DESTDIR}${libdir}/libafsrpc.a
+all: ${TOP_LIBDIR}/${LIBAFSRPC}
 
-${DEST}/lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+install: ${DESTDIR}${libdir}/${LIBAFSRPC}
 
-libafsrpc.a: ${LIBOBJS}
-	$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
-	$(RANLIB) $@
-	case "${SYS_NAME}" in \
-	    rs_aix*) \
-		$(AR) crv $@ ${srcdir}/../sys/afsl.exp;; \
-        esac
+${DEST}${libdir}/libafsrpc.${SHLIB_SUFFIX}: ${LIBAFSRPC}
+	${INSTALL} ${LIBAFSRPC} ${DEST}${libdir}/${LIBAFSRPC}
+	-ln -f -s ${LIBAFSRPC} ${DEST}${libdir}/libafsrpc.${SHLIB_SUFFIX}
+
+${LIBAFSRPC}: ${LIBOBJS}
+	case ${SYS_NAME} in \
+	rs_aix4*) \
+		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:afsrpc.exp ${MT_LIBS};; \
+	sun*_5*) \
+		${SHLIB_LINKER} -h ${LIBAFSRPC} -o ${LIBAFSRPC} ${MT_LIBS};; \
+	*) \
+		${SHLIB_LINKER} -o ${LIBAFSRPC} ${MT_LIBS};; \
+	esac
 
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
@@ -367,11 +375,13 @@ afsaux.o: ${FSINT}/afsaux.c
 clean:
 	$(RM) -f *.o libafsrpc*
 
-${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}: ${LIBAFSRPC}
+	${INSTALL} ${LIBAFSRPC} ${DESTDIR}${libdir}/${LIBAFSRPC}
+	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
 
-${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}: ${LIBAFSRPC}
+	${INSTALL} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
+	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
 
-dest: ${DEST}/lib/libafsrpc.a
+dest: ${DEST}/lib/${LIBAFSRPC}
 
