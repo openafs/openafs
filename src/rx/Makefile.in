@@ -72,7 +72,15 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	xdr_afsuuid.c rx_trace.h xdr_int64.c
 UKSRCS = $(KSRCS) rx_conncache.c
 
-all: includes kinstall ukinstall ${TOP_LIBDIR}/librx.a
+PICTARGET =../pic/rx
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
+$(PICTARGET)/%.o: %.c $(PICTARGET)
+	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+$(PICTARGET):
+	mkdir -p $(PICTARGET)
+
+all: includes kinstall ukinstall ${TOP_LIBDIR}/librx.a $(PICOBJS)
 
 RX_component_version_number.c: AFS_component_version_number.c
 	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
@@ -222,7 +230,7 @@ ${DESTDIR}/include/rx/rx_xmit_nt.h: rx_xmit_nt.h ${TOP_INCDIR}/rx
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o *.a core *_component_version_number.c
+	$(RM) -f *.o *.a core *_component_version_number.c $(PICTARGET)/*.o
 
 include ../config/Makefile.version
 
