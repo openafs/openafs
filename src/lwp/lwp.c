@@ -59,16 +59,16 @@ extern int PRE_Block;		/* from preempt.c */
 extern char PRE_Block;		/* from preempt.c */
 #endif
 
-#define  ON	    1
-#define  OFF	    0
-#define  TRUE	    1
-#define  FALSE	    0
-#define  READY		2
-#define  WAITING		3
-#define  DESTROYED	4
-#define QWAITING		5
-#define  MAXINT     (~(1<<((sizeof(int)*8)-1)))
-#define  MINSTACK   44
+#define ON		1
+#define OFF		0
+#define TRUE		1
+#define FALSE		0
+#define READY		2
+#define WAITING		3
+#define DESTROYED	4
+#define QWAITING	5
+#define MAXINT     (~(1<<((sizeof(int)*8)-1)))
+#define MINSTACK   44
 
 #if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
 #define MINFRAME 128
@@ -84,16 +84,17 @@ extern char PRE_Block;		/* from preempt.c */
 
 /* Debugging macro */
 #ifdef DEBUG
-#define Debug(level, msg)\
-	 if (lwp_debug && lwp_debug >= level) {\
-	     printf("***LWP (0x%x): ", lwp_cpptr);\
-	     printf msg;\
-	     putchar('\n');\
-	 }
-
+#define Debug(level, msg) do {						\
+    if (lwp_debug && lwp_debug >= level) {				\
+	printf("***LWP (0x%x): ", lwp_cpptr);				\
+	printf msg;							\
+	putchar('\n');							\
+    }									\
+} while (0)
 #else
-#define Debug(level, msg)
-
+#define Debug(level, msg) do {						\
+    ;									\
+} while (0)
 #endif
 
 static int Dispatcher();
@@ -288,9 +289,9 @@ LWP_CreateProcess(int (*ep) (), int stacksize, int priority, void *parm,
     if (lwp_MaxStackSeen < stacksize)
 	lwp_MaxStackSeen = stacksize;
 
-    Debug(0, ("Entered LWP_CreateProcess"))
-	/* Throw away all dead process control blocks */
-	purge_dead_pcbs();
+    Debug(0, ("Entered LWP_CreateProcess"));
+    /* Throw away all dead process control blocks */
+    purge_dead_pcbs();
     if (lwp_init) {
 	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
@@ -420,9 +421,9 @@ LWP_CreateProcess2(int (*ep) (), int stacksize, int priority, void *parm,
     if (lwp_MaxStackSeen < stacksize)
 	lwp_MaxStackSeen = stacksize;
 
-    Debug(0, ("Entered LWP_CreateProcess"))
-	/* Throw away all dead process control blocks */
-	purge_dead_pcbs();
+    Debug(0, ("Entered LWP_CreateProcess"));
+    /* Throw away all dead process control blocks */
+    purge_dead_pcbs();
     if (lwp_init) {
 	temp = (PROCESS) malloc(sizeof(struct lwp_pcb));
 	if (temp == NULL) {
@@ -467,8 +468,8 @@ LWP_CreateProcess2(int (*ep) (), int stacksize, int priority, void *parm,
 int
 LWP_CurrentProcess(PROCESS * pid)
 {				/* returns pid of current process */
-    Debug(0, ("Entered Current_Process"))
-	if (lwp_init) {
+    Debug(0, ("Entered Current_Process"));
+    if (lwp_init) {
 	*pid = lwp_cpptr;
 	return LWP_SUCCESS;
     } else
@@ -478,8 +479,8 @@ LWP_CurrentProcess(PROCESS * pid)
 PROCESS
 LWP_ThreadId(void)
 {
-    Debug(0, ("Entered ThreadId"))
-	if (lwp_init)
+    Debug(0, ("Entered ThreadId"));
+    if (lwp_init)
 	return lwp_cpptr;
     else
 	return (PROCESS) 0;
@@ -492,8 +493,8 @@ LWP_DestroyProcess(PROCESS pid)
 {				/* destroy a lightweight process */
     PROCESS temp;
 
-    Debug(0, ("Entered Destroy_Process"))
-	if (lwp_init) {
+    Debug(0, ("Entered Destroy_Process"));
+    if (lwp_init) {
 	if (lwp_cpptr != pid) {
 	    Dispose_of_Dead_PCB(pid);
 	    Set_LWP_RC();
@@ -504,19 +505,16 @@ LWP_DestroyProcess(PROCESS pid)
 #if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.dsptchstack[MINFRAME]));
-#else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) - 8]));
-#else
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+#elif defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) -
 				      0x40]));
-#else
-#if defined(AFS_S390_LINUX20_ENV)
+#elif defined(AFS_S390_LINUX20_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) -
@@ -527,9 +525,6 @@ LWP_DestroyProcess(PROCESS pid)
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) -
 				      sizeof(void *)]));
 #endif
-#endif
-#endif
-#endif
 	}
 	return LWP_SUCCESS;
     } else
@@ -539,8 +534,8 @@ LWP_DestroyProcess(PROCESS pid)
 int
 LWP_DispatchProcess(void)
 {				/* explicit voluntary preemption */
-    Debug(2, ("Entered Dispatch_Process"))
-	if (lwp_init) {
+    Debug(2, ("Entered Dispatch_Process"));
+    if (lwp_init) {
 	Set_LWP_RC();
 	return LWP_SUCCESS;
     } else
@@ -555,11 +550,12 @@ Dump_Processes(void)
 	register int i;
 	for (i = 0; i < MAX_PRIORITIES; i++)
 	    for_all_elts(x, runnable[i], {
-			 printf("[Priority %d]\n", i); Dump_One_Process(x);}
-	)
-	    for_all_elts(x, blocked, {
+			 printf("[Priority %d]\n", i);
 			 Dump_One_Process(x);
 			 }
+	)
+	    for_all_elts(x, blocked, {
+			 Dump_One_Process(x);}
 	)
     } else
 	printf("***LWP: LWP support not initialized\n");
@@ -570,8 +566,8 @@ Dump_Processes(void)
 int
 LWP_GetProcessPriority(PROCESS pid, int *priority)
 {				/* returns process priority */
-    Debug(0, ("Entered Get_Process_Priority"))
-	if (lwp_init) {
+    Debug(0, ("Entered Get_Process_Priority"));
+    if (lwp_init) {
 	*priority = pid->priority;
 	return 0;
     } else
@@ -586,8 +582,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
     register int i;
     char *value;
 
-    Debug(0, ("Entered LWP_InitializeProcessSupport"))
-	if (lwp_init != NULL)
+    Debug(0, ("Entered LWP_InitializeProcessSupport"));
+    if (lwp_init != NULL)
 	return LWP_SUCCESS;
 
     /* Set up offset for stack checking -- do this as soon as possible */
@@ -632,8 +628,8 @@ LWP_InitializeProcessSupport(int priority, PROCESS * pid)
 int
 LWP_INTERNALSIGNAL(char *event, int yield)
 {				/* signal the occurence of an event */
-    Debug(2, ("Entered LWP_SignalProcess"))
-	if (lwp_init) {
+    Debug(2, ("Entered LWP_SignalProcess"));
+    if (lwp_init) {
 	int rc;
 	rc = Internal_Signal(event);
 	if (yield)
@@ -648,19 +644,17 @@ LWP_TerminateProcessSupport(void)
 {				/* terminate all LWP support */
     register int i;
 
-    Debug(0, ("Entered Terminate_Process_Support"))
-	if (lwp_init == NULL)
+    Debug(0, ("Entered Terminate_Process_Support"));
+    if (lwp_init == NULL)
 	return LWP_EINIT;
     if (lwp_cpptr != LWPANCHOR.outerpid)
 	Abort_LWP("Terminate_Process_Support invoked from wrong process!");
     for (i = 0; i < MAX_PRIORITIES; i++)
 	for_all_elts(cur, runnable[i], {
-		     Free_PCB(cur);
-		     }
+		     Free_PCB(cur);}
     )
 	for_all_elts(cur, blocked, {
-		     Free_PCB(cur);
-		     }
+		     Free_PCB(cur);}
     )
 	free(lwp_init);
     lwp_init = NULL;
@@ -672,8 +666,8 @@ LWP_WaitProcess(char *event)
 {				/* wait on a single event */
     char *tempev[2];
 
-    Debug(2, ("Entered Wait_Process"))
-	if (event == NULL)
+    Debug(2, ("Entered Wait_Process"));
+    if (event == NULL)
 	return LWP_EBADEVENT;
     tempev[0] = event;
     tempev[1] = NULL;
@@ -686,9 +680,9 @@ LWP_MwaitProcess(int wcount, char *evlist[])
     register int ecount, i;
 
 
-    Debug(0, ("Entered Mwait_Process [waitcnt = %d]", wcount))
+    Debug(0, ("Entered Mwait_Process [waitcnt = %d]", wcount));
 
-	if (evlist == NULL) {
+    if (evlist == NULL) {
 	Set_LWP_RC();
 	return LWP_EBADCOUNT;
     }
@@ -753,8 +747,8 @@ Abort_LWP(char *msg)
 {
     struct lwp_context tempcontext;
 
-    Debug(0, ("Entered Abort_LWP"))
-	printf("***LWP: %s\n", msg);
+    Debug(0, ("Entered Abort_LWP"));
+    printf("***LWP: %s\n", msg);
     printf("***LWP: Abort --- dumping PCBs ...\n");
 #ifdef DEBUG
     Dump_Processes();
@@ -771,8 +765,8 @@ Create_Process_Part2(void)
 {				/* creates a context for the new process */
     PROCESS temp;
 
-    Debug(2, ("Entered Create_Process_Part2"))
-	temp = lwp_cpptr;	/* Get current process id */
+    Debug(2, ("Entered Create_Process_Part2"));
+    temp = lwp_cpptr;		/* Get current process id */
     savecontext(Dispatcher, &temp->context, NULL);
     (*temp->ep) (temp->parm);
     LWP_DestroyProcess(temp);
@@ -782,11 +776,11 @@ Create_Process_Part2(void)
 static int
 Delete_PCB(register PROCESS pid)
 {				/* remove a PCB from the process list */
-    Debug(4, ("Entered Delete_PCB"))
-	lwp_remove(pid,
-		   (pid->blockflag || pid->status == WAITING
-		    || pid->status ==
-		    DESTROYED ? &blocked : &runnable[pid->priority]));
+    Debug(4, ("Entered Delete_PCB"));
+    lwp_remove(pid,
+	       (pid->blockflag || pid->status == WAITING
+		|| pid->status ==
+		DESTROYED ? &blocked : &runnable[pid->priority]));
     LWPANCHOR.processcnt--;
     return 0;
 }
@@ -862,13 +856,15 @@ Dispatcher(void)
 	for (i = 0; i < MAX_PRIORITIES; i++) {
 	    printf("[Priority %d, runnable (%d):", i, runnable[i].count);
 	    for_all_elts(p, runnable[i], {
-			 printf(" \"%s\"", p->name);}
+			 printf(" \"%s\"", p->name);
+			 }
 	    )
 		puts("]");
 	}
 	printf("[Blocked (%d):", blocked.count);
 	for_all_elts(p, blocked, {
-		     printf(" \"%s\"", p->name);}
+		     printf(" \"%s\"", p->name);
+		     }
 	)
 	    puts("]");
     }
@@ -958,8 +954,8 @@ Overflow_Complain(void)
 static void
 Dispose_of_Dead_PCB(PROCESS cur)
 {
-    Debug(4, ("Entered Dispose_of_Dead_PCB"))
-	Delete_PCB(cur);
+    Debug(4, ("Entered Dispose_of_Dead_PCB"));
+    Delete_PCB(cur);
     Free_PCB(cur);
 /*
     Internal_Signal(cur);
@@ -975,12 +971,11 @@ Exit_LWP(void)
 static void
 Free_PCB(PROCESS pid)
 {
-    Debug(4, ("Entered Free_PCB"))
-	if (pid->stack != NULL) {
-	Debug(0,
-	      ("HWM stack usage: %d, [PCB at 0x%x]",
-	       Stack_Used(pid->stack, pid->stacksize), pid))
-	    free(pid->stack);
+    Debug(4, ("Entered Free_PCB"));
+    if (pid->stack != NULL) {
+	Debug(0, ("HWM stack usage: %d, [PCB at 0x%x]",
+		  Stack_Used(pid->stack, pid->stacksize), pid));
+	free(pid->stack);
     }
     if (pid->eventlist != NULL)
 	free(pid->eventlist);
@@ -993,8 +988,8 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 {
     register int i = 0;
 
-    Debug(4, ("Entered Initialize_PCB"))
-	if (name != NULL)
+    Debug(4, ("Entered Initialize_PCB"));
+    if (name != NULL)
 	while (((temp->name[i] = name[i]) != '\0') && (i < 31))
 	    i++;
     temp->name[31] = '\0';
@@ -1032,8 +1027,8 @@ Internal_Signal(register char *event)
     int rc = LWP_ENOWAIT;
     register int i;
 
-    Debug(0, ("Entered Internal_Signal [event id 0x%x]", event))
-	if (!lwp_init)
+    Debug(0, ("Entered Internal_Signal [event id 0x%x]", event));
+    if (!lwp_init)
 	return LWP_EINIT;
     if (event == NULL)
 	return LWP_EBADEVENT;
@@ -1042,7 +1037,7 @@ Internal_Signal(register char *event)
 		 for (i = 0; i < temp->eventcnt; i++) {
 		 if (temp->eventlist[i] == event) {
 		 temp->eventlist[i] = NULL; rc = LWP_SUCCESS;
-		 Debug(0, ("Signal satisfied for PCB 0x%x", temp))
+		 Debug(0, ("Signal satisfied for PCB 0x%x", temp));
 		 if (--temp->waitcnt == 0) {
 		 temp->status = READY; temp->wakevent = i + 1;
 		 move(temp, &blocked, &runnable[temp->priority]); break;}
@@ -1060,8 +1055,8 @@ Initialize_Stack(char *stackptr, int stacksize)
 {
     register int i;
 
-    Debug(4, ("Entered Initialize_Stack"))
-	if (lwp_stackUseEnabled)
+    Debug(4, ("Entered Initialize_Stack"));
+    if (lwp_stackUseEnabled)
 	for (i = 0; i < stacksize; i++)
 	    stackptr[i] = i & 0xff;
     else
