@@ -66,6 +66,10 @@ process.o	: process.s process.c
 					$(CC) -c -I${SRCDIR}include -KPIC -G0  process.s;; \
 				sgi_61 | sgi_62 | sgi_63 ) \
 					$(CC) -c ${XCFLAGS} -I${SRCDIR}include -KPIC -G0  process.s;; \
+				s390*) \
+					/lib/cpp -P -I${SRCDIR}include process.s >process.ss; \
+					${AS} -ahlns process.ss -o process.o >process.lst; \
+					rm process.ss ;; \
 				hp* | *_linux* | sgi_64 | sgi_65) \
 					${CC} ${CFLAGS} -c process.c;; \
 				ncrx86_*) \

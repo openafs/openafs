@@ -38,6 +38,8 @@ extern char* getenv();
 #ifdef	AFS_OSF_ENV
 extern void *malloc(int size);
 extern void *realloc(void *ptr, int size);
+#endif
+#if defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV)
 extern int PRE_Block;	/* from preempt.c */
 #else
 extern char PRE_Block;	/* from preempt.c */
@@ -56,6 +58,14 @@ extern char PRE_Block;	/* from preempt.c */
 
 #ifdef __hp9000s800
 #define MINFRAME 128
+#define STACK_ALIGN 8
+#else
+#ifdef __s390__
+#define MINFRAME    96
+#define STACK_ALIGN 8
+#else
+#define STACK_ALIGN 4
+#endif
 #endif
 
 /* Debugging macro */
@@ -269,11 +279,7 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
 	if (stacksize < MINSTACK)
 	    stacksize = 1000;
 	else
-#ifdef __hp9000s800
-	    stacksize = 8 * ((stacksize+7) / 8);
-#else
-	    stacksize = 4 * ((stacksize+3) / 4);
-#endif
+	    stacksize = STACK_ALIGN * ((stacksize+STACK_ALIGN-1) / STACK_ALIGN);
 #ifdef	AFS_AIX32_ENV
 	if (!stackptr) {
 	    /*
@@ -347,10 +353,15 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
 		    stackptr+stacksize-0x40); /* lomgjmp does something
 						 with %fp + 0x38 */
 #else
+#if defined(AFS_S390_LINUX20_ENV)
+	savecontext(Create_Process_Part2, &temp2->context,
+		    stackptr+stacksize-MINFRAME);
+#else /* !AFS_S390_LINUX20_ENV */
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr+stacksize-sizeof(void *));
-#endif
-#endif
+#endif /* AFS_S390_LINUX20_ENV */
+#endif /* AFS_SPARC64_LINUX20_ENV || AFS_SPARC_LINUX20_ENV */
+#endif /* AFS_SGI62_ENV */
 #endif
 	/* End of gross hack */
 
@@ -397,11 +408,7 @@ int LWP_CreateProcess2(ep, stacksize, priority, parm, name, pid)
 	if (stacksize < MINSTACK)
 	    stacksize = 1000;
 	else
-#ifdef __hp9000s800
-	    stacksize = 8 * ((stacksize+7) / 8);
-#else
-	    stacksize = 4 * ((stacksize+3) / 4);
-#endif
+	    stacksize = STACK_ALIGN * ((stacksize+STACK_ALIGN-1) / STACK_ALIGN);
 	if ((stackptr = (char *) malloc(stacksize)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
@@ -422,7 +429,11 @@ int LWP_CreateProcess2(ep, stacksize, priority, parm, name, pid)
 #ifdef __hp9000s800
 	savecontext(Create_Process_Part2, &temp2->context, stackptr+MINFRAME);
 #else
+#if defined(AFS_S390_LINUX20_ENV)
+	savecontext(Create_Process_Part2, &temp2->context, stackptr+stacksize-MINFRAME);
+#else
 	savecontext(Create_Process_Part2, &temp2->context, stackptr+stacksize-sizeof(void *));
+#endif
 #endif
 	/* End of gross hack */
 
@@ -482,8 +493,13 @@ int LWP_DestroyProcess(pid)		/* destroy a lightweight process */
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-0x40]));
 #else
+#if defined(AFS_S390_LINUX20_ENV)
+	    savecontext(Dispatcher, &(temp -> context),
+			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-MINFRAME]));
+#else
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-sizeof(void *)]));
+#endif
 #endif
 #endif
 #endif

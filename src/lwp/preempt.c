@@ -26,7 +26,7 @@ int PRE_Block = 0;
 #include "lwp.h"
 #include "preempt.h"
 
-#ifdef	AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 int PRE_Block = 0;		/* used in lwp.c and process.s */
 #else
 char PRE_Block = 0;		/* used in lwp.c and process.s */
