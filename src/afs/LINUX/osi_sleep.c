@@ -18,50 +18,11 @@ RCSID("$Header$");
 
 
 
-#if defined(AFS_GLOBAL_SUNLOCK)
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-#endif
-
 void afs_osi_Wakeup(char *event);
 void afs_osi_Sleep(char *event);
 
 static char waitV, dummyV;
-
-#if ! defined(AFS_GLOBAL_SUNLOCK)
-
-/* call procedure aproc with arock as an argument, in ams milliseconds */
-static struct timer_list *afs_osi_CallProc(void *aproc, void *arock, int ams)
-{
-    struct timer_list *timer = NULL;
-    
-    timer = (struct timer_list*)osi_Alloc(sizeof(struct timer_list));
-    if (timer) {
-	init_timer(timer);
-	timer->expires = (ams*afs_hz)/1000 + 1;
-	timer->data = (unsigned long)arock;
-	timer->function = aproc;
-	add_timer(timer);
-    }
-    return timer;
-}
-
-/* cancel a timeout, whether or not it has already occurred */
-static int afs_osi_CancelProc(struct timer_list *timer)
-{
-    if (timer) {
-	del_timer(timer);
-	osi_Free(timer, sizeof(struct timer_list));
-    }
-    return 0;
-}
-
-static AfsWaitHack()
-{
-    AFS_STATCNT(WaitHack);
-    wakeup(&waitV);
-}
-
-#endif
 
 void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
@@ -96,25 +57,18 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     if (ahandle)
 	ahandle->proc = (caddr_t) current;
 
-    AFS_ASSERT_GLOCK();
     do {
-#if	defined(AFS_GLOBAL_SUNLOCK)
-        code = osi_TimedSleep(&waitV, ams, 1);
-        if (code == EINTR) {
-                if (aintok) 
-		    return EINTR;
-        }
-#else
-	timer = afs_osi_CallProc(AfsWaitHack, (char *) current, ams);
-	afs_osi_Sleep(&waitV);
-	afs_osi_CancelProc(timer);
-#endif /* AFS_GLOBAL_SUNLOCK */
+        AFS_ASSERT_GLOCK();
+        code = 0;
+        code = osi_TimedSleep(&waitV, ams, aintok);
+
+        if (code) break;
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
-	    return EINTR;
+	    break;
 	}
     } while (osi_Time() < endTime);
-    return 0;
+    return code;
 }
 
 
@@ -199,6 +153,9 @@ static void afs_addevent(char *event)
     newp->refcount = 0;
 }
 
+#ifndef set_current_state
+#define set_current_state(x)            current->state = (x);
+#endif
 
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
@@ -209,22 +166,25 @@ void afs_osi_Sleep(char *event)
 {
     struct afs_event *evp;
     int seq;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
 
     evp = afs_getevent(event);
     if (!evp) {
-	/* Can't block because allocating a new event would require dropping
-         * the GLOCK, which may cause us to miss the wakeup.  So call the
-         * allocator then return immediately.  We'll find the new event next
-         * time around without dropping the GLOCK. */
         afs_addevent(event);
-        return;
+	evp = afs_getevent(event);
     }
 
     seq = evp->seq;
 
+    add_wait_queue(&evp->cond, &wait);
     while (seq == evp->seq) {
 	sigset_t saved_set;
 
+	set_current_state(TASK_INTERRUPTIBLE);
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
 	spin_lock_irq(&current->sigmask_lock);
@@ -233,7 +193,7 @@ void afs_osi_Sleep(char *event)
 	recalc_sigpending(current);
 	spin_unlock_irq(&current->sigmask_lock);
 
-	interruptible_sleep_on(&evp->cond);
+	schedule();
 
 	spin_lock_irq(&current->sigmask_lock);
 	current->blocked = saved_set;
@@ -241,6 +201,9 @@ void afs_osi_Sleep(char *event)
 	spin_unlock_irq(&current->sigmask_lock);
 	AFS_GLOCK();
     }
+    remove_wait_queue(&evp->cond, &wait);
+    set_current_state(TASK_RUNNING);
+
     relevent(evp);
 }
 
@@ -256,29 +219,40 @@ void afs_osi_Sleep(char *event)
  */
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
-    long t = ams * HZ / 1000;
+    int code = 0;
+    long ticks = (ams * HZ / 1000) + 1;
     struct afs_event *evp;
+#ifdef DECLARE_WAITQUEUE
+    DECLARE_WAITQUEUE(wait, current);
+#else
+    struct wait_queue wait = { current, NULL };
+#endif
 
     evp = afs_getevent(event);
     if (!evp) {
-        /* Can't block because allocating a new event would require dropping
-         * the GLOCK, which may cause us to miss the wakeup.  So call the
-         * allocator then return immediately.  We'll find the new event next
-         * time around without dropping the GLOCK. */
         afs_addevent(event);
-        return EAGAIN;
+	evp = afs_getevent(event);
     }
 
+    add_wait_queue(&evp->cond, &wait);
+    set_current_state(TASK_INTERRUPTIBLE);
+    /* always sleep TASK_INTERRUPTIBLE to keep load average
+       from artifically increasing. */
+
     AFS_GUNLOCK();
-    if (aintok)
-	t = interruptible_sleep_on_timeout(&evp->cond, t);
-    else
-	t = sleep_on_timeout(&evp->cond, t);
+    if (aintok) {
+        if (schedule_timeout(ticks))
+            code = EINTR;
+    } else
+        schedule_timeout(ticks);
     AFS_GLOCK();
+
+    remove_wait_queue(&evp->cond, &wait);
+    set_current_state(TASK_RUNNING);
 
     relevent(evp);
 
-    return t ? EINTR : 0;
+    return code;
 }
 
 
