@@ -296,6 +296,9 @@ extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
                    struct iovec *dvec, int nvecs, int *lengthp);
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);
+#ifndef RXK_LISTENER_ENV
+extern void rxk_init();
+#endif
 
 /* UKERNEL/rx_knet.c */
 #ifdef UKERNEL

@@ -105,7 +105,7 @@ static int afs_InitSetup(int preallocs)
     int code;
 
     if (afs_InitSetup_done)
-	return;
+	return EAGAIN;
 
 #ifndef AFS_NOSTATS
     /*
@@ -303,6 +303,7 @@ void afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 
 /* leaving as is, probably will barf if we add prototypes here since it's likely being called
 with partial list */
+int
 afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 long parm, parm2, parm3, parm4, parm5, parm6;
 {
@@ -499,7 +500,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     } else if (parm == AFSOP_ADDCELL2) {
 	struct afsop_cell tcell;
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *lcnamep = 0;
-	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *cnamep = 0;
+	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	int cflags = parm4;
 
 	/* wait for basic init */
@@ -724,11 +725,6 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif /* AFS_SGI62_ENV && !AFS_SGI65_ENV */
 #endif /* AFS_SGI53_ENV */
     else if (parm == AFSOP_SHUTDOWN) {
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	extern struct mount *afs_globalVFS;
-#else	/* AFS_OSF_ENV */
-	extern struct vfs *afs_globalVFS;
-#endif
 	afs_cold_shutdown = 0;
 	if (parm == 1) afs_cold_shutdown = 1;
 	if (afs_globalVFS != 0) {
@@ -1188,6 +1184,7 @@ Afs_syscall ()
 	    long parm6;
 	} *uap = (struct a *)u.u_ap;
 #else /* UKERNEL */
+int
 #if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 afs_syscall ()
 #else
@@ -1376,7 +1373,7 @@ Afs_syscall ()
 	code = EINVAL;
 #endif
     }
-out:
+
 #ifdef AFS_LINUX20_ENV
     code = -code;
     unlock_kernel();
@@ -1571,7 +1568,6 @@ extern struct afs_icl_set *afs_icl_FindSet();
 static int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 {
-    register int i;
     afs_int32 *lp, elts, flags;
     register afs_int32 code;
     struct afs_icl_log *logp;
@@ -1795,14 +1791,14 @@ afs_lock_t afs_icl_lock;
 int afs_icl_Event4(register struct afs_icl_set *setp, afs_int32 eventID, 
 	afs_int32 lAndT, long p1, long p2, long p3, long p4)
 {
-    register struct afs_icl_log *logp;
     afs_int32 mask;
     register int i;
     register afs_int32 tmask;
     int ix;
 
     /* If things aren't init'ed yet (or the set is inactive), don't panic */
-    if (!ICL_SETACTIVE(setp)) return;
+    if (!ICL_SETACTIVE(setp))
+	return 0;
 
     AFS_ASSERT_GLOCK();
     mask = lAndT>>24 & 0xff;	/* mask of which logs to log to */
@@ -1819,6 +1815,7 @@ int afs_icl_Event4(register struct afs_icl_set *setp, afs_int32 eventID,
 	}
     }
     ReleaseReadLock(&setp->lock);
+    return 0;
 }
 
 /* Next 4 routines should be implemented via var-args or something.
@@ -1857,7 +1854,7 @@ struct afs_icl_log *afs_icl_allLogs = 0;
  *
  * Log must be write-locked.
  */
-static afs_icl_GetLogSpace(register struct afs_icl_log *logp, afs_int32 minSpace)
+static void afs_icl_GetLogSpace(register struct afs_icl_log *logp, afs_int32 minSpace)
 {
     register unsigned int tsize;
 
@@ -1877,7 +1874,7 @@ static afs_icl_GetLogSpace(register struct afs_icl_log *logp, afs_int32 minSpace
  * log must be write-locked.
  */
 #define ICL_CHARSPERLONG	4
-static afs_int32 afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
+static void afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
 {
     char *op;		/* ptr to char to write */
     int tc;
@@ -1954,7 +1951,7 @@ int afs_icl_UseAddr(int type)
  * pretty soon, anyway.  The log must be unlocked.
  */
 
-int afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op, 
+void afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op, 
 	afs_int32 types, long p1, long p2, long p3, long p4)
 {
     int rsize;			/* record size in longs */
@@ -2268,7 +2265,6 @@ int afs_icl_CopyOut(register struct afs_icl_log *logp, afs_int32 *bufferp,
 {
     afs_int32 nwords;		/* number of words to copy out */
     afs_uint32 startCookie;	/* first cookie to use */
-    register afs_int32 i;
     afs_int32 outWords;		/* words we've copied out */
     afs_int32 inWords;		/* max words to copy out */
     afs_int32 code;			/* return code */
@@ -2821,7 +2817,6 @@ int afs_icl_AddLogToSet(struct afs_icl_set *setp, struct afs_icl_log *newlogp)
 {
     register int i;
     int code = -1;
-    struct afs_icl_log *logp;
     
     ObtainWriteLock(&setp->lock,207);
     for(i = 0; i < ICL_LOGSPERSET; i++) {

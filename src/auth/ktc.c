@@ -129,7 +129,8 @@ static struct flock fileUlock = { F_UNLCK, 0, 0, 0, 0 };
  */
 int afs_tf_init(), afs_tf_get_pname(), afs_tf_get_pinst(), afs_tf_get_cred(); 
 int afs_tf_save_cred(), afs_tf_close(), afs_tf_create(); 
-int afs_tf_dest_tkt(), ktc_LocalCell();
+int afs_tf_dest_tkt();
+static void ktc_LocalCell();
 char *ktc_tkt_string();
 #endif  /* AFS_KERBEROS_ENV */
 
@@ -1615,7 +1616,7 @@ ktc_newpag()
  * BLETCH!  We have to invoke the entire afsconf package just to
  * find out what the local cell is.
  */
-static ktc_LocalCell()
+static void ktc_LocalCell()
 {
     int code;
     struct afsconf_dir *conf;

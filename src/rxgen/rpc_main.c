@@ -479,6 +479,9 @@ static void h_output(char *infile, char *define, int extend,
 	f_print(fout, "#ifndef	S_IFMT  /* XXXXX */\n");
 	f_print(fout, "#include \"h/stat.h\"\n");
 	f_print(fout, "#endif\n");
+	f_print(fout, "#if defined (AFS_OBSD_ENV) && !defined (MLEN)\n");
+	f_print(fout, "#include \"sys/mbuf.h\"\n");
+	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef	IPPROTO_UDP /* XXXXX */\n");
 	f_print(fout, "#include \"netinet/in.h\"\n");
 	f_print(fout, "#endif\n");

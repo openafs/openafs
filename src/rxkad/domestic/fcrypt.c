@@ -26,7 +26,7 @@ RCSID("$Header$");
 #ifndef UKERNEL
 #include "afs/stds.h"
 #include "h/types.h"
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
 #endif
 #else /* UKERNEL */

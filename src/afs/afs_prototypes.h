@@ -89,7 +89,7 @@ extern int afs_icl_Event1(register struct afs_icl_set *setp, afs_int32 eventID,
 	afs_int32 lAndT, long p1);
 extern int afs_icl_Event0(register struct afs_icl_set *setp, afs_int32 eventID, 
 	afs_int32 lAndT);
-extern int afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op, 
+extern void afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op, 
 	afs_int32 types, long p1, long p2, long p3, long p4);
 
 extern int afs_CheckInit(void);
@@ -309,6 +309,8 @@ extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
         afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers);
 extern void afs_ComputeCacheParms(void);
 extern int afs_InitCacheInfo(register char *afile);
+extern int afs_InitVolumeInfo(char *afile);
+extern int afs_InitCellInfo(char *afile);
 extern int afs_ResourceInit(int preallocs);
 extern void shutdown_cache(void);
 extern void shutdown_vnodeops(void);

@@ -601,39 +601,40 @@ int rxi_GetIFInfo(void)
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
-      if (i >= ADDRSPERSITE) break;
-#else
-#if defined(AFS_OBSD_ENV)
+	if (i >= ADDRSPERSITE) break;
+#elif defined(AFS_OBSD_ENV)
     for (ifn = ifnet.tqh_first; i < ADDRSPERSITE && ifn != NULL; ifn = ifn->if_list.tqe_next) {
 #else
     for (ifn = ifnet; ifn != NULL && i < ADDRSPERSITE; ifn = ifn->if_next) {
 #endif
-#endif
-      rxmtu = (ifn->if_mtu - RX_IPUDP_SIZE);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-      TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
-      if (i >= ADDRSPERSITE) break;
+	rxmtu = (ifn->if_mtu - RX_IPUDP_SIZE);
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
+	    if (i >= ADDRSPERSITE) break;
+#elif defined(AFS_OBSD_ENV)
+	for (ifad = ifn->if_addrlist.tqh_first; ifad != NULL && i < ADDRSPERSITE;
+	     ifad = ifad->ifa_list.tqe_next) {
 #else
-      for (ifad = ifn->if_addrlist; ifad != NULL && i < ADDRSPERSITE;
-	   ifad = ifad->ifa_next){
+        for (ifad = ifn->if_addrlist; ifad != NULL && i < ADDRSPERSITE;
+	     ifad = ifad->ifa_next) {
 #endif
-	if (IFADDR2SA(ifad)->sa_family == AF_INET) {
-	  ifinaddr = ntohl(((struct sockaddr_in *) IFADDR2SA(ifad))->sin_addr.s_addr);
-	  if (myNetAddrs[i] != ifinaddr) { 
-	    different++;
-	  }
-	  mtus[i] = rxmtu;
-	  rxmtu = rxi_AdjustIfMTU(rxmtu);
-	  maxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags-1) * UDP_HDR_SIZE);
-	  maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
-	  addrs[i++] = ifinaddr;
-	  if ( ( ifinaddr != 0x7f000001 ) &&
-	      (maxmtu > rx_maxReceiveSize) ) {
-	    rx_maxReceiveSize = MIN( RX_MAX_PACKET_SIZE, maxmtu);
-	    rx_maxReceiveSize = MIN( rx_maxReceiveSize, rx_maxReceiveSizeUser);
-	  }
+	    if (IFADDR2SA(ifad)->sa_family == AF_INET) {
+		ifinaddr = ntohl(((struct sockaddr_in *) IFADDR2SA(ifad))->sin_addr.s_addr);
+		if (myNetAddrs[i] != ifinaddr) { 
+		    different++;
+		}
+		mtus[i] = rxmtu;
+		rxmtu = rxi_AdjustIfMTU(rxmtu);
+		maxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags-1) * UDP_HDR_SIZE);
+		maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+		addrs[i++] = ifinaddr;
+		if ( ( ifinaddr != 0x7f000001 ) &&
+		    (maxmtu > rx_maxReceiveSize) ) {
+		    rx_maxReceiveSize = MIN( RX_MAX_PACKET_SIZE, maxmtu);
+		    rx_maxReceiveSize = MIN( rx_maxReceiveSize, rx_maxReceiveSizeUser);
+		}
+	    }
 	}
-      }
     }
 
     rx_maxJumboRecvSize = RX_HEADER_SIZE
@@ -642,13 +643,13 @@ int rxi_GetIFInfo(void)
     rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
-      int j;
-      for (j=0; j< i; j++) {
-	myNetMTUs[j] = mtus[j];
-	myNetAddrs[j] = addrs[j];
-      }
+	int j;
+	for (j=0; j< i; j++) {
+	    myNetMTUs[j] = mtus[j];
+	    myNetAddrs[j] = addrs[j];
+	}
     }
-   return different;
+    return different;
 }
 #ifdef AFS_DARWIN60_ENV
 /* Returns ifnet which best matches address */
@@ -672,63 +673,75 @@ rxi_FindIfnet(addr, pifad)
 /* Returns ifnet which best matches address */
 struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad) 
 {
-  afs_uint32 ppaddr;
-  int match_value = 0;
-  extern struct in_ifaddr *in_ifaddr;
-  struct in_ifaddr *ifa;
-  struct sockaddr_in *sin;
+    afs_uint32 ppaddr;
+    int match_value = 0;
+#ifndef AFS_OBSD_ENV
+    extern struct in_ifaddr *in_ifaddr;
+#endif
+    struct in_ifaddr *ifa;
+    struct sockaddr_in *sin;
   
-  if (numMyNetAddrs == 0)
-    (void) rxi_GetIFInfo();
+    if (numMyNetAddrs == 0)
+	(void) rxi_GetIFInfo();
 
-  ppaddr = ntohl(addr);
-
-  /* if we're given an address, skip everything until we find it */
-  if (!*pifad)
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    *pifad = TAILQ_FIRST(&in_ifaddrhead);
-#else 
-    *pifad = in_ifaddr;
-#endif
-  else {
-    if (((ppaddr & (*pifad)->ia_subnetmask) == (*pifad)->ia_subnet))
-      match_value = 2; /* don't find matching nets, just subnets */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    *pifad = TAILQ_NEXT(*pifad, ia_link);
-#else   
-    *pifad = (*pifad)->ia_next;
-#endif
-  }
-    
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-  for (ifa = *pifad; ifa; ifa = TAILQ_NEXT(ifa, ia_link) ) {
+#ifdef AFS_OBSD_ENV
+    ppaddr = addr;
 #else
-  for (ifa = *pifad; ifa; ifa = ifa->ia_next ) {
+    ppaddr = ntohl(addr);
 #endif
-    if ((ppaddr & ifa->ia_netmask) == ifa->ia_net) {
-      if ((ppaddr & ifa->ia_subnetmask) == ifa->ia_subnet) {
-	sin=IA_SIN(ifa);
-	if ( sin->sin_addr.s_addr == ppaddr) {   /* ie, ME!!!  */
-	  match_value = 4;
-	  *pifad = ifa;
-	  goto done;
-	}
-	if (match_value < 3) {
-	  *pifad = ifa;
-	  match_value = 3;
-	}
-      }
-      else {
-	if (match_value < 2) {
-	  *pifad = ifa;
-	  match_value = 2;
-	}
-      }
-    } /* if net matches */
-  } /* for all in_ifaddrs */
+
+    /* if we're given an address, skip everything until we find it */
+    if (!*pifad)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	*pifad = TAILQ_FIRST(&in_ifaddrhead);
+#elif defined(AFS_OBSD_ENV)
+	*pifad = in_ifaddr.tqh_first;
+#else
+	*pifad = in_ifaddr;
+#endif
+    else {
+	if (((ppaddr & (*pifad)->ia_subnetmask) == (*pifad)->ia_subnet))
+	    match_value = 2;	/* don't find matching nets, just subnets */
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	*pifad = TAILQ_NEXT(*pifad, ia_link);
+#elif defined(AFS_OBSD_ENV)
+	*pifad = (*pifad)->ia_list.tqe_next;
+#else   
+	*pifad = (*pifad)->ia_next;
+#endif
+    }
+    
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+    for (ifa = *pifad; ifa; ifa = TAILQ_NEXT(ifa, ia_link) ) {
+#elif defined(AFS_OBSD_ENV)
+    for (ifa = *pifad; ifa; ifa = ifa->ia_list.tqe_next) {
+#else   
+    for (ifa = *pifad; ifa; ifa = ifa->ia_next ) {
+#endif
+	if ((ppaddr & ifa->ia_netmask) == ifa->ia_net) {
+	    if ((ppaddr & ifa->ia_subnetmask) == ifa->ia_subnet) {
+		sin=IA_SIN(ifa);
+		if ( sin->sin_addr.s_addr == ppaddr) { /* ie, ME!!!  */
+		    match_value = 4;
+		    *pifad = ifa;
+		    goto done;
+		}
+		if (match_value < 3) {
+		    *pifad = ifa;
+		    match_value = 3;
+		}
+	    }
+	    else {
+		if (match_value < 2) {
+		    *pifad = ifa;
+		    match_value = 2;
+		}
+	    }
+	} /* if net matches */
+    } /* for all in_ifaddrs */
 
  done:
-  return (*pifad ?  (*pifad)->ia_ifp : NULL );
+    return (*pifad ?  (*pifad)->ia_ifp : NULL );
 }
 #endif
 #endif /* else AFS_USERSPACE_IP_ADDR */
@@ -749,9 +762,8 @@ struct osi_socket *rxk_NewSocket(short aport)
 {
     register afs_int32 code;
     struct socket *newSocket;
-    register struct mbuf *nam;
+    struct mbuf *nam;
     struct sockaddr_in myaddr;
-    int wow;
 #ifdef AFS_HPUX110_ENV
     /* prototype copied from kernel source file streams/str_proto.h */
     extern MBLKP allocb_wait(int, int);
@@ -773,14 +785,12 @@ struct osi_socket *rxk_NewSocket(short aport)
 #else      /* AFS_HPUX110_ENV */
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, SS_NOWAIT);
 #endif     /* else AFS_HPUX110_ENV */
-#else
-#ifdef AFS_SGI65_ENV
-    code = socreate(AF_INET, &newSocket, SOCK_DGRAM,IPPROTO_UDP);
-#elif defined(AFS_XBSD_ENV)
-    code = socreate(AF_INET, &newSocket, SOCK_DGRAM,IPPROTO_UDP, curproc);
+#elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
+#elif defined(AFS_FBSD_ENV)
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
-#endif /* AFS_SGI65_ENV */
 #endif /* AFS_HPUX102_ENV */
     if (code) goto bad;
 
@@ -816,10 +826,16 @@ struct osi_socket *rxk_NewSocket(short aport)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_XBSD_ENV)
-    code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
+#if defined(AFS_FBSD_ENV)
+    code = sobind(newSocket, (struct sockaddr *) &myaddr, curproc);
+#elif defined(AFS_OBSD_ENV)
+    code = sockargs(&nam, (caddr_t) &myaddr, sizeof(myaddr), MT_SONAME);
+    if (code == 0) {
+	code = sobind(newSocket, nam);
+	m_freem(nam);
+    }
 #else
-    code = sobind(newSocket, (struct sockaddr *)&myaddr);
+    code = sobind(newSocket, (struct sockaddr *) &myaddr);
 #endif
     if (code) {
         printf("sobind fails\n");

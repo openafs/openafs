@@ -42,7 +42,10 @@
 #include <ufs/ufs/inode.h>
 #include <ufs/ufs/extattr.h>
 #include <ufs/ufs/ufsmount.h>
+#ifndef MLEN
 #include <sys/mbuf.h>
+#include <net/if.h>
+#endif
 #include <sys/protosw.h>
 #include <sys/ioctl.h> 
 #include <sys/timeout.h>

@@ -635,7 +635,7 @@ void rxi_StartServerProcs(int nExistingProcs)
 void rx_StartServer(int donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs=0;
+    register int i;
     SPLVAR;
     clock_NewTime();
 
@@ -772,8 +772,6 @@ int rxi_lowConnRefCount = 0;
  */
 void rxi_CleanupConnection(struct rx_connection *conn)
 {
-    int i;
-
     /* Notify the service exporter, if requested, that this connection
      * is being destroyed */
     if (conn->type == RX_SERVER_CONNECTION && conn->service->destroyConnProc)
@@ -807,6 +805,7 @@ void rxi_CleanupConnection(struct rx_connection *conn)
 
 #ifndef KERNEL
     if (conn->specific) {
+	int i;
 	for (i = 0 ; i < conn->nSpecific ; i++) {
 	    if (conn->specific[i] && rxi_keyCreate_destructor[i])
 		(*rxi_keyCreate_destructor[i])(conn->specific[i]);

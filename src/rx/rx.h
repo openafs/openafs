@@ -38,6 +38,9 @@
 #include "rx_packet.h"
 #include "rx_misc.h"
 #include "rx_multi.h"
+#if defined (AFS_OBSD_ENV) && !defined (MLEN)
+#include "sys/mbuf.h"
+#endif
 #include "netinet/in.h"
 #include "sys/socket.h"
 #else /* KERNEL */
