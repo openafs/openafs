@@ -18,7 +18,9 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
+#include <string.h>
 #include <sys/stat.h>
 #include <afs/stds.h>
 #include <afs/cmd.h>
@@ -60,7 +62,7 @@ register char *aname;
     return ts->s_port;	/* returns it in network byte order */
 }
 
-MainCommand(as, arock)
+int MainCommand(as, arock)
 char *arock;
 struct cmd_syndesc *as;
 {
@@ -491,7 +493,7 @@ struct cmd_syndesc *as;
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
 #endif
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {

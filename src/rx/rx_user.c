@@ -10,6 +10,7 @@
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
 # include <afs/param.h>
+# include <afsconfig.h>
 # include <sys/types.h>
 # include <errno.h>
 # include <signal.h>
@@ -31,6 +32,12 @@
 #endif
 #include <afs/afs_args.h>
 #include <afs/afsutil.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 
 #ifndef	IPPORT_USERRESERVED
 /* If in.h doesn't define this, define it anyway.  Unfortunately, defining
@@ -45,8 +52,8 @@
 # include "rx.h"
 # include "rx_globals.h"
 
-
 extern void rxi_Delay();
+extern void rxi_MorePackets();
 
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
@@ -86,12 +93,12 @@ pthread_mutex_t rx_if_mutex;
  */
 osi_socket rxi_GetUDPSocket(u_short port)
 {
-    int binds, code;
+    int binds, code=0;
     osi_socket socketFd = OSI_NULLSOCKET;
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
     extern int rxi_Listen(osi_socket sock);
-    int greedy;
+    int greedy=0;
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
@@ -348,7 +355,7 @@ void rx_GetIFInfo()
 #ifndef AFS_DJGPP_ENV
     struct ifconf   ifc;
     struct ifreq    ifs[ADDRSPERSITE];
-    struct ifreq ifreq, *ifr;
+    struct ifreq *ifr;
 #ifdef	AFS_AIX41_ENV
     char buf[BUFSIZ], *cp, *cplim;
 #endif
