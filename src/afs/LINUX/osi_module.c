@@ -74,7 +74,7 @@ __asm__ __volatile__ ("
 #endif
 
 #if defined(AFS_LINUX24_ENV)
-asmlinkage int (*sys_setgroupsp32)(int gidsetsize, __kernel_gid32_t *grouplist);
+asmlinkage int (*sys_setgroups32p)(int gidsetsize, __kernel_gid32_t *grouplist);
 #endif 
 
 #ifdef AFS_SPARC64_LINUX20_ENV
@@ -136,7 +136,7 @@ int init_module(void)
     sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups32;
 #endif
 #if defined(AFS_LINUX24_ENV)
-    sys_setgroupsp32 = SYSCALL2POINTER sys_call_table[__NR_setgroups32];
+    sys_setgroups32p = SYSCALL2POINTER sys_call_table[__NR_setgroups32];
     sys_call_table[__NR_setgroups32] = POINTER2SYSCALL afs_xsetgroups32;
 #endif
 
@@ -154,7 +154,7 @@ void cleanup_module(void)
     sys_call_table32[__NR_afs_syscall] = afs_ni_syscall32;
 #endif
 #if defined(AFS_LINUX24_ENV)
-    sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroupsp32;
+    sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroups32p;
 #endif
     unregister_filesystem(&afs_file_system);
 
