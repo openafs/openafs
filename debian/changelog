@@ -1,3 +1,10 @@
+openafs (1.1.1-3) unstable; urgency=low
+
+  * Oops, that last upstream patch for rx debug and version didn't work on
+    Linux.  Since some Debian users may run Linux, let's try again.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 21 Jul 2001 12:48:00 -0400
+
 openafs (1.1.1-2) unstable; urgency=medium
 
   * Swallow before vomiting, for it is the Debconf way, closes: #106030
