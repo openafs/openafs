@@ -133,6 +133,7 @@ struct afs_PerfStats afs_perfstats;
 extern	int     LogLevel;
 extern	int	Statistics;
 
+int     busyonrst = 1;
 int     timeout = 30;
 int 	SawSpare;
 int 	SawPctSpare;
@@ -960,6 +961,7 @@ static FlagMsg()
     strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
     strcat(buffer, "[-hr <number of hours between refreshing the host cps>] ");
     strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
+    strcat(buffer, "[-nobusy <no VBUSY before a volume is attached>] ");
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
@@ -1189,7 +1191,10 @@ static ParseArgs(argc, argv)
 			   busy_threshold);
 		    Sawbusy = 0;
 		}
-	    }
+	      }
+	    else
+	      if (!strcmp(argv[i], "-nobusy")) 
+		busyonrst=0;
 #ifdef	AFS_AIX32_ENV
 	else
 	    if (!strcmp(argv[i], "-m")) {

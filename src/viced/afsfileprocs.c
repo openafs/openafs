@@ -6146,13 +6146,13 @@ CheckVnode(fid, volptr, vptr, lock)
 	    /* I'm not really worried about when we restarted, I'm   */
 	    /* just worried about when the first VBUSY was returned. */
 	    TM_GetTimeOfDay(&restartedat, 0);
-	    return(VBUSY);
+	    return(busyonrst?VBUSY:VRESTARTING);
 	  }
 	  else {
 	    struct timeval now;
 	    TM_GetTimeOfDay(&now, 0);
 	    if ((now.tv_sec - restartedat.tv_sec) < (11*60)) {
-	      return(VBUSY);
+	      return(busyonrst?VBUSY:VRESTARTING);
 	    }
 	    else {
 	      return (VRESTARTING);
