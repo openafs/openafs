@@ -107,7 +107,7 @@ UAFSOBJ = \
 	$(UOBJ)/Kvice.xdr.o \
 	$(UOBJ)/xdr_arrayn.o \
 	$(UOBJ)/Kvice.cs.o \
-	$(UOBJ)/fcrypt.o \
+	$(UOBJ)/bg-fcrypt.o \
 	$(UOBJ)/rx.o \
 	$(UOBJ)/rx_rdwr.o \
 	$(UOBJ)/rx_clock.o \
@@ -124,7 +124,6 @@ UAFSOBJ = \
 	$(UOBJ)/Kvldbint.cs.o \
 	$(UOBJ)/Kvldbint.xdr.o \
 	$(UOBJ)/Kcallback.ss.o \
-	$(UOBJ)/crypt_conn.o \
 	$(UOBJ)/AFS_component_version_number.o \
 	$(UOBJ)/afs_exporter.o \
 	$(UOBJ)/rxkad_client.o \
@@ -224,7 +223,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
-	$(WEBOBJ)/fcrypt.o \
+	$(WEBOBJ)/bg-fcrypt.o \
 	$(WEBOBJ)/rx.o \
 	$(WEBOBJ)/rx_rdwr.o \
 	$(WEBOBJ)/rx_clock.o \
@@ -241,7 +240,6 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
 	$(WEBOBJ)/Kcallback.ss.o \
-	$(WEBOBJ)/crypt_conn.o \
 	$(WEBOBJ)/AFS_component_version_number.o \
 	$(WEBOBJ)/afs_exporter.o \
 	$(WEBOBJ)/rxkad_client.o \
@@ -341,7 +339,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
 	$(WEBOBJ)/Kvice.cs.o \
-	$(WEBOBJ)/fcrypt.o \
+	$(WEBOBJ)/bg-fcrypt.o \
 	$(WEBOBJ)/rx.o \
 	$(WEBOBJ)/rx_rdwr.o \
 	$(WEBOBJ)/rx_clock.o \
@@ -358,7 +356,6 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/Kvldbint.cs.o \
 	$(WEBOBJ)/Kvldbint.xdr.o \
 	$(WEBOBJ)/Kcallback.ss.o \
-	$(WEBOBJ)/crypt_conn.o \
 	$(WEBOBJ)/AFS_component_version_number.o \
 	$(WEBOBJ)/afs_exporter.o \
 	$(WEBOBJ)/rxkad_client.o \
@@ -498,9 +495,7 @@ $(UOBJ)/afs_memcache.o: $(AFS)/afs_memcache.c
 	$(CRULE1);
 $(UOBJ)/afs_stat.o: $(AFS)/afs_stat.c
 	$(CRULE1);
-$(UOBJ)/fcrypt.o: 	$(AFS)/fcrypt.c
-	$(CRULE1);
-$(UOBJ)/crypt_conn.o: $(AFS)/crypt_conn.c
+$(UOBJ)/bg-fcrypt.o: 	$(AFS)/bg-fcrypt.c
 	$(CRULE1);
 $(UOBJ)/rxkad_client.o: $(AFS)/rxkad_client.c
 	$(CRULE1);
@@ -743,9 +738,7 @@ $(WEBOBJ)/afs_memcache.o: $(AFS)/afs_memcache.c
 	$(CRULE2);
 $(WEBOBJ)/afs_stat.o: $(AFS)/afs_stat.c
 	$(CRULE2);
-$(WEBOBJ)/fcrypt.o: 	$(AFS)/fcrypt.c
-	$(CRULE2);
-$(WEBOBJ)/crypt_conn.o: $(AFS)/crypt_conn.c
+$(WEBOBJ)/bg-fcrypt.o: 	$(AFS)/bg-fcrypt.c
 	$(CRULE2);
 $(WEBOBJ)/rxkad_client.o: $(AFS)/rxkad_client.c
 	$(CRULE2);
