@@ -237,8 +237,10 @@ afs_int32 SRXAFSCB_Probe(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetCE64(rxcall)
+afs_int32 SRXAFSCB_GetCE64(rxcall, index, ce)
     struct rx_call *rxcall;
+    afs_int32 index;
+    AFSDBCacheEntry64 *ce;
 
 { /*SRXAFSCB_GetCE64*/
 
@@ -260,8 +262,10 @@ afs_int32 SRXAFSCB_GetCE64(rxcall)
 
 } /*SRXAFSCB_GetCE64*/
 
-afs_int32 SRXAFSCB_GetCE(rxcall)
+afs_int32 SRXAFSCB_GetCE(rxcall, index, ce)
     struct rx_call *rxcall;
+    afs_int32 index;
+    AFSDBCacheEntry *ce;
 
 { /*SRXAFSCB_GetCE*/
 
@@ -305,8 +309,10 @@ afs_int32 SRXAFSCB_GetCE(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetLock(rxcall)
+afs_int32 SRXAFSCB_GetLock(rxcall, index, lock)
     struct rx_call *rxcall;
+    afs_int32 index;
+    AFSDBLock *lock;
 
 { /*SRXAFSCB_GetLock*/
 
@@ -350,8 +356,9 @@ afs_int32 SRXAFSCB_GetLock(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_XStatsVersion(rxcall)
+afs_int32 SRXAFSCB_XStatsVersion(rxcall, versionNumberP)
     struct rx_call *rxcall;
+    afs_int32 *versionNumberP;
 
 { /*SRXAFSCB_XStatsVersion*/
 
@@ -395,8 +402,14 @@ afs_int32 SRXAFSCB_XStatsVersion(rxcall)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFSCB_GetXStats(rxcall)
+afs_int32 SRXAFSCB_GetXStats(rxcall, clientVersionNumber, collectionNumber,
+			     srvVersionNumberP, timeP, dataP)
     struct rx_call *rxcall;
+    afs_int32 clientVersionNumber;
+    afs_int32 collectionNumber;
+    afs_int32 *srvVersionNumberP;
+    afs_int32 *timeP;
+    AFSCB_CollData *dataP;
 
 { /*SRXAFSCB_GetXStats*/
 

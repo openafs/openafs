@@ -90,7 +90,7 @@ error_exit:
 
 
 afs_int32 DumpDB(), RestoreDbHeader();
-afs_int32 BUDB_DumpDB (call, firstcall, maxLength, charListPtr, done)
+afs_int32 SBUDB_DumpDB (call, firstcall, maxLength, charListPtr, done)
      struct rx_call *call;
      int  firstcall;
      afs_int32 maxLength;
@@ -227,7 +227,7 @@ error_exit:
     return(code);
 }
 
-afs_int32 BUDB_RestoreDbHeader (call, header)
+afs_int32 SBUDB_RestoreDbHeader (call, header)
      struct rx_call *call;
      struct DbHeader *header;
 {

@@ -1415,7 +1415,7 @@ error_exit:
  *	host - address of host that did verification
  */
 afs_int32 DbVerify();
-afs_int32 BUDB_DbVerify(call, status, orphans, host)
+afs_int32 SBUDB_DbVerify(call, status, orphans, host)
      struct rx_call *call;
      afs_int32 *status;
      afs_int32 *orphans;

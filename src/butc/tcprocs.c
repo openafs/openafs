@@ -568,7 +568,8 @@ STC_TCInfo(acid, tciptr)
  */
 STC_DeleteDump(acid, dumpID, taskId)
    struct rx_call *acid;
-   afs_int32 *taskId;
+   afs_uint32 dumpID;
+   afs_uint32 *taskId;
 {
    struct deleteDumpIf *ptr=0;
    statusP statusPtr=0;

@@ -488,7 +488,7 @@ static BozoDaemon() {
 
 	/* see if we should do a restart */
 	if (now > nextRestart) {
-	    BOZO_ReBozo(0);	/* doesn't come back */
+	    SBOZO_ReBozo(0);	/* doesn't come back */
 	}
 	
 	/* see if we should restart a server */

@@ -1029,7 +1029,7 @@ rememberDump(dumpAddrParam, dumpParam,  dumpListPtrParam)
  * ---------------------------------------------
  */
 
-afs_int32 BUDB_AddVolume (call, vol)
+afs_int32 SBUDB_AddVolume (call, vol)
   struct rx_call *call;
   struct budb_volumeEntry *vol;
 {
@@ -1144,7 +1144,7 @@ afs_int32 AddVolume (call, vol)
 }
 
 
-afs_int32 BUDB_AddVolumes (call, vols)
+afs_int32 SBUDB_AddVolumes (call, vols)
   struct rx_call *call;
   struct budb_volumeList *vols;
 {
@@ -1284,7 +1284,7 @@ afs_int32 AddVolumes (call, vols)
  *	1) record the volume set
  */
 
-afs_int32 BUDB_CreateDump(call, dump)
+afs_int32 SBUDB_CreateDump(call, dump)
      struct rx_call *call;
      struct budb_dumpEntry *dump;
 {
@@ -1432,7 +1432,7 @@ afs_int32 CreateDump(call, dump)
     return code;
 }
 
-afs_int32 BUDB_DeleteDump (call, id, fromTime, toTime, dumps)
+afs_int32 SBUDB_DeleteDump (call, id, fromTime, toTime, dumps)
      struct rx_call *call;
      dumpId id;
      Date   fromTime;
@@ -1464,7 +1464,7 @@ afs_int32 DoDeleteDump (call, id, fromTime, toTime, dumps)
     return(code);
 }
 
-afs_int32 BUDB_ListDumps (call, sflags, name, groupid, fromTime, toTime, dumps, flags)
+afs_int32 SBUDB_ListDumps (call, sflags, name, groupid, fromTime, toTime, dumps, flags)
    struct rx_call *call;
    afs_int32 sflags, groupid;
    char *name;
@@ -1583,7 +1583,7 @@ afs_int32 ListDumps (call, sflags, groupid, fromTime, toTime, dumps, flags)
     return(code);
 }
 
-afs_int32 BUDB_DeleteTape (call, tape)
+afs_int32 SBUDB_DeleteTape (call, tape)
   struct rx_call *call;
   struct budb_tapeEntry *tape;		/* tape info */
 {
@@ -1643,7 +1643,7 @@ afs_int32 DoDeleteTape (call, tape)
  *      n - some error. May or may not have deleted information.
  */
 
-afs_int32 BUDB_DeleteVDP (call, dsname, dumpPath, curDumpId)
+afs_int32 SBUDB_DeleteVDP (call, dsname, dumpPath, curDumpId)
      struct rx_call *call;
      char *dsname;
      char *dumpPath;
@@ -1729,7 +1729,7 @@ afs_int32 DeleteVDP (call, dsname, dumpPath, curDumpId)
  *      volume is not found in the dump, then look for it in its parent dump.
  */
 
-afs_int32 BUDB_FindClone(call, dumpID, volName, clonetime)
+afs_int32 SBUDB_FindClone(call, dumpID, volName, clonetime)
      struct rx_call *call;
      afs_int32 dumpID;
      char *volName;
@@ -1909,7 +1909,7 @@ afs_int32 FindClone (call, dumpID, volName, clonetime)
  *      deptr - descriptor of most recent dump
  */
 
-afs_int32 BUDB_FindDump (call, volumeName, beforeDate, deptr)
+afs_int32 SBUDB_FindDump (call, volumeName, beforeDate, deptr)
      struct rx_call *call;
      char *volumeName;
      afs_int32 beforeDate;
@@ -2005,7 +2005,7 @@ afs_int32 FindDump (call, volumeName, beforeDate, deptr)
  *	dname - dumpname
  */
 
-afs_int32 BUDB_FindLatestDump (call, vsname, dumpPath, dumpentry)
+afs_int32 SBUDB_FindLatestDump (call, vsname, dumpPath, dumpentry)
      struct rx_call *call;
      char	*vsname, *dumpPath;
      struct	budb_dumpEntry *dumpentry;
@@ -2137,7 +2137,7 @@ afs_int32 FindLatestDump (call, vsname, dumpPath, dumpentry)
 }
 
 
-afs_int32 BUDB_FinishDump (call, dump)
+afs_int32 SBUDB_FinishDump (call, dump)
   struct rx_call *call;
   struct budb_dumpEntry *dump;
 {
@@ -2191,7 +2191,7 @@ afs_int32 FinishDump (call, dump)
     return code;
 }
 
-afs_int32 BUDB_FinishTape (call, tape)
+afs_int32 SBUDB_FinishTape (call, tape)
   struct rx_call *call;
   struct budb_tapeEntry *tape;
 {
@@ -2287,7 +2287,7 @@ afs_int32 FinishTape (call, tape)
  *	BUDB_OP_DUMPID
  */
 
-afs_int32 BUDB_GetDumps (call, majorVersion, flags, name, start, end,
+afs_int32 SBUDB_GetDumps (call, majorVersion, flags, name, start, end,
 		    index, nextIndexP, dbTimeP, dumps)
   struct rx_call *call;
   int majorVersion;			/* version of interface structures */
@@ -2607,7 +2607,7 @@ afs_int32 makeAppended (ut, appendedDumpID, initialDumpID, startTapeSeq)
     return(code);
 }
 
-afs_int32 BUDB_MakeDumpAppended (call, appendedDumpID, initialDumpID, startTapeSeq)
+afs_int32 SBUDB_MakeDumpAppended (call, appendedDumpID, initialDumpID, startTapeSeq)
      struct rx_call *call;
      afs_int32           appendedDumpID;
      afs_int32           initialDumpID;
@@ -2647,7 +2647,7 @@ afs_int32 MakeDumpAppended (call, appendedDumpID, initialDumpID, startTapeSeq)
 }
 
 /* Find the last tape of a dump-set. This includes any appended dumps */
-afs_int32 BUDB_FindLastTape (call, dumpID, dumpEntry, tapeEntry, volEntry)
+afs_int32 SBUDB_FindLastTape (call, dumpID, dumpEntry, tapeEntry, volEntry)
      struct rx_call          *call;
      afs_int32                    dumpID;
      struct budb_dumpEntry   *dumpEntry;
@@ -2772,7 +2772,7 @@ afs_int32 FindLastTape (call, dumpID, dumpEntry, tapeEntry, volEntry)
 }
 
 
-afs_int32 BUDB_GetTapes (call, majorVersion, flags, name, start, end, index, nextIndexP,
+afs_int32 SBUDB_GetTapes (call, majorVersion, flags, name, start, end, index, nextIndexP,
 	       dbTimeP, tapes)
      struct rx_call *call;
      int   majorVersion;		/* version of interface structures */
@@ -2926,7 +2926,7 @@ afs_int32 GetTapes (call, majorVersion, flags, name, start, end,
  *		name on the selected dumpid.
  */
 
-afs_int32 BUDB_GetVolumes (call, majorVersion, flags, name, start, end,
+afs_int32 SBUDB_GetVolumes (call, majorVersion, flags, name, start, end,
 		      index, nextIndexP, dbTimeP, volumes)
   struct rx_call *call;
   int   majorVersion;			/* version of interface structures */
@@ -3105,7 +3105,7 @@ afs_int32 GetVolumes (call, majorVersion, flags, name, start, end,
     return code;
 }
 
-afs_int32 BUDB_UseTape (call, tape, new)
+afs_int32 SBUDB_UseTape (call, tape, new)
   struct rx_call *call;
   struct budb_tapeEntry *tape;		/* tape info */
   int  *new;				/* set if tape is new */
@@ -3198,7 +3198,7 @@ afs_int32 UseTape (call, tape, new)
  * ---------------------------------------------
  */
 
-afs_int32 BUDB_T_DumpHashTable (call, type, filename)
+afs_int32 SBUDB_T_DumpHashTable (call, type, filename)
   struct rx_call *call;
   int   type;
   char *filename;
@@ -3296,7 +3296,7 @@ afs_int32 T_DumpHashTable (call, type, filename)
     return code;
 }
 
-afs_int32 BUDB_T_GetVersion (call, majorVersion)
+afs_int32 SBUDB_T_GetVersion (call, majorVersion)
   struct rx_call *call;
   int *majorVersion;
 {
@@ -3327,7 +3327,7 @@ afs_int32 T_GetVersion (call, majorVersion)
  *	dump as much of the database as possible int /tmp/<filename>
  */
 
-afs_int32 BUDB_T_DumpDatabase (call, filename)
+afs_int32 SBUDB_T_DumpDatabase (call, filename)
      struct rx_call *call;
      char *filename;
 {

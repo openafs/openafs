@@ -51,10 +51,11 @@ extern int DoLogging;
 extern int bozo_isrestricted;
 #endif
 
-BOZO_GetRestartTime(acall, atype, aktime)
-struct rx_call *acall;
-afs_int32 atype;
-struct ktime *aktime; {
+SBOZO_GetRestartTime(acall, atype, aktime)
+    struct rx_call *acall;
+    afs_int32 atype;
+    struct bozo_netKTime *aktime;
+{
     register afs_int32 code;
 
     code = 0;		/* assume success */
@@ -75,10 +76,11 @@ struct ktime *aktime; {
     return code;
 }
 
-BOZO_SetRestartTime(acall, atype, aktime)
-struct rx_call *acall;
-afs_int32 atype;
-struct ktime *aktime; {
+SBOZO_SetRestartTime(acall, atype, aktime)
+    struct rx_call *acall;
+    afs_int32 atype;
+    struct bozo_netKTime *aktime;
+{
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
 
@@ -115,7 +117,7 @@ fail:
     return code;
 }
 
-BOZO_Exec(acall, acmd)
+SBOZO_Exec(acall, acmd)
 struct rx_call *acall;
 char *acmd; {
 
@@ -143,7 +145,7 @@ fail:
     return code;
 }
 
-BOZO_GetDates(acall, aname, atime, abakTime, aoldTime)
+SBOZO_GetDates(acall, aname, atime, abakTime, aoldTime)
 struct rx_call *acall;
 char *aname;
 afs_int32 *atime, *abakTime, *aoldTime; {
@@ -178,7 +180,7 @@ afs_int32 *atime, *abakTime, *aoldTime; {
     return 0;
 }
 
-BOZO_UnInstall(acall, aname)
+SBOZO_UnInstall(acall, aname)
 struct rx_call *acall;
 register char *aname; {
     char *filepath;
@@ -267,7 +269,7 @@ static void SaveOldFiles(char *aname)
     renamefile(aname, bbuffer);
 }
 
-BOZO_Install(acall, aname, asize, mode, amtime)
+SBOZO_Install(acall, aname, asize, mode, amtime)
 struct rx_call *acall;
 char *aname;
 afs_int32 asize;
@@ -356,7 +358,7 @@ afs_int32 mode; {
     else return 0;
 }
 
-BOZO_SetCellName(acall, aname)
+SBOZO_SetCellName(acall, aname)
 struct rx_call *acall;
 char *aname; {
     struct afsconf_cell tcell;
@@ -390,7 +392,7 @@ char *aname; {
     return code;
 }
 
-BOZO_GetCellName(acall, aname)
+SBOZO_GetCellName(acall, aname)
 struct rx_call *acall;
 char **aname; {
     register afs_int32 code;
@@ -410,7 +412,7 @@ char **aname; {
     return code;
 }
 
-BOZO_GetCellHost(acall, awhich, aname)
+SBOZO_GetCellHost(acall, awhich, aname)
 struct rx_call *acall;
 afs_uint32 awhich;
 char **aname; {
@@ -445,7 +447,7 @@ done:
     return code;
 }
 
-BOZO_DeleteCellHost(acall, aname)
+SBOZO_DeleteCellHost(acall, aname)
 struct rx_call *acall;
 char *aname; {
     register afs_int32 code;
@@ -488,7 +490,7 @@ char *aname; {
     return code;
 }
 
-BOZO_AddCellHost(acall, aname)
+SBOZO_AddCellHost(acall, aname)
 struct rx_call *acall;
 char *aname; {
     register afs_int32 code;
@@ -561,7 +563,7 @@ char *aname; {
     return code;
 }
 
-BOZO_ListKeys(acall, an, akvno, akey, akeyinfo)
+SBOZO_ListKeys(acall, an, akvno, akey, akeyinfo)
 struct rx_call *acall;
 int an;
 afs_int32 *akvno;
@@ -617,7 +619,7 @@ fail:
     return code;
 }
 
-BOZO_AddKey(acall, an, akey)
+SBOZO_AddKey(acall, an, akey)
 struct rx_call *acall;
 afs_int32 an;
 struct bozo_key *akey; {
@@ -646,7 +648,7 @@ fail:
     return code;
 }
 
-BOZO_SetNoAuthFlag(acall, aflag)
+SBOZO_SetNoAuthFlag(acall, aflag)
 register struct rx_call *acall;
 afs_int32 aflag; {
     register afs_int32 code  = 0;
@@ -665,7 +667,7 @@ fail:
     return code;
 }
 
-BOZO_DeleteKey(acall, an)
+SBOZO_DeleteKey(acall, an)
 struct rx_call *acall;
 afs_int32 an; {
     register afs_int32 code;
@@ -685,7 +687,7 @@ fail:
 }
 
 
-BOZO_ListSUsers(acall, an, aname)
+SBOZO_ListSUsers(acall, an, aname)
 struct rx_call *acall;
 afs_int32 an;
 register char **aname; {
@@ -701,7 +703,7 @@ fail:
     return code;
 }
 
-BOZO_AddSUser(acall, aname)
+SBOZO_AddSUser(acall, aname)
 struct rx_call *acall;
 char *aname; {
     register afs_int32 code;
@@ -721,7 +723,7 @@ fail:
     return code;
 }
 
-BOZO_DeleteSUser(acall, aname)
+SBOZO_DeleteSUser(acall, aname)
 struct rx_call *acall;
 char *aname; {
     register afs_int32 code;
@@ -742,7 +744,7 @@ fail:
     return code;
 }
 
-BOZO_CreateBnode(acall, atype, ainstance, ap1, ap2, ap3, ap4, ap5, notifier)
+SBOZO_CreateBnode(acall, atype, ainstance, ap1, ap2, ap3, ap4, ap5, notifier)
 struct rx_call *acall;
 char *atype;
 char *ainstance;
@@ -777,7 +779,7 @@ char *notifier; {
     return code;
 }
 
-BOZO_WaitAll(acall)
+SBOZO_WaitAll(acall)
 register struct rx_call *acall; {
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
@@ -796,7 +798,7 @@ fail:
     return code;
 }
 
-BOZO_DeleteBnode(acall, ainstance)
+SBOZO_DeleteBnode(acall, ainstance)
 struct rx_call *acall;
 char *ainstance; {
     register afs_int32 code;
@@ -853,7 +855,7 @@ char *arock; {
 }
 
 /* shutdown and leave down */
-BOZO_ShutdownAll(acall)
+SBOZO_ShutdownAll(acall)
 struct rx_call *acall; {
     /* iterate over all bnodes, setting the status to temporarily disabled */
     register afs_int32 code;
@@ -874,7 +876,7 @@ struct rx_call *acall; {
 }
 
 /* shutdown and restart */
-BOZO_RestartAll(acall)
+SBOZO_RestartAll(acall)
 struct rx_call *acall; {
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
@@ -901,7 +903,7 @@ struct rx_call *acall; {
     return code;
 }
 
-BOZO_ReBozo(acall)
+SBOZO_ReBozo(acall)
 register struct rx_call *acall; {
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
@@ -936,7 +938,7 @@ fail:
 }
 
 /* make sure all are running */
-BOZO_StartupAll(acall)
+SBOZO_StartupAll(acall)
 struct rx_call *acall; {
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
@@ -953,7 +955,7 @@ fail:
     return code;
 }
 
-BOZO_Restart(acall, ainstance)
+SBOZO_Restart(acall, ainstance)
 struct rx_call *acall;
 register char *ainstance; {
     register struct bnode *tb;
@@ -987,7 +989,7 @@ fail:
 }
 
 /* set temp status */
-BOZO_SetTStatus(acall, ainstance, astatus)
+SBOZO_SetTStatus(acall, ainstance, astatus)
 struct rx_call *acall;
 char *ainstance;
 afs_int32 astatus; {
@@ -1015,7 +1017,7 @@ fail:
     return code;
 }
 
-BOZO_SetStatus(acall, ainstance, astatus)
+SBOZO_SetStatus(acall, ainstance, astatus)
 struct rx_call *acall;
 char *ainstance;
 afs_int32 astatus; {
@@ -1044,7 +1046,7 @@ fail:
     return code;
 }
 
-BOZO_GetStatus(acall, ainstance, astat, astatDescr)
+SBOZO_GetStatus(acall, ainstance, astat, astatDescr)
 struct rx_call *acall;
 char *ainstance;
 afs_int32 *astat;
@@ -1106,7 +1108,7 @@ register char *aname; {
     return unlink(tbuffer);
 }
 
-BOZO_Prune(acall, aflags)
+SBOZO_Prune(acall, aflags)
 struct rx_call *acall;
 afs_int32 aflags; {
     register afs_int32 code;
@@ -1162,7 +1164,7 @@ afs_int32 aflags; {
     return code;
 }
 
-BOZO_EnumerateInstance(acall, anum, ainstance)
+SBOZO_EnumerateInstance(acall, anum, ainstance)
 struct rx_call *acall;
 afs_int32 anum;
 char **ainstance; {
@@ -1284,7 +1286,7 @@ int GetRequiredDirPerm (path)
     return -1;
 }
 
-BOZO_GetInstanceInfo(acall, ainstance, atype, astatus)
+SBOZO_GetInstanceInfo(acall, ainstance, atype, astatus)
   IN struct rx_call *acall;
   IN char *ainstance;
   OUT char **atype;
@@ -1318,7 +1320,7 @@ BOZO_GetInstanceInfo(acall, ainstance, atype, astatus)
     return 0;
 }
 
-BOZO_GetInstanceParm(acall, ainstance, anum, aparm)
+SBOZO_GetInstanceParm(acall, ainstance, anum, aparm)
 struct rx_call *acall;
 char *ainstance;
 afs_int32 anum;
@@ -1347,7 +1349,7 @@ char **aparm; {
     return code;
 }
 
-BOZO_GetLog(acall, aname)
+SBOZO_GetLog(acall, aname)
 register struct rx_call *acall;
 char *aname; {
     register afs_int32 code;
@@ -1409,7 +1411,7 @@ char *aname; {
     return code;
 }
 
-BOZO_GetInstanceStrings(acall, abnodeName, as1, as2, as3, as4)
+SBOZO_GetInstanceStrings(acall, abnodeName, as1, as2, as3, as4)
 struct rx_call *acall;
 char *abnodeName;
 char **as1, **as2, **as3, **as4; {
@@ -1442,7 +1444,7 @@ char **as1, **as2, **as3, **as4; {
 }
 
 #ifdef BOS_RESTRICTED_MODE
-BOZO_GetRestrictedMode(acall, arestmode) 
+SBOZO_GetRestrictedMode(acall, arestmode) 
 struct rx_call *acall;
 afs_int32 *arestmode; 
 {
@@ -1450,7 +1452,7 @@ afs_int32 *arestmode;
      return 0;
 }
 
-BOZO_SetRestrictedMode(acall, arestmode) 
+SBOZO_SetRestrictedMode(acall, arestmode) 
 struct rx_call *acall;
 afs_int32 arestmode; 
 {
@@ -1472,14 +1474,14 @@ afs_int32 arestmode;
      return code;
 }
 #else
-BOZO_GetRestrictedMode(acall, arestmode) 
+SBOZO_GetRestrictedMode(acall, arestmode) 
 struct rx_call *acall;
 afs_int32 *arestmode; 
 {
      return RXGEN_OPCODE;
 }
 
-BOZO_SetRestrictedMode(acall, arestmode) 
+SBOZO_SetRestrictedMode(acall, arestmode) 
 struct rx_call *acall;
 afs_int32 arestmode; 
 {

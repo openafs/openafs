@@ -330,25 +330,9 @@ extern afs_int32 ka_VerifyUserPassword(
     ka_UserAuthenticateGeneral \
         (KA_USERAUTH_VERSION + (f), n,i,r,p,l, /*spare1,2*/0,0, rP)
 
-extern afs_int32 KAM_CreateUser();
-extern afs_int32 KAM_DeleteUser();
-extern afs_int32 KAA_ChangePassword();
-extern afs_int32 KAM_SetPassword();
-extern afs_int32 KAA_Authenticate(), KAA_AuthenticateV2();
-extern afs_int32 KAT_GetTicket();
-extern afs_int32 KAM_SetFields();
 #define KA_REUSEPW 1
 #define KA_NOREUSEPW 2
 #define KA_ISLOCKED 4                
-
-extern afs_int32 KAM_GetEntry();
-extern afs_int32 KAM_ListEntry();
-extern afs_int32 KAM_GetStats();
-extern afs_int32 KAM_GetPassword();
-extern afs_int32 KAM_GetRandomKey();
-extern afs_int32 KAM_Debug();
-extern afs_int32 KAM_Unlock();
-extern afs_int32 KAM_LockStatus();
 
 #define KA_AUTHENTICATION_SERVICE 731
 #define KA_TICKET_GRANTING_SERVICE 732

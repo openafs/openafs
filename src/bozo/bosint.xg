@@ -52,6 +52,7 @@ struct bozo_status {
 %#define BOZO_PRUNECORE		4	/* prune core files */
 
 package BOZO_
+prefix S
 statindex 1
 
 CreateBnode(

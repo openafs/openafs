@@ -685,9 +685,9 @@ FetchData64(
 StoreData64(
   IN  AFSFid *Fid, 
   AFSStoreStatus *InStatus, 
-  afs_int64 Pos, 
-  afs_int64 Length, 
-  afs_int64 FileLength, 
+  afs_uint64 Pos, 
+  afs_uint64 Length, 
+  afs_uint64 FileLength, 
   OUT AFSFetchStatus *OutStatus, 
   AFSVolSync *Sync
 ) split = 65538;

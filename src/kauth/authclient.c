@@ -550,7 +550,6 @@ afs_int32 ka_Authenticate (
     code = kawrap_ubik_Call (KAA_AuthenticateV2, conn, 0,
 		     name, instance, start, end, &arequest, &oanswer);
     if (code == RXGEN_OPCODE) {
-	extern afs_int32 KAA_Authenticate();
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
