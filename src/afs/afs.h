@@ -904,6 +904,23 @@ struct afs_fheader {
 #endif
 #endif
 
+struct buffer {
+  afs_int32 fid;              /* is adc->index, the cache file number */
+  afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
+				 he file */
+  afs_int32 page;
+  afs_int32 accesstime;
+  struct buffer *hashNext;
+  char *data;
+  char lockers;
+  char dirty;
+  char hashIndex;
+#if AFS_USEBUFFERS
+  struct buf *bufp;
+#endif
+  afs_rwlock_t lock;          /* the lock for this structure */
+};
+
 /* kept on disk and in dcache entries */
 struct fcache {
     struct VenusFid fid;	/* Fid for this file */
@@ -970,6 +987,14 @@ struct dcache {
 };
 /* this is obsolete and should be removed */
 #define ihint stamp
+
+/* afs_memcache.c */
+struct memCacheEntry {
+  int size;                   /* # of valid bytes in this entry */
+  int dataSize;               /* size of allocated data area */
+  afs_lock_t afs_memLock;
+  char *data;                 /* bytes */
+};
 
 /* macro to mark a dcache entry as bad */
 #define ZapDCE(x) \
@@ -1186,30 +1211,6 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
-
-struct buffer {
-    afs_int32 fid;		/* is adc->index, the cache file number */
-    afs_inode_t inode;		/* is adc->f.inode, the inode number of the cache file */
-    afs_int32 page;
-    afs_int32 accesstime;
-    struct buffer *hashNext;
-    char *data;
-    char lockers;
-    char dirty;
-    char hashIndex;
-#if AFS_USEBUFFERS
-    struct buf *bufp;
-#endif
-    afs_rwlock_t lock;		/* the lock for this structure */
-};
-
-/* afs_memcache.c */
-struct memCacheEntry {
-    int size;			/* # of valid bytes in this entry */
-    int dataSize;		/* size of allocated data area */
-    afs_lock_t afs_memLock;
-    char *data;			/* bytes */
-};
 
 /* First 32 bits of capabilities */
 #define CAPABILITY_ERRORTRANS (1<<0)
