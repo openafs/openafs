@@ -1,4 +1,5 @@
 #! /bin/sh
+# Modified by Sam Hartman <hartmans@mit.edu> for Debian
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
 # 
@@ -17,6 +18,9 @@
 #
 # Note that AFS does not use a pid file in /var/run. It is turned off by
 # unmounting /afs.
+
+exec 3>/dev/null
+exec </dev/null
 
 
 # Gather up options and post startup script name, if present
