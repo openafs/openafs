@@ -43,10 +43,10 @@
 #define IDS_HOSTREM_ONE                 39
 #define IDS_CELLEDIT_TITLE              40
 #define IDS_CELLADD_TITLE               41
-#define IDS_SVRCOL_SERVER               43
-#define IDS_SVRCOL_COMMENT              44
-#define IDS_TIP_DRIVES                  45
-#define IDS_MAP_LETTER                  46
+#define IDS_SVRCOL_SERVER               42
+#define IDS_SVRCOL_COMMENT              43
+#define IDS_TIP_DRIVES                  44
+#define IDS_MAP_LETTER                  45
                                         
 #define IDS_DRIVE_MAP                   48
 #define IDS_ERROR_MAP                   49
