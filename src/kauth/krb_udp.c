@@ -414,7 +414,7 @@ afs_int32 UDP_GetTicket (ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, a
     COUNT_REQ (UGetTicket);
 
     if (code = InitAuthServ(&tt, LOCKREAD, this_op)) goto fail;
-    code = ka_LookupKvno (0, KA_TGS_NAME,
+    code = ka_LookupKvno (tt, KA_TGS_NAME,
 			  ((strlen(authDomain) > 0) ? authDomain : lrealm),
 			  kvno, &tgskey);
     if (code) goto abort;
