@@ -40,7 +40,7 @@
 #include "cm_rpc.h"
 
 #ifdef _DEBUG
-#include <crtdbg.h.
+#include <crtdbg.h>
 #endif
 
 /* Copied from afs_tokens.h */
