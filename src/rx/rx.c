@@ -2207,7 +2207,6 @@ struct rx_connection *rxi_FindConnection(osi_socket socket,
 {
     int hashindex, flag;
     register struct rx_connection *conn;
-    struct rx_peer *peer;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) :
@@ -2224,13 +2223,12 @@ struct rx_connection *rxi_FindConnection(osi_socket socket,
 	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *) 0;
 	}
-	/* epoch's high order bits mean route for security reasons only on
-	 * the cid, not the host and port fields.
-	 */
-	if (conn->epoch & 0x80000000) break;
-	if (((type == RX_CLIENT_CONNECTION) 
-	     || (pp->host == host)) && (pp->port == port))
-	  break;
+	if (pp->host == host && pp->port == port)
+	    break;
+	if (type == RX_CLIENT_CONNECTION && pp->port == port)
+	    break;
+	if (type == RX_CLIENT_CONNECTION && (conn->epoch & 0x80000000))
+	    break;
       }
       if ( !flag )
       {
@@ -2262,7 +2260,7 @@ struct rx_connection *rxi_FindConnection(osi_socket socket,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	peer = conn->peer = rxi_FindPeer(host, port, 0, 1);
+	conn->peer = rxi_FindPeer(host, port, 0, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();   /* don't GC immediately */
 	conn->epoch = epoch;
@@ -2285,27 +2283,9 @@ struct rx_connection *rxi_FindConnection(osi_socket socket,
 	rx_stats.nServerConns++;
 	MUTEX_EXIT(&rx_stats_mutex);
     }
-    else
-    {
-    /* Ensure that the peer structure is set up in such a way that
-    ** replies in this connection go back to that remote interface
-    ** from which the last packet was sent out. In case, this packet's
-    ** source IP address does not match the peer struct for this conn,
-    ** then drop the refCount on conn->peer and get a new peer structure.
-    ** We can check the host,port field in the peer structure without the
-    ** rx_peerHashTable_lock because the peer structure has its refCount
-    ** incremented and the only time the host,port in the peer struct gets
-    ** updated is when the peer structure is created.
-    */
-	if (conn->peer->host == host )
-		peer = conn->peer; /* no change to the peer structure */
-	else
-        	peer = rxi_FindPeer(host, port, conn->peer, 1);
-    }
 
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->refCount++;
-    conn->peer = peer;
     MUTEX_EXIT(&conn->conn_data_lock);
 
     rxLastConn = conn;	/* store this connection as the last conn used */
