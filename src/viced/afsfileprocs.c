@@ -6676,9 +6676,12 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     tlen = FDH_SIZE(fdP);
     ViceLog(25,
 	    ("FetchData_RXStyle: file size %llu\n", (afs_uintmax_t) tlen));
-    if ((tlen < 0) || (Pos > tlen)) {
+    if (tlen < 0) {
 	FDH_CLOSE(fdP);
 	return EIO;
+    }
+    if (Pos > tlen) {
+	Len = 0;
     }
 
     if (Pos + Len > tlen)
