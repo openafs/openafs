@@ -1,0 +1,17 @@
+#!/bin/sh
+case `arch` in
+i[3456]86)
+	case $KVERS in
+	    2.2*)
+		echo i386_linux22
+		;;
+	    2.4*)
+		echo i386_linux24
+		;;
+	    esac
+;;
+	*)
+	echo ERROr:  sysname not yet known
+	exit 1
+
+esac

@@ -16,7 +16,10 @@ export DH_COMPAT=2
 export DH_OPTIONS
 
 # The AFS sysname is determined by a script
-SYS_NAME=$(shell sh debian/sysname)
+KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
+       else if (NR==4) { e=$$3; exit; } } \
+       END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
+SYS_NAME=$(shell KVERS=$(KVERS) sh debian/sysname)
 package=openafs
 srcpkg = openafs-modules-source
 modulepkg=$(shell echo openafs-modules-$(KVERS))
@@ -24,9 +27,6 @@ ifndef KSRC
 KSRC=/usr/src/linux
 endif
 MODDIR=..
-KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
-       else if (NR==4) { e=$$3; exit; } } \
-       END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
 
 export KSRC 
 export KVERS
@@ -204,8 +204,9 @@ binary-source:
 	-o \( -path ./debian/\* -type d \) \
 	-o -path ./debian/\*debhelper \) -prune -o -print | \
 		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
-	( cd debian/$(srcpkg)/usr/src/modules/$(package); \
-		$(MAKE) -f debian/rules clean)
+	( cd debian/$(srcpkg)/usr/src/modules/$(package)&& \
+		$(MAKE) -f debian/rules clean && \
+		mv debian/kern-sysname debian/sysname)
 	chown -R root.root debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
