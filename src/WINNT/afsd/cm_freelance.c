@@ -90,7 +90,7 @@ void cm_InitFakeRootDir() {
 			(curDirEntryInPage + 1 >= CM_DIR_EPP)) {
 			curPage++;
 			curDirEntryInPage = 0;
-			curChunk = 0;
+			curChunk = 1;
 		}
 		curChunk += sizeOfCurEntry;
 		curDirEntry++;
