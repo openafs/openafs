@@ -102,7 +102,7 @@ extern void VResetDiskUsage_r(void);
 extern void VSetPartitionDiskUsage(register struct DiskPartition *dp);
 extern void VSetPartitionDiskUsage_r(register struct DiskPartition *dp);
 extern char *VPartitionPath(struct DiskPartition *p);
-/*extern void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks,
-			     afs_int32 checkBlocks); */
+/*extern void VAdjustDiskUsage(Error *ec, Volume *vp, afs_size_t blocks,
+                             afs_size_t checkBlocks); */
 extern void VPrintDiskStats(void);
 

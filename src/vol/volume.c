@@ -536,7 +536,11 @@ VAttachVolumeByName_r(ec, partition, name, mode)
 {
     register Volume *vp;
     int fd,n;
+#ifdef AFS_LARGEFILE_ENV
+    struct stat64 status;
+#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
+#endif /* !AFS_LARGEFILE_ENV */
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
     struct DiskPartition *partp;
@@ -572,7 +576,13 @@ VAttachVolumeByName_r(ec, partition, name, mode)
     strcat(path, "/");
     strcat(path, name);
     VOL_UNLOCK
-    if ((fd = open(path, O_RDONLY)) == -1 || fstat(fd,&status) == -1) {
+    if ((fd = open(path, O_RDONLY)) == -1
+#ifdef AFS_LARGEFILE_ENV
+	|| fstat64(fd,&status) == -1
+#else /* !AFS_LARGEFILE_ENV */
+	|| fstat(fd,&status) == -1
+#endif /* !AFS_LARGEFILE_ENV */
+	) {
 	close(fd);
 	VOL_LOCK
 	*ec = VNOVOL;
@@ -1506,10 +1516,19 @@ static void GetVolumePath(Error *ec, VolId volumeId, char **partitionp,
     name[0] = '/';
     sprintf(&name[1],VFORMAT,volumeId);
     for (dp = DiskPartitionList; dp; dp = dp->next) {
+#ifdef AFS_LARGEFILE_ENV
+	struct stat64 status;
+#else /* !AFS_LARGEFILE_ENV */
 	struct stat status;
+#endif
         strcpy(path, VPartitionPath(dp));
 	strcat(path, name);
-	if (stat(path,&status) == 0) {
+#ifdef AFS_LARGEFILE_ENV
+	if (stat64(path,&status) == 0)
+#else /* !AFS_LARGEFILE_ENV */
+	if (stat(path,&status) == 0)
+#endif /* !AFS_LARGEFILE_ENV */
+	{
 	    strcpy(partition, dp->name);
 	    found = 1;
 	    break;

@@ -22,6 +22,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #endif
 
 #undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV
 
 #undef BITMAP_LATER

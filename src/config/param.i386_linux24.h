@@ -26,6 +26,11 @@
 #define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 
+#ifdef AFS_LARGEFILE_ENV
+#define _FILE_OFFSET_BITS	64
+#endif
+
+
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #include <linux/config.h>
 #ifdef CONFIG_SMP

@@ -122,7 +122,7 @@ char buf[BUFSIZE];
 
 char readdata(buffer, size)
   char  *buffer;
-  afs_int32 size;
+  afs_size_t size;
 {
   int   code;
   afs_int32 s;
@@ -384,7 +384,7 @@ struct vNode
     } entries[100];
   } acl;
 #endif
-  afs_int32 dataSize;
+  afs_size_t dataSize;
 };
 
 #define MAXNAMELEN 256
@@ -456,12 +456,24 @@ afs_int32 ReadVNode(count)
 	      break;
 
           case 'A':
-	      readdata(vn.acl, 192);             /* Skip ACL data */
+	      readdata(vn.acl, (afs_size_t) 192);  /* Skip ACL data */
 	      break;
 
-          case 'f':
-	      vn.dataSize = ntohl(readvalue(4));
+#ifdef AFS_LARGEFILE_ENV
+          case 'h':
+	  {
+	      afs_uint32 hi, lo;
+	      hi = ntohl(readvalue(4));
+	      lo = ntohl(readvalue(4));
+	      FillInt64(vn.dataSize, hi, lo);
+	  }
+	  goto common_vnode;
+#endif /* AFS_LARGEFILE_ENV */
 
+          case 'f':
+	      vn.dataSize = (afs_size_t) ntohl(readvalue(4));
+
+      common_vnode:
 	      /* parentdir is the name of this dir's vnode-file-link
 	       * or this file's parent vnode-file-link.
 	       * "./AFSDir-<#>". It's a symbolic link to its real dir.
@@ -637,7 +649,8 @@ afs_int32 ReadVNode(count)
 		   */
 		  int fid;
 		  int lfile;
-		  afs_int32 size, s;
+		  afs_size_t size;
+		  afs_int32 s;
 
 		  /* Check if its vnode-file-link exists. If not,
 		   * then the file will be an orphaned file.
@@ -661,7 +674,7 @@ afs_int32 ReadVNode(count)
 		  fid = open(filename, (O_CREAT | O_WRONLY | O_TRUNC), mode);
 		  size = vn.dataSize;
 		  while (size > 0) {
-		     s = ((size > BUFSIZE) ? BUFSIZE : size);
+		     s = (afs_int32) ((size > BUFSIZE) ? BUFSIZE : size);
 		     code = fread(buf, 1, s, dumpfile);
 		     if (code > 0) {
 		        write(fid, buf, code);
@@ -671,8 +684,16 @@ afs_int32 ReadVNode(count)
 		        if (code < 0)
 			   fprintf (stderr, "Code = %d; Errno = %d\n", code, errno);
 			else 
+#ifdef AFS_LARGEFILE_ENV
+			   fprintf (stderr, "Read (0X%x,0X%x) bytes out of (0X%x,0X%x)\n", 
+				    (unsigned) ((vn.dataSize - size) >> 32),
+				    (unsigned) ((vn.dataSize - size) & 0xffffffff),
+				    (unsigned) (vn.dataSize >> 32),
+				    (unsigned) (vn.dataSize & 0xffffffff));
+#else /* !AFS_LARGEFILE_ENV */
 			   fprintf (stderr, "Read %d bytes out of %d\n", 
 				    (vn.dataSize - size), vn.dataSize);
+#endif /* !AFS_LARGEFILE_ENV */
 			break;
 		     }
 		  }

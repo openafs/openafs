@@ -249,8 +249,9 @@ extern FILE *ih_fdopen(FdHandle_t *h, char *fdperms);
 #endif /* AFS_NAMEI_ENV */
 
 /*
- * Prototypes for file descriptor cache routined
+ * Prototypes for file descriptor cache routines
  */
+extern void ih_Initialize(void);
 extern void ih_UseLargeCache(void);
 extern IHandle_t *ih_init(int dev, int vid, Inode ino);
 extern IHandle_t *ih_copy(IHandle_t *ihP);
@@ -259,11 +260,11 @@ extern int fd_close(FdHandle_t *fdP);
 extern int fd_reallyclose(FdHandle_t *fdP);
 extern StreamHandle_t *stream_fdopen(FD_t fd);
 extern StreamHandle_t *stream_open(const char *file, const char *mode);
-extern int stream_read(void *ptr, int size, int nitems,
-		       StreamHandle_t *streamP);
-extern int stream_write(void *ptr, int size, int nitems,
-			StreamHandle_t *streamP);
-extern int stream_seek(StreamHandle_t *streamP, int offset, int whence);
+extern afs_size_t stream_read(void *ptr, afs_size_t size, afs_size_t nitems,
+			      StreamHandle_t *streamP);
+extern afs_size_t stream_write(void *ptr, afs_size_t size, afs_size_t nitems,
+			       StreamHandle_t *streamP);
+extern int stream_seek(StreamHandle_t *streamP, afs_size_t offset, int whence);
 extern int stream_flush(StreamHandle_t *streamP);
 extern int stream_close(StreamHandle_t *streamP, int reallyClose);
 extern int ih_reallyclose(IHandle_t *ihP);
@@ -339,16 +340,29 @@ extern int ih_condsync(IHandle_t *ihP);
 	namei_icreate(H, P, P1, P2, P3, P4)
 
 #define OS_IOPEN(H) namei_iopen(H)
+#ifdef AFS_LARGEFILE_ENV
+#define OS_OPEN(F, M, P) open64(F, M, P)
+#else /* !AFS_LARGEFILE_ENV */
 #define OS_OPEN(F, M, P) open(F, M, P)
+#endif /* !AFS_LARGEFILE_ENV */
 #define OS_CLOSE(FD) close(FD)
 
 #define OS_READ(FD, B, S) read(FD, B, S)
 #define OS_WRITE(FD, B, S) write(FD, B, S)
+#ifdef AFS_LARGEFILE_ENV
+#define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) O, F)
+#else /* !AFS_LARGEFILE_ENV */
 #define OS_SEEK(FD, O, F) lseek(FD, O, F)
+#endif /* !AFS_LARGEFILE_ENV */
 
 #define OS_SYNC(FD) fsync(FD)
+#ifdef AFS_LARGEFILE_ENV
+#define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) L)
+#else /* !AFS_LARGEFILE_ENV */
 #define OS_TRUNC(FD, L) ftruncate(FD, L)
+#endif /* !AFS_LARGEFILE_ENV */
 #define OS_SIZE(FD) ih_size(FD)
+extern afs_size_t ih_size(int fd);
 
 #define IH_INC(H, I, P) namei_inc(H, I, P)
 #define IH_DEC(H, I, P) namei_dec(H, I, P)
@@ -378,6 +392,7 @@ extern Inode ih_icreate(IHandle_t *ih, int dev, char *part, Inode nI, int p1,\
 #define OS_SYNC(FD) fsync(FD)
 #define OS_TRUNC(FD, L) ftruncate(FD, L)
 #define OS_SIZE(FD) ih_size(FD)
+extern afs_size_t ih_size(int fd);
 
 #ifdef AFS_LINUX22_ENV
 #define IH_INC(H, I, P) -1

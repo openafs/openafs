@@ -184,7 +184,7 @@ DRead(fid, page)
     ObtainWriteLock(&tb->lock);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
-    if (ReallyRead(tb->fid,tb->page,tb->data)) {
+    if (ReallyRead(tb->fid, (afs_size_t) tb->page,tb->data)) {
 	tb->lockers--;
         FidZap(tb->fid);	/* disaster */
 	ReleaseWriteLock(&tb->lock);
@@ -261,7 +261,7 @@ newslot (afid, apage, lp)
      * and the afs_bufferLock prevents other threads from zapping this
      * buffer while we are writing it out */
     if (lp->dirty) {
-        if (ReallyWrite(lp->fid,lp->page,lp->data)) Die("writing bogus buffer");
+        if (ReallyWrite(lp->fid, (afs_size_t) lp->page,lp->data)) Die("writing bogus buffer");
         lp->dirty = 0;
     }
 
@@ -336,7 +336,7 @@ DFlushVolume (vid)
         if (FidVolEq(tb->fid,vid)) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
-		code = ReallyWrite(tb->fid, tb->page, tb->data);
+		code = ReallyWrite(tb->fid, (afs_size_t) tb->page, tb->data);
 		if (code && !rcode)
 		    rcode = code;
 		tb->dirty = 0;
@@ -361,7 +361,7 @@ DFlushEntry (fid)
         if (FidEq(tb->fid, fid) && tb->dirty) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
-		code = ReallyWrite(tb->fid, tb->page, tb->data);
+		code = ReallyWrite(tb->fid, (afs_size_t) tb->page, tb->data);
 		if (code) {
 		    ReleaseWriteLock(&tb->lock);
 		    ReleaseReadLock(&afs_bufferLock);
@@ -392,7 +392,7 @@ DFlush ()
 	    (*tbp)->lockers++;
 	    ReleaseReadLock(&afs_bufferLock);
 	    if ((*tbp)->dirty) {
-		code = ReallyWrite((*tbp)->fid, (*tbp)->page, (*tbp)->data);
+		code = ReallyWrite((*tbp)->fid, (afs_size_t) (*tbp)->page, (*tbp)->data);
 		if (!code)
 		    (*tbp)->dirty = 0; /* Clear the dirty flag */
 		if (code && !rcode) {

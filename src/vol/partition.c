@@ -255,7 +255,11 @@ int VCheckPartition(part, devname)
      char *part;
      char *devname;
 {
+#ifdef AFS_LARGEFILE_ENV
+    struct stat64 status;
+#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
+#endif /* !AFS_LARGEFILE_ENV */
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
     char AFSIDatPath[MAXPATHLEN];
 #endif
@@ -265,20 +269,34 @@ int VCheckPartition(part, devname)
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	return 0;
     }
+#ifdef AFS_LARGEFILE_ENV
+    if (stat64(part, &status) < 0) {
+	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
+	return 0;
+    }
+#else /* !AFS_LARGEFILE_ENV */
     if (stat(part, &status) < 0) {
 	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
 	return 0;
     }
+#endif /* AFS_LARGEFILE_ENV */
     
 #ifndef AFS_AIX32_ENV
     if (programType == fileServer) {
 	char salvpath[MAXPATHLEN];
 	strcpy(salvpath, part);
 	strcat(salvpath, "/FORCESALVAGE");
+#ifdef AFS_LARGEFILE_ENV
+	if (stat64(salvpath, &status) == 0) {
+	    Log("VInitVnodes: Found %s; aborting\n", salvpath);
+	    return -1;
+	}
+#else /* !AFS_LARGEFILE_ENV */
 	if (stat(salvpath, &status) == 0) {
 	    Log("VInitVnodes: Found %s; aborting\n", salvpath);
 	    return -1;
 	}
+#endif /* !AFS_LARGEFILE_ENV */
     }
 #endif
 
@@ -286,7 +304,13 @@ int VCheckPartition(part, devname)
     strcpy(AFSIDatPath, part);
     strcat(AFSIDatPath, "/AFSIDat");
 #ifdef AFS_NAMEI_ENV
-    if (stat(AFSIDatPath, &status) < 0) {
+    if (
+#ifdef AFS_LARGEFILE_ENV
+	stat64(AFSIDatPath, &status)
+#else /* !AFS_LARGEFILE_ENV */
+	stat(AFSIDatPath, &status)
+#endif /* !AFS_LARGEFILE_ENV */
+	< 0) {
 	DIR *dirp;
 	struct dirent *dp;
 
@@ -904,7 +928,7 @@ void VResetDiskUsage(void)
     VOL_UNLOCK
 }
 
-void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBlocks)
+void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_size_t blocks, afs_size_t checkBlocks)
 {
     *ec = 0;
     /* why blocks instead of checkBlocks in the check below?  Otherwise, any check
@@ -928,14 +952,14 @@ void VAdjustDiskUsage_r(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 check
     V_diskused(vp) += blocks;
 }
 
-void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks, afs_int32 checkBlocks)
+void VAdjustDiskUsage(Error *ec, Volume *vp, afs_size_t blocks, afs_size_t checkBlocks)
 {
     VOL_LOCK
     VAdjustDiskUsage_r(ec, vp, blocks, checkBlocks);
     VOL_UNLOCK
 }
 
-int VDiskUsage_r(Volume *vp, afs_int32 blocks)
+int VDiskUsage_r(Volume *vp, afs_size_t blocks)
 {
     if (blocks > 0) {
 #ifdef	AFS_AIX32_ENV
@@ -952,7 +976,7 @@ int VDiskUsage_r(Volume *vp, afs_int32 blocks)
     return 0;
 }
 
-int VDiskUsage(Volume *vp, afs_int32 blocks)
+int VDiskUsage(Volume *vp, afs_size_t blocks)
 {
     int retVal;
     VOL_LOCK
