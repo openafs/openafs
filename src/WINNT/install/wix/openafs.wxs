@@ -38,10 +38,11 @@
          />
         
         <!-- Launch conditions -->
-        <Condition
-         Message="$(loc.StrLaunchCond)">
+        <Condition Message="$(loc.StrLaunchCond)">
          <![CDATA[VersionNT >= 500]]>
         </Condition>
+        <Condition Message="$(loc.AdminRequired)">Privileged</Condition>
+        
         
         <!-- Global Properties -->
         <?include property.wxi?>

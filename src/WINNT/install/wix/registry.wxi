@@ -194,7 +194,7 @@
 	     empty.  Due to a bug in Windows Installer, when a feature is empty (i.e. contains no components)
 	     its install state is set as NULL, instead of Local or Absent.  This prevents the feature from
 	     being removed when the product is uninstalled. This is just a flag component to add to the
-	     loopback feature so that it is not empty. -->    
+	     loopback feature so that it is not empty. -->
     <Component Id="rcm_Loopback" Guid="9F9BBDA3-208C-4F93-B81F-313E031B6DDA">
         <Registry Root="HKLM" Key="SOFTWARE\OpenAFS\Client" Name="LoopbackInstalled" Type="integer" Value="1" Id="reg_Loopback1" KeyPath="yes" />
     </Component>
