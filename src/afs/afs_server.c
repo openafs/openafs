@@ -604,7 +604,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	tc = conns[multi_i];
 	sa = tc->srvr;
 	if (conntimer[multi_i] == 0)
-	  rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
+	  rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
 	end = osi_Time();
 	m_error=multi_error;
 	if ((start == end) && !multi_error)
