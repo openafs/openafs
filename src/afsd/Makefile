@@ -37,8 +37,6 @@ AFSLIBS=$(SRCDIR)lib/afs/libauth.a ${SRCDIR}lib/afs/libcmd.a $(SRCDIR)lib/afs/li
 
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
-	rs_aix*) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
 	sgi_61 | sgi_62 | sgi_63) \
 		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
 	sgi_64 | sgi_65 ) \
