@@ -694,7 +694,7 @@ fi
 AC_SUBST(HAVE_PAM)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp strerror)
 AC_CHECK_TYPE(ssize_t, int)
 
 AC_CHECK_FUNCS(timegm)

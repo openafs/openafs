@@ -85,12 +85,18 @@ RCSID("$Header$");
 
 struct stat istat, ostat;
 
+/* How many systems don't have strerror now? */
+#ifndef HAVE_STRERROR
 #if !defined(AFS_DARWIN60_ENV)
 extern int sys_nerr;
 #endif
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern char *sys_errlist[];
 #endif
+#else
+#define ErrorString strerror
+#endif
+
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern struct passwd *getpwnam();
 int stripcalled = 0;
@@ -123,6 +129,7 @@ static char *strrpbrk (s, set)
     return 0;
 }
 
+#ifndef HAVE_STRERROR
 char *ErrorString(aerrno)
     int aerrno; {
     static char tbuffer[100];
@@ -133,6 +140,7 @@ char *ErrorString(aerrno)
     }
     return tbuffer;
 }
+#endif
 
 int
 stripName(aname)
