@@ -2260,12 +2260,15 @@ HandleMTab()
 }
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
+
 call_syscall(param1, param2, param3, param4, param5, param6, param7)
      long param1, param2, param3, param4, param5, param6, param7;
 {
     int error;
 #ifdef AFS_LINUX20_ENV
     long eparm[4];
+    struct afsprocdata syscall_data;
+    int fd = open(PROC_SYSCALL_FNAME,O_RDWR);
 
     eparm[0] = param4;
     eparm[1] = param5;
@@ -2273,11 +2276,22 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
     eparm[3] = param7;
 
     param4 = (long)eparm;
-#endif
 
+    syscall_data.syscall = AFSCALL_CALL;
+    syscall_data.param1 = param1;
+    syscall_data.param2 = param2;
+    syscall_data.param3 = param3;
+    syscall_data.param4 = param4;
+    if(fd > 0) {
+       error = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+       close(fd);
+    }
+    else
+#endif
     error =
 	syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4,
 		param5, param6, param7);
+
     if (afsd_verbose)
 	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);

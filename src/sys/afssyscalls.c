@@ -17,6 +17,7 @@ RCSID
 #include <sys/errno.h>
 #include <afs/afs_args.h>
 #include <sys/file.h>
+#include <sys/ioctl.h>
 #if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 #include <unistd.h>
 #else
@@ -313,21 +314,60 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 
 #endif /* AFS_NAMEI_ENV */
 
+#ifdef AFS_LINUX20_ENV
+int proc_afs_syscall(int syscall, int param1, int param2, int param3, 
+		     int param4, int *rval) {
+  struct afsprocdata syscall_data;
+  int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
+
+  if(fd < 0)
+    return -1;
+
+  syscall_data.syscall = syscall;
+  syscall_data.param1 = param1;
+  syscall_data.param2 = param2;
+  syscall_data.param3 = param3;
+  syscall_data.param4 = param4;
+
+  *rval = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+
+  close(fd);
+
+  return 0;
+}
+#endif
+
 int
 lsetpag(void)
 {
-    int errcode;
+    int errcode, rval;
 
+#ifdef AFS_LINUX20_ENV
+    rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
+    
+    if(rval)
+      errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+#else
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+#endif
+    
     return (errcode);
 }
 
 int
 lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
-    int errcode;
+    int errcode, rval;
 
+#ifdef AFS_LINUX20_ENV
+    rval = proc_afs_syscall(AFSCALL_PIOCTL, (unsigned int)path, cmd, (unsigned int)cmarg, follow, &errcode);
+
+    if(rval)
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+#else
+    errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+#endif
+
     return (errcode);
 }
 

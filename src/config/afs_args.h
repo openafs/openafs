@@ -172,4 +172,25 @@ typedef struct cm_initparams_v1 {
 #define AFS_CLIENT_RETRIEVAL_VERSION		1	/* latest version */
 #define AFS_CLIENT_RETRIEVAL_FIRST_EDITION	1	/* first version */
 
+/* Defines and structures for the AFS proc replacement layer for the original syscall (AFS_SYSCALL) strategy */
+
+#ifdef AFS_LINUX20_ENV
+ 
+#define PROC_FSDIRNAME "openafs"
+#define PROC_SYSCALL_NAME "afs_ioctl"
+#define PROC_SYSCALL_FNAME "/proc/fs/openafs/afs_ioctl"
+#define VIOC_SYSCALL_TYPE 'C' 
+#define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
+ 
+struct afsprocdata {
+  int param4;
+  int param3;
+  int param2;
+  int param1;
+  int syscall;
+};
+ 
+#endif
+
+
 #endif /* _AFS_ARGS_H_ */
