@@ -60,9 +60,6 @@ static struct bnode_stats {
     int weirdPids;
 } bnode_stats;
 
-static afs_int32 SendNotifierData();
-static int DeleteProc();
-
 #ifndef AFS_NT40_ENV
 extern char **environ;			/* env structure */
 #endif
@@ -440,6 +437,22 @@ int bnode_InitBnode (register struct bnode *abnode,
     return 0;
 }
 
+static int DeleteProc(register struct bnode_proc *abproc)
+{
+    register struct bnode_proc **pb, *tb;
+    struct bnode_proc *nb;
+
+    for(pb = &allProcs,tb = *pb; tb; pb = &tb->next, tb=nb) {
+	nb = tb->next;
+	if (tb == abproc) {
+	    *pb = nb;
+	    free(tb);
+	    return 0;
+	}
+    }
+    return BZNOENT;
+}
+
 /* bnode lwp executes this code repeatedly */
 static int bproc() {
     register afs_int32 code;
@@ -583,49 +596,6 @@ static int bproc() {
     }
 }
 
-
-int hdl_notifier(struct bnode_proc *tp)
-{
-#ifndef AFS_NT40_ENV  /* NT notifier callout not yet implemented */
-    int code, pid, status;
-    struct stat tstat;
-
-    if (stat(tp->bnode->notifier, &tstat)) {
-	bozo_Log("BNODE: Failed to find notifier '%s'; ignored\n", tp->bnode->notifier);
-	return(1);
-    }
-    if ((pid = fork()) == 0) {
-	FILE *fout;
-	struct bnode *tb = tp->bnode;
-	int ec;
-
-#if defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI51_ENV)
-	ec = setsid();
-#else
-#ifdef AFS_LINUX20_ENV
-	ec = setpgrp();
-#else
-	ec = setpgrp(0,0);
-#endif
-#endif
-	fout = popen(tb->notifier, "w");
-	if (fout == NULL) {
-	    bozo_Log("BNODE: Failed to find notifier '%s'; ignored\n", tb->notifier);
-	    perror(tb->notifier);	
-	    exit(1);
-	}
-	code = SendNotifierData(fileno(fout), tp);
-	pclose(fout);
-	exit(0);
-    } else if (pid < 0) {
-	bozo_Log("Failed to fork creating process to handle notifier '%s'\n", tp->bnode->notifier);
-	return -1;
-    }
-#endif /* AFS_NT40_ENV */
-    return(0);
-}
-
-
 static afs_int32 SendNotifierData(register int fd, 
 				  register struct bnode_proc *tp)
 {
@@ -699,8 +669,47 @@ static afs_int32 SendNotifierData(register int fd,
     }
 }
 
+int hdl_notifier(struct bnode_proc *tp)
+{
+#ifndef AFS_NT40_ENV  /* NT notifier callout not yet implemented */
+    int code, pid, status;
+    struct stat tstat;
 
-    
+    if (stat(tp->bnode->notifier, &tstat)) {
+	bozo_Log("BNODE: Failed to find notifier '%s'; ignored\n", tp->bnode->notifier);
+	return(1);
+    }
+    if ((pid = fork()) == 0) {
+	FILE *fout;
+	struct bnode *tb = tp->bnode;
+	int ec;
+
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI51_ENV)
+	ec = setsid();
+#else
+#ifdef AFS_LINUX20_ENV
+	ec = setpgrp();
+#else
+	ec = setpgrp(0,0);
+#endif
+#endif
+	fout = popen(tb->notifier, "w");
+	if (fout == NULL) {
+	    bozo_Log("BNODE: Failed to find notifier '%s'; ignored\n", tb->notifier);
+	    perror(tb->notifier);	
+	    exit(1);
+	}
+	code = SendNotifierData(fileno(fout), tp);
+	pclose(fout);
+	exit(0);
+    } else if (pid < 0) {
+	bozo_Log("Failed to fork creating process to handle notifier '%s'\n", tp->bnode->notifier);
+	return -1;
+    }
+#endif /* AFS_NT40_ENV */
+    return(0);
+}
+
 /* Called by IOMGR at low priority on IOMGR's stack shortly after a SIGCHLD
  * occurs.  Wakes up bproc do redo things */
 int bnode_SoftInt(int asignal)
@@ -892,18 +901,3 @@ int bnode_Deactivate(register struct bnode *abnode)
     return BZNOENT;
 }
 
-static int DeleteProc(register struct bnode_proc *abproc)
-{
-    register struct bnode_proc **pb, *tb;
-    struct bnode_proc *nb;
-
-    for(pb = &allProcs,tb = *pb; tb; pb = &tb->next, tb=nb) {
-	nb = tb->next;
-	if (tb == abproc) {
-	    *pb = nb;
-	    free(tb);
-	    return 0;
-	}
-    }
-    return BZNOENT;
-}
