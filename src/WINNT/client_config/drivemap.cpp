@@ -17,9 +17,11 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include <WINNT/TaLocale.h>
+#undef REALLOC
 #include "drivemap.h"
 #include <time.h>
 #include <adssts.h>
+#define DEBUG_VERBOSE
 #include <osilog.h>
 
 /*
@@ -632,16 +634,6 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
    TCHAR szRemote[ MAX_PATH ];
    wsprintf (szRemote, TEXT("\\\\%s\\%s"), szClient, szSubmount);
 
-   NETRESOURCE Resource;
-   memset (&Resource, 0x00, sizeof(NETRESOURCE));
-   Resource.dwScope = RESOURCE_GLOBALNET;
-   Resource.dwType = RESOURCETYPE_DISK;
-   Resource.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-   Resource.dwUsage = RESOURCEUSAGE_CONNECTABLE;
-   Resource.lpLocalName = szLocal;
-   Resource.lpRemoteName = szRemote;
-
-   // DWORD rc = WNetAddConnection2 (&Resource, NULL, NULL, ((fPersistent) ? CONNECT_UPDATE_PROFILE : 0));
    DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent);
    if (rc == NO_ERROR)
       return TRUE;
@@ -940,10 +932,8 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 					{
 						if (drivemap)
 						    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
-                                                //WNetCancelConnection(lpnrLocal[i].lpLocalName,TRUE);
 					} else
 					    DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
-					//WNetCancelConnection(lpnrLocal[i].lpRemoteName,TRUE);
 					DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
 				}
 			}
@@ -986,13 +976,13 @@ BOOL DoMapShareChange()
 				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
 					continue;	//only look at real afs mappings
 				CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
-				if (strcmpi(pSubmount,"all")==0) 
+				if (lstrcmpi(pSubmount,"all")==0) 
 					continue;				// do not remove 'all'
 				for (DWORD j=0;j<List.cSubmounts;j++)
 				{
 					if (
 						(List.aSubmounts[j].szSubmount[0]) &&
-						(strcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
+						(lstrcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
 						) 
 					{
 						List.aSubmounts[j].fInUse=TRUE; 
@@ -1010,25 +1000,22 @@ BOOL DoMapShareChange()
 	sprintf(szPath,"\\\\%s-afs\\all",szMachine);
 	cbBuffer=MAXRANDOMNAMELEN-1;
 	// Lets connect all submounts that weren't connectd
-	CHAR * pUser=szUser;
-	if (WNetGetUser(szPath,(LPSTR)szUser,&cbBuffer)!=NO_ERROR)
-		GenRandomName(szUser,MAXRANDOMNAMELEN-1);
-	else {
-		if ((pUser=strchr(szUser,'\\'))==NULL)
-			return FALSE;
-		pUser++;
+    CHAR * pUser = NULL;
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbBuffer)!=NO_ERROR) {
+        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
+            GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+            pUser = szUser;
+        }
+    } else {
+		if ((pUser=strchr(szUser,'\\'))!=NULL)
+            pUser++;
+        else
+            pUser = NULL;
 	}
 	for (DWORD j=0;j<List.cSubmounts;j++)
 	{
 		if (List.aSubmounts[j].fInUse)
 			continue;
-		sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[j].szSubmount);
-		NETRESOURCE nr;
-		memset (&nr, 0x00, sizeof(NETRESOURCE));
-		nr.dwType=RESOURCETYPE_DISK;
-		nr.lpLocalName="";
-		nr.lpRemoteName=szPath;
-		//DWORD res=WNetAddConnection2(&nr,NULL,pUser,0);
 		DWORD res=MountDOSDrive(0,List.aSubmounts[j].szSubmount,FALSE,pUser);
 	}
 	return TRUE;
@@ -1038,9 +1025,9 @@ BOOL DoMapShare()
 {
 	DRIVEMAPLIST List;
 	TCHAR szMachine[ MAX_PATH ];
-	TCHAR szPath[ MAX_PATH ];
 	DWORD rc=28;
 	BOOL bMappedAll=FALSE;
+    CHAR * pUser = NULL;
 	GetComputerName(szMachine,&rc);
    // Initialize the data structure
 	DEBUG_EVENT0("AFS DoMapShare");
@@ -1049,34 +1036,22 @@ BOOL DoMapShare()
 	// All connections have been removed
 	// Lets restore them after making the connection from the random name
 
-	GenRandomName(pUserName,MAXRANDOMNAMELEN-1);
+    if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
+        GenRandomName(pUserName,MAXRANDOMNAMELEN-1);
+        pUser = pUserName;
+    }
 	for (DWORD i=0;i<List.cSubmounts;i++)
 	{
 		if (List.aSubmounts[i].szSubmount[0])
 		{
-			sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[i].szSubmount);
-			NETRESOURCE nr;
-			memset (&nr, 0x00, sizeof(NETRESOURCE));
-			nr.dwType=RESOURCETYPE_DISK;
-			nr.lpLocalName="";
-			nr.lpRemoteName=szPath;
-			//DWORD res=WNetAddConnection2(&nr,NULL,pUserName,0);
 			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUserName);
-			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
-			if (strcmpi("all",List.aSubmounts[i].szSubmount)==0)
+			if (lstrcmpi("all",List.aSubmounts[i].szSubmount)==0)
 				bMappedAll=TRUE;
 		}
 	}
 	if (!bMappedAll)	//make sure all is mapped also
 	{
-			sprintf(szPath,"\\\\%s-afs\\all",szMachine);
-			NETRESOURCE nr;
-			memset (&nr, 0x00, sizeof(NETRESOURCE));
-			nr.dwType=RESOURCETYPE_DISK;
-			nr.lpLocalName="";
-			nr.lpRemoteName=szPath;
 			DWORD res=MountDOSDrive(0,"all",FALSE,pUserName);
-			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
 			if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
 			{
 			    DisMountDOSDrive("all");
@@ -1127,7 +1102,7 @@ BOOL GlobalMountDrive()
 	    if (dwResult != ERROR_SUCCESS) {
 		if (dwResult != ERROR_NO_MORE_ITEMS)
 		{
-		    DEBUG_EVENT1("AFS DriveMap","Failed to read \GlobalAutoMapper values: %d",dwResult);
+		    DEBUG_EVENT1("AFS DriveMap","Failed to read \\GlobalAutoMapper values: %d",dwResult);
 		}
 		break;
 	    }
@@ -1151,7 +1126,6 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const c
     nr.dwType=RESOURCETYPE_DISK;
     nr.lpLocalName=szDrive;
     nr.lpRemoteName=szPath;
-    nr.dwDisplayType = RESOURCEDISPLAYTYPE_GENERIC;
     nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
     DWORD res=WNetAddConnection2(&nr,NULL,pUsername,(bPersistent)?CONNECT_UPDATE_PROFILE:0);
     DEBUG_EVENT3("AFS DriveMap","Mount %s Remote[%s]=%x",(bPersistent)?"Persistant" : "NonPresistant",szPath,res);
