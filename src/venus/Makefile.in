@@ -140,7 +140,7 @@ kdump-build: kdump.c ${INCLS} AFS_component_version_number.c
 #
 # Build targets - one for each type of kdump build process we have
 #
-kdump:
+kdump: kdump.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_5? ) \
@@ -181,7 +181,8 @@ kdump64:
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] )  \
-		${CC} ${XCFLAGS64} -o ${KDUMP64} ${KDUMP64}.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		$(MAKE) kdump64.o ; \
+		${CC} ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
 
@@ -222,7 +223,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 			touch kdump.o ;; \
 		*) \
 			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
-			-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} \
+			-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS} \
 			-o kdump.o -c ${srcdir}/kdump.c ;; \
 	esac ;
 
@@ -231,7 +232,7 @@ kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] ) \
 		${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
-		-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} \
+		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS64} \
 		-o kdump64.o -c ${srcdir}/kdump.c ;; \
 	esac
 
@@ -296,7 +297,7 @@ ${DEST}/etc/kdump: kdump-build
 	esac
 
 ${DEST}/etc/kdump64: kdump-build
-	if [ -e kdump64 ]; then \
+	if [ -f kdump64 ]; then \
 		${INSTALL} -s kdump64 $@; \
 	fi
 
@@ -312,7 +313,7 @@ install: \
 	${DESTDIR}${sbindir}/fstrace \
 	${DESTDIR}${bindir}/cmdebug \
 	${DESTDIR}${sbindir}/kdump \
-	${DESTDIR}${sbindir}/kdump62
+	${DESTDIR}${sbindir}/kdump64
 
 #
 # Misc targets
@@ -369,7 +370,7 @@ ${DESTDIR}${sbindir}/kdump: kdump-build
 	esac
 
 ${DESTDIR}${sbindir}/kdump64: kdump-build
-	if [ -e kdump64 ]; then \
+	if [ -f kdump64 ]; then \
 		${INSTALL} -s kdump64 $@; \
 	fi
 
