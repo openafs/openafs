@@ -997,6 +997,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	INIT_LIST_HEAD(&ip->i_devices);
 #endif
 	ip->i_data.host = (void*) ip;
+#ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+	ip->i_data.gfp_mask = GFP_HIGHUSER;
+#endif
 	ip->i_mapping = &ip->i_data;
 #ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 	init_rwsem(&ip->i_truncate_sem);

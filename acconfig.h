@@ -30,6 +30,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef FULL_LISTVOL_SWITCH
 
 #undef INODE_SETATTR_NOT_VOID
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
