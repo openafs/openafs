@@ -60,6 +60,11 @@
 #define AFS_GLOBAL_SUNLOCK
 #endif
 
+#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
+#define MODVERSIONS
+#include <linux/modversions.h>
+#endif
+
 #endif /* __KERNEL__  && !DUMP_KERNEL*/
 
 #ifdef KERNEL
