@@ -650,7 +650,9 @@ int cm_HaveCallback(cm_scache_t *scp)
 	    } else if (fdc==2 && !fgc) { 	// we're in good shape
 		if (cm_getLocalMountPointChange()) {	// check for changes
 		    cm_clearLocalMountPointChange(); // clear the changefile
+            lock_ReleaseMutex(scp->mx);      // this is re-locked in reInitLocalMountPoints
 		    cm_reInitLocalMountPoints();	// start reinit
+            lock_ObtainMutex(scp->mx);      // now get the lock back 
 		    return 0;
 		}
 		return 1;			// no change
