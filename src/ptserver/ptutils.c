@@ -32,7 +32,7 @@
 extern struct ubik_dbase *dbase;
 extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
-extern afs_int32 IDCmp();
+extern int IDCmp();
 
 extern afs_int32 AddToEntry();
 static char *whoami = "ptserver";
