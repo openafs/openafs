@@ -6,15 +6,15 @@
  * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
  */
 
-#include <linux/sysctl.h>
-#include <linux/config.h>
-
 #include <afsconfig.h>
 #include "../afs/param.h"
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h"   /* afs statistics */
+
+#include <linux/sysctl.h>
+#include <linux/config.h>
 
 /* From afs_analyze.c */
 extern afs_int32 hm_retry_RO;
