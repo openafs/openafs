@@ -171,7 +171,7 @@ AFSNONFSOBJS = \
 
 # Compilation rules
 # These files are to be optimized
-afs_base64.o: $(TOP_SRC_AFS)/afs_base64.c
+base64.o: $(TOP_SRCDIR)/util/base64.c
 	$(CRULE_NOOPT)
 afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
 	$(CRULE_OPT)

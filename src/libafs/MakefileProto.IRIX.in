@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 # OS specific object files:
 AFS_OS_OBJS = \
-	afs_base64.o \
+	base64.o \
 	osi_groups.o \
 	osi_idbg.o \
 	osi_file.o \
