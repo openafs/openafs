@@ -191,11 +191,23 @@
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
+/* define if your linux kernel exports sys_chdir */
+#undef EXPORTED_SYS_CHDIR
+
+/* define if your linux kernel exports sys_close */
+#undef EXPORTED_SYS_CLOSE
+
 /* define if your linux kernel exports tasklist_lock */
 #undef EXPORTED_TASKLIST_LOCK
 
-/* define if your h_exists exists */
+/* define if completion_h exists */
 #undef COMPLETION_H_EXISTS
+
+/* define if for_each_process defined */
+#undef DEFINED_FOR_EACH_PROCESS
+
+/* define if prev_task defined */
+#undef DEFINED_PREV_TASK
 
 /* define if your setattr return return non-void */
 #undef INODE_SETATTR_NOT_VOID
@@ -212,14 +224,35 @@
 /* define if you struct inode has i_devices */
 #undef STRUCT_INODE_HAS_I_DEVICES
 
-/* define if you struct inode has data_buffers */
+/* define if your struct inode has data_buffers */
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+
+/* define if your recalc_sigpending takes void */
+#undef RECALC_SIGPENDING_TAKES_VOID
+
+/* define if your struct task_struct has parent */
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+
+/* define if your struct task_struct has real_parent */
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+
+/* define if your struct task_struct has sigmask_lock */
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+
+/* define if your struct task_struct has sighand */
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+
+/* define if your struct task_struct has sig */
+#undef STRUCT_TASK_STRUCT_HAS_SIG
 
 /* define if struct ufsvfs has vfs_dqrwlock */
 #undef HAVE_VFS_DQRWLOCK
 
 /* define if struct proc has p_corefile */
 #undef HAVE_P_COREFILE
+
+/* define if struct fs has fs_rolled */
+#undef STRUCT_FS_HAS_FS_ROLLED
 
 /* define if you struct sockaddr sa_len */
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
@@ -284,17 +317,26 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 
+#undef COMPLETION_H_EXISTS
+#undef DEFINED_FOR_EACH_PROCESS
+#undef DEFINED_PREV_TASK
+#undef EXPORTED_KALLSYMS_ADDRESS
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
+#undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
-#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_FS_HAS_FS_ROLLED
 #undef STRUCT_INODE_HAS_I_DEVICES
-#undef EXPORTED_TASKLIST_LOCK
-#undef EXPORTED_SYS_CALL_TABLE
-#undef EXPORTED_KALLSYMS_SYMBOL
-#undef EXPORTED_KALLSYMS_ADDRESS
-#undef COMPLETION_H_EXISTS
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
 
 /* glue for RedHat kernel bug */

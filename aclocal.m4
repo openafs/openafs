@@ -99,7 +99,10 @@ case $system in
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/usr/src/linux"
+		   LINUX_KERNEL_PATH="/usr/src/linux-2.4"
+		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		     LINUX_KERNEL_PATH="/usr/src/linux"
+		   fi
 		 fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -1`
@@ -152,24 +155,34 @@ case $system in
 	           [LINUX_BUILD_VNODE_FROM_INODE(config,afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
 	         )
+		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_DEFINES_FOR_EACH_PROCESS
+		 LINUX_DEFINES_PREV_TASK
+		 LINUX_EXPORTS_TASKLIST_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
-		 LINUX_COMPLETION_H_EXISTS
-		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_NEED_RHCONFIG
+		 LINUX_RECALC_SIGPENDING_ARG_TYPE
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno"; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
                    ac_cv_linux_exports_sys_call_table=yes
                  else
-                   LINUX_EXPORTS_SYS_CALL_TABLE
-                   LINUX_EXPORTS_KALLSYMS_SYMBOL
-                   LINUX_EXPORTS_KALLSYMS_ADDRESS
                    LINUX_EXPORTS_INIT_MM
+                   LINUX_EXPORTS_KALLSYMS_ADDRESS
+                   LINUX_EXPORTS_KALLSYMS_SYMBOL
+                   LINUX_EXPORTS_SYS_CALL_TABLE
+                   LINUX_EXPORTS_SYS_CHDIR
+                   LINUX_EXPORTS_SYS_CLOSE
                    if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
                          linux_syscall_method=none
                          if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
@@ -184,6 +197,12 @@ case $system in
                          if test "x$linux_syscall_method" = "xnone"; then
                         AC_MSG_ERROR([no available sys_call_table access method])
                          fi
+			 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
+			  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+			 fi
+			 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
+			  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
+			 fi
                    fi
                  fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
@@ -199,7 +218,13 @@ case $system in
                   AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
-		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if your h_exists exists])
+		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
+		 fi
+		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
+		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
+		 fi
+		 if test "x$ac_cv_linux_defines_prev_task" = "xyes" ; then
+		  AC_DEFINE(DEFINED_PREV_TASK, 1, [define if prev_task defined])
 		 fi
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
@@ -217,7 +242,25 @@ case $system in
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if you struct inode has data_buffers])
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
+		 fi
+		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
+		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_real_parent" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_REAL_PARENT, 1, [define if your struct task_struct has real_parent])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sigmask_lock" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, 1, [define if your struct task_struct has sigmask_lock])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
 		 fi
                 :
 		fi
@@ -227,6 +270,7 @@ case $system in
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
+		SOLARIS_FS_HAS_FS_ROLLED
                 ;;
         *-sunos*)
 		MKAFS_OSTYPE=SUNOS
@@ -340,6 +384,15 @@ else
 		powerpc-apple-darwin6.2*)
 			AFS_SYSNAME="ppc_darwin_60"
 			;;
+		powerpc-apple-darwin6.3*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.4*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.5*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			;;
@@ -372,6 +425,9 @@ else
 			;;
 		alpha*-dec-osf5.0*)
 			AFS_SYSNAME="alpha_dux50"
+			;;
+		alpha*-dec-osf5.1*)
+			AFS_SYSNAME="alpha_dux51"
 			;;
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"
@@ -648,7 +704,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: aclocal.m4,v 1.15 2002/12/11 17:23:44 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.16 2003/04/13 20:49:23 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -845,86 +901,6 @@ chmod +x $configdir/make_vnode.pl
 $configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -o $outputdir
 ])
 
-AC_DEFUN(LINUX_EXPORTS_TASKLIST_LOCK, [
-AC_MSG_CHECKING(for exported tasklist_lock)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_tasklist_lock
-#error tasklist_lock not exported
-#endif],
-ac_cv_linux_exports_tasklist_lock=yes,
-ac_cv_linux_exports_tasklist_lock=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
-CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN(LINUX_EXPORTS_SYS_CALL_TABLE, [
-AC_MSG_CHECKING(for exported sys_call_table)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_sys_call_table,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_sys_call_table
-#error sys_call_table not exported
-#endif],
-ac_cv_linux_exports_sys_call_table=yes,
-ac_cv_linux_exports_sys_call_table=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_sys_call_table)
-CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN(LINUX_EXPORTS_INIT_MM, [
-AC_MSG_CHECKING(for exported init_mm)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_init_mm,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_init_mm
-#error init_mm not exported
-#endif],
-ac_cv_linux_exports_init_mm=yes,
-ac_cv_linux_exports_init_mm=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_init_mm)
-CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN(LINUX_EXPORTS_KALLSYMS_SYMBOL, [
-AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_symbol,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_kallsyms_symbol_to_address
-#error kallsyms_symbol_to_address not exported
-#endif],
-ac_cv_linux_exports_kallsyms_symbol=yes,
-ac_cv_linux_exports_kallsyms_symbol=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_symbol)
-CPPFLAGS="$save_CPPFLAGS"])
-
-AC_DEFUN(LINUX_EXPORTS_KALLSYMS_ADDRESS, [
-AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_address,
-[
-AC_TRY_COMPILE(
-[#include <linux/modversions.h>],
-[#ifndef __ver_kallsyms_address_to_symbol
-#error kallsyms_address_to_symbol not exported
-#endif],
-ac_cv_linux_exports_kallsyms_address=yes,
-ac_cv_linux_exports_kallsyms_address=no)])
-AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_address)
-CPPFLAGS="$save_CPPFLAGS"])
-
 AC_DEFUN(LINUX_COMPLETION_H_EXISTS, [
 AC_MSG_CHECKING(for linux/completion.h existance)
 save_CPPFLAGS="$CPPFLAGS"
@@ -944,50 +920,159 @@ ac_cv_linux_completion_h_exists=no)])
 AC_MSG_RESULT($ac_cv_linux_completion_h_exists)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED, [
-AC_MSG_CHECKING(for i_mmap_shared in struct inode)
+
+AC_DEFUN(LINUX_DEFINES_FOR_EACH_PROCESS, [
+AC_MSG_CHECKING(for defined for_each_process)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mmap_shared,
+AC_CACHE_VAL(ac_cv_linux_defines_for_each_process,
 [
 AC_TRY_COMPILE(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printf("%d\n", _inode.i_mmap_shared);],
-ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes,
-ac_cv_linux_fs_struct_inode_has_i_mmap_shared=no)])
-AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
+[#include <linux/sched.h>],
+[#ifndef for_each_process(p)
+#error for_each_process not defined
+#endif],
+ac_cv_linux_defines_for_each_process=yes,
+ac_cv_linux_defines_for_each_process=no)])
+AC_MSG_RESULT($ac_cv_linux_defines_for_each_process)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, [
-AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
+
+AC_DEFUN(LINUX_DEFINES_PREV_TASK, [
+AC_MSG_CHECKING(for defined prev_task)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers, 
+AC_CACHE_VAL(ac_cv_linux_defines_prev_task,
 [
 AC_TRY_COMPILE(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printf("%d\n", _inode.i_dirty_data_buffers);], 
-ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
-ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
-AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
+[#include <linux/sched.h>],
+[#ifndef prev_task(p)
+#error prev_task not defined
+#endif],
+ac_cv_linux_defines_prev_task=yes,
+ac_cv_linux_defines_prev_task=no)])
+AC_MSG_RESULT($ac_cv_linux_defines_prev_task)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD, [
-AC_MSG_CHECKING(for i_mapping_overload in struct inode)
+
+AC_DEFUN(LINUX_EXPORTS_INIT_MM, [
+AC_MSG_CHECKING(for exported init_mm)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
-AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mapping_overload, 
+AC_CACHE_VAL(ac_cv_linux_exports_init_mm,
 [
 AC_TRY_COMPILE(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printf("%d\n", _inode.i_mapping_overload);], 
-ac_cv_linux_fs_struct_inode_has_i_mapping_overload=yes,
-ac_cv_linux_fs_struct_inode_has_i_mapping_overload=no)])
-AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mapping_overload)
+[#include <linux/modversions.h>],
+[#ifndef __ver_init_mm
+#error init_mm not exported
+#endif],
+ac_cv_linux_exports_init_mm=yes,
+ac_cv_linux_exports_init_mm=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_init_mm)
 CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_KALLSYMS_ADDRESS, [
+AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_address,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_kallsyms_address_to_symbol
+#error kallsyms_address_to_symbol not exported
+#endif],
+ac_cv_linux_exports_kallsyms_address=yes,
+ac_cv_linux_exports_kallsyms_address=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_address)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_KALLSYMS_SYMBOL, [
+AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_symbol,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_kallsyms_symbol_to_address
+#error kallsyms_symbol_to_address not exported
+#endif],
+ac_cv_linux_exports_kallsyms_symbol=yes,
+ac_cv_linux_exports_kallsyms_symbol=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_symbol)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_SYS_CALL_TABLE, [
+AC_MSG_CHECKING(for exported sys_call_table)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_sys_call_table,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_sys_call_table
+#error sys_call_table not exported
+#endif],
+ac_cv_linux_exports_sys_call_table=yes,
+ac_cv_linux_exports_sys_call_table=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_sys_call_table)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_SYS_CHDIR, [
+AC_MSG_CHECKING(for exported sys_chdir)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_sys_chdir,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_sys_chdir
+#error sys_chdir not exported
+#endif],
+ac_cv_linux_exports_sys_chdir=yes,
+ac_cv_linux_exports_sys_chdir=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_sys_chdir)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_SYS_CLOSE, [
+AC_MSG_CHECKING(for exported sys_close)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_sys_close,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_sys_close
+#error sys_close not exported
+#endif],
+ac_cv_linux_exports_sys_close=yes,
+ac_cv_linux_exports_sys_close=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_sys_close)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_EXPORTS_TASKLIST_LOCK, [
+AC_MSG_CHECKING(for exported tasklist_lock)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_tasklist_lock,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_tasklist_lock
+#error tasklist_lock not exported
+#endif],
+ac_cv_linux_exports_tasklist_lock=yes,
+ac_cv_linux_exports_tasklist_lock=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
+CPPFLAGS="$save_CPPFLAGS"])
+
 
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_CDEV, [
 AC_MSG_CHECKING(for i_cdev in struct inode)
@@ -1004,6 +1089,7 @@ ac_cv_linux_fs_struct_inode_has_i_cdev=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)
 CPPFLAGS="$save_CPPFLAGS"])
 
+
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DEVICES, [
 AC_MSG_CHECKING(for i_devices in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
@@ -1019,6 +1105,146 @@ ac_cv_linux_fs_struct_inode_has_i_devices=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_devices)
 CPPFLAGS="$save_CPPFLAGS"])
 
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, [
+AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_dirty_data_buffers);], 
+ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
+ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD, [
+AC_MSG_CHECKING(for i_mapping_overload in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mapping_overload, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mapping_overload);], 
+ac_cv_linux_fs_struct_inode_has_i_mapping_overload=yes,
+ac_cv_linux_fs_struct_inode_has_i_mapping_overload=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mapping_overload)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED, [
+AC_MSG_CHECKING(for i_mmap_shared in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mmap_shared,
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mmap_shared);],
+ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes,
+ac_cv_linux_fs_struct_inode_has_i_mmap_shared=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_RECALC_SIGPENDING_ARG_TYPE,[
+AC_MSG_CHECKING(for recalc_sigpending arg type)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_func_recalc_sigpending_takes_void,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[recalc_sigpending();],
+ac_cv_linux_func_recalc_sigpending_takes_void=yes,
+ac_cv_linux_func_recalc_sigpending_takes_void=no)])
+AC_MSG_RESULT($ac_cv_linux_func_recalc_sigpending_takes_void)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT, [
+AC_MSG_CHECKING(for parent in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_parent,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.parent);],
+ac_cv_linux_sched_struct_task_struct_has_parent=yes,
+ac_cv_linux_sched_struct_task_struct_has_parent=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT, [
+AC_MSG_CHECKING(for real_parent in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_real_parent,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.real_parent);],
+ac_cv_linux_sched_struct_task_struct_has_real_parent=yes,
+ac_cv_linux_sched_struct_task_struct_has_real_parent=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_real_parent)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG, [
+AC_MSG_CHECKING(for sig in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sig,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.sig);],
+ac_cv_linux_sched_struct_task_struct_has_sig=yes,
+ac_cv_linux_sched_struct_task_struct_has_sig=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sig)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, [
+AC_MSG_CHECKING(for sigmask_lock in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sigmask_lock,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.sigmask_lock);],
+ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=yes,
+ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sigmask_lock)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND, [
+AC_MSG_CHECKING(for sighand in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sighand,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.sighand);],
+ac_cv_linux_sched_struct_task_struct_has_sighand=yes,
+ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)
+CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN(LINUX_INODE_SETATTR_RETURN_TYPE,[
 AC_MSG_CHECKING(for inode_setattr return type)
@@ -1139,6 +1365,23 @@ ac_cv_solaris_proc_has_p_corefile=no)])
 AC_MSG_RESULT($ac_cv_solaris_proc_has_p_corefile)
 if test "$ac_cv_solaris_proc_has_p_corefile" = "yes"; then
   AC_DEFINE(HAVE_P_COREFILE, 1, [define if struct proc has p_corefile])
+fi
+])
+
+
+AC_DEFUN(SOLARIS_FS_HAS_FS_ROLLED, [
+AC_MSG_CHECKING(for fs_rolled in struct proc)
+AC_CACHE_VAL(ac_cv_solaris_fs_has_fs_rolled,
+[
+AC_TRY_COMPILE(
+[#include <sys/fs/ufs_fs.h>],
+[struct fs _fs;
+(void) _fs.fs_rolled;], 
+ac_cv_solaris_fs_has_fs_rolled=yes,
+ac_cv_solaris_fs_has_fs_rolled=no)])
+AC_MSG_RESULT($ac_cv_solaris_fs_has_fs_rolled)
+if test "$ac_cv_solaris_fs_has_fs_rolled" = "yes"; then
+  AC_DEFINE(STRUCT_FS_HAS_FS_ROLLED, 1, [define if struct fs has fs_rolled])
 fi
 ])
 
