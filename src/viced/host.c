@@ -909,7 +909,6 @@ struct host *h_GetHost_r(struct rx_connection *tcon)
     int held;
     struct interfaceAddr interf;
     int interfValid = 0;
-    afs_int32	buffer[AFS_MAX_INTERFACE_ADDR];
     struct Identity *identP = NULL;
     afs_int32 haddr;
     afs_int32 hport;
@@ -1850,7 +1849,6 @@ static struct AFSFid zerofid;
 int CheckHost(register struct host *host, int held)
 {
     register struct client *client;
-    struct interfaceAddr interf;
     int code;
 
     /* Host is held by h_Enumerate */
@@ -1983,11 +1981,11 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 		host->host, interf->numberOfInterfaces));
 
 	number = interf->numberOfInterfaces;
-	myPort   = host->port;
-	myHost   = host->host; /* current interface address */
+	myPort = host->port;
+	myHost = host->host; /* current interface address */
 
 	/* validation checks */
-	if ( number < 0 )
+	if ( number < 0 || number > AFS_MAX_INTERFACE_ADDR )
         {
 		ViceLog(0,("Number of alternate addresses returned is %d\n",
 			 number));

@@ -1704,9 +1704,9 @@ int MultiBreakCallBackAlternateAddress(struct host *host, struct AFSCBFids *afid
 int MultiBreakCallBackAlternateAddress_r(struct host *host, struct AFSCBFids *afidp)
 {
 	int i,j;
-	struct rx_connection*	conns[AFS_MAX_INTERFACE_ADDR];
+	struct rx_connection**	conns;
 	struct rx_connection*   connSuccess = 0;
-	afs_int32			addr[AFS_MAX_INTERFACE_ADDR];
+	afs_int32		*addr;
 	static struct rx_securityClass *sc = 0;
 	static struct AFSCBs tc = {0,0};
 	char hoststr[16];
@@ -1723,6 +1723,10 @@ int MultiBreakCallBackAlternateAddress_r(struct host *host, struct AFSCBFids *af
 	/* initialise a security object only once */
 	if ( !sc )
 	    sc = rxnull_NewClientSecurityObject();
+
+	i = host->interface->numberOfInterfaces;
+	addr = malloc(i * sizeof(afs_int32));
+	conns = malloc(i * sizeof(struct rx_connection *));
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1770,6 +1774,9 @@ int MultiBreakCallBackAlternateAddress_r(struct host *host, struct AFSCBFids *af
 		if ( conns[i] != connSuccess )
 			rx_DestroyConnection(conns[i] );
 
+	free(addr);
+	free(conns);
+
 	if ( connSuccess ) return 0;	/* success */
 		else return 1;		/* failure */
 }
@@ -1782,9 +1789,9 @@ int MultiBreakCallBackAlternateAddress_r(struct host *host, struct AFSCBFids *af
 int MultiProbeAlternateAddress_r(struct host *host)
 {
 	int i,j;
-	struct rx_connection*	conns[AFS_MAX_INTERFACE_ADDR];
+	struct rx_connection**	conns;
 	struct rx_connection*   connSuccess = 0;
-	afs_int32			addr[AFS_MAX_INTERFACE_ADDR];
+	afs_int32		*addr;
 	static struct rx_securityClass *sc = 0;
 	char hoststr[16];
 
@@ -1800,6 +1807,10 @@ int MultiProbeAlternateAddress_r(struct host *host)
 	/* initialise a security object only once */
 	if ( !sc )
 	    sc = rxnull_NewClientSecurityObject();
+
+	i = host->interface->numberOfInterfaces;
+	addr = malloc(i * sizeof(afs_int32));
+	conns = malloc(i * sizeof(struct rx_connection *));
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1846,6 +1857,9 @@ int MultiProbeAlternateAddress_r(struct host *host)
 	for ( i=0; i < j; i++)
 		if ( conns[i] != connSuccess )
 			rx_DestroyConnection(conns[i] );
+
+	free(addr);
+	free(conns);
 
 	if ( connSuccess ) return 0;	/* success */
 		else return 1;		/* failure */
