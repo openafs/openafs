@@ -101,7 +101,7 @@ transmit(peer)
 	pkt->reftime = sys.reftime;
 	pkt->org = peer->org;
 	pkt->rec = peer->rec;
-	(void) gettimeofday(&txtv, (struct timezone *) 0);
+	(void) gettimeofday(&txtv, NULL);
 #if	0
 	if (peer->flags & PEER_FL_AUTHENABLE) {
 		/* add encryption time into the timestamp */

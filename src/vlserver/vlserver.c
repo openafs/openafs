@@ -109,7 +109,7 @@ void initialize_dstats ()
 int vldb_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(vldb_confdir, call, (char *)0);
+    return afsconf_SuperUser(vldb_confdir, call, NULL);
 }
 
 /* Main server module */
@@ -243,7 +243,7 @@ char	**argv;
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */
-    code = afsconf_GetExtendedCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE,
+    code = afsconf_GetExtendedCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE,
                                        &info, &clones);
     if (code) {
 	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
@@ -279,7 +279,7 @@ char	**argv;
 
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *) 0;
-    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
     tservice = rx_NewService(0, USER_SERVICE_ID, "Vldb server", sc, 3, VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");

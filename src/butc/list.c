@@ -53,7 +53,7 @@ void InitNodeList(portOffset)
 {
     maxTaskID = (portOffset * 1000) + 1;             /* this is the first task id alotted */
     headNode.taskID = -1;
-    headNode.next = (struct dumpNode *)0;
+    headNode.next = NULL;
     headNode.dumps = (struct tc_dumpDesc *)0;
     headNode.restores = (struct tc_restoreDesc *)0;
     dumpQHeader = &headNode;                         /* noone in the list to start with */
@@ -93,9 +93,9 @@ afs_int32 taskID;
     curPtr = dumpQHeader;
     oldPtr = dumpQHeader;
     if(curPtr) newPtr = dumpQHeader->next;
-    else newPtr = (struct dumpNode *)0;
+    else newPtr = NULL;
     done = 0;
-    while((!done) && (curPtr != (struct dumpNode *)0)) {
+    while((!done) && (curPtr != NULL)) {
 	if(curPtr->taskID == taskID){
 	    done = 1;
 	    oldPtr->next = newPtr;
@@ -147,7 +147,7 @@ struct dumpNode **resultNode;
 
     done = 0;
     tmpPtr = dumpQHeader;
-    while((!done) && (tmpPtr != (struct dumpNode *)0)) {
+    while((!done) && (tmpPtr != NULL)) {
 	if(tmpPtr->taskID == taskID) {
 	    *resultNode = tmpPtr;
 	    done = 1;

@@ -224,7 +224,7 @@ int HandleFlock(register struct vcache *avc, int acom,
 
     AFS_STATCNT(HandleFlock);
     code = 0;		/* default when we don't make any network calls */
-    lockIdSet(&flock, (struct SimpleLocks *)0, clid);
+    lockIdSet(&flock, NULL, clid);
 
 #if defined(AFS_SGI_ENV)
     osi_Assert(valusema(&avc->vc_rwlock) <= 0);
@@ -251,7 +251,7 @@ int HandleFlock(register struct vcache *avc, int acom,
 	  }
 	}
 #endif
-	if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, onlymine, clid)) {
+	if (lockIdcmp2(&flock, avc, NULL, onlymine, clid)) {
 	  ReleaseWriteLock(&avc->lock); 	    
 	  return 0;
  	} 
@@ -300,7 +300,7 @@ int HandleFlock(register struct vcache *avc, int acom,
 	    } while
 	      (afs_Analyze(tc, code, &avc->fid, areq, 
 			   AFS_STATS_FS_RPCIDX_RELEASELOCK,
-                           SHARED_LOCK, (struct cell *)0));
+                           SHARED_LOCK, NULL));
 	}
     }
     else {
@@ -355,10 +355,10 @@ int HandleFlock(register struct vcache *avc, int acom,
 		    } while
 		      (afs_Analyze(tc, code, &avc->fid, areq,
 				   AFS_STATS_FS_RPCIDX_RELEASELOCK,
-				   SHARED_LOCK, (struct cell *)0));
+				   SHARED_LOCK, NULL));
 		}
 	    } else if (avc->flockCount == -1 && (acom & LOCK_EX)) {
-		if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+		if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 		    code = EWOULDBLOCK;
 		} else
 		    code = 0;
@@ -385,7 +385,7 @@ int HandleFlock(register struct vcache *avc, int acom,
 		    } while
 			(afs_Analyze(tc, code, &avc->fid, areq,
 				     AFS_STATS_FS_RPCIDX_SETLOCK,
-				     SHARED_LOCK, (struct cell *)0));
+				     SHARED_LOCK, NULL));
 		}
 		else code = 0;	/* otherwise, pretend things worked */
 	    }
@@ -401,7 +401,7 @@ int HandleFlock(register struct vcache *avc, int acom,
 #endif
 
 		    slp->type = LockWrite;
-		    slp->next = (struct SimpleLocks *)0;		    
+		    slp->next = NULL;		    
 		    avc->slocks = slp;
 		    avc->flockCount = -1;
 		} else {
@@ -594,7 +594,7 @@ static int HandleGetLock(register struct vcache *avc,
     register afs_int32 code;
     struct AFS_FLOCK flock;
 
-    lockIdSet(&flock, (struct SimpleLocks *)0, clid);
+    lockIdSet(&flock, NULL, clid);
 
     ObtainWriteLock(&avc->lock,122);
     if (avc->flockCount == 0) {
@@ -625,7 +625,7 @@ static int HandleGetLock(register struct vcache *avc,
 	 * write lock, say it is unlocked.
 	 */
 	if (avc->flockCount > 0 ||      /* only read locks */
-	    !lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	    !lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	    af->l_type = F_UNLCK;
 	    goto unlck_leave;
 	}
@@ -651,7 +651,7 @@ static int HandleGetLock(register struct vcache *avc,
      * already, and it is not this process, we fail.
      */
     if (avc->flockCount < 0) {
-	if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	    af->l_type = F_WRLCK;
 	    if (avc->slocks) {
 		af->l_pid = avc->slocks->pid;
@@ -676,7 +676,7 @@ static int HandleGetLock(register struct vcache *avc,
      * If there is more than one, or it isn't us, we cannot lock.
      */
     if ((avc->flockCount > 1)
-	|| lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	|| lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	struct SimpleLocks *slp;
 	
 	af->l_type = F_RDLCK;
@@ -686,7 +686,7 @@ static int HandleGetLock(register struct vcache *avc,
 #endif
 	/* find a pid that isn't our own */
 	for (slp = avc->slocks; slp; slp = slp->next) {
-           if (lockIdcmp2(&flock, (struct vcache *)0, slp, 1, clid)) {
+           if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
                af->l_pid = slp->pid;
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
                af->l_sysid = avc->slocks->sysid;
@@ -702,7 +702,7 @@ static int HandleGetLock(register struct vcache *avc,
 	* already, and it is not this process, we fail.
 	*/
 	if (avc->flockCount < 0) {
-	    if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	    if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 		af->l_type = F_WRLCK;
 		if (avc->slocks) {
 		    af->l_pid = avc->slocks->pid;
@@ -727,7 +727,7 @@ static int HandleGetLock(register struct vcache *avc,
 	 * If there is more than one, or it isn't us, we cannot lock.
 	 */
 	if ((avc->flockCount > 1)
-	    || lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	    || lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	    struct SimpleLocks *slp;
 	    af->l_type = F_RDLCK;
 	    af->l_pid = 0;
@@ -736,7 +736,7 @@ static int HandleGetLock(register struct vcache *avc,
 #endif
 	    /* find a pid that isn't our own */
 	    for (slp = avc->slocks; slp; slp = slp->next) {
-		if (lockIdcmp2(&flock, (struct vcache *)0, slp, 1, clid)) {
+		if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
 		    af->l_pid = slp->pid;
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    af->l_sysid = avc->slocks->sysid;
@@ -808,7 +808,7 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
     } while
       (afs_Analyze(tc, code, &avc->fid, areq,
 		   AFS_STATS_FS_RPCIDX_FETCHSTATUS,
-		   SHARED_LOCK, (struct cell *)0));
+		   SHARED_LOCK, NULL));
 
     if (temp)
 	areq->flags &= ~O_NONBLOCK;

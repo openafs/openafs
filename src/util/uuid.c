@@ -417,7 +417,7 @@ void uuid__get_os_time (uuid_time_t *os_time)
 {
     struct timeval      tp;
 
-    if (gettimeofday (&tp, (struct timezone *) 0)) {
+    if (gettimeofday (&tp, NULL)) {
         perror ("uuid__get_time");
         exit (-1);
     }

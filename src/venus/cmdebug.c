@@ -286,7 +286,7 @@ char **argv; {
 #endif
     rx_Init(0);
 
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "probe unik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe unik server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

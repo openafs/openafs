@@ -69,7 +69,7 @@ afs_int32 *aindex; {
     
     LOCK_GLOBAL_MUTEX
     tclass = (struct rx_securityClass *)
-	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, (char *) 0);
+	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = 2;    /* kerberos security index */

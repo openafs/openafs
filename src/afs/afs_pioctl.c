@@ -899,11 +899,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 			foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
-	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &dp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow,  NULL, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
-	code = gop_lookupname(path, AFS_UIOUSER, follow,  (struct vnode **) 0, &vp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow,  NULL, &vp);
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
@@ -936,7 +936,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
 	}
     }
-    else vp = (struct vnode *) 0;
+    else vp = NULL;
     
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
@@ -950,7 +950,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	gp = vp;	/* remember for "put" */
 	vp = (struct vnode *) afs_gntovn(vp);	/* get vcache from gp */
       }
-      else gp = (struct vnode *) 0;
+      else gp = NULL;
 #endif 
 #ifdef	AFS_SUN5_ENV
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
@@ -1002,7 +1002,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_DEC_ENV
 	if (vp) {
 	    GRELE(vp);
-	    vp = (struct vnode *) 0;
+	    vp = NULL;
 	}
 #endif
     }
@@ -1158,7 +1158,7 @@ DECL_PIOCTL(PSetAcl)
       else code = -1;
     } while
 	(afs_Analyze(tconn, code, &avc->fid, areq,
-		     AFS_STATS_FS_RPCIDX_STOREACL, SHARED_LOCK, (struct cell *)0));
+		     AFS_STATS_FS_RPCIDX_STOREACL, SHARED_LOCK, NULL));
 
     /* now we've forgotten all of the access info */
     ObtainWriteLock(&afs_xcbhash, 455);
@@ -1254,7 +1254,7 @@ DECL_PIOCTL(PGetAcl)
     } while
 	(afs_Analyze(tconn, code, &avc->fid, areq,
 		     AFS_STATS_FS_RPCIDX_FETCHACL,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
     if (code == 0) {
       *aoutSize = (acl.AFSOpaque_len == 0 ? 1 : acl.AFSOpaque_len);
@@ -1298,7 +1298,7 @@ DECL_PIOCTL(PGetWSCell)
 	return EIO;          /* Inappropriate ioctl for device */
 
     ObtainReadLock(&afs_xcell);
-    cellOne = (struct cell *) 0;
+    cellOne = NULL;
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tcell = QTOC(cq); tq = QNext(cq);
@@ -1434,7 +1434,7 @@ DECL_PIOCTL(PSetTokens)
     /* now we just set the tokens */
     tu = afs_GetUser(areq->uid,	i, WRITE_LOCK); /* i has the cell # */
     tu->vid = clear.ViceId;
-    if (tu->stp != (char *) 0) {
+    if (tu->stp != NULL) {
       afs_osi_Free(tu->stp, tu->stLen);
     }
     tu->stp = (char *) afs_osi_Alloc(stLen);
@@ -1496,7 +1496,7 @@ DECL_PIOCTL(PGetVolumeStatus)
     } while
       (afs_Analyze(tc, code, &avc->fid, areq,
 		   AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
-		   SHARED_LOCK, (struct cell *)0));
+		   SHARED_LOCK, NULL));
 
     if (code) return code;
     /* Copy all this junk into msg->im_data, keeping track of the lengths. */
@@ -1576,7 +1576,7 @@ DECL_PIOCTL(PSetVolumeStatus)
     } while
       (afs_Analyze(tc, code, &avc->fid, areq,
 		   AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
-		   SHARED_LOCK, (struct cell *)0));
+		   SHARED_LOCK, NULL));
 
     if (code) return code;
     /* we are sending parms back to make compat. with prev system.  should
@@ -1612,7 +1612,7 @@ DECL_PIOCTL(PFlush)
     afs_symhint_inval(avc);
     if (avc->linkData && !(avc->states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData)+1);
-	avc->linkData = (char *) 0;
+	avc->linkData = NULL;
     }
     ReleaseWriteLock(&avc->lock);
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
@@ -1654,7 +1654,7 @@ DECL_PIOCTL(PNewStatMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
@@ -1887,7 +1887,7 @@ DECL_PIOCTL(PCheckServers)
 	cellp = afs_GetCellByName(cp, READ_LOCK);
 	if (!cellp) return ENOENT;
     }
-    else cellp = (struct cell *) 0;
+    else cellp = NULL;
     if (!cellp && (temp & 2)) {
 	/* use local cell */
 	cellp = afs_GetCell(1, READ_LOCK);
@@ -2115,7 +2115,7 @@ DECL_PIOCTL(PRemoveCallBack)
 	} while
 	  (afs_Analyze(tc, code, &avc->fid, areq,
 		       AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS,
-		       SHARED_LOCK, (struct cell *)0));
+		       SHARED_LOCK, NULL));
 
 	ObtainWriteLock(&afs_xcbhash, 457);
 	afs_DequeueCallback(avc);
@@ -2176,7 +2176,7 @@ DECL_PIOCTL(PNewCell)
     }
 
     linkedstate |= CNoSUID; /* setuid is disabled by default for fs newcell */
-    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0, (char *) 0);
+    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0, NULL);
     return code;
 }
 
@@ -2329,7 +2329,7 @@ DECL_PIOCTL(PRemoveMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique &&  (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
@@ -2376,7 +2376,7 @@ DECL_PIOCTL(PRemoveMount)
     } while
 	(afs_Analyze(tc, code, &avc->fid, areq,
 		     AFS_STATS_FS_RPCIDX_REMOVEFILE,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
     if (code) {
 	if (tdc) afs_PutDCache(tdc);
@@ -2512,7 +2512,7 @@ DECL_PIOCTL(PFlushVolumeData)
     MObtainWriteLock(&afs_xdcache,328);  /* needed if you're going to flush any stuff */
     for(i=0;i<afs_cacheFiles;i++) {
 	if (!(afs_indexFlags[i] & IFEverUsed)) continue;	/* never had any data */
-	tdc = afs_GetDSlot(i, (struct dcache *) 0);
+	tdc = afs_GetDSlot(i, NULL);
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
@@ -2659,7 +2659,7 @@ DECL_PIOCTL(PSetSysName)
 	    afs_PutUser(au, READ_LOCK);
 	    return EINVAL;  /* Better than panicing */
 	}
-	error = EXP_SYSNAME(exporter, (setsysname? inname : (char *)0), outname);
+	error = EXP_SYSNAME(exporter, (setsysname? inname : NULL), outname);
 	if (error) {
 	    if (error == ENODEV) foundname = 0; /* sysname not set yet! */
 	    else {
@@ -3394,7 +3394,7 @@ DECL_PIOCTL(PFlushMount)
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
-	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, avc, bufp);
+	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     }
@@ -3421,7 +3421,7 @@ DECL_PIOCTL(PFlushMount)
     afs_symhint_inval(tvc);
     if (tvc->linkData && !(tvc->states & CCore)) {
 	afs_osi_Free(tvc->linkData, strlen(tvc->linkData)+1);
-	tvc->linkData = (char *) 0;
+	tvc->linkData = NULL;
     }
     ReleaseWriteLock(&tvc->lock);
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
@@ -3557,7 +3557,7 @@ DECL_PIOCTL(PPrefetchFromTape)
     } while
         (afs_Analyze(tc, code, &tvc->fid, areq, 
 		AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK, 
-		(struct cell *)0));
+		NULL));
     /* This call is done only to have the callback things handled correctly */
     afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
     afs_PutVCache(tvc);
@@ -3614,7 +3614,7 @@ DECL_PIOCTL(PResidencyCmd)
         } while
           (afs_Analyze(tc, code, &tvc->fid, areq, 
 		AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK,
-                (struct cell *)0));
+                NULL));
        /* This call is done to have the callback things handled correctly */
        afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
     } else { /* just a status request, return also link data */

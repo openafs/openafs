@@ -117,7 +117,7 @@ int afsremove(register struct vcache *adp, register struct dcache *tdc,
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, treqp,
-		   AFS_STATS_FS_RPCIDX_REMOVEFILE, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_REMOVEFILE, SHARED_LOCK, NULL));
 
     osi_dnlc_remove (adp, aname, tvc);
     if (tvc) afs_symhint_inval(tvc);   /* XXX: don't really need to be so extreme */
@@ -284,7 +284,7 @@ tagain:
 	return afs_CheckCode(code, &treq, 22);
     }
 #else	/* AFS_OSF_ENV */
-    tvc = (struct vcache *) 0;
+    tvc = NULL;
     if (code) {
 	code = afs_CheckCode(code, &treq, 23);
 	afs_PutFakeStat(&fakestate);

@@ -461,7 +461,7 @@ static struct buffer *newslot (adbase, afid, apage)
     if (pp == 0) {
         /* There are no unlocked buffers that don't need to be written to the disk. */
         ubik_print("Ubik: Internal Error: Unable to find free buffer in ubik cache\n");
-	return (struct buffer *) 0;
+	return NULL;
     }
 
     /* Now fill in the header. */
@@ -562,7 +562,7 @@ static char *DNew (dbase, fid, page)
     afs_int32 fid; {
     struct buffer *tb;
 
-    if ((tb = newslot(dbase, fid, page)) == 0) return (char *) 0;
+    if ((tb = newslot(dbase, fid, page)) == 0) return NULL;
     tb->lockers++;
     memset(tb->data, 0, PAGESIZE);
     return tb->data;

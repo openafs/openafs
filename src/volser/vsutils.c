@@ -470,7 +470,7 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
             strcpy(sname.cell, info.name);
             sname.instance[0] = 0;
             strcpy(sname.name, "afs");
-            code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), (char *)0);
+            code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
             if (code) {   /* did not get ticket */
                 fprintf(STDERR, "vsu_ClientInit: Could not get afs tokens, running unauthenticated.\n");
                 scIndex = 0;

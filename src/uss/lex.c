@@ -194,7 +194,7 @@ Replace(in, out)
     
     if (isQuotedString) {
 	nullP = strchr(out, '"');
-	if (nullP == (char *)0)
+	if (nullP == NULL)
 	    nullP = out_cp;
     }
     else

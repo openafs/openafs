@@ -35,7 +35,7 @@ dnlcstats_t dnlcstats;
 
 #define NCSIZE 300
 #define NHSIZE 256 /* must be power of 2. == NHASHENT in dir package */
-struct nc *ncfreelist = (struct nc *)0;
+struct nc *ncfreelist = NULL;
 static struct nc nameCache[NCSIZE];
 struct nc *nameHash[NHSIZE];
 /* Hash table invariants:
@@ -84,7 +84,7 @@ static struct nc *GetMeAnEntry(void)
     osi_Panic("null tnc in GetMeAnEntry");
 
   if (tnc->prev == tnc) { /* only thing in list, don't screw around */
-    nameHash[nameptr] = (struct nc *) 0;
+    nameHash[nameptr] = NULL;
     return (tnc);
   }
 
@@ -207,7 +207,7 @@ struct vcache *osi_dnlc_lookup (struct vcache *adp, char *aname, int locktype )
   ObtainReadLock(&afs_xvcache);	
   ObtainReadLock(&afs_xdnlc);
 
-  for ( tvc = (struct vcache *) 0, tnc = nameHash[skey], safety=0; 
+  for ( tvc = NULL, tnc = nameHash[skey], safety=0; 
        tnc; tnc = tnc->next, safety++ ) {
     if ( /* (tnc->key == key)  && */ (tnc->dirp == adp) 
 	&& (!strcmp((char *)tnc->name, aname))) {
@@ -288,7 +288,7 @@ static void RemoveEntry (struct nc *tnc, unsigned int key)
 
   TRACE(RemoveEntryT, key);
   if (tnc == tnc->next) { /* only one in list */
-    nameHash[key] = (struct nc *) 0;
+    nameHash[key] = NULL;
   }
   else {
     if (tnc == nameHash[key])
@@ -297,7 +297,7 @@ static void RemoveEntry (struct nc *tnc, unsigned int key)
     tnc->next->prev = tnc->prev;
   }
 
-  tnc->prev = (struct nc *) 0; /* everything not in hash table has 0 prev */
+  tnc->prev = NULL; /* everything not in hash table has 0 prev */
   tnc->key = 0; /* just for safety's sake */
 }
 
@@ -324,11 +324,11 @@ int osi_dnlc_remove (struct vcache *adp, char *aname, struct vcache *avc )
   for (tnc = nameHash[skey]; tnc; tnc = tnc->next) {
     if ((tnc->dirp == adp) && (tnc->key == key)
 	&& (!strcmp((char *)tnc->name, aname))) {
-      tnc->dirp = (struct vcache *) 0; /* now it won't match anything */
+      tnc->dirp = NULL; /* now it won't match anything */
       break;      
     }
     else if (tnc->next == nameHash[skey]) { /* end of list */
-      tnc = (struct nc *) 0;
+      tnc = NULL;
       break;
     }
   }
@@ -369,7 +369,7 @@ int osi_dnlc_purgedp (struct vcache *adp)
 
   for (i=0; i<NCSIZE; i++) {
     if ((nameCache[i].dirp == adp) || (nameCache[i].vp == adp)) {
-      nameCache[i].dirp = nameCache[i].vp = (struct vcache *) 0;
+      nameCache[i].dirp = nameCache[i].vp = NULL;
       if (writelocked && nameCache[i].prev) {
 	RemoveEntry(&nameCache[i], nameCache[i].key & (NHSIZE-1));
 	nameCache[i].next = ncfreelist;
@@ -398,7 +398,7 @@ int osi_dnlc_purgevp (struct vcache *avc)
 
   for (i=0; i<NCSIZE; i++) {
     if ((nameCache[i].vp == avc)) {
-      nameCache[i].dirp = nameCache[i].vp = (struct vcache *) 0;
+      nameCache[i].dirp = nameCache[i].vp = NULL;
       /* can't simply break; because of hard links -- might be two */
       /* different entries with same vnode */ 
       if (writelocked && nameCache[i].prev) {
@@ -423,10 +423,10 @@ int osi_dnlc_purge(void)
   TRACE( osi_dnlc_purgeT, 0);
   if (EWOULDBLOCK == NBObtainWriteLock(&afs_xdnlc,4)) { /* couldn't get lock */
     for (i=0; i<NCSIZE; i++) 
-      nameCache[i].dirp = nameCache[i].vp = (struct vcache *) 0;
+      nameCache[i].dirp = nameCache[i].vp = NULL;
   }
   else {  /* did get the lock */
-    ncfreelist = (struct nc *) 0;
+    ncfreelist = NULL;
     memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
     memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
     for (i=0; i<NCSIZE; i++) {
@@ -458,7 +458,7 @@ int i;
   memset((char *)dnlctracetable, 0, sizeof(dnlctracetable));
   dnlct=0;
   ObtainWriteLock(&afs_xdnlc,223);
-  ncfreelist = (struct nc *) 0;
+  ncfreelist = NULL;
   memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
   memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
   for (i=0; i<NCSIZE; i++) {

@@ -54,8 +54,8 @@ struct conn *afs_Conn(register struct VenusFid *afid,
 {
    u_short fsport=AFS_FSPORT;
    struct volume *tv;
-   struct conn *tconn = (struct conn *)0;
-   struct srvAddr *lowp= (struct srvAddr *)0;
+   struct conn *tconn = NULL;
+   struct srvAddr *lowp= NULL;
    struct unixuser *tu;
    int notbusy;
    int i;
@@ -68,7 +68,7 @@ struct conn *afs_Conn(register struct VenusFid *afid,
 	 afs_FinalizeReq(areq);
 	 areq->volumeError = 1;
       }
-      return (struct conn *) 0;
+      return NULL;
    }
 
    if (tv->serverHost[0] && tv->serverHost[0]->cell) {
@@ -135,7 +135,7 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 
     if (!sap || ((sap->sa_flags & SRVR_ISDOWN) && !force_if_down)) {
 	/* sa is known down, and we don't want to force it.  */
-	return (struct conn *)0;
+	return NULL;
     }
 
     ObtainSharedLock(&afs_xconn,15);
@@ -147,7 +147,7 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 
     if (!tc && !create) {
        ReleaseSharedLock(&afs_xconn);
-       return (struct conn *)0;
+       return NULL;
     }
 
     if (!tc) {
@@ -299,14 +299,14 @@ struct conn *afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
     /* try to find any connection from the set */
     AFS_STATCNT(afs_ConnByMHosts);
     for (i=0;i<MAXCELLHOSTS;i++) {
-	if ((ts = ahosts[i]) == (struct server *) 0) break;
+	if ((ts = ahosts[i]) == NULL) break;
 	tconn = afs_ConnByHost(ts, aport, acell, 
 			       areq, 0, locktype);
 	if (tconn) {
 	   return tconn;
 	}
     }
-    return (struct conn *) 0;
+    return NULL;
 
 } /*afs_ConnByMHosts*/
 

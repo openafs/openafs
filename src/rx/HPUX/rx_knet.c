@@ -108,7 +108,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
     if (am->m_off > MMAXOFF || am->m_len < 28) {
 	am = m_pullup(am, 28);
 	USERPRI;
-	if (!am) return (struct mbuf *)0;
+	if (!am) return NULL;
     }
     hdr = (mtod(am, struct ip *))->ip_hl;
     if (hdr > 5) {
@@ -116,7 +116,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 	if (am->m_len < (8 + (hdr<<2))) {
 	    am = m_pullup(am, 8+(hdr<<2));
 	    USERPRI;
-	    if (!am) return (struct mbuf *)0;
+	    if (!am) return NULL;
 	}
 	ti = mtod(am, struct ip *); /* recompute, since m_pullup allocates new mbuf */
 	tu = (struct udphdr *)(((char *)ti) + (hdr<<2)); /* skip ip hdr */
@@ -132,7 +132,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 	for(tsp=ports, i=0; i<MAXRXPORTS;i++) {
 	    if (*tsp++ == port) {
 		/* checksum the packet */
-		ip_stripoptions(ti,     (struct mbuf *) 0); /* get rid of anything we don't need */
+		ip_stripoptions(ti,     NULL); /* get rid of anything we don't need */
 		/* deliver packet to rx */
 		taddr.sin_family = AF_INET;         /* compute source address */
 		taddr.sin_port = tu->uh_sport;
@@ -169,7 +169,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 			   this packet is bad */
 			m_freem(am);
 			USERPRI;
-			return((struct mbuf *)0);
+			return(NULL);
 		    }
 		}
 		/*
@@ -192,7 +192,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 		}
 		else m_freem(am);
 		USERPRI;
-		return((struct mbuf *)0);
+		return(NULL);
 	    }
 	}
     }
@@ -204,7 +204,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
       return code;
     }
     USERPRI;
-    return((struct mbuf *)0);
+    return(NULL);
 }
 #endif /* ! RXK_LISTENER_ENV */
 

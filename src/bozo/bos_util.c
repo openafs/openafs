@@ -69,7 +69,7 @@ main(int argc, char **argv)
 	struct ktc_encryptionKey tkey;
 	int kvno;
 	char buf[BUFSIZ], ver[BUFSIZ];
-	char *tcell = (char *) 0;
+	char *tcell = NULL;
 
 	if (argc != 3) {
 	    printf("bos_util add: usage is 'bos_util add <kvno>\n");
@@ -105,7 +105,7 @@ main(int argc, char **argv)
 	int kvno;
 	register afs_int32 code;
 	char buf[BUFSIZ], ver[BUFSIZ];
-	char *tcell = (char *) 0;
+	char *tcell = NULL;
 
 	if (argc != 3) {
 	    printf("bos_util adddes: usage is 'bos_util adddes <kvno>\n");

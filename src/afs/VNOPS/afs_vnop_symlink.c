@@ -152,7 +152,7 @@ afs_symlink
 	else code = -1;
     } while 
        (afs_Analyze(tc, code, &adp->fid, &treq,
-                   AFS_STATS_FS_RPCIDX_SYMLINK, SHARED_LOCK, (struct cell *)0));
+                   AFS_STATS_FS_RPCIDX_SYMLINK, SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&afs_xvcache,40);
     if (code) {

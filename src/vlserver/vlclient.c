@@ -137,7 +137,7 @@ struct Vlent *GetVolume(vol, entry)
     register int i;
     register struct Vlent *vl;
 
-    if (!vol) return (struct Vlent *)0;
+    if (!vol) return NULL;
     i = VHash(vol);
     for (vl=VLa[i]; vl; vl = vl->next) {
 	if ((vl->rwid == vol && vol != entry->volumeId[0]) ||
@@ -157,7 +157,7 @@ struct Vlent *GetVolume(vol, entry)
 	exit(1);
     }
     VL++;
-    return (struct Vlent *)0;
+    return NULL;
 }
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
@@ -198,7 +198,7 @@ char *confDir, *cellp;
 	    strncpy(sname.cell, cellp, sizeof(sname.cell));
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    fprintf(stderr,"vl_Initialize: Could not get afs tokens, running unauthenticated.\n");
 	    scIndex = 0;
@@ -223,7 +223,7 @@ char *confDir, *cellp;
 	       &ttoken.sessionKey, ttoken.kvno, ttoken.ticketLen, ttoken.ticket);
       }
     if (!server) {
-	code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE, &info);
+	code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
 	if (info.numServers > MAXSERVERS) {
 	    fprintf(stderr,
 		    "vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",

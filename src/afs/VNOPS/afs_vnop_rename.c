@@ -178,7 +178,7 @@ tagain:
 
     } while
 	(afs_Analyze(tc, code, &andp->fid, areq,
-		     AFS_STATS_FS_RPCIDX_RENAME, SHARED_LOCK, (struct cell *)0));
+		     AFS_STATS_FS_RPCIDX_RENAME, SHARED_LOCK, NULL));
 
     returnCode = code;	    /* remember for later */
     
@@ -289,9 +289,9 @@ tagain:
     if (unlinkFid.Fid.Vnode) {
 	unlinkFid.Fid.Volume = aodp->fid.Fid.Volume;
 	unlinkFid.Cell = aodp->fid.Cell;
-	tvc = (struct vcache *)0;
+	tvc = NULL;
 	if (!unlinkFid.Fid.Unique) {
-	    tvc = afs_LookupVCache(&unlinkFid, areq, (afs_int32 *)0, aodp, aname1);
+	    tvc = afs_LookupVCache(&unlinkFid, areq, NULL, aodp, aname1);
 	}
 	if (!tvc) /* lookup failed or wasn't called */
 	   tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
@@ -327,9 +327,9 @@ tagain:
 	fileFid.Fid.Volume = aodp->fid.Fid.Volume;
 	fileFid.Cell = aodp->fid.Cell;
 	if (!fileFid.Fid.Unique)
-	    tvc = afs_LookupVCache(&fileFid, areq, (afs_int32 *)0, andp, aname2);
+	    tvc = afs_LookupVCache(&fileFid, areq, NULL, andp, aname2);
 	else
-	    tvc = afs_GetVCache(&fileFid, areq, (afs_int32 *)0, (struct vcache*)0);
+	    tvc = afs_GetVCache(&fileFid, areq, NULL, (struct vcache*)0);
 	if (tvc && (vType(tvc) == VDIR)) {
 	    ObtainWriteLock(&tvc->lock,152);
 	    tdc1 = afs_FindDCache(tvc, 0);

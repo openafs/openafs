@@ -50,7 +50,7 @@ afs_int32 threadEntryDir(anEntry, size, type)
      afs_int32 size, type;
 {
     dlqlinkP entryPtr;
-    char     *entry = (char *)0;
+    char     *entry = NULL;
     int      tried;
 
     for (tried=0; tried<5; tried++) {
@@ -93,7 +93,7 @@ threadEntry(anEntry, size, type)
      afs_int32 size, type;
 {
     dlqlinkP entryPtr;
-    char     *entry = (char *)0;
+    char     *entry = NULL;
     int      tried;
 
     for (tried=0; tried<5; tried++) {

@@ -190,10 +190,10 @@ struct cmd_syndesc *as; {
 
 	if (as->parms[ADDPARMOFFSET].items) 
 	    tname = as->parms[ADDPARMOFFSET].items->data;
-	else tname = (char *) 0;
+	else tname = NULL;
 	/* next call expands cell name abbrevs for us and handles looking up
          * local cell */
-	code = afsconf_GetCellInfo(tdir, tname, (char *) 0, &info);
+	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
 	if (code) {
 	    com_err ("bos", code, "(can't find cell '%s' in cell database)",
 		   (tname? tname : "<default>"));
@@ -226,7 +226,7 @@ struct cmd_syndesc *as; {
 		    sc[scIndex] = sc[2];
 	    }
 	} else { /* not -localauth, check for tickets */
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), (char *)0);
+	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	    if (code == 0) {
 		/* have tickets, will travel */
 		if (ttoken.kvno >= 0 && ttoken.kvno <= 255) ;
@@ -832,7 +832,7 @@ register struct cmd_syndesc *as; {
 	    ucstring(cellBuffer, cellBuffer, strlen(cellBuffer));
 	    tcell = cellBuffer;
 	}
-	else tcell = (char *) 0;    /* no cell specified, use current */
+	else tcell = NULL;    /* no cell specified, use current */
 /*
 	ka_StringToKey(as->parms[1].items->data, tcell, &tkey);
 */
@@ -1185,7 +1185,7 @@ char *orphans;
     }
 
     /* add the parallel option if given */
-    if (parallel != (char *)0) {
+    if (parallel != NULL) {
         if ( (strlen(tbuffer) + 11 + strlen(parallel) + 1) > BOZO_BSSIZE ) {
 	   printf("bos: command line too big\n");
 	   return(E2BIG);
@@ -1195,7 +1195,7 @@ char *orphans;
     }
 
     /* add the tmpdir option if given */
-    if (atmpDir != (char *)0) {
+    if (atmpDir != NULL) {
         if ( (strlen(tbuffer) + 9 + strlen(atmpDir) + 1) > BOZO_BSSIZE ) {
 	   printf("bos: command line too big\n");
 	   return(E2BIG);
@@ -1205,7 +1205,7 @@ char *orphans;
     }
 
     /* add the orphans option if given */
-    if (orphans != (char *)0) {
+    if (orphans != NULL) {
         if ( (strlen(tbuffer) + 10 + strlen(orphans) + 1) > BOZO_BSSIZE ) {
 	   printf("bos: command line too big\n");
 	   return(E2BIG);
@@ -1384,23 +1384,23 @@ struct cmd_syndesc *as; {
     if (as->parms[3].items)
 	outName = as->parms[3].items->data;
     else
-	outName = (char *) 0;
+	outName = NULL;
 
     if (as->parms[5].items)
 	showlog = 1;
 
     /* parallel option */
-    parallel = (char *) 0;
+    parallel = NULL;
     if (as->parms[6].items)
 	parallel = as->parms[6].items->data;
 
     /* get the tmpdir filename if any */
-    tmpDir = (char *)0;
+    tmpDir = NULL;
     if (as->parms[7].items)
 	tmpDir = as->parms[7].items->data;
 
     /* -orphans option */
-    orphans = (char *)0;
+    orphans = NULL;
     if (as->parms[8].items) {
 	if (mrafs) {
 	    printf("Can't specify -orphans for MR-AFS fileserver\n");
@@ -1487,7 +1487,7 @@ struct cmd_syndesc *as; {
 	}
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
-	rc = DoSalvage(tconn, (char *) 0, (char *) 0, outName, showlog,parallel,tmpDir,orphans);
+	rc = DoSalvage(tconn, NULL, NULL, outName, showlog,parallel,tmpDir,orphans);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting fs.\n");
 	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_NORMAL);
@@ -1526,7 +1526,7 @@ struct cmd_syndesc *as; {
 	}
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
-	rc = DoSalvage(tconn, as->parms[1].items->data, (char *) 0,
+	rc = DoSalvage(tconn, as->parms[1].items->data, NULL,
 		       outName, showlog,parallel,tmpDir,orphans);
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting fs.\n");
@@ -1549,7 +1549,7 @@ struct cmd_syndesc *as; {
 
 	if (as->parms[ADDPARMOFFSET].items) 
 	    tmpname = as->parms[ADDPARMOFFSET].items->data;
-	else tmpname = (char *) 0;
+	else tmpname = NULL;
 
 	localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
 	confdir = (localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
@@ -1664,7 +1664,7 @@ static DoStat (aname, aconn, aint32p, firstTime)
 	printf("    Last exit at %s\n", DateOf(istatus.lastAnyExit));
     }
     if (istatus.lastErrorExit) {
-	is1 = is2 = is3 = is4 = (char *) 0;
+	is1 = is2 = is3 = is4 = NULL;
 	printf("    Last error exit at %s, ", DateOf(istatus.lastErrorExit));
 	code = BOZO_GetInstanceStrings(aconn, aname, &is1, &is2, &is3, &is4);
 	/* don't complain about failing call, since could simply mean

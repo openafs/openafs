@@ -75,7 +75,7 @@ static int debugOutput;
 int KA_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(KA_conf, call, (char *)0);
+    return afsconf_SuperUser(KA_conf, call, NULL);
 }
 
 afs_int32 es_Report(char *fmt, ...)

@@ -149,7 +149,7 @@ char **argv; {
     /* try to find volume location information */
     
 
-    ts = cmd_CreateSyntax((char *)0, Twiddle, 0, "adjust rx parms");
+    ts = cmd_CreateSyntax(NULL, Twiddle, 0, "adjust rx parms");
     cmd_AddParm(ts, "-initReceiveWindow ", CMD_SINGLE, CMD_OPTIONAL, "16");
     cmd_AddParm(ts, "-maxReceiveWindow ", CMD_SINGLE, CMD_OPTIONAL, "16");
     cmd_AddParm(ts, "-initSendWindow ", CMD_SINGLE, CMD_OPTIONAL, "8");

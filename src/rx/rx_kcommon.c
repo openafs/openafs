@@ -88,7 +88,7 @@ void rxk_shutdownPorts(void)
 #if ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(RXK_LISTENER_ENV)
 	    soclose((struct socket *)rxk_portRocks[i]);
 #endif
-	    rxk_portRocks[i] = (char *)0;
+	    rxk_portRocks[i] = NULL;
 	}
     }
 }

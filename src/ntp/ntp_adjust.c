@@ -108,7 +108,7 @@ adj_logical(offset)
 	if (offset > CLOCK_MAX || offset < -CLOCK_MAX) {
 		double steptime = offset;
 
-		(void) gettimeofday(&tv2, (struct timezone *) 0);
+		(void) gettimeofday(&tv2, NULL);
 		steptime += tv2.tv_sec;
 		steptime += tv2.tv_usec / 1000000.0;
 		tv1.tv_sec = steptime;
@@ -120,7 +120,7 @@ adj_logical(offset)
 			printf("adj_logical: %f %f\n", offset, steptime);
 		}
 #endif
-		if (settimeofday(&tv1, (struct timezone *) 0) < 0)
+		if (settimeofday(&tv1, NULL) < 0)
 		    {
 			syslog(LOG_ERR, "Can't set time: %m");
 			return(-1);
@@ -311,7 +311,7 @@ int adjtime(newdelta, olddelta)
     cum.tv_usec = (cum.tv_usec < 0) ? -((-cum.tv_usec) % MICROSECONDS) :
 	cum.tv_usec % MICROSECONDS;
 
-    gettimeofday (&now, (struct timezone *)0);
+    gettimeofday (&now, NULL);
     new = now;
     new.tv_sec += cum.tv_sec;
     new.tv_usec += cum.tv_usec;
@@ -326,7 +326,7 @@ int adjtime(newdelta, olddelta)
     if (cum.tv_sec || abs(cum.tv_usec) > 2000) {
 	/* wait till accumulated update is at least 2msec since this call
          * seems to add some jitter. */
-	settimeofday (&new, (struct timezone *)0);
+	settimeofday (&new, NULL);
 	if (debug > 4)			/* do set before doing I/O */
 	    printf ("hp_adjtime: pushing clock by %d usec w/ settimeofday \n",
 		    cum.tv_sec*1000000 + cum.tv_usec);

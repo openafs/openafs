@@ -176,7 +176,7 @@ static afs_int32 InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
 	strcpy(sname.cell, info.name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    fprintf(stderr,
 		    "%s: Couldn't get AFS tokens, running unauthenticated.\n",
@@ -568,7 +568,7 @@ static int CheckDoubleMount(a_mp, a_oldmp)
     struct stat stbuf;
     
     pws = getpwuid(atoi(uss_Uid));
-    if (pws != (struct passwd *)0) {
+    if (pws != NULL) {
 	/*
 	 * User exists in the password file, so they've been fully
 	 * created and integrated.  Return the ``ancient'' mountpoint.

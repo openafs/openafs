@@ -85,7 +85,7 @@ int astartInput; {
     oi_params.i_gwparams = &wi_params;
 
     code = gator_objects_init(&oi_params);
-    if (code) return (struct gwin *) 0;
+    if (code) return NULL;
     
     /* if we start input thread */
     IOMGR_Initialize();	/* input thread uses it */

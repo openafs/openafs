@@ -158,9 +158,9 @@ tagain:
 	    /* found the file, so use it */
 	    newFid.Cell = adp->fid.Cell;
 	    newFid.Fid.Volume = adp->fid.Fid.Volume;
-	    tvc = (struct vcache *)0;
+	    tvc = NULL;
 	    if (newFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&newFid, &treq, (afs_int32 *)0, adp, aname);	
+		tvc = afs_LookupVCache(&newFid, &treq, NULL, adp, aname);	
 	    }
 	    if (!tvc)  /* lookup failed or wasn't called */
 	       tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
@@ -295,7 +295,7 @@ tagain:
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_CREATEFILE, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_CREATEFILE, SHARED_LOCK, NULL));
 
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     if (code == EEXIST && aexcl == NONEXCL) {
@@ -323,11 +323,11 @@ tagain:
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
 	code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t*)adp), aname, avcp,
-			  (struct pathname *)0, 0,
-			  (struct vnode *)0, acred);
+			  NULL, 0,
+			  NULL, acred);
 #else
-	code = afs_lookup(adp, aname, avcp, (struct pathname *)0, 0,
-			  (struct vnode *)0, acred);
+	code = afs_lookup(adp, aname, avcp, NULL, 0,
+			  NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
 	code = afs_lookup(adp, aname, avcp, acred);

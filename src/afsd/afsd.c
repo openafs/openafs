@@ -1640,8 +1640,8 @@ mainproc(as, arock)
      */
     lookingForHomeCell = 1;
 
-    afsconf_CellApply(cdir, ConfigCell, (char *) 0);
-    afsconf_CellAliasApply(cdir, ConfigCellAlias, (char *) 0);
+    afsconf_CellApply(cdir, ConfigCell, NULL);
+    afsconf_CellAliasApply(cdir, ConfigCellAlias, NULL);
 
     /*
      * If we're still looking for the home cell after the whole cell configuration database
@@ -1819,7 +1819,7 @@ mainproc(as, arock)
     if (aix_vmount()) {
 #else
 #if defined(AFS_HPUX100_ENV)
-    if ((mount("",cacheMountDir,mountFlags,"afs", (char *)0, 0)) < 0) {
+    if ((mount("",cacheMountDir,mountFlags,"afs", NULL, 0)) < 0) {
 #else
 #ifdef	AFS_HPUX_ENV
 #if	defined(AFS_HPUX90_ENV)
@@ -1845,7 +1845,7 @@ mainproc(as, arock)
 #endif
 #else
 #ifdef	AFS_SUN5_ENV
-    if ((mount("AFS",cacheMountDir,mountFlags,"afs", (char *)0, 0)) < 0) {
+    if ((mount("AFS",cacheMountDir,mountFlags,"afs", NULL, 0)) < 0) {
 #else
 #if defined(AFS_SGI_ENV)
     mountFlags = MS_FSS;
@@ -1897,7 +1897,7 @@ int argc;
 char **argv; {
     register struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax((char *) 0, mainproc, (char *) 0, "start AFS");
+    ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL, "1024 byte blocks in cache");
     cmd_AddParm(ts, "-files", CMD_SINGLE, CMD_OPTIONAL, "files in cache");
     cmd_AddParm(ts, "-rootvol", CMD_SINGLE, CMD_OPTIONAL, "name of AFS root volume");

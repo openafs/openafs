@@ -85,7 +85,7 @@ char *afs_index(register char *a, register char c)
 	if (tc == c) return a;
 	else a++;
     }
-    return (char *) 0;
+    return NULL;
 }
 
 /* call under write lock, evaluate mvid field from a mt pt.
@@ -114,7 +114,7 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 #ifdef notdef
     if (avc->mvid && (avc->states & CMValid)) return 0;	/* done while racing */
 #endif
-    *avolpp = (struct volume *)0;
+    *avolpp = NULL;
     code = afs_HandleLink(avc, areq);
     if (code) return code;
 
@@ -410,7 +410,7 @@ int afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
     au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
     afs_PutUser(au, 0);	
     if (au->exporter) {
-      error = EXP_SYSNAME(au->exporter, (char *)0, bufp);
+      error = EXP_SYSNAME(au->exporter, NULL, bufp);
       if (error) 
 	strcpy(bufp, "@sys");
       return -1;
@@ -492,7 +492,7 @@ extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
  * ensure that vcaches created for failed RPC's to older servers have the
  * CForeign bit set.
  */
-static struct vcache *BStvc = (struct vcache *) 0;
+static struct vcache *BStvc = NULL;
 
 int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
@@ -774,7 +774,7 @@ tagain:
 	}
 	else code = -1;
     } while (afs_Analyze(tcp, code, &adp->fid, areqp, 
-			 AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, (struct cell *)0));
+			 AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
     if (code) goto done;
@@ -1011,7 +1011,7 @@ tagain:
 	if ((&statsp[0])->errorCode) {
 	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp, 
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, 
-			(struct cell *)0);
+			NULL);
 	    code = (&statsp[0])->errorCode;
 	}
     } else {
@@ -1054,7 +1054,7 @@ afs_lookup(adp, aname, avcp, acred)
     struct AFS_UCRED *acred; {
 #endif
     struct vrequest treq;
-    char *tname = (char *)0;
+    char *tname = NULL;
     register struct vcache *tvc=0;
     register afs_int32 code;
     register afs_int32 bulkcode = 0;
@@ -1102,13 +1102,13 @@ afs_lookup(adp, aname, avcp, acred)
     if (code)
 	goto done;
 
-    *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
+    *avcp = NULL;   /* Since some callers don't initialize it */
 
     /* come back to here if we encounter a non-existent object in a read-only
        volume's directory */
 
   redo:
-    *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
+    *avcp = NULL;   /* Since some callers don't initialize it */
     bulkcode = 0;
 
     if (!(adp->states & CStatd)) {
@@ -1158,7 +1158,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* now check the access */
     if (treq.uid != adp->last_looker) {  
        if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-	 *avcp = (struct vcache *)0;
+	 *avcp = NULL;
 	 code = EACCES;
 	 goto done;
        }
@@ -1204,7 +1204,7 @@ afs_lookup(adp, aname, avcp, acred)
 	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
 	    /* need read access on dir to stat non-directory / non-link */
 	    afs_PutVCache(tvc);
-	    *avcp = (struct vcache *)0;
+	    *avcp = NULL;
 	    code = EACCES;
 	    goto done;
 	}
@@ -1234,7 +1234,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* now we have to lookup the next fid */
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
     if (!tdc) {
-      *avcp = (struct vcache *)0;  /* redundant, but harmless */
+      *avcp = NULL;  /* redundant, but harmless */
       code = EIO;
       goto done;
     }
@@ -1351,10 +1351,10 @@ afs_lookup(adp, aname, avcp, acred)
 	/* if the vcache isn't usable, release it */
 	if (tvc && !(tvc->states & CStatd)) {
 	    afs_PutVCache(tvc);
-	    tvc = (struct vcache *) 0;
+	    tvc = NULL;
 	}
     } else {
-	tvc = (struct vcache *) 0;
+	tvc = NULL;
 	bulkcode = 0;
     }
 
@@ -1411,7 +1411,7 @@ afs_lookup(adp, aname, avcp, acred)
 
 		if (tvolp && (tvolp->states & VForeign)) {
 		    /* XXXX tvolp has ref cnt on but not locked! XXX */
-		    tvc = afs_GetRootVCache(tvc->mvid, &treq, (afs_int32 *)0, tvolp);
+		    tvc = afs_GetRootVCache(tvc->mvid, &treq, NULL, tvolp);
 		} else {
 		    tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
 		}
@@ -1430,7 +1430,7 @@ afs_lookup(adp, aname, avcp, acred)
 		 * ptr to point back to the appropriate place */
 		if (tvolp) {
 		    ObtainWriteLock(&tvc->lock,134);
-		    if (tvc->mvid == (struct VenusFid *) 0) {
+		    if (tvc->mvid == NULL) {
 			tvc->mvid = (struct VenusFid *) osi_AllocSmallSpace(sizeof(struct VenusFid));
 		    }
 		    /* setup backpointer */
@@ -1523,7 +1523,7 @@ done:
        /* If there is an error, make sure *avcp is null.
 	* Alphas panic otherwise - defect 10719.
 	*/
-       *avcp = (struct vcache *)0;
+       *avcp = NULL;
     }
 
     afs_PutFakeStat(&fakestate);

@@ -351,7 +351,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	if (!code) afs_NewCell(aliasName,	/* new entry name */
 			       0,		/* host list */
 			       CAlias,		/* flags */
-			       (char *) 0,	/* linked cell */
+			       NULL,	/* linked cell */
 			       0, 0,		/* fs & vl ports */
 			       0,		/* timeout */
 			       cellName);	/* real cell name */
@@ -411,7 +411,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #ifdef AFS_SGI62_ENV
 	ainode = (ainode << 32) | (parm3 & 0xffffffff);
 #endif
-	code = afs_InitCacheFile((char *) 0, ainode);
+	code = afs_InitCacheFile(NULL, ainode);
     }
     else if (parm == AFSOP_ROOTVOLUME) {
 #if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
@@ -2061,7 +2061,7 @@ int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize, afs_uint32 flags,
     strcpy(logp->name, name);
     LOCK_INIT(&logp->lock, "logp lock");
     logp->logSize = logSize;
-    logp->datap = (afs_int32 *)0;	/* don't allocate it until we need it */
+    logp->datap = NULL;	/* don't allocate it until we need it */
 
     if (flags & ICL_CRLOG_FLAG_PERSISTENT)
 	logp->states |= ICL_LOGF_PERSISTENT;
@@ -2252,7 +2252,7 @@ int afs_icl_LogFreeUse(register struct afs_icl_log *logp)
 #endif
 	logp->firstUsed = logp->firstFree = 0;
 	logp->logElements = 0;
-	logp->datap = (afs_int32 *)0;
+	logp->datap = NULL;
     }
     ReleaseWriteLock(&logp->lock);
     return 0;

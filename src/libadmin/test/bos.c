@@ -92,8 +92,8 @@ static LocalParseLine(
     register int tc;
 
     inToken = 0;        /* not copying token chars at start */
-    first = (struct token *) 0;
-    last = (struct token *) 0;
+    first = NULL;
+    last = NULL;
     while (1) {
         tc = *aline++;
         if (tc == 0 || space(tc)) {
@@ -101,7 +101,7 @@ static LocalParseLine(
                 inToken = 0;    /* end of this token */
                 *tptr++ = 0;
                 ttok = (struct token *) malloc(sizeof(struct token));
-                ttok->next = (struct token *) 0;
+                ttok->next = NULL;
                 ttok->key = (char *) malloc(strlen(tbuffer)+1);
                 strcpy(ttok->key, tbuffer);
                 if (last) {
@@ -123,7 +123,7 @@ static LocalParseLine(
         }
         if (tc == 0) {
             /* last token flushed 'cause space(0) --> true */
-            if (last) last->next = (struct token *) 0;
+            if (last) last->next = NULL;
             *alist = first;
             return 0;
         }
@@ -231,7 +231,7 @@ int ktime_ParsePeriodic(
         }
         /* otherwise use keyword table */
         for(tp = ptkeys;; tp++) {
-            if (tp->key == (char *) 0) {
+            if (tp->key == NULL) {
 		LocalFreeTokens(tt);
                 return -1;
             }

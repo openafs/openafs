@@ -131,7 +131,7 @@ int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
     tv = (struct volume *) afs_osi_Alloc(aVolumes * sizeof(struct volume));
     for (i=0;i<aVolumes-1;i++)
 	tv[i].next = &tv[i+1];
-    tv[aVolumes-1].next = (struct volume *) 0;
+    tv[aVolumes-1].next = NULL;
     afs_freeVolList = Initialafs_freeVolList = tv;
     afs_memvolumes = aVolumes;
 
@@ -239,13 +239,13 @@ int afs_InitVolumeInfo(register char *afile)
 #ifdef AFS_LINUX22_ENV
     {
 	struct dentry *dp;
-	code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &dp);
+	code = gop_lookupname(afile, AFS_UIOSYS, 0, NULL, &dp);
 	if (code) return ENOENT;
 	fce.inode = volumeInode = dp->d_inode->i_ino;
 	dput(dp);
     }
 #else
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &filevp);
+    code = gop_lookupname(afile, AFS_UIOSYS, 0, NULL, &filevp);
     if (code) return ENOENT;
     fce.inode = volumeInode = afs_vnodeToInumber(filevp);
 #ifdef AFS_DEC_ENV
@@ -299,7 +299,7 @@ int afs_InitCacheInfo(register char *afile)
     code = osi_InitCacheInfo(afile);
     if (code) return code;
 #else
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &filevp);
+    code = gop_lookupname(afile, AFS_UIOSYS, 0, NULL, &filevp);
     if (code || !filevp) return ENOENT;
     {
 #if	defined(AFS_SUN56_ENV)
@@ -322,10 +322,10 @@ int afs_InitCacheInfo(register char *afile)
 
 #if	defined(AFS_SGI_ENV)
 #ifdef AFS_SGI65_ENV
-      VFS_STATVFS(filevp->v_vfsp, &st, (struct vnode *)0, code);
+      VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
       if (!code) 
 #else
-      if (!VFS_STATFS(filevp->v_vfsp, &st, (struct vnode *)0))
+      if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
 #endif /* AFS_SGI65_ENV */
 #else /* AFS_SGI_ENV */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
@@ -751,7 +751,7 @@ void shutdown_AFS(void)
       afs_sysnamecount = 0;
       afs_marinerHost = 0;
       QInit(&CellLRU);      
-      afs_setTimeHost = (struct server *)0;
+      afs_setTimeHost = NULL;
       afs_volCounter = 1;
       afs_waitForever = afs_waitForeverCount = 0;
       afs_cellindex = 0;

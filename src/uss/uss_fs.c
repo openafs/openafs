@@ -84,7 +84,7 @@ static int InAFS(a_path)
     static char rn[] = "uss_fs:InAFS";
     register afs_int32 code;
 
-    blob.in       = (char *)0;
+    blob.in       = NULL;
     blob.in_size  = 0;
     blob.out_size = USS_FS_MAX_SIZE;
     blob.out      = uss_fs_OutBuff;
@@ -241,7 +241,7 @@ afs_int32 uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
     static char rn[] = "uss_fs_GetACL";	/*Routine name*/
     register afs_int32 code;			/*pioctl() result*/
 
-    blob.in	  = (char *)0;
+    blob.in	  = NULL;
     blob.in_size  = 0;
     blob.out      = a_aclBuff;
     blob.out_size = a_aclBuffBytes;
@@ -285,7 +285,7 @@ afs_int32 uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
 
     blob.in	  = a_aclBuff;
     blob.in_size  = a_aclBuffBytes;
-    blob.out      = (char *)0;
+    blob.out      = NULL;
     blob.out_size = 0;
 
 #ifdef USS_FS_DB
@@ -327,7 +327,7 @@ afs_int32 uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
     static char rn[] = "uss_fs_GetVolStat";	/*Routine name*/
     register afs_int32 code;				/*pioctl() result*/
 
-    blob.in	  = (char *)0;
+    blob.in	  = NULL;
     blob.in_size  = 0;
     blob.out      = a_volStatBuff;
     blob.out_size = a_volStatBuffBytes;
@@ -408,9 +408,9 @@ afs_int32 uss_fs_CkBackups()
     static char rn[] = "uss_fs_CkBackups";	/*Routine name*/
     register afs_int32 code;				/*pioctl() result*/
 
-    blob.in       = (char *)0;
+    blob.in       = NULL;
     blob.in_size  = 0;
-    blob.out      = (char *)0;
+    blob.out      = NULL;
     blob.out_size = 0;
     
 #ifdef USS_FS_DB
@@ -418,7 +418,7 @@ afs_int32 uss_fs_CkBackups()
 	   rn, blob.in, blob.in_size, blob.out, blob.out_size);
 #endif /* USS_FS_DB */
 
-    code = pioctl((char *)0,	/*No pathname needed here*/
+    code = pioctl(NULL,	/*No pathname needed here*/
 		  VIOCCKBACK,	/*CheckBackups*/
 		  &blob,		/*Params*/
 		  1);		/*Symlink disposition*/
@@ -551,7 +551,7 @@ afs_int32 uss_fs_RmMountPoint(a_mountpoint)
      */
     blob.in	  = componentP;
     blob.in_size  = strlen(componentP) + 1;
-    blob.out      = (char *)0;
+    blob.out      = NULL;
     blob.out_size = 0;
 
     if (!uss_DryRun) {

@@ -115,7 +115,7 @@ static afs_int32 afsconf_FindService(register const char *aname)
 #if     defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
     ts = getservbyname(aname, "");
 #else
-    ts = getservbyname(aname, (char *) 0);
+    ts = getservbyname(aname, NULL);
 #endif
     if (ts) {
 	/* we found it in /etc/services, so we use this value */
@@ -124,7 +124,7 @@ static afs_int32 afsconf_FindService(register const char *aname)
 
     /* not found in /etc/services, see if it is one of ours */
     for(tsp = serviceTable;; tsp++) {
-	if (tsp->name == (char *) 0) return -1;
+	if (tsp->name == NULL) return -1;
 	if (!strcmp(tsp->name, aname)) return htons(tsp->port);
     }
 }

@@ -130,7 +130,7 @@ struct volume *afs_UFSGetVolSlot(void)
 	*bestLp = tv->next;
 	if (tv->name)
 	    afs_osi_Free(tv->name, strlen(tv->name)+1);
-	tv->name = (char *) 0;
+	tv->name = NULL;
 	/* now write out volume structure to file */
 	if (tv->vtix < 0) {
 	    tv->vtix = afs_volCounter++;
@@ -190,7 +190,7 @@ struct volume *afs_MemGetVolSlot(void)
 
 	newVp = (struct volume *) afs_osi_Alloc(sizeof(struct volume));
 
-	newVp->next = (struct volume *)0;
+	newVp->next = NULL;
 	afs_freeVolList = newVp;
     }
     tv = afs_freeVolList;
@@ -539,7 +539,7 @@ static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
 
     tcell = afs_GetCell(fid->Cell, READ_LOCK);
     if (!tcell)
-	return (struct volume *) 0;
+	return NULL;
     if (!(tcell->states & CHasVolRef))
 	tcell->states |= CHasVolRef;
 
@@ -570,11 +570,11 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     XSTATS_DECLS;
 
     if (strlen(aname) > VL_MAXNAMELEN)	/* Invalid volume name */
-	return (struct volume *) 0;
+	return NULL;
 
     tcell = afs_GetCell(acell, READ_LOCK);
     if (!tcell) {
-	return (struct volume *) 0;
+	return NULL;
     }
 
     /* allow null request if we don't care about ENODEV/ETIMEDOUT distinction */
@@ -629,7 +629,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	} else
 	    code = -1;
     } while
-      (afs_Analyze(tconn, code, (struct VenusFid *) 0, &treq,
+      (afs_Analyze(tconn, code, NULL, &treq,
 		   -1, /* no op code for this */
 		   SHARED_LOCK, tcell));
 
@@ -644,7 +644,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	    struct server *sp;
 	    struct srvAddr *sap;
 	    for (i=0; i<MAXCELLHOSTS; i++) {
-		if ((sp = tcell->cellHosts[i]) == (struct server *) 0) break;
+		if ((sp = tcell->cellHosts[i]) == NULL) break;
 		for (sap = sp->addr; sap; sap = sap->next_sa)
 		    afs_MarkServerUpOrDown(sap, 0);
 	    }
@@ -652,7 +652,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	afs_CopyError(&treq, areq);
 	osi_FreeLargeSpace(tbuffer);
 	afs_PutCell(tcell, READ_LOCK);
-	return (struct volume *) 0;
+	return NULL;
     }
     /*
      * Check to see if this cell has not yet referenced a volume.  If
@@ -677,7 +677,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	 * This means that very soon we'll ask for the RO volume so
 	 * we'll prefetch it (well we did already.)
 	 */
-	tv1 = afs_SetupVolume(tv->roVol, (char *)0, ve, tcell, 0, type, areq);
+	tv1 = afs_SetupVolume(tv->roVol, NULL, ve, tcell, 0, type, areq);
 	tv1->refCount--;
     }
     osi_FreeLargeSpace(tbuffer);
@@ -934,7 +934,7 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		    if (code == 0 && nentries == 0)
 			code = VL_NOENT;
 
-		} while (afs_Analyze(tconn, code, (struct VenusFid *) 0, areq,
+		} while (afs_Analyze(tconn, code, NULL, areq,
 				     -1, SHARED_LOCK, tcell));
 		if (code) {
 		    /* Better handing of such failures; for now we'll simply retry this call */
@@ -982,7 +982,7 @@ void afs_ResetVolumeInfo(struct volume *tv)
       tv->status[i] = not_busy;
     if (tv->name) {
 	afs_osi_Free(tv->name, strlen(tv->name)+1);
-	tv->name = (char *) 0;
+	tv->name = NULL;
       }
     ReleaseWriteLock(&tv->lock);
 }

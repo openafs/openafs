@@ -425,7 +425,7 @@ afs_int32 FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
     struct extentaddr *exp;    
     register afs_int32 i, j, code, base, index, error=0;	
 
-    *expp = (struct extentaddr *)0;
+    *expp = NULL;
     *basep = 0;
 
     /* Create the first extension block if it does not exist */

@@ -131,7 +131,7 @@ static int test_this_package(pkg)
     c_crparams.box_vertchar  = '|';
     c_crparams.box_horizchar = '-';
     newwin = WOP_CREATE(&c_crparams);
-    if (newwin == (struct gwin *)0) {
+    if (newwin == NULL) {
 	fprintf(stderr, "[%s:%s] Can't create a new window\n", pn, rn);
     }
     else

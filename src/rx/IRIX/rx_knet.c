@@ -545,7 +545,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     }
     tm = top;
 
-    tm->m_act = (struct mbuf *) 0;
+    tm->m_act = NULL;
 
     /* setup mbuf corresponding to destination address */
     um = m_get(M_DONTWAIT, MT_SONAME);

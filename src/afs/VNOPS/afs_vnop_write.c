@@ -59,7 +59,7 @@ int afs_StoreOnLastReference(register struct vcache *avc, register struct vreque
 	avc->execsOrWriters--;
 	AFS_RELE(AFSTOV(avc)); /* VN_HOLD at set CCore(afs_FakeClose)*/
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
-	avc->linkData =	(char *)0;
+	avc->linkData =	NULL;
     }
     /* Now, send the file back.  Used to require 0 writers left, but now do
      * it on every close for write, since two closes in a row are harmless

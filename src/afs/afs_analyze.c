@@ -202,7 +202,7 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
 	    }
 	} else
 	    i = -1;
-    } while (afs_Analyze(tconn, i, (struct VenusFid *) 0, &treq,
+    } while (afs_Analyze(tconn, i, NULL, &treq,
 			 -1, /* no op code for this */
 			 SHARED_LOCK, tcell));
 

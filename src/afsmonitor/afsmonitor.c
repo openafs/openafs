@@ -319,7 +319,7 @@ char *name;
 	he = gethostbyname(name);
 #ifdef AFS_SUN5_ENV
 	/* On solaris the above does not resolve hostnames to full names */
-	if (he != (struct hostent *)0) {
+	if (he != NULL) {
 		memcpy(ip_addr, he->h_addr, he->h_length);
 		he = gethostbyaddr(ip_addr, he->h_length, he->h_addrtype);
 	}
@@ -499,7 +499,7 @@ int a_exitVal;		/* exit code */
 	curr_hostEntry = FSnameList;
 	for(i=0; i<numFS; i++) {
 		prev_hostEntry = curr_hostEntry;	
-		if (curr_hostEntry->thresh != (struct Threshold *)0) 
+		if (curr_hostEntry->thresh != NULL) 
 			free(curr_hostEntry->thresh);
 		free(curr_hostEntry);
    		if (afsmon_debug)
@@ -515,7 +515,7 @@ int a_exitVal;		/* exit code */
 	curr_hostEntry = CMnameList;
 	for(i=0; i<numCM; i++) {
 		prev_hostEntry = curr_hostEntry;	
-		if (curr_hostEntry->thresh != (struct Threshold *)0) 
+		if (curr_hostEntry->thresh != NULL) 
 			free(curr_hostEntry->thresh);
 		free(curr_hostEntry);
    		if (afsmon_debug)
@@ -575,7 +575,7 @@ char *a_hostName;	/* name of cache manager to be inserted in list */
    strncpy(curr_item->hostName,a_hostName,CFG_STR_LEN);
    curr_item->next = (struct afsmon_hostEntry *)0;
    curr_item->numThresh = 0;
-   curr_item->thresh = (struct Threshold *)0;
+   curr_item->thresh = NULL;
 
    if (FSnameList == (struct afsmon_hostEntry *)0) 
 	FSnameList = curr_item;
@@ -664,7 +664,7 @@ char *a_hostName;	/* name of cache manager to be inserted in list */
    strncpy(curr_item->hostName,a_hostName,CFG_STR_LEN);
    curr_item->next = (struct afsmon_hostEntry *)0;
    curr_item->numThresh = 0;
-   curr_item->thresh = (struct Threshold *)0;
+   curr_item->thresh = NULL;
 
    if (CMnameList == (struct afsmon_hostEntry *)0) 
 	CMnameList = curr_item;
@@ -771,7 +771,7 @@ char *a_line;
 
    /* good host ? */
    he = GetHostByName(arg1);
-   if ( he == (struct hostent *)0) {
+   if ( he == NULL) {
 	fprintf(stderr,"[ %s ] Unable to resolve hostname %s\n",
 		rn,arg1);
 	return(-1);
@@ -1187,7 +1187,7 @@ char *a_line;
    	while(idx < FS_NUM_DATA_CATEGORIES && numGroups) { 
 	   sscanf(fs_categories[idx],"%s %d %d",catName, &fromIdx, &toIdx);
 
-	   if (strcasestr(catName,"_group") != (char *)0) {
+	   if (strcasestr(catName,"_group") != NULL) {
 	   	if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_FS_STAT_ENTRIES ||
 			toIdx > NUM_FS_STAT_ENTRIES) 
 			return(-4);
@@ -1294,7 +1294,7 @@ char *a_line;
    	while(idx < CM_NUM_DATA_CATEGORIES && numGroups) { 
 	   sscanf(cm_categories[idx],"%s %d %d",catName, &fromIdx, &toIdx);
 
-	   if (strcasestr(catName,"_group") != (char *)0) {
+	   if (strcasestr(catName,"_group") != NULL) {
 	   	if (fromIdx < 0 || toIdx < 0 || fromIdx > NUM_CM_STAT_ENTRIES ||
 			toIdx > NUM_CM_STAT_ENTRIES) 
 			return(-12);
@@ -1504,7 +1504,7 @@ char *a_config_filename;
 	if (curr_host->numThresh) {
 		numBytes = curr_host->numThresh * sizeof(struct Threshold);
 		curr_host->thresh = (struct Threshold *) malloc(numBytes);
-		if (curr_host->thresh == (struct Threshold *)0) {
+		if (curr_host->thresh == NULL) {
 			fprintf(stderr,"[ %s ] Memory Allocation error 1",rn);
 			afsmon_Exit(25);
 		}
@@ -1522,7 +1522,7 @@ char *a_config_filename;
 	if (curr_host->numThresh) {
 		numBytes = curr_host->numThresh * sizeof(struct Threshold);
 		curr_host->thresh = (struct Threshold *) malloc(numBytes);
-		if (curr_host->thresh == (struct Threshold *)0) {
+		if (curr_host->thresh == NULL) {
 			fprintf(stderr,"[ %s ] Memory Allocation error 2",rn);
 			afsmon_Exit(35);
 		}
@@ -1942,7 +1942,7 @@ char *a_actValue;	/* actual value */
 
    }
 
-   fsHandler_argv[argNum] = (char *)0;
+   fsHandler_argv[argNum] = NULL;
    for(i=0; i<argNum; i++)
 	fsHandler_argv[i] = fsHandler_args[i];
 	
@@ -3135,7 +3135,7 @@ init_fs_buffers()
 
    new_fsPR->data.AFS_CollData_val = (afs_int32 *) malloc(
 		XSTAT_FS_FULLPERF_RESULTS_LEN * sizeof(afs_int32));
-   if (new_fsPR->data.AFS_CollData_val == (afs_int32 *)0)  {
+   if (new_fsPR->data.AFS_CollData_val == NULL)  {
 		free(new_fslist_item);
 		free(new_fsPR->connP);
 		free(new_fsPR);
@@ -3248,7 +3248,7 @@ init_cm_buffers()
 
    new_cmPR->data.AFSCB_CollData_val = (afs_int32 *) malloc(
 		XSTAT_CM_FULLPERF_RESULTS_LEN * sizeof(afs_int32));
-   if (new_cmPR->data.AFSCB_CollData_val == (afs_int32 *)0)  {
+   if (new_cmPR->data.AFSCB_CollData_val == NULL)  {
 		free(new_cmlist_item);
 		free(new_cmPR->connP);
 		free(new_cmPR);
@@ -3484,7 +3484,7 @@ afsmon_execute()
    while (curr_FS) {
 	strncpy(fullhostname,curr_FS->hostName,sizeof(fullhostname));
 	he = GetHostByName(fullhostname);
-	if (he == (struct hostent *)0) {
+	if (he == NULL) {
 	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",rn, fullhostname);
 	   return(-1);
 	}
@@ -3506,7 +3506,7 @@ afsmon_execute()
    
    numCollIDs = 1;
    collIDP = (afs_int32 *) malloc (sizeof (afs_int32));
-   if (collIDP == (afs_int32 *)0) {
+   if (collIDP == NULL) {
 	fprintf(stderr,"[ %s ] failed to allocate a measely afs_int32 word.Argh!\n", rn);
 	return(-1);
    }
@@ -3558,7 +3558,7 @@ afsmon_execute()
    while (curr_CM) {
 	strncpy(fullhostname,curr_CM->hostName,sizeof(fullhostname));
 	he = GetHostByName(fullhostname);
-	if (he == (struct hostent *)0) {
+	if (he == NULL) {
 	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",rn, fullhostname);
 	   return(-1);
 	}
@@ -3580,7 +3580,7 @@ afsmon_execute()
    
    numCollIDs = 1;
    collIDP = (afs_int32 *) malloc (sizeof (afs_int32));
-   if (collIDP == (afs_int32 *)0) {
+   if (collIDP == NULL) {
 	fprintf(stderr,"[ %s ] failed to allocate a measely long word.Argh!\n", rn);
 	return(-1);
    }

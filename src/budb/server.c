@@ -82,7 +82,7 @@ int debugging = 0;
 int BU_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(BU_conf, call, (char *)0);
+    return afsconf_SuperUser(BU_conf, call, NULL);
 }
 
 int
@@ -136,9 +136,9 @@ initializeArgHandler()
 
     int argHandler();
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *)0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    cptr = cmd_CreateSyntax((char *) 0, argHandler, (char *) 0,
+    cptr = cmd_CreateSyntax(NULL, argHandler, NULL,
                             "Backup database server");
 
     cmd_AddParm(cptr, "-database", CMD_SINGLE, CMD_OPTIONAL,
@@ -478,7 +478,7 @@ main(argc, argv)
     sca[RX_SCINDEX_KAD] = rxkad_NewServerSecurityObject(rxkad_clear,
 							  BU_conf,
 							  afsconf_GetKey,
-							  (char *) 0);
+							  NULL);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();

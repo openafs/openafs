@@ -645,7 +645,7 @@ int UV_MoveVolume(
 
     strncpy(tmpName, volName, VOLSER_OLDMAXVOLNAME);
     free(volName);
-    volName = (char *) 0;
+    volName = NULL;
 
     tst = AFSVolSetFlags (toconn, totid, (VTDeleteOnSalvage | VTOutOfService));
     if (tst) {
@@ -2653,7 +2653,7 @@ int UV_ListPartitions(
     *cntp = 0;
 
     partEnts.partEntries_len = 0;
-    partEnts.partEntries_val = (afs_int32 *)0;
+    partEnts.partEntries_val = NULL;
     /* this is available only on new servers */
     tst = AFSVolXListPartitions(server, &partEnts); 
 
@@ -3821,7 +3821,7 @@ static afs_int32 GroupEntries(
 		    qPtr->ids[ROVOL] = pntr->cloneID;
 		    qPtr->copyDate[RWVOL] = pntr->copyDate;
 		    strncpy(qPtr->name, pntr->name,VOLSER_OLDMAXVOLNAME);
-		    qPtr->next = (struct aqueue *)0;
+		    qPtr->next = NULL;
 		}
 		else if(pntr->type == BACKVOL) {
 		    qPtr->isValid[RWVOL] = 0;
@@ -3832,7 +3832,7 @@ static afs_int32 GroupEntries(
 		    qPtr->ids[ROVOL] = 0;
 		    qPtr->copyDate[BACKVOL] = pntr->copyDate;
 		    vsu_ExtractName(qPtr->name, pntr->name);
-		    qPtr->next = (struct aqueue *)0;
+		    qPtr->next = NULL;
 		}
 		else if(pntr->type == ROVOL) {
 		    qPtr->isValid[RWVOL] = 0;
@@ -3843,7 +3843,7 @@ static afs_int32 GroupEntries(
 		    qPtr->ids[ROVOL] = pntr->volid;
 		    qPtr->copyDate[ROVOL] = pntr->copyDate;
 		    vsu_ExtractName(qPtr->name, pntr->name);
-		    qPtr->next = (struct aqueue *)0;
+		    qPtr->next = NULL;
 
 		}
 		Lp_QAdd(myQueue,qPtr);

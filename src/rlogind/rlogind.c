@@ -243,11 +243,11 @@ main(argc, argv)
 	sa.sa_mask.losigs = sigmask(SIGUSR2);
 	sa.sa_handler = trace_handler;
 	sa.sa_flags = SA_RESTART;
-	sigaction(SIGUSR1, &sa, (struct sigaction *)0);
+	sigaction(SIGUSR1, &sa, NULL);
 	sa.sa_mask.losigs = sigmask(SIGUSR1);
 	sa.sa_handler = trace_handler;
 	sa.sa_flags = SA_RESTART;
-	sigaction(SIGUSR2, &sa, (struct sigaction *)0);
+	sigaction(SIGUSR2, &sa, NULL);
 #endif
 #ifdef	AFS_OSF_ENV
 	on = IPTOS_LOWDELAY;
@@ -462,7 +462,7 @@ doit(f, fromp)
                 setup_term(0);
                 if (authenticated) {
                         execl(_PATH_LOGIN, "login", "-p",
-                            "-h", hp->h_name, "-f", lusername, (char *)0);
+                            "-h", hp->h_name, "-f", lusername, NULL);
                 } else {
 		    char *sp = lusername;
 		    while (*sp == ' ') sp++;
@@ -471,7 +471,7 @@ doit(f, fromp)
 			exit(1);
 		    } 
                     execl(_PATH_LOGIN, "login", "-p",
-                            "-h", hp->h_name, lusername, (char *)0);
+                            "-h", hp->h_name, lusername, NULL);
 		    }
 		fatalperror(2, _PATH_LOGIN);
                 /*NOTREACHED*/
@@ -747,9 +747,9 @@ gotpty:
                 struct sigaction sa;
                 memset((char *)&sa, 0, sizeof(sa));
                 sa.sa_handler = SIG_DFL;
-                sigaction(SIGQUIT, &sa, (struct sigaction *)0);
+                sigaction(SIGQUIT, &sa, NULL);
                 sa.sa_handler = SIG_DFL;
-                sigaction(SIGHUP, &sa, (struct sigaction *)0);
+                sigaction(SIGHUP, &sa, NULL);
                 }
 
 		t = open(line, O_RDWR);
@@ -782,10 +782,10 @@ gotpty:
                 memset((char *)&sa, 0, sizeof(sa));
                 sa.sa_mask.losigs = sigmask(SIGUSR2);
                 sa.sa_handler = trace_handler;
-                sigaction(SIGUSR1, &sa, (struct sigaction *)0);
+                sigaction(SIGUSR1, &sa, NULL);
                 sa.sa_mask.losigs = sigmask(SIGUSR1);
                 sa.sa_handler = trace_handler;
-                sigaction(SIGUSR2, &sa, (struct sigaction *)0);
+                sigaction(SIGUSR2, &sa, NULL);
                 }
 
 		(void) loginlog(lusername, line, hp->h_name);
@@ -2075,7 +2075,7 @@ char	*mname, *sname;
     }
     
 
-    for (loc=0; ptymdirs[loc] != (char *) 0; loc++) {
+    for (loc=0; ptymdirs[loc] != NULL; loc++) {
 	if (stat(ptymdirs[loc], &stb))			/* no directory ... */
 	    continue;					/*  so try next one */
 
@@ -2132,9 +2132,9 @@ char	*mname, *sname;
 
 		/*	else we got both a master and a slave pty	*/
 got_one:	(void) chmod (ptysloc, 0622);		/* not readable */
-		if (mname != (char *) 0)
+		if (mname != NULL)
 		    (void) strcpy(mname, ptymloc);
-		if (sname != (char *) 0)
+		if (sname != NULL)
 		    (void) strcpy(sname, ptysloc);
 		return 0;				/* return OK	*/
 	    }
@@ -2188,7 +2188,7 @@ got_one:	(void) chmod (ptysloc, 0622);		/* not readable */
 	}
     }
     /* we failed in our search--we now try the slow brute-force method */
-    for (loc=0; ptymdirs[loc] != (char *) 0; loc++) {
+    for (loc=0; ptymdirs[loc] != NULL; loc++) {
 	DIR *dirp;
 	struct dirent *dp;
 
@@ -2291,9 +2291,9 @@ char    *mname, *sname;
 
 		/*	else we got both a master and a slave pty	*/
 		(void) chmod (ptysloc, 0622);		/* not readable */
-		if (mname != (char *) 0)
+		if (mname != NULL)
 		    (void) strcpy(mname, ptymloc);
-		if (sname != (char *) 0)
+		if (sname != NULL)
 		    (void) strcpy(sname, ptysloc);
 		return 0;				/* return OK	*/
 	    }

@@ -211,7 +211,7 @@ struct timeval **tvpp, **otvpp;
 		return(1);
 	}
 
-	(void) gettimeofday(&mytime, (struct timezone *)0);
+	(void) gettimeofday(&mytime, NULL);
 	/* END OF TIME CRITICAL CODE SECTION!!!! */
 
 	if (clockdata[i-1] != '\n') {

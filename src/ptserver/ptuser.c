@@ -160,7 +160,7 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
         strcpy(sname.cell,info.name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), NULL);
 	if (code) scIndex = 0;
 	else {
 	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
@@ -552,7 +552,7 @@ afs_int32 pr_ListEntries(flag, startindex, nentries, entries, nextstartindex)
   prentries bulkentries;
 
   *nentries = 0;
-  *entries  = (struct prlistentries *)0;
+  *entries  = NULL;
   *nextstartindex = -1;
   bulkentries.prentries_val = 0;
   bulkentries.prentries_len = 0;

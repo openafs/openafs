@@ -1282,7 +1282,7 @@ static void ss_ProcName_setup(definition *defp)
 	for (plist = defp->pc.plists; plist; plist = plist->next) 
 	    if (plist->component_kind == DEF_PARAM) {
 		plist->pl.param_flag &= ~(PROCESSED_PARAM);
-		plist->pl.string_name = (char *)0;
+		plist->pl.string_name = NULL;
 	    }
     }
 }

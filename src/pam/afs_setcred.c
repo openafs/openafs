@@ -284,7 +284,7 @@ pam_sm_setcred(
             if ( ka_VerifyUserPassword(
                            KA_USERAUTH_VERSION,
                            user, /* kerberos name */
-                           (char *)0, /* instance */
+                           NULL, /* instance */
                            cell_ptr, /* realm */
                             password, /* password */
                             0, /* spare 2 */
@@ -303,7 +303,7 @@ pam_sm_setcred(
 	    if ( ka_UserAuthenticateGeneral(
                            KA_USERAUTH_VERSION,
                            user, /* kerberos name */
-                           (char *)0, /* instance */
+                           NULL, /* instance */
                            cell_ptr, /* realm */
                             password, /* password */
                             0, /* default lifetime */

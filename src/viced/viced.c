@@ -222,7 +222,7 @@ void CheckDescriptors_Signal(x)  {IOMGR_SoftSig(CheckDescriptors, 0);}
 int fs_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(confDir, call, (char *)0);
+    return afsconf_SuperUser(confDir, call, NULL);
 }
 
 static void ResetCheckSignal(void)
@@ -481,10 +481,10 @@ main(argc, argv)
     rx_SetRxDeadTime(30);
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0; /* rxvab_NewServerSecurityObject(key1, 0) */
-    sc[2] = rxkad_NewServerSecurityObject (rxkad_clear, (char *) 0,
-					   get_key, (char *) 0);
-    sc[3] = rxkad_NewServerSecurityObject (rxkad_crypt, (char *) 0,
-					   get_key, (char *) 0);
+    sc[2] = rxkad_NewServerSecurityObject (rxkad_clear, NULL,
+					   get_key, NULL);
+    sc[3] = rxkad_NewServerSecurityObject (rxkad_crypt, NULL,
+					   get_key, NULL);
     tservice = rx_NewService
 	(/* port */ 0, /* service id */ 1, /*service name */ "AFS",
 	 /* security classes */ sc, /* numb sec classes */ 4,
@@ -1266,7 +1266,7 @@ static void NewParms(initializing)
 
     if (!(stat("/vice/file/parms",&sbuf))) {
 	parms = (char *)malloc(sbuf.st_size);
-	if(parms <= (char *)0) return;
+	if(parms <= NULL) return;
 	fd = open("parms", O_RDONLY, 0666);
 	if(fd <= 0) {
 	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
@@ -1348,9 +1348,9 @@ InitPR()
     SystemId = SYSADMINID;
     SystemAnyUser = ANYUSERID;
     SystemAnyUserCPS.prlist_len = 0;
-    SystemAnyUserCPS.prlist_val = (afs_int32 *)0;
+    SystemAnyUserCPS.prlist_val = NULL;
     AnonCPS.prlist_len = 0;
-    AnonCPS.prlist_val = (afs_int32 *)0;
+    AnonCPS.prlist_val = NULL;
     while (1) {
 	code = pr_GetCPS(SystemAnyUser, &SystemAnyUserCPS);
 	if (code != 0) {
@@ -1394,7 +1394,7 @@ char *confDir;
 	ViceLog(0, ("Could not get security object for localAuth\n"));
 	exit(1);
     }
-    code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE, &info);
+    code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
     if (info.numServers > MAXSERVERS) {
 	ViceLog(0, ("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",info.numServers, MAXSERVERS));
 	exit(1);

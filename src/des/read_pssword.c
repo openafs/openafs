@@ -314,7 +314,7 @@ lose:
      * Restore the old signal handler for SIGINT.
      */
     tcsetattr(fno, TCSANOW, &save_ttyb);
-    sigaction(SIGINT, &oldsig, (struct sigaction *)0);
+    sigaction(SIGINT, &oldsig, NULL);
     if (fi != stdin)
         fclose(fi);
  

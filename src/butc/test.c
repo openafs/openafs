@@ -272,7 +272,7 @@ char **argv; {
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc,  NULL);
 
     ts = cmd_CreateSyntax("dump",PerformDump,0,"perform a dump");
  

@@ -113,7 +113,7 @@ char **av;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax((char *)0, GetInitParamsCmd, (char *)0,
+    ts = cmd_CreateSyntax(NULL, GetInitParamsCmd, NULL,
 			  "Get CM initialization parameters");
     
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "filename in AFS");

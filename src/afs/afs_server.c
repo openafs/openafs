@@ -564,7 +564,7 @@ void afs_CheckServers(int adown, struct cell *acellp)
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETTIME);
 	    start = osi_Time();		/* time the gettimeofday call */
 	    RX_AFS_GUNLOCK();
-	    code = RXAFS_GetTime(tc->id, &tv.tv_sec, &tv.tv_usec);
+	    code = RXAFS_GetTime(tc->id, (afs_int32 *)&tv.tv_sec, (afs_int32 *)&tv.tv_usec);
 	    RX_AFS_GLOCK();
 	    end = osi_Time();
 	    XSTATS_END_TIME;
@@ -672,7 +672,7 @@ struct server *afs_FindServer (afs_int32 aserver, ushort aport,
 	    }
 	}
     }
-    return (struct server *)0;
+    return NULL;
 
 } /*afs_FindServer*/
 
@@ -767,7 +767,7 @@ void afs_SortOneServer(struct server *asp)
    int lowrank, rank;
       
    for (rootsa=&(asp->addr); *rootsa; rootsa=&(lowsa->next_sa)) {
-      lowprev = (struct srvAddr *)0;
+      lowprev = NULL;
       lowsa   = *rootsa;             /* lowest sa is the first one */
       lowrank = lowsa->sa_iprank;
 
@@ -1143,7 +1143,7 @@ static int afs_SetServerPrefs(struct srvAddr *sa)
     }
 #else
 #ifndef USEIFADDR
-    struct ifnet *ifn = (struct ifnet *)0;
+    struct ifnet *ifn = NULL;
     struct in_ifaddr *ifad = (struct in_ifaddr *) 0;
     struct sockaddr_in *sin;
 

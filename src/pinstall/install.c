@@ -180,7 +180,7 @@ static int quickStrip (char *iname, char *oname, int ignored, int copy_only)
 	    case 0:			/* child	*/
 		copy[1] = iname;
 		copy[2] = oname;
-		execve("/bin/cp", copy, (char **)0);
+		execve("/bin/cp", copy, NULL);
 		perror("/bin/cp");
 		exit(1);
 
@@ -226,7 +226,7 @@ static int quickStrip (char *iname, char *oname, int ignored, int copy_only)
 #else
 #define	STRIP_BIN	"/bin/strip"
 #endif
-		execve(STRIP_BIN, strip, (char **)0);
+		execve(STRIP_BIN, strip, NULL);
 		perror(STRIP_BIN);
 		exit(1);
 

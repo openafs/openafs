@@ -34,7 +34,7 @@ getinode(struct vfs *vfsp, dev_t dev, ino_t inode, int *perror)
     
    if (!mp && !(mp = getmp(dev))) {
       u.u_error = ENXIO;
-      return((struct inode *)0);
+      return(NULL);
    }
    pip=iget(dev,mp,inode);
    if(!pip)
@@ -123,7 +123,7 @@ int dev, inode, usrmod;
 {
 	struct file *fp;
 	struct inode *ip;
-	struct vnode *vp = (struct vnode *)0;
+	struct vnode *vp = NULL;
 	int dummy;
 	extern struct fileops vnodefops;
 	register int code;

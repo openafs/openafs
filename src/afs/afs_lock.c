@@ -311,7 +311,7 @@ void afs_BozonInit(struct afs_bozoLock *alock, struct vcache *avc)
     AFS_STATCNT(afs_BozonInit);
     alock->count = 0;
     alock->flags = 0;
-    alock->proc = (char *) 0;
+    alock->proc = NULL;
 }
 
 int afs_CheckBozonLock(struct afs_bozoLock *alock)

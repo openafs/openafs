@@ -104,7 +104,7 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
 	    avc->execsOrWriters--;
 	    AFS_RELE(AFSTOV(avc));	
 	    crfree((struct ucred *)avc->linkData);	
-	    avc->linkData = (char *)0;
+	    avc->linkData = NULL;
 	}
     }
 }

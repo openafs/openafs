@@ -305,7 +305,7 @@ try_auth:
               if (refresh_token || set_token)
                  code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
@@ -315,7 +315,7 @@ try_auth:
               else
                  code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */
@@ -346,7 +346,7 @@ try_auth:
            }
     }
     /* Restore old signal handler */
-    code = sigaction(SIGCHLD, &origAction, (struct sigaction *)0);
+    code = sigaction(SIGCHLD, &origAction, NULL);
     if (code) {
        pam_afs_syslog(LOG_ERR, PAMAFS_PAMERROR, errno);
     }
@@ -356,7 +356,7 @@ try_auth:
         if (refresh_token || set_token)
             code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
@@ -366,7 +366,7 @@ try_auth:
         else
             code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */

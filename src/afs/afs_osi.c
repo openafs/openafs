@@ -256,7 +256,7 @@ static void afs_gfs_FlushText(register struct vcache *vp)
 	    return;
 	  }
 	}
-	else xp = (struct text *) 0;
+	else xp = NULL;
 
 	if (gp->g_flag & GTEXT)	{/* still has a text object? */
 	  xinval(gp);

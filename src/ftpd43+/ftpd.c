@@ -350,10 +350,10 @@ nextopt:
 	memset((char *)&sa, 0, sizeof(sa));
 	sa.sa_mask.losigs = sigmask(SIGUSR2);
 	sa.sa_handler = trace_handler;
-	sigaction(SIGUSR1, &sa, (struct sigaction *)0);
+	sigaction(SIGUSR1, &sa, NULL);
 	sa.sa_mask.losigs = sigmask(SIGUSR1);
 	sa.sa_handler = trace_handler;
-	sigaction(SIGUSR2, &sa, (struct sigaction *)0);
+	sigaction(SIGUSR2, &sa, NULL);
 #endif	/* AFS_AIX32_ENV */
 
 #ifdef	AFS_OSF_ENV
@@ -1746,7 +1746,7 @@ renamefrom(name)
 
 	if (stat(name, &st) < 0) {
 		perror_reply(550, name);
-		return ((char *)0);
+		return (NULL);
 	}
 	reply(350, "File exists, ready for destination name");
 	return (name);
@@ -1916,7 +1916,7 @@ gunique(local)
 		*cp = '\0';
 	if (stat(cp ? local : ".", &st) < 0) {
 		perror_reply(553, cp ? local : ".");
-		return((char *) 0);
+		return(NULL);
 	}
 	if (cp)
 		*cp = '/';
@@ -1929,7 +1929,7 @@ gunique(local)
 			return(new);
 	}
 	reply(452, "Unique file name cannot be created.");
-	return((char *) 0);
+	return(NULL);
 }
 
 /*

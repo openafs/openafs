@@ -29,7 +29,7 @@ void *osi_UFSOpen(afs_int32 ainode)
     struct inode *ip;
     register struct osi_file *afile = NULL;
     extern struct vfs *rootvfs;
-    struct vnode *vp = (struct vnode *)0;
+    struct vnode *vp = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
     int dummy;

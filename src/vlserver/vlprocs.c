@@ -88,7 +88,7 @@ char *rxinfo(rxcall)
     
     tconn = rx_ConnectionOf(rxcall);
     hostAddr.s_addr = rx_HostOf(rx_PeerOf(tconn));
-    code = rxkad_GetServerInfo(rxcall->conn, (afs_int32 *) 0, &exp, tname, tinst, tcell, (afs_int32 *) 0);
+    code = rxkad_GetServerInfo(rxcall->conn, NULL, &exp, tname, tinst, tcell, NULL);
     if (!code)
  	sprintf(rxinfo_str,"%s %s", inet_ntoa(hostAddr), tname);
     else
@@ -163,7 +163,7 @@ afs_int32 SVL_CreateEntry(rxcall, newentry)
     struct nvlentry	tentry;
 
     COUNT_REQ (VLCREATEENTRY);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) {
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {
 	errorcode = VL_PERM;
 	goto end;
       }
@@ -223,7 +223,7 @@ afs_int32 SVL_CreateEntry(rxcall, newentry)
 
   end:
     osi_auditU (rxcall, VLCreateEntryEvent, errorcode,
-		AUD_STR, (newentry ? newentry->name : (char *)0), AUD_END);
+		AUD_STR, (newentry ? newentry->name : NULL), AUD_END);
     return errorcode;
 }
 
@@ -236,7 +236,7 @@ afs_int32 SVL_CreateEntryN(rxcall, newentry)
     struct nvlentry	tentry;
 
     COUNT_REQ (VLCREATEENTRYN);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) {
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {
 	errorcode = VL_PERM;
 	goto end;
       }
@@ -296,7 +296,7 @@ afs_int32 SVL_CreateEntryN(rxcall, newentry)
 
   end:
     osi_auditU (rxcall, VLCreateEntryEvent, errorcode,
-		AUD_STR, (newentry ? newentry->name : (char *)0), AUD_END);
+		AUD_STR, (newentry ? newentry->name : NULL), AUD_END);
     return errorcode;
 }
 
@@ -308,7 +308,7 @@ afs_int32 SVL_ChangeAddr(rxcall, ip1, ip2)
     afs_int32		errorcode;
 
     COUNT_REQ (VLCHANGEADDR);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) {
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {
 	errorcode = VL_PERM;
 	goto end;
       }
@@ -344,7 +344,7 @@ afs_int32 SVL_DeleteEntry(rxcall, volid, voltype)
     struct nvlentry	tentry;
 
     COUNT_REQ (VLDELETEENTRY);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) 
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) 
 	END(VL_PERM);
 
     if ((voltype != -1 ) && (InvalidVoltype(voltype)))
@@ -536,7 +536,7 @@ afs_int32			*newvolumeid;
     struct ubik_trans *trans;
 
     COUNT_REQ (VLGETNEWVOLUMEID);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0)) 
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) 
 	END( VL_PERM );
 
     if (Maxvolidbump < 0 || Maxvolidbump > MAXBUMPCOUNT)
@@ -585,7 +585,7 @@ afs_int32			releasetype;
     for(typeindex = 0; typeindex < MAXTYPES; typeindex++)
 	hashVol[typeindex] = 0;
     hashnewname = 0;
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))  
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))  
 	END ( VL_PERM );
 
     if (errorcode = check_vldbentry(newentry))
@@ -685,7 +685,7 @@ afs_int32			releasetype;
     for(typeindex = 0; typeindex < MAXTYPES; typeindex++)
 	hashVol[typeindex] = 0;
     hashnewname = 0;
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))  
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))  
 	END ( VL_PERM );
 
     if (errorcode = check_nvldbentry(newentry))
@@ -783,7 +783,7 @@ afs_int32 SVL_UpdateEntry (rxcall, volid, voltype, updateentry, releasetype)
     struct nvlentry	tentry;
 
     COUNT_REQ (VLUPDATEENTRY);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	END( VL_PERM );
     if ((voltype != -1 ) && (InvalidVoltype(voltype)))
 	END( VL_BADVOLTYPE );
@@ -830,7 +830,7 @@ afs_int32 SVL_UpdateEntryByName (rxcall, volname, updateentry, releasetype)
     struct nvlentry	tentry;
 
     COUNT_REQ (VLUPDATEENTRYBYNAME);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	END( VL_PERM );
     if (releasetype && InvalidReleasetype(releasetype))
 	END( VL_BADRELLOCKTYPE );
@@ -875,7 +875,7 @@ afs_int32			voloper;
     struct nvlentry	tentry;
 
     COUNT_REQ(VLSETLOCK);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	END( VL_PERM );
     if ((voltype != -1 ) && (InvalidVoltype(voltype)))
 	END( VL_BADVOLTYPE );
@@ -941,7 +941,7 @@ afs_int32			releasetype;
     struct nvlentry	tentry;
 
     COUNT_REQ(VLRELEASELOCK);
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
 	END( VL_PERM );
     if ((voltype != -1 ) && (InvalidVoltype(voltype)))
 	END( VL_BADVOLTYPE );
@@ -1699,7 +1699,7 @@ vital_vlheader	*vital_header;
     COUNT_REQ(VLGETSTATS);
 #ifdef	notdef
     /* Allow users to get statistics freely */
-    if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))   /* Must be in 'UserList' to use */
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))   /* Must be in 'UserList' to use */
 	return VL_PERM;
 #endif
     if (errorcode = Init_VLdbase(&trans, LOCKREAD, this_op))
@@ -1774,7 +1774,7 @@ afs_int32 SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
   int srvidx, mhidx;
 
   COUNT_REQ(VLREGADDR);
-  if (!afsconf_SuperUser(vldb_confdir, rxcall, (char *)0))
+  if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
      return (VL_PERM);
   if (code = Init_VLdbase(&trans, LOCKWRITE, this_op))
      return code;
@@ -2185,7 +2185,7 @@ bulkaddrs		    *addrsp;
 	return VL_BADMASK;
     }
 
-    if (exp == (struct extentaddr *)0) {  
+    if (exp == NULL) {  
 	ubik_AbortTrans(trans);
 	return VL_NOENT;
     }
@@ -2840,7 +2840,7 @@ register afs_uint32	ipaddr1, ipaddr2;
 	  }
        } 
        else if (HostAddress[i] == ipaddr1) {
-	  exp = (struct extentaddr *)0;
+	  exp = NULL;
 	  break;
        }
     }

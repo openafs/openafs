@@ -184,7 +184,7 @@ static void rxi_ListenerProc(fd_set *rfds, int *tnop, struct rx_call **newcallp)
 	   then atomically computes the time to the next event, guaranteeing
 	   that this is positive.  If there is no next event, it returns 0 */
 	clock_NewTime();
-	if (!rxevent_RaiseEvents(&cv)) tvp = (struct timeval *) 0;
+	if (!rxevent_RaiseEvents(&cv)) tvp = NULL;
 	else {
 	    /* It's important to copy cv to tv, because the 4.3 documentation
 	       for select threatens that *tv may be updated after a select, in

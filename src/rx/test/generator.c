@@ -863,7 +863,7 @@ PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
     fprintf(itl_h,
 	    "static void SetupRunCmd(void) {\n"
 	    "\tstruct cmd_syndesc *ts;\n"
-	    "\tts = cmd_CreateSyntax((char *) 0,DoRun, 0, \"run the test client program\");\n"
+	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test client program\");\n"
 	    "\tcmd_AddParm(ts, \"-threadCount\", CMD_SINGLE, CMD_REQUIRED, \"number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-iterationCount\", CMD_SINGLE, CMD_REQUIRED, \"number of iterations to make over entire interface for each thread\");\n"
 	    "\tcmd_AddParm(ts, \"-secType\", CMD_SINGLE, CMD_REQUIRED, \"security level to use (1 -> unauthenticated, 2 -> authenticated)\");\n"
@@ -1326,7 +1326,7 @@ PRIVATE void WriteServTrailer(FILE *srv_h) {
 
 	    "static void SetupRunCmd(void) {\n"
 	    "\tstruct cmd_syndesc *ts;\n"
-	    "\tts = cmd_CreateSyntax((char *) 0,DoRun, 0, \"run the test server program\");\n"
+	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test server program\");\n"
 	    "\tcmd_AddParm(ts, \"-lowThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"minimum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-highThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"maximum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-serverPort\", CMD_SINGLE, CMD_REQUIRED, \"port that server is using\");\n"

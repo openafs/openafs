@@ -125,7 +125,7 @@ doit(f, fromp)
 #ifdef DEBUG
 	{ int t = open("/dev/tty", 2);
 	  if (t >= 0) {
-		ioctl(t, TIOCNOTTY, (char *)0);
+		ioctl(t, TIOCNOTTY, NULL);
 		(void) close(t);
 	  }
 	}
@@ -191,8 +191,8 @@ doit(f, fromp)
                 if(ka_UserAuthenticateGeneral(
                            KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
                            user, /* kerberos name */
-                           (char *)0, /* instance */
-                           (char *)0, /* realm */
+                           NULL, /* instance */
+                           NULL, /* realm */
                             pass, /* password */
                             0, /* default lifetime */
                             &password_expires,
@@ -248,7 +248,7 @@ doit(f, fromp)
 					break;
 				ready = readfrom;
 				(void) select(maxfd+1, &ready, (fd_set *)0,
-				    (fd_set *)0, (struct timeval *)0);
+				    (fd_set *)0, NULL);
 				if (FD_ISSET(s, &ready)) {
 					if (read(s, &sig, 1) <= 0)
 						FD_CLR(s, &readfrom);

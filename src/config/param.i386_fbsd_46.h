@@ -31,9 +31,9 @@
 #define IMOD 0x0080
 
 #define IN_LOCK(ip)     lockmgr(&ip->i_lock, LK_EXCLUSIVE, \
-                                (struct simplelock *)0, curproc)
+                                NULL, curproc)
 #define IN_UNLOCK(ip)   lockmgr(&ip->i_lock, LK_RELEASE, \
-                                (struct simplelock *)0, curproc)
+                                NULL, curproc)
 
 #include <afs/afs_sysnames.h>
 

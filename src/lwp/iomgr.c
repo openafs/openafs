@@ -1047,7 +1047,7 @@ int IOMGR_CancelSignal (int signo)
 {
     if (badsig(signo) || (sigsHandled & mysigmask(signo)) == 0)
 	return LWP_EBADSIG;
-    sigaction (signo, &oldActions[signo], (struct sigaction *)0);
+    sigaction (signo, &oldActions[signo], NULL);
     sigsHandled &= ~mysigmask(signo);
     return LWP_SUCCESS;
 }

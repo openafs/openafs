@@ -150,7 +150,7 @@ main (argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "show new DCE passord");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "show new DCE passord");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL,"original AFS cell name");
     code = cmd_Dispatch(argc, argv);
     exit(code);

@@ -481,7 +481,7 @@ h_gethostcps_r(host,now)
     host->hostFlags |= HPCS_INPROGRESS;	/* mark as CPSCall in progress */
     if (host->hcps.prlist_val)
 	free(host->hcps.prlist_val);    /* this is for hostaclRefresh */
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
     slept? (host->cpsCall = FT_ApproxTime()): (host->cpsCall = now );
 
@@ -516,7 +516,7 @@ h_gethostcps_r(host,now)
 	}
 	if (host->hcps.prlist_val)
 	    free(host->hcps.prlist_val);
-	host->hcps.prlist_val = (afs_int32 *)0;
+	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;	/* Make sure it's zero */
     } else
 	host->hcpsfailed = 0;
@@ -624,9 +624,9 @@ struct host *h_Alloc_r(r_con)
     }
     now = host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
     host->hostFlags = 0;
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->interface = 0;
 #ifdef undef
     host->hcpsfailed = 0; 	/* save cycles */
@@ -762,7 +762,7 @@ int h_TossStuff_r(register struct host *host)
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 		free(client->CPS.prlist_val);
-                client->CPS.prlist_val = (afs_int32 *)0;
+                client->CPS.prlist_val = NULL;
 	    }
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
@@ -800,7 +800,7 @@ int h_TossStuff_r(register struct host *host)
 	}
 	if (host->hcps.prlist_val)
 	    free(host->hcps.prlist_val);
-	host->hcps.prlist_val = (afs_int32 *)0;
+	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;
 	DeleteAllCallBacks_r(host);
 	host->hostFlags &= ~RESETDONE;	/* just to be safe */
@@ -1186,7 +1186,7 @@ static MapName_r(aname, acell, aval)
     lnames.namelist_len = 1;
     lnames.namelist_val = (prname *) aname;  /* don't malloc in the common case */
     lids.idlist_len = 0;
-    lids.idlist_val = (afs_int32 *) 0;
+    lids.idlist_val = NULL;
 
     cnamelen=strlen(acell);
     if (cnamelen) {
@@ -1399,7 +1399,7 @@ ticket name length != 64
 	if (client->CPS.prlist_val && (client->ViceId != ANONYMOUSID)) {
 	   free(client->CPS.prlist_val);
 	}
-	client->CPS.prlist_val = (afs_int32 *)0;
+	client->CPS.prlist_val = NULL;
         client->ViceId = viceid;
 	client->expTime	= expTime;
 
@@ -2041,7 +2041,7 @@ h_CheckHosts() {
      */
     checktime = now - 15*60;
     clientdeletetime = now - 120*60;	/* 2 hours ago */
-    h_Enumerate(CheckHost, (char *) 0);
+    h_Enumerate(CheckHost, NULL);
 
 } /*h_CheckHosts*/
 

@@ -275,7 +275,7 @@ afs_lhash_create(
 	lh->ndata = 0;
 
 	lh->ntable = 0;
-	lh->table = (struct bucket **)0;
+	lh->table = NULL;
 
 	if (afs_lhash_accomodate(lh, lh->ltable-1) < 0) {
 		lh->deallocate(lh, sizeof *lh);

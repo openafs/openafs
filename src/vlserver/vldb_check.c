@@ -933,7 +933,7 @@ main(argc, argv)
 
   setlinebuf(stdout);
 
-  ts=cmd_CreateSyntax((char *)0, WorkerBee, (char *) 0, "vldb check");
+  ts=cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
   cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "vldb_file");
   cmd_AddParm(ts, "-uheader",  CMD_FLAG,   CMD_OPTIONAL, "Display UBIK header");
   cmd_AddParm(ts, "-vheader",  CMD_FLAG,   CMD_OPTIONAL, "Display VLDB header");

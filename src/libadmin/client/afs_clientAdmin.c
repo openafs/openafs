@@ -350,7 +350,7 @@ static int GetKASToken(
     }
     have_server_conn = 1;
 
-    tst = ka_ParseLoginName((char *)principal, name, inst, (char *) 0);
+    tst = ka_ParseLoginName((char *)principal, name, inst, NULL);
     if (tst != 0) {
 	goto fail_GetKASToken;
     }
@@ -434,7 +434,7 @@ static int GetAFSToken(
     }
 
     tst = ka_ParseLoginName((char *)principal, tokenHandle->client.name,
-			    tokenHandle->client.instance, (char *) 0);
+			    tokenHandle->client.instance, NULL);
     if (tst) {
 	goto fail_GetAFSToken;
     }

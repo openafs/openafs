@@ -52,8 +52,8 @@ RCSID("$Header$");
 /*
  * ---------------------- Exported variables ----------------------
  */
-char *uss_fs_InBuff  = (char *)0; /*Cache Manager input  buff*/
-char *uss_fs_OutBuff = (char *)0; /*Cache Manager output buff*/
+char *uss_fs_InBuff  = NULL; /*Cache Manager input  buff*/
+char *uss_fs_OutBuff = NULL; /*Cache Manager output buff*/
 
 /*
  * Set up convenient tags for the command line parameter indicies.
@@ -2019,7 +2019,7 @@ main(argc,argv)
      */
     InitETTables();
     uss_common_Init();
-    cmd_SetBeforeProc(GetCommon, (char *)0);
+    cmd_SetBeforeProc(GetCommon, NULL);
 
     /*
      * Execute the parsed command.

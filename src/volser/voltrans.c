@@ -102,7 +102,7 @@ register struct volser_trans *atrans; {
 	if (tt == atrans) {
 	    if (tt->volume)
 		VDetachVolume(&error, tt->volume);
-	    tt->volume = (struct Volume *) 0;
+	    tt->volume = NULL;
 	    *lt = tt->next;
 	    free(tt);
 	    return 0;

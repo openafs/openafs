@@ -938,8 +938,8 @@ doafs:
 		    if(ka_UserAuthenticateGeneral(
 			   KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
 			   pwd->pw_name, /* kerberos name */
-			   (char *)0, /* instance */
-			   (char *)0, /* realm */
+			   NULL, /* instance */
+			   NULL, /* realm */
 			    pp, /* password */
 			    0, /* default lifetime */
 			    &password_expires,
@@ -1111,7 +1111,7 @@ doafs:
 		struct utmpx *utx, *getutxent(), *pututxline();
 #endif
 #if defined(AFS_HPUX_ENV)
-		register struct utmp *u = (struct utmp *) 0;
+		register struct utmp *u = NULL;
 		extern pid_t getpid();
 #endif
 
@@ -1284,8 +1284,8 @@ doafs:
 
 	/* destroy environment unless user has requested preservation */
 	if (!pflag) {
-	    envinit[0] = (char *)0;
-	    envinit[1] = (char *)0;
+	    envinit[0] = NULL;
+	    envinit[1] = NULL;
 	    environ = envinit;
 	}
 	(void)setuid(pwd->pw_uid);
@@ -2134,8 +2134,8 @@ loop:
 
     if (ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
 				   pwd->pw_name, /* kerberos name */
-				   (char *)0, /* instance */
-				   (char *)0, /* realm */
+				   NULL, /* instance */
+				   NULL, /* realm */
 				   pword, /* password */
 				   0, /* default lifetime */
 				   0, /* spare 1 */

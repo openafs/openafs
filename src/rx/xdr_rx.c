@@ -183,7 +183,7 @@ static bool_t xdrrx_getint32(XDR *xdrs, afs_int32 *lp)
 	 */
 	if (pin(saddr, STACK_TO_PIN)) { 
 	    /* XXX There's little we can do by continue XXX */
-	    saddr = (char *)0;
+	    saddr = NULL;
 	    rx_pin_failed++;
 	}
 #endif
@@ -217,7 +217,7 @@ static bool_t xdrrx_putint32(register XDR *xdrs, register afs_int32 *lp)
 	 * guarantee that they remain there.
 	 */
 	if (pin(saddr, STACK_TO_PIN)) {
-	    saddr = (char *)0;
+	    saddr = NULL;
 	    rx_pin_failed++;
 	}
 #endif
@@ -247,7 +247,7 @@ static bool_t xdrrx_getbytes(register XDR *xdrs,
 	 */
 	if (pin(saddr, STACK_TO_PIN)) { 
 	    /* XXX There's little we can do by continue XXX */
-	    saddr = (char *)0;
+	    saddr = NULL;
 	    rx_pin_failed++;
 	}
 #endif
@@ -277,7 +277,7 @@ static bool_t xdrrx_putbytes(register XDR *xdrs,
 	 */
 	if (pin(saddr, STACK_TO_PIN)) { 
 	    /* XXX There's little we can do by continue XXX */
-	    saddr = (char *)0;
+	    saddr = NULL;
 	    rx_pin_failed++;
 	}
 #endif

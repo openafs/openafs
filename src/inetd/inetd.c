@@ -249,7 +249,7 @@ main(argc, argv, envp)
 #ifndef AFS_HPUX_ENV
 		tmpint = open("/dev/tty", O_RDWR);
 		if (tmpint > 0) {
-			ioctl(tmpint, TIOCNOTTY, (char *)0);
+			ioctl(tmpint, TIOCNOTTY, NULL);
 			close(tmpint);
 		}
 #else
@@ -289,12 +289,12 @@ main(argc, argv, envp)
 	memset((char *)&sa, '\0', sizeof(sa));
 	sa.sa_mask = sigBlock;
 	sa.sa_handler = retry;
-	sigaction(SIGALRM, &sa, (struct sigaction *)0);
+	sigaction(SIGALRM, &sa, NULL);
 	config();
 	sa.sa_handler = config;
-	sigaction(SIGHUP, &sa, (struct sigaction *)0);
+	sigaction(SIGHUP, &sa, NULL);
 	sa.sa_handler = reapchild;
-	sigaction(SIGCHLD, &sa, (struct sigaction *)0);
+	sigaction(SIGCHLD, &sa, NULL);
 	{
 		/* space for daemons to overwrite environment for ps */
 #define	DUMMYSIZE	100
@@ -317,7 +317,7 @@ main(argc, argv, envp)
 	    }
 	    readable = allsock;
 	    if ((n = select(maxsock + 1, &readable, (fd_set *)0,
-		(fd_set *)0, (struct timeval *)0)) <= 0) {
+		(fd_set *)0, NULL)) <= 0) {
 		    if (n < 0 && errno != EINTR)
 			syslog(LOG_WARNING, "select: %m\n");
 		    sleep(1);
@@ -329,7 +329,7 @@ main(argc, argv, envp)
 		if (debug)
 			fprintf(stderr, "someone wants %s\n", sep->se_service);
 		if (!sep->se_wait && sep->se_socktype == SOCK_STREAM) {
-			ctrl = accept(sep->se_fd, (struct sockaddr *)0,
+			ctrl = accept(sep->se_fd, NULL,
 			    (int *)0);
 			if (debug)
 				fprintf(stderr, "accept, ctrl %d\n", ctrl);
@@ -350,11 +350,11 @@ main(argc, argv, envp)
                     if (sep->se_socktype == SOCK_DGRAM) {
 			if (sep->se_count++ == 0)
 			    (void)gettimeofday(&sep->se_time,
-			        (struct timezone *)0);
+			        NULL);
 			else if (sep->se_count >= TOOMANY) {
 				struct timeval now;
 
-				(void)gettimeofday(&now, (struct timezone *)0);
+				(void)gettimeofday(&now, NULL);
 				if (now.tv_sec - sep->se_time.tv_sec >
 				    CNT_INTVL) {
 					sep->se_time = now;
@@ -477,7 +477,7 @@ main(argc, argv, envp)
 					execl(sep->se_server,
 					      strrchr(sep->se_server, '/')+1,
 					      sep->se_socktype == SOCK_DGRAM
-					      ? (char *)0 : addrbuf, (char *)0);
+					      ? (char *)0 : addrbuf, NULL);
 				    } else
 					execv(sep->se_server, sep->se_argv);
 				} else
@@ -507,7 +507,7 @@ reapchild()
 	register struct servtab *sep;
 
 	for (;;) {
-		pid = wait3(&status, WNOHANG, (struct rusage *)0);
+		pid = wait3(&status, WNOHANG, NULL);
 		if (pid <= 0)
 			break;
 		if (debug)
@@ -671,7 +671,7 @@ enter(cp)
 	sigset_t oset;
 
 	sep = (struct servtab *)malloc(sizeof (*sep));
-	if (sep == (struct servtab *)0) {
+	if (sep == NULL) {
 		syslog(LOG_ERR, "Out of memory.");
 		exit(-1);
 	}
@@ -720,7 +720,7 @@ more:
 	while ((cp = nextline(fconfig)) && (*cp == '#' || (strlen(cp) < 2)))
 		;
 	if (cp == NULL)
-		return ((struct servtab *)0);
+		return (NULL);
 	sep->se_service = copyofstr(skip(&cp));
 	arg = skip(&cp);
 	if (strcmp(arg, "stream") == 0)
@@ -801,8 +801,8 @@ again:
 		if (c == ' ' || c == '\t')
 			if (cp = nextline(fconfig))
 				goto again;
-		*cpp = (char *)0;
-		return ((char *)0);
+		*cpp = NULL;
+		return (NULL);
 	}
 	start = cp;
 	while (*cp && *cp != ' ' && *cp != '\t')
@@ -820,7 +820,7 @@ nextline(fd)
 	char *cp;
 
 	if (fgets(line, sizeof (line), fd) == NULL)
-		return ((char *)0);
+		return (NULL);
 	cp = strchr(line, '\n');
 	if (cp)
 		*cp = '\0';
@@ -836,7 +836,7 @@ copyofstr(cp)
 	if (cp == NULL)
 		cp = "";
 	new = malloc((unsigned)(strlen(cp) + 1));
-	if (new == (char *)0) {
+	if (new == NULL) {
 		syslog(LOG_ERR, "Out of memory.");
 		exit(-1);
 	}
@@ -1019,7 +1019,7 @@ machtime()
 {
 	struct timeval tv;
 
-	if (gettimeofday(&tv, (struct timezone *)0) < 0) {
+	if (gettimeofday(&tv, NULL) < 0) {
 		fprintf(stderr, "Unable to get time of day\n");
 		return (0L);
 	}

@@ -380,7 +380,7 @@ int ReceiveFile(ufd, call, blksize)
     struct rx_call *call;
     long blksize;
 {
-    char *buffer = (char *) 0;
+    char *buffer = NULL;
     afs_int32  bytesread;
     afs_uint32  bytesleft, w;
     afs_int32 error = 0;
@@ -3939,7 +3939,7 @@ register struct cmd_syndesc *as;
       struct hostent       *he; 
       afs_int32 saddr;
       he = hostutil_GetHostByName((char*)as->parms[1].items->data);
-      if (he == (struct hostent *)0) {
+      if (he == NULL) {
 	  fprintf(stderr,
 		  "Can't get host info for '%s'\n",
 		  as->parms[1].items->data);
@@ -4034,7 +4034,7 @@ char *arock; {
     cstruct = (struct ubik_client *)0;
 
     sauth = 0;
-    tcell = (char *) 0;
+    tcell = NULL;
     if (as->parms[12].items)	/* if -cell specified */
 	tcell = as->parms[12].items->data;
     if(as->parms[14].items)	/* -serverauth specified */
@@ -4087,7 +4087,7 @@ char **argv; {
 
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 
-    cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc,  NULL);
 
     ts = cmd_CreateSyntax("create", CreateVolume, 0, "create a new volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");

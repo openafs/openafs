@@ -110,7 +110,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_LINK, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_LINK, SHARED_LOCK, NULL));
 
     if (code) {
 	if (tdc) afs_PutDCache(tdc);

@@ -812,7 +812,7 @@ getnum(char *s, char **e)
 {
 	int ret = -1;
 
-	*e = (char *) 0;
+	*e = NULL;
 	ret = strtol(s, e, 0);
 	if (*e)
 		switch (**e) {
@@ -852,7 +852,7 @@ main(int argc, char **argv)
 	goodfile[0] = 0;
 	logfile[0] = 0;
 
-	setvbuf(stdout, (char *)0, _IOLBF, 0); /* line buffered stdout */
+	setvbuf(stdout, NULL, _IOLBF, 0); /* line buffered stdout */
 
 	while ((ch = getopt(argc, argv, "b:c:dl:m:no:p:qr:s:t:w:D:LN:OP:RS:W"))
 	       != EOF)

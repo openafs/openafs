@@ -162,7 +162,7 @@ main(argc, argv)
     FSSktArray[0].sin_family = htons(AF_INET);	/*Internet family*/
     FSSktArray[0].sin_port   = htons(7000);	/*FileServer port*/
     he = hostutil_GetHostByName("servername1");
-    if (he == (struct hostent *)0) {
+    if (he == NULL) {
       fprintf(stderr, "[%s] Can't get host info for servername1\n", rn);
       exit(-1);
     }
@@ -171,7 +171,7 @@ main(argc, argv)
     FSSktArray[1].sin_family = htons(AF_INET);	/*Internet address family*/
     FSSktArray[1].sin_port   = htons(7000);	/*FileServer port*/
     he = hostutil_GetHostByName("servername2");
-    if (he == (struct hostent *)0) {
+    if (he == NULL) {
       fprintf(stderr, "[%s] Can't get host info for servername2\n", rn);
       exit(-1);
     }
@@ -180,7 +180,7 @@ main(argc, argv)
     FSSktArray[2].sin_family = htons(AF_INET);	/*Internet address family*/
     FSSktArray[2].sin_port   = htons(7000);	/*FileServer port*/
     he = hostutil_GetHostByName("servername3");
-    if (he == (struct hostent *)0) {
+    if (he == NULL) {
       fprintf(stderr, "[%s] Can't get host info for servername3\n", rn);
       exit(-1);
     }

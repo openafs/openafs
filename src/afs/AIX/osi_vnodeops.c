@@ -565,7 +565,7 @@ struct ucred	*cred;
 	crhold(cred);
 	if (vcp->credp) {
 	    struct ucred *crp = vcp->credp;
-	    vcp->credp = (struct ucred *)0;
+	    vcp->credp = NULL;
 	    crfree(crp);
 	}
 	vcp->credp = cred;
@@ -862,7 +862,7 @@ struct ucred	*cred;
 	    struct ucred *crp;
 	    UpgradeSToWLock(&vcp->lock, 508);
 	    crp = vcp->credp;
-	    vcp->credp = (struct ucred *)0;
+	    vcp->credp = NULL;
 	    ConvertWToSLock(&vcp->lock);
 	    crfree(crp);
 	}
@@ -1510,7 +1510,7 @@ register struct buf *abp;
 	 * Ensure that all comparable buffers are grouped contiguously.
 	 * Later on, we'll merge adjacent buffers into a single request.
 	 */
-	firstComparable = (struct buf *) 0;
+	firstComparable = NULL;
 	lbp = &afs_asyncbuf;
 	for(qbp = *lbp; qbp; lbp = &qbp->av_forw, qbp = *lbp) {
 	    if (EFS_COMPARABLE(tbp, qbp)) {
@@ -1533,7 +1533,7 @@ register struct buf *abp;
 	/* do the insert before qbp now */
 	tbp->av_forw = *lbp;
 	*lbp = tbp;
-	if (firstComparable == (struct buf *) 0) {
+	if (firstComparable == NULL) {
 	    /* next we're going to do all sorts of buffer merging tricks, but
 	     * here we know we're the only COMPARABLE block in the
 	     * afs_asyncbuf list, so we just skip that and continue with

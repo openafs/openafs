@@ -109,7 +109,7 @@ static int fsprobe_CleanupInit()
     rxcall 	   = (struct rx_call *)0;
     Fids_Array	   = (AFSCBFids *)0;
     CallBack_Array = (AFSCBs *)0;
-    interfaceAddr  = (struct interfaceAddr *)0;
+    interfaceAddr  = NULL;
 
     code = SRXAFSCB_CallBack(rxcall, Fids_Array, CallBack_Array);
     if (code)
@@ -203,7 +203,7 @@ int fsprobe_Cleanup(a_releaseMem)
     if (a_releaseMem) {
       if (fsprobe_ConnInfo != (struct fsprobe_ConnectionInfo *)0)
 	free(fsprobe_ConnInfo);
-      if (fsprobe_Results.stats != (struct ProbeViceStatistics *)0)
+      if (fsprobe_Results.stats != NULL)
 	free(fsprobe_Results.stats);
       if (fsprobe_Results.probeOK != (int *)0)
 	free(fsprobe_Results.probeOK);
@@ -379,7 +379,7 @@ tryold:
 	goto out;
     }
     partEnts.partEntries_len = 0;
-    partEnts.partEntries_val = (afs_int32 *)0;
+    partEnts.partEntries_val = NULL;
     code = AFSVolXListPartitions(aconn, &partEnts);
     if (!newvolserver) {
 	if (code == RXGEN_OPCODE) {
@@ -533,7 +533,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
     fsprobe_statsBytes = a_numServers * sizeof(struct ProbeViceStatistics);
     fsprobe_Results.stats = (struct ProbeViceStatistics *)
       malloc(fsprobe_statsBytes);
-    if (fsprobe_Results.stats == (struct ProbeViceStatistics *)0) {
+    if (fsprobe_Results.stats == NULL) {
       fprintf(stderr,
 	      "[%s] Can't allocate %d statistics structs (%d bytes)\n",
 	      rn, a_numServers, fsprobe_statsBytes);
@@ -635,7 +635,7 @@ int fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
       memcpy(&(curr_conn->skt), a_socketArray + curr_srv, sizeof(struct sockaddr_in));
 
       hostNameFound = hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
-      if (hostNameFound == (char *)0) {
+      if (hostNameFound == NULL) {
 	fprintf(stderr,
 		"[%s] Can't map Internet address %lu to a string name\n",
 		rn, curr_conn->skt.sin_addr.s_addr);

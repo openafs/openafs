@@ -134,7 +134,7 @@ register afs_int32 uid, host, pag;
 	}
     }
     MReleaseWriteLock(&afs_xnfspag);
-    return (struct nfsclientpag *) 0;
+    return NULL;
 }
 
 
@@ -152,7 +152,7 @@ afs_nfsclient_init() {
 
 	init_nfsexporter = 1;
 	LOCK_INIT(&afs_xnfspag, "afs_xnfspag");
-	afs_nfsexported = exporter_add(0, &nfs_exportops, EXP_EXPORTED, EXP_NFS, (char *)0);
+	afs_nfsexported = exporter_add(0, &nfs_exportops, EXP_EXPORTED, EXP_NFS, NULL);
     }
 }
 
@@ -193,7 +193,7 @@ afs_int32 *pagparam;
 		if (!au->exporter) {
 		    pag = NOPAG;
 		    afs_PutUser(au, READ_LOCK);
-		    au = (struct unixuser *)0;
+		    au = NULL;
 		}
 	    } else 
 		pag = NOPAG;	/*  No unixuser struct so pag not trusted  */

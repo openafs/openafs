@@ -876,7 +876,7 @@ char **argv; {
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax((char *) 0, cmdproc, 0, "Read internal cache manager structs");
+    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "Read internal cache manager structs");
     cmd_AddParm(ts, "-kobj", CMD_SINGLE, CMD_OPTIONAL, "kernel object (default /vmunix)");
     cmd_AddParm(ts, "-kcore", CMD_SINGLE, CMD_OPTIONAL, "kernel core image (default /dev/kmem)");
     cmd_AddParm(ts, "-cells", CMD_FLAG, CMD_OPTIONAL, "cell state");

@@ -1130,7 +1130,7 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 
     strncpy(tmpName, volName, VOLSER_OLDMAXVOLNAME);
     free(volName);
-    volName = (char *) 0;
+    volName = NULL;
 
     code = AFSVolSetFlags (toconn, totid, (VTDeleteOnSalvage | VTOutOfService));
     ONERR(code, "Failed to set the flags on the destination volume %u\n", volid);
@@ -3154,7 +3154,7 @@ UV_ListPartitions(aserver, ptrPartList, cntp)
     aconn = UV_Bind(aserver,AFSCONF_VOLUMEPORT);
 
     partEnts.partEntries_len = 0;
-    partEnts.partEntries_val = (afs_int32 *)0;
+    partEnts.partEntries_val = NULL;
     code = AFSVolXListPartitions(aconn, &partEnts); /* this is available only on new servers */
     if (code == RXGEN_OPCODE) 
     {

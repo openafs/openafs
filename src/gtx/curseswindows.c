@@ -153,7 +153,7 @@ int gator_cursesgwin_init(adebug)
     gator_basegwin.w_height  = c_data->charheight * LINES;
     gator_basegwin.w_changed = 0;
     gator_basegwin.w_op	     = &curses_gwinops;
-    gator_basegwin.w_parent  = (struct gwin *)0;
+    gator_basegwin.w_parent  = NULL;
 
     /*
      * Plug the private data into the generic part of the base window.
@@ -209,9 +209,9 @@ struct gwin *gator_cursesgwin_create(params)
     if (curses_debug)
 	fprintf(stderr, "[%s:%s] Allocating %d bytes for new gwin structure\n", mn, rn, sizeof(struct gwin));
     newgwin = (struct gwin *) malloc(sizeof(struct gwin));
-    if (newgwin == (struct gwin *)0) {
+    if (newgwin == NULL) {
 	fprintf(stderr, "[%s:%s] Can't malloc() %d bytes for new gwin structure: Errno is %d\n", mn, rn, sizeof(struct gwin), errno);
-	return((struct gwin *)0);
+	return(NULL);
     }
 
     newgwin->w_type	= GATOR_WIN_CURSES;
@@ -229,7 +229,7 @@ struct gwin *gator_cursesgwin_create(params)
     if (c_data == (struct gator_cursesgwin *)0){
 	fprintf(stderr, "[%s:%s] Can't allocate %d bytes for curses window private space\n", mn, rn, sizeof(struct gator_cursesgwin));
 	free(newgwin);
-	return((struct gwin *)0);
+	return(NULL);
     }
 
     newcursgwin	= newwin(newgwin->w_height,	/*Number of lines*/
@@ -240,7 +240,7 @@ struct gwin *gator_cursesgwin_create(params)
 	fprintf(stderr, "[%s:%s] Failed to create curses window via newwin()\n", mn, rn);
 	free(newgwin);
 	free(c_data);
-	return((struct gwin *)0);
+	return(NULL);
     }
 
     /*

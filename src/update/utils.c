@@ -55,7 +55,7 @@ struct filestr **ah; {
 	free(tf->name);
 	free(tf);
     }
-    *ah = (struct filestr *) 0;
+    *ah = NULL;
     return 0;
 }
 

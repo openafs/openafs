@@ -1794,7 +1794,7 @@ register Volume *vp;
         hd->next = hd->prev = 0;
 	/* if not in LRU chain, next test won't be true */
 	if (hd == volumeLRU)	/* last header item, turn into empty list */
-	    volumeLRU = (struct volHeader *) 0;
+	    volumeLRU = NULL;
     }
     return old;
 }

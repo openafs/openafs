@@ -734,8 +734,8 @@ struct rx_connection *rx_NewConnection(register afs_uint32 shost,
     conn->ackRate = RX_FAST_ACK_RATE;
     conn->nSpecific = 0;
     conn->specific = NULL;
-    conn->challengeEvent = (struct rxevent *)0;
-    conn->delayedAbortEvent = (struct rxevent *)0;
+    conn->challengeEvent = NULL;
+    conn->delayedAbortEvent = NULL;
     conn->abortCount = 0;
     conn->error = 0;
 
@@ -899,7 +899,7 @@ static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn)
 			call->state == RX_STATE_ACTIVE) {
 			rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
 		    } else {
-			rxi_AckAll((struct rxevent *)0, call, 0);
+			rxi_AckAll(NULL, call, 0);
 		    }
 		}
 		MUTEX_EXIT(&call->lock);
@@ -2546,7 +2546,7 @@ struct rx_packet *rxi_ReceivePacket(register struct rx_packet *np,
 		struct rx_packet *tp;
 
 		rxi_CallError(call, RX_CALL_DEAD);
-		tp = rxi_SendSpecial(call, conn, np, RX_PACKET_TYPE_BUSY, (char *) 0, 0, 1);
+		tp = rxi_SendSpecial(call, conn, np, RX_PACKET_TYPE_BUSY, NULL, 0, 1);
 		MUTEX_EXIT(&call->lock);
 		MUTEX_ENTER(&conn->conn_data_lock);
 		conn->refCount--;
@@ -2831,7 +2831,7 @@ static void rxi_CheckReachEvent(struct rxevent *event,
     int i, waiting;
 
     MUTEX_ENTER(&conn->conn_data_lock);
-    conn->checkReachEvent = (struct rxevent *) 0;
+    conn->checkReachEvent = NULL;
     waiting = conn->flags & RX_CONN_ATTACHWAIT;
     if (event) conn->refCount--;
     MUTEX_EXIT(&conn->conn_data_lock);
@@ -2900,7 +2900,7 @@ static int rxi_CheckConnReach(struct rx_connection *conn, struct rx_call *call)
     conn->flags |= RX_CONN_ATTACHWAIT;
     MUTEX_EXIT(&conn->conn_data_lock);
     if (!conn->checkReachEvent)
-	rxi_CheckReachEvent((struct rxevent *)0, conn, call);
+	rxi_CheckReachEvent(NULL, conn, call);
 
     return 1;
 }
@@ -3857,7 +3857,7 @@ struct rx_packet *rxi_ReceiveChallengePacket(register struct rx_connection *conn
     }
     else {
 	np = rxi_SendSpecial((struct rx_call *)0, conn, np,
-			     RX_PACKET_TYPE_RESPONSE, (char *) 0, -1, istack);
+			     RX_PACKET_TYPE_RESPONSE, NULL, -1, istack);
     }
     return np;
 }
@@ -3975,17 +3975,17 @@ void rxi_AckAll(struct rxevent *event, register struct rx_call *call, char *dumm
 #ifdef RX_ENABLE_LOCKS
     if (event) {
 	MUTEX_ENTER(&call->lock);
-	call->delayedAckEvent = (struct rxevent *) 0;
+	call->delayedAckEvent = NULL;
 	CALL_RELE(call, RX_CALL_REFCOUNT_ACKALL);
     }
     rxi_SendSpecial(call, call->conn, (struct rx_packet *) 0,
-		    RX_PACKET_TYPE_ACKALL, (char *) 0, 0, 0);
+		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
-    if (event) call->delayedAckEvent = (struct rxevent *) 0;
+    if (event) call->delayedAckEvent = NULL;
     rxi_SendSpecial(call, call->conn, (struct rx_packet *) 0,
-		    RX_PACKET_TYPE_ACKALL, (char *) 0, 0, 0);
+		    RX_PACKET_TYPE_ACKALL, NULL, 0, 0);
 #endif /* RX_ENABLE_LOCKS */
 }
 
@@ -3995,14 +3995,14 @@ void rxi_SendDelayedAck(struct rxevent *event, register struct rx_call *call, ch
     if (event) {
 	MUTEX_ENTER(&call->lock);
 	if (event == call->delayedAckEvent)
-	    call->delayedAckEvent = (struct rxevent *) 0;
+	    call->delayedAckEvent = NULL;
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
     }
     (void) rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
-    if (event) call->delayedAckEvent = (struct rxevent *) 0;
+    if (event) call->delayedAckEvent = NULL;
     (void) rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
 #endif /* RX_ENABLE_LOCKS */
 }
@@ -5216,7 +5216,7 @@ void rxi_KeepAliveEvent(struct rxevent *event, register struct rx_call *call,
     MUTEX_ENTER(&call->lock);
     CALL_RELE(call, RX_CALL_REFCOUNT_ALIVE);
     if (event == call->keepAliveEvent)
-	call->keepAliveEvent = (struct rxevent *) 0;
+	call->keepAliveEvent = NULL;
     now = clock_Sec();
 
 #ifdef RX_ENABLE_LOCKS
@@ -5278,7 +5278,7 @@ void rxi_SendDelayedConnAbort(struct rxevent *event, register struct rx_connecti
     struct rx_packet *packet;
 
     MUTEX_ENTER(&conn->conn_data_lock);
-    conn->delayedAbortEvent = (struct rxevent *) 0;
+    conn->delayedAbortEvent = NULL;
     error = htonl(conn->error);
     conn->abortCount++;
     MUTEX_EXIT(&conn->conn_data_lock);
@@ -5300,7 +5300,7 @@ void rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *ca
     struct rx_packet *packet;
 
     MUTEX_ENTER(&call->lock);
-    call->delayedAbortEvent = (struct rxevent *) 0;
+    call->delayedAbortEvent = NULL;
     error = htonl(call->error);
     call->abortCount++;
     packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -5321,7 +5321,7 @@ void rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *co
 	void *atries)
 {
     int tries = (int) atries;
-    conn->challengeEvent = (struct rxevent *) 0;
+    conn->challengeEvent = NULL;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
 	struct clock when;
@@ -5354,7 +5354,7 @@ void rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *co
 	    /* If there's no packet available, do this later. */
 	    RXS_GetChallenge(conn->securityObject, conn, packet);
 	    rxi_SendSpecial((struct rx_call *) 0, conn, packet,
-			    RX_PACKET_TYPE_CHALLENGE, (char *) 0, -1, 0);
+			    RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
 	    rxi_FreePacket(packet);
 	}
 	clock_GetTime(&when);

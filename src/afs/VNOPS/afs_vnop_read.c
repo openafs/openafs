@@ -245,7 +245,7 @@ tagain:
 		    /* don't have current data, so get it below */
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
-		    tdc = (struct dcache *) 0;
+		    tdc = NULL;
 		}
 	    }
 
@@ -778,7 +778,7 @@ tagain:
 		    /* don't have current data, so get it below */
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
-		    tdc = (struct dcache *) 0;
+		    tdc = NULL;
 		}
 	    }
 

@@ -1063,7 +1063,7 @@ WorkerBee (as, arock)
     misc.listentries = (as->parms[3].items ? 1 : 0);     /* -entries  */
     misc.verbose     = (as->parms[4].items ? 1 : 0);     /* -verbose  */
     recreateFile     = (as->parms[5].items ? as->parms[5].items->data :
-			                     (char *)0); /* -rebuild  */
+			                     NULL); /* -rebuild  */
 
     fd = open (pr_dbaseName, O_RDONLY, 0);
     if (fd == -1) {
@@ -1105,7 +1105,7 @@ main (argc, argv)
 
   setlinebuf(stdout);
 
-  ts=cmd_CreateSyntax((char *)0, WorkerBee, (char *)0, "PRDB check");
+  ts=cmd_CreateSyntax(NULL, WorkerBee, NULL, "PRDB check");
   cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "ptdb_file");
   cmd_AddParm(ts, "-uheader",  CMD_FLAG,   CMD_OPTIONAL, "Display UBIK header");
   cmd_AddParm(ts, "-pheader",  CMD_FLAG,   CMD_OPTIONAL, "Display KADB header");

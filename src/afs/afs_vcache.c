@@ -194,7 +194,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
        if (afs_norefpanic) {
 	  printf ("flush vc refcnt < 1");
 	  afs_norefpanic++;
-	  (void) vgone(avc, VX_NOSLEEP, (struct vnodeops *) 0);
+	  (void) vgone(avc, VX_NOSLEEP, NULL);
 	  AFS_GLOCK();
 	  VN_UNLOCK(AFSTOV(avc));
        }
@@ -673,7 +673,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     AFS_GLOCK();
 
     tvc = nvc;
-    tvc->nextfree = (struct vcache *)0; 
+    tvc->nextfree = NULL; 
     afs_vcount++;
 #else	/* AFS_OSF_ENV */
     /* pull out a free cache entry */
@@ -771,7 +771,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     else {
 	tvc = freeVCList;   /* take from free list */
 	freeVCList = tvc->nextfree;
-	tvc->nextfree = (struct vcache *)0;
+	tvc->nextfree = NULL;
     }
 #endif	/* AFS_OSF_ENV */
 
@@ -795,8 +795,8 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->v.v_vm_info->pager = MEMORY_OBJECT_NULL;
 #endif /* AFS_MACH_ENV */
     tvc->parentVnode = 0;
-    tvc->mvid = (struct VenusFid *) 0;
-    tvc->linkData = (char *) 0;
+    tvc->mvid = NULL;
+    tvc->linkData = NULL;
     tvc->cbExpires = 0;
     tvc->opens = 0;
     tvc->execsOrWriters = 0;
@@ -999,7 +999,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     osi_dnlc_purgedp(tvc);  /* this may be overkill */
     memset((char *)&(tvc->quick), 0, sizeof(struct vtodc));
     memset((char *)&(tvc->callsort), 0, sizeof(struct afs_q));
-    tvc->slocks = (struct SimpleLocks *)0;
+    tvc->slocks = NULL;
     i = VCHash(afid);
 
     tvc->hnext = afs_vhashT[i];
@@ -1074,7 +1074,7 @@ void afs_FlushActiveVcaches(register afs_int32 doflocks)
 		} while
 		    (afs_Analyze(tc, code, &tvc->fid, &treq,
 				 AFS_STATS_FS_RPCIDX_EXTENDLOCK,
-				 SHARED_LOCK, (struct cell *)0));
+				 SHARED_LOCK, NULL));
 
 		ReleaseWriteLock(&tvc->lock);
 		ObtainReadLock(&afs_xvcache);
@@ -1104,7 +1104,7 @@ void afs_FlushActiveVcaches(register afs_int32 doflocks)
 		    tvc->states &= ~CCore;
 		    /* XXXX Find better place-holder for cred XXXX */
 		    cred = (struct AFS_UCRED *) tvc->linkData;
-		    tvc->linkData = (char *) 0;	/* XXX */
+		    tvc->linkData = NULL;	/* XXX */
 		    afs_InitReq(&ureq, cred);
 		    afs_Trace2(afs_iclSetp, CM_TRACE_ACTCCORE,
 			       ICL_TYPE_POINTER, tvc,
@@ -1212,7 +1212,7 @@ int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
     }
     ObtainWriteLock(&afs_xcbhash, 461);
     avc->states &= ~( CStatd | CUnique );   
-    avc->callback = (struct server *)0;
+    avc->callback = NULL;
     afs_DequeueCallback(avc);
     ReleaseWriteLock(&afs_xcbhash);
     ReleaseWriteLock(&avc->lock);
@@ -1382,7 +1382,7 @@ int afs_WriteVCache(register struct vcache *avc,
     } while
 	(afs_Analyze(tc, code, &avc->fid, areq,
 		     AFS_STATS_FS_RPCIDX_STORESTATUS,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&avc->lock,20);
     if (code == 0) {
@@ -1546,7 +1546,7 @@ int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
     } while
 	(afs_Analyze(tc, code, afid, areq,
 		     AFS_STATS_FS_RPCIDX_XLOOKUP,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
     return code;
 }
@@ -1627,7 +1627,7 @@ loop:
 	UpgradeSToWLock(&afs_xvcache,21);
 
 	/* no cache entry, better grab one */
-	tvc = afs_NewVCache(afid, (struct server *)0);
+	tvc = afs_NewVCache(afid, NULL);
 	newvcache = 1;
 
 	ConvertWToSLock(&afs_xvcache);
@@ -1705,7 +1705,7 @@ loop:
 	ObtainReadLock(&afs_xvcache);
 	AFS_FAST_RELE(tvc);
 	ReleaseReadLock(&afs_xvcache);
-	return (struct vcache *) 0;
+	return NULL;
     }
 
     ReleaseWriteLock(&tvc->lock);
@@ -1792,7 +1792,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     if (!tvc) {
         /* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache,22);
-        tvc = afs_NewVCache(&nfid, (struct server *)0);
+        tvc = afs_NewVCache(&nfid, NULL);
 	newvcache = 1;
         ConvertWToSLock(&afs_xvcache);
     }
@@ -1834,7 +1834,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	ObtainReadLock(&afs_xvcache);
 	AFS_FAST_RELE(tvc);
 	ReleaseReadLock(&afs_xvcache);
-	return (struct vcache *) 0;
+	return NULL;
     }
 
     ObtainWriteLock(&afs_xcbhash, 466);
@@ -1852,7 +1852,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	    tvc->states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(3600), tvp); 
 	} else {
-	    tvc->callback = (struct server *)0;
+	    tvc->callback = NULL;
 	    afs_DequeueCallback(tvc);
 	    tvc->states &= ~(CStatd | CUnique);   
 	    if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1)) 
@@ -1862,7 +1862,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	afs_DequeueCallback(tvc);
 	tvc->states &= ~CStatd;	
 	tvc->states &= ~CUnique;   
-	tvc->callback = (struct server *)0;
+	tvc->callback = NULL;
 	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1)) 
 	  osi_dnlc_purgedp (tvc);  /* if it (could be) a directory */
     }	
@@ -1903,10 +1903,10 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	tfid = *afid;
 	tfid.Fid.Vnode = 0;	/* Means get rootfid of volume */
 	origCBs = afs_allCBs; /* ignore InitCallBackState */
-	code = afs_RemoteLookup(&tfid, areq, (char *)0, &nfid, 
+	code = afs_RemoteLookup(&tfid, areq, NULL, &nfid, 
 				&OutStatus, &CallBack, &serverp, &tsync);
 	if (code) {
-	    return (struct vcache *)0;
+	    return NULL;
 	}
 /*	ReleaseReadLock(&tvolp->lock);		 */
 	ObtainWriteLock(&tvolp->lock,56);
@@ -1955,7 +1955,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
     if (!tvc) {
 	UpgradeSToWLock(&afs_xvcache,23);
 	/* no cache entry, better grab one */
-	tvc = afs_NewVCache(afid, (struct server *)0);
+	tvc = afs_NewVCache(afid, NULL);
 	newvcache = 1;
 	afs_stats_cmperf.vcacheMisses++;
     }
@@ -1999,7 +1999,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 
       ObtainReadLock(&tvc->lock);
       tvc->states &= ~CUnique;   
-      tvc->callback = (struct server *)0;              /* redundant, perhaps */
+      tvc->callback = NULL;              /* redundant, perhaps */
       ReleaseReadLock(&tvc->lock);
     }
 
@@ -2031,14 +2031,14 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	tfid = *afid;
 	tfid.Fid.Vnode = 0;	/* Means get rootfid of volume */
 	origCBs = afs_allCBs; /* ignore InitCallBackState */
-	code = afs_RemoteLookup(&tfid, areq, (char *)0, &nfid, &OutStatus,
+	code = afs_RemoteLookup(&tfid, areq, NULL, &nfid, &OutStatus,
 				&CallBack, &serverp, &tsync);
     }
 
     if (code) {
 	ObtainWriteLock(&afs_xcbhash, 467);
 	afs_DequeueCallback(tvc);
-	tvc->callback = (struct server *)0;
+	tvc->callback = NULL;
 	tvc->states &= ~(CStatd|CUnique);  
 	ReleaseWriteLock(&afs_xcbhash);
 	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1)) 
@@ -2047,7 +2047,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	ObtainReadLock(&afs_xvcache);
 	AFS_FAST_RELE(tvc);
 	ReleaseReadLock(&afs_xvcache);
-	return (struct vcache *) 0;
+	return NULL;
     }
 	
     ObtainWriteLock(&afs_xcbhash, 468);
@@ -2068,7 +2068,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	}
     } else {
 	afs_DequeueCallback(tvc);
-	tvc->callback = (struct server *)0;
+	tvc->callback = NULL;
 	tvc->states &= ~(CStatd | CUnique);
 	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1)) 
 	  osi_dnlc_purgedp (tvc);  /* if it (could be) a directory */
@@ -2118,7 +2118,7 @@ afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
     } while
 	(afs_Analyze(tc, code, afid, areq,
 		     AFS_STATS_FS_RPCIDX_FETCHSTATUS,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
 if (!code) {
   afs_ProcessFS(avc, Outsp, areq);
@@ -2141,7 +2141,7 @@ if (!code) {
        }
     else {
       afs_DequeueCallback(avc);
-      avc->callback = (struct server *)0;
+      avc->callback = NULL;
       avc->states &= ~(CStatd|CUnique);  
       if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1)) 
 	osi_dnlc_purgedp (avc);  /* if it (could be) a directory */
@@ -2149,7 +2149,7 @@ if (!code) {
   }
   else {
     afs_DequeueCallback(avc);
-    avc->callback = (struct server *)0;
+    avc->callback = NULL;
     avc->states &= ~(CStatd|CUnique);  
     if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1)) 
       osi_dnlc_purgedp (avc);  /* if it (could be) a directory */
@@ -2223,7 +2223,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
     if (!tvc) {
 	/* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache,25);
-	tvc = afs_NewVCache(afid, (struct server *)0);
+	tvc = afs_NewVCache(afid, NULL);
 	newvcache = 1;
 	ConvertWToSLock(&afs_xvcache);
     }
@@ -2284,7 +2284,7 @@ void afs_StuffVcache(register struct VenusFid *afid,
      }
     else {
       afs_DequeueCallback(tvc);
-      tvc->callback = (struct server *)0;
+      tvc->callback = NULL;
       tvc->states &= ~(CStatd|CUnique);  
       if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1)) 
 	osi_dnlc_purgedp (tvc);  /* if it (could be) a directory */
@@ -2593,7 +2593,7 @@ void afs_vcacheInit(int astatSize)
         }
     }
 #else	/* AFS_OSF_ENV */
-    freeVCList = (struct vcache *)0;
+    freeVCList = NULL;
 #endif
 
     RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
@@ -2609,7 +2609,7 @@ void afs_vcacheInit(int astatSize)
     for(i=0; i < astatSize-1; i++) {
        tvp[i].nextfree = &(tvp[i+1]);
     }	
-    tvp[astatSize-1].nextfree = (struct vcache *) 0;
+    tvp[astatSize-1].nextfree = NULL;
 #ifdef	AFS_AIX32_ENV
     pin((char *)tvp, astatSize * sizeof(struct vcache));	/* XXX */    
 #endif

@@ -80,11 +80,11 @@ struct hostent *hostutil_GetHostByName(register char *ahost)
 	memset(addr, 0, sizeof(addr));
 	while ((tc = *ahost++)) {
 	    if (tc == '.') {
-		if (dots >= 3) return (struct hostent *) 0; /* too many dots */
+		if (dots >= 3) return NULL; /* too many dots */
 		addr[dots++] = tval;
 		tval = 0;
 	    }
-	    else if (tc > '9' || tc < '0') return (struct hostent *) 0;
+	    else if (tc > '9' || tc < '0') return NULL;
 	    else {
 		tval *= 10;
 		tval += tc - '0';
@@ -94,7 +94,7 @@ struct hostent *hostutil_GetHostByName(register char *ahost)
 #ifdef h_addr
 	/* 4.3 system */
 	addrp[0] = addr;
-	addrp[1] = (char *) 0;
+	addrp[1] = NULL;
 	thostent.h_addr_list = &addrp[0];
 #else /* h_addr */
 	/* 4.2 and older systems */
@@ -105,7 +105,7 @@ struct hostent *hostutil_GetHostByName(register char *ahost)
     else {
 #ifdef AFS_NT40_ENV
 	if (afs_winsockInit()<0) 
-	    return (struct hostent *)0;
+	    return NULL;
 #endif
 	return gethostbyname(ahost);
     }
@@ -121,7 +121,7 @@ char *hostutil_GetNameByINet(afs_uint32 addr)
 
 #ifdef AFS_NT40_ENV
 	if (afs_winsockInit()<0) 
-	    return (char *)0;
+	    return NULL;
 #endif
   th = gethostbyaddr((void *)&addr, sizeof(addr), AF_INET);
   if (th) {

@@ -96,7 +96,7 @@ test2(v)
 	struct timeval tp;
 	struct l_fixedpt time_lm;
 
-	(void)gettimeofday(&tp, (struct timezone *) 0);
+	(void)gettimeofday(&tp, NULL);
 	tstamp(&time_lm, &tp);
 
 	if (v) {

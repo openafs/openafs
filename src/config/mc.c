@@ -51,8 +51,8 @@ static int ParseLine(char *aline, struct token **alist)
     int dontUse = 0;
     
     inToken = 0;	/* not copying token chars at start */
-    first = (struct token *) 0;
-    last = (struct token *) 0;
+    first = NULL;
+    last = NULL;
     while (1) {
 	tc = *aline++;
 	if (tc == 0 || space(tc)) {    /* terminating null gets us in here, too */
@@ -63,7 +63,7 @@ static int ParseLine(char *aline, struct token **alist)
 		else
 		    *tptr++ = 0;
 		ttok = (struct token *) malloc(sizeof(struct token));
-		ttok->next = (struct token *) 0;
+		ttok->next = NULL;
 		if (dontUse) {
 		    ttok->key = (char *) malloc(strlen(tbuffer));
 		    strcpy(ttok->key, tbuffer+1);
@@ -97,7 +97,7 @@ static int ParseLine(char *aline, struct token **alist)
 	}
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
-	    if (last) last->next = (struct token *) 0;
+	    if (last) last->next = NULL;
 	    *alist = first;
 	    return 0;
 	}
@@ -150,7 +150,7 @@ int mc_copy(register FILE *ain, register FILE *aout, char *alist[])
 	    if (code != 0) return -1;
 	    copying = 0;
 	    done = 0;
-	    for(tp = alist; (!done) && (*tp != (char *)0) ; tp++) {
+	    for(tp = alist; (!done) && (*tp != NULL) ; tp++) {
 		for(tt = tokens; tt; tt=tt->next) {
 		    if (!strcmp(*tp, tt->key)) {
 			/* Need to search all tokens in case a dont use

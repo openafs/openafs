@@ -185,7 +185,7 @@ main(argc, argv)
 		/*
 		 * Needed to fill in the time stamp fields
 		 */
-		(void) gettimeofday(&tp, (struct timezone *) 0);
+		(void) gettimeofday(&tp, NULL);
 		tstamp(&pkt->xmt, &tp);
 
 		if (send(s, (char *) pkt, sizeof(ntp_data), 0) < 0) {
@@ -218,7 +218,7 @@ main(argc, argv)
 			perror("recvfrom");
 			exit(1);
 		}
-		(void) gettimeofday(&tp, (struct timezone *) 0);
+		(void) gettimeofday(&tp, NULL);
 		tstamp(&in_timestamp, &tp);
 
 		close(s);
@@ -311,13 +311,13 @@ main(argc, argv)
 		}
 
 		/* set the clock */
-		gettimeofday(&tp, (struct timezone *) 0);
+		gettimeofday(&tp, NULL);
 		offset += tp.tv_sec;
 		offset += tp.tv_usec / 1000000.0;
 		tp.tv_sec = offset;
 		tp.tv_usec = (offset - tp.tv_sec) * 1000000.0;
 
-		if (settimeofday(&tp, (struct timezone *) 0)) {
+		if (settimeofday(&tp, NULL)) {
 			perror("Can't set time (settimeofday)");
 		} else
 			set = 0;

@@ -152,7 +152,7 @@ void des_init_random_number_generator(des_cblock key)
      * use a time stamp to ensure that a server started later does not reuse
      * an old stream:
      */
-    gettimeofday(&time, (struct timezone *)0);
+    gettimeofday(&time, NULL);
     des_set_sequence_number((unsigned char *)&time);
 
     /*

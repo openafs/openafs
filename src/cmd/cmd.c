@@ -343,7 +343,7 @@ struct cmd_syndesc *cmd_CreateSyntax(char *aname, int (*aproc)(struct cmd_syndes
 	strcpy(td->name, aname);
     }
     else {
-	td->name = (char *) 0;
+	td->name = NULL;
 	noOpcodes = 1;
     }
     if (ahelp) {
@@ -356,7 +356,7 @@ struct cmd_syndesc *cmd_CreateSyntax(char *aname, int (*aproc)(struct cmd_syndes
 	    strcpy(td->help, ahelp);
 	}
     }
-    else td->help = (char *) 0;
+    else td->help = NULL;
     td->proc = aproc;
     td->rock = arock;
     
@@ -425,7 +425,7 @@ int cmd_AddParm(register struct cmd_syndesc *as, char *aname, int atype,
 	assert(tp->help);
 	strcpy(tp->help, ahelp);
     }
-    else tp->help = (char *) 0;
+    else tp->help = NULL;
     return 0;
 }
 
@@ -522,14 +522,14 @@ static char **InsertInitOpcode(int *aargc, char **aargv)
     newargv = (char **) malloc(((*aargc)+2) * sizeof(char *));
     if (!newargv) {
       fprintf(stderr, "%s: Can't create new argv array with %d+2 slots\n", aargv[0], *aargc);
-	return((char **)0);
+	return(NULL);
     }
 
     /*Create space for the initial opcode & fill it in*/
     pinitopcode = (char *) malloc(sizeof(initcmd_opcode));
     if (!pinitopcode) {
         fprintf(stderr, "%s: Can't malloc initial opcode space\n", aargv[0]);
-	return((char **)0);
+	return(NULL);
     }
     strcpy(pinitopcode, initcmd_opcode);
 
@@ -541,7 +541,7 @@ static char **InsertInitOpcode(int *aargc, char **aargv)
     newargv[0] = aargv[0];
     newargv[1] = pinitopcode;
     (*aargc)++;
-    newargv[*aargc] = (char *)0;
+    newargv[*aargc] = NULL;
 
     /*Return the happy news*/
     return(newargv);
@@ -584,7 +584,7 @@ int cmd_Dispatch(int argc, char **argv)
 	    ts = cmd_CreateSyntax("help", HelpProc, (char*)0,
 				  "get help on commands");
 	    cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
-	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
 
 	    ts = cmd_CreateSyntax("apropos", AproposProc, (char*)0,
 				  "search by help text");

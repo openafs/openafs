@@ -463,7 +463,7 @@ int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
 		rn, a_numServers);
 	arg_errfound = 1;
     }
-    if (a_collIDP == (afs_int32 *)0) {
+    if (a_collIDP == NULL) {
 	fprintf(stderr, "[%s] Null collection ID array argument\n", rn);
 	arg_errfound = 1;
     }
@@ -561,7 +561,7 @@ int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
 	
 	hostNameFound =
 	    hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
-	if (hostNameFound == (char *)0) {
+	if (hostNameFound == NULL) {
 	    fprintf(stderr,
 		    "[%s] Can't map Internet address %lu to a string name\n",
 		    rn, curr_conn->skt.sin_addr.s_addr);

@@ -126,7 +126,7 @@ afs_int32 DumpDB (call, firstcall, maxLength, charListPtr, done)
      */
     if (maxLength == 0)
     {
-	charListPtr->charListT_val = (char *)0;
+	charListPtr->charListT_val = NULL;
 	charListPtr->charListT_len = 0;
 
         *done = ((dumpSyncPtr->statusFlags == 0) ? 1 : 0);

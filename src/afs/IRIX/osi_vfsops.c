@@ -549,7 +549,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
 	if (code = afs_InitReq(&treq, OSI_GET_CURRENT_CRED()))
 	    goto out;
-	*avcp = (vnode_t*) afs_GetVCache(&vfid, &treq, (afs_int32 *)0, (struct vcache*)0);
+	*avcp = (vnode_t*) afs_GetVCache(&vfid, &treq, NULL, (struct vcache*)0);
 	if (! *avcp) {
 	    code = ENOENT;
 	}

@@ -181,9 +181,9 @@ struct onode *gator_objects_create(params)
     if (objects_debug)
       fprintf(stderr, "[%s:%s] Allocating %d bytes for new onode structure\n", mn, rn, sizeof(struct onode));
     new_onode = (struct onode *)malloc(sizeof(struct onode));
-    if (new_onode == (struct onode *)0) {
+    if (new_onode == NULL) {
       fprintf(stderr, "[%s:%s] Can't allocate %d bytes for new onode structure; errno is %d\n", mn, rn, sizeof(struct onode), errno);
-      return((struct onode *)0);
+      return(NULL);
     }
 
     /*
@@ -204,10 +204,10 @@ struct onode *gator_objects_create(params)
     new_onode->o_window   = params->cr_window;
     new_onode->o_op       = &(objops[params->cr_type]);
     new_onode->o_home     = params->cr_home_obj;
-    new_onode->o_help     = (struct onode *)0;
-    new_onode->o_nextobj  = (struct onode *)0;
+    new_onode->o_help     = NULL;
+    new_onode->o_nextobj  = NULL;
     new_onode->o_upobj    = params->cr_parent_obj;
-    new_onode->o_downobj  = (struct onode *)0;
+    new_onode->o_downobj  = NULL;
 
     /*
       * Call the proper routine to initialize the private parts of the
@@ -220,18 +220,18 @@ struct onode *gator_objects_create(params)
       if (objects_debug)
 	fprintf(stderr, "[%s:%s] Error %d in creation routine for gator object type %d\n", mn, rn, code, params->cr_type);
       free(new_onode);
-      return((struct onode *)0);
+      return(NULL);
     }
 
     /*
       * Set the links on the parent and previous objects, if so directed.
       */
-    if (params->cr_prev_obj != (struct onode *)0) {
+    if (params->cr_prev_obj != NULL) {
       if (objects_debug)
 	fprintf(stderr, "[%s:%s] Setting o_nextobj pointer in the previous object located at 0x%x (previous value was 0x%x)\n", mn, rn, params->cr_prev_obj, params->cr_prev_obj->o_nextobj);
       params->cr_prev_obj->o_nextobj = new_onode;
     }
-    if (params->cr_parent_obj != (struct onode *)0) {
+    if (params->cr_parent_obj != NULL) {
       if (objects_debug)
 	fprintf(stderr, "[%s:%s] Setting o_downobj pointer in the parent object located at 0x%x (previous value was 0x%x)\n", mn, rn, params->cr_parent_obj, params->cr_parent_obj->o_downobj);
       params->cr_parent_obj->o_downobj = new_onode;

@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     switch (weblog_pid) {
     case 0:
       /* the child process - in this case weblog */
-      execlp(path, "weblog", argv[3],argv[4],argv[5],argv[6],(char *)0);
+      execlp(path, "weblog", argv[3],argv[4],argv[5],argv[6],NULL);
 #ifdef DEBUG
       perror("apache_afs_weblog:Could not execute weblog");
 #endif

@@ -66,7 +66,7 @@ static void rxk_input (struct mbuf *am, int iphlen)
 
     /* make sure we have base ip and udp headers in first mbuf */
     if (iphlen > sizeof (struct ip)) {
-        ip_stripoptions(am, (struct mbuf *)0, (struct ipoption *)0);
+        ip_stripoptions(am, NULL, NULL);
         iphlen = sizeof (struct ip);
     }
 
@@ -251,7 +251,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
             }
             mlen = MHLEN;
             m->m_pkthdr.len = 0;
-            m->m_pkthdr.rcvif = (struct ifnet *)0;
+            m->m_pkthdr.rcvif = NULL;
         } else
 	MGET(m, M_DONTWAIT, MT_DATA);
 	if (!m) {
@@ -317,7 +317,7 @@ nopages:
     }
     tm = top;
 
-    tm->m_act = (struct mbuf *) 0;
+    tm->m_act = NULL;
 
     /* setup mbuf corresponding to destination address */
     um = m_get(M_DONTWAIT, MT_SONAME);

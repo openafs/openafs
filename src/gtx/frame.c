@@ -114,48 +114,48 @@ register struct gtx_frame *aframe; {
 	keymap_BindToString(recursiveMap,
 			    "\010",
 			    gtxframe_CtrlHCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\177",gtxframe_CtrlHCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\025",
 			    gtxframe_CtrlUCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\033",
 			    gtxframe_RecursiveEndCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\015",
 			    gtxframe_RecursiveEndCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\012",
 			    gtxframe_RecursiveEndCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\003",
 			    gtxframe_RecursiveErrCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 	keymap_BindToString(recursiveMap,
 			    "\007",
 			    gtxframe_RecursiveErrCmd,
-			    (char *) 0,
-			    (char *) 0);
+			    NULL,
+			    NULL);
 
 	for(i=040; i<0177; i++) {
 	    tstring[0] = i;
 	    tstring[1] = 0;
 	    keymap_BindToString(recursiveMap, tstring, gtxframe_SelfInsertCmd,
-				(char *) 0, i);
+				NULL, i);
 	}
     }
     aframe->savemap = aframe->keymap;
@@ -178,7 +178,7 @@ struct gtx_frame *aframe;
 struct gwin *awin; {
     if (awin->w_frame) {
 	/* Unthread this frame */
-	awin->w_frame->window = (struct gwin *) 0;
+	awin->w_frame->window = NULL;
     }
     awin->w_frame = aframe;
     aframe->window = awin;	/* Set frame's window ptr */
@@ -282,7 +282,7 @@ int aresultSize; {
 	free(aframe->defaultLine);
     aframe->promptLine = gtx_CopyString(aprompt);
     tp = aframe->defaultLine = (char *) malloc(1024);
-    if (tp == (char *)0)
+    if (tp == NULL)
       return(-1);
     if (adefault)
 	strcpy(tp, adefault);
@@ -313,7 +313,7 @@ int aresultSize; {
 	free(aframe->promptLine);
     if (aframe->defaultLine)
 	free(aframe->defaultLine);
-    aframe->defaultLine = aframe->promptLine = (char *) 0;
+    aframe->defaultLine = aframe->promptLine = NULL;
     if (code)
 	gtxframe_DisplayString(aframe, "[Aborted]");
     return(code);
@@ -335,7 +335,7 @@ struct gtx_frame *aframe; {
       return(0);
     if (aframe->messageLine)
 	free(aframe->messageLine);
-    aframe->messageLine = (char *) 0;
+    aframe->messageLine = NULL;
     return(0);
 }
 

@@ -77,7 +77,7 @@ static int cron_hascore(abnode)
 register struct ezbnode *abnode; {
     char tbuffer[256];
 
-    bnode_CoreName(abnode, (char *) 0, tbuffer);
+    bnode_CoreName(abnode, NULL, tbuffer);
     if (access(tbuffer, 0) == 0) return 1;
     else return 0;
 }
@@ -110,7 +110,7 @@ register struct cronbnode *abnode; {
 	if (!abnode->running) {
 	    /* start up */
 	    abnode->lastStart = FT_ApproxTime();
-	    code = bnode_NewProc(abnode, abnode->command, (char *) 0, &tp);
+	    code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
 	    if (code) {
 		bozo_Log("cron bnode %s failed to start (code %d)\n",
 			 abnode->b.name, code);
@@ -158,7 +158,7 @@ char *acommand; {
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(acommand, &cmdpath)) {
 	bozo_Log("BNODE: command path invalid '%s'\n", acommand);
-	return (struct bnode *)0;
+	return NULL;
     }
 
     te = (struct cronbnode *) malloc(sizeof(struct cronbnode));
@@ -167,7 +167,7 @@ char *acommand; {
     if (code < 0) {
 	free(te);
 	free(cmdpath);
-	return (struct bnode *) 0;
+	return NULL;
     }
     bnode_InitBnode(te, &cronbnode_ops, ainstance);
     te->when = ktime_next(&te->whenToRun, 0);
@@ -190,7 +190,7 @@ struct cronbnode *abnode; {
 	if (FT_ApproxTime() >= abnode->when) {
 	    abnode->lastStart = FT_ApproxTime();
 	    bnode_SetTimeout(abnode, 0);
-	    code = bnode_NewProc(abnode, abnode->command, (char *) 0, &tp);
+	    code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
 	    if (code) {
 		bozo_Log("cron failed to start bnode %s (code %d)\n",
 			 abnode->b.name, code);

@@ -66,7 +66,7 @@ RCSID("$Header$");
 extern int (*vol_PollProc)();
 extern struct volser_trans *TransList();
 extern int IOMGR_Poll();
-char *GlobalNameHack = (char *)0;
+char *GlobalNameHack = NULL;
 int hackIsIn = 0;
 afs_int32 GlobalVolCloneId, GlobalVolParentId;
 int GlobalVolType;
@@ -188,7 +188,7 @@ void * a5;
 int vol_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(tdir, call, (char *)0);
+    return afsconf_SuperUser(tdir, call, NULL);
 }
 
 #include "AFS_component_version_number.c"
@@ -368,7 +368,7 @@ usage:
     afsconf_GetKey(tdir, 999, &tkey);
     securityObjects[0] = rxnull_NewServerSecurityObject();
     securityObjects[1] = (struct rx_securityClass *) 0;	/* don't bother with rxvab */
-    securityObjects[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    securityObjects[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
     if (securityObjects[0] == (struct rx_securityClass *) 0) Abort("rxnull_NewServerSecurityObject");
     service = rx_NewService(0, VOLSERVICE_ID, "VOLSER", securityObjects, 3, AFSVolExecuteRequest);
     if (service == (struct rx_service *) 0) Abort("rx_NewService");

@@ -128,14 +128,14 @@ dev_t adev; {
 
 #ifdef	AFS_AIX_ENV
     if ((nmounts = getmount(&vmountp)) <= 0)	{   
-	return (char *)0;
+	return NULL;
     }
     for (; nmounts; nmounts--, vmountp = (struct vmount *)((int)vmountp + vmountp->vmt_length)) {
 	char *part = vmt2dataptr(vmountp, VMT_STUB);
 #else
 #ifdef	AFS_SUN5_ENV
     if (!(mntfile = fopen(MNTTAB, "r"))) {
-	return (char *)0;
+	return NULL;
     }
     while (!getmntent(mntfile, &mnt)) {
 	char *part = mnt.mnt_mountp;
@@ -144,12 +144,12 @@ dev_t adev; {
 #ifdef AFS_LINUX22_ENV
     if ((mfd = setmntent("/proc/mounts", "r")) == NULL) {
 	if ((mfd = setmntent("/etc/mtab", "r")) == NULL) {
-	    return (char *)0;
+	    return NULL;
 	}
     }
 #else
     if ((mfd = setmntent(MOUNTED/*MNTTAB*/, "r")) == NULL) {
-	return (char *)0;
+	return NULL;
     }
 #endif
     while ((mntent = getmntent(mfd))) {
@@ -216,14 +216,14 @@ dev_t adev; {
 		    *ptr = '\0';
 		    strcpy(wpath, pbuf);
 		} else
-		    return (char *)0;
+		    return NULL;
 	    }
 	    ptr = (char *)strrchr(pbuffer, '/');	    
 	    if (ptr) {
 		strcpy(pbuffer, ptr+1);
 		return pbuffer;
 	    } else
-		return (char *)0;
+		return NULL;
 	}
     }
 #ifndef	AFS_AIX_ENV
@@ -237,7 +237,7 @@ dev_t adev; {
 #endif
 #endif /* AFS_SGI_ENV */
 #endif
-    return (char *)0;
+    return NULL;
 }
 
 
@@ -269,6 +269,6 @@ char *afs_rawname(devfile)
      while((--i>=0) && (devfile[i] != '/'));
   }
 
-  return (char *)0;
+  return NULL;
 }
 

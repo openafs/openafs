@@ -92,7 +92,7 @@ struct bztemp {
 int bozo_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(bozo_confdir, call, (char *)0);
+    return afsconf_SuperUser(bozo_confdir, call, NULL);
 }
 
 /* restart bozo process */
@@ -279,8 +279,8 @@ char *aname; {
     bozo_nextDayKT.min = 0;
 
     for(code=0;code<MAXPARMS;code++)
-	parms[code] = (char *) 0;
-    instp = typep = notifier = (char *) 0;
+	parms[code] = NULL;
+    instp = typep = notifier = NULL;
     tfile = (FILE *) 0;
     if (!aname) aname = (char *)bozo_fileName;
     tfile = fopen(aname, "r");
@@ -355,7 +355,7 @@ char *aname; {
 	    code = -1;
 	    goto fail;
 	} else if (code == 3)
-	    notifier = (char *)0;
+	    notifier = NULL;
 	
 	for(i=0;i<MAXPARMS;i++) {
 	    /* now read the parms, until we see an "end" line */
@@ -908,7 +908,7 @@ char **envp;
     bozo_rxsc[0] = rxnull_NewServerSecurityObject();
     bozo_rxsc[1] = (struct rx_securityClass *) 0;
     bozo_rxsc[2] = rxkad_NewServerSecurityObject(
-					 0, tdir, afsconf_GetKey, (char *) 0);
+					 0, tdir, afsconf_GetKey, NULL);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();

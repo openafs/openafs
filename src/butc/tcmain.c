@@ -419,21 +419,21 @@ static afs_int32 GetConfigParams(filename, port)
     queryoperator  = 1;                   /* can question operator */
     autoQuery      = 1;                   /* prompt for first tape */
     isafile        = 0;                   /* Do not dump to a file */
-    opencallout    = (char *)0;           /* open  callout routine */
-    closecallout   = (char *)0;           /* close callout routine */
+    opencallout    = NULL;           /* open  callout routine */
+    closecallout   = NULL;           /* close callout routine */
     tapemounted    = 0;                   /* tape is not mounted */
 #ifdef xbsa
     BufferSize     = (CONF_XBSA ? XBSADFLTBUFFER : BUTM_BLOCKSIZE);
     dumpRestAuthnLevel = rpc_c_protect_level_default;   
-    xbsaObjectOwner  = (char *)0;         /* bsaObjectOwner */
-    appObjectOwner   = (char *)0;         /* appObjectOwner */
-    adsmServerName   = (char *)0;         /* TSM server name - same as ADSM */
-    xbsaSecToken     = (char *)0;         /* XBSA sercurity token */
-    xbsalGName       = (char *)0;         /* XBSA IGName */
+    xbsaObjectOwner  = NULL;         /* bsaObjectOwner */
+    appObjectOwner   = NULL;         /* appObjectOwner */
+    adsmServerName   = NULL;         /* TSM server name - same as ADSM */
+    xbsaSecToken     = NULL;         /* XBSA sercurity token */
+    xbsalGName       = NULL;         /* XBSA IGName */
 #else
     BufferSize     = BUTM_BLOCKSIZE;
 #endif /*xbsa*/
-    centralLogFile   = (char *)0;         /* Log for all butcs */
+    centralLogFile   = NULL;         /* Log for all butcs */
     centralLogIO = 0;                     /* Log for all butcs */
     statusSize   = 0;                     /* size before status message */
     maxpass      = PASSESDFLT;            /* dump passes */
@@ -1132,7 +1132,7 @@ char **argv;
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax((char *) 0, WorkerBee, (char *) 0, "tape coordinator");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "tape coordinator");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "port offset");
     cmd_AddParm(ts, "-debuglevel", CMD_SINGLE, CMD_OPTIONAL, "0 | 1 | 2");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1177,7 +1177,7 @@ char **argv;
 	ts->parms[3].items = (struct cmd_item *) NULL;
 	ts->parms[4].items = (struct cmd_item *) NULL;
 	ts->parms[5].items = (struct cmd_item *) NULL;
-	return WorkerBee(ts, (char *) 0);
+	return WorkerBee(ts, NULL);
     }
     else
 	return cmd_Dispatch(argc, argv);

@@ -174,6 +174,6 @@ struct onode *gator_objdict_lookup(nametofind)
     /*
      * Finally, return the good news.
      */
-    return((struct onode *)0);
+    return(NULL);
 
 } /*gator_objdict_lookup*/

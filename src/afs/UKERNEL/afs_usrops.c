@@ -1671,7 +1671,7 @@ void uafs_Init(
      */
     lookingForHomeCell = 1;
 
-    afsconf_CellApply(afs_cdir, ConfigCell, (char *) 0);
+    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
 
     /*
      * If we're still looking for the home cell after the whole cell

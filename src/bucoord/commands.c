@@ -687,7 +687,7 @@ char *bc_CopyString(astring)
     afs_int32 tlen;
     char *tp;
 
-    if (!astring) return((char *) 0);	/* propagate null strings easily */
+    if (!astring) return(NULL);	/* propagate null strings easily */
     tlen = strlen(astring);
     tp = (char *) malloc(tlen+1);	/* don't forget the terminating null */
     if (!tp) 
@@ -722,14 +722,14 @@ char *concatParams(itemPtr)
    if ( length == 0 )   			/* no string (0 length) */
    {
        com_err(whoami, 0, "Can't have zero length date and time string");
-       return((char *)0);
+       return(NULL);
    }
    
    string = (char *) malloc(length);            /* allocate the string */
    if (!string)
    {
        com_err(whoami,BC_NOMEM,"");
-       return((char *)0);
+       return(NULL);
    }
    string[0] = 0;
 
@@ -1143,7 +1143,7 @@ bc_VolRestoreCmd(as, arock)
     afs_int32 fromDate;
     char *newExt, *timeString;
     afs_int32 i, portRemain;
-    afs_int32 *ports = (afs_int32 *)0;
+    afs_int32 *ports = NULL;
     afs_int32 portCount=0;
     int  dontExecute;
 
@@ -1219,7 +1219,7 @@ bc_VolRestoreCmd(as, arock)
         fromDate = 0x7fffffff;	/* latest one */
     }
 
-    newExt  = (as->parms[3].items ? as->parms[3].items->data : (char *)0);
+    newExt  = (as->parms[3].items ? as->parms[3].items->data : NULL);
     oldFlag = 0;
 
     /* Read all the port offsets into the ports array. The first element in the
@@ -1277,7 +1277,7 @@ char *arock; {
     int oldFlag;
     afs_int32 fromDate;
     char *newExt;
-    afs_int32 *ports = (afs_int32 *)0;
+    afs_int32 *ports = NULL;
     afs_int32 portCount=0;
     int  dontExecute;
     struct bc_volumeDump *prev, *tvol, *nextvol;
@@ -1365,7 +1365,7 @@ char *arock; {
        }
     }
 
-    newExt      = (as->parms[10].items ? as->parms[10].items->data : (char *)0);
+    newExt      = (as->parms[10].items ? as->parms[10].items->data : NULL);
     dontExecute = (as->parms[11].items ? 1 : 0);     /* -n */
 
     /*
@@ -1428,7 +1428,7 @@ bc_VolsetRestoreCmd (as, arock)
     char *newExt;
 
     int                  dontExecute;
-    afs_int32                *ports = (afs_int32 *)0;
+    afs_int32                *ports = NULL;
     afs_int32                portCount=0;
     afs_int32                code = 0;
     afs_int32                portoffset = 0;
@@ -1558,7 +1558,7 @@ bc_VolsetRestoreCmd (as, arock)
        }
     }
 
-    newExt      = (as->parms[3].items ? as->parms[3].items->data : (char *)0);
+    newExt      = (as->parms[3].items ? as->parms[3].items->data : NULL);
     dontExecute = (as->parms[4].items ? 1 : 0);
 
     fromDate = 0x7fffffff;	/* last one before this date */
@@ -1616,7 +1616,7 @@ int bc_DumpCmd(as, arock)
     afs_int32 level;			    /* this dump's level # */
     afs_int32 problemFindingDump;    	    /* can't find parent(s) */
 
-    afs_int32 *portp = (afs_int32 *)0;
+    afs_int32 *portp = NULL;
     afs_int32 portCount = 0;
     afs_int32 doAt, atTime;                     /* Time a timed-dump is to start at */
     afs_int32 length;

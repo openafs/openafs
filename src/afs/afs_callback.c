@@ -105,7 +105,7 @@ int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheE
     } /*Zip through hash chains*/
 
   searchDone:
-    if (tvc == (struct vcache *) 0) {
+    if (tvc == NULL) {
 	/*Past EOF*/
 	code = 1;
 	goto fcnDone;
@@ -181,7 +181,7 @@ int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCach
     } /*Zip through hash chains*/
 
   searchDone:
-    if (tvc == (struct vcache *) 0) {
+    if (tvc == NULL) {
 	/*Past EOF*/
 	code = 1;
 	goto fcnDone;
@@ -373,7 +373,7 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
 	    for (i = 0; i < VCSIZE; i++)
 		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
-			tvc->callback = (struct server *)0;
+			tvc->callback = NULL;
 			tvc->quick.stamp = 0; 
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->fid.Cell;
@@ -424,7 +424,7 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
 		if (tvc->fid.Fid.Vnode == a_fid->Vnode
 		    && tvc->fid.Fid.Volume == a_fid->Volume
 		    && tvc->fid.Fid.Unique == a_fid->Unique ) {
-		    tvc->callback = (struct server *)0;
+		    tvc->callback = NULL;
 		    tvc->quick.stamp = 0; 
 		    tvc->h1.dchint = NULL; /* invalidate hints */
 		    ObtainWriteLock(&afs_xcbhash, 450);
@@ -599,7 +599,7 @@ int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 		    if (tvc->callback == ts) {
 			ObtainWriteLock(&afs_xcbhash, 451);
 			afs_DequeueCallback(tvc);
-			tvc->callback = (struct server *)0;
+			tvc->callback = NULL;
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
 			ReleaseWriteLock(&afs_xcbhash);
 		    }
@@ -729,7 +729,7 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
      * no data.
      */
     a_dataP->AFSCB_CollData_len = 0;
-    a_dataP->AFSCB_CollData_val = (afs_int32 *)0;
+    a_dataP->AFSCB_CollData_val = NULL;
 #else
     switch(a_collectionNumber) {
       case AFSCB_XSTATSCOLL_CALL_INFO:
@@ -795,7 +795,7 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 * Illegal collection number.
 	 */
 	a_dataP->AFSCB_CollData_len = 0;
-	a_dataP->AFSCB_CollData_val = (afs_int32 *)0;
+	a_dataP->AFSCB_CollData_val = NULL;
 	code = 1;
     } /*Switch on collection number*/
 #endif /* AFS_NOSTATS */

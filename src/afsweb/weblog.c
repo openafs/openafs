@@ -121,7 +121,7 @@ main (int argc, char **argv)
   zero_argc = argc;
   zero_argv = argv;
   
-  ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, 
+  ts = cmd_CreateSyntax(NULL, CommandProc, 0, 
 			"obtain Kerberos authentication for web servers");
 
 /* define the command line arguments */  
@@ -309,7 +309,7 @@ static char *makeString(char *sp)
     return NULL;
   }
   new_string=(char *) malloc(len+1);
-  if (new_string==(char *)0) {
+  if (new_string==NULL) {
     fprintf(stderr, "weblog: Out of memory - malloc failed\n");
     return NULL;
   }
@@ -366,7 +366,7 @@ static char *make_string(s_p, length)
     int length;
 {
     char *new_p = (char *) malloc(length + 1);
-    if (new_p == (char *) 0) {
+    if (new_p == NULL) {
 	fprintf(stderr, "dlog: out of memory\n");
 	exit(1);
     }

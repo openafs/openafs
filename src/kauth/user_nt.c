@@ -478,7 +478,7 @@ static int krb_get_in_tkt_ext(user, instance, realm, service, sinstance, life,
     pkt->length += 1 + strlen(realm);
 
 #ifndef WIN32
-    (void) gettimeofday(&t_local,(struct timezone *) 0);
+    (void) gettimeofday(&t_local,NULL);
 #else /* WIN32 */
     t_local = time((void *) 0);
 #endif /* WIN32 */

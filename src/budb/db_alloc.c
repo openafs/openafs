@@ -48,10 +48,10 @@ afs_int32 InitDBalloc ()
     nEntries[tape_BLOCK] = NtapeS;
     nEntries[dump_BLOCK] = NdumpS;
 
-    sizeEntries[volFragment_BLOCK] = sizeof(((struct vfBlock *)0)->a[0]);
-    sizeEntries[volInfo_BLOCK] = sizeof(((struct viBlock *)0)->a[0]);
-    sizeEntries[tape_BLOCK] = sizeof(((struct tBlock *)0)->a[0]);
-    sizeEntries[dump_BLOCK] = sizeof(((struct dBlock *)0)->a[0]);
+    sizeEntries[volFragment_BLOCK] = sizeof(((struct vfBlock *)NULL)->a[0]);
+    sizeEntries[volInfo_BLOCK] = sizeof(((struct viBlock *)NULL)->a[0]);
+    sizeEntries[tape_BLOCK] = sizeof(((struct tBlock *)NULL)->a[0]);
+    sizeEntries[dump_BLOCK] = sizeof(((struct dBlock *)NULL)->a[0]);
 
     return 0;
 }

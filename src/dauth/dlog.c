@@ -190,7 +190,7 @@ char *make_string(s_p, length)
     int length;
 {
     char *new_p = (char *) malloc(length + 1);
-    if (new_p == (char *) 0) {
+    if (new_p == NULL) {
 	fprintf(stderr, "dlog: out of memory\n");
 	exit(1);
     }
@@ -412,7 +412,7 @@ main (argc, argv)
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
 
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "obtain Kerberos authentication");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "obtain Kerberos authentication");
 
 #define aPRINCIPAL 0
 #define aCELL 1

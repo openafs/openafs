@@ -110,7 +110,7 @@ afs_open(avcp, aflags, acred)
 	        crhold(acred);
 	        if (tvc->credp) {
 	            struct ucred *crp = tvc->credp;
-	            tvc->credp = (struct ucred *)0;
+	            tvc->credp = NULL;
 	            crfree(crp);
 	        }
 	        tvc->credp = acred;

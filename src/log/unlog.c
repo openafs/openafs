@@ -122,7 +122,7 @@ main(argc, argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "Release Kerberos authentication");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "Release Kerberos authentication");
     cmd_AddParm(ts, "-cell", CMD_LIST, CMD_OPTIONAL, "cell name");
 
     code = cmd_Dispatch(argc, argv);

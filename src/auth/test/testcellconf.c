@@ -92,17 +92,17 @@ char *argv[];
 	printf("Done.\n\n");
 	/* do this junk once */
 	printf("start of special test\n");
-	code = afsconf_GetCellInfo(theDir, (char *) 0, "afsprot", &theCell);
+	code = afsconf_GetCellInfo(theDir, NULL, "afsprot", &theCell);
 	if (code) printf("failed to find afsprot service (%d)\n", code);
 	else {
 	    printf("AFSPROT service:\n");
-	    PrintOneCell(&theCell, (char *) (char *) 0, theDir);
+	    PrintOneCell(&theCell, (char *) NULL, theDir);
 	}
 	code = afsconf_GetCellInfo(theDir, 0, "bozotheclown", &theCell);
 	if (code == 0) printf("unexpectedly found service 'bozotheclown'\n");
-	code = afsconf_GetCellInfo(theDir, (char *) 0, "telnet", &theCell);
+	code = afsconf_GetCellInfo(theDir, NULL, "telnet", &theCell);
 	printf("Here's the telnet service:\n");
-	PrintOneCell(&theCell, (char *) 0, theDir);
+	PrintOneCell(&theCell, NULL, theDir);
 	printf("done with special test\n");
     }
     else {
@@ -112,7 +112,7 @@ char *argv[];
 	    if (code) {
 		printf("Could not find info for cell '%s', code %d\n", argv[i], code);
 	    }
-	    else PrintOneCell(&theCell, (char *) 0, theDir);
+	    else PrintOneCell(&theCell, NULL, theDir);
 	}
     }
 

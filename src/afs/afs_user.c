@@ -267,7 +267,7 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
 	}
     }
     ReleaseWriteLock(&afs_xuser);
-    return (struct unixuser *) 0;
+    return NULL;
 
 } /*afs_FindUser*/
 
@@ -441,7 +441,7 @@ struct unixuser *afs_GetUser(register afs_int32 auid,
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == auid) {
 	    RmtUser = 0;
-	    pu = (struct unixuser *)0;
+	    pu = NULL;
 	    if (tu->exporter) {
 		RmtUser = 1;
 		pu = tu;
@@ -508,7 +508,7 @@ void afs_SetPrimary(register struct unixuser *au, register int aflag)
 
     AFS_STATCNT(afs_SetPrimary);
     i = UHash(au->uid);
-    pu = (struct unixuser *) 0;
+    pu = NULL;
     ObtainWriteLock(&afs_xuser,105);
     /*
      * See if anyone is this uid's primary cell yet; recording in pu the
@@ -526,7 +526,7 @@ void afs_SetPrimary(register struct unixuser *au, register int aflag)
 	 * people see a primary identity until now.
 	 */
 	pu->states &= ~UPrimary;
-	pu = (struct unixuser *) 0;
+	pu = NULL;
     }
     if (aflag == 1) {
 	/* setting au to be primary */

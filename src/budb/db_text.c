@@ -140,7 +140,7 @@ afs_int32 GetText (call, lockHandle, textType, maxLength, offset,
     /* allocate the transfer storage */
     if (transferSize <= 0) {
       charListPtr->charListT_len = 0L;
-      charListPtr->charListT_val = (char *)0;
+      charListPtr->charListT_val = NULL;
     }
     else {
       charListPtr->charListT_len = transferSize;

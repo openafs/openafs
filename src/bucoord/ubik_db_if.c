@@ -883,7 +883,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 	    sname.instance[0] = 0;
 	    strcpy(sname.name, "afs");
 
-	    code = ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), (char *)0);
+	    code = ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), NULL);
 	    if (code) 
 	    {
 	        com_err(whoami,code, 0,"; Can't get AFS tokens - running unauthenticated");
@@ -1035,7 +1035,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 	    strcpy(principal.name, "afs");
 	
 	    /* get token */
-	    code = ktc_GetToken(&principal, &token, sizeof(token), (char *)0);
+	    code = ktc_GetToken(&principal, &token, sizeof(token), NULL);
 	    if (code)
 	    {
 	        com_err(whoami, code, "; Can't get tokens - running unauthenticated");

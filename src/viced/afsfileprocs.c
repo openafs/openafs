@@ -3086,7 +3086,7 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
 
     /* set up return status */
     GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);
-    GetStatus(parentptr, OutDirStatus, rights, anyrights, (struct Vnode *)0);
+    GetStatus(parentptr, OutDirStatus, rights, anyrights, NULL);
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
@@ -3245,7 +3245,7 @@ SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
 #endif /* FS_STATS_DETAILED */
 
     /* Return to the caller the updated parent dir status */
-    GetStatus(parentptr, OutDirStatus, rights, anyrights, (struct Vnode *)0);
+    GetStatus(parentptr, OutDirStatus, rights, anyrights, NULL);
 
     /*
      * Note: it is not necessary to break the callback on fileFid, since
@@ -4095,7 +4095,7 @@ afs_int32 SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srv
      * no data.
      */
     a_dataP->AFS_CollData_len = 0;
-    a_dataP->AFS_CollData_val = (afs_int32 *)0;
+    a_dataP->AFS_CollData_val = NULL;
 #endif /* 0 */
 
     switch(a_collectionNumber) {
@@ -4119,7 +4119,7 @@ afs_int32 SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srv
 	a_dataP->AFS_CollData_val = dataBuffP;
 #else
 	a_dataP->AFS_CollData_len = 0;
-	a_dataP->AFS_CollData_val = (afs_int32 *)0;
+	a_dataP->AFS_CollData_val = NULL;
 #endif /* 0 */
 	break;
 
@@ -4179,7 +4179,7 @@ afs_int32 SRXAFS_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srv
 	 * Illegal collection number.
 	 */
 	a_dataP->AFS_CollData_len = 0;
-	a_dataP->AFS_CollData_val = (afs_int32 *)0;
+	a_dataP->AFS_CollData_val = NULL;
 	code = 1;
     } /*Switch on collection number*/
 
@@ -4355,7 +4355,7 @@ afs_int32 SRXAFS_FlushCPS(acall, vids, addrs, spare1, spare2, spare3)
 #endif
       if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 	free(client->CPS.prlist_val);
-	client->CPS.prlist_val = (afs_int32 *)0;
+	client->CPS.prlist_val = NULL;
       }
       ReleaseWriteLock(&client->lock);
     }

@@ -57,7 +57,7 @@ static int ez_hascore(abnode)
 register struct ezbnode *abnode; {
     char tbuffer[256];
 
-    bnode_CoreName(abnode, (char *) 0, tbuffer);
+    bnode_CoreName(abnode, NULL, tbuffer);
     if (access(tbuffer, 0) == 0) return 1;
     else return 0;
 }
@@ -97,7 +97,7 @@ char *acommand; {
 
     if (ConstructLocalBinPath(acommand, &cmdpath)) {
 	bozo_Log("BNODE: command path invalid '%s'\n", acommand);
-	return (struct bnode *)0;
+	return NULL;
     }
 
     te = (struct ezbnode *) malloc(sizeof(struct ezbnode));
@@ -139,7 +139,7 @@ afs_int32 astatus; {
     if (astatus == BSTAT_NORMAL && !abnode->running) {
 	/* start up */
 	abnode->lastStart = FT_ApproxTime();
-	code = bnode_NewProc(abnode, abnode->command, (char *) 0, &tp);
+	code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
 	if (code) return code;
 	abnode->running = 1;
 	abnode->proc = tp;

@@ -116,7 +116,7 @@ retry:
     } while
 	(afs_Analyze(tc, code, &avc->fid, areq,
 		     AFS_STATS_FS_RPCIDX_STOREDATA,
-		     SHARED_LOCK, (struct cell *)0));
+		     SHARED_LOCK, NULL));
 
     if (code == 0) {
 	afs_ProcessFS(avc, &OutStatus, areq);
@@ -529,7 +529,7 @@ restart:
 		}
 	    } while (afs_Analyze(tc, code, &avc->fid, areq,
 				 AFS_STATS_FS_RPCIDX_STOREDATA,
-				 SHARED_LOCK, (struct cell *)0));
+				 SHARED_LOCK, NULL));
 
 	    /* put back all remaining locked dcache entries */  
 	    for (i=0; i<nchunks; i++) {

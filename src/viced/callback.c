@@ -687,7 +687,7 @@ AddCallBack1_r(host, fid, thead, type, locked)
 	register afs_uint32 hash;
 
 	fe = newfe;
-	newfe = (struct FileEntry *) 0;
+	newfe = NULL;
 	fe->firstcb = 0;
         fe->volid = fid->Volume;
 	fe->vnode = fid->Vnode;
@@ -718,7 +718,7 @@ AddCallBack1_r(host, fid, thead, type, locked)
 	}
     } else {
 	cb = newcb;
-	newcb = (struct CallBack *) 0;
+	newcb = NULL;
 	*(lastcb?&lastcb->cnext:&fe->firstcb) = cbtoi(cb);
 	fe->ncbs++;
 	cb->cnext = 0;
@@ -1417,7 +1417,7 @@ static int GetSomeSpace_r(hostp, locked)
     struct host *hostp;
     int locked;
 {
-    register struct host *hp, *hp1 = (struct host *)0;
+    register struct host *hp, *hp1 = NULL;
     int i=0;
 
     cbstuff.GotSomeSpaces++;

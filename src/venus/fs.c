@@ -1130,7 +1130,7 @@ static SetVolCmd(as)
 	blob.in = space;
 	status = (VolumeStatus *)space;
 	status->MinQuota = status->MaxQuota = -1;
-        offmsg = (char *) 0;
+        offmsg = NULL;
 	if (as->parms[1].items) {
 	    code = util_GetInt32(as->parms[1].items->data, &status->MaxQuota);
 	    if (code) {
@@ -1468,7 +1468,7 @@ defect #3069
     if (as->parms[2].items)	/* cell name specified */
 	cellName = as->parms[2].items->data;
     else
-	cellName = (char *) 0;
+	cellName = NULL;
     volName = as->parms[1].items->data;
 
     if (strlen(volName) >= 64) {
@@ -1786,7 +1786,7 @@ static SetCacheSizeCmd(as)
 	    printf("'fs setcache' not allowed on memory cache based cache managers.\n");
 	}
 	else {
-	    Die(errno, (char *) 0);
+	    Die(errno, NULL);
 	}
 	return 1;
     }
@@ -1804,13 +1804,13 @@ static GetCacheParmsCmd(as)
     afs_int32 parms[MAXGCSIZE];
 
     memset(parms, '\0', sizeof parms); /* avoid Purify UMR error */
-    blob.in = (char *) 0;
+    blob.in = NULL;
     blob.in_size = 0;
     blob.out_size = sizeof(parms);
     blob.out = (char *) parms;
     code = pioctl(0, VIOCGETCACHEPARMS, &blob, 1);
     if (code) {
-	Die(errno, (char *) 0);
+	Die(errno, NULL);
 	return 1;
     }
     printf("AFS using %d of the cache's available %d 1K byte blocks.\n",
@@ -2067,13 +2067,13 @@ static WSCellCmd(as)
     struct ViceIoctl blob;
 
     blob.in_size = 0;
-    blob.in = (char *) 0;
+    blob.in = NULL;
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl((char *) 0, VIOC_GET_WS_CELL, &blob, 1);
+    code = pioctl(NULL, VIOC_GET_WS_CELL, &blob, 1);
     if (code) {
-	Die(errno, (char *) 0);
+	Die(errno, NULL);
 	return 1;
     }
 
@@ -2434,7 +2434,7 @@ static VLDBInit(noAuthFlag, info)
 	strcpy(sname.cell, info->name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    fprintf(stderr, "%s: Could not get afs tokens, running unauthenticated.\n", pn);
 	    scIndex = 0;
@@ -2871,7 +2871,7 @@ static afs_int32 SetCryptCmd(as)
     blob.out_size = 0;
     code = pioctl(0, VIOC_SETRXKCRYPT, &blob, 1);
     if (code)
-      Die(errno, (char *) 0);
+      Die(errno, NULL);
     return 0;
 }
 
@@ -2883,14 +2883,14 @@ static afs_int32 GetCryptCmd(as)
     struct ViceIoctl blob;
     char *tp;
  
-    blob.in = (char *) 0;
+    blob.in = NULL;
     blob.in_size = 0;
     blob.out_size = sizeof(flag);
     blob.out = space;
 
     code = pioctl(0, VIOC_GETRXKCRYPT, &blob, 1);
 
-    if (code) Die(errno, (char *) 0);
+    if (code) Die(errno, NULL);
     else {
       tp = space;
       memcpy(&flag, tp, sizeof(afs_int32));

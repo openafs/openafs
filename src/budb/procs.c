@@ -160,7 +160,7 @@ callPermitted(call)
     acdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!acdir) return 0;
 
-     if ( afsconf_SuperUser(acdir, call, (char *)0) )
+     if ( afsconf_SuperUser(acdir, call, NULL) )
 	 permitted = 1;
 
   exit:

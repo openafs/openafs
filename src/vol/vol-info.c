@@ -596,7 +596,7 @@ char **argv;
     register struct cmd_syndesc *ts;
     afs_int32 code;
 
-    ts = cmd_CreateSyntax((char *)0, handleit, 0, "Dump volume's internal state");
+    ts = cmd_CreateSyntax(NULL, handleit, 0, "Dump volume's internal state");
     cmd_AddParm(ts, "-online", CMD_FLAG, CMD_OPTIONAL, "Get info from running fileserver");
     cmd_AddParm(ts, "-vnode", CMD_FLAG, CMD_OPTIONAL, "Dump vnode info");
     cmd_AddParm(ts, "-date", CMD_FLAG, CMD_OPTIONAL, "Also dump vnode's mod date");

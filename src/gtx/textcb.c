@@ -124,7 +124,7 @@ struct gator_textcb_hdr *gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEn
     if (gator_textcb_debug)
       fprintf(stderr, "[%s] Allocating %d bytes for the text buffer\n", rn, bytesToAllocate);
     newBuff = (char *) malloc(bytesToAllocate);
-    if (newBuff == (char *)0) {
+    if (newBuff == NULL) {
       fprintf(stderr, "[%s] Can't allocate %d bytes for text buffer; errno is %d\n", rn, bytesToAllocate, errno);
       return((struct gator_textcb_hdr *)0);
     }
@@ -132,7 +132,7 @@ struct gator_textcb_hdr *gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEn
       if (gator_textcb_debug)
 	fprintf(stderr, "[%s] Text buffer allocated at 0x%x\n", rn, newBuff);
     blankLine = (char *) malloc(a_maxCharsPerEntry + 1);
-    if (blankLine == (char *)0) {
+    if (blankLine == NULL) {
       fprintf(stderr, "[%s] Can't allocate %d bytes for blank line buffer; errno is %d\n", rn, a_maxCharsPerEntry+1, errno);
       free(newBuff);
       return((struct gator_textcb_hdr *)0);
@@ -556,7 +556,7 @@ int gator_textcb_Delete(a_cbhdr)
 	      rn, a_cbhdr->entry[0].textp,
 	      (a_cbhdr->maxEntriesStored * a_cbhdr->maxCharsPerEntry));
     free(a_cbhdr->entry[0].textp);
-    a_cbhdr->entry[0].textp = (char *)0;
+    a_cbhdr->entry[0].textp = NULL;
 
     if (gator_textcb_debug)
       fprintf(stderr, "[%s]: Freeing text entry array at 0x%x (%d bytes)\n",
@@ -565,7 +565,7 @@ int gator_textcb_Delete(a_cbhdr)
     free(a_cbhdr->entry);
     a_cbhdr->entry = (struct gator_textcb_entry *)0;
     free(a_cbhdr->blankLine);
-    a_cbhdr->blankLine = (char *)0;
+    a_cbhdr->blankLine = NULL;
 
     /*
       * Release the write lock on it, then free the header itself.

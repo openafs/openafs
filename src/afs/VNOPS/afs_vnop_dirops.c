@@ -119,7 +119,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_MAKEDIR, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_MAKEDIR, SHARED_LOCK, NULL));
 
     if (code) {
 	if (code < 0) {
@@ -189,7 +189,7 @@ afs_rmdir(adp, aname, acred)
 #endif
     struct vrequest treq;
     register struct dcache *tdc;
-    register struct vcache *tvc = (struct vcache *)0;
+    register struct vcache *tvc = NULL;
     register afs_int32 code;
     register struct conn *tc;
     afs_size_t offset, len;
@@ -264,7 +264,7 @@ afs_rmdir(adp, aname, acred)
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_REMOVEDIR, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_REMOVEDIR, SHARED_LOCK, NULL));
 
     if (code) {
 	if (tdc) {

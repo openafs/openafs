@@ -426,13 +426,13 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
     if (params[1] == INODESPECIAL)
 	AFS_LOCK_VOL_CREATE();
 
-    code = gop_lookupname(path, AFS_UIOSYS, FOLLOW, (struct vnode **) 0, &dvp);
+    code = gop_lookupname(path, AFS_UIOSYS, FOLLOW, NULL, &dvp);
     if (code == ENOENT) {
 	/* Maybe it's an old directory name format. */
 	AFS_COPYINSTR((char*)datap, name, AFS_PNAME_SIZE-1, &junk, unused);
 	strcat(name, "/.");
 	strcat(name, int_to_base64(stmp1, rw_vno));
-	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, (struct vnode **) 0,
+	code = gop_lookupname(name, AFS_UIOSYS, FOLLOW, NULL,
 			      &dvp);
 	if (!code) {
 	    /* Use old name format. */
@@ -450,7 +450,7 @@ xfs_icreatename64(struct vfs *vfsp, int datap, int datalen,
 	if (code) {
 	    if (code == EEXIST) {
 		/* someone beat us to it? */
-		code = gop_lookupname(path, AFS_UIOSYS, 0, (struct vnode **) 0,
+		code = gop_lookupname(path, AFS_UIOSYS, 0, NULL,
 				      &dvp);
 	    }
 	    if (code) {

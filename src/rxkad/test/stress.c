@@ -283,7 +283,7 @@ void main (argc, argv)
 	exit (1);
     }
 #endif
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "run Rx authentication stress test");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "run Rx authentication stress test");
     cmd_AddParm (ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
     cmd_AddParm (ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");
     cmd_AddParm (ts, "-sendlen", CMD_SINGLE, CMD_OPTIONAL, "bytes to send to server in Copious call");

@@ -82,8 +82,8 @@ static int LocalParseLine(char *aline, struct token **alist)
     register int tc;
     
     inToken = 0;	/* not copying token chars at start */
-    first = (struct token *) 0;
-    last = (struct token *) 0;
+    first = NULL;
+    last = NULL;
     while (1) {
 	tc = *aline++;
 	if (tc == 0 || space(tc)) {    /* terminating null gets us in here, too */
@@ -91,7 +91,7 @@ static int LocalParseLine(char *aline, struct token **alist)
 		inToken	= 0;	/* end of this token */
 		*tptr++ = 0;
 		ttok = (struct token *) malloc(sizeof(struct token));
-		ttok->next = (struct token *) 0;
+		ttok->next = NULL;
 		ttok->key = (char *) malloc(strlen(tbuffer)+1);
 		strcpy(ttok->key, tbuffer);
 		if (last) {
@@ -113,7 +113,7 @@ static int LocalParseLine(char *aline, struct token **alist)
 	}
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
-	    if (last) last->next = (struct token *) 0;
+	    if (last) last->next = NULL;
 	    *alist = first;
 	    return 0;
 	}
@@ -267,7 +267,7 @@ int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
 	}
 	/* otherwise use keyword table */
 	for(tp = ptkeys;; tp++) {
-	    if (tp->key == (char *) 0) {
+	    if (tp->key == NULL) {
 		return -1;
 	    }
 	    if (strcmp(tp->key, tt->key) == 0) break;

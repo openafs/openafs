@@ -170,11 +170,11 @@ int amode; {
 
     if (ConvertPartition(apartid, pbuf, sizeof(pbuf))) {
 	*error = EINVAL;
-	return (struct Volume *) 0;
+	return NULL;
     }
     if (ConvertVolume(avolid, vbuf, sizeof(vbuf))) {
 	*error = EINVAL;
-	return (struct Volume *) 0;
+	return NULL;
     }
     tv = VAttachVolumeByName(error, pbuf, vbuf, amode);
     return tv;
@@ -560,7 +560,7 @@ char *newName;
 	}
     }
     else {
-	purgevp = (struct Volume *) 0;
+	purgevp = NULL;
     }
     originalvp = tt->volume;
     if ((V_type(originalvp) == backupVolume) || (V_type(originalvp) == readonlyVolume)){
@@ -612,7 +612,7 @@ char *newName;
     if (purgevp)
     	 Log("1 Volser: Clone: Purging old read only volume %u\n", purgeId);
     CloneVolume(&error, originalvp, newvp, purgevp);
-    purgevp = (struct Volume *)	0;  /* clone releases it, maybe even if error */
+    purgevp = NULL;  /* clone releases it, maybe even if error */
     if (error) {
 	 Log("1 Volser: Clone: clone operation failed with code %d\n", error);
 	 LogError(error);
@@ -644,7 +644,7 @@ char *newName;
 	goto fail;
     }
     VDetachVolume(&error, newvp); /* allow file server to get it's hands on it */
-    newvp = (struct Volume *) 0;
+    newvp = NULL;
     VUpdateVolume(&error, originalvp);
     if (error) {
 	 Log("1 Volser: Clone: original update %d\n", error);
@@ -801,7 +801,7 @@ afs_int32 cloneId;
 	goto fail;
     }
     VDetachVolume(&error, clonevp); /* allow file server to get it's hands on it */
-    clonevp = (struct Volume *) 0;
+    clonevp = NULL;
     VUpdateVolume(&error, originalvp);
     if (error) {
 	 Log("1 Volser: Clone: original update %d\n", error);
@@ -1324,7 +1324,7 @@ struct restoreCookie *cookie;
     strcpy(tt->lastProcName,"Restore");
     tt->rxCallPtr = acid;
     code = RestoreVolume(acid, tt->volume, (aflags & 1),cookie);   /* last is incrementalp */
-    FSYNC_askfs(tt->volid, (char *) 0, FSYNC_RESTOREVOLUME, 0l);/*break call backs on the
+    FSYNC_askfs(tt->volid, NULL, FSYNC_RESTOREVOLUME, 0l);/*break call backs on the
 						     restored volume */
     tt->rxCallPtr = (struct rx_call *)0; 
     tcode = TRELE(tt);
@@ -1393,7 +1393,7 @@ afs_int32 anewsite;
     }
     strcpy(tt->lastProcName,"SetForwarding");
     tt->rxCallPtr = acid;
-    FSYNC_askfs(tt->volid, (char *) 0, FSYNC_MOVEVOLUME, anewsite);
+    FSYNC_askfs(tt->volid, NULL, FSYNC_MOVEVOLUME, anewsite);
     tt->rxCallPtr = (struct rx_call *)0;
     if(TRELE(tt)) return VOLSERTRELE_ERROR;
    
@@ -1538,7 +1538,7 @@ char **aname;
     struct volser_trans *tt;
     register int len;
     
-    *aname = (char *)0;
+    *aname = NULL;
     tt = FindTrans(atrans);
     if (!tt) return ENOENT;
     if (tt->vflags & VTDeleted) {

@@ -70,7 +70,7 @@ extern struct rxevent *rxevent_Post(/* when, func, arg, arg1 */);
 	BEGIN					    \
 	    if (event_ptr) {			    \
 		rxevent_Cancel_1(event_ptr, call, type);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #else /* RX_REFCOUNT_CHECK */
@@ -78,7 +78,7 @@ extern struct rxevent *rxevent_Post(/* when, func, arg, arg1 */);
 	BEGIN					    \
 	    if (event_ptr) {			    \
 		rxevent_Cancel_1(event_ptr, call, 0);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #endif /* RX_REFCOUNT_CHECK */
@@ -87,7 +87,7 @@ extern struct rxevent *rxevent_Post(/* when, func, arg, arg1 */);
 	BEGIN					    \
 	    if (event_ptr) {			    \
 		rxevent_Cancel_1(event_ptr, NULL, 0);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #endif /* RX_ENABLE_LOCKS */

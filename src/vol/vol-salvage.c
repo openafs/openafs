@@ -550,7 +550,7 @@ static handleit(as)
 	dirp = opendir(tmpdir);
 	if (!dirp) {
 	    printf("Can't open temporary placeholder dir %s; using current partition \n", tmpdir);
-	    tmpdir = (char *)0;
+	    tmpdir = NULL;
 	} else
 	    closedir(dirp);
     }
@@ -1114,13 +1114,13 @@ char *wpath, *pbuffer;
 	*ptr = '\0';
 	strcpy(wpath, pbuf);
     } else
-	return (char *)0;
+	return NULL;
     ptr = (char *)strrchr(pbuffer, '/');	    
     if (ptr) {
 	strcpy(pbuffer, ptr+1);
 	return pbuffer;
     } else
-	return (char *)0;
+	return NULL;
 }
 
 void SalvageFileSys1(struct DiskPartition *partP, VolumeId singleVolumeNumber)
@@ -2872,7 +2872,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	if (ShowRootFiles && vnodeEssence->owner==0 && vnodeNumber != 1)
 	    Log("FOUND root file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name?dir->name:"??", name,
 		vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
-	if (vnodeIdToClass(vnodeNumber) == vLarge && vnodeEssence->name == (char *)0) {
+	if (vnodeIdToClass(vnodeNumber) == vLarge && vnodeEssence->name == NULL) {
 	    char *n;
 	    if (n = (char*)malloc(strlen(name)+1))
 		strcpy(n, name);
@@ -3436,7 +3436,7 @@ void MaybeZapVolume(register struct InodeSummary *isp, char *message,
 
 void AskOffline(VolumeId volumeId)
 {
-    if (FSYNC_askfs(volumeId, (char *)0, FSYNC_OFF, FSYNC_SALVAGE) == FSYNC_DENIED) {
+    if (FSYNC_askfs(volumeId, NULL, FSYNC_OFF, FSYNC_SALVAGE) == FSYNC_DENIED) {
 	Log("AskOffline:  file server denied offline request; a general salvage is required.\n");
         Abort("Salvage aborted\n");
     }
