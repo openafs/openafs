@@ -334,7 +334,7 @@ void afsd_Main()
     }
 
 	ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-	ServiceStatus.dwWin32ExitCode = NO_ERROR;
+	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
 	ServiceStatus.dwCheckPoint = 0;
 	ServiceStatus.dwWaitHint = 0;
 	ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
