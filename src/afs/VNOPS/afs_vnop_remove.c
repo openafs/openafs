@@ -434,6 +434,17 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
+#ifdef AFS_DARWIN_ENV
+           /* this is called by vrele (via VOP_INACTIVE) when the refcount
+              is 0. we can't just call VN_HOLD since vref will panic.
+              we can't just call osi_vnhold because a later AFS_RELE will call
+              vrele again, which will try to call VOP_INACTIVE again after
+              vn_locking the vnode. which would be fine except that our vrele
+              caller also locked the vnode... So instead, we just gimmick the
+              refcounts and hope nobody else can touch the file now */
+	    osi_Assert(VREFCOUNT(avc) == 0);
+	    VREFCOUNT_SET(avc, 1);
+#endif
 	    VN_HOLD(&avc->v);
 
 	    /* We'll only try this once. If it fails, just release the vnode.
@@ -464,6 +475,10 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 	    }
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);
+#ifdef AFS_DARWIN_ENV
+	    osi_Assert(VREFCOUNT(avc) == 1);
+	    VREFCOUNT_SET(avc, 0);
+#endif
         }
     }
     else {
