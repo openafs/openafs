@@ -38,7 +38,7 @@
 ** w.x.y.z 	# machineName
  * returns the network interface IP Address in NBO
  */
-u_long
+afs_uint32
 extract_Addr(line, maxSize)
 char* line;
 int maxSize;
@@ -46,8 +46,8 @@ int maxSize;
   char bytes[4][32];
   int i=0,n=0;
   char*   endPtr;
-  u_long val[4];
-  u_long retval=0;
+  afs_uint32 val[4];
+  afs_uint32 retval=0;
   
   /* skip empty spaces */
   while ( isspace(*line) && maxSize ) {
@@ -96,8 +96,8 @@ int maxSize;
  * parsed by extract_Addr().
  */
 int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName)
-  afs_int32  outAddrs[];           /* output address array */
-  afs_int32  *mask, *mtu;          /* optional mask and mtu */
+  afs_uint32  outAddrs[];           /* output address array */
+  afs_uint32  *mask, *mtu;          /* optional mask and mtu */
   afs_uint32 maxAddrs;	   	   /* max number of addresses */
   afs_uint32 *nAddrs;              /* number of Addresses in output array */
   char       reason[];             /* reason for failure */
@@ -107,7 +107,7 @@ int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName
   char   line[MAX_NETFILE_LINE];
   int lineNo, usedfile;
   afs_uint32 i, neaddrs, nfaddrs, nOutaddrs;
-  afs_int32  addr, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
+  afs_uint32  addr, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
 
   assert(outAddrs);
   assert(reason);
@@ -196,17 +196,17 @@ int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName
  */
 int
 ParseNetInfoFile(final, mask, mtu, max, reason, fileName)
-afs_int32   *final, *mask, *mtu;
+afs_uint32   *final, *mask, *mtu;
 int 	max;			/* max number of interfaces */
 char reason[];
 const char *fileName;
 {
 
-  afs_int32  existingAddr[MAXIPADDRS], existingMask[MAXIPADDRS], existingMtu[MAXIPADDRS];
+  afs_uint32  existingAddr[MAXIPADDRS], existingMask[MAXIPADDRS], existingMtu[MAXIPADDRS];
   char   line[MAX_NETFILE_LINE];
   FILE*  fp;
   int 	  i, existNu, count = 0;
-  afs_int32  addr;
+  afs_uint32  addr;
   int 	  lineNo=0;
   int    l;
   
@@ -294,13 +294,13 @@ const char *fileName;
  * entries.
  */
 int filterAddrs(addr1,addr2,mask1,mask2,mtu1,mtu2,n1,n2)
-u_long addr1[],addr2[];
-afs_int32  mask1[], mask2[];
-afs_int32  mtu1[], mtu2[];
+afs_uint32 addr1[],addr2[];
+afs_uint32  mask1[], mask2[];
+afs_uint32  mtu1[], mtu2[];
 {
-  u_long taddr[MAXIPADDRS];
-  afs_int32  tmask[MAXIPADDRS];
-  afs_int32  tmtu[MAXIPADDRS];
+  afs_uint32 taddr[MAXIPADDRS];
+  afs_uint32  tmask[MAXIPADDRS];
+  afs_uint32  tmtu[MAXIPADDRS];
   int count=0,i=0,j=0,found=0;
   
   assert(addr1);
@@ -349,16 +349,16 @@ afs_int32  mtu1[], mtu2[];
  * set of IP addresses to use
  */
 int parseNetFiles(addrbuf, maskbuf,mtubuf,max,reason, niFileName, nrFileName)
-afs_int32  addrbuf[];
-afs_int32  maskbuf[];
-afs_int32  mtubuf[];
-u_long max;        /* Entries in addrbuf, maskbuf and mtubuf */
+afs_uint32  addrbuf[];
+afs_uint32  maskbuf[];
+afs_uint32  mtubuf[];
+afs_uint32 max;        /* Entries in addrbuf, maskbuf and mtubuf */
 char reason[];
 const char *niFileName;
 const char *nrFileName;
 {
-  afs_int32	addrbuf1[MAXIPADDRS],maskbuf1[MAXIPADDRS], mtubuf1[MAXIPADDRS];
-  afs_int32     addrbuf2[MAXIPADDRS],maskbuf2[MAXIPADDRS], mtubuf2[MAXIPADDRS];
+  afs_uint32	addrbuf1[MAXIPADDRS],maskbuf1[MAXIPADDRS], mtubuf1[MAXIPADDRS];
+  afs_uint32     addrbuf2[MAXIPADDRS],maskbuf2[MAXIPADDRS], mtubuf2[MAXIPADDRS];
   int nAddrs1=0;
   afs_uint32 nAddrs2=0;
   int code,i;
