@@ -202,6 +202,7 @@ typedef unsigned short etap_event_t;
 #define	MACH_USER_API	1
 #if defined(AFS_FBSD50_ENV)
 #include "h/bio.h"
+#include "h/filedesc.h"
 #endif
 #include "h/file.h"
 #include "h/uio.h"
