@@ -1,3 +1,952 @@
+2003-04-11 13:50  shadow
+
+	* src/util/pthread_nosigs.h: DELTA
+	STABLE12-softsig-dont-block-critical-signals-20030411 AUTHOR
+	shadow@dementia.org FIXES
+	
+	blocking these seems to prevent all threads from dying when the
+	kernel gives e.g. SIGSEGV to one of the processes. since softsig is
+	to protect us from what signals we handle might do in the handler,
+	this should be fine
+
+2003-04-11 01:11  zacheiss
+
+	* doc/txt/RELNOTES-1.2.9: file RELNOTES-1.2.9 was initially added
+	on branch openafs-stable-1_2_x.
+
+2003-04-11 01:11  zacheiss
+
+	* doc/txt/RELNOTES-1.2.9: DELTA
+	STABLE12-add-1_2_9-release-notes-20030411 AUTHOR zacheiss@mit.edu
+	
+	Add 1.2.9 release notes.
+
+2003-04-10 21:01  zacheiss
+
+	* NEWS: DELTA STABLE12-update-news-20030410 AUTHOR zacheiss@mit.edu
+	
+	Update NEWS file with important changes going into 1.2.9.
+
+2003-04-10 18:36  zacheiss
+
+	* configure-libafs.in, configure.in: DELTA
+	STABLE12-create-openafs-1_2_9-20030410 AUTHOR zacheiss@mit.edu
+	
+	Begin 1.2.9 release cycle.
+
+2003-04-10 15:57  shadow
+
+	* acinclude.m4: DELTA STABLE12-linux-try-more-kernel-paths-20030410
+	AUTHOR shadow@dementia.org FIXES 1364
+	
+	try /usr/src/linux-2.4 in addition to /usr/src/linux
+
+2003-04-10 15:25  zacheiss
+
+	* acinclude.m4: DELTA STABLE12-darwin-map-more-versions-20030410
+	AUTHOR zacheiss@mit.edu
+	
+	Recognize MacOS X 10.2.5 as ppc_darwin_60.
+
+2003-04-10 14:55  shadow
+
+	* src/rxkad/rxkad_server.c: DELTA
+	STABLE12-rxkad-2b-deal-with-expiry-20030410 AUTHOR
+	lha@stacken.kth.se FIXES 1369
+	
+	return the actual error and not RXKADBADTICKET always
+
+2003-04-09 12:33  shadow
+
+	* src/config/Makefile.alpha_dux51.in: file Makefile.alpha_dux51.in
+	was initially added on branch openafs-stable-1_2_x.
+
+2003-04-09 12:33  shadow
+
+	* acinclude.m4, src/config/Makefile.alpha_dux51.in,
+	src/config/afs_sysnames.h, src/config/param.alpha_dux51.h,
+	src/config/param.alpha_dux51_usr.h, src/venus/test/owntest.c: DELTA
+	dux51-basic-build-support-20030409 AUTHOR mattiasa@e.kth.se FIXES
+	
+	so servers can be built from 1.2.9-release
+
+2003-04-07 16:16  shadow
+
+	* src/viced/host.c: DELTA STABLE12-h-gethost-r-race-20030401 AUTHOR
+	shadow@dementia.org FIXES 1308
+	
+	avoid deref of identP when code is -1
+
+2003-04-07 13:54  shadow
+
+	* src/vol/vol-salvage.c: DELTA salvager-aix-update-20030407 AUTHOR
+	nik@zurich.ibm.com FIXES
+	
+	make it work with namei
+
+2003-04-07 13:39  shadow
+
+	* src/viced/host.c: DELTA STABLE12-flushhostcps-20030407 AUTHOR
+	shadow@dementia.org FIXES
+	
+	make it so flushhostcps can't try to Release when no host was
+	found, which was apparently the problem dlc@cs really observed.
+
+2003-04-04 03:29  shadow
+
+	* src/volser/dumpstuff.c: DELTA
+	STABLE12-volser-dump-vnode-include-volid-in-error-20030213 AUTHOR
+	shadow@dementia.org FIXES
+	
+	include a volume number in the error message
+
+2003-04-03 12:33  shadow
+
+	* src/volser/dumpstuff.c: DELTA
+	STABLE12-volser-dump-vnode-include-volid-in-error-20030213 AUTHOR
+	shadow@dementia.org FIXES
+	
+	include a volume number in the error message
+
+2003-04-01 19:23  shadow
+
+	* src/viced/host.c: DELTA STABLE12-h-gethost-r-race-20030401 AUTHOR
+	shadow@dementia.org FIXES 1308
+	
+	Thanks to Chaskiel Grundman for explaining what was happening: -
+	the connection is old and pre-existing, but has no host structure. 
+	- 2 calls come in - the first one enters h_GetHost_r, and
+	h_Lookup_r returns null (but identP is non-null, since rx keeps it
+	around until it gc's the connection)   The first thread calls
+	WhoAreYou, which succeeds, it then calls InitCallBackState3 (after
+	H_UNLOCK) note that the host has been inserted into the hashtable -
+	the second thread enters h_GetHost_r, and calls rx_GetSpecific. it
+	then calls h_Lookup_r. h_Lookup_r will block (new host is locked),
+	but eventually returns the new host - InitCallBackState3 returns,
+	and the frees the old identP, replaces it, and unlocks the host.  -
+	the first thread returns from h_Lookup_r. boom.
+	
+	the changes: -call rx_GetSpecific after h_Lookup_r returns (and
+	potentially slept) -removes an if wrapping which always is true
+	(since !interfValid is always  true) -don't realloc identP if it
+	exists -don't free an old one by calling rx_SetSpecific either
+
+2003-03-31 13:23  zacheiss
+
+	* acinclude.m4: DELTA STABLE12-darwin-map-more-version-20030331
+	AUTHOR zacheiss@mit.edu
+	
+	Recognize MacOS X 10.2.3 and 10.2.4.
+
+2003-03-30 02:44  shadow
+
+	* src/ubik/beacon.c: DELTA
+	
+	if you really want to mask the IP address from
+	gethostbyname(gethostname()) there's not really any reason to stand
+	in your way
+	STABLE12-ubik-allow-netinfo-netrestrict-to-mask-address-pointed-to-
+	by-hostname-20020417 AUTHOR shadow@dementia.org
+
+2003-03-28 16:27  shadow
+
+	* acconfig.h, acinclude.m4, src/vfsck/setup.c,
+	src/cf/solaris-fs-rolled.m4: DELTA
+	STABLE12-solaris-fs-rolled-20030328 AUTHOR shadow@dementia.org
+	FIXES
+	
+	for solaris 9 u2
+
+2003-03-28 16:26  shadow
+
+	* src/cf/solaris-fs-rolled.m4: DELTA solaris-fs-rolled-20030328
+	AUTHOR shadow@dementia.org FIXES
+	
+	for solaris 9 u2
+
+2003-03-28 04:21  shadow
+
+	* src/viced/host.c: DELTA STABLE12-flushhostcps-init-held-20030328
+	AUTHOR dlc@cs.cmu.edu FIXES
+	
+	init held so flushhostcps is more useful.
+
+2003-03-28 04:17  shadow
+
+	* src/viced/: afsfileprocs.c, viced.c, viced.h: DELTA
+	
+	For sites with only new (>3.4) clients (or who decide to not care
+	about older clients) and want to force VRESTARTING instead of
+	VBUSY.
+	STABLE12-viced-allow-hinting-of-all-new-clients-for-vbusy-vrestarti
+	ng-handling-20030215 AUTHOR shadow@dementia.org FIXES
+
+2003-03-26 12:23  shadow
+
+	* src/shlibafsrpc/mapfile: DELTA
+	STABLE12-shlibafsrpc-export-missing-des-symbols-20030326 AUTHOR
+	shadow@dementia.org FIXES
+	
+	symbols libafsauthent wants but we don't have
+
+2003-03-26 04:11  shadow
+
+	* src/rx/LINUX/rx_knet.c: DELTA
+	STABLE12-linux-rxk-listener-shutdown-cleanup-20030323 AUTHOR
+	shadow@dementia.org FIXES
+	
+	get rid of need for sys_kill
+
+2003-03-25 16:11  shadow
+
+	* src/rxkad/ticket5.c: DELTA
+	STABLE12-rxkad2b-allow-no-kvno-20030325 AUTHOR nneul@umr.edu FIXES
+	
+	allow a missing kvno field to work usefully
+
+2003-03-23 14:47  shadow
+
+	* src/: afs/afs_call.c, afsd/afsd.c: DELTA
+	STABLE12-move-up-cell-initialization-in-cachemgr-20030323 AUTHOR
+	shadow@dementia.org FIXES
+	
+	to potentially avoid an oops at startup
+
+2003-03-23 12:15  shadow
+
+	* src/rx/LINUX/rx_knet.c: DELTA
+	STABLE12-linux-rxk-listener-shutdown-cleanup-20030323 AUTHOR
+	shadow@dementia.org FIXES
+	
+	get rid of need for sys_kill
+
+2003-03-23 01:46  shadow
+
+	* src/: afs/afs_osi.c, afs/LINUX/osi_machdep.h,
+	afs/LINUX/osi_misc.c, afs/LINUX/osi_module.c, rx/LINUX/rx_knet.c:
+	DELTA STABLE12-linux-rxk-listener-shutdown-cleanup-20030323 AUTHOR
+	shadow@dementia.org FIXES
+	
+	avoid need for sys_kill
+
+2003-03-23 01:45  shadow
+
+	* src/afs/afs_call.c: DELTA
+	STABLE12-linux-kthreads-reparent-20030323 AUTHOR
+	cg2v@andrew.cmu.edu FIXES
+	
+	reparent kernel threads to avoid zombies at shutdown
+
+2003-03-21 13:36  shadow
+
+	* src/rx/xdr_mem.c: DELTA STABLE12-xdrmem-getbytes-20030321 AUTHOR
+	rees@umich.edu FIXES
+	
+	See, for example:
+	http://web.mit.edu/kerberos/www/advisories/MITKRB5-SA-2003-003-xdr.
+	txt This source is unused but it seems like a good idea to patch it
+	anyway.
+
+2003-03-21 13:28  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-linux-hold-tasklist-lock-in-get-page-offset-20030321
+	AUTHOR cg2v@andrew.cmu.edu FIXES
+	
+	tasklist_lock must be held to traverse list
+
+2003-03-21 09:01  shadow
+
+	* acconfig.h, acinclude.m4, src/cf/linux-test4.m4: DELTA
+	STABLE12-linux-one-more-stupid-configure-test-20030321 AUTHOR
+	shadow@dementia.org FIXES
+	
+	pointed out by zacheiss@mit.edu that i missed this. oops
+
+2003-03-19 17:22  shadow
+
+	* acconfig.h, acinclude.m4, src/afs/LINUX/osi_machdep.h,
+	src/cf/linux-test4.m4: DELTA
+	STABLE12-redhat-81-support-again-20030319 AUTHOR
+	shadow@dementia.org FIXES
+	
+	once more. maybe this time they'll release something that looks
+	like this
+
+2003-03-19 07:52  shadow
+
+	* src/kauth/kaserver.h: DELTA
+	STABLE12-kaserver-disable-krb4-crossrealm-20030317 AUTHOR
+	kolya@mit.edu FIXES
+	
+	to deal with krb4 security advisory type mismatch for krb4_cross
+	pointed out by Jack Neely <slack@quackmaster.net>
+
+2003-03-18 18:18  shadow
+
+	* src/config/param.sunx86_59_usr.h: file param.sunx86_59_usr.h was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-03-18 18:18  shadow
+
+	* src/config/: Makefile.sunx86_59.in, param.sunx86_59.h,
+	param.sunx86_59_usr.h: DELTA STABLE12-sunx86-update-20030318 AUTHOR
+	fallsjo@isk.kth.se FIXES
+	
+	make client useful on solaris x86 again
+
+2003-03-18 18:18  shadow
+
+	* src/config/Makefile.sunx86_59.in: file Makefile.sunx86_59.in was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-03-18 18:18  shadow
+
+	* src/config/param.sunx86_59.h: file param.sunx86_59.h was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-03-18 18:03  shadow
+
+	* src/: lwp/Makefile.in, config/afs_sysnames.h,
+	config/param.sunx86_57_usr.h, config/param.sunx86_58_usr.h,
+	inetd/Makefile.in: DELTA STABLE12-sunx86-update-20030318 AUTHOR
+	fallsjo@isk.kth.se FIXES
+	
+	make client useful on solaris x86 again
+
+2003-03-17 22:56  shadow
+
+	* src/kauth/: kaprocs.c, kaserver.c, kaserver.h, krb_udp.c: DELTA
+	STABLE12-kaserver-disable-krb4-crossrealm-20030317 AUTHOR
+	shadow@dementia.org FIXES
+	
+	to deal with krb4 security advisory
+
+2003-03-17 22:55  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-viced-vbusy-when-getclient-fails-20030317 AUTHOR
+	lha@stacken.kth.se FIXES
+	
+	more paranoia to not crash if GetClient fails, since there's
+	apparently a race we haven't found yet
+
+2003-03-14 15:31  shadow
+
+	* src/viced/viced.c: DELTA winnt-no-softsig-20030314 AUTHOR
+	cg2v@andrew.cmu.edu FIXES 1333
+	
+	the softsig stuff messed up the windows signal stuff. MSVC doesn't
+	recognize #elsif. if #elif isn't standard, then it needs to be
+	split into #else and another #if/#endif block.
+
+2003-03-14 15:30  shadow
+
+	* src/rxkad/v5der.c: DELTA winnt-rxkad5-20030314 AUTHOR
+	cg2v@andrew.cmu.edu FIXES 1333
+	
+	stddef.h needed for NULL
+
+2003-03-14 15:30  shadow
+
+	* src/libafsrpc/afsrpc.def: DELTA winnt-afsrpc-assert-20030314
+	AUTHOR cg2v@andrew.cmu.edu FIXES 1333
+	
+	something in the fileserver started using osi_Assert, instead of
+	whatever assert comes from util, so we need osi_AssertFailU in
+	addition to AssertionFailed.
+
+2003-03-14 15:30  shadow
+
+	* src/WINNT/client_creds/shortcut.cpp: DELTA
+	winnt-client-shortcut-20030314 AUTHOR cg2v@andrew.cmu.edu FIXES
+	1333
+	
+	leaving the #include <initguid.h> in caused Bad Things to happen
+	when I did a build. I'm pretty sure initguid.h is only supposed to
+	be used by things that *impliment* COM objects.
+
+2003-03-14 15:29  shadow
+
+	* src/WINNT/afsd/afsd.c: DELTA winnt-afsd-initialize-rect-20030314
+	AUTHOR cg2v@andrew.cmu.edu FIXES 1333
+	
+	rect is used uninitialized, I'm pretty sure they really meant to
+	refer to main_rect.top, not rect.top
+
+2003-03-14 15:17  shadow
+
+	* src/WINNT/client_exp/gui2fs.cpp: DELTA
+	STABLE12-winnt-fix-duplication-20030314 AUTHOR cg2v@andrew.cmu.edu
+	FIXES
+	
+	get rid of duplication
+
+2003-03-14 15:00  shadow
+
+	* src/WINNT/afsd/cm_ioctl.c: DELTA
+	STABLE12-winnt-client-config-submount-fix-20030314 AUTHOR
+	james@abrakus.com FIXES
+	
+	"Atempts to add a new drive, to the root, with a sub mount name,
+	will sometimes return error #35"
+
+2003-03-14 14:49  shadow
+
+	* src/: WINNT/afsd/cm_conn.c, WINNT/afsd/cm_ioctl.c,
+	WINNT/afsd/cm_rpc.c, libacl/aclprocs.c, libacl/netprocs.c,
+	util/secutil_nt.c, rx/rx.c, rx/rx_pthread.c: DELTA
+	STABLE12-winnt-include-sanity-20030314 AUTHOR cg2v@andrew.cmu.edu
+	FIXES 1332
+	
+	include headers by their usual name instead of trying to be special
+
+2003-03-14 14:45  shadow
+
+	* src/WINNT/afsd/smb3.c: DELTA
+	STABLE12-winnt-give-nosuchpath-if-thats-what-we-mean-20030314
+	AUTHOR lantzer@umr.edu FIXES 1329
+	
+	"The Windows AFS client returns the error ERROR_NOSUCHFILE, where
+	the same request on a local NTFS volume returns the error
+	ERROR_NOSUCHPATH."
+
+2003-03-14 14:39  shadow
+
+	* src/WINNT/afsd/cm_callback.c: DELTA
+	STABLE12-winnt-stat-cache-ref-leak-fix-20030314 AUTHOR
+	lantzer@umr.edu FIXES 1327
+	
+	avoid leaking stat cache entries
+
+2003-03-14 14:25  shadow
+
+	* src/rx/rx.c: DELTA STABLE12-rx-init-stats-mutex-20030314 AUTHOR
+	cg2v@andrew.cmu.edu FIXES
+	
+	instead of what rx-init-mutex-before-calling-getudpsocket-20030313,
+	just init the mutex earlier where others are done
+
+2003-03-13 15:37  shadow
+
+	* src/WINNT/afsd/cm_ioctl.c: DELTA
+	STABLE12-winnt-client-config-submount-fix-20030313 AUTHOR
+	james@abrakus.com FIXES
+	
+	"Atempts to add a new drive, to the root, with a sub mount name,
+	will sometimes return error #35"
+
+2003-03-13 14:02  shadow
+
+	* src/rx/rx.c: DELTA
+	STABLE12-rx-init-mutex-before-calling-getudpsocket-20030313 AUTHOR
+	shadow@dementia.org FIXES
+	
+	pointed out by cg2v@andrew.cmu.edu
+
+2003-03-10 21:22  shadow
+
+	* src/viced/callback.c: DELTA
+	STABLE12-cbd-all-flag-in-usage-20030310 AUTHOR shadow@dementia.org
+	FIXES
+	
+	cbd supports -all; put it in usage.
+
+2003-03-10 18:29  zacheiss
+
+	* src/afs/afs_prototypes.h: DELTA
+	STABLE12-add-useful-string-functions-20020822 AUTHOR kolya@mit.edu
+	
+	Add two useful functions for string operations: afs_strdup() and
+	afs_osi_FreeStr().  Will be used by an upcoming patch.
+
+2003-03-10 17:51  shadow
+
+	* src/afs/afs_call.c: DELTA
+	STABLE12-new-and-maybe-improved-cell-code-20020822 AUTHOR
+	kolya@mit.edu FIXES
+	
+	correct a code block so patch is correct
+
+2003-03-06 10:39  shadow
+
+	* src/afs/: afs_callback.c, afs_osi.c, afs_util.c,
+	UKERNEL/afs_usrops.c: DELTA
+	STABLE12-add-useful-string-functions-20020822 AUTHOR kolya@mit.edu
+	
+	Add two useful functions for string operations: afs_strdup() and
+	afs_osi_FreeStr().  Will be used by an upcoming patch.
+
+2003-03-06 10:25  shadow
+
+	* src/afs/: afs.h, afs_dynroot.c, afs_prototypes.h: DELTA
+	STABLE12-new-and-maybe-improved-cell-code-20020822 AUTHOR
+	kolya@mit.edu FIXES
+	
+	This is mostly a rewrite of src/afs/afs_cell.c, and associated
+	changes to other things.  Features of the new cell code:
+	
+	 * Persistent name-to-cell-number mapping across reboots, to ensure
+	the
+	   cell numbers in the dcache are meaningful.  Stored in the new
+	cache
+	   file, /usr/vice/cache/CellInfo.
+	 * Allow cmdebug to query the cell number to cell name mapping.
+	 * Allow clients to have an empty CellServDB as long as AFSDB is
+	enabled
+	   and ThisCell has AFSDB records.
+	 * The home cell retains the setuid bit even if looked up via
+	AFSDB.
+	 * Dynroot gets its own cell, rather than piggybacking on cell 1.
+	 * Cell 1 is no longer special; cell numbers are now semi-opaque.
+	 * Convert cell traversal code to using GetCellByIndex rather than
+	   directly poking at CellLRU / afs_xcell.
+	 * Separate cells from aliases, which shouldn't have been the same
+	   in the first place.
+	 * Cleaner code (IMHO).
+
+2003-03-06 10:04  shadow
+
+	* src/viced/afsfileprocs.c: DELTA STABLE12-misc-build-fix-20030306
+	AUTHOR shadow@dementia.org FIXES
+	
+	fix error logging code
+
+2003-03-06 09:53  shadow
+
+	* src/: afs/afs.h, afs/afs_analyze.c, afs/afs_call.c,
+	afs/afs_callback.c, afs/afs_cell.c, afs/afs_daemons.c,
+	afs/afs_dcache.c, afs/afs_dynroot.c, afs/afs_init.c,
+	afs/afs_osi_vget.c, afs/afs_pioctl.c, afs/afs_prototypes.h,
+	afs/afs_server.c, afs/afs_stats.h, afs/afs_vcache.c,
+	afs/afs_volume.c, afs/IRIX/osi_vfsops.c,
+	afs/VNOPS/afs_vnop_lookup.c, afsd/afsd.c, config/afs_args.h,
+	fsint/afscbint.xg, fsprobe/fsprobe_callback.c, venus/cmdebug.c,
+	venus/kdump.c, vol/vnode.c, xstat/xstat_fs_callback.c: DELTA
+	STABLE12-new-and-maybe-improved-cell-code-20020822 AUTHOR
+	kolya@mit.edu FIXES
+	
+	This is mostly a rewrite of src/afs/afs_cell.c, and associated
+	changes to other things.  Features of the new cell code:
+	
+	 * Persistent name-to-cell-number mapping across reboots, to ensure
+	the
+	   cell numbers in the dcache are meaningful.  Stored in the new
+	cache
+	   file, /usr/vice/cache/CellInfo.
+	 * Allow cmdebug to query the cell number to cell name mapping.
+	 * Allow clients to have an empty CellServDB as long as AFSDB is
+	enabled
+	   and ThisCell has AFSDB records.
+	 * The home cell retains the setuid bit even if looked up via
+	AFSDB.
+	 * Dynroot gets its own cell, rather than piggybacking on cell 1.
+	 * Cell 1 is no longer special; cell numbers are now semi-opaque.
+	 * Convert cell traversal code to using GetCellByIndex rather than
+	   directly poking at CellLRU / afs_xcell.
+	 * Separate cells from aliases, which shouldn't have been the same
+	   in the first place.
+	 * Cleaner code (IMHO).
+
+2003-03-06 03:50  shadow
+
+	* src/WINNT/afsd/cm_callback.c: DELTA
+	STABLE12-windows-cm-getcellbynum-rpc-20030306 AUTHOR
+	shadow@dementia.org FIXES
+	
+	missing stub
+
+2003-03-03 10:58  shadow
+
+	* src/rx/: rx.c, rx_globals.h, rx_pthread.c: DELTA
+	STABLE12-rx-thread-id-startup-20030303 AUTHOR rtb@pclella.cern.ch
+	FIXES 1304
+	
+	avoid using rxi_availProcs to allocate thread ids as it may
+	decrement from under us
+
+2003-03-03 10:19  shadow
+
+	* src/WINNT/afsd/smb3.c: DELTA
+	STABLE12-winnt-cleanup-memory-leak-20030303 AUTHOR
+	james@abrakus.com FIXES 1322
+	
+	due to a change in the smb protocol we leaked memory. fix it.
+
+2003-02-28 20:22  shadow
+
+	* src/vol/nuke.c: DELTA
+	
+	don't construct a windows path on unix
+	STABLE12-nuke-create-windows-pathnames-only-on-windows-thanks-20030
+	228 AUTHOR haba@pdc.kth.se FIXES
+
+2003-02-24 11:37  shadow
+
+	* src/vol/vol-salvage.c: DELTA
+	
+	pointed out by Hartmut Reuter
+	STABLE12-salvager-create-larger-buffer-for-inodes-tmpfile-and-avoid
+	-overrun-20030224 AUTHOR shadow@dementia.org FIXES 1318
+
+2003-02-18 21:37  shadow
+
+	* src/viced/: afsfileprocs.c, callback.c, host.c: DELTA
+	STABLE12-viced-fix-port-logging-20030218 AUTHOR lha@stacken.kth.se
+	FIXES 1307
+	
+	put port in correct byte order when logging
+
+2003-02-18 03:14  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-viced-host-logging-update-20030218 AUTHOR
+	shadow@dementia.org FIXES 1308
+	
+	print info before letting host get gc'd
+
+2003-02-08 01:44  shadow
+
+	* src/viced/callback.c: DELTA
+	STABLE12-callback-interfaces-check-malloc-result-for-error-20030208
+	AUTHOR shadow@dementia.org FIXES
+	
+	if we run out of memory, maybe we should assert. we should probably
+	log.  this is just so i remember to deal better.
+
+2003-02-06 18:03  shadow
+
+	* src/WINNT/afsd/cm_rpc.c: DELTA
+	STABLE12-winnt-find-token-event-missing-braces-20030206 AUTHOR
+	Andrei.Keis@morganstanley.com FIXES 1288
+	
+	add missing {} braces
+
+2003-02-03 18:36  shadow
+
+	* src/butc/Makefile.in: DELTA STABLE12-butc-xbsa-cflags-20030203
+	AUTHOR mbacchi@gmavt.net FIXES 1283
+	
+	still need to link in libs but this should at least get us further
+
+2003-02-03 18:33  shadow
+
+	* src/lwp/test/: selclient.c, selserver.c, selsubs.c: DELTA
+	STABLE12-lwp-tests-20030203 AUTHOR cg2v@andrew.cmu.edu FIXES 1280
+	
+	make the tests work
+
+2003-02-03 18:16  shadow
+
+	* src/cmd/cmd.c: DELTA
+	STABLE12-cmd-print-help-in-cases-without-subcommands-20030203
+	AUTHOR mbacchi@gmavt.net FIXES 1277
+	
+	so libcmd supports help for e.g. pt_util
+
+2003-02-03 18:06  shadow
+
+	* src/config/: param.i386_linux24.h, param.ia64_linux24.h,
+	param.parisc_linux24.h, param.ppc_linux24.h, param.s390_linux24.h,
+	param.sparc64_linux24.h, param.sparc_linux24.h: DELTA
+	
+	allow variable cpu numbers
+	STABLE12-linux-include-thread-h-to-allow-variable-num-of-cpus-20030
+	203 AUTHOR blade@debian.org FIXES 1275
+
+2003-02-03 15:56  shadow
+
+	* src/config/: param.i386_linux22.h, param.i386_linux24.h,
+	param.s390_linux22.h, param.s390_linux24.h: DELTA
+	STABLE12-linux-config-defines-need-1-20030203 AUTHOR
+	warlord@mit.edu FIXES 1265
+	
+	have to define to a value, not just define, local APIC stuff
+
+2003-02-03 15:46  shadow
+
+	* src/: rx/rx_pthread.c, vol/fssync.c: DELTA
+	STABLE12-rx-thread-id-assignment-fixes-20030203 AUTHOR
+	rtb@pclella.cern.ch
+	
+	in rx_pthread.c the ++rxi_pthread_hinum; has to be protected by the
+	rx_stats_mutex in all three cases. In the file I attached in the
+	openafs-devel article the last one was accidentally unprotected.
+	
+	the FSYNC_sync thread (fssync.c) needs needs to be handled as well.
+
+2003-01-31 17:36  shadow
+
+	* src/afs/LINUX/osi_machdep.h: DELTA
+	STABLE12-more-redhate-beta-fun-20030131 AUTHOR shadow@dementia.org
+	
+	apparently having recalc_sigpending stay the same was just as hard
+	as continuing to export the same level of functionality, so we get
+	neither.
+
+2003-01-31 16:30  zacheiss
+
+	* src/rx/: rx.c, rx_globals.h: DELTA
+	STABLE12-rx-avoid-deadlock-in-attaching-call-20030122 AUTHOR
+	kolya@mit.edu
+	
+	Avoid a subtle cycle in the locking order hierarchy involving the
+	rxi_ServerThreadSelectingCall flag, and instead rely on call->lock
+	to make sure we don't attach the same call twice.  Also some
+	miscellaneous cleanup and code unification.
+
+2003-01-31 16:20  shadow
+
+	* src/rx/: DARWIN/rx_knet.c, FBSD/rx_knet.c: DELTA
+	STABLE12-fix-netreceive-memleak-20030130 AUTHOR rees@umich.edu
+	
+	for darwin and freebsd, simplified for pullup
+
+2003-01-31 16:11  zacheiss
+
+	* src/: util/assert.h, vol/vol-salvage.c, volser/dumpstuff.c: DELTA
+	STABLE12-better-assert-macro-20030113 AUTHOR kolya@mit.edu
+	
+	Wrap our assert() macro in do{..}while(0) to make it look just like
+	a real function.  Fix instances of use of this macro that lacked a
+	trailing semicolon of their own.
+
+2003-01-31 16:08  zacheiss
+
+	* src/: util/Makefile.in, util/softsig.c, util/softsig.h,
+	viced/viced.c, tviced/Makefile.in: DELTA
+	STABLE12-better-signal-thread-support-for-fileserver-20030113
+	AUTHOR kolya@mit.edu
+	
+	Improved signal-thread support for the pthread fileserver, which
+	avoids blocking signals in any thread, to appease Linux's thread
+	signaling semantics.
+
+2003-01-31 16:05  zacheiss
+
+	* src/viced/viced.c: DELTA
+	STABLE12-pthread-fileserver-create-signal-thread-20030103 AUTHOR
+	kolya@mit.edu
+	
+	Create a special thread to receive signals in the pthread
+	fileserver, in order to avoid deadlock (we have signal handlers
+	that unsafely grab locks).
+
+2003-01-25 19:02  shadow
+
+	* src/afs/DARWIN/osi_vnodeops.c: DELTA
+	STABLE12-darwin-creds-update-20030125 AUTHOR shadow@dementia.org
+	
+	pullup from head
+
+2003-01-25 13:41  shadow
+
+	* src/afs/DARWIN/osi_vnodeops.c: DELTA
+	STABLE12-darwin-deal-with-unclean-pages-from-vm-20020107 AUTHOR
+	cg2v@andrew.cmu.edu
+	
+	based on report from lha@stacken.kth.se
+
+2003-01-22 12:12  zacheiss
+
+	* src/pam/Makefile.in: DELTA
+	STABLE12-pam-no-system-include-path-20021210 AUTHOR nneul@umr.edu
+	
+	breaks modern gcc.  also, wrong.
+
+2003-01-17 13:18  shadow
+
+	* src/: rx/rx_globals.h, rx/rx_pthread.c, viced/viced.c: DELTA
+	STABLE12-rx-assign-thread-id-key-to-periodic-helpers-20030117
+	AUTHOR Rainer.Toebbicke@cern.ch
+	
+	so each gets own holdbits
+
+2003-01-17 02:39  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-viced-getclient-assert-logging-20030117 AUTHOR
+	shadow@dementia.org
+	
+	log some more info before asserting
+
+2003-01-17 01:47  shadow
+
+	* src/vol/clone.c: DELTA
+	STABLE12-vol-clone-inc-failure-logging-20030117 AUTHOR
+	shadow@dementia.org
+	
+	log more info on asserts
+
+2003-01-17 01:24  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-viced-improved-host-logging-20030117 AUTHOR
+	shadow@dementia.org
+	
+	to deal with condition reported by lha@stacken.kth.se
+
+2003-01-17 01:12  shadow
+
+	* src/libafs/MakefileProto.SOLARIS.in: DELTA
+	STABLE12-solaris-deal-with-gmake-stupidity-20030117 AUTHOR
+	jhutz@cmu.edu
+	
+	make gmake not try to link libafs.o and libafs.nonfs.o into another
+	object
+
+2003-01-17 01:02  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-viced-alloc-hosts-held-and-locked-20030114 AUTHOR
+	shadow@dementia.org
+	
+	to avoid potential race as we chain in while allocating then try to
+	lock after returning to h_GetHost_r
+
+2003-01-17 00:43  shadow
+
+	* src/afs/afs_osi_pag.c: DELTA
+	STABLE12-linux-ifdef-stupidity-cleanup-20030117 AUTHOR
+	shadow@dementia.org
+	
+	as pointed out by zacheiss@mit.edu
+
+2003-01-17 00:42  shadow
+
+	* src/rx/: rx.c, rx_packet.c: DELTA
+	STABLE12-linux-fast-netdown-20020107 AUTHOR warlord@mit.edu
+	
+	notice the NETUNREACH quickly and mark a host down
+
+2003-01-16 20:30  shadow
+
+	* src/afs/LINUX/osi_vnodeops.c: DELTA
+	STABLE12-linux-lock64-fix-20030116 AUTHOR
+	semerad@ss1000.ms.mff.cuni.cz
+	
+	fix 64bit lock functions
+
+2003-01-14 02:48  shadow
+
+	* src/rx/rx_rdwr.c: DELTA STABLE12-undo-unintended-change-20020817
+	AUTHOR lha@stacken.kth.se
+	
+	An unintentional change accidentally leaked out when the
+	rx-avoid-using-newproc-on-solaris-20020812 delta was checked in. 
+	Undo it, since it breaks things.
+
+2003-01-13 20:20  kolya
+
+	* src/util/: softsig.c, softsig.h: 
+	DELTA better-signal-thread-support-for-fileserver-20030113 AUTHOR
+	kolya@mit.edu
+	
+	Improved signal-thread support for the pthread fileserver, which
+	avoids blocking signals in any thread, to appease Linux's thread
+	signaling semantics.
+
+2003-01-13 18:47  shadow
+
+	* Makefile.in, src/afsd/Makefile.in, src/butc/Makefile.in,
+	src/libafs/MakefileProto.SOLARIS.in, src/shlibafsrpc/Makefile.in,
+	src/sys/Makefile.in, src/viced/Makefile.in: DELTA
+	STABLE12-solaris-x86-58-support-20030113 AUTHOR fallsjo@isk.kth.se
+	
+	make 1.2.x work on solaris 8 x86
+
+2003-01-13 17:57  shadow
+
+	* src/config/Makefile.sunx86_58.in: DELTA
+	solaris-x86-58-support-20030113 AUTHOR fallsjo@isk.kth.se
+	
+	needed for patch
+
+2003-01-11 02:53  shadow
+
+	* acconfig.h, acinclude.m4, src/afs/afs_osi.c,
+	src/afs/LINUX/osi_groups.c, src/afs/LINUX/osi_machdep.h,
+	src/afs/LINUX/osi_misc.c, src/afs/LINUX/osi_module.c,
+	src/afs/LINUX/osi_sleep.c, src/cf/linux-test4.m4,
+	src/ptserver/pt_util.c, src/rx/LINUX/rx_kmutex.h,
+	src/sys/rmtsyss.c, src/venus/test/owntest.c: DELTA
+	STABLE12-linux-redhat-81-beta-support-20020107 AUTHOR
+	shadow@dementia.org
+	
+	thanks to Sean McDermott for the errno.h fixes.  the rest is my
+	fault, the configure tests as well as the kernel changes
+
+2003-01-11 02:48  shadow
+
+	* src/rx/: rx_kcommon.c, rx_kcommon.h, rx_pthread.c, rx_rdwr.c,
+	SOLARIS/rx_knet.c: DELTA
+	STABLE12-rx-avoid-using-newproc-on-solaris-20020812 AUTHOR
+	kolya@mit.edu
+	
+	Second attempt at avoiding the use of newproc() on Solaris.  This
+	time, use thread_create to spawn a kernel thread, and use a dummy
+	packet to wake up the listener during shutdown.
+
+2003-01-11 02:44  shadow
+
+	* src/rxkad/ticket5.c: DELTA
+	STABLE12-rxkad-2b-principal-translation-20021223 AUTHOR
+	hartmans@mit.edu
+	
+	Do v5/v4 principal name translation.
+
+2003-01-11 02:44  shadow
+
+	* src/vol/: vnode.c, volume.c: DELTA
+	
+	thanks to whichever of jhutz@cmu.edu or cg2v@andrew.cmu.edu (or
+	both) noticed the race; also deal with wrap problem in
+	VolumeCacheCheck that i noticed
+	STABLE12-vol-package-avoid-race-on-invalidating-hashed-vnode-200301
+	11 AUTHOR shadow@dementia.org
+
+2003-01-11 02:42  shadow
+
+	* src/: afsmonitor/afsmonitor.c, butm/butm_test.c, export/cfgafs.c,
+	export/cfgexport.c, gtx/curseswindows.c, gtx/dumbwindows.c,
+	gtx/object_test.c, gtx/screen_test.c, package/fileops.c,
+	package/messages.c, pinstall/install.c, ptserver/db_verify.c,
+	ptserver/pt_util.c, scout/scout.c, sys/afssyscalls.c,
+	sys/rmtsysd.c, sys/rmtsyss.c, uss/uss_fs.c, uss/uss_kauth.c,
+	uss/uss_procs.c, uss/uss_ptserver.c, uss/uss_vol.c, venus/fs.c,
+	venus/fstrace.c, venus/kdump.c, venus/twiddle.c, vlserver/cnvldb.c,
+	vlserver/sascnvldb.c, vol/fs_conv_411.c, vol/partition.c: DELTA
+	STABLE12-include-errno-dont-declare-it-20030111 AUTHOR
+	hartmans@mit.edu
+	
+	include errno.h instead of extern int errno ourselves
+
+2003-01-11 02:35  shadow
+
+	* src/rxkad/ticket.c: DELTA
+	STABLE12-rxkad-be-openssl-keyschedule-safe-20030111 AUTHOR
+	jhutz@cmu.edu
+	
+	openssl has larger keyschedules than we do
+	
+	crypto api is all so unfortunate
+
+2003-01-10 14:49  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-linux-placate-whiny-gcc-20020110 AUTHOR
+	shadow@dementia.org
+	
+	debian unstable gcc gets bitter and cries to mom over newlines in
+	strings.
+
+2003-01-10 04:35  shadow
+
+	* src/afs/afs_nfsdisp.c: DELTA
+	STABLE12-nfstrans-solaris-pre-7-support-20021210 AUTHOR
+	shadow@dementia.org
+	
+	pullup
 2002-12-10 18:17  shadow
 
 	* src/afs/afs_nfsdisp.c: DELTA
