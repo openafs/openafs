@@ -23,6 +23,14 @@ RCSID("$Header$");
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#include <ctype.h>
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -116,8 +124,8 @@ int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName
 {
   FILE*  fp;
   char   line[MAX_NETFILE_LINE];
-  int lineNo, usedfile;
-  afs_uint32 i, neaddrs, nfaddrs, nOutaddrs;
+  int lineNo, usedfile = 0;
+  afs_uint32 i, neaddrs, nOutaddrs;
   afs_uint32  addr, eAddrs[MAXIPADDRS], eMask[MAXIPADDRS], eMtu[MAXIPADDRS];
 
   assert(outAddrs);
@@ -129,7 +137,7 @@ int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName
   /* Initialize */
   *nAddrs = 0;
   for (i=0; i<maxAddrs;  i++) outAddrs[i] = 0;
-  sprintf(reason, "");
+  strcpy(reason, "");
 
   /* get all network interfaces from the kernel */
   neaddrs = rxi_getAllAddrMaskMtu(eAddrs, eMask, eMtu, MAXIPADDRS);
