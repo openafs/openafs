@@ -79,7 +79,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=6300
+AFSPRODUCT_VER_PATCH=6390
 AFSPRODUCT_VER_BUILD=0
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
 AFSPRODUCT_FILE_VERSION=$(AFSPRODUCT_VER_MAJOR),$(AFSPRODUCT_VER_MINOR),$(AFSPRODUCT_VER_PATCH),$(AFSPRODUCT_VER_BUILD)
@@ -237,7 +237,7 @@ afscflags =\
 	/Os
 
 !IF ("$(AFSVER_CL)"!="1200")
-afscdefs = $(afscdefs) /G7 /GT /GS /GZ /RTCs /RTCu
+afscdefs = $(afscdefs) /G7 /GT /GS /RTCs /RTCu
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
@@ -251,7 +251,7 @@ NODEBUG=1
 cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 
 !IF ("$(AFSVER_CL)"=="1200")
-afscdefs = $(afscdefs) -DDEBUG
+afscdefs = $(afscdefs) -DDEBUG /GZ
 !ENDIF
 
 !IFDEF _CRTDBG_MAP_ALLOC
