@@ -138,9 +138,10 @@ doneTrace:
 	}
 }
 
-#if 0
+#if 1
 /* This code was moved to Drivemap.cpp*/
 /* Mount a drive into AFS if the user wants us to */
+/* DEE Could check first if we are run as SYSTEM */
 void CheckMountDrive()
 {
         char szAfsPath[_MAX_PATH];
@@ -172,9 +173,27 @@ void CheckMountDrive()
                         }
                 }
                 
+#if 0
                 sprintf(szAfsPath, "\\Device\\LanmanRedirector\\%s\\%s-AFS\\%s", szDriveToMapTo, cm_HostName, szSubMount);
         
                 dwResult = DefineDosDevice(DDD_RAW_TARGET_PATH, szDriveToMapTo, szAfsPath);
+#else
+		{
+		    NETRESOURCE nr;
+		    memset (&nr, 0x00, sizeof(NETRESOURCE));
+ 
+		    sprintf(szAfsPath,"\\\\%s-AFS\\%s",cm_HostName,szSubMount);
+		    
+		    nr.dwScope = RESOURCE_GLOBALNET;
+		    nr.dwType=RESOURCETYPE_DISK;
+		    nr.lpLocalName=szDriveToMapTo;
+		    nr.lpRemoteName=szAfsPath;
+		    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+		    nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;
+
+		    dwResult = WNetAddConnection2(&nr,NULL,NULL,FALSE);
+		}
+#endif
                 afsi_log("GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
         }        
 
@@ -252,7 +271,7 @@ void afsd_Main()
 	}
 
         /* Check if we should mount a drive into AFS */
-/*        CheckMountDrive();*/
+        CheckMountDrive();
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
 	
