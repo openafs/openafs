@@ -231,7 +231,7 @@ RebuildEntry(entryp)
 
   ka_ConvertBytes (key, sizeof(key), (char *)&entryp->key, 
 		   sizeof(entryp->key));
-  fprintf(out, " -initial_password foo\n", key);
+  fprintf(out, " -initial_password foo\n");
 
   strcpy(flags,"");
   if (entryp->flags & KAFADMIN)  strcat(flags, "+ADMIN");
