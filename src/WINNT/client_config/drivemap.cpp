@@ -800,7 +800,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 
 /* Generate Random User name random acording to time*/
 DWORD dwOldState=0;
-TCHAR pUserName[MAXRANDOMNAMELEN];
+TCHAR pUserName[MAXRANDOMNAMELEN]=TEXT("");
 BOOL fUserName=FALSE;
 #define AFSLogonOptionName TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider")
 
@@ -911,7 +911,7 @@ void TestAndDoUnMapShare()
 
 void DoUnMapShare(BOOL drivemap)	//disconnect drivemap 
 {
-	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+	TCHAR szMachine[MAX_PATH],szPath[MAX_PATH];
 	DWORD rc=28;
 	HANDLE hEnum;
 	LPNETRESOURCE lpnrLocal,lpnr=NULL;
@@ -960,9 +960,8 @@ BOOL DoMapShareChange()
 	HANDLE hEnum;
 	LPNETRESOURCE lpnrLocal,lpnr=NULL;
 	DWORD res;
-	DWORD cbBuffer=16384;
 	DWORD cEntries=-1;
-	CHAR szUser[MAXRANDOMNAMELEN];
+    DWORD cbBuffer=16384;
 
     memset(szMachine, '\0', sizeof(szMachine));
     GetNetbiosName(szMachine, NETBIOS_NAME_FULL);
@@ -1010,21 +1009,26 @@ BOOL DoMapShareChange()
 	GlobalFree((HGLOBAL)lpnrLocal);
 	WNetCloseEnum(hEnum);
 	sprintf(szPath,"\\\\%s\\all",szMachine);
-	cbBuffer=MAXRANDOMNAMELEN-1;
+
 	// Lets connect all submounts that weren't connectd
+    DWORD cbUser=MAXRANDOMNAMELEN-1;
+	CHAR szUser[MAXRANDOMNAMELEN];
     CHAR * pUser = NULL;
-	if (WNetGetUser(szPath,(LPSTR)szUser,&cbBuffer)!=NO_ERROR) {
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
         if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
-            GenRandomName(szUser,MAXRANDOMNAMELEN-1);
-            pUser = szUser;
+            if (!pUserName[0]) {
+                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+                pUser = szUser;
+            } else {
+                pUser = pUserName;
+            }
         }
     } else {
 		if ((pUser=strchr(szUser,'\\'))!=NULL)
             pUser++;
-        else
-            pUser = NULL;
 	}
-	for (DWORD j=0;j<List.cSubmounts;j++)
+
+    for (DWORD j=0;j<List.cSubmounts;j++)
 	{
 		if (List.aSubmounts[j].fInUse)
 			continue;
@@ -1038,7 +1042,6 @@ BOOL DoMapShare()
 	DRIVEMAPLIST List;
 	DWORD rc=28;
 	BOOL bMappedAll=FALSE;
-    CHAR * pUser = NULL;
 
    // Initialize the data structure
 	DEBUG_EVENT0("AFS DoMapShare");
@@ -1047,27 +1050,46 @@ BOOL DoMapShare()
 	// All connections have been removed
 	// Lets restore them after making the connection from the random name
 
-    if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
-        GenRandomName(pUserName,MAXRANDOMNAMELEN-1);
-        pUser = pUserName;
-    }
+	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+    memset(szMachine, '\0', sizeof(szMachine));
+    GetNetbiosName(szMachine, NETBIOS_NAME_FULL);
+    sprintf(szPath,"\\\\%s\\all",szMachine);
+
+    // Lets connect all submounts that weren't connectd
+    DWORD cbUser=MAXRANDOMNAMELEN-1;
+	CHAR szUser[MAXRANDOMNAMELEN];
+    CHAR * pUser = NULL;
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
+        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
+            if (!pUserName[0]) {
+                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+                pUser = szUser;
+            } else {
+                pUser = pUserName;
+            }
+        }
+    } else {
+		if ((pUser=strchr(szUser,'\\'))!=NULL)
+            pUser++;
+	}
+
 	for (DWORD i=0;i<List.cSubmounts;i++)
 	{
 		if (List.aSubmounts[i].szSubmount[0])
 		{
-			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUserName);
+			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUser);
 			if (lstrcmpi("all",List.aSubmounts[i].szSubmount)==0)
 				bMappedAll=TRUE;
 		}
 	}
 	if (!bMappedAll)	//make sure all is mapped also
 	{
-			DWORD res=MountDOSDrive(0,"all",FALSE,pUserName);
-			if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
-			{
-			    DisMountDOSDrive("all");
-			    MountDOSDrive(0,"all",FALSE,pUserName);
-			}
+        DWORD res=MountDOSDrive(0,"all",FALSE,pUser);
+        if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
+        {
+            DisMountDOSDrive("all");
+            MountDOSDrive(0,"all",FALSE,pUser);
+        }
 	}
 	for (TCHAR chDrive = chDRIVE_A; chDrive <= chDRIVE_Z; ++chDrive)
 	{
