@@ -322,6 +322,7 @@ shutdown_rxkernel(void)
 		rxk_portRocks[i] = NULL;
 	    }
 	}
+	del_input_type(0xdead);
     }
 }
 

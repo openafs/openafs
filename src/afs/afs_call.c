@@ -1528,6 +1528,9 @@ afs_shutdown(void)
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
     rx_WakeupServerProcs();
+#ifdef AFS_AIX51_ENV
+    shutdown_rxkernel();
+#endif
     /* shutdown_rxkernel(); */
     while (afs_termState == AFSOP_STOP_RXCALLBACK)
 	afs_osi_Sleep(&afs_termState);
@@ -1598,7 +1601,11 @@ afs_shutdown(void)
     shutdown_rx();
     afs_shutdown_BKG();
     shutdown_bufferpackage();
+#endif
+#ifdef AFS_AIX51_ENV
     shutdown_daemons();
+#endif
+#ifdef notdef
     shutdown_cache();
     shutdown_osi();
     shutdown_osinet();
