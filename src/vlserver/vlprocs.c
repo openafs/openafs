@@ -148,7 +148,7 @@ int Init_VLdbase (trans, locktype, this_op)
 
 /* Create a new vldb entry; both new volume id and name must be unique (non-existant in vldb). */
 
-VL_CreateEntry(rxcall, newentry)
+SVL_CreateEntry(rxcall, newentry)
   struct rx_call	*rxcall;
   struct vldbentry	*newentry;
 {   struct ubik_trans	*trans;
@@ -221,7 +221,7 @@ VL_CreateEntry(rxcall, newentry)
 }
 
 
-VL_CreateEntryN(rxcall, newentry)
+SVL_CreateEntryN(rxcall, newentry)
   struct rx_call	*rxcall;
   struct nvldbentry	*newentry;
 {   struct ubik_trans	*trans;
@@ -294,7 +294,7 @@ VL_CreateEntryN(rxcall, newentry)
 }
 
 
-VL_ChangeAddr(rxcall, ip1, ip2)
+SVL_ChangeAddr(rxcall, ip1, ip2)
   struct rx_call	*rxcall;
   afs_int32 ip1, ip2;
 {   struct ubik_trans	*trans;
@@ -328,7 +328,7 @@ VL_ChangeAddr(rxcall, ip1, ip2)
 }
 
 /* Delete a vldb entry given the volume id. */
-VL_DeleteEntry(rxcall, volid, voltype)
+SVL_DeleteEntry(rxcall, volid, voltype)
   struct rx_call	*rxcall;
   afs_int32			volid;
   afs_int32			voltype;
@@ -410,7 +410,7 @@ GetEntryByID (rxcall, volid, voltype, aentry, new, this_op)
     return(ubik_EndTrans(trans));
 }
 
-VL_GetEntryByID (rxcall, volid, voltype, aentry)
+SVL_GetEntryByID (rxcall, volid, voltype, aentry)
   struct rx_call	*rxcall;
   afs_int32			volid, voltype;
   vldbentry		*aentry;		/* entry data copied here */
@@ -419,7 +419,7 @@ VL_GetEntryByID (rxcall, volid, voltype, aentry)
     return (GetEntryByID(rxcall, volid, voltype, (char *)aentry, 0, this_op));
 }
 
-VL_GetEntryByIDN (rxcall, volid, voltype, aentry)
+SVL_GetEntryByIDN (rxcall, volid, voltype, aentry)
   struct rx_call	*rxcall;
   afs_int32			volid, voltype;
   nvldbentry		*aentry;		/* entry data copied here */
@@ -428,7 +428,7 @@ VL_GetEntryByIDN (rxcall, volid, voltype, aentry)
     return (GetEntryByID(rxcall, volid, voltype, (char *)aentry, 1, this_op));
 }
 
-VL_GetEntryByIDU (rxcall, volid, voltype, aentry)
+SVL_GetEntryByIDU (rxcall, volid, voltype, aentry)
   struct rx_call	*rxcall;
   afs_int32			volid, voltype;
   uvldbentry		*aentry;		/* entry data copied here */
@@ -490,7 +490,7 @@ GetEntryByName (rxcall, volname, aentry, new, this_op)
     return(ubik_EndTrans(trans));
 }
 
-VL_GetEntryByNameO (rxcall, volname, aentry)
+SVL_GetEntryByNameO (rxcall, volname, aentry)
   struct rx_call	*rxcall;
   char			*volname;
   struct vldbentry	*aentry;		/* entry data copied here */
@@ -500,7 +500,7 @@ VL_GetEntryByNameO (rxcall, volname, aentry)
 }
 
 
-VL_GetEntryByNameN (rxcall, volname, aentry)
+SVL_GetEntryByNameN (rxcall, volname, aentry)
   struct rx_call	*rxcall;
   char			*volname;
   struct nvldbentry	*aentry;		/* entry data copied here */
@@ -509,7 +509,7 @@ VL_GetEntryByNameN (rxcall, volname, aentry)
     return (GetEntryByName(rxcall, volname, (char *)aentry, 1, this_op));
 }
 
-VL_GetEntryByNameU (rxcall, volname, aentry)
+SVL_GetEntryByNameU (rxcall, volname, aentry)
   struct rx_call	*rxcall;
   char			*volname;
   struct uvldbentry	*aentry;		/* entry data copied here */
@@ -521,7 +521,7 @@ VL_GetEntryByNameU (rxcall, volname, aentry)
 
 
 /* Get the current value of the maximum volume id and bump the volume id counter by Maxvolidbump. */
-VL_GetNewVolumeId (rxcall, Maxvolidbump, newvolumeid)
+SVL_GetNewVolumeId (rxcall, Maxvolidbump, newvolumeid)
 struct rx_call		*rxcall;
 afs_int32			Maxvolidbump;
 afs_int32			*newvolumeid;
@@ -562,7 +562,7 @@ afs_int32			*newvolumeid;
  * newentry. No individual checking/updating per field (alike
  * VLUpdateEntry) is done. */
 
-VL_ReplaceEntry (rxcall, volid, voltype, newentry, releasetype)
+SVL_ReplaceEntry (rxcall, volid, voltype, newentry, releasetype)
 struct rx_call		*rxcall;
 afs_int32			volid;
 afs_int32			voltype;
@@ -662,7 +662,7 @@ afs_int32			releasetype;
     return errorcode;
 }
 
-VL_ReplaceEntryN (rxcall, volid, voltype, newentry, releasetype)
+SVL_ReplaceEntryN (rxcall, volid, voltype, newentry, releasetype)
 struct rx_call		*rxcall;
 afs_int32			volid;
 afs_int32			voltype;
@@ -765,7 +765,7 @@ afs_int32			releasetype;
 
 /* Update a vldb entry (accessed thru its volume id). Almost all of the entry's fields can be modified in a single call by setting the appropriate bits in the Mask field in VldbUpdateentry. */
 /* this routine may never have been tested; use replace entry instead unless you're brave */
-VL_UpdateEntry (rxcall, volid, voltype, updateentry, releasetype)
+SVL_UpdateEntry (rxcall, volid, voltype, updateentry, releasetype)
   struct rx_call	    *rxcall;
   afs_int32			    volid;
   afs_int32			    voltype;
@@ -813,7 +813,7 @@ VL_UpdateEntry (rxcall, volid, voltype, updateentry, releasetype)
 }
 
 
-VL_UpdateEntryByName (rxcall, volname, updateentry, releasetype)
+SVL_UpdateEntryByName (rxcall, volname, updateentry, releasetype)
   struct rx_call	    *rxcall;
   char			    *volname;
   afs_int32			    releasetype;
@@ -858,7 +858,7 @@ VL_UpdateEntryByName (rxcall, volname, updateentry, releasetype)
 
 
 /* Set a lock to the vldb entry for volid (of type voltype if not -1). */
-VL_SetLock (rxcall, volid, voltype, voloper)
+SVL_SetLock (rxcall, volid, voltype, voloper)
 struct rx_call		*rxcall;
 afs_int32			volid;
 afs_int32			voltype;
@@ -924,7 +924,7 @@ afs_int32			voloper;
  * fields (afsid and/or volume operation) will be cleared along with
  * the lock time stamp. */
 
-VL_ReleaseLock (rxcall, volid, voltype, releasetype)
+SVL_ReleaseLock (rxcall, volid, voltype, releasetype)
 struct rx_call		*rxcall;
 afs_int32			volid;
 afs_int32			voltype;
@@ -970,7 +970,7 @@ afs_int32			releasetype;
   
 
 /* ListEntry returns a single vldb entry, aentry, with offset previous_index; the remaining parameters (i.e. next_index) are used so that sequential calls to this routine will get the next (all) vldb entries. */
-VL_ListEntry (rxcall, previous_index, count, next_index, aentry)
+SVL_ListEntry (rxcall, previous_index, count, next_index, aentry)
 struct rx_call		*rxcall;
 afs_int32			previous_index;
 afs_int32			*count;
@@ -991,7 +991,7 @@ struct vldbentry	*aentry;
 }
 
 /* ListEntry returns a single vldb entry, aentry, with offset previous_index; the remaining parameters (i.e. next_index) are used so that sequential calls to this routine will get the next (all) vldb entries. */
-VL_ListEntryN (rxcall, previous_index, count, next_index, aentry)
+SVL_ListEntryN (rxcall, previous_index, count, next_index, aentry)
 struct rx_call		*rxcall;
 afs_int32			previous_index;
 afs_int32			*count;
@@ -1013,7 +1013,7 @@ struct nvldbentry	*aentry;
 
 
 /* Retrieves in vldbentries all vldb entries that match the specified attributes (by server number, partition, volume type, and flag); if volume id is specified then the associated list for that entry is returned. CAUTION: This could be a very expensive call since in most cases sequential search of all vldb entries is performed. */
-VL_ListAttributes(rxcall, attributes, nentries, vldbentries)
+SVL_ListAttributes(rxcall, attributes, nentries, vldbentries)
 struct rx_call		    *rxcall;
 struct VldbListByAttributes *attributes;
 afs_int32			    *nentries;
@@ -1120,7 +1120,7 @@ bulkentries		    *vldbentries;
     return(ubik_EndTrans(trans));
 }
 
-VL_ListAttributesN(rxcall, attributes, nentries, vldbentries)
+SVL_ListAttributesN(rxcall, attributes, nentries, vldbentries)
 struct rx_call		    *rxcall;
 struct VldbListByAttributes *attributes;
 afs_int32			    *nentries;
@@ -1232,7 +1232,7 @@ nbulkentries		    *vldbentries;
 }
 
 
-VL_ListAttributesN2(rxcall, attributes, name, startindex, nentries, vldbentries, nextstartindex)
+SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries, vldbentries, nextstartindex)
   struct rx_call	      *rxcall;
   struct VldbListByAttributes *attributes;
   char *                      name;              /* Wildcarded volume name */
@@ -1447,7 +1447,7 @@ VL_ListAttributesN2(rxcall, attributes, name, startindex, nentries, vldbentries,
  * returned. CAUTION: This could be a very expensive call since in most
  * cases sequential search of all vldb entries is performed.
  */
-VL_LinkedList(rxcall, attributes, nentries, vldbentries)
+SVL_LinkedList(rxcall, attributes, nentries, vldbentries)
     struct rx_call		*rxcall;
     struct VldbListByAttributes *attributes;
     afs_int32			*nentries;
@@ -1564,7 +1564,7 @@ VL_LinkedList(rxcall, attributes, nentries, vldbentries)
     return(ubik_EndTrans(trans));
 }
 
-VL_LinkedListN(rxcall, attributes, nentries, vldbentries)
+SVL_LinkedListN(rxcall, attributes, nentries, vldbentries)
     struct rx_call		    *rxcall;
     struct VldbListByAttributes *attributes;
     afs_int32			    *nentries;
@@ -1682,7 +1682,7 @@ VL_LinkedListN(rxcall, attributes, nentries, vldbentries)
 }
 
 /* Get back vldb header statistics (allocs, frees, maxvolumeid, totalentries, etc) and dynamic statistics (number of requests and/or aborts per remote procedure call, etc) */
-VL_GetStats(rxcall, stats, vital_header)
+SVL_GetStats(rxcall, stats, vital_header)
 struct rx_call	*rxcall;
 vldstats	*stats;
 vital_vlheader	*vital_header;
@@ -1707,7 +1707,7 @@ vital_vlheader	*vital_header;
  * easy to do.  In the future, it might require a little bit of grunging
  * through the VLDB, but that's life.
  */
-VL_GetAddrs(rxcall, Handle, spare2, spare3, nentries, addrsp)
+SVL_GetAddrs(rxcall, Handle, spare2, spare3, nentries, addrsp)
 struct rx_call	*rxcall;
 afs_int32 Handle, spare2;
 struct VLCallBack  *spare3;
@@ -1749,7 +1749,7 @@ bulkaddrs		    *addrsp;
 
 #define PADDR(addr) printf("%d.%d.%d.%d", (addr>>24)&0xff, (addr>>16)&0xff, (addr>>8) &0xff, addr&0xff);
 
-VL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
+SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
   struct rx_call	*rxcall;
   afsUUID *uuidp;
   afs_int32 spare1;
@@ -2093,7 +2093,7 @@ VL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
   return(ubik_EndTrans(trans));
 }
 
-VL_GetAddrsU(rxcall, attributes, uuidpo, uniquifier, nentries, addrsp)
+SVL_GetAddrsU(rxcall, attributes, uuidpo, uniquifier, nentries, addrsp)
 struct rx_call	*rxcall;
 struct ListAddrByAttributes *attributes;
 afsUUID *uuidpo;
@@ -2908,7 +2908,7 @@ register afs_uint32	ipaddr1, ipaddr2;
 }
 
 /* see if the vlserver is back yet */
-VL_ProbeServer(rxcall)
+SVL_ProbeServer(rxcall)
 struct rx_call *rxcall; {
     return 0;
 }

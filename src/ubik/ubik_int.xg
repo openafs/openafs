@@ -15,12 +15,12 @@ struct BDesc {
     afs_int32 session;
 };
 
-struct net_version {
+struct ubik_version {
     afs_int32 epoch;
     afs_int32 counter;
 };
 
-struct net_tid {
+struct ubik_tid {
     afs_int32 epoch;
     afs_int32 counter;
 };
@@ -38,8 +38,8 @@ struct ubik_debug {
     afs_int32 lowestTime;		/* time we last chose lowestHost */
     afs_int32 syncHost;			/* sync site we've heard from last (even if we didn't vote) */
     afs_int32 syncTime;			/* time of above */
-    struct net_version syncVersion;	/* sync site's claimed db version */
-    struct net_tid syncTid;		/* sync site's claimed tid */
+    struct ubik_version syncVersion;	/* sync site's claimed db version */
+    struct ubik_tid syncTid;		/* sync site's claimed tid */
     
     /* variables from beacon module */
     afs_int32 amSyncSite;		/* do I think I'm the sync site */
@@ -49,7 +49,7 @@ struct ubik_debug {
     /* variables from disk module */
     afs_int32 lockedPages;		/* count of read-locked pages */
     afs_int32 writeLockedPages;		/* count of write-locked pages */
-    struct net_version localVersion;
+    struct ubik_version localVersion;
     afs_int32 activeWrite;		/* is there an active write transaction with this as sync site */
     afs_int32 tidCounter;			/* tid counter field from dbase, or 0 if no write trans. */
     
@@ -76,7 +76,7 @@ struct ubik_sdebug {
     afs_int32 lastVoteTime;		/* time last vote received */
     afs_int32 lastBeaconSent;		/* time last beacon sent */
     afs_int32 lastVote;			/* was last vote yes? */
-    struct net_version remoteVersion;
+    struct ubik_version remoteVersion;
     afs_int32 currentDB;			/* is current DB up to date? */
     afs_int32 beaconSinceDown;		/* beacon sent since last noticed up? */
     afs_int32 up;			/* is site up */
@@ -95,8 +95,8 @@ struct ubik_debug_old {
     afs_int32 lowestTime;		/* time we last chose lowestHost */
     afs_int32 syncHost;			/* sync site we've heard from last (even if we didn't vote) */
     afs_int32 syncTime;			/* time of above */
-    struct net_version syncVersion;	/* sync site's claimed db version */
-    struct net_tid syncTid;		/* sync site's claimed tid */
+    struct ubik_version syncVersion;	/* sync site's claimed db version */
+    struct ubik_tid syncTid;		/* sync site's claimed tid */
     
     /* variables from beacon module */
     afs_int32 amSyncSite;		/* do I think I'm the sync site */
@@ -106,7 +106,7 @@ struct ubik_debug_old {
     /* variables from disk module */
     afs_int32 lockedPages;		/* count of read-locked pages */
     afs_int32 writeLockedPages;		/* count of write-locked pages */
-    struct net_version localVersion;
+    struct ubik_version localVersion;
     afs_int32 activeWrite;		/* is there an active write transaction with this as sync site */
     afs_int32 tidCounter;			/* tid counter field from dbase, or 0 if no write trans. */
     
@@ -131,7 +131,7 @@ struct ubik_sdebug_old {
     afs_int32 lastVoteTime;		/* time last vote received */
     afs_int32 lastBeaconSent;		/* time last beacon sent */
     afs_int32 lastVote;			/* was last vote yes? */
-    struct net_version remoteVersion;
+    struct ubik_version remoteVersion;
     afs_int32 currentDB;			/* is current DB up to date? */
     afs_int32 beaconSinceDown;		/* beacon sent since last noticed up? */
     afs_int32 up;			/* is site up */
@@ -173,8 +173,8 @@ statindex 11
 /* Vote package interface calls */
 Beacon		(IN afs_int32 state,
 		afs_int32 voteStart, 
-		net_version *Version, 
-		net_tid *tid) multi = VOTE_BEACON;
+		ubik_version *Version, 
+		ubik_tid *tid) multi = VOTE_BEACON;
 
 DebugOld	(OUT ubik_debug_old *db) = VOTE_DEBUG_OLD;
 
@@ -204,12 +204,12 @@ statindex 12
 #define	DISK_COMMIT		20001
 #define	DISK_LOCK		20002
 #define	DISK_WRITE		20003
-#define	DISK_GETVERSION	20004
+#define	DISK_GETVERSION		20004
 #define	DISK_GETFILE		20005
 #define	DISK_SENDFILE		20006
 #define	DISK_ABORT		20007
 #define	DISK_RELEASELOCKS	20008
-#define	DISK_TRUNCATE	20009
+#define	DISK_TRUNCATE		20009
 #define	DISK_PROBE		20010
 #define	DISK_WRITEV		20011
 #define DISK_INTERFACEADDR	20012
@@ -218,47 +218,47 @@ statindex 12
 /* Disk package interface calls - the order of
  * these declarations is important.
  */
-Begin		(IN net_tid *tid) = DISK_BEGIN;
+Begin		(IN ubik_tid *tid) = DISK_BEGIN;
 
-Commit		(IN net_tid *tid) = DISK_COMMIT;
+Commit		(IN ubik_tid *tid) = DISK_COMMIT;
 
-Lock		(IN net_tid *tid, 
+Lock		(IN ubik_tid *tid, 
 		afs_int32 file, 
 		afs_int32 position, 
 		afs_int32 length, 
 		afs_int32 type) = DISK_LOCK;
 
-Write		(IN net_tid *tid, 
+Write		(IN ubik_tid *tid, 
 		afs_int32 file, 
 		afs_int32 position, 
 		bulkdata *data) = DISK_WRITE;
 
-GetVersion	(OUT net_version *Version) = DISK_GETVERSION;
+GetVersion	(OUT ubik_version *Version) = DISK_GETVERSION;
 
 GetFile		(IN afs_int32 file,
-		OUT net_version *Version) split = DISK_GETFILE;
+		OUT ubik_version *Version) split = DISK_GETFILE;
 
 SendFile	(IN afs_int32 file,
 		afs_int32 length,
-		net_version *Version) split = DISK_SENDFILE	;
+		ubik_version *Version) split = DISK_SENDFILE	;
 		
-Abort		(IN net_tid *tid) = DISK_ABORT;
+Abort		(IN ubik_tid *tid) = DISK_ABORT;
 
-ReleaseLocks	(IN net_tid *tid) = DISK_RELEASELOCKS;
+ReleaseLocks	(IN ubik_tid *tid) = DISK_RELEASELOCKS;
 
-Truncate	(IN net_tid *tid, 
+Truncate	(IN ubik_tid *tid, 
 		afs_int32 file,
 		afs_int32 length) = DISK_TRUNCATE;
 
 Probe		() multi = DISK_PROBE;
 
-WriteV		(IN net_tid *tid,
+WriteV		(IN ubik_tid *tid,
 		iovec_wrt *io_vector,
                 iovec_buf *io_buffer) = DISK_WRITEV;
 
 UpdateInterfaceAddr(IN  UbikInterfaceAddr* inAddr,
 		    OUT UbikInterfaceAddr* outAddr) multi = DISK_INTERFACEADDR;
 
-SetVersion      (IN net_tid     *tid, 
-                 IN net_version *OldVersion,
-                 IN net_version *NewVersion) = DISK_SETVERSION;
+SetVersion      (IN ubik_tid     *tid, 
+                 IN ubik_version *OldVersion,
+                 IN ubik_version *NewVersion) = DISK_SETVERSION;
