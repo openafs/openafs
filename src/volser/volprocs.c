@@ -207,7 +207,7 @@ Volume	* vp;
 			    V_parentId(vp), 1, 1, 0);
     assert(VALID_INO(inodeNumber));
 
-    SetSalvageDirHandle(&dir, V_id(vp), vp->device, inodeNumber);
+    SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
     did.Vnode = (VnodeId)1;
     did.Unique = 1;
