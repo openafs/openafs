@@ -113,7 +113,7 @@ afs_int32 uss_procs_BuildDir(a_path, a_mode, a_owner, a_access)
 	    if (errno != EEXIST) {
 		uss_procs_PrintErr(line,
 				   "Failed to create directory '%s': %s\n",
-				   a_path, sys_errlist[errno]);
+				   a_path, strerror(errno));
 		return(1);
 	    } /*Directory didn't exist*/
 	} /*Create the directory*/
@@ -128,13 +128,13 @@ afs_int32 uss_procs_BuildDir(a_path, a_mode, a_owner, a_access)
 	if (chmod(a_path, m)) {
 	    uss_procs_PrintErr(line,
 		"Can't chmod() directory '%s' to be '%s' : %s\n",
-		a_path, a_mode, sys_errlist[errno]);
+		a_path, a_mode, strerror(errno));
 		return(1);
 	} /* chmod the directory */
 	if (chown(a_path, o, -1)) {
 	    uss_procs_PrintErr(line,
 			       "Can't chown() directory '%s' to be owned by '%s' (uid %d): %s\n",
-			       a_path, a_owner, o, sys_errlist[errno]);
+			       a_path, a_owner, o, strerror(errno));
 	    return(1);
 	} /*Couldn't chown*/
     } /*Not a dry run*/
@@ -233,7 +233,7 @@ afs_int32 uss_procs_CpFile(a_path, a_mode, a_owner, a_proto)
 
     if (stat(temp, &stbuf)) {
 	uss_procs_PrintErr(line, "Failed to stat '%s': %s\n",
-			   a_proto, sys_errlist[errno]);
+			   a_proto, strerror(errno));
 	return(1);
     }
 
@@ -267,7 +267,7 @@ afs_int32 uss_procs_CpFile(a_path, a_mode, a_owner, a_proto)
 	if (chown(a_path, o, -1)) {
 	    uss_procs_PrintErr(line,
 			       "Can't chown() file '%s' to be owned by '%s' (uid %d): %s\n",
-			       a_path, a_owner, o, sys_errlist[errno]);
+			       a_path, a_owner, o, strerror(errno));
 	    return(1);
 	} /*chown failed*/
     } /*Not a dry run*/
@@ -347,7 +347,7 @@ afs_int32 uss_procs_EchoToFile(a_path, a_mode, a_owner, a_content)
 	if (chown(a_path, o, -1)){
 	    uss_procs_PrintErr(line,
 			       "Can't chown() file '%s' to be owned by '%s' (uid %d): %s\n",
-			       a_path, a_owner, o, sys_errlist[errno]);
+			       a_path, a_owner, o, strerror(errno));
 	    return(1);
 	}
     } /*Not a dry run*/
@@ -388,7 +388,7 @@ afs_int32 uss_procs_Exec(a_command)
       if (system(a_command)) {
 	uss_procs_PrintErr(line,
 			   "Failed to run the '%s' command: %s\n",
-			   a_command, sys_errlist[errno]);
+			   a_command, strerror(errno));
 	return(1);
       }
     } /*Not a dry run*/
@@ -447,7 +447,7 @@ afs_int32 uss_procs_SetLink(a_path1, a_path2, a_type)
 	if (symlink(a_path1, a_path2)) {
 	  uss_procs_PrintErr(line,
 			     "Failed to make symlink '%s' to '%s': %s\n",
-			     a_path1, a_path2, sys_errlist[errno]);
+			     a_path1, a_path2, strerror(errno));
 	  return(1);
 	}
       } /*Dry run*/
@@ -464,7 +464,7 @@ afs_int32 uss_procs_SetLink(a_path1, a_path2, a_type)
 	if (link(a_path1, a_path2)) {
 	  uss_procs_PrintErr(line,
 			     "Failed to make hard link '%s' to '%s': %s\n",
-			     a_path1, a_path2, sys_errlist[errno]);
+			     a_path1, a_path2, strerror(errno));
 	  return(1);
 	}
       } /*Dry run*/
@@ -564,19 +564,19 @@ static int Copy(a_from, a_to, a_mode)
 	    if (fd1 < 0) {
 		uss_procs_PrintErr(line,
 				   "%s: Failed to open '%s' for overwrite: %s.\n",
-				   uss_whoami, a_to, sys_errlist[errno]);
+				   uss_whoami, a_to, strerror(errno));
 		return(1);
 	    }
 	} else {
 	    uss_procs_PrintErr(line, "%s: Failed to open '%s': %s.\n",
-			       uss_whoami, a_to, sys_errlist[errno]);
+			       uss_whoami, a_to, strerror(errno));
 	    return(1);
 	}
     }
 
     if ((fd2 = open(a_from, O_RDONLY, 0)) < 0) {
 	uss_procs_PrintErr(line, "%s: Error reading '%s': %s\n",
-			   uss_whoami, a_from, sys_errlist[errno]);
+			   uss_whoami, a_from, strerror(errno));
 	close(fd1);
 	return(1);
     }
@@ -588,12 +588,12 @@ static int Copy(a_from, a_to, a_mode)
     if (rc) {
 	uss_procs_PrintErr(line,
 			   "Failed to close '%s' %s\n",
-			   a_to, sys_errlist[errno]);
+			   a_to, strerror(errno));
 	return(1);
     }
     if(rc = close(fd2))
 	uss_procs_PrintErr(line, "Warning: Failed to close '%s': %s\n",
-			   a_from, sys_errlist[errno]);
+			   a_from, strerror(errno));
     return(0);
 
 } /*Copy*/
@@ -646,12 +646,12 @@ static int Echo(a_s, a_f, a_mode)
 	    if (fd < 0) {
 		uss_procs_PrintErr(line,
 				   "%s: Failed to open '%s' for overwrite: %s.\n",
-				   uss_whoami, a_f, sys_errlist[errno]);
+				   uss_whoami, a_f, strerror(errno));
 		return(1);
 	    }
 	} else {
 	    uss_procs_PrintErr(line, "%s: Failed to open '%s': %s. \n",
-			       uss_whoami, a_f, sys_errlist[errno]);
+			       uss_whoami, a_f, strerror(errno));
 	    return(1);
 	}
     }
@@ -659,7 +659,7 @@ static int Echo(a_s, a_f, a_mode)
     write(fd, "\n", 1);
     if (close(fd)){
 	uss_procs_PrintErr(line, "Failed to close '%s': %s\n",
-			   a_f, sys_errlist[errno]);
+			   a_f, strerror(errno));
 	return(1);
     }
     return(0);
@@ -862,7 +862,7 @@ FILE *uss_procs_FindAndOpen(a_fileToOpen)
 	    if (cant_read)
 		fprintf(stderr,
 			"%s: Can't open template '%s': %s\n",
-			uss_whoami, tmp_str, sys_errlist[errno]);
+			uss_whoami, tmp_str, strerror(errno));
 	    else {
 		fprintf(stderr,
 			"%s: Can't find template '%s' in searchlist",
