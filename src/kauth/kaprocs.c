@@ -928,7 +928,8 @@ PrepareTicketAnswer
     afs_int32 cksum;
 
     code = KAANSWERTOOLONG;
-    if (oanswer->MaxSeqLen < sizeof(struct ka_ticketAnswer) - 5*MAXKTCNAMELEN)
+    if (oanswer->MaxSeqLen <
+	sizeof(struct ka_ticketAnswer) - 5 * MAXKTCNAMELEN - MAXKTCTICKETLEN + ticketLen)
 	return code;
 
     answer = (struct ka_ticketAnswer *)oanswer->SeqBody;
@@ -1762,8 +1763,9 @@ static afs_int32 GetTicket (version, call, kvno, authDomain, aticket,
     switch (version) {
       case 0:
 	code = KAANSWERTOOLONG;
-	if (oanswer->MaxSeqLen <
-	    sizeof(struct ka_getTicketAnswer) - 5*MAXKTCNAMELEN) goto abort;
+        if (oanswer->MaxSeqLen < sizeof(struct ka_getTicketAnswer) - 5 
+	    * MAXKTCNAMELEN - MAXKTCTICKETLEN + ticketLen)
+	    goto abort;
 	
 	answer = (struct ka_getTicketAnswer *)oanswer->SeqBody;
 	memcpy(&answer->sessionKey, &sessionKey, sizeof(struct ktc_encryptionKey));
