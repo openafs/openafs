@@ -38,11 +38,10 @@ case "$1" in
 	    db_get openafs-client/cell-info
 	    if [ "x$RET" != "x" ] ; then
 		echo \>$THISCELL >/etc/openafs/CellServDB.new
-		for hname in $RET ; do 
-		    host $hname |perl -anle \
-		      'print "$F[2] # $F[0]" if $F[1] eq "A"' \
-		      >>/etc/openafs/CellServDB.new
-		    done
+		perl -MSocket -e 'foreach (@ARGV) {' \
+		        -e '@a=gethostbyname($_) and ' \
+		        -e 'printf("%s\t\t# %s\n",inet_ntoa($a[4]),$a[0]) }' $RET \
+		    >>/etc/openafs/CellServDB.new
 			if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
 			    echo None of the hostnames resolved to an address 2>&1
 			    db_reset openafs-client/cell-info ||true
