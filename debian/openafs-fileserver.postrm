@@ -19,6 +19,8 @@ set -e
 case "$1" in
 purge)
     rm /etc/openafs/server/ThisCell 2>/dev/null || true
+    (cd /etc/openafs/server && rm CellServDB UserList) 2>/dev/null ||true
+    (cd /etc/openafs/server-local && rm BosConfig) 2>/dev/null ||true
     ;;
        remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 

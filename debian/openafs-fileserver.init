@@ -15,6 +15,10 @@ DAEMON=/usr/sbin/bosserver
 NAME=bosserver
 DESC="AFS Server"
 
+
+exec 3>/dev/null
+exec </dev/null
+
 test -f $DAEMON || exit 0
 
 
@@ -28,7 +32,8 @@ case "$1" in
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --signal 1 \
+    bos shutdown localhost -wait -localauth
+	start-stop-daemon --stop --quiet  \
 		--exec $DAEMON
 	echo "$NAME."
 	;;

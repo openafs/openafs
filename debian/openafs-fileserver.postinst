@@ -18,6 +18,9 @@ case "$1" in
 
 	db_get openafs-fileserver/thiscell
 	echo $RET >/etc/openafs/server/ThisCell
+	if [ -f /etc/openafs/server/CellServDB ] ; then :
+	    else echo \>$RET >/etc/openafs/server/CellServDB
+	    fi
 
     ;;
 

@@ -19,7 +19,9 @@ set -e
 case "$1" in
 purge)
     rm /etc/openafs/cacheinfo 2>/dev/null ||true
+    rm /etc/openafs/CellServDB 2>/dev/null ||true
     rm /etc/openafs/ThisCell 2>/dev/null ||true
+    rm /etc/openafs/afs.conf.client 2>/dev/null || true
     ;;
        remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 

@@ -67,8 +67,9 @@ the bos addkey command";
   exit(1);
 }
 
-unlink("/etc/openafs/Server/CellServDB"); # ignore errors
-# stop bosserver here
+run("/etc/init.d/openafs-fileserver stop");
+
+
 $server = `hostname`;
 chomp $server;
 $admin = $rl->readline("What administrative principal should be used?");
@@ -81,6 +82,9 @@ open(CELL, "/etc/openafs/server/ThisCell")
   or die "Cannot open /etc/openafs/server/ThisCell: $!\n";
 my $cell = <CELL>;
 chomp $cell;
+
+run( "echo \\>$cell >/etc/openafs/server/CellServDB");
+run("/etc/init.d/openafs-fileserver start");
 run ("bos addhost $server $server -localauth ||true");
 run("bos adduser $server $admin -localauth");
 unwind("bos removeuser $server $admin -localauth");
