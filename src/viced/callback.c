@@ -295,6 +295,7 @@ static int MultiBreakVolumeCallBack(struct host *host, int isheld, struct VCBPar
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld, struct VCBParams *parms);
 static int lih_r(register struct host *host, register int held, register struct host *hostp);
 static int GetSomeSpace_r(struct host *hostp, int locked);
+static int ClearHostCallbacks_r(struct host *hp, int locked);
 
 #define GetCB() ((struct CallBack *)iGetCB(&cbstuff.nCBs))
 #define GetFE() ((struct FileEntry *)iGetFE(&cbstuff.nFEs))
