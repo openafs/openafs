@@ -1689,7 +1689,7 @@ main(argc, argv)
     }
     if (err || argc != 1) {
 	fprintf(stderr,
-		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] callbackdumpfile\n");
+		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] callbackdumpfile\n");
 	fprintf(stderr, "[cbid is shown for each host in the hosts.dump file]\n");
 	exit(1);
     }
