@@ -975,6 +975,8 @@ SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
 
     AFS_STATCNT(SRXAFSCB_WhoAreYou);
 
+    memset(addr, 0, sizeof(*addr));
+
     ObtainReadLock(&afs_xinterface);
 
     /* return all network interface addresses */
