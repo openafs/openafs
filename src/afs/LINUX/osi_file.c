@@ -138,7 +138,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     down_write(&inode->i_alloc_sem);
 #endif
     down(&inode->i_sem);
-    inode->i_size = newattrs.ia_size = asize;
+    newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
 #if defined(AFS_LINUX24_ENV)
     newattrs.ia_ctime = CURRENT_TIME;
@@ -156,6 +156,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
 #else
+    inode->i_size = asize;
     if (inode->i_sb->s_op && inode->i_sb->s_op->notify_change) {
 	code = inode->i_sb->s_op->notify_change(&afile->dentry, &newattrs);
     }
