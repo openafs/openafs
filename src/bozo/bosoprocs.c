@@ -1179,7 +1179,7 @@ char **ainstance; {
 
 struct bozo_bosEntryStats bozo_bosEntryStats[] = {
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_AFS_DIRPATH    */
-    {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_ETC_DIRPATH    */
+    {NULL, 1,1, 0700, 02}, /* AFSDIR_SERVER_ETC_DIRPATH    */
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_BIN_DIRPATH    */
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_LOGS_DIRPATH   */
     {NULL, 1,0, 0700, 07}, /* AFSDIR_SERVER_BACKUP_DIRPATH */
