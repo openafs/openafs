@@ -59,7 +59,6 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     char * data;
     int i,tlen;
 
-    if (!xprt_CryptOK (conn)) return RXKADILLEGALLEVEL;
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
     LOCK_RXKAD_STATS
@@ -96,7 +95,6 @@ afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
     char *data;
     int i,tlen;
 
-    if (!xprt_CryptOK (conn)) return RXKADILLEGALLEVEL;
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
     LOCK_RXKAD_STATS
