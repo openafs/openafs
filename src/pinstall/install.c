@@ -89,7 +89,7 @@ extern int sys_nerr;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern char *sys_errlist[];
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern struct passwd *getpwnam();
 int stripcalled = 0;
 #endif
@@ -152,7 +152,7 @@ atoo(astr)
     return value;
     }
 
-#if	defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV)
 /*
  * Implementation lifted from that for AIX 3.1, since there didn't seem to be any
  * reason why it wouldn't work.
@@ -204,6 +204,7 @@ char *iname, *oname; {
 		return -1;
 	}
 
+#ifndef AFS_OBSD_ENV
 	/*
 	 * done the copy, now strip if desired.
 	 */
@@ -234,6 +235,7 @@ char *iname, *oname; {
 			return -1;
 		}
 	}
+#endif
 
 	return status;
 }
@@ -473,7 +475,7 @@ main (argc, argv)
 #endif /* AFS_HPUX_ENV */
     char pnametmp[1024];
     int pnamelen;
-#if defined (AFS_AIX_ENV) || defined(AFS_FBSD_ENV)
+#if defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV)
     afs_int32 newcode;
     static char diskBuffer[BUFSIZE];	/* must be static to avoid compiler bugs for large stuff */
 #endif
@@ -684,7 +686,7 @@ main (argc, argv)
 		continue;
 	    }
 	}
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV)
 	stripcalled = 0;
 	if (strip == 1 ||
 	    ((strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i])) && AIXobject(fnames[i])))

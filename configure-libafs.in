@@ -189,6 +189,10 @@ case $system in
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
 		;;
+	*-openbsd*)
+		MKAFS_OSTYPE=OBSD
+		AC_MSG_RESULT(i386_obsd)
+		;;
         *)
                 AC_MSG_RESULT($system)
                 ;;

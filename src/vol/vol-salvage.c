@@ -122,7 +122,7 @@ RCSID("$Header$");
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -133,7 +133,7 @@ RCSID("$Header$");
 #ifdef	AFS_OSF_ENV
 #include <ufs/inode.h>
 #else	/* AFS_OSF_ENV */
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/inode.h>
 #endif
 #endif
