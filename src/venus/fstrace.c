@@ -2155,8 +2155,8 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
     code = syscall(AFSCALL_ICL, parm0, parm1, parm2, parm3, parm4);
 #endif
 #endif
-    return code;
 #endif /* AFS_LINUX20_ENV */
+    return code;
 }
 #endif
 
