@@ -1087,6 +1087,7 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     if (inSize > 0) {
       AFS_COPYIN(ablob->in, inData, inSize, code);
+      inData[inSize]='\0';
     }
     else code = 0;
     if (code) {
@@ -1104,8 +1105,10 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     if (code == 0 && ablob->out_size > 0) {
       if (outSize > ablob->out_size) outSize = ablob->out_size;
       if (outSize >= PIGGYSIZE) code = E2BIG;
-      else if	(outSize) 
+      else if	(outSize) {
 	AFS_COPYOUT(outData, ablob->out, outSize, code);
+	outData[outSize]='\0';
+      }
     }
     osi_FreeLargeSpace(outData);
     afs_PutFakeStat(&fakestate);
