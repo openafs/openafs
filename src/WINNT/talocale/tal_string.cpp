@@ -1491,58 +1491,68 @@ void FreeString (LPCVOID pszString, LPCVOID pszOriginalString)
 
 LPSTR StringToAnsi (LPCTSTR pszOriginal)
 {
-#ifndef UNICODE
-   return (LPSTR)pszOriginal;
+    if (!pszOriginal)
+        return NULL;
+    LPSTR pszTargetA;
+    int len = lstrlen(pszOriginal);
+    if ((pszTargetA = AllocateAnsi (1+len)) != NULL) {
+#ifdef UNICODE
+        CopyUnicodeToAnsi (pszTargetA, pszOriginal);
 #else
-   if (!pszOriginal)
-      return NULL;
-   LPSTR pszTargetA;
-   if ((pszTargetA = AllocateAnsi (1+lstrlen(pszOriginal))) != NULL)
-      CopyUnicodeToAnsi (pszTargetA, pszOriginal);
-   return pszTargetA;
+        lstrcpy (pszTargetA, (LPSTR)pszOriginal);
 #endif
+    }
+    return pszTargetA;
 }
 
 LPTSTR AnsiToString (LPCSTR pszOriginalA)
 {
-#ifndef UNICODE
-   return (LPTSTR)pszOriginalA;
+    if (!pszOriginalA)
+        return NULL;
+    LPTSTR pszTarget;
+    int lenA = lstrlenA(pszOriginalA);
+    if ((pszTarget = AllocateString (1+lenA)) != NULL) {
+#ifdef UNICODE
+        CopyAnsiToUnicode (pszTarget, pszOriginalA);
 #else
-   if (!pszOriginalA)
-      return NULL;
-   LPTSTR pszTarget;
-   if ((pszTarget = AllocateString (1+lstrlenA(pszOriginalA))) != NULL)
-      CopyAnsiToUnicode (pszTarget, pszOriginalA);
-   return pszTarget;
+        lstrcpy (pszTargetA, (LPSTR)pszOriginal);
+#endif
+    }
+    return pszTarget;
 #endif
 }
 
 
 LPWSTR StringToUnicode (LPCTSTR pszOriginal)
 {
+    if (!pszOriginal)
+        return NULL;
+    LPWSTR pszTargetW;
+    int len = lstrlen(pszOriginal);
+    if ((pszTargetW = AllocateUnicode (1+len)) != NULL) {
 #ifdef UNICODE
-   return (LPWSTR)pszOriginal;
+        CopyAnsiToUnicode (pszTargetW, pszOriginal);
 #else
-   if (!pszOriginal)
-      return NULL;
-   LPWSTR pszTargetW;
-   if ((pszTargetW = AllocateUnicode (1+lstrlen(pszOriginal))) != NULL)
-      CopyAnsiToUnicode (pszTargetW, pszOriginal);
-   return pszTargetW;
+        lstrcpy ((LPSTR)pszTargetW, (LPSTR)pszOriginal);
+#endif
+    }
+    return pszTargetW;
 #endif
 }
 
 LPTSTR UnicodeToString (LPCWSTR pszOriginalW)
 {
+    if (!pszOriginalW)
+        return NULL;
+    LPTSTR pszTarget;
+    if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL) {
 #ifdef UNICODE
-   return (LPTSTR)pszOriginalW;
+        CopyUnicodeToAnsi (pszTarget, pszOriginalW);
 #else
-   if (!pszOriginalW)
-      return NULL;
-   LPTSTR pszTarget;
-   if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL)
-      CopyUnicodeToAnsi (pszTarget, pszOriginalW);
-   return pszTarget;
+        lstrcpyA ((LPSTR)pszTarget, pszOriginalW);
+#endif
+    }
+    return pszTarget;
 #endif
 }
 
