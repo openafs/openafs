@@ -2377,7 +2377,7 @@ static SyncVldb(as)
   afs_int32 pname, code;	/* part name */
   char part[10];
   int flags = 0;
-  char *volname;
+  char *volname = 0;
 
   tserver = 0;
   if (as->parms[0].items) {
