@@ -294,7 +294,7 @@ struct rx_securityClass {
     int refCount;
 };
 
-#define RXS_OP(obj,op,args) ((obj->ops->op_ ## op) ? (*(obj)->ops->op_ ## op)args : 0)
+#define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
 
 #define RXS_Close(obj) RXS_OP(obj,Close,(obj))
 #define RXS_NewConnection(obj,conn) RXS_OP(obj,NewConnection,(obj,conn))
