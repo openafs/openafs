@@ -112,6 +112,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
 			smb_NotifyChange(0,
 			 FILE_NOTIFY_GENERIC_FILE_FILTER,
 			 dscp, NULL, NULL, TRUE);
+		if (dscp) cm_ReleaseSCache(dscp);
 	}
 }
 
