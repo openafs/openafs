@@ -1,0 +1,49 @@
+                  OpenAFS Release Notes - Version 1.2.4
+     _________________________________________________________________
+Linux clients: Major bugfixes
+All other systems: Minor updates
+     _________________________________________________________________
+
+All systems: 
+
+- Avoid fileserver looping problem while clearing
+  callbacks.
+- Added config script for afsweb for Netscape web server.
+- Avoid coredump in ptserver by checking return value of malloc().  
+- Clients allocates correct string size when creating symlinks and
+  files.  
+- Logfiles more consistant about referring to hosts in a IP
+  adress:port number format, rather than a memory address or hex IP.
+- Converted vcache casting in cache manager to macros, to ease future changes.
+- Avoid kernel panic when dynroot and memcache are used simultaneously.
+- General enhancements to test suite, including a functioning Solaris port.
+
+Solaris:
+- The AFS kernel module can now be shutdown, reloaded, and restarted.
+- Use autoconf to check for p_corefile in struct proc, rather than
+  assuming it exists in Solaris 7 and later.
+- NFS translator functionality now compiles; might even work.
+- Don't update timestamps on unallocated inodes.
+- Don't spawn seperate kernel thread for rx listener, use afsd fork
+  instead.  Avoids use of deprecated newproc() function.
+- Make vfsck allow forced runs, even when old inodes exist.
+
+Linux:
+- File creation works again for clients using Linux 2.2.x series
+  kernels.
+- memcache now works on clients using Linux 2.4.x series kernels.
+- sparc64 linux 2.4.x clients should work again.
+- Avoid ESTALE errors for AFS root in 2.4.19 prerelease kernels.
+- Compile PAM module for ia64.
+- Rewrote ia64 syscall stubs not in machine code.
+- Include function prototype to avoid panic on ia64 clients.
+
+Tru64:
+- namei fileserver should now work.
+- Avoid leaking vnodes when error occurs.
+
+NetBSD:
+- namei fileserver should now work.
+
+AIX:
+- Fix build on AIX by not declaring a variable as "register".
