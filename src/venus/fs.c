@@ -1302,6 +1302,15 @@ SetVolCmd(struct cmd_syndesc *as)
     return error;
 }
 
+/*
+ * Why is VenusFid declared in the kernel-only section of afs.h,
+ * if it's the exported interface of the cache manager?
+ */
+struct VenusFid {
+    afs_int32 Cell;
+    AFSFid Fid;
+};
+
 static int
 ExamineCmd(struct cmd_syndesc *as)
 {
@@ -1314,6 +1323,8 @@ ExamineCmd(struct cmd_syndesc *as)
 
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
+	struct VenusFid vfid;
+
 	/* once per file */
 	blob.out_size = MAXSIZE;
 	blob.in_size = 0;
@@ -1327,6 +1338,15 @@ ExamineCmd(struct cmd_syndesc *as)
 	status = (VolumeStatus *) space;
 	name = (char *)status + sizeof(*status);
 	offmsg = name + strlen(name) + 1;
+
+	blob.out_size = sizeof(struct VenusFid);
+	blob.out = (char *) &vfid;
+	if (0 == pioctl(ti->data, VIOCGETFID, &blob, 1)) {
+	    printf("File %s (%u.%u.%u) contained in volume %u\n",
+		   ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
+		   vfid.Fid.Volume);
+	}
+
 	PrintStatus(status, name, offmsg);
     }
     return error;
@@ -3216,7 +3236,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-show", CMD_SINGLE, CMD_OPTIONAL,
 		"[user|console|all|none]");
 
-    ts = cmd_CreateSyntax("examine", ExamineCmd, 0, "display volume status");
+    ts = cmd_CreateSyntax("examine", ExamineCmd, 0, "display file/volume status");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_CreateAlias(ts, "lv");
     cmd_CreateAlias(ts, "listvol");
