@@ -615,9 +615,8 @@ afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 		code = UBADHOST; /* remote CellServDB inconsistency */
 		ubik_print("Inconsistent Cell Info on server: ");
 		for ( j=0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    printf("%s ", afs_inet_ntoa(ts->addr[j]));
-		printf("\n");
-		fflush(stdout); fflush(stderr);     
+		    ubik_print("%s ", afs_inet_ntoa(ts->addr[j]));
+		ubik_print("\n");
 	    }
 	    else {
 		ts->up= 0;	/* mark the remote server as down */

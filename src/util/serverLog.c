@@ -116,8 +116,12 @@ void FSLog (const char *format, ...)
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV)
-    fflush(stdout);
-    fflush(stderr);     /* in case they're sharing the same FD */
+    if ( ! serverLogSyslog ) {
+		if ( serverLogFD > 0 )
+            fflush(serverLogFD); /* in case not on stdout/stderr */
+        fflush(stdout);
+        fflush(stderr);     /* in case they're sharing the same FD */
+    }
 #endif
 }
 

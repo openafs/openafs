@@ -592,8 +592,8 @@ UbikInterfaceAddr	*inAddr, *outAddr;
     {
 	ubik_print("Inconsistent Cell Info from server: ");
 	for ( i=0; i < UBIK_MAX_INTERFACE_ADDR && inAddr->hostAddr[i]; i++)
-	    printf("%s ", afs_inet_ntoa(htonl(inAddr->hostAddr[i])));
-	printf("\n");
+	    ubik_print("%s ", afs_inet_ntoa(htonl(inAddr->hostAddr[i])));
+	ubik_print("\n");
 	printServerInfo();
         return UBADHOST;
     }
@@ -604,9 +604,8 @@ UbikInterfaceAddr	*inAddr, *outAddr;
     
     ubik_print("ubik: A Remote Server has addresses: ");
     for ( i=0; i < UBIK_MAX_INTERFACE_ADDR && ts->addr[i]; i++)
-	printf("%s ", afs_inet_ntoa(ts->addr[i]));
-    printf("\n");
-    fflush(stdout); fflush(stderr);
+	ubik_print("%s ", afs_inet_ntoa(ts->addr[i]));
+    ubik_print("\n");
 
     return 0;
 }
@@ -619,12 +618,11 @@ printServerInfo()
     ubik_print("Local CellServDB:");
     for ( ts=ubik_servers; ts; ts= ts->next, j++)
     {
-	printf("Server %d: ", j);
+	ubik_print("Server %d: ", j);
 	for ( i=0; (i<UBIK_MAX_INTERFACE_ADDR) && ts->addr[i]; i++)
-	    printf("%s ", afs_inet_ntoa(ts->addr[i]));
+	    ubik_print("%s ", afs_inet_ntoa(ts->addr[i]));
     }
-    printf("\n");
-    fflush(stdout); fflush(stderr);
+    ubik_print("\n");
 }
 
 SDISK_SetVersion(rxcall, atid, oldversionp, newversionp)
