@@ -259,6 +259,8 @@ tagain:
                           type=DT_LNK; */
                        /* what other types does AFS support? */
                   }
+		  /* clean up from afs_FindVCache */
+		  afs_PutVCache(tvc, WRITE_LOCK);
              }
              code = (*filldir)(dirbuf, de->name, len, offset, ino, type);
         }
