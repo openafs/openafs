@@ -33,6 +33,7 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
+#include <afs/afsint.h>
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #include <resolv.h>
@@ -59,7 +60,6 @@ RCSID("$Header$");
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
-#include <afs/afsint.h>
 
 static ParseHostLine();
 static ParseCellLine();
