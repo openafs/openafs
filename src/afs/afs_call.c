@@ -329,13 +329,11 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 	AFS_COPYIN((char *)parm2, (caddr_t) &cparms, sizeof(cparms), code);
 	if (code) {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined (AFS_SGI64_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
-	    goto out;
-#else
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined (AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 	    setuerror(code);
 	    code = -1;
-	    goto out;
 #endif
+	    goto out;
 	}
 	afs_CacheInit_Done = 1;
     {
@@ -600,11 +598,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 
 out:
   AFS_GUNLOCK();
-#ifdef AFS_LINUX20_ENV
-  return -code;
-#else
-  return code;
-#endif
+  ERR_RETURN(code);
 }
 
 #ifdef AFS_AIX32_ENV
@@ -688,7 +682,6 @@ syscall(syscall, p1, p2, p3, p4, p5, p6) {
  * lsetpag -	interface to afs_setpag().
  */
 lsetpag() {
-
     AFS_STATCNT(lsetpag);
     return syscall(AFSCALL_SETPAG, 0, 0, 0, 0, 0);
 }

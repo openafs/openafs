@@ -17,8 +17,16 @@ AC_HEADER_TIME
 
 AC_PREFIX_DEFAULT(/usr/afsws)
 
-AC_CHECK_HEADERS(sys/types.h sys/param.h sys/file.h unistd.h)
-AC_CHECK_HEADERS(io.h signal.h fcntl.h)
+AC_CHECK_HEADERS(dirent.h)
+AC_CHECK_HEADERS(fcntl.h)
+AC_CHECK_HEADERS(io.h)
+AC_CHECK_HEADERS(mntent.h)
+AC_CHECK_HEADERS(signal.h)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(sys/fcntl.h sys/file.h sys/fs_types.h)
+AC_CHECK_HEADERS(sys/mntent.h sys/mnttab.h sys/mount.h)
+AC_CHECK_HEADERS(sys/param.h sys/types.h)
+AC_CHECK_HEADERS(sys/vfs.h)
 
 AC_CHECK_FUNCS(setitimer sigaction random)
 

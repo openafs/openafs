@@ -9,6 +9,9 @@
 
 #ifndef _AFS_H_
 #define _AFS_H_
+
+#include "../afs/config_platform.h"
+
 /*
  * AFS system call opcodes
  */
@@ -1073,28 +1076,28 @@ extern int afs_norefpanic;
 
 /* get a file's serial number from a vnode */
 #ifndef afs_vnodeToInumber
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#ifdef VTOINUM_VNODETOINO
 #define afs_vnodeToInumber(V) VnodeToIno(V)
 #else
-#ifdef AFS_DECOSF_ENV
+#ifdef VTOINUM_VTOINUM
 #define afs_vnodeToInumber(V) osi_vnodeToInumber(V)
 #else
 #define afs_vnodeToInumber(V) (VTOI(V)->i_number)
-#endif /* AFS_DECOSF_ENV */
-#endif /* AFS_SGI62_ENV */
+#endif /* !VTOINUM_VTOINUM */
+#endif /* !VTOINUM_VNODETOINO */
 #endif
 
 /* get a file's device number from a vnode */
 #ifndef afs_vnodeToDev
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#ifdef VTODEV_VNODETODEV
 #define afs_vnodeToDev(V) VnodeToDev(V)
 #else
-#ifdef AFS_DECOSF_ENV
+#ifdef VTODEV_VTODEV
 #define afs_vnodeToDev(V) osi_vnodeToDev(V)
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
-#endif /* AFS_DECOSF_ENV */
-#endif /* AFS_SGI62_ENV */
+#endif /* !VTODEV_VTODEV */
+#endif /* !VTODEV_VNODETODEV */
 #endif
 
 #endif	/* _AFS_H_ */

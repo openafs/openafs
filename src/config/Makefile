@@ -68,6 +68,9 @@ ${KERNELDIR}/afs/param.h ${DESTDIR}include/afs/param.h :: param.${SYS_NAME}.h
 ${KERNELDIR}/afs/afs_sysnames.h ${DESTDIR}include/afs/afs_sysnames.h :: afs_sysnames.h
 	$(RM) -f $@; $(CP) $? $@
 
+${KERNELDIR}/afs/config_platform.h ${DESTDIR}include/afs/config_platform.h :: config_platform.h
+	$(RM) -f $@; $(CP) $? $@
+
 DESTINCLS = ${DESTDIR}include/afs/afs_args.h ${DESTDIR}include/afs/venus.h ${DESTDIR}include/afs/debug.h ${DESTDIR}include/afs/afs_sysnames.h  ${DESTDIR}include/afs/param.h  ${DESTDIR}include/afs/stds.h  ${DESTDIR}include/afs/icl.h 
 
 ${KERNELDIR}/afs/stds.h ${DESTDIR}include/afs/stds.h :: stds.h
