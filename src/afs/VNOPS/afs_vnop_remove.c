@@ -313,7 +313,7 @@ tagain:
 
     tdc	= afs_GetDCache(adp, (afs_size_t) 0,	&treq, &offset,	&len, 1);  /* test for error below */
     ObtainWriteLock(&adp->lock,142);
-    ObtainSharedLock(&tdc->lock, 638);
+    if (tdc) ObtainSharedLock(&tdc->lock, 638);
 
     /*
      * Make sure that the data in the cache is current. We may have
