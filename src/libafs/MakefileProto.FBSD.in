@@ -1,4 +1,3 @@
-#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
 #
 # MakefileProto for FreeBSD systems
 #
@@ -20,7 +19,7 @@ afssrvlibexecdir=@afssrvlibexecdir@
 afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
-# include config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -30,7 +29,8 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_vm.o \
-	osi_vnodeops.o
+	osi_vnodeops.o \
+	osi_module.o 
 
 AFS_OS_NFSOBJS = \
 	osi_vfsops_nfs.o
@@ -45,7 +45,7 @@ AFS_OS_NONFSOBJS = \
 # 	-DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DUFS \
 #	-DRT -DKERNEL -D_KERNEL
 KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
+	-DKLD_MODULE -elf -mpreferred-stack-boundary=2 -I.. -I../afs
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
@@ -83,8 +83,8 @@ setup:
 
 
 # Below this line are targets when in the COMMON directory:
-LIBAFS = libafs.o
-LIBAFSNONFS = libafs.nonfs.o
+LIBAFS = libafs.ko
+LIBAFSNONFS = libafs.nonfs.ko
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -92,21 +92,15 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
+# Without this line, gmake tries to build libafs.o
+.PHONY: libafs
 
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
-# libafs:	$(LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
 # install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
-# install_libafs:	$(INST_LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
 # dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFSNONFS)
-libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
-
-install_libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
-
-dest_libafs:
-	echo WARNING: No kernel module for ${SYS_NAME}
+dest_libafs:	$(DEST_LIBAFSNONFS)
 
 
 $(INST_LIBAFS): $(LIBAFS)
@@ -122,10 +116,16 @@ $(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
 	$(INSTALL) -f $? $@
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+	$(LD) -r -o ${LIBAFS}.kld ${AFSAOBJS} ${AFSNFSOBJS}
+	gensetdefs ${LIBAFS}.kld
+	$(MAKE) setdef0.o setdef1.o
+	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
+	$(LD) -r -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	gensetdefs ${LIBAFSNONFS}.kld
+	$(MAKE) setdef0.o setdef1.o
+	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o ${LIBAFSNONFS}.kld setdef1.o
 
 
 # Object build rules:
@@ -146,4 +146,10 @@ osi_vfsops.o: $(AFS)/osi_vfsops.c
 osi_vm.o: $(AFS)/osi_vm.c
 	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)
+osi_module.o: $(AFS)/osi_module.c
+	$(CRULE1)   
+setdef0.o: setdef0.c
+	$(CRULE1)
+setdef1.o: setdef1.c
 	$(CRULE1)

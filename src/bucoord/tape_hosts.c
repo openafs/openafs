@@ -285,6 +285,9 @@ int bc_ParseHosts()
 	the->portOffset = port;
 	if (th) {
 	    memcpy(&the->addr.sin_addr.s_addr, th->h_addr, 4);
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	    the->addr.sin_len = sizeof(struct sockaddr_in);
+#endif
 	    the->addr.sin_family = AF_INET;
 	    the->addr.sin_port = 0;
 	}

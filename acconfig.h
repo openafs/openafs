@@ -9,6 +9,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_GETHOSTBYNAME
 #undef HAVE_RES_SEARCH
 #undef HAVE_SOCKET
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
 
 #if ENDIANESS_IN_SYS_PARAM_H
 # ifndef KERNEL

@@ -543,6 +543,9 @@ static ParseHostLine(aline, addr, aname, aclone)
     if (code != 5) return AFSCONF_SYNTAX;
     addr->sin_family = AF_INET;
     addr->sin_port = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr->sin_len = sizeof(struct sockaddr_in);
+#endif
     tp = (char *) &addr->sin_addr;
     *tp++ = c1;
     *tp++ = c2;

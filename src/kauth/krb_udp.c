@@ -857,6 +857,9 @@ afs_int32 init_krb_udp ()
     krb4name = "kerberos4";
     sp = getservbyname(krb4name, "udp");
     taddr.sin_family = AF_INET;  /* added for NCR port */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
     if ( !sp )	
     {
 	/* if kerberos-4 is not available, try "kerberos-iv" */

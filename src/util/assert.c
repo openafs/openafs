@@ -18,6 +18,7 @@
 RCSID("$Header$");
 
 #include <stdio.h>
+#include "afsutil.h"
 
 #ifdef AFS_NT40_ENV
 void afs_NTAbort(void)
@@ -33,8 +34,7 @@ void AssertionFailed(char *file, int line)
     time_t when;
 
     time(&when);
-    strcpy(tdate, ctime(&when));
-    tdate[24] = '0';
+    afs_ctime(&when, tdate, 25);
     fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n",
 	tdate, file, line);
     fflush(stderr);

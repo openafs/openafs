@@ -81,9 +81,9 @@ void afs_MarinerLogFetch(avc, off, bytes, idx)
     taddr.sin_family = AF_INET;
     taddr.sin_addr.s_addr = afs_marinerHost;
     taddr.sin_port = htons(2106);
-#ifdef  AFS_OSF_ENV
+#ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
-#endif  /* AFS_OSF_ENV */
+#endif /* STRUCT_SOCKADDR_HAS_SA_LEN */
     tp = tp1 = (char *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     strcpy(tp, "fetch$Fetching ");
     tp += 15; /* change it if string changes */
@@ -114,6 +114,9 @@ void afs_MarinerLog(astring, avc)
     taddr.sin_family = AF_INET;
     taddr.sin_addr.s_addr = afs_marinerHost;
     taddr.sin_port = htons(2106);
+#ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(taddr);
+#endif /* STRUCT_SOCKADDR_HAS_SA_LEN */
     tp = buf = (char *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     strcpy(tp, astring);

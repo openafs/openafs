@@ -16,7 +16,6 @@
 #define AFS_X86_FBSD42_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
-#define AFS_KERBEROS_ENV 1
 #define O_SYNC O_FSYNC
 #define FTRUNC O_TRUNC
 
@@ -54,6 +53,7 @@
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
 
+#define RXK_LISTENER_ENV 1
 #define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
 #define AFS_USE_GETTIMEOFDAY    1       /* use gettimeofday to implement rx clock */
 
@@ -73,8 +73,8 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
 #define	osi_GetTime(x)	microtime(x)
-#define	AFS_KALLOC(x)	kalloc(x)
-#define	AFS_KFREE(x,y)	kfree(x,y)
+#define	AFS_KALLOC(x)	malloc(x, M_AFS, M_WAITOK)
+#define	AFS_KFREE(x,y)	free(x,M_AFS)
 #define	v_count		v_usecount
 #define v_vfsp		v_mount
 #define vfs_bsize	mnt_stat.f_bsize

@@ -9,7 +9,6 @@
 #define AFS_USR_FBSD42_ENV	1
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1
-#define AFS_KERBEROS_ENV
 
 #define O_SYNC O_FSYNC
 

@@ -236,9 +236,13 @@ static int getport(addr)
 
     memset(addr, 0, sizeof(*addr));
     assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr->sin_len = sizeof(struct sockaddr_in);
+#endif
     addr->sin_addr.s_addr = htonl(0x7f000001);
     addr->sin_family = AF_INET; /* was localhost->h_addrtype */
     addr->sin_port = htons(2040);  /* XXXX htons not _really_ neccessary */
+
     return sd;
 }
 

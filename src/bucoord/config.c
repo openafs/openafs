@@ -116,6 +116,9 @@ char *aname; {
     tentry->addr.sin_family = AF_INET;
     memcpy(&tentry->addr.sin_addr.s_addr, th->h_addr, sizeof(afs_int32));
     tentry->addr.sin_port = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    tentry->addr.sin_len = sizeof(struct sockaddr_in);
+#endif
     tentry->portOffset = aport;
     return 0;
 }

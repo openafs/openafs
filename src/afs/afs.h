@@ -602,11 +602,11 @@ struct vcache {
      * Do not try to get the vcache lock when the vlock is held */
     afs_rwlock_t vlock;
 #endif /* defined(AFS_SUN5_ENV) */
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_DARWIN_ENV)
 #if	defined(AFS_SUN5_ENV)
     krwlock_t rwlock;
     struct cred *credp;
 #endif
+#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     afs_bozoLock_t pvnLock;	/* see locks.x */
 #endif
 #ifdef	AFS_AIX32_ENV
@@ -620,6 +620,9 @@ struct vcache {
 #endif
 #ifdef AFS_DARWIN_ENV
     struct lock__bsd__      rwlock;
+#endif
+#ifdef AFS_FBSD_ENV
+    struct lock      rwlock;
 #endif
     afs_int32 parentVnode;		/* Parent dir, if a file. */
     afs_int32 parentUnique;

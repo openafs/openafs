@@ -917,6 +917,9 @@ static int MyBeforeProc (as, arock)
 	    memcpy(&cellinfo.hostAddr[i].sin_addr, th->h_addr, sizeof(afs_int32));
 	    cellinfo.hostAddr[i].sin_family = AF_INET;
 	    cellinfo.hostAddr[i].sin_port = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	    cellinfo.hostAddr[i].sin_len = sizeof(struct sockaddr_in);
+#endif
 	}
 	cellinfo.numServers = i;
 	strcpy (cellinfo.name, lcell);

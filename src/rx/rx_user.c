@@ -120,6 +120,9 @@ osi_socket rxi_GetUDPSocket(u_short port)
     taddr.sin_addr.s_addr = 0;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short)port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
 #define MAX_RX_BINDS 10
     for (binds=0; binds<MAX_RX_BINDS; binds++) {
       if (binds) rxi_Delay (10);

@@ -234,6 +234,18 @@ else
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
+		i?86-*-freebsd4.3*)
+			AFS_SYSNAME="i386_fbsd_43"
+			;;
+		i?86-*-freebsd4.4*)
+			AFS_SYSNAME="i386_fbsd_44"
+			;;
+		i?86-*-freebsd4.5*)
+			AFS_SYSNAME="i386_fbsd_45"
+			;;
+		i?86-*-freebsd4.6*)
+			AFS_SYSNAME="i386_fbsd_46"
+			;;
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;
@@ -357,7 +369,17 @@ case $AFS_SYSNAME in
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 		;;
 esac
-
+AC_CACHE_VAL(ac_cv_sockaddr_len,
+[
+AC_MSG_CHECKING([if struct sockaddr has sa_len field])
+AC_TRY_COMPILE( [#include <sys/types.h>
+#include <sys/socket.h>],
+[struct sockaddr *a;
+a->sa_len=0;], ac_cv_sockaddr_len=yes, ac_cv_sockaddr_len=no)
+AC_MSG_RESULT($ac_cv_sockaddr_len)])
+if test "$ac_cv_sockaddr_len" = "yes"; then
+   AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN)
+fi
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
 else

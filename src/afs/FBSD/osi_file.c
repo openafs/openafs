@@ -50,8 +50,8 @@ void *osi_UFSOpen(ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
-    IN_UNLOCK(ip);
     afile->vnode = ITOV(ip);
+    VOP_UNLOCK(afile->vnode, 0, curproc);
     afile->size = VTOI(afile->vnode)->i_size;
     afile->offset = 0;
     afile->proc = (int (*)()) 0;
@@ -67,7 +67,7 @@ afs_osi_Stat(afile, astat)
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi,320);
     AFS_GUNLOCK();
-    VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, code);
+    code=VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;
@@ -94,7 +94,6 @@ osi_UFSClose(afile)
 osi_UFSTruncate(afile, asize)
     register struct osi_file *afile;
     afs_int32 asize; {
-    struct AFS_UCRED *oldCred;
     struct vattr tvattr;
     register afs_int32 code;
     struct osi_stat tstat;
@@ -108,17 +107,10 @@ osi_UFSTruncate(afile, asize)
     if (code || tstat.size <= asize) return code;
     MObtainWriteLock(&afs_xosi,321);    
     VATTR_NULL(&tvattr);
-    /* note that this credential swapping stuff is only necessary because
-	of ufs's references directly to cred instead of to
-	credentials parameter.  Probably should fix ufs some day. */
-    oldCred = curproc->p_cred->pc_ucred; /* remember old credentials pointer  */
-    curproc->p_cred->pc_ucred = &afs_osi_cred;
-    /* temporarily use superuser credentials */
     tvattr.va_size = asize;
     AFS_GUNLOCK();
-    VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, code);
+    code=VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
     AFS_GLOCK();
-    curproc->p_cred->pc_ucred = oldCred;     /* restore */
     MReleaseWriteLock(&afs_xosi);
     return code;
 }
@@ -127,7 +119,7 @@ void osi_DisableAtimes(avp)
 struct vnode *avp;
 {
    struct inode *ip = VTOI(avp);
-   ip->i_flag &= ~IACC;
+   ip->i_flag &= ~IN_ACCESS;
 }
 
 
@@ -137,7 +129,6 @@ afs_osi_Read(afile, offset, aptr, asize)
     int offset;
     char *aptr;
     afs_int32 asize; {
-    struct AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
     register afs_int32 cnt1=0;
@@ -178,7 +169,6 @@ afs_osi_Write(afile, offset, aptr, asize)
     char *aptr;
     afs_int32 offset;
     afs_int32 asize; {
-    struct AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
@@ -186,13 +176,10 @@ afs_osi_Write(afile, offset, aptr, asize)
         osi_Panic("afs_osi_Write called with null param");
     if (offset != -1) afile->offset = offset;
     {
-        struct ucred *tmpcred = curproc->p_cred->pc_ucred;
-	curproc->p_cred->pc_ucred = &afs_osi_cred;
 	AFS_GUNLOCK();
 	code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
                   AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid);
 	AFS_GLOCK();
-	curproc->p_cred->pc_ucred = tmpcred;
     }
     if (code == 0) {
 	code = asize - resid;
