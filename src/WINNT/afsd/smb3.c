@@ -5245,8 +5245,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         /* don't create if not found */
         if (dscp)
             cm_ReleaseSCache(dscp);
-		if (scp)
-			cm_ReleaseSCache(scp);
+        if (scp)
+            cm_ReleaseSCache(scp);
         cm_ReleaseUser(userp);
         free(realPathp);
         return CM_ERROR_NOSUCHFILE;
@@ -5365,9 +5365,11 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             }
         }
 
-        cm_ReleaseSCache(dscp);
+        if (dscp)
+            cm_ReleaseSCache(dscp);
         dscp = tscp1;
-        cm_ReleaseSCache(scp);
+        if (scp)
+            cm_ReleaseSCache(scp);
         scp = tscp2;
         /* 
          * if we get here and code == 0, then scp is the last directory created, and dscp is the
