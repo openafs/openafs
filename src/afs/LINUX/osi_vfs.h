@@ -34,31 +34,63 @@ typedef struct vnode {
 	uid_t			i_uid;
 	gid_t			i_gid;
 	kdev_t			i_rdev;
+#if defined(AFS_LINUX24_ENV)
+        loff_t                  i_size;
+#else
 	off_t			i_size;
+#endif
 	time_t			i_atime;
 	time_t			i_mtime;
 	time_t			i_ctime;
 	unsigned long		i_blksize;
 	unsigned long		i_blocks;
 	unsigned long		i_version;
+#if !defined(AFS_LINUX24_ENV)
 	unsigned long		i_nrpages;
+#endif
 	struct semaphore	i_sem;
+#if defined(AFS_LINUX24_ENV)
+        struct semaphore        i_zombie;
+#else
 	struct semaphore	i_atomic_write;
+#endif
 	struct inode_operations	*i_op;
+#if defined(AFS_LINUX24_ENV)
+        struct file_operations  *i_fop;
+#endif
 	struct super_block	*i_sb;
+#if defined(AFS_LINUX24_ENV)
+        wait_queue_head_t       i_wait;
+#else
 	struct wait_queue	*i_wait;
+#endif
 	struct file_lock	*i_flock;
+#if defined(AFS_LINUX24_ENV)
+        struct address_space    *i_mapping;
+        struct address_space    i_data;
+#else
 	struct vm_area_struct	*i_mmap;
 	struct page		*i_pages;
+#endif
 	struct dquot		*i_dquot[MAXQUOTAS];
+#if defined(AFS_LINUX24_ENV)
+        struct pipe_inode_info  *i_pipe;
+        struct block_device     *i_bdev;
+#endif
 
 	unsigned long		i_state;
 
 	unsigned int		i_flags;
+#if !defined(AFS_LINUX24_ENV)
 	unsigned char		i_pipe;
+#endif
 	unsigned char		i_sock;
 
+#if defined(AFS_LINUX24_ENV)
+        atomic_t                i_writecount;
+#else
 	int			i_writecount;
+#endif
 	unsigned int		i_attr_flags;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
 	__u32                   i_generation;
@@ -93,6 +125,9 @@ typedef struct vnode {
 #define i_number	i_ino
 #define v_count		i_count
 #define v_op		i_op
+#if defined(AFS_LINUX24_ENV)
+#define v_fop           i_fop
+#endif
 #define v_type		i_mode
 #define v_vfsp		i_sb
 #define vfs_vnodecovered s_covered

@@ -39,7 +39,11 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
     
     *perror = 0;
     
-    if (!vfsp && !(vfsp = vfs_devsearch(dev))) {
+    if (!vfsp 
+#if !defined(AFS_SUN58_ENV)
+	&& !(vfsp = vfs_devsearch(dev))
+#endif
+	) {
 	return (ENODEV);
     }
     if (code = (*ufs_igetp)(vfsp, inode, &ip, credp)) {

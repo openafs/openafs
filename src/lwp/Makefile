@@ -66,7 +66,7 @@ process.o	: process.s process.c
 					$(CC) -c -I${SRCDIR}include -KPIC -G0  process.s;; \
 				sgi_61 | sgi_62 | sgi_63 ) \
 					$(CC) -c ${XCFLAGS} -I${SRCDIR}include -KPIC -G0  process.s;; \
-				hp* | i386_linux* | sgi_64 | sgi_65) \
+				hp* | *_linux* | sgi_64 | sgi_65) \
 					${CC} ${CFLAGS} -c process.c;; \
 				ncrx86_*) \
 					/usr/ccs/lib/cpp -P -I${SRCDIR}include process.s process.ss; \

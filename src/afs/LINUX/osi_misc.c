@@ -22,17 +22,40 @@ char *crash_addr = 0; /* Induce an oops by writing here. */
 int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	       vnode_t **dirvpp, struct dentry **dpp)
 {
+#if defined(AFS_LINUX24_ENV)
+    struct nameidata nd;
+#else
     struct dentry *dp = NULL;
+#endif
     int code;
 
     code = ENOENT;
+#if defined(AFS_LINUX24_ENV)
+    if (seg == AFS_UIOUSER) {
+        code = followlink ?
+	    user_path_walk(aname, &nd) : user_path_walk_link(aname, &nd);
+    }
+    else {
+        if (path_init(aname, followlink ? LOOKUP_FOLLOW : 0, &nd))
+	    code = path_walk(aname, &nd);
+    }
+
+    if (!code) {
+	if (nd.dentry->d_inode) {
+	    *dpp = nd.dentry;
+	    code = 0;
+	}
+	else
+	    path_release(&nd);
+    }
+#else
     if (seg == AFS_UIOUSER) {
 	dp = followlink ? namei(aname) : lnamei(aname);
     }
     else {
 	dp = lookup_dentry(aname, NULL, followlink ? 1 : 0);
     }
-    
+
     if (dp && !IS_ERR(dp)) {
 	if (dp->d_inode) {
 	    *dpp = dp;
@@ -41,6 +64,7 @@ int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	else
 	    dput(dp);
     }
+#endif
 	    
     return code;
 }
@@ -262,9 +286,17 @@ void osi_linux_free_inode_pages(void)
     for (i=0; i<VCSIZE; i++) {
 	for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
 	    ip = (struct inode*)tvc;
+#if defined(AFS_LINUX24_ENV)
+	    if (ip->i_data.nrpages) {
+#else
 	    if (ip->i_nrpages) {
+#endif
 		invalidate_inode_pages(ip);
+#if defined(AFS_LINUX24_ENV)
+		if (ip->i_data.nrpages) {
+#else
 		if (ip->i_nrpages) {
+#endif
 		    printf("Failed to invalidate all pages on inode 0x%x\n",
 			   ip);
 		}
@@ -283,13 +315,26 @@ void osi_iput(struct inode *ip)
     extern struct vfs *afs_globalVFS;
 
     
+#if defined(AFS_LINUX24_ENV)
+    if (atomic_read(&ip->i_count) == 0 || atomic_read(&ip->i_count) & 0xffff0000) {
+#else
     if (ip->i_count == 0 || ip->i_count & 0xffff0000) {
+#endif
 	osi_Panic("IPUT Bad refCount %d on inode 0x%x\n",
+#if defined(AFS_LINUX24_ENV)
+		  atomic_read(&ip->i_count), ip);
+#else
 		  ip->i_count, ip);
+#endif
     }
     if (afs_globalVFS && afs_globalVFS == ip->i_sb ) {
+#if defined(AFS_LINUX24_ENV)
+	atomic_dec(&ip->i_count);
+	if (!atomic_read(&ip->i_count))
+#else
 	ip->i_count --;
 	if (!ip->i_count)
+#endif
 	    afs_delete_inode(ip);
     }
     else { 

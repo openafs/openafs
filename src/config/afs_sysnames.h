@@ -77,6 +77,7 @@
 #define SYS_NAME_ID_sunx86_56          	 936
 #define SYS_NAME_ID_sunx86_55          	 937
 #define SYS_NAME_ID_sun4x_57		 938
+#define SYS_NAME_ID_sun4x_58		 939
 
 
 #define SYS_NAME_ID_vax_ul4		1003
@@ -107,6 +108,13 @@
 
 #define SYS_NAME_ID_i386_linux2		1500
 #define SYS_NAME_ID_i386_linux22	1501
+#define SYS_NAME_ID_i386_linux24        1502
+
+#define SYS_NAME_ID_ppc_linux2          1600
+#define SYS_NAME_ID_ppc_linux22         1601
+#define SYS_NAME_ID_ppc_linux24         1602
+
+
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

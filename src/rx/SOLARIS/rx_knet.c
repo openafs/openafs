@@ -21,6 +21,9 @@
 #include "../sys/stream.h"
 #include "../sys/tihdr.h"
 #include "../sys/fcntl.h"
+#ifdef AFS_SUN58_ENV
+#include "../netinet/ip6.h"
+#endif
 #include "../inet/ip.h"
 #include "../netinet/udp.h"
 

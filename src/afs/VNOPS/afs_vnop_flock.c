@@ -511,7 +511,7 @@ struct AFS_UCRED *acred; {
 	acmd = F_SETLK;
     }
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
+#if (defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
     if ((acmd == F_GETLK) || (acmd == F_RGETLK)) {
 #else
     if (acmd == F_GETLK) {
@@ -525,7 +525,7 @@ struct AFS_UCRED *acred; {
 	return code;
     }
     else if ((acmd == F_SETLK) || (acmd == F_SETLKW) 
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
+#if (defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
 	     || (acmd == F_RSETLK)|| (acmd == F_RSETLKW)) {
 #else
 	) {
@@ -548,7 +548,7 @@ struct AFS_UCRED *acred; {
 	else if (af->l_type == F_UNLCK) code = LOCK_UN;
 	else return EINVAL; /* unknown lock type */
 	if (((acmd == F_SETLK) 
-#if 	defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV)
+#if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV)) && !defined(AFS_SUN58_ENV)
 	|| (acmd == F_RSETLK) 
 #endif
 	) && code != LOCK_UN)

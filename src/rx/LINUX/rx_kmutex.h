@@ -39,8 +39,11 @@ typedef struct afs_kmutex {
     int owner;
 } afs_kmutex_t;
 
+#if defined(AFS_LINUX24_ENV)
+typedef wait_queue_head_t afs_kcondvar_t;
+#else
 typedef struct wait_queue *afs_kcondvar_t;
-
+#endif
 
 static inline int MUTEX_ISMINE(afs_kmutex_t *l)
 {
@@ -50,7 +53,11 @@ static inline int MUTEX_ISMINE(afs_kmutex_t *l)
 
 static inline void afs_mutex_init(afs_kmutex_t *l)
 {
+#if defined(AFS_LINUX24_ENV)
+    init_MUTEX(&l->sem);
+#else
     l->sem = MUTEX;
+#endif
     l->owner = 0;
 }
 #define MUTEX_INIT(a,b,c,d) afs_mutex_init(a)
@@ -85,7 +92,11 @@ static inline void MUTEX_EXIT(afs_kmutex_t *l)
     up(&l->sem);
 }
 
+#if defined(AFS_LINUX24_ENV)
+#define CV_INIT(cv,b,c,d) init_waitqueue_head((wait_queue_head_t *)(cv))
+#else
 #define CV_INIT(cv,b,c,d) init_waitqueue((struct wait_queue**)(cv))
+#endif
 #define CV_DESTROY(cv)
 
 /* CV_WAIT and CV_TIMEDWAIT rely on the fact that the Linux kernel has
@@ -99,7 +110,11 @@ static inline CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
 
+#if defined(AFS_LINUX24_ENV)
+    interruptible_sleep_on((wait_queue_head_t *)cv);
+#else
     interruptible_sleep_on((struct wait_queue**)cv);
+#endif
 
     MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
@@ -115,7 +130,11 @@ static inline CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
     
+#if defined(AFS_LINUX24_ENV)
+    t = interruptible_sleep_on_timeout((wait_queue_head_t *)cv, t);
+#else
     t = interruptible_sleep_on_timeout((struct wait_queue**)cv, t);
+#endif
     
     MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
@@ -123,8 +142,13 @@ static inline CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
     return 0;
 }
 
+#if defined(AFS_LINUX24_ENV)
+#define CV_SIGNAL(cv) wake_up((wait_queue_head_t *)cv)
+#define CV_BROADCAST(cv) wake_up((wait_queue_head_t *)cv)
+#else
 #define CV_SIGNAL(cv) wake_up((struct wait_queue**)cv)
 #define CV_BROADCAST(cv) wake_up((struct wait_queue**)cv)
+#endif
 
 #else
 

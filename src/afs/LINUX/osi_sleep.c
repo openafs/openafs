@@ -124,7 +124,11 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				   by wakeup calls; wait will not return until
 				   it changes */
+#if defined(AFS_LINUX24_ENV)
+    wait_queue_head_t cond;
+#else
     struct wait_queue *cond;
+#endif
 } afs_event_t;
 
 #define HASHSIZE 128
@@ -156,7 +160,11 @@ static afs_event_t *afs_getevent(char *event)
 	afs_evhashcnt++;
 	newp->next = afs_evhasht[hashcode];
 	afs_evhasht[hashcode] = newp;
+#if defined(AFS_LINUX24_ENV)
+	init_waitqueue_head(&newp->cond);
+#else
 	init_waitqueue(&newp->cond);
+#endif
 	newp->seq = 0;
     }
     newp->event = event;

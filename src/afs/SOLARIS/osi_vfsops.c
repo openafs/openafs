@@ -433,7 +433,9 @@ _init()
 #else
     read_binding_file(sysbind, sb_hashtab);
 #endif
+#if !defined(AFS_SUN58_ENV)
     make_syscallname("afs", AFS_SYSCALL);
+#endif
 
     if (sysent[AFS_SYSCALL].sy_call == nosys) {
 	if ((sysn = mod_getsysname(AFS_SYSCALL)) != NULL) {
