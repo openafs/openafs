@@ -1,0 +1,12 @@
+Template: openafs-client/thiscell
+Type: string
+Description:  What AFS cell does this workstation belong to?
+   AFS filespace is organized into cells or administrative domains.
+   Each workstation belongs to one cell.  Usually the cell is the DNS
+   domain name of the workstation.
+
+template: openafs-client/cachesize
+Type: string
+Description:  How large is your AFS cache (kb)? 
+Default: 50000
+

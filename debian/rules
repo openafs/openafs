@@ -58,9 +58,9 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp.
-	$(MAKE) install DESTDIR=`pwd`/debian/tmp
+	cat debian/filelist |debian/movefiles
 
-	dh_movefiles
+
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -101,7 +101,7 @@ binary-arch: build install
 	dh_testversion 1.1.17
 	dh_testdir
 	dh_testroot
-#	dh_installdebconf
+	dh_installdebconf
 	dh_installdocs
 	dh_installexamples
 	dh_installmenu
@@ -118,6 +118,7 @@ binary-arch: build install
 	dh_compress
 	dh_fixperms
 	# You may want to make some executables suid here.
+	chmod 700 debian/openafs-client/var/cache/openafs
 	dh_suidregister
 	dh_installdeb
 #	dh_makeshlibs

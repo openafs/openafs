@@ -1,17 +1,17 @@
 Source: openafs
-Section: unknown
+Section: non-us
 Priority: optional
-Maintainer: unknown <hartmans@snorklewacker.mit.edu>
-Build-Depends: debhelper
+Maintainer: Sam Hartman <hartmans@mit.edu>
+Build-Depends: debhelper, libncurses5-dev, libpam0g-dev, bison
 Standards-Version: 3.1.1
 
-Package: openafs
+Package: openafs-client
 Architecture: any
-Depends: ${shlibs:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
-
-Package: openafs-doc
-Architecture: all
-Description: Documentation for openafs
- <insert long description, indented with spaces>
+Depends: ${shlibs:Depends}, debconf
+Description: The AFS distributed filesystem- client support
+   AFS is a distributed filesystem allowing cross-platform sharing of
+   files among multiple computers.  Facilities are provided for access
+   control, authentication, backup and administrative management.
+   .
+   This package provides basic client support to mount and manipulate
+   AFS.
