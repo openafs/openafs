@@ -603,8 +603,8 @@ Section "AFS Client" secClient
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" 
-  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" 
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "-A -M -N -Q"
+  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" "-A -M -N -Q"
 
   Push "$INSTDIR\Client\Program"
   Call AddToPath
