@@ -807,7 +807,11 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
 {
 #if defined(AFS_NAMEI_ENV)
     IHandle_t *ihtmpp;
+#if !defined(AFS_NT40_ENV)
     namei_t filename;
+#else
+    char filename[MAX_PATH];
+#endif
 #endif
     Vvnodesize += vnode->length;
     if (dsizeOnly) return;
@@ -821,8 +825,13 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
 #if defined(AFS_NAMEI_ENV)
     if(PrintFileNames) {
 	    IH_INIT(ihtmpp, V_device(vp), V_parentId(vp), ino);
+#if !defined(AFS_NT40_ENV)
 	    namei_HandleToName(&filename, ihtmpp);
 	    printf(" UFS-Filename: %s",filename.n_path);
+#else
+	    nt_HandleToName(filename, ihtmpp);
+	    printf(" NTFS-Filename: %s",filename);
+#endif
     }
 #endif
     printf("\n");

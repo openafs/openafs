@@ -258,7 +258,7 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 				rxi_FreePacket(p);
 			    }
 			    if (swapNameProgram) {
-				(*swapNameProgram)(rx_listnerPid, &name, 0);
+				(*swapNameProgram)(rx_listenerPid, &name, 0);
 				rx_listenerPid = 0;
 			    }
 			    return;

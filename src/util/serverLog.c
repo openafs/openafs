@@ -115,7 +115,7 @@ void FSLog (const char *format, ...)
 	    write(serverLogFD, tbuffer, len);
     UNLOCK_SERVERLOG();
 
-#if !defined(AFS_PTHREAD_ENV)
+#if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     if ( ! serverLogSyslog ) {
         fflush(stdout);
         fflush(stderr);     /* in case they're sharing the same FD */
@@ -192,12 +192,12 @@ int OpenLog(const char *fileName)
     struct tm *TimeFields;
     char FileName[MAXPATHLEN]; 
 
-    if ( serverLogSyslog ) {
 #ifndef AFS_NT40_ENV
+    if ( serverLogSyslog ) {
 	openlog(NULL, LOG_PID, serverLogSyslogFacility);
 	return;
-#endif
     }
+#endif
 
     if (mrafsStyleLogs) {
         TM_GetTimeOfDay(&Start, 0);
@@ -254,9 +254,11 @@ int ReOpenLog(const char *fileName)
     if (access(fileName, F_OK)==0)
 	return 0; /* exists, no need to reopen. */
 
+#if !defined(AFS_NT40_ENV)
     if ( serverLogSyslog ) {
 	return 0;
     }
+#endif
 
 #if defined(AFS_PTHREAD_ENV)
     LOCK_SERVERLOG();
