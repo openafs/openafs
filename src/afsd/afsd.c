@@ -1384,7 +1384,7 @@ mainproc(as, arock)
 	/* -chunksize */
 	chunkSize = atoi(as->parms[12].items->data);
 	if (chunkSize < 0 || chunkSize > 30) {
-	    printf("afsd:invalid chunk size spec'd, using default\n");
+	    printf("afsd:invalid chunk size (not in range 0-30), using default\n");
 	    chunkSize = 0;
 	}
     }
