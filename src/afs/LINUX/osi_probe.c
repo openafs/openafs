@@ -400,8 +400,8 @@ static int main_zapped_syscalls[] = {
  * mmap2 and fstat64 are implemented only for 32-bit calls
  */
 #ifdef AFS_PPC64_LINUX20_ENV
-    __NR_mmap2,
-    __NR_fstat64,
+    /* _mmap2, _fstat64 */
+    192, 197,
 #endif /* AFS_PPC64_LINUX20_ENV */
 
 /* Similarly for S390X, with lcown16 and fstat64 */
@@ -644,7 +644,8 @@ static int sct32_zapped_syscalls[] = {
 /* mmap2 and fstat64 are implemented only for 32-bit calls */
 static int sct32_unique_syscalls[] = {
 #ifdef AFS_PPC64_LINUX20_ENV
-    __NR_mmap2, __NR_fstat64,
+    /* _mmap2, _fstat64 */
+    192, 197,
 #endif
 #ifdef AFS_SPARC64_LINUX24_ENV
     /* 
