@@ -294,7 +294,8 @@ void uuid__get_os_time (uuid_time_t *os_time)
 char hostName1[128] = "localhost";
 static int uuid_get_address (uuid_address_p_t addr)
 {
-    afs_int32 code, addr1;
+    afs_int32 code;
+    afs_uint32 addr1;
     struct hostent *he;
 
     code = gethostname(hostName1, 64);
