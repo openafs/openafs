@@ -842,16 +842,24 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #if defined(AFS_LINUX26_ENV)
                 struct dentry *dentry;
                 struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
+                AFS_FAST_HOLD(tvc);
                 AFS_GUNLOCK();
+shrink_restart:
+                DLOCK();
                 cur=head;
                 while ((cur = cur->next) != head) {
                     dentry = list_entry(cur, struct dentry, d_alias);
                     if (!d_unhashed(dentry) &&
-                        !list_empty(&dentry->d_subdirs))
+                        !list_empty(&dentry->d_subdirs)) {
+                        DUNLOCK();
 			shrink_dcache_parent(dentry);
+                        goto shrink_restart;
+                    }
                 }
+                DUNLOCK();
                 d_prune_aliases(AFSTOI(tvc));
                 AFS_GLOCK();
+                AFS_FAST_RELE(tvc);
 #else
 		afs_TryFlushDcacheChildren(tvc);
 #endif
