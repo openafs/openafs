@@ -1,4 +1,4 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 use Term::ReadLine;
 use strict;
 use OpenAFS::ConfigUtils;

@@ -10,8 +10,8 @@ INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}/afs -I${TOP_INCDIR}
 INCLIBS=-L${SRCDIR}/lib/afs -L${TOP_LIBDIR}
 
 LIBS=\
-	${TOP_LIBDIR}/libdumpscan.a \
-	${TOP_LIBDIR}/libxfiles.a \
+	libdumpscan.a \
+	libxfiles.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/libvolser.a \
@@ -336,7 +336,7 @@ mmap-cat: mmap-cat.o $(EXTRA_OBJS)
 	$(CC) $(LDFLAGS) -o $@ mmap-cat.o $(EXTRA_OBJS) $(LIBS)
 
 run-tests: run-tests.in
-	(cd ..; CONFIG_FILES=tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_OBJDIR@/config.status)
+	(cd ../..; CONFIG_FILES=src/tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_OBJDIR@/config.status)
 	@chmod +x run-tests
 
 #.c.o:
