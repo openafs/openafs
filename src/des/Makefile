@@ -36,8 +36,8 @@ DBG	=
 GPROF	=
 # by default do not try to hide entry points
 F_CC	= -c ${GPROF} ${DBG} ${XCFLAGS}
-F_CPP	= -I${K_INC} -I.
-MK_STR	= "	\$${CC} -I\$${SRC} \$${F_CPP} \$${F_CC}"
+F_CPP	= -I${K_INC} -I. -I${TOP_SRCDIR}/config 
+MK_STR	= "	\$${CC} -I\$${SRC} \$${F_CPP} \$${F_CC}" -I${TOP_SRCDIR}/config 
 LDFLAGS = ${XLDFLAGS}
 
 # dont use optimizer, since it pessimizes on uvax2,

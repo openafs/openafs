@@ -17,10 +17,12 @@
 #include "conf.h"
 
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(HAVE_STRINGS_H)
 #include <strings.h>
 #endif
+#if defined(HAVE_STRING_H)
 #include <string.h>
+#endif
 
 #ifdef	BSDUNIX
 #ifdef	AFS_SUN5_ENV
@@ -34,8 +36,11 @@
 #include <setjmp.h>
 #endif
 
-#if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -46,14 +51,11 @@
 static int intrupt;
 #endif
 
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#include <termios.h>
-#endif
-#ifdef AFS_NT40_ENV
+#ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
 

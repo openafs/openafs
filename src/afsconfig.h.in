@@ -13,6 +13,7 @@
 #define HAVE_STRING_H
 
 #ifdef AFS_NT40_ENV
+#define HAVE_WINDOWS_H
 #define HAVE_MALLOC_H
 #define HAVE_WINSOCK2_H
 #define HAVE_DIRECT_H
@@ -49,6 +50,23 @@
 
 #if !defined(AFS_AIX41_ENV)
 #define HAVE_SYS_MOUNT_H
+#endif
+
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#define HAVE_STRINGS_H
+#define HAVE_STRING_H
+#else
+#define HAVE_STRING_H
+#endif
+
+#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#define HAVE_TERMIOS_H
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#define HAVE_TERMIOS_H
+#endif
+
+#if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#define HAVE_SIGNAL_H
 #endif
 
 #endif /* AFSCONFIG_H */

@@ -13,7 +13,7 @@ include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
 INCLUDES = -I${SRCDIR}include -I.. -I../rx
-CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config
 SFLAGS=-P -I${SRCDIR}include
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?

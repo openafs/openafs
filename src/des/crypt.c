@@ -42,7 +42,12 @@ static char sccsid[] = "@(#)crypt.c	5.11 (Berkeley) 6/25/91";
 #include <windows.h>
 #endif
 #include <stdlib.h>
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
 #include <string.h>
+#endif
 
 /*
  * UNIX password, and DES, encryption.

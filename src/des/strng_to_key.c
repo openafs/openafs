@@ -22,10 +22,15 @@
 
 #include <mit-cpyright.h>
 #include <stdio.h>
-#include <string.h>
 #include <afs/param.h>
 #include <des.h>
 #include "des_internal.h"
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
+#include <string.h>
+#endif
 
 extern int des_debug;
 extern int des_debug_print();

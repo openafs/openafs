@@ -16,12 +16,17 @@
 #include <mit-cpyright.h>
 
 #include <afs/param.h>
+#include <des.h>
+#include "des_internal.h"
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
 #include <string.h>
-#include <des.h>
-#include "des_internal.h"
+#endif
 #include "stats.h"
 
 extern void des_fixup_key_parity();

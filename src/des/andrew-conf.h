@@ -3,6 +3,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #ifdef vax
 #include "conf-bsdvax.h"
 #else
