@@ -43,7 +43,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 ubik_lastYesTime;
 extern afs_int32 ubik_nBuffers;
 
-extern int afsconf_ClientAuth();
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
@@ -256,7 +255,6 @@ void main (argc, argv)
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;
     if (kerberosKeys) {
-	extern int afsconf_GetKey();
 	sc[2] = rxkad_NewServerSecurityObject
 	    (0, prdir, afsconf_GetKey, (char *)0);
     }
