@@ -75,12 +75,10 @@ static inline void MUTEX_ENTER(afs_kmutex_t *l)
 /* And how to do a good tryenter? */
 static inline int MUTEX_TRYENTER(afs_kmutex_t *l)
 {
-    if (!l->owner) {
-	MUTEX_ENTER(l);
-	return 1;
-    }
-    else
-	return 0;
+    if (down_trylock(&l->sem))
+        return 0;
+    l->owner = current->pid;
+    return 1;
 }
 
 static inline void MUTEX_EXIT(afs_kmutex_t *l)
