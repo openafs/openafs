@@ -982,12 +982,12 @@ int afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     AFS_GLOCK();
     code = afs_rmdir((struct vcache*)dip, name, credp);
 
-    /* Linux likes to see ENOTDIR returned from an rmdir() syscall
+    /* Linux likes to see ENOTEMPTY returned from an rmdir() syscall
      * that failed because a directory is not empty. So, we map
-     * EEXIST to ENOTDIR on linux.
+     * EEXIST to ENOTEMPTY on linux.
      */
     if (code == EEXIST) {
-	code = ENOTDIR;
+	code = ENOTEMPTY;
     }
     
     if (!code) {
