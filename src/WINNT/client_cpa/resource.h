@@ -1,15 +1,12 @@
-/* 
- * Copyright (C) 1998, 1989 Transarc Corporation - All rights reserved
- *
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
- *
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by afs_cpa.rc
-//
+
 #define IDS_CPL_NAME_NT                 1
 #define IDS_CPL_DESC_NT                 2
 #define IDS_CPL_NAME_95                 3

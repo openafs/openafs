@@ -1,4 +1,11 @@
-/* Copyright 1998 - Transarc Corporation - All Rights Reserved */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /* An IHandle_t is an abstraction allowing the file and volume operations to
  * pass the elements required to identify a file to the underlying file

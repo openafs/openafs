@@ -1,10 +1,13 @@
-/* Copyright (C) 1995, 1989, 1998 Transarc Corporation - All rights reserved */
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
+
 /*
- *
  * Linux specific vnodeops. Also includes the glue routines required to call
  * AFS vnodeops. The "NOTUSED" #define is used to indicate routines and
  * calling sequences present in an ops table that we don't actually use.

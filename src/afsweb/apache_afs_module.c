@@ -1,8 +1,13 @@
-/* Copyright (C) 1999 IBM Transarc Labs - All rights reserved. */
-
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /*
- * 
  * afs_module  Version 1.3     < for Apache Server version 1.2.6 and 1.3.1 >
  * 
  * Add to Configuration file (before any of the Authentication modules)

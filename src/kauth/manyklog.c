@@ -1,8 +1,12 @@
-/* Copyright (C) 1991, 1989 Transarc Corporation - All rights reserved */
 /*
- * (C) COPYRIGHT IBM CORPORATION 1988, 1989
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
+
 /*
  * Revision 2.6  1991/04/15  10:44:53
  * Initialize "explicit" local variable in false case.

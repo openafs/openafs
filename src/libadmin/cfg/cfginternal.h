@@ -1,9 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef TRANSARC_AFS_CFG_INTERNAL_H
 #define TRANSARC_AFS_CFG_INTERNAL_H
-
-/* Copyright (C) 1999, 1998  Transarc Corporation.  All Rights Reserved.
- *
- */
 
 /* Define types, macros, etc., internal to the configuration library */
 

@@ -1,25 +1,11 @@
-/* Copyright (C) 1990, 1989 Transarc Corporation - All rights reserved */
 /*
-****************************************************************************
-*        Copyright IBM Corporation 1988, 1989 - All Rights Reserved        *
-*                                                                          *
-* Permission to use, copy, modify, and distribute this software and its    *
-* documentation for any purpose and without fee is hereby granted,         *
-* provided that the above copyright notice appear in all copies and        *
-* that both that copyright notice and this permission notice appear in     *
-* supporting documentation, and that the name of IBM not be used in        *
-* advertising or publicity pertaining to distribution of the software      *
-* without specific, written prior permission.                              *
-*                                                                          *
-* IBM DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL *
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL IBM *
-* BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY      *
-* DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER  *
-* IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING   *
-* OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.    *
-****************************************************************************
-*/
-
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /* NOTE: fc_cbc_encrypt now modifies its 5th argument, to permit chaining over
  * scatter/gather vectors.

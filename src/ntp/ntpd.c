@@ -1,6 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef	lint
 #endif /* lint */
-
 /*
  * Revision 1.2  1993/04/11  17:35:40
  * define NOSWAP option on sgi
@@ -405,12 +413,12 @@ main(argc, argv)
 #endif	/* DEBUG */
 		setlogmask(LOG_UPTO(LOG_INFO));
 
-	syslog(LOG_NOTICE, "%s version $Revision: 1.1 $", prog_name);
+	syslog(LOG_NOTICE, "%s version $Revision: 1.1.1.2 $", prog_name);
 	syslog(LOG_NOTICE, "patchlevel %d", PATCHLEVEL);
 
 #ifdef	DEBUG
 	if (debug)
-		printf("%s version $Revision: 1.1 $ patchlevel %d\n",
+		printf("%s version $Revision: 1.1.1.2 $ patchlevel %d\n",
 		       prog_name, PATCHLEVEL);
 #endif
 #if defined(AFS_AIX_ENV)

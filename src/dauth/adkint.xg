@@ -1,8 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
-/* 
+/*
  * adkint.xg -- interface definition for AFS/DFS DCE KDC ticket service.
- *
- * Copyright (c) 1993 Transarc Corporation. All rights reserved.
  */
 
 package ADK_

@@ -1,5 +1,13 @@
-/* Copyright Transarc Corporation 1998 - All Rights Reserved.
- *
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * test readdir routines.
 * Need to ensure that opendir succeeds if the directory is empty. To that
  * end report the NT error for any failure.

@@ -1,6 +1,13 @@
-/* Copyright (C) 1999 IBM Transarc Labs - All rights reserved. */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
-/* apache_afs_utils.c
+/*
  * This file contains routines common to both the client and the server-
  * primarily an interface routine to the pioctl call
  * and a routine for setting the primary flag in the token structure in

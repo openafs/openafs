@@ -1,11 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #ifndef lint
 #endif
-
-/*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * LICENSED MATERIALS - PROPERTY OF IBM
- */
 #include <afs/param.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -22,13 +25,17 @@ char **argv; {
     struct timeval tvp[2];
     int fd1;
     int code;
+#ifndef HAVE_GETCWD
+    extern char *getwd();
+#define getcwd(x,y) getwd(x)
+#endif
 
     /* venus system tester */
     if (argc != 2) return printf("usage: fulltest <dir-to-screw-up>\n");
     dirName = argv[1];
     mkdir(dirName, 0777);
     if (chdir(dirName) < 0) return perror("chdir");
-    if (getwd(tempName) == 0) {
+    if (getcwd(tempName, 1024) == 0) {
 	return printf("Could not get working dir.\n");
     }
     /* now create some files */

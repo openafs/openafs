@@ -1,9 +1,13 @@
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * Copyright TRANSARC CORPORATION 1990
- * LICENSED MATERIALS - PROPERTY OF IBM
- *
- * uss_acl.c
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  *	Implementation of the ACL and quota-related operations used
  *	by the AFS user account facility.
  */

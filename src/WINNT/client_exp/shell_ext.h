@@ -1,7 +1,10 @@
 /*
- * Copyright (C) 1997  Transarc Corporation.
- * All rights reserved.
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 #if !defined(AFX_SHELLEXT_H__DC515C28_6CAC_11D1_BAE7_00C04FD140D2__INCLUDED_)

@@ -1,4 +1,11 @@
-/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -121,7 +128,7 @@ main(argc, argv)
 	int nargs;
 
 	printf("fs> ");
-	if (gets(line) != NULL) {
+	if (fgets(line, 499, stdin) != NULL) {
 	    char *oper;
 	    register char **argp = args;
 	    GetArgs(line, argp, &nargs);

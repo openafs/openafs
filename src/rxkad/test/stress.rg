@@ -1,8 +1,14 @@
-/* -*- C -*- Automatically set mode to C-mode since that's closest to right */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /* RX Authentication Stress test: rxgen file */
 
-/* Copyright (C) 1991 Transarc Corporation - All rights reserved */
 
 %#define	RXKST_SERVICEPORT	7100 /* test server's port */
 %#define	RXKST_SERVICEID		0xeb81

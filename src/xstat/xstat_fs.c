@@ -1,12 +1,13 @@
 /*
- * (C) Copyright Transarc Corporation 1990
- * Licensed Materials - Property of Transarc
+ * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*------------------------------------------------------------------------
- * xstat_fs.c
- *
+/*
  * Description:
  *	Implementation of the client side of the AFS File Server extended
  *	statistics facility.

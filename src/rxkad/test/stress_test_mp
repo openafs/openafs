@@ -1,4 +1,10 @@
 #! /bin/csh -fe
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
 
 # This script runs the Rx stress test on a list of machines.  It needs
 # to be started on all the machines within a few seconds of each other

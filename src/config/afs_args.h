@@ -1,11 +1,18 @@
-#ifndef _AFS_ARGS_H_
-#define _AFS_ARGS_H_
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
+/*
  * AFS system call opcodes
  */
+
+#ifndef _AFS_ARGS_H_
+#define _AFS_ARGS_H_
 
 #define	AFSOP_START_RXCALLBACK	  0	/* no aux parms */
 #define	AFSOP_START_AFS		  1	/* no aux parms */

@@ -1,9 +1,10 @@
-/* -*- C -*- Automatically set mode to C-mode since that's closest to right */
-/* Copyright (C) 1990, 1989 Transarc Corporation - All rights reserved */
 /*
- * For copyright information, see IPL which you accepted in order to
- * download this software.
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /* for input byte sequences */

@@ -1,10 +1,17 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef lint
 #endif
-
 /*
- ****************************************************************
- * $Revision: 1.1 $
- * $Date: 2000/11/04 04:23:22 $
+ * $Revision: 1.1.1.2 $
+ * $Date: 2000/11/05 05:03:31 $
  * $State: Exp $
  * $Locker:  $
  ****************************************************************

@@ -1,10 +1,11 @@
 @echo off
+rem Copyright 2000, International Business Machines Corporation and others.
+rem All Rights Reserved.
+rem 
+rem This software has been released under the terms of the IBM Public
+rem License.  For details, see the LICENSE file in the top-level source
+rem directory or online at http://www.openafs.org/dl/license10.html
 
-rem
-rem Copyright (C) 1998  Transarc Corporation.
-rem All rights reserved.
-rem
-rem
 rem This file deletes the IS5 dir tree.  First it will delete all the files we
 rem know about.  Then it will delete the IS5 dirs.  For dirs that contain
 rem output files that we don't care about, we deltree them.  For all other dirs

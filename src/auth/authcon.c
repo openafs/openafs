@@ -1,8 +1,12 @@
-/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
 /*
- * (C) COPYRIGHT IBM CORPORATION 1988, 1989
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
+
 /*
  * Revision 2.3  90/08/31  16:11:49
  * Move permit_xprt.h.
@@ -69,16 +73,6 @@ extern struct rx_securityClass *rxkad_NewClientSecurityObject();
 #include "../permit_xprt.h"
 #endif /* defined(UKERNEL) */
 
-
-#if !defined(UKERNEL)
-int afsconf_CheckAuth(adir, acall)
-register struct rx_call *acall;
-register struct afsconf_dir *adir; {
-    LOCK_GLOBAL_MUTEX
-    return ((afsconf_SuperUser(adir, acall, (char *)0) == 0)? 10029 : 0);
-    UNLOCK_GLOBAL_MUTEX
-}
-#endif /* !defined(UKERNEL) */
 
 /* return a null security object if nothing else can be done */
 static afs_int32 QuickAuth(astr, aindex)

@@ -1,7 +1,10 @@
-/* Copyright (C) 1990 Transarc Corporation - All rights reserved */
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987, 1988
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 #include <afs/param.h>
@@ -283,7 +286,7 @@ static handleit(as)
 	bzero(&updateentry, sizeof(updateentry));
 	bzero(&listbyattributes, sizeof(listbyattributes));
 	printf("vl> ");
-	if (gets(line) == NULL) {
+	if (fgets(line, 499, stdin) == NULL) {
 	    printf("\n");
 	    exit(0);
 	} else {

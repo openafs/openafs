@@ -1,3 +1,12 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 /* Verify that the size of the XFS inode is large enough to hold the XFS
  * attribute for AFS inode parameters. Check all the mounted /vicep partitions.
  */

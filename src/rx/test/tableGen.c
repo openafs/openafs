@@ -1,4 +1,13 @@
 /*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * The program will create a file that contains descriptions
  * of a set of rx rpc's.  The output of this program is used
  * as input to generator.c.

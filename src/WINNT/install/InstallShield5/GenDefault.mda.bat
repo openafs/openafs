@@ -1,10 +1,10 @@
 @echo off
-
-rem
-rem Copyright (C) 1998  Transarc Corporation.
-rem All rights reserved.
-rem
-rem
+rem Copyright 2000, International Business Machines Corporation and others.
+rem All Rights Reserved.
+rem 
+rem This software has been released under the terms of the IBM Public
+rem License.  For details, see the LICENSE file in the top-level source
+rem directory or online at http://www.openafs.org/dl/license10.html
 
 rem -------------- default.mda --------------------------------------------
 
