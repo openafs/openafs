@@ -461,7 +461,7 @@ int main(
 static void getloginname(register struct utmp *up)
 {
 	register char *namep;
-	char c;
+	int c;
 
 	while (up->ut_name[0] == '\0') {
 		namep = up->ut_name;
@@ -469,10 +469,10 @@ static void getloginname(register struct utmp *up)
 		while ((c = getchar()) != '\n') {
 			if (c == ' ')
 				c = '_';
-			if (c == (char)EOF)
+			if (c == EOF)
 				exit(0);
 			if (namep < up->ut_name+NMAX)
-				*namep++ = c;
+				*namep++ = (char) c;
 		}
 	}
 	strncpy(lusername, up->ut_name, NMAX);

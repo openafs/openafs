@@ -97,7 +97,7 @@ char *partName;
 yesprompt(str)
 char *str;
 {
-    char response, c;
+    int response, c;
     int code;
 
     fprintf(STDERR, "Do you want to %s? [yn](n): ", str);

@@ -2076,7 +2076,7 @@ register struct cmd_syndesc *as;
 	else {                    /* volume exists - do we do a full incremental or abort */
 	    int Oserver, Opart, Otype, vol_elsewhere = 0;
 	    struct nvldbentry Oentry;
-	    char   c, dc;
+	    int   c, dc;
 
 	    if(avolid == 0) {
 		avolid = entry.volumeId[voltype];

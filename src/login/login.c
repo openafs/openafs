@@ -1439,7 +1439,7 @@ int prompt;
 				exit(0);
 			}
 			if (p < nbuf + UT_NAMESIZE)
-				*p++ = ch;
+				*p++ = (char) ch;
 		}
 		if (p > nbuf) {
 			if (nbuf[0] == '-')
