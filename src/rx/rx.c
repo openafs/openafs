@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.9 2001/10/14 18:43:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.10 2002/01/22 20:29:44 hartmans Exp $");
 
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
@@ -897,7 +897,12 @@ static void rxi_DestroyConnectionNoLock(conn)
 		     * last reply packets */
 		    rxevent_Cancel(call->delayedAckEvent, call,
 				   RX_CALL_REFCOUNT_DELAY);
-		    rxi_AckAll((struct rxevent *)0, call, 0);
+		    if (call->state == RX_STATE_PRECALL ||
+			call->state == RX_STATE_ACTIVE) {
+			rxi_SendDelayedAck(call->delayedAckEvent, call, 0);
+		    } else {
+			rxi_AckAll((struct rxevent *)0, call, 0);
+		    }
 		}
 		MUTEX_EXIT(&call->lock);
 	    }
@@ -1001,6 +1006,21 @@ struct rx_call *rx_NewCall(conn)
     clock_GetTime(&queueTime);
     AFS_RXGLOCK();
     MUTEX_ENTER(&conn->conn_call_lock);
+
+    /*
+     * Check if there are others waiting for a new call.
+     * If so, let them go first to avoid starving them.
+     * This is a fairly simple scheme, and might not be
+     * a complete solution for large numbers of waiters.
+     */
+    if (conn->makeCallWaiters) {
+#ifdef	RX_ENABLE_LOCKS
+	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
+#else
+	osi_rxSleep(conn);
+#endif
+    }
+
     for (;;) {
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    call = conn->call[i];
@@ -1015,7 +1035,6 @@ struct rx_call *rx_NewCall(conn)
 	    }
 	    else {
 		call = rxi_NewCall(conn, i);
-		MUTEX_ENTER(&call->lock);
 		break;
 	    }
 	}
@@ -1025,12 +1044,24 @@ struct rx_call *rx_NewCall(conn)
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_MAKECALL_WAITING;
 	MUTEX_EXIT(&conn->conn_data_lock);
+
+	conn->makeCallWaiters++;
 #ifdef	RX_ENABLE_LOCKS
 	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
 	osi_rxSleep(conn);
 #endif
+	conn->makeCallWaiters--;
     }
+    /*
+     * Wake up anyone else who might be giving us a chance to
+     * run (see code above that avoids resource starvation).
+     */
+#ifdef	RX_ENABLE_LOCKS
+    CV_BROADCAST(&conn->conn_call_cv);
+#else
+    osi_rxWakeup(conn);
+#endif
 
     CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 
@@ -1918,7 +1949,7 @@ struct rx_service *rxi_FindService(socket, serviceId)
 
 /* Allocate a call structure, for the indicated channel of the
  * supplied connection.  The mode and state of the call must be set by
- * the caller. */
+ * the caller. Returns the call with mutex locked. */
 struct rx_call *rxi_NewCall(conn, channel)
     register struct rx_connection *conn;
     register int channel;
@@ -2000,7 +2031,6 @@ struct rx_call *rxi_NewCall(conn, channel)
 	the call number is valid from the last time this channel was used */
     if (*call->callNumber == 0) *call->callNumber = 1;
 
-    MUTEX_EXIT(&call->lock);
     return call;
 }
 
@@ -2526,7 +2556,6 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	}
 	if (!call) {
 	    call = rxi_NewCall(conn, channel);
-	    MUTEX_ENTER(&call->lock);
 	    *call->callNumber = np->header.callNumber;
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -5263,15 +5292,40 @@ void rxi_SendDelayedCallAbort(event, call, dummy)
  * seconds) to ask the client to authenticate itself.  The routine
  * issues a challenge to the client, which is obtained from the
  * security object associated with the connection */
-void rxi_ChallengeEvent(event, conn, dummy)
+void rxi_ChallengeEvent(event, conn, atries)
     struct rxevent *event;
     register struct rx_connection *conn;
-    char *dummy;
+    void *atries;
 {
+    int tries = (int) atries;
     conn->challengeEvent = (struct rxevent *) 0;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
 	struct clock when;
+
+	if (tries <= 0) {
+	    /* We've failed to authenticate for too long.
+	     * Reset any calls waiting for authentication;
+	     * they are all in RX_STATE_PRECALL.
+	     */
+	    int i;
+
+	    MUTEX_ENTER(&conn->conn_call_lock);
+	    for (i=0; i<RX_MAXCALLS; i++) {
+		struct rx_call *call = conn->call[i];
+		if (call) {
+		    MUTEX_ENTER(&call->lock);
+		    if (call->state == RX_STATE_PRECALL) {
+			rxi_CallError(call, RX_CALL_DEAD);
+			rxi_SendCallAbort(call, NULL, 0, 0);
+		    }
+		    MUTEX_EXIT(&call->lock);
+		}
+	    }
+	    MUTEX_EXIT(&conn->conn_call_lock);
+	    return;
+	}
+
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
 	    /* If there's no packet available, do this later. */
@@ -5282,7 +5336,8 @@ void rxi_ChallengeEvent(event, conn, dummy)
 	}
 	clock_GetTime(&when);
 	when.sec += RX_CHALLENGE_TIMEOUT;
-	conn->challengeEvent = rxevent_Post(&when, rxi_ChallengeEvent, conn, 0);
+	conn->challengeEvent =
+	    rxevent_Post(&when, rxi_ChallengeEvent, conn, (void *) (tries-1));
     }
 }
 
@@ -5297,7 +5352,7 @@ void rxi_ChallengeOn(conn)
 {
     if (!conn->challengeEvent) {
 	RXS_CreateChallenge(conn->securityObject, conn);
-	rxi_ChallengeEvent((struct rxevent *)0, conn, NULL);
+	rxi_ChallengeEvent(NULL, conn, (void *) RX_CHALLENGE_MAXTRIES);
     };
 }
 

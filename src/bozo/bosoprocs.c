@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.3 2001/11/26 00:27:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.4 2002/01/22 20:29:44 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -362,6 +362,7 @@ char *aname; {
     struct afsconf_cell tcell;
     register afs_int32 code;
     char caller[MAXKTCNAMELEN];
+    char clones[MAXHOSTSPERCELL];
     
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) {
       code = BZACCESS;
@@ -369,7 +370,7 @@ char *aname; {
     }
     if (DoLogging) bozo_Log("%s is executing SetCellName '%s'\n", caller, aname);
 
-    code = afsconf_GetCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
     if (code) 
       goto fail;
 
@@ -382,7 +383,7 @@ char *aname; {
     }
 
     strcpy(tcell.name, aname);
-    code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
+    code = afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell, &clones);
 
   fail:
     osi_auditU (acall, BOS_SetCellEvent, code, AUD_STR, aname, AUD_END);
@@ -411,13 +412,14 @@ char **aname; {
 
 BOZO_GetCellHost(acall, awhich, aname)
 struct rx_call *acall;
-afs_int32 awhich;
+afs_uint32 awhich;
 char **aname; {
     register afs_int32 code;
     struct afsconf_cell tcell;
     register char *tp;
+    char clones[MAXHOSTSPERCELL];
 
-    code = afsconf_GetCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
     if (code) goto fail;
 
     if (awhich >= tcell.numServers) {
@@ -426,8 +428,13 @@ char **aname; {
     }
     
     tp = tcell.hostName[awhich];
-    *aname = (char *) malloc(strlen(tp)+1);
-    strcpy(*aname, tp);
+    *aname = (char *) malloc(strlen(tp)+3);
+    if (clones[awhich]) {
+	strcpy(*aname, "[");
+	strcat(*aname, tp);
+	strcat(*aname, "]");
+    } else
+        strcpy(*aname, tp);
     goto done;
     
 fail:
@@ -446,6 +453,7 @@ char *aname; {
     afs_int32 which;
     register int i;
     char caller[MAXKTCNAMELEN];
+    char clones[MAXHOSTSPERCELL];
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) {
       code = BZACCESS;
@@ -454,7 +462,7 @@ char *aname; {
     if (DoLogging) 
       bozo_Log("%s is executing DeleteCellHost '%s'\n", caller, aname);
 
-    code = afsconf_GetCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
     if (code) 
       goto fail;
 
@@ -473,7 +481,7 @@ char *aname; {
 
     memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
     memset(tcell.hostName[which], 0, MAXHOSTCHARS);
-    code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
+    code = afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell, &clones);
 
   fail:
     osi_auditU( acall, BOS_DeleteHostEvent, code, AUD_STR, aname, AUD_END);
@@ -488,6 +496,9 @@ char *aname; {
     afs_int32 which;
     register int i;
     char caller[MAXKTCNAMELEN];
+    char clones[MAXHOSTSPERCELL];
+    char *n;
+    char isClone = 0;
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) {
       code = BZACCESS;
@@ -496,13 +507,20 @@ char *aname; {
     if (DoLogging) 
       bozo_Log("%s is executing AddCellHost '%s'\n", caller, aname);
 
-    code = afsconf_GetCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
     if (code) 
       goto fail;
 
+    n = aname;
+    if (*n == '[') {
+        *(n + strlen(n) -1) = 0;
+        ++n;
+        isClone = 1;
+    }
+
     which = -1;
     for(i=0;i<tcell.numServers;i++) {
-	if (strcmp(tcell.hostName[i], aname) == 0) {
+	if (strcmp(tcell.hostName[i], n) == 0) {
 	    which = i;
 	    break;
 	}
@@ -534,8 +552,9 @@ char *aname; {
     }
 
     memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
-    strcpy(tcell.hostName[which], aname);
-    code = afsconf_SetCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
+    strcpy(tcell.hostName[which], n);
+    clones[which] = isClone;
+    code = afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH, &tcell, &clones);
 
   fail:
     osi_auditU(acall, BOS_AddHostEvent, code, AUD_STR, aname, AUD_END);

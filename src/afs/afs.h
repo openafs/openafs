@@ -202,7 +202,7 @@ struct cell {
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
     time_t timeout;			    /* data expire time, if non-zero */
-    struct cell *alias;			    /* what this cell is an alias for */
+    char *realName;			    /* who this cell is an alias for */
 };
 
 #define	afs_PutCell(cellp, locktype)
@@ -529,11 +529,19 @@ struct SimpleLocks {
 #define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
 #define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
 #define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
+#define DLOCK()      spin_lock(&dcache_lock)
+#define DUNLOCK()    spin_unlock(&dcache_lock)
+#define DGET(d)      dget_locked(d)
+#define DCOUNT(d)    atomic_read(&(d)->d_count)
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
 #define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
 #define VREFCOUNT_DEC(v)	(v)->vrefCount--;
 #define VREFCOUNT_INC(v)	(v)->vrefCount++;
+#define DLOCK()
+#define DUNLOCK()
+#define DGET(d)      dget(d)
+#define DCOUNT(d)    ((d)->d_count)
 #endif
 
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
@@ -959,7 +967,9 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 #define	FVHash(acell,avol)  (((avol)+(acell)) & (NFENTRIES-1))
 
 extern struct cell	    *afs_GetCell();
+extern struct cell	    *afs_GetCellNoLock();
 extern struct cell	    *afs_GetCellByName();
+extern struct cell	    *afs_GetCellByName2();
 extern struct cell	    *afs_GetCellByIndex();
 extern struct unixuser	    *afs_GetUser();
 extern struct volume	    *afs_GetVolume();
@@ -1003,6 +1013,8 @@ extern void afs_PutDynroot();
 extern int afs_DynrootNewVnode();
 extern int afs_SetDynrootEnable();
 extern int afs_GetDynrootEnable();
+extern int afs_DynrootVOPSymlink();
+extern int afs_DynrootVOPRemove();
 
 
 /* Performance hack - we could replace VerifyVCache2 with the appropriate
