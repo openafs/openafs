@@ -1128,6 +1128,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     int sflags;
     AFSFetchStatus newDirStatus;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
 #ifdef AFS_FREELANCE_CLIENT
     if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
@@ -1154,10 +1155,11 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
         if (code) 
             continue;
 
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_RemoveFile(connp->callp, &afsFid, namep,
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_RemoveFile(callp, &afsFid, namep,
                                  &newDirStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp, &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
@@ -1647,6 +1649,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     long j;
     cm_scache_t *scp;
     cm_fid_t tfid;
+    struct rx_connection * callp;
 
     osi_Log1(afsd_logp, "cm_TryBulkStat dir 0x%x", (long) dscp);
 
@@ -1685,10 +1688,11 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
             if (code) 
                 continue;
 
-            lock_ObtainMutex(&connp->mx);
-            code = RXAFS_BulkStatus(connp->callp, &fidStruct,
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_BulkStatus(callp, &fidStruct,
                                      &statStruct, &callbackStruct, &volSync);
-            lock_ReleaseMutex(&connp->mx);
+            rx_PutConnection(callp);
+
         } while (cm_Analyze(connp, userp, reqp, &dscp->fid,
                              &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
@@ -1884,6 +1888,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     cm_conn_t *connp;
     AFSFid tfid;
     AFSStoreStatus afsInStatus;
+    struct rx_connection * callp;
 
     /* handle file length setting */
     if (attrp->mask & CM_ATTRMASK_LENGTH)
@@ -1912,10 +1917,11 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         if (code) 
             continue;
 
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_StoreStatus(connp->callp, &tfid,
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_StoreStatus(callp, &tfid,
                                   &afsInStatus, &afsOutStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp,
                          &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
@@ -1952,6 +1958,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSFetchStatus newFileStatus;
     AFSCallBack newFileCallback;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -1986,12 +1993,14 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         dirAFSFid.Volume = dscp->fid.volume;
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
-        lock_ObtainMutex(&connp->mx);
+
+        callp = cm_GetRxConn(connp);
         code = RXAFS_CreateFile(connp->callp, &dirAFSFid, namep,
                                  &inStatus, &newAFSFid, &newFileStatus,
                                  &updatedDirStatus, &newFileCallback,
                                  &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
@@ -2071,6 +2080,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     AFSFetchStatus newDirStatus;
     AFSCallBack newDirCallback;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2105,12 +2115,14 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
         dirAFSFid.Volume = dscp->fid.volume;
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
-        lock_ObtainMutex(&connp->mx);
+
+        callp = cm_GetRxConn(connp);
         code = RXAFS_MakeDir(connp->callp, &dirAFSFid, namep,
                               &inStatus, &newAFSFid, &newDirStatus,
                               &updatedDirStatus, &newDirCallback,
                               &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
@@ -2165,6 +2177,7 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
     if (dscp->fid.cell != sscp->fid.cell ||
         dscp->fid.volume != sscp->fid.volume) {
@@ -2190,12 +2203,12 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         existingAFSFid.Vnode = sscp->fid.vnode;
         existingAFSFid.Unique = sscp->fid.unique;
 
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_Link(connp->callp, &dirAFSFid, namep, &existingAFSFid,
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_Link(callp, &dirAFSFid, namep, &existingAFSFid,
             &newLinkStatus, &updatedDirStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
-
+        rx_PutConnection(callp);
         osi_Log1(smb_logp,"  RXAFS_Link returns %d", code);
+
     } while (cm_Analyze(connp, userp, reqp,
         &dscp->fid, &volSync, NULL, NULL, code));
 
@@ -2224,6 +2237,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     AFSFetchStatus updatedDirStatus;
     AFSFetchStatus newLinkStatus;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -2247,11 +2261,13 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
         dirAFSFid.Volume = dscp->fid.volume;
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_Symlink(connp->callp, &dirAFSFid, namep, contentsp,
+
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_Symlink(callp, &dirAFSFid, namep, contentsp,
                               &inStatus, &newAFSFid, &newLinkStatus,
                               &updatedDirStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
@@ -2298,6 +2314,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     int didEnd;
     AFSFetchStatus updatedDirStatus;
     AFSVolSync volSync;
+    struct rx_connection * callp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -2320,10 +2337,12 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
         dirAFSFid.Volume = dscp->fid.volume;
         dirAFSFid.Vnode = dscp->fid.vnode;
         dirAFSFid.Unique = dscp->fid.unique;
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_RemoveDir(connp->callp, &dirAFSFid, namep,
+
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_RemoveDir(callp, &dirAFSFid, namep,
                                 &updatedDirStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCErrorRmdir(code, reqp);
@@ -2370,6 +2389,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     AFSFetchStatus updatedNewDirStatus;
     AFSVolSync volSync;
     int oneDir;
+    struct rx_connection * callp;
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our call
@@ -2461,12 +2481,14 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
         newDirAFSFid.Volume = newDscp->fid.volume;
         newDirAFSFid.Vnode = newDscp->fid.vnode;
         newDirAFSFid.Unique = newDscp->fid.unique;
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_Rename(connp->callp, &oldDirAFSFid, oldNamep,
+
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_Rename(callp, &oldDirAFSFid, oldNamep,
                              &newDirAFSFid, newNamep,
                              &updatedOldDirStatus, &updatedNewDirStatus,
                              &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, reqp, &oldDscp->fid,
                          &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
@@ -2508,6 +2530,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
     cm_file_lock_t *fileLock;
     osi_queue_t *q;
     int found = 0;
+    struct rx_connection * callp;
 
     /* Look for a conflict.  Also, if we are asking for a shared lock,
      * look for another shared lock, so we don't have to do an RPC.
@@ -2538,10 +2561,12 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
             code = cm_Conn(&scp->fid, userp, reqp, &connp);
             if (code) 
                 break;
-            lock_ObtainMutex(&connp->mx);
-            code = RXAFS_SetLock(connp->callp, &tfid, Which,
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_SetLock(callp, &tfid, Which,
                                   &volSync);
-            lock_ReleaseMutex(&connp->mx);
+            rx_PutConnection(callp);
+
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
                              NULL, NULL, code));
         lock_ObtainMutex(&scp->mx);
@@ -2581,6 +2606,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
     int anotherReader = 0;
     int smallLock = 0;
     int found = 0;
+    struct rx_connection * callp;
 
     if (LargeIntegerLessThan(LLength, scp->length))
         smallLock = 1;
@@ -2633,9 +2659,11 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
             code = cm_Conn(&scp->fid, userp, reqp, &connp);
             if (code) 
                 break;
-            lock_ObtainMutex(&connp->mx);
-            code = RXAFS_ReleaseLock(connp->callp, &tfid, &volSync);
-            lock_ReleaseMutex(&connp->mx);
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_ReleaseLock(callp, &tfid, &volSync);
+            rx_PutConnection(callp);
+
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
                              NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
@@ -2654,6 +2682,7 @@ void cm_CheckLocks()
     AFSVolSync volSync;
     cm_conn_t *connp;
     long code;
+    struct rx_connection * callp;
 
     cm_InitReq(&req);
 
@@ -2676,10 +2705,12 @@ void cm_CheckLocks()
                                 &req, &connp);
                 if (code) 
                     break;
-                lock_ObtainMutex(&connp->mx);
-                code = RXAFS_ExtendLock(connp->callp, &tfid,
+
+                callp = cm_GetRxConn(connp);
+                code = RXAFS_ExtendLock(callp, &tfid,
                                          &volSync);
-                lock_ReleaseMutex(&connp->mx);
+                rx_PutConnection(callp);
+
             } while (cm_Analyze(connp, fileLock->userp, &req,
                                  &fileLock->fid, &volSync, NULL, NULL,
                                  code));
@@ -2703,6 +2734,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
     osi_queue_t *q;
     cm_req_t req;
     int found = 0;
+    struct rx_connection * callp;
 
     if (vcp_is_dead) {
         code = CM_ERROR_TIMEDOUT;
@@ -2746,10 +2778,12 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
                             &req, &connp);
             if (code) 
                 break;
-            lock_ObtainMutex(&connp->mx);
-            code = RXAFS_SetLock(connp->callp, &tfid, Which,
+
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_SetLock(callp, &tfid, Which,
                                   &volSync);
-            lock_ReleaseMutex(&connp->mx);
+            rx_PutConnection(callp);
+
         } while (cm_Analyze(connp, oldFileLock->userp, &req,
                              &oldFileLock->fid, &volSync,
                              NULL, NULL, code));

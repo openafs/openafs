@@ -565,7 +565,7 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
         tcp->refCount = 1;
         lock_ReleaseMutex(&tcp->mx);
     } else {
-        if ((tcp->ucgen < ucellp->gen) || 
+        if ((tcp->ucgen < ucellp->gen) ||
             (tcp->cryptlevel != (cryptall ? rxkad_crypt : rxkad_clear)))
         {
             lock_ObtainMutex(&tcp->mx);
@@ -602,3 +602,15 @@ long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
     cm_FreeServerList(serverspp);
     return code;
 }
+
+extern struct rx_connection * 
+cm_GetRxConn(cm_conn_t *connp)
+{
+    struct rx_connection * rxconn;
+    lock_ObtainMutex(&connp->mx);
+    rxconn = connp->callp;
+    rx_GetConnection(rxconn);
+    lock_ReleaseMutex(&connp->mx);
+    return rxconn;
+}
+

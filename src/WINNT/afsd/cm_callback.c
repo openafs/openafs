@@ -808,6 +808,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     int mustCall;
     long sflags;
     cm_fid_t sfid;
+    struct rx_connection * callp;
 
     osi_Log2(afsd_logp, "GetCallback scp %x flags %lX", scp, flags);
 
@@ -871,10 +872,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             code = cm_Conn(&sfid, userp, reqp, &connp);
             if (code) continue;
 
-            lock_ObtainMutex(&connp->mx);
-            code = RXAFS_FetchStatus(connp->callp, &tfid,
+            callp = cm_GetRxConn(connp);
+            code = RXAFS_FetchStatus(callp, &tfid,
                                      &afsStatus, &callback, &volSync);
-            lock_ReleaseMutex(&connp->mx);
+            rx_PutConnection(callp);
+
         } while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);

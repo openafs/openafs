@@ -50,6 +50,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
     long now;
     int wasDown;
     cm_conn_t *connp;
+    struct rx_connection * callp;
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -95,9 +96,9 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
                 }
                 else {
                     /* file server */
-                    lock_ObtainMutex(&connp->mx);
-                    code = RXAFS_GetTime(connp->callp, &secs, &usecs);
-                    lock_ReleaseMutex(&connp->mx);
+                    callp = cm_GetRxConn(connp);
+                    code = RXAFS_GetTime(callp, &secs, &usecs);
+                    rx_PutConnection(callp);
                 }
                 if (wasDown)
                     rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);

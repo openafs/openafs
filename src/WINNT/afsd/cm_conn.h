@@ -83,6 +83,7 @@ typedef struct cm_req {
 				   cache managers treat it as "server is down"*/
 
 #include "cm_server.h"
+#include "rx.h"
 
 extern void cm_InitConn(void);
 
@@ -105,5 +106,7 @@ extern long cm_Conn(struct cm_fid *, struct cm_user *, struct cm_req *,
 extern void cm_PutConn(cm_conn_t *connp);
 
 extern void cm_GCConnections(cm_server_t *serverp);
+
+extern struct rx_connection * cm_GetRxConn(cm_conn_t *connp);
 
 #endif /*  __CM_CONN_H_ENV__ */
