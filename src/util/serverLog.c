@@ -60,10 +60,25 @@ static pthread_mutex_t serverLogMutex;
 #define F_OK 0
 #endif
 
+char *threadname();
+
 static int serverLogFD = -1;
 
 #include <stdarg.h>
 int LogLevel;
+int mrafsStyleLogs = 0;
+int printLocks = 0;
+static char ourName[MAXPATHLEN];
+
+void WriteLogBuffer(buf,len)
+    char *buf;
+    afs_uint32 len;
+{
+    LOCK_SERVERLOG();
+    if (serverLogFD > 0)
+        write(serverLogFD, buf, len);
+    UNLOCK_SERVERLOG();
+}
 
 /* VARARGS1 */
 void FSLog (const char *format, ...)
@@ -75,11 +90,19 @@ void FSLog (const char *format, ...)
     char tbuffer[1024];
     char *info;
     int len;
+    int i;
+    char *name;
 
     currenttime = time(0);
     timeStamp = afs_ctime(&currenttime, tbuffer, sizeof(tbuffer));
     timeStamp[24] = ' ';  /* ts[24] is the newline, 25 is the null */
     info = &timeStamp[25];
+
+    if (mrafsStyleLogs) {
+       name = threadname();
+       sprintf(info, "[%s] ", name);
+       info += strlen(info);
+    }
 
     va_start(args, format);
     (void) vsprintf(info, format, args);
@@ -118,6 +141,7 @@ void SetDebug_Signal(int signo)
     else {
         LogLevel = 1;
     }
+    printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
@@ -132,6 +156,7 @@ void ResetDebug_Signal(int signo)
 {
     LogLevel = 0;
 
+    if (printLocks >0) --printLocks;
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
@@ -140,6 +165,8 @@ void ResetDebug_Signal(int signo)
 
     signal(signo, ResetDebug_Signal);   /* on some platforms, this signal */
 					/* handler needs to be set again */
+    if (mrafsStyleLogs)
+	OpenLog((char *)&ourName);
 } /*ResetDebug_Signal*/
 
 
@@ -158,13 +185,32 @@ int OpenLog(const char *fileName)
      */
     int tempfd;
     char oldName[MAXPATHLEN];
+    struct timeval Start;
+    struct tm *TimeFields;
+    char FileName[MAXPATHLEN]; 
 
-    strcpy(oldName, fileName);
-    strcat(oldName, ".old");
+    if (mrafsStyleLogs) {
+        TM_GetTimeOfDay(&Start, 0);
+        TimeFields = localtime(&Start.tv_sec);
+        if (fileName) {
+            if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
+            strcpy((char *)&ourName, (char *) fileName);
+	}
+        sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", ourName,
+		TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, 
+		TimeFields->tm_mday, TimeFields->tm_hour, 
+		TimeFields->tm_min, TimeFields->tm_sec);
+        rename (fileName, FileName); /* don't check error code */
+        tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666); 
+    } else {
+        strcpy(oldName, fileName);
+        strcat(oldName, ".old");
 
-    /* don't check error */
-    renamefile(fileName, oldName);
-    tempfd = open(fileName, O_WRONLY|O_TRUNC|O_CREAT, 0666);
+        /* don't check error */
+        renamefile(fileName, oldName);
+        tempfd = open(fileName, O_WRONLY|O_TRUNC|O_CREAT, 0666);
+    }
+
     if(tempfd < 0)
     {
 	printf("Unable to open log file %s\n", fileName);
