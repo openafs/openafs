@@ -70,7 +70,7 @@ Default : 1
 Variable: smb_LogoffTokenTransfer
 
   If enabled (set to 1), activates functionality where the user's
-  tokens are kept intact until smb_LogofTokenTransferTimeout seconds
+  tokens are kept intact until smb_LogoffTokenTransferTimeout seconds
   elapse after user logs off.  If roaming profiles are used and the
   roaming profile takes a long time to be written back, this ensures
   that the tokens remain valid until the profile save is complete.
@@ -108,7 +108,8 @@ Type	: REG_SZ
 Default : "\AFSCache"
 Variable: cm_CachePath
 
-  Location of on-disk cache file.
+  Location of on-disk cache file.  The default implies the root 
+  directory of the boot disk
 
 Value	: TrapOnPanic
 Type	: DWORD {1,0}
@@ -116,6 +117,14 @@ Default : 0
 Variable: traceOnPanic
 
   Issues a breakpoint in the event of a panic. (breakpoint: _asm int 3).
+
+Value   : NetbiosName
+Type    : REG_SZ
+Default : "AFS"
+Variable: cm_NetbiosName
+
+  Specifies the NetBIOS name to be used when binding to a Loopback
+  adapter.
 
 Value	: IsGateway
 Type	: DWORD {1,0}
@@ -125,7 +134,12 @@ Variable: isGateway
   Select whether or not this AFS client should act as a gateway.  If
   set and the NetBIOS name hostname-AFS is bound to a physical NIC,
   other machines in the subnet can access AFS via SMB connections to
-  hostname-AFS .
+  hostname-AFS.
+
+  When IsGateway is non-zero, the LAN adapter detection code will
+  avoid binding to a loopback adapter.  This will ensure that the
+  NetBIOS name will be of the form hostname-AFS instead of the value
+  set by the "NetbiosName" registry value.
 
 Value	: ReportSessionStartups
 Type	: DWORD {1,0}
@@ -133,7 +147,8 @@ Default : 0
 Variable: reportSessionStartups
 
   If enabled, all SMB sessions created are recorded in the Application
-  event log.
+  event log.  This also enables other events such as drive mappings
+  or various error types to be logged.
 
 Value	: TraceBufferSize
 Type	: QWORD
@@ -162,7 +177,11 @@ Default : 1
 Variable: cm_dnsEnabled
 
   Enables resolving volservers using AFSDB DNS queries. (see
-  afsdb-freelance-notes)
+  afsdb-freelance-notes).
+
+  As of 1.3.60, this value is ignored as the DNS query support
+  utilizes the Win32 DNSQuery API which is available on Win2000
+  and above.
 
 Value	: FreelanceClient
 Type	: DWORD {1,0}
@@ -217,6 +236,23 @@ Variable: rx_mtu
   If set to anything other than -1, uses that value as the maximum MTU
   supported by the RX interface.
 
+  In order to enable OpenAFS to operate across the Cisco IPSec VPN
+  client, this value must be set to 1264 or smaller.
+
+Value   : AllSubmount
+Type    : DWORD {0, 1}
+Default : 1
+Variable: allSubmount (smb.c)
+
+  By setting this value to 0, the "\\NetbiosName\all" mount point 
+  will not be created.  This allows the read-write versions of 
+  root.afs to be hidden.
+
+
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+
+
 2. Network provider parameters
 ------------------------------
 Affects the network provider (aklogon.dll).
@@ -228,7 +264,7 @@ Value	: FailLoginsSilently
 Type	: DWORD
 Default : 0
 
-Do not display message boxes if the login fails.
+  Do not display message boxes if the login fails.
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
@@ -237,5 +273,143 @@ Value   : NoWarnings
 Type	: DWORD
 Default : 0
 
-Disables visible warnings during logon.
+  Disables visible warnings during logon.
+
+Value   : AuthentProviderPath
+Type    : REG_SZ
+NSIS    : <install path>\afslogon.dll
+
+  Specifies the install location of the authentication provider dll.
+
+Value   : Class
+Type    : DWORD
+NSIS    : 0x02
+
+  Specifies the class of network provider
+
+Value   : DependOnGroup
+Type    : REG_MULTI_SZ
+NSIS    : PNP_TDI
+
+  Specifies the service groups upon which the AFS Client Service 
+  depends.  Windows should not attempt to start the AFS Client Service
+  until all of the services within these groups have successfully 
+  started.
+
+Value   : DependOnService
+Type    : REG_MULTI_SZ
+NSIS    : Tcpip NETBIOS RpcSs
+
+  Specifies a list of services upon which the AFS Client Service 
+  depends.  Windows should not attempt to start the AFS Client Service
+  until all of the specified services have successfully started.
+  
+Value   : LogonOptions
+Type    : DWORD
+NSIS    : depends on user configuration
+
+  0x00 - Integrated Logon is not used
+  0x01 - Integrated Logon is used
+  0x02 - High Security Mode is used
+  0x03 - Integrated Logon with High Security Mode is used
+
+  High Security Mode generates random SMB names for the creation of
+  Drive Mappings.  This mode should not be used without Integrated Logon.
+
+Value   : LogonScript
+Type    : REG_SZ
+NSIS    : <install path>\afscreds.exe -:%s -x
+
+  Specifies the command to be executed at the end of successful logon.
+
+Value   : Name
+Type    : REG_SZ
+NSIS    : "OpenAFSDaemon"
+
+  Specifies the display name of the AFS Client Service
+
+Value   : ProviderPath
+Type    : REG_SZ
+NSIS    : <install path>\afslogon.dll
+
+  Specifies the DLL to use for the network provider
+
+Value   : VerboseLogging
+Type    : DWORD
+NSIS    : 0x0a
+
+  Determines the level of logging to be enabled
+
+
+3. AFS Credentials System Tray Tool parameters
+----------------------------------------------
+Affects the behavior of afscreds.exe
+
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
+
+Value   : Gateway
+Type    : REG_SZ
+Default : ""
+Function: GetGatewayName()
+
+  If the AFS client is utilizing a gateway to obtain AFS access, 
+  the name of the gateway is specified by this value.
+
+Value	: Cell
+Type	: REG_SZ
+Default : <none>
+Variable: IsServiceConfigured()
+
+  The value Cell is used to determine if the AFS Client Service has
+  been properly configured or not.
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client]
+[HKCU\SOFTWARE\OpenAFS\Client]
+
+Value   : ShowTrayIcon
+Type    : DWORD {0, 1}
+Default : 1
+Function: InitApp(), Main_OnCheckTerminate()
+
+  This value is used to determine whether or not a shortcut should be
+  maintained in the user's Start Menu->Programs->Startup folder. 
+
+  This value used to be stored at 
+  [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].
+
+Value   : EnableKFW
+Type    : DWORD {0, 1}
+Default : 1
+Function: KFW_is_available()
+
+  When MIT Kerberos for Windows can be loaded, Kerberos 5 will be used
+  to obtain AFS credentials.  By setting this value to 0, the internal
+  Kerberos 4 implementation will be used instead.
+
+Value   : AfscredsShortcutParams
+Type    : REG_SZ
+Default : "-A -M -N -Q"
+Function: Shortcut_FixStartup
+
+  This value specifies the command line options which should be set
+  as part of the shortcut to afscreds.exe.
+
+
+Regkey:
+[HKCU\SOFTWARE\OpenAFS\Client\Reminders]
+
+Value   : "afs cell name"
+Type    : DWORD {0, 1}
+Default : <none>
+Function: LoadRemind(), SaveRemind()
+
+  These values are used to save and restore the state of the reminder
+  flag for each cell for which the user has obtained tokens.
+
+  This value used to be stored at 
+  [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].
+
 
