@@ -343,10 +343,10 @@ int osi_NetSend(struct osi_socket *asocket, struct sockaddr_in *addr,
     return error;
 }
 
-int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr, 
-	struct iovec *dvec, int nvecs, int *alength)
-{
-    struct sonode *so = (struct sonode *)asocket;
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
+        int nvecs, int *alength)
+{  
+    struct sonode *asocket = (struct sonode *)so;
     struct nmsghdr msg;
     struct uio uio;
     struct iovec iov[RX_MAXIOVECS];
@@ -377,7 +377,7 @@ int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
     uio.uio_limit = 0;
     uio.uio_resid = *alength;
 
-    error = sockfs_sorecvmsg(so, &msg, &uio);
+    error = sockfs_sorecvmsg(asocket, &msg, &uio);
     if (error == 0) {
 	if (msg.msg_name == NULL) {
 	    error = -1;

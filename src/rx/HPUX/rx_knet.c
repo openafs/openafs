@@ -240,31 +240,31 @@ int osi_NetSend(register struct socket *asocket, struct sockaddr_in *addr,
 
 /* pattern from IRIX */
 #if defined(RXK_LISTENER_ENV)
-int osi_NetReceive(struct socket *so, struct sockaddr_in *from, 
-                   struct iovec *iov, int iovcnt, int *lengthp)
-{
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,         
+        int nvecs, int *alength)
+{   
     int          code;
     struct uio   tuio;
     struct iovec tmpvec[RX_MAXWVECS+2];
     int          flags = 0;
     MBLKP bp, sp;
 
-    if (iovcnt > RX_MAXWVECS+2) {
-        osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
+    if (nvecs > RX_MAXWVECS+2) {
+        osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);
     }
-    memcpy(tmpvec, (char*)iov, iovcnt/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
+    memcpy(tmpvec, (char*)dvec, nvecs/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
     tuio.uio_iov     = tmpvec;
-    tuio.uio_iovcnt  = iovcnt;
+    tuio.uio_iovcnt  = nvecs;
     tuio.uio_fpflags = 0;
     tuio.uio_offset  = 0;
     tuio.uio_seg     = UIOSEG_KERNEL;
-    tuio.uio_resid   = *lengthp;
+    tuio.uio_resid   = *alength;
 
     code = soreceive(so, &bp, &tuio, &flags, &sp, (MBLKPP)NULL);
     if (!code) {
         *lengthp = *lengthp - tuio.uio_resid;
         if (bp) {
-            memcpy((char*)from, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
+            memcpy((char*)addr, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
         } else {
             code = -1;
         }

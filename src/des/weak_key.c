@@ -17,8 +17,14 @@
 
 RCSID("$Header$");
 
-#include <des.h>
+#ifndef KERNEL
+#include <stdio.h>
+#endif
+
+#include "des.h"
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -62,9 +68,7 @@ static const des_cblock weak[16] = {
  *
  * Requires: key has correct odd parity.
  */
-int
-des_is_weak_key(key)
-     des_cblock key;
+int des_is_weak_key(des_cblock key)
 {
     int i;
     const des_cblock *weak_p = weak;

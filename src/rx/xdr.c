@@ -58,10 +58,6 @@ RCSID("$Header$");
 #endif
 #include "xdr.h"
 
-#ifndef osi_alloc
-extern char *osi_alloc();
-#endif
-
 /*
  * constants specific to the xdr "protocol"
  */

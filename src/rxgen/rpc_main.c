@@ -223,53 +223,6 @@ main(argc, argv)
 	exit(0);
 }
 
-static void
-write_int32_macros(fout)
-	FILE *fout;
-{
-	/*
-	 * Note that rxgen writes code that uses xdr_afs_int32() and
-	 * xdr_afs_uint32().  Systems do not provide these natively, so we
-	 * #define them to locally provided equivalents.
-	 *
-	 * Some systems do come with native xdr_int32() and xdr_uint32()
-	 * functions, but the prototypes are not always in the same
-	 * place and are not always consistent so it is less trouble to
-	 * use the original int and u_int functions.  We do check that
-	 * an int is 32 bits...
-	 *
-	 * A cleaner solution than these #defines would be to make rxgen
-	 * emit calls to xdr_int() and xdr_u_int() to process the types
-	 * afs_int32 and afs_uint32 (if, of course, an int is 32 bits).
-	 *
-	 * Note that to avoid compiler warnings we need to keep
-	 * the types of the native xdr_* routines in sync with the
-	 * definitions of afs_int32 and afs_uint32 in config/stds.h.
-	 */
-
-	/*
-	 * If you change the definitions of xdr_afs_int32 and xdr_afs_uint32,
-	 * be sure to change them in BOTH rx/xdr.h and rxgen/rpc_main.c.
-	 */
-
-#if (INT_MAX == 0x7FFFFFFF) && (UINT_MAX == 0xFFFFFFFFu)
-	f_print(fout, "#ifndef xdr_afs_int32\n");
-	f_print(fout, "#define xdr_afs_int32 xdr_int\n");
-	f_print(fout, "#endif\n");
-	f_print(fout, "#ifndef xdr_afs_uint32\n");
-	f_print(fout, "#define xdr_afs_uint32 xdr_u_int\n");
-	f_print(fout, "#endif\n");
-        f_print(fout, "#ifndef xdr_afs_int64\n");
-        f_print(fout, "#define xdr_afs_int64 xdr_int64\n");
-        f_print(fout, "#endif\n");
-        f_print(fout, "#ifndef xdr_afs_uint64\n");
-        f_print(fout, "#define xdr_afs_uint64 xdr_uint64\n");
-        f_print(fout, "#endif\n");
-#else
-#error Need to do some work here...
-#endif
-}
-
 /*
  * add extension to filename 
  */
@@ -449,8 +402,6 @@ c_output(infile, define, extend, outfile, append)
 	    f_print(fout, "#include <rx/xdr.h>\n");
 	}
     }
-
-    write_int32_macros(fout);
 
     tell = ftell(fout);
     while (def = get_definition()) {
@@ -774,8 +725,6 @@ int append;
 	}
     }
 
-    write_int32_macros(fout);
-
     tell = ftell(fout);
     while (get_definition()) continue;
     if (extend && tell == ftell(fout)) {
@@ -848,8 +797,6 @@ int append;
 	    f_print(fout, "#include <afs/rxgen_consts.h>\n");
 	}
     }
-
-    write_int32_macros(fout);
 
     tell = ftell(fout);
     fflush(fout);

@@ -17,6 +17,7 @@ AFS_OS_OBJS = \
 	osi_sleep.o \
 	osi_vm.o \
 	osi_vnodeops.o \
+	xdr_int32.o \
 	xdr_int64.o
 
 AFS_OS_NFSOBJS = \
@@ -115,15 +116,15 @@ solaris_destdirs_libafs: dest_libafs
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
+# Without this line, gmake tries to build libafs.o
+.PHONY: libafs
+
 <all -sun4x_57 -sun4x_58 -sun4x_59>
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
-
-# Without this line, gmake tries to build libafs.o
-.PHONY: libafs
 
 libafs:	$(LIBAFSNONFS)
 install_libafs:	$(INST_LIBAFSNONFS)
@@ -179,6 +180,8 @@ osi_vfsops.o: $(AFS)/osi_vfsops.c
 osi_vm.o: $(AFS)/osi_vm.c
 	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)
+xdr_int32.o: $(RX)/xdr_int32.c
 	$(CRULE1)
 xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE1)

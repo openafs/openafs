@@ -16,8 +16,12 @@
 RCSID("$Header$");
 
 #include <mit-cpyright.h>
+#ifndef KERNEL
 #include <stdio.h>
+#endif
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 int des_debug;
 
@@ -28,8 +32,7 @@ int des_debug;
  */
 
 #if 0 /* These don't seem to get used anywhere.... */
-void swap_bits(array)
-    char *array;
+void swap_bits(char *array)
 {
 #ifdef MSBFIRST
     /* just return */
@@ -55,8 +58,7 @@ void swap_bits(array)
 #endif /* MSBFIRST */
 }
 
-afs_uint32 long_swap_bits(x)
-    afs_uint32 x;
+afs_uint32 long_swap_bits(afs_uint32 x)
 {
 #ifdef MSBFIRST
     return x;
@@ -83,8 +85,7 @@ afs_uint32 long_swap_bits(x)
 }
 #endif /* 0 */
 
-afs_uint32 swap_six_bits_to_ansi(old)
-    afs_uint32 old;
+afs_uint32 swap_six_bits_to_ansi(afs_uint32 old)
 {
     register afs_uint32 new, j;
 
@@ -101,8 +102,7 @@ afs_uint32 swap_six_bits_to_ansi(old)
     return new;
 }
 
-afs_uint32 swap_four_bits_to_ansi(old)
-    afs_uint32 old;
+afs_uint32 swap_four_bits_to_ansi(afs_uint32 old)
 {
     register afs_uint32 new,j;
 
@@ -118,8 +118,7 @@ afs_uint32 swap_four_bits_to_ansi(old)
     return new;
 }
 
-afs_uint32 swap_bit_pos_1(x)
-    afs_uint32 x;
+afs_uint32 swap_bit_pos_1(afs_uint32 x)
 {
     /*
      * This corrects for the bit ordering of the algorithm, e.g.
@@ -139,8 +138,7 @@ afs_uint32 swap_bit_pos_1(x)
     return x;
 }
 
-afs_uint32 swap_bit_pos_0(x)
-    afs_uint32 x;
+afs_uint32 swap_bit_pos_0(afs_uint32 x)
 {
     /*  zero based version */
 
@@ -167,8 +165,7 @@ afs_uint32 swap_bit_pos_0(x)
 #endif /* LSBFIRST */
 }
 
-afs_uint32 swap_bit_pos_0_to_ansi(x)
-    afs_uint32 x;
+afs_uint32 swap_bit_pos_0_to_ansi(afs_uint32 x)
 {
     /* zero based version */
 
@@ -190,8 +187,7 @@ afs_uint32 swap_bit_pos_0_to_ansi(x)
     return x;
 }
 
-afs_uint32 rev_swap_bit_pos_0(x)
-    afs_uint32 x;
+afs_uint32 rev_swap_bit_pos_0(afs_uint32 x)
 {
     /* zero based version */
 
@@ -221,8 +217,7 @@ afs_uint32 rev_swap_bit_pos_0(x)
 #endif /* MSBFIRST */
 }
 
-afs_uint32 swap_byte_bits(x)
-    afs_uint32 x;
+afs_uint32 swap_byte_bits(afs_uint32 x)
 {
 #ifdef MSBFIRST
     return x;
@@ -245,8 +240,7 @@ afs_uint32 swap_byte_bits(x)
 #endif /* LSBFIRST */
 }
 
-int swap_long_bytes_bit_number(x)
-    afs_uint32 x;
+int swap_long_bytes_bit_number(afs_uint32 x)
 {
     /*
      * given a bit number (0-31) from a vax, swap the byte part of the
@@ -265,12 +259,8 @@ int swap_long_bytes_bit_number(x)
 #endif /* MSBFIRST */
 }
 
-void test_set(stream, src, testbit, dest, setbit)
-    FILE *stream;
-    const char *src;
-    int testbit;
-    const char *dest;
-    int setbit;
+void test_set(FILE *stream, const char *src, int testbit, 
+	const char *dest, int setbit)
 {
 #ifdef DES_SHIFT_SHIFT
     if (testbit == setbit)

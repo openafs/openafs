@@ -57,10 +57,6 @@ RCSID("$Header$");
 #endif
 #include "xdr.h"
 
-#ifndef osi_alloc
-char *osi_alloc();
-#endif
-
 #define LASTUNSIGNED	((u_int)0-1)
 
 

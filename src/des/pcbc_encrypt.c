@@ -21,20 +21,19 @@
  */
 
 #include <mit-cpyright.h>
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #include <des.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+#include "des_prototypes.h"
 
 RCSID("$Header$");
 
 #include "des_internal.h"
 
 #define XPRT_PCBC_ENCRYPT
-
-extern int des_debug;
-extern int des_debug_print();
-extern int des_ecb_encrypt();
 
 /*
  * pcbc_encrypt is an "error propagation chaining" encrypt operation
@@ -65,15 +64,17 @@ extern int des_ecb_encrypt();
  * This is NOT a standard mode of operation.
  *
  */
-
-afs_int32
-des_pcbc_encrypt(in,out,length,key,iv,encrypt)
-    des_cblock *in;		/* >= length bytes of inputtext */
-    des_cblock *out;		/* >= length bytes of outputtext */
-    register afs_int32 length;	/* in bytes */
-    int encrypt;		/* 0 ==> decrypt, else encrypt */
-    des_key_schedule key;		/* precomputed key schedule */
-    des_cblock *iv;		/* 8 bytes of ivec */
+/*
+    des_cblock *in;             * >= length bytes of input text *
+    des_cblock *out;            * >= length bytes of output text *
+    register afs_int32 length;  * in bytes *
+    int encrypt;                * 0 ==> decrypt, else encrypt *
+    des_key_schedule key;       * precomputed key schedule *
+    des_cblock *iv;             * 8 bytes of ivec *
+*/
+afs_int32 des_pcbc_encrypt(des_cblock *in, des_cblock *out,
+        register afs_int32 length, des_key_schedule key,
+        des_cblock *iv, int encrypt)
 {
     register afs_uint32 *input = (afs_uint32 *) in;
     register afs_uint32 *output = (afs_uint32 *) out;

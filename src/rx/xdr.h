@@ -282,65 +282,6 @@ struct xdr_discrim {
 #define IXDR_PUT_SHORT(buf, v)		IXDR_PUT_INT32((buf), ((afs_int32)(v)))
 #define IXDR_PUT_U_SHORT(buf, v)	IXDR_PUT_INT32((buf), ((afs_int32)(v)))
 
-/*
- * These are the "generic" xdr routines.
- */
-#if 0
-extern bool_t	xdr_void();
-extern bool_t	xdr_int();
-extern bool_t	xdr_u_int();
-extern bool_t	xdr_short();
-extern bool_t	xdr_u_short();
-extern bool_t	xdr_long();
-extern bool_t	xdr_char();
-extern bool_t	xdr_u_char();
-extern bool_t	xdr_bool();
-extern bool_t	xdr_enum();
-extern bool_t	xdr_array();
-extern bool_t	xdr_bytes();
-extern bool_t	xdr_opaque();
-extern bool_t	xdr_string();
-extern bool_t	xdr_union();
-extern bool_t	xdr_float();
-extern bool_t	xdr_double();
-extern bool_t	xdr_reference();
-extern bool_t	xdr_wrapstring();
-extern bool_t	xdr_vector();
-extern bool_t   xdr_int64();
-extern bool_t   xdr_uint64();
-
-/*
- * These are the public routines for the various implementations of
- * xdr streams.
- */
-extern void   xdrmem_create();		/* XDR using memory buffers */
-extern void   xdrrx_create();		/* XDR using rx */
-extern void   xdrstdio_create();	/* XDR using stdio library */
-extern void   xdrrec_create();		/* XDR pseudo records for tcp */
-extern bool_t xdrrec_endofrecord();	/* make end of xdr record */
-extern bool_t xdrrec_skiprecord();	/* move to begining of next record */
-extern bool_t xdrrec_eof();		/* true iff no more input */
-#endif
-
-/*
- * If you change the definitions of xdr_afs_int32 and xdr_afs_uint32, be sure
- * to change them in BOTH rx/xdr.h and rxgen/rpc_main.c.  Also, config/stds.h
- * has the defines for afs_int32 which should match below.
- */
-
-#ifndef xdr_afs_int32
-#define xdr_afs_int32 xdr_int
-#endif
-#ifndef xdr_afs_uint32
-#define xdr_afs_uint32 xdr_u_int
-#endif
-#ifndef xdr_afs_int64
-#define xdr_afs_int64 xdr_int64
-#endif
-#ifndef xdr_afs_uint64
-#define xdr_afs_uint64 xdr_uint64
-#endif
-
 #include "xdr_prototypes.h"
 
 #endif /* __XDR_INCLUDE__ */

@@ -130,8 +130,7 @@ char *osi_alloc(afs_int32 x)
     return (char *)(mem_alloc(x));
 }
 
-int
-osi_free(char *x, afs_int32 size)
+int osi_free(char *x, afs_int32 size)
 {
     if ((x == &memZero) || !x) return 0;
     LOCK_MALLOC_STATS

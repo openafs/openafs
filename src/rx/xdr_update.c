@@ -41,12 +41,8 @@ RCSID("$Header$");
  * > xdr_obj: routine to XDR an object.
  *    
  */
-bool_t                        
-xdr_pointer(xdrs,objpp,obj_size,xdr_obj)
-        register XDR *xdrs;
-        char **objpp;
-        u_int obj_size;
-        xdrproc_t xdr_obj;
+bool_t xdr_pointer(register XDR *xdrs, char **objpp,
+	u_int obj_size, xdrproc_t xdr_obj)
 {                      
                        
         bool_t more_data;
@@ -72,13 +68,8 @@ xdr_pointer(xdrs,objpp,obj_size,xdr_obj)
  * > elemsize: size of each element
  * > xdr_elem: routine to XDR each element
  */
-bool_t
-xdr_vector(xdrs, basep, nelem, elemsize, xdr_elem)
-	register XDR *xdrs;
-	register char *basep;
-	register u_int nelem;
-	register u_int elemsize;
-	register xdrproc_t xdr_elem;	
+bool_t xdr_vector(register XDR *xdrs, register char *basep, 
+	register u_int nelem, register u_int elemsize, register xdrproc_t xdr_elem)
 {
 	register u_int i;
 	register char *elptr;

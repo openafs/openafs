@@ -87,7 +87,7 @@ int clock_UnInit(void)
 } 
 
 /* Compute the current time.  The timer gets the current total elapsed time since startup, expressed in seconds and microseconds.  This call is almost 200 usec on an APC RT */
-void clock_UpdateTime()
+void clock_UpdateTime(void)
 {
     struct itimerval itimer;
     getitimer(ITIMER_REAL, &itimer);

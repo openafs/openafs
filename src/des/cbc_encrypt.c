@@ -18,19 +18,20 @@
  */
 
 #include <mit-cpyright.h>
-#include <stdio.h>
-#include <des.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#ifndef KERNEL
+#include <stdio.h>
+#endif
+
+#include <des.h>
+#include "des_prototypes.h"
 
 RCSID("$Header$");
 
 
 #define XPRT_CBC_ENCRYPT
-
-extern int des_debug;
-extern int des_debug_print();
-extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining operation, either
@@ -50,15 +51,17 @@ extern int des_ecb_encrypt();
  * of 8 bytes, but only the first "length" bytes returned into the
  * cleartext.
  */
-
-afs_int32
-des_cbc_encrypt(in,out,length,key,iv,encrypt)
-    des_cblock *in;		/* >= length bytes of input text */
-    des_cblock *out;		/* >= length bytes of output text */
-    register afs_int32 length;	/* in bytes */
-    int encrypt;		/* 0 ==> decrypt, else encrypt */
-    des_key_schedule key;		/* precomputed key schedule */
-    des_cblock *iv;		/* 8 bytes of ivec */
+/*
+    des_cblock *in;		* >= length bytes of input text *
+    des_cblock *out;		* >= length bytes of output text *
+    register afs_int32 length;	* in bytes *
+    int encrypt;		* 0 ==> decrypt, else encrypt *
+    des_key_schedule key;		* precomputed key schedule *
+    des_cblock *iv;		* 8 bytes of ivec *
+*/
+afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out, 
+	register afs_int32 length, des_key_schedule key, 
+	des_cblock *iv, int encrypt)
 {
     register afs_uint32 *input = (afs_uint32 *) in;
     register afs_uint32 *output = (afs_uint32 *) out;

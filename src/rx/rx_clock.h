@@ -70,12 +70,8 @@ extern int clock_haveCurrentTime;
 extern int clock_nUpdates;
 
 /* Initialize the clock package */
-extern void clock_Init();
 
 #define	clock_NewTime()	(clock_haveCurrentTime = 0)
-
-/* Update the value to be returned by gettime */
-extern void clock_UpdateTime();
 
 /* Return the current clock time.  If the clock value has not been updated since the last call to clock_NewTime, it is updated now */
 #define        clock_GetTime(cv)                               \

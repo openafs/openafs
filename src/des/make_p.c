@@ -14,11 +14,12 @@ RCSID("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
+#include <des.h>
 #include "des_internal.h"
 #include "tables.h"
+#include "des_prototypes.h"
 
-void gen(stream)
-    FILE *stream;
+void gen(FILE *stream)
 {
     /* P permutes 32 bit input R1 into 32 bit output R2 */	
 

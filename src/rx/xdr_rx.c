@@ -62,8 +62,8 @@ RCSID("$Header$");
 #ifndef AFS_NT40_ENV
 #include <netinet/in.h>
 #endif
-#include "xdr.h"
 #include "rx.h"
+#include "xdr.h"
 #endif /* KERNEL */
 
 /*

@@ -20,8 +20,10 @@
 RCSID("$Header$");
 
 #include <mit-cpyright.h>
+#include <stdio.h>
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 #include "odd.h"          /* Load compile-time generated odd_parity table */
 
@@ -30,9 +32,7 @@ RCSID("$Header$");
  *                       8,16,...64 in des order, implies 0, 8, 16, ...
  *                       vax order.
  */
-void
-des_fixup_key_parity(key)
-     register des_cblock key;
+void des_fixup_key_parity(register des_cblock key)
 {
     int i;
 
@@ -47,9 +47,7 @@ des_fixup_key_parity(key)
  *                       See des_fix_key_parity for the definition of
  *                       correct des parity.
  */
-int
-des_check_key_parity(key)
-     register des_cblock key;
+int des_check_key_parity(register des_cblock key)
 {
     int i;
 

@@ -134,7 +134,7 @@ extern afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr, afs
         afs_int32 *nextPeer, afs_uint32 debugSupportedValues, struct rx_debugPeer *peer,
         afs_uint32 *supportedValues);
 extern void shutdown_rx(void);
-#ifdef RX_ENABLE_LOCKS
+#ifndef osirx_AssertMine
 extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #endif
 #ifndef KERNEL
@@ -171,7 +171,12 @@ void rxi_DebugPrint();
 /* rx_clock.c */
 #if !defined(clock_Init)
 extern void clock_Init(void);
+#endif
+#if !defined(clock_UnInit)
 extern int clock_UnInit(void);
+#endif
+#if !defined(clock_UpdateTime)
+extern void clock_UpdateTime(void);
 #endif
 
 /* rx_clock_nt.c */
@@ -210,7 +215,7 @@ extern void osi_AssertFailK(const char *expr, const char *file, int line);
 
 /* rx_knet.c */
 extern struct osi_socket *rxk_NewSocket(short aport);
-extern int rxk_FreeSocket(register struct socket *asocket);
+extern int rxk_FreeSocket(register osi_socket asocket);
 #if 0
 /* definitions are all different at the moment */
 #ifdef KERNEL
@@ -246,7 +251,12 @@ extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 
 
 /* rx_misc.c */
-
+#ifndef osi_alloc
+extern char *osi_alloc(afs_int32 x);
+#endif
+#ifndef osi_free
+extern int osi_free(char *x, afs_int32 size);
+#endif
 
 /* rx_multi.c */
 
@@ -361,7 +371,7 @@ extern pthread_mutex_t rx_if_mutex;
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern void osi_AssertFailU(const char *expr, const char *file, int line);
 extern int rx_getAllAddr (afs_int32 *buffer, int maxSize);
-extern void osi_Panic();
+extern void osi_Panic(); /* leave without args till stdarg rewrite */
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 
 
@@ -369,7 +379,6 @@ extern void rxi_InitPeerParams(struct rx_peer *pp);
 
 
 /* MISC PROTOTYPES - MOVE TO APPROPRIATE LOCATION LATER */
-
 
 
 

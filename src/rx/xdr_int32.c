@@ -26,65 +26,58 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+
 #include <afsconfig.h>
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
 #include <afs/param.h>
+#endif
 
 RCSID("$Header$");
 
 #ifndef	NeXT
 
-/*
- * xdr_reference.c, Generic XDR routines impelmentation.
- *
- * Copyright (C) 1984, Sun Microsystems, Inc.
- *
- * These are the "non-trivial" xdr primitives used to serialize and de-serialize
- * "pointers".  See xdr.h for more info on the interface to xdr.
- */
-
-#include "xdr.h"
+#ifdef	KERNEL
+#include <sys/param.h>
+#else
 #include <stdio.h>
-#define LASTUNSIGNED	((u_int)0-1)
+#endif
+#include "xdr.h"
 
 /*
- * XDR an indirect pointer
- * xdr_reference is for recursively translating a structure that is
- * referenced by a pointer inside the structure that is currently being
- * translated.  pp references a pointer to storage. If *pp is null
- * the  necessary storage is allocated.
- * size is the sizeof the referneced structure.
- * proc is the routine to handle the referenced structure.
+ * XDR afs_int32 integers
+ * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t
-xdr_reference(xdrs, pp, size, proc)
-	register XDR *xdrs;
-	caddr_t *pp;		/* the pointer to work on */
-	u_int size;		/* size of the object pointed to */
-	xdrproc_t proc;		/* xdr routine to handle the object */
+bool_t xdr_afs_int32(register XDR *xdrs, afs_int32 *lp)
 {
-	register caddr_t loc = *pp;
-	register bool_t stat;
 
-	if (loc == NULL)
-		switch (xdrs->x_op) {
-		case XDR_FREE:
-			return (TRUE);
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, (long *)lp));
 
-		case XDR_DECODE:
-			*pp = loc = osi_alloc(size);
-			if (loc == NULL) {
-				return (FALSE);
-			}
-			memset(loc, 0, (int)size);
-			break;
-	}
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, (long *)lp));
 
-	stat = (*proc)(xdrs, loc, LASTUNSIGNED);
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
 
-	if (xdrs->x_op == XDR_FREE) {
-		osi_free(loc, size);
-		*pp = NULL;
-	}
-	return (stat);
+	return (FALSE);
 }
+
+/*
+ * XDR unsigned afs_int32 integers
+ * same as xdr_long - open coded to save a proc call!
+ */
+bool_t xdr_afs_uint32(register XDR *xdrs, afs_uint32 *ulp)
+{
+
+	if (xdrs->x_op == XDR_DECODE)
+		return (XDR_GETINT32(xdrs, (long *)ulp));
+	if (xdrs->x_op == XDR_ENCODE)
+		return (XDR_PUTINT32(xdrs, (long *)ulp));
+	if (xdrs->x_op == XDR_FREE)
+		return (TRUE);
+	return (FALSE);
+}
+
 #endif /* NeXT */
