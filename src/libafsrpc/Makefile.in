@@ -17,7 +17,7 @@ CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../
 
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
-CCRULE = ${CC} ${CFLAGS} -c $?
+CCRULE = ${CC} ${CFLAGS} -c $<
 RXKAD = ../rxkad
 RXSTAT = ../rxstat
 FSINT = ../fsint
