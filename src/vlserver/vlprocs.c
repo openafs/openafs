@@ -1441,7 +1441,7 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 	if (name && (strcmp(name, ".*") != 0) && (strcmp(name, "") != 0)) {
 	    sprintf(volumename, "^%s$", name);
 #ifdef HAVE_POSIX_REGEX
-	    if (regcomp(&re, volumename, REG_BASIC | REG_NOSUB) != 0) {
+	    if (regcomp(&re, volumename, REG_NOSUB) != 0) {
 		errorcode = VL_BADNAME;
 		goto done;
 	    }
