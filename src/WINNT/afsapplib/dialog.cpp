@@ -1835,7 +1835,7 @@ WORD NextControlID (HWND hParent)
       if ((wChild < 0) || (wChild >= 0xF000))
          continue;
 
-      wNext = max( wNext, wChild+1 );
+      wNext = max( wNext, (WORD) wChild+1 );
       }
 
    return wNext;
