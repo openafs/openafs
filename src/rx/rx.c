@@ -1764,6 +1764,16 @@ afs_int32 rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	 || (call->mode == RX_MODE_RECEIVING && call->rnext == 1)) {
 	    (void) rxi_ReadProc(call, &dummy, 1);
 	}
+
+	/* If we had an outstanding delayed ack, be nice to the server
+	 * and force-send it now.
+	 */
+	if (call->delayedAckEvent) {
+	    rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+	    call->delayedAckEvent = NULL;
+	    rxi_SendDelayedAck(NULL, call, NULL);
+	}
+
 	/* We need to release the call lock since it's lower than the
 	 * conn_call_lock and we don't want to hold the conn_call_lock
 	 * over the rx_ReadProc call. The conn_call_lock needs to be held
