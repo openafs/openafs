@@ -1542,9 +1542,16 @@ afs_ProcessFS(avc, astat, areq)
 	avc->m.Mode |= S_IFDIR;
     }
     else if (astat->FileType == SymbolicLink) {
-	vSetType(avc, VLNK);
-	avc->m.Mode |= S_IFLNK;
-	if ((avc->m.Mode & 0111) == 0) avc->mvstat = 1;
+	if (afs_fakestat_enable && (avc->m.Mode & 0111) == 0) {
+	    vSetType(avc, VDIR);
+	    avc->m.Mode |= S_IFDIR;
+	} else {
+	    vSetType(avc, VLNK);
+	    avc->m.Mode |= S_IFLNK;
+	}
+	if ((avc->m.Mode & 0111) == 0) {
+	    avc->mvstat = 1;
+	}
     }
     avc->anyAccess = astat->AnonymousAccess;
 #ifdef badidea

@@ -261,6 +261,7 @@ static int afs_linux_readdir(struct file *fp,
     int len;
     afs_size_t origOffset, tlen;
     cred_t *credp = crref();
+    struct afs_fakestat_state fakestat;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
@@ -272,10 +273,19 @@ static int afs_linux_readdir(struct file *fp,
 	return -code;
     }
 
+    afs_InitFakeStat(&fakestat);
+    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    if (code) {
+	afs_PutFakeStat(&fakestat);
+	AFS_GUNLOCK();
+	return -code;
+    }
+
     /* update the cache entry */
 tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -code;
     }
@@ -284,6 +294,7 @@ tagain:
     tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -ENOENT;
     }
@@ -380,6 +391,7 @@ tagain:
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     ReleaseReadLock(&avc->lock);
+    afs_PutFakeStat(&fakestat);
     AFS_GUNLOCK();
     return 0;
 }

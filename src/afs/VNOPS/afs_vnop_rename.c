@@ -31,11 +31,12 @@ extern afs_rwlock_t afs_xcbhash;
 /* Note that we don't set CDirty here, this is OK because the rename
  * RPC is called synchronously. */
 
-afsrename(aodp, aname1, andp, aname2, acred)
-    register struct vcache *aodp, *andp;
+afsrename(aodp, aname1, andp, aname2, acred, areq)
+    struct vcache *aodp, *andp;
     char *aname1, *aname2;
-    struct AFS_UCRED *acred; {
-    struct vrequest treq;
+    struct AFS_UCRED *acred;
+    struct vrequest *areq;
+{
     register struct conn *tc;
     register afs_int32 code;
     afs_int32 returnCode;
@@ -53,8 +54,6 @@ afsrename(aodp, aname1, andp, aname2, acred)
 	       ICL_TYPE_STRING, aname1, ICL_TYPE_POINTER, andp,
 	       ICL_TYPE_STRING, aname2);
 
-    if (code = afs_InitReq(&treq, acred)) return code;
-
     if (strlen(aname1) > AFSNAMEMAX || strlen(aname2) > AFSNAMEMAX) {
 	code = ENAMETOOLONG;
 	goto done;
@@ -62,9 +61,9 @@ afsrename(aodp, aname1, andp, aname2, acred)
 
     /* verify the latest versions of the stat cache entries */
 tagain:
-    code = afs_VerifyVCache(aodp, &treq);
+    code = afs_VerifyVCache(aodp, areq);
     if (code) goto done;
-    code = afs_VerifyVCache(andp, &treq);
+    code = afs_VerifyVCache(andp, areq);
     if (code) goto done;
     
     /* lock in appropriate order, after some checks */
@@ -83,7 +82,7 @@ tagain:
 	    goto done;
 	}
 	ObtainWriteLock(&andp->lock,147);
-	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (!tdc1) {
 	    code = ENOENT;
 	} else {
@@ -101,7 +100,7 @@ tagain:
 	ObtainWriteLock(&aodp->lock,149);
 	tdc2 = afs_FindDCache(andp, 0);
 	if (tdc2) ObtainWriteLock(&tdc2->lock, 644);
-	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (tdc1)
 	    ObtainWriteLock(&tdc1->lock, 645);
 	else
@@ -110,7 +109,7 @@ tagain:
     else {
 	ObtainWriteLock(&aodp->lock,150);	/* lock smaller one first */
 	ObtainWriteLock(&andp->lock,557);
-	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, areq, &offset, &len, 0);
 	if (tdc1)
 	    ObtainWriteLock(&tdc1->lock, 646);
 	else
@@ -166,7 +165,7 @@ tagain:
 
     /* locks are now set, proceed to do the real work */
     do {
-	tc = afs_Conn(&aodp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
 #ifdef RX_ENABLE_LOCKS
@@ -182,7 +181,7 @@ tagain:
 	} else code = -1;
 
     } while
-	(afs_Analyze(tc, code, &andp->fid, &treq,
+	(afs_Analyze(tc, code, &andp->fid, areq,
 		     AFS_STATS_FS_RPCIDX_RENAME, SHARED_LOCK, (struct cell *)0));
 
     returnCode = code;	    /* remember for later */
@@ -296,11 +295,11 @@ tagain:
 	unlinkFid.Cell = aodp->fid.Cell;
 	tvc = (struct vcache *)0;
 	if (!unlinkFid.Fid.Unique) {
-	    tvc = afs_LookupVCache(&unlinkFid, &treq, (afs_int32 *)0, WRITE_LOCK,
+	    tvc = afs_LookupVCache(&unlinkFid, areq, (afs_int32 *)0, WRITE_LOCK,
 				   aodp, aname1);
 	}
 	if (!tvc) /* lookup failed or wasn't called */
-	   tvc = afs_GetVCache(&unlinkFid, &treq, (afs_int32 *)0,
+	   tvc = afs_GetVCache(&unlinkFid, areq, (afs_int32 *)0,
 			       (struct vcache*)0, WRITE_LOCK);
 
 	if (tvc) {
@@ -334,9 +333,9 @@ tagain:
 	fileFid.Fid.Volume = aodp->fid.Fid.Volume;
 	fileFid.Cell = aodp->fid.Cell;
 	if (!fileFid.Fid.Unique)
-	    tvc = afs_LookupVCache(&fileFid, &treq, (afs_int32 *)0, WRITE_LOCK, andp, aname2);
+	    tvc = afs_LookupVCache(&fileFid, areq, (afs_int32 *)0, WRITE_LOCK, andp, aname2);
 	else
-	    tvc = afs_GetVCache(&fileFid, &treq, (afs_int32 *)0,
+	    tvc = afs_GetVCache(&fileFid, areq, (afs_int32 *)0,
 				(struct vcache*)0, WRITE_LOCK);
 	if (tvc && (vType(tvc) == VDIR)) {
 	    ObtainWriteLock(&tvc->lock,152);
@@ -360,16 +359,15 @@ tagain:
     }
     code = returnCode;
 done:
-    code = afs_CheckCode(code, &treq, 25);
     return code;
 }
 
 #ifdef	AFS_OSF_ENV
 afs_rename(fndp, tndp)
     struct nameidata *fndp, *tndp; {
-    register struct vcache *aodp = VTOAFS(fndp->ni_dvp);
+    struct vcache *aodp = VTOAFS(fndp->ni_dvp);
     char *aname1 = fndp->ni_dent.d_name;
-    register struct vcache *andp = VTOAFS(tndp->ni_dvp);
+    struct vcache *andp = VTOAFS(tndp->ni_dvp);
     char *aname2 = tndp->ni_dent.d_name;
     struct ucred *acred = tndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -380,14 +378,28 @@ afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, npnp, acred)
 afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
 #endif
     OSI_VC_DECL(aodp);
-    register struct vcache *andp;
+    struct vcache *andp;
     char *aname1, *aname2;
     struct AFS_UCRED *acred; {
 #endif
     register afs_int32 code;
+    struct afs_fakestat_state ofakestate;
+    struct afs_fakestat_state nfakestate;
+    struct vrequest treq;
     OSI_VC_CONVERT(aodp)
 
-    code = afsrename(aodp, aname1, andp, aname2, acred);
+    code = afs_InitReq(&treq, acred);
+    if (code) return code;
+    afs_InitFakeStat(&ofakestate);
+    afs_InitFakeStat(&nfakestate);
+    code = afs_EvalFakeStat(&aodp, &ofakestate, &treq);
+    if (code) goto done;
+    code = afs_EvalFakeStat(&andp, &nfakestate, &treq);
+    if (code) goto done;
+    code = afsrename(aodp, aname1, andp, aname2, acred, &treq);
+done:
+    afs_PutFakeStat(&ofakestate);
+    afs_PutFakeStat(&nfakestate);
 #ifdef	AFS_OSF_ENV
     AFS_RELE(tndp->ni_dvp);
     if (tndp->ni_vp != NULL) {
@@ -396,5 +408,6 @@ afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
     AFS_RELE(fndp->ni_dvp);
     AFS_RELE(fndp->ni_vp);
 #endif	/* AFS_OSF_ENV */
+    code = afs_CheckCode(code, &treq, 25);
     return code;
 }
