@@ -196,3 +196,5 @@ EXPORTS
 	rx_SetRxStatUserOk			@201
 	rx_RxStatUserOk				@202
 	rx_enable_hot_thread			@203 DATA
+	xdr_int64				@204
+	xdr_uint64				@205
