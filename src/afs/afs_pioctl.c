@@ -1140,14 +1140,10 @@ static PSetAcl(avc, afun, areq, ain, aout, ainSize, aoutSize)
       tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK);
       if (tconn) {
 	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREACL);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	code = RXAFS_StoreACL(tconn->id, (struct AFSFid *) &avc->fid.Fid,
 			      &acl, &OutStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GLOCK();
 	XSTATS_END_TIME;
       }
       else code = -1;
@@ -1258,14 +1254,10 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
       if (tconn) {
 	*aout = 0;
 	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	code = RXAFS_FetchACL(tconn->id, &Fid,
 			      &acl, &OutStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GLOCK();
 	XSTATS_END_TIME;
       }
       else code = -1;
@@ -1532,14 +1524,10 @@ static PGetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
       tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
       if (tc) {
 	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	code = RXAFS_GetVolumeStatus(tc->id, avc->fid.Fid.Volume, &volstat,
 				     &Name, &OfflineMsg, &MOTD);
-#ifdef RX_ENABLE_LOCKS
-	AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GLOCK();
 	XSTATS_END_TIME;
       }
       else code = -1;
@@ -1621,14 +1609,10 @@ static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_SetVolumeStatus(tc->id, avc->fid.Fid.Volume,
 					&storeStat, volName, offLineMsg, motd);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	}
 	else code = -1;
@@ -2244,13 +2228,9 @@ static PRemoveCallBack(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	    if (tc) {
 	      XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
-#ifdef RX_ENABLE_LOCKS
-	      AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	      RX_AFS_GUNLOCK();
 	      code = RXAFS_GiveUpCallBacks(tc->id, &theFids, &theCBs);
-#ifdef RX_ENABLE_LOCKS
-	      AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	      RX_AFS_GLOCK();
 	      XSTATS_END_TIME;
 	    }
 	    /* don't set code on failure since we wouldn't use it */
@@ -3884,9 +3864,7 @@ static PPrefetchFromTape(avc, afun, areq, ain, aout, ainSize, aoutSize)
         tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
         if (tc) {
 
-#ifdef RX_ENABLE_LOCKS
-            AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+            RX_AFS_GUNLOCK();
             tcall = rx_NewCall(tc->id);
             code = StartRXAFS_FetchData(tcall,
                                 (struct AFSFid *) &tvc->fid.Fid, 0, 0);
@@ -3895,9 +3873,7 @@ static PPrefetchFromTape(avc, afun, areq, ain, aout, ainSize, aoutSize)
                 code = EndRXAFS_FetchData(tcall, &OutStatus, &CallBack, &tsync);
             }
             code1 = rx_EndCall(tcall, code);
-#ifdef RX_ENABLE_LOCKS
-            AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+            RX_AFS_GLOCK();
         } else
             code = -1;
     } while
@@ -3957,15 +3933,11 @@ afs_int32 *aoutSize;        /* set this */
         do {
             tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
             if (tc) {
-#ifdef RX_ENABLE_LOCKS
-                AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+                RX_AFS_GUNLOCK();
                 code = RXAFS_ResidencyCmd(tc->id, Fid,
                                  Inputs,
                                  (struct ResidencyCmdOutputs *) aout);
-#ifdef RX_ENABLE_LOCKS
-                AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+                RX_AFS_GLOCK();
             } else
                 code = -1;
         } while

@@ -183,51 +183,31 @@ static int VLDB_Same (afid, areq)
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameO(tconn->id, bp, &v.tve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameN(tconn->id, bp, &v.ntve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else {
 		type = 2;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		i = VL_GetEntryByNameU(tconn->id, bp, &v.utve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
 		    if (i == RXGEN_OPCODE) {
 			type = 1;
-#ifdef RX_ENABLE_LOCKS
-			AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GUNLOCK();
                         i = VL_GetEntryByNameN(tconn->id, bp, &v.ntve);
-#ifdef RX_ENABLE_LOCKS
-			AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GLOCK();
 			if (i == RXGEN_OPCODE) {
 			    type = 0;
 			    tconn->srvr->server->flags |= SNO_LHOSTS;
-#ifdef RX_ENABLE_LOCKS
-			    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			    RX_AFS_GUNLOCK();
 			    i = VL_GetEntryByNameO(tconn->id, bp, &v.tve);
-#ifdef RX_ENABLE_LOCKS
-			    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			    RX_AFS_GLOCK();
 			} else if (!i)
 			    tconn->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!i)

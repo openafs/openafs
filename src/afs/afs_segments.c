@@ -74,14 +74,10 @@ int afs_StoreMini(avc, areq)
     do {
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 retry:
 	    tcall = rx_NewCall(tc->id);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    /* Set the client mod time since we always want the file
              * to have the client's mod time and not the server's one
              * (to avoid problems with make, etc.) It almost always
@@ -98,9 +94,7 @@ retry:
 	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(base), 
 	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tlen), 
 	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {
 	        code = StartRXAFS_StoreData64(tcall,
@@ -131,9 +125,7 @@ retry:
 #endif /* AFS_64BIT_CLIENT */
 	    }
 	    code = rx_EndCall(tcall, code);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	}
 	else code = -1;
@@ -381,9 +373,7 @@ afs_StoreAllSegments(avc, areq, sync)
 		tc = afs_Conn(&avc->fid, areq);
 		if (tc) {
 restart:
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GUNLOCK();
 		    tcall = rx_NewCall(tc->id);
 #ifdef AFS_64BIT_CLIENT
 		    if (!afs_serverHasNo64Bit(tc)) {
@@ -407,9 +397,7 @@ restart:
 		    code = StartRXAFS_StoreData(tcall, (struct AFSFid *) &avc->fid.Fid,
 						&InStatus, base, bytes, tlen);
 #endif /* AFS_64BIT_CLIENT */
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GLOCK();
 		} else {
 		    code = -1;
 		    tcall = NULL;
@@ -520,13 +508,9 @@ restart:
                        while (sbytes > 0) {
                            tlen = (sbytes > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : sbytes);
                            memset(tbuffer, 0, tlen);
-#ifdef RX_ENABLE_LOCKS
-			   AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			   RX_AFS_GUNLOCK();
 			   bsent = rx_Write(tcall, tbuffer, tlen);
-#ifdef RX_ENABLE_LOCKS
-			   AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			   RX_AFS_GLOCK();
 
                            if (bsent != tlen) {
                                code = -33;     /* XXX */
@@ -548,13 +532,9 @@ restart:
 		if (!code) {
 		    struct AFSFetchStatus OutStatus;
 		    struct AFSVolSync tsync;
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GUNLOCK();
 		    code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GLOCK();
 		    hadd32(newDV, 1);
 		    XSTATS_END_TIME;
       
@@ -572,13 +552,9 @@ restart:
 		    ConvertWToSLock(&avc->lock);
 		}
 		if (tcall) {
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GUNLOCK();
 		    code = rx_EndCall(tcall, code, avc, base);  
-#ifdef RX_ENABLE_LOCKS
-		    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		    RX_AFS_GLOCK();
 		}
 	    } while (afs_Analyze(tc, code, &avc->fid, areq,
 				 AFS_STATS_FS_RPCIDX_STOREDATA,

@@ -619,51 +619,31 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameO(tconn->id, aname, tve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameN(tconn->id, aname, ntve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else {
 		type = 2;
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = VL_GetEntryByNameU(tconn->id, aname, utve);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
 		    if (code == RXGEN_OPCODE) {
 			type = 1;
-#ifdef RX_ENABLE_LOCKS
-			AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GUNLOCK();
                         code = VL_GetEntryByNameN(tconn->id, aname, ntve);
-#ifdef RX_ENABLE_LOCKS
-			AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GLOCK();
 			if (code == RXGEN_OPCODE) {
 			    type = 0;
 			    tconn->srvr->server->flags |= SNO_LHOSTS;
-#ifdef RX_ENABLE_LOCKS
-			    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			    RX_AFS_GUNLOCK();
 			    code = VL_GetEntryByNameO(tconn->id, aname, tve);
-#ifdef RX_ENABLE_LOCKS
-			    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			    RX_AFS_GLOCK();
 			} else if (!code)
 			    tconn->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!code)
@@ -968,13 +948,9 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		    tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
 					     tcell->cell, areq, SHARED_LOCK);
 		    if (tconn) {
-#ifdef RX_ENABLE_LOCKS
-			AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GUNLOCK();
 			code = VL_GetAddrsU(tconn->id, &attrs, &uuid, &unique, &nentries, &addrs);
-#ifdef RX_ENABLE_LOCKS
-			AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			RX_AFS_GLOCK();
 		    } else {
 			code = -1;
 		    }

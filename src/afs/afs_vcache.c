@@ -378,14 +378,10 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
 					    SHARED_LOCK);
 			if (tc) {
 			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GUNLOCK();
 			  code = RXAFS_GiveUpCallBacks(tc->id, &fidArray,
 						       &cbArray);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GLOCK();
 			  XSTATS_END_TIME;
 			}
 			else code = -1;
@@ -1052,16 +1048,12 @@ afs_FlushActiveVcaches(doflocks)
 		    tc = afs_Conn(&tvc->fid, &treq, SHARED_LOCK);
 		    if (tc) {
 		      XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_EXTENDLOCK);
-#ifdef RX_ENABLE_LOCKS
-		      AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		      RX_AFS_GUNLOCK();
 		      code =
 			    RXAFS_ExtendLock(tc->id,
 					     (struct AFSFid *) &tvc->fid.Fid,
 					     &tsync);
-#ifdef RX_ENABLE_LOCKS
-		      AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		      RX_AFS_GLOCK();
 		      XSTATS_END_TIME;
 		    }
 		    else code = -1;
@@ -1373,15 +1365,11 @@ afs_WriteVCache(avc, astatus, areq)
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
 	  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STORESTATUS);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	  code = RXAFS_StoreStatus(tc->id,
 				   (struct AFSFid *) &avc->fid.Fid,
 				   astatus, &OutStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
 	  XSTATS_END_TIME;
 	}
 	else code = -1;
@@ -1548,15 +1536,11 @@ afs_RemoteLookup(afid, areq, name, nfid, OutStatusp, CallBackp, serverp, tsyncp)
 	    if (serverp) *serverp = tc->srvr->server;
 	    start = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_XLOOKUP);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_Lookup(tc->id, (struct AFSFid *) &afid->Fid, name,
 				(struct AFSFid *) &nfid->Fid, 
 				OutStatusp, &OutDirStatus, CallBackp, tsyncp);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else 
 	    code = -1;
@@ -2116,15 +2100,11 @@ afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 	    avc->callback = tc->srvr->server;
 	    start = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_FetchStatus(tc->id,
 				     (struct AFSFid *) &afid->Fid,
 				     Outsp, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 
 	    XSTATS_END_TIME;
 

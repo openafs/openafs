@@ -394,13 +394,9 @@ afs_MemCacheStoreProc(acall, mceP, alen, avc, shouldWake, abytesToXferP, abytesX
       
       while (alen > 0) {
 	  tlen = (alen > AFS_LRALLOCSIZ? AFS_LRALLOCSIZ : alen);
-#ifdef RX_ENABLE_LOCKS
-          AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+          RX_AFS_GUNLOCK();
 	  code = rx_WritevAlloc(acall, tiov, &tnio, RX_MAXIOVECS, tlen);
-#ifdef RX_ENABLE_LOCKS
-          AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+          RX_AFS_GLOCK();
 	  if (code <= 0) {
 	      osi_FreeSmallSpace(tiov);
 	      return -33;
@@ -411,13 +407,9 @@ afs_MemCacheStoreProc(acall, mceP, alen, avc, shouldWake, abytesToXferP, abytesX
 	      osi_FreeSmallSpace(tiov);
 	      return -33;
 	  }
-#ifdef RX_ENABLE_LOCKS
-          AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+          RX_AFS_GUNLOCK();
 	  code = rx_Writev(acall, tiov, tnio, tlen);
-#ifdef RX_ENABLE_LOCKS
-          AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+          RX_AFS_GLOCK();
 #ifndef AFS_NOSTATS
 	  (*abytesXferredP) += code;
 #endif /* AFS_NOSTATS */
@@ -475,14 +467,10 @@ afs_MemCacheFetchProc(acall, mceP, abase, adc, avc, abytesToXferP, abytesXferred
       }
       do {
 	  if (moredata) {
-#ifdef RX_ENABLE_LOCKS
-              AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+              RX_AFS_GUNLOCK();
 	      code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
 	      length = ntohl(length);
-#ifdef RX_ENABLE_LOCKS
-              AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+              RX_AFS_GLOCK();
 	      if (code != sizeof(afs_int32)) {
 	          code = rx_Error(acall);
 	          osi_FreeSmallSpace(tiov);
@@ -509,13 +497,9 @@ afs_MemCacheFetchProc(acall, mceP, abase, adc, avc, abytesToXferP, abytesXferred
 #endif				/* AFS_NOSTATS */
 	  while (length > 0) {
 	      tlen = (length > AFS_LRALLOCSIZ? AFS_LRALLOCSIZ : length);
-#ifdef RX_ENABLE_LOCKS
-              AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+              RX_AFS_GUNLOCK();
 	      code = rx_Readv(acall, tiov, &tnio, RX_MAXIOVECS, tlen);
-#ifdef RX_ENABLE_LOCKS
-              AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+              RX_AFS_GLOCK();
 #ifndef AFS_NOSTATS
 	      (*abytesXferredP) += code;
 #endif				/* AFS_NOSTATS */

@@ -109,9 +109,7 @@ int SRXAFSCB_GetCE(a_call, a_index, a_result)
     int code;				/*Return code*/
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETCE);
 
@@ -174,9 +172,7 @@ int SRXAFSCB_GetCE(a_call, a_index, a_result)
 fcnDone:
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(code);
 
@@ -194,9 +190,7 @@ int SRXAFSCB_GetCE64(a_call, a_index, a_result)
     int code;				/*Return code*/
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETCE);
 
@@ -264,9 +258,7 @@ int SRXAFSCB_GetCE64(a_call, a_index, a_result)
 fcnDone:
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(code);
 
@@ -309,9 +301,7 @@ int SRXAFSCB_GetLock (a_call, a_index, a_result)
     int code;			/*Return code*/
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETLOCK);
     
@@ -347,9 +337,7 @@ int SRXAFSCB_GetLock (a_call, a_index, a_result)
 
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(code);
 
@@ -529,9 +517,7 @@ int SRXAFSCB_CallBack(a_call, a_fids, a_callbacks)
     int code=0;
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_CALLBACK);
 
@@ -548,9 +534,7 @@ int SRXAFSCB_CallBack(a_call, a_fids, a_callbacks)
 
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
     
     return(0);
 
@@ -585,17 +569,13 @@ int SRXAFSCB_Probe(a_call)
     int code = 0;
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_Probe);
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_PROBE);
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(0);
 
@@ -636,9 +616,7 @@ int SRXAFSCB_InitCallBackState(a_call)
     extern int osi_dnlc_purge();
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_INITCALLBACKSTATE);
     AFS_STATCNT(SRXAFSCB_InitCallBackState);
@@ -685,9 +663,7 @@ int SRXAFSCB_InitCallBackState(a_call)
 
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(0);
 
@@ -724,18 +700,14 @@ int SRXAFSCB_XStatsVersion(a_call, a_versionP)
 
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_XSTATSVERSION);
 
     *a_versionP = AFSCB_XSTAT_VERSION;
 
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(0);
 }  /*SRXAFSCB_XStatsVersion*/
@@ -783,9 +755,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
     afs_int32 dataBytes;		/*Bytes in data buffer*/
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETXSTATS);
 
@@ -879,9 +849,7 @@ int SRXAFSCB_GetXStats(a_call, a_clientVersionNum, a_collectionNumber, a_srvVers
 
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return(code);
 
@@ -1022,9 +990,7 @@ struct interfaceAddr *addr;
     int code = 0;
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
 
     AFS_STATCNT(SRXAFSCB_WhoAreYou);
 
@@ -1041,9 +1007,7 @@ struct interfaceAddr *addr;
 
     ReleaseReadLock(&afs_xinterface);
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return code;
 }
@@ -1114,9 +1078,7 @@ afsUUID *a_uuid;
     int code = 0;
     XSTATS_DECLS;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_Probe);
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_PROBE);
@@ -1124,9 +1086,7 @@ afsUUID *a_uuid;
 	code = 1; /* failure */
     XSTATS_END_TIME;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return code;
 }
@@ -1164,9 +1124,7 @@ int SRXAFSCB_GetServerPrefs(
     int i, j;
     struct srvAddr *sa;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_GetServerPrefs);
 
     ObtainReadLock(&afs_xserver);
@@ -1185,9 +1143,7 @@ int SRXAFSCB_GetServerPrefs(
 
     ReleaseReadLock(&afs_xserver);
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return 0;
 }
@@ -1226,9 +1182,7 @@ int SRXAFSCB_GetCellServDB(
     struct afs_q *cq, *tq;
     char *t_name, *p_name = NULL;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_GetCellServDB);
 
     memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
@@ -1252,9 +1206,7 @@ int SRXAFSCB_GetCellServDB(
 	i = 0;
     t_name = (char *)rxi_Alloc(i+1);
     if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
 
@@ -1264,9 +1216,7 @@ int SRXAFSCB_GetCellServDB(
 
     ReleaseReadLock(&afs_xcell);
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     *a_name = t_name;
     return 0;
@@ -1302,9 +1252,7 @@ int SRXAFSCB_GetLocalCell(
     struct afs_q *cq, *tq;
     char *t_name, *p_name = NULL;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_GetLocalCell);
 
     /* Search the list for the primary cell. Cell number 1 is only
@@ -1329,9 +1277,7 @@ int SRXAFSCB_GetLocalCell(
 	plen = 0;
     t_name = (char *)rxi_Alloc(plen+1);
     if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
 
@@ -1341,9 +1287,7 @@ int SRXAFSCB_GetLocalCell(
 
     ReleaseReadLock(&afs_xcell);
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     *a_name = t_name;
     return 0;
@@ -1423,9 +1367,7 @@ int SRXAFSCB_GetCacheConfig(
     size_t allocsize;
     cm_initparams_v1 cm_config;
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GLOCK();
     AFS_STATCNT(SRXAFSCB_GetCacheConfig);
 
     /*
@@ -1434,9 +1376,7 @@ int SRXAFSCB_GetCacheConfig(
     allocsize = sizeof(cm_initparams_v1);
     t_config = (afs_uint32 *)rxi_Alloc(allocsize);
     if (t_config == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
 
@@ -1457,9 +1397,7 @@ int SRXAFSCB_GetCacheConfig(
     config->cacheConfig_val = t_config;
     config->cacheConfig_len = allocsize/sizeof(afs_uint32);
 
-#ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+    RX_AFS_GUNLOCK();
 
     return 0;
 }
