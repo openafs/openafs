@@ -71,6 +71,8 @@ extern struct volser_trans *FindTrans(), *NewTrans(),*TransList();
 extern struct afsconf_dir *tdir;
 extern char *volutil_PartitionName();
 
+extern void LogError(afs_int32 errcode);
+
 /* Forward declarations */
 static int GetPartName(afs_int32 partid, char *pname);
 

@@ -51,6 +51,8 @@ RCSID("$Header$");
 #include "volser.h"
 #include "volint.h"
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 extern int DoLogging;
 
 /* This iod stuff is a silly little package to emulate the old qi_in stuff, which

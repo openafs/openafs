@@ -146,6 +146,8 @@ RCSID("$Header$");
 #include <jfs/filsys.h>
 #endif
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 int aixlow_water = 8;	/* default 8% */
 struct DiskPartition *DiskPartitionList;
 

@@ -30,8 +30,10 @@ extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
 extern char *serverLogSyslogTag;
 #endif
-extern void FSLog(const char *format, ...);
+extern void vFSLog(const char *format, va_list args);
+/*@printflike@*/ extern void FSLog(const char *format, ...);
 #define ViceLog(level, str)  if ((level) <= LogLevel) (FSLog str)
+#define vViceLog(level, str) if ((level) <= LogLevel) (vFSLog str)
 
 extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);

@@ -60,6 +60,9 @@ RCSID("$Header$");
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 
+/*@printflike@*/ extern void Log(const char* format, ...);
+/*@printflike@*/ extern void Abort(const char *format, ...);
+
 #define VolserVersion "2.0"
 #define N_SECURITY_OBJECTS 3
 
@@ -79,7 +82,6 @@ extern int (*VolWriteProc)();
 extern int (*VolFlushProc)();
 extern void AFSVolExecuteRequest();
 extern void RXSTATS_ExecuteRequest();
-extern Log();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls=0;
 int DoLogging = 0;

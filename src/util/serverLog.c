@@ -91,11 +91,8 @@ void WriteLogBuffer(char *buf, afs_uint32 len)
     UNLOCK_SERVERLOG();
 }
 
-/* VARARGS1 */
-void FSLog (const char *format, ...)
+void vFSLog (const char *format, va_list args)
 {
-    va_list args;
-
     time_t currenttime;
     char *timeStamp;
     char tbuffer[1024];
@@ -114,9 +111,7 @@ void FSLog (const char *format, ...)
        info += strlen(info);
     }
 
-    va_start(args, format);
     (void) vsprintf(info, format, args);
-    va_end(args);
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
@@ -135,7 +130,18 @@ void FSLog (const char *format, ...)
         fflush(stderr);     /* in case they're sharing the same FD */
     }
 #endif
-}
+} /*vFSLog*/
+
+/* VARARGS1 */
+/*@printflike@*/
+void FSLog(const char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    vFSLog(format, args);
+    va_end(args);
+} /*FSLog*/
 
 static int DebugOn(int loglevel)
 {

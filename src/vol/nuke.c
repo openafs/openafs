@@ -42,6 +42,8 @@ RCSID("$Header$");
 #include "salvage.h"
 #include "fssync.h"
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 
 struct Lock localLock;
 char *vol_DevName();

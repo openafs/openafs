@@ -145,6 +145,8 @@ pthread_cond_t vol_sleep_cond;
 extern void *calloc(), *realloc();
 #endif
 
+/*@printflike@*/ extern void Log(const char* format, ...);
+
 /* Forward declarations */
 static Volume *attach2();
 static void FreeVolume();

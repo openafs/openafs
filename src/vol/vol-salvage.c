@@ -391,7 +391,9 @@ typedef struct {
 
 
 /* Forward declarations */
-void Log(), Abort(), Exit();
+/*@printflike@*/ void Log(const char *format, ...);
+/*@printflike@*/ void Abort(const char *format, ...);
+void Exit(int code);
 int Fork(void);
 int Wait(char *prog);
 char * ToString(char *s);
@@ -3659,39 +3661,49 @@ void showlog(void)
     }
 }
 
-void Log(a,b,c,d,e,f,g,h,i,j,k)
-char *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k;
+void Log(const char *format, ...)
 {
     struct timeval now;
+    va_list args;
 
+    va_start(args, format);
 #ifndef AFS_NT40_ENV
-	if ( useSyslog )
-	{
-		syslog(LOG_INFO, a,b,c,d,e,f,g,h,i,j,k);
-	} else 
+    if ( useSyslog )
+    {
+	char tmp[1024];
+	(void) vsnprintf(tmp, sizeof tmp, format, args);
+	syslog(LOG_INFO, "%s", tmp);
+    } else 
 #endif
-	{
-	    gettimeofday(&now, 0);
-	    fprintf(logFile, "%s ", TimeStamp(now.tv_sec, 1));
-	    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
-	    fflush(logFile);
-	}
+    {
+	gettimeofday(&now, 0);
+	fprintf(logFile, "%s ", TimeStamp(now.tv_sec, 1));
+	vfprintf(logFile, format, args);
+	fflush(logFile);
+    }
+    va_end(args);
 }
 
-void Abort(a,b,c,d,e,f,g,h,i,j,k)
-char *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k;
+void Abort(const char *format, ...)
 {
+    va_list args;
+
+    va_start(args, format);
 #ifndef AFS_NT40_ENV
-	if ( useSyslog )
-	{
-		syslog(LOG_INFO, a,b,c,d,e,f,g,h,i,j,k);
-	} else 
+    if ( useSyslog )
+    {
+	char tmp[1024];
+	(void) vsnprintf(tmp, sizeof tmp, format, args);
+	syslog(LOG_INFO, "%s", tmp);
+    } else 
 #endif
-	{
-	    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
-	    fflush(logFile);
-	    if (ShowLog) showlog();
-	}
+    {
+	vfprintf(logFile, format, args);
+	fflush(logFile);
+	if (ShowLog) showlog();
+    }
+    va_end(args);
+
     if (debug)
 	abort();
     Exit(1);

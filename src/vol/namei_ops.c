@@ -44,6 +44,8 @@ RCSID("$Header$");
 #include "partition.h"
 #include <afs/errors.h>
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 
 int namei_iread(IHandle_t *h, int offset, char *buf, int size)

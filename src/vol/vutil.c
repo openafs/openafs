@@ -64,6 +64,8 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 void AssignVolumeName();
 void AssignVolumeName_r();
 void ClearVolumeStats();

@@ -63,6 +63,8 @@ RCSID("$Header$");
 #endif /* AFS_NT40_ENV */
 #include <sys/stat.h>
 
+extern void Abort(const char *format, ...);
+
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 

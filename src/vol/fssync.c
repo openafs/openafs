@@ -82,6 +82,8 @@ RCSID("$Header$");
 #include "volume.h"
 #include "partition.h"
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 #ifdef osi_Assert
 #undef osi_Assert
 #endif

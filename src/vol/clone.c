@@ -59,6 +59,8 @@ RCSID("$Header$");
 #include "partition.h"
 #include "viceinode.h"
 
+/*@printfline@*/ extern void Log(const char *format, ...);
+
 int (*vol_PollProc)() =	0;  /* someone must init this */
 
 #define ERROR_EXIT(code) {error = code; goto error_exit;}

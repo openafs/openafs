@@ -36,6 +36,8 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include "volser.h"
 
+/*@printflike@*/ extern void Log(const char *format, ...);
+
 static struct volser_trans *allTrans=0;
 static afs_int32 transCounter = 1;
 
