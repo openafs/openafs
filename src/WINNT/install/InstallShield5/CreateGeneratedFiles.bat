@@ -15,6 +15,6 @@ call GenIS5.ipr.bat
 cd File Groups
 rem This next file must run using cmd.exe
 cmd /c GenFileGroups.bat
-cd ..\Media\Transarc AFS
+cd ..\Media\OpenAFS
 call GenDefault.mda.bat
 cd ..\..

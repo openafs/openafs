@@ -16,7 +16,7 @@ copy Default.fgl "Component Definitions"
 copy Default.fdf "File Groups"
 copy GenFileGroups.bat "File Groups"
 
-copy GenDefault.mda.bat "Media\Transarc AFS"
+copy GenDefault.mda.bat "Media\OpenAFS"
 
 copy Default.rge "Registry Entries"
 

@@ -14,11 +14,11 @@ Set SavePath=%Path%
 
 Path %IS5ROOT%\Program;%PATH%
 
-ISbuild -p"%AFSROOT%\src\WINNT\install\InstallShield5" -m"Transarc AFS" 
+ISbuild -p"%AFSROOT%\src\WINNT\install\InstallShield5" -m"OpenAFS" 
 
-if not exist "Media\Transarc AFS\Disk Images\disk1" goto nocopylicense
-mkdir "Media\Transarc AFS\Disk Images\disk1\License"
-copy ..\..\license\lang\*.rtf "Media\Transarc AFS\Disk Images\disk1\License"
+if not exist "Media\OpenAFS\Disk Images\disk1" goto nocopylicense
+mkdir "Media\OpenAFS\Disk Images\disk1\License"
+copy ..\..\license\lang\*.rtf "Media\OpenAFS\Disk Images\disk1\License"
 :nocopylicense
 
 If errorlevel 1 goto BuildErrorOccurred

@@ -19,12 +19,12 @@ echo [GeneralInfo] >> default.mda
 echo MEDIATYPE=CDROM >> default.mda
 echo DATAASFILES=No >> default.mda
 echo BUILDTYPE=Full >> default.mda
-echo BuildLocation=Media\Transarc AFS >> default.mda
+echo BuildLocation=Media\OpenAFS >> default.mda
 echo BREAKBYTOPCOMPONENT=No >> default.mda
 echo REFRESH_DATAFILES=Yes >> default.mda
 echo REFRESH_SPLASH=Yes >> default.mda
 echo BUILDSIZE= >> default.mda
-echo Name=AFS for Windows >> default.mda
+echo Name=OpenAFS for Windows >> default.mda
 echo REVIEWREPORT=No >> default.mda
 echo REFRESH_IFILES=Yes >> default.mda
 echo PASSWORD= >> default.mda
@@ -32,7 +32,7 @@ echo. >> default.mda
 echo [SetupInfo] >> default.mda
 echo ENABLELANGDLG=Yes >> default.mda
 echo ALTERNATEISDELETENAME= >> default.mda
-echo APPLICATIONNAME=AFS for Windows >> default.mda
+echo APPLICATIONNAME=OpenAFS for Windows >> default.mda
 echo HIDESTATUSBAR=No >> default.mda
 echo WIN32SENABLE=No >> default.mda
 echo. >> default.mda
@@ -59,8 +59,8 @@ echo count=8 >> default.mda
 echo. >> default.mda
 echo [TagFileInfo] >> default.mda
 echo PRODUCTCATEGORY=System Tool >> default.mda
-echo APPLICATIONNAME=AFS for Windows >> default.mda
-echo COMPANYNAME=Transarc Corpration >> default.mda
+echo APPLICATIONNAME=OpenAFS for Windows >> default.mda
+echo COMPANYNAME=OpenAFS >> default.mda
 echo VERSION=1.00.000 >> default.mda
-echo INFO= >> default.mda
+echo INFO=http://www.openafs.org >> default.mda
 
