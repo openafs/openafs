@@ -21,6 +21,7 @@
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <afs/com_err.h>
+#include <afs/cellconfig.h>
 #include "ptserver.h"
 #include "pterror.h"
 #include <stdlib.h>
