@@ -29,13 +29,13 @@ configure-stamp:
 	-ln -s src/Makefile Makefile
 
 
+		$(MAKE) links
 	touch configure-stamp
 
 build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	$(MAKE) links
 	$(MAKE) SYS_NAME=$(SYS_NAME)
 
 	touch build-stamp
@@ -59,8 +59,9 @@ install: build
 
 	# Add here commands to install the package into debian/tmp.
 	cat debian/filelist |debian/movefiles
-
-
+	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client/etc/init.d/openafs-client
+	chmod 755 debian/openafs-client/etc/init.d/openafs-client
+	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.

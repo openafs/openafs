@@ -1,6 +1,21 @@
 openafs for Debian
 ----------------------
 
-<possible notes regarding this package - if none, delete this file>
+* No manual pages are included.  I need to find out if versions exist
+  that are OK for copyright reasons.
 
- -- unknown <hartmans@snorklewacker.mit.edu>, Fri,  3 Nov 2000 23:41:41 -0500
+* The init.d script is not activated by default.  I want to hold off
+  on this until module building is more reasonable.
+
+*  AFS users may be confused by the directory layout.  The files that
+   normally go in /usr/vice/etc go in /etc/openafs.  The cache should
+   be mounted on /var/cache/openafs.
+
+* The libopenafs-dev package only includes static libraries because
+  AFS does not build shared libs.
+
+
+
+
+
+ -- Sam Hartman <hartmans@mit.edu>, Fri,  3 Nov 2000 23:41:41 -0500

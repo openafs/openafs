@@ -7,6 +7,11 @@ Description:  What AFS cell does this workstation belong to?
 
 template: openafs-client/cachesize
 Type: string
-Description:  How large is your AFS cache (kb)? 
 Default: 50000
+Description:  How large is your AFS cache (kb)? 
+   AFS uses a  area of the disk to cache remote files for faster
+   access.  This cache will be mounted on /var/cache/openafs.  It is
+   important that the cache not overfill the partition it is located
+   on.  Often, people find it useful to dedicate a partition to their
+   AFS cache.
 
