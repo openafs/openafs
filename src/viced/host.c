@@ -964,7 +964,7 @@ retry:
 	H_UNLOCK
 	code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf,
 					   &caps);
-	if ( code == RXGEN_OPCODE )
+	if ( code == RXGEN_OPCODE ) 
 	    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 	H_LOCK
 	if ( code == RXGEN_OPCODE ) {
@@ -1073,7 +1073,7 @@ retry:
 		H_UNLOCK
 		code = RXAFSCB_TellMeAboutYourself(host->callback_rxcon, 
 						   &interf, &caps);
-		if ( code == RXGEN_OPCODE )
+		if ( code == RXGEN_OPCODE ) 
 		    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 		H_LOCK
 		if ( code == RXGEN_OPCODE ) {

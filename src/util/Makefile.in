@@ -30,6 +30,7 @@ includes = \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
 	${TOP_INCDIR}/afs/softsig.h \
+	${TOP_INCDIR}/afs/unified_afs.h \
 	${TOP_INCDIR}/potpourri.h 
 
 all: ${includes} \
@@ -122,6 +123,10 @@ afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
 afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
+unified_afs.c unified_afs.h: unified_afs.et
+	$(RM) -f unified_afs.c unified_afs.h
+	${COMPILE_ET} unified_afs
+
 #
 # Install targets
 #
@@ -145,12 +150,16 @@ install: \
 	${DESTDIR}${includedir}/afs/afs_atomlist.h \
 	${DESTDIR}${includedir}/afs/afs_lhash.h \
 	${DESTDIR}${includedir}/afs/softsig.h \
+	${DESTDIR}${includedir}/afs/unified_afs.h \
 	${DESTDIR}${includedir}/potpourri.h \
 	${DESTDIR}${libdir}/afs/util.a \
 	${DESTDIR}${libdir}/afs/libafsutil.a \
 	${DESTDIR}${bindir}/sys
 
 ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/unified_afs.h: unified_afs.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
@@ -210,6 +219,9 @@ ${TOP_LIBDIR}/libafsutil.a: util.a
 
 
 ${DESTDIR}${includedir}/afs/dirpath.h: dirpath.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/unified_afs.h: unified_afs.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
@@ -273,6 +285,9 @@ ${DESTDIR}${bindir}/sys: sys
 
 
 ${DEST}/include/afs/dirpath.h: dirpath.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/unified_afs.h: unified_afs.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/pthread_nosigs.h: ${srcdir}/pthread_nosigs.h
@@ -349,6 +364,7 @@ include ../config/Makefile.version
 
 dest: \
 	${DEST}/include/afs/dirpath.h \
+	${DEST}/include/afs/unified_afs.h \
 	${DEST}/include/afs/pthread_nosigs.h \
 	${DEST}/include/afs/assert.h \
 	${DEST}/include/afs/errors.h \

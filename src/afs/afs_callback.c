@@ -1464,8 +1464,9 @@ int SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
     
     RX_AFS_GUNLOCK();
     
+    dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
-    memcpy((char *)dataBuffP, "1", dataBytes);
+    dataBuffP[0] = CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes/sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 

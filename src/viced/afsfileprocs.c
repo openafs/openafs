@@ -109,6 +109,7 @@ RCSID("$Header$");
 #include "viced_prototypes.h"
 #include "viced.h"
 #include "host.h"
+#include <afs/unified_afs.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 
@@ -5987,11 +5988,12 @@ afs_int32 SRXAFS_GetCapabilities(struct rx_call *acall,
 				 Capabilities *capabilities)
 {
     afs_int32 *dataBuffP;               
+    afs_int32 *dataP;
     afs_int32 dataBytes;   
 
-    dataBytes = (((CAPABILITY_BITS-1)>>5)+1) * sizeof(afs_int32);
+    dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_int32 *)malloc(dataBytes);
-    dataBytes = CAPABILITY_ERRORTRANS;
+    dataBuffP[0] = CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes/sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
@@ -7127,15 +7129,135 @@ StoreData_RXStyle(Volume *volptr,
 static int sys2et[512];
 
 void init_sys_error_to_et(void) {
-    int uae = 49733376L;
-    int uaf = 49733632L;
     memset(&sys2et, 0, sizeof(sys2et));
-    sys2et[EPERM] = 1 + uae;
-    sys2et[EEXIST] = 17 +  uae;
-    sys2et[ENOTEMPTY] = 39 +  uae;
+    sys2et[EPERM] = UAEPERM;
+    sys2et[ENOENT] = UAENOENT;
+    sys2et[ESRCH] = UAESRCH;
+    sys2et[EINTR] = UAEINTR;
+    sys2et[EIO] = UAEIO;
+    sys2et[ENXIO] = UAENXIO;
+    sys2et[E2BIG] = UAE2BIG;
+    sys2et[ENOEXEC] = UAENOEXEC;
+    sys2et[EBADF] = UAEBADF;
+    sys2et[ECHILD] = UAECHILD;
+    sys2et[EAGAIN] = UAEAGAIN;
+    sys2et[ENOMEM] = UAENOMEM;
+    sys2et[EACCES] = UAEACCES;
+    sys2et[EFAULT] = UAEFAULT;
+    sys2et[ENOTBLK] = UAENOTBLK;
+    sys2et[EBUSY] = UAEBUSY;
+    sys2et[EEXIST] = UAEEXIST;
+    sys2et[EXDEV] = UAEXDEV;
+    sys2et[ENODEV] = UAENODEV;
+    sys2et[ENOTDIR] = UAENOTDIR;
+    sys2et[EISDIR] = UAEISDIR;
+    sys2et[EINVAL] = UAEINVAL;
+    sys2et[ENFILE] = UAENFILE;
+    sys2et[EMFILE] = UAEMFILE;
+    sys2et[ENOTTY] = UAENOTTY;
+    sys2et[ETXTBSY] = UAETXTBSY;
+    sys2et[EFBIG] = UAEFBIG;
+    sys2et[ENOSPC] = UAENOSPC;
+    sys2et[ESPIPE] = UAESPIPE;
+    sys2et[EROFS] = UAEROFS;
+    sys2et[EMLINK] = UAEMLINK;
+    sys2et[EPIPE] = UAEPIPE;
+    sys2et[EDOM] = UAEDOM;
+    sys2et[ERANGE] = UAERANGE;
+    sys2et[EDEADLK] = UAEDEADLK;
+    sys2et[ENAMETOOLONG] = UAENAMETOOLONG;
+    sys2et[ENOLCK] = UAENOLCK;
+    sys2et[ENOSYS] = UAENOSYS;
+    sys2et[ENOTEMPTY] = UAENOTEMPTY;
+    sys2et[ELOOP] = UAELOOP;
+    sys2et[EWOULDBLOCK] = UAEWOULDBLOCK;
+    sys2et[ENOMSG] = UAENOMSG;
+    sys2et[EIDRM] = UAEIDRM;
+    sys2et[ECHRNG] = UAECHRNG;
+    sys2et[EL2NSYNC] = UAEL2NSYNC;
+    sys2et[EL3HLT] = UAEL3HLT;
+    sys2et[EL3RST] = UAEL3RST;
+    sys2et[ELNRNG] = UAELNRNG;
+    sys2et[EUNATCH] = UAEUNATCH;
+    sys2et[ENOCSI] = UAENOCSI;
+    sys2et[EL2HLT] = UAEL2HLT;
+    sys2et[EBADE] = UAEBADE;
+    sys2et[EBADR] = UAEBADR;
+    sys2et[EXFULL] = UAEXFULL;
+    sys2et[ENOANO] = UAENOANO;
+    sys2et[EBADRQC] = UAEBADRQC;
+    sys2et[EBADSLT] = UAEBADSLT;
+    sys2et[EDEADLK] = UAEDEADLK;
+    sys2et[EBFONT] = UAEBFONT;
+    sys2et[ENOSTR] = UAENOSTR;
+    sys2et[ENODATA] = UAENODATA;
+    sys2et[ETIME] = UAETIME;
+    sys2et[ENOSR] = UAENOSR;
+    sys2et[ENONET] = UAENONET;
+    sys2et[ENOPKG] = UAENOPKG;
+    sys2et[EREMOTE] = UAEREMOTE;
+    sys2et[ENOLINK] = UAENOLINK;
+    sys2et[EADV] = UAEADV;
+    sys2et[ESRMNT] = UAESRMNT;
+    sys2et[ECOMM] = UAECOMM;
+    sys2et[EPROTO] = UAEPROTO;
+    sys2et[EMULTIHOP] = UAEMULTIHOP;
+    sys2et[EDOTDOT] = UAEDOTDOT;
+    sys2et[EBADMSG] = UAEBADMSG;
+    sys2et[EOVERFLOW] = UAEOVERFLOW;
+    sys2et[ENOTUNIQ] = UAENOTUNIQ;
+    sys2et[EBADFD] = UAEBADFD;
+    sys2et[EREMCHG] = UAEREMCHG;
+    sys2et[ELIBACC] = UAELIBACC;
+    sys2et[ELIBBAD] = UAELIBBAD;
+    sys2et[ELIBSCN] = UAELIBSCN;
+    sys2et[ELIBMAX] = UAELIBMAX;
+    sys2et[ELIBEXEC] = UAELIBEXEC;
+    sys2et[EILSEQ] = UAEILSEQ;
+    sys2et[ERESTART] = UAERESTART;
+    sys2et[ESTRPIPE] = UAESTRPIPE;
+    sys2et[EUSERS] = UAEUSERS;
+    sys2et[ENOTSOCK] = UAENOTSOCK;
+    sys2et[EDESTADDRREQ] = UAEDESTADDRREQ;
+    sys2et[EMSGSIZE] = UAEMSGSIZE;
+    sys2et[EPROTOTYPE] = UAEPROTOTYPE;
+    sys2et[ENOPROTOOPT] = UAENOPROTOOPT;
+    sys2et[EPROTONOSUPPORT] = UAEPROTONOSUPPORT;
+    sys2et[ESOCKTNOSUPPORT] = UAESOCKTNOSUPPORT;
+    sys2et[EOPNOTSUPP] = UAEOPNOTSUPP;
+    sys2et[EPFNOSUPPORT] = UAEPFNOSUPPORT;
+    sys2et[EAFNOSUPPORT] = UAEAFNOSUPPORT;
+    sys2et[EADDRINUSE] = UAEADDRINUSE;
+    sys2et[EADDRNOTAVAIL] = UAEADDRNOTAVAIL;
+    sys2et[ENETDOWN] = UAENETDOWN;
+    sys2et[ENETUNREACH] = UAENETUNREACH;
+    sys2et[ENETRESET] = UAENETRESET;
+    sys2et[ECONNABORTED] = UAECONNABORTED;
+    sys2et[ECONNRESET] = UAECONNRESET;
+    sys2et[ENOBUFS] = UAENOBUFS;
+    sys2et[EISCONN] = UAEISCONN;
+    sys2et[ENOTCONN] = UAENOTCONN;
+    sys2et[ESHUTDOWN] = UAESHUTDOWN;
+    sys2et[ETOOMANYREFS] = UAETOOMANYREFS;
+    sys2et[ETIMEDOUT] = UAETIMEDOUT;
+    sys2et[ECONNREFUSED] = UAECONNREFUSED;
+    sys2et[EHOSTDOWN] = UAEHOSTDOWN;
+    sys2et[EHOSTUNREACH] = UAEHOSTUNREACH;
+    sys2et[EALREADY] = UAEALREADY;
+    sys2et[EINPROGRESS] = UAEINPROGRESS;
+    sys2et[ESTALE] = UAESTALE;
+    sys2et[EUCLEAN] = UAEUCLEAN;
+    sys2et[ENOTNAM] = UAENOTNAM;
+    sys2et[ENAVAIL] = UAENAVAIL;
+    sys2et[EISNAM] = UAEISNAM;
+    sys2et[EREMOTEIO] = UAEREMOTEIO;
+    sys2et[EDQUOT] = UAEDQUOT;
+    sys2et[ENOMEDIUM] = UAENOMEDIUM;
+    sys2et[EMEDIUMTYPE] = UAEMEDIUMTYPE;
 }
 
 afs_int32 sys_error_to_et(afs_int32 in) {
+    if (in < 0 || in > 511) return in;
     if (sys2et[in] != 0) return sys2et[in];
     return in;
 }

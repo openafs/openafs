@@ -75,6 +75,8 @@ void osi_Init(void)
 #ifdef AFS_SGI64_ENV
     osi_flid.fl_pid = osi_flid.fl_sysid = 0;
 #endif
+
+    init_et_to_sys_error();
 }
 
 int osi_Active(register struct vcache *avc)

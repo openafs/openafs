@@ -17,7 +17,7 @@ extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
     afs_int32 locktype, struct cell *cellp);
 extern int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where);
 extern void afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato);
-
+extern void init_sys_error_to_et(void);
 
 /* afs_axscache.c */
 extern afs_rwlock_t afs_xaxs;
