@@ -191,7 +191,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\pthread.lib
+	$(DESTDIR)\lib\afspthread.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)

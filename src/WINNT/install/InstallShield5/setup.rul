@@ -442,6 +442,7 @@ begin
 	szErrMsg="                                                                 ";
 	Enable (STATUS);
 	SetStatusWindow (50, "Now Downloading CellServDB file...");
+	CreateDir(TARGETDIR);
 	nResult=GetWebPage(szErrMsg,szDestFile,szDefaultWeb);
 	SetStatusWindow (100, "Downloading completed.");
 	Delay (2);

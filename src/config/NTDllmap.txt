@@ -1,4 +1,4 @@
-pthread.dll                    0x61000000    0x00080000
+afspthread.dll                 0x61000000    0x00080000
 afsrpc.dll                     0x61080000    0x00080000
 afsauthent.dll                 0x61100000    0x00080000
 afspioctl.dll                  0x61200000    0x00080000

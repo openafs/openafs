@@ -169,7 +169,7 @@ install: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\tokens.exe \
 	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
 	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
-	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
+	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
 	$(DESTDIR)\bin\kpasswd.exe
 
@@ -307,7 +307,7 @@ $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
-	
+
 ############################################################################
 # generate versioninfo resources
 

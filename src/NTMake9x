@@ -42,7 +42,7 @@ start:
     $(MKDIR) $(DESTDIR)
 !	ENDIF
 
-config:
+config: start
      echo ***** $@
 	$(CD) $(OBJ)\$@
 	$(NTMAKE)
@@ -315,7 +315,7 @@ media: Win9x
 # Fake the version copy so clean will go through the complete cycle with undefines
 clean: start
 	if not exist .\src\config\NTMakefile.version copy .\src\config\NTMakefile.version-NOCML .\src\config\NTMakefile.version
-    nmake /nologo /f ntmake9x "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_LIBUTILS = nmake /nologo /f ntmakefile clean" install
+	nmake /nologo /f ntmake9x "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_LIBUTILS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
 	$(CD) $(OBJ)\WINNT\install\Win9x
 	nmake /nologo /f NTMakefile clean
 	$(CD) ..\..\..\..

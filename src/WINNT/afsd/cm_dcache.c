@@ -1155,7 +1155,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 		afsStatus.UnixModeBits = 0x1ff;
 		afsStatus.ParentVnode = 0x1;
 		afsStatus.ParentUnique = 0x1;
-		afsStatus.SegSize = 0;
+		afsStatus.ResidencyMask = 0;
 		afsStatus.ClientModTime = 0x3b49f6e2;
 		afsStatus.ServerModTime = 0x3b49f6e2;
 		afsStatus.Group = 0;

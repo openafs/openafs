@@ -806,7 +806,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 		statusp->UnixModeBits = 0x1ff;
 		statusp->ParentVnode = 0x1;
 		statusp->ParentUnique = 0x1;
-		statusp->SegSize = 0;
+		statusp->ResidencyMask = 0;
 		statusp->ClientModTime = 0x3b49f6e2;
 		statusp->ServerModTime = 0x3b49f6e2;
 		statusp->Group = 0;

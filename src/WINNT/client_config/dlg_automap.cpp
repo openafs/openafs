@@ -237,29 +237,39 @@ BOOL UpdateRegistry(DRIVEMAP *pDrive, BOOL bRemove)
 
 BOOL DefineDosDrive(DRIVEMAP *pDrive, DDDACTION dddAction)
 {
-   TCHAR szAfsPath[MAX_PATH];
-   TCHAR szDrive[3] = TEXT("?:");
+    // TCHAR szAfsPath[MAX_PATH];
+    // TCHAR szDrive[3] = TEXT("?:");
    BOOL fResult = FALSE;
 
    if (!pDrive)
       return FALSE;
 
-   szDrive[0] = pDrive->chDrive;
-   _stprintf(szAfsPath, TEXT("\\Device\\LanmanRedirector\\%s\\%s-AFS\\%s"), szDrive, szHostName, pDrive->szSubmount);
-
    if (dddAction == DDD_REMOVE) {
-      fResult = DefineDosDevice(DDD_RAW_TARGET_PATH | DDD_REMOVE_DEFINITION | DDD_EXACT_MATCH_ON_REMOVE, szDrive, szAfsPath);
-      if (!fResult)
-         Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), GetLastError());
+       if (!(fResult=(DisMountDOSDrive(pDrive->chDrive)==NO_ERROR)))
+           Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), GetLastError());
    } else if (dddAction == DDD_ADD) {
-      fResult = DefineDosDevice(DDD_RAW_TARGET_PATH, szDrive, szAfsPath);
-      if (!fResult)
-         Message (MB_OK | MB_ICONHAND, IDS_ERROR_MAP, IDS_ERROR_MAP_DESC, TEXT("%08lX"), GetLastError());
+       if (!(fResult=(MountDOSDrive(pDrive->chDrive, pDrive->szSubmount,FALSE)==NO_ERROR)))
+	   Message (MB_OK | MB_ICONHAND, IDS_ERROR_MAP, IDS_ERROR_MAP_DESC, TEXT("%08lX"), GetLastError());
    }
+   /*
+     Replace this code with Drive mapping routine that doesn't require different formats for each OS
+     szDrive[0] = pDrive->chDrive;
+     _stprintf(szAfsPath, TEXT("\\Device\\LanmanRedirector\\%s\\%s-AFS\\%s"), szDrive, szHostName, pDrive->szSubmount);
 
+     if (dddAction == DDD_REMOVE) {
+         fResult = DefineDosDevice(DDD_RAW_TARGET_PATH | DDD_REMOVE_DEFINITION | DDD_EXACT_MATCH_ON_REMOVE, szDrive, szAfsPath);
+	 if (!fResult)
+             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), GetLastError());
+     } else if (dddAction == DDD_ADD) {
+          fResult = DefineDosDevice(DDD_RAW_TARGET_PATH, szDrive, szAfsPath);
+	  if (!fResult)
+	      Message (MB_OK | MB_ICONHAND, IDS_ERROR_MAP, IDS_ERROR_MAP_DESC, TEXT("%08lX"), GetLastError());
+     }
+
+    */
    if (fResult)
-         UpdateRegistry(pDrive, dddAction == DDD_REMOVE);
-
+       UpdateRegistry(pDrive, dddAction == DDD_REMOVE);
+   
    return fResult;
 }   
 

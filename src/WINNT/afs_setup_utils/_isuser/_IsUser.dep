@@ -1,5 +1,0 @@
-# Microsoft Developer Studio Generated Dependency File, included by _IsUser.mak
-
-.\_Isuser.RC : \
-	".\sdrc.h"\
-	
