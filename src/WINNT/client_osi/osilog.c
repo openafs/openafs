@@ -342,8 +342,8 @@ void osi_LogDisable(osi_log_t *logp)
 }
 
 #define REG_CLIENT_PARMS_KEY  "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
-#define TRACE_OPTION_EVENT 1
-#define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
+#define TRACE_OPTION_EVENT 2
+#define ISCLIENTTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
 
 DWORD osi_TraceOption=0;
 
@@ -364,7 +364,7 @@ void osi_LogEvent0(char *a,char *b)
 {
 	HANDLE h; 
     char *ptbuf[1];
-	if (!ISLOGONTRACE(osi_TraceOption))
+	if (!ISCLIENTTRACE(osi_TraceOption))
 		return;
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	ptbuf[0] = b;
@@ -377,7 +377,7 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 {
 	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
 	va_list marker;
-	if (!ISLOGONTRACE(osi_TraceOption))
+	if (!ISCLIENTTRACE(osi_TraceOption))
 		return;
     h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,c);
