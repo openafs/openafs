@@ -25,3 +25,14 @@ Description: The AFS distributed filesystem- development libraries
    .
    This package provides static development libraries and headers
    needed to compile AFS applications.
+
+Package: openafs-modules-source
+Priority: extra
+Depends: libncurses5-dev, libpam0g-dev
+Architecture: all
+Description: The AFS distributed filesystem- Module Sources
+   AFS is a distributed filesystem allowing cross-platform sharing of
+   files among multiple computers.  Facilities are provided for access
+   control, authentication, backup and administrative management.
+   .
+   This package provides source to the AFS kernel modules.
