@@ -42,10 +42,7 @@ RCSID("$Header$");
 #include "vol.h"
 
 /* returns 0 on success, errno on failure */
-int ReallyRead (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int ReallyRead(DirHandle *file, int block, char *data)
 {
     FdHandle_t *fdP;
     int code;
@@ -74,10 +71,7 @@ char	      *	data;
 }
 
 /* returns 0 on success, errno on failure */
-int ReallyWrite (file, block, data)
-DirHandle     *	file;
-int 		block;
-char	      *	data;
+int ReallyWrite (DirHandle *file, int block, char *data)
 {
     FdHandle_t *fdP;
     extern int VolumeChanged;
@@ -113,11 +107,7 @@ char	      *	data;
  * Create a handle to a directory entry and reference it (IH_INIT).
  * The handle needs to be dereferenced with the FidZap() routine.
  */
-SetSalvageDirHandle(dir, volume, device, inode)
-DirHandle *dir;
-afs_int32 volume;
-Inode inode;
-afs_int32 device;
+void SetSalvageDirHandle(DirHandle *dir, afs_int32 volume, Inode inode, afs_int32 device)
 {
     private SalvageCacheCheck = 1;
     memset(dir, 0, sizeof(DirHandle));
@@ -131,25 +121,18 @@ afs_int32 device;
     dir->dirh_cacheCheck = SalvageCacheCheck++;	
 }
 
-FidZap (file)
-DirHandle     *	file;
-
+void FidZap(DirHandle *file)
 {
     IH_RELEASE(file->dirh_handle);
     memset(file, 0, sizeof(DirHandle));
 }
 
-FidZero (file)
-DirHandle     *	file;
-
+void FidZero(DirHandle *file)
 {
     memset(file, 0, sizeof(DirHandle));
 }
 
-FidEq (afile, bfile)
-DirHandle      * afile;
-DirHandle      * bfile;
-
+int FidEq(DirHandle *afile, DirHandle *bfile)
 {
     if (afile->dirh_volume != bfile->dirh_volume) return 0;
     if (afile->dirh_device != bfile->dirh_device) return 0;
@@ -158,27 +141,19 @@ DirHandle      * bfile;
     return 1;
 }
 
-FidVolEq (afile, vid)
-DirHandle      * afile;
-afs_int32            vid;
-
+int FidVolEq(DirHandle *afile, afs_int32 vid)
 {
     if (afile->dirh_volume != vid) return 0;
     return 1;
 }
 
-FidCpy (tofile, fromfile)
-DirHandle      * tofile;
-DirHandle      * fromfile;
-
+void FidCpy(DirHandle *tofile, DirHandle *fromfile)
 {
     *tofile = *fromfile;
     IH_COPY(tofile->dirh_handle, fromfile->dirh_handle);
 }
 
-Die (msg)
-char  * msg;
-
+void Die (char *msg)
 {
     printf("%s\n",msg);
     assert(1==2);

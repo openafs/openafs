@@ -42,8 +42,8 @@ RCSID("$Header$");
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"
-#include "partition.h"
 #include "volume.h"
+#include "partition.h"
 #if defined(AFS_SGI_ENV)
 #include "sys/types.h"
 #include "fcntl.h"
@@ -70,9 +70,8 @@ RCSID("$Header$");
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
-private int moveHash();
-void StickOnLruChain_r();
-void VPutVnode_r();
+private int moveHash(register Vnode *vnp, bit32 newHash);
+void StickOnLruChain_r(register Vnode *vnp, register struct VnodeClassInfo *vcp);
 
 #define BAD_IGET	-1000
 
@@ -133,7 +132,7 @@ afs_int32 av1, av2, av3,av4; {
  * when there are not many volumes represented), and spread
  * equally amongst vnodes within a single volume.
  */
-int VolumeHashOffset_r() {
+int VolumeHashOffset_r(void) {
     static int nextVolumeHashOffset = 0;
     /* hashindex Must be power of two in size */
 #   define hashShift 3
@@ -232,8 +231,8 @@ int VInitVnodes(VnodeClass class, int nVnodes)
 /* allocate an *unused* vnode from the LRU chain, going backwards of course.  It shouldn't
     be necessary to specify that nUsers == 0 since if it is in the list, nUsers
     should be 0.  Things shouldn't be in lruq unless no one is using them.  */
-Vnode *VGetFreeVnode_r(vcp)
-struct VnodeClassInfo *vcp; {
+Vnode *VGetFreeVnode_r(struct VnodeClassInfo *vcp)
+{
     register Vnode *vnp;
 
     vnp = vcp->lruHead->lruPrev;
@@ -249,10 +248,7 @@ static mlkLastAlloc = 0;
 static mlkLastOver = 0;
 static mlkLastDelete = 0;
 
-Vnode *VAllocVnode(ec,vp,type)
-    Error *ec;
-    Volume *vp;
-    VnodeType type;
+Vnode *VAllocVnode(Error *ec, Volume *vp, VnodeType type)
 {
     Vnode *retVal;
     VOL_LOCK
@@ -261,10 +257,7 @@ Vnode *VAllocVnode(ec,vp,type)
     return retVal;
 }
 
-Vnode *VAllocVnode_r(ec,vp,type)
-    Error *ec;
-    Volume *vp;
-    VnodeType type;
+Vnode *VAllocVnode_r(Error *ec, Volume *vp, VnodeType type)
 {
     register Vnode *vnp;
     VnodeId vnodeNumber;
@@ -423,11 +416,11 @@ Vnode *VAllocVnode_r(ec,vp,type)
     return vnp;
 }
     
-Vnode *VGetVnode(ec,vp,vnodeNumber,locktype)
-    Error *ec;
-    Volume *vp;
-    VnodeId vnodeNumber;
-    int locktype;	/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
+Vnode *VGetVnode(
+    Error *ec,
+    Volume *vp,
+    VnodeId vnodeNumber,
+    int locktype)	/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
 {
     Vnode *retVal;
     VOL_LOCK
@@ -436,11 +429,11 @@ Vnode *VGetVnode(ec,vp,vnodeNumber,locktype)
     return retVal;
 }
 
-Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
-    Error *ec;
-    Volume *vp;
-    VnodeId vnodeNumber;
-    int locktype;	/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
+Vnode *VGetVnode_r(
+    Error *ec,
+    Volume *vp,
+    VnodeId vnodeNumber,
+    int locktype)	/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
 {
     register Vnode *vnp;
     int newHash;
@@ -530,7 +523,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 	VOL_UNLOCK
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
-	    Log("VGetVnode: can't open index dev=%d, i=%s\n",
+	    Log("VGetVnode: can't open index dev=%u, i=%s\n",
 		vp->device, PrintInode(NULL,
 				       vp->vnodeIndex[class].handle->ih_ino));
 	    *ec = VIO;
@@ -667,9 +660,7 @@ int  TrustVnodeCacheEntry = 1;
 /* This variable is bogus--when it's set to 0, the hash chains fill
    up with multiple versions of the same vnode.  Should fix this!! */
 void
-VPutVnode(ec,vnp)
-    Error *ec;
-    register Vnode *vnp;
+VPutVnode(Error *ec, register Vnode *vnp)
 {
     VOL_LOCK
     VPutVnode_r(ec,vnp);
@@ -677,9 +668,7 @@ VPutVnode(ec,vnp)
 }
 
 void
-VPutVnode_r(ec,vnp)
-    Error *ec;
-    register Vnode *vnp;
+VPutVnode_r(Error *ec, register Vnode *vnp)
 {
     int writeLocked, offset;
     VnodeClass class;
@@ -797,9 +786,7 @@ VPutVnode_r(ec,vnp)
  * Do nothing if the vnode isn't write locked or the vnode has
  * been deleted.
  */
-int VVnodeWriteToRead(ec,vnp)
-    Error *ec;
-    register Vnode *vnp;
+int VVnodeWriteToRead(Error *ec, register Vnode *vnp)
 {
     int retVal;
     VOL_LOCK
@@ -808,9 +795,7 @@ int VVnodeWriteToRead(ec,vnp)
     return retVal;
 }
 
-int VVnodeWriteToRead_r(ec,vnp)
-    Error *ec;
-    register Vnode *vnp;
+int VVnodeWriteToRead_r(Error *ec, register Vnode *vnp)
 {
     int writeLocked;
     VnodeClass class;
@@ -906,9 +891,7 @@ int VVnodeWriteToRead_r(ec,vnp)
 
 /* Move the vnode, vnp, to the new hash table given by the
    hash table index, newHash */
-static int moveHash(vnp, newHash)
-    register Vnode *vnp;
-    bit32 newHash;
+static int moveHash(register Vnode *vnp, bit32 newHash)
 {
     Vnode *tvnp;
  /* Remove it from the old hash chain */
@@ -929,9 +912,7 @@ static int moveHash(vnp, newHash)
 }
 
 void
-StickOnLruChain_r(vnp,vcp)
-    register Vnode *vnp;
-    register struct VnodeClassInfo *vcp;
+StickOnLruChain_r(register Vnode *vnp, register struct VnodeClassInfo *vcp)
 {
  /* Add it to the circular LRU list */
     if (vcp->lruHead == NULL)

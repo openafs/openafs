@@ -194,9 +194,6 @@ struct Lock vol_listLock;		/* Lock obtained when listing volumes:  prevents a vo
 
 extern struct Lock FSYNC_handler_lock;
 
-Volume *VAttachVolumeByName();
-Volume *VAttachVolumeByName_r();
-
 static int TimeZoneCorrection; /* Number of seconds west of GMT */
 
 /* Common message used when the volume goes off line */
@@ -1680,7 +1677,7 @@ void VAddToVolumeUpdateList_r(Error *ec, Volume *vp)
     UpdateList[nUpdatedVolumes++] = V_id(vp);
 }
 
-static void VScanUpdateList() {
+static void VScanUpdateList(void) {
     register int i, gap;
     register Volume *vp;
     Error error;

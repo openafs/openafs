@@ -389,7 +389,7 @@ afs_int32 *avolid;
     if (strlen(aname) > 31) return VOLSERBADNAME;
     if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
     if (DoLogging) Log("%s is executing CreateVolume '%s'\n", caller, aname);
-    if (error = ConvertPartition(apart, ppath, sizeof(ppath))) return error;/*a standard unix error*/
+    if ((error = ConvertPartition(apart, ppath, sizeof(ppath)))) return error;/*a standard unix error*/
     if (atype != readwriteVolume && atype != readonlyVolume && atype != backupVolume)
 	return EINVAL;
     if ((volumeID = *avolid) == 0) {

@@ -97,11 +97,11 @@ static void RemoveInodes(Device dev, VolumeId vid)
     IH_RELEASE(handle);
 }
 
-Volume *VCreateVolume(ec, partname, volumeId, parentId)
-    Error *ec;
-    char *partname;
-    VolId volumeId;
-    VolId parentId;	/* Should be the same as volumeId if there is
+Volume *VCreateVolume(
+    Error *ec,
+    char *partname,
+    VolId volumeId,
+    VolId parentId)	/* Should be the same as volumeId if there is
     			   no parent */
 {
     Volume *retVal;
@@ -111,11 +111,11 @@ Volume *VCreateVolume(ec, partname, volumeId, parentId)
     return retVal;
 }
 
-Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
-    Error *ec;
-    char *partname;
-    VolId volumeId;
-    VolId parentId;	/* Should be the same as volumeId if there is
+Volume *VCreateVolume_r(
+    Error *ec,
+    char *partname,
+    VolId volumeId,
+    VolId parentId)	/* Should be the same as volumeId if there is
     			   no parent */
 {
     VolumeDiskData vol;
@@ -289,9 +289,7 @@ Volume *VCreateVolume_r(ec, partname, volumeId, parentId)
 
 
 void
-AssignVolumeName(vol, name, ext)
-    register VolumeDiskData *vol;
-    char *name,*ext;
+AssignVolumeName(register VolumeDiskData *vol, char *name, char *ext)
 {
     VOL_LOCK
     AssignVolumeName_r(vol, name, ext);
@@ -299,9 +297,7 @@ AssignVolumeName(vol, name, ext)
 }
 
 void
-AssignVolumeName_r(vol, name, ext)
-    register VolumeDiskData *vol;
-    char *name,*ext;
+AssignVolumeName_r(register VolumeDiskData *vol, char *name, char *ext)
 {
     register char *dot;
     strncpy(vol->name, name, VNAMESIZE-1);
@@ -313,8 +309,7 @@ AssignVolumeName_r(vol, name, ext)
 	strncat(vol->name, ext, VNAMESIZE-1-strlen(vol->name));
 }
 
-afs_int32 CopyVolumeHeader_r(from, to)
-    VolumeDiskData *from, *to;
+afs_int32 CopyVolumeHeader_r(VolumeDiskData *from, VolumeDiskData *to)
 {
     /* The id and parentId fields are not copied; these are inviolate--the to volume
        is assumed to have already been created.  The id's cannot be changed once
@@ -338,8 +333,7 @@ afs_int32 CopyVolumeHeader_r(from, to)
     return 0;
 }
 
-afs_int32 CopyVolumeHeader(from, to)
-    VolumeDiskData *from, *to;
+afs_int32 CopyVolumeHeader(VolumeDiskData *from, VolumeDiskData *to)
 {
     afs_int32 code;
 
@@ -350,8 +344,7 @@ afs_int32 CopyVolumeHeader(from, to)
 }
 
 void
-ClearVolumeStats(vol)
-    register VolumeDiskData *vol;
+ClearVolumeStats(register VolumeDiskData *vol)
 {
     VOL_LOCK
     ClearVolumeStats_r(vol);
@@ -359,8 +352,7 @@ ClearVolumeStats(vol)
 }
 
 void
-ClearVolumeStats_r(vol)
-    register VolumeDiskData *vol;
+ClearVolumeStats_r(register VolumeDiskData *vol)
 {
     memset(vol->weekUse, 0, sizeof(vol->weekUse));
     vol->dayUse = 0;

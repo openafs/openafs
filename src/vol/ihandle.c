@@ -99,7 +99,7 @@ void ih_glock_init()
 #endif /* AFS_PTHREAD_ENV */
 
 /* Initialize the file descriptor cache */
-void ih_Initialize() {
+void ih_Initialize(void) {
     int i;
     assert(!ih_Inited);
     ih_Inited = 1;
@@ -146,7 +146,7 @@ void ih_Initialize() {
 
 /* Make the file descriptor cache as big as possible. Don't this call
  * if the program uses fopen or fdopen. */
-void ih_UseLargeCache() {
+void ih_UseLargeCache(void) {
     IH_LOCK
 
     if (!ih_Inited) {
@@ -158,7 +158,7 @@ void ih_UseLargeCache() {
 }
 
 /* Allocate a chunk of inode handles */
-void iHandleAllocateChunk()
+void iHandleAllocateChunk(void)
 {
     int i;
     IHandle_t *ihP;
@@ -224,7 +224,7 @@ IHandle_t *ih_copy(IHandle_t *ihP)
 }
 
 /* Allocate a chunk of file descriptor handles */
-void fdHandleAllocateChunk()
+void fdHandleAllocateChunk(void)
 {
     int i;
     FdHandle_t *fdP;
@@ -241,7 +241,7 @@ void fdHandleAllocateChunk()
 }
 
 /* Allocate a chunk of stream handles */
-void streamHandleAllocateChunk()
+void streamHandleAllocateChunk(void)
 {
     int i;
     StreamHandle_t *streamP;

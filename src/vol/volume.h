@@ -398,18 +398,19 @@ struct volHeader {
 
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				   offline */
-extern Volume * VGetVolume();
-extern Volume * VGetVolume_r();
+extern Volume * VGetVolume(Error *ec, VolId volumeId);
+extern Volume * VGetVolume_r(Error *ec, VolId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolume_r(Volume *);
 extern void VOffline(Volume *vp, char *message);
 extern void VOffline_r(Volume *vp, char *message);
 extern int VConnectFS(void);
 extern int VConnectFS_r(void);
-extern Volume * VAttachVolume();
-extern Volume * VAttachVolume_r();
-extern Volume * VCreateVolume();
-extern Volume * VCreateVolume_r();
+extern Volume * VAttachVolume(Error *ec, VolumeId volumeId, int mode);
+extern Volume * VAttachVolume_r(Error *ec, VolumeId volumeId, int mode);
+extern Volume * VCreateVolume(Error *ec, char *partname, VolId volumeId, VolId parentId);
+extern Volume * VCreateVolume_r(Error *ec, char *partname,
+				VolId volumeId, VolId parentId);
 extern VnodeId VAllocBitmapEntry(Error *ec, Volume *vp,
 				 struct vnodeIndex *index);
 extern VnodeId VAllocBitmapEntry_r(Error *ec, Volume *vp,
@@ -418,12 +419,10 @@ extern void VFreeBitMapEntry(Error *ec, register struct vnodeIndex *index,
 			     unsigned bitNumber);
 extern void VFreeBitMapEntry_r(Error *ec, register struct vnodeIndex *index,
 			       unsigned bitNumber);
-extern int VolumeNumber();
-extern int VolumeNumber_r();
-extern char * VolumeExternalName();
-extern char * VolumeExternalName_r();
-extern Volume * VAttachVolumeByName();
-extern Volume * VAttachVolumeByName_r();
+extern int VolumeNumber(char *name);
+extern char * VolumeExternalName(VolumeId volumeId);
+extern Volume * VAttachVolumeByName(Error *ec, char *partition, char *name, int mode);
+extern Volume * VAttachVolumeByName_r(Error *ec, char *partition, char *name, int mode);
 extern void VShutdown(void);
 extern void VUpdateVolume(Error *ec,Volume *vp);
 extern void VUpdateVolume_r(Error *ec,Volume *vp);

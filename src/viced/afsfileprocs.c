@@ -676,7 +676,7 @@ GetVolumePackage(struct rx_connection *tcon,
  * This is the opposite of GetVolumePackage(), and is always used at the end of
  * AFS calls to put back all used vnodes and the volume in the proper order!
  */
-static afs_int32
+static void
 PutVolumePackage(Vnode *parentwhentargetnotdir, 
 		 Vnode *targetptr,
 		 Vnode *parentptr,
@@ -2070,7 +2070,7 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
     AFSCallStats.FetchData++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
 
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchData;
 
     /* Get ptr to client data for user Id for logging */
@@ -3777,10 +3777,10 @@ SAFSS_Rename (struct rx_call *acall,
     }
 
     if (OldDirFid->Vnode <= NewDirFid->Vnode) {
-	if  (errorCode = GetVolumePackage(tcon, OldDirFid, &volptr,
-					  &oldvptr, MustBeDIR, &parent,
-					  &client, WRITE_LOCK, &rights,
-					  &anyrights)) {
+	if  ((errorCode = GetVolumePackage(tcon, OldDirFid, &volptr,
+					   &oldvptr, MustBeDIR, &parent,
+					   &client, WRITE_LOCK, &rights,
+					   &anyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}

@@ -279,7 +279,7 @@ afs_int32 DoCloneIndex(Volume *rwvp, Volume *clvp,
 	 }
       }
 
-      /* Overwrite the vnode etnry in the clone volume */
+      /* Overwrite the vnode entry in the clone volume */
       rwvnode->cloned = 0;
       code = STREAM_WRITE(rwvnode, vcp->diskSize, 1, clfileout);
       if (code != 1) {

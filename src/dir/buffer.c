@@ -325,6 +325,7 @@ DZap (fid)
     ReleaseReadLock(&afs_bufferLock);
 }
 
+int
 DFlushVolume (vid)
     register afs_int32 vid;
 {
