@@ -24,6 +24,9 @@ AFS_OS_OBJS = \
 	osi_sysctl.o \
 	osi_vfsops.o \
 	osi_vm.o \
+<ppc64_linux26>
+	osi_flush.o \
+<all>
 	osi_vnodeops.o 
 
 AFS_OS_NFSOBJS =
@@ -82,7 +85,7 @@ CCFLAGS = $(COMMON_KERN_CFLAGS) \
       -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
 DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
 
-<ppc_linux22 ppc_linux24 ppc64_linux24>
+<ppc_linux22 ppc_linux24 ppc64_linux24 ppc64_linux26>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
 DEFINES = $(COMMON_DEFINES) -D__powerpc__
 

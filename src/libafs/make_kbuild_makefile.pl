@@ -51,6 +51,9 @@ foreach $mf (@Makefiles) {
     elsif ($text =~ /^(\S+\.o):\s*(\S+\.c)/) {    ## Dependency
       $deps{$1} = $2;
     }
+    elsif ($text =~ /^(\S+\.o):\s*(\S+\.s)/) {    ## Dependency
+      $deps{$1} = $2;
+    }
     $text = '';
   }
   $F->close();
@@ -74,8 +77,12 @@ if (! -d $KDIR) {
 
 
 foreach (@objects) {
-  ($src = $_) =~ s/\.o$/.c/;
   die "No source known for $_\n" unless exists $deps{$_};
+  if($deps{$_} =~ /\.s$/) {
+     ($src = $_) =~ s/\.o$/.s/;
+  } else {
+     ($src = $_) =~ s/\.o$/.c/;
+  }
   if (-e "$KDIR/$src" || -l "$KDIR/$src") {
     unlink("$KDIR/$src") or die "$KDIR/$src: $!\n";
   }

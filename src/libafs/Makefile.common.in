@@ -393,6 +393,8 @@ osi_syscall.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_syscall.c
 	$(CRULE_NOOPT)
 osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
 	$(CRULE_NOOPT)
+osi_flush.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_flush.s
+	$(CRULE_OPT)
 osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c
 	$(CRULE_NOOPT)
 osi_cred.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_cred.c
