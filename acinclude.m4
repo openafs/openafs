@@ -169,6 +169,7 @@ case $system in
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno"; then
@@ -253,6 +254,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sigmask_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, 1, [define if your struct task_struct has sigmask_lock])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
 		 fi
                 :
 		fi

@@ -62,7 +62,11 @@ static inline int _has_pending_signals(sigset_t *signal, sigset_t *blocked)
 static inline void _recalc_sigpending_tsk(struct task_struct *t)
 {
     t->sigpending = PENDING(&t->pending, &t->blocked) ||
-        PENDING(&t->sig->shared_pending, &t->blocked);
+#ifdef STRUCT_TASK_STRUCT_HAS_SIG
+       PENDING(&t->sig->shared_pending, &t->blocked);
+#else
+        PENDING(&t->signal->shared_pending, &t->blocked);
+#endif
 }
 
 #define RECALC_SIGPENDING(X) _recalc_sigpending_tsk(X)
@@ -70,9 +74,12 @@ static inline void _recalc_sigpending_tsk(struct task_struct *t)
 #define RECALC_SIGPENDING(X) recalc_sigpending(X)
 #endif
  
-#ifdef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#if defined (STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK)
 #define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
 #define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
+#elif defined (STRUCT_TASK_STRUCT_HAS_SIGHAND)
+#define SIG_LOCK(X) spin_lock_irq(&X->sighand->siglock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sighand->siglock)
 #else
 #define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
 #define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
