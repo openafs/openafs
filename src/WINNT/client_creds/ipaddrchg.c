@@ -305,25 +305,26 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     strcpy(aserver.cell, rootcell);
 
     rc = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
+    if ( rc == 0 ) {
+        GetLocalTime (&stNow);
+        SystemTimeToFileTime (&stNow, &ftNow);
+        llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
+        llNow /= c100ns1SECOND;
 
-    GetLocalTime (&stNow);
-    SystemTimeToFileTime (&stNow, &ftNow);
-    llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
-    llNow /= c100ns1SECOND;
+        TimeToSystemTime (&stExpires, atoken.endTime);
+        SystemTimeToFileTime (&stExpires, &ftExpires);
+        llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
+        llExpires /= c100ns1SECOND;
 
-    TimeToSystemTime (&stExpires, atoken.endTime);
-    SystemTimeToFileTime (&stExpires, &ftExpires);
-    llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
-    llExpires /= c100ns1SECOND;
+        if (llNow < llExpires)
+            goto cleanup;
 
-    if (!rc && (llNow < llExpires))
-        goto cleanup;
-
-    if ( IsDebuggerPresent() ) {
-        char message[256];
-        sprintf(message,"ObtainTokensFromUserIfNeeded: %d  now = %ul  endTime = %ul\n",
-                 rc, llNow, llExpires);
-        OutputDebugString(message);
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            sprintf(message,"ObtainTokensFromUserIfNeeded: %d  now = %ul  endTime = %ul\n",
+                     rc, llNow, llExpires);
+            OutputDebugString(message);
+        }
     }
 
 #ifdef USE_FSPROBE
