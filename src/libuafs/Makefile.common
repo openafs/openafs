@@ -889,6 +889,6 @@ $(WEBOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
 	$(CRULE2);
 
 clean:
-	-rm -rf UAFS* AFSWEB* nsapi des
-	-rm -f  h net netinet rpc ufs machine inet nfs sys des linktest afs afsint config rx
+	-rm -rf UAFS* AFSWEB* nsapi des afs afsint config rx
+	-rm -f  h net netinet rpc ufs machine inet nfs sys des linktest
 
