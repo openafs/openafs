@@ -17,9 +17,12 @@ int
 main(int argc, char **argv) {
     BOOL res;
     HKEY hkSubmounts;
+    HKEY hkParameters;
+    char mountRoot[64]="/afs";
+    char * mountstring;
 
     if (argc < 2 || argc > 3) {
-        fprintf(stderr, "Incorrect arguments\n");
+        fprintf(stderr, "afsshare.exe <submount> [<afs mount path>]\n");
         exit(1);
     }
 
@@ -37,12 +40,35 @@ main(int argc, char **argv) {
             if (RegDeleteValue(hkSubmounts, argv[1])) {
                 fprintf(stderr,"Submount Deletion failure for [%s]: %lX",
                          argv[1], GetLastError());
+                RegCloseKey(hkSubmounts);
                 return 1;
             }
         } else {
-            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_SZ, argv[2], strlen(argv[2])+1)) {
+            if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
+                                "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters",
+                                0,
+                                NULL,
+                                REG_OPTION_NON_VOLATILE,
+                                KEY_READ,
+                                NULL,
+                                &hkParameters,
+                                NULL) == ERROR_SUCCESS) 
+            {
+                DWORD dwSize = sizeof(mountRoot);
+                RegQueryValueEx (hkParameters, "MountRoot", NULL, NULL, (PBYTE)mountRoot, &dwSize);
+                RegCloseKey(hkParameters);
+            }
+
+
+            if ( !strncmp(mountRoot, argv[2], strlen(mountRoot)) )
+                mountstring = argv[2] + strlen(mountRoot);
+            else
+                mountstring = argv[2];
+
+            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_SZ, mountstring, strlen(mountstring)+1)) {
                 fprintf(stderr,"Submount Set failure for [%s]: %lX",
                          argv[1], GetLastError());
+                RegCloseKey(hkSubmounts);
                 return 2;
             }
         }

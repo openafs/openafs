@@ -1178,6 +1178,7 @@ char VNLCUserName[] = "%LCUSERNAME%";
 char VNComputerName[] = "%COMPUTERNAME%";
 char VNLCComputerName[] = "%LCCOMPUTERNAME%";
 
+#ifdef DJGPP
 /* List available shares */
 int smb_ListShares()
 {
@@ -1241,7 +1242,7 @@ int smb_ListShares()
 
 	return num_shares;
 }
-
+#endif /* DJGPP */
 /* find a shareName in the table of submounts */
 int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	char **pathNamep)
@@ -1293,13 +1294,24 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	}
 
 #ifndef DJGPP
-    strcpy(sbmtpath, "afsdsbmt.ini");
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client\\Submounts",
+						0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+        len = sizeof(pathName);
+        code = RegQueryValueEx(parmKey, shareName, NULL, NULL,
+                                (BYTE *) pathName, &len);
+		if (code != ERROR_SUCCESS)
+			len = 0;
+        RegCloseKey (parmKey);
+	} else {
+        len = 0;
+    }   
 #else /* DJGPP */
     strcpy(sbmtpath, cm_confDir);
     strcat(sbmtpath, "/afsdsbmt.ini");
-#endif /* !DJGPP */
 	len = GetPrivateProfileString("AFS Submounts", shareName, "",
                                   pathName, sizeof(pathName), sbmtpath);
+#endif /* !DJGPP */
 	if (len != 0 && len != sizeof(pathName) - 1) {
         /* We can accept either unix or PC style AFS pathnames.  Convert
          * Unix-style to PC style here for internal use. 
