@@ -40,7 +40,7 @@ ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 #   install, rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
 
-all:
+all: force
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
 	$(MAKE) install "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
 
@@ -405,8 +405,10 @@ libafs_setup: config export
 libuafs_setup: config export
 	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
+force:
+
 TARGET=finale
-install:
+install: force
 	$(MAKE) $(TARGET) "SYS_NAME=${SYS_NAME}" \
 		"COMPILE_PART1=${COMPILE_PART1}" \
 		"COMPILE_PART2=${COMPILE_PART2}" \
