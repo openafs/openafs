@@ -24,6 +24,7 @@
 #include <krb.h>
 #include <krb5.h>
 #include <afs/ptserver.h>
+#include <afs/ptuser.h>
 
 #ifdef WIN32
 #include <windows.h>

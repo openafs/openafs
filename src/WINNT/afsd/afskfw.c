@@ -63,6 +63,7 @@
 #include <osilog.h>
 #include <rxkad_prototypes.h>   /* for life_to_time */
 #include <afs/ptserver.h>
+#include <afs/ptuser.h>
 
 /*
  * TIMING _____________________________________________________________________

@@ -1182,7 +1182,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         afsStatus.FileType = 0x2;
         afsStatus.LinkCount = scp->linkCount;
         afsStatus.Length = cm_fakeDirSize;
-        afsStatus.DataVersion = cm_fakeDirVersion;
+        afsStatus.DataVersion = scp->dataVersion;
         afsStatus.Author = 0x1;
         afsStatus.Owner = 0x0;
         afsStatus.CallerAccess = 0x9;
