@@ -279,7 +279,7 @@ login: project kauth rxkad
 		echo Skipping pam/login for parisc_linux24 ;; \
 	sun4x_* | sunx86_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
-	ppc_darwin* | *_obsd* | *_nbsd* ) \
+	ppc_darwin* | *_obsd* | *_nbsd* | hp_ux* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
