@@ -61,7 +61,7 @@ all: volserver vos restorevol voldump \
 
 restorevol: restorevol.c
 	${CC} ${CFLAGS} -o restorevol ${srcdir}/restorevol.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
 	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} ${XLIBS}
