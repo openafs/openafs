@@ -135,8 +135,9 @@ ${DEST}/include/afs/bnode.h: bnode.h
 # Misc. targets
 #
 clean:
-	$(RM) -f  *.a *.o bos bosserver testproc bosint.cs.c bosint.ss.c bosint.xdr.c \
-		bosint.h core boserr.c bnode.h AFS_component_version_number.c
+	$(RM) -f  *.a *.o bos bosserver testproc bos_util \
+		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
+		core boserr.c bnode.h AFS_component_version_number.c 
 
 test: 
 	cd test; $(MAKE) 
@@ -157,7 +158,7 @@ ${DESTDIR}${bindir}/bos: bos
 ${DESTDIR}${afssrvbindir}/bos: bos
 	${INSTALL} $? $@
 
-${DESTDIR}${afssrvbindir}/bos_util: bos_util
+${DESTDIR}${afssrvsbindir}/bos_util: bos_util
 	${INSTALL} $? $@
 
 ${DESTDIR}${libdir}/afs/libbos.a: libbos.a
