@@ -23,6 +23,7 @@ AC_CHECK_PROGS(LORDER, lorder, [${am_missing_run}lorder])
 
 case $AFS_SYSNAME in
 	alpha_dux40)
+		LEX="lex"
 		CSTATIC="-non_shared"
 		DBG="-g3"
 		LWP_OPTMZ="-O2"
