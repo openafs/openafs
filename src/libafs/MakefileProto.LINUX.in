@@ -6,8 +6,10 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 srcdir=@srcdir@
-include @TOP_OBJDIR@/src/config/Makefile.config
+KDEBUG=@KERN_DEBUG_OPT@
+FOMIT=@FOMIT_FRAME_POINTER@
 
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -37,40 +39,41 @@ CC = gcc
 LD = ld
 # -Wall
 <i386_linux22 i386_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer \
+CCFLAGS =  $(KDEBUG) -O2 $(FOMIT) \
 	-fno-strength-reduce -pipe -march=i486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
 <alpha_linux_22 alpha_linux_24>
-CCFLAGS = -O2 -fomit-frame-pointer -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
+CCFLAGS = $(KDEBUG) -O2 $(FOMIT) -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <s390_linux22 s390_linux24>
-CCFLAGS =   -O -fomit-frame-pointer -fno-strength-reduce \
+CCFLAGS =   -O $(FOMIT) -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char 
 DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <sparc_linux22 sparc_linux24>
 LD = ld -m elf32_sparc
-CCFLAGS =   -O2 -fomit-frame-pointer \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) \
 	-fno-strength-reduce -pipe -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
 DEFINES = -D__KERNEL__  -DCPU=sparc -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <sparc64_linux22 sparc64_linux24>
 CC = sparc64-linux-gcc
 LD = ld -m elf64_sparc
-CCFLAGS =   -O2 -fomit-frame-pointer \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) \
 	-fno-strength-reduce -pipe -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
 DEFINES = -D__KERNEL__  -DCPU=sparc64 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ppc_linux22 ppc_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
 	-fno-builtin -ffixed-r2
 DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <parisc_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -fno-common -fno-strength-reduce \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) \
+	-fno-strict-aliasing -fno-common -fno-strength-reduce \
         -fno-strict-aliasing -fsigned-char -mno-space-regs -mfast-indirect-calls \
         -mdisable-fpregs -ffunction-sections -march=1.1 -mschedule=7100
 DEFINES = -D__KERNEL__  -D__linux__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ia64_linux24>
-CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -pipe \
+CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) -fno-strict-aliasing -pipe \
 	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>

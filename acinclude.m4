@@ -47,6 +47,9 @@ AC_ARG_ENABLE(transarc-paths,
 AC_ARG_ENABLE(tivoli-tsm,
 [  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
 )
+AC_ARG_ENABLE(debug-kernel,
+[  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
+)
 
 dnl weird ass systems
 AC_AIX
@@ -66,6 +69,11 @@ AC_PROG_YACC
 AM_PROG_LEX
 
 OPENAFS_CHECK_BIGENDIAN
+
+KERN_DEBUG_OPT=
+if test "x$enable_debug_kernel" = "xyes"; then
+  KERN_DEBUG_OPT=-g
+fi
 
 AC_MSG_CHECKING(your OS)
 system=$host
@@ -117,6 +125,11 @@ case $system in
 		fi
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then
+		 OMIT_FRAME_POINTER=
+		 if test "x$enable_debug_kernel" = "xno"; then
+			OMIT_FRAME_POINTER=-fomit-frame-pointer
+		 fi
+		 AC_SUBST(OMIT_FRAME_POINTER)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
@@ -202,6 +215,7 @@ case $system in
                 AC_MSG_RESULT($system)
                 ;;
 esac
+AC_SUBST(KERN_DEBUG_OPT)
 
 if test "x$with_afs_sysname" != "x"; then
         AFS_SYSNAME="$with_afs_sysname"
