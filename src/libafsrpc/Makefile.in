@@ -17,7 +17,7 @@ CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../
 
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
-CCRULE = ${CC} ${CFLAGS} -c $?
+CCRULE = ${CC} ${CFLAGS} -c $<
 RXKAD = ../rxkad
 RXSTAT = ../rxstat
 FSINT = ../fsint
@@ -133,8 +133,6 @@ libafsrpc.a: ${LIBOBJS}
 		$(AR) crv $@ ${srcdir}/../sys/afsl.exp;; \
         esac
 
-${RXOBJS}: rx.h rx_user.h rx_globals.h rx_clock.h rx_queue.h rx_event.h
-
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
 
@@ -173,6 +171,8 @@ rx_trace.o: ${RX}/rx_trace.c
 
 rx_multi.o: ${RX}/rx_multi.c
 	${CCRULE}
+
+${RXOBJS}: ${RX}/rx.h ${RX}/rx_user.h ${RX}/rx_globals.h ${RX}/rx_clock.h ${RX}/rx_queue.h ${RX}/rx_event.h
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
 	${CCRULE}
