@@ -308,7 +308,7 @@ lose:
     if (!ok)
 	memset(s, 0, maxa);
     printf("\n");
-#if defined(AFS_HPUX_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
     /*
      * Restore the terminal to its previous characteristics.
      * Restore the old signal handler for SIGINT.
