@@ -176,7 +176,6 @@ int main (argc, argv)
     struct rx_securityClass *securityObjects[3];
     struct rx_service *service;
     extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-    extern afs_int32 afsconf_GetKey();
 
     int a = 0;
     rxkad_level level;
