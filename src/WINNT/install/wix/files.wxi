@@ -52,7 +52,7 @@
                     <File Id="fileafs_config_EXE" Name="afs_cfg.exe" LongName="afs_config.exe" KeyPath="yes" DiskId="1" src="$(var.ClientDir)\afs_config.exe"/>
                 </Component>
                 
-            <?ifdef Debug?>
+            <?ifdef DebugSyms?>
                 <Component Id="cmp_ServerCommonDebug" Guid="4132C211-5577-48DE-9C66-214EEC0E6BC4">
                     <File Id="fileafsbosadmin_PDB" Name="afsbosad.pdb" LongName="afsbosadmin.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\afsbosadmin.pdb"/>
                     <File Id="fileafscfgadmin_PDB" Name="afscfgad.pdb" LongName="afscfgadmin.pdb" DiskId="1" src="$(var.ServerDir)\afscfgadmin.pdb"/>
@@ -152,10 +152,35 @@
 					<Component Id="cmp_VC1310mfc71u" Guid="846BF4DC-14D3-4FFE-97EA-A5C17F5B667F">
 						<File Id="filemfc71u_DLL" Name="mfc71u.dll" LongName="mfc71u.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc71u.dll" />
 					</Component>
+					<?ifdef DebugSyms?>
+						<Component Id="cmp_VC1310msvcr71PDB" Guid="1EB72EAB-1129-4DA3-9CF2-26B3E4FB7A31">
+							<File Id="filemsvcr71_PDB" Name="msvcr71.pdb" LongName="msvcr71.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcr71.pdb" />
+						</Component>
+						<Component Id="cmp_VC1310msvcp71PDB" Guid="1A89DE42-0C88-49AE-A1F8-A7E66EE2D8AB">
+							<File Id="filemsvcp71_PDB" Name="msvcp71.pdb" LongName="msvcp71.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcp71.pdb" />
+						</Component>
+						<Component Id="cmp_VC1310mfc71PDB" Guid="F95968F4-49EB-4AAE-90F1-34FB6D972D92">
+							<File Id="filemfc71_PDB" Name="mfc71.pdb" LongName="mfc71.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc71.pdb" />
+						</Component>
+						<Component Id="cmp_VC1310mfc71uPDB" Guid="B0184770-5285-4CFA-910A-D4531AE0043C">
+							<File Id="filemfc71u_PDB" Name="mfc71u.pdb" LongName="mfc71u.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc71u.pdb" />
+						</Component>
+					<?endif?>
 				<?endif?>
             <?elseif $(env.AFSVER_CL) = "1300"?>
                 <Merge Id="mergeVC1300LibMFC" Language="$(var.LanguageCode)" DiskId="1" FileCompression="yes" src="$(env.PROGRAMFILES)\Common Files\Merge Modules\VC_User_MFC70_RTL_X86_---.msm" />
                 <Merge Id="mergeVC1300LibCRT" Language="$(var.LanguageCode)" DiskId="1" FileCompression="yes" src="$(env.PROGRAMFILES)\Common Files\Merge Modules\VC_User_CRT70_RTL_X86_---.msm" />
+                <?ifdef DebugSyms?>
+					<Component Id="cmp_VC1300msvcr70PDB" Guid="E2A402C2-1A66-4432-9659-32627C6EB0E7">
+						<File Id="filemsvcr70_PDB" Name="msvcr70.pdb" LongName="msvcr70.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcr70.pdb" />
+					</Component>
+					<Component Id="cmp_VC1300msvcp70PDB" Guid="7017FC16-6662-4891-8FA0-0E11817FC1EC">
+						<File Id="filemsvcp70_PDB" Name="msvcp70.pdb" LongName="msvcp70.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcp70.pdb" />
+					</Component>
+					<Component Id="cmp_VC1300mfc70PDB" Guid="47514F18-BB28-4422-8701-B7152F102AA6">
+						<File Id="filemfc70_PDB" Name="mfc70.pdb" LongName="mfc70.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc70.pdb" />
+					</Component>
+				<?endif?>
             <?elseif $(env.AFSVER_CL) = "1200"?>
                 <Component Id="cmpVC1200msvcrt" Guid="718CDA4A-532F-43E8-9618-4D3CFE27D730">
                     <File Id="filemsvcrt_DLL" Name="msvcrt.dll" LongName="msvcrt.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrt.dll" />
@@ -166,6 +191,17 @@
                 <Component Id="cmpVC1200mfc42" Guid="2C16F608-AE33-45D1-B072-0C05E99482A7">
                     <File Id="filemfc42_DLL" Name="mfc42.dll" LongName="mfc42.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42.dll" />
                 </Component>
+                <?ifdef DebugSyms?>
+					<Component Id="cmp_VC1200msvcrtPDB" Guid="A702C2AB-C99F-443A-A420-063FFD866FBC">
+						<File Id="filemsvcrt_PDB" Name="msvcrt.pdb" LongName="msvcrt.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrt.pdb" />
+					</Component>
+					<Component Id="cmp_VC1200msvcp60PDB" Guid="56CCAE2C-0CAD-43B2-A7BD-F56E9E4F74E1">
+						<File Id="filemsvcp60_PDB" Name="msvcp60.pdb" LongName="msvcp60.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcp60.pdb" />
+					</Component>
+					<Component Id="cmp_VC1200mfc42PDB" Guid="0B615363-EB3C-4785-A8E6-9AB42D85293D">
+						<File Id="filemfc42_PDB" Name="mfc42.pdb" LongName="mfc42.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42.pdb" />
+					</Component>
+                <?endif?>
             <?endif?>
           <?else?> <!-- Debug -->
             <?if $(env.AFSVER_CL) = "1310"?>
@@ -181,6 +217,7 @@
                 <Component Id="cmp_VC1310mfc71ud" Guid="4DCFABFC-B914-4805-BEFC-71C29D46730C">
                     <File Id="filemfc71ud_DLL" Name="mfc71ud.dll" LongName="mfc71ud.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc71ud.dll" />
                 </Component>
+                <?ifdef DebugSyms?>
                 <Component Id="cmp_VC1310msvcr71dPDB" Guid="2F1BAF2D-F977-49C4-9971-C933206DEB17">
                     <File Id="filemsvcr71d_PDB" Name="msvcr71d.pdb" LongName="msvcr71d.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcr71d.pdb" />
                 </Component>
@@ -193,6 +230,7 @@
                 <Component Id="cmp_VC1310mfc71udPDB" Guid="B5DCF017-6FE3-49BC-9298-9D96EF90EAE8">
                     <File Id="filemfc71ud_PDB" Name="mfc71ud.pdb" LongName="mfc71ud.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc71ud.pdb" />
                 </Component>
+                <?endif?>
             <?elseif $(env.AFSVER_CL) = "1300"?>
                 <Component Id="cmp_VC1300msvcr70d" Guid="F54C0DDB-3BDC-4824-8A63-100CB01E4CA4">
                     <File Id="filemsvcr70d_DLL" Name="msvcr70d.dll" LongName="msvcr70d.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcr70d.dll" />
@@ -203,6 +241,7 @@
                 <Component Id="cmp_VC1300mfc70d" Guid="635200A5-B02A-41FA-B1BD-8BCB97103E7D">
                     <File Id="filemfc70d_DLL" Name="mfc70d.dll" LongName="mfc70d.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc70d.dll" />
                 </Component>
+                <?ifdef DebugSyms?>
                 <Component Id="cmp_VC1300msvcr70dPDB" Guid="B8928CC3-F0D3-4BC1-9574-D35EA0F3F288">
                     <File Id="filemsvcr70d_PDB" Name="msvcr70d.pdb" LongName="msvcr70d.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcr70d.pdb" />
                 </Component>
@@ -212,6 +251,7 @@
                 <Component Id="cmp_VC1300mfc70dPDB" Guid="4A6939FA-C7AC-436A-9D2F-E2475C88F249">
                     <File Id="filemfc70d_PDB" Name="mfc70d.pdb" LongName="mfc70d.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc70d.pdb" />
                 </Component>
+                <?endif?>
             <?elseif $(env.AFSVER_CL) = "1200"?>
                 <Component Id="cmp_VC1200msvcrtd" Guid="9EFFE734-020C-4748-B074-86E15B50B6E5">
                     <File Id="filemsvcrtd_DLL" Name="msvcrtd.dll" LongName="msvcrtd.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrtd.dll" />
@@ -222,6 +262,7 @@
                 <Component Id="cmp_VC1200mfc42d" Guid="6D983D53-2E7F-48CE-953E-7A9D0215C6B8">
                     <File Id="filemfc42d_DLL" Name="mfc42d.dll" LongName="mfc42d.dll" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42d.dll" />
                 </Component>
+                <?ifdef DebugSyms?>
                 <Component Id="cmp_VC1200msvcrtdPDB" Guid="420C311B-EC0F-47CB-883A-06A82808C06B">
                     <File Id="filemsvcrtd_PDB" Name="msvcrtd.pdb" LongName="msvcrtd.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)msvcrtd.pdb" />
                 </Component>
@@ -232,6 +273,7 @@
                     <File Id="filemfc42d_PDB" Name="mfc42d.pdb" LongName="mfc42d.pdb" KeyPath="yes" DiskId="1" src="$(var.SystemDir)mfc42d.pdb" />
                 </Component>
             <?endif?>
+          <?endif?>
           <?endif?>
             </Directory> <!-- /common -->
             
@@ -249,7 +291,7 @@
 						<Shortcut Id="scAcctManager" Directory="dirShortCut" Name="AcctMgr.lnk" LongName="Account Manager.lnk" Description="$(loc.StrAcctMgrDesc)" Icon="ico_AcctManager" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
                     </File>
                 </Component>
-            <?ifdef Debug?>
+            <?ifdef DebugSyms?>
                 <Component Id="cmp_Control_CenterDebug" Guid="B14EEC50-8ADF-4FE4-B00F-431861A5620C">
                     <File Id="fileTaAfsServerManager_PDB" Name="TaAfsSvM.pdb" LongName="TaAfsServerManager.pdb" KeyPath="yes" DiskId="1" src="$(var.ServerDir)\TaAfsServerManager.pdb"/>
                     <File Id="fileTaAfsAdmSvr_PDB" Name="TaAfsAdS.pdb" LongName="TaAfsAdmSvr.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAdmSvr.pdb"/>
@@ -773,7 +815,7 @@
 						<File Id="fileafs_cpa_CPL" Name="afs_cpa.cpl" LongName="afs_cpa.cpl" KeyPath="yes" DiskId="1"/>
 				        <Registry Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" Name="AFS Client CPL" Value="[#fileafs_cpa_CPL]" Id="reg_Full_Client11" />
 					</Component>
-                <?ifdef Debug?>
+                <?ifdef DebugSyms?>
                     <Component Id="cmp_ClientProgramDebug" Guid="A6A394F6-45D0-45A9-A7DD-C0997070EC14">
                         <File Id="fileafsshare_PDB" Name="afsshare.pdb" LongName="afsshare.pdb" DiskId="1" />
                         <File Id="filelibosi_PDB" Name="libosi.pdb" LongName="libosi.pdb" DiskId="1" />
@@ -1191,7 +1233,7 @@
                                 <CreateFolder Directory="dirlocal" />
                             </Component>
                             
-                        <?ifdef Debug?>
+                        <?ifdef DebugSyms?>
                             <Component Id="cmp_Server_Program_Debug" Guid="5F7BA9F7-E9BD-4AC3-9232-5EFBF6B740F8">
                                 <File Id="filevlserver_PDB" Name="vlser.pdb" LongName="vlserver.pdb" DiskId="1" />
                                 <File Id="filevolinfo_PDB" Name="volin.pdb" LongName="volinfo.pdb" DiskId="1" />

@@ -58,20 +58,25 @@
         <?include lang\$(var.Language)\ui.wxi?>
         
         <!-- Custom actions -->
+    <?ifndef UseDllLoopbackInstaller?>
         <Binary
-         Id="BIN_Instloop"
+         Id="BIN_instloop"
          src="$(var.MediaBinDir)instloop.exe"/>
+    <?else?>
         <Binary
          Id="BIN_afsLoopback"
          src="$(var.MediaBinDir)afsloopback.dll"/>
+    <?endif?>
         <Binary
 		 Id="BIN_afsCustom"
 		 src="$(var.MediaDllDir)afscustom.dll"/>
+	<?ifdef UseDllLoopbackInstaller?>
         <CustomAction
          Id="InstallLoopback"
          BinaryKey="BIN_afsLoopback"
          DllEntry="installLoopbackMSI"
          Execute="deferred" 
+         Impersonate="no"
          />
 	<?ifdef RemoveLoopback?>
         <CustomAction
@@ -86,6 +91,31 @@
          DllEntry="uninstallLoopbackMSI"
          Execute="deferred" 
          />
+	<?endif?>
+	<?else?>
+		<CustomAction
+		 Id="InstallLoopback"
+		 BinaryKey="BIN_instloop"
+		 ExeCommand="-i"
+		 Impersonate="no"
+		 Execute="deferred"
+		 />
+		<?ifdef RemoveLoopback?>
+			<CustomAction
+			Id="RollbackLoopback"
+			BinaryKey="BIN_instloop"
+			ExeCommand="-u"
+			Impersonate="no"
+			Execute="rollback"
+			/>
+			<CustomAction
+			Id="RemoveLoopback"
+			BinaryKey="BIN_instloop"
+			ExeCommand="-u"
+			Impersonate="no"
+			Execute="deferred"
+			/>
+		<?endif?>
 	<?endif?>
         <CustomAction
          Id="InstallNetProvider" 
@@ -173,6 +203,6 @@
         <!-- Please let us know if you want other Installers to be detected and upgraded/removed -->
 
 		<!-- Media -->
-		<Media Id="1" Cabinet="disk1.cab" CompressionLevel="mszip" EmbedCab="yes" />
+		<Media Id="1" Cabinet="disk1.cab" CompressionLevel="high" EmbedCab="yes" />
     </Product>
 </Wix>

@@ -1,5 +1,18 @@
 ﻿<?xml version="1.0" ?>
 <Include>
+
+		<?ifdef DebugSyms?>
+			<?ifdef Debug?>
+				<?define DebugSymFollowParent="yes"?>
+				<?define DebugSymLowLevel="30"?>
+				<?define DebugSymHighLevel="130"?>
+			<?else?>
+				<?define DebugSymFollowParent="no"?>
+				<?define DebugSymLowLevel="130"?>
+				<?define DebugSymHighLevel="130"?>
+			<?endif?>
+		<?endif?>
+
         <Feature Id="feaOpenAFS" AllowAdvertise="no" Absent="disallow" ConfigurableDirectory="AFSDIR"
             Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
             Title="OpenAFS">
@@ -20,9 +33,9 @@
 					<ComponentRef Id="cmp_credsStartup" />
 				</Feature>
 				
-			<?ifdef Debug?>
+			<?ifdef DebugSyms?>
 				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
-					FollowParent="yes" InstallDefault="local" Level="30" Title="$(loc.StrAFSClientDebugDesc)">
+					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
                     <ComponentRef Id="cmp_ClientProgramDebug" />
                     <ComponentRef Id="cmp_CommonCommonDebug" />
                     <ComponentRef Id="cmp_ClientCommonDebug" />
@@ -44,14 +57,12 @@
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
                 <ComponentRef Id="cmf_afs_config_EXE" />
 
-                <?if $(var.Language) = "en_US" ?>
-                    <ComponentRef Id="cmf_afs_nt_HLP_en_US"/>
-                    <ComponentRef Id="cmf_TaAfsAppLib_1033_DLL" />
-                    <ComponentRef Id="cmf_afscreds_1033_DLL" />
-                    <ComponentRef Id="cmf_afs_config_1033_DLL" />
-                    <ComponentRef Id="cmf_afs_cpa_1033_DLL" />
-                    <ComponentRef Id="cmf_afs_shl_ext_1033_DLL" />
-                <?endif?>
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)"/>
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
 
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
@@ -101,14 +112,12 @@
                 <ComponentRef Id="cmf_TaAfsAppLib_DLL" />
                 <ComponentRef Id="cmf_afsprocmgmt_DLL" />
 
-            <?if $(var.Language) = "en_US" ?>
-                <ComponentRef Id="cmf_afseventmsg_1033_DLL" />
-                <ComponentRef Id="cmf_afsserver_1033_DLL" />
-                <ComponentRef Id="cmf_afssvrcfg_1033_DLL" />
-                <ComponentRef Id="cmf_TaAfsAppLib_1033_DLL" />
-                <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
-                <ComponentRef Id="cmp_Lang_en_US" />
-            <?endif?>
+                <ComponentRef Id="cmf_afseventmsg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afsserver_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afssvrcfg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
+                <ComponentRef Id="cmp_Lang_$(var.Language)" />
             
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
 
@@ -130,9 +139,9 @@
                 <ComponentRef Id="cmf_upserver_EXE" />
                 <ComponentRef Id="cmp_Server_Program" />
 
-            <?ifdef Debug?>
+            <?ifdef DebugSyms?>
 				<Feature Id="feaServerDebug" AllowAdvertise="no" Description="$(loc.StrAFSServerDebugLongDesc)" Display="expand"
-					FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSServerDebugDesc)">
+					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSServerDebugDesc)">
 					<ComponentRef Id="cmp_Server_Program_Debug" />
 					<ComponentRef Id="cmp_ServerCommonDebug" />
 					<ComponentRef Id="cmp_CommonCommonDebug" />
@@ -167,24 +176,22 @@
 				<ComponentRef Id="cmf_TaAfsAdmSvr_EXE" />
 				<ComponentRef Id="cmf_TaAfsAccountManager_EXE" />
 
-            <?if $(var.Language) = "en_US" ?>
-                <ComponentRef Id="cmf_afseventmsg_1033_DLL" />
-                <ComponentRef Id="cmf_afsserver_1033_DLL" />
-                <ComponentRef Id="cmf_afssvrcfg_1033_DLL" />
-                <ComponentRef Id="cmf_TaAfsAccountManager_1033_DLL" />
-                <ComponentRef Id="cmf_TaAfsAppLib_1033_DLL" />
-                <ComponentRef Id="cmf_TaAfsServerManager_1033_DLL" />
-                <ComponentRef Id="cmf_afscreds_1033_DLL" />
-                <ComponentRef Id="cmf_afs_config_1033_DLL" />
-                <ComponentRef Id="cmf_afs_cpa_1033_DLL" />
-                <ComponentRef Id="cmf_afs_shl_ext_1033_DLL" />
-                <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
-                <ComponentRef Id="cmp_Lang_en_US" />
-            <?endif?>
+                <ComponentRef Id="cmf_afseventmsg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afsserver_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afssvrcfg_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAccountManager_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsAppLib_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_TaAfsServerManager_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_cpa_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_shl_ext_$(var.LanguageCode)_DLL" />
+                <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
+                <ComponentRef Id="cmp_Lang_$(var.Language)" />
 
-            <?ifdef Debug?>
+            <?ifdef DebugSyms?>
 				<Feature Id="feaControlCenterDebug" AllowAdvertise="no" Description="$(loc.StrAFSCCDebugLongDesc)"
-					Display="expand" FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSCCDebugDesc)">
+					Display="expand" FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCCDebugDesc)">
 					<ComponentRef Id="cmp_Control_CenterDebug" />
 					<ComponentRef Id="cmp_ServerCommonDebug" />
 					<ComponentRef Id="cmp_CommonCommonDebug" />
@@ -212,9 +219,9 @@
 				<ComponentRef Id="cmp_SDK_Lib" />
 				<ComponentRef Id="cmp_SDK_Lib_Afs" />
 
-			<?ifdef Debug?>
+			<?ifdef DebugSyms?>
 				<Feature Id="feaSDKDebug" AllowAdvertise="no" Description="$(loc.StrAFSSDKDebugLongDesc)" Display="expand"
-					FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSSDKDebugDesc)">
+					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSSDKDebugDesc)">
 					<?include runtime_debug.wxi?>
 				</Feature>
 			<?endif?>

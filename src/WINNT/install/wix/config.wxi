@@ -95,6 +95,12 @@
         <?error AFSDEV_BUILDTYPE is not set in the environment.?>
     <?endif?>
 
+    <!-- We are including debug symbols anyway.  Undefine this for a leaner installer witout debug syms. -->
+    <?define DebugSyms?>
+    
+    <!-- Use the afsloopback.dll instead of instloop.exe -->
+    <?define UseDllLoopbackInstaller?>
+
     <!-- Note that if the follwing file does not exist, the build will fail -->
     <?ifndef CellDbFile?>
         <?define CellDbFile="CellServDB"?>
