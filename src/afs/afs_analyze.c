@@ -384,6 +384,9 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
       } else {
 	VSleep(afs_BusyWaitPeriod);	    /* poll periodically */
       }
+      if (shouldRetry != 0)
+	areq->busyCount++;
+
       return shouldRetry; /* should retry */
     }
 	  
