@@ -438,9 +438,9 @@ ubeacon_Interact() {
 * Return Values : 0 on success, non-zero on failure
 */
 static verifyInterfaceAddress(ame, info, aservers)
+    afs_uint32 *ame;		/* one of my interface addr in net byte order */
     struct afsconf_cell *info;
     afs_uint32 aservers[]; 	/* list of all possible server addresses */
-    afs_uint32 *ame;		/* one of my interface addr in net byte order */
 {
     afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
     int 	count, index, found, i, j, totalServers, start, end;

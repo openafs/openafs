@@ -8,8 +8,15 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -17,6 +24,9 @@
 #include <sys/param.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
+#ifdev HAVE_UNISTD_H
+#include <unistd.h>
 #endif
 #include <signal.h>
 #include <time.h>
@@ -38,7 +48,7 @@ register char *aport; {
     register afs_int32 total;
 
     total = 0;
-    while (tc = *aport++) {
+    while ((tc = *aport++)) {
 	if (tc < '0' || tc > '9') return -1;	/* bad port number */
 	total *= 10;
 	total += tc - (int) '0';
@@ -294,10 +304,12 @@ struct cmd_syndesc *as; {
 		   usdebug.currentDB, usdebug.up, usdebug.beaconSinceDown);
 	}
     }
+    return (0);
 }
 
 #include "AFS_component_version_number.c"
 
+int
 main(argc, argv)
     int argc;
     char **argv; {
