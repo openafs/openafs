@@ -528,7 +528,7 @@ smb_CalculateNowTZ()
 	local_tm = *(localtime(&t));
 
 	days = local_tm.tm_yday - gmt_tm.tm_yday;
-	hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour;
+	hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour - (local_tm.tm_isdst ? 1 : 0);
 	minutes = 60 * hours + local_tm.tm_min - gmt_tm.tm_min;
 	seconds = 60 * minutes + local_tm.tm_sec - gmt_tm.tm_sec;
 
@@ -894,8 +894,10 @@ void smb_ReleaseUID(smb_user_t *uidp)
 		osi_assert(up != NULL);
 		*lupp = up->nextp;
 		lock_FinalizeMutex(&uidp->mx);
-		if (uidp->unp)
+		if (uidp->unp) {
 			userp = uidp->unp->userp;	/* remember to drop ref later */
+            uidp->unp->userp = NULL;
+        }
 	}		
 	lock_ReleaseWrite(&smb_rctLock);
 	if (userp) {
@@ -1267,15 +1269,20 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
     } 
     else /* create  \\<netbiosName>\<cellname>  */
     {
-        if (cm_GetCell_Gen(shareName, temp, CM_FLAG_CREATE))
-        {   
-			int len = min(strlen(shareName), strlen(temp));
-            if (!_strnicmp(shareName, temp, len)) {  /* partial matches allowed */
-                sprintf(pathName,"/%s/",temp);
-                *pathNamep = strdup(strlwr(pathName));
-				return 1;
-            }
-        } 
+        /* Get the full name for this cell */
+        code = cm_SearchCellFile(shareName, temp, 0, 0);
+#ifdef AFS_AFSDB_ENV
+		if (code && cm_dnsEnabled) {
+            int ttl;
+            code = cm_SearchCellByDNS(shareName, temp, &ttl, 0, 0);
+        }
+#endif
+        /* construct the path */
+        if (code == 0) {
+            sprintf(pathName,"/%s/",temp);
+            *pathNamep = strdup(strlwr(pathName));
+            return 1;
+        }
 	}
     /* failure */
     *pathNamep = NULL;
@@ -4753,9 +4760,10 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
 		/* and record the last writer */
 		if (bufferp->userp != userp) {
-			if (bufferp->userp) cm_ReleaseUser(bufferp->userp);
-			bufferp->userp = userp;
 			cm_HoldUser(userp);
+			if (bufferp->userp) 
+                cm_ReleaseUser(bufferp->userp);
+			bufferp->userp = userp;
 		}
                 
 		/* adjust counters, pointers, etc. */

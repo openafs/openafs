@@ -100,7 +100,7 @@ void cm_HoldUser(cm_user_t *up)
 void cm_ReleaseUser(cm_user_t *up)
 {
 	cm_ucell_t *ucp;
-        cm_ucell_t *ncp;
+    cm_ucell_t *ncp;
 
 	if (up == NULL) return;
 
@@ -108,13 +108,13 @@ void cm_ReleaseUser(cm_user_t *up)
 	osi_assert(up->refCount-- > 0);
 	if (up->refCount == 0) {
 		lock_FinalizeMutex(&up->mx);
-                for(ucp = up->cellInfop; ucp; ucp = ncp) {
+        for(ucp = up->cellInfop; ucp; ucp = ncp) {
 			ncp = ucp->nextp;
 			if (ucp->ticketp) free(ucp->ticketp);
-                        free(ucp);
-                }
-                free(up);
+            free(ucp);
         }
+        free(up);
+    }
 	lock_ReleaseWrite(&cm_userLock);
 }
 

@@ -2401,8 +2401,8 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
 	if (code == 0 || Timeout != 0) {
 		fileLock = malloc(sizeof(cm_file_lock_t));
 		fileLock->LockType = LockType;
-		fileLock->userp = userp;
 		cm_HoldUser(userp);
+		fileLock->userp = userp;
 		fileLock->fid = scp->fid;
 		fileLock->LOffset = LOffset;
 		fileLock->LLength = LLength;
@@ -2440,7 +2440,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
 	q = scp->fileLocks;
 	while (q) {
 		fileLock = (cm_file_lock_t *)
-				((char *) q - offsetof(cm_file_lock_t, fileq));
+            ((char *) q - offsetof(cm_file_lock_t, fileq));
 		if (!found
 		    && fileLock->userp == userp
 		    && LargeIntegerEqualTo(fileLock->LOffset, LOffset)
@@ -2480,7 +2480,8 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
 		lock_ReleaseMutex(&scp->mx);
 		do {
 			code = cm_Conn(&scp->fid, userp, reqp, &connp);
-			if (code) break;
+			if (code) 
+                break;
 			code = RXAFS_ReleaseLock(connp->callp, &tfid, &volSync);
 		} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
 				    NULL, code));
@@ -2596,7 +2597,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
 		code = cm_MapRPCError(code, &req);
 	}
 
-handleCode:
+  handleCode:
 	if (code != 0 && code != CM_ERROR_WOULDBLOCK) {
 		lock_ObtainMutex(&scp->mx);
 		osi_QRemove(&scp->fileLocks, &oldFileLock->fileq);
@@ -2608,6 +2609,7 @@ handleCode:
 	else if (code != CM_ERROR_WOULDBLOCK) {
 		oldFileLock->flags |= CM_FILELOCK_FLAG_INVALID;
 		cm_ReleaseUser(oldFileLock->userp);
+        oldFileLock->userp = NULL;
 	}
 	lock_ReleaseWrite(&cm_scacheLock);
 

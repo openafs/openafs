@@ -68,7 +68,7 @@ void DebugEvent0_local(char *a)
 	DeregisterEventSource(h);
 }
 
-#define MAXBUF_ 131
+#define MAXBUF_ 512
 
 void DebugEvent_local(char *a,char *b,...) 
 {
@@ -150,11 +150,11 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	cm_configProc_t *procp, void *rockp)
 {
-	char wdir[256];
+	char wdir[257];
     int tlen;
     FILE *tfilep, *bestp, *tempp;
     char *tp;
-    char lineBuffer[256];
+    char lineBuffer[257];
     struct hostent *thp;
     char *valuep;
     struct sockaddr_in vlSockAddr;
@@ -165,7 +165,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
 	long ip_addr;
     int c1, c2, c3, c4;
-    char aname[256];
+    char aname[241];
     char *afsconf_path;
 #endif
 
@@ -173,7 +173,7 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 
 #if !defined(DJGPP)
 	code = GetWindowsDirectory(wdir, sizeof(wdir));
-    if (code == 0 || code > sizeof(wdir)) 
+    if (code == 0 || code > sizeof(wdir))
         return -1;
 
 	/* add trailing backslash, if required */

@@ -1371,44 +1371,45 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 {
 	long code;
 	cm_buf_t *bp;		/* buffer we're hacking on */
-        cm_buf_t *nbp;		/* next one */
+    cm_buf_t *nbp;		/* next one */
 	long i;
 
 	i = BUF_FILEHASH(&scp->fid);
 
 	code = 0;
 	lock_ObtainWrite(&buf_globalLock);
-        bp = buf_fileHashTablepp[i];
-        if (bp) bp->refCount++;
-        lock_ReleaseWrite(&buf_globalLock);
+    bp = buf_fileHashTablepp[i];
+    if (bp) bp->refCount++;
+    lock_ReleaseWrite(&buf_globalLock);
 	for(; bp; bp = nbp) {
 		/* clean buffer synchronously */
 		if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
 			if (userp) {
+                cm_HoldUser(userp);
 				lock_ObtainMutex(&bp->mx);
-				if (bp->userp) cm_ReleaseUser(bp->userp);
-                                bp->userp = userp;
+				if (bp->userp) 
+                    cm_ReleaseUser(bp->userp);
+                bp->userp = userp;
 				lock_ReleaseMutex(&bp->mx);
-                                cm_HoldUser(userp);
-                        }
+            }
 			buf_CleanAsync(bp, reqp);
-	                buf_CleanWait(bp);
-                        lock_ObtainMutex(&bp->mx);
+            buf_CleanWait(bp);
+            lock_ObtainMutex(&bp->mx);
 			if (bp->flags & CM_BUF_ERROR) {
 				if (code == 0 || code == -1) code = bp->error;
-                                if (code == 0) code = -1;
-                        }
-                        lock_ReleaseMutex(&bp->mx);
+                if (code == 0) code = -1;
+            }
+            lock_ReleaseMutex(&bp->mx);
 		}
 
 		lock_ObtainWrite(&buf_globalLock);
 		buf_LockedRelease(bp);
-                nbp = bp->fileHashp;
-                if (nbp) nbp->refCount++;
+        nbp = bp->fileHashp;
+        if (nbp) nbp->refCount++;
 		lock_ReleaseWrite(&buf_globalLock);
 	}	/* for loop over a bunch of buffers */
 	
-        /* done */
+    /* done */
 	return code;
 }
 
