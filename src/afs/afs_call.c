@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.11 2002/05/12 05:50:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.12 2002/06/10 12:02:02 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -544,10 +544,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif
 	afs_cold_shutdown = 0;
 	if (parm == 1) afs_cold_shutdown = 1;
-	if (afs_globalVFS != 0) {
-	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
-	    code = EACCES;
-	}
+	if (afs_globalVFS != 0) 
+	    afs_warn("AFS isn't unmounted yet!\n");
+
 	afs_shutdown();
     }
 
