@@ -12,20 +12,23 @@
 
 RCSID("$Header$");
 
-#include <security/pam_appl.h>
-#include <security/pam_modules.h>
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
 #include <sys/param.h>
+#include <sys/wait.h>
 #include <afs/kautils.h>
+#include <signal.h>
+#include <errno.h>
+
+#include <security/pam_appl.h>
+#include <security/pam_modules.h>
+
 #include "afs_message.h"
 #include "afs_util.h"
-#include <signal.h>
-#include <sys/wait.h>
-#include <errno.h>
+
 
 #define RET(x) { retcode = (x); goto out; }
 
