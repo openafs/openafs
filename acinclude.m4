@@ -760,7 +760,7 @@ AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
 
-AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf)
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)

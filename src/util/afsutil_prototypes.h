@@ -148,6 +148,15 @@ extern int ReOpenLog(const char *fileName);
 /* snprintf.c */
 
 
+/* strl */
+#ifndef HAVE_STRLCPY
+extern size_t strlcpy(char *dst, const char *src, size_t siz);
+#endif
+#ifndef HAVE_STRLCAT
+extern size_t strlcat(char *dst, const char *src, size_t siz);
+#endif
+
+
 /* sys.c */
 
 
