@@ -107,6 +107,10 @@
 #define _SX(x) (x)
 #endif
 
+/* Older Linux doesn't have __user. The sys_read prototype needs it. */
+#ifndef __user
+#define __user
+#endif
 
 /* Allow the user to specify sys_call_table addresses */
 static unsigned long sys_call_table_addr[4] = { 0,0,0,0 };
