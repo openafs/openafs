@@ -457,20 +457,17 @@ KFW_use_krb524(void)
         len = sizeof(use524);
         code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
                                 (BYTE *) &use524, &len);
-        if (code != ERROR_SUCCESS) {
-            RegCloseKey(parmKey);
-
-            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
-                                 0, KEY_QUERY_VALUE, &parmKey);
-            if (code == ERROR_SUCCESS) {
-                len = sizeof(use524);
-                code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
-                                        (BYTE *) &use524, &len);
-                if (code != ERROR_SUCCESS)
-                    use524 = 0;
-            }
+        RegCloseKey(parmKey);
+    }
+    if (code != ERROR_SUCCESS) {
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code == ERROR_SUCCESS) {
+            len = sizeof(use524);
+            code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
+                                    (BYTE *) &use524, &len);
+            RegCloseKey (parmKey);
         }
-        RegCloseKey (parmKey);
     }
     return use524;
 }
@@ -488,21 +485,20 @@ KFW_is_available(void)
         len = sizeof(enableKFW);
         code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
                                 (BYTE *) &enableKFW, &len);
-        if (code != ERROR_SUCCESS) {
-            RegCloseKey(parmKey);
-
-            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
-                                 0, KEY_QUERY_VALUE, &parmKey);
-            if (code == ERROR_SUCCESS) {
-                len = sizeof(enableKFW);
-                code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
-                                        (BYTE *) &enableKFW, &len);
-                if (code != ERROR_SUCCESS)
-                    enableKFW = 1;
-            }
-        }
         RegCloseKey (parmKey);
     }
+    
+    if (code != ERROR_SUCCESS) {
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                             0, KEY_QUERY_VALUE, &parmKey);
+        if (code == ERROR_SUCCESS) {
+            len = sizeof(enableKFW);
+            code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
+                                    (BYTE *) &enableKFW, &len);
+            RegCloseKey (parmKey);
+        }
+    } 
+
     if ( !enableKFW )
         return FALSE;
 
