@@ -455,6 +455,7 @@ AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+AC_CHECK_FUNCS(setprogname getprogname)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

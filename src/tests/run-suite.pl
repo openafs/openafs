@@ -148,11 +148,19 @@ run("echo /afs:/usr/vice/cache:${cachesize} >$openafsdirpath->{'viceetcdir'}/cac
 run("$openafsinitcmd->{'client-forcestart'}");
 my $afs_running = 0;
 open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+  if(m:^AFS:) {
+    print "The AFS client is currently running on this workstation.\n";
+    print "Please restart this script after running $openafsinitcmd->{'client-stop'}\n";
+    exit(1);
+  }
 while(<MOUNT>) {
-if(m:^AFS:) {
-       $afs_running = 1;
+  if(m:^AFS:) {
+    $afs_running = 1;
+  }
+  if(m:^/afs on AFS:) {
+    $afs_running = 1;
+  }
 }
-       }
 unless ($afs_running) {
 print "*** The AFS client failed to start.\n";
 print  "Please fix whatever problem kept it from running.\n";

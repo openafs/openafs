@@ -162,7 +162,7 @@ TEST_SRCS     = write-ro-file.c read-vs-mmap.c read-vs-mmap2.c		   \
 		blocks-new-file.c fsx.c afscp.c afscp_callback.c	   \
 		write-rand.c
 
-EXTRA_OBJS = err.o errx.o warn.o warnx.o
+EXTRA_OBJS = err.o errx.o warn.o warnx.o vwarn.o vwarnx.o verr.o verrx.o warnerr.o snprint.o 
 
 OpenAFS/OS.pm: OpenAFS/OS-$(MKAFS_OSTYPE).pm
 	$(CP) OpenAFS/OS-$(MKAFS_OSTYPE).pm OpenAFS/OS.pm
@@ -343,7 +343,7 @@ run-tests: run-tests.in
 #	$(CC) -c $(CPPFLAGS) $(DEFS) -I$(srcdir) -I. $(REALCFLAGS) $<
 
 afscp: afscp.o afscp_callback.o $(EXTRA_OBJS)
-	$(CC) $(LDFLAGS) -o $@ afscp.o afscp_callback.o $(EXTRA_OBJS) $(INT_LIBS)
+	$(CC) $(LDFLAGS) -o $@ afscp.o afscp_callback.o $(EXTRA_OBJS) $(INT_LIBS) ${XLIBS}
 
 hello-world:   hello-world.in
 	sed -e "s!%CC%!$(CC)!" $(srcdir)/hello-world.in > $@

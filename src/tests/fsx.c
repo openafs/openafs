@@ -11,7 +11,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#if defined(_UWIN) || defined(__linux)
+#if defined(sun) || defined(_UWIN) || defined(__linux)
 # include <sys/param.h>
 # include <limits.h>
 # include <time.h>
@@ -31,6 +31,13 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <fcntl.h>
+
+#if !defined L_SET
+# define L_SET          SEEK_SET
+# define L_INCR         SEEK_CUR
+# define L_XTND         SEEK_END
+#endif
 
 #define NUMPRINTCOLUMNS 32	/* # columns of data to print on each line */
 
