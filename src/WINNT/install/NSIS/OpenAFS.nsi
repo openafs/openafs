@@ -467,6 +467,7 @@ Section "AFS Client" secClient
   ; Stop the running processes
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  nsExec::Exec '$R0 afsd_service.exe'
   nsExec::Exec '$R0 afscreds.exe'
   Exec "afscreds.exe -z"
   ; in case we are upgrading an old version that does not support -z
