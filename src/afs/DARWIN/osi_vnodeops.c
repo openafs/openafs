@@ -467,6 +467,11 @@ afs_vop_pagein(ap)
     }
     afs_BozonUnlock(&tvc->pvnLock, tvc);
     AFS_GUNLOCK();
+
+    /* Zero out rest of last page if there wasn't enough data in the file */
+    if (code == 0 && auio.uio_resid > 0)
+	memset(aiov.iov_base, 0, auio.uio_resid);
+
     kernel_upl_unmap(kernel_map, pl);
     if (!nocommit) {
       if (code)
