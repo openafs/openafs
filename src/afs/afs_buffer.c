@@ -147,13 +147,12 @@ char *DRead(register afs_inode_t *fid, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
-    void *tfile;
-    register afs_int32 code, *sizep;
+    struct osi_file *tfile;
+    int code;
 
     AFS_STATCNT(DRead);
     MObtainWriteLock(&afs_bufferLock,256);
 
-/* some new code added 1/1/92 */
 #define bufmatch(tb) (tb->page == page && dirp_Eq(tb->fid, fid))
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
 
@@ -213,21 +212,13 @@ char *DRead(register afs_inode_t *fid, register int page)
      */
     tb = afs_newslot(fid, page, (tb ? tb : tb2));
     if (!tb) {
-      MReleaseWriteLock(&afs_bufferLock);
-      return 0;
+	MReleaseWriteLock(&afs_bufferLock);
+	return 0;
     }
     MObtainWriteLock(&tb->lock,260);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
     tfile = afs_CFileOpen(fid[0]);
-    sizep = (afs_int32 *)tfile;
-    if (page * AFS_BUFFER_PAGESIZE >= *sizep) {
-	dirp_Zap(tb->fid);
-	tb->lockers--;
-	MReleaseWriteLock(&tb->lock);
-	afs_CFileClose(tfile);
-	return 0;
-    }
     code = afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			 tb->data, AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
@@ -273,7 +264,7 @@ static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register s
     register afs_int32 i;
     afs_int32 lt;
     register struct buffer *tp;
-    void *tfile;
+    struct osi_file *tfile;
 
     AFS_STATCNT(afs_newslot);
     /* we take a pointer here to a buffer which was at the end of an
@@ -444,7 +435,7 @@ void DFlush (void)
     /* Flush all the modified buffers. */
     register int i;
     register struct buffer *tb;
-    void *tfile;
+    struct osi_file *tfile;
 
     AFS_STATCNT(DFlush);
     tb = Buffers;

@@ -39,7 +39,6 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 {
     register struct volume *tvp;
     register struct cell *tcell;
-    register afs_int32 i;
     int fakedir = 0;
 
     AFS_STATCNT(afs_CopyOutAttrs);

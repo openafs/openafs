@@ -1,4 +1,42 @@
 /*
+ * OpenBSD specific vnodeops + other misc interface glue
+ * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
+ * OpenBSD version by Jim Rees <rees@umich.edu>
+ *
+ * $Id$
+ */
+
+/*
+copyright 2002
+the regents of the university of michigan
+all rights reserved
+
+permission is granted to use, copy, create derivative works 
+and redistribute this software and such derivative works 
+for any purpose, so long as the name of the university of 
+michigan is not used in any advertising or publicity 
+pertaining to the use or distribution of this software 
+without specific, written prior authorization.  if the 
+above copyright notice or any other identification of the 
+university of michigan is included in any copy of any 
+portion of this software, then the disclaimer below must 
+also be included.
+
+this software is provided as is, without representation 
+from the university of michigan as to its fitness for any 
+purpose, and without warranty by the university of 
+michigan of any kind, either express or implied, including 
+without limitation the implied warranties of 
+merchantability and fitness for a particular purpose. the 
+regents of the university of michigan shall not be liable 
+for any damages, including special, indirect, incidental, or 
+consequential damages, with respect to any claim arising 
+out of or in connection with the use of the software, even 
+if it has been or is hereafter advised of the possibility of 
+such damages.
+*/
+
+/*
 Copyright 1995 Massachusetts Institute of Technology.  All Rights
 Reserved.
 
@@ -13,14 +51,6 @@ WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO,
 ANY WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
 NONINFRINGEMENT.
 */
-
-/*
- * OpenBSD specific vnodeops + other misc interface glue
- * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
- * OpenBSD version by Jim Rees <rees@umich.edu>
- *
- * $Id$
- */
 
 /*
  * A bunch of code cribbed from NetBSD ufs_vnops.c, ffs_vnops.c, and
@@ -178,15 +208,24 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 int afs_debug;
 
-#define NBSD_WRITES_ALLOWED
-#ifndef NBSD_WRITES_ALLOWED
-int nbsd_writes_allowed = 0;
-#endif
-
 #undef vrele
 #define vrele afs_nbsd_rele
 #undef VREF
 #define VREF afs_nbsd_ref
+
+extern int afs_lookup();
+extern int afs_open();
+extern int afs_close();
+extern int HandleIoctl(struct vcache *avc, afs_int32 acom, struct afs_ioctl *adata);
+extern int afs_fsync();
+extern int afs_remove();
+extern int afs_link();
+extern int afs_rename();
+extern int afs_mkdir();
+extern int afs_rmdir();
+extern int afs_symlink();
+extern int afs_readdir();
+extern int afs_readlink();
 
 int
 afs_nbsd_lookup(ap)
@@ -276,11 +315,6 @@ afs_nbsd_create(ap)
 
     /* vnode layer handles excl/nonexcl */
 
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
     error = afs_create(VTOAFS(dvp), name, ap->a_vap, NONEXCL,
 		       ap->a_vap->va_mode, &vcp,
 		       cnp->cn_cred);
@@ -331,6 +365,7 @@ afs_nbsd_open(ap)
 {
     int error;
     struct vcache *vc = VTOAFS(ap->a_vp);
+
     error = afs_open(&vc, ap->a_mode, ap->a_cred);
 #ifdef DIAGNOSTIC
     if (AFSTOV(vc) != ap->a_vp)
@@ -348,7 +383,7 @@ afs_nbsd_close(ap)
 		struct proc *a_p;
 	} */ *ap;
 {
-    return afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred, ap->a_p);
+    return afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred);
 }
 
 int
@@ -422,21 +457,15 @@ afs_nbsd_ioctl(ap)
 		struct proc *a_p;
 	} */ *ap;
 {
-    struct vcache *tvc = VTOAFS(ap->a_vp);
-    int error = 0;
-
     /* in case we ever get in here... */
 
     AFS_STATCNT(afs_ioctl);
-    if (((ap->a_command >> 8) & 0xff) == 'V') {
+    if (((ap->a_command >> 8) & 0xff) == 'V')
 	/* This is a VICEIOCTL call */
-	error = HandleIoctl(tvc, (struct file *)0/*Not used*/,
-			    ap->a_command, ap->a_data);
-	return(error);
-    } else {
+	return HandleIoctl(VTOAFS(ap->a_vp), ap->a_command, (struct afs_ioctl *) ap->a_data);
+    else
 	/* No-op call; just return. */
-	return(ENOTTY);
-    }
+	return ENOTTY;
 }
 
 /* ARGSUSED */
@@ -467,6 +496,7 @@ afs_nbsd_fsync(ap)
 {
     int wait = ap->a_waitfor == MNT_WAIT;
     struct vnode *vp = ap->a_vp;
+
     vflushbuf(vp, wait);
     return afs_fsync(VTOAFS(vp), ap->a_cred);
 }
@@ -484,11 +514,6 @@ afs_nbsd_remove(ap)
     struct vnode *dvp = ap->a_dvp;
 
     GETNAME();
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
     error =  afs_remove(VTOAFS(dvp), name, cnp->cn_cred);
     if (dvp == vp)
 	vrele(vp);
@@ -527,15 +552,12 @@ afs_nbsd_link(ap)
 	VOP_ABORTOP(dvp, cnp);
 	goto out;
     }
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
+
     error = afs_link(VTOAFS(vp), VTOAFS(dvp), name, cnp->cn_cred);
     FREE(cnp->cn_pnbuf, M_NAMEI);
     if (dvp != vp)
 	VOP_UNLOCK(vp, 0, curproc);
+
 out:
     vput(dvp);
     DROPNAME();
@@ -621,11 +643,6 @@ abortit:
     tname[tcnp->cn_namelen] = '\0';
 
 
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
     /* XXX use "from" or "to" creds? NFS uses "to" creds */
     error = afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, tcnp->cn_cred);
 
@@ -663,11 +680,6 @@ afs_nbsd_mkdir(ap)
 #ifdef DIAGNOSTIC
     if ((cnp->cn_flags & HASBUF) == 0)
 	panic("afs_nbsd_mkdir: no name");
-#endif
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
 #endif
     error = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, cnp->cn_cred);
     if (error) {
@@ -708,11 +720,6 @@ afs_nbsd_rmdir(ap)
 	return (EINVAL);
     }
 
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
     error = afs_rmdir(VTOAFS(dvp), name, cnp->cn_cred);
     DROPNAME();
     vput(dvp);
@@ -735,11 +742,6 @@ afs_nbsd_symlink(ap)
     /* NFS ignores a_vpp; so do we. */
 
     GETNAME();
-#ifndef NBSD_WRITES_ALLOWED
-    if (!nbsd_writes_allowed)
-	error = EROFS;
-    if (!error)
-#endif
     error = afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target,
 			cnp->cn_cred);
     DROPNAME();
@@ -759,10 +761,14 @@ afs_nbsd_readdir(ap)
 		u_long **a_cookies;
 	} */ *ap;
 {
-/*    printf("readdir %p cookies %p ncookies %d\n", ap->a_vp, ap->a_cookies,
-	   ap->a_ncookies); */
+#ifdef AFS_HAVE_COOKIES
+    printf("readdir %p cookies %p ncookies %d\n", ap->a_vp, ap->a_cookies,
+	   ap->a_ncookies);
     return afs_readdir(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred,
 		       ap->a_eofflag, ap->a_ncookies, ap->a_cookies);
+#else
+    return afs_readdir(VTOAFS(ap->a_vp), ap->a_uio, ap->a_cred, ap->a_eofflag);
+#endif
 }
 
 int

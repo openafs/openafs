@@ -1124,12 +1124,12 @@ afs_lookup(adp, aname, avcp, acred)
 
     /* now check the access */
     if (treq.uid != adp->last_looker) {  
-       if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-	 *avcp = NULL;
-	 code = EACCES;
-	 goto done;
-       }
-       else adp->last_looker = treq.uid;
+	if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
+	    *avcp = NULL;
+	    code = EACCES;
+	    goto done;
+	}
+	else adp->last_looker = treq.uid;
     } 
 
     /* Check for read access as well.  We need read access in order to
@@ -1192,7 +1192,7 @@ afs_lookup(adp, aname, avcp, acred)
 #endif /* linux22 */
     }
 
-    {
+    { /* sub-block just to reduce stack usage */
     register struct dcache *tdc;
     afs_size_t dirOffset, dirLen;
     ino_t theDir;
@@ -1201,9 +1201,9 @@ afs_lookup(adp, aname, avcp, acred)
     /* now we have to lookup the next fid */
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
     if (!tdc) {
-      *avcp = NULL;  /* redundant, but harmless */
-      code = EIO;
-      goto done;
+	*avcp = NULL;		/* redundant, but harmless */
+	code = EIO;
+	goto done;
     }
 
     /* now we will just call dir package with appropriate inode.
@@ -1254,9 +1254,8 @@ afs_lookup(adp, aname, avcp, acred)
     code = afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid, &dirCookie);
 
     /* If the first lookup doesn't succeed, maybe it's got @sys in the name */
-    while (code == ENOENT && Next_AtSys(adp, &treq, &sysState)) {
-      code = afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid, &dirCookie);
-    }
+    while (code == ENOENT && Next_AtSys(adp, &treq, &sysState))
+	code = afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid, &dirCookie);
     tname = sysState.name;
 
     ReleaseReadLock(&tdc->lock);
@@ -1298,10 +1297,10 @@ afs_lookup(adp, aname, avcp, acred)
 	 * but hasn't been statd, then do a bulk stat operation.
 	 */
         do {
-	   retry = 0;
-	   ObtainReadLock(&afs_xvcache);	
-	   tvc = afs_FindVCache(&tfid, &retry, 0/* !stats,!lru */);
-	   ReleaseReadLock(&afs_xvcache);	
+	    retry = 0;
+	    ObtainReadLock(&afs_xvcache);	
+	    tvc = afs_FindVCache(&tfid, &retry, 0 /* !stats,!lru */);
+	    ReleaseReadLock(&afs_xvcache);	
         } while (tvc && retry);
 
 	if (!tvc || !(tvc->states & CStatd)) 
@@ -1327,13 +1326,13 @@ afs_lookup(adp, aname, avcp, acred)
      * the file has not yet been looked up.
      */
     if (!tvc) {
-       afs_int32 cached = 0;
-       if (!tfid.Fid.Unique && (adp->states & CForeign)) {
+	afs_int32 cached = 0;
+	if (!tfid.Fid.Unique && (adp->states & CForeign)) {
 	    tvc = afs_LookupVCache(&tfid, &treq, &cached, adp, tname);
-       } 
-       if (!tvc && !bulkcode) {  /* lookup failed or wasn't called */
-	   tvc = afs_GetVCache(&tfid, &treq, &cached, NULL);
-       } 
+	} 
+	if (!tvc && !bulkcode) { /* lookup failed or wasn't called */
+	    tvc = afs_GetVCache(&tfid, &treq, &cached, NULL);
+	} 
     } /* if !tvc */
     } /* sub-block just to reduce stack usage */
 
@@ -1363,7 +1362,7 @@ afs_lookup(adp, aname, avcp, acred)
 
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
         if (!(flags & AFS_LOOKUP_NOEVAL))
-          /* don't eval mount points */
+	    /* don't eval mount points */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 	if (tvc->mvstat == 1 && force_eval) {
 	    /* a mt point, possibly unevaluated */
@@ -1381,7 +1380,7 @@ afs_lookup(adp, aname, avcp, acred)
 
 	    /* next, we want to continue using the target of the mt point */
 	    if (tvc->mvid && (tvc->states & CMValid)) {
-	      struct vcache *uvc;
+		struct vcache *uvc;
 		/* now lookup target, to set .. pointer */
 		afs_Trace2(afs_iclSetp, CM_TRACE_LOOKUP1,
 			   ICL_TYPE_POINTER, tvc, ICL_TYPE_FID, &tvc->fid);
@@ -1473,7 +1472,7 @@ done:
 #endif	/* AFS_OSF_ENV */
 
 	if (afs_mariner)
-	  afs_AddMarinerName(aname, tvc); 
+	    afs_AddMarinerName(aname, tvc); 
 
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
         if (!(flags & AFS_LOOKUP_NOEVAL))
@@ -1483,7 +1482,7 @@ done:
         mount point's vc in the vcache by its fid. */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 	if (!hit) {
-	  osi_dnlc_enter (adp, aname, tvc, &versionNo);
+	    osi_dnlc_enter (adp, aname, tvc, &versionNo);
 	}
 	else {
 #ifdef AFS_LINUX20_ENV
@@ -1498,10 +1497,10 @@ done:
     if (bulkcode) code = bulkcode; else 
     code = afs_CheckCode(code, &treq, 19);
     if (code) {
-       /* If there is an error, make sure *avcp is null.
-	* Alphas panic otherwise - defect 10719.
-	*/
-       *avcp = NULL;
+	/* If there is an error, make sure *avcp is null.
+	 * Alphas panic otherwise - defect 10719.
+	 */
+	*avcp = NULL;
     }
 
     afs_PutFakeStat(&fakestate);

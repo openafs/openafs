@@ -913,36 +913,36 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
 #ifdef	AFS_AIX41_ENV
-    {
-	struct ucred *cred1, *cred2;
+	{
+	    struct ucred *cred1, *cred2;
  
-	if (foreigncreds) {
-	    cred1 = cred2 = foreigncreds;
-	} else {
-	    cred1 = cred2 = credp;
+	    if (foreigncreds) {
+		cred1 = cred2 = foreigncreds;
+	    } else {
+		cred1 = cred2 = credp;
+	    }
+	    code = afs_HandlePioctl(vp, com, &data, follow, &cred1);
+	    if (cred1 != cred2) { 
+		/* something changed the creds */
+		crset(cred1);
+	    }
 	}
-	code = afs_HandlePioctl(vp, com, &data, follow, &cred1);
-	if (cred1 != cred2) { 
-	    /* something changed the creds */
-	    crset(cred1);
-	}
-    }
 #else
 #if	defined(AFS_HPUX101_ENV)
-    {
-	struct ucred *cred = p_cred(u.u_procp);
-	code = afs_HandlePioctl(vp, com, &data, follow, &cred);
-    }
+	{
+	    struct ucred *cred = p_cred(u.u_procp);
+	    code = afs_HandlePioctl(vp, com, &data, follow, &cred);
+	}
 #else
 #ifdef AFS_SGI_ENV
-    {
-	struct cred *credp;
-	credp = OSI_GET_CURRENT_CRED();
-	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
-    }
+	{
+	    struct cred *credp;
+	    credp = OSI_GET_CURRENT_CRED();
+	    code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+	}
 #else
 #if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
+	code = afs_HandlePioctl(vp ? VTOAFS(vp) : NULL, com, &data, follow, &credp);
 #else
 	code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
 #endif

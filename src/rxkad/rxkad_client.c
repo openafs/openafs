@@ -28,7 +28,9 @@ RCSID("$Header$");
 #ifdef AFS_LINUX20_ENV
 #include "h/socket.h"
 #endif
+#ifndef AFS_OBSD_ENV
 #include "netinet/in.h"
+#endif
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */

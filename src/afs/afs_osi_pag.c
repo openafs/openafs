@@ -361,8 +361,10 @@ int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
          * programs (without setpag) to work properly.
          */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-        av->uid = acred->cr_uid;    /* default when no pag is set */
-                                    /* bsd creds don't have ruid */
+	if (acred == NOCRED)
+	    av->uid = -2; /* XXX nobody... ?*/
+	else
+	    av->uid = acred->cr_uid; /* bsd creds don't have ruid */
 #else
 	av->uid	= acred->cr_ruid;    /* default when no pag is set */
 #endif

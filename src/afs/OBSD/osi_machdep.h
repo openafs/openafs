@@ -47,9 +47,6 @@ extern struct timeval time;
 
 #define osi_vnhold(avc, r) afs_vget(AFSTOV(avc), 0)
 
-#define	gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
-  vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
-
 #define afs_suser() afs_osi_suser(osi_curcred()) 
 
 extern int (**afs_vnodeop_p)();

@@ -82,7 +82,7 @@ char *rxi_Alloc();
 #ifndef KERNEL
 #define osi_Time() time(0)
 #endif
-struct rxkad_stats rxkad_stats = {0};
+struct rxkad_stats rxkad_stats;
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,

@@ -1,4 +1,42 @@
 /*
+ * OpenBSD specific assistance routines & VFS ops
+ * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
+ * OpenBSD version by Jim Rees <rees@umich.edu>
+ *
+ * $Id$
+ */
+
+/*
+copyright 2002
+the regents of the university of michigan
+all rights reserved
+
+permission is granted to use, copy, create derivative works 
+and redistribute this software and such derivative works 
+for any purpose, so long as the name of the university of 
+michigan is not used in any advertising or publicity 
+pertaining to the use or distribution of this software 
+without specific, written prior authorization.  if the 
+above copyright notice or any other identification of the 
+university of michigan is included in any copy of any 
+portion of this software, then the disclaimer below must 
+also be included.
+
+this software is provided as is, without representation 
+from the university of michigan as to its fitness for any 
+purpose, and without warranty by the university of 
+michigan of any kind, either express or implied, including 
+without limitation the implied warranties of 
+merchantability and fitness for a particular purpose. the 
+regents of the university of michigan shall not be liable 
+for any damages, including special, indirect, incidental, or 
+consequential damages, with respect to any claim arising 
+out of or in connection with the use of the software, even 
+if it has been or is hereafter advised of the possibility of 
+such damages.
+*/
+
+/*
 Copyright 1995 Massachusetts Institute of Technology.  All Rights
 Reserved.
 
@@ -13,14 +51,6 @@ WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO,
 ANY WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
 NONINFRINGEMENT.
 */
-
-/*
- * OpenBSD specific assistance routines & VFS ops
- * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
- * OpenBSD version by Jim Rees <rees@umich.edu>
- *
- * $Id$
- */
 
 /*
  * Some code cribbed from ffs_vfsops and other NetBSD sources, which
@@ -334,13 +364,13 @@ afs_root(struct mount *mp,
 	!(code = afs_CheckInit())) {
 	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	if (tvp) {
-printf("tvp %x %d\n", tvp, AFSTOV(tvp)->v_usecount);
 	    /* There is really no reason to over-hold this bugger--it's held
 	       by the root filesystem reference. */
 	    if (afs_globalVp != tvp) {
+#ifdef AFS_DONT_OVERHOLD_GLOBALVP
 		if (afs_globalVp)
-printf("afs_globalVp %x %d\n", afs_globalVp, AFSTOV(afs_globalVp)->v_usecount);
-/*		    AFS_RELE(AFSTOV(afs_globalVp));*/
+		    AFS_RELE(AFSTOV(afs_globalVp));
+#endif
 		afs_globalVp = tvp;
 		AFS_HOLD(AFSTOV(afs_globalVp));
 	    }

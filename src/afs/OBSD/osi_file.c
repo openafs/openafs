@@ -116,8 +116,10 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 
 void osi_DisableAtimes(struct vnode *avp)
 {
+#if 0
     struct inode *ip = VTOI(avp);
     ip->i_flag &= ~IACC;
+#endif
 }
 
 
@@ -133,24 +135,24 @@ int afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize
      * If the osi_file passed in is NULL, panic only if AFS is not shutting
      * down. No point in crashing when we are already shutting down
      */
-    if ( !afile ) {
-	if ( !afs_shuttingdown )
+    if (!afile) {
+	if (!afs_shuttingdown)
 	    osi_Panic("osi_Read called with null param");
 	else
 	    return EIO;
     }
 
-    if (offset != -1) afile->offset = offset;
+    if (offset != -1)
+	afile->offset = offset;
     AFS_GUNLOCK();
-    code = gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		    AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid);
+    code = vn_rdwr(UIO_READ, afile->vnode, aptr, asize, afile->offset,
+		   AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
-    }
-    else {
+    } else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
 		   ICL_TYPE_INT32, code);
 	code = -1;
@@ -172,8 +174,8 @@ int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int3
 
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curproc);
-    code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		    AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid);
+    code = vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+		   AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
     VOP_UNLOCK(afile->vnode, 0, curproc);
     AFS_GLOCK();
 

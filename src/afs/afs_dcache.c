@@ -377,7 +377,7 @@ static void afs_GetDownD(int anumber, int *aneedSpace)
 
     struct dcache *tdc;
     struct VenusFid *afid;
-    afs_int32 i, j, k;
+    afs_int32 i, j;
     afs_hyper_t vtime;
     int skip, phase;
     register struct vcache *tvc;
@@ -1185,15 +1185,15 @@ struct dcache *afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
     i = DCHash(&avc->fid, chunk);
     MObtainWriteLock(&afs_xdcache,278);
     for(index = afs_dchashTbl[i]; index != NULLIDX;) {
-      if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-	tdc = afs_GetDSlot(index, NULL);
-	ReleaseReadLock(&tdc->tlock);
-	if (!FidCmp(&tdc->f.fid, &avc->fid) && chunk == tdc->f.chunk) {
-	    break;  /* leaving refCount high for caller */
+	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	    tdc = afs_GetDSlot(index, NULL);
+	    ReleaseReadLock(&tdc->tlock);
+	    if (!FidCmp(&tdc->f.fid, &avc->fid) && chunk == tdc->f.chunk) {
+		break;		/* leaving refCount high for caller */
+	    }
+	    afs_PutDCache(tdc);
 	}
-	afs_PutDCache(tdc);
-      }
-      index = afs_dcnextTbl[index];
+	index = afs_dcnextTbl[index];
     }
     MReleaseWriteLock(&afs_xdcache);
     if (index != NULLIDX) {

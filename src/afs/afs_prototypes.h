@@ -432,6 +432,11 @@ extern void *osi_AllocSmallSpace(size_t size);
 extern char *osi_AllocSmall(register afs_int32 size, register afs_int32 morespace);
 #endif
 
+/* afs_osi_uio.c */
+extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio, struct iovec *aoutvec);
+extern int afsio_trim(struct uio *auio, afs_int32 asize);
+extern int afsio_skip(struct uio *auio, afs_int32 asize);
+
 
 
 /* ARCH/osi_misc.c */
