@@ -175,7 +175,6 @@ afs_vget(mp, lfl, vp)
 	vprint("bad usecount", vp);
 	panic("afs_vget");
     }
-    error = vget(vp, lfl, curthread);
     error = vget(vp, lfl, curproc);
     if (!error)
 	insmntque(vp, afs_globalVFS);	/* take off free list */
