@@ -877,7 +877,6 @@ static int GetPrincipalFromCache(
     int rc = 0;
     afs_status_t tst = 0;
     principal_get_p prin = (principal_get_p) rpc_specific;
-    kas_identity_p who = (kas_identity_p) dest;
 
     memcpy(dest, &prin->principal[slot], sizeof(kas_identity_t));
     rc = 1;
@@ -1007,7 +1006,6 @@ int ADMINAPI kas_PrincipalGetNext(
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
-    int locked_iter = 0;
  
     /*
      * Validate arguments
@@ -1407,7 +1405,6 @@ int ADMINAPI kas_PrincipalFieldsSet(
     int was_spare;
     char spare_bytes[4] = {0,0,0,0};
     int somethings_changing = 0;
-    int have_got_current_flag = 0;
 
     /*
      * Validate input arguments.
