@@ -397,8 +397,7 @@ main(argc, argv)
 	assert(pthread_attr_init(&tattr) == 0);
 	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
-	assert(pthread_create(&tid, &tattr, BKGSleep, NULL) == 0);
+	assert(pthread_create(&tid, &tattr, (void *)BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
