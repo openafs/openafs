@@ -264,8 +264,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
         {
             SC_HANDLE hService;
             if ((hService = OpenService( hManager, TEXT("TransarcAFSDaemon"), 
-                                         SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG |
-                                         SERVICE_QUERY_STATUS) ) != NULL)
+                                         SERVICE_QUERY_STATUS | SERVICE_START) ) != NULL)
             {
                 if (StartService(hService, 0, 0)) {
                     if ( IsDebuggerPresent() )

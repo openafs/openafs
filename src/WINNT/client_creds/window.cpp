@@ -203,8 +203,7 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
               {
                   SC_HANDLE hService;
                   if ((hService = OpenService ( hManager, TEXT("TransarcAFSDaemon"), 
-                                                SERVICE_CHANGE_CONFIG | SERVICE_QUERY_CONFIG |
-                                                SERVICE_QUERY_STATUS)) != NULL)
+                                                SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
                   {
                       if (StartService (hService, 0, 0))
                           TestAndDoMapShare(SERVICE_START_PENDING);
