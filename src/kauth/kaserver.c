@@ -155,7 +155,6 @@ main (argc, argv)
     struct rx_securityClass *sca[1];
     struct rx_securityClass *scm[3];
     
-    extern int afsconf_ClientAuth();
     extern int afsconf_ClientAuthSecure();
     extern int afsconf_ServerAuth();
     extern int afsconf_CheckAuth();
