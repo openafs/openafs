@@ -113,8 +113,8 @@ setup:
 LIBAFSIAUTH = afs.ext.iauth
 LIBAFS = afs.ext
 
-DEST_LIBAFSIAUTH = $(DEST)root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
-DEST_LIBAFS = $(DEST)root.client/usr/vice/etc/dkload/$(LIBAFS)
+DEST_LIBAFSIAUTH = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
+DEST_LIBAFS = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFS)
 
 INST_LIBAFSIAUTH = ${DESTDIR}${afskerneldir}/$(LIBAFSIAUTH)
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/$(LIBAFS)
