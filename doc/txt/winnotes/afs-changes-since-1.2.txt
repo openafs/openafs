@@ -1,14 +1,37 @@
 Since 1.3.77:
+  * Correct deadlock condition in cm_EndCallbackGrantingCall which can
+    be triggered if the volume referenced by the cm_scache_t object is
+    offline.
+
+  * The AFS Service needs to respond to SERVICE_ACCEPT_SHUTDOWN messages
+    in addition to SERVICE_ACCEPT_STOP.
+
+  * Move RPC shutdown until after the SMB and RX shutdown procedures 
+    complete.  Block until RPC shutdown is complete.
+
+  * Modify afslogon.dll (integrated logon) to wait for service if its
+    state is START_PENDING.  If the timeout period occurs, reset to 
+    the retry interval and not the sleep interval.
+
+  * When renewing the server list for a cell obtained via DNS AFSDB
+    records, the cm_cell_t entry must be removed from the list of all 
+    cells.  Otherwise, the list of cells will be corrupted.
+ 
+  * In the dcache and scache modules, use the cm_scache_t dataVersion
+    instead of the cm_fakeDirVersion.  
+
+  * Synchronize fs.c with the unix version.
+
   * The variable used to determine whether a file or virtual memory
     mapped cache is used was not properly initialized to a default
     value. If the registry setting "NonPersistentCaching" was not
     set, the choice would be random.   Properly initialized to be
     "file".
 
- * The memory mapped view was never unmapped before closing the file
-   at service shutdown.  This is now properly cleaned up.
+  * The memory mapped view was never unmapped before closing the file
+    at service shutdown.  This is now properly cleaned up.
 
- * Default location of Cache file is now %TEMP%\AFSCache
+  * Default location of Cache file is now %TEMP%\AFSCache
 
 Since 1.3.76:
 
@@ -155,6 +178,7 @@ Since 1.3.72/73:
 
   * Fix AFS Client Configuration Control Panel to support new SysName
     protocol.
+
   * Fix a bug in afsd_service.exe which could result in the SysName
     not being read from the registry.
 
