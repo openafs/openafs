@@ -18,6 +18,8 @@ include ../config/Makefile.${SYS_NAME}
 CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 
+INSTALLex = ${INSTALL} -m 755
+
 #
 # What to make
 #
@@ -27,7 +29,7 @@ all: afsd vsys
 # Programs
 #
 
-AFSLIBS=$(SRCDIR)lib/afs/libauth.a ${SRCDIR}/lib/afs/libcmd.a $(SRCDIR)lib/afs/libsys.a $(SRCDIR)lib/afs/util.a $(SRCDIR)lib/librx.a $(SRCDIR)lib/liblwp.a $(SRCDIR)lib/afs/util.a 
+AFSLIBS=${SRCDIR}/lib/afs/libauth.a ${SRCDIR}/lib/afs/libcmd.a ${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/afs/util.a ${SRCDIR}/lib/librx.a ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/util.a 
 
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
