@@ -82,29 +82,17 @@ if "%1"=="CHECKED" goto checked
 if "%1"=="free" goto free
 if "%1"=="FREE" goto free
 
-if "%1"=="wspp" goto wspp
-if "%1"=="WSPP" goto wspp
-
 goto usage
 
 :checked
 set AFSBLD_TYPE=CHECKED
-set AFSBLD_IS_WSPP=
 set AFSDEV_CRTDEBUG=1
 goto args_done
 
 :free
 set AFSBLD_TYPE=FREE
-set AFSBLD_IS_WSPP=
 set AFSDEV_CRTDEBUG=0
 goto args_done
-
-:wspp
-set AFSBLD_TYPE=FREE
-set AFSBLD_IS_WSPP=1
-set AFSDEV_CRTDEBUG=0
-goto args_done
-
 
 :args_done
 
