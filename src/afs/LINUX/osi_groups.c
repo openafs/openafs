@@ -100,8 +100,8 @@ int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag, int change_pare
 
 
 /* Intercept the standard system call. */
-extern int (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
-asmlinkage int afs_xsetgroups(int gidsetsize, gid_t *grouplist)
+extern long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
+asmlinkage long afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
     int code;
     cred_t *cr = crref();

@@ -135,6 +135,10 @@
 
 #define SYS_NAME_ID_i386_fbsd_42        2100
 
+#define SYS_NAME_ID_ia64_linux2		2200
+#define SYS_NAME_ID_ia64_linux22	2201
+#define SYS_NAME_ID_ia64_linux24	2202
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

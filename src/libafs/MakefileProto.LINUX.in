@@ -67,6 +67,10 @@ CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
 	-fno-builtin -ffixed-r2
 DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<ia64_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -pipe \
+	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
+DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>
 INCLUDES = -I. -I../ -I${TOP_SRCDIR}/config
 
@@ -124,6 +128,8 @@ ${COMPDIRS}:
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
+<ia64_linux24>
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m ; \

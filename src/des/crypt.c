@@ -249,8 +249,13 @@ typedef union {
 	struct {
 #if defined(LONG_IS_32_BITS)
 		/* long is often faster than a 32-bit bit field */
+#if defined(AFS_IA64_LINUX20_ENV)
+		int	i0;
+		int	i1;
+#else
 		long	i0;
 		long	i1;
+#endif
 #else
 		long	i0: 32;
 		long	i1: 32;
@@ -500,6 +505,7 @@ crypt(key, setting)
 	long salt;
 	int num_iter, salt_size;
 	C_block keyblock, rsltblock;
+
 
 	for (i = 0; i < 8; i++) {
 		if ((t = 2*(unsigned char)(*key)) != 0)

@@ -31,7 +31,7 @@
 #include "../h/sched.h"
 #define osi_Time() (xtime.tv_sec)
 #if  (CPU == sparc64)
-#define osi_GetTime(V) do { (*##V##).tv_sec = xtime.tv_sec; (*##V##).tv_usec = xtime.tv_usec; } while (0)
+#define osi_GetTime(V) do { (*(V)).tv_sec = xtime.tv_sec; (*(V)).tv_usec = xtime.tv_usec; } while (0)
 #else
 #define osi_GetTime(V) (*(V)=xtime)
 #endif

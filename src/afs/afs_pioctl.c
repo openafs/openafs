@@ -200,7 +200,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 	struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
@@ -737,6 +737,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_LINUX22_ENV
     cred_t *credp = crref(); /* don't free until done! */
     struct dentry *dp;
+
 #endif
     AFS_STATCNT(afs_syscall_pioctl);
     if (follow) follow = 1;	/* compat. with old venus */
@@ -1075,7 +1076,7 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     return afs_CheckCode(code, &treq, 41);
   }
   
-  static PGetFID(avc, afun, areq, ain, aout, ainSize, aoutSize)
+static PGetFID(avc, afun, areq, ain, aout, ainSize, aoutSize)
     struct vcache *avc;
   int afun;
   struct vrequest *areq;

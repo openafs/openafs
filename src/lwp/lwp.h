@@ -20,7 +20,11 @@
 
 #if !defined(KERNEL) && !defined(_KMEMUSER) && !defined(AFS_PTHREAD_ENV)
 #include <afs/param.h>
+#ifdef HAVE_UCONTEXT_H
+#include <ucontext.h>
+#else
 #include <setjmp.h>
+#endif
 
 #define LWP_SUCCESS	0
 #define LWP_EBADPID	-1
@@ -191,14 +195,19 @@ typedef struct lwp_pcb {
 #else
 struct lwp_context {	/* saved context for dispatcher */
     char *topstack;	/* ptr to top of process stack */
-#if defined(sparc) && !defined(__linux__)
-#ifdef	save_allregs
+#ifdef HAVE_UCONTEXT_H
+    ucontext_t ucontext;
+    int state;
+#else /* !HAVE_UCONTEXT_H */
+# if defined(sparc) && !defined(__linux__)
+# ifdef	save_allregs
     int globals[7+1+32+2+32+2];    /* g1-g7, y reg, f0-f31, fsr, fq, c0-c31, csr, cq. */
-#else
+# else
     int globals[8];    /* g1-g7 and y registers. */
-#endif
-#endif
+# endif
+# endif
     jmp_buf setjmp_buffer;
+#endif /* HAVE_UCONTEXT_H */
 };
 
 struct rock

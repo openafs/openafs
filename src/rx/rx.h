@@ -54,6 +54,7 @@
 # include "rx_event.h"
 # include "rx_packet.h"
 # include "rx_misc.h"
+# include "rx_null.h"
 #ifndef AFS_NT40_ENV
 # include <netinet/in.h>
 #endif

@@ -12,6 +12,7 @@
 
 RCSID("$Header$");
 
+#include <stdlib.h>
 #include <lock.h>
 
 #include "dir.h"

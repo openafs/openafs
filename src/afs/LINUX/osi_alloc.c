@@ -19,6 +19,7 @@ RCSID("$Header$");
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../h/mm.h"
+#include "../h/slab.h"
 
 #include "../afs/afs_atomlist.h"
 #include "../afs/afs_lhash.h"
@@ -86,7 +87,7 @@ static void *linux_alloc(unsigned int asize)
 
     /*  if we can use kmalloc use it to allocate the required memory. */
     if (asize <  MAX_KMALLOC_SIZE) {
-        new = (void *)(long)kmalloc(asize, GFP_KERNEL);
+        new = (void *)(unsigned long)kmalloc(asize, GFP_KERNEL);
         if (new) /* piggy back alloc type */
             (unsigned long)new |= KM_TYPE;
     }

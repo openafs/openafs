@@ -215,6 +215,9 @@ else
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"
 			;;
+		ia64-*-linux*)
+			AFS_SYSNAME="ia64_linuxXX"
+			;;
 		powerpc-*-linux*)
 			AFS_SYSNAME="ppc_linuxXX"
 			;;
