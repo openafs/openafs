@@ -1,4 +1,18 @@
 Since 1.3.72/73:
+  * Fix the locking of objects during Directory Searches in the
+    SMB/CIFS server.  The failure to properly lock the reference 
+    counts was resulting in the premature freeing of smb_dirSearch_t 
+    objects while they were still in use by the SMB/CIFS client.
+    This does not solve the "Invalid Handle" problem.
+
+  * Fix Find Cell By Name pioctl call to return a valid cell
+    name for the Freelance fake root.afs volume.  
+    "Freelance.Local.Root".
+
+  * Fix the Explorer Shell Extension Symlinks->Add operation.
+    The dialog template was missing and the link destination
+    string was too short.
+
   * Add support for symlinks to Freelance root.afs volume
     Stored at HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks
        <number>  =  "<linkname>:<relative-path>."
