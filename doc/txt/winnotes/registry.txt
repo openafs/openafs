@@ -249,6 +249,14 @@ Variable: allSubmount (smb.c)
   will not be created.  This allows the read-write versions of 
   root.afs to be hidden.
 
+Value   : NoFindLanaByName
+Type    : DWORD {0, 1}
+Default : 0
+
+  Disables the attempt to identity the network adapter to use by 
+  looking for an adapter with a display name of "AFS".
+
+
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
