@@ -441,6 +441,7 @@ void osi_linux_mask() {
 void osi_linux_unmask() {
     spin_lock_irq(&rxk_ListenerTask->sigmask_lock);
     sigemptyset(&rxk_ListenerTask->blocked);
+    flush_signals(rxk_ListenerTask);
     recalc_sigpending(rxk_ListenerTask);
     spin_unlock_irq(&rxk_ListenerTask->sigmask_lock);
 }
