@@ -130,9 +130,6 @@ ${DESTDIR}etc/kdump64: kdump64
 	* ) \
 		echo skipping kdump64 for ${SYS_NAME} ;; \
 	esac
-from
-r
-
 
 install: all ${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
 	${DESTDIR}bin/up ${DESTDIR}etc/fstrace ${DESTDIR}bin/cmdebug \
