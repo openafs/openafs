@@ -1333,7 +1333,7 @@ struct min_direct {
 struct usr_ucred {
 	unsigned long		cr_ref;
 	long			cr_uid;
-#if !defined(AFS_USR_FBSD_ENV)
+#if !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DARWIN60_ENV)
 	long			cr_gid;
 #endif
 	long			cr_ruid;

@@ -227,6 +227,14 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		;;
 
+	ppc_darwin_60)
+		LEX="lex -l"
+		LWP_OPTMZ="-O2"
+		REGEX_OBJ="regex.o"
+		XCFLAGS="-no-cpp-precomp"
+		TXLIBS="-lncurses"
+		;;
+
 	ppc_linux22)
 		INSTALL="install"
 		LEX="flex -l"

@@ -24,7 +24,11 @@ RCSID("$Header$");
 #endif
 #include "../afsint/afsint.h"
 
+#ifdef AFS_DARWIN60_ENV
+struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct ifaddr **pifad);
+#else
 struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad);
+#endif
 
 #ifndef RXK_LISTENER_ENV
 int (*rxk_PacketArrivalProc)(register struct rx_packet *ahandle,

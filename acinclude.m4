@@ -383,10 +383,19 @@ case $AFS_SYSNAME in
 	*_darwin*)
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
-		;;
-esac
+                dnl the test below fails on darwin, even if the CPPFLAGS below
+                dnl are added. the headers from Kernel.Framework must be used
+                dnl when KERNEL is defined.
 
+                dnl really, such a thing isn't guaranteed to work on any 
+                dnl platform until the kernel cflags from MakefileProto are
+                dnl known to configure
+	        AC_DEFINE(HAVE_STRUCT_BUF)
+		;;
+        *)
 AC_MSG_CHECKING(for definition of struct buf)
+dnl save_CPPFLAGS="$CPPFLAGS"
+dnl CPPFLAGS="$CPPFLAGS -DKERNEL -D_KERNEL -D__KERNEL -D__KERNEL__"
 AC_CACHE_VAL(ac_cv_have_struct_buf, [
 	ac_cv_have_struct_buf=no
 	AC_TRY_COMPILE(
@@ -396,10 +405,13 @@ AC_CACHE_VAL(ac_cv_have_struct_buf, [
 		ac_cv_have_struct_buf=yes,)
 	]
 )
+dnl CPPFLAGS="$save_CPPFLAGS"
 AC_MSG_RESULT($ac_cv_have_struct_buf)
 if test "$ac_cv_have_struct_buf" = yes; then
 	AC_DEFINE(HAVE_STRUCT_BUF)
 fi
+;;
+esac
 
 
 AC_CACHE_VAL(ac_cv_sockaddr_len,

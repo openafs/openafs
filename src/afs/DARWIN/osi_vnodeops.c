@@ -283,7 +283,7 @@ afs_vop_open(ap)
 	panic("AFS open changed vnode!");
 #endif
     afs_BozonLock(&vc->pvnLock, vc);
-    osi_FlushPages(vc);
+    osi_FlushPages(vc, ap->a_cred);
     afs_BozonUnlock(&vc->pvnLock, vc);
     AFS_GUNLOCK();
     return error;
@@ -306,7 +306,7 @@ afs_vop_close(ap)
     else
         code=afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
@@ -381,7 +381,7 @@ afs_vop_read(ap)
     struct vcache *avc=VTOAFS(ap->a_vp);
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     code=afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
@@ -458,7 +458,7 @@ afs_vop_pagein(ap)
     aiov.iov_base = (caddr_t)ioaddr;
     AFS_GLOCK();
     afs_BozonLock(&tvc->pvnLock, tvc);
-    osi_FlushPages(tvc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     code=afs_read(tvc, uio, cred, 0, 0, 0);
     if (code == 0) {
       ObtainWriteLock(&tvc->lock, 2);
@@ -494,7 +494,7 @@ afs_vop_write(ap)
     void *object;
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     if (UBCINFOEXISTS(ap->a_vp))
        ubc_clean(ap->a_vp, 1);
     if (UBCINFOEXISTS(ap->a_vp))
@@ -622,7 +622,7 @@ afs_vop_pageout(ap)
 
     AFS_GLOCK();
     afs_BozonLock(&tvc->pvnLock, tvc);
-    osi_FlushPages(tvc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(tvc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);

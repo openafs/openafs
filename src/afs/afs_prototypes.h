@@ -484,7 +484,7 @@ extern void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp);
 extern void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred);
 extern void osi_VM_TryReclaim(struct vcache *avc, int *slept);
 extern void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size);
-extern int osi_VM_Setup(struct vcache *avc);
+extern int osi_VM_Setup(struct vcache *avc, int force);
 
 #ifdef AFS_SUN5_ENV
 extern int osi_VM_GetDownD(struct vcache *avc, struct dcache *adc);

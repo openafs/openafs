@@ -88,6 +88,10 @@ $(LIBUAFS): $(UAFSOBJ)
 	-$(RM) -f $(LIBUAFS)
 	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
 
+$(LIBJUAFS): $(JUAFSOBJ)
+	-$(RM) -f $(LIBJUAFS)
+	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
+
 $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
 	-$(RM) -f $(LIBAFSWEB)
 	ld -b $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
