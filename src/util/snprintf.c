@@ -9,6 +9,9 @@
 #include <ctype.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#if defined(AFS_AIX32_ENV)
+#include <sys/socket.h>
+#endif
 
 #define MAXPREC 100
 
