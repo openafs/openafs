@@ -779,9 +779,9 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
     smb_vc_t *vcp;
 
     lock_ObtainWrite(&smb_rctLock);
-    for(vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
+    for (vcp = smb_allVCsp; vcp; vcp=vcp->nextp) {
         if (lsn == vcp->lsn && lana == vcp->lana) {
-            vcp->refCount++;
+            smb_HoldVCNoLock(vcp);
             break;
         }
     }
@@ -842,11 +842,21 @@ int smb_IsStarMask(char *maskp)
     return 0;
 }
 
+void smb_ReleaseVCNoLock(smb_vc_t *vcp)
+{
+    osi_assert(vcp->refCount-- > 0);
+}       
+
 void smb_ReleaseVC(smb_vc_t *vcp)
 {
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(vcp->refCount-- > 0);
     lock_ReleaseWrite(&smb_rctLock);
+}       
+
+void smb_HoldVCNoLock(smb_vc_t *vcp)
+{
+    vcp->refCount++;
 }       
 
 void smb_HoldVC(smb_vc_t *vcp)
@@ -873,7 +883,7 @@ smb_tid_t *smb_FindTID(smb_vc_t *vcp, unsigned short tid, int flags)
         tidp->nextp = vcp->tidsp;
         tidp->refCount = 1;
         tidp->vcp = vcp;
-        vcp->refCount++;
+        smb_HoldVCNoLock(vcp);
         vcp->tidsp = tidp;
         lock_InitializeMutex(&tidp->mx, "tid_t mutex");
         tidp->tid = tid;
@@ -887,30 +897,27 @@ void smb_ReleaseTID(smb_tid_t *tidp)
     smb_tid_t *tp;
     smb_tid_t **ltpp;
     cm_user_t *userp;
-    smb_vc_t  *vcp;
 
     userp = NULL;
-    vcp = NULL;
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(tidp->refCount-- > 0);
     if (tidp->refCount == 0 && (tidp->flags & SMB_TIDFLAG_DELETE)) {
         ltpp = &tidp->vcp->tidsp;
-        for(tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
-            if (tp == tidp) break;
+        for (tp = *ltpp; tp; ltpp = &tp->nextp, tp = *ltpp) {
+            if (tp == tidp) 
+                break;
         }
         osi_assert(tp != NULL);
         *ltpp = tp->nextp;
         lock_FinalizeMutex(&tidp->mx);
         userp = tidp->userp;	/* remember to drop ref later */
-        vcp = tidp->vcp;
+        tidp->userp = NULL;
+        smb_ReleaseVCNoLock(tidp->vcp);
+        tidp->vcp = NULL;
     }
     lock_ReleaseWrite(&smb_rctLock);
-    if (userp) {
+    if (userp)
         cm_ReleaseUser(userp);
-    }	
-    if (vcp) {
-        smb_ReleaseVC(vcp);
-    }   
 }	        
 
 smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
@@ -933,7 +940,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
         uidp->nextp = vcp->usersp;
         uidp->refCount = 1;
         uidp->vcp = vcp;
-        vcp->refCount++;
+        smb_HoldVCNoLock(vcp);
         vcp->usersp = uidp;
         lock_InitializeMutex(&uidp->mx, "user_t mutex");
         uidp->userID = uid;
@@ -992,10 +999,8 @@ void smb_ReleaseUID(smb_user_t *uidp)
     smb_user_t *up;
     smb_user_t **lupp;
     cm_user_t *userp;
-    smb_vc_t  *vcp;
 
     userp = NULL;
-    vcp = NULL;
     lock_ObtainWrite(&smb_rctLock);
     osi_assert(uidp->refCount-- > 0);
     if (uidp->refCount == 0 && (uidp->flags & SMB_USERFLAG_DELETE)) {
@@ -1007,10 +1012,10 @@ void smb_ReleaseUID(smb_user_t *uidp)
         *lupp = up->nextp;
         lock_FinalizeMutex(&uidp->mx);
         if (uidp->unp) {
-            userp = uidp->unp->userp;	/* remember to drop ref later */
-            uidp->unp->userp = NULL;
+            userp = uidp->unp->userp;	/* avoid deadlock by releasing */
+            uidp->unp->userp = NULL;    /* after releasing the lock */
         }       
-        vcp = uidp->vcp;
+        smb_ReleaseVCNoLock(uidp->vcp);
         uidp->vcp = NULL;
     }		
     lock_ReleaseWrite(&smb_rctLock);
@@ -1018,9 +1023,6 @@ void smb_ReleaseUID(smb_user_t *uidp)
         cm_ReleaseUserVCRef(userp);
         cm_ReleaseUser(userp);
     }	
-    if (vcp) {
-        smb_ReleaseVC(vcp);
-    }
 }	
 
 /* retrieve a held reference to a user structure corresponding to an incoming
@@ -1110,7 +1112,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
     }
 
   retry:
-    for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
+    for (fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
         if (fid == fidp->fid) {
             if (newFid) {
                 fid++;
@@ -1141,7 +1143,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
         osi_QAdd((osi_queue_t **)&vcp->fidsp, &fidp->q);
         fidp->refCount = 1;
         fidp->vcp = vcp;
-        vcp->refCount++;
+        smb_HoldVCNoLock(vcp);
         lock_InitializeMutex(&fidp->mx, "fid_t mutex");
         fidp->fid = fid;
         fidp->curr_chunk = fidp->prev_chunk = -2;
@@ -1170,24 +1172,30 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     osi_assert(fidp->refCount-- > 0);
     if (fidp->refCount == 0 && (fidp->flags & SMB_FID_DELETE)) {
         vcp = fidp->vcp;
-        if (!(fidp->flags & SMB_FID_IOCTL))
+        fidp->vcp = NULL;
+        if (!(fidp->flags & SMB_FID_IOCTL)) {
             scp = fidp->scp;
+            fidp->scp = NULL;
+        }
+
         osi_QRemove((osi_queue_t **) &vcp->fidsp, &fidp->q);
         thrd_CloseHandle(fidp->raw_write_event);
 
         /* and see if there is ioctl stuff to free */
         ioctlp = fidp->ioctlp;
         if (ioctlp) {
-            if (ioctlp->prefix) cm_FreeSpace(ioctlp->prefix);
-            if (ioctlp->inAllocp) free(ioctlp->inAllocp);
-            if (ioctlp->outAllocp) free(ioctlp->outAllocp);
+            if (ioctlp->prefix) 
+                cm_FreeSpace(ioctlp->prefix);
+            if (ioctlp->inAllocp) 
+                free(ioctlp->inAllocp);
+            if (ioctlp->outAllocp) 
+                free(ioctlp->outAllocp);
             free(ioctlp);
         }       
 
         free(fidp);
 
-        /* do not call smb_ReleaseVC() because we already have the lock */
-        vcp->refCount--;
+        smb_ReleaseVCNoLock(vcp);
     }
     lock_ReleaseWrite(&smb_rctLock);
 
@@ -1854,6 +1862,8 @@ static NCB *GetNCB(void)
 
 void smb_FreePacket(smb_packet_t *tbp)
 {
+    smb_vc_t * vcp = NULL;
+
     osi_assert(tbp->magic == SMB_PACKETMAGIC);
         
     lock_ObtainWrite(&smb_globalLock);
@@ -1861,6 +1871,7 @@ void smb_FreePacket(smb_packet_t *tbp)
     smb_packetFreeListp = tbp;
     tbp->magic = SMB_PACKETMAGIC;
     tbp->ncbp = NULL;
+    vcp = tbp->vcp;
     tbp->vcp = NULL;
     tbp->resumeCode = 0;
     tbp->inCount = 0;
@@ -1871,6 +1882,9 @@ void smb_FreePacket(smb_packet_t *tbp)
     tbp->ncb_length = 0;
     tbp->flags = 0;
     lock_ReleaseWrite(&smb_globalLock);
+
+    if (vcp)
+        smb_ReleaseVC(vcp);
 }
 
 static void FreeNCB(NCB *bufferp)
@@ -2966,6 +2980,8 @@ void smb_WaitingLocksDaemon()
             cm_FreeSpace(inp->spacep);
             smb_FreePacket(inp);
             smb_FreePacket(outp);
+            if (vcp)
+                smb_ReleaseVC(vcp);
             FreeNCB(ncbp);
             free(wL);
         } while (nwL);
@@ -3404,10 +3420,11 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         memcpy(dsp->mask, mask, 11);
 
         /* track if this is likely to match a lot of entries */
-        if (smb_IsStarMask(mask)) starPattern = 1;
-        else starPattern = 0;
-    }	
-    else {
+        if (smb_IsStarMask(mask)) 
+            starPattern = 1;
+        else 
+            starPattern = 0;
+    } else {
         /* pull the next cookie value out of the search status block */
         nextCookie = inCookiep[13] + (inCookiep[14]<<8) + (inCookiep[15]<<16)
             + (inCookiep[16]<<24);
@@ -3837,7 +3854,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     caseFold = CM_FLAG_CASEFOLD;
 
     code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-    if(code) {
+    if (code) {
         cm_ReleaseUser(userp);
         return CM_ERROR_NOSUCHPATH;
     }
