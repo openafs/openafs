@@ -358,6 +358,7 @@ afs_int32 UDP_Authenticate (ksoc, client, name, inst, startTime, endTime, sname,
 	code = -1;
 	goto fail;
     }
+    KALOG(name, inst, sname, sinst, NULL, client->sin_addr.s_addr, LOG_AUTHENTICATE);
     osi_audit ( UDPAuthenticateEvent, 0, AUD_STR, name, AUD_STR, inst, AUD_END);
     return 0;
 
