@@ -279,6 +279,15 @@ OSI_VC_DECL(adp);
 #endif
 	return code;
     }
+
+    if (adp->mvstat == 1) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp);
+	afs_PutVCache(tvc);
+#endif
+	return EISDIR;
+    }
+
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
