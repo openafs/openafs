@@ -3993,7 +3993,8 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_nWaiting--;
 	    MUTEX_EXIT(&rx_stats_mutex);
-	    queue_Remove(call);
+	    if (queue_IsOnQueue(call))
+	        queue_Remove(call);
 	}
 	call->state = RX_STATE_ACTIVE;
 	call->mode = RX_MODE_RECEIVING;
