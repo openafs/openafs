@@ -331,6 +331,14 @@ rval_t *rvp;
 	iput(newip);
 	return 0;
 }
+#else /* !AFS_SGI_EFS_IOPS_ENV */
+int
+afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
+afs_uint32 dev, near_inode, param1, param2, param3, param4;
+rval_t *rvp;
+{
+    return ENOSYS;
+}
 #endif /* AFS_SGI_EFS_IOPS_ENV */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
