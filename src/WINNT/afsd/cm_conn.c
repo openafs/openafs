@@ -101,32 +101,23 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	struct cm_req *reqp, cm_serverRef_t **serverspp)
 {
 	long code;
-        cm_volume_t *volp = NULL;
-        cm_serverRef_t *serversp = NULL;
-        cm_cell_t *cellp = NULL;
+    cm_volume_t *volp = NULL;
+    cm_cell_t *cellp = NULL;
 
-        if (!fidp) {
+    if (!fidp) {
 		*serverspp = NULL;
 		return 0;
 	}
 
 	cellp = cm_FindCellByID(fidp->cell);
-        if (!cellp) return CM_ERROR_NOSUCHCELL;
+    if (!cellp) return CM_ERROR_NOSUCHCELL;
 
-        code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
-        if (code) return code;
-        
-	if (fidp->volume == volp->rwID)
-        	serversp = volp->rwServersp;
-	else if (fidp->volume == volp->roID)
-        	serversp = volp->roServersp;
-	else if (fidp->volume == volp->bkID)
-        	serversp = volp->bkServersp;
-	else
-		serversp = NULL;
+    code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
+    if (code) return code;
+    
+    *serverspp = cm_GetVolServers(volp, fidp->volume);
 
-        cm_PutVolume(volp);
-	*serverspp = serversp;
+    cm_PutVolume(volp);
 	return 0;
 }
 
@@ -148,13 +139,16 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
  */
 int
 cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
-	struct cm_fid *fidp,
-	AFSVolSync *volSyncp, cm_callbackRequest_t *cbrp, long errorCode)
+	struct cm_fid *fidp, 
+	AFSVolSync *volSyncp, 
+	cm_serverRef_t * serversp,
+	cm_callbackRequest_t *cbrp, long errorCode)
 {
 	cm_server_t *serverp;
-	cm_serverRef_t *serversp, *tsrp;
+	cm_serverRef_t *tsrp;
 	cm_ucell_t *ucellp;
-        int retry = 0;
+    int retry = 0;
+    int free_svr_list = 0;
 	int dead_session;
         
 	osi_Log2(afsd_logp, "cm_Analyze connp 0x%x, code %d",
@@ -167,7 +161,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		serverp = connp->serverp;
 
 	/* Update callback pointer */
-        if (cbrp && errorCode == 0) cbrp->serverp = connp->serverp;
+    if (cbrp && errorCode == 0) 
+        cbrp->serverp = connp->serverp;
 
 	/* If not allowed to retry, don't */
 	if (reqp->flags & CM_REQ_NORETRY)
@@ -205,7 +200,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		 * the servers are marked as DOWN.  So clear the DOWN
 		 * flag and reset the busy state as well.
 		 */
-		cm_GetServerList(fidp, userp, reqp, &serversp);
+        if (!serversp) {
+            cm_GetServerList(fidp, userp, reqp, &serversp);
+            free_svr_list = 1;
+        }
         if (serversp) {
             lock_ObtainWrite(&cm_serverLock);
             for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
@@ -214,7 +212,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                     tsrp->status = not_busy;
             }
             lock_ReleaseWrite(&cm_serverLock);
-
+            if (free_svr_list)
+                cm_FreeServerList(&serversp);
             retry = 1;
         }
 
@@ -224,20 +223,28 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 	/* if all servers are busy, mark them non-busy and start over */
 	if (errorCode == CM_ERROR_ALLBUSY) {
-		cm_GetServerList(fidp, userp, reqp, &serversp);
+        if (!serversp) {
+            cm_GetServerList(fidp, userp, reqp, &serversp);
+            free_svr_list = 1;
+        }
 		lock_ObtainWrite(&cm_serverLock);
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->status == busy)
 				tsrp->status = not_busy;
 		}
         lock_ReleaseWrite(&cm_serverLock);
+        if (free_svr_list)
+            cm_FreeServerList(&serversp);
 		thrd_Sleep(5000);
 		retry = 1;
 	}
 
 	/* special codes:  VBUSY and VRESTARTING */
 	if (errorCode == VBUSY || errorCode == VRESTARTING) {
-		cm_GetServerList(fidp, userp, reqp, &serversp);
+        if (!serversp) {
+            cm_GetServerList(fidp, userp, reqp, &serversp);
+            free_svr_list = 1;
+        }
 		lock_ObtainWrite(&cm_serverLock);
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp
@@ -247,6 +254,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 			}
 		}
         lock_ReleaseWrite(&cm_serverLock);
+        if (free_svr_list)
+            cm_FreeServerList(&serversp);
 		retry = 1;
 	}
 
@@ -278,12 +287,16 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		}
 
 		/* Mark server offline for this volume */
-		cm_GetServerList(fidp, userp, reqp, &serversp);
-
+        if (!serversp) {
+            cm_GetServerList(fidp, userp, reqp, &serversp);
+            free_svr_list = 1;
+        }
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp)
 				tsrp->status = offline;
 		}
+        if (free_svr_list)
+            cm_FreeServerList(&serversp);
 		retry = 1;
 	}
 
@@ -312,10 +325,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	else if (errorCode >= -64 && errorCode < 0) {
 		/* mark server as down */
 		lock_ObtainMutex(&serverp->mx);
-                serverp->flags |= CM_SERVERFLAG_DOWN;
+        serverp->flags |= CM_SERVERFLAG_DOWN;
 		lock_ReleaseMutex(&serverp->mx);
-                retry = 1;
-        }
+        retry = 1;
+    }
 
 	if (errorCode == RXKADEXPIRED && !dead_session) {
 		lock_ObtainMutex(&userp->mx);
@@ -347,21 +360,21 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 {
 	long code;
 	cm_serverRef_t *tsrp;
-        cm_server_t *tsp;
-        long firstError = 0;
+    cm_server_t *tsp;
+    long firstError = 0;
 	int someBusy = 0, someOffline = 0, allBusy = 1, allDown = 1;
 	long timeUsed, timeLeft, hardTimeLeft;
 #ifdef DJGPP
-        struct timeval now;
+    struct timeval now;
 #endif /* DJGPP */        
 
-        *connpp = NULL;
+    *connpp = NULL;
 
 #ifndef DJGPP
 	timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
 #else
-        gettimeofday(&now, NULL);
-        timeUsed = sub_time(now, reqp->startTime) / 1000;
+    gettimeofday(&now, NULL);
+    timeUsed = sub_time(now, reqp->startTime) / 1000;
 #endif
         
 	/* leave 5 seconds margin of safety */
@@ -369,8 +382,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	hardTimeLeft = HardDeadtimeout - timeUsed - 5;
 
 	lock_ObtainWrite(&cm_serverLock);
-
-    for(tsrp = serversp; tsrp; tsrp=tsrp->next) {
+    for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
         tsp->refCount++;
         lock_ReleaseWrite(&cm_serverLock);
@@ -556,5 +568,6 @@ long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
 	}
 
 	code = cm_ConnByMServers(serversp, userp, reqp, connpp);
-        return code;
+    cm_FreeServerList(&serversp);
+    return code;
 }

@@ -142,6 +142,11 @@ void cm_PutServer(cm_server_t *serverp)
 	lock_ReleaseWrite(&cm_serverLock);
 }
 
+void cm_PutServerNoLock(cm_server_t *serverp)
+{
+	osi_assert(serverp->refCount-- > 0);
+}
+
 void cm_SetServerPrefs(cm_server_t * serverp)
 {
 	unsigned long	serverAddr; 	/* in host byte order */
@@ -243,13 +248,14 @@ cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp)
 {
 	cm_serverRef_t *tsrp;
 
-        lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainWrite(&cm_serverLock);
 	serverp->refCount++;
-        lock_ReleaseWrite(&cm_serverLock);
+    lock_ReleaseWrite(&cm_serverLock);
 	tsrp = malloc(sizeof(*tsrp));
 	tsrp->server = serverp;
 	tsrp->status = not_busy;
 	tsrp->next = NULL;
+    tsrp->refCount = 1;
 
 	return tsrp;
 }
@@ -261,7 +267,6 @@ long cm_ChecksumServerList(cm_serverRef_t *serversp)
 	cm_serverRef_t *tsrp;
 
     lock_ObtainWrite(&cm_serverLock);
-
 	for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 		if (first)
 			first = 0;
@@ -277,6 +282,8 @@ long cm_ChecksumServerList(cm_serverRef_t *serversp)
 /*
 ** Insert a server into the server list keeping the list sorted in 
 ** asending order of ipRank. 
+** 
+** The refCount of the cm_serverRef_t is increased
 */
 void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 {
@@ -284,8 +291,9 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 	unsigned short ipRank = element->server->ipRank;
 
     lock_ObtainWrite(&cm_serverLock);
+    element->refCount++;                /* increase refCount */
 
-	/* insertion into empty list  or at the beginning of the list */
+    /* insertion into empty list  or at the beginning of the list */
 	if ( !current || (current->server->ipRank > ipRank) )
 	{
 		element->next = *list;
@@ -338,6 +346,11 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
 
 	/* re-insert deleted element into the list with modified rank*/
 	cm_InsertServerList(list, element);
+
+    /* reduce refCount which was increased by cm_InsertServerList */
+    lock_ObtainWrite(&cm_serverLock);
+    element->refCount--;
+    lock_ReleaseWrite(&cm_serverLock);
 	return 0;
 }
 /*
@@ -427,8 +440,10 @@ void cm_FreeServerList(cm_serverRef_t** list)
     while (current)
     {
         next = current->next;
-        cm_FreeServer(current->server);
-        free(current);
+        if (--current->refCount == 0) {
+            cm_FreeServer(current->server);
+            free(current);
+        }
         current = next;
     }
   

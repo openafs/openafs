@@ -419,8 +419,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
                 if (code) continue;
                 
                 code = RXAFS_FetchACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid,
-			    &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 	cm_ReleaseSCache(scp);
         
@@ -485,8 +484,7 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if (code) continue;
                 
                 code = RXAFS_StoreACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid,
-			    &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	/* invalidate cache info, since we just trashed the ACL cache */
@@ -611,7 +609,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 		code = RXAFS_SetVolumeStatus(tcp->callp, scp->fid.volume,
 			&storeStat, volName, offLineMsg, motd);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, code));
+	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	/* return on failure */
@@ -669,7 +667,7 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 		code = RXAFS_GetVolumeStatus(tcp->callp, scp->fid.volume,
 			&volStat, &Name, &OfflineMsg, &MOTD);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, code));
+	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
 	code = cm_MapRPCError(code, &req);
 
 	cm_ReleaseSCache(scp);
@@ -695,43 +693,43 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	long code;
-        cm_scache_t *scp;
-        cm_cell_t *cellp;
-        cm_volume_t *tvp;
-	cm_serverRef_t *tsrp;
-        cm_server_t *tsp;
-        unsigned long volume;
-        char *cp;
-        cm_req_t req;
+    cm_scache_t *scp;
+    cm_cell_t *cellp;
+    cm_volume_t *tvp;
+	cm_serverRef_t *tsrp, *current;
+    cm_server_t *tsp;
+    unsigned long volume;
+    char *cp;
+    cm_req_t req;
 
 	cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
         
 	volume = scp->fid.volume;
 
 	cellp = cm_FindCellByID(scp->fid.cell);
-        osi_assert(cellp);
+    osi_assert(cellp);
 
-        cm_ReleaseSCache(scp);
+    cm_ReleaseSCache(scp);
 
 	code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
-        if (code) return code;
+    if (code) return code;
 	
-        cp = ioctlp->outDatap;
+    cp = ioctlp->outDatap;
         
 	lock_ObtainMutex(&tvp->mx);
 	tsrp = cm_GetVolServers(tvp, volume);
 	lock_ObtainRead(&cm_serverLock);
-	while(tsrp) {
-		tsp = tsrp->server;
+	for (current = tsrp; current; current = current->next) {
+		tsp = current->server;
 		memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
 		cp += sizeof(long);
-                tsrp = tsrp->next;
 	}
 	lock_ReleaseRead(&cm_serverLock);
-        lock_ReleaseMutex(&tvp->mx);
+    cm_FreeServerList(&tsrp);
+    lock_ReleaseMutex(&tvp->mx);
 
 	/* still room for terminating NULL, add it on */
 	volume = 0;	/* reuse vbl */
@@ -1007,14 +1005,14 @@ long cm_IoctlGetCacheParms(struct smb_ioctl *ioctlp, struct cm_user *userp)
 long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	long whichCell;
-        long magic = 0;
+    long magic = 0;
 	cm_cell_t *tcellp;
 	cm_serverRef_t *serverRefp;
-        cm_server_t *serverp;
+    cm_server_t *serverp;
 	long i;
-        char *cp;
-        char *tp;
-        char *basep;
+    char *cp;
+    char *tp;
+    char *basep;
 
 	cm_SkipIoctlPath(ioctlp);
 
@@ -1028,7 +1026,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		memcpy((char *)&magic, tp, sizeof(long));
 	}
 
-        lock_ObtainRead(&cm_cellLock);
+    lock_ObtainRead(&cm_cellLock);
 	for(tcellp = cm_allCellsp; tcellp; tcellp = tcellp->nextp) {
 		if (whichCell == 0) break;
 		whichCell--;
@@ -1044,15 +1042,16 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 			max = 13;
 		}
 		memset(cp, 0, max * sizeof(long));
-                basep = cp;
+        basep = cp;
 		lock_ObtainRead(&cm_serverLock);	/* for going down server list */
+        /* jaltman - do the reference counts to serverRefp contents need to be increased? */
 		serverRefp = tcellp->vlServersp;
 		for(i=0; i<max; i++) {
 			if (!serverRefp) break;
 			serverp = serverRefp->server;
 			memcpy(cp, &serverp->addr.sin_addr.s_addr, sizeof(long));
 			cp += sizeof(long);
-                        serverRefp = serverRefp->next;
+            serverRefp = serverRefp->next;
 		}
 		lock_ReleaseRead(&cm_serverLock);
 		cp = basep + max * sizeof(afs_int32);
@@ -1982,7 +1981,6 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
 	char afspath[MAX_PATH];
 	char *submountreqp;
-	int iteration;
 	int nextAutoSubmount;
     HKEY hkSubmounts;
     DWORD dwType, dwSize;
@@ -2021,7 +2019,6 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
     if (submountreqp && *submountreqp) {
 		char submountPathNormalized[MAX_PATH];
 		char submountPath[MAX_PATH];
-		int submountPathLen;
 
         dwSize = sizeof(submountPath);
         status = RegQueryValueEx( hkSubmounts, submountreqp, 0,

@@ -55,21 +55,9 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 	long code;
 
 	/* clear out old bindings */
-	while (tsrp = volp->rwServersp) {
-		volp->rwServersp = tsrp->next;
-		cm_PutServer(tsrp->server);
-		free(tsrp);
-	}
-	while (tsrp = volp->roServersp) {
-		volp->roServersp = tsrp->next;
-		cm_PutServer(tsrp->server);
-		free(tsrp);
-	}
-	while (tsrp = volp->bkServersp) {
-		volp->bkServersp = tsrp->next;
-		cm_PutServer(tsrp->server);
-		free(tsrp);
-	}
+    cm_FreeServerList(&volp->rwServersp);
+    cm_FreeServerList(&volp->roServersp);
+    cm_FreeServerList(&volp->bkServersp);
 
     /* now we have volume structure locked and held; make RPC to fill it */
     do {
@@ -79,7 +67,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 		osi_Log1(afsd_logp, "CALL VL_GetEntryByNameO name %s",
                   volp->namep);
         code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
-	} while (cm_Analyze(connp, userp, reqp, NULL, NULL, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
     code = cm_MapVLRPCError(code, reqp);
 
     if (code == 0) {
@@ -126,21 +114,28 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 			if ((tflags & VLSF_RWVOL)
                  && (vldbEntry.flags & VLF_RWEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
-				tsrp->next = volp->rwServersp;
-                volp->rwServersp = tsrp;
+                cm_InsertServerList(&volp->rwServersp, tsrp);
+                lock_ObtainWrite(&cm_serverLock);
+                tsrp->refCount--;       /* drop allocation reference */
+                lock_ReleaseWrite(&cm_serverLock);
 			}
             if ((tflags & VLSF_ROVOL)
                  && (vldbEntry.flags & VLF_ROEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
 				cm_InsertServerList(&volp->roServersp, tsrp);
+                lock_ObtainWrite(&cm_serverLock);
+                tsrp->refCount--;       /* drop allocation reference */
+                lock_ReleaseWrite(&cm_serverLock);
 				ROcount++;
             }
 			/* We don't use VLSF_BACKVOL !?! */
             if ((tflags & VLSF_RWVOL)
                  && (vldbEntry.flags & VLF_BACKEXISTS)) {
 				tsrp = cm_NewServerRef(tsp);
-                tsrp->next = volp->bkServersp;
-                volp->bkServersp = tsrp;
+                cm_InsertServerList(&volp->bkServersp, tsrp);
+                lock_ObtainWrite(&cm_serverLock);
+                tsrp->refCount--;       /* drop allocation reference */
+                lock_ReleaseWrite(&cm_serverLock);
 			}
 			/* Drop the reference obtained by cm_FindServer() */
 			cm_PutServer(tsp);
@@ -311,16 +306,24 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 cm_serverRef_t *cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
 {
 	cm_serverRef_t *serversp;
+    cm_serverRef_t *current;;
+
+    lock_ObtainWrite(&cm_serverLock);
 
 	if (volume == volp->rwID)
-        	serversp = volp->rwServersp;
+        serversp = volp->rwServersp;
 	else if (volume == volp->roID)
-        	serversp = volp->roServersp;
+        serversp = volp->roServersp;
 	else if (volume == volp->bkID)
-        	serversp = volp->bkServersp;
+        serversp = volp->bkServersp;
 	else osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
         
-        return serversp;
+    for (current = serversp; current; current = current->next)
+        current->refCount++;
+
+    lock_ReleaseWrite(&cm_serverLock);
+
+    return serversp;
 }
 
 void cm_PutVolume(cm_volume_t *volp)

@@ -91,6 +91,7 @@ extern void cm_InitReq(cm_req_t *reqp);
 extern int cm_Analyze(cm_conn_t *connp, struct cm_user *up, struct cm_req *reqp,
 	struct cm_fid *fidp,
 	struct AFSVolSync *volInfop,
+    struct cm_serverRef_t * serversp,
 	struct cm_callbackRequest *cbrp, long code);
 
 extern long cm_ConnByMServers(struct cm_serverRef *, struct cm_user *,

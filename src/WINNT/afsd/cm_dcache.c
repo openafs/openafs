@@ -173,7 +173,7 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         code = rx_EndCall(callp, code);
         osi_Log0(afsd_logp, "CALL StoreData DONE");
                 
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
     /* now, clean up our state */
@@ -266,7 +266,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 		if (code == 0)
 			code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
         code = rx_EndCall(callp, code);
-	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
     /* now, clean up our state */
@@ -1345,7 +1345,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
-	} while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);

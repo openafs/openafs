@@ -814,7 +814,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             code = RXAFS_FetchStatus(connp->callp, &tfid,
                                      &afsStatus, &callback, &volSync);
 
-		} while (cm_Analyze(connp, userp, reqp, &sfid, &volSync,
+		} while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
 		osi_Log0(afsd_logp, "CALL FetchStatus DONE");

@@ -45,12 +45,15 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 			tsp->cellp = cellp;
 	}
 	else
-        	tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
+        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp);
 
 	/* Insert the vlserver into a sorted list, sorted by server rank */
 	tsrp = cm_NewServerRef(tsp);
 	cm_InsertServerList(&cellp->vlServersp, tsrp);
-
+    /* drop the allocation reference */
+    lock_ObtainWrite(&cm_serverLock);
+    tsrp->refCount--;
+    lock_ReleaseWrite(&cm_serverLock);
 	return 0;
 }
 

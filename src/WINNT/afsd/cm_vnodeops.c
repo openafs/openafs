@@ -1114,8 +1114,7 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
                 code = RXAFS_RemoveFile(connp->callp, &afsFid, namep,
 					&newDirStatus, &volSync);
 		
-	} while (cm_Analyze(connp, userp, reqp,
-			    &dscp->fid, &volSync, NULL, code));
+	} while (cm_Analyze(connp, userp, reqp, &dscp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
         lock_ObtainMutex(&dscp->mx);
@@ -1630,7 +1629,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                         	&statStruct, &callbackStruct, &volSync);
 
 		} while (cm_Analyze(connp, userp, reqp, &dscp->fid,
-				    &volSync, &cbReq, code));
+				    &volSync, NULL, &cbReq, code));
                 code = cm_MapRPCError(code, reqp);
 
                 osi_Log0(afsd_logp, "CALL BulkStatus DONE");
@@ -1850,7 +1849,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
 			&afsInStatus, &afsOutStatus, &volSync);
 
 	} while (cm_Analyze(connp, userp, reqp,
-			    &scp->fid, &volSync, NULL, code));
+			    &scp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
 
 	osi_Log1(afsd_logp, "CALL StoreStatus DONE, code %d", code);
@@ -1923,7 +1922,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
 					&updatedDirStatus, &newFileCallback,
 					&volSync);
 	} while (cm_Analyze(connp, userp, reqp,
-			    &dscp->fid, &volSync, &cbReq, code));
+			    &dscp->fid, &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
         
         lock_ObtainMutex(&dscp->mx);
@@ -2039,7 +2038,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
 				     &updatedDirStatus, &newDirCallback,
 				     &volSync);
 	} while (cm_Analyze(connp, userp, reqp,
-			    &dscp->fid, &volSync, &cbReq, code));
+			    &dscp->fid, &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
         
         lock_ObtainMutex(&dscp->mx);
@@ -2121,7 +2120,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
 				     &inStatus, &newAFSFid, &newLinkStatus,
 				     &updatedDirStatus, &volSync);
 	} while (cm_Analyze(connp, userp, reqp,
-			    &dscp->fid, &volSync, NULL, code));
+			    &dscp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
         
         lock_ObtainMutex(&dscp->mx);
@@ -2190,7 +2189,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
                 code = RXAFS_RemoveDir(connp->callp, &dirAFSFid, namep,
 					&updatedDirStatus, &volSync);
 	} while (cm_Analyze(connp, userp, reqp,
-			    &dscp->fid, &volSync, NULL, code));
+			    &dscp->fid, &volSync, NULL, NULL, code));
         code = cm_MapRPCErrorRmdir(code, reqp);
         
         lock_ObtainMutex(&dscp->mx);
@@ -2330,7 +2329,7 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 			&updatedOldDirStatus, &updatedNewDirStatus,
                 	&volSync);
 	} while (cm_Analyze(connp, userp, reqp, &oldDscp->fid,
-			    &volSync, NULL, code));
+			    &volSync, NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
         
 	/* update the individual stat cache entries for the directories */
@@ -2402,7 +2401,7 @@ long cm_Lock(cm_scache_t *scp, unsigned char LockType,
 			code = RXAFS_SetLock(connp->callp, &tfid, Which,
 					     &volSync);
 		} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
-				    NULL, code));
+				    NULL, NULL, code));
 		lock_ObtainMutex(&scp->mx);
 		code = cm_MapRPCError(code, reqp);
 	}
@@ -2493,7 +2492,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
                 break;
 			code = RXAFS_ReleaseLock(connp->callp, &tfid, &volSync);
 		} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
-				    NULL, code));
+				    NULL, NULL, code));
 		code = cm_MapRPCError(code, reqp);
 		lock_ObtainMutex(&scp->mx);
 	}
@@ -2534,7 +2533,7 @@ void cm_CheckLocks()
 				code = RXAFS_ExtendLock(connp->callp, &tfid,
 							&volSync);
 			} while (cm_Analyze(connp, fileLock->userp, &req,
-					    &fileLock->fid, &volSync, NULL,
+					    &fileLock->fid, &volSync, NULL, NULL,
 					    code));
 			code = cm_MapRPCError(code, &req);
 			lock_ObtainWrite(&cm_scacheLock);
@@ -2602,7 +2601,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
 					     &volSync);
 		} while (cm_Analyze(connp, oldFileLock->userp, &req,
 				    &oldFileLock->fid, &volSync,
-				    NULL, code));
+				    NULL, NULL, code));
 		code = cm_MapRPCError(code, &req);
 	}
 
