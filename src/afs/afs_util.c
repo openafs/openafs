@@ -85,6 +85,16 @@ int afs_strcasecmp(char *s1, char *s2)
     return *s1 - *s2;
 }
 
+char *afs_strchr(char *s, int c)
+{
+    char *p;
+
+    for (p = s; *p; p++)
+	if (*p == c)
+	    return p;
+    return NULL;
+}
+
 char *afs_strdup(char *s)
 {
     char *n;

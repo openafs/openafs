@@ -638,6 +638,7 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
 extern int afs_strcasecmp(char *s1, char *s2);
 extern char *afs_strdup(char *s);
+extern char *afs_strchr(char *s, int c);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
