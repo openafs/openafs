@@ -112,7 +112,7 @@ int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
  	return avc->vc_error;
 
     startDate = osi_Time();
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     /* otherwise we read */
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
@@ -357,7 +357,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
  	return avc->vc_error;
 
     startDate = osi_Time();
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     /* otherwise we read */
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
@@ -720,7 +720,7 @@ int afs_closex(register struct file *afd)
 
     AFS_STATCNT(afs_closex);
     /* setup the credentials */
-    if (code = afs_InitReq(&treq, u.u_cred)) return code;
+    if ((code = afs_InitReq(&treq, u.u_cred))) return code;
     afs_InitFakeStat(&fakestat);
 
     closeDone = 0;
@@ -1005,7 +1005,7 @@ off_t start, stop;
 
     AFS_STATCNT(afs_fsync);
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
 
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);

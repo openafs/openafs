@@ -1060,7 +1060,7 @@ int afs_HandlePioctl(struct vcache *avc, afs_int32 acom,
     afs_Trace3(afs_iclSetp, CM_TRACE_PIOCTL, ICL_TYPE_INT32, acom & 0xff,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
-    if (code = afs_InitReq(&treq, *acred)) return code;
+    if ((code = afs_InitReq(&treq, *acred))) return code;
     afs_InitFakeStat(&fakestate);
     if (avc) {
 	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
@@ -1707,7 +1707,7 @@ DECL_PIOCTL(PGetTokens)
 	tokens, the primary cell indicator (an afs_int32 0) and the cell name
 	at the end, in that order.
     */
-    if (newStyle = (ainSize > 0)) {
+    if ((newStyle = (ainSize > 0))) {
 	memcpy((char *)&iterator, ain, sizeof(afs_int32));
     }
     i = UHash(areq->uid);

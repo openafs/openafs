@@ -2522,7 +2522,7 @@ int afs_icl_ZapSet(register struct afs_icl_set *setp)
 	    unpin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif
 	    for(i=0; i < ICL_LOGSPERSET; i++) {
-		if (tlp = setp->logs[i])
+		if ((tlp = setp->logs[i]))
 		    afs_icl_LogReleNL(tlp);
 	    }
 	    osi_FreeSmallSpace(setp);

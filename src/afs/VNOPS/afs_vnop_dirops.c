@@ -70,7 +70,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) 
+    if ((code = afs_InitReq(&treq, acred))) 
 	goto done2;
     afs_InitFakeStat(&fakestate);
 
@@ -204,7 +204,7 @@ afs_rmdir(adp, aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp, 
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
     afs_InitFakeStat(&fakestate);
 

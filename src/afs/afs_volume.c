@@ -75,7 +75,7 @@ static int afs_vtoi(register char *aname)
     register int tc;
     temp = 0;
     AFS_STATCNT(afs_vtoi);
-    while(tc = *aname++) {
+    while((tc = *aname++)) {
 	if (tc > '9' ||	tc < '0')
 	    return 0; /* invalid name */
 	temp *= 10;

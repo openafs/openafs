@@ -150,7 +150,7 @@ int tkt_MakeTicket (ticket, ticketLen, key, name, inst, cell,
     if (code) return -1;
 
     /* encrypt ticket */
-    if (code = key_sched (key, schedule)) {
+    if ((code = key_sched (key, schedule))) {
 	printf ("In tkt_MakeTicket: key_sched returned %d\n", code);
 	return RXKADBADKEY;
     }

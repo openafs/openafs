@@ -324,7 +324,7 @@ void shutdown_osinet(void)
   if (afs_cold_shutdown) {
     struct osi_packet *tp;
 
-    while (tp = freePacketList) {
+    while ((tp = freePacketList)) {
       freePacketList = tp->next;
       afs_osi_Free(tp, AFS_LRALLOCSIZ);
 #ifdef	AFS_AIX32_ENV
@@ -332,7 +332,7 @@ void shutdown_osinet(void)
 #endif
     }
 
-    while (tp = freeSmallList) {
+    while ((tp = freeSmallList)) {
       freeSmallList = tp->next;
       afs_osi_Free(tp, AFS_SMALLOCSIZ);
 #ifdef	AFS_AIX32_ENV

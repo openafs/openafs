@@ -343,7 +343,7 @@ void osi_linux_free(void *addr)
     
     lmem.chunk = addr;
     /* remove this chunk from our hash table */
-    if ( lmp = (struct osi_linux_mem *)afs_lhash_remove(lh_mem_htab, hash_chunk(addr), &lmem)) {
+    if ((lmp = (struct osi_linux_mem *)afs_lhash_remove(lh_mem_htab, hash_chunk(addr), &lmem))) {
         linux_free(lmp->chunk); /* this contains the piggybacked type info*/
         afs_atomlist_put(al_mem_pool, lmp); /* return osi_linux_mem struct to pool*/
         afs_linux_cur_allocs--;

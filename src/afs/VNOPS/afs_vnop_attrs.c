@@ -251,7 +251,7 @@ int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 
 	if (afs_nfsexporter) {
 	  if (!inited) {
-	    if (code = afs_InitReq(&treq, acred))
+	    if ((code = afs_InitReq(&treq, acred)))
 	      return code;
 	     inited = 1;
 	  }
@@ -269,7 +269,7 @@ int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
 	      }
 	  }
-	  if (au = afs_FindUser(treq.uid, -1, READ_LOCK)) {
+	  if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
 	    register struct afs_exporter *exporter = au->exporter;
 
 	    if (exporter && !(afs_nfsexporter->exp_states & EXP_UNIXMODE)) {
@@ -420,7 +420,7 @@ int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, struct AFS_UCRED
     AFS_STATCNT(afs_setattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
  
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);

@@ -673,12 +673,13 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	   tvc = QTOV(tq);
 	   uq = QPrev(tq);
 
-	   if (tvc->states & CVFlushed)
+	   if (tvc->states & CVFlushed) {
 		refpanic("CVFlushed on VLRU");
-	   else if (i++ > 2*afs_cacheStats) /* even allowing for a few xallocs...*/
+	   } else if (i++ > 2*afs_cacheStats) { /* even allowing for a few xallocs...*/
 		refpanic("Increase -stat parameter of afsd(VLRU cycle?)");
-	   else if (QNext(uq) != tq)
+	   } else if (QNext(uq) != tq) {
 		refpanic("VLRU inconsistent");
+	   }
 
 #ifdef AFS_DARWIN_ENV
 	   if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0) &&
@@ -1315,7 +1316,7 @@ static void afs_SimpleVStat(register struct vcache *avc,
 	  */
 #endif /* badidea */
 	  if (avc->Access && (ac = afs_FindAxs(avc->Access, areq->uid)))
-	    ac->axess =  astat->CallerAccess;
+	    ac->axess = astat->CallerAccess;
 	  else  /* not found, add a new one if possible */
 	    afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
     }
@@ -1493,7 +1494,7 @@ void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *
       {
 	struct axscache *ac;
 	if (avc->Access && (ac = afs_FindAxs(avc->Access, areq->uid)))
-	  ac->axess =  astat->CallerAccess;
+	  ac->axess = astat->CallerAccess;
 	else  /* not found, add a new one if possible */
 	  afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
       }

@@ -91,8 +91,7 @@ dev_t VnodeToDev(vnode_t *avp)
        osi_Panic("VnodeToDev called before cacheops initialized\n");
 }
 
-void *osi_UFSOpen(ainode)
-    afs_int32 ainode;
+void *osi_UFSOpen(afs_int32 ainode)
 {
     struct vnode *vp;
     struct vattr va;
@@ -133,9 +132,8 @@ void *osi_UFSOpen(ainode)
     return (void *)afile;
 }
 
-afs_osi_Stat(afile, astat)
-    register struct osi_file *afile;
-    register struct osi_stat *astat; {
+int afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+{
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
@@ -153,9 +151,8 @@ afs_osi_Stat(afile, astat)
     return code;
 }
 
-osi_UFSClose(afile)
-     register struct osi_file *afile;
-  {
+int osi_UFSClose(register struct osi_file *afile)
+{
       AFS_STATCNT(osi_Close);
       if(afile->vnode) {
 	AFS_RELE(afile->vnode);
@@ -163,11 +160,10 @@ osi_UFSClose(afile)
       
       osi_FreeSmallSpace(afile);
       return 0;
-  }
+}
 
-osi_UFSTruncate(afile, asize)
-    register struct osi_file *afile;
-    afs_int32 asize; {
+int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     struct vattr tvattr;
     register afs_int32 code;
@@ -190,8 +186,7 @@ osi_UFSTruncate(afile, asize)
     return code;
 }
 
-void osi_DisableAtimes(avp)
-struct vnode *avp;
+void osi_DisableAtimes(struct vnode *avp)
 {
 
 
@@ -209,11 +204,8 @@ struct vnode *avp;
 
 
 /* Generic read interface */
-afs_osi_Read(afile, offset, aptr, asize)
-    register struct osi_file *afile;
-    int offset;
-    char *aptr;
-    afs_int32 asize; {
+int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
@@ -249,11 +241,8 @@ afs_osi_Read(afile, offset, aptr, asize)
 }
 
 /* Generic write interface */
-afs_osi_Write(afile, offset, aptr, asize)
-    register struct osi_file *afile;
-    char *aptr;
-    afs_int32 offset;
-    afs_int32 asize; {
+int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
@@ -284,8 +273,7 @@ afs_osi_Write(afile, offset, aptr, asize)
 
 
 
-void
-shutdown_osifile()
+void shutdown_osifile(void)
 {
   extern int afs_cold_shutdown;
 

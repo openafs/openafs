@@ -338,9 +338,9 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
     afs_int32 newpag, code;
     AFS_STATCNT(AddPag);
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    if (code = setpag(p, credpp, aval, &newpag, 0))
+    if ((code = setpag(p, credpp, aval, &newpag, 0)))
 #else	/* AFS_OSF_ENV */
-    if (code = setpag(credpp, aval, &newpag, 0))
+    if ((code = setpag(credpp, aval, &newpag, 0)))
 #endif
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (code);

@@ -24,22 +24,16 @@ RCSID("$Header$");
 #include "../afs/nfsclient.h"
 #include "../afs/afs_osidnlc.h"
 
-#if	defined(AFS_HPUX102_ENV)
-#define AFS_FLOCK	k_flock
-#else
-#if	defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
-#define AFS_FLOCK       flock64
-#else
-#define AFS_FLOCK	flock
-#endif /* AFS_SUN65_ENV */
-#endif /* AFS_HPUX102_ENV */
-
+/* Static prototypes */
+static int HandleGetLock(register struct vcache *avc,
+        register struct AFS_FLOCK *af, register struct vrequest *areq, int clid);
 static int GetFlockCount(struct vcache *avc, struct vrequest *areq);
+static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp, 
+        register struct SimpleLocks *alp, int onlymine, int clid);
+static void DoLockWarning(void);
 
-void lockIdSet(flock, slp, clid)
-   int clid;  /* non-zero on SGI, OSF, SunOS, Darwin, xBSD *//* XXX ptr type */
-    struct SimpleLocks *slp;
-    struct AFS_FLOCK *flock;
+/* int clid;  * non-zero on SGI, OSF, SunOS, Darwin, xBSD ** XXX ptr type */
+void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
 #if	defined(AFS_SUN5_ENV)
     register proc_t *procp = ttoproc(curthread);    
@@ -146,13 +140,11 @@ void lockIdSet(flock, slp, clid)
  * to p_ppid?  Especially in the context of the lower loop, where
  * the repeated comparison doesn't make much sense...
  */
-static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
-    struct AFS_FLOCK *flock1;
-    struct vcache *vp;
-    register struct SimpleLocks *alp;
-    int onlymine;  /* don't match any locks which are held by my */
-		   /* parent */
-     int clid; /* Only Irix 6.5 for now. */
+/* onlymine - don't match any locks which are held by my parent */
+/* clid - only irix 6.5 */
+
+static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp, 
+	register struct SimpleLocks *alp, int onlymine, int clid)
 {
     register struct SimpleLocks *slp;
 #if	defined(AFS_SUN5_ENV)
@@ -166,7 +158,6 @@ static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
 #endif /* AFS_SGI64_ENV */
 #endif
 #endif
-    int code = 0;
 
     if (alp) {
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
@@ -219,12 +210,10 @@ static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
     file, I guess we'll permit it.  however, we don't want simple,
     innocent closes by children to unlock files in the parent process.
 */
-HandleFlock(avc, acom, areq, clid, onlymine)
-    pid_t clid;        /* non-zero on SGI, SunOS, OSF1 only */
-    register struct vcache *avc;
-    struct vrequest *areq;
-    int onlymine; 
-    int acom; {
+/* clid - nonzero on sgi sunos osf1 only */
+int HandleFlock(register struct vcache *avc, int acom, 
+	struct vrequest *areq, pid_t clid, int onlymine)
+{
     struct conn *tc;
     struct SimpleLocks *slp, *tlp, **slpp;
     afs_int32 code;
@@ -452,8 +441,9 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 
 
 /* warn a user that a lock has been ignored */
-afs_int32 lastWarnTime = 0;
-static void DoLockWarning() {
+afs_int32 lastWarnTime = 0; /* this is used elsewhere */
+static void DoLockWarning(void)
+{
     register afs_int32 now;
     now = osi_Time();
 
@@ -468,24 +458,18 @@ static void DoLockWarning() {
 
 
 #ifdef	AFS_OSF_ENV
-afs_lockctl(avc, af, flag, acred, clid, offset)
-struct eflock *af;
-int flag;
-pid_t clid;
-off_t offset;
+afs_lockctl(struct vcache *avc, struct eflock *af, int flag, 
+	struct AFS_UCRED *acred, pid_t clid, off_t offset)
 #else
 #if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-afs_lockctl(avc, af, acmd, acred, clid)
+afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred, pid_t clid)
 pid_t clid;
 #else
 u_int clid=0;
-afs_lockctl(avc, af, acmd, acred)
+afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred)
 #endif
-struct AFS_FLOCK *af;
-int acmd;
 #endif
-struct vcache *avc;
-struct AFS_UCRED *acred; {
+{
     struct vrequest treq;
     afs_int32 code;
 #ifdef	AFS_OSF_ENV
@@ -494,7 +478,7 @@ struct AFS_UCRED *acred; {
     struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_lockctl);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
@@ -604,11 +588,8 @@ struct AFS_UCRED *acred; {
  *       PID has the file read locked.
  */
 #ifndef	AFS_OSF_ENV	/* getlock is a no-op for osf (for now) */
-HandleGetLock(avc, af, areq, clid)
-    int clid;           /* not used by some OSes */
-    register struct vcache *avc;
-    register struct vrequest *areq;
-    register struct AFS_FLOCK *af; 
+static int HandleGetLock(register struct vcache *avc, 
+	register struct AFS_FLOCK *af, register struct vrequest *areq, int clid)
 {
     register afs_int32 code;
     struct AFS_FLOCK flock;
@@ -845,14 +826,12 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
 /* Flock not support on System V systems */
 #ifdef AFS_OSF_ENV
 extern struct fileops afs_fileops;
-afs_xflock (p, args, retval) 
-	struct proc *p;
-	void *args;
-	int *retval;
-{
+
+int afs_xflock (struct proc *p, void *args, int *retval) 
 #else /* AFS_OSF_ENV */
-afs_xflock () {
+int afs_xflock (void)
 #endif
+{
     int code = 0;
     struct a {
 	int fd;

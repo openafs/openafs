@@ -236,7 +236,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
 #endif
 
-    if (code = afs_InitReq(&treq, acred)) {
+    if ((code = afs_InitReq(&treq, acred))) {
 #ifdef  AFS_OSF_ENV
 	afs_PutVCache(adp, 0);
 	afs_PutVCache(tvc, 0);
@@ -422,7 +422,7 @@ int afs_remunlink(register struct vcache *avc, register int doit)
 	return 0;
 
     if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
-        if (code = afs_InitReq(&treq, avc->uncred)) {
+        if ((code = afs_InitReq(&treq, avc->uncred))) {
 	    ReleaseWriteLock(&avc->lock);
         }
 	else {

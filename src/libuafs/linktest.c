@@ -21,6 +21,8 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include <afs/afs_usrops.h>
 
+void uafs_Shutdown(void);
+
 int main(int argc, char **argv)
 {
     int port = 0;

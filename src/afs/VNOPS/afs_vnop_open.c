@@ -49,7 +49,7 @@ afs_open(avcp, aflags, acred)
     struct afs_fakestat_state fakestate;
     
     AFS_STATCNT(afs_open);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
 #ifdef AFS_SGI64_ENV
     /* avcpp can be, but is not necesarily, bhp's vnode. */
     tvc = VTOAFS(BHV_TO_VNODE(bhv));

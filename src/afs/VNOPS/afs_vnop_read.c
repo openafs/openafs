@@ -68,7 +68,7 @@ int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED 
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     if (!noLock) {
 	code = afs_VerifyVCache(avc, &treq);
 	if (code) {
@@ -598,7 +598,7 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     if (!noLock) {
       if (!avc) 
 	osi_Panic ("null avc in afs_UFSRead");

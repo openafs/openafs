@@ -438,6 +438,20 @@ extern void afs_osi_Sleep(int *event);
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
+#if defined(AFS_SUN57_64BIT_ENV)
+extern void *osi_UFSOpen(ino_t ainode);
+#else
+extern void *osi_UFSOpen(afs_int32 ainode);
+#endif
+extern int afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat);
+extern int osi_UFSClose(register struct osi_file *afile);
+extern int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize);
+extern void osi_DisableAtimes(struct vnode *avp);
+extern int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_int32 asize);
+extern int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr, afs_int32 asize);
+extern int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp);
+extern void shutdown_osifile(void);
+
 
 /* ARCH/osi_vnodeops.c */
 extern struct vnodeops Afs_vnodeops;
@@ -671,6 +685,13 @@ extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum v
 #endif /* AFS_OSF_ENV */
 extern int afs_LocalHero(register struct vcache *avc, register struct dcache *adc, 
         register AFSFetchStatus *astat, register int aincr);
+
+
+/* VNOPS/afs_vnop_flock.c */
+extern void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid);
+extern int HandleFlock(register struct vcache *avc, int acom,
+        struct vrequest *areq, pid_t clid, int onlymine);
+
 
 
 /* VNOPS/afs_vnop_lookup.c */

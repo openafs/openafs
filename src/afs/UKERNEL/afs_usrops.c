@@ -668,7 +668,7 @@ int lookupname(char *fnamep, int segflg, int followlink,
 /*
  * open a file given its i-node number
  */
-void *osi_UFSOpen(int ino)
+void *osi_UFSOpen(afs_int32 ino)
 {
     int rc;
     struct osi_file *fp;
@@ -726,7 +726,7 @@ int osi_UFSClose(struct osi_file *fp)
     return 0;
 }
 
-int osi_UFSTruncate(struct osi_file *fp, int len)
+int osi_UFSTruncate(struct osi_file *fp, afs_int32 len)
 {
     int rc;
 
@@ -744,7 +744,7 @@ int osi_UFSTruncate(struct osi_file *fp, int len)
     return 0;
 }
 
-int afs_osi_Read(struct osi_file *fp, int offset, char *buf, int len)
+int afs_osi_Read(struct osi_file *fp, int offset, char *buf, afs_int32 len)
 {
     int rc, ret;
     int code;
@@ -782,7 +782,7 @@ int afs_osi_Read(struct osi_file *fp, int offset, char *buf, int len)
     return ret;
 }
 
-int afs_osi_Write(struct osi_file *fp, int offset, char *buf, int len)
+int afs_osi_Write(struct osi_file *fp, afs_int32 offset, char *buf, afs_int32 len)
 {
     int rc, ret;
     int code;

@@ -39,6 +39,17 @@ extern int afs_shuttingdown;
 #endif
 #endif
 
+/* Moved from VNOPS/afs_vnop_flocks so can be used in prototypes */
+#if     defined(AFS_HPUX102_ENV)
+#define AFS_FLOCK       k_flock
+#else
+#if     defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
+#define AFS_FLOCK       flock64
+#else
+#define AFS_FLOCK       flock
+#endif /* AFS_SUN65_ENV */
+#endif /* AFS_HPUX102_ENV */
+
 /* The following are various levels of afs debugging */
 #define	AFSDEB_GENERAL		1	/* Standard debugging */
 #define	AFSDEB_NETWORK		2	/* low level afs networking */

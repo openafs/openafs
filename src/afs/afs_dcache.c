@@ -1546,7 +1546,7 @@ RetryGetDCache:
     shortcut = 0;
 
     /* check hints first! (might could use bcmp or some such...) */
-    if (tdc = avc->h1.dchint) {
+    if ((tdc = avc->h1.dchint)) {
 	int dcLocked;
 
 	/*

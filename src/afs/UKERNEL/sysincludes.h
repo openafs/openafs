@@ -1364,7 +1364,7 @@ struct	usr_user {
 #define u_rval1			u_r.r_val1
 #define u			(*(get_user_struct()))
 
-extern struct usr_user *get_user_struct();
+extern struct usr_user *get_user_struct(void);
 
 #define USR_DIRSIZE		2048
 

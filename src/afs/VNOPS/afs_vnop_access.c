@@ -190,7 +190,7 @@ int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, struct AFS_UCRED *acr
 		ICL_TYPE_INT32, amode,
 		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     afs_InitFakeStat(&fakestate);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
 
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {

@@ -75,9 +75,8 @@ void *osi_UFSOpen(afs_int32 ainode)
     return (void *)afile;
 }
 
-afs_osi_Stat(afile, astat)
-    register struct osi_file *afile;
-    register struct osi_stat *astat; {
+int afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+{
     register afs_int32 code;
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi,320);
@@ -106,9 +105,8 @@ int osi_UFSClose(register struct osi_file *afile)
       return 0;
   }
 
-osi_UFSTruncate(afile, asize)
-    register struct osi_file *afile;
-    afs_int32 asize; {
+int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     register afs_int32 code;
     struct osi_stat tstat;
@@ -161,11 +159,8 @@ osi_UFSTruncate(afile, asize)
 
 
 /* Generic read interface */
-afs_osi_Read(afile, offset, aptr, asize)
-    register struct osi_file *afile;
-    int offset;
-    char *aptr;
-    afs_int32 asize; {
+int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     size_t resid;
     register afs_int32 code;
@@ -200,11 +195,8 @@ afs_osi_Read(afile, offset, aptr, asize)
 }
 
 /* Generic write interface */
-afs_osi_Write(afile, offset, aptr, asize)
-    register struct osi_file *afile;
-    char *aptr;
-    afs_int32 offset;
-    afs_int32 asize; {
+int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr, afs_int32 asize)
+{
     struct AFS_UCRED *oldCred;
     size_t resid;
     register afs_int32 code;
@@ -233,9 +225,7 @@ afs_osi_Write(afile, offset, aptr, asize)
 /*  This work should be handled by physstrat in ca/machdep.c.
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
-int afs_osi_MapStrategy(aproc, bp)
-    int (*aproc)();
-    register struct buf *bp;
+int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp)
 {
     afs_int32 returnCode;
 
@@ -245,8 +235,7 @@ int afs_osi_MapStrategy(aproc, bp)
     return returnCode;
 }
 
-void
-shutdown_osifile()
+void shutdown_osifile(void)
 {
   extern int afs_cold_shutdown;
 

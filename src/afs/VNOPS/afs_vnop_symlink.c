@@ -80,7 +80,7 @@ afs_symlink
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 
     afs_InitFakeStat(&fakestate);
@@ -342,7 +342,7 @@ afs_readlink(OSI_VC_ARG(avc), auio, acred)
 
     AFS_STATCNT(afs_readlink);
     afs_Trace1(afs_iclSetp, CM_TRACE_READLINK, ICL_TYPE_POINTER, avc);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     afs_InitFakeStat(&fakestat);
     code = afs_EvalFakeStat(&avc, &fakestat, &treq);
     if (code) goto done;

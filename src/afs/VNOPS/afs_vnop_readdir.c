@@ -529,7 +529,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
         || AfsLargeFileSize(auio->uio_offset, auio->uio_resid) )
 	return EFBIG;
 
-    if (code = afs_InitReq(&treq, acred)) {
+    if ((code = afs_InitReq(&treq, acred))) {
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);
 #endif

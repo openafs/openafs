@@ -71,7 +71,7 @@ char *afs_strcat(register char *s1, register char *s2)
 	while (*s1++)
 		;
 	--s1;
-	while (*s1++ = *s2++)
+	while ((*s1++ = *s2++))
 		;
 	return (os1);
 }
@@ -81,7 +81,7 @@ char *afs_index(register char *a, register char c)
 {
     register char tc;
     AFS_STATCNT(afs_index);
-    while (tc = *a) {
+    while ((tc = *a)) {
 	if (tc == c) return a;
 	else a++;
     }
@@ -873,10 +873,10 @@ tagain:
 	}
 	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq) 
 	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent4");
+	{   refpanic ("Bulkstat VLRU inconsistent4"); }
 	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq) 
 	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) 
-	   refpanic ("Bulkstat VLRU inconsistent5");
+	{   refpanic ("Bulkstat VLRU inconsistent5"); }
 
 	if (tvcp != lruvcp) {  /* if they are == don't move it, don't corrupt vlru */
 	   QRemove(&tvcp->vlruq);
@@ -888,10 +888,10 @@ tagain:
 	}
 	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq) 
 	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent5");
+	{   refpanic ("Bulkstat VLRU inconsistent5"); }
 	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq) 
 	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent6");
+	{   refpanic ("Bulkstat VLRU inconsistent6"); }
 	ReleaseWriteLock(&afs_xvcache);
 
 	ObtainWriteLock(&afs_xcbhash, 494);
@@ -1059,7 +1059,7 @@ afs_lookup(adp, aname, avcp, acred)
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done;
 
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
@@ -1081,7 +1081,7 @@ afs_lookup(adp, aname, avcp, acred)
     bulkcode = 0;
 
     if (!(adp->states & CStatd)) {
-	if (code = afs_VerifyVCache2(adp, &treq)) {
+	if ((code = afs_VerifyVCache2(adp, &treq))) {
 	    goto done;
 	}
     }

@@ -37,7 +37,7 @@ struct axscache *afs_SlowFindAxs(struct axscache **cachep, afs_int32 id)
 	    return(i);
 	}
 
-	if (j=i->next) {   /* ASSIGNMENT HERE! */
+	if ((j=i->next)) {   /* ASSIGNMENT HERE! */
 	    if (j->uid == id) {
 		axs_Front(cachep,i,j);
 		return(j);
@@ -58,7 +58,7 @@ struct axscache *axs_Alloc(void)
     int k;
 
     ObtainWriteLock(&afs_xaxs,174);
-    if (h = afs_axsfreelist) {
+    if ((h = afs_axsfreelist)) {
 	afs_axsfreelist = h->next;
     } else {
 	h=i=j= (struct axscache *) afs_osi_Alloc(NAXSs * sizeof(struct axscache));
@@ -111,7 +111,7 @@ void afs_RemoveAxs(struct axscache **headp, struct axscache *axsp)
 		axs_Free(axsp);
 		return;
 	    }
-	    if (i = j->next) {   /* ASSIGNMENT HERE! */
+	    if ((i = j->next)) {   /* ASSIGNMENT HERE! */
 		j->next = i->next;
 		axs_Free(axsp);
 		return;
