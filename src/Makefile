@@ -9,14 +9,14 @@ SHELL=/bin/sh
 DESTDIR=dest/
 SRCDIR=${DESTDIR}
 INSTALL=${SRCDIR}bin/install
-WASHTOOL=${SRCDIR}bin/washtool
+WASHTOOL=true
 
 #WASHTOOLRCSUPDATE=${WASHTOOL} rcsupdate
 WASHTOOLCMD=make
 WASHTOOLFLAGS=-argument install
 
 COMPILE_PART1=cd obj; cd 
-COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/
+COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=$(shell pwd)/${SYS_NAME}/dest/ SRCDIR=$(shell pwd)/${SYS_NAME}/dest/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
@@ -324,7 +324,7 @@ KERNELDIR= \
   rxkad \
   util \
   libacl \
-  vlserver \
+	vlserver \
   sgiefs  \
   rxstat
 
@@ -344,7 +344,7 @@ UKERNELDIR= \
   rxstat
 
 
-libafs: minproject libafs_setup ${KERNELDIR}
+libafs: minproject libafs_setup  ${KERNELDIR} 
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
 libuafs: minproject libuafs_setup ${UKERNELDIR}
@@ -431,7 +431,7 @@ libadmin: libafsauthent bozo
 	${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
 
-finale: project cmd comerr afsd allrcmds butc tbutc libafs libuafs audit kauth log package \
+finale: project cmd comerr afsd allrcmds butc tbutc  libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth tests libafsrpc \
 	libafsauthent libadmin
