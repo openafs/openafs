@@ -1,6 +1,13 @@
-/* Test ktc related calls as well as some file access stuff. */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
-/* Copyright (C) 1990, 1989 Transarc Corporation - All rights reserved */
+/* Test ktc related calls as well as some file access stuff. */
 
 #include <sys/types.h>
 #include <errno.h>

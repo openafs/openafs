@@ -1,10 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #ifndef TRANSARC_AFS_KAS_ADMIN_H
 #define TRANSARC_AFS_KAS_ADMIN_H
-
-/*
- * Copyright (C)  1998  Transarc Corporation.  All rights reserved.
- *
- */
 
 #include <afs/param.h>
 #include <afs/afs_Admin.h>

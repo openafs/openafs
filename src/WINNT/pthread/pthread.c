@@ -1,7 +1,13 @@
 /*
- * Copyright (C)  1999, 1998  Transarc Corporation.  All rights reserved.
- *
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * This file contains a skeleton pthread implementation for NT.
  * This is not intended to be a fully compliant pthread implementation
  * The purpose of this file is to only implement those functions that

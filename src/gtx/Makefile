@@ -1,9 +1,11 @@
-#
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 # Makefile for gtx, a display-independent, object-oriented window toolkit.
-#
-#	(C) Copyright Transarc Corporation 1990, 1989
-#	Licensed Materials - Property of Transarc
-#	All Rights Reserved.
 
 
 SHELL=/bin/sh

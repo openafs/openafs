@@ -1,3 +1,12 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 /* selserver.c tests the IOMGR_Select interface. Specifically it verifies
  * that the read/write/exception lists work correctly with file descriptors
  * larger than 31. Generally, the calls to IOMGR_Select pass in all the

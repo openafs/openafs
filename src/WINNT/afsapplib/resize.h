@@ -1,4 +1,13 @@
 /*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * I've FINALLY stuck this in a separate file; I must have twenty different
  * implementations floating around these days.  Anyway, here's my generic
  * let-your-dialog-resize-and-still-look-cool code; an example of how to use

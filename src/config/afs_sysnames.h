@@ -1,11 +1,13 @@
-#ifndef __AFS_SYSNAMES_INCL_ENV_
-#define __AFS_SYSNAMES_INCL_ENV_ 1
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /*
- * (C) Copyright Transarc Corporation 1998, 1992
- * Licensed Materials - Property of Transarc
- * All Rights Reserved.
- *
  * File: afs_sysnames.h
  *
  * Macros defining AFS systypes and their associated IDs, and generating
@@ -13,6 +15,10 @@
  *
  * Groups of 100 IDs have been allocated to each major system type.
  */
+
+#ifndef __AFS_SYSNAMES_INCL_ENV_
+#define __AFS_SYSNAMES_INCL_ENV_ 1
+
 #ifndef	IGNORE_STDS_H
 #include "stds.h"
 #endif

@@ -1,4 +1,10 @@
-#
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 # Test input file for uss bulk processing, doing both adds and deletes.
 # Note: there are some lines with intentional errors, so that this file
 # may be used for testing.

@@ -1,8 +1,14 @@
-@comment {
+@comment (
 /*
- * (C) COPYRIGHT IBM CORPORATION 1988, 1989
- * LICENSED MATERIALS - PROPERTY OF IBM
- */ )
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+)
 @comment (
   Revision 1.2  89/02/20  13:08:52
   Fixed copyright notice to not interfere w/ comment syntax.

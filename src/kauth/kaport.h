@@ -1,4 +1,13 @@
 /*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * some macros to permit a couple of new features while remaining compatible 
  * and reasonably portable...
  * could tighten up 0 and 3 a little, but I've left them like this for now 

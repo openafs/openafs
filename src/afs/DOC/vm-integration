@@ -1,3 +1,10 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
 Here's a quick guide to understanding the AFS 3 VM integration.  This
 will help you do AFS 3 ports, since one of the trickiest parts of an
 AFS 3 port is the integration of the virtual memory system with the

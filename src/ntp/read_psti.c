@@ -1,3 +1,12 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
 #if	defined(REFCLOCK) && defined(PSTI)
 #ifndef	lint
 static char *sccsid = "@(#)read_psti.c	1.1	MS/ACF	89/02/17";

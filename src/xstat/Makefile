@@ -1,11 +1,12 @@
-#
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 # Makefile for the module providing the client side of the File Server
 # and Cache Manager extended statistics gathering.
-#
-#	(C) Copyright Transarc Corporation 1990
-#	Licensed Materials - Property of Transarc
-#	All Rights Reserved.
-#
 SHELL = /bin/sh
 COMPONENT=xstat
 include ../config/Makefile.${SYS_NAME}

@@ -1,13 +1,11 @@
 /*
- * Copyright (C) 1997  Transarc Corporation.
- * All rights reserved.
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
-
-// afs_shl_ext.odl : type library source for afs_shl_ext.dll
-
-// This file will be processed by the MIDL compiler to produce the
-// type library (afsshell.tlb).
 
 [ uuid(DC515C1A-6CAC-11D1-BAE7-00C04FD140D2), version(1.0) ]
 library afs_shl_ext

@@ -1,11 +1,14 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #ifndef lint
 #endif
-
-/*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * LICENSED MATERIALS - PROPERTY OF IBM
- */
 /* This is the directory salvager.  It consists of two routines.  The first, DirOK, checks to see if the directory looks good.  If the directory does NOT look good, the approved procedure is to then call Salvage, which copies all the good entries from the damaged dir into a new directory. */
 
 #include <afs/param.h>

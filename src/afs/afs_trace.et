@@ -1,3 +1,10 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 error_table 2 zcm
 	ec	CM_TRACE_NULL, "dummy"
 	ec	CM_TRACE_PAGEIN, "getapage vp 0x%lx off 0x%x len 0x%x rw=0x%x"

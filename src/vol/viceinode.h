@@ -1,21 +1,23 @@
-
-#ifndef _VICEINODE_H_
-#define _VICEINODE_H_
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
 #endif
-
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * LICENSED MATERIALS - PROPERTY OF IBM
- */
-/*
-
 	System:		VICE-TWO
 	Module:		viceinode.h
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
+
+#ifndef _VICEINODE_H_
+#define _VICEINODE_H_
 
 /* The four inode parameters for most inodes (files, directories,
    symbolic links) */

@@ -1,11 +1,13 @@
 #!/bin/perl
-#
-# AFSinstall
-#
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
 # A Perl5 script to install AFS from a distribution directory. Installs in
 # sets called "packages", and offers a Tk based GUI for ease of use.
-#
-# Copyright 1998 Transarc Corporation
 #
 
 $| = 1;

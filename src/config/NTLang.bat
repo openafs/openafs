@@ -1,7 +1,12 @@
 @echo off
+rem Copyright 2000, International Business Machines Corporation and others.
+rem All Rights Reserved.
+rem 
+rem This software has been released under the terms of the IBM Public
+rem License.  For details, see the LICENSE file in the top-level source
+rem directory or online at http://www.openafs.org/dl/license10.html
+
 REM AFS build environment language selection for Windows NT.
-REM
-REM Copyright (C) 1999  Transarc Corporation.  All rights reserved.
 REM ########################################################################
 
 

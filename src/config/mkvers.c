@@ -1,4 +1,11 @@
-/* Copyright Transarc Corporation 1998 */
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 /* Make the AFS_component_version_number.c file. Do it in C since there's no
  * guarantee of perl on an NT platform.

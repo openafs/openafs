@@ -1,10 +1,13 @@
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * LICENSED MATERIALS - PROPERTY OF IBM
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 /*
- *
  * File		physio.cx
  * NOTE		This is NOT the standard physio.cx for venus or, yet alone, vice.
  *              It is a test one for use in src/dir.

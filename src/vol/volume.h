@@ -1,21 +1,23 @@
-
-#ifndef __volume_h
-#define	__volume_h  1
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
 
 #if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
 #endif
-
 /*
- * (C) COPYRIGHT IBM CORPORATION 1987
- * LICENSED MATERIALS - PROPERTY OF IBM
- */
-/*
-
 	System:		VICE-TWO
 	Module:		volume.h
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
+
+#ifndef __volume_h
+#define	__volume_h  1
 
 #include <afs/afssyscalls.h>
 #include "voldefs.h"

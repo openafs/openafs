@@ -1,4 +1,13 @@
 /*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * generator.c -- phase 2 of the generator.
  *
  * takes a file, which has a list of signature as input,

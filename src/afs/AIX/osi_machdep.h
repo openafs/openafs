@@ -1,6 +1,13 @@
-/* Copyright (C) 1995 Transarc Corporation - All rights reserved. */
 /*
- *
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
  * AIX OSI header file. Extends afs_osi.h.
  *
  * afs_osi.h includes this file, which is the only way this file should
