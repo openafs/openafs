@@ -30,6 +30,7 @@ static int fs_timeout(), fs_getstat(), fs_setstat(), fs_delete();
 static int fs_procexit(), fs_getstring(), fs_getparm(), fs_restartp();
 static int fs_hascore();
 struct bnode *fs_create();
+struct bnode *fsmr_create();
 
 static SetNeedsClock();
 static NudgeProcs();
@@ -80,20 +81,26 @@ struct fsbnode {
     char *filecmd;		    /* command to start primary file server */
     char *volcmd;		    /* command to start secondary vol server */
     char *salcmd;		    /* command to start salvager */
+    char *scancmd;                  /* command to start scanner (MR-AFS) */
     struct bnode_proc *fileProc;    /* process for file server */
     struct bnode_proc *volProc;	    /* process for vol server */
     struct bnode_proc *salProc;	    /* process for salvager */
-    afs_int32 lastFileStart;		    /* last start for file */
-    afs_int32 lastVolStart;		    /* last start for vol */
+    struct bnode_proc *scanProc;    /* process for scanner (MR-AFS) */
+    afs_int32 lastFileStart;        /* last start for file */
+    afs_int32 lastVolStart;         /* last start for vol */
+    afs_int32 lastScanStart;        /* last start for scanner (MR-AFS) */
     char fileRunning;		    /* file process is running */
     char volRunning;		    /* volser is running */
     char salRunning;		    /* salvager is running */
+    char scanRunning;               /* scanner is running (MR_AFS) */
     char fileSDW;		    /* file shutdown wait */
     char volSDW;		    /* vol shutdown wait */
     char salSDW;		    /* waiting for the salvager to shutdown */
+    char scanSDW;                   /* scanner shutdown wait (MR_AFS) */
     char fileKillSent;		    /* kill signal has been sent */
     char volKillSent;
     char salKillSent;
+    char scanKillSent;              /* kill signal has been sent (MR_AFS) */
     char needsSalvage;		    /* salvage before running */
     char needsClock;		    /* do we need clock ticks */
 };
@@ -118,6 +125,10 @@ register struct ezbnode *abnode; {
 
     /* see if salvager left a core file */
     bnode_CoreName(abnode, "salv", tbuffer);
+    if (access(tbuffer, 0) == 0) return 1;
+
+    /* see if scanner left a core file (MR-AFS) */
+    bnode_CoreName(abnode, "scan", tbuffer);
     if (access(tbuffer, 0) == 0) return 1;
 
     /* no one left a core file */
@@ -155,6 +166,22 @@ register struct fsbnode *abnode; {
     if (tstat.st_ctime > abnode->lastVolStart) code = 1;
     else code = 0;
     bnode_FreeTokens(tt);
+    if (code) return code;
+
+    if (abnode->scancmd) {                     /* Only in MR-AFS */
+        /* now do same for scancmd (MR-AFS) */
+        code = bnode_ParseLine(abnode->scancmd, &tt);
+        if (code) return 0;
+        if (!tt) return 0;
+        code = stat(tt->key, &tstat);
+        if (code) {
+            bnode_FreeTokens(tt);
+            return 0;
+	}
+        if (tstat.st_ctime > abnode->lastScanStart) code = 1;
+        else code = 0;
+        bnode_FreeTokens(tt); 
+    }
 
     return code;
 }
@@ -210,6 +237,7 @@ struct fsbnode *abnode; {
     free(abnode->filecmd);
     free(abnode->volcmd);
     free(abnode->salcmd);
+    if (abnode->scancmd) free(abnode->scancmd);
     free(abnode);
     return 0;
 }
@@ -229,15 +257,16 @@ static void AppendExecutableExtension(char *cmd)
 #endif /* AFS_NT40_ENV */
 
 
-struct bnode *fs_create(ainstance, afilecmd, avolcmd, asalcmd)
+struct bnode *fs_create(ainstance, afilecmd, avolcmd, asalcmd, ascancmd)
 char *ainstance;
 char *afilecmd;
 char *avolcmd;
-char *asalcmd; {
+char *asalcmd; 
+char *ascancmd; {
     struct stat tstat;
     register struct fsbnode *te;
     char cmdname[AFSDIR_PATH_MAX];
-    char *fileCmdpath, *volCmdpath, *salCmdpath;
+    char *fileCmdpath, *volCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
 
     fileCmdpath = volCmdpath = salCmdpath = NULL;
@@ -254,6 +283,13 @@ char *asalcmd; {
     if (ConstructLocalBinPath(asalcmd, &salCmdpath)) {
 	bozo_Log("BNODE: command path invalid '%s'\n", asalcmd);
 	bailout = 1;
+    }
+
+    if (strlen(ascancmd)) {
+       if (ConstructLocalBinPath(ascancmd, &scanCmdpath)) {
+            bozo_Log("BNODE: command path invalid '%s'\n", ascancmd);
+            bailout = 1;
+       }
     }
 
     if (!bailout) {
@@ -283,6 +319,17 @@ char *asalcmd; {
 	    bozo_Log("BNODE: salvager binary '%s' not found\n", cmdname);
 	    bailout = 1;
 	}
+
+        if (strlen(ascancmd)) {
+	    sscanf(scanCmdpath, "%s", cmdname);
+#ifdef AFS_NT40_ENV
+	    AppendExecutableExtension(cmdname);
+#endif
+	    if (stat(cmdname, &tstat)) {
+		bozo_Log("BNODE: scanner binary '%s' not found\n", cmdname);
+		bailout = 1;
+	    }
+	}
     }
 
     if (bailout) {
@@ -295,6 +342,10 @@ char *asalcmd; {
     te->filecmd = fileCmdpath;
     te->volcmd = volCmdpath;
     te->salcmd = salCmdpath;
+    if (strlen(ascancmd))
+       te->scancmd = scanCmdpath;
+    else 
+       te->scancmd = (char *)0;
     bnode_InitBnode(te, &fsbnode_ops, ainstance);
     bnode_SetTimeout(te, POLLTIME);	/* ask for timeout activations every 10 seconds */
     RestoreSalFlag(te);		/* restore needsSalvage flag based on file's existence */
@@ -333,6 +384,14 @@ struct fsbnode *abnode; {
 		     FSSDTIME);
 	}
     }
+    if (abnode->scanSDW) {
+        if (!abnode->scanKillSent && now - abnode->timeSDStarted > SDTIME) {
+            bnode_StopProc(abnode->scanProc, SIGKILL);
+            abnode->scanKillSent = 1;
+            bozo_Log("bos shutdown: scanner failed to shutdown within %d seconds\n",
+                     SDTIME);
+        }
+    }
     SetNeedsClock(abnode);
 }
 
@@ -340,11 +399,13 @@ static int fs_getstat(abnode, astatus)
 struct fsbnode *abnode;
 afs_int32 *astatus; {
     register afs_int32 temp;
-    if (abnode->volSDW || abnode->fileSDW || abnode->salSDW) temp = BSTAT_SHUTTINGDOWN;
+    if (abnode->volSDW || abnode->fileSDW || abnode->salSDW || abnode->scanSDW)
+	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->salRunning) temp = BSTAT_NORMAL;
-    else if (abnode->volRunning && abnode->fileRunning) temp = BSTAT_NORMAL;
-    else if (!abnode->salRunning && !abnode->volRunning && !abnode->fileRunning)
-	temp = BSTAT_SHUTDOWN;
+    else if (abnode->volRunning && abnode->fileRunning && (!abnode->scancmd || 
+       abnode->scanRunning)) temp = BSTAT_NORMAL;
+    else if (!abnode->salRunning && !abnode->volRunning && !abnode->fileRunning
+        && !abnode->scanRunning) temp = BSTAT_SHUTDOWN;
     else temp = BSTAT_STARTINGUP;
     *astatus = temp;
     return 0;
@@ -390,6 +451,12 @@ struct bnode_proc *aproc; {
 	abnode->salSDW = 0;
 	abnode->salKillSent = 0;
     }
+    else if (aproc == abnode->scanProc) {
+        abnode->scanProc = 0;
+        abnode->scanRunning = 0;
+        abnode->scanSDW = 0;
+        abnode->scanKillSent = 0;
+    }
 
     /* now restart anyone who needs to restart */
     return NudgeProcs(abnode);
@@ -397,10 +464,13 @@ struct bnode_proc *aproc; {
 
 /* make sure we're periodically checking the state if we need to */
 static SetNeedsClock(ab)
-register struct fsbnode *ab; {
-    if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning)
+    register struct fsbnode *ab; 
+{
+    if (ab->b.goal == 1 && ab->fileRunning && ab->volRunning
+       && (!ab->scancmd || ab->scanRunning))
 	ab->needsClock = 0; /* running normally */
-    else if (ab->b.goal == 0 && !ab->fileRunning && !ab->volRunning && !ab->salRunning)
+    else if (ab->b.goal == 0 && !ab->fileRunning && !ab->volRunning 
+	     && !ab->salRunning && !ab->scanRunning)
 	ab->needsClock = 0; /* halted normally */
     else ab->needsClock	= 1;	/* other */
     if (ab->needsClock && !bnode_PendingTimeout(ab))
@@ -437,6 +507,16 @@ register struct fsbnode *abnode; {
 		    abnode->volRunning = 1;
 		}
 	    }
+	    if (abnode->scancmd) {
+		if (!abnode->scanRunning) {
+		    abnode->lastScanStart = FT_ApproxTime();
+		    code = bnode_NewProc(abnode, abnode->scancmd, "scanner", &tp);
+		    if (code == 0) {
+			abnode->scanProc = tp;
+			abnode->scanRunning = 1;
+		    }
+		}
+	    }    
 	}
 	else {	/* file is not running */
 	    /* see how to start */
@@ -459,6 +539,15 @@ register struct fsbnode *abnode; {
 			abnode->volRunning = 1;
 		    }
 		}
+		if (abnode->scancmd && !abnode->scanRunning) {
+                    abnode->lastScanStart = FT_ApproxTime();
+                    code = bnode_NewProc(abnode, abnode->scancmd, "scanner",
+                                         &tp);
+                    if (code == 0) {
+                        abnode->scanProc = tp;
+                        abnode->scanRunning = 1;
+                    }
+                }
 	    }
 	    else {  /* needs to be salvaged */
 		/* make sure file server and volser are gone */
@@ -472,7 +561,13 @@ register struct fsbnode *abnode; {
 		    if (!abnode->fileSDW) abnode->timeSDStarted = now;
 		    abnode->fileSDW = 1;
 		}
-		if (abnode->volRunning || abnode->fileRunning) return 0;
+                if (abnode->scanRunning) {
+                    bnode_StopProc(abnode->scanProc, SIGTERM);
+                    if (!abnode->scanSDW) abnode->timeSDStarted = now;
+                    abnode->scanSDW = 1;
+                }
+		if (abnode->volRunning || abnode->fileRunning 
+		    || abnode->scanRunning) return 0;
 		/* otherwise, it is safe to start salvager */
 		if (!abnode->salRunning) {
 		    code = bnode_NewProc(abnode, abnode->salcmd, "salv", &tp);
@@ -501,6 +596,11 @@ register struct fsbnode *abnode; {
 	    abnode->volSDW = 1;
 	    abnode->timeSDStarted = now;
 	}
+        if (abnode->scanRunning && !abnode->scanSDW) {
+            bnode_StopProc(abnode->scanProc, SIGTERM);
+            abnode->scanSDW = 1;
+            abnode->timeSDStarted = now;
+        }
     }
     SetNeedsClock(abnode);
     return 0;
@@ -514,7 +614,18 @@ afs_int32 alen;{
     if (abnode->b.goal == 1) {
 	if (abnode->fileRunning) {
 	    if (abnode->fileSDW) strcpy(abuffer, "file server shutting down");
-	    else if (!abnode->volRunning) strcpy(abuffer, "file server up; volser down");
+	    else if (abnode->scancmd) {
+                if (!abnode->volRunning && !abnode->scanRunning)
+                    strcpy(abuffer, "file server up; volser and scanner down");
+		else if (abnode->volRunning && !abnode->scanRunning)
+                    strcpy(abuffer, "file server up; volser up; scanner down");
+		else if (!abnode->volRunning && abnode->scanRunning)
+                    strcpy(abuffer, "file server up; volser down; scanner up");
+
+		else strcpy(abuffer, "file server running");
+	    } 
+	    else if (!abnode->volRunning) 
+		strcpy(abuffer, "file server up; volser down");
 	    else strcpy(abuffer, "file server running");
 	}
 	else if (abnode->salRunning) {
@@ -524,7 +635,7 @@ afs_int32 alen;{
     }
     else {
 	/* shutting down */
-	if (abnode->fileRunning || abnode->volRunning) {
+	if (abnode->fileRunning || abnode->volRunning || abnode->scanRunning) {
 	    strcpy(abuffer, "file server shutting down");
 	}
 	else if (abnode->salRunning)
@@ -545,6 +656,8 @@ afs_int32  alen; {
 	strcpy(abuffer, abnode->volcmd);
     else if (aindex == 2)
 	strcpy(abuffer, abnode->salcmd);
+    else if (aindex == 3 && abnode->scancmd)
+	strcpy(abuffer, abnode->scancmd);
     else
 	return BZDOM;
     return 0;
