@@ -1862,7 +1862,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC00000CCL;	/* Bad network name */
 	}
 	else if (code == CM_ERROR_NOIPC) {
-		NTStatus = 0xC00000CCL;	/* Bad network name */
+		NTStatus = 0xC0000022L;	/* Access Denied */
 	}
 	else if (code == CM_ERROR_CLOCKSKEW) {
 		NTStatus = 0xC0000133L;	/* Time difference at DC */
@@ -1986,8 +1986,8 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 		error = 6;
 	}
 	else if (code == CM_ERROR_NOIPC) {
-		class = 1;
-		error = 66;
+		class = 2;
+		error = 4; /* bad access */
 	}
 	else if (code == CM_ERROR_CLOCKSKEW) {
 		class = 1;	/* invalid function */
@@ -5881,17 +5881,17 @@ void InitNCBslot(int idx)
 void smb_Listener(void *parmp)
 {
 	NCB *ncbp;
-        long code;
-        long len;
+    long code;
+    long len;
 	long i, j;
-        smb_vc_t *vcp;
-	int flags;
+    smb_vc_t *vcp;
+	int flags = 0;
 	char rname[NCBNAMSZ+1];
 	char cname[MAX_COMPUTERNAME_LENGTH+1];
 	int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
 #ifdef DJGPP
-        dos_ptr dos_ncb;
-        time_t now;
+    dos_ptr dos_ncb;
+    time_t now;
 #endif /* DJGPP */
 	int lana = (int) parmp;
 
@@ -6059,6 +6059,7 @@ void smb_NetbiosInit()
     int delname_tried=0;
     int len;
     int lana_found = 0;
+    OSVERSIONINFO Version;
 
     /*******************************************************************/
     /*      ms loopback adapter scan                                   */
@@ -6075,6 +6076,11 @@ void smb_NetbiosInit()
     /*      AFAIK, this is the default for the ms loopback adapter.*/
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     /*******************************************************************/
+
+    /* Get the version of Windows */
+    memset(&Version, 0x00, sizeof(Version));
+    Version.dwOSVersionInfoSize = sizeof(Version);
+    GetVersionEx(&Version);
 
     /* setup the NCB system */
     ncbp = GetNCB();
@@ -6108,39 +6114,54 @@ void smb_NetbiosInit()
         ncbp->ncb_callname[2] = 100;
         ncbp->ncb_lana_num = lana_list.lana[i];
         code = Netbios(ncbp);
-        if (code == 0) code = ncbp->ncb_retcode;
+        if (code == 0) 
+            code = ncbp->ncb_retcode;
         if (code != 0) {
-	    sprintf(s, "Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
-	    afsi_log(s);
-	    lana_list.lana[i] = 255;  /* invalid lana */
+            sprintf(s, "Netbios NCBRESET lana %d error code %d", lana_list.lana[i], code);
+            afsi_log(s);
+            lana_list.lana[i] = 255;  /* invalid lana */
         } else {
             sprintf(s, "Netbios NCBRESET lana %d succeeded", lana_list.lana[i]);
             afsi_log(s);
-	    /* check to see if this is the "Microsoft Loopback Adapter"        */
-	    memset( ncbp, 0, sizeof (*ncbp) );
-	    ncbp->ncb_command = NCBASTAT;
-	    ncbp->ncb_lana_num = lana_list.lana[i];
-	    strcpy( ncbp->ncb_callname,  "*               " );
-	    ncbp->ncb_buffer = (char *) &Adapter;
-	    ncbp->ncb_length = sizeof(Adapter);
-	    code = Netbios( ncbp );
+            memset( ncbp, 0, sizeof (*ncbp) );
+            ncbp->ncb_command = NCBASTAT;
+            ncbp->ncb_lana_num = lana_list.lana[i];
+            strcpy( ncbp->ncb_callname,  "*               " );
+            ncbp->ncb_buffer = (char *) &Adapter;
+            ncbp->ncb_length = sizeof(Adapter);
+            code = Netbios( ncbp );
 	    
-	    if ( code == 0 ) {
-		wla_found = TRUE;
-		for (j=0; wla_found && (j<6); j++)
-		    wla_found = ( Adapter.status.adapter_address[j] == kWLA_MAC[j] );
-		
-		if ( wla_found ) {
-		    sprintf(s, "Windows Loopback Adapter detected lana %d", lana_list.lana[i]);
-		    afsi_log(s);
-		    
-		    /* select this lana; no need to continue */
-		    lana_list.length = 1;
-		    lana_list.lana[0] = lana_list.lana[i];
-		    break;
-		}
-	    }
-	}
+            if ( code == 0 ) {
+                wla_found = TRUE;
+                for (j=0; wla_found && (j<6); j++)
+                    wla_found = ( Adapter.status.adapter_address[j] == kWLA_MAC[j] );
+
+                if ( wla_found ) {
+                    /*
+                     * check to see if this is the Microsoft Loopback Adapter"
+                     * if we are running on Windows XP or higher
+                     */
+                    if ( Version.dwPlatformId == VER_PLATFORM_WIN32_NT &&
+                         ( Version.dwMajorVersion > 5 ||
+                           Version.dwMajorVersion == 5 &&
+                           Version.dwMinorVersion >= 1 )
+                 )  
+                    {
+                        sprintf(s, "Windows Loopback Adapter detected lana %d", lana_list.lana[i]);
+                        afsi_log(s);
+
+                        /* select this lana; no need to continue */
+                        lana_list.length = 1;
+                        lana_list.lana[0] = lana_list.lana[i];
+                        break;
+                    } else {
+                        sprintf(s, "Windows Loopback Adapter disabled lana %d", lana_list.lana[i]);
+                        afsi_log(s);
+                        lana_list.lana[i] = 255; /* invalid lana */
+                    }
+                }
+            }
+        }
     }
 #else
     /* for DJGPP, there is no NCBENUM and NCBRESET is a real reset.  so
@@ -6270,16 +6291,16 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
 {
 	thread_t phandle;
-        int lpid;
-        int i;
-        long code;
-        int len;
-        NCB *ncbp;
+    int lpid;
+    int i;
+    long code;
+    int len;
+    NCB *ncbp;
 	struct tm myTime;
 	char s[100];
 #ifdef DJGPP
-        int npar, seg, sel;
-        dos_ptr rawBuf;
+    int npar, seg, sel;
+    dos_ptr rawBuf;
 #endif /* DJGPP */
 
 #ifndef DJGPP

@@ -167,7 +167,7 @@ BOOL InitInstance(
 	main_rect.right  = GetDeviceCaps(hDC, HORZRES);
 	main_rect.top    = GetDeviceCaps(hDC, LOGPIXELSY) / 4;   /* 1/4 inch */
 	ReleaseDC(hWnd, hDC);
-	main_rect.bottom = rect.top + nLineHeight;
+	main_rect.bottom = main_rect.top + nLineHeight;
 
 	osi_InitPanic(afsd_notifier);
 

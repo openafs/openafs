@@ -2113,6 +2113,7 @@ register struct cmd_syndesc *as; {
 	    }
 	}
     }
+    return(0);
 }
 
 
