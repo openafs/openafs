@@ -61,6 +61,30 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	ubc_release(vp);
 	ubc_info_free(vp);
     }
+#else
+    /* This is literally clean_up_name_parent_ptrs() */
+    /* Critical to clean up any state attached to the vnode here since it's
+       being recycled, and we're not letting refcnt drop to 0 to trigger
+       normal recycling. */
+    if (VNAME(vp) || VPARENT(vp)) {
+	char *tmp1;
+	struct vnode *tmp2;
+
+	/* do it this way so we don't block before clearing 
+	   these fields. */
+	tmp1 = VNAME(vp);
+	tmp2 = VPARENT(vp);
+	VNAME(vp) = NULL;
+	VPARENT(vp) = NULL;
+            
+	if (tmp1) {
+	    remove_name(tmp1);
+	}
+            
+	if (tmp2) {
+	    vrele(tmp2);
+	}
+    }
 #endif
 
     AFS_GLOCK();
@@ -177,6 +201,12 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 	simple_unlock(&vp->v_interlock);
 	AFS_RELE(vp);
 	return;
+    }
+    if (ISSET(vp->v_flag, VUINACTIVE)) {
+	simple_unlock(&vp->v_interlock);
+        AFS_RELE(vp);
+        printf("vnode %x still inactive!", vp);
+        return;
     }
 #ifdef AFS_DARWIN14_ENV
     if (vp->v_ubcinfo->ui_refcount > 1 || vp->v_ubcinfo->ui_mapped) {
