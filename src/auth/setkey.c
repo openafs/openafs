@@ -8,14 +8,26 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#include <stdio.h>
 #include <WINNT/afsreg.h>
 #include <WINNT/afsevent.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #include "cellconfig.h"
@@ -23,9 +35,10 @@
 #include <afs/afsutil.h>
 
 #include "AFS_component_version_number.c"
-int char2hex(char c);
-int hex2char(char c);
+static int char2hex(char c);
+static int hex2char(char c);
 
+int
 main(argc, argv)
 int argc;
 char **argv; {
@@ -67,7 +80,7 @@ char **argv; {
 
 	code = afsconf_AddKey(tdir, atoi(argv[2]), tkey, 1);
 	if (code) {
-	    printf("setkey: failed to set key, code %d.\n", code);
+	    printf("setkey: failed to set key, code %d.\n", (int) code);
 	    exit(1);
 	}
     }
@@ -80,7 +93,7 @@ char **argv; {
 	kvno = atoi(argv[2]);
 	code = afsconf_DeleteKey(tdir, kvno);
 	if (code) {
-	    printf("setkey: failed to delete key %d, (code %d)\n", kvno, code);
+	    printf("setkey: failed to delete key %d, (code %d)\n", (int) kvno, (int) code);
 	    exit(1);
 	}
     }
@@ -91,7 +104,7 @@ char **argv; {
 	
 	code = afsconf_GetKeys(tdir, &tkeys);
 	if (code) {
-	    printf("setkey: failed to get keys, code %d\n", code);
+	    printf("setkey: failed to get keys, code %d\n", (int) code);
 	    exit(1);
 	}
 	for(i=0;i<tkeys.nkeys;i++) {
@@ -107,19 +120,19 @@ char **argv; {
 	      hexbuf[j*2+1] =  hex2char( c  % 16);
 	    }
 	    hexbuf[16]='\0';
-	    printf("kvno %4d: key is '%s' (0x%s)\n", tkeys.key[i].kvno, tbuffer, hexbuf);
+	    printf("kvno %4d: key is '%s' (0x%s)\n", (int) tkeys.key[i].kvno, tbuffer, hexbuf);
 	  }
 	}
 	printf("All done.\n");
     }
     else {
-	printf("setkey: unknown operation '%s', type 'setkey' for assistance\n");
+	printf("setkey: unknown operation '%s', type 'setkey' for assistance\n", argv[1]);
 	exit(1);
     }
     exit(0);
 }
 
-int char2hex(char c)
+static int char2hex(char c)
 {
   if (c >= '0' && c <='9')
     return ( c - 48);
@@ -132,7 +145,7 @@ int char2hex(char c)
   return -1;
 }
 
-int hex2char(char c)
+static int hex2char(char c)
 {
   if (c <=9)
     return (c+48);
