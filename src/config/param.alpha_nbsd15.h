@@ -7,11 +7,9 @@
 
 #define AFS_64BIT_ENV	1
 
-#define AFS_ALPHA_ENV 1
-
 #define SYS_NAME       "alpha_nbsd15"
 #define SYS_NAME_ID    SYS_NAME_ID_alpha_nbsd15
 
-#define AFSBIG_ENDIAN 1
+#define AFSLITTLE_ENDIAN 1
 
 #endif	/* AFS_PARAM_COMMON_H */
