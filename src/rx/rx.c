@@ -899,7 +899,7 @@ static void rxi_DestroyConnectionNoLock(conn)
 				   RX_CALL_REFCOUNT_DELAY);
 		    if (call->state == RX_STATE_PRECALL ||
 			call->state == RX_STATE_ACTIVE) {
-			rxi_SendDelayedAck(call->delayedAckEvent, call, 0);
+			rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
 		    } else {
 			rxi_AckAll((struct rxevent *)0, call, 0);
 		    }
