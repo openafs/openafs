@@ -131,7 +131,7 @@ extern int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid);
 extern int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
         afs_int32 *a_srvr_addr, afs_int32 *a_srvr_rank);
 extern int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
-    char **a_name, afs_int32 *a_hosts);
+    char **a_name, serverList *a_hosts);
 extern int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name);
 extern int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
         afs_uint32 *serverVersion, afs_uint32 *configCount, cacheConfig *config);

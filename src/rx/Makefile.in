@@ -540,6 +540,8 @@ ${DESTDIR}${includedir}/rx/rx_null.h: rx_null.h
 ${DESTDIR}${includedir}/rx/xdr_prototypes.h: xdr_prototypes.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
 
 dest: ${DEST}/lib/librx.a \
 	${DEST}/include/rx/rx_packet.h \
