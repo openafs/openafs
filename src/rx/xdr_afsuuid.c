@@ -11,11 +11,11 @@
  * xdr_afsuuid.c, XDR routine for built in afsUUID data type.
  */
 
-#include "afs/param.h"
 #include <afsconfig.h>
+#include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_afsuuid.c,v 1.7 2003/07/15 23:16:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_afsuuid.c,v 1.8 2004/05/15 04:53:30 shadow Exp $");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV

@@ -16,6 +16,7 @@
 #include "afsd.h"
 #include "afsd_init.h"
 #include "smb.h"
+#include "cm_conn.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -466,11 +467,11 @@ PowerNotificationThreadNotify()
 	DWORD		dwRet = 0;
 	BOOL		bRet  = FALSE;
 
-	// Notify thread of power event, and wait 19 seconds
+	// Notify thread of power event, and wait for the HardDead timeout period
 	dwRet = SignalObjectAndWait(
 				gThreadInfo.hEventPowerEvent,	// object to signal
 				gThreadInfo.hEventResumeMain,	// object to watch
-				19*1000,						// timeout (ms)
+				HardDeadtimeout*1000,			// timeout (ms)
 				FALSE							// alertable
 				);
 

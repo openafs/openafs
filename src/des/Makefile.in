@@ -53,9 +53,6 @@ all: \
 #
 # Build rules
 #
-.c.o:
-	${CC} -c ${CFLAGS} $<
-
 
 PICTARGET =../pic/des
 PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))

@@ -98,7 +98,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 	                                code = RXAFS_GetTime(connp->callp, &secs, &usecs);
 	                        }
 				if (wasDown)
-					rx_SetConnDeadTime(connp->callp, CM_CONN_CONNDEADTIME);
+					rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
 	                        cm_PutConn(connp);
 			}	/* got an unauthenticated connection to this server */
 
@@ -390,6 +390,33 @@ void cm_RandomizeServer(cm_serverRef_t** list)
     lock_ReleaseWrite(&cm_serverLock);
 }
 
+/* call cm_FreeServer while holding a write lock on cm_serverLock */
+void cm_FreeServer(cm_server_t* server)
+{
+    if (--(server->refCount) == 0)
+    {
+        /* we need to check to ensure that all of the connections
+         * for this server have a 0 refCount; otherwise, they will
+         * not be garbage collected 
+         */
+        cm_GCConnections(&server);  /* connsp */
+
+        lock_FinalizeMutex(&server->mx);
+        if ( cm_allServersp == server )
+            cm_allServersp = server->allNextp;
+        else {
+            cm_server_t *tsp;
+
+            for(tsp = cm_allServersp; tsp->allNextp; tsp=tsp->allNextp) {
+                if ( tsp->allNextp == server ) {
+                    tsp->allNextp = server->allNextp;
+                    break;
+                }
+            }
+        }
+    }
+ }
+
 void cm_FreeServerList(cm_serverRef_t** list)
 {
     cm_serverRef_t  *current = *list;
@@ -399,9 +426,10 @@ void cm_FreeServerList(cm_serverRef_t** list)
 
     while (current)
     {
-	   next = current->next;
-	   free(current);
-	   current = next;
+        next = current->next;
+        cm_FreeServer(current->server);
+        free(current);
+        current = next;
     }
   
     lock_ReleaseWrite(&cm_serverLock);

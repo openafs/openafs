@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/testpt.c,v 1.13 2003/12/07 22:49:35 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/testpt.c,v 1.14 2004/06/23 14:27:42 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -55,9 +55,8 @@ static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */
 static char conf_dir[100];
 static char lcell[MAXCELLCHARS];
 
-ListUsedIds(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+ListUsedIds(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     namelist lnames;
@@ -184,9 +183,7 @@ afs_int32 *groupOwners;		/* ids of owners of groups */
 int nUsers, nGroups, nAdds, nRems, nUDels, nGDels;
 
 int
-IdCmp(a, b)
-     afs_int32 *a;
-     afs_int32 *b;
+IdCmp(afs_int32 *a, afs_int32 *b)
 {
     if (*a > *b) {
 	return 1;
@@ -198,16 +195,13 @@ IdCmp(a, b)
 }
 
 static int
-sqr(n)
-     int n;
+sqr(int n)
 {
     return n * n;
 }
 
 static int
-GetGroupLimit(N, x)
-     int N;
-     int x;
+GetGroupLimit(int N, int x)
 {
     int y;
     double sqrt();
@@ -239,8 +233,7 @@ GetGroupLimit(N, x)
 }
 
 void
-CreateUser(u)
-     int u;
+CreateUser(int u)
 {
     afs_int32 code;
     char name[16];
@@ -278,8 +271,7 @@ CreateUser(u)
 }
 
 void
-CreateGroup(g)
-     int g;
+CreateGroup(int g)
 {
     afs_int32 code;
     char name[16];
@@ -347,8 +339,7 @@ CreateGroup(g)
 }
 
 int
-DeleteRandomId(list)
-     afs_int32 *list;
+DeleteRandomId(afs_int32 *list)
 {
     afs_int32 code;
     afs_int32 id;
@@ -376,8 +367,7 @@ DeleteRandomId(list)
 }
 
 void
-AddUser(u, g)
-     int u, g;
+AddUser(int u, int g)
 {
     afs_int32 code;
     afs_int32 ui, gi;
@@ -400,8 +390,7 @@ AddUser(u, g)
 }
 
 void
-RemUser(u, g)
-     int u, g;
+RemUser(int u, int g)
 {
     afs_int32 code;
     afs_int32 ui, gi;
@@ -419,9 +408,8 @@ RemUser(u, g)
     nRems++;
 }
 
-TestManyMembers(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+TestManyMembers(struct cmd_syndesc *as, char *arock)
 {
     char *filled;		/* users filled up */
     char *cleaned;		/* users cleaned up */
@@ -736,11 +724,10 @@ TestManyMembers(as, arock)
 /* Converts a byte string to ascii.  Return the number of unconverted bytes. */
 
 static int
-ka_ConvertBytes(ascii, alen, bs, bl)
-     char *ascii;		/* output buffer */
-     int alen;			/* buffer length */
-     char bs[];			/* byte string */
-     int bl;			/* number of bytes */
+ka_ConvertBytes(char *ascii,		/* output buffer */
+		int alen,		/* buffer length */
+		char bs[],		/* byte string */
+		int bl)			/* number of bytes */
 {
     int i;
     unsigned char c;
@@ -778,9 +765,8 @@ ka_ConvertBytes(ascii, alen, bs, bl)
  *     must be correct.
  */
 
-TestPrServ(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+TestPrServ(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 id;
     char name[PR_MAXNAMELEN + 1];
@@ -926,9 +912,7 @@ static char tmp_cell_file[128] = "";
 static char tmp_noauth_file[128] = "";
 
 static int
-MyAfterProc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+MyAfterProc(struct cmd_syndesc *as, char *arock)
 {
     if (strlen(tmp_conf_file))
 	unlink(tmp_conf_file);
@@ -942,9 +926,7 @@ MyAfterProc(as, arock)
 }
 
 static int
-MyBeforeProc(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+MyBeforeProc(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     int i;
@@ -1079,8 +1061,7 @@ MyBeforeProc(as, arock)
 }
 
 static void
-add_std_args(ts)
-     register struct cmd_syndesc *ts;
+add_std_args(register struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 12);
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
@@ -1102,9 +1083,8 @@ osi_audit()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int 
+main(int argc, char *argv[])
 {
     afs_int32 code;
     struct cmd_syndesc *ts;	/* ptr to parsed command line syntax */

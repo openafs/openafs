@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.9 2003/07/15 23:17:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10 2004/06/24 17:38:39 shadow Exp $");
 
 #include <stdio.h>
 #define VICE
@@ -380,6 +380,7 @@ setup(dev)
 	return (-1);
 #endif
 #ifdef AFS_NEWCG_ENV
+# ifndef AFS_SUN510_ENV
     if (sblock.fs_interleave < 1) {
 	pwarn("IMPOSSIBLE INTERLEAVE=%d IN SUPERBLOCK", sblock.fs_interleave);
 	sblock.fs_interleave = 1;
@@ -390,6 +391,7 @@ setup(dev)
 	    dirty(&asblk);
 	}
     }
+# endif /* AFS_SUN510_ENV */
 #endif /* AFS_NEWCG_ENV */
 #ifdef AFS_NEWCG_ENV
     if (sblock.fs_npsect < sblock.fs_nsect) {
@@ -471,7 +473,9 @@ setup(dev)
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN3_ENV)
 #ifdef	AFS_SUN5_ENV
 	    sblock.fs_npsect = 0;
+# ifndef AFS_SUN510_ENV
 	    sblock.fs_interleave = 0;
+# endif
 	    sblock.fs_state = FSOKAY - sblock.fs_time;	/* make mountable */
 #else
 	    fs_set_state(&sblock, FSOKAY - sblock.fs_time);
@@ -739,7 +743,9 @@ readsb(listerr)
      */
     altsblock.fs_fsbtodb = sblock.fs_fsbtodb;
 #ifdef AFS_NEWCG_ENV
+# ifndef AFS_SUN510_ENV
     altsblock.fs_interleave = sblock.fs_interleave;
+# endif
     altsblock.fs_npsect = sblock.fs_npsect;
     altsblock.fs_nrpos = sblock.fs_nrpos;
 #endif /* AFS_NEWCG_ENV */

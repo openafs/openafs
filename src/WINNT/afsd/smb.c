@@ -82,7 +82,7 @@ smb_ncb_t *smb_ncbFreeListp;
 
 int smb_NumServerThreads;
 
-int numNCBs, numSessions;
+int numNCBs, numSessions, numVCs;
 
 int smb_maxVCPerServer;
 int smb_maxMpxRequests;
@@ -728,6 +728,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	if (!vcp && (flags & SMB_FLAG_CREATE)) {
 		vcp = malloc(sizeof(*vcp));
 		memset(vcp, 0, sizeof(*vcp));
+        vcp->vcID = numVCs++;
 		vcp->refCount = 1;
 		vcp->tidCounter = 1;
 		vcp->fidCounter = 1;
@@ -845,7 +846,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
 		uidp->vcp = vcp;
         vcp->refCount++;
 		vcp->usersp = uidp;
-		lock_InitializeMutex(&uidp->mx, "uid_t mutex");
+		lock_InitializeMutex(&uidp->mx, "user_t mutex");
 		uidp->userID = uid;
 		osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[%x] new-uid[%d] name[%s]",(int)vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
 	}
@@ -1200,13 +1201,12 @@ int smb_ListShares()
 }
 
 /* find a shareName in the table of submounts */
-int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
+int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	char **pathNamep)
 {
 	DWORD len;
 	char pathName[1024];
 	char *var;
-	smb_user_t *uidp;
 	char temp[1024];
 	DWORD sizeTemp;
     char sbmtpath[MAX_PATH];
@@ -1274,25 +1274,19 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
         while (1)
         {
             if (var = smb_stristr(p, VNUserName)) {
-                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
                 if (uidp && uidp->unp)
                     smb_subst(p, var, sizeof(VNUserName),uidp->unp->name);
                 else
                     smb_subst(p, var, sizeof(VNUserName)," ");
-                if (uidp)
-                    smb_ReleaseUID(uidp);
             }
             else if (var = smb_stristr(p, VNLCUserName)) 
             {
-                uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
                 if (uidp && uidp->unp)
                     strcpy(temp, uidp->unp->name);
                 else 
                     strcpy(temp, " ");
                 _strlwr(temp);
                 smb_subst(p, var, sizeof(VNLCUserName), temp);
-                if (uidp)
-                    smb_ReleaseUID(uidp);
             }
             else if (var = smb_stristr(p, VNComputerName)) 
             {
@@ -2005,6 +1999,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 	unsigned long NTStatus;
 
 	/* map CM_ERROR_* errors to NT 32-bit status codes */
+    /* NT Status codes are listed in ntstatus.h not winerror.h */
 	if (code == CM_ERROR_NOSUCHCELL) {
 		NTStatus = 0xC000000FL;	/* No such file */
 	}
@@ -2100,11 +2095,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC0000023L;	/* Buffer too small */
 	}
     else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-#ifdef COMMENT
-		NTStatus = 0xC000049CL; /* Potential file found */
-#else
 		NTStatus = 0xC0000035L;	/* Object name collision */
-#endif
     }
 	else {
 		NTStatus = 0xC0982001L;	/* SMB non-specific error */
@@ -2704,6 +2695,7 @@ long smb_ReceiveCoreGetDiskAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *rsp)
 {
 	smb_tid_t *tidp;
+    smb_user_t *uidp;
 	unsigned short newTid;
 	char shareName[256];
 	char *sharePath;
@@ -2731,7 +2723,10 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 	lock_ReleaseMutex(&vcp->mx);
         
 	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
-	shareFound = smb_FindShare(vcp, inp, shareName, &sharePath);
+    uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
+	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
+    if (uidp)
+        smb_ReleaseUID(uidp);
 	if (!shareFound) {
 		smb_ReleaseTID(tidp);
 		return CM_ERROR_BADSHARENAME;
@@ -6693,7 +6688,8 @@ void smb_Listener(void *parmp)
          * we run out.
          */
 
-        osi_assert(i < Sessionmax && numNCBs < NCBmax - 1);
+        osi_assert(i < Sessionmax - 1);
+        osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
 
 		LSNs[i] = ncbp->ncb_lsn;
 		lanas[i] = ncbp->ncb_lana_num;
@@ -7030,6 +7026,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_NetbiosInit();
 
 	/* Initialize listener and server structures */
+    numVCs = 0;
 	memset(dead_sessions, 0, sizeof(dead_sessions));
     sprintf(eventName, "SessionEvents[0]");
 	SessionEvents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);

@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.40 2003/12/07 22:49:43 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41 2004/05/15 06:11:40 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -864,7 +864,12 @@ ObtainSalvageLock(void)
 #else
     salvageLock =
 	afs_open(AFSDIR_SERVER_SLVGLOCK_FILEPATH, O_CREAT | O_RDWR, 0666);
-    assert(salvageLock >= 0);
+    if (salvageLock < 0) {
+	fprintf(stderr,
+		"salvager:  can't open salvage lock file %s, aborting\n",
+		AFSDIR_SERVER_SLVGLOCK_FILEPATH);
+	Exit(1);
+    }
 #ifdef AFS_DARWIN_ENV
     if (flock(salvageLock, LOCK_EX) == -1) {
 #else

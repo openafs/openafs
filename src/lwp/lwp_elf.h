@@ -34,8 +34,9 @@
 /*
  * For common usage of elf platforms
  *
- * $Id: lwp_elf.h,v 1.1 2003/09/24 19:02:05 shadow Exp $
+ * $Id: lwp_elf.h,v 1.2 2004/06/24 17:38:32 shadow Exp $
  */
+#include <afs/param.h>
 
 #ifndef _C_LABEL
 #if !defined(SYSV) && !defined(__ELF__) && !defined(AFS_SUN5_ENV)

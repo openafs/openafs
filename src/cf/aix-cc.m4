@@ -1,5 +1,5 @@
 dnl
-dnl $Id: aix-cc.m4,v 1.1 2002/08/15 21:10:23 shadow Exp $
+dnl $Id: aix-cc.m4,v 1.2 2004/06/03 05:13:29 shadow Exp $
 dnl 
 
 dnl We do not quite know how the version number of the xlc
@@ -14,7 +14,7 @@ dnl vac.C 4.4.0.0		440
 dnl vac.C 5.0.2.1		502
 dnl
 
-AC_DEFUN(AC_AIX_CC_GOOD, [
+AC_DEFUN([AC_AIX_CC_GOOD], [
 AIXCC="$CC"
 save_CC="$CC"
 if test "$CC" ; then

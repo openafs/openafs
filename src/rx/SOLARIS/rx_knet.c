@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.16 2003/07/15 23:16:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.17 2004/06/24 17:38:34 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -52,10 +52,12 @@ int (*sockfs_sosendmsg)
   (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
 int (*sockfs_sosetsockopt)
   (struct sonode *, int, int, void *, int) = NULL;
+#ifndef AFS_SUN510_ENV
 int (*sockfs_sounbind)
   (struct sonode *, int);
 void (*sockfs_sockfree)
   (struct sonode *);
+#endif
 
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
@@ -70,6 +72,9 @@ rxi_GetIFInfo()
     ill_t *ill;
     ipif_t *ipif;
     int rxmtu, maxmtu;
+#ifdef AFS_SUN510_ENV
+    ill_walk_context_t ctx;
+#endif
 
     int mtus[ADDRSPERSITE];
     afs_uint32 addrs[ADDRSPERSITE];
@@ -78,7 +83,11 @@ rxi_GetIFInfo()
     memset(mtus, 0, sizeof(mtus));
     memset(addrs, 0, sizeof(addrs));
 
+#ifdef AFS_SUN510_ENV
+    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+#else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
+#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
@@ -144,6 +153,9 @@ rxi_FindIfMTU(afs_uint32 addr)
     afs_uint32 myAddr, netMask;
     int match_value = 0;
     int mtu = -1;
+#ifdef AFS_SUN510_ENV
+    ill_walk_context_t ctx;
+#endif
 
     if (numMyNetAddrs == 0)
 	rxi_GetIFInfo();
@@ -158,7 +170,11 @@ rxi_FindIfMTU(afs_uint32 addr)
     else
 	netMask = 0;
 
+#ifdef AFS_SUN510_ENV
+    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+#else
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
+#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)
@@ -254,6 +270,7 @@ rxk_NewSocket(short aport)
 	    return NULL;
 	}
     }
+#ifndef AFS_SUN510_ENV
     if (sockfs_sounbind == NULL) {
 	sockfs_sounbind = (int (*)())modlookup("sockfs", "sounbind");
 	if (sockfs_sounbind == NULL)
@@ -264,6 +281,7 @@ rxk_NewSocket(short aport)
 	if (sockfs_sockfree == NULL)
 	    return NULL;
     }
+#endif
 
     accessvp = sockfs_solookup(AF_INET, SOCK_DGRAM, 0, "/dev/udp", &error);
     if (accessvp == NULL) {
@@ -307,6 +325,7 @@ osi_FreeSocket(register struct osi_socket *asocket)
     struct sockaddr_in taddr;
     struct iovec dvec;
     char c;
+    vnode_t *vp;
 
     AFS_STATCNT(osi_FreeSocket);
 
@@ -322,8 +341,14 @@ osi_FreeSocket(register struct osi_socket *asocket)
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
 
+#ifdef AFS_SUN510_ENV
+    vp = SOTOV(so);
+    VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED());
+    VN_RELE(vp);
+#else
     sockfs_sounbind(so, 0);
     sockfs_sockfree(so);
+#endif
     return 0;
 }
 

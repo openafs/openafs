@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.8 2003/08/08 21:20:46 shadow Exp $ */
+/* $Id: pt_util.c,v 1.9 2004/06/23 14:27:41 shadow Exp $ */
 
 /*
  *
@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.8 2003/08/08 21:20:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.9 2004/06/23 14:27:41 shadow Exp $");
 
 #include <afs/cmd.h>		/*Command line parsing */
 #include <errno.h>
@@ -97,9 +97,8 @@ int nflag = 0;
 int wflag = 0;
 int flags = 0;
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
 
     register struct cmd_syndesc *cs;	/*Command line syntax descriptor */
@@ -129,8 +128,7 @@ main(argc, argv)
 }
 
 int
-CommandProc(a_as)
-     register struct cmd_syndesc *a_as;
+CommandProc(register struct cmd_syndesc *a_as)
 {
     register int i;
     register long code;
@@ -342,8 +340,7 @@ CommandProc(a_as)
 }
 
 int
-display_entry(offset)
-     int offset;
+display_entry(int offset)
 {
     register int i;
 
@@ -367,8 +364,7 @@ display_entry(offset)
 }
 
 void
-add_group(id)
-     long id;
+add_group(long id)
 {
     struct grp_list *g;
     register long i;
@@ -403,8 +399,7 @@ display_groups()
 }
 
 void
-display_group(id)
-     int id;
+display_group(int id)
 {
     register int i, offset;
     int print_grp = 0;
@@ -475,8 +470,7 @@ display_group(id)
 }
 
 void
-fix_pre(pre)
-     struct prentry *pre;
+fix_pre(struct prentry *pre)
 {
     register int i;
 
@@ -503,8 +497,7 @@ fix_pre(pre)
 }
 
 char *
-id_to_name(id)
-     int id;
+id_to_name(int id)
 {
     register int offset;
     static struct prentry pre;
@@ -531,8 +524,7 @@ id_to_name(id)
 }
 
 char *
-checkin(pre)
-     struct prentry *pre;
+checkin(struct prentry *pre)
 {
     struct hash_entry *he, *last;
     register int id;
@@ -562,8 +554,7 @@ checkin(pre)
 }
 
 char *
-check_core(id)
-     register int id;
+check_core(register int id)
 {
     struct hash_entry *he;
     he = hat[IDHash(id)];

@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_inode.c,v 1.14 2003/07/15 23:14:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_inode.c,v 1.15 2004/06/24 17:38:24 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -129,7 +129,11 @@ igetinode(vfsp, dev, inode, ipp, credp, perror)
 	 * Don't call dnlc for the cm inodes since it's a big performance 
 	 * penalty there!
 	 */
+#ifdef AFS_SUN510_ENV
+	dnlc_enter(ITOV(ip), "a", ITOV(ip));
+#else
 	dnlc_enter(ITOV(ip), "a", ITOV(ip), (struct AFS_UCRED *)0);
+#endif
     }
 
     *ipp = ip;
@@ -201,7 +205,11 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
 #endif
     newip->i_nlink = 1;
     newip->i_mode = IFREG;
+#ifdef AFS_SUN510_ENV
+    newip->i_vnode->v_type = VREG;
+#else
     newip->i_vnode.v_type = VREG;
+#endif
 
     newip->i_vicep1 = param1;
     if (param2 == 0x1fffffff /*INODESPECIAL*/) {

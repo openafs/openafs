@@ -502,24 +502,27 @@ void buf_WaitIO(cm_buf_t *bp)
 		if (!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)))
 			break;
 		
-                /* otherwise I/O is happening, but some other thread is waiting for
-                 * the I/O already.  Wait for that guy to figure out what happened,
-                 * and then check again.
-                 */
-                bp->flags |= CM_BUF_WAITING;
-                osi_SleepM((long) bp, &bp->mx);
-                lock_ObtainMutex(&bp->mx);
-		osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
-        }
-        
-        /* if we get here, the IO is done, but we may have to wakeup people waiting for
-         * the I/O to complete.  Do so.
+        /* otherwise I/O is happening, but some other thread is waiting for
+         * the I/O already.  Wait for that guy to figure out what happened,
+         * and then check again.
          */
-        if (bp->flags & CM_BUF_WAITING) {
+        if ( bp->flags & CM_BUF_WAITING ) 
+            osi_Log1(buf_logp, "buf_WaitIO CM_BUF_WAITING already set for 0x%x", bp);
+
+        bp->flags |= CM_BUF_WAITING;
+        osi_SleepM((long) bp, &bp->mx);
+        lock_ObtainMutex(&bp->mx);
+		osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
+    }
+        
+    /* if we get here, the IO is done, but we may have to wakeup people waiting for
+     * the I/O to complete.  Do so.
+     */
+    if (bp->flags & CM_BUF_WAITING) {
 		bp->flags &= ~CM_BUF_WAITING;
-                osi_Wakeup((long) bp);
-        }
-        osi_Log1(buf_logp, "WaitIO finished wait for bp 0x%x", (long) bp);
+        osi_Wakeup((long) bp);
+    }
+    osi_Log1(buf_logp, "WaitIO finished wait for bp 0x%x", (long) bp);
 }
 
 /* code to drop reference count while holding buf_globalLock */

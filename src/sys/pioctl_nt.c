@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.11 2004/03/05 23:09:36 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.14 2004/06/04 06:00:38 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -103,7 +103,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
     char *drivep;
     char netbiosName[MAX_NB_NAME_LENGTH];
-    char tbuffer[100];
+    char tbuffer[256]="";
     HANDLE fh;
 
     if (fileNamep) {
@@ -112,10 +112,47 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
             strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
-        } else
-            strcpy(tbuffer, SMB_IOCTL_FILENAME);
-    } else {
-        /* No file name specified, use UNC name */
+        } else if (fileNamep[0] == fileNamep[1] && 
+			       fileNamep[0] == '\\')
+        {
+            int count = 0, i = 0;
+
+            while (count < 4 && fileNamep[i]) {
+                tbuffer[i] = fileNamep[i];
+                if ( tbuffer[i++] == '\\' )
+                    count++;
+            }
+            if (tbuffer[i] == 0)
+                tbuffer[i++] = '\\';
+            tbuffer[i] = 0;
+            strcat(tbuffer, SMB_IOCTL_FILENAME);
+        } else {
+            char curdir[256]="";
+
+            GetCurrentDirectory(sizeof(curdir), curdir);
+            if ( curdir[1] == ':' ) {
+                tbuffer[0] = curdir[0];
+                tbuffer[1] = ':';
+                strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+            } else if (curdir[0] == curdir[1] &&
+                       curdir[0] == '\\') 
+            {
+                int count = 0, i = 0;
+
+                while (count < 4 && curdir[i]) {
+                    tbuffer[i] = curdir[i];
+                    if ( tbuffer[i++] == '\\' )
+                        count++;
+                }
+                if (tbuffer[i] == 0)
+                    tbuffer[i++] = '\\';
+                tbuffer[i] = 0;
+                strcat(tbuffer, SMB_IOCTL_FILENAME);
+            }
+        }
+	}
+	if (!tbuffer[0]) {
+        /* No file name starting with drive colon specified, use UNC name */
         lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
@@ -256,11 +293,16 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
     /* now get the absolute path to the current wdir in this drive */
     GetCurrentDirectory(sizeof(tpath), tpath);
-    strcpy(outPathp, tpath + 2);	/* skip drive letter */
+	if (tpath[1] == ':')
+	    strcpy(outPathp, tpath + 2);	/* skip drive letter */
+	else
+		strcpy(outPathp, tpath);		/* copy entire UNC path */
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
-	strcat(outPathp, "\\");
-	strcat(outPathp, firstp);
+		int len = strlen(outPathp);
+		if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
+			strcat(outPathp, "\\");
+		strcat(outPathp, firstp);
     }
 
     /* finally, if necessary, switch back to our home drive letter */

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.33 2004/05/08 03:58:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34 2004/05/15 06:43:12 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -334,7 +334,8 @@ afs_osi_SetTime(osi_timeval_t * tvp)
     AFS_STATCNT(osi_SetTime);
 
     TO_USER_SPACE();
-    (void)(*sys_settimeofdayp) (tvp, NULL);
+    if (sys_settimeofdayp)
+	(void)(*sys_settimeofdayp) (tvp, NULL);
     TO_KERNEL_SPACE();
 #endif
 }

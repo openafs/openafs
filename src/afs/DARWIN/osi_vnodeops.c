@@ -5,7 +5,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.16 2004/04/05 06:21:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.18 2004/06/23 18:34:48 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -188,6 +188,16 @@ afs_vop_lookup(ap)
     vp = AFSTOV(vcp);		/* always get a node if no error */
     vp->v_vfsp = dvp->v_vfsp;
 
+    if (UBCINFOMISSING(vp) ||
+	UBCINFORECLAIMED(vp)) {
+#ifdef AFS_DARWIN14_ENV
+	if (UBCINFORECLAIMED(vp) && ISSET(vp->v_flag, (VXLOCK|VORECLAIM))) {
+	    DROPNAME();
+	    return (ENXIO);
+	} else 
+#endif
+	    ubc_info_init(vp);
+    }
     /* The parent directory comes in locked.  We unlock it on return
      * unless the caller wants it left locked.
      * we also always return the vnode locked. */
@@ -253,8 +263,17 @@ afs_vop_create(ap)
 	*ap->a_vpp = AFSTOV(vcp);
 	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE | LK_RETRY, p);
-	if (UBCINFOMISSING(*ap->a_vpp) || UBCINFORECLAIMED(*ap->a_vpp))
-	    ubc_info_init(*ap->a_vpp);
+	if (UBCINFOMISSING(*ap->a_vpp) || UBCINFORECLAIMED(*ap->a_vpp)) {
+#ifdef AFS_DARWIN14_ENV
+	    if (UBCINFORECLAIMED(*ap->a_vpp) && ISSET((*ap->a_vpp)->v_flag, 
+						      (VXLOCK|VORECLAIM))) {
+		vput(dvp);
+		DROPNAME();
+		return (ENXIO);
+	    } else 
+#endif
+		ubc_info_init(*ap->a_vpp);
+	}
     } else
 	*ap->a_vpp = 0;
 
@@ -350,6 +369,17 @@ afs_vop_close(ap)
 	    printf("afs: Imminent ui_refcount panic\n");
 	} else {
 	    printf("afs: WARNING: ui_refcount panic averted\n");
+	}
+    }
+    if (UBCINFOMISSING(ap->a_vp) ||
+	UBCINFORECLAIMED(ap->a_vp)) {
+	if (UBCINFORECLAIMED(ap->a_vp) && ISSET(ap->a_vp->v_flag, 
+						(VXLOCK|VORECLAIM))) {
+	    printf("no ubc for %x in close, reclaim set\n", ap->a_vp);
+	    return (ENXIO);
+	} else {
+	    printf("no ubc for %x in close, put back\n", ap->a_vp);
+	    ubc_info_init(ap->a_vp);
 	}
     }
 #endif
@@ -833,7 +863,8 @@ afs_vop_remove(ap)
     cache_purge(vp);
     if (!error && UBCINFOEXISTS(vp)) {
 #ifdef AFS_DARWIN14_ENV
-	(void)ubc_uncache(vp);
+	/* If crashes continue in ubc_hold, comment this out */
+	/* (void)ubc_uncache(vp);*/
 #else
 	int wasmapped = ubc_issetflags(vp, UI_WASMAPPED);
 	int hasobjref = ubc_issetflags(vp, UI_HASOBJREF);
@@ -957,8 +988,22 @@ afs_vop_rename(ap)
 	if ((fcnp->cn_flags & SAVESTART) == 0)
 	    panic("afs_rename: lost from startdir");
 	fcnp->cn_nameiop = DELETE;
-	(void)relookup(fdvp, &fvp, fcnp);
-	return (VOP_REMOVE(fdvp, fvp, fcnp));
+
+        VREF(fdvp); 
+        error=relookup(fdvp, &fvp, fcnp);
+        if (error == 0)
+	    vrele(fdvp);
+        if (fvp == NULL) {
+	    return (ENOENT);
+        }
+        
+        error=VOP_REMOVE(fdvp, fvp, fcnp);
+        if (fdvp == fvp)
+            vrele(fdvp);
+        else
+            vput(fdvp);
+        vput(fvp);
+        return (error);
     }
     if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
 	goto abortit;

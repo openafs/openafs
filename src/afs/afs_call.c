@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.66 2004/04/12 16:04:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.69 2004/06/24 17:38:22 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -130,7 +130,7 @@ afs_InitSetup(int preallocs)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
     code = rx_Init(htons(7001));
     if (code) {
-	printf("AFS: RX failed to initialize.\n");
+	printf("AFS: RX failed to initialize %d).\n", code);
 	return code;
     }
     rx_SetRxDeadTime(afs_rx_deadtime);
@@ -270,7 +270,7 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     default:
-	printf("Unknown op %d in StartDaemon()\n");
+	printf("Unknown op %d in StartDaemon()\n", parm);
 	break;
     }
     return 0;
@@ -708,7 +708,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
-	int code;
 
 	if (count > AFS_MAX_INTERFACE_ADDR) {
 	    code = ENOMEM;

@@ -1,4 +1,4 @@
-AC_DEFUN(COMPILER_HAS_FUNCTION_MACRO, [
+AC_DEFUN([COMPILER_HAS_FUNCTION_MACRO], [
 AC_MSG_CHECKING(for __FUNCTION__ and __LINE__ macros)
 AC_CACHE_VAL(ac_cv_compiler_has_function_macro,
 [

@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.22 2004/04/21 02:20:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.23 2004/06/02 06:15:45 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -156,10 +156,9 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
     AFS_STATCNT(setpag);
 
     group_info = afs_getgroups(*cr);
-    g0 = GROUP_AT(group_info, 0);
-    g1 = GROUP_AT(group_info, 1);
-
-    if (afs_get_pag_from_groups(g0, g1) == NOPAG) {
+    if (group_info->ngroups < 2
+	||  afs_get_pag_from_groups(GROUP_AT(group_info, 0),
+				    GROUP_AT(group_info, 1)) == NOPAG) {
 	/* We will have to make sure group_info is big enough for pag */
 	struct group_info *tmp;
 	int i;

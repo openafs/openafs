@@ -30,12 +30,6 @@
 /* read/write lock for all global storage in this module */
 osi_rwlock_t cm_callbackLock;
 
-/*
-#ifdef AFS_FREELANCE_CLIENT
-extern int cm_fakeDirCallback;
-extern int cm_fakeGettingCallback;
-#endif
-*/
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;
 #endif
@@ -606,7 +600,7 @@ int cm_HaveCallback(cm_scache_t *scp)
     // good shape and we simply return true, provided no change is detected.
   int fdc, fgc;
 
-    if (cm_freelanceEnabled && scp->fid.cell==0x1 && scp->fid.volume==0x20000001) {	// if it's something on /afs
+    if (cm_freelanceEnabled && scp->fid.cell==0x1 && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {	// if it's something on /afs
 	if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1))  	// if it's not root.afs
 	    return 1;
 	else {
@@ -764,7 +758,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
 	if (cm_freelanceEnabled &&
         scp->fid.cell==0x1 &&
-		scp->fid.volume==0x20000001 &&
+		scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
 		scp->fid.unique==0x1 &&
 		scp->fid.vnode==0x1) {
 		// Start by indicating that we're in the process
@@ -787,9 +781,9 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 		return 0;
 	}
 
-	/*if (scp->fid.cell==0x1 && scp->fid.volume==0x20000001) {
-		afsi_log("cm_getcallback should NEVER EVER get here... ");
-	}*/
+	if (scp->fid.cell==0x1 && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
+		osi_Log0(afsd_logp,"cm_getcallback should NEVER EVER get here... ");
+	}
 	// yj: end of getcallback modifications  ---------------
 		
 #endif /* AFS_FREELANCE_CLIENT */

@@ -28,6 +28,7 @@
 #include "afsd_init.h"
 
 #include "smb.h"
+#include "cm_server.h"
 
 #ifndef DJGPP
 #include <rx/rxkad.h>
@@ -50,6 +51,7 @@
 osi_mutex_t cm_Afsdsbmt_Lock;
 
 extern afs_int32 cryptall;
+extern char cm_NetbiosName[];
 
 void cm_InitIoctl(void)
 {
@@ -136,28 +138,100 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 {
 	long code;
 	cm_scache_t *substRootp;
+    char * relativePath = ioctlp->inDatap;
 
-        /* This is usually the file name, but for StatMountPoint it is the path. */
-	TranslateExtendedChars(ioctlp->inDatap);
+    /* This is usually the file name, but for StatMountPoint it is the path. */
+    /* ioctlp->inDatap can be either of the form:
+     *    \path\.
+     *    \path\file
+     *    \\netbios-name\submount\path\.
+     *    \\netbios-name\submount\path\file
+     */
+	TranslateExtendedChars(relativePath);
 
-	code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
-		CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-		userp, ioctlp->tidPathp, reqp, &substRootp);
-	if (code) return code;
+    if (relativePath[0] == relativePath[1] &&
+         relativePath[1] == '\\' && 
+         !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
+    {
+        char shareName[256];
+        char *sharePath;
+        int shareFound, i;
+
+        /* We may have found a UNC path. 
+         * If the first component is the NetbiosName,
+         * then throw out the second component (the submount)
+         * since it had better expand into the value of ioctl->tidPathp
+         */
+        char * p;
+        p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
+        if ( !_strnicmp("all", p, 3) )
+            p += 4;
+
+        for (i = 0; *p && *p != '\\'; i++,p++ ) {
+            shareName[i] = *p;
+        }
+        p++;                    /* skip past trailing slash */
+        shareName[i] = 0;       /* terminate string */
+
+        shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
+        if ( shareFound ) {
+            /* we found a sharename, therefore use the resulting path */
+            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, sharePath, reqp, &substRootp);
+            free(sharePath);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+			if (code) return code;
+        } else {
+            /* otherwise, treat the name as a cellname mounted off the afs root.
+			 * This requires that we reconstruct the shareName string with 
+			 * leading and trailing slashes.
+			 */
+            p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
+			if ( !_strnicmp("all", p, 3) )
+				p += 4;
+
+			shareName[0] = '/';
+			for (i = 1; *p && *p != '\\'; i++,p++ ) {
+				shareName[i] = *p;
+			}
+			p++;                    /* skip past trailing slash */
+			shareName[i++] = '/';	/* add trailing slash */
+			shareName[i] = 0;       /* terminate string */
+
+			
+			code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, shareName, reqp, &substRootp);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+			if (code) return code;
+        }
+    } else {
+        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, ioctlp->tidPathp, reqp, &substRootp);
+        if (code) return code;
         
-        code = cm_NameI(substRootp, ioctlp->inDatap, CM_FLAG_FOLLOW,
-        	userp, NULL, reqp, scpp);
-	if (code) return code;
-        
+        code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+        if (code) return code;
+    }
+
 	/* # of bytes of path */
-        code = strlen(ioctlp->inDatap) + 1;
-        ioctlp->inDatap += code;
+    code = strlen(ioctlp->inDatap) + 1;
+    ioctlp->inDatap += code;
 
-        /* This is usually nothing, but for StatMountPoint it is the file name. */
-        TranslateExtendedChars(ioctlp->inDatap);
+    /* This is usually nothing, but for StatMountPoint it is the file name. */
+    TranslateExtendedChars(ioctlp->inDatap);
 
 	/* and return success */
-        return 0;
+    return 0;
 }
 
 void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
@@ -214,35 +288,101 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 			 cm_scache_t **scpp, char *leafp)
 {
 	long code;
-        char tbuffer[1024];
-        char *tp, *jp;
+    char tbuffer[1024];
+    char *tp, *jp;
 	cm_scache_t *substRootp;
 
 	strcpy(tbuffer, ioctlp->inDatap);
-        tp = strrchr(tbuffer, '\\');
+    tp = strrchr(tbuffer, '\\');
 	jp = strrchr(tbuffer, '/');
 	if (!tp)
 		tp = jp;
 	else if (jp && (tp - tbuffer) < (jp - tbuffer))
 		tp = jp;
-        if (!tp) {
-        	strcpy(tbuffer, "\\");
-                if (leafp) strcpy(leafp, ioctlp->inDatap);
+    if (!tp) {
+        strcpy(tbuffer, "\\");
+        if (leafp) 
+            strcpy(leafp, ioctlp->inDatap);
 	}
-        else {
-        	*tp = 0;
-                if (leafp) strcpy(leafp, tp+1);
-	}
+    else {
+        *tp = 0;
+        if (leafp) 
+            strcpy(leafp, tp+1);
+	}   
 
-	code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
-		CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-		userp, ioctlp->tidPathp, reqp, &substRootp);
-	if (code) return code;
+    if (tbuffer[0] == tbuffer[1] &&
+        tbuffer[1] == '\\' && 
+        !_strnicmp(cm_NetbiosName,tbuffer+2,strlen(cm_NetbiosName))) 
+    {
+        char shareName[256];
+        char *sharePath;
+        int shareFound, i;
+
+        /* We may have found a UNC path. 
+         * If the first component is the NetbiosName,
+         * then throw out the second component (the submount)
+         * since it had better expand into the value of ioctl->tidPathp
+         */
+        char * p;
+        p = tbuffer + 2 + strlen(cm_NetbiosName) + 1;
+        if ( !_strnicmp("all", p, 3) )
+            p += 4;
+
+        for (i = 0; *p && *p != '\\'; i++,p++ ) {
+            shareName[i] = *p;
+        }
+        p++;                    /* skip past trailing slash */
+        shareName[i] = 0;       /* terminate string */
+
+        shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
+        if ( shareFound ) {
+            /* we found a sharename, therefore use the resulting path */
+            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, sharePath, reqp, &substRootp);
+            free(sharePath);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+			if (code) return code;
+        } else {
+            /* otherwise, treat the name as a cellname mounted off the afs root.
+			 * This requires that we reconstruct the shareName string with 
+			 * leading and trailing slashes.
+			 */
+            p = tbuffer + 2 + strlen(cm_NetbiosName) + 1;
+			if ( !_strnicmp("all", p, 3) )
+				p += 4;
+
+			shareName[0] = '/';
+			for (i = 1; *p && *p != '\\'; i++,p++ ) {
+				shareName[i] = *p;
+			}
+			p++;                    /* skip past trailing slash */
+			shareName[i++] = '/';	/* add trailing slash */
+			shareName[i] = 0;       /* terminate string */
+			
+			code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                             CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, shareName, reqp, &substRootp);
+            if (code) return code;
+
+			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+			if (code) return code;
+        }
+    } else {
+        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                    CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                    userp, ioctlp->tidPathp, reqp, &substRootp);
+        if (code) return code;
 
         code = cm_NameI(substRootp, tbuffer, CM_FLAG_FOLLOW,
-        	userp, NULL, reqp, scpp);
-	if (code) return code;
-        
+                    userp, NULL, reqp, scpp);
+        if (code) return code;
+    }
+
 	/* # of bytes of path */
         code = strlen(ioctlp->inDatap) + 1;
         ioctlp->inDatap += code;
@@ -938,18 +1078,41 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
      * cell list will be cm_CellLock and cm_ServerLock will be held for write.
     */  
   
-    cm_cell_t *tcellp;
+    cm_cell_t *cp;
   
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
   
-    for(tcellp = cm_allCellsp; tcellp; tcellp=tcellp->nextp) 
+    for(cp = cm_allCellsp; cp; cp=cp->nextp) 
     {
+        long code;
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
-        cm_FreeServerList(&tcellp->vlServersp);
-        tcellp->vlServersp = NULL;
-        cm_SearchCellFile(tcellp->namep, tcellp->namep, cm_AddCellProc, tcellp);
-        cm_RandomizeServer(&tcellp->vlServersp);
+        cm_FreeServerList(&cp->vlServersp);
+        cp->vlServersp = NULL;
+        code = cm_SearchCellFile(cp->namep, cp->namep, cm_AddCellProc, cp);
+#ifdef AFS_AFSDB_ENV
+		if (code) {
+            if (cm_dnsEnabled) {
+                int ttl;
+                code = cm_SearchCellByDNS(cp->namep, cp->namep, &ttl, cm_AddCellProc, cp);
+                if ( code == 0 ) { /* got cell from DNS */
+                    cp->flags |= CM_CELLFLAG_DNS;
+                    cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+                    cp->timeout = time(0) + ttl;
+                }
+            }
+        } 
+        else {
+            cp->flags &= ~CM_CELLFLAG_DNS;
+        }
+#endif /* AFS_AFSDB_ENV */
+        if (code) {
+            cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+        }
+        else {
+            cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+            cm_RandomizeServer(&cp->vlServersp);
+        }
     }
     
     lock_ReleaseWrite(&cm_cellLock);
@@ -973,30 +1136,94 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long setSysName;
-        char *cp;
+	long setSysName, foundname = 0;
+    char *cp, *cp2, inname[MAXSYSNAME], outname[MAXSYSNAME];
+    int t, count, num = 0;
+    char **sysnamelist[MAXSYSNAME];
         
 	cm_SkipIoctlPath(ioctlp);
 
-        memcpy(&setSysName, ioctlp->inDatap, sizeof(long));
-        ioctlp->inDatap += sizeof(long);
+    memcpy(&setSysName, ioctlp->inDatap, sizeof(long));
+    ioctlp->inDatap += sizeof(long);
         
-        if (setSysName) {
-		strcpy(cm_sysName, ioctlp->inDatap);
+    if (setSysName) {
+        /* check my args */
+        if ( setSysName < 0 || setSysName > MAXNUMSYSNAMES )
+            return EINVAL;
+        cp2 = ioctlp->inDatap;
+        for ( cp=ioctlp->inDatap, count = 0; count < setSysName; count++ ) {
+            /* won't go past end of ioctlp->inDatap since maxsysname*num < ioctlp->inDatap length */
+            t = strlen(cp);
+            if (t >= MAXSYSNAME || t <= 0)
+                return EINVAL;
+            /* check for names that can shoot us in the foot */
+            if (*cp == '.' && (cp[1] == 0 || (cp[1] == '.' && cp[2] == 0)))
+                return EINVAL;
+            cp += t + 1;
         }
-        else {
+        /* args ok */
+
+        /* inname gets first entry in case we're being a translator */
+        /* (we are never a translator) */
+        t = strlen(ioctlp->inDatap);
+        memcpy(inname, ioctlp->inDatap, t + 1);
+        ioctlp->inDatap += t + 1;
+        num = count;
+    }
+
+    /* Not xlating, so local case */
+    if (!cm_sysName)
+        osi_panic("cm_IoctlSysName: !cm_sysName\n", __FILE__, __LINE__);
+
+    if (!setSysName) {      /* user just wants the info */
+        strcpy(outname, cm_sysName);
+        foundname = cm_sysNameCount;
+        *sysnamelist = cm_sysNameList;
+    } else {                /* Local guy; only root can change sysname */
+        /* clear @sys entries from the dnlc, once afs_lookup can
+         * do lookups of @sys entries and thinks it can trust them */
+        /* privs ok, store the entry, ... */
+        strcpy(cm_sysName, inname);
+        if (setSysName > 1) {       /* ... or list */
+            cp = ioctlp->inDatap;
+            for (count = 1; count < setSysName; ++count) {
+                if (!cm_sysNameList[count])
+                    osi_panic
+                        ("cm_IoctlSysName: no cm_sysNameList entry to write\n"
+                          , __FILE__, __LINE__);
+                t = strlen(cp);
+                memcpy(cm_sysNameList[count], cp, t + 1);  /* include null */
+                cp += t + 1;
+            }
+        }
+        cm_sysNameCount = setSysName;
+    }
+
+    if (!setSysName) {
 		/* return the sysname to the caller */
-                setSysName = 1;	/* really means "found sys name */
 		cp = ioctlp->outDatap;
-                memcpy(cp, &setSysName, sizeof(long));
-                cp += sizeof(long);	/* skip found flag */
-                strcpy(cp, cm_sysName);
-                cp += strlen(cp) + 1;	/* skip name and terminating null char */
-                ioctlp->outDatap = cp;
+        memcpy(cp, (char *)&foundname, sizeof(afs_int32));
+        cp += sizeof(afs_int32);	/* skip found flag */
+        if (foundname) {
+            strcpy(cp, outname);
+            cp += strlen(outname) + 1;	/* skip name and terminating null char */
+            for ( count=1; count < foundname ; ++count) {   /* ... or list */
+                if ( !(*sysnamelist)[count] )
+                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n"
+                               , __FILE__, __LINE__);
+                t = strlen((*sysnamelist)[count]);
+                if (t >= MAXSYSNAME)
+                    osi_panic("cm_IoctlSysName: sysname entry garbled\n"
+                               , __FILE__, __LINE__);
+                strcpy(cp, (*sysnamelist)[count]);
+                cp += t + 1;
+            }
         }
+        ioctlp->outDatap = cp;
+    }
         
 	/* done: success */
-        return 0;
+    return 0;
 }
 
 long cm_IoctlGetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
@@ -1207,6 +1434,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
 	  /* we are adding the mount point to the root dir., so call
 	     the freelance code to do the add. */
+	  osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
 	  code = cm_FreelanceAddMount(leaf, fullCell, volume, NULL);
 	  return code;
 	}

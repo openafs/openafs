@@ -379,7 +379,7 @@ extern smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags);
 
 extern void smb_ReleaseFID(smb_fid_t *fidp);
 
-extern int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName, char **pathNamep);
+extern int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName, char **pathNamep);
 
 extern int smb_FindShareCSCPolicy(char *shareName);
 

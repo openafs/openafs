@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.36 2004/03/10 07:38:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.37 2004/05/29 23:48:05 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -25,9 +25,6 @@ RCSID
 #include <sys/utime.h>
 #include <io.h>
 #include <WINNT/afssw.h>
-#ifdef AFS_AFSDB_ENV
-#include <cm_dns.h>
-#endif /* AFS_AFSDB_ENV */
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -64,7 +61,12 @@ RCSID
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
-
+#ifdef AFS_NT40_ENV
+#ifdef AFS_AFSDB_ENV
+/* cm_dns.h depends on cellconfig.h */
+#include <cm_dns.h>
+#endif /* AFS_AFSDB_ENV */
+#endif
 static struct afsconf_servPair serviceTable[] = {
     {"afs", 7000,},
     {"afscb", 7001,},
@@ -792,14 +794,15 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     register afs_int32 i;
     int tservice;
     struct afsconf_entry DNSce;
-    afs_int32 cellHosts[AFSMAXCELLHOSTS];
+    afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
+	char      cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     int numServers;
     int rc;
     int ttl;
 
     DNSce.cellInfo.numServers = 0;
     DNSce.next = NULL;
-    rc = getAFSServer(acellName, cellHosts, &numServers, &ttl);
+    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, &numServers, &ttl);
     /* ignore the ttl here since this code is only called by transitory programs
      * like klog, etc. */
     if (rc < 0)
@@ -808,8 +811,9 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	return -1;
 
     for (i = 0; i < numServers; i++) {
-	memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHosts[i],
+	memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHostAddrs[i],
 	       sizeof(long));
+	memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
 	acellInfo->hostAddr[i].sin_family = AF_INET;
 
 	/* sin_port supplied by connection code */

@@ -91,7 +91,6 @@ typedef afs_int32 errcode_t;
 #include <loadfuncs-profile.h>
 #include <loadfuncs-krb.h>
 #include <loadfuncs-krb524.h>
-#include <loadfuncs-afs36.h>
 #include <loadfuncs-leash.h>
 
 // service definitions

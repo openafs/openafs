@@ -76,6 +76,8 @@ extern int rxkad_PreparePacket(struct rx_securityClass *aobj,
 extern int rxkad_GetStats(struct rx_securityClass *aobj,
 			  struct rx_connection *aconn,
 			  struct rx_securityObjectStats *astats);
+extern rxkad_level rxkad_StringToLevel(char *string);
+extern char *rxkad_LevelToString(rxkad_level level);
 
 
 /* rxkad_errs.c */

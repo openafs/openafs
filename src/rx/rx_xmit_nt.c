@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.6 2003/07/15 23:16:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.7 2004/06/02 14:50:24 jaltman Exp $");
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 
@@ -78,6 +78,14 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 	/* Accounts for any we didn't copy in to iovecs. */
 	code -= size;
     } else {
+#ifdef AFS_NT40_ENV
+    if (code == SOCKET_ERROR)
+        code = WSAGetLastError();
+    if (code == WSAEWOULDBLOCK)
+        errno = WSAEWOULDBLOCK;
+    else
+        errno = EIO;
+#endif /* AFS_NT40_ENV */
 	code = -1;
     }
 
@@ -125,10 +133,12 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
 	switch (code) {
 	case WSAEINPROGRESS:
 	case WSAENETRESET:
-	case WSAEWOULDBLOCK:
 	case WSAENOBUFS:
 	    errno = 0;
 	    break;
+    case WSAEWOULDBLOCK:
+        errno = WSAEWOULDBLOCK;
+        break;
 	default:
 	    errno = EIO;
 	    break;
@@ -145,8 +155,4 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
     return code;
 
 }
-
-
-
-
 #endif /* AFS_NT40_ENV || AFS_DJGPP_ENV */

@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.35 2003/08/29 22:00:04 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36 2004/06/24 17:38:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -530,9 +530,19 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 		      &tuio, NULL, NULL, -1);
 #elif defined(AFS_SUN5_ENV)
 	AFS_GUNLOCK();
+#ifdef AFS_SUN510_ENV
+	{
+	    caller_context_t ct;
+
+	    VOP_RWLOCK(tfile->vnode, 1, &ct);
+	    code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
+	    VOP_RWUNLOCK(tfile->vnode, 1, &ct);
+	}
+#else
 	VOP_RWLOCK(tfile->vnode, 1);
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_RWUNLOCK(tfile->vnode, 1);
+#endif
 	AFS_GLOCK();
 	if (code == ENOSPC)
 	    afs_warnuser

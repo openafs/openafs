@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.78 2004/04/18 06:13:47 kolya Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81 2004/06/08 17:27:46 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -88,6 +88,7 @@ DECL_PIOCTL(PRxStatProc);
 DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
+DECL_PIOCTL(PCallBackAddr);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -188,6 +189,7 @@ static int (*(CpioctlSw[])) () = {
     PBogus,			/* 0 */
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
+	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -3743,4 +3745,101 @@ DECL_PIOCTL(PResidencyCmd)
 	*aoutSize = sizeof(struct ResidencyCmdOutputs);
     }
     return code;
+}
+
+DECL_PIOCTL(PCallBackAddr)
+{
+#ifndef UKERNEL
+    afs_uint32 addr, code;
+    int srvAddrCount;
+    struct server *ts;
+    struct srvAddr *sa;
+    struct conn *tc;
+    afs_int32 i, j;
+    struct unixuser *tu;
+    struct srvAddr **addrs;
+
+    /*AFS_STATCNT(PCallBackAddr);*/
+    if ( !afs_resourceinit_flag )      /* afs deamons havn't started yet */
+	return EIO;          /* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(acred))
+	return EACCES;
+
+    if ( ainSize < sizeof(afs_int32) )
+	return EINVAL;
+
+    memcpy(&addr, ain, sizeof(afs_int32));
+
+    ObtainReadLock(&afs_xinterface);
+    for ( i=0; (unsigned short)i < afs_cb_interface.numberOfInterfaces; i++) {
+	if (afs_cb_interface.addr_in[i] == addr) break;
+    }
+
+    ReleaseWriteLock(&afs_xinterface);
+
+    if (afs_cb_interface.addr_in[i] != addr)
+	return EINVAL;
+
+    ObtainReadLock(&afs_xserver);  /* Necessary? */
+    ObtainReadLock(&afs_xsrvAddr);
+
+    srvAddrCount = 0;
+    for (i=0;i<NSERVERS;i++) {
+        for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+            srvAddrCount++;
+        }
+    }
+
+    addrs = afs_osi_Alloc(srvAddrCount * sizeof(*addrs));
+    j = 0;
+    for (i=0;i<NSERVERS;i++) {
+        for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+            if (j >= srvAddrCount) break;
+            addrs[j++] = sa;
+        }
+    }
+
+    ReleaseReadLock(&afs_xsrvAddr);
+    ReleaseReadLock(&afs_xserver);
+
+    for (i=0; i<j; i++) {
+        sa = addrs[i];
+        ts = sa->server;
+        if (!ts)
+            continue;
+
+        /* vlserver has no callback conn */
+        if (sa->sa_portal == AFS_VLPORT) {
+            continue;
+        }
+
+        if (!ts->cell) /* not really an active server, anyway, it must */
+	    continue;  /* have just been added by setsprefs */
+
+        /* get a connection, even if host is down; bumps conn ref count */
+        tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
+        tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
+			  1/*force*/, 1/*create*/, SHARED_LOCK);
+        afs_PutUser(tu, SHARED_LOCK);
+        if (!tc)
+	    continue;
+
+        if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(ts)) {
+            if (sa->sa_flags & SRVADDR_ISDOWN) {
+                rx_SetConnDeadTime(tc->id, 3);
+            }
+
+#ifdef RX_ENABLE_LOCKS
+            AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	    code = RXAFS_CallBackRxConnAddr(tc->id, &addr);
+#ifdef RX_ENABLE_LOCKS
+            AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	}
+	afs_PutConn(tc, SHARED_LOCK);   /* done with it now */
+    } /* Outer loop over addrs */
+#endif /* UKERNEL */
+    return 0;
 }

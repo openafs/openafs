@@ -326,7 +326,8 @@ AFSD_SDKLIBS =\
     dnsapi.lib \
 	rpcrt4.lib \
 	user32.lib \
-    Dbghelp.lib
+    Dbghelp.lib \
+    strsafe.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \

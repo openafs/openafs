@@ -33,7 +33,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.29 2004/05/08 04:23:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33 2004/06/24 17:38:23 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -259,8 +259,8 @@ afs_ServerDown(struct srvAddr *sa)
 
 
 /* return true if we have any callback promises from this server */
-static int
-HaveCallBacksFrom(struct server *aserver)
+int
+afs_HaveCallBacksFrom(struct server *aserver)
 {
     register afs_int32 now;
     register int i;
@@ -583,7 +583,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || HaveCallBacksFrom(sa->server)
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)
 	    || (tc->srvr->server == afs_setTimeHost)) {
 	    conns[nconns]=tc; 
 	    rxconns[nconns]=tc->id;
@@ -714,7 +714,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 
 /* find a server structure given the host address */
 struct server *
-afs_FindServer(afs_int32 aserver, ushort aport, afsUUID * uuidp,
+afs_FindServer(afs_int32 aserver, afs_uint16 aport, afsUUID * uuidp,
 	       afs_int32 locktype)
 {
     struct server *ts;
@@ -1212,16 +1212,24 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
     }
 #else				/* AFS_USERSPACE_IP_ADDR */
 #if	defined(AFS_SUN5_ENV)
+#ifdef AFS_SUN510_ENV
+    ill_walk_context_t ctx;
+#else
     extern struct ill_s *ill_g_headp;
+    long *addr = (long *)ill_g_headp;
+#endif
     ill_t *ill;
     ipif_t *ipif;
     int subnet, subnetmask, net, netmask;
-    long *addr = (long *)ill_g_headp;
 
     if (sa)
 	  sa->sa_iprank = 0;
+#ifdef AFS_SUN510_ENV
+    for (ill = ILL_START_WALK_ALL(&ctx) ; ill ; ill = ill_next(&ctx, ill)) {
+#else
     for (ill = (struct ill_s *)*addr /*ill_g_headp */ ; ill;
 	 ill = ill->ill_next) {
+#endif
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
 	if (ill->ill_isv6)

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/readpwd.c,v 1.8 2004/04/18 06:13:50 kolya Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/readpwd.c,v 1.9 2004/06/23 14:27:42 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -42,9 +42,8 @@ osi_audit()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     afs_int32 argc;
-     char **argv;
+int
+main(afs_int32 argc, char **argv)
 {
 
     register afs_int32 code;

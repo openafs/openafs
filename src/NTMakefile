@@ -22,7 +22,9 @@ SRC=$(AFSROOT)\src
 !IFNDEF AFS_OBJDIR
 AFS_OBJDIR=$(AFSROOT)\obj
 !ENDIF
+!IFNDEF DESTDIR
 DESTDIR=$(AFSROOT)\dest
+!ENDIF
 
 CD = cd
 NTMAKE = nmake /nologo /f ntmakefile install
@@ -195,7 +197,14 @@ cm_headers: libacl_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-afsdobjs: cm_headers
+auth_headers: cm_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\auth
+	$(CD) $(SRC)\auth
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+afsdobjs: auth_headers
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -214,7 +223,7 @@ auth: sys
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
-	$(CD) ..\..
+	$(CD) ..\..	
 
 ubik: auth
      echo ***** $@
@@ -592,19 +601,26 @@ mkdir:
 	-mkdir $(DESTDIR)\free\bin
 	-@copy $(SRC)\config\NTLANG.BAT .
 
-NSIS:
+loopback:
+   echo ***** Making Loopback Adapter Utility DLL
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
+   $(NTMAKE)
+   $(CD) ..\..\..\..
+
+NSIS: loopback
    echo ***** Making NSIS Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-#msi:
-#   echo ***** Making MSI Installer
-#   $(DOCD) $(SRC)\WINNT\install\$@
-#   $(CD) $(SRC)\WINNT\install\$@
-#   $(NTMAKE)
-#   $(CD) ..\..\..\..
+wix: loopback
+   echo ***** Making Wix MSI Installer
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
+   $(NTMAKE)
+   $(CD) ..\..\..\..
 
 InstallShield5:
 	echo ***** afs_setup_utils
@@ -618,11 +634,11 @@ InstallShield5:
 	$(NTMAKE)
 	$(CD) ..\..\..\..
 
-media: install InstallShield5 NSIS
+media: install InstallShield5 NSIS wix
 
 install-nsis: install NSIS
 
-install-msi: install msi
+install-wix: install wix
 
 install-is5: install InstallShield5
 

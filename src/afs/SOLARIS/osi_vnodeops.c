@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.19 2003/07/15 23:14:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20 2004/06/24 17:38:24 shadow Exp $");
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
@@ -139,12 +139,22 @@ afs_delmap(avp, offset, asp, addr, length, prot, maxprot, flags, credp)
     return (0);
 }
 
+#ifdef AFS_SUN510_ENV
+int
+afs_vmread(avp, auio, ioflag, acred, ct)
+     register struct vnode *avp;
+     struct uio *auio;
+     int ioflag;
+     struct AFS_UCRED *acred;
+     caller_context_t *ct;
+#else
 int
 afs_vmread(avp, auio, ioflag, acred)
      register struct vnode *avp;
      struct uio *auio;
      int ioflag;
      struct AFS_UCRED *acred;
+#endif
 {
     register int code;
 
@@ -157,12 +167,22 @@ afs_vmread(avp, auio, ioflag, acred)
 }
 
 
+#ifdef AFS_SUN510_ENV
+int
+afs_vmwrite(avp, auio, ioflag, acred, ct)
+     register struct vnode *avp;
+     struct uio *auio;
+     int ioflag;
+     struct AFS_UCRED *acred;
+     caller_context_t *ct;
+#else
 int
 afs_vmwrite(avp, auio, ioflag, acred)
      register struct vnode *avp;
      struct uio *auio;
      int ioflag;
      struct AFS_UCRED *acred;
+#endif
 {
     register int code;
 
@@ -1761,6 +1781,55 @@ extern int gafs_fid(), gafs_readlink(), fs_setfl(), afs_pathconf();
 extern int afs_lockctl();
 extern void gafs_inactive();
 
+#ifdef AFS_SUN510_ENV
+struct fs_operation_def afs_vnodeops_template[] = {
+    { VOPNAME_OPEN,		gafs_open },
+    { VOPNAME_CLOSE,		gafs_close },
+    { VOPNAME_READ,		afs_vmread },
+    { VOPNAME_WRITE,		afs_vmwrite },
+    { VOPNAME_IOCTL,		afs_ioctl },
+    { VOPNAME_SETFL,		fs_setfl },
+    { VOPNAME_GETATTR,		gafs_getattr },
+    { VOPNAME_SETATTR,		gafs_setattr },
+    { VOPNAME_ACCESS,		gafs_access },
+    { VOPNAME_LOOKUP,		gafs_lookup },
+    { VOPNAME_CREATE,		gafs_create },
+    { VOPNAME_REMOVE,		gafs_remove },
+    { VOPNAME_LINK,		gafs_link },
+    { VOPNAME_RENAME,		gafs_rename },
+    { VOPNAME_MKDIR,		gafs_mkdir },
+    { VOPNAME_RMDIR,		gafs_rmdir },
+    { VOPNAME_READDIR,		gafs_readdir },
+    { VOPNAME_SYMLINK,		gafs_symlink },   
+    { VOPNAME_READLINK,		gafs_readlink },
+    { VOPNAME_FSYNC,		gafs_fsync },
+    { VOPNAME_INACTIVE,		gafs_inactive },
+    { VOPNAME_FID,		gafs_fid },
+    { VOPNAME_RWLOCK,		afs_rwlock },
+    { VOPNAME_RWUNLOCK,		afs_rwunlock },
+    { VOPNAME_SEEK,		afs_seek },
+    { VOPNAME_CMP,		afs_cmp },
+    { VOPNAME_FRLOCK,		afs_frlock },
+    { VOPNAME_SPACE,		afs_space },
+    { VOPNAME_REALVP,		afs_realvp },
+    { VOPNAME_GETPAGE,		afs_getpage },
+    { VOPNAME_PUTPAGE,		afs_putpage },
+    { VOPNAME_MAP,		afs_map },
+    { VOPNAME_ADDMAP,		afs_addmap },
+    { VOPNAME_DELMAP,		afs_delmap },
+    { VOPNAME_POLL,		fs_poll },
+    { VOPNAME_DUMP,		afs_dump },
+    { VOPNAME_PATHCONF,		afs_pathconf },
+    { VOPNAME_PAGEIO,		afs_pageio },
+    { VOPNAME_DUMPCTL,		afs_dumpctl },   
+    { VOPNAME_DISPOSE,		afs_dispose },
+    { VOPNAME_GETSECATTR,	afs_getsecattr },
+    { VOPNAME_SETSECATTR,	afs_setsecattr },
+    { VOPNAME_SHRLOCK,		fs_shrlock },
+    NULL,
+};
+struct vnodeops *afs_ops;
+#else
 struct vnodeops Afs_vnodeops = {
     gafs_open,
     gafs_close,
@@ -1811,6 +1880,7 @@ struct vnodeops Afs_vnodeops = {
 #endif
 };
 struct vnodeops *afs_ops = &Afs_vnodeops;
+#endif
 
 
 

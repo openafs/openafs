@@ -79,11 +79,12 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=6400
+AFSPRODUCT_VER_PATCH=6500
 AFSPRODUCT_VER_BUILD=0
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
 AFSPRODUCT_FILE_VERSION=$(AFSPRODUCT_VER_MAJOR),$(AFSPRODUCT_VER_MINOR),$(AFSPRODUCT_VER_PATCH),$(AFSPRODUCT_VER_BUILD)
-CELLNAME_DEFAULT=Your Cell Name
+# Set CELLNAME_DEFAULT to "your cell name"
+CELLNAME_DEFAULT=openafs.org
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
 TARGETOS = WINNT
@@ -166,7 +167,7 @@ OUT=$(OJT)\$(RELDIR)
 # !ENDIF
 
 !IF ("$(APPVER)" == "")
-APPVER=4.0
+APPVER=5.0
 !ENDIF
 
 
@@ -242,7 +243,7 @@ afscdefs = $(afscdefs) /G7 /GT /GS
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-afscflags = $(afscflags) /Ox
+afscflags = $(afscflags) /Ox /Zi
 cdebug = $(cdebug:-Od=) # avoid annoying override warning (D4025)
 cvarsdll = $(cvarsdll:-MDd=-MD)
 NODEBUG=1
@@ -350,7 +351,7 @@ mfclibsdll = $(mfclibsdll:msvcrt.lib=)
 # Link with binmode.obj; files will be opened in binary mode by default.
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 
-ldebug=
+ldebug=/DEBUG /PDB:$*.pdb 
 EXEPREP = rebase -b 0x00400000 -x $(@D) -q $@
 DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -x $(@D) -q $@
 

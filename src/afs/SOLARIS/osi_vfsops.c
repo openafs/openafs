@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.17 2003/07/15 23:14:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18 2004/06/24 17:38:24 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -237,6 +237,19 @@ afs_swapvp(struct vfs *afsp, struct vnode **avpp, char *nm)
 }
 
 
+#ifdef AFS_SUN510_ENV
+struct fs_operation_def afs_vfsops_template[] = {
+    { VFSNAME_MOUNT,		afs_mount },
+    { VFSNAME_UNMOUNT,		afs_unmount },
+    { VFSNAME_ROOT,		afs_root },
+    { VFSNAME_STATVFS,		afs_statvfs },
+    { VFSNAME_SYNC,		afs_sync },
+    { VFSNAME_VGET,		afs_vget },
+    { VFSNAME_MOUNTROOT,	afs_mountroot },
+    { VFSNAME_FREEVFS,		fs_freevfs },
+};
+struct vfsops *afs_vfsopsp;
+#else
 struct vfsops Afs_vfsops = {
     afs_mount,
     afs_unmount,
@@ -250,6 +263,7 @@ struct vfsops Afs_vfsops = {
     fs_freevfs,
 #endif
 };
+#endif
 
 
 /*
@@ -264,9 +278,13 @@ int (*afs_orig_ioctl) (), (*afs_orig_ioctl32) ();
 int (*afs_orig_setgroups) (), (*afs_orig_setgroups32) ();
 
 struct streamtab *udp_infop = 0;
+#ifndef AFS_SUN510_ENV
 struct ill_s *ill_g_headp = 0;
+#endif
 
 int afs_sinited = 0;
+
+extern struct fs_operation_def afs_vnodeops_template[];
 
 #if	!defined(AFS_NONFSTRANS)
 int (*nfs_rfsdisptab_v2) ();
@@ -279,7 +297,11 @@ int (*nfs_checkauth) ();
 
 extern Afs_syscall();
 
+#ifdef AFS_SUN510_ENV
+afsinit(int fstype, char *dummy)
+#else
 afsinit(struct vfssw *vfsswp, int fstype)
+#endif
 {
     extern int afs_xioctl();
     extern int afs_xsetgroups();
@@ -298,8 +320,14 @@ afsinit(struct vfssw *vfsswp, int fstype)
     sysent32[SYS_ioctl].sy_call = afs_xioctl;
 #endif
 
+#ifdef AFS_SUN510_ENV
+    vfs_setfsops(fstype, afs_vfsops_template, &afs_vfsopsp);
+    afsfstype = fstype;
+    vn_make_ops("afs", afs_vnodeops_template, &afs_ops);
+#else
     vfsswp->vsw_vfsops = &Afs_vfsops;
     afsfstype = fstype;
+#endif
 
 
 #if	!defined(AFS_NONFSTRANS)
@@ -337,23 +365,38 @@ afsinit(struct vfssw *vfsswp, int fstype)
     ufs_igetp = (int (*)())modlookup("ufs", "ufs_iget");
     ufs_itimes_nolockp = (void (*)())modlookup("ufs", "ufs_itimes_nolock");
     udp_infop = (struct streamtab *)modlookup("udp", "udpinfo");
+#ifdef AFS_SUN510_ENV
+    if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp
+	|| !udp_infop)
+	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
+#else
     ill_g_headp = (struct ill_s *)modlookup("ip", "ill_g_head");
 
     if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp
 	|| !udp_infop || !ill_g_headp)
 	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
+#endif
 
     afs_sinited = 1;
     return 0;
 
 }
 
+#ifdef AFS_SUN510_ENV
+static struct vfsdef_v3 afs_vfsdef = {
+    VFSDEF_VERSION,
+    "afs",
+    afsinit,
+    0
+};
+#else
 static struct vfssw afs_vfw = {
     "afs",
     afsinit,
     &Afs_vfsops,
     0
 };
+#endif
 
 static struct sysent afssysent = {
     6,
@@ -373,7 +416,11 @@ extern struct mod_ops mod_syscallops;
 static struct modlfs afsmodlfs = {
     &mod_fsops,
     "afs filesystem",
+#ifdef AFS_SUN510_ENV
+    &afs_vfsdef
+#else
     &afs_vfw
+#endif
 };
 
 static struct modlsys afsmodlsys = {

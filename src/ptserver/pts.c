@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.12 2004/04/18 03:16:14 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13 2004/06/23 14:27:42 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -73,24 +73,21 @@ struct sourcestack {
 } *shead;
 
 int
-Interactive(as)
-     register struct cmd_syndesc *as;
+Interactive(register struct cmd_syndesc *as)
 {
     finished = 0;
     return 0;
 }
 
 int
-Quit(as)
-     register struct cmd_syndesc *as;
+Quit(register struct cmd_syndesc *as)
 {
     finished = 1;
     return 0;
 }
 
 int
-Source(as)
-     register struct cmd_syndesc *as;
+Source(register struct cmd_syndesc *as)
 {
     FILE *fd;
     struct sourcestack *sp;
@@ -118,8 +115,7 @@ Source(as)
 }
 
 int
-Sleep(as)
-     register struct cmd_syndesc *as;
+Sleep(register struct cmd_syndesc *as)
 {
     int delay;
     if (!as->parms[0].items) {
@@ -157,8 +153,7 @@ osi_audit()
 }
 
 int
-GetGlobals(as)
-     register struct cmd_syndesc *as;
+GetGlobals(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     char *cell;
@@ -190,8 +185,7 @@ GetGlobals(as)
 }
 
 int
-CleanUp(as)
-     register struct cmd_syndesc *as;
+CleanUp(register struct cmd_syndesc *as)
 {
 #if defined(SUPERGROUPS)
     if (as && !strcmp(as->name, "help"))
@@ -212,8 +206,8 @@ CleanUp(as)
     return 0;
 }
 
-CreateGroup(as)
-     register struct cmd_syndesc *as;
+int
+CreateGroup(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -272,8 +266,8 @@ CreateGroup(as)
     return 0;
 }
 
-CreateUser(as)
-     register struct cmd_syndesc *as;
+int
+CreateUser(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -319,10 +313,7 @@ CreateUser(as)
 
 #ifdef notdef
 int
-GetNameOrId(as, lids, lnames)
-     register struct cmd_syndesc *as;
-     struct idlist *lids;
-     struct namelist *lnames;
+GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
 {
     register afs_int32 code = 0;
     int n = 0;
@@ -413,10 +404,7 @@ GetNameOrId(as, lids, lnames)
 
 
 int
-GetNameOrId(as, lids, lnames)
-     register struct cmd_syndesc *as;
-     struct idlist *lids;
-     struct namelist *lnames;
+GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
 {
     register afs_int32 code = 0;
     int n = 0, nd = 0, nm = 0, id, x;
@@ -503,8 +491,8 @@ GetNameOrId(as, lids, lnames)
 }
 
 
-AddToGroup(as)
-     register struct cmd_syndesc *as;
+int
+AddToGroup(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -524,8 +512,8 @@ AddToGroup(as)
     return 0;
 }
 
-RemoveFromGroup(as)
-     register struct cmd_syndesc *as;
+int
+RemoveFromGroup(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     struct cmd_item *u, *g;
@@ -545,8 +533,8 @@ RemoveFromGroup(as)
     return 0;
 }
 
-ListMembership(as)
-     register struct cmd_syndesc *as;
+int
+ListMembership(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     idlist ids;
@@ -590,8 +578,8 @@ ListMembership(as)
     return 0;
 }
 
-Delete(as)
-     register struct cmd_syndesc *as;
+int
+Delete(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     idlist ids;
@@ -629,8 +617,8 @@ char *flags_upcase = "SOMA ";	/* legal all access values */
 char *flags_dncase = "s mar";	/* legal member acces values */
 int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 
-CheckEntry(as)
-     register struct cmd_syndesc *as;
+int
+CheckEntry(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 rcode = 1;
@@ -728,8 +716,8 @@ CheckEntry(as)
     return (rcode);
 }
 
-ListEntries(as)
-     struct cmd_syndesc *as;
+int
+ListEntries(struct cmd_syndesc *as)
 {
     afs_int32 code = 0;
     afs_int32 flag, startindex, nentries, nextstartindex;
@@ -765,8 +753,8 @@ ListEntries(as)
     return code;
 }
 
-ChownGroup(as)
-     register struct cmd_syndesc *as;
+int
+ChownGroup(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     char *name;
@@ -781,8 +769,8 @@ ChownGroup(as)
     return code;
 }
 
-ChangeName(as)
-     register struct cmd_syndesc *as;
+int
+ChangeName(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     char *oldname;
@@ -797,8 +785,8 @@ ChangeName(as)
     return code;
 }
 
-ListMax(as)
-     register struct cmd_syndesc *as;
+int
+ListMax(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 maxUser, maxGroup;
@@ -818,8 +806,8 @@ ListMax(as)
     return code;
 }
 
-SetMax(as)
-     register struct cmd_syndesc *as;
+int
+SetMax(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     afs_int32 maxid;
@@ -858,8 +846,8 @@ SetMax(as)
     return code;
 }
 
-SetFields(as)
-     register struct cmd_syndesc *as;
+int
+SetFields(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     idlist ids;
@@ -953,8 +941,8 @@ SetFields(as)
     return 0;
 }
 
-ListOwned(as)
-     register struct cmd_syndesc *as;
+int
+ListOwned(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
     idlist ids;
@@ -1004,8 +992,7 @@ ListOwned(as)
 }
 
 static void
-add_std_args(ts)
-     register struct cmd_syndesc *ts;
+add_std_args(register struct cmd_syndesc *ts)
 {
     char test_help[AFSDIR_PATH_MAX];
 
@@ -1031,9 +1018,7 @@ static void add_NameOrId_args (ts)
 #include "AFS_component_version_number.c"
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.19 2003/07/15 23:16:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.20 2004/06/21 20:06:26 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -37,7 +37,11 @@ rxk_NewSocket(short aport)
     int code;
 
 
+#ifdef LINUX_KERNEL_IS_SELINUX
+    code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
+#else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#endif
     if (code < 0)
 	return NULL;
 

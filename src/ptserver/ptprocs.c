@@ -51,7 +51,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.20 2003/11/23 04:53:37 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21 2004/06/23 13:45:09 shadow Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -102,6 +102,9 @@ afs_int32 listSuperGroups();
 
 static stolower();
 extern int IDCmp();
+
+extern int prp_group_default;
+extern int prp_user_default;
 
 /* When abort, reset initd so that the header is read in on next call.
  * Abort the transaction and return the code.
@@ -1513,9 +1516,9 @@ listEntry(call, aid, aentry)
     aentry->flags = tentry.flags >> PRIVATE_SHIFT;
     if (aentry->flags == 0) {
 	if (tentry.flags & PRGRP)
-	    aentry->flags = PRP_GROUP_DEFAULT >> PRIVATE_SHIFT;
+	    aentry->flags = prp_group_default >> PRIVATE_SHIFT;
 	else
-	    aentry->flags = PRP_USER_DEFAULT >> PRIVATE_SHIFT;
+	    aentry->flags = prp_user_default >> PRIVATE_SHIFT;
     }
     aentry->owner = tentry.owner;
     aentry->id = tentry.id;
@@ -1659,7 +1662,7 @@ put_prentries(tentry, bulkentries)
     if (entry->flags == 0) {
 	entry->flags =
 	    ((tentry->
-	      flags & PRGRP) ? PRP_GROUP_DEFAULT : PRP_USER_DEFAULT) >>
+	      flags & PRGRP) ? prp_group_default : prp_user_default) >>
 	    PRIVATE_SHIFT;
     }
     entry->owner = tentry->owner;

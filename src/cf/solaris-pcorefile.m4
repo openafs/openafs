@@ -1,4 +1,4 @@
-AC_DEFUN(SOLARIS_PROC_HAS_P_COREFILE, [
+AC_DEFUN([SOLARIS_PROC_HAS_P_COREFILE], [
 AC_MSG_CHECKING(for p_corefile in struct proc)
 AC_CACHE_VAL(ac_cv_solaris_proc_has_p_corefile,
 [

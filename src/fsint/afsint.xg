@@ -698,3 +698,7 @@ GiveUpAllCallBacks(
 GetCapabilities(
   Capabilities *capabilities
 ) = 65540;
+
+CallBackRxConnAddr(
+  IN afs_int32 *addr
+) = 65541;

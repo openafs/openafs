@@ -172,7 +172,11 @@ enum xdr_op {
 #if 0
 typedef bool_t(*xdrproc_t) ();
 #else
+#ifdef AFS_I386_LINUX26_ENV
+typedef bool_t(*xdrproc_t) (void *, caddr_t *, u_int);
+#else
 typedef bool_t(*xdrproc_t) (void *, ...);
+#endif
 #endif
 
 

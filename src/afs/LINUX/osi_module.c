@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.48 2004/05/11 20:36:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52 2004/06/21 21:46:17 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -35,14 +35,6 @@ RCSID
 #endif
 #if !defined(EXPORTED_SYS_CALL_TABLE) && defined(HAVE_KERNEL_LINUX_SYSCALL_H)
 #include <linux/syscall.h>
-#endif
-
-#if defined(AFS_LINUX26_ENV)
-#include <linux/vermagic.h>
-#include <linux/compiler.h>
-
-MODULE_INFO(vermagic, VERMAGIC_STRING);
-
 #endif
 
 #ifdef AFS_SPARC64_LINUX24_ENV
@@ -163,6 +155,9 @@ afsproc_exit()
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }
 
+extern asmlinkage long
+afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
+
 static int
 afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 	  unsigned long arg)
@@ -239,7 +234,6 @@ init_module(void)
     unsigned long kernel_gp = 0;
     static struct fptr sys_setgroups;
 #endif /* defined(AFS_IA64_LINUX20_ENV) */
-    extern int afs_syscall();
     extern long afs_xsetgroups();
 #if defined(__NR_setgroups32)
     extern int afs_xsetgroups32();
@@ -369,7 +363,6 @@ init_module(void)
 #endif /* EXPORTED_KALLSYMS_ADDRESS */
     if (!sys_call_table) {
 	printf("Failed to find address of sys_call_table\n");
-	/*	sys_settimeofdayp = 0;*/
     } else {
 	printf("Found sys_call_table at %x\n", sys_call_table);
 #ifdef AFS_SPARC64_LINUX20_ENV

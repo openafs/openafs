@@ -107,8 +107,6 @@ extern long cm_HandleLink(cm_scache_t *linkScp, struct cm_user *userp,
 extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
 	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern char cm_sysName[100];
-
 extern int cm_ExpandSysName(char *inp, char *outp, long outSize);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.11 2003/07/15 23:17:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/client.c,v 1.12 2004/06/23 14:27:46 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -55,6 +55,9 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#ifdef	AFS_AIX_ENV
+#include <sys/statfs.h>
+#endif
 #include "update.h"
 #include "global.h"
 
@@ -69,8 +72,7 @@ static int RenameNewFiles(struct filestr *modFiles);
 static int PathsAreEquivalent(char *path1, char *path2);
 
 afs_int32
-GetServer(aname)
-     char *aname;
+GetServer(char *aname)
 {
     register struct hostent *th;
     afs_int32 addr;
@@ -98,9 +100,7 @@ osi_audit()
 #endif
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     struct rx_connection *conn;
     struct rx_call *call;
@@ -405,10 +405,9 @@ main(argc, argv)
 }
 
 /* returns 1 if the file is upto date else returns 0*/
+/*check the dir case more carefully */
 int
-IsCompatible(filename, time, length)	/*check the dir case more carefully */
-     char *filename;
-     afs_int32 time, length;
+IsCompatible(char *filename, afs_int32 time, afs_int32 length)	
 {
     struct stat status;
     afs_int32 error;
@@ -425,7 +424,7 @@ IsCompatible(filename, time, length)	/*check the dir case more carefully */
     free(localname);
 
     if (error == -1)
-	return 0;		/*a non-existent file, has to be fetched fresh */
+	return 0;	/*a non-existent file, has to be fetched fresh */
     if ((status.st_mode & S_IFMT) == S_IFDIR
 	|| ((status.st_mtime == time) && (status.st_size == length)))
 	return (1);
@@ -434,10 +433,7 @@ IsCompatible(filename, time, length)	/*check the dir case more carefully */
 }
 
 int
-FetchFile(call, remoteFile, localFile, dirFlag)
-     struct rx_call *call;
-     char *localFile, *remoteFile;
-     int dirFlag;
+FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
 {
     int fd = -1, error = 0;
     struct stat status;
@@ -473,33 +469,20 @@ FetchFile(call, remoteFile, localFile, dirFlag)
 
 
 int
-update_ReceiveFile(fd, call, status)
-     register int fd;
-     register struct rx_call *call;
-     register struct stat *status;
+update_ReceiveFile(register int fd, register struct rx_call *call, register struct stat *status)
 {
     register char *buffer = (char *)0;
     afs_int32 length;
-#ifdef notdef
-    XDR xdr;
-#endif
     register int blockSize;
     afs_int32 error = 0, len;
 #ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
     struct statfs tstatfs;
 #endif
 
-#ifdef	notdef
-    xdrrx_create(&xdr, call, XDR_DECODE);
-    if (!xdr_afs_int32(&xdr, &length))
-	return UPDATE_ERROR;
-#else
     len = rx_Read(call, &length, sizeof(afs_int32));
     length = ntohl(length);
     if (len != sizeof(afs_int32))
 	return UPDATE_ERROR;
-#endif
 #ifdef	AFS_AIX_ENV
     /* Unfortunately in AIX valuable fields such as st_blksize are gone from the stat structure!! */
     fstatfs(fd, &tstatfs);
@@ -585,9 +568,7 @@ PathsAreEquivalent(char *path1, char *path2)
  * deleted on client site) else it returns 0 */
 
 int
-NotOnHost(filename, okhostfiles)
-     char *filename;
-     struct filestr *okhostfiles;
+NotOnHost(char *filename, struct filestr *okhostfiles)
 {
     int i, rc;
     struct stat status;
@@ -663,8 +644,7 @@ RenameNewFiles(struct filestr *modFiles)
  * and the uid, gid, file mode, access and modification times will be set to
  * the passed in values.
  */
-static
-    int
+static int
 GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 		    char *filename,	/* name of file to be fetched */
 		    short uid, short gid,	/* uid/gid for fetched file */

@@ -1,5 +1,5 @@
 dnl
-dnl $Id: solaris-cc.m4,v 1.2 2002/08/15 21:10:23 shadow Exp $
+dnl $Id: solaris-cc.m4,v 1.3 2004/06/03 05:13:30 shadow Exp $
 dnl 
 
 dnl
@@ -8,7 +8,7 @@ dnl whose digits correspond to the digits in the compiler
 dnl version. Thus compiler version 4.2.0 is 0x420.
 dnl
 
-AC_DEFUN(AC_SOLARIS_CC_GOOD, [
+AC_DEFUN([AC_SOLARIS_CC_GOOD], [
 SOLARISCC="$CC"
 save_CC="$CC"
 if test "$CC" ; then
