@@ -507,9 +507,9 @@ struct rx_call {
     int abortCount;		/* number of times last error was sent */
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
-      VOID(*arrivalProc) (register struct rx_call * call, register struct multi_handle * mh, register int index);	/* Procedure to call when reply is received */
+    void (*arrivalProc) (register struct rx_call * call, register VOID * mh, register int index);	/* Procedure to call when reply is received */
     VOID *arrivalProcHandle;	/* Handle to pass to replyFunc */
-    VOID *arrivalProcArg;	/* Additional arg to pass to reply Proc */
+    int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
     afs_uint32 startWait;	/* time server began waiting for input data/send quota */
     struct clock traceWait;	/* time server began waiting for input data/send quota */

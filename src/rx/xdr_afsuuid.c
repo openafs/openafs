@@ -55,7 +55,8 @@ xdr_afsUUID(XDR * xdrs, afsUUID * objp)
     if (!xdr_char(xdrs, &objp->clock_seq_low)) {
 	return (FALSE);
     }
-    if (!xdr_vector(xdrs, (char *)objp->node, 6, sizeof(char), xdr_char)) {
+    /* Cast needed here because xdrproc_t officially takes 3 args :-( */
+    if (!xdr_vector(xdrs, (char *)objp->node, 6, sizeof(char), (xdrproc_t)xdr_char)) {
 	return (FALSE);
     }
     return (TRUE);

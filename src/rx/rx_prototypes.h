@@ -13,6 +13,7 @@
 /* rx.c */
 extern void rx_SetEpoch(afs_uint32 epoch);
 extern int rx_Init(u_int port);
+extern int rx_InitHost(u_int host, u_int port);
 #ifndef KERNEL
 extern void rxi_StartServerProcs(int nExistingProcs);
 #endif
@@ -48,12 +49,11 @@ extern void rx_WakeupServerProcs(void);
 extern struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service,
 				  osi_socket * socketp);
 extern void rx_SetArrivalProc(register struct rx_call *call,
-			      register VOID(*proc) (register struct rx_call *
+			      register void (*proc) (register struct rx_call *
 						    call,
-						    register struct
-						    multi_handle * mh,
+						    register VOID * mh,
 						    register int index),
-			      register VOID * handle, register VOID * arg);
+			      register VOID * handle, register int arg);
 extern afs_int32 rx_EndCall(register struct rx_call *call, afs_int32 rc);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
@@ -128,9 +128,10 @@ extern struct rx_packet *rxi_SendAck(register struct rx_call *call, register str
 				     *optionalPacket, int serial, int reason,
 				     int istack);
 extern void rxi_StartUnlocked(struct rxevent *event,
-			      register struct rx_call *call, int istack);
+			      register struct rx_call *call,
+			      void *arg1, int istack);
 extern void rxi_Start(struct rxevent *event, register struct rx_call *call,
-		      int istack);
+		      void *arg1, int istack);
 extern void rxi_Send(register struct rx_call *call,
 		     register struct rx_packet *p, int istack);
 #ifdef RX_ENABLE_LOCKS
@@ -150,7 +151,7 @@ extern void rxi_SendDelayedCallAbort(struct rxevent *event,
 				     char *dummy);
 extern void rxi_ChallengeEvent(struct rxevent *event,
 			       register struct rx_connection *conn,
-			       void *atries);
+			       void *arg1, int atries);
 extern void rxi_ChallengeOn(register struct rx_connection *conn);
 extern void rxi_ComputeRoundTripTime(register struct rx_packet *p,
 				     register struct clock *sentp,
@@ -286,6 +287,8 @@ at another time. */
 #else
 extern struct rxevent *rxevent_Post(struct clock *when, void (*func) (),
 				    void *arg, void *arg1);
+extern struct rxevent *rxevent_Post2(struct clock *when, void (*func) (),
+				    void *arg, void *arg1, int arg2);
 #endif
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
@@ -418,7 +421,7 @@ extern struct multi_handle *multi_Init(struct rx_connection **conns,
 				       register int nConns);
 extern int multi_Select(register struct multi_handle *mh);
 extern void multi_Ready(register struct rx_call *call,
-			register struct multi_handle *mh, register int index);
+			register VOID *mh, register int index);
 extern void multi_Finalize(register struct multi_handle *mh);
 extern void multi_Finalize_Ignore(register struct multi_handle *mh);
 

@@ -14,7 +14,7 @@
  * Its value should be as large as the maximum file descriptor limit we
  * are likely to run into on any platform.  Right now, that is 65536
  * which is the default hard fd limit on Solaris 9 */
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(KERNEL)
 #define FD_SETSIZE 65536
 #endif
 
