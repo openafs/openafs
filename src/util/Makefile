@@ -9,7 +9,7 @@ SHELL = /bin/sh
 COMPONENT=util
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = ${OPTMZ} -I. -I$(SRCDIR)include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I. -I$(SRCDIR)include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \

@@ -12,12 +12,14 @@
  */
 
 #include <afs/param.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#include <afsconfig.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifdef AFS_NT40_ENV
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
@@ -146,7 +148,7 @@ afs_int32 *aval;
     negative = 0;
 
     /* skip over leading spaces */
-    while (tc = *as) {
+    while ((tc = *as)) {
 	if (tc != ' ' && tc != '\t') break;
     }
 
@@ -168,7 +170,7 @@ afs_int32 *aval;
     else base = 10;
 
     /* compute the # itself */
-    while(tc = *as) {
+    while((tc = *as)) {
 	if (!ismeta(tc, base)) return -1;
 	total *= base;
 	total += getmeta(tc);
@@ -192,7 +194,7 @@ afs_uint32 *aval;
     total = 0;  /* initialize things */
 
     /* skip over leading spaces */
-    while (tc = *as) {
+    while ((tc = *as)) {
         if (tc != ' ' && tc != '\t') break;
     }
 
@@ -208,7 +210,7 @@ afs_uint32 *aval;
     else base = 10;
 
     /* compute the # itself */
-    while(tc = *as) {
+    while((tc = *as)) {
         if (!ismeta(tc, base)) return -1;
         total *= base;
         total += getmeta(tc);
