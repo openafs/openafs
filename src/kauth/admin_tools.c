@@ -715,7 +715,7 @@ int StringToKey (
       
     printf ("Converting %s with the DES string to key yields key='",
 	    as->parms[0].items->data);
-    ka_PrintBytes (&key, sizeof(key));
+    ka_PrintBytes ((char *)&key, sizeof(key));
     printf ("'.\n");
 
     return 0;

@@ -85,18 +85,16 @@ void Usage(void)
 
 main(int argc, char **argv)
 {
-    int n = 0;
     char stampsFile[1024];
     char stateFile[1024];
     char s[1024];
-    char *p;
     int i;
     char *baseDir;
     int argDir = 0;
     char *outputFile = NULL;
     char outputFileBuf[sizeof(VERS_FILE) + 2];
     struct stat sbuf;
-    time_t versTime, stampsTime, stateTime;
+    time_t versTime;
     int reBuild = 0;
     int code;
     char *cml_prefix = NULL;
