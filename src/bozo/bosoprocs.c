@@ -411,7 +411,7 @@ char **aname; {
 
 BOZO_GetCellHost(acall, awhich, aname)
 struct rx_call *acall;
-afs_int32 awhich;
+afs_uint32 awhich;
 char **aname; {
     register afs_int32 code;
     struct afsconf_cell tcell;

@@ -135,7 +135,7 @@ GetCellName(
 ) = 94;
 
 GetCellHost(
-  IN afs_int32 awhich,
+  IN afs_uint32 awhich,
   OUT string name<BOZO_BSSIZE>
 ) = 95;
 
