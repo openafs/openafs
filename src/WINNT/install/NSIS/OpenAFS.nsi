@@ -7,8 +7,24 @@
 ;MultiLanguage Example Script
 ;Written by Joost Verburg
 
-!define MUI_PRODUCT "OpenAFS" ;Define your own software name here
 !include nsi-includes.nsi
+!ifndef v2.0b4
+!define MUI_PRODUCT "OpenAFS" ;Define your own software name here
+!define MUI_VERSION ${AFS_VERSION}
+!else
+Name "OpenAFS ${AFS_VERSION}"
+VIProductVersion "${AFS_VERSION}.00"
+VIAddVersionKey "ProductName" "OpenAFS"
+VIAddVersionKey "CompanyName" "OpenAFS.org"
+VIAddVersionKey "ProductVersion" ${AFS_VERSION}
+VIAddVersionKey "FileVersion" ${AFS_VERSION}
+VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
+VIAddVersionKey "LegalCopyright" "(C)2003"
+!ifdef DEBUG
+VIAddVersionKey "PrivateBuild" "Debug"
+!endif
+!endif
+
 ; Define DEBUG if building a DEBUG installer
 ;!define DEBUG 1
 
@@ -27,8 +43,11 @@
   SilentInstall normal
   SetCompressor bzip2
   !define MUI_ICON "..\..\client_config\afs_config.ico"
-  ; This is an absolute path to the NSIS install directory--we need to make this a variable
-  !define MUI_UNICON "c:\Program Files\NSIS\Contrib\Icons\normal-uninstall.ico"
+  !ifndef v2.0b4
+  !define MUI_UNICON "${NSISDIR}\Contrib\Icons\normal-uninstall.ico"
+  !else
+  !define MUI_UNICON "..\..\client_config\afs_config.ico"
+  !endif
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
   !define AFS_REGKEY_ROOT "Software\TransarcCorporation"
@@ -70,15 +89,24 @@
   !define MUI_UNCONFIRMPAGE
 
   
+!IFNDEF v2.0b4
   !insertmacro MUI_PAGECOMMAND_WELCOME
-  ;!insertmacro MUI_PAGECOMMAND_LICENSE
+ ;!insertmacro MUI_PAGECOMMAND_LICENSE
   !insertmacro MUI_PAGECOMMAND_COMPONENTS
   !insertmacro MUI_PAGECOMMAND_DIRECTORY
   Page custom AFSPageGetCellServDB
   Page custom AFSPageGetCellName
-  ;Page custom AFSPageGetConfigURL
   !insertmacro MUI_PAGECOMMAND_INSTFILES
   !insertmacro MUI_PAGECOMMAND_FINISH
+!ELSE
+  !insertmacro MUI_PAGE_WELCOME
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+  Page custom AFSPageGetCellServDB
+  Page custom AFSPageGetCellName
+  !insertmacro MUI_PAGE_INSTFILES
+  !insertmacro MUI_PAGE_FINISH
+!ENDIF
   
   ;LicenseData "Licenses.rtf"
 ;--------------------------------
@@ -91,7 +119,9 @@
   !insertmacro MUI_LANGUAGE "SimpChinese"
   !insertmacro MUI_LANGUAGE "TradChinese"    
   !insertmacro MUI_LANGUAGE "Japanese"
-  ;!insertmacro MUI_LANGUAGE "Korean"
+  !ifdef v2.0b4
+  !insertmacro MUI_LANGUAGE "Korean"
+  !endif
   ;!insertmacro MUI_LANGUAGE "Italian"
   ;!insertmacro MUI_LANGUAGE "Dutch"
   ;!insertmacro MUI_LANGUAGE "Danish"
@@ -121,7 +151,9 @@
   LangString DESC_SecCopyUI ${LANG_SIMPCHINESE} "OpenAFS for Windows: Simplified Chinese"
   LangString DESC_SecCopyUI ${LANG_TRADCHINESE} "OpenAFS for Windows: Traditional Chinese description"
   LangString DESC_SecCopyUI ${LANG_JAPANESE} "OpenAFS for Windows: Japanese description"
-  ;LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
+!ifdef v2.0b4
+  LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
+!endif
   ;LangString DESC_SecCopyUI ${LANG_ITALIAN} "OpenAFS for Windows: Italian description"
   ;LangString DESC_SecCopyUI ${LANG_DUTCH} "OpenAFS for Windows: Dutch description"
   ;LangString DESC_SecCopyUI ${LANG_DANISH} "OpenAFS for Windows: Danish description"
@@ -146,7 +178,9 @@
   LangString DESC_SecClient ${LANG_SIMPCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_SecClient ${LANG_TRADCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_SecClient ${LANG_JAPANESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  ;LangString DESC_SecClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+!ifdef v2.0b4  
+  LangString DESC_SecClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+!endif
   LangString DESC_SecClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
   LangString DESC_SecServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server."
@@ -155,7 +189,9 @@
   LangString DESC_SecServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
   LangString DESC_SecServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
   LangString DESC_SecServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server."
-  ;LangString DESC_SecServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server."
+!ifdef v2.0b4  
+  LangString DESC_SecServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server."
+!endif
   LangString DESC_SecServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server."
   
   LangString DESC_SecControl ${LANG_ENGLISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
@@ -164,7 +200,9 @@
   LangString DESC_SecControl ${LANG_SIMPCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   LangString DESC_SecControl ${LANG_TRADCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   LangString DESC_SecControl ${LANG_JAPANESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  ;LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+!ifdef v2.0b4  
+  LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+!endif
   LangString DESC_SecControl ${LANG_PORTUGUESEBR} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   
   LangString DESC_SecDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
@@ -173,7 +211,9 @@
   LangString DESC_SecDocs ${LANG_SIMPCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_TRADCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_JAPANESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  ;LangString DESC_SecDocs ${LANG_KOREAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+!ifdef v2.0b4  
+  LangString DESC_SecDocs ${LANG_KOREAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+!endif
   LangString DESC_SecDocs ${LANG_PORTUGUESEBR} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   
 ; Popup error messages
@@ -183,7 +223,9 @@
   LangString CellError ${LANG_SIMPCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_TRADCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_JAPANESE} "You must specify a valid CellServDB file to copy during the install"
-  ;LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
+!ifdef v2.0b4  
+  LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
+!endif
   LangString CellError ${LANG_PORTUGUESEBR} "You must specify a valid CellServDB file to copy during the install"
   
   
@@ -194,7 +236,9 @@
    LangString UPGRADE_CLIENT ${LANG_SIMPCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_TRADCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
-   ;LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
+!ifdef v2.0b4
+   LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
+!endif
    LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
  
    LangString REINSTALL_CLIENT ${LANG_ENGLISH} "Re-install AFS Client"
@@ -203,7 +247,9 @@
    LangString REINSTALL_CLIENT ${LANG_SIMPCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_TRADCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_JAPANESE} "Re-install AFS Client"
-   ;LangString REINSTALL_CLIENT ${LANG_KOREAN} "Re-install AFS Client"
+!ifdef v2.0b4
+   LangString REINSTALL_CLIENT ${LANG_KOREAN} "Re-install AFS Client"
+!endif
    LangString REINSTALL_CLIENT ${LANG_PORTUGUESEBR} "Re-install AFS Client"
   
    LangString UPGRADE_SERVER ${LANG_ENGLISH} "Upgrade AFS Server"
@@ -212,7 +258,9 @@
    LangString UPGRADE_SERVER ${LANG_SIMPCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_TRADCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_JAPANESE} "Upgrade AFS Server"
-   ;LangString UPGRADE_SERVER ${LANG_KOREAN} "Upgrade AFS Server"
+!ifdef v2.0b4
+   LangString UPGRADE_SERVER ${LANG_KOREAN} "Upgrade AFS Server"
+!endif
    LangString UPGRADE_SERVER ${LANG_PORTUGUESEBR} "Upgrade AFS Server"
     
    LangString REINSTALL_SERVER ${LANG_ENGLISH} "Re-install AFS Server"
@@ -221,7 +269,9 @@
    LangString REINSTALL_SERVER ${LANG_SIMPCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_TRADCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_JAPANESE} "Re-install AFS Server"
-   ;LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
+!ifdef v2.0b4   
+   LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
+!endif
    LangString REINSTALL_SERVER ${LANG_PORTUGUESEBR} "Re-install AFS Server"
   
 ;--------------------------------
@@ -620,22 +670,22 @@ DontUseFile:
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "VersionString" ${AFS_VERSION}
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Title" "AFS Client"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Description" "AFS Client"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PathName" "$INSTDIR\Client\Program"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Software Type" "File System"
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Title" "AFS Client"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Description" "AFS Client"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "Software Type" "File System"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "PathName" "$INSTDIR\Client\Program"
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PatchLevel" ${AFS_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "VersionString" ${AFS_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Title" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Description" "AFS Client"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Software Type" "File System"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "PathName" "$INSTDIR\Client\Program"
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
 
    ; Set network settings
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
@@ -776,22 +826,22 @@ Section "AFS Server" SecServer
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Server" "" $INSTDIR
   
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "VersionString" ${AFS_VERSION}
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Title" "AFS Server"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Description" "AFS Server for Windows"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PathName" "$INSTDIR\Server"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Software Type" "File System"
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Title" "AFS Server"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Description" "AFS Server for Windows"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Software Type" "File System"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "PathName" "$INSTDIR\Server"
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PatchLevel" ${AFS_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "VersionString" ${AFS_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "Title" "AFS Server"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "Description" "AFS Server for Windows"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "Software Type" "File System"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "PathName" "$INSTDIR\Server"
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
 
   ; Install the service
   SetOutPath "$INSTDIR\Common"
@@ -862,14 +912,14 @@ Section "AFS Control Center" SecControl
    
    ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName" $INSTDIR
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "VersionString" ${MUI_VERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PatchLevel" ${AFS_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
   
 
   ;Write start menu entries
@@ -891,7 +941,9 @@ Section "Supplemental Documentation" SecDocs
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-   ;StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+!ifdef v2.0b4
+   StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+!endif
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
    StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
    StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
@@ -1019,14 +1071,14 @@ DoTradChinese:
 DoneLanguage:
    ;Store install folder
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation" "" $INSTDIR
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "VersionString" ${MUI_VERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
-  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion" "PatchLevel" ${AFS_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
 
   ; Write start menu shortcut
   SetOutPath "$SMPROGRAMS\OpenAFS"
@@ -1225,12 +1277,20 @@ FunctionEnd
 ;--------------------------------
 ;Descriptions
 
+!ifndef v2.0b4
 !insertmacro MUI_FUNCTIONS_DESCRIPTION_BEGIN
+!else
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+!endif
   !insertmacro MUI_DESCRIPTION_TEXT ${SecServer} $(DESC_SecServer)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecClient} $(DESC_SecClient)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecControl} $(DESC_SecControl)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDocs} $(DESC_SecDocs)
-!insertmacro MUI_FUNCTIONS_DESCRIPTION_END
+!ifndef v2.0b4
+  !insertmacro MUI_FUNCTIONS_DESCRIPTION_END
+!else
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+!endif
  
 ;--------------------------------
 ;Uninstaller Section
@@ -1493,8 +1553,10 @@ Section "Uninstall"
  
   RMDir  "$INSTDIR"
 
+!ifndef v2.0b4
   ;Display the Finish header
   !insertmacro MUI_UNFINISHHEADER
+!endif
 
 SectionEnd
 
@@ -1520,8 +1582,8 @@ FunctionEnd
 Function afs.GetCellServDB
 
 ;Check if we should download CellServDB
-;ReadINIStr $R0 $0 "Field 4" "State"
-;StrCmp $R0 "0" CheckIncl
+ReadINIStr $R0 $0 "Field 4" "State"
+StrCmp $R0 "0" CheckIncl
 
    ReadINIStr $R0 $0 "Field 5" "State"
    NSISdl::download $R0 "$WINDIR\afsdcell.ini"
@@ -1609,7 +1671,7 @@ Function AFSCommon.Install
 
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayName" "OpenAFS for Windows"
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "UninstallString" "$INSTDIR\uninstall.exe"
-WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayVersion" "${MUI_VERSION}"
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayVersion" "${AFS_VERSION}"
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "URLInfoAbout" "http://www.openafs.org/"
 
 FunctionEnd
@@ -1776,15 +1838,15 @@ Function ShouldClientInstall
 
    Call GetInstalledVersionMajor
    Pop $R0
-   IntCmpU $R0 ${MUI_MAJORVERSION} +1 Upgrade Downgrade
+   IntCmpU $R0 ${AFS_MAJORVERSION} +1 Upgrade Downgrade
 
    Call GetInstalledVersionMinor
    Pop $R0
-   IntCmpU $R0 ${MUI_MINORVERSION} +1 Upgrade Downgrade
+   IntCmpU $R0 ${AFS_MINORVERSION} +1 Upgrade Downgrade
    
    Call GetInstalledVersionPatch
    Pop $R0
-   IntCmpU $R0 ${MUI_PATCHLEVEL} Reinstall Upgrade Downgrade
+   IntCmpU $R0 ${AFS_PATCHLEVEL} Reinstall Upgrade Downgrade
    
 Reinstall:
    StrCpy $R0 "1"
@@ -1821,15 +1883,15 @@ Function ShouldServerInstall
 
    Call GetInstalledVersionMajor
    Pop $R0
-   IntCmpU $R0 ${MUI_MAJORVERSION} +1 Upgrade Downgrade
+   IntCmpU $R0 ${AFS_MAJORVERSION} +1 Upgrade Downgrade
 
    Call GetInstalledVersionMinor
    Pop $R0
-   IntCmpU $R0 ${MUI_MINORVERSION} +1 Upgrade Downgrade
+   IntCmpU $R0 ${AFS_MINORVERSION} +1 Upgrade Downgrade
    
    Call GetInstalledVersionPatch
    Pop $R0
-   IntCmpU $R0 ${MUI_PATCHLEVEL} Reinstall Upgrade Downgrade
+   IntCmpU $R0 ${AFS_PATCHLEVEL} Reinstall Upgrade Downgrade
    
 Reinstall:
    StrCpy $R0 "1"
@@ -2060,7 +2122,9 @@ Function AFSLangFiles
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-   ;StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+!ifdef v2.0b4
+   StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+!endif
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
    StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
    StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
@@ -2532,6 +2596,7 @@ Function un.IsNT
     Push 1
 FunctionEnd
 
+!ifdef ADDSHAREDDLLUSED
 ; AddSharedDLL
  ;
  ; Increments a shared DLLs reference count.
@@ -2584,6 +2649,7 @@ FunctionEnd
    Pop $R0
    Pop $R1
  FunctionEnd
+!endif
 
 !ifdef INSTALL_LOOPBACK
 Function afs.InstallMSLoopback

@@ -3,6 +3,7 @@ RELDIR=WINNT\install\NSIS
 !INCLUDE ..\..\..\config\NTMakefile.version
 
 EXEDIR = $(DESTDIR)\WinInstall\Config
+NSISDIR = C:\Program Files\NSIS
 
 $(OUT)\Service.obj: Service.cpp
 	   $(C2OBJ) Service.cpp
@@ -56,10 +57,13 @@ prebuild:
 !ENDIF
    $(DEL) nsi-includes.nsi
    echo !define AFS_DESTDIR $(DESTDIR) > nsi-includes.nsi
-   echo !define MUI_VERSION $(AFSPRODUCT_VERSION) >> nsi-includes.nsi
-   echo !define MUI_MAJORVERSION $(AFSPRODUCT_VER_MAJOR) >>nsi-includes.nsi
-   echo !define MUI_MINORVERSION $(AFSPRODUCT_VER_MINOR) >>nsi-includes.nsi
-   echo !define MUI_PATCHLEVEL $(AFSPRODUCT_VER_PATCH) >>nsi-includes.nsi
+   echo !define AFS_VERSION $(AFSPRODUCT_VERSION) >> nsi-includes.nsi
+   echo !define AFS_MAJORVERSION $(AFSPRODUCT_VER_MAJOR) >>nsi-includes.nsi
+   echo !define AFS_MINORVERSION $(AFSPRODUCT_VER_MINOR) >>nsi-includes.nsi
+   echo !define AFS_PATCHLEVEL $(AFSPRODUCT_VER_PATCH) >>nsi-includes.nsi
+   $(DESTDIR)\bin\util_cr.exe _echo "!define " >>nsi-includes.nsi 
+   "$(NSISDIR)\makensis.exe" /VERSION >>nsi-includes.nsi          
+   echo. >>nsi-includes.nsi                                       
 !if ("$(AFSVER_CL)" == "1310")
    echo !define CL_1310 1 >> nsi-includes.nsi
 !else if ("$(AFSVER_CL)" == "1300")

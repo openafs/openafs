@@ -344,6 +344,15 @@ main(int argc, char *argv[])
     BOOL bQuiet = FALSE;
     if (argc < 2)
 	usuage();
+
+   /* RSM4: Add an "ECHO" that doesn't append a new line... */
+   if (strcmp(argv[1], "_echo") == 0) {
+      if(argc<3)
+         usuage();
+      printf("%s",argv[2]);
+      return 0;
+   }
+
     if (strcmp(argv[1], "_sysvar") == 0) {
 	if (argc < 4)
 	    usuage();
