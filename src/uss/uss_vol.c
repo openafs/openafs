@@ -779,7 +779,7 @@ afs_int32 uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
 	else {
 	  uss_procs_PrintErr(line,
 			     "Couldn't create volume '%s' [error %d]: %s\n",
-			     a_volname, code, sys_errlist[errno]);
+			     a_volname, code, strerror(errno));
 	  return(1);
 	} /*Failure was NOT because it already existed*/
       } /*UV_CreateVolume failed*/
@@ -837,7 +837,7 @@ afs_int32 uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
 	    }
 	    else {
 	      fprintf(stderr,"%s: Can't mount volume '%s' on '%s': %s\n",
-		      uss_whoami, a_volname, a_mpoint, sys_errlist[errno]);
+		      uss_whoami, a_volname, a_mpoint, strerror(errno));
 	      if (Oldmpoint)
 		free(Oldmpoint);
 	      return(1);
@@ -871,7 +871,7 @@ afs_int32 uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
       if (chown(a_mpoint, o, -1)) {
 	fprintf(stderr,
 		"%s: Can't chown() mountpoint '%s' to owner '%s' (uid %d): %s\n",
-		uss_whoami, a_mpoint, a_owner, o, sys_errlist[errno]);
+		uss_whoami, a_mpoint, a_owner, o, strerror(errno));
 	if (Oldmpoint)
 	  free(Oldmpoint);
 	return(1);
