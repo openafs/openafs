@@ -20,7 +20,8 @@ LIBFILE = $(DESTDIR)\lib\afsrx.lib
 
 # Object files by category.
 XDROBJS = xdr.obj xdr_array.obj xdr_arrayn.obj xdr_float.obj xdr_mem.obj \
-	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj xdr_afsuuid.obj
+	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj \
+	xdr_afsuuid.obj xdr_int64.obj
 
 RXOBJS = rx_clock_nt.obj rx_event.obj rx_user.obj rx_lwp.obj rx.obj \
 	rx_null.obj rx_globals.obj rx_getaddr.obj rx_misc.obj rx_packet.obj \
