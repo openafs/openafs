@@ -274,7 +274,7 @@ extern char *cm_categories[]; /* cache manager data category names */
 
 
 
-#ifndef AFS_XBSD_ENV
+#ifndef AFS_FBSD_ENV
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
