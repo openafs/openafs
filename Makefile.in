@@ -169,7 +169,7 @@ afs: export pinstall comerr afs_depinstall
 des: config pinstall
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
-sys: cmd comerr afs des rx rxstat fsint
+sys: cmd comerr afs des rx rxstat fsint sys_depinstall
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
 rxkad: cmd comerr sys des rx rxkad_depinstall
@@ -368,6 +368,9 @@ afs_depinstall: pinstall comerr
 dir_depinstall: pinstall
 	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
 
+sys_depinstall: pinstall
+	${COMPILE_PART1} sys ${COMPILE_DEPINSTALL}
+
 kauth_depinstall: pinstall rxgen comerr
 	${COMPILE_PART1} kauth ${COMPILE_DEPINSTALL}
 
@@ -382,11 +385,11 @@ libafs_setup: config export
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 
 libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
 libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
 		-sn $(SYS_NAME) \
 		-os $(MKAFS_OSTYPE) \
@@ -408,7 +411,7 @@ libuafs_setup: config export
 libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
 		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
 		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
-		rxstat_depinstall lwp_depinstall des
+		rxstat_depinstall lwp_depinstall sys_depinstall des
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | ia64_hpux112*) \
