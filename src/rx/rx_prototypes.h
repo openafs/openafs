@@ -380,6 +380,9 @@ extern void rxi_InitPeerParams(struct rx_peer *pp);
 
 /* MISC PROTOTYPES - MOVE TO APPROPRIATE LOCATION LATER */
 
-
+/* keep here for now, 64 bit issues */
+extern void *afs_osi_Alloc(size_t x);
+extern void *afs_osi_Alloc_NoSleep(size_t x);
+extern void afs_osi_Free(void *x, size_t asize);
 
 #endif /* _RX_PROTOTYPES_H */

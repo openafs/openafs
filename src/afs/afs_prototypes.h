@@ -401,24 +401,15 @@ extern void afs_osi_Free(void *x, size_t asize);
 extern afs_int32 afs_preallocs;
 extern afs_lock_t osi_fsplock;
 extern afs_lock_t osi_flplock;
-#ifndef afs_osi_Alloc
-extern void *afs_osi_Alloc(size_t x);
-#endif
-#ifndef afs_osi_Alloc_NoSleep
-extern void *afs_osi_Alloc_NoSleep(size_t x);
-#endif
-#ifndef afs_osi_Free
-extern void afs_osi_Free(void *x, size_t asize);
-#endif
+extern void osi_FreeLargeSpace(void *adata);
+extern void osi_FreeMediumSpace(void *adata);
+extern void osi_FreeSmallSpace(void *adata);
 extern void *osi_AllocLargeSpace(size_t size);
 extern void *osi_AllocMediumSpace(size_t size);
 extern void *osi_AllocSmallSpace(size_t size);
 #ifndef osi_AllocSmall
 extern char *osi_AllocSmall(register afs_int32 size, register afs_int32 morespace);
 #endif
-extern void osi_FreeLargeSpace(void *adata);
-extern void osi_FreeMediumSpace(void *adata);
-extern void osi_FreeSmallSpace(void *adata);
 
 
 

@@ -351,7 +351,7 @@ int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr,
 /*  This work should be handled by physstrat in ca/machdep.c.
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
-int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp);
+int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp)
 {
     afs_int32 returnCode;
 
