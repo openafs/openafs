@@ -499,12 +499,8 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		fprintf(STDOUT, "    Last Access %s",
 			ctime((time_t *) & pntr->accessDate));
 #endif
-	    if (pntr->updateDate < pntr->creationDate)
-		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & pntr->creationDate));
-	    else
-		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & pntr->updateDate));
+	    fprintf(STDOUT, "    Last Update %s",
+		    ctime((time_t *) & pntr->updateDate));
 	    fprintf(STDOUT,
 		    "    %d accesses in the past day (i.e., vnode references)\n",
 		    pntr->dayUse);
@@ -656,12 +652,8 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		fprintf(STDOUT, "    Last Access %s",
 			ctime((time_t *) & a_xInfoP->accessDate));
 #endif
-	    if (a_xInfoP->updateDate < a_xInfoP->creationDate)
-		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & a_xInfoP->creationDate));
-	    else
-		fprintf(STDOUT, "    Last Update %s",
-			ctime((time_t *) & a_xInfoP->updateDate));
+	    fprintf(STDOUT, "    Last Update %s",
+		    ctime((time_t *) & a_xInfoP->updateDate));
 	    fprintf(STDOUT,
 		    "    %d accesses in the past day (i.e., vnode references)\n",
 		    a_xInfoP->dayUse);
@@ -2575,6 +2567,10 @@ DumpVolume(as)
 #define FULL  2
 #define INC   3
 
+#define TS_DUMP	1
+#define TS_KEEP	2
+#define TS_NEW	3
+
 static
 RestoreVolume(as)
      register struct cmd_syndesc *as;
@@ -2582,6 +2578,7 @@ RestoreVolume(as)
 {
     afs_int32 avolid, aserver, apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
+    afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
     char prompt;
     char afilename[NameLen], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
@@ -2626,6 +2623,40 @@ RestoreVolume(as)
     if (as->parms[7].items) {
 	readonly = 1;
 	voltype = ROVOL;
+    }
+
+    if (as->parms[8].items) {
+	if ((strcmp(as->parms[8].items->data, "d") == 0)
+	    || (strcmp(as->parms[8].items->data, "dump") == 0)) {
+	    acreation = TS_DUMP;
+	} else if ((strcmp(as->parms[8].items->data, "k") == 0)
+	    || (strcmp(as->parms[8].items->data, "keep") == 0)) {
+	    acreation = TS_KEEP;
+	} else if ((strcmp(as->parms[8].items->data, "n") == 0)
+	    || (strcmp(as->parms[8].items->data, "new") == 0)) {
+	    acreation = TS_NEW;
+	} else {
+	    fprintf(STDERR, "vos: %s is not a valid argument to -creation\n",
+		    as->parms[8].items->data);
+	    exit(1);
+	}
+    }
+
+    if (as->parms[9].items) {
+	if ((strcmp(as->parms[9].items->data, "d") == 0)
+	    || (strcmp(as->parms[9].items->data, "dump") == 0)) {
+	    alastupdate = TS_DUMP;
+	} else if ((strcmp(as->parms[9].items->data, "k") == 0)
+	    || (strcmp(as->parms[9].items->data, "keep") == 0)) {
+	    alastupdate = TS_KEEP;
+	} else if ((strcmp(as->parms[9].items->data, "n") == 0)
+	    || (strcmp(as->parms[9].items->data, "new") == 0)) {
+	    alastupdate = TS_NEW;
+	} else {
+	    fprintf(STDERR, "vos: %s is not a valid argument to -lastupdate\n",
+		    as->parms[9].items->data);
+	    exit(1);
+	}
     }
 
     aserver = GetServer(as->parms[0].items->data);
@@ -2779,6 +2810,38 @@ RestoreVolume(as)
 	restoreflags |= RV_OFFLINE;
     if (readonly)
 	restoreflags |= RV_RDONLY;
+
+    switch (acreation) {
+	case TS_DUMP:
+	    restoreflags |= RV_CRDUMP;
+	    break;
+	case TS_KEEP:
+	    restoreflags |= RV_CRKEEP;
+	    break;
+	case TS_NEW:
+	    restoreflags |= RV_CRNEW;
+	    break;
+	default:
+	    if (aoverwrite == FULL)
+		restoreflags |= RV_CRNEW;
+	    else
+		restoreflags |= RV_CRKEEP;
+    }
+
+    switch (alastupdate) {
+	case TS_DUMP:
+	    restoreflags |= RV_LUDUMP;
+	    break;
+	case TS_KEEP:
+	    restoreflags |= RV_LUKEEP;
+	    break;
+	case TS_NEW:
+	    restoreflags |= RV_LUNEW;
+	    break;
+	default:
+	    restoreflags |= RV_LUKEEP;
+    }
+
     code =
 	UV_RestoreVolume(aserver, apart, avolid, avolname, restoreflags,
 			 WriteData, afilename);
@@ -5373,6 +5436,10 @@ main(argc, argv)
 		"leave restored volume offline");
     cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
 		"make restored volume read-only");
+    cmd_AddParm(ts, "-creation", CMD_SINGLE, CMD_OPTIONAL,
+		"dump | keep | new");
+    cmd_AddParm(ts, "-lastupdate", CMD_SINGLE, CMD_OPTIONAL,
+		"dump | keep | new");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("unlock", LockReleaseCmd, 0,
