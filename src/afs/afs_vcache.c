@@ -957,6 +957,10 @@ restart:
 #ifdef STRUCT_INODE_HAS_I_SB_LIST
 	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
 #endif
+#ifdef STRUCT_INODE_HAS_INOTIFY_LOCK
+	INIT_LIST_HEAD(&inode->inotify_watches); 
+	spin_lock_init(&inode->inotify_lock); 
+#endif 
     }
 #endif
 
