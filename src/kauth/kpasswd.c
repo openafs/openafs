@@ -211,10 +211,10 @@ CommandProc(as, arock)
      char *arock;
      struct cmd_syndesc *as;
 {
-    char name[MAXKTCNAMELEN];
-    char instance[MAXKTCNAMELEN];
-    char cell[MAXKTCREALMLEN];
-    char realm[MAXKTCREALMLEN];
+    char name[MAXKTCNAMELEN]="";
+    char instance[MAXKTCNAMELEN]="";
+    char cell[MAXKTCREALMLEN]="";
+    char realm[MAXKTCREALMLEN]="";
     afs_int32 serverList[MAXSERVERS];
     char *lcell;		/* local cellname */
     int code;
