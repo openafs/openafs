@@ -455,7 +455,8 @@ static verifyInterfaceAddress(ame, info, aservers)
     afs_uint32 aservers[]; 	/* list of all possible server addresses */
 {
     afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
-    int 	count, found, i, j, totalServers, start, end;
+    afs_uint32  myAddr2[UBIK_MAX_INTERFACE_ADDR];
+    int 	count, found, i, j, totalServers, start, end, usednetfiles = 0;
 
     if (info)
         totalServers = info->numServers;
@@ -484,6 +485,7 @@ static verifyInterfaceAddress(ame, info, aservers)
 	ubik_print("Aborting..\n");
 	return UBADHOST;
       }
+      usednetfiles++;
     }
     else {
       /* get all my interface addresses in net byte order */
@@ -511,7 +513,32 @@ static verifyInterfaceAddress(ame, info, aservers)
     {
 	ubik_print("ubik: primary address %s does not exist\n",
 			afs_inet_ntoa(*ame));
-	return UBADHOST;
+	/* if we had the result of rx_getAllAddr already, avoid subverting
+	   the "is gethostbyname(gethostname()) us" check. If we're
+	   using NetInfo/NetRestrict, we assume they have enough clue
+	   to avoid that big hole in their foot from the loaded gun. */
+	if (usednetfiles) {
+	    /* take the address we did get, then see if ame was masked */
+	    *ame=myAddr[0];
+	    count = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR); 
+	    if ( count <= 0 )           /* no address found */
+	    {
+		ubik_print("ubik: No network addresses found, aborting..");
+		return UBADHOST;
+	    }
+	    
+	    /* verify that the My-address passed in by ubik is correct */
+	    for ( j=0, found = 0; j < count; j++)
+	    {
+		if ( *ame == myAddr2[j] ) /* both in net byte order */
+		{
+		    found = 1;
+		    break;
+		}
+	    }
+	}
+	if ( !found )
+	    return UBADHOST;
     }
 
     /* if any of my addresses are there in serverList, then
