@@ -123,6 +123,7 @@ static cs_ProcTail_setup();
 static ss_Proc_CodeGeneration();
 static ss_ProcName_setup();
 static ss_ProcParams_setup();
+static ss_ProcProto_setup();
 static ss_ProcSpecial_setup();
 static ss_ProcUnmarshallInParams_setup();
 static ss_ProcCallRealProc_setup();
@@ -1347,6 +1348,7 @@ definition *defp;
     ss_ProcName_setup(defp);
     if (!cflag) {
 	ss_ProcParams_setup(defp, &somefrees);
+	ss_ProcProto_setup(defp, &somefrees);
 	ss_ProcSpecial_setup(defp, &somefrees);
 	ss_ProcUnmarshallInParams_setup(defp);
 	ss_ProcCallRealProc_setup(defp);
@@ -1440,6 +1442,23 @@ int *somefrees;
 	}
     }	
     fprintf(fout, "\n");
+}
+
+
+static
+ss_ProcProto_setup(defp, somefrees)
+definition *defp;
+int *somefrees;
+{
+    proc1_list *plist, *plist1;
+    list *listp;
+    definition *defp1;
+    int preserve_flag = 0;
+
+	f_print(fout, "#ifndef KERNEL\n");
+	f_print(fout, "\tafs_int32 %s%s%s%s();\n", prefix, ServerPrefix, 
+		PackagePrefix[PackageIndex], defp->pc.proc_name);
+	f_print(fout, "#endif\n");
 }
 
 
@@ -1786,7 +1805,7 @@ er_ProcProcsArray_setup()
 static
 er_ProcMainBody_setup()
 {
-    f_print(fout, "%s%sExecuteRequest(z_call)\n", prefix,  PackagePrefix[PackageIndex]);
+    f_print(fout, "int %s%sExecuteRequest(z_call)\n", prefix,  PackagePrefix[PackageIndex]);
     f_print(fout, "\tregister struct rx_call *z_call;\n");
     f_print(fout, "{\n\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
@@ -1802,7 +1821,7 @@ er_ProcMainBody_setup()
 static
 er_HeadofOldStyleProc_setup()
 {
-    f_print(fout, "\n%s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+    f_print(fout, "\nint %s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "\tregister struct rx_call *z_call;\n");
     f_print(fout, "{\n");
     f_print(fout, "\tint op;\n");
