@@ -109,7 +109,7 @@ int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag, int change_pare
 }
 
 
-/* Intercept the standard system call. XXX take old_gid_t in new kernels */
+/* Intercept the standard system call. */
 extern long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 asmlinkage long afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
@@ -157,6 +157,7 @@ asmlinkage long afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
     unlock_kernel();
 
     code = (*sys_setgroups32p)(gidsetsize, grouplist);
+
     if (code) {
 	return code;
     }
@@ -175,12 +176,12 @@ asmlinkage long afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
 }
 #endif
 
-#if defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-extern int (*sys32_setgroupsp)(int gidsetsize, __kernel_gid_t32 *grouplist);
-asmlinkage int afs32_xsetgroups(int gidsetsize, __kernel_gid_t32 *grouplist)
+extern long (*sys32_setgroupsp)(int gidsetsize, old_gid_t *grouplist);
+asmlinkage long afs32_xsetgroups(int gidsetsize, old_gid_t *grouplist)
 {
-    int code;
+    long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
@@ -209,10 +210,10 @@ asmlinkage int afs32_xsetgroups(int gidsetsize, __kernel_gid_t32 *grouplist)
 }
 #ifdef AFS_LINUX24_ENV
 /* Intercept the uid32 system call as used by 32bit programs. */
-extern int (*sys32_setgroups32p)(int gidsetsize, __kernel_gid_t32 *grouplist);
-asmlinkage int afs32_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
+extern long (*sys32_setgroups32p)(int gidsetsize, gid_t *grouplist);
+asmlinkage long afs32_xsetgroups32(int gidsetsize, gid_t *grouplist)
 {
-    int code;
+    long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
