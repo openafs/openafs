@@ -3462,12 +3462,13 @@ void
 IpAddrChangeMonitor(void * hWnd)
 {
 #ifdef USE_OVERLAPPED
-    HANDLE Handle = INVALID_HANDLE_VALUE;
+    HANDLE Handle = INVALID_HANDLE_VALUE;   /* Do Not Close This Handle */
     OVERLAPPED Ovlap;
 #endif /* USE_OVERLAPPED */
     DWORD Result;
     DWORD prevNumOfAddrs = GetNumOfIpAddrs();
     DWORD NumOfAddrs;
+    char message[256];
 
     if ( !hWnd )
         return;
@@ -3479,33 +3480,48 @@ IpAddrChangeMonitor(void * hWnd)
         Result = NotifyAddrChange(&Handle,&Ovlap);
         if (Result != ERROR_IO_PENDING)
         {        
-            printf("NotifyAddrChange() failed with error %d \n", Result);
+            if ( IsDebuggerPresent() ) {
+                sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
+                OutputDebugString(message);
+            }
             break;
         }
 
-        if ((Result = WaitForSingleObject(Handle,INFINITE)) == WAIT_FAILED)
+        if ((Result = WaitForSingleObject(Handle,INFINITE)) != WAIT_OBJECT_0)
         {
-            printf("WaitForSingleObject() failed with error %d\n",
-                    GetLastError());
+            if ( IsDebuggerPresent() ) {
+                sprintf(message, "WaitForSingleObject() failed with error %d\n",
+                        GetLastError());
+                OutputDebugString(message);
+            }
             continue;
         }
 
         if (GetOverlappedResult(Handle, &Ovlap,
                                  &DataTransfered, TRUE) == 0)
         {
-            printf("GetOverlapped result failed %d \n",
-                    GetLastError());
+            if ( IsDebuggerPresent() ) {
+                sprintf(message, "GetOverlapped result failed %d \n",
+                        GetLastError());
+                OutputDebugString(message);
+            }
             break;
         }
-
 #else
         Result = NotifyAddrChange(NULL,NULL);
+        if (Result != NO_ERROR)
+        {        
+            if ( IsDebuggerPresent() ) {
+                sprintf(message, "NotifyAddrChange() failed with error %d \n", Result);
+                OutputDebugString(message);
+            }
+            break;
+        }
 #endif
         
         NumOfAddrs = GetNumOfIpAddrs();
 
         if ( IsDebuggerPresent() ) {
-            char message[256];
             sprintf(message,"IPAddrChangeMonitor() NumOfAddrs: now %d was %d\n",
                     NumOfAddrs, prevNumOfAddrs);
             OutputDebugString(message);
@@ -3520,11 +3536,6 @@ IpAddrChangeMonitor(void * hWnd)
         }
         prevNumOfAddrs = NumOfAddrs;
     }
-
-#ifdef USE_OVERLAPPED
-    if (Handle != INVALID_HANDLE_VALUE)
-        CloseHandle(Handle);
-#endif 
 }
 
 
