@@ -446,9 +446,22 @@ int rx_Init(u_int port)
 #else
     osi_GetTime(&tv);
 #endif
-    /* *Slightly* random start time for the cid.  This is just to help
-     * out with the hashing function at the peer */
-    rx_port = port;
+    if (port) {
+	rx_port = port;
+    } else {
+#if defined(KERNEL) && !defined(UKERNEL)
+	/* Really, this should never happen in a real kernel */
+	rx_port = 0;
+#else
+	struct sockaddr_in addr;
+	int addrlen = sizeof(addr);
+	if (getsockname(rx_socket, (struct sockaddr *) &addr, &addrlen)) {
+	    rx_Finalize();
+	    return -1;
+	}
+	rx_port = addr.sin_port;
+#endif
+    }
     rx_stats.minRtt.sec = 9999999;
 #ifdef	KERNEL
     rx_SetEpoch (tv.tv_sec | 0x80000000);
@@ -459,6 +472,8 @@ int rx_Init(u_int port)
     MUTEX_ENTER(&rx_stats_mutex);
     rxi_dataQuota += rx_extraQuota;	/* + extra pkts caller asked to rsrv */
     MUTEX_EXIT(&rx_stats_mutex);
+    /* *Slightly* random start time for the cid.  This is just to help
+     * out with the hashing function at the peer */
     rx_nextCid = ((tv.tv_sec ^ tv.tv_usec) << RX_CIDSHIFT);
     rx_connHashTable = (struct rx_connection **) htable;
     rx_peerHashTable = (struct rx_peer **) ptable;
