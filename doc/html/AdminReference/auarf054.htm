@@ -1,0 +1,343 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf053.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf055.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRUSSBULKINPUT" HREF="auarf002.htm#ToC_52">uss Bulk Input File</A></H2>
+<A NAME="IDX4099"></A>
+<A NAME="IDX4100"></A>
+<A NAME="IDX4101"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Provides instructions for the <B>uss bulk</B> command
+<P><STRONG>Description</STRONG>
+<P>The <B>uss</B> bulk input file lists instructions for the
+<B>uss</B> command interpreter to execute when running the <B>uss
+bulk</B> command. If the file includes <B>add</B> instructions
+that reference a <B>uss</B> template file, then the template file must
+also exist.
+<P><B>Summary of Bulk Input File Instructions</B>
+<P>The bulk input file can include the following instructions, each on its own
+line. A more detailed description of each instruction's syntax
+follows this list.
+<DL>
+<P><DT><B>add
+</B><DD>Creates a user account. Equivalent to the <B>uss add</B>
+command.
+<P><DT><B>delete
+</B><DD>Deletes a user account. Equivalent to the <B>uss delete</B>
+command.
+<P><DT><B>delvolume
+</B><DD>Removes the volume and VLDB entry for each account referenced by a
+<B>delete</B> instruction that follows this instruction in the bulk input
+file.
+<P><DT><B>exec
+</B><DD>Executes a command.
+<P><DT><B>savevolume
+</B><DD>Preserves the volume and VLDB entry for each account referenced by a
+<B>delete</B> instruction that follows this instruction in the bulk input
+file.
+</DL>
+<P><B>The add Instruction for Creating an Account</B>
+<A NAME="IDX4102"></A>
+<A NAME="IDX4103"></A>
+<P>The <B>add</B> instruction creates a user account. Each instance
+in the bulk input file is equivalent in effect to a <B>uss add</B> command
+issued on the command line. The order of the instruction's fields
+matches the order of arguments to the <B>uss add</B> command, although
+some arguments do not have a corresponding field. Like the <B>uss
+add</B> command's arguments, many of the fields correspond to (provide
+a value for) a variable in the <B>uss</B> template file, as indicated in
+the following description of each field.
+<P>The instruction's syntax is as follows. It appears on multiple
+lines here only for the sake of legibility--each <B>add</B>
+instruction must appear on a single line in the bulk input file.
+<PRE>   add <VAR>username</VAR>[:<VAR>full_name</VAR>][:<VAR>initial_password</VAR>][:<VAR>password_expires</VAR>]
+       [:<VAR>file_server</VAR>][:<VAR>partition</VAR>][:<VAR>mount_point</VAR>][:<VAR>uid</VAR>][:<VAR>var1</VAR>][:<VAR>var2</VAR>]
+       [:<VAR>var3</VAR>][:<VAR>var4</VAR>][:<VAR>var5</VAR>][:<VAR>var6</VAR>][:<VAR>var7</VAR>][:<VAR>var8</VAR>][:<VAR>var9</VAR>][:]
+   
+</PRE>
+<P>To omit a value for a field (presumably because it is optional or the
+template specifies a constant value for it), type nothing between the two
+colons that surround it. After the last argument provided, end the line
+with either a colon and carriage return, or a carriage return alone.
+<P>The meaning of, and acceptable values for, each field are as
+follows.
+<DL>
+<P><DT><B><VAR>username</VAR>
+</B><DD>Names the user's Authentication Database and Protection Database
+entries. It can include up to eight alphanumeric characters, but not
+the <B>:</B> (colon), <B>.</B> (period), or <B>@</B>
+(at-sign) characters. Because it becomes the username (the name under
+which a user logs in), it is best not to include shell metacharacters and to
+obey the restrictions that many operating systems impose on usernames
+(usually, to contain no more than eight lowercase letters).
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-user</B>. Corresponding variable in the template file:
+$USER.
+<P><DT><B><VAR>full_name</VAR>
+</B><DD>Specifies the user's full name. Do not surround it with double
+quotes (""), even if it contains spaces. If not provided, it defaults
+to the username in the <VAR>username</VAR> field. 
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-realname</B>. Corresponding variable in the template
+file: $NAME. Many operating systems include a field for the full
+name in a user's entry in the local password file (<B>/etc/passwd</B>
+or equivalent), and this variable can be used to pass a value to be used in
+that field.
+<P><DT><B><VAR>initial_password</VAR>
+</B><DD>Specifies the user's initial password. Although the AFS
+commands that handle passwords accept strings of virtually unlimited length,
+it is best to use a password of eight characters or less, which is the maximum
+length that many applications and utilities accept. If not provided,
+this argument defaults to the string <B>changeme</B>.
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-pass</B>. Corresponding variable in the template file:
+none.
+<P><DT><B><VAR>password_expires</VAR>
+</B><DD>Sets the number of days after a user's password is changed that it
+remains valid. Provide an integer from the range <B>1</B> through
+<B>254</B> to specify the number of days until expiration, or the value
+<B>0</B> to indicate that the password never expires (the default).
+<P>When the password becomes invalid (expires), the user is unable to
+authenticate, but has 30 more days in which to issue the <B>kpasswd</B>
+command to change the password (after that, only an administrator can change
+it).
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-pwexpires</B>. Corresponding variable in the template
+file: $PWEXPIRES.
+<P><DT><B><VAR>file_server</VAR>
+</B><DD>Names the file server machine on which to create the new user's
+volume. It is best to provide a fully-qualified hostname (for example,
+<B>fs1.abc.com</B>), but an abbreviated form is acceptable
+provided that the cell's naming service is available to resolve it at the
+time the volume is created.
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-server</B>. Corresponding variable in the template file:
+$SERVER.
+<P><DT><B><VAR>partition</VAR>
+</B><DD>Specifies the partition on which to create the user's volume; it
+must reside on the file server machine named in the <VAR>file_server</VAR>
+field. Identify the partition by its complete name (for example,
+<B>/vicepa</B>, or use one of the following abbreviations: 
+<PRE>   <B>/vicepa</B>     =     <B>vicepa</B>      =      <B>a</B>      =      <B>0</B>
+   <B>/vicepb</B>     =     <B>vicepb</B>      =      <B>b</B>      =      <B>1</B>
+   
+</PRE>
+<P>
+<P>After <B>/vicepz</B> (for which the index is 25) comes 
+<PRE>   <B>/vicepaa</B>    =     <B>vicepaa</B>     =      <B>aa</B>     =      <B>26</B>
+   <B>/vicepab</B>    =     <B>vicepab</B>     =      <B>ab</B>     =      <B>27</B>
+   
+</PRE>
+<P>and so on through 
+<PRE>   <B>/vicepiv</B>    =     <B>vicepiv</B>     =      <B>iv</B>     =      <B>255</B>
+    
+</PRE>
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-partition</B>. Corresponding variable in template:
+$PART.
+<P><DT><B><VAR>mount_point</VAR>
+</B><DD>Specifies the complete pathname for the user's home directory.
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-mount</B>.
+<P>Corresponding variable in template: $MTPT, but in the template
+file's <B>V</B> instruction only. Occurrences of the $MTPT
+variable in template instructions that follow the <B>V</B> instruction
+take their value from the <B>V</B> instruction's <VAR>mount_point</VAR>
+field. Thus the value of this command line argument becomes the value
+for the $MTPT variable in instructions that follow the <B>V</B>
+instruction only if the string $MTPT appears alone in the <B>V</B>
+instruction's <VAR>mount_point</VAR> field.
+<P><DT><B><VAR>uid</VAR>
+</B><DD>Specifies a positive integer other than <B>0</B> (zero) to assign as
+the user's AFS UID. If this argument is omitted, the Protection
+Server assigns an AFS UID that is one greater than the current value of the
+<TT>max</TT> <TT>user</TT> <TT>id</TT> counter (use the <B>pts
+listmax</B> command to display the counter). If including this
+argument, first use the <B>pts examine</B> command to verify that no
+existing account already has the desired AFS UID; if one does, the
+account-creation process terminates with an error.
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-uid</B>. Corresponding variable in template: $UID.
+<P><DT><B><VAR>var1</VAR> through <VAR>var9</VAR>
+</B><DD>Specifies values for each of the number variables $1 through $9 that can
+appear in the template file. The number variables allow the
+administrator to provide values for variables other than the set defined by
+the <B>uss</B> command suite.
+<P>Corresponding argument to the <B>uss add</B> command:
+<B>-var</B>. Corresponding variables in template: $1 through
+$9.
+<P>If providing a value in any of the fields, then in every field that
+precedes it either provide an actual value or indicate an empty field by
+putting nothing between two colons. It is acceptable, but not
+necessary, to indicate empty fields by putting colons after the last field
+that contains an actual value.
+</DL>
+<P><B>The delete Instruction for Deleting an Account</B>
+<A NAME="IDX4104"></A>
+<A NAME="IDX4105"></A>
+<P>The <B>delete</B> instruction deletes a user account from the
+system. Each instance in the bulk input file is equivalent in effect to
+a <B>uss delete</B> command issued on the command line. The order
+of the instruction's fields matches the order of arguments to the
+<B>uss delete</B> command:
+<PRE>   delete <VAR>username</VAR>:<VAR>mount_point_path</VAR>[:{ savevolume | delvolume }][:]
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>username</VAR>
+</B><DD>Names the entry to delete from the Protection and Authentication
+Databases.
+<P><DT><B><VAR>mount_point_path</VAR>
+</B><DD>Specifies the complete pathname to the user's home directory, which
+is deleted from the filespace. By default, the volume mounted there is
+also deleted from the file server machine where it resides, as is its record
+from the Volume Location Database (VLDB). To prevent deletion, include
+the <B>savevolume</B> string in the instruction's third field, or
+precede this <B>delete</B> instruction with a <B>savevolume</B>
+instruction. Partial pathnames are interpreted relative to the current
+working directory.
+<P><DT><B>savevolume
+</B><DD>Retains the volume on its file server machine, and the corresponding entry
+in the VLDB. Provide this value or <B>delvolume</B> in the third
+field, or omit both values to treat the volume according to the prevailing
+default, which is set by a preceding <B>savevolume</B> or
+<B>delvolume</B> instruction in the bulk input file.
+<P><DT><B>delvolume
+</B><DD>Removes the volume from its file server machine, and the corresponding
+entry from the VLDB. Provide this value or <B>savevolume</B> in the
+third field, or omit both values to treat the volume according to the
+prevailing default, which is set by a preceding <B>savevolume</B> or
+<B>delvolume</B> instruction in the bulk input file.
+</DL>
+<P>After the last argument provided, end the line with either a colon and
+carriage return or a carriage return alone.
+<P><B>The exec Instruction for Executing a Command</B>
+<P>The <B>exec</B> instruction executes the specified command, which can
+be a UNIX shell script or command, a program, or an AFS command. The
+<B>uss</B> command interpreter must have the necessary privileges in AFS
+and the local file system; it assumes the AFS and local identities of the
+issuer of the <B>uss bulk</B> command.
+<P>The instruction's syntax is as follows:
+<PRE>   exec <VAR>command</VAR>
+   
+</PRE>
+<P><B>The delvolume and savevolume Instructions for Setting the Default
+Treatment of Volumes</B>
+<A NAME="IDX4106"></A>
+<A NAME="IDX4107"></A>
+<A NAME="IDX4108"></A>
+<A NAME="IDX4109"></A>
+<P>The <B>savevolume</B> and <B>delvolume</B> instructions determine
+the default treatment of volumes referenced by the <B>delete</B>
+instructions that follow them in the bulk input file. Their syntax is
+as follows:
+<PRE>   savevolume
+   delvolume
+   
+</PRE>
+<P>The <B>savevolume</B> instruction prevents the removal of the volume
+and VLDB entry for all <B>delete</B> instruction that follow it in the
+bulk input file, and the <B>delvolume</B> instruction removes the volume
+and VLDB entry for all subsequent <B>delete</B> instructions.
+Either setting persists until its opposite appears in the file, or until the
+end of the bulk file.
+<P>If neither line appears in the bulk input file, the default is to remove
+the volume and the VLDB entry; <B>delete</B> instructions that appear
+before the first <B>savevolume</B> instruction are also subject to this
+default. If a <B>delete</B> instruction's third field
+specifies either <B>savevolume</B> or <B>delvolume</B>, that setting
+overrides the default.
+<P><STRONG>Examples</STRONG>
+<P>The following example <B>add</B> instruction creates an
+authentication-only account. The user's initial password is
+<B>changeme</B> (the default).
+<PRE>   add anderson
+   
+</PRE>
+<P>The following example <B>add</B> instructions refer to the indicated
+<B>V</B> instruction in a template file (which must appear on a single
+line in the template file). 
+<PRE>   add smith:John Smith:::fs1:a:::::marketing 
+   add jones:Pat Jones:::fs3:c:::::finance
+   V user.$USER $SERVER.abc.com /vicep$PART 2000 \
+       /afs/abc.com/usr/$3/$USER $UID $USER all
+   
+</PRE>
+<P>The first <B>add</B> instruction creates an account called
+<B>smith</B> in the Protection and Authentication Databases, with an
+initial password <B>changeme</B> and a value for $UID provided by the
+Protection Server. The volume <B>user.smith</B> resides on
+partition <B>/vicepa</B> of file server machine
+<B>fs1.abc.com</B> and is mounted at
+<B>/afs/abc.com/usr/marketing/smith</B>. He owns his home
+directory and has all access permissions on its root directory's access
+control list (ACL). The account for <B>jones</B> is similar, except
+that the volume resides on partition <B>/vicepc</B> of file server machine
+<B>fs3.abc.com</B> and is mounted at
+<B>/afs/abc.com/usr/finance/jones</B>.
+<P>Notice that the fields corresponding to the volume mount point, UID, $1
+variable, and $2 variable are empty (between <TT>a</TT> and
+<TT>marketing</TT> on the first example line), because their corresponding
+variables do not appear in the template file. The initial password
+field is also empty.
+<P>The following <B>add</B> instructions are equivalent in effect to the
+preceding example, but explicitly indicate empty fields for all of the number
+variables that don't have a value:
+<PRE>   add smith:John Smith:::fs1:a:::::marketing::::::
+   add jones:Pat Jones:::fs3:c:::::finance::::::
+   
+</PRE>
+<P>The following example shows a complete bulk file containing a set of
+<B>delete</B> instructions combined with a <B>savevolume</B>
+instruction. Because the <B>delete</B> instruction for users
+<B>smith</B>, <B>pat</B>, and <B>rogers</B> appear before the
+<B>savevolume</B> instruction and the third field is blank in each, the
+corresponding home volumes are removed. The volume for user
+<B>terry</B> is retained because the default established by the
+<B>savevolume</B> instruction applies to it, but user
+<B>johnson</B>'s volume is removed because the third field of her
+<B>delete</B> instruction overrides the current default.
+<PRE>   delete smith:/afs/abc.com/usr/smith
+   delete pat:/afs/abc.com/usr/pat
+   delete rogers:/afs/abc.com/usr/rogers
+   savevolume
+   delete terry:/afs/abc.com/usr/terry
+   delete johnson:/afs/abc.com/usr/johnson:delvolume
+   
+</PRE>
+<P>The following example <B>exec</B> instruction appears between sets of
+<B>add</B> and <B>delete</B> instructions in a bulk input file.
+A message appears in the command shell where the <B>uss bulk</B> command
+is issued, to indicate when the additions are finished and the deletions
+beginning.
+<PRE>   exec echo "Additions completed; beginning deletions..."
+   
+</PRE>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf055.htm#HDRUSSFILE">uss Template File</A>
+<P><A HREF="auarf243.htm#HDRUSS_ADD">uss add</A>
+<P><A HREF="auarf245.htm#HDRUSS_BULK">uss bulk</A>
+<P><A HREF="auarf246.htm#HDRUSS_DELETE">uss delete</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf053.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf055.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

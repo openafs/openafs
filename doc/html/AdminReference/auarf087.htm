@@ -1,0 +1,292 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf086.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf088.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBK_SCANTAPE" HREF="auarf002.htm#ToC_101">backup scantape</A></H2>
+<A NAME="IDX4400"></A>
+<A NAME="IDX4401"></A>
+<A NAME="IDX4402"></A>
+<A NAME="IDX4403"></A>
+<A NAME="IDX4404"></A>
+<A NAME="IDX4405"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Extracts dump information from a tape
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>backup scantape</B> [<B>-dbadd</B>]  [<B>-portoffset</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]
+                [<B>-localauth</B>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+  
+<B>backup sc</B> [<B>-d</B>]  [<B>-p</B> &lt;<VAR>TC&nbsp;port&nbsp;offset</VAR>>]  [<B>-l</B>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-help</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>backup scantape</B> command extracts information from the dump
+labels and volume headers on the tape in the device controlled by the Tape
+Coordinator indicated by the <B>-portoffset</B> argument. The Tape
+Coordinator displays the information for each volume in its window as soon as
+it extracts it (rather than waiting until it has scanned the entire
+tape).
+<P>(If the <B>FILE YES</B> instruction appears in the
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file associated with the
+specified port offset, then the <B>backup scantape</B> command extracts
+dump information from the backup data file named in that port offset's
+entry in the <B>/usr/afs/backup/tapeconfig</B> file on the Tape
+Coordinator machine, rather than from a tape. For the sake of clarity,
+the following text refers to tapes only, but the Backup System handles backup
+data files in much the same way.)
+<P>If the <B>-dbadd</B> flag is provided, the <B>backup scantape</B>
+command creates new dump and volume records in the Backup Database for the
+scanned information. However, if it finds that a record already exists
+in the database for the same dump, it terminates the scanning
+operation.
+<P>The scanning operation works only on tapes containing volume data.
+The command fails with an error message if the tape contains a copy of the
+Backup Database (was created with the <B>backup savedb</B> command, or has
+the AFS tape name <B>Ubik_db_dump.1</B>).
+<P>The Tape Coordinator's default response to this command is to access
+the tape by invoking the <B>MOUNT</B> instruction in the
+<B>CFG_</B><VAR>device_name</VAR> file, or by prompting the backup operator
+to insert the tape if there is no <B>MOUNT</B> instruction.
+However, if the <B>AUTOQUERY NO</B> instruction appears in the
+<B>CFG_</B><VAR>device_name</VAR> file, or if the issuer of the
+<B>butc</B> command included the <B>-noautoquery</B> flag, the Tape
+Coordinator instead expects the tape to be in the device already. If it
+is not, the Tape Coordinator invokes the <B>MOUNT</B> instruction or
+prompts the operator.
+<P>To terminate a tape scanning operation in interactive mode, issue the
+<B>(backup) kill</B> command. In noninteractive mode, the only
+choice is to use a termination signal such as &lt;<B>Ctrl-c</B>> to halt
+the Tape Coordinator completely.
+<P><STRONG>Cautions</STRONG>
+<P>A scanning operation does not have to begin with the first tape in a dump
+set, but the Backup System can process tapes only in sequential order after
+the initial tape provided. The Tape Coordinator automatically requests
+any subsequent tapes by invoking the <B>MOUNT</B> instruction in the local
+<B>/usr/afs/backup/CFG_</B><VAR>device_name</VAR> file, or by prompting the
+operator if there is no <B>MOUNT</B> instruction.
+<P>The Tape Coordinator's success in scanning a tape that is corrupted or
+damaged depends on the extent of the damage and what type of data is
+corrupted. It can almost always scan the tape successfully up to the
+point of damage. If the damage is minor, the Tape Coordinator can
+usually skip over it and scan the rest of the tape, but more major damage can
+prevent further scanning. Because a scanning operation can start on any
+tape in a dump set, damage on one tape does not prevent scanning of the others
+in the dump set. However, it is possible to scan either the tapes that
+precede the damaged one or the ones that follow it, but not both.
+<P>If a tape is relabeled with the <B>backup labeltape</B> command, it is
+not possible to recover data from it for the purposes of rebuilding the Backup
+Database.
+<P>If the <B>-dbadd</B> flag is included on the command, it is best not to
+terminate the tape scanning operation before it completes (for example, by
+issuing the <B>(backup) kill</B> command in interactive mode). The
+Backup System writes a new record in the Backup Database for each dump as soon
+as it scans the relevant information on the tape, and so it possibly has
+already written new records. If the operator wants to rerun the
+scanning operation, he or she must locate and remove the records created
+during the terminated operation: the second operation exits
+automatically if it finds that a record that it needs to create already
+exists.
+<P>If the <B>-dbadd</B> flag is included and the first tape provided is
+not the first tape in the dump set, the following restrictions apply:
+<UL>
+<P><LI>If the first data on the tape is a continuation of a volume that begins on
+the previous (unscanned) tape in the dump set, the Backup System does not add
+a record for that volume to the Backup Database.
+<P><LI>The Backup System must read the marker that indicates the start of an
+appended dump to add database records for the volumes in it. If the
+first volume on the tape belongs to an appended dump, but is not immediately
+preceded by the appended-dump marker, the Backup System does not create a
+Backup Database record for it or any subsequent volumes that belong to that
+appended dump.
+</UL>
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-dbadd
+</B><DD>Adds the information extracted from the tape to the Backup Database (but
+only if the database does not already contain an entry with the same dump ID
+number).
+<P><DT><B>-portoffset
+</B><DD>Specifies the port offset number of the Tape Coordinator handling the
+tapes for this operation.
+<P><DT><B>-localauth
+</B><DD>Constructs a server ticket using a key from the local
+<B>/usr/afs/etc/KeyFile</B> file. The <B>backup</B> command
+interpreter presents it to the Backup Server, Volume Server and VL Server
+during mutual authentication. Do not combine this flag with the
+<B>-cell</B> argument. For more details, see the introductory
+<B>backup</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. Do not combine this
+argument with the <B>-localauth</B> flag. For more details, see the
+introductory <B>backup</B> reference page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>For every dump on a tape, the <B>backup scantape</B> command displays
+in the Tape Coordinator window the dump label and the volume header of each
+volume in the dump. If a dump spans more than one tape, the dump label
+does not repeat at the beginning of subsequent tapes.
+<P>A dump label contains the following fields, which are the same as in the
+output from the <B>backup readlabel</B> command:
+<DL>
+<P><DT><B><TT>tape name</TT><TT></TT>
+</B><DD>The permanent name assigned by using the <B>-pname</B> argument of the
+<B>backup labeltape</B> command. This name remains on the tape
+until that argument is used again, no matter how many times the tape is
+recycled or otherwise relabeled. If the tape does not have a permanent
+name, the value <TT>&lt;NULL></TT> appears in this field.
+<P><DT><B><TT>AFS tape name</TT>
+</B><DD>A tape name in one of the following prescribed formats. The Backup
+System automatically writes the appropriate AFS tape name to the label as part
+of a <B>backup dump</B> operation, or the operator can assign it with the
+<B>-name</B> argument to the <B>backup labeltape</B> command. 
+<UL>
+<P><LI><VAR>volume_set_name</VAR>.<VAR>dump_level_name</VAR>.<VAR>tape
+_index</VAR>, if the tape contains volume data. The
+<VAR>volume_set_name</VAR> is the name of the volume set that was dumped to
+create the initial dump in the dump set of which this tape is a part;
+<VAR>dump_level_name</VAR> is the last pathname element of the dump level at
+which the initial dump was backed up; and <VAR>tape_index</VAR> is the
+numerical position of the tape in the dump set.
+<P><LI><TT>&lt;NULL></TT> if the tape has no AFS tape name. This is
+normally the case if the <B>-name</B> argument was not included the last
+time the <B>backup labeltape</B> command was used on this tape, and no
+data has been written to it since.
+</UL>
+<P><DT><B><TT>creationTime</TT>
+</B><DD>The date and time at which the Backup System started performing the dump
+operation that created the initial dump.
+<P><DT><B><TT>cell</TT>
+</B><DD>The cell in which the dump set was created. This is the cell whose
+Backup Database contains a record of the dump set.
+<P><DT><B><TT>size</TT>
+</B><DD>The tape's capacity (in kilobytes) as recorded on the label, rather
+than the amount of data on the tape. The value is assigned by the
+<B>-size</B> argument to the <B>backup labeltape</B> command or
+derived from the <B>/usr/afs/backup/tapeconfig</B> file on the Tape
+Coordinator machine, not from a measurement of the tape.
+<P><DT><B><TT>dump</TT> <TT>path</TT>
+</B><DD>The dump level of the initial dump in the dump set.
+<P><DT><B><TT>dump</TT> <TT>id</TT>
+</B><DD>The dump ID number of the initial dump in the dump set, as recorded in the
+Backup Database.
+<P><DT><B><TT>useCount</TT>
+</B><DD>The number of times a dump has been written to the tape, or it has been
+relabeled.
+</DL>
+<P>The volume header contains the following fields:
+<DL>
+<P><DT><B><TT>volume</TT> <TT>name</TT>
+</B><DD>The volume name, complete with a <TT>.backup</TT> or
+<TT>.readonly</TT> extension, if appropriate.
+<P><DT><B><TT>volume</TT> <TT>ID</TT>
+</B><DD>The volume's volume ID.
+<P><DT><B><TT>dumpSetName</TT>
+</B><DD>The dump to which the volume belongs. The dump name is of the form
+<VAR>volume_set_name</VAR><B>.</B><VAR>dump_level_name</VAR> and
+matches the name displayed in the dump label.
+<P><DT><B><TT>dumpID</TT>
+</B><DD>The dump ID of the dump named in the <TT>dumpSetName</TT> field.
+<P><DT><B><TT>level</TT>
+</B><DD>The depth in the dump hierarchy of the dump level used in creating the
+dump. A value of <TT>0</TT> indicates a full dump. A value of
+<TT>1</TT> or greater indicates an incremental dump made at the indicated
+depth in the hierarchy. The value reported is for the entire dump, not
+necessarily for the volume itself; for example, it is possible for a dump
+performed at an incremental level to include a full dump of an individual
+volume if the volume was omitted from previous dumps.
+<P><DT><B><TT>parentID</TT>
+</B><DD>The dump ID number of <TT>dumpSetName</TT>'s parent dump. It
+is <TT>0</TT> if the value in the <TT>level</TT> field is
+<TT>0</TT>.
+<P><DT><B><TT>endTime</TT>
+</B><DD>Is always <TT>0</TT>; it is reserved for internal use.
+<P><DT><B><TT>cloneDate</TT>
+</B><DD>The date and time at which the volume was created. For a backup or
+read-only volume, this represents the time at which it was cloned from its
+read/write source. For a read/write volume, it indicates the time at
+which the Backup System locked the volume for purposes of including it in the
+dump named in the <TT>dumpSetName</TT> field.
+</DL>
+<P>The message <TT>Scantape: Finished</TT> indicates the completion of
+the output.
+<P>In normal circumstances, the Backup System writes a marker to indicate that
+a volume is the last one on a tape, or that the volume continues on the next
+tape. However, if a backup operation terminated abnormally (for
+example, because the operator terminated the Tape Coordinator by issuing the
+&lt;<B>Ctrl-c</B>> command during the operation), then there is no such
+marker. Some very early versions of the Backup System also did not
+write these markers. If a tape does not conclude with one of the
+expected markers, the Tape Coordinator cannot determine if there is a
+subsequent tape in the dump set and so generates the following message in its
+window:
+<PRE>   Are there more tapes? (y/n)
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the output for the first two volumes on a tape
+in the device with port offset 0:
+<PRE>   % <B>backup scantape</B>
+   Dump label
+   ----------
+   tape name = monthly_guest
+   AFS tape name = guests.monthly.3
+   creationTime =  Mon Feb  1 04:06:40 1999
+   cell = abc.com
+   size = 2150000 Kbytes
+   dump path = /monthly
+   dump id = 917860000
+   useCount = 44
+   -- End of dump label --
+   -- volume --
+   volume name: user.guest10.backup
+   volume ID 1937573829
+   dumpSetName: guests.monthly
+   dumpID 917860000
+   level 0
+   parentID 0
+   endTime 0
+   clonedate Mon Feb  1 03:03:23 1999
+   -- volume --
+   volume name: user.guest11.backup
+   volume ID 1938519386
+   dumpSetName: guests.monthly
+   dumpID 917860000
+   level 0
+   parentID 0
+   endTime 0
+   clonedate Mon Feb  1 03:05:15 1999
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be listed in the <B>/usr/afs/etc/UserList</B> file on
+every machine where the Backup Server is running, or must be logged onto a
+server machine as the local superuser <B>root</B> if the
+<B>-localauth</B> flag is included.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf073.htm#HDRBK_DUMP">backup dump</A>
+<P><A HREF="auarf074.htm#HDRBK_DUMPINFO">backup dumpinfo</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf086.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf088.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

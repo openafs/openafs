@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf126.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf128.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRDLOG" HREF="auarf002.htm#ToC_141">dlog</A></H2>
+<A NAME="IDX4697"></A>
+<A NAME="IDX4698"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Authenticates to the DCE Security Service
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>dlog</B> [<B>-principal</B> &lt;<VAR>user&nbsp;name</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+     [<B>-password</B> &lt;<VAR>user's&nbsp;password</VAR>>]  [<B>-servers</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;servers</VAR>><SUP>+</SUP>]  
+     [<B>-lifetime</B> &lt;<VAR>ticket&nbsp;lifetime&nbsp;in&nbsp;hh[:mm[:ss]]</VAR>>]  
+     [<B>-setpag</B>]  [<B>-pipe</B>]  [<B>-help</B>]
+    
+<B>dlog</B> [<B>-pr</B> &lt;<VAR>user&nbsp;name</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-pw</B> &lt;<VAR>user's&nbsp;password</VAR>>] 
+     [<B>-ser</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;servers</VAR>><SUP>+</SUP>]  
+     [<B>-l</B> &lt;<VAR>ticket&nbsp;lifetime&nbsp;in&nbsp;hh[:mm[:ss]]</VAR>>]  [<B>-set</B>]  [<B>-pi</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>dlog</B> command obtains DCE credentials for the issuer from the
+DCE Security Service in the cell named by the <B>-cell</B> argument, and
+stores them on the AFS client machine on which the user issues the
+command. The AFS/DFS Migration Toolkit Protocol Translator processes
+running on machines in the DCE cell accept the credentials, which enables the
+user to access the DCE cell's filespace from the AFS client. The
+user's identity in the local file system is unchanged.
+<P>If the issuer does not provide the <B>-principal</B> argument, the
+<B>dlog</B> command interpreter uses the user name under which the issuer
+is logged into the local file system. Provide the DCE password for the
+appropriate user name. As with the <B>klog</B> command, the
+password does not cross the network in clear text (unless the issuer is logged
+into the AFS client from a remote machine).
+<P>The credentials are valid for a lifetime equivalent to the smallest of the
+following, all but the last of which is defined by the DCE cell's
+Security Server:
+<UL>
+<P><LI>The maximum certificate lifetime for the issuer's DCE account
+<P><LI>The maximum certificate lifetime for the <B>afs</B> principal's
+DCE account
+<P><LI>The registry-wide maximum certificate lifetime
+<P><LI>The registry-wide default certificate lifetime
+<P><LI>The lifetime requested using the <B>-lifetime</B> argument
+</UL>
+<P>If the previous maximum certificate lifetime values are set to
+<B>default-policy</B>, the maximum possible ticket lifetime is defined by
+the default certificate lifetime. Refer to the DCE vendor's
+administration guide for more information before setting any of these
+values.
+<P>The AFS Cache Manager stores the ticket in a credential structure
+associated with the name of the issuer (or the user named by the
+<B>-principal</B> argument. If the user already has a ticket for
+the DCE cell, the ticket resulting from this command replaces it in the
+credential structure.
+<P>The AFS <B>tokens</B> command displays the ticket obtained by the
+<B>dlog</B> command for the server principal <B>afs</B>, regardless of
+the principal to which it is actually granted. Note that the
+<B>tokens</B> command does not distinguish tickets for a DFS<SUP>TM</SUP>
+File Server from tickets for an AFS File Server.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-principal
+</B><DD>Specifies the DCE user name for which to obtain DCE credentials. If
+this option is omitted, the <B>dlog</B> command interpreter uses the name
+under which the issuer is logged into the local file system.
+<P><DT><B>-cell
+</B><DD>Specifies the DCE cell in which to authenticate. During a single
+login session on a given machine, a user can authenticate in multiple cells
+simultaneously, but can have only one ticket at a time for each cell (that is,
+it is possible to authenticate under only one identity per cell per
+machine). It is legal to abbreviate the cell name to the shortest form
+that distinguishes it from the other cells listed in the
+<B>/usr/vice/etc/CellServDB</B> file on the local client machine.
+<P>If the issuer does not provide the <B>-cell</B> argument, the
+<B>dlog</B> command attempts to authenticate with the DCE Security Server
+for the cell defined by 
+<OL TYPE=1>
+<P><LI>The value of the environment variable AFSCELL on the local AFS client
+machine, if defined. The issuer can set the AFSCELL environment
+variable to name the desired DCE cell.
+<P><LI>The cell name in the <B>/usr/vice/etc/ThisCell</B> file on the local
+AFS client machine. The machine's administrator can place the
+desired DCE cell's name in the file.
+</OL>
+<P><DT><B>-password
+</B><DD>Specifies the password for the issuer (or for the user named by the
+<B>-principal</B> argument). Using this argument is not
+recommended, because it makes the password visible on the command line.
+If this argument is omitted, the command prompts for the password and does not
+echo it visibly.
+<P><DT><B>-servers
+</B><DD>Specifies a list of DFS database server machines running the Translator
+Server through which the AFS client machine can attempt to
+authenticate. Specify each server by hostname, shortened machine name,
+or IP address. If this argument is omitted, the <B>dlog</B> command
+interpreter randomly selects a machine from the list of DFS Fileset Location
+(FL) Servers in the <B>/usr/vice/etc/CellServDB</B> file for the DCE cell
+specified by the <B>-cell</B> argument. This argument is useful for
+testing when authentication seems to be failing on certain server
+machines.
+<P><DT><B>-lifetime
+</B><DD>Requests a ticket lifetime using the format
+<VAR>hh</VAR><B>:</B><VAR>mm</VAR>[<B>:</B><VAR>ss</VAR>]
+(hours, minutes, and optionally a number seconds between 00 and 59).
+For example, the value <B>168:30</B> requests a ticket lifetime of 7
+days and 30 minutes, and <B>96:00</B> requests a lifetime of 4
+days. Acceptable values range from <B>00:05</B> (5 minutes)
+to <B>720:00</B> (30 days). If this argument is not provided
+and no other determinants of ticket lifetime have been changed from their
+defaults, ticket lifetime is 10 hours.
+<P>The requested lifetime must be smaller than any of the DCE cell's
+determinants for ticket lifetime; see the discussion in the preceding
+<B>Description</B> section.
+<P><DT><B>-setpag
+</B><DD>Creates a process authentication group (PAG) in which the newly created
+ticket is placed. If this flag is omitted, the ticket is instead
+associated with the issuers' local user ID (UID).
+<P><DT><B>-pipe
+</B><DD>Suppresses any prompts that the command interpreter otherwise produces,
+including the prompt for the issuer's password. Instead, the
+command interpreter accepts the password via the standard input stream.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Output</STRONG>
+<P>If the <B>dlog</B> command interpreter cannot contact a Translator
+Server, it produces a message similar to the following:
+<PRE>   dlog: server or network not responding -- failed to contact
+   authentication service
+   
+</PRE>
+<P><STRONG>Examples</STRONG>
+<P>The following command authenticates the issuer as <B>cell_admin</B> in
+the <B>dce.abc.com</B> cell.
+<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com</B>
+   Password: <VAR>cell_admin's password</VAR>
+    
+</PRE>
+<P>In the following example, the issuer authenticates as <B>cell_admin</B>
+to the <B>dce.abc.com</B> cell and request a ticket lifetime
+of 100 hours. The <B>tokens</B> command confirms that the user
+obtained DCE credentials as the user <B>cell_admin</B>: the AFS ID
+is equivalent to the UNIX ID of <B>1</B> assigned to <B>cell_admin</B>
+in <B>dce.abc.com</B> cell's DCE registry.
+<PRE>   % <B>dlog -principal cell_admin -cell dce.abc.com -lifetime 100</B>
+   Password: <VAR>cell_admin's password</VAR>
+   
+   % <B>tokens</B>
+   Tokens held by the Cache Manager:
+   
+   User's (AFS ID 1) tokens for afs@dce.abc.com [Expires Jul 6 14:12] 
+   User's (AFS ID 4758) tokens for afs@abc.com [Expires Jul 2 13:14] 
+ 
+      --End of list--
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>None
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf128.htm#HDRDPASS">dpass</A>
+<P><A HREF="auarf200.htm#HDRKLOG">klog</A>
+<P><A HREF="auarf235.htm#HDRTOKENS">tokens</A>
+<P><A HREF="auarf238.htm#HDRUNLOG">unlog</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf126.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf128.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

@@ -1,0 +1,40 @@
+>andrew.cmu.edu		#Carnegie Mellon University - Computing Services
+128.2.10.11			#vice11.fs.andrew.cmu.edu
+128.2.10.12			#vice12.fs.andrew.cmu.edu
+128.2.10.2			#vice2.fs.andrew.cmu.edu
+128.2.10.28			#vice28.fs.andrew.cmu.edu
+128.2.10.7			#vice7.fs.andrew.cmu.edu
+>cs.cmu.edu		#Carnegie Mellon University - School of Comp. Sci.
+128.2.206.130			#cucumber.srv.cs.cmu.edu
+128.2.222.199			#papaya.srv.cs.cmu.edu
+128.2.242.86			#lemon.srv.cs.cmu.edu
+>ece.cmu.edu		#Carnegie Mellon University - Elec. Comp. Eng. Dept.
+128.2.129.7			#porok.ece.cmu.edu
+128.2.129.8			#vicio.ece.cmu.edu
+128.2.129.9			#e-xing.ece.cmu.edu
+>athena.mit.edu		#MIT/Athena cell
+18.70.0.6			#prill.mit.edu.
+18.145.0.25			#agamemnon.mit.edu.
+18.159.0.34			#chimera.mit.edu.
+>dev.mit.edu		#MIT/IS Development cell
+18.86.0.28			#wham.mit.edu.
+18.86.0.50			#hum.mit.edu.
+18.86.0.51			#rattle.mit.edu.
+>net.mit.edu		#MIT/Network Group cell
+18.72.1.38			#gracie.mit.edu.
+18.72.0.26			#cetus.mit.edu.
+>sipb.mit.edu		#MIT/SIPB cell
+18.181.0.19			#reynelda.mit.edu.
+18.181.0.23			#ronald-ann.mit.edu.
+18.181.0.22			#rosebud.mit.edu.
+>ir.stanford.edu	#Stanford University
+171.64.7.222			#afsdb1.stanford.edu
+171.64.7.234			#afsdb2.stanford.edu
+171.64.7.246			#afsdb3.stanford.edu
+>umr.edu		#University of Missouri - Rolla
+131.151.1.59			#afs1.umr.edu
+131.151.1.70			#afs6.umr.edu
+131.151.1.146			#afs5.umr.edu
+>dementia.org		#Dementia Unlimited
+128.2.35.149			#alycia.dementia.org
+128.2.120.216			#meredith.dementia.org

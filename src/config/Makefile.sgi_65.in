@@ -1,0 +1,46 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = IRIX
+# Pointers to destination and source directories
+
+# compilation and link editor flags
+DBG=-g
+FSINCLUDES=-I/usr/include/sys/fs
+OPTMZ=-O
+XCFLAGS=-n32 -mips3 -woff 1009,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552
+# The -mips3 for XCFLAGS64 allows code to run on R4000 as well as R8000+.
+XCFLAGS64 =-64 -mips3
+XLDFLAGS=-n32 -mips3
+XLDFLAGS64=-64 -mips3
+MT_CFLAGS=-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV ${XCFLAGS}
+#
+# libraries
+TXLIBS= -lcurses
+XLIBS=@LIB_AFSDB@
+MTLIBS=-lpthread
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=
+#
+# programs
+AR=ar
+AS=as
+CP=cp
+MT_CC=/usr/bin/cc
+LD=/usr/bin/ld   
+LEX=lex
+MV=mv
+RANLIB=/bin/true
+RM=rm
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
+#
+# This is for the vol package
+XFS_SIZE_CHECK = $(DESTDIR)root.server/usr/afs/bin/xfs_size_check

@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf124.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf126.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRBUSERVER" HREF="auarf002.htm#ToC_139">buserver</A></H2>
+<A NAME="IDX4685"></A>
+<A NAME="IDX4686"></A>
+<A NAME="IDX4687"></A>
+<A NAME="IDX4688"></A>
+<A NAME="IDX4689"></A>
+<A NAME="IDX4690"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the Backup Server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>buserver</B> [<B>-database</B> &lt;<VAR>database&nbsp;directory</VAR>>] 
+         [<B>-cellservdb</B> &lt;<VAR>cell&nbsp;configuration&nbsp;directory</VAR>>]
+         [<B>-resetdb</B>]  [<B>-noauth</B>]  [<B>-smallht</B>] 
+         [<B>-servers</B> &lt;<VAR>list&nbsp;of&nbsp;ubik&nbsp;database&nbsp;servers</VAR>><SUP>+</SUP>]  
+         [<B>-enable_peer_stats</B>]  [<B>-enable_process_stats</B>] 
+         [<B>-help</B>]
+</PRE>
+<P>This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+<P><STRONG>Description</STRONG>
+<P>The <B>buserver</B> command initializes the Backup Server, which runs
+on database server machines and maintains the Backup Database. In the
+conventional configuration, the binary file is located in the
+<B>/usr/afs/bin</B> directory on a file server machine.
+<P>The <B>buserver</B> command is not normally issued at the command shell
+prompt, but rather placed into a database server machine's
+<B>/usr/afs/local/BosConfig</B> file with the <B>bos create</B>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a file server machine as the local superuser
+<B>root</B>.
+<P>As it initializes, the Backup Server process creates the two files that
+constitute the Backup Database, <B>bdb.DB0</B> and
+<B>bdb.DBSYS1</B>, in the <B>/usr/afs/db</B> directory if they
+do not already exist. The Backup Database houses information about
+volume sets and entries, the dump hierarchy, Tape Coordinators, and previously
+performed dump sets. Use the commands in the <B>backup</B> suite to
+administer the database.
+<P>The Backup Server records a trace of its activity in the
+<B>/usr/afs/logs/BackupLog</B> file. Use the <B>bos getlog</B>
+command to display the contents of the file.
+<P><STRONG>Cautions</STRONG>
+<P>The <B>buserver</B> process reserves port <B>7021</B> for its
+use. Unexpected behavior can occur if another process tries to reserve
+this port while the <B>buserver</B> process is running.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-database
+</B><DD>Specifies the pathname of an alternate directory for the Backup Database
+files, ending in a final slash (<B>/</B>). If this argument is not
+provided, the default is the <B>/usr/afs/db</B> directory.
+<P><DT><B>-cellservdb
+</B><DD>Specifies the pathname of the directory from which the Backup Server reads
+in an alternate version of the <B>CellServDB</B> file. This
+argument is mandatory for correct functioning when the Backup Server is
+running on a subset of the cell's database server machines that is not a
+majority of the machines listed in the standard
+<B>/usr/afs/etc/CellServDB</B> file (which the Backup Server consults if
+this argument is not provided). It is not appropriate in any other
+circumstances.
+<P><DT><B>-resetdb
+</B><DD>Removes all of the information in the Backup Database files in the
+<B>/usr/afs/db</B> directory, leaving zero-length versions of them.
+The backup operator must recreate the configuration entries in the database
+(for volume sets, the dump hierarchy and so on) before performing backup
+operations.
+<P><DT><B>-noauth
+</B><DD>Establishes an unauthenticated connection between the issuer and the
+Backup Server, in which the Backup Server treats the issuer as the
+unprivileged user <B>anonymous</B>. It is useful only when
+authorization checking is disabled on the database server machine. In
+normal circumstances, the Backup Server allows only authorized (privileged)
+users to issue commands that affect or contact the Backup Database, and
+refuses to perform such an action even if the <B>-noauth</B> flag is
+used.
+<P><DT><B>-smallht
+</B><DD>Directs the Backup Server to use smaller internal hash tables for the
+Backup Database, which reduces memory requirements but can make data access
+take longer.
+<P><DT><B>-servers
+</B><DD>Specifies the database server machines on which to start the Backup
+Server. Use this argument if running the Backup Server on a subset of
+the database server machines that is not a majority of the machines listed in
+the <B>/usr/afs/etc/CellServDB</B> file.
+<P><DT><B>-enable_peer_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another
+machine, a separate record is kept for each type of RPC (FetchFile, GetStatus,
+and so on) sent or received. To display or otherwise access the
+records, use the Rx Monitoring API.
+<P><DT><B>-enable_process_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example <B>bos create</B> command creates a
+<B>buserver</B> process on the file server machine
+<B>fs3.abc.com</B>. It appears here on two lines only
+for legibility.
+<PRE>   % <B>bos create -server fs3.abc.com -instance buserver</B>  \
+                <B>-type simple -cmd /usr/afs/bin/buserver</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the superuser <B>root</B> on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the <B>bos
+create</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf014.htm#HDRBACKUPLOG">BackupLog</A>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf020.htm#HDRSV_CSDB">CellServDB (server version)</A>
+<P><A HREF="auarf042.htm#HDRBDBDB">bdb.DB0 and bdb.DBSYS1</A>
+<P><A HREF="auarf060.htm#HDRBK_INTRO">backup</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf124.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf126.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

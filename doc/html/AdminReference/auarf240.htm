@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf239.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf241.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRUPCLIENT" HREF="auarf002.htm#ToC_254">upclient</A></H2>
+<A NAME="IDX5496"></A>
+<A NAME="IDX5497"></A>
+<A NAME="IDX5498"></A>
+<A NAME="IDX5499"></A>
+<A NAME="IDX5500"></A>
+<A NAME="IDX5501"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the client portion of the Update Server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>upclient</B> &lt;<VAR>hostname</VAR>>  [<B>-crypt</B>]  [<B>-clear</B>]  [<B>-t </B>&lt;<VAR>retry&nbsp;time</VAR>>]
+         [<B>-verbose</B>]<SUP>*</SUP>  &lt;<VAR>dir</VAR>><SUP>+</SUP>  [<B>-help</B>]
+</PRE>
+<P>This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+<P><STRONG>Description</STRONG>
+<P>The <B>upclient</B> command initializes the client portion of the
+Update Server. In the conventional configuration, its binary file is
+located in the <B>/usr/afs/bin</B> directory on a file server
+machine.
+<P>The <B>upclient</B> command is not normally issued at the command shell
+prompt but rather placed into a file server machine's
+<B>/usr/afs/local/BosConfig</B> file with the <B>bos create</B>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a database server machine as the local superuser
+<B>root</B>.
+<P>The <B>upclient</B> process periodically checks that all files in each
+local directory named by the <VAR>dir</VAR> argument match the files in the
+corresponding directory on the source machine named by the
+<VAR>hostname</VAR>argument. If a file does not match, the
+<B>upclient</B> process requests the source copy from the
+<B>upserver</B> process running on the source machine.
+<P>By default, the <B>upclient</B> process in the United States edition of
+AFS requests that the <B>upserver</B> process encrypt the data before
+transferring it, whereas in the international edition it requests unencrypted
+transfer. If using the United States edition, use the <B>-clear</B>
+flag to request unencrypted transfer if appropriate. (The
+<B>-crypt</B> flag explicitly sets the default in the United States
+edition, and is not available in the international edition.)
+<P>In the conventional configuration, separate instances of the
+<B>upclient</B> process request data from the <B>/usr/afs/bin</B> and
+<B>/usr/afs/etc</B> directories, except on machines for which the system
+control machine is also the binary distribution machine for the machine's
+system type. The conventional names for the separate instances are
+<B>upclientbin</B> and <B>upclientetc</B> respectively.
+<P>The <B>upclient</B> and <B>upserver</B> processes always mutually
+authenticate, whether or not the data they pass is encrypted; they use
+the key with the highest key version number in the
+<B>/usr/afs/etc/KeyFile</B> file to construct a server ticket for mutual
+authentication.
+<P><STRONG>Cautions</STRONG>
+<P>Do not use the Update Server to distribute the contents of the
+<B>/usr/afs/etc</B> directory if using the international edition of
+AFS. The contents of this directory are sensitive and the international
+edition of AFS does not include the encryption routines necessary for
+encrypting files before transfer across the network.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B><VAR>hostname</VAR>
+</B><DD>Names either the cell's system control machine (if the requested
+directory is <B>/usr/afs/etc</B>), or the binary distribution machine for
+the local machine's CPU and operating system type (if the requested
+directory is <B>/usr/afs/bin</B>).
+<P><DT><B>-crypt
+</B><DD>Requests the transfer of data from the <B>upserver</B> process in
+encrypted form. With the United States edition of AFS, use this flag to
+set the default explicitly. Provide this flag or the <B>-crypt</B>
+flag, but not both. 
+<TABLE><TR><TD ALIGN="LEFT" VALIGN="TOP"><B>Note:</B></TD><TD ALIGN="LEFT" VALIGN="TOP">This flag is not available in the international edition of AFS.
+</TD></TR></TABLE>
+<P><DT><B>-clear
+</B><DD>Requests transfer of data from the <B>upserver</B> process in
+unencrypted form. Use this flag to change from the default for the
+United States edition of AFS. Provide this flag or the
+<B>-crypt</B> flag, but not both.
+<P><DT><B>-t
+</B><DD>Specifies how often to check for changes in each specified directory, as a
+number of seconds. If this argument is omitted, the default is 300 (5
+minutes). This argument determines the maximum amount of time it takes
+for a change made on the source machine to propagate to this machine.
+<P><DT><B>-verbose
+</B><DD>Writes a trace of the <B>upclient</B> process's operations on the
+standard output stream, which usually corresponds to the machine
+console. Provide one, two, or three instances of the flag; each
+additional instance generates increasingly numerous and detailed
+messages.
+<P><DT><B><VAR>dir</VAR>
+</B><DD>Names each directory to check for modified files. The conventional
+choices are the following: 
+<UL>
+<P><LI><B>/usr/afs/bin</B>, in which case the recommended name for the
+process (assigned with the <B>-instance</B> argument to the <B>bos
+create</B> command) is <B>upclientbin</B>. The <VAR>hostname</VAR>
+is the binary distribution machine for the local machine's system
+type. Use the <B>-clear</B> flag be used for the
+<B>/usr/afs/bin</B> directory, since binaries are not particularly
+sensitive and encrypting them can take a long time.
+<P><LI><B>/usr/afs/etc</B>, in which case the recommended name for the
+process (assigned with the <B>-instance</B> argument to the <B>bos
+create</B> command) is <B>upclientetc</B>. The <VAR>hostname</VAR>
+is the cell's system control machine. Use the <B>-crypt</B>
+flag for the <B>/usr/afs/etc</B> directory, since it contains the
+<B>KeyFile</B> file and other data vital to cell security.
+<P>As a reminder, do not use the Update Server to transfer the contents of the
+<B>/usr/afs/etc</B> directory if using the international edition of
+AFS.
+</UL>
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following <B>bos create</B> command creates an
+<B>upclientbin</B> process on the machine
+<B>fs4.abc.com</B> that refers to the machine
+<B>fs1.abc.com</B> as the source for the
+<B>/usr/afs/bin</B> directory (thus <B>fs1.abc.com</B>
+is the binary distribution machine for machines of
+<B>fs4.abc.com</B>'s type). The files in the
+<B>/usr/afs/bin</B> directory are distributed every 120 seconds.
+The command requests transfer in unencrypted form.
+<PRE>   % <B>bos create  -server fs4.abc.com -instance upclientbin -type simple</B>   \
+                 <B>-cmd "/usr/afs/bin/upclient fs1.abc.com -clear</B>  \
+                 <B>-t 120 /usr/afs/bin"</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the superuser <B>root</B> on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the <B>bos
+create</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf241.htm#HDRUPSERVER">upserver</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf239.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf241.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

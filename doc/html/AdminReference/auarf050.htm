@@ -1,0 +1,165 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf049.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf051.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRTAPECONFIG" HREF="auarf002.htm#ToC_48">tapeconfig</A></H2>
+<P><STRONG>Purpose</STRONG>
+<A NAME="IDX4027"></A>
+<A NAME="IDX4028"></A>
+<A NAME="IDX4029"></A>
+<P>Defines configuration parameters for all tape devices and backup data files
+on a Tape Coordinator machine
+<P><STRONG>Description</STRONG>
+<P>The <B>tapeconfig</B> file defines basic configuration parameters for
+all of the tape devices or backup data files available for backup operations
+on a Tape Coordinator machine. The file is in ASCII format and must
+reside in the local <B>/usr/afs/backup</B> directory. The
+instruction for each tape device or backup data file appears on its own line
+and each has the following format:
+<PRE>   [<VAR>capacity</VAR>    <VAR>filemark_size</VAR>]    <VAR>device_name</VAR>    <VAR>port_offset</VAR>
+   
+</PRE>
+<P>where
+<DL>
+<P><DT><B><VAR>capacity</VAR>
+</B><DD>Specifies the capacity of the tapes used with a tape device, or the amount
+of data to write into a backup data file. The Tape Coordinator refers
+to this value in two circumstances: 
+<UL>
+<P><LI>When the capacity field of a tape or backup data file's label is
+empty (because the tape has never been labeled). The Tape Coordinator
+records this value on the label and uses it when determining how much data it
+can write to the tape or file during a <B>backup dump</B> or <B>backup
+savedb</B> operation. If there is already a capacity value on the
+label, the Tape Coordinator uses it instead.
+<P><LI>When the <B>-size</B> argument is omitted the first time the
+<B>backup labeltape</B> command is used on a given tape or file.
+The Tape Coordinator copies this value into the label's capacity
+field.
+</UL>
+<P>
+<P>The Tape Coordinator uses this capacity value or the one on the Backup
+System tape label to track how much space remains as it writes data to a tape
+or backup data file. The appropriate value to record for a tape depends
+on the size of the tapes usually used in the device and whether it has a
+compression mode; for suggested values, see the <I>IBM AFS
+Administration Guide</I> chapter on configuring the Backup System. If
+using a value obtained from the <B>fms</B> command, reduce it by 10% to
+15% before recording it in the file.
+<P>For a backup data file, it is best to provide a value that helps the Tape
+Coordinator avoid reaching the end-of-file (EOF) unexpectedly. Make it
+at least somewhat smaller than the amount of space available on the partition
+housing the file when the dump operation begins, and never larger than the
+maximum file size allowed by the operating system.
+<P>Specify a (positive) integer or decimal value followed by a letter than
+indicates units, with no intervening space. In a decimal number, the
+number of digits after the decimal point must not translate to fractions of
+bytes. The maximum acceptable value is 2048 GB (2 TB). The
+acceptable units letters are as follows; if the letter is omitted, the
+default is kilobytes.
+<P>
+<UL>
+<P><LI><B>k</B>or <B>K</B> for kilobytes (KB)
+<P><LI><B>m</B> or <B>M</B> for megabytes (MB)
+<P><LI><B>g</B> or <B>G</B> for gigabytes (GB)
+<P><LI><B>t</B> or <B>T</B> for terabytes (TB)
+</UL>
+<P>If this field is omitted, the Tape Coordinator uses the maximum acceptable
+value (2048 GB or 2 TB). Either leave both this field and the
+<VAR>filemark_size</VAR> field empty, or provide a value in both of them.
+<P><DT><B><VAR>filemark_size</VAR>
+</B><DD>Specifies the size of a tape device's filemarks (also called
+end-of-file or EOF marks), which is set by the device's
+manufacturer. In a dump to tape, the Tape Coordinator inserts filemarks
+at the boundary between the data from each volume, so the filemark size
+affects how much space is available for actual data. 
+<P>The appropriate value to record for a tape depends on the size of the tapes
+usually used in the device and whether it has a compression mode; for
+suggested values, see the <I>IBM AFS Administration Guide</I> chapter on
+configuring the Backup System. If using a value obtained from the
+<B>fms</B> command, increase it by 10% to 15% before recording it in the
+file.
+<P>For backup data files, record a value of <B>0</B> (zero). The
+Tape Coordinator actually ignores this field for backup data files, because it
+does not use filemarks when writing to a file.
+<P>Use the same notation as for the <VAR>capacity</VAR> field, but note that the
+default units is bytes rather than kilobytes. The maximum acceptable
+value is 2048 GB.
+<P>If this field is empty, the Tape Coordinator uses the value <B>0</B>
+(zero). Either leave both this field and the <VAR>capacity</VAR> field
+empty, or provide a value in both of them.
+<P><DT><B><VAR>device_name</VAR>
+</B><DD>Specifies the complete pathname of the tape device or backup data
+file. The format of tape device names depends on the operating system,
+but on UNIX systems device names generally begin with the string
+<B>/dev/</B>. For a backup data file, this field defines the
+complete pathname; for a discussion of suggested naming conventions see
+the description of the <B>FILE</B> instruction in <A HREF="auarf018.htm#HDRCFG">CFG_<I>device_name</I></A>.
+<P><DT><B><VAR>port_offset</VAR>
+</B><DD>Specifies the port offset number associated with this combination of Tape
+Coordinator and tape device or backup data file. 
+<P>Acceptable values are the integers <B>0</B> through <B>58510</B>
+(the Backup System can track a maximum of 58,511 port offset numbers).
+Each value must be unique among the cell's Tape Coordinators, but any
+number of them can be associated with a single machine. Port offset
+numbers need not be assigned sequentially, and can appear in any order in the
+<B>tapeconfig</B> file. Assign port offset <B>0</B> to the Tape
+Coordinator for the tape device or backup data file used most often for backup
+operations; doing so will allow the operator to omit the
+<B>-portoffset</B> argument from the largest possible number of
+<B>backup</B> commands.
+</DL>
+<P><STRONG>Privilege Required</STRONG>
+<P>Creating the file requires UNIX <B>w</B> (<B>write</B>) and
+<B>x</B> (<B>execute</B>) permissions on the
+<B>/usr/afs/backup</B> directory. Editing the file requires UNIX
+<B>w</B> (<B>write</B>) permission on the file.
+<P><STRONG>Examples</STRONG>
+<P>The following example <B>tapeconfig</B> file configures three tape
+devices and a backup data file. The first device has device name
+<B>/dev/rmt/0h</B>, and is assigned port offset <B>0</B> because it
+will be the most frequently used device for all backup operations in the
+cell. Its default tape capacity is 2 GB and filemark size is 1
+MB. The <B>/dev/rmt/3h</B> drive has half the capacity but a much
+smaller filemark size; its port offset is <B>3</B>. The third
+device listed, <B>/dev/rmt/4h</B>, has the same capacity and filemark size
+as the first device and is assigned port offset <B>2</B>. Port
+offset <B>4</B> is assigned to the backup data file <B>/dev/FILE</B>,
+which is actually a symbolic link to the actual file located elsewhere on the
+local disk. The Tape Coordinator writes up to 1.5 GB into the
+file; as recommended, the filemark size is set to zero.
+<PRE>   2G 1M /dev/rmt/0h 0
+   1g 4k /dev/rmt/3h 3
+   2G 1m /dev/rmt/4h 2
+   1.5G 0 /dev/FILE 4
+   
+</PRE>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf062.htm#HDRBK_ADDHOST">backup addhost</A>
+<P><A HREF="auarf073.htm#HDRBK_DUMP">backup dump</A>
+<P><A HREF="auarf079.htm#HDRBK_LABELTAPE">backup labeltape</A>
+<P><A HREF="auarf086.htm#HDRBK_SAVEDB">backup savedb</A>
+<P><A HREF="auarf126.htm#HDRBUTC">butc</A>
+<P><A HREF="auarf130.htm#HDRFMS">fms</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf049.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf051.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

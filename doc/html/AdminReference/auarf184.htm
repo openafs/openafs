@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf183.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf185.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRKAS_DELETE" HREF="auarf002.htm#ToC_198">kas delete</A></H2>
+<A NAME="IDX5078"></A>
+<A NAME="IDX5079"></A>
+<A NAME="IDX5080"></A>
+<A NAME="IDX5081"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Deletes an entry from the Authentication Database
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>kas delete -name</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  
+           [<B>-admin_username</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>]  
+           [<B>-password_for_admin</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+           [<B>-servers</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  
+           [<B>-noauth</B>]  [<B>-help</B>] 
+   
+<B>kas d -na</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  [<B>-a</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>] 
+      [<B>-p</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+      [<B>-s</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>] 
+     
+<B>kas rm -na</B> &lt;<VAR>name&nbsp;of&nbsp;user</VAR>>  [<B>-a</B> &lt;<VAR>admin&nbsp;principal&nbsp;to&nbsp;use&nbsp;for&nbsp;authentication</VAR>>]  
+       [<B>-p</B> &lt;<VAR>admin&nbsp;password</VAR>>]  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  
+       [<B>-s</B> &lt;<VAR>explicit&nbsp;list&nbsp;of&nbsp;authentication&nbsp;servers</VAR>><SUP>+</SUP>]  [<B>-no</B>]  [<B>-h</B>]  
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>kas delete</B> command removes from the Authentication Database
+the user entry named by the <B>-name</B> argument. The indicated
+user becomes unable to log in, or the indicated server becomes unreachable
+(because the Authentication Server's Ticket Granting Service module no
+longer has a key with which to seal tickets for the server).
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-name
+</B><DD>Names the Authentication Database entry to delete.
+<P><DT><B>-admin_username
+</B><DD>Specifies the user identity under which to authenticate with the
+Authentication Server for execution of the command. For more details,
+see the introductory <B>kas</B> reference page.
+<P><DT><B>-password_for_admin
+</B><DD>Specifies the password of the command's issuer. If it is
+omitted (as recommended), the <B>kas</B> command interpreter prompts for
+it and does not echo it visibly. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>kas</B> reference page.
+<P><DT><B>-servers
+</B><DD>Names each machine running an Authentication Server with which to
+establish a connection. For more details, see the introductory
+<B>kas</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>kas</B> reference
+page.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example shows the administrative user <B>admin</B>
+entering interactive mode to delete three accounts.
+<PRE>   % <B>kas</B>
+   Password for admin:
+   ka> <B>delete smith</B>
+   ka><B> delete pat</B>
+   ka> <B>delete terry</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must have the <TT>ADMIN</TT> flag set on his or her
+Authentication Database entry.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf181.htm#HDRKAS_INTRO">kas</A>
+<P><A HREF="auarf183.htm#HDRKAS_CREATE">kas create</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf183.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf185.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

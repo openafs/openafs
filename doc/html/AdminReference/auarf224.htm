@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf223.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf225.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRPTS_RENAME" HREF="auarf002.htm#ToC_238">pts rename</A></H2>
+<A NAME="IDX5390"></A>
+<A NAME="IDX5391"></A>
+<A NAME="IDX5392"></A>
+<A NAME="IDX5393"></A>
+<A NAME="IDX5394"></A>
+<A NAME="IDX5395"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Changes the name of a Protection Database entry
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>pts rename -oldname</B> &lt;<VAR>old&nbsp;name</VAR>>  <B>-newname</B> &lt;<VAR>new&nbsp;name</VAR>>
+           [<B>-cell</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-noauth</B>]  [<B>-force</B>]  [<B>-help</B>]
+    
+<B>pts ren -o</B> &lt;<VAR>old&nbsp;name</VAR>>  <B>-ne</B> &lt;<VAR>new&nbsp;name</VAR>>  [<B>-c</B> &lt;<VAR>cell&nbsp;name</VAR>>]  [<B>-no</B>]  [<B>-f</B>]  [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>pts rename</B> command changes the name of the user, machine, or
+group entry specified by the <B>-oldname</B> argument to the name
+specified by the <B>-newname</B> argument. It is not possible to
+change a user or machine entry's name to look like a regular group
+entry's name (have a colon in it).
+<P>Members of the <B>system:administrators</B> group can change a
+regular group name into a prefix-less name and vice versa. When
+changing a prefix-less group name into a regular group name or a regular group
+name to another regular group name, the owner field of the new name (the part
+before the colon) must correctly reflect the group's owner.
+<P>Changing a regular group's owner with the <B>pts chown</B> command
+automatically changes the owner field (the part before the colon) of the
+group's name, but does not change the owner field of any groups owned by
+the group. Use this command to rename those groups to a form that
+accurately reflects their ownership.
+<P><STRONG>Cautions</STRONG>
+<P>By convention, many aspects of an AFS user account have the same name as
+the user's Protection Database entry, including the Authentication
+Database entry, volume, and mount point. When using this command to
+change a user name, also change the names of all related entities to maintain
+consistency. For instructions, see the chapter on user accounts in the
+<I>IBM AFS Administration Guide</I>.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-oldname
+</B><DD>Specifies the current full name of the entry.
+<P><DT><B>-newname
+</B><DD>Specifies the new full name for the entry. For regular groups, the
+owner field (the part before the colon) of the new name must reflect the
+actual ownership of the group.
+<P><DT><B>-cell
+</B><DD>Names the cell in which to run the command. For more details, see
+the introductory <B>pts</B> reference page.
+<P><DT><B>-noauth
+</B><DD>Assigns the unprivileged identity <B>anonymous</B> to the
+issuer. For more details, see the introductory <B>pts</B> reference
+page.
+<P><DT><B>-force
+</B><DD>Enables the command to continue executing as far as possible when errors
+or other problems occur, rather than halting execution at the first
+error.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following example changes the name of the group <B>staff</B>, owned
+by the privileged user <B>admin</B>, to
+<B>admin:staff</B>:
+<PRE>   % <B>pts rename -oldname staff -newname admin:staff</B>
+   
+</PRE>
+<P>The following example changes the name of the group
+<B>admin:finance</B> to the group <B>finance</B>. The
+issuer must belong to the <B>system:administrators</B> group.
+<PRE>   % <B>pts rename -oldname admin:finance -newname finance</B>
+   
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>To change a regular group name to a prefix-less name or vice versa, or to
+change a user or machine entry's name, the issuer must belong to the
+<B>system:administrators</B> group.
+<P>To change a group name to a new name of the same type (regular or
+prefix-less), the issuer must own the group or belong to the
+<B>system:administrators</B> group.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf210.htm#HDRPTS_INTRO">pts</A>
+<P><A HREF="auarf213.htm#HDRPTS_CHOWN">pts chown</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf223.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf225.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

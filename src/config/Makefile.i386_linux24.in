@@ -1,0 +1,46 @@
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = LINUX
+
+# Base directory for linux kernel source. Actually a prefix which is complete
+# when LINUX_VERS is appended to it.
+LINUX_SRCDIR = /usr/src/linux-
+# Default list of Linux kernels to build. Build will run only if all
+# can be built. To build a different set, specify LINUX_VERS to make.
+LINUX_VERS = 2.3.99-pre3
+
+#
+# compilation and link editor flags
+DBG=-g
+OPTMZ=-O2
+PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
+# Put -O2 here to _ensure_ all Makefiles pick it up.
+XCFLAGS= -O2
+MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
+XLDFLAGS=
+SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=
+#
+# libraries
+MTLIBS=-lpthread
+TXLIBS= /usr/lib/libncurses.so
+XLIBS= @LIB_AFSDB@
+#
+# programs
+AR=ar
+AS=as
+CP=cp
+LD=ld
+MT_CC=cc
+MV=mv
+RANLIB=ranlib
+RM=rm
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
+#
+# Other OS specific requirements
+#
+YACC = bison -y
+LEX = flex -l
+# Used in des library.
+CRYPT_OBJ = crypt.o

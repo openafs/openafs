@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf248.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf250.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRVLSERVER" HREF="auarf002.htm#ToC_263">vlserver</A></H2>
+<A NAME="IDX5560"></A>
+<A NAME="IDX5561"></A>
+<A NAME="IDX5562"></A>
+<A NAME="IDX5563"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Initializes the Volume Location Server
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>vlserver</B> [<B>-p</B> &lt;<VAR>lwp&nbsp;processes</VAR>>]  [<B>-nojumbo</B>]  
+         [<B>-enable_peer_stats</B>]  [<B>-enable_process_stats</B>]  [<B>-help</B>]
+</PRE>
+<P>This command does not use the syntax conventions of the AFS command
+suites. Provide the command name and all option names in full.
+<P><STRONG>Description</STRONG>
+<P>The <B>vlserver</B> command initializes the Volume Location (VL)
+Server, which runs on every database server machine. In the
+conventional configuration, its binary file is located in the
+<B>/usr/afs/bin</B> directory on a file server machine.
+<P>The <B>vlserver</B> command is not normally issued at the command shell
+prompt but rather placed into a file server machine's
+<B>/usr/afs/local/BosConfig</B> file with the <B>bos create</B>
+command. If it is ever issued at the command shell prompt, the issuer
+must be logged onto a database server machine as the local superuser
+<B>root</B>.
+<P>As it initializes, the VL Server process creates the two files that
+constitute the Volume Location Database (VLDB), <B>vldb.DB0</B> and
+<B>vldb.DBSYS1</B>, in the <B>/usr/afs/db</B> directory if they
+do not already exist. Use the commands in the <B>vos</B> suite to
+administer the database.
+<P>The VL Server maintains the record of volume locations in the Volume
+Location Database (VLDB). When the Cache Manager fills a file request
+from an application program, it first contacts the VL Server to learn which
+file server machine currently houses the volume that contains the file.
+The Cache Manager then requests the file from the File Server process running
+on that file server machine.
+<P>The VL Server records a trace of its activity in the
+<B>/usr/afs/logs/VLLog</B> file. Use the <B>bos getlog</B>
+command to display the contents of the file. By default, it records on
+a minimal number of messages. For instructions on increasing the amount
+of logging, see the <B>VLLog</B> reference page.
+<P>By default, the VL Server runs nine lightweight processes (LWPs). To
+change the number, use the <B>-p</B> argument.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>-p
+</B><DD>Sets the number of server lightweight processes (LWPs) to run.
+Provide an integer between <B>4</B> and <B>16</B>. The default
+is 9.
+<P><DT><B>-nojumbo
+</B><DD>Prohibits the server from sending or receiving jumbograms. A
+jumbogram is a large-size packet composed of 2 to 4 normal Rx data packets
+that share the same header. The VL Server uses jumbograms by default,
+but some routers are not capable of properly breaking the jumbogram into
+smaller packets and reassembling them.
+<P><DT><B>-enable_peer_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. For each connection with a specific UDP port on another
+machine, a separate record is kept for each type of RPC (FetchFile, GetStatus,
+and so on) sent or received. To display or otherwise access the
+records, use the Rx Monitoring API.
+<P><DT><B>-enable_process_stats
+</B><DD>Activates the collection of Rx statistics and allocates memory for their
+storage. A separate record is kept for each type of RPC (FetchFile,
+GetStatus, and so on) sent or received, aggregated over all connections to
+other machines. To display or otherwise access the records, use the Rx
+Monitoring API.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Examples</STRONG>
+<P>The following <B>bos create</B> command creates a <B>vlserver</B>
+process on the machine <B>fs2.abc.com</B> that uses six
+lightweight processes. Type the command on a single line:
+<PRE>   % <B>bos create -server fs2.abc.com -instance vlserver -type simple</B>  \
+                <B>-cmd "/usr/afs/bin/vlserver -p 6"</B>
+</PRE>
+<P><STRONG>Privilege Required</STRONG>
+<P>The issuer must be logged in as the superuser <B>root</B> on a file
+server machine to issue the command at a command shell prompt. It is
+conventional instead to create and start the process by issuing the <B>bos
+create</B> command.
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf016.htm#HDRBOSCONFIG">BosConfig</A>
+<P><A HREF="auarf038.htm#HDRVLLOG">VLLog</A>
+<P><A HREF="auarf051.htm#HDRVLDBDB">vldb.DB0 and vldb.DBSYS1</A>
+<P><A HREF="auarf098.htm#HDRBOS_CREATE">bos create</A>
+<P><A HREF="auarf102.htm#HDRBOS_GETLOG">bos getlog</A>
+<P>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf248.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf250.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>

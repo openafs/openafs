@@ -1,0 +1,96 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 4//EN">
+<HTML><HEAD>
+<TITLE>Administration Reference</TITLE>
+<!-- Begin Header Records  ========================================== -->
+<!-- /tmp/idwt3672/auarf000.scr converted by idb2h R4.2 (359) ID      -->
+<!-- Workbench Version (AIX) on 3 Oct 2000 at 16:18:30                -->
+<META HTTP-EQUIV="updated" CONTENT="Tue, 03 Oct 2000 16:18:29">
+<META HTTP-EQUIV="review" CONTENT="Wed, 03 Oct 2001 16:18:29">
+<META HTTP-EQUIV="expires" CONTENT="Thu, 03 Oct 2002 16:18:29">
+</HEAD><BODY>
+<!-- (C) IBM Corporation 2000. All Rights Reserved    --> 
+<BODY bgcolor="ffffff"> 
+<!-- End Header Records  ============================================ -->
+<A NAME="Top_Of_Page"></A>
+<H1>Administration Reference</H1>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf282.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Bot_Of_Page"><IMG SRC="../bot.gif" BORDER="0" ALT="[Bottom of Topic]"></A> <A HREF="auarf284.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<P>
+<H2><A NAME="HDRXSTAT_FS_TEST" HREF="auarf002.htm#ToC_297">xstat_fs_test</A></H2>
+<A NAME="IDX5871"></A>
+<A NAME="IDX5872"></A>
+<P><STRONG>Purpose</STRONG>
+<P>Displays data collections from the File Server process
+<P><STRONG>Synopsis</STRONG>
+<PRE><B>xstat_fs_test</B> [<B>initcmd</B>] <B>-fsname</B> &lt;<VAR>File&nbsp;Server&nbsp;name(s)&nbsp;to&nbsp;monitor</VAR>><SUP>+</SUP>
+              <B>-collID</B> &lt;<VAR>Collection(s)&nbsp;to&nbsp;fetch</VAR>><SUP>+</SUP>  [<B>-onceonly</B>]
+              [<B>-frequency</B> &lt;<VAR>poll&nbsp;frequency,&nbsp;in&nbsp;seconds</VAR>>]
+              [<B>-period</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>]  [<B>-debug</B>] [<B>-help</B>]
+   
+<B>xstat_fs_test</B> [<B>initcmd</B>] <B>-fs</B> &lt;<VAR>File&nbsp;Server&nbsp;name(s)&nbsp;to&nbsp;monitor</VAR>><SUP>+</SUP>
+              <B>-c</B> &lt;<VAR>Collection(s)&nbsp;to&nbsp;fetch</VAR>><SUP>+</SUP>  [<B>-o</B>]
+              [<B>-fr</B> &lt;<VAR>poll&nbsp;frequency,&nbsp;in&nbsp;seconds</VAR>>]
+              [<B>-p</B> &lt;<VAR>data&nbsp;collection&nbsp;time,&nbsp;in&nbsp;minutes</VAR>>]  [<B>-d</B>] [<B>-h</B>]
+</PRE>
+<P><STRONG>Description</STRONG>
+<P>The <B>xstat_fs_test</B> command tests the routines in the
+<B>libxstat_fs.a</B> library and displays the data collections
+associated with the File Server (the <B>fs</B> process). The
+command executes in the foreground.
+<P>The command produces a large volume of output; to save it for later
+analysis, direct it to a file.
+<P><STRONG>Options</STRONG>
+<DL>
+<P><DT><B>initcmd
+</B><DD>Accommodates the command's use of the AFS command parser, and is
+optional.
+<P><DT><B>-fsname
+</B><DD>Specifies the fully qualified hostname of each file server machine for
+which to monitor the File Server process.
+<P><DT><B>-collID
+</B><DD>Specifies each data collection to return, which defines the type and
+amount of data the command interpreter gathers about the File Server.
+Data is returned in a predefined data structure.
+<P>There are three acceptable values: 
+<DL>
+<P><DT><B>0
+</B><DD>Provides profiling information about the numbers of times different
+internal File Server routines were called since the File Server
+started. This value is not currently implemented; it returns no
+data.
+<P><DT><B>1
+</B><DD>Reports various internal performance statistics related to the File Server
+(for example, vnode cache entries and <B>Rx</B> protocol activity).
+<P><DT><B>2
+</B><DD>Reports all of the internal performance statistics provided by the
+<B>1</B> setting, plus some additional, detailed performance figures about
+the File Server (for example, minimum, maximum, and cumulative statistics
+regarding File Server RPCs, how long they take to complete, and how many
+succeed).
+</DL>
+<P><DT><B>-onceonly
+</B><DD>Gathers statistics just one time. Omit this flag to have the
+command continue to probe the Cache Manager for statistics at the frequency
+specified by the <B>-frequency</B> argument; in this case press
+&lt;<B>Ctrl-c</B>> to stop the probes.
+<P><DT><B>-frequency
+</B><DD>Sets the frequency in seconds at which the program initiates probes to the
+Cache Manager. The default is 30 seconds.
+<P><DT><B>-period
+</B><DD>Sets the number of minutes the program runs; at the end of this
+period of time, the program exits. The default is 10 minutes.
+<P><DT><B>-debug
+</B><DD>Displays a trace on the standard output stream as the command runs.
+<P><DT><B>-help
+</B><DD>Prints the online help for this command. All other valid options
+are ignored.
+</DL>
+<P><STRONG>Related Information</STRONG>
+<P><A HREF="auarf282.htm#HDRXSTAT_CM_TEST">xstat_cm_test</A>
+<HR><P ALIGN="center"> <A HREF="../index.htm"><IMG SRC="../books.gif" BORDER="0" ALT="[Return to Library]"></A> <A HREF="auarf002.htm#ToC"><IMG SRC="../toc.gif" BORDER="0" ALT="[Contents]"></A> <A HREF="auarf282.htm"><IMG SRC="../prev.gif" BORDER="0" ALT="[Previous Topic]"></A> <A HREF="#Top_Of_Page"><IMG SRC="../top.gif" BORDER="0" ALT="[Top of Topic]"></A> <A HREF="auarf284.htm"><IMG SRC="../next.gif" BORDER="0" ALT="[Next Topic]"></A> <A HREF="auarf284.htm#HDRINDEX"><IMG SRC="../index.gif" BORDER="0" ALT="[Index]"></A> <P> 
+<!-- Begin Footer Records  ========================================== -->
+<P><HR><B> 
+<br>&#169; <A HREF="http://www.ibm.com/">IBM Corporation 2000.</A>  All Rights Reserved 
+</B> 
+<!-- End Footer Records  ============================================ -->
+<A NAME="Bot_Of_Page"></A>
+</BODY></HTML>
