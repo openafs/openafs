@@ -53,7 +53,6 @@ RCSID
 extern struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 
 extern struct afsconf_dir *bozo_confdir;
-extern struct rx_securityClass *bozo_rxsc[2];
 extern int bozo_newKTs;
 extern int DoLogging;
 #ifdef BOS_RESTRICTED_MODE

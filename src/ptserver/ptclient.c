@@ -41,7 +41,9 @@ char confdir[AFSDIR_PATH_MAX];
 
 char *whoami;
 
+#ifndef AFS_PTHREAD_ENV
 extern struct ubik_client *pruclient;
+#endif
 
 static int ignoreExist = 0;
 static char line[256];

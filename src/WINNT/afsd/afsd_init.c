@@ -91,8 +91,6 @@ int cm_dnsEnabled = 1;
 
 char cm_NetBiosName[32];
 
-void cm_InitFakeRootDir();
-
 void
 afsi_start()
 {

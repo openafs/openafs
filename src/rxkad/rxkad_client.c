@@ -66,8 +66,6 @@ RCSID
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
 
-char *rxi_Alloc();
-
 #ifndef max
 #define	max(a,b)    ((a) < (b)? (b) : (a))
 #endif /* max */

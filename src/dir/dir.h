@@ -98,6 +98,17 @@ extern int IsEmpty(void *dir);
 extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
 extern int DirHash(register char *string);
 
+extern int DStat(int *abuffers, int *acalls, int *aios);
+extern int DInit(int abuffers);
+extern void *DRead(register afs_int32 *fid, register int page);
+extern void DRelease(register struct buffer *bp, int flag);
+extern int DVOffset(register void *ap);
+extern void DZap(register afs_int32 *fid);
+extern int DFlushVolume(register afs_int32 vid);
+extern int DFlushEntry(register afs_int32 *fid);
+extern int DFlush();
+extern void *DNew(register afs_int32 *fid, register int page);
+
 #ifdef KERNEL
 extern int afs_dir_NameBlobs(char *name);
 extern int afs_dir_Create(void *dir, char *entry, void *vfid);

@@ -89,6 +89,7 @@ dlqLinkb(headptr, entryptr)
  *	move all the items on the fromptr and append to the toptr's list
  */
 
+void
 dlqMoveb(fromptr, toptr)
      dlqlinkP fromptr;
      dlqlinkP toptr;

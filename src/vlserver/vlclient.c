@@ -72,7 +72,6 @@ void print_usage();
 void fill_entry();
 void fill_update_entry();
 
-extern int VL_GetAddrsU(), VL_RegisterAddrs();
 #define	VL_NUMBER_OPCODESX	34
 static char *opcode_names[VL_NUMBER_OPCODESX] = {
     "CreateEntry",
@@ -119,7 +118,6 @@ struct Vlent {
     char name[64];
 };
 
-extern int VL_UpdateEntryByName();
 #define	NVOLS	1000
 #define	ALLOCNT 50000
 struct Vlent *VLa[NVOLS];
@@ -130,7 +128,6 @@ struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
 char confdir[AFSDIR_PATH_MAX];
 char *(args[50]);
-extern struct cmd_syndesc *cmd_CreateSyntax();
 
 struct Vlent *
 GetVolume(vol, entry)

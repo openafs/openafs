@@ -50,9 +50,6 @@ RCSID
 #include "pterror.h"
 #include <afs/afsutil.h>
 
-extern char *ucstring();
-extern char *lcstring();
-
 static char *whoami = "testpr";
 static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */
 static char conf_dir[100];

@@ -14,16 +14,6 @@ extern "C" {
 
 #include "TaAfsAdmSvrInternal.h"
 
-
-/*
- * DEFINITIONS ________________________________________________________________
- *
- */
-
-extern void AfsAdmSvr_Startup (void);
-extern void AfsAdmSvr_Shutdown (void);
-
-
 /*
  * ROUTINES ___________________________________________________________________
  *

@@ -44,7 +44,6 @@ GLOBALS g;
 
 BOOL InitApp (LPSTR pszCmdLineA);
 void ExitApp (void);
-void Quit (void);
 void PumpMessage (MSG *pmsg);
 BOOL IsServerInstalled (void);
 

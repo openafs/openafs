@@ -44,7 +44,8 @@ static TCHAR szYes[cchRESOURCE];
 static TCHAR szNo[cchRESOURCE];
 
 static const UINT DISK_DRIVE_IMAGE = 0;
-static const UINT DISABLED_DISK_DRIVE_IMAGE = 1;
+//static const UINT DISABLED_DISK_DRIVE_IMAGE = 1;
+//static const UINT DISK_DRIVE_WITH_WARNING_IMAGE = 2;
 
 // Remember the config state of the FS so we can detect when it changes.
 // When it changes we must redisplay the partition info.

@@ -23,7 +23,9 @@ RCSID
 #include <errno.h>
 #include <afs/tcdata.h>
 
-extern int debugLevel;
+#include "error_macros.h"
+
+/*extern int debugLevel;*/
 static struct dumpNode *dumpQHeader;	/* ptr to head of the dumpNode list */
 static struct dumpNode headNode;	/* the dummy header of the node list */
 static afs_int32 maxTaskID;	/* the largest task Id allotted so far, this is never reused */

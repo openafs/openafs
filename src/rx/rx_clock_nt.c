@@ -42,7 +42,7 @@ LARGE_INTEGER rxi_clockFreq;
 void clock_UpdateTime(void);
 
 void
-clock_Init()
+clock_Init(void)
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {
 	printf("No High Performance clock, exiting.\n");
@@ -57,9 +57,11 @@ clock_Init()
 
 #ifndef KERNEL
 /* Make clock uninitialized. */
-clock_UnInit()
+int
+clock_UnInit(void)
 {
     clockInitialized = 0;
+	return 0;
 }
 #endif
 

@@ -39,8 +39,9 @@ afs_int32 bc_UpdateVolumeSet();
 extern struct bc_config *bc_globalConfig;
 extern struct udbHandleS udbHandle;
 extern char *whoami;
-extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf,
-					     char *name);
+extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf, char *name);
+extern void FreeVolumeSet(struct bc_volumeSet *avset);
+
 
 /* ------------------------------------
  * command level routines

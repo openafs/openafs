@@ -61,8 +61,6 @@ afs_int32 krb4_cross = 0;
 
 struct afsconf_dir *KA_conf;	/* for getting cell info */
 
-extern afs_int32 ubik_lastYesTime;
-extern afs_int32 ubik_nBuffers;
 int MinHours = 0;
 int npwSums = KA_NPWSUMS;	/* needs to be variable sometime */
 

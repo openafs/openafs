@@ -51,7 +51,6 @@ RCSID
 int localauth, interact;
 char tcell[64];
 
-extern int BC_ExecuteRequest();
 extern int bc_AddDumpCmd();
 extern int bc_AddHostCmd();
 extern int bc_AddVolEntryCmd();
@@ -82,8 +81,6 @@ extern int bc_deleteDumpCmd();
 extern int bc_dumpInfoCmd();
 extern int bc_restoreDbCmd();
 extern int bc_saveDbCmd();
-
-extern PrintError();
 
 /*
  * Global configuration information for the Backup Coordinator.

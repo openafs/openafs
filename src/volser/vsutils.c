@@ -56,11 +56,6 @@ RCSID
 
 struct ubik_client *cstruct;
 static rxkad_level vsu_rxkad_level = rxkad_clear;
-extern int VL_CreateEntry(), VL_CreateEntryN();
-extern int VL_GetEntryByID(), VL_GetEntryByIDN();
-extern int VL_GetEntryByNameO(), VL_GetEntryByNameN();
-extern int VL_ReplaceEntry(), VL_ReplaceEntryN();
-extern int VL_ListAttributes(), VL_ListAttributesN(), VL_ListAttributesN2();
 
 static void
 ovlentry_to_nvlentry(oentryp, nentryp)
@@ -298,7 +293,7 @@ struct cacheips {
 #define GETADDRUCACHESIZE             64
 struct cacheips cacheips[GETADDRUCACHESIZE];
 int cacheip_index = 0;
-extern int VL_GetAddrsU();
+
 VLDB_IsSameAddrs(serv1, serv2, errorp)
      afs_int32 serv1, serv2, *errorp;
 {
@@ -578,6 +573,7 @@ vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
 /*extract the name of volume <name> without readonly or backup suffixes
  * and return the result as <rname>.
  */
+int
 vsu_ExtractName(rname, name)
      char rname[], name[];
 {

@@ -62,8 +62,6 @@ RCSID
 #endif /* !O_LARGEFILE */
 #endif /* AFS_NT40_ENV */
 
-extern afs_int32 DErrno;
-
 #ifdef AFS_PTHREAD_ENV
 pthread_once_t ih_glock_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ih_glock_mutex;

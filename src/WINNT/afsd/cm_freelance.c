@@ -18,6 +18,8 @@
 #include "cm_freelance.h"
 #include "stdio.h"
 
+extern void afsi_log(char *pattern, ...);
+
 int cm_noLocalMountPoints;
 int cm_fakeDirSize;
 int cm_fakeDirCallback=0;

@@ -26,15 +26,6 @@ RCSID
 #endif
 
 /*
- * Functions that aren't prototyped, but that we use
- */
-
-extern int VL_CreateEntryN(), VL_CreateEntry(), VL_GetEntryByIDN(),
-VL_GetEntryByID(), VL_GetEntryByNameN(), VL_GetEntryByNameO(),
-VL_ReplaceEntryN(), VL_ReplaceEntry(), VL_ListAttributesN(),
-VL_ListAttributes(), VL_GetAddrsU();
-
-/*
  * VLDB entry conversion routines.
  * convert from one type of VLDB record to another.  There are only
  * two types "old" and "new".

@@ -43,7 +43,6 @@ RCSID
 
 struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 
-extern struct bc_config *bc_globalConfig;
 extern char *bc_CopyString();
 extern void bc_HandleMisc();
 extern char *whoami;

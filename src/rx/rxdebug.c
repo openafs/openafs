@@ -53,8 +53,6 @@ RCSID
 
 #define	TIMEOUT	    20
 
-extern struct hostent *hostutil_GetHostByName();
-
 static short
 PortNumber(aport)
      register char *aport;

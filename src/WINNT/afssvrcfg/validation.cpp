@@ -26,15 +26,11 @@
  * PROTOTYPES _________________________________________________________________
  *
  */
-BOOL Validation_IsValid(TCHAR *pszInput, VALIDATION_TYPE type, BOOL bShowError);
-
 static BOOL CheckAfsPartitionName(TCHAR *pszInput, int &nErrorMsgResID);
 static BOOL CheckAfsCellName(TCHAR *pszInput, int &nErrorMsgResID);
 static BOOL CheckAfsPassword(TCHAR *pszInput, int &nErrorMsgResID);
 static BOOL CheckAfsUid(TCHAR *pszInput, int &nErrorMsgResID);
 static BOOL CheckAfsServerName(TCHAR *pszInput, int &nErrorMsgResID);
-static BOOL CheckFileName(TCHAR *pszInput, int &nErrorMsgResID);
-static BOOL CheckPath(TCHAR *pszInput, int &nErrorMsgResID);
 static void ShowError(int nErrorMsgResID);
 
 

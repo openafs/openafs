@@ -22,7 +22,7 @@
 
 #include "afsd.h"
 
-void afsi_log();
+extern void afsi_log(char *pattern, ...);
 
 /* This module implements the buffer package used by the local transaction
  * system (cm).  It is initialized by calling cm_Init, which calls buf_Init;

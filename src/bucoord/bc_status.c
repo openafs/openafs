@@ -41,6 +41,10 @@ RCSID
     curPollPtr->flags &= ~(clear);		\
     unlock_Status();
 
+extern struct bc_config *bc_globalConfig;
+extern afs_int32 bc_GetConn(struct bc_config *aconfig, afs_int32 aport, struct rx_connection **tconn);
+extern statusP findStatus(afs_uint32 taskId);
+
 /* globals for backup coordinator status management */
 
 dlqlinkT statusHead;		/* chain of status blocks */
@@ -149,8 +153,6 @@ statusWatcher()
     PROCESS dispatchPid;
 
     afs_int32 code = 0;
-    extern struct bc_config *bc_globalConfig;
-    extern struct rx_connection *bc_GetConn();
 
     lastTaskCode = 0;
 
@@ -431,7 +433,6 @@ waitForTask(taskId)
 {
     statusP ptr;
     afs_int32 done = 0, rcode, t;
-    extern statusP findStatus();
 
     t = (TASK_DONE | ABORT_DONE | TASK_ERROR);
     while (!done) {

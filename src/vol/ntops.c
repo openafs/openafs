@@ -41,6 +41,8 @@ RCSID
 
 #define BASEFILEATTRIBUTE FILE_ATTRIBUTE_NORMAL
 
+static void AddToZLCDeleteList(char dir, char *name);
+
 /* nt_unlink - unlink a case sensitive name.
  *
  * nt_unlink supports the nt_dec call.
@@ -1107,7 +1109,6 @@ nt_ListAFSSubDirs(IHandle_t * dirIH,
     int tag, vno;
     FdHandle_t linkHandle;
     int ninodes = 0;
-    static void AddToZLCDeleteList(char dir, char *name);
     static void DeleteZLCFiles(char *path);
 
     s = nt_HandleToVolDir(path, &myIH);

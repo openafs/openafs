@@ -41,48 +41,6 @@ RCSID
 #endif
 #endif
 
-
-
-/*
- * Prototypes for functions that don't exist in any header files
- */
-
-extern int BOZO_AddCellHost();
-extern int BOZO_AddKey();
-extern int BOZO_AddSUser();
-extern int BOZO_CreateBnode();
-extern int BOZO_DeleteBnode();
-extern int BOZO_DeleteCellHost();
-extern int BOZO_DeleteKey();
-extern int BOZO_DeleteSUser();
-extern int BOZO_EnumerateInstance();
-extern int BOZO_Exec();
-extern int BOZO_GetCellHost();
-extern int BOZO_GetCellName();
-extern int BOZO_GetDates();
-extern int BOZO_GetInstanceInfo();
-extern int BOZO_GetInstanceParm();
-extern int BOZO_GetInstanceParm();
-extern int BOZO_GetRestartTime();
-extern int BOZO_GetStatus();
-extern int BOZO_ListSUsers();
-extern int BOZO_ListKeys();
-extern int BOZO_Prune();
-extern int BOZO_ReBozo();
-extern int BOZO_Restart();
-extern int BOZO_RestartAll();
-extern int BOZO_SetCellName();
-extern int BOZO_SetNoAuthFlag();
-extern int BOZO_SetRestartTime();
-extern int BOZO_SetStatus(struct rx_connection *, char *, afs_int32);
-extern int BOZO_SetTStatus(struct rx_connection *, char *, afs_int32);
-extern int BOZO_ShutdownAll();
-extern int BOZO_StartupAll();
-extern int BOZO_UnInstall();
-extern int BOZO_WaitAll();
-extern int StartBOZO_GetLog();
-extern int StartBOZO_Install();
-
 typedef struct bos_server {
     int begin_magic;
     int is_valid;

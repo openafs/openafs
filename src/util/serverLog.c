@@ -165,7 +165,7 @@ DebugOn(int loglevel)
 void
 SetDebug_Signal(int signo)
 {
-    extern int IOMGR_SoftSig();
+/*    extern int IOMGR_SoftSig();*/
 
     if (LogLevel > 0) {
 	LogLevel *= 5;

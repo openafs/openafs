@@ -38,12 +38,8 @@ RCSID
 #include <afs/vlserver.h>
 #include "error_macros.h"
 
-
-extern struct bc_config *bc_globalConfig;
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
-extern void bc_HandleMisc();
 extern char *whoami;
-extern struct rx_connection *bc_GetConn();
 
 #define	BC_MAXLEVELS	    20
 #define	MAXTAPESATONCE	    10

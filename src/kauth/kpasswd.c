@@ -83,7 +83,7 @@ int CommandProc();
 
 static int zero_argc;
 static char **zero_argv;
-extern int init_child(), pasword_bad(), give_to_child(), terminate_child();
+extern int init_child(), give_to_child(), terminate_child();
 
 #ifdef AFS_NT40_ENV
 struct passwd {

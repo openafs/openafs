@@ -128,4 +128,6 @@ struct extentaddr {
 
 #define VLog(level, str)   ViceLog(5, str)
 
+extern int FreeBlock(struct ubik_trans *trans, afs_int32 blockindex);
+
 #endif /* _VLSERVER_ */

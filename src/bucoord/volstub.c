@@ -29,7 +29,6 @@ RCSID
 #include "bc.h"
 #include <afs/volint.h>
 
-extern int VL_GetEntryByID();
 extern char *whoami;
 
 /* ********************************************************************* */

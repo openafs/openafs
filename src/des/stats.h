@@ -10,13 +10,27 @@
 /* Some Cheap statistics which should be shared with the rxkad definitions, but
  * aren't.  The layout should match the layout in rxkad/rxkad.p.h. */
 
-struct {
-    afs_uint32 rxkad_stuff[34];	/* see rxkad.h */
-    afs_uint32 fc_stuff[3];	/* see rxkad.h */
+struct rxkad_stats {
+    afs_uint32 connections[3];	/* client side only */
+    afs_uint32 destroyObject;	/* client security objects */
+    afs_uint32 destroyClient;	/* client connections */
+    afs_uint32 destroyUnused;	/* unused server conn */
+    afs_uint32 destroyUnauth;	/* unauthenticated server conn */
+    afs_uint32 destroyConn[3];	/* server conn per level */
+    afs_uint32 expired;		/* server packets rejected */
+    afs_uint32 challengesSent;	/* server challenges sent */
+    afs_uint32 challenges[3];	/* challenges seen by client */
+    afs_uint32 responses[3];	/* responses seen by server */
+    afs_uint32 preparePackets[6];
+    afs_uint32 checkPackets[6];
+    afs_uint32 bytesEncrypted[2];	/* index just by type */
+    afs_uint32 bytesDecrypted[2];
+    afs_uint32 fc_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
+    afs_uint32 fc_key_scheds;	/* key schedule creations */
     afs_uint32 des_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
     afs_uint32 des_key_scheds;	/* key schedule creations */
     afs_uint32 des_randoms;	/* random blocks generated */
-    unsigned long spares[10];
+    long spares[10];
 } rxkad_stats;			/* put these here for convenience */
 
 #ifdef AFS_PTHREAD_ENV

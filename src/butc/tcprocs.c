@@ -41,7 +41,6 @@ RCSID
 #include <afs/tcdata.h>
 #include "error_macros.h"
 #include "butc_xbsa.h"
-extern afs_int32 xbsaType;
 
 callPermitted(call)
      struct rx_call *call;

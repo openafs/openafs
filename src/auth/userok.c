@@ -59,7 +59,7 @@ afsconf_CheckAuth(adir, acall)
 UNLOCK_GLOBAL_MUTEX}
 #endif /* !defined(UKERNEL) */
 
-static
+static int
 GetNoAuthFlag(adir)
      struct afsconf_dir *adir;
 {
@@ -71,6 +71,7 @@ GetNoAuthFlag(adir)
 }
 
 
+int
 afsconf_GetNoAuthFlag(adir)
      struct afsconf_dir *adir;
 {
@@ -80,6 +81,7 @@ afsconf_GetNoAuthFlag(adir)
     UNLOCK_GLOBAL_MUTEX return rc;
 }
 
+void
 afsconf_SetNoAuthFlag(adir, aflag)
      struct afsconf_dir *adir;
      int aflag;
@@ -104,6 +106,7 @@ afsconf_SetNoAuthFlag(adir, aflag)
 UNLOCK_GLOBAL_MUTEX}
 
 /* deletes a user from the UserList file */
+int
 afsconf_DeleteUser(adir, auser)
      struct afsconf_dir *adir;
      register char *auser;
@@ -190,6 +193,7 @@ afsconf_DeleteUser(adir, auser)
 }
 
 /* returns nth super user from the UserList file */
+int
 afsconf_GetNthUser(adir, an, abuffer, abufferLen)
      struct afsconf_dir *adir;
      afs_int32 an;
@@ -262,6 +266,7 @@ FindUser(adir, auser)
 }
 
 /* add a user to the user list, checking for duplicates */
+int
 afsconf_AddUser(adir, aname)
      struct afsconf_dir *adir;
      char *aname;

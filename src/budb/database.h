@@ -314,3 +314,7 @@ extern struct memoryDB db;
 struct memoryHashTable *ht_GetType();
 extern afs_uint32 ht_HashEntry();
 extern dbadr ht_LookupBucket();
+
+extern afs_int32 dbwrite(struct ubik_trans *ut, afs_int32 pos, char *buff, afs_int32 len);
+extern void db_panic(char *reason);
+extern void ht_Reset(struct memoryHashTable *mht);

@@ -41,7 +41,6 @@ static int cron_timeout(), cron_getstat(), cron_setstat(), cron_delete();
 static int cron_procexit(), cron_getstring(), cron_getparm(), cron_restartp();
 static int cron_hascore();
 struct bnode *cron_create();
-extern char *ktime_DateOf();
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
 

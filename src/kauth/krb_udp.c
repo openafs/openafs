@@ -84,7 +84,6 @@ struct packet {
     char data[MAX_PKT_LEN];
 };
 
-extern struct kadstats dynamic_statistics;
 extern char *lastOperation;
 extern char lrealm[];
 

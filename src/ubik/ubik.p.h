@@ -329,6 +329,13 @@ extern int DISK_Write();
 extern int DISK_WriteV();
 extern int DISK_Truncate();
 extern int DISK_SetVersion();
+
+/* disk.c */
+extern int udisk_abort(struct ubik_trans *atrans);
+
+/* lock.c */
+extern void ulock_relLock(struct ubik_trans *atrans);
+
 #endif /* UBIK_INTERNALS */
 
 extern afs_int32 ubik_nBuffers;
@@ -347,5 +354,8 @@ extern int ubik_ClientInit(register struct rx_connection **serverconns,
 
 extern afs_int32 ubik_ClientDestroy(struct ubik_client *aclient);
 
+/* ubik.c */
+extern int ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, struct ubik_trans **transPtr);
+extern int ubik_EndTrans(register struct ubik_trans *transPtr);
 
 #endif /* UBIK_H */

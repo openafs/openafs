@@ -22,6 +22,10 @@
 
 #include "afsd.h"
 
+#ifdef DEBUG
+extern void afsi_log(char *pattern, ...);
+#endif
+
 osi_mutex_t cm_bufGetMutex;
 #ifdef AFS_FREELANCE_CLIENT
 extern osi_mutex_t cm_Freelance_Lock;

@@ -76,7 +76,6 @@ int
 des_random_key(des_cblock key)
 {
     LOCK_INIT if (!is_inited) {
-	void des_init_random_number_generator();
 	des_init_random_number_generator(key);
     }
     UNLOCK_INIT

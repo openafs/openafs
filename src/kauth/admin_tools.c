@@ -44,10 +44,7 @@ RCSID
 #include "kautils.h"
 #include "kaport.h"
 
-
 #define CMD_PARSER_AMBIG_FIX 1	/* allow ambiguous aliases */
-
-extern char *ktime_GetDateUsage();
 
 #define	KA_SIXHOURS	(6*3600)
 
@@ -77,53 +74,6 @@ DefaultCell(void)
 }
 
 /* These are the command operation procedures. */
-
-int
-ListUsers(struct cmd_syndesc *as, char *arock)
-{
-    struct kaident name;
-    afs_int32 index;
-    afs_int32 count;
-    afs_int32 next_index;
-    int code, all = 0, showa = 0;
-    int showkey = (as->parms[2].items != NULL);
-
-    if (as->parms[0].items)
-	all = 1;
-    if (as->parms[1].items) {
-	all = 1;
-	showa = 1;
-    }
-    for (index = 0; 1; index = next_index) {
-	code =
-	    ubik_Call(KAM_ListEntry, conn, 0, index, &next_index, &count,
-		      &name);
-	if (code) {
-	    com_err(whoami, code, "calling KAM_ListEntry");
-	    break;
-	}
-	if (!next_index)
-	    break;
-	if (next_index < 0)
-	    printf("next_index (%d) is negative: ", next_index);
-	if (strlen(name.name) == 0)
-	    printf("name is zero length: ");
-	if (all)
-	    DumpUser(name.name, NULL, showa, showkey, name.instance);
-	else
-	    ka_PrintUserID("", name.name, name.instance, "\n");
-    }
-    return code;
-}
-
-
-int
-ExamineUser(struct cmd_syndesc *as, char *arock)
-{
-    int showkey = (as->parms[1].items != NULL);
-    return DumpUser(as->parms[0].items->data, arock, 0, showkey, NULL);
-}
-
 
 int
 DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
@@ -282,6 +232,53 @@ DumpUser(char *user, char *arock, int showadmin, int showkey, char *inst)
     }
     return 0;
 }
+
+int
+ListUsers(struct cmd_syndesc *as, char *arock)
+{
+    struct kaident name;
+    afs_int32 index;
+    afs_int32 count;
+    afs_int32 next_index;
+    int code, all = 0, showa = 0;
+    int showkey = (as->parms[2].items != NULL);
+
+    if (as->parms[0].items)
+	all = 1;
+    if (as->parms[1].items) {
+	all = 1;
+	showa = 1;
+    }
+    for (index = 0; 1; index = next_index) {
+	code =
+	    ubik_Call(KAM_ListEntry, conn, 0, index, &next_index, &count,
+		      &name);
+	if (code) {
+	    com_err(whoami, code, "calling KAM_ListEntry");
+	    break;
+	}
+	if (!next_index)
+	    break;
+	if (next_index < 0)
+	    printf("next_index (%d) is negative: ", next_index);
+	if (strlen(name.name) == 0)
+	    printf("name is zero length: ");
+	if (all)
+	    DumpUser(name.name, NULL, showa, showkey, name.instance);
+	else
+	    ka_PrintUserID("", name.name, name.instance, "\n");
+    }
+    return code;
+}
+
+
+int
+ExamineUser(struct cmd_syndesc *as, char *arock)
+{
+    int showkey = (as->parms[1].items != NULL);
+    return DumpUser(as->parms[0].items->data, arock, 0, showkey, NULL);
+}
+
 
 struct OKerrors {
     int code;

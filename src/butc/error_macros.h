@@ -24,3 +24,19 @@
             code = evalue;                                      \
             goto abort_exit;                                    \
         }
+
+/*need conversion to varargs*//*extern void ELog(afs_int32 task, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
+extern void ErrorLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
+extern void TLog(afs_int32 task, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);
+extern void TapeLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2, char *str, char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h, char *i, char *j);*/
+
+extern void FreeNode(afs_int32 taskID);
+extern void CreateNode(struct dumpNode **newNode);
+extern void LeaveDeviceQueue(struct deviceSyncNode *devLatch);
+extern void EnterDeviceQueue(struct deviceSyncNode *devLatch);
+extern Date ExpirationDate(afs_int32 dumpid);
+extern void InitNodeList(afs_int32 portOffset);
+
+/* bucoord/status.c */
+extern void clearStatus(afs_uint32 taskId, afs_uint32 flags);
+extern void setStatus(afs_uint32 taskId, afs_uint32 flags);

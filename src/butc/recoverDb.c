@@ -38,7 +38,6 @@ RCSID
 /* GLOBAL CONFIGURATION PARAMETERS */
 extern int autoQuery;
 extern int queryoperator;
-extern int isafile;
 
 /* Handle for the information read from all the tapes of a dump */
 afs_int32 tapepos;		/* when read a label, remember its position */

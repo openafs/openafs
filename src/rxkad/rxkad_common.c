@@ -74,8 +74,6 @@ RCSID
 #include "private_data.h"
 #define XPRT_RXKAD_COMMON
 
-char *rxi_Alloc();
-
 #ifndef afs_max
 #define	afs_max(a,b)    ((a) < (b)? (b) : (a))
 #endif /* afs_max */

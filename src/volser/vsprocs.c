@@ -64,17 +64,8 @@ RCSID
 
 #include <volser_prototypes.h>
 
-afs_int32 VolumeExists(), CheckVldbRWBK(), CheckVldb();
-
 struct ubik_client *cstruct;
 int verbose = 0;
-extern int VL_GetNewVolumeId();
-extern int VL_SetLock();
-extern int VL_ReleaseLock();
-extern int VL_DeleteEntry();
-
-void MapNetworkToHost();
-void MapHostToNetwork();
 
 struct release {
     afs_int32 time;

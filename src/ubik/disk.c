@@ -38,7 +38,7 @@ RCSID
 #include "ubik_int.h"
 
 #define	PHSIZE	128
-struct buffer {
+static struct buffer {
     struct ubik_dbase *dbase;	/* dbase within which the buffer resides */
     afs_int32 file;		/* Unique cache key */
     afs_int32 page;		/* page number */

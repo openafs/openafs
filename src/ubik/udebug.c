@@ -45,8 +45,6 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
-extern struct hostent *hostutil_GetHostByName();
-
 static short
 PortNumber(register char *aport)
 {

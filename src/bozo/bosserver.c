@@ -51,7 +51,6 @@ RCSID
 #define BOZO_LWP_STACKSIZE	16000
 extern int BOZO_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
-extern int afsconf_GetKey();
 extern struct bnode_ops fsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 void bozo_Log();
@@ -61,7 +60,6 @@ static char *bozo_pid;
 struct rx_securityClass *bozo_rxsc[3];
 const char *bozo_fileName;
 FILE *bozo_logFile;
-extern int rx_stackSize;	/* for rx_SetStackSize macro */
 
 int DoLogging = 0;
 int DoSyslog = 0;

@@ -35,7 +35,6 @@ RCSID
 
 extern struct vlheader cheader;
 struct vlheader xheader;
-extern struct ubik_dbase *VL_dbase;
 extern afs_uint32 HostAddress[];
 extern int maxnservers;
 struct extentaddr extentaddr;

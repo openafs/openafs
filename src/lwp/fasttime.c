@@ -40,7 +40,6 @@ RCSID
 #endif
 #include <afs/afsutil.h>
 
-extern char *valloc();
 int ft_debug;
 
 #define TRUE	1

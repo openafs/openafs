@@ -90,7 +90,6 @@ RCSID
 #endif
 #define osi_Assert(e) (void)(e)
 
-extern int LogLevel;		/* Vice loglevel */
 int (*V_BreakVolumeCallbacks) ();
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
@@ -123,9 +122,7 @@ struct command {
     char partName[16];		/* partition name, e.g. /vicepa */
 };
 
-
 /* Forward declarations */
-static int getport();
 static void FSYNC_sync();
 static void FSYNC_newconnection();
 static void FSYNC_com();

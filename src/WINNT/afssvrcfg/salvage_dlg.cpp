@@ -50,7 +50,6 @@ static int nNumProcesses;
  *
  */
 static void OnInitDialog(HWND hwndDlg);
-static void CheckEnableButtons();
 static void OnAdvanced();
 static void UpdateControls();
 static BOOL OnSalvage();

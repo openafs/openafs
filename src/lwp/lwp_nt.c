@@ -498,7 +498,7 @@ static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
 }
 
 
-VOID WINAPI Enter_LWP(PVOID fiberData)
+static VOID WINAPI Enter_LWP(PVOID fiberData)
 {
     PROCESS pcb = (PROCESS)fiberData;
 

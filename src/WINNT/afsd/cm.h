@@ -17,11 +17,12 @@
 #endif /* DJGPP */
 
 /* from .xg file */
-long VL_GetEntryByID(struct rx_connection *, long, long, struct vldbentry *);
-long VL_GetEntryByNameO(struct rx_connection *, char *, struct vldbentry *);
-long VL_ProbeServer(struct rx_connection *);
-long VL_GetEntryBYIDN(struct rx_connection *, long, long, struct nvldbentry *);
-long VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
+/* FIXME: these were "long" but Windows NT wants "int" */
+int VL_GetEntryByID(struct rx_connection *, long, long, struct vldbentry *);
+int VL_GetEntryByNameO(struct rx_connection *, char *, struct vldbentry *);
+int VL_ProbeServer(struct rx_connection *);
+int VL_GetEntryBYIDN(struct rx_connection *, long, long, struct nvldbentry *);
+int VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
 
 /* from .xg file */
 extern StartRXAFS_FetchData (struct rx_call *,

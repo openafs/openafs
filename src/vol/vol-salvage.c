@@ -219,7 +219,6 @@ extern off_t afs_lseek(int FD, off_t O, int F);
 #ifdef	AFS_OSF_ENV
 extern void *calloc();
 #endif
-extern char *vol_DevName();
 static char *TimeStamp(time_t clock, int precision);
 
 #define ORPH_IGNORE 0

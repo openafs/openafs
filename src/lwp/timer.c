@@ -49,10 +49,7 @@ typedef unsigned char bool;
 
 #define MILLION	1000000
 
-static globalInitDone = 0;
-
-void openafs_insque(struct TM_Elem *, struct TM_Elem *);
-void openafs_remque(struct TM_Elem *);
+static int globalInitDone = 0;
 
 /* t1 = t2 - t3 */
 static void

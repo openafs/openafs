@@ -100,9 +100,7 @@ rwWindowData awdSplitServer[] = {
 void Main_OnNotifyFromDispatch (LPNOTIFYSTRUCT lpns);
 
 void Main_OnPreviewPane (BOOL fPreviewNew, BOOL fVertNew, BOOL fStoreView);
-void Main_OnServerView (int lvsNew);
 DWORD WINAPI Main_OnOpenServers_ThreadProc (PVOID lp);
-void Main_OnEndTask_Properties (LPTASKPACKET ptp);
 
 void Main_SubclassServers (HWND hDlg);
 

@@ -44,7 +44,6 @@ static vos_vldbEntry_t vldbRootCellEntry;
  */
 BOOL CALLBACK GetCurConfigDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp);
 static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp);
-static void SetConfigDefaults();
 static void ShowMsg(UINT uiMsgID);
 static void NextStep(UINT uiMsgID);
 

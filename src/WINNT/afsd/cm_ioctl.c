@@ -48,9 +48,6 @@
 #define MAX_PATH 260
 
 osi_mutex_t cm_Afsdsbmt_Lock;
-#ifdef AFS_FREELANCE_CLIENT
-extern osi_mutex_t cm_Freelance_Lock;
-#endif
 
 extern afs_int32 cryptall;
 

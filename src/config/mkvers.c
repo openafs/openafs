@@ -84,6 +84,7 @@ Usage(void)
     exit(1);
 }
 
+int
 main(int argc, char **argv)
 {
     char stampsFile[1024];

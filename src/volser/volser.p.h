@@ -160,4 +160,9 @@ struct partList {		/*used by the backup system */
 #define RV_OFFLINE 0x2
 #define RV_RDONLY  0x10000
 
+extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
+extern int vsu_ExtractName(char rname[], char name[]);
+extern afs_int32 vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth, struct ubik_client **uclientp, int (*secproc)());
+extern void vsu_SetCrypt(int cryptflag);
+
 #endif /* _VOLSER_ */

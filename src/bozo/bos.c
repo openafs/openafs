@@ -47,13 +47,6 @@ RCSID
 #include <ubik.h>
 #include <afs/ktime.h>
 
-
-
-extern char *volutil_PartitionName();
-extern struct rx_call *rx_NewCall();
-extern char *volutil_PartitionName();
-extern struct hostent *hostutil_GetHostByName();
-
 static IStatServer();
 static DoStat();
 

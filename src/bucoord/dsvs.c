@@ -38,11 +38,6 @@ RCSID
 #include <afs/bubasics.h>
 #include "bc.h"
 
-extern struct bc_config *bc_globalConfig;
-extern FILE *bc_open();
-extern void bc_HandleMisc();
-extern char *whoami;
-
 static char db_dsvs = 0;	/*Assume debugging output turned off */
 static char mn[] = "dsvs";	/*Module name */
 

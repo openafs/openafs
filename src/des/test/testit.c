@@ -25,7 +25,7 @@ RCSID
 /* MIN_ARGC == MAX_ARGC ==> required # args */
 
 extern char *errmsg();
-extern int des_string_to_key();
+extern void des_string_to_key();
 extern int des_key_sched();
 extern int des_ecb_encrypt();
 extern int des_cbc_encrypt();

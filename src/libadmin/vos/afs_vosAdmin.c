@@ -46,8 +46,6 @@ RCSID
 #include "vsprocs.h"
 #include "lockprocs.h"
 
-extern int VL_GetAddrsU();
-
 typedef struct file_server {
     int begin_magic;
     int is_valid;

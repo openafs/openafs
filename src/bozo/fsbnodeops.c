@@ -45,7 +45,6 @@ static int fs_timeout(), fs_getstat(), fs_setstat(), fs_delete();
 static int fs_procexit(), fs_getstring(), fs_getparm(), fs_restartp();
 static int fs_hascore();
 struct bnode *fs_create();
-struct bnode *fsmr_create();
 
 static SetNeedsClock();
 static NudgeProcs();

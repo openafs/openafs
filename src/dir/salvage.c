@@ -38,10 +38,7 @@ RCSID
 
 #define MAXENAME 256
 
-struct DirEntry *GetBlob();
-struct PageHeader *DRead();
 extern afs_int32 DErrno;
-int NameBlobs(), Lookup(), Create(), MakeDir();
 
 /* figure out how many pages in use in a directory, given ptr to its (locked) header */
 static

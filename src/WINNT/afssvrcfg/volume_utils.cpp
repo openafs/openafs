@@ -29,7 +29,7 @@ extern "C" {
  */
 static HWND m_hDriveList = 0;
 
-static const UINT MAX_DRIVES = 26;
+//static const UINT MAX_DRIVES = 26;
 static const UINT DISK_DRIVE_IMAGE = 0;
 static const UINT DISABLED_DISK_DRIVE_IMAGE = 1;
 static const UINT DISK_DRIVE_WITH_WARNING_IMAGE = 2;

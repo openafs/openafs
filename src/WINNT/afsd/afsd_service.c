@@ -30,8 +30,6 @@
 
 extern void afsi_log(char *pattern, ...);
 
-extern char AFSConfigKeyName[];
-
 HANDLE WaitToTerminate;
 
 int GlobalStatus;

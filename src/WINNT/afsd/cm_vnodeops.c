@@ -28,6 +28,10 @@
 #define ROVOL	1
 #define BACKVOL	2
 
+#ifdef DEBUG
+extern void afsi_log(char *pattern, ...);
+#endif
+
 unsigned int cm_mountRootGen = 0;
 
 char cm_sysName[100];

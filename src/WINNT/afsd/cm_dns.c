@@ -19,6 +19,8 @@
 #include <lwp.h>
 #include <afs/afsint.h>
 
+/*extern void afsi_log(char *pattern, ...);*/
+
 extern int errno;
 static char dns_addr[30];
 #ifdef DJGPP

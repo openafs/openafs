@@ -48,7 +48,7 @@ RCSID
     by acellInfo parm.   Useful only on the server (which describes only one cell).
 */
 
-static
+static int
 VerifyEntries(aci)
      register struct afsconf_cell *aci;
 {
@@ -90,6 +90,7 @@ VerifyEntries(aci)
    This is a handle to the internal cache that is maintained by the bosserver.
    */
 
+int
 afsconf_SetCellInfo(adir, apath, acellInfo)
      struct afsconf_dir *adir;
      char *apath;
@@ -101,6 +102,7 @@ afsconf_SetCellInfo(adir, apath, acellInfo)
     return code;
 }
 
+int
 afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
      struct afsconf_dir *adir;
      char *apath;

@@ -145,12 +145,12 @@ ulock_getLock(atrans, atype, await)
 }
 
 /* Release the transaction lock */
-int
+void
 ulock_relLock(atrans)
      struct ubik_trans *atrans;
 {
     if (rwlockinit)
-	return EINVAL;
+	return;
 
     if (atrans->locktype == LOCKREAD) {
 	ReleaseReadLock(&rwlock);

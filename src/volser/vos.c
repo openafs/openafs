@@ -76,9 +76,6 @@ struct tqHead {
     struct tqElem *next;
 };
 
-
-struct hostent *hostutil_GetHostByName(register char *ahost);
-
 #define COMMONPARMS     cmd_Seek(ts, 12);\
 cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
 cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
@@ -94,23 +91,6 @@ struct rx_connection *tconn;
 afs_int32 tserver;
 extern struct ubik_client *cstruct;
 const char *confdir;
-extern struct rx_connection *UV_Bind();
-extern int UV_SetSecurity();
-extern int UV_SetVolumeInfo();
-extern int vsu_SetCrypt();
-extern VL_SetLock();
-extern VL_ReleaseLock();
-extern VL_DeleteEntry();
-extern VL_ListEntry();
-extern VL_GetAddrs();
-extern VL_GetAddrsU();
-extern VL_ChangeAddr();
-
-extern int vsu_ExtractName();
-extern PrintError();
-extern void EnumerateEntry();
-extern void SubEnumerateEntry();
-
 
 static struct tqHead busyHead, notokHead;
 

@@ -81,10 +81,6 @@ extern "C" {
  *
  */
 
-DWORD WINAPI Task_ThreadProc (PVOID lp);
-
-void Task_Perform (LPTASKPACKET ptp);
-
 #ifdef DEBUG
 void Task_ExportCell (LPTASKPACKET ptp);
 #endif

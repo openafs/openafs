@@ -28,7 +28,6 @@
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
 /*extern unsigned char smb_LANadapter;*/
-extern LANA_ENUM lana_list;
 
 void smb_InitIoctl(void)
 {

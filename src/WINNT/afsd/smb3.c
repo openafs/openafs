@@ -27,8 +27,6 @@
 
 #include "smb.h"
 
-extern smb_vc_t *dead_vcp;
-
 extern osi_hyper_t hzero;
 
 smb_packet_t *smb_Directory_Watches = NULL;

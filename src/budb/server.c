@@ -58,10 +58,6 @@ RCSID
 #include "globals.h"
 #include "afs/audit.h"
 
-
-extern afs_int32 ubik_lastYesTime;
-extern afs_int32 ubik_nBuffers;
-
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
 

@@ -135,3 +135,5 @@ extern int bnode_NewProc( /* bnode, execstring, corename, procaddr */ );
 extern int bnode_Init( /* no parms */ );
 extern afs_int32 bnode_Create();
 extern struct bnode *bnode_FindInstance();
+extern int bnode_WaitStatus(register struct bnode *abnode, int astatus);
+extern int bnode_SetStat(register struct bnode *abnode, register int agoal);

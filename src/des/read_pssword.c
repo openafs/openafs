@@ -87,7 +87,7 @@ static push_signals(), pop_signals();
 #endif
 
 int des_read_pw_string(char *, int, char *, int);
-int des_string_to_key(char *, des_cblock *);
+void des_string_to_key(char *, des_cblock *);
 
 /*** Routines ****************************************************** */
 int

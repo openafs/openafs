@@ -25,6 +25,8 @@ RCSID
 #include "butc_xbsa.h"
 #include <afs/butx.h>
 
+#include "error_macros.h"
+
 extern int debugLevel;
 
 

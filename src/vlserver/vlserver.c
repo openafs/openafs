@@ -66,9 +66,6 @@ afs_uint32 HostAddress[MAXSERVERID + 1];
 extern int afsconf_CheckAuth();
 extern int afsconf_ServerAuth();
 
-extern afs_int32 ubik_lastYesTime;
-extern afs_int32 ubik_nBuffers;
-
 static CheckSignal();
 int LogLevel = 0;
 int smallMem = 0;

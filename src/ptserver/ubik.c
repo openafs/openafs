@@ -182,6 +182,7 @@ struct rx_securityClass *ubik_sc[3];
 
 /* Other declarations */
 
+int
 afsconf_GetNoAuthFlag()
 {
     return (1);

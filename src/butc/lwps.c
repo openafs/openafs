@@ -40,7 +40,6 @@ RCSID
 #include "butc_xbsa.h"
 
 /* GLOBAL CONFIGURATION PARAMETERS */
-extern int dump_namecheck;
 extern int queryoperator;
 extern int tapemounted;
 extern char *opencallout;
@@ -48,9 +47,11 @@ extern char *closecallout;
 extern char *whoami;
 extern char *extractDumpName();
 extern int BufferSize;		/* Size in B stored for header info */
-extern char *restoretofile;
 FILE *restoretofilefd;
+#ifdef xbsa
+extern char *restoretofile;
 extern int forcemultiple;
+#endif
 
 /* XBSA Global Parameters */
 afs_int32 xbsaType;
@@ -58,7 +59,7 @@ afs_int32 xbsaType;
 struct butx_transactionInfo butxInfo;
 #endif
 
-struct TapeBlock {		/* A 16KB tapeblock */
+static struct TapeBlock {		/* A 16KB tapeblock */
     char mark[BUTM_HDRSIZE];	/* Header info */
     char data[BUTM_BLKSIZE];	/* data */
 } *bufferBlock;
@@ -125,7 +126,7 @@ struct timezone tzp;
 afs_int32 readVolumeHeader( /*char *buffer,afs_int32 bufloc,(struct volumeHeader *)vhptr */ );
 
 /* The on-disk volume header or trailer can differ in size from platform to platform */
-struct TapeBlock tapeBlock;
+static struct TapeBlock tapeBlock;
 char tapeVolumeHT[sizeof(struct volumeHeader) + 2 * sizeof(char)];
 
 void

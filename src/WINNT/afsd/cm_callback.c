@@ -25,6 +25,8 @@
 
 #include "afsd.h"
 
+/*extern void afsi_log(char *pattern, ...);*/
+
 /* read/write lock for all global storage in this module */
 osi_rwlock_t cm_callbackLock;
 

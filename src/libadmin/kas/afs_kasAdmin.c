@@ -36,7 +36,6 @@ RCSID
 #undef ENCRYPT
 
 extern int ubik_Call();
-extern int ubik_Call_New();
 extern int ubik_CallIter();
 
 typedef struct {

@@ -54,6 +54,8 @@ RCSID
 #include "global.h"
 
 extern int UPDATE_ExecuteRequest();
+extern rxkad_level StringToLevel(char *name);
+
 static int AddObject(char **expPath, char *dir);
 static int PathInDirectory(char *dir, char *path);
 

@@ -35,9 +35,7 @@ RCSID
 #include "kautils.h"
 #include "kaserver.h"
 
-extern struct kaheader cheader;
 extern Date cheaderReadTime;	/* time cheader last read in */
-extern struct ubik_dbase *KA_dbase;
 
 #define set_header_word(tt,field,value) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (value)), (char *)&(cheader.field)), sizeof(afs_int32))
 

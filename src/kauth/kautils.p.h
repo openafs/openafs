@@ -151,6 +151,10 @@ extern int ka_KeyIsZero(register char *akey, register int alen);
 
 extern void ka_timestr(afs_int32 time, char *tstr, afs_int32 tlen);
 
+extern void ka_debugKeyCache(struct ka_debugInfo *info);
+
+extern void save_principal(char *p, char *n, char *i, char *c);
+
 extern afs_int32 ka_GetAFSTicket(char *name, char *instance, char *realm,
 				 Date lifetime, afs_int32 flags);
 

@@ -51,8 +51,6 @@ RCSID
 #endif
 #define PAGESIZE 2048
 
-extern int LogLevel;
-
 afs_int32 lpErrno, lpCount;
 
 /* returns 0 on success, errno on failure */

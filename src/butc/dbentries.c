@@ -40,7 +40,6 @@ RCSID
 
 #include "error_macros.h"
 
-extern struct ubik_client *cstruct;
 dlqlinkT savedEntries;
 dlqlinkT entries_to_flush;
 

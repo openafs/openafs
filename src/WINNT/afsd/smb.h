@@ -296,7 +296,7 @@ typedef struct smb_waitingLock {
 	void *lockp;
 } smb_waitingLock_t;
 
-smb_waitingLock_t *smb_allWaitingLocks;
+extern smb_waitingLock_t *smb_allWaitingLocks;
 
 typedef long (smb_proc_t)(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
@@ -347,6 +347,10 @@ extern smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags);
 extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags);
 
 extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern); 
+
+extern smb_username_t *smb_FindUserByName(char *usern, char *machine, int flags);
+
+extern smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern);
 
 extern void smb_ReleaseUID(smb_user_t *uidp);
 
@@ -428,6 +432,8 @@ extern void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_packet_t *op);
 
 extern char *myCrt_2Dispatch(int i); 
+
+extern char *myCrt_2Dispatch(int i);
 
 extern unsigned int smb_Attributes(cm_scache_t *scp);
 

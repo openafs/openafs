@@ -23,11 +23,6 @@
 #include <osi.h>
 #include <afsint.h>
 
-typedef long afs_int32;
-typedef unsigned long afs_uint32;
-typedef short afs_int16;
-typedef unsigned short afs_uint16;
-
 #include "fs.h"
 #include "fs_utils.h"
 #include "cmd.h"

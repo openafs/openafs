@@ -22,6 +22,8 @@
 
 #include "afsd.h"
 
+/*extern void afsi_log(char *pattern, ...);*/
+
 extern osi_hyper_t hzero;
 
 /* hash table stuff */

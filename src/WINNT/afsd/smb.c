@@ -57,7 +57,7 @@ long ongoingOps = 0;
 
 unsigned int sessionGen = 0;
 
-void afsi_log();
+extern void afsi_log(char *pattern, ...);
 
 osi_hyper_t hzero = {0, 0};
 osi_hyper_t hones = {0xFFFFFFFF, -1};
@@ -157,8 +157,8 @@ smb_waitingLock_t *smb_allWaitingLocks;
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 	NCB *ncbp, raw_write_cont_t *rwcp);
 void smb_NetbiosInit();
-extern char cm_HostName[];
 #ifdef DJGPP
+extern char cm_HostName[];
 extern char cm_confDir[];
 #endif
 
