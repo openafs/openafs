@@ -174,7 +174,7 @@ void osi_VM_TryReclaim(struct vcache *avc, int *slept)
         return;
     }
 #ifdef AFS_DARWIN14_ENV
-    if (vp->v_ubcinfo->ui_refcount > 1) {
+    if (vp->v_ubcinfo->ui_refcount > 1 || vp->v_ubcinfo->ui_mapped) {
         simple_unlock(&vp->v_interlock);
         AFS_RELE(vp);
         return;
