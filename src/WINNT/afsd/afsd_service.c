@@ -418,8 +418,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 #endif /* JUMP */
     {
 		code = afsd_InitCM(&reason);
-		if (code != 0)
+		if (code != 0) {
+            afsi_log("afsd_InitCM failed: %s (code = %d)", reason, code);
 			osi_panic(reason, __FILE__, __LINE__);
+        }
 
 #ifndef NOTSERVICE
         ServiceStatus.dwCheckPoint++;
@@ -427,8 +429,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 		code = afsd_InitDaemons(&reason);
-		if (code != 0)
+		if (code != 0) {
+            afsi_log("afsd_InitDaemons failed: %s (code = %d)", reason, code);
 			osi_panic(reason, __FILE__, __LINE__);
+        }
 
 #ifndef NOTSERVICE
         ServiceStatus.dwCheckPoint++;
@@ -436,8 +440,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
 		code = afsd_InitSMB(&reason, DummyMessageBox);
-		if (code != 0)
+		if (code != 0) {
+            afsi_log("afsd_InitSMB failed: %s (code = %d)", reason, code);
 			osi_panic(reason, __FILE__, __LINE__);
+        }
 
 #ifndef NOTSERVICE
 		ServiceStatus.dwCurrentState = SERVICE_RUNNING;
