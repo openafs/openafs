@@ -198,6 +198,13 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	if (code < 0) {
 	    code = -code;
 	    break;
+	} else if (code == 0) {
+	    /*
+	     * This is bad -- we can't read any more data from the
+	     * file, but we have no good way of signaling a partial
+	     * read either.
+	    code = EIO;
+	    break;
 	}
 
 	iov->iov_base += code;
