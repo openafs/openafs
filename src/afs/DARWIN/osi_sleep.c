@@ -150,6 +150,34 @@ afs_osi_Sleep(void *event)
     relevent(evp);
 }
 
+void 
+afs_osi_fullSigMask()
+{
+    struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
+       
+    /* Protect original sigmask */
+    if (!user_thread->uu_oldmask) {
+	/* Back up current sigmask */
+	user_thread->uu_oldmask = user_thread->uu_sigmask;
+	/* Mask all signals */
+	user_thread->uu_sigmask = ~(sigset_t)0;
+    }
+}
+
+void 
+afs_osi_fullSigRestore()
+{
+    struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
+       
+    /* Protect original sigmask */
+    if (user_thread->uu_oldmask) {
+	/* Restore original sigmask */
+	user_thread->uu_sigmask = user_thread->uu_oldmask;
+	/* Clear the oldmask */
+	user_thread->uu_oldmask = (sigset_t)0;
+    }
+}
+
 int
 afs_osi_SleepSig(void *event)
 {

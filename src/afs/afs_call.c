@@ -875,7 +875,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	char *cellname = afs_osi_Alloc(cellLen);
 
 #ifndef UKERNEL
-	afs_osi_MaskSignals();
+	afs_osi_MaskUserLoop();
 #endif
 	AFS_COPYIN((afs_int32 *) parm2, cellname, cellLen, code);
 	AFS_COPYIN((afs_int32 *) parm3, kmsg, kmsgLen, code);

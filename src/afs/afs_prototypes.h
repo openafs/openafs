@@ -464,6 +464,7 @@ extern void afs_osi_Invisible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
+extern void afs_osi_MaskUserLoop(void);
 extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
 #ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
