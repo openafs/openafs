@@ -237,10 +237,10 @@ ListEntries(
   OUT afs_int32     *nextstartindex
 ) = 521;
 
-#if defined(SUPERGROUPS)
+/* #if defined(SUPERGROUPS) */
 ListSuperGroups(
-  IN long id,
+  IN afs_int32 id,
   OUT prlist *elist,
-  OUT long *over
+  OUT afs_int32 *over
 ) = 530;
-#endif 
+/* #endif */

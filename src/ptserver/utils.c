@@ -35,6 +35,8 @@ RCSID
 
 #if defined(SUPERGROUPS)
 extern afs_int32 depthsg;
+afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid,
+			afs_int32 gid, afs_int32 depth);
 #endif
 
 afs_int32
