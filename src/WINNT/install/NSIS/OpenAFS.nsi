@@ -11,26 +11,18 @@
 !include ${INCLUDEDIR}\nsi-includes.nsi
 ; Define DEBUG if building a DEBUG installer
 
-; This version compiles with NSIS v2.0b3 or NSIS v2.0b4
+; This version compiles with NSIS v2.0
 
-!ifdef v2.0b3       ; v2.0b3
-!ifndef DEBUG        ; !DEBUG
-!define MUI_PRODUCT "OpenAFS" ;Define your own software name here
-!else                ; DEBUG on v2.0b3
-!define MUI_PRODUCT "OpenAFS Checked/Debug"
-!endif               ; End DEBUG
-!define MUI_VERSION ${AFS_VERSION}
-!else                ; v2.0b4
 !ifndef RELEASE
-!ifndef DEBUG        ; !DEBUG on v2.0b4
+!ifndef DEBUG
 Name "OpenAFS ${AFS_VERSION} ${__DATE__} ${__TIME__}"
-!else                ; DEBUG on v2.0b4
+!else
 Name "OpenAFS ${AFS_VERSION} ${__DATE__} ${__TIME__} Checked/Debug"
 !endif               ; End DEBUG/!DEBUG
 !else
-!ifndef DEBUG        ; !DEBUG on v2.0b4
+!ifndef DEBUG
 Name "OpenAFS ${AFS_VERSION}"
-!else                ; DEBUG on v2.0b4
+!else                ; DEBUG
 Name "OpenAFS ${AFS_VERSION} Checked/Debug"
 !endif               ; End DEBUG/!DEBUG
 !endif
@@ -44,7 +36,6 @@ VIAddVersionKey "LegalCopyright" "(C)2003"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
-!endif               ; End v2.0b4
 
 
 !include "MUI.nsh"
@@ -62,11 +53,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   SilentInstall normal
   SetCompressor bzip2
   !define MUI_ICON "..\..\client_config\afs_config.ico"
-  !ifdef v2.0b3
-  !define MUI_UNICON "${NSISDIR}\Contrib\Icons\normal-uninstall.ico"
-  !else
   !define MUI_UNICON "..\..\client_config\afs_config.ico"
-  !endif
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
   !define AFS_REGKEY_ROOT "Software\TransarcCorporation"
@@ -109,16 +96,6 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !define MUI_UNCONFIRMPAGE
   
   
-!IFDEF v2.0b3       ; v2.0b3
-  !insertmacro MUI_PAGECOMMAND_WELCOME
- ;!insertmacro MUI_PAGECOMMAND_LICENSE
-  !insertmacro MUI_PAGECOMMAND_COMPONENTS
-  !insertmacro MUI_PAGECOMMAND_DIRECTORY
-  Page custom AFSPageGetCellServDB
-  Page custom AFSPageGetCellName
-  !insertmacro MUI_PAGECOMMAND_INSTFILES
-  !insertmacro MUI_PAGECOMMAND_FINISH
-!ELSE                ; v2.0b4
   !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
@@ -126,7 +103,6 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   Page custom AFSPageGetCellName
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
-!ENDIF
   
   ;LicenseData "Licenses.rtf"
 ;--------------------------------
@@ -139,9 +115,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !insertmacro MUI_LANGUAGE "SimpChinese"
   !insertmacro MUI_LANGUAGE "TradChinese"    
   !insertmacro MUI_LANGUAGE "Japanese"
-  !ifndef v2.0b3
   !insertmacro MUI_LANGUAGE "Korean"
-  !endif
   ;!insertmacro MUI_LANGUAGE "Italian"
   ;!insertmacro MUI_LANGUAGE "Dutch"
   ;!insertmacro MUI_LANGUAGE "Danish"
@@ -171,9 +145,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_SecCopyUI ${LANG_SIMPCHINESE} "OpenAFS for Windows: Simplified Chinese"
   LangString DESC_SecCopyUI ${LANG_TRADCHINESE} "OpenAFS for Windows: Traditional Chinese description"
   LangString DESC_SecCopyUI ${LANG_JAPANESE} "OpenAFS for Windows: Japanese description"
-!ifndef v2.0b3
   LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
-!endif
   ;LangString DESC_SecCopyUI ${LANG_ITALIAN} "OpenAFS for Windows: Italian description"
   ;LangString DESC_SecCopyUI ${LANG_DUTCH} "OpenAFS for Windows: Dutch description"
   ;LangString DESC_SecCopyUI ${LANG_DANISH} "OpenAFS for Windows: Danish description"
@@ -198,9 +170,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secClient ${LANG_SIMPCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_secClient ${LANG_TRADCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_secClient ${LANG_JAPANESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-!ifndef v2.0b3  
   LangString DESC_secClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-!endif
   LangString DESC_secClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
   LangString DESC_secServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
@@ -209,9 +179,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
-!ifndef v2.0b3 
   LangString DESC_secServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
-!endif
   LangString DESC_secServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   
   LangString DESC_secControl ${LANG_ENGLISH} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
@@ -220,9 +188,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secControl ${LANG_SIMPCHINESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
   LangString DESC_secControl ${LANG_TRADCHINESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
   LangString DESC_secControl ${LANG_JAPANESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
-!ifndef v2.0b3  
   LangString DESC_secControl ${LANG_KOREAN} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
-!endif
   LangString DESC_secControl ${LANG_PORTUGUESEBR} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
   
   LangString DESC_secDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
@@ -231,9 +197,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secDocs ${LANG_SIMPCHINESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_secDocs ${LANG_TRADCHINESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_secDocs ${LANG_JAPANESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
-!ifndef v2.0b3  
   LangString DESC_secDocs ${LANG_KOREAN} "Supplemental Documentation: Additional documentation for using OpenAFS."
-!endif
   LangString DESC_secDocs ${LANG_PORTUGUESEBR} "Supplemental Documentation: Additional documentation for using OpenAFS."
   
   LangString DESC_secSDK ${LANG_ENGLISH} "SDK: Header files and libraries for developing software with OpenAFS."
@@ -242,9 +206,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secSDK ${LANG_SIMPCHINESE} "SDK: Header files and libraries for developing software with OpenAFS."
   LangString DESC_secSDK ${LANG_TRADCHINESE} "SDK: Header files and libraries for developing software with OpenAFS."
   LangString DESC_secSDK ${LANG_JAPANESE} "SDK: Header files and libraries for developing software with OpenAFS."
-!ifndef v2.0b3
   LangString DESC_secSDK ${LANG_KOREAN} "SDK: Header files and libraries for developing software with OpenAFS."
-!endif
   LangString DESC_secSDK ${LANG_PORTUGUESEBR} "SDK: Header files and libraries for developing software with OpenAFS."
   
 ; Popup error messages
@@ -254,9 +216,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString CellError ${LANG_SIMPCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_TRADCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_JAPANESE} "You must specify a valid CellServDB file to copy during the install"
-!ifndef v2.0b3  
   LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
-!endif
   LangString CellError ${LANG_PORTUGUESEBR} "You must specify a valid CellServDB file to copy during the install"
   
   LangString CellNameError ${LANG_ENGLISH} "You must specify a cell name for your client to use."
@@ -265,9 +225,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString CellNameError ${LANG_SIMPCHINESE} "You must specify a cell name for your client to use."
   LangString CellNameError ${LANG_TRADCHINESE} "You must specify a cell name for your client to use."
   LangString CellNameError ${LANG_JAPANESE} "You must specify a cell name for your client to use."
-!ifndef v2.0b3
   LangString CellNameError ${LANG_KOREAN} "You must specify a cell name for your client to use."
-!endif
   LangString CellNameError ${LANG_PORTUGUESEBR} "You must specify a cell name for your client to use."
   
   LangString URLError ${LANG_ENGLISH} "You must specify a URL if you choose the option to download the CellServDB."
@@ -276,9 +234,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString URLError ${LANG_SIMPCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
   LangString URLError ${LANG_TRADCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
   LangString URLError ${LANG_JAPANESE} "You must specify a URL if you choose the option to download the CellServDB."
-!ifndef v2.0b3
   LangString URLError ${LANG_KOREAN} "You must specify a URL if you choose the option to download the CellServDB."
-!endif
   LangString URLError ${LANG_PORTUGUESEBR} "You must specify a URL if you choose the option to download the CellServDB."
 
   
@@ -289,9 +245,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString UPGRADE_CLIENT ${LANG_SIMPCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_TRADCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
-!ifndef v2.0b3
    LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
-!endif
    LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
  
    LangString REINSTALL_CLIENT ${LANG_ENGLISH} "Re-install AFS Client"
@@ -300,9 +254,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString REINSTALL_CLIENT ${LANG_SIMPCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_TRADCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_JAPANESE} "Re-install AFS Client"
-!ifndef v2.0b3
    LangString REINSTALL_CLIENT ${LANG_KOREAN} "Re-install AFS Client"
-!endif
    LangString REINSTALL_CLIENT ${LANG_PORTUGUESEBR} "Re-install AFS Client"
   
    LangString UPGRADE_SERVER ${LANG_ENGLISH} "Upgrade AFS Server"
@@ -311,9 +263,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString UPGRADE_SERVER ${LANG_SIMPCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_TRADCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_JAPANESE} "Upgrade AFS Server"
-!ifndef v2.0b3
    LangString UPGRADE_SERVER ${LANG_KOREAN} "Upgrade AFS Server"
-!endif
    LangString UPGRADE_SERVER ${LANG_PORTUGUESEBR} "Upgrade AFS Server"
     
    LangString REINSTALL_SERVER ${LANG_ENGLISH} "Re-install AFS Server"
@@ -322,9 +272,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString REINSTALL_SERVER ${LANG_SIMPCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_TRADCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_JAPANESE} "Re-install AFS Server"
-!ifndef v2.0b3   
    LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
-!endif
    LangString REINSTALL_SERVER ${LANG_PORTUGUESEBR} "Re-install AFS Server"
   
   ReserveFile "CellServPage.ini"
@@ -334,120 +282,152 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 ;--------------------------------
 ; Macros
 ; Macro - Upgrade DLL File
- ; Written by Joost Verburg
- ; ------------------------
- ;
- ; Example of usage:
- ; !insertmacro UpgradeDLL "dllname.dll" "$SYSDIR\dllname.dll"
- ;
- ; !define UPGRADEDLL_NOREGISTER if you want to upgrade a DLL which cannot be registered
- ;
- ; Note that this macro sets overwrite to ON (the default) when it has been inserted.
- ; If you are using another setting, set it again after inserting the macro.
+; Written by Joost Verburg
+; ------------------------
+;
+; Parameters:
+; LOCALFILE   - Location of the new DLL file (on the compiler system)
+; DESTFILE    - Location of the DLL file that should be upgraded
+;              (on the user's system)
+; TEMPBASEDIR - Directory on the user's system to store a temporary file
+;               when the system has to be rebooted.
+;               For Win9x support, this should be on the same volume as the
+;               DESTFILE!
+;               The Windows temp directory could be located on any volume,
+;               so you cannot use  this directory.
+;
+; Define UPGRADEDLL_NOREGISTER if you want to upgrade a DLL that does not
+; have to be registered.
+;
+; Note: If you want to support Win9x, you can only use
+;       short filenames (8.3).
+;
+; Example of usage:
+; !insertmacro UpgradeDLL "dllname.dll" "$SYSDIR\dllname.dll" "$SYSDIR"
+;
 
+!macro UpgradeDLL LOCALFILE DESTFILE TEMPBASEDIR
 
- !macro UpgradeDLL LOCALFILE DESTFILE
-
-   Push $R0
-   Push $R1
-   Push $R2
-   Push $R3
-
-   ;------------------------
-   ;Check file and version
-
-   IfFileExists "${DESTFILE}" "" "copy_${LOCALFILE}"
-
-   ClearErrors
-     GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
-     GetDLLVersion "${DESTFILE}" $R2 $R3
-   IfErrors "upgrade_${LOCALFILE}"
-
-   IntCmpU $R0 $R2 "" "done_${LOCALFILE}" "upgrade_${LOCALFILE}"
-   IntCmpU $R1 $R3 "done_${LOCALFILE}" "done_${LOCALFILE}" "upgrade_${LOCALFILE}"
-
-   ;------------------------
-   ;Let's upgrade the DLL!
-
-   SetOverwrite try
-
-   "upgrade_${LOCALFILE}:"
-     !ifndef UPGRADEDLL_NOREGISTER
-       ;Unregister the DLL
-       UnRegDLL "${DESTFILE}"
-     !endif
-
-   ;------------------------
-   ;Try to copy the DLL directly
-
-   ClearErrors
-     StrCpy $R0 "${DESTFILE}"
-     Call ":file_${LOCALFILE}"
-   IfErrors "" "noreboot_${LOCALFILE}"
-
-   ;------------------------
-   ;DLL is in use. Copy it to a temp file and Rename it on reboot.
-
-   GetTempFileName $R0
-     Call ":file_${LOCALFILE}"
-   Rename /REBOOTOK $R0 "${DESTFILE}"
-
-   ;------------------------
-   ;Register the DLL on reboot
-
-   !ifndef UPGRADEDLL_NOREGISTER
-     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
-     "Register ${DESTFILE}" '"$SYSDIR\rundll32.exe" "${DESTFILE},DllRegisterServer"'
-   !endif
-
-   Goto "done_${LOCALFILE}"
-
-   ;------------------------
-   ;DLL does not exist - just extract
-
-   "copy_${LOCALFILE}:"
-     StrCpy $R0 "${DESTFILE}"
-     Call ":file_${LOCALFILE}"
-
-   ;------------------------
-   ;Register the DLL
-
-   "noreboot_${LOCALFILE}:"
-     !ifndef UPGRADEDLL_NOREGISTER
-       RegDLL "${DESTFILE}"
-     !endif
-
-   ;------------------------
-   ;Done
-
-   "done_${LOCALFILE}:"
-
-   Pop $R3
-   Pop $R2
-   Pop $R1
-   Pop $R0
-
-   ;------------------------
-   ;End
-
-   Goto "end_${LOCALFILE}"
-
-   ;------------------------
-   ;Called to extract the DLL
-
-   "file_${LOCALFILE}:"
-     File /oname=$R0 "${LOCALFILE}"
-     Return
-
-   "end_${LOCALFILE}:"
+  Push $R0
+  Push $R1
+  Push $R2
+  Push $R3
+  Push $R4
+  Push $R5
 
   ;------------------------
-  ;Set overwrite to default
-  ;(was set to TRY above)
+  ;Unique number for labels
 
-  SetOverwrite on
+  !define UPGRADEDLL_UNIQUE ${__LINE__}
 
- !macroend
+  ;------------------------
+  ;Copy the parameters used on run-time to a variable
+  ;This allows the usage of variables as paramter
+
+  StrCpy $R4 "${DESTFILE}"
+  StrCpy $R5 "${TEMPBASEDIR}"
+
+  ;------------------------
+  ;Check file and version
+
+  IfFileExists $R4 0 upgradedll.copy_${UPGRADEDLL_UNIQUE}
+
+  ClearErrors
+    GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
+    GetDLLVersion $R4 $R2 $R3
+  IfErrors upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
+
+  IntCmpU $R0 $R2 0 upgradedll.done_${UPGRADEDLL_UNIQUE} \
+    upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
+  IntCmpU $R1 $R3 upgradedll.done_${UPGRADEDLL_UNIQUE} \
+    upgradedll.done_${UPGRADEDLL_UNIQUE} \
+    upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
+
+  ;------------------------
+  ;Let's upgrade the DLL!
+
+  SetOverwrite try
+
+  upgradedll.upgrade_${UPGRADEDLL_UNIQUE}:
+    !ifndef UPGRADEDLL_NOREGISTER
+      ;Unregister the DLL
+      UnRegDLL $R4
+    !endif
+
+  ;------------------------
+  ;Try to copy the DLL directly
+
+  ClearErrors
+    StrCpy $R0 $R4
+    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
+  IfErrors 0 upgradedll.noreboot_${UPGRADEDLL_UNIQUE}
+
+  ;------------------------
+  ;DLL is in use. Copy it to a temp file and Rename it on reboot.
+
+  GetTempFileName $R0 $R5
+    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
+  Rename /REBOOTOK $R0 $R4
+
+  ;------------------------
+  ;Register the DLL on reboot
+
+  !ifndef UPGRADEDLL_NOREGISTER
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
+      "Register $R4" 'rundll32.exe "$R4",DllRegisterServer'
+  !endif
+
+  Goto upgradedll.done_${UPGRADEDLL_UNIQUE}
+
+  ;------------------------
+  ;DLL does not exist - just extract
+
+  upgradedll.copy_${UPGRADEDLL_UNIQUE}:
+    StrCpy $R0 $R4
+    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
+
+  ;------------------------
+  ;Register the DLL
+
+  upgradedll.noreboot_${UPGRADEDLL_UNIQUE}:
+    !ifndef UPGRADEDLL_NOREGISTER
+      RegDLL $R4
+    !endif
+
+  ;------------------------
+  ;Done
+
+  upgradedll.done_${UPGRADEDLL_UNIQUE}:
+
+  Pop $R5
+  Pop $R4
+  Pop $R3
+  Pop $R2
+  Pop $R1
+  Pop $R0
+
+  ;------------------------
+  ;End
+
+  Goto upgradedll.end_${UPGRADEDLL_UNIQUE}
+
+  ;------------------------
+  ;Called to extract the DLL
+
+  upgradedll.file_${UPGRADEDLL_UNIQUE}:
+    File /oname=$R0 "${LOCALFILE}"
+    Return
+
+  upgradedll.end_${UPGRADEDLL_UNIQUE}:
+
+ ;------------------------
+ ;Restore settings
+
+ SetOverwrite lastused
+ 
+ !undef UPGRADEDLL_UNIQUE
+
+!macroend
 
 
 ;--------------------------------
@@ -468,9 +448,10 @@ Section "AFS Client" secClient
   SetShellVarContext all
   ; Stop any running services or we can't replace the files
   ; Stop the running processes
-  ;GetTempFileName $R0
-  ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
-  ;nsExec::Exec '$R0 afscreds.exe'
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  nsExec::Exec '$R0 afscreds.exe'
+  nsExec::Exec "afscreds.exe -z"
 !IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
@@ -481,17 +462,18 @@ Section "AFS Client" secClient
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
-  File "${AFS_CLIENT_BUILDDIR}\libosi.dll"
-  File "${AFS_CLIENT_BUILDDIR}\libafsconf.dll"
+  !define UPGRADEDLL_NOREGISTER
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\libosi.dll" "$INSTDIR\Client\Program\libosi.dll" "$INSTDIR"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\libafsconf.dll" "$INSTDIR\Client\Program\libafsconf.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\klog.exe"
   File "${AFS_CLIENT_BUILDDIR}\tokens.exe"
   File "${AFS_CLIENT_BUILDDIR}\unlog.exe"
   File "${AFS_CLIENT_BUILDDIR}\fs.exe"
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
-  File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_BUILD_INCDIR}\afs\auth.h"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
-  File "${AFS_CLIENT_BUILDDIR}\afslogon.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -673,9 +655,10 @@ Section "AFS Server" secServer
   SetShellVarContext all
   ; Stop any running services or we can't replace the files
   ; Stop the running processes
-  ;GetTempFileName $R0
-  ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
-  ;nsExec::Exec '$R0 afscreds.exe'
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  nsExec::Exec '$R0 afscreds.exe'
+  nsExec::Exec "afscreds.exe -z"
 !IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
@@ -938,9 +921,7 @@ Section "Supplemental Documentation" secDocs
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-!ifndef v2.0b3
    StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
-!endif
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
    StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
    StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
@@ -1521,30 +1502,20 @@ FunctionEnd
 ;--------------------------------
 ;Descriptions
 
-!ifdef v2.0b3
-!insertmacro MUI_FUNCTIONS_DESCRIPTION_BEGIN
-!else
-!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-!endif
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${secServer} $(DESC_secServer)
   !insertmacro MUI_DESCRIPTION_TEXT ${secClient} $(DESC_secClient)
   !insertmacro MUI_DESCRIPTION_TEXT ${secControl} $(DESC_secControl)
   !insertmacro MUI_DESCRIPTION_TEXT ${secDocs} $(DESC_secDocs)
   !insertmacro MUI_DESCRIPTION_TEXT ${secSDK} $(DESC_secSDK)
-!ifdef v2.0b3
-  !insertmacro MUI_FUNCTIONS_DESCRIPTION_END
-!else
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
-!endif
  
 ;--------------------------------
 ;Uninstaller Section
 
 Section "Uninstall"
   ; Make sure the user REALLY wants to do this, unless they did a silent uninstall, in which case...let them!
-#ifdef v2.0b4
   IfSilent StartRemove     ; New in v2.0b4
-#endif
   MessageBox MB_YESNO "Are you sure you want to remove OpenAFS from this machine?" IDYES StartRemove
   abort
   
@@ -1555,6 +1526,7 @@ StartRemove:
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"
   nsExec::Exec '$R0 afscreds.exe'
+  nsExec::Exec "afscreds.exe -z"
 !IFDEF INSTALL_KFW
   nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
@@ -1699,13 +1671,7 @@ StartRemove:
 !ENDIF
 !ENDIF
   
-!ifdef v2.0b3
-   Call un.IsSilent
-   Pop $R1
-   StrCmp $R1 "/S" SkipAsk
-!else
    IfSilent SkipAsk
-!endif
 ;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
 ;  CellExists:
   MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
@@ -1941,11 +1907,6 @@ StartRemove:
  
   RMDir  "$INSTDIR"
 
-!ifdef v2.0b3
-  ;Display the Finish header
-  !insertmacro MUI_UNFINISHHEADER
-!endif
-
 SectionEnd
 
 ;--------------------------------
@@ -2070,13 +2031,7 @@ FunctionEnd
 
 
 Function AFSPageGetCellName
-!ifdef v2.0b3
-   Call IsSilent
-   Pop $R1
-   StrCmp $R1 "/S" exit
-!else
    IfSilent good
-!endif
   ; Skip this page if we are not installing the client
   SectionGetFlags ${secClient} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
@@ -2133,75 +2088,6 @@ WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "URLInfoAbout" "http://www.openafs.org/"
 
 FunctionEnd
-
-; This code is all needed in v2.0b3 to handle the /S switch...
-!ifdef v2.0b3
-; Check if install should be silent
-Function IsSilent
-  Push $0
-  Push $CMDLINE
-  Push "/S"
-  Call StrStr
-  Pop $0
-  StrCpy $0 $0 3
-  StrCmp $0 "/S" silent
-  StrCmp $0 "/S " silent
-    StrCpy $0 0
-    Goto notsilent
-  silent: StrCpy $0 1
-  notsilent: Exch $0
-FunctionEnd
-
-
-; Check if uninstall should be silent
-Function un.IsSilent
-  Push $0
-  Push $CMDLINE
-  Push "/S"
-  Call un.StrStr
-  Pop $0
-  StrCpy $0 $0 3
-  StrCmp $0 "/S" silent
-  StrCmp $0 "/S " silent
-    StrCpy $0 0
-    Goto notsilent
-  silent: StrCpy $0 1
-  notsilent: Exch $0
-FunctionEnd
-
-
-
-; StrStr function
-Function StrStr
-  Exch $R1 ; st=haystack,old$R1, $R1=needle
-  Exch    ; st=old$R1,haystack
-  Exch $R2 ; st=old$R1,old$R2, $R2=haystack
-  Push $R3
-  Push $R4
-  Push $R5
-  StrLen $R3 $R1
-  StrCpy $R4 0
-  ; $R1=needle
-  ; $R2=haystack
-  ; $R3=len(needle)
-  ; $R4=cnt
-  ; $R5=tmp
-  loop:
-    StrCpy $R5 $R2 $R3 $R4
-    StrCmp $R5 $R1 done
-    StrCmp $R5 "" done
-    IntOp $R4 $R4 + 1
-    Goto loop
-  done:
-  StrCpy $R1 $R2 "" $R4
-  Pop $R5
-  Pop $R4
-  Pop $R3
-  Pop $R2
-  Exch $R1
-FunctionEnd
-!endif
-; End of specific v2.0b3 code...
 
 
 ;-------------------
@@ -2531,11 +2417,10 @@ Function AFSLangFiles
    ; Common files
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config.exe"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll"
    File "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"
-   File "${AFS_DESTDIR}\lib\afsauthent.dll"
-   File "${AFS_DESTDIR}\lib\afspthread.dll"
-   File "${AFS_DESTDIR}\lib\afsrpc.dll"
+  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afsauthent.dll" "$INSTDIR\Common\afsauthent.dll" "$INSTDIR"
+  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afspthread.dll" "$INSTDIR\Common\afspthread.dll" "$INSTDIR"
+  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afsrpc.dll" "$INSTDIR\Common\afsrpc.dll" "$INSTDIR"
    File "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
    File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
@@ -2626,7 +2511,6 @@ Function AFSLangFiles
 
 !ifdef DEBUG
    File "${AFS_CLIENT_BUILDDIR}\afs_config.pdb"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
    File "${AFS_SERVER_BUILDDIR}\afsadminutil.pdb"
    File "${AFS_DESTDIR}\lib\afsauthent.pdb"
    File "${AFS_DESTDIR}\lib\afspthread.pdb"
@@ -2646,9 +2530,7 @@ Function AFSLangFiles
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-!ifdef v2.0b4
    StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
-!endif
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
    StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
    StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
