@@ -261,6 +261,10 @@ typedef struct timeval {
 #else
 #define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
 #endif
+/* Avoid problems with timer_t redefinition */
+#ifndef timer_t
+#define timer_t ktimer_t
+#endif
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <osi_vfs.h>
