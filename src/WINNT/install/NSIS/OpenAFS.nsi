@@ -1511,7 +1511,10 @@ StartRemove:
   Delete "$WINDIR\afsdcell.ini"
 
   Delete "$WINDIR\afsdsbmt.ini"
+; Only remove krb5.ini if KfW was installed
+!IFDEF INSTALL_KFW
   Delete "$WINDIR\krb5.ini"
+!ENDIF
   Delete "$WINDIR\afsdns.ini"
   Delete "$WINDIR\afs_freelance.ini"
   
