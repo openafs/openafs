@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fstrace.c,v 1.5 2001/07/15 07:22:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fstrace.c,v 1.6 2001/09/11 15:48:53 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1646,7 +1646,7 @@ icl_DumpKernel(outFilep, setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *) malloc(sizeof(struct logInfo));
-	    bzero((char *)lip, sizeof(*lip));
+	    memset((char *)lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *) malloc(strlen(tname)+1);
@@ -1664,7 +1664,7 @@ icl_DumpKernel(outFilep, setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *) malloc(sizeof(struct logInfo));
-	    bzero((char *)lip, sizeof(*lip));
+	    memset((char *)lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *) malloc(strlen(tname)+1);
@@ -2184,7 +2184,7 @@ icl_CreateSetWithFlags(name, baseLogp, fatalLogp, flags, outSetpp)
 	states |= ICL_SETF_PERSISTENT;
 
     setp = (struct afs_icl_set *) osi_Alloc(sizeof(struct afs_icl_set));
-    bzero((caddr_t)setp, sizeof(*setp));
+    memset((caddr_t)setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)
 	states &= ~ICL_SETF_ACTIVE;	/* if freed, can't be active */
@@ -2620,7 +2620,7 @@ afs_icl_bulkSetinfo_t *GetBulkSetInfo()
 	    exit (1);
 	}
     }
-    bzero((char *)setInfo, infoSize);
+    memset((char *)setInfo, 0, infoSize);
 
     return setInfo;
 }
@@ -2640,7 +2640,7 @@ afs_icl_bulkLoginfo_t *GetBulkLogInfo()
 	}
     }
 
-    bzero((char *)logInfo, infoSize);
+    memset((char *)logInfo, 0, infoSize);
     return logInfo;
 }
 

@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.4 2001/09/11 14:23:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.5 2001/09/11 15:48:35 hartmans Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -77,11 +77,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.4 2001/09/11 14:23:0
 #include "rx_globals.h"
 #include <lwp.h>
 #include "rx_internal.h"
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#else
 #ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
 #endif
 #endif
 #ifdef HAVE_UNISTD_H
@@ -173,7 +173,7 @@ afs_int32 rx_SlowReadPacket(struct rx_packet *packet, unsigned int offset,
   r = resid;
   while ((resid > 0) && (i < packet->niovecs)) {
     j = MIN (resid, packet->wirevec[i].iov_len - (offset - l));
-    bcopy ((char *)(packet->wirevec[i].iov_base) + (offset - l), out, j);
+    memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
     resid -= j;
     l += packet->wirevec[i].iov_len;
     i++;  
@@ -213,7 +213,7 @@ afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
     
     b = (char*)(packet->wirevec[i].iov_base) + (offset - l);
     j = MIN (resid, packet->wirevec[i].iov_len - (offset - l));
-    bcopy (in, b, j);
+    memcpy(b, in, j);
     resid -= j;
     l += packet->wirevec[i].iov_len;
     i++;  
@@ -270,8 +270,9 @@ static struct rx_packet * allocCBuf(int class)
   rx_nFreePackets--;
   c = queue_First(&rx_freePacketQueue, rx_packet);
   queue_Remove(c);
-  if (c->header.flags != RX_FREE_PACKET)
+  if (!(c->flags & RX_PKTFLAG_FREE))
     osi_Panic("rxi_AllocPacket: packet not free\n");
+  c->flags &= ~RX_PKTFLAG_FREE;
   c->header.flags = 0;
   
 #ifdef KERNEL
@@ -365,7 +366,7 @@ void rxi_MorePackets(int apackets)
   p = rx_mallocedP = (struct rx_packet *) osi_Alloc(getme);
 
   PIN(p, getme);	/* XXXXX */
-  bzero((char *)p, getme);
+  memset((char *)p, 0, getme);
   NETPRI;
   AFS_RXGLOCK();
   MUTEX_ENTER(&rx_freePktQ_lock);
@@ -375,7 +376,7 @@ void rxi_MorePackets(int apackets)
     p->wirevec[0].iov_len  = RX_HEADER_SIZE;
     p->wirevec[1].iov_base = (char *) (p->localdata);
     p->wirevec[1].iov_len  = RX_FIRSTBUFFERSIZE;
-    p->header.flags = RX_FREE_PACKET;
+    p->flags |= RX_PKTFLAG_FREE;
     p->niovecs = 2;
     
     queue_Append(&rx_freePacketQueue, p);
@@ -403,14 +404,14 @@ void rxi_MorePacketsNoLock(int apackets)
   getme = apackets * sizeof(struct rx_packet);
   p = rx_mallocedP = (struct rx_packet *) osi_Alloc(getme);
 
-  bzero((char *)p, getme);
+  memset((char *)p, 0, getme);
 
   for (e = p + apackets; p<e; p++) {
     p->wirevec[0].iov_base = (char *) (p->wirehead);
     p->wirevec[0].iov_len  = RX_HEADER_SIZE;
     p->wirevec[1].iov_base = (char *) (p->localdata);
     p->wirevec[1].iov_len  = RX_FIRSTBUFFERSIZE;
-    p->header.flags = RX_FREE_PACKET;
+    p->flags |= RX_PKTFLAG_FREE;
     p->niovecs = 2;
     
     queue_Append(&rx_freePacketQueue, p);
@@ -457,10 +458,10 @@ void rxi_FreePacketNoLock(struct rx_packet *p)
 {
   dpf(("Free %x\n", p));
 
-  if (p->header.flags & RX_FREE_PACKET)
+  if (p->flags & RX_PKTFLAG_FREE)
     osi_Panic("rxi_FreePacketNoLock: packet already free\n");
   rx_nFreePackets++;
-  p->header.flags = RX_FREE_PACKET;
+  p->flags |= RX_PKTFLAG_FREE;
   queue_Append(&rx_freePacketQueue, p);
 }
 
@@ -624,12 +625,13 @@ struct rx_packet *rxi_AllocPacketNoLock(class)
   
   rx_nFreePackets--;
   p = queue_First(&rx_freePacketQueue, rx_packet);
-  if (p->header.flags != RX_FREE_PACKET)
+  if (!(p->flags & RX_PKTFLAG_FREE))
     osi_Panic("rxi_AllocPacket: packet not free\n");
   
   dpf(("Alloc %x, class %d\n", p, class));
   
   queue_Remove(p);
+  p->flags &= ~RX_PKTFLAG_FREE;
   p->header.flags = 0;
   
   /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -789,7 +791,7 @@ int rxi_ReadPacket(socket, p, host, port)
     savelen = p->wirevec[p->niovecs].iov_len;
     p->wirevec[p->niovecs].iov_len += RX_EXTRABUFFERSIZE;
 
-    bzero((char *)&msg, sizeof(msg));
+    memset((char *)&msg, 0, sizeof(msg));
     msg.msg_name = (char *) &from;
     msg.msg_namelen = sizeof(struct sockaddr_in);
     msg.msg_iov = p->wirevec;
@@ -977,7 +979,7 @@ static int cpytoc(mp, off, len, cp)
 	    return -1;
 	}
 	n = MIN(len, (mp->b_wptr - mp->b_rptr));
-	bcopy((char *)mp->b_rptr, cp, n);
+	memcpy(cp, (char *)mp->b_rptr, n);
 	cp += n;
 	len -= n;
 	mp->b_rptr += n;
@@ -1009,7 +1011,7 @@ static int cpytoiovec(mp, off, len, iovs, niovs)
 	    t = iovs[i].iov_len;
 	  }
 	  m = MIN(n,t);
-	  bcopy((char *)mp->b_rptr, iovs[i].iov_base + o, m);
+	  memcpy(iovs[i].iov_base + o, (char *)mp->b_rptr, m);
 	  mp->b_rptr += m;
 	  o += m;
 	  t -= m;
@@ -1052,7 +1054,7 @@ static int m_cpytoiovec(m, off, len, iovs, niovs)
   
   while (len) {
     t = MIN(l1, MIN(l2, (unsigned int)len));
-    bcopy (p1, p2, t);
+    memcpy(p2, p1, t);
     p1 += t;    p2 += t;
     l1 -= t;    l2 -= t;
     len -= t;
@@ -1112,6 +1114,17 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
     afs_int32 tl;
     struct rx_serverQueueEntry *np, *nqe;
 
+    /*
+     * Only respond to client-initiated Rx debug packets,
+     * and clear the client flag in the response.
+     */
+    if (ap->header.flags & RX_CLIENT_INITIATED) {
+	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
+	rxi_EncodePacketHeader(ap);
+    } else {
+	return ap;
+    }
+
     rx_packetread(ap, 0, sizeof(struct rx_debugIn), (char *)&tin);
     /* all done with packet, now set length to the truth, so we can 
      * reuse this packet */
@@ -1124,7 +1137,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    struct rx_debugStats tstat;
 
 	    /* get basic stats */
-	    bzero ((char *)&tstat, sizeof(tstat)); /* make sure spares are zero */
+	    memset((char *)&tstat, 0, sizeof(tstat)); /* make sure spares are zero */
 	    tstat.version = RX_DEBUGI_VERSION;
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
@@ -1165,7 +1178,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    if (tl > 0)
 	      return ap;
 
-	    bzero ((char *)&tconn, sizeof(tconn)); /* make sure spares are zero */
+	    memset((char *)&tconn, 0, sizeof(tconn)); /* make sure spares are zero */
 	    /* get N'th (maybe) "interesting" connection info */
 	    for(i=0;i<rx_hashTableSize;i++) {
 #if !defined(KERNEL)
@@ -1266,7 +1279,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    if (tl > 0)
 	      return ap;
 
-	    bzero ((char *)&tpeer, sizeof(tpeer));
+	    memset((char *)&tpeer, 0, sizeof(tpeer));
 	    for(i=0;i<rx_hashTableSize;i++) {
 #if !defined(KERNEL)
 		/* the time complexity of the algorithm used here
@@ -1384,13 +1397,27 @@ struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
   register struct rx_packet *ap;
   int istack;
 {
-  afs_int32 tl;
-	rx_packetwrite(ap, 0, 65, cml_version_number+4);
-        tl = ap->length;
+    afs_int32 tl;
+
+    /*
+     * Only respond to client-initiated version requests, and
+     * clear that flag in the response.
+     */
+    if (ap->header.flags & RX_CLIENT_INITIATED) {
+	char buf[66];
+
+	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
+	rxi_EncodePacketHeader(ap);
+	memset(buf, 0, sizeof(buf));
+	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
+	rx_packetwrite(ap, 0, 65, buf);
+	tl = ap->length;
 	ap->length = 65;
 	rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
-        ap->length = tl;
-	return ap;
+	ap->length = tl;
+    }
+
+    return ap;
 }
 
 
@@ -1807,7 +1834,7 @@ register struct rx_packet *p;
 {
     register afs_uint32 *buf = (afs_uint32 *)(p->wirevec[0].iov_base);      /* MTUXXX */
 
-    bzero((char *)buf, RX_HEADER_SIZE);
+    memset((char *)buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
     *buf++ = htonl(p->header.cid);
     *buf++ = htonl(p->header.callNumber);
@@ -1853,7 +1880,7 @@ void rxi_PrepareSendPacket(call, p, last)
     int i, j;
     ssize_t len;	/* len must be a signed type; it can go negative */
 
-    p->acked = 0;
+    p->flags &= ~RX_PKTFLAG_ACKED;
     p->header.cid = (conn->cid | call->channel);
     p->header.serviceId = conn->serviceId;
     p->header.securityIndex = conn->securityIndex;

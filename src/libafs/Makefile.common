@@ -8,22 +8,10 @@
 # Common elements for Makefiles for all system types.
 #
 SHELL=/bin/sh
-DESTDIR = DEST/
-SRCDIR = DEST/
 INCLUDE= -I.  -I/usr/include -I${TOP_SRCDIR}/config
-Aobj=COMMON
-Dobj=DYNEL
-Cobj=CLIENT
-Sobj=SERVER
-Nobj=COMMON_NONFS
-Xobj=COMMON_NFS11
-NDobj=DYNEL_NONFS
 AFS	=../afs
-ADIR	=../dir
 RX	=../rx
 AFSINT	=../afsint
-DKLOAD	=../dkload
-
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 .c.i:
@@ -36,17 +24,22 @@ CRULE2=	$(CC) $(OPTF) $(CFLAGS) -c $?
 CRULE3=	$(CC) $(OPTF2) $(CFLAGS) -c $?
 CRULE4=	$(CC) $(DBG) $(CFLAGS) -c $?
 
-system:	install
+system:	all
 
 kinstall:	install
-install:	all 
+install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
 
 all:	setup $(COMPDIRS)
 
-single_compdir:
+single_compdir single_instdir single_destdir:
 	cd $(KOBJ) ; \
-	echo $(MAKE) DESTDIR=${DESTDIR} libafs; \
-	$(MAKE) DESTDIR=${DESTDIR}  libafs;
+	echo $(MAKE) DESTDIR=${DESTDIR} $@_libafs; \
+	$(MAKE) DESTDIR=${DESTDIR}  $@_libafs;
+
+single_compdir_libafs: libafs
+single_instdir_libafs: install_libafs
+single_destdir_libafs: dest_libafs
 
 AFSAOBJS = \
 	afs_atomlist.o \
@@ -124,7 +117,6 @@ AFSAOBJS = \
 	rxkad_client.o	\
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
-	xdr_int64.o	\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -229,8 +221,6 @@ rx_rdwr.o: $(RX)/rx_rdwr.c
 afs_uuid.o: $(AFS)/afs_uuid.c
 	$(CRULE2);
 xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
-	$(CRULE2);
-xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE2);
 
 # these files are not to be optimized - subject to change.
@@ -340,7 +330,7 @@ afs_pioctl_nfs.o:	$(AFS)/afs_pioctl.c
 
 
 clean:
-	-rm -rf STATIC* MODLOAD*
-	-rm -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx 
+	-$(RM) -rf STATIC* MODLOAD*
+	-$(RM) -rf  h net netinet rpc ufs machine inet nfs sys afs afsint asm asm-generic config rx linux
 
 

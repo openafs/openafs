@@ -480,36 +480,36 @@ struct SimpleLocks {
 };
 
 /* vcache state bits */
-#define	CStatd	    1		/* has this file ever been stat'd? */
-#define CBackup	    2		/* file is on a backup volume */
-#define	CRO	    4		/* is it on a read-only volume */
-#define	CMValid	    8		/* is the mount point info valid? */
-#define	CCore	    0x10	/* storing a core file, needed since we don't get an open */
-#define CDirty      0x20        /* file has been modified since first open (... O_RDWR) */
-#define	CSafeStore  0x40	/* close must wait for store to finish (should be in fd) */
-#define	CMAPPED	    0x80	/* Mapped files; primarily used by SunOS 4.0.x */
-#define	CNSHARE	    0x100	/* support O_NSHARE semantics */
-#define	CLied	    0x200
-#define	CTruth	    0x400
+#define CStatd		0x00000001	/* has this file ever been stat'd? */
+#define CBackup		0x00000002	/* file is on a backup volume */
+#define CRO		0x00000004	/* is it on a read-only volume */
+#define CMValid		0x00000008	/* is the mount point info valid? */
+#define CCore		0x00000010	/* storing a core file, needed since we don't get an open */
+#define CDirty		0x00000020	/* file has been modified since first open (... O_RDWR) */
+#define CSafeStore	0x00000040	/* close must wait for store to finish (should be in fd) */
+#define CMAPPED		0x00000080	/* Mapped files; primarily used by SunOS 4.0.x */
+#define CNSHARE		0x00000100	/* support O_NSHARE semantics */
+#define CLied		0x00000200
+#define CTruth		0x00000400
 #ifdef	AFS_OSF_ENV
-#define	CWired	    0x800	/* OSF hack only */
+#define CWired		0x00000800	/* OSF hack only */
 #else
-#define	CWRITE_IGN  0x800	/* Next OS hack only */
+#define CWRITE_IGN	0x00000800	/* Next OS hack only */
 #endif
-#define	CUnique	    0x1000	/* vc's uniquifier - latest unifiquier for fid */
-#define	CForeign    0x2000	/* this is a non-afs vcache */
-#define CHasPages   0x4000
-#define CUnlinked   0x10000
-#define CBulkStat   0x20000	/* loaded by a bulk stat, and not ref'd since */
-#define CUnlinkedDel  0x40000
-#define CVFlushed   0x80000
-#define	CCore1	    0x100000	/* osf1 core file; not same as CCore above */
-#define CWritingUFS 0x200000	/* to detect vm deadlock - used by sgi */
-#define CCreating   0x400000	/* avoid needless store after open truncate */
-#define CPageHog    0x800000	/* AIX - dumping large cores is a page hog. */
-#define CDCLock	    0x200000	/* Vnode lock held over call to GetDownD */
-#define CBulkFetching 0x4000000 /* stats are being fetched by bulk stat */
-#define CExtendedFile 0x8000000 /* extended file via ftruncate call. */
+#define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
+#define CForeign	0x00002000	/* this is a non-afs vcache */
+#define CHasPages	0x00004000
+#define CUnlinked	0x00010000
+#define CBulkStat	0x00020000	/* loaded by a bulk stat, and not ref'd since */
+#define CUnlinkedDel	0x00040000
+#define CVFlushed	0x00080000
+#define CCore1		0x00100000	/* osf1 core file; not same as CCore above */
+#define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
+#define CCreating	0x00400000	/* avoid needless store after open truncate */
+#define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */
+#define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
+#define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
+#define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1

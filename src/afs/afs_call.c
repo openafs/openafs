@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.6 2001/07/15 07:22:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.7 2001/09/11 15:47:35 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -107,7 +107,7 @@ static int afs_InitSetup(int preallocs)
     afs_InitStats();
 #endif /* AFS_NOSTATS */
     
-    bzero(afs_zeros, AFS_ZEROS);
+    memset(afs_zeros, 0, AFS_ZEROS);
 
     /* start RX */
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
@@ -842,7 +842,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	}
 #endif /* AFS_SUN57_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 	struct iparam32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
@@ -1251,9 +1251,9 @@ afs_shutdown()
     shutdown_afstest();
     /* The following hold the cm stats */
 /*
-    bzero(&afs_cmstats, sizeof(struct afs_CMStats));
-    bzero(&afs_stats_cmperf, sizeof(struct afs_stats_CMPerf));
-    bzero(&afs_stats_cmfullperf, sizeof(struct afs_stats_CMFullPerf));
+    memset(&afs_cmstats, 0, sizeof(struct afs_CMStats));
+    memset(&afs_stats_cmperf, 0, sizeof(struct afs_stats_CMPerf));
+    memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
 */
     afs_warn(" ALL allocated tables\n");
     afs_shuttingdown = 0;
@@ -1922,7 +1922,7 @@ afs_icl_CreateLogWithFlags(name, logSize, flags, outLogpp)
     
     logp = (struct afs_icl_log *)
 	osi_AllocSmallSpace(sizeof(struct afs_icl_log));
-    bzero((caddr_t)logp, sizeof(*logp));
+    memset((caddr_t)logp, 0, sizeof(*logp));
 
     logp->refCount = 1;
     logp->name = osi_AllocSmallSpace(strlen(name)+1);
@@ -2028,8 +2028,7 @@ afs_icl_CopyOut(logp, bufferp, bufSizep, cookiep, flagsp)
 	if (end - ix < nwords)
 	    nwords = end - ix;
 	if (nwords > 0) {
-	    bcopy((char *) &logp->datap[ix], (char *) bufferp,
-		  sizeof(afs_int32) * nwords);
+	    memcpy((char *) bufferp, (char *) &logp->datap[ix], sizeof(afs_int32) * nwords);
 	    outWords += nwords;
 	    inWords -= nwords;
 	    bufferp += nwords;
@@ -2049,8 +2048,7 @@ afs_icl_CopyOut(logp, bufferp, bufSizep, cookiep, flagsp)
 	nwords = inWords;
 	if (logp->firstFree - ix < nwords)
 	    nwords = logp->firstFree - ix;
-	bcopy((char *) &logp->datap[ix], (char *) bufferp,
-	      sizeof(afs_int32) * nwords);
+	memcpy((char *) bufferp, (char *) &logp->datap[ix], sizeof(afs_int32) * nwords);
 	outWords += nwords;
 	inWords -= nwords;
 	bufferp += nwords;
@@ -2330,7 +2328,7 @@ afs_icl_CreateSetWithFlags(name, baseLogp, fatalLogp, flags, outSetpp)
 	states |= ICL_SETF_PERSISTENT;
 
     setp = (struct afs_icl_set *) afs_osi_Alloc(sizeof(struct afs_icl_set));
-    bzero((caddr_t)setp, sizeof(*setp));
+    memset((caddr_t)setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)
 	states &= ~ICL_SETF_ACTIVE;	/* if freed, can't be active */

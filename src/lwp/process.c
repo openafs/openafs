@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/process.c,v 1.7 2001/07/15 07:22:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/process.c,v 1.8 2001/09/11 15:48:27 hartmans Exp $");
 
 #include <stdio.h>
 #include <assert.h>
@@ -26,6 +26,59 @@ extern int PRE_Block;              /* used in lwp.c and process.s */
 #else
 extern char PRE_Block;             /* used in lwp.c and process.s */
 #endif
+
+#ifdef HAVE_UCONTEXT_H
+
+afs_int32
+savecontext(ep, savearea, newsp)
+char	(*ep)();
+struct lwp_context *savearea;
+char*	newsp;
+{
+#if defined(AFS_IA64_LINUX20_ENV)
+	register unsigned long sp __asm__("r12");
+#else
+#error	"You need to update stack pointer register for this platform"
+#endif
+
+	PRE_Block = 1;
+
+	savearea->state = 0;
+	getcontext(&savearea->ucontext);
+	savearea->topstack = sp;
+	switch (savearea->state)
+	{
+		case 0:
+			if (newsp)
+			{
+				ucontext_t thread;
+
+				getcontext(&thread);
+				thread.uc_stack.ss_sp = newsp - AFS_LWP_MINSTACKSIZE + sizeof(void *) + sizeof(void *);
+				thread.uc_stack.ss_size = AFS_LWP_MINSTACKSIZE - sizeof(void *);
+				makecontext(&thread, ep, 0);
+				setcontext(&thread);
+			}
+			else
+				(*ep)();
+			break;
+		case 2:
+			break;
+	}
+	return 0;
+}
+
+void
+returnto(savearea)
+struct lwp_context *savearea;
+{
+	PRE_Block = 0;
+
+	savearea->state = 2;
+	setcontext(&savearea->ucontext);
+}
+
+#else
 
 /*
  * Magic stack pointer
@@ -169,3 +222,4 @@ struct lwp_context *savearea;
 	return 0;
 }
 
+#endif

@@ -6,11 +6,22 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-DESTDIR=dest/
-SRCDIR=${DESTDIR}
-INSTALL=${SRCDIR}bin/install
-
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+DEST=@DEST@
+TOP_SRCDIR=@TOP_SRCDIR@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afskerneldir=@afskerneldir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 
 # Systype-generic items
 SYS_NAME=@AFS_SYSNAME@
@@ -30,27 +41,75 @@ WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
-# To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
+include src/config/Makefile.${SYS_NAME}
+
+# To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
-# To compile a package and all its predecessors using washtool run
-#   "make <package>".  This requires that @sys works, and that washtool,
-#   rcsupdate and our version of ci and co exist.
-# To compile for the kernel type "make blibafs".  This assumes washtool,
-#   install, rxgen, compile_et and others already exist and runs it with
+# To compile for the kernel type "make blibafs".  This assumes install, 
+#   rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
 
-all: force
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+COMPILE_PART1  = cd src; cd
+COMPILE_PART2A = ; $(MAKE)
+COMPILE_PART2B = all
+COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
+COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 
-all_nolibafs:
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install TARGET=finale_nolibafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+all: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build
 
-only_libafs:
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install TARGET=libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+all_nolibafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=finale_nolibafs
+
+only_libafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=libafs
+
+only_libafs_tree: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=libafs_tree
+
+install: all install_dirs
+	$(MAKE) build COMPILE_PART2B=install
+
+install_nolibafs: all install_dirs
+	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=install
+
+install_only_libafs: all install_dirs
+	$(MAKE) build TARGET=libafs COMPILE_PART2B=install
+
+dest: all dest_dirs
+	$(MAKE) build COMPILE_PART2B=dest
+
+dest_nolibafs: all dest_dirs
+	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
+
+dest_only_libafs: all dest_dirs
+	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
+
+${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
+	mkdir -p $@
+
+install_dirs: force
+	mkdir -p ${DESTDIR}${bindir}
+	mkdir -p ${DESTDIR}${sbindir}
+	mkdir -p ${DESTDIR}${libexecdir}/openafs
+	mkdir -p ${DESTDIR}${libdir}/afs
+	mkdir -p ${DESTDIR}${includedir}/afs
+	mkdir -p ${DESTDIR}${includedir}/rx
+	mkdir -p ${DESTDIR}${afskerneldir}
+	mkdir -p ${DESTDIR}${afssrvbindir}
+	mkdir -p ${DESTDIR}${afssrvsbindir}
+	mkdir -p ${DESTDIR}${afssrvlibexecdir}
+
+dest_dirs: force
+	mkdir -p ${DEST}/bin
+	mkdir -p ${DEST}/etc
+	mkdir -p ${DEST}/lib/afs
+	mkdir -p ${DEST}/include/afs
+	mkdir -p ${DEST}/include/rx
+	mkdir -p ${DEST}/root.client/usr/vice/etc/C
+	mkdir -p ${DEST}/root.server/etc
+	mkdir -p ${DEST}/root.server/usr/afs/bin
 
 project: cmd comerr 
 
@@ -73,10 +132,11 @@ comerr: util
 	${COMPILE_PART1} comerr ${COMPILE_PART2}
 
 cmd: comerr
-	${COMPILE_PART1} cmd ${COMPILE_PART2}
 	@case ${SYS_NAME} in \
 	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
-		${COMPILE_PART1} cmd ${COMPILE_PART2} install64 ;; \
+		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
+	*) \
+		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
 lwp: project util
@@ -99,8 +159,9 @@ rxstat: rx
 rxincls: rxobj
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
-rxtests: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART3}
+rxtests: rxdebug
+rxdebug: rx
+	${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
 fsint: project kfsint
 
@@ -137,8 +198,7 @@ auth: project comerr des lwp rx sys rxkad audit
 ubik: project auth 
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
-ubiktests: ubik sys
-	${COMPILE_PART1} ubik ${COMPILE_PART3}
+ubiktests: ubik
 
 ptserver: project ubik cmd comerr auth audit
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
@@ -201,12 +261,12 @@ null: project
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
 	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
-		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
-		ln -s libnull.a ${DESTDIR}lib/afs/libtermlib.a; \
+		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
+		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	  *) \
-		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
-		ln -s /usr/lib/libtermlib.a ${DESTDIR}lib/afs/libtermlib.a; \
+		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
+		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	esac
 
@@ -287,6 +347,26 @@ UKERNELDIR= \
 
 libafs: libafs_setup ${KERNELDIR}
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
+
+libafs_tree: libafs_setup ${KERNELDIR}
+	-/bin/rm -rf libafs_tree
+	for d in afs afsint rx config; do \
+		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
+	done
+	for f in `cd src/libafs; find . -name '*.[ch]'` \
+		Makefile.common Makefile.extradefs \
+		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
+		; do \
+		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
+	done
+	for f in config.guess config.sub install-sh missing mkinstalldirs \
+		; do \
+		${INSTALL} -c -f $$f libafs_tree/$$f; \
+	done
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
+	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
+	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
+	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
 
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
@@ -375,25 +455,20 @@ libadmin_real:
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-			$(MAKE) libadmin_real SYS_NAME=$(SYS_NAME) \
-			COMPILE_PART1="$(COMPILE_PART1)" \
-			COMPILE_PART2="$(COMPILE_PART2)" \
-			TOP_SRCDIR=@TOP_SRCDIR@ \
-			SRCDIR=$(SRCDIR) DESTDIR=$(DESTDIR) \
-			DBG_DEFS=$(DBG_DEFS) ;; \
+			$(MAKE) libadmin_real ;; \
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tests libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tests libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -408,139 +483,230 @@ libuafs_setup: config export
 force:
 
 TARGET=finale
-install: force
-	$(MAKE) $(TARGET) "SYS_NAME=${SYS_NAME}" \
-		"COMPILE_PART1=${COMPILE_PART1}" \
-		"COMPILE_PART2=${COMPILE_PART2}" \
-		 DESTDIR=`pwd`/${SYS_NAME}/dest/ \
-		 TOP_SRCDIR=@TOP_SRCDIR@ \
-		 SRCDIR=`pwd`/${SYS_NAME}/dest/ \
-		 "DBG_DEFS=${DBG_DEFS}"
+build: force
+	$(MAKE) $(TARGET) DEST=$(DEST) COMPILE_PART2B=$(COMPILE_PART2B) DESTDIR=$(DESTDIR)
 
 kupdate: updatekdir libafs_setup libuafs_setup
 
 blibafs:
-	$(MAKE) libafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument kinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libafs
 
 blibuafs:
-	$(MAKE) libuafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument ukinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libuafs
 
 bwebafs: sys
-	$(MAKE) libuafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument webinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libuafs
 
 clean:
-	$(MAKE) clean2 "COMPILE_PART1=cd src; cd" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} 
+	$(MAKE) clean2
 
 clean2:
-	${COMPILE_PART1} config ${COMPILE_CLEAN}
-	${COMPILE_PART1} pinstall ${COMPILE_CLEAN}
-	${COMPILE_PART1} procmgmt ${COMPILE_CLEAN}
-	${COMPILE_PART1} util ${COMPILE_CLEAN}
-	${COMPILE_PART1} audit ${COMPILE_CLEAN}
-	${COMPILE_PART1} comerr ${COMPILE_CLEAN}
-	${COMPILE_PART1} cmd ${COMPILE_CLEAN}
-	${COMPILE_PART1} lwp ${COMPILE_CLEAN}
-	${COMPILE_PART1} rxgen ${COMPILE_CLEAN}
-	${COMPILE_PART1} rx ${COMPILE_CLEAN}
-	${COMPILE_PART1} rxstat ${COMPILE_CLEAN}
-	${COMPILE_PART1} fsint ${COMPILE_CLEAN}
-	${COMPILE_PART1} export ${COMPILE_CLEAN}
-	${COMPILE_PART1} afs ${COMPILE_CLEAN}
-	${COMPILE_PART1} des ${COMPILE_CLEAN}
-	${COMPILE_PART1} sys ${COMPILE_CLEAN}
-	${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
-	${COMPILE_PART1} auth ${COMPILE_CLEAN}
-	${COMPILE_PART1} ubik ${COMPILE_CLEAN}
-	${COMPILE_PART1} ptserver ${COMPILE_CLEAN}
-	${COMPILE_PART1} kauth ${COMPILE_CLEAN}
-	${COMPILE_PART1} dauth ${COMPILE_CLEAN}
-	${COMPILE_PART1} libacl ${COMPILE_CLEAN}
-	${COMPILE_PART1} dir ${COMPILE_CLEAN}
-	${COMPILE_PART1} vol ${COMPILE_CLEAN}
-	${COMPILE_PART1} vlserver ${COMPILE_CLEAN}
-	${COMPILE_PART1} viced ${COMPILE_CLEAN}
-	${COMPILE_PART1} viced ${COMPILE_CLEAN}
-	${COMPILE_PART1} tviced ${COMPILE_CLEAN}
-	${COMPILE_PART1} volser ${COMPILE_CLEAN}
-	${COMPILE_PART1} venus ${COMPILE_CLEAN}
-	${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
-	${COMPILE_PART1} afsd ${COMPILE_CLEAN}
-	${COMPILE_PART1} null ${COMPILE_CLEAN}
-	${COMPILE_PART1} gtx ${COMPILE_CLEAN}
-	${COMPILE_PART1} fsprobe ${COMPILE_CLEAN}
-	${COMPILE_PART1} scout ${COMPILE_CLEAN}
-	${COMPILE_PART1} uss ${COMPILE_CLEAN}
-	${COMPILE_PART1} bozo ${COMPILE_CLEAN}
-	${COMPILE_PART1} vfsck ${COMPILE_CLEAN}
-	${COMPILE_PART1} sgistuff ${COMPILE_CLEAN}
-	${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
-	${COMPILE_PART1} sia ${COMPILE_CLEAN}
-	${COMPILE_PART1} login ${COMPILE_CLEAN}
-	${COMPILE_PART1} pam ${COMPILE_CLEAN}
-	${COMPILE_PART1} afsweb ${COMPILE_CLEAN}
-	${COMPILE_PART1} update ${COMPILE_CLEAN}
-	${COMPILE_PART1} log ${COMPILE_CLEAN}
-	${COMPILE_PART1} bu_utils ${COMPILE_CLEAN}
-	${COMPILE_PART1} usd ${COMPILE_CLEAN}
-	${COMPILE_PART1} bubasics ${COMPILE_CLEAN}
-	${COMPILE_PART1} butm ${COMPILE_CLEAN}
-	${COMPILE_PART1} butc ${COMPILE_CLEAN}
-	${COMPILE_PART1} tbutc ${COMPILE_CLEAN}
-	${COMPILE_PART1} budb ${COMPILE_CLEAN}
-	${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
-	${COMPILE_PART1} xstat ${COMPILE_CLEAN}
-	${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
-	${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
-	${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/vos ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/kas ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/pts ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/bos ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/cfg ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/test ${COMPILE_CLEAN}
-	${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
-	${COMPILE_PART1} finale ${COMPILE_CLEAN}
-	${COMPILE_PART1} mpp ${COMPILE_CLEAN}
-	${COMPILE_PART1} package ${COMPILE_CLEAN}
-	${COMPILE_PART1} ntp ${COMPILE_CLEAN}
-	${COMPILE_PART1} ftpd43+ ${COMPILE_CLEAN}
-	${COMPILE_PART1} inetd ${COMPILE_CLEAN}
-	${COMPILE_PART1} rsh ${COMPILE_CLEAN}
-	${COMPILE_PART1} rlogind ${COMPILE_CLEAN}
-	${COMPILE_PART1} rcp ${COMPILE_CLEAN}
-	${COMPILE_PART1} libafs ${COMPILE_CLEAN}
-	${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
+	-${COMPILE_PART1} config ${COMPILE_CLEAN}
+	-${COMPILE_PART1} pinstall ${COMPILE_CLEAN}
+	-${COMPILE_PART1} procmgmt ${COMPILE_CLEAN}
+	-${COMPILE_PART1} util ${COMPILE_CLEAN}
+	-${COMPILE_PART1} audit ${COMPILE_CLEAN}
+	-${COMPILE_PART1} comerr ${COMPILE_CLEAN}
+	-${COMPILE_PART1} cmd ${COMPILE_CLEAN}
+	-${COMPILE_PART1} lwp ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxgen ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rx ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxstat ${COMPILE_CLEAN}
+	-${COMPILE_PART1} fsint ${COMPILE_CLEAN}
+	-${COMPILE_PART1} export ${COMPILE_CLEAN}
+	-${COMPILE_PART1} afs ${COMPILE_CLEAN}
+	-${COMPILE_PART1} des ${COMPILE_CLEAN}
+	-${COMPILE_PART1} sys ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxkad ${COMPILE_CLEAN}
+	-${COMPILE_PART1} auth ${COMPILE_CLEAN}
+	-${COMPILE_PART1} ubik ${COMPILE_CLEAN}
+	-${COMPILE_PART1} ptserver ${COMPILE_CLEAN}
+	-${COMPILE_PART1} kauth ${COMPILE_CLEAN}
+	-${COMPILE_PART1} dauth ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libacl ${COMPILE_CLEAN}
+	-${COMPILE_PART1} dir ${COMPILE_CLEAN}
+	-${COMPILE_PART1} vol ${COMPILE_CLEAN}
+	-${COMPILE_PART1} vlserver ${COMPILE_CLEAN}
+	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
+	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
+	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
+	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
+	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
+	-${COMPILE_PART1} afsd ${COMPILE_CLEAN}
+	-${COMPILE_PART1} null ${COMPILE_CLEAN}
+	-${COMPILE_PART1} gtx ${COMPILE_CLEAN}
+	-${COMPILE_PART1} fsprobe ${COMPILE_CLEAN}
+	-${COMPILE_PART1} scout ${COMPILE_CLEAN}
+	-${COMPILE_PART1} uss ${COMPILE_CLEAN}
+	-${COMPILE_PART1} bozo ${COMPILE_CLEAN}
+	-${COMPILE_PART1} vfsck ${COMPILE_CLEAN}
+	-${COMPILE_PART1} sgistuff ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
+	-${COMPILE_PART1} sia ${COMPILE_CLEAN}
+	-${COMPILE_PART1} login ${COMPILE_CLEAN}
+	-${COMPILE_PART1} pam ${COMPILE_CLEAN}
+	-${COMPILE_PART1} afsweb ${COMPILE_CLEAN}
+	-${COMPILE_PART1} update ${COMPILE_CLEAN}
+	-${COMPILE_PART1} log ${COMPILE_CLEAN}
+	-${COMPILE_PART1} bu_utils ${COMPILE_CLEAN}
+	-${COMPILE_PART1} usd ${COMPILE_CLEAN}
+	-${COMPILE_PART1} bubasics ${COMPILE_CLEAN}
+	-${COMPILE_PART1} butm ${COMPILE_CLEAN}
+	-${COMPILE_PART1} butc ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tbutc ${COMPILE_CLEAN}
+	-${COMPILE_PART1} budb ${COMPILE_CLEAN}
+	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
+	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
+	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/vos ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/kas ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/pts ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/bos ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/cfg ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/test ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
+	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
+	-${COMPILE_PART1} mpp ${COMPILE_CLEAN}
+	-${COMPILE_PART1} package ${COMPILE_CLEAN}
+	-${COMPILE_PART1} ntp ${COMPILE_CLEAN}
+	-${COMPILE_PART1} ftpd43+ ${COMPILE_CLEAN}
+	-${COMPILE_PART1} inetd ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rsh ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rlogind ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rcp ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
+	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
+	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
+	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
+	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
+	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
  
 distclean: clean
-	/bin/rm -f config.log config.cache config.status Makefile
-	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
-	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
-	/bin/rm -f src/libuafs/Makefile afs.ppc_darwin.plist src/pam/Makefile
+	/bin/rm -f config.log config.cache config.status \
+	src/config/afsconfig.h \
+	Makefile \
+	src/afs/Makefile \
+	src/afsd/Makefile \
+	src/afsd/afs.ppc_darwin.plist \
+	src/afsmonitor/Makefile \
+	src/afsweb/Makefile \
+	src/audit/Makefile \
+	src/auth/test/Makefile \
+	src/auth/Makefile \
+	src/bozo/test/Makefile \
+	src/bozo/Makefile \
+	src/bu_utils/Makefile \
+	src/bubasics/Makefile \
+	src/bucoord/Makefile \
+	src/budb/Makefile \
+	src/butc/Makefile \
+	src/butm/Makefile \
+	src/cmd/test/Makefile \
+	src/cmd/Makefile \
+	src/comerr/test/Makefile \
+	src/comerr/Makefile \
+	src/config/Makefile \
+	src/config/Makefile.version \
+	src/config/Makefile.version-NOCML \
+	src/config/Makefile.${SYS_NAME} \
+	src/dauth/Makefile \
+	src/des/test/Makefile \
+	src/des/Makefile \
+	src/des_stub/Makefile \
+	src/dir/test/Makefile \
+	src/dir/Makefile \
+	src/export/Makefile \
+	src/finale/Makefile \
+	src/fsint/Makefile \
+	src/fsprobe/Makefile \
+	src/ftpd43+/Makefile \
+	src/gtx/Makefile \
+	src/inetd/Makefile \
+	src/kauth/test/Makefile \
+	src/kauth/Makefile \
+	src/libacl/test/Makefile \
+	src/libacl/Makefile \
+	src/libadmin/adminutil/Makefile \
+	src/libadmin/Makefile \
+	src/libadmin/bos/Makefile \
+	src/libadmin/cfg/test/Makefile \
+	src/libadmin/cfg/Makefile \
+	src/libadmin/client/Makefile \
+	src/libadmin/kas/Makefile \
+	src/libadmin/pts/Makefile \
+	src/libadmin/samples/Makefile \
+	src/libadmin/test/Makefile \
+	src/libadmin/vos/Makefile \
+	src/libafs/Makefile \
+	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+	src/libafsauthent/Makefile \
+	src/libafsrpc/Makefile \
+	src/libuafs/Makefile \
+	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
+	src/log/test/Makefile \
+	src/log/Makefile \
+	src/login/Makefile \
+	src/lwp/test/Makefile \
+	src/lwp/Makefile \
+	src/mpp/Makefile \
+	src/ntp/Makefile \
+	src/null/Makefile \
+	src/package/Makefile \
+	src/pam/Makefile \
+	src/pinstall/test/Makefile \
+	src/pinstall/Makefile \
+	src/procmgmt/Makefile \
+	src/procmgmt/test/Makefile \
+	src/ptserver/Makefile \
+	src/rcp/Makefile \
+	src/rlogind/Makefile \
+	src/rsh/Makefile \
+	src/rx/Makefile \
+	src/rx/bulk.example/Makefile \
+	src/rx/bulktest/Makefile \
+	src/rx/multi.example/Makefile \
+	src/rx/simple.example/Makefile \
+	src/rx/test/Makefile \
+	src/rxdebug/Makefile \
+	src/rxgen/Makefile \
+	src/rxkad/Makefile \
+	src/rxkad/test/Makefile \
+	src/rxstat/Makefile \
+	src/scout/Makefile \
+	src/sgistuff/Makefile \
+	src/sia/Makefile \
+	src/sys/Makefile \
+	src/tbutc/Makefile \
+	src/tsm41/Makefile \
+	src/tviced/Makefile \
+	src/ubik/Makefile \
+	src/update/Makefile \
+	src/usd/test/Makefile \
+	src/usd/Makefile \
+	src/uss/Makefile \
+	src/util/Makefile \
+	src/util/test/Makefile \
+	src/venus/test/Makefile \
+	src/venus/Makefile \
+	src/vfsck/Makefile \
+	src/viced/Makefile \
+	src/vlserver/Makefile \
+	src/vol/Makefile \
+	src/vol/test/Makefile \
+	src/volser/Makefile \
+	src/wsadmin.src/Makefile \
+	src/xstat/Makefile 
 
 pristine: distclean
-	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4
-
-links:
-	echo "Remove the obj directory"
-	- /bin/rm -rf @sys/obj/* ;
-	- /bin/rm -rf @sys/dest/* ;
-	- /bin/mkdir @sys/obj ;
-	echo "Create the obj directories"
-	here=`pwd` ; \
-	cd src; \
-	for file in `find [!NW]* -type d -print` ; do \
-		/bin/mkdir $${here}/obj/$${file} ; \
-	done;
-	echo "Create the obj file links"
-	here=`pwd` ; \
-	cd src; \
-	for file in `find [!NW]* -type f -print` ; do \
-		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
-	done;
+	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
 
 #
 # Below targets are all deprecated, insecure, or obsolte, 

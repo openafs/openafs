@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.4 2001/07/15 07:22:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.5 2001/09/11 15:47:35 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -1079,7 +1079,7 @@ afs_BioDaemon (nbiods)
     /* Initialize a token (self) to use in the queue of sleeping processes.   */
     self = (struct afs_bioqueue *) afs_osi_Alloc (sizeof (struct afs_bioqueue));
     pin (self, sizeof (struct afs_bioqueue)); /* fix in memory */
-    bzero(self, sizeof(*self));
+    memset(self, 0, sizeof(*self));
     QInit (&(self->lruq));		/* initialize queue entry pointers */
 
 
@@ -1200,7 +1200,7 @@ void afs_BackgroundDaemon() {
     /* initialize subsystem */
     if (brsInit == 0) {
 	LOCK_INIT(&afs_xbrs, "afs_xbrs");
-	bzero((char *)afs_brs, sizeof(afs_brs));
+	memset((char *)afs_brs, 0, sizeof(afs_brs));
 	brsInit = 1;
 #if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
         /*
@@ -1281,8 +1281,8 @@ void shutdown_daemons()
   if (afs_cold_shutdown) {
       afs_brsDaemons = brsInit = 0;
       rxepoch_checked = afs_nbrs = 0;
-      bzero((char *)afs_brs, sizeof(afs_brs));
-      bzero((char *)&afs_xbrs, sizeof(afs_lock_t));
+      memset((char *)afs_brs, 0, sizeof(afs_brs));
+      memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
       afs_brsWaiters = 0;
 #ifdef AFS_AIX32_ENV
 #ifdef AFS_AIX41_ENV
@@ -1292,7 +1292,7 @@ void shutdown_daemons()
 #else /* AFS_AIX41_ENV */
       afs_busyq = NULL;
       afs_biodcnt = 0;
-      bzero((char *)&afs_bioqueue, sizeof(struct afs_bioqueue));
+      memset((char *)&afs_bioqueue, 0, sizeof(struct afs_bioqueue));
 #endif
       afs_initbiod = 0;
 #endif

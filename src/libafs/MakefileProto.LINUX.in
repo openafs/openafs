@@ -7,9 +7,25 @@
 
 # MakefileProto for Linux i386 systems
 #
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
+SYS_NAME=@AFS_SYSNAME@
 
-DESTDIR=DEST/
-include ../config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -25,7 +41,8 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 	osi_vnodeops.o \
 	xdr.o \
-	xdr_array.o
+	xdr_array.o \
+	xdr_int64.o
 
 AFS_OS_NFSOBJS =
 
@@ -64,6 +81,10 @@ CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
 	-fno-builtin -ffixed-r2
 DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<ia64_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -pipe \
+	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
+DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>
 INCLUDES = -I. -I../ -I${TOP_SRCDIR}/config
 
@@ -75,6 +96,8 @@ MPS = @MPS@
 
 # COMPDIRS is called in Makefile.common to do the actual builds.
 COMPDIRS=linux_compdirs
+INSTDIRS=linux_instdirs
+DESTDIRS=linux_destdirs
 
 include Makefile.common
 
@@ -84,31 +107,32 @@ LINUX_MODULE_NAME=
 LOCAL_SMP_DEF=
 
 setup:
-	-rm -f h net netinet sys rpc
+	-$(RM) -f h net netinet sys rpc
 	-ln -s rx rpc
 	for m in ${MPS} ; do \
 		KDIR=$(KOBJ)-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m; \
 		mkdir -p $${KDIR}; \
 		ln -fs ../Makefile $${KDIR}/Makefile ; \
 		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+		ln -fs ../config $${KDIR}/config; \
 	done 
 	
 # Compile SP and MP clients as requested
 
-${COMPDIRS}:
-	rm -f h 
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	$(RM) -f h 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux h 
-	rm -f linux 
+	$(RM) -f linux 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux linux 
-	rm -f net 
+	$(RM) -f net 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux net 
-	rm -f netinet 
+	$(RM) -f netinet 
 	ln -s ${LINUX_KERNEL_PATH}/include/linux netinet 
-	rm -f sys
+	$(RM) -f sys
 	ln -s ${LINUX_KERNEL_PATH}/include/linux sys
-	rm -f asm-generic
+	$(RM) -f asm-generic
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
-	rm -f asm
+	$(RM) -f asm
 <alpha_linux_22 alpha_linux_24>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-alpha asm
 <i386_linux22 i386_linux24>
@@ -121,6 +145,8 @@ ${COMPDIRS}:
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24>
 	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
+<ia64_linux24>
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <all>
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m ; \
@@ -133,9 +159,16 @@ ${COMPDIRS}:
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
-		$(MAKE) DESTDIR=${DESTDIR} SMP_DEF="$${SMP_DEF}" $${TARG} CLIENT=${LINUX_VERS}${LINUX_MODULE_NAME} || exit $$?; \
+		$(MAKE) SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERS}${LINUX_MODULE_NAME} || exit $$?; \
 		cd ../ ; \
 	done
+
+linux_compdirs_libafs: libafs
+linux_compdirs_libafs.mp: libafs.mp
+linux_instdirs_libafs: install_libafs
+linux_instdirs_libafs.mp: install_libafs.mp
+linux_destdirs_libafs: dest_libafs
+linux_destdirs_libafs.mp: dest_libafs.mp
 
 
 # Below this line are targets when in the COMMON directory:
@@ -143,21 +176,18 @@ ${COMPDIRS}:
 LIBAFS = libafs-${CLIENT}.o
 LIBAFS_MP = libafs-${CLIENT}.mp.o
 
-DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/openafs.o
-DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/openafs.mp.o
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
+
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/openafs.o
+DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/openafs.mp.o
 
 
-libafs:	$(DEST_LIBAFS) 
+libafs:	$(LIBAFS) 
 	echo SP Build Complete
 
-libafs.mp: $(DEST_LIBAFS_MP)
+libafs.mp: $(LIBAFS_MP)
 	echo MP Build Complete
-
-$(DEST_LIBAFS): $(LIBAFS)
-	${INSTALL} -f $? $@
-
-$(DEST_LIBAFS_MP): $(LIBAFS_MP)
-	${INSTALL} -f $? $@
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
@@ -167,33 +197,57 @@ ${LIBAFS_MP}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 
+install_libafs:	$(INST_LIBAFS) 
+	echo SP Install Complete
+
+install_libafs.mp: $(INST_LIBAFS_MP)
+	echo MP Install Complete
+
+dest_libafs:	$(DEST_LIBAFS) 
+	echo SP Install Complete
+
+dest_libafs.mp: $(DEST_LIBAFS_MP)
+	echo MP Install Complete
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFS_MP): $(LIBAFS_MP)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS_MP): $(LIBAFS_MP)
+	${INSTALL} -f $? $@
+
 
 # Linux specific objects
 osi_alloc.o: $(AFS)/osi_alloc.c
-	$(CRULE1);
+	$(CRULE1)
 osi_cred.o: $(AFS)/osi_cred.c
-	$(CRULE1);
+	$(CRULE1)
 osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1);
+	$(CRULE1)
 osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1);
+	$(CRULE1)
 osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1);
+	$(CRULE1)
 osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1);
+	$(CRULE1)
 osi_module.o: $(AFS)/osi_module.c
-	$(CRULE1);
+	$(CRULE1)
 osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1);
+	$(CRULE1)
 xdr.o: $(RX)/xdr.c
-	$(CRULE1);
+	$(CRULE1)
 xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1);
+	$(CRULE1)
 xdr_array.o: $(RX)/xdr_array.c
-	$(CRULE1);
+	$(CRULE1)

@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.7 2001/07/20 10:57:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.8 2001/09/11 15:47:38 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -133,7 +133,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
        volnamep = &avc->linkData[1];
        tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
     }
-    if (!tcell) return ENOENT;
+    if (!tcell) return ENODEV;
 
     mtptCell = tcell->cell;               /* The cell for the mountpoint */
     if (tcell->lcellp) {
@@ -562,8 +562,7 @@ tagain:
 		 * preserve the value of the file size. We could
 		 * flush the pages, but it wouldn't be worthwhile.
 		 */
-		bcopy((char *) &tfid.Fid, (char *)(fidsp+fidIndex),
-		      sizeof(*fidsp));
+		memcpy((char *)(fidsp+fidIndex), (char *) &tfid.Fid, sizeof(*fidsp));
 		tvcp->states |= CBulkFetching;
 		tvcp->m.Length = statSeqNo;
 		fidIndex++;
@@ -897,7 +896,7 @@ afs_lookup(adp, aname, avcp, acred)
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = (struct vnode *)adp;
-    bcopy(ndp->ni_ptr, aname, ndp->ni_namelen);
+    memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_file.c,v 1.6 2001/07/15 07:22:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_file.c,v 1.7 2001/09/11 15:47:36 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -40,7 +40,7 @@ void *osi_UFSOpen(ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	bzero((char *)&afs_osi_cred, sizeof(struct AFS_UCRED));
+	memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }

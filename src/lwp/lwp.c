@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp.c,v 1.8 2001/07/15 07:22:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp.c,v 1.9 2001/09/11 15:48:26 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1252,7 +1252,7 @@ static PROCESS lwp_alloc_process(name, ep, arg)
 {
     PROCESS lp;
     assert(lp = (PROCESS) malloc(sizeof (*lp)));
-    bzero((char *) lp, sizeof(*lp));
+    memset((char *) lp, 0, sizeof(*lp));
     if (!name) {
 	char temp[100];
 	static procnum;

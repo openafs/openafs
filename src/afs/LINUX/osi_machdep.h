@@ -31,7 +31,7 @@
 #include "../h/sched.h"
 #define osi_Time() (xtime.tv_sec)
 #if  (CPU == sparc64)
-#define osi_GetTime(V) do { (*##V##).tv_sec = xtime.tv_sec; (*##V##).tv_usec = xtime.tv_usec; } while (0)
+#define osi_GetTime(V) do { (*(V)).tv_sec = xtime.tv_sec; (*(V)).tv_usec = xtime.tv_usec; } while (0)
 #else
 #define osi_GetTime(V) (*(V)=xtime)
 #endif
@@ -59,9 +59,11 @@ extern struct vnodeops afs_dir_iops, afs_symlink_iops;
 			((vc)->v_op == &afs_dir_iops) ? 1 : \
 			((vc)->v_op == &afs_symlink_iops))
 
-/* bcopy is in stds.h, just so fcrpyt.c can pick it up. */
+#if 0
+/* bcopy is in stds.h, just so fcrypt.c can pick it up. */
 #define bzero(D,C)   memset((D), 0, (C))
 #define bcmp(A,B,C)  memcmp((A), (B), (C))
+#endif
 
 /* We often need to pretend we're in user space to get memory transfers
  * right for the kernel calls we use.
