@@ -56,4 +56,6 @@ typedef int ssize_t;
 typedef char * caddr_t;
 
 #define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
+
+#define snprintf                _snprintf
 #endif /* _PARAM_NT35_H_ */
