@@ -796,8 +796,10 @@ char **envp;
 	}
 	else break;
     }
-    if (i>=10)
+    if (i>=10) {
+	bozo_Log("Bos giving up, can't initialize rx\n");
 	exit(code);
+    }
 
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
 			     /* parm */0, "bozo-the-clown", &bozo_pid);
