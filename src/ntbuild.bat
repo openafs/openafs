@@ -11,11 +11,6 @@ REM Modify for local configuration; common defaults shown.
 REM ########################################################################
 
 REM ########################################################################
-REM
-REM NOTE: You should run NTLANG.REG before attempting to build localized
-REM language files! Failure to do so will cause the resource compiler
-REM and message-catalog compiler to choke when they hit unknown code pages.
-REM
 REM NOTE: You will need to copy the NLS files into your windows\system32 
 REM directory prior to building non-english files.
 REM
