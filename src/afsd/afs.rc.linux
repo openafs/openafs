@@ -14,8 +14,8 @@
 
 
 # Gather up options and post startup script name, if present
-if [ -f /etc/sysconfig/afs ]; then
-	. /etc/sysconfig/afs
+if [ -f /etc/default/afs ]; then
+	. /etc/default/afs
 fi
 
 # is_on returns 1 if value of arg is "on"
@@ -129,20 +129,29 @@ case "$1" in
 		exit 1
 	fi
 
-	echo "Starting AFS services..... "
+	echo -n "Starting AFS services: "
 	# Start bosserver, it if exists
 	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bosserver  ; then
-		/usr/afs/bin/bosserver 
+		start-stop-daemon --start --quiet --pidfile /var/run/bos.pid \
+		    --exec /usr/afs/bin/bosserver
+		echo -n " bosserver"
 	fi
 
 	# Start AFS client
 	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
-		/usr/vice/etc/afsd ${OPTIONS}
+		start-stop-daemon --start --quiet --exec /usr/vice/etc/afsd \
+		    -- ${OPTIONS}
+		echo -n " afsd"
 
 		# Start AFS version of inetd.conf if present.
 		if  test -f /usr/afsws/etc/inetd.conf -a -x /usr/afsws/etc/inetd.afs ; then
-			/usr/afsws/etc/inetd.afs /usr/afsws/etc/inetd.conf
+			start-stop-daemon --start --quiet \
+			    --pidfile /var/run/inetd.afs.pid \
+			    --exec /usr/afsws/etc/inetd.afs -- \
+			    /usr/afsws/etc/inetd.conf
+			echo -n " inetd"
 		fi
+		echo "."
 		$AFS_POST_INIT
 	fi
 
@@ -150,25 +159,35 @@ case "$1" in
 
   stop)
 	# Stop AFS
-	echo "Stopping AFS services..... "
+	echo -n "Stopping AFS services: "
 
 	if  is_on $AFS_CLIENT  ; then
-		killall inetd.afs
+		start-stop-daemon --stop --quiet \
+		    --pidfile /var/run/inetd.afs.pid && echo -n " inetd"
 		umount /afs
+		echo -n " afsd"
 	fi
 
 	if  is_on $AFS_SERVER && test -x /usr/afs/bin/bos ; then
 		echo "Stopping AFS bosserver"
 		/usr/afs/bin/bos shutdown localhost -localauth -wait
-		killall -HUP bosserver
+		start-stop-daemon --stop --quiet --signal 1 \
+		    --pidfile /var/run/bos.pid
 	fi
 
 	LIBAFS=`/sbin/lsmod | fgrep libafs`
 	if [ -n "$LIBAFS" ] ; then
 		LIBAFS=`echo $LIBAFS | awk 'BEGIN { FS = " " } { print $1 }'`
 		/sbin/rmmod $LIBAFS
+		echo -n " libafs"
 	fi
+	echo "."
 
+	;;
+
+  restart|force-reload)
+	"$0" stop
+	"$0" start
 	;;
 
   *)
