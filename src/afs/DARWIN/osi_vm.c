@@ -281,7 +281,7 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 		1
 #endif
 		)
-		VOP_INACTIVE(vp, p);
+	      VOP_UNLOCK(vp, 0, p); /* was VOP_INACTIVE(vp, p); */
 	    else
 		VOP_UNLOCK(vp, 0, p);
 #ifdef AFS_DARWIN14_ENV
@@ -290,7 +290,7 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 #endif
 	    if (obj) {
 		if (ISSET(vp->v_flag, VTERMINATE))
-		    panic("afs_vnreclaim: already teminating");
+		    panic("afs_vnreclaim: already terminating");
 		SET(vp->v_flag, VTERMINATE);
 		memory_object_destroy(obj, 0);
 		while (ISSET(vp->v_flag, VTERMINATE)) {
