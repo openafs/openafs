@@ -160,37 +160,62 @@ not actually be configured as file servers in the cell.
 
 afs_int32 ListServers()
 {
-	afs_int32 code;
-	struct rx_connection *conn;
-	struct rx_call *call;
-	int i;
-	int byte_count;
+    afs_int32 code;
+    struct rx_connection *conn;
+    struct rx_call *call;
+    int i;
+    int byte_count;
+    int nentries;
+    afs_int32 base, index;
 
-	afs_int32 Handle=0;
-	afs_int32 spare2=0;
-	struct VLCallBack spare3;
+    afs_int32 Handle=0;
+    afs_int32 spare2=0;
+    struct VLCallBack spare3;
 
-	bulkaddrs addrs;
-	afs_uint32 *p;
+    bulkaddrs addrs, m_addrs;
+    ListAddrByAttributes m_attrs;
+    afs_int32 m_unique, m_nentries;
+    afs_uint32 *p;
 
-	/* get list of file servers in NW byte order */
-	memset(&addrs, 0, sizeof(addrs));
-	memset(&spare3, 0, sizeof(spare3));
-	code=ubik_Call(VL_GetAddrs,client,0,Handle,spare2,&spare3,
-		&server_count,&addrs);
-	if(code)
-	{
-		printf("Fatal error: could not get list of \
-file servers\n");
-		return 1;
+    /* get list of file servers in NW byte order */
+    memset(&addrs, 0, sizeof(addrs));
+    memset(&spare3, 0, sizeof(spare3));
+    code=ubik_Call(VL_GetAddrs,client,0,Handle,spare2,&spare3,
+		   &server_count,&addrs);
+    if(code)
+    {
+	printf("Fatal error: could not get list of file servers\n");
+	return 1;
+    }
+
+    for(i=0,p=addrs.bulkaddrs_val;i<server_count;++i,++p) {
+	if ( ((*p & 0xff000000) == 0xff000000) && ((*p)&0xffff) ) {
+	    if ( (base  >= 0) && (base  <= VL_MAX_ADDREXTBLKS) &&
+		 (index >= 1) && (index <= VL_MHSRV_PERBLK)    ) {
+		m_attrs.Mask  = VLADDR_INDEX;
+		m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
+		m_nentries            = 0;
+		m_addrs.bulkaddrs_val = 0;
+		m_addrs.bulkaddrs_len = 0;
+		code = ubik_Call(VL_GetAddrsU, client, 0,
+				 &m_attrs, &m_uuid, &m_unique, &m_nentries, &m_addrs);
+		if (vcode) 
+		    return code;
+
+		m_addrp = (afs_int32 *)m_addrs.bulkaddrs_val;
+		for (j=0; j<m_nentries; j++, m_addrp++) {
+		    server_id[i] = *m_addrp;
+		    *m_addrp = htonl(*m_addrp);       
+		    printf("host %s\n", hostutil_GetNameByINet(*p));
+		}
+	    }
+	} else {
+	    server_id[i] = *p;
+	    *p = htonl(*p);
+	    printf("host %s\n", hostutil_GetNameByINet(*p));
 	}
-	server_count=ntohl(server_count);
-
-	for(i=0,p=addrs.bulkaddrs_val;i<server_count;++i,++p)
-		server_id[i] = *p;
-
-	return code;
-
+    }
+    return code;
 }
 
 afs_int32 GetServerList()
