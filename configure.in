@@ -111,7 +111,7 @@ else
   if test "$ac_cv_func_socket" = no; then
     for lib in socket inet; do
         if test "$HAVE_SOCKET" != 1; then
-                AC_CHECK_LIB($lib, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET))
+                AC_CHECK_LIB(${lib}, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET))
         fi
     done
   fi
@@ -121,7 +121,7 @@ else
   if test "$ac_cv_func_connect" = no; then
     for lib in nsl; do
         if test "$HAVE_CONNECT" != 1; then
-                AC_CHECK_LIB($lib, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT))
+                AC_CHECK_LIB(${lib}, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT))
         fi
     done
   fi
@@ -130,7 +130,7 @@ else
   if test "$ac_cv_func_gethostbyname" = no; then
         for lib in dns nsl resolv; do
           if test "$HAVE_GETHOSTBYNAME" != 1; then
-            AC_CHECK_LIB($lib, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME))
+            AC_CHECK_LIB(${lib}, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME))
           fi
         done    
   fi    
@@ -139,7 +139,7 @@ else
   if test "$ac_cv_func_res_search" = no; then
         for lib in dns nsl resolv; do
           if test "$HAVE_RES_SEARCH" != 1; then
-            AC_CHECK_LIB($lib, res_search, LIBS="$LIBS -l$lib";HAVE_RES_SEARCH=1;AC_DEFINE(HAVE_RES_SEARCH))
+            AC_CHECK_LIB(${lib}, res_search, LIBS="$LIBS -l$lib";HAVE_RES_SEARCH=1;AC_DEFINE(HAVE_RES_SEARCH))
           fi
         done    
 	if test "$HAVE_RES_SEARCH" = 1; then
