@@ -5886,7 +5886,7 @@ void smb_Listener(void *parmp)
         long len;
 	long i, j;
         smb_vc_t *vcp;
-	int flags = 0;
+	int flags;
 	char rname[NCBNAMSZ+1];
 	char cname[MAX_COMPUTERNAME_LENGTH+1];
 	int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
@@ -5903,6 +5903,7 @@ void smb_Listener(void *parmp)
 
 	while (1) {
 		memset(ncbp, 0, sizeof(NCB));
+		flags = 0;
 #ifdef DJGPP
              /* terminate if shutdown flag is set */
              if (smbShutdownFlag == 1)
