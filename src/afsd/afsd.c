@@ -1996,7 +1996,7 @@ long param1, param2, param3, param4, param5, param6, param7;
 #endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);
-    if (afsd_verbose) printf("SScall(%d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, error);
+    if (afsd_verbose) printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1, error);
     return (error);
 }
 #else	/* AFS_AIX32_ENV */
