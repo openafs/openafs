@@ -183,7 +183,7 @@ ${DESTDIR}lib/libdes.a: libdes.a
 	${INSTALL} $? $@
 
 install install.noversion: all ukinstall ${DESTDIR}lib/libdes.a
-	${INSTALL} des.h des_conf.h mit-cpyright.h crypt.h ${DESTDIR}include
+	${INSTALL} des.h des_conf.h mit-cpyright.h ${DESTDIR}include
 	${INSTALL} odd.h ${DESTDIR}include/des_odd.h
 
 clean:
