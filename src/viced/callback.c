@@ -445,7 +445,7 @@ static int CDel(struct CallBack *cb, int deletefe)
 	assert(0);
 	ViceLog(0,("CDel: Internal Error -- shutting down: wanted %d from %d, now at %d\n",cbi,fe->firstcb,*cbp));
 	DumpCallBackState();
-	ShutDown();
+	ShutDownAndCore(PANIC);
       }
     }
     CDelPtr(fe, cbp, deletefe);
@@ -488,7 +488,7 @@ static afs_uint32 *FindCBPtr(struct FileEntry *fe, struct host *host)
 	if (safety > cbstuff.nblks) {
 	  ViceLog(0,("FindCBPtr: Internal Error -- shutting down.\n"));
 	  DumpCallBackState();
-	  ShutDown();
+	  ShutDownAndCore(PANIC);
 	}
 	cb = itocb(*cbp);
 	if (cb->hhead == hostindex)
@@ -674,7 +674,7 @@ static int AddCallBack1_r(struct host *host, AFSFid *fid, afs_uint32 *thead,
 	if (safety > cbstuff.nblks) {
 	  ViceLog(0,("AddCallBack1: Internal Error -- shutting down.\n"));
 	  DumpCallBackState();
-	  ShutDown();
+	  ShutDownAndCore(PANIC);
 	}
 	if (cb->hhead == h_htoi(host))
 	    break;
@@ -1460,7 +1460,7 @@ int CleanupTimedOutCallBacks_r(void)
 		if (ntimedout > cbstuff.nblks) {
 		  ViceLog(0,("CCB: Internal Error -- shutting down...\n"));
 		  DumpCallBackState();
-		  ShutDown();
+		  ShutDownAndCore(PANIC);
 		}
 	    } while (cbi != *thead);
 	    *thead = 0;
