@@ -73,7 +73,7 @@ char *rxi_Alloc();
 #ifndef KERNEL
 #define osi_Time() time(0)
 #endif
-struct rxkad_stats rxkad_stats;
+struct rxkad_stats rxkad_stats = {0};
 
 /* this call sets up an endpoint structure, leaving it in *network* byte
  * order so that it can be used quickly for encryption.
