@@ -98,6 +98,30 @@ InitFSRequest(fs_ioctlRequest_t * rp)
     rp->nbytes = 0;
 }
 
+static BOOL
+IoctlDebug(void)
+{
+    static int init = 0;
+    static BOOL debug = 0;
+
+    if ( !init ) {
+        HKEY hk;
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+                         TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(BOOL);
+            DWORD dwType = REG_DWORD;
+            RegQueryValueEx (hk, TEXT("IoctlDebug"), NULL, &dwType, (PBYTE)&debug, &dwSize);
+            RegCloseKey (hk);
+        }
+
+        init = 1;
+    }
+
+    return debug;
+}
+
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
@@ -170,17 +194,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         char szPath[MAX_PATH] = "";
         NETRESOURCE nr;
         DWORD res;
-        DWORD ioctlDebug = 0;
+        DWORD ioctlDebug = IoctlDebug();
         DWORD gle;
-
-        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
-                        TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
-        {
-            DWORD dwSize = sizeof(DWORD);
-            DWORD dwType = REG_DWORD;
-            RegQueryValueEx (hk, TEXT("IoctlDebug"), NULL, &dwType, (PBYTE)&ioctlDebug, &dwSize);
-            RegCloseKey (hk);
-        }
 
         gle = GetLastError();
         if (gle && ioctlDebug ) {
@@ -264,19 +279,31 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
 {
     long rcount;
     long ioCount;
+    DWORD gle;
 
     rcount = reqp->mp - reqp->data;
-    if (rcount <= 0)
+    if (rcount <= 0) {
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl Transceive rcount <= 0: %d\r\n",rcount);
 	return EINVAL;		/* not supposed to happen */
+    }
 
     if (!WriteFile(handle, reqp->data, rcount, &ioCount, NULL)) {
 	/* failed to write */
-	return GetLastError();
+	gle = GetLastError();
+
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl Transceive WriteFile failed: 0x%X\r\n",gle);
+        return gle;
     }
 
     if (!ReadFile(handle, reqp->data, sizeof(reqp->data), &ioCount, NULL)) {
 	/* failed to read */
-	return GetLastError();
+	gle = GetLastError();
+
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl Transceive ReadFile failed: 0x%X\r\n",gle);
+        return gle;
     }
 
     reqp->nbytes = ioCount;	/* set # of bytes available */
@@ -299,6 +326,9 @@ UnmarshallLong(fs_ioctlRequest_t * reqp, long *valp)
 {
     /* not enough data left */
     if (reqp->nbytes < 4) {
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl UnmarshallLong reqp->nbytes < 4: %d\r\n",
+                     reqp->nbytes);
 	return -1;
     }
 
@@ -320,8 +350,11 @@ MarshallString(fs_ioctlRequest_t * reqp, char *stringp)
 	count = 1;
 
     /* watch for buffer overflow */
-    if ((reqp->mp - reqp->data) + count > sizeof(reqp->data))
+    if ((reqp->mp - reqp->data) + count > sizeof(reqp->data)) {
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl MarshallString buffer overflow\r\n");
 	return -1;
+    }
 
     if (stringp)
 	memcpy(reqp->mp, stringp, count);
@@ -389,15 +422,19 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	newPath[2] = 0;
 	if (!SetCurrentDirectory(newPath)) {
 	    code = GetLastError();
+
+            if ( IoctlDebug() )
+                fprintf(stderr, "pioctl fs_GetFullPath SetCurrentDirectory(%s) failed: 0x%X\r\n",
+                         newPath, code);
 	    return code;
 	}
     }
 
     /* now get the absolute path to the current wdir in this drive */
     GetCurrentDirectory(sizeof(tpath), tpath);
-	if (tpath[1] == ':')
-	    strcpy(outPathp, tpath + 2);	/* skip drive letter */
-	else if ( tpath[0] == '\\' && tpath[1] == '\\') {
+    if (tpath[1] == ':')
+        strcpy(outPathp, tpath + 2);	/* skip drive letter */
+    else if ( tpath[0] == '\\' && tpath[1] == '\\') {
         /* UNC path - strip off the server and sharename */
         int i, count;
         for ( i=2,count=2; count < 4 && tpath[i]; i++ ) {
@@ -417,10 +454,10 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 
     /* if there is a non-null name after the drive, append it */
     if (*firstp != 0) {
-		int len = strlen(outPathp);
-		if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
-			strcat(outPathp, "\\");
-		strcat(outPathp, firstp);
+        int len = strlen(outPathp);
+        if (outPathp[len-1] != '\\' && outPathp[len-1] != '/') 
+            strcat(outPathp, "\\");
+        strcat(outPathp, firstp);
     }
 
     /* finally, if necessary, switch back to our home drive letter */
@@ -484,10 +521,16 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
     }
 
     /* now unmarshall the return value */
-    UnmarshallLong(&preq, &temp);
+    if (UnmarshallLong(&preq, &temp) != 0) {
+        CloseHandle(reqHandle);
+        return -1;
+    }
+
     if (temp != 0) {
 	CloseHandle(reqHandle);
 	errno = CMtoUNIXerror(temp);
+        if ( IoctlDebug() )
+            fprintf(stderr, "pioctl temp != 0: %d\r\n",temp);
 	return -1;
     }
 

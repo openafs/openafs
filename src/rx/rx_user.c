@@ -100,7 +100,9 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     osi_socket socketFd = OSI_NULLSOCKET;
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
-    int greedy = 0;
+#ifdef AFS_LINUX22_ENV
+    int pmtu=IP_PMTUDISC_DONT;
+#endif
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
@@ -147,15 +149,16 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     fcntl(socketFd, F_SETFD, 1);
 #endif
 
+#ifndef AFS_DJGPP_ENV
     /* Use one of three different ways of getting a socket buffer expanded to
      * a reasonable size.
      */
     {
+	int greedy = 0;
 	int len1, len2;
 
 	len1 = 32766;
 	len2 = rx_UdpBufSize;
-#ifndef AFS_DJGPP_ENV
 	greedy =
 	    (setsockopt
 	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
@@ -172,14 +175,19 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	    (setsockopt
 	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
 	      sizeof(len2)) >= 0);
-#endif /* AFS_DJGPP_ENV */
+	if (!greedy)
+	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
+	     name);
+	MUTEX_ENTER(&rx_stats_mutex);
+	rx_stats.socketGreedy = greedy;
+	MUTEX_EXIT(&rx_stats_mutex);
     }
-
-#ifndef AFS_DJGPP_ENV
-    if (!greedy)
-	(osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
-	 name);
 #endif /* AFS_DJGPP_ENV */
+
+#ifdef AFS_LINUX22_ENV
+    setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+#endif
+
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
     }
@@ -195,9 +203,6 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	close(socketFd);
 #endif
 
-    MUTEX_ENTER(&rx_stats_mutex);
-    rx_stats.socketGreedy = greedy;
-    MUTEX_EXIT(&rx_stats_mutex);
     return OSI_NULLSOCKET;
 }
 

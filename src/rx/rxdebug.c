@@ -109,6 +109,7 @@ MainCommand(as, arock)
     int withRxStats;
     int withWaiters;
     int withIdleThreads;
+    int withWaited;
     int withPeers;
     struct rx_debugStats tstats;
     char *portName, *hostName;
@@ -253,6 +254,7 @@ MainCommand(as, arock)
     withRxStats = (supportedDebugValues & RX_SERVER_DEBUG_RX_STATS);
     withWaiters = (supportedDebugValues & RX_SERVER_DEBUG_WAITER_CNT);
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
+    withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
 
     printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
@@ -265,6 +267,8 @@ MainCommand(as, arock)
 	printf("%d calls waiting for a thread\n", tstats.nWaiting);
     if (withIdleThreads)
 	printf("%d threads are idle\n", tstats.idleThreads);
+    if (withWaited)
+	printf("%d calls have waited for a thread\n", tstats.nWaited);
 
     if (rxstats) {
 	if (!withRxStats) {

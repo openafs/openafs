@@ -43,7 +43,7 @@ extern int afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
+#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !defined(AFS_PPC64_LINUX26_ENV) && !defined(AFS_AMD64_LINUX26_ENV))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -1195,7 +1195,7 @@ struct afs_fakestat_state {
 extern int afs_fakestat_enable;
 
 struct buffer {
-    ino_t fid[1];		/* Unique cache key + i/o addressing */
+    struct fcache *fid;
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;

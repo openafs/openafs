@@ -674,7 +674,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* look for first safe entry to examine in the directory.  BlobScan
 	 * looks for a the 1st allocated dir after the dirCookie slot.
 	 */
-	newIndex = BlobScan(&dcp->f.inode, (dirCookie >> 5));
+	newIndex = BlobScan(&dcp->f, (dirCookie >> 5));
 	if (newIndex == 0)
 	    break;
 
@@ -683,7 +683,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	/* get a ptr to the dir entry */
 	dirEntryp =
-	    (struct DirEntry *)afs_dir_GetBlob(&dcp->f.inode, newIndex);
+	    (struct DirEntry *)afs_dir_GetBlob(&dcp->f, newIndex);
 	if (!dirEntryp)
 	    break;
 
@@ -1293,7 +1293,7 @@ afs_lookup(adp, aname, avcp, acred)
     {				/* sub-block just to reduce stack usage */
 	register struct dcache *tdc;
 	afs_size_t dirOffset, dirLen;
-	ino_t theDir;
+	struct fcache *theDir;
 	struct VenusFid tfid;
 
 	/* now we have to lookup the next fid */
@@ -1351,15 +1351,15 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* lookup the name in the appropriate dir, and return a cache entry
 	 * on the resulting fid */
-	theDir = tdc->f.inode;
+	theDir = &tdc->f;
 	code =
-	    afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid,
+	    afs_dir_LookupOffset(theDir, sysState.name, &tfid.Fid,
 				 &dirCookie);
 
 	/* If the first lookup doesn't succeed, maybe it's got @sys in the name */
 	while (code == ENOENT && Next_AtSys(adp, &treq, &sysState))
 	    code =
-		afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid,
+		afs_dir_LookupOffset(theDir, sysState.name, &tfid.Fid,
 				     &dirCookie);
 	tname = sysState.name;
 

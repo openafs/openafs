@@ -898,7 +898,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	ObtainWriteLock(&tdc->lock, 679);
 	ZapDCE(tdc);
 	if (vType(avc) == VDIR)
-	    DZap(&tdc->f.inode);
+	    DZap(&tdc->f);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
@@ -1041,6 +1041,12 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	    afs_CFileTruncate(tfile, newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, newSize);
+	    if (alen < tdc->validPos) {
+                if (alen < AFS_CHUNKTOBASE(tdc->f.chunk))
+                    tdc->validPos = 0;
+                else
+                    tdc->validPos = alen;
+            }
 	    ConvertWToSLock(&tdc->lock);
 	}
 	ReleaseSharedLock(&tdc->lock);

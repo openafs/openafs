@@ -569,8 +569,7 @@ verifyInterfaceAddress(ame, info, aservers)
     for (j = 0, found = 0; j < count; j++) {
 	for (i = 0; i < totalServers; i++) {
 	    if (info)
-		tmpAddr =
-		    (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
+		tmpAddr = (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
 	    else
 		tmpAddr = aservers[i];
 	    if (myAddr[j] == tmpAddr) {

@@ -28,9 +28,9 @@ extern afs_int32 rxkad_EncryptPacket(const struct rx_connection *conn,
 /* domestic/fcrypt.c */
 extern int fc_keysched(struct ktc_encryptionKey *key,
 		       fc_KeySchedule schedule);
-extern afs_int32 fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+extern afs_int32 fc_ecb_encrypt(void * clear, void * cipher,
 				fc_KeySchedule schedule, int encrypt);
-extern afs_int32 fc_cbc_encrypt(char *input, char *output, afs_int32 length,
+extern afs_int32 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 				fc_KeySchedule key, afs_uint32 * xor,
 				int encrypt);
 

@@ -1520,7 +1520,7 @@ CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 }
 
 int
-OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber)
+OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber, void *rock)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1556,7 +1556,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     if ((err =
 	 ListViceInodes(dev, fileSysPath, path,
 			singleVolumeNumber ? OnlyOneVolume : 0,
-			singleVolumeNumber, &forceSal, forceR, wpath)) < 0) {
+			singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
 	if (err == -2) {
 	    Log("*** I/O error %d when writing a tmp inode file %s; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, path, dev);
 	    return -1;

@@ -35,6 +35,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
+    KERNEL_SPACE_DECL;
+    int pmtu = IP_PMTUDISC_DONT;
 
 
     /* We need a better test for this. if you need it back, tell us
@@ -64,6 +66,9 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	return NULL;
     }
 
+    TO_USER_SPACE();
+    sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+    TO_KERNEL_SPACE();
     return (struct osi_socket *)sockp;
 }
 
