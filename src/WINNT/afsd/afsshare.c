@@ -40,7 +40,7 @@ main(int argc, char **argv) {
                 return 1;
             }
         } else {
-            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_SZ, argv[2], strlen(argv[2]+1))) {
+            if (RegSetValueEx(hkSubmounts, argv[1], 0, REG_SZ, argv[2], strlen(argv[2])+1)) {
                 fprintf(stderr,"Submount Set failure for [%s]: %lX",
                          argv[1], GetLastError());
                 return 2;
