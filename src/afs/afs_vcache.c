@@ -481,10 +481,9 @@ static void afs_TryFlushDcacheChildren(struct vcache *tvc)
     struct list_head *head = &ip->i_dentry;
     struct dentry *dentry;
     
-#if 1
     afs_Trace1(afs_iclSetp, CM_TRACE_TRYFLUSHDCACHECHILDREN,
 	       ICL_TYPE_POINTER, ip);
-
+#if 0
     VN_HOLD(tvc);
     AFS_GUNLOCK();
     d_prune_aliases(ip);
@@ -507,8 +506,8 @@ restart:
 		
 		next = tmp->next;
 		if (!DCOUNT(dchld) && !dchld->d_inode) {
-		    DGET(dchld);
 		    AFS_GUNLOCK();
+		    DGET(dchld);
 		    DUNLOCK();
 		    d_drop(dchld);
 		    dput(dchld);
