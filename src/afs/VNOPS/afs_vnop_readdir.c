@@ -641,11 +641,7 @@ tagain:
 		}
 #else /* AFS_HPUX_ENV */
 		code = afs_readdir_move(ode, avc, auio, o_slen,
-#if defined(AFS_SUN5_ENV)
-		                        len, origOffset);
-#else
 					auio->afsio_resid, origOffset);
-#endif
 #endif /* AFS_HPUX_ENV */
 		/* this next line used to be AFSVFS40 or AIX 3.1, but is
 		 * really generic */
