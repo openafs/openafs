@@ -82,52 +82,68 @@ struct release {
 
 /* Utility macros used by rest of this source file */
 #define EPRINT(ec, es) \
+do { \
 	fprintf(STDERR, "\n"); \
 	fprintf(STDERR, (es)); \
-	PrintError("   ",ec);
+	PrintError("   ",ec); \
+} while (0)
 
 #define EPRINT1(ec, es, ep1) \
+do { \
 	fprintf(STDERR, "\n"); \
 	fprintf(STDERR, (es), (ep1)); \
-	PrintError("   ",ec);
+	PrintError("   ",ec); \
+} while (0)
 
 #define EPRINT2(ec, es, ep1, ep2) \
+do { \
 	fprintf(STDERR, "\n"); \
 	fprintf(STDERR, (es), (ep1), (ep2)); \
-	PrintError("   ",ec);
+	PrintError("   ",ec); \
+} while (0)
 
 #define EPRINT3(ec, es, ep1, ep2, ep3) \
+do { \
 	fprintf(STDERR, "\n"); \
 	fprintf(STDERR, (es), (ep1), (ep2), (ep3)); \
-	PrintError("   ",ec); 
+	PrintError("   ",ec); \
+} while (0)
 
 #define EGOTO(where, ec, es) \
+do { \
 	if (ec) { \
 		EPRINT((ec),(es)); \
 		error = (ec); \
 		goto where; \
-	}
+	} \
+} while (0)
 
 #define EGOTO1(where, ec, es, ep1) \
+do { \
 	if (ec) { \
 		EPRINT1((ec),(es),(ep1)); \
 		error = (ec); \
 		goto where; \
-	}
+	} \
+} while (0)
 
 #define EGOTO2(where, ec, es, ep1, ep2) \
+do { \
 	if (ec) { \
 		EPRINT2((ec),(es),(ep1),(ep2)); \
 		error = (ec); \
 		goto where; \
-	}
+	} \
+} while (0)
 
 #define EGOTO3(where, ec, es, ep1, ep2, ep3) \
+do { \
 	if (ec) { \
 		EPRINT3((ec),(es),(ep1),(ep2),(ep3)); \
 		error = (ec); \
 		goto where; \
-	}
+	} \
+} while (0)
 
 #define VPRINT(es) \
 	{ if (verbose) { fprintf(STDOUT, (es)); fflush(STDOUT); } }
@@ -521,7 +537,8 @@ int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname, afs_int32 
     EGOTO2(cfail, vcode, "Failed to create the volume %s %u \n",aname,*anewid);
     
     code = AFSVolSetInfo(aconn, tid, &tstatus);
-    EPRINT1(code, "Could not change quota (error %d), continuing...\n", code);
+    if (code)
+	EPRINT(code, "Could not change quota (error %d), continuing...\n");
 
     code = AFSVolSetFlags(aconn, tid, 0); /* bring it online (mark it InService */
     EGOTO2(cfail, vcode, "Could not bring the volume %s %u online \n",aname,*anewid);
