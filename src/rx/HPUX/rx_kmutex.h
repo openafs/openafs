@@ -20,61 +20,71 @@
 
 #include <sys/ksleep.h>
 #include <sys/spinlock.h>
-#include <sys/sem_sync.h>
+#include <sys/sem_beta.h>
 #include <sys/errno.h>
 #include <net/netmp.h>
 
+#include "../rx/rx_kernel.h" /* For osi_Panic() */
+
 #define RX_ENABLE_LOCKS         1
 #define AFS_GLOBAL_RXLOCK_KERNEL
+
 extern lock_t*  rx_sleepLock;
+
+/* We use beta semaphores instead of sync semaphores for Rx locks as
+ * recommended by HP labs. Sync semaphores are not supported by HP
+ * any more.
+ */
 
 #define CV_INIT(cv,a,b,c) 
 
-/* this is supposed to atomically drop the mutex and go to sleep */
-/* reacquire the mutex when the sleep is done */
-#define CV_WAIT(cv, lck) {                                                \
-                          int code;                                       \
-                          ksleep_prepare();                               \
-                          MP_SPINLOCK(rx_sleepLock);                      \
-                          if (valusync(lck) < 1)                          \
-                                vsync(lck);                               \
-                          else                                            \
-                                osi_Panic("mutex not held %d",valusync(lck)); \
-                          code=ksleep_one(KERNEL_ADDRESS|KERN_SPINLOCK_OBJECT,\
-                                        (cv),rx_sleepLock,0);             \
-                          if ( code ) {                                   \
-                              if ( code == EINTR ) {/* lock still held */ \
-                                  MP_SPINUNLOCK(rx_sleepLock);            \
-                              } else if (code != -EINTR) {                \
-                                  osi_Panic("ksleep_one failed %d", code);\
-			      }                                           \
-                          }                                               \
-                          psync(lck); /* grab the mutex again */          \
-                        }
+/* This is supposed to atomically drop the mutex and go to sleep
+ * and reacquire the mutex when it wakes up.
+ */
+#define CV_WAIT(cv, lck) \
+    do { \
+        int code; \
+        ksleep_prepare(); \
+        MP_SPINLOCK(rx_sleepLock); \
+        if (!b_owns_sema(lck)) \
+            osi_Panic("mutex not held \n"); \
+        b_vsema(lck); \
+        code = ksleep_one(PCATCH | KERNEL_ADDRESS | KERN_SPINLOCK_OBJECT, \
+            (cv), rx_sleepLock, 0); \
+        if (code) { \
+            if (code == EINTR) { /* lock still held */ \
+                MP_SPINUNLOCK(rx_sleepLock); \
+            } else if (code != -EINTR) { \
+                osi_Panic("ksleep_one failed: code = %d \n", code); \
+            } \
+        } \
+        b_psema(lck); /* grab the mutex again */ \
+    } while(0)
 
-/* Wakes up one thread waiting on this condition */
-#define CV_SIGNAL(cv)    {                                                \
-                           int wo, code;                                  \
-                           MP_SPINLOCK(rx_sleepLock);                     \
-                           if( (code = kwakeup_one(KERNEL_ADDRESS,(cv),   \
-                                                  WAKEUP_ONE, &wo))<0)    \
-                                osi_Panic("kwakeup_one failed %d", code); \
-                           MP_SPINUNLOCK(rx_sleepLock);                   \
-                         }
+/* Wakes up a thread waiting on this condition */
+#define CV_SIGNAL(cv) \
+    do { \
+        int wo, code; \
+        MP_SPINLOCK(rx_sleepLock); \
+        if ((code = kwakeup_one(KERNEL_ADDRESS, (cv), WAKEUP_ONE, &wo)) < 0) \
+            osi_Panic("kwakeup_one failed: code = %d \n", code); \
+        MP_SPINUNLOCK(rx_sleepLock); \
+    } while (0)
 
-/* wakeup all threads waiting on this condition */
-#define CV_BROADCAST(cv) {                                                \
-                           int wo, code;                                  \
-                           MP_SPINLOCK(rx_sleepLock);                     \
-                           if( (code = kwakeup_one(KERNEL_ADDRESS,(cv),   \
-                                                 WAKEUP_ALL, &wo))<0)     \
-                                osi_Panic("kwakeup_all failed %d", code); \
-                           MP_SPINUNLOCK(rx_sleepLock);                   \
-                         }
+/* Wakes up all threads waiting on this condition */
+#define CV_BROADCAST(cv) \
+    do { \
+        int wo, code; \
+        MP_SPINLOCK(rx_sleepLock); \
+        if ((code = kwakeup_one(KERNEL_ADDRESS, (cv), WAKEUP_ALL, &wo)) < 0) \
+            osi_Panic("kwakeup_all failed: code = %d \n", code); \
+        MP_SPINUNLOCK(rx_sleepLock); \
+    } while (0)
 
 #define CV_DESTROY(a)
 
-typedef sync_t  afs_kmutex_t;
+/* We now use beta semaphores for mutexes */
+typedef b_sema_t afs_kmutex_t;
 typedef caddr_t afs_kcondvar_t;
 
 #else /* AFS_HPUX110_ENV */
@@ -95,18 +105,21 @@ typedef caddr_t afs_kcondvar_t;
 #undef osirx_AssertMine
 extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 
-#define MUTEX_DESTROY(a)        ( dealloc_spinlock((a)->s_lock) )
-#define MUTEX_ENTER(a)          psync(a)
-#define MUTEX_TRYENTER(a)       ( (valusync(a)==1)? (MUTEX_ENTER(a), 1):0 )
-#if 0
-#define MUTEX_EXIT(a)           ((valusync(a)<1)? vsync(a) : \
-                                                osi_Panic("mutex not held"))
-#endif
-#define MUTEX_EXIT(a)           vsync(a)
-#define MUTEX_INIT(a,b,c,d)     (initsync(a), vsync(a))
+#define AFS_RX_ORDER 30
+
+#define MUTEX_INIT(a,b,c,d) b_initsema((a), 1, AFS_RX_ORDER, (b))
+#define MUTEX_DESTROY(a)
+
+#define MUTEX_TRYENTER(a) b_cpsema(a)
+
+#define MUTEX_ENTER(a) \
+    ((b_owns_sema(a)) ? (osi_Panic("Already Held"), 0) : b_psema(a))
+
+#define MUTEX_EXIT(a) \
+    ((b_owns_sema(a)) ? b_vsema(a) : (osi_Panic("mutex not held"), 0))
 
 #undef MUTEX_ISMINE
-#define MUTEX_ISMINE(a)         ( (valusync(a)<1) ? 1 : 0 ) 
+#define MUTEX_ISMINE(a) b_owns_sema(a)
 
 #else /* AFS_HPUX110_ENV */
 
