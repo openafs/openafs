@@ -1418,6 +1418,7 @@ main(int argc, char * argv[])
     NewParms(1);
 
     /* Open FileLog on stdout, stderr, fd 1 and fd2 (for perror), sigh. */
+    serverLogSyslogTag = "fileserver";
     OpenLog(AFSDIR_SERVER_FILELOG_FILEPATH);
     SetupLogSignals(); 
 

@@ -1066,7 +1066,7 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 	     open("/", 0); dup2(0, 1); dup2(0, 2);
 #ifndef AFS_NT40_ENV
 		 if ( useSyslog ) {
-		 	openlog(NULL, LOG_PID, useSyslogFacility);
+		 	openlog("salvager", LOG_PID, useSyslogFacility);
 		 } else
 #endif
 		 {

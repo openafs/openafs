@@ -327,6 +327,7 @@ void main (argc, argv)
 #endif
     }
 
+    serverLogSyslogTag = "ptserver";
     OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);     /* set up logging */
     SetupLogSignals();
  

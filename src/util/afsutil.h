@@ -28,6 +28,7 @@ extern int LogLevel;
 #ifndef AFS_NT40_ENV
 extern int serverLogSyslog;
 extern int serverLogSyslogFacility;
+extern char *serverLogSyslogTag;
 #endif
 extern void FSLog(const char *format, ...);
 #define ViceLog(level, str)  if ((level) <= LogLevel) (FSLog str)

@@ -213,6 +213,7 @@ char	**argv;
     } 
     vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
 
+    serverLogSyslogTag = "vlserver";
     OpenLog(AFSDIR_SERVER_VLOG_FILEPATH);   /* set up logging */
     SetupLogSignals(); 
 
