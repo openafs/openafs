@@ -138,12 +138,14 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_maxbytes = MAX_NON_LFS;
 #endif
     code = afs_root(sb);
-    if (code)
+    if (code) {
+	afs_globalVFS = NULL;
 #if defined(AFS_LINUX26_ENV)
-	module_put(THIS_MODULE);
+        module_put(THIS_MODULE);
 #else
-	MOD_DEC_USE_COUNT;
+        MOD_DEC_USE_COUNT;
 #endif
+    }
 
 #if !defined(AFS_LINUX24_ENV)
     unlock_super(sb);
