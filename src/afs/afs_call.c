@@ -1163,7 +1163,7 @@ struct afssysargs {
     long parm6; /* not actually used - should be removed */
 };
 /* Linux system calls only set up for 5 arguments. */
-asmlinkage int afs_syscall(long syscall, long parm1, long parm2, long parm3,
+asmlinkage long afs_syscall(long syscall, long parm1, long parm2, long parm3,
 			   long parm4)
 {
     struct afssysargs args, *uap = &args;
