@@ -243,6 +243,7 @@ afs_mount(mp, path, data, ndp, p)
     }
 
     AFS_STATCNT(afs_mount);
+    AFS_GLOCK();
 
 #ifdef AFS_DISCON_ENV
     /* initialize the vcache entries before we start using them */
@@ -261,6 +262,7 @@ afs_mount(mp, path, data, ndp, p)
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, MOUNT_AFS);
+    AFS_GUNLOCK();
     (void)afs_statfs(mp, &mp->mnt_stat);
 
     return 0;
@@ -278,12 +280,12 @@ afs_unmount(afsp, flags, p)
 #ifdef AFS_DISCON_ENV
     give_up_cbs();
 #endif
-    if (!afs_globalVFS) {
+    if (afs_globalVFS == NULL) {
 	printf("afs already unmounted\n");
 	return 0;
     }
     if (afs_globalVp)
-	AFS_RELE(AFSTOV(afs_globalVp));
+	vrele(AFSTOV(afs_globalVp));
     afs_globalVp = NULL;
 
     vflush(afsp, NULLVP, 0);	/* don't support forced */
@@ -436,8 +438,8 @@ afsinit()
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 6;
     sysent[AFS_SYSCALL].sy_argsize = 6 * sizeof(long);
-    sysent[54].sy_call = afs_xioctl;
-    sysent[80].sy_call = Afs_xsetgroups;
+    sysent[SYS_ioctl].sy_call = afs_xioctl;
+    sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
     osi_Init();
 
     return 0;
