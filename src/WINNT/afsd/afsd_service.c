@@ -40,6 +40,8 @@
 
 extern void afsi_log(char *pattern, ...);
 
+HANDLE hAFSDMainThread = NULL;
+
 HANDLE WaitToTerminate;
 
 int GlobalStatus;
@@ -189,7 +191,7 @@ afsd_ServiceControlHandlerEx(
         ServiceStatus.dwWin32ExitCode = NO_ERROR;
         ServiceStatus.dwCheckPoint = 1;
         ServiceStatus.dwWaitHint = 10000;
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_POWEREVENT;
+        ServiceStatus.dwControlsAccepted = 0;
         SetServiceStatus(StatusHandle, &ServiceStatus);
         SetEvent(WaitToTerminate);
         dwRet = NO_ERROR;
@@ -317,7 +319,9 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 {
 	long code;
 	char *reason;
+#ifdef JUMP
 	int jmpret;
+#endif /* JUMP */
     HANDLE hInitHookDll;
     AfsdInitHook initHook;
 
@@ -330,6 +334,8 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 	osi_InitTraceOption();
 
 	GlobalStatus = 0;
+
+	afsi_start();
 
 	WaitToTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_WaitToTerminate"));
     if ( GetLastError() == ERROR_ALREADY_EXISTS )
@@ -364,8 +370,6 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     /* create thread used to flush cache */
     PowerNotificationThreadCreate();
 #endif
-
-	afsi_start();
 
     /* allow an exit to be called prior to any initialization */
     hInitHookDll = LoadLibrary(AFSD_HOOK_DLL);
@@ -459,13 +463,6 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
 
-    ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-	ServiceStatus.dwWin32ExitCode = NO_ERROR;
-	ServiceStatus.dwCheckPoint = 0;
-	ServiceStatus.dwWaitHint = 5000;
-	ServiceStatus.dwControlsAccepted = 0;
-	SetServiceStatus(StatusHandle, &ServiceStatus);
-
     {   
     HANDLE h; char *ptbuf[1];
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
@@ -483,7 +480,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     /* Remove the ExceptionFilter */
     SetUnhandledExceptionFilter(NULL);
 
-	ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+    if ( hInitHookDll )
+        FreeLibrary(hInitHookDll);
+
+    ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
 	ServiceStatus.dwCheckPoint = 0;
 	ServiceStatus.dwWaitHint = 0;
@@ -511,12 +511,17 @@ main(void)
 	    if (status == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
         {
             DWORD tid;
-            CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
+            hAFSDMainThread = CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
 		
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
             getchar();              
             SetEvent(WaitToTerminate);
         }
+    }
+
+    if ( hAFSDMainThread ) {
+        WaitForSingleObject( hAFSDMainThread, INFINITE );
+        CloseHandle( hAFSDMainThread );
     }
     return(0);
 }
