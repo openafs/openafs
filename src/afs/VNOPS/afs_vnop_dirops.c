@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.14.2.2 2004/10/18 17:43:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.14.2.3 2004/11/09 17:15:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -147,10 +147,10 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
 	ObtainWriteLock(&tdc->lock, 632);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
-	code = afs_dir_Create(&tdc->f, aname, &newFid.Fid);
+	code = afs_dir_Create(tdc, aname, &newFid.Fid);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- use invalid value */
-	    DZap(&tdc->f);
+	    DZap(tdc);
 	}
     }
     if (tdc) {
@@ -250,7 +250,7 @@ afs_rmdir(adp, aname, acred)
 	struct VenusFid unlinkFid;
 
 	unlinkFid.Fid.Vnode = 0;
-	code = afs_dir_Lookup(&tdc->f, aname, &unlinkFid.Fid);
+	code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
 	if (code == 0) {
 	    afs_int32 cached = 0;
 
@@ -304,10 +304,10 @@ afs_rmdir(adp, aname, acred)
 	UpgradeSToWLock(&tdc->lock, 634);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
-	code = afs_dir_Delete(&tdc->f, aname);
+	code = afs_dir_Delete(tdc, aname);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- invalid value */
-	    DZap(&tdc->f);
+	    DZap(tdc);
 	}
     }
     if (tdc) {

@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.2 2004/10/18 17:43:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.3 2004/11/09 17:14:57 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -686,7 +686,7 @@ afs_HashOutDCache(struct dcache *adc)
     AFS_STATCNT(afs_glink);
 #endif
     /* we know this guy's in the LRUQ.  We'll move dude into DCQ below */
-    DZap(&adc->f);
+    DZap(adc);
     /* if this guy is in the hash table, pull him out */
     if (adc->f.fid.Fid.Volume != 0) {
 	/* remove entry from first hash chains */
@@ -2038,7 +2038,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	 * Right now, we only have one tool, and it's a hammer.  So, we
 	 * fetch the whole file.
 	 */
-	DZap(&tdc->f);	/* pages in cache may be old */
+	DZap(tdc);	/* pages in cache may be old */
 #ifdef  IHINT
 	if (file = tdc->ihint) {
 	    if (tdc->f.inode == file->inum)
@@ -2415,7 +2415,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    afs_CFileClose(file);
 	    ZapDCE(tdc);	/* sets DFEntryMod */
 	    if (vType(avc) == VDIR) {
-		DZap(&tdc->f);
+		DZap(tdc);
 	    }
 	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);

@@ -22,7 +22,6 @@
 #include "afsd.h"
 #include <rx\rx.h>
 #include <rx\rx_null.h>
-
 #include <WINNT/syscfg.h>
 
 #include "smb.h"
@@ -651,7 +650,7 @@ int afsd_InitCM(char **reasonP)
         char * p, *q; 
         afsi_log("Sys name %s", buf);
 
-        for (p = q = buf; p < cm_sysName + dummyLen; p++)
+        for (p = q = buf; p < buf + dummyLen; p++)
         {
             if (*p == '\0' || isspace(*p)) {
                 memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);

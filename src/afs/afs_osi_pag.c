@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.1 2004/10/18 07:11:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.21.2.2 2004/11/09 17:09:39 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -160,7 +160,7 @@ afs_pag_wait(struct AFS_UCRED **acred)
   if(afs_pag_sleep(acred)) {
     if(!afs_pag_sleepcnt) {
       printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
-	     __func__, getpid(), afs_pag_sleepcnt);
+	     "afs_pag_wait", getpid(), afs_pag_sleepcnt);
     }
     
     afs_pag_sleepcnt++;

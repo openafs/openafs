@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.2 2004/10/18 17:44:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.3 2004/11/09 17:16:40 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -229,7 +229,8 @@ namei_HandleToName(namei_t * name, IHandle_t * ih)
  * name space.
  */
 #define VICE_README "These files and directories are a part of the AFS \
-namespace. Modifying them\nin any way will result in loss of AFS data.\n"
+namespace. Modifying them\nin any way will result in loss of AFS data,\n\
+ownership and permissions included.\n"
 int
 namei_ViceREADME(char *partition)
 {

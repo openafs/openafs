@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.2 2004/10/18 17:44:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.3 2004/11/09 17:20:26 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1589,7 +1589,8 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     }
     if (!canfork || debug || Fork() == 0) {
 	int nInodes;
-	nInodes = status.st_size / sizeof(struct ViceInodeInfo);
+	unsigned long st_size=(unsigned long) status.st_size;
+	nInodes = st_size / sizeof(struct ViceInodeInfo);
 	if (nInodes == 0) {
 	    fclose(summaryFile);
 	    close(inodeFd);
@@ -1598,7 +1599,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 		RemoveTheForce(fileSysPath);
 	    else {
 		struct VolumeSummary *vsp;
-		int i, j;
+		int i;
 
 		GetVolumeSummary(singleVolumeNumber);
 
@@ -1611,7 +1612,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 		singleVolumeNumber ? "No applicable" : "No", dev);
 	    return -1;
 	}
-	ip = (struct ViceInodeInfo *)malloc(status.st_size);
+	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
 	    fclose(summaryFile);
 	    close(inodeFd);
@@ -1621,7 +1622,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 		("Unable to allocate enough space to read inode table; %s not salvaged\n",
 		 dev);
 	}
-	if (read(inodeFd, ip, status.st_size) != status.st_size) {
+	if (read(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
 	    close(inodeFd);
 	    unlink(path);
@@ -1630,7 +1631,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	}
 	qsort(ip, nInodes, sizeof(struct ViceInodeInfo), CompareInodes);
 	if (afs_lseek(inodeFd, 0, SEEK_SET) == -1
-	    || write(inodeFd, ip, status.st_size) != status.st_size) {
+	    || write(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
 	    close(inodeFd);
 	    unlink(path);
@@ -1673,14 +1674,16 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     assert(afs_fstat(fileno(summaryFile), &status) != -1);
     if (status.st_size != 0) {
 	int ret;
-	inodeSummary = (struct InodeSummary *)malloc(status.st_size);
+	unsigned long st_status=(unsigned long)status.st_size;
+	inodeSummary = (struct InodeSummary *)malloc(st_status);
 	assert(inodeSummary != NULL);
 	/* For GNU we need to do lseek to get the file pointer moved. */
 	assert(afs_lseek(fileno(summaryFile), 0, SEEK_SET) == 0);
-	ret = read(fileno(summaryFile), inodeSummary, status.st_size);
-	assert(ret == status.st_size);
+	ret = read(fileno(summaryFile), inodeSummary, st_status);
+	assert(ret == st_status);
     }
-    nVolumesInInodeFile = status.st_size / sizeof(struct InodeSummary);
+    nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
+    Log("%d nVolumesInInodeFile %d \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
     close(inodeFd);
     unlink(summaryFileName);
@@ -2026,6 +2029,7 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 
     /* Fix actual inode counts */
     if (!Showmode) {
+	Log("totalInodes %d\n",totalInodes);
 	for (ip = inodes; totalInodes; ip++, totalInodes--) {
 	    static int TraceBadLinkCounts = 0;
 #ifdef AFS_NAMEI_ENV
@@ -2061,6 +2065,8 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 		}
 		ip->linkCount++;
 	    }
+
+	   Log("%d inodes to process\n",totalInodes); 
 	}
 #ifdef AFS_NAMEI_ENV
 	while (dec_VGLinkH > 0) {

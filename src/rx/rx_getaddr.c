@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.1 2004/10/18 07:12:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.2 2004/11/09 17:16:12 shadow Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -342,18 +342,22 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
     for (cp = (char *)ifc.ifc_buf, cplim = ifc.ifc_buf + ifc.ifc_len;
 	 cp < cplim;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	 cp += _SIZEOF_ADDR_IFREQ(*ifr))
+	 cp += _SIZEOF_ADDR_IFREQ(*ifr)
 #else
 #ifdef AFS_AIX51_ENV
-	 cp = cpnext)
+	 cp = cpnext
 #else
-	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a)))
+	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))
 #endif
+#endif
+	) 
+#else
+    for (i = 0; i < len; ++i) 
 #endif
     {
+#if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	ifr = (struct ifreq *)cp;
 #else
-    for (i = 0; i < len; ++i) {
 	ifr = &ifs[i];
 #endif
 	a = (struct sockaddr_in *)&ifr->ifr_addr;
@@ -367,8 +371,12 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 	    continue;		/* ignore this address */
 	}
 	if (a->sin_addr.s_addr != 0) {
-	    if (!loopbacks && (ifr->ifr_flags & IFF_LOOPBACK)) {
-		continue;	/* skip aliased loopbacks as well. */
+            if (!loopbacks) {
+                if (a->sin_addr.s_addr == htonl(0x7f000001)) 
+		    continue;	/* skip loopback address as well. */
+            } else {
+                if (ifr->ifr_flags & IFF_LOOPBACK) 
+		    continue;	/* skip aliased loopbacks as well. */
 	    }
 	    if (count >= maxSize)	/* no more space */
 		printf("Too many interfaces..ignoring 0x%x\n",

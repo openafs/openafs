@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.2 2004/10/18 17:43:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.3 2004/11/09 17:14:57 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -898,7 +898,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	ObtainWriteLock(&tdc->lock, 679);
 	ZapDCE(tdc);
 	if (vType(avc) == VDIR)
-	    DZap(&tdc->f);
+	    DZap(tdc);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }

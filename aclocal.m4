@@ -53,7 +53,7 @@ AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
 AC_ARG_WITH(linux-kernel-headers,
-[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
 )
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
@@ -416,6 +416,9 @@ else
 		i?86-*-openbsd3.5)
 			AFS_SYSNAME="i386_obsd35"
 			;;
+		i?86-*-openbsd3.6)
+			AFS_SYSNAME="i386_obsd36"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -442,6 +445,9 @@ else
 			;;
 		i?86-*-freebsd5.2*)
 			AFS_SYSNAME="i386_fbsd_52"
+			;;
+		i?86-*-freebsd5.3*)
+			AFS_SYSNAME="i386_fbsd_53"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -2155,6 +2161,19 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib64/libncurses.so"
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	ppc64_linux26)
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 

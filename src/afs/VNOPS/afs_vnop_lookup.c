@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.3 2004/10/18 17:43:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.4 2004/11/09 17:15:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -507,21 +507,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
     return 1;
 }
 
-#if (defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV))
-extern int BlobScan(ino64_t * afile, afs_int32 ablob);
-#else
-#if defined(AFS_HPUX1123_ENV)
-/* DEE should use the new afs_inode_t  for all */
-extern int BlobScan(ino_t * afile, afs_int32 ablob);
-#else
-#if defined AFS_LINUX_64BIT_KERNEL
-extern int BlobScan(long *afile, afs_int32 ablob);
-#else
-extern int BlobScan(afs_int32 * afile, afs_int32 ablob);
-#endif
-#endif
-#endif
-
+extern int BlobScan(struct dcache * afile, afs_int32 ablob);
 
 /* called with an unlocked directory and directory cookie.  Areqp
  * describes who is making the call.
@@ -674,7 +660,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* look for first safe entry to examine in the directory.  BlobScan
 	 * looks for a the 1st allocated dir after the dirCookie slot.
 	 */
-	newIndex = BlobScan(&dcp->f, (dirCookie >> 5));
+	newIndex = BlobScan(dcp, (dirCookie >> 5));
 	if (newIndex == 0)
 	    break;
 
@@ -683,7 +669,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	/* get a ptr to the dir entry */
 	dirEntryp =
-	    (struct DirEntry *)afs_dir_GetBlob(&dcp->f, newIndex);
+	    (struct DirEntry *)afs_dir_GetBlob(dcp, newIndex);
 	if (!dirEntryp)
 	    break;
 
@@ -1293,7 +1279,6 @@ afs_lookup(adp, aname, avcp, acred)
     {				/* sub-block just to reduce stack usage */
 	register struct dcache *tdc;
 	afs_size_t dirOffset, dirLen;
-	struct fcache *theDir;
 	struct VenusFid tfid;
 
 	/* now we have to lookup the next fid */
@@ -1351,15 +1336,14 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* lookup the name in the appropriate dir, and return a cache entry
 	 * on the resulting fid */
-	theDir = &tdc->f;
 	code =
-	    afs_dir_LookupOffset(theDir, sysState.name, &tfid.Fid,
+	    afs_dir_LookupOffset(tdc, sysState.name, &tfid.Fid,
 				 &dirCookie);
 
 	/* If the first lookup doesn't succeed, maybe it's got @sys in the name */
 	while (code == ENOENT && Next_AtSys(adp, &treq, &sysState))
 	    code =
-		afs_dir_LookupOffset(theDir, sysState.name, &tfid.Fid,
+		afs_dir_LookupOffset(tdc, sysState.name, &tfid.Fid,
 				     &dirCookie);
 	tname = sysState.name;
 

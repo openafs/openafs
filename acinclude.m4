@@ -41,7 +41,7 @@ AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
 AC_ARG_WITH(linux-kernel-headers,
-[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
 )
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
@@ -404,6 +404,9 @@ else
 		i?86-*-openbsd3.5)
 			AFS_SYSNAME="i386_obsd35"
 			;;
+		i?86-*-openbsd3.6)
+			AFS_SYSNAME="i386_obsd36"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
@@ -430,6 +433,9 @@ else
 			;;
 		i?86-*-freebsd5.2*)
 			AFS_SYSNAME="i386_fbsd_52"
+			;;
+		i?86-*-freebsd5.3*)
+			AFS_SYSNAME="i386_fbsd_53"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h

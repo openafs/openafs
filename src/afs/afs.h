@@ -1195,7 +1195,7 @@ struct afs_fakestat_state {
 extern int afs_fakestat_enable;
 
 struct buffer {
-    struct fcache *fid;
+    struct dcache *fid;
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;

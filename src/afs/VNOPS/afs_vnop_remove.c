@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.2 2004/10/18 17:43:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.3 2004/11/09 17:15:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -154,10 +154,10 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	UpgradeSToWLock(&tdc->lock, 637);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
-	code = afs_dir_Delete(&tdc->f, aname);
+	code = afs_dir_Delete(tdc, aname);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- invalid value */
-	    DZap(&tdc->f);
+	    DZap(tdc);
 	}
     }
     if (tdc) {
@@ -357,7 +357,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
      * done the work */
     if (!tvc)
 	if (tdc) {
-	    code = afs_dir_Lookup(&tdc->f, aname, &unlinkFid.Fid);
+	    code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
 	    if (code == 0) {
 		afs_int32 cached = 0;
 

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.1 2004/10/18 07:12:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.2 2004/11/09 17:17:49 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -947,6 +947,7 @@ h_GetHost_r(struct rx_connection *tcon)
     afs_int32 hport;
     char hoststr[16], hoststr2[16];
     Capabilities caps;
+    struct rx_connection *cb_conn = NULL;
 
     caps.Capabilities_val = NULL;
 
@@ -979,11 +980,15 @@ h_GetHost_r(struct rx_connection *tcon)
 	    goto retry;
 	}
 	host->hostFlags &= ~ALTADDR;
+	cb_conn = host->callback_rxcon;
+	rx_GetConnection(cb_conn);
 	H_UNLOCK;
 	code =
-	    RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf, &caps);
+	    RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
 	if (code == RXGEN_OPCODE)
-	    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
+	    code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+	rx_PutConnection(cb_conn);
+	cb_conn=NULL;
 	H_LOCK;
 	if (code == RXGEN_OPCODE) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
@@ -1098,12 +1103,15 @@ h_GetHost_r(struct rx_connection *tcon)
 	h_gethostcps_r(host, FT_ApproxTime());
 	if (!(host->Console & 1)) {
 	    int pident = 0;
+	    cb_conn = host->callback_rxcon;
+	    rx_GetConnection(cb_conn);
 	    H_UNLOCK;
 	    code =
-		RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf,
-					    &caps);
+		RXAFSCB_TellMeAboutYourself(cb_conn, &interf, &caps);
 	    if (code == RXGEN_OPCODE)
-		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
+		code = RXAFSCB_WhoAreYou(cb_conn, &interf);
+	    rx_PutConnection(cb_conn);
+	    cb_conn=NULL;
 	    H_LOCK;
 	    if (code == RXGEN_OPCODE) {
 		if (!identP)
@@ -1146,8 +1154,12 @@ h_GetHost_r(struct rx_connection *tcon)
 			 ntohs(host->port)));
 	    }
 	    if (code == 0 && !identP->valid) {
+	        cb_conn = host->callback_rxcon;
+	        rx_GetConnection(cb_conn);
 		H_UNLOCK;
-		code = RXAFSCB_InitCallBackState(host->callback_rxcon);
+		code = RXAFSCB_InitCallBackState(cb_conn);
+	        rx_PutConnection(cb_conn);
+	        cb_conn=NULL;
 		H_LOCK;
 	    } else if (code == 0) {
 		oldHost = h_LookupUuid_r(&identP->uuid);
@@ -1172,10 +1184,14 @@ h_GetHost_r(struct rx_connection *tcon)
 		} else {
 		    /* This really is a new host */
 		    hashInsertUuid_r(&identP->uuid, host);
+		    cb_conn = host->callback_rxcon;
+		    rx_GetConnection(cb_conn);		
 		    H_UNLOCK;
 		    code =
-			RXAFSCB_InitCallBackState3(host->callback_rxcon,
+			RXAFSCB_InitCallBackState3(cb_conn,
 						   &FS_HostUUID);
+		    rx_PutConnection(cb_conn);
+		    cb_conn=NULL;
 		    H_LOCK;
 		    if (code == 0) {
 			ViceLog(25,
@@ -2043,6 +2059,7 @@ int
 CheckHost(register struct host *host, int held)
 {
     register struct client *client;
+    struct rx_connection *cb_conn = NULL;
     int code;
 
     /* Host is held by h_Enumerate */
@@ -2055,6 +2072,8 @@ CheckHost(register struct host *host, int held)
     }
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
+	cb_conn = host->callback_rxcon;
+	rx_GetConnection(cb_conn);
 	if (!(host->hostFlags & HOSTDELETED)) {
 	    if (host->LastCall < clientdeletetime) {
 		host->hostFlags |= HOSTDELETED;
@@ -2063,13 +2082,13 @@ CheckHost(register struct host *host, int held)
 		    if (host->interface) {
 			H_UNLOCK;
 			code =
-			    RXAFSCB_InitCallBackState3(host->callback_rxcon,
+			    RXAFSCB_InitCallBackState3(cb_conn,
 						       &FS_HostUUID);
 			H_LOCK;
 		    } else {
 			H_UNLOCK;
 			code =
-			    RXAFSCB_InitCallBackState(host->callback_rxcon);
+			    RXAFSCB_InitCallBackState(cb_conn);
 			H_LOCK;
 		    }
 		    host->hostFlags |= ALTADDR;	/* alternate addresses valid */
@@ -2093,7 +2112,7 @@ CheckHost(register struct host *host, int held)
 		    if (host->interface) {
 			afsUUID uuid = host->interface->uuid;
 			H_UNLOCK;
-			code = RXAFSCB_ProbeUuid(host->callback_rxcon, &uuid);
+			code = RXAFSCB_ProbeUuid(cb_conn, &uuid);
 			H_LOCK;
 			if (code) {
 			    if (MultiProbeAlternateAddress_r(host)) {
@@ -2107,7 +2126,7 @@ CheckHost(register struct host *host, int held)
 			}
 		    } else {
 			H_UNLOCK;
-			code = RXAFSCB_Probe(host->callback_rxcon);
+			code = RXAFSCB_Probe(cb_conn);
 			H_LOCK;
 			if (code) {
 			    char hoststr[16];
@@ -2121,6 +2140,10 @@ CheckHost(register struct host *host, int held)
 		}
 	    }
 	}
+	H_UNLOCK;
+	rx_PutConnection(cb_conn);
+	cb_conn=NULL;
+	H_LOCK;
 	h_Unlock_r(host);
     }
     H_UNLOCK;

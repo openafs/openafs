@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.14.2.1 2004/08/25 07:09:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.14.2.2 2004/11/09 17:13:17 shadow Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -354,9 +354,9 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
     register struct vnode *vp = AFSTOV(avc);
     struct buf *bp;
     daddr_t bn;
-    size_t acnt, cnt;
-    int off, newoff;
-    ssize_t bsize, rem, len;
+    off_t acnt, cnt;
+    off_t off, newoff;
+    off_t bsize, rem, len;
     int error;
     struct bmapval bmv[2];
     int nmaps, didFakeOpen = 0;
@@ -372,7 +372,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
     if (uio->uio_resid <= 0) {
 	return (0);
     }
-    if (uio->uio_offset < 0 || (signed long)newoff < 0) {
+    if (uio->uio_offset < 0 || newoff < 0)  {
 	return (EINVAL);
     }
     if (ioflag & IO_DIRECT)
@@ -473,7 +473,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	    /*
 	     * read/paging in a normal file
 	     */
-	    rem = avc->m.Length - (afs_int32) uio->uio_offset;
+	    rem = avc->m.Length - uio->uio_offset;
 	    if (rem <= 0)
 		/* EOF */
 		break;
@@ -604,7 +604,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	if (bp->b_flags & B_ERROR) {
 	    /*
 	     * Since we compile -signed, b_error is a signed
-	     * char when it should ba an unsigned char.
+	     * char when it should be an unsigned char.
 	     * This can cause some errors codes to be interpreted
 	     * as negative #s
 	     */
@@ -638,7 +638,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	     * Make sure it is at least as high as the last byte we just wrote
 	     * into the buffer.
 	     */
-	    if (avc->m.Length < (afs_int32) uio->uio_offset) {
+	    if (avc->m.Length < uio->uio_offset)  {
 		AFS_GLOCK();
 		ObtainWriteLock(&avc->lock, 235);
 		avc->m.Length = uio->uio_offset;

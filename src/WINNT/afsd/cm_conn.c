@@ -384,12 +384,12 @@ out:
 long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	cm_req_t *reqp, cm_conn_t **connpp)
 {
-	long code;
-	cm_serverRef_t *tsrp;
+    long code;
+    cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     long firstError = 0;
-	int someBusy = 0, someOffline = 0, allBusy = 1, allDown = 1;
-	long timeUsed, timeLeft, hardTimeLeft;
+    int someBusy = 0, someOffline = 0, allBusy = 1, allDown = 1;
+    long timeUsed, timeLeft, hardTimeLeft;
 #ifdef DJGPP
     struct timeval now;
 #endif /* DJGPP */        
@@ -397,17 +397,17 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
     *connpp = NULL;
 
 #ifndef DJGPP
-	timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
 #else
     gettimeofday(&now, NULL);
     timeUsed = sub_time(now, reqp->startTime) / 1000;
 #endif
         
-	/* leave 5 seconds margin of safety */
-	timeLeft =  ConnDeadtimeout - timeUsed - 5;
-	hardTimeLeft = HardDeadtimeout - timeUsed - 5;
+    /* leave 5 seconds margin of safety */
+    timeLeft =  ConnDeadtimeout - timeUsed - 5;
+    hardTimeLeft = HardDeadtimeout - timeUsed - 5;
 
-	lock_ObtainWrite(&cm_serverLock);
+    lock_ObtainWrite(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
         cm_GetServerNoLock(tsp);
@@ -419,7 +419,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             else if (tsrp->status == offline)
                 someOffline = 1;
             else {
-				allBusy = 0;
+                allBusy = 0;
                 code = cm_ConnByServer(tsp, usersp, connpp);
                 if (code == 0) {
                     cm_PutServer(tsp);
@@ -439,24 +439,24 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 if (firstError == 0) 
                     firstError = code;
             }
-		} 
+        } 
         lock_ObtainWrite(&cm_serverLock);
         cm_PutServerNoLock(tsp);
     }   
 
-	lock_ReleaseWrite(&cm_serverLock);
-	if (firstError == 0) {
+    lock_ReleaseWrite(&cm_serverLock);
+    if (firstError == 0) {
         if (serversp == NULL)
-			firstError = CM_ERROR_NOSUCHVOLUME;
+            firstError = CM_ERROR_NOSUCHVOLUME;
         else if (allDown) 
-			firstError = CM_ERROR_ALLOFFLINE;
-		else if (allBusy) 
-			firstError = CM_ERROR_ALLBUSY;
-		else
-			firstError = CM_ERROR_TIMEDOUT;
-	}
+            firstError = CM_ERROR_ALLOFFLINE;
+        else if (allBusy) 
+            firstError = CM_ERROR_ALLBUSY;
+        else
+            firstError = CM_ERROR_TIMEDOUT;
+    }
 
-	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
+    osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
     return firstError;
 }
 
