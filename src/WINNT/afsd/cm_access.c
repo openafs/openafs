@@ -101,7 +101,8 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up, long rights,
         /* fall through */
         
 done:
-	if (didLock) lock_ReleaseMutex(&aclScp->mx);
+    if (didLock) 
+        lock_ReleaseMutex(&aclScp->mx);
         cm_ReleaseSCache(aclScp);
         return code;
 }

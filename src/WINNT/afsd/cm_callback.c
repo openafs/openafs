@@ -635,11 +635,13 @@ int cm_HaveCallback(cm_scache_t *scp)
   int fdc, fgc;
 
     if (cm_freelanceEnabled && 
-        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-        scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {	// if it's something on /afs
-	if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1))  	// if it's not root.afs
+         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
+        /* if it's something on /afs */
+        if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1)) {
+            /* if it's not root.afs */
 	    return 1;
-	else {
+        }
+
 	    lock_ObtainMutex(&cm_Freelance_Lock);
 	    fdc = cm_fakeDirCallback;
 	    fgc = cm_fakeGettingCallback;
@@ -659,12 +661,12 @@ int cm_HaveCallback(cm_scache_t *scp)
 	    }
 	    return 0;
 	}
-    }
 #endif
 
     if (scp->cbServerp != NULL)
 	return 1;
-    else return 0;
+    else 
+        return 0;
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
@@ -708,6 +710,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	cm_racingRevokes_t *revp;		/* where we are */
 	cm_racingRevokes_t *nrevp;		/* where we'll be next */
         int freeFlag;
+    cm_server_t * serverp = 0;
 
 	lock_ObtainWrite(&cm_callbackLock);
 	if (flags & CM_CALLBACK_MAINTAINCOUNT) {
@@ -716,13 +719,23 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	else {
 		osi_assert(cm_activeCallbackGrantingCalls-- > 0);
 	}
-        if (cm_activeCallbackGrantingCalls == 0) freeFlag = 1;
-        else freeFlag = 0;
+    if (cm_activeCallbackGrantingCalls == 0) 
+        freeFlag = 1;
+    else 
+        freeFlag = 0;
 
 	/* record the callback; we'll clear it below if we really lose it */
+    if (cbrp) {
 	if (scp) {
+            if (scp->cbServerp != cbrp->serverp) {
+                serverp = scp->cbServerp;
+            }
 	        scp->cbServerp = cbrp->serverp;
 	        scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
+        } else {
+            serverp = cbrp->serverp;
+        }
+        cbrp->serverp = NULL;
 	}
 
 	/* a callback was actually revoked during our granting call, so
@@ -737,7 +750,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                  * callback-granting call, and if this fid is the right fid,
                  * then clear the callback.
                  */
-                if (scp && cbrp->callbackCount != cm_callbackCount
+        if (scp && cbrp && cbrp->callbackCount != cm_callbackCount
                        	&& revp->callbackCount > cbrp->callbackCount
              && (( scp->fid.volume == revp->fid.volume &&
                                  scp->fid.vnode == revp->fid.vnode &&
@@ -769,6 +782,12 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	if (freeFlag) cm_racingRevokesp = NULL;
 
 	lock_ReleaseWrite(&cm_callbackLock);
+
+    if ( serverp ) {
+        lock_ObtainWrite(&cm_serverLock);
+        cm_FreeServer(serverp);
+        lock_ReleaseWrite(&cm_serverLock);
+    }
 }
 
 /* if flags is 1, we want to force the code to make one call, anyway.
@@ -799,10 +818,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
              scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
              scp->fid.unique==0x1 &&
              scp->fid.vnode==0x1) {
+            
             // Start by indicating that we're in the process
             // of fetching the callback
-
             lock_ObtainMutex(&cm_Freelance_Lock);
+            osi_Log0(afsd_logp,"cm_getGetCallback fakeGettingCallback=1");
             cm_fakeGettingCallback = 1;
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
@@ -811,8 +831,11 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
             // Indicate that the callback is not done
             lock_ObtainMutex(&cm_Freelance_Lock);
+            osi_Log0(afsd_logp,"cm_getGetCallback fakeDirCallback=2");
             cm_fakeDirCallback = 2;
+
             // Indicate that we're no longer fetching the callback
+            osi_Log0(afsd_logp,"cm_getGetCallback fakeGettingCallback=0");
             cm_fakeGettingCallback = 0;
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
@@ -861,7 +884,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
 		}   
         else
-            cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
+            cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
 
         /* now check to see if we got an error */
         if (code) return code;
@@ -884,8 +907,8 @@ void cm_CheckCBExpiration(void)
 			scp->refCount++;
 			lock_ReleaseWrite(&cm_scacheLock);
 			lock_ObtainMutex(&scp->mx);
-			if (scp->cbServerp && now > scp->cbExpires) {
-                osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
+            if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
+                osi_Log1(afsd_logp, "Callback Expiration Discarding SCache scp %x", scp);
 				cm_DiscardSCache(scp);
                         }
 			lock_ReleaseMutex(&scp->mx);

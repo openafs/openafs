@@ -1,3 +1,63 @@
+Since 1.3.70:
+  * Fix aklog.exe to not add the AFS ID to the username
+
+  * PTS registration of new users to foreign cells has been added to 
+     afscreds.exe
+
+  * The cm_Daemon thread is used to perform checks for 
+    down servers, up servers, volumes, callback expirations, 
+    lock maintenance and token expiration.  Due to a gaff in
+    larger integer division the thread never performed any 
+    work.  Instead the current time computation would always
+    be less then the trigger times.  This had an adverse affect
+    on the client's ability to maintain communication with servers,
+    keep volumes up to date, and flush user tokens and acls
+    when they have expired. This was broken when the 1.3 branch
+    was modified to support VC7 which no longer included 
+    largeint.lib
+
+  * An initialization problem with the Freelance code was 
+    detected while fixing the callbackRequest.  The cm_rootSCachep
+    object is obtained during afsd_InitDaemons() but the callback 
+    information is incomplete.  The callback information will not
+    be obtained until cm_MergeStatus is called from within
+    cm_GetCallback.  Unfortunately, cm_SyncOp did not properly 
+    test for the conditions under which the callback information
+    must be obtained.  
+
+  * Reports have been filed indicating that callbacks were
+    being lost.  An examination of the code indicated that the
+    cm_server_t objects were not being properly reference
+    counted by the cm_scache_t and cm_callbackRequest_t objects.
+    In particular, the cm_server_t objects may have been freed
+    from beneath the cm_conn_t objects.
+
+    All of the reference counting is now done via the functions:
+        cm_GetServer
+        cm_GetServerNoLock
+        cm_PutServer
+        cm_PutServerNoLock
+    this improves the ability to track the referrals.  
+
+    Each cm_BeginCallbackGranting Call now allocates a reference
+    to the cm_server_t.  The cm_EndCallbackGrantingCall either
+    frees the reference or transfers it to the cm_scache_t
+    cbServerp field.  These are then appropriately tracked
+    through the cm_Analyze call.
+
+  * Ensure that the dnlc hash table is the same size as the
+    dir name hash table (as per original author's note).
+    Increase the dnlc CM_AFSNCNAMESIZE to a multiple of 8
+    for compatibility with 64-bit systems.
+
+  * fix smb_ApplyV3DirListPatches to properly apply the hidden
+     attribute to dotfiles when the infoLevel < 0x101 and 
+     cm_SyncOp has failed.
+
+  * Fix the Freelance registry initialization code.  There
+    was a possibility that some systems could end up with 
+    garbage in the registry during a clean install.
+
 Since 1.3.66:
    * file and directory names beginning with "." will now be given the
      hidden attribute when the volume access is anonymous.  this matches

@@ -27,21 +27,20 @@
 #include <osi.h>
 #include "afsd.h"
 
-osi_rwlock_t cm_dnlcLock;
+static osi_rwlock_t cm_dnlcLock;
 
-cm_dnlcstats_t dnlcstats;	/* dnlc statistics */
-int cm_useDnlc = 1; 		/* yes, start using the dnlc */
-int cm_debugDnlc = 0;		/* debug dnlc */
+static cm_dnlcstats_t dnlcstats;	/* dnlc statistics */
+static int cm_useDnlc = 1; 	/* yes, start using the dnlc */
+static int cm_debugDnlc = 0;	/* debug dnlc */
 
 
 /* Hash table invariants:
  *     1.  If nameHash[i] is NULL, list is empty
  *     2.  A single element in a hash bucket has itself as prev and next.
  */
-struct nc 	*ncfreelist = (struct nc *)0;
+static struct nc *ncfreelist = (struct nc *)0;
 static struct nc nameCache[NCSIZE];
-struct nc*	nameHash[NHSIZE];
-
+static struct nc *nameHash[NHSIZE];
 
 #ifndef DJGPP
 #define dnlcNotify(x,debug){                    \
@@ -58,7 +57,6 @@ struct nc*	nameHash[NHSIZE];
 #else
 #define dnlcNotify(x,debug)
 #endif /* !DJGPP */
-
 
 static struct nc * 
 GetMeAnEntry() 

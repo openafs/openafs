@@ -196,3 +196,5 @@ List of unfunded projects:
       afsmap.exe <drive> <afs-path> [/PERSISTENT]
       afsmap.exe <drive> <unc-path> [/PERSISTENT]
       afsmap.exe <drive> /DELETE
+  23. Write-through caching appears to be unsupported.   Files copied to AFS
+      do not end up in the local cache.

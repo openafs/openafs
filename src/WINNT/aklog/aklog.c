@@ -181,6 +181,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
+    char username_copy[BUFSIZ];
 	long viceId;			/* AFS uid of user */
 #ifdef ALLOW_REGISTER
     afs_int32 id;
@@ -248,7 +249,12 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 #else /* ALLOW_REGISTER */
             if ((*status == 0) && (viceId != ANONYMOUSID))
 #endif /* ALLOW_REGISTER */
-                sprintf (username, "AFS ID %d", (int) viceId);
+            {
+#ifdef AFS_ID_TO_NAME
+                strncpy(username_copy, username, BUFSIZ);
+                snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+#endif /* AFS_ID_TO_NAME */
+            }
 #ifdef ALLOW_REGISTER
             } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
                 if (dflag) {
@@ -263,6 +269,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                     printf("%s: unable to obtain tokens for cell %s "
                             "(status: %d).\n", progname, cell_to_use, status);
                     *status = AKLOG_TOKEN;
+                return ;
                 }
 
                 /*
@@ -274,6 +281,7 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 
                 if ((*status = pr_Initialize(1L, confname, aserver->cell, 0))) {
                     printf("Error %d\n", status);
+                return;
                 }
 
                 if ((*status = pr_CreateUser(username, &id))) {
@@ -283,7 +291,10 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
                 } else {
                     printf("created cross-cell entry for %s at %s\n",
                             username, cell_to_use);
-                    sprintf(username, "AFS ID %d", (int) id);
+#ifdef AFS_ID_TO_NAME
+                strncpy(username_copy, username, BUFSIZ);
+                snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+#endif /* AFS_ID_TO_NAME */
                 }
             }
         }
@@ -432,7 +443,6 @@ static char *afs_realm_of_cell(struct afsconf_cell *cellconfig)
 			*s++ = c;
 		}
 		*s++ = 0;
-
 	}
 	return krbrlm;
 }
@@ -690,8 +700,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         memcpy(&atoken.sessionKey, v5cred->keyblock.contents, v5cred->keyblock.length);
         atoken.ticketLen = v5cred->ticket.length;
         memcpy(atoken.ticket, v5cred->ticket.data, atoken.ticketLen);
-    } else 
-    {
+    } else {
         strcpy (username, c.pname);
         if (c.pinst[0])
         {
@@ -734,8 +743,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 					progname, status);
 				return(AKLOG_KERBEROS);
 			}
-		} else 
-		{
+        } else {
 			if ((status = krb_get_tf_realm(TKT_FILE, realm_of_user)) != KSUCCESS)
 			{
 				fprintf(stderr, "%s: Couldn't determine realm of user: %s)",
@@ -762,6 +770,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	*/
 	strncpy(aclient.name, username, MAXKTCNAMELEN - 1);
 	strcpy(aclient.instance, "");
+    
     if (usev5) {
         int len = min(v5cred->client->realm.length,MAXKTCNAMELEN - 1);
         strncpy(aclient.cell, v5cred->client->realm.data, len);
@@ -1222,8 +1231,7 @@ int main(int argc, char *argv[])
 		for (cur_node = cells.first; cur_node; cur_node = cur_node->next)
 		{
 			memcpy(&cellinfo, cur_node->data, sizeof(cellinfo));
-			if (status = auth_to_cell(
-				context, 
+            if (status = auth_to_cell(context, 
 				cellinfo.cell, cellinfo.realm))
 				somethingswrong++;
 		}
@@ -1231,8 +1239,7 @@ int main(int argc, char *argv[])
 		/* Then, log to all paths in the paths list */
 		for (cur_node = paths.first; cur_node; cur_node = cur_node->next)
 		{
-			if (status = auth_to_path(
-				context, 
+            if (status = auth_to_path(context, 
 				cur_node->data))
 				somethingswrong++;
 		}

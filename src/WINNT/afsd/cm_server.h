@@ -74,6 +74,10 @@ extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp);
 
 extern long cm_ChecksumServerList(cm_serverRef_t *serversp);
 
+extern void cm_GetServer(cm_server_t *);
+
+extern void cm_GetServerNoLock(cm_server_t *);
+
 extern void cm_PutServer(cm_server_t *);
 
 extern void cm_PutServerNoLock(cm_server_t *);

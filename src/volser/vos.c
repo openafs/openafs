@@ -3356,7 +3356,7 @@ static
 SyncVldb(as)
      register struct cmd_syndesc *as;
 {
-    afs_int32 pnum, code;	/* part name */
+    afs_int32 pnum = 0, code;	/* part name */
     char part[10];
     int flags = 0;
     char *volname = 0;

@@ -339,8 +339,10 @@ typedef struct smb_dirListPatch {
 } smb_dirListPatch_t;
 
 /* dirListPatch Flags */
-#define SMB_DIRLISTPATCH_DOTFILE 1  /* the file referenced is a dot file 
-									   Note: will not be set if smb_hideDotFiles is false */
+#define SMB_DIRLISTPATCH_DOTFILE 1  
+/* the file referenced is a dot file
+ * Note: will not be set if smb_hideDotFiles is false 
+ */
 
 /* waiting lock list elements */
 typedef struct smb_waitingLock {

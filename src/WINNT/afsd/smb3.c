@@ -3029,7 +3029,6 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 			        *((u_long *)dptr) = SMB_ATTR_HIDDEN;
                 }
 			    dptr += 4;
-
             } else {
                 /* 1969-12-31 23:59:58 +00*/
                 dosTime = 0xEBBFBF7D;
@@ -3066,11 +3065,10 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
                 /* merge in hidden (dot file) attribute */
                 if ( patchp->flags & SMB_DIRLISTPATCH_DOTFILE ) {
-                    attr == SMB_ATTR_HIDDEN;
+                    attr = SMB_ATTR_HIDDEN;
 			        *dptr++ = attr & 0xff;
 			        *dptr++ = (attr >> 8) & 0xff;
                 }
-
             }
 			continue;
         }
