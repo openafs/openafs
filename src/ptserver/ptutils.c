@@ -69,6 +69,7 @@ afs_int32 depthsg = 5;  /* Maximum iterations used during IsAMemberOF */
 extern int IDCmp();
 afs_int32 GetListSG2 (struct ubik_trans *at, afs_int32 gid, prlist *alist,
 	afs_int32 *sizeP, afs_int32 depth);
+afs_int32 allocNextId(struct ubik_trans *, struct prentry *);
 
 struct map *sg_flagged;
 struct map *sg_found;
@@ -373,12 +374,12 @@ afs_int32 CreateEntry (at, aname, aid, idflag, flag, oid, creator)
     atsign = strchr(aname, '@');
     if (!atsign) {
        /* A normal user or group. Pick an id for it */
-       if (idflag) 
-	  tentry.id = *aid;
-       else {
-	  code= AllocID(at,flag,&tentry.id);
-	  if (code != PRSUCCESS) return code;
-       }
+	if (idflag) 
+	    tentry.id = *aid;
+	else {
+	    code= AllocID(at,flag,&tentry.id);
+	    if (code != PRSUCCESS) return code;
+	}
     } else if (flag & PRGRP) {
        /* A foreign group. Its format must be AUTHUSER_GROUP@cellname
 	* Then pick an id for the group.
@@ -403,7 +404,6 @@ afs_int32 CreateEntry (at, aname, aid, idflag, flag, oid, creator)
        char *cellGroup;
        afs_int32 pos, n;
        struct prentry centry;
-       extern afs_int32 allocNextId();
 
        /* To create the user <name>@<cell> the group AUTHUSER_GROUP@<cell>
 	* must exist.
@@ -427,7 +427,8 @@ afs_int32 CreateEntry (at, aname, aid, idflag, flag, oid, creator)
 	  /* Allocate an ID special for this foreign user. It is based 
 	   * on the representing group's id and nusers count.
 	   */
-	  tentry.id = allocNextId(&centry);
+	  tentry.id = allocNextId(at, &centry);
+	  if (!tentry.id) return PRNOIDS;
        }
 	 
        /* The foreign user will be added to the representing foreign
@@ -1910,17 +1911,21 @@ nameOK:;
 }
 
 
-afs_int32 allocNextId(cellEntry)
-     struct prentry *cellEntry;
+afs_int32 allocNextId(struct ubik_trans *at, struct prentry *cellEntry)
 {
 	/* Id's for foreign cell entries are constructed as follows:
 	   The 16 low order bits are the group id of the cell and the
 	   top 16 bits identify the particular users in that cell */
 
 	afs_int32 id;
+	afs_int32 cellid = ((ntohl(cellEntry-> id)) & 0x0000ffff);
 
+	id = (ntohl(cellEntry -> nusers) + 1);
+	while (FindByID(at, ((id << 16) | cellid))) {
+	    id++;
+	    if (id > 0xffff) return 0;
+	}
 
-	id = (ntohl(cellEntry -> nusers) +1); 
 	cellEntry->nusers = htonl(id);
 				      /* use the field nusers to keep 
 					 the next available id in that
@@ -1931,13 +1936,11 @@ afs_int32 allocNextId(cellEntry)
 					 does not have an option to change 
 					 foreign users quota yet  */
 
-	id = (id << 16) | ((ntohl(cellEntry-> id)) & 0x0000ffff);
+	id = (id << 16) | cellid;
 	return id;
 }
 
-int inRange(cellEntry,aid)
-struct prentry *cellEntry;
-afs_int32 aid;
+int inRange(struct prentry *cellEntry, afs_int32 aid)
 {
 	afs_uint32 id,cellid,groupid;
 
