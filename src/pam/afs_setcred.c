@@ -44,6 +44,7 @@ pam_sm_setcred(
     int try_first_pass = 0;
     int got_authtok = 0;
     int ignore_root = 0;
+    int trust_root = 0;
     int set_expires = 0; /* the default is to not to set the env variable */
     int i;
     struct pam_conv *pam_convp = NULL;
@@ -79,6 +80,10 @@ pam_sm_setcred(
 	    try_first_pass = 1;
         } else if (strcasecmp(argv[i], "ignore_root"   ) == 0) {
             ignore_root = 1;
+        } else if (strcasecmp(argv[i], "trust_root"   ) == 0) {
+            trust_root = 1;
+        } else if (strcasecmp(argv[i], "catch_su"   ) == 0) {
+            use_first_pass = 0;
 	} else if (strcasecmp(argv[i], "setenv_password_expires")==0) {
 	    set_expires = 1;
 	} else {
@@ -124,9 +129,14 @@ pam_sm_setcred(
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
 #endif
-    if (ignore_root && upwd != NULL && upwd->pw_uid == 0) {
-        pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
-        RET(PAM_AUTH_ERR);
+    if (upwd != NULL && upwd->pw_uid == 0) {
+	if (ignore_root) { 
+		pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
+		RET(PAM_AUTH_ERR);
+	} else if (trust_root) {
+		pam_afs_syslog(LOG_INFO, PAMAFS_TRUSTROOT, user);
+		RET(PAM_SUCCESS);
+	}
     }
 #endif
 
