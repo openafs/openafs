@@ -1,6 +1,6 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
- * All Rights Reserved.
+ *$All Rights Reserved.
  * 
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
@@ -1265,7 +1265,9 @@ static int afs_UFSCacheStoreProc(register struct rx_call *acall,
 	    osi_FreeLargeSpace(tbuffer);
 	    return EIO;
 	}
-	afs_Trace1(afs_iclSetp, CM_TRACE_STOREPROC2, ICL_TYPE_INT32, got);
+	afs_Trace2(afs_iclSetp, CM_TRACE_STOREPROC2, 
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(*tbuffer),
+			ICL_TYPE_INT32, got);
 	RX_AFS_GUNLOCK();
 	code = rx_Write(acall, tbuffer, got);  /* writing 0 bytes will
 	* push a short packet.  Is that really what we want, just because the
@@ -1375,9 +1377,17 @@ static int afs_UFSCacheFetchProc(register struct rx_call *acall,
 #endif				/* AFS_NOSTATS */
 	while (length > 0) {
 	    tlen = (length > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : length);
+#ifdef RX_KERNEL_TRACE
+	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+			ICL_TYPE_STRING, "before rx_Read");
+#endif
 	    RX_AFS_GUNLOCK();
 	    code = rx_Read(acall, tbuffer, tlen);
 	    RX_AFS_GLOCK();
+#ifdef RX_KERNEL_TRACE
+	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+			ICL_TYPE_STRING, "after rx_Read");
+#endif
 #ifndef AFS_NOSTATS
 	    (*abytesXferredP) += code;
 #endif				/* AFS_NOSTATS */
@@ -1396,12 +1406,12 @@ static int afs_UFSCacheFetchProc(register struct rx_call *acall,
 	    abase += tlen;
 	    length -= tlen;
 	    adc->validPos = abase;
-	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
-		       ICL_TYPE_STRING, __FILE__,
-		       ICL_TYPE_INT32, __LINE__,
-		       ICL_TYPE_POINTER, adc,
-		       ICL_TYPE_INT32, adc->dflags);
-	    afs_osi_Wakeup(&adc->validPos);
+	    if (afs_osi_Wakeup(&adc->validPos) == 0)
+		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
+			   ICL_TYPE_STRING, __FILE__,
+			   ICL_TYPE_INT32, __LINE__,
+			   ICL_TYPE_POINTER, adc,
+			   ICL_TYPE_INT32, adc->dflags);
 	}
     } while (moredata);
     osi_FreeLargeSpace(tbuffer);
@@ -2011,7 +2021,12 @@ RetryLookup:
 	tdc->validPos = Position;	/*  which is AFS_CHUNKBASE(abyte) */
 	if (tdc->mflags & DFFetchReq) {
 	    tdc->mflags &= ~DFFetchReq;
-	    afs_osi_Wakeup(&tdc->validPos);
+	    if (afs_osi_Wakeup(&tdc->validPos) == 0)
+	        afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
+		       ICL_TYPE_STRING, __FILE__,
+		       ICL_TYPE_INT32, __LINE__,
+		       ICL_TYPE_POINTER, tdc,
+		       ICL_TYPE_INT32, tdc->dflags);
 	}
 	tsmall = (struct tlocal1 *) osi_AllocLargeSpace(sizeof(struct tlocal1));
 	setVcacheStatus = 0;
@@ -2108,8 +2123,6 @@ RetryLookup:
 		    } else {
 		        bytes = rx_Read(tcall, (char *)&length_hi, sizeof(afs_int32));
 			RX_AFS_GLOCK();
-			afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
-				   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
 		        if (bytes == sizeof(afs_int32)) {
 			    length_hi = ntohl(length_hi);
 		        } else {
@@ -2319,12 +2332,12 @@ RetryLookup:
 #endif /* AFS_NOSTATS */
 
 	tdc->dflags &= ~DFFetching;
-	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
-		   ICL_TYPE_STRING, __FILE__,
-		   ICL_TYPE_INT32, __LINE__,
-		   ICL_TYPE_POINTER, tdc,
-		   ICL_TYPE_INT32, tdc->dflags);
-	afs_osi_Wakeup(&tdc->validPos);
+	if (afs_osi_Wakeup(&tdc->validPos) == 0)
+	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
+		       ICL_TYPE_STRING, __FILE__,
+		       ICL_TYPE_INT32, __LINE__,
+		       ICL_TYPE_POINTER, tdc,
+		       ICL_TYPE_INT32, tdc->dflags);
 	if (avc->execsOrWriters == 0) tdc->f.states &= ~DWriting;
 
 	/* now, if code != 0, we have an error and should punt.

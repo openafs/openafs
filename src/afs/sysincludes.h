@@ -104,6 +104,9 @@ typedef unsigned short                  etap_event_t;
 #ifdef AFS_AIX41_ENV
 #include "sys/statfs.h"
 #endif
+#ifdef AFS_AIX51_ENV
+#include "sys/acl.h"
+#endif
 #include "../h/file.h"
 #include "../h/fullstat.h"
 #include "../h/vattr.h"

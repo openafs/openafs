@@ -460,7 +460,7 @@ extern void VolumeHeaderToDisk(VolumeDiskHeader_t *dh, VolumeHeader_t *h);
 			   the volume is read-only, the file server may continue to
 			   server it; it may also continue to server it in read/write
 			   mode if the writes are deferred */
-#define V_UPDATE   3	/* General update or volume purge is possible.  Volume must
+#define V_VOLUPD   3	/* General update or volume purge is possible.  Volume must
 			   go offline */
 #define V_DUMP	   4	/* A dump of the volume is requested; the volume can be served
 			   read-only during this time */

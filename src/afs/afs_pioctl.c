@@ -301,6 +301,9 @@ int HandleIoctl(register struct vcache *avc, register afs_int32 acom, struct afs
        default:
 
 	 code = EINVAL;
+#ifdef AFS_AIX51_ENV
+	 code = ENOSYS;
+#endif
 	 break;
        }
        return code;		/* so far, none implemented */
@@ -374,13 +377,21 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void * arg, int flag, cred_t *cr, rval_t *r
 #ifndef AFS_HPUX102_ENV
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_AIX32_ENV
+#ifdef AFS_AIX51_ENV
+kioctl(fdes, com, arg, ext, arg2, arg3)
+     caddr_t arg2, arg3;
+#else
 kioctl(fdes, com, arg, ext)
+#endif
      int fdes, com;
      caddr_t arg, ext;
 {
   struct a {
     int fd, com;
     caddr_t arg, ext;
+#ifdef AFS_AIX51_ENV
+     caddr_t arg2, arg3;
+#endif
   } u_uap, *uap = &u_uap;
 #else
 #ifdef	AFS_SUN5_ENV
@@ -476,6 +487,12 @@ int afs_xioctl (void)
       uap->fd = fdes;
       uap->com = com;
       uap->arg = arg;
+#ifdef AFS_AIX51_ENV
+      uap->arg2 = arg2;
+      uap->arg3 = arg3;
+#endif
+
+  
       if (setuerror(getf(uap->fd, &fd))) {
 	return -1;
     }
@@ -597,7 +614,11 @@ int afs_xioctl (void)
       if (!ioctlDone) {
 #ifdef	AFS_AIX41_ENV
 	  ufdrele(uap->fd);
+#ifdef AFS_AIX51_ENV
+	  code = okioctl(fdes, com, arg, ext, arg2, arg3);
+#else
 	  code = okioctl(fdes, com, arg, ext);
+#endif
 	  return code;
 #else
 #ifdef	AFS_AIX32_ENV
@@ -3202,8 +3223,13 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
     setuerror(0);	
 #endif
     newcred->cr_gid = RMTUSER_REQ;
+#ifdef AFS_AIX51_ENV
+    newcred->cr_groupset.gs_union.un_groups[0] = g0;
+    newcred->cr_groupset.gs_union.un_groups[1] = g1;
+#else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
+#endif
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
 #else

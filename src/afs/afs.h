@@ -645,7 +645,11 @@ struct vcache {
 #ifdef	AFS_AIX32_ENV
     afs_lock_t pvmlock;
     vmhandle_t vmh;
+#if defined(AFS_AIX51_ENV)
+    vmid_t segid;
+#else
     int  segid;
+#endif
     struct ucred *credp;
 #endif
 #ifdef AFS_AIX_ENV
@@ -897,7 +901,11 @@ struct fcache {
 #if defined(AFS_LINUX_64BIT_KERNEL)
     long inode;	 		/* Unix inode for this chunk */
 #else
+#if defined(AFS_AIX51_ENV)
+    ino_t     inode;		/* Unix inode for this chunk */
+#else
     afs_int32 inode;		/* Unix inode for this chunk */
+#endif
 #endif
 #endif
     afs_int32 chunkBytes;	/* Num bytes in this chunk */

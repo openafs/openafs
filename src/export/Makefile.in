@@ -12,6 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
      INCS = -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}
    CFLAGS = ${OPTMZ} ${DEFS} ${INCS}
   EXPORTS = -bexport:export.exp
+  EXPORTS5 = -bexport:export5.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp extras.exp
      KOBJ = export.o symtab.o
 
@@ -32,10 +33,16 @@ ukinstall webinstall:
 	${INSTALL} ${srcdir}/export.exp ${UKERNELDIR}
 
 export.ext: ${KOBJ}
-	${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS} -lcsys
+	case ${SYS_NAME} in \
+	rs_aix4* ) \
+		${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS} -lcsys ;; \
+	rs_aix5* ) \
+		${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS5} -lcsys ;; \
+	esac
 
 export.ext.nonfs: export.nonfs.o symtab.o
-	${LD} -o export.ext.nonfs -eexport ${IMPORTS} export.nonfs.o symtab.o ${EXPORTS} -lcsys
+	${LD} -o export.ext.nonfs -eexport ${IMPORTS} export.nonfs.o \
+		symtab.o ${EXPORTS} -lcsys
 
 export.nonfs.o:
 	${CC} ${INCS} -DAFS_NONFSTRANS -c export.c

@@ -121,13 +121,13 @@ $(INST_LIBAFSIAUTH): $(LIBAFSIAUTH)
 
 $(LIBAFSIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
 	${LD} ${LDSTUFF} -bloadmap:afs.ext.iauth.loadmap \
-	 -bmap:afs.ext.iauth.map -o afs.ext.iauth \
-	${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS}
+		-bmap:afs.ext.iauth.map -o afs.ext.iauth \
+		${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS} 
 
 $(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
 	${LD} ${LDSTUFF} -bloadmap:afs.ext.loadmap \
-	 -bmap:afs.ext.map -o afs.ext \
-	${AFSAOBJS} $(AFSNOIAUTHOBJS) ${LIBS} ${LDFLAGS}
+	 	-bmap:afs.ext.map -o afs.ext \
+		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} ${LDFLAGS}
 
 libafs: $(LIBAFS) $(LIBAFSIAUTH)
 install_libafs: $(INST_LIBAFS) $(INST_LIBAFSIAUTH)

@@ -32,7 +32,7 @@ extern char    *malloc(), *optarg;
 extern int	errno;
 extern int	sysconfig(int cmd, void *arg, int len);
 
-int debug;
+int debug = 0 ;
 char *syms = "/unix";
 
 #include "AFS_component_version_number.c"

@@ -709,6 +709,9 @@ void afs_osi_TraverseProcTable(void)
 #endif	/* AFS_SGI_ENV */
 
 #if defined(AFS_AIX_ENV)
+#ifdef AFS_AIX51_ENV
+#define max_proc v.ve_proc
+#endif
 void afs_osi_TraverseProcTable(void)
 {
     struct proc *p;
@@ -722,17 +725,28 @@ void afs_osi_TraverseProcTable(void)
     if (!afs_gcpags_procsize)
 	return;
 
+#ifndef AFS_AIX51_ENV
     simple_lock(&proc_tbl_lock);
+#endif
     for (p = (struct proc *)v.vb_proc, i = 0;
          p < max_proc;
 	 p = (struct proc *)((char *)p + afs_gcpags_procsize), i++) {
 
+#ifdef AFS_AIX51_ENV
+	if (p->p_pvprocp->pv_stat == SNONE)
+	    continue;
+	if (p->p_pvprocp->pv_stat == SIDL)
+	    continue;
+	if (p->p_pvprocp->pv_stat == SEXIT)
+	    continue;
+#else
 	if (p->p_stat == SNONE)
 	    continue;
 	if (p->p_stat == SIDL)
 	    continue;
 	if (p->p_stat == SEXIT)
 	    continue;
+#endif
 
 	/* sanity check */
 
@@ -750,7 +764,9 @@ void afs_osi_TraverseProcTable(void)
 
 	afs_GCPAGs_perproc_func(p);
     }
+#ifndef AFS_AIX51_ENV
     simple_unlock(&proc_tbl_lock);
+#endif
 }
 #endif
 
@@ -887,16 +903,28 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pproc)
     /* simple_lock(&proc_tbl_lock); */
     if (pproc->p_adspace != NULLSEGVAL) {
 
+#ifdef AFS_AIX51_ENV
+	simple_lock(&pproc->p_pvprocp->pv_lock);
+#else
 	simple_lock(&pproc->p_lock);
+#endif
 
 	if (pproc->p_threadcount &&
+#ifdef AFS_AIX51_ENV
+	    pproc->p_pvprocp->pv_threadlist) {
+#else
 	    pproc->p_threadlist) {
+#endif
 
 	    /*
 	     * arbitrarily pick the first thread in pproc
 	     */
 	    struct thread *pproc_thread =
+#ifdef AFS_AIX51_ENV
+	        pproc->p_pvprocp->pv_threadlist;
+#else
 		pproc->p_threadlist;
+#endif
 
 	    /*
 	     * location of 'struct user' in pproc's
@@ -919,7 +947,11 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pproc)
 			  &dp, SYS_ADSPACE);
 	}
 
+#ifdef AFS_AIX51_ENV
+	simple_unlock(&pproc->p_pvprocp->pv_lock);
+#else
 	simple_unlock(&pproc->p_lock);
+#endif
     }
     /* simple_unlock(&proc_tbl_lock); */
     if (xm == XMEM_SUCC) {

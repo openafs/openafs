@@ -280,7 +280,7 @@ int VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 		    Error error;
 		    Volume *vp;
 		    vp = VAttachVolumeByName(&error, diskP->name, dp->d_name,
-					     V_UPDATE);
+					     V_VOLUPD);
 		    (*(vp?&nAttached:&nUnattached))++;
 		    if (error == VOFFLINE)
 			Log("Volume %u stays offline (/vice/offline/%s exists)\n", 

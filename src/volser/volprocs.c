@@ -329,7 +329,7 @@ afs_int32 apartID, avolID;
      * server doesn't try to use it (and abort) while (or after) we delete it.
      * If we don't get the volume, that's fine, too.  We just won't put it back.
      */
-    tvp = XAttachVolume(&error, avolID, apartID, V_UPDATE);
+    tvp = XAttachVolume(&error, avolID, apartID, V_VOLUPD);
     code = nuke(partName, avolID);
     if (tvp) VDetachVolume(&error, tvp);
     return code;
@@ -553,7 +553,7 @@ char *newName;
     
     
     if (purgeId) {
-	purgevp = VAttachVolume(&error, purgeId, V_UPDATE);
+	purgevp = VAttachVolume(&error, purgeId, V_VOLUPD);
 	if (error) {
 	    Log("1 Volser: Clone: Could not attach 'purge' volume %u; clone aborted\n", purgeId);
 	    goto fail;
@@ -731,7 +731,7 @@ afs_int32 cloneId;
        goto fail;
     }
 
-    clonevp = VAttachVolume(&error, cloneId, V_UPDATE);
+    clonevp = VAttachVolume(&error, cloneId, V_VOLUPD);
     if (error) {
 	Log("1 Volser: can't attach clone %d\n", cloneId);
 	goto fail;
@@ -868,7 +868,7 @@ afs_int32 *ttid;
     if (iflags & ITCreate) mode = V_SECRETLY;
     else if (iflags & ITBusy) mode = V_CLONE;
     else if (iflags & ITReadOnly) mode = V_READONLY;
-    else if (iflags & ITOffline) mode = V_UPDATE;
+    else if (iflags & ITOffline) mode = V_VOLUPD;
     else  { 
 	Log("1 Volser: TransCreate: Could not create trans, error %u\n",EINVAL);
 	LogError(EINVAL);

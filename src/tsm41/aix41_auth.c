@@ -28,7 +28,6 @@ RCSID("$Header$");
 #include <afs/kauth.h>
 #include <afs/kautils.h>
 
-
 int afs_authenticate (char *userName, char *response, int  *reenter, char **message) {
     char *reason, *pword, prompt[256];
     struct passwd *pwd;
@@ -83,23 +82,60 @@ int afs_getgrset (char *userName) {
     return NULL;
 }
 
-int afs_getgrgid (int id) {
+struct group *afs_getgrgid (int id) {
     return NULL;
 }
 
-int afs_getgrnam (char *name) {
+struct group *afs_getgrnam (char *name) {
     return NULL;
 }
 
+#ifdef AFS_AIX51_ENV
+/*
+ *  This is a nasty hack. It seems getpwnam calls this routine and is not
+ *  happy with NULL as result. Trying to call here getpwnam in order to get
+ *  a reasonable result kills the whole program. So I tried to return
+ *  a dummy pwd and it seems to work!
+ */
+struct passwd *afs_getpwnam (char *user) {
+    char name[64];
+    char *passwd = "*";
+    char *gecos = "";
+    char *dir = "/";
+    char *shell = "/bin/sh";
+    char *nobody = "nobody";
+    struct passwd p;
+
+    strncpy((char *)&name, user, sizeof(name));
+    name[63] = 0;
+    p.pw_name = &name;
+    p.pw_name = nobody;
+    p.pw_passwd = passwd;
+    p.pw_uid = 4294967294;
+    p.pw_gid = 4294967294;
+    p.pw_gecos = gecos;
+    p.pw_dir = dir;
+    p.pw_shell = shell;
+
+    return &p;
+}
+#else
 int afs_getpwnam(int id)
 {
     return NULL;
 }
+#endif
 
+#ifdef AFS_AIX52_ENV
+struct passwd *afs_getpwuid (uid_t uid) {
+    return pwd;
+}
+#else
 int afs_getpwuid(char *name)
 {
     return NULL;
 }
+#endif
 
 int afs_initialize(struct secmethod_table *meths) {
     /*

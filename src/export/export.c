@@ -90,7 +90,11 @@ register struct uio *uiop; {
 
 	if (toc_nsyms * sizeof (sym_t) != conf.symt_sz
 	    || toc_size > (1024 * 1024))
+#ifdef AFS_AIX51_ENV
+		return EFBIG;
+#else
 		return EINVAL;
+#endif
 
 	toc_syms = (sym_t *) xmalloc(toc_size, 2, kernel_heap);
 
@@ -227,6 +231,7 @@ import_kvar(struct k_var *kvp, caddr_t *toc) {
 /*
  * Call vanilla syscalls
  */
+#ifndef AFS_AIX51_ENV
 osetgroups(ngroups, gidset)
     int ngroups;
     gid_t *gidset;
@@ -236,15 +241,25 @@ osetgroups(ngroups, gidset)
     error = setgroups(ngroups, gidset);
     return (error);
 }
+#endif
 
-
+#ifdef AFS_AIX51_ENV
+okioctl(fdes, cmd, arg, ext, arg2, arg3)
+    int fdes, cmd;
+    caddr_t ext, arg, arg2, arg3;
+#else
 okioctl(fdes, cmd, arg, ext)
     int fdes, cmd, arg;
     caddr_t ext;
+#endif
 {
     int error;
     
+#ifdef AFS_AIX51_ENV
+    error = kioctl(fdes, cmd, arg, ext, arg2, arg3);
+#else
     error = kioctl(fdes, cmd, arg, ext);
+#endif
     return (error);
 }
 

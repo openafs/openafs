@@ -37,7 +37,7 @@ static int rxepoch_checked=0;
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags=AFS_GCPAGS;
-afs_int32 afs_gcpags_procsize;
+afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
 #ifdef DEFAULT_PROBE_INTERVAL

@@ -47,7 +47,11 @@ int use_msf = 0;
 /* lex stuff */
 extern FILE *yyin;
 extern FILE *yyout;
+#ifdef AFS_AIX51_ENV
+int yylineno = 0;
+#else
 extern int yylineno;
+#endif
 
 char * xmalloc (unsigned int size)
 {

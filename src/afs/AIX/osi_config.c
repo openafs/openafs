@@ -260,7 +260,9 @@ struct k_var kvars[] = {
 	{ (void *) &vnodefops,		"vnodefops"		},
 	{ (void *) &ifnet,		"ifnet"			},
  	{ (void *) &jfs_icache_lock,	"jfs_icache_lock"	},
+#ifndef AFS_AIX51_ENV
  	{ (void *) &proc_tbl_lock,	"proc_tbl_lock"		},
+#endif
 	{ 0,				0			},
 };
 

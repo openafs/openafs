@@ -118,7 +118,11 @@ static void mkint(char *buf, unsigned long val, int base, int uc, int prec)
  *       both '0' and ' ' are given, the ' ' flag will be ignored.
  *     + The '#' and '+' flags have no effect.
  */
+#ifdef AFS_AIX51_ENV
+static int  vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
+#else
 static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
+#endif
 {
   unsigned int width, precision, haveprec, len;
   int ljust, plsign, spsign, altform, zfill;
@@ -382,7 +386,11 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 }
 
 
+#ifdef AFS_AIX51_ENV
+int snprintf(char *p, size_t avail, const char *fmt, ...)
+#else
 void snprintf(char *p, unsigned int avail, char *fmt, ...)
+#endif
 {
   va_list ap;
 

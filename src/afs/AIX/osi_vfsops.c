@@ -58,6 +58,7 @@ static int afs_mount(afsp, path, data)
 
     afs_globalVFS = afsp;
     afsp->vfs_bsize = 8192;
+    afsp->vfs_count = 0;
 #ifdef AFS_64BIT_CLIENT
     afsp->vfs_flag |= VFS_DEVMOUNT;
 #endif /* AFS_64BIT_CLIENT */
@@ -236,6 +237,9 @@ struct vfsops Afs_vfsops = {
 	afs_vget,
 	afs_badop,	/* vfs_cntl */
 	afs_badop	/* vfs_quotactl */
+#ifdef AFS_AIX51_ENV
+	,afs_badop	/* vfs_syncvfs */
+#endif
 };
 
 /*

@@ -179,6 +179,24 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     /* And linux has it's own stash as well. */
     vattr2inode(AFSTOV(avc), attrs);
 #endif
+#ifdef notdef
+#ifdef AFS_AIX51_ENV
+    afs_Trace2(afs_iclSetp, CM_TRACE_STATACLX, 
+		ICL_TYPE_POINTER, attrs->va_acl, 
+		ICL_TYPE_INT32, attrs->va_aclsiz);
+    if (attrs->va_acl && attrs->va_aclsiz >= 12) {
+	struct acl *ap;
+
+	ap = (struct acl *) attrs->va_acl;
+	ap->acl_len = 8;
+	ap->acl_mode = ACL_MODE;
+	ap->acl_rsvd = 0;
+	ap->u_access = 7;
+    }
+    /* temporary fix ? */
+    attrs->va_aclsiz = 1;
+#endif
+#endif
     return 0;
 }
 

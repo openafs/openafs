@@ -326,8 +326,8 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
     struct ifconf   ifc;
     struct ifreq    ifs[NIFS], *ifr;
     struct sockaddr_in *a;
-#if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
-    char	*cp, *cplim;	/* used only for AIX 41 */
+#if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    char	*cp, *cplim, *cpnext;	/* used only for AIX 41 */
 #endif
 
     s = socket(AF_INET, SOCK_DGRAM, 0);
@@ -350,7 +350,11 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	        cp += _SIZEOF_ADDR_IFREQ(*ifr))
 #else
+#ifdef AFS_AIX51_ENV
+                cp = cpnext)
+#else
                 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a)))
+#endif
 #endif
        {
 	ifr = (struct ifreq *)cp;
@@ -359,11 +363,16 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
 	ifr = &ifs[i];
 #endif
 	a = (struct sockaddr_in *) &ifr->ifr_addr;
-	if (a->sin_addr.s_addr != 0 && a->sin_family == AF_INET) {
-	    if ( ioctl(s, SIOCGIFFLAGS, ifr) < 0 ) {
-		perror("SIOCGIFFLAGS");
-		continue; /* ignore this address */
-	    }
+#ifdef AFS_AIX51_ENV
+	cpnext = cp + sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a));
+#endif
+	if (a->sin_family != AF_INET)
+	    continue;
+	if ( ioctl(s, SIOCGIFFLAGS, ifr) < 0 ) {
+	    perror("SIOCGIFFLAGS");
+	    continue; /* ignore this address */
+	}
+	if (a->sin_addr.s_addr != 0) {
 	    if (ifr->ifr_flags & IFF_LOOPBACK) {
 		continue;	 /* skip aliased loopbacks as well. */
 	    }

@@ -58,6 +58,8 @@
 #define SYS_NAME_ID_rs_aix32		 701
 #define SYS_NAME_ID_rs_aix41		 702
 #define SYS_NAME_ID_rs_aix42		 703
+#define SYS_NAME_ID_rs_aix51		 704
+#define SYS_NAME_ID_rs_aix43		 705
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912

@@ -36,6 +36,7 @@ afs_setgroups(
     gid_t *gidset,
     int change_parent);
 
+#ifndef AFS_AIX5_ENV
 int
 setgroups(ngroups, gidset)
     int ngroups;
@@ -77,7 +78,7 @@ setgroups(ngroups, gidset)
     }
     return code;
 }
-
+#endif
 
 int
 setpag(cred, pagvalue, newpag, change_parent)
@@ -91,6 +92,7 @@ setpag(cred, pagvalue, newpag, change_parent)
     int j;
 
     AFS_STATCNT(setpag);
+#ifndef AFS_AIX51_ENV
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
@@ -102,15 +104,29 @@ setpag(cred, pagvalue, newpag, change_parent)
  	}
 	ngroups += 2;
     }
+#endif
     *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+#ifdef AFS_AIX51_ENV
+    if (change_parent) {
+	code = kcred_setpag(*cred, PAG_AFS, *newpag);
+    } else {
+	struct ucred *newcr = crdup(*cred);
+
+	crset(newcr);
+	code = kcred_setpag(newcr, PAG_AFS, *newpag);
+	*cred = newcr;
+    }
+#else
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
 	return (setuerror(code), code);
     }
+#endif
     return code;
 }
 
 
+#ifndef AFS_AIX51_ENV
 static int
 afs_getgroups(
     struct ucred *cred,
@@ -198,3 +214,4 @@ afs_setgroups(
     }
     return 0;
 }
+#endif

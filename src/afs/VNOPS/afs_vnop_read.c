@@ -190,6 +190,11 @@ tagain:
 		    code = 0;
 		    ConvertSToRLock(&tdc->mflock);
 		    while (!code && tdc->mflags & DFFetchReq) {
+			afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+				ICL_TYPE_STRING, __FILE__,
+				ICL_TYPE_INT32, __LINE__,
+				ICL_TYPE_POINTER, tdc,
+				ICL_TYPE_INT32, tdc->dflags);
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
@@ -243,6 +248,10 @@ tagain:
 		}
 		else {
 		    /* don't have current data, so get it below */
+		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
+				ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
+				ICL_TYPE_HYPER, &avc->m.DataVersion,
+				ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
@@ -720,6 +729,11 @@ tagain:
 		    code = 0;
 		    ConvertSToRLock(&tdc->mflock);
 		    while (!code && tdc->mflags & DFFetchReq) {
+			afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+				ICL_TYPE_STRING, __FILE__,
+				ICL_TYPE_INT32, __LINE__,
+				ICL_TYPE_POINTER, tdc,
+				ICL_TYPE_INT32, tdc->dflags);
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
@@ -770,12 +784,17 @@ tagain:
 	    else {
 		/* no longer fetching, verify data version (avoid new
 		 * GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+		if (hsame(avc->m.DataVersion, tdc->f.versionNo) 
+							&& tdc->f.chunkBytes) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		    len = tdc->f.chunkBytes - offset;
 		}
 		else {
 		    /* don't have current data, so get it below */
+		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
+				ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
+				ICL_TYPE_HYPER, &avc->m.DataVersion,
+				ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
@@ -783,6 +802,10 @@ tagain:
 	    }
 
 	    if (!tdc) {
+		/* If we get, it was not possible to start the 
+		 * background daemon. With flag == 1 afs_GetDCache
+		 * does the FetchData rpc synchronously.
+		 */
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
@@ -800,6 +823,11 @@ tagain:
 	}
 	if (len	> totalLength) len = totalLength;   /* will read len bytes */
 	if (len	<= 0) {	/* shouldn't get here if DFFetching is on */
+	    afs_Trace4(afs_iclSetp, CM_TRACE_VNODEREAD2,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tdc->validPos),
+			ICL_TYPE_INT32, tdc->f.chunkBytes,
+			ICL_TYPE_INT32, tdc->dflags);
 	    /* read past the end of a chunk, may not be at next chunk yet, and yet
 		also not at eof, so may have to supply fake zeros */
 	    len	= AFS_CHUNKTOSIZE(tdc->f.chunk) - offset; /* bytes left in chunk addr space */

@@ -145,7 +145,7 @@ int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
 #endif /* AFS_VM_RDWR_ENV */
 #endif /* AFS_64BIT_CLIENT */
 
-#if defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
     {
 	static void afs_procsize_init(void);
 
@@ -491,7 +491,7 @@ int afs_ResourceInit(int preallocs)
 
 } /*afs_ResourceInit*/
 
-#if defined(AFS_AIX_ENV)
+#if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
 
 /*
  * AIX dynamic sizeof(struct proc)
@@ -537,6 +537,9 @@ static void afs_procsize_init(void)
 {
     struct proc *p0;	/* pointer to process 0 */
     struct proc *pN;	/* pointer to process 0's first child */
+#ifdef AFS_AIX51_ENV
+    struct pvproc *pV;
+#endif
     int pN_index;
     ptrdiff_t pN_offset;
     int procsize;
@@ -547,7 +550,17 @@ static void afs_procsize_init(void)
 	return;
     }
 
+#ifdef AFS_AIX51_ENV
+    pN = (struct proc *)0;
+    pV = p0->p_pvprocp;
+    if (pV) {
+	pV = pV->pv_child;
+	if (pV)
+	    pN = pV->pv_procp;
+    }
+#else
     pN = p0->p_child;
+#endif
     if (!pN) {
 	afs_gcpags = AFS_GCPAGS_EPROCN;
 	return;
@@ -584,7 +597,6 @@ static void afs_procsize_init(void)
 
     afs_gcpags_procsize = procsize;
 }
-
 #endif
 
 /*

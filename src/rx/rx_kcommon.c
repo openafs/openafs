@@ -907,7 +907,15 @@ void afs_rxevent_daemon(void)
 #ifdef RX_ENABLE_LOCKS
 	AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
+#ifdef RX_KERNEL_TRACE
+	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+		   ICL_TYPE_STRING, "before afs_osi_Wait()");
+#endif
 	afs_osi_Wait(500, NULL, 0);
+#ifdef RX_KERNEL_TRACE
+	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+		   ICL_TYPE_STRING, "after afs_osi_Wait()");
+#endif
 	if (afs_termState == AFSOP_STOP_RXEVENT )
 	{
 #ifdef RXK_LISTENER_ENV
@@ -915,7 +923,7 @@ void afs_rxevent_daemon(void)
 #else
 		afs_termState = AFSOP_STOP_COMPLETE;
 #endif
-		afs_osi_Wakeup(&afs_termState);
+		osi_rxWakeup(&afs_termState);
 		return;
 	}
     }
@@ -956,9 +964,21 @@ int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
     p->wirevec[p->niovecs-1].iov_len = savelen + RX_EXTRABUFFERSIZE;
 
     nbytes = tlen + sizeof(afs_int32);
+#ifdef RX_KERNEL_TRACE
+    AFS_GLOCK();
+    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+		ICL_TYPE_STRING, "before osi_NetRecive()");
+    AFS_GUNLOCK();
+#endif
     code = osi_NetReceive(rx_socket, &from, p->wirevec, p->niovecs,
 			    &nbytes);
 
+#ifdef RX_KERNEL_TRACE
+    AFS_GLOCK();
+    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+		ICL_TYPE_STRING, "after osi_NetRecive()");
+    AFS_GUNLOCK();
+#endif
    /* restore the vec to its correct state */
     p->wirevec[p->niovecs-1].iov_len = savelen;
 
@@ -1074,11 +1094,11 @@ void rxk_Listener(void)
 #endif /* RX_ENABLE_LOCKS */
     if (afs_termState == AFSOP_STOP_RXK_LISTENER) {
 	afs_termState = AFSOP_STOP_COMPLETE;
-	afs_osi_Wakeup(&afs_termState);
+	osi_rxWakeup(&afs_termState);
     }
     rxk_ListenerPid = 0;
 #if defined(AFS_LINUX22_ENV) || defined(AFS_SUN5_ENV)
-    afs_osi_Wakeup(&rxk_ListenerPid);
+    osi_rxWakeup(&rxk_ListenerPid);
 #endif
 #ifdef AFS_SUN5_ENV
     AFS_GUNLOCK();

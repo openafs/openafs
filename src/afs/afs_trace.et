@@ -150,7 +150,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_STOREDATA64, "StoreData64: fid (%d:%d.%d.%d) offs (0x%x, 0x%x) len (0x%x, 0x%x) file length (0x%x, 0x%x)"
 	ec	CM_TRACE_RESIDCMD, "ResidencyCmd tvc 0x%x command %d fid (%d:%d.%d.%d)"
 	ec	CM_TRACE_PREFETCHCMD, "PrefetchCmd tvc 0x%x tfid (%d:%d.%d.%d) fid (%d:%d.%d.%d)"
-	ec	CM_TRACE_STOREPROC2, "StoreProc got 0x%x"
+	ec	CM_TRACE_STOREPROC2, "StoreProc got (0x%x, 0x%x) length 0x%x"
 	ec	CM_TRACE_ADJUSTSIZE, "AdjustSize index %d oldSize %d newSize %d blocksUsed %d"
 	ec	CM_TRACE_SETLENGTH, "%s line %d: m.Length was (0x%x, 0x%x), now (0x%x, 0x%x)"
 	ec	CM_TRACE_DCACHEWAIT, "%s line %d: waiting for 0x%x flags 0x%x" 
@@ -161,5 +161,12 @@ error_table 2 ZCM
 	ec	CM_TRACE_DENTRYIPUT, "d_iput inode 0x%x d_name %s/%s"
 	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x name %s parent %s"
 	ec	CM_TRACE_DCACHEWAKE, "%s line %d: waking up waiters for 0x%x flags 0x%x"
+	ec      CM_TRACE_VERSIONNO, "At offset (0x%x, 0x%x) vc shows (0x%x, 0x%x), dc (0x%x, 0x%x)"
+	ec      CM_TRACE_TIMESTAMP, "%s"
+	ec      CM_TRACE_RXSLEEP, "osi_rxSleep() at %s line %d"
+	ec      CM_TRACE_RXWAKE, "osi_rxWakeup() at %s line %d"
+	ec      CM_TRACE_GNGETACL, "Gn_getacl vp 0x%lx (returns 0x%x)"
+	ec      CM_TRACE_EINVAL, "EINVAL in %s at line %d"
+	ec      CM_TRACE_VNODEREAD2, "negative length tdc 0x%lx validPos (0x%x, 0x%x) chunkBytes 0x%x dflags 0x%x"
 end
 

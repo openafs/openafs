@@ -105,6 +105,10 @@ static ssize_t afs_linux_read(struct file *fp, char *buf, size_t count,
             code = afs_read(vcp, &tuio, credp, 0, 0, 0);
 	    xfered += count - tuio.uio_resid;
 	    if (code != 0) {
+    		afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
+	       		ICL_TYPE_OFFSET, offp,
+	       		ICL_TYPE_INT32, -1,
+	       		ICL_TYPE_INT32, code);
 		code = xfered;
 		*offp += count - tuio.uio_resid;
 	    } else {

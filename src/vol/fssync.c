@@ -426,7 +426,7 @@ defect #2080 for details.
 	    tvolName[0] = '/';
 	    sprintf(&tvolName[1], VFORMAT, command.volume);
 
-	    vp = VAttachVolumeByName_r(&error, command.partName, tvolName, V_UPDATE);
+	    vp = VAttachVolumeByName_r(&error, command.partName, tvolName, V_VOLUPD);
 	    if (vp)
 	        VPutVolume_r(vp);
 	    break;
@@ -580,7 +580,7 @@ static void FSYNC_Drop(fd)
 
 	    tvolName[0] = '/';
 	    sprintf(&tvolName[1], VFORMAT, p[i].volumeID);
-	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName, V_UPDATE);
+	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName, V_VOLUPD);
 	    if (vp)
 	        VPutVolume_r(vp);
 	    p[i].volumeID = 0;
