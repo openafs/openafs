@@ -84,6 +84,7 @@ extern void afs_GCPAGs_perproc_func(AFS_PROC *pproc);
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
+extern char *afs_strchr(char *s, int c);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);

@@ -71,6 +71,16 @@ char *afs_cv2string(char *ttp, afs_uint32 aval)
 
 } /*afs_cv2string*/
 
+char *afs_strchr(char *s, int c)
+{
+    char *p;
+   
+    for (p = s; *p; p++)
+      if (*p == c)
+	return p;
+    return NULL;
+}
+
 void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag)
 {

@@ -265,15 +265,9 @@ afs_InitFakeStat(state)
  *
  * The actual implementation of afs_EvalFakeStat and afs_TryEvalFakeStat,
  * which is called by those wrapper functions.
- *
- * Only issues RPCs if canblock is non-zero.
  */
-static int
-afs_EvalFakeStat_int(avcp, state, areq, canblock)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
-    int canblock;
+static int afs_EvalFakeStat_int(stricr vcache **avcp,
+      struct afs_fakestat_state *state, struct vrequest *areq, int canblock)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -288,10 +282,29 @@ afs_EvalFakeStat_int(avcp, state, areq, canblock)
     if (tvc->mvstat != 1)
 	return 0;
 
-    /* Is the call to VerifyVCache really necessary? */
     code = afs_VerifyVCache(tvc, areq);
     if (code)
 	goto done;
+
+    if (afs_fakestat_enable == 2 && !canblock) {
+	ObtainSharedLock(&tvc->lock, 680);
+	if (!tvc->linkData) {
+	    UpgradeSToWLock(&tvc->lock, 681);
+	    code = afs_HandleLink(tvc, areq);
+	    if (code) {
+		ReleaseWriteLock(&tvc->lock);
+		goto done;
+	    }
+	    ConvertWToRLock(&tvc->lock);
+	} else {
+	    ConvertSToRLock(&tvc->lock);
+	}
+
+	if (!afs_strchr(tvc->linkData, ':'))
+	    canblock = 1;
+	ReleaseReadLock(&tvc->lock);
+    }
+
     if (canblock) {
 	ObtainWriteLock(&tvc->lock, 599);
 	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
