@@ -39,7 +39,7 @@ SOFTWARE.
 #include <adshlp.h>
 /**/
 
-#define SEC_ERR_VALUE(v) if(status==v) return #v
+#define SEC_ERR_VALUE(v) if (status==v) return #v
 
 char * _get_sec_err_text(SECURITY_STATUS status) {
 	SEC_ERR_VALUE(SEC_E_OK);
@@ -93,7 +93,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 		&creds,
 		&expiry);
 
-	if(status != SEC_E_OK) {
+	if (status != SEC_E_OK) {
 		DebugEvent("AcquireCredentialsHandle failed: %lX", status);
 		goto ghp_0;
 	}
@@ -132,17 +132,17 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 
 		DebugEvent("InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
 
-		if(!first) FreeContextBuffer(stoks.pvBuffer);
+		if (!first) FreeContextBuffer(stoks.pvBuffer);
         
-		if(status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+		if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
 			CompleteAuthToken(&ctxclient, &sdescc);
 		}
 
-		if(status != SEC_I_CONTINUE_NEEDED && status != SEC_I_COMPLETE_AND_CONTINUE) {
+		if (status != SEC_I_CONTINUE_NEEDED && status != SEC_I_COMPLETE_AND_CONTINUE) {
 			cont = FALSE;
 		}
 
-		if(!stokc.cbBuffer && !cont) {
+		if (!stokc.cbBuffer && !cont) {
 			DebugEvent("Breaking out after InitializeSecurityContext");
 			break;
 		}
@@ -162,22 +162,22 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 
 		FreeContextBuffer(stokc.pvBuffer);
 
-		if(status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+		if (status == SEC_I_COMPLETE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
 			CompleteAuthToken(&ctxserver,&sdescs);
 		}
 
-		if(status == SEC_I_CONTINUE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
+		if (status == SEC_I_CONTINUE_NEEDED || status == SEC_I_COMPLETE_AND_CONTINUE) {
 			cont = TRUE;
 		}
 
-		if(!cont)
+		if (!cont)
 			FreeContextBuffer(stoks.pvBuffer);
 
 		first = FALSE;
 		iters--; /* just in case, hard limit on loop */
-	} while(cont && iters);
+	} while (cont && iters);
 
-	if(sattrs & ASC_RET_DELEGATE) {
+	if (sattrs & ASC_RET_DELEGATE) {
 		DebugEvent("Received delegate context");
 		*outCtx = ctxserver;
 		code = 0;
@@ -209,13 +209,13 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
     for ( p=domain, a=ansidomain; *a = (CHAR)*p; p++, a++);
     DebugEvent("Domain: %s", ansidomain);
 
-    if(ConvertSidToStringSidW(psid,&p)) {
+    if (ConvertSidToStringSidW(psid,&p)) {
         IADsNameTranslate *pNto;
 
         DebugEvent("Got SID string [%S]", p);
 
         hr = CoInitialize(NULL);
-        if(SUCCEEDED(hr))
+        if (SUCCEEDED(hr))
             coInitialized = TRUE;
 
         hr = CoCreateInstance( CLSID_NameTranslate,
@@ -224,20 +224,22 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
                                IID_IADsNameTranslate,
                                (void**)&pNto);
 
-        if(FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
+        if (FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
         else {
             hr = pNto->Init(ADS_NAME_INITTYPE_GC,L"");
             if (FAILED(hr)) { 
                 DebugEvent("NameTranslate Init GC failed [%ld]", hr);
-                hr = pNto->Init(ADS_NAME_INITTYPE_DOMAIN,domain);
-                if (FAILED(hr)) { 
-                    DebugEvent("NameTranslate Init Domain failed [%ld]", hr);
+                if ( domain ) {
+                    hr = pNto->Init(ADS_NAME_INITTYPE_DOMAIN,domain);
+                    if (FAILED(hr)) { 
+                        DebugEvent("NameTranslate Init Domain failed [%ld]", hr);
+                    }
                 }
             }
 
             if (!FAILED(hr)) {
                 hr = pNto->Set(ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, p);
-                if(FAILED(hr)) { DebugEvent("Can't set sid string"); }
+                if (FAILED(hr)) { DebugEvent("Can't set sid string"); }
                 else {
                     BSTR bstr;
 
@@ -256,13 +258,13 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
         DebugEvent("Can't convert sid to string");
     }
 
-	if(adsPath[0]) {
+	if (adsPath[0]) {
 		WCHAR fAdsPath[MAX_PATH];
 		IADsUser *pAdsUser;
 		BSTR bstHomeDir = NULL;
 
 		hr = StringCchPrintfW(fAdsPath, MAX_PATH, L"LDAP://%s", adsPath);
-		if(hr != S_OK) {
+		if (hr != S_OK) {
 			DebugEvent("Can't format full adspath");
 			goto cleanup;
 		}
@@ -270,13 +272,13 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
 		DebugEvent("Trying adsPath=[%S]", fAdsPath);
 
 		hr = ADsGetObject( fAdsPath, IID_IADsUser, (LPVOID *) &pAdsUser);
-		if(hr != S_OK) {
+		if (hr != S_OK) {
 			DebugEvent("Can't open IADs object");
 			goto cleanup;
 		}
 
         hr = pAdsUser->get_Profile(&bstHomeDir);
-		if(hr != S_OK) {
+		if (hr != S_OK) {
 			DebugEvent("Can't get profile directory");
 			goto cleanup_homedir_section;
 		}
@@ -294,7 +296,7 @@ cleanup_homedir_section:
 	}
 
 cleanup:
-	if(coInitialized)
+	if (coInitialized)
 		CoUninitialize();
 
 	return code;               
@@ -310,24 +312,24 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonO
 
 	homePath[0] = '\0';
 
-	if(LogonSSP(lpLogonId,&ctx)) {
+	if (LogonSSP(lpLogonId,&ctx)) {
         DebugEvent("Failed LogonSSP");
 		return 1;
     } else {
 		status = ImpersonateSecurityContext(&ctx);
-		if(status == SEC_E_OK) {
+		if (status == SEC_E_OK) {
 		    PSECURITY_LOGON_SESSION_DATA plsd;
             NTSTATUS rv;
 
             rv = LsaGetLogonSessionData(lpLogonId, &plsd);
-            if(rv == 0) {
+            if (rv == 0) {
                 PWSTR domain;
 
                 domain = (PWSTR)malloc(sizeof(WCHAR) * (plsd->LogonDomain.Length+1));
                 memcpy(domain, plsd->LogonDomain.Buffer, sizeof(WCHAR) * (plsd->LogonDomain.Length));
                 domain[plsd->LogonDomain.Length] = 0;
 
-                if(!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid,domain)) {
+                if (!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid,domain)) {
                     DebugEvent("Returned home path [%s]",homePath);
                     opt->flags |= LOGON_FLAG_AD_REALM;
                 }
@@ -355,7 +357,7 @@ BOOL GetLocalShortDomain(PWSTR Domain)
     BOOL retval = FALSE;
 
     hr = CoInitialize(NULL);
-    if(SUCCEEDED(hr))
+    if (SUCCEEDED(hr))
         coInitialized = TRUE;
 
     hr = CoCreateInstance(CLSID_ADSystemInfo,
@@ -367,12 +369,15 @@ BOOL GetLocalShortDomain(PWSTR Domain)
         BSTR bstr;
 
         hr = pADsys->get_DomainShortName(&bstr);
-        wcscpy( Domain, bstr );
+        if ( !FAILED(hr) ) {
+            wcscpy( Domain, bstr );
+            SysFreeString(bstr);
+            retval = TRUE;
+        }
         pADsys->Release();
-        retval = TRUE;
     }
 
-	if(coInitialized)
+	if (coInitialized)
 		CoUninitialize();
 
     return retval;
