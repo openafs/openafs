@@ -1794,6 +1794,7 @@ SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
+    FidZero(&dir);
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
     logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
@@ -1862,6 +1863,7 @@ SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
 Bad_RemoveFile: 
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
     ViceLog(2, ("SAFS_RemoveFile returns %d\n",	errorCode)); 
     return errorCode;
 
@@ -1956,6 +1958,8 @@ SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
+    FidZero(&dir);
+
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
     logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
@@ -2023,6 +2027,7 @@ SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
 Bad_CreateFile:
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
     ViceLog(2, ("SAFS_CreateFile returns %d\n",	errorCode)); 
     return errorCode;
 
@@ -2133,6 +2138,11 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
     struct client *t_client;            /* tmp ptr to client data */
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
+
+    FidZero(&olddir);
+    FidZero(&newdir);
+    FidZero(&filedir);
+    FidZero(&newfiledir);
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
@@ -2483,6 +2493,10 @@ Bad_Rename:
     }
     PutVolumePackage(fileptr, (newvptr && newvptr != oldvptr? newvptr : 0),
 		     oldvptr, volptr);
+    FidZap(&olddir);
+    FidZap(&newdir);
+    FidZap(&filedir);
+    FidZap(&newfiledir);
     ViceLog(2, ("SAFS_Rename returns %d\n", errorCode));
     return errorCode;
 
@@ -2582,6 +2596,8 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
     FdHandle_t *fdP;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
+    FidZero(&dir);
+
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
     logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
@@ -2673,6 +2689,7 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
 Bad_SymLink: 
     /* Write the all modified vnodes (parent, new files) and volume back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
     ViceLog(2, ("SAFS_Symlink returns %d\n", errorCode));
     return errorCode;
 
@@ -2769,6 +2786,8 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
     struct client *t_client;            /* tmp ptr to client data */
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
+
+    FidZero(&dir);
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
@@ -2874,6 +2893,7 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
 Bad_Link:
     /* Write the all modified vnodes (parent, new files) and volume back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
     ViceLog(2, ("SAFS_Link returns %d\n", errorCode));
     return errorCode;
 
@@ -2974,6 +2994,9 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
+    FidZero(&dir);
+    FidZero(&parentdir);
+
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
     logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
@@ -3044,7 +3067,7 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
     Update_TargetVnodeStatus(targetptr, TVS_MKDIR, client, InStatus,
 			     parentptr, volptr, 0);
 
-    /* Actually create the New directory in the directory package */
+    /* Actually create the New directory in the directory package */ 
     SetDirHandle(&dir, targetptr);
     assert(!(MakeDir(&dir, OutFid, DirFid)));
     DFlush();
@@ -3067,6 +3090,8 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
 Bad_MakeDir: 
     /* Write the all modified vnodes (parent, new files) and volume back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
+    FidZap(&parentdir);
     ViceLog(2, ("SAFS_MakeDir returns %d\n", errorCode)); 
     return errorCode;
 
@@ -3162,6 +3187,8 @@ SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
     struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
+    FidZero(&dir);
+
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
     logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
@@ -3226,6 +3253,7 @@ SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
 Bad_RemoveDir: 
     /* Write the all modified vnodes (parent, new files) and volume back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    FidZap(&dir);
     ViceLog(2, ("SAFS_RemoveDir	returns	%d\n", errorCode));
     return errorCode;
 
@@ -6663,6 +6691,7 @@ int CopyOnWrite(targetptr, volptr)
 		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
 			       V_id(volptr), volptr->partition->name, length,
 			       rdlen, wrlen, errno));
+		    assert(0);
                     /* Decrement this inode so salvager doesn't find it. */
 		    FDH_REALLYCLOSE(newFdP);
 		    IH_RELEASE(newH);
