@@ -431,7 +431,7 @@ _init()
         printf("misc/nfssrv module must be loaded before loading afs with nfs-xlator\n");
         return (ENOSYS);
     }
-#else
+#else /* !AFS_SUN55_ENV */
 #if	defined(AFS_SUN52_ENV)
     if ((!(mp = mod_find_by_filename("fs", "nfs")) && 
 	!(mp = mod_find_by_filename(NULL, "/kernel/fs/nfs")) &&
@@ -440,9 +440,10 @@ _init()
 	printf("fs/nfs module must be loaded before loading afs with nfs-xlator\n");
 	return (ENOSYS);
     }
-#endif
-#endif
-#endif
+#endif /* AFS_SUN52_ENV */
+#endif /* AFS_SUN55_ENV */
+#endif /* !AFS_NONFSTRANS */
+#if !defined(AFS_SUN58_ENV)
     /* 
      * Re-read the /etc/name_to_sysnum file to make sure afs isn't added after
      * reboot.  Ideally we would like to call modctl_read_sysbinding_file() but
@@ -455,14 +456,12 @@ _init()
 #ifdef	AFS_SUN53_ENV
 #ifndef	SYSBINDFILE
 #define	SYSBINDFILE	"/etc/name_to_sysnum"
-#endif
+#endif /* SYSBINDFILE */
     read_binding_file(SYSBINDFILE, sb_hashtab);
-#else
+#else /* !AFS_SUN53_ENV */
     read_binding_file(sysbind, sb_hashtab);
-#endif
-#if !defined(AFS_SUN58_ENV)
+#endif /* AFS_SUN53_ENV */
     make_syscallname("afs", AFS_SYSCALL);
-#endif
 
     if (sysent[AFS_SYSCALL].sy_call == nosys) {
 	if ((sysn = mod_getsysname(AFS_SYSCALL)) != NULL) {
@@ -471,11 +470,12 @@ _init()
 	    rw_init(sysent[AFS_SYSCALL].sy_lock, "afs_syscall",
 #ifdef AFS_SUN57_ENV
 		    RW_DEFAULT, NULL);
-#else
+#else /* !AFS_SUN57_ENV */
 			RW_DEFAULT, DEFAULT_WT);
-#endif	
+#endif /* AFS_SUN57_ENV */
 	}
     }
+#endif /* !AFS_SUN58_ENV */
 
     osi_Init();				/* initialize global lock, etc */
 
