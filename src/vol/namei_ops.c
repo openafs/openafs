@@ -317,8 +317,8 @@ delTree(char *root, char *tree, int *errp)
 	 */
 	*cp = 0; 
       }
-      if (!errno)
-	closedir(ds);
+      /* if (!errno) -- closedir not implicit if we got an error */
+      closedir(ds);
     } 
     
     /* finally axe the current dir */
