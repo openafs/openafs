@@ -364,6 +364,7 @@ uninstall:
 
 all: run-tests OpenAFS/OS.pm libxfiles.a libdumpscan.a $(TEST_PROGRAMS)\
 	afsdump_scan afsdump_dirlist afsdump_extract dumptool
+	@chmod +x run-tests
 
 clean:
 	-rm -f xf_errs.c xf_errs.h dumpscan_errs.c dumpscan_errs.h *.o \
