@@ -536,6 +536,10 @@ struct AFS_UCRED *acred; {
 	   this way at least, they can get work done */
 	if (af->l_len == 0x7fffffff)
 	    af->l_len = 0;	/* since some systems indicate it as EOF */
+#ifdef AFS_LINUX_64BIT_KERNEL
+	if (af->l_len == LONG_MAX)
+	    af->l_len = 0;      /* since some systems indicate it as EOF */
+#endif
 	/* next line makes byte range locks always succeed,
 	   even when they should block */
 	if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
