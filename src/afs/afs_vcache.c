@@ -962,6 +962,12 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
 	INIT_LIST_HEAD(&ip->i_data.locked_pages);
 	INIT_LIST_HEAD(&ip->i_dirty_buffers);
+#ifdef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+	INIT_LIST_HEAD(&inode->i_dirty_data_buffers);
+#endif
+#ifdef STRUCT_INODE_HAS_I_DEVICES
+	INIT_LIST_HEAD(&inode->i_devices);
+#endif
 	ip->i_data.host = (void*) ip;
 	ip->i_mapping = &ip->i_data;
 #ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
