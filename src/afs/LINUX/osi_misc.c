@@ -12,15 +12,15 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"
 #if defined(AFS_LINUX24_ENV)
-#include "../h/smp_lock.h"
+#include "h/smp_lock.h"
 #endif
 
 char *crash_addr = 0; /* Induce an oops by writing here. */

@@ -155,10 +155,10 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		cd ../ ; \
 	done
 
-linux_compdirs_libafs: libafs
-linux_compdirs_libafs.mp: libafs.mp
-linux_compdirs_libafs.ep: libafs.ep
-linux_compdirs_libafs.bm: libafs.bm
+linux_compdirs_libafs: depsrcs libafs
+linux_compdirs_libafs.mp: depsrcs libafs.mp
+linux_compdirs_libafs.ep: depsrcs libafs.ep
+linux_compdirs_libafs.bm: depsrcs libafs.bm
 linux_instdirs_libafs: install_libafs
 linux_instdirs_libafs.mp: install_libafs.mp
 linux_instdirs_libafs.ep: install_libafs.ep
@@ -262,30 +262,3 @@ $(DEST_LIBAFS_EP): $(LIBAFS_EP)
 
 $(DEST_LIBAFS_BM): $(LIBAFS_BM)
 	${INSTALL} -f $? $@
-
-
-# Linux specific objects
-osi_alloc.o: $(AFS)/osi_alloc.c
-	$(CRULE1)
-osi_cred.o: $(AFS)/osi_cred.c
-	$(CRULE1)
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_module.o: $(AFS)/osi_module.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_sysctl.o: $(AFS)/osi_sysctl.c
-	$(CRULE1)
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1)
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)

@@ -8,12 +8,12 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #include <sys/namei.h>
 
 int osi_lookupname(char *aname, enum uio_seg seg, int followlink,

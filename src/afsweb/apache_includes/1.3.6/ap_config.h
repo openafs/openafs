@@ -110,7 +110,7 @@ stat() properly */
 #ifdef WIN32
 /* include process.h first so we can override spawn[lv]e* properly */
 #include <process.h>
-#include "../os/win32/os.h"
+#include "os/win32/os.h"
 #else
 #include "os.h"
 #endif
@@ -1006,7 +1006,7 @@ typedef int rlim_t;
 #endif
 
 #ifdef WIN32
-#include "../include/hsregex.h"
+#include "include/hsregex.h"
 #elif defined(USE_HSREGEX)
 #include "hsregex.h"
 #else

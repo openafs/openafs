@@ -57,7 +57,7 @@
 RCSID("$Header$");
 
 
-#include "../lwp.h"
+#include "lwp.h"
 #include "seltest.h"
 
 extern int IOMGR_Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);

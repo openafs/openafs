@@ -12,14 +12,14 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../h/unistd.h" /* For syscall numbers. */
-#include "../h/mm.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "h/unistd.h" /* For syscall numbers. */
+#include "h/mm.h"
 
 #include <linux/module.h>
 #include <linux/slab.h>

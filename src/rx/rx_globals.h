@@ -10,7 +10,7 @@
 /* RX:  Globals for internal use, basically */
 
 #ifdef	KERNEL
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* KERNEL */
 # include "rx.h"
 #endif /* KERNEL */

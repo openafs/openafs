@@ -31,30 +31,20 @@ LIBS=\
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a
 
-KSRCS=Kvldbint.cs.c Kvldbint.xdr.c vl_opcodes.h vldbint.h
-UKSRCS=$(KSRCS)
-
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
-
-CDIR=../../../src/vlserver
 
 
 all: \
 	vlserver vlclient cnvldb vlserver cnvldb vldb_check \
-	${TOP_LIBDIR}/libvldb.a \
+	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
+	${TOP_LIBDIR}/libvldb.a depinstall
+
+depinstall: \
+	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h \
 	${TOP_INCDIR}/afs/vl_opcodes.h \
 	${TOP_INCDIR}/afs/vlserver.h \
 	${TOP_INCDIR}/afs/vldbint.h \
-	${TOP_INCDIR}/afs/cnvldb.h \
-	${KERNELDIR}/afsint/Kvldbint.cs.c \
-	${KERNELDIR}/afsint/Kvldbint.xdr.c \
-	${KERNELDIR}/afsint/vl_opcodes.h \
-	${KERNELDIR}/afsint/vldbint.h \
-	${UKERNELDIR}/afsint/Kvldbint.cs.c \
-	${UKERNELDIR}/afsint/Kvldbint.xdr.c \
-	${UKERNELDIR}/afsint/vl_opcodes.h \
-	${UKERNELDIR}/afsint/vldbint.h
-
+	${TOP_INCDIR}/afs/cnvldb.h 
 
 vldb_check: vldb_check.o
 	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${XLIBS} \
@@ -122,15 +112,6 @@ vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 
 system: install
 
-kinstall: $(KSRCS)
-	${INSTALL} $(KSRCS) ${KERNELDIR}/afsint
-
-ukinstall webinstall: ${UKERNELDIR}/afsint $(UKSRCS)
-	${INSTALL} $(UKSRCS) ${UKERNELDIR}/afsint
-
-${UKERNELDIR}/afsint:
-	mkdir -p $@
-
 ${DEST}/root.server/usr/afs/bin/vlserver: vlserver
 	${INSTALL} $? $@
 
@@ -150,30 +131,6 @@ ${TOP_INCDIR}/afs/vldbint.h: vldbint.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/cnvldb.h: cnvldb.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Kvldbint.cs.c: Kvldbint.cs.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Kvldbint.xdr.c: Kvldbint.xdr.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/vl_opcodes.h: vl_opcodes.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/vldbint.h: vldbint.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Kvldbint.cs.c: Kvldbint.cs.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Kvldbint.xdr.c: Kvldbint.xdr.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/vl_opcodes.h: vl_opcodes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/vldbint.h: vldbint.h
 	${INSTALL} $? $@
 
 install: \

@@ -82,7 +82,7 @@ RCSID("$Header$");
 #ifdef AFS_SGI_EFS_IOPS_ENV
 #define ROOTINO EFS_ROOTINO
 #include <sys/fs/efs.h>
-#include "../sgiefs/efs.h" /* until 5.1 release */ 
+#include "sgiefs/efs.h" /* until 5.1 release */ 
 #endif
 
 

@@ -13,13 +13,10 @@ CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
 all: \
 	${TOP_LIBDIR}/libdir.a \
-	${TOP_INCDIR}/afs/dir.h \
-	${KERNELDIR}/afs \
-	${KERNELDIR}/afs/dir.h \
-	${KERNELDIR}/afs/afs_dir.c \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/dir.h \
-	${UKERNELDIR}/afs/afs_dir.c
+	depinstall
+
+depinstall: \
+	${TOP_INCDIR}/afs/dir.h 
 
 libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(RM) -f $@
@@ -43,24 +40,6 @@ ${TOP_INCDIR}/afs/dir.h: dir.h
 	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/libdir.a: libdir.a
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs:
-	mkdir -p $@
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-${KERNELDIR}/afs/dir.h: dir.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/afs_dir.c: dir.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/dir.h: dir.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/afs_dir.c: dir.c
 	${INSTALL} $? $@
 
 install: \

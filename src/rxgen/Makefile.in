@@ -16,7 +16,7 @@ OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
 GOAL=rxgen
 CFLAGS=-I. -I${TOP_INCDIR} -I${TOP_OBJDIR}/src/config ${XCFLAGS}
 
-all: ukinstall rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
+all: rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
 
 rxgen: $(OBJS) AFS_component_version_number.c
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
@@ -25,16 +25,6 @@ rxgen: $(OBJS) AFS_component_version_number.c
 # Install targets
 #
 install:  ${DESTDIR}${bindir}/rxgen ${DESTDIR}${includedir}/afs/rxgen_consts.h
-
-ukinstall: \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/rxgen_consts.h
-
-${UKERNELDIR}/afs:
-	mkdir -p ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs/rxgen_consts.h: rxgen_consts.h
-	${INSTALL} $? $@
 
 ${DEST}/bin/rxgen: rxgen
 	${INSTALL} $? $@

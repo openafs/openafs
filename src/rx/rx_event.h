@@ -13,8 +13,8 @@
 #define _EVENT_
 
 #ifdef	KERNEL
-#include "../rx/rx_queue.h"
-#include "../rx/rx_clock.h"
+#include "rx/rx_queue.h"
+#include "rx/rx_clock.h"
 #else /* KERNEL */
 #include "rx_queue.h"
 #include "rx_clock.h"

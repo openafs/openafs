@@ -429,7 +429,7 @@ ginode(inum) {
 #define	__ASSERT_H__
 
 #ifdef AFS_SGI_EFS_IOPS_ENV
-#include "../sgiefs/libefs.h"
+#include "sgiefs/libefs.h"
 extern int Log();
 
 /* afs_efs_figet() replaces the SGI library routine because we are malloc'ing

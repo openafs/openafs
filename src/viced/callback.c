@@ -108,7 +108,7 @@ RCSID("$Header$");
 #include <afs/nfs.h>   /* yuck.  This is an abomination. */
 #include <lwp.h>
 #include <rx/rx.h>
-#include <afs/afscbint.h>
+#include <afscbint.h>
 #include <afs/afsutil.h>
 #include <lock.h>
 #include <afs/ihandle.h>

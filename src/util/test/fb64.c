@@ -17,7 +17,7 @@ RCSID("$Header$");
 main() { printf("fb64 not required for this operating system.\n"); exit(1); }
 #else
 
-#include "../afsutil.h"
+#include "afsutil.h"
 
 char *prog = "fb64";
 

@@ -65,7 +65,7 @@ RCSID("$Header$");
 #include <mntent.h>
 #ifdef AFS_SGI_EFS_IOPS_ENV
 #define ROOTINO EFS_ROOTINO
-#include "../sgiefs/efs.h"
+#include "sgiefs/efs.h"
 #endif
 #else
 #ifdef AFS_LINUX22_ENV

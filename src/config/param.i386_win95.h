@@ -1,3 +1,6 @@
+#ifndef UKERNEL
+/* This section for kernel libafs compiles only */
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -60,3 +63,10 @@ typedef char * caddr_t;
 
 #define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
 #endif /* AFS_PARAM_H */
+
+#else /* !defined(UKERNEL) */
+
+/* This section for user space compiles only */
+
+
+#endif /* !defined(UKERNEL) */

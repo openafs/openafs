@@ -8,12 +8,12 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #ifdef AFS_DUX40_ENV
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 
 
 static struct protosw parent_proto;	/* udp proto switch */

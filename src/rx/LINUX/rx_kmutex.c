@@ -14,13 +14,13 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../rx/rx_kcommon.h"
-#include "../rx/rx_kmutex.h"
-#include "../rx/rx_kernel.h"
+#include "rx/rx_kcommon.h"
+#include "rx_kmutex.h"
+#include "rx/rx_kernel.h"
 
 #ifdef CONFIG_SMP
 

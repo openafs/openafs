@@ -186,15 +186,6 @@ typedef struct afs_hyper_t { /* unsigned 64 bit integers */
 /*#define abs(x)                  ((x) >= 0 ? (x) : -(x))*/
 #endif
 
-#if defined(AFS_LINUX20_ENV) && defined(KERNEL)
-/* This is here instead of osi_machdep.h so fcrypt.c can pick it up. */
-#include "../h/string.h"
-#if 0
-#define bcopy(F, T, C) memcpy((T), (F), (C))
-#endif
-#endif
-
-
 /* minumum length of string to pass to int_to_base64 */
 typedef char b64_string_t[8];
 #if defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))

@@ -31,10 +31,3 @@ clean:
 #######################################################################
 
 test tests: usd_test
-
-kinstall:
-	@echo No kernel source here.
-
-
-
-

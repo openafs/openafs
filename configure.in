@@ -5,14 +5,6 @@ AC_CONFIG_HEADER(src/config/afsconfig.h)
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
-TOP_SRCDIR="${srcdir}/src"
-TOP_OBJDIR="${SRCDIR_PARENT}"
-TOP_INCDIR="${SRCDIR_PARENT}/include"
-TOP_LIBDIR="${SRCDIR_PARENT}/lib"
-if test "${DEST}x" = "x"; then
-	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
-fi
-
 AC_OUTPUT(             \
 Makefile               \
 src/afs/Makefile \

@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -18,38 +18,38 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../rx/rx_kcommon.h"
-#include "../rx/rx_clock.h"
-#include "../rx/rx_queue.h"
-#include "../rx/rx_packet.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rx/rx_kcommon.h"
+#include "rx/rx_clock.h"
+#include "rx/rx_queue.h"
+#include "rx/rx_packet.h"
 #else /* defined(UKERNEL) */
-#include "../h/types.h"
+#include "h/types.h"
 #ifndef AFS_LINUX20_ENV
-#include "../h/systm.h"
+#include "h/systm.h"
 #endif
 #if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 #endif
-#include "../h/socket.h"
+#include "h/socket.h"
 #if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV)
 #if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
-#include "../sys/mount.h"   /* it gets pulled in by something later anyway */
+#include "sys/mount.h"   /* it gets pulled in by something later anyway */
 #endif
-#include "../h/mbuf.h"
+#include "h/mbuf.h"
 #endif
-#include "../netinet/in.h"
-#include "../afs/afs_osi.h"
-#include "../rx/rx_kmutex.h"
-#include "../rx/rx_clock.h"
-#include "../rx/rx_queue.h"
+#include "netinet/in.h"
+#include "afs/afs_osi.h"
+#include "rx_kmutex.h"
+#include "rx/rx_clock.h"
+#include "rx/rx_queue.h"
 #ifdef	AFS_SUN5_ENV
 #include <sys/sysmacros.h>
 #endif
-#include "../rx/rx_packet.h"
+#include "rx/rx_packet.h"
 #endif /* defined(UKERNEL) */
-#include "../rx/rx_globals.h"
+#include "rx/rx_globals.h"
 #else /* KERNEL */
 #include "sys/types.h"
 #include <sys/stat.h>

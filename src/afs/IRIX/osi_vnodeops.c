@@ -11,16 +11,16 @@
  * SGI specific vnodeops + other misc interface glue
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #ifdef	AFS_SGI62_ENV
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
-#include "../sys/flock.h" 
-#include "../afs/nfsclient.h"  
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"  /* statistics */
+#include "sys/flock.h" 
+#include "afs/nfsclient.h"  
 
 /* AFSBSIZE must be at least the size of a page, else the client will hang.
  * For 64 bit platforms, the page size is more than 8K.

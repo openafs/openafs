@@ -15,8 +15,8 @@ RCSID("$Header$");
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #ifdef UKERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -13,7 +13,7 @@ This file is now obsolete.
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -21,9 +21,9 @@ This file is now obsolete.
 RCSID("$Header$");
 
 #ifdef	KERNEL
-#include "../h/types.h"
-#include "../h/uio.h"
-#include "../rx/rx_stream.h"
+#include "h/types.h"
+#include "h/uio.h"
+#include "rx/rx_stream.h"
 #else /* KERNEL */
 #include "rx_stream.h"
 #endif /* KERNEL */

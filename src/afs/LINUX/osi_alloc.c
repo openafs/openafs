@@ -12,17 +12,17 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../h/mm.h"
-#include "../h/slab.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "h/mm.h"
+#include "h/slab.h"
 
-#include "../afs/afs_atomlist.h"
-#include "../afs/afs_lhash.h"
+#include "afs_atomlist.h"
+#include "afs_lhash.h"
 
 #define MAX_KMALLOC_SIZE PAGE_SIZE /* Max we should alloc with kmalloc */
 #define MAX_BUCKET_LEN 30 /* max. no. of entries per buckets we expect to see */
@@ -51,7 +51,7 @@ struct afs_lhash_stat afs_linux_lsb; /* hash table statistics */
 unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN]; /* bucket population distribution in our hash table */
 
 #if defined(AFS_LINUX24_ENV)
-#include "../h/vmalloc.h"
+#include "h/vmalloc.h"
 #else
 /* externs : can we do this in a better way. Including vmalloc.h causes other
  * problems.*/

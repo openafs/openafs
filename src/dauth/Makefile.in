@@ -38,9 +38,6 @@ USNS=		cellname
 
 include ../config/Makefile.version
 
-ukinstall webinstall:
-		echo No $@ source here
-
 noversion:	install
 
 all: dlog dpass

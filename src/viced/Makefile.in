@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-CFLAGS=-DNINTERFACE -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs \
+CFLAGS=-DNINTERFACE -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
 	 ${XCFLAGS} -DRXDEBUG
 
 LDFLAGS = ${DBUG} ${XLDFLAGS}

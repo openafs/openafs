@@ -114,22 +114,9 @@ netscape_afs_web_secure:
 	chmod a+x ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
 	chmod a+w ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
 
-all: kinstall ukinstall
+all: 
 
 install:  
-
-kinstall:
-	@echo No $@ source here.
-
-
-webinstall: ${UKERNELDIR}/afs ${UKSRCS}
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-ukinstall:
-	@echo No $@ source here.
 
 ##
 ## For Apache Afs Web Secure libraries and binaries

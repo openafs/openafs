@@ -26,17 +26,17 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-#include "../afs/stds.h"
-#include "../afs/sysincludes.h" /* Standard vendor system headers */
-#include "../afs/afsincludes.h"
-#include "../afs/afs_osi.h"
-#include "../afsint/afsint.h"
-#include "../afs/lock.h"
+#include "afs/stds.h"
+#include "afs/sysincludes.h" /* Standard vendor system headers */
+#include "afsincludes.h"
+#include "afs/afs_osi.h"
+#include "afsint.h"
+#include "afs/lock.h"
 
-#include "../afs/prs_fs.h"
-#include "../afs/dir.h"
+#include "afs/prs_fs.h"
+#include "afs/dir.h"
 
 #define AFS_DYNROOT_CELLNAME	"dynroot"
 #define AFS_DYNROOT_VOLUME	1

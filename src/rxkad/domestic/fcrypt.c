@@ -14,7 +14,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -24,20 +24,20 @@ RCSID("$Header$");
 #define DEBUG 0
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "../afs/stds.h"
-#include "../h/types.h"
+#include "afs/stds.h"
+#include "h/types.h"
 #ifndef AFS_LINUX20_ENV
-#include "../netinet/in.h"
+#include "netinet/in.h"
 #endif
 #else /* UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../afs/stds.h"
+#include "afs/sysincludes.h"
+#include "afs/stds.h"
 #endif /* UKERNEL */
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
 
-#include "../afs/longc_procs.h"
+#include "afs/longc_procs.h"
 
 #else /* KERNEL */
 

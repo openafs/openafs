@@ -13,12 +13,12 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
 
 /*
  * afs_suser() returns true if the caller is superuser, false otherwise.

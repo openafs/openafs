@@ -17,7 +17,7 @@ This file is now obsolete.
 #define _RX_STREAM_
 
 #ifdef	KERNEL
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* KERNEL */
 #include <sys/types.h>
 #include <sys/uio.h>

@@ -11,14 +11,14 @@
  * Implementation of Irix IDBG facility for AFS.
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #ifdef	AFS_SGI62_ENV
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"  /* statistics */
 
 
 /*

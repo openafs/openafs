@@ -13,8 +13,8 @@
 RCSID("$Header$");
 
 #if defined(UKERNEL)
-#include "../rx/xdr.h"
-#include "../afsint/kauth.h"
+#include "rx/xdr.h"
+#include "afs/kauth.h"
 #else /* defined(UKERNEL) */
 #include <rx/xdr.h>
 #include "kauth.h"

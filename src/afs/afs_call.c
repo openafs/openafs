@@ -8,25 +8,25 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"
-#include "../rx/rx_globals.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"
+#include "rx/rx_globals.h"
 #if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
 #include "net/if.h"
 #ifdef AFS_SGI62_ENV
-#include "../h/hashing.h"
+#include "h/hashing.h"
 #endif
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN60_ENV)
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
 #ifdef AFS_LINUX22_ENV
-#include "../h/smp_lock.h"
+#include "h/smp_lock.h"
 #endif
 
 

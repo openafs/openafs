@@ -354,8 +354,8 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	done
 <all>
 
-irix_compdirs_STATIC.libafs: STATIC.libafs
-irix_compdirs_MODLOAD.libafs: MODLOAD.libafs
+irix_compdirs_STATIC.libafs: depsrcs STATIC.libafs
+irix_compdirs_MODLOAD.libafs: depsrcs MODLOAD.libafs
 irix_instdirs_STATIC.libafs: install_STATIC.libafs
 irix_instdirs_MODLOAD.libafs: install_MODLOAD.libafs
 irix_destdirs_STATIC.libafs: dest_STATIC.libafs
@@ -460,30 +460,3 @@ dest_LINKFILES:
 	ln -fs  libafs.IP20.o       ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP32.o
 	ln -fs  libafs.IP20.nonfs.o ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
 	ln -fs  libafs.IP20.nonfs.o ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
-<all>
-
-
-# Object build rules:
-# Common objects
-afs_base64.o: $(AFS)/afs_base64.c
-	$(CRULE1)
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_idbg.o: $(AFS)/osi_idbg.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)

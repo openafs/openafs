@@ -14,7 +14,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -32,8 +32,8 @@ RCSID("$Header$");
 #endif
 #include <ctype.h>
 #ifdef KERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #else
 #ifdef __FreeBSD__
 #include <sys/types.h>

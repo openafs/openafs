@@ -16,12 +16,11 @@ CFLAGS = ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} \
 #
 all: \
 	${TOP_LIBDIR}/libacl.a \
+	depinstall
+
+depinstall: \
 	${TOP_INCDIR}/afs/acl.h \
-	${TOP_INCDIR}/afs/prs_fs.h \
-	${KERNELDIR}/afs \
-	${KERNELDIR}/afs/prs_fs.h \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/prs_fs.h
+	${TOP_INCDIR}/afs/prs_fs.h 
 
 libacl.a: aclprocs.o netprocs.o AFS_component_version_number.o
 	$(RM) -f $@
@@ -43,18 +42,6 @@ ${TOP_INCDIR}/afs/acl.h: acl.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs:
-	mkdir -p $? $@
-
-${KERNELDIR}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs:
-	mkdir -p $? $@
-
-${UKERNELDIR}/afs/prs_fs.h: prs_fs.h
 	${INSTALL} $? $@
 
 install: \

@@ -9,7 +9,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${TOP_OBJDIR}/src/config -I. -I${srcdir} ${XCFLAGS}
 
-all: ukinstall compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
+all: compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 
 et_lex.lex.c: et_lex.lex.l
 	$(RM) -f et_lex.lex.c
@@ -30,41 +30,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 #
 # Installation targets
 #
-ukinstall: \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/com_err.c \
-	${UKERNELDIR}/afs/com_err.h \
-	${UKERNELDIR}/afs/error_msg.c \
-	${UKERNELDIR}/afs/error_table.h \
-	${UKERNELDIR}/afs/mit-sipb-cr.h \
-	${UKERNELDIR}/afs/internal.h \
-	${UKERNELDIR}/afs/et_name.c
-
 install:  ${DESTDIR}${bindir}/compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-${UKERNELDIR}/afs/com_err.c: com_err.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/com_err.h: com_err.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/error_msg.c: error_msg.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/error_table.h: error_table.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/internal.h: internal.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/et_name.c: et_name.c
-	${INSTALL} $? $@
 
 ${DEST}/bin/compile_et: compile_et
 	${INSTALL} $? $@

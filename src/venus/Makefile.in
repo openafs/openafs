@@ -174,7 +174,10 @@ cmdebug: cmdebug.o ${CMLIBS}
 # *linux* - Builds kdump-X.Y.Z according to kernel version
 kdump-linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_number.c
 	${CC} $(DBG) -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs \
+		-I${TOP_OBJDIR}/src \
+		-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs \
+		-I${TOP_SRCDIR} -I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
 		-I${TOP_INCDIR} ${XCFLAGS} -o kdump-linux-${LINUX_VERSION}.o \
 		-c ${srcdir}/kdump.c
 
@@ -185,7 +188,10 @@ kdump-linux-@LINUX_VERSION@: kdump-linux-@LINUX_VERSION@.o
 # *alpha_linux* - Builds kdump-X.Y.Z according to kernel version
 kdump-alpha_linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_number.c
 	${CC} $(DBG) -I${LINUX_KERNEL_PATH}/include -I${TOP_INCDIR}/afs \
+		-I${TOP_OBJDIR}/src \
+		-I${TOP_OBJDIR}/src/afs/${MKAFS_OSTYPE} \
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src/libafs/afs \
+		-I${TOP_SRCDIR} -I${TOP_SRCDIR}/afs/${MKAFS_OSTYPE} \
 		-I${TOP_INCDIR} ${XCFLAGS} -mno-fp-regs -ffixed-8 \
 		-o kdump-alpha_linux-${LINUX_VERSION}.o -c ${srcdir}/kdump.c ;; \
 

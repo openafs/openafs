@@ -29,10 +29,10 @@ RCSID("$Header$");
 #endif
 #include <signal.h>
 #include <sys/stat.h>
-#include "../rx_clock.h"
-#include "../rx.h"
-#include "../rx_globals.h"
-#include "../rx_null.h"
+#include "rx_clock.h"
+#include "rx.h"
+#include "rx_globals.h"
+#include "rx_null.h"
 
 int error;  /* Return this error number on a call */
 int print = 0, eventlog = 0, rxlog = 0;

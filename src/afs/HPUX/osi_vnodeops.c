@@ -10,13 +10,13 @@
 /* This is a placeholder for routines unique to the port of AFS to hp-ux*/
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h" /* statistics stuff */
 
 #include <sys/uio.h>
 #include <sys/vfs.h>
@@ -160,25 +160,25 @@ afs_lockf( vp, flag, len, cred, fp, LB, UB )
 }
 
 
-#include "../machine/vmparam.h"	/* For KERNELSPACE */
-#include "../h/debug.h"
-#include "../h/types.h"
-#include "../h/param.h"
-#include "../h/vmmac.h"
-#include "../h/time.h"
-#include "../ufs/inode.h"
-#include "../ufs/fs.h"
-#include "../h/dbd.h"
-#include "../h/vfd.h"
-#include "../h/region.h"
-#include "../h/pregion.h"
-#include "../h/vmmeter.h"
-#include "../h/user.h"
-#include "../h/sysinfo.h"
-#include "../h/pfdat.h"
-#include "../h/tuneable.h"
-#include "../h/buf.h"
-#include "../netinet/in.h"
+#include "machine/vmparam.h"	/* For KERNELSPACE */
+#include "h/debug.h"
+#include "h/types.h"
+#include "h/param.h"
+#include "h/vmmac.h"
+#include "h/time.h"
+#include "ufs/inode.h"
+#include "ufs/fs.h"
+#include "h/dbd.h"
+#include "h/vfd.h"
+#include "h/region.h"
+#include "h/pregion.h"
+#include "h/vmmeter.h"
+#include "h/user.h"
+#include "h/sysinfo.h"
+#include "h/pfdat.h"
+#include "h/tuneable.h"
+#include "h/buf.h"
+#include "netinet/in.h"
 
 /* a freelist of one */
 struct buf *afs_bread_freebp = 0;

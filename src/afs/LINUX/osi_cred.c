@@ -12,12 +12,12 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 
 /* Setup a pool for creds. Allocate several at a time. */
 #define CRED_ALLOC_STEP 29 /* at 140 bytes/cred = 4060 bytes. */

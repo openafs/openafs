@@ -17,8 +17,8 @@
 RCSID("$Header$");
 
 #ifdef UKERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsutil.h"
+#include "afs/sysincludes.h"
+#include "afs/afsutil.h"
 #else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>

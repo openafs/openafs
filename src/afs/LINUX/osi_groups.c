@@ -14,15 +14,15 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"  /* statistics */
 #ifdef AFS_LINUX22_ENV
-#include "../h/smp_lock.h"
+#include "h/smp_lock.h"
 #endif
 
 static int afs_getgroups(cred_t *cr, gid_t *groups);

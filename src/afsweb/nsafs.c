@@ -12,20 +12,20 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"
-#include "../afs/afs_usrops.h"
-#include "../afs/auth.h"
-#include "../afs/cellconfig.h"
-#include "../afs/vice.h"
-#include "../afs/kautils.h"
-#include "../afs/nsafs.h"
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"
+#include "afs_usrops.h"
+#include "afs/auth.h"
+#include "afs/cellconfig.h"
+#include "afs/vice.h"
+#include "afs/kautils.h"
+#include "afs/nsafs.h"
 
 #define NSAFS_DFLT_RCVTHREADS	2	/* Dflt number recevice threads */
 #define NSAFS_BUFFER_SIZE	4096	/* Send/Receive buffer size */
@@ -183,7 +183,7 @@ void nsafs_decode64(char *buf)
 /*
  * Interface for pioctls - used for unlogging 
  */
-#include "../afs/venus.h"
+#include "afs/venus.h"
 int do_pioctl(char *in_buffer, int in_size, 
               char *out_buffer, int out_size, 
               int opcode, char *path, int followSymLinks)

@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #if defined(UKERNEL)
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -17,18 +17,18 @@
 RCSID("$Header$");
 
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afs_usrops.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../rx/rx.h"
-#include "../rx/xdr.h"
-#include "../rx/rxkad.h"
-#include "../afs/auth.h"
-#include "../afs/cellconfig.h"
-#include "../afs/afsutil.h"
-#include "../afs/ptclient.h"
-#include "../afs/pterror.h"
+#include "afs/sysincludes.h"
+#include "afs_usrops.h"
+#include "afsincludes.h"
+#include "afs/stds.h"
+#include "rx/rx.h"
+#include "rx/xdr.h"
+#include "rx/rxkad.h"
+#include "afs/auth.h"
+#include "afs/cellconfig.h"
+#include "afs/afsutil.h"
+#include "afs/ptclient.h"
+#include "afs/pterror.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <ctype.h>

@@ -11,15 +11,15 @@
  * --------------------- Required definitions ---------------------
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h" /*Standard vendor system headers*/
-#include "../afs/afsincludes.h" /*AFS-based standard headers*/
-#include "../afs/afs_stats.h"  /* statistics */
-#include "../afs/afs_cbqueue.h"
-#include "../afs/afs_osidnlc.h"
+#include "afs/sysincludes.h" /*Standard vendor system headers*/
+#include "afsincludes.h" /*AFS-based standard headers*/
+#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_cbqueue.h"
+#include "afs/afs_osidnlc.h"
 
 afs_uint32 afs_stampValue=0;
 

@@ -8,33 +8,33 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #ifdef AFS_SUN5_ENV
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 
 
 #ifdef AFS_SUN56_ENV
 
-#include "../inet/common.h"
-#include "../sys/tiuser.h"
-#include "../sys/t_kuser.h"
-#include "../sys/stropts.h"
-#include "../sys/stream.h"
-#include "../sys/tihdr.h"
-#include "../sys/fcntl.h"
+#include "inet/common.h"
+#include "sys/tiuser.h"
+#include "sys/t_kuser.h"
+#include "sys/stropts.h"
+#include "sys/stream.h"
+#include "sys/tihdr.h"
+#include "sys/fcntl.h"
 #ifdef AFS_SUN58_ENV
-#include "../netinet/ip6.h"
+#include "netinet/ip6.h"
 #define ipif_local_addr ipif_lcl_addr
 #ifndef V4_PART_OF_V6
 #define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
 #endif
 #endif
-#include "../inet/ip.h"
-#include "../inet/ip_if.h"
-#include "../netinet/udp.h"
+#include "inet/ip.h"
+#include "inet/ip_if.h"
+#include "netinet/udp.h"
 
 /*
  * Function pointers for kernel socket routines
@@ -427,22 +427,22 @@ void osi_StopListener(void)
 
 #else /* AFS_SUN56_ENV */
 
-#include "../inet/common.h"
-#include "../sys/tiuser.h"
-#include "../sys/t_kuser.h"
-#include "../sys/ioctl.h"
-#include "../sys/stropts.h"
-#include "../sys/stream.h"
-#include "../sys/strsubr.h"
-#include "../sys/vnode.h"
-#include "../sys/stropts.h"
-#include "../sys/tihdr.h"
-#include "../sys/timod.h"
-#include "../sys/fcntl.h"
-#include "../sys/debug.h"
-#include "../inet/common.h"
-#include "../inet/mi.h"
-#include "../netinet/udp.h"
+#include "inet/common.h"
+#include "sys/tiuser.h"
+#include "sys/t_kuser.h"
+#include "sys/ioctl.h"
+#include "sys/stropts.h"
+#include "sys/stream.h"
+#include "sys/strsubr.h"
+#include "sys/vnode.h"
+#include "sys/stropts.h"
+#include "sys/tihdr.h"
+#include "sys/timod.h"
+#include "sys/fcntl.h"
+#include "sys/debug.h"
+#include "inet/common.h"
+#include "inet/mi.h"
+#include "netinet/udp.h"
 
 extern dev_t afs_udp_rdev;
 

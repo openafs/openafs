@@ -17,7 +17,7 @@ RCSID("$Header$");
 
 #include <stdio.h>
 #include <sys/types.h>
-#include "../../util/afsutil.h"
+#include "util/afsutil.h"
 
 void Usage(void)
 {

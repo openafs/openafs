@@ -28,10 +28,10 @@ RCSID("$Header$");
 #endif
 #include <sys/stat.h>
 #include <signal.h>
-#include "../rx_clock.h"
-#include "../rx.h"
-#include "../rx_globals.h"
-#include "../rx_null.h"
+#include "rx_clock.h"
+#include "rx.h"
+#include "rx_globals.h"
+#include "rx_null.h"
 #include <errno.h>
 #include <afs/afsutil.h>
 

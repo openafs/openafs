@@ -57,22 +57,13 @@ KOBJS=kauth.xdr.o kauth.cs.o kaaux.o client.o authclient.o token.o kautils.o kal
 all: kaserver kas kpwvalid klog klog.krb knfs kpasswd rebuild kdb \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libkauth.krb.a \
+	depinstall
+
+depinstall: \
+	kaerrors.c kauth.cs.c kauth.xdr.c \
 	${TOP_INCDIR}/afs/kautils.h \
 	${TOP_INCDIR}/afs/kauth.h \
-	${TOP_INCDIR}/afs/kaport.h \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afsint \
-	${UKERNELDIR}/afsint/kauth.h \
-	${UKERNELDIR}/afsint/kauth.cs.c \
-	${UKERNELDIR}/afsint/kauth.xdr.c \
-	${UKERNELDIR}/afs/authclient.c \
-	${UKERNELDIR}/afs/user.c \
-	${UKERNELDIR}/afs/kautils.h \
-	${UKERNELDIR}/afs/kaaux.c \
-	${UKERNELDIR}/afs/token.c \
-	${UKERNELDIR}/afs/kalocalcell.c \
-	${UKERNELDIR}/afs/client.c \
-	${UKERNELDIR}/afs/kaerrors.c
+	${TOP_INCDIR}/afs/kaport.h 
 
 test tests: all
 	cd test; $(MAKE)
@@ -233,45 +224,6 @@ ${TOP_INCDIR}/afs/kauth.h: kauth.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/kaport.h: kaport.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-${UKERNELDIR}/afsint:
-	mkdir -p $@
-
-${UKERNELDIR}/afs/authclient.c: authclient.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/user.c: user.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/kautils.h: kautils.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/kaaux.c: kaaux.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/token.c: token.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/kalocalcell.c: kalocalcell.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/client.c: client.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/kaerrors.c: kaerrors.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/kauth.h: Kkauth.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/kauth.xdr.c: Kkauth.xdr.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/kauth.cs.c: Kkauth.cs.c
 	${INSTALL} $? $@
 
 install: \

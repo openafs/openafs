@@ -18,19 +18,15 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 include ../config/Makefile.version
 
-all: kinstall ukinstall ${TOP_LIBDIR}/export.exp ${TOP_LIBDIR}/extras.exp cfgexport cfgafs
+all: ${TOP_LIBDIR}/export.exp ${TOP_LIBDIR}/extras.exp cfgexport cfgafs
+	${INSTALL} ${srcdir}/export.h ${KERNELDIR}
+	${INSTALL} ${srcdir}/export.exp ${KERNELDIR}
+	${INSTALL} ${srcdir}/export.h ${UKERNELDIR}
+	${INSTALL} ${srcdir}/export.exp ${UKERNELDIR}
 
 noversion system: install
 
 install: ${DESTDIR}${libdir}/afs/export.exp ${DESTDIR}${libdir}/afs/extras.exp  
-
-kinstall:
-	${INSTALL} ${srcdir}/export.h ${KERNELDIR}
-	${INSTALL} ${srcdir}/export.exp ${KERNELDIR}
-
-ukinstall webinstall:
-	${INSTALL} ${srcdir}/export.h ${UKERNELDIR}
-	${INSTALL} ${srcdir}/export.exp ${UKERNELDIR}
 
 export.ext: ${KOBJ}
 	case ${SYS_NAME} in \

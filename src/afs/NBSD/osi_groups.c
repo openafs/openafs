@@ -16,13 +16,13 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"  /* statistics */
 
 #define NOCRED  ((struct ucred *) -1)
 #define NOUID   ((uid_t) -1)

@@ -15,7 +15,7 @@
 #ifdef KDUMP_KERNEL
 #include <afs/afs_args.h>
 #else
-#include "../afs/afs_args.h"
+#include "afs/afs_args.h"
 #endif
 
 

@@ -45,7 +45,7 @@ RCSID("$Header$");
 #if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
-#include "../h/string.h"
+#include "h/string.h"
 #if 0
 #define bzero(A,C) memset((A), 0, (C))
 #endif

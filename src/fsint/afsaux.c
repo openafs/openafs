@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -18,17 +18,17 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../rx/xdr.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rx/xdr.h"
 #else /* defined(UKERNEL) */
 #if defined(AFS_ALPHA_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #else
-#include "../h/types.h"
-#include "../rpc/types.h"
-#include "../rx/xdr.h"
+#include "h/types.h"
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif
 #if !defined(AFS_ALPHA_ENV)
 #ifndef	XDR_GETINT32
@@ -39,7 +39,7 @@ RCSID("$Header$");
 #endif
 #endif
 #endif /* defined(UKERNEL) */
-#include "../afsint/afsint.h"
+#include "afsint.h"
 #else /* KERNEL */
 # include <rx/xdr.h>
 # include "afsint.h"

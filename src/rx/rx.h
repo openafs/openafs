@@ -30,21 +30,21 @@
 #endif
 
 #ifdef	KERNEL
-#include "../rx/rx_kmutex.h"
-#include "../rx/rx_kernel.h"
-#include "../rx/rx_clock.h"
-#include "../rx/rx_event.h"
-#include "../rx/rx_queue.h"
-#include "../rx/rx_packet.h"
-#include "../rx/rx_misc.h"
-#include "../rx/rx_multi.h"
-#include "../netinet/in.h"
-#include "../sys/socket.h"
+#include "rx_kmutex.h"
+#include "rx_kernel.h"
+#include "rx_clock.h"
+#include "rx_event.h"
+#include "rx_queue.h"
+#include "rx_packet.h"
+#include "rx_misc.h"
+#include "rx_multi.h"
+#include "netinet/in.h"
+#include "sys/socket.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <stdio.h>
 #ifdef AFS_PTHREAD_ENV
-# include <rx/rx_pthread.h>
+# include "rx_pthread.h"
 #else
 # include "rx_lwp.h"
 #endif
@@ -1003,7 +1003,7 @@ typedef struct rx_interface_stat {
 #endif /* _RX_	 End of rx.h */
 
 #ifdef	KERNEL
-#include "../rx/rx_prototypes.h"
+#include "rx/rx_prototypes.h"
 #else
 #include "rx_prototypes.h"
 #endif

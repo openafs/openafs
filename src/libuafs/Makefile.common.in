@@ -20,6 +20,39 @@ DES	=../des
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
 
+TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
+TOP_OBJ_RXSTAT = ${TOP_OBJDIR}/src/rxstat
+TOP_OBJ_VLSERVER = ${TOP_OBJDIR}/src/vlserver
+
+TOP_SRC_AFS = ${TOP_SRCDIR}/afs
+TOP_SRC_RXSTAT = ${TOP_SRCDIR}/rxstat
+TOP_SRC_FSINT = ${TOP_SRCDIR}/fsint
+TOP_SRC_RX = ${TOP_SRCDIR}/rx
+TOP_SRC_VNOPS = ${TOP_SRCDIR}/afs/VNOPS
+TOP_SRC_RXKAD = ${TOP_SRCDIR}/rxkad
+
+COMMON_INCLUDE = -I. -I.. -I../nfs \
+        -I${TOP_SRCDIR} \
+        -I${TOP_SRCDIR}/afs \
+        -I${TOP_SRCDIR}/afs/UKERNEL \
+        -I${TOP_SRCDIR}/config \
+        -I${TOP_SRCDIR}/rx \
+        -I${TOP_SRCDIR}/rx/UKERNEL \
+        -I${TOP_SRCDIR}/rxkad \
+        -I${TOP_SRCDIR}/rxkad/domestic \
+        -I${TOP_SRCDIR}/util \
+        -I${TOP_OBJDIR}/src \
+        -I${TOP_OBJDIR}/src/afs/UKERNEL \
+        -I${TOP_OBJDIR}/src/afs \
+        -I${TOP_OBJDIR}/src/util \
+        -I${TOP_OBJDIR}/src/rxkad \
+        -I${TOP_OBJDIR}/src/config \
+        -I${TOP_OBJDIR}/src/fsint \
+        -I${TOP_OBJDIR}/src/vlserver \
+	-I${TOP_OBJDIR}/src/libuafs \
+        -I${TOP_INCDIR} \
+        -I${TOP_INCDIR}/afs \
+
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
 all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) linktest
@@ -28,10 +61,8 @@ webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
-linktest: UAFS/$(LIBUAFS) des/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -I. UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
-
-ukinstall: install
+linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a $(TEST_LIBS) $(XLIBS)
 
 install: \
 	${DESTDIR}${libdir}/$(LIBUAFS) \
@@ -49,8 +80,8 @@ dest: \
 	${DEST}/root.perf/lib/$(LIBJUAFS)
 
 
-CRULE1=	$(CC) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
-CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
+CRULE2=	$(CC) $(COMMON_INCLUDE) $(OPTF) $(WEBOPTS) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
 
 UAFSOBJ = \
 	$(UOBJ)/afs_atomlist.o \
@@ -103,6 +134,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_usrops.o \
 	$(UOBJ)/xdr_afsuuid.o \
 	$(UOBJ)/afs_uuid.o \
+	$(UOBJ)/assert.o \
 	$(UOBJ)/osi_vnodeops.o \
 	$(UOBJ)/osi_vm.o \
 	$(UOBJ)/osi_groups.o \
@@ -222,6 +254,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_usrops.o \
 	$(WEBOBJ)/xdr_afsuuid.o \
 	$(WEBOBJ)/afs_uuid.o \
+	$(WEBOBJ)/assert.o \
 	$(WEBOBJ)/osi_vnodeops.o \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
@@ -458,6 +491,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_usrops.o \
 	$(JUAFS)/xdr_afsuuid.o \
 	$(JUAFS)/afs_uuid.o \
+	$(JUAFS)/assert.o \
 	$(JUAFS)/osi_vnodeops.o \
 	$(JUAFS)/osi_vm.o \
 	$(JUAFS)/osi_groups.o \
@@ -528,750 +562,744 @@ JUAFSOBJ = \
 
 # These files are for the user space library
 
-$(UOBJ)/afs_atomlist.o: $(AFS)/afs_atomlist.c
+$(UOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
 	$(CRULE1)
-$(UOBJ)/afs_lhash.o: $(AFS)/afs_lhash.c
+$(UOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util/afs_lhash.c
 	$(CRULE1)
-$(UOBJ)/afs_analyze.o: $(AFS)/afs_analyze.c
+$(UOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 	$(CRULE1)
-$(UOBJ)/afs_axscache.o: $(AFS)/afs_axscache.c
+$(UOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE1)
-$(UOBJ)/afs_buffer.o: $(AFS)/afs_buffer.c
+$(UOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE1)
-$(UOBJ)/afs_cell.o: $(AFS)/afs_cell.c
+$(UOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE1)
-$(UOBJ)/afs_conn.o: $(AFS)/afs_conn.c
+$(UOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 	$(CRULE1)
-$(UOBJ)/afs_dcache.o: $(AFS)/afs_dcache.c
+$(UOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE1)
-$(UOBJ)/afs_dynroot.o: $(AFS)/afs_dynroot.c
+$(UOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE1)
-$(UOBJ)/afs_init.o: $(AFS)/afs_init.c
+$(UOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE1)
-$(UOBJ)/afs_mariner.o: $(AFS)/afs_mariner.c
+$(UOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
 	$(CRULE1)
-$(UOBJ)/afs_osidnlc.o: $(AFS)/afs_osidnlc.c
+$(UOBJ)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
 	$(CRULE1)
-$(UOBJ)/afs_osi.o: 	$(AFS)/afs_osi.c
+$(UOBJ)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
 	$(CRULE1)
-$(UOBJ)/afs_osi_pag.o: $(AFS)/afs_osi_pag.c
+$(UOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 	$(CRULE1)
-$(UOBJ)/afs_segments.o: $(AFS)/afs_segments.c
+$(UOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE1)
-$(UOBJ)/afs_server.o: $(AFS)/afs_server.c
+$(UOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
 	$(CRULE1)
-$(UOBJ)/afs_user.o: $(AFS)/afs_user.c
+$(UOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE1)
-$(UOBJ)/afs_util.o: $(AFS)/afs_util.c
+$(UOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
 	$(CRULE1)
-$(UOBJ)/afs_vcache.o: $(AFS)/afs_vcache.c
+$(UOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
 	$(CRULE1)
-$(UOBJ)/afs_osi_uio.o: $(AFS)/afs_osi_uio.c
+$(UOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_access.o: $(AFS)/afs_vnop_access.c
+$(UOBJ)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_attrs.o: $(AFS)/afs_vnop_attrs.c
+$(UOBJ)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_create.o: $(AFS)/afs_vnop_create.c
+$(UOBJ)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_dirops.o: $(AFS)/afs_vnop_dirops.c
+$(UOBJ)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_fid.o: $(AFS)/afs_vnop_fid.c
+$(UOBJ)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_flock.o: $(AFS)/afs_vnop_flock.c
+$(UOBJ)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_link.o: $(AFS)/afs_vnop_link.c
+$(UOBJ)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_lookup.o: $(AFS)/afs_vnop_lookup.c
+$(UOBJ)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_open.o: $(AFS)/afs_vnop_open.c
+$(UOBJ)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_read.o: $(AFS)/afs_vnop_read.c
+$(UOBJ)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_readdir.o: $(AFS)/afs_vnop_readdir.c
+$(UOBJ)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_remove.o: $(AFS)/afs_vnop_remove.c
+$(UOBJ)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_rename.o: $(AFS)/afs_vnop_rename.c
+$(UOBJ)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_strategy.o: $(AFS)/afs_vnop_strategy.c
+$(UOBJ)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_symlink.o: $(AFS)/afs_vnop_symlink.c
+$(UOBJ)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
 	$(CRULE1)
-$(UOBJ)/afs_vnop_write.o: $(AFS)/afs_vnop_write.c
+$(UOBJ)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
 	$(CRULE1)
-$(UOBJ)/afs_volume.o: $(AFS)/afs_volume.c
+$(UOBJ)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
 	$(CRULE1)
-$(UOBJ)/rx_rdwr.o: $(RX)/rx_rdwr.c
+$(UOBJ)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
 	$(CRULE1)
-$(UOBJ)/afs_cbqueue.o: $(AFS)/afs_cbqueue.c
+$(UOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE1)
-$(UOBJ)/afs_callback.o: $(AFS)/afs_callback.c
+$(UOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE1)
-$(UOBJ)/afs_chunk.o: $(AFS)/afs_chunk.c
+$(UOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE1)
-$(UOBJ)/afs_daemons.o: $(AFS)/afs_daemons.c
+$(UOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
 	$(CRULE1)
-$(UOBJ)/afs_dir.o: 	$(AFS)/afs_dir.c
+$(UOBJ)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
+	$(CRULE1) -o afs_dir.o
+$(UOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
 	$(CRULE1)
-$(UOBJ)/AFS_component_version_number.o: $(AFS)/AFS_component_version_number.c
+$(UOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE1)
-$(UOBJ)/afs_lock.o: $(AFS)/afs_lock.c
+$(UOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE1)
-$(UOBJ)/afs_memcache.o: $(AFS)/afs_memcache.c
+$(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
-$(UOBJ)/afs_stat.o: $(AFS)/afs_stat.c
+$(UOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE1)
-$(UOBJ)/fcrypt.o: 	$(AFS)/fcrypt.c
+$(UOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
 	$(CRULE1)
-$(UOBJ)/crypt_conn.o: $(AFS)/crypt_conn.c
+$(UOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE1)
-$(UOBJ)/rxkad_client.o: $(AFS)/rxkad_client.c
+$(UOBJ)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
 	$(CRULE1)
-$(UOBJ)/rxkad_common.o: $(AFS)/rxkad_common.c
+$(UOBJ)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
 	$(CRULE1)
-$(UOBJ)/afs_exporter.o: $(AFS)/afs_exporter.c
+$(UOBJ)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
 	$(CRULE1)
-$(UOBJ)/afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
+$(UOBJ)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
 	$(CRULE1)
-$(UOBJ)/afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
+$(UOBJ)/rx.o: $(TOP_SRC_RX)/rx.c
 	$(CRULE1)
-$(UOBJ)/afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
+$(UOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 	$(CRULE1)
-$(UOBJ)/rx.o: $(RX)/rx.c
+$(UOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE1)
-$(UOBJ)/rx_clock.o: $(RX)/rx_clock.c
+$(UOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE1)
-$(UOBJ)/rx_event.o: $(RX)/rx_event.c
+$(UOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE1)
-$(UOBJ)/rx_globals.o: $(RX)/rx_globals.c
+$(UOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE1)
-$(UOBJ)/rx_misc.o: $(RX)/rx_misc.c
+$(UOBJ)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
 	$(CRULE1)
-$(UOBJ)/rx_null.o: $(RX)/rx_null.c
+$(UOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE1)
-$(UOBJ)/rx_getaddr.o: $(RX)/rx_getaddr.c
+$(UOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE1)
-$(UOBJ)/rx_packet.o: $(RX)/rx_packet.c
+$(UOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE1)
-$(UOBJ)/rx_conncache.o: $(RX)/rx_conncache.c
+$(UOBJ)/xdr_int32.o: $(TOP_SRC_RX)/xdr_int32.c
 	$(CRULE1)
-$(UOBJ)/xdr_rx.o: $(RX)/xdr_rx.c
+$(UOBJ)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
 	$(CRULE1)
-$(UOBJ)/xdr_int32.o: $(RX)/xdr_int32.c
+$(UOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE1)
-$(UOBJ)/xdr_int64.o: $(RX)/xdr_int64.c
+$(UOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
+	$(CRULE1) -o afs_uuid.o
+$(UOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
 	$(CRULE1)
-$(UOBJ)/afs_usrops.o: $(AFS)/afs_usrops.c
+$(UOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE1)
-$(UOBJ)/afs_uuid.o: $(AFS)/afs_uuid.c
+$(UOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 	$(CRULE1)
-$(UOBJ)/xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
+$(UOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 	$(CRULE1)
-$(UOBJ)/osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+$(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE1)
-$(UOBJ)/osi_vm.o: $(AFS)/osi_vm.c
+$(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
-$(UOBJ)/osi_groups.o: $(AFS)/osi_groups.c
+$(UOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 	$(CRULE1)
-$(UOBJ)/Kcallback.ss.o: $(AFSINT)/Kcallback.ss.c
+$(UOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE1)
-$(UOBJ)/Kvice.xdr.o: $(AFSINT)/Kvice.xdr.c
+$(UOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
 	$(CRULE1)
-$(UOBJ)/Kvice.cs.o: $(AFSINT)/Kvice.cs.c
+$(UOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(CRULE1)
-$(UOBJ)/afsaux.o: $(AFSINT)/afsaux.c
+$(UOBJ)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
 	$(CRULE1)
-$(UOBJ)/xdr_arrayn.o: $(RX)/xdr_arrayn.c
+$(UOBJ)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
 	$(CRULE1)
-$(UOBJ)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
+$(UOBJ)/rx_kmutex.o: $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
 	$(CRULE1)
-$(UOBJ)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
+$(UOBJ)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
 	$(CRULE1)
-$(UOBJ)/afs_main.o: $(AFS)/afs_main.c
+$(UOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE1)
-$(UOBJ)/rx_kmutex.o: $(RX)/rx_kmutex.c
-	$(CRULE1)
-$(UOBJ)/rx_knet.o: $(RX)/rx_knet.c
-	$(CRULE1)
-$(UOBJ)/rx_kcommon.o: $(RX)/rx_kcommon.c
-	$(CRULE1)
-$(UOBJ)/afs_call.o: $(AFS)/afs_call.c
+$(UOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/afs_pioctl.o: $(AFS)/afs_pioctl.c
+$(UOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/osi_vfsops.o: $(AFS)/osi_vfsops.c
+$(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE1) -DAFS_NONFSTRANS
-$(UOBJ)/ktc.o: 	$(AFS)/ktc.c
+$(UOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE1)
-$(UOBJ)/ticket.o: $(AFS)/ticket.c
+$(UOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
 	$(CRULE1)
-$(UOBJ)/rxkad_server.o: $(AFS)/rxkad_server.c
+$(UOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
 	$(CRULE1)
-$(UOBJ)/ptint.cs.o: $(AFSINT)/ptint.cs.c
+$(UOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
 	$(CRULE1)
-$(UOBJ)/ptint.xdr.o: $(AFSINT)/ptint.xdr.c
+$(UOBJ)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
 	$(CRULE1)
-$(UOBJ)/ptuser.o: $(AFS)/ptuser.c
+$(UOBJ)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
 	$(CRULE1)
-$(UOBJ)/pterror.o: $(AFS)/pterror.c
+$(UOBJ)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
 	$(CRULE1)
-$(UOBJ)/ubikclient.o: $(AFS)/ubikclient.c
+$(UOBJ)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
 	$(CRULE1)
-$(UOBJ)/ubik_int.cs.o: $(AFSINT)/ubik_int.cs.c
+$(UOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
 	$(CRULE1)
-$(UOBJ)/ubik_int.xdr.o: $(AFSINT)/ubik_int.xdr.c
+$(UOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
 	$(CRULE1)
-$(UOBJ)/authclient.o: $(AFS)/authclient.c
+$(UOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
 	$(CRULE1)
-$(UOBJ)/kalocalcell.o: $(AFS)/kalocalcell.c
+$(UOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
 	$(CRULE1)
-$(UOBJ)/client.o: $(AFS)/client.c
+$(UOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
 	$(CRULE1)
-$(UOBJ)/user.o: $(AFS)/user.c
+$(UOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE1)
-$(UOBJ)/hostparse.o: $(AFS)/hostparse.c
+$(UOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE1)
-$(UOBJ)/token.o: $(AFS)/token.c
+$(UOBJ)/token.o: $(TOP_SRCDIR)/kauth/token.c
 	$(CRULE1)
-$(UOBJ)/acfg_errors.o: $(AFS)/acfg_errors.c
+$(UOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE1)
-$(UOBJ)/kaaux.o: $(AFS)/kaaux.c
+$(UOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
 	$(CRULE1)
-$(UOBJ)/authcon.o: $(AFS)/authcon.c
+$(UOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
 	$(CRULE1)
-$(UOBJ)/cellconfig.o: $(AFS)/cellconfig.c
+$(UOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE1)
-$(UOBJ)/casestrcpy.o: $(AFS)/casestrcpy.c
+$(UOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
 	$(CRULE1)
-$(UOBJ)/dirpath.o: $(AFS)/dirpath.c
+$(UOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
-$(UOBJ)/fileutil.o: $(AFS)/fileutil.c
+$(UOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
-$(UOBJ)/netutils.o: $(AFS)/netutils.c
+$(UOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
 	$(CRULE1)
-$(UOBJ)/et_name.o: $(AFS)/et_name.c
+$(UOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULE1)
-$(UOBJ)/com_err.o: $(AFS)/com_err.c
+$(UOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
 	$(CRULE1)
-$(UOBJ)/error_msg.o: $(AFS)/error_msg.c
+$(UOBJ)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
 	$(CRULE1)
-$(UOBJ)/uerrors.o: $(AFS)/uerrors.c
+$(UOBJ)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
 	$(CRULE1)
-$(UOBJ)/kaerrors.o: $(AFS)/kaerrors.c
+$(UOBJ)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
 	$(CRULE1)
-$(UOBJ)/ktc_errors.o: $(AFS)/ktc_errors.c
+$(UOBJ)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
 	$(CRULE1)
-$(UOBJ)/rxkad_errs.o: $(AFS)/rxkad_errs.c
+$(UOBJ)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
 	$(CRULE1)
-$(UOBJ)/kauth.cs.o: $(AFSINT)/kauth.cs.c
+$(UOBJ)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
 	$(CRULE1)
-$(UOBJ)/kauth.xdr.o: $(AFSINT)/kauth.xdr.c
+$(UOBJ)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
 	$(CRULE1)
-$(UOBJ)/rxstat.o: $(AFSINT)/rxstat.c
+$(UOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE1)
-$(UOBJ)/Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
+$(UOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE1)
-$(UOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
+$(UOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE1)
 
 # These files are for the netscape plugin
 
-$(WEBOBJ)/afs_atomlist.o: $(AFS)/afs_atomlist.c
+$(WEBOBJ)/afs_atomlist.o: $(TOP_SRCDIR)/util//afs_atomlist.c
 	$(CRULE2)
-$(WEBOBJ)/afs_lhash.o: $(AFS)/afs_lhash.c
+$(WEBOBJ)/afs_lhash.o: $(TOP_SRCDIR)/util//afs_lhash.c
 	$(CRULE2)
-$(WEBOBJ)/afs_analyze.o: $(AFS)/afs_analyze.c
+$(WEBOBJ)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
 	$(CRULE2)
-$(WEBOBJ)/afs_axscache.o: $(AFS)/afs_axscache.c
+$(WEBOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE2)
-$(WEBOBJ)/afs_buffer.o: $(AFS)/afs_buffer.c
+$(WEBOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE2)
-$(WEBOBJ)/afs_cell.o: $(AFS)/afs_cell.c
+$(WEBOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE2)
-$(WEBOBJ)/afs_conn.o: $(AFS)/afs_conn.c
+$(WEBOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
 	$(CRULE2)
-$(WEBOBJ)/afs_dcache.o: $(AFS)/afs_dcache.c
+$(WEBOBJ)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
 	$(CRULE2)
-$(WEBOBJ)/afs_dynroot.o: $(AFS)/afs_dynroot.c
+$(WEBOBJ)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
 	$(CRULE2)
-$(WEBOBJ)/afs_init.o: $(AFS)/afs_init.c
+$(WEBOBJ)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
 	$(CRULE2)
-$(WEBOBJ)/afs_mariner.o: $(AFS)/afs_mariner.c
+$(WEBOBJ)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
 	$(CRULE2)
-$(WEBOBJ)/afs_osidnlc.o: $(AFS)/afs_osidnlc.c
+$(WEBOBJ)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
 	$(CRULE2)
-$(WEBOBJ)/afs_osi.o: 	$(AFS)/afs_osi.c
+$(WEBOBJ)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
 	$(CRULE2)
-$(WEBOBJ)/afs_osi_pag.o: $(AFS)/afs_osi_pag.c
+$(WEBOBJ)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
 	$(CRULE2)
-$(WEBOBJ)/afs_segments.o: $(AFS)/afs_segments.c
+$(WEBOBJ)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE2)
-$(WEBOBJ)/afs_server.o: $(AFS)/afs_server.c
+$(WEBOBJ)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
 	$(CRULE2)
-$(WEBOBJ)/afs_user.o: $(AFS)/afs_user.c
+$(WEBOBJ)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
 	$(CRULE2)
-$(WEBOBJ)/afs_util.o: $(AFS)/afs_util.c
+$(WEBOBJ)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vcache.o: $(AFS)/afs_vcache.c
+$(WEBOBJ)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
 	$(CRULE2)
-$(WEBOBJ)/afs_osi_uio.o: $(AFS)/afs_osi_uio.c
+$(WEBOBJ)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_access.o: $(AFS)/afs_vnop_access.c
+$(WEBOBJ)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_attrs.o: $(AFS)/afs_vnop_attrs.c
+$(WEBOBJ)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_create.o: $(AFS)/afs_vnop_create.c
+$(WEBOBJ)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_dirops.o: $(AFS)/afs_vnop_dirops.c
+$(WEBOBJ)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_fid.o: $(AFS)/afs_vnop_fid.c
+$(WEBOBJ)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_flock.o: $(AFS)/afs_vnop_flock.c
+$(WEBOBJ)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_link.o: $(AFS)/afs_vnop_link.c
+$(WEBOBJ)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_lookup.o: $(AFS)/afs_vnop_lookup.c
+$(WEBOBJ)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_open.o: $(AFS)/afs_vnop_open.c
+$(WEBOBJ)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_read.o: $(AFS)/afs_vnop_read.c
+$(WEBOBJ)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_readdir.o: $(AFS)/afs_vnop_readdir.c
+$(WEBOBJ)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_remove.o: $(AFS)/afs_vnop_remove.c
+$(WEBOBJ)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_rename.o: $(AFS)/afs_vnop_rename.c
+$(WEBOBJ)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_strategy.o: $(AFS)/afs_vnop_strategy.c
+$(WEBOBJ)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_symlink.o: $(AFS)/afs_vnop_symlink.c
+$(WEBOBJ)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
 	$(CRULE2)
-$(WEBOBJ)/afs_vnop_write.o: $(AFS)/afs_vnop_write.c
+$(WEBOBJ)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
 	$(CRULE2)
-$(WEBOBJ)/afs_volume.o: $(AFS)/afs_volume.c
+$(WEBOBJ)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
 	$(CRULE2)
-$(WEBOBJ)/rx_rdwr.o: $(RX)/rx_rdwr.c
+$(WEBOBJ)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
 	$(CRULE2)
-$(WEBOBJ)/afs_cbqueue.o: $(AFS)/afs_cbqueue.c
+$(WEBOBJ)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
 	$(CRULE2)
-$(WEBOBJ)/afs_callback.o: $(AFS)/afs_callback.c
+$(WEBOBJ)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
 	$(CRULE2)
-$(WEBOBJ)/afs_chunk.o: $(AFS)/afs_chunk.c
+$(WEBOBJ)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
 	$(CRULE2)
-$(WEBOBJ)/afs_daemons.o: $(AFS)/afs_daemons.c
+$(WEBOBJ)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
 	$(CRULE2)
-$(WEBOBJ)/afs_dir.o: 	$(AFS)/afs_dir.c
+$(WEBOBJ)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
+	$(CRULE2) -o afs_dir.o
+$(WEBOBJ)/AFS_component_version_number.o: AFS_component_version_number.c
 	$(CRULE2)
-$(WEBOBJ)/AFS_component_version_number.o: $(AFS)/AFS_component_version_number.c
+$(WEBOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 	$(CRULE2)
-$(WEBOBJ)/afs_lock.o: $(AFS)/afs_lock.c
+$(WEBOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE2)
-$(WEBOBJ)/afs_memcache.o: $(AFS)/afs_memcache.c
+$(WEBOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE2)
-$(WEBOBJ)/afs_stat.o: $(AFS)/afs_stat.c
+$(WEBOBJ)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
 	$(CRULE2)
-$(WEBOBJ)/fcrypt.o: 	$(AFS)/fcrypt.c
+$(WEBOBJ)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
 	$(CRULE2)
-$(WEBOBJ)/crypt_conn.o: $(AFS)/crypt_conn.c
+$(WEBOBJ)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 	$(CRULE2)
-$(WEBOBJ)/rxkad_client.o: $(AFS)/rxkad_client.c
+$(WEBOBJ)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
 	$(CRULE2)
-$(WEBOBJ)/rxkad_common.o: $(AFS)/rxkad_common.c
+$(WEBOBJ)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
 	$(CRULE2)
-$(WEBOBJ)/afs_exporter.o: $(AFS)/afs_exporter.c
+$(WEBOBJ)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
 	$(CRULE2)
-$(WEBOBJ)/afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
+$(WEBOBJ)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
 	$(CRULE2)
-$(WEBOBJ)/afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
+$(WEBOBJ)/rx.o: $(TOP_SRC_RX)/rx.c
 	$(CRULE2)
-$(WEBOBJ)/afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
+$(WEBOBJ)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
 	$(CRULE2)
-$(WEBOBJ)/rx.o: $(RX)/rx.c
+$(WEBOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 	$(CRULE2)
-$(WEBOBJ)/rx_clock.o: $(RX)/rx_clock.c
+$(WEBOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE2)
-$(WEBOBJ)/rx_event.o: $(RX)/rx_event.c
+$(WEBOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
 	$(CRULE2)
-$(WEBOBJ)/rx_globals.o: $(RX)/rx_globals.c
+$(WEBOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE2)
-$(WEBOBJ)/rx_misc.o: $(RX)/rx_misc.c
+$(WEBOBJ)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
 	$(CRULE2)
-$(WEBOBJ)/rx_null.o: $(RX)/rx_null.c
+$(WEBOBJ)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE2)
-$(WEBOBJ)/rx_getaddr.o: $(RX)/rx_getaddr.c
+$(WEBOBJ)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
 	$(CRULE2)
-$(WEBOBJ)/rx_packet.o: $(RX)/rx_packet.c
+$(WEBOBJ)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE2)
-$(WEBOBJ)/rx_conncache.o: $(RX)/rx_conncache.c
+$(WEBOBJ)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
 	$(CRULE2)
-$(WEBOBJ)/xdr_rx.o: $(RX)/xdr_rx.c
+$(WEBOBJ)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
+	$(CRULE2) -o afs_uuid.o
+$(WEBOBJ)/assert.o: $(TOP_SRCDIR)/util/assert.c
+	$(CRULE1)
+$(WEBOBJ)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
 	$(CRULE2)
-$(WEBOBJ)/afs_usrops.o: $(AFS)/afs_usrops.c
+$(WEBOBJ)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
 	$(CRULE2)
-$(WEBOBJ)/afs_uuid.o: $(AFS)/afs_uuid.c
+$(WEBOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 	$(CRULE2)
-$(WEBOBJ)/xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
+$(WEBOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE2)
-$(WEBOBJ)/osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+$(WEBOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE2)
-$(WEBOBJ)/osi_vm.o: $(AFS)/osi_vm.c
+$(WEBOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 	$(CRULE2)
-$(WEBOBJ)/osi_groups.o: $(AFS)/osi_groups.c
+$(WEBOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE2)
-$(WEBOBJ)/Kcallback.ss.o: $(AFSINT)/Kcallback.ss.c
+$(WEBOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
 	$(CRULE2)
-$(WEBOBJ)/Kvice.xdr.o: $(AFSINT)/Kvice.xdr.c
+$(WEBOBJ)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(CRULE2)
-$(WEBOBJ)/Kvice.cs.o: $(AFSINT)/Kvice.cs.c
+$(WEBOBJ)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
 	$(CRULE2)
-$(WEBOBJ)/afsaux.o: $(AFSINT)/afsaux.c
+$(WEBOBJ)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
 	$(CRULE2)
-$(WEBOBJ)/xdr_arrayn.o: $(RX)/xdr_arrayn.c
+$(WEBOBJ)/rx_kmutex.o: $(TOP_SRC_RX)/UKERNEL/rx_kmutex.c
 	$(CRULE2)
-$(WEBOBJ)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
+$(WEBOBJ)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
 	$(CRULE2)
-$(WEBOBJ)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
+$(WEBOBJ)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
 	$(CRULE2)
-$(WEBOBJ)/afs_main.o: $(AFS)/afs_main.c
-	$(CRULE2)
-$(WEBOBJ)/rx_kmutex.o: $(RX)/rx_kmutex.c
-	$(CRULE2)
-$(WEBOBJ)/rx_knet.o: $(RX)/rx_knet.c
-	$(CRULE2)
-$(WEBOBJ)/rx_kcommon.o: $(RX)/rx_kcommon.c
-	$(CRULE2)
-$(WEBOBJ)/afs_call.o: $(AFS)/afs_call.c
+$(WEBOBJ)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE2) -DAFS_NONFSTRANS
-$(WEBOBJ)/afs_pioctl.o: $(AFS)/afs_pioctl.c
+$(WEBOBJ)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE2) -DAFS_NONFSTRANS
-$(WEBOBJ)/osi_vfsops.o: $(AFS)/osi_vfsops.c
+$(WEBOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(CRULE2) -DAFS_NONFSTRANS
-$(WEBOBJ)/ktc.o: 	$(AFS)/ktc.c
+$(WEBOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE2)
-$(WEBOBJ)/ktc.krb.o:	$(AFS)/ktc.c
+$(WEBOBJ)/ktc.krb.o:	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE2) -DAFS_KERBEROS_ENV -DMAYBE_NO_KTC 
 	mv ktc.o ktc.krb.o
-$(WEBOBJ)/securehash.o: $(AFS)/securehash.c
+$(WEBOBJ)/securehash.o: $(TOP_SRCDIR)/afsweb/securehash.c
 	$(CRULE2)
-$(WEBOBJ)/nsafs.o: $(AFS)/nsafs.c
+$(WEBOBJ)/nsafs.o: $(TOP_SRCDIR)/afsweb/nsafs.c
 	$(CRULE2)
-$(WEBOBJ)/ticket.o: $(AFS)/ticket.c
+$(WEBOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
 	$(CRULE2)
-$(WEBOBJ)/rxkad_server.o: $(AFS)/rxkad_server.c
+$(WEBOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
 	$(CRULE2)
-$(WEBOBJ)/ptint.cs.o: $(AFSINT)/ptint.cs.c
+$(WEBOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
 	$(CRULE2)
-$(WEBOBJ)/ptint.xdr.o: $(AFSINT)/ptint.xdr.c
+$(WEBOBJ)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
 	$(CRULE2)
-$(WEBOBJ)/ptuser.o: $(AFS)/ptuser.c
+$(WEBOBJ)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
 	$(CRULE2)
-$(WEBOBJ)/pterror.o: $(AFS)/pterror.c
+$(WEBOBJ)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
 	$(CRULE2)
-$(WEBOBJ)/ubikclient.o: $(AFS)/ubikclient.c
+$(WEBOBJ)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
 	$(CRULE2)
-$(WEBOBJ)/ubik_int.cs.o: $(AFSINT)/ubik_int.cs.c
+$(WEBOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
 	$(CRULE2)
-$(WEBOBJ)/ubik_int.xdr.o: $(AFSINT)/ubik_int.xdr.c
+$(WEBOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
 	$(CRULE2)
-$(WEBOBJ)/authclient.o: $(AFS)/authclient.c
+$(WEBOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
 	$(CRULE2)
-$(WEBOBJ)/kalocalcell.o: $(AFS)/kalocalcell.c
+$(WEBOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
 	$(CRULE2)
-$(WEBOBJ)/client.o: $(AFS)/client.c
+$(WEBOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
 	$(CRULE2)
-$(WEBOBJ)/user.o: $(AFS)/user.c
+$(WEBOBJ)/user.o: $(TOP_SRCDIR)/kauth/user.c
 	$(CRULE2)
-$(WEBOBJ)/hostparse.o: $(AFS)/hostparse.c
+$(WEBOBJ)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
 	$(CRULE2)
-$(WEBOBJ)/token.o: $(AFS)/token.c
+$(WEBOBJ)/token.o: $(TOP_SRCDIR)/kauth/token.c
 	$(CRULE2)
-$(WEBOBJ)/acfg_errors.o: $(AFS)/acfg_errors.c
+$(WEBOBJ)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
 	$(CRULE2)
-$(WEBOBJ)/kaaux.o: $(AFS)/kaaux.c
+$(WEBOBJ)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
 	$(CRULE2)
-$(WEBOBJ)/kauth.cs.o: $(AFSINT)/kauth.cs.c
+$(WEBOBJ)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
 	$(CRULE2)
-$(WEBOBJ)/kauth.xdr.o: $(AFSINT)/kauth.xdr.c
+$(WEBOBJ)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
 	$(CRULE2)
-$(WEBOBJ)/authcon.o: $(AFS)/authcon.c
+$(WEBOBJ)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
 	$(CRULE2)
-$(WEBOBJ)/cellconfig.o: $(AFS)/cellconfig.c
+$(WEBOBJ)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(CRULE2)
-$(WEBOBJ)/casestrcpy.o: $(AFS)/casestrcpy.c
+$(WEBOBJ)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
 	$(CRULE1)
-$(WEBOBJ)/dirpath.o: $(AFS)/dirpath.c
+$(WEBOBJ)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
 	$(CRULE1)
-$(WEBOBJ)/fileutil.o: $(AFS)/fileutil.c
+$(WEBOBJ)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
 	$(CRULE1)
-$(WEBOBJ)/netutils.o: $(AFS)/netutils.c
+$(WEBOBJ)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
 	$(CRULE1)
-$(WEBOBJ)/et_name.o: $(AFS)/et_name.c
+$(WEBOBJ)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
 	$(CRULE2)
-$(WEBOBJ)/com_err.o: $(AFS)/com_err.c
+$(WEBOBJ)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
 	$(CRULE2)
-$(WEBOBJ)/error_msg.o: $(AFS)/error_msg.c
+$(WEBOBJ)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
 	$(CRULE2)
-$(WEBOBJ)/uerrors.o: $(AFS)/uerrors.c
+$(WEBOBJ)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
 	$(CRULE2)
-$(WEBOBJ)/kaerrors.o: $(AFS)/kaerrors.c
+$(WEBOBJ)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
 	$(CRULE2)
-$(WEBOBJ)/ktc_errors.o: $(AFS)/ktc_errors.c
+$(WEBOBJ)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
 	$(CRULE2)
-$(WEBOBJ)/rxkad_errs.o: $(AFS)/rxkad_errs.c
+$(WEBOBJ)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
 	$(CRULE2)
-$(WEBOBJ)/rxstat.o: $(AFSINT)/rxstat.c
+$(WEBOBJ)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
 	$(CRULE2)
-$(WEBOBJ)/Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
+$(WEBOBJ)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
 	$(CRULE2)
-$(WEBOBJ)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
+$(WEBOBJ)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
 	$(CRULE2)
 
 # These are for libjuafs.a 
 # Used for linking with libafsauthent and libafsrpc
 
-$(JUAFS)/afs_atomlist.o: $(AFS)/afs_atomlist.c
-	$(CRULE1);
-$(JUAFS)/afs_lhash.o: $(AFS)/afs_lhash.c
-	$(CRULE1);
-$(JUAFS)/afs_analyze.o: $(AFS)/afs_analyze.c
-	$(CRULE1);
-$(JUAFS)/afs_axscache.o: $(AFS)/afs_axscache.c
-	$(CRULE1);
-$(JUAFS)/afs_buffer.o: $(AFS)/afs_buffer.c
-	$(CRULE1);
-$(JUAFS)/afs_cell.o: $(AFS)/afs_cell.c
-	$(CRULE1);
-$(JUAFS)/afs_conn.o: $(AFS)/afs_conn.c
-	$(CRULE1);
-$(JUAFS)/afs_dcache.o: $(AFS)/afs_dcache.c
-	$(CRULE1);
-$(JUAFS)/afs_dynroot.o: $(AFS)/afs_dynroot.c
-	$(CRULE1);
-$(JUAFS)/afs_init.o: $(AFS)/afs_init.c
-	$(CRULE1);
-$(JUAFS)/afs_mariner.o: $(AFS)/afs_mariner.c
-	$(CRULE1);
-$(JUAFS)/afs_osidnlc.o: $(AFS)/afs_osidnlc.c
-	$(CRULE1);
-$(JUAFS)/afs_osi.o: 	$(AFS)/afs_osi.c
-	$(CRULE1);
-$(JUAFS)/afs_osi_pag.o: $(AFS)/afs_osi_pag.c
-	$(CRULE1);
-$(JUAFS)/afs_segments.o: $(AFS)/afs_segments.c
-	$(CRULE1);
-$(JUAFS)/afs_server.o: $(AFS)/afs_server.c
-	$(CRULE1);
-$(JUAFS)/afs_user.o: $(AFS)/afs_user.c
-	$(CRULE1);
-$(JUAFS)/afs_util.o: $(AFS)/afs_util.c
-	$(CRULE1);
-$(JUAFS)/afs_vcache.o: $(AFS)/afs_vcache.c
-	$(CRULE1);
-$(JUAFS)/afs_osi_uio.o: $(AFS)/afs_osi_uio.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_access.o: $(AFS)/afs_vnop_access.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_attrs.o: $(AFS)/afs_vnop_attrs.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_create.o: $(AFS)/afs_vnop_create.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_dirops.o: $(AFS)/afs_vnop_dirops.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_fid.o: $(AFS)/afs_vnop_fid.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_flock.o: $(AFS)/afs_vnop_flock.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_link.o: $(AFS)/afs_vnop_link.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_lookup.o: $(AFS)/afs_vnop_lookup.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_open.o: $(AFS)/afs_vnop_open.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_read.o: $(AFS)/afs_vnop_read.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_readdir.o: $(AFS)/afs_vnop_readdir.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_remove.o: $(AFS)/afs_vnop_remove.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_rename.o: $(AFS)/afs_vnop_rename.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_strategy.o: $(AFS)/afs_vnop_strategy.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_symlink.o: $(AFS)/afs_vnop_symlink.c
-	$(CRULE1);
-$(JUAFS)/afs_vnop_write.o: $(AFS)/afs_vnop_write.c
-	$(CRULE1);
-$(JUAFS)/afs_volume.o: $(AFS)/afs_volume.c
-	$(CRULE1);
-$(JUAFS)/rx_rdwr.o: $(RX)/rx_rdwr.c
-	$(CRULE1);
-$(JUAFS)/afs_cbqueue.o: $(AFS)/afs_cbqueue.c
-	$(CRULE1);
-$(JUAFS)/afs_callback.o: $(AFS)/afs_callback.c
-	$(CRULE1);
-$(JUAFS)/afs_chunk.o: $(AFS)/afs_chunk.c
-	$(CRULE1);
-$(JUAFS)/afs_daemons.o: $(AFS)/afs_daemons.c
-	$(CRULE1);
-$(JUAFS)/afs_dir.o: 	$(AFS)/afs_dir.c
-	$(CRULE1);
-$(JUAFS)/AFS_component_version_number.o: $(AFS)/AFS_component_version_number.c
-	$(CRULE1);
-$(JUAFS)/afs_lock.o: $(AFS)/afs_lock.c
-	$(CRULE1);
-$(JUAFS)/afs_memcache.o: $(AFS)/afs_memcache.c
-	$(CRULE1);
-$(JUAFS)/afs_stat.o: $(AFS)/afs_stat.c
-	$(CRULE1);
-$(JUAFS)/fcrypt.o: 	$(AFS)/fcrypt.c
-	$(CRULE1);
-$(JUAFS)/crypt_conn.o: $(AFS)/crypt_conn.c
-	$(CRULE1);
-$(JUAFS)/rxkad_client.o: $(AFS)/rxkad_client.c
-	$(CRULE1);
-$(JUAFS)/rxkad_common.o: $(AFS)/rxkad_common.c
-	$(CRULE1);
-$(JUAFS)/afs_exporter.o: $(AFS)/afs_exporter.c
-	$(CRULE1);
-$(JUAFS)/afs_nfsclnt.o: $(AFS)/afs_nfsclnt.c
-	$(CRULE1);
-$(JUAFS)/afs_nfsdisp.o: $(AFS)/afs_nfsdisp.c
-	$(CRULE1);
-$(JUAFS)/afs_nfsdisp_v3.o: $(AFS)/afs_nfsdisp_v3.c
-	$(CRULE1);
-$(JUAFS)/rx.o: $(RX)/rx.c
-	$(CRULE1);
-$(JUAFS)/rx_clock.o: $(RX)/rx_clock.c
-	$(CRULE1);
-$(JUAFS)/rx_event.o: $(RX)/rx_event.c
-	$(CRULE1);
-$(JUAFS)/rx_globals.o: $(RX)/rx_globals.c
-	$(CRULE1);
-$(JUAFS)/rx_misc.o: $(RX)/rx_misc.c
-	$(CRULE1);
-$(JUAFS)/rx_null.o: $(RX)/rx_null.c
-	$(CRULE1);
-$(JUAFS)/rx_getaddr.o: $(RX)/rx_getaddr.c
-	$(CRULE1);
-$(JUAFS)/rx_packet.o: $(RX)/rx_packet.c
-	$(CRULE1);
-$(JUAFS)/rx_conncache.o: $(RX)/rx_conncache.c
-	$(CRULE1);
-$(JUAFS)/xdr_rx.o: $(RX)/xdr_rx.c
-	$(CRULE1);
-$(JUAFS)/xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1);
-$(JUAFS)/afs_usrops.o: $(AFS)/afs_usrops.c
-	$(CRULE1);
-$(JUAFS)/afs_uuid.o: $(AFS)/afs_uuid.c
-	$(CRULE1);
-$(JUAFS)/xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
-	$(CRULE1);
-$(JUAFS)/osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1);
-$(JUAFS)/osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1);
-$(JUAFS)/osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1);
-$(JUAFS)/Kcallback.ss.o: $(AFSINT)/Kcallback.ss.c
-	$(CRULE1);
-$(JUAFS)/Kvice.xdr.o: $(AFSINT)/Kvice.xdr.c
-	$(CRULE1);
-$(JUAFS)/Kvice.cs.o: $(AFSINT)/Kvice.cs.c
-	$(CRULE1);
-$(JUAFS)/afsaux.o: $(AFSINT)/afsaux.c
-	$(CRULE1);
-$(JUAFS)/xdr_arrayn.o: $(RX)/xdr_arrayn.c
-	$(CRULE1);
-$(JUAFS)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
-	$(CRULE1);
-$(JUAFS)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
-	$(CRULE1);
-$(JUAFS)/afs_main.o: $(AFS)/afs_main.c
-	$(CRULE1);
-$(JUAFS)/rx_knet.o: $(RX)/rx_knet.c
-	$(CRULE1);
-$(JUAFS)/rx_kcommon.o: $(RX)/rx_kcommon.c
-	$(CRULE1);
-$(JUAFS)/afs_call.o: $(AFS)/afs_call.c
-	$(CRULE1) -DAFS_NONFSTRANS;
-$(JUAFS)/afs_pioctl.o: $(AFS)/afs_pioctl.c
-	$(CRULE1) -DAFS_NONFSTRANS;
-$(JUAFS)/osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS;
-$(JUAFS)/ktc.o: 	$(AFS)/ktc.c
-	$(CRULE1);
-$(JUAFS)/ticket.o: $(AFS)/ticket.c
-	$(CRULE1);
-$(JUAFS)/rxkad_server.o: $(AFS)/rxkad_server.c
-	$(CRULE1);
-$(JUAFS)/ptint.cs.o: $(AFSINT)/ptint.cs.c
-	$(CRULE1);
-$(JUAFS)/ptint.xdr.o: $(AFSINT)/ptint.xdr.c
-	$(CRULE1);
-$(JUAFS)/ptuser.o: $(AFS)/ptuser.c
-	$(CRULE1);
-$(JUAFS)/pterror.o: $(AFS)/pterror.c
-	$(CRULE1);
-$(JUAFS)/ubikclient.o: $(AFS)/ubikclient.c
-	$(CRULE1);
-$(JUAFS)/ubik_int.cs.o: $(AFSINT)/ubik_int.cs.c
-	$(CRULE1);
-$(JUAFS)/ubik_int.xdr.o: $(AFSINT)/ubik_int.xdr.c
-	$(CRULE1);
-$(JUAFS)/authclient.o: $(AFS)/authclient.c
-	$(CRULE1);
-$(JUAFS)/kalocalcell.o: $(AFS)/kalocalcell.c
-	$(CRULE1);
-$(JUAFS)/client.o: $(AFS)/client.c
-	$(CRULE1);
-$(JUAFS)/user.o: $(AFS)/user.c
-	$(CRULE1);
-$(JUAFS)/hostparse.o: $(AFS)/hostparse.c
-	$(CRULE1);
-$(JUAFS)/token.o: $(AFS)/token.c
-	$(CRULE1);
-$(JUAFS)/acfg_errors.o: $(AFS)/acfg_errors.c
-	$(CRULE1);
-$(JUAFS)/kaaux.o: $(AFS)/kaaux.c
-	$(CRULE1);
-$(JUAFS)/authcon.o: $(AFS)/authcon.c
-	$(CRULE1);
-$(JUAFS)/cellconfig.o: $(AFS)/cellconfig.c
-	$(CRULE1);
-$(JUAFS)/casestrcpy.o: $(AFS)/casestrcpy.c
-	$(CRULE1);
-$(JUAFS)/dirpath.o: $(AFS)/dirpath.c
-	$(CRULE1);
-$(JUAFS)/fileutil.o: $(AFS)/fileutil.c
-	$(CRULE1);
-$(JUAFS)/netutils.o: $(AFS)/netutils.c
-	$(CRULE1);
-$(JUAFS)/et_name.o: $(AFS)/et_name.c
-	$(CRULE1);
-$(JUAFS)/com_err.o: $(AFS)/com_err.c
-	$(CRULE1);
-$(JUAFS)/error_msg.o: $(AFS)/error_msg.c
-	$(CRULE1);
-$(JUAFS)/uerrors.o: $(AFS)/uerrors.c
-	$(CRULE1);
-$(JUAFS)/kaerrors.o: $(AFS)/kaerrors.c
-	$(CRULE1);
-$(JUAFS)/ktc_errors.o: $(AFS)/ktc_errors.c
-	$(CRULE1);
-$(JUAFS)/rxkad_errs.o: $(AFS)/rxkad_errs.c
-	$(CRULE1);
-$(JUAFS)/kauth.cs.o: $(AFSINT)/kauth.cs.c
-	$(CRULE1);
-$(JUAFS)/kauth.xdr.o: $(AFSINT)/kauth.xdr.c
-	$(CRULE1);
-$(JUAFS)/rxstat.o: $(AFSINT)/rxstat.c
-	$(CRULE1);
-$(JUAFS)/Krxstat.ss.o: $(AFSINT)/Krxstat.ss.c
-	$(CRULE1);
-$(JUAFS)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
-	$(CRULE1);
+$(JUAFS)/afs_atomlist.o: $(TOP_SRCDIR)/util/afs_atomlist.c
+	$(CRULE1)
+$(JUAFS)/afs_lhash.o: $(TOP_SRCDIR)/util//afs_lhash.c
+	$(CRULE1)
+$(JUAFS)/afs_analyze.o: $(TOP_SRC_AFS)/afs_analyze.c
+	$(CRULE1)
+$(JUAFS)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
+	$(CRULE1)
+$(JUAFS)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
+	$(CRULE1)
+$(JUAFS)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
+	$(CRULE1)
+$(JUAFS)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
+	$(CRULE1)
+$(JUAFS)/afs_dcache.o: $(TOP_SRC_AFS)/afs_dcache.c
+	$(CRULE1)
+$(JUAFS)/afs_dynroot.o: $(TOP_SRC_AFS)/afs_dynroot.c
+	$(CRULE1)
+$(JUAFS)/afs_init.o: $(TOP_SRC_AFS)/afs_init.c
+	$(CRULE1)
+$(JUAFS)/afs_mariner.o: $(TOP_SRC_AFS)/afs_mariner.c
+	$(CRULE1)
+$(JUAFS)/afs_osidnlc.o: $(TOP_SRC_AFS)/afs_osidnlc.c
+	$(CRULE1)
+$(JUAFS)/afs_osi.o: $(TOP_SRC_AFS)/afs_osi.c
+	$(CRULE1)
+$(JUAFS)/afs_osi_pag.o: $(TOP_SRC_AFS)/afs_osi_pag.c
+	$(CRULE1)
+$(JUAFS)/afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
+	$(CRULE1)
+$(JUAFS)/afs_server.o: $(TOP_SRC_AFS)/afs_server.c
+	$(CRULE1)
+$(JUAFS)/afs_user.o: $(TOP_SRC_AFS)/afs_user.c
+	$(CRULE1)
+$(JUAFS)/afs_util.o: $(TOP_SRC_AFS)/afs_util.c
+	$(CRULE1)
+$(JUAFS)/afs_vcache.o: $(TOP_SRC_AFS)/afs_vcache.c
+	$(CRULE1)
+$(JUAFS)/afs_osi_uio.o: $(TOP_SRC_AFS)/afs_osi_uio.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_access.o: $(TOP_SRC_VNOPS)/afs_vnop_access.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_attrs.o: $(TOP_SRC_VNOPS)/afs_vnop_attrs.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_create.o: $(TOP_SRC_VNOPS)/afs_vnop_create.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_dirops.o: $(TOP_SRC_VNOPS)/afs_vnop_dirops.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_fid.o: $(TOP_SRC_VNOPS)/afs_vnop_fid.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_flock.o: $(TOP_SRC_VNOPS)/afs_vnop_flock.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_link.o: $(TOP_SRC_VNOPS)/afs_vnop_link.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_lookup.o: $(TOP_SRC_VNOPS)/afs_vnop_lookup.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_open.o: $(TOP_SRC_VNOPS)/afs_vnop_open.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_read.o: $(TOP_SRC_VNOPS)/afs_vnop_read.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_readdir.o: $(TOP_SRC_VNOPS)/afs_vnop_readdir.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_remove.o: $(TOP_SRC_VNOPS)/afs_vnop_remove.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_rename.o: $(TOP_SRC_VNOPS)/afs_vnop_rename.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_strategy.o: $(TOP_SRC_VNOPS)/afs_vnop_strategy.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_symlink.o: $(TOP_SRC_VNOPS)/afs_vnop_symlink.c
+	$(CRULE1)
+$(JUAFS)/afs_vnop_write.o: $(TOP_SRC_VNOPS)/afs_vnop_write.c
+	$(CRULE1)
+$(JUAFS)/afs_volume.o: $(TOP_SRC_AFS)/afs_volume.c
+	$(CRULE1)
+$(JUAFS)/rx_rdwr.o: $(TOP_SRC_RX)/rx_rdwr.c
+	$(CRULE1)
+$(JUAFS)/afs_cbqueue.o: $(TOP_SRC_AFS)/afs_cbqueue.c
+	$(CRULE1)
+$(JUAFS)/afs_callback.o: $(TOP_SRC_AFS)/afs_callback.c
+	$(CRULE1)
+$(JUAFS)/afs_chunk.o: $(TOP_SRC_AFS)/afs_chunk.c
+	$(CRULE1)
+$(JUAFS)/afs_daemons.o: $(TOP_SRC_AFS)/afs_daemons.c
+	$(CRULE1)
+$(JUAFS)/afs_dir.o: 	$(TOP_SRCDIR)/dir/dir.c
+	$(CRULE1) -o afs_dir.o
+$(JUAFS)/AFS_component_version_number.o: AFS_component_version_number.c
+	$(CRULE1)
+$(JUAFS)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
+	$(CRULE1)
+$(JUAFS)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
+	$(CRULE1)
+$(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
+	$(CRULE1)
+$(JUAFS)/fcrypt.o: 	$(TOP_SRC_RXKAD)/domestic/fcrypt.c
+	$(CRULE1)
+$(JUAFS)/crypt_conn.o: $(TOP_SRC_RXKAD)/domestic/crypt_conn.c
+	$(CRULE1)
+$(JUAFS)/rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
+	$(CRULE1)
+$(JUAFS)/rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
+	$(CRULE1)
+$(JUAFS)/afs_exporter.o: $(TOP_SRCDIR)/afs/afs_exporter.c
+	$(CRULE1)
+$(JUAFS)/afs_nfsclnt.o: $(TOP_SRC_AFS)/afs_nfsclnt.c
+	$(CRULE1)
+$(JUAFS)/afs_nfsdisp.o: $(TOP_SRC_AFS)/afs_nfsdisp.c
+	$(CRULE1)
+$(JUAFS)/rx.o: $(TOP_SRC_RX)/rx.c
+	$(CRULE1)
+$(JUAFS)/rx_clock.o: $(TOP_SRC_RX)/rx_clock.c
+	$(CRULE1)
+$(JUAFS)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
+	$(CRULE1)
+$(JUAFS)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
+	$(CRULE1)
+$(JUAFS)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE1)
+$(JUAFS)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
+	$(CRULE1)
+$(JUAFS)/rx_getaddr.o: $(TOP_SRC_RX)/rx_getaddr.c
+	$(CRULE1)
+$(JUAFS)/rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
+	$(CRULE1)
+$(JUAFS)/rx_conncache.o: $(TOP_SRCDIR)/rx/rx_conncache.c
+	$(CRULE1)
+$(JUAFS)/xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
+	$(CRULE1)
+$(JUAFS)/xdr_int64.o: $(TOP_SRC_RX)/xdr_int64.c
+	$(CRULE1)
+$(JUAFS)/afs_usrops.o: $(TOP_SRC_AFS)/UKERNEL/afs_usrops.c
+	$(CRULE1)
+$(JUAFS)/afs_uuid.o: $(TOP_SRCDIR)/util/uuid.c
+	$(CRULE1) -o afs_uuid.o
+$(JUAFS)/assert.o: $(TOP_SRCDIR)/util/assert.c
+	$(CRULE1)
+$(JUAFS)/xdr_afsuuid.o: $(TOP_SRCDIR)/rx/xdr_afsuuid.c
+	$(CRULE1)
+$(JUAFS)/osi_vnodeops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vnodeops.c
+	$(CRULE1)
+$(JUAFS)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
+	$(CRULE1)
+$(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
+	$(CRULE1)
+$(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
+	$(CRULE1)
+$(JUAFS)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
+	$(CRULE1)
+$(JUAFS)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
+	$(CRULE1)
+$(JUAFS)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
+	$(CRULE1)
+$(JUAFS)/xdr_arrayn.o: $(TOP_SRC_RX)/xdr_arrayn.c
+	$(CRULE1)
+$(JUAFS)/Kvldbint.cs.o: $(TOP_OBJ_VLSERVER)/Kvldbint.cs.c
+	$(CRULE1)
+$(JUAFS)/Kvldbint.xdr.o: $(TOP_OBJ_VLSERVER)/Kvldbint.xdr.c
+	$(CRULE1)
+$(JUAFS)/rx_knet.o: $(TOP_SRC_RX)/UKERNEL/rx_knet.c
+	$(CRULE1)
+$(JUAFS)/rx_kcommon.o: $(TOP_SRCDIR)/rx/rx_kcommon.c
+	$(CRULE1)
+$(JUAFS)/afs_call.o: $(TOP_SRC_AFS)/afs_call.c
+	$(CRULE1) -DAFS_NONFSTRANS
+$(JUAFS)/afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
+	$(CRULE1) -DAFS_NONFSTRANS
+$(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS
+$(JUAFS)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
+	$(CRULE1)
+$(JUAFS)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
+	$(CRULE1)
+$(JUAFS)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
+	$(CRULE1)
+$(JUAFS)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
+	$(CRULE1)
+$(JUAFS)/ptint.xdr.o: $(TOP_OBJDIR)/src/ptserver/ptint.xdr.c
+	$(CRULE1)
+$(JUAFS)/ptuser.o: $(TOP_SRCDIR)/ptserver/ptuser.c
+	$(CRULE1)
+$(JUAFS)/pterror.o: $(TOP_OBJDIR)/src/ptserver/pterror.c
+	$(CRULE1)
+$(JUAFS)/ubikclient.o: $(TOP_SRCDIR)/ubik/ubikclient.c
+	$(CRULE1)
+$(JUAFS)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
+	$(CRULE1)
+$(JUAFS)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
+	$(CRULE1)
+$(JUAFS)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
+	$(CRULE1)
+$(JUAFS)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
+	$(CRULE1)
+$(JUAFS)/client.o: $(TOP_SRCDIR)/kauth/client.c
+	$(CRULE1)
+$(JUAFS)/user.o: $(TOP_SRCDIR)/kauth/user.c
+	$(CRULE1)
+$(JUAFS)/hostparse.o: $(TOP_SRCDIR)/util/hostparse.c
+	$(CRULE1)
+$(JUAFS)/token.o: $(TOP_SRCDIR)/kauth/token.c
+	$(CRULE1)
+$(JUAFS)/acfg_errors.o: $(TOP_OBJDIR)/src/auth/acfg_errors.c
+	$(CRULE1)
+$(JUAFS)/kaaux.o: $(TOP_SRCDIR)/kauth/kaaux.c
+	$(CRULE1)
+$(JUAFS)/authcon.o: $(TOP_SRCDIR)/auth/authcon.c
+	$(CRULE1)
+$(JUAFS)/cellconfig.o: $(TOP_SRCDIR)/auth/cellconfig.c
+	$(CRULE1)
+$(JUAFS)/casestrcpy.o: $(TOP_SRCDIR)/util/casestrcpy.c
+	$(CRULE1)
+$(JUAFS)/dirpath.o: $(TOP_SRCDIR)/util/dirpath.c
+	$(CRULE1)
+$(JUAFS)/fileutil.o: $(TOP_SRCDIR)/util/fileutil.c
+	$(CRULE1)
+$(JUAFS)/netutils.o: $(TOP_SRCDIR)/util/netutils.c
+	$(CRULE1)
+$(JUAFS)/et_name.o: $(TOP_SRCDIR)/comerr/et_name.c
+	$(CRULE1)
+$(JUAFS)/com_err.o: $(TOP_SRCDIR)/comerr/com_err.c
+	$(CRULE1)
+$(JUAFS)/error_msg.o: $(TOP_SRCDIR)/comerr/error_msg.c
+	$(CRULE1)
+$(JUAFS)/uerrors.o: $(TOP_OBJDIR)/src/ubik/uerrors.c
+	$(CRULE1)
+$(JUAFS)/kaerrors.o: $(TOP_OBJDIR)/src/kauth/kaerrors.c
+	$(CRULE1)
+$(JUAFS)/ktc_errors.o: $(TOP_OBJDIR)/src/auth/ktc_errors.c
+	$(CRULE1)
+$(JUAFS)/rxkad_errs.o: $(TOP_OBJDIR)/src/rxkad/rxkad_errs.c
+	$(CRULE1)
+$(JUAFS)/kauth.cs.o: $(TOP_OBJDIR)/src/kauth/kauth.cs.c
+	$(CRULE1)
+$(JUAFS)/kauth.xdr.o: $(TOP_OBJDIR)/src/kauth/kauth.xdr.c
+	$(CRULE1)
+$(JUAFS)/rxstat.o: $(TOP_SRC_RXSTAT)/rxstat.c
+	$(CRULE1)
+$(JUAFS)/Krxstat.ss.o: $(TOP_OBJ_RXSTAT)/Krxstat.ss.c
+	$(CRULE1)
+$(JUAFS)/Krxstat.xdr.o: $(TOP_OBJ_RXSTAT)/Krxstat.xdr.c
+	$(CRULE1)
 
 
 clean:
@@ -1311,25 +1339,25 @@ ${DEST}/root.afsweb/usr/lib/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
 ${DEST}/root.afsweb/usr/lib/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/param.h: afs/param.h
+${DEST}/root.perf/include/afs/param.h: $(TOP_INCDIR)/afs/param.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/stds.h: afs/stds.h
+${DEST}/root.perf/include/afs/stds.h: $(TOP_INCDIR)/afs/stds.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/afs_sysnames.h: afs/afs_sysnames.h
+${DEST}/root.perf/include/afs/afs_sysnames.h: $(TOP_INCDIR)/afs/afs_sysnames.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/afs_stats.h: afs/afs_stats.h
+${DEST}/root.perf/include/afs/afs_stats.h: $(TOP_INCDIR)/afs/afs_stats.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/sysincludes.h: afs/sysincludes.h
+${DEST}/root.perf/include/afs/sysincludes.h: $(TOP_SRCDIR)/afs/sysincludes.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/include/afs/afs_usrops.h: afs/afs_usrops.h
+${DEST}/root.perf/include/afs/afs_usrops.h: $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h
 	${INSTALL} $? $@
 
-${DEST}/root.perf/lib/libdes.a: des/libdes.a
+${DEST}/root.perf/lib/libdes.a: ${TOP_OBJDIR}/lib/libdes.a
 	${INSTALL} $? $@
 
 ${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
@@ -1338,4 +1366,63 @@ ${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
 ${DEST}/root.perf/lib/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
 	${INSTALL} $? $@
 
+#
+# Common directory and other build targets
+#
+UAFS:
+	mkdir -p $@
 
+JUAFS:
+	mkdir -p $@
+
+AFSWEB:
+	mkdir -p $@
+
+setup_common:
+	-$(RM) -f h net netinet rpc ufs nfs machine sys inet nsapi
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net 
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	-ln -s $(NS_INCL) nsapi
+
+setup_uafs: UAFS setup_common
+	-$(RM) -f UAFS/Makefile UAFS/Makefile.common
+	ln -s ../Makefile UAFS/Makefile
+	ln -s ../Makefile.common UAFS/Makefile.common
+
+setup_juafs: JUAFS setup_common
+	-$(RM) -f JUAFS/Makefile JUAFS/Makefile.common
+	ln -s ../Makefile JUAFS/Makefile
+	ln -s ../Makefile.common JUAFS/Makefile.common
+
+setup_nsafs: AFSWEB setup_common
+	-$(RM) -f AFSWEB/Makefile AFSWEB/Makefile.common
+	ln -s ../Makefile AFSWEB/Makefile
+	ln -s ../Makefile.common AFSWEB/Makefile.common
+
+UAFS/$(LIBUAFS): setup_uafs
+	cd UAFS; \
+	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=; \
+	$(RANLIB) $(LIBUAFS)
+
+JUAFS/$(LIBJUAFS): setup_juafs
+	cd JUAFS; \
+	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS; \
+	$(RANLIB) $(LIBJUAFS)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEB) DESTDIR=${DESTDIR}; \
+	$(RANLIB) $(LIBAFSWEB)
+
+AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEBKRB) DESTDIR=${DESTDIR}; \
+	$(RANLIB) $(LIBAFSWEBKRB)
+
+include ${TOP_OBJDIR}/src/config/Makefile.version

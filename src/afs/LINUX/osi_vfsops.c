@@ -13,16 +13,16 @@
  * super_block operations should return negated errno to Linux.
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"
-#include "../h/locks.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"
+#include "h/locks.h"
 #if defined(AFS_LINUX24_ENV)
-#include "../h/smp_lock.h"
+#include "h/smp_lock.h"
 #endif
 
 #define __NO_VERSION__ /* don't define kernel_verion in module.h */

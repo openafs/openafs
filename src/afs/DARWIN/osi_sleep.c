@@ -8,13 +8,13 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h" /* Standard vendor system headers */
-#include "../afs/afsincludes.h" /* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
+#include "afs/sysincludes.h" /* Standard vendor system headers */
+#include "afsincludes.h" /* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* afs statistics */
 
 
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);

@@ -24,126 +24,16 @@ fc_test_LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libsys.a
 
-all: kinstall ukinstall ${TOP_LIBDIR}/librxkad.a fc_test \
-	${TOP_INCDIR}/rx/rxkad.h ${TOP_INCDIR}/rx/rxkad_prototypes.h \
+all: ${TOP_LIBDIR}/librxkad.a fc_test depinstall
+
+depinstall: \
+	${TOP_INCDIR}/rx/rxkad.h \
+	${TOP_INCDIR}/rx/rxkad_prototypes.h \
 	${TOP_INCDIR}/rx/fcrypt.h
 
 #
 # Install targets
 #
-kinstall: \
-	${KERNELDIR}/afs/private_data.h \
-	${KERNELDIR}/afs/rxkad.h \
-	${KERNELDIR}/afs/rxkad_prototypes.h \
-	${KERNELDIR}/afs/sboxes.h \
-	${KERNELDIR}/afs/fcrypt.h \
-	${KERNELDIR}/afs/fcrypt.c \
-	${KERNELDIR}/afs/crypt_conn.c \
-	${KERNELDIR}/afs/rxkad_client.c \
-	${KERNELDIR}/afs/rxkad_common.c 
-
-${KERNELDIR}/afs/private_data.h: private_data.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/sboxes.h: sboxes.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/fcrypt.c: fcrypt.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/crypt_conn.c: crypt_conn.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/rxkad_client.c: rxkad_client.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afs/rxkad_common.c: rxkad_common.c
-	${INSTALL} $? $@
-
-ukinstall: \
-	${UKERNELDIR}/afs \
-	${UKERNELDIR}/rx \
-	${UKERNELDIR}/afs/private_data.h \
-	${UKERNELDIR}/afs/rxkad.h \
-	${UKERNELDIR}/afs/rxkad_prototypes.h \
-	${UKERNELDIR}/afs/fcrypt.h \
-	${UKERNELDIR}/rx/rxkad.h \
-	${UKERNELDIR}/rx/rxkad_prototypes.h \
-	${UKERNELDIR}/rx/fcrypt.h \
-	${UKERNELDIR}/afs/sboxes.h \
-	${UKERNELDIR}/afs/fcrypt.c \
-	${UKERNELDIR}/afs/crypt_conn.c \
-	${UKERNELDIR}/afs/rxkad_client.c \
-	${UKERNELDIR}/afs/rxkad_common.c \
-	${UKERNELDIR}/afs/ticket.c \
-	${UKERNELDIR}/afs/rxkad_server.c \
-	${UKERNELDIR}/afs/lifetimes.h \
-	${UKERNELDIR}/afs/rxkad_errs.c 
-
-
-${UKERNELDIR}/afs:
-	mkdir -p $?
-
-${UKERNELDIR}/rx:
-	mkdir -p $?
-
-${UKERNELDIR}/afs/private_data.h: private_data.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/rx/rxkad_prototypes.h: rxkad_prototypes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/lifetimes.h: lifetimes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/ticket.c: ticket.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/sboxes.h: sboxes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/fcrypt.c: fcrypt.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/crypt_conn.c: crypt_conn.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad_client.c: rxkad_client.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad_errs.c: rxkad_errs.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad_server.c: rxkad_server.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/rxkad_common.c: rxkad_common.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/rx/rxkad.h: rxkad.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/rx/fcrypt.h: fcrypt.h
-	${INSTALL} $? $@
-
 install:   \
 	${DESTDIR}${libdir}/librxkad.a \
 	${DESTDIR}${includedir}/rx/fcrypt.h \

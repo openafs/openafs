@@ -11,7 +11,7 @@
 
 #include <afsconfig.h>
 #ifdef	KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -19,31 +19,31 @@
 RCSID("$Header$");
 
 #ifdef KERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../h/time.h"
-#include "../h/stat.h"
+#include "h/types.h"
+#include "h/time.h"
+#include "h/stat.h"
 #ifdef	AFS_OSF_ENV
 #include <net/net_globals.h>
 #endif	/* AFS_OSF_ENV */
 #ifdef AFS_LINUX20_ENV
-#include "../h/socket.h"
+#include "h/socket.h"
 #endif
-#include "../netinet/in.h"
-#include "../afs/afs_args.h"
-#include "../afs/afs_osi.h"
+#include "netinet/in.h"
+#include "afs/afs_args.h"
+#include "afs/afs_osi.h"
 #if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
-#include "../h/systm.h"
+#include "h/systm.h"
 #endif
 #ifdef RXDEBUG
 #undef RXDEBUG	    /* turn off debugging */
 #endif /* RXDEBUG */
 #if defined(AFS_SGI_ENV)
-#include "../sys/debug.h"
+#include "sys/debug.h"
 #endif
-#include "../afsint/afsint.h"
+#include "afsint.h"
 #ifdef	AFS_ALPHA_ENV
 #undef kmem_alloc
 #undef kmem_free
@@ -52,27 +52,27 @@ RCSID("$Header$");
 #undef register
 #endif	/* AFS_ALPHA_ENV */
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #endif /* !UKERNEL */
-#include "../afs/lock.h"
-#include "../rx/rx_kmutex.h"
-#include "../rx/rx_kernel.h"
-#include "../rx/rx_clock.h"
-#include "../rx/rx_queue.h"
-#include "../rx/rx.h"
-#include "../rx/rx_globals.h"
-#include "../rx/rx_trace.h"
+#include "afs/lock.h"
+#include "rx_kmutex.h"
+#include "rx_kernel.h"
+#include "rx_clock.h"
+#include "rx_queue.h"
+#include "rx.h"
+#include "rx_globals.h"
+#include "rx_trace.h"
 #define	AFSOP_STOP_RXCALLBACK	210	/* Stop CALLBACK process */
 #define	AFSOP_STOP_AFS		211	/* Stop AFS process */
 #define	AFSOP_STOP_BKG		212	/* Stop BKG process */
-#include "../afsint/afsint.h"
+#include "afsint.h"
 extern afs_int32 afs_termState;
 #ifdef AFS_AIX41_ENV
 #include "sys/lockl.h"
 #include "sys/lock_def.h"
 #endif /* AFS_AIX41_ENV */
-# include "../afsint/rxgen_consts.h"
+# include "rxgen_consts.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <errno.h>

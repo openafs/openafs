@@ -14,14 +14,14 @@
  *
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/osi_inode.h"
-#include "../afs/afs_stats.h" /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/osi_inode.h"
+#include "afs/afs_stats.h" /* statistics stuff */
 #include <ufs/ufsmount.h>
 
 /* given a vnode, return the `inode number'; if it's a UFS vnode just

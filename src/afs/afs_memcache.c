@@ -8,13 +8,13 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
-#include "../rpc/types.h"
+#include "rpc/types.h"
 #endif
 #ifdef	AFS_ALPHA_ENV
 #undef kmem_alloc
@@ -23,8 +23,8 @@ RCSID("$Header$");
 #undef mem_free
 #undef register
 #endif  /* AFS_ALPHA_ENV */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h" /* statistics */
 
 /* memory cache routines */
 static struct memCacheEntry *memCache;

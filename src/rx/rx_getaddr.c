@@ -35,9 +35,9 @@ RCSID("$Header$");
 #endif
 #else	/* KERNEL */
 #ifdef UKERNEL
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 #else /* UKERNEL */
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #endif /* UKERNEL */
 #endif	/* KERNEL */
 

@@ -4,7 +4,7 @@
 RCSID("$Header$");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
-#include <afs/afsincludes.h>            /* Afs-based standard headers */
+#include <afsincludes.h>            /* Afs-based standard headers */
 #include <afs/afs_stats.h>              /* statistics */
 #include <sys/malloc.h>
 #include <sys/namei.h>

@@ -8,10 +8,10 @@
  */
 
 #if defined(UKERNEL)
-#include "../afs/lock.h"
-#include "../afs/ubik.h"
-#include "../afsint/ptint.h"
-#include "../afs/ptserver.h"
+#include "afs/lock.h"
+#include "ubik.h"
+#include "afs/ptint.h"
+#include "afs/ptserver.h"
 #else /* defined(UKERNEL) */
 #include <lock.h>
 #include <ubik.h>

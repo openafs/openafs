@@ -17,7 +17,12 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o ${REGEX_OBJ}
 
-all: ukinstall kinstall \
+all: includes \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	sys
+
+includes: \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
 	${TOP_INCDIR}/afs/assert.h \
@@ -33,10 +38,9 @@ all: ukinstall kinstall \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
-	${TOP_INCDIR}/potpourri.h \
-	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libafsutil.a \
-	sys
+	${TOP_INCDIR}/potpourri.h 
+
+depinstall: includes
 
 dirpath.h: ${srcdir}/dirpath.hin Makefile
 	( sed \
@@ -321,110 +325,6 @@ ${DEST}/lib/afs/libafsutil.a: util.a
 
 
 ${DEST}/bin/sys: sys
-	${INSTALL} $? $@
-
-
-kinstall: ${KDIR}/vice.h \
-	${KDIR}/afs_base64.c \
-	${KDIR}/afs_uuid.c \
-	${KDIR}/afs_atomlist.c \
-	${KDIR}/afs_atomlist.h \
-	${KDIR}/afs_lhash.c \
-	${KDIR}/afs_lhash.h
-
-${KDIR}/vice.h: ${srcdir}/vice.h
-	${INSTALL} $? $@
-
-${KDIR}/afs_base64.c: ${srcdir}/base64.c
-	${INSTALL} $? $@
-
-${KDIR}/afs_uuid.c: ${srcdir}/uuid.c
-	${INSTALL} $? $@
-
-${KDIR}/afs_atomlist.c: ${srcdir}/afs_atomlist.c
-	${INSTALL} $? $@
-
-${KDIR}/afs_atomlist.h: ${srcdir}/afs_atomlist.h
-	${INSTALL} $? $@
-
-${KDIR}/afs_lhash.c: ${srcdir}/afs_lhash.c
-	${INSTALL} $? $@
-
-${KDIR}/afs_lhash.h: ${srcdir}/afs_lhash.h
-	${INSTALL} $? $@
-
-ukinstall: \
-	${UKDIR}/afs_uuid.c \
-	${UKDIR}/afs_atomlist.c \
-	${UKDIR}/afs_atomlist.h \
-	${UKDIR}/afs_lhash.c \
-	${UKDIR}/afs_lhash.h \
-	${UKDIR}/pthread_glock.h \
-	${UKDIR}/vice.h \
-	${UKDIR}/errors.h \
-	${UKDIR}/afsutil.h \
-	${UKDIR}/afsutil_prototypes.h \
-	${UKDIR}/dirpath.h \
-	${UKDIR}/dirpath.c \
-	${UKDIR}/fileutil.h \
-	${UKDIR}/fileutil.c \
-	${UKDIR}/netutils.h \
-	${UKDIR}/netutils.c \
-	${UKDIR}/casestrcpy.c \
-	${UKDIR}/hostparse.c 
-
-${UKDIR}/errors.h: ${srcdir}/errors.h
-	${INSTALL} $? $@
-
-${UKDIR}/afsutil.h: ${srcdir}/afsutil.h
-	${INSTALL} $? $@
-
-${UKDIR}/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
-	${INSTALL} $? $@
-
-${UKDIR}/dirpath.h: dirpath.h
-	${INSTALL} $? $@
-
-${UKDIR}/dirpath.c: ${srcdir}/dirpath.c
-	${INSTALL} $? $@
-
-${UKDIR}/fileutil.h: ${srcdir}/fileutil.h
-	${INSTALL} $? $@
-
-${UKDIR}/fileutil.c: ${srcdir}/fileutil.c
-	${INSTALL} $? $@
-
-${UKDIR}/netutils.h: ${srcdir}/netutils.h
-	${INSTALL} $? $@
-
-${UKDIR}/netutils.c: ${srcdir}/netutils.c
-	${INSTALL} $? $@
-
-${UKDIR}/casestrcpy.c: ${srcdir}/casestrcpy.c
-	${INSTALL} $? $@
-
-${UKDIR}/hostparse.c: ${srcdir}/hostparse.c
-	${INSTALL} $? $@
-
-${UKDIR}/pthread_glock.h: ${srcdir}/pthread_glock.h
-	${INSTALL} $? $@
-
-${UKDIR}/vice.h: ${srcdir}/vice.h
-	${INSTALL} $? $@
-
-${UKDIR}/afs_uuid.c: ${srcdir}/uuid.c
-	${INSTALL} $? $@
-
-${UKDIR}/afs_atomlist.c: ${srcdir}/afs_atomlist.c
-	${INSTALL} $? $@
-
-${UKDIR}/afs_atomlist.h: ${srcdir}/afs_atomlist.h
-	${INSTALL} $? $@
-
-${UKDIR}/afs_lhash.c: ${srcdir}/afs_lhash.c
-	${INSTALL} $? $@
-
-${UKDIR}/afs_lhash.h: ${srcdir}/afs_lhash.h
 	${INSTALL} $? $@
 
 #

@@ -8,14 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics gathering code */
-#include "../afs/afs_cbqueue.h" 
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* statistics gathering code */
+#include "afs/afs_cbqueue.h" 
 #ifdef AFS_AIX_ENV
 #include <sys/adspace.h>	/* for vm_att(), vm_det() */
 #endif

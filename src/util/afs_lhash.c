@@ -13,8 +13,8 @@
 RCSID("$Header$");
 
 #ifdef KERNEL
-#include "../afs/afs_atomlist.h"
-#include "../afs/afs_lhash.h"
+#include "afs_atomlist.h"
+#include "afs_lhash.h"
 #else /* KERNEL */
 #include "afs_atomlist.h"
 #include "afs_lhash.h"

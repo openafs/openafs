@@ -12,17 +12,17 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 
 #ifdef AFS_HPUX110_ENV
-#include "../h/tihdr.h"
+#include "h/tihdr.h"
 #include <xti.h>
 #endif
-#include "../afsint/afsint.h"
+#include "afsint.h"
 
 #ifdef AFS_DARWIN60_ENV
 struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct ifaddr **pifad);

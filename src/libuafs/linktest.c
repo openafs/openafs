@@ -17,9 +17,13 @@
 
 RCSID("$Header$");
 
+#include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+
 #include <rx/rx.h>
-#include <afs/afs_usrops.h>
+#include <afs/sysincludes.h>
+#include <afs_usrops.h>
 
 void uafs_Shutdown(void);
 

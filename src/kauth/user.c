@@ -12,7 +12,7 @@
 
 #include <afsconfig.h>
 #if defined(UKERNEL)
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -20,21 +20,21 @@
 RCSID("$Header$");
 
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../afs/com_err.h"
-#include "../afs/cellconfig.h"
-#include "../afs/auth.h"
-#include "../afsint/ptint.h"
-#include "../afs/pterror.h"
-#include "../afs/ptserver.h"
-#include "../rx/rx.h"
-#include "../rx/rx_globals.h"
-#include "../rx/rxkad.h"
-#include "../afsint/kauth.h"
-#include "../afs/kautils.h"
-#include "../afs/afsutil.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/stds.h"
+#include "afs/com_err.h"
+#include "afs/cellconfig.h"
+#include "afs/auth.h"
+#include "afs/ptint.h"
+#include "afs/pterror.h"
+#include "afs/ptserver.h"
+#include "rx/rx.h"
+#include "rx/rx_globals.h"
+#include "rx/rxkad.h"
+#include "afs/kauth.h"
+#include "afs/kautils.h"
+#include "afs/afsutil.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>

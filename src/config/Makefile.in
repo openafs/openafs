@@ -12,7 +12,7 @@ CFLAGS=$(DBG) -I${TOP_INCDIR} -I. ${XCFLAGS}
 
 INST=$(RM) -f $@; $(CP) $? $@
 
-all: config mkvers ukinstall kinstall \
+all: config mkvers \
 	${TOP_INCDIR}/afs/param.h \
 	${TOP_INCDIR}/afs/stds.h \
 	${TOP_INCDIR}/afs/afs_sysnames.h \
@@ -34,12 +34,6 @@ Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 AFS_component_version_number.c: Makefile.version
 	$(MAKE) -f Makefile.version AFS_component_version_number.c
 
-${KERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
-	$(INST)
-
-${UKERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
-	$(INST)
-
 #
 # App build/install targets
 #
@@ -58,25 +52,16 @@ config.o: ${srcdir}/config.c AFS_component_version_number.c
 #
 # Include installation targets
 #
-KDIRS = ${KERNELDIR}/afs \
-	${KERNELDIR}/rx \
-	${KERNELDIR}/afsint \
-	${KERNELDIR}/config
 
-$(KDIRS): 
+${TOP_INCDIR}/afs: ${TOP_INCDIR}
 	mkdir -p $@
 
-UKDIRS = ${UKERNELDIR}/afs \
-	${UKERNELDIR}/rx \
-	${UKERNELDIR}/afsint \
-	${UKERNELDIR}/config
-
-$(UKDIRS): 
+${TOP_INCDIR}:
 	mkdir -p $@
 
 # XXX inlined INST
-${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}.h ${AFS_PARAM_COMMON}
-	if [ X${AFS_PARAM_COMMON} != X ] ; then \
+${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${TOP_INCDIR}/afs ${srcdir}/param.${SYS_NAME}.h ${AFS_PARAM_COMMON}
+	if [ "X${AFS_PARAM_COMMON}" != "X" ] ; then \
 		cat ${srcdir}/${AFS_PARAM_COMMON} ${srcdir}/param.${SYS_NAME}.h > param.h.new ; \
 		$(RM) -f $@; \
 		 $(CP) param.h.new $@ ; \
@@ -84,25 +69,22 @@ ${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs
 		$(RM) -f $@; $(CP) ${srcdir}/param.${SYS_NAME}.h $@ ; \
 	fi
 
-${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: ${srcdir}/afs_sysnames.h
+${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: ${srcdir}/afs_sysnames.h
 	$(INST)
 
-${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
+${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
 	$(INST)
 
-${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
+${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
 	$(INST)
 
-${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h 
+${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h 
 	$(INST)
 
-${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
+${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
 	$(INST)
 
 ${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: ${srcdir}/debug.h 
-	$(INST)
-
-${UKERNELDIR}/afs/param.h: ${srcdir}/param.${SYS_NAME}_usr.h
 	$(INST)
 
 # these are needed to compile the kernel.  Config is necessary to
@@ -117,25 +99,6 @@ install: ${DESTDIR}${includedir}/afs/param.h \
 	${DESTDIR}${includedir}/afs/icl.h \
 	${DESTDIR}${includedir}/afs/venus.h \
 	${DESTDIR}${includedir}/afs/debug.h
-
-kinstall: \
-	$(KDIRS) \
-	${KERNELDIR}/afs/param.h \
-	${KERNELDIR}/afs/stds.h \
-	${KERNELDIR}/afs/afs_sysnames.h \
-	${KERNELDIR}/afs/afs_args.h \
-	${KERNELDIR}/afs/icl.h \
-	${KERNELDIR}/afs/AFS_component_version_number.c
-
-ukinstall: \
-	$(UKDIRS) \
-	${UKERNELDIR}/afs/param.h \
-	${UKERNELDIR}/afs/stds.h \
-	${UKERNELDIR}/afs/afs_sysnames.h \
-	${UKERNELDIR}/afs/afs_args.h \
-	${UKERNELDIR}/afs/icl.h \
-	${UKERNELDIR}/afs/venus.h \
-	${UKERNELDIR}/afs/AFS_component_version_number.c
 
 clean:
 	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c param.h.new

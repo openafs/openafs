@@ -8,42 +8,42 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #if !defined(UKERNEL)
-#include "../h/param.h"
-#include "../h/types.h"
-#include "../h/time.h"
+#include "h/param.h"
+#include "h/types.h"
+#include "h/time.h"
 #if	defined(AFS_AIX31_ENV) || defined(AFS_DEC_ENV)
-#include "../h/limits.h"
+#include "h/limits.h"
 #endif
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
-#include "../h/kernel.h"    /* Doesn't needed, so it should go */
+#include "h/kernel.h"    /* Doesn't needed, so it should go */
 #endif
 #endif /* !defined(UKERNEL) */
 
-#include "../afs/afs_osi.h"
-#include "../afsint/afsint.h"
-#include "../afs/lock.h"
+#include "afs/afs_osi.h"
+#include "afsint.h"
+#include "afs/lock.h"
 
 #if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
-#include "../h/buf.h"
+#include "h/buf.h"
 #endif /* !defined(UKERNEL) */
 
-#include "../afs/stds.h"
-#include "../afs/volerrors.h"
-#include "../afs/exporter.h"
-#include "../afs/prs_fs.h"
-#include "../afs/afs_chunkops.h"
-#include "../afs/dir.h"
+#include "afs/stds.h"
+#include "afs/volerrors.h"
+#include "afs/exporter.h"
+#include "afs/prs_fs.h"
+#include "afs/afs_chunkops.h"
+#include "afs/dir.h"
 
-#include "../afs/afs_stats.h"
-#include "../afs/longc_procs.h"
-#include "../afs/afs.h"
+#include "afs/afs_stats.h"
+#include "afs/longc_procs.h"
+#include "afs/afs.h"
 
 #ifndef	BUF_TIME_MAX
 #define	BUF_TIME_MAX	0x7fffffff

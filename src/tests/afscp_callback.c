@@ -1,5 +1,5 @@
 #include <afs/param.h>
-#include <afs/afscbint.h>               /*Callback interface defs*/
+#include <fsint/afscbint.h>               /*Callback interface defs*/
 int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
 static int init_afs_cb() {

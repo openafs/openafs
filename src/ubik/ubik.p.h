@@ -35,7 +35,7 @@
 #endif
 
 #if defined(UKERNEL)
-#include "../afsint/ubik_int.h"
+#include "ubik_int.h"
 #else /* defined(UKERNEL) */
 #include <ubik_int.h>
 #endif /* defined(UKERNEL) */
@@ -134,7 +134,7 @@ struct ubik_stat {
 };
 
 #if defined(UKERNEL)
-#include "../afs/lock.h"
+#include "afs/lock.h"
 #else /* defined(UKERNEL) */
 #include <lock.h>			/* just to make sure we've go this */
 #endif /* defined(UKERNEL) */

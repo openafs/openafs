@@ -8,7 +8,7 @@
  */
 
 #ifdef UKERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -17,15 +17,15 @@
 RCSID("$Header$");
 
 #ifdef UKERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "rxstat.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rxstat/rxstat.h"
 #else /* UKERNEL */
 #include <afs/stds.h>
 #include <rx/rx.h>
-#include "rxstat.h"
+#include "rxstat/rxstat.h"
 #ifdef KERNEL
-#include "../sys/errno.h"
+#include "sys/errno.h"
 #else /* KERNEL */
 #include <errno.h>
 #endif /* KERNEL */

@@ -26,18 +26,18 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"
-#include "../afs/auth.h"
-#include "../afs/cellconfig.h"
-#include "../afs/vice.h"
-#include "../afs/nsafs.h"
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"
+#include "afs/auth.h"
+#include "afs/cellconfig.h"
+#include "afs/vice.h"
+#include "afs/nsafs.h"
 
 static int big_endian;
 

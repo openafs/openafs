@@ -10,8 +10,8 @@
 #ifndef _AFS_OSI_
 #define _AFS_OSI_
 
-#include "../h/types.h"
-#include "../h/param.h"
+#include "h/types.h"
+#include "h/param.h"
 
 #ifdef AFS_LINUX20_ENV
 #ifndef _LINUX_CODA_FS_I
@@ -23,8 +23,8 @@ struct coda_inode_info {};
 #define _LINUX_XFS_FS_I
 struct xfs_inode_info {};
 #endif
-#include "../h/fs.h"
-#include "../h/mm.h"
+#include "h/fs.h"
+#include "h/mm.h"
 #endif
 
 
@@ -376,7 +376,7 @@ typedef struct timeval osi_timeval_t;
 /* Now include system specific OSI header file. It will redefine macros
  * defined here as required by the OS.
  */
-#include "../afs/osi_machdep.h"
+#include "osi_machdep.h"
 
 /* Declare any structures which use these macros after the OSI implementation
  * has had the opportunity to redefine them.

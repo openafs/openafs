@@ -85,7 +85,7 @@ extern "C" {
 
  /* Need declaration of DIR on Win32 */
 #ifdef WIN32
-#include "../os/win32/readdir.h"
+#include "os/win32/readdir.h"
 #endif
 
 typedef struct pool pool;

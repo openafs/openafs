@@ -357,7 +357,7 @@ static void c_output(char *infile, char *define, int extend,
     f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
     if (xflag) {
 	if (kflag) {
-	    f_print(fout, "#include \"../afs/param.h\"\n");
+	    f_print(fout, "#include \"afs/param.h\"\n");
 	} else {
 	    f_print(fout, "#include <afs/param.h>\n");
 	}
@@ -367,21 +367,21 @@ static void c_output(char *infile, char *define, int extend,
     }
     if (currfile && (include = extendfile(currfile,".h"))) {
 	if (kflag) {
-	    f_print(fout, "#include \"../afsint/%s\"\n\n",include);
+	    f_print(fout, "#include \"%s\"\n\n",include);
 	} else
 	    f_print(fout, "#include \"%s\"\n\n", include);
 	free(include);
     } else {
 	/* In case we can't include the interface's own header file... */
 	if (kflag) {
-	    f_print(fout, "#include \"../h/types.h\"\n");
-	    f_print(fout, "#include \"../h/socket.h\"\n");
-	    f_print(fout, "#include \"../h/file.h\"\n");
-	    f_print(fout, "#include \"../h/stat.h\"\n");
-	    f_print(fout, "#include \"../netinet/in.h\"\n");
-	    f_print(fout, "#include \"../h/time.h\"\n");
-	    f_print(fout, "#include \"../rx/xdr.h\"\n");
-	    f_print(fout, "#include \"../afsint/rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"h/types.h\"\n");
+	    f_print(fout, "#include \"h/socket.h\"\n");
+	    f_print(fout, "#include \"h/file.h\"\n");
+	    f_print(fout, "#include \"h/stat.h\"\n");
+	    f_print(fout, "#include \"netinet/in.h\"\n");
+	    f_print(fout, "#include \"h/time.h\"\n");
+	    f_print(fout, "#include \"rx/xdr.h\"\n");
+	    f_print(fout, "#include \"rxgen_consts.h\"\n");
 	} else {
 	    f_print(fout, "#include <rx/xdr.h>\n");
 	}
@@ -455,38 +455,38 @@ static void h_output(char *infile, char *define, int extend,
 	f_print(fout, "#ifdef	KERNEL\n");
 	f_print(fout, "/* The following 'ifndefs' are not a good solution to the vendor's omission of surrounding all system includes with 'ifndef's since it requires that this file is included after the system includes...*/\n");
 	f_print(fout, "#include <afsconfig.h>\n");
-	f_print(fout, "#include \"../afs/param.h\"\n");
+	f_print(fout, "#include \"afs/param.h\"\n");
 	f_print(fout, "#ifdef	UKERNEL\n");
-	f_print(fout, "#include \"../afs/sysincludes.h\"\n");
-	f_print(fout, "#include \"../rx/xdr.h\"\n");
-	f_print(fout, "#include \"../rx/rx.h\"\n");
+	f_print(fout, "#include \"afs/sysincludes.h\"\n");
+	f_print(fout, "#include \"rx/xdr.h\"\n");
+	f_print(fout, "#include \"rx/rx.h\"\n");
 	if (xflag) {
-	    f_print(fout, "#include \"../rx/rx_globals.h\"\n");
+	    f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	}
 	f_print(fout, "#else	/* UKERNEL */\n");
-	f_print(fout, "#include \"../h/types.h\"\n");
+	f_print(fout, "#include \"h/types.h\"\n");
 	f_print(fout, "#ifndef	SOCK_DGRAM  /* XXXXX */\n");
-	f_print(fout, "#include \"../h/socket.h\"\n");
+	f_print(fout, "#include \"h/socket.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef	DTYPE_SOCKET  /* XXXXX */\n");
 	f_print(fout, "#ifdef AFS_DEC_ENV\n");
-	f_print(fout, "#include \"../h/smp_lock.h\"\n");
+	f_print(fout, "#include \"h/smp_lock.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef AFS_LINUX22_ENV\n");
-	f_print(fout, "#include \"../h/file.h\"\n");
+	f_print(fout, "#include \"h/file.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef	S_IFMT  /* XXXXX */\n");
-	f_print(fout, "#include \"../h/stat.h\"\n");
+	f_print(fout, "#include \"h/stat.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef	IPPROTO_UDP /* XXXXX */\n");
-	f_print(fout, "#include \"../netinet/in.h\"\n");
+	f_print(fout, "#include \"netinet/in.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef	DST_USA  /* XXXXX */\n");
-	f_print(fout, "#include \"../h/time.h\"\n");
+	f_print(fout, "#include \"h/time.h\"\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef AFS_LINUX22_ENV\n");
-	f_print(fout, "#include \"../rpc/types.h\"\n");
+	f_print(fout, "#include \"rpc/types.h\"\n");
 	f_print(fout, "#endif /* AFS_LINUX22_ENV */\n");
 	f_print(fout, "#ifndef	XDR_GETLONG /* XXXXX */\n");
 	f_print(fout, "#ifdef AFS_LINUX22_ENV\n");
@@ -495,14 +495,14 @@ static void h_output(char *infile, char *define, int extend,
 	f_print(fout, "#define u_quad_t __u_quad_t\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#endif\n");
-	f_print(fout, "#include \"../rx/xdr.h\"\n");
+	f_print(fout, "#include \"rx/xdr.h\"\n");
 	f_print(fout, "#endif /* XDR_GETLONG */\n");
 	f_print(fout, "#endif   /* UKERNEL */\n");
-	f_print(fout, "#include \"../afsint/rxgen_consts.h\"\n");
-	f_print(fout, "#include \"../afs/afs_osi.h\"\n");
-	f_print(fout, "#include \"../rx/rx.h\"\n");
+	f_print(fout, "#include \"rxgen_consts.h\"\n");
+	f_print(fout, "#include \"afs_osi.h\"\n");
+	f_print(fout, "#include \"rx/rx.h\"\n");
 	if (xflag) {
-	    f_print(fout, "#include \"../rx/rx_globals.h\"\n");
+	    f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	}
 	f_print(fout, "#else	/* KERNEL */\n");
 	f_print(fout, "#include <afs/param.h>\n");
@@ -637,26 +637,26 @@ static void C_output(char *infile, char *define, int extend,
     f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
     if (currfile && (include = extendfile(currfile,".h"))) {
 	if (kflag) {
-	    f_print(fout, "#include \"../afsint/%s\"\n\n",include);
+	    f_print(fout, "#include \"%s\"\n\n",include);
 	} else {
 	    f_print(fout,"#include \"%s\"\n\n",include);
 	}
 	free(include);
     } else {
 	if (kflag) {
-	    f_print(fout, "#include \"../h/types.h\"\n");
-	    f_print(fout, "#include \"../h/socket.h\"\n");
-	    f_print(fout, "#include \"../h/file.h\"\n");
-	    f_print(fout, "#include \"../h/stat.h\"\n");
-	    f_print(fout, "#include \"../netinet/in.h\"\n");
-	    f_print(fout, "#include \"../h/time.h\"\n");
-	    f_print(fout, "#include \"../rpc/types.h\"\n");
-	    f_print(fout, "#include \"../rx/xdr.h\"\n");
-	    f_print(fout, "#include \"../afsint/rxgen_consts.h\"\n");
-	    f_print(fout, "#include \"../afs/afs_osi.h\"\n");
-	    f_print(fout, "#include \"../rx/rx.h\"\n");
+	    f_print(fout, "#include \"h/types.h\"\n");
+	    f_print(fout, "#include \"h/socket.h\"\n");
+	    f_print(fout, "#include \"h/file.h\"\n");
+	    f_print(fout, "#include \"h/stat.h\"\n");
+	    f_print(fout, "#include \"netinet/in.h\"\n");
+	    f_print(fout, "#include \"h/time.h\"\n");
+	    f_print(fout, "#include \"rpc/types.h\"\n");
+	    f_print(fout, "#include \"rx/xdr.h\"\n");
+	    f_print(fout, "#include \"rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"afs/afs_osi.h\"\n");
+	    f_print(fout, "#include \"rx/rx.h\"\n");
 	    if (xflag) {
-		f_print(fout, "#include \"../rx/rx_globals.h\"\n");
+		f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	    }
 	} else {
 	    f_print(fout, "#include <sys/types.h>\n");
@@ -701,26 +701,26 @@ static void S_output(char *infile, char *define, int extend,
     f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
     if (currfile && (include = extendfile(currfile,".h"))) {
 	if (kflag) {
-	    f_print(fout, "#include \"../afsint/%s\"\n",include);
+	    f_print(fout, "#include \"%s\"\n",include);
 	} else {
 	    f_print(fout,"#include \"%s\"\n\n",include);
 	}
 	free(include);
     } else {
 	if (kflag) {
-	    f_print(fout, "#include \"../h/types.h\"\n");
-	    f_print(fout, "#include \"../h/socket.h\"\n");
-	    f_print(fout, "#include \"../h/file.h\"\n");
-	    f_print(fout, "#include \"../h/stat.h\"\n");
-	    f_print(fout, "#include \"../netinet/in.h\"\n");
-	    f_print(fout, "#include \"../h/time.h\"\n");
-	    f_print(fout, "#include \"../rpc/types.h\"\n");
-	    f_print(fout, "#include \"../rx/xdr.h\"\n");
-	    f_print(fout, "#include \"../afsint/rxgen_consts.h\"\n");
-	    f_print(fout, "#include \"../afs/afs_osi.h\"\n");
-	    f_print(fout, "#include \"../rx/rx.h\"\n");
+	    f_print(fout, "#include \"h/types.h\"\n");
+	    f_print(fout, "#include \"h/socket.h\"\n");
+	    f_print(fout, "#include \"h/file.h\"\n");
+	    f_print(fout, "#include \"h/stat.h\"\n");
+	    f_print(fout, "#include \"netinet/in.h\"\n");
+	    f_print(fout, "#include \"h/time.h\"\n");
+	    f_print(fout, "#include \"rpc/types.h\"\n");
+	    f_print(fout, "#include \"rx/xdr.h\"\n");
+	    f_print(fout, "#include \"rxgen_consts.h\"\n");
+	    f_print(fout, "#include \"afs/afs_osi.h\"\n");
+	    f_print(fout, "#include \"rx/rx.h\"\n");
 	    if (xflag) {
-		f_print(fout, "#include \"../rx/rx_globals.h\"\n");
+		f_print(fout, "#include \"rx/rx_globals.h\"\n");
 	    }
 	} else {
 	    f_print(fout, "#include <sys/types.h>\n");

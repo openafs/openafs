@@ -1,26 +1,14 @@
-AC_INIT(Makefile.common)
+AC_INIT(src/libafs/Makefile.common.in)
 AM_INIT_AUTOMAKE(openafs-libafs,devel)
-AC_CONFIG_HEADER(config/afsconfig.h)
+AC_CONFIG_HEADER(src/config/afsconfig.h)
 define(OPENAFS_CONFIGURE_LIBAFS)
 
 AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
-TOP_SRCDIR="${SRCDIR_PARENT}"
-TOP_INCDIR="${SRCDIR_PARENT}/include"
-TOP_LIBDIR="${SRCDIR_PARENT}/lib"
-if test "${DEST}x" = "x"; then
-	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
-fi
-
-# Check for files involved in porting.  Report errors, don't make the
-# user hunt through the configure log after the build fails!
-if test ! -r config/Makefile.${AFS_SYSNAME}.in ; then
-  AC_MSG_ERROR(no source file config/Makefile.${AFS_SYSNAME}.in)
-fi
-
 AC_OUTPUT(             \
 Makefile               \
-config/Makefile.config \
-config/Makefile.${AFS_SYSNAME} \
+src/config/Makefile.config \
+src/libafs/Makefile.common \
+src/libafs/Makefile \
 )

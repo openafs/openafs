@@ -13,7 +13,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -21,14 +21,14 @@
 RCSID("$Header$");
 
 #ifdef KERNEL
-#include "../afs/stds.h"
+#include "afs/stds.h"
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../rx/rx.h"
-#include "../netinet/in.h"
+#include "h/types.h"
+#include "rx/rx.h"
+#include "netinet/in.h"
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../rx/rx.h"
+#include "afs/sysincludes.h"
+#include "rx/rx.h"
 #endif /* !UKERNEL */
 #else /* !KERNEL */
 #include <afs/stds.h>

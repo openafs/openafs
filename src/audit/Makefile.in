@@ -17,18 +17,12 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
-all: ukinstall ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
+all: ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
 # XXX-INST: where to install the AIX audit files?
-install:  ${DESTDIR}${libdir}/afs/libaudit.a ${DESTDIR}${includedir}/afs/audit.h
-
-ukinstall: ${UKERNELDIR}/afs ${UKERNELDIR}/afs/audit.h
-
-${UKERNELDIR}/afs:
-	mkdir -p ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs/audit.h: audit.h
-	${INSTALL} $? $@
+install: \
+	${DESTDIR}${libdir}/afs/libaudit.a \
+	${DESTDIR}${includedir}/afs/audit.h
 
 ${DEST}/include/afs/audit.h: audit.h
 	${INSTALL} $? $@

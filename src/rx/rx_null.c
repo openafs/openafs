@@ -18,11 +18,11 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #ifndef	UKERNEL
-#include "../h/types.h"
+#include "h/types.h"
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* KERNEL */
 #include "rx.h"
 #endif /* KERNEL */

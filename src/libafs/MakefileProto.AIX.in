@@ -134,29 +134,8 @@ install_libafs: $(INST_LIBAFS) $(INST_LIBAFSIAUTH)
 dest_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 
-osi_assem.o:	${AFS}/osi_assem.s
-	${AS} -o osi_assem.o ${AFS}/osi_assem.s
-osi_config.o: $(AFS)/osi_config.c
-	$(CRULE1)
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_timeout.o: $(AFS)/osi_timeout.c
-	$(CRULE1)
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1)
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)
-
+osi_assem.o:	$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem.s
+	${AS} -o osi_assem.o $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem.s
 
 # Build rules for iauth objects.
 afs_call_iauth.o:	$(AFS)/afs_call.c
@@ -165,7 +144,7 @@ afs_nfsclnt_iauth.o:	$(AFS)/afs_nfsclnt.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o
 afs_pioctl_iauth.o:	$(AFS)/afs_pioctl.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o
-osi_vfsops_iauth.o: $(AFS)/osi_vfsops.c
+osi_vfsops_iauth.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
 	$(CRULE1) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o
-osi_vnodeops_iauth.o:	$(AFS)/osi_vnodeops.c
+osi_vnodeops_iauth.o:	$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
 	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o

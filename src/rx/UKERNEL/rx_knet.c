@@ -8,11 +8,11 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 
 
 #define SECONDS_TO_SLEEP	0

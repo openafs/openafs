@@ -11,7 +11,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -26,25 +26,25 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "../afs/stds.h"
-#include "../afs/afs_osi.h"
+#include "afs/stds.h"
+#include "afs/afs_osi.h"
 #ifdef	AFS_AIX_ENV
-#include "../h/systm.h"
+#include "h/systm.h"
 #endif
 #ifdef AFS_DARWIN60_ENV
-#include "../h/kernel.h"
+#include "h/kernel.h"
 #endif
-#include "../h/types.h"
-#include "../h/time.h"
+#include "h/types.h"
+#include "h/time.h"
 #ifndef AFS_LINUX22_ENV
-#include "../rpc/types.h"
-#include "../rx/xdr.h"
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif /* AFS_LINUX22_ENV */
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #endif /* !UKERNEL */
-#include "../rx/rx.h"
+#include "rx/rx.h"
 
 #else /* KERNEL */
 #include <afs/stds.h>

@@ -15,8 +15,8 @@
 
 #ifdef	KERNEL
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV)
-#include "../h/systm.h"
-#include "../h/time.h"
+#include "h/systm.h"
+#include "h/time.h"
 #endif	/* System V */
 #else /* KERNEL */
 #ifndef AFS_NT40_ENV
@@ -85,7 +85,7 @@ extern int clock_nUpdates;
 #define	clock_Sec() ((!clock_haveCurrentTime)? clock_UpdateTime(), clock_now.sec:clock_now.sec)
 #endif /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 #else /* KERNEL */
-#include "../afs/afs_osi.h"
+#include "afs/afs_osi.h"
 #define clock_Init()
 #if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
 #define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)

@@ -8,13 +8,14 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
-
-CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS}
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
-all: kinstall ukinstall ${TOP_INCDIR}/rx/rxstat.h ${TOP_LIBDIR}/librxstat.a
+all: depinstall ${TOP_LIBDIR}/librxstat.a 
+
+depinstall: \
+	${TOP_INCDIR}/rx/rxstat.h Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c
 
 #
 # Build targets
@@ -58,48 +59,6 @@ ${DEST}/lib/librxstat.a: librxstat.a
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-kinstall: ${KERNELDIR}/afsint \
-	${KERNELDIR}/afsint/rxstat.c \
-	${KERNELDIR}/afsint/rxstat.h \
-	${KERNELDIR}/afsint/Krxstat.ss.c \
-	${KERNELDIR}/afsint/Krxstat.xdr.c 
-
-${KERNELDIR}/afsint:
-	mkdir -p $?
-
-${KERNELDIR}/afsint/rxstat.c: rxstat.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
-	${INSTALL} $? $@
-
-${KERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
-	${INSTALL} $? $@
-
-ukinstall: ${UKERNELDIR}/afsint \
-	${UKERNELDIR}/afsint/rxstat.c \
-	${UKERNELDIR}/afsint/rxstat.h \
-	${UKERNELDIR}/afsint/Krxstat.ss.c \
-	${UKERNELDIR}/afsint/Krxstat.xdr.c
-
-${UKERNELDIR}/afsint:
-	mkdir -p $?
-
-${UKERNELDIR}/afsint/rxstat.c: rxstat.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/rxstat.h: rxstat.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
 	${INSTALL} $? $@
 
 #

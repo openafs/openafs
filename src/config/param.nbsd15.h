@@ -1,3 +1,6 @@
+#ifndef UKERNEL
+/* This section for kernel libafs compiles only */
+
 
 #ifndef	AFS_PARAM_COMMON_H
 #define	AFS_PARAM_COMMON_H
@@ -106,3 +109,10 @@ enum vcexcl {NONEXCL, EXCL};
 #endif /* _KERNEL */
 
 #endif	/* AFS_PARAM_COMMON_H */
+
+#else /* !defined(UKERNEL) */
+
+/* This section for user space compiles only */
+
+
+#endif /* !defined(UKERNEL) */

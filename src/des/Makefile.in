@@ -44,7 +44,7 @@ OBJS = \
 	crypt.o \
 	util.o
 
-all: ukinstall \
+all: \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_INCDIR}/des.h \
 	${TOP_INCDIR}/des_prototypes.h \
@@ -177,27 +177,6 @@ ${DEST}/include/mit-cpyright.h: mit-cpyright.h
 	${INSTALL} $? $@
 
 ${DEST}/include/des_odd.h: odd.h
-	${INSTALL} $? $@
-
-ukinstall: \
-	${UKERNELDIR}/des/libdes.a \
-	${UKERNELDIR}/des/des.h \
-	${UKERNELDIR}/des/des_prototypes.h \
-	${UKERNELDIR}/des/mit-cpyright.h 
-
-${UKERNELDIR}/des:
-	mkdir -p $?
-
-${UKERNELDIR}/des/libdes.a: libdes.a
-	${INSTALL} $? $@
-
-${UKERNELDIR}/des/des.h: des.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/des/des_prototypes.h: des_prototypes.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/des/mit-cpyright.h: mit-cpyright.h
 	${INSTALL} $? $@
 
 #

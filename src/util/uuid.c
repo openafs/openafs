@@ -44,7 +44,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -52,8 +52,8 @@
 RCSID("$Header$");
 
 #ifdef KERNEL
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
 #define uuid_memcmp(A,B,C)	memcmp(A, B, C)
 #define uuid_memcpy(A,B,C)	memcpy(A, B, C)
 #else /* KERNEL */

@@ -14,16 +14,16 @@
 #ifndef _RX_KCOMMON_H_
 #define _RX_KCOMMON_H_
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afsincludes.h"
-#include "../rx/rx_globals.h"
-#include "../rx/rx_kmutex.h"
-#include "../afs/lock.h"
-#include "../rx/rx.h"
-#include "../rx/rx_globals.h"
-#include "../afs/longc_procs.h"
-#include "../afs/afs_stats.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afsincludes.h"
+#include "rx/rx_globals.h"
+#include "rx_kmutex.h"
+#include "afs/lock.h"
+#include "rx/rx.h"
+#include "rx/rx_globals.h"
+#include "afs/longc_procs.h"
+#include "afs/afs_stats.h"
 
 extern struct usr_ifnet *usr_ifnet;
 extern struct usr_in_ifaddr *usr_in_ifaddr;

@@ -12,19 +12,19 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h" /* statistics */
 #include <vm/vm_mmap.h>
 #include <vm/vm_ubc.h>
-#include "../afs/afs_cbqueue.h"
-#include "../afs/nfsclient.h"
-#include "../afs/afs_osidnlc.h"
+#include "afs/afs_cbqueue.h"
+#include "afs/nfsclient.h"
+#include "afs/afs_osidnlc.h"
 
 
 extern int afs_lookup(), afs_create(), afs_noop(), afs_open(), afs_close();

@@ -23,7 +23,9 @@ KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
        ktc.c authcon.c ktc_errors.c
 
-all: kinstall ukinstall ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/afs/auth.h copyauth setkey
+all: ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libauth.krb.a depinstall copyauth setkey
+
+depinstall: ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/afs/auth.h
 
 cellconfig.o: cellconfig.c ${INCLS}
 ktc.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
@@ -68,45 +70,6 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 #
 # Install targets
 #
-kinstall: ${KERNELDIR}/afs/auth.h
-
-${KERNELDIR}/afs/auth.h: auth.h
-	${INSTALL} $? $@
-
-ukinstall: \
-	${UKERNELDIR}/afs/auth.h \
-	${UKERNELDIR}/afs/cellconfig.h \
-	${UKERNELDIR}/afs/acfg_errors.c \
-	${UKERNELDIR}/afs/keys.h \
-	${UKERNELDIR}/afs/cellconfig.c \
-	${UKERNELDIR}/afs/ktc.c \
-	${UKERNELDIR}/afs/authcon.c \
-	${UKERNELDIR}/afs/ktc_errors.c
-
-${UKERNELDIR}/afs/auth.h: auth.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/cellconfig.h: cellconfig.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/cellconfig.c: cellconfig.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/acfg_errors.c: acfg_errors.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/keys.h: keys.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/ktc.c: ktc.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/authcon.c: authcon.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/ktc_errors.c: ktc_errors.c
-	${INSTALL} $? $@
-
 install:   ${DESTDIR}${libdir}/afs/libauth.a ${DESTDIR}${libdir}/afs/libauth.krb.a ${DESTDIR}${includedir}/afs/keys.h ${DESTDIR}${includedir}/afs/cellconfig.h ${DESTDIR}${includedir}/afs/auth.h ${DESTDIR}${sbindir}/copyauth 
 
 ${DEST}/lib/afs/libauth.a: libauth.a

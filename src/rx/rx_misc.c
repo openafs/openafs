@@ -14,7 +14,7 @@ RCSID("$Header$");
 
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
-#include <afs/afsincludes.h>
+#include <afsincludes.h>
 #else
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

@@ -58,13 +58,11 @@ KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I../h -I../nfs -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ=STATIC
 
-# This tells Makefile.common to use its single directory build target.
-#COMPDIRS = single_compdir
 # This is the hpux multiple directory target.
 COMPDIRS = hpux_compdirs
 INSTDIRS = hpux_instdirs
@@ -75,8 +73,9 @@ include Makefile.common
 BITS = 64 32
 
 setup:
-	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys
+	-$(RM) -f  h conf net dux machine netinet nfs rpc s200 ufs sys
 	ln -fs /usr/include/sys h
+	ln -fs /etc/conf conf
 	ln -fs /etc/conf/net net
 	ln -fs /etc/conf/dux dux
 	ln -fs /etc/conf/machine machine
@@ -117,7 +116,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	done; \
 	fi
 
-hpux_compdirs_libafs: libafs
+hpux_compdirs_libafs: depsrcs libafs
 hpux_instdirs_libafs: install_libafs
 hpux_destdirs_libafs: dest_libafs
 
@@ -156,30 +155,3 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(AR) cru $@ $?
 	$(RANLIB) $@
-
-
-# HP specific objects
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)
-
-# This is a list of header files compiled with the -g option. It allows
-# examination of AFS structures in a dump.
-osi_debug.o: $(AFS)/osi_debug.c
-	$(CRULE4)
-

@@ -14,16 +14,16 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
-#include "../afs/afs_cbqueue.h"
-#include "../afs/nfsclient.h"
-#include "../afs/afs_osidnlc.h"
+#include "afs/sysincludes.h"   /* Standard vendor system headers */
+#include "afsincludes.h"       /* Afs-based standard headers */
+#include "afs/afs_stats.h" /* statistics */
+#include "afs/afs_cbqueue.h"
+#include "afs/nfsclient.h"
+#include "afs/afs_osidnlc.h"
 
 /* question: does afs_create need to set CDirty in the adp or the avc?
  * I think we can get away without it, but I'm not sure.  Note that

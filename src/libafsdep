@@ -1,0 +1,12 @@
+util/afs_lhash.c
+util/afs_atomlist.c
+util/uuid.c
+dir/dir.c
+fsint/afsaux.c
+fsint/K*.[ch]
+fsint/*.xg
+rxstat/K*.[ch]
+rxstat/*.xg
+rxstat/rxstat.[ch]
+vlserver/K*.[ch]
+vlserver/*.xg

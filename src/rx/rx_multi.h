@@ -11,7 +11,7 @@
 #define _RX_MULTI_
 
 #ifdef	KERNEL
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* KERNEL */
 # include "rx.h"
 #endif /* KERNEL */

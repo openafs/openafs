@@ -72,16 +72,16 @@
  * granted with a shorter expiration time.
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h" /*Standard vendor system headers*/
-#include "../afs/afsincludes.h" /*AFS-based standard headers*/
-#include "../afs/afs_cbqueue.h"
+#include "afs/sysincludes.h" /*Standard vendor system headers*/
+#include "afsincludes.h" /*AFS-based standard headers*/
+#include "afs/afs_cbqueue.h"
 #include "afs/afs.h"
-#include "../afs/lock.h"
-#include "../afs/afs_stats.h"
+#include "afs/lock.h"
+#include "afs/afs_stats.h"
 
 static unsigned int base = 0;
 static unsigned int basetime = 0;

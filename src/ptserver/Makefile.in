@@ -38,7 +38,19 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libsys.a
 
 
-all: ukinstall ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a ${TOP_INCDIR}/afs/prclient.h ${TOP_INCDIR}/afs/prerror.h ${TOP_INCDIR}/afs/print.h ${TOP_INCDIR}/afs/prserver.h ${TOP_INCDIR}/afs/ptclient.h ${TOP_INCDIR}/afs/pterror.h ${TOP_INCDIR}/afs/ptint.h ${TOP_INCDIR}/afs/ptserver.h readgroup readpwd testpt
+all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
+	depinstall readgroup readpwd testpt
+
+depinstall: \
+	ptint.cs.c ptint.xdr.c \
+	${TOP_INCDIR}/afs/prclient.h \
+	${TOP_INCDIR}/afs/prerror.h \
+	${TOP_INCDIR}/afs/print.h \
+	${TOP_INCDIR}/afs/prserver.h \
+	${TOP_INCDIR}/afs/ptclient.h \
+	${TOP_INCDIR}/afs/pterror.h \
+	${TOP_INCDIR}/afs/ptint.h \
+	${TOP_INCDIR}/afs/ptserver.h
 
 #
 # Build targets
@@ -143,16 +155,6 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-ukinstall: ${UKERNELDIR}/afs \
-	${UKERNELDIR}/afsint/ptint.h \
-	${UKERNELDIR}/afsint/ptint.cs.c \
-	${UKERNELDIR}/afsint/ptint.xdr.c \
-	${UKERNELDIR}/afs/ptuser.c \
-	${UKERNELDIR}/afs/ptclient.h \
-	${UKERNELDIR}/afs/pterror.c \
-	${UKERNELDIR}/afs/pterror.h \
-	${UKERNELDIR}/afs/ptserver.h
-
 install: \
 	${DESTDIR}${afssrvlibexecdir}/ptserver \
 	${DESTDIR}${afssrvbindir}/pts \
@@ -168,33 +170,6 @@ install: \
 	${DESTDIR}${includedir}/afs/pterror.h \
 	${DESTDIR}${includedir}/afs/ptint.h \
 	${DESTDIR}${includedir}/afs/ptserver.h
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-${UKERNELDIR}/afs/ptuser.c: ptuser.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/pterror.c: pterror.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/ptint.h: Kptint.h
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/ptint.cs.c: Kptint.cs.c
-	${INSTALL} $? $@
-
-${UKERNELDIR}/afsint/ptint.xdr.c: Kptint.xdr.c
-	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/ptserver: ptserver
 	${INSTALL} $? $@

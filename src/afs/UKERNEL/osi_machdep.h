@@ -18,7 +18,7 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 
 #define MAX_OSI_PATH            1024
 #define MAX_OSI_FILES           1024

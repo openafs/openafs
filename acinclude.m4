@@ -641,4 +641,23 @@ AC_SUBST(IRIX_BUILD_IP35)
 
 OPENAFS_OSCONF
 
+TOP_SRCDIR="${srcdir}/src"
+dnl
+dnl If we're using ./configure, need a more reasonable TOP_SRCDIR, since relative links don't work everywhere
+dnl
+case $TOP_SRCDIR in
+        /*)
+                ;;
+        *)
+                TOP_SRCDIR=${SRCDIR_PARENT}/src
+esac
+
+TOP_OBJDIR="${SRCDIR_PARENT}"
+TOP_INCDIR="${SRCDIR_PARENT}/include"
+TOP_LIBDIR="${SRCDIR_PARENT}/lib"
+if test "${DEST}x" = "x"; then
+        DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+fi
+
+
 ])

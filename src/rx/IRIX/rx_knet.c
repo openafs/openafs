@@ -8,14 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../rx/rx_kcommon.h"
-#include "../h/tcp-param.h"
+#include "rx/rx_kcommon.h"
+#include "h/tcp-param.h"
 /* This must be loaded after proc.h to avoid macro collision with a variable*/
-#include "../netinet/udp_var.h"
+#include "netinet/udp_var.h"
 
 
 

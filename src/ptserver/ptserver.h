@@ -8,7 +8,7 @@
  */
 
 #if defined(UKERNEL)
-#include "../afsint/ptint.h"
+#include "afs/ptint.h"
 #else /* defined(UKERNEL) */
 #include "ptint.h"
 #endif /* defined(UKERNEL) */

@@ -17,7 +17,7 @@
 #ifndef __TRANSARC_AFS_STATS_H__
 #define __TRANSARC_AFS_STATS_H__
 
-#include "../afs/param.h"
+#include "afs/param.h"
 
 /* the following is to work around a VAX compiler limitation */
 #if defined(vax)

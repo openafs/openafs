@@ -8,13 +8,13 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* statistics stuff */
 
 
 int afs_mount();
@@ -36,7 +36,7 @@ struct vcache *afs_globalVp = 0;
 int afs_rootCellIndex = 0;
 
 #if !defined(AFS_USR_AIX_ENV)
-#include "../sys/syscall.h"
+#include "sys/syscall.h"
 #endif
 
 afs_mount(afsp, path, data)

@@ -13,8 +13,8 @@
 RCSID("$Header$");
 
 #ifdef	KERNEL
-#include "../rx/rx_kernel.h"
-#include "../rx/rx_multi.h"
+#include "rx/rx_kernel.h"
+#include "rx/rx_multi.h"
 #else /* KERNEL */
 # include "rx_user.h"
 # include "rx_multi.h"

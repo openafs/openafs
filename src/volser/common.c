@@ -36,8 +36,7 @@ char *s;
     abort();
 }
 
-void
-InitErrTabs()
+void InitErrTabs(void)
 {
     initialize_KA_error_table();
     initialize_RXK_error_table();

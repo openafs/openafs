@@ -25,7 +25,7 @@ RCSID("$Header$");
 #include <rpc.h>
 #include <afs/smb_iocons.h>
 #include <afs/pioctl_nt.h>
-#include "../WINNT/afsd/afsrpc.h"
+#include "WINNT/afsd/afsrpc.h"
 #include <afs/vice.h>
 #include "auth.h"
 #include <afs/afsutil.h>

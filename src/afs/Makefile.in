@@ -8,21 +8,14 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h
+all: depinstall
+
+depinstall: ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h \
+	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
 	esac
-
-# NOTE: linux case uses --new as well to work around bug in some versions of
-# gencat.
-kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afszcm.cat
-	-chmod 666 ${KERNELDIR}/afs/*
-	${INSTALL} ${srcdir}/*.[csh] ${KERNELDIR}/afs
-	-${INSTALL} *.[csh] ${KERNELDIR}/afs
-	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${KERNELDIR}/afs
-	${INSTALL} ${srcdir}/${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
-	-${INSTALL} ${MKAFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 
 afs_trace.h afs_trace.msf: afs_trace.et
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
@@ -41,19 +34,6 @@ afszcm.cat: afs_trace.msf
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
-
-${KERNELDIR}/afs:
-	mkdir -p $@
-
-ukinstall: ${UKERNELDIR}/afs afs_trace.msf AFS_component_version_number.c
-	-chmod 666 ${UKERNELDIR}/afs/*
-	${INSTALL} *.[csh] ${UKERNELDIR}/afs
-	${INSTALL} ${srcdir}/*.[csh] ${UKERNELDIR}/afs
-	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${UKERNELDIR}/afs
-	${INSTALL} ${srcdir}/UKERNEL/*.[csh] ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
 
 install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h
 	case ${SYS_NAME} in \

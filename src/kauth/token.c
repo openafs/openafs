@@ -13,7 +13,7 @@
 
 #include <afsconfig.h>
 #if defined(UKERNEL)
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -21,17 +21,17 @@
 RCSID("$Header$");
 
 #if defined(UKERNEL)
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/stds.h"
-#include "../rx/xdr.h"
-#include "../afs/pthread_glock.h"
-#include "../afs/lock.h"
-#include "../afs/ubik.h"
-#include "../afsint/kauth.h"
-#include "../afs/kautils.h"
-#include "../afs/auth.h"
-#include "../afs/pthread_glock.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/stds.h"
+#include "rx/xdr.h"
+#include "afs/pthread_glock.h"
+#include "afs/lock.h"
+#include "ubik.h"
+#include "afs/kauth.h"
+#include "afs/kautils.h"
+#include "afs/auth.h"
+#include "afs/pthread_glock.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <sys/types.h>

@@ -11,15 +11,15 @@
  * Implements:
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/stds.h"
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
-#include "../afs/afs_osi.h"
+#include "afs/stds.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* afs statistics */
+#include "afs/afs_osi.h"
 
 /* Local variables. */
 afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */

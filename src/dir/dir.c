@@ -14,40 +14,40 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #if !defined(UKERNEL)
-#include "../h/types.h"
-#include "../h/param.h"
+#include "h/types.h"
+#include "h/param.h"
 #ifdef	AFS_AUX_ENV
-#include "../h/mmu.h"
-#include "../h/seg.h"
-#include "../h/sysmacros.h"
-#include "../h/signal.h"
-#include "../h/errno.h"
+#include "h/mmu.h"
+#include "h/seg.h"
+#include "h/sysmacros.h"
+#include "h/signal.h"
+#include "h/errno.h"
 #endif
-#include "../h/time.h"
+#include "h/time.h"
 #if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
-#include "../h/errno.h"
+#include "h/errno.h"
 #else
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
-#include "../h/kernel.h"
+#include "h/kernel.h"
 #endif
 #endif
 #if	defined(AFS_SUN56_ENV) || defined(AFS_HPUX_ENV)
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 #endif
 #if defined(AFS_FBSD_ENV)
-#include "../h/lock.h"
-#include "../vm/vm.h"
-#include "../vm/vm_extern.h"
-#include "../vm/pmap.h"
-#include "../vm/vm_map.h"
+#include "h/lock.h"
+#include "vm/vm.h"
+#include "vm/vm_extern.h"
+#include "vm/pmap.h"
+#include "vm/vm_map.h"
 #endif /* AFS_FBSD_ENV */
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN60_ENV)
-#include "../h/user.h"
+#include "h/user.h"
 #endif /* AFS_SGI64_ENV */
-#include "../h/uio.h"
+#include "h/uio.h"
 #ifdef	AFS_DEC_ENV
-#include "../afs/gfs_vfs.h"
-#include "../afs/gfs_vnode.h"
+#include "afs/gfs_vfs.h"
+#include "afs/gfs_vnode.h"
 #else
 #ifdef	AFS_MACH_ENV
 #ifdef  NeXT
@@ -74,22 +74,22 @@ RCSID("$Header$");
 #endif
 #endif
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
-#include "../h/mbuf.h"
+#include "h/mbuf.h"
 #endif
 #ifndef AFS_LINUX20_ENV
-#include "../netinet/in.h"
+#include "netinet/in.h"
 #endif
 #else /* !defined(UKERNEL) */
-#include "../afs/stds.h"
-#include "../afs/sysincludes.h"
+#include "afs/stds.h"
+#include "afs/sysincludes.h"
 #endif /* !defined(UKERNEL) */
-#include "../afs/afs_osi.h"
+#include "afs/afs_osi.h"
 
-#include "../afs/dir.h"
+#include "afs/dir.h"
 
-#include "../afs/longc_procs.h"
+#include "afs/longc_procs.h"
 #ifdef AFS_LINUX20_ENV
-#include "../h/string.h"
+#include "h/string.h"
 #endif
 
 /* generic renaming */

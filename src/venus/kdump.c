@@ -402,8 +402,8 @@ typedef struct {
 #endif
 
 #include <afs/afsint.h>
-#include "../vlserver/vldbint.h"
-#include "../afs/lock.h"
+#include "vlserver/vldbint.h"
+#include "afs/lock.h"
 
 #define	KERNEL
 
@@ -423,8 +423,8 @@ extern off64_t lseek64();
 #define KDUMP_SIZE_T int
 #endif /* AFS_SGI61_ENV */
 
-#include "../afs/afs.h"		/* XXXX Getting it from the obj tree XXX */
-#include "../afs/afs_axscache.h" /* XXXX Getting it from the obj tree XXX */
+#include "afs/afs.h"		/* XXXX Getting it from the obj tree XXX */
+#include "afs/afs_axscache.h" /* XXXX Getting it from the obj tree XXX */
 #include <afs/afs_stats.h>
 
 #include <afs/cmd.h>
@@ -2540,8 +2540,13 @@ void print_vnode(kmem, vep, ptr, pnt)
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n",
 	   vep->i_op, vep->i_dev, vep->i_rdev, vep->i_sb);
 #ifdef AFS_LINUX24_ENV
+#ifdef AFS_PARISC_LINUX24_ENV
+    printf("\ti_sem: count=%d, wait=0x%x\n",
+	   vep->i_sem.count, vep->i_sem.wait);
+#else
     printf("\ti_sem: count=%d, sleepers=%d, wait=0x%x\n",
 	   vep->i_sem.count, vep->i_sem.sleepers, vep->i_sem.wait);
+#endif
 #else
     printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n",
 	   vep->i_sem.count, vep->i_sem.waking, vep->i_sem.wait);

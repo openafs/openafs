@@ -8,16 +8,16 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #ifndef	AFS_DEC_ENV
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"	/* statistics */
-#include "../afs/nfsclient.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
+#include "afs/nfsclient.h"
 
 int afs_nfsclient_reqhandler(), afs_nfsclient_hold(), afs_PutNfsClientPag();
 int afs_nfsclient_sysname(), afs_nfsclient_GC(), afs_nfsclient_stats();

@@ -13,27 +13,27 @@
  * Implements:
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/stds.h"
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afs/stds.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
 
 #if !defined(UKERNEL)
 #include <net/if.h>
 #include <netinet/in.h>
 
 #ifdef AFS_SGI62_ENV
-#include "../h/hashing.h"
+#include "h/hashing.h"
 #endif
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
 
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* afs statistics */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* afs statistics */
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>

@@ -22,11 +22,12 @@ ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 #   rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
 
-COMPILE_PART1  = cd src; cd
-COMPILE_PART2A = ; $(MAKE)
+COMPILE_PART1  = cd src && cd
+COMPILE_PART2A = && $(MAKE)
 COMPILE_PART2B = all
 COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
+COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
 
 all: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
 	$(MAKE) build
@@ -83,11 +84,6 @@ dest_dirs: force
 	mkdir -p ${DEST}/root.server/etc
 	mkdir -p ${DEST}/root.server/usr/afs/bin
 
-# This is needed to get these dirs built prior to stuff being installed into them
-build_dirs_rx:
-	mkdir -p ${TOP_OBJDIR}/src/libafs/rx
-	mkdir -p ${TOP_OBJDIR}/src/libuafs/rx
-
 project: cmd comerr 
 
 tests: all 
@@ -99,14 +95,14 @@ config:
 pinstall: config
 	${COMPILE_PART1} pinstall ${COMPILE_PART2}
 
-procmgmt: config pinstall
+procmgmt: pinstall
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: pinstall procmgmt
+util: procmgmt
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
-audit: pinstall rx rxkad fsint
-	${COMPILE_PART1} audit ${COMPILE_PART2}
+audit: util rx rxkad
+	${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
 	${COMPILE_PART1} comerr ${COMPILE_PART2}
@@ -119,13 +115,13 @@ cmd: comerr
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
-lwp: project util
+lwp: util
 	${COMPILE_PART1} lwp ${COMPILE_PART2}
 
-rxgen: pinstall
+rxgen: pinstall 
 	${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rx: project lwp rxgen build_dirs_rx
+rx: pinstall lwp rxgen 
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxstat: rx
@@ -135,54 +131,53 @@ rxtests: rxdebug
 rxdebug: rx sys
 	${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
-fsint: project kfsint
-
-kfsint: lwp rxgen rx
+fsint: cmd comerr rxgen rx lwp 
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
 
-export2: project fsint
+export2: project 
 
-export: fsint
+export: 
 	@case ${SYS_NAME} in \
 	rs_aix*) \
-		${COMPILE_PART1} export ${COMPILE_PART2} ;; \
-	*) \
-		echo skipping export for ${SYS_NAME} ;; \
+		${MAKE} export_build ; \
 	esac
 
-afs: export
+export_build: fsint
+	${COMPILE_PART1} export ${COMPILE_PART2}
+
+afs: export pinstall comerr
 	${COMPILE_PART1} afs ${COMPILE_PART2}
 
 des: config pinstall
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
-sys: project afs des rx rxstat fsint
+sys: cmd comerr afs des rx rxstat fsint
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: project des rx
+rxkad: cmd comerr sys des rx
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-auth: project comerr des lwp rx sys rxkad audit
+auth: cmd comerr comerr des lwp rx sys rxkad audit
 	${COMPILE_PART1} auth ${COMPILE_PART2}
 
-ubik: project auth 
+ubik: cmd comerr auth 
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
 ubiktests: ubik
 
-ptserver: project ubik cmd comerr auth audit
+ptserver: cmd comerr ubik cmd comerr auth audit
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
 
-kauth: project ubik cmd auth comerr ptserver audit libacl
+kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
-dauth: project ubik cmd auth kauth comerr
+dauth: cmd comerr ubik cmd auth kauth comerr
 	${COMPILE_PART1} dauth ${COMPILE_PART2}
 
-libacl: project ptserver
+libacl: cmd comerr ptserver
 	${COMPILE_PART1} libacl ${COMPILE_PART2}
 
-dir: project libacl
+dir: cmd comerr libacl
 	${COMPILE_PART1} dir ${COMPILE_PART2}
 
 # Removed from sgi_* case below:
@@ -195,16 +190,16 @@ sgiefs:
 		echo No efs stuff for ${SYS_NAME};; \
 	esac
 
-vol: project dir afs sgiefs
+vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
-vlserver: project vol audit
+vlserver: cmd comerr vol audit
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
-viced: project vlserver audit
+viced: cmd comerr vlserver audit
 	${COMPILE_PART1} viced ${COMPILE_PART2}
 
-tviced: project viced vlserver libafsrpc libafsauthent
+tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
@@ -212,17 +207,17 @@ tviced: project viced vlserver libafsrpc libafsauthent
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	esac
 
-volser: project tviced usd kauth audit
+volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-venus: project volser ptserver
+venus: cmd comerr volser ptserver
 	${COMPILE_PART1} venus ${COMPILE_PART2}
 	${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
-afsd: project sys kauth
+afsd: cmd comerr sys kauth
 	${COMPILE_PART1} afsd ${COMPILE_PART2}
 
-null: project
+null: cmd comerr
 	${COMPILE_PART1} null ${COMPILE_PART2}
 
 ${TOP_LIBDIR}/libtermlib.a: 
@@ -234,27 +229,21 @@ ${TOP_LIBDIR}/libtermlib.a:
 		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	esac
 
-gtx: project null auth kauth ${TOP_LIBDIR}/libtermlib.a
+gtx: cmd comerr null auth kauth ${TOP_LIBDIR}/libtermlib.a
 	${COMPILE_PART1} gtx ${COMPILE_PART2}
 
-fsprobe: project util fsint volser
+fsprobe: cmd comerr util fsint volser
 	${COMPILE_PART1} fsprobe ${COMPILE_PART2}
 
-scout: project gtx fsprobe
+scout: cmd comerr gtx fsprobe
 	${COMPILE_PART1} scout ${COMPILE_PART2}
 
-uss: des kauth project rx vlserver vol volser
+uss: des kauth cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: project ntp audit
+bozo: cmd comerr ntp audit
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
-
-# Removed from respective case statements below:
-# ${COMPILE_PART1} vfsckaix42 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol25 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol26 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol27 ${COMPILE_PART2} ;;
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
@@ -264,7 +253,7 @@ vfsck:	vol
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-login: project kauth rxkad
+login: cmd comerr kauth rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	sgi_* ) \
@@ -285,64 +274,86 @@ login: project kauth rxkad
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	esac
 
-KERNELDIR= \
-  afs \
-  dir \
-  rx \
-  fsint \
-  auth \
-  rxkad \
-  util \
-  libacl \
-  vlserver \
-  sgiefs  \
-  rxstat
+
+#
+# _depinstall targets - only build and install headers/sources that are needed by libafs/libuafs
+#
+# encode dependencies within the _depinstall targets as required
+#
+lwp_depinstall: pinstall
+	${COMPILE_PART1} lwp ${COMPILE_DEPINSTALL}
+
+rx_depinstall: pinstall
+	${COMPILE_PART1} rx ${COMPILE_DEPINSTALL}
+
+rxkad_depinstall: pinstall comerr
+	${COMPILE_PART1} rxkad ${COMPILE_DEPINSTALL}
+
+ubik_depinstall: pinstall comerr rxgen
+	${COMPILE_PART1} ubik ${COMPILE_DEPINSTALL}
+
+vlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
+	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
+
+auth_depinstall: pinstall comerr
+	${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
+
+fsint_depinstall: pinstall rxgen
+	${COMPILE_PART1} fsint ${COMPILE_DEPINSTALL}
+
+rxstat_depinstall: pinstall rxgen
+	${COMPILE_PART1} rxstat ${COMPILE_DEPINSTALL}
+
+libacl_depinstall: pinstall
+	${COMPILE_PART1} libacl ${COMPILE_DEPINSTALL}
+
+afs_depinstall: pinstall comerr
+	${COMPILE_PART1} afs ${COMPILE_DEPINSTALL}
+
+dir_depinstall: pinstall
+	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
+
+kauth_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} kauth ${COMPILE_DEPINSTALL}
+
+ptserver_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
 
 
-UKERNELDIR= \
-  afs \
-  dir \
-  rx \
-  fsint \
-  util \
-  auth \
-  rxkad \
-  vlserver \
-  kauth \
-  des \
-  afsweb \
-  rxstat
+#
+# libafs build targets
+#
+libafs_setup: config export
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 
-
-libafs: lwp libafs_setup ${KERNELDIR}
+libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup ${KERNELDIR}
-	-/bin/rm -rf libafs_tree
-	for d in afs afsint rx config; do \
-		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
-	done
-	for f in `cd src/libafs; find . -name '*.[ch]'` \
-		Makefile.common Makefile.extradefs ${DARWIN_INFOFILE} \
-		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
-		; do \
-		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
-	done
-	for f in config.guess config.sub install-sh missing mkinstalldirs \
-		; do \
-		${INSTALL} -c -f $$f libafs_tree/$$f; \
-	done
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
-	${INSTALL} -c src/config/Makefile.config.in libafs_tree/config
-	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
-	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
-	case ${SYS_NAME} in \
-	*linux*) \
-		${INSTALL} -c src/config/make_vnode.pl libafs_tree/config ; \
-		${INSTALL} -c src/afs/LINUX/osi_vfs.hin libafs_tree/afs ;; \
-	esac
+libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
+	${TOP_SRCDIR}/config/make_libafs_tree.pl \
+		-sn $(SYS_NAME) \
+		-os $(MKAFS_OSTYPE) \
+		-t @TOP_OBJDIR@/libafs_tree \
+		-o @TOP_OBJDIR@ \
+		-p @srcdir@
 
-libuafs: lwp libuafs_setup ${UKERNELDIR}
+#
+# libuafs build targets
+#
+
+UKERNELDIR= \
+  des \
+  afsweb 
+
+libuafs_setup: config export
+	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
+
+libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
+		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
+		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
+		rxstat_depinstall lwp_depinstall des
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*) \
@@ -354,28 +365,28 @@ libuafs: lwp libuafs_setup ${UKERNELDIR}
 afsweb: kauth dauth 
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
 
-update: project auth
+update: cmd comerr auth
 	${COMPILE_PART1} update ${COMPILE_PART2}
 
-log: project auth 
+log: cmd comerr auth 
 	${COMPILE_PART1} log ${COMPILE_PART2}
 
-bu_utils: project usd
+bu_utils: cmd comerr usd
 	${COMPILE_PART1} bu_utils ${COMPILE_PART2}
 
-usd: project
+usd: cmd comerr
 	${COMPILE_PART1} usd ${COMPILE_PART2}
 
-bubasics: project comerr rx
+bubasics: cmd comerr comerr rx
 	${COMPILE_PART1} bubasics ${COMPILE_PART2}
 
-butm: project bubasics usd uss
+butm: cmd comerr bubasics usd uss
 	${COMPILE_PART1} butm ${COMPILE_PART2}
 
-butc: project bubasics butm budb bucoord cmd rxgen rx
+butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 	${COMPILE_PART1} butc ${COMPILE_PART2}
 
-tbutc: project bubasics butm budb bucoord cmd butc
+tbutc: cmd comerr bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
@@ -383,16 +394,16 @@ tbutc: project bubasics butm budb bucoord cmd butc
 		echo Not building MT butc for ${SYS_NAME} ;; \
 	esac
 
-budb: project bubasics uss
+budb: cmd comerr bubasics uss
 	${COMPILE_PART1} budb ${COMPILE_PART2}
 
-bucoord: project bubasics budb volser
+bucoord: cmd comerr bubasics budb volser
 	${COMPILE_PART1} bucoord ${COMPILE_PART2}
 
-xstat: project fsint viced
+xstat: cmd comerr fsint viced
 	${COMPILE_PART1} xstat ${COMPILE_PART2}
 
-afsmonitor: project gtx xstat
+afsmonitor: cmd comerr gtx xstat
 	${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
 tests: rxtests ubiktests
@@ -478,12 +489,6 @@ finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
-
-libafs_setup: config export
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
-
-libuafs_setup: config export
-	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
 force:
 

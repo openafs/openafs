@@ -12,7 +12,7 @@
  */
 
 #ifdef	KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -22,15 +22,15 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../h/uio.h"
+#include "h/types.h"
+#include "h/uio.h"
 #ifdef	AFS_OSF_ENV
 #include <net/net_globals.h>
 #endif	/* AFS_OSF_ENV */
 #ifdef AFS_LINUX20_ENV
-#include "../h/socket.h"
+#include "h/socket.h"
 #else
-#include "../rpc/types.h"
+#include "rpc/types.h"
 #endif
 #ifdef  AFS_ALPHA_ENV
 #undef kmem_alloc
@@ -45,16 +45,16 @@ RCSID("$Header$");
 #define u_quad_t __u_quad_t
 #endif
 #endif
-#include "../rx/xdr.h"
-#include "../netinet/in.h"
+#include "rx/xdr.h"
+#include "netinet/in.h"
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
-#include "../rpc/types.h"
-#include "../rpc/xdr.h"
+#include "afs/sysincludes.h"
+#include "rpc/types.h"
+#include "rpc/xdr.h"
 #endif /* !UKERNEL */
-#include "../rx/rx.h"
+#include "rx/rx.h"
 
-#include "../afs/longc_procs.h"
+#include "afs/longc_procs.h"
 
 #else /* KERNEL */
 #include <sys/types.h>

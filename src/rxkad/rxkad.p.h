@@ -133,10 +133,6 @@ extern pthread_mutex_t rxkad_stats_mutex;
 
 extern int rxkad_EpochWasSet;		/* TRUE => we called rx_SetEpoch */
 
-#ifdef  KERNEL
-#include "../afs/rxkad_prototypes.h"
-#else
 #include "rxkad_prototypes.h"
-#endif
 
 #endif /* TRANSARC_RXKAD_RXKAD_H */

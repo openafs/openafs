@@ -11,18 +11,18 @@
  * osi_vfsops.c for AIX
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"   /* statistics stuff */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"   /* statistics stuff */
 
 
 #ifdef AFS_AIX_IAUTH_ENV
-#include "../afs/nfsclient.h"
-#include "../afs/exporter.h"
+#include "afs/nfsclient.h"
+#include "afs/exporter.h"
 extern struct afs_exporter	*afs_nfsexporter;
 #endif
 

@@ -13,7 +13,7 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
@@ -21,22 +21,22 @@
 RCSID("$Header$");
 
 #ifdef KERNEL
-#include "../afs/stds.h"
+#include "afs/stds.h"
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../h/time.h"
+#include "h/types.h"
+#include "h/time.h"
 #ifdef AFS_LINUX20_ENV
-#include "../h/socket.h"
+#include "h/socket.h"
 #endif
-#include "../netinet/in.h"
+#include "netinet/in.h"
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 #endif /* !UKERNEL */
 #ifndef AFS_LINUX22_ENV
-#include "../rpc/types.h"
-#include "../rx/xdr.h"
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* ! KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -56,7 +56,7 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #ifdef AFS_PTHREAD_ENV
-#include "../rxkad/rxkad.h"
+#include "rxkad/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 

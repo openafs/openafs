@@ -21,9 +21,6 @@ clean:
 
 install:
 
-kinstall:
-	@echo No kernel source here.
-
 testit: testit.o 
 	${CC} ${CFLAGS} testit.o ${LIBS} ${LDFLAGS} -o testit
 verify: verify.o ../libdes.a

@@ -56,7 +56,7 @@
 RCSID("$Header$");
 
 
-#include "../lwp.h"
+#include "lwp.h"
 #include "seltest.h"
 
 /* Put this in lwp.h? */

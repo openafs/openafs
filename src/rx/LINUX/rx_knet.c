@@ -13,14 +13,14 @@
  * Linux implementation.
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
 RCSID("$Header$");
 
 #ifdef AFS_LINUX22_ENV
-#include "../rx/rx_kcommon.h"
+#include "rx/rx_kcommon.h"
 #if defined(AFS_LINUX24_ENV)
-#include "../h/smp_lock.h"
+#include "h/smp_lock.h"
 #endif
 #include <asm/uaccess.h>
 

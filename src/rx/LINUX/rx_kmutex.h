@@ -16,7 +16,7 @@
 #ifndef RX_KMUTEX_H_
 #define RX_KMUTEX_H_
 
-#include "../rx/rx_kernel.h"	/* for osi_Panic() */
+#include "rx/rx_kernel.h"	/* for osi_Panic() */
 
 /* AFS_GLOBAL_RXLOCK_KERNEL is defined so that the busy tq code paths are
  * used. The thread can sleep when sending packets.

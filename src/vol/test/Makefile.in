@@ -31,9 +31,6 @@ OBJECTS=listVicepx.o utilities.o  updateDirInode.o
 
 all: listVicepx updateDirInode testpart
 
-kinstall:
-	@echo No kernel source here.
-
 install:   
 
 ${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h ../filesignal.h ../vutils.h ../vldb.h ../salvage.h ../volinodes.h ../qiin.h

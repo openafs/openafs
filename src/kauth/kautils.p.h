@@ -40,9 +40,9 @@
 #include <afs/afsutil.h>
 
 #else
-#include "../afs/ubik.h"
-#include "../afs/auth.h"
-#include "../afs/cellconfig.h"
+#include "ubik.h"
+#include "afs/auth.h"
+#include "afs/cellconfig.h"
 #endif /* !defined(UKERNEL) */
 
 

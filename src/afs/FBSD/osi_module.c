@@ -2,7 +2,7 @@
 
 #include <afs/param.h>
 #include <afs/sysincludes.h>
-#include <afs/afsincludes.h>
+#include <afsincludes.h>
 #include <sys/module.h>
 #include <sys/sysproto.h>
 #include <sys/syscall.h>

@@ -12,7 +12,7 @@
 #define DES_DEFS
 
 #if defined(UKERNEL)
-#include "../des/mit-cpyright.h"
+#include "des/mit-cpyright.h"
 #else /* defined(UKERNEL) */
 #include <mit-cpyright.h>
 #endif /* defined(UKERNEL) */
