@@ -84,7 +84,6 @@ static cm_aclent_t *GetFreeACLEnt(void)
     if (cm_aclLRUp == NULL)
         osi_panic("empty aclent LRU", __FILE__, __LINE__);
 
-    lock_ObtainWrite(&cm_aclLock);
     aclp = cm_aclLRUEndp;
     if (aclp == cm_aclLRUEndp)
         cm_aclLRUEndp = (cm_aclent_t *) osi_QPrev(&aclp->q);
@@ -109,7 +108,6 @@ static cm_aclent_t *GetFreeACLEnt(void)
         cm_ReleaseUser(aclp->userp);
         aclp->userp = NULL;
     }
-    lock_ReleaseWrite(&cm_aclLock);
     return aclp;
 }
 
