@@ -91,6 +91,9 @@ typedef struct vnode {
 #endif
 	struct dquot		*i_dquot[MAXQUOTAS];
 #if defined(AFS_LINUX24_ENV)
+#if defined(STRUCT_INODE_HAS_I_DEVICES)
+        struct list_head        i_devices;
+#endif
         struct pipe_inode_info  *i_pipe;
         struct block_device     *i_bdev;
 #if defined(STRUCT_INODE_HAS_I_CDEV)
