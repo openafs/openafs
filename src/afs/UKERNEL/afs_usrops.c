@@ -4184,7 +4184,7 @@ int uafs_getcellstatus(char *cell, afs_int32 *status)
     return -1;
   }
 
-  *status = iob.out;
+  *status = (afs_int32) iob.out;
   return 0;
 }
 
@@ -4204,7 +4204,7 @@ int uafs_getvolquota(char *path, afs_int32 *BlocksInUse, afs_int32 *MaxQuota)
   iob.out = buf;
   iob.out_size = 1024;
 
-  rc = call_syscall(AFSCALL_PIOCTL, path, _VICEIOCTL(4),
+  rc = call_syscall(AFSCALL_PIOCTL, (long) path, _VICEIOCTL(4),
                       (long)&iob, 0, 0);
 
   if (rc != 0) {
@@ -4239,7 +4239,7 @@ int uafs_setvolquota(char *path, afs_int32 MaxQuota)
   status->MaxQuota = MaxQuota;
   status->MinQuota = -1;
 
-  rc = call_syscall(AFSCALL_PIOCTL, path, _VICEIOCTL(5),
+  rc = call_syscall(AFSCALL_PIOCTL, (long) path, _VICEIOCTL(5),
                       (long)&iob, 0, 0);
 
   if (rc != 0) {
