@@ -32,10 +32,22 @@ INCFILES =\
 	$(INCFILEDIR)\osilog.h \
 	$(INCFILEDIR)\osisleep.h \
 	$(INCFILEDIR)\perf.h \
-     $(INCFILEDIR)\osithrdnt.h
-
+!IFDEF OSIEVENT
+	$(INCFILEDIR)\osievent.h \
+!ENDIF
+    $(INCFILEDIR)\osithrdnt.h
 
 $(INCFILEDIR)\dbrpc.h: dbrpc.h
+
+EXEFILE = $(DESTDIR)\bin\osidebug.exe
+
+EXEOBJS = \
+	osidebug.obj
+
+EXELIBS = \
+        rpcndr.lib rpcrt4.lib rpcns4.lib \
+		Ws2_32.lib \
+	$(DESTDIR)\lib\libosi.lib
 
 ############################################################################
 # Definitions for building a DLL.
@@ -45,17 +57,17 @@ DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libosi.dll
 ILIBDIR = $(DESTDIR)\lib
 
 DLLOBJS =\
-	dbrpc_s.obj \
-	osistatl.obj \
-	osibasel.obj \
-	osisleep.obj \
-	osiqueue.obj \
-	osiltype.obj \
-	osidb.obj \
-	osifd.obj \
-	osilog.obj \
-	osiutils.obj \
-	libosi.res
+	$(OJT)\dbrpc_s.obj \
+	$(OJT)\osistatl.obj \
+	$(OJT)\osibasel.obj \
+	$(OJT)\osisleep.obj \
+	$(OJT)\osiqueue.obj \
+	$(OJT)\osiltype.obj \
+	$(OJT)\osidb.obj \
+	$(OJT)\osifd.obj \
+	$(OJT)\osilog.obj \
+	$(OJT)\osiutils.obj \
+	$(OJT)\libosi.res
 
 DLLLIBS =\
         rpcndr.lib \
@@ -71,22 +83,52 @@ $(DLLFILE): $(DLLOBJS)
 
 
 ############################################################################
+# build osievent.dll
+OSIEVENTDLL = $(DESTDIR)\root.client\usr\vice\etc\osievent.dll
+
+osievent.rc: osievent.mc
+	mc $*.mc
+
+$(OJT)\osievent.res: osievent.rc
+
+$(OJT)\osievent.dll: $(OJT)\osievent.res
+	link -dll -noentry -out:$*.dll $*.res
+
+$(OSIEVENTDLL): $(OJT)\osievent.dll
+	$(COPY) osievent.dll $(DESTDIR)\root.client\usr\vice\etc\.
+
+############################################################################
+# build osidebug too
+
+$(OJT)\osidebug.res: osidebug.rc
+
+$(EXEOBJS) : osidebug.c
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXEGUILINK) $(EXELIBS)
+
+############################################################################
 # midl on dbrpc.idl
 
 dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
-	$(MIDL) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" dbrpc.idl
-
+	$(MIDL) $(AFSDEV_AUXMIDLFLAGS) -Zp4 -cpp_cmd $(cc) -cpp_opt "-E" $**
 ############################################################################
 # generate versioninfo resources
 
-libosi.res: libosi.rc AFS_component_version_number.h
+$(OJT)\libosi.res: libosi.rc AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
 
 install_headers: $(INCFILES)
 
+!IFDEF OSIEVENT
+install: $(OSIEVENTDLL) install_headers $(DLLFILE)
+!ELSE
 install: install_headers $(DLLFILE)
+!ENDIF
+
+install_debug: $(OJT)\osidebug.res $(EXEFILE)
 
 install9x: install
 
@@ -94,5 +136,9 @@ install9x: install
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES)
+	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES) $(OSIEVENTDLL)
+	$(DEL) $(EXEOBJS) $(EXEFILE) $(OJT)\*.res $(OJT)\*.DLL
 
+
+mkdir:
+	

@@ -15,6 +15,7 @@
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES = \
+	$(INCFILEDIR)\volser_prototypes.h \
 	$(INCFILEDIR)\volser.h \
 	$(INCFILEDIR)\volint.h
 
@@ -29,14 +30,14 @@ LOCAL_INCFILES = \
 LIBFILE = $(DESTDIR)\lib\afs\afsvolser.lib
 
 LIBOBJS =\
-	lockprocs.obj \
-	volerr.obj \
-	volint.cs.obj \
-	volint.ss.obj \
-	volint.xdr.obj \
-	vsprocs.obj \
-	vsutils.obj \
-	AFS_component_version_number.obj 
+	$(OJT)\lockprocs.obj \
+	$(OJT)\volerr.obj \
+	$(OJT)\volint.cs.obj \
+	$(OJT)\volint.ss.obj \
+	$(OJT)\volint.xdr.obj \
+	$(OJT)\vsprocs.obj \
+	$(OJT)\vsutils.obj \
+	$(OJT)\AFS_component_version_number.obj 
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -74,17 +75,17 @@ EXEC_LIBS = \
 VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\volserver.exe
 
 VOLSERVER_EXEOBJS = \
-	common.obj \
-	dumpstuff.obj \
-	physio.obj \
-	volerr.obj \
-	volint.cs.obj \
-	volint.ss.obj \
-	volint.xdr.obj \
-	volmain.obj \
-	volprocs.obj \
-	voltrans.obj \
-	volserver.res
+	$(OJT)\common.obj \
+	$(OJT)\dumpstuff.obj \
+	$(OJT)\physio.obj \
+	$(OJT)\volerr.obj \
+	$(OJT)\volint.cs.obj \
+	$(OJT)\volint.ss.obj \
+	$(OJT)\volint.xdr.obj \
+	$(OJT)\volmain.obj \
+	$(OJT)\volprocs.obj \
+	$(OJT)\voltrans.obj \
+	$(OJT)\volserver.res
 	
 
 VOLSERVER_EXELIBS = \
@@ -102,13 +103,13 @@ RS_VOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\vos.exe
 CL_VOS_EXEFILE = $(DESTDIR)\etc\vos.exe
 
 VOS_EXEOBJS = \
-	vos.obj \
-	vsprocs.obj \
-	vsutils.obj \
-	lockprocs.obj \
-	volint.xdr.obj \
-	volerr.obj \
-	vos.res
+	$(OJT)\vos.obj \
+	$(OJT)\vsprocs.obj \
+	$(OJT)\vsutils.obj \
+	$(OJT)\lockprocs.obj \
+	$(OJT)\volint.xdr.obj \
+	$(OJT)\volerr.obj \
+	$(OJT)\vos.res
 
 VOS_EXELIBS = \
 	$(DESTDIR)\lib\afsubik.lib \
@@ -125,14 +126,15 @@ $(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)
 
 ############################################################################
 # Generate versioninfo resources
-volserver.res: volserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
-vos.res: vos.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\volserver.res: AFS_component_version_number.h
+
+$(OJT)\vos.res: AFS_component_version_number.h
 
 ############################################################################
 # Definitions for generating files via RXGEN
 
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
 
 volint.h volint.cs.c volint.ss.c volint.xdr.c: volint.xg
 	$(RXGEN) -x $**
@@ -159,5 +161,8 @@ install: $(LOCAL_INCFILES) $(LIBFILE) $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) volerr.c volser.h
+	$(DEL) volerr.c volser.h $(INCFILES)
 	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
+
+mkdir:
+	

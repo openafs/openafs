@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <winnt/osi_malloc.h>
 
 DWORD LogonOption,TraceOption;
 

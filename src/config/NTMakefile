@@ -9,17 +9,15 @@
 
 # Relative path to src directory depends on how we got to current directory.
 
-!IF (EXIST(..\..\src))
-SRCROOT = ..\..\src
-!ELSE IF (EXIST(..\..\..\src))
-SRCROOT = ..\..\..\src
-!ELSE
-!ERROR Can not find src directory from current directory.
-!ENDIF
-
 INCFILEDIR = $(DESTDIR)\include\afs
 
+
 INCFILES =\
+	$(INCFILEDIR)\debug.h \
+	$(INCFILEDIR)\afsconfig.h \
+	$(INCFILEDIR)\stds.h \
+	$(INCFILEDIR)\param.h \
+	$(INCFILEDIR)\afs_sysnames.h \
 	$(INCFILEDIR)\afs_args.h \
 	$(INCFILEDIR)\debug.h \
 	$(INCFILEDIR)\param.h \
@@ -102,24 +100,15 @@ idirs: doclink
 	$(COPY) AFSCONFIG-WINDOWS.H $(DESTDIR)\include\afs\afsconfig.h
 
 INCCOPY = \
-	$(DESTDIR)\bin\rmbat.bat \
-	$(DESTDIR)\bin\rmbat.rsp \
 	$(DESTDIR)\bin\NTBUILD.bat
-
-$(DESTDIR)\bin\rmbat.bat:..\rmbat.bat
-	$(COPY) $? $@
-	util_cr + $@
-
-$(DESTDIR)\bin\rmbat.rsp:..\rmbat.rsp
-	$(COPY) $? $@
 
 $(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
 	$(COPY) $? $@
-	util_cr + $@
+	$(UTIL_CR) + $@
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe 
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(OJT)\util_cr.exe 
 	$(COPY) NTLang.bat $(DESTDIR)\bin
-	util_cr + $(DESTDIR)\bin\NTLang.bat
+	$(UTIL_CR) + $(DESTDIR)\bin\NTLang.bat
 
 $(DESTDIR)\NTDllmap.txt:NTDllmap.txt
 	$(COPY) $? $@
@@ -149,20 +138,17 @@ INCTOOLS = \
 	$(DESTDIR)\bin\util_cr.exe \
 	$(DESTDIR)\bin\touch.exe
 
-#mkvers.exe : mkvers.obj
-#	$(EXECONLINK)
+$(INCTOOLS):$(OJT)\$$(@F)
+	$(COPY) $** $(DESTDIR)\bin\.
 
-$(DESTDIR)\bin\mkvers.exe:mkvers.exe
-	$(COPY) mkvers.exe $(DESTDIR)\bin\.
-
-$(DESTDIR)\bin\util_cr.exe:util_cr.exe
-	$(COPY) util_cr.exe $(DESTDIR)\bin\.
-
-util_cr.exe : util_cr.obj
+$(OJT)\mkvers.exe : $(OJT)\mkvers.obj
 	$(EXECONLINK)
 
-$(DESTDIR)\bin\touch.exe:touch.exe
-	$(COPY) touch.exe $(DESTDIR)\bin\.
+$(OJT)\touch.exe : $(OJT)\touch.obj
+	$(EXECONLINK)
+
+$(OJT)\util_cr.exe : $(OJT)\util_cr.obj
+	$(EXECONLINK)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 

@@ -11,7 +11,7 @@
 #define _RXKAD_PROTOTYPES_H
 
 /* till the typedefs are moved elsewhere */
-#include "rx/fcrypt.h"
+#include "fcrypt.h"
 #include "rx/rx.h"
 
 /* domestic/crypt_conn.c */

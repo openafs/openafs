@@ -28,24 +28,24 @@ INCFILES =\
 KAUTH_LIBFILE = $(DESTDIR)\lib\afs\afskauth.lib
 
 KAUTH_LIBOBJS =\
-	kauth.xdr.obj \
-	kauth.cs.obj \
-	kaaux.obj \
-	client.obj \
-	authclient.obj \
-	token.obj \
-	kautils.obj \
-	kalocalcell.obj \
-	kaerrors.obj \
-	user_nt.obj \
-	krb_tf.obj \
-	cm_config.obj \
-	AFS_component_version_number.obj
+	$(OJT)\kauth.xdr.obj \
+	$(OJT)\kauth.cs.obj \
+	$(OJT)\kaaux.obj \
+	$(OJT)\client.obj \
+	$(OJT)\authclient.obj \
+	$(OJT)\token.obj \
+	$(OJT)\kautils.obj \
+	$(OJT)\kalocalcell.obj \
+	$(OJT)\kaerrors.obj \
+	$(OJT)\user_nt.obj \
+	$(OJT)\krb_tf.obj \
+	$(OJT)\cm_config.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 WINNTAFSD = ..\WINNT\afsd\
 
-cm_config.obj: $(WINNTAFSD)\cm_config.c
-	$(C2OBJ) $(WINNTAFSD)\cm_config.c
+$(OJT)\cm_config.obj: $(WINNTAFSD)\cm_config.c
+	$(C2OBJ) $**
 
 $(KAUTH_LIBFILE): $(KAUTH_LIBOBJS) 
 	$(LIBARCH)  
@@ -56,26 +56,29 @@ $(KAUTH_LIBFILE): $(KAUTH_LIBOBJS)
 KAUTH_KRB_LIBFILE = $(DESTDIR)\lib\afs\afskauth.krb.lib
 
 KAUTH_KRB_LIBOBJS =\
-	kauth.xdr.obj \
-	kauth.cs.obj \
-	kaaux.obj \
-	client.obj \
-	authclient.obj \
-	token.obj \
-	kautils.obj \
-	kalocalcell.obj \
-	kaerrors.obj \
-	user.krb.obj \
-	krb_tf.obj \
-	cm_config.obj \
-	AFS_component_version_number.obj
+	$(OJT)\kauth.xdr.obj \
+	$(OJT)\kauth.cs.obj \
+	$(OJT)\kaaux.obj \
+	$(OJT)\client.obj \
+	$(OJT)\authclient.obj \
+	$(OJT)\token.obj \
+	$(OJT)\kautils.obj \
+	$(OJT)\kalocalcell.obj \
+	$(OJT)\kaerrors.obj \
+	$(OJT)\user.krb.obj \
+	$(OJT)\krb_tf.obj \
+	$(OJT)\cm_config.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(KAUTH_KRB_LIBFILE): $(KAUTH_KRB_LIBOBJS) 
 	$(LIBARCH)  
 
 #make user.krb.obj
-user.krb.obj: user_nt.c $(INCFILES) $(DESTDIR)/include/afs/vice.h
-	$(C2OBJ) user_nt.c  /DAFS_KERBEROS_ENV /Fouser.krb.obj
+
+user_nt.c : $(INCFILES) $(DESTDIR)/include/afs/vice.h
+
+$(OJT)\user.krb.obj: user_nt.c
+	$(C2OBJ) $**  -DAFS_KERBEROS_ENV
 
 
 # common libs
@@ -105,18 +108,18 @@ TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 KASERVER = $(DESTDIR)\root.server\usr\afs\bin\kaserver.exe
 
 KASERVER_OBJS =\
-	kaserver.obj \
-	kautils.obj \
-	kalocalcell.obj \
-	kadatabase.obj \
-	krb_udp.obj \
-	kaprocs.obj \
-	kalog.obj \
-	kauth.ss.obj \
-	kauth.xdr.obj \
-	kaaux.obj \
-	kaauxdb.obj \
-	kaserver.res
+	$(OJT)\kaserver.obj \
+	$(OJT)\kautils.obj \
+	$(OJT)\kalocalcell.obj \
+	$(OJT)\kadatabase.obj \
+	$(OJT)\krb_udp.obj \
+	$(OJT)\kaprocs.obj \
+	$(OJT)\kalog.obj \
+	$(OJT)\kauth.ss.obj \
+	$(OJT)\kauth.xdr.obj \
+	$(OJT)\kaaux.obj \
+	$(OJT)\kaauxdb.obj \
+	$(OJT)\kaserver.res
 
 KASERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
@@ -125,12 +128,14 @@ $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
 	$(EXECONLINK)
 	$(EXEPREP) 
 
-#build kadatabase.obj
-kadatabase.obj: kadatabase.c $(INCFILES) 
-	$(C2OBJ) kadatabase.c  /DSPECIAL=1 /Fokadatabase.obj
-#build kaprocs.obj
-kaprocs.obj: kaprocs.c $(INCFILES)
-	$(C2OBJ) kaprocs.c /DSPECIAL=1 /Fokaprocs.obj
+#build $(OJT)\kadatabase.obj
+
+$(OJT)\kadatabase.obj: kadatabase.c 
+	$(C2OBJ) $**  /DSPECIAL=1
+
+#build $(OJT)\kaprocs.obj
+$(OJT)\kaprocs.obj: kaprocs.c
+	$(C2OBJ) $**  /DSPECIAL=1
 
 ############################################################################
 # build kas
@@ -138,10 +143,10 @@ kaprocs.obj: kaprocs.c $(INCFILES)
 KAS = $(DESTDIR)\root.server\usr\afs\bin\kas.exe
 
 KAS_OBJS =\
-	kas.obj \
-	admin_tools.obj \
-	kkids.obj \
-	kas.res
+	$(OJT)\kas.obj \
+	$(OJT)\admin_tools.obj \
+	$(OJT)\kkids.obj \
+	$(OJT)\kas.res
 	
 $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK)
@@ -152,58 +157,57 @@ $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 KPASSWD_EXEFILE = $(DESTDIR)\bin\kpasswd.exe
 
 KPASSWD_OBJS =\
-	kpasswd.obj \
-	kkids.obj \
-	kpasswd.res
+	$(OJT)\kpasswd.obj \
+	$(OJT)\kkids.obj \
+	$(OJT)\kpasswd.res
 
 $(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
 	$(EXECONLINK)
 	$(EXEPREP)
 
 #kpwvalid.exe
-kpwvalid.exe: kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
+$(OJT)\kpwvalid.exe: $(OJT)\kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
 	$(EXECONLINK)
 
 #kdb.exe - Not implemented for NT - because dbm not available on NT
-#kdb.exe: kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
+#kdb.exe: $(OJT)\kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
 #	$(EXECONLINK)
 
-
-
 #rebuild.exe 
-rebuild.exe: rebuild.obj kautils.obj $(AFSLIBS) 
+$(OJT)\rebuild.exe: $(OJT)\rebuild.obj $(OJT)\kautils.obj $(AFSLIBS) 
 	$(EXECONLINK)
 
 ############################################################################
 # Definitions for generating versioninfo resources
 
-kaserver.res: kaserver.rc AFS_component_version_number.h
+$(OJT)\kaserver.res: AFS_component_version_number.h
 
-kas.res: kas.rc AFS_component_version_number.h
+$(OJT)\kas.res: AFS_component_version_number.h
 
-kpasswd.res: kpasswd.rc AFS_component_version_number.h
+$(OJT)\kpasswd.res: AFS_component_version_number.h
+
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
 
 ############################################################################
 # rxgen on kauth.rg
 
-kauth.ss.c kauth.cs.c kauth.xdr.c $(DESTDIR)\include\afs\kauth.h: kauth.rg
+kauth.ss.c kauth.cs.c kauth.xdr.c kauth.h: kauth.rg
 	$(RXGEN) -x $**
-	$(COPY) kauth.h $(DESTDIR)\include\afs\kauth.h
 
 ############################################################################
 # compile_et on kaerrors.c 
 
-kaerrors.c $(DESTDIR)\include\afs\kautils.h: kaerrors.et kautils.p.h
+kaerrors.c kautils.h: kaerrors.et kautils.p.h
 	$(DEL) kautils.h kaerrors.c
 	$(COMPILE_ET) kaerrors -h kautils
-	$(COPY) kautils.h  $(DESTDIR)\include\afs\kautils.h
 
 ############################################################################
 # install 
 
 install: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) $(KASERVER) $(KAS) \
 	$(KPASSWD_EXEFILE) \
-	kpwvalid.exe rebuild.exe  \
+	$(OJT)\kpwvalid.exe $(OJT)\rebuild.exe  \
 	$(DESTDIR)\etc\kas.exe
 
 install9X: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) \
@@ -219,7 +223,9 @@ $(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) $(KPASSWD_EXEFILE)
+	$(DEL) $(KPASSWD_EXEFILE) $(INCFILES)
 	$(DEL) kauth.cs.c kauth.h kauth.ss.c kauth.xdr.c kautils.h
 	$(DEL) kaerrors.c
 
+mkdir:
+	

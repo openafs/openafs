@@ -25,10 +25,10 @@ INCFILES =\
 DIR_LIBFILE = $(DESTDIR)\lib\afs\afsdir.lib
 
 DIR_LIBOBJS =\
-	buffer.obj \
-	dir.obj \
-	salvage.obj \
-	AFS_component_version_number.obj
+	$(OJT)\buffer.obj \
+	$(OJT)\dir.obj \
+	$(OJT)\salvage.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(DIR_LIBFILE): $(DIR_LIBOBJS) 
 	$(LIBARCH)  
@@ -44,6 +44,5 @@ install: $(DIR_LIBFILE) $(INCFILES)
 
 clean::
 
-
-
-
+mkdir:
+	

@@ -18,10 +18,10 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 INCFILEDIR = $(DESTDIR)\include\WINNT
 
 LIBOBJS = \
-	tal_alloc.obj \
-	tal_main.obj \
-	tal_string.obj \
-	tal_dialog.obj
+	$(OJT)\tal_alloc.obj \
+	$(OJT)\tal_main.obj \
+	$(OJT)\tal_string.obj \
+	$(OJT)\tal_dialog.obj
 
 LIBINCLUDES = \
 	$(INCFILEDIR)\talocale.h \
@@ -43,3 +43,6 @@ $(LIBFILE): $(LIBOBJS)
 
 clean::
 	$(DEL) $(LIBINCLUDES)
+
+mkdir:
+	

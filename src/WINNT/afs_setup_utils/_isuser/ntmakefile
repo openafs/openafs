@@ -9,13 +9,10 @@ NULL=
 NULL=nul
 !ENDIF 
 
-OUTDIR=.
-INTDIR=.
-# Begin Custom Macros
-OutDir=.
-# End Custom Macros
+OUTDIR=$(OJT) 
+INTDIR=$(OJT) 
 
-INSTALL : "$(OUTDIR)\_IsUser.dll"
+INSTALL : "$(DESTDIR)\WinInstall\Config\_IsUser.dll"
 	$(DEL) *.PCH 
 	$(DEL) *.IDB
 
@@ -27,38 +24,35 @@ CLEAN ::
 	-@erase "$(OUTDIR)\_IsUser.exp"
 	-@erase "$(OUTDIR)\_IsUser.lib"
 
-"$(OUTDIR)" ::
-    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
-
 CPP=cl.exe
 CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
-.c{$(INTDIR)}.obj::
+.c.{$(OJT)\}obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cpp{$(INTDIR)}.obj::
+.cpp.{$(OJT)\}obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.obj::
+.cxx.{$(OJT)\}obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.c{$(INTDIR)}.sbr::
+.c.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cpp{$(INTDIR)}.sbr::
+.cpp.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.sbr::
+.cxx.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
@@ -72,21 +66,24 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\_IsUser.bsc"
 BSC32_SBRS= \
 
 LINK32=link.exe
-LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"$(OUTDIR)\_IsUser.pdb" /machine:I386 /out:"$(OUTDIR)\_IsUser.dll" /implib:"$(OUTDIR)\_IsUser.lib" 
+LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /incremental:no /pdb:"$(OUTDIR)\_IsUser.pdb" /machine:I386 /out:"$(DESTDIR)\WinInstall\Config\_IsUser.dll" /implib:"$(OUTDIR)\_IsUser.lib" 
 LINK32_OBJS= \
 	"$(INTDIR)\_isuser.obj" \
 	"$(INTDIR)\_Isuser.res"
 
-"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+"$(DESTDIR)\WinInstall\Config\_IsUser.dll" : $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
 
 SOURCE=.\_isuser.c
 
-"$(INTDIR)\_isuser.obj" : $(SOURCE) "$(INTDIR)"
+"$(INTDIR)\_isuser.obj" : $(SOURCE)
 
 SOURCE=.\_Isuser.RC
 
-"$(INTDIR)\_Isuser.res" : $(SOURCE) "$(INTDIR)"
+"$(INTDIR)\_Isuser.res" : $(SOURCE)
 	$(RSC) $(RSC_PROJ) $(SOURCE)
+
+
+mkdir:

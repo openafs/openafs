@@ -258,7 +258,9 @@ extern int rxi_GetIFInfo(void);
 #if 0
 extern int rxk_FreeSocket(register struct socket *asocket);
 #endif
+#ifndef AFS_NT40_ENV
 extern struct osi_socket *rxk_NewSocket(short aport);
+#endif
 #endif
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port);
 #ifdef UKERNEL
@@ -287,7 +289,9 @@ extern void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime);
 
 
 /* rx_knet.c */
+#ifndef AFS_NT40_ENV
 extern struct osi_socket *rxk_NewSocket(short aport);
+#endif
 extern int rxk_FreeSocket(register osi_socket asocket);
 #if defined(KERNEL) && !defined(AFS_SGI_ENV)
 extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
@@ -361,7 +365,7 @@ extern afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset,
 	int resid, char *in);
 extern void rxi_freeCBuf(struct rx_packet *c);
 extern int rxi_RoundUpPacket(struct rx_packet *p, unsigned int nb);
-extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int class);
+extern int rxi_AllocDataBuf(struct rx_packet *p, int nb, int cla_ss);
 extern void rxi_MorePackets(int apackets);
 extern void rxi_MorePacketsNoLock(int apackets);
 extern void rxi_FreeAllPackets(void);
@@ -371,8 +375,8 @@ extern int rxi_FreeDataBufsNoLock(struct rx_packet *p, int first);
 extern void rxi_RestoreDataBufs(struct rx_packet *p);
 extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
 extern void rxi_FreePacket(struct rx_packet *p);
-extern struct rx_packet *rxi_AllocPacketNoLock(int class);
-extern struct rx_packet *rxi_AllocPacket(int class);
+extern struct rx_packet *rxi_AllocPacketNoLock(int cla_ss);
+extern struct rx_packet *rxi_AllocPacket(int cla_ss);
 extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call, int want);
 extern int rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 *host, u_short *port);
 extern struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, 
@@ -464,10 +468,6 @@ extern char *osi_Alloc(afs_int32 x);
 extern void osi_Free(char *x, afs_int32 size);
 #endif
 #endif /* AFS_AIX32_ENV */
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
-extern int rxi_getaddr(void);
-extern int rx_getAllAddr (afs_int32 *buffer, int maxSize);
-#endif
 extern void rx_GetIFInfo(void);
 extern void rx_SetNoJumbo(void);
 

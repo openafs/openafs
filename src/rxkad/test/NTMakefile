@@ -12,16 +12,16 @@
 ############################################################################
 # Build stress.exe
 
-EXEFILE = stress.exe
+EXEFILE = $(OJT)\stress.exe
 
 EXEOBJS =\
-	stress.xdr.obj \
-	stress_errs.obj \
-	stress_c.obj \
-	stress_s.obj \
-	stress.cs.obj \
-	stress.ss.obj \
-	stress.obj
+	$(OJT)\stress.xdr.obj \
+	$(OJT)\stress_errs.obj \
+	$(OJT)\stress_c.obj \
+	$(OJT)\stress_s.obj \
+	$(OJT)\stress.cs.obj \
+	$(OJT)\stress.ss.obj \
+	$(OJT)\stress.obj
 
 EXELIBS =\
 	$(DESTDIR)\lib\afsrxkad.lib \
@@ -59,3 +59,6 @@ test tests: $(EXEFILE)
 clean::
 	 $(DEL) stress.cs.c stress.ss.c stress.xdr.c stress.h \
 		stress_errs.c stress_errs.h stress.EXE th_*	
+
+mkdir:
+	

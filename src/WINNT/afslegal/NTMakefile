@@ -18,8 +18,8 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afslegal.exe
 
 EXEOBJS = \
-	afslegal_stub.res \
-	afslegal.obj
+	$(OJT)\afslegal_stub.res \
+	$(OJT)\afslegal.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\talocale.lib \
@@ -40,4 +40,11 @@ lang ::
 ############################################################################
 # Dependencies
 
-afslegal_stub.res : afslegal_stub.rc AFS_component_version_number.h
+$(OJT)\afslegal_stub.res : AFS_component_version_number.h
+
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+	

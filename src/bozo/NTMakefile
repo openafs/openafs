@@ -22,10 +22,10 @@ INCFILES =\
 BOS_LIBFILE = $(DESTDIR)\lib\afs\afsbos.lib
 
 BOS_LIBOBJS =\
-	AFS_component_version_number.obj \
-	bosint.cs.obj \
-	bosint.xdr.obj \
-	boserr.obj
+	$(OJT)\bosint.cs.obj \
+	$(OJT)\bosint.xdr.obj \
+	$(OJT)\boserr.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(BOS_LIBFILE): $(BOS_LIBOBJS)
 	$(LIBARCH)
@@ -37,14 +37,14 @@ $(BOS_LIBFILE): $(BOS_LIBOBJS)
 BOSSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosserver.exe
 
 BOSSERVER_EXEOBJS =\
-	bosserver.obj \
-	bnode.obj \
-	cronbnodeops.obj \
-	ezbnodeops.obj \
-	fsbnodeops.obj \
-	bosint.ss.obj \
-	bosoprocs.obj \
-	bosserver.res
+	$(OJT)\bosserver.obj \
+	$(OJT)\bnode.obj \
+	$(OJT)\cronbnodeops.obj \
+	$(OJT)\ezbnodeops.obj \
+	$(OJT)\fsbnodeops.obj \
+	$(OJT)\bosint.ss.obj \
+	$(OJT)\bosoprocs.obj \
+	$(OJT)\bosserver.res
 
 
 BOSSERVER_EXELIBS =\
@@ -81,8 +81,8 @@ RS_BOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bos.exe
 CL_BOS_EXEFILE = $(DESTDIR)\bin\bos.exe
 
 BOS_EXEOBJS =\
-	bos.obj \
-	bos.res
+	$(OJT)\bos.obj \
+	$(OJT)\bos.res
 
 BOS_EXELIBS =\
 	$(DESTDIR)\lib\afsrx.lib \
@@ -130,11 +130,9 @@ bnode.h boserr.c: boserr.et bnode.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-bosserver.res: bosserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\bosserver.res: AFS_component_version_number.h
 
-bos.res: bos.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\bos.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -147,3 +145,6 @@ install: $(BOS_LIBFILE) $(BOSSERVER_EXEFILE) $(CL_BOS_EXEFILE) $(INCFILES)
 
 clean::
 	$(DEL) bnode.h boserr.c bosint.cs.c bosint.h bosint.ss.c bosint.xdr.c
+
+mkdir:
+	

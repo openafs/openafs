@@ -13,10 +13,12 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#ifndef __APPLE_CC__
+#include <malloc.h>
+#endif
 #include <assert.h>
 #include <string.h>
 
@@ -81,7 +83,7 @@ void Usage(void)
     exit(1);
 }
 
-int main(int argc, char **argv)
+main(int argc, char **argv)
 {
     char stampsFile[1024];
     char stateFile[1024];
@@ -104,7 +106,6 @@ int main(int argc, char **argv)
     strcat(cmldir, "src/CML");
 
     baseDir = strstr(cmldir, CMLDIR_DFLT);
-    assert(baseDir);
 
     programName = argv[0];
 

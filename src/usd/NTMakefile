@@ -26,8 +26,8 @@ INCFILES = \
 LIBFILE = $(DESTDIR)\lib\afs\afsusd.lib
 
 LIBOBJS =\
-	usd_nt.obj \
-	AFS_component_version_number.obj
+	$(OJT)\usd_nt.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -47,4 +47,5 @@ test:
 	$(MAKECMD) /fNTMakefile test
 	$(CD) ..
 
-
+mkdir:
+	

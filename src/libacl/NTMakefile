@@ -24,9 +24,9 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsacl.lib 
 
 LIBOBJS =\
-	aclprocs.obj \
-	netprocs.obj \
-	AFS_component_version_number.obj
+	$(OJT)\aclprocs.obj \
+	$(OJT)\netprocs.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -51,3 +51,6 @@ test:
 	$(CD) test
 	$(MAKECMD) /f NTMakefile acltest
 
+
+mkdir:
+	

@@ -10,16 +10,19 @@ AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
-KAUTH = ..\..\kauth\
+KAUTH = ..\..\kauth
+RX = ..\..\rx
+
+RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
 
 KAUTHOBJS = \
-	kauth.cs.obj kauth.xdr.obj kaaux.obj
+	$(OJT)\kauth.cs.obj $(OJT)\kauth.xdr.obj $(OJT)\kaaux.obj
 
 ADMINOBJS = \
-	afs_kasAdmin.obj \
-	afskasadmin.res
+	$(OJT)\afs_kasAdmin.obj \
+	$(OJT)\afskasadmin.res
 
-DLLOBJS = $(ADMINOBJS) $(KAUTHOBJS)
+DLLOBJS = $(ADMINOBJS) $(KAUTHOBJS) $(RXOBJS)
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_kasAdmin.h
@@ -42,17 +45,14 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 
 install: $(DLLFILE) $(LIBINCLUDES)
 
+$(KAUTHOBJS): $(KAUTH)\$$(@B).c
+	$(C2OBJ) -I$(KAUTH) $**
 
-
-kauth.cs.obj: $(KAUTH)\kauth.cs.c
-	$(C2OBJ) $(KAUTH)\kauth.cs.c
-
-kauth.xdr.obj: $(KAUTH)\kauth.xdr.c
-	$(C2OBJ) $(KAUTH)\kauth.xdr.c
-
-kaaux.obj: $(KAUTH)\kaaux.c
-	$(C2OBJ) $(KAUTH)\kaaux.c
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
 # Definitions for generating versioninfo resources
-afskasadmin.res: afskasadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\afskasadmin.res: AFS_component_version_number.h
+
+mkdir:
+	

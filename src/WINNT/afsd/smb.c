@@ -32,6 +32,7 @@
 #include "afsd.h"
 
 #include "smb.h"
+#include <winnt/osi_malloc.h>
 
 /* These characters are illegal in Windows filenames */
 static char *illegalChars = "\\/:*?\"<>|";

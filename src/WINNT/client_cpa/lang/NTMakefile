@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_cpa_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afs_cpa.rc
 
-RESFILE = afs_cpa_$(LANGID).res
+RESFILE = $(OJT)\afs_cpa_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -48,7 +48,7 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
-	$(DEL) *.res RC* RD* $(DLLFILE) $(DEL) $(DLLFILE)
+	$(DEL) *.res RC* RD* $(DLLFILE)
 
 ############################################################################
 #
@@ -58,3 +58,6 @@ clean ::
 $(RESFILE) : $(RCFILE) AFS_component_version_number.h
 	$(RC) /fo$(RESFILE) /c$(LANGCP) $(RCFILE)
 
+
+mkdir:
+	

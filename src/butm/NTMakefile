@@ -15,8 +15,8 @@
 LIBFILE = $(DESTDIR)\lib\afs\afsbutm.lib
 
 LIBOBJS =\
-	file_tm.obj \
-	AFS_component_version_number.obj
+	$(OJT)\file_tm.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -25,7 +25,7 @@ $(LIBFILE): $(LIBOBJS)
 ############################################################################
 # Install target; primary makefile target
 
-install: $(LIBFILE) test_ftm.exe
+install: $(LIBFILE) $(OJT)\test_ftm.exe
 
 
 ############################################################################
@@ -43,5 +43,8 @@ TESTLIBS = $(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsbubasics.lib
 
-test_ftm.exe: test_ftm.obj $(LIBFILE) $(TESTLIBS)
+$(OJT)\test_ftm.exe: $(OJT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)
 	$(EXECONLINK)
+
+mkdir:
+	

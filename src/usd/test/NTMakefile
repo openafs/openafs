@@ -16,8 +16,8 @@ clean::
 test tests: usd_test.exe
 
 # make usd_test.exe
-usd_test.exe: usd_test.obj $(LIBFILE) $(LIBUTIL)
+$(OJT)\usd_test.exe: $(OJT)\usd_test.obj $(LIBFILE) $(LIBUTIL)
 	$(EXECONLINK)
+
+mkdir:
 	
-
-

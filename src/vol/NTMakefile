@@ -32,18 +32,18 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
 
 LIBOBJS =\
-	common.obj \
-	clone.obj \
-	fssync.obj \
-	ntops.obj \
-	nuke.obj \
-	partition.obj \
-	purge.obj \
-	vnode.obj \
-	volume.obj \
-	vutil.obj \
-	ihandle.obj \
-	AFS_component_version_number.obj	
+	$(OJT)\common.obj \
+	$(OJT)\clone.obj \
+	$(OJT)\fssync.obj \
+	$(OJT)\ntops.obj \
+	$(OJT)\nuke.obj \
+	$(OJT)\partition.obj \
+	$(OJT)\purge.obj \
+	$(OJT)\vnode.obj \
+	$(OJT)\volume.obj \
+	$(OJT)\vutil.obj \
+	$(OJT)\ihandle.obj \
+	$(OJT)\AFS_component_version_number.obj	
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -70,10 +70,10 @@ EXEC_LIBS = \
 SALVAGER = $(DESTDIR)\root.server\usr\afs\bin\salvager.exe
 
 SALVAGER_EXEOBJS =\
-	vol-salvage.obj \
-	physio.obj \
-	AFS_component_version_number.obj \
-	salvager.res
+	$(OJT)\vol-salvage.obj \
+	$(OJT)\physio.obj \
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\salvager.res
 
 $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
 	$(EXECONLINK)
@@ -84,16 +84,19 @@ $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
 # build volinfo
 VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
 
-$(VOLINFO): vol-info.obj physio.obj volinfo.res $(EXEC_LIBS)
+$(VOLINFO): $(OJT)\vol-info.obj $(OJT)\physio.obj $(OJT)\volinfo.res $(EXEC_LIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
 ############################################################################
 # generate versioninfo resources
-salvager.res: salvager.rc AFS_component_version_number.h
+$(OJT)\salvager.res: salvager.rc AFS_component_version_number.h
 
-volinfo.res: volinfo.rc AFS_component_version_number.h
+$(OJT)\volinfo.res: AFS_component_version_number.h
 
 ############################################################################
 # Install targets
 install: $(INCFILES) $(LIBFILE) $(SALVAGER) $(VOLINFO) 
+
+mkdir:
+	

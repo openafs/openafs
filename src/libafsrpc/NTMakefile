@@ -22,235 +22,63 @@ AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
 # Object files by category.
-MULTIOBJS = rx_multi.obj
+MULTIOBJS = $(OJT)\rx_multi.obj
 
-XDROBJS = xdr.obj xdr_array.obj xdr_arrayn.obj xdr_float.obj xdr_mem.obj \
-	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj \
-	xdr_afsuuid.obj xdr_int64.obj
+XDROBJS = $(OJT)\xdr.obj $(OJT)\xdr_array.obj $(OJT)\xdr_arrayn.obj $(OJT)\xdr_float.obj $(OJT)\xdr_mem.obj \
+	$(OJT)\xdr_rec.obj  $(OJT)\xdr_refernce.obj $(OJT)\xdr_rx.obj $(OJT)\xdr_update.obj \
+	$(OJT)\xdr_afsuuid.obj $(OJT)\xdr_int64.obj $(OJT)\xdr_int32.obj
 
-RXOBJS = rx_event.obj rx_user.obj rx_pthread.obj rx.obj \
-	rx_null.obj rx_globals.obj rx_getaddr.obj rx_misc.obj rx_packet.obj \
-	rx_rdwr.obj rx_trace.obj rx_xmit_nt.obj rx_conncache.obj 
+RXOBJS = $(OJT)\rx_event.obj $(OJT)\rx_user.obj $(OJT)\rx_pthread.obj $(OJT)\rx.obj \
+	$(OJT)\rx_null.obj $(OJT)\rx_globals.obj $(OJT)\rx_getaddr.obj $(OJT)\rx_misc.obj $(OJT)\rx_packet.obj \
+	$(OJT)\rx_rdwr.obj $(OJT)\rx_trace.obj $(OJT)\rx_xmit_nt.obj $(OJT)\rx_conncache.obj
 
-RXSTATOBJS = rxstat.obj rxstat.ss.obj rxstat.xdr.obj rxstat.cs.obj
+RXSTATBJS = $(OJT)\rxstat.obj $(OJT)\rxstat.ss.obj $(OJT)\rxstat.xdr.obj $(OJT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = rxkad_client.obj rxkad_server.obj rxkad_common.obj ticket.obj \
-	AFS_component_version_number.obj
+LIBRXKAD_OBJS = $(OJT)\rxkad_client.obj $(OJT)\rxkad_server.obj $(OJT)\rxkad_common.obj $(OJT)\ticket.obj \
+	$(OJT)\ticket5.obj $(OJT)\crc.obj $(OJT)\AFS_component_version_number.obj
 
-LIBRXKAD_REGOBJS = fcrypt.obj crypt_conn.obj
+LIBRXKAD_REGOBJS = $(OJT)\fcrypt.obj $(OJT)\crypt_conn.obj
 
-DESOBJS = des.obj cbc_encrypt.obj pcbc_encrypt.obj cksum.obj new_rnd_key.obj \
-	key_sched.obj debug_decl.obj quad_cksum.obj key_parity.obj \
-	weak_key.obj strng_to_key.obj misc.obj util.obj
+DESOBJS_INT = $(OJT)\des.obj $(OJT)\cbc_encrypt.obj $(OJT)\pcbc_encrypt.obj $(OJT)\cksum.obj $(OJT)\new_rnd_key.obj \
+	$(OJT)\key_sched.obj $(OJT)\debug_decl.obj $(OJT)\quad_cksum.obj $(OJT)\key_parity.obj \
+	$(OJT)\weak_key.obj $(OJT)\strng_to_key.obj $(OJT)\util.obj
 
-UTILOBJS = casestrcpy.obj winsock_nt.obj
+DESOBJS = $(DESOBJS_INT) $(OJT)\misc.obj 
 
-COMERROBJS = error_msg.obj et_name.obj com_err.obj
+UTILOBJS = $(OJT)\casestrcpy.obj $(OJT)\winsock_nt.obj
 
-FSINTOBJS = afsint.cs.obj afsint.xdr.obj afscbint.cs.obj afscbint.xdr.obj \
-	afsaux.obj
+COMERRBJS = $(OJT)\error_msg.obj $(OJT)\et_name.obj $(OJT)\com_err.obj
 
-DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATOBJS) $(LIBRXKAD_OBJS) \
-	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILOBJS) $(COMERROBJS) \
-	$(FSINTOBJS) afsrpc.res
+FSINTBJS = $(OJT)\afsint.cs.obj $(OJT)\afsint.xdr.obj $(OJT)\afscbint.cs.obj $(OJT)\afscbint.xdr.obj \
+	$(OJT)\afsaux.obj
 
-rx_multi.obj: $(RX)\rx_multi.c
-	$(C2OBJ) $(RX)\rx_multi.c
+DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
+	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
+	$(FSINTBJS) $(OJT)\afsrpc.res
 
-xdr.obj: $(RX)\xdr.c
-	$(C2OBJ) $(RX)\xdr.c
+$(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
+	$(C2OBJ) $** -I$(RX) 
 
-xdr_array.obj: $(RX)\xdr_array.c
-	$(C2OBJ) $(RX)\xdr_array.c
+$(RXSTATBJS):$(RXSTAT)\$$(@B).c
+	$(C2OBJ) $** -I$(RXSTAT)
 
-xdr_arrayn.obj: $(RX)\xdr_arrayn.c
-	$(C2OBJ) $(RX)\xdr_arrayn.c
+$(LIBRXKAD_REGOBJS) $(LIBRXKAD_OBJS):$(RXKAD)\$$(@B).c
+	$(C2OBJ) $** -I$(RXKAD)
 
-xdr_float.obj: $(RX)\xdr_float.c
-	$(C2OBJ) $(RX)\xdr_float.c
+$(DESOBJS_INT):$(DES)\$$(@B).c
+	$(C2OBJ) $** -I$(DES)
 
-xdr_mem.obj: $(RX)\xdr_mem.c
-	$(C2OBJ) $(RX)\xdr_mem.c
+$(OJT)\misc.obj:$(DES)\misc.c
+	$(C2OBJ) $** -DDONT_INCL_MAIN -I$(DES)
 
-xdr_rec.obj: $(RX)\xdr_rec.c
-	$(C2OBJ) $(RX)\xdr_rec.c
+$(COMERRBJS):$(COMERR)\$$(@B).c
+	$(C2OBJ) $** -I$(COMERR)
 
-xdr_refernce.obj: $(RX)\xdr_refernce.c
-	$(C2OBJ) $(RX)\xdr_refernce.c
+$(FSINTBJS):$(FSINT)\$$(@B).c
+	$(C2OBJ) $** -I$(FSINT)
 
-xdr_rx.obj: $(RX)\xdr_rx.c
-	$(C2OBJ) $(RX)\xdr_rx.c
-
-xdr_update.obj: $(RX)\xdr_update.c
-	$(C2OBJ) $(RX)\xdr_update.c
-
-xdr_afsuuid.obj: $(RX)\xdr_afsuuid.c
-	$(C2OBJ) $(RX)\xdr_afsuuid.c
-
-xdr_int64.obj: $(RX)\xdr_int64.c
-	$(C2OBJ) $(RX)\xdr_int64.c
-
-rx_event.obj: $(RX)\rx_event.c
-	$(C2OBJ) $(RX)\rx_event.c
-
-rx_user.obj: $(RX)\rx_user.c
-	$(C2OBJ) $(RX)\rx_user.c
-
-rx_pthread.obj: $(RX)\rx_pthread.c
-	$(C2OBJ) $(RX)\rx_pthread.c
-
-rx.obj: $(RX)\rx.c
-	$(C2OBJ) $(RX)\rx.c
-
-rx_null.obj: $(RX)\rx_null.c
-	$(C2OBJ) $(RX)\rx_null.c
-
-rx_globals.obj: $(RX)\rx_globals.c
-	$(C2OBJ) $(RX)\rx_globals.c
-
-rx_getaddr.obj: $(RX)\rx_getaddr.c
-	$(C2OBJ) $(RX)\rx_getaddr.c
-
-rx_misc.obj: $(RX)\rx_misc.c
-	$(C2OBJ) $(RX)\rx_misc.c
-
-rx_packet.obj: $(RX)\rx_packet.c
-	$(C2OBJ) $(RX)\rx_packet.c
-
-rx_rdwr.obj: $(RX)\rx_rdwr.c
-	$(C2OBJ) $(RX)\rx_rdwr.c
-
-rx_trace.obj: $(RX)\rx_trace.c
-	$(C2OBJ) $(RX)\rx_trace.c
-
-rx_xmit_nt.obj: $(RX)\rx_xmit_nt.c
-	$(C2OBJ) $(RX)\rx_xmit_nt.c
-
-rx_conncache.obj: $(RX)\rx_conncache.c
-	$(C2OBJ) $(RX)\rx_conncache.c
-
-rxstat.cs.obj:$(RXSTAT)\rxstat.cs.c
-	$(C2OBJ) $(RXSTAT)\rxstat.cs.c
-
-rxstat.ss.obj:$(RXSTAT)\rxstat.ss.c
-	$(C2OBJ) $(RXSTAT)\rxstat.ss.c
-
-rxstat.xdr.obj:$(RXSTAT)\rxstat.xdr.c
-	$(C2OBJ) $(RXSTAT)\rxstat.xdr.c
-
-rxstat.obj:$(RXSTAT)\rxstat.c
-	$(C2OBJ) $(RXSTAT)\rxstat.c
-
-rxkad_client.obj:$(RXKAD)\rxkad_client.c
-	$(C2OBJ) $(RXKAD)\rxkad_client.c
-
-rxkad_server.obj:$(RXKAD)\rxkad_server.c
-	$(C2OBJ) $(RXKAD)\rxkad_server.c
-
-rxkad_common.obj:$(RXKAD)\rxkad_common.c
-	$(C2OBJ) $(RXKAD)\rxkad_common.c
-
-ticket.obj:$(RXKAD)\ticket.c
-	$(C2OBJ) $(RXKAD)\ticket.c
-
-fcrypt.obj:$(RXKAD)\fcrypt.c
-	$(C2OBJ) $(RXKAD)\fcrypt.c
-
-crypt_conn.obj:$(RXKAD)\crypt_conn.c
-	$(C2OBJ) $(RXKAD)\crypt_conn.c
-
-AFS_component_version_number.obj:$(RXKAD)\AFS_component_version_number.c
-	$(C2OBJ) $(RXKAD)\AFS_component_version_number.c
-
-fcrypt_x.obj:$(RXKAD)\fcrypt.c
-	$(C2OBJ) $(RXKAD)\fcrypt.c /Fofcrypt_x.obj
-
-crypt_conn_x.obj:$(RXKAD)\crypt_conn.c
-	$(C2OBJ) $(RXKAD)\crypt_conn.c /Focrypt_conn_x.obj
-
-des.obj:$(DES)\des.c
-	$(C2OBJ) $(DES)\des.c
-
-cbc_encrypt.obj:$(DES)\cbc_encrypt.c
-	$(C2OBJ) $(DES)\cbc_encrypt.c
-
-pcbc_encrypt.obj:$(DES)\pcbc_encrypt.c
-	$(C2OBJ) $(DES)\pcbc_encrypt.c
-
-cksum.obj:$(DES)\cksum.c
-	$(C2OBJ) $(DES)\cksum.c
-
-new_rnd_key.obj:$(DES)\new_rnd_key.c
-	$(C2OBJ) $(DES)\new_rnd_key.c
-
-key_sched.obj:$(DES)\key_sched.c
-	$(C2OBJ) $(DES)\key_sched.c
-
-debug_decl.obj:$(DES)\debug_decl.c
-	$(C2OBJ) $(DES)\debug_decl.c
-
-quad_cksum.obj:$(DES)\quad_cksum.c
-	$(C2OBJ) $(DES)\quad_cksum.c
-
-key_parity.obj:$(DES)\key_parity.c
-	$(C2OBJ) $(DES)\key_parity.c
-
-weak_key.obj:$(DES)\weak_key.c
-	$(C2OBJ) $(DES)\weak_key.c
-
-strng_to_key.obj:$(DES)\strng_to_key.c
-	$(C2OBJ) $(DES)\strng_to_key.c
-
-misc.obj:$(DES)\misc.c
-	$(C2OBJ) -DDONT_INCL_MAIN $(DES)\misc.c
-
-util.obj:$(DES)\util.c
-	$(C2OBJ) $(DES)\util.c
-
-des_x.obj:$(DES)\des.c
-	$(C2OBJ) $(DES)\des.c /Fodes_x.obj
-
-cbc_crypt_x.obj:$(DES)\cbc_encrypt.c
-	$(C2OBJ) $(DES)\cbc_encrypt.c /Focbc_crypt_x.obj
-
-pcbc_crypt_x.obj:$(DES)\pcbc_encrypt.c
-	$(C2OBJ) $(DES)\pcbc_encrypt.c /Fopcbc_crypt_x.obj
-
-cksum_x.obj:$(DES)\cksum.c
-	$(C2OBJ) $(DES)\cksum.c /Focksum_x.obj
-
-nrnd_key_x.obj:$(DES)\new_rnd_key.c
-	$(C2OBJ) $(DES)\new_rnd_key.c /Fonrnd_key_x.obj
-
-error_msg.obj:$(COMERR)\error_msg.c
-	$(C2OBJ) $(COMERR)\error_msg.c
-
-et_name.obj:$(COMERR)\et_name.c
-	$(C2OBJ) $(COMERR)\et_name.c
-
-com_err.obj:$(COMERR)\com_err.c
-	$(C2OBJ) $(COMERR)\com_err.c
-
-casestrcpy.obj:$(UTIL)\casestrcpy.c
-	$(C2OBJ) $(UTIL)\casestrcpy.c
-
-winsock_nt.obj:$(UTIL)\winsock_nt.c
-	$(C2OBJ) $(UTIL)\winsock_nt.c
-
-afsint.cs.obj:$(FSINT)\afsint.cs.c
-	$(C2OBJ) $(FSINT)\afsint.cs.c
-
-afsint.xdr.obj:$(FSINT)\afsint.xdr.c
-	$(C2OBJ) $(FSINT)\afsint.xdr.c
-
-afscbint.cs.obj:$(FSINT)\afscbint.cs.c
-	$(C2OBJ) $(FSINT)\afscbint.cs.c
-
-afscbint.xdr.obj:$(FSINT)\afscbint.xdr.c
-	$(C2OBJ) $(FSINT)\afscbint.xdr.c
-
-afsaux.obj:$(FSINT)\afsaux.c
-	$(C2OBJ) $(FSINT)\afsaux.c
+$(UTILOBJS):$(UTIL)\$$(@B).c
+	$(C2OBJ) $** -I$(UTIL)
 
 NTMAKE = nmake /nologo /f ntmakefile
 
@@ -269,9 +97,7 @@ $(DESTDIR)\lib\afsrpc.dll: $(DLLOBJS) $(DLLLIBS)
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources
-afsrpc.res: afsrpc.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
+$(OJT)\afsrpc.res: AFS_component_version_number.h
 
 install:
 !       IF (EXIST(..\..\src\des\NTMakefile))

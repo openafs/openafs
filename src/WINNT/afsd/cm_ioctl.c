@@ -1286,6 +1286,35 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	return code;
 }
 
+long cm_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{/*CHECK FOR VALID SYMLINK*/
+	long code;
+	cm_scache_t *dscp;
+	cm_scache_t *scp;
+	char *cp;
+	cm_space_t *spacep;
+	cm_scache_t *newRootScp;
+	cm_req_t req;
+
+	cm_InitReq(&req);
+
+	code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+	if (code) return code;
+
+	cp = ioctlp->inDatap;
+	osi_LogEvent("cm_IoctlListlink",NULL," name[%s]",cp);
+
+	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+	cm_ReleaseSCache(dscp);
+	if (code) return code;
+
+	/* Check that it's a real symlink */
+	if (scp->fileType != CM_SCACHETYPE_SYMLINK)
+		code = CM_ERROR_INVAL;
+	cm_ReleaseSCache(scp);
+	return code;
+}
+
 long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	long code;

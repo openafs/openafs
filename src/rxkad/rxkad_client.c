@@ -58,7 +58,7 @@ RCSID("$Header$");
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #ifdef AFS_PTHREAD_ENV
-#include "rxkad/rxkad.h"
+#include "rx/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 

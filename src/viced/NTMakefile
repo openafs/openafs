@@ -26,13 +26,13 @@ INCFILES =\
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
 EXEOBJS =\
-	afsfileprocs.obj \
-	callback.obj \
-	host.obj \
-	physio.obj \
-	viced.obj \
-	AFS_component_version_number.obj \
-	fileserver.res
+	$(OJT)\afsfileprocs.obj \
+	$(OJT)\callback.obj \
+	$(OJT)\host.obj \
+	$(OJT)\physio.obj \
+	$(OJT)\viced.obj \
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\fileserver.res
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -63,18 +63,19 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 
 ############################################################################
 # generate versioninfo resources
-fileserver.res: fileserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\fileserver.res: AFS_component_version_number.h
 
-
-install:  $(INCFILES) fileserver.res
+install:  $(INCFILES) $(OJT)\fileserver.res
 
 ############################################################################
 # Build cbd - not generally distributed debugging program
-CBD = cbd.exe
+CBD = $(OJT)\cbd.exe
 
-cbd.obj: callback.c
-	$(C2OBJ) /Focbd.obj -DINTERPRET_DUMP callback.c
+$(OJT)\cbd.obj: callback.c
+	$(C2OBJ) $** -DINTERPRET_DUMP
 
-$(CBD): cbd.obj 
+$(CBD): $(OJT)\cbd.obj 
 	$(EXECONLINK)
+
+mkdir:
+	

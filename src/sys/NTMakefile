@@ -20,7 +20,7 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afspioctl.lib
 
 LIBOBJS =\
-	pioctl_nt.obj
+	$(OJT)\pioctl_nt.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)

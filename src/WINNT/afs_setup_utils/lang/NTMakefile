@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afs_setup_utils_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afs_setup_utils.rc
 
-RESFILE = afs_setup_utils_$(LANGID).res
+RESFILE = $(OJT)\afs_setup_utils_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -60,3 +60,6 @@ clean ::
 $(RESFILE) : $(RCFILE) AFS_component_version_number.h
 	$(RC) /fo$(RESFILE) /c$(LANGCP) $(RCFILE)
 
+
+mkdir:
+	

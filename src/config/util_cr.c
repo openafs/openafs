@@ -6,8 +6,10 @@
 	This software has been released under the terms of the IBM Public
 	License.  For details, see the LICENSE file in the top-level source
 	directory or online at http://www.openafs.org/dl/license10.html
+
 */
 
+#undef _CRTDBG_MAP_ALLOC
 #include "stdio.h"
 #include "io.h"
 #include <assert.h>
@@ -16,6 +18,12 @@
 #include "windows.h"
 #include "malloc.h"
 #include "time.h"
+#include "stdlib.h"
+#include "windows.h"
+
+#ifndef  intptr_t
+#define intptr_t long
+#endif
 
 void usuage()
 {
@@ -29,10 +37,74 @@ void usuage()
 	OR util_cr * \"-[register key value]\" ; aremove register key value\n\
 	OR util_cr @ file.ini \"[SectionKey]variable=value\" ; update ini-ipr-pwf file\n\
 	OR util_cr @ file.ini \"[SectionKey]variable=value*DatE*\" ; update ini-ipr-pwf file, insert date\n\
-	OR util_cr ~  ;force error\n");
+	OR util_cr ~  ;force error\n\
+	OR util_cr _del  [/q=quiet /s=recurese] [*. *. *.] ;delete \n\
+	OR util_cr _cpy [/q=quiet ] [*. *. *.] destinationFolder;\n\
+	OR util_cr _isOS [nt xp 98 9x w2] ;test for OS, return 1 if match else 0\n\
+	OR util_cr _dir !build type!source!object! set current directory in file->home base is used for offset\n\
+	OR unil_cr _ver return compiler version\n" );
 	exit(0xc000);
 }
 
+struct TRANSLATION {
+		WORD langID;         // language ID
+		WORD charset;        // character set (code page)
+};
+
+int CheckVersion(int argc,char *argv[])
+{
+	OSVERSIONINFO VersionInfo;
+	int i;
+	memset(&VersionInfo,0,sizeof(VersionInfo));
+	VersionInfo.dwOSVersionInfoSize =sizeof(OSVERSIONINFO);
+	if (!GetVersionEx(&VersionInfo))
+	{
+		return 0XC000;
+	}
+	for (i=2;i<argc;i++)
+	{
+		if (stricmp(argv[i],"nt")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==4)
+				&& (VersionInfo.dwMinorVersion==0))
+				return 1;
+		}
+		if (stricmp(argv[i],"xp")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==5)
+				&& (VersionInfo.dwMinorVersion==1))
+				return 1;
+		}
+		if (stricmp(argv[i],"w2")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_NT) 
+				&& (VersionInfo.dwMajorVersion==5)
+				&& (VersionInfo.dwMinorVersion==0))
+				return 1;
+		}
+		if (stricmp(argv[i],"98")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS) && (VersionInfo.dwMinorVersion==10))
+				return 1;
+		}
+		if (stricmp(argv[i],"95")==0)
+		{
+			if ((VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS) && (VersionInfo.dwMinorVersion==0))
+
+				return 1;
+		}
+		if (stricmp(argv[i],"9x")==0)
+		{
+			if (VersionInfo.dwPlatformId==VER_PLATFORM_WIN32_WINDOWS)
+				return 1;
+		}
+		if (stricmp(argv[i],"_")==0)
+			return 0;
+	}
+	return 0;
+}
 
 void Addkey (const char *hkey,const char *subkey,const char *stag,const char *sval)
 {
@@ -96,17 +168,228 @@ void Subkey(const char *hkey,const char *subkey)
 	}
 }
 
+void doremove(BOOL bRecurse,BOOL bQuiet,char* argv)
+{
+	char *pParm;
+	char parm[MAX_PATH+1];
+	char basdir[MAX_PATH+1];
+	strcpy(parm,argv);
+	pParm=parm;
+	GetCurrentDirectory(sizeof(basdir),basdir);
+	if (strrchr(parm,'\\')!=NULL)
+	{/*jump to base directory*/
+		pParm=strrchr(parm,'\\');
+		*pParm=0;
+		if (!SetCurrentDirectory(parm))
+			return;
+		pParm++;
+	}
+	if (!bRecurse)
+	{
+		struct _finddata_t fileinfo;
+		intptr_t hfile;
+		BOOL bmore;
+		char basdir[MAX_PATH+1];
+		GetCurrentDirectory(sizeof(basdir),basdir);
+		hfile=_findfirst(pParm,&fileinfo);
+		bmore=(hfile!=-1);
+		while (bmore)
+		{
+			if ((DeleteFile(fileinfo.name)==1) && (!bQuiet))
+				printf("Remove %s\\%s\n",basdir,fileinfo.name);
+			bmore=(_findnext(hfile,&fileinfo)==0);
+		}
+		_findclose(hfile);
+	} else {
+	/*RECURSIVE LOOP - SCAN directories*/
+		struct _finddata_t fileinfo;
+		intptr_t hfile;
+		BOOL bmore;
+		doremove(FALSE,bQuiet,pParm);
+		hfile=_findfirst("*.*",&fileinfo);
+		bmore=(hfile!=-1);
+		while (bmore)
+		{
+			if (fileinfo.attrib & _A_SUBDIR)
+			{
+				if ((strcmp(fileinfo.name,".")!=0) && (strcmp(fileinfo.name,"..")!=0))
+				{
+					if (SetCurrentDirectory(fileinfo.name))
+						doremove(TRUE,bQuiet,pParm);
+					SetCurrentDirectory(basdir);
+				}
+			}
+			bmore=(_findnext(hfile,&fileinfo)==0);
+		}
+		_findclose(hfile);
+	}
+	SetCurrentDirectory(basdir);
+}
+
+void gencurdir(char *val)
+{
+	char bld[MAX_PATH+1],parm[MAX_PATH+1],src[MAX_PATH+1],obj[MAX_PATH+1],dir[MAX_PATH+1],curdir[MAX_PATH+1];
+	char *p,*po;
+	FILE *f;
+	BOOL isObjAbs,isSrcAbs;	/* two flags to determine if either string is not relative*/
+	strcpy(bld,val+1);	/*it better be checked or free*/
+	strcpy(src,strchr(bld,'!')+1);
+	strcpy(obj,strchr(src,'!')+1);
+	*strchr(bld,'!')=0;
+	*strchr(obj,'!')=0;
+	*strchr(src,'!')=0;
+	isObjAbs=((*obj=='\\')||(strstr(obj,":")));
+	isSrcAbs=((*src=='\\')||(strstr(src,":")));
+	GetCurrentDirectory(MAX_PATH,dir);
+	strlwr(bld);
+	strlwr(dir);
+	strlwr(src);
+	strlwr(obj);
+	strcpy(curdir,dir);
+	strcat(curdir,"\\ \n");
+	if (GetTempPath(MAX_PATH,parm)==0)
+		exit(0xc000);
+	strcat(parm,"home");
+	if ((f=fopen(parm,"w"))==NULL)
+		exit(0xc000);
+	__try {
+	__try {
+		if (obj[strlen(obj)-1]!='\\')
+			strcat(obj,"\\");
+		if (src[strlen(src)-1]!='\\')
+			strcat(src,"\\");
+		do {/* try to match src or obj*/
+			if ((p=strstr(dir,src)) && isSrcAbs)
+			{
+				po=p;
+				p+=strlen(src);
+			} else if ((p=strstr(dir,src)) && !isSrcAbs && *(p-1)=='\\')
+			{
+				po=p;
+				p+=strlen(src);
+			} else if ( (p=strstr(dir,obj)) && isObjAbs)
+			{
+				po=p;
+				p+=strlen(obj);
+			} else if ((p=strstr(dir,obj)) && !isObjAbs && *(p-1)=='\\')
+			{
+				po=p;
+				p+=strlen(obj);
+			}
+		} while (strstr(p,src)||strstr(p,obj));
+		if (isObjAbs) {
+			sprintf(parm,"OJT=%s%s\\%s \n",obj,bld,p);
+		} else {
+			*po=0;
+			sprintf(parm,"OJT=%s%s%s\\%s \n",dir,obj,bld,p);
+		}
+		if (strcmp(curdir,parm+4)==0)	/* current directory is object*/
+			strcpy(parm,"OJT= \n");
+		fwrite(parm,strlen(parm),1,f);
+		if (isSrcAbs) {
+			sprintf(parm,"SRT=%s%s\\ \n",src,p);
+		} else {
+			*(p-strlen(src))=0;
+			sprintf(parm,"SRT=%s%s%s\\ \n",dir,src,p);
+		}
+		if (strcmp(curdir,parm+4)==0)	/* current directory is object*/
+			strcpy(parm,"SRT= \n");
+		fwrite(parm,strlen(parm),1,f);
+		/* now lets set the AFS_LASTCMP environment variable */
+		sprintf(parm,"AFS_LASTCMP=%s\\%s",src,p);
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER ){
+		exit(0xc000);
+	}
+	}
+	__finally {
+		fclose(f);
+	}   
+}
+
+int isequal(char *msg1,char *msg2,char *disp)
+{
+	int x;
+	strlwr(msg1);
+	strlwr(msg2);
+	if (strcmp(msg1,msg2)!=0)
+		return 0;
+	printf("ERROR -- %s \n",disp);
+	exit(0xc000);
+}
+
+int SetSysEnv(int argc,char * argv[])
+{
+	long ret;
+	DWORD dwResult;
+	printf("assignment %s %s\n",argv[2],argv[3]);
+	Addkey("HKEY_LOCAL_MACHINE","System\\CurrentControlSet\\Control\\Session Manager\\Environment"
+		,argv[2]
+		,argv[3]
+		);
+	SendMessageTimeout(HWND_BROADCAST,WM_SETTINGCHANGE,0,(DWORD)"Environment",SMTO_NORMAL,1,&dwResult);
+	return 0;
+}
+
 int main(int argc, char* argv[])
 {
+/*	typedef char * CHARP;*/
 	char fname[128];
 	FILE *file;
 	int l,i;
 	char **pvar,*ch;
 	long len;
-	typedef char * CHARP;
+	BOOL bRecurse=FALSE;
+	BOOL bQuiet=FALSE;
+	if (argc<2)
+ 		usuage();
+	if (strcmp(argv[1],"_sysvar")==0)
+	{
+		if (argc<4)
+			usuage();
+		return (SetSysEnv(argc,argv));
 
-	if (argc<3)
+	}
+	if (strnicmp(argv[1],"_dir",4)==0){ /*get current directory routine*/
+		gencurdir(argv[1]);
+		return 0;
+	}
+	if (strnicmp(argv[1],"_isequal",4)==0){ /*get current directory routine*/
+		return isequal(argv[2],argv[3],argv[4]);
+	}
+	if (stricmp(argv[1],"_del")==0) /*DELETE routine*/
+ 	{
+		int iargc=2;
+		if ((argc>iargc) && (stricmp(argv[iargc],"/s")==0))
+		{
+			iargc++;
+			bRecurse=TRUE;
+		}
+		if ((argc>iargc) && (stricmp(argv[iargc],"/q")==0))
+		{
+			iargc++;
+			bQuiet=TRUE;
+		}
+		if ((argc>iargc) && (stricmp(argv[iargc],"/s")==0))
+		{
+			iargc++;
+			bRecurse=TRUE;
+		}
+		while (iargc<argc)
+		{
+			doremove(bRecurse,bQuiet,argv[iargc]);
+			iargc++;
+		}
+		return 0;
+	}
+	if (strcmp(argv[1],"_ver")==0)
+ 	{
+		return _MSC_VER;
+	}
+	 if (argc<3)
 		usuage();
+	if (strcmp(argv[1],"_isOS")==0)
+		return CheckVersion(argc,argv);
  	if (strcmp(argv[1],"}")==0)
  	{
  		char v1[4],v2[4],v3[4],v4[4];
@@ -427,7 +710,7 @@ int main(int argc, char* argv[])
 		ch++;
 	}
 	fclose(file);
-	pvar=(CHARP *)malloc(argc*sizeof(CHARP));
+	pvar=(char **)malloc(argc*sizeof(char *));
 	for (i=1;i<argc-1;i++)
 		pvar[i]=argv[i+1];
 	pvar[argc-1]=NULL;

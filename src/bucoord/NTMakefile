@@ -19,13 +19,13 @@ INCFILES = bc.h
 LIBFILE = $(DESTDIR)\lib\afs\afsbxdb.lib
 
 LIBOBJS =\
-	dsstub.obj \
-	ubik_db_if.obj \
-	status.obj \
-	dlq.obj \
-	bucoord_errs.obj \
-	volstub.obj \
-	AFS_component_version_number.obj
+	$(OJT)\dsstub.obj \
+	$(OJT)\ubik_db_if.obj \
+	$(OJT)\status.obj \
+	$(OJT)\dlq.obj \
+	$(OJT)\bucoord_errs.obj \
+	$(OJT)\volstub.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -37,25 +37,25 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
 EXEOBJS =\
-	main.obj \
-	config.obj \
-	dsstub.obj \
-	volstub.obj \
-	commands.obj \
-	regex.obj \
-	server.obj \
-	dsvs.obj \
-	dump.obj \
-	restore.obj \
-	ubik_db_if.obj \
-	dump_sched.obj \
-	vol_sets.obj \
-	tape_hosts.obj \
-	bucoord_errs.obj \
-	bc_status.obj \
-	status.obj \
-	dlq.obj \
-	backup.res
+	$(OJT)\main.obj \
+	$(OJT)\config.obj \
+	$(OJT)\dsstub.obj \
+	$(OJT)\volstub.obj \
+	$(OJT)\commands.obj \
+	$(OJT)\regex.obj \
+	$(OJT)\server.obj \
+	$(OJT)\dsvs.obj \
+	$(OJT)\dump.obj \
+	$(OJT)\restore.obj \
+	$(OJT)\ubik_db_if.obj \
+	$(OJT)\dump_sched.obj \
+	$(OJT)\vol_sets.obj \
+	$(OJT)\tape_hosts.obj \
+	$(OJT)\bucoord_errs.obj \
+	$(OJT)\bc_status.obj \
+	$(OJT)\status.obj \
+	$(OJT)\dlq.obj \
+	$(OJT)\backup.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbudb.lib \
@@ -98,8 +98,7 @@ bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-backup.res: backup.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\backup.res: AFS_component_version_number.h
 
 ############################################################################
 # Install 
@@ -113,3 +112,6 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 clean::
 	$(DEL) bc.h bucoord_errs.c
 
+
+mkdir:
+	

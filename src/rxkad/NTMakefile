@@ -12,18 +12,23 @@
 INCFILEDIR = $(DESTDIR)\include\rx  # header file install directory
 
 INCFILES =\
+	$(INCFILEDIR)\rxkad_prototypes.h \
+	$(INCFILEDIR)\fcrypt.h \
+	$(INCFILEDIR)\asn1_err.h \
 	$(INCFILEDIR)\rxkad.h
 
 # build afsrxkad.lib
 LIBOBJS =\
-	rxkad_client.obj \
-	rxkad_server.obj \
-	rxkad_common.obj \
-	ticket.obj \
-	rxkad_errs.obj \
-	AFS_component_version_number.obj \
-	fcrypt.obj \
-	crypt_conn.obj 
+	$(OJT)\rxkad_client.obj \
+	$(OJT)\rxkad_server.obj \
+	$(OJT)\rxkad_common.obj \
+	$(OJT)\ticket.obj \
+	$(OJT)\rxkad_errs.obj \
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\fcrypt.obj \
+	$(OJT)\ticket5.obj \
+	$(OJT)\crc.obj \
+	$(OJT)\crypt_conn.obj 
 
 # afsrxkad.lib
 LIBFILE = $(DESTDIR)\lib\afsrxkad.lib
@@ -33,36 +38,28 @@ $(LIBFILE): $(LIBOBJS)
 
 # generate rxkad.h and rxkad_errs.c from rxkad_errs.et
 
-$(INCFILES) rxkad_errs.c : rxkad_errs.et rxkad.p.h
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
+
+rxkad.h rxkad_errs.c : rxkad_errs.et rxkad.p.h
 	$(DEL) rxkad_errs.c 
 	$(COMPILE_ET) rxkad_errs -h rxkad
-	$(COPY) rxkad.h $(INCFILES)
 
 # These sources are kept in a separate directory so that we can use an
 # ACL to comply with source export restrictions.
 
 DOMESTIC = crypt_conn.c fcrypt.c fcrypt.h sboxes.h
 
-crypt_conn.c : domestic\crypt_conn.c
-	$(DEL) crypt_conn.c
-	$(COPY) domestic\crypt_conn.c crypt_conn.c
-
-fcrypt.c : domestic\fcrypt.c
-	$(DEL) fcrypt.c
-	$(COPY) domestic\fcrypt.c fcrypt.c
-
-fcrypt.h : domestic\fcrypt.h
-	$(DEL) fcrypt.h
-	$(COPY) domestic\fcrypt.h fcrypt.h
-
-sboxes.h : domestic\sboxes.h
-	$(DEL) sboxes.h
-	$(COPY) domestic\sboxes.h sboxes.h
+$(DOMESTIC):domestic\$$@
+	$(COPY)  $** .
 
 install: $(DOMESTIC) $(INCFILES) $(LIBFILE)
 
 install9x: install
 
 clean::
-	$(DEL) $(RXKAD_INCFILE) rxkad_errs.c 
+	$(DEL) $(RXKAD_INCFILE) rxkad_errs.c $(INCFILES)
+	$(DEL) $(LIBFILE)
 
+mkdir:
+	

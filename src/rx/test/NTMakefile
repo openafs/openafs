@@ -18,15 +18,18 @@ LIBS = \
 	$(DESTDIR)\lib\afsrx.lib
 
 
-RXTESTOBJS = testclient.obj testserver.obj
+RXTESTOBJS = $(OJT)\testclient.obj $(OJT)\testserver.obj
 
 
-test tests: testclient.exe testserver.exe tableGen.exe generator.exe
+tests: $(OJT)\testclient.exe $(OJT)\testserver.exe $(OJT)\tableGen.exe $(OJT)\generator.exe
 
-testclient.exe: testclient.obj $(LIBS)
+testclient.exe: $(OJT)\testclient.obj $(LIBS)
 	$(EXECONLINK)
 
-testserver.exe: testserver.obj $(LIBS)
+testserver.exe: $(OJT)\testserver.obj $(LIBS)
 	$(EXECONLINK)
 
 $(RXTESTOBJS): ..\rx_clock.h ..\rx_queue.h ..\rx_event.h ..\rx.h
+
+mkdir:
+	

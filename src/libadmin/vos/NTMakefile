@@ -10,36 +10,41 @@ AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
-VLSERVER = ..\..\vlserver\
+VLSERVER = ..\..\vlserver
 
-VOLSER = ..\..\volser\
+VOLSER = ..\..\volser
 
-FSINT = ..\..\fsint\
+FSINT = ..\..\fsint
+
+RX = ..\..\rx
 
 ADMINOBJS = \
-	afs_vosAdmin.obj \
-	vosutils.obj \
-	vsprocs.obj \
-	lockprocs.obj
+	$(OJT)\afs_vosAdmin.obj \
+	$(OJT)\vosutils.obj \
+	$(OJT)\vsprocs.obj \
+	$(OJT)\lockprocs.obj
 
 VLSERVEROBJS = \
-	vldbint.cs.obj \
-	vldbint.xdr.obj
+	$(OJT)\vldbint.cs.obj \
+	$(OJT)\vldbint.xdr.obj
 
 VOLSEROBJS = \
-	volint.cs.obj \
-	volint.xdr.obj
+	$(OJT)\volint.cs.obj \
+	$(OJT)\volint.xdr.obj
 
 FSINTOBJS =\
-	afsint.xdr.obj \
-	afscbint.xdr.obj
+	$(OJT)\afsint.xdr.obj \
+	$(OJT)\afscbint.xdr.obj
+
+RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
 	$(VLSERVEROBJS) \
 	$(VOLSEROBJS) \
 	$(FSINTOBJS) \
-	afsvosadmin.res
+	$(RXOBJS) \
+	$(OJT)\afsvosadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_vosAdmin.h
@@ -66,24 +71,20 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 
 install: $(DLLFILE) $(LIBINCLUDES)
 
-vldbint.cs.obj: $(VLSERVER)\vldbint.cs.c
-	$(C2OBJ) $(VLSERVER)\vldbint.cs.c
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
-vldbint.xdr.obj: $(VLSERVER)\vldbint.xdr.c
-	$(C2OBJ) $(VLSERVER)\vldbint.xdr.c
+$(VLSERVEROBJS):$(VLSERVER)\$$(@B).c
+	$(C2OBJ) $**
 
-volint.cs.obj: $(VOLSER)\volint.cs.c
-	$(C2OBJ) $(VOLSER)\volint.cs.c
+$(VOLSEROBJS):$(VOLSER)\$$(@B).c
+	$(C2OBJ) $**
 
-volint.xdr.obj: $(VOLSER)\volint.xdr.c
-	$(C2OBJ) $(VOLSER)\volint.xdr.c
-
-afsint.xdr.obj: $(FSINT)\afsint.xdr.c
-	$(C2OBJ) $(FSINT)\afsint.xdr.c
-
-afscbint.xdr.obj: $(FSINT)\afscbint.xdr.c
-	$(C2OBJ) $(FSINT)\afscbint.xdr.c
+$(FSINTOBJS):$(FSINT)\$$(@B).c
+	$(C2OBJ) $**
 
 # Definitions for generating versioninfo resources
-afsvosadmin.res: afsvosadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\afsvosadmin.res: AFS_component_version_number.h
+
+mkdir:
+	

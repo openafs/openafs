@@ -19,10 +19,10 @@ INCFILES =\
 # Library component lists.
 
 LIBOBJS = \
-	rxstat.cs.obj \
-	rxstat.ss.obj \
-	rxstat.xdr.obj \
-	rxstat.obj
+	$(OJT)\rxstat.cs.obj \
+	$(OJT)\rxstat.ss.obj \
+	$(OJT)\rxstat.xdr.obj \
+	$(OJT)\rxstat.obj
 
 LIBFILE = $(DESTDIR)\lib\afsrxstat.lib
 
@@ -38,4 +38,8 @@ install9x: install
 
 clean::
 	$(DEL) rxstat.cs.c rxstat.h rxstat.ss.c rxstat.xdr.c
+	$(DEL) $(LIBFILE)
 
+
+mkdir:
+	

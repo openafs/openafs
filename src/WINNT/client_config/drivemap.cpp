@@ -20,6 +20,7 @@ extern "C" {
 #include <time.h>
 #include <adssts.h>
 #include <osilog.h>
+#include <winnt/osi_malloc.h>
 
 /*
  * REGISTRY ___________________________________________________________________

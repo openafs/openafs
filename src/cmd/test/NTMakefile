@@ -17,9 +17,9 @@ EXELIBS =\
 
 # build itest.exe
 ITEST_EXEOBJS =\
-	itest.obj
+	$(OJT)\itest.obj
 
-ITEST_EXEFILE = itest.exe
+ITEST_EXEFILE = $(OJT)\itest.exe
 
 $(ITEST_EXEFILE): $(ITEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -27,9 +27,9 @@ $(ITEST_EXEFILE): $(ITEST_EXEOBJS)
 
 #build ctest.exe
 CTEST_EXEOBJS =\
-	ctest.obj
+	$(OJT)\ctest.obj
 
-CTEST_EXEFILE = ctest.exe
+CTEST_EXEFILE = $(OJT)\ctest.exe
 
 $(CTEST_EXEFILE): $(CTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -37,9 +37,9 @@ $(CTEST_EXEFILE): $(CTEST_EXEOBJS)
 
 # build dtest.exe
 DTEST_EXEOBJS =\
-	dtest.obj
+	$(OJT)\dtest.obj
 
-DTEST_EXEFILE = dtest.exe
+DTEST_EXEFILE = $(OJT)\dtest.exe
 
 $(DTEST_EXEFILE): $(DTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -50,4 +50,7 @@ all: test
 test tests: $(CTEST_EXEFILE) $(ITEST_EXEFILE) $(DTEST_EXEFILE)
 
 clean::
-	$(DEL) ctest.exe dtest.exe itest.exe
+	$(DEL) $(OJT)\ctest.exe $(OJT)\dtest.exe $(OJT)\itest.exe
+
+mkdir:
+	

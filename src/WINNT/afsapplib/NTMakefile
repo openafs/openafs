@@ -43,34 +43,34 @@ INCFILES = \
 	$(INCFILEDIR)\subclass.h
 
 DLLOBJS = \
-	afsapplib_stub.res \
-	afsapplib.obj \
-	al_admsvr.obj \
-	al_browse.obj \
-	al_browseset.obj \
-	al_cover.obj \
-	al_creds.obj \
-	al_dynlink.obj \
-	al_error.obj \
-	al_help.obj \
-	al_misc.obj \
-	al_progress.obj \
-	al_pump.obj \
-	al_task.obj \
-	al_wizard.obj \
-	checklist.obj \
-	ctl_date.obj \
-	ctl_elapsed.obj \
-	ctl_sockaddr.obj \
-	ctl_spinner.obj \
-	ctl_time.obj \
-	dialog.obj \
-	fastlist.obj \
-	hashlist.obj \
-	regexp.obj \
-	resize.obj \
-	settings.obj \
-	subclass.obj
+	$(OJT)\afsapplib_stub.res \
+	$(OJT)\afsapplib.obj \
+	$(OJT)\al_admsvr.obj \
+	$(OJT)\al_browse.obj \
+	$(OJT)\al_browseset.obj \
+	$(OJT)\al_cover.obj \
+	$(OJT)\al_creds.obj \
+	$(OJT)\al_dynlink.obj \
+	$(OJT)\al_error.obj \
+	$(OJT)\al_help.obj \
+	$(OJT)\al_misc.obj \
+	$(OJT)\al_progress.obj \
+	$(OJT)\al_pump.obj \
+	$(OJT)\al_task.obj \
+	$(OJT)\al_wizard.obj \
+	$(OJT)\checklist.obj \
+	$(OJT)\ctl_date.obj \
+	$(OJT)\ctl_elapsed.obj \
+	$(OJT)\ctl_sockaddr.obj \
+	$(OJT)\ctl_spinner.obj \
+	$(OJT)\ctl_time.obj \
+	$(OJT)\dialog.obj \
+	$(OJT)\fastlist.obj \
+	$(OJT)\hashlist.obj \
+	$(OJT)\regexp.obj \
+	$(OJT)\resize.obj \
+	$(OJT)\settings.obj \
+	$(OJT)\subclass.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -132,5 +132,11 @@ clean::
 # Dependencies
 #
 
-AfsAppLib_stub.res : AfsAppLib_stub.rc AFS_component_version_number.h
+$(OJT)\AfsAppLib_stub.res : AFS_component_version_number.h
+
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
 

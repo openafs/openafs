@@ -8,11 +8,16 @@
  */
 
 #define _POSIX_PTHREAD_SEMANTICS
+#include <afs\param.h>
 #include <assert.h>
 #include <stdio.h>
+#ifndef  AFS_NT40_ENV
 #include <signal.h>
-#include <pthread.h>
 #include <unistd.h>
+#else
+#include <afs\procmgmt.h>
+#endif
+#include <pthread.h>
 
 static pthread_t softsig_tid;
 static struct {

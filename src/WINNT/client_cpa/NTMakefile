@@ -15,12 +15,13 @@
 DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_cpa.cpl
 
 DLLOBJS =\
-	afs_cpa_stub.res \
-	cpl_interface.obj \
-	AFS_component_version_number.obj
+	$(OJT)\cpl_interface.obj \
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\afs_cpa_stub.res
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afs\TaLocale.lib \
+	$(DESTDIR)\lib\libosi.lib \
 	comctl32.lib
 
 DEFFILE = afs_cpa.def
@@ -61,7 +62,7 @@ clean::
 ############################################################################
 # Dependencies
 
-afs_cpa_stub.res : afs_cpa_stub.rc AFS_component_version_number.h
+$(OJT)\afs_cpa_stub.res : AFS_component_version_number.h
 
 en_US:
 	$(CD) lang
@@ -103,3 +104,8 @@ de_DE:
 	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
     $(CD) ..
 
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

@@ -15,16 +15,16 @@
 EXEFILE = $(DESTDIR)\etc\butc.exe
 
 EXEOBJS =\
-	dbentries.obj \
-	tcprocs.obj \
-	lwps.obj \
-	list.obj \
-	recoverDb.obj \
-	tcudbprocs.obj \
-	dump.obj \
-	tcstatus.obj \
-	tcmain.obj \
-	butc.res
+	$(OJT)\dbentries.obj \
+	$(OJT)\tcprocs.obj \
+	$(OJT)\lwps.obj \
+	$(OJT)\list.obj \
+	$(OJT)\recoverDb.obj \
+	$(OJT)\tcudbprocs.obj \
+	$(OJT)\dump.obj \
+	$(OJT)\tcstatus.obj \
+	$(OJT)\tcmain.obj  \
+	$(OJT)\butc.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbudb.lib \
@@ -59,8 +59,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-butc.res: butc.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\butc.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -76,5 +75,8 @@ clean::
 
 ############################################################################
 # Auxiliary build targets not built by default; e.g. test programs
-butc_test.exe: test.obj
+$(OJT)\butc_test.exe: $(OJT)\test.obj
 	$(EXECONLINK)
+
+mkdir:
+	

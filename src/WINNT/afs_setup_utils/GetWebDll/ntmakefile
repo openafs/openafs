@@ -1,31 +1,30 @@
 # Microsoft Developer Studio Generated NMAKE File, Based on GetWebDll.dsp
+
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
 !IF "$(OS)" == "Windows_NT"
 NULL=
 !ELSE 
 NULL=nul
 !ENDIF 
 
-OUTDIR=.
-INTDIR=.
+OUTDIR=$(OJT)
+INTDIR=$(OJT)
 # Begin Custom Macros
 OutDir=.
 # End Custom Macros
 
-INSTALL : "$(OUTDIR)\GetWebDll.dll"
+INSTALL : "$(DESTDIR)\WinInstall\Config\GetWebDll.dll"
 
 
-CLEAN :
-	-@erase "$(INTDIR)\GetWebDll.pch"
+CLEAN ::
 	-@erase "$(INTDIR)\*.obj"
-	-@erase "$(INTDIR)\vc60.idb"
 	-@erase "$(OUTDIR)\GetWebDll.dll"
 	-@erase "$(OUTDIR)\GetWebDll.exp"
 	-@erase "$(OUTDIR)\GetWebDll.lib"
 	-@erase "$(OUTDIR)\GetWebDll.sbl"
 	-@erase "$(OUTDIR)\GetWebDll.pjt"
-
-"$(OUTDIR)" :
-    if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
 CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_WINDLL" /D "_MBCS" /D "_USRDLL" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c
@@ -69,14 +68,14 @@ BSC32_FLAGS=/nologo /o"$(OUTDIR)\GetWebDll.bsc"
 BSC32_SBRS= \
 
 LINK32=link.exe
-LINK32_FLAGS=/nologo /subsystem:windows /dll /incremental:no /pdb:"$(OUTDIR)\GetWebDll.pdb" /machine:I386 /def:".\GetWebDll.def" /out:"$(OUTDIR)\GetWebDll.dll" /implib:"$(OUTDIR)\GetWebDll.lib" 
+LINK32_FLAGS=/nologo /subsystem:windows /dll /incremental:no /pdb:"$(OUTDIR)\GetWebDll.pdb" /machine:I386 /def:".\GetWebDll.def" /out:"$(DESTDIR)\WinInstall\Config\GetWebDll.dll" /implib:"$(DESTDIR)\WinInstall\Config\GetWebDll.lib" 
 DEF_FILE= \
 	".\GetWebDll.def"
 LINK32_OBJS= \
 	"$(INTDIR)\GetWebDll.obj" \
 	"$(INTDIR)\GetWebDll.res"
 
-"$(OUTDIR)\GetWebDll.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
+"$(DESTDIR)\WinInstall\Config\GetWebDll.dll" : $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
@@ -93,11 +92,11 @@ LINK32_OBJS= \
 
 SOURCE=.\GetWebDll.cpp
 
-"$(INTDIR)\GetWebDll.obj" : $(SOURCE) "$(INTDIR)"
+"$(INTDIR)\GetWebDll.obj" : $(SOURCE)
 
 
 SOURCE=.\GetWebDll.rc
 
-"$(INTDIR)\GetWebDll.res" : $(SOURCE) "$(INTDIR)"
+"$(INTDIR)\GetWebDll.res" : $(SOURCE)
 	$(RSC) $(RSC_PROJ) $(SOURCE)
 

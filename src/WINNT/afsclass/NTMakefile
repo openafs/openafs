@@ -16,20 +16,20 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 ############################################################################
 
 LIBOBJS = \
-	c_debug.obj  \
-	c_ident.obj  \
-	c_identlist.obj  \
-	c_cell.obj   \
-	c_svr.obj    \
-	c_svc.obj    \
-	c_agg.obj    \
-	c_set.obj    \
-	c_usr.obj    \
-	c_grp.obj    \
-	c_notify.obj \
-	afsclassfn.obj \
-	internal.obj \
-	worker.obj
+	$(OJT)\c_debug.obj  \
+	$(OJT)\c_ident.obj  \
+	$(OJT)\c_identlist.obj  \
+	$(OJT)\c_cell.obj   \
+	$(OJT)\c_svr.obj    \
+	$(OJT)\c_svc.obj    \
+	$(OJT)\c_agg.obj    \
+	$(OJT)\c_set.obj    \
+	$(OJT)\c_usr.obj    \
+	$(OJT)\c_grp.obj    \
+	$(OJT)\c_notify.obj \
+	$(OJT)\afsclassfn.obj \
+	$(OJT)\internal.obj \
+	$(OJT)\worker.obj
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\winnt\afsclass.h \
@@ -63,3 +63,6 @@ $(LIBFILE): $(LIBOBJS)
 
 clean::
 
+
+mkdir:
+	

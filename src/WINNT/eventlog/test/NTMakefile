@@ -9,6 +9,9 @@
 
 test tests: elogtest.exe
 
-elogtest.exe: elogtest.obj \
+$(OJT)\elogtest.exe: $(OJT)\elogtest.obj \
 	$(DESTDIR)\lib\afs\afseventlog.lib $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
+
+mkdir:
+	

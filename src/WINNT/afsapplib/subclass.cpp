@@ -14,6 +14,7 @@ extern "C" {
 
 #include <windows.h>
 #include <WINNT/subclass.h>
+#include <winnt/osi_malloc.h>
 
 
 /*

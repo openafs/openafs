@@ -21,8 +21,8 @@ LIBINCLUDES = \
 PTHR_DLLFILE = $(DESTDIR)\lib\afspthread.dll
 
 PTHR_DLLOBJS = \
-	pthread.obj \
-	pthread.res
+	$(OJT)\pthread.obj \
+	$(OJT)\pthread.res
 
 $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
@@ -34,25 +34,25 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
 PTHR95_DLLFILE = $(DESTDIR)\lib\win95\afspthread.dll
 
 PTHR95_DLLOBJS = \
-	pthread_95.obj \
-	pthread95.res
+   $(OJT)\pthread_95.obj \
+	$(OJT)\pthread95.res
 
 $(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
 	$(DLLCONLINK) /DEF:pthread.def
 	$(DLLPREP)
 
-pthread_95.obj: pthread.c
-	$(C2OBJ) pthread.c -DAFS_WIN95_ENV /Fopthread_95.obj
+$(OJT)\pthread_95.obj: pthread.c
+	$(C2OBJ) $** -DAFS_WIN95_ENV 
 
 install: $(PTHR95_DLLFILE) $(PTHR_DLLFILE) $(LIBINCLUDES)
 
 install9x: install
 
-pthread.res: pthread.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
-pthread95.res: pthread95.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\pthread95.res: pthread95.rc AFS_component_version_number.h
+	$(RC) /fo$*.res $(*F).rc 
 
 clean::
 	$(DEL) /q $(DESTDIR)\lib\win95\*.*
+
+mkdir:
+	

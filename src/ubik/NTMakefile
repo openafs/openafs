@@ -26,24 +26,24 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afsubik.lib
 
 LIBOBJS =\
-	disk.obj \
-	remote.obj \
-	beacon.obj \
-	recovery.obj \
-	ubik.obj \
-	vote.obj \
-	lock.obj \
-	phys.obj \
-	ubik_int.cs.obj \
-	ubik_int.ss.obj \
-	ubik_int.xdr.obj \
-	ubikcmd.obj \
-	ubikclient.obj \
-	uerrors.obj	\
-	AFS_component_version_number.obj
+	$(OJT)\disk.obj \
+	$(OJT)\remote.obj \
+	$(OJT)\beacon.obj \
+	$(OJT)\recovery.obj \
+	$(OJT)\ubik.obj \
+	$(OJT)\vote.obj \
+	$(OJT)\lock.obj \
+	$(OJT)\phys.obj \
+	$(OJT)\ubik_int.cs.obj \
+	$(OJT)\ubik_int.ss.obj \
+	$(OJT)\ubik_int.xdr.obj \
+	$(OJT)\ubikcmd.obj \
+	$(OJT)\ubikclient.obj \
+	$(OJT)\uerrors.obj	\
+	$(OJT)\AFS_component_version_number.obj
 
 
-$(LIBFILE): $(LIBOBJS) 
+$(LIBFILE): $(LIBOBJS)
 	$(LIBARCH) 
 
 ############################################################################
@@ -53,8 +53,8 @@ RS_UDBG_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\udebug.exe
 CL_UDBG_EXEFILE = $(DESTDIR)\bin\udebug.exe
 
 UDBG_EXEOBJS =\
-	udebug.obj \
-	udebug.res
+	$(OJT)\udebug.obj \
+	$(OJT)\udebug.res
 
 UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -76,23 +76,24 @@ $(CL_UDBG_EXEFILE): $(RS_UDBG_EXEFILE)
 ############################################################################
 # generate versioninfo resources
 
-udebug.res: udebug.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\udebug.res: AFS_component_version_number.h
+#	$(RC) $*.rc
 
 ############################################################################
 # rxgen on ubik_int.xg
 
-ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c $(INCFILEDIR)\ubik_int.h: ubik_int.xg
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
+
+ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c ubik_int.h: ubik_int.xg
 	$(RXGEN) -x $**
-	$(COPY) ubik_int.h $(INCFILEDIR)\ubik_int.h
 
 ############################################################################
 # compile_et on uerrors.et
 
-uerrors.c $(INCFILEDIR)\ubik.h: uerrors.et ubik.p.h
+uerrors.c ubik.h: uerrors.et ubik.p.h
 	$(DEL)  ubik.h uerrors.c
 	$(COMPILE_ET) uerrors -h ubik
-	$(COPY) ubik.h $(INCFILEDIR)\ubik.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -104,7 +105,7 @@ install: $(INCFILES) $(LIBFILE)  $(CL_UDBG_EXEFILE)
 
 clean::
 	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 
-	$(DEL) $(INCFILEDIR)\ubik_int.h	uerrors.c $(INCFILEDIR)\ubik.h
+	$(DEL) uerrors.c $(INCFILES)
 	$(DEL) ubik_int.h ubik.h
 
 ############################################################################
@@ -112,14 +113,17 @@ clean::
 
 test tests: utst_server utst_client $(EXEFILE) 
 
-utst_server: utst_server.obj utst_int.ss.obj utst_int.xdr.obj  $(EXELIBS)
+utst_server: $(OJT)\utst_server.obj $(OJT)\utst_int.ss.obj $(OJT)\utst_int.xdr.obj  $(EXELIBS)
 	$(EXECONLINK) 
 	
-utst_client: utst_client.obj utst_int.cs.obj utst_int.xdr.obj $(EXELIBS)
+utst_client: $(OJT)\utst_client.obj $(OJT)\utst_int.cs.obj $(OJT)\utst_int.xdr.obj $(EXELIBS)
 	$(EXECONLINK) 
 	
 # rxgen on utst_int.xg
 utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg
 	$(RXGEN)  utst_int.xg
 
-utst_server.obj utst_client.obj : utst_int.h 
+$(OJT)\utst_server.obj $(OJT)\utst_client.obj : utst_int.h 
+
+mkdir:
+	

@@ -41,32 +41,37 @@ IDLFILES = \
 	iTaAfsAdmSvrTypes.h
 
 LIBOBJS = \
-	TaAfsAdmSvrClient.obj \
-	TaAfsAdmSvrClientBind.obj \
-	TaAfsAdmSvrClientCache.obj \
-	TaAfsAdmSvrClientCell.obj \
-	TaAfsAdmSvrClientGroup.obj \
-	TaAfsAdmSvrClientInternal.obj \
-	TaAfsAdmSvrClientNotify.obj \
-	TaAfsAdmSvrClientPing.obj \
-	TaAfsAdmSvrClientUser.obj \
-	TaAfsAdmSvrCommon.obj \
-	iTaAfsAdmSvr_c.obj
+	$(OJT)\TaAfsAdmSvrClient.obj \
+	$(OJT)\TaAfsAdmSvrClientBind.obj \
+	$(OJT)\TaAfsAdmSvrClientCache.obj \
+	$(OJT)\TaAfsAdmSvrClientCell.obj \
+	$(OJT)\TaAfsAdmSvrClientGroup.obj \
+	$(OJT)\TaAfsAdmSvrClientInternal.obj \
+	$(OJT)\TaAfsAdmSvrClientNotify.obj \
+	$(OJT)\TaAfsAdmSvrClientPing.obj \
+	$(OJT)\TaAfsAdmSvrClientUser.obj \
+	$(OJT)\TaAfsAdmSvrCommon.obj \
+	$(OJT)\iTaAfsAdmSvr_c.obj
+
+EXERES = $(OJT)\AfsAdmSvr.res
+
+
+$(EXERES):$$(@B).rc
+	$(RC) $**
 
 EXEOBJS = \
-	AfsAdmSvr.res \
-	TaAfsAdmSvr.obj \
-	TaAfsAdmSvrCallback.obj \
-	TaAfsAdmSvrCell.obj \
-	TaAfsAdmSvrCommon.obj \
-	TaAfsAdmSvrDebug.obj \
-	TaAfsAdmSvrGeneral.obj \
-	TaAfsAdmSvrGroup.obj \
-	TaAfsAdmSvrMain.obj \
-	TaAfsAdmSvrProperties.obj \
-	TaAfsAdmSvrSearch.obj \
-	TaAfsAdmSvrUser.obj \
-	iTaAfsAdmSvr_s.obj
+	$(OJT)\TaAfsAdmSvr.obj \
+	$(OJT)\TaAfsAdmSvrCallback.obj \
+	$(OJT)\TaAfsAdmSvrCell.obj \
+	$(OJT)\TaAfsAdmSvrCommon.obj \
+	$(OJT)\TaAfsAdmSvrDebug.obj \
+	$(OJT)\TaAfsAdmSvrGeneral.obj \
+	$(OJT)\TaAfsAdmSvrGroup.obj \
+	$(OJT)\TaAfsAdmSvrMain.obj \
+	$(OJT)\TaAfsAdmSvrProperties.obj \
+	$(OJT)\TaAfsAdmSvrSearch.obj \
+	$(OJT)\TaAfsAdmSvrUser.obj \
+	$(OJT)\iTaAfsAdmSvr_s.obj
 
 VCLIBS =\
  	gdi32.lib \
@@ -84,7 +89,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\AfsVosAdmin.lib \
 	$(DESTDIR)\lib\afs\AfsBosAdmin.lib \
 	$(DESTDIR)\lib\afs\AfsAdminUtil.lib \
-	$(DESTDIR)\lib\afs\AfsClientAdmin.lib
+	$(DESTDIR)\lib\afs\AfsClientAdmin.lib \
 
 ############################################################################
 #
@@ -106,7 +111,8 @@ MIDL_FLAGS=/ms_ext \
 .SUFFIXES: .h .idl
 
 .idl.h:
-	midl $(MIDL_FLAGS) $<
+	echo [$<]
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) $<
 
 ############################################################################
 
@@ -161,5 +167,14 @@ clean:: afsclass_clean afsapplib_clean
 # Dependencies
 #
 
-AfsAdmSvr.res : AfsAdmSvr.rc AFS_component_version_number.h
+$(OJT)\AfsAdmSvr.res : AFS_component_version_number.h
 
+mkdir:
+	-mkdir $(OJT)\..\afsapplib
+	cd ..\afsapplib
+	nmake /nologo /f ntmakefile mkdir
+	cd ..\afsadmsvr
+	-mkdir $(OJT)\..\afsclass
+	cd ..\afsclass
+	nmake /nologo /f ntmakefile mkdir
+	cd ..\afsadmsvr

@@ -69,6 +69,7 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_MAKESUBMOUNT] = cm_IoctlMakeSubmount;
 	smb_ioctlProcsp[VIOC_GETRXKCRYPT] = cm_IoctlGetRxkcrypt;
 	smb_ioctlProcsp[VIOC_SETRXKCRYPT] = cm_IoctlSetRxkcrypt;
+	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
 #ifdef DJGPP
 	smb_ioctlProcsp[VIOC_SHUTDOWN] = cm_IoctlShutdown;
 #endif

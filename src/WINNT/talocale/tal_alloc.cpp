@@ -17,6 +17,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <WINNT/tal_alloc.h>
+#include <winnt/osi_malloc.h>
 
 
 /*

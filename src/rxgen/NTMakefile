@@ -18,16 +18,15 @@ INCFILES =\
 EXEFILE = $(DESTDIR)\bin\rxgen.exe
 
 EXEOBJS =\
-	rpc_main.obj \
-	rpc_hout.obj \
-	rpc_cout.obj \
-	rpc_parse.obj \
-	rpc_scan.obj \
-	rpc_util.obj \
-	rpc_svcout.obj \
-	rpc_clntout.obj
+	$(OJT)\rpc_main.obj \
+	$(OJT)\rpc_hout.obj \
+	$(OJT)\rpc_cout.obj \
+	$(OJT)\rpc_parse.obj \
+	$(OJT)\rpc_scan.obj \
+	$(OJT)\rpc_util.obj \
+	$(OJT)\rpc_svcout.obj \
+	$(OJT)\rpc_clntout.obj
 	
-
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
 	$(EXEPREP) 
@@ -40,3 +39,6 @@ install9x: install
 
 clean::
 	$(DEL) $(EXEFILE)	
+
+mkdir:
+	

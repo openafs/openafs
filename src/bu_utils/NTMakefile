@@ -15,8 +15,8 @@
 EXEFILE = $(DESTDIR)\etc\fms.exe
 
 EXEOBJS =\
-	fms.obj \
-	fms.res
+	$(OJT)\fms.obj \
+	$(OJT)\fms.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -32,8 +32,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-fms.res: fms.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\fms.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -46,3 +45,5 @@ install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
 
 clean::
 
+mkdir:
+	

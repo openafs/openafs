@@ -27,6 +27,7 @@ INCFILES =\
 	$(INCFILEDIR)\cm_scache.h \
 	$(INCFILEDIR)\cm_server.h \
 	$(INCFILEDIR)\cm_user.h \
+	$(INCFILEDIR)\cm_dns.h \
 	$(INCFILEDIR)\cm_utils.h \
 	$(INCFILEDIR)\fs_utils.h \
 	$(INCFILEDIR)\krb.h \
@@ -39,46 +40,63 @@ INCFILES =\
 	$(INCFILEDIR)\afsmsg95.h \
 	$(INCFILEDIR)\afsrpc.h \
 	$(INCFILEDIR)\cm_dns.h \
+!IFDEF OSICRASH
+	$(INCFILEDIR)\afsdcrash.h \
+!ENDIF
 	$(INCFILEDIR)\cm_dns_private.h
 
 IDLFILES =\
-	afsrpc.h afsrpc_c.obj
+	afsrpc.h $(OJT)\afsrpc_c.c
 
-CONFOBJS=cm_config.obj \
-         cm_dns.obj
+CONFOBJS=$(OJT)\cm_config.obj \
+         $(OJT)\cm_dns.obj
+
+RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+
+RX= ..\..\rx
+
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
+
+$(IDLFILES):afsrpc.idl
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config $?
+
 
 AFSDOBJS=\
-	afsd_init.obj \
-	cm_cell.obj \
-	cm_server.obj \
-	cm_volume.obj \
-	cm_conn.obj \
-	cm_user.obj \
-	cm_buf.obj \
-	cm_scache.obj \
-	cm_dcache.obj \
-	cm_access.obj \
-	cm_callback.obj \
-	cm_vnodeops.obj \
-	cm_dir.obj \
-	cm_utils.obj \
-	smb.obj \
-	smb3.obj \
-	smb_ioctl.obj \
-	cm_ioctl.obj \
-	cm_daemon.obj \
-	cm_aclent.obj \
-	cm_dnlc.obj \
-	cm_rpc.obj \
-	afsrpc_s.obj \
-     cm_freelance.obj
+	$(OJT)\afsd_init.obj \
+	$(OJT)\cm_cell.obj \
+	$(OJT)\cm_server.obj \
+	$(OJT)\cm_volume.obj \
+	$(OJT)\cm_conn.obj \
+	$(OJT)\cm_user.obj \
+	$(OJT)\cm_buf.obj \
+	$(OJT)\cm_scache.obj \
+	$(OJT)\cm_dcache.obj \
+	$(OJT)\cm_access.obj \
+	$(OJT)\cm_callback.obj \
+	$(OJT)\cm_vnodeops.obj \
+	$(OJT)\cm_dir.obj \
+	$(OJT)\cm_utils.obj \
+	$(OJT)\smb.obj \
+	$(OJT)\smb3.obj \
+	$(OJT)\smb_ioctl.obj \
+	$(OJT)\cm_ioctl.obj \
+	$(OJT)\cm_daemon.obj \
+	$(OJT)\cm_aclent.obj \
+	$(OJT)\cm_dnlc.obj \
+	$(OJT)\cm_rpc.obj \
+	$(OJT)\afsrpc_s.obj \
+!IFDEF OSICRASH
+	$(OJT)\afsdcrash.obj \
+!ENDIF
+     $(OJT)\cm_freelance.obj
 
-cm_conn.obj: cm_conn.c
+$(OJT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV $**
 
-FSOBJS=fs.obj fs_utils.obj
+FSOBJS=$(OJT)\fs.obj $(OJT)\fs_utils.obj
 
-SLOBJS=symlink.obj fs_utils.obj
+SLOBJS=$(OJT)\symlink.obj $(OJT)\fs_utils.obj
 
 ILIBDIR = $(DESTDIR)\lib
 
@@ -87,7 +105,8 @@ ILIBDIR = $(DESTDIR)\lib
 # Flags for linking LOGON DLL'S
 #
 
-LOGONLINKFLAGS = -entry:DllEntryPoint
+LOGONLINKFLAGS = -entry:DllEntryPoint /NODEFAULTLIB:msvcr70d.lib /NODEFAULTLIB:msvcrtd.lib  msvcrt.lib
+
 
 ############################################################################
 #
@@ -103,7 +122,7 @@ MIDL_FLAGS=/app_config \
 .SUFFIXES: .h .idl
 
 .idl.h:
-	midl $(MIDL_FLAGS) $<
+	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) $<
 
 ############################################################################
 # libafsconf.dll
@@ -111,7 +130,7 @@ MIDL_FLAGS=/app_config \
 CONF_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll
 
 
-$(CONF_DLLFILE): $(CONFOBJS) libafsconf.res
+$(CONF_DLLFILE): $(CONFOBJS) $(OJT)\libafsconf.res
 	$(DLLGUILINK) -def:libafsconf.def
 	$(DLLPREP)
 	$(COPY) $*.lib $(ILIBDIR)
@@ -123,8 +142,8 @@ $(CONF_DLLFILE): $(CONFOBJS) libafsconf.res
 LOGON_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslogon.dll
 
 LOGON_DLLOBJS =\
-	afslogon.obj \
-	afslogon.res
+	$(OJT)\afslogon.obj \
+	$(OJT)\afslogon.res
 
 LOGON_DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
@@ -142,8 +161,8 @@ $(LOGON_DLLFILE): $(LOGON_DLLOBJS)
 LOG95_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afslog95.dll
 
 LOG95_DLLOBJS =\
-	afslog95.obj \
-	afslog95.res
+	$(OJT)\afslog95.obj \
+	$(OJT)\afslog95.res
 
 LOG95_DLLLIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
@@ -158,9 +177,9 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: cm_dns.obj cm_config.obj
-     $(COPY) cm_dns.obj $(DESTDIR)\lib
-     $(COPY) cm_config.obj $(DESTDIR)\lib
+install_objs: $(OJT)\cm_dns.obj $(OJT)\cm_config.obj
+     $(COPY) $(OJT)\cm_dns.obj $(DESTDIR)\lib
+     $(COPY) $(OJT)\cm_config.obj $(DESTDIR)\lib
 
 install_headers: $(IDLFILES) $(INCFILES)
 
@@ -214,19 +233,18 @@ EXELIBS = \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib
 
-
 # klog.exe
-$(EXEDIR)\klog.exe: cklog.obj klog.res
+$(EXEDIR)\klog.exe: $(OJT)\cklog.obj $(OJT)\klog.res
 	$(EXECONLINK) $(EXELIBS)
 	$(EXEPREP)
 
 # tokens.exe
-$(EXEDIR)\tokens.exe: ctokens.obj tokens.res
+$(EXEDIR)\tokens.exe: $(OJT)\ctokens.obj $(OJT)\tokens.res
 	$(EXECONLINK) $(EXELIBS)
 	$(EXEPREP)
 
 # unlog.exe
-$(EXEDIR)\unlog.exe: cunlog.obj unlog.res
+$(EXEDIR)\unlog.exe: $(OJT)\cunlog.obj $(OJT)\unlog.res
 	$(EXECONLINK) $(EXELIBS)
 	$(EXEPREP)
 
@@ -244,30 +262,31 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\libosi.lib \
 	rpcrt4.lib \
 	user32.lib
 
-$(AFSD_EXEFILE): afsd.obj $(AFSDOBJS) afsd.res
+$(AFSD_EXEFILE): $(OJT)\afsd.obj $(AFSDOBJS) $(OJT)\afsd.res  $(RXOBJS)
 	$(EXEGUILINK) $(AFSD_EXELIBS)
 	$(EXEPREP)
 
 # afsd_service.exe
-$(EXEDIR)\afsd_service.exe: afsd_service.obj $(AFSDOBJS) afsd_service.res
+$(EXEDIR)\afsd_service.exe: $(OJT)\afsd_service.obj $(AFSDOBJS) $(OJT)\afsd_service.res  $(RXOBJS)
 	$(EXECONLINK) $(AFSD_EXELIBS)
 	$(EXEPREP)
 
 # fs.exe
-$(EXEDIR)\fs.exe: $(FSOBJS) fs.res
+$(EXEDIR)\fs.exe: $(FSOBJS) $(OJT)\fs.res
 	$(EXECONLINK) $(EXELIBS)
 	$(EXEPREP)
 
 # symlink.exe
-$(EXEDIR)\symlink.exe: $(SLOBJS) symlink.res
+$(EXEDIR)\symlink.exe: $(SLOBJS) $(OJT)\symlink.res
 	$(EXECONLINK) $(EXELIBS)
 	$(EXEPREP)
 
 # afsshare.exe
-$(EXEDIR)\afsshare.exe: afsshare.obj afsshare.res
+$(EXEDIR)\afsshare.exe: $(OJT)\afsshare.obj $(OJT)\afsshare.res
 	$(EXECONLINK)
 	$(EXEPREP)
 
@@ -281,10 +300,10 @@ $(EXEDIR)\afsshare.exe: afsshare.obj afsshare.res
 KAUTH = ..\..\kauth
 
 KPASSWD_OBJS =\
-	kpasswd.obj \
-	kkids.obj \
-	kautils.obj \
-	$(KAUTH)\kpasswd.res
+	$(OJT)\kpasswd.obj \
+	$(OJT)\kkids.obj \
+	$(OJT)\kautils.obj \
+	$(OJT)\$(KAUTH)\kpasswd.res
 
 KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
@@ -293,13 +312,13 @@ KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
-kpasswd.obj: $(KAUTH)/kpasswd.c
+$(OJT)\kpasswd.obj: $(KAUTH)/kpasswd.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV $**
 
-kkids.obj: $(KAUTH)/kkids.c
+$(OJT)\kkids.obj: $(KAUTH)/kkids.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV $**
 
-kautils.obj: $(KAUTH)/kautils.c
+$(OJT)\kautils.obj: $(KAUTH)/kautils.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV $**
 
 $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
@@ -311,28 +330,33 @@ $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
 ############################################################################
 # generate versioninfo resources
 
-afsshare.res: afsshare.rc AFS_component_version_number.h
+$(OJT)\afsshare.res: AFS_component_version_number.h
 
-fs.res: fs.rc AFS_component_version_number.h
+$(OJT)\fs.res: AFS_component_version_number.h
 
-symlink.res: symlink.rc AFS_component_version_number.h
+$(OJT)\symlink.res: AFS_component_version_number.h
 
-klog.res: klog.rc AFS_component_version_number.h
+$(OJT)\klog.res: AFS_component_version_number.h
 
-tokens.res: tokens.rc AFS_component_version_number.h
+$(OJT)\tokens.res: AFS_component_version_number.h
 
-unlog.res: unlog.rc AFS_component_version_number.h
+$(OJT)\unlog.res: AFS_component_version_number.h
 
-afsd_service.res: afsd_service.rc AFS_component_version_number.h
+$(OJT)\afsd_service.res: AFS_component_version_number.h
 
-afslogon.res: afslogon.rc AFS_component_version_number.h
+$(OJT)\afslogon.res: AFS_component_version_number.h
 
-afslog95.res: afslog95.rc AFS_component_version_number.h
+$(OJT)\afslog95.res: AFS_component_version_number.h
 
-libafsconf.res: libafsconf.rc AFS_component_version_number.h
+$(OJT)\libafsconf.res: AFS_component_version_number.h
 
 clean::
-	$(DEL) *.res
+	$(DEL) $(OJT)\*.res
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
-	$(DEL) $(EXELIBS)
+	$(DEL) $(CONF_DLLFILE)
+	$(DEL) $(LOGON_DLLFILE)
+	$(DEL) $(LOG95_DLLFILE)
+
+mkdir:
+	

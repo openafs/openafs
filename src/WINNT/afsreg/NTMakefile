@@ -11,15 +11,17 @@ INCFILES = \
 	$(DESTDIR)\include\WINNT\afsreg.h \
 	$(DESTDIR)\include\WINNT\syscfg.h \
 	$(DESTDIR)\include\WINNT\afssw.h \
+	$(DESTDIR)\include\WINNT\osi_malloc.h \
 	$(DESTDIR)\include\WINNT\vptab.h
+
 
 LIBFILE = $(DESTDIR)\lib\afs\afsreg.lib
 
 LIBOBJS = \
-	afsreg.obj \
-	syscfg.obj \
-	afssw.obj \
-	vptab.obj
+	$(OJT)\afsreg.obj \
+	$(OJT)\syscfg.obj \
+	$(OJT)\afssw.obj \
+	$(OJT)\vptab.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)

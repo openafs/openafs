@@ -12,7 +12,7 @@
 LIBFILE = $(DESTDIR)\lib\afs\afseventlog.lib
 
 LIBOBJS =\
-	logevent.obj
+	$(OJT)\logevent.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -78,4 +78,8 @@ clean::
 	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
     $(CD) ..
 
-
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

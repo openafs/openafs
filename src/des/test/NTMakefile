@@ -7,13 +7,16 @@
 
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 
-testit.exe: testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OJT)\testit.exe: $(OJT)\testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-verify.exe: verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OJT)\verify.exe: $(OJT)\verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-key_test.exe: key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OJT)\key_test.exe: $(OJT)\key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-tests: testit.exe verify.exe key_test.exe
+$(OJT)\tests: $(OJT)\testit.exe $(OJT)\verify.exe $(OJT)\key_test.exe
+
+mkdir:
+	

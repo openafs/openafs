@@ -23,7 +23,7 @@ RCSID("$Header$");
 #else /* UKERNEL */
 #include <afs/stds.h>
 #include <rx/rx.h>
-#include "rxstat/rxstat.h"
+#include "rxstat.h"
 #ifdef KERNEL
 #include "sys/errno.h"
 #else /* KERNEL */

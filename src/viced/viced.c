@@ -252,7 +252,7 @@ static void ResetCheckSignal(void)
 #endif
 #endif
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     softsig_signal(signo, CheckSignal_Signal);
 #else
     signal(signo, CheckSignal_Signal);
@@ -338,7 +338,7 @@ CheckAdminName()
 
 static void setThreadId(char *s)
 {
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* set our 'thread-id' so that the host hold table works */
     MUTEX_ENTER(&rx_stats_mutex);   /* protects rxi_pthread_hinum */ 
     ++rxi_pthread_hinum;
@@ -1433,7 +1433,7 @@ main(int argc, char * argv[])
     ViceLog(0, ("File server starting\n"));
 #endif
 
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     /* initialize the pthread soft signal handler thread */
     softsig_init();
 #endif
@@ -1690,7 +1690,7 @@ main(int argc, char * argv[])
     /* Install handler to catch the shutdown signal;
      * bosserver assumes SIGQUIT shutdown
      */
-#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     softsig_signal(SIGQUIT, ShutDown_Signal);
 #else
     signal(SIGQUIT, ShutDown_Signal);

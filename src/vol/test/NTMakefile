@@ -24,15 +24,18 @@ EXEC_LIBS = \
 
 ############################################################################
 # build inode lister
-ILIST = ilist.exe
+ILIST = $(OJT)\ilist.exe
 
-$(ILIST): ilist_nt.obj $(EXEC_LIBS)
+$(ILIST): $(OJT)\ilist_nt.obj $(EXEC_LIBS)
 	$(EXECONLINK)
 
 
 ############################################################################
 # build link table lister
-LTLIST = ltlist.exe
+LTLIST = $(OJT)\ltlist.exe
 
-$(LTLIST): ltlist.obj $(EXEC_LIBS)
+$(LTLIST): $(OJT)\ltlist.obj $(EXEC_LIBS)
 	$(EXECONLINK)
+
+mkdir:
+	

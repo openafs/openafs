@@ -14,8 +14,8 @@
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosctlsvc.exe
 
 EXEOBJS =\
-	bosctlsvc.obj \
-	bosctlsvc.res
+	$(OJT)\bosctlsvc.obj \
+	$(OJT)\bosctlsvc.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
@@ -30,8 +30,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-bosctlsvc.res: bosctlsvc.rc AFS_component_version_number.h
-#	$(RC) $*.rc
+$(OJT)\bosctlsvc.res: AFS_component_version_number.h
 
 
 ############################################################################
@@ -44,3 +43,5 @@ install: $(LIBFILE) $(DLLFILE) $(EXEFILE) $(INCFILES)
 # Local clean target; augments predefined clean target
 
 clean::
+
+mkdir:

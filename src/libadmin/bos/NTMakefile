@@ -11,18 +11,22 @@ AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 !include ..\..\config\NTMakefile.version
 
 
-BOZO = ..\..\bozo\
+BOZO = ..\..\bozo
+RX = ..\..\rx
+
+RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
 
 BOZOOBJS = \
-	bosint.xdr.obj bosint.cs.obj
+	$(OJT)\bosint.xdr.obj $(OJT)\bosint.cs.obj
 
 ADMINOBJS = \
-	afs_bosAdmin.obj
+	$(OJT)\afs_bosAdmin.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
 	$(BOZOOBJS) \
-	afsbosadmin.res
+	$(RXOBJS) \
+	$(OJT)\afsbosadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_bosAdmin.h
@@ -46,13 +50,15 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 
 install: $(DLLFILE) $(LIBINCLUDES)
 
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
-bosint.xdr.obj: $(BOZO)\bosint.xdr.c
-	$(C2OBJ) $(BOZO)\bosint.xdr.c
+$(BOZOOBJS): $(BOZO)\$$(@B).c
+	$(C2OBJ) $**
 
-bosint.cs.obj: $(BOZO)\bosint.cs.c
-	$(C2OBJ) $(BOZO)\bosint.cs.c
 
 # Definitions for generating versioninfo resources
-afsbosadmin.res: afsbosadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\afsbosadmin.res: AFS_component_version_number.h
+
+mkdir:
+	

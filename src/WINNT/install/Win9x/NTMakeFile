@@ -61,3 +61,6 @@ prep :
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\sock.vxd"
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\MMAP.vxd"
 	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\AFSD.EXE"
+
+mkdir:
+	

@@ -7,12 +7,12 @@
 
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 
-test tests: getifinfo.exe regman.exe dupkey.exe
+test tests: $(OJT)\getifinfo.exe $(OJT)\regman.exe $(OJT)\dupkey.exe
 
-getifinfo.exe: getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
+$(OJT)\getifinfo.exe: $(OJT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
 	$(EXECONLINK)
 
-dupkey.exe: dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
+$(OJT)\dupkey.exe: $(OJT)\dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
 
 REGMAN_EXELIBS =\
@@ -21,5 +21,8 @@ REGMAN_EXELIBS =\
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
-regman.exe: regman.obj $(REGMAN_EXELIBS)
+$(OJT)\regman.exe: $(OJT)\regman.obj $(REGMAN_EXELIBS)
 	$(EXECONLINK)
+
+mkdir:
+	

@@ -10,12 +10,17 @@
 test tests: ptest.exe tsd.exe native.exe
 
 
-ptest.exe: ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OJT)\ptest.exe: $(OJT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-tsd.exe: tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OJT)\tsd.exe: $(OJT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-native.exe: native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OJT)\native.exe: $(OJT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
+clean::
+	$(DEL) $(DESTDIR)/lib/afspthread.lib
+
+mkdir:
+	

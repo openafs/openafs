@@ -44,21 +44,21 @@ $(INCFILEDIR)\des_odd.h: odd.h
 # Library component lists.
 
 LIBOBJS = \
-	des.obj \
-	cbc_encrypt.obj \
-	pcbc_encrypt.obj \
-	cksum.obj \
-	new_rnd_key.obj \
-	key_sched.obj \
-	debug_decl.obj \
-	quad_cksum.obj \
-	key_parity.obj \
-	weak_key.obj \
-	read_pssword.obj \
-	strng_to_key.obj \
-	misc.obj \
-	util.obj \
-	crypt.obj
+	$(OJT)\des.obj \
+	$(OJT)\cbc_encrypt.obj \
+	$(OJT)\pcbc_encrypt.obj \
+	$(OJT)\cksum.obj \
+	$(OJT)\new_rnd_key.obj \
+	$(OJT)\key_sched.obj \
+	$(OJT)\debug_decl.obj \
+	$(OJT)\quad_cksum.obj \
+	$(OJT)\key_parity.obj \
+	$(OJT)\weak_key.obj \
+	$(OJT)\read_pssword.obj \
+	$(OJT)\strng_to_key.obj \
+	$(OJT)\misc.obj \
+	$(OJT)\util.obj \
+	$(OJT)\crypt.obj
 
 LIBFILE = $(DESTDIR)\lib\afsdes.lib
 
@@ -82,55 +82,55 @@ GENERATED_FILES = \
 # Make generated files.
 MAKETARG = $** $@
 
-key_perm.h: make_keyperm.exe
+key_perm.h: $(OJT)\make_keyperm.exe
 	$(MAKETARG)
 
-p_table.h: make_p_table.exe
+p_table.h: $(OJT)\make_p_table.exe
 	$(MAKETARG)
 
-s_table.h: make_s_table.exe
+s_table.h: $(OJT)\make_s_table.exe
 	$(MAKETARG)
 
-odd.h: make_odd.exe
+odd.h: $(OJT)\make_odd.exe
 	$(MAKETARG)
 
-p.c: make_p.exe
+p.c: $(OJT)\make_p.exe
 	$(MAKETARG)
 
-s.c: make_s.exe
+s.c: $(OJT)\make_s.exe
 	$(MAKETARG)
 
-fp.c: make_fp.exe
+fp.c: $(OJT)\make_fp.exe
 	$(MAKETARG)
 
-ip.c: make_ip.exe
+ip.c: $(OJT)\make_ip.exe
 	$(MAKETARG)
 
 # Make generators.
-misc.obj: AFS_component_version_number.c
+$(OJT)\misc.obj: AFS_component_version_number.c
 
-make_keyperm.exe: make_keyperm.obj misc.obj main.obj
+$(OJT)\make_keyperm.exe: $(OJT)\make_keyperm.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_p_table.exe: make_p_table.obj misc.obj main.obj
+$(OJT)\make_p_table.exe: $(OJT)\make_p_table.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_s_table.exe: make_s_table.obj misc.obj main.obj
+$(OJT)\make_s_table.exe: $(OJT)\make_s_table.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_odd.exe: make_odd.obj misc.obj main.obj
+$(OJT)\make_odd.exe: $(OJT)\make_odd.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_p.exe: make_p.obj misc.obj main.obj
+$(OJT)\make_p.exe: $(OJT)\make_p.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_s.exe: make_s.obj misc.obj main.obj
+$(OJT)\make_s.exe: $(OJT)\make_s.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_fp.exe: make_fp.obj misc.obj main.obj
+$(OJT)\make_fp.exe: $(OJT)\make_fp.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
-make_ip.exe: make_ip.obj misc.obj main.obj
+$(OJT)\make_ip.exe: $(OJT)\make_ip.obj $(OJT)\misc.obj $(OJT)\main.obj
 	$(EXECONLINK)
 
 install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)
@@ -139,4 +139,6 @@ install9x: install
 
 clean::
 	$(DEL) $(LIBFILE) $(GENERATED_FILES)
+
+mkdir:
 

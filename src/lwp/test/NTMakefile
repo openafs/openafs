@@ -8,13 +8,13 @@
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
-LIBS =  DEST\lib\afslwp.lib \
-	DEST\lib\afs\afsutil.lib
+LIBS =  DESTDIR\lib\afslwp.lib \
+	DESTDIRlib\afs\afsutil.lib
 
 
 # build testkey.exe
-TESTKEY = testkey.exe
-testkey.exe: test_key.obj $(LIBS)
+TESTKEY = $(OJT)\testkey.exe
+$(OJT)\testkey.exe: $(OJT)\test_key.obj $(LIBS)
 	$(EXECONLINK)
 
 
@@ -26,3 +26,6 @@ test testkey: $(TESTKEY)
 
 clean::
 
+
+mkdir:
+	

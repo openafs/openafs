@@ -29,16 +29,16 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsbubasics.lib
 
 LIBOBJS =\
-	butc.ss.obj \
-	butc.cs.obj \
-	butc.xdr.obj \
-	bumon.ss.obj \
-	bumon.cs.obj \
-	bumon.xdr.obj \
-	butc_errs.obj \
-	butm_errs.obj \
-	butx_errs.obj \
-	AFS_component_version_number.obj
+	$(OJT)\butc.ss.obj \
+	$(OJT)\butc.cs.obj \
+	$(OJT)\butc.xdr.obj \
+	$(OJT)\bumon.ss.obj \
+	$(OJT)\bumon.cs.obj \
+	$(OJT)\bumon.xdr.obj \
+	$(OJT)\butc_errs.obj \
+	$(OJT)\butm_errs.obj \
+	$(OJT)\butx_errs.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -81,4 +81,5 @@ clean::
  	$(DEL) *.xdr.c *.ss.c *.cs.c butc.h bumon.h butm.h tcdata.h butx.h \
 		butc_errs.c butm_errs.c	butx_errs.c
 
-
+mkdir:
+	

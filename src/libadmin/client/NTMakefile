@@ -12,8 +12,8 @@ AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
 
 DLLOBJS = \
-	afs_clientAdmin.obj \
-	afsclientadmin.res
+	$(OJT)\afs_clientAdmin.obj \
+	$(OJT)\afsclientadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_clientAdmin.h
@@ -38,5 +38,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 install: $(DLLFILE) $(LIBINCLUDES)
 
 # Definitions for generating versioninfo resources
-afsclientadmin.res: afsclientadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\afsclientadmin.res: AFS_component_version_number.h
+
+mkdir:
+	

@@ -26,8 +26,8 @@ AFSDEV_AUXRCDEFINES = $(AFSDEV_AUXRCDEFINES) -I$(DESTDIR)\include\winnt
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\WizTest.exe
 
 EXEOBJS = \
-	wiztest.res \
-	wiztest.obj
+	$(OJT)\wiztest.res \
+	$(OJT)\wiztest.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
@@ -41,3 +41,6 @@ $(EXEFILE) : $(EXEOBJS) $(EXELIBS)
 
 test : $(EXEFILE)
 
+
+mkdir:
+	

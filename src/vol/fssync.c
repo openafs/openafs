@@ -82,6 +82,11 @@ RCSID("$Header$");
 #include "volume.h"
 #include "partition.h"
 
+#ifdef osi_Assert
+#undef osi_Assert
+#endif
+#define osi_Assert(e) (void)(e)
+
 extern int LogLevel; /* Vice loglevel */
 int (*V_BreakVolumeCallbacks)();
 

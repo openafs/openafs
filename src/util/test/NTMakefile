@@ -12,14 +12,13 @@ LIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
-dirpath_test.exe: dirpath_test.obj $(LIBS)
+$(OJT)\dirpath_test.exe: $(OJT)\dirpath_test.obj $(LIBS)
 	$(EXECONLINK)
 
-test tests: dirpath_test.exe
+test tests: $(OJT)\dirpath_test.exe
 
 clean::
-	$(DEL) dirpath_test.exe
+	$(DEL) $(OJT)\dirpath_test.exe
 
-
-
-
+mkdir:
+	

@@ -5,13 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# make compiler warnings fatal
-
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
-
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd -I..\client_config
 
 # include the primary makefile
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
@@ -25,23 +21,31 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afscreds.exe
 
 EXEOBJS = \
-	afscreds_stub.res \
-	advtab.obj \
-	afswiz.obj \
-	al_wizard.obj \
-	checklist.obj \
-	creds.obj \
-	credstab.obj \
-	drivemap.obj \
-	fs_utils.obj \
-	main.obj \
-	misc.obj \
-	mounttab.obj \
-	settings.obj \
-	shortcut.obj \
-	subclass.obj \
-	trayicon.obj \
-	window.obj
+	$(OJT)\advtab.obj \
+	$(OJT)\afswiz.obj \
+	$(OJT)\creds.obj \
+	$(OJT)\main.obj \
+	$(OJT)\misc.obj \
+	$(OJT)\credstab.obj \
+	$(OJT)\mounttab.obj \
+	$(OJT)\settings.obj \
+	$(OJT)\shortcut.obj \
+	$(OJT)\trayicon.obj \
+	$(OJT)\window.obj
+
+EXERES = \
+	$(OJT)\afscreds_stub.res
+
+AFSDOBJS = \
+	$(OJT)\fs_utils.obj
+	
+AFSAPPLIBOBJS= \
+	$(OJT)\checklist.obj \
+	$(OJT)\al_wizard.obj \
+	$(OJT)\subclass.obj 
+
+CLIENTOBJS = \
+	$(OJT)\drivemap.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -52,6 +56,7 @@ VCLIBS =\
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afs\TaLocale.lib
 
 ############################################################################
@@ -68,42 +73,31 @@ COPYHEADERS = \
 	$(DESTDIR)\include\WINNT\checklist.h \
 	$(DESTDIR)\include\WINNT\subclass.h
 
-COPYSOURCES = \
-	.\al_wizard.cpp \
-	.\al_wizard.h \
-	.\checklist.cpp \
-	.\checklist.h \
-	.\drivemap.cpp \
-	.\drivemap.h \
-	.\fs_utils.c \
-	.\subclass.cpp \
-	.\subclass.h
+############################################################################
+
+AFSD = ..\afsd
+AFSAPPLIB=..\afsapplib
+CLIENT= ..\client_config
+
+$(CLIENTOBJS): $(CLIENT)\$$(@B).cpp
+	$(C2OBJ) -I$*(*D) $**
+
+$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
+	$(C2OBJ) -I$*(*D) $**
+
+$(AFSDOBJS): $(AFSD)\$$(@B).c
+	$(C2OBJ) -I$*(*D) $**
+
+$(EXEOBJS): $$(@B).cpp
+	$(C2OBJ) -I$*(*D) -I$(AFSAPPLIB) $**
 
 ############################################################################
 
-{..\afsd}.c{.\}.c:
-	$(COPY) ..\afsd\$(*B).c .
-
-{..\afsapplib}.h{.\}.h:
-	$(COPY) ..\afsapplib\$(*B).h .
-
-{..\afsapplib}.cpp{.\}.cpp:
-	$(COPY) ..\afsapplib\$(*B).cpp .
-
-{..\client_config}.h{.\}.h:
-	$(COPY) ..\client_config\$(*B).h .
-
-{..\client_config}.cpp{.\}.cpp:
-	$(COPY) ..\client_config\$(*B).cpp .
-
-
-############################################################################
-
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(CLIENTOBJS) $(EXELIBS) 
 	$(EXEGUILINK) $(VCLIBS)
 	$(EXEPREP) 
 
-install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang
+install : $(COPYHEADERS) $(EXEFILE) lang
 
 lang ::
 	$(CD) lang
@@ -115,5 +109,11 @@ lang ::
 # Dependencies
 #
 
-afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+$(OJT)\afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
 

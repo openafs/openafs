@@ -35,15 +35,15 @@ DOCS_UNINST_DLLFILE         = $(DESTDIR)\root.server\usr\afs\bin\DocsUninst.dll
 # Source files and libraries that are shared by all of the targets.
 
 AFSAPPLIBOBJS = \
-    subclass.obj
+    $(OJT)\subclass.obj
 
 DLLOBJS = \
     $(AFSAPPLIBOBJS)    \
-    progress_dlg.obj    \
-    animate_icon.obj    \
-    sutil.obj           \
-    forceremove.obj     \
-    afs_setup_utils_stub.res
+    $(OJT)\progress_dlg.obj    \
+    $(OJT)\animate_icon.obj    \
+    $(OJT)\sutil.obj           \
+    $(OJT)\forceremove.obj     \
+    $(OJT)\afs_setup_utils_stub.res
 
 VCLIBS = \
 	comctl32.lib \
@@ -60,7 +60,7 @@ DLLLIBS = \
 
 AFSAPPLIBDIR = ..\..\WINNT\afsapplib
 
-subclass.obj: $(AFSAPPLIBDIR)\subclass.cpp
+$(OJT)\subclass.obj: $(AFSAPPLIBDIR)\subclass.cpp
     $(C2OBJ) -I$(AFSAPPLIBDIR) $(AFSAPPLIBDIR)\subclass.cpp
 
 
@@ -70,10 +70,10 @@ subclass.obj: $(AFSAPPLIBDIR)\subclass.cpp
 AFSRM_EXEFILE = $(DESTDIR)\bin\afsrm.exe
 
 AFSRM_EXEOBJS =\
-    afsrm.obj \
-    forceremove.obj \
-    sutil.obj \
-    AFS_component_version_number.obj
+    $(OJT)\afsrm.obj \
+    $(OJT)\forceremove.obj \
+    $(OJT)\sutil.obj \
+    $(OJT)\AFS_component_version_number.obj
 
 AFSRM_EXELIBS =\
     $(DESTDIR)\lib\afs\afsreg.lib \
@@ -108,55 +108,57 @@ $(DIRLANG) ::
 ############################################################################
 # How to build the shared source file for each uninstall dll
 
-s_afs_setup_utils.obj: afs_setup_utils.cpp
-        $(C2OBJ) afs_setup_utils.cpp -DSERVER_UNINST /Fos_afs_setup_utils.obj
+C2OBJ = $(C2OBJ) -DSERVER_UNINST
 
-c_afs_setup_utils.obj: afs_setup_utils.cpp
-        $(C2OBJ) afs_setup_utils.cpp -DCLIENT_UNINST /Foc_afs_setup_utils.obj
+$(OJT)\s_afs_setup_utils.obj: afs_setup_utils.cpp
+	$(C2OBJ) $**
 
-cc_afs_setup_utils.obj: afs_setup_utils.cpp
-        $(C2OBJ) afs_setup_utils.cpp -DCC_UNINST /Focc_afs_setup_utils.obj
+$(OJT)\c_afs_setup_utils.obj: afs_setup_utils.cpp
+	$(C2OBJ) $**
 
-lc_afs_setup_utils.obj: afs_setup_utils.cpp
-        $(C2OBJ) afs_setup_utils.cpp -DLIGHT_CLIENT_UNINST /Folc_afs_setup_utils.obj
+$(OJT)\cc_afs_setup_utils.obj: afs_setup_utils.cpp
+	$(C2OBJ) $**
 
-d_afs_setup_utils.obj: afs_setup_utils.cpp
-        $(C2OBJ) afs_setup_utils.cpp -DDOCS_UNINST /Fod_afs_setup_utils.obj
+$(OJT)\lc_afs_setup_utils.obj: afs_setup_utils.cpp
+	$(C2OBJ) $**
+
+$(OJT)\d_afs_setup_utils.obj: afs_setup_utils.cpp
+	$(C2OBJ) $**
 
 
 ############################################################################
 
-$(INSTALL_UTILS_DLLFILE) : afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(INSTALL_UTILS_DLLFILE) : $(OJT)\afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:install_utils.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
-$(SERVER_UNINST_DLLFILE) : s_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(SERVER_UNINST_DLLFILE) : $(OJT)\s_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:server_uninst.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
-$(CLIENT_UNINST_DLLFILE) : c_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(CLIENT_UNINST_DLLFILE) : $(OJT)\c_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:client_uninst.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
-$(CC_UNINST_DLLFILE) : cc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(CC_UNINST_DLLFILE) : $(OJT)\cc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:cc_uninst.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
-$(LIGHT_CLIENT_UNINST_DLLFILE) : lc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(LIGHT_CLIENT_UNINST_DLLFILE) : $(OJT)\lc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:light_client_uninst.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
-$(DOCS_UNINST_DLLFILE) : d_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
+$(DOCS_UNINST_DLLFILE) : $(OJT)\d_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
     $(DLLGUILINK) -entry:DllEntryPoint /DEF:docs_uninst.def $(VCLIBS)
     $(DLLPREP)
     $(COPY) $*.lib $(ILIBDIR)
@@ -186,5 +188,10 @@ clean::
 # Dependencies
 #
 
-afs_setup_utils_stub.res : afs_setup_utils_stub.rc AFS_component_version_number.h
+$(OJT)\afs_setup_utils_stub.res : afs_setup_utils_stub.rc AFS_component_version_number.h
 
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

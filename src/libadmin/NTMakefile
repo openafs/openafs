@@ -20,3 +20,6 @@ install9x: install
 
 clean::
 	$(DEL) $(INCFILES)
+
+mkdir:
+	

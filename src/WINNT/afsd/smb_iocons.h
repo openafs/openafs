@@ -82,7 +82,7 @@ typedef struct cm_cacheParms {
 #define VIOCNEWGETTOK			0x1f
 #define VIOCDELTOK			0x20
 #define VIOCDELALLTOK			0x21
-
+#define VIOC_ISSYMLINK			0x22
 #define VIOC_SYMLINK			0x23
 #define VIOC_LISTSYMLINK		0x24
 #define VIOC_DELSYMLINK			0x25

@@ -9,10 +9,10 @@
 !INCLUDE ..\..\config\NTMakefile.version
 
 ############################################################################
-CELL_EXEFILE = testcellconf.exe
+CELL_EXEFILE = $(OJT)\testcellconf.exe
 
 CELL_EXEOBJS =\
-	testcellconf.obj
+	$(OJT)\testcellconf.obj
 
 CELL_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -26,10 +26,10 @@ $(CELL_EXEFILE): $(CELL_EXEOBJS)  $(CELL_EXELIBS)
 	$(EXEPREP) 
 
 ############################################################################
-KTC_EXEFILE = ktctest.exe
+KTC_EXEFILE = $(OJT)\ktctest.exe
 
 KTC_EXEOBJS =\
-	ktctest.obj
+	$(OJT)\ktctest.obj
 
 KTC_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
@@ -44,3 +44,6 @@ $(KTC_EXEFILE): $(KTC_EXEOBJS)  $(KTC_EXELIBS)
 test tests: $(CELL_EXEFILE) $(KTC_EXEFILE)
 
 clean::
+
+mkdir: 
+	

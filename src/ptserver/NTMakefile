@@ -20,6 +20,7 @@ INCFILES =\
 	$(INCFILEDIR)\afs\ptserver.h \
 	$(INCFILEDIR)\afs\ptint.h \
 	$(INCFILEDIR)\afs\pterror.h \
+	ptopcodes.h \
 	$(INCFILEDIR)\afs\ptclient.h 
 
 ############################################################################
@@ -28,14 +29,13 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsprot.lib
 
 LIBOBJS =\
-	ptuser.obj \
-	pterror.obj \
-	ptint.cs.obj \
-	ptint.xdr.obj \
-	AFS_component_version_number.obj
+	$(OJT)\ptuser.obj \
+	$(OJT)\pterror.obj \
+	$(OJT)\ptint.cs.obj \
+	$(OJT)\ptint.xdr.obj \
+	$(OJT)\AFS_component_version_number.obj
 
-
-$(LIBFILE): $(LIBOBJS)  
+$(LIBFILE):  $(LIBOBJS)
 	$(LIBARCH) 
 
 ############################################################################
@@ -44,13 +44,13 @@ $(LIBFILE): $(LIBOBJS)
 PTSERVER = $(DESTDIR)\root.server\usr\afs\bin\ptserver.exe
 
 PTSERVER_EXEOBJS =\
-	ptint.ss.obj \
-	ptint.xdr.obj \
-	ptserver.obj \
-	ptutils.obj \
-	ptprocs.obj \
-	utils.obj \
-	ptserver.res
+	$(OJT)\ptint.ss.obj \
+	$(OJT)\ptint.xdr.obj \
+	$(OJT)\ptserver.obj \
+	$(OJT)\ptutils.obj \
+	$(OJT)\ptprocs.obj \
+	$(OJT)\utils.obj \
+	$(OJT)\ptserver.res
 
 
 PTSERVER_EXELIBS =\
@@ -72,8 +72,7 @@ PTSERVER_EXELIBS =\
 PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
 !ENDIF
 
-
-$(PTSERVER): $(PTSERVER_EXEOBJS) $(PTSERVER_EXELIBS)
+$(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 	$(EXECONLINK)
 	$(EXEPREP) 
 
@@ -85,8 +84,8 @@ $(PTSERVER): $(PTSERVER_EXEOBJS) $(PTSERVER_EXELIBS)
 PTS = $(DESTDIR)\bin\pts.exe
 
 PTS_EXEOBJS =\
-	pts.obj \
-	pts.res
+	$(OJT)\pts.obj \
+	$(OJT)\pts.res
 
 PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -113,32 +112,32 @@ $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
 ############################################################################
 # generate versioninfo resources
 
-ptserver.res: ptserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
-pts.res: pts.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\ptserver.res: AFS_component_version_number.h
+
+$(OJT)\pts.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen on pting.xg
 
-ptint.ss.c ptint.cs.c ptint.xdr.c $(DESTDIR)\include\afs\ptint.h: ptint.xg
-	$(RXGEN) -x $**
-	$(COPY) ptint.h $(DESTDIR)\include\afs\ptint.h
+$(INCFILEDIR)\afs\ptint.h : ptint.h
 
+ptint.ss.c ptint.cs.c ptint.xdr.c ptint.h: ptint.xg
+	$(RXGEN) -x $**
 
 ############################################################################
 # Definitions for generating files via COMPILE_ET
 
-$(DESTDIR)\include\afs\pterror.h pterror.c: pterror.et
+$(DESTDIR)\include\afs\pterror.h: pterror.h
+
+pterror.h pterror.c: pterror.et
 	$(DEL) pterror.h pterror.c
 	$(COMPILE_ET) pterror  -h pterror
-	$(COPY) pterror.h $(DESTDIR)\include\afs\pterror.h
 
 ############################################################################
 # install pts, ptserver and afsprot.lib
 
-install: $(INCFILES) $(LIBFILE) $(PTSERVER) $(PTS) readgroup.exe \
-	readpwd.exe  testpt.exe db_verify.exe  \
+install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(OJT)\readgroup.exe \
+	$(OJT)\readpwd.exe  $(OJT)\testpt.exe $(OJT)\db_verify.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
 	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
 	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
@@ -172,7 +171,7 @@ $(INCFILEDIR)\afs\prclient.h: $(INCFILEDIR)\afs\ptclient.h
 
 clean::
 	$(DEL) ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h
-	$(DEL) readgroup.exe readpwd.exe db_verify.exe testpt.exe 
+	$(DEL) $(OJT)\readgroup.exe $(OJT)\readpwd.exe $(OJT)\db_verify.exe $(OJT)\testpt.exe 
 	$(DEL) pterror.h pterror.c
 	$(DEL) $(PTS)
 
@@ -180,14 +179,17 @@ clean::
 # tests?
 TEST_LIBS = $(PTS_EXELIBS)
 
-readgroup.exe: readgroup.obj $(LIBFILE) $(TEST_LIBS)
+$(OJT)\readgroup.exe: $(OJT)\readgroup.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
 
-readpwd.exe: readpwd.obj $(LIBFILE) $(TEST_LIBS)
+$(OJT)\readpwd.exe: $(OJT)\readpwd.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
 
-testpt.exe: testpt.obj $(LIBFILE) $(TEST_LIBS)
+$(OJT)\testpt.exe: $(OJT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
 
-db_verify.exe: db_verify.obj pterror.obj display.obj $(LIBFILE) $(TEST_LIBS)
+$(OJT)\db_verify.exe: $(OJT)\db_verify.obj $(OJT)\pterror.obj $(OJT)\display.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
+
+mkdir:
+	

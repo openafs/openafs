@@ -18,6 +18,8 @@ extern "C" {
 #include <windowsx.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <shobjidl.h>
+#include <shlguid.h>
 #include "shortcut.h"
 
 

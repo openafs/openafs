@@ -113,6 +113,8 @@ extern long cm_IoctlDelAllToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlSymlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlIslink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern long cm_IoctlListlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlDeletelink(smb_ioctl_t *ioctlp, cm_user_t *userp);

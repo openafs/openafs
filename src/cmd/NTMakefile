@@ -20,26 +20,30 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afscmd.lib
 
 LIBOBJS =\
-	cmd_errors.obj \
-	cmd.obj \
-	AFS_component_version_number.obj
-
-$(LIBFILE): $(LIBOBJS) 
+	$(OJT)\cmd_errors.obj \
+	$(OJT)\cmd.obj \
+	$(OJT)\AFS_component_version_number.obj
+	
+$(LIBFILE): $(LIBOBJS)
 	$(LIBARCH) 
 
+$(INCFILES):$$(@F)
+	 $(COPY)  $** $(INCFILEDIR)\.
 
 cmd_errors.c cmd.h: cmd_errors.et cmd.p.h
 	$(DEL) cmd_errors.c cmd.h
-	$(COMPILE_ET) cmd_errors -h cmd
+	$(COMPILE_ET) cmd_errors.et -h cmd
 
-
-install: $(LIBFILE) $(INCFILES)
+install: cmd.h $(LIBFILE) $(INCFILES)
 
 install9x: install
 
 clean::
-	$(DEL) cmd_errors.c cmd.h
+	$(DEL) cmd_errors.c cmd.h $(INCFILES)
 	$(DEL) $(LIBFILE)
+	$(DEL) *.PDB
 
 test tests:
+
+mkdir:
 	

@@ -36,6 +36,10 @@ static int clockInitialized = 0;
 /* Timing tests show that we can compute times at about 4uS per call. */
 LARGE_INTEGER rxi_clock0;
 LARGE_INTEGER rxi_clockFreq;
+
+#undef clock_UpdateTime
+void clock_UpdateTime(void);
+
 void clock_Init()
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {

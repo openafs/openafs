@@ -35,11 +35,11 @@ update.cs.c update.ss.c update.er.c update.h: update.xg
 UPSERVER = $(DESTDIR)\root.server\usr\afs\bin\upserver.exe
 
 USVR_OBJS = \
-	AFS_component_version_number.obj \
-	server.obj \
-	utils.obj \
-	update.ss.obj \
-	upserver.res
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\server.obj \
+	$(OJT)\utils.obj \
+	$(OJT)\update.ss.obj \
+	$(OJT)\upserver.res
 
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 	$(EXECONLINK)
@@ -50,11 +50,11 @@ $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 UPCLIENT = $(DESTDIR)\root.server\usr\afs\bin\upclient.exe
 
 UCLNT_OBJS = \
-	AFS_component_version_number.obj \
-	client.obj \
-	utils.obj \
-	update.cs.obj \
-	upclient.res
+	$(OJT)\AFS_component_version_number.obj \
+	$(OJT)\client.obj \
+	$(OJT)\utils.obj \
+	$(OJT)\update.cs.obj \
+	$(OJT)\upclient.res
 
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
 	$(EXECONLINK)
@@ -63,10 +63,9 @@ $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
 ############################################################################
 # generate versioninfo resources
 
-upserver.res: upserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
-upclient.res: upclient.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\upserver.res: AFS_component_version_number.h
+
+$(OJT)\upclient.res: AFS_component_version_number.h
 
 ############################################################################
 # Install update executables.
@@ -79,3 +78,7 @@ install: update.h $(UPCLIENT) $(UPSERVER)
 
 clean::
 	$(DEL) update.cs.c update.ss.c update.xdr.c update.h
+
+mkdir:
+	 copy home $(OJT)\.
+	

@@ -17,8 +17,8 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 EXEFILE = $(DESTDIR)\bin\sgml2rtf.exe
 
 EXEOBJS = \
-	main.obj \
-	multistring.obj
+	$(OJT)\main.obj \
+	$(OJT)\multistring.obj
 
 EXELIBS = \
 	user32.lib
@@ -35,3 +35,8 @@ lang ::
 	@$(MAKECMD) /nologo /f NTMakefile install
 	$(CD) ..
 
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

@@ -29,13 +29,13 @@ INCFILES =\
 ############################################################################
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afseventmsg_$(LANGID).dll
 
-DLLRESFILE = afseventmsg_$(LANGID).res
+DLLRESFILE = $(OJT)\afseventmsg_$(LANGID).res
 
 DLLRCFILE = afseventmsg.rc
 
 EVENTRCFILE = $(LANGNAME)\event.rc
 
-EVENTRESFILE = $(LANGNAME)\event.res
+EVENTRESFILE = $(OJT)\$(LANGNAME)\event.res
 
 DLLOBJS = $(DLLRESFILE)
 

@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afslegal_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afslegal.rc
 
-RESFILE = afslegal_$(LANGID).res
+RESFILE = $(OJT)\afslegal_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -60,3 +60,6 @@ clean ::
 $(RESFILE) : $(RCFILE) AFS_component_version_number.h
 	$(RC) /fo$(RESFILE) /c$(LANGCP) $(RCFILE)
 
+
+mkdir:
+	

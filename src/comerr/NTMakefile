@@ -4,7 +4,7 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
-
+!message
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -21,11 +21,11 @@ INCFILES =\
 COMERR_LIBFILE = $(DESTDIR)\lib\afs\afscom_err.lib
 
 COMERR_LIBOBJS =\
-		error_msg.obj  \
-		et_name.obj  \
-		com_err.obj \
-		AFS_component_version_number.obj
-
+		$(OJT)\error_msg.obj  \
+		$(OJT)\et_name.obj  \
+		$(OJT)\com_err.obj \
+		$(OJT)\AFS_component_version_number.obj
+		
 $(COMERR_LIBFILE): $(COMERR_LIBOBJS)
 	$(LIBARCH)  
 
@@ -45,9 +45,9 @@ error_table_nt.c:  et_lex.lex_nt.c error_table.y
     $(YACC) -d -o $@ error_table.y
 
 COMPILE_ET_EXEOBJS =\
-		compile_et.obj \
-		error_table_nt.obj
-		
+		$(OJT)\compile_et.obj \
+		$(OJT)\error_table_nt.obj
+
 COMPILE_ET_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib
 
@@ -61,7 +61,7 @@ install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE)
 install9x: install
 
 clean::
-	$(DEL) $(COMERR_LIBFILE)
+	$(DEL) $(COMERR_LIBFILE) $(OJT)\AFS_component_version_number.obj
 	$(DEL) $(COMPILE_ET_EXEFILE)
 	$(DEL) *~ *.bak \
                  *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
@@ -70,5 +70,4 @@ clean::
 
 test:
 
-
-	
+mkdir:

@@ -25,9 +25,11 @@
 /* Fake error code since NT errno.h doesn't define it */
 #include <afs/errmap_nt.h>
 
-extern char *hostutil_GetNameByINet(long addr);
+//extern char *hostutil_GetNameByINet(long addr);
 
+#ifndef hostutil_GetHostByName
 extern struct hostent *hostutil_GetHostByName(char *namep);
+#endif
 
 extern long util_GetInt32(char *stringp, long *valuep);
 

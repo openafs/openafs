@@ -22,34 +22,34 @@ EXELIBS = \
 	$(DESTDIR)\afs\afskauth.lib
 
 
-multiklog.exe: multiklog.obj
+$(OJT)\multiklog.exe: $(OJT)\multiklog.obj
 	$(EXECONLINK) $(EXELIBS)
 
 
-test_date.exe: test_date.obj
+$(OJT)\test_date.exe: $(OJT)\test_date.obj
 	$(EXECONLINK) $(EXELIBS)
 
-test_badtix.exe: test_badtix.obj
+$(OJT)\test_badtix.exe: $(OJT)\test_badtix.obj
 	$(EXECONLINK) $(EXELIBS)
 
-decode_ticket.exe: decode_ticket.obj
+$(OJT)\decode_ticket.exe: $(OJT)\decode_ticket.obj
 	$(EXECONLINK) $(EXELIBS)
 
-test_interim_ktc.exe: test_interim_ktc.obj
+$(OJT)\test_interim_ktc.exe: $(OJT)\test_interim_ktc.obj
 	$(EXECONLINK) $(EXELIBS)
 
-test_rxkad_free: test_rxkad_free.o 
+$(OJT)\test_rxkad_free: test_rxkad_free.o 
 	$(EXECONLINK) $(EXELIBS)
 
-test_getticket.exe: test_getticket.obj
+$(OJT)\test_getticket.exe: $(OJT)\test_getticket.obj
 	$(EXECONLINK) $(EXELIBS)
 
-background.exe: background.obj
+$(OJT)\background.exe: $(OJT)\background.obj
 	$(EXECONLINK) $(EXELIBS)
 
 
-test tests all: multiklog.exe test_date.exe test_badtix.exe decode_ticket.exe \
-		test_interim_ktc.exe test_getticket.exe background.exe
+test tests all: $(OJT)\multiklog.exe $(OJT)\test_date.exe $(OJT)\test_badtix.exe $(OJT)\decode_ticket.exe \
+		$(OJT)\test_interim_ktc.exe $(OJT)\test_getticket.exe $(OJT)\background.exe
 
 
 # test_interim_ktc depends on normally running ka & pr servers.  Also on
@@ -91,4 +91,5 @@ runtest: background multiklog test_badtix test_interim_ktc test_rxkad_free
 
 clean::
 
-
+mkdir:
+	

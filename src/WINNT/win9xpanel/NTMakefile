@@ -53,7 +53,7 @@ prep :
 
 !IF  "$(AFSDEV_BUILDTYPE)" == "FREE"
 
-INTDIR=.
+INTDIR=$(OJT)\
 HLP=hcrtf.exe
 HLP_PROJ = /x
 # Begin Custom Macros
@@ -74,7 +74,7 @@ CLEAN ::
 CPP_PROJ=/nologo /MD /W3 /GX /O2 \
 	$(CPP_INCLUDE) /P \
 	/I "$(DESTDIR)\include\\" /I "$(DESTDIR)\include\rx" /I "$(DESTDIR)\include\afs" \
-	/D "NDEBUG" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+	/D "NDEBUG" /D "_MFC" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_WINNT" /D "_AFXDLL" /D "ENCRIPT" /Fo"$(OJT)\\\" /Fd"$(INTDIR)\\" /FD /c 
 
 MTL_PROJ=/nologo /D "NDEBUG" /mktyplib203 /win32 
 RSC_PROJ=/l 0x409 /fo"$(INTDIR)\WinAfsLoad.res" $(AFSD_INC_MFC) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\"" /d "NDEBUG" /d "_AFXDLL" 
@@ -112,7 +112,7 @@ LINK32_OBJS= \
 
 !ELSEIF  "$(AFSDEV_BUILDTYPE)" == "CHECKED"
 
-INTDIR=.
+INTDIR=$(OJT)\
 HLP=hcrtf.exe
 HLP_PROJ = /x
 # Begin Custom Macros
@@ -186,27 +186,27 @@ $(DS_POSTBUILD_DEP) : "$(OUTDIR)\WinAfsLoad.exe"
 
 !ENDIF 
 
-.c{$(INTDIR)}.obj::
+.c.${$(OJT)\}obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.obj::
+.cxx.obj::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.c{$(INTDIR)}.sbr::
+.c.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cpp{$(INTDIR)}.sbr::
+.cpp$.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
 
-.cxx{$(INTDIR)}.sbr::
+.cxx.$(OJT)\sbr::
    $(CPP) @<<
    $(CPP_PROJ) $< 
 <<
@@ -333,4 +333,7 @@ SOURCE=.\WinAfsLoadDlg.cpp
 !ENDIF 
 
 install9x: install
+
+mkdir:
+
 

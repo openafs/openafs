@@ -22,32 +22,32 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_config.exe
 
 EXEOBJS = \
-	afs_config_stub.res \
-	cellservdb.obj \
-	checklist.obj \
-	config.obj \
-	ctl_sockaddr.obj \
-	ctl_spinner.obj \
-	dialog.obj \
-	drivemap.obj \
-	fastlist.obj \
-	fs_utils.obj \
-	hashlist.obj \
-	isadmin.obj \
-	main.obj \
-	misc.obj \
-	pagesize.obj \
-	resize.obj \
-	subclass.obj \
-	tab_advanced.obj \
-	tab_drives.obj \
-	tab_hosts.obj \
-	tab_general.obj \
-	tab_prefs.obj \
-	dlg_misc.obj \
-	dlg_logon.obj \
-	dlg_diag.obj \
-	dlg_automap.obj
+	$(OJT)\config.obj \
+	$(OJT)\drivemap.obj \
+	$(OJT)\main.obj \
+	$(OJT)\misc.obj \
+	$(OJT)\pagesize.obj \
+	$(OJT)\tab_advanced.obj \
+	$(OJT)\tab_drives.obj \
+	$(OJT)\tab_hosts.obj \
+	$(OJT)\tab_general.obj \
+	$(OJT)\tab_prefs.obj \
+	$(OJT)\dlg_logon.obj \
+	$(OJT)\dlg_diag.obj \
+	$(OJT)\dlg_misc.obj \
+	$(OJT)\isadmin.obj \
+	$(OJT)\dlg_automap.obj
+
+EXEOBJSc = \
+	$(OJT)\cellservdb.obj
+
+EXERES = \
+	$(OJT)\afs_config_stub.res 
+
+AFSDOBJS = \
+	$(OJT)\fs_utils.obj
+	
+AFSD= ..\afsd
 
 VCLIBS =\
 	comctl32.lib \
@@ -58,6 +58,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\TaLocale.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
+	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib
 
 ############################################################################
@@ -80,46 +81,43 @@ COPYHEADERS = \
 	$(DESTDIR)\include\WINNT\resize.h \
 	$(DESTDIR)\include\WINNT\subclass.h
 
-COPYSOURCES = \
-	.\checklist.cpp \
-	.\checklist.h \
-	.\ctl_sockaddr.cpp \
-	.\ctl_sockaddr.h \
-	.\ctl_spinner.cpp \
-	.\ctl_spinner.h \
-	.\dialog.cpp \
-	.\dialog.h \
-	.\fastlist.cpp \
-	.\fastlist.h \
-	.\fs_utils.c \
-	.\hashlist.cpp \
-	.\hashlist.h \
-	.\resize.cpp \
-	.\resize.h \
-	.\subclass.cpp \
-	.\subclass.h
+AFSAPPLIBOBJS= \
+	$(OJT)\hashlist.obj \
+	$(OJT)\resize.obj \
+	$(OJT)\subclass.obj \
+	$(OJT)\fastlist.obj \
+	$(OJT)\dialog.obj \
+	$(OJT)\ctl_sockaddr.obj \
+	$(OJT)\ctl_spinner.obj \
+	$(OJT)\checklist.obj
+
+AFSAPPLIB=..\afsapplib
+
+$(AFSAPPLIBOBJS): $(AFSAPPLIB)\$$(@B).cpp
+	$(C2OBJ) -I$(AFSAPPLIB) $**
+
+$(AFSDOBJS): $(AFSD)\$$(@B).c
+	$(C2OBJ) -I$(AFSD) $**
+
+$(EXEOBJS): $$(@B).cpp
+	$(C2OBJ) -I$(AFSAPPLIB) $**
+
+$(EXEOBJSc): $$(@B).c
+	$(CPP2OBJ) -I$(AFSAPPLIB) $**
 
 ############################################################################
 
 {..\afsapplib}.h{$(DESTDIR)\include\WINNT}.h:
 	$(COPY) ..\afsapplib\$(*B).h $(DESTDIR)\include\WINNT
 
-{..\afsapplib}.h{.\}.h:
-	$(COPY) ..\afsapplib\$(*B).h .
-
-{..\afsapplib}.cpp{.\}.cpp:
-	$(COPY) ..\afsapplib\$(*B).cpp .
-
-{..\afsd}.c{.\}.c:
-	$(COPY) ..\afsd\$(*B).c .
 
 ############################################################################
 
-$(EXEFILE) : $(EXEOBJS) $(EXELIBS)
+$(EXEFILE) : $(EXEOBJS) $(EXEOBJSc) $(EXERES) $(AFSAPPLIBOBJS) $(AFSDOBJS) $(EXELIBS)
 	$(EXEGUILINK) $(VCLIBS)
 	$(EXEPREP) 
 
-install : $(COPYSOURCES) $(COPYHEADERS) $(EXEFILE) lang
+install : $(COPYHEADERS) $(EXEFILE) lang
 
 install9x: install
 
@@ -171,9 +169,10 @@ de_DE:
 	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
     $(CD) ..
 
-afs_config_stub.res : afs_config_stub.rc AFS_component_version_number.h
+$(OJT)\afs_config_stub.res : AFS_component_version_number.h
 
 clean::
+	$(DEL) $(COPYHEADERS)
 	$(CD) lang
 	if exist $(NTLANG) $(NTLANG) en_US $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) ja_JP $(MAKECMD) /nologo /f NTMakefile clean
@@ -184,3 +183,9 @@ clean::
 	if exist $(NTLANG) $(NTLANG) es_ES $(MAKECMD) /nologo /f NTMakefile clean
 	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
     $(CD) ..
+
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

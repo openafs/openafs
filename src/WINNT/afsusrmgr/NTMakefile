@@ -30,40 +30,40 @@ AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAccountManager.exe
 
 EXEOBJS = \
-	AfsUsrMgr_stub.res \
-	action.obj \
-	browse.obj \
-	cell_prop.obj \
-	cmdline.obj \
-	columns.obj \
-	command.obj \
-	creds.obj \
-	display.obj \
-	errdata.obj \
-	general.obj \
-	grp_col.obj \
-	grp_create.obj \
-	grp_delete.obj \
-	grp_prop.obj \
-	grp_rename.obj \
-	grp_tab.obj \
-	helpfunc.obj \
-	main.obj \
-	mch_col.obj \
-	mch_create.obj \
-	mch_delete.obj \
-	mch_tab.obj \
-	options.obj \
-	task.obj \
-	usr_col.obj \
-	usr_cpw.obj \
-	usr_create.obj \
-	usr_delete.obj \
-	usr_prop.obj \
-	usr_search.obj \
-	usr_tab.obj \
-	window.obj \
-	winlist.obj
+	$(OJT)\AfsUsrMgr_stub.res \
+	$(OJT)\action.obj \
+	$(OJT)\browse.obj \
+	$(OJT)\cell_prop.obj \
+	$(OJT)\cmdline.obj \
+	$(OJT)\columns.obj \
+	$(OJT)\command.obj \
+	$(OJT)\creds.obj \
+	$(OJT)\display.obj \
+	$(OJT)\errdata.obj \
+	$(OJT)\general.obj \
+	$(OJT)\grp_col.obj \
+	$(OJT)\grp_create.obj \
+	$(OJT)\grp_delete.obj \
+	$(OJT)\grp_prop.obj \
+	$(OJT)\grp_rename.obj \
+	$(OJT)\grp_tab.obj \
+	$(OJT)\helpfunc.obj \
+	$(OJT)\main.obj \
+	$(OJT)\mch_col.obj \
+	$(OJT)\mch_create.obj \
+	$(OJT)\mch_delete.obj \
+	$(OJT)\mch_tab.obj \
+	$(OJT)\options.obj \
+	$(OJT)\task.obj \
+	$(OJT)\usr_col.obj \
+	$(OJT)\usr_cpw.obj \
+	$(OJT)\usr_create.obj \
+	$(OJT)\usr_delete.obj \
+	$(OJT)\usr_prop.obj \
+	$(OJT)\usr_search.obj \
+	$(OJT)\usr_tab.obj \
+	$(OJT)\window.obj \
+	$(OJT)\winlist.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -91,5 +91,11 @@ install : $(EXEFILE) lang
 # Dependencies
 #
 
-AfsUsrMgr_stub.res : AfsUsrMgr_stub.rc AFS_component_version_number.h
+$(OJT)\AfsUsrMgr_stub.res : AFS_component_version_number.h
 
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+	

@@ -6,12 +6,12 @@
 !INCLUDE ..\..\config\NTMakefile.version
 
 
-EXEFILE = comerr_test.exe
+EXEFILE = $(OJT)\comerr_test.exe
 
 EXEOBJS =\
-	test1.obj \
-	test2.obj \
-	test.obj
+	$(OJT)\test1.obj \
+	$(OJT)\test2.obj \
+	$(OJT)\test.obj
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
@@ -34,3 +34,6 @@ tests: $(EXEFILE)
 clean::
 	$(DEL) test1.c test1.h test2.c test2.h
 
+
+mkdir:
+	

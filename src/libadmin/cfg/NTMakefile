@@ -21,23 +21,28 @@ INCFILES =\
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afscfgadmin.dll
 ILIBDIR = $(DESTDIR)\lib\afs
 
+RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
 
 UBIKOBJS=\
-	ubik_int.cs.obj \
-	ubik_int.xdr.obj
+	$(OJT)\ubik_int.cs.obj \
+	$(OJT)\ubik_int.xdr.obj
 
 CLIENTOBJS=\
-	cellservdb.obj
+	$(OJT)\cellservdb.obj
+
+CFGOBJS = \
+	$(OJT)\cfgclient.obj \
+	$(OJT)\cfgdb.obj \
+	$(OJT)\cfghost.obj \
+	$(OJT)\cfgservers.obj \
+	$(OJT)\cfginternal.obj
 
 DLLOBJS =\
 	$(UBIKOBJS) \
 	$(CLIENTOBJS) \
-	cfgclient.obj \
-	cfgdb.obj \
-	cfghost.obj \
-	cfgservers.obj \
-	cfginternal.obj \
-	afscfgadmin.res
+	$(RXOBJS) \
+	$(CFGOBJS) \
+	$(OJT)\afscfgadmin.res
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
@@ -60,13 +65,15 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 ############################################################################
 # Definitions for building ubik objects
 
-UBIKDIR=..\..\ubik
+UBIK=..\..\ubik
+RX= ..\..\rx
 
-ubik_int.cs.obj: $(UBIKDIR)\ubik_int.cs.c
-	$(C2OBJ) $(UBIKDIR)\ubik_int.cs.c
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
-ubik_int.xdr.obj: $(UBIKDIR)\ubik_int.xdr.c
-	$(C2OBJ) $(UBIKDIR)\ubik_int.xdr.c
+$(UBIKOBJS): $(UBIK)\$$(@B).c
+	$(C2OBJ) $**
+
 
 ############################################################################
 # Definitions for building client objects
@@ -74,19 +81,20 @@ ubik_int.xdr.obj: $(UBIKDIR)\ubik_int.xdr.c
 
 CLIENTCFGDIR = ..\..\WINNT\client_config
 
-cellservdb.obj: $(CLIENTCFGDIR)\cellservdb.c
-	$(C2OBJ) -I$(CLIENTCFGDIR) $(CLIENTCFGDIR)\cellservdb.c
+$(CLIENTOBJS): $(CLIENTCFGDIR)\$$(@B).c
+	$(C2OBJ) -I$(CLIENTCFGDIR) $**
 
-cfgclient.obj: cfgclient.c
-	$(C2OBJ) -I$(CLIENTCFGDIR) cfgclient.c
+$(CFGOBJS): $$(@B).c
+	$(C2OBJ) -I$(CLIENTCFGDIR) $**
 
 ############################################################################
 # Definitions for generating versioninfo resources
 
-afscfgadmin.res: afscfgadmin.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
+$(OJT)\afscfgadmin.res: AFS_component_version_number.h
 
 install: $(DLLFILE) $(INCFILES)
 
 clean::
+
+mkdir:
+	

@@ -10,14 +10,14 @@
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
-LIBOBJS = lock.obj \
-	  lwp_nt.obj \
-	  iomgr.obj \
-	  timer.obj\
-	  fasttime.obj \
-	  waitkey.obj \
-	  threadname.obj \
-	  AFS_component_version_number.obj
+LIBOBJS = $(OJT)\lock.obj \
+	  $(OJT)\lwp_nt.obj \
+	  $(OJT)\iomgr.obj \
+	  $(OJT)\timer.obj\
+	  $(OJT)\fasttime.obj \
+	  $(OJT)\waitkey.obj \
+	  $(OJT)\threadname.obj \
+	  $(OJT)\AFS_component_version_number.obj
 
 LIBFILE = $(DESTDIR)\lib\afslwp.lib
 
@@ -36,10 +36,13 @@ install9x: install
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-tests: rw.exe
+tests: $(OJT)\rw.exe
 
-rw.exe: rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
+$(OJT)\rw.exe: $(OJT)\rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
 clean::
 	$(DEL) $(LIBFILE)
+
+mkdir:
+	

@@ -26,11 +26,11 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsbudb.lib
 
 LIBOBJS =\
-	budb_errs.obj \
-	budb.cs.obj \
-	budb.xdr.obj \
-	struct_ops.obj \
-	AFS_component_version_number.obj
+	$(OJT)\budb_errs.obj \
+	$(OJT)\budb.cs.obj \
+	$(OJT)\budb.xdr.obj \
+	$(OJT)\struct_ops.obj \
+	$(OJT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -42,21 +42,21 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\buserver.exe
 
 EXEOBJS =\
-	database.obj \
-	db_alloc.obj \
-	db_dump.obj \
-	db_hash.obj \
-	struct_ops.obj \
-	ol_verify.obj \
-	budb.ss.obj \
-	budb.xdr.obj \
-	dbs_dump.obj \
-	db_lock.obj \
-	db_text.obj \
-	procs.obj \
-	budb_errs.obj \
-	server.obj \
-	buserver.res
+	$(OJT)\database.obj \
+	$(OJT)\db_alloc.obj \
+	$(OJT)\db_dump.obj \
+	$(OJT)\db_hash.obj \
+	$(OJT)\struct_ops.obj \
+	$(OJT)\ol_verify.obj \
+	$(OJT)\budb.ss.obj \
+	$(OJT)\budb.xdr.obj \
+	$(OJT)\dbs_dump.obj \
+	$(OJT)\db_lock.obj \
+	$(OJT)\db_text.obj \
+	$(OJT)\procs.obj \
+	$(OJT)\budb_errs.obj \
+	$(OJT)\server.obj \
+	$(OJT)\buserver.res
 
 
 EXELIBS =\
@@ -86,8 +86,7 @@ $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-buserver.res: buserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OJT)\buserver.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen budb.rg
@@ -118,3 +117,6 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 clean::
 	$(DEL) budb_errs.c budb_errs.h budb.h budb_client.h	
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
+
+mkdir:
+	

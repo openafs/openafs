@@ -7,7 +7,10 @@
 
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
-tests: dtest.exe
+tests: $(OJT)\dtest.exe
 
-dtest.exe: dtest.obj DEST\lib\afs\afsdir.lib
+$(OJT)\dtest.exe: $(OJT)\dtest.obj $(DESTDIR)\lib\afs\afsdir.lib
 	$(EXECONLINK)
+
+mkdir:
+	

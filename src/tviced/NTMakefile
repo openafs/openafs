@@ -26,27 +26,30 @@ UTIL = ..\util
 DIR = ..\dir
 VOL = ..\vol
 FSINT = ..\fsint
+RX = ..\rx
 
-VICEDOBJS = viced.obj afsfileprocs.obj host.obj physio.obj callback.obj	\
-		$(VICED)\fileserver.res
+RXOBJS = $(OJT)\xdr_int64.obj $(OJT)\xdr_int32.obj
 
-VLSERVEROBJS = vldbint.cs.obj vldbint.xdr.obj
+VICEDOBJS = $(OJT)\viced.obj $(OJT)\afsfileprocs.obj $(OJT)\host.obj $(OJT)\physio.obj $(OJT)\callback.obj
+VICEDRES =	$(OJT)\$(VICED)\fileserver.res
 
-LWPOBJS = lock.obj fasttime.obj threadname.obj
+VLSERVEROBJS = $(OJT)\vldbint.cs.obj $(OJT)\vldbint.xdr.obj
 
-LIBACLOBJS = aclprocs.obj netprocs.obj
+LWPOBJS = $(OJT)\lock.obj $(OJT)\fasttime.obj $(OJT)\threadname.obj
 
-UTILOBJS = assert.obj uuid.obj serverLog.obj fileutil.obj
+LIBACLOBJS = $(OJT)\aclprocs.obj $(OJT)\netprocs.obj
 
-DIROBJS = buffer.obj dir.obj salvage.obj
+UTILOBJS = $(OJT)\assert.obj $(OJT)\uuid.obj $(OJT)\serverLog.obj $(OJT)\fileutil.obj 
 
-VOLOBJS = vnode.obj volume.obj vutil.obj partition.obj fssync.obj purge.obj \
-	  clone.obj common.obj ihandle.obj ntops.obj
+DIROBJS = $(OJT)\buffer.obj $(OJT)\dir.obj $(OJT)\salvage.obj
 
-FSINTOBJS = afsaux.obj afscbint.cs.obj afsint.ss.obj afsint.xdr.obj
+VOLOBJS = $(OJT)\vnode.obj $(OJT)\volume.obj $(OJT)\vutil.obj $(OJT)\partition.obj $(OJT)\fssync.obj $(OJT)\purge.obj \
+	  $(OJT)\clone.obj $(OJT)\common.obj $(OJT)\ihandle.obj $(OJT)\ntops.obj
 
-EXEOBJS = $(VICEDOBJS) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
-	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS)
+FSINTOBJS = $(OJT)\afsaux.obj $(OJT)\afscbint.cs.obj $(OJT)\afsint.ss.obj $(OJT)\afsint.xdr.obj
+
+EXEOBJS = $(VICEDOBJS) $(VICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
+	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS)
 
 
 
@@ -54,132 +57,32 @@ noversion: install
 
 all: fileserver
 
+$(RXOBJS): $(RX)\$$(@B).c
+	$(C2OBJ) -I$(RX) $**
 
-############################################################################
-# VICED package
-viced.obj: $(VICED)/viced.c
-	$(C2OBJ) $**
+$(VICEDOBJS): $(VICED)\$$(@B).c
+	$(C2OBJ) -I$(VICED) -I$(UTIL) $**
 
-afsfileprocs.obj: $(VICED)/afsfileprocs.c
-	$(C2OBJ) $**
+$(UTILOBJS): $(UTIL)\$$(@B).c
+	$(C2OBJ) -I$(UTIL) $**
 
-host.obj: $(VICED)/host.c
-	$(C2OBJ) $**
+$(LWPOBJS): $(LWP)\$$(@B).C
+	$(C2OBJ) -I$(LWP) $**
 
-physio.obj: $(VICED)/physio.c
-	$(C2OBJ) $**
+$(LIBACLOBJS): $(LIBACL)\$$(@B).C
+	$(C2OBJ) -I$(LIBACL) $**
 
-callback.obj: $(VICED)/callback.c
-	$(C2OBJ) $**
+$(VLSERVEROBJS): $(VLSERVER)\$$(@B).C
+	$(C2OBJ) -I$(VLSERVER) $**
 
-############################################################################
-# UTIL package
-assert.obj: $(UTIL)/assert.c
-	$(C2OBJ) $**
+$(DIROBJS): $(DIR)\$$(@B).C
+	$(C2OBJ) -I$(DIR) $**
 
-uuid.obj: $(UTIL)/uuid.c
-	$(C2OBJ) $**
+$(VOLOBJS): $(VOL)\$$(@B).C
+	$(C2OBJ) -I$(VOL) $**
 
-serverLog.obj: $(UTIL)/serverLog.c
-	$(C2OBJ) $**
-
-fileutil.obj: $(UTIL)/fileutil.c
-	$(C2OBJ) $**
-
-############################################################################
-# LWP package
-lock.obj: $(LWP)/lock.c
-	$(C2OBJ) $**
-
-fasttime.obj: $(LWP)/fasttime.c
-	$(C2OBJ) $**
-
-threadname.obj: $(LWP)/threadname.c
-	$(C2OBJ) $**
-
-############################################################################
-# LIBACL package
-aclprocs.obj: $(LIBACL)/aclprocs.c
-	$(C2OBJ) $**
-
-netprocs.obj: $(LIBACL)/netprocs.c
-	$(C2OBJ) $**
-
-############################################################################
-# VLSERVER package
-vldbint.cs.obj: $(VLSERVER)/vldbint.cs.c
-	$(C2OBJ) $**
-
-vldbint.xdr.obj: $(VLSERVER)/vldbint.xdr.c
-	$(C2OBJ) $**
-
-############################################################################
-# DIR package
-buffer.obj: $(DIR)/buffer.c
-	$(C2OBJ) $**
-
-dir.obj: $(DIR)/dir.c
-	$(C2OBJ) $**
-
-salvage.obj: $(DIR)/salvage.c
-	$(C2OBJ) $**
-
-############################################################################
-# VOL package
-vnode.obj: $(VOL)/vnode.c
-	$(C2OBJ) $**
-
-volume.obj: $(VOL)/volume.c
-	$(C2OBJ) $**
-
-vutil.obj: $(VOL)/vutil.c
-	$(C2OBJ) $**
-
-partition.obj: $(VOL)/partition.c
-	$(C2OBJ) $**
-
-fssync.obj: $(VOL)/fssync.c
-	$(C2OBJ) $**
-
-purge.obj: $(VOL)/purge.c
-	$(C2OBJ) $**
-
-clone.obj: $(VOL)/clone.c
-	$(C2OBJ) $**
-
-nuke.obj: $(VOL)/nuke.c
-	$(C2OBJ) $**
-
-common.obj: $(VOL)/common.c
-	$(C2OBJ) $**
-
-ihandle.obj: $(VOL)/ihandle.c
-	$(C2OBJ) $**
-
-ntops.obj: $(VOL)/ntops.c
-	$(C2OBJ) $**
-
-############################################################################
-# FSINT package
-afsaux.obj: $(FSINT)/afsaux.c
-	$(C2OBJ) $**
-
-afscbint.cs.obj: $(FSINT)/afscbint.cs.c
-	$(C2OBJ) $**
-
-afscbint.ss.obj: $(FSINT)/afscbint.ss.c
-	$(C2OBJ) $**
-
-afsint.cs.obj: $(FSINT)/afsint.cs.c
-	$(C2OBJ) $**
-
-afsint.ss.obj: $(FSINT)/afsint.ss.c
-	$(C2OBJ) $**
-
-afsint.xdr.obj: $(FSINT)/afsint.xdr.c
-	$(C2OBJ) $**
-
-
+$(FSINTOBJS): $(FSINT)\$$(@B).C
+	$(C2OBJ) -I$(FSINT) $**
 
 EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
@@ -198,3 +101,6 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXEPREP) 
 
 install:  $(EXEFILE)
+
+mkdir:
+	

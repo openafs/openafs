@@ -16,36 +16,36 @@
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afssvrcfg.exe
 
 EXEOBJS =\
-    char_conv.obj             \
-	admin_info_dlg.obj        \
-	cfg_utils.obj             \
-	create_partition_dlg.obj  \
-	file_server_page.obj      \
-	graphics.obj              \
-	info_page.obj             \
-	intro_page.obj            \
-	partitions_page.obj       \
-	partition_page.obj        \
-	replicatition_page.obj    \
-	services_page.obj         \
-	toolbox.obj               \
-	afscfg.obj                \
-	backup_server_page.obj    \
-	config_server_page.obj    \
-	db_server_page.obj        \
-	get_cur_config.obj        \
-	help.obj                  \
-	info2_page.obj            \
-	logfile.obj               \
-	partition_utils.obj       \
-	root_afs_page.obj         \
-	sys_control_page.obj      \
-	volume_utils.obj          \
-	salvage_dlg.obj			  \
-    get_pw_dlg.obj            \
-    salvage_results_dlg.obj   \
-    validation.obj            \
-	afscfg_stub.res
+    $(OJT)\char_conv.obj             \
+	$(OJT)\admin_info_dlg.obj        \
+	$(OJT)\cfg_utils.obj             \
+	$(OJT)\create_partition_dlg.obj  \
+	$(OJT)\file_server_page.obj      \
+	$(OJT)\graphics.obj              \
+	$(OJT)\info_page.obj             \
+	$(OJT)\intro_page.obj            \
+	$(OJT)\partitions_page.obj       \
+	$(OJT)\partition_page.obj        \
+	$(OJT)\replicatition_page.obj    \
+	$(OJT)\services_page.obj         \
+	$(OJT)\toolbox.obj               \
+	$(OJT)\afscfg.obj                \
+	$(OJT)\backup_server_page.obj    \
+	$(OJT)\config_server_page.obj    \
+	$(OJT)\db_server_page.obj        \
+	$(OJT)\get_cur_config.obj        \
+	$(OJT)\help.obj                  \
+	$(OJT)\info2_page.obj            \
+	$(OJT)\logfile.obj               \
+	$(OJT)\partition_utils.obj       \
+	$(OJT)\root_afs_page.obj         \
+	$(OJT)\sys_control_page.obj      \
+	$(OJT)\volume_utils.obj          \
+	$(OJT)\salvage_dlg.obj			  \
+    $(OJT)\get_pw_dlg.obj            \
+    $(OJT)\salvage_results_dlg.obj   \
+    $(OJT)\validation.obj            \
+	$(OJT)\afscfg_stub.res
 
 VCLIBS =\
 	comctl32.lib \
@@ -69,9 +69,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-afscfg_stub.res: afscfg_stub.rc AFS_component_version_number.h
-	$(RC) $*.rc
-
+$(OJT)\afscfg_stub.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -93,3 +91,9 @@ lang::
 
 clean::
 
+mkdir:
+	-mkdir $(OJT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+	
