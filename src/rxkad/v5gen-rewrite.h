@@ -120,3 +120,7 @@
 #define copy_oid  _rxkad_v5_copy_oid 
 #define TicketFlags2int _rxkad_v5_TicketFlags2int
 #define int2TicketFlags _rxkad_v5_int2TicketFlags
+
+#ifndef HAVE_TIMEGM
+#define timegm	_rxkad_timegm
+#endif

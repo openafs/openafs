@@ -83,6 +83,8 @@ RXKADOBJS =\
 	rxkad_server.o \
 	rxkad_common.o \
 	ticket.o \
+	ticket5.o \
+	crc.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -180,6 +182,12 @@ rxkad_common.o: ${RXKAD}/rxkad_common.c
 	${CCRULE}
 
 ticket.o: ${RXKAD}/ticket.c
+	${CCRULE}
+
+ticket5.o: ${RXKAD}/ticket5.c
+	${CCRULE}
+
+crc.o: ${RXKAD}/crc.c
 	${CCRULE}
 
 fcrypt.o: ${RXKAD}/fcrypt.c
