@@ -28,7 +28,9 @@ A. Creating the proper directory structure.
       sun4x_57
       sun4x_58
       ppc_darwin_13
-      alpha_linux_22 (DES does not work, will require one more change to
+      ppc_linux22
+      ppc_linux24
+      alpha_linux22 (DES does not work, will require one more change to
 				compile)
       hp_ux110 (No client support, but db servers and utilities work)
       hp_ux102 (No client support, but db servers and utilities work)
