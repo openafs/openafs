@@ -507,7 +507,7 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
 static struct proc_dir_entry *openafs_procfs;
 
 static int
-afsproc_init()
+afsproc_init(void)
 {
     struct proc_dir_entry *entry1;
     struct proc_dir_entry *entry;
@@ -537,7 +537,7 @@ afsproc_init()
 }
 
 static void
-afsproc_exit()
+afsproc_exit(void)
 {
     remove_proc_entry(PROC_RXSTATS_NAME, openafs_procfs);
     remove_proc_entry(PROC_SERVICES_NAME, openafs_procfs);
@@ -576,9 +576,9 @@ afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
     __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
 			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L1:    mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_syscall-.L1,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
+			 ";;\n" ".L1:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_syscall-.L1,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
 			 "br.ret.sptk.many b0\n" ".fptr_afs_syscall:\n\t"
-			 "data8 @fptr(afs_syscall)");
+			 "data8 @fptr(afs_syscall)\n\t" ".skip 8");
 }
 
 asmlinkage long
@@ -586,9 +586,9 @@ afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
     __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
 			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L2:    mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
+			 ";;\n" ".L2:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
 			 "br.ret.sptk.many b0\n" ".fptr_afs_xsetgroups:\n\t"
-			 "data8 @fptr(afs_xsetgroups)");
+			 "data8 @fptr(afs_xsetgroups)\n\t" ".skip 8");
 }
 
 struct fptr {
