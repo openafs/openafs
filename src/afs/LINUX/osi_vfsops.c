@@ -463,3 +463,13 @@ void vcache2inode(struct vcache *avc)
     VATTR_NULL(&vattr);
     afs_CopyOutAttrs(avc, &vattr); /* calls vattr2inode */
 }
+
+/* Yet another one for fakestat'ed mountpoints */
+void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp)
+{
+    struct vattr vattr;
+
+    VATTR_NULL(&vattr);
+    afs_CopyOutAttrs(rootvp, &vattr);
+    vattr2inode(AFSTOV(mpvp), &vattr);
+}

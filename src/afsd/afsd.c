@@ -240,6 +240,7 @@ static int enable_process_stats = 0;	/* enable rx stats */
 static int enable_afsdb = 0;		/* enable AFSDB support */
 #endif
 static int enable_dynroot = 0;		/* enable dynroot support */
+static int enable_fakestat = 0;		/* enable fakestat support */
 #ifdef notdef
 static int inodes = 60;		        /* VERY conservative, but has to be */
 #endif

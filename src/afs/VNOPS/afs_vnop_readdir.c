@@ -443,6 +443,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
     afs_uint32 us;
+    struct afs_fakestat_state fakestate;
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent;
 #endif /* defined(AFS_SGI53_ENV) */
@@ -495,6 +496,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	return code;
     }
     /* update the cache entry */
+    afs_InitFakeStat(&fakestate);
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (code) goto done;
 tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) goto done;
@@ -729,6 +733,7 @@ done:
 #ifdef	AFS_HPUX_ENV
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 28);
     return code;
 }
@@ -759,6 +764,7 @@ afs1_readdir(avc, auio, acred)
     struct minnfs_direct *sdirEntry = (struct minnfs_direct *)osi_AllocSmallSpace(sizeof(struct min_direct));
     afs_int32 rlen;
 #endif
+    struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_readdir);
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
@@ -768,6 +774,15 @@ afs1_readdir(avc, auio, acred)
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+	return code;
+    }
+    afs_InitFakeStat(&fakestate);
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (code) {
+#ifdef	AFS_HPUX_ENV
+	osi_FreeSmallSpace((char *)sdirEntry);
+#endif
+	afs_PutFakeStat(&fakestate);
 	return code;
     }
     /* update the cache entry */
@@ -955,6 +970,7 @@ done:
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
     osi_FreeSmallSpace((char *)sdirEntry);
 #endif
+    afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 29);
     return code;
 }

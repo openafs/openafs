@@ -54,6 +54,7 @@ extern struct inode_operations afs_symlink_iops, afs_dir_iops;
 
 afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
+int afs_fakestat_enable = 0;
 
 
 /* this would be faster if it did comparison as int32word, but would be 
@@ -90,8 +91,9 @@ char *afs_index(a, c)
 }
 
 /* call under write lock, evaluate mvid field from a mt pt.
- * avc is the vnode of the mount point object.
- * advc is the vnode of the containing directory
+ * avc is the vnode of the mount point object; must be write-locked.
+ * advc is the vnode of the containing directory (optional; if NULL and
+ *   EvalMountPoint succeeds, caller must initialize *avolpp->dotdot)
  * avolpp is where we return a pointer to the volume named by the mount pt, if success
  * areq is the identity of the caller.
  *
@@ -231,10 +233,174 @@ EvalMountPoint(avc, advc, avolpp, areq)
      * to the new path.
      */
     tvp->mtpoint = avc->fid;	/* setup back pointer to mtpoint */
-    tvp->dotdot  = advc->fid;
+    if (advc) tvp->dotdot  = advc->fid;
 
     *avolpp = tvp;
     return 0;
+}
+
+/*
+ * afs_InitFakeStat
+ *
+ * Must be called on an afs_fakestat_state object before calling
+ * afs_EvalFakeStat or afs_PutFakeStat.  Calling afs_PutFakeStat
+ * without calling afs_EvalFakeStat is legal, as long as this
+ * function is called.
+ */
+
+void
+afs_InitFakeStat(state)
+    struct afs_fakestat_state *state;
+{
+    state->valid = 1;
+    state->did_eval = 0;
+    state->need_release = 0;
+}
+
+/*
+ * afs_EvalFakeStat_int
+ *
+ * The actual implementation of afs_EvalFakeStat and afs_TryEvalFakeStat,
+ * which is called by those wrapper functions.
+ *
+ * Only issues RPCs if canblock is non-zero.
+ */
+static int
+afs_EvalFakeStat_int(avcp, state, areq, canblock)
+    struct vcache **avcp;
+    struct afs_fakestat_state *state;
+    struct vrequest *areq;
+    int canblock;
+{
+    struct vcache *tvc, *root_vp;
+    struct volume *tvolp = NULL;
+    int code = 0;
+
+    osi_Assert(state->valid == 1);
+    osi_Assert(state->did_eval == 0);
+    state->did_eval = 1;
+    if (!afs_fakestat_enable)
+	return 0;
+    tvc = *avcp;
+    if (tvc->mvstat != 1)
+	return 0;
+
+    /* Is the call to VerifyVCache really necessary? */
+    code = afs_VerifyVCache(tvc, areq);
+    if (code)
+	goto done;
+    if (canblock) {
+	ObtainWriteLock(&tvc->lock, 599);
+	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
+	ReleaseWriteLock(&tvc->lock);
+	if (code)
+	    goto done;
+	if (tvolp) {
+	    tvolp->dotdot = tvc->fid;
+	    tvolp->dotdot.Fid.Vnode = tvc->parentVnode;
+	    tvolp->dotdot.Fid.Unique = tvc->parentUnique;
+	}
+    }
+    if (tvc->mvid && (tvc->states & CMValid)) {
+	if (!canblock) {
+	    afs_int32 retry;
+
+	    do {
+		retry = 0;
+		ObtainWriteLock(&afs_xvcache, 597);
+		root_vp = afs_FindVCache(tvc->mvid, 0, 0, &retry, 0);
+		if (root_vp && retry) {
+		    ReleaseWriteLock(&afs_xvcache);
+		    afs_PutVCache(root_vp, 0);
+		}
+	    } while (root_vp && retry);
+	    ReleaseWriteLock(&afs_xvcache);
+	} else {
+	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
+	}
+	if (!root_vp) {
+	    code = canblock ? ENOENT : 0;
+	    goto done;
+	}
+	if (tvolp) {
+	    /* Is this always kosher?  Perhaps we should instead use
+	     * NBObtainWriteLock to avoid potential deadlock.
+	     */
+	    ObtainWriteLock(&root_vp->lock, 598);
+	    if (!root_vp->mvid)
+		root_vp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
+	    *root_vp->mvid = tvolp->dotdot;
+	    ReleaseWriteLock(&root_vp->lock);
+	}
+	state->need_release = 1;
+	state->root_vp = root_vp;
+	*avcp = root_vp;
+	code = 0;
+    } else {
+	code = canblock ? ENOENT : 0;
+    }
+
+done:
+    if (tvolp)
+	afs_PutVolume(tvolp, WRITE_LOCK);
+    return code;
+}
+
+/*
+ * afs_EvalFakeStat
+ *
+ * Automatically does the equivalent of EvalMountPoint for vcache entries
+ * which are mount points.  Remembers enough state to properly release
+ * the volume root vcache when afs_PutFakeStat() is called.
+ *
+ * State variable must be initialized by afs_InitFakeState() beforehand.
+ *
+ * Returns 0 when everything succeeds and *avcp points to the vcache entry
+ * that should be used for the real vnode operation.  Returns non-zero if
+ * something goes wrong and the error code should be returned to the user.
+ */
+int
+afs_EvalFakeStat(avcp, state, areq)
+    struct vcache **avcp;
+    struct afs_fakestat_state *state;
+    struct vrequest *areq;
+{
+    return afs_EvalFakeStat_int(avcp, state, areq, 1);
+}
+
+/*
+ * afs_TryEvalFakeStat
+ *
+ * Same as afs_EvalFakeStat, but tries not to talk to remote servers
+ * and only evaluate the mount point if all the data is already in
+ * local caches.
+ *
+ * Returns 0 if everything succeeds and *avcp points to a valid
+ * vcache entry (possibly evaluated).
+ */
+int
+afs_TryEvalFakeStat(avcp, state, areq)
+    struct vcache **avcp;
+    struct afs_fakestat_state *state;
+    struct vrequest *areq;
+{
+    return afs_EvalFakeStat_int(avcp, state, areq, 0);
+}
+
+/*
+ * afs_PutFakeStat
+ *
+ * Perform any necessary cleanup at the end of a vnode op, given that
+ * afs_InitFakeStat was previously called with this state.
+ */
+void
+afs_PutFakeStat(state)
+    struct afs_fakestat_state *state;
+{
+    osi_Assert(state->valid == 1);
+    if (state->need_release)
+	afs_PutVCache(state->root_vp, 0);
+    state->valid = 0;
 }
     
 afs_ENameOK(aname)
@@ -921,8 +1087,17 @@ afs_lookup(adp, aname, avcp, acred)
     int no_read_access = 0;
     struct sysname_info sysState;   /* used only for @sys checking */
     int dynrootRetry = 1;
+    struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_lookup);
+    afs_InitFakeStat(&fakestate);
+
+    if (code = afs_InitReq(&treq, acred))
+	goto done;
+
+    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    if (code)
+	goto done;
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = AFSTOV(adp);
     memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
@@ -930,10 +1105,6 @@ afs_lookup(adp, aname, avcp, acred)
 #endif	/* AFS_OSF_ENV */
 
     *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
-
-    if (code = afs_InitReq(&treq, acred)) { 
-	goto done;
-    }
 
     /* come back to here if we encounter a non-existent object in a read-only
        volume's directory */
@@ -1217,9 +1388,9 @@ afs_lookup(adp, aname, avcp, acred)
         if (!(flags & AFS_LOOKUP_NOEVAL))
           /* don't eval mount points */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
-	if (tvc->mvstat == 1) {
-	  /* a mt point, possibly unevaluated */
-	  struct volume *tvolp;
+	if (!afs_fakestat_enable && tvc->mvstat == 1) {
+	    /* a mt point, possibly unevaluated */
+	    struct volume *tvolp;
 
 	    ObtainWriteLock(&tvc->lock,133);
 	    code = EvalMountPoint(tvc, adp, &tvolp, &treq);
@@ -1319,6 +1490,7 @@ done:
 	    if (!FidCmp(&(tvc->fid), &(adp->fid))) { 
 		afs_PutVCache(*avcp, WRITE_LOCK);
 		*avcp = NULL;
+		afs_PutFakeStat(&fakestate);
 		return afs_CheckCode(EISDIR, &treq, 18);
 	    }
 	}
@@ -1342,6 +1514,7 @@ done:
 	    /* So Linux inode cache is up to date. */
 	    code = afs_VerifyVCache(tvc, &treq);
 #else
+	    afs_PutFakeStat(&fakestate);
 	    return 0;  /* can't have been any errors if hit and !code */
 #endif
 	}
@@ -1355,5 +1528,6 @@ done:
        *avcp = (struct vcache *)0;
     }
 
+    afs_PutFakeStat(&fakestate);
     return code;
 }

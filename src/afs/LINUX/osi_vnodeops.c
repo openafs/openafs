@@ -42,6 +42,7 @@ RCSID("$Header$");
 #endif
 
 extern struct vcache *afs_globalVp;
+extern afs_rwlock_t afs_xvcache;
 
 extern struct dentry_operations *afs_dops;
 #if defined(AFS_LINUX24_ENV)
@@ -169,6 +170,7 @@ static int afs_linux_readdir(struct file *fp,
     int len;
     int origOffset;
     cred_t *credp = crref();
+    struct afs_fakestat_state fakestat;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
@@ -180,10 +182,19 @@ static int afs_linux_readdir(struct file *fp,
 	return -code;
     }
 
+    afs_InitFakeStat(&fakestat);
+    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    if (code) {
+	afs_PutFakeStat(&fakestat);
+	AFS_GUNLOCK();
+	return -code;
+    }
+
     /* update the cache entry */
 tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -code;
     }
@@ -191,6 +202,7 @@ tagain:
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, 0, &treq, &origOffset, &len, 1);
     if (!tdc) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -ENOENT;
     }
@@ -284,6 +296,7 @@ tagain:
 
     afs_PutDCache(tdc);
     ReleaseReadLock(&avc->lock);
+    afs_PutFakeStat(&fakestat);
     AFS_GUNLOCK();
     return 0;
 }
@@ -654,20 +667,33 @@ static int afs_linux_revalidate(struct dentry *dp)
     cred_t *credp;
     struct vrequest treq;
     struct vcache *vcp = ITOAFS(dp->d_inode);
+    struct vcache *rootvp = NULL;
 
     AFS_GLOCK();
+
+    if (afs_fakestat_enable && vcp->mvstat == 1 && vcp->mvid &&
+	(vcp->states & CMValid) && (vcp->states & CStatd)) {
+	ObtainSharedLock(&afs_xvcache, 680);
+	rootvp = afs_FindVCache(vcp->mvid, 0, 0, 0, 0);
+	ReleaseSharedLock(&afs_xvcache);
+    }
+
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
 
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->states & CStatd) {
-        if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
+	if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
 	    check_bad_parent(dp); /* check and correct mvid */
-	vcache2inode(vcp);
+	if (rootvp)
+	    vcache2fakeinode(rootvp, vcp);
+	else
+	    vcache2inode(vcp);
 #ifdef AFS_LINUX24_ENV
 	unlock_kernel();
 #endif
+	if (rootvp) afs_PutVCache(rootvp);
 	AFS_GUNLOCK();
 	return 0;
     }
