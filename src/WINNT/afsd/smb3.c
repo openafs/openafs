@@ -1447,13 +1447,18 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
 		/* prepare for setattr call */
 		attr.mask = 0;
+		
 		lastMod = *((FILETIME *)(p->datap + 16));
-		if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod))) {
+		/* when called as result of move a b, lastMod is (-1, -1). If the check for -1 is not present, timestamp
+		of the resulting file will be 1969 (-1)
+		 */
+		if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
 			attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
 			smb_UnixTimeFromLargeSearchTime(&attr.clientModTime,
 							&lastMod);
 			fidp->flags |= SMB_FID_MTIMESETDONE;
 		}
+		
 		attribute = *((u_long *)(p->datap + 32));
 		if (attribute != 0) {
 			if ((scp->unixModeBits & 0222)

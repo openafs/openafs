@@ -5,10 +5,6 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# make compiler warnings fatal
-
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
-
 # indicate that the functions in this library should be exported
 
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DEXPORT_AFSAPPLIB -DEXPORTED=_declspec(dllexport)

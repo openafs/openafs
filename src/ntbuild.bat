@@ -54,12 +54,14 @@ set AFSBLD_IS_WSPP=1
 goto args_done
 
 
+
 :args_done
 REM ########################################################################
 REM General required definitions:
 REM     SYS_NAME = AFS system name
 
 SET SYS_NAME=i386_win95
+SET SYS_NAME=i386_nt40
 SET _WIN32_IE=0x400
 
 REM ########################################################################

@@ -242,7 +242,11 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 			}
                         valuep++;	/* skip the "#" */
 
-                        valuep += strspn(valuep, " 	"); /* skip SP & TAB */
+                        valuep += strspn(valuep, " \t"); /* skip SP & TAB */
+                        /* strip spaces and tabs in the end. They should not be there according to CellServDB format
+                        so do this just in case                        */
+                        while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') valuep[strlen(valuep) - 1] = '\0';
+
 #endif /* !DJGPP */
 			if (inRightCell) {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)

@@ -11,7 +11,6 @@
 #     AFSDEV_BUILDTYPE = [ CHECKED | FREE ]
 #     AFSDEV_INCLUDE = <default include directories>
 #     AFSDEV_LIB = <default library directories>
-#     AFSDEV_BIN = <default build binary directories>
 #
 # Optional definitions:
 #     AFSDEV_DESTDIR = <top-level install directory>  (default is $(AFSROOT)\DEST)
@@ -37,7 +36,7 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.2 b
+AFSPRODUCT_VERSION=1.2.6 a
 CELLNAME_DEFAULT=Your Cell Name
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
@@ -63,40 +62,26 @@ AFSDEV_BUILDTYPE = NONE
 
 # Limit default include and library directories to those specified for build.
 
-!IFNDEF AFSDEV_INCLUDE
-!ERROR Must define AFSDEV_INCLUDE to be the default include directories.
-!ENDIF
+#!IFNDEF AFSDEV_INCLUDE
+#!ERROR Must define AFSDEV_INCLUDE to be the default include directories.
+#!ENDIF
 
-!IF ((!DEFINED(INCLUDE)) && ([set INCLUDE=$(AFSDEV_INCLUDE)] != 0))
+#!IF ((!DEFINED(INCLUDE)) && ([set INCLUDE=$(AFSDEV_INCLUDE)] != 0))
 #    If env. var. INCLUDE not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable INCLUDE.
-!ENDIF
-INCLUDE = $(AFSDEV_INCLUDE)
+#!ERROR Failed setting environment variable INCLUDE.
+#!ENDIF
+#INCLUDE = $(AFSDEV_INCLUDE)
 
 
-!IFNDEF AFSDEV_LIB
-!ERROR Must define AFSDEV_LIB to be the default library directories.
-!ENDIF
+#!IFNDEF AFSDEV_LIB
+#!ERROR Must define AFSDEV_LIB to be the default library directories.
+#!ENDIF
 
-!IF ((!DEFINED(LIB)) && ([set LIB=$(AFSDEV_LIB)] != 0))
+#!IF ((!DEFINED(LIB)) && ([set LIB=$(AFSDEV_LIB)] != 0))
 #    If env. var. LIB not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable LIB.
-!ENDIF
-LIB = $(AFSDEV_LIB)
-
-
-# Put default build binary directories at front of path.
-
-!IFNDEF AFSDEV_BIN
-!ERROR Must define AFSDEV_BIN to be the default build binary directories.
-!ENDIF
-
-!IF ((!DEFINED(PATH)) && ([set PATH=$(AFSDEV_BIN)] != 0))
-#    If env. var. PATH not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable PATH.
-!ENDIF
-PATH = $(AFSDEV_BIN);$(PATH)
-
+#!ERROR Failed setting environment variable LIB.
+#!ENDIF
+#LIB = $(AFSDEV_LIB)
 
 # Undefine WIN32.MAK NODEBUG macro.
 # Always generate full debug info, unless profiling or tuning (see below).
@@ -104,9 +89,7 @@ PATH = $(AFSDEV_BIN);$(PATH)
 !UNDEF NODEBUG
 
 # Include WIN32.MAK nmake file
-
 !INCLUDE <WIN32.MAK>
-
 
 
 # Extend and/or supplement definitions in WIN32.MAK.
@@ -183,13 +166,15 @@ afscflags =\
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 #    Apply full optimization; generate full debug info in obj.
-afscflags = $(afscflags) /Ox /Z7
-ldebug = $(ldebug) -debugtype:both
+afscflags = $(afscflags) /Ox /Zi
+# ldebug = $(ldebug) -debugtype:both
+ldebug = $(ldebug)
 cdebug = $(cdebug:-Od=)  # avoid annoying override warning (D4025)
+cvarsdll = $(cvarsdll:-MDd=-MD)
 
 !ELSEIF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 #    Disable optimization; generate full debug info in obj.
-afscflags = $(afscflags) /Od /Z7
+afscflags = $(afscflags) /Od /Zi
 ldebug = $(ldebug) -debugtype:both
 !ENDIF
 
@@ -215,14 +200,14 @@ afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
 # /FIXED:NO   generates a relocation section in the executable
 
 afslflags =\
-	/FIXED:NO
+	/FIXED:NO /VERBOSE:LIB /DEBUG
 
 
 
 # For checked builds, define DEBUG (but not the MS control flag _DEBUG).
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
-afscdefs = $(afscdefs) -DDEBUG
+#afscdefs = $(afscdefs) -DDEBUG
 !ENDIF
 
 # Utilize the debug version of the MSVC runtime, if requested.

@@ -57,7 +57,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\TaLocale.lib
 
 $(DLLFILE): $(DLLOBJS)
-	$(DLLMFCLINK) /def:afs_shl_ext.def $(DLLLIBS)
+	$(DLLCONLINK) /def:afs_shl_ext.def $(DLLLIBS)
 	$(DLLPREP)
 
 ############################################################################

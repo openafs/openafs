@@ -11,7 +11,6 @@
 #     AFSDEV_BUILDTYPE = [ CHECKED | FREE ]
 #     AFSDEV_INCLUDE = <default include directories>
 #     AFSDEV_LIB = <default library directories>
-#     AFSDEV_BIN = <default build binary directories>
 #
 # Optional definitions:
 #     AFSDEV_DESTDIR = <top-level install directory>  (default is $(AFSROOT)\DEST)
@@ -93,20 +92,6 @@ INCLUDE = $(AFSDEV_INCLUDE)
 !ERROR Failed setting environment variable LIB.
 !ENDIF
 LIB = $(AFSDEV_LIB)
-
-
-# Put default build binary directories at front of path.
-
-!IFNDEF AFSDEV_BIN
-!ERROR Must define AFSDEV_BIN to be the default build binary directories.
-!ENDIF
-
-!IF ((!DEFINED(PATH)) && ([set PATH=$(AFSDEV_BIN)] != 0))
-#    If env. var. PATH not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable PATH.
-!ENDIF
-PATH = $(AFSDEV_BIN);$(PATH)
-
 
 # Undefine WIN32.MAK NODEBUG macro.
 # Always generate full debug info, unless profiling or tuning (see below).
@@ -302,7 +287,8 @@ DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll) $
 DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for resource-only DLLs
-DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**
+# DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**
+DLLRESLINK = $(link) /OUT:$@ -noentry $(afslflags) $**
 
 # Library archive macro
 LIBARCH = $(implib) /NOLOGO /OUT:$@ $**

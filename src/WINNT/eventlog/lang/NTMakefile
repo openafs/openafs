@@ -40,7 +40,7 @@ EVENTRESFILE = $(LANGNAME)\event.res
 DLLOBJS = $(DLLRESFILE)
 
 $(DLLFILE): $(DLLOBJS)
-	$(DLLCONLINK)
+	$(DLLRESLINK)
 	$(DLLPREP)
 
 ############################################################################
