@@ -564,6 +564,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
+		 LINUX_KERNEL_PAGE_FOLLOW_LINK
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -680,6 +681,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
+		 fi
+		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
+		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
