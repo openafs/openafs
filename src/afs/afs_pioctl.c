@@ -1028,16 +1028,12 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#ifdef AFS_LINUX22_ENV
-    return -code;
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     return (code);
 #else
     if (!getuerror()) 	
  	setuerror(code);
     return (getuerror());
-#endif
 #endif
 }
   
