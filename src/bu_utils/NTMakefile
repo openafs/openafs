@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=bu_utils
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # build fms.exe
@@ -15,8 +15,8 @@
 EXEFILE = $(DESTDIR)\etc\fms.exe
 
 EXEOBJS =\
-	$(OJT)\fms.obj \
-	$(OJT)\fms.res
+	$(OUT)\fms.obj \
+	$(OUT)\fms.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -32,7 +32,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\fms.res: AFS_component_version_number.h
+$(OUT)\fms.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target

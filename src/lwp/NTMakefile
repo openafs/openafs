@@ -7,17 +7,21 @@
 
 # nmake Makefile for NT build of LWP. 
 
+RELDIR=lwp
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
-LIBOBJS = $(OJT)\lock.obj \
-	  $(OJT)\lwp_nt.obj \
-	  $(OJT)\iomgr.obj \
-	  $(OJT)\timer.obj\
-	  $(OJT)\fasttime.obj \
-	  $(OJT)\waitkey.obj \
-	  $(OJT)\threadname.obj \
-	  $(OJT)\AFS_component_version_number.obj
+LIBOBJS = $(OUT)\lock.obj \
+	  $(OUT)\lwp_nt.obj \
+	  $(OUT)\iomgr.obj \
+	  $(OUT)\timer.obj\
+	  $(OUT)\fasttime.obj \
+	  $(OUT)\waitkey.obj \
+	  $(OUT)\threadname.obj \
+	  $(OUT)\AFS_component_version_number.obj
+
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 LIBFILE = $(DESTDIR)\lib\afslwp.lib
 
@@ -36,9 +40,9 @@ install9x: install
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-tests: $(OJT)\rw.exe
+tests: $(OUT)\rw.exe
 
-$(OJT)\rw.exe: $(OJT)\rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
+$(OUT)\rw.exe: $(OUT)\rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
 clean::

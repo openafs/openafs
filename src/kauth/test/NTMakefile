@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=kauth\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 EXELIBS = \
 	$(DESTDIR)\afslwp.lib \
@@ -22,34 +22,34 @@ EXELIBS = \
 	$(DESTDIR)\afs\afskauth.lib
 
 
-$(OJT)\multiklog.exe: $(OJT)\multiklog.obj
+$(OUT)\multiklog.exe: $(OUT)\multiklog.obj
 	$(EXECONLINK) $(EXELIBS)
 
 
-$(OJT)\test_date.exe: $(OJT)\test_date.obj
+$(OUT)\test_date.exe: $(OUT)\test_date.obj
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\test_badtix.exe: $(OJT)\test_badtix.obj
+$(OUT)\test_badtix.exe: $(OUT)\test_badtix.obj
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\decode_ticket.exe: $(OJT)\decode_ticket.obj
+$(OUT)\decode_ticket.exe: $(OUT)\decode_ticket.obj
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\test_interim_ktc.exe: $(OJT)\test_interim_ktc.obj
+$(OUT)\test_interim_ktc.exe: $(OUT)\test_interim_ktc.obj
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\test_rxkad_free: test_rxkad_free.o 
+$(OUT)\test_rxkad_free: test_rxkad_free.o 
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\test_getticket.exe: $(OJT)\test_getticket.obj
+$(OUT)\test_getticket.exe: $(OUT)\test_getticket.obj
 	$(EXECONLINK) $(EXELIBS)
 
-$(OJT)\background.exe: $(OJT)\background.obj
+$(OUT)\background.exe: $(OUT)\background.obj
 	$(EXECONLINK) $(EXELIBS)
 
 
-test tests all: $(OJT)\multiklog.exe $(OJT)\test_date.exe $(OJT)\test_badtix.exe $(OJT)\decode_ticket.exe \
-		$(OJT)\test_interim_ktc.exe $(OJT)\test_getticket.exe $(OJT)\background.exe
+test tests all: $(OUT)\multiklog.exe $(OUT)\test_date.exe $(OUT)\test_badtix.exe $(OUT)\decode_ticket.exe \
+		$(OUT)\test_interim_ktc.exe $(OUT)\test_getticket.exe $(OUT)\background.exe
 
 
 # test_interim_ktc depends on normally running ka & pr servers.  Also on

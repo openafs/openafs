@@ -6,9 +6,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=audit
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 INCFILEDIR = $(DESTDIR)\include\afs
 
@@ -20,7 +20,7 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsaudit.lib
 
 LIBOBJS =\
-	$(OJT)\audit.obj
+	$(OUT)\audit.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH)  

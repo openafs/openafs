@@ -5,11 +5,11 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=rxstat
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !IF (EXIST(..\config\NTMakefile.version))
 !INCLUDE ..\config\NTMakefile.version
 !ENDIF
-
 
 INCFILEDIR = $(DESTDIR)\include
 
@@ -19,10 +19,12 @@ INCFILES =\
 # Library component lists.
 
 LIBOBJS = \
-	$(OJT)\rxstat.cs.obj \
-	$(OJT)\rxstat.ss.obj \
-	$(OJT)\rxstat.xdr.obj \
-	$(OJT)\rxstat.obj
+	$(OUT)\rxstat.cs.obj \
+	$(OUT)\rxstat.ss.obj \
+	$(OUT)\rxstat.xdr.obj \
+	$(OUT)\rxstat.obj
+
+$(LIBOBJS): rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h
 
 LIBFILE = $(DESTDIR)\lib\afsrxstat.lib
 

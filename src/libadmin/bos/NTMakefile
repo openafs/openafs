@@ -7,26 +7,26 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\bos
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
-
 
 BOZO = ..\..\bozo
 RX = ..\..\rx
 
-RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
 BOZOOBJS = \
-	$(OJT)\bosint.xdr.obj $(OJT)\bosint.cs.obj
+	$(OUT)\bosint.xdr.obj $(OUT)\bosint.cs.obj
 
 ADMINOBJS = \
-	$(OJT)\afs_bosAdmin.obj
+	$(OUT)\afs_bosAdmin.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
 	$(BOZOOBJS) \
 	$(RXOBJS) \
-	$(OJT)\afsbosadmin.res
+	$(OUT)\afsbosadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_bosAdmin.h
@@ -58,7 +58,7 @@ $(BOZOOBJS): $(BOZO)\$$(@B).c
 
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsbosadmin.res: AFS_component_version_number.h
+$(OUT)\afsbosadmin.res: AFS_component_version_number.h
 
 mkdir:
 	

@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afs_config.h"
@@ -448,7 +449,7 @@ void AutoMapEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : TEXT("/afs")), TRUE, FALSE);
+   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
 
@@ -476,8 +477,8 @@ void AutoMapEdit_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pMap->szMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
+   if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+        (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
       {
       Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
       return;

@@ -1,17 +1,16 @@
 # Copyright (C)  1998  Transarc Corporation.  All rights reserved.
 #
 
-
+RELDIR=comerr\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
-
-EXEFILE = $(OJT)\comerr_test.exe
+EXEFILE = $(OUT)\comerr_test.exe
 
 EXEOBJS =\
-	$(OJT)\test1.obj \
-	$(OJT)\test2.obj \
-	$(OJT)\test.obj
+	$(OUT)\test1.obj \
+	$(OUT)\test2.obj \
+	$(OUT)\test.obj
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \

@@ -41,16 +41,19 @@ goto usage
 :checked
 set AFSBLD_TYPE=CHECKED
 set AFSBLD_IS_WSPP=
+set AFSDEV_CRTDEBUG=1
 goto args_done
 
 :free
 set AFSBLD_TYPE=FREE
 set AFSBLD_IS_WSPP=
+set AFSDEV_CRTDEBUG=0
 goto args_done
 
 :wspp
 set AFSBLD_TYPE=FREE
 set AFSBLD_IS_WSPP=1
+set AFSDEV_CRTDEBUG=0
 goto args_done
 
 
@@ -59,9 +62,13 @@ goto args_done
 REM ########################################################################
 REM General required definitions:
 REM     SYS_NAME = AFS system name
+REM Choose one of "i386_win95" or "i386_nt40"
 
-SET SYS_NAME=i386_win95
 SET SYS_NAME=i386_nt40
+
+REM Specify the targeted version of Windows and IE: 0x400 for Win9x/NT4 
+REM and above; 0x500 for Windows 2000 and above
+
 SET _WIN32_IE=0x400
 
 REM ########################################################################
@@ -70,19 +77,32 @@ REM     AFSDEV_BUILDTYPE = CHECKED / FREE
 REM     AFSDEV_INCLUDE = default include directories
 REM     AFSDEV_LIB = default library directories
 REM     AFSDEV_BIN = default build binary directories
+REM     AFSVER_CL  = version of the Microsoft compiler "1200" for VC6;
+REM                  or "1300" for VC7 (.NET)
+REM                  or "1310" for .NET 2003
 
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
-rem Location of VC++ development folder
+REM Location of Microsoft Visual C++ development folder (8.3 short name)
 set MSVCDIR=c:\progra~1\micros~2\vc98
 
-set AFSDEV_INCLUDE=%MSVCDIR%\include;%MSVCDIR%\mfc\include
-set AFSDEV_LIB=%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
-set AFSDEV_BIN=%MSVCDIR%\bin
+REM Location of Microsoft Platform SDK (8.3 short name)
+set MSSDKDIR=c:\progra~1\micros~4
+
+REM Location of npapi.h (from DDK or Platform SDK samples - 8.3 short name)
+set NTDDKDIR=c:\progra~1\micros~5
+
+REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
+SET 9XDDKDIR=c:\progra~1\micros~6
+
+set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSVCDIR%\mfc\include
+set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%9XDDKDIR%\include
+set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
+set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin
 
 REM ########################################################################
 REM Location of base folder where source lies, build directory
-REM e.g. AFSROOT\SRC is source directory of the build tree
+REM e.g. AFSROOT\SRC is source directory of the build tree (8.3 short name)
 
 set AFSROOT=D:\Dev\AfsSorce\OpenAF~2.2
 

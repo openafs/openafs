@@ -11,6 +11,7 @@ AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include -I..
 
 # include the primary makefile
 
+RELDIR=WINNT\afsapplib\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -35,7 +36,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAppLib_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afsapplib.rc
 
-RESFILE = $(OJT)\afsapplib_$(LANGID).res
+RESFILE = $(OUT)\afsapplib_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -48,7 +49,7 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
-	@if exist $(OJT)\*.res del $(OJT)\*.res
+	@if exist $(OUT)\*.res del $(OUT)\*.res
 	@if exist RC*. del RC*.
 	@if exist RD*. del RD*.
 

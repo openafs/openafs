@@ -10,7 +10,7 @@
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include -I..
 
 # include the primary makefile
-
+RELDIR=WINNT\afslegal\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afslegal_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afslegal.rc
 
-RESFILE = $(OJT)\afslegal_$(LANGID).res
+RESFILE = $(OUT)\afslegal_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 

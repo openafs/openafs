@@ -7,20 +7,21 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\kas
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
 KAUTH = ..\..\kauth
 RX = ..\..\rx
 
-RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
 KAUTHOBJS = \
-	$(OJT)\kauth.cs.obj $(OJT)\kauth.xdr.obj $(OJT)\kaaux.obj
+	$(OUT)\kauth.cs.obj $(OUT)\kauth.xdr.obj $(OUT)\kaaux.obj
 
 ADMINOBJS = \
-	$(OJT)\afs_kasAdmin.obj \
-	$(OJT)\afskasadmin.res
+	$(OUT)\afs_kasAdmin.obj \
+	$(OUT)\afskasadmin.res
 
 DLLOBJS = $(ADMINOBJS) $(KAUTHOBJS) $(RXOBJS)
 
@@ -52,7 +53,7 @@ $(RXOBJS): $(RX)\$$(@B).c
 	$(C2OBJ) -I$(RX) $**
 
 # Definitions for generating versioninfo resources
-$(OJT)\afskasadmin.res: AFS_component_version_number.h
+$(OUT)\afskasadmin.res: AFS_component_version_number.h
 
 mkdir:
 	

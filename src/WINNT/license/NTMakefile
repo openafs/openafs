@@ -9,6 +9,7 @@
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 
 # include the primary makefile
+RELDIR=WINNT\license
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -17,8 +18,8 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 EXEFILE = $(DESTDIR)\bin\sgml2rtf.exe
 
 EXEOBJS = \
-	$(OJT)\main.obj \
-	$(OJT)\multistring.obj
+	$(OUT)\main.obj \
+	$(OUT)\multistring.obj
 
 EXELIBS = \
 	user32.lib
@@ -36,7 +37,7 @@ lang ::
 	$(CD) ..
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

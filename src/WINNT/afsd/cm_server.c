@@ -256,6 +256,8 @@ long cm_ChecksumServerList(cm_serverRef_t *serversp)
 	int first = 1;
 	cm_serverRef_t *tsrp;
 
+    lock_ObtainWrite(&cm_serverLock);
+
 	for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 		if (first)
 			first = 0;
@@ -264,6 +266,7 @@ long cm_ChecksumServerList(cm_serverRef_t *serversp)
 		sum ^= (long) tsrp->server;
 	}
 
+    lock_ReleaseWrite(&cm_serverLock);
 	return sum;
 }
 
@@ -276,11 +279,14 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 	cm_serverRef_t	*current=*list;
 	unsigned short ipRank = element->server->ipRank;
 
+    lock_ObtainWrite(&cm_serverLock);
+
 	/* insertion into empty list  or at the beginning of the list */
 	if ( !current || (current->server->ipRank > ipRank) )
 	{
 		element->next = *list;
 		*list = element;
+        lock_ReleaseWrite(&cm_serverLock);
 		return ;	
 	}
 	
@@ -292,6 +298,7 @@ void cm_InsertServerList(cm_serverRef_t** list, cm_serverRef_t* element)
 	}
 	element->next = current->next;
 	current->next = element;
+    lock_ReleaseWrite(&cm_serverLock);
 }
 /*
 ** Re-sort the server list with the modified rank
@@ -307,6 +314,7 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
 	if ( (!*current) || !((*current)->next)  )
 		return 1;		/* list unchanged: return success */
 
+    lock_ObtainWrite(&cm_serverLock);
 	/* if the server is on the list, delete it from list */
 	while ( *current )
 	{
@@ -319,11 +327,14 @@ long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t*	server)
 		current = & ( (*current)->next);	
 	}
 	/* if this volume is not replicated on this server  */
-	if ( !element)
+	if (!element) {
+        lock_ReleaseWrite(&cm_serverLock);
 		return 1;	/* server is not on list */
+    }
 
 	/* re-insert deleted element into the list with modified rank*/
 	cm_InsertServerList(list, element);
+    lock_ReleaseWrite(&cm_serverLock);
 	return 0;
 }
 /*
@@ -340,6 +351,8 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 	if ( !tsrp || ! tsrp->next )
 		return ; 
 
+    lock_ObtainWrite(&cm_serverLock);
+
 	/* count the number of servers with the lowest rank */
 	lowestRank = tsrp->server->ipRank;
 	for ( count=1, tsrp=tsrp->next; tsrp; tsrp=tsrp->next)
@@ -351,12 +364,17 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 	}	
 
 	/* if there is only one server with the lowest rank, we are done */
-	if ( count <= 1 )		
+	if ( count <= 1 ) {
+        lock_ReleaseWrite(&cm_serverLock);
 		return ;
+    }
 
 	picked = rand() % count;
-	if ( !picked )
+	if ( !picked ) {
+        lock_ReleaseWrite(&cm_serverLock);
 		return ;
+    }
+
 	tsrp = *list;
 	while (--picked >= 0)
 	{
@@ -366,4 +384,23 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 	lastTsrp->next = tsrp->next;  /* delete random element from list*/
 	tsrp->next     = *list; /* insert element at the beginning of list */
 	*list          = tsrp;
+    lock_ReleaseWrite(&cm_serverLock);
 }
+
+void cm_FreeServerList(cm_serverRef_t** list)
+{
+    cm_serverRef_t  *current = *list;
+    cm_serverRef_t  *next = 0;
+
+    lock_ObtainWrite(&cm_serverLock);
+
+    while (current)
+    {
+	   next = current->next;
+	   free(current);
+	   current = next;
+    }
+  
+    lock_ReleaseWrite(&cm_serverLock);
+}
+

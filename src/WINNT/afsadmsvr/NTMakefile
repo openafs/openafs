@@ -15,6 +15,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DIGNORE_STDS_H
 
 # include the primary makefile
 
+RELDIR=WINNT\afsadmsvr
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -41,37 +42,37 @@ IDLFILES = \
 	iTaAfsAdmSvrTypes.h
 
 LIBOBJS = \
-	$(OJT)\TaAfsAdmSvrClient.obj \
-	$(OJT)\TaAfsAdmSvrClientBind.obj \
-	$(OJT)\TaAfsAdmSvrClientCache.obj \
-	$(OJT)\TaAfsAdmSvrClientCell.obj \
-	$(OJT)\TaAfsAdmSvrClientGroup.obj \
-	$(OJT)\TaAfsAdmSvrClientInternal.obj \
-	$(OJT)\TaAfsAdmSvrClientNotify.obj \
-	$(OJT)\TaAfsAdmSvrClientPing.obj \
-	$(OJT)\TaAfsAdmSvrClientUser.obj \
-	$(OJT)\TaAfsAdmSvrCommon.obj \
-	$(OJT)\iTaAfsAdmSvr_c.obj
+	$(OUT)\TaAfsAdmSvrClient.obj \
+	$(OUT)\TaAfsAdmSvrClientBind.obj \
+	$(OUT)\TaAfsAdmSvrClientCache.obj \
+	$(OUT)\TaAfsAdmSvrClientCell.obj \
+	$(OUT)\TaAfsAdmSvrClientGroup.obj \
+	$(OUT)\TaAfsAdmSvrClientInternal.obj \
+	$(OUT)\TaAfsAdmSvrClientNotify.obj \
+	$(OUT)\TaAfsAdmSvrClientPing.obj \
+	$(OUT)\TaAfsAdmSvrClientUser.obj \
+	$(OUT)\TaAfsAdmSvrCommon.obj \
+	$(OUT)\iTaAfsAdmSvr_c.obj
 
-EXERES = $(OJT)\AfsAdmSvr.res
+EXERES = $(OUT)\AfsAdmSvr.res
 
 
 $(EXERES):$$(@B).rc
 	$(RC) $**
 
 EXEOBJS = \
-	$(OJT)\TaAfsAdmSvr.obj \
-	$(OJT)\TaAfsAdmSvrCallback.obj \
-	$(OJT)\TaAfsAdmSvrCell.obj \
-	$(OJT)\TaAfsAdmSvrCommon.obj \
-	$(OJT)\TaAfsAdmSvrDebug.obj \
-	$(OJT)\TaAfsAdmSvrGeneral.obj \
-	$(OJT)\TaAfsAdmSvrGroup.obj \
-	$(OJT)\TaAfsAdmSvrMain.obj \
-	$(OJT)\TaAfsAdmSvrProperties.obj \
-	$(OJT)\TaAfsAdmSvrSearch.obj \
-	$(OJT)\TaAfsAdmSvrUser.obj \
-	$(OJT)\iTaAfsAdmSvr_s.obj
+	$(OUT)\TaAfsAdmSvr.obj \
+	$(OUT)\TaAfsAdmSvrCallback.obj \
+	$(OUT)\TaAfsAdmSvrCell.obj \
+	$(OUT)\TaAfsAdmSvrCommon.obj \
+	$(OUT)\TaAfsAdmSvrDebug.obj \
+	$(OUT)\TaAfsAdmSvrGeneral.obj \
+	$(OUT)\TaAfsAdmSvrGroup.obj \
+	$(OUT)\TaAfsAdmSvrMain.obj \
+	$(OUT)\TaAfsAdmSvrProperties.obj \
+	$(OUT)\TaAfsAdmSvrSearch.obj \
+	$(OUT)\TaAfsAdmSvrUser.obj \
+	$(OUT)\iTaAfsAdmSvr_s.obj
 
 VCLIBS =\
 	gdi32.lib \
@@ -168,14 +169,14 @@ clean:: afsclass_clean afsapplib_clean
 # Dependencies
 #
 
-$(OJT)\AfsAdmSvr.res : AFS_component_version_number.h
+$(OUT)\AfsAdmSvr.res : AFS_component_version_number.h
 
 mkdir:
-	-mkdir $(OJT)\..\afsapplib
+	-mkdir $(OUT)\..\afsapplib
 	cd ..\afsapplib
 	nmake /nologo /f ntmakefile mkdir
 	cd ..\afsadmsvr
-	-mkdir $(OJT)\..\afsclass
+	-mkdir $(OUT)\..\afsclass
 	cd ..\afsclass
 	nmake /nologo /f ntmakefile mkdir
 	cd ..\afsadmsvr

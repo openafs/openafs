@@ -48,5 +48,8 @@
 
 #include <WINNT/TaLocale.h>
 
+#if defined (_DEBUG) && defined (AFS_CRTDBG_MAP_ALLOC)
+#define new DEBUG_NEW
+#endif
 
 #endif // !defined(AFX_STDAFX_H__601A9D0D_6CD3_11D1_BAE7_00C04FD140D2__INCLUDED_)

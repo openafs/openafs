@@ -37,6 +37,8 @@ class CShellExt : public CCmdTarget
 	BOOL m_bDirSelected;
 	BOOL m_bIsSymlink;	// is symbolic link!
 	TCHAR m_szFile[MAX_PATH];
+	BOOL m_bIsOverlayEnabled;
+	BOOL IsOverlayEnabled(){return m_bIsOverlayEnabled;}
 
     CStringArray m_astrFileNames;
 

@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=config
 !INCLUDE NTMakefile.$(SYS_NAME)
 
 # Relative path to src directory depends on how we got to current directory.
@@ -34,6 +35,339 @@ $(INCFILEDIR)\afsconfig.h: afsconfig-windows.h
 	$(COPY) $? $@
 
 idirs: doclink
+!	IF (!EXIST($(OJT)))
+		$(MKDIR) $(OJT)
+!	ENDIF
+!	IF (!EXIST($(OJT)\afs))
+		$(MKDIR) $(OJT)\afs
+!	ENDIF
+!	IF (!EXIST($(OJT)\audit))
+		$(MKDIR) $(OJT)\audit
+!	ENDIF
+!	IF (!EXIST($(OJT)\auth))
+		$(MKDIR) $(OJT)\auth
+!	ENDIF
+!	IF (!EXIST($(OJT)\auth\test))
+		$(MKDIR) $(OJT)\auth\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\bozo))
+		$(MKDIR) $(OJT)\bozo
+!	ENDIF
+!	IF (!EXIST($(OJT)\bubasics))
+		$(MKDIR) $(OJT)\bubasics
+!	ENDIF
+!	IF (!EXIST($(OJT)\bucoord))
+		$(MKDIR) $(OJT)\bucoord
+!	ENDIF
+!	IF (!EXIST($(OJT)\budb))
+		$(MKDIR) $(OJT)\budb
+!	ENDIF
+!	IF (!EXIST($(OJT)\butc))
+		$(MKDIR) $(OJT)\butc
+!	ENDIF
+!	IF (!EXIST($(OJT)\butm))
+		$(MKDIR) $(OJT)\butm
+!	ENDIF
+!	IF (!EXIST($(OJT)\bu_utils))
+		$(MKDIR) $(OJT)\bu_utils
+!	ENDIF
+!	IF (!EXIST($(OJT)\cmd))
+		$(MKDIR) $(OJT)\cmd
+!	ENDIF
+!	IF (!EXIST($(OJT)\cmd\test))
+		$(MKDIR) $(OJT)\cmd\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\comerr))
+		$(MKDIR) $(OJT)\comerr
+!	ENDIF
+!	IF (!EXIST($(OJT)\comerr\test))
+		$(MKDIR) $(OJT)\comerr\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\config))
+		$(MKDIR) $(OJT)\config
+!	ENDIF
+!	IF (!EXIST($(OJT)\des))
+		$(MKDIR) $(OJT)\des
+!	ENDIF
+!	IF (!EXIST($(OJT)\des\test))
+		$(MKDIR) $(OJT)\des\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\des_stub))
+		$(MKDIR) $(OJT)\des_stub
+!	ENDIF
+!	IF (!EXIST($(OJT)\dir))
+		$(MKDIR) $(OJT)\dir
+!	ENDIF
+!	IF (!EXIST($(OJT)\dir\test))
+		$(MKDIR) $(OJT)\dir\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\finale))
+		$(MKDIR) $(OJT)\finale
+!	ENDIF
+!	IF (!EXIST($(OJT)\fsint))
+		$(MKDIR) $(OJT)\fsint
+!	ENDIF
+!	IF (!EXIST($(OJT)\kauth))
+		$(MKDIR) $(OJT)\kauth
+!	ENDIF
+!	IF (!EXIST($(OJT)\kauth\test))
+		$(MKDIR) $(OJT)\kauth\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\libacl))
+		$(MKDIR) $(OJT)\libacl
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin))
+		$(MKDIR) $(OJT)\libadmin
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\adminutil))
+		$(MKDIR) $(OJT)\libadmin\adminutil
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\bos))
+		$(MKDIR) $(OJT)\libadmin\bos
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\cfg))
+		$(MKDIR) $(OJT)\libadmin\cfg
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\cfg\test))
+		$(MKDIR) $(OJT)\libadmin\cfg\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\client))
+		$(MKDIR) $(OJT)\libadmin\client
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\kas))
+		$(MKDIR) $(OJT)\libadmin\kas
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\pts))
+		$(MKDIR) $(OJT)\libadmin\pts
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\test))
+		$(MKDIR) $(OJT)\libadmin\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\libadmin\vos))
+		$(MKDIR) $(OJT)\libadmin\vos
+!	ENDIF
+!	IF (!EXIST($(OJT)\libafsauthent))
+		$(MKDIR) $(OJT)\libafsauthent
+!	ENDIF
+!	IF (!EXIST($(OJT)\libafsrpc))
+		$(MKDIR) $(OJT)\libafsrpc
+!	ENDIF
+!	IF (!EXIST($(OJT)\lwp))
+		$(MKDIR) $(OJT)\lwp
+!	ENDIF
+!	IF (!EXIST($(OJT)\lwp\test))
+		$(MKDIR) $(OJT)\lwp\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\procmgmt))
+		$(MKDIR) $(OJT)\procmgmt
+!	ENDIF
+!	IF (!EXIST($(OJT)\procmgmt\test))
+		$(MKDIR) $(OJT)\procmgmt\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\ptserver))
+		$(MKDIR) $(OJT)\ptserver
+!	ENDIF
+!	IF (!EXIST($(OJT)\rx))
+		$(MKDIR) $(OJT)\rx
+!	ENDIF
+!	IF (!EXIST($(OJT)\rx\test))
+		$(MKDIR) $(OJT)\rx\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\rxgen))
+		$(MKDIR) $(OJT)\rxgen
+!	ENDIF
+!	IF (!EXIST($(OJT)\rxkad))
+		$(MKDIR) $(OJT)\rxkad
+!	ENDIF
+!	IF (!EXIST($(OJT)\rxstat))
+		$(MKDIR) $(OJT)\rxstat
+!	ENDIF
+!	IF (!EXIST($(OJT)\shlibafsauthent))
+		$(MKDIR) $(OJT)\shlibafsauthent
+!	ENDIF
+!	IF (!EXIST($(OJT)\shlibafsrpc))
+		$(MKDIR) $(OJT)\shlibafsrpc
+!	ENDIF
+!	IF (!EXIST($(OJT)\sys))
+		$(MKDIR) $(OJT)\sys
+!	ENDIF
+!	IF (!EXIST($(OJT)\tbutc))
+		$(MKDIR) $(OJT)\tbutc
+!	ENDIF
+!	IF (!EXIST($(OJT)\tviced))
+		$(MKDIR) $(OJT)\tviced
+!	ENDIF
+!	IF (!EXIST($(OJT)\ubik))
+		$(MKDIR) $(OJT)\ubik
+!	ENDIF
+!	IF (!EXIST($(OJT)\update))
+		$(MKDIR) $(OJT)\update
+!	ENDIF
+!	IF (!EXIST($(OJT)\usd))
+		$(MKDIR) $(OJT)\usd
+!	ENDIF
+!	IF (!EXIST($(OJT)\usd\test))
+		$(MKDIR) $(OJT)\usd\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\util))
+		$(MKDIR) $(OJT)\util
+!	ENDIF
+!	IF (!EXIST($(OJT)\util\test))
+		$(MKDIR) $(OJT)\util\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\viced))
+		$(MKDIR) $(OJT)\viced
+!	ENDIF
+!	IF (!EXIST($(OJT)\vlserver))
+		$(MKDIR) $(OJT)\vlserver
+!	ENDIF
+!	IF (!EXIST($(OJT)\vol))
+		$(MKDIR) $(OJT)\vol
+!	ENDIF
+!	IF (!EXIST($(OJT)\vol\test))
+		$(MKDIR) $(OJT)\vol\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\volser))
+		$(MKDIR) $(OJT)\volser
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT))
+		$(MKDIR) $(OJT)\WINNT
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsadmsvr))
+		$(MKDIR) $(OJT)\WINNT\afsadmsvr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsapplib))
+		$(MKDIR) $(OJT)\WINNT\afsapplib
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsapplib\lang))
+		$(MKDIR) $(OJT)\WINNT\afsapplib\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsapplib\test))
+		$(MKDIR) $(OJT)\WINNT\afsapplib\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsclass))
+		$(MKDIR) $(OJT)\WINNT\afsclass
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsd))
+		$(MKDIR) $(OJT)\WINNT\afsd
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afslegal))
+		$(MKDIR) $(OJT)\WINNT\afslegal
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afslegal\lang))
+		$(MKDIR) $(OJT)\WINNT\afslegal\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsreg))
+		$(MKDIR) $(OJT)\WINNT\afsreg
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsreg\test))
+		$(MKDIR) $(OJT)\WINNT\afsreg\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrcfg))
+		$(MKDIR) $(OJT)\WINNT\afssvrcfg
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrcfg\lang))
+		$(MKDIR) $(OJT)\WINNT\afssvrcfg\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrcpa))
+		$(MKDIR) $(OJT)\WINNT\afssvrcpa
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrcpa\lang))
+		$(MKDIR) $(OJT)\WINNT\afssvrcpa\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrmgr))
+		$(MKDIR) $(OJT)\WINNT\afssvrmgr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afssvrmgr\lang))
+		$(MKDIR) $(OJT)\WINNT\afssvrmgr\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsusrmgr))
+		$(MKDIR) $(OJT)\WINNT\afsusrmgr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsusrmgr\lang))
+		$(MKDIR) $(OJT)\WINNT\afsusrmgr\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afs_setup_utils))
+		$(MKDIR) $(OJT)\WINNT\afs_setup_utils
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afs_setup_utils\lang))
+		$(MKDIR) $(OJT)\WINNT\afs_setup_utils\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afs_setup_utils\_isuser))
+		$(MKDIR) $(OJT)\WINNT\afs_setup_utils\_isuser
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afs_setup_utils\GetWebDll))
+		$(MKDIR) $(OJT)\WINNT\afs_setup_utils\GetWebDll
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\bosctlsvc))
+		$(MKDIR) $(OJT)\WINNT\bosctlsvc
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_config))
+		$(MKDIR) $(OJT)\WINNT\client_config
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_config\lang))
+		$(MKDIR) $(OJT)\WINNT\client_config\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_cpa))
+		$(MKDIR) $(OJT)\WINNT\client_cpa
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_cpa\lang))
+		$(MKDIR) $(OJT)\WINNT\client_cpa\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_creds))
+		$(MKDIR) $(OJT)\WINNT\client_creds
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_creds\lang))
+		$(MKDIR) $(OJT)\WINNT\client_creds\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_exp))
+		$(MKDIR) $(OJT)\WINNT\client_exp
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_exp\lang))
+		$(MKDIR) $(OJT)\WINNT\client_exp\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\client_osi))
+		$(MKDIR) $(OJT)\WINNT\client_osi
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\eventlog))
+		$(MKDIR) $(OJT)\WINNT\eventlog
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\eventlog\lang))
+		$(MKDIR) $(OJT)\WINNT\eventlog\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\eventlog\test))
+		$(MKDIR) $(OJT)\WINNT\eventlog\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install))
+		$(MKDIR) $(OJT)\WINNT\install
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\InstallShield5))
+		$(MKDIR) $(OJT)\WINNT\install\InstallShield5
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\NSIS))
+		$(MKDIR) $(OJT)\WINNT\install\NSIS
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\Win9x))
+		$(MKDIR) $(OJT)\WINNT\install\Win9x
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\license))
+		$(MKDIR) $(OJT)\WINNT\license
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\license\lang))
+		$(MKDIR) $(OJT)\WINNT\license\lang
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\pthread))
+		$(MKDIR) $(OJT)\WINNT\pthread
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\pthread\test))
+		$(MKDIR) $(OJT)\WINNT\pthread\test
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\talocale))
+		$(MKDIR) $(OJT)\WINNT\talocale
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\win9xpanel))
+		$(MKDIR) $(OJT)\WINNT\win9xpanel
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)))
 		$(MKDIR) $(DESTDIR)
 !	ENDIF
@@ -106,7 +440,7 @@ $(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
 	$(COPY) $? $@
 	$(UTIL_CR) + $@
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(OJT)\util_cr.exe 
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat $(DESTDIR)\bin\util_cr.exe 
 	$(COPY) NTLang.bat $(DESTDIR)\bin
 	$(UTIL_CR) + $(DESTDIR)\bin\NTLang.bat
 
@@ -138,16 +472,16 @@ INCTOOLS = \
 	$(DESTDIR)\bin\util_cr.exe \
 	$(DESTDIR)\bin\touch.exe
 
-$(INCTOOLS):$(OJT)\$$(@F)
+$(INCTOOLS):$(OUT)\$$(@F)
 	$(COPY) $** $(DESTDIR)\bin\.
 
-$(OJT)\mkvers.exe : $(OJT)\mkvers.obj
+$(OUT)\mkvers.exe : $(OUT)\mkvers.obj
 	$(EXECONLINK)
 
-$(OJT)\touch.exe : $(OJT)\touch.obj
+$(OUT)\touch.exe : $(OUT)\touch.obj
 	$(EXECONLINK)
 
-$(OJT)\util_cr.exe : $(OJT)\util_cr.obj
+$(OUT)\util_cr.exe : $(OUT)\util_cr.obj
 	$(EXECONLINK)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
@@ -165,6 +499,6 @@ clean::
 	$(DEL) $(DESTDIR)\LIB\*.DLL
 	$(DEL) $(DESTDIR)\bin\mkver.exe
 	$(DEL) $(DESTDIR)\bin\touch.exe
-	$(DEL) util_cr.exe
-	$(DEL) mkver.exe
-	$(DEL) touch.exe
+	$(DEL) $(OUT)\util_cr.exe
+	$(DEL) $(OUT)\mkver.exe
+	$(DEL) $(OUT)\touch.exe

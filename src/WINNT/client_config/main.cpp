@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afs_config.h"
@@ -19,7 +20,6 @@ extern "C" {
 #include "tab_hosts.h"
 #include "tab_drives.h"
 #include "tab_advanced.h"
-
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -62,6 +62,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdSh
    RegisterFastListClass();
    RegisterSockAddrClass();
    RegisterSpinnerClass();
+   fs_utils_InitMountRoot();
 
    // Initialize our global variables and window classes
    //

@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=shlibafsrpc
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -22,33 +23,74 @@ AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
 # Object files by category.
-MULTIOBJS = rx_multi.obj
+MULTIOBJS = $(OUT)\rx_multi.obj
 
-XDROBJS = xdr.obj xdr_array.obj xdr_arrayn.obj xdr_float.obj xdr_mem.obj \
-	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj \
-	xdr_afsuuid.obj xdr_int64.obj
+XDROBJS = $(OUT)\xdr.obj \
+    $(OUT)\xdr_array.obj \
+    $(OUT)\xdr_arrayn.obj \
+    $(OUT)\xdr_float.obj \
+    $(OUT)\xdr_mem.obj \
+	$(OUT)\xdr_rec.obj \
+    $(OUT)\xdr_refernce.obj \
+    $(OUT)\xdr_rx.obj \
+    $(OUT)\xdr_update.obj \
+	$(OUT)\xdr_afsuuid.obj \
+    $(OUT)\xdr_int64.obj
 
-RXOBJS = rx_event.obj rx_user.obj rx_pthread.obj rx.obj \
-	rx_null.obj rx_globals.obj rx_getaddr.obj rx_misc.obj rx_packet.obj \
-	rx_rdwr.obj rx_trace.obj rx_xmit_nt.obj rx_conncache.obj 
+RXOBJS = $(OUT)\rx_event.obj \
+    $(OUT)\rx_user.obj \
+    $(OUT)\rx_pthread.obj \
+    $(OUT)\rx.obj \
+	$(OUT)\rx_null.obj \
+    $(OUT)\rx_globals.obj \
+    $(OUT)\rx_getaddr.obj \
+    $(OUT)\rx_misc.obj 
+    $(OUT)\rx_packet.obj \
+	$(OUT)\rx_rdwr.obj \
+    $(OUT)\rx_trace.obj \
+    $(OUT)\rx_xmit_nt.obj \
+    $(OUT)\rx_conncache.obj 
 
-RXSTATOBJS = rxstat.obj rxstat.ss.obj rxstat.xdr.obj rxstat.cs.obj
+RXSTATOBJS = $(OUT)\rxstat.obj \
+    $(OUT)\rxstat.ss.obj \
+    $(OUT)\rxstat.xdr.obj \
+    $(OUT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = rxkad_client.obj rxkad_server.obj rxkad_common.obj ticket.obj \
-	AFS_component_version_number.obj
+LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj \
+    $(OUT)\rxkad_server.obj \
+    $(OUT)\rxkad_common.obj \
+    $(OUT)\ticket.obj \
+	$(OUT)\AFS_component_version_number.obj
 
-LIBRXKAD_REGOBJS = fcrypt.obj crypt_conn.obj
+LIBRXKAD_REGOBJS = $(OUT)\fcrypt.obj \
+    $(OUT)\crypt_conn.obj
 
-DESOBJS = des.obj cbc_encrypt.obj pcbc_encrypt.obj cksum.obj new_rnd_key.obj \
-	key_sched.obj debug_decl.obj quad_cksum.obj key_parity.obj \
-	weak_key.obj strng_to_key.obj misc.obj util.obj
+DESOBJS = $(OUT)\des.obj \
+    $(OUT)\cbc_encrypt.obj \
+    $(OUT)\pcbc_encrypt.obj \
+    $(OUT)\cksum.obj \
+    $(OUT)\new_rnd_key.obj \
+	$(OUT)\key_sched.obj \
+    $(OUT)\debug_decl.obj \
+    $(OUT)\quad_cksum.obj \
+    $(OUT)\key_parity.obj \
+	$(OUT)\weak_key.obj \
+    $(OUT)\strng_to_key.obj \
+    $(OUT)\misc.obj \
+    $(OUT)\util.obj
 
-UTILOBJS = casestrcpy.obj winsock_nt.obj
+UTILOBJS = $(OUT)\casestrcpy.obj \
+    $(OUT)\winsock_nt.obj
 
-COMERROBJS = error_msg.obj et_name.obj com_err.obj
+COMERROBJS = $(OUT)\error_msg.obj \    
+    $(OUT)\et_name.obj \
+    $(OUT)\com_err.obj
 
-FSINTOBJS = afsint.cs.obj afsint.xdr.obj afscbint.cs.obj afscbint.xdr.obj \
-	afsaux.obj
+FSINTOBJS = $(OUT)\afsint.cs.obj \
+    $(OUT)\afsint.xdr.obj \
+    $(OUT)\afscbint.cs.obj \
+    $(OUT)\afscbint.xdr.obj \
+	$(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATOBJS) $(LIBRXKAD_OBJS) \
 	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILOBJS) $(COMERROBJS) \

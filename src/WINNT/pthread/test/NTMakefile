@@ -5,18 +5,19 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\pthread\test
 !INCLUDE ../../../config/NTMakefile.$(SYS_NAME)
 
 test tests: ptest.exe tsd.exe native.exe
 
 
-$(OJT)\ptest.exe: $(OJT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OUT)\ptest.exe: $(OUT)\ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-$(OJT)\tsd.exe: $(OJT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OUT)\tsd.exe: $(OUT)\tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-$(OJT)\native.exe: $(OJT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+$(OUT)\native.exe: $(OUT)\native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
 clean::

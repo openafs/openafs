@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=usd\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -16,7 +17,7 @@ clean::
 test tests: usd_test.exe
 
 # make usd_test.exe
-$(OJT)\usd_test.exe: $(OJT)\usd_test.obj $(LIBFILE) $(LIBUTIL)
+$(OUT)\usd_test.exe: $(OUT)\usd_test.obj $(LIBFILE) $(LIBUTIL)
 	$(EXECONLINK)
 
 mkdir:

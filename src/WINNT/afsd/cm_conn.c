@@ -29,6 +29,9 @@ osi_rwlock_t cm_connLock;
 
 long RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
 
+#define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
+#define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
+
 afs_int32 cryptall = 0;
 
 void cm_PutConn(cm_conn_t *connp)
@@ -41,11 +44,37 @@ void cm_PutConn(cm_conn_t *connp)
 void cm_InitConn(void)
 {
 	static osi_once_t once;
+	long code;
+	DWORD sessTimeout;
+	HKEY parmKey;
         
-        if (osi_Once(&once)) {
+    if (osi_Once(&once)) {
 		lock_InitializeRWLock(&cm_connLock, "connection global lock");
-		osi_EndOnce(&once);
+
+        /* keisa - read timeout value for lanmanworkstation  service.
+         * It is used as hardtimeout for connections. 
+         * Default value is 45 
+         */
+		code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, LANMAN_WKS_PARAM_KEY,
+                            0, KEY_QUERY_VALUE, &parmKey);
+		if (code == ERROR_SUCCESS)
+        {
+		    DWORD dummyLen = sizeof(sessTimeout);
+		    code = RegQueryValueEx(parmKey, LANMAN_WKS_SESSION_TIMEOUT, NULL, NULL, 
+                                   (BYTE *) &sessTimeout, &dummyLen);
+		    if (code == ERROR_SUCCESS)
+            {
+                afsi_log("lanmanworkstation : SessTimeout %d", sessTimeout);
+                RDRtimeout = sessTimeout;
+            }
+		    else
+            {
+                RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
+            }
         }
+		
+        osi_EndOnce(&once);
+    }
 }
 
 void cm_InitReq(cm_req_t *reqp)
@@ -134,7 +163,30 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	if (reqp->flags & CM_REQ_NORETRY)
 		goto out;
 
-	/* if all servers are offline, mark them non-busy and start over */
+	/* if timeout - check that is did not exceed the SMB timeout
+	   and retry */
+	if (errorCode == CM_ERROR_TIMEDOUT)
+    {
+	    long timeUsed, timeLeft;
+	    /* timeleft - get if from reqp the same way as cmXonnByMServers does */
+#ifndef DJGPP
+	    timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+#else
+	    gettimeofday(&now, NULL);
+	    timeUsed = sub_time(now, reqp->startTime) / 1000;
+#endif
+	    
+	    /* leave 5 seconds margin for sleep */
+	    timeLeft = RDRtimeout - timeUsed;
+	    if (timeLeft > 5)
+        {
+            thrd_Sleep(3000);
+            cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
+            retry = 1;
+        } 
+    }
+
+    /* if all servers are offline, mark them non-busy and start over */
 	if (errorCode == CM_ERROR_ALLOFFLINE) {
 	    osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
 	    thrd_Sleep(5000);
@@ -295,41 +347,42 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
 	lock_ObtainWrite(&cm_serverLock);
 
-        for(tsrp = serversp; tsrp; tsrp=tsrp->next) {
-		tsp = tsrp->server;
-		tsp->refCount++;
-                lock_ReleaseWrite(&cm_serverLock);
-		if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
-			if (tsrp->status == busy)
-				someBusy = 1;
-			else if (tsrp->status == offline)
-				someOffline = 1;
-			else {
-				code = cm_ConnByServer(tsp, usersp, connpp);
-				if (code == 0) {
-					cm_PutServer(tsp);
-					/* Set RPC timeout */
-					if (timeLeft > CM_CONN_CONNDEADTIME)
-						timeLeft = CM_CONN_CONNDEADTIME;
+    for(tsrp = serversp; tsrp; tsrp=tsrp->next) {
+        tsp = tsrp->server;
+        tsp->refCount++;
+        lock_ReleaseWrite(&cm_serverLock);
+        if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
+            if (tsrp->status == busy)
+                someBusy = 1;
+            else if (tsrp->status == offline)
+                someOffline = 1;
+            else {
+                code = cm_ConnByServer(tsp, usersp, connpp);
+                if (code == 0) {
+                    cm_PutServer(tsp);
+                    /* Set RPC timeout */
+                    if (timeLeft > CM_CONN_CONNDEADTIME)
+                        timeLeft = CM_CONN_CONNDEADTIME;
 
-					if (hardTimeLeft > CM_CONN_HARDDEADTIME) 
-					        hardTimeLeft = CM_CONN_HARDDEADTIME;
+                    if (hardTimeLeft > CM_CONN_HARDDEADTIME) 
+                        hardTimeLeft = CM_CONN_HARDDEADTIME;
 
-					lock_ObtainMutex(&(*connpp)->mx);
-					rx_SetConnDeadTime((*connpp)->callp,
-							   timeLeft);
-					rx_SetConnHardDeadTime((*connpp)->callp, 
-							       (u_short) hardTimeLeft);
-					lock_ReleaseMutex(&(*connpp)->mx);
+                    lock_ObtainMutex(&(*connpp)->mx);
+                    rx_SetConnDeadTime((*connpp)->callp,
+                                        timeLeft);
+                    rx_SetConnHardDeadTime((*connpp)->callp, 
+                                            (u_short) hardTimeLeft);
+                    lock_ReleaseMutex(&(*connpp)->mx);
 
-                        		return 0;
-				}
-				if (firstError == 0) firstError = code;
-			}
+                    return 0;
                 }
-                lock_ObtainWrite(&cm_serverLock);
-                osi_assert(tsp->refCount-- > 0);
+                if (firstError == 0) 
+                    firstError = code;
+            }
         }
+        lock_ObtainWrite(&cm_serverLock);
+        osi_assert(tsp->refCount-- > 0);
+    }   
 
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
@@ -341,7 +394,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 		else firstError = CM_ERROR_NOSUCHVOLUME;
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
-        return firstError;
+    return firstError;
 }
 
 /* called with a held server to GC all bad connections hanging off of the server */

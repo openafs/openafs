@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=bucoord
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 #########################################################################
 # install local include file
@@ -19,13 +19,13 @@ INCFILES = bc.h
 LIBFILE = $(DESTDIR)\lib\afs\afsbxdb.lib
 
 LIBOBJS =\
-	$(OJT)/dsstub.obj \
-	$(OJT)/ubik_db_if.obj \
-	$(OJT)/status.obj \
-	$(OJT)/dlq.obj \
-	$(OJT)/bucoord_errs.obj \
-	$(OJT)/volstub.obj \
-	$(OJT)/AFS_component_version_number.obj
+	$(OUT)/dsstub.obj \
+	$(OUT)/ubik_db_if.obj \
+	$(OUT)/status.obj \
+	$(OUT)/dlq.obj \
+	$(OUT)/bucoord_errs.obj \
+	$(OUT)/volstub.obj \
+	$(OUT)/AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -37,27 +37,27 @@ $(LIBFILE): $(LIBOBJS)
 EXEFILE = $(DESTDIR)\etc\backup.exe
 
 EXEOBJS =\
-	$(OJT)\main.obj \
-	$(OJT)\config.obj \
-	$(OJT)\dsstub.obj \
-	$(OJT)\volstub.obj \
-	$(OJT)\commands.obj \
-	$(OJT)\regex.obj \
-	$(OJT)\server.obj \
-	$(OJT)\dsvs.obj \
-	$(OJT)\dump.obj \
-	$(OJT)\restore.obj \
-	$(OJT)\ubik_db_if.obj \
-	$(OJT)\dump_sched.obj \
-	$(OJT)\vol_sets.obj \
-	$(OJT)\tape_hosts.obj \
-	$(OJT)\bucoord_errs.obj \
-	$(OJT)\bc_status.obj \
-	$(OJT)\status.obj \
-	$(OJT)\dlq.obj \
+	$(OUT)\main.obj \
+	$(OUT)\config.obj \
+	$(OUT)\dsstub.obj \
+	$(OUT)\volstub.obj \
+	$(OUT)\commands.obj \
+	$(OUT)\regex.obj \
+	$(OUT)\server.obj \
+	$(OUT)\dsvs.obj \
+	$(OUT)\dump.obj \
+	$(OUT)\restore.obj \
+	$(OUT)\ubik_db_if.obj \
+	$(OUT)\dump_sched.obj \
+	$(OUT)\vol_sets.obj \
+	$(OUT)\tape_hosts.obj \
+	$(OUT)\bucoord_errs.obj \
+	$(OUT)\bc_status.obj \
+	$(OUT)\status.obj \
+	$(OUT)\dlq.obj \
 
 
-$(OJT)/backup.res:AFS_component_version_number.h
+$(OUT)/backup.res:AFS_component_version_number.h
 	$(RC) backup.rc
 
 $(EXEOBJS):$$(@B).c
@@ -104,7 +104,7 @@ bucoord_errs.c bc.h:    bucoord_errs.et bc.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)/backup.res: AFS_component_version_number.h
+$(OUT)/backup.res: AFS_component_version_number.h
 
 ############################################################################
 # Install 

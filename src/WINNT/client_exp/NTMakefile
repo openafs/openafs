@@ -8,9 +8,9 @@
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd  /D"_WINDOWS" /D"_WINDLL" /D"_AFXDLL" /D"_USRDLL"
 
 NO_CRTDBG=1			#define this to disable any CRT_DBG flag
+RELDIR=WINNT\client_exp
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # afs_shl_ext.dll
@@ -18,37 +18,37 @@ NO_CRTDBG=1			#define this to disable any CRT_DBG flag
 DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll
 
 DLLOBJS =\
-	$(OJT)\add_acl_entry_dlg.obj \
-	$(OJT)\add_submount_dlg.obj \
-	$(OJT)\afs_shl_ext.obj \
-	$(OJT)\afs_shl_ext_stub.res \
-	$(OJT)\auth_dlg.obj \
-	$(OJT)\clear_acl_dlg.obj \
-	$(OJT)\copy_acl_dlg.obj \
-	$(OJT)\down_servers_dlg.obj \
-	$(OJT)\fs_utils.obj \
-	$(OJT)\gui2fs.obj \
-	$(OJT)\help.obj \
-	$(OJT)\klog_dlg.obj \
-	$(OJT)\make_mount_point_dlg.obj \
-	$(OJT)\mount_points_dlg.obj \
-	$(OJT)\msgs.obj \
-	$(OJT)\partition_info_dlg.obj \
-	$(OJT)\results_dlg.obj \
-	$(OJT)\server_status_dlg.obj \
-	$(OJT)\set_afs_acl.obj \
-	$(OJT)\shell_ext.obj \
-	$(OJT)\stdafx.obj \
-	$(OJT)\submount_info.obj \
-	$(OJT)\submounts_dlg.obj \
-	$(OJT)\unlog_dlg.obj \
-	$(OJT)\volumeinfo.obj \
-#	$(OJT)\make_symbolic_link_dlg.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\add_acl_entry_dlg.obj \
+	$(OUT)\add_submount_dlg.obj \
+	$(OUT)\afs_shl_ext.obj \
+	$(OUT)\afs_shl_ext_stub.res \
+	$(OUT)\auth_dlg.obj \
+	$(OUT)\clear_acl_dlg.obj \
+	$(OUT)\copy_acl_dlg.obj \
+	$(OUT)\down_servers_dlg.obj \
+	$(OUT)\fs_utils.obj \
+	$(OUT)\gui2fs.obj \
+	$(OUT)\help.obj \
+	$(OUT)\klog_dlg.obj \
+	$(OUT)\make_mount_point_dlg.obj \
+	$(OUT)\mount_points_dlg.obj \
+	$(OUT)\msgs.obj \
+	$(OUT)\partition_info_dlg.obj \
+	$(OUT)\results_dlg.obj \
+	$(OUT)\server_status_dlg.obj \
+	$(OUT)\set_afs_acl.obj \
+	$(OUT)\shell_ext.obj \
+	$(OUT)\stdafx.obj \
+	$(OUT)\submount_info.obj \
+	$(OUT)\submounts_dlg.obj \
+	$(OUT)\unlog_dlg.obj \
+	$(OUT)\volumeinfo.obj \
+	$(OUT)\make_symbolic_link_dlg.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 AFSD = ..\afsd
 
-$(OJT)\fs_utils.obj: $(AFSD)\fs_utils.c
+$(OUT)\fs_utils.obj: $(AFSD)\fs_utils.c
 	$(C2OBJ) $**
 
 DLLLIBS =\
@@ -66,7 +66,7 @@ $(DLLFILE): $(DLLOBJS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\afs_shl_ext_stub.res: AFS_component_version_number.h
+$(OUT)\afs_shl_ext_stub.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -137,7 +137,7 @@ clean::
     $(CD) ..
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

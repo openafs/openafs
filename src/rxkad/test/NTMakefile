@@ -5,23 +5,23 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=rxkad\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Build stress.exe
 
-EXEFILE = $(OJT)\stress.exe
+EXEFILE = $(OUT)\stress.exe
 
 EXEOBJS =\
-	$(OJT)\stress.xdr.obj \
-	$(OJT)\stress_errs.obj \
-	$(OJT)\stress_c.obj \
-	$(OJT)\stress_s.obj \
-	$(OJT)\stress.cs.obj \
-	$(OJT)\stress.ss.obj \
-	$(OJT)\stress.obj
+	$(OUT)\stress.xdr.obj \
+	$(OUT)\stress_errs.obj \
+	$(OUT)\stress_c.obj \
+	$(OUT)\stress_s.obj \
+	$(OUT)\stress.cs.obj \
+	$(OUT)\stress.ss.obj \
+	$(OUT)\stress.obj
 
 EXELIBS =\
 	$(DESTDIR)\lib\afsrxkad.lib \

@@ -62,10 +62,10 @@ void afsi_log();
 osi_hyper_t hzero = {0, 0};
 osi_hyper_t hones = {0xFFFFFFFF, -1};
 
-osi_log_t *smb_logp;
+osi_log_t *  smb_logp;
 osi_rwlock_t smb_globalLock;
 osi_rwlock_t smb_rctLock;
-osi_rwlock_t smb_ListenerLock;
+osi_mutex_t  smb_ListenerLock;
  
 char smb_LANadapter;
 unsigned char smb_sharename[NCBNAMSZ+1] = {0};
@@ -1057,7 +1057,7 @@ int smb_ListShares()
         fprintf(stderr, "The following shares are available:\n");
         fprintf(stderr, "Share Name (AFS Path)\n");
         fprintf(stderr, "---------------------\n");
-        fprintf(stderr, "\\\\%s\\%-16s (/afs)\n", smb_localNamep, "ALL");
+        fprintf(stderr, "\\\\%s\\%-16s (%s)\n", smb_localNamep, "ALL", cm_mountRoot);
 
 #ifndef DJGPP
 	code = GetWindowsDirectory(sbmtpath, sizeof(sbmtpath));
@@ -1084,7 +1084,7 @@ int smb_ListShares()
                                         sbmtpath);
           if (!len) return num_shares;
           p = pathName;
-          if (strncmp(p, "/afs", 4) != 0)
+          if (strncmp(p, cm_mountRoot, 4) != 0)
             print_afs = 1;
           while (*p) {
             if (*p == '\\') *p = '/';    /* change to / */
@@ -1092,7 +1092,7 @@ int smb_ListShares()
           }
 
           fprintf(stderr, "\\\\%s\\%-16s (%s%s)\n",
-                  smb_localNamep, this_share, (print_afs ? "/afs" : "\0"),
+                  smb_localNamep, this_share, (print_afs ? cm_mountRoot : "\0"),
                   pathName);
           num_shares++;
           while (*this_share != NULL) this_share++;  /* find next NULL */
@@ -1141,8 +1141,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
         /* We can accept either unix or PC style AFS pathnames.  Convert
            Unix-style to PC style here for internal use. */
         p = pathName;
-        if (strncmp(p, "/afs", 4) == 0)
-          p += 4;  /* skip /afs */
+        if (strncmp(p, cm_mountRoot, 4) == 0)
+          p += strlen(cm_mountRoot);  /* skip mount path */
         q = p;
         while (*q) {
           if (*q == '/') *q = '\\';    /* change to \ */
@@ -1372,13 +1372,13 @@ static smb_packet_t *GetPacket(void)
 	tbp = smb_packetFreeListp;
         if (tbp) smb_packetFreeListp = tbp->nextp;
 	lock_ReleaseWrite(&smb_globalLock);
-        if (!tbp) {
+    if (!tbp) {
 #ifndef DJGPP
-        	tbp = GlobalAlloc(GMEM_FIXED, 65540);
+        tbp = calloc(65540,1);
 #else /* DJGPP */
-                tbp = malloc(sizeof(smb_packet_t));
+        tbp = malloc(sizeof(smb_packet_t));
 #endif /* !DJGPP */
-                tbp->magic = SMB_PACKETMAGIC;
+        tbp->magic = SMB_PACKETMAGIC;
 		tbp->ncbp = NULL;
 		tbp->vcp = NULL;
 		tbp->resumeCode = 0;
@@ -1391,28 +1391,28 @@ static smb_packet_t *GetPacket(void)
 		tbp->flags = 0;
         
 #ifdef DJGPP
-                npar = SMB_PACKETSIZE >> 4;  /* number of paragraphs */
-                {
-                  signed int retval =
-                    __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
-                  if (retval == -1) {
-                    afsi_log("Cannot allocate %d paragraphs of DOS memory",
-                             npar);
-                    osi_panic("",__FILE__,__LINE__);
-                  }
-                  else {
-                    afsi_log("Allocated %d paragraphs of DOS mem at 0x%X",
-                             npar, retval);
-                    seg = retval;
-                  }
-                }
-                tbp->dos_pkt = (seg * 16) + 0;  /* DOS physical address */
-                tbp->dos_pkt_sel = tb_sel;
+        npar = SMB_PACKETSIZE >> 4;  /* number of paragraphs */
+        {
+            signed int retval =
+                __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
+            if (retval == -1) {
+                afsi_log("Cannot allocate %d paragraphs of DOS memory",
+                          npar);
+                osi_panic("",__FILE__,__LINE__);
+            }
+            else {
+                afsi_log("Allocated %d paragraphs of DOS mem at 0x%X",
+                          npar, retval);
+                seg = retval;
+            }
+        }
+        tbp->dos_pkt = (seg * 16) + 0;  /* DOS physical address */
+        tbp->dos_pkt_sel = tb_sel;
 #endif /* DJGPP */
 	}
-        osi_assert(tbp->magic == SMB_PACKETMAGIC);
+    osi_assert(tbp->magic == SMB_PACKETMAGIC);
 
-        return tbp;
+    return tbp;
 }
 
 smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
@@ -1420,63 +1420,63 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
 	smb_packet_t *tbp;
 	tbp = GetPacket();
 	memcpy(tbp, pkt, sizeof(smb_packet_t));
-	tbp->wctp = tbp->data + ((unsigned int)pkt->wctp -
-                                 (unsigned int)pkt->data);
+	tbp->wctp = tbp->data + ((unsigned int)pkt->wctp - (unsigned int)pkt->data);
 	return tbp;
 }
 
 static NCB *GetNCB(void)
 {
 	smb_ncb_t *tbp;
-        NCB *ncbp;
+    NCB *ncbp;
 #ifdef DJGPP
-        unsigned int npar, seg, tb_sel;
+    unsigned int npar, seg, tb_sel;
 #endif /* DJGPP */
 
 	lock_ObtainWrite(&smb_globalLock);
 	tbp = smb_ncbFreeListp;
-        if (tbp) smb_ncbFreeListp = tbp->nextp;
+    if (tbp) 
+        smb_ncbFreeListp = tbp->nextp;
 	lock_ReleaseWrite(&smb_globalLock);
-        if (!tbp) {
+    if (!tbp) {
 #ifndef DJGPP
-        	tbp = GlobalAlloc(GMEM_FIXED, sizeof(*tbp));
+        tbp = calloc(sizeof(*tbp),1);
 #else /* DJGPP */
-                tbp = malloc(sizeof(*tbp));
-                npar = (sizeof(NCB)+15) >> 4;  /* number of paragraphs */
-                {
-                  signed int retval =
-                    __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
-                  if (retval == -1) {
-                    afsi_log("Cannot allocate %d paragraphs of DOS mem in GetNCB",
-                             npar);
-                    osi_panic("",__FILE__,__LINE__);
-                  } else {
-                    afsi_log("Allocated %d paragraphs of DOS mem at 0x%X in GetNCB",
-                             npar, retval);
-                    seg = retval;
-                  }
-                }
-                tbp->dos_ncb = (seg * 16) + 0;  /* DOS physical address */
-                tbp->dos_ncb_sel = tb_sel;
+        tbp = malloc(sizeof(*tbp));
+        npar = (sizeof(NCB)+15) >> 4;  /* number of paragraphs */
+        {
+            signed int retval =
+                __dpmi_allocate_dos_memory(npar, &tb_sel); /* DOS segment */
+            if (retval == -1) {
+                afsi_log("Cannot allocate %d paragraphs of DOS mem in GetNCB",
+                          npar);
+                osi_panic("",__FILE__,__LINE__);
+            } else {
+                afsi_log("Allocated %d paragraphs of DOS mem at 0x%X in GetNCB",
+                          npar, retval);
+                seg = retval;
+            }
+        }
+        tbp->dos_ncb = (seg * 16) + 0;  /* DOS physical address */
+        tbp->dos_ncb_sel = tb_sel;
 #endif /* !DJGPP */
-                tbp->magic = SMB_NCBMAGIC;
+        tbp->magic = SMB_NCBMAGIC;
 	}
         
-        osi_assert(tbp->magic == SMB_NCBMAGIC);
+    osi_assert(tbp->magic == SMB_NCBMAGIC);
 
 	memset(&tbp->ncb, 0, sizeof(NCB));
-        ncbp = &tbp->ncb;
+    ncbp = &tbp->ncb;
 #ifdef DJGPP
-        dos_memset(tbp->dos_ncb, 0, sizeof(NCB));
+    dos_memset(tbp->dos_ncb, 0, sizeof(NCB));
 #endif /* DJGPP */
-        return ncbp;
+    return ncbp;
 }
 
 void smb_FreePacket(smb_packet_t *tbp)
 {
-        osi_assert(tbp->magic == SMB_PACKETMAGIC);
+    osi_assert(tbp->magic == SMB_PACKETMAGIC);
         
-        lock_ObtainWrite(&smb_globalLock);
+    lock_ObtainWrite(&smb_globalLock);
 	tbp->nextp = smb_packetFreeListp;
 	smb_packetFreeListp = tbp;
 	tbp->magic = SMB_PACKETMAGIC;
@@ -1490,39 +1490,39 @@ void smb_FreePacket(smb_packet_t *tbp)
 	tbp->oddByte = 0;
 	tbp->ncb_length = 0;
 	tbp->flags = 0;
-        lock_ReleaseWrite(&smb_globalLock);
+    lock_ReleaseWrite(&smb_globalLock);
 }
 
 static void FreeNCB(NCB *bufferp)
 {
 	smb_ncb_t *tbp;
         
-        tbp = (smb_ncb_t *) bufferp;
-        osi_assert(tbp->magic == SMB_NCBMAGIC);
+    tbp = (smb_ncb_t *) bufferp;
+    osi_assert(tbp->magic == SMB_NCBMAGIC);
         
-        lock_ObtainWrite(&smb_globalLock);
+    lock_ObtainWrite(&smb_globalLock);
 	tbp->nextp = smb_ncbFreeListp;
 	smb_ncbFreeListp = tbp;
-        lock_ReleaseWrite(&smb_globalLock);
+    lock_ReleaseWrite(&smb_globalLock);
 }
 
 /* get a ptr to the data part of a packet, and its count */
 unsigned char *smb_GetSMBData(smb_packet_t *smbp, int *nbytesp)
 {
-        int parmBytes;
-        int dataBytes;
-        unsigned char *afterParmsp;
+    int parmBytes;
+    int dataBytes;
+    unsigned char *afterParmsp;
 
-        parmBytes = *smbp->wctp << 1;
+    parmBytes = *smbp->wctp << 1;
 	afterParmsp = smbp->wctp + parmBytes + 1;
         
-        dataBytes = afterParmsp[0] + (afterParmsp[1]<<8);
-        if (nbytesp) *nbytesp = dataBytes;
+    dataBytes = afterParmsp[0] + (afterParmsp[1]<<8);
+    if (nbytesp) *nbytesp = dataBytes;
         
 	/* don't forget to skip the data byte count, since it follows
-         * the parameters; that's where the "2" comes from below.
-         */
-        return (unsigned char *) (afterParmsp + 2);
+     * the parameters; that's where the "2" comes from below.
+     */
+    return (unsigned char *) (afterParmsp + 2);
 }
 
 /* must set all the returned parameters before playing around with the
@@ -5271,20 +5271,20 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 	NCB *ncbp, raw_write_cont_t *rwcp)
 {
-        static showErrors = 1;
-        smb_dispatch_t *dp;
-        smb_t *smbp;
-        unsigned long code;
-        unsigned char *outWctp;
-        int nparms;			/* # of bytes of parameters */
-        char tbuffer[200];
-        int nbytes;			/* bytes of data, excluding count */
-        int temp;
-        unsigned char *tp;
-        unsigned short errCode;
+    static showErrors = 0;
+    smb_dispatch_t *dp;
+    smb_t *smbp;
+    unsigned long code;
+    unsigned char *outWctp;
+    int nparms;			/* # of bytes of parameters */
+    char tbuffer[200];
+    int nbytes;			/* bytes of data, excluding count */
+    int temp;
+    unsigned char *tp;
+    unsigned short errCode;
 	unsigned long NTStatus;
-        int noSend;
-        unsigned char errClass;
+    int noSend;
+    unsigned char errClass;
 	unsigned int oldGen;
 	DWORD oldTime, newTime;
 
@@ -6168,6 +6168,9 @@ void smb_NetbiosInit()
     len = strlen(smb_localNamep);
     for(i=len; i<NCBNAMSZ; i++) ncbp->ncb_name[i] = ' ';
 #endif
+    sprintf(s, "lana_list.length %d", lana_list.length);
+    afsi_log(s);
+
     /* Keep the name so we can unregister it later */
     for (l = 0; l < lana_list.length; l++) {
         lana = lana_list.lana[l];
@@ -6192,7 +6195,7 @@ void smb_NetbiosInit()
 
         if (code == 0) code = ncbp->ncb_retcode;
         if (code == 0) {
-            fprintf(stderr, "Netbios NCBADDNAME succeeded on lana %d\n", lana);
+            afsi_log("Netbios NCBADDNAME succeeded on lana %d", lana);
 #ifdef DJGPP
             /* we only use one LANA with djgpp */
             lana_list.lana[0] = lana;
@@ -6202,13 +6205,12 @@ void smb_NetbiosInit()
         else {
             sprintf(s, "Netbios NCBADDNAME lana %d error code %d", lana, code);
             afsi_log(s);
-            fprintf(stderr, "Netbios NCBADDNAME lana %d error code %d\n", lana, code);
             if (code == NRC_BRIDGE) {    /* invalid LANA num */
                 lana_list.lana[l] = 255;
                 continue;
             }
             else if (code == NRC_DUPNAME) {
-                /* Name already exists; try to delete it */
+                afsi_log("Name already exists; try to delete it");
                 memset(ncbp, 0, sizeof(*ncbp));
                 ncbp->ncb_command = NCBDELNAME;
                 memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
@@ -6219,9 +6221,10 @@ void smb_NetbiosInit()
                 code = Netbios(ncbp, dos_ncb);
 #endif /* DJGPP */
                 if (code == 0) code = ncbp->ncb_retcode;
-                else
-                    fprintf(stderr, "Netbios NCBDELNAME lana %d error code %d\n", lana, code);
-                fflush(stderr);
+                else {
+                    sprintf(s, "Netbios NCBDELNAME lana %d error code %d\n", lana, code);
+                    afsi_log(s);
+                }
                 if (code != 0 || delname_tried) {
                     lana_list.lana[l] = 255;
                 }
@@ -6336,10 +6339,10 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	
 	/* 4 Raw I/O buffers */
 #ifndef DJGPP
-	smb_RawBufs = GlobalAlloc(GMEM_FIXED, 65536);
+	smb_RawBufs = calloc(65536,1);
 	*((char **)smb_RawBufs) = NULL;
 	for (i=0; i<3; i++) {
-		char *rawBuf = GlobalAlloc(GMEM_FIXED, 65536);
+		char *rawBuf = calloc(65536,1);
 		*((char **)rawBuf) = smb_RawBufs;
 		smb_RawBufs = rawBuf;
 	}
@@ -6586,3 +6589,39 @@ void smb_Shutdown(void)
 #endif
 }
 #endif /* DJGPP */
+
+int smb_DumpVCP(FILE *outputFile, char *cookie)
+{
+    int zilch;
+    char output[1024];
+    int i;
+  
+    smb_vc_t *vcp;
+  
+    lock_ObtainRead(&smb_rctLock);
+  
+    for(vcp = smb_allVCsp; vcp; vcp=vcp->nextp) 
+    {
+        smb_fid_t *fidp;
+      
+        sprintf(output, "%s vcp=0x%08X, refCount=%d, flags=%d, vcID=%d, lsn=%d, uidCounter=%d, tidCounter=%d, fidCounter=%d\n",
+                 cookie, vcp, vcp->refCount, vcp->flags, vcp->vcID, vcp->lsn, vcp->uidCounter, vcp->tidCounter, vcp->fidCounter);
+        WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+      
+        for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) 
+        {
+            sprintf(output, "%s -- fidp=0x%08X, refCount=%d, fid=%d, vcp=0x%08X, scp=0x%08X, ioctlp=0x%08X, NTopen_pathp=%s, NTopen_wholepathp=%s\n", 
+                     cookie, fidp, fidp->refCount, fidp->fid, fidp->vcp, fidp->scp, fidp->ioctlp, 
+                     fidp->NTopen_pathp ? fidp->NTopen_pathp : "NULL", 
+                     fidp->NTopen_wholepathp ? fidp->NTopen_wholepathp : "NULL");
+            WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+        }
+      
+        sprintf(output, "done dumping fidsp\n");
+        WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+    }       
+  
+    lock_ReleaseRead(&smb_rctLock);
+}
+
+

@@ -18,7 +18,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DIGNORE_STDS_H
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
 
 # include the primary makefile
-
+RELDIR=WINNT\afsusrmgr
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -30,40 +30,40 @@ AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsAccountManager.exe
 
 EXEOBJS = \
-	$(OJT)\AfsUsrMgr_stub.res \
-	$(OJT)\action.obj \
-	$(OJT)\browse.obj \
-	$(OJT)\cell_prop.obj \
-	$(OJT)\cmdline.obj \
-	$(OJT)\columns.obj \
-	$(OJT)\command.obj \
-	$(OJT)\creds.obj \
-	$(OJT)\display.obj \
-	$(OJT)\errdata.obj \
-	$(OJT)\general.obj \
-	$(OJT)\grp_col.obj \
-	$(OJT)\grp_create.obj \
-	$(OJT)\grp_delete.obj \
-	$(OJT)\grp_prop.obj \
-	$(OJT)\grp_rename.obj \
-	$(OJT)\grp_tab.obj \
-	$(OJT)\helpfunc.obj \
-	$(OJT)\main.obj \
-	$(OJT)\mch_col.obj \
-	$(OJT)\mch_create.obj \
-	$(OJT)\mch_delete.obj \
-	$(OJT)\mch_tab.obj \
-	$(OJT)\options.obj \
-	$(OJT)\task.obj \
-	$(OJT)\usr_col.obj \
-	$(OJT)\usr_cpw.obj \
-	$(OJT)\usr_create.obj \
-	$(OJT)\usr_delete.obj \
-	$(OJT)\usr_prop.obj \
-	$(OJT)\usr_search.obj \
-	$(OJT)\usr_tab.obj \
-	$(OJT)\window.obj \
-	$(OJT)\winlist.obj
+	$(OUT)\AfsUsrMgr_stub.res \
+	$(OUT)\action.obj \
+	$(OUT)\browse.obj \
+	$(OUT)\cell_prop.obj \
+	$(OUT)\cmdline.obj \
+	$(OUT)\columns.obj \
+	$(OUT)\command.obj \
+	$(OUT)\creds.obj \
+	$(OUT)\display.obj \
+	$(OUT)\errdata.obj \
+	$(OUT)\general.obj \
+	$(OUT)\grp_col.obj \
+	$(OUT)\grp_create.obj \
+	$(OUT)\grp_delete.obj \
+	$(OUT)\grp_prop.obj \
+	$(OUT)\grp_rename.obj \
+	$(OUT)\grp_tab.obj \
+	$(OUT)\helpfunc.obj \
+	$(OUT)\main.obj \
+	$(OUT)\mch_col.obj \
+	$(OUT)\mch_create.obj \
+	$(OUT)\mch_delete.obj \
+	$(OUT)\mch_tab.obj \
+	$(OUT)\options.obj \
+	$(OUT)\task.obj \
+	$(OUT)\usr_col.obj \
+	$(OUT)\usr_cpw.obj \
+	$(OUT)\usr_create.obj \
+	$(OUT)\usr_delete.obj \
+	$(OUT)\usr_prop.obj \
+	$(OUT)\usr_search.obj \
+	$(OUT)\usr_tab.obj \
+	$(OUT)\window.obj \
+	$(OUT)\winlist.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -91,10 +91,10 @@ install : $(EXEFILE) lang
 # Dependencies
 #
 
-$(OJT)\AfsUsrMgr_stub.res : AFS_component_version_number.h
+$(OUT)\AfsUsrMgr_stub.res : AFS_component_version_number.h
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

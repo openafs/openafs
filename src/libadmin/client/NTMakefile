@@ -7,13 +7,13 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\client
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
-
 DLLOBJS = \
-	$(OJT)\afs_clientAdmin.obj \
-	$(OJT)\afsclientadmin.res
+	$(OUT)\afs_clientAdmin.obj \
+	$(OUT)\afsclientadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_clientAdmin.h
@@ -38,7 +38,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 install: $(DLLFILE) $(LIBINCLUDES)
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsclientadmin.res: AFS_component_version_number.h
+$(OUT)\afsclientadmin.res: AFS_component_version_number.h
 
 mkdir:
 	

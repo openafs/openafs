@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=viced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for installing header files
@@ -26,13 +26,13 @@ INCFILES =\
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
 
 EXEOBJS =\
-	$(OJT)\afsfileprocs.obj \
-	$(OJT)\callback.obj \
-	$(OJT)\host.obj \
-	$(OJT)\physio.obj \
-	$(OJT)\viced.obj \
-	$(OJT)\AFS_component_version_number.obj \
-	$(OJT)\fileserver.res
+	$(OUT)\afsfileprocs.obj \
+	$(OUT)\callback.obj \
+	$(OUT)\host.obj \
+	$(OUT)\physio.obj \
+	$(OUT)\viced.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\fileserver.res
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -63,18 +63,18 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 
 ############################################################################
 # generate versioninfo resources
-$(OJT)\fileserver.res: AFS_component_version_number.h
+$(OUT)\fileserver.res: AFS_component_version_number.h
 
-install:  $(INCFILES) $(OJT)\fileserver.res
+install:  $(INCFILES) $(OUT)\fileserver.res
 
 ############################################################################
 # Build cbd - not generally distributed debugging program
-CBD = $(OJT)\cbd.exe
+CBD = $(OUT)\cbd.exe
 
-$(OJT)\cbd.obj: callback.c
+$(OUT)\cbd.obj: callback.c
 	$(C2OBJ) $** -DINTERPRET_DUMP
 
-$(CBD): $(OJT)\cbd.obj 
+$(CBD): $(OUT)\cbd.obj 
 	$(EXECONLINK)
 
 mkdir:

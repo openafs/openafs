@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afscreds.h"
@@ -495,7 +496,7 @@ void WizMount_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, WM_SETREDRAW, TRUE, 0);
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
-   SetDlgItemText (hDlg, IDC_MAP_PATH, TEXT("/afs"));
+   SetDlgItemText (hDlg, IDC_MAP_PATH, cm_slash_mount_root);
 
    CheckDlgButton (hDlg, IDC_NOMAP, FALSE);
    CheckDlgButton (hDlg, IDC_YESMAP, TRUE);

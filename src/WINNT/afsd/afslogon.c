@@ -74,7 +74,7 @@ void DebugEvent0(char *a)
 	HANDLE h; char *ptbuf[1];
 	if (!ISLOGONTRACE(TraceOption))
 		return;
-	h = RegisterEventSource(NULL, a);
+	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	ptbuf[0] = a;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
 	DeregisterEventSource(h);
@@ -87,7 +87,7 @@ void DebugEvent(char *a,char *b,...)
 	va_list marker;
 	if (!ISLOGONTRACE(TraceOption))
 		return;
-	h = RegisterEventSource(NULL, a);
+	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,b);
 	_vsnprintf(buf,MAXBUF_,b,marker);
 	ptbuf[0] = buf;
@@ -154,7 +154,7 @@ WCHAR *GetLogonScript(CHAR *pname)
 		{
         HANDLE h; char *ptbuf[1],buf[132],tbuf[255];
 		WideCharToMultiByte(CP_ACP,0,script,LSPsize,tbuf,255,NULL,NULL);
-        h = RegisterEventSource(NULL, "AFS AfsLogon - GetLogonScript");
+        h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
         sprintf(buf, "Script[%s,%d] Return Code[%x]",tbuf,LSPsize,code);
         ptbuf[0] = buf;
         ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
@@ -235,6 +235,7 @@ BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
 		case DLL_PROCESS_ATTACH:
 			/* Initialize AFS libraries */
 			rx_Init(0);
+            initAFSDirPath();
 			ka_Init(0);
 			break;
 

@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\install\InstallShield5
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -28,22 +29,22 @@ XCOPY= xcopy /s/e
 ############################################################################
 
 prep: AFS_component_version_number.txt
-	$(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" ".\lang\en_US\value.txt" "$(OJT)\lang\en_US\value.shl"
+	$(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" ".\lang\en_US\value.txt" "$(OUT)\lang\en_US\value.shl"
 	$(DESTDIR)\bin\util_cr.exe } "$(AFSPRODUCT_VERSION)" "default.txt" "default.rge"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_CONFIGNAME=$(CELLSERVDB_CONFIGNAME)"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\lang\en_US\value.shl" "[DATA] CELLNAME_DEFAULT=$(CELLNAME_DEFAULT)"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_INSTALL=$(CELLSERVDB_INSTALL)"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_WEB=$(CELLSERVDB_WEB)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_CONFIGNAME=$(CELLSERVDB_CONFIGNAME)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\lang\en_US\value.shl" "[DATA] CELLNAME_DEFAULT=$(CELLNAME_DEFAULT)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_INSTALL=$(CELLSERVDB_INSTALL)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\lang\en_US\value.shl" "[DATA] CELLSERVDB_WEB=$(CELLSERVDB_WEB)"
 !IF "$(WELCOMEMESSAGE)" != ""
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\lang\en_US\value.shl" "[DATA] WELCOME_MESSAGE=$(WELCOMEMESSAGE)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\lang\en_US\value.shl" "[DATA] WELCOME_MESSAGE=$(WELCOMEMESSAGE)"
 !ENDIF
 !     IF ((EXIST("$(ISWEB)")) &&("$(ISWEB)"!=""))
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] Version=$(AFSPRODUCT_VERSION)"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] Comments=$(AFSBUILDCOMMENTS)"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] ApplicationName=AFSforWindows"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] Company=Open AFS"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] Title=Open AFS for Windows"
-	$(DESTDIR)\bin\util_cr.exe @ "$(OJT)\packageweb.pfw" "[Options] OutputSpec="$(DESTDIR)\WinInstall\PackageWeb\AFSforWindows.exe"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] Version=$(AFSPRODUCT_VERSION)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] Comments=$(AFSBUILDCOMMENTS)"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] ApplicationName=AFSforWindows"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] Company=Open AFS"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] Title=Open AFS for Windows"
+	$(DESTDIR)\bin\util_cr.exe @ "$(OUT)\packageweb.pfw" "[Options] OutputSpec="$(DESTDIR)\WinInstall\PackageWeb\AFSforWindows.exe"
 !     ENDIF
     CreateISDirTree.bat
     ScatterFiles.bat

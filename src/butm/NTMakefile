@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=butm
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for building a static library
@@ -15,8 +15,8 @@
 LIBFILE = $(DESTDIR)\lib\afs\afsbutm.lib
 
 LIBOBJS =\
-	$(OJT)\file_tm.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\file_tm.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
@@ -25,7 +25,7 @@ $(LIBFILE): $(LIBOBJS)
 ############################################################################
 # Install target; primary makefile target
 
-install: $(LIBFILE) $(OJT)\test_ftm.exe
+install: $(LIBFILE) $(OUT)\test_ftm.exe
 
 
 ############################################################################
@@ -43,7 +43,7 @@ TESTLIBS = $(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsbubasics.lib
 
-$(OJT)\test_ftm.exe: $(OJT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)
+$(OUT)\test_ftm.exe: $(OUT)\test_ftm.obj $(LIBFILE) $(TESTLIBS)
 	$(EXECONLINK)
 
 mkdir:

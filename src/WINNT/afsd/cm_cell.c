@@ -63,65 +63,66 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
 cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 {
 	cm_cell_t *cp;
-        long code;
-        static cellCounter = 1;		/* locked by cm_cellLock */
+    long code;
+    static cellCounter = 1;		/* locked by cm_cellLock */
 	int ttl;
 	char fullname[200];
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
 		if (strcmp(namep, cp->namep) == 0) {
-		  strcpy(fullname, cp->namep);
-		  break;
+            strcpy(fullname, cp->namep);
+            break;
 		}
-        }
+    }
 
 	if ((!cp && (flags & CM_FLAG_CREATE))
 #ifdef AFS_AFSDB_ENV
-	    /* if it's from DNS, see if it has expired */
-	    || (cp && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout))
+         /* if it's from DNS, see if it has expired */
+         || (cp && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout))
 #endif
 	  ) {
 		if (!cp) cp = malloc(sizeof(*cp));
-                memset(cp, 0, sizeof(*cp));
-                code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
+        memset(cp, 0, sizeof(*cp));
+        code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
 #ifdef AFS_AFSDB_ENV
-		  if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/)
-		    code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
+            if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/)
+                code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
 #endif
-		  if (code) {
-		    free(cp);
-		    cp = NULL;
-		    goto done;
-		  }
+            if (code) {
+                free(cp);
+                cp = NULL;
+                goto done;
+            }
 #ifdef AFS_AFSDB_ENV
-		  else {   /* got cell from DNS */
-		    cp->flags |= CM_CELLFLAG_DNS;
-		    cp->timeout = time(0) + ttl;
-		  }
+            else {   /* got cell from DNS */
+                cp->flags |= CM_CELLFLAG_DNS;
+                cp->timeout = time(0) + ttl;
+            }
 #endif
 		}
 
 		/* randomise among those vlservers having the same rank*/ 
 		cm_RandomizeServer(&cp->vlServersp);
 
-                /* otherwise we found the cell, and so we're nearly done */
-                lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
+        /* otherwise we found the cell, and so we're nearly done */
+        lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
 
 		/* copy in name */
-                cp->namep = malloc(strlen(fullname)+1);
-                strcpy(cp->namep, fullname);
+        cp->namep = malloc(strlen(fullname)+1);
+        strcpy(cp->namep, fullname);
 
 		/* thread on global list */
-                cp->nextp = cm_allCellsp;
-                cm_allCellsp = cp;
+        cp->nextp = cm_allCellsp;
+        cm_allCellsp = cp;
                 
-                cp->cellID = cellCounter++;
-        }
+        cp->cellID = cellCounter++;
+    }
 
-done:
-	if (newnamep)
+  done:
+    /* fullname is not valid if cp == NULL */
+	if (cp && newnamep)
 	  strcpy(newnamep, fullname);
 	lock_ReleaseWrite(&cm_cellLock);
         return cp;

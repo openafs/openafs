@@ -7,12 +7,10 @@
 ;MultiLanguage Example Script
 ;Written by Joost Verburg
 
-!define MUI_PRODUCT "OpenAFS for Windows" ;Define your own software name here
-;!define MUI_VERSION "1.2.11" ;Define your own software version here
-;!define MUI_MAJORVERSION 1
-;!define MUI_MINORVERSION 2
-;!define MUI_PATCHLEVEL 110
+!define MUI_PRODUCT "OpenAFS" ;Define your own software name here
 !include nsi-includes.nsi
+; Define DEBUG if building a DEBUG installer
+;!define DEBUG 1
 
 !include "MUI.nsh"
 !include Sections.nsh
@@ -21,10 +19,14 @@
 ;Configuration
 
   ;General
+!ifndef DEBUG
   OutFile "OpenAFSforWindows.exe"
+!else
+  OutFile "OpenAFSforWindows-DEBUG.exe"
+!endif
   SilentInstall normal
   SetCompressor bzip2
-  !define MUI_ICON "..\..\client_cpa\afs_conf.ico"
+  !define MUI_ICON "..\..\client_config\afs_config.ico"
   !define MUI_UNICON "c:\Program Files\NSIS\Contrib\Icons\normal-uninstall.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
@@ -53,6 +55,7 @@
 ;--------------------------------
 ;Modern UI Configuration
 
+  ;!define MUI_LICENSEPAGE
   !define MUI_CUSTOMPAGECOMMANDS
   !define MUI_WELCOMEPAGE
   !define MUI_COMPONENTSPAGE
@@ -67,13 +70,16 @@
 
   
   !insertmacro MUI_PAGECOMMAND_WELCOME
+  ;!insertmacro MUI_PAGECOMMAND_LICENSE
   !insertmacro MUI_PAGECOMMAND_COMPONENTS
   !insertmacro MUI_PAGECOMMAND_DIRECTORY
   Page custom AFSPageGetCellServDB
   Page custom AFSPageGetCellName
+  ;Page custom AFSPageGetConfigURL
   !insertmacro MUI_PAGECOMMAND_INSTFILES
   !insertmacro MUI_PAGECOMMAND_FINISH
   
+  ;LicenseData "Licenses.rtf"
 ;--------------------------------
 ;Languages
 
@@ -114,7 +120,7 @@
   LangString DESC_SecCopyUI ${LANG_SIMPCHINESE} "OpenAFS for Windows: Simplified Chinese"
   LangString DESC_SecCopyUI ${LANG_TRADCHINESE} "OpenAFS for Windows: Traditional Chinese description"
   LangString DESC_SecCopyUI ${LANG_JAPANESE} "OpenAFS for Windows: Japanese description"
-  LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
+  ;LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
   ;LangString DESC_SecCopyUI ${LANG_ITALIAN} "OpenAFS for Windows: Italian description"
   ;LangString DESC_SecCopyUI ${LANG_DUTCH} "OpenAFS for Windows: Dutch description"
   ;LangString DESC_SecCopyUI ${LANG_DANISH} "OpenAFS for Windows: Danish description"
@@ -139,7 +145,7 @@
   LangString DESC_SecClient ${LANG_SIMPCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_SecClient ${LANG_TRADCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_SecClient ${LANG_JAPANESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  ;LangString DESC_SecClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_SecClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
   LangString DESC_SecServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server."
@@ -148,7 +154,7 @@
   LangString DESC_SecServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
   LangString DESC_SecServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
   LangString DESC_SecServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server."
+  ;LangString DESC_SecServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server."
   LangString DESC_SecServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server."
   
   LangString DESC_SecControl ${LANG_ENGLISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
@@ -157,16 +163,16 @@
   LangString DESC_SecControl ${LANG_SIMPCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   LangString DESC_SecControl ${LANG_TRADCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   LangString DESC_SecControl ${LANG_JAPANESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+  ;LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   LangString DESC_SecControl ${LANG_PORTUGUESEBR} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
   
-  LangString DESC_SecDocs ${LANG_ENGLISH} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_SecDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_GERMAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_SPANISH} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_SIMPCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_TRADCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_JAPANESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_KOREAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+  ;LangString DESC_SecDocs ${LANG_KOREAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_PORTUGUESEBR} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
   
 ; Popup error messages
@@ -176,7 +182,7 @@
   LangString CellError ${LANG_SIMPCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_TRADCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_JAPANESE} "You must specify a valid CellServDB file to copy during the install"
-  LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
+  ;LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_PORTUGUESEBR} "You must specify a valid CellServDB file to copy during the install"
   
   
@@ -187,7 +193,7 @@
    LangString UPGRADE_CLIENT ${LANG_SIMPCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_TRADCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
-   LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
+   ;LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
    
    
@@ -197,7 +203,7 @@
    LangString REINSTALL_SERVER ${LANG_SIMPCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_TRADCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_JAPANESE} "Re-install AFS Server"
-   LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
+   ;LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_PORTUGUESEBR} "Re-install AFS Server"
   
 ;--------------------------------
@@ -363,7 +369,30 @@ Section "AFS Client" SecClient
   File "${AFS_DESTDIR}\etc\rxdebug.exe"
   File "${AFS_DESTDIR}\etc\backup.exe"
   
-  
+!ifdef DEBUG
+  File "${AFS_CLIENT_BUILDDIR}\afsshare.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\libosi.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\libafsconf.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\klog.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\tokens.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\unlog.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\fs.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afscreds.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afsd_service.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
+  File "${AFS_DESTDIR}\bin\kpasswd.pdb"
+  ;File "${AFS_SERVER_BUILDDIR}\pts.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bos.pdb"
+  File "${AFS_SERVER_BUILDDIR}\kas.pdb"
+  File "${AFS_SERVER_BUILDDIR}\vos.pdb"
+  File "${AFS_SERVER_BUILDDIR}\udebug.pdb"
+  File "${AFS_DESTDIR}\bin\translate_et.pdb"
+  File "${AFS_DESTDIR}\etc\rxdebug.pdb"
+  File "${AFS_DESTDIR}\etc\backup.pdb"
+!endif
+
   ; Client_headers
    SetOutPath "$INSTDIR\Client\Program\Include"
    File "${AFS_BUILD_INCDIR}\lock.h"
@@ -528,6 +557,13 @@ Section "AFS Client" SecClient
   ; Do WINDOWSDIR components
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
+  ;Call afs.InstallMSLoopback
+  
+  ; Include Kerberos for Windows files in the installer...
+  ;SetOutPath "$INSTDIR\kfw\bin\"
+  ;File "${KFW_SOURCE}\bin\*"
+  ;SetOutPath "$INSTDIR\kfw\doc"
+  ;File "${KFW_SOURCE}\doc\*"
   
   ReadINIStr $R0 $0 "Field 2" "State"
   StrCmp $R0 "1" UsePkg DontUsePkg
@@ -546,13 +582,13 @@ DontUseFile:
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\Client" "" $INSTDIR
   Call AFSCommon.Install
   
-  
   ; Write registry entries
   WriteRegStr HKCR "*\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
-  WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "(Default)" "AFS Client Shell Extension"
+  WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "" "AFS Client Shell Extension"
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "" "$INSTDIR\Client\Program\afs_shl_ext.dll"
   WriteRegStr HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32" "ThreadingModel" "Apartment"
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -573,42 +609,52 @@ DontUseFile:
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
 
-  ; Daemon entries
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "(Default)" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" 0
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-   
    ; Set network settings
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
   
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe"
-  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" 
+  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" 
 
   Push "$INSTDIR\Client\Program"
   Call AddToPath
   Push "$INSTDIR\Common"
   Call AddToPath
   
+  ; Add kfw to path too
+  Push "$INSTDIR\kfw\bin"
+  Call AddToPath
+   
   ; Create the AFS service
-  GetTempFileName $R0
-  File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  ExecWait "net stop TransarcAFSDaemon"
-  ExecWait '$R0 u TransarcAFSDaemon'
-  ExecWait '$R0 TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
-  Delete $R0
+  SetOutPath "$INSTDIR\Common"
+  File "${AFS_WININSTALL_DIR}\Service.exe"
+  nsExec::Exec "net stop TransarcAFSDaemon"
+  ;IMPORTANT!  If we are not refreshing the config files, do NOT remove the service
+  ;Don't re-install because it must be present or we wouldn't have passed the Reg check
+  ReadINIStr $R2 $1 "Field 2" "State"
+
+  StrCmp $R2 "" skipremove
+  nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
+  nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
+skipremove:
+  Delete "$INSTDIR\Common\service.exe"
+
+  ; Daemon entries
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "(Default)" ""
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" 2
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
 
   ;Write cell name
   ReadINIStr $R0 $1 "Field 2" "State"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
-  
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" 1  
   SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -678,12 +724,12 @@ Section "AFS Server" SecServer
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
 
   ; Install the service
-  GetTempFileName $R0
-  File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  ExecWait "net stop TransarcAFSServer"
-  ExecWait '$R0 u TransarcAFSServer'
-  ExecWait '$R0 TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
-  Delete $R0
+  SetOutPath "$INSTDIR\Common"
+  File "${AFS_WININSTALL_DIR}\Service.exe"
+  nsExec::Exec "net stop TransarcAFSServer"
+  nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
+  nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
+  Delete "$INSTDIR\Common\service.exe"
   
   CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Configuration Wizard.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" "/wizard"
@@ -710,7 +756,7 @@ Section "AFS Control Center" SecControl
  SetOutPath "$INSTDIR\Common"
 
   SetOutPath "$INSTDIR\Common"
-  File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
+  File "${AFS_WININSTALL_DIR}\msvcr71.dll"
       
    
    ;Store install folder
@@ -768,7 +814,7 @@ DoGerman:
    File "..\..\doc\install\Documentation\de_DE\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\de_DE\html\*"
-   ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\de_DE\html\CmdRef\*"
    SetOutPath "$INSTDIR\Documentation\html\InstallGd"
    File "..\..\doc\install\Documentation\de_DE\html\InstallGd\*"
@@ -783,13 +829,13 @@ DoSpanish:
    File "..\..\doc\install\Documentation\es_ES\README.TXT"
    SetOutPath "$INSTDIR\Documentation\html"
    File "..\..\doc\install\Documentation\es_ES\html\*"
-   ;SetOutPath "$INSTDIR\Documentation\html\CmdRef"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef"
    ;File "..\..\doc\install\Documentation\es_ES\html\CmdRef\*"
    SetOutPath "$INSTDIR\Documentation\html\InstallGd"
-   File "..\..\doc\install\Documentation\es_ES\html\InstallGd\*"
-   ;SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
+   ;File "..\..\doc\install\Documentation\es_ES\html\InstallGd\*"
+   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
    ;File "..\..\doc\install\Documentation\es_ES\html\ReleaseNotes\*"
-   ;SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
+   SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
    ;File "..\..\doc\install\Documentation\es_ES\html\SysAdminGd\*"
    goto DoneLanguage
 
@@ -803,9 +849,9 @@ DoJapanese:
    SetOutPath "$INSTDIR\Documentation\html\InstallGd"
    File "..\..\doc\install\Documentation\ja_JP\html\InstallGd\*"
    SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\ReleaseNotes\*"
    SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
-   File "..\..\doc\install\Documentation\ja_JP\html\SysAdminGd\*"
+   ;File "..\..\doc\install\Documentation\ja_JP\html\SysAdminGd\*"
    goto DoneLanguage
    
 DoKorean:
@@ -904,6 +950,14 @@ Function .onInit
   ; Set the default install options
   	Push $0
 
+   Call IsUserAdmin
+   Pop $R0
+   StrCmp $R0 "true" contInstall
+
+   MessageBox MB_OK|MB_ICONSTOP|MB_TOPMOST "You must be an administrator of this machine to install this software."
+   Abort
+   
+contInstall:
    Call ShouldClientInstall
    Pop $R2
    
@@ -914,7 +968,7 @@ Function .onInit
 	SectionGetFlags ${secClient} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secClient} $0
-	# !insertmacro SelectSection ${secClient}
+    ;# !insertmacro SelectSection ${secClient}
    goto skipClient
 NoClient:
 	StrCpy $1 ${secClient} ; Gotta remember which section we are at now...
@@ -940,25 +994,25 @@ skipClient:
 	SectionGetFlags ${secServer} $0
 	IntOp $0 $0 & ${SF_SELECTED}
 	SectionSetFlags ${secServer} $0
-	# !insertmacro UnselectSection ${secServer}
+	;# !insertmacro UnselectSection ${secServer}
    goto skipServer
 
 NoServer:
 	SectionGetFlags ${secServer} $0
 	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secServer} $0
-	# !insertmacro UnselectSection ${secServer}
+	;# !insertmacro UnselectSection ${secServer}
    
 skipServer:   
 	SectionGetFlags ${secControl} $0
 	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secControl} $0
-	# !insertmacro UnselectSection ${secControl}
+	;# !insertmacro UnselectSection ${secControl}
 
 	SectionGetFlags ${secDocs} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secDocs} $0
-	# !insertmacro UnselectSection ${secDocs}
+	;# !insertmacro UnselectSection ${secDocs}
 
 	Pop $0
   
@@ -968,7 +1022,7 @@ skipServer:
   File /oname=$0 CellServPage.ini
   GetTempFilename $1
   File /oname=$1 AFSCell.ini
-   
+  ;File /oname=$1 ConfigURL.ini
   
 FunctionEnd
 
@@ -1005,18 +1059,26 @@ FunctionEnd
 Section "Uninstall"
   
   SetShellVarContext all
+  ; Stop the running processes
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"
+  nsExec::Exec '$R0 afscreds.exe'
+  nsExec::Exec '$R0 krbcc32s.exe'
+
   ; Delete the AFS service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  ExecWait "net stop TransarcAFSDaemon"
-  ExecWait "net stop TransarcAFSServer"
-  ExecWait '$R0 u TransarcAFSDaemon'
-  ExecWait '$R0 u TransarcAFSServer'
+  nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec "net stop TransarcAFSServer"
+  nsExec::Exec '$R0 u TransarcAFSDaemon'
+  nsExec::Exec '$R0 u TransarcAFSServer'
   Delete $R0
   
   Push "$INSTDIR\Client\Program"
   Call un.RemoveFromPath
   Push "$INSTDIR\Common"
+  Call un.RemoveFromPath
+  Push "$INSTDIR\kfw\bin"
   Call un.RemoveFromPath
   
   ; Delete documentation
@@ -1027,38 +1089,53 @@ Section "Uninstall"
   Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
   Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
-  Delete "$WINDIR\afs_cpa.cpl"
+   Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
+   Delete /REBOOTOK "$INSTDIR\Common\afs_shl_ext.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsadminutil.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afsauthent.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afspthread.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afsrpc.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsclientadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsprocmgmt.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\TaAfsAppLib.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsbosadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
+   ;Delete /REBOOTOK "$INSTDIR\Common\msvcp60.dll"
   
    Call un.IsSilent
    Pop $R1
    StrCmp $R1 "/S" SkipAsk
-  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelCell
-  CellExists:
-  MessageBox MB_YESNO "Would you like to keep your Cell file?" IDYES SkipDelCell
+;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
+;  CellExists:
+  MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
   SkipAsk:
   Delete "$WINDIR\afsdcell.ini"
 
-  SkipDelCell:
-   StrCmp $R1 "/S" SkipAsk2  
-  MessageBox MB_YESNO "Would you like to keep your submount file?" IDYES SkipSubFile
-  SkipAsk2:
   Delete "$WINDIR\afsdsbmt.ini"
+  Delete "$WINDIR\krb5.ini"
+  Delete "$WINDIR\afsdns.ini"
+  Delete "$WINDIR\afs_freelance.ini"
   
-  SkipSubFile:
+  SkipDel:
   Delete "$WINDIR\afsd_init.log"
   Delete "$INSTDIR\Uninstall.exe"
 
   ; Remove server
-  Delete "$INSTDIR\Server\usr\afs\bin\afskill.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\bosserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\buserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\butc.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\fileserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\fms.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\kaserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\ptserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afskill.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\bosserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\buserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\butc.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\fileserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\fms.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\kaserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\ptserver.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\salvager.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\ServerUninst.dll"
   Delete "$INSTDIR\Server\usr\afs\bin\upclient.exe"
@@ -1082,24 +1159,39 @@ Section "Uninstall"
   
   RMDir "$INSTDIR\Documentation"
   ; Delete DOC short cut
-  RMDir /r "$INSTDIR\Client\Program"
-  RMDir /r "$INSTDIR\Client"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.exe"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\*"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\*"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\afs\*"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\Include\rx\*"
+  Delete /REBOOTOK "$INSTDIR\Client\Program\Sample\*"
+  RMDir  "$INSTDIR\Client\Program\Sample"
+  RMDir  "$INSTDIR\Client\Program\Include\afs"
+  RMDir  "$INSTDIR\Client\Program\Include\rx"
+  RMDir  "$INSTDIR\Client\Program\Include"
+  RMDir  "$INSTDIR\Client\Program"
+  RMDir  "$INSTDIR\Client"
   
   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
   Delete /REBOOTOK "$INSTDIR\Common\*"
-  RMDir /r "$INSTDIR\Common"
+  RMDir "$INSTDIR\Common"
+
+  ;Remove KfW files
+  Delete /REBOOTOK "$INSTDIR\kfw\bin\*"
+  RMDIR  /r "$INSTDIR\kfw\bin"
+  Delete /REBOOTOK "$INSTDIR\kfw\doc\*"
+  RMDIR  /r "$INSTDIR\kfw\doc"
+  RMDIR  /r "$INSTDIR\kfw"
 
   Delete "$SMPROGRAMS\OpenAFS\Documentation.lnk"
 
   ; Remove control center
-  Delete "$INSTDIR\Control Center\TaAfsAccountManager.exe"
-  Delete "$INSTDIR\Control Center\TaAfsAdmSvr.exe"
-  Delete "$INSTDIR\Control Center\TaAfsServerManager.exe"
-  Delete "$INSTDIR\Control Center\CCUninst.dll"
-  RMDir "$INSTDIR\Control Center"
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAccountManager.exe"
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAdmSvr.exe"
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsServerManager.exe"
+  Delete /REBOOTOK "$INSTDIR\Control Center\CCUninst.dll"
+  RMDir  "$INSTDIR\Control Center"
   
-  RMDir "$INSTDIR"
-
   Delete "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"
   Delete "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk"
   Delete "$SMPROGRAMS\OpenAFS\Control Center\Account Manager.lnk"
@@ -1107,11 +1199,19 @@ Section "Uninstall"
   RMDIR "$SMPROGRAMS\OpenAFS\Control Center"
   RMDir /r "$SMPROGRAMS\OpenAFS\Client"
   RMDir /r "$SMPROGRAMS\OpenAFS"
+  Delete "$SMSTARTUP\AFS Credentials.lnk"
   
   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "CachePath"
   IfErrors +2
   Delete "$R0\AFSCache"
   Delete "C:\AFSCache"
+
+  DeleteRegKey HKCR "*\shellex\ContextMenuHandlers\AFS Client Shell Extension"
+  DeleteRegKey HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32"
+  DeleteRegKey HKCR "CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+  DeleteRegKey HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension"
+  DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
+
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion"
@@ -1124,7 +1224,8 @@ Section "Uninstall"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
   DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
  
-  
+  RMDir  "$INSTDIR"
+
   ;Display the Finish header
   !insertmacro MUI_UNFINISHHEADER
 
@@ -1137,9 +1238,14 @@ Function un.onInit
 
   ;Get language from registry
   ReadRegStr $LANGUAGE HKCU "Software\OpenAFS\AFS" "Installer Language"
-  
+
 FunctionEnd
 
+Function un.onUninstSuccess
+
+   MessageBox MB_OK "Please reboot your machine to complete uninstallation of the software"
+
+FunctionEnd
 
 ;------------------------------
 ; Get the CellServDB file from the Internet
@@ -1147,8 +1253,8 @@ FunctionEnd
 Function afs.GetCellServDB
 
 ;Check if we should download CellServDB
-ReadINIStr $R0 $0 "Field 4" "State"
-StrCmp $R0 "0" CheckIncl
+;ReadINIStr $R0 $0 "Field 4" "State"
+;StrCmp $R0 "0" CheckIncl
 
    ReadINIStr $R0 $0 "Field 5" "State"
    NSISdl::download $R0 "$WINDIR\afsdcell.ini"
@@ -1183,6 +1289,7 @@ startOver:
   WriteINIStr $0 "Field 2" "Flags" "DISABLED"
   WriteINIStr $0 "Field 3" "State" "1"
   
+  !insertmacro MUI_HEADER_TEXT "CellServDB Configuration" "Please choose a method for installing the CellServDB file:" 
   InstallOptions::dialog $0
   Pop $R1
   StrCmp $R1 "cancel" exit
@@ -1211,6 +1318,7 @@ Function AFSPageGetCellName
    Call IsSilent
    Pop $R1
    StrCmp $R1 "/S" exit
+  !insertmacro MUI_HEADER_TEXT "Cell Name Configuration" "Please enter the name for your default cell:" 
   InstallOptions::dialog $1
   Pop $R1
   StrCmp $R1 "cancel" exit
@@ -1479,7 +1587,26 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
-   File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
+   File "${AFS_WININSTALL_DIR}\msvcr71.dll"
+   ;File "${AFS_WININSTALL_DIR}\msvcp60.dll"
+
+!ifdef DEBUG
+   File "${AFS_CLIENT_BUILDDIR}\afs_config.pdb"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsadminutil.pdb"
+   File "${AFS_DESTDIR}\lib\afsauthent.pdb"
+   File "${AFS_DESTDIR}\lib\afspthread.pdb"
+   File "${AFS_DESTDIR}\lib\afsrpc.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
+!endif
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
@@ -1550,6 +1677,21 @@ DoGerman:
    File "..\..\doc\help\de_DE\taafssvrmgr.hlp"
    File "..\..\doc\help\de_DE\taafsusrmgr.CNT"
    File "..\..\doc\help\de_DE\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.pdb"
+   File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
+   File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
+!endif
    goto done   
 
 DoSpanish:
@@ -1990,3 +2132,159 @@ FunctionEnd
    Pop $R1
  FunctionEnd
 
+ Function afs.InstallMSLoopback
+   ;GetTempFileName $R0
+   ;File /oname=$R0 "loopback_install.dll"
+   ;nsExec::Exec "rundll32.exe $R0 doLoopBackEntry quiet"
+   ;Call GetWindowsVersion
+   ;Pop $R1
+   ;StrCmp $R1 "2000" +1 +2
+   ;nsExec::Exec "rundll32.exe $R0 disableLoopBackEntry"
+   ;Delete $R0
+FunctionEnd
+
+
+
+; GetWindowsVersion
+;
+; Based on Yazno's function, http://yazno.tripod.com/powerpimpit/
+; Updated by Joost Verburg
+;
+; Returns on top of stack
+;
+; Windows Version (95, 98, ME, NT x.x, 2000, XP, 2003)
+; or
+; '' (Unknown Windows Version)
+;
+; Usage:
+;   Call GetWindowsVersion
+;   Pop $R0
+;   ; at this point $R0 is "NT 4.0" or whatnot
+
+Function GetWindowsVersion
+
+  Push $R0
+  Push $R1
+
+  ClearErrors
+
+  ReadRegStr $R0 HKLM \
+  "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+
+  IfErrors 0 lbl_winnt
+  
+  ; we are not NT
+  ReadRegStr $R0 HKLM \
+  "SOFTWARE\Microsoft\Windows\CurrentVersion" VersionNumber
+
+  StrCpy $R1 $R0 1
+  StrCmp $R1 '4' 0 lbl_error
+
+  StrCpy $R1 $R0 3
+
+  StrCmp $R1 '4.0' lbl_win32_95
+  StrCmp $R1 '4.9' lbl_win32_ME lbl_win32_98
+
+  lbl_win32_95:
+    StrCpy $R0 '95'
+  Goto lbl_done
+
+  lbl_win32_98:
+    StrCpy $R0 '98'
+  Goto lbl_done
+
+  lbl_win32_ME:
+    StrCpy $R0 'ME'
+  Goto lbl_done
+
+  lbl_winnt:
+
+  StrCpy $R1 $R0 1
+
+  StrCmp $R1 '3' lbl_winnt_x
+  StrCmp $R1 '4' lbl_winnt_x
+
+  StrCpy $R1 $R0 3
+
+  StrCmp $R1 '5.0' lbl_winnt_2000
+  StrCmp $R1 '5.1' lbl_winnt_XP
+  StrCmp $R1 '5.2' lbl_winnt_2003 lbl_error
+
+  lbl_winnt_x:
+    StrCpy $R0 "NT $R0" 6
+  Goto lbl_done
+
+  lbl_winnt_2000:
+    Strcpy $R0 '2000'
+  Goto lbl_done
+
+  lbl_winnt_XP:
+    Strcpy $R0 'XP'
+  Goto lbl_done
+
+  lbl_winnt_2003:
+    Strcpy $R0 '2003'
+  Goto lbl_done
+
+  lbl_error:
+    Strcpy $R0 ''
+  lbl_done:
+
+  Pop $R1
+  Exch $R0
+
+FunctionEnd
+
+
+; Author: Lilla (lilla@earthlink.net) 2003-06-13
+; function IsUserAdmin uses plugin \NSIS\PlusgIns\UserInfo.dll
+; This function is based upon code in \NSIS\Contrib\UserInfo\UserInfo.nsi
+; This function was tested under NSIS 2 beta 4 (latest CVS as of this writing).
+;
+; Usage:
+;   Call IsUserAdmin
+;   Pop $R0   ; at this point $R0 is "true" or "false"
+;
+Function IsUserAdmin
+Push $R0
+Push $R1
+Push $R2
+
+ClearErrors
+UserInfo::GetName
+IfErrors Win9x
+Pop $R1
+UserInfo::GetAccountType
+Pop $R2
+
+StrCmp $R2 "Admin" 0 Continue
+; Observation: I get here when running Win98SE. (Lilla)
+; The functions UserInfo.dll looks for are there on Win98 too, 
+; but just don't work. So UserInfo.dll, knowing that admin isn't required
+; on Win98, returns admin anyway. (per kichik)
+; MessageBox MB_OK 'User "$R1" is in the Administrators group'
+StrCpy $R0 "true"
+Goto Done
+
+Continue:
+; You should still check for an empty string because the functions
+; UserInfo.dll looks for may not be present on Windows 95. (per kichik)
+StrCmp $R2 "" Win9x
+StrCpy $R0 "false"
+;MessageBox MB_OK 'User "$R1" is in the "$R2" group'
+Goto Done
+
+Win9x:
+; comment/message below is by UserInfo.nsi author:
+; This one means you don't need to care about admin or
+; not admin because Windows 9x doesn't either
+;MessageBox MB_OK "Error! This DLL can't run under Windows 9x!"
+StrCpy $R0 "false"
+
+Done:
+;MessageBox MB_OK 'User= "$R1"  AccountType= "$R2"  IsUserAdmin= "$R0"'
+
+Pop $R2
+Pop $R1
+Exch $R0
+FunctionEnd

@@ -133,6 +133,7 @@
 #define IDC_MAP_PERSISTENT              5049
 #define IDC_RUNNING                     5050
 #define IDC_STOPPED                     5051
+#define IDC_STATICSUBMOUNT              5052
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

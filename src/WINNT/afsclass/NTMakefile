@@ -11,25 +11,26 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 
 # include the primary makefile
 
+RELDIR=WINNT\afsclass
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
 ############################################################################
 
 LIBOBJS = \
-	$(OJT)\c_debug.obj  \
-	$(OJT)\c_ident.obj  \
-	$(OJT)\c_identlist.obj  \
-	$(OJT)\c_cell.obj   \
-	$(OJT)\c_svr.obj    \
-	$(OJT)\c_svc.obj    \
-	$(OJT)\c_agg.obj    \
-	$(OJT)\c_set.obj    \
-	$(OJT)\c_usr.obj    \
-	$(OJT)\c_grp.obj    \
-	$(OJT)\c_notify.obj \
-	$(OJT)\afsclassfn.obj \
-	$(OJT)\internal.obj \
-	$(OJT)\worker.obj
+	$(OUT)\c_debug.obj  \
+	$(OUT)\c_ident.obj  \
+	$(OUT)\c_identlist.obj  \
+	$(OUT)\c_cell.obj   \
+	$(OUT)\c_svr.obj    \
+	$(OUT)\c_svc.obj    \
+	$(OUT)\c_agg.obj    \
+	$(OUT)\c_set.obj    \
+	$(OUT)\c_usr.obj    \
+	$(OUT)\c_grp.obj    \
+	$(OUT)\c_notify.obj \
+	$(OUT)\afsclassfn.obj \
+	$(OUT)\internal.obj \
+	$(OUT)\worker.obj
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\winnt\afsclass.h \

@@ -7,9 +7,9 @@
 
 # Override default definitions in NTMakefile.$(SYS_NAME) before including.
 
+RELDIR=vlserver
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for installing header files
@@ -27,10 +27,10 @@ INCFILES = \
 LIBFILE = $(DESTDIR)\lib\afs\afsvldb.lib
 
 LIBOBJS =\
-	$(OJT)\vl_errors.obj \
-	$(OJT)\vldbint.cs.obj \
-	$(OJT)\vldbint.xdr.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\vl_errors.obj \
+	$(OUT)\vldbint.cs.obj \
+	$(OUT)\vldbint.xdr.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)  
 	$(LIBARCH) 
@@ -41,18 +41,18 @@ $(LIBFILE): $(LIBOBJS)
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsvldb.lib
 
 MT_LIBOBJS =\
-	$(OJT)\vl_errors_mt.obj \
-	$(OJT)\vldbint.cs_mt.obj \
-	$(OJT)\vldbint.xdr_mt.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\vl_errors_mt.obj \
+	$(OUT)\vldbint.cs_mt.obj \
+	$(OUT)\vldbint.xdr_mt.obj \
+	$(OUT)\AFS_component_version_number.obj
 
-$(OJT)\vl_errors_mt.obj:vl_errors.c
+$(OUT)\vl_errors_mt.obj:vl_errors.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(OJT)\vldbint.cs_mt.obj:vldbint.cs.c
+$(OUT)\vldbint.cs_mt.obj:vldbint.cs.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(OJT)\vldbint.xdr_mt.obj:vldbint.xdr.c
+$(OUT)\vldbint.xdr_mt.obj:vldbint.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(MT_LIBFILE): $(MT_LIBOBJS)  
@@ -64,12 +64,12 @@ $(MT_LIBFILE): $(MT_LIBOBJS)
 VLSERVER = $(DESTDIR)\root.server\usr\afs\bin\vlserver.exe
 
 VLSERVER_EXEOBJS =\
-	$(OJT)\vldbint.ss.obj \
-	$(OJT)\vldbint.xdr.obj \
-	$(OJT)\vlprocs.obj \
-	$(OJT)\vlserver.obj \
-	$(OJT)\vlutils.obj \
-	$(OJT)\vlserver.res
+	$(OUT)\vldbint.ss.obj \
+	$(OUT)\vldbint.xdr.obj \
+	$(OUT)\vlprocs.obj \
+	$(OUT)\vlserver.obj \
+	$(OUT)\vlutils.obj \
+	$(OUT)\vlserver.res
 
 VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afsubik.lib \
@@ -94,7 +94,7 @@ $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
 
 ############################################################################
 # generate versioninfo resources
-$(OJT)\vlserver.res: AFS_component_version_number.h
+$(OUT)\vlserver.res: AFS_component_version_number.h
 #	$(RC) $*.rc
 
 ############################################################################
@@ -125,7 +125,7 @@ VLDB_CHECK_LIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib
 
-$(OJT)\vldb_check.exe: $(OJT)\vldb_check.obj $(VLDB_CHECK_LIBS)
+$(OUT)\vldb_check.exe: $(OUT)\vldb_check.obj $(VLDB_CHECK_LIBS)
 	$(EXECONLINK)
 
 ############################################################################
@@ -134,14 +134,14 @@ VLCLIENT_LIBS = \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
-$(OJT)\vlclient.exe: $(OJT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
+$(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 	$(EXECONLINK)
 
 
 ############################################################################
 # install vlserver components
 
-install: $(INCFILES) $(LIBFILE) $(VLSERVER) $(OJT)\vldb_check.exe $(OJT)\vlclient.exe \
+install: $(INCFILES) $(LIBFILE) $(VLSERVER) $(OUT)\vldb_check.exe $(OUT)\vlclient.exe \
 	 $(MT_LIBFILE)
 
 install9x: install

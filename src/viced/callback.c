@@ -1434,7 +1434,7 @@ BreakLaterCallBacks(void)
     FSYNC_UNLOCK;
 
     if (!myfe) {
-	H_UNLOCK
+	H_UNLOCK;
 	return 0;
     }
 

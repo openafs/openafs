@@ -219,3 +219,35 @@ long *aval;
     else *aval = total;
     return 0;
 }
+
+char *cm_mount_root="afs"; 
+char *cm_slash_mount_root="/afs";
+char *cm_back_slash_mount_root="\\afs";
+#define AFSCONFIGKEYNAME TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters")
+
+void fs_utils_InitMountRoot()
+{
+    HKEY parmKey;
+    char mountRoot[MAX_PATH+1];
+    char *pmount=mountRoot;
+    DWORD len=sizeof(mountRoot)-1;
+    printf("int mountroot \n");
+    if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSCONFIGKEYNAME,0, KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS) 
+         || (RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
+         || (len==sizeof(mountRoot)-1)
+         ) 
+        strcpy(mountRoot, "\\afs"); 
+    RegCloseKey(parmKey);
+    mountRoot[len]=0;       /*safety see ms-help://MS.MSDNQTR.2002OCT.1033/sysinfo/base/regqueryvalueex.htm*/
+    cm_mount_root=malloc(len+1);
+    cm_slash_mount_root=malloc(len+2);
+    cm_back_slash_mount_root=malloc(len+2);
+    if ((*pmount=='/') || (*pmount='\\'))
+        pmount++;
+    strcpy(cm_mount_root,pmount);
+    strcpy(cm_slash_mount_root+1,pmount);
+    cm_slash_mount_root[0]='/';
+    strcpy(cm_back_slash_mount_root+1,pmount);
+    cm_back_slash_mount_root[0]='\\';
+}
+

@@ -5,10 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 #
-
+RELDIR=WINNT\client_osi
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for installing header files
@@ -57,17 +56,17 @@ DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libosi.dll
 ILIBDIR = $(DESTDIR)\lib
 
 DLLOBJS =\
-	$(OJT)\dbrpc_s.obj \
-	$(OJT)\osistatl.obj \
-	$(OJT)\osibasel.obj \
-	$(OJT)\osisleep.obj \
-	$(OJT)\osiqueue.obj \
-	$(OJT)\osiltype.obj \
-	$(OJT)\osidb.obj \
-	$(OJT)\osifd.obj \
-	$(OJT)\osilog.obj \
-	$(OJT)\osiutils.obj \
-	$(OJT)\libosi.res
+	$(OUT)\dbrpc_s.obj \
+	$(OUT)\osistatl.obj \
+	$(OUT)\osibasel.obj \
+	$(OUT)\osisleep.obj \
+	$(OUT)\osiqueue.obj \
+	$(OUT)\osiltype.obj \
+	$(OUT)\osidb.obj \
+	$(OUT)\osifd.obj \
+	$(OUT)\osilog.obj \
+	$(OUT)\osiutils.obj \
+	$(OUT)\libosi.res
 
 DLLLIBS =\
         rpcndr.lib \
@@ -89,18 +88,18 @@ OSIEVENTDLL = $(DESTDIR)\root.client\usr\vice\etc\osievent.dll
 osievent.rc: osievent.mc
 	mc $*.mc
 
-$(OJT)\osievent.res: osievent.rc
+$(OUT)\osievent.res: osievent.rc
 
-$(OJT)\osievent.dll: $(OJT)\osievent.res
+$(OUT)\osievent.dll: $(OUT)\osievent.res
 	link -dll -noentry -out:$*.dll $*.res
 
-$(OSIEVENTDLL): $(OJT)\osievent.dll
+$(OSIEVENTDLL): $(OUT)\osievent.dll
 	$(COPY) osievent.dll $(DESTDIR)\root.client\usr\vice\etc\.
 
 ############################################################################
 # build osidebug too
 
-$(OJT)\osidebug.res: osidebug.rc
+$(OUT)\osidebug.res: osidebug.rc
 
 $(EXEOBJS) : osidebug.c
 
@@ -115,7 +114,7 @@ dbrpc.h dbrpc_c.c dbrpc_s.c: dbrpc.idl
 ############################################################################
 # generate versioninfo resources
 
-$(OJT)\libosi.res: libosi.rc AFS_component_version_number.h
+$(OUT)\libosi.res: libosi.rc AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -128,7 +127,7 @@ install: $(OSIEVENTDLL) install_headers $(DLLFILE)
 install: install_headers $(DLLFILE)
 !ENDIF
 
-install_debug: $(OJT)\osidebug.res $(EXEFILE)
+install_debug: $(OUT)\osidebug.res $(EXEFILE)
 
 install9x: install
 
@@ -137,7 +136,7 @@ install9x: install
 
 clean::
 	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES) $(OSIEVENTDLL)
-	$(DEL) $(EXEOBJS) $(EXEFILE) $(OJT)\*.res $(OJT)\*.DLL
+	$(DEL) $(EXEOBJS) $(EXEFILE) $(OUT)\*.res $(OUT)\*.DLL
 
 
 mkdir:

@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Generated NMAKE File, Based on GetWebDll.dsp
-
+RELDIR=WINNT\afs_setup_utils\GetWebDll
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -9,8 +9,8 @@ NULL=
 NULL=nul
 !ENDIF 
 
-OUTDIR=$(OJT)
-INTDIR=$(OJT)
+OUTDIR=$(OUT)
+INTDIR=$(OUT)
 # Begin Custom Macros
 OutDir=.
 # End Custom Macros

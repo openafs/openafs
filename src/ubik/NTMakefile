@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=ubik
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Install header files
@@ -26,21 +26,21 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afsubik.lib
 
 LIBOBJS =\
-	$(OJT)\disk.obj \
-	$(OJT)\remote.obj \
-	$(OJT)\beacon.obj \
-	$(OJT)\recovery.obj \
-	$(OJT)\ubik.obj \
-	$(OJT)\vote.obj \
-	$(OJT)\lock.obj \
-	$(OJT)\phys.obj \
-	$(OJT)\ubik_int.cs.obj \
-	$(OJT)\ubik_int.ss.obj \
-	$(OJT)\ubik_int.xdr.obj \
-	$(OJT)\ubikcmd.obj \
-	$(OJT)\ubikclient.obj \
-	$(OJT)\uerrors.obj	\
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\disk.obj \
+	$(OUT)\remote.obj \
+	$(OUT)\beacon.obj \
+	$(OUT)\recovery.obj \
+	$(OUT)\ubik.obj \
+	$(OUT)\vote.obj \
+	$(OUT)\lock.obj \
+	$(OUT)\phys.obj \
+	$(OUT)\ubik_int.cs.obj \
+	$(OUT)\ubik_int.ss.obj \
+	$(OUT)\ubik_int.xdr.obj \
+	$(OUT)\ubikcmd.obj \
+	$(OUT)\ubikclient.obj \
+	$(OUT)\uerrors.obj	\
+	$(OUT)\AFS_component_version_number.obj
 
 
 $(LIBFILE): $(LIBOBJS)
@@ -53,8 +53,8 @@ RS_UDBG_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\udebug.exe
 CL_UDBG_EXEFILE = $(DESTDIR)\bin\udebug.exe
 
 UDBG_EXEOBJS =\
-	$(OJT)\udebug.obj \
-	$(OJT)\udebug.res
+	$(OUT)\udebug.obj \
+	$(OUT)\udebug.res
 
 UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -76,7 +76,7 @@ $(CL_UDBG_EXEFILE): $(RS_UDBG_EXEFILE)
 ############################################################################
 # generate versioninfo resources
 
-$(OJT)\udebug.res: AFS_component_version_number.h
+$(OUT)\udebug.res: AFS_component_version_number.h
 #	$(RC) $*.rc
 
 ############################################################################
@@ -113,17 +113,17 @@ clean::
 
 test tests: utst_server utst_client $(EXEFILE) 
 
-utst_server: $(OJT)\utst_server.obj $(OJT)\utst_int.ss.obj $(OJT)\utst_int.xdr.obj  $(EXELIBS)
+utst_server: $(OUT)\utst_server.obj $(OUT)\utst_int.ss.obj $(OUT)\utst_int.xdr.obj  $(EXELIBS)
 	$(EXECONLINK) 
 	
-utst_client: $(OJT)\utst_client.obj $(OJT)\utst_int.cs.obj $(OJT)\utst_int.xdr.obj $(EXELIBS)
+utst_client: $(OUT)\utst_client.obj $(OUT)\utst_int.cs.obj $(OUT)\utst_int.xdr.obj $(EXELIBS)
 	$(EXECONLINK) 
 	
 # rxgen on utst_int.xg
 utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg
 	$(RXGEN)  utst_int.xg
 
-$(OJT)\utst_server.obj $(OJT)\utst_client.obj : utst_int.h 
+$(OUT)\utst_server.obj $(OUT)\utst_client.obj : utst_int.h 
 
 mkdir:
 	

@@ -17,15 +17,12 @@
 # update the 'finale' dependency to be the new directory.
 
 # These three macros define the source, object, and destination folders
-
-SRC=src
+SRC=$(AFSROOT)\src
 #If AFS_OBJDIR is not defined then use obj as relative obj folder
-!IFDEF AFS_OBJDIR
-DESTDIR=$(AFS_OBJDIR)\dest
-!ELSE
-DESTDIR=obj\dest
-AFS_OBJDIR=obj
+!IFNDEF AFS_OBJDIR
+AFS_OBJDIR=$(AFSROOT)\obj
 !ENDIF
+DESTDIR=$(AFSROOT)\dest
 
 CD = cd
 NTMAKE = nmake /nologo /f ntmakefile install
@@ -35,7 +32,7 @@ NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 MKDIR = mkdir
 
 #debug statement support jumping to last know error
-DOCD=src\DOLASTCMP.BAT
+DOCD=$(SRC)\DOLASTCMP.BAT
 
 config:
      echo ***** $@

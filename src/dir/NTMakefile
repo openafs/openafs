@@ -5,10 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=dir
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
-
 
 ############################################################################
 # Definitions for installing header files
@@ -25,10 +24,10 @@ INCFILES =\
 DIR_LIBFILE = $(DESTDIR)\lib\afs\afsdir.lib
 
 DIR_LIBOBJS =\
-	$(OJT)\buffer.obj \
-	$(OJT)\dir.obj \
-	$(OJT)\salvage.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\buffer.obj \
+	$(OUT)\dir.obj \
+	$(OUT)\salvage.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(DIR_LIBFILE): $(DIR_LIBOBJS) 
 	$(LIBARCH)  

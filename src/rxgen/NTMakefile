@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=rxgen
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 INCFILEDIR = $(DESTDIR)\include\afs 
 
@@ -18,15 +18,18 @@ INCFILES =\
 EXEFILE = $(DESTDIR)\bin\rxgen.exe
 
 EXEOBJS =\
-	$(OJT)\rpc_main.obj \
-	$(OJT)\rpc_hout.obj \
-	$(OJT)\rpc_cout.obj \
-	$(OJT)\rpc_parse.obj \
-	$(OJT)\rpc_scan.obj \
-	$(OJT)\rpc_util.obj \
-	$(OJT)\rpc_svcout.obj \
-	$(OJT)\rpc_clntout.obj
+	$(OUT)\rpc_main.obj \
+	$(OUT)\rpc_hout.obj \
+	$(OUT)\rpc_cout.obj \
+	$(OUT)\rpc_parse.obj \
+	$(OUT)\rpc_scan.obj \
+	$(OUT)\rpc_util.obj \
+	$(OUT)\rpc_svcout.obj \
+	$(OUT)\rpc_clntout.obj
 	
+$(EXEOBJS): $$(@B).c
+    $(C2OBJ) $**
+
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 	$(EXECONLINK)
 	$(EXEPREP) 

@@ -165,6 +165,7 @@
 #define IDC_ROOTVOLUME					1061
 #define IDC_AUTOLANA                    1062
 #define IDC_STATICLANA                  1063
+#define IDC_STATICSUBMOUNT              1064
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

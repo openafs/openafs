@@ -5,6 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+!MESSAGE Processing afs\NTMakefile
+RELDIR=afs
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 
 ################################################
@@ -15,5 +17,5 @@ $(DESTDIR)\include\afs\unified_afs.c $(DESTDIR)\include\afs\unified_afs.h:   uni
    $(COMPILE_ET) unified_afs -h unified_afs
    $(COPY) unified_afs.h $(DESTDIR)\include\afs
 
-install: $(DESTDIR)\include\afs\unified_afs.c
+install: $(DESTDIR)\include\afs\unified_afs.c 
 

@@ -9,6 +9,7 @@
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 
 # include the primary makefile
+RELDIR=WINNT\afslegal
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -18,8 +19,8 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afslegal.exe
 
 EXEOBJS = \
-	$(OJT)\afslegal_stub.res \
-	$(OJT)\afslegal.obj
+	$(OUT)\afslegal_stub.res \
+	$(OUT)\afslegal.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\talocale.lib \
@@ -40,10 +41,10 @@ lang ::
 ############################################################################
 # Dependencies
 
-$(OJT)\afslegal_stub.res : AFS_component_version_number.h
+$(OUT)\afslegal_stub.res : AFS_component_version_number.h
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=rxkad
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 INCFILEDIR = $(DESTDIR)\include\rx  # header file install directory
 
@@ -19,16 +19,18 @@ INCFILES =\
 
 # build afsrxkad.lib
 LIBOBJS =\
-	$(OJT)\rxkad_client.obj \
-	$(OJT)\rxkad_server.obj \
-	$(OJT)\rxkad_common.obj \
-	$(OJT)\ticket.obj \
-	$(OJT)\rxkad_errs.obj \
-	$(OJT)\AFS_component_version_number.obj \
-	$(OJT)\fcrypt.obj \
-	$(OJT)\ticket5.obj \
-	$(OJT)\crc.obj \
-	$(OJT)\crypt_conn.obj 
+	$(OUT)\rxkad_client.obj \
+	$(OUT)\rxkad_server.obj \
+	$(OUT)\rxkad_common.obj \
+	$(OUT)\ticket.obj \
+	$(OUT)\rxkad_errs.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\fcrypt.obj \
+	$(OUT)\ticket5.obj \
+	$(OUT)\crc.obj \
+	$(OUT)\crypt_conn.obj 
+
+$(LIBOBJS):
 
 # afsrxkad.lib
 LIBFILE = $(DESTDIR)\lib\afsrxkad.lib

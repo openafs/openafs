@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DPMGTEXPORT=__declspec(dllexport)
 
+RELDIR=procmgmt
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -24,9 +25,9 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsprocmgmt.dll
 ILIBDIR = $(DESTDIR)\lib\afs
 
 DLLOBJS =\
-	$(OJT)\procmgmt_nt.obj \
-	$(OJT)\redirect_nt.obj \
-	$(OJT)\afsprocmgmt.res
+	$(OUT)\procmgmt_nt.obj \
+	$(OUT)\redirect_nt.obj \
+	$(OUT)\afsprocmgmt.res
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
@@ -45,8 +46,8 @@ RS_KILL_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afskill.exe
 CL_KILL_EXEFILE = $(DESTDIR)\etc\afskill.exe
 
 KILL_EXEOBJS =\
-	$(OJT)\afskill.obj \
-	$(OJT)\afskill.res
+	$(OUT)\afskill.obj \
+	$(OUT)\afskill.res
 
 KILL_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
@@ -64,10 +65,10 @@ $(CL_KILL_EXEFILE): $(RS_KILL_EXEFILE)
 #.cpp.obj:
 #	$(CPP2OBJ) $<
 
-$(OJT)\afsprocmgmt.res: AFS_component_version_number.h
+$(OUT)\afsprocmgmt.res: AFS_component_version_number.h
 #	$(RC) $*.rc
 
-$(OJT)\afskill.res: AFS_component_version_number.h
+$(OUT)\afskill.res: AFS_component_version_number.h
 #	$(RC) $*.rc
 
 install_headers: $(INCFILES)

@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\eventlog\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -29,13 +30,13 @@ INCFILES =\
 ############################################################################
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afseventmsg_$(LANGID).dll
 
-DLLRESFILE = $(OJT)\afseventmsg_$(LANGID).res
+DLLRESFILE = $(OUT)\afseventmsg_$(LANGID).res
 
 DLLRCFILE = afseventmsg.rc
 
 EVENTRCFILE = $(LANGNAME)\event.rc
 
-EVENTRESFILE = $(OJT)\$(LANGNAME)\event.res
+EVENTRESFILE = $(OUT)\$(LANGNAME)\event.res
 
 DLLOBJS = $(DLLRESFILE)
 

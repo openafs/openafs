@@ -5,18 +5,19 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=des\test
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 
-$(OJT)\testit.exe: $(OJT)\testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OUT)\testit.exe: $(OUT)\testit.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-$(OJT)\verify.exe: $(OJT)\verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OUT)\verify.exe: $(OUT)\verify.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-$(OJT)\key_test.exe: $(OJT)\key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
+$(OUT)\key_test.exe: $(OUT)\key_test.obj $(DESTDIR)\lib\afsdes.lib $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
 
-$(OJT)\tests: $(OJT)\testit.exe $(OJT)\verify.exe $(OJT)\key_test.exe
+$(OUT)\tests: $(OUT)\testit.exe $(OUT)\verify.exe $(OUT)\key_test.exe
 
 mkdir:
 	

@@ -5,6 +5,7 @@
 #	License.  For details, see the LICENSE file in the top-level source
 #	directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\install\Win9x
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 OUTDIR = $(DESTDIR)\WinInstall
@@ -34,11 +35,11 @@ DLLCOMPONENTS = \
 		
 $(COMPONENTS)::
 	$(DESTDIR)\bin\util_cr.exe ~ $@
-	$(COPY) $@ $(DESTDIR)\WinInstall\.
+	$(COPY) $@ $(OUTDIR)
 
 $(DLLCOMPONENTS)::
 	$(DESTDIR)\bin\util_cr.exe ~ $@
-	$(COPY) $@ $(DESTDIR)\WinInstall\Dll\.
+	$(COPY) $@ $(OUTDIR)\Dll\.
 
 !IF (EXIST(ISBUILD.MAK))
 !INCLUDE ISBUILD.MAK
@@ -55,12 +56,12 @@ clean ::
     $(DEL) $(OUTDIR)\DiskIm~1\WebInstall\*
 
 prep :
-	$(COPY) "$(DESTDIR)\WinInstall\config\sock.vxd" "$(DESTDIR)\WinInstall\."
-	$(COPY) "$(DESTDIR)\WinInstall\config\MMAP.vxd" "$(DESTDIR)\WinInstall\."
-	$(COPY) "$(DESTDIR)\WinInstall\config\AFSD.EXE" "$(DESTDIR)\WinInstall\."
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\sock.vxd"
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\MMAP.vxd"
-	$(DESTDIR)\bin\util_cr.exe ~ "$(DESTDIR)\WinInstall\AFSD.EXE"
+	$(COPY) "$(OUTDIR)\config\sock.vxd" "$(OUTDIR)"
+	$(COPY) "$(OUTDIR)\config\MMAP.vxd" "$(OUTDIR)"
+	$(COPY) "$(OUTDIR)\config\AFSD.EXE" "$(OUTDIR)"
+	$(DESTDIR)\bin\util_cr.exe ~ "$(OUTDIR)\sock.vxd"
+	$(DESTDIR)\bin\util_cr.exe ~ "$(OUTDIR)\MMAP.vxd"
+	$(DESTDIR)\bin\util_cr.exe ~ "$(OUTDIR)\AFSD.EXE"
 
 mkdir:
 	

@@ -48,14 +48,14 @@ extern int errno;
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
 	char *tp;
-        char tc;
-        int sawEquals;
+    char tc;
+    int sawEquals;
 	int sawBracket;
         
-        sawEquals = 0;
+    sawEquals = 0;
 	sawBracket = 0;
-        for(tp = lineBufferp; *tp; tp++) {
-		tc = *tp;
+    for(tp = lineBufferp; *tp; tp++) {
+        tc = *tp;
 
 		if (sawBracket) {
 			if (tc == ']')
@@ -64,33 +64,38 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 		}
 
 		/* comment or line end */
-                if (tc == '#' || tc == '\r' || tc == '\n') break;
+        if (tc == '#' || tc == '\r' || tc == '\n') 
+            break;
 
-		/* square bracket comment -- look for closing delim
-		if (tc == '[') {sawBracket = 1; continue;}
+		/* square bracket comment -- look for closing delim */
+		if (tc == '[') {
+            sawBracket = 1; 
+            continue;
+        }
 
 		/* space or tab */
-                if (tc == ' ' || tc == '\t') continue;
+        if (tc == ' ' || tc == '\t') 
+            continue;
 
-                if (tc == '=') {
-                	sawEquals = 1;
-                        continue;
+        if (tc == '=') {
+            sawEquals = 1;
+            continue;
 		}
                 
-                /* now we have a real character, put it in the appropriate bucket */
-                if (sawEquals == 0) {
+        /* now we have a real character, put it in the appropriate bucket */
+        if (sawEquals == 0) {
 			*leftp++ = tc;
-                }
-                else {
-			*rightp++ = tc;
-                }
         }
+        else {
+			*rightp++ = tc;
+        }
+    }
 
 	/* null terminate the strings */
 	*leftp = 0;
-        *rightp = 0;
+    *rightp = 0;
 
-        return 0;	/* and return success */
+    return 0;	/* and return success */
 }
 
 /* search for a cell, and either return an error code if we don't find it,
@@ -106,68 +111,69 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	cm_configProc_t *procp, void *rockp)
 {
 	char wdir[256];
-        int tlen;
-        FILE *tfilep, *bestp, *tempp;
-        char *tp;
-        char lineBuffer[256];
-        struct hostent *thp;
-        char *valuep;
-        struct sockaddr_in vlSockAddr;
-        int inRightCell;
-        int foundCell;
-        long code;
+    int tlen;
+    FILE *tfilep, *bestp, *tempp;
+    char *tp;
+    char lineBuffer[256];
+    struct hostent *thp;
+    char *valuep;
+    struct sockaddr_in vlSockAddr;
+    int inRightCell;
+    int foundCell;
+    long code;
 	int tracking = 1, partial = 0;
 #if defined(DJGPP) || defined(AFS_WIN95_ENV)
 	long ip_addr;
-        int c1, c2, c3, c4;
-        char aname[256];
+    int c1, c2, c3, c4;
+    char aname[256];
 #endif
-        char *afsconf_path;
+    char *afsconf_path;
 
 	foundCell = 0;
 
 #if !defined(DJGPP)
 	code = GetWindowsDirectory(wdir, sizeof(wdir));
-        if (code == 0 || code > sizeof(wdir)) return -1;
+    if (code == 0 || code > sizeof(wdir)) 
+        return -1;
 
 	/* add trailing backslash, if required */
-        tlen = strlen(wdir);
-        if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
+    tlen = strlen(wdir);
+    if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
 #else
-        strcpy(wdir, cm_confDir);
-        strcat(wdir,"/");
+    strcpy(wdir, cm_confDir);
+    strcat(wdir,"/");
 #endif /* !DJGPP */
         
-        strcat(wdir, AFS_CELLSERVDB);
+    strcat(wdir, AFS_CELLSERVDB);
 
+    tfilep = fopen(wdir, "r");
+
+    if (!tfilep) {
+        /* If we are using DJGPP client, cellservdb will be in afsconf dir. */
+        /* If we are in Win95 here, we are linking with klog etc. and are
+        using DJGPP client even though DJGPP is not defined.  So we still
+        need to check AFSCONF for location. */
+        afsconf_path = getenv("AFSCONF");
+        if (!afsconf_path)
+            strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
+        else
+            strcpy(wdir, afsconf_path);
+        strcat(wdir, "/");
+        strcat(wdir, AFS_CELLSERVDB_UNIX);
+        /*fprintf(stderr, "opening cellservdb file %s\n", wdir);*/
         tfilep = fopen(wdir, "r");
-
-        if (!tfilep) {
-          /* If we are using DJGPP client, cellservdb will be in afsconf dir. */
-          /* If we are in Win95 here, we are linking with klog etc. and are
-             using DJGPP client even though DJGPP is not defined.  So we still
-             need to check AFSCONF for location. */
-            afsconf_path = getenv("AFSCONF");
-            if (!afsconf_path)
-               strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
-            else
-               strcpy(wdir, afsconf_path);
-            strcat(wdir, "/");
-            strcat(wdir, AFS_CELLSERVDB_UNIX);
-            /*fprintf(stderr, "opening cellservdb file %s\n", wdir);*/
-            tfilep = fopen(wdir, "r");
-            if (!tfilep) return -2;
-        }
+        if (!tfilep) return -2;
+    }
 
 	bestp = fopen(wdir, "r");
         
 	/* have we seen the cell line for the guy we're looking for? */
 	inRightCell = 0;
 	while (1) {
-	        tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
-	        if (tracking)
+        tp = fgets(lineBuffer, sizeof(lineBuffer), tfilep);
+        if (tracking)
 			(void) fgets(lineBuffer, sizeof(lineBuffer), bestp);
-                if (tp == NULL) {
+        if (tp == NULL) {
 			if (feof(tfilep)) {
 				/* hit EOF */
 				if (partial) {
@@ -188,36 +194,36 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 					return (foundCell? 0 : -3);
 				}
 			}
-                }
-                
-                /* turn trailing cr or lf into null */
-                tp = strchr(lineBuffer, '\r');
-                if (tp) *tp = 0;
-                tp = strchr(lineBuffer, '\n');
-                if (tp) *tp = 0;
-                
-		/* skip blank lines */
-                if (lineBuffer[0] == 0) continue;
+        }
 
-                if (lineBuffer[0] == '>') {
+        /* turn trailing cr or lf into null */
+        tp = strchr(lineBuffer, '\r');
+        if (tp) *tp = 0;
+        tp = strchr(lineBuffer, '\n');
+        if (tp) *tp = 0;
+
+		/* skip blank lines */
+        if (lineBuffer[0] == 0) continue;
+
+        if (lineBuffer[0] == '>') {
 			/* trim off at white space or '#' chars */
-                        tp = strchr(lineBuffer, ' ');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '\t');
-                        if (tp) *tp = 0;
-                        tp = strchr(lineBuffer, '#');
-                        if (tp) *tp = 0;
+            tp = strchr(lineBuffer, ' ');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '\t');
+            if (tp) *tp = 0;
+            tp = strchr(lineBuffer, '#');
+            if (tp) *tp = 0;
 
 			/* now see if this is the right cell */
-                	if (stricmp(lineBuffer+1, cellNamep) == 0) {
+            if (stricmp(lineBuffer+1, cellNamep) == 0) {
 				/* found the cell we're looking for */
 				if (newCellNamep)
 					strcpy(newCellNamep, lineBuffer+1);
-	                        inRightCell = 1;
+                inRightCell = 1;
 				tracking = 0;
 			}
 			else if (strnicmp(lineBuffer+1, cellNamep,
-					  strlen(cellNamep)) == 0) {
+                               strlen(cellNamep)) == 0) {
 				/* partial match */
 				if (partial) {	/* ambiguous */
 					fclose(tfilep);
@@ -230,58 +236,62 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 				tracking = 0;
 				partial = 1;
 			}
-                        else inRightCell = 0;
-                }
-                else {
+            else inRightCell = 0;
+        }
+        else {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
-                	valuep = strchr(lineBuffer, '#');
+            valuep = strchr(lineBuffer, '#');
 			if (valuep == NULL) {
 				fclose(tfilep);
 				fclose(bestp);
 				return -4;
 			}
-                        valuep++;	/* skip the "#" */
+            valuep++;	/* skip the "#" */
 
-                        valuep += strspn(valuep, " \t"); /* skip SP & TAB */
-                        /* strip spaces and tabs in the end. They should not be there according to CellServDB format
-                        so do this just in case                        */
-                        while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') valuep[strlen(valuep) - 1] = '\0';
+            valuep += strspn(valuep, " \t"); /* skip SP & TAB */
+            /* strip spaces and tabs in the end. They should not be there according to CellServDB format
+            so do this just in case                        */
+            while (valuep[strlen(valuep) - 1] == ' ' || valuep[strlen(valuep) - 1] == '\t') 
+                valuep[strlen(valuep) - 1] = '\0';
 
 #endif /* !DJGPP */
 			if (inRightCell) {
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 				/* add the server to the VLDB list */
-                                thp = gethostbyname(valuep);
-                                if (thp) {
+                thp = gethostbyname(valuep);
+                if (thp) {
 					memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
-                                        	sizeof(long));
-                                        vlSockAddr.sin_family = AF_INET;
-                                        /* sin_port supplied by connection code */
+                            sizeof(long));
+                    vlSockAddr.sin_family = AF_INET;
+                    /* sin_port supplied by connection code */
 					if (procp)
 						(*procp)(rockp, &vlSockAddr, valuep);
-	                                foundCell = 1;
+                    foundCell = 1;
 				}
 #else
-                                /* For DJGPP, we will read IP address instead
-                                   of name/comment field */
-                                code = sscanf(lineBuffer, "%d.%d.%d.%d #%s",
-                                              &c1, &c2, &c3, &c4, aname);
-                                tp = (char *) &ip_addr;
-                                *tp++ = c1;
-                                *tp++ = c2;
-                                *tp++ = c3;
-                                *tp++ = c4;
-                                memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
-                                        	sizeof(long));
-                                vlSockAddr.sin_family = AF_INET;
-                                /* sin_port supplied by connection code */
-                                if (procp)
-                                  (*procp)(rockp, &vlSockAddr, valuep);
-                                foundCell = 1;
+                /* For DJGPP, we will read IP address instead
+                of name/comment field */
+                code = sscanf(lineBuffer, "%d.%d.%d.%d #%s",
+                               &c1, &c2, &c3, &c4, aname);
+                tp = (char *) &ip_addr;
+                *tp++ = c1;
+                *tp++ = c2;
+                *tp++ = c3;
+                *tp++ = c4;
+                memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
+                        sizeof(long));
+                vlSockAddr.sin_family = AF_INET;
+                /* sin_port supplied by connection code */
+                if (procp)
+                    (*procp)(rockp, &vlSockAddr, valuep);
+                foundCell = 1;
 #endif /* !DJGPP */
-                        }
-                }	/* a vldb line */
-        }		/* while loop processing all lines */
+            }
+        }	/* a vldb line */
+    }		/* while loop processing all lines */
+
+    /* if for some unknown reason cell is not found, return negative code (-11) ??? */
+    return (foundCell) ? 0 : -11;
 }
 
 long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,

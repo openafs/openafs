@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\vos
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
@@ -19,24 +20,24 @@ FSINT = ..\..\fsint
 RX = ..\..\rx
 
 ADMINOBJS = \
-	$(OJT)\afs_vosAdmin.obj \
-	$(OJT)\vosutils.obj \
-	$(OJT)\vsprocs.obj \
-	$(OJT)\lockprocs.obj
+	$(OUT)\afs_vosAdmin.obj \
+	$(OUT)\vosutils.obj \
+	$(OUT)\vsprocs.obj \
+	$(OUT)\lockprocs.obj
 
 VLSERVEROBJS = \
-	$(OJT)\vldbint.cs.obj \
-	$(OJT)\vldbint.xdr.obj
+	$(OUT)\vldbint.cs.obj \
+	$(OUT)\vldbint.xdr.obj
 
 VOLSEROBJS = \
-	$(OJT)\volint.cs.obj \
-	$(OJT)\volint.xdr.obj
+	$(OUT)\volint.cs.obj \
+	$(OUT)\volint.xdr.obj
 
 FSINTOBJS =\
-	$(OJT)\afsint.xdr.obj \
-	$(OJT)\afscbint.xdr.obj
+	$(OUT)\afsint.xdr.obj \
+	$(OUT)\afscbint.xdr.obj
 
-RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
@@ -44,7 +45,7 @@ DLLOBJS =\
 	$(VOLSEROBJS) \
 	$(FSINTOBJS) \
 	$(RXOBJS) \
-	$(OJT)\afsvosadmin.res
+	$(OUT)\afsvosadmin.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_vosAdmin.h
@@ -84,7 +85,7 @@ $(FSINTOBJS):$(FSINT)\$$(@B).c
 	$(C2OBJ) $**
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsvosadmin.res: AFS_component_version_number.h
+$(OUT)\afsvosadmin.res: AFS_component_version_number.h
 
 mkdir:
 	

@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DADMINEXPORT=__declspec(dllexport)
 
+RELDIR=libadmin\cfg
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -21,28 +22,28 @@ INCFILES =\
 DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afscfgadmin.dll
 ILIBDIR = $(DESTDIR)\lib\afs
 
-RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
 UBIKOBJS=\
-	$(OJT)\ubik_int.cs.obj \
-	$(OJT)\ubik_int.xdr.obj
+	$(OUT)\ubik_int.cs.obj \
+	$(OUT)\ubik_int.xdr.obj
 
 CLIENTOBJS=\
-	$(OJT)\cellservdb.obj
+	$(OUT)\cellservdb.obj
 
 CFGOBJS = \
-	$(OJT)\cfgclient.obj \
-	$(OJT)\cfgdb.obj \
-	$(OJT)\cfghost.obj \
-	$(OJT)\cfgservers.obj \
-	$(OJT)\cfginternal.obj
+	$(OUT)\cfgclient.obj \
+	$(OUT)\cfgdb.obj \
+	$(OUT)\cfghost.obj \
+	$(OUT)\cfgservers.obj \
+	$(OUT)\cfginternal.obj
 
 DLLOBJS =\
 	$(UBIKOBJS) \
 	$(CLIENTOBJS) \
 	$(RXOBJS) \
 	$(CFGOBJS) \
-	$(OJT)\afscfgadmin.res
+	$(OUT)\afscfgadmin.res
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
@@ -90,7 +91,7 @@ $(CFGOBJS): $$(@B).c
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\afscfgadmin.res: AFS_component_version_number.h
+$(OUT)\afscfgadmin.res: AFS_component_version_number.h
 
 install: $(DLLFILE) $(INCFILES)
 

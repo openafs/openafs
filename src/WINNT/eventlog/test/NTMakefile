@@ -5,11 +5,12 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\eventlog\test
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 
 test tests: elogtest.exe
 
-$(OJT)\elogtest.exe: $(OJT)\elogtest.obj \
+$(OUT)\elogtest.exe: $(OUT)\elogtest.obj \
 	$(DESTDIR)\lib\afs\afseventlog.lib $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
 

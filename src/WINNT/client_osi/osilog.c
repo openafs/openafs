@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#define AFS_DAEMON_EVENT_NAME "TransarcAFSDaemon"
+
 /* the size; overrideable */
 long osi_logSize = OSI_LOG_DEFAULTSIZE;
 
@@ -356,7 +358,7 @@ void osi_LogEvent0(char *a,char *b)
 	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
 	if (!ISLOGONTRACE(osi_TraceOption))
 		return;
-	h = RegisterEventSource(NULL, a);
+	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	ptbuf[0] = b;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
 	DeregisterEventSource(h);
@@ -369,13 +371,7 @@ void osi_LogEvent(char *a,char *b,char *c,...)
 	va_list marker;
 	if (!ISLOGONTRACE(osi_TraceOption))
 		return;
-	if (b)
-	{
-		wsprintf(buf,a,b);
-		h = RegisterEventSource(NULL, buf);
-	}
-	else
-		h = RegisterEventSource(NULL, a);
+    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,c);
 	_vsnprintf(buf,MAXBUF_,c,marker);
 	ptbuf[0] = buf;

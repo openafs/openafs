@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=bubasics
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Install headers
@@ -29,16 +29,16 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsbubasics.lib
 
 LIBOBJS =\
-	$(OJT)\butc.ss.obj \
-	$(OJT)\butc.cs.obj \
-	$(OJT)\butc.xdr.obj \
-	$(OJT)\bumon.ss.obj \
-	$(OJT)\bumon.cs.obj \
-	$(OJT)\bumon.xdr.obj \
-	$(OJT)\butc_errs.obj \
-	$(OJT)\butm_errs.obj \
-	$(OJT)\butx_errs.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\butc.ss.obj \
+	$(OUT)\butc.cs.obj \
+	$(OUT)\butc.xdr.obj \
+	$(OUT)\bumon.ss.obj \
+	$(OUT)\bumon.cs.obj \
+	$(OUT)\bumon.xdr.obj \
+	$(OUT)\butc_errs.obj \
+	$(OUT)\butm_errs.obj \
+	$(OUT)\butx_errs.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 

@@ -37,4 +37,8 @@ extern long fs_StripDriveLetter(char *inPathp, char *outPathp, long outSize);
 
 extern long fs_ExtractDriveLetter(char *inPathp, char *outPathp);
 
+extern char *cm_mount_root;             /*"afs"*/
+extern char *cm_slash_mount_root;       /*"/afs"*/
+extern char *cm_back_slash_mount_root;  /*"\\afs"*/
+extern void fs_utils_InitMountRoot();
 #endif /* FS_UTILS_H_ENV */

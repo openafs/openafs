@@ -9,6 +9,7 @@
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 
 # include the primary makefile
+RELDIR=WINNT\license\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 

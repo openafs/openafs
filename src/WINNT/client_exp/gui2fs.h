@@ -41,5 +41,4 @@ long fs_ExtractDriveLetter(const char *inPathp, char *outPathp);
 BOOL IsSymlink(const char * true_name);
 UINT MakeSymbolicLink(const char *,const char *);
 void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath);
-
 #endif //__GUI2FS_H__

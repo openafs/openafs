@@ -5,16 +5,17 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=procmgmt\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
-tests: $(OJT)\pmgttest.exe
+tests: $(OUT)\pmgttest.exe
 
 PMGTTEST_EXELIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
-$(OJT)\pmgttest.exe: $(OJT)\pmgttest.obj $(PMGTTEST_EXELIBS)
+$(OUT)\pmgttest.exe: $(OUT)\pmgttest.obj $(PMGTTEST_EXELIBS)
 	$(EXECONLINK)
 
 mkdir:

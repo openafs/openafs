@@ -5,8 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=rx
 !include ..\config\NTMakefile.$(SYS_NAME)
-!include ..\config\NTMakefile.version
 
 # RX has different strings for it's version number.
 VERSFILE=RX_component_version_number
@@ -14,21 +14,24 @@ CML_PREFIX=rx_
 
 !include ..\config\NTMakefile.version
 
+{.}.c{$(OUT)}.obj:
+    $(C2OBJ) $<
+
 # Additional debugging flag for RX.
 AFSDEV_AUXCDEFINES = -DRXDEBUG
 
 LIBFILE = $(DESTDIR)\lib\afsrx.lib
 
 # Object files by category.
-XDROBJS = $(OJT)\xdr.obj $(OJT)\xdr_array.obj $(OJT)\xdr_arrayn.obj $(OJT)\xdr_float.obj $(OJT)\xdr_mem.obj \
-	$(OJT)\xdr_rec.obj  $(OJT)\xdr_refernce.obj $(OJT)\xdr_rx.obj $(OJT)\xdr_update.obj \
-	$(OJT)\xdr_afsuuid.obj $(OJT)\xdr_int64.obj $(OJT)\xdr_int32.obj
+XDROBJS = $(OUT)\xdr.obj $(OUT)\xdr_array.obj $(OUT)\xdr_arrayn.obj $(OUT)\xdr_float.obj $(OUT)\xdr_mem.obj \
+	$(OUT)\xdr_rec.obj  $(OUT)\xdr_refernce.obj $(OUT)\xdr_rx.obj $(OUT)\xdr_update.obj \
+	$(OUT)\xdr_afsuuid.obj $(OUT)\xdr_int64.obj $(OUT)\xdr_int32.obj
 
-RXOBJS = $(OJT)\rx_event.obj $(OJT)\rx_clock_nt.obj $(OJT)\rx_user.obj $(OJT)\rx_lwp.obj $(OJT)\rx.obj \
-	$(OJT)\rx_null.obj $(OJT)\rx_globals.obj $(OJT)\rx_getaddr.obj $(OJT)\rx_misc.obj $(OJT)\rx_packet.obj \
-	$(OJT)\rx_rdwr.obj $(OJT)\rx_trace.obj $(OJT)\rx_xmit_nt.obj $(OJT)\rx_conncache.obj
+RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_clock_nt.obj $(OUT)\rx_user.obj $(OUT)\rx_lwp.obj $(OUT)\rx.obj \
+	$(OUT)\rx_null.obj $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj $(OUT)\rx_packet.obj \
+	$(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj
 
-MULTIOBJS = $(OJT)\rx_multi.obj
+MULTIOBJS = $(OUT)\rx_multi.obj
 
 LIBOBJS = $(RXOBJS) $(MULTIOBJS) $(XDROBJS)
 
@@ -57,7 +60,7 @@ LOCAL_HEADERS = \
 
 $(LIBOBJS): $(INCFILES) $(LOCAL_HEADERS)
 
-$(MULTIOBJS):  rx_multi.h
+$(MULTIOBJS):  rx_multi.h 
 
 $(XDROBJS): xdr.h
 
@@ -69,8 +72,8 @@ $(LIBFILE): $(LIBOBJS)
 
 # build rxdebug.
 RXDEBUG = $(DESTDIR)\etc\rxdebug.exe
-RXDOBJS = $(OJT)\rxdebug.obj \
-	  $(OJT)\rxdebug.res
+RXDOBJS = $(OUT)\rxdebug.obj \
+	  $(OUT)\rxdebug.res
 
 LIBDIR  = $(DESTDIR)\lib
 RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
@@ -79,8 +82,10 @@ RXDLIBS = $(LIBDIR)\afs\afscmd.lib \
 	  $(LIBDIR)\afs\afsutil.lib \
           $(LIBDIR)\afs\afsreg.lib
 
-$(OJT)\rxdebug.res: rxdebug.rc AFS_component_version_number.h
+$(OUT)\rxdebug.res: rxdebug.rc AFS_component_version_number.h
 	$(RC) /Fo$*.RES $(*F).rc 
+
+$(OUT)\rxdebug.obj: rxdebug.c
 
 $(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
 	$(EXECONLINK)

@@ -7,10 +7,10 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\cfg\test
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 
-
-tests: $(OJT)\cfgtest.exe
+tests: $(OUT)\cfgtest.exe
 
 CFGTEST_EXELIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
@@ -20,7 +20,7 @@ CFGTEST_EXELIBS =\
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib  # static library
 
-$(OJT)\cfgtest.exe: $(OJT)\cfgtest.obj $(CFGTEST_EXELIBS)
+$(OUT)\cfgtest.exe: $(OUT)\cfgtest.obj $(CFGTEST_EXELIBS)
 	$(EXECONLINK)
 
 mkdir:

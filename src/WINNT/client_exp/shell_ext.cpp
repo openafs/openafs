@@ -27,7 +27,10 @@ extern "C" {
 #include "server_status_dlg.h"
 #include "auth_dlg.h"
 #include "submounts_dlg.h"
-#include "gui2fs.h"
+#include "make_symbolic_link_dlg.h"
+#if (_MSC_VER<=1200)
+#include <atlconv.h>
+#endif
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,21 +63,35 @@ static BOOL IsADir(const CString& strName)
 // CShellExt
 
 IMPLEMENT_DYNCREATE(CShellExt, CCmdTarget)
+#define REG_CLIENT_PARMS_KEY    "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
+#define OVERLAYENABLED 1
 
 CShellExt::CShellExt()
 {
+	HKEY NPKey;
 	EnableAutomation();
 	nCMRefCount++;
 	HRESULT hr;
+	UINT code;
+	DWORD ShellOption,LSPsize,LSPtype;
 	hr = SHGetMalloc(&m_pAlloc);
+	m_bIsOverlayEnabled=FALSE;
 	if (FAILED(hr))
 		m_pAlloc = NULL;
+	RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,0, KEY_QUERY_VALUE, &NPKey);
+	LSPsize=sizeof(ShellOption);
+	code=RegQueryValueEx(NPKey, "ShellOption", NULL,
+			     &LSPtype, (LPBYTE)&ShellOption, &LSPsize);
+	RegCloseKey (NPKey);
+	m_bIsOverlayEnabled=((code==0) && (LSPtype==REG_DWORD) && ((ShellOption & OVERLAYENABLED)!=0));
+	TRACE("Create CShellExt, Ref count %d/n",nCMRefCount);
 }
 
 CShellExt::~CShellExt()
 {
 	if(m_pAlloc) m_pAlloc->Release();
 	nCMRefCount--;
+	TRACE("Destroy CShellExt, Ref count %d/n",nCMRefCount);
 }
 
 
@@ -219,8 +236,16 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOW_SERVER, GetMessageString(IDS_SHOW_FILE_SERVERS_ITEM));
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOWCELL, GetMessageString(IDS_SHOW_CELL_ITEM));
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SERVER_STATUS, GetMessageString(IDS_SHOW_SERVER_STATUS_ITEM));
-	if (pThis->m_bIsSymlink)
-		::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_REMOVE_SYMLINK, GetMessageString(IDS_REMOVE_SYMLINK_ITEM));
+
+    HMENU hSymbolicMenu = CreatePopupMenu();
+	int indexSymbolicMenu = 0;
+    ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_ADD, GetMessageString(IDS_SYMBOLICLINK_ADD));
+    // ::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_EDIT, GetMessageString(IDS_SYMBOLICLINK_EDIT));
+	::InsertMenu(hSymbolicMenu, indexSymbolicMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SYMBOLICLINK_REMOVE, GetMessageString(IDS_SYMBOLICLINK_REMOVE));
+       
+	::EnableMenuItem(hSymbolicMenu,1,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
+    // ::EnableMenuItem(hSymbolicMenu,2,((pThis->m_bIsSymlink)?MF_ENABLED:MF_GRAYED)|MF_BYPOSITION);
+	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT)hSymbolicMenu, GetMessageString(IDS_SYMBOLIC_LINK_ITEM));
 	
 	// The Submounts menu has been removed because the AFS tray icon
 	// and control panel now support mapping drives directly to an AFS
@@ -242,7 +267,7 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	::InsertMenu (hMenu, indexMenu + indexShellMenu++, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, TEXT(""));
 	
     return ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_NULL, 
-			(USHORT)indexAfsMenu + indexVolPartMenu + indexMountPointMenu + indexShellMenu));
+			(USHORT)indexAfsMenu + indexVolPartMenu + indexMountPointMenu + indexShellMenu + indexSymbolicMenu));
 }
 
 STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
@@ -318,7 +343,8 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 										dlg.DoModal();
 									}
 									break;
-		
+
+        /*
 		case IDM_SUBMOUNTS_EDIT:	{
 										CSubmountsDlg dlg;
 										dlg.DoModal();
@@ -332,18 +358,56 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 										dlg.DoModal();
 									}
 									break;
-		case IDM_REMOVE_SYMLINK:	{
-										if (files.GetSize()>1)
-											break;
-										int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK);
-										if (nChoice == IDYES)
-											RemoveSymlink(files.GetAt(0));
-									}
-									break;
-		default:
-			ASSERT(FALSE);
-			Release();
-		    return E_INVALIDARG;
+        */
+	case IDM_SYMBOLICLINK_REMOVE: {
+		if (files.GetSize()>1)
+			break;
+		CString msg=files.GetAt(0);
+		int i;
+		if ((i=msg.ReverseFind('\\'))>0)
+			msg=msg.Left(i+1);
+		else if ((i=msg.ReverseFind(':'))>0)
+			msg=msg.Left(i+1)+"\\";
+		if (!SetCurrentDirectory(msg))
+		{
+			MessageBeep((UINT)-1);
+			ShowMessageBox(IDS_UNABLE_TO_SET_CURRENT_DIRECTORY,MB_OK,IDS_UNABLE_TO_SET_CURRENT_DIRECTORY);
+			break;
+		}
+		msg=files.GetAt(0);
+		if ((i=msg.ReverseFind('\\'))>0||((i=msg.ReverseFind(':'))>0))
+			msg=msg.Right(msg.GetLength()-i-1);
+		int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK,msg);
+		if (nChoice == IDYES)
+			RemoveSymlink(files.GetAt(0));
+	}
+		break;
+
+	case IDM_SYMBOLICLINK_ADD: {
+		CString msg=files.GetAt(0);
+		int i;
+		if ((i=msg.ReverseFind('\\'))>0)
+			msg=msg.Left(i+1);
+		else if ((i=msg.ReverseFind(':'))>0)
+			msg=msg.Left(i+1)+"\\";
+		CMakeSymbolicLinkDlg dlg;
+		dlg.Setbase(msg);
+		dlg.DoModal();
+	}
+		break;
+		
+	case IDM_REMOVE_SYMLINK:	{
+		if (files.GetSize()>1)
+			break;
+		int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK);
+		if (nChoice == IDYES)
+			RemoveSymlink(files.GetAt(0));
+	}
+		break;
+	default:
+		ASSERT(FALSE);
+		Release();
+		return E_INVALIDARG;
 	}
 
 	Release();
@@ -399,10 +463,10 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT idCmd, UINT uType,
 		case IDM_SERVER_STATUS:		nCmdStrID = ID_SERVER_STATUS;
 									break;
 
-		case IDM_SUBMOUNTS_CREATE:	nCmdStrID = ID_SUBMOUNTS_CREATE;
+		case IDM_SYMBOLICLINK_ADD:	nCmdStrID = ID_SYMBOLICLINK_ADD;
 									break;
 		
-		case IDM_SUBMOUNTS_EDIT:	nCmdStrID = ID_SUBMOUNTS_EDIT;
+		case IDM_SYMBOLICLINK_REMOVE:	nCmdStrID = ID_SYMBOLICLINK_REMOVE;
 									break;
 
 		case IDM_REMOVE_SYMLINK:	nCmdStrID= ID_REMOVE_SYMLINK;

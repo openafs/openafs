@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=volser
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for installing header files
@@ -30,14 +30,14 @@ LOCAL_INCFILES = \
 LIBFILE = $(DESTDIR)\lib\afs\afsvolser.lib
 
 LIBOBJS =\
-	$(OJT)\lockprocs.obj \
-	$(OJT)\volerr.obj \
-	$(OJT)\volint.cs.obj \
-	$(OJT)\volint.ss.obj \
-	$(OJT)\volint.xdr.obj \
-	$(OJT)\vsprocs.obj \
-	$(OJT)\vsutils.obj \
-	$(OJT)\AFS_component_version_number.obj 
+	$(OUT)\lockprocs.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\volint.cs.obj \
+	$(OUT)\volint.ss.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\vsprocs.obj \
+	$(OUT)\vsutils.obj \
+	$(OUT)\AFS_component_version_number.obj 
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -75,17 +75,17 @@ EXEC_LIBS = \
 VOLSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\volserver.exe
 
 VOLSERVER_EXEOBJS = \
-	$(OJT)\common.obj \
-	$(OJT)\dumpstuff.obj \
-	$(OJT)\physio.obj \
-	$(OJT)\volerr.obj \
-	$(OJT)\volint.cs.obj \
-	$(OJT)\volint.ss.obj \
-	$(OJT)\volint.xdr.obj \
-	$(OJT)\volmain.obj \
-	$(OJT)\volprocs.obj \
-	$(OJT)\voltrans.obj \
-	$(OJT)\volserver.res
+	$(OUT)\common.obj \
+	$(OUT)\dumpstuff.obj \
+	$(OUT)\physio.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\volint.cs.obj \
+	$(OUT)\volint.ss.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\volmain.obj \
+	$(OUT)\volprocs.obj \
+	$(OUT)\voltrans.obj \
+	$(OUT)\volserver.res
 	
 
 VOLSERVER_EXELIBS = \
@@ -103,13 +103,13 @@ RS_VOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\vos.exe
 CL_VOS_EXEFILE = $(DESTDIR)\etc\vos.exe
 
 VOS_EXEOBJS = \
-	$(OJT)\vos.obj \
-	$(OJT)\vsprocs.obj \
-	$(OJT)\vsutils.obj \
-	$(OJT)\lockprocs.obj \
-	$(OJT)\volint.xdr.obj \
-	$(OJT)\volerr.obj \
-	$(OJT)\vos.res
+	$(OUT)\vos.obj \
+	$(OUT)\vsprocs.obj \
+	$(OUT)\vsutils.obj \
+	$(OUT)\lockprocs.obj \
+	$(OUT)\volint.xdr.obj \
+	$(OUT)\volerr.obj \
+	$(OUT)\vos.res
 
 VOS_EXELIBS = \
 	$(DESTDIR)\lib\afsubik.lib \
@@ -126,9 +126,9 @@ $(CL_VOS_EXEFILE): $(RS_VOS_EXEFILE)
 
 ############################################################################
 # Generate versioninfo resources
-$(OJT)\volserver.res: AFS_component_version_number.h
+$(OUT)\volserver.res: AFS_component_version_number.h
 
-$(OJT)\vos.res: AFS_component_version_number.h
+$(OUT)\vos.res: AFS_component_version_number.h
 
 ############################################################################
 # Definitions for generating files via RXGEN

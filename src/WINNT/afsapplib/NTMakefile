@@ -11,6 +11,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DEXPORT_AFSAPPLIB -DEXPORTED=_declsp
 
 # include the primary makefile
 
+RELDIR=WINNT\afsapplib
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -43,34 +44,34 @@ INCFILES = \
 	$(INCFILEDIR)\subclass.h
 
 DLLOBJS = \
-	$(OJT)\afsapplib_stub.res \
-	$(OJT)\afsapplib.obj \
-	$(OJT)\al_admsvr.obj \
-	$(OJT)\al_browse.obj \
-	$(OJT)\al_browseset.obj \
-	$(OJT)\al_cover.obj \
-	$(OJT)\al_creds.obj \
-	$(OJT)\al_dynlink.obj \
-	$(OJT)\al_error.obj \
-	$(OJT)\al_help.obj \
-	$(OJT)\al_misc.obj \
-	$(OJT)\al_progress.obj \
-	$(OJT)\al_pump.obj \
-	$(OJT)\al_task.obj \
-	$(OJT)\al_wizard.obj \
-	$(OJT)\checklist.obj \
-	$(OJT)\ctl_date.obj \
-	$(OJT)\ctl_elapsed.obj \
-	$(OJT)\ctl_sockaddr.obj \
-	$(OJT)\ctl_spinner.obj \
-	$(OJT)\ctl_time.obj \
-	$(OJT)\dialog.obj \
-	$(OJT)\fastlist.obj \
-	$(OJT)\hashlist.obj \
-	$(OJT)\regexp.obj \
-	$(OJT)\resize.obj \
-	$(OJT)\settings.obj \
-	$(OJT)\subclass.obj
+	$(OUT)\afsapplib_stub.res \
+	$(OUT)\afsapplib.obj \
+	$(OUT)\al_admsvr.obj \
+	$(OUT)\al_browse.obj \
+	$(OUT)\al_browseset.obj \
+	$(OUT)\al_cover.obj \
+	$(OUT)\al_creds.obj \
+	$(OUT)\al_dynlink.obj \
+	$(OUT)\al_error.obj \
+	$(OUT)\al_help.obj \
+	$(OUT)\al_misc.obj \
+	$(OUT)\al_progress.obj \
+	$(OUT)\al_pump.obj \
+	$(OUT)\al_task.obj \
+	$(OUT)\al_wizard.obj \
+	$(OUT)\checklist.obj \
+	$(OUT)\ctl_date.obj \
+	$(OUT)\ctl_elapsed.obj \
+	$(OUT)\ctl_sockaddr.obj \
+	$(OUT)\ctl_spinner.obj \
+	$(OUT)\ctl_time.obj \
+	$(OUT)\dialog.obj \
+	$(OUT)\fastlist.obj \
+	$(OUT)\hashlist.obj \
+	$(OUT)\regexp.obj \
+	$(OUT)\resize.obj \
+	$(OUT)\settings.obj \
+	$(OUT)\subclass.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -132,10 +133,10 @@ clean::
 # Dependencies
 #
 
-$(OJT)\AfsAppLib_stub.res : AFS_component_version_number.h
+$(OUT)\AfsAppLib_stub.res : AFS_component_version_number.h
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

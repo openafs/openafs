@@ -10,7 +10,7 @@
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include -I..
 
 # include the primary makefile
-
+RELDIR=WINNT\afs_setup_utils\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afs_setup_utils_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afs_setup_utils.rc
 
-RESFILE = $(OJT)\afs_setup_utils_$(LANGID).res
+RESFILE = $(OUT)\afs_setup_utils_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 

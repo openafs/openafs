@@ -176,15 +176,19 @@ void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
 void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
 {
 	char *cp;
-
-	if (!strnicmp (inpathp, "/afs", strlen("/afs")))
+    char bslash_mountRoot[256];
+       
+    strncpy(bslash_mountRoot, cm_mountRoot, sizeof(bslash_mountRoot) - 1);
+    bslash_mountRoot[0] = '\\';
+       
+    if (!strnicmp (inpathp, cm_mountRoot, strlen(cm_mountRoot)))
 		lstrcpy (outpathp, inpathp);
-	else if (!strnicmp (inpathp, "\\afs", strlen("\\afs")))
+       else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
 		lstrcpy (outpathp, inpathp);
 	else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
-		sprintf (outpathp, "/afs%s", inpathp);
+               sprintf (outpathp, "%s%s", cm_mountRoot, inpathp);
 	else // inpathp looks like "<cell>/usr"
-		sprintf (outpathp, "/afs/%s", inpathp);
+               sprintf (outpathp, "%s/%s", cm_mountRoot, inpathp);
 
 	for (cp = outpathp; *cp != 0; ++cp) {
 		if (*cp == '\\')
@@ -195,8 +199,8 @@ void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
            outpathp[strlen(outpathp)-1] = 0;
 	}
 
-	if (!strcmpi (outpathp, "/afs")) {
-           strcpy (outpathp, "/afs/");
+	if (!strcmpi (outpathp, cm_mountRoot)) {
+        strcpy (outpathp, cm_mountRoot);
 	}
 }
 
@@ -918,12 +922,35 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	else return CM_ERROR_NOMORETOKENS;	/* mapped to EDOM */
 }
 
+extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
+
 long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	/* don't need to do, since NT cache manager will re-read afsdcell.ini
-         * on every access to a new cell.
-         */
-	return CM_ERROR_INVAL;
+    /* NT cache manager will read cell information from afsdcell.ini each time
+     * cell is accessed. So, this call is necessary only if list of server for a cell 
+     * changes (or IP addresses of cell servers changes).
+     * All that needs to be done is to refresh server information for all cells that 
+     * are already loaded.
+  
+     * cell list will be cm_CellLock and cm_ServerLock will be held for write.
+    */  
+  
+    cm_cell_t *tcellp;
+  
+    cm_SkipIoctlPath(ioctlp);
+    lock_ObtainWrite(&cm_cellLock);
+  
+    for(tcellp = cm_allCellsp; tcellp; tcellp=tcellp->nextp) 
+    {
+        /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
+        cm_FreeServerList(&tcellp->vlServersp);
+        tcellp->vlServersp = NULL;
+        cm_SearchCellFile(tcellp->namep, tcellp->namep, cm_AddCellProc, tcellp);
+        cm_RandomizeServer(&tcellp->vlServersp);
+    }
+    
+    lock_ReleaseWrite(&cm_cellLock);
+    return 0;       
 }
 
 long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
@@ -1272,7 +1299,8 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	if (code == 0) {
 		cp = ioctlp->outDatap;
 		if (newRootScp != NULL) {
-			strcpy(cp, "/afs/");
+            strcpy(cp, cm_mountRoot);
+            strcat(cp, "/");
 			cp += strlen(cp);
 		}
 		strcpy(cp, spacep->data);
@@ -1765,8 +1793,8 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			 */
 			WritePrivateProfileString("AFS Submounts",
 					submountreqp, 
-					(strlen(&afspath[strlen("/afs")])) ?
-						  &afspath[strlen("/afs")]:"/",
+					(strlen(&afspath[strlen(cm_mountRoot)])) ?
+						  &afspath[strlen(cm_mountRoot)]:"/",
 					"afsdsbmt.ini");
 
 			strcpy(ioctlp->outDatap, submountreqp);
@@ -1879,8 +1907,8 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
 
 	WritePrivateProfileString("AFS Submounts", ioctlp->outDatap,
-				  (strlen(&afspath[lstrlen("/afs")])) ? 
-				  &afspath[lstrlen("/afs")]:"/",
+				  (strlen(&afspath[lstrlen(cm_mountRoot)])) ? 
+				  &afspath[lstrlen(cm_mountRoot)]:"/",
 				  "afsdsbmt.ini");
 
 	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
@@ -1927,3 +1955,70 @@ long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
   return 0;
 }
 
+/* 
+ * functions to dump contents of various structures. 
+ * In debug build (linked with crt debug library) will dump allocated but not freed memory
+ */
+extern int cm_DumpSCache(FILE *outputFile, char *cookie);
+extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie);
+extern int smb_DumpVCP(FILE *outputFile, char *cookie);
+
+long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    long inValue = 0;
+    HANDLE hLogFile;
+    char logfileName[MAX_PATH+1];
+    char *cookie;
+  
+#ifdef _DEBUG  
+    static _CrtMemState memstate;
+#endif
+  
+    cm_SkipIoctlPath(ioctlp);
+    memcpy(&inValue, ioctlp->inDatap, sizeof(long));
+  
+    GetWindowsDirectory(logfileName, sizeof(logfileName));
+    strncat(logfileName, "\\afsd_alloc.log", sizeof(logfileName));
+
+    hLogFile = CreateFile(logfileName, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  
+    if (!hLogFile)
+    {
+      /* error */
+      inValue = -1;
+      memcpy(ioctlp->outDatap, &inValue, sizeof(long));
+      ioctlp->outDatap += sizeof(long);
+      
+      return 0;               
+    }
+  
+    SetFilePointer(hLogFile, 0, NULL, FILE_END);
+  
+    cookie = inValue ? "b" : "e";
+  
+#ifdef _DEBUG  
+  
+    if (inValue)
+    {
+      _CrtMemCheckpoint(&memstate);           
+    }
+    else
+    {
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, hLogFile);
+        _CrtMemDumpAllObjectsSince(&memstate);
+    }
+#endif
+  
+    /* dump all interesting data */
+    cm_DumpSCache(hLogFile, cookie);
+    cm_DumpBufHashTable(hLogFile, cookie);
+    smb_DumpVCP(hLogFile, cookie);
+
+    CloseHandle(hLogFile);                          
+  
+    memcpy(ioctlp->outDatap, &inValue, sizeof(long));
+    ioctlp->outDatap += sizeof(long);
+  
+    return 0;
+}

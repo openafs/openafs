@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=butc
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # build butc
@@ -15,16 +15,16 @@
 EXEFILE = $(DESTDIR)\etc\butc.exe
 
 EXEOBJS =\
-	$(OJT)\dbentries.obj \
-	$(OJT)\tcprocs.obj \
-	$(OJT)\lwps.obj \
-	$(OJT)\list.obj \
-	$(OJT)\recoverDb.obj \
-	$(OJT)\tcudbprocs.obj \
-	$(OJT)\dump.obj \
-	$(OJT)\tcstatus.obj \
-	$(OJT)\tcmain.obj  \
-	$(OJT)\butc.res
+	$(OUT)\dbentries.obj \
+	$(OUT)\tcprocs.obj \
+	$(OUT)\lwps.obj \
+	$(OUT)\list.obj \
+	$(OUT)\recoverDb.obj \
+	$(OUT)\tcudbprocs.obj \
+	$(OUT)\dump.obj \
+	$(OUT)\tcstatus.obj \
+	$(OUT)\tcmain.obj  \
+	$(OUT)\butc.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbudb.lib \
@@ -59,7 +59,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\butc.res: AFS_component_version_number.h
+$(OUT)\butc.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -75,7 +75,7 @@ clean::
 
 ############################################################################
 # Auxiliary build targets not built by default; e.g. test programs
-$(OJT)\butc_test.exe: $(OJT)\test.obj
+$(OUT)\butc_test.exe: $(OUT)\test.obj
 	$(EXECONLINK)
 
 mkdir:

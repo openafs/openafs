@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=finale
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Build translate_et.exe
@@ -15,8 +15,8 @@
 TRANSLATE_ET_EXEFILE = $(DESTDIR)\bin\translate_et.exe
 
 TRANSLATE_ET_EXEOBJS =\
-	$(OJT)\translate_et_nt.obj \
-	$(OJT)\translate_et.res
+	$(OUT)\translate_et_nt.obj \
+	$(OUT)\translate_et.res
 
 TRANSLATE_ET_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsadminutil.lib \
@@ -31,7 +31,7 @@ $(TRANSLATE_ET_EXEFILE): $(TRANSLATE_ET_EXEOBJS) $(TRANSLATE_ET_EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\translate_et.res: AFS_component_version_number.h
+$(OUT)\translate_et.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target

@@ -7,10 +7,10 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
-
-install tests: $(OJT)\afscp.exe
+install tests: $(OUT)\afscp.exe
 
 AFSCP_EXELIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
@@ -25,14 +25,14 @@ AFSCP_EXELIBS =\
 	$(DESTDIR)\lib\afs\afscmd.lib  # static library
 
 AFSCP_EXEOBJS =\
-	$(OJT)\bos.obj \
-	$(OJT)\client.obj \
-	$(OJT)\kas.obj \
-	$(OJT)\pts.obj \
-	$(OJT)\util.obj \
-	$(OJT)\vos.obj
+	$(OUT)\bos.obj \
+	$(OUT)\client.obj \
+	$(OUT)\kas.obj \
+	$(OUT)\pts.obj \
+	$(OUT)\util.obj \
+	$(OUT)\vos.obj
 
-$(OJT)\afscp.exe: $(OJT)\afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
+$(OUT)\afscp.exe: $(OUT)\afscp.obj $(AFSCP_EXEOBJS) $(AFSCP_EXELIBS)
 	$(EXECONLINK)
 
 mkdir:

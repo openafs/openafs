@@ -10,6 +10,8 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <osilog.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afscreds.h"
@@ -17,7 +19,6 @@ extern "C" {
 #include "drivemap.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <osilog.h>
 #include "rxkad.h"
 
 /*
@@ -57,6 +58,10 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdSh
 {
    Shortcut_Init();
    TaLocale_LoadCorrespondingModule (hInst);
+
+   osi_InitTraceOption();
+   osi_LogEvent0("AFSCreds Main command line",pCmdLine);
+   fs_utils_InitMountRoot();
 
    if (InitApp (pCmdLine))
       {

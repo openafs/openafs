@@ -16,6 +16,7 @@ AFSDEV_AUXRCDEFINES = $(AFSDEV_AUXRCDEFINES) -I$(DESTDIR)\include\winnt
 
 # include the primary makefile
 
+RELDIR=WINNT\afsapplib\test
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 
 ############################################################################
@@ -26,8 +27,8 @@ AFSDEV_AUXRCDEFINES = $(AFSDEV_AUXRCDEFINES) -I$(DESTDIR)\include\winnt
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\WizTest.exe
 
 EXEOBJS = \
-	$(OJT)\wiztest.res \
-	$(OJT)\wiztest.obj
+	$(OUT)\wiztest.res \
+	$(OUT)\wiztest.obj
 
 EXELIBS = \
 	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \

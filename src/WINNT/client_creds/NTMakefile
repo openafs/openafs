@@ -9,7 +9,9 @@
 
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd -I..\client_config
 
+
 # include the primary makefile
+RELDIR=WINNT\client_creds
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -21,31 +23,31 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd -I..\client_config
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afscreds.exe
 
 EXEOBJS = \
-	$(OJT)\advtab.obj \
-	$(OJT)\afswiz.obj \
-	$(OJT)\creds.obj \
-	$(OJT)\main.obj \
-	$(OJT)\misc.obj \
-	$(OJT)\credstab.obj \
-	$(OJT)\mounttab.obj \
-	$(OJT)\settings.obj \
-	$(OJT)\shortcut.obj \
-	$(OJT)\trayicon.obj \
-	$(OJT)\window.obj
+	$(OUT)\advtab.obj \
+	$(OUT)\afswiz.obj \
+	$(OUT)\creds.obj \
+	$(OUT)\main.obj \
+	$(OUT)\misc.obj \
+	$(OUT)\credstab.obj \
+	$(OUT)\mounttab.obj \
+	$(OUT)\settings.obj \
+	$(OUT)\shortcut.obj \
+	$(OUT)\trayicon.obj \
+	$(OUT)\window.obj
 
 EXERES = \
-	$(OJT)\afscreds_stub.res
+	$(OUT)\afscreds_stub.res
 
 AFSDOBJS = \
-	$(OJT)\fs_utils.obj
+	$(OUT)\fs_utils.obj
 	
 AFSAPPLIBOBJS= \
-	$(OJT)\checklist.obj \
-	$(OJT)\al_wizard.obj \
-	$(OJT)\subclass.obj 
+	$(OUT)\checklist.obj \
+	$(OUT)\al_wizard.obj \
+	$(OUT)\subclass.obj 
 
 CLIENTOBJS = \
-	$(OJT)\drivemap.obj
+	$(OUT)\drivemap.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -109,10 +111,10 @@ lang ::
 # Dependencies
 #
 
-$(OJT)\afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
+$(OUT)\afscreds_stub.res : afscreds_stub.rc AFS_component_version_number.h
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

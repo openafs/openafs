@@ -21,13 +21,13 @@
 #define IDM_SHOW_SERVER                 10
 #define IDM_SHOWCELL                    11
 #define IDM_SERVER_STATUS               12
-#define IDM_REMOVE_SYMLINK              13
-#define IDM_SUBMOUNTS_EDIT              14
+#define IDM_SYMBOLICLINK_REMOVE         13
+#define IDM_SYMBOLICLINK_ADD            14
 #define IDM_SUBMOUNTS                   15
 #define IDM_ACL_CLEAN                   16
 #define ID_GET_TOKENS                   17
 #define ID_DISCARD_TOKENS               18
-#define IDM_SUBMOUNTS_CREATE            19
+#define IDM_SUBMOUNTS_EDIT              19
 #define IDD_KLOG_DIALOG                 102
 #define IDR_MENU_FILE                   129
 #define IDD_VOLUME_INFO                 130
@@ -50,6 +50,8 @@
 #define IDD_AUTHENTICATION              149
 #define IDD_UNLOG_DIALOG                150
 #define IDD_ADD_SUBMOUNT                154
+#define IDD_SYMBOLICLINK_ADD            155
+#define IDM_REMOVE_SYMLINK              156
 #define IDC_LIST                        1001
 #define IDC_PASSWORD                    1002
 #define IDC_OFFLINE_MSG                 1003
@@ -237,12 +239,22 @@
 #define IDS_REMOVE_MP_COLUMN            59188
 #define IDS_REMOVE_SYMLINK_ITEM         59189
 #define IDS_REALLY_REMOVE_SYMLINK       59190
+#define IDS_SYMBOLICLINK_ADD            59191
+#define IDS_SYMBOLICLINK_EDIT           59192
+#define IDS_SYMBOLICLINK_REMOVE         59193
+#define IDS_SYMBOLIC_LINK_ITEM          59194
+#define ID_SYMBOLICLINK_ADD             59195
+#define ID_SYMBOLICLINK_REMOVE          59196
+#define IDS_UNABLE_TO_CREATE_SYMBOLIC_LINK 59197
+#define IDS_UNABLE_TO_SET_CURRENT_DIRECTORY 59198
+#define IDS_CURRENT_DIRECTORY_PATH_TOO_LONG 59199
+
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        155
+#define _APS_NEXT_RESOURCE_VALUE        163
 #define _APS_NEXT_COMMAND_VALUE         32829
 #define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101

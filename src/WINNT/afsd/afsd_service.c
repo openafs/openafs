@@ -200,11 +200,22 @@ void CheckMountDrive()
 }
 #endif
 
+typedef BOOL ( APIENTRY * AfsdInitHook )(void);
+#define AFSD_INIT_HOOK "AfsdInitHook"
+#define AFSD_HOOK_DLL  "afsdhook.dll"
+
 void afsd_Main()
 {
 	long code;
 	char *reason;
 	int jmpret;
+    HANDLE hInitHookDll;
+    AfsdInitHook initHook;
+
+#ifdef _DEBUG
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /*| _CRTDBG_CHECK_ALWAYS_DF*/ | 
+                   _CRTDBG_CHECK_CRT_DF /* | _CRTDBG_DELAY_FREE_MEM_DF */ );
+#endif 
 
 	osi_InitPanic(afsd_notifier);
 	osi_InitTraceOption();
@@ -226,17 +237,55 @@ void afsd_Main()
 	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
-{       
-        HANDLE h; char *ptbuf[1];
-	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-	ptbuf[0] = "AFS start pending";
-	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-	DeregisterEventSource(h);
-}
+    {       
+    HANDLE h; char *ptbuf[1];
+    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+    ptbuf[0] = "AFS start pending";
+    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
+    DeregisterEventSource(h);
+    }
 
 	afsi_start();
 
-	MainThreadId = GetCurrentThreadId();
+    /* allow an exit to be called prior to any initialization */
+    hInitHookDll = LoadLibrary(AFSD_HOOK_DLL);
+    if (hInitHookDll)
+    {
+        BOOL hookRc = FALSE;
+        initHook = ( AfsdInitHook ) GetProcAddress(hInitHookDll, AFSD_INIT_HOOK);
+        if (initHook)
+        {
+            hookRc = initHook();
+        }
+        FreeLibrary(hInitHookDll);
+               
+        if (hookRc == FALSE)
+        {
+            ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 0;
+            ServiceStatus.dwWaitHint = 0;
+            ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+            /* exit if initialization failed */
+            return;
+        }
+        else
+        {
+            /* allow another 15 seconds to start */
+            ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+            ServiceStatus.dwServiceSpecificExitCode = 0;
+            ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+            ServiceStatus.dwWin32ExitCode = NO_ERROR;
+            ServiceStatus.dwCheckPoint = 2;
+            ServiceStatus.dwWaitHint = 15000;
+            ServiceStatus.dwControlsAccepted = 0;
+            SetServiceStatus(StatusHandle, &ServiceStatus);
+        }
+    }
+
+    MainThreadId = GetCurrentThreadId();
 	jmpret = setjmp(notifier_jmp);
 
 	if (jmpret == 0) {
@@ -260,29 +309,28 @@ void afsd_Main()
 		ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 		SetServiceStatus(StatusHandle, &ServiceStatus);
 #endif
-	{
-	        HANDLE h; char *ptbuf[1];
+        {
+	    HANDLE h; char *ptbuf[1];
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 		ptbuf[0] = "AFS running";
 		ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
 		DeregisterEventSource(h);
-	}
+        }
 	}
 
-        /* Check if we should mount a drive into AFS */
-        CheckMountDrive();
+    /* Check if we should mount a drive into AFS */
+    CheckMountDrive();
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
 	
-{   
-        HANDLE h; char *ptbuf[1];
+    {   
+    HANDLE h; char *ptbuf[1];
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	ptbuf[0] = "AFS quitting";
-	ReportEvent(h,
-		GlobalStatus ? EVENTLOG_ERROR_TYPE : EVENTLOG_INFORMATION_TYPE,
-		0, 0, NULL, 1, 0, ptbuf, NULL);
-	DeregisterEventSource(h);
-}
+	ReportEvent(h, GlobalStatus ? EVENTLOG_ERROR_TYPE : EVENTLOG_INFORMATION_TYPE,
+                0, 0, NULL, 1, 0, ptbuf, NULL);
+    DeregisterEventSource(h);
+    }
 
 	ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	ServiceStatus.dwWin32ExitCode = NO_ERROR;
@@ -292,23 +340,32 @@ void afsd_Main()
 	SetServiceStatus(StatusHandle, &ServiceStatus);
 }
 
-#ifdef NOTSERVICE
-void main()
+DWORD __stdcall afsdMain_thread(void* notUsed)
 {
 	afsd_Main();
-	Sleep(1000);
-	return ;
+    return(0);
 }
-#else
+
 void main()
 {
-	LONG status = ERROR_SUCCESS;
 	SERVICE_TABLE_ENTRY dispatchTable[] = {
 		{AFS_DAEMON_SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION) afsd_Main},
 		{NULL, NULL}
 	};
 
+    afsd_SetUnhandledExceptionFilter();
+
 	if (!StartServiceCtrlDispatcher(dispatchTable))
-		status = GetLastError();
+    {
+        LONG status = GetLastError();
+	    if (status == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
+        {
+            DWORD tid;
+            CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
+		
+            printf("Hit <Enter> to terminate OpenAFS Client Service\n");
+            getchar();              
+            SetEvent(WaitToTerminate);
+        }
+    }
 }
-#endif

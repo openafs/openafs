@@ -73,6 +73,8 @@ void smb_InitIoctl(void)
 #ifdef DJGPP
 	smb_ioctlProcsp[VIOC_SHUTDOWN] = cm_IoctlShutdown;
 #endif
+	smb_ioctlProcsp[VIOC_TRACEMEMDUMP] = cm_IoctlMemoryDump;
+	smb_ioctlProcsp[VIOC_ISSYMLINK] = cm_IoctlIslink;
 }
 
 /* called to make a fid structure into an IOCTL fid structure */

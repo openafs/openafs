@@ -11,6 +11,7 @@ extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <rx/rxkad.h>
+#include <afs/fs_utils.h>
 }
 #include <windows.h>
 #include <stdlib.h>
@@ -233,7 +234,7 @@ BOOL SubmountToPath (PDRIVEMAPLIST pList, LPTSTR pszPath, LPTSTR pszSubmount, BO
    //
    if (!lstrcmpi (pszSubmount, TEXT("all")))
       {
-      lstrcpy (pszPath, TEXT("/afs"));
+      lstrcpy (pszPath, cm_slash_mount_root);
       return TRUE;
       }
 
@@ -600,8 +601,8 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
 {
    // We can only map drives to places in AFS using this function.
    //
-   if ( (lstrncmpi (pszMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pszMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
+   if ( (lstrncmpi (pszMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+        (lstrncmpi (pszMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
       {
       if (pdwStatus)
          *pdwStatus = ERROR_BAD_NETPATH;
@@ -681,21 +682,21 @@ void RemoveSubMount (LPTSTR pszSubmount)
 
 void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWantForwardSlashes)
 {
-   if (!*pszSource)
-      lstrcpy (pszTarget, (fWantAFS) ? TEXT("/afs") : TEXT(""));
-   else if ((*pszSource != TEXT('/')) && (*pszSource != TEXT('\\')))
-      wsprintf (pszTarget, TEXT("/afs/%s"), pszSource);
-   // We don't want to strip afs off the start if it is part of something for example afscell.company.com
-   else if (fWantAFS && (lstrncmpi (&pszSource[1], TEXT("afs"), 3)) || !((pszSource[4] == TEXT('/')) ||
-                                                                         (pszSource[4] == TEXT('\\')) ||
-                                                                         (lstrlen(pszSource) == 4)))
-      wsprintf (pszTarget, TEXT("/afs%s"), pszSource);
-   else if (!fWantAFS && (!lstrncmpi (&pszSource[1], TEXT("afs"), 3) && ((pszSource[4] == TEXT('/')) ||
-                                                                        (pszSource[4] == TEXT('\\')) ||
-                                                                        (lstrlen(pszSource) == 4))))
-      lstrcpy (pszTarget, &pszSource[4]);
-   else
-      lstrcpy (pszTarget, pszSource);
+    if (!*pszSource)
+        lstrcpy (pszTarget, (fWantAFS) ? cm_slash_mount_root : TEXT(""));
+    else if ((*pszSource != TEXT('/')) && (*pszSource != TEXT('\\')))
+        wsprintf (pszTarget, TEXT("%s/%s"),cm_slash_mount_root, pszSource);
+    // We don't want to strip afs off the start if it is part of something for example afscell.company.com
+    else if (fWantAFS && (lstrncmpi (&pszSource[1], cm_mount_root, strlen(cm_mount_root))) || !((pszSource[strlen(cm_slash_mount_root)] == TEXT('/')) ||
+                                                                                                 (pszSource[strlen(cm_slash_mount_root)] == TEXT('\\')) ||
+                                                                                                 (lstrlen(pszSource) == strlen(cm_slash_mount_root))))
+        wsprintf (pszTarget, TEXT("%s%s"),cm_slash_mount_root, pszSource);
+    else if (!fWantAFS && (!lstrncmpi (&pszSource[1], cm_mount_root, strlen(cm_mount_root)) && ((pszSource[strlen(cm_slash_mount_root)] == TEXT('/')) ||
+                                                                                                 (pszSource[strlen(cm_slash_mount_root)] == TEXT('\\')) ||
+                                                                                                 (lstrlen(pszSource) == strlen(cm_slash_mount_root)))))
+        lstrcpy (pszTarget, &pszSource[strlen(cm_slash_mount_root)]);
+    else
+        lstrcpy (pszTarget, pszSource);
 
    for (LPTSTR pch = pszTarget; *pch; ++pch)
       {

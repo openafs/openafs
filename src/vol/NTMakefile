@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=vol
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -32,18 +33,18 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
 
 LIBOBJS =\
-	$(OJT)\common.obj \
-	$(OJT)\clone.obj \
-	$(OJT)\fssync.obj \
-	$(OJT)\ntops.obj \
-	$(OJT)\nuke.obj \
-	$(OJT)\partition.obj \
-	$(OJT)\purge.obj \
-	$(OJT)\vnode.obj \
-	$(OJT)\volume.obj \
-	$(OJT)\vutil.obj \
-	$(OJT)\ihandle.obj \
-	$(OJT)\AFS_component_version_number.obj	
+	$(OUT)\common.obj \
+	$(OUT)\clone.obj \
+	$(OUT)\fssync.obj \
+	$(OUT)\ntops.obj \
+	$(OUT)\nuke.obj \
+	$(OUT)\partition.obj \
+	$(OUT)\purge.obj \
+	$(OUT)\vnode.obj \
+	$(OUT)\volume.obj \
+	$(OUT)\vutil.obj \
+	$(OUT)\ihandle.obj \
+	$(OUT)\AFS_component_version_number.obj	
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -70,10 +71,10 @@ EXEC_LIBS = \
 SALVAGER = $(DESTDIR)\root.server\usr\afs\bin\salvager.exe
 
 SALVAGER_EXEOBJS =\
-	$(OJT)\vol-salvage.obj \
-	$(OJT)\physio.obj \
-	$(OJT)\AFS_component_version_number.obj \
-	$(OJT)\salvager.res
+	$(OUT)\vol-salvage.obj \
+	$(OUT)\physio.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\salvager.res
 
 $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
 	$(EXECONLINK)
@@ -84,15 +85,15 @@ $(SALVAGER): $(SALVAGER_EXEOBJS) $(EXEC_LIBS)
 # build volinfo
 VOLINFO = $(DESTDIR)\root.server\usr\afs\bin\volinfo.exe
 
-$(VOLINFO): $(OJT)\vol-info.obj $(OJT)\physio.obj $(OJT)\volinfo.res $(EXEC_LIBS)
+$(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
 ############################################################################
 # generate versioninfo resources
-$(OJT)\salvager.res: salvager.rc AFS_component_version_number.h
+$(OUT)\salvager.res: salvager.rc AFS_component_version_number.h
 
-$(OJT)\volinfo.res: AFS_component_version_number.h
+$(OUT)\volinfo.res: AFS_component_version_number.h
 
 ############################################################################
 # Install targets

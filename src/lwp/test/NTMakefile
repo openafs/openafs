@@ -5,16 +5,17 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=lwp\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
-LIBS =  DESTDIR\lib\afslwp.lib \
-	DESTDIRlib\afs\afsutil.lib
+LIBS =  $(DESTDIR)\lib\afslwp.lib \
+	$(DESTDIR)lib\afs\afsutil.lib
 
 
 # build testkey.exe
-TESTKEY = $(OJT)\testkey.exe
-$(OJT)\testkey.exe: $(OJT)\test_key.obj $(LIBS)
+TESTKEY = $(OUT)\testkey.exe
+$(OUT)\testkey.exe: $(OUT)\test_key.obj $(LIBS)
 	$(EXECONLINK)
 
 

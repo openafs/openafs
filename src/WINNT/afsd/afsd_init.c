@@ -89,9 +89,7 @@ HANDLE afsi_file;
 int cm_dnsEnabled = 1;
 #endif
 
-/*#ifdef AFS_FREELANCE_CLIENT
-extern int cm_freelanceEnabled;
-#endif*/
+char cm_NetBiosName[32];
 
 void cm_InitFakeRootDir();
 
@@ -109,13 +107,16 @@ afsi_start()
 	strcat(wd, "\\afsd_init.log");
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-				CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+                           OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+    SetFilePointer(afsi_file, 0, NULL, FILE_END);
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
 	strcat(t, ": Create log file\n");
 	strcat(u, ": Created log file\n");
 	WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
 	WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 }
+
+static int afsi_log_useTimestamp = 1;
 
 void
 afsi_log(char *pattern, ...)
@@ -126,10 +127,15 @@ afsi_log(char *pattern, ...)
 	va_start(ap, pattern);
 
 	vsprintf(s, pattern, ap);
-	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-	sprintf(u, "%s: %s\n", t, s);
-	if (afsi_file != INVALID_HANDLE_VALUE)
-		WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    if ( afsi_log_useTimestamp ) {
+        GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
+        sprintf(u, "%s: %s\n", t, s);
+        if (afsi_file != INVALID_HANDLE_VALUE)
+            WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    } else {
+        if (afsi_file != INVALID_HANDLE_VALUE)
+            WriteFile(afsi_file, s, strlen(s), &zilch, NULL);
+    }
 }
 
 /*
@@ -436,6 +442,16 @@ int afsd_InitCM(char **reasonP)
 	}
 #endif /* AFS_FREELANCE_CLIENT */
 
+    dummyLen = sizeof(cm_NetBiosName);
+    code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+                           (BYTE *) &cm_NetBiosName, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        afsi_log("Explicit NetBios name is used %s", cm_NetBiosName);
+    }
+    else {
+        cm_NetBiosName[0] = 0;   /* default off */
+    }
+
 	RegCloseKey (parmKey);
 
 	/* setup early variables */
@@ -624,21 +640,263 @@ int afsd_InitSMB(char **reasonP, void *aMBfunc)
 	char *ctemp;
 
 	/* Do this last so that we don't handle requests before init is done.
-         * Here we initialize the SMB listener.
-         */
-	strcpy(hostName, cm_HostName);
+     * Here we initialize the SMB listener.
+     */
+    if (!cm_NetBiosName[0])
+    {
+        strcpy(hostName, cm_HostName);
         ctemp = strchr(hostName, '.');	/* turn ntdfs.* into ntdfs */
         if (ctemp) *ctemp = 0;
-        hostName[11] = 0;	/* ensure that even after adding the -A, we
-				 * leave one byte free for the netbios server
-				 * type.
-                                 */
+            hostName[11] = 0; /* ensure that even after adding the -A, we
+                               * leave one byte free for the netbios server
+                               * type.
+                               */
         strcat(hostName, "-AFS");
-        _strupr(hostName);
-	smb_Init(afsd_logp, hostName, smb_UseV3, LANadapter, numSvThreads,
-		 aMBfunc);
+    } else {
+        strcpy(hostName, cm_NetBiosName);
+    }
+    _strupr(hostName);
+
+    smb_Init(afsd_logp, hostName, smb_UseV3, LANadapter, numSvThreads, 
+             aMBfunc);
 	afsi_log("smb_Init");
 
 	return 0;
 }
 
+#ifdef ReadOnly
+#undef ReadOnly
+#endif
+
+#ifdef File
+#undef File
+#endif
+
+#pragma pack( push, before_imagehlp, 8 )
+#include <imagehlp.h>
+#pragma pack( pop, before_imagehlp )
+
+#define MAXNAMELEN 1024
+
+void afsd_printStack(HANDLE hThread, CONTEXT *c)
+{
+    HANDLE hProcess = GetCurrentProcess();
+    int frameNum;
+    DWORD offset;
+    DWORD symOptions;
+    char functionName[MAXNAMELEN];
+  
+    IMAGEHLP_MODULE Module;
+    IMAGEHLP_LINE Line;
+  
+    STACKFRAME s;
+    IMAGEHLP_SYMBOL *pSym;
+  
+    afsi_log_useTimestamp = 0;
+  
+    pSym = (IMAGEHLP_SYMBOL *) GlobalAlloc(0, sizeof (IMAGEHLP_SYMBOL) + MAXNAMELEN);
+  
+    memset( &s, '\0', sizeof s );
+    if (!SymInitialize(hProcess, NULL, 1) )
+    {
+        afsi_log("SymInitialize(): GetLastError() = %lu\n", GetLastError() );
+      
+        SymCleanup( hProcess );
+        GlobalFree(pSym);
+      
+        return;
+    }
+  
+    symOptions = SymGetOptions();
+    symOptions |= SYMOPT_LOAD_LINES;
+    symOptions &= ~SYMOPT_UNDNAME;
+    SymSetOptions( symOptions );
+  
+    /*
+     * init STACKFRAME for first call
+     * Notes: AddrModeFlat is just an assumption. I hate VDM debugging.
+     * Notes: will have to be #ifdef-ed for Alphas; MIPSes are dead anyway,
+     * and good riddance.
+     */
+#if defined (_ALPHA_) || defined (_MIPS_) || defined (_PPC_)
+#error The STACKFRAME initialization in afsd_printStack() for this platform
+#error must be properly configured
+#else
+    s.AddrPC.Offset = c->Eip;
+    s.AddrPC.Mode = AddrModeFlat;
+    s.AddrFrame.Offset = c->Ebp;
+    s.AddrFrame.Mode = AddrModeFlat;
+#endif
+
+    memset( pSym, '\0', sizeof (IMAGEHLP_SYMBOL) + MAXNAMELEN );
+    pSym->SizeOfStruct = sizeof (IMAGEHLP_SYMBOL);
+    pSym->MaxNameLength = MAXNAMELEN;
+  
+    memset( &Line, '\0', sizeof Line );
+    Line.SizeOfStruct = sizeof Line;
+  
+    memset( &Module, '\0', sizeof Module );
+    Module.SizeOfStruct = sizeof Module;
+  
+    offset = 0;
+  
+    afsi_log("\n--# FV EIP----- RetAddr- FramePtr StackPtr Symbol\n" );
+  
+    for ( frameNum = 0; ; ++ frameNum )
+    {
+        /*
+         * get next stack frame (StackWalk(), SymFunctionTableAccess(), 
+         * SymGetModuleBase()). if this returns ERROR_INVALID_ADDRESS (487) or
+         * ERROR_NOACCESS (998), you can assume that either you are done, or
+         * that the stack is so hosed that the next deeper frame could not be
+         * found.
+         */
+        if ( ! StackWalk( IMAGE_FILE_MACHINE_I386, hProcess, hThread, &s, c, 
+                          NULL, SymFunctionTableAccess, SymGetModuleBase, 
+                          NULL ) )
+            break;
+      
+        /* display its contents */
+        afsi_log("\n%3d %c%c %08lx %08lx %08lx %08lx ",
+                 frameNum, s.Far? 'F': '.', s.Virtual? 'V': '.',
+                 s.AddrPC.Offset, s.AddrReturn.Offset,
+                 s.AddrFrame.Offset, s.AddrStack.Offset );
+      
+        if ( s.AddrPC.Offset == 0 )
+        {
+            afsi_log("(-nosymbols- PC == 0)\n" );
+        }
+        else
+        { 
+            /* show procedure info from a valid PC */
+            if (!SymGetSymFromAddr(hProcess, s.AddrPC.Offset, &offset, pSym))
+            {
+                if ( GetLastError() != ERROR_INVALID_ADDRESS )
+                {
+                    afsi_log("SymGetSymFromAddr(): errno = %lu\n", 
+                             GetLastError());
+                }
+            }
+            else
+            {
+                UnDecorateSymbolName(pSym->Name, functionName, MAXNAMELEN, 
+                                     UNDNAME_NAME_ONLY);
+                afsi_log("%s", functionName );
+
+                if ( offset != 0 )
+                {
+                    afsi_log(" %+ld bytes\n", (long) offset);
+                }
+            }
+
+            if (!SymGetLineFromAddr(hProcess, s.AddrPC.Offset, &offset, &Line))
+            {
+                if (GetLastError() != ERROR_INVALID_ADDRESS)
+                {
+                    afsi_log("Error: SymGetLineFromAddr(): errno = %lu\n", 
+                             GetLastError());
+                }
+            }
+            else
+            {
+                afsi_log("    Line: %s(%lu) %+ld bytes\n", Line.FileName, 
+                         Line.LineNumber, offset);
+            }
+	  
+        }
+      
+        /* no return address means no deeper stackframe */
+        if (s.AddrReturn.Offset == 0)
+        {
+            SetLastError(0);
+            break;
+        }
+    }
+  
+    if (GetLastError() != 0)
+    {
+        afsi_log("\nStackWalk(): errno = %lu\n", GetLastError());
+    }
+  
+    SymCleanup(hProcess);
+    GlobalFree(pSym);
+}
+
+#ifdef _DEBUG
+static DWORD *afsd_crtDbgBreakCurrent = NULL;
+static DWORD afsd_crtDbgBreaks[256];
+#endif
+
+LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
+{
+    CONTEXT context;
+#ifdef _DEBUG  
+    BOOL allocRequestBrk = FALSE;
+#endif 
+  
+    afsi_log("UnhandledException : code : 0x%x, address: 0x%x\n", 
+             ep->ExceptionRecord->ExceptionCode, 
+             ep->ExceptionRecord->ExceptionAddress);
+	   
+#ifdef _DEBUG
+    if (afsd_crtDbgBreakCurrent && 
+        *afsd_crtDbgBreakCurrent == _CrtSetBreakAlloc(*afsd_crtDbgBreakCurrent))
+    { 
+        allocRequestBrk = TRUE;
+        afsi_log("Breaking on alloc request # %d\n", *afsd_crtDbgBreakCurrent);
+    }
+#endif
+	   
+    /* save context if we want to print the stack information */
+    context = *ep->ContextRecord;
+	   
+    afsd_printStack(GetCurrentThread(), &context);
+	   
+    if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
+    {
+        afsi_log("EXCEPTION_BREAKPOINT - continue execition ...\n");
+    
+#ifdef _DEBUG
+        if (allocRequestBrk)
+        {
+            afsd_crtDbgBreakCurrent++;
+            _CrtSetBreakAlloc(*afsd_crtDbgBreakCurrent);
+        }
+#endif         
+    
+        ep->ContextRecord->Eip++;
+        return EXCEPTION_CONTINUE_EXECUTION;
+    }
+    else
+    {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+}
+  
+void afsd_SetUnhandledExceptionFilter()
+{
+    SetUnhandledExceptionFilter(afsd_ExceptionFilter);
+}
+  
+#ifdef _DEBUG
+void afsd_DbgBreakAllocInit()
+{
+    memset(afsd_crtDbgBreaks, -1, sizeof(afsd_crtDbgBreaks));
+    afsd_crtDbgBreakCurrent = afsd_crtDbgBreaks;
+}
+  
+void afsd_DbgBreakAdd(DWORD requestNumber)
+{
+    int i;
+    for (i = 0; i < sizeof(afsd_crtDbgBreaks) - 1; i++)
+	{
+        if (afsd_crtDbgBreaks[i] == -1)
+	    {
+            break;
+	    }
+	}
+    afsd_crtDbgBreaks[i] = requestNumber;
+
+    _CrtSetBreakAlloc(afsd_crtDbgBreaks[0]);
+}
+#endif

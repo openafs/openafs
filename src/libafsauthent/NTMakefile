@@ -10,6 +10,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libafsauthent
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -26,62 +27,62 @@ RX = ..\rx
 
 LIBFILE = $(DESTDIR)\lib\afsauthent.dll
 
-RXOBJS = $(OJT)\xdr_int32.obj $(OJT)\xdr_int64.obj
+RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
-AUDITBJS = $(OJT)\audit.obj
+AUDITBJS = $(OUT)\audit.obj
 
 AUTHOBJS = \
-	$(OJT)\cellconfig.obj \
-	$(OJT)\userok.obj \
-	$(OJT)\writeconfig.obj \
-	$(OJT)\authcon.obj \
-	$(OJT)\ktc_errors.obj \
-	$(OJT)\ktc_nt.obj \
-	$(OJT)\acfg_errors.obj
+	$(OUT)\cellconfig.obj \
+	$(OUT)\userok.obj \
+	$(OUT)\writeconfig.obj \
+	$(OUT)\authcon.obj \
+	$(OUT)\ktc_errors.obj \
+	$(OUT)\ktc_nt.obj \
+	$(OUT)\acfg_errors.obj
 
 KAUTHOBJS = \
-	$(OJT)\kauth.xdr.obj \
-	$(OJT)\kauth.cs.obj \
-	$(OJT)\kaaux.obj \
-	$(OJT)\client.obj \
-	$(OJT)\authclient.obj \
-	$(OJT)\token.obj \
-	$(OJT)\kautils.obj \
-	$(OJT)\kalocalcell.obj \
-	$(OJT)\kaerrors.obj \
-	$(OJT)\user_nt.obj
+	$(OUT)\kauth.xdr.obj \
+	$(OUT)\kauth.cs.obj \
+	$(OUT)\kaaux.obj \
+	$(OUT)\client.obj \
+	$(OUT)\authclient.obj \
+	$(OUT)\token.obj \
+	$(OUT)\kautils.obj \
+	$(OUT)\kalocalcell.obj \
+	$(OUT)\kaerrors.obj \
+	$(OUT)\user_nt.obj
 
 UBIKOBJS = \
-	$(OJT)\ubikclient.obj \
-	$(OJT)\uerrors.obj \
-	$(OJT)\ubik_int.cs.obj \
-	$(OJT)\ubik_int.xdr.obj
+	$(OUT)\ubikclient.obj \
+	$(OUT)\uerrors.obj \
+	$(OUT)\ubik_int.cs.obj \
+	$(OUT)\ubik_int.xdr.obj
 
 UTILOBJS = \
-	$(OJT)\pthread_glock.obj \
-	$(OJT)\get_krbrlm.obj \
-	$(OJT)\casestrcpy.obj \
-	$(OJT)\fileutil.obj \
-	$(OJT)\dirpath.obj \
-	$(OJT)\readdir_nt.obj
+	$(OUT)\pthread_glock.obj \
+	$(OUT)\get_krbrlm.obj \
+	$(OUT)\casestrcpy.obj \
+	$(OUT)\fileutil.obj \
+	$(OUT)\dirpath.obj \
+	$(OUT)\readdir_nt.obj
 
 RXKADOBJS = \
-	$(OJT)\rxkad_errs.obj
+	$(OUT)\rxkad_errs.obj
 
 PTSERVEROBJS = \
-	$(OJT)\ptclient.obj \
-	$(OJT)\ptint.cs.obj \
-	$(OJT)\ptint.xdr.obj \
-	$(OJT)\ptuser.obj \
-	$(OJT)\display.obj \
-	$(OJT)\pterror.obj
+	$(OUT)\ptclient.obj \
+	$(OUT)\ptint.cs.obj \
+	$(OUT)\ptint.xdr.obj \
+	$(OUT)\ptuser.obj \
+	$(OUT)\display.obj \
+	$(OUT)\pterror.obj
 
 SYSOBJS = \
-	$(OJT)\pioctl_nt.obj
+	$(OUT)\pioctl_nt.obj
 
 WINNTAFSDOBJS =\
-	$(OJT)\cm_config.obj \
-	$(OJT)\afsrpc_c.obj
+	$(OUT)\cm_config.obj \
+	$(OUT)\afsrpc_c.obj
 
 DLLOBJS =\
 	$(AUTHOBJS) \
@@ -94,7 +95,7 @@ DLLOBJS =\
 	$(WINNTAFSDOBJS) \
 	$(AUDITBJS) \
 	$(DESTDIR)\lib\cm_dns.obj \
-	$(OJT)\afsauthent.res
+	$(OUT)\afsauthent.res
 
 $(RXOBJS): $(RX)\$$(@B).c
 	$(C2OBJ) -I$(RX) $**
@@ -143,7 +144,7 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsauthent.res: AFS_component_version_number.h
+$(OUT)\afsauthent.res: AFS_component_version_number.h
 
 install: $(LIBFILE)
 

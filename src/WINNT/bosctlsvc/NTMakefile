@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\bosctlsvc
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -14,8 +15,8 @@
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosctlsvc.exe
 
 EXEOBJS =\
-	$(OJT)\bosctlsvc.obj \
-	$(OJT)\bosctlsvc.res
+	$(OUT)\bosctlsvc.obj \
+	$(OUT)\bosctlsvc.res
 
 EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
@@ -30,7 +31,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-$(OJT)\bosctlsvc.res: AFS_component_version_number.h
+$(OUT)\bosctlsvc.res: AFS_component_version_number.h
 
 
 ############################################################################

@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
 
+RELDIR=tviced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -16,7 +17,6 @@ SRC_DIR = ..\viced
 # Build the fileserver
 
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\fileserver.exe
-
 
 VICED = ..\viced
 VLSERVER = ..\vlserver
@@ -28,25 +28,26 @@ VOL = ..\vol
 FSINT = ..\fsint
 RX = ..\rx
 
-RXOBJS = $(OJT)\xdr_int64.obj $(OJT)\xdr_int32.obj
+RXOBJS = $(OUT)\xdr_int64.obj \
+         $(OUT)\xdr_int32.obj
 
-VICEDOBJS = $(OJT)\viced.obj $(OJT)\afsfileprocs.obj $(OJT)\host.obj $(OJT)\physio.obj $(OJT)\callback.obj
-VICEDRES =	$(OJT)\$(VICED)\fileserver.res
+VICEDOBJS = $(OUT)\viced.obj $(OUT)\afsfileprocs.obj $(OUT)\host.obj $(OUT)\physio.obj $(OUT)\callback.obj
+VICEDRES =	$(OUT)\$(VICED)\fileserver.res
 
-VLSERVEROBJS = $(OJT)\vldbint.cs.obj $(OJT)\vldbint.xdr.obj
+VLSERVEROBJS = $(OUT)\vldbint.cs.obj $(OUT)\vldbint.xdr.obj
 
-LWPOBJS = $(OJT)\lock.obj $(OJT)\fasttime.obj $(OJT)\threadname.obj
+LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
-LIBACLOBJS = $(OJT)\aclprocs.obj $(OJT)\netprocs.obj
+LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
-UTILOBJS = $(OJT)\assert.obj $(OJT)\uuid.obj $(OJT)\serverLog.obj $(OJT)\fileutil.obj 
+UTILOBJS = $(OUT)\assert.obj $(OUT)\uuid.obj $(OUT)\serverLog.obj $(OUT)\fileutil.obj 
 
-DIROBJS = $(OJT)\buffer.obj $(OJT)\dir.obj $(OJT)\salvage.obj
+DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
-VOLOBJS = $(OJT)\vnode.obj $(OJT)\volume.obj $(OJT)\vutil.obj $(OJT)\partition.obj $(OJT)\fssync.obj $(OJT)\purge.obj \
-	  $(OJT)\clone.obj $(OJT)\common.obj $(OJT)\ihandle.obj $(OJT)\ntops.obj
+VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.obj $(OUT)\fssync.obj $(OUT)\purge.obj \
+	  $(OUT)\clone.obj $(OUT)\common.obj $(OUT)\ihandle.obj $(OUT)\ntops.obj
 
-FSINTOBJS = $(OJT)\afsaux.obj $(OJT)\afscbint.cs.obj $(OJT)\afsint.ss.obj $(OJT)\afsint.xdr.obj
+FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(VICEDOBJS) $(VICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
 	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS)

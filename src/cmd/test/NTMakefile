@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=cmd\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 # test exe's
 EXELIBS =\
@@ -17,9 +17,9 @@ EXELIBS =\
 
 # build itest.exe
 ITEST_EXEOBJS =\
-	$(OJT)\itest.obj
+	$(OUT)\itest.obj
 
-ITEST_EXEFILE = $(OJT)\itest.exe
+ITEST_EXEFILE = $(OUT)\itest.exe
 
 $(ITEST_EXEFILE): $(ITEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -27,9 +27,9 @@ $(ITEST_EXEFILE): $(ITEST_EXEOBJS)
 
 #build ctest.exe
 CTEST_EXEOBJS =\
-	$(OJT)\ctest.obj
+	$(OUT)\ctest.obj
 
-CTEST_EXEFILE = $(OJT)\ctest.exe
+CTEST_EXEFILE = $(OUT)\ctest.exe
 
 $(CTEST_EXEFILE): $(CTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -37,9 +37,9 @@ $(CTEST_EXEFILE): $(CTEST_EXEOBJS)
 
 # build dtest.exe
 DTEST_EXEOBJS =\
-	$(OJT)\dtest.obj
+	$(OUT)\dtest.obj
 
-DTEST_EXEFILE = $(OJT)\dtest.exe
+DTEST_EXEFILE = $(OUT)\dtest.exe
 
 $(DTEST_EXEFILE): $(DTEST_EXEOBJS) 
 	$(EXECONLINK) $(EXELIBS)  
@@ -50,7 +50,7 @@ all: test
 test tests: $(CTEST_EXEFILE) $(ITEST_EXEFILE) $(DTEST_EXEFILE)
 
 clean::
-	$(DEL) $(OJT)\ctest.exe $(OJT)\dtest.exe $(OJT)\itest.exe
+	$(DEL) $(OUT)\ctest.exe $(OUT)\dtest.exe $(OUT)\itest.exe
 
 mkdir:
 	

@@ -10,7 +10,7 @@
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include -I..
 
 # include the primary makefile
-
+RELDIR=WINNT\afssvrcfg\lang
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\config\NTMakefile.version
 
@@ -35,7 +35,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afssvrcfg_$(LANGID).dll
 
 RCFILE = $(LANGNAME)\afscfg.rc
 
-RESFILE = $(OJT)\afscfg_$(LANGID).res
+RESFILE = $(OUT)\afscfg_$(LANGID).res
 
 DLLOBJS = $(RESFILE)
 
@@ -48,7 +48,7 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
-	@if exist $(OJT)\*.res del $(OJT)\*.res
+	@if exist $(OUT)\*.res del $(OUT)\*.res
 	@if exist RC*. del RC*.
 	@if exist RD*. del RD*.
 

@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afscreds.h"
@@ -419,7 +420,13 @@ void Mapping_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : TEXT("/afs")), TRUE, FALSE);
+    AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+    CHAR msg[256], msgf[256];
+    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
+    {
+		wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
+		SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
+   }
    SetDlgItemText (hDlg, IDC_MAP_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_MAP_DESC, pMap->szSubmount);
 
@@ -448,9 +455,9 @@ void Mapping_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pMap->szMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
-      {
+    if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&	/*TEXT("/afs")*/
+         (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) ) /*TEXT("\\afs")*/
+    {
       Message (MB_ICONHAND, IDS_BADMAP_TITLE, IDS_BADMAP_DESC);
       return;
       }

@@ -101,6 +101,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     char *drivep;
     char hostName[256];
     char tbuffer[100];
+    char explicitNetbiosName[32];
     char *ctemp;
     HANDLE fh;
     HKEY parmKey;
@@ -123,7 +124,14 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 			 KEY_QUERY_VALUE, &parmKey);
 	if (code != ERROR_SUCCESS)
 	    goto nogateway;
-	dummyLen = sizeof(hostName);
+   dummyLen = sizeof(explicitNetbiosName);
+   code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
+                           (BYTE *) &explicitNetbiosName, &dummyLen);
+   if (!code == ERROR_SUCCESS) 
+   {
+       explicitNetbiosName[0] = 0;
+   }
+   dummyLen = sizeof(hostName);
 	code =
 	    RegQueryValueEx(parmKey, "Gateway", NULL, NULL, hostName,
 			    &dummyLen);
@@ -146,13 +154,23 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 #endif /* AFS_WIN95_ENV */
 
       havehost:
-	ctemp = strchr(hostName, '.');	/* turn ntafs.* into ntafs */
-	if (ctemp)
-	    *ctemp = 0;
-	hostName[11] = 0;
+        ctemp = strchr(hostName, '.');	/* turn ntafs.* into ntafs */
+        if (ctemp)
+            *ctemp = 0;
+        hostName[11] = 0;
 
-	_strupr(hostName);
-	sprintf(tbuffer, "\\\\%s-AFS\\all%s", hostName, SMB_IOCTL_FILENAME);
+        if (explicitNetbiosName[0])
+        {
+            _strupr(explicitNetbiosName);
+            sprintf(tbuffer, "\\\\%s\\all%s",
+                     explicitNetbiosName, SMB_IOCTL_FILENAME);
+        }
+        else
+        {
+            _strupr(hostName);
+            sprintf(tbuffer, "\\\\%s-AFS\\all%s",
+                     hostName, SMB_IOCTL_FILENAME);
+        }
     }
 
     fflush(stdout);

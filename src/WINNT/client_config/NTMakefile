@@ -10,7 +10,7 @@
 AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
 
 # include the primary makefile
-
+RELDIR=WINNT\client_config
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
@@ -22,30 +22,30 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
 EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_config.exe
 
 EXEOBJS = \
-	$(OJT)\config.obj \
-	$(OJT)\drivemap.obj \
-	$(OJT)\main.obj \
-	$(OJT)\misc.obj \
-	$(OJT)\pagesize.obj \
-	$(OJT)\tab_advanced.obj \
-	$(OJT)\tab_drives.obj \
-	$(OJT)\tab_hosts.obj \
-	$(OJT)\tab_general.obj \
-	$(OJT)\tab_prefs.obj \
-	$(OJT)\dlg_logon.obj \
-	$(OJT)\dlg_diag.obj \
-	$(OJT)\dlg_misc.obj \
-	$(OJT)\isadmin.obj \
-	$(OJT)\dlg_automap.obj
+	$(OUT)\config.obj \
+	$(OUT)\drivemap.obj \
+	$(OUT)\main.obj \
+	$(OUT)\misc.obj \
+	$(OUT)\pagesize.obj \
+	$(OUT)\tab_advanced.obj \
+	$(OUT)\tab_drives.obj \
+	$(OUT)\tab_hosts.obj \
+	$(OUT)\tab_general.obj \
+	$(OUT)\tab_prefs.obj \
+	$(OUT)\dlg_logon.obj \
+	$(OUT)\dlg_diag.obj \
+	$(OUT)\dlg_misc.obj \
+	$(OUT)\isadmin.obj \
+	$(OUT)\dlg_automap.obj
 
 EXEOBJSc = \
-	$(OJT)\cellservdb.obj
+	$(OUT)\cellservdb.obj
 
 EXERES = \
-	$(OJT)\afs_config_stub.res 
+	$(OUT)\afs_config_stub.res 
 
 AFSDOBJS = \
-	$(OJT)\fs_utils.obj
+	$(OUT)\fs_utils.obj
 	
 AFSD= ..\afsd
 
@@ -82,14 +82,14 @@ COPYHEADERS = \
 	$(DESTDIR)\include\WINNT\subclass.h
 
 AFSAPPLIBOBJS= \
-	$(OJT)\hashlist.obj \
-	$(OJT)\resize.obj \
-	$(OJT)\subclass.obj \
-	$(OJT)\fastlist.obj \
-	$(OJT)\dialog.obj \
-	$(OJT)\ctl_sockaddr.obj \
-	$(OJT)\ctl_spinner.obj \
-	$(OJT)\checklist.obj
+	$(OUT)\hashlist.obj \
+	$(OUT)\resize.obj \
+	$(OUT)\subclass.obj \
+	$(OUT)\fastlist.obj \
+	$(OUT)\dialog.obj \
+	$(OUT)\ctl_sockaddr.obj \
+	$(OUT)\ctl_spinner.obj \
+	$(OUT)\checklist.obj
 
 AFSAPPLIB=..\afsapplib
 
@@ -169,7 +169,7 @@ de_DE:
 	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
     $(CD) ..
 
-$(OJT)\afs_config_stub.res : AFS_component_version_number.h
+$(OUT)\afs_config_stub.res : AFS_component_version_number.h
 
 clean::
 	$(DEL) $(COPYHEADERS)
@@ -185,7 +185,7 @@ clean::
     $(CD) ..
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

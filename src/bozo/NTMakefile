@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=bozo
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 ############################################################################
 # Header files to install
@@ -22,10 +22,10 @@ INCFILES =\
 BOS_LIBFILE = $(DESTDIR)\lib\afs\afsbos.lib
 
 BOS_LIBOBJS =\
-	$(OJT)\bosint.cs.obj \
-	$(OJT)\bosint.xdr.obj \
-	$(OJT)\boserr.obj \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\bosint.cs.obj \
+	$(OUT)\bosint.xdr.obj \
+	$(OUT)\boserr.obj \
+	$(OUT)\AFS_component_version_number.obj
 
 $(BOS_LIBFILE): $(BOS_LIBOBJS)
 	$(LIBARCH)
@@ -37,14 +37,14 @@ $(BOS_LIBFILE): $(BOS_LIBOBJS)
 BOSSERVER_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bosserver.exe
 
 BOSSERVER_EXEOBJS =\
-	$(OJT)\bosserver.obj \
-	$(OJT)\bnode.obj \
-	$(OJT)\cronbnodeops.obj \
-	$(OJT)\ezbnodeops.obj \
-	$(OJT)\fsbnodeops.obj \
-	$(OJT)\bosint.ss.obj \
-	$(OJT)\bosoprocs.obj \
-	$(OJT)\bosserver.res
+	$(OUT)\bosserver.obj \
+	$(OUT)\bnode.obj \
+	$(OUT)\cronbnodeops.obj \
+	$(OUT)\ezbnodeops.obj \
+	$(OUT)\fsbnodeops.obj \
+	$(OUT)\bosint.ss.obj \
+	$(OUT)\bosoprocs.obj \
+	$(OUT)\bosserver.res
 
 
 BOSSERVER_EXELIBS =\
@@ -81,8 +81,8 @@ RS_BOS_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\bos.exe
 CL_BOS_EXEFILE = $(DESTDIR)\bin\bos.exe
 
 BOS_EXEOBJS =\
-	$(OJT)\bos.obj \
-	$(OJT)\bos.res
+	$(OUT)\bos.obj \
+	$(OUT)\bos.res
 
 BOS_EXELIBS =\
 	$(DESTDIR)\lib\afsrx.lib \
@@ -130,9 +130,9 @@ bnode.h boserr.c: boserr.et bnode.p.h
 ############################################################################
 # Definitions for generating versioninfo resources
 
-$(OJT)\bosserver.res: AFS_component_version_number.h
+$(OUT)\bosserver.res: AFS_component_version_number.h
 
-$(OJT)\bos.res: AFS_component_version_number.h
+$(OUT)\bos.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target

@@ -1586,3 +1586,69 @@ BOOL IsPathInAfs(const CHAR *strPath)
     return TRUE;
 }
 
+UINT MakeSymbolicLink(const char *strName ,const char *strDir)
+{
+    struct ViceIoctl blob;
+	char space[MAXSIZE];
+	UINT code;
+	/*lets confirm its a good symlink*/
+	if (!IsPathInAfs(strDir))
+		return 1;
+	LPTSTR lpsz = new TCHAR[strlen(strDir)+1];
+	_tcscpy(lpsz, strName);
+    strcpy(space, strDir);
+    blob.out_size = 0;
+    blob.in_size = 1 + strlen(space);
+    blob.in = space;
+    blob.out = NULL;
+    if ((code=pioctl(lpsz, VIOC_SYMLINK, &blob, 0))!=0)
+		return code;
+	return 0;
+}
+
+void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
+{
+	ASSERT(nlenPath<MAX_PATH);
+    struct ViceIoctl blob;
+    char orig_name[MAX_PATH+1];		/*Original name, may be modified*/
+    char true_name[MAX_PATH+1];		/*``True'' dirname (e.g., symlink target)*/
+    char parent_dir[MAX_PATH+1];		/*Parent directory of true name*/
+    char *last_component;	/*Last component of true name*/
+	UINT code;    
+	strcpy(orig_name, strName);
+	strcpy(true_name, orig_name);
+	/*
+	 * Find rightmost slash, if any.
+	 */
+	last_component = (char *) strrchr(true_name, '\\');
+	if (!last_component)
+	    last_component = (char *) strrchr(true_name, '/');
+	if (last_component) {
+	    /*
+	     * Found it.  Designate everything before it as the parent directory,
+	     * everything after it as the final component.
+	     */
+	    strncpy(parent_dir, true_name, last_component - true_name + 1);
+	    parent_dir[last_component - true_name + 1] = 0;
+	    last_component++;   /*Skip the slash*/
+	}
+	else {
+	    /*
+	     * No slash appears in the given file name.  Set parent_dir to the current
+	     * directory, and the last component as the given name.
+	     */
+	    fs_ExtractDriveLetter(true_name, parent_dir);
+	    strcat(parent_dir, ".");
+	    last_component = true_name;
+            fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
+	}
+	blob.in = last_component;
+	blob.in_size = strlen(last_component)+1;
+	blob.out_size = MAXSIZE;
+	blob.out = space;
+	memset(space, 0, MAXSIZE);
+	if ((code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1)))
+		strcpy(space,"???");
+	ASSERT(strlen(space)<MAX_PATH);
+	strncpy(strPath,space,nlenPath);
+}

@@ -48,6 +48,7 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 #endif /* not WIN32 */
 
+static MemDumpCmd(struct cmd_syndesc *asp);
 
 extern afs_int32 VL_GetEntryByNameO();
 
@@ -1855,9 +1856,22 @@ register struct cmd_syndesc *as; {
 	Die(errno, 0);
     return 0;
 #else /* WIN32 */
-	fprintf(stderr, "fs: 'newcell' not implemented, since afsdcell.ini is\n");
-	fprintf(stderr, "fs: re-read on every reference to a new cell, on Windows/NT.\n");
-        return -1;
+    register afs_int32 code;
+    struct ViceIoctl blob;
+    
+    blob.in_size = 0;
+    blob.in = (char *) 0;
+    blob.out_size = MAXSIZE;
+    blob.out = space;
+
+    code = pioctl((char *) 0, VIOCNEWCELL, &blob, 1);
+
+    if (code) {
+       Die(errno, (char *) 0);
+    }
+    else
+       printf("Cell servers information refreshed\n");
+    return 0;
 #endif /* WIN32 */
 }
 
@@ -2716,7 +2730,7 @@ char **argv; {
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "output to named file");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
     cmd_AddParm(ts, "-vlservers", CMD_FLAG, CMD_OPTIONAL, "VL servers");
-/*    cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
+    /* cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
     cmd_CreateAlias(ts, "gp");
 
     ts = cmd_CreateSyntax("setacl", SetACLCmd, 0, "set access control list");
@@ -2791,12 +2805,12 @@ char **argv; {
     cmd_AddParm(ts, "-rw", CMD_FLAG, CMD_OPTIONAL, "force r/w volume");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL, "don't check name with VLDB");
 
-/*
-
-defect 3069
-
+    /*
+     *
+     * defect 3069
+     * 
     cmd_AddParm(ts, "-root", CMD_FLAG, CMD_OPTIONAL, "create cellular mount point");
-*/
+    */
 
     
     ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, 0, "remove mount point");
@@ -2831,17 +2845,19 @@ defect 3069
     cmd_CreateAlias(ts, "sq");
 
     ts = cmd_CreateSyntax("newcell", NewCellCmd, 0, "configure new cell");
+#ifndef WIN32
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL, "linked cell name");
+#endif
 
 #ifdef FS_ENABLE_SERVER_DEBUG_PORTS
-/*
- * Turn this on only if you wish to be able to talk to a server which is listening
- * on alternative ports. This is not intended for general use and may not be
- * supported in the cache manager. It is not a way to run two servers at the
- * same host, since the cache manager cannot properly distinguish those two hosts.
- */
+    /*
+     * Turn this on only if you wish to be able to talk to a server which is listening
+     * on alternative ports. This is not intended for general use and may not be
+     * supported in the cache manager. It is not a way to run two servers at the
+     * same host, since the cache manager cannot properly distinguish those two hosts.
+     */
     cmd_AddParm(ts, "-fsport", CMD_SINGLE, CMD_OPTIONAL, "cell's fileserver port");
     cmd_AddParm(ts, "-vlport", CMD_SINGLE, CMD_OPTIONAL, "cell's vldb server port");
 #endif
@@ -2854,9 +2870,9 @@ defect 3069
 
     ts = cmd_CreateSyntax("wscell", WSCellCmd, 0, "list workstation's cell");
     
-/*
-    ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
-*/
+    /*
+     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
+     */
     
     ts = cmd_CreateSyntax("monitor", MonitorCmd, 0, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "host name or 'off'");
@@ -2904,6 +2920,10 @@ defect 3069
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL, "dump log contents");
     cmd_CreateAlias(ts, "tr");
 
+    ts = cmd_CreateSyntax("memdump", MemDumpCmd, 0, "dump memory allocs in debug builds");
+    cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
+    cmd_AddParm(ts, "-end", CMD_FLAG, CMD_OPTIONAL, "dump memory allocs");
+    
     code = cmd_Dispatch(argc, argv);
 
 #ifndef WIN32
@@ -2960,3 +2980,40 @@ void Die(code, filename)
 #endif /* not WIN32 */
     }
 } /*Die*/
+
+static MemDumpCmd(struct cmd_syndesc *asp)
+{
+    long code;
+    struct ViceIoctl blob;
+    long inValue;
+    long outValue;
+  
+    if ((asp->parms[0].items && asp->parms[1].items)) {
+        fprintf(stderr, "fs trace: must use at most one of '-begin' or '-end'\n");
+        return EINVAL;
+    }
+  
+    /* determine if we're turning this tracing on or off */
+    inValue = 0;
+    if (asp->parms[0].items)
+        inValue = 1;            /* begin */
+    else if (asp->parms[1].items) 
+        inValue = 0;            /* end */
+  
+    blob.in_size = sizeof(long);
+    blob.in = (char *) &inValue;
+    blob.out_size = sizeof(long);
+    blob.out = (char *) &outValue;
+
+    code = pioctl(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
+    if (code) {
+        Die(errno, NULL);
+        return code;
+    }
+
+    if (outValue) printf("AFS memdump begin.\n");
+    else printf("AFS memdump end.\n");
+
+    return 0;
+}
+

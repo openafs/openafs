@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=fsint
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !IF (EXIST(..\config\NTMakefile.version))
 !INCLUDE ..\config\NTMakefile.version
@@ -23,14 +24,14 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsint.lib
 
 LIBOBJS =\
-	$(OJT)\afscbint.cs.obj \
-	$(OJT)\afscbint.ss.obj \
-	$(OJT)\afscbint.xdr.obj \
-	$(OJT)\afsint.cs.obj 	\
-	$(OJT)\afsint.ss.obj 	\
-	$(OJT)\afsint.xdr.obj 	\
-	$(OJT)\afsaux.obj      \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\afscbint.cs.obj \
+	$(OUT)\afscbint.ss.obj \
+	$(OUT)\afscbint.xdr.obj \
+	$(OUT)\afsint.cs.obj 	\
+	$(OUT)\afsint.ss.obj 	\
+	$(OUT)\afsint.xdr.obj 	\
+	$(OUT)\afsaux.obj      \
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)  
@@ -47,35 +48,35 @@ afsint.cs.c afsint.ss.c afsint.xdr.c afsint.h: afsint.xg common.xg
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsint.lib
 
 MT_LIBOBJS =\
-	$(OJT)\afscbint.cs_mt.obj \
-	$(OJT)\afscbint.ss_mt.obj \
-	$(OJT)\afscbint.xdr_mt.obj \
-	$(OJT)\afsint.cs_mt.obj 	\
-	$(OJT)\afsint.ss_mt.obj 	\
-	$(OJT)\afsint.xdr_mt.obj 	\
-	$(OJT)\afsaux_mt.obj      \
-	$(OJT)\AFS_component_version_number.obj
+	$(OUT)\afscbint.cs_mt.obj \
+	$(OUT)\afscbint.ss_mt.obj \
+	$(OUT)\afscbint.xdr_mt.obj \
+	$(OUT)\afsint.cs_mt.obj 	\
+	$(OUT)\afsint.ss_mt.obj 	\
+	$(OUT)\afsint.xdr_mt.obj 	\
+	$(OUT)\afsaux_mt.obj      \
+	$(OUT)\AFS_component_version_number.obj
 
 
-$(OJT)\afscbint.cs_mt.obj:afscbint.cs.c
+$(OUT)\afscbint.cs_mt.obj:afscbint.cs.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afscbint.ss_mt.obj:afscbint.ss.c
+$(OUT)\afscbint.ss_mt.obj:afscbint.ss.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afscbint.xdr_mt.obj:afscbint.xdr.c
+$(OUT)\afscbint.xdr_mt.obj:afscbint.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afsint.cs_mt.obj:afsint.cs.c
+$(OUT)\afsint.cs_mt.obj:afsint.cs.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afsint.ss_mt.obj:afsint.ss.c
+$(OUT)\afsint.ss_mt.obj:afsint.ss.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afsint.xdr_mt.obj:afsint.xdr.c
+$(OUT)\afsint.xdr_mt.obj:afsint.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
-$(OJT)\afsaux_mt.obj:afsaux.c
+$(OUT)\afsaux_mt.obj:afsaux.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV 
 
 $(MT_LIBFILE): $(MT_LIBOBJS)

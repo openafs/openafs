@@ -1408,3 +1408,38 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
         /* done */
 	return code;
 }
+
+/* dump the contents of the buf_hashTablepp. */
+int cm_DumpBufHashTable(FILE *outputFile, char *cookie)
+{
+    int zilch;
+    cm_buf_t *bp;
+    char output[1024];
+    int i;
+  
+    lock_ObtainRead(&buf_globalLock);
+  
+    sprintf(output, "%s - dumping buf_HashTable - buf_hashSize=%d\n", cookie, buf_hashSize);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+  
+    for (i = 0; i < buf_hashSize; i++)
+    {
+        for(bp = buf_hashTablepp[i]; bp; bp=bp->hashp) 
+        {
+            if (bp->refCount)
+            {
+                sprintf(output, "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d,"
+                        "vnode=%d, unique=%d), size=%d refCount=%d\n", 
+                        cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
+                        bp->fid.vnode, bp->fid.unique, bp->size, bp->refCount);
+                WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+            }
+        }
+    }
+  
+    sprintf(output, "%s - Done dumping buf_HashTable.\n", cookie);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+
+    lock_ReleaseRead(&buf_globalLock);
+}
+

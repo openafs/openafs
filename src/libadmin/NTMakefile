@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=libadmin
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 

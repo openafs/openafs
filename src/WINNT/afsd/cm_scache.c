@@ -964,5 +964,60 @@ int cm_FindFileType(cm_fid_t *fidp)
                 }
         }
         lock_ReleaseWrite(&cm_scacheLock);
-        return NULL;
+        return 0;
 }
+
+/* dump all scp's that have reference count > 0 to a file. 
+ * cookie is used to identify this batch for easy parsing, 
+ * and it a string provided by a caller 
+ */
+int cm_DumpSCache(FILE *outputFile, char *cookie)
+{
+    int zilch;
+    cm_scache_t *scp;
+    char output[1024];
+    int i;
+  
+    lock_ObtainRead(&cm_scacheLock);
+  
+    sprintf(output, "%s - dumping scache - cm_currentSCaches=%d, cm_maxSCaches=%d\n", cookie, cm_currentSCaches, cm_maxSCaches);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+  
+    for (scp = cm_scacheLRULastp; scp; scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
+    {
+        if (scp->refCount != 0)
+        {
+            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%d\n", 
+                    cookie, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                    scp->refCount);
+            WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+        }
+    }
+  
+    sprintf(output, "%s - dumping cm_hashTable - cm_hashTableSize=%d\n", cookie, cm_hashTableSize);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+  
+    for (i = 0; i < cm_hashTableSize; i++)
+    {
+        for(scp = cm_hashTablep[i]; scp; scp=scp->nextp) 
+        {
+            if (scp)
+            {
+                if (scp->refCount)
+                {
+                    sprintf(output, "%s scp=0x%08X, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%d\n", 
+                            cookie, (void *)scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                            scp->fid.unique, scp->refCount);
+                    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+                }
+            }
+        }
+    }
+
+    sprintf(output, "%s - Done dumping scache.\n", cookie);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+  
+    lock_ReleaseRead(&cm_scacheLock);       
+    return (0);     
+}
+

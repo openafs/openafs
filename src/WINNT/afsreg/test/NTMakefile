@@ -5,14 +5,15 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\afsreg\test
 !INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
 
-test tests: $(OJT)\getifinfo.exe $(OJT)\regman.exe $(OJT)\dupkey.exe
+test tests: $(OUT)\getifinfo.exe $(OUT)\regman.exe $(OUT)\dupkey.exe
 
-$(OJT)\getifinfo.exe: $(OJT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
+$(OUT)\getifinfo.exe: $(OUT)\getifinfo.obj $(DESTDIR)\lib\afs\afsreg.lib 
 	$(EXECONLINK)
 
-$(OJT)\dupkey.exe: $(OJT)\dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
+$(OUT)\dupkey.exe: $(OUT)\dupkey.obj $(DESTDIR)\lib\afs\afsreg.lib
 	$(EXECONLINK)
 
 REGMAN_EXELIBS =\
@@ -21,7 +22,7 @@ REGMAN_EXELIBS =\
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
-$(OJT)\regman.exe: $(OJT)\regman.obj $(REGMAN_EXELIBS)
+$(OUT)\regman.exe: $(OUT)\regman.obj $(REGMAN_EXELIBS)
 	$(EXECONLINK)
 
 mkdir:

@@ -6,9 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # AFSDEV_AUXCDEFINES = /DUNICODE
+RELDIR=WINNT\afssvrcfg
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for building afssvrcfg.exe.
@@ -16,36 +16,36 @@
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\afssvrcfg.exe
 
 EXEOBJS =\
-    $(OJT)\char_conv.obj             \
-	$(OJT)\admin_info_dlg.obj        \
-	$(OJT)\cfg_utils.obj             \
-	$(OJT)\create_partition_dlg.obj  \
-	$(OJT)\file_server_page.obj      \
-	$(OJT)\graphics.obj              \
-	$(OJT)\info_page.obj             \
-	$(OJT)\intro_page.obj            \
-	$(OJT)\partitions_page.obj       \
-	$(OJT)\partition_page.obj        \
-	$(OJT)\replicatition_page.obj    \
-	$(OJT)\services_page.obj         \
-	$(OJT)\toolbox.obj               \
-	$(OJT)\afscfg.obj                \
-	$(OJT)\backup_server_page.obj    \
-	$(OJT)\config_server_page.obj    \
-	$(OJT)\db_server_page.obj        \
-	$(OJT)\get_cur_config.obj        \
-	$(OJT)\help.obj                  \
-	$(OJT)\info2_page.obj            \
-	$(OJT)\logfile.obj               \
-	$(OJT)\partition_utils.obj       \
-	$(OJT)\root_afs_page.obj         \
-	$(OJT)\sys_control_page.obj      \
-	$(OJT)\volume_utils.obj          \
-	$(OJT)\salvage_dlg.obj			  \
-    $(OJT)\get_pw_dlg.obj            \
-    $(OJT)\salvage_results_dlg.obj   \
-    $(OJT)\validation.obj            \
-	$(OJT)\afscfg_stub.res
+    $(OUT)\char_conv.obj             \
+	$(OUT)\admin_info_dlg.obj        \
+	$(OUT)\cfg_utils.obj             \
+	$(OUT)\create_partition_dlg.obj  \
+	$(OUT)\file_server_page.obj      \
+	$(OUT)\graphics.obj              \
+	$(OUT)\info_page.obj             \
+	$(OUT)\intro_page.obj            \
+	$(OUT)\partitions_page.obj       \
+	$(OUT)\partition_page.obj        \
+	$(OUT)\replicatition_page.obj    \
+	$(OUT)\services_page.obj         \
+	$(OUT)\toolbox.obj               \
+	$(OUT)\afscfg.obj                \
+	$(OUT)\backup_server_page.obj    \
+	$(OUT)\config_server_page.obj    \
+	$(OUT)\db_server_page.obj        \
+	$(OUT)\get_cur_config.obj        \
+	$(OUT)\help.obj                  \
+	$(OUT)\info2_page.obj            \
+	$(OUT)\logfile.obj               \
+	$(OUT)\partition_utils.obj       \
+	$(OUT)\root_afs_page.obj         \
+	$(OUT)\sys_control_page.obj      \
+	$(OUT)\volume_utils.obj          \
+	$(OUT)\salvage_dlg.obj			  \
+    $(OUT)\get_pw_dlg.obj            \
+    $(OUT)\salvage_results_dlg.obj   \
+    $(OUT)\validation.obj            \
+	$(OUT)\afscfg_stub.res
 
 VCLIBS =\
 	comctl32.lib \
@@ -69,7 +69,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 ############################################################################
 # Definitions for generating versioninfo resource via RC
 
-$(OJT)\afscfg_stub.res: AFS_component_version_number.h
+$(OUT)\afscfg_stub.res: AFS_component_version_number.h
 
 ############################################################################
 # Install target; primary makefile target
@@ -92,7 +92,7 @@ lang::
 clean::
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

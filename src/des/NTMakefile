@@ -23,10 +23,9 @@
 # override as needed 
 #
 
-
+RELDIR=des
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 INCFILEDIR = $(DESTDIR)\include
 
@@ -44,21 +43,24 @@ $(INCFILEDIR)\des_odd.h: odd.h
 # Library component lists.
 
 LIBOBJS = \
-	$(OJT)\des.obj \
-	$(OJT)\cbc_encrypt.obj \
-	$(OJT)\pcbc_encrypt.obj \
-	$(OJT)\cksum.obj \
-	$(OJT)\new_rnd_key.obj \
-	$(OJT)\key_sched.obj \
-	$(OJT)\debug_decl.obj \
-	$(OJT)\quad_cksum.obj \
-	$(OJT)\key_parity.obj \
-	$(OJT)\weak_key.obj \
-	$(OJT)\read_pssword.obj \
-	$(OJT)\strng_to_key.obj \
-	$(OJT)\misc.obj \
-	$(OJT)\util.obj \
-	$(OJT)\crypt.obj
+	$(OUT)\des.obj \
+	$(OUT)\cbc_encrypt.obj \
+	$(OUT)\pcbc_encrypt.obj \
+	$(OUT)\cksum.obj \
+	$(OUT)\new_rnd_key.obj \
+	$(OUT)\key_sched.obj \
+	$(OUT)\debug_decl.obj \
+	$(OUT)\quad_cksum.obj \
+	$(OUT)\key_parity.obj \
+	$(OUT)\weak_key.obj \
+	$(OUT)\read_pssword.obj \
+	$(OUT)\strng_to_key.obj \
+	$(OUT)\misc.obj \
+	$(OUT)\util.obj \
+	$(OUT)\crypt.obj
+
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 LIBFILE = $(DESTDIR)\lib\afsdes.lib
 
@@ -82,56 +84,69 @@ GENERATED_FILES = \
 # Make generated files.
 MAKETARG = $** $@
 
-key_perm.h: $(OJT)\make_keyperm.exe
+key_perm.h: $(OUT)\make_keyperm.exe
 	$(MAKETARG)
 
-p_table.h: $(OJT)\make_p_table.exe
+p_table.h: $(OUT)\make_p_table.exe
 	$(MAKETARG)
 
-s_table.h: $(OJT)\make_s_table.exe
+s_table.h: $(OUT)\make_s_table.exe
 	$(MAKETARG)
 
-odd.h: $(OJT)\make_odd.exe
+odd.h: $(OUT)\make_odd.exe
 	$(MAKETARG)
 
-p.c: $(OJT)\make_p.exe
+p.c: $(OUT)\make_p.exe
 	$(MAKETARG)
 
-s.c: $(OJT)\make_s.exe
+s.c: $(OUT)\make_s.exe
 	$(MAKETARG)
 
-fp.c: $(OJT)\make_fp.exe
+fp.c: $(OUT)\make_fp.exe
 	$(MAKETARG)
 
-ip.c: $(OJT)\make_ip.exe
+ip.c: $(OUT)\make_ip.exe
 	$(MAKETARG)
 
 # Make generators.
-$(OJT)\misc.obj: AFS_component_version_number.c
+$(OUT)\main.obj: main.c
+    $(C2OBJ) $**
 
-$(OJT)\make_keyperm.exe: $(OJT)\make_keyperm.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_keyperm.exe: $(OUT)\make_keyperm.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_p_table.exe: $(OJT)\make_p_table.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_p_table.exe: $(OUT)\make_p_table.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_s_table.exe: $(OJT)\make_s_table.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_s_table.exe: $(OUT)\make_s_table.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_odd.exe: $(OJT)\make_odd.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_odd.exe: $(OUT)\make_odd.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_p.exe: $(OJT)\make_p.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_p.exe: $(OUT)\make_p.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_s.exe: $(OJT)\make_s.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_s.exe: $(OUT)\make_s.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_fp.exe: $(OJT)\make_fp.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_fp.exe: $(OUT)\make_fp.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
 
-$(OJT)\make_ip.exe: $(OJT)\make_ip.obj $(OJT)\misc.obj $(OJT)\main.obj
+$(OUT)\make_ip.exe: $(OUT)\make_ip.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
+
+GENOBJS = $(OUT)\make_keyperm.obj \
+    $(OUT)\make_p_table.obj \
+    $(OUT)\make_s_table.obj \
+    $(OUT)\make_odd.obj \
+    $(OUT)\make_p.obj \
+    $(OUT)\make_s.obj \
+    $(OUT)\make_fp.obj \
+    $(OUT)\make_ip.obj
+    
+$(GENOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)
 

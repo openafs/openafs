@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=libadmin\adminutil
 !include ..\..\config\NTMakefile.$(SYS_NAME)
 !include ..\..\config\NTMakefile.version
 
@@ -72,46 +73,46 @@ afs_AdminVosErrors.h afs_AdminVosErrors.c : afs_AdminVosErrors.et
         $(COMPILE_ET) afs_AdminVosErrors -h afs_AdminVosErrors
 
 ERRORSOBJS = \
-	$(OJT)\afs_AdminBosErrors.obj \
-	$(OJT)\afs_AdminCfgErrors.obj \
-	$(OJT)\afs_AdminClientErrors.obj \
-	$(OJT)\afs_AdminCommonErrors.obj \
-	$(OJT)\afs_AdminKasErrors.obj \
-	$(OJT)\afs_AdminMiscErrors.obj \
-	$(OJT)\afs_AdminPtsErrors.obj \
-	$(OJT)\afs_AdminUtilErrors.obj \
-	$(OJT)\afs_AdminVosErrors.obj
+	$(OUT)\afs_AdminBosErrors.obj \
+	$(OUT)\afs_AdminCfgErrors.obj \
+	$(OUT)\afs_AdminClientErrors.obj \
+	$(OUT)\afs_AdminCommonErrors.obj \
+	$(OUT)\afs_AdminKasErrors.obj \
+	$(OUT)\afs_AdminMiscErrors.obj \
+	$(OUT)\afs_AdminPtsErrors.obj \
+	$(OUT)\afs_AdminUtilErrors.obj \
+	$(OUT)\afs_AdminVosErrors.obj
 
 AUTHOBJS=\
-	$(OJT)\ktc_errors.obj \
-	$(OJT)\acfg_errors.obj
+	$(OUT)\ktc_errors.obj \
+	$(OUT)\acfg_errors.obj
 
 BOZOOBJS=\
-	$(OJT)\boserr.obj
+	$(OUT)\boserr.obj
 
 KAUTHOBJS=\
-	$(OJT)\kaerrors.obj 
+	$(OUT)\kaerrors.obj 
 	
 CMDOBJS=\
-	$(OJT)\cmd_errors.obj 
+	$(OUT)\cmd_errors.obj 
 
 PTSERVEROBJS=\
-	$(OJT)\pterror.obj 
+	$(OUT)\pterror.obj 
 
 UBIKOBJS=\
-	$(OJT)\uerrors.obj
+	$(OUT)\uerrors.obj
 
 RXKADOBJS=\
-	$(OJT)\rxkad_errs.obj
+	$(OUT)\rxkad_errs.obj
 
 VOLSEROBJS=\
-	$(OJT)\volerr.obj
+	$(OUT)\volerr.obj
 
 VLSERVEROBJS=\
-	$(OJT)\vl_errors.obj
+	$(OUT)\vl_errors.obj
 
 ADMINOBJS = \
-	$(OJT)\afs_utilAdmin.obj
+	$(OUT)\afs_utilAdmin.obj
 
 DLLOBJS =\
 	$(ADMINOBJS) \
@@ -125,7 +126,7 @@ DLLOBJS =\
 	$(VOLSEROBJS) \
 	$(UBIKOBJS) \
 	$(RXKADOBJS) \
-	$(OJT)\afsadminutil.res
+	$(OUT)\afsadminutil.res
 
 LIBINCLUDES = \
 	$(DESTDIR)\include\afs\afs_utilAdmin.h \
@@ -158,7 +159,7 @@ install: $(INCFILES) afs_AdminCommonErrors.c \
 	$(DLLFILE)
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsadminutil.res: AFS_component_version_number.h
+$(OUT)\afsadminutil.res: AFS_component_version_number.h
 
 $(AUTHOBJS): $(AUTH)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
@@ -188,15 +189,15 @@ $(VLSERVEROBJS): $(VLSERVER)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
 
 clean::
-	$(DEL) afs_AdminBosErrors.c afs_AdminBosErrors.h $(OJT)\afs_AdminBosErrors.obj
-	$(DEL) afs_AdminCfgErrors.c afs_AdminCfgErrors.h $(OJT)\afs_AdminCfgErrors.obj
-	$(DEL) afs_AdminClientErrors.c afs_AdminClientErrors.h $(OJT)\afs_AdminClientErrors.obj
-	$(DEL) afs_AdminCommonErrors.c afs_AdminCommonErrors.h $(OJT)\afs_AdminCommonErrors.obj
-	$(DEL) afs_AdminKasErrors.c afs_AdminKasErrors.h $(OJT)\afs_AdminKasErrors.obj
-	$(DEL) afs_AdminMiscErrors.c afs_AdminMiscErrors.h $(OJT)\afs_AdminMiscErrors.obj
-	$(DEL) afs_AdminPtsErrors.c afs_AdminPtsErrors.h $(OJT)\afs_AdminPtsErrors.obj
-	$(DEL) afs_AdminUtilErrors.c afs_AdminUtilErrors.h $(OJT)\afs_AdminUtilErrors.obj
-	$(DEL) afs_AdminVosErrors.c afs_AdminVosErrors.h $(OJT)\afs_AdminVosErrors.obj
+	$(DEL) afs_AdminBosErrors.c afs_AdminBosErrors.h $(OUT)\afs_AdminBosErrors.obj
+	$(DEL) afs_AdminCfgErrors.c afs_AdminCfgErrors.h $(OUT)\afs_AdminCfgErrors.obj
+	$(DEL) afs_AdminClientErrors.c afs_AdminClientErrors.h $(OUT)\afs_AdminClientErrors.obj
+	$(DEL) afs_AdminCommonErrors.c afs_AdminCommonErrors.h $(OUT)\afs_AdminCommonErrors.obj
+	$(DEL) afs_AdminKasErrors.c afs_AdminKasErrors.h $(OUT)\afs_AdminKasErrors.obj
+	$(DEL) afs_AdminMiscErrors.c afs_AdminMiscErrors.h $(OUT)\afs_AdminMiscErrors.obj
+	$(DEL) afs_AdminPtsErrors.c afs_AdminPtsErrors.h $(OUT)\afs_AdminPtsErrors.obj
+	$(DEL) afs_AdminUtilErrors.c afs_AdminUtilErrors.h $(OUT)\afs_AdminUtilErrors.obj
+	$(DEL) afs_AdminVosErrors.c afs_AdminVosErrors.h $(OUT)\afs_AdminVosErrors.obj
 	$(DEL) $(INCFILES)
 	$(DEL) $(DLLOBJS)
 	$(DEL) $(DLLFILE)

@@ -7,6 +7,7 @@
 
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV -DRXDEBUG
 
+RELDIR=tbutc
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -30,23 +31,41 @@ BUTC    =..\butc
 BUCOORD = ..\bucoord
 VOLSER  = ..\volser
 
-BUCOORDOBJS = $(OJT)\ubik_db_if.obj $(OJT)\$(BUCOORD)\volstub.obj $(OJT)\$(BUCOORD)\dlq.obj \
-	                     $(OJT)\$(BUCOORD)\status.obj $(OJT)\$(BUCOORD)\bucoord_errs.obj
+BUCOORDOBJS = $(OUT)\ubik_db_if.obj \
+    $(OUT)\$(BUCOORD)\volstub.obj \
+    $(OUT)\$(BUCOORD)\dlq.obj \
+	$(OUT)\$(BUCOORD)\status.obj \
+    $(OUT)\$(BUCOORD)\bucoord_errs.obj
 
-VOLSERLIBOBJ = $(OJT)\$(VOLSER)\volint.cs.obj  $(OJT)\vsprocs.obj $(OJT)\$(VOLSER)\vsutils.obj \
-               $(OJT)\$(VOLSER)\lockprocs.obj  $(OJT)\$(VOLSER)\volint.xdr.obj $(OJT)\$(VOLSER)\volerr.obj  \
-               $(OJT)\$(VOLSER)\volint.ss.obj  $(OJT)\AFS_component_version_number.obj 
-VOLSERLIBS  = $(OJT)\afstvolser.lib
+VOLSERLIBOBJ = $(OUT)\$(VOLSER)\volint.cs.obj  \
+               $(OUT)\vsprocs.obj \
+               $(OUT)\$(VOLSER)\vsutils.obj \
+               $(OUT)\$(VOLSER)\lockprocs.obj  \
+               $(OUT)\$(VOLSER)\volint.xdr.obj \
+               $(OUT)\$(VOLSER)\volerr.obj  \
+               $(OUT)\$(VOLSER)\volint.ss.obj  \
+               $(OUT)\AFS_component_version_number.obj 
+VOLSERLIBS  = $(OUT)\afstvolser.lib
 
-LWPOBJS     = $(OJT)\lock.obj
+LWPOBJS     = $(OUT)\lock.obj
 
-BUTMOBJS    = $(OJT)\file_tm.obj $(OJT)\AFS_component_version_number.obj
-BUTMLIBS    = $(OJT)\afstbutm.lib
+BUTMOBJS    = $(OUT)\file_tm.obj \
+              $(OUT)\AFS_component_version_number.obj
+BUTMLIBS    = $(OUT)\afstbutm.lib
 BUTMINCLUDE = -I$(DESTDIR)\include
 
-BUTCOBJS   = $(OJT)\dbentries.obj $(OJT)\tcprocs.obj $(OJT)\lwps.obj $(OJT)\tcmain.obj $(OJT)\list.obj $(OJT)\recoverDb.obj \
-	     $(OJT)\tcudbprocs.obj $(OJT)\dump.obj $(OJT)\tcstatus.obj $(OJT)\butc_xbsa.obj \
-             $(LWPOBJS) $(BUCOORDOBJS)
+BUTCOBJS   = $(OUT)\dbentries.obj \
+         $(OUT)\tcprocs.obj \
+         $(OUT)\lwps.obj \
+         $(OUT)\tcmain.obj \
+         $(OUT)\list.obj \
+         $(OUT)\recoverDb.obj \
+	     $(OUT)\tcudbprocs.obj \
+         $(OUT)\dump.obj \
+         $(OUT)\tcstatus.obj \
+         $(OUT)\butc_xbsa.obj \
+         $(LWPOBJS) \
+         $(BUCOORDOBJS)
 BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)
 BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
@@ -89,7 +108,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 
 include ..\config\NTMakefile.version
 
-# rm $(OJT)\tcstatus.obj
+# rm $(OUT)\tcstatus.obj
 # nmake /nologo /f ntmakefile install
 #----------------------------------------------- BUTC
 
@@ -97,65 +116,65 @@ $(BUTCEXE): $(BUTCOBJS) $(BUTCLIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
-.c.$(OJT)\obj:
+.c.$(OUT)\obj:
 	$(C2OBJ) -I$(BUCOORD) $<
 
-$(OJT)\dbentries.obj: $(BUTC)/dbentries.c
+$(OUT)\dbentries.obj: $(BUTC)/dbentries.c
 	$(C2OBJ) $**
 
-$(OJT)\tcprocs.obj: $(BUTC)/tcprocs.c
+$(OUT)\tcprocs.obj: $(BUTC)/tcprocs.c
 	$(C2OBJ) $**
 
-$(OJT)\lwps.obj: $(BUTC)/lwps.c
+$(OUT)\lwps.obj: $(BUTC)/lwps.c
 	$(C2OBJ) $**
 
-$(OJT)\tcmain.obj: $(BUTC)/tcmain.c
+$(OUT)\tcmain.obj: $(BUTC)/tcmain.c
 	$(C2OBJ) $**
 
-$(OJT)\list.obj: $(BUTC)/list.c
+$(OUT)\list.obj: $(BUTC)/list.c
 	$(C2OBJ) $**
 
-$(OJT)\recoverDb.obj: $(BUTC)/recoverDb.c
+$(OUT)\recoverDb.obj: $(BUTC)/recoverDb.c
 	$(C2OBJ) $**
 
-$(OJT)\tcudbprocs.obj: $(BUTC)/tcudbprocs.c
+$(OUT)\tcudbprocs.obj: $(BUTC)/tcudbprocs.c
 	$(C2OBJ) $**
 
-$(OJT)\dump.obj: $(BUTC)/dump.c
+$(OUT)\dump.obj: $(BUTC)/dump.c
 	$(C2OBJ) $**
 
-$(OJT)\tcstatus.obj: $(BUTC)/tcstatus.c
+$(OUT)\tcstatus.obj: $(BUTC)/tcstatus.c
 	$(C2OBJ) $**
 
-$(OJT)\butc_xbsa.obj: $(BUTC)/butc_xbsa.c
+$(OUT)\butc_xbsa.obj: $(BUTC)/butc_xbsa.c
 	$(C2OBJ) $**
 
 #----------------------------------------------- BUCOORD
 
-$(OJT)\ubik_db_if.obj: $(BUCOORD)/ubik_db_if.c
+$(OUT)\ubik_db_if.obj: $(BUCOORD)/ubik_db_if.c
 	$(C2OBJ) -I$(BUCOORD) $**
 
 #----------------------------------------------- VOLSER
 # Build the afstvolser.lib library here. The file compiled
 # for is is vsprocs.c. The rest are from the VOLSER dir.
 
-$(OJT)\afstvolser.lib: $(VOLSERLIBOBJ)
+$(OUT)\afstvolser.lib: $(VOLSERLIBOBJ)
 	$(LIBARCH)
 
-$(OJT)\vsprocs.obj: $(VOLSER)/vsprocs.c
+$(OUT)\vsprocs.obj: $(VOLSER)/vsprocs.c
 	$(C2OBJ) $**
 
 #----------------------------------------------- LWP
 
-$(OJT)\lock.obj: $(LWP)/lock.c
+$(OUT)\lock.obj: $(LWP)/lock.c
 	$(C2OBJ) $**
 
 #----------------------------------------------- BUTC
 
-$(OJT)\file_tm.obj: $(BUTM)/file_tm.c
+$(OUT)\file_tm.obj: $(BUTM)/file_tm.c
 	$(C2OBJ) $**
 
-$(OJT)\afstbutm.lib: $(BUTMOBJS)
+$(OUT)\afstbutm.lib: $(BUTMOBJS)
 	$(LIBARCH)
 
 #-----------------------------------------------

@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\client_cpa
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)	  
 !include ..\..\config\NTMakefile.version
-
 
 ############################################################################
 # Definitions for building afs_cpa.cpl
@@ -15,9 +15,9 @@
 DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afs_cpa.cpl
 
 DLLOBJS =\
-	$(OJT)\cpl_interface.obj \
-	$(OJT)\AFS_component_version_number.obj \
-	$(OJT)\afs_cpa_stub.res
+	$(OUT)\cpl_interface.obj \
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\afs_cpa_stub.res
 
 DLLLIBS =\
 	$(DESTDIR)\lib\afs\TaLocale.lib \
@@ -62,7 +62,7 @@ clean::
 ############################################################################
 # Dependencies
 
-$(OJT)\afs_cpa_stub.res : AFS_component_version_number.h
+$(OUT)\afs_cpa_stub.res : AFS_component_version_number.h
 
 en_US:
 	$(CD) lang
@@ -105,7 +105,7 @@ de_DE:
     $(CD) ..
 
 mkdir:
-	-mkdir $(OJT)\lang
+	-mkdir $(OUT)\lang
 	cd lang
 	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
 	cd ..

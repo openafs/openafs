@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=libafsrpc
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -22,39 +23,39 @@ AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
 # Object files by category.
-MULTIOBJS = $(OJT)\rx_multi.obj
+MULTIOBJS = $(OUT)\rx_multi.obj
 
-XDROBJS = $(OJT)\xdr.obj $(OJT)\xdr_array.obj $(OJT)\xdr_arrayn.obj $(OJT)\xdr_float.obj $(OJT)\xdr_mem.obj \
-	$(OJT)\xdr_rec.obj  $(OJT)\xdr_refernce.obj $(OJT)\xdr_rx.obj $(OJT)\xdr_update.obj \
-	$(OJT)\xdr_afsuuid.obj $(OJT)\xdr_int64.obj $(OJT)\xdr_int32.obj
+XDROBJS = $(OUT)\xdr.obj $(OUT)\xdr_array.obj $(OUT)\xdr_arrayn.obj $(OUT)\xdr_float.obj $(OUT)\xdr_mem.obj \
+	$(OUT)\xdr_rec.obj  $(OUT)\xdr_refernce.obj $(OUT)\xdr_rx.obj $(OUT)\xdr_update.obj \
+	$(OUT)\xdr_afsuuid.obj $(OUT)\xdr_int64.obj $(OUT)\xdr_int32.obj
 
-RXOBJS = $(OJT)\rx_event.obj $(OJT)\rx_user.obj $(OJT)\rx_pthread.obj $(OJT)\rx.obj \
-	$(OJT)\rx_null.obj $(OJT)\rx_globals.obj $(OJT)\rx_getaddr.obj $(OJT)\rx_misc.obj $(OJT)\rx_packet.obj \
-	$(OJT)\rx_rdwr.obj $(OJT)\rx_trace.obj $(OJT)\rx_xmit_nt.obj $(OJT)\rx_conncache.obj
+RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_user.obj $(OUT)\rx_pthread.obj $(OUT)\rx.obj \
+	$(OUT)\rx_null.obj $(OUT)\rx_globals.obj $(OUT)\rx_getaddr.obj $(OUT)\rx_misc.obj $(OUT)\rx_packet.obj \
+	$(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj
 
-RXSTATBJS = $(OJT)\rxstat.obj $(OJT)\rxstat.ss.obj $(OJT)\rxstat.xdr.obj $(OJT)\rxstat.cs.obj
+RXSTATBJS = $(OUT)\rxstat.obj $(OUT)\rxstat.ss.obj $(OUT)\rxstat.xdr.obj $(OUT)\rxstat.cs.obj
 
-LIBRXKAD_OBJS = $(OJT)\rxkad_client.obj $(OJT)\rxkad_server.obj $(OJT)\rxkad_common.obj $(OJT)\ticket.obj \
-	$(OJT)\ticket5.obj $(OJT)\crc.obj $(OJT)\AFS_component_version_number.obj
+LIBRXKAD_OBJS = $(OUT)\rxkad_client.obj $(OUT)\rxkad_server.obj $(OUT)\rxkad_common.obj $(OUT)\ticket.obj \
+	$(OUT)\ticket5.obj $(OUT)\crc.obj $(OUT)\AFS_component_version_number.obj
 
-LIBRXKAD_REGOBJS = $(OJT)\fcrypt.obj $(OJT)\crypt_conn.obj
+LIBRXKAD_REGOBJS = $(OUT)\fcrypt.obj $(OUT)\crypt_conn.obj
 
-DESOBJS_INT = $(OJT)\des.obj $(OJT)\cbc_encrypt.obj $(OJT)\pcbc_encrypt.obj $(OJT)\cksum.obj $(OJT)\new_rnd_key.obj \
-	$(OJT)\key_sched.obj $(OJT)\debug_decl.obj $(OJT)\quad_cksum.obj $(OJT)\key_parity.obj \
-	$(OJT)\weak_key.obj $(OJT)\strng_to_key.obj $(OJT)\util.obj
+DESOBJS_INT = $(OUT)\des.obj $(OUT)\cbc_encrypt.obj $(OUT)\pcbc_encrypt.obj $(OUT)\cksum.obj $(OUT)\new_rnd_key.obj \
+	$(OUT)\key_sched.obj $(OUT)\debug_decl.obj $(OUT)\quad_cksum.obj $(OUT)\key_parity.obj \
+	$(OUT)\weak_key.obj $(OUT)\strng_to_key.obj $(OUT)\util.obj
 
-DESOBJS = $(DESOBJS_INT) $(OJT)\misc.obj 
+DESOBJS = $(DESOBJS_INT) $(OUT)\misc.obj 
 
-UTILOBJS = $(OJT)\casestrcpy.obj $(OJT)\winsock_nt.obj
+UTILOBJS = $(OUT)\casestrcpy.obj $(OUT)\winsock_nt.obj
 
-COMERRBJS = $(OJT)\error_msg.obj $(OJT)\et_name.obj $(OJT)\com_err.obj
+COMERRBJS = $(OUT)\error_msg.obj $(OUT)\et_name.obj $(OUT)\com_err.obj
 
-FSINTBJS = $(OJT)\afsint.cs.obj $(OJT)\afsint.xdr.obj $(OJT)\afscbint.cs.obj $(OJT)\afscbint.xdr.obj \
-	$(OJT)\afsaux.obj
+FSINTBJS = $(OUT)\afsint.cs.obj $(OUT)\afsint.xdr.obj $(OUT)\afscbint.cs.obj $(OUT)\afscbint.xdr.obj \
+	$(OUT)\afsaux.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
 	$(DESOBJS) $(LIBRXKAD_REGOBJS) $(UTILBJS) $(COMERRBJS) \
-	$(FSINTBJS) $(OJT)\afsrpc.res
+	$(FSINTBJS) $(OUT)\afsrpc.res
 
 $(MULTIOBJS) $(RXOBJS) $(XDROBJS):$(RX)\$$(@B).c
 	$(C2OBJ) $** -I$(RX) 
@@ -68,7 +69,7 @@ $(LIBRXKAD_REGOBJS) $(LIBRXKAD_OBJS):$(RXKAD)\$$(@B).c
 $(DESOBJS_INT):$(DES)\$$(@B).c
 	$(C2OBJ) $** -I$(DES)
 
-$(OJT)\misc.obj:$(DES)\misc.c
+$(OUT)\misc.obj:$(DES)\misc.c
 	$(C2OBJ) $** -DDONT_INCL_MAIN -I$(DES)
 
 $(COMERRBJS):$(COMERR)\$$(@B).c
@@ -92,12 +93,12 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
-$(DESTDIR)\lib\afsrpc.dll: $(DLLOBJS) $(DLLLIBS)
+$(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources
-$(OJT)\afsrpc.res: AFS_component_version_number.h
+$(OUT)\afsrpc.res: AFS_component_version_number.h
 
 install:
 !       IF (EXIST(..\..\src\des\NTMakefile))

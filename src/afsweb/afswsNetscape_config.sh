@@ -395,12 +395,3 @@ cp /tmp/newconf $ws_conf
 $ECHO ""
 
 $ECHO "  Installation of $PRODUCT complete."
-
-
-
-
-
-
-
-
-

@@ -4119,9 +4119,9 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
         lock_ObtainMutex(&unp->mx);
         unp->userp = cm_NewUser();
         lock_ReleaseMutex(&unp->mx);
-		osi_LogEvent("AFS smb_FindCMUserByName New User",NULL,"name[%s] machine[%s]",usern,machine);
+		osi_LogEvent("AFS smb_FindCMUserByName : New User",NULL,"name[%s] machine[%s]",usern,machine);
     }  else	{
-		osi_LogEvent("AFS smb_FindCMUserByName Found",NULL,"name[%s] machine[%s]",usern,machine);
+		osi_LogEvent("AFS smb_FindCMUserByName : Found",NULL,"name[%s] machine[%s]",usern,machine);
 	}
     return unp->userp;
 }
