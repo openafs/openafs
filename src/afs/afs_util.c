@@ -106,6 +106,18 @@ char *afs_strcat(char *s1, char *s2)
 }
 #endif
 
+#ifdef AFS_OBSD34_ENV
+char *afs_strcpy(char *s1, char *s2)
+{
+    char *os1;
+
+    os1 = s1;
+    while ((*s1++ = *s2++) != '\0')
+	;
+    return os1;
+}
+#endif
+
 #ifndef afs_strchr
 char *afs_strchr(char *s, int c)
 {

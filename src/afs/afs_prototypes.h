@@ -674,6 +674,9 @@ extern int afs_strcasecmp(char *s1, char *s2);
 #ifndef afs_strcat
 extern char *afs_strcat(char *s1, char *s2);
 #endif
+#ifdef AFS_OBSD34_ENV
+extern char *afs_strcpy(char *s1, char *s2);
+#endif
 #ifndef afs_strchr
 extern char *afs_strchr(char *s, int c);
 #endif
