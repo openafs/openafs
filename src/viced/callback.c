@@ -772,6 +772,7 @@ static void MultiBreakCallBack_r(cba, ncbas, afidp, xhost)
     if (!thishost || (thishost->hostFlags & HOSTDELETED)) {
       continue;
     }
+    rx_GetConnection(thishost->callback_rxcon);
     conns[j++] = thishost->callback_rxcon;
 	
 #ifdef	ADAPT_MTU
@@ -842,8 +843,10 @@ static void MultiBreakCallBack_r(cba, ncbas, afidp, xhost)
   for (i=0; i<ncbas; i++) {
     struct host *hp;
     hp = cba[i].hp;
-    if (hp && xhost != hp)
+    if (hp && xhost != hp) {
+      rx_PutConnection(hp->callback_rxcon);
       h_Release_r(hp);
+    }
   }
 
 return ;
