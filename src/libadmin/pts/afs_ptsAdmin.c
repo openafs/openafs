@@ -2682,7 +2682,7 @@ static int GetOwnedGroupRPC(
      * We can retrieve the next group from data we already received
      */
 
-    strcpy(&list->group[slot], &list->owned_names.namelist_val[list->index]);
+    strcpy(list->group[slot], list->owned_names.namelist_val[list->index]);
     list->index++;
 
     /*
@@ -2725,7 +2725,7 @@ static int GetOwnedGroupFromCache(
     afs_status_t tst = 0;
     owned_group_list_p list = (owned_group_list_p) rpc_specific;
 
-    strcpy((char *) dest, &list->group[slot]);
+    strcpy((char *) dest, list->group[slot]);
     rc = 1;
 
     if (st != NULL) {
@@ -3029,7 +3029,7 @@ static int GetPTSRPC(
      * We can retrieve the next entry from data we already received
      */
 
-    strcpy(&list->entries[slot], list->currName->name);
+    strcpy(list->entries[slot], list->currName->name);
     list->index++;
     list->currName++;
 
@@ -3072,7 +3072,7 @@ static int GetPTSFromCache(
     afs_status_t tst = 0;
     pts_list_p list = (pts_list_p) rpc_specific;
 
-    strcpy((char *) dest, &list->entries[slot]);
+    strcpy((char *) dest, list->entries[slot]);
     rc = 1;
 
     if (st != NULL) {
