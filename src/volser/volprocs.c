@@ -2801,6 +2801,33 @@ afs_int32 SAFSVolConvertROtoRWvolume(acid, partId, volumeId)
 #endif /* AFS_NAMEI_ENV */
 }
 
+afs_int32 SAFSVolGetSize (acid, fromTrans, fromDate, size)
+struct rx_call *acid;
+afs_int32 fromTrans;
+afs_int32 fromDate;
+register struct volintSize *size;
+{
+    int code = 0;
+    register struct volser_trans *tt;
+    char caller[MAXKTCNAMELEN];
+
+    if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;/*not a super user*/
+    tt = FindTrans(fromTrans);
+    if (!tt) return ENOENT;
+    if (tt->vflags & VTDeleted) {
+	TRELE(tt);
+	return ENOENT;
+    }
+    strcpy(tt->lastProcName,"GetSize"); 
+    tt->rxCallPtr = acid; 
+    code = SizeDumpVolume(acid, tt->volume, fromDate, 1, size);	/* measure volume's data */
+    tt->rxCallPtr = (struct rx_call *)0; 
+    if(TRELE(tt)) return VOLSERTRELE_ERROR; 
+    
+/*    osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);  */
+    return code;
+}
+
 /* GetPartName - map partid (a decimal number) into pname (a string)
  * Since for NT we actually want to return the drive name, we map through the
  * partition struct.

@@ -92,6 +92,17 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 static bit32 volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP,
 			      Error *status);
 
+static int SizeDumpDumpHeader(register struct iod *iodp, register Volume *vp,
+			      afs_int32 fromtime, register struct volintSize *size);
+static int SizeDumpPartial(register struct iod *iodp, register Volume *vp,
+			   afs_int32 fromtime, int dumpAllDirs,
+			   register struct volintSize *size);
+static int SizeDumpVnodeIndex(register struct iod *iodp, Volume *vp,
+			      VnodeClass class, afs_int32 fromtime, int forcedump,
+			      register struct volintSize *size);
+static int SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
+			 int volid, int vnodeNumber, int dumpEverything,
+			 register struct volintSize *size);
 
 static void iod_Init(register struct iod *iodp, register struct rx_call *call)
 {
@@ -1154,3 +1165,211 @@ static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
     iod_ungetc(iodp, tag);
     return 1;
 }
+
+
+/* ----- Below are the calls that calculate dump size ----- */
+
+static int SizeDumpVolumeHeader(register struct iod *iodp, register Volume *vp, register struct volintSize *v_size)
+{
+    int code = 0;
+    static char nullString[1] = "";  /*The ``contents'' of motd*/
+
+/*     if (!code) code = DumpTag(iodp, D_VOLUMEHEADER); */
+    v_size->dump_size += 1;
+/*     if (!code) {code = DumpInt32(iodp, 'i',V_id(vp));} */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'v',V_stamp(vp).version); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpString(iodp, 'n',V_name(vp)); */
+    v_size->dump_size += (2 + strlen(V_name(vp)));
+/*     if (!code) code = DumpBool(iodp, 's',V_inService(vp)); */
+    v_size->dump_size += 2;
+/*     if (!code) code = DumpBool(iodp, 'b',V_blessed(vp)); */
+    v_size->dump_size += 2;
+/*     if (!code) code = DumpInt32(iodp, 'u',V_uniquifier(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpByte(iodp, 't',(byte)V_type(vp)); */
+    v_size->dump_size += 2;
+/*     if (!code){ code = DumpInt32(iodp, 'p',V_parentId(vp));} */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'c',V_cloneId(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'q',V_maxquota(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'm',V_minquota(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'd',V_diskused(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'f',V_filecount(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'a', V_accountNumber(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'o', V_owner(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'C',V_creationDate(vp));	/\* Rw volume creation date *\/ */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'A',V_accessDate(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'U',V_updateDate(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'E',V_expirationDate(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'B',V_backupDate(vp));		/\* Rw volume backup clone date *\/ */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpString(iodp, 'O',V_offlineMessage(vp)); */
+    v_size->dump_size += (2 + strlen(V_offlineMessage(vp)));
+/*     /\* */
+/*      * We do NOT dump the detailed volume statistics residing in the old */
+/*      * motd field, since we cannot tell from the info in a dump whether */
+/*      * statistics data has been put there.  Instead, we dump a null string, */
+/*      * just as if that was what the motd contained. */
+/*      *\/ */
+/*     if (!code) code = DumpString(iodp, 'M', nullString); */
+    v_size->dump_size += (2 + strlen(nullString));
+/*     if (!code) code = DumpArrayInt32(iodp, 'W', (afs_uint32 *)V_weekUse(vp), sizeof(V_weekUse(vp))/sizeof(V_weekUse(vp)[0])); */
+    v_size->dump_size += (3 + 4*(sizeof(V_weekUse(vp))/sizeof(V_weekUse(vp)[0])));
+/*     if (!code) code = DumpInt32(iodp, 'D', V_dayUseDate(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'Z', V_dayUse(vp)); */
+    v_size->dump_size += 5;
+    return code;
+}
+
+static int SizeDumpEnd(register struct iod *iodp, register struct volintSize *v_size)
+{
+    int code = 0;
+    v_size->dump_size += 5;
+    return code;
+}
+
+int SizeDumpVolume(register struct rx_call *call, register Volume *vp, afs_int32 fromtime,
+		   int dumpAllDirs, register struct volintSize *v_size)
+{
+    struct iod iod;
+    int code = 0;
+    register struct iod *iodp = (struct iod *)0;
+//    iod_Init(iodp, call);
+
+    if (!code) code = SizeDumpDumpHeader(iodp, vp, fromtime, v_size);
+    if (!code) code = SizeDumpPartial(iodp, vp, fromtime, dumpAllDirs, v_size);
+    if (!code) code = SizeDumpEnd(iodp, v_size);
+    
+    return code;
+}
+
+static int SizeDumpDumpHeader(register struct iod *iodp, register Volume *vp, afs_int32 fromtime,
+			      register struct volintSize *v_size)
+{
+    int code = 0;
+    int UseLatestReadOnlyClone = 1;
+    afs_int32 dumpTimes[2];
+//    iodp->device = vp->device;
+//    iodp->parentId = V_parentId(vp);
+//    iodp->dumpPartition = vp->partition;
+
+    v_size->dump_size = 0; /* initialize the size */
+/*     if (!code) code = DumpDouble(iodp, D_DUMPHEADER, DUMPBEGINMAGIC, DUMPVERSION); */
+    v_size->dump_size += 9;
+/*     if (!code) code = DumpInt32(iodp, 'v', UseLatestReadOnlyClone? V_id(vp): V_parentId(vp)); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpString(iodp, 'n',V_name(vp)); */
+    v_size->dump_size += (2 + strlen(V_name(vp)));
+/*     dumpTimes[0] = fromtime; */
+/*     dumpTimes[1] = V_backupDate(vp);	/\* Until the time the clone was made *\/ */
+/*     if (!code) code = DumpArrayInt32(iodp, 't', (afs_uint32 *)dumpTimes, 2); */
+    v_size->dump_size += (3 + 4*2);
+    return code;
+}
+
+static int SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid, int vnodeNumber, int dumpEverything,
+		     register struct volintSize *v_size)
+{
+    int code = 0;
+
+    if (!v || v->type == vNull)
+	return code;
+/*     if (!code) code = DumpDouble(iodp, D_VNODE, vnodeNumber, v->uniquifier); */
+    v_size->dump_size += 9;
+    if (!dumpEverything)
+        return code;
+/*     if (!code)  code = DumpByte(iodp, 't',(byte)v->type); */
+    v_size->dump_size += 2;
+/*     if (!code) code = DumpShort(iodp, 'l', v->linkCount); /\* May not need this *\/ */
+    v_size->dump_size += 3;
+/*     if (!code) code = DumpInt32(iodp, 'v', v->dataVersion); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'm', v->unixModifyTime); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'a', v->author); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 'o', v->owner); */
+    v_size->dump_size += 5;
+/*     if (!code && v->group) code = DumpInt32(iodp, 'g', v->group);	/\* default group is 0 *\/ */
+    if(v->group)     v_size->dump_size += 5;
+/*     if (!code) code = DumpShort(iodp, 'b', v->modeBits); */
+    v_size->dump_size += 3;
+/*     if (!code) code = DumpInt32(iodp, 'p', v->parent); */
+    v_size->dump_size += 5;
+/*     if (!code) code = DumpInt32(iodp, 's', v->serverModifyTime); */
+    v_size->dump_size += 5;
+    if (v->type == vDirectory) {
+/*	acl_HtonACL(VVnodeDiskACL(v)); */
+/* 	if (!code) code = DumpByteString(iodp, 'A', (byte *) VVnodeDiskACL(v), VAclDiskSize(v)); */
+	v_size->dump_size += 1 + VAclDiskSize(v);
+    }
+
+    if (VNDISK_GET_INO(v)) {
+	v_size->dump_size += (v->length + 5);
+    } 
+    return code;
+}
+
+/* A partial dump (no dump header) */
+static int SizeDumpPartial(register struct iod *iodp, register Volume *vp, afs_int32 fromtime, int dumpAllDirs,
+			   register struct volintSize *v_size)
+{
+    int code = 0;
+    if (!code) code = SizeDumpVolumeHeader(iodp, vp, v_size);
+    if (!code) code = SizeDumpVnodeIndex(iodp, vp, vLarge, fromtime, dumpAllDirs, v_size);
+    if (!code) code = SizeDumpVnodeIndex(iodp, vp, vSmall, fromtime, 0, v_size);
+    return code;
+}
+
+static int SizeDumpVnodeIndex(register struct iod *iodp, Volume *vp, VnodeClass class, afs_int32 fromtime,
+			      int forcedump, register struct volintSize *v_size)
+{
+    register int code = 0;
+    register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    char buf[SIZEOF_LARGEDISKVNODE];
+    struct VnodeDiskObject *vnode = (struct VnodeDiskObject *) buf;
+    StreamHandle_t *file;
+    FdHandle_t *fdP;
+    int size;
+    int flag;
+    register int vnodeIndex, nVnodes;
+
+    fdP = IH_OPEN(vp->vnodeIndex[class].handle);
+    assert(fdP != NULL);
+    file = FDH_FDOPEN(fdP, "r+");
+    assert(file != NULL);
+    size = OS_SIZE(fdP->fd_fd);
+    assert(size != -1);
+   nVnodes = (size / vcp->diskSize) - 1;
+    if (nVnodes > 0) {
+	assert((nVnodes+1)*vcp->diskSize == size);
+	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
+    }
+    else nVnodes = 0;
+    for (vnodeIndex = 0; nVnodes && STREAM_READ(vnode, vcp->diskSize, 1, file) == 1 && !code;
+      nVnodes--, vnodeIndex++) {
+	flag = forcedump || (vnode->serverModifyTime >= fromtime);
+	/* Note:  the >= test is very important since some old volumes may not have
+  	   a serverModifyTime.  For an epoch dump, this results in 0>=0 test, which
+	   does dump the file! */
+	if (!code) code = SizeDumpVnode(iodp, vnode, V_id(vp), bitNumberToVnodeNumber(vnodeIndex, class), flag, v_size);
+    }
+    STREAM_CLOSE(file);
+    FDH_CLOSE(fdP);
+    return code;
+}
+

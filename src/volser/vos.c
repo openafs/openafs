@@ -4334,6 +4334,80 @@ register struct cmd_syndesc *as;
     return code;
 }
 
+static Sizes(as)
+register struct cmd_syndesc *as;
+{
+    afs_int32 avolid, aserver, apart,voltype,fromdate=0,code, err, i;
+    struct nvldbentry entry;
+    volintSize vol_size;
+    
+    rx_SetRxDeadTime(60 * 10);
+    for (i = 0; i<MAXSERVERS; i++) {
+	struct rx_connection *rxConn = ubik_GetRPCConn(cstruct,i);
+	if (rxConn == 0) break;
+	rx_SetConnDeadTime(rxConn, rx_connDeadTime);
+	if (rxConn->service)  rxConn->service->connDeadTime = rx_connDeadTime;
+    }
+    
+    avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
+    if (avolid == 0) {
+	if (err) PrintError("", err);
+	else  fprintf(STDERR, "vos: can't find volume '%s'\n", as->parms[0].items->data);
+	return ENOENT;
+    }
+    
+    if (as->parms[1].items || as->parms[2].items) {
+	if (!as->parms[1].items || !as->parms[2].items) {
+	    fprintf(STDERR, "Must specify both -server and -partition options\n");
+	    return -1;
+	}
+	aserver = GetServer(as->parms[2].items->data);
+	if (aserver == 0) {
+	    fprintf(STDERR, "Invalid server name\n");
+	    return -1;
+	}
+	apart = volutil_GetPartitionID(as->parms[1].items->data);
+	if (apart < 0) {
+	    fprintf(STDERR, "Invalid partition name\n");
+	    return -1;
+	}
+    } else {
+	code = GetVolumeInfo(avolid, &aserver, &apart, &voltype, &entry);
+	if (code) return code;
+    }
+
+    fromdate = 0;
+    
+    if (as->parms[4].items && strcmp(as->parms[4].items->data,"0")) {
+	code = ktime_DateToInt32(as->parms[4].items->data, &fromdate);
+	if (code) {
+	    fprintf(STDERR,"vos: failed to parse date '%s' (error=%d))\n",
+		    as->parms[1].items->data, code);
+	    return code;
+	}
+    }
+
+    fprintf(STDOUT, "Volume: %s\n", as->parms[0].items->data);
+    
+    if(as->parms[3].items) /* do the dump estimate */
+    {
+	vol_size.dump_size = 0;
+	code = UV_GetSize(avolid, aserver, apart, fromdate, &vol_size);
+	if (code) {
+	    PrintDiagnostics("size", code);
+	    return code;
+	}
+	/* presumably the size info is now gathered in pntr */
+	/* now we display it */
+	
+	fprintf(STDOUT,"dump_size: %llu\n", vol_size.dump_size);
+    }
+    
+    /* Display info */
+    
+    return 0;
+}
+
 PrintDiagnostics(astring, acode)
     char *astring;
     afs_int32 acode;
@@ -4641,6 +4715,14 @@ char **argv; {
     cmd_AddParm(ts, "-partition", CMD_SINGLE,0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "don't ask");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("size", Sizes, 0, "obtain various sizes of the volume.");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL,  "machine name");
+    cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL, "Obtain the size of the dump");
+    cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
     COMMONPARMS;
 
     code = cmd_Dispatch(argc, argv);
