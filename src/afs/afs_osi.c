@@ -806,6 +806,12 @@ afs_osi_TraverseProcTable(void)
 #endif
 
 #if defined(AFS_OSF_ENV)
+
+#ifdef AFS_DUX50_ENV
+extern struct pid_entry *pidtab;
+extern int npid; 
+#endif
+
 void
 afs_osi_TraverseProcTable(void)
 {
