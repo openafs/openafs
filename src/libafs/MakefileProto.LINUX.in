@@ -37,7 +37,7 @@ AFS_OS_NONFSOBJS =
 
 
 # System specific build commands and flags
-CC = kgcc
+CC = gcc
 LD = ld
 # -Wall
 <i386_linux22 i386_linux24>
