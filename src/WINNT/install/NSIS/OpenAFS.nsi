@@ -44,6 +44,8 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 ;--------------------------------
 ;Configuration
 
+!define REPLACEDLL_NOREGISTER
+
   ;General
 !ifndef DEBUG
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows.exe"
@@ -296,17 +298,17 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 ;               The Windows temp directory could be located on any volume,
 ;               so you cannot use  this directory.
 ;
-; Define UPGRADEDLL_NOREGISTER if you want to upgrade a DLL that does not
+; Define REPLACEDLL_NOREGISTER if you want to upgrade a DLL that does not
 ; have to be registered.
 ;
 ; Note: If you want to support Win9x, you can only use
 ;       short filenames (8.3).
 ;
 ; Example of usage:
-; !insertmacro UpgradeDLL "dllname.dll" "$SYSDIR\dllname.dll" "$SYSDIR"
+; !insertmacro ReplaceDLL "dllname.dll" "$SYSDIR\dllname.dll" "$SYSDIR"
 ;
 
-!macro UpgradeDLL LOCALFILE DESTFILE TEMPBASEDIR
+!macro ReplaceDLL LOCALFILE DESTFILE TEMPBASEDIR
 
   Push $R0
   Push $R1
@@ -318,7 +320,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;------------------------
   ;Unique number for labels
 
-  !define UPGRADEDLL_UNIQUE ${__LINE__}
+  !define REPLACEDLL_UNIQUE ${__LINE__}
 
   ;------------------------
   ;Copy the parameters used on run-time to a variable
@@ -329,27 +331,27 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 
   ;------------------------
   ;Check file and version
-
-  IfFileExists $R4 0 upgradedll.copy_${UPGRADEDLL_UNIQUE}
-
-  ClearErrors
-    GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
-    GetDLLVersion $R4 $R2 $R3
-  IfErrors upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
-
-  IntCmpU $R0 $R2 0 upgradedll.done_${UPGRADEDLL_UNIQUE} \
-    upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
-  IntCmpU $R1 $R3 upgradedll.done_${UPGRADEDLL_UNIQUE} \
-    upgradedll.done_${UPGRADEDLL_UNIQUE} \
-    upgradedll.upgrade_${UPGRADEDLL_UNIQUE}
+  ;
+  ;IfFileExists $R4 0 upgradedll.copy_${REPLACEDLL_UNIQUE}
+  ;
+  ;ClearErrors
+  ;  GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
+  ;  GetDLLVersion $R4 $R2 $R3
+  ;IfErrors upgradedll.upgrade_${REPLACEDLL_UNIQUE}
+  ;
+  ;IntCmpU $R0 $R2 0 upgradedll.done_${REPLACEDLL_UNIQUE} \
+  ;  upgradedll.upgrade_${REPLACEDLL_UNIQUE}
+  ;IntCmpU $R1 $R3 upgradedll.done_${REPLACEDLL_UNIQUE} \
+  ;  upgradedll.done_${REPLACEDLL_UNIQUE} \
+  ;  upgradedll.upgrade_${REPLACEDLL_UNIQUE}
 
   ;------------------------
-  ;Let's upgrade the DLL!
+  ;Let's replace the DLL!
 
   SetOverwrite try
 
-  upgradedll.upgrade_${UPGRADEDLL_UNIQUE}:
-    !ifndef UPGRADEDLL_NOREGISTER
+  upgradedll.upgrade_${REPLACEDLL_UNIQUE}:
+    !ifndef REPLACEDLL_NOREGISTER
       ;Unregister the DLL
       UnRegDLL $R4
     !endif
@@ -359,45 +361,45 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 
   ClearErrors
     StrCpy $R0 $R4
-    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
-  IfErrors 0 upgradedll.noreboot_${UPGRADEDLL_UNIQUE}
+    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
+  IfErrors 0 upgradedll.noreboot_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;DLL is in use. Copy it to a temp file and Rename it on reboot.
 
   GetTempFileName $R0 $R5
-    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
+    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
   Rename /REBOOTOK $R0 $R4
 
   ;------------------------
   ;Register the DLL on reboot
 
-  !ifndef UPGRADEDLL_NOREGISTER
+  !ifndef REPLACEDLL_NOREGISTER
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\RunOnce" \
       "Register $R4" 'rundll32.exe "$R4",DllRegisterServer'
   !endif
 
-  Goto upgradedll.done_${UPGRADEDLL_UNIQUE}
+  Goto upgradedll.done_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;DLL does not exist - just extract
 
-  upgradedll.copy_${UPGRADEDLL_UNIQUE}:
+  upgradedll.copy_${REPLACEDLL_UNIQUE}:
     StrCpy $R0 $R4
-    Call :upgradedll.file_${UPGRADEDLL_UNIQUE}
+    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;Register the DLL
 
-  upgradedll.noreboot_${UPGRADEDLL_UNIQUE}:
-    !ifndef UPGRADEDLL_NOREGISTER
+  upgradedll.noreboot_${REPLACEDLL_UNIQUE}:
+    !ifndef REPLACEDLL_NOREGISTER
       RegDLL $R4
     !endif
 
   ;------------------------
   ;Done
 
-  upgradedll.done_${UPGRADEDLL_UNIQUE}:
+  upgradedll.done_${REPLACEDLL_UNIQUE}:
 
   Pop $R5
   Pop $R4
@@ -409,23 +411,23 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;------------------------
   ;End
 
-  Goto upgradedll.end_${UPGRADEDLL_UNIQUE}
+  Goto upgradedll.end_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;Called to extract the DLL
 
-  upgradedll.file_${UPGRADEDLL_UNIQUE}:
+  upgradedll.file_${REPLACEDLL_UNIQUE}:
     File /oname=$R0 "${LOCALFILE}"
     Return
 
-  upgradedll.end_${UPGRADEDLL_UNIQUE}:
+  upgradedll.end_${REPLACEDLL_UNIQUE}:
 
  ;------------------------
  ;Restore settings
 
  SetOverwrite lastused
  
- !undef UPGRADEDLL_UNIQUE
+ !undef REPLACEDLL_UNIQUE
 
 !macroend
 
@@ -482,18 +484,16 @@ Section "AFS Client" secClient
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
-  !define UPGRADEDLL_NOREGISTER
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\libosi.dll" "$INSTDIR\Client\Program\libosi.dll" "$INSTDIR"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\libafsconf.dll" "$INSTDIR\Client\Program\libafsconf.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\libosi.dll" "$INSTDIR\Client\Program\libosi.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\libafsconf.dll" "$INSTDIR\Client\Program\libafsconf.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\klog.exe"
   File "${AFS_CLIENT_BUILDDIR}\tokens.exe"
   File "${AFS_CLIENT_BUILDDIR}\unlog.exe"
   File "${AFS_CLIENT_BUILDDIR}\fs.exe"
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
-  File "${AFS_BUILD_INCDIR}\afs\auth.h"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -519,7 +519,7 @@ Section "AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
   File "${AFS_DESTDIR}\bin\kpasswd.pdb"
-  ;File "${AFS_SERVER_BUILDDIR}\pts.pdb"
+  File "${AFS_DESTDIR}\bin\pts.pdb"
   File "${AFS_SERVER_BUILDDIR}\bos.pdb"
   File "${AFS_SERVER_BUILDDIR}\kas.pdb"
   File "${AFS_SERVER_BUILDDIR}\vos.pdb"
@@ -538,7 +538,7 @@ Section "AFS Client" secClient
   
   ; Do Windows SYSDIR (Control panel)
   SetOutPath "$SYSDIR"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$SYSDIR\afs_cpa.cpl" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$SYSDIR\afs_cpa.cpl" "$INSTDIR"
 !ifdef DEBUG
   File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
 !endif
@@ -783,7 +783,7 @@ skipCheck:
    Call AFSLangFiles
    
    SetOutPath "$SYSDIR"
-  !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver.cpl" "$SYSDIR\afsserver.cpl" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver.cpl" "$SYSDIR\afsserver.cpl" "$INSTDIR"
 
 !ifdef DEBUG
    File "${AFS_SERVER_BUILDDIR}\afsserver.pdb"
@@ -2453,9 +2453,9 @@ Function AFSLangFiles
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config.exe"
    File "${AFS_SERVER_BUILDDIR}\afsadminutil.dll"
-  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afsauthent.dll" "$INSTDIR\Common\afsauthent.dll" "$INSTDIR"
-  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afspthread.dll" "$INSTDIR\Common\afspthread.dll" "$INSTDIR"
-  !insertmacro UpgradeDLL "${AFS_DESTDIR}\lib\afsrpc.dll" "$INSTDIR\Common\afsrpc.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsauthent.dll" "$INSTDIR\Common\afsauthent.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afspthread.dll" "$INSTDIR\Common\afspthread.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_DESTDIR}\lib\afsrpc.dll" "$INSTDIR\Common\afsrpc.dll" "$INSTDIR"
    File "${AFS_SERVER_BUILDDIR}\afsclientadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.dll"
    File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
@@ -2577,23 +2577,23 @@ DoEnglish:
    File "..\..\doc\install\Documentation\en_US\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll" "$INSTDIR\Client\Program\afs_shl_ext_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll" "$INSTDIR\Client\Program\afs_shl_ext_1033.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"           "$INSTDIR\Common\afs_config_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.dll"              "$INSTDIR\Common\afs_cpa_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.dll"          "$INSTDIR\Common\afseventmsg_1033.dll" "$INSTDIR"
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1033.dll"      "$INSTDIR\Common\afs_setup_utils_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1033.dll"            "$INSTDIR\Common\afsserver_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.dll"            "$INSTDIR\Common\afssvrcfg_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.dll"  "$INSTDIR\Common\TaAfsAccountManager_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"          "$INSTDIR\Common\TaAfsApplLib_1033.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"   "$INSTDIR\Common\TaAfsServerManager_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"           "$INSTDIR\Common\afs_config_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.dll"              "$INSTDIR\Common\afs_cpa_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.dll"          "$INSTDIR\Common\afseventmsg_1033.dll" "$INSTDIR"
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1033.dll"      "$INSTDIR\Common\afs_setup_utils_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1033.dll"            "$INSTDIR\Common\afsserver_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.dll"            "$INSTDIR\Common\afssvrcfg_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.dll"  "$INSTDIR\Common\TaAfsAccountManager_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"          "$INSTDIR\Common\TaAfsApplLib_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"   "$INSTDIR\Common\TaAfsServerManager_1033.dll" "$INSTDIR"
    File "..\..\doc\help\en_US\afs-cc.CNT"
    File "..\..\doc\help\en_US\afs-cc.hlp"
    File "..\..\doc\help\en_US\afs-light.CNT"
@@ -2625,23 +2625,23 @@ DoGerman:
    File "..\..\doc\install\Documentation\de_DE\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"                      "$INSTDIR\Client\Program\afscreds_1032.dll" "$INSTDIR"
-  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll" "$INSTDIR\Client\Program\afs_shl_ext_1032.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"                      "$INSTDIR\Client\Program\afscreds_1032.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll" "$INSTDIR\Client\Program\afs_shl_ext_1032.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"           "$INSTDIR\Common\afs_config_1032.dll" "$INSTDIR"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.dll"              "$INSTDIR\Common\afs_cpa_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.dll"          "$INSTDIR\Common\afseventmsg_1032.dll" "$INSTDIR" 
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1032.dll"      "$INSTDIR\Common\afs_setup_utils_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1032.dll"            "$INSTDIR\Common\afsserver_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1032.dll"            "$INSTDIR\Common\afssvrcfg_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1032.dll"  "$INSTDIR\Common\TaAfsAccountManager_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.dll"          "$INSTDIR\Common\TaAfsAppLib_1032.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"   "$INSTDIR\Common\TaAfsServerManager_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"           "$INSTDIR\Common\afs_config_1032.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.dll"              "$INSTDIR\Common\afs_cpa_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.dll"          "$INSTDIR\Common\afseventmsg_1032.dll" "$INSTDIR" 
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1032.dll"      "$INSTDIR\Common\afs_setup_utils_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1032.dll"            "$INSTDIR\Common\afsserver_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1032.dll"            "$INSTDIR\Common\afssvrcfg_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1032.dll"  "$INSTDIR\Common\TaAfsAccountManager_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.dll"          "$INSTDIR\Common\TaAfsAppLib_1032.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"   "$INSTDIR\Common\TaAfsServerManager_1032.dll" "$INSTDIR" 
    File "..\..\doc\help\de_DE\afs-cc.CNT"
    File "..\..\doc\help\de_DE\afs-cc.hlp"
    File "..\..\doc\help\de_DE\afs-light.CNT"
@@ -2673,23 +2673,23 @@ DoSpanish:
    File "..\..\doc\install\Documentation\es_ES\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"     "$INSTDIR\Client\Program\afscreds_1034.dll" "$INSTDIR" 
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll" "$INSTDIR\Client\Program\afs_shl_ext_1034.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"     "$INSTDIR\Client\Program\afscreds_1034.dll" "$INSTDIR" 
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll" "$INSTDIR\Client\Program\afs_shl_ext_1034.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"          "$INSTDIR\Common\afs_config_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.dll"             "$INSTDIR\Common\afs_cpa_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.dll"         "$INSTDIR\Common\afseventmsg_1034.dll" "$INSTDIR"  
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1034.dll"     "$INSTDIR\Common\afs_setup_utils_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1034.dll"           "$INSTDIR\Common\afsserver_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1034.dll"           "$INSTDIR\Common\afssvrcfg_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1034.dll" "$INSTDIR\Common\TaAfsAccountManager_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.dll"         "$INSTDIR\Common\TaAfsAppLib_1034.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"  "$INSTDIR\Common\TaAfsServerManager_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"          "$INSTDIR\Common\afs_config_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.dll"             "$INSTDIR\Common\afs_cpa_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.dll"         "$INSTDIR\Common\afseventmsg_1034.dll" "$INSTDIR"  
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1034.dll"     "$INSTDIR\Common\afs_setup_utils_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1034.dll"           "$INSTDIR\Common\afsserver_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1034.dll"           "$INSTDIR\Common\afssvrcfg_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1034.dll" "$INSTDIR\Common\TaAfsAccountManager_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.dll"         "$INSTDIR\Common\TaAfsAppLib_1034.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"  "$INSTDIR\Common\TaAfsServerManager_1034.dll" "$INSTDIR"  
    File "..\..\doc\help\es_ES\afs-cc.CNT"
    File "..\..\doc\help\es_ES\afs-cc.hlp"
    File "..\..\doc\help\es_ES\afs-light.CNT"
@@ -2721,23 +2721,23 @@ DoJapanese:
    File "..\..\doc\install\Documentation\ja_JP\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"  "$INSTDIR\Client\Program\afscreds_1041.dll" "$INSTDIR"  
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll" "$INSTDIR\Client\Program\afs_shl_ext_1041.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"  "$INSTDIR\Client\Program\afscreds_1041.dll" "$INSTDIR"  
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll" "$INSTDIR\Client\Program\afs_shl_ext_1041.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"           "$INSTDIR\Common\afs_config_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.dll"              "$INSTDIR\Common\afs_cpa_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.dll"          "$INSTDIR\Common\afseventmsg_1041.dll" "$INSTDIR"   
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1041.dll"      "$INSTDIR\Common\afs_setup_utils_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1041.dll"            "$INSTDIR\Common\afsserver_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1041.dll"            "$INSTDIR\Common\afssvrcfg_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1041.dll"  "$INSTDIR\Common\TaAfsAccountManager_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.dll"          "$INSTDIR\Common\TaAfsAppLib_1041.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"   "$INSTDIR\Common\TaAfsServerManager_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"           "$INSTDIR\Common\afs_config_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.dll"              "$INSTDIR\Common\afs_cpa_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.dll"          "$INSTDIR\Common\afseventmsg_1041.dll" "$INSTDIR"   
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1041.dll"      "$INSTDIR\Common\afs_setup_utils_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1041.dll"            "$INSTDIR\Common\afsserver_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1041.dll"            "$INSTDIR\Common\afssvrcfg_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1041.dll"  "$INSTDIR\Common\TaAfsAccountManager_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.dll"          "$INSTDIR\Common\TaAfsAppLib_1041.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"   "$INSTDIR\Common\TaAfsServerManager_1041.dll" "$INSTDIR"   
    File "..\..\doc\help\ja_JP\afs-cc.CNT"
    File "..\..\doc\help\ja_JP\afs-cc.hlp"
    File "..\..\doc\help\ja_JP\afs-light.CNT"
@@ -2769,23 +2769,23 @@ DoKorean:
    File "..\..\doc\install\Documentation\ko_KR\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"  "$INSTDIR\Client\Program\afscreds_1042.dll" "$INSTDIR"   
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll" "$INSTDIR\Client\Program\afs_shl_ext_1042.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"  "$INSTDIR\Client\Program\afscreds_1042.dll" "$INSTDIR"   
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll" "$INSTDIR\Client\Program\afs_shl_ext_1042.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"           "$INSTDIR\Common\afs_config_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.dll"              "$INSTDIR\Common\afs_cpa_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.dll"          "$INSTDIR\Common\afseventmsg_1042.dll" "$INSTDIR"    
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1042.dll"      "$INSTDIR\Common\afs_setup_utils_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1042.dll"            "$INSTDIR\Common\afsserver_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1042.dll"            "$INSTDIR\Common\afssvrcfg_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1042.dll"  "$INSTDIR\Common\TaAfsAccountManager_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.dll"          "$INSTDIR\Common\TaAfsAppLib_1042.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"   "$INSTDIR\Common\TaAfsServerManager_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"           "$INSTDIR\Common\afs_config_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.dll"              "$INSTDIR\Common\afs_cpa_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.dll"          "$INSTDIR\Common\afseventmsg_1042.dll" "$INSTDIR"    
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1042.dll"      "$INSTDIR\Common\afs_setup_utils_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1042.dll"            "$INSTDIR\Common\afsserver_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1042.dll"            "$INSTDIR\Common\afssvrcfg_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1042.dll"  "$INSTDIR\Common\TaAfsAccountManager_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.dll"          "$INSTDIR\Common\TaAfsAppLib_1042.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"   "$INSTDIR\Common\TaAfsServerManager_1042.dll" "$INSTDIR"    
    File "..\..\doc\help\ko_KR\afs-cc.CNT"
    File "..\..\doc\help\ko_KR\afs-cc.hlp"
    File "..\..\doc\help\ko_KR\afs-light.CNT"
@@ -2818,23 +2818,23 @@ DoPortugueseBR:
    File "..\..\doc\install\Documentation\pt_BR\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL  "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"  "$INSTDIR\Client\Program\afscreds_1046.dll" "$INSTDIR"    
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll" "$INSTDIR\Client\Program\afs_shl_ext_1046.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL  "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"  "$INSTDIR\Client\Program\afscreds_1046.dll" "$INSTDIR"    
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll" "$INSTDIR\Client\Program\afs_shl_ext_1046.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"           "$INSTDIR\Common\afs_config_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.dll"              "$INSTDIR\Common\afs_cpa_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.dll"          "$INSTDIR\Common\afseventmsg_1046.dll" "$INSTDIR"     
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1046.dll"      "$INSTDIR\Common\afs_setup_utils_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1046.dll"            "$INSTDIR\Common\afsserver_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1046.dll"            "$INSTDIR\Common\afssvrcfg_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1046.dll"  "$INSTDIR\Common\TaAfsAccountManager_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.dll"          "$INSTDIR\Common\TaAfsAppLib_1046.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"   "$INSTDIR\Common\TaAfsServerManager_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"           "$INSTDIR\Common\afs_config_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.dll"              "$INSTDIR\Common\afs_cpa_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.dll"          "$INSTDIR\Common\afseventmsg_1046.dll" "$INSTDIR"     
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1046.dll"      "$INSTDIR\Common\afs_setup_utils_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1046.dll"            "$INSTDIR\Common\afsserver_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1046.dll"            "$INSTDIR\Common\afssvrcfg_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1046.dll"  "$INSTDIR\Common\TaAfsAccountManager_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.dll"          "$INSTDIR\Common\TaAfsAppLib_1046.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"   "$INSTDIR\Common\TaAfsServerManager_1046.dll" "$INSTDIR"     
    File "..\..\doc\help\pt_BR\afs-cc.CNT"
    File "..\..\doc\help\pt_BR\afs-cc.hlp"
    File "..\..\doc\help\pt_BR\afs-light.CNT"
@@ -2866,23 +2866,23 @@ DoSimpChinese:
    File "..\..\doc\install\Documentation\zh_CN\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"   "$INSTDIR\Client\Program\afscreds_2052.dll" "$INSTDIR"     
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll" "$INSTDIR\Client\Program\afs_shl_ext_2052.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"   "$INSTDIR\Client\Program\afscreds_2052.dll" "$INSTDIR"     
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll" "$INSTDIR\Client\Program\afs_shl_ext_2052.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"           "$INSTDIR\Common\afs_config_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.dll"              "$INSTDIR\Common\afs_cpa_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.dll"          "$INSTDIR\Common\afseventmsg_2052.dll" "$INSTDIR"      
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_2052.dll"      "$INSTDIR\Common\afs_setup_utils_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_2052.dll"            "$INSTDIR\Common\afsserver_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_2052.dll"            "$INSTDIR\Common\afssvrcfg_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_2052.dll"  "$INSTDIR\Common\TaAfsAccountManager_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.dll"          "$INSTDIR\Common\TaAfsAppLib_2052.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"   "$INSTDIR\Common\TaAfsServerManager_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"           "$INSTDIR\Common\afs_config_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.dll"              "$INSTDIR\Common\afs_cpa_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.dll"          "$INSTDIR\Common\afseventmsg_2052.dll" "$INSTDIR"      
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_2052.dll"      "$INSTDIR\Common\afs_setup_utils_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_2052.dll"            "$INSTDIR\Common\afsserver_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_2052.dll"            "$INSTDIR\Common\afssvrcfg_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_2052.dll"  "$INSTDIR\Common\TaAfsAccountManager_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.dll"          "$INSTDIR\Common\TaAfsAppLib_2052.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"   "$INSTDIR\Common\TaAfsServerManager_2052.dll" "$INSTDIR"      
    File "..\..\doc\help\zh_CN\afs-cc.CNT"
    File "..\..\doc\help\zh_CN\afs-cc.hlp"
    File "..\..\doc\help\zh_CN\afs-light.CNT"
@@ -2914,23 +2914,23 @@ DoTradChinese:
    File "..\..\doc\install\Documentation\zh_TW\README.TXT"
 
    SetOutPath "$INSTDIR\Client\Program"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"  "$INSTDIR\Client\Program\_1028.dll" "$INSTDIR"      
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll" "$INSTDIR\Client\Program\afs_shl_ext_1028.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"  "$INSTDIR\Client\Program\_1028.dll" "$INSTDIR"      
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll" "$INSTDIR\Client\Program\afs_shl_ext_1028.dll" "$INSTDIR"
 !ifdef DEBUG
    ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.pdb"
    ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.pdb"
 !endif
 
    SetOutPath "$INSTDIR\Common"
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"           "$INSTDIR\Common\afs_config_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.dll"              "$INSTDIR\Common\afs_cpa_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.dll"          "$INSTDIR\Common\afseventmsg_1028.dll" "$INSTDIR"       
-  ;!insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1028.dll"      "$INSTDIR\Common\afs_setup_utils_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afsserver_1028.dll"            "$INSTDIR\Common\afsserver_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1028.dll"            "$INSTDIR\Common\afssvrcfg_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1028.dll"  "$INSTDIR\Common\TaAfsAccountManager_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.dll"          "$INSTDIR\Common\TaAfsAppLib_1028.dll" "$INSTDIR"       
-   !insertmacro UpgradeDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"   "$INSTDIR\Common\TaAfsServerManager_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"           "$INSTDIR\Common\afs_config_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.dll"              "$INSTDIR\Common\afs_cpa_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.dll"          "$INSTDIR\Common\afseventmsg_1028.dll" "$INSTDIR"       
+  ;!insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1028.dll"      "$INSTDIR\Common\afs_setup_utils_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1028.dll"            "$INSTDIR\Common\afsserver_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1028.dll"            "$INSTDIR\Common\afssvrcfg_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1028.dll"  "$INSTDIR\Common\TaAfsAccountManager_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.dll"          "$INSTDIR\Common\TaAfsAppLib_1028.dll" "$INSTDIR"       
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"   "$INSTDIR\Common\TaAfsServerManager_1028.dll" "$INSTDIR"       
    File "..\..\doc\help\zh_TW\afs-cc.CNT"
    File "..\..\doc\help\zh_TW\afs-cc.hlp"
    File "..\..\doc\help\zh_TW\afs-light.CNT"
