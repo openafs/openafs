@@ -14,18 +14,30 @@ AFS_CLIENT=on
 AFS_SERVER=off
 
 # AFS client configuration options:
+XXLARGE="-stat 4000 -dcache 4000 -daemons 6 -volumes 256 -files 50000"
+XLARGE="-stat 3600 -dcache 3600 -daemons 5 -volumes 196 -files 50000"
 LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
 MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
 SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
+
+# cachesize and according options are set by /afs/rc.d/init.d/afs
+#   * if you set CACHESIZE to "AUTOMATIC", it will automatically be chosen
+#     deduced by parition sizes (does not work if your cache is on / or /usr)
+#   * if you set OPTIONS to "AUTOMATIC", the init script will choose a set
+#     of options based on the cache size
+# otherwise the values specified here will be used. So be careful!
+# Note: if you leave these as-is, no changes are made.
+CACHESIZE=
 OPTIONS=$MEDIUM
+
+# you should never need to change these settings
+AFSDIR=/afs
+CACHEDIR=/usr/vice/cache
+CACHEINFO=/usr/vice/etc/cacheinfo
 
 # Set to "-verbose" for a lot of debugging information from afsd. Only
 # useful for debugging as it prints _a lot_ of information.
 VERBOSE=
-
-# OPTIONS are the options passed to afsd.
-OPTIONS="$OPTIONS $VERBOSE"
-
 
 # Sample server preferences function. Set server preferences using this.
 # afs_serverprefs() {
