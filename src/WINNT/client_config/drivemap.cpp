@@ -523,7 +523,7 @@ void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
                       &dwType, (LPBYTE)mapping, &mappingLen);
         if ( dwType == REG_EXPAND_SZ ) {
             TCHAR buf[MAX_PATH];
-            DWORD dummyLen = ExpandEnvironmentStrings(buf, mapping, MAX_PATH);
+            DWORD dummyLen = ExpandEnvironmentStrings(mapping, buf, MAX_PATH);
             if (dummyLen > MAX_PATH)
                 continue;
             _tcsncpy(mapping, buf, MAX_PATH);
