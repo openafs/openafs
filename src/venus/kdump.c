@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/kdump.c,v 1.7 2003/04/13 19:32:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/kdump.c,v 1.8 2003/07/30 17:23:46 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -53,7 +53,7 @@ struct ntfs_inode_info{};
 #define u16 unsigned short
 #include <features.h>
 #if __GLIBC_MINOR__ >= 2
-#define _SYS_TYPES_H
+#define _SYS_TYPES_H 1
 #endif
 #define __KERNEL__
 #endif

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_file.c,v 1.7 2001/09/11 15:47:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_file.c,v 1.8 2003/07/30 17:23:43 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -126,6 +126,9 @@ osi_UFSTruncate(afile, asize)
     if (code || tstat.size <= asize) return code;
     MObtainWriteLock(&afs_xosi,321);    
     AFS_GUNLOCK();
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+    down_write(&inode->i_alloc_sem);
+#endif
     down(&inode->i_sem);
     inode->i_size = newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
@@ -156,6 +159,9 @@ osi_UFSTruncate(afile, asize)
 #endif
     code = -code;
     up(&inode->i_sem);
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+    up_write(&inode->i_alloc_sem);
+#endif
     AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);
     return code;
@@ -211,8 +217,12 @@ afs_osi_Write(afile, offset, aptr, asize)
     size_t resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
-    if ( !afile )
-        osi_Panic("afs_osi_Write called with null param");
+    if ( !afile ) {
+	if ( !afs_shuttingdown )
+	    osi_Panic("afs_osi_Write called with null param");
+	else
+	    return EIO;
+    } 
     if (offset != -1) afile->offset = offset;
     AFS_GUNLOCK();
     code = osi_rdwr(UIO_WRITE, afile, (caddr_t)aptr, asize, &resid);

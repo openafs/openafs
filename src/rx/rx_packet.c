@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.8 2003/04/13 19:32:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.9 2003/07/30 17:23:45 hartmans Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -33,7 +33,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.8 2003/04/13 19:32:2
 #include "../afs/sysincludes.h"
 #endif
 #include "../h/socket.h"
-#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
 #if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
 #include "../sys/mount.h"   /* it gets pulled in by something later anyway */
 #endif
@@ -959,7 +959,7 @@ int osi_NetSend(socket, addr, dvec, nvecs, length, istack)
  * message receipt is done in rxk_input or rx_put.
  */
 
-#ifdef AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
 /*
  * Copy an mblock to the contiguous area pointed to by cp.
  * MTUXXX Supposed to skip <off> bytes and copy <len> bytes,
@@ -1081,7 +1081,7 @@ return len;
 
 #if !defined(AFS_LINUX20_ENV)
 int rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
 mblk_t *amb;
 #else
 struct mbuf *amb;

@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.13 2003/04/13 19:32:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.14 2003/07/30 17:23:43 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -25,37 +25,53 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.13 2003/04/13 
 
 char *crash_addr = 0; /* Induce an oops by writing here. */
 
-/* Lookup name and return vnode for same. */
-int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-	       vnode_t **dirvpp, struct dentry **dpp)
-{
 #if defined(AFS_LINUX24_ENV)
-    struct nameidata nd;
-#else
-    struct dentry *dp = NULL;
-#endif
+/* Lookup name and return vnode for same. */
+int osi_lookupname_internal(char *aname, uio_seg_t seg, int followlink,
+			    vnode_t **dirvpp, struct dentry **dpp, 
+			    struct nameidata *nd)
+{
     int code;
 
     code = ENOENT;
-#if defined(AFS_LINUX24_ENV)
     if (seg == AFS_UIOUSER) {
         code = followlink ?
-	    user_path_walk(aname, &nd) : user_path_walk_link(aname, &nd);
+	    user_path_walk(aname, nd) : user_path_walk_link(aname, nd);
     }
     else {
-        if (path_init(aname, followlink ? LOOKUP_FOLLOW : 0, &nd))
-	    code = path_walk(aname, &nd);
+	if (path_init(aname, followlink ? LOOKUP_FOLLOW : 0, nd))
+	    code = path_walk(aname, nd);
     }
 
     if (!code) {
-	if (nd.dentry->d_inode) {
-	    *dpp = dget(nd.dentry);
+	if (nd->dentry->d_inode) {
+	    *dpp = dget(nd->dentry);
 	    code = 0;
-	} else
+	} else {
 	    code = ENOENT;
-	path_release(&nd);
+	    path_release(nd);
+	}
     }
+    return code;
+}
+#endif
+
+int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
+		   vnode_t **dirvpp, struct dentry **dpp)
+{
+#if defined(AFS_LINUX24_ENV)
+    struct nameidata nd;
+    int code = osi_lookupname_internal(aname, seg, followlink, dirvpp, dpp,
+				       &nd);
+    if (!code)
+	path_release(&nd);
+    
+    return (code);
 #else
+    struct dentry *dp = NULL;
+    int code;
+    
+    code = ENOENT;
     if (seg == AFS_UIOUSER) {
 	dp = followlink ? namei(aname) : lnamei(aname);
     }
@@ -71,9 +87,9 @@ int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 	else
 	    dput(dp);
     }
-#endif
 	    
     return code;
+#endif
 }
 
 /* Intialize cache device info and fragment size for disk cache partition. */
@@ -85,8 +101,10 @@ int osi_InitCacheInfo(char *aname)
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
+    extern struct nameidata afs_cacheNd;
 
-    code = osi_lookupname(aname, AFS_UIOSYS, 1, NULL, &dp);
+    code = osi_lookupname_internal(aname, AFS_UIOSYS, 1, NULL, &dp, 
+				   &afs_cacheNd);
     if (code) return ENOENT;
 
     cacheInode = dp->d_inode->i_ino;

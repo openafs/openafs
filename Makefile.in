@@ -87,6 +87,20 @@ dest_nolibafs: all dest_dirs
 dest_only_libafs: all dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 
+packages: dest
+	@case ${SYS_NAME} in \
+	ppc_darwin* ) \
+		${COMPILE_PART1} packaging/MacOS && sh ./buildpkg.sh ${DEST} ;; \
+	hp_ux110 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
+	hp_ux11i ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
+	ia64_hpux1122 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
+	*) \
+		echo Not building packages for ${SYS_NAME} ;; \
+	esac
+
 ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
 	mkdir -p $@
 
@@ -134,7 +148,7 @@ comerr: util
 
 cmd: comerr
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
+	sgi_6* | sun4x_5[789] | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
@@ -240,7 +254,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -261,7 +275,7 @@ null: project
 
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
-	  rs_aix* | sun*_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
+	  rs_aix* | sun*_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd* | ia64_hpux*) \
 		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
 		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
@@ -292,7 +306,7 @@ bozo: project ntp audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* | sun*_4* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | sun*_4* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -311,8 +325,14 @@ login: project kauth rxkad
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	parisc_linux24) \
 		echo Skipping pam/login for parisc_linux24 ;; \
-	sun*_* | hp_ux11* | *linux* | *fbsd* ) \
-		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
+	amd64_linux24) \
+		echo Skipping pam/login for amd64_linux24 ;; \
+	sun*_* | hp_ux11* | ia64_hpux* | *linux* | *fbsd* ) \
+		if test "@HAVE_PAM@" = "yes"; then \
+			${COMPILE_PART1} pam ${COMPILE_PART2} ; \
+		else \
+			echo Skipping pam for ${SYS_NAME} ; \
+		fi ;; \
 	ppc_darwin* | *_obsd* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
@@ -411,7 +431,7 @@ butc: project bubasics butm budb bucoord cmd
 
 tbutc: project bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix4*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun*_*|rs_aix4*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
@@ -434,7 +454,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*) \
 	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -442,7 +462,7 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*) \
 	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -450,7 +470,9 @@ libafsauthent: ubik auth kauth libafsrpc
 
 shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
+	amd64_linux24) \
+		echo Skipping shlibafsprc for amd64_linux24 ;; \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
@@ -458,7 +480,9 @@ shlibafsrpc: rx rxkad des
 
 shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
+	amd64_linux24) \
+		echo Skipping shlibafsauthent for amd64_linux24 ;; \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
@@ -478,7 +502,7 @@ libadmin_real:
 
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \

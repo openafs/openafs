@@ -32,7 +32,7 @@ SHLIB_LINKER=${MT_CC} -shared
 #
 # libraries
 MTLIBS=-lpthread
-TXLIBS= /usr/lib/libncurses.so
+TXLIBS=-lncurses
 XLIBS= @LIB_AFSDB@
 #
 # programs

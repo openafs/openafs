@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.8 2002/05/12 05:50:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.9 2003/07/30 17:23:45 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -69,7 +69,7 @@ int pr_rxstat_userok(call)
     return afsconf_SuperUser(prdir, call, (char *)0);
 }
 
-void main (argc, argv)
+int main (argc, argv)
   int argc;
   char **argv;
 {
@@ -292,4 +292,5 @@ void main (argc, argv)
 
     rx_StartServer(1);
     osi_audit (PTS_FinishEvent, -1, AUD_END);
+    return 0;
 }

@@ -49,7 +49,7 @@ Generic install command.  Options are:
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.2 2003/01/02 03:55:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.3 2003/07/30 17:23:45 hartmans Exp $");
 
 #include <stdio.h>
 #include <pwd.h>
@@ -85,12 +85,18 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.2 2003/01/02 03:
 
 struct stat istat, ostat;
 
+/* How many systems don't have strerror now? */
+#ifndef HAVE_STRERROR
 #if !defined(AFS_DARWIN60_ENV)
 extern int sys_nerr;
 #endif
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern char *sys_errlist[];
 #endif
+#else
+#define ErrorString strerror
+#endif
+
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern struct passwd *getpwnam();
 int stripcalled = 0;
@@ -123,6 +129,7 @@ static char *strrpbrk (s, set)
     return 0;
 }
 
+#ifndef HAVE_STRERROR
 char *ErrorString(aerrno)
     int aerrno; {
     static char tbuffer[100];
@@ -133,6 +140,7 @@ char *ErrorString(aerrno)
     }
     return tbuffer;
 }
+#endif
 
 int
 stripName(aname)
@@ -162,7 +170,8 @@ atoo(astr)
 static int
 quickStrip (iname, oname, ignored, copy_only)
 char *iname, *oname; {
-	int pid, status;
+	int pid;
+	pid_t status;
 	static char *strip[] = {
 		"strip", 0, 0,
 	};
@@ -186,7 +195,7 @@ char *iname, *oname; {
 		exit(1);
 
 	    default:			/* parent	*/
-		if (waitpid(pid, &status, 0) != pid) {
+		if (waitpid(pid, &status, 0) != pid && errno != ECHILD) {
 			perror("waitpid");
 			return -1;
 		}
@@ -232,7 +241,7 @@ char *iname, *oname; {
 		exit(1);
 
 	    default:			/* parent	*/
-		if (waitpid(pid, &status, 0) != pid) {
+		if (waitpid(pid, &status, 0) != pid && errno != ECHILD) {
 			perror("waitpid");
 			return -1;
 		}

@@ -29,8 +29,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -DRXDEBUG ${XCFLAGS}
 
@@ -162,12 +162,12 @@ includes: \
 	${TOP_INCDIR}/rx/xdr.h
 
 kinstall: ${KERNELDIR}/rx
-	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)rx
-	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
+	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)/rx
+	$(INSTALL) $(KSRCS) $(KERNELDIR)/rx
 
 ukinstall: ${UKERNELDIR}/rx
-	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
-	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
+	$(INSTALL) $(UKSRCS) $(UKERNELDIR)/rx
+	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)/rx
 
 ${DEST}/include/rx/rx_packet.h: rx_packet.h
 	${INSTALL} $? $@

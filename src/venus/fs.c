@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.2 2003/01/02 03:55:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.3 2003/07/30 17:23:46 hartmans Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -43,6 +43,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.2 2003/01/02 03:55:52 ha
 #include <strings.h>
 #include <afs/afsutil.h>
 #include <stdlib.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <assert.h>
 #include <afs/ptclient.h>
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.16 2003/04/13 19:32:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.17 2003/07/30 17:23:43 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -208,16 +208,18 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) 
 	struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
         if (current->thread.flags & SPARC_FLAG_32BIT)
-#elif AFS_SPARC64_LINUX20_ENV
+#elif defined(AFS_SPARC64_LINUX20_ENV)
 	if (current->tss.flags & SPARC_FLAG_32BIT) 
+#elif defined(AFS_AMD64_LINUX20_ENV)
+        if (current->thread.flags & THREAD_IA32)
 #else
 #error Not done for this linux type
-#endif /* AFS_SPARC64_LINUX20_ENV */
+#endif 
 	  {
 		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
 		if (!code)
@@ -1084,7 +1086,11 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
 	return EINVAL;	/* out of range */
     }
     inSize = ablob->in_size;
-    if (inSize >= PIGGYSIZE) return E2BIG;
+
+    /* Do all range checking before continuing */
+    if (inSize >= PIGGYSIZE || inSize < 0 || ablob->out_size < 0)
+	return E2BIG;
+
     inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     if (inSize > 0) {
       AFS_COPYIN(ablob->in, inData, inSize, code);

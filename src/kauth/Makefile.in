@@ -27,7 +27,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-UKERNELDIR = ../libuafs/
+UKERNELDIR = ../libuafs
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
 CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
