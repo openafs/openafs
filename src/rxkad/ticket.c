@@ -92,6 +92,7 @@ int tkt_DecodeTicket (char *asecret, afs_int32 ticketLen,
 
     if (ticketLen == 0) return RXKADBADTICKET; /* no ticket */
     if ((ticketLen < MINKTCTICKETLEN) || /* minimum legal ticket size */
+	(ticketLen > MAXKTCTICKETLEN) || /* maximum legal ticket size */
 	((ticketLen) % 8 != 0))		/* enc. part must be (0 mod 8) bytes */
 	return RXKADBADTICKET;
 
