@@ -25,6 +25,10 @@ PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
 
+$(PICTARGET)/%.o: domestic/%.c $(PICTARGET)
+	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
