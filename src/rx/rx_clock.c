@@ -37,7 +37,7 @@ RCSID("$Header$");
 #include "rx_clock.h"
 #endif
 
-#if	!defined(AFS_USE_GETTIMEOFDAY)
+#if !defined(AFS_USE_GETTIMEOFDAY)
 /*use this package only if gettimeofday is much much costlier than getitime */
 
 #ifndef KERNEL
