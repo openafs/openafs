@@ -337,7 +337,6 @@ $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
 AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 
 AFSD_SDKLIBS =\
-#	largeint.lib \
 	netapi32.lib \
         dnsapi.lib \
         mpr.lib \
@@ -348,10 +347,7 @@ AFSD_SDKLIBS =\
         mpr.lib \
         secur32.lib \
         ole32.lib \
-        oleaut32.lib \
-        psapi.lib \
-        wintrust.lib \
-        crypt32.lib
+        oleaut32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
@@ -370,7 +366,7 @@ $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_E
 
 # afsd_service.exe
 $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_service.res  $(RXOBJS) $(AFSD_EXELIBS)
-	$(EXECONLINK) $(AFSD_SDKLIBS) /MAP 
+	$(EXECONLINK) $(AFSD_SDKLIBS) /MAP /LARGEADDRESSAWARE
 	$(EXEPREP)
 
 # fs.exe
