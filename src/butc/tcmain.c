@@ -1086,7 +1086,8 @@ char *arock; {
     code = pthread_create(&dbWatcherPid, &tattr, dbWatcher, (void *)2);
     AFS_SIGSET_RESTORE();
 #else
-    code = LWP_CreateProcess(dbWatcher, 20480, LWP_NORMAL_PRIORITY, 2, "dbWatcher", &dbWatcherPid);
+    code = LWP_CreateProcess(dbWatcher, 20480, LWP_NORMAL_PRIORITY, 
+			     (void *) 2, "dbWatcher", &dbWatcherPid);
 #endif
     if (code)
     {

@@ -276,7 +276,7 @@ afs_vop_open(ap)
 	panic("AFS open changed vnode!");
 #endif
     afs_BozonLock(&vc->pvnLock, vc);
-    osi_FlushPages(vc);
+    osi_FlushPages(vc, ap->a_cred);
     afs_BozonUnlock(&vc->pvnLock, vc);
     AFS_GUNLOCK();
     return error;
@@ -299,7 +299,7 @@ afs_vop_close(ap)
     else
         code=afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
@@ -363,7 +363,7 @@ afs_vop_read(ap)
     struct vcache *avc=VTOAFS(ap->a_vp);
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     code=afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
@@ -425,7 +425,7 @@ afs_vop_getpages(ap)
     uio.uio_procp=curproc;
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, curproc->p_cred->pc_ucred);  /* hold bozon lock, but not basic vnode lock */
     code=afs_read(avc, &uio, curproc->p_cred->pc_ucred, 0, 0, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
@@ -503,7 +503,7 @@ afs_vop_write(ap)
     struct vcache *avc=VTOAFS(ap->a_vp);
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
-    osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
+    osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     code=afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();

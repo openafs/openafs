@@ -80,8 +80,6 @@ RCSID("$Header$");
 #ifdef AFS_KERBEROS_ENV 
 #include <fcntl.h>
 #include <sys/file.h>
-extern afs_uint32 life_to_time();
-extern unsigned char time_to_life();
 #include "cellconfig.h"
 static char lcell[MAXCELLCHARS];
  

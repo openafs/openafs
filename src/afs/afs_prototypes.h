@@ -458,7 +458,7 @@ extern int afs_osi_SleepSig(void *event);
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 extern void *osi_UFSOpen(ino_t ainode);
 #else
 extern void *osi_UFSOpen(afs_int32 ainode);
@@ -495,11 +495,6 @@ extern struct vnodeops Afs_vnodeops;
 
 
 /* afs_osifile.c */
-#ifdef AFS_SGI62_ENV
-extern void *osi_UFSOpen(ino_t);
-#else
-extern void *osi_UFSOpen();
-#endif
 
 /* afs_osi_pag.c */
 extern afs_uint32 pag_epoch;

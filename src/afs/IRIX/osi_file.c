@@ -17,7 +17,6 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h"  /* afs statistics */
 
 int afs_osicred_initialized=0;
-struct  AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;

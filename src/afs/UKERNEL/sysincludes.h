@@ -1329,13 +1329,14 @@ struct min_direct {
 #ifndef NOGROUP
 #define NOGROUP			(-1)
 #endif
+#ifdef cr_gid
+#undef cr_gid
+#endif
 
 struct usr_ucred {
 	unsigned long		cr_ref;
 	long			cr_uid;
-#if !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DARWIN60_ENV)
 	long			cr_gid;
-#endif
 	long			cr_ruid;
 	long			cr_rgid;
 	long			cr_suid;

@@ -34,7 +34,6 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#include <strings.h>
 
 #define	MAXSIZE	2048
 static char space[MAXSIZE];

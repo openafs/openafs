@@ -38,7 +38,7 @@ RCSID("$Header$");
 
 #ifndef	NeXT
 
-#ifdef	KERNEL
+#if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #else
 #include <stdio.h>

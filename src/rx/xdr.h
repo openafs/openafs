@@ -43,8 +43,10 @@
 #include <winsock2.h>
 #endif /* _MFC_VER */
 #endif
+#ifndef bool_t
 #define	bool_t	int
 #define	enum_t	int
+#endif
 #ifndef FALSE
 #define	FALSE	0
 #endif /* !FALSE */

@@ -104,7 +104,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     else {
 	*alength = *alength - tuio.uio_resid;
 	if (maddr) {
-	    memcpy((char*)from, (char*)mtod(maddr, struct sockaddr_in *),
+	    memcpy((char*)addr, (char*)mtod(maddr, struct sockaddr_in *),
 		  sizeof(struct sockaddr_in));
 	    m_freem(maddr);
 	}

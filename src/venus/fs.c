@@ -49,7 +49,6 @@ RCSID("$Header$");
 #include <afs/volser.h>
 #include <afs/vlserver.h>
 #include <afs/cmd.h>
-#include <strings.h>
 #include <afs/afsutil.h>
 #include <stdlib.h>
 #include <assert.h>

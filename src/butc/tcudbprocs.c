@@ -910,7 +910,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
 		code = pthread_create(&alivePid, &tattr, KeepAlive, 0);
 		AFS_SIGSET_RESTORE();
 #else
-	        code = LWP_CreateProcess(KeepAlive, 16384, 1, NULL, 
+	        code = LWP_CreateProcess(KeepAlive, 16384, 1, (void *) NULL, 
 					 "Keep-alive process", &alivePid);
 #endif
 		/* XXX should we check code here ??? XXX */
