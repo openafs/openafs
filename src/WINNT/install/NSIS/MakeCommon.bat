@@ -8,3 +8,4 @@ echo !define MUI_VERSION %1 >> nsi-includes.nsi
 echo !define MUI_MAJORVERSION 1 >>nsi-includes.nsi
 echo !define MUI_MINORVERSION 2 >>nsi-includes.nsi
 echo !define MUI_PATCHLEVEL 1100 >>nsi-includes.nsi
+if "%AFSDEV_BUILDTYPE%" == "CHECKED" echo !define DEBUG 1 >>nsi-includes.nsi
