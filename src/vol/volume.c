@@ -569,7 +569,9 @@ VAttachVolumeByName_r(Error *ec, char *partition, char *name, int mode)
     strcat(path, name);
     VOL_UNLOCK
     if ((fd = open(path, O_RDONLY)) == -1 || fstat(fd,&status) == -1) {
-	close(fd);
+	Log("VAttachVolume: Failed to open %s (errno %d)\n", path, errno);
+	if (fd > -1)
+	    close(fd);
 	VOL_LOCK
 	*ec = VNOVOL;
 	goto done;
