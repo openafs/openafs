@@ -1015,10 +1015,10 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	else if (S_ISLNK(ip->i_mode))
 	    ip->i_op = &afs_symlink_iops;
 #endif
+    } 
     dp->d_time = jiffies;
     dp->d_op = afs_dops;
     d_add(dp, (struct inode*)vcp);
-    } 
 
     AFS_GUNLOCK();
     crfree(credp);
