@@ -217,6 +217,7 @@ rxi_InitPthread(void)
     assert(pthread_cond_init(&rx_listener_cond, (const pthread_condattr_t *)0)
 	   == 0);
     assert(pthread_key_create(&rx_thread_id_key, NULL) == 0);
+    assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
@@ -461,10 +462,15 @@ rx_InitHost(u_int host, u_int port)
 
     /* Malloc up a bunch of packets & buffers */
     rx_nFreePackets = 0;
-    rx_nPackets = rx_extraPackets + RX_MAX_QUOTA + 2;	/* fudge */
     queue_Init(&rx_freePacketQueue);
     rxi_NeedMorePackets = FALSE;
+#ifdef RX_ENABLE_TSFPQ
+    rx_nPackets = 0;	/* in TSFPQ version, rx_nPackets is managed by rxi_MorePackets* */
+    rxi_MorePacketsTSFPQ(rx_extraPackets + RX_MAX_QUOTA + 2, RX_TS_FPQ_FLUSH_GLOBAL, 0);
+#else /* RX_ENABLE_TSFPQ */
+    rx_nPackets = rx_extraPackets + RX_MAX_QUOTA + 2;	/* fudge */
     rxi_MorePackets(rx_nPackets);
+#endif /* RX_ENABLE_TSFPQ */
     rx_CheckPackets();
 
     NETPRI;
@@ -649,6 +655,10 @@ rxi_StartServerProcs(int nExistingProcs)
     }
     nProcs += maxdiff;		/* Extra processes needed to allow max number requested to run in any given service, under good conditions */
     nProcs -= nExistingProcs;	/* Subtract the number of procs that were previously created for use as server procs */
+#ifdef RX_ENABLE_TSFPQ
+    rx_TSFPQMaxProcs += nProcs;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+#endif /* RX_ENABLE_TSFPQ */
     for (i = 0; i < nProcs; i++) {
 	rxi_StartServerProc(rx_ServerProc, rx_stackSize);
     }
