@@ -96,7 +96,7 @@ rxtests: rxobj
 
 fsint: project kfsint
 
-kfsint: rxgen rxincls lwp
+kfsint: lwp rxgen rxincls
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
 
 export2: project fsint
