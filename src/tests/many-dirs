@@ -1,0 +1,6 @@
+#!/bin/sh
+# $Id$
+
+mkdir foobar || exit 1
+(cd foobar && $objdir/create-dirs 1000) || exit 1
+$objdir/rm-rf foobar || exit 1

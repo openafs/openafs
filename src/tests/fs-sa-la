@@ -1,0 +1,6 @@
+#!/bin/sh
+# $Id$
+FS=${FS:-${objdir}/../appl/fs/fs}
+${FS} sa . kalle-anka-nu rl 2>&4
+${FS} la >&4 2>&4
+exit 0

@@ -1,0 +1,29 @@
+#!/bin/sh
+set -x
+# $Id$
+##if test "X$FAST" != "X" ; then echo "Not running $0" ;  exit 0 ; fi
+echo -n pwd before is ' '
+pwd
+#
+# copied from generic-build because rcs wants to put (hard)links into tar balls.
+#
+filename=$AFSROOT/stacken.kth.se/ftp/pub/gnu/rcs/rcs-5.7.tar.gz
+b=rcs-5.7
+obj=$b-obj
+gzip -dc $filename | tar xvf - >&4 2>&1
+mkdir $obj || exit 1
+cd $obj || exit 1
+../$b/configure >&4 || exit 1
+make $MAKEFLAGS || exit 1
+echo -n pwd after is ' '
+pwd
+echo row1 > testfile
+echo log1 | ./src/ci -u testfile
+./src/co -l testfile
+echo row2 >> testfile
+echo log2 | ./src/ci -u testfile
+./src/co -l testfile
+echo row3 >> testfile
+echo log3 | ./src/ci -u testfile
+wc -l testfile | grep '3 testfile' || exit 1
+

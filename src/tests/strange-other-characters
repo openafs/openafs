@@ -1,0 +1,5 @@
+#!/bin/sh
+# $Id$
+dir=$AFSROOT/stacken.kth.se/ftp/pub/arla/tests
+
+test -f $dir/едц || exit 1

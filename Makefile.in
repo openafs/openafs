@@ -90,6 +90,9 @@ build_dirs_rx:
 
 project: cmd comerr 
 
+tests: all 
+	${COMPILE_PART1} tests ${COMPILE_PART2}
+
 config: 
 	${COMPILE_PART1} config ${COMPILE_PART2}
 

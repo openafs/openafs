@@ -1,0 +1,6 @@
+#!/bin/sh
+# $Id$
+FS=${FS:-${objdir}/../appl/fs/fs}
+> foobar
+${FS} flush
+test -f foobar || exit 1

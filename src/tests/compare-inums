@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+$objdir/create-files 100 0 || exit 1
+$objdir/readdir-vs-lstat . || exit 1

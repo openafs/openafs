@@ -1,0 +1,15 @@
+#!/bin/sh
+# $Id$
+
+FS=${FS:-${objdir}/../appl/fs/fs}
+
+touch foo
+
+echo "foobar" > foo
+
+for i in `awk 'BEGIN {for(i=0; i < 1000; ++i) printf "%d\n", i}' /dev/null`; do
+    ${FS} flush foo
+    cat foo > /dev/null || exit 1
+done
+
+rm foo
