@@ -865,7 +865,11 @@ rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
 	     * never be cleaned up.
 	     */
 	    peer = rxi_FindPeer(*host, *port, 0, 0);
-	    if (peer) {
+	    /* Since this may not be associated with a connection,
+	     * it may have no refCount, meaning we could race with
+	     * ReapConnections
+	     */
+	    if (peer && (peer->refCount > 0)) {
 		MUTEX_ENTER(&peer->peer_lock);
 		hadd32(peer->bytesReceived, p->length);
 		MUTEX_EXIT(&peer->peer_lock);
