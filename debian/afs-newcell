@@ -1,4 +1,7 @@
 #!/usr/bin/perl -w
+# Copyright (C) 2000 by Sam Hartman
+# This file may be copied either under the terms of the GNU GPL or the IBM Public License
+# either version 2 or later of the GPL or version 1.0 or later of the IPL.
 
 use Term::ReadLine;
 use strict;
@@ -33,7 +36,7 @@ the cell.
 
 =head1 AUTHOR
 
-Sam Hartman <hartmans@mit.edu>
+Sam Hartman <hartmans@debian.org>
 
 =cut
 
