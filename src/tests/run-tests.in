@@ -12,6 +12,7 @@ host=@host@
 RUNAS=nobody
 FS=@afssrvbindir@/fs
 export FS
+export SHELL
 
 AFSROOT=${AFSROOT-/afs}
 export AFSROOT
