@@ -1047,7 +1047,6 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = jiffies;
 	d_instantiate(dp, ip);
     }
 
@@ -1118,7 +1117,6 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    ip->i_op = &afs_symlink_iops;
 #endif
     }
-    dp->d_time = jiffies;
     dp->d_op = &afs_dentry_operations;
     d_add(dp, AFSTOI(vcp));
 
@@ -1277,7 +1275,6 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = jiffies;
 	d_instantiate(dp, AFSTOI(tvcp));
     }
 
@@ -1331,10 +1328,10 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     cred_t *credp = crref();
     const char *oldname = olddp->d_name.name;
     const char *newname = newdp->d_name.name;
-
-#if defined(AFS_LINUX26_ENV)
     struct dentry *rehash = NULL;
 
+#if defined(AFS_LINUX26_ENV)
+    /* Prevent any new references during rename operation. */
     lock_kernel();
 #endif
     /* Remove old and new entries from name hash. New one will change below.
@@ -1347,28 +1344,26 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 	d_drop(newdp);
 	rehash = newdp;
     }
-
-#ifdef maybe
-    if (atomic_read(&olddp->d_count) > 1) {
-	printk("afs_linux_rename::shrink_dcache_parent()\n");
-	shrink_dcache_parent(olddp);
+#else
+    if (!list_empty(&newdp->d_hash)) {
+	d_drop(newdp);
+	rehash = newdp;
     }
 #endif
-#else
-    if (!list_empty(&olddp->d_hash))
-	d_drop(olddp);
-    if (!list_empty(&newdp->d_hash))
-	d_drop(newdp);
+
+#if defined(AFS_LINUX24_ENV)
+    if (atomic_read(&olddp->d_count) > 1)
+	shrink_dcache_parent(olddp);
 #endif
+
     AFS_GLOCK();
     code = afs_rename(ITOAFS(oldip), oldname, ITOAFS(newip), newname, credp);
     AFS_GUNLOCK();
 
-
-#if defined(AFS_LINUX26_ENV)
     if (rehash)
 	d_rehash(rehash);
 
+#if defined(AFS_LINUX26_ENV)
     unlock_kernel();
 #endif
 
