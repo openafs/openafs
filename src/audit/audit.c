@@ -419,10 +419,10 @@ int osi_audit_check ()
 #else /* ! AFS_AIX_ENV */
 
 int osi_audit (char *audEvent, afs_int32 errCode, ...)
-{}
+{ return 0; }
 
 int osi_auditU (struct rx_call *call, char *audEvent, int errCode, ...)
-{}
+{ return 0; }
 
 #endif
 
