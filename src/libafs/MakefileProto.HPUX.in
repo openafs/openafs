@@ -48,7 +48,7 @@ AFS_OS_NONFSOBJS = \
 # seems to hang).  When the compiler sees the +ES1.Xindirect_calls
 # option, however, it issues a warning and turns off +Z.
 #
-<hp_ux110 hp_ux102>
+<hp_ux110 hp_ux102 hp_ux11i>
 KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
 	-DMP +R500 -Wl,+k $(CPU_KDEFS)
 KDEFS_32 = +DA1.0 +DS1.0
@@ -83,7 +83,7 @@ DESTDIRS = hpux_destdirs
 
 include Makefile.common
 
-<hp_ux110 hp_ux102>
+<hp_ux11i hp_ux110 hp_ux102>
 BITS = 64 32
 <ia64_hpux1122>
 BITS = 64
@@ -91,9 +91,9 @@ BITS = 64
 
 setup:
 	-$(RM) -f  h conf net dux machine netinet nfs rpc s200 ufs sys
-<hp_ux110 hp_ux102>
+<hp_ux102>
 	ln -fs /usr/include/sys h
-<ia64_hpux1122>
+<hp_ux110 hp_ux11i ia64_hpux1122>
 	ln -fs /etc/conf/h h
 <all>
 	ln -fs /etc/conf conf
@@ -104,7 +104,7 @@ setup:
 	ln -fs /etc/conf/nfs nfs
 	ln -fs /usr/include/rpc rpc
 	ln -fs /etc/conf/machine s200
-<hp_ux110 hp_ux102>
+<hp_ux11i hp_ux110 hp_ux102>
 	ln -fs /etc/conf/ufs ufs
 <ia64_hpux1122>
 	ln -fs /etc/conf/sys ufs

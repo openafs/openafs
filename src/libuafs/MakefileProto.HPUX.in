@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # System specific build commands and flags
 CC = /opt/ansic/bin/cc
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
-<hp_ux102 hp_ux110>
+<hp_ux102 hp_ux110 hp_ux11i>
 KOPTS=-Wp,-H200000 -Wl,-a,archive +DA1.0 +z
 <ia64_hpux1122>
 KOPTS=-Wp,-H200000 -Wl,-a,archive_shared
@@ -20,7 +20,7 @@ CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${D
 OPTF=-O
 WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
-<hp_ux102 hp_ux110>
+<hp_ux102 hp_ux110 hp_ux11i>
 TEST_CFLAGS= -Wp,-H200000 +DA1.0 +z -D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -Dhpux -DAFS_HPUX_ENV
 <ia64_hpux1122>
 TEST_CFLAGS= -Wp,-H200000 -D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV -Dhpux -DAFS_HPUX_ENV

@@ -49,18 +49,19 @@ extern int afs_close();
 
 #define vtoblksz(vp)	((vp)->v_vfsp->vfs_bsize)
 
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 /* We no longer need to lock on the VM Empire,
  * or at least that is what is claimed. 
  * so we will noopt the vmemp_ routines
  * This needs to be looked at closer.
  */
 #define vmemp_lockx()
+#undef  vmemp_returnx
 #define vmemp_returnx(a) return(a)
 #define vmemp_unlockx()
 #endif
 
-#if !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_HPUX110_ENV)
 /*
  * Copy an mbuf to the contiguous area pointed to by cp.
  * Skip <off> bytes and copy <len> bytes.
@@ -1278,7 +1279,7 @@ retry:
     if (change_to_fstore)
        afspgin_update_dbd(vm_info, bsize);
     
-#if defined(AFS_HPUX1122_ENV) 
+#if defined(AFS_HPUX110_ENV) 
 	getppdp()->cnt.v_exfod += count;
 #else
     mpproc_info[getprocindex()].cnt.v_exfod += count;
@@ -1650,7 +1651,7 @@ afs_pageout(vp,prp, start, end, flags)
 	 */
 	if (steal) {
 	    if (flags & PF_DEACT) {
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 		getppdp()->cnt.v_pswpout += npages;
 #else
 		mpproc_info[getprocindex()].cnt.v_pswpout += npages;
@@ -1658,7 +1659,7 @@ afs_pageout(vp,prp, start, end, flags)
 /*		sar_bswapout += ptod(npages);*/
 	    }
 	    else if (vhand) {
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 		getppdp()->cnt.v_pgout++;
 		getppdp()->cnt.v_pgpgout += npages;
 #else
@@ -1918,7 +1919,7 @@ afs_swapfs_len(bp)
 afs_mmap(vp, off, size_bytes, access)
      struct vnode *vp;
      u_int off;
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX1111_ENV)
 	 u_long size_bytes;
 #else
      u_int size_bytes;
@@ -1956,7 +1957,7 @@ int
 afs_unmap(vp,off, size_bytes,access)
      struct vnode *vp;
      u_int off;
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX1111_ENV)
 	 u_long size_bytes;
 #else
      u_int size_bytes;
@@ -2022,7 +2023,7 @@ afs_ioctl(vp, com, data, flag, cred)
 	return(ENOTTY);
 }
 
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX1111_ENV)
 /* looks like even if appl is 32 bit, we need to round to 8 bytes */
 /* This had no effect, it must not be being used */
 

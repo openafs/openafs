@@ -73,7 +73,7 @@ RCSID("$Header$");
 #endif /* AFS_MACH_ENV */
 #endif
 #endif
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
 #include "h/mbuf.h"
 #endif
 #ifndef AFS_LINUX20_ENV

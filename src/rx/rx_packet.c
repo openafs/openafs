@@ -36,7 +36,7 @@ RCSID("$Header$");
 #include "h/proc.h"
 #endif
 #include "h/socket.h"
-#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
 #if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
 #include "sys/mount.h"   /* it gets pulled in by something later anyway */
 #endif
@@ -939,7 +939,7 @@ int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs,
  * message receipt is done in rxk_input or rx_put.
  */
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX1122_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
 /*
  * Copy an mblock to the contiguous area pointed to by cp.
  * MTUXXX Supposed to skip <off> bytes and copy <len> bytes,
@@ -1052,7 +1052,7 @@ return len;
 
 #if !defined(AFS_LINUX20_ENV)
 int rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX1122_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX110_ENV)
 mblk_t *amb;
 #else
 struct mbuf *amb;

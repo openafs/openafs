@@ -230,7 +230,7 @@ typedef unsigned short                  etap_event_t;
 struct vfspage;			/* for vnode.h compiler warnings */
 #    include "h/swap.h"	/* for struct swpdbd, for vnode.h compiler warnings */
 #    include "h/dbd.h"	/* for union idbd, for vnode.h compiler warnings */
-#ifdef AFS_HPUX1122_ENV
+#ifdef AFS_HPUX110_ENV
 #    include "h/resource.h"
 #endif
 #  endif /* AFS_HPUX_ENV */

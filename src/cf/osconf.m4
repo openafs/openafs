@@ -119,7 +119,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="ld -b"
 		;;
 
-	hp_ux110)
+	hp_ux11*)
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc"

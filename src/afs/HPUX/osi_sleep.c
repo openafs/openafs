@@ -16,8 +16,9 @@ RCSID("$Header$");
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* afs statistics */
 
-
+#if !defined(AFS_HPUX110_ENV)
 static char waitV;
+#endif
 
 /* call procedure aproc with arock as an argument, in ams milliseconds */
 static int afs_osi_CallProc(aproc, arock, ams)
@@ -28,12 +29,12 @@ static int afs_osi_CallProc(aproc, arock, ams)
     int code;
 
     AFS_STATCNT(osi_CallProc);
-#if !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_HPUX110_ENV)
     AFS_GUNLOCK();
 #endif
     /* hz is in cycles/second, and timeout's 3rd parm is in cycles */
     code = timeout(aproc, arock, (ams * afs_hz)/1000 + 1);
-#if !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_HPUX110_ENV)
     AFS_GLOCK();
 #endif
     return code;
@@ -47,17 +48,17 @@ static int afs_osi_CancelProc(aproc, arock)
     int code = 0;
     AFS_STATCNT(osi_CancelProc);
 
-#if !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_HPUX110_ENV)
     AFS_GUNLOCK();
 #endif
     code = untimeout(aproc, arock);
-#if !defined(AFS_HPUX1122_ENV)
+#if !defined(AFS_HPUX110_ENV)
     AFS_GLOCK();
 #endif
     return code;
 }
 
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 static void AfsWaitHack(char * event)
 {
     lock_t * sleep_lock;
@@ -91,7 +92,7 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
     proc = achandle->proc;
     if (proc == 0) return;
     achandle->proc = (caddr_t) 0;   /* so dude can figure out he was signalled */
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 	afs_osi_Wakeup((char *)achandle);
 #else
     afs_osi_Wakeup(&waitV);
@@ -107,7 +108,7 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int code;
     afs_int32 endTime, tid;
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 	char localwait;
 	char * event;
 #endif
@@ -120,7 +121,7 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	AFS_ASSERT_GLOCK();
 	code = 0;
 	/* do not do anything for solaris, digital, AIX, and SGI MP */
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 	if (ahandle) { 
 		event = (char *) ahandle;
     }
@@ -153,7 +154,7 @@ int afs_osi_SleepSig(void *event)
     return 0;
 }
 
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 void afs_osi_Sleep(void *event)
 {
 	lock_t * sleep_lock;

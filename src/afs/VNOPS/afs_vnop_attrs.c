@@ -33,7 +33,7 @@ RCSID("$Header$");
 extern afs_rwlock_t afs_xcbhash;
 struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 extern struct vfs *afs_globalVFS;
 #endif
 
@@ -139,7 +139,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #else 
     attrs->va_rdev = 1;
 #endif
-#if defined(AFS_HPUX1122_ENV)
+#if defined(AFS_HPUX110_ENV)
 	if (afs_globalVFS) attrs->va_fstype = afs_globalVFS->vfs_mtype;
 #endif
 

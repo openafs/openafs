@@ -1395,7 +1395,7 @@ int BreakLaterCallBacks(void)
 	    /* leave hold for MultiBreakVolumeCallBack to clear */
 	}
 	myfe = fe;
-	(struct object *)fe = ((struct object *)fe)->next;
+	fe = (struct FileEntry *)((struct object *)fe)->next;
 	FreeFE(myfe);
     }
 
