@@ -164,10 +164,45 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
 	if (fh == INVALID_HANDLE_VALUE) {
-		if (GetLastError() == ERROR_DOWNGRADE_DETECTED)
-			fprintf(stderr, "Unable to open \"%s\": Authentication Downgrade Detected\n", tbuffer);
-		return -1;
+        HKEY hk;
+        char szUser[64] = "";
+        char szClient[MAX_PATH] = "";
+        char szPath[MAX_PATH] = "";
+        NETRESOURCE nr;
+        DWORD res;
+
+        if (GetLastError() != ERROR_DOWNGRADE_DETECTED)
+            return -1;
+
+        lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
+        sprintf(szPath, "\\\\%s", szClient);
+
+        /* We should probably be using GetUserNameEx() for this */
+        if (RegOpenKey (HKEY_CURRENT_USER, 
+                        TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize);
+            RegCloseKey (hk);
+        }
+
+        memset (&nr, 0x00, sizeof(NETRESOURCE));
+        nr.dwType=RESOURCETYPE_DISK;
+        nr.lpLocalName=0;
+        nr.lpRemoteName=szPath;
+        res = WNetAddConnection2(&nr,NULL,szUser,0);
+        if (res)
+            return -1;
+
+        fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                         FILE_FLAG_WRITE_THROUGH, NULL);
+        fflush(stdout);
+        if (fh == INVALID_HANDLE_VALUE)
+            return -1;
 	}
+
     /* return fh and success code */
     *handlep = fh;
     return 0;
