@@ -1266,7 +1266,7 @@ static void NewParms(initializing)
 
     if (!(stat("/vice/file/parms",&sbuf))) {
 	parms = (char *)malloc(sbuf.st_size);
-	if(parms <= NULL) return;
+	if(!parms) return;
 	fd = open("parms", O_RDONLY, 0666);
 	if(fd <= 0) {
 	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
