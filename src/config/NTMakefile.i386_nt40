@@ -215,10 +215,6 @@ afscdefs =\
     -DAFS_FREELANCE_CLIENT \
     -DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
-#    We would like to be able to define these but currently cannot
-#    -DRX_ENABLE_LOCKS \
-#    -DUSE_PTHREADS \
-#    -DAFS_PTHREAD_ENV \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
