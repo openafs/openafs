@@ -89,6 +89,7 @@ struct xfs_inode_info {
 #include <linux/quota.h>
 #include <linux/sched.h>
 #include <linux/mm.h>
+#include <linux/slab.h>
 #include <linux/string.h>
 #include <asm/semaphore.h>
 #include <linux/errno.h>
