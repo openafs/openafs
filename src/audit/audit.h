@@ -16,6 +16,10 @@
 #define AUD_DATE 6         /* date (unsigned long)           */
 #define AUD_FID  7         /* File ID                        */
 #define AUD_FIDS 8         /* array of Fids                  */
+/* next 3 lines on behalf of MR-AFS */
+#define AUD_RESID 20       /* resid         in variable list */
+#define AUD_RSSIZERANGE 21 /* rssizerange   in variable list */
+#define AUD_LOOKUPINFO 22  /* LookupInfo    in variable list */ 
 
 /*
  * Note: the master definitions of these error codes come from *.et
@@ -62,6 +66,9 @@
 #define VS_MonitorEvent    "AFS_VS_Monitor"
 #define VS_SetIdTyEvent    "AFS_VS_SetIdTy"
 #define VS_SetDateEvent    "AFS_VS_SetDate"
+/* Next 2 lines on behalf of MR-AFS */
+#define VS_SelectiveDumpEvent "AFS_VS_DmpSelct"
+#define VS_ListVolumeResidencyInfoEvent "AFS_VS_LstVInfo"
 
 #define PTS_StartEvent     "AFS_PTS_Start"
 #define PTS_FinishEvent    "AFS_PTS_Finish"
@@ -168,6 +175,12 @@
 #define FlushCPSEvent           "AFS_SRX_FlusCPS"
 #define PrivilegeEvent		"AFS_Priv"
 #define PrivSetID		"AFS_PrivSet"
+/* Next 5 lines on behalf of MR-AFS */
+#define GetResidenciesEvent     "AFS_SRX_GetR"
+#define ChangeResidenciesEvent  "AFS_SRX_ChgR"
+#define ImportResidenciesEvent  "AFS_SRX_Import"
+#define GetExtendedVolumeAttributesEvent "AFS_SRX_GetVA"
+#define SetExtendedVolumeAttributesEvent "AFS_SRX_SetVA"
 
 #define NoAuthEvent             "AFS_RunNoAuth"
 #define NoAuthDisableEvent      "AFS_NoAuthDsbl"
@@ -213,6 +226,57 @@
 #define VLSetLockEvent		"AFS_VL_SetLck"
 #define VLReleaseLockEvent	"AFS_VL_RelLck"
 #define VLChangeAddrEvent	"AFS_VL_ChgAdd"
+
+/* Next 2 block of lines on behalf of MR-AFS */
+#define RSStartEvent            "AFS_RS_StartEnt"
+#define RSFinishEvent           "AFS_RS_FnshEnt"
+#define RSExitEvent             "AFS_RS_ExitEnt"
+#define RSChangeAddr            "AFS_RS_ChgAddr"
+#define RSChangeName            "AFS_RS_ChgName"
+#define RSNewEntry              "AFS_RS_NewEntry"
+#define RSAddResidencyToServer  "AFS_RS_AddRToS"
+#define RSRemoveResidencyFromServer "AFS_RS_RemRFS"
+#define RSNameToResId           "AFS_RS_NameToId"
+#define RSResIdToName           "AFS_RS_IdToName"
+#define RSDelete                "AFS_RS_Delete"
+#define RSListMax               "AFS_RS_ListMax"
+#define RSSetMax                "AFS_RS_SetMax"
+#define RSListEntry             "AFS_RS_ListEnt"
+#define RSSetFieldsEntry        "AFS_RS_SetEnt"
+#define RSListElements          "AFS_RS_ListElm"
+#define RSIsAHolderOf           "AFS_RS_IsAHold"
+#define RSChooseResidency       "AFS_RS_ChooseR"
+#define RSSwapAllocatedSpace    "AFS_RS_SwapSpc"
+#define RSQuickCheck            "AFS_RS_QuickChk"
+#define RSResidencyWipeableInfo "AFS_RS_WipeInfo"
+#define RSGetResidencySummary   "AFS_RS_GetRSum"
+#define RSGetWiperFreeSpaceFraction "AFS_RS_GetFSpc"
+#define RSRegisterAddrs         "AFS_RS_Regist"
+#define RSGetAddrsU             "AFS_RS_GetAddrU"
+#define RSSetWeights            "AFS_RS_SetWght"
+#define RSGetWeights            "AFS_RS_GetWght"
+#define RSSetThresholds         "AFS_RS_SetThrsh"
+#define RSGetThresholds         "AFS_RS_GetThrsh"
+#define RSListResidencies       "AFS_RS_ListRes"
+#define RSListServers           "AFS_RS_ListServ"
+#define RSGetRandom             "AFS_RS_GetRandm"
+
+#define REMIOExitEvent          "AFS_RE_ExitEnt"
+#define SREMIOGetConnection     "AFS_RE_GetConn"
+#define SREMIORemoteIncDec      "AFS_RE_IncDec"
+#define SREMIOBulkIncDec        "AFS_RE_BlkIDec"
+#define SREMIORemoteStat        "AFS_RE_Stat"
+#define SREMIORemoteCloseIfOpen "AFS_RE_Close"
+#define SREMIORemoteOpen        "AFS_RE_Open"
+#define SREMIORemoteSeek        "AFS_RE_Seek"
+#define SREMIORemoteRead        "AFS_RE_Read"
+#define SREMIORemoteWrite       "AFS_RE_Write"
+#define SREMIORemoteListFiles   "AFS_RE_LstFiles"
+#define SREMIORemoteTruncate    "AFS_RE_Truncate"
+#define SREMIORemoteFsyncFile   "AFS_RE_Fsync"
+#define SREMIORemoteImportFile  "AFS_RE_Import"
+#define SREMIORemoteGetHSMdata  "AFS_RE_HSMdata"
+#define SREMIOPrefetch          "AFS_RE_Prefetch"
 
 
 /* prototypes for audit functions */
