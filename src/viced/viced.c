@@ -599,10 +599,13 @@ main(argc, argv)
 	ViceLog(0, ("Can't find address for FileServer '%s'\n",	FS_HostName));
     }
     else {
+      char *hoststr;
       bcopy(he->h_addr, &FS_HostAddr_NBO, 4);
+      hoststr = afs_inet_ntoa_r(FS_HostAddr_NBO);
       FS_HostAddr_HBO = ntohl(FS_HostAddr_NBO);
-      ViceLog(0,("FileServer %s has address 0x%x (0x%x in host byte order)\n",
-		 FS_HostName, FS_HostAddr_NBO, FS_HostAddr_HBO));
+      ViceLog(0,("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
+		 FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
+      free(hoststr);
     }
 
     /* Install handler to catch the shutdown signal */

@@ -45,7 +45,8 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=	${SRCDIR}lib/libafsauthent.a	\
-	${SRCDIR}lib/libafsrpc.a
+	${SRCDIR}lib/libafsrpc.a \
+	${SRCDIR}lib/afs/util.a
 
 include ../config/Makefile.version
 
