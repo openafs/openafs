@@ -1,3 +1,172 @@
+2004-01-10 18:04  shadow
+
+	* doc/txt/RELNOTES-1.2.11: file RELNOTES-1.2.11 was initially added
+	on branch openafs-stable-1_2_x.
+
+2004-01-10 18:04  shadow
+
+	* doc/txt/RELNOTES-1.2.11: DELTA
+	STABLE12-openafs-1-2-11-relnotes-20040110 AUTHOR
+	shadow@dementia.org
+	
+	have some release notes
+
+2004-01-10 17:42  shadow
+
+	* src/cf/ressearch.m4: DELTA
+	STABLE12-res-search-test-shouldnt-use-res-close-20030915 AUTHOR
+	jhutz@cmu.edu FIXES 2099
+	
+	res_close() not part of generally accepted resolver api
+
+2004-01-10 17:35  shadow
+
+	* configure.in, configure-libafs.in: DELTA
+	STABLE12-hello-openafs-1-2-11-20040110 AUTHOR shadow@dementia.org
+	
+	damn it.
+
+2004-01-10 17:30  shadow
+
+	* src/volser/volprocs.c: DELTA STABLE12-namei-ihandle-leak-20031114
+	AUTHOR shadow@dementia.org FIXES 2518
+	
+	flush all dir buffers we have cached when rewriting a volume from a
+	restore
+	
+	avoids holding an ihandle which has an open fdhandle for an
+	unlinked file
+
+2004-01-10 17:28  shadow
+
+	* src/vol/devname.c: DELTA
+	STABLE12-vol-linux-dont-assume-ext2-20031208 AUTHOR
+	shadow@dementia.org
+	
+	to deal simply with /usr/include/linux potentially having 2.6
+	kernel headers in newer linuxes. given that we might not have ext2
+	as root, this check probably wasn't sufficient anyway.
+
+2004-01-10 17:02  zacheiss
+
+	* src/ubik/beacon.c: DELTA
+	STABLE12-ubik-election-epoch-fix-20040110 AUTHOR jhutz@cs.cmu.edu
+	
+	ubik's ability to keep quorum broke when unix time passed 2^30
+	seconds.  Buy us another 2^30 seconds.
+
+2003-10-24 06:24  shadow
+
+	* src/vol/fstab.c: file fstab.c was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 06:24  shadow
+
+	* src/afs/sysctl.h: file sysctl.h was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 06:24  shadow
+
+	* src/: afs/sysctl.h, vol/fstab.c: DELTA STABLE12-macos103-20031024
+	AUTHOR emoy@apple.com FIXES 2325
+	
+	support for macos 10.3 for 1.2.10
+
+2003-10-24 05:25  shadow
+
+	* src/packaging/MacOS/OpenAFS.Description.plist: file
+	OpenAFS.Description.plist was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 05:25  shadow
+
+	* src/packaging/MacOS/OpenAFS.Info.plist: file OpenAFS.Info.plist
+	was initially added on branch openafs-stable-1_2_x.
+
+2003-10-24 05:25  shadow
+
+	* src/packaging/MacOS/settings.plist: file settings.plist was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-10-24 05:25  shadow
+
+	* src/packaging/MacOS/Makefile: file Makefile was initially added
+	on branch openafs-stable-1_2_x.
+
+2003-10-24 05:25  shadow
+
+	* src/packaging/MacOS/afssettings.m: file afssettings.m was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-10-24 05:24  shadow
+
+	* src/libafs/afs.ppc_darwin_70.plist.in: file
+	afs.ppc_darwin_70.plist.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 05:24  shadow
+
+	* src/config/param.ppc_darwin_70.h: file param.ppc_darwin_70.h was
+	initially added on branch openafs-stable-1_2_x.
+
+2003-10-24 05:24  shadow
+
+	* src/config/param.ppc_darwin_70_usr.h: file
+	param.ppc_darwin_70_usr.h was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 05:24  shadow
+
+	* src/config/Makefile.ppc_darwin_70.in: file
+	Makefile.ppc_darwin_70.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2003-10-24 05:24  shadow
+
+	* Makefile.in, src/afs/Makefile.in, src/afs/DARWIN/osi_vfsops.c,
+	src/afs/DARWIN/osi_vnodeops.c, src/afs/VNOPS/afs_vnop_attrs.c,
+	src/afsd/Makefile.in, src/afsd/afs.rc.darwin,
+	src/afsd/afs.rc.darwin.plist, src/afsmonitor/afsmonitor.c,
+	src/butc/Makefile.in, src/config/Makefile.ppc_darwin_70.in,
+	src/config/afs_sysnames.h, src/config/param.ppc_darwin_70.h,
+	src/config/param.ppc_darwin_70_usr.h,
+	src/libadmin/samples/cm_client_config.c,
+	src/libadmin/samples/cm_list_cells.c,
+	src/libadmin/samples/cm_local_cell.c,
+	src/libadmin/samples/cm_server_prefs.c,
+	src/libadmin/samples/rxdebug_basic_stats.c,
+	src/libadmin/samples/rxdebug_conns.c,
+	src/libadmin/samples/rxdebug_peers.c,
+	src/libadmin/samples/rxdebug_rx_stats.c,
+	src/libadmin/samples/rxdebug_supported_stats.c,
+	src/libadmin/samples/rxdebug_version.c,
+	src/libadmin/samples/rxstat_clear_peer.c,
+	src/libadmin/samples/rxstat_clear_process.c,
+	src/libadmin/samples/rxstat_disable_peer.c,
+	src/libadmin/samples/rxstat_disable_process.c,
+	src/libadmin/samples/rxstat_enable_peer.c,
+	src/libadmin/samples/rxstat_enable_process.c,
+	src/libadmin/samples/rxstat_get_peer.c,
+	src/libadmin/samples/rxstat_get_process.c,
+	src/libadmin/samples/rxstat_get_version.c,
+	src/libadmin/samples/rxstat_query_peer.c,
+	src/libadmin/samples/rxstat_query_process.c,
+	src/libadmin/test/afscp.c, src/libafs/MakefileProto.DARWIN.in,
+	src/libafs/afs.ppc_darwin_70.plist.in, src/libafsrpc/Makefile.in,
+	src/lwp/Makefile.in, src/packaging/MacOS/Makefile,
+	src/packaging/MacOS/OpenAFS.Description.plist,
+	src/packaging/MacOS/OpenAFS.Info.plist,
+	src/packaging/MacOS/OpenAFS.post_install,
+	src/packaging/MacOS/afssettings.m, src/packaging/MacOS/buildpkg.sh,
+	src/packaging/MacOS/settings.plist, src/ptserver/Makefile.in,
+	src/rxgen/rpc_scan.c, src/rxkad/Makefile.in,
+	src/shlibafsrpc/Makefile.in, src/sys/Makefile.in,
+	src/tviced/Makefile.in, src/util/flipbase64.c, src/util/softsig.c,
+	src/viced/Makefile.in, src/vol/Makefile.in, src/vol/partition.c:
+	DELTA STABLE12-macos103-20031024 AUTHOR emoy@apple.com FIXES 2325
+	
+	support for macos 10.3 for 1.2.10
+
 2003-07-29 22:36  shadow
 
 	* src/butm/file_tm.c: DELTA
