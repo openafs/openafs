@@ -138,6 +138,8 @@ fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} $(DBG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
+		sun*_4* ) \
+			${CC} -I/usr/xpg2include -I/usr/5include -g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c fstrace.c ;; \
 		* ) \
 			${CC} ${CFLAGS} $(DBG) -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I${TOP_INCDIR} -c ${srcdir}/fstrace.c ;; \
 	esac
@@ -148,6 +150,8 @@ fstrace: fstrace.o
 			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a /usr/lib/libi.a ;; \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${CFLAGS} $(DBG) -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+		sun*_4* ) \
+			${CC} -L/usr/xpg2lib -L/usr/5lib ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a -lxpg ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
 			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
 		* ) \

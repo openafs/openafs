@@ -40,7 +40,6 @@ int PRE_EndPreempt()
 #else
 #include <sys/time.h>
 #include <signal.h>
-#include <ucontext.h>
 
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 int PRE_Block = 0;		/* used in lwp.c and process.s */
@@ -48,15 +47,25 @@ int PRE_Block = 0;		/* used in lwp.c and process.s */
 char PRE_Block = 0;		/* used in lwp.c and process.s */
 #endif
 
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
 static void AlarmHandler(sig, st, scp)
     int sig;
     siginfo_t *st;
     ucontext_t *scp;
+#else
+static void AlarmHandler(sig, code, scp)
+    int sig, code;
+    struct sigcontext *scp;
+#endif
     {
     if (PRE_Block == 0 && lwp_cpptr->level == 0)
 	{
 	PRE_BeginCritical();
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
 	sigprocmask(SIG_SETMASK, &scp->uc_sigmask, NULL);
+#else
+	sigsetmask(scp->sc_mask);
+#endif
 	LWP_DispatchProcess();
 	PRE_EndCritical();
 	}
@@ -67,7 +76,11 @@ int PRE_InitPreempt(slice)
     struct timeval *slice;
     {
     struct itimerval itv;
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
     struct sigaction action;
+#else
+    struct sigvec vec;
+#endif
 
     if (lwp_cpptr == 0) return (LWP_EINIT);
     
@@ -81,6 +94,7 @@ int PRE_InitPreempt(slice)
 	itv.it_interval = itv.it_value = *slice;
 	}
 
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
     memset((char *)&action, 0, sizeof(action));
     action.sa_sigaction = AlarmHandler;
     action.sa_flags = SA_SIGINFO;
@@ -88,6 +102,15 @@ int PRE_InitPreempt(slice)
     if ((sigaction(SIGALRM, &action, NULL) == -1) ||
 	(setitimer(ITIMER_REAL, &itv, NULL) == -1))
 	return(LWP_ESYSTEM);
+#else
+    memset((char *)&vec, 0, sizeof(vec));
+    vec.sv_handler = AlarmHandler;
+    vec.sv_mask = vec.sv_onstack = 0;
+
+    if ((sigvec(SIGALRM, &vec, (struct sigvec *)0) == -1) ||
+	(setitimer(ITIMER_REAL, &itv, (struct itimerval *) 0) == -1))
+	return(LWP_ESYSTEM);
+#endif
 
     return(LWP_SUCCESS);
     }
@@ -95,12 +118,17 @@ int PRE_InitPreempt(slice)
 int PRE_EndPreempt()
     {
     struct itimerval itv;
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
     struct sigaction action;
+#else
+    struct sigvec vec;
+#endif
 
     if (lwp_cpptr == 0) return (LWP_EINIT);
     
     itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
 
+#if HAVE_SIGACTION && defined(SA_SIGINFO)
     memset((char *)&action, 0, sizeof(action));
     action.sa_handler = SIG_DFL;
 
@@ -108,6 +136,15 @@ int PRE_EndPreempt()
 	(sigaction(SIGALRM, &action, NULL) == -1))
 	return(LWP_ESYSTEM);
 
+#else
+    memset((char *)&vec, 0, sizeof(vec));
+    vec.sv_handler = SIG_DFL;
+    vec.sv_mask = vec.sv_onstack = 0;
+
+    if ((setitimer(ITIMER_REAL, &itv, (struct itimerval *) 0) == -1) ||
+	(sigvec(SIGALRM, &vec, (struct sigvec *)0) == -1))
+	return(LWP_ESYSTEM);
+#endif
     return(LWP_SUCCESS);
     }
 

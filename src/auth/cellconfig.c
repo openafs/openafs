@@ -97,6 +97,9 @@ static int afsconf_CloseInternal(register struct afsconf_dir *adir);
 static int afsconf_Reopen(register struct afsconf_dir *adir);
 static int SaveKeys(struct afsconf_dir *adir);
 
+#ifndef T_AFSDB
+#define T_AFSDB 18  /* per RFC1183 section 1 */
+#endif
 
 /*
  * Basic Rule: we touch "<AFSCONF_DIR>/CellServDB" every time we change anything, so

@@ -19,7 +19,7 @@
  *	    	between user processes and Venus.
  */
 #include <afs/param.h>
-#ifdef AFS_SUN5_ENV
+#ifdef AFS_SUN_ENV
 #include <sys/ioccom.h>
 #endif
 
@@ -67,6 +67,8 @@ struct ViceIoctl {
 #define _VICEIOCTL(id)  ((unsigned int ) _IOW('V', id, struct ViceIoctl))
 #define _VICEIOCTL2(dev, id) ((unsigned int ) _IOW(dev, id, struct ViceIoctl))
 #endif
+#define _CVICEIOCTL(id) _VICEIOCTL2('C', id)
+#define _OVICEIOCTL(id) _VICEIOCTL2('O', id)
 
 /* Use this macro to define up to 256 vice ioctl's.  These ioctl's
    all potentially have in/out parameters--this depends upon the

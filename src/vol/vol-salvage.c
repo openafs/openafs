@@ -110,7 +110,7 @@ RCSID("$Header$");
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
-#if	defined(AFS_AIX_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 #define WCOREDUMP(x)	(x & 0200)
 #endif
 #include <rx/xdr.h>
@@ -166,9 +166,6 @@ RCSID("$Header$");
 #endif
 #endif
 #include <fcntl.h>
-#ifndef AFS_NT40_ENV
-#include <afs/osi_inode.h>
-#endif
 #include <afs/cmd.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>

@@ -179,7 +179,7 @@ struct cm_initparams {
 #define VIOC_STATISTICS         _VICEIOCTL(68)  /* arla: fetch statistics */
 
 /* Coordinated 'C' pioctl's */
-#define VIOC_NEWALIAS		_VICEIOCTL2('C', 1) /* create new cell alias */
-#define VIOC_GETALIAS		_VICEIOCTL2('C', 2) /* get alias info */
+#define VIOC_NEWALIAS		_CVICEIOCTL(1)  /* create new cell alias */
+#define VIOC_GETALIAS		_CVICEIOCTL(2)  /* get alias info */
 
 #endif /* AFS_VENUS_H */

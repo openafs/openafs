@@ -169,6 +169,11 @@ case $system in
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
                 ;;
+        *-sunos*)
+		MKAFS_OSTYPE=SUNOS
+		enable_kernel_module=no
+                AC_MSG_RESULT(sun4)
+                ;;
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
                 AC_MSG_RESULT(hp_ux)
@@ -301,6 +306,9 @@ else
 			;;
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
+			;;
+		sparc-sun-sunos4*)
+			AFS_SYSNAME="sun4_413"
 			;;
 		i386-pc-solaris2.7)
 			AFS_SYSNAME="sunx86_57"
@@ -535,7 +543,8 @@ AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname)
+AC_CHECK_FUNCS(setprogname getprogname sigaction)
+AC_CHECK_TYPE(ssize_t, int)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

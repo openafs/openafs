@@ -75,6 +75,9 @@ RCSID("$Header$");
 #else
 #if	defined(AFS_SUN_ENV)
 #include <sys/vfs.h>
+#ifndef AFS_SUN5_ENV
+#include <mntent.h>
+#endif
 #endif
 #ifdef AFS_SUN5_ENV
 #include <unistd.h>

@@ -43,7 +43,7 @@ RCSID("$Header$");
 #include <afs/fileutil.h>
 #include "bnode.h"
 
-#ifdef AFS_AIX_ENV
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 /* All known versions of AIX lack WCOREDUMP but this works */
 #define WCOREDUMP(x) ((x) & 0x80)
 #endif

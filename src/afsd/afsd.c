@@ -154,8 +154,12 @@ void set_staticaddrs(void);
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #else
+#if defined(AFS_SUN_ENV)
+#include <sys/vfs.h>
+#else
 #if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/statfs.h>
+#endif
 #endif
 #endif
 

@@ -432,10 +432,8 @@ int main (int argc, char *argv[])
 #endif /* AFS_HPUX_ENV */
     char pnametmp[1024];
     int pnamelen;
-#if defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV)
     afs_int32 newcode;
     static char diskBuffer[BUFSIZE];	/* must be static to avoid compiler bugs for large stuff */
-#endif
     char myHostName[100];
     struct timeval tvp[2];
     int isDir;
