@@ -14,13 +14,13 @@ CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -DRXD
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
 # Really the xdr stuff should be in its own directory.
 #
-XDROBJS_common = xdr_rx.o xdr_afsuuid.o
+XDROBJS_common = xdr.o xdr_array.o xdr_rx.o xdr_afsuuid.o
 
 XDROBJS = xdr_arrayn.o ${XDROBJS_common}
 
-XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
+XDROBJS_djgpp = xdr_rec.o xdr_stdio.o \
 	xdr_float.o  xdr_refernce.o  xdr_update.o \
-	xdr_array.o xdr_mem.o ${XDROBJS_common}
+	xdr_mem.o ${XDROBJS_common}
 
 RXOBJS_common = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o \
 	rx_globals.o rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o rx_trace.o \
