@@ -53,7 +53,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-DEBUG.exe"
 !endif
   SilentInstall normal
-  SetCompressor bzip2
+  SetCompressor lzma
   !define MUI_ICON "..\..\client_config\afs_config.ico"
   !define MUI_UNICON "..\..\client_config\afs_config.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
