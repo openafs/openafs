@@ -131,18 +131,18 @@ static int (*(VpioctlSw[]))() = {
   PRxStatPeer,			/* 54 - control peer RX statistics */
   PGetRxkcrypt,			/* 55 -- Get rxkad encryption flag */
   PSetRxkcrypt,			/* 56 -- Set rxkad encryption flag */
-  PNoop,			/* 57 -- arla: set file prio */
-  PNoop,			/* 58 -- arla: fallback getfh */
-  PNoop,			/* 59 -- arla: fallback fhopen */
-  PNoop,			/* 60 -- arla: controls xfsdebug */
-  PNoop,			/* 61 -- arla: controls arla debug */
-  PNoop,			/* 62 -- arla: debug interface */
-  PNoop,			/* 63 -- arla: print xfs status */
-  PNoop,			/* 64 -- arla: force cache check */
-  PNoop,			/* 65 -- arla: break callback */
+  PBogus,			/* 57 -- arla: set file prio */
+  PBogus,			/* 58 -- arla: fallback getfh */
+  PBogus,			/* 59 -- arla: fallback fhopen */
+  PBogus,			/* 60 -- arla: controls xfsdebug */
+  PBogus,			/* 61 -- arla: controls arla debug */
+  PBogus,			/* 62 -- arla: debug interface */
+  PBogus,			/* 63 -- arla: print xfs status */
+  PBogus,			/* 64 -- arla: force cache check */
+  PBogus,			/* 65 -- arla: break callback */
   PPrefetchFromTape,            /* 66 -- MR-AFS: prefetch file from tape */
   PResidencyCmd,                /* 67 -- MR-AFS: generic commnd interface */
-  PNoop,			/* 68 -- arla: fetch stats */
+  PBogus,			/* 68 -- arla: fetch stats */
 };
 
 static int (*(CpioctlSw[]))() = {
