@@ -122,8 +122,6 @@ kinstall: includes
 	case ${SYS_NAME} in \
 	alpha_dux* ) \
 		$(INSTALL) DUX/*.[ch] $(KERNELDIR)rx;; \
-	hp_ux* ) \
-		$(INSTALL) HPUX/*.[ch] $(KERNELDIR)rx;; \
 	*_linux* ) \
 		$(INSTALL) LINUX/*.[ch] $(KERNELDIR)rx;; \
 	rs_aix* ) \

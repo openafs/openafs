@@ -30,15 +30,12 @@ A. Creating the proper directory structure.
       ppc_darwin_13/
       alpha_linux_2216_22/ (DES does not work, will require one more change to
 				compile)
+      hp_ux110/ (No client support, but db servers and utilities work)
 
       Example:
       % mkdir i386_linux22
       % ls -CF
       i386_linux22/     src/
-
-      Builds for the following platforms will not fully compile:
-
-      hp_ux110/
 
    2. Within each of those directories, create a dest/ and obj/ directory.
 
