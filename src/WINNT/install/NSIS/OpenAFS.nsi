@@ -48,6 +48,7 @@
   !define AFS_BUILD_INCDIR "${AFS_DESTDIR}\include"
   !define AFS_CLIENT_LIBDIR "${AFS_DESTDIR}\lib"
   !define AFS_SERVER_BUILDDIR "${AFS_DESTDIR}\root.server\usr\afs\bin"
+  !define AFS_ETC_BUILDDIR "${AFS_DESTDIR}\etc"
   !define SDK_DIR "X:"
   
 ;--------------------------------
@@ -487,15 +488,68 @@ Section "AFS Server" SecServer
 
   SetShellVarContext all
 
-   SetOutPath "$INSTDIR\Server\usr\afs\bin"  
-  File "${NSISDIR}\Contrib\UIs\modern.exe"
+  CreateDirectory "$INSTDIR\Server\usr\afs\etc"
+  CreateDirectory "$INSTDIR\Server\usr\afs\local"
+  CreateDirectory "$INSTDIR\Server\usr\afs\logs"
   
+  SetOutPath "$INSTDIR\Server\usr\afs\bin"  
+  File "${AFS_SERVER_BUILDDIR}\afskill.exe"
+  File "${AFS_SERVER_BUILDDIR}\afssvrcfg.exe"
+  File "${AFS_SERVER_BUILDDIR}\bosctlsvc.exe"
+  File "${AFS_SERVER_BUILDDIR}\bosserver.exe"
+  File "${AFS_SERVER_BUILDDIR}\buserver.exe"
+  File "${AFS_ETC_BUILDDIR}\butc.exe"
+  File "${AFS_SERVER_BUILDDIR}\fileserver.exe"
+  File "${AFS_ETC_BUILDDIR}\fms.exe"
+  File "${AFS_SERVER_BUILDDIR}\kaserver.exe"
+  File "${AFS_SERVER_BUILDDIR}\ptserver.exe"
+  File "${AFS_SERVER_BUILDDIR}\salvager.exe"
+  File "${AFS_SERVER_BUILDDIR}\upclient.exe"
+  File "${AFS_SERVER_BUILDDIR}\upserver.exe"
+  File "${AFS_SERVER_BUILDDIR}\vlserver.exe"
+  File "${AFS_SERVER_BUILDDIR}\volinfo.exe"
+  File "${AFS_SERVER_BUILDDIR}\volserver.exe"
+ 
+ ;AFS Server common files
+ SetOutPath "$INSTDIR\Common"
+ File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+ SetOutPath "$INSTDIR\Common"
+ File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
+   Call AFSLangFiles
+   
   ;Store install folder
-  WriteRegStr HKCU "${AFS_REGKEY_ROOT}\Server" "" $INSTDIR
+  WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Server" "" $INSTDIR
   
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Title" "AFS Server"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Description" "AFS Server for Windows"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PathName" "$INSTDIR\Server"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Software Type" "File System"
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Title" "AFS Server"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Description" "AFS Server for Windows"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "Software Type" "File System"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "PathName" "$INSTDIR\Server"
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
 
+  ; Install the service
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
+  nsExec::Exec '$R0 TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
+  Delete $R0
+  
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Configuration Wizard.lnk" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard'
+  
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
 SectionEnd
@@ -507,11 +561,41 @@ Section "AFS Control Center" SecControl
 
   SetShellVarContext all
 
-   SetOutPath "$INSTDIR\Control"
-  File "${NSISDIR}\Contrib\UIs\modern.exe"
+   SetOutPath "$INSTDIR\Control Center"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager.exe"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.exe"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.exe"
    
-  ;Store install folder
-  WriteRegStr HKCU "${AFS_REGKEY_ROOT}\Control" "" $INSTDIR
+ ;AFS Server common files
+ Call AFSCommon.Install
+ Call AFSLangFiles
+ SetOutPath "$INSTDIR\Common"
+ File "${AFS_SERVER_BUILDDIR}\afsvosadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afsbosadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
+ File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+
+  SetOutPath "$INSTDIR\Common"
+  File "${AFS_WININSTALL_DIR}\Msvcr71.dll"
+      
+   
+   ;Store install folder
+  WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName" $INSTDIR
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "VersionString" ${MUI_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MajorVersion" ${MUI_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "MinorVersion" ${MUI_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PatchLevel" ${MUI_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "VersionString" ${MUI_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "MajorVersion" ${MUI_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "MinorVersion" ${MUI_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${MUI_VERSION}" "PatchLevel" ${MUI_PATCHLEVEL}
+  
+
+  ;Write start menu entries
+  CreateDirectory "$SMPROGRAMS\OpenAFS\Control Center"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Control Center\Account Manager.lnk" "$INSTDIR\Control Center\TaAfsAccountManager.exe"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Control Center\Server Manager.lnk" "$INSTDIR\Control Center\TaAfsServerManager.exe"
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
@@ -792,7 +876,9 @@ Section "Uninstall"
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
   nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec "net stop TransarcAFSServer"
   nsExec::Exec '$R0 u TransarcAFSDaemon'
+  nsExec::Exec '$R0 u TransarcAFSServer'
   Delete $R0
   
   Push "$INSTDIR\Client\Program"
@@ -800,9 +886,7 @@ Section "Uninstall"
   Push "$INSTDIR\Common"
   Call un.RemoveFromPath
   
-  Delete "$INSTDIR\modern.exe"
-  Delete "$INSTDIR\Client\modern.exe"
-  Delete "$INSTDIR\Control_Center\modern.exe"
+  ; Delete documentation
   Delete "$INSTDIR\Documentation\README.TXT"
   Delete "$INSTDIR\Documentation\html\*"
   Delete "$INSTDIR\Documentation\html\CmdRef\*"
@@ -815,8 +899,28 @@ Section "Uninstall"
   
   Delete "$INSTDIR\Uninstall.exe"
 
-  RMDir "$INSTDIR\Client"
-  RMDir "$INSTDIR\Server"
+  ; Remove server
+  Delete "$INSTDIR\Server\usr\afs\bin\afskill.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\bosserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\buserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\butc.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\fileserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\fms.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\kaserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\ptserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\salvager.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\ServerUninst.dll"
+  Delete "$INSTDIR\Server\usr\afs\bin\upclient.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\upserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\vlserver.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
+  Delete "$INSTDIR\Server\usr\afs\bin\volserver.exe"
+  RMDir "$INSTDIR\Server\usr\afs\bin"
+  RmDir /r "$INSTDIR\Server\usr\afs\etc"
+  RmDir /r "$INSTDIR\Server\usr\afs\local"
+  RMDIR /r "$INSTDIR\Server\usr\afs\logs"
   
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
@@ -832,16 +936,31 @@ Section "Uninstall"
 
   Delete "$SMPROGRAMS\OpenAFS\Documentation.lnk"
 
+  ; Remove control center
+  Delete "$INSTDIR\Control Center\TaAfsAccountManager.exe"
+  Delete "$INSTDIR\Control Center\TaAfsAdmSvr.exe"
+  Delete "$INSTDIR\Control Center\TaAfsServerManager.exe"
+  Delete "$INSTDIR\Control Center\CCUninst.dll"
   RMDir "$INSTDIR\Control Center"
+  
   RMDir "$INSTDIR"
 
   Delete "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"
   Delete "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk"
+  Delete "$SMPROGRAMS\OpenAFS\Control Center\Account Manager.lnk"
+  Delete "$SMPROGRAMS\OpenAFS\Control Center\Server Manager.lnk"
+  RMDIR "$SMPROGRAMS\OpenAFS\Control Center"
   RMDir /r "$SMPROGRAMS\OpenAFS\Client"
   RMDir /r "$SMPROGRAMS\OpenAFS"
   
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Supplemental Documentation"
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion"
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Control Center"
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion"
+  DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Server"
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
 
@@ -1177,13 +1296,13 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.dll"
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
-;   StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
-;   StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
-;   StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-   ;StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
-;   StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
-;   StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
-;   StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
+   StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
+   StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
+   StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
+   StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
+   StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
+   StrCmp $LANGUAGE ${LANG_SIMPCHINESE} DoSimpChinese
+   StrCmp $LANGUAGE ${LANG_TRADCHINESE} DoTradChinese
    
 DoEnglish:
 
@@ -1202,8 +1321,134 @@ DoEnglish:
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"
    goto done
-   
 
+DoGerman:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\de_DE\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1032.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1032.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.dll"
+   goto done   
+
+DoSpanish:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\es_ES\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1034.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1034.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.dll"
+   goto done
+
+DoJapanese:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\ja_JP\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1041.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1041.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.dll"
+   goto done
+   
+DoKorean:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\ko_KR\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1042.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1042.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.dll"
+   goto done
+
+
+DoPortugueseBR:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\pt_BR\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1046.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1046.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.dll"
+   goto done
+   
+DoSimpChinese:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\zh_CN\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_2052.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_2052.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.dll"
+   goto done
+   
+DoTradChinese:
+
+   SetOutPath "$INSTDIR\Documentation"
+   File "..\..\doc\install\Documentation\zh_TW\README.TXT"
+
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\afsserver_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1028.dll"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1028.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.dll"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.dll"
+   goto done
+   
 done:
 FunctionEnd
 
