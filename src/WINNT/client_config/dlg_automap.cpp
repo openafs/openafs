@@ -218,7 +218,7 @@ BOOL UpdateRegistry(DRIVEMAP *pDrive, BOOL bRemove)
    if (!pDrive)
       return FALSE;
 
-   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSConfigKeyName);
+   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSDConfigKeyName);
 
    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDispo) != ERROR_SUCCESS)
       return FALSE;

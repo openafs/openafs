@@ -26,8 +26,6 @@ extern "C" {
 #include <lanahelper.h>
 
 extern void Config_GetLanAdapter (ULONG *pnLanAdapter);
-extern BOOL Config_ReadNum (LPCTSTR pszLHS, DWORD *pdwRHS);
-extern BOOL Config_ReadString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
 
 /*
  * REGISTRY ___________________________________________________________________

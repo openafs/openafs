@@ -34,14 +34,6 @@ extern "C" {
 #define PIOCTL_MAXSIZE     2048
 
 
-/*
- * REGISTRY ___________________________________________________________________
- *
- */
-
-static TCHAR cszLANMANDEVICE[] = TEXT("\\Device\\LanmanRedirector\\");
-const TCHAR AFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
-
 
 /*
  * ROUTINES ___________________________________________________________________
@@ -91,14 +83,14 @@ DWORD Config_GetServiceState (void)
 
 void Config_GetGatewayFlag (BOOL *pfFlag)
 {
-   if (!Config_ReadNum (TEXT("IsGateway"), (DWORD*)pfFlag))
+   if (!Config_ReadGlobalNum (TEXT("IsGateway"), (DWORD*)pfFlag))
       *pfFlag = FALSE;
 }
 
 
 BOOL Config_SetGatewayFlag (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("IsGateway"), fFlag);
+   Config_WriteGlobalNum (TEXT("IsGateway"), fFlag);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -106,7 +98,7 @@ BOOL Config_SetGatewayFlag (BOOL fFlag, ULONG *pStatus)
 
 void Config_GetGatewayName (LPTSTR pszName)
 {
-   if (!Config_ReadString (TEXT("Gateway"), pszName, MAX_PATH))
+   if (!Config_ReadGlobalString (TEXT("Gateway"), pszName, MAX_PATH))
       GetString (pszName, IDS_GATEWAY_UNKNOWN);
    else if (!*pszName)
       GetString (pszName, IDS_GATEWAY_UNKNOWN);
@@ -119,11 +111,11 @@ BOOL Config_SetGatewayName (LPCTSTR pszName, ULONG *pStatus)
    GetString (szBogus, IDS_GATEWAY_UNKNOWN);
    if (!lstrcmpi (szBogus, pszName))
       {
-      Config_WriteString (TEXT("Gateway"), TEXT(""));
+      Config_WriteGlobalString (TEXT("Gateway"), TEXT(""));
       }
    else
       {
-      Config_WriteString (TEXT("Gateway"), pszName);
+      Config_WriteGlobalString (TEXT("Gateway"), pszName);
       }
 
    return TRUE;
@@ -165,7 +157,7 @@ void Config_FixGatewayDrives (void)
 
 void Config_GetCellName (LPTSTR pszName)
 {
-   if (!Config_ReadString (TEXT("Cell"), pszName, MAX_PATH))
+   if (!Config_ReadGlobalString (TEXT("Cell"), pszName, MAX_PATH))
       GetString (pszName, IDS_CELL_UNKNOWN);
    else if (!*pszName)
       GetString (pszName, IDS_CELL_UNKNOWN);
@@ -211,7 +203,7 @@ BOOL Config_SetCellName (LPCTSTR pszName, ULONG *pStatus)
    GetString (szBogus, IDS_CELL_UNKNOWN);
    if (lstrcmpi (szBogus, pszName))
       {
-      Config_WriteString (TEXT("Cell"), pszName);
+      Config_WriteGlobalString (TEXT("Cell"), pszName);
       g.fNeedRestart = TRUE;
       }
    return TRUE;
@@ -347,14 +339,14 @@ BOOL Config_SetAuthentFlag (BOOL fFlag, ULONG *pStatus)
 
 void Config_GetTrayIconFlag (BOOL *pfFlag)
 {
-   if (!Config_ReadNum (TEXT("ShowTrayIcon"), (DWORD*)pfFlag))
+   if (!Config_ReadUserNum (TEXT("ShowTrayIcon"), (DWORD*)pfFlag))
       *pfFlag = FALSE;
 }
 
 
 BOOL Config_SetTrayIconFlag (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("ShowTrayIcon"), fFlag);
+   Config_WriteUserNum (TEXT("ShowTrayIcon"), fFlag);
 
    for (HWND hSearch = GetWindow (GetDesktopWindow(), GW_CHILD);
         hSearch && IsWindow(hSearch);
@@ -521,7 +513,7 @@ void Config_FreeServerPrefs (PSERVERPREFS pPrefs)
 
 void Config_GetCacheSize (ULONG *pckCache)
 {
-   if (!Config_ReadNum (TEXT("CacheSize"), (DWORD*)pckCache))
+   if (!Config_ReadGlobalNum (TEXT("CacheSize"), (DWORD*)pckCache))
       *pckCache = CM_CONFIGDEFAULT_CACHESIZE;
 }
 
@@ -555,7 +547,7 @@ BOOL Config_SetCacheSize (ULONG ckCache, ULONG *pStatus)
 
    if (rc)
       {
-      Config_WriteNum (TEXT("CacheSize"), ckCache);
+      Config_WriteGlobalNum (TEXT("CacheSize"), ckCache);
       }
 
    if (pStatus && !rc)
@@ -569,7 +561,7 @@ BOOL Config_SetCacheSize (ULONG ckCache, ULONG *pStatus)
 
 void Config_GetChunkSize (ULONG *pckChunk)
 {
-   if (!Config_ReadNum (TEXT("ChunkSize"), (DWORD*)pckChunk))
+   if (!Config_ReadGlobalNum (TEXT("ChunkSize"), (DWORD*)pckChunk))
       *pckChunk = CM_CONFIGDEFAULT_CHUNKSIZE;
    *pckChunk = max (*pckChunk, 10);
    *pckChunk = (1 << ((*pckChunk)-10));
@@ -578,7 +570,7 @@ void Config_GetChunkSize (ULONG *pckChunk)
 
 BOOL Config_SetChunkSize (ULONG ckChunk, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("ChunkSize"), log2(ckChunk * 1024));
+   Config_WriteGlobalNum (TEXT("ChunkSize"), log2(ckChunk * 1024));
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -587,14 +579,14 @@ BOOL Config_SetChunkSize (ULONG ckChunk, ULONG *pStatus)
 
 void Config_GetStatEntries (ULONG *pcEntries)
 {
-   if (!Config_ReadNum (TEXT("Stats"), (DWORD*)pcEntries))
+   if (!Config_ReadGlobalNum (TEXT("Stats"), (DWORD*)pcEntries))
       *pcEntries = CM_CONFIGDEFAULT_STATS;
 }
 
 
 BOOL Config_SetStatEntries (ULONG cEntries, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("Stats"), cEntries);
+   Config_WriteGlobalNum (TEXT("Stats"), cEntries);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -647,14 +639,14 @@ BOOL Config_SetProbeInt (ULONG csecProbe, ULONG *pStatus)
 
 void Config_GetNumThreads (ULONG *pcThreads)
 {
-   if (!Config_ReadNum (TEXT("ServerThreads"), (DWORD*)pcThreads))
+   if (!Config_ReadGlobalNum (TEXT("ServerThreads"), (DWORD*)pcThreads))
       *pcThreads = CM_CONFIGDEFAULT_SVTHREADS;
 }
 
 
 BOOL Config_SetNumThreads (ULONG cThreads, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("ServerThreads"), cThreads);
+   Config_WriteGlobalNum (TEXT("ServerThreads"), cThreads);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -663,14 +655,14 @@ BOOL Config_SetNumThreads (ULONG cThreads, ULONG *pStatus)
 
 void Config_GetNumDaemons (ULONG *pcDaemons)
 {
-   if (!Config_ReadNum (TEXT("Daemons"), (DWORD*)pcDaemons))
+   if (!Config_ReadGlobalNum (TEXT("Daemons"), (DWORD*)pcDaemons))
       *pcDaemons = CM_CONFIGDEFAULT_DAEMONS;
 }
 
 
 BOOL Config_SetNumDaemons (ULONG cDaemons, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("Daemons"), cDaemons);
+   Config_WriteGlobalNum (TEXT("Daemons"), cDaemons);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -679,7 +671,7 @@ BOOL Config_SetNumDaemons (ULONG cDaemons, ULONG *pStatus)
 
 void Config_GetSysName (LPTSTR pszName)
 {
-   if (!Config_ReadString (TEXT("SysName"), pszName, MAX_PATH))
+   if (!Config_ReadGlobalString (TEXT("SysName"), pszName, MAX_PATH))
       lstrcpy (pszName, TEXT("i386_nt40"));
 }
 
@@ -716,7 +708,7 @@ BOOL Config_SetSysName (LPCTSTR pszName, ULONG *pStatus)
 
    if (rc)
       {
-      Config_WriteString (TEXT("SysName"), pszName);
+      Config_WriteGlobalString (TEXT("SysName"), pszName);
       }
 
    if (pStatus && !rc)
@@ -730,14 +722,14 @@ BOOL Config_SetSysName (LPCTSTR pszName, ULONG *pStatus)
 
 void Config_GetRootVolume (LPTSTR pszName)
 {
-   if (!Config_ReadString (TEXT("RootVolume"), pszName, MAX_PATH))
+   if (!Config_ReadGlobalString (TEXT("RootVolume"), pszName, MAX_PATH))
       lstrcpy (pszName, TEXT("root.afs"));
 }
 
 
 BOOL Config_SetRootVolume (LPCTSTR pszName, ULONG *pStatus)
 {
-   Config_WriteString (TEXT("RootVolume"), pszName);
+   Config_WriteGlobalString (TEXT("RootVolume"), pszName);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -746,14 +738,14 @@ BOOL Config_SetRootVolume (LPCTSTR pszName, ULONG *pStatus)
 
 void Config_GetMountRoot (LPTSTR pszPath)
 {
-   if (!Config_ReadString (TEXT("MountRoot"), pszPath, MAX_PATH))
+   if (!Config_ReadGlobalString (TEXT("MountRoot"), pszPath, MAX_PATH))
       lstrcpy (pszPath, TEXT("/afs"));
 }
 
 
 BOOL Config_SetMountRoot (LPCTSTR pszPath, ULONG *pStatus)
 {
-   Config_WriteString (TEXT("MountRoot"), pszPath);
+   Config_WriteGlobalString (TEXT("MountRoot"), pszPath);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
@@ -799,7 +791,7 @@ BOOL Config_GetCacheInUse (ULONG *pckCacheInUse, ULONG *pStatus)
 
 void Config_GetCachePath (LPTSTR pszCachePath)
 {
-   if (!Config_ReadString (TEXT("CachePath"), pszCachePath, MAX_PATH)) {
+   if (!Config_ReadGlobalString (TEXT("CachePath"), pszCachePath, MAX_PATH)) {
       TCHAR szPath[MAX_PATH];
       GetWindowsDirectory(szPath, sizeof(szPath));
 		szPath[2] = 0;	/* get drive letter only */
@@ -811,83 +803,83 @@ void Config_GetCachePath (LPTSTR pszCachePath)
 
 BOOL Config_SetCachePath(LPCTSTR pszPath, ULONG *pStatus)
 {
-   Config_WriteString (TEXT("CachePath"), pszPath);
+   Config_WriteGlobalString (TEXT("CachePath"), pszPath);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
 
 void Config_GetLanAdapter (ULONG *pnLanAdapter)
 {
-   if (!Config_ReadNum (TEXT("LANadapter"), (DWORD*)pnLanAdapter))
+   if (!Config_ReadGlobalNum (TEXT("LANadapter"), (DWORD*)pnLanAdapter))
       *pnLanAdapter = -1;
 }
 
 BOOL Config_SetLanAdapter (ULONG nLanAdapter, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("LANadapter"), nLanAdapter);
+   Config_WriteGlobalNum (TEXT("LANadapter"), nLanAdapter);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
 
 void Config_GetTrapOnPanic (BOOL *pfFlag)
 {
-   if (!Config_ReadNum (TEXT("TrapOnPanic"), (DWORD*)pfFlag))
+   if (!Config_ReadGlobalNum (TEXT("TrapOnPanic"), (DWORD*)pfFlag))
       *pfFlag = TRUE;
 }
 
 BOOL Config_SetTrapOnPanic (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("TrapOnPanic"), fFlag);
+   Config_WriteGlobalNum (TEXT("TrapOnPanic"), fFlag);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
 
 void Config_GetTraceBufferSize (ULONG *pnBufSize)
 {
-   if (!Config_ReadNum (TEXT("TraceBufferSize"), (DWORD*)pnBufSize))
+   if (!Config_ReadGlobalNum (TEXT("TraceBufferSize"), (DWORD*)pnBufSize))
       *pnBufSize = 5000;
 }
 
 BOOL Config_SetTraceBufferSize (ULONG nBufSize, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("TraceBufferSize"), nBufSize);
+   Config_WriteGlobalNum (TEXT("TraceBufferSize"), nBufSize);
    g.fNeedRestart = TRUE;
    return TRUE;
 }
 
 void Config_GetLoginRetryInterval (ULONG *pnInterval)
 {
-   if (!Config_ReadNum (TEXT("LoginRetryInterval"), (DWORD*)pnInterval))
+   if (!Config_ReadGlobalNum (TEXT("LoginRetryInterval"), (DWORD*)pnInterval))
       *pnInterval = 30;
 }
 
 BOOL Config_SetLoginRetryInterval (ULONG nInterval, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("LoginRetryInterval"), nInterval);
+   Config_WriteGlobalNum (TEXT("LoginRetryInterval"), nInterval);
    return TRUE;
 }
 
 void Config_GetFailLoginsSilently (BOOL *pfFlag)
 {
-   if (!Config_ReadNum (TEXT("FailLoginsSilently"), (DWORD*)pfFlag))
+   if (!Config_ReadGlobalNum (TEXT("FailLoginsSilently"), (DWORD*)pfFlag))
       *pfFlag = FALSE;
 }
 
 BOOL Config_SetFailLoginsSilently (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("FailLoginsSilently"), fFlag);
+   Config_WriteGlobalNum (TEXT("FailLoginsSilently"), fFlag);
    return TRUE;
 }
 
 void Config_GetReportSessionStartups (BOOL *pfFlag)
 {
-   if (!Config_ReadNum (TEXT("ReportSessionStartups"), (DWORD*)pfFlag))
+   if (!Config_ReadGlobalNum (TEXT("ReportSessionStartups"), (DWORD*)pfFlag))
       *pfFlag = FALSE;
 }
 
 BOOL Config_SetReportSessionStartups (BOOL fFlag, ULONG *pStatus)
 {
-   Config_WriteNum (TEXT("ReportSessionStartups"), fFlag);
+   Config_WriteGlobalNum (TEXT("ReportSessionStartups"), fFlag);
    return TRUE;
 }
 
