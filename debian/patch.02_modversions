@@ -1,10 +1,10 @@
 Index: src/config/param.i386_linux22.h
 ===================================================================
 RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/param.i386_linux22.h,v
-retrieving revision 1.1.1.4
-diff -u -r1.1.1.4 param.i386_linux22.h
---- src/config/param.i386_linux22.h	2001/04/23 18:42:11	1.1.1.4
-+++ src/config/param.i386_linux22.h	2001/06/17 01:56:35
+retrieving revision 1.3
+diff -u -r1.3 param.i386_linux22.h
+--- src/config/param.i386_linux22.h	23 Jun 2001 16:17:57 -0000	1.3
++++ src/config/param.i386_linux22.h	23 Jun 2001 16:18:02 -0000
 @@ -27,21 +27,6 @@
  #define AFS_SYSCALL 137
  #define AFS_64BIT_IOPS_ENV  1
@@ -52,10 +52,10 @@ diff -u -r1.1.1.4 param.i386_linux22.h
 Index: src/config/param.i386_linux24.h
 ===================================================================
 RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/param.i386_linux24.h,v
-retrieving revision 1.1.1.2
-diff -u -r1.1.1.2 param.i386_linux24.h
---- src/config/param.i386_linux24.h	2001/03/07 09:43:18	1.1.1.2
-+++ src/config/param.i386_linux24.h	2001/06/17 01:51:59
+retrieving revision 1.3
+diff -u -r1.3 param.i386_linux24.h
+--- src/config/param.i386_linux24.h	23 Jun 2001 16:17:57 -0000	1.3
++++ src/config/param.i386_linux24.h	23 Jun 2001 16:18:02 -0000
 @@ -20,21 +20,6 @@
  #define AFS_SYSCALL 137
  #define AFS_64BIT_IOPS_ENV  1
@@ -103,10 +103,10 @@ diff -u -r1.1.1.2 param.i386_linux24.h
 Index: src/config/param.ppc_linux22.h
 ===================================================================
 RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/param.ppc_linux22.h,v
-retrieving revision 1.1
-diff -u -r1.1 param.ppc_linux22.h
---- src/config/param.ppc_linux22.h	2001/02/18 03:34:40	1.1
-+++ src/config/param.ppc_linux22.h	2001/06/17 01:50:45
+retrieving revision 1.3
+diff -u -r1.3 param.ppc_linux22.h
+--- src/config/param.ppc_linux22.h	23 Jun 2001 16:17:58 -0000	1.3
++++ src/config/param.ppc_linux22.h	23 Jun 2001 16:18:02 -0000
 @@ -18,21 +18,6 @@
  #define AFS_SYSCALL 137
  #define AFS_64BIT_IOPS_ENV  1
@@ -159,63 +159,66 @@ diff -u -r1.1 param.ppc_linux22.h
 Index: src/config/param.ppc_linux24.h
 ===================================================================
 RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/param.ppc_linux24.h,v
-retrieving revision 1.1.1.1
-diff -u -r1.1.1.1 param.ppc_linux24.h
---- src/config/param.ppc_linux24.h	2000/12/03 06:22:59	1.1.1.1
-+++ src/config/param.ppc_linux24.h	2001/06/17 01:50:45
-@@ -20,6 +20,24 @@
+retrieving revision 1.3
+diff -u -r1.3 param.ppc_linux24.h
+--- src/config/param.ppc_linux24.h	23 Jun 2001 16:17:59 -0000	1.3
++++ src/config/param.ppc_linux24.h	23 Jun 2001 16:23:09 -0000
+@@ -20,21 +20,6 @@
  #define AFS_SYSCALL 137
  #define AFS_64BIT_IOPS_ENV  1
  #define AFS_NAMEI_ENV     1   /* User space interface to file system */
-+#include <linux/config.h>
-+#ifdef CONFIG_SMP
-+#undef CONFIG_SMP
-+#endif
-+/* Using "AFS_SMP" to map to however many #define's are required to get
-+ * MP to compile for Linux
-+ */
-+#ifdef AFS_SMP
-+#define CONFIG_SMP
-+#define __SMP__
-+#define AFS_GLOBAL_SUNLOCK
-+#endif
-+
+-#include <afs/afs_sysnames.h>
+-
+-#define AFS_USERSPACE_IP_ADDR 1
+-#define RXK_LISTENER_ENV 1
+-#define AFS_GCPAGS             0       /* if nonzero, garbage collect PAGs */
+-
+-
+-/* Machine / Operating system information */
+-#define SYS_NAME       "ppc_linux24"
+-#define SYS_NAME_ID    SYS_NAME_ID_ppc_linux24
+-#define AFSBIG_ENDIAN    1
+-#define AFS_HAVE_FFS        1       /* Use system's ffs. */
+-#define AFS_HAVE_STATVFS    0  /* System doesn't support statvfs */
+-#define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
+-
+ #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+ #include <linux/config.h>
+ #ifdef CONFIG_SMP
+@@ -49,7 +34,26 @@
+ #define AFS_GLOBAL_SUNLOCK
+ #endif
+ 
 +#if defined(MODULE) && defined(CONFIG_MODVERSIONS)
 +#define MODVERSIONS
 +#include <linux/modversions.h>
 +#endif
-+#endif /* __KERNEL__  && !DUMP_KERNEL*/
- #include <afs/afs_sysnames.h>
- 
- #define AFS_USERSPACE_IP_ADDR 1
-@@ -36,20 +54,6 @@
- #define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
- 
- #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
--#include <linux/config.h>
--#ifdef CONFIG_SMP
--#undef CONFIG_SMP
--#endif
--/* Using "AFS_SMP" to map to however many #define's are required to get
-- * MP to compile for Linux
-- */
--#ifdef AFS_SMP
--#define CONFIG_SMP
--#define __SMP__
--#define AFS_GLOBAL_SUNLOCK
--#endif
--
--#endif /* __KERNEL__  && !DUMP_KERNEL*/
+ #endif /* __KERNEL__  && !DUMP_KERNEL*/
++#include <afs/afs_sysnames.h>
++
++#define AFS_USERSPACE_IP_ADDR 1
++#define RXK_LISTENER_ENV 1
++#define AFS_GCPAGS             0       /* if nonzero, garbage collect PAGs */
++
++
++/* Machine / Operating system information */
++#define SYS_NAME       "ppc_linux24"
++#define SYS_NAME_ID    SYS_NAME_ID_ppc_linux24
++#define AFSBIG_ENDIAN    1
++#define AFS_HAVE_FFS        1       /* Use system's ffs. */
++#define AFS_HAVE_STATVFS    0  /* System doesn't support statvfs */
++#define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
++
  
  #ifdef KERNEL
  #ifndef MIN
 Index: src/config/param.sparc_linux22.h
 ===================================================================
 RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/config/param.sparc_linux22.h,v
-retrieving revision 1.1
-diff -u -r1.1 param.sparc_linux22.h
---- src/config/param.sparc_linux22.h	2001/01/16 05:39:04	1.1
-+++ src/config/param.sparc_linux22.h	2001/06/17 01:50:45
+retrieving revision 1.3
+diff -u -r1.3 param.sparc_linux22.h
+--- src/config/param.sparc_linux22.h	23 Jun 2001 16:17:59 -0000	1.3
++++ src/config/param.sparc_linux22.h	23 Jun 2001 16:18:02 -0000
 @@ -21,21 +21,6 @@
  #define AFS_SYSCALL 227
  #define AFS_64BIT_IOPS_ENV  1
