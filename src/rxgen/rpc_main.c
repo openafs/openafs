@@ -531,6 +531,7 @@ h_output(infile, define, extend, outfile, append)
 	f_print(fout, "#define	_RXGEN_%s_\n\n", uppercase(fullname));
 	f_print(fout, "#ifdef	KERNEL\n");
 	f_print(fout, "/* The following 'ifndefs' are not a good solution to the vendor's omission of surrounding all system includes with 'ifndef's since it requires that this file is included after the system includes...*/\n");
+	f_print(fout, "#include <afsconfig.h>\n");
 	f_print(fout, "#include \"../afs/param.h\"\n");
 	f_print(fout, "#ifdef	UKERNEL\n");
 	f_print(fout, "#include \"../afs/sysincludes.h\"\n");
