@@ -174,5 +174,7 @@ struct cm_initparams {
 #define VIOC_AFS_FLUSHMOUNT	_VICEIOCTL(52)  /* Flush mount symlink data */
 #define VIOC_RXSTAT_PROC	_VICEIOCTL(53)	/* Control process RX stats */
 #define VIOC_RXSTAT_PEER	_VICEIOCTL(54)	/* Control peer RX stats */
+#define VIOC_GETRXKCRYPT        _VICEIOCTL(55)  /* Set rxkad enc flag */
+#define VIOC_SETRXKCRYPT        _VICEIOCTL(56)  /* Set rxkad enc flag */
 
 #endif /* AFS_VENUS_H */

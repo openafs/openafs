@@ -2809,9 +2809,9 @@ static afs_int32 GetCryptCmd(as)
     if (code) Die(code, (char *) 0);
     else {
       tp = space;
-      bcopy(tp, &foo, sizeof(int32));
+      bcopy(tp, &flag, sizeof(afs_int32));
       printf("Security level is currently ");
-      if (foo == 1)
+      if (flag == 1)
         printf("crypt (data security).\n");
       else
         printf("clear.\n");
