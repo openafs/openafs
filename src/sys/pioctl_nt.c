@@ -122,7 +122,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if ( tbuffer[i++] == '\\' )
                     count++;
             }
-            if (tbuffer[i] == 0)
+            if (fileNamep[i] == 0)
                 tbuffer[i++] = '\\';
             tbuffer[i] = 0;
             strcat(tbuffer, SMB_IOCTL_FILENAME);
@@ -147,7 +147,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 if (tbuffer[i] == 0)
                     tbuffer[i++] = '\\';
                 tbuffer[i] = 0;
-                strcat(tbuffer, SMB_IOCTL_FILENAME);
+                strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
             }
         }
 	}
@@ -267,10 +267,24 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
 	pathHasDrive = 0;
     }
 
-    if (*firstp == '\\' || *firstp == '/') {
-	/* already an absolute pathname, just copy it back */
-	strcpy(outPathp, firstp);
-	return 0;
+    if ( firstp[0] == '\\' && firstp[1] == '\\') {
+        /* UNC path - strip off the server and sharename */
+        int i, count;
+        for ( i=2,count=2; count < 4 && firstp[i]; i++ ) {
+            if ( firstp[i] == '\\' || firstp[i] == '/' ) {
+                count++;
+            }
+        }
+        if ( firstp[i] == 0 ) {
+            strcpy(outPathp,"\\");
+        } else {
+            strcpy(outPathp,&firstp[--i]);
+        }
+        return 0;
+    } else if (firstp[0] == '\\' || firstp[0] == '/') {
+        /* already an absolute pathname, just copy it back */
+        strcpy(outPathp, firstp);
+        return 0;
     }
 
     GetCurrentDirectory(sizeof(origPath), origPath);

@@ -394,10 +394,10 @@ static void CheckEnableBak()
 
 static void CheckEnableSc()
 {
-	BOOL bSccEnable;
+	BOOL bSccEnable = TRUE;
 	UINT uiSccStatusMsg;
 	UINT uiSccActionMsg;
-	BOOL bScsEnable;
+	BOOL bScsEnable = TRUE;
 	UINT uiScsStatusMsg;
 	UINT uiScsActionMsg;
 
