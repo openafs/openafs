@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.6 2001/09/11 14:34:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.2 2003/01/02 03:55:51 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -25,6 +25,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.6 2001/09/11 14:3
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
+#include <errno.h>
 #include <rx/xdr.h>
 #include <signal.h>
 #ifdef HAVE_STRING_H
@@ -33,7 +34,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.6 2001/09/11 14:3
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 
-extern int errno;   /* We ship this over the net if needed */
 extern RMTSYS_ExecuteRequest();
 
 #define	NFS_EXPORTER	    1	/* To probably handle more later */

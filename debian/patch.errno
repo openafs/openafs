@@ -1,0 +1,635 @@
+? src/tests/run-tests
+? src/tests/OpenAFS/Dirpath.pm
+Index: src/afsmonitor/afsmonitor.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/afsmonitor/afsmonitor.c,v
+retrieving revision 1.1.1.8
+diff -u -r1.1.1.8 afsmonitor.c
+--- src/afsmonitor/afsmonitor.c	26 Sep 2002 19:04:39 -0000	1.1.1.8
++++ src/afsmonitor/afsmonitor.c	2 Jan 2003 03:50:48 -0000
+@@ -209,7 +209,7 @@
+ /* EXTERN DEFINITIONS */
+ 
+ extern struct hostent *hostutil_GetHostByName(); 
+-extern int errno;
++
+ 
+ 
+ /* routines from afsmon-output.c */
+Index: src/butm/butm_test.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/butm/butm_test.c,v
+retrieving revision 1.1.1.7
+diff -u -r1.1.1.7 butm_test.c
+--- src/butm/butm_test.c	14 Oct 2001 18:04:19 -0000	1.1.1.7
++++ src/butm/butm_test.c	2 Jan 2003 03:50:50 -0000
+@@ -12,6 +12,7 @@
+ 
+ RCSID("$Header: /tmp/cvstemp/openafs/debian/Attic/patch.errno,v 1.1 2003/01/02 03:55:49 hartmans Exp $");
+ 
++#include <errno.h>
+ #include <sys/types.h>
+ #include <sys/file.h>
+ #include <sys/stat.h>
+@@ -23,7 +24,7 @@
+ #include <afs/butm.h>
+ #include "AFS_component_version_number.c"
+ 
+-extern int errno;
++
+ 
+ static char *whoami = "TEST FAIL";
+ 
+Index: src/export/cfgafs.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/export/cfgafs.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 cfgafs.c
+--- src/export/cfgafs.c	14 Jul 2001 22:21:52 -0000	1.1.1.4
++++ src/export/cfgafs.c	2 Jan 2003 03:50:52 -0000
+@@ -15,6 +15,7 @@
+ 
+ RCSID("$Header: /tmp/cvstemp/openafs/debian/Attic/patch.errno,v 1.1 2003/01/02 03:55:49 hartmans Exp $");
+ 
++#include <errno.h>
+ #include <stdio.h>
+ #include <fcntl.h>
+ #include <sys/types.h>
+@@ -26,7 +27,7 @@
+ #include <signal.h>
+ 
+ extern char    *malloc(), *optarg;
+-extern int	errno;
++
+ extern int	sysconfig(int cmd, void *arg, int len);
+ 
+ #include "AFS_component_version_number.c"
+Index: src/export/cfgexport.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/export/cfgexport.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 cfgexport.c
+--- src/export/cfgexport.c	11 Sep 2001 14:32:37 -0000	1.1.1.5
++++ src/export/cfgexport.c	2 Jan 2003 03:50:52 -0000
+@@ -15,6 +15,7 @@
+ 
+ RCSID("$Header: /tmp/cvstemp/openafs/debian/Attic/patch.errno,v 1.1 2003/01/02 03:55:49 hartmans Exp $");
+ 
++#include <errno.h>
+ #include <stdio.h>
+ #include <fcntl.h>
+ #include <sys/types.h>
+@@ -29,7 +30,6 @@
+ #include "sym.h"
+ 
+ extern char    *malloc(), *optarg;
+-extern int	errno;
+ extern int	sysconfig(int cmd, void *arg, int len);
+ 
+ int debug;
+Index: src/gtx/curseswindows.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/gtx/curseswindows.c,v
+retrieving revision 1.1.1.6
+diff -u -r1.1.1.6 curseswindows.c
+--- src/gtx/curseswindows.c	26 Sep 2002 19:06:06 -0000	1.1.1.6
++++ src/gtx/curseswindows.c	2 Jan 2003 03:50:52 -0000
+@@ -41,7 +41,7 @@
+ #include "gtxobjects.h"
+ #include "gtxframe.h"
+ 
+-extern int errno;               /* everybody else puts it in errno.h */
++
+ 
+ int curses_debug;			    /*Is debugging turned on?*/
+ static char mn[] = "gator_curseswindows";   /*Module name*/
+Index: src/gtx/dumbwindows.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/gtx/dumbwindows.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 dumbwindows.c
+--- src/gtx/dumbwindows.c	14 Jul 2001 22:22:01 -0000	1.1.1.4
++++ src/gtx/dumbwindows.c	2 Jan 2003 03:50:52 -0000
+@@ -20,10 +20,8 @@
+ 
+ #include "gtxdumbwin.h"			/*Interface definition*/
+ #include <stdio.h>			/*Standard I/O package*/
++#include <errno.h>
+ 
+-#if	!defined(NeXT)
+-extern int errno;			/*System error number*/
+-#endif /* NeXT */
+ int dumb_debug;				/*Is debugging turned on?*/
+ static char mn[] = "gator_dumbwindows";	/*Module name*/
+ 
+Index: src/gtx/object_test.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/gtx/object_test.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 object_test.c
+--- src/gtx/object_test.c	14 Jul 2001 22:22:03 -0000	1.1.1.4
++++ src/gtx/object_test.c	2 Jan 2003 03:50:52 -0000
+@@ -23,10 +23,10 @@
+ #include "gtxcurseswin.h"    /*Gator curses window package*/
+ #include "gtxdumbwin.h"      /*Gator dumb terminal window package*/
+ #include "gtxX11win.h"       /*Gator X11 window package*/
++#include <errno.h>
+ #include <stdio.h>                  /*Standard I/O stuff*/
+ #include <cmd.h>		    /*Command interpretation library*/
+ 
+-extern int errno;
+ 
+ /*
+  * Command line parameter indicies.
+Index: src/gtx/screen_test.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/gtx/screen_test.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 screen_test.c
+--- src/gtx/screen_test.c	14 Jul 2001 22:22:04 -0000	1.1.1.4
++++ src/gtx/screen_test.c	2 Jan 2003 03:50:52 -0000
+@@ -21,8 +21,8 @@
+ #include "gtxdumbwin.h"	    /*Dumb terminal window interface*/
+ #include "gtxX11win.h"	    /*X11 window interface*/
+ #include <cmd.h>		    /*Command interpretation library*/
++#include <errno.h>
+ 
+-extern int errno;
+ 
+ /*
+  * Command line parameter indicies.
+Index: src/package/fileops.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/package/fileops.c,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 fileops.c
+--- src/package/fileops.c	4 Nov 2000 04:23:23 -0000	1.1.1.1
++++ src/package/fileops.c	2 Jan 2003 03:50:57 -0000
+@@ -27,6 +27,13 @@
+ #include <sys/stat.h>
+ #include <sys/file.h>
+ #include <dirent.h>
++#ifdef HAVE_STRING_H
++#include <string.h>
++#else
++#ifdef HAVE_STRINGS_H
++#include <strings.h>
++#endif
++#endif
+ #include <errno.h>
+ #ifdef	AFS_SUN5_ENV
+ #include <sys/fcntl.h>
+@@ -34,8 +41,6 @@
+ #include "globals.h"
+ #include "package.h"
+ 
+-extern char *strcpy();
+-extern int errno;
+ 
+ int mv(from,to)
+ register char *from;
+Index: src/package/messages.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/package/messages.c,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 messages.c
+--- src/package/messages.c	4 Nov 2000 04:23:24 -0000	1.1.1.1
++++ src/package/messages.c	2 Jan 2003 03:50:57 -0000
+@@ -29,6 +29,8 @@
+ #endif
+ #include <varargs.h>
+ #include "package.h"
++#include <errno.h>
++
+ 
+ static char *putnum(dp, n, b)
+     register char *dp;
+@@ -98,7 +100,6 @@
+ 	  }
+ 	case 'm':
+ 	  {
+-	    extern int errno;
+ 	    extern int sys_nerr;
+ 	    extern char *sys_errlist[];
+ 
+Index: src/pinstall/install.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/pinstall/install.c,v
+retrieving revision 1.1.1.9
+diff -u -r1.1.1.9 install.c
+--- src/pinstall/install.c	26 Sep 2002 19:07:22 -0000	1.1.1.9
++++ src/pinstall/install.c	2 Jan 2003 03:50:58 -0000
+@@ -85,7 +85,6 @@
+ 
+ struct stat istat, ostat;
+ 
+-extern int errno;
+ #if !defined(AFS_DARWIN60_ENV)
+ extern int sys_nerr;
+ #endif
+Index: src/ptserver/db_verify.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/ptserver/db_verify.c,v
+retrieving revision 1.1.1.8
+diff -u -r1.1.1.8 db_verify.c
+--- src/ptserver/db_verify.c	14 Oct 2001 18:06:10 -0000	1.1.1.8
++++ src/ptserver/db_verify.c	2 Jan 2003 03:50:58 -0000
+@@ -7,7 +7,6 @@
+  * directory or online at http://www.openafs.org/dl/license10.html
+  */
+ 
+-extern int errno;
+ 
+ #include <afsconfig.h>
+ #include <afs/param.h>
+Index: src/ptserver/pt_util.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/ptserver/pt_util.c,v
+retrieving revision 1.5
+diff -u -r1.5 pt_util.c
+--- src/ptserver/pt_util.c	20 Sep 2001 06:47:46 -0000	1.5
++++ src/ptserver/pt_util.c	2 Jan 2003 03:50:58 -0000
+@@ -23,6 +23,7 @@
+ 
+ RCSID("$Header: /tmp/cvstemp/openafs/debian/Attic/patch.errno,v 1.1 2003/01/02 03:55:49 hartmans Exp $");
+ 
++#include <errno.h>
+ #include <lock.h>
+ #include <netinet/in.h>
+ #define UBIK_INTERNALS
+@@ -39,7 +40,6 @@
+ 
+ extern char *optarg;
+ extern int optind;
+-extern int errno;
+ 
+ int display_entry();
+ void add_group();
+Index: src/scout/scout.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/scout/scout.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 scout.c
+--- src/scout/scout.c	11 Sep 2001 14:34:47 -0000	1.1.1.5
++++ src/scout/scout.c	2 Jan 2003 03:51:01 -0000
+@@ -32,8 +32,9 @@
+ #include <stdio.h>		/*Standard I/O stuff*/
+ #include <cmd.h>		/*Command interpretation library*/
+ #include <fsprobe.h>		/*Interface for fsprobe module*/
++#include <errno.h>
++
+ 
+-extern int errno;
+ extern struct hostent *hostutil_GetHostByName();
+ extern int gtx_InputServer();
+ extern int gethostname();
+Index: src/sys/afssyscalls.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/sys/afssyscalls.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 afssyscalls.c
+--- src/sys/afssyscalls.c	14 Jul 2001 22:23:58 -0000	1.1.1.4
++++ src/sys/afssyscalls.c	2 Jan 2003 03:51:01 -0000
+@@ -27,6 +27,7 @@
+ #ifdef AFS_SGI_XFS_IOPS_ENV
+ #include "xfsattrs.h"
+ #endif
++#include <errno.h>
+ #include "afssyscalls.h"
+ 
+ #ifdef AFS_DEBUG_IOPS
+@@ -238,8 +239,7 @@
+ icreate(dev, near_inode, param1, param2, param3, param4)
+ int dev, near_inode, param1, param2, param3, param4;
+ {
+-    extern int errno;
+-    int errcode;
++  int errcode;
+     struct iparam iparams;
+ 
+     iparams.param1 = param1;
+@@ -255,7 +255,6 @@
+ iopen(dev, inode, usrmod)
+ int dev, inode, usrmod;
+ {
+-    extern int errno;
+     int errcode;
+ 
+     errcode = syscall(AFS_SYSCALL, AFSCALL_IOPEN, dev, inode, usrmod);
+@@ -266,7 +265,6 @@
+ iinc(dev, inode, inode_p1)
+ int dev, inode, inode_p1;
+ {
+-    extern int errno;
+     int errcode;
+ 
+     errcode = syscall(AFS_SYSCALL, AFSCALL_IINC, dev, inode, inode_p1);
+@@ -277,7 +275,6 @@
+ idec(dev, inode, inode_p1)
+ int dev, inode, inode_p1;
+ {
+-    extern int errno;
+     int errcode;
+ 
+     errcode = syscall(AFS_SYSCALL, AFSCALL_IDEC, dev, inode, inode_p1);
+@@ -292,7 +289,6 @@
+ char *cbuf;
+ unsigned int count;
+ {
+-    extern int errno;
+     int errcode;
+     struct iparam iparams;
+ 
+@@ -311,7 +307,6 @@
+ char *cbuf;
+ unsigned int count;
+ {
+-    extern int errno;
+     int errcode;
+     struct iparam iparams;
+ 
+@@ -329,7 +324,6 @@
+ 
+ lsetpag()
+ {
+-    extern int errno;
+     int errcode;
+ 
+     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
+@@ -340,7 +334,6 @@
+ char *path, *cmarg;
+ int cmd, follow;
+ {
+-    extern int errno;
+     int errcode;
+ 
+     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+Index: src/sys/rmtsysd.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/sys/rmtsysd.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 rmtsysd.c
+--- src/sys/rmtsysd.c	14 Jul 2001 22:24:04 -0000	1.1.1.4
++++ src/sys/rmtsysd.c	2 Jan 2003 03:51:01 -0000
+@@ -28,11 +28,12 @@
+ #include <netinet/in.h>
+ #include <sys/stat.h>
+ #include <sys/file.h>
++#include <errno.h>
+ #include <stdio.h>
+ #include <rx/xdr.h>
+ #include "rmtsys.h"
+ 
+-extern int errno;   /* We ship this over the net if needed */
++
+ extern RMTSYS_ExecuteRequest();
+ 
+ #define N_SECURITY_OBJECTS 1	/* No real security yet */
+Index: src/sys/rmtsyss.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/sys/rmtsyss.c,v
+retrieving revision 1.1.1.6
+diff -u -r1.1.1.6 rmtsyss.c
+--- src/sys/rmtsyss.c	11 Sep 2001 14:34:52 -0000	1.1.1.6
++++ src/sys/rmtsyss.c	2 Jan 2003 03:51:01 -0000
+@@ -25,6 +25,7 @@
+ #include <sys/stat.h>
+ #include <sys/file.h>
+ #include <stdio.h>
++#include <errno.h>
+ #include <rx/xdr.h>
+ #include <signal.h>
+ #ifdef HAVE_STRING_H
+@@ -33,7 +34,6 @@
+ /*#include <afs/cellconfig.h>*/
+ #include "rmtsys.h"
+ 
+-extern int errno;   /* We ship this over the net if needed */
+ extern RMTSYS_ExecuteRequest();
+ 
+ #define	NFS_EXPORTER	    1	/* To probably handle more later */
+Index: src/uss/uss_fs.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/uss/uss_fs.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 uss_fs.c
+--- src/uss/uss_fs.c	11 Sep 2001 14:35:06 -0000	1.1.1.5
++++ src/uss/uss_fs.c	2 Jan 2003 03:51:03 -0000
+@@ -28,10 +28,11 @@
+ #ifdef	AFS_SUN5_ENV
+ #include <sys/ioccom.h>
+ #endif
++#include <errno.h>
+ #include <netinet/in.h>
+ #include <afs/venus.h>
+ #include "uss_common.h"
+-extern int errno;
++
+ 
+ 
+ /*
+Index: src/uss/uss_kauth.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/uss/uss_kauth.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 uss_kauth.c
+--- src/uss/uss_kauth.c	11 Sep 2001 14:35:06 -0000	1.1.1.5
++++ src/uss/uss_kauth.c	2 Jan 2003 03:51:03 -0000
+@@ -28,7 +28,6 @@
+ #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
+ #include <afs/kaport.h>         /* pack_long */
+ 
+-extern int errno;
+ extern afs_int32 KAM_CreateUser();
+ 
+ #define uss_kauth_MAX_SIZE	2048
+Index: src/uss/uss_procs.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/uss/uss_procs.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 uss_procs.c
+--- src/uss/uss_procs.c	11 Sep 2001 14:35:06 -0000	1.1.1.5
++++ src/uss/uss_procs.c	2 Jan 2003 03:51:03 -0000
+@@ -33,7 +33,6 @@
+ #endif
+ #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
+ 
+-extern int errno;
+ 
+ #undef USS_PROCS_DB
+ #undef USS_PROCS_DB_INSTANCE
+Index: src/uss/uss_ptserver.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/uss/uss_ptserver.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 uss_ptserver.c
+--- src/uss/uss_ptserver.c	11 Sep 2001 14:35:07 -0000	1.1.1.5
++++ src/uss/uss_ptserver.c	2 Jan 2003 03:51:03 -0000
+@@ -25,7 +25,6 @@
+ #include <afs/pterror.h>	/*Protection Server error codes*/
+ #include <afs/com_err.h>	/*Error code xlation*/
+ 
+-extern int errno;
+ 
+ #undef USS_PTSERVER_DB
+ 
+Index: src/uss/uss_vol.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/uss/uss_vol.c,v
+retrieving revision 1.1.1.6
+diff -u -r1.1.1.6 uss_vol.c
+--- src/uss/uss_vol.c	26 Sep 2002 19:08:53 -0000	1.1.1.6
++++ src/uss/uss_vol.c	2 Jan 2003 03:51:03 -0000
+@@ -27,7 +27,7 @@
+ #include <sys/stat.h>
+ #include <pwd.h>
+ #include <netdb.h>
+-#include <sys/errno.h>
++#include <errno.h>
+ #include <afs/vlserver.h>
+ #include <afs/auth.h>
+ #include <afs/cellconfig.h>
+@@ -38,7 +38,6 @@
+ #include <afs/keys.h>
+ #include <ubik.h>
+ 
+-extern int errno;
+ extern struct rx_connection *UV_Bind();
+ extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
+ extern int line;
+Index: src/venus/fs.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/venus/fs.c,v
+retrieving revision 1.1.1.10
+diff -u -r1.1.1.10 fs.c
+--- src/venus/fs.c	26 Sep 2002 19:09:04 -0000	1.1.1.10
++++ src/venus/fs.c	2 Jan 2003 03:51:04 -0000
+@@ -66,7 +66,7 @@
+ extern struct hostent *hostutil_GetHostByName();
+ extern afs_int32 VL_GetEntryByNameO();
+ 
+-extern int errno;
++
+ extern struct cmd_syndesc *cmd_CreateSyntax();
+ static char pn[] = "fs";
+ static int rxInitDone = 0;
+Index: src/venus/kdump.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/venus/kdump.c,v
+retrieving revision 1.1.1.11
+diff -u -r1.1.1.11 kdump.c
+--- src/venus/kdump.c	2 Aug 2002 04:37:28 -0000	1.1.1.11
++++ src/venus/kdump.c	2 Jan 2003 03:51:04 -0000
+@@ -13,6 +13,7 @@
+ RCSID("$Header: /tmp/cvstemp/openafs/debian/Attic/patch.errno,v 1.1 2003/01/02 03:55:49 hartmans Exp $");
+ 
+ #include <stdio.h>
++#include <errno.h>
+ #include <stdlib.h>	/* for malloc() */
+ 
+ #ifdef AFS_LINUX24_ENV
+@@ -518,7 +519,6 @@
+ #ifndef AFS_KDUMP_LIB
+ extern struct cmd_syndesc *cmd_CreateSyntax();
+ #endif
+-extern int errno;
+ int opencore();
+ 
+ /* Note: this should agree with the definition in afs_buffer.c */
+Index: src/venus/twiddle.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/venus/twiddle.c,v
+retrieving revision 1.1.1.4
+diff -u -r1.1.1.4 twiddle.c
+--- src/venus/twiddle.c	14 Jul 2001 22:24:37 -0000	1.1.1.4
++++ src/venus/twiddle.c	2 Jan 2003 03:51:04 -0000
+@@ -30,7 +30,8 @@
+ #undef VICE
+ #include "afs/prs_fs.h"
+ #include <afs/afsint.h>
+-#include <afs/auth.h>
++#include <afs/auth.h>>
++#include <errno.h
+ #include <afs/cellconfig.h>
+ #include <afs/cmd.h>
+ #include <strings.h>
+@@ -44,7 +45,7 @@
+ static char tspace[1024];
+ static struct ubik_client *uclient;
+ 
+-extern int errno;
++
+ extern struct cmd_syndesc *cmd_CreateSyntax();
+ static char pn[] = "fs";
+ static int rxInitDone = 0;
+Index: src/vlserver/cnvldb.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/vlserver/cnvldb.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 cnvldb.c
+--- src/vlserver/cnvldb.c	11 Sep 2001 14:35:37 -0000	1.1.1.5
++++ src/vlserver/cnvldb.c	2 Jan 2003 03:51:04 -0000
+@@ -30,7 +30,7 @@
+ #define MAXSIZE 2048 /* most I'll get back from PIOCTL */
+ #define	BADSERVERID	255	/* XXX */
+ 
+-extern int errno;
++
+ extern struct cmd_syndesc *cmd_CreateSyntax();
+ static char pn[] = "cnvldb";
+ static char tempname[] = "XXnewvldb";
+Index: src/vlserver/sascnvldb.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/vlserver/sascnvldb.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 sascnvldb.c
+--- src/vlserver/sascnvldb.c	11 Sep 2001 14:35:37 -0000	1.1.1.5
++++ src/vlserver/sascnvldb.c	2 Jan 2003 03:51:04 -0000
+@@ -35,7 +35,7 @@
+ 
+ #define MAXSIZE 2048 /* most I'll get back from PIOCTL */
+ 
+-extern int errno;
++
+ extern struct cmd_syndesc *cmd_CreateSyntax();
+ static char pn[] = "cnvldb";
+ static char tempname[] = "XXnewvldb";
+Index: src/vol/fs_conv_411.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/vol/fs_conv_411.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 fs_conv_411.c
+--- src/vol/fs_conv_411.c	11 Sep 2001 14:35:41 -0000	1.1.1.5
++++ src/vol/fs_conv_411.c	2 Jan 2003 03:51:04 -0000
+@@ -84,7 +84,6 @@
+ int icount=0, iarraysize=0, *iarray;
+ 
+ char *rawname(),  *unrawname(), *vol_DevName(), *blockcheck();
+-extern int errno;
+ #define ROOTINODE	2	
+ int force = 0,  verbose = 0,  unconv = 0;
+ 
+Index: src/vol/partition.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/vol/partition.c,v
+retrieving revision 1.12
+diff -u -r1.12 partition.c
+--- src/vol/partition.c	26 Sep 2002 19:18:09 -0000	1.12
++++ src/vol/partition.c	2 Jan 2003 03:51:04 -0000
+@@ -59,7 +59,7 @@
+ #endif
+ #endif /* AFS_VFSINCL_ENV */
+ #endif	/* AFS_OSF_ENV */
+-#include <sys/errno.h>
++#include <errno.h>
+ #include <sys/stat.h>
+ #include <stdio.h>
+ #include <sys/file.h>
+@@ -811,7 +811,6 @@
+ #else
+ void VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
+ {
+-    extern int errno;
+     int fd, totalblks, free, used, availblks, bsize, code;
+     int reserved;
+ #if AFS_HAVE_STATVFS

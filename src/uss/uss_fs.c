@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.1.1.5 2001/09/11 14:35:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.2 2003/01/02 03:55:51 hartmans Exp $");
 
 #include "uss_fs.h"		/*Interface to this module*/
 #include <sys/types.h>
@@ -28,10 +28,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.1.1.5 2001/09/11 14:35
 #ifdef	AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
+#include <errno.h>
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include "uss_common.h"
-extern int errno;
+
 
 
 /*

@@ -18,14 +18,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_ptserver.c,v 1.1.1.5 2001/09/11 14:35:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_ptserver.c,v 1.2 2003/01/02 03:55:52 hartmans Exp $");
 
 #include "uss_ptserver.h"	/*Module interface*/
 #include <afs/ptclient.h>	/*Protection Server client interface*/
 #include <afs/pterror.h>	/*Protection Server error codes*/
 #include <afs/com_err.h>	/*Error code xlation*/
 
-extern int errno;
 
 #undef USS_PTSERVER_DB
 

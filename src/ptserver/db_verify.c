@@ -7,12 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-extern int errno;
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.8 2001/10/14 18:06:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.2 2003/01/02 03:55:51 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

@@ -13,8 +13,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.1.1.5 2001/09/11 14:32:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.2 2003/01/02 03:55:50 hartmans Exp $");
 
+#include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -29,7 +30,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.1.1.5 2001/09/11
 #include "sym.h"
 
 extern char    *malloc(), *optarg;
-extern int	errno;
 extern int	sysconfig(int cmd, void *arg, int len);
 
 int debug;

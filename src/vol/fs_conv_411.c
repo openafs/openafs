@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fs_conv_411.c,v 1.1.1.5 2001/09/11 14:35:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fs_conv_411.c,v 1.2 2003/01/02 03:55:53 hartmans Exp $");
 
 #if	defined(AFS_DUX40_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_SUN54_ENV)
 #if defined AFS_DUX40_ENV
@@ -84,7 +84,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fs_conv_411.c,v 1.1.1.5 2001/09/11 
 int icount=0, iarraysize=0, *iarray;
 
 char *rawname(),  *unrawname(), *vol_DevName(), *blockcheck();
-extern int errno;
 #define ROOTINODE	2	
 int force = 0,  verbose = 0,  unconv = 0;
 

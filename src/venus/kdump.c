@@ -7,8 +7,21 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/kdump.c,v 1.6 2003/01/02 03:55:52 hartmans Exp $");
+
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>	/* for malloc() */
+
+#ifdef AFS_LINUX24_ENV
+#define __KERNEL__
+#include <linux/string.h>
+#define _STRING_H 1
+#endif
+
 #include <string.h>
 
 #ifdef __linux__
@@ -47,8 +60,6 @@ struct ntfs_inode_info{};
 
 /* This tells afs.h to pick up afs_args from the dest tree. */
 #define KDUMP_KERNEL
-
-#include <afs/param.h>
 
 /*
  * Need to include <netdb.h> before _KERNEL is defined since on IRIX 6.5
@@ -195,6 +206,13 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #include <vfs/vnode.h>
 #include <sys/inode.h>
 #else /* AFS_MACH_ENV */
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#include <sys/vnode.h>
+#include <sys/mount.h>
+#include <ufs/ufs/quota.h> 
+#include <ufs/ufs/inode.h>
+#include <ufs/ffs/fs.h> 
+#else
 #include "sys/vfs.h"
 #ifdef AFS_LINUX20_ENV
 #define UIO_MAXIOV 1 /* don't care */
@@ -220,25 +238,42 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #ifdef AFS_SPARC_LINUX20_ENV
 #define _SPARC_STATFS_H
 #else
+#ifdef AFS_ALPHA_LINUX20_ENV
+#define _ALPHA_STATFS_H
+#else
 #define _I386_STATFS_H
+#endif /* AFS_ALPHA_LINUX20_ENV */
 #endif /* AFS_SPARC_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */
 #endif /* AFS_S390_LINUX20_ENV */
 struct timezone {
     int a,b;
 };
+#if 0/*ndef AFS_ALPHA_LINUX20_ENV*/
+#ifndef AFS_LINUX24_ENV
 typedef struct timeval {
     int tv_sec;
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
+#endif
+#endif /*AFS_ALPHA_LINUX20_ENV*/
 #if defined(AFSBIG_ENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
 #else
 #define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
 #endif
+/* Avoid problems with timer_t redefinition */
+#ifndef timer_t
+#define timer_t ktimer_t
+#define timer_t_redefined
+#endif
 #include <linux/version.h>
 #include <linux/fs.h>
-#include <afs/osi_vfs.h>
+#include <osi_vfs.h>
+#ifdef timer_t_redefined
+#undef timer_t
+#undef timer_t_redefined
+#endif
 #else /* AFS_LINUX20_ENV */
 #ifdef AFS_HPUX110_ENV
 #define	KERNEL
@@ -270,6 +305,7 @@ typedef enum _spustate {        /* FROM /etc/conf/h/_types.h */
 #else
 #ifndef AFS_LINUX20_ENV
 #include "ufs/inode.h"
+#endif
 #endif
 #endif
 #endif
@@ -483,7 +519,6 @@ void print_cmstats();
 #ifndef AFS_KDUMP_LIB
 extern struct cmd_syndesc *cmd_CreateSyntax();
 #endif
-extern int errno;
 int opencore();
 
 /* Note: this should agree with the definition in afs_buffer.c */
@@ -924,6 +959,7 @@ int cnt, size;
 #endif /*AFS_KDUMP_LIB */
 #endif
 
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 int
 findsym( char *sname, off_t *offset )
 {
@@ -988,12 +1024,16 @@ findsym( char *sname, off_t *offset )
 	}
 #endif	/* defined(AFS_SUN5_ENV) */
 }
+#endif
 
 #define CBHTSIZE 128
 
 kdump()
 {
     int cell, cnt, cnt1;
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+   printf("Kdump not supported\n");
+#else
 #ifndef AFS_KDUMP_LIB
 
     kmem = opencore(core);
@@ -1123,9 +1163,11 @@ kdump()
     if (Dgcpags || Dall) {
 	print_gcpags(1);
     }
+#endif
     return 0;
 }
 
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 int Sum_cellnames=0, Sum_userstp=0, Sum_volnames=0, Sum_exps=0, Sum_nfssysnames=0;
 int Sum_vcachemvids=0, Sum_vcachelinkData=0, Sum_vcacheacc=0, Sum_vcachelocks=0;
 
@@ -1235,7 +1277,7 @@ int pnt;
     int chainCount[NSERVERS];
 
     if (pnt) {
-	bzero((char*)chainCount, sizeof(chainCount));
+	memset((char*)chainCount, 0, sizeof(chainCount));
 	printf("\n\nPrinting 'afs_servers' structures...\n");
     }
     findsym( "afs_servers", &symoff);
@@ -1273,7 +1315,7 @@ int pnt;
 
     /* Verify against afs_totalServers. */
     if (pnt) {
-	bzero((char*)chainCount, sizeof(chainCount));
+	memset((char*)chainCount, 0, sizeof(chainCount));
 	if (findsym( "afs_totalServers", &symoff)) {
 	    kread(kmem, symoff, (char*)&afs_totalServers, sizeof(afs_int32));
 	    if (afs_totalServers != nServers) {
@@ -1992,7 +2034,7 @@ void kread(int kmem,off_t loc,void *buf,KDUMP_SIZE_T len)
 {
     int i;
 
-    bzero(buf,len);
+    memset(buf, 0, len);
 
 #ifdef	AFS_OSF_ENV
     if (mem) {
@@ -2438,9 +2480,15 @@ void print_vnode(kmem, vep, ptr, pnt)
     printf("\ti_ino=%d, i_mode=%x, i_nlink=%d, i_uid=%d, i_gid=%d, i_size=%d\n",
 	   vep->i_ino, vep->i_mode, vep->i_nlink, vep->i_uid, vep->i_gid,
 	   vep->i_size);
+#ifndef AFS_LINUX24_ENV
     printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
 	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	   vep->i_nrpages);
+#else
+    printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u\n",
+	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version
+	   );
+#endif
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n",
 	   vep->i_op, vep->i_dev, vep->i_rdev, vep->i_sb);
 #ifdef AFS_LINUX24_ENV
@@ -3883,6 +3931,7 @@ void print_cmstats(cmp)
     printf("\t%10d afs_GetCell\n",         cmp->callInfo.C_afs_GetCell);
     printf("\t%10d afs_GetCellByIndex\n",         cmp->callInfo.C_afs_GetCellByIndex);
     printf("\t%10d afs_GetCellByName\n",         cmp->callInfo.C_afs_GetCellByName);
+    printf("\t%10d afs_GetRealCellByIndex\n",         cmp->callInfo.C_afs_GetRealCellByIndex);
     printf("\t%10d afs_NewCell\n",         cmp->callInfo.C_afs_NewCell);
     printf("\t%10d CheckVLDB\n",         cmp->callInfo.C_CheckVLDB);
     printf("\t%10d afs_GetVolume\n",         cmp->callInfo.C_afs_GetVolume);
@@ -4010,6 +4059,7 @@ void print_cmstats(cmp)
 #endif
 }
 
+#endif
 #if 0
 #define OffsetOf(s,mem)	((long)(&(((s *)0)->mem)))
 #define SizeOf(s,mem)	((long)sizeof(((s *)0)->mem))

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.1.1.5 2001/09/11 14:35:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.2 2003/01/02 03:55:52 hartmans Exp $");
 
 #include "uss_procs.h"		/*Module interface*/
 #include "uss_common.h"		/*Common defs & operations*/
@@ -33,7 +33,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.1.1.5 2001/09/11 14
 #endif
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
 
-extern int errno;
 
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE

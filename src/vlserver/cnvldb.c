@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/cnvldb.c,v 1.1.1.5 2001/09/11 14:35:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/cnvldb.c,v 1.2 2003/01/02 03:55:53 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -30,7 +30,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/cnvldb.c,v 1.1.1.5 2001/09/11 
 #define MAXSIZE 2048 /* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */
 
-extern int errno;
+
 extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";

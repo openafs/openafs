@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.10 2002/09/26 19:09:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.2 2003/01/02 03:55:52 hartmans Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -66,7 +66,7 @@ extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
 extern afs_int32 VL_GetEntryByNameO();
 
-extern int errno;
+
 extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "fs";
 static int rxInitDone = 0;
