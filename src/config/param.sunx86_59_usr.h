@@ -23,6 +23,7 @@
 #define AFS_USR_SUN6_ENV	1
 #define AFS_USR_SUN7_ENV	1
 #define AFS_USR_SUN8_ENV	1
+#define AFS_USR_SUN9_ENV	1
 
 #include <afs/afs_sysnames.h>
 
@@ -35,9 +36,9 @@
 #define AFS_MOUNT_AFS	 1
 
 /* Machine / Operating system information */
-#define sys_sunx86_58	1
-#define SYS_NAME	"sunx86_58"
-#define SYS_NAME_ID	SYS_NAME_ID_sunx86_58
+#define sys_sunx86_59	1
+#define SYS_NAME	"sunx86_59"
+#define SYS_NAME_ID	SYS_NAME_ID_sunx86_59
 #define AFSLITTLE_ENDIAN	1
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS      0       /* System doesn't support statvfs */
