@@ -34,7 +34,7 @@ static int memAllocMaySleep = 0;
 
 extern int cacheDiskType;
 
-int afs_InitMemCache(int size, int blkSize, int flags)
+int afs_InitMemCache(afs_int64 size, int blkSize, int flags)
   {
       int index;
 
