@@ -39,6 +39,7 @@
                     <ComponentRef Id="cmp_ClientProgramDebug" />
                     <ComponentRef Id="cmp_CommonCommonDebug" />
                     <ComponentRef Id="cmp_ClientCommonDebug" />
+                    <ComponentRef Id="cmp_ClientSystemDebug" />
                     <?include runtime_debug.wxi?>
 				</Feature>
 			<?endif?>
@@ -47,7 +48,7 @@
 				<ComponentRef Id="cmp_CommonDir" />
 
                 <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
-                <ComponentRef Id="efl_afsdcell_INI" />
+                <ComponentRef Id="efl_CellServDB" />
                 <ComponentRef Id="cmf_afs_cpa_CPL" />
 
                 <ComponentRef Id="cmf_afsrpc_DLL" />

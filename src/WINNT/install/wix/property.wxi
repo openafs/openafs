@@ -11,7 +11,6 @@
 	<Property Id="RXMAXMTU">$(var.RxMaxMTU)</Property>
 	<Property Id="HIDEDOTFILES">$(var.HideDotFiles)</Property>
 	<Property Id="SECURITYLEVEL">$(var.SecurityLevel)</Property>
-
 	<Property Id="CREDSSTARTUP">1</Property>
 	<Property Id="CREDSAUTOINIT">-a</Property>
 	<Property Id="CREDSRENEWDRMAP">-m</Property>

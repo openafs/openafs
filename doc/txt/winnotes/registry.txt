@@ -482,6 +482,18 @@ Function: Afscreds.exe GetDefaultCell()
 
 
 Regkey:
+[HKCU\SOFTWARE\OpenAFS\Client]
+
+Value   : Authentication Cell
+Type    : REG_SZ
+Default : <none>
+Function: Afscreds.exe GetDefaultCell()
+
+  This value allows the user to configure a different cell name to
+  be used as the default cell when acquiring tokens in afscreds.exe
+
+
+Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client\Reminders]
 
 Value   : "afs cell name"
@@ -494,6 +506,77 @@ Function: LoadRemind(), SaveRemind()
 
   This value used to be stored at 
   [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].
+
+
+Regkey:
+[HKCU\SOFTWARE\OpenAFS\Client\Active Maps]
+
+Value   : "upper case drive letter"
+Type    : DWORD {0, 1}
+Default : <none>
+
+  These values are used to store the persistence state of the AFS 
+  drive mappings as listed in the [...\Client\Mappings] key
+
+  These values used to be stored in the afsdsbmt.ini file
+
+Regkey:
+[HKCU\SOFTWARE\OpenAFS\Client\Mappings]
+
+Value   : "upper case drive letter"
+Type    : REG_SZ
+Default : <none>
+
+  These values are used to store the AFS path in Unix notation
+  to which the drive letter is to be mapped.
+
+  These values used to be stored in the afsdsbmt.ini file.
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]
+
+Value   : "smb/cifs share name"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to map SMB/CIFS shares to Client Side Caching 
+    (off-line access) policies. For each share one of the following
+    policies may be used: "manual", "programs", "documents", "disable"
+
+    These values used to be stored in afsdsbmt.ini
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance]
+
+Value   : "numeric value"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to store newline terminated mount point strings 
+    for use in constructing the fake root.afs volume when Freelance
+    (dynamic roots) mode is activated.
+
+        "athena.mit.edu#athena.mit.edu:root.cell.\n"
+        ".athena.mit.edu%athena.mit.edu:root.cell.\n"
+
+    These values used to be stored in afs_freelance.ini
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Submounts]
+
+Value   : "submount name"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to store mappings of unix style AFS paths
+    to submount names which can be referenced as UNC paths.
+    For example the submount string "/athena.mit.edu/user/j/a/jaltman"
+    can be associated with the submount name "jaltman.home".
+    This can then be referenced as the UNC path \\AFS\jaltman.home.
+
+    These values used to be stored in afsdsbmt.ini
 
 
 Regkey:

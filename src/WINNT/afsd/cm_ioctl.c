@@ -1691,7 +1691,8 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (flags & PIOCTL_LOGON) {
 		  /* SMB user name with which to associate tokens */
 		  smbname = tp;
-		  fprintf(stderr, "SMB name = %s\n", smbname);
+          osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",osi_LogSaveString(smb_logp,smbname));		  
+          fprintf(stderr, "SMB name = %s\n", smbname);
 		  tp += strlen(tp) + 1;
         }
 

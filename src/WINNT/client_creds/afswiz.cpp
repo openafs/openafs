@@ -345,7 +345,6 @@ void WizCreds_OnInitDialog (HWND hDlg)
    HKEY hk;
 
    TCHAR szCell[ cchRESOURCE ] = TEXT("");
-   (void)GetDefaultCell (szCell);
    SetDlgItemText (hDlg, IDC_NEWCREDS_CELL, szCell);
 
    TCHAR szUser[ cchRESOURCE ] = TEXT("");

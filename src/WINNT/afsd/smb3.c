@@ -164,7 +164,7 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
 #define SMB_EXT_SEC_PACKAGE_NAME "Negotiate"
 void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength){
     SECURITY_STATUS status, istatus;
-	CredHandle creds;
+	CredHandle creds = {0,0};
 	TimeStamp expiry;
 	SecBufferDesc secOut;
 	SecBuffer secTok;
@@ -233,19 +233,15 @@ void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength){
             OutputDebugF("AcceptSecurityContext status != CONTINUE  %lX", status);
     }
 
+    /* Discard partial security context */
+    DeleteSecurityContext(&ctx);
+
 	if (secTok.pvBuffer) FreeContextBuffer( secTok.pvBuffer );
 
 	/* Discard credentials handle.  We'll reacquire one when we get the session setup X */
 	FreeCredentialsHandle(&creds);
 
   nes_0:
-
-    if (secBlob) {
-        OutputDebugF("Returning initial token:");
-        OutputDebugHexDump(*secBlob,*secBlobLength);
-    } else {
-        OutputDebugF("No initial token");
-    }
 	return;
 }
 
@@ -513,11 +509,6 @@ long smb_AuthenticateUserLM(smb_vc_t *vcp, char * accountName, char * primaryDom
 
 	OutputDebugF("In smb_AuthenticateUser for user [%s] domain [%s]", accountName, primaryDomain);
 	OutputDebugF("ciPwdLength is %d and csPwdLength is %d", ciPwdLength, csPwdLength);
-
-    OutputDebugF("csPassword:");
-    OutputDebugHexDump(csPwd,csPwdLength);
-    OutputDebugF("ciPassword:");
-    OutputDebugHexDump(ciPwd,ciPwdLength);
 
 	if (ciPwdLength > P_RESP_LEN || csPwdLength > P_RESP_LEN) {
 		OutputDebugF("ciPwdLength or csPwdLength is too long");
@@ -3975,6 +3966,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     osi_Log1(smb_logp,"NTCreateX for [%s]",osi_LogSaveString(smb_logp,realPathp));
     osi_Log4(smb_logp,"NTCreateX da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
+    osi_Log1(smb_logp,"NTCreateX lastNamep=[%s]",osi_LogSaveString(smb_logp,(lastNamep?lastNamep:"null")));
 
 	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
 		/* special case magic file name for receiving IOCTL requests
@@ -3982,6 +3974,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		 */
 		fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
 		smb_SetupIoctlFid(fidp, spacep);
+		osi_Log1(smb_logp,"NTCreateX Setting up IOCTL on fid[%d]",fidp->fid);
 
 		/* set inp->fid so that later read calls in same msg can find fid */
 		inp->fid = fidp->fid;
@@ -5090,6 +5083,9 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 		otherAction = FILE_ACTION_RENAMED_NEW_NAME;
 	}
 
+    osi_Log2(smb_logp,"in smb_NotifyChange for file [%s] dscp [%x]",
+              osi_LogSaveString(smb_logp,filename),dscp);
+
 	lock_ObtainMutex(&smb_Dir_Watch_Lock);
 	watch = smb_Directory_Watches;
 	while (watch) {
@@ -5110,6 +5106,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 
 		fidp = smb_FindFID(vcp, fid, 0);
         if (!fidp) {
+            osi_Log1(smb_logp," no fidp for fid[%d]",fid);
         	lastWatch = watch;
         	watch = watch->nextp;
         	continue;
@@ -5117,7 +5114,8 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
 		if (fidp->scp != dscp
 		    || (filter & notifyFilter) == 0
 		    || (!isDirectParent && !wtree)) {
-			smb_ReleaseFID(fidp);
+            osi_Log1(smb_logp," passing fidp->scp[%x]", fidp->scp);
+            smb_ReleaseFID(fidp);
 			lastWatch = watch;
 			watch = watch->nextp;
 			continue;
@@ -5324,9 +5322,11 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
         lock_ObtainMutex(&unp->mx);
         unp->userp = cm_NewUser();
         lock_ReleaseMutex(&unp->mx);
-		osi_LogEvent("AFS smb_FindCMUserByName : New User",NULL,"name[%s] machine[%s]",usern,machine);
+		osi_Log2(smb_logp,"smb_FindCMUserByName New user name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
+        osi_LogEvent("AFS smb_FindCMUserByName : New User",NULL,"name[%s] machine[%s]",usern,machine);
     }  else	{
-		osi_LogEvent("AFS smb_FindCMUserByName : Found",NULL,"name[%s] machine[%s]",usern,machine);
+        osi_Log2(smb_logp,"smb_FindCMUserByName Not found name[%s] machine[%s]",osi_LogSaveString(smb_logp,usern),osi_LogSaveString(smb_logp,machine));
+        osi_LogEvent("AFS smb_FindCMUserByName : Found",NULL,"name[%s] machine[%s]",usern,machine);
 	}
     return unp->userp;
 }

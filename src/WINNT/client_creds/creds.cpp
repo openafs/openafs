@@ -437,22 +437,34 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword,
 
 int GetDefaultCell (LPTSTR pszCell)
 {
-   int rc = KTC_NOCM;
-   *pszCell = TEXT('\0');
+    int rc = KTC_NOCM;
+    *pszCell = TEXT('\0');
 
-   if (!Creds_OpenLibraries())
-      {
-      rc = ERROR_DLL_INIT_FAILED;
-      }
-   else if (IsServiceRunning())
-      {
-      char szCellA[ 256 ];
+    if (!Creds_OpenLibraries())
+    {
+        rc = ERROR_DLL_INIT_FAILED;
+    }
+    else if (IsServiceRunning())
+    {
+        char szCellA[ 256 ] = "";
+        int rc;
+        HKEY hk;
 
-      int rc;
-      if ((rc = cm_GetRootCellName (szCellA)) == 0)
-         CopyAnsiToString (pszCell, szCellA);
-      }
+        if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szCellA);
+            DWORD dwType = REG_SZ;
+            RegQueryValueEx (hk, TEXT("Authentication Cell"), NULL, &dwType, (PBYTE)szCellA, &dwSize);
+            RegCloseKey (hk);
+        }
 
-   return rc;
+        if (szCellA[0] == '\0') {
+            if ((rc = cm_GetRootCellName (szCellA)) == 0)
+                CopyAnsiToString (pszCell, szCellA);
+        } else {
+            rc = 0;
+        }
+    }
+    return rc;
 }
 

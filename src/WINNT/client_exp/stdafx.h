@@ -16,6 +16,10 @@
 
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
+// Don't include stuff we don't need.
+#define _AFX_NO_DB_SUPPORT
+#define _AFX_NO_DAO_SUPPORT
+
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
