@@ -472,47 +472,71 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
  *
  * Tree traversal algorithm from fs/dcache.c: select_parent()
  */
-static void afs_TryFlushDcacheChildren(struct dentry *parent)
+static void afs_TryFlushDcacheChildren(struct vcache *tvc)
 {
-    struct dentry *this_parent = parent;
+    struct inode *ip = AFSTOI(tvc);
+    struct dentry *this_parent;
     struct list_head *next;
-
- repeat:
-    next = this_parent->d_subdirs.next;
- resume:
+    struct list_head *cur;
+    struct list_head *head = &ip->i_dentry;
+    struct dentry *dentry;
+    
+restart:
     DLOCK();
-    while (next != &this_parent->d_subdirs) {
-	struct list_head *tmp = next;
-	struct dentry *dentry = list_entry(tmp, struct dentry, d_child);
+    cur = head;
+    while ((cur = cur->next) != head) {
+	dentry = list_entry(cur, struct dentry, d_alias);
+	if (DCOUNT(dentry)) {
+	    this_parent = dentry;
+	repeat:
+	    next = this_parent->d_subdirs.next;
+	resume:
+	    while (next != &this_parent->d_subdirs) {
+		struct list_head *tmp = next;
+		struct dentry *dchld = list_entry(tmp, struct dentry, d_child);
+		
+		next = tmp->next;
+		if (!DCOUNT(dchld) && !dchld->d_inode) {
+		    DGET(dchld);
+		    AFS_GUNLOCK();
+		    DUNLOCK();
+		    d_drop(dchld);
+		    dput(dchld);
+		    AFS_GLOCK();
+		    DLOCK();
+		    goto repeat;
+		}
+		/*
+		 * Descend a level if the d_subdirs list is non-empty.
+		 */
+		if (!list_empty(&dchld->d_subdirs)) {
+		    this_parent = dchld;
+		    goto repeat;
+		}
+	    }
+	    
+	    /*
+	     * All done at this level ... ascend and resume the search.
+	     */
+	    if (this_parent != dentry) {
+		next = this_parent->d_child.next;
+		this_parent = this_parent->d_parent;
+		goto resume;
+	    }
+	}
 
-	next = tmp->next;
-	if (!DCOUNT(dentry) && !dentry->d_inode) {
-	    DGET(dentry);
+	if (!DCOUNT(dentry)) {
 	    AFS_GUNLOCK();
+	    DGET(dentry);
 	    DUNLOCK();
 	    d_drop(dentry);
 	    dput(dentry);
 	    AFS_GLOCK();
-	    goto repeat;
-	}
-	/*
-	 * Descend a level if the d_subdirs list is non-empty.
-         */
-	if (!list_empty(&dentry->d_subdirs)) {
-	    this_parent = dentry;
-	    goto repeat;
+	    goto restart;
 	}
     }
     DUNLOCK();
 
-    /*
-     * All done at this level ... ascend and resume the search.
-     */
-    if (this_parent != parent) {
-	next = this_parent->d_child.next;
-	this_parent = this_parent->d_parent;
-	goto resume;
-    }
 }
 #endif /* AFS_LINUX22_ENV */
 
@@ -608,67 +632,6 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     int code, fv_slept;
 
     AFS_STATCNT(afs_NewVCache);
-#ifdef AFS_LINUX22_ENV
-    if (!freeVCList) {
-	/* Free some if possible. */
-        struct afs_q *tq, *uq;
-        int i; char *panicstr;
-        int vmax = 2 * afs_cacheStats;
-        int vn = VCACHE_FREE;
-	
-        i = 0;
-        for(tq = VLRU.prev; tq != &VLRU && vn > 0; tq = uq) {
-	    tvc = QTOV(tq);
-	    uq = QPrev(tq);
-	    if (tvc->states & CVFlushed) 
-                refpanic ("CVFlushed on VLRU");
-	    else if (i++ > vmax)
-                refpanic ("Exceeded pool of AFS vnodes(VLRU cycle?)");
-	    else if (QNext(uq) != tq)
-                refpanic ("VLRU inconsistent");
-	    
-	    if (tvc == afs_globalVp)
-		continue;
-	    
-	    if ( VREFCOUNT(tvc) && tvc->opens == 0 ) {
-		struct inode *ip = AFSTOI(tvc);
-		if (list_empty(&ip->i_dentry)) {
-		    vn --;
-		}
-		else {
-		    struct list_head *cur;
-		    struct list_head *head = &ip->i_dentry;
-		    int all = 1;
-		restart:
-		    DLOCK();
-		    cur = head;
-		    while ((cur = cur->next) != head) {
-			struct dentry *dentry = list_entry(cur, struct dentry, d_alias);
-			if (DCOUNT(dentry)) {
-			    afs_TryFlushDcacheChildren(dentry);
-			}
-
-			if (!DCOUNT(dentry)) {
-			    AFS_GUNLOCK();
-			    DGET(dentry);
-			    DUNLOCK();
-			    d_drop(dentry);
-			    dput(dentry);
-			    AFS_GLOCK();
-			    goto restart;
-			}
-			else {
-			    all = 0;
-			}
-		    }
-		    DUNLOCK();
-		    if (all) vn --;
-		}
-	    }
-	    if (tq == uq) break;
-        }
-    }
-#endif /* AFS_LINUX22_ENV */
 #ifdef	AFS_OSF_ENV
 #ifdef	AFS_OSF30_ENV
     if (afs_vcount >= afs_maxvcount) 
@@ -776,6 +739,11 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
                }
            }
 #endif
+#if defined(AFS_LINUX22_ENV)
+	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0)
+		afs_TryFlushDcacheChildren(tvc);
+#endif
+
 	   if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 	       && (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
