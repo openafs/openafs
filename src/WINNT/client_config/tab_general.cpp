@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <rx/rxkad.h>
 }
 
 #include "afs_config.h"
@@ -17,6 +18,8 @@ extern "C" {
 #include "tab_hosts.h"
 #include "tab_advanced.h"
 
+#include "drivemap.h"
+#include <adssts.h>
 
 /*
  * VARIABLES __________________________________________________________________
@@ -69,7 +72,6 @@ BOOL fIsCellInCellServDB (LPCTSTR pszCell);
 
 BOOL CALLBACK Status_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp);
 void Status_OnRefresh (HWND hDlg);
-
 
 /*
  * ROUTINES ___________________________________________________________________
@@ -220,7 +222,6 @@ BOOL GeneralTab_VerifyOK (HWND hDlg, BOOL fComplainIfInvalid)
    return TRUE;
 }
 
-
 BOOL GeneralTab_OnApply (HWND hDlg, BOOL fForce, BOOL fComplainIfInvalid)
 {
    if (!fForce)
@@ -260,8 +261,7 @@ BOOL GeneralTab_OnApply (HWND hDlg, BOOL fForce, BOOL fComplainIfInvalid)
    BOOL fLogonAuthent = IsDlgButtonChecked (hDlg, IDC_LOGON);
    if (fLogonAuthent != g.Configuration.fLogonAuthent)
       {
-      if (!Config_SetAuthentFlag (fLogonAuthent))
-         return FALSE;
+	   SetBitLogonOption(fLogonAuthent,LOGON_OPTION_INTEGRATED);
       g.Configuration.fLogonAuthent = fLogonAuthent;
       }
 
@@ -325,7 +325,7 @@ void GeneralTab_OnRefresh (HWND hDlg, BOOL fRequery)
          Config_GetGatewayName (g.Configuration.szGateway);
 
       Config_GetCellName (g.Configuration.szCell);
-      Config_GetAuthentFlag (&g.Configuration.fLogonAuthent);
+      g.Configuration.fLogonAuthent=RWLogonOption(TRUE,LOGON_OPTION_INTEGRATED);
       Config_GetTrayIconFlag (&g.Configuration.fShowTrayIcon);
 
       if (!g.fIsWinNT)
@@ -406,6 +406,7 @@ void GeneralTab_OnTimer (HWND hDlg)
 {
    DWORD CurrentState = Config_GetServiceState();
    DWORD DisplayState = GeneralTab_GetDisplayState(hDlg);
+   TestAndDoMapShare(CurrentState);		//Re map mounted drives if necessary
 
    BOOL fInEndState = ((CurrentState == SERVICE_RUNNING) || (CurrentState == SERVICE_STOPPED));
    if (fInEndState && l.hStatus)
@@ -684,6 +685,7 @@ void GeneralTab_DoStartStop (HWND hDlg, BOOL fStart, BOOL fRestart)
             {
             g.fNeedRestart = FALSE;
             if (StartService (hService, 0, 0))
+				TestAndDoMapShare(SERVICE_START_PENDING);
                fSuccess = TRUE;
             }
          else // (!fStart)
@@ -691,6 +693,8 @@ void GeneralTab_DoStartStop (HWND hDlg, BOOL fStart, BOOL fRestart)
             SERVICE_STATUS Status;
             if (ControlService (hService, SERVICE_CONTROL_STOP, &Status))
                fSuccess = TRUE;
+			   if (g.Configuration.fLogonAuthent)
+				   DoUnMapShare(FALSE);
             }
 
          CloseServiceHandle (hService);

@@ -85,5 +85,19 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow);
 BOOL SubmountToPath (PDRIVEMAPLIST pList, LPTSTR pszPath, LPTSTR pszSubmount, BOOL fMarkInUse);
 BOOL PathToSubmount (LPTSTR pszSubmount, LPTSTR pszMapping, LPTSTR pszSubmountReq, ULONG *pStatus);
 
+BOOL TestAndDoMapShare(DWORD);
+BOOL DoMapShare();
+void MapShareName(char *);
+void DoUnMapShare(BOOL);
+BOOL DoMapShareChange();
+DWORD RWLogonOption(BOOL read,DWORD value);
+#ifndef DRIVEMAP_DEF_H
+extern void TestAndDoUnMapShare();
+extern TCHAR pUserName[];
+extern BOOL fUserName;
+extern DWORD RWLogonOption(BOOL read,DWORD value);
+extern void SetBitLogonOption(BOOL set,DWORD value);
+extern BOOL TestAndDoMapShare(DWORD);
+#endif
 #endif
 

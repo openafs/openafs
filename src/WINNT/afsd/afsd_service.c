@@ -185,6 +185,7 @@ void afsd_Main()
 	int jmpret;
 
 	osi_InitPanic(afsd_notifier);
+	osi_InitTraceOption();
 
 	GlobalStatus = 0;
 
@@ -250,7 +251,7 @@ void afsd_Main()
         CheckMountDrive();
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
-
+	
 {   
         HANDLE h; char *ptbuf[1];
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);

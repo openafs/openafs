@@ -1754,7 +1754,7 @@ register struct cmd_syndesc *as; {
 	tp = (char *)(space + sizeof(afs_int32));
 	lp = (afs_int32 *)tp;
 	*lp++ = 0x12345678;
-	size == sizeof(afs_int32) + sizeof(afs_int32);
+	size = sizeof(afs_int32) + sizeof(afs_int32);
 	blob.out_size = MAXSIZE;
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;

@@ -618,6 +618,8 @@ void Submounts_OnApply (HWND hDlg)
 
    FreeDriveMapList (&g.Configuration.NetDrives);
    QueryDriveMapList (&g.Configuration.NetDrives);
+   if (g.Configuration.fLogonAuthent)
+	   DoMapShareChange();
 }
 
 
@@ -682,6 +684,7 @@ void Submounts_OnEdit (HWND hDlg)
       }
 }
 
+// Action - On Remove submount item
 
 void Submounts_OnRemove (HWND hDlg)
 {
@@ -698,6 +701,7 @@ void Submounts_OnRemove (HWND hDlg)
 }
 
 
+// Action - On Add or On Edit a submount item
 void Submounts_EditSubmount (HWND hDlg, PSUBMOUNT pSubmount)
 {
    HWND hList = GetDlgItem (hDlg, IDC_LIST);

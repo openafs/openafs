@@ -22,6 +22,7 @@ NTMAKE = nmake /nologo /f ntmakefile install9x
 NTMAKELANG = nmake /nologo /f ntmakefile en_install
 NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
 NTMAKE_LIBUTILS = nmake /nologo /f ntmakefile install_libutils
+NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 MKDIR = mkdir
 OBJ = src
 
@@ -306,7 +307,7 @@ Win9x::
 	$(CD) $(OBJ)\WINNT\install\Win9x
 	nmake /nologo /f NTMakefile  isinstall
 	$(CD) ..\..\..\..
-	eho **** End of Install Scripts
+	echo **** End of Install Scripts
 
 media: Win9x
 

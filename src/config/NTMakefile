@@ -72,6 +72,9 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\WinInstall\Config))
 		$(MKDIR) $(DESTDIR)\WinInstall\Config
 !	ENDIF
+!	IF (!EXIST($(DESTDIR)\WinInstall\Dll))
+		$(MKDIR) $(DESTDIR)\WinInstall\Dll
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\root.server))
 		$(MKDIR) $(DESTDIR)\root.server
 !	ENDIF
@@ -114,7 +117,7 @@ $(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
 	$(COPY) $? $@
 	util_cr + $@
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe 
 	$(COPY) NTLang.bat $(DESTDIR)\bin
 	util_cr + $(DESTDIR)\bin\NTLang.bat
 
@@ -131,7 +134,7 @@ doclink:
 	- symlink make $(DESTDIR)\doc doc-pathname
 
 
-version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version
+version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
 
 NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
 	$(DEL) NTMakefile.version
@@ -163,7 +166,7 @@ $(DESTDIR)\bin\touch.exe:touch.exe
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 
-install: idirs $(INCTOOLS) $(INCCOPY) version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup 
+install: idirs $(INCTOOLS) $(INCCOPY) version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
 
 install9x: install
 

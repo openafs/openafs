@@ -163,6 +163,8 @@
 #define IDC_CHANGE                      1059
 #define IDC_DIAG_PARMS                  1060
 #define IDC_ROOTVOLUME					1061
+#define IDC_AUTOLANA                    1062
+#define IDC_STATICLANA                  1063
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -173,7 +175,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        122
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1062
+#define _APS_NEXT_CONTROL_VALUE         1064
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -217,7 +217,15 @@ BOOL Config_SetCellName (LPCTSTR pszName, ULONG *pStatus)
    return TRUE;
 }
 
+#if 0
+/* 	These two functions are not needed as of the 1.2.2a updates.
+	The old implementation used to 'bind' afslogon.dll to the credentials manager
+	when the Integrated Logon was selected.
 
+	With version 1.2.2a afslogon.dll is always 'bound' to the credentials manager; therefore,
+	the binding operation is done during installation.  Note: the Integrated Logon is
+	selected by an entry in the registry (LogonOptions).
+*/
 void Config_GetAuthentFlag (BOOL *pfFlag)
 {
    *pfFlag = FALSE;
@@ -335,7 +343,7 @@ BOOL Config_SetAuthentFlag (BOOL fFlag, ULONG *pStatus)
       Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_AUTHENT, TEXT("%ld"), status);
    return rc;
 }
-
+#endif
 
 void Config_GetTrayIconFlag (BOOL *pfFlag)
 {
@@ -811,7 +819,7 @@ BOOL Config_SetCachePath(LPCTSTR pszPath, ULONG *pStatus)
 void Config_GetLanAdapter (ULONG *pnLanAdapter)
 {
    if (!Config_ReadNum (TEXT("LANadapter"), (DWORD*)pnLanAdapter))
-      *pnLanAdapter = 0;
+      *pnLanAdapter = -1;
 }
 
 BOOL Config_SetLanAdapter (ULONG nLanAdapter, ULONG *pStatus)

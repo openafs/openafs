@@ -778,16 +778,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
 	for(uidp = vcp->usersp; uidp; uidp = uidp->nextp) {
 		if (uid == uidp->userID) {
 			uidp->refCount++;
-#ifdef DEBUG_VERBOSE 
-		{
-        HANDLE h; char *ptbuf[1],buf[132];
-        h = RegisterEventSource(NULL, "AFS Service - smb_FindUID (Find by UID)");
-        sprintf(buf, "VCP[%x] found-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
-        ptbuf[0] = buf;
-        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
-		}
-#endif
+			osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL," VCP[%x] found-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp) ? uidp->unp->name : "");
         	break;
 		}
         }
@@ -800,16 +791,7 @@ smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
                 vcp->usersp = uidp;
                 lock_InitializeMutex(&uidp->mx, "uid_t mutex");
                 uidp->userID = uid;
-#ifdef DEBUG_VERBOSE 
-		{
-        HANDLE h; char *ptbuf[1],buf[132];
-        h = RegisterEventSource(NULL, "AFS Service - smb_FindUID (Find by UID)");
-        sprintf(buf, "VCP[%x] new-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
-        ptbuf[0] = buf;
-        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
-		}
-#endif
+				osi_LogEvent("AFS smb_FindUID (Find by UID)",NULL,"VCP[%x] new-uid[%d] name[%s]",vcp,uidp->userID,(uidp->unp ? uidp->unp->name : ""));
         }
         lock_ReleaseWrite(&smb_rctLock);
         return uidp;
@@ -850,16 +832,7 @@ smb_user_t *smb_FindUserByNameThisSession(smb_vc_t *vcp, char *usern)
             continue;
           if (stricmp(uidp->unp->name, usern) == 0) {
             uidp->refCount++;
-#ifdef DEBUG_VERBOSE 
-            {
-              HANDLE h; char *ptbuf[1],buf[132];
-              h = RegisterEventSource(NULL, "AFS Service - smb_FindUserByNameThisSession");
-              sprintf(buf, "VCP[%x] uid[%d] match-name[%s]",vcp,uidp->userID,usern);
-              ptbuf[0] = buf;
-              ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-              DeregisterEventSource(h);
-            }
-#endif
+			osi_LogEvent("AFS smb_FindUserByNameThisSession",NULL,"VCP[%x] uid[%d] match-name[%s]",vcp,uidp->userID,usern);
             break;
           } else
             continue;
@@ -5391,27 +5364,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
 								rwcp);
 			else {
-				
-#ifdef DEBUG_VERBOSE
-			    HANDLE h; char *ptbuf[1],buf[132];DWORD err;
-			 	h = RegisterEventSource(NULL, "AFS Server - Dispatch");
-		 		sprintf(buf,"%s vcp[%x] lana[%d] lsn[%d]",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
-			 	ptbuf[0] = buf;
-			 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-			 	DeregisterEventSource(h);
-#endif
+					osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp[%x] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
+					osi_Log4(afsd_logp,"Dispatch %s vcp[%x] lana[%d] lsn[%d]",(myCrt_Dispatch(inp->inCom)),vcp,vcp->lana,vcp->lsn);
 					code = (*(dp->procp)) (vcp, inp, outp);
-
-#ifdef DEBUG_VERBOSE
-					h = RegisterEventSource(NULL, "AFS Server - Dispatch return ");
-					sprintf(buf,"code[%d]",code-CM_ERROR_BASE);
-					if (code)
-						ptbuf[0] = buf;
-					else
-						ptbuf[0] = "code[0]";
-					ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-					DeregisterEventSource(h);
-#endif
+					osi_LogEvent("AFS Dispatch return",NULL,"Code[%d]",(code==0)?0:code-CM_ERROR_BASE,"");
+					osi_Log1(afsd_logp,"Dispatch return  code[%d]",(code==0)?0:code-CM_ERROR_BASE);
 				}
 
 			if (oldGen != sessionGen) {
@@ -5465,7 +5422,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 				    1, ncbp->ncb_length, ptbuf, smbp);
 			DeregisterEventSource(h);
 #else /* DJGPP */
-                        osi_Log1(afsd_logp, "Invalid SMB message, length %d",
+            osi_Log1(afsd_logp, "Invalid SMB message, length %d",
                                  ncbp->ncb_length);
 #endif /* !DJGPP */
 

@@ -10,21 +10,24 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <rx/rxkad.h>
 }
-
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <WINNT/TaLocale.h>
 #include "drivemap.h"
-
+#include <time.h>
+#include <adssts.h>
+#include <osilog.h>
 
 /*
  * REGISTRY ___________________________________________________________________
  *
  */
 
-static const TCHAR AFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
+#undef AFSConfigKeyName
+const TCHAR sAFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters");
 
 
 /*
@@ -452,7 +455,7 @@ BOOL DriveIsGlobalAfsDrive(TCHAR chDrive)
    TCHAR szValue[128];
    HKEY hKey;
 
-   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSConfigKeyName);
+   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), sAFSConfigKeyName);
 
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
       return FALSE;
@@ -745,8 +748,11 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       pszSubmount = &szMapping[ lstrlen(cszLANMANDEVICE) ];
 
       if (IsWindows2000())
+	  {
           if (*(pszSubmount) != TEXT(';'))
              return FALSE;
+	  } else 
+		--pszSubmount;
 
       if (toupper(*(++pszSubmount)) != chDrive)
          return FALSE;
@@ -791,3 +797,300 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
    return TRUE;
 }
 
+/* Generate Random User name random acording to time*/
+DWORD dwOldState=0;
+TCHAR pUserName[MAXRANDOMNAMELEN];
+BOOL fUserName=FALSE;
+#define AFSLogonOptionName TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider")
+
+void SetBitLogonOption(BOOL set,DWORD value)
+{
+
+   RWLogonOption(FALSE,((set)?value | RWLogonOption(TRUE,0):RWLogonOption(TRUE,0) & ~value) );	
+}
+
+DWORD RWLogonOption(BOOL read,DWORD value)
+{
+	// if read is true then if value==0 return registry value
+	// if read and value!=0 then use value to test registry, return TRUE if value bits match value read
+   HKEY hk;
+   DWORD dwDisp;
+	DWORD LSPtype, LSPsize;
+	DWORD rval;
+   if (read)
+   {
+	   rval=0;
+		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLogonOptionName,0, KEY_QUERY_VALUE, &hk)==ERROR_SUCCESS)
+		{
+			LSPsize=sizeof(rval);
+			RegQueryValueEx(hk, "LogonOptions", NULL,
+						&LSPtype, (LPBYTE)&rval, &LSPsize);
+			RegCloseKey (hk);
+		}
+		return (value==0)?rval:((rval & value)==value);
+
+   } else {	//write
+		if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, NULL, 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
+		{
+			RegSetValueEx(hk,TEXT("LogonOptions"),NULL,REG_DWORD,(LPBYTE)&value,sizeof(value));
+			RegCloseKey (hk);
+		}
+		return TRUE;
+   }
+}
+
+void MapShareName(char *pszCmdLineA)
+{
+	fUserName = TRUE;
+	TCHAR *p=pUserName;
+	pszCmdLineA++;
+	while (*pszCmdLineA && (*pszCmdLineA != ' '))
+	{
+	  *p++=*pszCmdLineA++;
+	}
+}
+
+void GenRandomName(TCHAR *pname,int len)
+{
+	if (fUserName)
+	{		//user name was passed through command line, use once
+		fUserName=FALSE;
+		return;
+	}
+	srand( (unsigned)time( NULL ) );
+	for (int i=0;i<len;i++)
+		pname[i]='a'+(rand() % 26);
+	pname[len]=0;
+	return;
+}
+
+/*
+	Make a connection using users name
+	if fUserName then force a connection
+*/
+
+BOOL TestAndDoMapShare(DWORD dwState)
+{
+	if ((dwState!=SERVICE_RUNNING) || (dwOldState!=SERVICE_START_PENDING) 
+		|| (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)))
+	{
+		dwOldState=dwState;
+		return TRUE;
+	}
+	dwOldState=SERVICE_RUNNING;
+	return DoMapShare();
+}
+
+BOOL IsServiceActive()
+{
+   SC_HANDLE hManager;
+   SERVICE_STATUS Status;
+   if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
+      {
+      SC_HANDLE hService;
+      if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+         {
+         QueryServiceStatus (hService, &Status);
+         CloseServiceHandle (hService);
+         }
+
+      CloseServiceHandle (hManager);
+      }
+
+   return (Status.dwCurrentState == SERVICE_RUNNING) ? TRUE : FALSE;
+}
+
+void TestAndDoUnMapShare()
+{
+	if (!RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
+		return;
+	DoUnMapShare(FALSE);	
+}
+
+void DoUnMapShare(BOOL force)
+{
+	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+	DWORD rc=28;
+	HANDLE hEnum;
+	LPNETRESOURCE lpnrLocal,lpnr=NULL;
+	DWORD res;
+	DWORD cbBuffer=16384;
+	DWORD cEntries=-1;
+	GetComputerName(szMachine,&rc);
+	CHAR *pSubmount="";
+   // Initialize the data structure
+	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
+		return;
+	sprintf(szPath,"\\\\%s-afs\\",szMachine);
+	_strlwr(szPath);
+	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
+	do {
+		memset(lpnrLocal,0,cbBuffer);
+		if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+		{
+			for (DWORD i=0;i<cEntries;i++)
+			{
+				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath))
+				{
+					if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
+						if (force)
+							WNetCancelConnection(lpnrLocal[i].lpLocalName,TRUE);
+					else
+						WNetCancelConnection(lpnrLocal[i].lpRemoteName,TRUE);
+					DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
+				}
+			}
+		}
+	} while (res!=ERROR_NO_MORE_ITEMS);
+	GlobalFree((HGLOBAL)lpnrLocal);
+	WNetCloseEnum(hEnum);
+}
+
+BOOL DoMapShareChange()
+{
+	DRIVEMAPLIST List;
+	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+	DWORD rc=28;
+	HANDLE hEnum;
+	LPNETRESOURCE lpnrLocal,lpnr=NULL;
+	DWORD res;
+	DWORD cbBuffer=16384;
+	DWORD cEntries=-1;
+	GetComputerName(szMachine,&rc);
+	CHAR szUser[MAXRANDOMNAMELEN];
+   // Initialize the data structure
+	if (!IsServiceActive())
+		return TRUE;
+	memset (&List, 0x00, sizeof(DRIVEMAPLIST));
+	for (size_t ii = 0; ii < 26; ++ii)
+		List.aDriveMap[ii].chDrive = chDRIVE_A + ii;
+	QueryDriveMapList_ReadSubmounts (&List);
+	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
+		return FALSE;
+	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
+	sprintf(szPath,"\\\\%s-afs\\",szMachine);
+	_strlwr(szPath);
+	do {
+		memset(lpnrLocal,0,cbBuffer);
+		if ((res = WNetEnumResource(hEnum,&cEntries,lpnrLocal,&cbBuffer))==NO_ERROR)
+		{
+			for (DWORD i=0;i<cEntries;i++)
+			{
+				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
+					continue;	//only look at real afs mappings
+				CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
+				if (strcmpi(pSubmount,"all")==0) 
+					continue;				// do not remove 'all'
+				for (DWORD j=0;j<List.cSubmounts;j++)
+				{
+					if (
+						(List.aSubmounts[j].szSubmount[0]) &&
+						(strcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
+						) 
+					{
+						List.aSubmounts[j].fInUse=TRUE; 
+						goto nextname;
+					}
+				}
+				// wasn't on list so lets remove
+				sprintf(szPath,"\\\\%s-afs\\%s",szMachine,pSubmount);
+				WNetCancelConnection(szPath,TRUE);
+				nextname:;
+			}
+		}
+	} while (res!=ERROR_NO_MORE_ITEMS);
+	GlobalFree((HGLOBAL)lpnrLocal);
+	WNetCloseEnum(hEnum);
+	sprintf(szPath,"\\\\%s-afs\\all",szMachine);
+	cbBuffer=MAXRANDOMNAMELEN-1;
+	// Lets connect all submounts that weren't connectd
+	CHAR * pUser=szUser;
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbBuffer)!=NO_ERROR)
+		GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+	else {
+		if ((pUser=strchr(szUser,'\\'))==NULL)
+			return FALSE;
+		pUser++;
+	}
+	for (DWORD j=0;j<List.cSubmounts;j++)
+	{
+		if (List.aSubmounts[j].fInUse)
+			continue;
+		sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[j].szSubmount);
+		NETRESOURCE nr;
+		memset (&nr, 0x00, sizeof(NETRESOURCE));
+		nr.dwType=RESOURCETYPE_DISK;
+		nr.lpLocalName="";
+		nr.lpRemoteName=szPath;
+		DWORD res=WNetAddConnection2(&nr,NULL,pUser,0);
+
+	}
+	return TRUE;
+}
+
+BOOL DoMapShare()
+{
+	DRIVEMAPLIST List;
+	TCHAR szMachine[ MAX_PATH ];
+	TCHAR szPath[ MAX_PATH ];
+	DWORD rc=28;
+	BOOL bMappedAll=FALSE;
+	GetComputerName(szMachine,&rc);
+   // Initialize the data structure
+	DEBUG_EVENT0("AFS DoMapShare");
+	QueryDriveMapList (&List);
+	DoUnMapShare(TRUE);
+	// All connections have been removed
+	// Lets restore them after making the connection from the random name
+
+	GenRandomName(pUserName,MAXRANDOMNAMELEN-1);
+	for (DWORD i=0;i<List.cSubmounts;i++)
+	{
+		if (List.aSubmounts[i].szSubmount[0])
+		{
+			sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[i].szSubmount);
+			NETRESOURCE nr;
+			memset (&nr, 0x00, sizeof(NETRESOURCE));
+			nr.dwType=RESOURCETYPE_DISK;
+			nr.lpLocalName="";
+			nr.lpRemoteName=szPath;
+			DWORD res=WNetAddConnection2(&nr,NULL,pUserName,0);
+			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
+			if (strcmpi("all",List.aSubmounts[i].szSubmount)==0)
+				bMappedAll=TRUE;
+		}
+	}
+	if (!bMappedAll)	//make sure all is mapped also
+	{
+			sprintf(szPath,"\\\\%s-afs\\all",szMachine);
+			NETRESOURCE nr;
+			memset (&nr, 0x00, sizeof(NETRESOURCE));
+			nr.dwType=RESOURCETYPE_DISK;
+			nr.lpLocalName="";
+			nr.lpRemoteName=szPath;
+			DWORD res=WNetAddConnection2(&nr,NULL,pUserName,0);
+			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
+			if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
+			{
+				WNetCancelConnection(szPath,TRUE);
+				WNetAddConnection2(&nr,NULL,pUserName,0);
+			}
+	}
+	for (TCHAR chDrive = chDRIVE_A; chDrive <= chDRIVE_Z; ++chDrive)
+	{
+		TCHAR szRemote[3];
+		if (List.aDriveMap[chDrive-chDRIVE_A].fActive)
+		{
+			sprintf(szRemote,"%c:",chDrive);
+			sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aDriveMap[chDrive-chDRIVE_A].szSubmount);
+			NETRESOURCE nr;
+			memset (&nr, 0x00, sizeof(NETRESOURCE));
+			nr.dwType=RESOURCETYPE_DISK;
+			nr.lpLocalName=szRemote;
+			nr.lpRemoteName=szPath;
+			DWORD res=WNetAddConnection2(&nr,NULL,NULL,(List.aDriveMap[chDrive-chDRIVE_A].fPersistent)?CONNECT_UPDATE_PROFILE:0);
+			DEBUG_EVENT3("AFS DriveMap","Persistant[%d] Remote[%s]=%x",List.aDriveMap[chDrive-chDRIVE_A].fPersistent,szPath,res);
+		}
+	}
+	return TRUE;
+}

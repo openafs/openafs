@@ -6,8 +6,6 @@
  *
  */
 
-/* Copyright (C) 1994 Cazamar Systems, Inc. */
-
 #ifndef _OSI_LOG_H__
 #define _OSI_LOG_H__ 1
 
@@ -82,6 +80,9 @@ extern void osi_LogPanic(char *filep, long line);
 extern void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle);
 
 extern char *osi_LogSaveString(osi_log_t *logp, char *s);
+extern void osi_InitTraceOption();
+extern void osi_LogEvent0(char *a,char *b);
+extern void osi_LogEvent(char *a,char *b,char *c,...);
 
 /* define macros */
 #define osi_Log0(l,f)		osi_LogAdd((l), (f), 0, 0, 0, 0)
@@ -89,5 +90,57 @@ extern char *osi_LogSaveString(osi_log_t *logp, char *s);
 #define osi_Log2(l,f,a,b)	osi_LogAdd((l), (f), (long) (a), (long) (b), 0, 0)
 #define osi_Log3(l,f,a,b,c)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), 0)
 #define osi_Log4(l,f,a,b,c,d)	osi_LogAdd((l), (f), (long) (a), (long) (b), (long) (c), (long) (d))
+
+#ifdef DEBUG_VERBOSE
+#define DEBUG_EVENT1(a,b,c) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf, b,c);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT0(a) {HANDLE h; char *ptbuf[1];\
+	h = RegisterEventSource(NULL, a);\
+	ptbuf[0] = "";\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **) ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT2(a,b,c,d) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf, b,c,d);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **) ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT3(a,b,c,d,e) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf, b,c,d,e);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **)ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT4(a,b,c,d,e,f) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf, b,c,d,e,f);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **) ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT5(a,b,c,d,e,f,g) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf, b,c,d,e,f,g);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **) ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#define DEBUG_EVENT6(a,b,c,d,e,f,g,h) {HANDLE h; char *ptbuf[1],buf[132];\
+	h = RegisterEventSource(NULL, a);\
+	sprintf(buf,b,c,d,e,f,g,h);\
+	ptbuf[0] = buf;\
+	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0,(const char **) ptbuf, NULL);\
+	DeregisterEventSource(h);}
+#else
+#define DEBUG_EVENT0(a)
+#define DEBUG_EVENT1(a,b,c)
+#define DEBUG_EVENT2(a,b,c,d)
+#define DEBUG_EVENT3(a,b,c,d,e)
+#define DEBUG_EVENT4(a,b,c,d,e,f)
+#define DEBUG_EVENT5(a,b,c,d,e,f,g)
+#define DEBUG_EVENT6(a,b,c,d,e,f,g,h)
+#endif
 
 #endif /*  _OSI_LOG_H__ */

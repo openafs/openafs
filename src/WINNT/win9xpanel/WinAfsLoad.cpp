@@ -408,7 +408,7 @@ void CWinAfsLoadApp::WSANotifyFromUI(WPARAM wp,const char *msg)
 		m_wParam=wp;
 		m_sMsg=msg;	
 		SetEvent(CMyUIThread::m_hEventThreadKilled);
-		m_uNntifyMessage=0;
+		m_uNotifyMessage=0;
 		break;
 	default:
 		break;
