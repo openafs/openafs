@@ -183,6 +183,7 @@ case $system in
                    LINUX_EXPORTS_KALLSYMS_ADDRESS
                    LINUX_EXPORTS_KALLSYMS_SYMBOL
                    LINUX_EXPORTS_SYS_CALL_TABLE
+                   LINUX_EXPORTS_IA32_SYS_CALL_TABLE
                    LINUX_EXPORTS_SYS_CHDIR
                    LINUX_EXPORTS_SYS_CLOSE
                    LINUX_EXPORTS_SYS_WAIT4
@@ -216,6 +217,9 @@ case $system in
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
                   AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
+                 fi
+                 if test "x$ac_cv_linux_exports_ia32_sys_call_table" = "xyes"; then
+                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE)
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
                   AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL)

@@ -36,6 +36,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef EXPORTED_KALLSYMS_ADDRESS
 #undef EXPORTED_KALLSYMS_SYMBOL
 #undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
 #undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
 #undef RECALC_SIGPENDING_TAKES_VOID

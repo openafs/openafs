@@ -120,6 +120,23 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_call_table)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN(LINUX_EXPORTS_IA32_SYS_CALL_TABLE, [
+AC_MSG_CHECKING(for exported ia32_sys_call_table)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_ia32_sys_call_table,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_ia32_sys_call_table
+#error ia32_sys_call_table not exported
+#endif],
+ac_cv_linux_exports_ia32_sys_call_table=yes,
+ac_cv_linux_exports_ia32_sys_call_table=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_ia32_sys_call_table)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN(LINUX_EXPORTS_SYS_CHDIR, [
 AC_MSG_CHECKING(for exported sys_chdir)
 save_CPPFLAGS="$CPPFLAGS"
