@@ -350,7 +350,17 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
 	ino = (avc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
 	ino &= 0x7fffffff;	/* Assumes 32 bit ino_t ..... */
-	len = strlen(de->name);
+	if (de->name)
+	    len = strlen(de->name);
+	else {
+	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %x, dirpos %d)\n", 
+		   &tdc->f.inode, dirpos);
+	    DRelease(de, 0);
+	    afs_PutDCache(tdc);
+	    ReleaseReadLock(&avc->lock);
+	    afs_PutFakeStat(&fakestat);
+	    return -ENOENT;
+	}
 
 	/* filldir returns -EINVAL when the buffer is full. */
 #if (defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE)
