@@ -300,11 +300,40 @@ int
 afs_root(struct mount *mp,
 	      struct vnode **vpp)
 {
-    int error;
-    error = afs_root(mp, vpp);
-    if (!error)
-	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, curproc);		/* return it locked */
-    return error;
+    struct vrequest treq;
+    struct vcache *tvp;
+    int code;
+
+    AFS_STATCNT(afs_root);
+
+#ifdef  AFS_GLOBAL_SUNLOCK
+    mutex_enter(&afs_global_lock);
+#endif
+    if (!(code = afs_InitReq(&treq, osi_curcred())) &&
+	!(code = afs_CheckInit())) {
+	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	if (tvp) {
+	    /* There is really no reason to over-hold this bugger--it's held
+	       by the root filesystem reference. */
+	    if (afs_globalVp != tvp) {
+		if (afs_globalVp)
+		    AFS_RELE(AFSTOV(afs_globalVp));
+		afs_globalVp = tvp;
+		AFS_HOLD(AFSTOV(afs_globalVp));
+	    }
+	    AFSTOV(tvp)->v_flag |= VROOT;
+	    afs_globalVFS = mp;
+	    *vpp = AFSTOV(tvp);
+	} else
+	    code = ENOENT;
+    }
+#ifdef  AFS_GLOBAL_SUNLOCK
+    mutex_exit(&afs_global_lock);
+#endif
+
+    if (!code)
+	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, curproc); /* return it locked */
+    return code;
 }
 
 int
