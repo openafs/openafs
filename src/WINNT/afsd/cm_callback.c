@@ -775,13 +775,17 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
              */
             lock_ReleaseMutex(&scp->mx);
             cm_CallbackNotifyChange(scp);
+            lock_ReleaseWrite(&cm_callbackLock);
             lock_ObtainMutex(&scp->mx);
+            lock_ObtainWrite(&cm_callbackLock);
         }
-        if (freeFlag) free(revp);
+        if (freeFlag) 
+            free(revp);
     }
 
     /* if we freed the list, zap the pointer to it */
-    if (freeFlag) cm_racingRevokesp = NULL;
+    if (freeFlag) 
+        cm_racingRevokesp = NULL;
 
     lock_ReleaseWrite(&cm_callbackLock);
 

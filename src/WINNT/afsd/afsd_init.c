@@ -893,42 +893,6 @@ int afsd_InitCM(char **reasonP)
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
 
-    /* initialize RX, and tell it to listen to port 7001, which is used for
-     * callback RPC messages.
-     */
-    code = rx_Init(htons(7001));
-    afsi_log("rx_Init code %x", code);
-    if (code != 0) {
-        *reasonP = "afsd: failed to init rx client on port 7001";
-        return -1;
-    }
-
-    /* Initialize the RPC server for session keys */
-    RpcInit();
-
-    /* create an unauthenticated service #1 for callbacks */
-    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-    serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
-                             RXAFSCB_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
-    if (serverp == NULL) {
-        *reasonP = "unknown error";
-        return -1;
-    }
-
-    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
-    serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
-                             &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
-    afsi_log("rx_NewService addr %x", (int)serverp);
-    if (serverp == NULL) {
-        *reasonP = "unknown error";
-        return -1;
-    }
-        
-    /* start server threads, *not* donating this one to the pool */
-    rx_StartServer(0);
-    afsi_log("rx_StartServer");
-
     /* init user daemon, and other packages */
     cm_InitUser();
 
@@ -965,6 +929,39 @@ int afsd_InitCM(char **reasonP)
 #endif
 #endif
 
+    /* initialize RX, and tell it to listen to port 7001, which is used for
+     * callback RPC messages.
+     */
+    code = rx_Init(htons(7001));
+    afsi_log("rx_Init code %x", code);
+    if (code != 0) {
+        *reasonP = "afsd: failed to init rx client on port 7001";
+        return -1;
+    }
+
+    /* create an unauthenticated service #1 for callbacks */
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
+                             RXAFSCB_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
+
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
+                             &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
+        
+    /* start server threads, *not* donating this one to the pool */
+    rx_StartServer(0);
+    afsi_log("rx_StartServer");
+
     code = cm_GetRootCellName(rootCellName);
     afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
               code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
@@ -991,6 +988,10 @@ int afsd_InitCM(char **reasonP)
     if (cm_freelanceEnabled)
         cm_InitFreelance();
 #endif
+
+    /* Initialize the RPC server for session keys */
+    RpcInit();
+
     return 0;
 }
 
