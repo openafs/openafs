@@ -53,7 +53,7 @@ choose_client() {
 	# For now, just use uname -r to get the module version. 
 	VERSION=`uname -r`
 
-	LIBAFS=openafs$MP.o
+	LIBAFS=openafs.*o
 }
 
 #
@@ -128,10 +128,10 @@ load_client() {
 	fi
 
 	# use the prefix command if required
-	set_prefix
+#	set_prefix
 		LOADED=`/sbin/lsmod | fgrep openafs`
 	if [ -z "$LOADED" ] ; then
-	    /sbin/insmod ${PREFIX:+-P $PREFIX} -f  $MODLOADDIR/$LIBAFS 
+	modprobe openafs
 	fi
 }
 
