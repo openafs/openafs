@@ -3984,6 +3984,10 @@ register struct cmd_syndesc *as;
           continue;
       }
 
+      if (vcode == VL_INDEXERANGE) {
+	  break;
+      }
+
       if (vcode) {
 	  fprintf(STDERR,"vos: could not list the server addresses\n");
 	  PrintError("",vcode);
