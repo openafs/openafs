@@ -1,3 +1,10 @@
+openafs (1.2.3final2-5) unstable; urgency=medium
+
+  * Fix subarch handling, closes: #139662
+  * Update module control files to use  net not non-us
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 18 Apr 2002 13:13:16 -0400
+
 openafs (1.2.3final2-4) unstable; urgency=low
 
   * Move from non-us to main.

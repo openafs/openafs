@@ -14,9 +14,9 @@ ARCH=`dpkg --print-architecture`
 mprefix=`grep Package: debian/control.module | cut -d' ' -f 2 | cut -d= -f 1`
 
 # the changes file's name
-chfile="$KSRC/../$mprefix${KVERS}_${MODVERS}_${ARCH}.changes"
+chfile="$KSRC/../$mprefix${KVERS}${INT_SUBARCH}_${MODVERS}_${ARCH}.changes"
 
 dpkg-genchanges -b ${KMAINT:+-m"$KMAINT <$KEMAIL>"} -u"$KSRC/.." \
-	-cdebian/control > "$chfile.pt"
-pgp -fast ${KMAINT:+-u"$KMAINT"} < "$chfile.pt" > "$chfile"
+	-cdebian/control > "$chfile"
+#pgp -fast ${KMAINT:+-u"$KMAINT"} < "$chfile.pt" > "$chfile"
 rm "$chfile.pt"

@@ -1,5 +1,5 @@
 Source: openafs
-Section: non-us/main
+Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
 Standards-Version: 3.1.1
