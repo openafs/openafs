@@ -1131,7 +1131,7 @@ int smb_ListShares()
                                         sbmtpath);
           if (!len) return num_shares;
           p = pathName;
-          if (strncmp(p, cm_mountRoot, 4) != 0)
+          if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot)) != 0)
             print_afs = 1;
           while (*p) {
             if (*p == '\\') *p = '/';    /* change to / */
@@ -1216,7 +1216,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
         /* We can accept either unix or PC style AFS pathnames.  Convert
            Unix-style to PC style here for internal use. */
         p = pathName;
-        if (strncmp(p, cm_mountRoot, 4) == 0)
+        if (strncmp(p, cm_mountRoot, strlen(cm_mountRoot) == 0)
           p += strlen(cm_mountRoot);  /* skip mount path */
         q = p;
         while (*q) {
@@ -2825,11 +2825,10 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
 		dptr = patchp->dptr;
 
 		attr = smb_Attributes(scp);
-                *dptr++ = attr;
-
         /* check hidden attribute (the flag is only ON when dot file hiding is on ) */
         if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
             attr |= SMB_ATTR_HIDDEN;
+        *dptr++ = attr;
 
 		/* get dos time */
                 smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
