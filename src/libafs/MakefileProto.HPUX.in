@@ -129,8 +129,8 @@ LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 
-DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
-DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+DEST_LIBAFS = ${DEST}/root.client/usr/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/bin/${LIBAFSNONFS}
 
 
 libafs: ${LIBAFSNONFS}
