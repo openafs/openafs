@@ -112,6 +112,7 @@ afs_symlink
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     volp = afs_FindVolume(&adp->fid, READ_LOCK); /*parent is also in same vol*/
     ObtainWriteLock(&adp->lock,156);
+    ObtainWriteLock(&tdc->lock, 636);
     ObtainSharedLock(&afs_xvcache,17);  /* prevent others from creating this entry */
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
     do {
@@ -159,7 +160,10 @@ afs_symlink
 	}
 	ReleaseWriteLock(&adp->lock);
 	ReleaseWriteLock(&afs_xvcache);
-	if (tdc) afs_PutDCache(tdc);
+	if (tdc) {
+	    ReleaseWriteLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	}
 	goto done;
     }
     /* otherwise, we should see if we can make the change to the dir locally */
@@ -172,6 +176,7 @@ afs_symlink
 	}
     }
     if (tdc) {
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
     newFid.Cell = adp->fid.Cell;
@@ -248,9 +253,12 @@ afs_MemHandleLink(avc, areq)
 	  if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	  else alen = len;			/* mt point */
           tp = afs_osi_Alloc(alen); /* make room for terminating null */
+	  ObtainReadLock(&tdc->lock);
           addr = afs_MemCacheOpen(tdc->f.inode);
 	  tlen = len;
           code = afs_MemReadBlk(addr, 0, tp, tlen);
+	  afs_MemCacheClose(addr);
+	  ReleaseReadLock(&tdc->lock);
 	  tp[alen-1] = 0;
 	  afs_PutDCache(tdc);
 	  if (code != len) {
@@ -290,6 +298,7 @@ afs_UFSHandleLink(avc, areq)
 	    afs_PutDCache(tdc);
 	    return EFAULT;
 	}
+	ObtainReadLock(&tdc->lock);
 	tfile = osi_UFSOpen (tdc->f.inode);
 	if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	else alen = len;			/* mt point */
@@ -298,6 +307,7 @@ afs_UFSHandleLink(avc, areq)
 	code = afs_osi_Read(tfile, -1, tp, tlen);
 	tp[alen-1] = 0;
 	osi_UFSClose(tfile);
+	ReleaseReadLock(&tdc->lock);
 	afs_PutDCache(tdc);
 	if (code != tlen) {
 	    afs_osi_Free(tp, alen);

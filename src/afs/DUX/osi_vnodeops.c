@@ -625,7 +625,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	    && (counter == 0 || AFS_CHUNKOFFSET(fileBase) == 0)) {
 	    tdc = afs_FindDCache(avc, fileBase);
 	    if (tdc) {
-		if (!(tdc->flags & DFNextStarted))
+		if (!(tdc->mflags & DFNextStarted))
 		    afs_PrefetchChunk(avc, tdc, cred, &treq);
 		afs_PutDCache(tdc);
 	    }

@@ -287,6 +287,7 @@ tagain:
 	return -ENOENT;
     }
     ObtainReadLock(&avc->lock);
+    ObtainReadLock(&tdc->lock);
     /*
      * Make sure that the data in the cache is current. There are two
      * cases we need to worry about:
@@ -294,15 +295,17 @@ tagain:
      * 2. The cache data is no longer valid
      */
     while ((avc->states & CStatd)
-	   && (tdc->flags & DFFetching)
+	   && (tdc->dflags & DFFetching)
 	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
-	tdc->flags |= DFWaiting;
+	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
 	ObtainReadLock(&avc->lock);
+	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->states & CStatd)
 	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_PutDCache(tdc);
 	goto tagain;
@@ -373,6 +376,7 @@ tagain:
      */
     fp->f_pos = (loff_t)offset;
 
+    ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     ReleaseReadLock(&avc->lock);
     AFS_GUNLOCK();

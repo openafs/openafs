@@ -119,6 +119,7 @@ tagain:
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock,135);
+    if (tdc) ObtainSharedLock(&tdc->lock,630);
 
     /*
      * Make sure that the data in the cache is current. We may have
@@ -127,8 +128,10 @@ tagain:
     if (!(adp->states & CStatd)
 	|| (tdc && !hsame(adp->m.DataVersion, tdc->f.versionNo))) {
 	ReleaseWriteLock(&adp->lock);
-	if (tdc)
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
+	}
 	goto tagain;
     }
     if (tdc) {
@@ -136,6 +139,7 @@ tagain:
 	 * the size attributes (to handle O_TRUNC) */
 	code = afs_dir_Lookup(&tdc->f.inode, aname, &newFid.Fid); /* use dnlc first xxx */
 	if (code == 0) {
+	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    ReleaseWriteLock(&adp->lock);
 #ifdef AFS_SGI64_ENV
@@ -298,7 +302,10 @@ tagain:
     if (code == EEXIST && aexcl == NONEXCL) {
 	/* This lookup was handled in the common vn_open code in the
 	   vnode layer */
-	if (tdc) afs_PutDCache(tdc);
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	}
 	ReleaseWriteLock(&adp->lock);
 	goto done;
     }
@@ -309,7 +316,10 @@ tagain:
     if (code == EEXIST && aexcl == NONEXCL) {
 #endif /* AFS_SGI64_ENV */
 	/* if we get an EEXIST in nonexcl mode, just do a lookup */
-	if (tdc) afs_PutDCache(tdc);
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	}
 	ReleaseWriteLock(&adp->lock);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
@@ -335,10 +345,14 @@ tagain:
 	  osi_dnlc_purgedp(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
-	if (tdc) afs_PutDCache(tdc);
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	}
 	goto done;
     }
     /* otherwise, we should see if we can make the change to the dir locally */
+    if (tdc) UpgradeSToWLock(&tdc->lock, 631);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	code = afs_dir_Create(&tdc->f.inode, aname, &newFid.Fid);
@@ -348,6 +362,7 @@ tagain:
 	}
     }
     if (tdc) {
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
     newFid.Cell = adp->fid.Cell;
@@ -460,7 +475,8 @@ done:
  * data and stat cache entries.  This routine returns 1 if we should
  * do the operation locally, and 0 otherwise.
  *
- * This routine must be called with the stat cache entry write-locked.
+ * This routine must be called with the stat cache entry write-locked,
+ * and dcache entry write-locked.
  */
 afs_LocalHero(avc, adc, astat, aincr)
     register struct vcache *avc;
@@ -496,7 +512,7 @@ afs_LocalHero(avc, adc, astat, aincr)
     }
     if (ok) {
 	/* we've been tracking things correctly */
-	adc->flags |= DFEntryMod;
+	adc->dflags |= DFEntryMod;
 	adc->f.versionNo = avers;
 	return 1;
     }

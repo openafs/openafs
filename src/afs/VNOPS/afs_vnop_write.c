@@ -197,11 +197,14 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	 */
 	if (noLock) {
 	    tdc = afs_FindDCache(avc, filePos);
+	    if (tdc) ObtainWriteLock(&tdc->lock, 653);
 	} else if (afs_blocksUsed > (CM_WAITFORDRAINPCT*afs_cacheBlocks)/100) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
+		ObtainWriteLock(&tdc->lock, 654);
 		if (!hsame(tdc->f.versionNo, avc->m.DataVersion) ||
-		    (tdc->flags & DFFetching)) {
+		    (tdc->dflags & DFFetching)) {
+		    ReleaseWriteLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
 		}
@@ -222,9 +225,11 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 		}
 		avc->states |= CDirty;
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
+		if (tdc) ObtainWriteLock(&tdc->lock, 655);
 	    }
 	} else {
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
+	    if (tdc) ObtainWriteLock(&tdc->lock, 656);
 	}
 	if (!tdc) {
 	    error = EIO;
@@ -237,7 +242,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	if (!(tdc->f.states & DWriting)) {
 	    /* don't mark entry as mod if we don't have to */
 	    tdc->f.states |= DWriting;
-	    tdc->flags |= DFEntryMod;
+	    tdc->dflags |= DFEntryMod;
 	}
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
@@ -260,6 +265,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	    afs_MemCacheTruncate(tdc->f.inode, 0);
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
 	    afs_indexFlags[tdc->index] &= ~IFDataMod;    /* so it does disappear */
+	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    break;
 	}
@@ -297,11 +303,13 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	    code = afs_DoPartialWrite(avc, &treq);
 	    if (code) {
 		error = code;
+		ReleaseWriteLock(&tdc->lock);
 		afs_PutDCache(tdc);
 		break;
 	    }
 	}
 #endif
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
 #ifndef	AFS_VM_RDWR_ENV
@@ -429,11 +437,14 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	/* read the cached info */
 	if (noLock) {
 	    tdc = afs_FindDCache(avc, filePos);
+	    if (tdc) ObtainWriteLock(&tdc->lock, 657);
 	} else if (afs_blocksUsed > (CM_WAITFORDRAINPCT*afs_cacheBlocks)/100) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
+		ObtainWriteLock(&tdc->lock, 658);
 		if (!hsame(tdc->f.versionNo, avc->m.DataVersion) ||
-		    (tdc->flags & DFFetching)) {
+		    (tdc->dflags & DFFetching)) {
+		    ReleaseWriteLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
 		}
@@ -454,9 +465,11 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 		}
 		avc->states |= CDirty;
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
+		if (tdc) ObtainWriteLock(&tdc->lock, 659);
 	    }
 	} else {
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
+	    if (tdc) ObtainWriteLock(&tdc->lock, 660);
 	}
 	if (!tdc) {
 	    error = EIO;
@@ -469,7 +482,7 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	if (!(tdc->f.states & DWriting)) {
 	    /* don't mark entry as mod if we don't have to */
 	    tdc->f.states |= DWriting;
-	    tdc->flags |= DFEntryMod;
+	    tdc->dflags |= DFEntryMod;
 	}
 	tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
 	len = totalLength;	/* write this amount by default */
@@ -563,8 +576,9 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	    afs_AdjustSize(tdc,	0);	/* sets f.chunkSize to 0 */
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
 	    afs_indexFlags[tdc->index] &= ~IFDataMod;    /* so it does disappear */
-	    afs_PutDCache(tdc);
 	    afs_CFileClose(tfile);
+	    ReleaseWriteLock(&tdc->lock);
+	    afs_PutDCache(tdc);
 	    break;
 	}
 	/* otherwise we've written some, fixup length, etc and continue with next seg */
@@ -602,11 +616,13 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	    code = afs_DoPartialWrite(avc, &treq);
 	    if (code) {
 		error = code;
+		ReleaseWriteLock(&tdc->lock);
 		afs_PutDCache(tdc);
 		break;
 	    }
 	}
 #endif
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
 #ifndef	AFS_VM_RDWR_ENV

@@ -549,7 +549,7 @@ static int afsrwvp(register struct vcache *avc,
 		ObtainWriteLock(&avc->lock,562);
 		tdc = afs_FindDCache(avc, off);
 	        if (tdc) {	
-                    if (!(tdc->flags & DFNextStarted)) 
+                    if (!(tdc->mflags & DFNextStarted)) 
 		        afs_PrefetchChunk(avc, tdc, cr, &treq);
 		    afs_PutDCache(tdc);
                 }
@@ -1142,7 +1142,7 @@ afs_xinactive(OSI_VC_ARG(avc), acred)
 			    avc->fid.Fid.Vnode, avc->fid.Fid.Unique,
 			    code);
 		}
-		afs_InvalidateAllSegments(avc, 1);
+		afs_InvalidateAllSegments(avc);
 	    }
 	    s = VN_LOCK(vp);
 	    vp->v_count --;

@@ -68,6 +68,7 @@ tagain:
 	goto done;
     }
     oneDir = 0;
+    code = 0;
     if (andp->fid.Fid.Vnode == aodp->fid.Fid.Vnode) {
 	if (!strcmp(aname1, aname2)) {
 	    /* Same directory and same name; this is a noop and just return success
@@ -77,6 +78,13 @@ tagain:
 	    goto done;
 	}
 	ObtainWriteLock(&andp->lock,147);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	if (!tdc1) {
+	    code = ENOENT;
+	} else {
+	    ObtainWriteLock(&tdc1->lock, 643);
+	}
+	tdc2 = tdc1;
 	oneDir = 1;	    /* only one dude locked */
     }
     else if ((andp->states & CRO) || (aodp->states & CRO)) {
@@ -86,10 +94,24 @@ tagain:
     else if (andp->fid.Fid.Vnode < aodp->fid.Fid.Vnode) {
 	ObtainWriteLock(&andp->lock,148);	/* lock smaller one first */
 	ObtainWriteLock(&aodp->lock,149);
+	tdc2 = afs_FindDCache(andp, 0);
+	if (tdc2) ObtainWriteLock(&tdc2->lock, 644);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	if (tdc1)
+	    ObtainWriteLock(&tdc1->lock, 645);
+	else
+	    code = ENOENT;
     }
     else {
 	ObtainWriteLock(&aodp->lock,150);	/* lock smaller one first */
 	ObtainWriteLock(&andp->lock,557);
+	tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
+	if (tdc1)
+	    ObtainWriteLock(&tdc1->lock, 646);
+	else
+	    code = ENOENT;
+	tdc2 = afs_FindDCache(andp, 0);
+	if (tdc2) ObtainWriteLock(&tdc2->lock, 647);
     }
 
     osi_dnlc_remove (aodp, aname1, 0);
@@ -97,36 +119,45 @@ tagain:
     afs_symhint_inval(aodp); 
     afs_symhint_inval(andp);
 
-    /* before doing the rename, lookup the fileFid, just in case we
-     * don't make it down the path below that looks it up.  We always need
-     * fileFid in order to handle ".." invalidation at the very end.
-     */
-    code = 0;
-    tdc1 = afs_GetDCache(aodp, (afs_size_t) 0, &treq, &offset, &len, 0);
-    if (!tdc1) {
-	code = ENOENT;
-    }
     /*
      * Make sure that the data in the cache is current. We may have
      * received a callback while we were waiting for the write lock.
      */
-    else if (!(aodp->states & CStatd)
-	|| !hsame(aodp->m.DataVersion, tdc1->f.versionNo)) {
-	ReleaseWriteLock(&aodp->lock);
-	if (!oneDir) ReleaseWriteLock(&andp->lock);
-	afs_PutDCache(tdc1);
-	goto tagain;
+    if (tdc1) {
+	if (!(aodp->states & CStatd)
+	    || !hsame(aodp->m.DataVersion, tdc1->f.versionNo)) {
+
+	    ReleaseWriteLock(&aodp->lock);
+	    if (!oneDir) {
+		if (tdc2) {
+		    ReleaseWriteLock(&tdc2->lock);
+		    afs_PutDCache(tdc2);
+		}
+		ReleaseWriteLock(&andp->lock);
+	    }
+	    ReleaseWriteLock(&tdc1->lock);
+	    afs_PutDCache(tdc1);
+	    goto tagain;
+	}
     }
 
     if (code == 0)
 	code = afs_dir_Lookup(&tdc1->f.inode, aname1, &fileFid.Fid);
     if (code) {
-	if (tdc1) afs_PutDCache(tdc1);
+	if (tdc1) {
+	    ReleaseWriteLock(&tdc1->lock);
+	    afs_PutDCache(tdc1);
+	}
 	ReleaseWriteLock(&aodp->lock);
-	if (!oneDir) ReleaseWriteLock(&andp->lock);
+	if (!oneDir) {
+	    if (tdc2) {
+		ReleaseWriteLock(&tdc2->lock);
+		afs_PutDCache(tdc2);
+	    }
+	    ReleaseWriteLock(&andp->lock);
+	}
 	goto done;
     }
-    afs_PutDCache(tdc1);
 
     /* locks are now set, proceed to do the real work */
     do {
@@ -154,16 +185,8 @@ tagain:
     /* Now we try to do things locally.  This is really loathsome code. */
     unlinkFid.Fid.Vnode = 0;
     if (code == 0) {
-	tdc1 = tdc2 = 0;
-	/* don't use GetDCache because we don't want to worry about what happens if
-	    we have to stat the file (updating the stat block) before finishing
-	    local hero stuff (which may put old (from rename) data version number
-	    back in the cache entry).
-	    In any event, we don't really care if the data is not
+	/*  In any event, we don't really care if the data (tdc2) is not
 	    in the cache; if it isn't, we won't do the update locally.  */
-	tdc1 = afs_FindDCache(aodp, 0);
-	if (!oneDir) tdc2 = afs_FindDCache(andp, 0);
-	else tdc2 = tdc1;
 	/* see if version numbers increased properly */
 	doLocally = 1;
 	if (oneDir) {
@@ -215,8 +238,6 @@ tagain:
 		}
 	    }
 	}
-	if (tdc1) afs_PutDCache(tdc1);
-	if ((!oneDir) && tdc2) afs_PutDCache(tdc2);
 
 	/* update dir link counts */
 	aodp->m.LinkCount = OutOldDirStatus.LinkCount;
@@ -240,6 +261,16 @@ tagain:
     }
 
     /* release locks */
+    if (tdc1) {
+	ReleaseWriteLock(&tdc1->lock);
+	afs_PutDCache(tdc1);
+    }
+
+    if ((!oneDir) && tdc2) {
+	ReleaseWriteLock(&tdc2->lock);
+	afs_PutDCache(tdc2);
+    }
+
     ReleaseWriteLock(&aodp->lock);
     if (!oneDir) ReleaseWriteLock(&andp->lock);
     
@@ -306,8 +337,10 @@ tagain:
 	    ObtainWriteLock(&tvc->lock,152);
 	    tdc1 = afs_FindDCache(tvc, 0);
 	    if (tdc1) {
+		ObtainWriteLock(&tdc1->lock, 648);
 		ZapDCE(tdc1);	/* mark as unknown */
 		DZap(&tdc1->f.inode);
+		ReleaseWriteLock(&tdc1->lock);
 		afs_PutDCache(tdc1);	/* put it back */
 	    }
 	    osi_dnlc_remove(tvc, "..", 0);

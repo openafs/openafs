@@ -867,8 +867,10 @@ void shutdown_AFS()
       RWLOCK_INIT(&afs_xconn, "afs_xconn");
       memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
       RWLOCK_INIT(&afs_xuser, "afs_xuser");
-      RWLOCK_INIT(&afs_xvolume, "afs_xvolume"), RWLOCK_INIT(&afs_xcell, "afs_xcell");
-      RWLOCK_INIT(&afs_xserver, "afs_xserver"), LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
+      RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+      RWLOCK_INIT(&afs_xcell, "afs_xcell");
+      RWLOCK_INIT(&afs_xserver, "afs_xserver");
+      LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
     }
     
 } /*shutdown_AFS*/

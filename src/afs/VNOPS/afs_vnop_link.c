@@ -114,6 +114,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	ReleaseWriteLock(&adp->lock);
 	goto done;
     }
+    if (tdc) ObtainWriteLock(&tdc->lock, 635);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	code = afs_dir_Create(&tdc->f.inode, aname, &avc->fid.Fid);
@@ -123,6 +124,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	}
     }
     if (tdc) {
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);	/* drop ref count */
     }
     ReleaseWriteLock(&adp->lock);

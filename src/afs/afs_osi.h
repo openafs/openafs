@@ -194,6 +194,14 @@ typedef struct timeval osi_timeval_t;
     (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held"), 0))
 #endif /* AFS_GLOBAL_SUNLOCK */
 
+#ifdef RX_ENABLE_LOCKS
+#define RX_AFS_GLOCK()		AFS_GLOCK()
+#define RX_AFS_GUNLOCK()	AFS_GUNLOCK()
+#else
+#define RX_AFS_GLOCK()
+#define RX_AFS_GUNLOCK()
+#endif
+
 
 
 #ifndef KERNEL

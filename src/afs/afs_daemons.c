@@ -433,16 +433,17 @@ void BPrefetch(ab)
      * be waiting for our wakeup anyway.
      */
     tdc = (struct dcache *) (ab->ptr_parm[0]);
-    tdc->flags &= ~DFFetchReq;
+    ObtainSharedLock(&tdc->lock, 640);
+    if (tdc->mflags & DFFetchReq) {
+	UpgradeSToWLock(&tdc->lock, 641);
+	tdc->mflags &= ~DFFetchReq;
+	ReleaseWriteLock(&tdc->lock);
+    } else {
+	ReleaseSharedLock(&tdc->lock);
+    }
     afs_osi_Wakeup(&tdc->validPos);
     if (ab->size_parm[1]) {
-#ifdef	AFS_SUN5_ENVX
-	mutex_enter(&tdc->lock);
-	tdc->refCount--;
-	mutex_exit(&tdc->lock);
-#else
 	afs_PutDCache(tdc);	/* put this one back, too */
-#endif
     }
 }
 
@@ -1348,7 +1349,7 @@ afs_sgidaemon(void)
 			afs_sgibklist = NULL;
 			SPUNLOCK(afs_sgibklock, s);
 			AFS_GLOCK();
-			tdc->flags &= ~DFEntryMod;
+			tdc->dflags &= ~DFEntryMod;
 			afs_WriteDCache(tdc, 1);
 			AFS_GUNLOCK();
 			s = SPLOCK(afs_sgibklock);

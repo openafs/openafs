@@ -280,18 +280,55 @@ struct AFS_UCRED *acred;
     if (code = afs_InitReq(&treq, acred)) return code;
 
     if (!pl) {
-	/*
-	 * This is a read-ahead request, e.g. due to madvise.
-	 */
-	tdc = afs_GetDCache(avc, (afs_int32)off, &treq, &offset, &nlen, 1);
-	if (!tdc) return 0;
+	/* This is a read-ahead request, e.g. due to madvise.  */
+#ifdef	AFS_SUN5_ENV
+	int plen = alen;
+#else
+	int plen = PAGESIZE;
+#endif
+	ObtainReadLock(&avc->lock);
 
-	if (!(tdc->flags & DFNextStarted)) {
-	    ObtainReadLock(&avc->lock);
-	    afs_PrefetchChunk(avc, tdc, acred, &treq);
-	    ReleaseReadLock(&avc->lock);
+	while (plen > 0 && !afs_BBusy()) {
+	    /* Obtain a dcache entry at off.  2 means don't fetch data. */
+	    tdc = afs_GetDCache(avc, (afs_offs_t)off, &treq, &offset, &nlen, 2);
+	    if (!tdc) break;
+
+	    /* Write-lock the dcache entry, if we don't succeed, just go on */
+	    if (0 != NBObtainWriteLock(&tdc->lock, 642)) {
+		afs_PutDCache(tdc);
+		goto next_prefetch;
+	    }
+
+	    /* If we aren't already fetching this dcache entry, queue it */
+	    if (!(tdc->mflags & DFFetchReq)) {
+		struct brequest *bp;
+
+		tdc->mflags |= DFFetchReq;
+		bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
+				(afs_size_t) off, (afs_size_t) 1, tdc);
+		if (!bp) {
+		    /* Unable to start background fetch; might as well stop */
+		    tdc->mflags &= ~DFFetchReq;
+		    ReleaseWriteLock(&tdc->lock);
+		    afs_PutDCache(tdc);
+		    break;
+		}
+		ReleaseWriteLock(&tdc->lock);
+	    } else {
+		ReleaseWriteLock(&tdc->lock);
+		afs_PutDCache(tdc);
+	    }
+
+next_prefetch:
+	    /* Adjust our offset and remaining length values */
+	    off += nlen;
+	    plen -= nlen;
+
+	    /* If we aren't making progress for some reason, bail out */
+	    if (nlen <= 0) break;
 	}
-	afs_PutDCache(tdc);
+
+	ReleaseReadLock(&avc->lock);
 	return 0;
     }
 
@@ -321,6 +358,7 @@ struct AFS_UCRED *acred;
 	}
     }
 #endif
+
 retry:
 #ifdef	AFS_SUN5_ENV
     if (rw == S_WRITE || rw == S_CREATE)
@@ -372,9 +410,13 @@ retry:
     ReleaseWriteLock(&avc->vlock); 
 #endif
 
+    /* We're about to do stuff with our dcache entry..  Lock it. */
+    ObtainReadLock(&tdc->lock);
+
     /* Check to see whether the cache entry is still valid */
     if (!(avc->states & CStatd)
 	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock); 
 	afs_BozonUnlock(&avc->pvnLock, avc);
 	afs_PutDCache(tdc);
@@ -453,6 +495,9 @@ retry:
 	    buf->b_dev = 0;
 	    buf->b_blkno = btodb(toffset);
 	    bp_mapin(buf);		/* map it in to our address space */
+
+	    /* afs_ustrategy will want to lock the dcache entry */
+	    ReleaseReadLock(&tdc->lock);
 #ifndef	AFS_SUN5_ENV    
 	    ReleaseReadLock(&avc->lock);
 #endif
@@ -466,6 +511,8 @@ retry:
 #ifndef	AFS_SUN5_ENV    
 	    ObtainReadLock(&avc->lock);
 #endif
+	    ObtainReadLock(&tdc->lock);
+
 #ifdef	AFS_SUN5_ENV
 	    /* Before freeing unmap the buffer */
 	    bp_mapout(buf);
@@ -509,12 +556,14 @@ retry:
 
     AFS_GLOCK();
     pl[slot] = (struct page *) 0;
-    /*
-     * XXX This seems kind-of wrong: we shouldn't be modifying
-     *     avc->states while not holding the write lock (even
-     *     though nothing really uses CHasPages..)
-     */
-    avc->states |= CHasPages;
+    ReleaseReadLock(&tdc->lock);
+
+    /* Prefetch next chunk if we're at a chunk boundary */
+    if (AFS_CHUNKOFFSET(off) == 0) {
+	if (!(tdc->mflags & DFNextStarted))
+	    afs_PrefetchChunk(avc, tdc, acred, &treq);
+    }
+
     ReleaseReadLock(&avc->lock);
 #ifdef	AFS_SUN5_ENV
     ObtainWriteLock(&afs_xdcache,246);
@@ -548,6 +597,7 @@ retry:
     ReleaseReadLock(&avc->lock);
     afs_BozonUnlock(&avc->pvnLock, avc);
 #ifdef	AFS_SUN5_ENV
+    ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
 #endif
     return code;
@@ -576,6 +626,7 @@ int afs_putpage(vp, off, len, flags, cred)
 #else
     int toff = (int)off;
 #endif
+    int didWriteLock;
 
     AFS_STATCNT(afs_putpage);
     if (vp->v_flag & VNOMAP)		/* file doesn't allow mapping */
@@ -591,7 +642,8 @@ int afs_putpage(vp, off, len, flags, cred)
 	       	ICL_TYPE_LONG, (int) flags);
     avc = (struct vcache *) vp;
     afs_BozonLock(&avc->pvnLock, avc);
-    ObtainWriteLock(&avc->lock,247);
+    ObtainSharedLock(&avc->lock,247);
+    didWriteLock = 0;
 
     /* Get a list of modified (or whatever) pages */
     if (len) {
@@ -608,6 +660,12 @@ int afs_putpage(vp, off, len, flags, cred)
 	    if (!pages || !pvn_getdirty(pages, flags)) 
 		tlen = PAGESIZE;
 	    else {
+		if (!didWriteLock) {
+		    AFS_GLOCK();
+		    didWriteLock = 1;
+		    UpgradeSToWLock(&avc->lock, 671);
+		    AFS_GUNLOCK();
+		}
 		NPages++;
 		code = afs_putapage(vp, pages, &toff, &tlen, flags, cred);
 		if (code) {
@@ -619,6 +677,11 @@ int afs_putpage(vp, off, len, flags, cred)
 	    AFS_GLOCK();
 	}
     } else {
+	if (!didWriteLock) {
+	    UpgradeSToWLock(&avc->lock, 670);
+	    didWriteLock = 1;
+	}
+
 	AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV) 
 	code = pvn_vplist_dirty(vp, toff, afs_putapage, flags, cred);
@@ -628,10 +691,18 @@ int afs_putpage(vp, off, len, flags, cred)
 	AFS_GLOCK();
     }
 
-    if (code && !avc->vc_error)
+    if (code && !avc->vc_error) {
+	if (!didWriteLock) {
+	    UpgradeSToWLock(&avc->lock, 669);
+	    didWriteLock = 1;
+	}
 	avc->vc_error = code;
+    }
 
-    ReleaseWriteLock(&avc->lock);
+    if (didWriteLock)
+	ReleaseWriteLock(&avc->lock);
+    else
+	ReleaseSharedLock(&avc->lock);
     afs_BozonUnlock(&avc->pvnLock, avc);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_LONG, code, ICL_TYPE_LONG, NPages);
     AFS_GUNLOCK();
@@ -1120,9 +1191,10 @@ struct AFS_UCRED *acred;
 		    && hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)) {
 		    ObtainWriteLock(&avc->lock,251);
 		    ObtainWriteLock(&avc->vlock,576);
+		    ObtainReadLock(&dcp_newpage->lock);
 		    if ((avc->activeV == 0)
 			&& hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)
-			&& !(dcp_newpage->flags & (DFFetching))) {
+			&& !(dcp_newpage->dflags & (DFFetching))) {
 			AFS_GUNLOCK();
 			segmap_pagecreate(segkmap, raddr, rsize, 1);
 			AFS_GLOCK();
@@ -1131,9 +1203,9 @@ struct AFS_UCRED *acred;
 			afs_indexFlags[dcp_newpage->index]
 			    |= (IFAnyPages | IFDirtyPages);
 			ReleaseWriteLock(&afs_xdcache);		    
-			avc->states |= CHasPages;
 			created = 1;
 		    }
+		    ReleaseReadLock(&dcp_newpage->lock);
 		    afs_PutDCache(dcp_newpage);
 		    ReleaseWriteLock(&avc->vlock);
 		    ReleaseWriteLock(&avc->lock);
@@ -1158,13 +1230,6 @@ struct AFS_UCRED *acred;
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,253);
 #ifdef	AFS_SUN5_ENV
-	/*
-	 * If at a chunk boundary, start prefetch of next chunk.
-	 */
-	if (counter == 0 || AFS_CHUNKOFFSET(fileBase) == 0) {
-	    if (!(dcp->flags & DFNextStarted))
-	        afs_PrefetchChunk(avc, dcp, acred, &treq);
-	}
 	counter++;
         if (dcp)	
             afs_PutDCache(dcp);

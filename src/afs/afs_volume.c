@@ -317,6 +317,7 @@ void afs_CheckVolumeNames(flags)
 		    ReleaseReadLock(&afs_xvcache);
 
 		    ObtainWriteLock(&afs_xcbhash, 485);
+		    /* LOCKXXX: We aren't holding tvc write lock? */
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~CStatd;
 		    ReleaseWriteLock(&afs_xcbhash);

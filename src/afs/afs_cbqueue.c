@@ -289,10 +289,12 @@ unsigned int secs;
    {
    struct dcache * adc;
 
+   ObtainReadLock(&afs_xdcache);
    if ((adc = tvc->quick.dc) && (adc->stamp == tvc->quick.stamp)
    && (afs_indexTimes[adc->index] > afs_indexCounter - 20)) {
    queue up the stat request
    }
+   ReleaseReadLock(&afs_xdcache);
    }
    */
 

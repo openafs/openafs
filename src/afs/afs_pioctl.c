@@ -1693,17 +1693,18 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
+    ObtainReadLock(&tdc->lock);
     do {
       code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    ReleaseReadLock(&tdc->lock);
+    afs_PutDCache(tdc);	    /* we're done with the data */
     bufp = sysState.name;
     if (code) {
-	afs_PutDCache(tdc);
 	goto out;
     }
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
-    afs_PutDCache(tdc);	    /* we're done with the data */
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
 	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, WRITE_LOCK, avc, bufp);
     } else {
@@ -2480,9 +2481,11 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     tdc	= afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);	/* test for error below */
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
+    ObtainReadLock(&tdc->lock);
     do {
       code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    ReleaseReadLock(&tdc->lock);
     bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
@@ -2529,14 +2532,10 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	  code = RXAFS_RemoveFile(tc->id, (struct AFSFid *) &avc->fid.Fid,
 				  bufp, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	}
 	else code = -1;
@@ -2552,6 +2551,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     }
     if (tdc) {
 	/* we have the thing in the cache */
+	ObtainWriteLock(&tdc->lock, 661);
 	if (afs_LocalHero(avc, tdc, &OutDirStatus, 1)) {
 	    /* we can do it locally */
 	    code = afs_dir_Delete(&tdc->f.inode, bufp);
@@ -2560,6 +2560,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 		DZap(&tdc->f.inode);
 	    }
 	}
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);	/* drop ref count */
     }
     avc->states &= ~CUnique;		/* For the dfs xlator */
@@ -2705,6 +2706,7 @@ struct AFS_UCRED *acred;
 	if (!(afs_indexFlags[i] & IFEverUsed)) continue;	/* never had any data */
 	tdc = afs_GetDSlot(i, (struct dcache *) 0);
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
+	    ReleaseReadLock(&tdc->tlock);
 	    if (tdc->f.fid.Fid.Volume == volume && tdc->f.fid.Cell == cell) {
 		if (! (afs_indexFlags[i] & IFDataMod)) {
 		    /* if the file is modified, but has a ref cnt of only 1, then
@@ -2717,8 +2719,10 @@ struct AFS_UCRED *acred;
 			afs_FlushDCache(tdc);
 		}
 	    }
+	} else {
+	    ReleaseReadLock(&tdc->tlock);
 	}
-	tdc->refCount--;	/* bumped by getdslot */
+	afs_PutDCache(tdc);	/* bumped by getdslot */
     }
     MReleaseWriteLock(&afs_xdcache);
 
@@ -3677,17 +3681,18 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
+    ObtainReadLock(&tdc->lock);
     do {
       code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    ReleaseReadLock(&tdc->lock);
+    afs_PutDCache(tdc);	    /* we're done with the data */
     bufp = sysState.name;
     if (code) {
-	afs_PutDCache(tdc);
 	goto out;
     }
     tfid.Cell = avc->fid.Cell;
     tfid.Fid.Volume = avc->fid.Fid.Volume;
-    afs_PutDCache(tdc);	    /* we're done with the data */
     if (!tfid.Fid.Unique && (avc->states & CForeign)) {
 	tvc = afs_LookupVCache(&tfid, areq, (afs_int32 *)0, WRITE_LOCK, avc, bufp);
     } else {
@@ -3706,8 +3711,8 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
     afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
-    ObtainWriteLock(&tvc->lock,645);
-    ObtainWriteLock(&afs_xcbhash, 646);
+    ObtainWriteLock(&tvc->lock,649);
+    ObtainWriteLock(&afs_xcbhash, 650);
     afs_DequeueCallback(tvc);
     tvc->states	&= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
     ReleaseWriteLock(&afs_xcbhash);

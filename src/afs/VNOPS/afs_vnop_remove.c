@@ -130,7 +130,10 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
     if (tvc) afs_symhint_inval(tvc);   /* XXX: don't really need to be so extreme */
 
     if (code) {
-	if (tdc) afs_PutDCache(tdc);
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	}
 	if (tvc) afs_PutVCache(tvc, WRITE_LOCK);
 
 	if (code < 0) {
@@ -144,6 +147,7 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 	code = afs_CheckCode(code, treqp, 21);
 	return code;
     }
+    if (tdc) UpgradeSToWLock(&tdc->lock, 637);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	code = afs_dir_Delete(&tdc->f.inode, aname);
@@ -153,6 +157,7 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 	}
     }
     if (tdc) {
+	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);	/* drop ref count */
     }
     ReleaseWriteLock(&adp->lock);
@@ -265,6 +270,7 @@ tagain:
 
     tdc	= afs_GetDCache(adp, (afs_size_t) 0,	&treq, &offset,	&len, 1);  /* test for error below */
     ObtainWriteLock(&adp->lock,142);
+    ObtainSharedLock(&tdc->lock, 638);
 
     /*
      * Make sure that the data in the cache is current. We may have
@@ -273,8 +279,10 @@ tagain:
     if (!(adp->states & CStatd)
 	|| (tdc && !hsame(adp->m.DataVersion, tdc->f.versionNo))) {
 	ReleaseWriteLock(&adp->lock);
-	if (tdc)
+	if (tdc) {
+	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
+	}
 	goto tagain;
     }
 
@@ -330,6 +338,7 @@ tagain:
 	char *unlname = newname();
 
 	ReleaseWriteLock(&adp->lock);
+	if (tdc) ReleaseSharedLock(&tdc->lock);
 	code = afsrename(adp, aname, adp, unlname, acred);
 	Tnam1 = unlname;
 	if (!code) {
@@ -408,8 +417,9 @@ afs_remunlink(avc, doit)
 	    if (adp) {
 		tdc = afs_FindDCache(adp, 0);
 		ObtainWriteLock(&adp->lock, 159);
+		ObtainSharedLock(&tdc->lock, 639);
 
-		/* afsremove releases the adp lock, and does vn_rele(avc) */
+		/* afsremove releases the adp & tdc locks, and does vn_rele(avc) */
 		code = afsremove(adp, tdc, avc, unlname, cred, &treq);
 		afs_PutVCache(adp, WRITE_LOCK);
 	    } else {

@@ -1056,7 +1056,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    ObtainWriteLock(&vcp->lock,407);
 	    tdc = afs_FindDCache(vcp, xfrOffset);
             if (tdc) {
-	        if (!(tdc->flags & DFNextStarted))
+		if (!(tdc->mflags & DFNextStarted))
 	            afs_PrefetchChunk(vcp, tdc, credp, &treq);
 	        afs_PutDCache(tdc);
             }

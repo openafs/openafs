@@ -445,6 +445,7 @@ tagain:
 
     /* lock the directory cache entry */
     ObtainReadLock(&adp->lock);
+    ObtainReadLock(&dcp->lock);
 
     /*
      * Make sure that the data in the cache is current. There are two
@@ -453,20 +454,22 @@ tagain:
      * 2. The cache data is no longer valid
      */
     while ((adp->states & CStatd)
-	   && (dcp->flags & DFFetching)
+	   && (dcp->dflags & DFFetching)
 	   && hsame(adp->m.DataVersion, dcp->f.versionNo)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
 			ICL_TYPE_STRING, __FILE__,
 			ICL_TYPE_INT32, __LINE__,
 			ICL_TYPE_POINTER, dcp,
-			ICL_TYPE_INT32, dcp->flags);
-	dcp->flags |= DFWaiting;
+			ICL_TYPE_INT32, dcp->dflags);
+	ReleaseReadLock(&dcp->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_osi_Sleep(&dcp->validPos);
 	ObtainReadLock(&adp->lock);
+	ObtainReadLock(&dcp->lock);
     }
     if (!(adp->states & CStatd)
 	|| !hsame(adp->m.DataVersion, dcp->f.versionNo)) {
+	ReleaseReadLock(&dcp->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_PutDCache(dcp);
 	goto tagain;
@@ -586,6 +589,7 @@ tagain:
     }	/* while loop over all dir entries */
 
     /* now release the dir lock and prepare to make the bulk RPC */
+    ReleaseReadLock(&dcp->lock);
     ReleaseReadLock(&adp->lock);
 
     /* release the chunk */
@@ -1081,6 +1085,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* now we will just call dir package with appropriate inode.
       Dirs are always fetched in their entirety for now */
     ObtainReadLock(&adp->lock);
+    ObtainReadLock(&tdc->lock);
 
     /*
      * Make sure that the data in the cache is current. There are two
@@ -1089,15 +1094,17 @@ afs_lookup(adp, aname, avcp, acred)
      * 2. The cache data is no longer valid
      */
     while ((adp->states & CStatd)
-	   && (tdc->flags & DFFetching)
+	   && (tdc->dflags & DFFetching)
 	   && hsame(adp->m.DataVersion, tdc->f.versionNo)) {
-	tdc->flags |= DFWaiting;
+	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_osi_Sleep(&tdc->validPos);
 	ObtainReadLock(&adp->lock);
+	ObtainReadLock(&tdc->lock);
     }
     if (!(adp->states & CStatd)
 	|| !hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_PutDCache(tdc);
 	goto redo;
@@ -1128,6 +1135,7 @@ afs_lookup(adp, aname, avcp, acred)
     }
     tname = sysState.name;
 
+    ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
 
     if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {

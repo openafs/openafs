@@ -2643,8 +2643,8 @@ void print_dcache(kmem, dcp, dp, pnt)
     if (!pnt) return;
     printf("%lx: ", dp);
     print_venusfid(" fid", &dcp->f.fid);
-    printf("refcnt=%d, flags=%x, validPos=%d\n",
-	   dcp->refCount, dcp->flags, dcp->validPos);
+    printf("refcnt=%d, dflags=%x, mflags=%x, validPos=%d\n",
+	   dcp->refCount, dcp->dflags, dcp->mflags, dcp->validPos);
 
 #ifdef	AFS33
     printf("\tf.modtime=%d, f.versNo=%d.%d\n",
@@ -3334,7 +3334,7 @@ void print_conntable_lock(kmem)
 	  kread(kmem, (off_t) sep, (char *)sentry, sizeof *sentry);
 	  printf("\t%lx: next=0x%lx, peer=0x%lx, epoch=0x%x, cid=0x%x, ackRate=%d\n",
 		 sep, se.next, se.peer, se.epoch, se.cid, se.ackRate);
-	  printf("\t\tcall[%x=%d, %x=%d, %x=%d, %x=%d]\n",
+	  printf("\t\tcall[%lx=%d, %lx=%d, %lx=%d, %lx=%d]\n",
 		 se.call[0], se.callNumber[0],
 		 se.call[1], se.callNumber[1],
 		 se.call[2], se.callNumber[2],

@@ -505,7 +505,6 @@ struct SimpleLocks {
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
 #define CForeign	0x00002000	/* this is a non-afs vcache */
-#define CHasPages	0x00004000
 #define CUnlinked	0x00010000
 #define CBulkStat	0x00020000	/* loaded by a bulk stat, and not ref'd since */
 #define CUnlinkedDel	0x00040000
@@ -610,19 +609,19 @@ struct vcache {
 #ifdef AFS_DARWIN_ENV
     struct lock__bsd__      rwlock;
 #endif
-    afs_int32 parentVnode;			/* Parent dir, if a file. */
+    afs_int32 parentVnode;		/* Parent dir, if a file. */
     afs_int32 parentUnique;
     struct VenusFid *mvid;		/* Either parent dir (if root) or root (if mt pt) */
     char *linkData;			/* Link data if a symlink. */
-    afs_hyper_t flushDV;			/* data version last flushed from text */
+    afs_hyper_t flushDV;		/* data version last flushed from text */
     afs_hyper_t mapDV;			/* data version last flushed from map */
-    afs_size_t truncPos;			/* truncate file to this position at next store */
+    afs_size_t truncPos;		/* truncate file to this position at next store */
     struct server *callback;		/* The callback host, if any */
-    afs_uint32 cbExpires;			/* time the callback expires */
+    afs_uint32 cbExpires;		/* time the callback expires */
     struct afs_q callsort;              /* queue in expiry order, sort of */
     struct axscache *Access;            /* a list of cached access bits */
-    afs_int32 anyAccess;			/* System:AnyUser's access to this. */
-    afs_int32 last_looker;                  /* pag/uid from last lookup here */
+    afs_int32 anyAccess;		/* System:AnyUser's access to this. */
+    afs_int32 last_looker;              /* pag/uid from last lookup here */
 #if	defined(AFS_SUN5_ENV)
     afs_int32 activeV;
 #endif /* defined(AFS_SUN5_ENV) */
@@ -778,11 +777,12 @@ struct cm_initparams {
 /* struct dcache states bits */
 #define	DWriting    8		/* file being written (used for cache validation) */
 
-/* dcache flags */
-#define	DFNextStarted	1	/* next chunk has been prefetched already */
-#define	DFEntryMod	2	/* has entry itself been modified? */
-#define	DFFetching	4	/* file is currently being fetched */
-#define	DFWaiting	8	/* someone waiting for file */
+/* dcache data flags */
+#define	DFEntryMod	0x02	/* has entry itself been modified? */
+#define	DFFetching	0x04	/* file is currently being fetched */
+
+/* dcache meta flags */
+#define	DFNextStarted	0x01	/* next chunk has been prefetched already */
 #define	DFFetchReq	0x10	/* someone is waiting for DFFetching to go on */
 
 
@@ -866,13 +866,47 @@ struct fcache {
 /* kept in memory */
 struct dcache {
     struct afs_q lruq;		/* Free queue for in-memory images */
-    afs_rwlock_t lock;		/* XXX */
+    afs_rwlock_t lock;		/* Protects validPos, some f */
+    afs_rwlock_t tlock;		/* Atomizes updates to refCount */
+    afs_rwlock_t mflock;	/* Atomizes accesses/updates to mflags */
     afs_size_t validPos;	/* number of valid bytes during fetch */
-    afs_int32 index;			/* The index in the CacheInfo file*/
+    afs_int32 index;		/* The index in the CacheInfo file*/
     short refCount;		/* Associated reference count. */
-    short flags;		/* more flags bits */
+    char dflags;		/* Data flags */
+    char mflags;		/* Meta flags */
     struct fcache f;		/* disk image */
-    afs_int32 stamp; 		/* used with vtodc struct for hints */
+    afs_int32 stamp;		/* used with vtodc struct for hints */
+
+    /*
+     * Locking rules:
+     *
+     * dcache.lock protects the actual contents of the cache file (in
+     * f.inode), subfields of f except those noted below, dflags and
+     * validPos.
+     *
+     * dcache.tlock is used to make atomic updates to refCount.  Zero
+     * refCount dcache entries are protected by afs_xdcache instead of
+     * tlock.
+     *
+     * dcache.mflock is used to access and update mflags.  It cannot be
+     * held without holding the corresponding dcache.lock.  Updating
+     * mflags requires holding dcache.lock(R) and dcache.mflock(W), and
+     * checking for mflags requires dcache.lock(R) and dcache.mflock(R).
+     * Note that dcache.lock(W) gives you the right to update mflags,
+     * as dcache.mflock(W) can only be held with dcache.lock(R).
+     *
+     * dcache.stamp is protected by the associated vcache lock, because
+     * it's only purpose is to establish correspondence between vcache
+     * and dcache entries.
+     *
+     * dcache.index, dcache.f.fid, dcache.f.chunk and dcache.f.inode are
+     * write-protected by afs_xdcache and read-protected by refCount.
+     * Once an entry is referenced, these values cannot change, and if
+     * it's on the free list (with refCount=0), it can be reused for a
+     * different file/chunk.  These values can only be written while
+     * holding afs_xdcache(W) and allocating this dcache entry (thereby
+     * ensuring noone else has a refCount on it).
+     */
 };
 /* this is obsolete and should be removed */
 #define ihint stamp 
@@ -882,14 +916,8 @@ struct dcache {
     do { \
 	(x)->f.fid.Fid.Unique = 0; \
 	afs_indexUnique[(x)->index] = 0; \
-	(x)->flags |= DFEntryMod; \
+	(x)->dflags |= DFEntryMod; \
     } while(0)
-
-/*
- * Convenient release macro for use when afs_PutDCache would cause
- * deadlock on afs_xdcache lock
- */
-#define lockedPutDCache(ad) ((ad)->refCount--)
 
 /* FakeOpen and Fake Close used to be real subroutines.  They're only used in
  * sun_subr and afs_vnodeops, and they're very frequently called, so I made 
@@ -978,7 +1006,7 @@ extern struct volume	    *afs_GetVolumeByName();
 extern struct conn	    *afs_Conn();
 extern struct conn	    *afs_ConnByHost();
 extern struct conn	    *afs_ConnByMHosts();
-extern afs_int32		    afs_NewCell();
+extern afs_int32	    afs_NewCell();
 extern struct dcache	    *afs_GetDCache();
 extern struct dcache	    *afs_FindDCache();
 extern struct dcache	    *afs_NewDCache();

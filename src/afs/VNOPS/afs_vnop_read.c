@@ -107,13 +107,22 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
 	hset(avc->flushDV, avc->m.DataVersion);
     }
 #endif
+
+    /*
+     * Locks held:
+     * avc->lock(R)
+     */
     while (totalLength > 0) {
 	/* read all of the cached info */
 	if (filePos >= avc->m.Length) break;	/* all done */
 	if (noLock) {
-	    if (tdc) afs_PutDCache(tdc);
+	    if (tdc) {
+		ReleaseReadLock(&tdc->lock);
+		afs_PutDCache(tdc);
+	    }
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
+		ObtainReadLock(&tdc->lock);
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->f.chunkBytes - offset;
 	    }
@@ -123,15 +132,16 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
 	       The server could update the file as soon as the fetch responsible
 	       for the setting of the DFFetching flag completes.
 	    
-	       However, the presence of the DFFetching flag (visible under a
-	       read lock since it is set and cleared only under a write lock)
-	       means that we're fetching as good a version as was known to this
-	       client at the time of the last call to afs_VerifyVCache, since
-	       the latter updates the stat cache's m.DataVersion field under a
-	       write lock, and from the time that the DFFetching flag goes on
-	       (before the fetch starts), to the time it goes off (after the
-	       fetch completes), afs_GetDCache keeps at least a read lock
-	       (actually it keeps an S lock) on the cache entry.
+	       However, the presence of the DFFetching flag (visible under
+	       a dcache read lock since it is set and cleared only under a
+	       dcache write lock) means that we're fetching as good a version
+	       as was known to this client at the time of the last call to
+	       afs_VerifyVCache, since the latter updates the stat cache's
+	       m.DataVersion field under a vcache write lock, and from the
+	       time that the DFFetching flag goes on in afs_GetDCache (before
+	       the fetch starts), to the time it goes off (after the fetch
+	       completes), afs_GetDCache keeps at least a read lock on the
+	       vcache entry.
 	    
 	       This means that if the DFFetching flag is set, we can use that
 	       data for any reads that must come from the current version of
@@ -147,13 +157,17 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
 	       m.DataVersion > f.versionNo (the latter is not updated until
 	       after the fetch completes).
 	     */
-	    if (tdc) afs_PutDCache(tdc);	/* before reusing tdc */
+	    if (tdc) {
+		ReleaseReadLock(&tdc->lock);
+		afs_PutDCache(tdc);	/* before reusing tdc */
+	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
+	    ObtainReadLock(&tdc->lock);
 	    /* now, first try to start transfer, if we'll need the data.  If
 	     * data already coming, we don't need to do this, obviously.  Type
 	     * 2 requests never return a null dcache entry, btw.
 	     */
-	    if (!(tdc->flags & DFFetching)
+	    if (!(tdc->dflags & DFFetching)
 		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now,
 		 * and we'll need new data */
@@ -161,43 +175,54 @@ tagain:
 		if (trybusy && !afs_BBusy()) {
 		    struct brequest *bp;
 		    /* daemon is not busy */
-		    if (!(tdc->flags & DFFetchReq)) {
+		    ObtainSharedLock(&tdc->mflock, 665);
+		    if (!(tdc->mflags & DFFetchReq)) {
 			/* start the daemon (may already be running, however) */
-			tdc->flags |= DFFetchReq;
+			UpgradeSToWLock(&tdc->mflock, 666);
+			tdc->mflags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
 					(afs_size_t)filePos, (afs_size_t) 0,
 					tdc);
 			if (!bp) {
-			    tdc->flags &= ~DFFetchReq;
+			    tdc->mflags &= ~DFFetchReq;
 			    trybusy = 0;	/* Avoid bkg daemon since they're too busy */
+			    ReleaseWriteLock(&tdc->mflock);
 			    goto tagain;
 			}
+			ConvertWToSLock(&tdc->mflock);
 			/* don't use bp pointer! */
 		    }
-		    while (tdc->flags & DFFetchReq) {
+		    ConvertSToRLock(&tdc->mflock);
+		    while (tdc->mflags & DFFetchReq) {
 			/* don't need waiting flag on this one */
+			ReleaseReadLock(&tdc->mflock);
+			ReleaseReadLock(&tdc->lock);
 			ReleaseReadLock(&avc->lock);
 			afs_osi_Sleep(&tdc->validPos);
 			ObtainReadLock(&avc->lock);
+			ObtainReadLock(&tdc->lock);
+			ObtainReadLock(&tdc->mflock);
 		    }
+		    ReleaseReadLock(&tdc->mflock);
 		}
 	    }
 	    /* now data may have started flowing in (if DFFetching is on).  If
 	     * data is now streaming in, then wait for some interesting stuff. */
-	    while ((tdc->flags & DFFetching) && tdc->validPos <= filePos) {
+	    while ((tdc->dflags & DFFetching) && tdc->validPos <= filePos) {
 		/* too early: wait for DFFetching flag to vanish, or data to appear */
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
 				ICL_TYPE_STRING, __FILE__,
 				ICL_TYPE_INT32, __LINE__,
 				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->flags);
-		tdc->flags |= DFWaiting;
+				ICL_TYPE_INT32, tdc->dflags);
+		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
 		afs_osi_Sleep(&tdc->validPos);
 		ObtainReadLock(&avc->lock);
+		ObtainReadLock(&tdc->lock);
 	    }
 	    /* fetching flag gone, data is here, or we never tried (BBusy for instance) */
-	    if (tdc->flags & DFFetching) {
+	    if (tdc->dflags & DFFetching) {
 		/* still fetching, some new data is here: compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
@@ -210,6 +235,7 @@ tagain:
 		}
 		else {
 		    /* don't have current data, so get it below */
+		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = (struct dcache *) 0;
 		}
@@ -219,6 +245,7 @@ tagain:
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
+		ObtainReadLock(&tdc->lock);
 	    }
 	}
 
@@ -226,6 +253,13 @@ tagain:
 	    error = EIO;
 	    break;
 	}
+
+	/*
+	 * Locks held:
+	 * avc->lock(R)
+	 * tdc->lock(R)
+	 */
+
 	if (len	> totalLength) len = totalLength;   /* will read len bytes */
 	if (len	<= 0) {	/* shouldn't get here if DFFetching is on */
 	    /* read past the end of a chunk, may not be at next chunk yet, and yet
@@ -271,14 +305,21 @@ tagain:
 	if (len <= 0) break;	/* surprise eof */
     }	/* the whole while loop */
 
+    /*
+     * Locks held:
+     * avc->lock(R)
+     * tdc->lock(R) if tdc
+     */
+
     /* if we make it here with tdc non-zero, then it is the last chunk we
      * dealt with, and we have to release it when we're done.  We hold on
      * to it in case we need to do a prefetch.
      */
     if (tdc) {
+	ReleaseReadLock(&tdc->lock);
 #ifndef	AFS_VM_RDWR_ENV
 	/* try to queue prefetch, if needed */
-	if (!(tdc->flags & DFNextStarted) && !noLock) {
+	if (!noLock) {
 	    afs_PrefetchChunk(avc, tdc, acred, &treq);
 	}
 #endif
@@ -297,8 +338,8 @@ tagain:
  * flag in the prefetched block, so that the next call to read knows to wait
  * for the daemon to start doing things.
  *
- * This function must be called with the vnode at least read-locked
- * because it plays around with dcache entries.
+ * This function must be called with the vnode at least read-locked, and
+ * no locks on the dcache, because it plays around with dcache entries.
  */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 			      struct AFS_UCRED *acred, struct vrequest *areq)
@@ -309,30 +350,55 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 
     offset = adc->f.chunk+1;		/* next chunk we'll need */
     offset = AFS_CHUNKTOBASE(offset);   /* base of next chunk */
-    if (offset < avc->m.Length && !afs_BBusy()) {
+    ObtainReadLock(&adc->lock);
+    ObtainSharedLock(&adc->mflock, 662);
+    if (offset < avc->m.Length && !(adc->mflags & DFNextStarted) && !afs_BBusy()) {
 	struct brequest *bp;
-	adc->flags |= DFNextStarted;	/* we've tried to prefetch for this guy */
+
+	UpgradeSToWLock(&adc->mflock, 663);
+	adc->mflags |= DFNextStarted;	/* we've tried to prefetch for this guy */
+	ReleaseWriteLock(&adc->mflock);
+	ReleaseReadLock(&adc->lock);
+
 	tdc = afs_GetDCache(avc, offset, areq, &j1, &j2, 2);	/* type 2 never returns 0 */
-	if (!(tdc->flags & DFFetchReq)) {
+	ObtainSharedLock(&tdc->mflock, 651);
+	if (!(tdc->mflags & DFFetchReq)) {
 	    /* ask the daemon to do the work */
-	    tdc->flags |= DFFetchReq;	/* guaranteed to be cleared by BKG or GetDCache */
+	    UpgradeSToWLock(&tdc->mflock, 652);
+	    tdc->mflags |= DFFetchReq;	/* guaranteed to be cleared by BKG or GetDCache */
 	    /* last parm (1) tells bkg daemon to do an afs_PutDCache when it is done,
 	     * since we don't want to wait for it to finish before doing so ourselves.
 	     */
-#ifdef	AFS_SUN5_ENVX
-	    mutex_exit(&tdc->lock);
-#endif
-	     bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-				(afs_size_t) offset, (afs_size_t) 1, tdc);
+	    bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
+			    (afs_size_t) offset, (afs_size_t) 1, tdc);
 	    if (!bp) {
 		/* Bkg table full; just abort non-important prefetching to avoid deadlocks */
-		tdc->flags &= ~(DFNextStarted | DFFetchReq);
+		tdc->mflags &= ~DFFetchReq;
+		ReleaseWriteLock(&tdc->mflock);
 		afs_PutDCache(tdc);
-		return;
+
+		/*
+		 * DCLOCKXXX: This is a little sketchy, since someone else
+		 * could have already started a prefetch..  In practice,
+		 * this probably doesn't matter; at most it would cause an
+		 * extra slot in the BKG table to be used up when someone
+		 * prefetches this for the second time.
+		 */
+		ObtainReadLock(&adc->lock);
+		ObtainWriteLock(&adc->mflock, 664);
+		adc->mflags &= ~DFNextStarted;
+		ReleaseWriteLock(&adc->mflock);
+		ReleaseReadLock(&adc->lock);
+	    } else {
+		ReleaseWriteLock(&tdc->mflock);
 	    }
-	}
-	else
+	} else {
+	    ReleaseSharedLock(&tdc->mflock);
 	    afs_PutDCache(tdc);
+	}
+    } else {
+	ReleaseSharedLock(&adc->mflock);
+	ReleaseReadLock(&adc->lock);
     }
 }
 
@@ -381,15 +447,21 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
 
     if ((avc->states & CStatd)                                /* up to date */
 	&& (tdc = avc->quick.dc) && (tdc->index != NULLIDX) 
-	&& !(afs_indexFlags[tdc->index] & IFFree))   {
+	&& !(afs_indexFlags[tdc->index] & (IFFree | IFDiscarded)))   {
 
-	tdc->refCount++;
+	int readLocked = 0;
+
+	afs_RefDCache(tdc);
 	ReleaseReadLock(&afs_xdcache);
+	if (tdc->stamp == avc->quick.stamp) {
+	    readLocked = 1;
+	    ObtainReadLock(&tdc->lock);
+	}
 
 	if ((tdc->stamp == avc->quick.stamp)                /* hint matches */
 	    && ((offDiff = (auio->afsio_offset - avc->quick.minLoc)) >= 0)
 	    && (tdc->f.chunkBytes >= auio->afsio_resid + offDiff)
-	    && !(tdc->flags & DFFetching)) { /* fits in chunk */
+	    && !(tdc->dflags & DFFetching)) { /* fits in chunk */
 
 	    auio->afsio_offset -= avc->quick.minLoc;
 
@@ -465,19 +537,23 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
 	    hadd32(afs_indexCounter, 1);
 
 	    if (!noLock) {
-#ifndef	AFS_VM_RDWR_ENV
-		if (!(code = afs_InitReq(&treq, acred))&& (!(tdc->flags & DFNextStarted)))
-		    afs_PrefetchChunk(avc, tdc, acred, &treq);
-#endif
 		ReleaseReadLock(&avc->lock);
+#ifndef	AFS_VM_RDWR_ENV
+		if (!(code = afs_InitReq(&treq, acred))) {
+		    if (!(tdc->mflags & DFNextStarted))
+			afs_PrefetchChunk(avc, tdc, acred, &treq);
+		}
+#endif
 	    }
-	    tdc->refCount--;
+	    if (readLocked) ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
 	    return (code);
 	}
 	if (!tdc->f.chunkBytes) {   /* debugging f.chunkBytes == 0 problem */
 	    savedc = tdc;
 	}
-	tdc->refCount--;
+	if (readLocked) ReleaseReadLock(&tdc->lock);
+	afs_PutDCache(tdc);
     } else {
 	ReleaseReadLock(&afs_xdcache);
     }
@@ -507,7 +583,7 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
     struct iovec *tvec;
     struct osi_file *tfile;
     afs_int32 code;
-    int munlocked, trybusy=1;
+    int trybusy=1;
     struct vnode *vp;
     struct vrequest treq;
 
@@ -559,9 +635,13 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
 	/* read all of the cached info */
 	if (filePos >= avc->m.Length) break;	/* all done */
 	if (noLock) {
-	    if (tdc) afs_PutDCache(tdc);
+	    if (tdc) {
+		ReleaseReadLock(&tdc->lock);
+		afs_PutDCache(tdc);
+	    }
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
+		ObtainReadLock(&tdc->lock);
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->f.chunkBytes - offset;
 	    }
@@ -571,15 +651,16 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
 	       The server could update the file as soon as the fetch responsible
 	       for the setting of the DFFetching flag completes.
 	    
-	       However, the presence of the DFFetching flag (visible under a
-	       read lock since it is set and cleared only under a write lock)
-	       means that we're fetching as good a version as was known to this
-	       client at the time of the last call to afs_VerifyVCache, since
-	       the latter updates the stat cache's m.DataVersion field under a
-	       write lock, and from the time that the DFFetching flag goes on
-	       (before the fetch starts), to the time it goes off (after the
-	       fetch completes), afs_GetDCache keeps at least a read lock
-	       (actually it keeps an S lock) on the cache entry.
+	       However, the presence of the DFFetching flag (visible under
+	       a dcache read lock since it is set and cleared only under a
+	       dcache write lock) means that we're fetching as good a version
+	       as was known to this client at the time of the last call to
+	       afs_VerifyVCache, since the latter updates the stat cache's
+	       m.DataVersion field under a vcache write lock, and from the
+	       time that the DFFetching flag goes on in afs_GetDCache (before
+	       the fetch starts), to the time it goes off (after the fetch
+	       completes), afs_GetDCache keeps at least a read lock on the
+	       vcache entry.
 	    
 	       This means that if the DFFetching flag is set, we can use that
 	       data for any reads that must come from the current version of
@@ -595,62 +676,72 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
 	       m.DataVersion > f.versionNo (the latter is not updated until
 	       after the fetch completes).
 	     */
-	    if (tdc) afs_PutDCache(tdc);	/* before reusing tdc */
-	    munlocked = 0;
+	    if (tdc) {
+		ReleaseReadLock(&tdc->lock);
+		afs_PutDCache(tdc);	/* before reusing tdc */
+	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
+	    ObtainReadLock(&tdc->lock);
 	    if (tdc == savedc) {
 		savedc = 0;
 	    }
 	    /* now, first try to start transfer, if we'll need the data.  If
 	     * data already coming, we don't need to do this, obviously.  Type
 	     * 2 requests never return a null dcache entry, btw. */
-	    if (!(tdc->flags & DFFetching)
+	    if (!(tdc->dflags & DFFetching)
 		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now, and we'll need new data */
 tagain:
 		if (trybusy && !afs_BBusy()) {
 		    struct brequest *bp;
 		    /* daemon is not busy */
-		    if (!(tdc->flags & DFFetchReq)) {
-			tdc->flags |= DFFetchReq;
-#ifdef	AFS_SUN5_ENVX
-			mutex_exit(&tdc->lock);
-			munlocked = 1;
-#endif
+		    ObtainSharedLock(&tdc->mflock, 667);
+		    if (!(tdc->mflags & DFFetchReq)) {
+			UpgradeSToWLock(&tdc->mflock, 668);
+			tdc->mflags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-					(afs_size_t)filePos, (afs_size_t) 0,
+					(afs_size_t) filePos, (afs_size_t) 0,
 					tdc);
 			if (!bp) {
 			    /* Bkg table full; retry deadlocks */
-			    tdc->flags &= ~DFFetchReq;
+			    tdc->mflags &= ~DFFetchReq;
 			    trybusy = 0;	/* Avoid bkg daemon since they're too busy */
+			    ReleaseWriteLock(&tdc->mflock);
 			    goto tagain;
 			}
+			ConvertWToSLock(&tdc->mflock);
 		    }
-		    while (tdc->flags & DFFetchReq) {
+		    ConvertSToRLock(&tdc->mflock);
+		    while (tdc->mflags & DFFetchReq) {
 			/* don't need waiting flag on this one */
+			ReleaseReadLock(&tdc->mflock);
+			ReleaseReadLock(&tdc->lock);
 			ReleaseReadLock(&avc->lock);
 			afs_osi_Sleep(&tdc->validPos);
 			ObtainReadLock(&avc->lock);
+			ObtainReadLock(&tdc->lock);
+			ObtainReadLock(&tdc->mflock);
 		    }
+		    ReleaseReadLock(&tdc->mflock);
 		}
 	    }
 	    /* now data may have started flowing in (if DFFetching is on).  If
 	     * data is now streaming in, then wait for some interesting stuff. */
-	    while ((tdc->flags & DFFetching) && tdc->validPos <= filePos) {
+	    while ((tdc->dflags & DFFetching) && tdc->validPos <= filePos) {
 		/* too early: wait for DFFetching flag to vanish, or data to appear */
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
 				ICL_TYPE_STRING, __FILE__,
 				ICL_TYPE_INT32, __LINE__,
 				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->flags);
-		tdc->flags |= DFWaiting;
+				ICL_TYPE_INT32, tdc->dflags);
+		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
 		afs_osi_Sleep(&tdc->validPos);
 		ObtainReadLock(&avc->lock);
+		ObtainReadLock(&tdc->lock);
 	    }
 	    /* fetching flag gone, data is here, or we never tried (BBusy for instance) */
-	    if (tdc->flags & DFFetching) {
+	    if (tdc->dflags & DFFetching) {
 		/* still fetching, some new data is here: compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
@@ -663,6 +754,7 @@ tagain:
 		}
 		else {
 		    /* don't have current data, so get it below */
+		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = (struct dcache *) 0;
 		}
@@ -672,6 +764,7 @@ tagain:
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
+		ObtainReadLock(&tdc->lock);
 	    }
 	}
 	
@@ -843,10 +936,12 @@ tagain:
      * to it in case we need to do a prefetch, obviously.
      */
     if (tdc) {
+	ReleaseReadLock(&tdc->lock);
 #ifndef	AFS_VM_RDWR_ENV
 	/* try to queue prefetch, if needed */
-	if (!(tdc->flags & DFNextStarted) && !noLock) {
-	    afs_PrefetchChunk(avc, tdc, acred, &treq);
+	if (!noLock) {
+	    if (!(tdc->mflags & DFNextStarted))
+		afs_PrefetchChunk(avc, tdc, acred, &treq);
 	}
 #endif
 	afs_PutDCache(tdc);

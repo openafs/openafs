@@ -532,10 +532,7 @@ afs_MemCacheFetchProc(acall, mceP, abase, adc, avc, abytesToXferP, abytesXferred
 	      abase += tlen;
 	      length -= tlen;
 	      adc->validPos = abase;
-	      if (adc->flags & DFWaiting) {
-		  adc->flags &= ~DFWaiting;
-		  afs_osi_Wakeup(&adc->validPos);
-	      }
+	      afs_osi_Wakeup(&adc->validPos);
 	  }
       } while (moredata);
       /* max of two sizes */
