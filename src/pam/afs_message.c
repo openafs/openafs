@@ -36,7 +36,7 @@ static char *fallback_messages[] = {
     "AFS not available",			/* 10: AFS_UNAVAIL	*/
     "AFS error code 0x%x",			/* 11: AFS_ERROR	*/
     "AFS Authentication succeeded.\n",		/* 12: LOGIN_OK		*/
-    "AFS Authentication failed for user %s. %s\n",
+    "AFS Authentication failed for user %s %s\n",
 						/* 13: LOGIN_FAILED	*/
     "AFS PAM error, code=%d",			/* 14: PAMERROR		*/
     "AFS uid exceeds OS bounds.\n",		/* 15: UID_OVERFLOW	*/
@@ -68,8 +68,13 @@ static char *fallback_messages[] = {
 						/* 33: */
     "",
 						/* 34: */
-    "AFS blindly trusting user %s\n",
-						/* 35: TRUSTROOT	*/
+    "AFS blindly trusting user %s\n",		/* 35: TRUSTROOT	*/
+    "New AFS Password: ",                       /* 36: NEW_PWD_PROMPT   */
+    "New AFS Password (again): ",               /* 37: VERIFY_PWD_PROMPT */
+    "Failed to change AFS password",            /* 38: KRBPASS_FAIL     */
+    "Missing PAM flag: %s",                     /* 39: FLAGS            */
+    "ka error, code=%d",                        /* 40: KAERROR          */
+    "Passwords are not equal"                   /* 41: NE_PASSWORD      */
 };
 
 static int num_fallbacks = sizeof(fallback_messages)/sizeof(char *);
