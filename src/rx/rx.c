@@ -4282,12 +4282,15 @@ void rxi_ConnectionError(conn, error)
 {
     if (error) {
 	register int i;
+	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
 	    rxevent_Cancel(conn->challengeEvent, (struct rx_call*)0, 0);
 	if (conn->checkReachEvent) {
 	    rxevent_Cancel(conn->checkReachEvent, (struct rx_call*)0, 0);
 	    conn->checkReachEvent = 0;
+	    conn->refCount--;
 	}
+	MUTEX_EXIT(&conn->conn_data_lock);
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
