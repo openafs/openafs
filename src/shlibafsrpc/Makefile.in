@@ -37,6 +37,7 @@ SYSOBJS =\
 	syscall.o
 
 UTILOBJS =\
+	assert.o \
 	casestrcpy.o \
 	base64.o
 
@@ -342,6 +343,9 @@ com_err.o: ${COMERR}/com_err.c
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
+
+assert.o: ${UTIL}/assert.c
+	${CCRULE} ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
 	${CCRULE}
