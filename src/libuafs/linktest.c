@@ -22,6 +22,7 @@ RCSID
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <netinet/in.h>
 #include <afs/sysincludes.h>
 #include <rx/rx.h>
 #include <afs_usrops.h>
