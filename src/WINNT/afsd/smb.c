@@ -7344,7 +7344,13 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 			   or sec package id. */
 			afsi_log("Reverting to NO SMB AUTH");
 			smb_authType = SMB_AUTH_NONE;
-		} else if ( smb_authType == SMB_AUTH_EXTENDED) {
+		} 
+#ifdef COMMENT
+        /* Don't fallback to SMB_AUTH_NTLM.  Apparently, allowing SPNEGO to be used each
+         * time prevents the failure of authentication when logged into Windows with an
+         * external Kerberos principal mapped to a local account.
+         */
+        else if ( smb_authType == SMB_AUTH_EXTENDED) {
             /* Test to see if there is anything to negotiate.  If SPNEGO is not going to be used 
             * then the only option is NTLMSSP anyway; so just fallback. 
             */
@@ -7358,6 +7364,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
             } else
                 free(secBlob);
         }
+#endif
 	}
 
 	{
