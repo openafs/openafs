@@ -29,6 +29,9 @@ RCSID("$Header$");
 #ifdef	AFS_AIX_ENV
 #include "../h/systm.h"
 #endif
+#ifdef AFS_DARWIN60_ENV
+#include "../h/kernel.h"
+#endif
 #include "../h/types.h"
 #include "../h/time.h"
 #ifndef AFS_LINUX22_ENV

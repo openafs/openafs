@@ -46,7 +46,11 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
+<ppc_darwin_60>
+KOPTS=-no-cpp-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
+<ppc_darwin_14 ppc_darwin_13 ppc_darwin_12>
 KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
+<all>
 #CFLAGS=-Werror-implicit-function-declaration -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 #CFLAGS=-framework Kernel -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}

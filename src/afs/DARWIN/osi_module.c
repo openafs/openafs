@@ -5,7 +5,11 @@ RCSID("$Header$");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
+#ifdef AFS_DARWIN60_ENV /* not in Kernel.framework anymore !?! */
+#include <sys/syscall.h>
+#else
 #include "../sys/syscall.h"
+#endif
 #include <mach/kmod.h>
 
 struct vfsconf afs_vfsconf;
