@@ -492,6 +492,11 @@ extern void VTakeOffline(register Volume * vp);
 				 * never knows about more than one copy of the same volume--when
 				 * a volume is moved from one partition to another on a single
 				 * server */
+#define V_PEEK     6		/* "Peek" at the volume without telling the fileserver.  This is
+				 * similar to V_SECRETLY, but read-only.  It is used in cases where
+				 * not impacting fileserver performance is more important than
+				 * getting the most recent data. */
+
 
 #if	defined(NEARINODE_HINT)
 #define V_pref(vp,nearInode)  nearInodeHash(V_id(vp),(nearInode)); (nearInode) %= V_partition(vp)->f_files
