@@ -274,7 +274,13 @@ struct cacheips {
     afs_int32 count;
     afs_uint32 addrs[16];
 };
-struct cacheips cacheips[16];
+/*
+ * Increase cache size.  This avoids high CPU usage by the vlserver
+ * in environments where there are more than 16 fileservers in the
+ * cell.
+ */
+#define GETADDRUCACHESIZE             64
+struct cacheips cacheips[GETADDRUCACHESIZE];
 int cacheip_index=0;
 extern int VL_GetAddrsU();
 VLDB_IsSameAddrs(serv1, serv2, errorp)
@@ -295,14 +301,14 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
 	return 0;
     }
     if (!initcache) {
-	for (i=0; i<16; i++) {
+	for (i=0; i < GETADDRUCACHESIZE; i++) {
 	   cacheips[i].server = cacheips[i].count = 0;
 	}
 	initcache = 1;
     }
 
     /* See if it's cached */
-    for (i=0; i<16; i++) {
+    for (i=0; i < GETADDRUCACHESIZE; i++) {
        f1 = f2 = 0;
        for (j=0; j < cacheips[i].count; j++) {
 	  if      (serv1 == cacheips[i].addrs[j]) f1 = 1;
@@ -313,6 +319,8 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
        }	
        if (f1 || f2)
 	  return 0;
+       if (cacheips[i].server == serv1)
+          return 0;
   }
 
     memset(&attrs, 0, sizeof(attrs));
@@ -337,7 +345,8 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
     }
 
     code = 0;
-    if (++cacheip_index >= 16) cacheip_index = 0;
+    if (nentries > GETADDRUCACHESIZE) nentries = GETADDRUCACHESIZE;  /* safety check; should not happen */
+    if (++cacheip_index >= GETADDRUCACHESIZE) cacheip_index = 0;
     cacheips[cacheip_index].server = serv1;
     cacheips[cacheip_index].count = nentries;
     addrp = addrs.bulkaddrs_val;
