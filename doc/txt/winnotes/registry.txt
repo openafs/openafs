@@ -111,6 +111,19 @@ Variable: cm_CachePath
   Location of on-disk cache file.  The default implies the root 
   directory of the boot disk
 
+
+Value   : NonPersistentCaching
+Type    : DWORD [0..1]
+Default : 0
+Variable: buf_CacheType
+
+  When this registry value is set to a non-zero value, the CachePath
+  value is ignored and the cache data is stored in the windows paging
+  file.  This prevents the use of persistent caching (when available)
+  as well as the ability to alter the size of the cache at runtime
+  using the "fs setcachesize" command.
+
+
 Value	: TrapOnPanic
 Type	: DWORD {1,0}
 Default : 0
