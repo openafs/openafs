@@ -11,7 +11,7 @@ RCSID("$Header$");
 #include <ctype.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV)
+#if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV) || defined(AFS_XBSD_ENV)
 #include <sys/socket.h>
 #endif
 
