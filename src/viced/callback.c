@@ -1946,7 +1946,7 @@ struct host*		host;
 			rx_DestroyConnection(conns[i] );
 
 	free(addr);
-	free(cons);
+	free(conns);
 
 	if ( connSuccess ) return 0;	/* success */
 		else return 1;		/* failure */
