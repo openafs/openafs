@@ -488,6 +488,7 @@ main(argc, argv)
     rx_SetDestroyConnProc(tservice, (char (*)()) h_FreeConnection);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
+    rx_SetCheckReach(tservice, 1);
 
     tservice = rx_NewService(0,  RX_STATS_SERVICE_ID, "rpcstats", sc, 4, RXSTATS_ExecuteRequest);
     if (!tservice) {
