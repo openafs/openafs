@@ -54,27 +54,29 @@ osi_mutex_t cm_Afsdsbmt_Lock;
 extern afs_int32 cryptall;
 extern char cm_NetbiosName[];
 
+extern void afsi_log(char *pattern, ...);
+
 void cm_InitIoctl(void)
 {
-	lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
+    lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
 }
 
 long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
-	long code;
+    long code;
 
-	lock_ObtainWrite(&scp->bufCreateLock);
-	code = buf_FlushCleanPages(scp, userp, reqp);
+    lock_ObtainWrite(&scp->bufCreateLock);
+    code = buf_FlushCleanPages(scp, userp, reqp);
         
-        lock_ObtainMutex(&scp->mx);
-	scp->cbServerp = NULL;
-        scp->cbExpires = 0;
-        lock_ReleaseMutex(&scp->mx);
+    lock_ObtainMutex(&scp->mx);
+    scp->cbServerp = NULL;
+    scp->cbExpires = 0;
+    lock_ReleaseMutex(&scp->mx);
 
-	lock_ReleaseWrite(&scp->bufCreateLock);
-	cm_dnlcPurgedp(scp);
+    lock_ReleaseWrite(&scp->bufCreateLock);
+    cm_dnlcPurgedp(scp);
 
-        return code;
+    return code;
 }
 
 /*
@@ -83,23 +85,23 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
  */
 void cm_ResetACLCache(cm_user_t *userp)
 {
-	cm_scache_t *scp;
-	int hash;
+    cm_scache_t *scp;
+    int hash;
 
-	lock_ObtainWrite(&cm_scacheLock);
-	for (hash=0; hash < cm_hashTableSize; hash++) {
-		for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
-			scp->refCount++;
-			lock_ReleaseWrite(&cm_scacheLock);
-			lock_ObtainMutex(&scp->mx);
-			cm_InvalidateACLUser(scp, userp);
-			lock_ReleaseMutex(&scp->mx);
-			lock_ObtainWrite(&cm_scacheLock);
-			scp->refCount--;
-		}
-	}
-	lock_ReleaseWrite(&cm_scacheLock);
-}
+    lock_ObtainWrite(&cm_scacheLock);
+    for (hash=0; hash < cm_hashTableSize; hash++) {
+        for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+            scp->refCount++;
+            lock_ReleaseWrite(&cm_scacheLock);
+            lock_ObtainMutex(&scp->mx);
+            cm_InvalidateACLUser(scp, userp);
+            lock_ReleaseMutex(&scp->mx);
+            lock_ObtainWrite(&cm_scacheLock);
+            scp->refCount--;
+        }
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
+}       
 
 /*
  *  TranslateExtendedChars - This is a fix for TR 54482.
@@ -137,8 +139,8 @@ void TranslateExtendedChars(char *str)
 long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **scpp)
 {
-	long code;
-	cm_scache_t *substRootp;
+    long code;
+    cm_scache_t *substRootp;
     char * relativePath = ioctlp->inDatap;
 
     /* This is usually the file name, but for StatMountPoint it is the path. */
@@ -148,7 +150,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
      *    \\netbios-name\submount\path\.
      *    \\netbios-name\submount\path\file
      */
-	TranslateExtendedChars(relativePath);
+    TranslateExtendedChars(relativePath);
 
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
@@ -181,67 +183,73 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, sharePath, reqp, &substRootp);
             free(sharePath);
-            if (code) return code;
+            if (code) 
+                return code;
 
-			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                         userp, NULL, reqp, scpp);
-			if (code) return code;
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, NULL, reqp, scpp);
+            if (code) 
+                return code;
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
-			 * This requires that we reconstruct the shareName string with 
-			 * leading and trailing slashes.
-			 */
+             * This requires that we reconstruct the shareName string with 
+             * leading and trailing slashes.
+             */
             p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
-			if ( !_strnicmp("all", p, 3) )
-				p += 4;
+            if ( !_strnicmp("all", p, 3) )
+                p += 4;
 
-			shareName[0] = '/';
-			for (i = 1; *p && *p != '\\'; i++,p++ ) {
-				shareName[i] = *p;
-			}
-			p++;                    /* skip past trailing slash */
-			shareName[i++] = '/';	/* add trailing slash */
-			shareName[i] = 0;       /* terminate string */
+            shareName[0] = '/';
+            for (i = 1; *p && *p != '\\'; i++,p++ ) {
+                shareName[i] = *p;
+            }
+            p++;                    /* skip past trailing slash */
+            shareName[i++] = '/';	/* add trailing slash */
+            shareName[i] = 0;       /* terminate string */
 
-			
-			code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+
+            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, shareName, reqp, &substRootp);
-            if (code) return code;
+            if (code) 
+                return code;
 
-			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                         userp, NULL, reqp, scpp);
-			if (code) return code;
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, NULL, reqp, scpp);
+            if (code) 
+                return code;
         }
     } else {
         code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
-        if (code) return code;
+        if (code) 
+            return code;
         
         code = cm_NameI(substRootp, relativePath, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, NULL, reqp, scpp);
-        if (code) return code;
+        if (code) 
+            return code;
     }
 
-	/* # of bytes of path */
+    /* # of bytes of path */
     code = strlen(ioctlp->inDatap) + 1;
     ioctlp->inDatap += code;
 
     /* This is usually nothing, but for StatMountPoint it is the file name. */
     TranslateExtendedChars(ioctlp->inDatap);
 
-	/* and return success */
+    /* and return success */
     return 0;
 }
 
 void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
 {
-	long temp;
+    long temp;
         
-        temp = strlen(ioctlp->inDatap) + 1;
-        ioctlp->inDatap += temp;
-}
+    temp = strlen(ioctlp->inDatap) + 1;
+    ioctlp->inDatap += temp;
+}       
 
 
 /* format the specified path to look like "/afs/<cellname>/usr", by
@@ -253,33 +261,33 @@ void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
  */
 void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
 {
-	char *cp;
+    char *cp;
     char bslash_mountRoot[256];
        
     strncpy(bslash_mountRoot, cm_mountRoot, sizeof(bslash_mountRoot) - 1);
     bslash_mountRoot[0] = '\\';
        
     if (!strnicmp (inpathp, cm_mountRoot, strlen(cm_mountRoot)))
-		lstrcpy (outpathp, inpathp);
-       else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
-		lstrcpy (outpathp, inpathp);
-	else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
-               sprintf (outpathp, "%s%s", cm_mountRoot, inpathp);
-	else // inpathp looks like "<cell>/usr"
-               sprintf (outpathp, "%s/%s", cm_mountRoot, inpathp);
+        lstrcpy (outpathp, inpathp);
+    else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
+        lstrcpy (outpathp, inpathp);
+    else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
+        sprintf (outpathp, "%s%s", cm_mountRoot, inpathp);
+    else // inpathp looks like "<cell>/usr"
+        sprintf (outpathp, "%s/%s", cm_mountRoot, inpathp);
 
-	for (cp = outpathp; *cp != 0; ++cp) {
-		if (*cp == '\\')
-			*cp = '/';
-	}
+    for (cp = outpathp; *cp != 0; ++cp) {
+        if (*cp == '\\')
+            *cp = '/';
+    }       
 
-	if (strlen(outpathp) && (outpathp[strlen(outpathp)-1] == '/')) {
-           outpathp[strlen(outpathp)-1] = 0;
-	}
+    if (strlen(outpathp) && (outpathp[strlen(outpathp)-1] == '/')) {
+        outpathp[strlen(outpathp)-1] = 0;
+    }
 
-	if (!strcmpi (outpathp, cm_mountRoot)) {
+    if (!strcmpi (outpathp, cm_mountRoot)) {
         strcpy (outpathp, cm_mountRoot);
-	}
+    }
 }
 
 /* parse the passed-in file name and do a namei on its parent.  If we fail,
@@ -288,28 +296,28 @@ void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
 long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 			 cm_scache_t **scpp, char *leafp)
 {
-	long code;
+    long code;
     char tbuffer[1024];
     char *tp, *jp;
-	cm_scache_t *substRootp;
+    cm_scache_t *substRootp;
 
-	strcpy(tbuffer, ioctlp->inDatap);
+    strcpy(tbuffer, ioctlp->inDatap);
     tp = strrchr(tbuffer, '\\');
-	jp = strrchr(tbuffer, '/');
-	if (!tp)
-		tp = jp;
-	else if (jp && (tp - tbuffer) < (jp - tbuffer))
-		tp = jp;
+    jp = strrchr(tbuffer, '/');
+    if (!tp)
+        tp = jp;
+    else if (jp && (tp - tbuffer) < (jp - tbuffer))
+        tp = jp;
     if (!tp) {
         strcpy(tbuffer, "\\");
         if (leafp) 
             strcpy(leafp, ioctlp->inDatap);
-	}
+    }
     else {
         *tp = 0;
         if (leafp) 
             strcpy(leafp, tp+1);
-	}   
+    }   
 
     if (tbuffer[0] == tbuffer[1] &&
         tbuffer[1] == '\\' && 
@@ -344,722 +352,732 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             free(sharePath);
             if (code) return code;
 
-			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                         userp, NULL, reqp, scpp);
-			if (code) return code;
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                             userp, NULL, reqp, scpp);
+            if (code) return code;
         } else {
             /* otherwise, treat the name as a cellname mounted off the afs root.
-			 * This requires that we reconstruct the shareName string with 
-			 * leading and trailing slashes.
-			 */
+             * This requires that we reconstruct the shareName string with 
+             * leading and trailing slashes.
+             */
             p = tbuffer + 2 + strlen(cm_NetbiosName) + 1;
-			if ( !_strnicmp("all", p, 3) )
-				p += 4;
+            if ( !_strnicmp("all", p, 3) )
+                p += 4;
 
-			shareName[0] = '/';
-			for (i = 1; *p && *p != '\\'; i++,p++ ) {
-				shareName[i] = *p;
-			}
-			p++;                    /* skip past trailing slash */
-			shareName[i++] = '/';	/* add trailing slash */
-			shareName[i] = 0;       /* terminate string */
-			
-			code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+            shareName[0] = '/';
+            for (i = 1; *p && *p != '\\'; i++,p++ ) {
+                shareName[i] = *p;
+            }
+            p++;                    /* skip past trailing slash */
+            shareName[i++] = '/';	/* add trailing slash */
+            shareName[i] = 0;       /* terminate string */
+
+            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, shareName, reqp, &substRootp);
             if (code) return code;
 
-			code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                         userp, NULL, reqp, scpp);
-			if (code) return code;
+            code = cm_NameI(substRootp, p, CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                            userp, NULL, reqp, scpp);
+            if (code) return code;
         }
     } else {
         code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
-                    CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-                    userp, ioctlp->tidPathp, reqp, &substRootp);
+                        CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                        userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
 
         code = cm_NameI(substRootp, tbuffer, CM_FLAG_FOLLOW,
-                    userp, NULL, reqp, scpp);
+                        userp, NULL, reqp, scpp);
         if (code) return code;
     }
 
-	/* # of bytes of path */
-        code = strlen(ioctlp->inDatap) + 1;
-        ioctlp->inDatap += code;
+    /* # of bytes of path */
+    code = strlen(ioctlp->inDatap) + 1;
+    ioctlp->inDatap += code;
 
-	/* and return success */
-        return 0;
+    /* and return success */
+    return 0;
 }
 
 long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	cm_conn_t *connp;
-        cm_scache_t *scp;
-        AFSOpaque acl;
-        AFSFetchStatus fileStatus;
-        AFSVolSync volSync;
-        long code;
-        AFSFid fid;
-        int tlen;
-	cm_req_t req;
+    cm_conn_t *connp;
+    cm_scache_t *scp;
+    AFSOpaque acl;
+    AFSFetchStatus fileStatus;
+    AFSVolSync volSync;
+    long code;
+    AFSFid fid;
+    int tlen;
+    cm_req_t req;
 
-        cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
-	
-	/* now make the get acl call */
-	fid.Volume = scp->fid.volume;
-        fid.Vnode = scp->fid.vnode;
-        fid.Unique = scp->fid.unique;
-	do {
-	        acl.AFSOpaque_val = ioctlp->outDatap;
-	        acl.AFSOpaque_len = 0;
-		code = cm_Conn(&scp->fid, userp, &req, &connp);
-                if (code) continue;
-                
-                code = RXAFS_FetchACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
-	cm_ReleaseSCache(scp);
-        
-        if (code) return code;
-        
-	/* skip over return data */
-        tlen = strlen(ioctlp->outDatap) + 1;
-        ioctlp->outDatap += tlen;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
 
-	/* and return success */
-        return 0;
+    /* now make the get acl call */
+    fid.Volume = scp->fid.volume;
+    fid.Vnode = scp->fid.vnode;
+    fid.Unique = scp->fid.unique;
+    do {
+        acl.AFSOpaque_val = ioctlp->outDatap;
+        acl.AFSOpaque_len = 0;
+        code = cm_Conn(&scp->fid, userp, &req, &connp);
+        if (code) continue;
+
+        lock_ObtainMutex(&connp->mx);
+        code = RXAFS_FetchACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
+        lock_ReleaseMutex(&connp->mx);
+    } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
+    code = cm_MapRPCError(code, &req);
+    cm_ReleaseSCache(scp);
+
+    if (code) return code;
+
+    /* skip over return data */
+    tlen = strlen(ioctlp->outDatap) + 1;
+    ioctlp->outDatap += tlen;
+
+    /* and return success */
+    return 0;
 }
 
 long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *scp;
-        cm_cell_t *cellp;
-	cm_req_t req;
+    long code;
+    cm_scache_t *scp;
+    cm_cell_t *cellp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
-        
-        cellp = cm_FindCellByID(scp->fid.cell);
-        if (cellp) {
-		strcpy(ioctlp->outDatap, cellp->namep);
-                ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
-                code = 0;
-        }
-        else code = CM_ERROR_NOSUCHCELL;
-        
-        cm_ReleaseSCache(scp);
-        return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
+
+    cellp = cm_FindCellByID(scp->fid.cell);
+    if (cellp) {
+        strcpy(ioctlp->outDatap, cellp->namep);
+        ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
+        code = 0;
+    }
+    else code = CM_ERROR_NOSUCHCELL;
+
+    cm_ReleaseSCache(scp);
+    return code;
 }
 
 long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_conn_t *connp;
-        cm_scache_t *scp;
-        AFSOpaque acl;
-        AFSFetchStatus fileStatus;
-        AFSVolSync volSync;
-        long code;
-        AFSFid fid;
-	cm_req_t req;
+    cm_conn_t *connp;
+    cm_scache_t *scp;
+    AFSOpaque acl;
+    AFSFetchStatus fileStatus;
+    AFSVolSync volSync;
+    long code;
+    AFSFid fid;
+    cm_req_t req;
 
-        cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
 	
-	/* now make the get acl call */
-	fid.Volume = scp->fid.volume;
-        fid.Vnode = scp->fid.vnode;
-        fid.Unique = scp->fid.unique;
-	do {
-	        acl.AFSOpaque_val = ioctlp->inDatap;
-	        acl.AFSOpaque_len = strlen(ioctlp->inDatap)+1;
-		code = cm_Conn(&scp->fid, userp, &req, &connp);
-                if (code) continue;
-                
-                code = RXAFS_StoreACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-	} while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
+    /* now make the get acl call */
+    fid.Volume = scp->fid.volume;
+    fid.Vnode = scp->fid.vnode;
+    fid.Unique = scp->fid.unique;
+    do {
+        acl.AFSOpaque_val = ioctlp->inDatap;
+        acl.AFSOpaque_len = strlen(ioctlp->inDatap)+1;
+        code = cm_Conn(&scp->fid, userp, &req, &connp);
+        if (code) continue;
 
-	/* invalidate cache info, since we just trashed the ACL cache */
-	lock_ObtainMutex(&scp->mx);
-        cm_DiscardSCache(scp);
-	lock_ReleaseMutex(&scp->mx);
+        lock_ObtainMutex(&connp->mx);
+        code = RXAFS_StoreACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
+        lock_ReleaseMutex(&connp->mx);
+    } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
+    code = cm_MapRPCError(code, &req);
 
-	cm_ReleaseSCache(scp);
-        
-        return code;
+    /* invalidate cache info, since we just trashed the ACL cache */
+    lock_ObtainMutex(&scp->mx);
+    cm_DiscardSCache(scp);
+    lock_ReleaseMutex(&scp->mx);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
 }
 
 long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *scp;
-        unsigned long volume;
-        int i;
-	cm_req_t req;
+    long code;
+    cm_scache_t *scp;
+    unsigned long volume;
+    int i;
+    cm_req_t req;
 
-        cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
         
-	volume = scp->fid.volume;
-        cm_ReleaseSCache(scp);
+    volume = scp->fid.volume;
+    cm_ReleaseSCache(scp);
 
-	lock_ObtainWrite(&cm_scacheLock);
-	for(i=0; i<cm_hashTableSize; i++) {
-		for(scp = cm_hashTablep[i]; scp; scp = scp->nextp) {
-			if (scp->fid.volume == volume) {
-				scp->refCount++;
-                                lock_ReleaseWrite(&cm_scacheLock);
+    lock_ObtainWrite(&cm_scacheLock);
+    for (i=0; i<cm_hashTableSize; i++) {
+        for (scp = cm_hashTablep[i]; scp; scp = scp->nextp) {
+            if (scp->fid.volume == volume) {
+                scp->refCount++;
+                lock_ReleaseWrite(&cm_scacheLock);
 
-				/* now flush the file */
-				cm_FlushFile(scp, userp, &req);
-
-                                lock_ObtainWrite(&cm_scacheLock);
-                                scp->refCount--;
-                        }
-                }
+                /* now flush the file */
+                code = cm_FlushFile(scp, userp, &req);
+                if ( code )
+                    afsi_log("cm_FlushFile returns error: [%x]",code);
+                lock_ObtainWrite(&cm_scacheLock);
+                scp->refCount--;
+            }
         }
-	lock_ReleaseWrite(&cm_scacheLock);
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
 
-        return code;
+    return code;
 }
 
 long cm_IoctlFlushFile(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *scp;
-	cm_req_t req;
+    long code;
+    cm_scache_t *scp;
+    cm_req_t req;
 
-        cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
         
-	cm_FlushFile(scp, userp, &req);
-        cm_ReleaseSCache(scp);
+    cm_FlushFile(scp, userp, &req);
+    cm_ReleaseSCache(scp);
 
-        return 0;
+    return 0;
 }
 
 long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_scache_t *scp;
-	char volName[32];
-	char offLineMsg[256];
-	char motd[256];
-	cm_conn_t *tcp;
-	long code;
-	AFSFetchVolumeStatus volStat;
-	AFSStoreVolumeStatus storeStat;
-	cm_volume_t *tvp;
-	char *cp;
-        cm_cell_t *cellp;
-	cm_req_t req;
+    cm_scache_t *scp;
+    char volName[32];
+    char offLineMsg[256];
+    char motd[256];
+    cm_conn_t *tcp;
+    long code;
+    AFSFetchVolumeStatus volStat;
+    AFSStoreVolumeStatus storeStat;
+    cm_volume_t *tvp;
+    char *cp;
+    cm_cell_t *cellp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
 
-	cellp = cm_FindCellByID(scp->fid.cell);
-        osi_assert(cellp);
+    cellp = cm_FindCellByID(scp->fid.cell);
+    osi_assert(cellp);
 
-	if (scp->flags & CM_SCACHEFLAG_RO) {
-        	cm_ReleaseSCache(scp);
-        	return CM_ERROR_READONLY;
-	}
+    if (scp->flags & CM_SCACHEFLAG_RO) {
+        cm_ReleaseSCache(scp);
+        return CM_ERROR_READONLY;
+    }
 
-	code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, &tvp);
-        if (code) {
-		cm_ReleaseSCache(scp);
-        	return code;
-	}
+    code = cm_GetVolumeByID(cellp, scp->fid.volume, userp, &req, &tvp);
+    if (code) {
+        cm_ReleaseSCache(scp);
+        return code;
+    }
 
-	/* Copy the junk out, using cp as a roving pointer. */
-	cp = ioctlp->inDatap;
-	memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
-	cp += sizeof(AFSFetchVolumeStatus);
-	strcpy(volName, cp);
-	cp += strlen(volName)+1;
-	strcpy(offLineMsg, cp);
-	cp +=  strlen(offLineMsg)+1;
-	strcpy(motd, cp);
-	storeStat.Mask = 0;
-	if (volStat.MinQuota != -1) {
-		storeStat.MinQuota = volStat.MinQuota;
-		storeStat.Mask |= AFS_SETMINQUOTA;
-	}
-	if (volStat.MaxQuota != -1) {
-		storeStat.MaxQuota = volStat.MaxQuota;
-		storeStat.Mask |= AFS_SETMAXQUOTA;
-	}
+    /* Copy the junk out, using cp as a roving pointer. */
+    cp = ioctlp->inDatap;
+    memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
+    cp += sizeof(AFSFetchVolumeStatus);
+    strcpy(volName, cp);
+    cp += strlen(volName)+1;
+    strcpy(offLineMsg, cp);
+    cp +=  strlen(offLineMsg)+1;
+    strcpy(motd, cp);
+    storeStat.Mask = 0;
+    if (volStat.MinQuota != -1) {
+        storeStat.MinQuota = volStat.MinQuota;
+        storeStat.Mask |= AFS_SETMINQUOTA;
+    }
+    if (volStat.MaxQuota != -1) {
+        storeStat.MaxQuota = volStat.MaxQuota;
+        storeStat.Mask |= AFS_SETMAXQUOTA;
+    }
 
-	do {
-		code = cm_Conn(&scp->fid, userp, &req, &tcp);
-		if (code) continue;
+    do {
+        code = cm_Conn(&scp->fid, userp, &req, &tcp);
+        if (code) continue;
 
-		code = RXAFS_SetVolumeStatus(tcp->callp, scp->fid.volume,
-			&storeStat, volName, offLineMsg, motd);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
+        lock_ObtainMutex(&tcp->mx);
+        code = RXAFS_SetVolumeStatus(tcp->callp, scp->fid.volume,
+                                      &storeStat, volName, offLineMsg, motd);
+        lock_ReleaseMutex(&tcp->mx);
+    } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+    code = cm_MapRPCError(code, &req);
 
-	/* return on failure */
-	cm_ReleaseSCache(scp);
-	if (code) {
-        	return code;
-	}
+    /* return on failure */
+    cm_ReleaseSCache(scp);
+    if (code) {
+        return code;
+    }
 
-	/* we are sending parms back to make compat. with prev system.  should
-	 * change interface later to not ask for current status, just set
-         * new status
-         */
-	cp = ioctlp->outDatap;
-	memcpy(cp, (char *)&volStat, sizeof(VolumeStatus));
-	cp += sizeof(VolumeStatus);
-	strcpy(cp, volName);
-	cp += strlen(volName)+1;
-	strcpy(cp, offLineMsg);
-	cp += strlen(offLineMsg)+1;
-	strcpy(cp, motd);
-	cp += strlen(motd)+1;
+    /* we are sending parms back to make compat. with prev system.  should
+     * change interface later to not ask for current status, just set
+     * new status
+     */
+    cp = ioctlp->outDatap;
+    memcpy(cp, (char *)&volStat, sizeof(VolumeStatus));
+    cp += sizeof(VolumeStatus);
+    strcpy(cp, volName);
+    cp += strlen(volName)+1;
+    strcpy(cp, offLineMsg);
+    cp += strlen(offLineMsg)+1;
+    strcpy(cp, motd);
+    cp += strlen(motd)+1;
 
-	/* now return updated return data pointer */
-	ioctlp->outDatap = cp;
+    /* now return updated return data pointer */
+    ioctlp->outDatap = cp;
 
-	return 0;
-}
+    return 0;
+}       
 
 long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char volName[32];
-        cm_scache_t *scp;
-	char offLineMsg[256];
-	char motd[256];
-	cm_conn_t *tcp;
-	register long code;
-	AFSFetchVolumeStatus volStat;
-	register char *cp;
-	char *Name;
-        char *OfflineMsg;
-        char *MOTD;
-	cm_req_t req;
+    char volName[32];
+    cm_scache_t *scp;
+    char offLineMsg[256];
+    char motd[256];
+    cm_conn_t *tcp;
+    register long code;
+    AFSFetchVolumeStatus volStat;
+    register char *cp;
+    char *Name;
+    char *OfflineMsg;
+    char *MOTD;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
+    if (code) return code;
 
-	Name = volName;
-	OfflineMsg = offLineMsg;
-	MOTD = motd;
-	do {
-		code = cm_Conn(&scp->fid, userp, &req, &tcp);
-                if (code) continue;
+    Name = volName;
+    OfflineMsg = offLineMsg;
+    MOTD = motd;
+    do {
+        code = cm_Conn(&scp->fid, userp, &req, &tcp);
+        if (code) continue;
 
-		code = RXAFS_GetVolumeStatus(tcp->callp, scp->fid.volume,
-			&volStat, &Name, &OfflineMsg, &MOTD);
-	} while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
-	code = cm_MapRPCError(code, &req);
+        lock_ObtainMutex(&tcp->mx);
+        code = RXAFS_GetVolumeStatus(tcp->callp, scp->fid.volume,
+                                      &volStat, &Name, &OfflineMsg, &MOTD);
+        lock_ReleaseMutex(&tcp->mx);
+    } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
+    code = cm_MapRPCError(code, &req);
 
-	cm_ReleaseSCache(scp);
-	if (code) return code;
+    cm_ReleaseSCache(scp);
+    if (code) return code;
 
-        /* Copy all this junk into msg->im_data, keeping track of the lengths. */
-	cp = ioctlp->outDatap;
-	memcpy(cp, (char *)&volStat, sizeof(AFSFetchVolumeStatus));
-	cp += sizeof(AFSFetchVolumeStatus);
-	strcpy(cp, volName);
-	cp += strlen(volName)+1;
-	strcpy(cp, offLineMsg);
-	cp += strlen(offLineMsg)+1;
-	strcpy(cp, motd);
-	cp += strlen(motd)+1;
+    /* Copy all this junk into msg->im_data, keeping track of the lengths. */
+    cp = ioctlp->outDatap;
+    memcpy(cp, (char *)&volStat, sizeof(AFSFetchVolumeStatus));
+    cp += sizeof(AFSFetchVolumeStatus);
+    strcpy(cp, volName);
+    cp += strlen(volName)+1;
+    strcpy(cp, offLineMsg);
+    cp += strlen(offLineMsg)+1;
+    strcpy(cp, motd);
+    cp += strlen(motd)+1;
 
-	/* return new size */
-	ioctlp->outDatap = cp;
+    /* return new size */
+    ioctlp->outDatap = cp;
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
+    long code;
     cm_scache_t *scp;
     cm_cell_t *cellp;
     cm_volume_t *tvp;
-	cm_serverRef_t **tsrpp, *current;
+    cm_serverRef_t **tsrpp, *current;
     cm_server_t *tsp;
     unsigned long volume;
     char *cp;
     cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
         
-	volume = scp->fid.volume;
+    volume = scp->fid.volume;
 
-	cellp = cm_FindCellByID(scp->fid.cell);
+    cellp = cm_FindCellByID(scp->fid.cell);
     osi_assert(cellp);
 
     cm_ReleaseSCache(scp);
 
-	code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
+    code = cm_GetVolumeByID(cellp, volume, userp, &req, &tvp);
     if (code) return code;
 	
     cp = ioctlp->outDatap;
         
-	lock_ObtainMutex(&tvp->mx);
-	tsrpp = cm_GetVolServers(tvp, volume);
-	lock_ObtainRead(&cm_serverLock);
-	for (current = *tsrpp; current; current = current->next) {
-		tsp = current->server;
-		memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
-		cp += sizeof(long);
-	}
-	lock_ReleaseRead(&cm_serverLock);
+    lock_ObtainMutex(&tvp->mx);
+    tsrpp = cm_GetVolServers(tvp, volume);
+    lock_ObtainRead(&cm_serverLock);
+    for (current = *tsrpp; current; current = current->next) {
+        tsp = current->server;
+        memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
+        cp += sizeof(long);
+    }
+    lock_ReleaseRead(&cm_serverLock);
     cm_FreeServerList(tsrpp);
     lock_ReleaseMutex(&tvp->mx);
 
-	/* still room for terminating NULL, add it on */
-	volume = 0;	/* reuse vbl */
-	memcpy(cp, (char *)&volume, sizeof(long));
-	cp += sizeof(long);
+    /* still room for terminating NULL, add it on */
+    volume = 0;	/* reuse vbl */
+    memcpy(cp, (char *)&volume, sizeof(long));
+    cp += sizeof(long);
 
-	ioctlp->outDatap = cp;
-	cm_PutVolume(tvp);
-	return 0;
-}
+    ioctlp->outDatap = cp;
+    cm_PutVolume(tvp);
+    return 0;
+}       
 
 long cm_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *dscp;
-        cm_scache_t *scp;
-        char *cp;
-        cm_req_t req;
+    long code;
+    cm_scache_t *dscp;
+    cm_scache_t *scp;
+    char *cp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+    if (code) return code;
+
+    cp = ioctlp->inDatap;
+
+    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+    cm_ReleaseSCache(dscp);
+    if (code) return code;
         
-	cp = ioctlp->inDatap;
+    lock_ObtainMutex(&scp->mx);
 
-	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
-	cm_ReleaseSCache(dscp);
-        if (code) return code;
-        
-	lock_ObtainMutex(&scp->mx);
-
-        /* now check that this is a real mount point */
-        if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
-		lock_ReleaseMutex(&scp->mx);
-        	cm_ReleaseSCache(scp);
-                return CM_ERROR_INVAL;
-        }
-	
-        code = cm_ReadMountPoint(scp, userp, &req);
-        if (code == 0) {
-		cp = ioctlp->outDatap;
-                strcpy(cp, scp->mountPointStringp);
-                cp += strlen(cp) + 1;
-                ioctlp->outDatap = cp;
-        }
-	lock_ReleaseMutex(&scp->mx);
+    /* now check that this is a real mount point */
+    if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
+        lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
+        return CM_ERROR_INVAL;
+    }
 
-	return code;
-}
+    code = cm_ReadMountPoint(scp, userp, &req);
+    if (code == 0) {
+        cp = ioctlp->outDatap;
+        strcpy(cp, scp->mountPointStringp);
+        cp += strlen(cp) + 1;
+        ioctlp->outDatap = cp;
+    }
+    lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
+
+    return code;
+}       
 
 long cm_IoctlDeleteMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *dscp;
-        cm_scache_t *scp;
-        char *cp;
-        cm_req_t req;
+    long code;
+    cm_scache_t *dscp;
+    cm_scache_t *scp;
+    char *cp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
-        if (code) return code;
-        
-	cp = ioctlp->inDatap;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+    if (code) return code;
 
-	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+    cp = ioctlp->inDatap;
+
+    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         
-	/* if something went wrong, bail out now */
-        if (code) {
-		goto done;
-	}
+    /* if something went wrong, bail out now */
+    if (code) {
+        goto done;
+    }
         
-	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code) {
-        	lock_ReleaseMutex(&scp->mx);
-        	cm_ReleaseSCache(scp);
-		goto done;
-	}
-	
-        /* now check that this is a real mount point */
-        if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
-		lock_ReleaseMutex(&scp->mx);
-        	cm_ReleaseSCache(scp);
-                code = CM_ERROR_INVAL;
-                goto done;
-        }
-	
-        /* time to make the RPC, so drop the lock */
-	lock_ReleaseMutex(&scp->mx);
+    lock_ObtainMutex(&scp->mx);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
-        
-	/* easier to do it this way */
-        code = cm_Unlink(dscp, cp, userp, &req);
-	if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-		smb_NotifyChange(FILE_ACTION_REMOVED,
-				 FILE_NOTIFY_CHANGE_DIR_NAME,
-				 dscp, cp, NULL, TRUE);
+        goto done;
+    }
 
-done:
-	cm_ReleaseSCache(dscp);
-	return code;
+    /* now check that this is a real mount point */
+    if (scp->fileType != CM_SCACHETYPE_MOUNTPOINT) {
+        lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseSCache(scp);
+        code = CM_ERROR_INVAL;
+        goto done;
+    }
+
+    /* time to make the RPC, so drop the lock */
+    lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
+
+    /* easier to do it this way */
+    code = cm_Unlink(dscp, cp, userp, &req);
+    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+        smb_NotifyChange(FILE_ACTION_REMOVED,
+                          FILE_NOTIFY_CHANGE_DIR_NAME,
+                          dscp, cp, NULL, TRUE);
+
+  done:
+    cm_ReleaseSCache(dscp);
+    return code;
 }
 
 long cm_IoctlCheckServers(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_cell_t *cellp;
-        chservinfo_t csi;
-        char *tp;
-        char *cp;
-        long temp;
-        cm_server_t *tsp;
-        int haveCell;
+    cm_cell_t *cellp;
+    chservinfo_t csi;
+    char *tp;
+    char *cp;
+    long temp;
+    cm_server_t *tsp;
+    int haveCell;
         
-	cm_SkipIoctlPath(ioctlp);	/* we don't care about the path */
-	tp = ioctlp->inDatap;
-        haveCell = 0;
+    cm_SkipIoctlPath(ioctlp);	/* we don't care about the path */
+    tp = ioctlp->inDatap;
+    haveCell = 0;
 
-	memcpy(&temp, tp, sizeof(temp));
-	if (temp == 0x12345678) {	/* For afs3.3 version */
-                memcpy(&csi, tp, sizeof(csi));
-		if (csi.tinterval >= 0) {
-			cp = ioctlp->outDatap;
-			memcpy(cp, (char *)&cm_daemonCheckInterval, sizeof(long));
-			ioctlp->outDatap += sizeof(long);
-			if (csi.tinterval > 0) {
-				if (!smb_SUser(userp))
-					return CM_ERROR_NOACCESS;
-				cm_daemonCheckInterval = csi.tinterval;
-			}
-			return 0;
-		}
-		if (csi.tsize)
-			haveCell = 1;
-		temp = csi.tflags;
-		cp = csi.tbuffer;
-	} else {	/* For pre afs3.3 versions */
-		memcpy((char *)&temp, ioctlp->inDatap, sizeof(long));
-		ioctlp->inDatap = cp = ioctlp->inDatap + sizeof(long);
-		if (cp - ioctlp->inAllocp < ioctlp->inCopied)	/* still more data available */
-			haveCell = 1;
-	}
+    memcpy(&temp, tp, sizeof(temp));
+    if (temp == 0x12345678) {	/* For afs3.3 version */
+        memcpy(&csi, tp, sizeof(csi));
+        if (csi.tinterval >= 0) {
+            cp = ioctlp->outDatap;
+            memcpy(cp, (char *)&cm_daemonCheckInterval, sizeof(long));
+            ioctlp->outDatap += sizeof(long);
+            if (csi.tinterval > 0) {
+                if (!smb_SUser(userp))
+                    return CM_ERROR_NOACCESS;
+                cm_daemonCheckInterval = csi.tinterval;
+            }
+            return 0;
+        }
+        if (csi.tsize)
+            haveCell = 1;
+        temp = csi.tflags;
+        cp = csi.tbuffer;
+    } else {	/* For pre afs3.3 versions */
+        memcpy((char *)&temp, ioctlp->inDatap, sizeof(long));
+        ioctlp->inDatap = cp = ioctlp->inDatap + sizeof(long);
+        if (cp - ioctlp->inAllocp < ioctlp->inCopied)	/* still more data available */
+            haveCell = 1;
+    }       
 
-	/* 
-	 * 1: fast check, don't contact servers.
-	 * 2: local cell only.
-	 */
-	if (haveCell) {
-		/* have cell name, too */
-		cellp = cm_GetCell(cp, 0);
-		if (!cellp) return CM_ERROR_NOSUCHCELL;
-	}
-	else cellp = (cm_cell_t *) 0;
-	if (!cellp && (temp & 2)) {
-		/* use local cell */
-		cellp = cm_FindCellByID(1);
-	}
-	if (!(temp & 1)) {	/* if not fast, call server checker routine */
-		/* check down servers */
-		cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS | CM_FLAG_CHECKUPSERVERS,
-                	cellp);
-	}
+    /* 
+     * 1: fast check, don't contact servers.
+     * 2: local cell only.
+     */
+    if (haveCell) {
+        /* have cell name, too */
+        cellp = cm_GetCell(cp, 0);
+        if (!cellp) return CM_ERROR_NOSUCHCELL;
+    }
+    else cellp = (cm_cell_t *) 0;
+    if (!cellp && (temp & 2)) {
+        /* use local cell */
+        cellp = cm_FindCellByID(1);
+    }
+    if (!(temp & 1)) {	/* if not fast, call server checker routine */
+        /* check down servers */
+        cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS | CM_FLAG_CHECKUPSERVERS,
+                         cellp);
+    }       
 
-	/* now return the current down server list */
-	cp = ioctlp->outDatap;
-	lock_ObtainRead(&cm_serverLock);
-	for(tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
-		if (cellp && tsp->cellp != cellp) continue;	/* cell spec'd and wrong */
-		if ((tsp->flags & CM_SERVERFLAG_DOWN)
-                	&& tsp->type == CM_SERVER_FILE) {
-			memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
-			cp += sizeof(long);
-		}
-	}
-	lock_ReleaseRead(&cm_serverLock);
+    /* now return the current down server list */
+    cp = ioctlp->outDatap;
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
+        if (cellp && tsp->cellp != cellp) continue;	/* cell spec'd and wrong */
+        if ((tsp->flags & CM_SERVERFLAG_DOWN)
+             && tsp->type == CM_SERVER_FILE) {
+            memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
+            cp += sizeof(long);
+        }
+    }
+    lock_ReleaseRead(&cm_serverLock);
 
-	ioctlp->outDatap = cp;
-	return 0;
+    ioctlp->outDatap = cp;
+    return 0;
 }
 
 long cm_IoctlGag(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	/* we don't print anything superfluous, so we don't support the gag call */
-	return CM_ERROR_INVAL;
+    /* we don't print anything superfluous, so we don't support the gag call */
+    return CM_ERROR_INVAL;
 }
 
 long cm_IoctlCheckVolumes(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_CheckVolumes();
-	return 0;
-}
+    cm_CheckVolumes();
+    return 0;
+}       
 
 long cm_IoctlSetCacheSize(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long temp;
-        long code;
-        
-	cm_SkipIoctlPath(ioctlp);
+    long temp;
+    long code;
 
-        memcpy(&temp, ioctlp->inDatap, sizeof(temp));
-        if (temp == 0) temp = buf_nOrigBuffers;
-        else {
-		/* temp is in 1K units, convert to # of buffers */
-                temp = temp / (buf_bufferSize / 1024);
-        }
+    cm_SkipIoctlPath(ioctlp);
 
-	/* now adjust the cache size */
-        code = buf_SetNBuffers(temp);
+    memcpy(&temp, ioctlp->inDatap, sizeof(temp));
+    if (temp == 0) 
+        temp = buf_nOrigBuffers;
+    else {
+        /* temp is in 1K units, convert to # of buffers */
+        temp = temp / (buf_bufferSize / 1024);
+    }       
 
-	return code;
+    /* now adjust the cache size */
+    code = buf_SetNBuffers(temp);
+
+    return code;
 }
 
 long cm_IoctlTraceControl(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-        long inValue;
+    long inValue;
         
-        cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
         
-        memcpy(&inValue, ioctlp->inDatap, sizeof(long));
+    memcpy(&inValue, ioctlp->inDatap, sizeof(long));
 
-	/* print trace */
-	if (inValue & 8) {
-		afsd_ForceTrace(FALSE);
-	}
+    /* print trace */
+    if (inValue & 8) {
+        afsd_ForceTrace(FALSE);
+    }
         
-        if (inValue & 2) {
-        	/* set tracing value to low order bit */
-        	if ((inValue & 1) == 0) {
-			/* disable tracing */
-	                osi_LogDisable(afsd_logp);
-	        }
-	        else {
-			/* enable tracing */
-	        	osi_LogEnable(afsd_logp);
-		}
-	}
+    if (inValue & 2) {
+        /* set tracing value to low order bit */
+        if ((inValue & 1) == 0) {
+            /* disable tracing */
+            osi_LogDisable(afsd_logp);
+        }
+        else {
+            /* enable tracing */
+            osi_LogEnable(afsd_logp);
+        }
+    }
 
-	/* see if we're supposed to do a reset, too */
-        if (inValue & 4) {
-        	osi_LogReset(afsd_logp);
-	}
+    /* see if we're supposed to do a reset, too */
+    if (inValue & 4) {
+        osi_LogReset(afsd_logp);
+    }
 
-        /* and copy out tracing flag */
-        inValue = afsd_logp->enabled;	/* use as a temp vbl */
-        memcpy(ioctlp->outDatap, &inValue, sizeof(long));
-        ioctlp->outDatap += sizeof(long);
-        return 0;
-}
+    /* and copy out tracing flag */
+    inValue = afsd_logp->enabled;	/* use as a temp vbl */
+    memcpy(ioctlp->outDatap, &inValue, sizeof(long));
+    ioctlp->outDatap += sizeof(long);
+    return 0;
+}       
 
 long cm_IoctlGetCacheParms(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_cacheParms_t parms;
-        
-        memset(&parms, 0, sizeof(parms));
+    cm_cacheParms_t parms;
 
-	/* first we get, in 1K units, the cache size */
-        parms.parms[0] = buf_nbuffers * (buf_bufferSize / 1024);
-        
-        /* and then the actual # of buffers in use (not in the free list, I guess,
-         * will be what we do).
-         */
-        parms.parms[1] = (buf_nbuffers - buf_CountFreeList()) * (buf_bufferSize / 1024);
-        
-        memcpy(ioctlp->outDatap, &parms, sizeof(parms));
-        ioctlp->outDatap += sizeof(parms);
+    memset(&parms, 0, sizeof(parms));
 
-	return 0;
+    /* first we get, in 1K units, the cache size */
+    parms.parms[0] = buf_nbuffers * (buf_bufferSize / 1024);
+
+    /* and then the actual # of buffers in use (not in the free list, I guess,
+     * will be what we do).
+     */
+    parms.parms[1] = (buf_nbuffers - buf_CountFreeList()) * (buf_bufferSize / 1024);
+
+    memcpy(ioctlp->outDatap, &parms, sizeof(parms));
+    ioctlp->outDatap += sizeof(parms);
+
+    return 0;
 }
 
 long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long whichCell;
+    long whichCell;
     long magic = 0;
-	cm_cell_t *tcellp;
-	cm_serverRef_t *serverRefp;
+    cm_cell_t *tcellp;
+    cm_serverRef_t *serverRefp;
     cm_server_t *serverp;
-	long i;
+    long i;
     char *cp;
     char *tp;
     char *basep;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	tp = ioctlp->inDatap;
+    tp = ioctlp->inDatap;
 
-	memcpy((char *)&whichCell, tp, sizeof(long));
-	tp += sizeof(long);
-	
-	/* see if more than one long passed in, ignoring the null pathname (the -1) */
-	if (ioctlp->inCopied-1 > sizeof(long)) {
-		memcpy((char *)&magic, tp, sizeof(long));
-	}
+    memcpy((char *)&whichCell, tp, sizeof(long));
+    tp += sizeof(long);
+
+    /* see if more than one long passed in, ignoring the null pathname (the -1) */
+    if (ioctlp->inCopied-1 > sizeof(long)) {
+        memcpy((char *)&magic, tp, sizeof(long));
+    }
 
     lock_ObtainRead(&cm_cellLock);
-	for(tcellp = cm_allCellsp; tcellp; tcellp = tcellp->nextp) {
-		if (whichCell == 0) break;
-		whichCell--;
-	}
-	lock_ReleaseRead(&cm_cellLock);
-	if (tcellp) {
-		int max = 8;
+    for (tcellp = cm_allCellsp; tcellp; tcellp = tcellp->nextp) {
+        if (whichCell == 0) break;
+        whichCell--;
+    }
+    lock_ReleaseRead(&cm_cellLock);
+    if (tcellp) {
+        int max = 8;
 
-		cp = ioctlp->outDatap;
+        cp = ioctlp->outDatap;
 
-		if (magic == 0x12345678) {
-			memcpy(cp, (char *)&magic, sizeof(long));
-			max = 13;
-		}
-		memset(cp, 0, max * sizeof(long));
+        if (magic == 0x12345678) {
+            memcpy(cp, (char *)&magic, sizeof(long));
+            max = 13;
+        }
+        memset(cp, 0, max * sizeof(long));
         basep = cp;
-		lock_ObtainRead(&cm_serverLock);	/* for going down server list */
+        lock_ObtainRead(&cm_serverLock);	/* for going down server list */
         /* jaltman - do the reference counts to serverRefp contents need to be increased? */
-		serverRefp = tcellp->vlServersp;
-		for(i=0; i<max; i++) {
-			if (!serverRefp) break;
-			serverp = serverRefp->server;
-			memcpy(cp, &serverp->addr.sin_addr.s_addr, sizeof(long));
-			cp += sizeof(long);
+        serverRefp = tcellp->vlServersp;
+        for (i=0; i<max; i++) {
+            if (!serverRefp) break;
+            serverp = serverRefp->server;
+            memcpy(cp, &serverp->addr.sin_addr.s_addr, sizeof(long));
+            cp += sizeof(long);
             serverRefp = serverRefp->next;
-		}
-		lock_ReleaseRead(&cm_serverLock);
-		cp = basep + max * sizeof(afs_int32);
-		strcpy(cp, tcellp->namep);
-		cp += strlen(tcellp->namep)+1;
-		ioctlp->outDatap = cp;
-	}
+        }
+        lock_ReleaseRead(&cm_serverLock);
+        cp = basep + max * sizeof(afs_int32);
+        strcpy(cp, tcellp->namep);
+        cp += strlen(tcellp->namep)+1;
+        ioctlp->outDatap = cp;
+    }
 
     if (tcellp) 
         return 0;
@@ -1078,14 +1096,14 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
      * are already loaded.
   
      * cell list will be cm_CellLock and cm_ServerLock will be held for write.
-    */  
+     */  
   
     cm_cell_t *cp;
   
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
   
-    for(cp = cm_allCellsp; cp; cp=cp->nextp) 
+    for (cp = cm_allCellsp; cp; cp=cp->nextp) 
     {
         long code;
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
@@ -1093,7 +1111,7 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         cp->vlServersp = NULL;
         code = cm_SearchCellFile(cp->namep, cp->namep, cm_AddCellProc, cp);
 #ifdef AFS_AFSDB_ENV
-		if (code) {
+        if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
                 code = cm_SearchCellByDNS(cp->namep, cp->namep, &ttl, cm_AddCellProc, cp);
@@ -1123,27 +1141,27 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	/* if we don't know our default cell, return failure */
-	if (cm_rootCellp == NULL) {
-		return CM_ERROR_NOSUCHCELL;
-	}
+    /* if we don't know our default cell, return failure */
+    if (cm_rootCellp == NULL) {
+        return CM_ERROR_NOSUCHCELL;
+    }
 
-	/* return the default cellname to the caller */
-	strcpy(ioctlp->outDatap, cm_rootCellp->namep);
-	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-        
-	/* done: success */
-        return 0;
+    /* return the default cellname to the caller */
+    strcpy(ioctlp->outDatap, cm_rootCellp->namep);
+    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+
+    /* done: success */
+    return 0;
 }
 
 long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long setSysName, foundname = 0;
+    long setSysName, foundname = 0;
     char *cp, *cp2, inname[MAXSYSNAME], outname[MAXSYSNAME];
     int t, count, num = 0;
     char **sysnamelist[MAXSYSNAME];
         
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
     memcpy(&setSysName, ioctlp->inDatap, sizeof(long));
     ioctlp->inDatap += sizeof(long);
@@ -1181,7 +1199,8 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         strcpy(outname, cm_sysName);
         foundname = cm_sysNameCount;
         *sysnamelist = cm_sysNameList;
-    } else {                /* Local guy; only root can change sysname */
+    } else {        
+        /* Local guy; only root can change sysname */
         /* clear @sys entries from the dnlc, once afs_lookup can
          * do lookups of @sys entries and thinks it can trust them */
         /* privs ok, store the entry, ... */
@@ -1190,9 +1209,8 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
             cp = ioctlp->inDatap;
             for (count = 1; count < setSysName; ++count) {
                 if (!cm_sysNameList[count])
-                    osi_panic
-                        ("cm_IoctlSysName: no cm_sysNameList entry to write\n"
-                          , __FILE__, __LINE__);
+                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
+                               __FILE__, __LINE__);
                 t = strlen(cp);
                 memcpy(cm_sysNameList[count], cp, t + 1);  /* include null */
                 cp += t + 1;
@@ -1202,8 +1220,8 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     if (!setSysName) {
-		/* return the sysname to the caller */
-		cp = ioctlp->outDatap;
+        /* return the sysname to the caller */
+        cp = ioctlp->outDatap;
         memcpy(cp, (char *)&foundname, sizeof(afs_int32));
         cp += sizeof(afs_int32);	/* skip found flag */
         if (foundname) {
@@ -1211,12 +1229,12 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
             cp += strlen(outname) + 1;	/* skip name and terminating null char */
             for ( count=1; count < foundname ; ++count) {   /* ... or list */
                 if ( !(*sysnamelist)[count] )
-                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n"
-                               , __FILE__, __LINE__);
+                    osi_panic("cm_IoctlSysName: no cm_sysNameList entry to read\n", 
+                               __FILE__, __LINE__);
                 t = strlen((*sysnamelist)[count]);
                 if (t >= MAXSYSNAME)
-                    osi_panic("cm_IoctlSysName: sysname entry garbled\n"
-                               , __FILE__, __LINE__);
+                    osi_panic("cm_IoctlSysName: sysname entry garbled\n", 
+                               __FILE__, __LINE__);
                 strcpy(cp, (*sysnamelist)[count]);
                 cp += t + 1;
             }
@@ -1224,178 +1242,180 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         ioctlp->outDatap = cp;
     }
         
-	/* done: success */
+    /* done: success */
     return 0;
 }
 
 long cm_IoctlGetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long temp;
-        cm_cell_t *cellp;
+    long temp;
+    cm_cell_t *cellp;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	cellp = cm_GetCell(ioctlp->inDatap, 0);
-	if (!cellp) return CM_ERROR_NOSUCHCELL;
+    cellp = cm_GetCell(ioctlp->inDatap, 0);
+    if (!cellp) 
+        return CM_ERROR_NOSUCHCELL;
 
-	temp = 0;
-	lock_ObtainMutex(&cellp->mx);
-        if (cellp->flags & CM_CELLFLAG_SUID)
-		temp |= CM_SETCELLFLAG_SUID;
-	lock_ReleaseMutex(&cellp->mx);
+    temp = 0;
+    lock_ObtainMutex(&cellp->mx);
+    if (cellp->flags & CM_CELLFLAG_SUID)
+        temp |= CM_SETCELLFLAG_SUID;
+    lock_ReleaseMutex(&cellp->mx);
         
-        /* now copy out parm */
-        memcpy(ioctlp->outDatap, &temp, sizeof(long));
-        ioctlp->outDatap += sizeof(long);
+    /* now copy out parm */
+    memcpy(ioctlp->outDatap, &temp, sizeof(long));
+    ioctlp->outDatap += sizeof(long);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlSetCellStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long temp;
-        cm_cell_t *cellp;
+    long temp;
+    cm_cell_t *cellp;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	cellp = cm_GetCell(ioctlp->inDatap + 2*sizeof(long), 0);
-	if (!cellp) return CM_ERROR_NOSUCHCELL;
+    cellp = cm_GetCell(ioctlp->inDatap + 2*sizeof(long), 0);
+    if (!cellp) 
+        return CM_ERROR_NOSUCHCELL;
 
-	memcpy((char *)&temp, ioctlp->inDatap, sizeof(long));
+    memcpy((char *)&temp, ioctlp->inDatap, sizeof(long));
 
-	lock_ObtainMutex(&cellp->mx);
-        if (temp & CM_SETCELLFLAG_SUID)
-        	cellp->flags |= CM_CELLFLAG_SUID;
-	else
-        	cellp->flags &= ~CM_CELLFLAG_SUID;
-	lock_ReleaseMutex(&cellp->mx);
+    lock_ObtainMutex(&cellp->mx);
+    if (temp & CM_SETCELLFLAG_SUID)
+        cellp->flags |= CM_CELLFLAG_SUID;
+    else
+        cellp->flags &= ~CM_CELLFLAG_SUID;
+    lock_ReleaseMutex(&cellp->mx);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_SSetPref_t 	  *spin; /* input */
-	cm_SPref_t        *srvin;   /* one input component */
-	cm_server_t       *tsp;
-	int 		  i, vlonly, noServers, type;
-	struct sockaddr_in	tmp;
-	unsigned short	  rank;
+    cm_SSetPref_t 	  *spin; /* input */
+    cm_SPref_t        *srvin;   /* one input component */
+    cm_server_t       *tsp;
+    int 		  i, vlonly, noServers, type;
+    struct sockaddr_in	tmp;
+    unsigned short	  rank;
 
-	cm_SkipIoctlPath(ioctlp);       /* we don't care about the path */
+    cm_SkipIoctlPath(ioctlp);       /* we don't care about the path */
 
-	spin	   = (cm_SSetPref_t *)ioctlp->inDatap;
-	noServers  = spin->num_servers;
-	vlonly     = spin->flags;
-	if ( vlonly )
-		type = CM_SERVER_VLDB;
-	else    
+    spin	   = (cm_SSetPref_t *)ioctlp->inDatap;
+    noServers  = spin->num_servers;
+    vlonly     = spin->flags;
+    if ( vlonly )
+        type = CM_SERVER_VLDB;
+    else    
         type = CM_SERVER_FILE;
 
-	for ( i=0; i < noServers; i++) 
-	{
-		srvin          = &(spin->servers[i]);
-		rank           = srvin->rank + (rand() & 0x000f);
-		tmp.sin_addr   = srvin->host;
-		tmp.sin_family = AF_INET;
+    for ( i=0; i < noServers; i++) 
+    {
+        srvin          = &(spin->servers[i]);
+        rank           = srvin->rank + (rand() & 0x000f);
+        tmp.sin_addr   = srvin->host;
+        tmp.sin_family = AF_INET;
 
-		tsp = cm_FindServer(&tmp, type);
-		if ( tsp )		/* an existing server - ref count increased */
-		{
-			tsp->ipRank = rank; /* no need to protect by mutex*/
+        tsp = cm_FindServer(&tmp, type);
+        if ( tsp )		/* an existing server - ref count increased */
+        {
+            tsp->ipRank = rank; /* no need to protect by mutex*/
 
-			if ( type == CM_SERVER_FILE) /* fileserver */
-			{
-			    /* find volumes which might have RO copy 
-			    /* on server and change the ordering of 
-			    ** their RO list */
-			    cm_ChangeRankVolume(tsp);
-			}
-			else 	
-			{
-			    /* set preferences for an existing vlserver */
-			    cm_ChangeRankCellVLServer(tsp);
-			}
+            if ( type == CM_SERVER_FILE) /* fileserver */
+            {
+                /* find volumes which might have RO copy 
+                /* on server and change the ordering of 
+                ** their RO list */
+                    cm_ChangeRankVolume(tsp);
+            }
+            else 	
+            {
+                /* set preferences for an existing vlserver */
+                cm_ChangeRankCellVLServer(tsp);
+            }
             cm_PutServer(tsp);  /* decrease refcount */
-		}
-		else	/* add a new server without a cell */
-		{
-			tsp = cm_NewServer(&tmp, type, NULL); /* refcount = 1 */
-			tsp->ipRank = rank;
-		}
-	}
-	return 0;
+        }
+        else	/* add a new server without a cell */
+        {
+            tsp = cm_NewServer(&tmp, type, NULL); /* refcount = 1 */
+            tsp->ipRank = rank;
+        }
+    }
+    return 0;
 }
 
 long cm_IoctlGetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_SPrefRequest_t *spin; /* input */
-   	cm_SPrefInfo_t    *spout;   /* output */
-	cm_SPref_t        *srvout;   /* one output component */
-	cm_server_t       *tsp;
-	int 		  i, vlonly, noServers;
+    cm_SPrefRequest_t *spin; /* input */
+    cm_SPrefInfo_t    *spout;   /* output */
+    cm_SPref_t        *srvout;   /* one output component */
+    cm_server_t       *tsp;
+    int 		  i, vlonly, noServers;
 
-	cm_SkipIoctlPath(ioctlp);       /* we don't care about the path */
+    cm_SkipIoctlPath(ioctlp);       /* we don't care about the path */
 
-	spin      = (cm_SPrefRequest_t *)ioctlp->inDatap;
-	spout     = (cm_SPrefInfo_t *) ioctlp->outDatap;
-	srvout    = spout->servers;
-	noServers = spin->num_servers; 
-	vlonly    = spin->flags & CM_SPREF_VLONLY;
-	spout->num_servers = 0;
+    spin      = (cm_SPrefRequest_t *)ioctlp->inDatap;
+    spout     = (cm_SPrefInfo_t *) ioctlp->outDatap;
+    srvout    = spout->servers;
+    noServers = spin->num_servers; 
+    vlonly    = spin->flags & CM_SPREF_VLONLY;
+    spout->num_servers = 0;
 
-	lock_ObtainRead(&cm_serverLock); /* get server lock */
+    lock_ObtainRead(&cm_serverLock); /* get server lock */
 
-	for(tsp=cm_allServersp, i=0; tsp && noServers; tsp=tsp->allNextp,i++){
-		if (spin->offset > i) {
-			continue;    /* catch up to where we left off */
-		}
+    for (tsp=cm_allServersp, i=0; tsp && noServers; tsp=tsp->allNextp,i++){
+        if (spin->offset > i) {
+            continue;    /* catch up to where we left off */
+        }
 
-		if ( vlonly && (tsp->type == CM_SERVER_FILE) )
-			continue;   /* ignore fileserver for -vlserver option*/
-		if ( !vlonly && (tsp->type == CM_SERVER_VLDB) )
-			continue;   /* ignore vlservers */
+        if ( vlonly && (tsp->type == CM_SERVER_FILE) )
+            continue;   /* ignore fileserver for -vlserver option*/
+        if ( !vlonly && (tsp->type == CM_SERVER_VLDB) )
+            continue;   /* ignore vlservers */
 
-		srvout->host = tsp->addr.sin_addr;
-		srvout->rank = tsp->ipRank;
-		srvout++;	
-		spout->num_servers++;
-		noServers--;
-	}
-	lock_ReleaseRead(&cm_serverLock); /* release server lock */
+        srvout->host = tsp->addr.sin_addr;
+        srvout->rank = tsp->ipRank;
+        srvout++;	
+        spout->num_servers++;
+        noServers--;
+    }
+    lock_ReleaseRead(&cm_serverLock); /* release server lock */
 
-	if ( tsp ) 	/* we ran out of space in the output buffer */
-		spout->next_offset = i;
-	else    
-		spout->next_offset = 0; 
-	ioctlp->outDatap += sizeof(cm_SPrefInfo_t) + 
-			(spout->num_servers -1 ) * sizeof(cm_SPref_t) ;
-	return 0;
+    if ( tsp ) 	/* we ran out of space in the output buffer */
+        spout->next_offset = i;
+    else    
+        spout->next_offset = 0; 
+    ioctlp->outDatap += sizeof(cm_SPrefInfo_t) + 
+        (spout->num_servers -1 ) * sizeof(cm_SPref_t) ;
+    return 0;
 }
 
 long cm_IoctlStoreBehind(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	/* we ignore default asynchrony since we only have one way
-         * of doing this today.
-         */
-	return 0;
-}
+    /* we ignore default asynchrony since we only have one way
+     * of doing this today.
+     */
+    return 0;
+}       
 
 long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char leaf[256];
+    char leaf[256];
     long code;
     cm_scache_t *dscp;
     cm_attr_t tattr;
     char *cp;
-	cm_req_t req;
+    cm_req_t req;
     char mpInfo[256];
     char fullCell[256];
-	char volume[256];
-	char cell[256];
-	int ttl;
+    char volume[256];
+    char cell[256];
+    int ttl;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
         
     code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
     if (code) return code;
@@ -1409,49 +1429,49 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
      * work on UNIX clients.
      */
 
-	/* Extract the possibly partial cell name */
-	strcpy(cell, ioctlp->inDatap + 1);      /* Skip the mp type character */
+    /* Extract the possibly partial cell name */
+    strcpy(cell, ioctlp->inDatap + 1);      /* Skip the mp type character */
         
     if (cp = strchr(cell, ':')) {
-		/* Extract the volume name */
+        /* Extract the volume name */
         *cp = 0;
-		strcpy(volume,  cp + 1);
+        strcpy(volume,  cp + 1);
 	
         /* Get the full name for this cell */
         code = cm_SearchCellFile(cell, fullCell, 0, 0);
 #ifdef AFS_AFSDB_ENV
-		if (code && cm_dnsEnabled)
+        if (code && cm_dnsEnabled)
             code = cm_SearchCellByDNS(cell, fullCell, &ttl, 0, 0);
 #endif
         if (code)
-			return CM_ERROR_NOSUCHCELL;
+            return CM_ERROR_NOSUCHCELL;
 	
         sprintf(mpInfo, "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
-	} else {
+    } else {
         /* No cell name specified */
         strcpy(mpInfo, ioctlp->inDatap);
     }
 
 #ifdef AFS_FREELANCE_CLIENT
-	if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
-	  /* we are adding the mount point to the root dir., so call
-	     the freelance code to do the add. */
-	  osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
-	  code = cm_FreelanceAddMount(leaf, fullCell, volume, 
-                                  *ioctlp->inDatap == '%', NULL);
-	  return code;
-	}
+    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+        /* we are adding the mount point to the root dir., so call
+         * the freelance code to do the add. */
+        osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
+        code = cm_FreelanceAddMount(leaf, fullCell, volume, 
+                                    *ioctlp->inDatap == '%', NULL);
+        return code;
+    }
 #endif
-	/* create the symlink with mode 644.  The lack of X bits tells
+    /* create the symlink with mode 644.  The lack of X bits tells
      * us that it is a mount point.
      */
-	tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
+    tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
     tattr.unixModeBits = 0644;
-	tattr.clientModTime = time(NULL);
+    tattr.clientModTime = time(NULL);
 
     code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
-	if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-		smb_NotifyChange(FILE_ACTION_ADDED,
+    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+        smb_NotifyChange(FILE_ACTION_ADDED,
                          FILE_NOTIFY_CHANGE_DIR_NAME,
                          dscp, leaf, NULL, TRUE);
 
@@ -1461,533 +1481,533 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char leaf[256];
-	long code;
-	cm_scache_t *dscp;
-	cm_attr_t tattr;
-	char *cp;
-	cm_req_t req;
+    char leaf[256];
+    long code;
+    cm_scache_t *dscp;
+    cm_attr_t tattr;
+    char *cp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
-	if (code) return code;
+    code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
+    if (code) return code;
 
-        /* Translate chars for the link name */
-        TranslateExtendedChars(leaf);
+    /* Translate chars for the link name */
+    TranslateExtendedChars(leaf);
 
-        /* Translate chars for the linked to name */
-        TranslateExtendedChars(ioctlp->inDatap);
+    /* Translate chars for the linked to name */
+    TranslateExtendedChars(ioctlp->inDatap);
 
-	cp = ioctlp->inDatap;		/* contents of link */
+    cp = ioctlp->inDatap;		/* contents of link */
 
-	/* Create symlink with mode 0755. */
-	tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
-	tattr.unixModeBits = 0755;
+    /* Create symlink with mode 0755. */
+    tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
+    tattr.unixModeBits = 0755;
 
-	code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
-	if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME
-				   | FILE_NOTIFY_CHANGE_DIR_NAME,
-				 dscp, leaf, NULL, TRUE);
+    code = cm_SymLink(dscp, leaf, cp, 0, &tattr, userp, &req);
+    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+        smb_NotifyChange(FILE_ACTION_ADDED,
+                          FILE_NOTIFY_CHANGE_FILE_NAME
+                          | FILE_NOTIFY_CHANGE_DIR_NAME,
+                          dscp, leaf, NULL, TRUE);
 
-	cm_ReleaseSCache(dscp);
+    cm_ReleaseSCache(dscp);
 
-	return code;
+    return code;
 }
 
 extern long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
-	cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
-	cm_user_t *userp, cm_req_t *reqp);
+                            cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
+                            cm_user_t *userp, cm_req_t *reqp);
 
 long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-	cm_scache_t *dscp;
-	cm_scache_t *scp;
-	char *cp;
-	cm_space_t *spacep;
-	cm_scache_t *newRootScp;
-	cm_req_t req;
+    long code;
+    cm_scache_t *dscp;
+    cm_scache_t *scp;
+    char *cp;
+    cm_space_t *spacep;
+    cm_scache_t *newRootScp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
-	if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+    if (code) return code;
 
-	cp = ioctlp->inDatap;
+    cp = ioctlp->inDatap;
 
-	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
-	cm_ReleaseSCache(dscp);
-	if (code) return code;
+    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+    cm_ReleaseSCache(dscp);
+    if (code) return code;
 
-	/* Check that it's a real symlink */
-	if (scp->fileType != CM_SCACHETYPE_SYMLINK){
-		cm_ReleaseSCache(scp);
-		return CM_ERROR_INVAL;
-	}
+    /* Check that it's a real symlink */
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK){
+        cm_ReleaseSCache(scp);
+        return CM_ERROR_INVAL;
+    }
 
-	code = cm_AssembleLink(scp, "", &newRootScp, &spacep, userp, &req);
-	cm_ReleaseSCache(scp);
-	if (code == 0) {
-		cp = ioctlp->outDatap;
-		if (newRootScp != NULL) {
+    code = cm_AssembleLink(scp, "", &newRootScp, &spacep, userp, &req);
+    cm_ReleaseSCache(scp);
+    if (code == 0) {
+        cp = ioctlp->outDatap;
+        if (newRootScp != NULL) {
             strcpy(cp, cm_mountRoot);
             strcat(cp, "/");
-			cp += strlen(cp);
-		}
-		strcpy(cp, spacep->data);
-		cp += strlen(cp) + 1;
-		ioctlp->outDatap = cp;
-		cm_FreeSpace(spacep);
-		if (newRootScp != NULL)
-			cm_ReleaseSCache(newRootScp);
-	}
+            cp += strlen(cp);
+        }
+        strcpy(cp, spacep->data);
+        cp += strlen(cp) + 1;
+        ioctlp->outDatap = cp;
+        cm_FreeSpace(spacep);
+        if (newRootScp != NULL)
+            cm_ReleaseSCache(newRootScp);
+    }       
 
-	return code;
+    return code;
 }
 
 long cm_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {/*CHECK FOR VALID SYMLINK*/
-	long code;
-	cm_scache_t *dscp;
-	cm_scache_t *scp;
-	char *cp;
-	cm_req_t req;
+    long code;
+    cm_scache_t *dscp;
+    cm_scache_t *scp;
+    char *cp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
-	if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+    if (code) return code;
 
-	cp = ioctlp->inDatap;
-	osi_LogEvent("cm_IoctlListlink",NULL," name[%s]",cp);
+    cp = ioctlp->inDatap;
+    osi_LogEvent("cm_IoctlListlink",NULL," name[%s]",cp);
 
-	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
-	cm_ReleaseSCache(dscp);
-	if (code) return code;
+    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+    cm_ReleaseSCache(dscp);
+    if (code) return code;
 
-	/* Check that it's a real symlink */
-	if (scp->fileType != CM_SCACHETYPE_SYMLINK)
-		code = CM_ERROR_INVAL;
-	cm_ReleaseSCache(scp);
-	return code;
+    /* Check that it's a real symlink */
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK)
+        code = CM_ERROR_INVAL;
+    cm_ReleaseSCache(scp);
+    return code;
 }
 
 long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	long code;
-        cm_scache_t *dscp;
-        cm_scache_t *scp;
-	char *cp;
-        cm_req_t req;
+    long code;
+    cm_scache_t *dscp;
+    cm_scache_t *scp;
+    char *cp;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-        code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
-        if (code) return code;
+    code = cm_ParseIoctlPath(ioctlp, userp, &req, &dscp);
+    if (code) return code;
 
-        cp = ioctlp->inDatap;
+    cp = ioctlp->inDatap;
 
-	code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
+    code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         
-	/* if something went wrong, bail out now */
-        if (code) {
-		goto done;
-	}
+    /* if something went wrong, bail out now */
+    if (code) {
+        goto done;
+    }
         
-	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-        if (code) {
-        	lock_ReleaseMutex(&scp->mx);
-        	cm_ReleaseSCache(scp);
-		goto done;
-	}
-	
-        /* now check that this is a real symlink */
-        if (scp->fileType != CM_SCACHETYPE_SYMLINK) {
-		lock_ReleaseMutex(&scp->mx);
-        	cm_ReleaseSCache(scp);
-                code = CM_ERROR_INVAL;
-                goto done;
-        }
-	
-        /* time to make the RPC, so drop the lock */
-	lock_ReleaseMutex(&scp->mx);
+    lock_ObtainMutex(&scp->mx);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code) {     
+        lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
+        goto done;
+    }
+	
+    /* now check that this is a real symlink */
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK) {
+        lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseSCache(scp);
+        code = CM_ERROR_INVAL;
+        goto done;
+    }
+	
+    /* time to make the RPC, so drop the lock */
+    lock_ReleaseMutex(&scp->mx);
+    cm_ReleaseSCache(scp);
         
-	/* easier to do it this way */
-        code = cm_Unlink(dscp, cp, userp, &req);
-	if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
-		smb_NotifyChange(FILE_ACTION_REMOVED,
-				 FILE_NOTIFY_CHANGE_FILE_NAME
-				   | FILE_NOTIFY_CHANGE_DIR_NAME,
-				 dscp, cp, NULL, TRUE);
+    /* easier to do it this way */
+    code = cm_Unlink(dscp, cp, userp, &req);
+    if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
+        smb_NotifyChange(FILE_ACTION_REMOVED,
+                          FILE_NOTIFY_CHANGE_FILE_NAME
+                          | FILE_NOTIFY_CHANGE_DIR_NAME,
+                          dscp, cp, NULL, TRUE);
 
-done:
-	cm_ReleaseSCache(dscp);
-	return code;
+  done:
+    cm_ReleaseSCache(dscp);
+    return code;
 }
 
 long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char *saveDataPtr;
-	char *tp;
-	int ticketLen;
-	char *ticket;
-	int ctSize;
-	struct ClearToken ct;
-	cm_cell_t *cellp;
-	cm_ucell_t *ucellp;
-	char *uname = NULL;
-	afs_uuid_t uuid;
-	int flags;
-	char sessionKey[8];
-	char *smbname;
+    char *saveDataPtr;
+    char *tp;
+    int ticketLen;
+    char *ticket;
+    int ctSize;
+    struct ClearToken ct;
+    cm_cell_t *cellp;
+    cm_ucell_t *ucellp;
+    char *uname = NULL;
+    afs_uuid_t uuid;
+    int flags;
+    char sessionKey[8];
+    char *smbname;
 
-	saveDataPtr = ioctlp->inDatap;
+    saveDataPtr = ioctlp->inDatap;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	tp = ioctlp->inDatap;
+    tp = ioctlp->inDatap;
 
-	/* ticket length */
-	memcpy(&ticketLen, tp, sizeof(ticketLen));
-	tp += sizeof(ticketLen);
-	if (ticketLen < MINKTCTICKETLEN || ticketLen > MAXKTCTICKETLEN)
-		return CM_ERROR_INVAL;
+    /* ticket length */
+    memcpy(&ticketLen, tp, sizeof(ticketLen));
+    tp += sizeof(ticketLen);
+    if (ticketLen < MINKTCTICKETLEN || ticketLen > MAXKTCTICKETLEN)
+        return CM_ERROR_INVAL;
 
-	/* remember ticket and skip over it for now */
-	ticket = tp;
-	tp += ticketLen;
+    /* remember ticket and skip over it for now */
+    ticket = tp;
+    tp += ticketLen;
 
-	/* clear token size */
-	memcpy(&ctSize, tp, sizeof(ctSize));
-	tp += sizeof(ctSize);
-	if (ctSize != sizeof(struct ClearToken))
-		return CM_ERROR_INVAL;
+    /* clear token size */
+    memcpy(&ctSize, tp, sizeof(ctSize));
+    tp += sizeof(ctSize);
+    if (ctSize != sizeof(struct ClearToken))
+        return CM_ERROR_INVAL;
 
-	/* clear token */
-	memcpy(&ct, tp, ctSize);
-	tp += ctSize;
-	if (ct.AuthHandle == -1)
-		ct.AuthHandle = 999;	/* more rxvab compat stuff */
+    /* clear token */
+    memcpy(&ct, tp, ctSize);
+    tp += ctSize;
+    if (ct.AuthHandle == -1)
+        ct.AuthHandle = 999;	/* more rxvab compat stuff */
 
-	/* more stuff, if any */
-	if (ioctlp->inCopied > tp - saveDataPtr) {
-		/* flags:  logon flag */
-		memcpy(&flags, tp, sizeof(int));
-		tp += sizeof(int);
+    /* more stuff, if any */
+    if (ioctlp->inCopied > tp - saveDataPtr) {
+        /* flags:  logon flag */
+        memcpy(&flags, tp, sizeof(int));
+        tp += sizeof(int);
 
-		/* cell name */
-		cellp = cm_GetCell(tp, CM_FLAG_CREATE);
-		if (!cellp) return CM_ERROR_NOSUCHCELL;
-		tp += strlen(tp) + 1;
+        /* cell name */
+        cellp = cm_GetCell(tp, CM_FLAG_CREATE);
+        if (!cellp) return CM_ERROR_NOSUCHCELL;
+        tp += strlen(tp) + 1;
 
-		/* user name */
-		uname = tp;
-		tp += strlen(tp) + 1;
+        /* user name */
+        uname = tp;
+        tp += strlen(tp) + 1;
 
         if (flags & PIOCTL_LOGON) {
-		  /* SMB user name with which to associate tokens */
-		  smbname = tp;
-          osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
-                    osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
-          fprintf(stderr, "SMB name = %s\n", smbname);
-		  tp += strlen(tp) + 1;
+            /* SMB user name with which to associate tokens */
+            smbname = tp;
+            osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
+                     osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
+            fprintf(stderr, "SMB name = %s\n", smbname);
+            tp += strlen(tp) + 1;
         } else {
             osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
-                      osi_LogSaveString(smb_logp,uname));
+                     osi_LogSaveString(smb_logp,uname));
         }
 
 #ifndef DJGPP   /* for win95, session key is back in pioctl */
 		/* uuid */
-		memcpy(&uuid, tp, sizeof(uuid));
-		if (!cm_FindTokenEvent(uuid, sessionKey))
-			return CM_ERROR_INVAL;
+        memcpy(&uuid, tp, sizeof(uuid));
+        if (!cm_FindTokenEvent(uuid, sessionKey))
+            return CM_ERROR_INVAL;
 #endif /* !DJGPP */
-	} else {
-		cellp = cm_rootCellp;
+    } else {
+        cellp = cm_rootCellp;
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
     }
 
-	if (flags & PIOCTL_LOGON) {
-          userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
-	}
-	
-	/* store the token */
-	lock_ObtainMutex(&userp->mx);
-	ucellp = cm_GetUCell(userp, cellp);
+    if (flags & PIOCTL_LOGON) {
+        userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
+    }
+
+    /* store the token */
+    lock_ObtainMutex(&userp->mx);
+    ucellp = cm_GetUCell(userp, cellp);
     osi_Log1(smb_logp,"cm_IoctlSetToken ucellp %lx", ucellp);
-	ucellp->ticketLen = ticketLen;
-	if (ucellp->ticketp)
-		free(ucellp->ticketp);	/* Discard old token if any */
-	ucellp->ticketp = malloc(ticketLen);
-	memcpy(ucellp->ticketp, ticket, ticketLen);
+    ucellp->ticketLen = ticketLen;
+    if (ucellp->ticketp)
+        free(ucellp->ticketp);	/* Discard old token if any */
+    ucellp->ticketp = malloc(ticketLen);
+    memcpy(ucellp->ticketp, ticket, ticketLen);
 #ifndef DJGPP
-	/*
-	 * Get the session key from the RPC, rather than from the pioctl.
-	 */
-	/*
-	memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
-	 */
-	memcpy(ucellp->sessionKey.data, sessionKey, sizeof(sessionKey));
+    /*
+     * Get the session key from the RPC, rather than from the pioctl.
+     */
+    /*
+    memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
+    */
+    memcpy(ucellp->sessionKey.data, sessionKey, sizeof(sessionKey));
 #else
-        /* for win95, we are getting the session key from the pioctl */
-        memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
+    /* for win95, we are getting the session key from the pioctl */
+    memcpy(&ucellp->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
 #endif /* !DJGPP */
-	ucellp->kvno = ct.AuthHandle;
-	ucellp->expirationTime = ct.EndTimestamp;
-	ucellp->gen++;
-	if (uname) strcpy(ucellp->userName, uname);
-	ucellp->flags |= CM_UCELLFLAG_RXKAD;
-	lock_ReleaseMutex(&userp->mx);
+    ucellp->kvno = ct.AuthHandle;
+    ucellp->expirationTime = ct.EndTimestamp;
+    ucellp->gen++;
+    if (uname) strcpy(ucellp->userName, uname);
+    ucellp->flags |= CM_UCELLFLAG_RXKAD;
+    lock_ReleaseMutex(&userp->mx);
 
-	if (flags & PIOCTL_LOGON) {
-		ioctlp->flags |= SMB_IOCTLFLAG_LOGON;
-	}
+    if (flags & PIOCTL_LOGON) {
+        ioctlp->flags |= SMB_IOCTLFLAG_LOGON;
+    }
 
-	cm_ResetACLCache(userp);
+    cm_ResetACLCache(userp);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char *tp, *cp;
-	int iterator;
-	int temp;
-	cm_ucell_t *ucellp;
-	struct ClearToken ct;
+    char *tp, *cp;
+    int iterator;
+    int temp;
+    cm_ucell_t *ucellp;
+    struct ClearToken ct;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	tp = ioctlp->inDatap;
-	cp = ioctlp->outDatap;
+    tp = ioctlp->inDatap;
+    cp = ioctlp->outDatap;
 
-	/* iterator */
-	memcpy(&iterator, tp, sizeof(iterator));
-	tp += sizeof(iterator);
+    /* iterator */
+    memcpy(&iterator, tp, sizeof(iterator));
+    tp += sizeof(iterator);
 
-	lock_ObtainMutex(&userp->mx);
+    lock_ObtainMutex(&userp->mx);
 
-	/* look for token */
-	for (;;iterator++) {
-		ucellp = cm_FindUCell(userp, iterator);
-		if (!ucellp) {
-			lock_ReleaseMutex(&userp->mx);
-			return CM_ERROR_NOMORETOKENS;
-		}
-		if (ucellp->flags & CM_UCELLFLAG_RXKAD)
-			break;
-	}
+    /* look for token */
+    for (;;iterator++) {
+        ucellp = cm_FindUCell(userp, iterator);
+        if (!ucellp) {
+            lock_ReleaseMutex(&userp->mx);
+            return CM_ERROR_NOMORETOKENS;
+        }
+        if (ucellp->flags & CM_UCELLFLAG_RXKAD)
+            break;
+    }       
 
-	/* new iterator */
-	temp = ucellp->iterator + 1;
-	memcpy(cp, &temp, sizeof(temp));
-	cp += sizeof(temp);
+    /* new iterator */
+    temp = ucellp->iterator + 1;
+    memcpy(cp, &temp, sizeof(temp));
+    cp += sizeof(temp);
 
-	/* ticket length */
-	memcpy(cp, &ucellp->ticketLen, sizeof(ucellp->ticketLen));
-	cp += sizeof(ucellp->ticketLen);
+    /* ticket length */
+    memcpy(cp, &ucellp->ticketLen, sizeof(ucellp->ticketLen));
+    cp += sizeof(ucellp->ticketLen);
 
-	/* ticket */
-	memcpy(cp, ucellp->ticketp, ucellp->ticketLen);
-	cp += ucellp->ticketLen;
+    /* ticket */
+    memcpy(cp, ucellp->ticketp, ucellp->ticketLen);
+    cp += ucellp->ticketLen;
 
-	/* clear token size */
-	temp = sizeof(ct);
-	memcpy(cp, &temp, sizeof(temp));
-	cp += sizeof(temp);
+    /* clear token size */
+    temp = sizeof(ct);
+    memcpy(cp, &temp, sizeof(temp));
+    cp += sizeof(temp);
 
-	/* clear token */
-	ct.AuthHandle = ucellp->kvno;
+    /* clear token */
+    ct.AuthHandle = ucellp->kvno;
 #ifndef DJGPP
-	/*
-	 * Don't give out a real session key here
-	 */
-	/*
-	memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
-	 */
-	memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
+    /*
+     * Don't give out a real session key here
+     */
+    /*
+    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
+    */
+    memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
 #else
-	memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
+    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
 #endif /* !DJGPP */
-	ct.ViceId = 37;			/* XXX */
-	ct.BeginTimestamp = 0;		/* XXX */
-	ct.EndTimestamp = ucellp->expirationTime;
-	memcpy(cp, &ct, sizeof(ct));
-	cp += sizeof(ct);
+    ct.ViceId = 37;			/* XXX */
+    ct.BeginTimestamp = 0;		/* XXX */
+    ct.EndTimestamp = ucellp->expirationTime;
+    memcpy(cp, &ct, sizeof(ct));
+    cp += sizeof(ct);
 
-	/* Primary flag (unused) */
-	temp = 0;
-	memcpy(cp, &temp, sizeof(temp));
-	cp += sizeof(temp);
+    /* Primary flag (unused) */
+    temp = 0;
+    memcpy(cp, &temp, sizeof(temp));
+    cp += sizeof(temp);
 
-	/* cell name */
-	strcpy(cp, ucellp->cellp->namep);
-	cp += strlen(cp) + 1;
+    /* cell name */
+    strcpy(cp, ucellp->cellp->namep);
+    cp += strlen(cp) + 1;
 
-	/* user name */
-	strcpy(cp, ucellp->userName);
-	cp += strlen(cp) + 1;
+    /* user name */
+    strcpy(cp, ucellp->userName);
+    cp += strlen(cp) + 1;
 
-	ioctlp->outDatap = cp;
+    ioctlp->outDatap = cp;
 
-	lock_ReleaseMutex(&userp->mx);
+    lock_ReleaseMutex(&userp->mx);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char *cp;
-	int temp;
-	cm_cell_t *cellp;
-	cm_ucell_t *ucellp;
-	struct ClearToken ct;
-	char *tp;
+    char *cp;
+    int temp;
+    cm_cell_t *cellp;
+    cm_ucell_t *ucellp;
+    struct ClearToken ct;
+    char *tp;
 #ifndef DJGPP
-	afs_uuid_t uuid;
+    afs_uuid_t uuid;
 #endif /* !DJGPP */
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	tp = ioctlp->inDatap;
+    tp = ioctlp->inDatap;
 
-	cp = ioctlp->outDatap;
+    cp = ioctlp->outDatap;
 
-	/* cell name is right here */
-	cellp = cm_GetCell(tp, 0);
-	if (!cellp) return CM_ERROR_NOSUCHCELL;
-	tp += strlen(tp) + 1;
+    /* cell name is right here */
+    cellp = cm_GetCell(tp, 0);
+    if (!cellp) return CM_ERROR_NOSUCHCELL;
+    tp += strlen(tp) + 1;
 
 #ifndef DJGPP
-	/* uuid */
-	memcpy(&uuid, tp, sizeof(uuid));
+    /* uuid */
+    memcpy(&uuid, tp, sizeof(uuid));
 #endif /* !DJGPP */
 
-	lock_ObtainMutex(&userp->mx);
+    lock_ObtainMutex(&userp->mx);
 
-	ucellp = cm_GetUCell(userp, cellp);
-	if (!ucellp || !(ucellp->flags & CM_UCELLFLAG_RXKAD)) {
-		lock_ReleaseMutex(&userp->mx);
-		return CM_ERROR_NOMORETOKENS;
-	}
+    ucellp = cm_GetUCell(userp, cellp);
+    if (!ucellp || !(ucellp->flags & CM_UCELLFLAG_RXKAD)) {
+        lock_ReleaseMutex(&userp->mx);
+        return CM_ERROR_NOMORETOKENS;
+    }
 
-	/* ticket length */
-	memcpy(cp, &ucellp->ticketLen, sizeof(ucellp->ticketLen));
-	cp += sizeof(ucellp->ticketLen);
+    /* ticket length */
+    memcpy(cp, &ucellp->ticketLen, sizeof(ucellp->ticketLen));
+    cp += sizeof(ucellp->ticketLen);
 
-	/* ticket */
-	memcpy(cp, ucellp->ticketp, ucellp->ticketLen);
-	cp += ucellp->ticketLen;
+    /* ticket */
+    memcpy(cp, ucellp->ticketp, ucellp->ticketLen);
+    cp += ucellp->ticketLen;
 
-	/* clear token size */
-	temp = sizeof(ct);
-	memcpy(cp, &temp, sizeof(temp));
-	cp += sizeof(temp);
+    /* clear token size */
+    temp = sizeof(ct);
+    memcpy(cp, &temp, sizeof(temp));
+    cp += sizeof(temp);
 
-	/* clear token */
-	ct.AuthHandle = ucellp->kvno;
+    /* clear token */
+    ct.AuthHandle = ucellp->kvno;
 #ifndef DJGPP
-	/*
-	 * Don't give out a real session key here
-	 */
-	/*
-	memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
-	 */
-	memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
+    /*
+     * Don't give out a real session key here
+     */
+    /*
+    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
+    */
+    memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
 #else
-        memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
+    memcpy(ct.HandShakeKey, &ucellp->sessionKey, sizeof(ct.HandShakeKey));
 #endif /* !DJGPP */
-	ct.ViceId = 37;			/* XXX */
-	ct.BeginTimestamp = 0;		/* XXX */
-	ct.EndTimestamp = ucellp->expirationTime;
-	memcpy(cp, &ct, sizeof(ct));
-	cp += sizeof(ct);
+    ct.ViceId = 37;			/* XXX */
+    ct.BeginTimestamp = 0;		/* XXX */
+    ct.EndTimestamp = ucellp->expirationTime;
+    memcpy(cp, &ct, sizeof(ct));
+    cp += sizeof(ct);
 
-	/* Primary flag (unused) */
-	temp = 0;
-	memcpy(cp, &temp, sizeof(temp));
-	cp += sizeof(temp);
+    /* Primary flag (unused) */
+    temp = 0;
+    memcpy(cp, &temp, sizeof(temp));
+    cp += sizeof(temp);
 
-	/* cell name */
-	strcpy(cp, ucellp->cellp->namep);
-	cp += strlen(cp) + 1;
+    /* cell name */
+    strcpy(cp, ucellp->cellp->namep);
+    cp += strlen(cp) + 1;
 
-	/* user name */
-	strcpy(cp, ucellp->userName);
-	cp += strlen(cp) + 1;
+    /* user name */
+    strcpy(cp, ucellp->userName);
+    cp += strlen(cp) + 1;
 
-	ioctlp->outDatap = cp;
+    ioctlp->outDatap = cp;
 
-	lock_ReleaseMutex(&userp->mx);
+    lock_ReleaseMutex(&userp->mx);
 
 #ifndef DJGPP
-	cm_RegisterNewTokenEvent(uuid, ucellp->sessionKey.data);
+    cm_RegisterNewTokenEvent(uuid, ucellp->sessionKey.data);
 #endif /* !DJGPP */
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	char *cp;
-	cm_cell_t *cellp;
-	cm_ucell_t *ucellp;
+    char *cp;
+    cm_cell_t *cellp;
+    cm_ucell_t *ucellp;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	cp = ioctlp->outDatap;
+    cp = ioctlp->outDatap;
 
-	/* cell name is right here */
-	cellp = cm_GetCell(ioctlp->inDatap, 0);
-	if (!cellp) return CM_ERROR_NOSUCHCELL;
+    /* cell name is right here */
+    cellp = cm_GetCell(ioctlp->inDatap, 0);
+    if (!cellp) return CM_ERROR_NOSUCHCELL;
 
-	lock_ObtainMutex(&userp->mx);
+    lock_ObtainMutex(&userp->mx);
 
-	ucellp = cm_GetUCell(userp, cellp);
-	if (!ucellp) {
-		lock_ReleaseMutex(&userp->mx);
-		return CM_ERROR_NOMORETOKENS;
-	}
+    ucellp = cm_GetUCell(userp, cellp);
+    if (!ucellp) {
+        lock_ReleaseMutex(&userp->mx);
+        return CM_ERROR_NOMORETOKENS;
+    }
 
     osi_Log1(smb_logp,"cm_IoctlDelToken ucellp %lx", ucellp);
 
-	if (ucellp->ticketp) {
-		free(ucellp->ticketp);
-		ucellp->ticketp = NULL;
-	}
-	ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
-	ucellp->gen++;
+    if (ucellp->ticketp) {
+        free(ucellp->ticketp);
+        ucellp->ticketp = NULL;
+    }
+    ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+    ucellp->gen++;
 
-	lock_ReleaseMutex(&userp->mx);
+    lock_ReleaseMutex(&userp->mx);
 
-	cm_ResetACLCache(userp);
+    cm_ResetACLCache(userp);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-	cm_ucell_t *ucellp;
+    cm_ucell_t *ucellp;
 
-	lock_ObtainMutex(&userp->mx);
+    lock_ObtainMutex(&userp->mx);
 
     for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
         osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
-		ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
-		ucellp->gen++;
-	}
+        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+        ucellp->gen++;
+    }
 
-	lock_ReleaseMutex(&userp->mx);
+    lock_ReleaseMutex(&userp->mx);
 
-	cm_ResetACLCache(userp);
+    cm_ResetACLCache(userp);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
@@ -2167,19 +2187,19 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	memcpy(ioctlp->outDatap, &cryptall, sizeof(cryptall));
-        ioctlp->outDatap += sizeof(cryptall);
+    memcpy(ioctlp->outDatap, &cryptall, sizeof(cryptall));
+    ioctlp->outDatap += sizeof(cryptall);
 
-	return 0;
+    return 0;
 }
 
 long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	memcpy(&cryptall, ioctlp->inDatap, sizeof(cryptall));
+    memcpy(&cryptall, ioctlp->inDatap, sizeof(cryptall));
 
-	return 0;
+    return 0;
 }
 
 #ifdef DJGPP
@@ -2199,7 +2219,7 @@ long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
   if (uidp && uidp->unp) {
     memcpy(ioctlp->outDatap, uidp->unp->name, strlen(uidp->unp->name));
     ioctlp->outDatap += strlen(uidp->unp->name);
-	}
+  }
 
   return 0;
 }

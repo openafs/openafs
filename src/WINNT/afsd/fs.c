@@ -2181,19 +2181,19 @@ register struct cmd_syndesc *as; {
         return 0;
     }
 
-	input = space;
-	memcpy(&setp, input, sizeof(afs_int32));
-	input += sizeof(afs_int32);
-	if (!setp) {
-	    fprintf(stderr,"No sysname name value was found\n");
+    input = space;
+    memcpy(&setp, input, sizeof(afs_int32));
+    input += sizeof(afs_int32);
+    if (!setp) {
+        fprintf(stderr,"No sysname name value was found\n");
         return 1;
-	} 
+    } 
     
     printf("Current sysname%s", setp > 1 ? "s are" : " is");
     for (; setp > 0; --setp ) {
         printf(" \'%s\'", input);
         input += strlen(input) + 1;
-	}
+    }
     printf("\n");
     return 0;
 }
@@ -2943,7 +2943,7 @@ int argc;
 char **argv; {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -3141,7 +3141,7 @@ char **argv; {
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
     ts = cmd_CreateSyntax("sysname", SysNameCmd, 0, "get/set sysname (i.e. @sys) value");
-    cmd_AddParm(ts, "-newsys", CMD_SINGLE, CMD_OPTIONAL, "new sysname");
+    cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
     ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, 0, "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");

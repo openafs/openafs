@@ -43,9 +43,9 @@ typedef struct cm_SSetPref {
 
 #define MAXNUMSYSNAMES    16      /* max that current constants allow */
 #define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
-extern char *cm_sysName;
-extern int   cm_sysNameCount;
-extern char *cm_sysNameList[MAXNUMSYSNAMES];
+extern char *         cm_sysName;
+extern unsigned int   cm_sysNameCount;
+extern char *         cm_sysNameList[MAXNUMSYSNAMES];
 
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 

@@ -81,7 +81,7 @@ BOOL reportSessionStartups = FALSE;
 cm_initparams_v1 cm_initParams;
 
 char *cm_sysName = 0;
-int   cm_sysNameCount = 0;
+unsigned int   cm_sysNameCount = 0;
 char *cm_sysNameList[MAXNUMSYSNAMES];
 
 DWORD TraceOption = 0;
@@ -358,72 +358,72 @@ configureBackConnectionHostNames(void)
 
 int afsd_InitCM(char **reasonP)
 {
-	osi_uid_t debugID;
-	long cacheBlocks;
-	long cacheSize;
-	long logChunkSize;
-	long stats;
-	long traceBufSize;
+    osi_uid_t debugID;
+    long cacheBlocks;
+    long cacheSize;
+    long logChunkSize;
+    long stats;
+    long traceBufSize;
     long maxcpus;
-	long ltt, ltto;
+    long ltt, ltto;
     long rx_mtu, rx_nojumbo;
     long virtualCache;
-	char rootCellName[256];
-	struct rx_service *serverp;
-	static struct rx_securityClass *nullServerSecurityClassp;
-	struct hostent *thp;
-	char *msgBuf;
-	char buf[200];
-	HKEY parmKey;
-	DWORD dummyLen;
+    char rootCellName[256];
+    struct rx_service *serverp;
+    static struct rx_securityClass *nullServerSecurityClassp;
+    struct hostent *thp;
+    char *msgBuf;
+    char buf[200];
+    HKEY parmKey;
+    DWORD dummyLen;
     DWORD regType;
-	long code;
-	/*int freelanceEnabled;*/
-	WSADATA WSAjunk;
+    long code;
+    /*int freelanceEnabled;*/
+    WSADATA WSAjunk;
     lana_number_t lanaNum;
     int i;
 
-	WSAStartup(0x0101, &WSAjunk);
+    WSAStartup(0x0101, &WSAjunk);
 
     afsd_initUpperCaseTable();
 
-	/* setup osidebug server at RPC slot 1000 */
-	osi_LongToUID(1000, &debugID);
-	code = osi_InitDebug(&debugID);
-	afsi_log("osi_InitDebug code %d", code);
+    /* setup osidebug server at RPC slot 1000 */
+    osi_LongToUID(1000, &debugID);
+    code = osi_InitDebug(&debugID);
+    afsi_log("osi_InitDebug code %d", code);
 
     //	osi_LockTypeSetDefault("stat");	/* comment this out for speed *
-	if (code != 0) {
-		*reasonP = "unknown error";
-		return -1;
-	}
+    if (code != 0) {
+        *reasonP = "unknown error";
+        return -1;
+    }
 
-	/* who are we ? */
-	gethostname(cm_HostName, sizeof(cm_HostName));
-	afsi_log("gethostname %s", cm_HostName);
-	thp = gethostbyname(cm_HostName);
-	memcpy(&cm_HostAddr, thp->h_addr_list[0], 4);
+    /* who are we ? */
+    gethostname(cm_HostName, sizeof(cm_HostName));
+    afsi_log("gethostname %s", cm_HostName);
+    thp = gethostbyname(cm_HostName);
+    memcpy(&cm_HostAddr, thp->h_addr_list[0], 4);
 
-	/* seed random number generator */
-	srand(ntohl(cm_HostAddr));
+    /* seed random number generator */
+    srand(ntohl(cm_HostAddr));
 
-	/* Look up configuration parameters in Registry */
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
-				0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS) {
-		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
-				| FORMAT_MESSAGE_ALLOCATE_BUFFER,
-			      NULL, code, 0, (LPTSTR)&msgBuf, 0, NULL);
-		StringCbPrintfA(buf, sizeof(buf),
-			"Failure in configuration while opening Registry: %s",
-			msgBuf);
-		osi_panic(buf, __FILE__, __LINE__);
-	}
+    /* Look up configuration parameters in Registry */
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS) {
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
+                       | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                       NULL, code, 0, (LPTSTR)&msgBuf, 0, NULL);
+        StringCbPrintfA(buf, sizeof(buf),
+                         "Failure in configuration while opening Registry: %s",
+                         msgBuf);
+        osi_panic(buf, __FILE__, __LINE__);
+    }
 
     dummyLen = sizeof(maxcpus);
-	code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
-				(BYTE *) &maxcpus, &dummyLen);
-	if (code == ERROR_SUCCESS) {
+    code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
+                            (BYTE *) &maxcpus, &dummyLen);
+    if (code == ERROR_SUCCESS) {
         HANDLE hProcess;
         DWORD_PTR processAffinityMask, systemAffinityMask;
 
@@ -456,139 +456,139 @@ int afsd_InitCM(char **reasonP)
         }
     }
 
-	dummyLen = sizeof(TraceOption);
-	code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
-				(BYTE *) &TraceOption, &dummyLen);
+    dummyLen = sizeof(TraceOption);
+    code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
+                            (BYTE *) &TraceOption, &dummyLen);
     afsi_log("Event Log Tracing = %lX", TraceOption);
 
-	dummyLen = sizeof(traceBufSize);
-	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
-				(BYTE *) &traceBufSize, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Trace Buffer size %d", traceBufSize);
-	else {
-		traceBufSize = CM_CONFIGDEFAULT_TRACEBUFSIZE;
-		afsi_log("Default trace buffer size %d", traceBufSize);
-	}
+    dummyLen = sizeof(traceBufSize);
+    code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
+                            (BYTE *) &traceBufSize, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Trace Buffer size %d", traceBufSize);
+    else {
+        traceBufSize = CM_CONFIGDEFAULT_TRACEBUFSIZE;
+        afsi_log("Default trace buffer size %d", traceBufSize);
+    }
 
-	/* setup and enable debug log */
-	afsd_logp = osi_LogCreate("afsd", traceBufSize);
-	afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
+    /* setup and enable debug log */
+    afsd_logp = osi_LogCreate("afsd", traceBufSize);
+    afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
     osi_LogEnable(afsd_logp);
-	logReady = 1;
+    logReady = 1;
 
     osi_Log0(afsd_logp, "Log init");
 
-	dummyLen = sizeof(cacheSize);
-	code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
-				(BYTE *) &cacheSize, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Cache size %d", cacheSize);
-	else {
-		cacheSize = CM_CONFIGDEFAULT_CACHESIZE;
-		afsi_log("Default cache size %d", cacheSize);
-	}
+    dummyLen = sizeof(cacheSize);
+    code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
+                            (BYTE *) &cacheSize, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Cache size %d", cacheSize);
+    else {
+        cacheSize = CM_CONFIGDEFAULT_CACHESIZE;
+        afsi_log("Default cache size %d", cacheSize);
+    }
 
-	dummyLen = sizeof(logChunkSize);
-	code = RegQueryValueEx(parmKey, "ChunkSize", NULL, NULL,
-				(BYTE *) &logChunkSize, &dummyLen);
-	if (code == ERROR_SUCCESS) {
-		if (logChunkSize < 12 || logChunkSize > 30) {
-			afsi_log("Invalid chunk size %d, using default",
-				 logChunkSize);
-			logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
-		}
-		afsi_log("Chunk size %d", logChunkSize);
-	} else {
-		logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
-		afsi_log("Default chunk size %d", logChunkSize);
-	}
-	cm_logChunkSize = logChunkSize;
-	cm_chunkSize = 1 << logChunkSize;
+    dummyLen = sizeof(logChunkSize);
+    code = RegQueryValueEx(parmKey, "ChunkSize", NULL, NULL,
+                            (BYTE *) &logChunkSize, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        if (logChunkSize < 12 || logChunkSize > 30) {
+            afsi_log("Invalid chunk size %d, using default",
+                      logChunkSize);
+            logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
+        }
+        afsi_log("Chunk size %d", logChunkSize);
+    } else {
+        logChunkSize = CM_CONFIGDEFAULT_CHUNKSIZE;
+        afsi_log("Default chunk size %d", logChunkSize);
+    }
+    cm_logChunkSize = logChunkSize;
+    cm_chunkSize = 1 << logChunkSize;
 
-	dummyLen = sizeof(numBkgD);
-	code = RegQueryValueEx(parmKey, "Daemons", NULL, NULL,
-				(BYTE *) &numBkgD, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("%d background daemons", numBkgD);
-	else {
-		numBkgD = CM_CONFIGDEFAULT_DAEMONS;
-		afsi_log("Defaulting to %d background daemons", numBkgD);
-	}
+    dummyLen = sizeof(numBkgD);
+    code = RegQueryValueEx(parmKey, "Daemons", NULL, NULL,
+                            (BYTE *) &numBkgD, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("%d background daemons", numBkgD);
+    else {
+        numBkgD = CM_CONFIGDEFAULT_DAEMONS;
+        afsi_log("Defaulting to %d background daemons", numBkgD);
+    }
 
-	dummyLen = sizeof(numSvThreads);
-	code = RegQueryValueEx(parmKey, "ServerThreads", NULL, NULL,
-				(BYTE *) &numSvThreads, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("%d server threads", numSvThreads);
-	else {
-		numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
-		afsi_log("Defaulting to %d server threads", numSvThreads);
-	}
+    dummyLen = sizeof(numSvThreads);
+    code = RegQueryValueEx(parmKey, "ServerThreads", NULL, NULL,
+                            (BYTE *) &numSvThreads, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("%d server threads", numSvThreads);
+    else {
+        numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
+        afsi_log("Defaulting to %d server threads", numSvThreads);
+    }
 
-	dummyLen = sizeof(stats);
-	code = RegQueryValueEx(parmKey, "Stats", NULL, NULL,
-				(BYTE *) &stats, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Status cache size %d", stats);
-	else {
-		stats = CM_CONFIGDEFAULT_STATS;
-		afsi_log("Default status cache size %d", stats);
-	}
+    dummyLen = sizeof(stats);
+    code = RegQueryValueEx(parmKey, "Stats", NULL, NULL,
+                            (BYTE *) &stats, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Status cache size %d", stats);
+    else {
+        stats = CM_CONFIGDEFAULT_STATS;
+        afsi_log("Default status cache size %d", stats);
+    }
 
-	dummyLen = sizeof(ltt);
-	code = RegQueryValueEx(parmKey, "LogoffTokenTransfer", NULL, NULL,
-				(BYTE *) &ltt, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Logoff token transfer %s",  (ltt ? "on" : "off"));
-	else {
-		ltt = 1;
-		afsi_log("Logoff token transfer on by default");
-	}
+    dummyLen = sizeof(ltt);
+    code = RegQueryValueEx(parmKey, "LogoffTokenTransfer", NULL, NULL,
+                            (BYTE *) &ltt, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Logoff token transfer %s",  (ltt ? "on" : "off"));
+    else {
+        ltt = 1;
+        afsi_log("Logoff token transfer on by default");
+    }
     smb_LogoffTokenTransfer = ltt;
     afsi_log("Logoff token transfer is currently ignored");
 
-	if (ltt) {
-		dummyLen = sizeof(ltto);
-		code = RegQueryValueEx(parmKey, "LogoffTokenTransferTimeout",
-					NULL, NULL, (BYTE *) &ltto, &dummyLen);
-		if (code == ERROR_SUCCESS)
+    if (ltt) {
+        dummyLen = sizeof(ltto);
+        code = RegQueryValueEx(parmKey, "LogoffTokenTransferTimeout",
+                                NULL, NULL, (BYTE *) &ltto, &dummyLen);
+        if (code == ERROR_SUCCESS)
             afsi_log("Logoff token tranfer timeout %d seconds", ltto);
-		else {
-			ltto = 10;
-			afsi_log("Default logoff token transfer timeout 10 seconds");
-		}
-	} else {
+        else {
+            ltto = 10;
+            afsi_log("Default logoff token transfer timeout 10 seconds");
+        }
+    } else {
         ltto = 0;
-    }
+    }   
     smb_LogoffTransferTimeout = ltto;
     afsi_log("Default logoff token is currently ignored");
 
-	dummyLen = sizeof(cm_rootVolumeName);
-	code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,
-				cm_rootVolumeName, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Root volume %s", cm_rootVolumeName);
-	else {
-		StringCbCopyA(cm_rootVolumeName, sizeof(cm_rootVolumeName), "root.afs");
-		afsi_log("Default root volume name root.afs");
-	}
+    dummyLen = sizeof(cm_rootVolumeName);
+    code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,
+                            cm_rootVolumeName, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Root volume %s", cm_rootVolumeName);
+    else {
+        StringCbCopyA(cm_rootVolumeName, sizeof(cm_rootVolumeName), "root.afs");
+        afsi_log("Default root volume name root.afs");
+    }
 
-	cm_mountRootLen = sizeof(cm_mountRoot);
-	code = RegQueryValueEx(parmKey, "MountRoot", NULL, NULL,
-				cm_mountRoot, &cm_mountRootLen);
-	if (code == ERROR_SUCCESS) {
-		afsi_log("Mount root %s", cm_mountRoot);
-		cm_mountRootLen = strlen(cm_mountRoot);
-	} else {
-		StringCbCopyA(cm_mountRoot, sizeof(cm_mountRoot), "/afs");
-		cm_mountRootLen = 4;
-		/* Don't log */
-	}
+    cm_mountRootLen = sizeof(cm_mountRoot);
+    code = RegQueryValueEx(parmKey, "MountRoot", NULL, NULL,
+                            cm_mountRoot, &cm_mountRootLen);
+    if (code == ERROR_SUCCESS) {
+        afsi_log("Mount root %s", cm_mountRoot);
+        cm_mountRootLen = strlen(cm_mountRoot);
+    } else {
+        StringCbCopyA(cm_mountRoot, sizeof(cm_mountRoot), "/afs");
+        cm_mountRootLen = 4;
+        /* Don't log */
+    }
 
-	dummyLen = sizeof(buf);
-	code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
-				buf, &dummyLen);
+    dummyLen = sizeof(buf);
+    code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
+                            buf, &dummyLen);
     if (code == ERROR_SUCCESS && buf[0]) {
         if (regType == REG_EXPAND_SZ) {
             dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
@@ -599,17 +599,17 @@ int afsd_InitCM(char **reasonP)
         } else {
             StringCbCopyA(cm_CachePath, sizeof(cm_CachePath), buf);
         }
-		afsi_log("Cache path %s", cm_CachePath);
+        afsi_log("Cache path %s", cm_CachePath);
     } else {
-		GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
-		cm_CachePath[2] = 0;	/* get drive letter only */
-		StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
-		afsi_log("Default cache path %s", cm_CachePath);
-	}
+        GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
+        cm_CachePath[2] = 0;	/* get drive letter only */
+        StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
+        afsi_log("Default cache path %s", cm_CachePath);
+    }
 
     dummyLen = sizeof(virtualCache);
     code = RegQueryValueEx(parmKey, "NonPersistentCaching", NULL, NULL,
-        &virtualCache, &dummyLen);
+                            &virtualCache, &dummyLen);
     if (code == ERROR_SUCCESS && virtualCache) {
         buf_cacheType = CM_BUF_CACHETYPE_VIRTUAL;
     } else {
@@ -617,27 +617,27 @@ int afsd_InitCM(char **reasonP)
     }
     afsi_log("Cache type is %s", ((buf_cacheType == CM_BUF_CACHETYPE_FILE)?"FILE":"VIRTUAL"));
 
-	dummyLen = sizeof(traceOnPanic);
-	code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
-				(BYTE *) &traceOnPanic, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Set to %s on panic",
-			 traceOnPanic ? "trap" : "not trap");
-	else {
-		traceOnPanic = 0;
-		/* Don't log */
-	}
+    dummyLen = sizeof(traceOnPanic);
+    code = RegQueryValueEx(parmKey, "TrapOnPanic", NULL, NULL,
+                            (BYTE *) &traceOnPanic, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Set to %s on panic",
+                  traceOnPanic ? "trap" : "not trap");
+    else {  
+        traceOnPanic = 0;
+        /* Don't log */
+    }
 
-	dummyLen = sizeof(reportSessionStartups);
-	code = RegQueryValueEx(parmKey, "ReportSessionStartups", NULL, NULL,
-				(BYTE *) &reportSessionStartups, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Session startups %s be recorded in the Event Log",
-			 reportSessionStartups ? "will" : "will not");
-	else {
-		reportSessionStartups = 0;
-		/* Don't log */
-	}
+    dummyLen = sizeof(reportSessionStartups);
+    code = RegQueryValueEx(parmKey, "ReportSessionStartups", NULL, NULL,
+                            (BYTE *) &reportSessionStartups, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        afsi_log("Session startups %s be recorded in the Event Log",
+                  reportSessionStartups ? "will" : "will not");
+    else {
+        reportSessionStartups = 0;
+        /* Don't log */
+    }
 
     for ( i=0; i < MAXNUMSYSNAMES; i++ ) {
         cm_sysNameList[i] = osi_Alloc(MAXSYSNAME);
@@ -645,53 +645,53 @@ int afsd_InitCM(char **reasonP)
     }
     cm_sysName = cm_sysNameList[0];
 
-	dummyLen = MAXSYSNAME;
+    dummyLen = MAXSYSNAME;
     code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, cm_sysName, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Sys name %s", cm_sysName);
-	else {
-		StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
-		afsi_log("Default sys name %s", cm_sysName);
-	}
+    if (code == ERROR_SUCCESS)
+        afsi_log("Sys name %s", cm_sysName);
+    else {
+        StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
+        afsi_log("Default sys name %s", cm_sysName);
+    }
     cm_sysNameCount = 1;
 
-	dummyLen = sizeof(cryptall);
-	code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
-				(BYTE *) &cryptall, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("SecurityLevel is %s", cryptall?"crypt":"clear");
-	else {
-		cryptall = rxkad_clear;
-		afsi_log("Default SecurityLevel is clear");
-	}
+    dummyLen = sizeof(cryptall);
+    code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
+                            (BYTE *) &cryptall, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        afsi_log("SecurityLevel is %s", cryptall?"crypt":"clear");
+    } else {
+        cryptall = 0;
+        afsi_log("Default SecurityLevel is clear");
+    }
 
 #ifdef AFS_AFSDB_ENV
-	dummyLen = sizeof(cm_dnsEnabled);
-	code = RegQueryValueEx(parmKey, "UseDNS", NULL, NULL,
-				(BYTE *) &cm_dnsEnabled, &dummyLen);
-	if (code == ERROR_SUCCESS) {
-		afsi_log("DNS %s be used to find AFS cell servers",
-			 cm_dnsEnabled ? "will" : "will not");
-	}
-	else {
-	  cm_dnsEnabled = 1;   /* default on */
-	  afsi_log("Default to use DNS to find AFS cell servers");
-	}
+    dummyLen = sizeof(cm_dnsEnabled);
+    code = RegQueryValueEx(parmKey, "UseDNS", NULL, NULL,
+                            (BYTE *) &cm_dnsEnabled, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        afsi_log("DNS %s be used to find AFS cell servers",
+                  cm_dnsEnabled ? "will" : "will not");
+    }       
+    else {
+        cm_dnsEnabled = 1;   /* default on */
+        afsi_log("Default to use DNS to find AFS cell servers");
+    }
 #else /* AFS_AFSDB_ENV */
-	afsi_log("AFS not built with DNS support to find AFS cell servers");
+    afsi_log("AFS not built with DNS support to find AFS cell servers");
 #endif /* AFS_AFSDB_ENV */
 
 #ifdef AFS_FREELANCE_CLIENT
-	dummyLen = sizeof(cm_freelanceEnabled);
-	code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
-				(BYTE *) &cm_freelanceEnabled, &dummyLen);
-	if (code == ERROR_SUCCESS) {
-		afsi_log("Freelance client feature %s activated",
-			 cm_freelanceEnabled ? "is" : "is not");
-	}
-	else {
-	  cm_freelanceEnabled = 0;  /* default off */
-	}
+    dummyLen = sizeof(cm_freelanceEnabled);
+    code = RegQueryValueEx(parmKey, "FreelanceClient", NULL, NULL,
+                            (BYTE *) &cm_freelanceEnabled, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        afsi_log("Freelance client feature %s activated",
+                  cm_freelanceEnabled ? "is" : "is not");
+    }       
+    else {
+        cm_freelanceEnabled = 0;  /* default off */
+    }
 #endif /* AFS_FREELANCE_CLIENT */
 
 #ifdef COMMENT
@@ -738,15 +738,15 @@ int afsd_InitCM(char **reasonP)
     }
     afsi_log("Maximum number of VCs per server is %d", smb_maxVCPerServer);
 
-	dummyLen = sizeof(smb_authType);
-	code = RegQueryValueEx(parmKey, "SMBAuthType", NULL, NULL,
-		(BYTE *) &smb_authType, &dummyLen);
+    dummyLen = sizeof(smb_authType);
+    code = RegQueryValueEx(parmKey, "SMBAuthType", NULL, NULL,
+                            (BYTE *) &smb_authType, &dummyLen);
 
-	if (code != ERROR_SUCCESS || 
-        (smb_authType != SMB_AUTH_EXTENDED && smb_authType != SMB_AUTH_NTLM && smb_authType != SMB_AUTH_NONE)) {
-		smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
-	}
-	afsi_log("SMB authentication type is %s", ((smb_authType == SMB_AUTH_NONE)?"NONE":((smb_authType == SMB_AUTH_EXTENDED)?"EXTENDED":"NTLM")));
+    if (code != ERROR_SUCCESS || 
+         (smb_authType != SMB_AUTH_EXTENDED && smb_authType != SMB_AUTH_NTLM && smb_authType != SMB_AUTH_NONE)) {
+        smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
+    }
+    afsi_log("SMB authentication type is %s", ((smb_authType == SMB_AUTH_NONE)?"NONE":((smb_authType == SMB_AUTH_EXTENDED)?"EXTENDED":"NTLM")));
 
     dummyLen = sizeof(rx_nojumbo);
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
@@ -754,7 +754,7 @@ int afsd_InitCM(char **reasonP)
     if (code != ERROR_SUCCESS) {
         rx_nojumbo = 0;
     }
-    if(rx_nojumbo)
+    if (rx_nojumbo)
         afsi_log("RX Jumbograms are disabled");
 
     dummyLen = sizeof(rx_mtu);
@@ -763,7 +763,7 @@ int afsd_InitCM(char **reasonP)
     if (code != ERROR_SUCCESS || !rx_mtu) {
         rx_mtu = -1;
     }
-    if(rx_mtu != -1)
+    if (rx_mtu != -1)
         afsi_log("RX maximum MTU is %d", rx_mtu);
 
     dummyLen = sizeof(ConnDeadtimeout);
@@ -776,18 +776,18 @@ int afsd_InitCM(char **reasonP)
                            (BYTE *) &HardDeadtimeout, &dummyLen);
     afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
 
-	RegCloseKey (parmKey);
+    RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
     if(SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
         LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
 
-        if(LANadapter != -1)
+        if (LANadapter != -1)
             afsi_log("LAN adapter number %d", LANadapter);
         else
             afsi_log("LAN adapter number not determined");
 
-        if(isGateway)
+        if (isGateway)
             afsi_log("Set for gateway service");
 
         afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
@@ -797,38 +797,38 @@ int afsd_InitCM(char **reasonP)
         osi_panic(buf, __FILE__, __LINE__);
     }
 
-	/* setup early variables */
-	/* These both used to be configurable. */
-	smb_UseV3 = 1;
+    /* setup early variables */
+    /* These both used to be configurable. */
+    smb_UseV3 = 1;
     buf_bufferSize = CM_CONFIGDEFAULT_BLOCKSIZE;
 
-	/* turn from 1024 byte units into memory blocks */
+    /* turn from 1024 byte units into memory blocks */
     cacheBlocks = (cacheSize * 1024) / buf_bufferSize;
         
-	/* get network related info */
-	cm_noIPAddr = CM_MAXINTERFACE_ADDR;
-	code = syscfg_GetIFInfo(&cm_noIPAddr,
-                            cm_IPAddr, cm_SubnetMask,
-                            cm_NetMtu, cm_NetFlags);
+    /* get network related info */
+    cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+    code = syscfg_GetIFInfo(&cm_noIPAddr,
+                             cm_IPAddr, cm_SubnetMask,
+                             cm_NetMtu, cm_NetFlags);
 
-	if ( (cm_noIPAddr <= 0) || (code <= 0 ) )
-	    afsi_log("syscfg_GetIFInfo error code %d", code);
-	else
-	    afsi_log("First Network address %x SubnetMask %x",
-                 cm_IPAddr[0], cm_SubnetMask[0]);
+    if ( (cm_noIPAddr <= 0) || (code <= 0 ) )
+        afsi_log("syscfg_GetIFInfo error code %d", code);
+    else
+        afsi_log("First Network address %x SubnetMask %x",
+                  cm_IPAddr[0], cm_SubnetMask[0]);
 
-	/*
-	 * Save client configuration for GetCacheConfig requests
-	 */
-	cm_initParams.nChunkFiles = 0;
-	cm_initParams.nStatCaches = stats;
-	cm_initParams.nDataCaches = 0;
-	cm_initParams.nVolumeCaches = 0;
-	cm_initParams.firstChunkSize = cm_chunkSize;
-	cm_initParams.otherChunkSize = cm_chunkSize;
-	cm_initParams.cacheSize = cacheSize;
-	cm_initParams.setTime = 0;
-	cm_initParams.memCache = 0;
+    /*
+     * Save client configuration for GetCacheConfig requests
+     */
+    cm_initParams.nChunkFiles = 0;
+    cm_initParams.nStatCaches = stats;
+    cm_initParams.nDataCaches = 0;
+    cm_initParams.nVolumeCaches = 0;
+    cm_initParams.firstChunkSize = cm_chunkSize;
+    cm_initParams.otherChunkSize = cm_chunkSize;
+    cm_initParams.cacheSize = cacheSize;
+    cm_initParams.setTime = 0;
+    cm_initParams.memCache = 0;
 
     /* Set RX parameters before initializing RX */
     if ( rx_nojumbo ) {
@@ -847,48 +847,48 @@ int afsd_InitCM(char **reasonP)
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
 
-	/* initialize RX, and tell it to listen to port 7001, which is used for
+    /* initialize RX, and tell it to listen to port 7001, which is used for
      * callback RPC messages.
      */
-	code = rx_Init(htons(7001));
-	afsi_log("rx_Init code %x", code);
-	if (code != 0) {
-		*reasonP = "afsd: failed to init rx client on port 7001";
-		return -1;
-	}
+    code = rx_Init(htons(7001));
+    afsi_log("rx_Init code %x", code);
+    if (code != 0) {
+        *reasonP = "afsd: failed to init rx client on port 7001";
+        return -1;
+    }
 
-	/* Initialize the RPC server for session keys */
-	RpcInit();
+    /* Initialize the RPC server for session keys */
+    RpcInit();
 
-	/* create an unauthenticated service #1 for callbacks */
-	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    /* create an unauthenticated service #1 for callbacks */
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
     serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
-                            RXAFSCB_ExecuteRequest);
-	afsi_log("rx_NewService addr %x", (int)serverp);
-	if (serverp == NULL) {
-		*reasonP = "unknown error";
-		return -1;
-	}
+                             RXAFSCB_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
 
-	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
+    nullServerSecurityClassp = rxnull_NewServerSecurityObject();
     serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
-                            &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
-	afsi_log("rx_NewService addr %x", (int)serverp);
-	if (serverp == NULL) {
-		*reasonP = "unknown error";
-		return -1;
-	}
+                             &nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
+    afsi_log("rx_NewService addr %x", (int)serverp);
+    if (serverp == NULL) {
+        *reasonP = "unknown error";
+        return -1;
+    }
         
     /* start server threads, *not* donating this one to the pool */
     rx_StartServer(0);
-	afsi_log("rx_StartServer");
+    afsi_log("rx_StartServer");
 
-	/* init user daemon, and other packages */
-	cm_InitUser();
+    /* init user daemon, and other packages */
+    cm_InitUser();
 
-	cm_InitACLCache(2*stats);
+    cm_InitACLCache(2*stats);
 
-	cm_InitConn();
+    cm_InitConn();
 
     cm_InitCell();
         
@@ -905,28 +905,28 @@ int afsd_InitCM(char **reasonP)
     cm_InitSCache(stats);
         
     code = cm_InitDCache(0, cacheBlocks);
-	afsi_log("cm_InitDCache code %x", code);
-	if (code != 0) {
-		*reasonP = "error initializing cache";
-		return -1;
-	}
+    afsi_log("cm_InitDCache code %x", code);
+    if (code != 0) {
+        *reasonP = "error initializing cache";
+        return -1;
+    }
 
 #ifdef AFS_AFSDB_ENV
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-	if (cm_InitDNS(cm_dnsEnabled) == -1)
-	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
-	afsi_log("cm_InitDNS %d", cm_dnsEnabled);
+    if (cm_InitDNS(cm_dnsEnabled) == -1)
+        cm_dnsEnabled = 0;  /* init failed, so deactivate */
+    afsi_log("cm_InitDNS %d", cm_dnsEnabled);
 #endif
 #endif
 
-	code = cm_GetRootCellName(rootCellName);
-	afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
-             code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
-	if (code != 0 && !cm_freelanceEnabled) 
+    code = cm_GetRootCellName(rootCellName);
+    afsi_log("cm_GetRootCellName code %d, cm_freelanceEnabled= %d, rcn= %s", 
+              code, cm_freelanceEnabled, (code ? "<none>" : rootCellName));
+    if (code != 0 && !cm_freelanceEnabled) 
     {
-	    *reasonP = "can't find root cell name in afsd.ini";
-	    return -1;
-    }
+        *reasonP = "can't find root cell name in afsd.ini";
+        return -1;
+    }   
     else if (cm_freelanceEnabled)
         cm_rootCellp = NULL;
 
@@ -939,14 +939,13 @@ int afsd_InitCM(char **reasonP)
             *reasonP = "can't find root cell in afsdcell.ini";
             return -1;
         }
-	}
-
+    }
 
 #ifdef AFS_FREELANCE_CLIENT
-	if (cm_freelanceEnabled)
-	  cm_InitFreelance();
+    if (cm_freelanceEnabled)
+        cm_InitFreelance();
 #endif
-	return 0;
+    return 0;
 }
 
 int afsd_InitDaemons(char **reasonP)

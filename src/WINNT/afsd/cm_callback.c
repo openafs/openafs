@@ -70,22 +70,22 @@ cm_racingRevokes_t *cm_racingRevokesp;
  */
 void cm_RecordRacingRevoke(cm_fid_t *fidp, long cancelFlags)
 {
-	cm_racingRevokes_t *rp;
+    cm_racingRevokes_t *rp;
 
-	lock_ObtainWrite(&cm_callbackLock);
+    lock_ObtainWrite(&cm_callbackLock);
 
     osi_Log3(afsd_logp, "RecordRacingRevoke Volume %d Flags %lX activeCalls %d",
              fidp->volume, cancelFlags, cm_activeCallbackGrantingCalls);
 
-	if (cm_activeCallbackGrantingCalls > 0) {
-		rp = malloc(sizeof(*rp));
-	        memset(rp, 0, sizeof(*rp));
-	        osi_QAdd((osi_queue_t **) &cm_racingRevokesp, &rp->q);
-                rp->flags |= (cancelFlags & CM_RACINGFLAG_ALL);
-		if (fidp) rp->fid = *fidp;
-                rp->callbackCount = ++cm_callbackCount;
-	}
-	lock_ReleaseWrite(&cm_callbackLock);
+    if (cm_activeCallbackGrantingCalls > 0) {
+        rp = malloc(sizeof(*rp));
+        memset(rp, 0, sizeof(*rp));
+        osi_QAdd((osi_queue_t **) &cm_racingRevokesp, &rp->q);
+        rp->flags |= (cancelFlags & CM_RACINGFLAG_ALL);
+        if (fidp) rp->fid = *fidp;
+        rp->callbackCount = ++cm_callbackCount;
+    }
+    lock_ReleaseWrite(&cm_callbackLock);
 }
 
 /*
@@ -128,50 +128,50 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
  */
 void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
 {
-	cm_fid_t tfid;
-        cm_scache_t *scp;
-        long hash;
+    cm_fid_t tfid;
+    cm_scache_t *scp;
+    long hash;
         
-	/* don't bother setting cell, since we won't be checking it (to aid
-         * in working with multi-homed servers: we don't know the cell if we
-         * don't recognize the IP address).
-         */
-	tfid.cell = 0;
-        tfid.volume = fidp->Volume;
-        tfid.vnode = fidp->Vnode;
-        tfid.unique = fidp->Unique;
-        hash = CM_SCACHE_HASH(&tfid);
+    /* don't bother setting cell, since we won't be checking it (to aid
+     * in working with multi-homed servers: we don't know the cell if we
+     * don't recognize the IP address).
+     */
+    tfid.cell = 0;
+    tfid.volume = fidp->Volume;
+    tfid.vnode = fidp->Vnode;
+    tfid.unique = fidp->Unique;
+    hash = CM_SCACHE_HASH(&tfid);
 
     osi_Log3(afsd_logp, "RevokeCallback vol %d vn %d un %d",
-		 fidp->Volume, fidp->Vnode, fidp->Unique);
+             fidp->Volume, fidp->Vnode, fidp->Unique);
         
-	/* do this first, so that if we're executing a callback granting call
-         * at this moment, we kill it before it can be merged in.  Otherwise,
-         * it could complete while we're doing the scan below, and get missed
-         * by both the scan and by this code.
-         */
-	cm_RecordRacingRevoke(&tfid, 0);
+    /* do this first, so that if we're executing a callback granting call
+     * at this moment, we kill it before it can be merged in.  Otherwise,
+     * it could complete while we're doing the scan below, and get missed
+     * by both the scan and by this code.
+     */
+    cm_RecordRacingRevoke(&tfid, 0);
 
-	lock_ObtainWrite(&cm_scacheLock);
-	/* do all in the hash bucket, since we don't know how many we'll find with
-         * varying cells.
-         */
-        for(scp = cm_hashTablep[hash]; scp; scp=scp->nextp) {
-		if (scp->fid.volume == tfid.volume &&
-                	scp->fid.vnode == tfid.vnode &&
-                        scp->fid.unique == tfid.unique) {
-			scp->refCount++;
-			lock_ReleaseWrite(&cm_scacheLock);
+    lock_ObtainWrite(&cm_scacheLock);
+    /* do all in the hash bucket, since we don't know how many we'll find with
+     * varying cells.
+     */
+    for (scp = cm_hashTablep[hash]; scp; scp=scp->nextp) {
+        if (scp->fid.volume == tfid.volume &&
+             scp->fid.vnode == tfid.vnode &&
+             scp->fid.unique == tfid.unique) {
+            scp->refCount++;
+            lock_ReleaseWrite(&cm_scacheLock);
             osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
-                        lock_ObtainMutex(&scp->mx);
-			cm_DiscardSCache(scp);
-                        lock_ReleaseMutex(&scp->mx);
-			cm_CallbackNotifyChange(scp);
-                        lock_ObtainWrite(&cm_scacheLock);
-                        scp->refCount--;
-		}
+            lock_ObtainMutex(&scp->mx);
+            cm_DiscardSCache(scp);
+            lock_ReleaseMutex(&scp->mx);
+            cm_CallbackNotifyChange(scp);
+            lock_ObtainWrite(&cm_scacheLock);
+            scp->refCount--;
         }
-	lock_ReleaseWrite(&cm_scacheLock);
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
 }
 
 /* called to revoke a volume callback, which is typically issued when a volume
@@ -181,40 +181,40 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
  */
 void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
 {
-	long hash;
-        cm_scache_t *scp;
-        cm_fid_t tfid;
+    long hash;
+    cm_scache_t *scp;
+    cm_fid_t tfid;
 
     osi_Log1(afsd_logp, "RevokeVolumeCallback %d", fidp->Volume);
 
-	/* do this first, so that if we're executing a callback granting call
-         * at this moment, we kill it before it can be merged in.  Otherwise,
-         * it could complete while we're doing the scan below, and get missed
-         * by both the scan and by this code.
-         */
-	tfid.cell = tfid.vnode = tfid.unique = 0;
-        tfid.volume = fidp->Volume;
-        cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
+    /* do this first, so that if we're executing a callback granting call
+     * at this moment, we kill it before it can be merged in.  Otherwise,
+     * it could complete while we're doing the scan below, and get missed
+     * by both the scan and by this code.
+     */
+    tfid.cell = tfid.vnode = tfid.unique = 0;
+    tfid.volume = fidp->Volume;
+    cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
 
 
-        lock_ObtainWrite(&cm_scacheLock);
-	for(hash = 0; hash < cm_hashTableSize; hash++) {
-		for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
-			if (scp->fid.volume == fidp->Volume) {
-				scp->refCount++;
-	                        lock_ReleaseWrite(&cm_scacheLock);
-	                        lock_ObtainMutex(&scp->mx);
+    lock_ObtainWrite(&cm_scacheLock);
+    for (hash = 0; hash < cm_hashTableSize; hash++) {
+        for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+            if (scp->fid.volume == fidp->Volume) {
+                scp->refCount++;
+                lock_ReleaseWrite(&cm_scacheLock);
+                lock_ObtainMutex(&scp->mx);
                 osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
-				cm_DiscardSCache(scp);
-				lock_ReleaseMutex(&scp->mx);
-				cm_CallbackNotifyChange(scp);
-	                        lock_ObtainWrite(&cm_scacheLock);
-	                        scp->refCount--;
-	                }
-		}	/* search one hash bucket */
-	}	/* search all hash buckets */
-        
-        lock_ReleaseWrite(&cm_scacheLock);
+                cm_DiscardSCache(scp);
+                lock_ReleaseMutex(&scp->mx);
+                cm_CallbackNotifyChange(scp);
+                lock_ObtainWrite(&cm_scacheLock);
+                scp->refCount--;
+            }
+        }	/* search one hash bucket */
+    }	/* search all hash buckets */
+
+    lock_ReleaseWrite(&cm_scacheLock);
 }
 
 /* handle incoming RPC callback breaking message.
@@ -222,23 +222,23 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
  */
 SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArrayp)
 {
-        int i;
-        AFSFid *tfidp;
+    int i;
+    AFSFid *tfidp;
         
     osi_Log0(afsd_logp, "SRXAFSCB_CallBack");
 
-        for(i=0; i < (long) fidsArrayp->AFSCBFids_len; i++) {
-		tfidp = &fidsArrayp->AFSCBFids_val[i];
+    for (i=0; i < (long) fidsArrayp->AFSCBFids_len; i++) {
+        tfidp = &fidsArrayp->AFSCBFids_val[i];
                 
         if (tfidp->Volume == 0)
             continue;   /* means don't do anything */
-                else if (tfidp->Vnode == 0)
-                	cm_RevokeVolumeCallback(callp, tfidp);
+        else if (tfidp->Vnode == 0)
+            cm_RevokeVolumeCallback(callp, tfidp);
         else
             cm_RevokeCallback(callp, tfidp);
-        }
+    }
 
-	return 0;
+    return 0;
 }
 
 /* called with no locks by RPC system when a server indicates that it has never
@@ -288,32 +288,33 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	 * are "rare," hopefully this won't be a problem.
 	 */
 	lock_ObtainWrite(&cm_scacheLock);
-	for(hash = 0; hash < cm_hashTableSize; hash++) {
-		for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
-			scp->refCount++;
-                        lock_ReleaseWrite(&cm_scacheLock);
-                        lock_ObtainMutex(&scp->mx);
-			discarded = 0;
-			if (scp->cbServerp != NULL) {
-				/* we have a callback, now decide if we should clear it */
-				if (scp->cbServerp == tsp || tsp == NULL) {
+	for (hash = 0; hash < cm_hashTableSize; hash++) {
+            for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+                scp->refCount++;
+                lock_ReleaseWrite(&cm_scacheLock);
+                lock_ObtainMutex(&scp->mx);
+                discarded = 0;
+                if (scp->cbServerp != NULL) {
+                    /* we have a callback, now decide if we should clear it */
+                    if (scp->cbServerp == tsp || tsp == NULL) {
                         osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
-					cm_DiscardSCache(scp);
-					discarded = 1;
-				}
-			}
-			lock_ReleaseMutex(&scp->mx);
-			if (discarded)
-				cm_CallbackNotifyChange(scp);
-                        lock_ObtainWrite(&cm_scacheLock);
-                        scp->refCount--;
-		}	/* search one hash bucket */
-	}	/* search all hash buckets */
+                        cm_DiscardSCache(scp);
+                        discarded = 1;
+                    }
+                }
+                lock_ReleaseMutex(&scp->mx);
+                if (discarded)
+                    cm_CallbackNotifyChange(scp);
+                lock_ObtainWrite(&cm_scacheLock);
+                scp->refCount--;
+            }	/* search one hash bucket */
+	}      	/* search all hash buckets */
 	
 	lock_ReleaseWrite(&cm_scacheLock);
 	
 	/* we're done with the server structure */
-	if (tsp) cm_PutServer(tsp);
+	if (tsp) 
+            cm_PutServer(tsp);
     }
 
     return 0;
@@ -323,7 +324,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 SRXAFSCB_Probe(struct rx_call *callp)
 {
     osi_Log0(afsd_logp, "SRXAFSCB_Probe - not implemented");
-	return 0;
+    return 0;
 }
 
 /* debug interface: not implemented */
@@ -337,67 +338,67 @@ SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 /* debug interface: not implemented */
 SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_GetLock - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_GetCE(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_GetCE - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_XStatsVersion(struct rx_call *callp, long *vp)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_XStatsVersion - not implemented");
-	*vp = -1;
-	return RXGEN_OPCODE;
+    *vp = -1;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_GetXStats(struct rx_call *callp, long cvn, long coln, long *srvp, long *timep,
 	AFSCB_CollData *datap)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_GetXStats - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_InitCallBackState2(struct rx_call *callp, struct interfaceAddr* addr)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_InitCallBackState2 - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_WhoAreYou - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_InitCallBackState3 - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /* debug interface: not implemented */
 SRXAFSCB_ProbeUuid(struct rx_call *callp, afsUUID* clientUuid)
 {
-	/* XXXX */
+    /* XXXX */
     osi_Log0(afsd_logp, "SRXAFSCB_ProbeUuid - not implemented");
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /*------------------------------------------------------------------------
@@ -608,8 +609,8 @@ cacheConfig *config;
 /* called by afsd without any locks to initialize this module */
 void cm_InitCallback(void)
 {
-	lock_InitializeRWLock(&cm_callbackLock, "cm_callbackLock");
-        cm_activeCallbackGrantingCalls = 0;
+    lock_InitializeRWLock(&cm_callbackLock, "cm_callbackLock");
+    cm_activeCallbackGrantingCalls = 0;
 }
 
 /* called with locked scp; tells us whether we've got a callback.
@@ -633,7 +634,7 @@ int cm_HaveCallback(cm_scache_t *scp)
     // to be called because cm_GetCallback has some initialization work to do.
     // If cm_fakeDirCallback is 2, then it means that the fake directory is in
     // good shape and we simply return true, provided no change is detected.
-  int fdc, fgc;
+    int fdc, fgc;
 
     if (cm_freelanceEnabled && 
          scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
@@ -691,12 +692,12 @@ int cm_HaveCallback(cm_scache_t *scp)
  */
 void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
 {
-	lock_ObtainWrite(&cm_callbackLock);
-	cbrp->callbackCount = cm_callbackCount;
-        cm_activeCallbackGrantingCalls++;
-        cbrp->startTime = osi_Time();
-        cbrp->serverp = NULL;
-	lock_ReleaseWrite(&cm_callbackLock);
+    lock_ObtainWrite(&cm_callbackLock);
+    cbrp->callbackCount = cm_callbackCount;
+    cm_activeCallbackGrantingCalls++;
+    cbrp->startTime = osi_Time();
+    cbrp->serverp = NULL;
+    lock_ReleaseWrite(&cm_callbackLock);
 }
 
 /* Called at the end of a callback-granting call, to remove the callback
@@ -706,83 +707,83 @@ void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
  * this locking hierarchy.
  */
 void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
-	AFSCallBack *cbp, long flags)
+                                AFSCallBack *cbp, long flags)
 {
-	cm_racingRevokes_t *revp;		/* where we are */
-	cm_racingRevokes_t *nrevp;		/* where we'll be next */
-        int freeFlag;
+    cm_racingRevokes_t *revp;		/* where we are */
+    cm_racingRevokes_t *nrevp;		/* where we'll be next */
+    int freeFlag;
     cm_server_t * serverp = 0;
 
-	lock_ObtainWrite(&cm_callbackLock);
-	if (flags & CM_CALLBACK_MAINTAINCOUNT) {
-        	osi_assert(cm_activeCallbackGrantingCalls > 0);
-	}
-	else {
-		osi_assert(cm_activeCallbackGrantingCalls-- > 0);
-	}
+    lock_ObtainWrite(&cm_callbackLock);
+    if (flags & CM_CALLBACK_MAINTAINCOUNT) {
+        osi_assert(cm_activeCallbackGrantingCalls > 0);
+    }
+    else {
+        osi_assert(cm_activeCallbackGrantingCalls-- > 0);
+    }
     if (cm_activeCallbackGrantingCalls == 0) 
         freeFlag = 1;
     else 
         freeFlag = 0;
 
-	/* record the callback; we'll clear it below if we really lose it */
+    /* record the callback; we'll clear it below if we really lose it */
     if (cbrp) {
 	if (scp) {
             if (scp->cbServerp != cbrp->serverp) {
                 serverp = scp->cbServerp;
             }
-	        scp->cbServerp = cbrp->serverp;
-	        scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
+            scp->cbServerp = cbrp->serverp;
+            scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
         } else {
             serverp = cbrp->serverp;
         }
         cbrp->serverp = NULL;
-	}
+    }
 
-	/* a callback was actually revoked during our granting call, so
-	 * run down the list of revoked fids, looking for ours.
-	 * If activeCallbackGrantingCalls is zero, free the elements, too.
-	 *
-         * May need to go through entire list just to do the freeing.
-	 */
-	for(revp = cm_racingRevokesp; revp; revp = nrevp) {
-		nrevp = (cm_racingRevokes_t *) osi_QNext(&revp->q);
-		/* if this callback came in later than when we started the
-                 * callback-granting call, and if this fid is the right fid,
-                 * then clear the callback.
-                 */
+    /* a callback was actually revoked during our granting call, so
+     * run down the list of revoked fids, looking for ours.
+     * If activeCallbackGrantingCalls is zero, free the elements, too.
+     *
+     * May need to go through entire list just to do the freeing.
+     */
+    for (revp = cm_racingRevokesp; revp; revp = nrevp) {
+        nrevp = (cm_racingRevokes_t *) osi_QNext(&revp->q);
+        /* if this callback came in later than when we started the
+         * callback-granting call, and if this fid is the right fid,
+         * then clear the callback.
+         */
         if (scp && cbrp && cbrp->callbackCount != cm_callbackCount
-                       	&& revp->callbackCount > cbrp->callbackCount
+             && revp->callbackCount > cbrp->callbackCount
              && (( scp->fid.volume == revp->fid.volume &&
-                                 scp->fid.vnode == revp->fid.vnode &&
-                                 scp->fid.unique == revp->fid.unique)
-                            ||
-                                ((revp->flags & CM_RACINGFLAG_CANCELVOL) &&
-                                 scp->fid.volume == revp->fid.volume)
-                            ||
-                            	(revp->flags & CM_RACINGFLAG_CANCELALL))) {
-			/* this one matches */
-			osi_Log4(afsd_logp,
-			"Racing revoke scp %x old cbc %d rev cbc %d cur cbc %d",
-				 scp,
-				 cbrp->callbackCount, revp->callbackCount,
-				 cm_callbackCount);
-			cm_DiscardSCache(scp);
-			/*
-			 * Since we don't have a callback to preserve, it's
-			 * OK to drop the lock and re-obtain it.
-			 */
-			lock_ReleaseMutex(&scp->mx);
-			cm_CallbackNotifyChange(scp);
-			lock_ObtainMutex(&scp->mx);
-                }
-                if (freeFlag) free(revp);
+                   scp->fid.vnode == revp->fid.vnode &&
+                   scp->fid.unique == revp->fid.unique)
+                  ||
+                  ((revp->flags & CM_RACINGFLAG_CANCELVOL) &&
+                    scp->fid.volume == revp->fid.volume)
+                  ||
+                  (revp->flags & CM_RACINGFLAG_CANCELALL))) {
+            /* this one matches */
+            osi_Log4(afsd_logp,
+                      "Racing revoke scp %x old cbc %d rev cbc %d cur cbc %d",
+                      scp,
+                      cbrp->callbackCount, revp->callbackCount,
+                      cm_callbackCount);
+            cm_DiscardSCache(scp);
+            /*
+             * Since we don't have a callback to preserve, it's
+             * OK to drop the lock and re-obtain it.
+             */
+            lock_ReleaseMutex(&scp->mx);
+            cm_CallbackNotifyChange(scp);
+            lock_ObtainMutex(&scp->mx);
         }
+        if (freeFlag) free(revp);
+    }
 
-	/* if we freed the list, zap the pointer to it */
-	if (freeFlag) cm_racingRevokesp = NULL;
+    /* if we freed the list, zap the pointer to it */
+    if (freeFlag) cm_racingRevokesp = NULL;
 
-	lock_ReleaseWrite(&cm_callbackLock);
+    lock_ReleaseWrite(&cm_callbackLock);
 
     if ( serverp ) {
         lock_ObtainWrite(&cm_serverLock);
@@ -795,9 +796,9 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
  * called with locked scp; returns with same.
  */
 long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
-	struct cm_req *reqp, long flags)
+                    struct cm_req *reqp, long flags)
 {
-	long code;
+    long code;
     cm_conn_t *connp;
     AFSFetchStatus afsStatus;
     AFSVolSync volSync;
@@ -811,10 +812,10 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     osi_Log2(afsd_logp, "GetCallback scp %x flags %lX", scp, flags);
 
 #ifdef AFS_FREELANCE_CLIENT
-	// The case where a callback is needed on /afs is handled
-	// specially. We need to fetch the status by calling
-	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
-	if (cm_freelanceEnabled) {
+    // The case where a callback is needed on /afs is handled
+    // specially. We need to fetch the status by calling
+    // cm_MergeStatus and mark that cm_fakeDirCallback is 2
+    if (cm_freelanceEnabled) {
         if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
              scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
              scp->fid.unique==0x1 &&
@@ -849,41 +850,42 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     }
 #endif /* AFS_FREELANCE_CLIENT */
 	
-	mustCall = (flags & 1);
-	cm_AFSFidFromFid(&tfid, &scp->fid);
-	while (1) {
-		if (!mustCall && cm_HaveCallback(scp)) return 0;
+    mustCall = (flags & 1);
+    cm_AFSFidFromFid(&tfid, &scp->fid);
+    while (1) {
+        if (!mustCall && cm_HaveCallback(scp)) return 0;
 
         /* turn off mustCall, since it has now forced us past the check above */
         mustCall = 0;
 
         /* otherwise, we have to make an RPC to get the status */
-		sflags = CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK;
+        sflags = CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK;
         cm_SyncOp(scp, NULL, NULL, NULL, 0, sflags);
         cm_StartCallbackGrantingCall(scp, &cbr);
         sfid = scp->fid;
-		lock_ReleaseMutex(&scp->mx);
+        lock_ReleaseMutex(&scp->mx);
 		
-		/* now make the RPC */
-		osi_Log1(afsd_logp, "CALL FetchStatus vp %x", (long) scp);
+        /* now make the RPC */
+        osi_Log1(afsd_logp, "CALL FetchStatus vp %x", (long) scp);
         do {
-			code = cm_Conn(&sfid, userp, reqp, &connp);
+            code = cm_Conn(&sfid, userp, reqp, &connp);
             if (code) continue;
-		
+
+            lock_ObtainMutex(&connp->mx);
             code = RXAFS_FetchStatus(connp->callp, &tfid,
                                      &afsStatus, &callback, &volSync);
-
-		} while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
+            lock_ReleaseMutex(&connp->mx);
+        } while (cm_Analyze(connp, userp, reqp, &sfid, &volSync, NULL,
                             &cbr, code));
         code = cm_MapRPCError(code, reqp);
-		osi_Log0(afsd_logp, "CALL FetchStatus DONE");
+        osi_Log0(afsd_logp, "CALL FetchStatus DONE");
 
-		lock_ObtainMutex(&scp->mx);
+        lock_ObtainMutex(&scp->mx);
         cm_SyncOpDone(scp, NULL, sflags);
-		if (code == 0) {
+        if (code == 0) {
             cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
             cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
-		}   
+        }   
         else
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
 
@@ -903,8 +905,8 @@ void cm_CheckCBExpiration(void)
 
     now = osi_Time();
     lock_ObtainWrite(&cm_scacheLock);
-    for(i=0; i<cm_hashTableSize; i++) {
-        for(scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
+    for (i=0; i<cm_hashTableSize; i++) {
+        for (scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
             scp->refCount++;
             lock_ReleaseWrite(&cm_scacheLock);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {

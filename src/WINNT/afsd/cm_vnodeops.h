@@ -70,6 +70,10 @@ extern long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 extern long cm_Lookup(cm_scache_t *dscp, char *namep, long flags,
 	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp);
 
+extern long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags,
+                              cm_user_t *userp, cm_req_t *reqp, 
+                              cm_scache_t **outpScpp);
+
 extern void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
 	cm_user_t *userp, cm_req_t *reqp);
 
@@ -110,7 +114,8 @@ extern long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp,
 extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
 	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_ExpandSysName(char *inp, char *outp, long outSize);
+extern int cm_ExpandSysName(char *inp, char *outp, long outSize,
+                            unsigned int sysNameIndex);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);
 
