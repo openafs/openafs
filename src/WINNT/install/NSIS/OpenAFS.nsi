@@ -615,7 +615,7 @@ Section "AFS Client" secClient
   ;IMPORTANT!  If we are not refreshing the config files, do NOT remove the service
   ;Don't re-install because it must be present or we wouldn't have passed the Reg check
  
-  ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "Cell"
+  ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell"
   StrCmp $R2 "" +1 skipremove
   nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
@@ -657,7 +657,7 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NoFindLanaByName" 1
 !ENDIF
 
-  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" 
+  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" 
   strcpy $REG_VALUE   "DependOnGroup" 
   strcpy $REG_DATA_1  "PNP_TDI"
   strcpy $REG_DATA_2  ""
@@ -667,7 +667,7 @@ skipremove:
   strcpy $REG_VALUE   "DependOnService" 
   strcpy $REG_DATA_1  "Tcpip"
   strcpy $REG_DATA_2  "NETBIOS"
-  strcpy $REG_DATA_3  "NetBT"
+  strcpy $REG_DATA_3  "RpcSs"
   Call RegWriteMultiStr
 
   SetRebootFlag true
