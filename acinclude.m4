@@ -41,7 +41,7 @@ AC_ARG_WITH(dux-kernel-headers,
 [  --with-dux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to first match in /usr/sys)]
 )
 AC_ARG_WITH(linux-kernel-headers,
-[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
+[  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
 )
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
