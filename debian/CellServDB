@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 30 Jul 2002
+>grand.central.org      #GCO Public CellServDB 26 Feb 2003
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -9,20 +9,37 @@
 137.138.128.148                 #afsdb1.cern.ch
 137.138.246.50                  #afsdb3.cern.ch
 137.138.246.51                  #afsdb2.cern.ch
+>ams.cern.ch            #AMS Experiment
+137.138.206.77                  #pcamsf2.cern.ch
+137.138.206.123                 #pcamsf4.cern.ch
 >ethz.ch                #Swiss Federal Inst. of Tech. - Zurich, Switzerland
 129.132.97.19                   #amalthea.ethz.ch
 129.132.97.27                   #nethzafs-001.ethz.ch
 129.132.115.3                   #himalia.ethz.ch
 129.132.115.37                  #nethzafs-005.ethz.ch
 129.132.115.38                  #nethzafs-006.ethz.ch
+>psi.ch                 #Paul Scherrer Institut - Villigen, Switzerland
+129.129.16.10                   #afs1.psi.ch
+129.129.16.11                   #afs2.psi.ch
 >extundo.com            #Simon Josefsson's cell
 195.42.214.241                  #slipsten.extundo.com
 >sodre.cx               #Sodre.cx
 128.8.140.165                   #greed.sodre.cx
->desy.de                #DESY - Deutsches Elektronen-Synchrotron
-131.169.30.50                   #rikki.desy.de
+>desy.de                #Deutsches Elektronen-Synchrotron
 131.169.40.62                   #vayu.desy.de
 131.169.244.60                  #solar00.desy.de
+>gppc.de                #GPP Chemnitz mbH
+213.187.92.33                   #gpp1.gppc.de
+213.187.92.34                   #paulchen.gppc.de
+213.187.92.35                   #lotus.gppc.de
+>ifh.de                 #DESY Zeuthen
+141.34.22.10                    #romulus.ifh.de
+141.34.22.11                    #remus.ifh.de
+141.34.22.29                    #hekate.ifh.de
+>lrz-muenchen.de        #Leibniz-Rechenzentrum Muenchen
+129.187.10.36                   #afs1.lrz-muenchen.de
+129.187.14.10                   #afs3.lrz-muenchen.de
+129.187.14.12                   #afs2.lrz-muenchen.de
 >ipp-garching.mpg.de    #Institut fuer Plasmaphysik
 130.183.9.5                     #afs-db1.rzg.mpg.de
 130.183.100.10                  #afs-db2.aug.ipp-garching.mpg.de
@@ -44,11 +61,19 @@
 144.41.2.3                      #rs14.serv.uni-hohenheim.de
 144.41.2.4                      #rs15.serv.uni-hohenheim.de
 >meteo.uni-koeln.de     #Univ. of Cologne - Inst. for Geophysics & Meteorology
-134.95.144.200                  #bora.meteo.uni-koeln.de
-134.95.144.208                  #monsun.meteo.uni-koeln.de
-134.95.144.213                  #brise.meteo.uni-koeln.de
->sunsite.dk             #SunSITE.dk
-130.225.51.30                   #sunsite.dk
+134.95.144.22                   #afs1.meteo.uni-koeln.de
+134.95.144.24                   #afs2.meteo.uni-koeln.de
+>rrz.uni-koeln.de       #University of Cologne - Reg Comp Center
+134.95.19.3                     #afsdb1.rrz.uni-koeln.de
+134.95.19.30                    #fileserv3.rrz.uni-koeln.de
+134.95.67.97                    #afs.thp.uni-koeln.de
+134.95.140.190                  #rzkbserv.rrz.uni-koeln.de
+>physik.uni-mainz.de    #institute of physics, university Mainz, Germany
+134.93.130.93                   #hardy.physik.uni-mainz.de
+>uni-mannheim.de        #Uni Mannheim (Rechenzentrum)
+134.155.50.165                  #afsdbx.uni-mannheim.de
+134.155.50.166                  #afsdby.uni-mannheim.de
+134.155.50.167                  #afsdbz.uni-mannheim.de
 >andrew.cmu.edu         #Carnegie Mellon University - Computing Services
 128.2.10.2                      #vice2.fs.andrew.cmu.edu
 128.2.10.7                      #vice7.fs.andrew.cmu.edu
@@ -58,6 +83,8 @@
 >club.cc.cmu.edu        #Carnegie Mellon University Computer Club
 128.2.4.131                     #yttrium.club.cc.cmu.edu
 128.2.4.132                     #zirconium.club.cc.cmu.edu
+>chem.cmu.edu           #Carnegie Mellon University - Chemistry Dept.
+128.2.40.134                    #afs.chem.cmu.edu
 >cs.cmu.edu             #Carnegie Mellon University - School of Comp. Sci.
 128.2.206.130                   #cucumber.srv.cs.cmu.edu
 128.2.222.199                   #papaya.srv.cs.cmu.edu
@@ -100,6 +127,10 @@
 136.142.8.15                    #afs09.srv.cis.pitt.edu
 136.142.8.20                    #afs10.srv.cis.pitt.edu
 136.142.8.21                    #afs11.srv.cis.pitt.edu
+>psc.edu                #PSC (Pittsburgh Supercomputing Center)
+128.182.59.182                  #shaggy.psc.edu
+128.182.66.184                  #velma.psc.edu
+128.182.66.185                  #daphne.psc.edu
 >rose-hulman.edu        #Rose-Hulman Institute of Technology
 137.112.7.11                    #afs1.rose-hulman.edu
 137.112.7.12                    #afs2.rose-hulman.edu
@@ -111,9 +142,8 @@
 128.113.22.12                   #joab.server.rpi.edu
 128.113.22.13                   #korah.server.rpi.edu
 128.113.22.14                   #achan.server.rpi.edu
->hep.sc.edu             #USC HEP cell
+>hep.sc.edu             #University of South Carolina, Dept. of Physics
 129.252.78.77                   #cpeven.physics.sc.edu
-129.252.78.79                   #redbaron.physics.sc.edu
 >ir.stanford.edu        #Stanford University
 171.64.7.222                    #afsdb1.stanford.edu
 171.64.7.234                    #afsdb2.stanford.edu
@@ -146,6 +176,10 @@
 141.211.1.32                    #fear.ifs.umich.edu
 141.211.1.33                    #surprise.ifs.umich.edu
 141.211.1.34                    #ruthless.ifs.umich.edu
+>atlas.umich.edu        #ATLAS group cell in physics at University of Michigan
+141.211.43.102                  #linat02.grid.umich.edu
+141.211.43.106                  #linat06.grid.umich.edu
+141.211.43.109                  #atgrid.grid.umich.edu
 >citi.umich.edu         #University of Michigan - CITI
 141.211.92.144                  #babble.citi.umich.edu
 >lsa.umich.edu          #University of Michigan - College of LS&A
@@ -157,9 +191,9 @@
 141.211.61.41                   #clark.math.lsa.umich.edu
 141.211.61.42                   #nimitz.math.lsa.umich.edu
 >umr.edu                #University of Missouri - Rolla
-131.151.1.59                    #afs1.umr.edu
-131.151.1.70                    #afs6.umr.edu
-131.151.1.146                   #afs5.umr.edu
+131.151.1.59                    #afsdb1.umr.edu
+131.151.1.70                    #afsdb3.umr.edu
+131.151.1.146                   #afsdb2.umr.edu
 >eng.utah.edu           #University of Utah - Engineering
 155.99.222.40                   #afs1.eng.utah.edu
 155.99.222.41                   #afs2.eng.utah.edu
@@ -176,6 +210,9 @@
 >biocenter.helsinki.fi  #University of Helsinki, Institute of Biotechnology
 128.214.58.174                  #afsdb1.biocenter.helsinki.fi
 128.214.88.114                  #afsdb2.biocenter.helsinki.fi
+>dapnia.saclay.cea.fr   #CEA DAPNIA
+132.166.32.7                    #dphrsg.saclay.cea.fr
+132.166.32.12                   #dphrsl.saclay.cea.fr
 >in2p3.fr               #IN2P3 production cell
 134.158.232.11                  #ccafsdb1.in2p3.fr
 134.158.232.12                  #ccafsdb2.in2p3.fr
@@ -254,38 +291,81 @@
 198.128.3.23                    #fs3.es.net
 >slackers.net           #The Slackers' Network
 63.201.48.27                    #alexandria.slackers.net
->zepa.net               #Kolya/zepa.net cell
-205.245.53.21                   #perseus.zepa.net.
-205.245.53.48                   #neptune.zepa.net.
 >nikhef.nl              #The Dutch National Institute for High Energy Physics
 192.16.185.26                   #afs1.nikhef.nl
 192.16.185.27                   #afs2.nikhef.nl
 >1ts.org                #KCR/private Karl Ramm, Cambridge, MA
 4.36.43.102                     #dol-guldur.1ts.org
+>bazquux.org            #Baz Quux Organization
+66.207.142.196                  #baxquux.org
+>coed.org               #Adam Pennington's Cell
+66.93.61.184                    #vice1.coed.org
+128.2.121.5                     #vice3.coed.org
 >dementia.org           #Dementia Unlimited
 128.2.12.45                     #alycia.dementia.org
 128.2.120.216                   #meredith.dementia.org
 >nimlabs.org            #Nimlabs, Ink. Cell.
 18.238.1.103                    #olfin.nimlabs.org
 18.238.1.105                    #caerbanog.nimlabs.org
->openafs.org            #OpenAFS
+>nomh.org               #nomh.org
+205.201.8.44                    #gamma.nomh.org
+>oc7.org                #The OC7 Project
+128.2.6.107                     #vice3.oc7.org
+128.2.122.140                   #vice2.oc7.org
+>openafs.org            #OpenAFS Project
+128.2.13.199                    #new-virtue.openafs.org
 128.2.121.218                   #virtue.openafs.org
+130.237.48.87                   #andrew.e.kth.se
+130.237.48.107                  #onyx.e.kth.se
 >rhic                   #Relativistic Heavy Ion Collider
 130.199.6.51                    #rafs03.rcf.bnl.gov
 130.199.6.52                    #rafs02.rcf.bnl.gov
 130.199.6.69                    #rafs01.rcf.bnl.gov
->dynarc.se              #Dynarc
-62.65.1.17                      #adder.dynarc.se
+>e.kth.se               #Royal Institute of Technology, Elektro
+130.237.48.7                    #anden.e.kth.se
+130.237.48.8                    #sonen.e.kth.se
+130.237.48.244                  #fadern.e.kth.se
+>hallf.kth.se           #Royal Institute of Technology, HALLF
+130.237.24.141                  #rasmus13.hallf.kth.se
+130.237.24.152                  #rasmus3.hallf.kth.se
 >isk.kth.se             #Royal Institute of Technology, ISK
 130.237.202.12                  #afsdb2.isk.kth.se
 130.237.206.13                  #afsdb1.isk.kth.se
 130.237.209.141                 #afsdb3.isk.kth.se
+>it.kth.se              #Royal Institute of Technology, IT
+130.237.212.15                  #ptah.it.kth.se
+130.237.212.16                  #toth.it.kth.se
+130.237.215.7                   #isis.it.kth.se
 >md.kth.se              #Royal Institute of Technology, MMK
 130.237.57.68                   #trinity.md.kth.se
 130.237.57.72                   #morpheus.md.kth.se
 130.237.67.230                  #neo.speech.kth.se
+>mech.kth.se            #Royal Institute of Technology, MECH
+130.237.233.142                 #matterhorn.mech.kth.se
+130.237.233.143                 #castor.mech.kth.se
+130.237.233.144                 #pollux.mech.kth.se
+>nada.kth.se            #Royal Institute of Technology, NADA
+130.237.222.20                  #kosmos.nada.kth.se
+130.237.223.12                  #sputnik.nada.kth.se
+130.237.224.78                  #mir.nada.kth.se
+130.237.227.23                  #gagarin.nada.kth.se
+130.237.228.28                  #laika.nada.kth.se
+>pdc.kth.se             #Royal Institute of Technology, PDC
+130.237.232.29                  #crab.pdc.kth.se
+130.237.232.112                 #anna.pdc.kth.se
+130.237.232.114                 #hokkigai.pdc.kth.se
+>stacken.kth.se         #Stacken Computer Club
+130.237.234.3                   #milko.stacken.kth.se
+130.237.234.43                  #hot.stacken.kth.se
+130.237.237.230                 #fishburger.stacken.kth.se
+>physto.se              #Physics department Stockholm University
+130.237.205.36                  #sysafs1.physto.se
+130.237.205.72                  #sysafs2.physto.se
 >sanchin.se             #Sanchin Consulting AB, Sweden
 192.195.148.10                  #sesan.sanchin.se
+>su.se                  #Stockholm University
+130.237.162.81                  #afsdb1.su.se
+130.237.162.82                  #afsdb2.su.se
 >phy.bris.ac.uk         #Bristol University - phyics
 137.222.58.9                    #afs1.phy.bris.ac.uk
 >hep.man.ac.uk          #Manchester HEP
