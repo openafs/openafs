@@ -22,7 +22,7 @@ Description: Upgrading will move files to new locations; continue?
  configuration changes made before you do so will be lost.
 
 template: openafs-fileserver/alpha-broken
-Type: Note
+Type: note
 Description: OpenAFS Fileserv Probably does not work!
  You are running the OpenAFS file server package on an alpha.  This
  probably doesn't work; the DES code is flaky on the alpha, along with
