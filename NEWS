@@ -1,14 +1,49 @@
-Openafs News -- history of user Visible changes. 11 July 2001
+Openafs News -- history of user Visible changes. September 17, 2001
 
-* Changes since OpenAFS 1.1.1
+* Changes incorporated in OpenAFS 1.2.0
 
 ** AFS now supports --prefix and the other directory options of
    configure.  By default AFS builds assuming it will be installed in
    /usr/local.  In order to get traditional AFS directory paths (/usr/afs
    and /usr/vice/etc) use the --enable-transarc-paths option to
    configure.  More details on the new directory layout are found in README.
-   
-* Changes since Openafs 1.0
+
+
+* Changes incorporated in OpenAFS 1.1.1a
+ 
+** Windows 95/98/ME/NT/2000 - Consistent versioning
+   Installation, AFS Control Center, Client dialog boxes and properties 
+   pages for executables display a consistent OpenAFS version number. 
+   Installation detects previous installation and prompts the user for upgrade 
+   options.
+
+** Windows 95/98/ME/NT/2000 - Installation features
+   During installation the user can select the source of the CellservDB file,
+   AFS home cell, and drive mappings.  During installation a drive path 
+   mapping can include a variable that will be substituted with the current 
+   UserName that is logged in.
+
+** Windows 2000/NT - Integrated logon
+   The Integrated Logon feature works now.
+
+** Windows 95/98/ME - Logon script features
+   The Windows 95/98/ME client now offers a command-line option for starting up 
+   the AFS client without authenication. It is now possilbe to start the AFS 
+   client first and obtain tokens, and map drives all through Windows scripts.
+   This helps using Windows 95/98/ME client in Kerberos 5 environment.
+
+** Windows 2000/NT - LANA numbers
+   AFS client now scans the LANA numbers to establish the correct NETBIOS
+   connection.  NetBEUI is no longer needed.  The user no longer needs to find
+   the correct LANA number.
+
+** Windows 2000/NT - OpenAFS naming consistancy
+   Further progress has been made to remove references to "Transarc AFS"
+   and replace with "OpenAFS".
+
+
+  
+* Changes since OpenAFS 1.0 
 
 ** AFS now builds with configure. The README for building has been
    updated and includes full details.
