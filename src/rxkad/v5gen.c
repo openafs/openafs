@@ -23,7 +23,7 @@ int oldret = ret;
 ret = 0;
 e = encode_EncryptedData(p, len, &(data)->enc_part, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 3, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 3, &l);
 BACK;
 ret += oldret;
 }
@@ -32,7 +32,7 @@ int oldret = ret;
 ret = 0;
 e = encode_PrincipalName(p, len, &(data)->sname, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 2, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 2, &l);
 BACK;
 ret += oldret;
 }
@@ -41,7 +41,7 @@ int oldret = ret;
 ret = 0;
 e = encode_Realm(p, len, &(data)->realm, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -50,7 +50,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, &(data)->tkt_vno, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -88,7 +88,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -114,7 +114,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -140,7 +140,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 2, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 2, &l);
 if (e)
 return e;
 else {
@@ -166,7 +166,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 3, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 3, &l);
 if (e)
 return e;
 else {
@@ -282,7 +282,7 @@ int oldret = ret;
 ret = 0;
 e = encode_octet_string(p, len, &(data)->cipher, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 2, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 2, &l);
 BACK;
 ret += oldret;
 }
@@ -292,7 +292,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, (data)->kvno, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -301,7 +301,7 @@ int oldret = ret;
 ret = 0;
 e = encode_ENCTYPE(p, len, &(data)->etype, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -331,7 +331,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -357,7 +357,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 (data)->kvno = NULL;
 else {
@@ -385,7 +385,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 2, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 2, &l);
 if (e)
 return e;
 else {
@@ -502,7 +502,7 @@ ret += oldret;
 }
 e = der_put_length_and_tag (p, len, ret, UNIV, CONS, UT_Sequence, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -511,7 +511,7 @@ int oldret = ret;
 ret = 0;
 e = encode_NAME_TYPE(p, len, &(data)->name_type, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -541,7 +541,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -567,7 +567,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -804,7 +804,7 @@ int oldret = ret;
 ret = 0;
 e = encode_octet_string(p, len, &(data)->address, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -813,7 +813,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, &(data)->addr_type, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -843,7 +843,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -869,7 +869,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -966,7 +966,7 @@ int oldret = ret;
 ret = 0;
 e = encode_octet_string(p, len, &(&(data)->val[i])->ad_data, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -975,7 +975,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, &(&(data)->val[i])->ad_type, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -1023,7 +1023,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -1049,7 +1049,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -1164,7 +1164,7 @@ int oldret = ret;
 ret = 0;
 e = encode_AuthorizationData(p, len, (data)->authorization_data, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 10, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 10, &l);
 BACK;
 ret += oldret;
 }
@@ -1174,7 +1174,7 @@ int oldret = ret;
 ret = 0;
 e = encode_HostAddresses(p, len, (data)->caddr, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 9, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 9, &l);
 BACK;
 ret += oldret;
 }
@@ -1184,7 +1184,7 @@ int oldret = ret;
 ret = 0;
 e = encode_KerberosTime(p, len, (data)->renew_till, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 8, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 8, &l);
 BACK;
 ret += oldret;
 }
@@ -1193,7 +1193,7 @@ int oldret = ret;
 ret = 0;
 e = encode_KerberosTime(p, len, &(data)->endtime, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 7, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 7, &l);
 BACK;
 ret += oldret;
 }
@@ -1203,7 +1203,7 @@ int oldret = ret;
 ret = 0;
 e = encode_KerberosTime(p, len, (data)->starttime, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 6, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 6, &l);
 BACK;
 ret += oldret;
 }
@@ -1212,7 +1212,7 @@ int oldret = ret;
 ret = 0;
 e = encode_KerberosTime(p, len, &(data)->authtime, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 5, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 5, &l);
 BACK;
 ret += oldret;
 }
@@ -1221,7 +1221,7 @@ int oldret = ret;
 ret = 0;
 e = encode_TransitedEncoding(p, len, &(data)->transited, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 4, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 4, &l);
 BACK;
 ret += oldret;
 }
@@ -1230,7 +1230,7 @@ int oldret = ret;
 ret = 0;
 e = encode_PrincipalName(p, len, &(data)->cname, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 3, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 3, &l);
 BACK;
 ret += oldret;
 }
@@ -1239,7 +1239,7 @@ int oldret = ret;
 ret = 0;
 e = encode_Realm(p, len, &(data)->crealm, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 2, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 2, &l);
 BACK;
 ret += oldret;
 }
@@ -1248,7 +1248,7 @@ int oldret = ret;
 ret = 0;
 e = encode_EncryptionKey(p, len, &(data)->key, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -1257,7 +1257,7 @@ int oldret = ret;
 ret = 0;
 e = encode_TicketFlags(p, len, &(data)->flags, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -1295,7 +1295,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -1321,7 +1321,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -1347,7 +1347,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 2, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 2, &l);
 if (e)
 return e;
 else {
@@ -1373,7 +1373,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 3, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 3, &l);
 if (e)
 return e;
 else {
@@ -1399,7 +1399,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 4, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 4, &l);
 if (e)
 return e;
 else {
@@ -1425,7 +1425,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 5, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 5, &l);
 if (e)
 return e;
 else {
@@ -1451,7 +1451,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 6, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 6, &l);
 if (e)
 (data)->starttime = NULL;
 else {
@@ -1479,7 +1479,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 7, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 7, &l);
 if (e)
 return e;
 else {
@@ -1505,7 +1505,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 8, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 8, &l);
 if (e)
 (data)->renew_till = NULL;
 else {
@@ -1533,7 +1533,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 9, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 9, &l);
 if (e)
 (data)->caddr = NULL;
 else {
@@ -1561,7 +1561,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 10, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 10, &l);
 if (e)
 (data)->authorization_data = NULL;
 else {
@@ -1834,7 +1834,7 @@ int oldret = ret;
 ret = 0;
 e = encode_octet_string(p, len, &(data)->contents, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -1843,7 +1843,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, &(data)->tr_type, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -1873,7 +1873,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -1899,7 +1899,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
@@ -1993,7 +1993,7 @@ int oldret = ret;
 ret = 0;
 e = encode_octet_string(p, len, &(data)->keyvalue, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 1, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 1, &l);
 BACK;
 ret += oldret;
 }
@@ -2002,7 +2002,7 @@ int oldret = ret;
 ret = 0;
 e = encode_integer(p, len, &(data)->keytype, &l);
 BACK;
-e = der_put_length_and_tag (p, len, ret, CONTEXT, CONS, 0, &l);
+e = der_put_length_and_tag (p, len, ret, Der_CONTEXT, CONS, 0, &l);
 BACK;
 ret += oldret;
 }
@@ -2032,7 +2032,7 @@ return ASN1_BAD_FORMAT;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 0, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 0, &l);
 if (e)
 return e;
 else {
@@ -2058,7 +2058,7 @@ len = oldlen - newlen;
 {
 size_t newlen, oldlen;
 
-e = der_match_tag (p, len, CONTEXT, CONS, 1, &l);
+e = der_match_tag (p, len, Der_CONTEXT, CONS, 1, &l);
 if (e)
 return e;
 else {
