@@ -196,6 +196,7 @@ rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
     memcpy((void *)tcp->ivec, (void *)sessionkey, sizeof(tcp->ivec));
     tcp->kvno = kvno;			/* key version number */
     tcp->ticketLen = ticketLen;		/* length of ticket */
+    if (tcp->ticketLen > MAXKTCTICKETLEN) return 0; /* bad key */
     memcpy(tcp->ticket, ticket, ticketLen);
 
     LOCK_RXKAD_STATS
