@@ -701,6 +701,12 @@ int h_TossStuff_r(register struct host *host)
     /* ASSUMPTION: rxi_FreeConnection() does not yield */
     for (cp = &host->FirstClient; (client = *cp); ) {
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
+	    if (client->refCount) {
+		char hoststr[16];
+		ViceLog(0, ("Warning: Host %s:%d client %x refcount %d while deleting.\n",
+			    afs_inet_ntoa_r(host->host, hoststr), host->port,
+		    client, client->refCount)); 
+	    }
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 		free(client->CPS.prlist_val);
                 client->CPS.prlist_val = NULL;
