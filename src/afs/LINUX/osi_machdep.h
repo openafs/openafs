@@ -51,7 +51,17 @@
 #define afs_hz HZ
 #include "h/sched.h"
 #define osi_Time() (xtime.tv_sec)
+#ifdef AFS_LINUX_64BIT_KERNEL
+#define osi_GetTime(V)                                 \
+    do {                                               \
+       struct timeval tv;                              \
+       do_gettimeofday(&tv);                           \
+       (V)->tv_sec = (afs_int32)tv.tv_sec;             \
+       (V)->tv_usec = (afs_int32)tv.tv_usec;           \
+    } while (0)
+#else
 #define osi_GetTime(V) do_gettimeofday((V))
+#endif
 
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
