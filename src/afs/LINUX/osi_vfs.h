@@ -81,6 +81,9 @@ typedef struct vnode {
         struct address_space    i_data;
 #else
 	struct vm_area_struct	*i_mmap;
+#if defined(STRUCT_INODE_HAS_I_MMAP_SHARED)
+        struct vm_area_struct   *i_mmap_shared;
+#endif
 	struct page		*i_pages;
 #endif
 #if defined(STRUCT_INODE_HAS_I_MAPPING_OVERLOAD)
