@@ -174,7 +174,7 @@ case "$1" in
 	LIBAFS=`/sbin/lsmod | fgrep openafs`
 	if [ -n "$LIBAFS" ] ; then
 		LIBAFS=`echo $LIBAFS | awk 'BEGIN { FS = " " } { print $1 }'`
-		/sbin/rmmod openafs
+		/sbin/rmmod $LIBAFS
 		echo -n " libafs"
 	fi
 	echo "."
