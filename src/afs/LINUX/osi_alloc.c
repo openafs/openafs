@@ -339,20 +339,21 @@ void osi_linux_free_afs_memory(void)
 {
     down(&afs_linux_alloc_sem);
 
-    /* iterate through all elements in the hash table and free both 
-     * the chunk and the atom associated with it.
-     */
-    afs_lhash_iter(lh_mem_htab, hash_free);
+    if (allocator_init) {
+	/* iterate through all elements in the hash table and free both 
+	 * the chunk and the atom associated with it.
+	 */
+	afs_lhash_iter(lh_mem_htab, hash_free);
 
-    /*  free the atomlist. */
-    afs_atomlist_destroy(al_mem_pool);
+	/*  free the atomlist. */
+	afs_atomlist_destroy(al_mem_pool);
 
-    /* free the hashlist. */
-    afs_lhash_destroy(lh_mem_htab);
-
-    /* change the state so that the allocator is now uninitialized. */
-    allocator_init = 0;
-
+	/* free the hashlist. */
+	afs_lhash_destroy(lh_mem_htab);
+	
+	/* change the state so that the allocator is now uninitialized. */
+	allocator_init = 0;
+    }
     up(&afs_linux_alloc_sem);    
 }
 
