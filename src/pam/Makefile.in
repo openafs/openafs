@@ -113,10 +113,8 @@ ${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 ${DEST}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
 	${INSTALL} $? $@
 
-afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h
-afs_util.o: afs_util.c afs_util.h
 
 #
 # Misc. targets
