@@ -158,6 +158,8 @@ pthread_mutex_t fileproc_glock_mutex;
 #define	NOTACTIVECALL	0
 #define	ACTIVECALL	1
 
+#define CREATE_SGUID_ADMIN_ONLY 1
+
 extern struct afsconf_dir *confDir;
 extern afs_int32 dataVersionHigh;
 
@@ -6079,7 +6081,12 @@ Update_TargetVnodeStatus(targetptr, Caller, client, InStatus, parentptr, volptr,
     if (Caller & TVS_SDATA) {
       targetptr->disk.dataVersion++;
       if (VanillaUser(client))
+	{
 	  targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+#ifdef CREATE_SGUID_ADMIN_ONLY
+	  targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+#endif
+	}
     }
     if (Caller & TVS_SSTATUS) {	/* update time on non-status change */
 	/* store status, must explicitly request to change the date */
@@ -6092,7 +6099,12 @@ Update_TargetVnodeStatus(targetptr, Caller, client, InStatus, parentptr, volptr,
     if (InStatus->Mask & AFS_SETOWNER) {
 	/* admin is allowed to do chmod, chown as well as chown, chmod. */
 	if (VanillaUser(client))
+	  {
 	    targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+#ifdef CREATE_SGUID_ADMIN_ONLY
+	    targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+#endif
+	  }
 	targetptr->disk.owner = InStatus->Owner;
 	if (VolumeRootVnode (targetptr)) {
 	    Error errorCode = 0;	/* what should be done with this? */
