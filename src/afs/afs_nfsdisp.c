@@ -12,6 +12,8 @@
 
 RCSID("$Header$");
 
+/* Ugly Ugly Ugly  but precludes conflicting XDR macros; We want kernel xdr */
+#define __XDR_INCLUDE__
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #if defined(AFS_SUN55_ENV) && !defined(AFS_NONFSTRANS) 
