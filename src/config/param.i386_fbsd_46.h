@@ -14,11 +14,12 @@
 #define AFS_FBSD43_ENV 1
 #define AFS_FBSD44_ENV 1
 #define AFS_FBSD45_ENV 1
+#define AFS_FBSD46_ENV 1
 #define AFS_X86_FBSD_ENV 1
 #define AFS_X86_FBSD40_ENV 1
 #define AFS_X86_FBSD42_ENV 1
 #define AFS_X86_FBSD43_ENV 1
-#define AFS_X86_FBSD45_ENV 1
+#define AFS_X86_FBSD46_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
 #define O_SYNC O_FSYNC
@@ -52,8 +53,8 @@
 #ifndef	MOUNT_AFS
 #define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
-#define SYS_NAME	"i386_fbsd_45"
-#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_45
+#define SYS_NAME	"i386_fbsd_46"
+#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_46
 
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
