@@ -201,7 +201,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
 	    thrd_Sleep(5000);
 	    /* cm_ForceUpdateVolume marks all servers as non_busy */
-		/* No it doesn't.  It won't do anything if all of the 
+		/* No it doesn't and it won't do anything if all of the 
 		 * the servers are marked as DOWN.  So clear the DOWN
 		 * flag and reset the busy state as well.
 		 */
@@ -214,8 +214,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		}
         lock_ReleaseWrite(&cm_serverLock);
 
-        if (fidp != NULL)
+        if (fidp != NULL)   /* Not a VLDB call */
             cm_ForceUpdateVolume(fidp, userp, reqp);
+
 	    retry = 1;
 	}
 

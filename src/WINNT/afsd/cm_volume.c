@@ -287,9 +287,21 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 	cm_mountRootGen++;
 	lock_ObtainMutex(&volp->mx);
 	volp->flags |= CM_VOLUMEFLAG_RESET;
+#ifdef COMMENT
+    /* Mark the volume to be updated but don't update it now.
+     * This function is called only from within cm_Analyze
+     * when cm_ConnByMServers has failed with all servers down
+     * The problem is that cm_UpdateVolume is going to call
+     * cm_ConnByMServers which may cause a recursive chain
+     * of calls each returning a retry on failure.
+     * Instead, set the flag so the next time the volume is
+     * accessed by Name or ID the UpdateVolume call will
+     * occur.
+     */
 	code = cm_UpdateVolume(cellp, userp, reqp, volp);
 	if (code == 0)
 		volp->flags &= ~CM_VOLUMEFLAG_RESET;
+#endif
 	lock_ReleaseMutex(&volp->mx);
 
 	cm_PutVolume(volp);
