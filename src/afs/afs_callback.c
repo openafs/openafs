@@ -1152,6 +1152,7 @@ int SRXAFSCB_GetCellServDB(
 	a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
       }
       i = strlen(p_name);
+      afs_PutCell(tcell, READ_LOCK);
     }
 
     t_name = (char *)rxi_Alloc(i+1);
