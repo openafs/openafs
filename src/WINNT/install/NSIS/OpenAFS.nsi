@@ -1,17 +1,34 @@
 ;OpenAFS Install Script for NSIS
+;                             This version compiles with NSIS v2.0
 ;
-; Written by Rob Murawski <rsm4@ieee.org>
+; Originally written by Rob Murawski <rsm4@ieee.org>
 ;
-;Based on:
-;NSIS Modern User Interface version 1.63
-;MultiLanguage Example Script
-;Written by Joost Verburg
+;Redistribution and use in source and binary forms, with or without modification, are permitted
+;provided that the following conditions are met:
+;
+;  Redistributions of source code must retain the above copyright notice, this list of conditions
+;  and the following disclaimer. Redistributions in binary form must reproduce the above copyright
+;  notice, this list of conditions and the following disclaimer in the documentation and/or other
+;  materials provided with the distribution. The name of the author may not be used to endorse or
+;  promote products derived from this software without specific prior written permission.
+;
+;  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+;  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+;  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+;  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+;  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+;  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+;  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+;  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;
+;
+;     Some code originally based on:
+;     NSIS Modern User Interface version 1.63
+;     MultiLanguage Example Script
+;     Written by Joost Verburg
 
 ; Read in the environment information
 !include ${INCLUDEDIR}\nsi-includes.nsi
-; Define DEBUG if building a DEBUG installer
-
-; This version compiles with NSIS v2.0
 
 !ifndef RELEASE
 !ifndef DEBUG
@@ -103,6 +120,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !insertmacro MUI_PAGE_DIRECTORY
   Page custom AFSPageGetCellServDB
   Page custom AFSPageGetCellName
+  Page custom AFSPageConfigAFSCreds
   !insertmacro MUI_PAGE_INSTFILES
   !insertmacro MUI_PAGE_FINISH
   
@@ -175,6 +193,15 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   LangString DESC_secClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
+  LangString DESC_secLoopback ${LANG_ENGLISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_GERMAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_SPANISH} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_SIMPCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_TRADCHINESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_JAPANESE} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_KOREAN} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+  LangString DESC_secLoopback ${LANG_PORTUGUESEBR} "MS Loopback adapter: Installs the adapter for a more reliable AFS client. Not recommended for Windows 2000"
+
   LangString DESC_secServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_GERMAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_SPANISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
@@ -211,6 +238,15 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secSDK ${LANG_KOREAN} "SDK: Header files and libraries for developing software with OpenAFS."
   LangString DESC_secSDK ${LANG_PORTUGUESEBR} "SDK: Header files and libraries for developing software with OpenAFS."
   
+  LangString DESC_secDEBUG ${LANG_ENGLISH} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_GERMAN} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_SPANISH} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_SIMPCHINESE} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_TRADCHINESE} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_JAPANESE} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_KOREAN} "Debug symbols: Used for debugging problems with OpenAFS."
+  LangString DESC_secDEBUG ${LANG_PORTUGUESEBR} "Debug symbols: Used for debugging problems with OpenAFS."
+
 ; Popup error messages
   LangString CellError ${LANG_ENGLISH} "You must specify a valid CellServDB file to copy during install"
   LangString CellError ${LANG_GERMAN} "You must specify a valid CellServDB file to copy during the install"
@@ -506,32 +542,6 @@ Section "AFS Client" secClient
   File "${AFS_DESTDIR}\etc\rxdebug.exe"
   File "${AFS_DESTDIR}\etc\backup.exe"
   
-!ifdef DEBUG
-  File "${AFS_CLIENT_BUILDDIR}\afsshare.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\libosi.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\libafsconf.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\klog.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\tokens.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\unlog.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\fs.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\aklog.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afscreds.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afsd_service.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
-  File "${AFS_DESTDIR}\bin\kpasswd.pdb"
-  File "${AFS_DESTDIR}\bin\pts.pdb"
-  File "${AFS_SERVER_BUILDDIR}\bos.pdb"
-  File "${AFS_SERVER_BUILDDIR}\kas.pdb"
-  File "${AFS_SERVER_BUILDDIR}\vos.pdb"
-  File "${AFS_SERVER_BUILDDIR}\udebug.pdb"
-  File "${AFS_DESTDIR}\bin\translate_et.pdb"
-  File "${AFS_DESTDIR}\etc\rxdebug.pdb"
-  File "${AFS_DESTDIR}\etc\backup.pdb"
-!endif
-
-
    Call AFSLangFiles
    
 
@@ -541,15 +551,9 @@ Section "AFS Client" secClient
   ; Do Windows SYSDIR (Control panel)
   SetOutPath "$SYSDIR"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl" "$SYSDIR\afs_cpa.cpl" "$INSTDIR"
-!ifdef DEBUG
-  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
-!endif
   
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
-!ifdef INSTALL_LOOPBACK
-  Call afs.InstallMSLoopback
-!endif
 
 !ifdef INSTALL_KFW
   ; Include Kerberos for Windows files in the installer...
@@ -607,9 +611,33 @@ Section "AFS Client" secClient
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Client"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "-A -M -N -Q"
-  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" "-A -M -N -Q"
+  
+  ; Create command line options for AFSCreds...
+  StrCpy $R2 ""
+  ReadINIStr $R1 $2 "Field 3" "State"
+  StrCmp $R1 "1" +1 +2
+  StrCpy $R2 "-A "
+  ReadINIStr $R1 $2 "Field 5" "State"
+  StrCmp $R1 "1" +1 +2
+  StrCpy $R2 "$R2-M "
+  ReadINIStr $R1 $2 "Field 7" "State"
+  StrCmp $R1 "1" +1 +2
+  StrCpy $R2 "$R2-N "
+  ReadINIStr $R1 $2 "Field 9" "State"
+  StrCmp $R1 "1" +1 +2
+  StrCpy $R2 "$R2-Q "
+  ReadINIStr $R1 $2 "Field 13" "State"
+  StrCmp $R1 "1" +1 +2
+  StrCpy $R2 "$R2-S"
+  
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
+  
+  ReadINIStr $R1 $2 "Field 1" "State"
+  StrCmp $R1 "1" +1 +2
+  CreateShortCut "$SMSTARTUP\AFS Credentials.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
 
+  
+  
   Push "$INSTDIR\Client\Program"
   Call AddToUniquePath
   Push "$INSTDIR\Common"
@@ -696,6 +724,16 @@ skipremove:
   
 SectionEnd
 
+
+
+; MS Loopback adapter
+Section "MS Loopback Adapter" secLoopback
+
+Call afs.InstallMSLoopback
+
+SectionEnd
+
+
 ;------------------------
 ; OpenAFS SERVER  
 Section "AFS Server" secServer
@@ -748,25 +786,6 @@ skipCheck:
   File "${AFS_SERVER_BUILDDIR}\vlserver.exe"
   File "${AFS_SERVER_BUILDDIR}\volinfo.exe"
   File "${AFS_SERVER_BUILDDIR}\volserver.exe"
-
-!ifdef DEBUG
-  File "${AFS_SERVER_BUILDDIR}\afskill.pdb"
-  File "${AFS_SERVER_BUILDDIR}\afssvrcfg.pdb"
-  File "${AFS_SERVER_BUILDDIR}\bosctlsvc.pdb"
-  File "${AFS_SERVER_BUILDDIR}\bosserver.pdb"
-  File "${AFS_SERVER_BUILDDIR}\buserver.pdb"
-  File "${AFS_ETC_BUILDDIR}\butc.pdb"
-  File "${AFS_SERVER_BUILDDIR}\fileserver.pdb"
-  File "${AFS_ETC_BUILDDIR}\fms.pdb"
-  File "${AFS_SERVER_BUILDDIR}\kaserver.pdb"
-  File "${AFS_SERVER_BUILDDIR}\ptserver.pdb"
-  File "${AFS_SERVER_BUILDDIR}\salvager.pdb"
-  File "${AFS_SERVER_BUILDDIR}\upclient.pdb"
-  File "${AFS_SERVER_BUILDDIR}\upserver.pdb"
-  File "${AFS_SERVER_BUILDDIR}\vlserver.pdb"
-  File "${AFS_SERVER_BUILDDIR}\volinfo.pdb"
-  File "${AFS_SERVER_BUILDDIR}\volserver.pdb"
-!endif
  
  ;AFS Server common files
  SetOutPath "$INSTDIR\Common"
@@ -777,21 +796,12 @@ skipCheck:
  File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 
 !ifdef DEBUG
- File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
- File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
- File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
- File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
- File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
 !endif
  SetOutPath "$INSTDIR\Common"
    Call AFSLangFiles
    
    SetOutPath "$SYSDIR"
   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver.cpl" "$SYSDIR\afsserver.cpl" "$INSTDIR"
-
-!ifdef DEBUG
-   File "${AFS_SERVER_BUILDDIR}\afsserver.pdb"
-!endif
    
   ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Server" "" $INSTDIR
@@ -865,11 +875,6 @@ Section "AFS Control Center" secControl
   File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.exe"
   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.exe"
    
-!ifdef DEBUG
-  File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager.pdb"
-  File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.pdb"
-  File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.pdb"
-!endif
 
  ;AFS Server common files
  Call AFSCommon.Install
@@ -880,11 +885,8 @@ Section "AFS Control Center" secControl
 !IFDEF DEBUG
 !IFDEF CL_1310
    File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcr71d.pdb"
    File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.pdb"
    File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\mfc71d.pdb"
    File "${SYSTEMDIR}\MFC71CHS.DLL"
    File "${SYSTEMDIR}\MFC71CHT.DLL"
    File "${SYSTEMDIR}\MFC71DEU.DLL"
@@ -897,11 +899,8 @@ Section "AFS Control Center" secControl
 !ELSE
 !IFDEF CL_1300
    File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcr70d.pdb"
    File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.pdb"
    File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\mfc70d.pdb"
    File "${SYSTEMDIR}\MFC70CHS.DLL"
    File "${SYSTEMDIR}\MFC70CHT.DLL"
    File "${SYSTEMDIR}\MFC70DEU.DLL"
@@ -913,11 +912,8 @@ Section "AFS Control Center" secControl
    File "${SYSTEMDIR}\MFC70KOR.DLL"
 !ELSE
    File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\mfc42d.pdb"
    File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcp60d.pdb"
    File "${SYSTEMDIR}\msvcrtd.dll"
-   File "${SYSTEMDIR}\msvcrtd.pdb"
 !ENDIF
 !ENDIF
 !ELSE
@@ -1171,6 +1167,123 @@ Section "Software Development Kit (SDK)" secSDK
    Call AFSCommon.Install
 SectionEnd
 
+
+Section "Debug symbols" secDebug
+  	SectionGetFlags ${secClient} $R0
+   IntOp $R0 $R0 & ${SF_SELECTED}
+   IntCmp $R0 ${SF_SELECTED} +1 DoServer
+  
+  ; Do client components
+  SetOutPath "$INSTDIR\Client\Program"
+  File "${AFS_CLIENT_BUILDDIR}\afsshare.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\libosi.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\libafsconf.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\klog.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\tokens.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\unlog.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\fs.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\aklog.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afscreds.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afsd_service.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
+  File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
+  File "${AFS_DESTDIR}\bin\kpasswd.pdb"
+  File "${AFS_DESTDIR}\bin\pts.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bos.pdb"
+  File "${AFS_SERVER_BUILDDIR}\kas.pdb"
+  File "${AFS_SERVER_BUILDDIR}\vos.pdb"
+  File "${AFS_SERVER_BUILDDIR}\udebug.pdb"
+  File "${AFS_DESTDIR}\bin\translate_et.pdb"
+  File "${AFS_DESTDIR}\etc\rxdebug.pdb"
+  File "${AFS_DESTDIR}\etc\backup.pdb"
+
+  SetOutPath "$SYSDIR"
+  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
+  
+DoServer:
+  	SectionGetFlags ${secServer} $R0
+   IntOp $R0 $R0 & ${SF_SELECTED}
+   IntCmp $R0 ${SF_SELECTED} +1 DoControl
+
+  ; Do server components
+  SetOutPath "$INSTDIR\Server\usr\afs\bin"  
+  File "${AFS_SERVER_BUILDDIR}\afskill.pdb"
+  File "${AFS_SERVER_BUILDDIR}\afssvrcfg.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bosctlsvc.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bosserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\buserver.pdb"
+  File "${AFS_ETC_BUILDDIR}\butc.pdb"
+  File "${AFS_SERVER_BUILDDIR}\fileserver.pdb"
+  File "${AFS_ETC_BUILDDIR}\fms.pdb"
+  File "${AFS_SERVER_BUILDDIR}\kaserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\ptserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\salvager.pdb"
+  File "${AFS_SERVER_BUILDDIR}\upclient.pdb"
+  File "${AFS_SERVER_BUILDDIR}\upserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\vlserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\volinfo.pdb"
+  File "${AFS_SERVER_BUILDDIR}\volserver.pdb"
+
+  ; Do server common components
+ File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
+ 
+   SetOutPath "$SYSDIR"
+   File "${AFS_SERVER_BUILDDIR}\afsserver.pdb"
+
+   ; Do control center components
+DoControl:
+  	SectionGetFlags ${secControl} $R0
+   IntOp $R0 $R0 & ${SF_SELECTED}
+   IntCmp $R0 ${SF_SELECTED} +1 DoCommon
+
+   SetOutPath "$INSTDIR\Control Center"   
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager.pdb"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.pdb"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.pdb"
+
+DoCommon:
+  SetOutPath "$INSTDIR\Common"
+!IFDEF CL_1310
+   File "${SYSTEMDIR}\msvcr71d.pdb"
+   File "${SYSTEMDIR}\msvcp71d.pdb"
+   File "${SYSTEMDIR}\mfc71d.pdb"
+!ELSE
+!IFDEF CL_1300
+   File "${SYSTEMDIR}\msvcr70d.pdb"
+   File "${SYSTEMDIR}\msvcp70d.pdb"
+   File "${SYSTEMDIR}\mfc70d.pdb"
+!ELSE
+   File "${SYSTEMDIR}\mfc42d.pdb"
+   File "${SYSTEMDIR}\msvcp60d.pdb"
+   File "${SYSTEMDIR}\msvcrtd.pdb"
+!ENDIF
+!ENDIF
+  
+; Common Areas
+   SetOutPath "$INSTDIR\Common"
+   File "${AFS_CLIENT_BUILDDIR}\afs_config.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsadminutil.pdb"
+   File "${AFS_DESTDIR}\lib\afsauthent.pdb"
+   File "${AFS_DESTDIR}\lib\afspthread.pdb"
+   File "${AFS_DESTDIR}\lib\afsrpc.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
+   File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
+
+SectionEnd
+
+
 ;Display the Finish header
 ;Insert this macro after the sections if you are not using a finish page
 ;!insertmacro MUI_SECTIONS_FINISHHEADER
@@ -1208,6 +1321,32 @@ contInstall:
 
 
 contInstall2:
+   ; Select the loopback only if it is NOT Windows 2000 (The user can still select it,
+   ; even though we warn them!)
+   Call GetWindowsVersion
+   Pop $R1
+   StrCmp $R1 "2000" +1 DoLoop
+   SectionGetFlags ${secLoopback} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secLoopback} $0
+   
+DoLoop:
+   ; If the Loopback is already installed, we mark the option OFF and Read Only
+   ; so the user can not select it.
+   Call afs.isLoopbackInstalled
+   IntCmp $R1 0 SkipLoop
+   SectionGetFlags ${secLoopback} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   IntOp $0 $0 | ${SF_RO}
+   SectionSetFlags ${secLoopback} $0
+   
+SkipLoop:
+   ; Never install debug symbols unless explicitly selected
+	!IFDEF DEBUG
+   SectionGetFlags ${secDebug} $0
+	IntOp $0 $0 & ${SECTION_OFF}
+	SectionSetFlags ${secDebug} $0
+   !ENDIF
    ; Our logic should be like this.
    ;     1) If no AFS components are installed, we do a clean install with default options. (Client/Docs)
    ;     2) If existing modules are installed, we keep them selected
@@ -1445,6 +1584,8 @@ Nope:
   File /oname=$0 CellServPage.ini
   GetTempFilename $1
   File /oname=$1 AFSCell.ini
+  GetTempFilename $2
+  File /oname=$2 AFSCreds.ini
   ;File /oname=$1 ConfigURL.ini
   
 FunctionEnd
@@ -1475,6 +1616,8 @@ FunctionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${secControl} $(DESC_secControl)
   !insertmacro MUI_DESCRIPTION_TEXT ${secDocs} $(DESC_secDocs)
   !insertmacro MUI_DESCRIPTION_TEXT ${secSDK} $(DESC_secSDK)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secLoopback} $(DESC_secLoopback)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secDebug} $(DESC_secDebug)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
  
 ;--------------------------------
@@ -1548,7 +1691,6 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.dll"
 
-!IFDEF DEBUG
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afs_shl_ext.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsadminutil.pdb"
@@ -1587,7 +1729,6 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\msvcp60d.pdb"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
-!ENDIF
 !ENDIF
 !ELSE
 !IFDEF CL_1310
@@ -1663,7 +1804,6 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\volserver.exe"
 
-!ifdef DEBUG
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afskill.pdb"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afssvrcfg.pdb"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\bosctlsvc.pdb"
@@ -1681,7 +1821,6 @@ StartRemove:
   Delete "$INSTDIR\Server\usr\afs\bin\vlserver.pdb"
   Delete "$INSTDIR\Server\usr\afs\bin\volinfo.pdb"
   Delete "$INSTDIR\Server\usr\afs\bin\volserver.pdb"
-!endif
 
   RMDir /r "$INSTDIR\Server\usr\afs\bin"
   ; do not delete the server configuration files
@@ -1695,10 +1834,8 @@ StartRemove:
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
 
-!ifdef DEBUG
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
-!endif
   
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
@@ -1710,9 +1847,7 @@ StartRemove:
   ; Delete DOC short cut
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.exe"
 
-!ifdef DEBUG
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.pdb"
-!endif
 
   Delete /REBOOTOK "$INSTDIR\Client\Program\*"
   Delete /REBOOTOK "$INSTDIR\Client\Program\Include\*"
@@ -1806,11 +1941,9 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAdmSvr.exe"
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsServerManager.exe"
   Delete /REBOOTOK "$INSTDIR\Control Center\CCUninst.dll"
-!ifdef DEBUG
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAccountManager.pdb"
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAdmSvr.pdb"
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsServerManager.pdb"
-!endif
   RMDir  "$INSTDIR\Control Center"
   
   Delete "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"
@@ -2142,6 +2275,30 @@ done:
    goto startOver
 good:
 FunctionEnd
+
+
+;---------------------------------------------------------
+;Do the page to get the afscreds.exe startup configuration
+
+Function AFSPageConfigAFSCreds
+  ; Skip this page if we are not installing the client
+  SectionGetFlags ${secClient} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "0" done
+  
+  ; Set the install options here
+  
+  !insertmacro MUI_HEADER_TEXT "AFS Credentials Configuration" "Please choose default options for configuring the AFS Credentials program:" 
+  InstallOptions::dialog $2
+  Pop $R1
+  StrCmp $R1 "cancel" exit
+  StrCmp $R1 "back" done
+  StrCmp $R1 "success" done
+exit: Quit
+done:
+   
+FunctionEnd
+
 
 ;-------------
 ; Common install routines for each module
@@ -2577,23 +2734,6 @@ Function AFSLangFiles
 !ENDIF
 !ENDIF
 !ENDIF
-
-!ifdef DEBUG
-   File "${AFS_CLIENT_BUILDDIR}\afs_config.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsadminutil.pdb"
-   File "${AFS_DESTDIR}\lib\afsauthent.pdb"
-   File "${AFS_DESTDIR}\lib\afspthread.pdb"
-   File "${AFS_DESTDIR}\lib\afsrpc.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsclientadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsprocmgmt.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
-   File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
-!endif
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
@@ -3275,19 +3415,20 @@ FunctionEnd
 !endif
 
 
-
-!ifdef INSTALL_LOOPBACK
+; Installs the loopback adpater and disables it on Windows 2000
 Function afs.InstallMSLoopback
    GetTempFileName $R0
-   File /oname=$R0 "loopback_install.dll"
+   File /oname=$R0 "${AFS_WININSTALL_DIR}\loopback_install.dll"
    nsExec::Exec "rundll32.exe $R0 doLoopBackEntry quiet"
-   Call GetWindowsVersion
-   Pop $R1
-   StrCmp $R1 "2000" +1 +2
-   nsExec::Exec "rundll32.exe $R0 disableLoopBackEntry"
    Delete $R0
 FunctionEnd
-!endif
+
+Function afs.isLoopbackInstalled
+   SetOutPath $TEMP
+   File "${AFS_WININSTALL_DIR}\loopback_install.dll"
+   System::Call "$TEMP\loopback_install.dll::loopback_isInstalled() i().r11"
+   Delete "$TEMP\loopback_install.dll"
+FunctionEnd
 
 
 ; GetWindowsVersion
