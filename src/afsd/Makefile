@@ -99,7 +99,7 @@ install: all
                 hp?00_ux10? ) \
 			${INSTALL} afs.rc.hpux10 ${DESTDIR}root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
-			${INSTALLex}  afs.rc.linux ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
+			${INSTALLex}  -f afs.rc.linux ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
 			${INSTALL}  afs.conf.linux ${DESTDIR}root.client/usr/vice/etc/afs.conf ;; \
 		ppc_darwin*) \
 			mkdir -p ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/MacOS ;\
