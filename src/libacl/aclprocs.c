@@ -24,6 +24,9 @@ RCSID("$Header$");
 #else
 #include <netinet/in.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <ptclient.h>
@@ -248,14 +251,14 @@ struct acl_accessList **acl;
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2)
 	    return(-1);
 	(*acl)->entries[i].rights = k;
-	nextc = (strchr(nextc, '\n'));
+	nextc = strchr(nextc, '\n');
 	nextc ++;       /* 1 + index can cast ptr to integer */
     }
     j=i;
     for (i = (*acl)->total - 1; i >= (*acl)->total -  (*acl)->negative; i--,j++) {
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[j], &((*acl)->entries[j].rights)) != 2)
 	    return(-1);
-	nextc = (strchr(nextc, '\n'));
+	nextc = strchr(nextc, '\n');
 	nextc ++;
     }
     lids.idlist_len = 0;
