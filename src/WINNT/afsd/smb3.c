@@ -1661,10 +1661,10 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 
 			/* Copy attributes */
 			lattr = smb_ExtAttributes(scp);
-			*((u_long *)dptr) = lattr;
             /* merge in hidden (dot file) attribute */
  			if( patchp->flags & SMB_DIRLISTPATCH_DOTFILE )
  				lattr |= SMB_ATTR_HIDDEN;
+			*((u_long *)dptr) = lattr;
 			dptr += 4;
 		}
 		else {

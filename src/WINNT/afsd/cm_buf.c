@@ -1420,6 +1420,9 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie)
     char output[1024];
     int i;
   
+	if (buf_hashTablepp == NULL)
+		return -1;
+
     lock_ObtainRead(&buf_globalLock);
   
     sprintf(output, "%s - dumping buf_HashTable - buf_hashSize=%d\n", cookie, buf_hashSize);
