@@ -128,7 +128,7 @@ pam_sm_setcred(
         RET(PAM_AUTH_ERR);
     }
 #else
-#ifdef AFS_LINUX20_ENV
+#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
     upwd = getpwnam(user);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
