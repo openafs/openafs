@@ -78,7 +78,7 @@ all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf
 
 libdes.a: ${OBJS} AFS_component_version_number.o
 	$(RM) -f libdes.a
-	ar r libdes.a ${OBJS} AFS_component_version_number.o
+	$(AR) crv libdes.a ${OBJS} AFS_component_version_number.o
 	$(RANLIB) libdes.a
 
 make_ip: make_ip.o misc.o main.o
@@ -192,7 +192,7 @@ ukinstall: \
 	${UKERNELDIR}/des/libdes.a \
 	${UKERNELDIR}/des/des.h \
 	${UKERNELDIR}/des/mit-cpyright.h 
-	
+
 ${UKERNELDIR}/des:
 	mkdir -p $?
 
