@@ -23,13 +23,14 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
 	 namei_ops.o
 
-OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o 
+OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o
 
 all: gi \
 	${TOP_LIBDIR}/vlib.a \
 	${TOP_LIBDIR}/libvlib.a \
 	salvager \
 	volinfo \
+	voldump \
 	$(FS_CONV_OSF40D) \
 	$(XFS_SIZE_CHECK) \
 	$(FS_CONV_SOL26) \
@@ -51,6 +52,7 @@ install: \
 	${DESTDIR}${libdir}/afs/libvlib.a \
 	${DESTDIR}${afssrvlibexecdir}/salvager \
 	${DESTDIR}${afssrvsbindir}/volinfo \
+	${DESTDIR}${afssrvsbindir}/voldump \
 	$(install_FS_CONV_OSF40D) \
 	$(install_XFS_SIZE_CHECK) \
 	$(install_FS_CONV_SOL26) \
@@ -159,15 +161,12 @@ gi: ${TOP_LIBDIR}/libsys.a
         esac
 
 volinfo: vol-info.o physio.o ihandle.o ${LIBS}
-	case ${SYS_NAME} in \
-		*linux* | *fbsd*) \
-			${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
-				ihandle.o ${LIBS} ${XLIBS} ;; \
-		*) \
-			${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
-				 ihandle.o ${LIBS} ${XLIBS} ;; \
-	esac
+	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
+		ihandle.o ${LIBS} ${XLIBS}
 
+voldump: vol-dump.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o voldump vol-dump.o physio.o \
+		 ihandle.o ${LIBS} ${XLIBS}
 
 fs_conv_dux40D: fs_conv_411.o
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}
@@ -186,7 +185,7 @@ xfs_size_check: xfs_size_check.c
 #
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
-	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo voldump gi fs_conv_sol26 fs_conv_dux40D
 
 test:
 	cd test; $(MAKE)
@@ -208,6 +207,9 @@ ${DESTDIR}${afssrvlibexecdir}/salvager: salvager
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${afssrvsbindir}/volinfo: volinfo
+	${INSTALL} -s $? $@
+
+${DESTDIR}${afssrvsbindir}/voldump: voldump
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${includedir}/afs/nfs.h: nfs.h
@@ -269,6 +271,7 @@ dest: \
 	${DEST}/lib/afs/libvlib.a \
 	${DEST}/root.server/usr/afs/bin/salvager \
 	${DEST}/root.server/usr/afs/bin/volinfo \
+	${DEST}/root.server/usr/afs/bin/voldump \
 	$(dest_FS_CONV_OSF40D) \
 	$(dest_XFS_SIZE_CHECK) \
 	$(dest_FS_CONV_SOL26) \
