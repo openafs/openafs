@@ -270,14 +270,20 @@ int h_Release_r(host)
     register struct host *host;
 {	
     
-    if (!((host)->holds[h_holdSlot()] &= ~h_holdbit()) ) {
+    if (!((host)->holds[h_holdSlot()] & ~h_holdbit()) ) {
 	if (! h_OtherHolds_r(host) ) {
+	    /* must avoid masking this until after h_OtherHolds_r runs
+	       but it should be run before h_TossStuff_r */
+	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
 	    if ( (host->hostFlags & HOSTDELETED) || 
 		(host->hostFlags & CLIENTDELETED) ) {
 		h_TossStuff_r(host);
 	    }		
-	}
-    }
+	} else 
+	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
+    } else 
+      (host)->holds[h_holdSlot()] &= ~h_holdbit();
+
     return 0;
 }
 
