@@ -145,7 +145,7 @@ case "$1" in
 
 	# Start AFS client
 	if  is_on $AFS_CLIENT && test -x /usr/sbin/afsd  ; then
-		start-stop-daemon --start --quiet --exec /usr/vice/etc/afsd \
+		start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
 		    -- ${OPTIONS}
 		echo -n " afsd"
 
