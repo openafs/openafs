@@ -39,11 +39,11 @@ all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${
 # NOTE: linux case uses --new as well to work around bug in some versions of
 # gencat.
 kinstall: ${KERNELDIR}/afs AFS_component_version_number.c
-	-chmod 666 ${KERNELDIR}afs/*
+	-chmod 666 ${KERNELDIR}/afs/*
 	${COMPILE_ET} -v 2 afs_trace.et
-	${INSTALL} *.[csh] ${KERNELDIR}afs
-	${INSTALL} VNOPS/*.[csh] ${KERNELDIR}afs
-	${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}afs
+	${INSTALL} *.[csh] ${KERNELDIR}/afs
+	${INSTALL} VNOPS/*.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 	-$(RM) -f afszcm.cat
 	case ${SYS_NAME} in \
 		sgi_* ) \
@@ -62,11 +62,11 @@ ${KERNELDIR}/afs:
 	mkdir -p $@
 
 ukinstall: ${UKERNELDIR}/afs AFS_component_version_number.c
-	-chmod 666 ${UKERNELDIR}afs/*
+	-chmod 666 ${UKERNELDIR}/afs/*
 	${COMPILE_ET} -v 2 afs_trace.et
-	${INSTALL} *.[csh] ${UKERNELDIR}afs
-	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}afs
-	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}afs
+	${INSTALL} *.[csh] ${UKERNELDIR}/afs
+	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}/afs
+	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}/afs
 
 ${UKERNELDIR}/afs:
 	mkdir -p $@

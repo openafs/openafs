@@ -154,12 +154,12 @@ includes: \
 	${TOP_INCDIR}/rx/xdr.h
 
 kinstall: ${KERNELDIR}/rx
-	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)rx
-	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
+	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)/rx
+	$(INSTALL) $(KSRCS) $(KERNELDIR)/rx
 
 ukinstall: ${UKERNELDIR}/rx
-	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
-	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
+	$(INSTALL) $(UKSRCS) $(UKERNELDIR)/rx
+	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)/rx
 
 ${DEST}/include/rx/rx_packet.h: rx_packet.h
 	${INSTALL} $? $@
