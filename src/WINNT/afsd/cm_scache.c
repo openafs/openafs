@@ -307,7 +307,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 
 		lock_ObtainMutex(&cm_Freelance_Lock);
 		scp->length.LowPart = strlen(mp)+4;
-		scp->mountPointStringp=malloc(strlen(mp));
+		scp->mountPointStringp=malloc(strlen(mp)+1);
 		strcpy(scp->mountPointStringp,mp);
 		lock_ReleaseMutex(&cm_Freelance_Lock);
 
