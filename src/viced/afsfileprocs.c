@@ -548,9 +548,9 @@ common_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync, type)
      * Get volume/vnode for the fetched file; caller's access rights to
      * it are also returned
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights))
+				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_FetchData;
 
     SetVolumeSync(Sync, volptr);
@@ -572,8 +572,8 @@ common_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync, type)
 #endif /* FS_STATS_DETAILED */
 
     /* Check whether the caller has permission access to fetch the data */
-    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_FETCHDATA, 0)) 
+    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					   CHK_FETCHDATA, 0))) 
 	goto Bad_FetchData;
 
     /*
@@ -599,7 +599,7 @@ common_FetchData (acall, Fid, Pos, Len, OutStatus, CallBack, Sync, type)
     errorCode = FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type,
 				  &bytesToXfer, &bytesXferred);
 #else
-    if (errorCode = FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type))
+    if ((errorCode = FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type)))
 	goto Bad_FetchData;
 #endif /* FS_STATS_DETAILED */
 
@@ -759,7 +759,7 @@ afs_int32 SRXAFS_FetchACL (acall, Fid, AccessList, OutStatus, Sync)
     FS_LOCK
     AFSCallStats.FetchACL++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchACL;
 
     /* Get ptr to client data for user Id for logging */
@@ -776,21 +776,21 @@ afs_int32 SRXAFS_FetchACL (acall, Fid, AccessList, OutStatus, Sync)
      * Get volume/vnode for the fetched file; caller's access rights to it
      * are also returned
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights))
+				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_FetchACL;
 
     SetVolumeSync(Sync, volptr);
 
     /* Check whether we have permission to fetch the ACL */
-    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_FETCHACL, 0))
+    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					   CHK_FETCHACL, 0)))
 	goto Bad_FetchACL;
 
     /* Get the Access List from the dir's vnode */
-    if (errorCode = RXFetch_AccessList(targetptr, parentwhentargetnotdir,
-				       AccessList))
+    if ((errorCode = RXFetch_AccessList(targetptr, parentwhentargetnotdir,
+				       AccessList)))
 	goto Bad_FetchACL;
 
     /* Get OutStatus back From the target Vnode  */
@@ -863,9 +863,9 @@ SAFSS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync)
      * Get volume/vnode for the fetched file; caller's rights to it are
      * also returned
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights))
+				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_FetchStatus;
 
     /* set volume synchronization information */
@@ -873,8 +873,8 @@ SAFSS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync)
 
     /* Are we allowed to fetch Fid's status? */
     if (targetptr->disk.type != vDirectory) {
-      if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					     CHK_FETCHSTATUS, 0)) {
+      if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					     CHK_FETCHSTATUS, 0))) {
 	  if (rx_GetCallAbortCode(acall) == errorCode) 
 	      rx_SetCallAbortCode(acall, 0);
 	  goto Bad_FetchStatus;
@@ -957,7 +957,7 @@ afs_int32 SRXAFS_BulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     CallBacks->AFSCBs_len = nfiles;
 
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_BulkStatus;
 
     tfid = Fids->AFSCBFids_val;
@@ -966,10 +966,10 @@ afs_int32 SRXAFS_BulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 	 * Get volume/vnode for the fetched file; caller's rights to it
 	 * are also returned
 	 */
-	if (errorCode =
+	if ((errorCode =
 	    GetVolumePackage(tcon, tfid, &volptr, &targetptr,
 			     DONTCHECK, &parentwhentargetnotdir, &client,
-			     READ_LOCK, &rights, &anyrights))
+			     READ_LOCK, &rights, &anyrights)))
 	    	goto Bad_BulkStatus;
 	/* set volume synchronization information, but only once per call */
 	if (i == nfiles)
@@ -977,8 +977,8 @@ afs_int32 SRXAFS_BulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {
-	    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-						   CHK_FETCHSTATUS, 0)) {
+	    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+						   CHK_FETCHSTATUS, 0))) {
 		if (rx_GetCallAbortCode(acall) == errorCode) 
 		    rx_SetCallAbortCode(acall, 0);
 		goto Bad_BulkStatus;
@@ -1094,7 +1094,7 @@ afs_int32 SRXAFS_InlineBulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 	malloc(nfiles * sizeof(struct AFSCallBack));
     CallBacks->AFSCBs_len = nfiles;
 
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon)) {
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon))) {
 	goto Bad_InlineBulkStatus;
     }
 
@@ -1104,10 +1104,10 @@ afs_int32 SRXAFS_InlineBulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 	 * Get volume/vnode for the fetched file; caller's rights to it
 	 * are also returned
 	 */
-	if (errorCode =
+	if ((errorCode =
 	    GetVolumePackage(tcon, tfid, &volptr, &targetptr,
 			     DONTCHECK, &parentwhentargetnotdir, &client,
-			     READ_LOCK, &rights, &anyrights)) {
+			     READ_LOCK, &rights, &anyrights))) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
 	    tstatus->errorCode = errorCode;
 	    parentwhentargetnotdir = (Vnode *) 0;
@@ -1122,8 +1122,8 @@ afs_int32 SRXAFS_InlineBulkStatus(acall, Fids, OutStats, CallBacks, Sync)
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {
-	    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-						   CHK_FETCHSTATUS, 0)) {
+	    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+						   CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
 		tstatus->errorCode = errorCode;
 		PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
@@ -1215,7 +1215,7 @@ afs_int32 SRXAFS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchStatus;
 
     code = SAFSS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync);
@@ -1300,7 +1300,7 @@ afs_int32 SRXAFS_StoreData (acall, Fid, InStatus, Pos, Length, FileLength, OutSt
     AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
 
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreData;
 
     /* Get ptr to client data for user Id for logging */
@@ -1314,9 +1314,9 @@ afs_int32 SRXAFS_StoreData (acall, Fid, InStatus, Pos, Length, FileLength, OutSt
      * Get associated volume/vnode for the stored file; caller's rights
      * are also returned
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     MustNOTBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_StoreData;
     }
 
@@ -1330,8 +1330,8 @@ afs_int32 SRXAFS_StoreData (acall, Fid, InStatus, Pos, Length, FileLength, OutSt
     }
 
     /* Check if we're allowed to store the data */
-    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STOREDATA, InStatus)) {
+    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					   CHK_STOREDATA, InStatus))) {
 	goto Bad_StoreData;
     }
 
@@ -1547,7 +1547,7 @@ afs_int32 SRXAFS_StoreACL (acall, Fid, AccessList, OutStatus, Sync)
     FS_UNLOCK
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreACL;
 
     /* Get ptr to client data for user Id for logging */
@@ -1566,9 +1566,9 @@ afs_int32 SRXAFS_StoreACL (acall, Fid, AccessList, OutStatus, Sync)
      * Get associated volume/vnode for the target dir; caller's rights
      * are also returned.
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_StoreACL;
     }
 
@@ -1576,13 +1576,13 @@ afs_int32 SRXAFS_StoreACL (acall, Fid, AccessList, OutStatus, Sync)
     SetVolumeSync(Sync, volptr);
 
     /* Check if we have permission to change the dir's ACL */
-    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STOREACL, &InStatus)) {
+    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					   CHK_STOREACL, &InStatus))) {
 	goto Bad_StoreACL;
     }
 
     /* Build and store the new Access List for the dir */
-    if (errorCode = RXStore_AccessList(targetptr, AccessList)) {
+    if ((errorCode = RXStore_AccessList(targetptr, AccessList))) {
 	goto Bad_StoreACL;
     }
     
@@ -1663,9 +1663,9 @@ SAFSS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync)
      * Get volume/vnode for the target file; caller's rights to it are
      * also returned
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_StoreStatus;
     }
 
@@ -1673,8 +1673,8 @@ SAFSS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync)
     SetVolumeSync(Sync, volptr);
 
     /* Check if the caller has proper permissions to store status to Fid */
-    if (errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STORESTATUS, InStatus)) {
+    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
+					   CHK_STORESTATUS, InStatus))) {
 	goto Bad_StoreStatus;
     }
     /*
@@ -1736,7 +1736,7 @@ afs_int32 SRXAFS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreStatus;
 
     code = SAFSS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync);
@@ -1807,22 +1807,22 @@ SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
      * Get volume/vnode for the parent dir; caller's access rights are
      * also returned
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_RemoveFile;
     }
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has delete (& write) access to the parent directory? */
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE))) {
 	goto Bad_RemoveFile;
     }
 
     /* Actually delete the desired file */
-    if (errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir,
-				 &fileFid, Name, MustNOTBeDIR)) {
+    if ((errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir,
+				 &fileFid, Name, MustNOTBeDIR))) {
 	goto Bad_RemoveFile;
     }
 
@@ -1894,7 +1894,7 @@ afs_int32 SRXAFS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_RemoveFile;
 
     code = SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync);
@@ -1974,9 +1974,9 @@ SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
      * Get associated volume/vnode for the parent dir; caller long are
      * also returned
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_CreateFile;
     }
 
@@ -1984,12 +1984,12 @@ SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
     SetVolumeSync(Sync, volptr);
 
     /* Can we write (and insert) onto the parent directory? */
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
 	goto Bad_CreateFile;
     }
     /* get a new vnode for the file to be created and set it up */
-    if (errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
-				   Name, OutFid, vFile, nBlocks(0))) {
+    if ((errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
+				   Name, OutFid, vFile, nBlocks(0)))) {
 	goto Bad_CreateFile;
     }
 
@@ -2059,7 +2059,7 @@ afs_int32 SRXAFS_CreateFile (acall, DirFid, Name, InStatus, OutFid, OutFidStatus
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_CreateFile;
 
     code = SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid,
@@ -2175,25 +2175,25 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
 	    newrights = rights, newanyrights = anyrights;
 	}
 	else
-	    if (errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
+	    if ((errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
 					     &newvptr, MustBeDIR, &parent,
 					     &client, WRITE_LOCK, &newrights,
-					     &newanyrights)) {
+					     &newanyrights))) {
 		DFlush();
 		goto Bad_Rename;
 	    }
     }
     else {
-	if (errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
+	if ((errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
 					 &newvptr, MustBeDIR, &parent,
 					 &client, WRITE_LOCK, &newrights,
-					 &newanyrights)) {
+					 &newanyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}
-	if (errorCode = GetVolumePackage(tcon, OldDirFid, &volptr, &oldvptr,
+	if ((errorCode = GetVolumePackage(tcon, OldDirFid, &volptr, &oldvptr,
 					 MustBeDIR, &parent, &client, WRITE_LOCK,
-					 &rights, &anyrights)) {
+					 &rights, &anyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}
@@ -2202,10 +2202,10 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
-    if (errorCode = CheckWriteMode(oldvptr, rights, PRSFS_DELETE)) {
+    if ((errorCode = CheckWriteMode(oldvptr, rights, PRSFS_DELETE))) {
 	goto Bad_Rename;
     }
-    if (errorCode = CheckWriteMode(newvptr, newrights, PRSFS_INSERT)) {
+    if ((errorCode = CheckWriteMode(newvptr, newrights, PRSFS_INSERT))) {
 	goto Bad_Rename;
     }
 
@@ -2217,14 +2217,14 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
     if (oldvptr->disk.cloned)
     {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  old dir\n"));
-	 if ( errorCode = CopyOnWrite(oldvptr, volptr) )
+	 if ( ( errorCode = CopyOnWrite(oldvptr, volptr) ) )
 		goto Bad_Rename;
     }
     SetDirHandle(&olddir, oldvptr);
     if (newvptr->disk.cloned)
     {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  new dir\n"));
-	if ( errorCode = CopyOnWrite(newvptr, volptr) )
+	if ( ( errorCode = CopyOnWrite(newvptr, volptr) ) )
 		goto Bad_Rename;	
     }
 
@@ -2349,7 +2349,7 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
     if ((fileptr->disk.type == vDirectory ) && (fileptr->disk.cloned) )
     {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
-	if ( errorCode = CopyOnWrite(fileptr, volptr) )
+	if ( ( errorCode = CopyOnWrite(fileptr, volptr) ) )
 		goto Bad_Rename;
     }
 
@@ -2397,7 +2397,7 @@ SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
      * highly unlikely that it would work since it would involve issuing
      * another create.
      */
-    if (errorCode = Create(&newdir,(char *) NewName, &fileFid))
+    if ((errorCode = Create(&newdir,(char *) NewName, &fileFid)))
 	goto Bad_Rename;
 
     /* Delete the old name */
@@ -2518,7 +2518,7 @@ afs_int32 SRXAFS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName, OutOldDi
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Rename;
 
     code = SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName,
@@ -2600,9 +2600,9 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_SymLink;
     }
 
@@ -2610,7 +2610,7 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has insert (and write) access to the parent directory? */
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
 	goto Bad_SymLink;
     }
 
@@ -2632,9 +2632,9 @@ SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus
     }
  
     /* get a new vnode for the symlink and set it up */
-    if (errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
+    if ((errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
 				   Name, OutFid, vSymlink,
-				   nBlocks(strlen((char *) LinkContents)))) {
+				   nBlocks(strlen((char *) LinkContents))))) {
 	goto Bad_SymLink;
     }
 
@@ -2710,7 +2710,7 @@ afs_int32 SRXAFS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, O
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Symlink;
 
     code = SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid,
@@ -2793,9 +2793,9 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_Link;
     }
 
@@ -2803,7 +2803,7 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
     SetVolumeSync(Sync, volptr);
 
     /* Can the caller insert into the parent directory? */
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
 	goto Bad_Link;
     }
 
@@ -2815,7 +2815,7 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
     }
 
     /* get the file vnode  */
-    if (errorCode = CheckVnode(ExistingFid, &volptr, &targetptr, WRITE_LOCK)) {
+    if ((errorCode = CheckVnode(ExistingFid, &volptr, &targetptr, WRITE_LOCK))) {
         goto Bad_Link;
     }
     if (targetptr->disk.type != vFile) {
@@ -2829,13 +2829,13 @@ SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirStatus, Sync)
     if (parentptr->disk.cloned)	
     {
 	ViceLog(25, ("Link : calling CopyOnWrite on  target dir\n"));
-	if ( errorCode = CopyOnWrite(parentptr, volptr))
+	if ( ( errorCode = CopyOnWrite(parentptr, volptr)))
 		goto Bad_Link;		/* disk full error */
     }
 
     /* add the name to the directory */
     SetDirHandle(&dir, parentptr);
-    if (errorCode = Create(&dir, (char *)Name, ExistingFid))
+    if ((errorCode = Create(&dir, (char *)Name, ExistingFid)))
 	goto Bad_Link;
     DFlush();
 
@@ -2908,7 +2908,7 @@ afs_int32 SRXAFS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus, OutDirSta
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Link;
 
     code = SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus,
@@ -2992,9 +2992,9 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it.
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_MakeDir;
     }
  
@@ -3013,15 +3013,15 @@ SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
     if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) ||
 	(errorCode = CheckWriteMode(parentptr, rights, PRSFS_WRITE))) {
 #else 
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
 #endif /* DIRCREATE_NEED_WRITE */ 
 	goto Bad_MakeDir;
     }
 
 #define EMPTYDIRBLOCKS 2
     /* get a new vnode and set it up */
-    if (errorCode = Alloc_NewVnode(parentptr, &parentdir, volptr, &targetptr,
-				   Name, OutFid, vDirectory, EMPTYDIRBLOCKS)) {
+    if ((errorCode = Alloc_NewVnode(parentptr, &parentdir, volptr, &targetptr,
+				   Name, OutFid, vDirectory, EMPTYDIRBLOCKS))) {
 	goto Bad_MakeDir;
     }
 
@@ -3102,7 +3102,7 @@ afs_int32 SRXAFS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, O
     FS_UNLOCK
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_MakeDir;
 
     code = SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid,
@@ -3175,9 +3175,9 @@ SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
+    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_RemoveDir;
     }
     debugvnode1 = *parentptr;
@@ -3186,14 +3186,14 @@ SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has delete (&write) access to the parent dir? */
-    if (errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE)) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE))) {
 	goto Bad_RemoveDir;
     }
 
     debugvnode2 = *parentptr;
     /* Do the actual delete of the desired (empty) directory, Name */
-    if (errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid,
-				 Name, MustBeDIR)) {
+    if ((errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid,
+				 Name, MustBeDIR))) {
 	goto Bad_RemoveDir;
     }
 
@@ -3258,7 +3258,7 @@ afs_int32 SRXAFS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_RemoveDir;
 
     code = SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync);
@@ -3331,9 +3331,9 @@ SAFSS_SetLock (acall, Fid, type, Sync)
      * Get the vnode and volume for the desired file along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_SetLock;
     }
 
@@ -3392,7 +3392,7 @@ afs_int32 SRXAFS_SetLock (acall, Fid, type, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_SetLock;
 
     code = SAFSS_SetLock (acall, Fid, type, Sync);
@@ -3457,9 +3457,9 @@ SAFSS_ExtendLock (acall, Fid, Sync)
      * Get the vnode and volume for the desired file along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_ExtendLock;
     }
 
@@ -3516,7 +3516,7 @@ afs_int32 SRXAFS_ExtendLock (acall, Fid, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_ExtendLock;
 
     code = SAFSS_ExtendLock (acall, Fid, Sync);
@@ -3582,9 +3582,9 @@ SAFSS_ReleaseLock (acall, Fid, Sync)
      * Get the vnode and volume for the desired file along with the caller's
      * rights to it
      */
-    if (errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
 				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights)) {
+				     &client, WRITE_LOCK, &rights, &anyrights))) {
 	goto Bad_ReleaseLock;
     }
 
@@ -3592,7 +3592,7 @@ SAFSS_ReleaseLock (acall, Fid, Sync)
     SetVolumeSync(Sync, volptr);
 
     /* Handle the actual lock release */
-    if (errorCode = HandleLocking(targetptr, rights, LockRelease))
+    if ((errorCode = HandleLocking(targetptr, rights, LockRelease)))
 	goto Bad_ReleaseLock;
 
     /* if no more locks left, a callback would be triggered here */
@@ -3650,7 +3650,7 @@ afs_int32 SRXAFS_ReleaseLock (acall, Fid, Sync)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_ReleaseLock;
 
     code = SAFSS_ReleaseLock (acall, Fid, Sync);
@@ -3729,7 +3729,7 @@ afs_int32 SRXAFS_GetStatistics (acall, Statistics)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, NOTACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetStatistics;
 
     code = GetStatistics (tcon, Statistics);
@@ -4199,7 +4199,7 @@ afs_int32 SRXAFS_GiveUpCallBacks (acall, FidArray, CallBackArray)
     FS_LOCK
     AFSCallStats.GiveUpCallBacks++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GiveUpCallBacks;
 
     if (FidArray->AFSCBFids_len < CallBackArray->AFSCBs_len) {
@@ -4364,7 +4364,7 @@ static afs_vtoi(aname)
     register int tc;
 
     temp = 0;
-    while(tc = *aname++) {
+    while((tc = *aname++)) {
 	if (tc > '9' ||	tc < '0') return 0; /* invalid name */
 	temp *= 10;
 	temp += tc - '0';
@@ -4497,7 +4497,7 @@ afs_int32 SRXAFS_GetVolumeInfo (acall, avolid, avolinfo)
     FS_UNLOCK
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GetVolumeInfo;
 
     code = GetVolumeInfo (tcon, avolid, avolinfo);
@@ -4565,7 +4565,7 @@ afs_int32 SRXAFS_GetVolumeStatus (acall, avolid, FetchVolStatus, Name, OfflineMs
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1,("SAFS_GetVolumeStatus for volume %u\n", avolid));
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GetVolumeStatus;
 
     FS_LOCK
@@ -4578,9 +4578,9 @@ afs_int32 SRXAFS_GetVolumeStatus (acall, avolid, FetchVolStatus, Name, OfflineMs
     }
     dummyFid.Volume = avolid, dummyFid.Vnode = (afs_int32)ROOTVNODE, dummyFid.Unique = 1;
 
-    if (errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights))
+				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_GetVolumeStatus;
 
     if ((VanillaUser(client)) && (!(rights & PRSFS_READ))) {
@@ -4656,7 +4656,7 @@ afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMs
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1,("SAFS_SetVolumeStatus for volume %u\n", avolid));
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_SetVolumeStatus;
 
     FS_LOCK
@@ -4669,9 +4669,9 @@ afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMs
     }
     dummyFid.Volume = avolid, dummyFid.Vnode = (afs_int32)ROOTVNODE, dummyFid.Unique = 1;
 
-    if (errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
+    if ((errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
 				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights))
+				     &client, READ_LOCK, &rights, &anyrights)))
 	goto Bad_SetVolumeStatus;
 
     if (VanillaUser(client)) {
@@ -4825,7 +4825,7 @@ afs_int32 SRXAFS_CheckToken (acall, AfsId, Token)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, ACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_CheckToken;
 
     code = FSERR_ECONNREFUSED;
@@ -4903,7 +4903,7 @@ afs_int32 SRXAFS_GetTime (acall, Seconds, USeconds)
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    if (code = CallPreamble(acall, NOTACTIVECALL, &tcon))
+    if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetTime;
 
     code = GetTime (tcon, Seconds, USeconds);
@@ -4963,7 +4963,7 @@ GetVolumePackage(tcon, Fid, volptr, targetptr, chkforDir, parent, client, lockty
     int	aCLSize;	    /* size of the access list */
     int	errorCode = 0;	    /* return code to caller */
 
-    if (errorCode = CheckVnode(Fid, volptr, targetptr, locktype))
+    if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
 	return(errorCode);
     if (chkforDir) {
 	if (chkforDir == MustNOTBeDIR && ((*targetptr)->disk.type == vDirectory))
@@ -5337,13 +5337,13 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
 	    VSetPartitionDiskUsage(volptr->partition);
 	    volptr->partition->flags |= PART_DONTUPDATE;
-	    if (errorCode = VDiskUsage(volptr, nBlocks(size))) {
+	    if ((errorCode = VDiskUsage(volptr, nBlocks(size)))) {
 		volptr->partition->flags &= ~PART_DONTUPDATE;
 		return(errorCode);
 	    }
 
 	    ViceLog(25, ("StoreData : calling CopyOnWrite on  target dir\n"));
-	    if ( errorCode = CopyOnWrite(targetptr, volptr))
+	    if ((errorCode = CopyOnWrite(targetptr, volptr)))
 	    {
 	    	ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
 	    	volptr->partition->flags &= ~PART_DONTUPDATE;
@@ -5372,8 +5372,8 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
 
     /* adjust the disk block count by the difference in the files */
     adjustSize = (int) (nBlocks(NewLength) - nBlocks(targetptr->disk.length));
-    if(errorCode = AdjustDiskUsage(volptr, adjustSize,
-				   adjustSize - SpareComp(volptr))) {
+    if((errorCode = AdjustDiskUsage(volptr, adjustSize,
+				   adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
 	return(errorCode);
     }
@@ -5782,7 +5782,7 @@ DeleteTarget(parentptr, volptr, targetptr, dir, fileFid, Name, ChkForDir)
     if (parentptr->disk.cloned)	
     {
 	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
-	if ( errorCode = CopyOnWrite(parentptr, volptr))
+	if ((errorCode = CopyOnWrite(parentptr, volptr)))
 	{
 		ViceLog(20, ("DeleteTarget %s: CopyOnWrite failed %d\n",Name,errorCode));
 		return errorCode;
@@ -6308,8 +6308,8 @@ Alloc_NewVnode(parentptr, dir, volptr, targetptr, Name, OutFid, FileType, Blocks
     Inode inode=0;
     Inode nearInode;		/* hint for inode allocation in solaris */
 
-    if (errorCode = AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
-				    BlocksPreallocatedForVnode)) {
+    if ((errorCode = AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
+				    BlocksPreallocatedForVnode))) {
 	ViceLog(25, ("Insufficient space to allocate %d blocks\n", 
 		     BlocksPreallocatedForVnode));
 	return(errorCode);
@@ -6352,7 +6352,7 @@ Alloc_NewVnode(parentptr, dir, volptr, targetptr, Name, OutFid, FileType, Blocks
     if (parentptr->disk.cloned)	
     {
 	ViceLog(25, ("Alloc_NewVnode : CopyOnWrite called\n"));
-	if ( errorCode = CopyOnWrite(parentptr, volptr))  /* disk full */
+	if ((errorCode = CopyOnWrite(parentptr, volptr)))  /* disk full */
 	{
 		ViceLog(25, ("Alloc_NewVnode : CopyOnWrite failed\n"));
 		/* delete the vnode previously allocated */
@@ -6372,7 +6372,7 @@ Alloc_NewVnode(parentptr, dir, volptr, targetptr, Name, OutFid, FileType, Blocks
     
     /* add the name to the directory */
     SetDirHandle(dir, parentptr);
-    if (errorCode = Create(dir,(char *)Name, OutFid)) {
+    if ((errorCode = Create(dir,(char *)Name, OutFid))) {
 	(*targetptr)->delete = 1;
 	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
 	IH_REALLYCLOSE((*targetptr)->handle);
@@ -7116,7 +7116,7 @@ FileNameOK(aname)
 	/* watch for @sys on the right */
 	if (strcmp(aname+i-4, "@sys") == 0) return 0;
     }
-    while (tc = *aname++) {
+    while ((tc = *aname++)) {
 	if (tc == '/') return 0;    /* very bad character to encounter */
     }
     return 1;	/* file name is ok */

@@ -53,7 +53,7 @@ struct osi_file {
 #else
     afs_int32 offset;
 #endif
-    int	(*proc)();	/* proc, which, if not null, is called on writes */
+    int	(*proc)(struct osi_file *afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
     char *rock;		/* rock passed to proc */
     ino_t inum;         /* guarantee validity of hint */
 #if defined(UKERNEL)

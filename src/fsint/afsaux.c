@@ -72,10 +72,7 @@ static afs_int32 bslosers = 0;
 /*
  * XDR chars; from user mode xdr package.
  */
-bool_t
-xdr_char(xdrs, sp)
-	register XDR *xdrs;
-	char *sp;
+bool_t xdr_char(register XDR *xdrs, char *sp)
 {
 	afs_int32 l;
 
@@ -108,10 +105,7 @@ xdr_char(xdrs, sp)
  */
 #ifndef	AFS_SUN5_ENV
 #ifndef AFS_HPUX110_ENV
-bool_t
-xdr_wrapstring(xdrs, cpp)
-	XDR *xdrs;
-	char **cpp;
+bool_t xdr_wrapstring(XDR *xdrs, char **cpp)
 {
 	if (xdr_string(xdrs, cpp, 1024)) {
 		return(TRUE);
@@ -131,13 +125,8 @@ xdr_wrapstring(xdrs, cpp)
  * > elemsize: size of each element
  * > xdr_elem: routine to XDR each element
  */
-bool_t
-xdr_vector(xdrs, basep, nelem, elemsize, xdr_elem)
-	register XDR *xdrs;
-	register char *basep;
-	register u_int nelem;
-	register u_int elemsize;
-	register xdrproc_t xdr_elem;	
+bool_t xdr_vector(register XDR *xdrs, register char *basep, 
+	register u_int nelem, register u_int elemsize, register xdrproc_t xdr_elem)
 {
 	register u_int i;
 	register char *elptr;
@@ -178,9 +167,8 @@ xdr_CBS(XDR *x, struct CBS *abbs)
     }
 }
 
-xdr_BBS(x, abbs)
-    XDR *x;
-    struct BBS *abbs; {
+bool_t xdr_BBS(XDR *x, struct BBS *abbs)
+{
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {
 	NVFREE(abbs->SeqBody, abbs->MaxSeqLen);
@@ -205,7 +193,7 @@ xdr_BBS(x, abbs)
     }
 }
 
-xdr_AFSAccessList(XDR *x, AFSAccessList *abbs)
+bool_t xdr_AFSAccessList(XDR *x, AFSAccessList *abbs)
 {
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {

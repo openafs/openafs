@@ -174,7 +174,7 @@ EXT afs_uint32 rx_MyMaxSendSize INIT(8588);
 EXT afs_uint32 rx_maxJumboRecvSize INIT(RX_MAX_PACKET_SIZE);
 
 /* need this to permit progs to run on AIX systems */
-EXT int (*rxi_syscallp) () INIT(0); 
+EXT int (*rxi_syscallp) (afs_uint32 a3, afs_uint32 a4, void *a5) INIT(0); 
 
 /* List of free queue entries */
 EXT struct rx_serverQueueEntry *rx_FreeSQEList INIT(0);

@@ -34,7 +34,6 @@ extern bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp);
 /* xdr_rx.c */
 extern void xdrrx_create(register XDR *xdrs, register struct rx_call *call, register enum xdr_op op);
 
-
 #ifndef XDR_AFS_DECLS_ONLY
 
 /* xdr_array.c */

@@ -73,7 +73,7 @@ static int rxepoch_allocUnit = 10;   /* Allocation unit (number of epoch records
 int rxevent_nFree;		   /* Number of free event records */
 int rxevent_nPosted;	   /* Current number of posted events */
 int rxepoch_nFree;		   /* Number of free epoch records */
-static int (*rxevent_ScheduledEarlierEvent)(); /* Proc to call when an event is scheduled that is earlier than all other events */
+static int (*rxevent_ScheduledEarlierEvent)(void); /* Proc to call when an event is scheduled that is earlier than all other events */
 struct xfreelist { 
     void *mem;
     int size;
@@ -111,10 +111,7 @@ pthread_mutex_t rx_event_mutex;
 
 /* Pass in the number of events to allocate at a time */
 int rxevent_initialized = 0;
-void
-rxevent_Init(nEvents, scheduler)
-    int nEvents;
-    int (*scheduler)();
+void rxevent_Init(int nEvents, void (*scheduler)(void))
 {
     LOCK_EV_INIT
     if (rxevent_initialized) {
@@ -172,8 +169,16 @@ struct rxepoch *rxepoch_Allocate(struct clock *when)
  * "when" argument specifies when "func" should be called, in clock (clock.h)
  * units. */
 
-struct rxevent *rxevent_Post(struct clock *when, void (*func)(),
-			     void *arg, void *arg1)
+#if 0
+struct rxevent *rxevent_Post(struct clock *when, 
+	void (*func)(struct rxevent *event,
+        struct rx_connection *conn, struct rx_call *acall),
+	void *arg, void *arg1)
+#else
+struct rxevent *rxevent_Post(struct clock *when, 
+	void (*func)(),
+	void *arg, void *arg1)
+#endif
 {
     register struct rxevent *ev, *evqe, *evqpr;
     register struct rxepoch *ep, *epqe, *epqpr;
@@ -281,19 +286,11 @@ struct rxevent *rxevent_Post(struct clock *when, void (*func)(),
 #ifdef RX_ENABLE_LOCKS
 #ifdef RX_REFCOUNT_CHECK
 int rxevent_Cancel_type = 0;
-void rxevent_Cancel_1(ev, call, type)
-    register struct rxevent *ev;
-    register struct rx_call *call;
-    register int type;
-#else /* RX_REFCOUNT_CHECK */
-void rxevent_Cancel_1(ev, call)
-    register struct rxevent *ev;
-    register struct rx_call *call;
-#endif /* RX_REFCOUNT_CHECK */
-#else  /* RX_ENABLE_LOCKS */
-void rxevent_Cancel_1(ev)
-    register struct rxevent *ev;
-#endif /* RX_ENABLE_LOCKS */
+#endif
+#endif
+
+void rxevent_Cancel_1(register struct rxevent *ev, 
+	register struct rx_call *call, register int type)
 {
 #ifdef RXDEBUG
     if (rx_Log_event) {
@@ -345,8 +342,7 @@ void rxevent_Cancel_1(ev)
  * and the function returns 1.  If there are is no next epoch, the function
  * returns 0.
  */
-int rxevent_RaiseEvents(next)
-    struct clock *next;
+int rxevent_RaiseEvents(struct clock *next)
 {
     register struct rxepoch *ep;
     register struct rxevent *ev;

@@ -109,7 +109,9 @@ int (*swapNameProgram)() = 0;
 
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn);
+#ifdef RX_ENABLE_LOCKS
 static void rxi_SetAcksInTransmitQueue(register struct rx_call *call);
+#endif
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
@@ -1692,7 +1694,8 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
  * and (2) only use it once.  Other uses currently void your warranty
  */
 void rx_SetArrivalProc(register struct rx_call *call, 
-	register VOID (*proc)(),
+	register VOID (*proc)(register struct rx_call *call,
+        register struct multi_handle *mh, register int index),
 	register VOID *handle, register VOID *arg)
 {
     call->arrivalProc = proc;

@@ -857,9 +857,7 @@ h_TossStuff_r(host)
 
 
 /* Called by rx when a server connection disappears */
-h_FreeConnection(tcon)
-    struct rx_connection *tcon;
-
+int h_FreeConnection(struct rx_connection *tcon)
 {
     register struct client *client;
 

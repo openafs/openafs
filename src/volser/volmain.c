@@ -88,12 +88,14 @@ int Testing = 0; /* for ListViceInodes */
 		       }
 
 
-static MyBeforeProc () {
+static MyBeforeProc (struct rx_call *acall)
+{
     runningCalls++;
     return 0;
 }
 
-static MyAfterProc () {
+static MyAfterProc (struct rx_call *acall, afs_int32 code)
+{
     runningCalls--;
     return 0;
 }
@@ -363,8 +365,8 @@ usage:
     if (securityObjects[0] == (struct rx_securityClass *) 0) Abort("rxnull_NewServerSecurityObject");
     service = rx_NewService(0, VOLSERVICE_ID, "VOLSER", securityObjects, 3, AFSVolExecuteRequest);
     if (service == (struct rx_service *) 0) Abort("rx_NewService");
-    rx_SetBeforeProc(service, (char (*)()) MyBeforeProc);
-    rx_SetAfterProc(service, (char (*)()) MyAfterProc);
+    rx_SetBeforeProc(service, MyBeforeProc);
+    rx_SetAfterProc(service, MyAfterProc);
     rx_SetIdleDeadTime(service, 0);	/* never timeout */
     if (lwps < 4)
 	lwps = 4;

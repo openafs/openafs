@@ -87,16 +87,19 @@ RCSID("$Header$");
 #  define AFS_RPC_INLINE_T afs_int32
 #endif	/* KERNEL */
 
+/* Static prototypes */
 #if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
-static bool_t	xdrrx_getint64();
-static bool_t	xdrrx_putint64();
-#endif /* defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT) || defined(AFS_HPUX_64BIT_ENV) */
-static bool_t	xdrrx_getint32();
-static bool_t	xdrrx_putint32();
-static bool_t	xdrrx_getbytes();
-static bool_t	xdrrx_putbytes();
-static AFS_RPC_INLINE_T *	xdrrx_inline();
-void		xdrrx_destroy();
+static bool_t xdrrx_getint64(XDR *xdrs, long *lp);
+static bool_t xdrrx_putint64(XDR *xdrs, long *lp);
+#endif
+static bool_t xdrrx_getint32(XDR *xdrs, afs_int32 *lp);
+static bool_t xdrrx_putint32(register XDR *xdrs, register afs_int32 *lp);
+static bool_t xdrrx_getbytes(register XDR *xdrs,
+        register caddr_t addr, register u_int len);
+static bool_t xdrrx_putbytes(register XDR *xdrs,
+        register caddr_t addr, register u_int len);
+static AFS_RPC_INLINE_T *xdrrx_inline(register XDR *xdrs, register u_int len);
+
 
 /*
  * Ops vector for stdio type XDR
@@ -140,8 +143,7 @@ int  rx_pin_failed = 0;
 #endif
 
 #if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
-static bool_t
-xdrrx_getint64(XDR *xdrs, long *lp)
+static bool_t xdrrx_getint64(XDR *xdrs, long *lp)
 {
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
 	afs_int32 i;
@@ -153,8 +155,7 @@ xdrrx_getint64(XDR *xdrs, long *lp)
 	return FALSE;
 }
 
-static bool_t
-xdrrx_putint64(XDR *xdrs, long *lp)
+static bool_t xdrrx_putint64(XDR *xdrs, long *lp)
 {
 	afs_int32 code, i = htonl(*lp);
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
@@ -164,10 +165,7 @@ xdrrx_putint64(XDR *xdrs, long *lp)
 }
 #endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
 
-static bool_t
-xdrrx_getint32(xdrs, lp)
-	register XDR *xdrs;
-	register afs_int32 *lp;
+static bool_t xdrrx_getint32(XDR *xdrs, afs_int32 *lp)
 {
 	afs_int32 l;
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
@@ -202,10 +200,7 @@ xdrrx_getint32(xdrs, lp)
 	return FALSE;
 }
 
-static bool_t
-xdrrx_putint32(xdrs, lp)
-	register XDR *xdrs;
-	register afs_int32 *lp;
+static bool_t xdrrx_putint32(register XDR *xdrs, register afs_int32 *lp)
 {
 	afs_int32 code, l = htonl(*lp);
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
@@ -233,11 +228,8 @@ xdrrx_putint32(xdrs, lp)
 	return code;
 }
 
-static bool_t
-xdrrx_getbytes(xdrs, addr, len)
-	register XDR *xdrs;
-	register caddr_t addr;
-	register u_int len;
+static bool_t xdrrx_getbytes(register XDR *xdrs, 
+	register caddr_t addr, register u_int len)
 {
         afs_int32 code;
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
@@ -266,11 +258,8 @@ xdrrx_getbytes(xdrs, addr, len)
 	return code;
 }
 
-static bool_t
-xdrrx_putbytes(xdrs, addr, len)
-	register XDR *xdrs;
-	register caddr_t addr;
-	register u_int len;
+static bool_t xdrrx_putbytes(register XDR *xdrs, 
+	register caddr_t addr, register u_int len)
 {
         afs_int32 code;
 	register struct rx_call *call = ((struct rx_call *) (xdrs)->x_private);
@@ -300,28 +289,20 @@ xdrrx_putbytes(xdrs, addr, len)
 }
 
 #ifdef undef /* not used */
-static u_int
-xdrrx_getpos(xdrs)
-	register XDR *xdrs;
+static u_int xdrrx_getpos(register XDR *xdrs)
 {
         /* Not supported.  What error code should we return? (It doesn't matter:  it will never be called, anyway!) */
         return -1;
 }
 
-static bool_t
-xdrrx_setpos(xdrs, pos) 
-	register XDR *xdrs;
-	u_int pos;
+static bool_t xdrrx_setpos(register XDR *xdrs, u_int pos) 
 { 
         /* Not supported */
         return FALSE;
 }
 #endif
 
-static AFS_RPC_INLINE_T *
-xdrrx_inline(xdrs, len)
-	register XDR *xdrs;
-	register u_int len;
+static AFS_RPC_INLINE_T *xdrrx_inline(register XDR *xdrs, register u_int len)
 {
         /* I don't know what this routine is supposed to do, but the stdio module returns null, so we will, too */
 	return (0);

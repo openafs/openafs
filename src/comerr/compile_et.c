@@ -354,17 +354,16 @@ int main (argc, argv) int argc; char **argv; {
 		"static const struct error_table et = { text, %ldL, %d };\n\n",
 		(long int) table_number, current);
 	fputs("static struct et_list etlink = { 0, &et};\n\n", cfile);
-	fprintf(cfile, "void initialize_%s_error_table (%s) {\n",
-		table_name, (language == lang_C) ? "void" : "NOARGS");
+	fprintf(cfile, "void initialize_%s_error_table(void) {\n", table_name);
 	fputs("    add_to_error_table(&etlink);\n", cfile);
 	fputs("}\n", cfile);
 	fclose(cfile);
 
 
-	fprintf (hfile, "extern void initialize_%s_error_table ();\n",
+	fprintf (hfile, "extern void initialize_%s_error_table(void);\n",
 		 table_name);
     } else {
-	fprintf (hfile, "#define initialize_%s_error_table()\n",
+	fprintf (hfile, "#define initialize_%s_error_table(void)\n",
 		 table_name);
     }
 

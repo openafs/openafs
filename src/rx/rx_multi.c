@@ -22,11 +22,9 @@ RCSID("$Header$");
 
 /* multi.c and multi.h, together with some rxgen hooks, provide a way of making multiple, but similar, rx calls to multiple hosts simultaneously */
 
-struct multi_handle *multi_Init(conns, nConns)
-    struct rx_connection **conns;
-    register int nConns;
+struct multi_handle *multi_Init(struct rx_connection **conns, 
+	register int nConns)
 {
-    void multi_Ready();
     register struct rx_call **calls;
     register short *ready;
     register struct multi_handle *mh;
@@ -53,8 +51,7 @@ struct multi_handle *multi_Init(conns, nConns)
 }
 
 /* Return the user's connection index of the most recently ready call; that is, a call that has received at least one reply packet */
-int multi_Select(mh)
-    register struct multi_handle *mh;
+int multi_Select(register struct multi_handle *mh)
 {
     int index;
     SPLVAR;
@@ -86,10 +83,8 @@ int multi_Select(mh)
 }
 
 /* Called by Rx when the first reply packet of a call is received, or the call is aborted. */
-void multi_Ready(call, mh, index)
-    register struct rx_call *call;
-    register struct multi_handle *mh;
-    register int index;
+void multi_Ready(register struct rx_call *call, 
+	register struct multi_handle *mh, register int index)
 {
 #ifdef RX_ENABLE_LOCKS
     MUTEX_ENTER(&mh->lock);
@@ -105,8 +100,7 @@ void multi_Ready(call, mh, index)
 }
 
 /* Called when the multi rx call is over, or when the user aborts it (by using the macro multi_Abort) */
-void multi_Finalize(mh)
-register struct multi_handle *mh;
+void multi_Finalize(register struct multi_handle *mh)
 {
     register int i;
     register int nCalls = mh->nConns;
@@ -124,8 +118,7 @@ register struct multi_handle *mh;
 }
 
 /* ignores all remaining multiRx calls */
-void multi_Finalize_Ignore(mh)
-register struct multi_handle *mh;
+void multi_Finalize_Ignore(register struct multi_handle *mh)
 {
     register int i;
     register int nCalls = mh->nConns;

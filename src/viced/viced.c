@@ -484,7 +484,7 @@ main(argc, argv)
 	ViceLog(0, ("Failed to initialize RX, probably two servers running.\n"));
 	exit(-1);
     }
-    rx_SetDestroyConnProc(tservice, (char (*)()) h_FreeConnection);
+    rx_SetDestroyConnProc(tservice, h_FreeConnection);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
     rx_SetCheckReach(tservice, 1);

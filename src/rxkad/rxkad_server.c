@@ -121,7 +121,9 @@ static afs_int32 get_random_int32 (void)
 */
 
 struct rx_securityClass *rxkad_NewServerSecurityObject (
-	rxkad_level level, char *get_key_rock, int (*get_key)(), int (*user_ok)())
+	rxkad_level level, char *get_key_rock, 
+	int (*get_key)(char *get_key_rock, int kvno, struct ktc_encryptionKey *serverKey),
+	int (*user_ok)(char *name, char *instance, char *cell, afs_int32 kvno))
 {   struct rx_securityClass *tsc;
     struct rxkad_sprivate   *tsp;
     int size;

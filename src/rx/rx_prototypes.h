@@ -38,7 +38,9 @@ extern void rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket *so
 extern void rx_WakeupServerProcs(void);
 extern struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *socketp);
 extern void rx_SetArrivalProc(register struct rx_call *call, 
-        register VOID (*proc)(), register VOID *handle, register VOID *arg);
+        register VOID (*proc)(register struct rx_call *call,
+        register struct multi_handle *mh, register int index), 
+	register VOID *handle, register VOID *arg);
 extern afs_int32 rx_EndCall(register struct rx_call *call, afs_int32 rc);
 extern void rx_Finalize(void);
 extern void rxi_PacketsUnWait(void);
@@ -196,10 +198,26 @@ extern void rx_ReleaseCachedConnection(struct rx_connection *conn);
 
 
 /* rx_event.c */
-extern struct rxevent *rxevent_Post(struct clock *when, void (*func)(),
-                             void *arg, void *arg1);
+#if 0
+extern struct rxevent *rxevent_Post(struct clock *when, 
+	void (*func)(struct rxevent *event,
+        struct rx_connection *conn, struct rx_call *acall),
+        void *arg, void *arg1);
+/* this func seems to be called with tons of different style routines, need to look
+at another time. */
+#else
+extern struct rxevent *rxevent_Post(struct clock *when, 
+	void (*func)(),
+        void *arg, void *arg1);
+#endif
 extern void shutdown_rxevent(void);
 extern struct rxepoch *rxepoch_Allocate(struct clock *when);
+extern void rxevent_Init(int nEvents, void (*scheduler)(void));
+extern void rxevent_Cancel_1(register struct rxevent *ev,
+        register struct rx_call *call, register int type);
+extern int rxevent_RaiseEvents(struct clock *next);
+
+
 
 
 /* rx_getaddr.c */
@@ -313,6 +331,14 @@ extern int ntoh_syserr_conv(int code);
 
 
 /* rx_multi.c */
+extern struct multi_handle *multi_Init(struct rx_connection **conns, 
+        register int nConns);
+extern int multi_Select(register struct multi_handle *mh);
+extern void multi_Ready(register struct rx_call *call,
+        register struct multi_handle *mh, register int index);
+extern void multi_Finalize(register struct multi_handle *mh);
+extern void multi_Finalize_Ignore(register struct multi_handle *mh);
+
 
 
 /* rx_null.c */

@@ -154,23 +154,23 @@ typedef struct {
  * 64 bits. I've only done this for the kernel, since other changes may
  * be necessary if we make a 64 bit user version of AFS.
  */
-		bool_t	(*x_getint64)(); /* get 32 bits into a long */
-		bool_t	(*x_putint64)(); /* send 32 bits of a long */
+		bool_t	(*x_getint64)(void *xdrs, afs_int64 *lp); /* get 32 bits into a long */
+		bool_t	(*x_putint64)(void *xdrs, afs_int64 *lp); /* send 32 bits of a long */
 #endif /* AFS_SGI61_ENV */
 #if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
-		bool_t	(*x_getint32)();	/* get an afs_int32 from underlying stream */
-		bool_t	(*x_putint32)();	/* put an afs_int32 to " */
+		bool_t	(*x_getint32)(void *xdrs, afs_int32 *lp);	/* get an afs_int32 from underlying stream */
+		bool_t	(*x_putint32)(void *xdrs, afs_int32 *lp);	/* put an afs_int32 to " */
 #endif
-		bool_t	(*x_getbytes)();/* get some bytes from " */
-		bool_t	(*x_putbytes)();/* put some bytes to " */
-		u_int	(*x_getpostn)();/* returns bytes off from beginning */
-		bool_t  (*x_setpostn)();/* lets you reposition the stream */
-		afs_int32 *	(*x_inline)();	/* buf quick ptr to buffered data */
-		void	(*x_destroy)();	/* free privates of this xdr_stream */
+		bool_t	(*x_getbytes)(void *xdrs, caddr_t addr, u_int len);/* get some bytes from " */
+		bool_t	(*x_putbytes)(void *xdrs, caddr_t addr, u_int len);/* put some bytes to " */
+		u_int	(*x_getpostn)(void *xdrs);/* returns bytes off from beginning */
+		bool_t  (*x_setpostn)(void *xdrs, u_int pos);/* lets you reposition the stream */
+		afs_int32 *	(*x_inline)(void *xdrs, u_int len);	/* buf quick ptr to buffered data */
+		void	(*x_destroy)(void *xdrs);	/* free privates of this xdr_stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
-		bool_t  (*x_control)();
-		bool_t  (*x_getint32)();
-		bool_t  (*x_putint32)();
+		bool_t  (*x_control)(void *xdrs);
+		bool_t  (*x_getint32)(void *xdrs, afs_int32 *lp);
+		bool_t  (*x_putint32)(void *xdrs, afs_int32 *lp);
 #endif
 	} *x_ops;
 	caddr_t 	x_public;	/* users' data */
