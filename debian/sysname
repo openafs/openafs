@@ -1,5 +1,5 @@
 #!/bin/sh
-case `arch` in
+case `dpkg --print-installation-architecture` in
     alpha)
 	echo alpha_linux_22
 	;;
