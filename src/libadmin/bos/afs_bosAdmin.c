@@ -3112,7 +3112,7 @@ int ADMINAPI bos_ExecutableRestartTimeSet(
     restartTime.sec = time.sec;
     restartTime.day = time.day;
 
-    tst = BOZO_SetRestartTime(b_handle->server, restartType, restartTime);
+    tst = BOZO_SetRestartTime(b_handle->server, restartType, &restartTime);
 
     if (tst == 0) {
 	rc = 1;
