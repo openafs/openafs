@@ -169,7 +169,7 @@ void afs_StoreWarn(register afs_int32 acode, afs_int32 avolume, register afs_int
 		afs_warnuser(problem_fmt, avolume, partfull);
 	}
 	else
-#ifndef	AFS_SUN5_ENV
+#ifdef	EDQUOT
 	    /* EDQUOT doesn't exist on solaris and won't be sent by the server.
 	     * Instead ENOSPC will be sent...
 	     */

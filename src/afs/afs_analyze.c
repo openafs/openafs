@@ -262,6 +262,17 @@ int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
 	return EWOULDBLOCK;
     if (acode == VNOVNODE)
 	return ENOENT;
+    if (acode == VDISKFULL)
+	return ENOSPC;
+    if (acode == VOVERQUOTA)
+	return
+#ifdef EDQUOT
+	    EDQUOT
+#else
+	    ENOSPC
+#endif
+	    ;
+
     return acode;
 
 } /*afs_CheckCode*/
