@@ -19,7 +19,7 @@
 #include "osiqueue.h"
 
 #define OSI_LOG_DEFAULTSIZE	1000
-#define OSI_LOG_STRINGSIZE	30
+#define OSI_LOG_STRINGSIZE	128
 #define OSI_LOG_MAXPARMS	4	/* max # of int parms */
 
 typedef struct osi_logEntry {
