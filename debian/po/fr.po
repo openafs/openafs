@@ -14,8 +14,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
-"POT-Creation-Date: 2003-10-13 00:08-0400\n"
-"PO-Revision-Date: 2003-10-16 23:34+0100\n"
+"POT-Creation-Date: 2003-11-20 16:00-0500\n"
+"PO-Revision-Date: 2004-03-09 18:34+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -26,8 +26,8 @@ msgstr ""
 #: ../openafs-client.templates:3
 msgid "What hosts are DB servers for your home cell?"
 msgstr ""
-"Quels hôtes sont serveurs de bases de données pour votre cellule locale "
-"(« home cell ») ?"
+"Hôtes serveurs de bases de données pour votre cellule locale (« home "
+"cell ») :"
 
 #. Description
 #: ../openafs-client.templates:3
@@ -57,7 +57,7 @@ msgstr ""
 #. Description
 #: ../openafs-client.templates:16
 msgid "What AFS cell does this workstation belong to?"
-msgstr "À quelle cellule AFS ce poste de travail appartient-elle ?"
+msgstr "Cellule AFS à laquelle ce poste de travail appartient :"
 
 #. Description
 #: ../openafs-client.templates:16
@@ -72,13 +72,13 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kb)?"
-msgstr "Quelle est la taille de votre cache pour AFS (en kilo-octets) ?"
+msgid "How large is your AFS cache (kB)?"
+msgstr "Taille de votre cache pour AFS (en kilo-octets) :"
 
 #. Description
 #: ../openafs-client.templates:24
 msgid ""
-"AFS uses a  area of the disk to cache remote files for faster access.  This "
+"AFS uses an  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
@@ -177,8 +177,8 @@ msgstr ""
 #: ../openafs-client.templates:65
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
-"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION if "
-"this machine is the first database server in a new cell ."
+"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
+"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
 msgstr ""
 "Si vous créez /afs de manière dynamique, vous aurez peut-être à créer /etc/"
 "openafs/CellAlias pour inclure les alias des cellules communes. NE "
