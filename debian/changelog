@@ -1,8 +1,10 @@
-openafs (1.2.11-3) UNRELEASED; urgency=low
+openafs (1.2.11-3) unstable; urgency=high
 
+  * Now that libopenafs-dev contains binaries, it should have shared
+    library dependencies, Closes: #267509
   * New fr.po from Christian Perrier, Closes: #237098
 
- -- Sam Hartman <hartmans@debian.org>  Thu, 12 Aug 2004 18:37:48 -0400
+ -- Sam Hartman <hartmans@debian.org>  Tue, 24 Aug 2004 12:10:02 -0400
 
 openafs (1.2.11-2) unstable; urgency=low
 

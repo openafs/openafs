@@ -63,6 +63,7 @@ Package: libopenafs-dev
 Section: libdevel
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa
 Priority: extra
+Depends: ${shlibs:Depends}
 Description: The AFS distributed filesystem- development libraries
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access
