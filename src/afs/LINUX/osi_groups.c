@@ -156,10 +156,9 @@ setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
     AFS_STATCNT(setpag);
 
     group_info = afs_getgroups(*cr);
-    g0 = GROUP_AT(group_info, 0);
-    g1 = GROUP_AT(group_info, 1);
-
-    if (afs_get_pag_from_groups(g0, g1) == NOPAG) {
+    if (group_info->ngroups < 2
+	||  afs_get_pag_from_groups(GROUP_AT(group_info, 0),
+				    GROUP_AT(group_info, 1)) == NOPAG) {
 	/* We will have to make sure group_info is big enough for pag */
 	struct group_info *tmp;
 	int i;
