@@ -53,6 +53,29 @@ AFSDEV_BUILDTYPE = NONE
 !UNDEF _CRTDBG_MAP_ALLOC
 !ENDIF
 
+# Limit default include and library directories to those specified for build.
+
+!IFNDEF AFSDEV_INCLUDE
+!ERROR Must define AFSDEV_INCLUDE to be the default include directories.
+!ENDIF
+
+!IF ((!DEFINED(INCLUDE)) && ([set INCLUDE=$(AFSDEV_INCLUDE)] != 0))
+#    If env. var. INCLUDE not defined then macro assignment won't set it.
+!ERROR Failed setting environment variable INCLUDE.
+!ENDIF
+INCLUDE = $(AFSDEV_INCLUDE)
+
+
+!IFNDEF AFSDEV_LIB
+!ERROR Must define AFSDEV_LIB to be the default library directories.
+!ENDIF
+
+!IF ((!DEFINED(LIB)) && ([set LIB=$(AFSDEV_LIB)] != 0))
+#    If env. var. LIB not defined then macro assignment won't set it.
+!ERROR Failed setting environment variable LIB.
+!ENDIF
+LIB = $(AFSDEV_LIB)
+
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VERSION=1.2.11
 AFSPRODUCT_FILE_VERSION=1,2,1100,0

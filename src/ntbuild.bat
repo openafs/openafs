@@ -81,6 +81,8 @@ REM     AFSVER_CL  = version of the Microsoft compiler "1200" for VC6;
 REM                  or "1300" for VC7 (.NET)
 REM                  or "1310" for .NET 2003
 
+set AFSVER_CL=1200
+
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
 REM Location of Microsoft Visual C++ development folder (8.3 short name)
@@ -93,10 +95,10 @@ REM Location of npapi.h (from DDK or Platform SDK samples - 8.3 short name)
 set NTDDKDIR=c:\progra~1\micros~5
 
 REM Location of netmpr.h/netspi.h (from Windows 95/98 DDK - 8.3 short name)
-SET 9XDDKDIR=c:\progra~1\micros~6
+SET W9XDDKDIR=c:\progra~1\micros~6
 
-set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include;%MSVCDIR%\mfc\include
-set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%9XDDKDIR%\include
+set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\atl\include;%MSVCDIR%\include;%MSVCDIR%\mfc\include
+set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%W9XDDKDIR%\include
 set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
 set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin
 

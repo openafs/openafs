@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd -I..\client_config
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd -I..\client_config
 
 
 # include the primary makefile

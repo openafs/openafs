@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I ..\afsd
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\afsd
 
 # include the primary makefile
 RELDIR=WINNT\client_config
