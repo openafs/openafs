@@ -398,6 +398,13 @@ char *aname; {
     return 0;	/* all done */
 }
 
+int cmd_IsAdministratorCommand(as)
+register struct cmd_syndesc *as;
+{
+    as->flags |= CMD_ADMIN;
+    return 0;
+} 
+
 int cmd_Seek(as, apos)
 register struct cmd_syndesc *as;
 int apos; {
@@ -594,6 +601,7 @@ char **argv;
 	    ts = cmd_CreateSyntax("help", HelpProc, (char*)0,
 				  "get help on commands");
 	    cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
+	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, (char *)0);
 
 	    ts = cmd_CreateSyntax("apropos", AproposProc, (char*)0,
 				  "search by help text");
