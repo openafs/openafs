@@ -1509,6 +1509,19 @@ int GetClient(struct rx_connection * tcon, struct client **cp)
     H_LOCK
 
     *cp = client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key);
+    if (client == NULL || client->tcon == NULL) {
+	ViceLog(0, ("GetClient: no client in conn %x (host %x), VBUSYING\n", 
+		    tcon, rx_HostOf(rx_PeerOf(tcon))));
+	H_UNLOCK
+	return VBUSY;
+    }
+    if (rxr_CidOf(client->tcon) != client->sid) {
+	ViceLog(0, ("GetClient: tcon %x tcon sid %d client sid %d\n",
+		    client->tcon, rxr_CidOf(client->tcon),
+		    client->sid));
+	H_UNLOCK
+	return VBUSY;
+    }
     if (!(client && client->tcon && rxr_CidOf(client->tcon) == client->sid)) {
 	if (!client)
 	    ViceLog(0, ("GetClient: no client in conn %x\n", tcon));
