@@ -180,7 +180,9 @@ int AccessOK (ut, cid, tentry, mem, any)
 	if ((flags & mem) && IsAMemberOf (ut, cid, aid)) return 1;
     }
     /* Allow members of SYSVIEWERID to get membership and status only */
-    if (((mem == PRP_STATUS_MEM)||(mem == PRP_MEMBER_MEM))&&(IsAMemberOf (ut, cid, SYSVIEWERID))) return 1;
+    if (((mem == PRP_STATUS_MEM)||(mem == PRP_MEMBER_MEM)||
+	 (any == PRP_OWNED_ANY))&&(IsAMemberOf (ut, cid, SYSVIEWERID))) 
+	return 1;
     if (IsAMemberOf (ut, cid, SYSADMINID)) return 1;
     return 0;				/* no access */
 }
