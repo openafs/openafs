@@ -7272,7 +7272,7 @@ void smb_Server(VOID *parmp)
         "bufp=0x%x\n",
         bufp->dos_pkt / 16, bufp);*/
         fflush(stderr);
-        dosmemget(bufp->dos_pkt, ncbp-d>ncb_length, bufp->data);
+        dosmemget(bufp->dos_pkt, ncbp->ncb_length, bufp->data);
 #endif /* DJGPP */
         smbp = (smb_t *)bufp->data;
         outbufp->flags = 0;
