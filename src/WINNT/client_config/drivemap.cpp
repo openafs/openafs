@@ -624,7 +624,7 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
       }
 
    // We now have a submount name and drive letter--map the network drive.
-   DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent);
+   DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent,NULL);
    if (rc == NO_ERROR)
       return TRUE;
 
@@ -1158,7 +1158,7 @@ BOOL GlobalMountDrive()
 		break;
 	    }
 	}
-	dwResult=MountDOSDrive(*szDriveToMapTo,(const char *)szSubMount,FALSE);
+	dwResult=MountDOSDrive(*szDriveToMapTo,(const char *)szSubMount,FALSE,NULL);
     }
     RegCloseKey(hKey);
     return TRUE;
