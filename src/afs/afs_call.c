@@ -326,6 +326,33 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	osi_FreeSmallSpace(tbuffer);
 	osi_FreeSmallSpace(tbuffer1);
     }
+    else if (parm == AFSOP_ADDCELLALIAS) {
+	/*
+	 * Call arguments:
+	 * parm2 is the alias name
+	 * parm3 is the real cell name
+	 */
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	size_t bufferSize;
+#else /* AFS_SGI61_ENV */
+	u_int bufferSize;	
+#endif /* AFS_SGI61_ENV */
+	char *aliasName = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+	char *cellName = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+
+	AFS_COPYINSTR((char *)parm2, aliasName, AFS_SMALLOCSIZ, &bufferSize, code);
+	if (!code) AFS_COPYINSTR((char *)parm3, cellName, AFS_SMALLOCSIZ, &bufferSize, code);
+	if (!code) afs_NewCell(aliasName,	/* new entry name */
+			       0,		/* host list */
+			       CAlias,		/* flags */
+			       (char *) 0,	/* linked cell */
+			       0, 0,		/* fs & vl ports */
+			       0,		/* timeout */
+			       cellName);	/* real cell name */
+
+	osi_FreeSmallSpace(aliasName);
+	osi_FreeSmallSpace(cellName);
+    }
     else if (parm == AFSOP_CACHEINIT) {
 	struct afs_cacheParams cparms;
 

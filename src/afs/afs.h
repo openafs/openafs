@@ -200,7 +200,7 @@ struct cell {
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
     time_t timeout;			    /* data expire time, if non-zero */
-    struct cell *alias;			    /* what this cell is an alias for */
+    char *realName;			    /* who this cell is an alias for */
 };
 
 #define	afs_PutCell(cellp, locktype)
@@ -967,6 +967,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 
 extern struct cell	    *afs_GetCell();
 extern struct cell	    *afs_GetCellByName();
+extern struct cell	    *afs_GetCellByName2();
 extern struct cell	    *afs_GetCellByIndex();
 extern struct unixuser	    *afs_GetUser();
 extern struct volume	    *afs_GetVolume();
@@ -1010,6 +1011,8 @@ extern void afs_PutDynroot();
 extern int afs_DynrootNewVnode();
 extern int afs_SetDynrootEnable();
 extern int afs_GetDynrootEnable();
+extern int afs_DynrootVOPSymlink();
+extern int afs_DynrootVOPRemove();
 
 
 /* Performance hack - we could replace VerifyVCache2 with the appropriate

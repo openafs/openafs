@@ -66,13 +66,14 @@ static int PGetCPrefs(), PSetCPrefs(); /* client network addresses */
 static int PGetInitParams(), PFlushMount(), PRxStatProc(), PRxStatPeer();
 static int PGetRxkcrypt(), PSetRxkcrypt();
 static int PPrefetchFromTape(), PResidencyCmd();
+static int PNewAlias(), PListAliases();
 int PExportAfs();
 
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp);
 
 extern struct cm_initparams cm_initParams;
 
-static int (*(pioctlSw[]))() = {
+static int (*(VpioctlSw[]))() = {
   PBogus,			/* 0 */
   PSetAcl,			/* 1 */
   PGetAcl,			/* 2 */
@@ -141,6 +142,13 @@ static int (*(pioctlSw[]))() = {
   PNoop,			/* 65 -- arla: break callback */
   PPrefetchFromTape,            /* 66 -- MR-AFS: prefetch file from tape */
   PResidencyCmd,                /* 67 -- MR-AFS: generic commnd interface */
+  PNoop,			/* 68 -- arla: fetch stats */
+};
+
+static int (*(CpioctlSw[]))() = {
+  PBogus,			/* 0 */
+  PNewAlias,			/* 1 -- create new cell alias */
+  PListAliases,			/* 2 -- list cell aliases */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -741,21 +749,6 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     AFS_STATCNT(afs_syscall_pioctl);
     if (follow) follow = 1;	/* compat. with old venus */
-#ifndef	AFS_SUN5_ENV
-    if (! _VALIDVICEIOCTL(com)) {
-	PIOCTL_FREE_CRED();
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-        return EINVAL;
-#else	/* AFS_OSF_ENV */
-#if defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
-        return EINVAL;
-#else
-	setuerror(EINVAL);
-	return EINVAL;
-#endif
-#endif
-    }
-#endif
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
@@ -1036,16 +1029,31 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
 {
     struct vrequest treq;
     register afs_int32 code;
-    register afs_int32 function;
+    register afs_int32 function, device;
     afs_int32 inSize, outSize;
     char *inData, *outData;
+    int (*(*pioctlSw))();
+    int pioctlSwSize;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_PIOCTL, ICL_TYPE_INT32, acom & 0xff,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
     if (code = afs_InitReq(&treq, *acred)) return code;
+    device = (acom & 0xff00) >> 8;
+    switch (device) {
+	case 'V':	/* Original pioctl's */
+		pioctlSw = VpioctlSw;
+		pioctlSwSize = sizeof(VpioctlSw);
+		break;
+	case 'C':	/* Coordinated/common pioctl's */
+		pioctlSw = CpioctlSw;
+		pioctlSwSize = sizeof(CpioctlSw);
+		break;
+	default:
+		return EINVAL;
+    }
     function = acom & 0xff;
-    if (function >= (sizeof(pioctlSw) / sizeof(char *))) {
+    if (function >= (pioctlSwSize / sizeof(char *))) {
       return EINVAL;	/* out of range */
     }
     inSize = ablob->in_size;
@@ -1061,7 +1069,7 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     }
     outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     outSize = 0;
-    if (function == 3)	/* PSetTokens */
+    if (function == 3 && device == 'V')	/* PSetTokens */
 	code = (*pioctlSw[function])(avc, function, &treq, inData, outData, inSize, &outSize, acred);
     else
 	code = (*pioctlSw[function])(avc, function, &treq, inData, outData, inSize, &outSize, *acred);
@@ -2299,6 +2307,53 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return code;
 }
 
+static PNewAlias(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
+    struct vcache *avc;
+    int afun;
+    struct vrequest *areq;
+    register char *ain;
+    char *aout;
+    afs_int32 ainSize;
+    struct AFS_UCRED *acred;
+    afs_int32 *aoutSize;	/* set this */
+{
+    /* create a new cell alias */
+    register struct cell *tcell;
+    char *tp = ain;
+    register afs_int32 code;
+    char *realName, *aliasName;
+    register struct afs_q *cq, *tq;
+    
+    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+	return EIO;          /* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(acred))
+	return EACCES;
+
+    aliasName = tp;
+    tp += strlen(aliasName) + 1;
+    realName = tp;
+
+    /*
+     * Prevent user from shooting themselves in the foot -- don't allow
+     * creation of aliases when a real cell already exists with that name.
+     */
+    ObtainReadLock(&afs_xcell);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	tcell = QTOC(cq); tq = QNext(cq);
+	if ((afs_strcasecmp(tcell->cellName, aliasName) == 0) &&
+	    !(tcell->states & CAlias)) {
+	    ReleaseReadLock(&afs_xcell);
+	    return EEXIST;
+	}
+    }
+    ReleaseReadLock(&afs_xcell);
+
+    code = afs_NewCell(aliasName, 0, CAlias, 0, 0, 0, 0, realName);
+    *aoutSize = 0;
+    return code;
+}
+
 static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     struct vcache *avc;
     int afun;
@@ -2321,8 +2376,12 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     ObtainReadLock(&afs_xcell);
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tcell = QTOC(cq); tq = QNext(cq);
+	if (tcell->states & CAlias) {
+	    tcell = 0;
+	    continue;
+	}
 	if (whichCell == 0) break;
-	if (tq == &CellLRU) tcell = 0;
+	tcell = 0;
 	whichCell--;
     }
     if (tcell) {
@@ -2336,6 +2395,51 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	cp = aout + MAXCELLHOSTS * sizeof(afs_int32);
 	strcpy(cp, tcell->cellName);
 	cp += strlen(tcell->cellName)+1;
+	*aoutSize = cp - aout;
+    }
+    ReleaseReadLock(&afs_xcell);
+    if (tcell) return 0;
+    else return EDOM;
+}
+
+static PListAliases(avc, afun, areq, ain, aout, ainSize, aoutSize)
+    struct vcache *avc;
+    int afun;
+    struct vrequest *areq;
+    char *ain, *aout;
+    afs_int32 ainSize;
+    afs_int32 *aoutSize;	/* set this */
+{
+    afs_int32 whichAlias;
+    register struct cell *tcell=0;
+    register char *cp, *tp = ain;
+    register struct afs_q *cq, *tq;
+
+    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+	return EIO;          /* Inappropriate ioctl for device */
+    if (ainSize < sizeof(afs_int32))
+	return EINVAL;
+
+    memcpy((char *)&whichAlias, tp, sizeof(afs_int32));
+    tp += sizeof(afs_int32);
+
+    ObtainReadLock(&afs_xcell);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	tcell = QTOC(cq); tq = QNext(cq);
+	if (!(tcell->states & CAlias)) {
+	    tcell = 0;
+	    continue;
+	}
+	if (whichAlias == 0) break;
+	tcell = 0;
+	whichAlias--;
+    }
+    if (tcell) {	
+	cp = aout;
+	strcpy(cp, tcell->cellName);
+	cp += strlen(tcell->cellName)+1;
+	strcpy(cp, tcell->realName);
+	cp += strlen(tcell->realName)+1;
 	*aoutSize = cp - aout;
     }
     ReleaseReadLock(&afs_xcell);

@@ -20,6 +20,8 @@
  * afs_DynrootNewVnode
  * afs_SetDynrootEnable
  * afs_GetDynrootEnable
+ * afs_DynrootVOPRemove
+ * afs_DynrootVOPSymlink
  *
  */
 
@@ -41,9 +43,22 @@
 #define AFS_DYNROOT_VNODE	1
 #define AFS_DYNROOT_UNIQUE	1
 
-#define VNUM2CIDX(vnum)		((vnum) >> 2)
-#define VNUM2RW(vnum)		(((vnum) >> 1) & 1)
-#define CIDXRW2VNUM(cidx, rw)	(((cidx) << 2) | ((rw) << 1))
+/*
+ * Vnode numbers in dynroot are composed of a type field (upper 8 bits)
+ * and a type-specific identifier in the lower 24 bits.
+ */
+#define VN_TYPE_CELL		0x01	/* Corresponds to a struct cell */
+#define VN_TYPE_SYMLINK		0x02	/* User-created symlink in /afs */
+
+#define VNUM_TO_VNTYPE(vnum)	((vnum) >> 24)
+#define VNUM_TO_VNID(vnum)	((vnum) & 0x00ffffff)
+#define VNUM_FROM_TYPEID(type, id) \
+				((type) << 24 | (id))
+#define VNUM_TO_CIDX(vnum)	(VNUM_TO_VNID(vnum) >> 2)
+#define VNUM_TO_RW(vnum)	(VNUM_TO_VNID(vnum) >> 1 & 1)
+#define VNUM_FROM_CIDX_RW(cidx, rw) \
+				VNUM_FROM_TYPEID(VN_TYPE_CELL, \
+						 ((cidx) << 2 | (rw) << 1))
 
 static int afs_dynrootEnable = 0;
 
@@ -56,6 +71,20 @@ static int afs_dynrootCellCount;
 static int afs_dynrootVersion = 1;
 static int afs_dynrootVersionHigh = 1;
 /* End of variables protected by afs_dynrootDirLock */
+
+/* A dynamically-created symlink in a dynroot /afs */
+struct afs_dynSymlink {
+    struct afs_dynSymlink *next;
+    int index;
+    char *name;
+    char *target;
+};
+
+static afs_rwlock_t afs_dynSymlinkLock;
+/* Start of variables protected by afs_dynSymlinkLock */
+static struct afs_dynSymlink *afs_dynSymlinkBase = NULL;
+static int afs_dynSymlinkIndex = 0;
+/* End of variables protected by afs_dynSymlinkLock */
 
 extern afs_int32 afs_cellindex;
 extern afs_rwlock_t afs_xvcache;
@@ -178,13 +207,15 @@ afs_RefreshDynroot()
     int cellidx, maxcellidx, i;
     struct cell *c;
     int curChunk, curPage;
-    int dirSize;
+    int dirSize, sizeOfCurEntry;
     char *newDir, *dotCell;
     struct DirHeader *dirHeader;
     struct PageHeader *pageHeader;
     struct DirEntry *dirEntry;
     int doFlush = 0;
     int linkCount = 0;
+    struct afs_dynSymlink *ts;
+    int newCellCount;
 
     /*
      * Save afs_cellindex here, in case it changes between the
@@ -199,9 +230,7 @@ afs_RefreshDynroot()
     curPage = 0;
 
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
-	int sizeOfCurEntry;
-
-	c = afs_GetCellByIndex(cellidx, READ_LOCK);
+	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
 	if (!c) continue;
 
 	sizeOfCurEntry = afs_dir_NameBlobs(c->cellName);
@@ -222,6 +251,18 @@ afs_RefreshDynroot()
 	curChunk += sizeOfCurEntry;
 
 	afs_PutCell(c, READ_LOCK);
+    }
+
+    ObtainReadLock(&afs_dynSymlinkLock);
+    ts = afs_dynSymlinkBase;
+    while (ts) {
+	sizeOfCurEntry = afs_dir_NameBlobs(ts->name);
+	if (curChunk + sizeOfCurEntry > EPP) {
+	    curPage++;
+	    curChunk = 1;
+	}
+	curChunk += sizeOfCurEntry;
+	ts = ts->next;
     }
 
     dirSize = (curPage + 1) * AFS_PAGESIZE;
@@ -254,31 +295,41 @@ afs_RefreshDynroot()
     linkCount += 2;
 
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
-	c = afs_GetCellByIndex(cellidx, READ_LOCK);
+	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
-			      c->cellName, CIDXRW2VNUM(cellidx, 0));
+			      c->cellName, VNUM_FROM_CIDX_RW(cellidx, 0));
 
 	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
-			      dotCell, CIDXRW2VNUM(cellidx, 1));
+			      dotCell, VNUM_FROM_CIDX_RW(cellidx, 1));
 
-	linkCount += 2;
-
+	if (!(c->states & CAlias)) linkCount += 2;
 	afs_PutCell(c, READ_LOCK);
     }
+
+    ts = afs_dynSymlinkBase;
+    while (ts) {
+	int vnum = VNUM_FROM_TYPEID(VN_TYPE_SYMLINK, ts->index);
+	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
+			      ts->name, vnum);
+	ts = ts->next;
+    }
+
+    newCellCount = maxcellidx + afs_dynSymlinkIndex;
+    ReleaseReadLock(&afs_dynSymlinkLock);
 
     ObtainWriteLock(&afs_dynrootDirLock, 549);
     if (afs_dynrootDir) afs_osi_Free(afs_dynrootDir, afs_dynrootDirLen);
     afs_dynrootDir = newDir;
     afs_dynrootDirLen = dirSize;
     afs_dynrootDirLinkcnt = linkCount;
-    if (afs_dynrootCellCount != maxcellidx) {
+    if (afs_dynrootCellCount != newCellCount) {
 	/*
-	 * New cells added -- bump data version, invalidate vcache.
+	 * New cells/symlinks added -- bump data version, invalidate vcache.
 	 */
-	afs_dynrootCellCount = maxcellidx;
+	afs_dynrootCellCount = newCellCount;
 	afs_dynrootVersion++;
 	afs_dynrootVersionHigh = osi_Time();
 	doFlush = 1;
@@ -376,37 +427,75 @@ afs_DynrootNewVnode(avc, status)
 	struct cell *c;
 	int namelen, linklen, cellidx, rw;
 
-	cellidx = VNUM2CIDX(avc->fid.Fid.Vnode);
-	rw = VNUM2RW(avc->fid.Fid.Vnode);
+	memset(status, 0, sizeof(struct AFSFetchStatus));
 
-	c = afs_GetCellByIndex(cellidx, READ_LOCK);
+	status->FileType        = SymbolicLink;
+	status->LinkCount       = 1;
+	status->DataVersion     = 1;
+	status->CallerAccess    = PRSFS_LOOKUP | PRSFS_READ;
+	status->AnonymousAccess = PRSFS_LOOKUP | PRSFS_READ;
+	status->ParentVnode     = 1;
+	status->ParentUnique    = 1;
+
+	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) == VN_TYPE_SYMLINK) {
+	    struct afs_dynSymlink *ts;
+	    int index = VNUM_TO_VNID(avc->fid.Fid.Vnode);
+
+	    ObtainReadLock(&afs_dynSymlinkLock);
+	    ts = afs_dynSymlinkBase;
+	    while (ts) {
+		if (ts->index == index) break;
+		ts = ts->next;
+	    }
+
+	    if (ts) {
+		linklen = strlen(ts->target);
+		avc->linkData = afs_osi_Alloc(linklen + 1);
+		strcpy(avc->linkData, ts->target);
+
+		status->Length       = linklen;
+		status->UnixModeBits = 0755;
+	    }
+	    ReleaseReadLock(&afs_dynSymlinkLock);
+
+	    return ts ? 1 : 0;
+	}
+
+	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_CELL) {
+	    afs_warn("dynroot vnode inconsistency, unknown VNTYPE %d\n",
+		     VNUM_TO_VNTYPE(avc->fid.Fid.Vnode));
+	    return 0;
+	}
+
+	cellidx = VNUM_TO_CIDX(avc->fid.Fid.Vnode);
+	rw = VNUM_TO_RW(avc->fid.Fid.Vnode);
+
+	c = afs_GetCellByIndex(cellidx, READ_LOCK, 1 /* refresh */);
 	if (!c) {
 	    afs_warn("dynroot vnode inconsistency, can't find cell %d\n",
 		     cellidx);
 	    return 0;
 	}
 
-	memset(status, 0, sizeof(struct AFSFetchStatus));
-
 	if (c->states & CAlias) {
 	    /*
 	     * linkData needs to contain the name of the cell
 	     * we're aliasing for.
 	     */
-	    struct cell *tca = c->alias;
+	    char *realName = c->realName;
 
-	    if (!tca) {
-		afs_warn("dynroot: alias %s missing cell alias pointer\n",
+	    if (!realName) {
+		afs_warn("dynroot: alias %s missing real cell name\n",
 			 c->cellName);
 		linklen = 7;
 		avc->linkData = afs_osi_Alloc(linklen + 1);
 		strcpy(avc->linkData, "unknown");
 	    } else {
-		int namelen = strlen(tca->cellName);
+		int namelen = strlen(realName);
 		linklen = rw + namelen;
 		avc->linkData = afs_osi_Alloc(linklen + 1);
 		strcpy(avc->linkData, rw ? "." : "");
-		strcat(avc->linkData, tca->cellName);
+		strcat(avc->linkData, realName);
 	    }
 
 	    status->UnixModeBits = 0755;
@@ -424,15 +513,7 @@ afs_DynrootNewVnode(avc, status)
 	    status->UnixModeBits = 0644;
 	}
 
-	status->FileType        = SymbolicLink;
-	status->LinkCount       = 1;
-	status->Length          = linklen;
-	status->DataVersion     = 1;
-	status->CallerAccess    = PRSFS_LOOKUP | PRSFS_READ;
-	status->AnonymousAccess = PRSFS_LOOKUP | PRSFS_READ;
-	status->ParentVnode     = 1;
-	status->ParentUnique    = 1;
-
+	status->Length = linklen;
 	afs_PutCell(c, READ_LOCK);
 	return 1;
     }
@@ -458,4 +539,101 @@ int
 afs_GetDynrootEnable()
 {
     return afs_dynrootEnable;
+}
+
+/*
+ * Remove a temporary symlink entry from /afs.
+ */
+int
+afs_DynrootVOPRemove(avc, acred, aname)
+    struct vcache *avc;
+    struct AFS_UCRED *acred;
+    char *aname;
+{
+    struct afs_dynSymlink **tpps;
+    struct afs_dynSymlink *tps;
+    struct cell *c;
+    int found = 0;
+
+    if (acred->cr_uid)
+	return EPERM;
+
+    ObtainWriteLock(&afs_dynSymlinkLock, 97);
+    tpps = &afs_dynSymlinkBase;
+    while (*tpps) {
+	tps = *tpps;
+	if (afs_strcasecmp(aname, tps->name) == 0) {
+	    afs_osi_Free(tps->name, strlen(tps->name) + 1);
+	    afs_osi_Free(tps->target, strlen(tps->target) + 1);
+	    *tpps = tps->next;
+	    afs_osi_Free(tps, sizeof(*tps));
+	    afs_dynSymlinkIndex++;
+	    found = 1;
+	    break;
+	}
+	tpps = &(tps->next);
+    }
+    ReleaseWriteLock(&afs_dynSymlinkLock);
+    if (found) {
+	afs_RefreshDynroot();
+	return 0;
+    }
+
+    /* Check if this is an actual cell? */
+    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    if (c) {
+	afs_PutCell(c, READ_LOCK);
+	return EROFS;
+    } else {
+	return ENOENT;
+    }
+}
+
+/*
+ * Create a temporary symlink entry in /afs.
+ */
+int
+afs_DynrootVOPSymlink(avc, acred, aname, atargetName)
+    struct vcache *avc;
+    struct AFS_UCRED *acred;
+    char *aname;
+    char *atargetName;
+{
+    struct afs_dynSymlink *tps;
+    struct cell *c;
+
+    if (acred->cr_uid)
+	return EPERM;
+
+    /* Check if it's already a cell */
+    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    if (c) {
+	afs_PutCell(c, READ_LOCK);
+	return EEXIST;
+    }
+
+    /* Check if it's already a symlink */
+    ObtainWriteLock(&afs_dynSymlinkLock, 91);
+    tps = afs_dynSymlinkBase;
+    while (tps) {
+	if (afs_strcasecmp(aname, tps->name) == 0) {
+	    ReleaseWriteLock(&afs_dynSymlinkLock);
+	    return EEXIST;
+	}
+	tps = tps->next;
+    }
+
+    /* Doesn't already exist -- go ahead and create it */
+    tps = afs_osi_Alloc(sizeof(*tps));
+    tps->index = afs_dynSymlinkIndex++;
+    tps->next = afs_dynSymlinkBase;
+    tps->name = afs_osi_Alloc(strlen(aname) + 1);
+    strcpy(tps->name, aname);
+    tps->target = afs_osi_Alloc(strlen(atargetName) + 1);
+    strcpy(tps->target, atargetName);
+    afs_dynSymlinkBase = tps;
+    ReleaseWriteLock(&afs_dynSymlinkLock);
+
+    afs_RefreshDynroot();
+    return 0;
 }

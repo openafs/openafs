@@ -69,9 +69,19 @@ struct afsconf_cell {
     int timeout;				/* Data timeout, if non-zero */
 };
 
+struct afsconf_cellalias {
+    char aliasName[MAXCELLCHARS];
+    char realName[MAXCELLCHARS];
+};
+
 struct afsconf_entry {
     struct afsconf_entry *next;	/* next guy in afsconf_dir */
     struct afsconf_cell	cellInfo;	/* info for this cell */
+};
+
+struct afsconf_aliasentry {
+    struct afsconf_aliasentry *next;
+    struct afsconf_cellalias aliasInfo;
 };
 
 struct afsconf_dir {
@@ -80,6 +90,7 @@ struct afsconf_dir {
     struct afsconf_entry *entries; /* list of cell entries */
     struct afsconf_keys	*keystr;    /* structure containing keys */
     afs_int32 timeRead;		    /* time stamp of file last read */
+    struct afsconf_aliasentry *alias_entries; /* cell aliases */
 };
 
 extern struct afsconf_dir *afsconf_Open();

@@ -118,6 +118,7 @@ ConstructLocalLogPath(const char *cpath,
 /* file names */ 
 #define AFSDIR_THISCELL_FILE    "ThisCell"
 #define AFSDIR_CELLSERVDB_FILE  "CellServDB"
+#define AFSDIR_CELLALIAS_FILE   "CellAlias"
 #define AFSDIR_KEY_FILE         "KeyFile"
 #define AFSDIR_ULIST_FILE       "UserList"
 #define AFSDIR_NOAUTH_FILE      "NoAuth"
@@ -260,6 +261,7 @@ typedef enum afsdir_id {
       AFSDIR_SERVER_MIGRATE_DIRPATH_ID,
       AFSDIR_SERVER_MIGRATELOG_FILEPATH_ID,
       AFSDIR_SERVER_BIN_FILE_DIRPATH_ID,
+      AFSDIR_CLIENT_CELLALIAS_FILEPATH_ID,
       AFSDIR_PATHSTRING_MAX } afsdir_id_t;
 
 /* getDirPath() returns a pointer to a string from an internal array of path strings 
@@ -331,6 +333,7 @@ const char *getDirPath(afsdir_id_t string_id);
 /* client file paths */
 #define AFSDIR_CLIENT_THISCELL_FILEPATH getDirPath(AFSDIR_CLIENT_THISCELL_FILEPATH_ID)
 #define AFSDIR_CLIENT_CELLSERVDB_FILEPATH getDirPath(AFSDIR_CLIENT_CELLSERVDB_FILEPATH_ID)  
+#define AFSDIR_CLIENT_CELLALIAS_FILEPATH getDirPath(AFSDIR_CLIENT_CELLALIAS_FILEPATH_ID)  
 #define AFSDIR_CLIENT_NETINFO_FILEPATH getDirPath(AFSDIR_CLIENT_NETINFO_FILEPATH_ID)
 #define AFSDIR_CLIENT_NETRESTRICT_FILEPATH getDirPath(AFSDIR_CLIENT_NETRESTRICT_FILEPATH_ID)
 
