@@ -108,6 +108,8 @@ struct lwp_context *savearea;
 #elif defined(AFS_ALPHA_LINUX20_ENV)
 #define LWP_SP 8
 #define LWP_FP 7
+#elif defined(AFS_PARISC_LINUX24_ENV)
+#define LWP_SP 19
 #else
 #error Unsupported linux LWP system type.
 #endif
