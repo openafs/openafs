@@ -150,6 +150,7 @@ case $system in
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
 	         )
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
@@ -161,6 +162,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_address_space_has_gfp_mask" = "xyes"; then 
+		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_GFP_MASK)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
@@ -263,6 +267,9 @@ else
 		powerpc-apple-darwin5.4*)
 			AFS_SYSNAME="ppc_darwin_14"
 			;;
+		powerpc-apple-darwin5.5*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			;;
@@ -277,6 +284,15 @@ else
 			;;
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
+			;;
+		i386-pc-solaris2.7)
+			AFS_SYSNAME="sunx86_57"
+			;;
+		i386-pc-solaris2.8)
+			AFS_SYSNAME="sunx86_58"
+			;;
+		i386-pc-solaris2.9)
+			AFS_SYSNAME="sunx86_59"
 			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
@@ -546,7 +562,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: aclocal.m4,v 1.12 2002/05/12 05:56:49 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.13 2002/08/02 21:50:35 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -598,6 +614,21 @@ if test "$openafs_cv_c_bigendian_compile" = "yes"; then
   AC_DEFINE(ENDIANESS_IN_SYS_PARAM_H, 1, [define if sys/param.h defines the endiness])dnl
 fi
 ])
+
+AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK, [
+AC_MSG_CHECKING(for gfp_mask in struct address_space)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_address_space_has_gfp_mask, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct address_space _a;
+printf("%d\n", _a.gfp_mask);], 
+ac_cv_linux_fs_struct_address_space_has_gfp_mask=yes,
+ac_cv_linux_fs_struct_address_space_has_gfp_mask=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_gfp_mask)
+CPPFLAGS="$save_CPPFLAGS"])
 
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_BYTES, [
 AC_MSG_CHECKING(for i_bytes in struct inode)
