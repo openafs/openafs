@@ -111,5 +111,9 @@ struct afsconf_servPair {
 #define	AFSCONF_UPDATEPORT		7008
 #define	AFSCONF_RMTSYSSERVICE		"afsrmtsys"
 #define	AFSCONF_RMTSYSPORT		7009
+#define AFSCONF_RSDBSERVICE             "afsres"
+#define AFSCONF_RESPORT                 7010
+#define AFSCONF_REMIODBSERVICE          "afsremio"
+#define AFSCONF_REMIOPORT               7011 
 
 #endif /* __CELLCONFIG_AFS_INCL_ */

@@ -55,6 +55,8 @@ static struct afsconf_servPair serviceTable [] = {
     "afsnanny",	7007,
     "afsupdate",7008,
     "afsrmtsys",7009,
+    "afsres",   7010,   /* residency database for MR-AFS */
+    "afsremio", 7011,   /* remote I/O interface for MR-AFS */
     0, 0		/* insert new services before this spot */
 };
 
