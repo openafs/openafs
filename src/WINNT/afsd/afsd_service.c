@@ -55,7 +55,7 @@ jmp_buf notifier_jmp;
 extern int traceOnPanic;
 extern HANDLE afsi_file;
 
-int powerEventsRegsitered = 0;
+int powerEventsRegistered = 0;
 
 /*
  * Notifier function for use by osi_panic
@@ -273,33 +273,34 @@ afsd_ServiceControlHandlerEx(
             **	Return any error code to deny request,                                        
             **	i.e. as if returning BROADCAST_QUERY_DENY                                     
             */                                                                                
-            if(powerEventsRegsitered) {
-            switch((int) dwEventType)                                                         
-            {                                                                               
-            case PBT_APMQUERYSUSPEND:                                                         
-            case PBT_APMQUERYSTANDBY:                                                         
+            if (powerEventsRegistered) {
+                switch((int) dwEventType)                                                         
+                {                                                                               
+                case PBT_APMQUERYSUSPEND:                                                         
+                case PBT_APMQUERYSTANDBY:                                                         
 
 #ifdef	FLUSH_VOLUME
-                /* handle event */                                                            
-                dwRet = afsd_ServiceFlushVolume((DWORD) lpEventData);                         
+                    /* handle event */                                                            
+                    dwRet = afsd_ServiceFlushVolume((DWORD) lpEventData);                         
 #else                                                                                       
-                dwRet = NO_ERROR;                                                             
+                    dwRet = NO_ERROR;                                                             
 #endif                                                                                      
-                break;                                                                        
+                    break;                                                                        
 							                                                                  
-                /* allow remaining case PBT_WhatEver */                                           
-            case PBT_APMSUSPEND:                                                              
-            case PBT_APMSTANDBY:                                                              
-            case PBT_APMRESUMECRITICAL:                                                       
-            case PBT_APMRESUMESUSPEND:                                                        
-            case PBT_APMRESUMESTANDBY:                                                        
-            case PBT_APMBATTERYLOW:                                                           
-            case PBT_APMPOWERSTATUSCHANGE:                                                    
-            case PBT_APMOEMEVENT:                                                             
-            case PBT_APMRESUMEAUTOMATIC:                                                      
-            default:                                                                          
-                dwRet = NO_ERROR;                                                             
-            }   
+                    /* allow remaining case PBT_WhatEver */                                           
+                case PBT_APMSUSPEND:                                                              
+                case PBT_APMSTANDBY:                                                              
+                case PBT_APMRESUMECRITICAL:                                                       
+                case PBT_APMRESUMESUSPEND:                                                        
+                case PBT_APMRESUMESTANDBY:                                                        
+                case PBT_APMBATTERYLOW:                                                           
+                case PBT_APMPOWERSTATUSCHANGE:                                                    
+                case PBT_APMOEMEVENT:                                                             
+                case PBT_APMRESUMEAUTOMATIC:                                                      
+                default:                                                                          
+                    dwRet = NO_ERROR;                                                             
+                }   
+            }
         }
     }		/* end switch(ctrlCode) */                                                        
     return dwRet;   
@@ -311,7 +312,7 @@ afsd_ServiceControlHandlerEx(
  */
 /* DEE Could check first if we are run as SYSTEM */
 #define MAX_RETRIES 30
-static void MountGlobalDrives()
+static void MountGlobalDrives(void)
 {
     char szAfsPath[_MAX_PATH];
     char szDriveToMapTo[5];
@@ -503,7 +504,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
         /* see if we should handle power notifications */
         code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0, KEY_QUERY_VALUE, &hkParm);
-        if(code == ERROR_SUCCESS) {
+        if (code == ERROR_SUCCESS) {
             dummyLen = sizeof(bpower);
             code = RegQueryValueEx(hkParm, "FlushOnHibernate", NULL, NULL,
                 (BYTE *) &bpower, &dummyLen);      
@@ -513,10 +514,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 	    RegCloseKey(hkParm);
         }
-    /* create thread used to flush cache */
-        if(bpower) {
-    PowerNotificationThreadCreate();
-            powerEventsRegsitered = 1;
+        /* create thread used to flush cache */
+        if (bpower) {
+            PowerNotificationThreadCreate();
+            powerEventsRegistered = 1;
         }
     }
 #endif
@@ -634,8 +635,8 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
     /* terminate thread used to flush cache */
-    if(powerEventsRegsitered)
-    PowerNotificationThreadExit();
+    if (powerEventsRegistered)
+        PowerNotificationThreadExit();
 #endif
 
     /* Remove the ExceptionFilter */
