@@ -130,17 +130,17 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 afs.exp: afs4.exp afs5.exp
 	case ${SYS_NAME} in \
 		rs_aix5* ) \
-			cp -p afs5.exp afs.exp ;; \
-		* ) \
-			cp -p afs4.exp afs.exp ;; \
+			cp -p ${srcdir}/afs5.exp afs.exp ;; \
+		rs_aix* ) \
+			cp -p ${srcdir}/afs4.exp afs.exp ;; \
 	esac
 
 afsl.exp: afsl4.exp afsl5.exp
 	case ${SYS_NAME} in \
 		rs_aix5* ) \
-			cp -p afsl5.exp afsl.exp ;; \
-		* ) \
-			cp -p afsl4.exp afsl.exp ;; \
+			cp -p ${srcdir}/afsl5.exp afsl.exp ;; \
+		rs_aix* ) \
+			cp -p ${srcdir}/afsl4.exp afsl.exp ;; \
 	esac
 
 #
@@ -151,10 +151,16 @@ ${TOP_INCDIR}/afs/afssyscalls.h: afssyscalls.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/afs.exp: afs.exp
-	${INSTALL} $? $@
+	case ${SYS_NAME} in \
+		rs_aix* ) \
+			${INSTALL} $? $@ ;; \
+	esac
 
 ${TOP_LIBDIR}/afs.exp: afs.exp
-	${INSTALL} $? $@
+	case ${SYS_NAME} in \
+		rs_aix* ) \
+			${INSTALL} $? $@ ;; \
+	esac
 
 ${TOP_INCDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
@@ -166,7 +172,10 @@ ${UKERNELDIR}/afs:
 	mkdir -p $@
 
 ${UKERNELDIR}/afs/afsl.exp: afsl.exp
-	${INSTALL} $? $@
+	case ${SYS_NAME} in \
+		rs_aix* ) \
+			${INSTALL} $? $@ ;; \
+	esac
 
 ${KERNELDIR}/afs:
 	mkdir -p $@
@@ -199,7 +208,10 @@ ${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
 	${INSTALL} -s $? $@
 
 ${DESTDIR}${includedir}/afs/afs.exp: afs.exp
-	${INSTALL} $? $@
+	case ${SYS_NAME} in \
+		rs_aix* ) \
+			${INSTALL} $? $@ ;; \
+	esac
 
 ${DESTDIR}${includedir}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
@@ -217,7 +229,10 @@ ${DEST}/lib/afs/libsys.a: libsys.a
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/afs.exp: afs.exp
-	${INSTALL} $? $@
+	case ${SYS_NAME} in \
+		rs_aix* ) \
+			${INSTALL} $? $@ ;; \
+	esac
 
 ${DEST}/include/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
