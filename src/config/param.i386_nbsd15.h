@@ -43,8 +43,8 @@
 #ifndef	MOUNT_AFS
 #define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
-#define SYS_NAME	"i386_fbsd_42"
-#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_42
+#define SYS_NAME       "i386_nbsd15"
+#define SYS_NAME_ID    SYS_NAME_ID_i386_nbsd15
 
 #define AFS_HAVE_FFS            1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
