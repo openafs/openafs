@@ -673,7 +673,11 @@ readsb(listerr)
 		return (1);
 	}
 	altsblock.fs_link = sblock.fs_link;
+#ifdef STRUCT_FS_HAS_FS_ROLLED
+	altsblock.fs_rolled = sblock.fs_rolled;
+#else
 	altsblock.fs_rlink = sblock.fs_rlink;
+#endif
 	altsblock.fs_time = sblock.fs_time;
 	altsblock.fs_cstotal = sblock.fs_cstotal;
 	altsblock.fs_cgrotor = sblock.fs_cgrotor;
