@@ -849,8 +849,15 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
         }
     }
 
-    if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid))
-        GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
+    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+     * this is source domain and not the destination domain.
+     */
+    if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
+        WCHAR Domain[64]=L"";
+        GetLocalShortDomain(Domain);
+        if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain))
+            GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
+    }
     
     if (strlen(profileDir)) {
         DebugEvent("Profile Directory: %s", profileDir);

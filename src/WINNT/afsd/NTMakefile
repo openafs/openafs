@@ -218,7 +218,6 @@ LOGON_DLLLIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
     $(DESTDIR)\lib\afsrxkad.lib \
     $(DESTDIR)\lib\afsdes.lib \
-    $(DESTDIR)\lib\lanahelper.lib \
     $(AFSKFWLIB)
 
 LOGON_DLLSDKLIBS =\

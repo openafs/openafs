@@ -194,15 +194,20 @@ ghp_0:
 	return code;
 }
 
-DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid) {
+DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWSTR domain) {
 	DWORD code = 1; /* default is failure */
 	NTSTATUS rv = 0;
 	HRESULT hr = S_OK;
 	LPWSTR p = NULL;
 	WCHAR adsPath[MAX_PATH] = L"";
 	BOOL coInitialized = FALSE;
+    CHAR ansidomain[256], *a;
 
 	homePath[0] = '\0';
+    
+    /* I trust this is an ASCII domain name */
+    for ( p=domain, a=ansidomain; *a = (CHAR)*p; p++, a++);
+    DebugEvent("Domain: %s", ansidomain);
 
     if(ConvertSidToStringSidW(psid,&p)) {
         IADsNameTranslate *pNto;
@@ -221,11 +226,16 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid) {
 
         if(FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
         else {
-            hr = pNto->Init(ADS_NAME_INITTYPE_GC,L""); //,clientUpn/*IL->UserName.Buffer*/,IL->LogonDomainName.Buffer,IL->Password.Buffer);
+            hr = pNto->Init(ADS_NAME_INITTYPE_GC,L"");
             if (FAILED(hr)) { 
-                DebugEvent("NameTranslate Init failed [%ld]", hr);
+                DebugEvent("NameTranslate Init GC failed [%ld]", hr);
+                hr = pNto->Init(ADS_NAME_INITTYPE_DOMAIN,domain);
+                if (FAILED(hr)) { 
+                    DebugEvent("NameTranslate Init Domain failed [%ld]", hr);
+                }
             }
-            else {
+
+            if (!FAILED(hr)) {
                 hr = pNto->Set(ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, p);
                 if(FAILED(hr)) { DebugEvent("Can't set sid string"); }
                 else {
@@ -311,10 +321,17 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonO
 
             rv = LsaGetLogonSessionData(lpLogonId, &plsd);
             if(rv == 0) {
-                if(!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid)) {
+                PWSTR domain;
+
+                domain = (PWSTR)malloc(sizeof(WCHAR) * (plsd->LogonDomain.Length+1));
+                memcpy(domain, plsd->LogonDomain.Buffer, sizeof(WCHAR) * (plsd->LogonDomain.Length));
+                domain[plsd->LogonDomain.Length] = 0;
+
+                if(!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid,domain)) {
                     DebugEvent("Returned home path [%s]",homePath);
                     opt->flags |= LOGON_FLAG_AD_REALM;
                 }
+                free(domain);
                 LsaFreeReturnBuffer(plsd);
             } else {
                 DebugEvent("LsaGetLogonSessionData failed [%lX]", rv);
@@ -328,4 +345,35 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonO
         DeleteSecurityContext(&ctx);
 		return code;
 	}
+}
+
+BOOL GetLocalShortDomain(PWSTR Domain)
+{
+    HRESULT hr;
+    IADsADSystemInfo *pADsys;
+    BOOL coInitialized = FALSE;
+    BOOL retval = FALSE;
+
+    hr = CoInitialize(NULL);
+    if(SUCCEEDED(hr))
+        coInitialized = TRUE;
+
+    hr = CoCreateInstance(CLSID_ADSystemInfo,
+                           NULL,
+                           CLSCTX_INPROC_SERVER,
+                           IID_IADsADSystemInfo,
+                           (void**)&pADsys);
+    if ( !FAILED(hr) ) {
+        BSTR bstr;
+
+        hr = pADsys->get_DomainShortName(&bstr);
+        wcscpy( Domain, bstr );
+        pADsys->Release();
+        retval = TRUE;
+    }
+
+	if(coInitialized)
+		CoUninitialize();
+
+    return retval;
 }

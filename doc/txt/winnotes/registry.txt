@@ -312,6 +312,16 @@ Default : 2
     2 = Extended (GSS SPNEGO) authentication required
   The default is Extended authentication
 
+Value   : MaxLogSize
+Type    : DWORD {0 .. MAXDWORD}
+Default : 100K
+
+  This entry determines the maximum size of the %WINDIR%\TEMP\afsd_init.log 
+  file.  If the file is larger than this value when afsd_service.exe starts
+  the file will be reset to 0 bytes.  If this value is 0, it means the file
+  should be allowed to grow indefinitely.
+
+
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]
 
