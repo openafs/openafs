@@ -49,7 +49,7 @@ choose_client() {
 	# For now, just use uname -r to get the module version. 
 	VERSION=`uname -r`
 
-	LIBAFS=libafs-$VERSION$MP.o
+	LIBAFS=openafs$MP.o
 }
 
 #
@@ -107,7 +107,7 @@ set_prefix()
 }
 
 
-MODLOADDIR=/lib/modules/openafs/modload
+MODLOADDIR=/lib/modules/$VERSION/fs
 # load_client loads the AFS client module if it's not already loaded. 
 load_client() {
 	# If LIBAFS is set, use it.
