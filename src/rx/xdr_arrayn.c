@@ -123,6 +123,9 @@ xdr_arrayN(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 
 	case XDR_FREE:
 	    return (TRUE);
+
+	case XDR_ENCODE:
+	    break;
 	}
 
     /*
