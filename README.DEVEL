@@ -70,3 +70,9 @@ prototyped in block at top of file if static.
 
 If you make a routine or variable static, be sure and remove it from
 the AIX .exp files.
+
+Suggested compiler flags:
+	gcc: -Wall -Wstrict-prototypes
+	Solaris Workshop CC: -fd -v
+		(You might not want the -fd, it isn't really useful, just complains about the
+		K&R style functions, but -v gives useful info.)

@@ -426,7 +426,7 @@ struct usr_user *get_user_struct(void)
 /*
  * Sleep on an event
  */
-void afs_osi_Sleep(int *x)
+void afs_osi_Sleep(void *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -471,12 +471,13 @@ void afs_osi_Sleep(int *x)
     }
 }
 
-void afs_osi_SleepSig(int *x)
+int afs_osi_SleepSig(void *x)
 {
     afs_osi_Sleep(x);
+    return 0;
 }
 
-void afs_osi_Wakeup(int *x)
+void afs_osi_Wakeup(void *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -569,7 +570,7 @@ int afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 
 void afs_osi_CancelWait(struct afs_osi_WaitHandle *handle)
 {
-    afs_osi_Wakeup((int *)handle);
+    afs_osi_Wakeup(handle);
 }
 
 /*

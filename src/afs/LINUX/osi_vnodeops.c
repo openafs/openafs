@@ -333,7 +333,7 @@ tagain:
 	if (!dirpos)
 	    break;
 
-	de = (struct DirEntry*)afs_dir_GetBlob(&tdc->f.inode, dirpos);
+	de = afs_dir_GetBlob(&tdc->f.inode, dirpos);
 	if (!de)
 	    break;
 

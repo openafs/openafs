@@ -37,7 +37,7 @@ RCSID("$Header$");
 #ifdef UKERNEL
 #include "../rx/rx_kcommon.h"
 #else /* UKERNEL */
-/* nothing here required yet */
+#include "../rx/rx.h"
 #endif /* UKERNEL */
 #endif	/* KERNEL */
 
@@ -49,13 +49,14 @@ RCSID("$Header$");
 afs_int32 rxi_tempAddr=0;	/* default attempt */
 
 /* set the advisory noise */
-afs_int32 rxi_setaddr(x)
-afs_int32 x;{
+void rxi_setaddr(afs_int32 x)
+{
     rxi_tempAddr = x;
 }
 
 /* get approx to net addr */
-afs_int32 rxi_getaddr() {
+afs_int32 rxi_getaddr(void)
+{
     return rxi_tempAddr;
 }
 
@@ -64,10 +65,8 @@ afs_int32 rxi_getaddr() {
 #ifndef KERNEL
 
 /* to satisfy those who call setaddr */
-int
-rxi_setaddr(x)
-afs_int32 x; {
-    return 0;
+void rxi_setaddr(afs_int32 x)
+{
 }
 
 #endif /* !KERNEL */
@@ -83,7 +82,7 @@ afs_int32 x; {
 /* Return our internet address as a long in network byte order.  Returns zero
  * if it can't find one.
  */
-afs_int32 rxi_getaddr ()
+afs_int32 rxi_getaddr(void)
 {
 	afs_int32	buffer[1024];
 	int     count;

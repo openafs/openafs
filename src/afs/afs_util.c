@@ -107,7 +107,7 @@ void print_internet_address(char *preamble, struct srvAddr *sa,
 void afs_warn(char *a, long b, long c, long d, long e, long f, 
 	long g, long h, long i, long j)
 #else
-afs_warn(a,b,c,d,e,f,g,h,i,j)
+void afs_warn(a,b,c,d,e,f,g,h,i,j)
 char *a;
 long b,c,d,e,f,g,h,i,j;
 #endif
@@ -141,7 +141,7 @@ long b,c,d,e,f,g,h,i,j;
 void afs_warnuser(char *a, long b, long c, long d, long e, long f, 
 	long g, long h, long i, long j)
 #else
-afs_warnuser(a,b,c,d,e,f,g,h,i,j)
+void afs_warnuser(a,b,c,d,e,f,g,h,i,j)
 char *a;
 long b,c,d,e,f,g,h,i,j;
 #endif
@@ -243,7 +243,8 @@ void afs_CheckLocks(void)
 }
 
 
-int afs_noop() {
+int afs_noop(void)
+{
     AFS_STATCNT(afs_noop);
 #ifdef	AFS_OSF30_ENV
     return (EOPNOTSUPP);

@@ -790,12 +790,12 @@ void afs_osi_TraverseProcTable(void)
  */
 
 #if defined(AFS_SGI65_ENV)
-const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *p)
 {
     return NULL;
 }
 #elif defined(AFS_HPUX_ENV)
-const struct AFS_UCRED *afs_osi_proc2cred(proc_t *p)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *p)
 {
     if (!p)
 	return;

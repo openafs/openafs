@@ -17,7 +17,7 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h" /* statistics */
 #include "afs/stds.h"
 static struct axscache *afs_axsfreelist = NULL;
-static struct xfreelist { struct xfreelist *next; } *xfreemallocs = 0, *xsp = 0;
+static struct xfreelist { struct xfreelist *next; } *xfreemallocs = 0;
 static int afs_xaxscnt = 0;
 afs_rwlock_t afs_xaxs;
 
@@ -159,6 +159,7 @@ void afs_FreeAllAxs(struct axscache **headp)
    
 
 /* doesn't appear to be used at all */
+#if 0
 static void shutdown_xscache(void) 
 {
     struct xfreelist *xp, *nxp;
@@ -173,3 +174,4 @@ static void shutdown_xscache(void)
     afs_axsfreelist = NULL;
     xfreemallocs = NULL;
 }
+#endif

@@ -194,7 +194,7 @@ extern struct conn *afs_ConnByMHosts(struct server *ahosts[], unsigned short apo
 extern struct conn *afs_ConnByHost(struct server *aserver, unsigned short aport, 
         afs_int32 acell, struct vrequest *areq, int aforce, afs_int32 locktype);
 extern void afs_PutConn(register struct conn *ac, afs_int32 locktype);
-extern int ForceNewConnections(struct srvAddr *sap);
+extern void ForceNewConnections(struct srvAddr *sap);
 
 
 /* afs_daemons.c */
@@ -383,7 +383,9 @@ extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
 extern void shutdown_osi(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
-
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
+extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr);
+#endif
 
 /* afs_osi_pag.c */
 extern afs_uint32 genpag(void);
@@ -416,15 +418,40 @@ extern char *osi_AllocSmall(register afs_int32 size, register afs_int32 morespac
 /* ARCH/osi_misc.c */
 extern void osi_iput(struct inode *ip);
 
+/* LINUX/osi_misc.c */
+#if AFS_LINUX24_ENV
+extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
+               vnode_t **dirvpp, struct dentry **dpp);
+extern int osi_InitCacheInfo(char *aname);
+extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
+             size_t *resid);
+extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t *uiop, int rw);
+extern void setup_uio(uio_t *uiop, struct iovec *iovecp, char *buf,
+                             afs_offs_t pos, int count, uio_flag_t flag,
+                             uio_seg_t seg);
+extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t *uiop);
+extern void afs_osi_SetTime(osi_timeval_t *tvp);
+extern void osi_linux_free_inode_pages(void);
+extern void osi_clear_inode(struct inode *ip);
+extern void check_bad_parent(struct dentry *dp);
+#endif
+extern void osi_linux_mask(void);
+extern void osi_linux_unmask(void);
+extern void osi_linux_rxkreg(void);
+
+
 /* ARCH/osi_sleep.c */
 extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
 extern int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok);
 #ifndef afs_osi_Wakeup
-extern void afs_osi_Wakeup(int *event);
+extern void afs_osi_Wakeup(void *event);
 #endif
 #ifndef afs_osi_Sleep
-extern void afs_osi_Sleep(int *event);
+extern void afs_osi_Sleep(void *event);
+#endif
+#ifndef afs_osi_SleepSig
+extern int afs_osi_SleepSig(void *event);
 #endif
 
 /* ARCH/osi_file.c */
@@ -506,7 +533,9 @@ extern void afs_ActivateServer(struct srvAddr *sap);
 #ifdef AFS_USERSPACE_IP_ADDR
 extern int afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr, afs_uint32 subnetmask);
 #else
+#if (!defined(AFS_SUN5_ENV)) && defined(USEIFADDR)
 void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
+#endif
 #endif
 
 
@@ -539,7 +568,9 @@ extern int afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #ifdef UKERNEL
 extern void uafs_Shutdown(void);
 extern void osi_ReleaseVM(struct vcache *avc, int len, struct usr_ucred *credp);
+extern int osi_GetTime(struct timeval *tv);
 #endif
+
 
 
 
@@ -574,8 +605,14 @@ extern void afs_warn(char *a, long b, long c, long d, long e, long f, long g,
         long h, long i, long j);
 extern void afs_warnuser(char *a, long b, long c, long d, long e, long f,
 	long g, long h, long i, long j);
+#else
+extern void afs_warn();
+extern void afs_warnuser();
 #endif
 extern void afs_CheckLocks(void);
+extern int afs_badop(void);
+extern int afs_noop(void);
+extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 
 
@@ -699,7 +736,7 @@ extern void afs_PutFakeStat(struct afs_fakestat_state *state);
 extern int afs_ENameOK(register char *aname);
 extern int afs_getsysname(register struct vrequest *areq, register struct vcache *adp, 
         register char *bufp);
-extern int Check_AtSys(register struct vcache *avc, char *aname, 
+extern int Check_AtSys(register struct vcache *avc, const char *aname, 
         struct sysname_info *state, struct vrequest *areq);
 extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq, 
         struct sysname_info *state);
@@ -766,6 +803,17 @@ extern struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell,
 
 extern struct volume *afs_UFSGetVolSlot(void);
 extern void afs_CheckVolumeNames(int flags);
+
+
+/* Prototypes for generated files that aren't really in src/afs/ */
+
+/* afs_uuid.c */
+extern afs_int32 afs_uuid_equal(afsUUID *u1, afsUUID *u2);
+extern afs_int32 afs_uuid_is_nil(afsUUID *u1);
+extern void afs_htonuuid(afsUUID *uuidp);
+extern void afs_ntohuuid(afsUUID *uuidp);
+extern afs_int32 afs_uuid_create (afsUUID *uuid);
+extern u_short afs_uuid_hash (afsUUID *uuid);
 
 
 /* MISC PROTOTYPES - THESE SHOULD NOT BE HERE */

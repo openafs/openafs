@@ -26,7 +26,7 @@ struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
 void rxk_InitializeSocket();
 
-void afs_rxevent_daemon(void *argp)
+void afs_rxevent_daemon(void)
 {
     struct timespec tv;
     struct clock temp;

@@ -221,7 +221,7 @@ char *osi_Alloc(afs_int32 x)
     return ((char *) malloc(x));
 }
 
-osi_Free(char *x, afs_int32 size)
+void osi_Free(char *x, afs_int32 size)
 {
     if (x == &memZero) return;
     free((char *)x);
@@ -310,8 +310,7 @@ void rx_GetIFInfo(void)
     
 #endif
 
-static afs_uint32 fudge_netmask(addr) 
-afs_uint32 addr;
+static afs_uint32 fudge_netmask(afs_uint32 addr) 
 {
 afs_uint32 msk;
 
@@ -348,7 +347,7 @@ return rcode;
 #endif /* AFS_AIX_ENV */
 
 #ifndef AFS_NT40_ENV
-void rx_GetIFInfo()
+void rx_GetIFInfo(void)
 {
     int     s;
     int     i, j, len, res;

@@ -11,6 +11,7 @@
 #define _RX_PROTOTYPES_H
 
 /* rx.c */
+extern void rx_SetEpoch (afs_uint32 epoch);
 extern int rx_Init(u_int port);
 #ifndef KERNEL
 extern void rxi_StartServerProcs(int nExistingProcs);
@@ -32,7 +33,7 @@ extern int rxi_SetCallNumberVector(register struct rx_connection *aconn,
 extern struct rx_service *rx_NewService(u_short port, u_short serviceId, 
         char *serviceName,
         struct rx_securityClass **securityObjects,
-        int nSecurityObjects, afs_int32 (*serviceProc)());
+        int nSecurityObjects, afs_int32 (*serviceProc)(struct rx_call *acall));
 extern void rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket *socketp);
 extern void rx_WakeupServerProcs(void);
 extern struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *socketp);
@@ -165,6 +166,7 @@ extern void rx_clearPeerRPCStats(afs_uint32 clearFlag);
 extern void rx_SetRxStatUserOk(int (*proc)(struct rx_call *call));
 extern int rx_RxStatUserOk(struct rx_call *call);
 
+
 /* old style till varargs */
 void rxi_DebugPrint();
 
@@ -201,16 +203,62 @@ extern struct rxepoch *rxepoch_Allocate(struct clock *when);
 
 
 /* rx_getaddr.c */
-
+extern void rxi_setaddr(afs_int32 x);
+extern afs_int32 rxi_getaddr(void);
 
 /* rx_globals.c */
 
 
 /* rx_kcommon.c */
+extern int (*rxk_PacketArrivalProc)(register struct rx_packet *ahandle,
+        register struct sockaddr_in *afrom, char *arock,
+        afs_int32 asize);
+extern int (*rxk_GetPacketProc)(char **ahandle, int asize);
+extern afs_int32 afs_termState;
+extern int rxk_initDone;
+
+extern int rxk_DelPort(u_short aport);
+extern void rxk_shutdownPorts(void);
+extern osi_socket rxi_GetUDPSocket(u_short port);
+extern void osi_Panic();
+extern int osi_utoa(char *buf, size_t len, unsigned long val);
+extern void rxi_InitPeerParams(register struct rx_peer *pp);
+extern void shutdown_rxkernel(void);
+#ifdef AFS_USERSPACE_IP_ADDR
+extern int rxi_GetcbiInfo(void);
+extern afs_int32 rxi_Findcbi(afs_uint32 addr);
+#else
+extern int rxi_GetIFInfo(void);
+#endif
+#ifndef UKERNEL
+#if 0
+extern int rxk_FreeSocket(register struct socket *asocket);
+#endif
+extern struct osi_socket *rxk_NewSocket(short aport);
+#endif
+extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port);
 #ifdef UKERNEL
 extern void rx_ServerProc(void);
 #endif
 extern void osi_AssertFailK(const char *expr, const char *file, int line);
+extern void rxk_ListenerProc(void);
+extern void rxk_Listener(void);
+#ifndef UKERNEL
+extern void afs_rxevent_daemon(void);
+#endif
+extern void osi_StopListener(void);
+
+
+/* ARCH/rx_kmutex.c */
+#ifdef CONFIG_SMP
+extern void afs_mutex_init(afs_kmutex_t *l);
+extern void afs_mutex_enter(afs_kmutex_t *l);
+extern int afs_mutex_tryenter(afs_kmutex_t *l);
+extern void afs_mutex_exit(afs_kmutex_t *l);
+extern int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok);
+extern void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime);
+#endif
+
 
 
 /* rx_knet.c */
@@ -223,12 +271,15 @@ extern int osi_NetSend(struct socket *sop, struct sockaddr_in *to,
                 struct iovec *iov, int iovcnt, int size, int istack);
 #endif
 #endif
-#if 0
-extern int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
-                   struct iovec *iov, int iovcnt, int *lengthp);
-#endif
+extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
+                   struct iovec *dvec, int nvecs, int *lengthp);
 extern void osi_StopListener(void);
+extern int rxi_FindIfMTU(afs_uint32 addr);
 
+/* UKERNEL/rx_knet.c */
+#ifdef UKERNEL
+extern void afs_rxevent_daemon(void);
+#endif
 
 
 /* rx_lwp.c */
@@ -257,6 +308,9 @@ extern char *osi_alloc(afs_int32 x);
 #ifndef osi_free
 extern int osi_free(char *x, afs_int32 size);
 #endif
+extern int hton_syserr_conv(register afs_int32 code);
+extern int ntoh_syserr_conv(int code);
+
 
 /* rx_multi.c */
 
@@ -373,6 +427,18 @@ extern void osi_AssertFailU(const char *expr, const char *file, int line);
 extern int rx_getAllAddr (afs_int32 *buffer, int maxSize);
 extern void osi_Panic(); /* leave without args till stdarg rewrite */
 extern void rxi_InitPeerParams(struct rx_peer *pp);
+#ifdef  AFS_AIX32_ENV
+#ifndef osi_Alloc
+extern char *osi_Alloc(afs_int32 x);
+extern void osi_Free(char *x, afs_int32 size);
+#endif
+#endif /* AFS_AIX32_ENV */
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+extern int rxi_getaddr(void);
+extern int rx_getAllAddr (afs_int32 *buffer, int maxSize);
+#endif
+extern void rx_GetIFInfo(void);
+extern void rx_SetNoJumbo(void);
 
 
 /* rx_xmit_nt.c */
@@ -380,9 +446,18 @@ extern void rxi_InitPeerParams(struct rx_peer *pp);
 
 /* MISC PROTOTYPES - MOVE TO APPROPRIATE LOCATION LATER */
 
-/* keep here for now, 64 bit issues */
+/* EXTERNAL PROTOTYPES - include here cause it causes too many issues to
+   include the afs_prototypes.h file - just make sure they match */
 extern void *afs_osi_Alloc(size_t x);
 extern void *afs_osi_Alloc_NoSleep(size_t x);
 extern void afs_osi_Free(void *x, size_t asize);
+#ifndef afs_osi_Wakeup
+extern void afs_osi_Wakeup(void *event);
+#endif
+#ifndef afs_osi_Sleep
+extern void afs_osi_Sleep(void *event);
+#endif
+extern unsigned int afs_random(void);
+extern void osi_linux_rxkreg(void);
 
 #endif /* _RX_PROTOTYPES_H */

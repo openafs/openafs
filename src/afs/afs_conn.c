@@ -322,7 +322,7 @@ void afs_PutConn(register struct conn *ac, afs_int32 locktype)
 client network interface going down. We need to reopen new 
 connections in this case
 */
-int ForceNewConnections(struct srvAddr *sap)
+void ForceNewConnections(struct srvAddr *sap)
 {
 	struct conn *tc=0;
 

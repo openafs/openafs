@@ -290,7 +290,9 @@ int afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
       /* "moredata" just says "there are more dirty chunks yet to come".
        */
       if (j) {
+#ifdef AFS_NOSTATS
 	static afs_uint32 lp1 = 10000, lp2 = 10000;
+#endif
 	struct AFSStoreStatus InStatus;
 	afs_size_t base, bytes;
 	afs_uint32 nchunks;

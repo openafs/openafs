@@ -408,7 +408,7 @@ int afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
     }
 }
 
-int Check_AtSys(register struct vcache *avc, char *aname, 
+int Check_AtSys(register struct vcache *avc, const char *aname, 
 	struct sysname_info *state, struct vrequest *areq)
 {
     if (AFS_EQ_ATSYS(aname)) {

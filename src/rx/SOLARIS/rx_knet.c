@@ -131,9 +131,7 @@ rxi_GetIFInfo()
     return different;
 }
 
-int
-rxi_FindIfMTU(addr)
-    afs_uint32 addr;
+int rxi_FindIfMTU(afs_uint32 addr)
 {
     ill_t *ill;
     ipif_t *ipif;

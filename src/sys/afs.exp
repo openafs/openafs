@@ -105,7 +105,6 @@ afs_brsWaiters
 afs_brsDaemons
 afs_brs
 afs_callo
-cbHashT
 VLRU
 afs_DLRU
 afs_xcbhash

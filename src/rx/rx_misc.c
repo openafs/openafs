@@ -51,9 +51,7 @@ RCSID("$Header$");
  * Convert from the local (host) to the standard 
  * (network) system error code.
  */
-int
-hton_syserr_conv(code)
-    register afs_int32 code;
+int hton_syserr_conv(register afs_int32 code)
 {
     register afs_int32 err;
 
@@ -74,8 +72,7 @@ hton_syserr_conv(code)
  * Convert from the standard (Network) format to the
  * local (host) system error code.
  */
-int
-ntoh_syserr_conv(int code)
+int ntoh_syserr_conv(int code)
 {
     register afs_int32 err;
 

@@ -109,6 +109,7 @@ int (*swapNameProgram)() = 0;
 
 /* Local static routines */
 static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn);
+static void rxi_SetAcksInTransmitQueue(register struct rx_call *call);
 
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
@@ -304,8 +305,6 @@ struct rx_connection *rxLastConn = 0;
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX;
 #endif /* RX_LOCKS_DB */
-static void rxi_SetAcksInTransmitQueue();
-void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #else /* RX_ENABLE_LOCKS */
 #define SET_CALL_QUEUE_LOCK(C, L)
 #define CLEAR_CALL_QUEUE_LOCK(C)
@@ -334,8 +333,7 @@ struct rx_serverQueueEntry *rx_waitForPacket = 0;
 #define UNLOCK_EPOCH
 #endif /* AFS_PTHREAD_ENV */
 
-void rx_SetEpoch (epoch)
-  afs_uint32 epoch;
+void rx_SetEpoch (afs_uint32 epoch)
 {
     LOCK_EPOCH
     rx_epoch = epoch;
@@ -1169,7 +1167,7 @@ int rxi_SetCallNumberVector(register struct rx_connection *aconn,
 struct rx_service *rx_NewService(u_short port, u_short serviceId, 
 	char *serviceName, 
 	struct rx_securityClass **securityObjects,
-	int nSecurityObjects, afs_int32 (*serviceProc)())
+	int nSecurityObjects, afs_int32 (*serviceProc)(struct rx_call *acall))
 {    
     osi_socket socket = OSI_NULLSOCKET;
     register struct rx_service *tservice;    
@@ -1694,7 +1692,8 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
  * and (2) only use it once.  Other uses currently void your warranty
  */
 void rx_SetArrivalProc(register struct rx_call *call, 
-	register VOID (*proc)(), register VOID *handle, register VOID *arg)
+	register VOID (*proc)(),
+	register VOID *handle, register VOID *arg)
 {
     call->arrivalProc = proc;
     call->arrivalProcHandle = handle;

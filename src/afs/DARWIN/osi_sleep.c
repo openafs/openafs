@@ -18,8 +18,6 @@ RCSID("$Header$");
 
 
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-void afs_osi_Wakeup(int *event);
-void afs_osi_Sleep(int *event);
 
 static char waitV;
 
@@ -122,7 +120,7 @@ static afs_event_t *afs_getevent(char *event)
 #define relevent(evp) ((evp)->refcount--)
 
 
-void afs_osi_Sleep(int *event)
+void afs_osi_Sleep(void *event)
 {
     struct afs_event *evp;
     int seq;
@@ -144,7 +142,7 @@ void afs_osi_Sleep(int *event)
     relevent(evp);
 }
 
-int afs_osi_SleepSig(int *event)
+int afs_osi_SleepSig(void *event)
 {
     afs_osi_Sleep(event);
     return 0;
@@ -201,7 +199,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 }
 
 
-void afs_osi_Wakeup(int *event)
+void afs_osi_Wakeup(void *event)
 {
     struct afs_event *evp;
     

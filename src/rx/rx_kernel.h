@@ -15,9 +15,6 @@
 #define osi_Alloc afs_osi_Alloc
 #define osi_Free  afs_osi_Free
 
-extern int (*rxk_GetPacketProc)(); /* set to packet allocation procedure */
-extern int (*rxk_PacketArrivalProc)();
-
 #define rxi_ReScheduleEvents    0 /* Not needed by kernel */
 
 /* This is a no-op, because the kernel server procs are pre-allocated */
