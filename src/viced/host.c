@@ -1590,8 +1590,8 @@ static int h_DumpHost(host, held, file)
     char tmpStr[256];
 
     H_LOCK
-    sprintf(tmpStr, "ip:%x holds:%d port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-	    host->host, host->holds, host->port, host->index, host->cblist,
+    sprintf(tmpStr, "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
+	    host->host, host->port, host->index, host->cblist,
 	    CheckLock(&host->lock), host->LastCall, host->ActiveCall, 
 	    (host->hostFlags & VENUSDOWN), host->hostFlags&HOSTDELETED, 
 	    host->Console, host->hostFlags & CLIENTDELETED, 
@@ -1609,8 +1609,16 @@ static int h_DumpHost(host, held, file)
 	    sprintf(tmpStr, " %x", host->interface->addr[i]);
 	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
-    sprintf(tmpStr, "]\n");
+    sprintf(tmpStr, "] holds: ");
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+
+    for (i = 0 ; i < h_maxSlots ; i++) {
+      sprintf(tmpStr, "%04x", host->holds[i]);
+      STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    }
+    sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
+    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+
     H_UNLOCK
     return held;
 
