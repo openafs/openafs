@@ -109,4 +109,5 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_sock_create_v=yes,
   ac_cv_linux_kernel_sock_create_v=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)
+CPPFLAGS="$save_CPPFLAGS"])
 
