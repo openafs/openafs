@@ -161,12 +161,14 @@ ih_Initialize(void)
 void
 ih_UseLargeCache(void)
 {
-    IH_LOCK if (!ih_Inited) {
+    IH_LOCK;
+    if (!ih_Inited) {
 	ih_Initialize();
     }
     fdCacheSize = fdMaxCacheSize;
 
-IH_UNLOCK}
+    IH_UNLOCK;
+}
 
 /* Allocate a chunk of inode handles */
 void
@@ -191,7 +193,8 @@ ih_init(int dev, int vid, Inode ino)
     int ihash = IH_HASH(dev, vid, ino);
     IHandle_t *ihP;
 
-    IH_LOCK if (!ih_Inited) {
+    IH_LOCK;
+    if (!ih_Inited) {
 	ih_Initialize();
     }
 
@@ -199,7 +202,8 @@ ih_init(int dev, int vid, Inode ino)
     for (ihP = ihashTable[ihash].ihash_head; ihP; ihP = ihP->ih_next) {
 	if (ihP->ih_ino == ino && ihP->ih_vid == vid && ihP->ih_dev == dev) {
 	    ihP->ih_refcnt++;
-	    IH_UNLOCK return ihP;
+	    IH_UNLOCK;
+	    return ihP;
 	}
     }
 
@@ -218,17 +222,20 @@ ih_init(int dev, int vid, Inode ino)
     DLL_INIT_LIST(ihP->ih_fdhead, ihP->ih_fdtail);
     DLL_INSERT_TAIL(ihP, ihashTable[ihash].ihash_head,
 		    ihashTable[ihash].ihash_tail, ih_next, ih_prev);
-    IH_UNLOCK return ihP;
+    IH_UNLOCK;
+    return ihP;
 }
 
 /* Copy an inode handle */
 IHandle_t *
 ih_copy(IHandle_t * ihP)
 {
-    IH_LOCK assert(ih_Inited);
+    IH_LOCK;
+    assert(ih_Inited);
     assert(ihP->ih_refcnt > 0);
     ihP->ih_refcnt++;
-    IH_UNLOCK return ihP;
+    IH_UNLOCK;
+    return ihP;
 }
 
 /* Allocate a chunk of file descriptor handles */
@@ -280,15 +287,17 @@ ih_open(IHandle_t * ihP)
     if (!ihP)			/* XXX should log here in the fileserver */
 	return NULL;
 
-    IH_LOCK
-	/* Do we already have an open file handle for this Inode? */
-	for (fdP = ihP->ih_fdtail; fdP != NULL; fdP = fdP->fd_ihprev) {
+    IH_LOCK;
+
+    /* Do we already have an open file handle for this Inode? */
+    for (fdP = ihP->ih_fdtail; fdP != NULL; fdP = fdP->fd_ihprev) {
 	if (fdP->fd_status != FD_HANDLE_INUSE) {
 	    assert(fdP->fd_status == FD_HANDLE_OPEN);
 	    fdP->fd_status = FD_HANDLE_INUSE;
 	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	    ihP->ih_refcnt++;
-	    IH_UNLOCK(void) FDH_SEEK(fdP, 0, SEEK_SET);
+	    IH_UNLOCK;
+	    (void) FDH_SEEK(fdP, 0, SEEK_SET);
 	    return fdP;
 	}
     }
@@ -297,10 +306,13 @@ ih_open(IHandle_t * ihP)
      * Try to open the Inode, return NULL on error.
      */
     fdInUseCount += 1;
-    IH_UNLOCK fd = OS_IOPEN(ihP);
-    IH_LOCK if (fd == INVALID_FD) {
+    IH_UNLOCK;
+    fd = OS_IOPEN(ihP);
+    IH_LOCK;
+    if (fd == INVALID_FD) {
 	fdInUseCount -= 1;
-	IH_UNLOCK return NULL;
+	IH_UNLOCK;
+	return NULL;
     }
 
     /* fdCacheSize limits the size of the descriptor cache, but
@@ -335,11 +347,14 @@ ih_open(IHandle_t * ihP)
 		    fd_ihprev);
 
     if (closeFd != INVALID_FD) {
-	IH_UNLOCK OS_CLOSE(closeFd);
-	IH_LOCK fdInUseCount -= 1;
+	IH_UNLOCK;
+	OS_CLOSE(closeFd);
+	IH_LOCK;
+	fdInUseCount -= 1;
     }
 
-    IH_UNLOCK return fdP;
+    IH_UNLOCK;
+    return fdP;
 }
 
 /*
@@ -353,7 +368,8 @@ fd_close(FdHandle_t * fdP)
     if (!fdP)
 	return 0;
 
-    IH_LOCK assert(ih_Inited);
+    IH_LOCK;
+    assert(ih_Inited);
     assert(fdInUseCount > 0);
     assert(fdP->fd_status == FD_HANDLE_INUSE);
 
@@ -365,7 +381,8 @@ fd_close(FdHandle_t * fdP)
      * IH_REALLY_CLOSED) or we have too many open files.
      */
     if (ihP->ih_flags & IH_REALLY_CLOSED || fdInUseCount > fdCacheSize) {
-	IH_UNLOCK return fd_reallyclose(fdP);
+	IH_UNLOCK;
+	return fd_reallyclose(fdP);
     }
 
     /* Put this descriptor back into the cache */
@@ -377,8 +394,10 @@ fd_close(FdHandle_t * fdP)
      */
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;
-    IH_UNLOCK} else {
-	IH_UNLOCK ih_release(ihP);
+	IH_UNLOCK;
+    } else {
+	IH_UNLOCK;
+	ih_release(ihP);
     }
 
     return 0;
@@ -397,7 +416,8 @@ fd_reallyclose(FdHandle_t * fdP)
     if (!fdP)
 	return 0;
 
-    IH_LOCK assert(ih_Inited);
+    IH_LOCK;
+    assert(ih_Inited);
     assert(fdInUseCount > 0);
     assert(fdP->fd_status == FD_HANDLE_INUSE);
 
@@ -419,15 +439,19 @@ fd_reallyclose(FdHandle_t * fdP)
 	ihP->ih_flags &= ~IH_REALLY_CLOSED;
     }
 
-    IH_UNLOCK OS_CLOSE(closeFd);
-    IH_LOCK fdInUseCount -= 1;
+    IH_UNLOCK;
+    OS_CLOSE(closeFd);
+    IH_LOCK;
+    fdInUseCount -= 1;
 
     /* If this is not the only reference to the Inode then we can decrement
      * the reference count, otherwise we need to call ih_release. */
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;
-    IH_UNLOCK} else {
-	IH_UNLOCK ih_release(ihP);
+	IH_UNLOCK;
+    } else {
+	IH_UNLOCK;
+	ih_release(ihP);
     }
 
     return 0;
@@ -439,12 +463,14 @@ stream_fdopen(FD_t fd)
 {
     StreamHandle_t *streamP;
 
-    IH_LOCK if (streamAvailHead == NULL) {
+    IH_LOCK;
+    if (streamAvailHead == NULL) {
 	streamHandleAllocateChunk();
     }
     streamP = streamAvailHead;
     DLL_DELETE(streamP, streamAvailHead, streamAvailTail, str_next, str_prev);
-    IH_UNLOCK streamP->str_fd = fd;
+    IH_UNLOCK;
+    streamP->str_fd = fd;
     streamP->str_buflen = 0;
     streamP->str_bufoff = 0;
     streamP->str_error = 0;
@@ -655,9 +681,11 @@ stream_close(StreamHandle_t * streamP, int reallyClose)
     }
     streamP->str_fd = INVALID_FD;
 
-    IH_LOCK DLL_INSERT_TAIL(streamP, streamAvailHead, streamAvailTail,
-			    str_next, str_prev);
-    IH_UNLOCK return retval;
+    IH_LOCK;
+    DLL_INSERT_TAIL(streamP, streamAvailHead, streamAvailTail,
+		    str_next, str_prev);
+    IH_UNLOCK;
+    return retval;
 }
 
 /* Close all unused file descriptors associated with the inode
@@ -711,11 +739,11 @@ ih_fdclose(IHandle_t * ihP)
 	return 0;		/* No file descriptors closed */
     }
 
-    IH_UNLOCK
-	/*
-	 * Close the file descriptors
-	 */
-	closeCount = 0;
+    IH_UNLOCK;
+    /*
+     * Close the file descriptors
+     */
+    closeCount = 0;
     for (fdP = head; fdP != NULL; fdP = fdP->fd_next) {
 	OS_CLOSE(fdP->fd_fd);
 	fdP->fd_status = FD_HANDLE_AVAIL;
@@ -724,7 +752,8 @@ ih_fdclose(IHandle_t * ihP)
 	closeCount++;
     }
 
-    IH_LOCK assert(fdInUseCount >= closeCount);
+    IH_LOCK;
+    assert(fdInUseCount >= closeCount);
     fdInUseCount -= closeCount;
 
     /*
@@ -749,10 +778,12 @@ ih_reallyclose(IHandle_t * ihP)
     if (!ihP)
 	return 0;
 
-    IH_LOCK assert(ihP->ih_refcnt > 0);
+    IH_LOCK;
+    assert(ihP->ih_refcnt > 0);
     ih_fdclose(ihP);
 
-    IH_UNLOCK return 0;
+    IH_UNLOCK;
+    return 0;
 }
 
 /* Release an Inode handle. All cached file descriptors for this
@@ -766,11 +797,13 @@ ih_release(IHandle_t * ihP)
     if (!ihP)
 	return 0;
 
-    IH_LOCK assert(ihP->ih_refcnt > 0);
+    IH_LOCK;
+    assert(ihP->ih_refcnt > 0);
 
     if (ihP->ih_refcnt > 1) {
 	ihP->ih_refcnt--;
-	IH_UNLOCK return 0;
+	IH_UNLOCK;
+	return 0;
     }
 
     ihash = IH_HASH(ihP->ih_dev, ihP->ih_vid, ihP->ih_ino);
@@ -783,7 +816,8 @@ ih_release(IHandle_t * ihP)
 
     DLL_INSERT_TAIL(ihP, ihAvailHead, ihAvailTail, ih_next, ih_prev);
 
-    IH_UNLOCK return 0;
+    IH_UNLOCK;
+    return 0;
 }
 
 /* Sync an inode to disk if its handle isn't NULL */
