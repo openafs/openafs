@@ -1409,13 +1409,13 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 	int code = 0;
 	DWORD rv;
 	DWORD allSubmount;
-	DWORD nShares;
+	USHORT nShares;
 	DWORD nRegShares;
 	DWORD nSharesRet;
 	HKEY hkParam;
 	HKEY hkSubmount = NULL;
 	smb_rap_share_info_1_t * shares;
-	int cshare = 0;
+	USHORT cshare = 0;
 	char * cstrp;
 	char thisShare[256];
 	int i,j;
@@ -1479,11 +1479,12 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 
 	nShares = rootShares.cShare + nRegShares + allSubmount;
 
+#define REMARK_LEN 1
 	outParmsTotal = 8; /* 4 dwords */
-	outDataTotal = (sizeof(smb_rap_share_info_1_t) + 1) * nShares ;
+	outDataTotal = (sizeof(smb_rap_share_info_1_t) + REMARK_LEN) * nShares ;
 	if(outDataTotal > bufsize) {
-		nSharesRet = bufsize / (sizeof(smb_rap_share_info_1_t) + 1);
-		outDataTotal = (sizeof(smb_rap_share_info_1_t) + 1) * nSharesRet;
+		nSharesRet = bufsize / (sizeof(smb_rap_share_info_1_t) + REMARK_LEN);
+		outDataTotal = (sizeof(smb_rap_share_info_1_t) + REMARK_LEN) * nSharesRet;
 	}
 	else {
 		nSharesRet = nShares;
@@ -1495,14 +1496,14 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
     shares = (smb_rap_share_info_1_t *) outp->datap;
 	cstrp = outp->datap + sizeof(smb_rap_share_info_1_t) * nSharesRet;
 
-	memset(outp->datap, 0, (sizeof(smb_rap_share_info_1_t) + 1) * nSharesRet);
+	memset(outp->datap, 0, (sizeof(smb_rap_share_info_1_t) + REMARK_LEN) * nSharesRet);
 
 	if(allSubmount) {
 		strcpy( shares[cshare].shi1_netname, "all" );
 		shares[cshare].shi1_remark = cstrp - outp->datap;
 		/* type and pad are zero already */
 		cshare++;
-		cstrp++;
+		cstrp+=REMARK_LEN;
 	}
 
 	if(hkSubmount) {
@@ -1514,7 +1515,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 				shares[cshare].shi1_netname[sizeof(shares->shi1_netname)-1] = 0; /* unfortunate truncation */
 				shares[cshare].shi1_remark = cstrp - outp->datap;
 				cshare++;
-				cstrp++;
+				cstrp+=REMARK_LEN;
 			}
 			else
 				nShares--; /* uncount key */
@@ -1539,7 +1540,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 		strcpy(shares[cshare].shi1_netname, rootShares.shares[i].shi0_netname);
 		shares[cshare].shi1_remark = cstrp - outp->datap;
 		cshare++;
-		cstrp++;
+		cstrp+=REMARK_LEN;
 	}
 
 	outp->parmsp[0] = ((cshare == nShares)? ERROR_SUCCESS : ERROR_MORE_DATA);
@@ -1547,7 +1548,7 @@ long smb_ReceiveRAPNetShareEnum(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_
 	outp->parmsp[2] = cshare;
 	outp->parmsp[3] = nShares;
 
-	outp->totalData = (sizeof(smb_rap_share_info_1_t) + 1) * cshare;
+	outp->totalData = cstrp - outp->datap;
 	outp->totalParms = outParmsTotal;
 
 	smb_SendTran2Packet(vcp, outp, op);
