@@ -83,7 +83,9 @@ struct afsconf_dir {
 };
 
 extern struct afsconf_dir *afsconf_Open();
+extern afs_int32 afsconf_ClientAuth();
 extern afs_int32 afsconf_Authenticate();
+extern int afsconf_GetKey();
 
 struct afsconf_servPair {
     char *name;
