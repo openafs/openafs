@@ -48,8 +48,6 @@ AC_ARG_ENABLE(tivoli-tsm,
 [  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
 )
 
-AC_PROG_CC
-
 dnl weird ass systems
 AC_AIX
 AC_ISC_POSIX
@@ -58,6 +56,7 @@ AC_MINIX
 dnl Various compiler setup.
 AC_C_INLINE
 AC_C_CONST
+AC_PROG_CC
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
