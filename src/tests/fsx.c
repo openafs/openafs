@@ -35,7 +35,11 @@
 
 #if !defined L_SET
 # define L_SET          SEEK_SET
+#endif
+#if !defined L_INCR
 # define L_INCR         SEEK_CUR
+#endif
+#if !defined L_XTND
 # define L_XTND         SEEK_END
 #endif
 

@@ -41,6 +41,13 @@ RCSID("$Id$");
 #include <string.h>
 #include <ctype.h>
 
+#ifndef min
+#define min(a, b)               ((a) > (b) ? (b) : (a))
+#endif
+#ifndef max
+#define max(a, b)               ((a) < (b) ? (b) : (a))
+#endif
+
 enum format_flags {
     minus_flag     =  1,
     plus_flag      =  2,

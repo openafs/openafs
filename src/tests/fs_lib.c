@@ -129,7 +129,7 @@ fs_getfilecellname(char *path, char *cell, size_t len)
 
 #ifdef VIOC_SETRXKCRYPT
 int
-fs_setcrypt (u_int32_t n)
+fs_setcrypt (afs_uint32 n)
 {
     struct ViceIoctl	a_params;
 
@@ -151,7 +151,7 @@ fs_setcrypt (u_int32_t n)
 
 #ifdef VIOC_GETRXKCRYPT
 int
-fs_getcrypt (u_int32_t *level)
+fs_getcrypt (afs_uint32 *level)
 {
     struct ViceIoctl	a_params;
 
@@ -173,12 +173,12 @@ fs_getcrypt (u_int32_t *level)
 
 #ifdef VIOCCONNECTMODE
 int
-fs_connect(int32_t type, int32_t *flags)
+fs_connect(afs_int32 type, afs_int32 *flags)
 {
     struct ViceIoctl   a_params;
 
     a_params.in_size = sizeof(type);
-    a_params.out_size = sizeof (int32_t);
+    a_params.out_size = sizeof (afs_int32);
     a_params.in = (char *) &type;
     a_params.out = (char *) flags;
 
@@ -293,12 +293,12 @@ fs_getmaxfprio(int16_t *maxprio)
 
 #ifdef VIOCGETCACHEPARAMS
 int
-fs_getfilecachestats(u_int32_t *max_bytes,
-		     u_int32_t *used_bytes,
-		     u_int32_t *max_vnodes,
-		     u_int32_t *used_vnodes)
+fs_getfilecachestats(afs_uint32 *max_bytes,
+		     afs_uint32 *used_bytes,
+		     afs_uint32 *max_vnodes,
+		     afs_uint32 *used_vnodes)
 {
-    u_int32_t parms[16];
+    afs_uint32 parms[16];
     struct ViceIoctl a_params;
 
     a_params.in_size  = 0;
@@ -332,10 +332,10 @@ fs_getfilecachestats(u_int32_t *max_bytes,
 
 #ifdef VIOC_AVIATOR
 int
-fs_getaviatorstats(u_int32_t *max_workers,
-		   u_int32_t *used_workers)
+fs_getaviatorstats(afs_uint32 *max_workers,
+		   afs_uint32 *used_workers)
 {
-    u_int32_t parms[16];
+    afs_uint32 parms[16];
     struct ViceIoctl a_params;
 
     a_params.in_size = 0;
@@ -384,10 +384,10 @@ fs_gcpags(void)
 
 #ifdef VIOC_CALCULATE_CACHE
 int
-fs_calculate_cache(u_int32_t *calculated,
-		   u_int32_t *usedbytes)
+fs_calculate_cache(afs_uint32 *calculated,
+		   afs_uint32 *usedbytes)
 {
-    u_int32_t parms[16];
+    afs_uint32 parms[16];
     struct ViceIoctl a_params;
 
     a_params.in_size = 0;
@@ -441,8 +441,8 @@ debug (int pioctl_cmd, int inflags, int *outflags, char *pathname)
 {
     struct ViceIoctl   a_params;
 
-    int32_t rinflags = inflags;
-    int32_t routflags;
+    afs_int32 rinflags = inflags;
+    afs_int32 routflags;
 
     if (inflags != -1) {
 	a_params.in_size = sizeof(rinflags);
@@ -513,7 +513,7 @@ arla_debug (int inflags, int *outflags)
  */
 
 int
-fs_checkservers(char *cell, int32_t flags, u_int32_t *hosts, int numhosts)
+fs_checkservers(char *cell, afs_int32 flags, afs_uint32 *hosts, int numhosts)
 {
     struct ViceIoctl a_params;
     char *in = NULL;
@@ -521,15 +521,15 @@ fs_checkservers(char *cell, int32_t flags, u_int32_t *hosts, int numhosts)
     size_t insize;
 
     if (cell != NULL) {
-	insize = strlen(cell) + sizeof(int32_t) + 1;
+	insize = strlen(cell) + sizeof(afs_int32) + 1;
 	in = malloc (insize);
 	if (in == NULL)
 	    errx (1, "malloc");
 
 	memcpy (in, &flags, sizeof(flags));
 
-	memcpy (in + sizeof(int32_t), cell, strlen(cell));
-	in[sizeof(int32_t) + strlen(cell)] = '\0';
+	memcpy (in + sizeof(afs_int32), cell, strlen(cell));
+	in[sizeof(afs_int32) + strlen(cell)] = '\0';
 	
 	a_params.in_size = insize;
 	a_params.in = in;
@@ -538,7 +538,7 @@ fs_checkservers(char *cell, int32_t flags, u_int32_t *hosts, int numhosts)
 	a_params.in = (caddr_t )&flags;
     }
 
-    a_params.out_size = numhosts * sizeof(u_int32_t);
+    a_params.out_size = numhosts * sizeof(afs_uint32);
     a_params.out = (caddr_t)hosts;
 
     ret = 0;
@@ -580,7 +580,7 @@ int
 fs_set_sysname (const char *sys)
 {
     struct ViceIoctl a_params;
-    int32_t set = 1;
+    afs_int32 set = 1;
 
     a_params.in_size  = sizeof(set) + strlen(sys) + 1;
     a_params.in       = malloc(a_params.in_size);
@@ -605,14 +605,14 @@ int
 fs_setcache(int lv, int hv, int lb, int hb)
 {
     struct ViceIoctl a_params;
-    u_int32_t s[4];
+    afs_uint32 s[4];
 
     s[0] = lv;
     s[1] = hv;
     s[2] = lb;
     s[3] = hb;
 
-    a_params.in_size  = ((hv == 0) ? 1 : 4) * sizeof(u_int32_t);
+    a_params.in_size  = ((hv == 0) ? 1 : 4) * sizeof(afs_uint32);
     a_params.out_size = 0;
     a_params.in       = (void *)s;
     a_params.out      = NULL;
@@ -690,9 +690,9 @@ int
 fs_venuslog (void)
 {
     struct ViceIoctl a_params;
-    int32_t status = 0;   /* XXX not really right, but anyway */
+    afs_int32 status = 0;   /* XXX not really right, but anyway */
 
-    a_params.in_size  = sizeof(int32_t);
+    a_params.in_size  = sizeof(afs_int32);
     a_params.out_size = 0;
     a_params.in       = (caddr_t) &status;
     a_params.out      = NULL;
@@ -708,12 +708,12 @@ fs_venuslog (void)
  */
 
 int
-fs_getcellstatus (char *cellname, u_int32_t *flags)
+fs_getcellstatus (char *cellname, afs_uint32 *flags)
 {
     struct ViceIoctl a_params;
 
     a_params.in_size  = strlen (cellname) + 1;
-    a_params.out_size = sizeof (u_int32_t);
+    a_params.out_size = sizeof (afs_uint32);
     a_params.in       = cellname;
     a_params.out      = (caddr_t) flags;
 

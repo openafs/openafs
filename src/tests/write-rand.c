@@ -84,7 +84,7 @@ int
 main (int argc, char **argv)
 {
     const char *file;
-    const size_t sz;
+    size_t sz;
     char *random_buf;
     char *read_buf1;
     char *read_buf2;
