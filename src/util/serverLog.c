@@ -61,7 +61,7 @@ static pthread_mutex_t serverLogMutex;
 #define F_OK 0
 #endif
 
-char *threadname();
+char *(*threadNameProgram)();
 
 static int serverLogFD = -1;
 
@@ -95,7 +95,7 @@ void FSLog (const char *format, ...)
     info = &timeStamp[25];
 
     if (mrafsStyleLogs) {
-       name = threadname();
+       name = (*threadNameProgram)();
        sprintf(info, "[%s] ", name);
        info += strlen(info);
     }
@@ -116,8 +116,12 @@ void FSLog (const char *format, ...)
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV)
-    fflush(stdout);
-    fflush(stderr);     /* in case they're sharing the same FD */
+    if ( ! serverLogSyslog ) {
+		if ( serverLogFD > 0 )
+            fflush(serverLogFD); /* in case not on stdout/stderr */
+        fflush(stdout);
+        fflush(stderr);     /* in case they're sharing the same FD */
+    }
 #endif
 }
 

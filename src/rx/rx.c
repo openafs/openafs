@@ -95,6 +95,9 @@ extern afs_int32 afs_termState;
 extern afs_uint32 LWP_ThreadId();
 #endif /* RXDEBUG */
 
+int (*registerProgram)() = 0;
+int (*swapNameProgram)() = 0;
+
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
     afs_int32 rxi_start_aborted; /* rxi_start awoke after rxi_Send in error. */
@@ -618,7 +621,7 @@ void rxi_StartServerProcs(nExistingProcs)
 void rx_StartServer(donateMe)
 {
     register struct rx_service *service;
-    register int i;
+    register int i, nProcs;
     SPLVAR;
     clock_NewTime();
 
@@ -652,7 +655,26 @@ void rx_StartServer(donateMe)
     AFS_RXGUNLOCK();
     USERPRI;
 
-    if (donateMe) rx_ServerProc(); /* Never returns */
+    if (donateMe) {
+#ifndef AFS_NT40_ENV
+#ifndef KERNEL
+	int code;
+        char name[32];
+#ifdef AFS_PTHREAD_ENV
+        pid_t pid;
+        pid = pthread_self();
+#else /* AFS_PTHREAD_ENV */
+        PROCESS pid;
+        code = LWP_CurrentProcess(&pid);
+#endif /* AFS_PTHREAD_ENV */
+
+        sprintf(name,"srv_%d", ++nProcs);
+	if (registerProgram)
+            (*registerProgram)(pid, name);
+#endif /* KERNEL */
+#endif /* AFS_NT40_ENV */
+	rx_ServerProc(); /* Never returns */
+    }
     return;
 }
 

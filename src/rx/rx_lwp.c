@@ -36,6 +36,9 @@
 
 #define MAXTHREADNAMELENGTH 64
 
+extern int (*registerProgram)();
+extern int (*swapNameProgram)();
+
 int debugSelectFailure;	/* # of times select failed */
 /*
  * Sleep on the unique wait channel provided.
@@ -54,8 +57,8 @@ void rxi_Wakeup(void *addr)
     LWP_NoYieldSignal(addr);
 }
 
-PROCESS rx_listenerPid;	/* LWP process id of socket listener process */
-static void rx_ListenerProc(void *dummy);
+PROCESS rx_listenerPid = 0;	/* LWP process id of socket listener process */
+void rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -97,8 +100,14 @@ void rxi_StartServerProc(proc, stacksize)
     long (*proc)();
 {
     PROCESS scratchPid;
+    static int number = 0;
+    char name[32];
+
+    sprintf(name, "srv_%d", ++number);
     LWP_CreateProcess(proc, stacksize, RX_PROCESS_PRIORITY,
 		      0, "rx_ServerProc", &scratchPid);
+    if (registerProgram)
+	(*registerProgram)(scratchPid, name);
 }
 
 void rxi_StartListener() {
@@ -106,6 +115,8 @@ void rxi_StartListener() {
 #define	RX_LIST_STACK	24000
     LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY, 0,
 		      "rx_Listener", &rx_listenerPid);
+    if (registerProgram)
+	(*registerProgram)(rx_listenerPid, "listener");
 }
 
 /* The main loop which listens to the net for datagrams, and handles timeouts
@@ -151,7 +162,8 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
         exit(1);
     }
     rx_listenerPid = pid;
-    swapthreadname(pid, "listener", &name);
+    if (swapNameProgram)
+       (*swapNameProgram)(pid, "listener", &name);
 
     for (;;) {
 	/* Grab a new packet only if necessary (otherwise re-use the old one) */
@@ -245,6 +257,10 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 			    if (p) {
 				rxi_FreePacket(p);
 			    }
+			    if (swapNameProgram) {
+				(*swapNameProgram)(rx_listnerPid, &name, 0);
+				rx_listenerPid = 0;
+			    }
 			    return;
 			}
 		    }
@@ -260,6 +276,10 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 			if (newcallp && *newcallp) {
 			    if (p) {
 				rxi_FreePacket(p);
+			    }
+			    if (swapNameProgram) {
+				(*swapNameProgram)(rx_listenerPid, &name, 0);
+				rx_listenerPid = 0;
 			    }
 			    return;
 			}
