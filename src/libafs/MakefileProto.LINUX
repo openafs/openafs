@@ -104,8 +104,8 @@ ${COMPDIRS}:
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
-LIBAFS = libafs${CLIENT}.o
-LIBAFS_MP = libafs${CLIENT}.mp.o
+LIBAFS = openafs${CLIENT}.o
+LIBAFS_MP = openafs${CLIENT}.mp.o
 
 DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFS_MP = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
