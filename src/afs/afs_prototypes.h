@@ -444,7 +444,7 @@ extern void osi_iput(struct inode *ip);
 extern void afs_osi_SetTime(osi_timeval_t *atv);
 
 /* LINUX/osi_misc.c */
-#ifdef AFS_LINUX_ENV
+#ifdef AFS_LINUX20_ENV
 #ifdef AFS_LINUX24_ENV
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
                vnode_t **dirvpp, struct dentry **dpp);

@@ -1524,7 +1524,7 @@ void rxi_SendPacket(struct rx_call * call, struct rx_connection * conn,
 	  p->retryTime = p->timeSent;  /* resend it very soon */
 	  clock_Addmsec(&(p->retryTime), 10 + (((afs_uint32) p->backoff) << 8));
 
-#if defined(KERNEL) && defined(AFS_LINUX_ENV)
+#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
 	  /* Linux is nice -- it can tell us right away that we cannot
 	   * reach this recipient by returning an ENETUNREACH error
 	   * code.  So, when this happens let's "down" the host NOW so
@@ -1698,7 +1698,7 @@ void rxi_SendPacketList(struct rx_call * call, struct rx_connection * conn,
 	    p->retryTime = p->timeSent;  /* resend it very soon */
 	    clock_Addmsec(&(p->retryTime), 10 + (((afs_uint32) p->backoff) << 8));
 	  }
-#if defined(KERNEL) && defined(AFS_LINUX_ENV)
+#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
 	  /* Linux is nice -- it can tell us right away that we cannot
 	   * reach this recipient by returning an ENETUNREACH error
 	   * code.  So, when this happens let's "down" the host NOW so
