@@ -103,6 +103,7 @@ getinode(fs, dev, inode, ipp, perror)
     }
     vp = (struct vnode *) fake_vnode;
     fake_inode_init(vp, fs);
+    assert(vp->v_tag == VT_UFS);
     code = iget(VTOI(vp), inode, &ip, 0);
     if (code != 0) {
 	*perror = BAD_IGET;

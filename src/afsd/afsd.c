@@ -601,6 +601,12 @@ int SweepAFSCache(vFilesFound)
 	}
 	else  if ((strcmp(currp->d_name,          ".") == 0) ||
 	          (strcmp(currp->d_name,         "..") == 0) ||
+#ifdef AFS_DECOSF_ENV
+		  /* these are magic AdvFS files */
+		  (strcmp(currp->d_name,         ".tags") == 0) ||
+		  (strcmp(currp->d_name,         "quota.user") == 0) ||
+		  (strcmp(currp->d_name,         "quota.group") == 0) ||
+#endif
 		  (strcmp(currp->d_name, "lost+found") == 0)) {
 	    /*
 	     * Don't do anything - this file is legit, and is to be left alone.
