@@ -13,10 +13,7 @@
 #include <sys/types.h>
 #include <sys/file.h>
 #include <stdio.h>
-
-#if  defined(__alpha)
-extern void *malloc(int size);
-#endif
+#include <stdlib.h>
 
 #define TOK_DONTUSE 1 /* Don't copy if match and this flag is set. */
 struct token {
@@ -26,7 +23,7 @@ struct token {
 };
 
 /* free token list returned by parseLine */
-static FreeTokens(alist)
+static int FreeTokens(alist)
     register struct token *alist; {
     register struct token *nlist;
     for(; alist; alist = nlist) {
@@ -38,11 +35,11 @@ static FreeTokens(alist)
 }
 
 #define	space(x)    ((x) == ' ' || (x) == '\t' || (x) == '<' || (x) == '>')
-static ParseLine(aline, alist)
+static int ParseLine(aline, alist)
     char *aline;
     struct token **alist; {
     char tbuffer[MAXTOKLEN+1];
-    register char *tptr;
+    register char *tptr = NULL;
     int inToken;
     struct token *first, *last;
     register struct token *ttok;
@@ -57,7 +54,10 @@ static ParseLine(aline, alist)
 	if (tc == 0 || space(tc)) {    /* terminating null gets us in here, too */
 	    if (inToken) {
 		inToken	= 0;	/* end of this token */
-		*tptr++ = 0;
+		if ( !tptr )
+	   	    return -1; /* should never get here */
+		else
+		    *tptr++ = 0;
 		ttok = (struct token *) malloc(sizeof(struct token));
 		ttok->next = (struct token *) 0;
 		if (dontUse) {
@@ -101,7 +101,7 @@ static ParseLine(aline, alist)
 }
 /* read a line into a buffer, putting in null termination and stopping on appropriate
     end of line char.  Returns 0 at eof, > 0 at normal line end, and < 0 on error */
-static GetLine(afile, abuffer, amax)
+static int GetLine(afile, abuffer, amax)
     FILE *afile;
     int amax;
     register char *abuffer; {
@@ -124,7 +124,8 @@ static GetLine(afile, abuffer, amax)
 	}
     }
 }
-mc_copy(ain, aout, alist)
+
+int mc_copy(ain, aout, alist)
     register FILE *ain;
     register FILE *aout;
     char *alist[]; {

@@ -77,6 +77,9 @@ Generic install command.  Options are:
 #ifdef	AFS_HPUX_ENV
 #include <utime.h>
 #endif
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
 
 struct stat istat, ostat;
 
@@ -115,9 +118,9 @@ static char *strrpbrk (s, set)
     int  i;
 
     bzero (sets, sizeof(sets));
-    while (*set) sets[*set++] = 1;
+    while (*set) sets[(int) *set++] = 1;
     i = strlen (s);
-    while (i > 0) if (sets[s[--i]]) return &s[i];
+    while (i > 0) if (sets[(int)s[--i]]) return &s[i];
     return 0;
 }
 
@@ -126,23 +129,26 @@ char *ErrorString(aerrno)
     static char tbuffer[100];
     if (aerrno < 0 || aerrno >= sys_nerr) {
 	sprintf(tbuffer, "undefined error code %d", aerrno);
-	return tbuffer;
+    } else {
+	strcpy(tbuffer, sys_errlist[aerrno]);
     }
-    return sys_errlist[aerrno];
+    return tbuffer;
 }
 
+int
 stripName(aname)
     char *aname;
     {if (rindex(aname, '.') == 0) return 1;
     else return 0;
     }
 
+int
 atoo(astr)
     register char *astr;
     {register afs_int32 value;
     register char tc;
     value = 0;
-    while (tc = *astr++)
+    while ((tc = *astr++))
 	{value <<= 3;
 	value += tc-'0';
 	}
@@ -154,7 +160,7 @@ atoo(astr)
  * Implementation lifted from that for AIX 3.1, since there didn't seem to be any
  * reason why it wouldn't work.
  */
-static
+static int
 quickStrip (iname, oname, ignored, copy_only)
 char *iname, *oname; {
 	int pid, status;
@@ -248,6 +254,7 @@ char *iname, *oname; {
  *	Since /bin/strip will make that call for us, we will lie so that
  *	it has a chance.
  */
+int
 AIXobject(ignored) {
 
 	return !0;
@@ -451,16 +458,17 @@ static int quickStrip (afd, asize)
 
 #include "AFS_component_version_number.c"
 
+int
 main (argc, argv)
     int argc;
     char **argv;
 {
     int setOwner, setMode, setGroup, ifd, ofd;
-    afs_int32 mode, owner, group;
+    afs_int32 mode=0, owner, group;
     struct passwd *tpw;
     struct group *tgp;
     char *fnames[MAXFILES], *newNames[MAXFILES];
-    afs_int32 rcode, code, newcode;
+    afs_int32 rcode, code;
     char *dname;
     char pname[1024];
 #if defined (AFS_HPUX_ENV)
@@ -468,7 +476,10 @@ main (argc, argv)
 #endif /* AFS_HPUX_ENV */
     char pnametmp[1024];
     int pnamelen;
+#if defined (AFS_AIX_ENV)
+    afs_int32 newcode;
     static char diskBuffer[BUFSIZE];	/* must be static to avoid compiler bugs for large stuff */
+#endif
     char myHostName[100];
     struct timeval tvp[2];
     int isDir;
@@ -679,7 +690,7 @@ main (argc, argv)
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 	stripcalled = 0;
 	if (strip == 1 ||
-	    (strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i])) && AIXobject(fnames[i]))
+	    ((strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i])) && AIXobject(fnames[i])))
 	    stripcalled = 1;
 	if (!stripcalled) {
 	    /* Simply copy target to dest */

@@ -12,6 +12,7 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
+#include <string.h>
 #include <des.h>
 #include "des_internal.h"
 

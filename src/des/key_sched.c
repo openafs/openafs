@@ -36,11 +36,14 @@
 #include "stats.h"
 
 extern int des_debug;
-extern rev_swap_bit_pos_0();
+extern int rev_swap_bit_pos_0();
+extern int des_check_key_parity(des_cblock);
+extern int des_is_weak_key(des_cblock);
 
 typedef char key[64];
 /* the following are really void but cc86 doesnt allow it */
 static int make_key_sched();
+
 
 #ifdef AFS_DUX40_ENV
 #pragma weak des_key_sched = afs_des_key_sched
@@ -246,4 +249,6 @@ make_key_sched(Key,Schedule)
 	fprintf(stderr,"\n");
     }
 #endif
+
+	return(0);
 }
