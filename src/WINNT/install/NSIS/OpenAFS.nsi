@@ -32,7 +32,7 @@ VIAddVersionKey "CompanyName" "OpenAFS.org"
 VIAddVersionKey "ProductVersion" ${AFS_VERSION}
 VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
-VIAddVersionKey "LegalCopyright" "(C)2003"
+VIAddVersionKey "LegalCopyright" "(C)2000-2004"
 !ifdef DEBUG
 VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif               ; End DEBUG
@@ -460,7 +460,7 @@ Section "AFS Client" secClient
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   nsExec::Exec '$R0 afscreds.exe'
-  nsExec::Exec "afscreds.exe -z"
+  Exec "afscreds.exe -z"
   ; in case we are upgrading an old version that does not support -z
   Sleep 2000
   nsExec::Exec '$R0 afscreds.exe'
@@ -566,7 +566,7 @@ Section "AFS Client" secClient
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "VersionString" ${AFS_VERSION}
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Title" "AFS Client"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Description" "AFS Client"
-  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PathName" "$INSTDIR\Client\Program"
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PathName" "$INSTDIR\Client"
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Software Type" "File System"
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
@@ -689,7 +689,7 @@ Section "AFS Server" secServer
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   nsExec::Exec '$R0 afscreds.exe'
-  nsExec::Exec "afscreds.exe -z"
+  Exec "afscreds.exe -z"
   ; in case we are upgrading an old version that does not support -z
   Sleep 2000
   nsExec::Exec '$R0 afscreds.exe'
@@ -1317,11 +1317,24 @@ contInstall:
    Call ShouldClientInstall
    Pop $R2
    
+   ; Check if it was an IBM/Transarc version
+   ReadRegStr $R0 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "DisplayName"
+   StrCmp $R0 "IBM AFS Client" DoIBM
+   StrCmp $R0 "Transarc AFS Client" DoIBM
+NotIBM:
+   StrCpy $R9 ""
    StrCmp $R2 "0" NoClient
    StrCmp $R2 "1" ReinstallClient
    StrCmp $R2 "2" UpgradeClient
    StrCmp $R2 "3" DowngradeClient
-   
+   goto Continue
+DoIBM:
+   ReadRegDWORD $R0 HKLM "Software\TransarcCorporation\AFS Client\CurrentVersion" "MajorVersion"
+   StrCmp $R0 "3" +1 NotIBM
+   StrCpy $R9 "IBM"
+   goto UpgradeClient
+
+Continue:
 	SectionGetFlags ${secClient} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secClient} $0
@@ -1421,13 +1434,13 @@ CheckDocs:
 	SectionGetFlags ${secDocs} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secDocs} $0
-   goto end
+   goto CheckSDK
    
 NoDocs:
 	SectionGetFlags ${secDocs} $0
 	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secDocs} $0
-   goto end
+   goto CheckSDK
    
 ; To check the SDK, we simply look to see if the files exist.  If they do,
 ; the SDK is installed.  If not, we don't need to push it on the user.
@@ -1486,7 +1499,24 @@ end:
   StrCmp $R0 "" TryServer
   Push $R0
   Call GetParent
-  Call GetParent
+  
+  ; Work around bug in 1.3.5000, 1.3.5100, 1.3.5200, 1.3.5201, 1.3.5299 installers...
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MajorVersion"
+  StrCmp $R0 "1" +1 SkipParent
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "MinorVersion"
+  StrCmp $R0 "3" +1 SkipParent
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PatchLevel"
+  StrCmp $R0 "5000" UpParent
+  StrCmp $R0 "5100" UpParent
+  StrCmp $R0 "5200" UpParent
+  StrCmp $R0 "5201" UpParent
+  StrCmp $R0 "5299" UpParent
+  goto SkipParent
+  
+UpParent:
+   Call GetParent
+  
+SkipParent:
   Pop $R0
   StrCpy $INSTDIR $R0
   goto Nope
@@ -2219,7 +2249,7 @@ Function ShouldClientInstall
    
    StrCmp $R0 "" NotInstalled
    ; Now we see if it's an older or newer version
-
+   
    Call GetInstalledVersionMajor
    Pop $R0
    IntCmpU $R0 ${AFS_MAJORVERSION} +1 Upgrade Downgrade
@@ -2246,7 +2276,6 @@ Downgrade:
    StrCpy $R0 "3"
    Exch $R0
    goto end
-   
    
 NotInstalled:
    StrCpy $R0 "0"
