@@ -911,7 +911,7 @@ LONG __stdcall afsd_ExceptionFilter(EXCEPTION_POINTERS *ep)
 	   
     if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT)
     {
-        afsi_log("\nEXCEPTION_BREAKPOINT - continue execition ...\n");
+        afsi_log("\nEXCEPTION_BREAKPOINT - continue execution ...\n");
     
 #ifdef _DEBUG
         if (allocRequestBrk)

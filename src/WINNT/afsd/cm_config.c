@@ -489,7 +489,7 @@ long cm_GetRootCellName(char *cellNamep)
 	code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
 				cellNamep, &dummyLen);
 	RegCloseKey (parmKey);
-	if (code != ERROR_SUCCESS)
+	if (code != ERROR_SUCCESS || cellNamep[0] == 0)
 		return -1;
 
 	return 0;
