@@ -245,4 +245,38 @@ extern int ADMINAPI pts_OwnedGroupListDone(
   afs_status_p st
 );
 
+extern int ADMINAPI pts_UserListBegin(
+  const void *cellHandle,
+  void **iterationIdP,
+  afs_status_p st
+);
+
+extern int ADMINAPI pts_UserListNext(
+  const void *iterationId,
+  char *userName,
+  afs_status_p st
+);
+
+extern int ADMINAPI pts_UserListDone(
+  const void *iterationId,
+  afs_status_p st
+);
+
+extern int ADMINAPI pts_GroupListBegin(
+  const void *cellHandle,
+  void **iterationIdP,
+  afs_status_p st
+);
+
+extern int ADMINAPI pts_GroupListNext(
+  const void *iterationId,
+  char *groupName,
+  afs_status_p st
+);
+
+extern int ADMINAPI pts_GroupListDone(
+  const void *iterationId,
+  afs_status_p st
+);
+
 #endif /* TRANSARC_AFS_PTS_ADMIN_H */
