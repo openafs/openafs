@@ -87,6 +87,9 @@ die "Please specify a cellname\n" unless $cellname;
 unlink "$openafsdirpath->{'viceetcdir'}/CellServDB";
 unlink "$openafsdirpath->{'viceetcdir'}/ThisCell";
 if ($cellname eq "this.thirty.nine.character.name.for.sed") {
+  &uudecode("kaserver.DB0.uu");
+  &uudecode("kaserver.DBSYS1.uu");
+  &uudecode("KeyFile.uu");
   copy("kaserver.DB0","$openafsdirpath->{'afsdbdir'}/kaserver.DB0");
   copy("kaserver.DBSYS1","$openafsdirpath->{'afsdbdir'}/kaserver.DBSYS1");
   copy("KeyFile","$openafsdirpath->{'afsconfdir'}/KeyFile");
@@ -260,4 +263,40 @@ END {
     system("$openafsdirpath->{'afssrvbindir'}/bos shutdown $server -localauth") if $shutdown_needed;
   run(pop @unwinds) while @unwinds;
   }
+
+# perl uudecode implementation originally from 
+# http://www.perl.com/language/ppt/src/uudecode/uudecode.nick
+sub uudecode {
+    my ( $filename ) = @_;
+    open(ENCODED, "$filename");
+    FILESPEC :
+    while (<ENCODED>) {
+	my ($mode, $file);
+	next FILESPEC unless ($mode,$file) = /^begin\s+(\d+)\s+(\S+)/;
+	open(OUT, "> $file") or die "can't create $file: $!";
+	binmode(OUT);       # winsop
+	# Quickly protect file before data is written.  
+	# XXX: Does this break on sub-Unix systems, like if 
+	#      it's a mode 400 or 000 file? If so, then we must 
+	#      wait until after the close.
+	chmod oct($mode), $file or die "can't chmod $file to mode $mode: $!";
+	my $ended = 0;
+      LINE:
+	while (<ENCODED>) {
+	    if (/^end$/) {
+		$ended = 1;
+		last LINE;
+	    } 
+	    next LINE if /[a-z]/;
+	    next LINE unless int((((ord() - 32) & 077) + 2) / 3) 
+		== int(length() / 4);
+	    print OUT unpack("u", $_)
+		or die "can't write $file: $!";
+	    
+	}
+	close(OUT) or die "can't close $file: $!";
+	$ended or die "missing end; $file may be truncated";
+    }
+    close(ENCODED);
+}
 
