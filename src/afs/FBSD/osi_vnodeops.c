@@ -426,7 +426,7 @@ afs_vop_getpages(ap)
 	    /* vm_page_zero_invalid(m, TRUE); */
 	    for (i = 0; i < npages; ++i) {
 		if (i != ap->a_reqpage)
-		    vnode_pager_freepage(ap->a_m[i]);
+		    vm_page_free(ap->a_m[i]);
 	    }
 	    return(0);
 	}
@@ -459,7 +459,7 @@ afs_vop_getpages(ap)
     if (code && (uio.uio_resid == ap->a_count)) {
 	for (i = 0; i < npages; ++i) {
 	    if (i != ap->a_reqpage)
-		vnode_pager_freepage(ap->a_m[i]);
+		vm_page_free(ap->a_m[i]);
 	}
 	return VM_PAGER_ERROR;
     }
@@ -507,7 +507,7 @@ afs_vop_getpages(ap)
 		    vm_page_deactivate(m);
 		vm_page_wakeup(m);
 	    } else {
-		vnode_pager_freepage(m);
+		vm_page_free(m);
 	    }
         }
     }

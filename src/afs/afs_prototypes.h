@@ -864,7 +864,6 @@ extern int afs_closex(register struct file *afd);
 /* other VNOPS (please fix these) */
 extern int afs_open();
 extern int afs_close();
-extern int vnode_pager_freepage();
 extern int HandleIoctl();
 extern int afs_fsync();
 extern int afs_remove();
