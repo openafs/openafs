@@ -124,9 +124,9 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 # Without this line, gmake tries to build libafs.o
 .PHONY: libafs
 
-libafs:	$(LIBAFSNONFS)
-install_libafs:	$(INST_LIBAFSNONFS)
-dest_libafs:	$(DEST_LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS) $(LIBAFS)
+install_libafs:	$(INST_LIBAFSNONFS) $(INST_LIBAFS)
+dest_libafs:	$(DEST_LIBAFSNONFS) $(DEST_LIBAFS)
 
 
 $(INST_LIBAFS): $(LIBAFS)
@@ -152,13 +152,15 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 
 <sun4x_57 sun4x_58 sun4x_59>
 
-libafs: ${LIBAFSNONFS}
+libafs: ${LIBAFSNONFS} ${LIBAFS}
 
-install_libafs: ${LIBAFSNONFS}
+install_libafs: ${LIBAFSNONFS} ${LIBAFS}
 	${INSTALL} -f ${LIBAFSNONFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
+	${INSTALL} -f ${LIBAFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.o
 
-dest_libafs: ${LIBAFSNONFS}
+dest_libafs: ${LIBAFSNONFS} ${LIBAFS}
 	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
+	${INSTALL} -f ${LIBAFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
 
 <all>
 
