@@ -6468,6 +6468,7 @@ void GetStatus(targetptr, status, rights, anyrights, parentptr)
     else
 	status->FileType = Invalid;			/*invalid type field */
     status->LinkCount = targetptr->disk.linkCount;
+    status->Length_hi = 0;
     status->Length = targetptr->disk.length;
     status->DataVersion = targetptr->disk.dataVersion;
     status->Author = targetptr->disk.author;
