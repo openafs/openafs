@@ -229,12 +229,13 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	amd64_linux24)
+	amd64_linux*)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"

@@ -206,6 +206,7 @@
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
 #define SYS_NAME_ID_amd64_linux24       2702
+#define SYS_NAME_ID_amd64_linux26       2703
 
 #define SYS_NAME_ID_i386_umlinux2	2800
 #define SYS_NAME_ID_i386_umlinux22	2801
