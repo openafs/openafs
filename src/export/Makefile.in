@@ -24,7 +24,17 @@ all: ${TOP_LIBDIR}/export.exp ${TOP_LIBDIR}/export64.exp ${TOP_LIBDIR}/extras.ex
 
 noversion system: install
 
-install: ${DESTDIR}${libdir}/afs/export.exp ${DESTDIR}${libdir}/afs/extras.exp  
+install:    ${DESTDIR}${afskerneldir}/export.ext \
+	${DESTDIR}${afskerneldir}/export.ext.nonfs \
+	${DESTDIR}${afskerneldir}/export64.ext.nonfs \
+	${DESTDIR}${libdir}/afs/export.exp \
+	${DESTDIR}${libdir}/afs/export64.exp \
+	${DESTDIR}${libdir}/afs/extras.exp \
+	${DESTDIR}${afskerneldir}/cfgexport \
+	${DESTDIR}${afskerneldir}/cfgafs \
+	${DESTDIR}${afskerneldir}/export64.ext \
+	${DESTDIR}${afskerneldir}/cfgexport64 \
+	${DESTDIR}${afskerneldir}/cfgafs64 
 
 export.exp: ${srcdir}/export4.exp ${srcdir}/export5.exp
 	case ${SYS_NAME} in \
