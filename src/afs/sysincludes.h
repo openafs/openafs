@@ -64,6 +64,7 @@
 #include <linux/backing-dev.h>
 #include <linux/pagemap.h>
 #include <linux/namei.h>
+#include <linux/suspend.h>
 #endif
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
  * inclusion of uaccess.h.
