@@ -247,7 +247,6 @@ typedef struct timeval osi_timeval_t;
 #define USERPRI
 #endif
 
-#ifndef AFS_OBSD_ENV
 /*
  * vnode/vcache ref count manipulation
  */
@@ -256,7 +255,6 @@ typedef struct timeval osi_timeval_t;
 #else /* defined(UKERNEL) */
 #define AFS_RELE(vp) do { AFS_GUNLOCK(); VN_RELE(vp); AFS_GLOCK(); } while (0)
 #endif /* defined(UKERNEL) */
-#endif
 
 /*
  * For some reason we do bare refcount manipulation in some places, for some

@@ -212,11 +212,6 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 int afs_debug;
 
-#undef vrele
-#define vrele afs_nbsd_rele
-#undef VREF
-#define VREF afs_nbsd_ref
-
 int
 afs_nbsd_lookup(ap)
      struct vop_lookup_args	/* {

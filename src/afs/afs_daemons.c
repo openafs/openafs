@@ -576,11 +576,7 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 #ifdef	AFS_DEC_ENV
 		avc->vrefCount++;
 #else
-#if defined(AFS_NETBSD_ENV) || defined(AFS_OBSD_ENV)
-		AFS_HOLD(AFSTOV(avc));
-#else
 		VN_HOLD(AFSTOV(avc));
-#endif
 #endif
 	    }
 	    tb->refCount = ause + 1;

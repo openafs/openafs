@@ -346,7 +346,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
 		    AFS_RELE(AFSTOV(afs_globalVp));
 #endif
 		afs_globalVp = tvp;
-		AFS_HOLD(AFSTOV(afs_globalVp));
+		VREF(AFSTOV(afs_globalVp));
 	    }
 	    AFSTOV(tvp)->v_flag |= VROOT;
 	    afs_globalVFS = mp;
@@ -389,28 +389,6 @@ afs_sync(struct osi_vfs *afsp)
     store_dirty_vcaches();
 #endif
     return 0;
-}
-
-void
-afs_nbsd_ref(struct vnode *vp)
-{
-    if (vp->v_usecount == 0) {
-	vprint("holding unheld node", vp);
-	panic("afs_ref");
-    }
-    VREF(vp);
-}
-
-void
-afs_nbsd_rele(struct vnode *vp)
-{
-    AFS_GUNLOCK();
-    if (vp->v_usecount <= 0) {
-	vprint("rele'ing unheld node", vp);
-	panic("afs_rele");
-    }
-    vrele(vp);
-    AFS_GLOCK();
 }
 
 int
