@@ -1,0 +1,8 @@
+module AFSLIB_NAME {
+	version 1.0.3
+	type 	misc 
+	desc    "AFS Kernel routines"
+	states	loaded static  
+	loadtimes driver_install run
+	initfunc driver_install afsc_link static 
+}

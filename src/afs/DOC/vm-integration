@@ -1,0 +1,105 @@
+Copyright 2000, International Business Machines Corporation and others.
+All Rights Reserved.
+
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or online at http://www.openafs.org/dl/license10.html
+
+Here's a quick guide to understanding the AFS 3 VM integration.  This
+will help you do AFS 3 ports, since one of the trickiest parts of an
+AFS 3 port is the integration of the virtual memory system with the
+file system.
+
+The issues arise because in AFS, as in any network file system,
+changes may be made from any machine while references are being made
+to a file on your own machine.  Data may be cached in your local
+machine's VM system, and when the data changes remotely, the cache
+manager must invalidate the old information in the VM system.
+
+Furthermore, in some systems, there are pages of virtual memory
+containing changes to the files that need to be written back to the
+server at some time.  In these systems, it is important not to
+invalidate those pages before the data has made it to the file system.
+In addition, such systems often provide mapped file support, with read
+and write system calls affecting the same shared virtual memory as is
+used by the file should it be mapped.
+
+As you may have guessed from the above, there are two general styles
+of VM integration done in AFS 3: one for systems with limited VM
+system caching, and one for more modern systems where mapped files
+coexist with read and write system calls.
+
+For the older systems, the function osi_FlushText exists.  Its goal is
+to invalidate, or try to invalidate, caches where VM pages might cache
+file information that's now obsolete.  Even if the invalidation is
+impossible at the time the call is made, things should be setup so
+that the invalidation happens afterwards.
+
+I'm not going to say more about this type of system, since fewer and
+fewer exist, and since I'm low on time.  If I get back to this paper
+later, I'll remove this paragraph.  The rest of this note talks about
+the more modern mapped file systems.
+
+For mapped file systems, the function osi_FlushPages is called from
+various parts of the AFS cache manager.  We assume that this function
+must be called without holding any vnode locks, since it may call back
+to the file system to do part of its work.
+
+The function osi_FlushPages has a relatively complex specification.
+If the file is open for writing, or if the data version of the pages
+that could be in memory (vp->mapDV) is the current data version number
+of the file, then this function has no work to do.  The rationale is
+that if the file is open for writing, calling this function could
+destroy data written to the file but not flushed from the VM system to
+the cache file.  If mapDV >= DataVersion, then flushing the VM
+system's pages won't change the fact that we can still only have pages
+from data version == mapDV in memory.  That's because flushing all
+pages from the VM system results in a post condition that the only
+pages that might be in memory are from the current data version.
+
+If neither of the two conditions above occur, then we actually
+invalidate the pages, on a Sun by calling pvn_vptrunc.  This discards
+the pages without writing any dirty pages to the cache file.  We then
+set the mapDV field to the highest data version seen before we started
+the call to flush the pages.  On systems that release the vnode lock
+while doing the page flush, the file's data version at the end of this
+procedure may be larger than the value we set mapDV to, but that's
+only conservative, since a new could have been created from the
+earlier version of the file.
+
+There are a few times that we must call osi_FlushPages.  We should
+call it at the start of a read or open call, so that we raise mapDV to
+the current value, and get rid of any old data that might interfere
+with later reads.  Raising mapDV to the current value is also
+important, since if we wrote data with mapDV < DataVersion, then a
+call to osi_FlushPages would discard this data if the pages were
+modified w/o having the file open for writing (e.g. using a mapped
+file).  This is why we also call it in afs_map.  We call it in
+afs_getattr, since afs_getattr is the only function guaranteed to be
+called between the time another client updates an executable, and the
+time that our own local client tries to exec this executable; if we
+fail to call osi_FlushPages here, we might use some pages from the
+previous version of the executable file.
+
+Also, note that we update mapDV after a store back to the server
+completes, if we're sure that no other versions were created during
+the file's storeback.  The mapDV invariant (that no pages from earlier
+data versions exist in memory) remains true, since the only versions
+that existed between the old and new mapDV values all contained the
+same data.
+
+Finally, note a serious incompleteness in this system: we aren't
+really prepared to deal with mapped files correctly.  In particular,
+there is no code to ensure that data stored in dirty VM pages ends up
+in a cache file, except as a side effect of the segmap_release call
+(on Sun 4s) that unmaps the data from the kernel map, and which,
+because of the SM_WRITE flag, also calls putpage synchronously to get
+rid of the data.
+
+This problem needs to be fixed for any system that uses mapped files
+seriously.  Note that the NeXT port's generic write call uses mapped
+files, but that we've set a flag (close_flush) that ensures that all
+dirty pages get flushed after every write call.  It is also something
+of a performance hit, since it would be better to write those pages to
+the cache asynchronously rather than after every write, as happens
+now.
