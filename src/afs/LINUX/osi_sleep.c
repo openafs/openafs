@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_sleep.c,v 1.1.1.7 2002/01/22 19:48:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_sleep.c,v 1.1.1.8 2002/01/30 14:01:28 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -103,7 +103,6 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
         if (code == EINTR) {
                 if (aintok) 
 		    return EINTR;
-                flush_signals(current);
         }
 #else
 	timer = afs_osi_CallProc(AfsWaitHack, (char *) current, ams);
@@ -224,9 +223,22 @@ void afs_osi_Sleep(char *event)
     seq = evp->seq;
 
     while (seq == evp->seq) {
+	sigset_t saved_set;
+
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
+	spin_lock_irq(&current->sigmask_lock);
+	saved_set = current->blocked;
+	sigfillset(&current->blocked);
+	recalc_sigpending(current);
+	spin_unlock_irq(&current->sigmask_lock);
+
 	interruptible_sleep_on(&evp->cond);
+
+	spin_lock_irq(&current->sigmask_lock);
+	current->blocked = saved_set;
+	recalc_sigpending(current);
+	spin_unlock_irq(&current->sigmask_lock);
 	AFS_GLOCK();
     }
     relevent(evp);

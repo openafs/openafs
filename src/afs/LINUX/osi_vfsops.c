@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.10 2001/10/14 17:59:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.11 2002/01/30 14:01:28 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -78,6 +78,7 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     AFS_GLOCK();
     if (afs_was_mounted) {
 	printf("You must reload the AFS kernel extensions before remounting AFS.\n");
+	AFS_GUNLOCK();
 	return NULL;
     }
     afs_was_mounted = 1;
