@@ -337,8 +337,7 @@ usage:
     }
     if (!rxJumbograms) {
 	/* Don't allow 3.4 vos clients to send jumbograms and we don't send. */
-	rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-	rxi_nSendFrags = rxi_nRecvFrags = 1;
+        rx_SetNoJumbo();
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(420);

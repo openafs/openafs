@@ -910,9 +910,8 @@ char **envp;
     bozo_rxsc[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(
 					 0, tdir, afsconf_GetKey, (char *) 0);
 
-    /* These two lines disallow jumbograms */
-    rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-    rxi_nSendFrags = rxi_nRecvFrags = 1;
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
 
     tservice = rx_NewService(/* port */ 0, /* service id */ 1, 
 		  /*service name */ "bozo", /* security classes */ bozo_rxsc,

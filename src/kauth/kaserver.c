@@ -335,9 +335,8 @@ main (argc, argv)
 
     sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
 
-    /* These two lines disallow jumbograms */
-    rx_maxReceiveSize = OLD_MAX_PACKET_SIZE;
-    rxi_nSendFrags = rxi_nRecvFrags = 1;
+    /* Disable jumbograms */
+    rx_SetNoJumbo();
 
     tservice =
 	rx_NewService (0, KA_AUTHENTICATION_SERVICE, "AuthenticationService",
