@@ -2,6 +2,7 @@ xf_errs.c
 xf_errs.h
 OS.pm
 Dirpath.pm
+Makefile
 afsdump_dirlist
 afsdump_extract
 afsdump_scan
