@@ -736,10 +736,12 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     else if (parm == AFSOP_SHUTDOWN) {
 	afs_cold_shutdown = 0;
 	if (parm == 1) afs_cold_shutdown = 1;
+#ifndef AFS_DARWIN_ENV
 	if (afs_globalVFS != 0) {
 	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
 	    code = EACCES;
 	} else
+#endif
 	    afs_shutdown();
     }
     else if (parm == AFSOP_AFS_VFSMOUNT) {

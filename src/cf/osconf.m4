@@ -350,12 +350,14 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_12)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		REGEX_OBJ="regex.o"
 		XCFLAGS="-traditional-cpp"
 		;;
 
 	ppc_darwin_13)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
@@ -363,6 +365,7 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_14)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
@@ -370,6 +373,7 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_60)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
@@ -778,6 +782,7 @@ fi
 
 AC_SUBST(CCXPG2)
 AC_SUBST(AFSD_LIBS)
+AC_SUBST(AFSD_LDFLAGS)
 AC_SUBST(AR)
 AC_SUBST(AS)
 AC_SUBST(CP)

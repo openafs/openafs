@@ -30,6 +30,7 @@ viceetcdir=@viceetcdir@
 AR = @AR@
 AS = @AS@
 AFSD_LIBS = @AFSD_LIBS@
+AFSD_LDFLAGS = @AFSD_LDFLAGS@
 CC = @CC@
 CCXPG2 = @CCXPG2@
 CFLAGS = @CFLAGS@
