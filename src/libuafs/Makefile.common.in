@@ -51,7 +51,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
         -I${TOP_OBJDIR}/src/vlserver \
 	-I${TOP_OBJDIR}/src/libuafs \
         -I${TOP_INCDIR} \
-        -I${TOP_INCDIR}/afs \
+        -I${TOP_INCDIR}/afs 
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
