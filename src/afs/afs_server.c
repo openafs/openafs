@@ -304,7 +304,7 @@ static void CheckVLServer(sa, areq)
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
-    rx_SetConnDeadTime(tc->id, 50);
+    rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
     afs_PutConn(tc, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
@@ -639,7 +639,7 @@ void afs_CheckServers(adown, acellp)
 		afs_setTimeHost = tc->srvr->server;
 	    }
 	    if (setTimer)
-		rx_SetConnDeadTime(tc->id, 50);
+		rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
 	    if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 		/* server back up */
 		print_internet_address("afs: file server ", sa, " is back up", 2);
