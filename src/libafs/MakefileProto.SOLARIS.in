@@ -30,12 +30,15 @@ DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 #LD = /usr/ccs/bin/ld
 #LORDER = /usr/ccs/bin/lorder
 #CC = /opt/SUNWspro/bin/cc
-KDEFS= -Dsun4c -DSUN4C_60 -DNFSCLIENT -DSYSACCT -DOLDSCSI -DVDDRV -D_KERNEL \
-	-DSYSV -dn ${ARCH_DEFS}
+KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
 
-<sun4x_57 sun4x_58 sun4x_59 sun4x_510 sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+<sun4x_57 sun4x_58 sun4x_59 sun4x_510>
 KDEFS_32 = 
 KDEFS_64 = -xarch=v9 
+
+<sunx86_57 sunx86_58 sunx86_59 sunx86_510>
+KDEFS_32 = 
+KDEFS_64 = -xarch=amd64 -xmodel=kernel
 
 <all>
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
