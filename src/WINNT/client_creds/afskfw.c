@@ -2596,7 +2596,7 @@ KFW_AFS_klog(
     // NULL or empty cell returns information on local cell
     if (rc = get_cellconfig(Dmycell, &ak_cellconfig, local_cell))
     {
-		KFW_AFS_error(rc, "get_cellconfig()");
+        // KFW_AFS_error(rc, "get_cellconfig()");
         return(rc);
     }
 
@@ -2965,7 +2965,7 @@ KFW_AFS_error(LONG rc, LPCSTR FailedFunctionName)
     else
       errText = "Unknown error!";
 
-    sprintf(message, "%s\n(%s failed)", errText, FailedFunctionName);
+    sprintf(message, "%s (0x%x)\n(%s failed)", errText, rc, FailedFunctionName);
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString(message);
