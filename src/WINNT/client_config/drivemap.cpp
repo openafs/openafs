@@ -188,8 +188,12 @@ BOOL IsWindows2000 (void)
 
 void GetClientNetbiosName (LPTSTR pszName)
 {
-    *pszName = TEXT('\0');
-    lana_GetNetbiosName(pszName, LANA_NETBIOS_NAME_FULL);
+    static TCHAR szNetbiosName[32] = "";
+
+    if ( szNetbiosName[0] == 0 ) {
+        lana_GetNetbiosName(szNetbiosName, LANA_NETBIOS_NAME_FULL);
+    }
+    _tcscpy(pszName, szNetbiosName);
 }
 
 
@@ -710,12 +714,10 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 
     LPTSTR pszSubmount = szMapping;
     
-	static TCHAR szNetBiosName[32] = "";
-	if (szNetBiosName[0] == 0) {
-		memset(szNetBiosName, '\0', sizeof(szNetBiosName));
-		lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_FULL);
-		_tcscat(szNetBiosName, TEXT("\\"));
-	}
+	TCHAR szNetBiosName[32];
+    memset(szNetBiosName, '\0', sizeof(szNetBiosName));
+    GetClientNetbiosName(szNetBiosName);
+    _tcscat(szNetBiosName, TEXT("\\"));
 
    if (isWinNT)
    {
@@ -924,7 +926,7 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 	CHAR *pSubmount="";
 
     memset(szMachine, '\0', sizeof(szMachine));
-    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
+    GetClientNetbiosName(szMachine);
 
    // Initialize the data structure
 	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
@@ -970,7 +972,7 @@ BOOL DoMapShareChange()
     DWORD cbBuffer=16384;
 
     memset(szMachine, '\0', sizeof(szMachine));
-    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
+    GetClientNetbiosName(szMachine);
 
     // Initialize the data structure
 	if (!IsServiceActive())
@@ -1058,7 +1060,7 @@ BOOL DoMapShare()
 
 	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
     memset(szMachine, '\0', sizeof(szMachine));
-    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
+    GetClientNetbiosName(szMachine);
     sprintf(szPath,"\\\\%s\\all",szMachine);
 
     // Lets connect all submounts that weren't connectd
