@@ -32,6 +32,8 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_INODE_HAS_I_BYTES
 #undef STRUCT_INODE_HAS_I_CDEV
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_MAPPING_OVERLOAD
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 
 /* glue for RedHat kernel bug */

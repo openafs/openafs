@@ -113,11 +113,19 @@ case $system in
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 		 LINUX_FS_STRUCT_INODE_HAS_I_CDEV
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
+		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+		 LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mapping_overload" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_MAPPING_OVERLOAD)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_cdev" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_CDEV)

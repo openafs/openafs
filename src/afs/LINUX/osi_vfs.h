@@ -28,6 +28,9 @@ typedef struct vnode {
 #if defined(AFS_LINUX24_ENV)
         struct list_head        i_dirty_buffers;
 #endif
+#if defined(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+        struct list_head        i_dirty_data_buffers;
+#endif
 	unsigned long		i_ino;
 	unsigned int		i_count;
 	kdev_t			i_dev;
@@ -79,6 +82,9 @@ typedef struct vnode {
 #else
 	struct vm_area_struct	*i_mmap;
 	struct page		*i_pages;
+#endif
+#if defined(STRUCT_INODE_HAS_I_MAPPING_OVERLOAD)
+        int                     i_mapping_overload;
 #endif
 	struct dquot		*i_dquot[MAXQUOTAS];
 #if defined(AFS_LINUX24_ENV)
