@@ -67,7 +67,7 @@ ${DESTDIR}${libdir}/afs/libbosadmin.a: libbosadmin.a
 
 libbosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_bosAdmin.o: afs_bosAdmin.h

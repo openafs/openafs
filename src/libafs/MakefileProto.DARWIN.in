@@ -139,8 +139,8 @@ osi_vnodeops.o: $(AFS)/osi_vnodeops.c
 osi_module.o: $(AFS)/osi_module.c
 	$(CRULE1)
 xdr.o: $(RX)/xdr.c
-	$(CRULE1);
+	$(CRULE1)
 xdr_array.o: $(RX)/xdr_array.c
-	$(CRULE1);
+	$(CRULE1)
 xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1);
+	$(CRULE1)

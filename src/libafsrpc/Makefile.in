@@ -145,97 +145,97 @@ libafsrpc.a: ${LIBOBJS}
         esac
 
 rx_event.o: ${RX}/rx_event.c
-	${CCRULE};
+	${CCRULE}
 
 rx_user.o: ${RX}/rx_user.c
-	${CCRULE};
+	${CCRULE}
 
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE};
+	${CCRULE}
 
 rx.o: ${RX}/rx.c
-	${CCRULE};
+	${CCRULE}
 
 rx_conncache.o: ${RX}/rx_conncache.c
-	${CCRULE};
+	${CCRULE}
 
 rx_null.o: ${RX}/rx_null.c
-	${CCRULE};
+	${CCRULE}
 
 rx_globals.o: ${RX}/rx_globals.c
-	${CCRULE};
+	${CCRULE}
 
 rx_getaddr.o: ${RX}/rx_getaddr.c
-	${CCRULE};
+	${CCRULE}
 
 rx_misc.o: ${RX}/rx_misc.c
-	${CCRULE};
+	${CCRULE}
 
 rx_packet.o: ${RX}/rx_packet.c
-	${CCRULE};
+	${CCRULE}
 
 rx_rdwr.o: ${RX}/rx_rdwr.c
-	${CCRULE};
+	${CCRULE}
 
 rx_trace.o: ${RX}/rx_trace.c
-	${CCRULE};
+	${CCRULE}
 
 rx_multi.o: ${RX}/rx_multi.c
-	${CCRULE};
+	${CCRULE}
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
-	${CCRULE};
+	${CCRULE}
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE};
+	${CCRULE}
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
-	${CCRULE};
+	${CCRULE}
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE};
+	${CCRULE}
 
 fcrypt.o: ${RXKAD}/fcrypt.c
-	${CCRULE};
+	${CCRULE}
 
 crypt_conn.o: ${RXKAD}/crypt_conn.c
-	${CCRULE};
+	${CCRULE}
 
 AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
-	${CCRULE};
+	${CCRULE}
 
 xdr.o: ${RX}/xdr.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_int64.o: ${RX}/xdr_int64.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_array.o: ${RX}/xdr_array.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_arrayn.o: ${RX}/xdr_arrayn.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_float.o: ${RX}/xdr_float.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_mem.o: ${RX}/xdr_mem.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_rec.o: ${RX}/xdr_rec.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_refernce.o: ${RX}/xdr_refernce.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_rx.o: ${RX}/xdr_rx.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_update.o: ${RX}/xdr_update.c
-	${CCRULE};
+	${CCRULE}
 
 xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
-	${CCRULE};
+	${CCRULE}
 
 # Note that the special case statement for compiling des.c is present
 # simply to work around a compiler bug on HP-UX 11.0.  The symptom of
@@ -276,58 +276,58 @@ des.o: ${DES}/des.c
 	esac
 
 crypt.o: ${DES}/crypt.c
-	${CCRULE};
+	${CCRULE}
 
 cbc_encrypt.o: ${DES}/cbc_encrypt.c
-	${CCRULE};
+	${CCRULE}
 
 pcbc_encrypt.o: ${DES}/pcbc_encrypt.c
-	${CCRULE};
+	${CCRULE}
 
 cksum.o: ${DES}/cksum.c
-	${CCRULE};
+	${CCRULE}
 
 new_rnd_key.o: ${DES}/new_rnd_key.c
-	${CCRULE};
+	${CCRULE}
 
 key_sched.o: ${DES}/key_sched.c
-	${CCRULE};
+	${CCRULE}
 
 debug_decl.o: ${DES}/debug_decl.c
-	${CCRULE};
+	${CCRULE}
 
 quad_cksum.o: ${DES}/quad_cksum.c
-	${CCRULE};
+	${CCRULE}
 
 key_parity.o: ${DES}/key_parity.c
-	${CCRULE};
+	${CCRULE}
 
 weak_key.o: ${DES}/weak_key.c
-	${CCRULE};
+	${CCRULE}
 
 strng_to_key.o: ${DES}/strng_to_key.c
-	${CCRULE};
+	${CCRULE}
 
 misc.o: ${DES}/misc.c
-	${CCRULE};
+	${CCRULE}
 
 util.o: ${DES}/util.c
-	${CCRULE};
+	${CCRULE}
 
 error_msg.o: ${COMERR}/error_msg.c
-	${CCRULE};
+	${CCRULE}
 
 et_name.o: ${COMERR}/et_name.c
-	${CCRULE};
+	${CCRULE}
 
 com_err.o: ${COMERR}/com_err.c
-	${CCRULE};
+	${CCRULE}
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
-	${CCRULE};
+	${CCRULE}
 
 base64.o: ${UTIL}/base64.c
-	${CCRULE};
+	${CCRULE}
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
@@ -350,31 +350,31 @@ syscall.o: ${SYS}/syscall.s
 	esac
 
 rxstat.o: ${RXSTAT}/rxstat.c
-	${CCRULE};
+	${CCRULE}
 
 rxstat.cs.o: ${RXSTAT}/rxstat.cs.c
-	${CCRULE};
+	${CCRULE}
 
 rxstat.ss.o: ${RXSTAT}/rxstat.ss.c
-	${CCRULE};
+	${CCRULE}
 
 rxstat.xdr.o: ${RXSTAT}/rxstat.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE};
+	${CCRULE}
 
 clean:
 	$(RM) -f *.o libafsrpc*

@@ -10,12 +10,11 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-BACKDIR=../../../../PARENT/dest/
 include ../../config/Makefile.${SYS_NAME}
 
 OPTIMIZE=-g
 
-INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
+INCDIRS= -I${DESTDIR}/include -I..
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 

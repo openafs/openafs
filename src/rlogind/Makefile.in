@@ -69,7 +69,7 @@ rlogind: ${OBJS} ${LIBS} ../login/libutil.a
 	hp_ux110) \
 		${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} -lsec ;; \
 	*) ${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
-	esac ;
+	esac 
 
 rlogind.o: rlogind.c AFS_component_version_number.c
 
@@ -80,7 +80,7 @@ rexecd: rexecd.o ${ALIBS}
 	rs_aix*) \
 		${CC} -o $@ ${CFLAGS} rexecd.o ${ALIBS} ${XLIBS} -ls ;; \
 	*) ${CC} -o $@ ${CFLAGS} rexecd.o ${ALIBS} ${XLIBS} ;;\
-	esac ;
+	esac 
 
 
 ../login/libutil.a : ../login/util_login.c ../login/util_logout.c ../login/util_logwtmp.c

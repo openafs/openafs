@@ -41,10 +41,10 @@ include ../config/Makefile.version
 
 all: kinstall ukinstall ${TOP_LIBDIR}/libacl.a ${TOP_INCDIR}/afs/acl.h ${TOP_INCDIR}/afs/prs_fs.h
 
-libacl.a: $(LIBOBJS)  AFS_component_version_number.o
-	$(RM) -f libacl.a
-	ar rv libacl.a $(LIBOBJS) AFS_component_version_number.o
-	$(RANLIB) libacl.a
+libacl.a: $(LIBOBJS) AFS_component_version_number.o
+	$(RM) -f $@
+	$(AR) crv $@ $(LIBOBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 aclprocs.o: aclprocs.c acl.h
 

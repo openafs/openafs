@@ -44,9 +44,9 @@ cmdall: all test
 all: kinstall ukinstall ${TOP_LIBDIR}/libdir.a ${TOP_INCDIR}/afs/dir.h
 
 libdir.a: ${OBJS} AFS_component_version_number.o
-	$(RM) -f libdir.a
-	ar rv libdir.a $(OBJS) AFS_component_version_number.o
-	$(RANLIB) libdir.a
+	$(RM) -f $@
+	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 kinstall:
 	${INSTALL} dir.h ${KERNELDIR}/afs

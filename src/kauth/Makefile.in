@@ -129,15 +129,15 @@ Kkauth.h: kauth.rg
 	${RXGEN} -x -k -h -o Kkauth.h kauth.rg
 
 libkauth.a: $(OBJS) AFS_component_version_number.o
-	-$(RM) -f libkauth.a
-	ar rv libkauth.a $(OBJS) AFS_component_version_number.o
-	$(RANLIB) libkauth.a
+	-$(RM) -f $@
+	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 
 libkauth.krb.a: $(KOBJS) AFS_component_version_number.o
-	-$(RM) -f libkauth.krb.a
-	ar rv libkauth.krb.a $(KOBJS) AFS_component_version_number.o
-	$(RANLIB) libkauth.krb.a
+	-$(RM) -f $@
+	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 
 read_passwd.o: read_passwd.c

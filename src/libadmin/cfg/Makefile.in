@@ -72,7 +72,7 @@ ${DEST}/lib/afs/libcfgadmin.a: libcfgadmin.a
 
 libcfgadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 UBIKDIR=../../ubik

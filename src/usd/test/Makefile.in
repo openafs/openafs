@@ -12,13 +12,12 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
-#include ../../config/Makefile.version
 
 INSTALL=${SRCDIR}/bin/install
 RXGEN=${SRCDIR}/bin/rxgen
 COMPILE_ET = ${SRCDIR}/bin/compile_et
 
-INCDIRS= -I${DESTDIR}/include  -I.. -I${BACKDIR}/include
+INCDIRS= -I${DESTDIR}/include  -I..
 CFLAGS = $(DBUG) -I${SRCDIR}/include ${INCDIRS} ${XCFLAGS}
 LIBUSD=DEST/lib/afs/libusd.a
 

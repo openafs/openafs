@@ -183,20 +183,20 @@ dest_libafs: ${LIBAFSNONFS}
 
 # Solaris specific objects
 osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1);
+	$(CRULE1)
 osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1);
+	$(CRULE1)
 osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1);
+	$(CRULE1)
 osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o;
+	$(CRULE1) -o osi_vfsops_nfs.o
 osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS;
+	$(CRULE1) -DAFS_NONFSTRANS
 osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1);
+	$(CRULE1)
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1);
+	$(CRULE1)
 xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1);
+	$(CRULE1)

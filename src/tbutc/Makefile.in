@@ -300,7 +300,7 @@ pre:
 		else \
 			echo 'Will use XBSA header files from "'$$hdrdir'" (XBSA_HDRDIR)'; \
 		fi; \
-	fi;
+	fi
 
 all: butc
 

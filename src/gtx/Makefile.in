@@ -173,7 +173,7 @@ object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS}
 #
 libgtx.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS} AFS_component_version_number.o
+	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
 	${RANLIB} $@
 
 install: libgtx.a

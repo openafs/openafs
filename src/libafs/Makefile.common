@@ -9,19 +9,9 @@
 #
 SHELL=/bin/sh
 INCLUDE= -I.  -I/usr/include -I${TOP_SRCDIR}/config
-Aobj=COMMON
-Dobj=DYNEL
-Cobj=CLIENT
-Sobj=SERVER
-Nobj=COMMON_NONFS
-Xobj=COMMON_NFS11
-NDobj=DYNEL_NONFS
 AFS	=../afs
-ADIR	=../dir
 RX	=../rx
 AFSINT	=../afsint
-DKLOAD	=../dkload
-
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 .c.i:

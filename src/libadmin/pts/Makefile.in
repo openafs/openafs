@@ -68,16 +68,16 @@ ${DEST}/lib/afs/libptsadmin.a: libptsadmin.a
 
 libptsadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_ptsAdmin.o: afs_ptsAdmin.h
 
 ptint.xdr.o: ${PTSERVER}/ptint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 ptint.cs.o: ${PTSERVER}/ptint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 clean:
 	$(RM) -f *.o libptsadmin*

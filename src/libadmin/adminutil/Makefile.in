@@ -138,7 +138,7 @@ ${TOP_INCDIR}/afs/afs_utilAdmin.h: afs_utilAdmin.h
 
 libafsadminutil.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_utilAdmin.o: afs_utilAdmin.h

@@ -41,7 +41,7 @@ null.o: null.c AFS_component_version_number.o
 
 libnull.a: null.o
 	-$(RM) -f $@
-	ar rv $@ null.o
+	$(AR) crv $@ null.o
 	$(RANLIB) $@
 
 clean:

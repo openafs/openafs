@@ -11,5 +11,5 @@ VERSION=@VERSION@
 AFS_component_version_number.o: AFS_component_version_number.c
 
 AFS_component_version_number.c: 
-	echo 'char cml_version_number[]="@(#) OpenAFS ${VERSION} built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c;
-	echo 'char* AFSVersion = "${PACKAGE} ${VERSION}"; ' >>AFS_component_version_number.c;
+	echo 'char cml_version_number[]="@(#) OpenAFS ${VERSION} built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c
+	echo 'char* AFSVersion = "${PACKAGE} ${VERSION}"; ' >>AFS_component_version_number.c

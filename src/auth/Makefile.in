@@ -61,13 +61,13 @@ ktc.krb.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 
 libauth.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f libauth.a
-	ar rv libauth.a $(OBJS) AFS_component_version_number.o
+	$(AR) crv $@ $(OBJS) AFS_component_version_number.o
 	$(RANLIB) libauth.a
 
 libauth.krb.a: $(KOBJS) AFS_component_version_number.o
-	-$(RM) -f libauth.krb.a
-	ar rv libauth.krb.a $(KOBJS) AFS_component_version_number.o
-	$(RANLIB) libauth.krb.a
+	-$(RM) -f $@
+	$(AR) crv $@ $(KOBJS) AFS_component_version_number.o
+	$(RANLIB) $@
 
 copyauth: copyauth.o
 	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS}

@@ -85,28 +85,28 @@ ${DEST}/lib/afs/libvosadmin.a: libvosadmin.a
 
 libvosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_vosAdmin.o: afs_vosAdmin.h
 
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 volint.xdr.o: ${VOLSER}/volint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 volint.cs.o: ${VOLSER}/volint.cs.c
-	${CCRULE};
+	${CCRULE}
 
 afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 clean:
 	$(RM) -f *.o libvosadmin*

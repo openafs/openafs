@@ -85,9 +85,9 @@ volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
 		${LDFLAGS} $(LIBS) ${XLIBS}
 
 libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
-	-$(RM) -f libvolser.a
-	ar rv libvolser.a volint.cs.o $(VSOBJS) volint.ss.o AFS_component_version_number.o 
-	$(RANLIB) libvolser.a
+	-$(RM) -f $@
+	$(AR) crv $@ volint.cs.o $(VSOBJS) volint.ss.o AFS_component_version_number.o 
+	$(RANLIB) $@
 
 volser.h volerr.c: volerr.et volser.p.h
 	$(RM) -f volser.h volerr.c

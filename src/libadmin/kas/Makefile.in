@@ -68,19 +68,19 @@ ${DEST}/lib/afs/libkasadmin.a: libkasadmin.a
 
 libkasadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_kasAdmin.o: afs_kasAdmin.h
 
 kauth.cs.o: ${KAUTH}/kauth.cs.c
-	${CCRULE};
+	${CCRULE}
 
 kauth.xdr.o: ${KAUTH}/kauth.xdr.c
-	${CCRULE};
+	${CCRULE}
 
 kaaux.o: ${KAUTH}/kaaux.c
-	${CCRULE};
+	${CCRULE}
 
 clean:
 	$(RM) -f *.o libkasadmin*

@@ -60,7 +60,7 @@ ${DEST}/lib/afs/libclientadmin.a: libclientadmin.a
 
 libclientadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	ar rv $@ ${LIBOBJS}
+	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_clientAdmin.o: afs_clientAdmin.h
