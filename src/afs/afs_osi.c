@@ -1058,8 +1058,20 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	|| (pr->state == TASK_STOPPED)) {
 	cr.cr_ref = 1;
 	cr.cr_uid = pr->uid;
+#if defined(AFS_LINUX26_ENV)
+{
+	int i;
+
+	memset(cr.cr_groups, 0, NGROUPS * sizeof(gid_t));
+
+	cr.cr_ngroups = pr->group_info->ngroups;
+	for(i = 0; i < pr->group_info->ngroups; ++i)
+		cr.cr_groups[i] = GROUP_AT(pr->group_info, i);
+}
+#else
 	cr.cr_ngroups = pr->ngroups;
 	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
+#endif
 	rv = &cr;
     }
 

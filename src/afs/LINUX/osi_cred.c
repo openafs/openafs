@@ -101,8 +101,18 @@ crref(void)
     cr->cr_ruid = current->uid;
     cr->cr_gid = current->fsgid;
     cr->cr_rgid = current->gid;
+#if defined(AFS_LINUX26_ENV)
+{
+    int i;
+
+    for(i = 0; i < current->group_info->ngroups && i < NGROUPS; ++i)
+        cr->cr_groups[i] = GROUP_AT(current->group_info, i);
+    cr->cr_ngroups = current->group_info->ngroups;
+}
+#else
     memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
     cr->cr_ngroups = current->ngroups;
+#endif
     return cr;
 }
 
@@ -115,6 +125,19 @@ crset(cred_t * cr)
     current->uid = cr->cr_ruid;
     current->fsgid = cr->cr_gid;
     current->gid = cr->cr_rgid;
+#if defined(AFS_LINUX26_ENV)
+{
+    struct group_info *new_info;
+    int i;
+
+    new_info = groups_alloc(cr->cr_ngroups);
+    for(i = 0; i < cr->cr_ngroups; ++i)
+	GROUP_AT(new_info, i) = cr->cr_groups[i];
+    set_current_groups(new_info);
+    put_group_info(new_info);
+}
+#else
     memcpy(current->groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
     current->ngroups = cr->cr_ngroups;
+#endif
 }

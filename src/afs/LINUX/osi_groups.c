@@ -36,19 +36,28 @@ static int afs_setgroups(cred_t ** cr, int ngroups, gid_t * gidset,
 int
 set_pag_in_parent(int pag, int g0, int g1)
 {
+    int i;
+#if defined(AFS_LINUX26_ENV)
+    struct group_info *old_info, *new_info;
+
+    old_info = current->parent->group_info;
+    new_info = groups_alloc(old_info->ngroups + 2);
+
+    for(i = 0; i < old_info->ngroups; ++i)
+	GROUP_AT(new_info, i) = GROUP_AT(old_info, i);
+
+    GROUP_AT(new_info, i++) = g0;
+    GROUP_AT(new_info, i++) = g1;
+
+    current->parent->group_info = new_info;
+    put_group_info(old_info);
+#else
 #ifdef STRUCT_TASK_STRUCT_HAS_PARENT
     gid_t *gp = current->parent->groups;
+    int ngroups = current->parent->ngroups;
 #else
     gid_t *gp = current->p_pptr->groups;
-#endif
-    int ngroups;
-    int i;
-
-
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
-    ngroups = current->parent->ngroups;
-#else
-    ngroups = current->p_pptr->ngroups;
+    int ngroups = current->p_pptr->ngroups;
 #endif
 
     if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
@@ -70,6 +79,7 @@ set_pag_in_parent(int pag, int g0, int g1)
     current->parent->ngroups = ngroups;
 #else
     current->p_pptr->ngroups = ngroups;
+#endif
 #endif
     return 0;
 }

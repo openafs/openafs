@@ -151,6 +151,8 @@ case $system in
 		   AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
 		  fi
 		 fi
+                 dnl do we need to determine SUBARCH from autoconf.h
+                 SUBARCH=default
 		fi
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then

@@ -35,6 +35,10 @@ COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 
 # System specific build commands and flags
+<i386_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I../mach
+DEFINES = $(COMMON_DEFINES) -DCPU=586 -DKBUILD_BASENAME=libafs_$(subst .,_,$(subst -,_,${CLIENT})) -DKBUILD_MODNAME=libafs_$(subst .,_,$(subst -,_,${CLIENT}))
+
 <i386_linux22 i386_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
 DEFINES = $(COMMON_DEFINES) -DCPU=586
@@ -131,7 +135,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
 <alpha_linux_22 alpha_linux_24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
-<i386_linux22 i386_linux24>
+<i386_linux22 i386_linux24 i386_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
 <i386_umlinux22 i386_umlinux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
@@ -149,6 +153,8 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
 <ia64_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
+<i386_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386/mach-default mach
 <all>
 	for m in ${MPS} ; do \
 		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \

@@ -40,6 +40,10 @@ RCSID
 #define pageoff(pp) pp->offset
 #endif
 
+#if defined(AFS_LINUX26_ENV)
+#define UnlockPage(pp) unlock_page(pp)
+#endif
+
 extern struct vcache *afs_globalVp;
 extern afs_rwlock_t afs_xvcache;
 
@@ -109,6 +113,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 		*offp += count;
 	    }
 	  done:
+		;
 	} else {
 #endif /* AFS_64BIT_CLIENT */
 	    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
@@ -216,6 +221,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 		ReleaseWriteLock(&vcp->lock);
 	    }
 	  done:
+		;
 	} else {
 #endif /* AFS_64BIT_CLIENT */
 	    AFS_GUNLOCK();
@@ -354,7 +360,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	}
 
 	/* filldir returns -EINVAL when the buffer is full. */
-#if (defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE)
+#if defined(AFS_LINUX26_ENV) || ((defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE))
 	{
 	    unsigned int type = DT_UNKNOWN;
 	    struct VenusFid afid;
@@ -756,6 +762,15 @@ struct file_operations afs_file_fops = {
 /**********************************************************************
  * AFS Linux dentry operations
  **********************************************************************/
+
+static int
+afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
+{
+        int err = afs_linux_revalidate(dentry);
+        if (!err)
+                generic_fillattr(dentry->d_inode, stat);
+        return err;
+}
 
 /* afs_linux_revalidate
  * Ensure vcache is stat'd before use. Return 0 if entry is valid.
@@ -1576,7 +1591,11 @@ extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 #endif
 
 struct inode_operations afs_file_iops = {
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX26_ENV)
+  .permission =		afs_linux_permission,
+  .getattr =		afs_linux_getattr,
+  .setattr =		afs_notify_change,
+#elif defined(AFS_LINUX24_ENV)
   .permission =		afs_linux_permission,
   .revalidate =		afs_linux_revalidate,
   .setattr =		afs_notify_change,
@@ -1616,7 +1635,11 @@ struct inode_operations afs_dir_iops = {
   .mkdir =		afs_linux_mkdir,
   .rmdir =		afs_linux_rmdir,
   .rename =		afs_linux_rename,
+#if defined(AFS_LINUX26_ENV)
+  .getattr =		afs_linux_getattr,
+#else
   .revalidate =		afs_linux_revalidate,
+#endif
   .permission =		afs_linux_permission,
 };
 

@@ -524,7 +524,7 @@ afs_RemoveVCB(struct VenusFid *afid)
     return 0;
 }
 
-#ifdef AFS_LINUX22_ENV
+#if defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX26_ENV)
 
 static void
 __shrink_dcache_parent(struct dentry *parent)
@@ -674,7 +674,7 @@ afs_TryFlushDcacheChildren(struct vcache *tvc)
     DUNLOCK();
 #endif
 }
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX22_ENV && !AFS_LINUX26_ENV */
 
 /*
  * afs_NewVCache
@@ -802,8 +802,15 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		}
 	    }
 #elif defined(AFS_LINUX22_ENV)
-	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0)
+	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0) {
+#if defined(AFS_LINUX26_ENV)
+		AFS_GUNLOCK();
+		d_prune_aliases(AFSTOI(tvc));
+		AFS_GLOCK();
+#else
 		afs_TryFlushDcacheChildren(tvc);
+#endif
+	    }
 #endif
 
 	    if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
@@ -954,6 +961,71 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     hzero(tvc->mapDV);
     tvc->truncPos = AFS_NOTRUNC;	/* don't truncate until we need to */
     hzero(tvc->m.DataVersion);	/* in case we copy it into flushDV */
+#if defined(AFS_LINUX22_ENV)
+{
+    struct inode *ip = AFSTOI(tvc);
+    struct address_space *mapping = &ip->i_data;
+
+#if defined(AFS_LINUX26_ENV)
+    inode_init_once(ip);
+#else
+    sema_init(&ip->i_sem, 1);
+    INIT_LIST_HEAD(&ip->i_hash);
+    INIT_LIST_HEAD(&ip->i_dentry);
+#if defined(AFS_LINUX24_ENV)
+    sema_init(&ip->i_zombie, 1);
+    init_waitqueue_head(&ip->i_wait);
+    spin_lock_init(&ip->i_data.i_shared_lock);
+#ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+    spin_lock_init(&ip->i_data.page_lock);
+#endif
+    INIT_LIST_HEAD(&ip->i_data.clean_pages);
+    INIT_LIST_HEAD(&ip->i_data.dirty_pages);
+    INIT_LIST_HEAD(&ip->i_data.locked_pages);
+    INIT_LIST_HEAD(&ip->i_dirty_buffers);
+#ifdef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+    INIT_LIST_HEAD(&ip->i_dirty_data_buffers);
+#endif
+#ifdef STRUCT_INODE_HAS_I_DEVICES
+    INIT_LIST_HEAD(&ip->i_devices);
+#endif
+#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+    init_rwsem(&ip->i_truncate_sem);
+#endif
+#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
+    init_rwsem(&ip->i_alloc_sem);
+#endif 
+
+#else /* AFS_LINUX22_ENV */
+    sema_init(&ip->i_atomic_write, 1);
+    init_waitqueue(&ip->i_wait);
+#endif
+#endif
+
+#if defined(AFS_LINUX24_ENV)
+    mapping->host = ip;
+    ip->i_mapping = mapping;
+#ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+    ip->i_data.gfp_mask = GFP_HIGHUSER;
+#endif
+#if defined(AFS_LINUX26_ENV)
+    mapping_set_gfp_mask(mapping, GFP_HIGHUSER);
+{
+    extern struct backing_dev_info afs_backing_dev_info;
+
+    mapping->backing_dev_info = &afs_backing_dev_info;
+}
+#endif
+#endif
+
+#if !defined(AFS_LINUX26_ENV)
+    if (afs_globalVFS)
+	ip->i_dev = afs_globalVFS->s_dev;
+#endif
+    ip->i_sb = afs_globalVFS;
+}
+#endif
+
 #ifdef	AFS_OSF_ENV
     /* Hold it for the LRU (should make count 2) */
     VN_HOLD(AFSTOV(tvc));
@@ -1090,50 +1162,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     vn_initlist((struct vnlist *)&tvc->v);
     tvc->lastr = 0;
 #endif /* AFS_SGI_ENV */
-#if defined(AFS_LINUX22_ENV)
-    {
-	struct inode *ip = AFSTOI(tvc);
-	sema_init(&ip->i_sem, 1);
-#if defined(AFS_LINUX24_ENV)
-	sema_init(&ip->i_zombie, 1);
-	init_waitqueue_head(&ip->i_wait);
-	spin_lock_init(&ip->i_data.i_shared_lock);
-#ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-	spin_lock_init(&ip->i_data.page_lock);
-#endif
-	INIT_LIST_HEAD(&ip->i_data.clean_pages);
-	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
-	INIT_LIST_HEAD(&ip->i_data.locked_pages);
-	INIT_LIST_HEAD(&ip->i_dirty_buffers);
-#ifdef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
-	INIT_LIST_HEAD(&ip->i_dirty_data_buffers);
-#endif
-#ifdef STRUCT_INODE_HAS_I_DEVICES
-	INIT_LIST_HEAD(&ip->i_devices);
-#endif
-	ip->i_data.host = (void *)ip;
-#ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
-	ip->i_data.gfp_mask = GFP_HIGHUSER;
-#endif
-	ip->i_mapping = &ip->i_data;
-#ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
-	init_rwsem(&ip->i_truncate_sem);
-#endif
-#ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
-	init_rwsem(&ip->i_alloc_sem);
-#endif
-#else
-	sema_init(&ip->i_atomic_write, 1);
-	init_waitqueue(&ip->i_wait);
-#endif
-	INIT_LIST_HEAD(&ip->i_hash);
-	INIT_LIST_HEAD(&ip->i_dentry);
-	if (afs_globalVFS) {
-	    ip->i_dev = afs_globalVFS->s_dev;
-	    ip->i_sb = afs_globalVFS;
-	}
-    }
-#endif
     tvc->h1.dchint = 0;
     osi_dnlc_purgedp(tvc);	/* this may be overkill */
     memset((char *)&(tvc->quick), 0, sizeof(struct vtodc));

@@ -73,7 +73,13 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 void
 osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
-    invalidate_inode_pages(AFSTOI(avc));
+    struct inode *ip = AFSTOI(avc);
+
+#if defined(AFS_LINUX26_ENV)
+    invalidate_inode_pages(ip->i_mapping);
+#else
+    invalidate_inode_pages(ip);
+#endif
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag
@@ -100,7 +106,11 @@ osi_VM_StoreAllSegments(struct vcache *avc)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
+#if defined(AFS_LINUX26_ENV)
+    filemap_fdatawrite(ip->i_mapping);
+#else
     filemap_fdatasync(ip->i_mapping);
+#endif
     filemap_fdatawait(ip->i_mapping);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 121);

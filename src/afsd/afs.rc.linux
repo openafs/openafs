@@ -177,9 +177,13 @@ load_client() {
 		exit 1
 	fi
 
-	# use the prefix command if required
-	set_prefix
-	/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	if [ -f $KSYMS_FILE ]; then
+		# use the prefix command if required
+		set_prefix
+		/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	else
+		/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	fi
 }
 
 generate_cacheinfo() {

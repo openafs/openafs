@@ -157,10 +157,17 @@ afsd_thread(void *rock)
 #ifdef SYS_SETPRIORITY_EXPORTED
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
 #endif
-    daemonize();		/* doesn't do much, since we were forked from keventd, but
+#if defined(AFS_LINUX26_ENV)
+    daemonize("afsd");
+#else
+    daemonize();
+#endif
+				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
+#if !defined(AFS_LINUX26_ENV)
     reparent_to_init();
+#endif
     afs_osi_MaskSignals();
     switch (parm) {
     case AFSOP_START_RXCALLBACK:
@@ -282,7 +289,11 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 {
     int code;
     DECLARE_COMPLETION(c);
+#if defined(AFS_LINUX26_ENV)
+    struct work_struct tq;
+#else
     struct tq_struct tq;
+#endif
     struct afsd_thread_info info;
     if (parm == AFSOP_START_RXCALLBACK) {
 	if (afs_CB_Running)
@@ -306,11 +317,16 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     }				/* other functions don't need setup in the parent */
     info.complete = &c;
     info.parm = parm;
+#if defined(AFS_LINUX26_ENV)
+    INIT_WORK(&tq, afsd_launcher, &info);
+    schedule_work(&tq);
+#else
     tq.sync = 0;
     INIT_LIST_HEAD(&tq.list);
     tq.routine = afsd_launcher;
     tq.data = &info;
     schedule_task(&tq);
+#endif
     AFS_GUNLOCK();
     /* we need to wait cause we passed stack pointers around.... */
     wait_for_completion(&c);

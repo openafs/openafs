@@ -17,6 +17,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
+#include "h/module.h"
 
 
 int afs_osicred_initialized = 0;
@@ -60,6 +61,9 @@ osi_UFSOpen(afs_int32 ainode)
     FILE_INODE(filp) = tip;
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
     filp->f_flags = O_RDWR;
+#if defined(AFS_LINUX26_ENV)
+    filp->f_mapping = tip->i_mapping;
+#endif
 #if defined(AFS_LINUX24_ENV)
     filp->f_op = fops_get(tip->i_fop);
 #else
@@ -85,8 +89,13 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     MObtainWriteLock(&afs_xosi, 320);
     astat->size = FILE_INODE(&afile->file)->i_size;
     astat->blksize = FILE_INODE(&afile->file)->i_blksize;
+#if defined(AFS_LINUX26_ENV)
+    astat->mtime = FILE_INODE(&afile->file)->i_mtime.tv_sec;
+    astat->atime = FILE_INODE(&afile->file)->i_atime.tv_sec;
+#else
     astat->mtime = FILE_INODE(&afile->file)->i_mtime;
     astat->atime = FILE_INODE(&afile->file)->i_atime;
+#endif
     code = 0;
     MReleaseWriteLock(&afs_xosi);
     return code;

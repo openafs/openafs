@@ -61,7 +61,7 @@
 #define osi_AllocSmall afs_osi_Alloc
 #define osi_FreeSmall afs_osi_Free
 
-#define afs_suser suser
+#define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
 #undef vType
@@ -105,6 +105,9 @@ extern struct vnodeops afs_file_iops, afs_dir_iops, afs_symlink_iops;
 
 
 #define PAGESIZE PAGE_SIZE
+#ifndef NGROUPS
+#define NGROUPS NGROUPS_MAX
+#endif
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
@@ -153,9 +156,7 @@ typedef struct uio {
  */
 extern unsigned long afs_linux_page_offset;
 
-/* some more functions to help with the page offset stuff */
-#define AFS_LINUX_MAP_NR(addr) ((((unsigned long)addr) - afs_linux_page_offset)  >> PAGE_SHIFT)
-
+/* function to help with the page offset stuff */
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__) && defined(CONFIG_SMP)

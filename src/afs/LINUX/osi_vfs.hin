@@ -17,6 +17,7 @@
 #ifndef OSI_VFS_H_
 #define OSI_VFS_H_
 
+#if !defined(AFS_LINUX26_ENV)
 /* The vnode should match the current implementation of the fs independent
  * part of the Linux inode.
  */
@@ -24,6 +25,10 @@
 /* LINUX VNODE INCLUDED BELOW -- DO NOT MODIFY */
 
 typedef struct vnode vnode_t;
+#else
+typedef struct inode vnode_t;
+#define vnode inode
+#endif
 
 /* Map vnode fields to inode fields. */
 #define i_number	i_ino
