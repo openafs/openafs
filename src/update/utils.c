@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <afs/stds.h>
 #include <rx/rxkad.h>
 #include "global.h"
@@ -17,8 +18,20 @@
 #include <WINNT/afssw.h>
 #endif
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <stdlib.h>
 
+RCSID("$Header$");
 
+int
 AddToList(ah, aname)
 struct filestr **ah;
 char *aname; {
@@ -31,6 +44,7 @@ char *aname; {
     return 0;
 }
 
+int
 ZapList(ah)
 struct filestr **ah; {
     register struct filestr *tf, *nf;

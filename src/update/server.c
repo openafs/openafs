@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -26,6 +27,15 @@
 #include <sys/file.h>
 #include <dirent.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdio.h>
@@ -36,11 +46,13 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 
+RCSID("$Header$");
+
 #include "update.h"
 #include "global.h"
 
 
-extern UPDATE_ExecuteRequest();
+extern int UPDATE_ExecuteRequest();
 static int AddObject(char **expPath, char *dir);
 static int PathInDirectory(char *dir, char *path);
 
@@ -50,7 +62,7 @@ char *dirName[MAXENTRIES];
 int   dirLevel[MAXENTRIES];
 char *whoami;
 
-static Quit();
+static int Quit();
 
 /* check whether caller is authorized to manage RX statistics */
 int update_rxstat_userok(call)
@@ -166,7 +178,7 @@ int main (argc, argv)
     extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern afs_int32 afsconf_GetKey();
 
-    int a;
+    int a = 0;
     rxkad_level level;
     rxkad_level newLevel;
 
@@ -215,10 +227,8 @@ int main (argc, argv)
 
     for (a=1; a<argc; a++) {
 	if (argv[a][0] == '-') { /* parse options */
-	    int arglen = strlen(argv[a]);
 	    char arg[256];
 	    lcstring (arg, argv[a], sizeof(arg));
-#define IsArg(a) (strncmp (arg,a, arglen) == 0)
 	    newLevel = StringToLevel (&argv[a][1]);
 	    if (newLevel != -1) {
 		level = newLevel;	/* set new level */
@@ -286,6 +296,7 @@ int main (argc, argv)
 
     rx_StartServer(1); /* Donate this process to the server process pool */
     Quit("StartServer returned?");
+    return 0;
 }
 
 /* fetch the file name and send it to the remote requester specified by call */
@@ -300,7 +311,7 @@ int UPDATE_FetchFile(call, name)
     char *reqObject;
 
     /* construct a local path from a canonical (wire-format) path */
-    if ( error = ConstructLocalPath(name, "/", &reqObject) ) {
+    if ((error = ConstructLocalPath(name, "/", &reqObject))) {
 	com_err(whoami, error, "Unable to construct local path");
 	return UPDATE_ERROR;
     }
@@ -332,7 +343,7 @@ int UPDATE_FetchInfo(call, name)
     char *reqObject;
 
     /* construct a local path from a canonical (wire-format) path */
-    if ( error = ConstructLocalPath(name, "/", &reqObject) ) {
+    if ((error = ConstructLocalPath(name, "/", &reqObject))) {
 	com_err(whoami, error, "Unable to construct local path");
 	return UPDATE_ERROR;
     }
@@ -358,7 +369,7 @@ int UPDATE_FetchInfo(call, name)
     return error;
 } 
 
-static Quit(msg, a, b)
+static int Quit(msg, a, b)
     char *msg;
 {
     fprintf(stderr, msg, a, b);
@@ -373,7 +384,9 @@ register struct stat *status;
     char *buffer = (char*) 0;
     int blockSize;
     afs_int32 length, tlen;
+#ifdef notdef
     XDR xdr;
+#endif
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
     struct statfs tstatfs;
@@ -403,7 +416,7 @@ register struct stat *status;
     rx_Write(call, &tlen, sizeof(afs_int32));	/* send length on fetch */
 #endif
     while (!error && length) {
-	register nbytes = (length>blockSize?blockSize:length);
+	register int nbytes = (length>blockSize?blockSize:length);
 	nbytes = read(fd, buffer, nbytes);
 	if (nbytes <= 0) {
 	    fprintf(stderr, "File system read failed\n");
@@ -440,7 +453,7 @@ char *origDir;                   /* orig name of dir before being localized */
     if (!stream) {
 	error = EIO;
     } else {
-	while(dp = readdir(dirp)){
+	while((dp = readdir(dirp))){
 	    strcpy(filename, name);
 	    strcat(filename,"/");
 	    strcat(filename,dp->d_name);
@@ -456,7 +469,13 @@ char *origDir;                   /* orig name of dir before being localized */
 		
 		strcpy(dirEntry, origDir); strcat(dirEntry, "/");
 		strcat(dirEntry, dp->d_name);
-		err = fprintf(stream, "\"%s\" %u %u %u %u %u %u\n", dirEntry, tstatus.st_mtime,tstatus.st_size,tstatus.st_mode,tstatus.st_uid,tstatus.st_gid, tstatus.st_atime);
+		err = fprintf(stream, "\"%s\" %u %u %u %u %u %u\n", dirEntry, 
+			(unsigned int) tstatus.st_mtime,
+			(unsigned int) tstatus.st_size,
+			tstatus.st_mode,
+			tstatus.st_uid,
+			tstatus.st_gid, 
+			(unsigned int) tstatus.st_atime);
 		if (err < 0) error = EIO;
 	    }	
 	    err = close(tfd);
@@ -502,7 +521,7 @@ static int AddObject(char **expPath, char *dir)
   struct stat statbuf;
 
   /* construct a local path from a canonical (wire-format) path */
-  if ( error = ConstructLocalPath(dir, "/", expPath) ) {
+  if ((error = ConstructLocalPath(dir, "/", expPath))) {
       com_err(whoami, error, "Unable to construct local path");
       return error;
   }

@@ -14,7 +14,7 @@ LIBS = ${SRCDIR}lib/afs/libauth.a ${SRCDIR}lib/librxkad.a \
        ${SRCDIR}lib/libdes.a ${LIBRX} ${SRCDIR}lib/liblwp.a \
        ${SRCDIR}lib/afs/libcom_err.a ${SRCDIR}lib/afs/util.a \
        ${SRCDIR}lib/afs/libsys.a 
-CFLAGS= ${DBUG}  -I${SRCDIR}include ${XCFLAGS}
+CFLAGS= ${DBUG}  -I${SRCDIR}include -I${TOP_SRCDIR}/config ${XCFLAGS}
 
 PROGS=upclient upserver
 
