@@ -2,8 +2,10 @@ openafs (1.2.11-1) unstable; urgency=high
 
   * Versions prior to 1.2.10 stopped working with multiple servers in a
     cell because of a ubik bug prompting the 1.2.11 release.
+  * Fix afs startup script not to start afsd if already running; really
+    fixed in 1.2.10-3, but not documented, Closes: #219702
 
- -- Sam Hartman <hartmans@debian.org>  Sat, 10 Jan 2004 16:23:54 -0500
+ -- Sam Hartman <hartmans@debian.org>  Sat, 10 Jan 2004 16:37:33 -0500
 
 openafs (1.2.10-3) unstable; urgency=low
 
