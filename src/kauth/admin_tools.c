@@ -514,6 +514,7 @@ ka_islocked(char *name, char *instance, afs_uint32 * when)
 	code =
 	    ubik_CallIter(KAM_LockStatus, conn, UPUBIKONLY, &count, name,
 			  instance, &tempwhen, /*spares */ 0, 0, 0,
+			  0, 0, 0, 0, 0, 0, 0, 0,
 			  0);
 	if (code) {
 	    if (seriouserror(code))
