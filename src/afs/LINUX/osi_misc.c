@@ -91,7 +91,7 @@ int osi_InitCacheInfo(char *aname)
 
     cacheInode = dp->d_inode->i_ino;
     cacheDev.dev = dp->d_inode->i_dev;
-    afs_fsfragsize = dp->d_inode->i_sb->s_blocksize;
+    afs_fsfragsize = dp->d_inode->i_sb->s_blocksize - 1;
     afs_cacheSBp = dp->d_inode->i_sb;
 
     dput(dp);
