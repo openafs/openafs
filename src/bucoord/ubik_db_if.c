@@ -1277,7 +1277,7 @@ ubik_Call_SingleServer(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8,
 	     * calls
 	     */
 	    if ((code == 0)
-		&& (aflags & UF_SINGLESERVER != 0)
+		&& ((aflags & UF_SINGLESERVER) != 0)
 		) {
 		/* need to save state */
 		uServer.ucs_flags = UF_SINGLESERVER;
