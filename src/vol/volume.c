@@ -116,8 +116,8 @@ RCSID("$Header$");
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
-#ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
+#ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
 #include "vnode.h"
@@ -286,10 +286,10 @@ int VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 					     V_VOLUPD);
 		    (*(vp?&nAttached:&nUnattached))++;
 		    if (error == VOFFLINE)
-			Log("Volume %u stays offline (/vice/offline/%s exists)\n", 
+			Log("Volume %d stays offline (/vice/offline/%s exists)\n", 
 			    VolumeNumber(dp->d_name), dp->d_name);
 		    else 
-			Log("Partition %s: attached volume %u (%s)\n", diskP->name, 
+			Log("Partition %s: attached volume %d (%s)\n", diskP->name, 
 			    VolumeNumber(dp->d_name), dp->d_name);
 		    if (vp) {
 			VPutVolume(vp);
@@ -710,7 +710,7 @@ private Volume *attach2(Error *ec, char *path, register struct VolumeHeader
 		      VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
     VOL_LOCK
     if (*ec) {
-      Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%d\n",
+      Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%u\n",
         path, *ec);
     }
     if (!*ec) {
@@ -733,7 +733,7 @@ private Volume *attach2(Error *ec, char *path, register struct VolumeHeader
 			  SMALLINDEXMAGIC, SMALLINDEXVERSION);
 	VOL_LOCK
     	if (*ec) {
-  	    Log("VAttachVolume: Error reading smallVnode vol header %s; error=%d\n",
+  	    Log("VAttachVolume: Error reading smallVnode vol header %s; error=%u\n",
 	        path, *ec);
 	}
     }
@@ -745,7 +745,7 @@ private Volume *attach2(Error *ec, char *path, register struct VolumeHeader
 			  LARGEINDEXMAGIC, LARGEINDEXVERSION);
 	VOL_LOCK
     	if (*ec) {
-  	    Log("VAttachVolume: Error reading largeVnode vol header %s; error=%d\n",
+  	    Log("VAttachVolume: Error reading largeVnode vol header %s; error=%u\n",
 	        path, *ec);
 	}
     }
@@ -758,13 +758,13 @@ private Volume *attach2(Error *ec, char *path, register struct VolumeHeader
 			  LINKTABLEMAGIC, LINKTABLEVERSION);
 	VOL_LOCK
     	if (*ec) {
-  	    Log("VAttachVolume: Error reading namei vol header %s; error=%d\n",
+  	    Log("VAttachVolume: Error reading namei vol header %s; error=%u\n",
 	        path, *ec);
 	}
     }
 #endif
     if (*ec) {
-	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%d\n",
+	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%u\n",
 	    path, *ec);
 	FreeVolume(vp);
 	return NULL;

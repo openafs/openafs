@@ -63,7 +63,9 @@ RCSID("$Header$");
 #endif /* AFS_NT40_ENV */
 #include <sys/stat.h>
 
-extern void Abort(const char *format, ...);
+/*@printflike@*/ extern void Log(const char *format, ...);
+
+/*@printflike@*/ extern void Abort(const char *format, ...);
 
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
@@ -536,7 +538,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 	}
 	else if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber),
 			 SEEK_SET) < 0) {
-	    Log ("VGetVnode: can't seek on index file vn=%d\n",vnodeNumber);
+	    Log ("VGetVnode: can't seek on index file vn=%u\n",vnodeNumber);
 	    *ec = VIO;
 	    mlkReason=10;
 	    FDH_REALLYCLOSE(fdP);
@@ -556,7 +558,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 	    /* Check for disk errors.  Anything else just means that the vnode
 	       is not allocated */
 	    if (n == -1 && errno == EIO) {
-		Log("VGetVnode: Couldn't read vnode %d, volume %u (%s); volume needs salvage\n",  
+		Log("VGetVnode: Couldn't read vnode %u, volume %u (%s); volume needs salvage\n",  
 		    vnodeNumber, V_id(vp), V_name(vp));
 		VForceOffline_r(vp);
 		*ec = VSALVAGE;
@@ -598,7 +600,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 		    *ec = VNOVNODE;
 		}
 		else {
-		    Log("VGetVnode: Bad magic number, vnode %d, volume %u (%s); volume needs salvage\n",  
+		    Log("VGetVnode: Bad magic number, vnode %u, volume %u (%s); volume needs salvage\n",  
 		vnodeNumber, V_id(vp), V_name(vp));
 		    vp->goingOffline = 1;	/* used to call VOffline, but that would mess
 						   up the volume ref count if called here */
@@ -747,7 +749,7 @@ VPutVnode_r(ec,vnp)
 			    PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 			*ec = VIO;
 		    } else {
-			Log("VPutVnode: Couldn't write vnode %d, volume %u (%s) (error %d)\n",
+			Log("VPutVnode: Couldn't write vnode %u, volume %u (%s) (error %d)\n",
 			    vnp->vnodeNumber, V_id(vnp->volumePtr),
 			    V_name(vnp->volumePtr), code);
 			VForceOffline_r(vp);
@@ -879,11 +881,11 @@ int VVnodeWriteToRead_r(ec,vnp)
 		VOL_LOCK
 		if(code == BAD_IGET)
 		{
-			    Log("VPutVnode: bad inumber %d\n",
-				    vp->vnodeIndex[class].handle->ih_ino);
+			    Log("VPutVnode: bad inumber %llu\n",
+				(afs_uintmax_t) vp->vnodeIndex[class].handle->ih_ino);
 			    *ec = VIO;
 		} else {
-		    Log("VPutVnode: Couldn't write vnode %d, volume %u (%s)\n",
+		    Log("VPutVnode: Couldn't write vnode %u, volume %u (%s)\n",
 			vnp->vnodeNumber, V_id(vnp->volumePtr),
 			V_name(vnp->volumePtr));
 			VForceOffline_r(vp);

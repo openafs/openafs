@@ -141,7 +141,7 @@ char *aname;
 afs_int32 asize; {
     if (asize < 18) return -1;
     /* It's better using the Generic VFORMAT since otherwise we have to make changes to too many places... The 14 char limitation in names hits us again in AIX; print in field of 9 digits (still 10 for the rest), right justified with 0 padding */
-    sprintf(aname, VFORMAT, (unsigned long) avol);
+    (void) afs_snprintf(aname, asize, VFORMAT, (unsigned long) avol);
     return 0;
 }
 
@@ -621,7 +621,7 @@ char *newName;
     CloneVolume(&error, originalvp, newvp, purgevp);
     purgevp = NULL;  /* clone releases it, maybe even if error */
     if (error) {
-	 Log("1 Volser: Clone: clone operation failed with code %d\n", error);
+	 Log("1 Volser: Clone: clone operation failed with code %u\n", error);
 	 LogError(error);
 	goto fail;
     }
@@ -646,7 +646,7 @@ char *newName;
     V_inUse(newvp) = 0;
     VUpdateVolume(&error, newvp);
     if (error) {
-	 Log("1 Volser: Clone: VUpdate failed code %d\n", error);
+	 Log("1 Volser: Clone: VUpdate failed code %u\n", error);
 	 LogError(error);
 	goto fail;
     }
@@ -654,7 +654,7 @@ char *newName;
     newvp = NULL;
     VUpdateVolume(&error, originalvp);
     if (error) {
-	 Log("1 Volser: Clone: original update %d\n", error);
+	 Log("1 Volser: Clone: original update %u\n", error);
 	 LogError(error);
 	goto fail;
     }
@@ -803,7 +803,7 @@ afs_int32 cloneId;
     V_inUse(clonevp) = 0;
     VUpdateVolume(&error, clonevp);
     if (error) {
-	Log("1 Volser: Clone: VUpdate failed code %d\n", error);
+	Log("1 Volser: Clone: VUpdate failed code %u\n", error);
 	LogError(error);
 	goto fail;
     }
@@ -811,7 +811,7 @@ afs_int32 cloneId;
     clonevp = NULL;
     VUpdateVolume(&error, originalvp);
     if (error) {
-	 Log("1 Volser: Clone: original update %d\n", error);
+	 Log("1 Volser: Clone: original update %u\n", error);
 	 LogError(error);
 	goto fail;
     }
@@ -2746,8 +2746,8 @@ afs_int32 SAFSVolConvertROtoRWvolume(acid, partId, volumeId)
 	}
     }
     if (!found) return ENOENT;
-    sprintf(headername, VFORMAT, volumeId);
-    sprintf(opath,"%s/%s", pname, headername);
+    (void) afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void) afs_snprintf(opath, sizeof opath,"%s/%s", pname, headername);
     fd = open(opath, O_RDONLY);
     if (fd < 0) {
         Log("1 SAFS_VolConvertROtoRWvolume: Couldn't open header for RO-volume %lu.\n", volumeId);
@@ -2777,8 +2777,8 @@ afs_int32 SAFSVolConvertROtoRWvolume(acid, partId, volumeId)
     h.smallVnodeIndex_hi = h.id;
     h.largeVnodeIndex_hi = h.id;
     h.linkTable_hi = h.id;
-    sprintf(headername, VFORMAT, h.id);
-    sprintf(npath, "%s/%s", pname, headername);
+    (void) afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void) afs_snprintf(npath, sizeof npath, "%s/%s", pname, headername);
     fd = open(npath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {
         Log("1 SAFS_VolConvertROtoRWvolume: Couldn't create header for RW-volume %lu.\n", h.id);

@@ -735,8 +735,8 @@ static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
 	IH_INIT(ihP, iodp->device, iodp->parentId, VNDISK_GET_INO(v));
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
-	    Log("1 Volser: DumpVnode: dump: Unable to open inode %d for vnode %d (volume %d); not dumped, error %d\n",
-		VNDISK_GET_INO(v), vnodeNumber, volid, errno);
+	    Log("1 Volser: DumpVnode: dump: Unable to open inode %llu for vnode %u (volume %i); not dumped, error %d\n",
+		(afs_uintmax_t)VNDISK_GET_INO(v), vnodeNumber, volid, errno);
 	    IH_RELEASE(ihP);
 	    return VOLSERREAD_DUMPERROR;
 	}
@@ -779,9 +779,10 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 			cnt1++;
 			if (DoLogging) {
 			   afs_fsize_t vnodeLength;
-			   Log("RestoreVolume %d Cleanup: Removing old vnode=%d inode=%d size=%d\n", 
+			   Log("RestoreVolume %u Cleanup: Removing old vnode=%u inode=%llu size=%llu\n", 
 			       V_id(vp), bitNumberToVnodeNumber(i,class),
-			       VNDISK_GET_INO(vnode), vnodeLength);
+			       (afs_uintmax_t)VNDISK_GET_INO(vnode),
+			       (afs_uintmax_t)vnodeLength);
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),
 			     V_parentId(vp));
@@ -1021,7 +1022,8 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 		    FDH_REALLYCLOSE(fdP);
 		    IH_RELEASE(tmpH);
 		    if (error) {
-                        Log("1 Volser: ReadVnodes: IDEC inode %d\n", ino);
+                        Log("1 Volser: ReadVnodes: IDEC inode %llu\n",
+			    (afs_uintmax_t)ino);
 			IH_DEC(V_linkHandle(vp), ino, V_parentId(vp));
 			return VOLSERREAD_DUMPERROR;
 		    }
@@ -1111,7 +1113,7 @@ static bit32 volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP,
 	    size = nbytes;
 	
 	if ((code = iod_Read(iodp, p, size)) != size) {
-	    Log("1 Volser: WriteFile: Error reading dump file %d size=%d nbytes=%d (%d of %d); restore aborted\n", vn, filesize, nbytes, code, size);
+	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u); restore aborted\n", vn, (afs_uintmax_t)filesize, nbytes, code, size);
 	    *status = 3;
 	    break;
 	}

@@ -87,7 +87,7 @@ void WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
     if (serverLogFD > 0)
-      write(serverLogFD, buf, len);
+	(void) write(serverLogFD, buf, len);
     UNLOCK_SERVERLOG();
 }
 
@@ -107,11 +107,13 @@ void vFSLog (const char *format, va_list args)
 
     if (mrafsStyleLogs) {
        name = (*threadNameProgram)();
-       sprintf(info, "[%s] ", name);
+       (void) afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer),
+			   "[%s] ", name);
        info += strlen(info);
     }
 
-    (void) vsprintf(info, format, args);
+    (void) afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer),
+			 format, args);
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
@@ -121,7 +123,7 @@ void vFSLog (const char *format, va_list args)
     } else 
 #endif
 	if (serverLogFD > 0)
-	    write(serverLogFD, tbuffer, len);
+	    (void) write(serverLogFD, tbuffer, len);
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
@@ -172,8 +174,9 @@ void SetDebug_Signal(int signo)
     IOMGR_SoftSig(DebugOn, LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    signal(signo, SetDebug_Signal);   /* on some platforms, this signal */
-				      /* handler needs to be set again */
+    (void) signal(signo, SetDebug_Signal); /* on some platforms, this
+					    * signal handler needs to
+					    * be set again */
 } /*SetDebug_Signal*/
 
 void ResetDebug_Signal(int signo)
@@ -187,8 +190,10 @@ void ResetDebug_Signal(int signo)
     IOMGR_SoftSig(DebugOn, (void *)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    signal(signo, ResetDebug_Signal);   /* on some platforms, this signal */
-					/* handler needs to be set again */
+    (void) signal(signo, ResetDebug_Signal);  /* on some platforms,
+					       * this signal handler
+					       * needs to be set
+					       * again */
     if (mrafsStyleLogs)
 	OpenLog((char *)&ourName);
 } /*ResetDebug_Signal*/
@@ -196,9 +201,9 @@ void ResetDebug_Signal(int signo)
 
 void SetupLogSignals(void)
 {
-    signal(SIGHUP, ResetDebug_Signal);
+    (void) signal(SIGHUP, ResetDebug_Signal);
     /* Note that we cannot use SIGUSR1 -- Linux stole it for pthreads! */
-    signal(SIGTSTP, SetDebug_Signal);
+    (void) signal(SIGTSTP, SetDebug_Signal);
 }
 
 int OpenLog(const char *fileName) 
@@ -227,7 +232,8 @@ int OpenLog(const char *fileName)
             if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
             strcpy((char *)&ourName, (char *) fileName);
 	}
-        sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", ourName,
+        afs_snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
+		     ourName,
 		TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, 
 		TimeFields->tm_mday, TimeFields->tm_hour, 
 		TimeFields->tm_min, TimeFields->tm_sec);
@@ -258,8 +264,8 @@ int OpenLog(const char *fileName)
     serverLogFD = tempfd;
 #else
     close(tempfd); /* just checking.... */
-    freopen(fileName, "w", stdout);
-    freopen(fileName, "w", stderr);
+    (void) freopen(fileName, "w", stdout);
+    (void) freopen(fileName, "w", stderr);
     serverLogFD = fileno(stdout);
 #endif /* AFS_PTHREAD_ENV */
 
@@ -298,8 +304,8 @@ int ReOpenLog(const char *fileName)
     }
     close(tempfd);
 
-    freopen(fileName, "a", stdout);
-    freopen(fileName, "a", stderr);
+    (void) freopen(fileName, "a", stdout);
+    (void) freopen(fileName, "a", stderr);
     serverLogFD = fileno(stdout);
   
 

@@ -469,16 +469,18 @@ afs_int32 ReadVNode(count)
 	       */
 	      vnode = ((vn.type == 2) ? vn.vnode : vn.parent);
 	      if (vnode == 1)
-		 sprintf(parentdir, "%s", rootdir);
+		 strncpy(parentdir, rootdir, sizeof parentdir);
 	      else {
-		 sprintf(parentdir, "%s/%s%d", rootdir, ADIR, vnode);
+		  afs_snprintf(parentdir, sizeof parentdir,
+			       "%s/%s%d", rootdir, ADIR, vnode);
 		 
 		 len = readlink(parentdir, linkname, MAXNAMELEN);
 		 if (len < 0) {
 		    /* parentdir does not exist. So create an orphan dir.
 		     * and then link the parentdir to the orphaned dir.
 		     */
-		    sprintf(linkname, "%s/%s%d", rootdir, ODIR, vnode);
+		    afs_snprintf(linkname, sizeof linkname,
+				 "%s/%s%d", rootdir, ODIR, vnode);
 		    code = mkdir(linkname, 0777);
 		    if ((code < 0) && (errno != EEXIST)) {
 		       fprintf(stderr, "Error creating directory %s  code=%d;%d\n", 
@@ -486,7 +488,8 @@ afs_int32 ReadVNode(count)
 		    }
 			
 		    /* Link the parentdir to it - now parentdir exists */
-		    sprintf(linkname, "%s%d/", ODIR, vnode);
+		    afs_snprintf(linkname, sizeof linkname,
+				"%s%d/", ODIR, vnode);
 		    code = symlink(linkname, parentdir);
 		    if (code) {
 		       fprintf(stderr, "Error creating symlink %s -> %s  code=%d;%d\n", 
@@ -571,8 +574,10 @@ afs_int32 ReadVNode(count)
 			   /* dirname is the directory to create.
 			    * vflink is what will link to it. 
 			    */
-			   sprintf(dirname, "%s/%s", parentdir, this_name);
-			   sprintf(vflink, "%s/%s%d", rootdir, ADIR, this_vn);
+			   afs_snprintf(dirname, sizeof dirname,
+					"%s/%s", parentdir, this_name);
+			   afs_snprintf(vflink, sizeof vflink,
+					"%s/%s%d", rootdir, ADIR, this_vn);
 
 			   /* The link and directory may already exist */
 			   len = readlink(vflink, linkname, MAXNAMELEN);
@@ -590,7 +595,8 @@ afs_int32 ReadVNode(count)
 			       * It was created originally as orphaned.
 			       */
 			      linkname[len-1] = '\0';  /* remove '/' at end */
-			      sprintf(lname, "%s/%s", rootdir, linkname);
+			      afs_snprintf(lname, sizeof lname,
+					   "%s/%s", rootdir, linkname);
 			      code = rename(lname, dirname);
 			      if (code) {
 				 fprintf(stderr, "Error renaming %s to %s  code=%d;%d\n", 
@@ -600,9 +606,11 @@ afs_int32 ReadVNode(count)
 
 			   /* Now create/update the link to the new/moved directory */
 			   if (vn.vnode == 1)
-			      sprintf(dirname, "%s/", this_name);
+			      afs_snprintf(dirname, sizeof dirname,
+					   "%s/", this_name);
 			   else
-			      sprintf(dirname, "%s%d/%s/", ADIR, vn.vnode, this_name);
+			      afs_snprintf(dirname, sizeof dirname,
+					   "%s%d/%s/", ADIR, vn.vnode, this_name);
 			   unlink(vflink);
 			   code = symlink(dirname, vflink);
 			   if (code) {
@@ -617,7 +625,8 @@ afs_int32 ReadVNode(count)
 			 */
 			else {
 			   /*AFILEENTRY*/
-			   sprintf(vflink, "%s/%s%d", parentdir, AFILE, this_vn);
+			   afs_snprintf(vflink, sizeof vflink,
+					"%s/%s%d", parentdir, AFILE, this_vn);
 			   
 			   code = symlink(this_name, vflink);
 			   if ((code < 0) && (errno != EEXIST)) {
@@ -643,10 +652,12 @@ afs_int32 ReadVNode(count)
 		   * then the file will be an orphaned file.
 		   */
 		  lfile = 1;
-		  sprintf(filename, "%s/%s%d", parentdir, AFILE, vn.vnode);
+		  afs_snprintf(filename, sizeof filename,
+			       "%s/%s%d", parentdir, AFILE, vn.vnode);
 		  len = readlink(filename, fname, MAXNAMELEN);
 		  if (len < 0) {
-		     sprintf(filename, "%s/%s%d", rootdir, OFILE, vn.vnode);
+		     afs_snprintf(filename, sizeof filename,
+				  "%s/%s%d", rootdir, OFILE, vn.vnode);
 		     lfile = 0; /* no longer a linked file; a direct path */
 		  }
 
@@ -664,15 +675,20 @@ afs_int32 ReadVNode(count)
 		     s = ((size > BUFSIZE) ? BUFSIZE : size);
 		     code = fread(buf, 1, s, dumpfile);
 		     if (code > 0) {
-		        write(fid, buf, code);
+		        (void) write(fid, buf, code);
 			size -= code;
 		     }
 		     if (code != s) {
 		        if (code < 0)
 			   fprintf (stderr, "Code = %d; Errno = %d\n", code, errno);
-			else 
-			   fprintf (stderr, "Read %d bytes out of %d\n", 
-				    (vn.dataSize - size), vn.dataSize);
+			else {
+			   char tmp[100];
+			   (void) afs_snprintf(tmp, sizeof tmp,
+					       "Read %llu bytes out of %llu",
+					       (afs_uintmax_t)(vn.dataSize - size),
+					       (afs_uintmax_t)vn.dataSize);
+			   fprintf (stderr, "%s\n", tmp);
+			}
 			break;
 		     }
 		  }
@@ -700,13 +716,16 @@ afs_int32 ReadVNode(count)
 		   * of the symbolic link. If it doesn't exist,
 		   * then the link will be an orphaned link.
 		   */
-		  sprintf(linkname, "%s/%s%d", parentdir, AFILE, vn.vnode);
+		  afs_snprintf(linkname, sizeof linkname,
+			       "%s/%s%d", parentdir, AFILE, vn.vnode);
 		  len = readlink(linkname, fname, MAXNAMELEN);
 		  if (len < 0) {
-		     sprintf(filename, "%s/%s%d", rootdir, OFILE, vn.vnode);
+		     afs_snprintf(filename, sizeof filename,
+				  "%s/%s%d", rootdir, OFILE, vn.vnode);
 		  } else {
 		     fname[len] = '\0';
-		     sprintf(filename, "%s/%s", parentdir, fname);
+		     afs_snprintf(filename, sizeof filename,
+				  "%s/%s", parentdir, fname);
 		  }
 
 		  /* Read the link in, delete it, and then create it */
@@ -821,7 +840,7 @@ WorkerBee(as, arock)
      code = chdir((as->parms[3].items ? as->parms[3].items->data :
 		                        as->parms[1].items->data));
      if (code) {
-        fprintf(stderr, "Mount point directory not found: Error = %d\n", stderr);
+        fprintf(stderr, "Mount point directory not found: Error = %d\n", errno);
 	goto cleanup;
      }
      t = (char *)getcwd(mntroot, MAXPATHLEN);     /* get its full pathname */
@@ -832,9 +851,9 @@ WorkerBee(as, arock)
 	goto cleanup;
      }
      strcat(mntroot, "/");                   /* append '/' to end of it */
-     chdir(thisdir);                         /* return to original working dir */
+     code = chdir(thisdir);                  /* return to original working dir */
      if (code) {
-        fprintf(stderr, "Cannot find working directory: Error = %d\n", stderr);
+        fprintf(stderr, "Cannot find working directory: Error = %d\n", errno);
 	goto cleanup;
      }
   } else {                                   /* use current directory */
@@ -885,17 +904,18 @@ WorkerBee(as, arock)
      dirP = opendir(rootdir);
      while (dirP && (dirE = readdir(dirP))) {
         if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-	   sprintf(name, "%s/%s", rootdir, dirE->d_name);
+	   afs_snprintf(name, sizeof name, "%s/%s", rootdir, dirE->d_name);
 	   dirQ = opendir(name);
 	   while (dirQ && (dirF = readdir(dirQ))) {
 	      if (strncmp(dirF->d_name, AFILE, strlen(AFILE)) == 0) {
-		 sprintf(name, "%s/%s/%s", rootdir, dirE->d_name, dirF->d_name);
+		 afs_snprintf(name, sizeof name,
+			      "%s/%s/%s", rootdir, dirE->d_name, dirF->d_name);
 		 unlink(name);
 	      }
 	   }
 	   closedir(dirQ);
 	} else if (strncmp(dirE->d_name, AFILE, strlen(AFILE)) == 0) {
-	   sprintf(name, "%s/%s", rootdir, dirE->d_name);
+	   afs_snprintf(name, sizeof name, "%s/%s", rootdir, dirE->d_name);
 	   unlink(name);
 	}
      }
@@ -906,7 +926,7 @@ WorkerBee(as, arock)
   dirP = opendir(rootdir);
   while (dirP && (dirE = readdir(dirP))) {
       if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-	  sprintf(name, "%s/%s", rootdir, dirE->d_name);
+	  afs_snprintf(name, sizeof name, "%s/%s", rootdir, dirE->d_name);
 	  unlink(name);
       }
   }

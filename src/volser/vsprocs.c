@@ -874,7 +874,7 @@ void sigint_handler(int x)
 	fflush(STDOUT);
 
 	interrupt=1;
-	signal(SIGINT,sigint_handler);
+	(void) signal(SIGINT,sigint_handler);
 
 	return;
 }

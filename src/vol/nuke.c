@@ -205,9 +205,11 @@ int nuke(char *aname, afs_int32 avolid)
 	 */
 	/* reuse devName buffer now */
 #ifdef AFS_NT40_ENV
-	sprintf(devName, "%c:\\%s", *lastDevComp , VolumeExternalName(avolid));
+	afs_snprintf(devName, sizeof devName,
+		     "%c:\\%s", *lastDevComp , VolumeExternalName(avolid));
 #else
-	sprintf(devName, "%s/%s", aname, VolumeExternalName(avolid));
+	afs_snprintf(devName, sizeof devName,
+		     "%s/%s", aname, VolumeExternalName(avolid));
 #endif /* AFS_NT40_ENV */
 	code = unlink(devName);
 	if (code) code = errno;

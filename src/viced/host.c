@@ -1611,32 +1611,40 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t *file)
 	H_UNLOCK
 	return held;
     }
-    sprintf(tmpStr,"Host %s:%d down = %d, LastCall %s",
-	    afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
-	    (host->hostFlags & VENUSDOWN),
-	    afs_ctime((time_t *)&host->LastCall, tbuffer, sizeof(tbuffer)));
+    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+			"Host %s:%d down = %d, LastCall %s",
+			afs_inet_ntoa_r(host->host, hoststr),
+			ntohs(host->port),
+			(host->hostFlags & VENUSDOWN),
+			afs_ctime((time_t *)&host->LastCall,
+				  tbuffer, sizeof(tbuffer)));
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     for (client = host->FirstClient; client; client=client->next) {
 	if (!client->deleted) {
 	    if (client->tcon) {
-		sprintf(tmpStr, "    user id=%d,  name=%s, sl=%s till %s",
-			client->ViceId, h_UserName(client),
-			client->authClass ? "Authenticated" : "Not authenticated",
-			client->authClass ?
-			afs_ctime((time_t *)&client->expTime, tbuffer, sizeof(tbuffer))
-			: "No Limit\n");
+		(void) afs_snprintf(tmpStr, sizeof tmpStr,
+				    "    user id=%d,  name=%s, sl=%s till %s",
+				    client->ViceId, h_UserName(client),
+				    client->authClass ?
+				    "Authenticated" : "Not authenticated",
+				    client->authClass ?
+				    afs_ctime((time_t *)&client->expTime, tbuffer, sizeof(tbuffer))
+				    : "No Limit\n");
 		STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    }
 	    else {
-		sprintf(tmpStr, "    user=%s, no current server connection\n",
-			h_UserName(client));
+		(void) afs_snprintf(tmpStr, sizeof tmpStr,
+				    "    user=%s, no current server connection\n",
+				    h_UserName(client));
 		STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    }
-	    sprintf(tmpStr, "      CPS-%d is [", client->CPS.prlist_len);
+	    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+				"      CPS-%d is [", client->CPS.prlist_len);
 	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	    if (client->CPS.prlist_val) {
 		for (i=0; i > client->CPS.prlist_len; i++) {
-		    sprintf(tmpStr, " %d", client->CPS.prlist_val[i]);
+		    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+					" %d", client->CPS.prlist_val[i]);
 		    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 		}
 	    }
@@ -1668,8 +1676,9 @@ void h_PrintClients()
 	return;
     }
     now = FT_ApproxTime();
-    sprintf(tmpStr, "List of active users at %s\n",
-	    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+			"List of active users at %s\n",
+			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_PrintClient, (char *)file);
     STREAM_REALLYCLOSE(file);
@@ -1686,16 +1695,18 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t *file)
     char tmpStr[256];
 
     H_LOCK
-    sprintf(tmpStr, "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-	    host->host, ntohs(host->port), host->index, host->cblist,
-	    CheckLock(&host->lock), host->LastCall, host->ActiveCall, 
-	    (host->hostFlags & VENUSDOWN), host->hostFlags&HOSTDELETED, 
-	    host->Console, host->hostFlags & CLIENTDELETED, 
-	    host->hcpsfailed, host->cpsCall);
+    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+			"ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
+			host->host, ntohs(host->port), host->index, host->cblist,
+			CheckLock(&host->lock), host->LastCall, host->ActiveCall, 
+			(host->hostFlags & VENUSDOWN), host->hostFlags&HOSTDELETED, 
+			host->Console, host->hostFlags & CLIENTDELETED, 
+			host->hcpsfailed, host->cpsCall);
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->hcps.prlist_val)
 	for (i=0; i < host->hcps.prlist_len; i++) {
-	    sprintf(tmpStr, " %d", host->hcps.prlist_val[i]);
+	    (void) afs_snprintf(tmpStr, sizeof tmpStr,
+				" %d", host->hcps.prlist_val[i]);
 	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     sprintf(tmpStr, "] [");
@@ -1733,7 +1744,7 @@ void h_DumpHosts()
 	return;
     }
     now = FT_ApproxTime();
-    sprintf(tmpStr, "List of active hosts at %s\n",
+    (void) afs_snprintf(tmpStr, sizeof tmpStr, "List of active hosts at %s\n",
 	    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     h_Enumerate(h_DumpHost, (char *) file);

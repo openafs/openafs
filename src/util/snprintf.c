@@ -5,7 +5,6 @@
 
 RCSID("$Header$");
 
-#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_SNPRINTF)
 #include <sys/types.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -26,7 +25,8 @@ RCSID("$Header$");
  * to receive it.  The minimum length is <prec> or ceil(log{base}(val)),
  * whichever is larger, plus room for a trailing NUL.
  */
-static void mkint(char *buf, unsigned long val, int base, int uc, int prec)
+static void mkint(char *buf, afs_uintmax_t val,
+		  int base, int uc, unsigned prec)
 {
   int len = 0, dig, i;
 
@@ -118,11 +118,7 @@ static void mkint(char *buf, unsigned long val, int base, int uc, int prec)
  *       both '0' and ' ' are given, the ' ' flag will be ignored.
  *     + The '#' and '+' flags have no effect.
  */
-#ifdef AFS_AIX51_ENV
-static int  vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
-#else
-static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
-#endif
+int afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 {
   unsigned int width, precision, haveprec, len;
   int ljust, plsign, spsign, altform, zfill;
@@ -130,8 +126,10 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
   char *x, *y, xbuf[MAXPREC + 21], fbuf[20];
   struct hostent *he;
   struct in_addr ia;
-  unsigned long UVAL;
-  long SVAL, *lcountp;
+  afs_uintmax_t UVAL;
+  afs_intmax_t SVAL;
+  afs_intmax_t* llcountp;
+  long *lcountp;
   double FVAL;
   short *hcountp;
 
@@ -190,7 +188,8 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
     while (*fmt) {
       switch (*fmt) {
         case 'h': hflag   = 1; fmt++; continue;      /* short argument */
-        case 'l': lflag   = 1; fmt++; continue;      /* long argument */
+        case 'l': lflag  += 1; fmt++; continue;      /* long argument */
+        case 'L': lflag   = 2; fmt++; continue;      /* long long argument */
         default: break;
       }
       break;
@@ -216,7 +215,8 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 
       case 'i': 
       case 'd': /* signed decimal integer */
-        if      (lflag) SVAL = va_arg(ap, long);
+        if      (lflag > 1) SVAL = va_arg(ap, afs_intmax_t);
+	else if (lflag) SVAL = va_arg(ap, long);
         else if (hflag) SVAL = va_arg(ap, short);
         else            SVAL = va_arg(ap, int);
         UVAL = (SVAL < 0) ? -SVAL : SVAL;
@@ -240,7 +240,8 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 
 
       case 'o': /* unsigned octal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
+        if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
+        else if (lflag) UVAL = va_arg(ap, unsigned long);
         else if (hflag) UVAL = va_arg(ap, unsigned short);
         else            UVAL = va_arg(ap, unsigned int);
 
@@ -258,7 +259,8 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
         break;
 
       case 'u': /* unsigned decimal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
+        if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
+        else if (lflag) UVAL = va_arg(ap, unsigned long);
         else if (hflag) UVAL = va_arg(ap, unsigned short);
         else            UVAL = va_arg(ap, unsigned int);
 
@@ -275,7 +277,8 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
 
       case 'x': 
       case 'X': /* unsigned hexadecimal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
+        if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
+	else if (lflag) UVAL = va_arg(ap, unsigned long);
         else if (hflag) UVAL = va_arg(ap, unsigned short);
         else            UVAL = va_arg(ap, unsigned int);
 
@@ -347,12 +350,15 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
         break;
 
       case 'n': /* report count so far */
-        if (lflag) {
+        if (lflag > 1) {
+          llcountp = va_arg(ap, afs_intmax_t *);
+          *llcountp = (long long) count;
+	} else if (lflag) {
           lcountp = va_arg(ap, long *);
-          *lcountp = count;
+          *lcountp = (long) count;
         } else if (hflag) {
           hcountp = va_arg(ap, short *);
-          *hcountp = count;
+          *hcountp = (short) count;
         } else {
           countp = va_arg(ap, int *);
           *countp = count;
@@ -383,8 +389,37 @@ static void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
     if (ljust) while (j-- > 0) *p++ = ' ';
   }
   *p = 0;
+  return count;
 }
 
+int afs_snprintf(char *p, size_t avail, const char *fmt, ...)
+{
+    va_list ap;
+    int result;
+
+    va_start(ap, fmt);
+    result = afs_vsnprintf(p, avail, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_VSNPRINTF)
+
+#ifdef AFS_AIX51_ENV
+int  vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
+#else
+void vsnprintf(char *p, unsigned int avail, char *fmt, va_list ap)
+#endif
+{
+    int result;
+    result = afs_vsnprintf(p, avail, fmt, ap);
+#ifdef AFS_AIX51_ENV
+    return result;
+#endif
+}
+#endif /* AFS_OSF20_ENV || AFS_AIX32_ENV */
+
+#if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV)) || !defined(HAVE_SNPRINTF)
 
 #ifdef AFS_AIX51_ENV
 int snprintf(char *p, size_t avail, const char *fmt, ...)
@@ -392,10 +427,14 @@ int snprintf(char *p, size_t avail, const char *fmt, ...)
 void snprintf(char *p, unsigned int avail, char *fmt, ...)
 #endif
 {
-  va_list ap;
+    va_list ap;
+    int result;
 
-  va_start(ap, fmt);
-  vsnprintf(p, avail, fmt, ap);
-  va_end(ap);
+    va_start(ap, fmt);
+    result = afs_vsnprintf(p, avail, fmt, ap);
+    va_end(ap);
+#ifdef AFS_AIX51_ENV
+    return result;
+#endif
 }
 #endif /* AFS_OSF20_ENV || AFS_AIX32_ENV */

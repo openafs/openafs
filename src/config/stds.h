@@ -105,6 +105,16 @@ typedef afs_int32 afs_sfsize_t;
 #define SplitOffsetOrSize(t,h,l) (h) = 0; (l) = (t);
 #endif /* !AFS_LARGEFILE_ENV */
 
+/* Maximum integer sizes.  Also what is expected by %lld, %llu in
+ * afs_snprintf. */
+#ifdef AFS_64BIT_CLIENT
+typedef afs_int64 afs_intmax_t;
+typedef afs_uint64 afs_uintmax_t;
+#else /* !AFS_64BIT_CLIENT */
+typedef afs_int32 afs_intmax_t;
+typedef afs_uint32 afs_uintmax_t;
+#endif /* !AFS_64BIT_CLIENT */
+
 /* you still have to include <netinet/in.h> to make these work */
 
 #define hton32 htonl

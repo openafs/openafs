@@ -66,8 +66,9 @@ void VPurgeVolume_r(Error *ec, Volume *vp)
      * volume header. This routine can, under some circumstances, be called
      * when two volumes with the same id exist on different partitions.
      */
-    sprintf(purgePath, "%s/%s", VPartitionPath(vp->partition),
-	    VolumeExternalName(V_id(vp)));
+    (void) afs_snprintf(purgePath, sizeof purgePath,
+			"%s/%s", VPartitionPath(vp->partition),
+			VolumeExternalName(V_id(vp)));
     PurgeIndex_r(vp, vLarge);
     PurgeIndex_r(vp, vSmall);
     PurgeHeader_r(vp);

@@ -470,7 +470,7 @@ void HandleVolume(struct DiskPartition *dp, char *name)
 	    if (!dsizeOnly && !saveinodes) {
 		printf("Volume header (size = %d):\n", size = stat.st_size);
 		printf("\tstamp\t= 0x%x\n", header.stamp.version);
-		printf("\tVolId\t= %d\n", header.id);
+		printf("\tVolId\t= %u\n", header.id);
 	    }
 
 	    IH_INIT(ih, dp->device , header.id, header.volumeInfo);
@@ -488,7 +488,7 @@ void HandleVolume(struct DiskPartition *dp, char *name)
 	    IH_RELEASE(ih);
 	    size += code;
 	    if (!dsizeOnly && !saveinodes) {
-		printf("\tparent\t= %d\n", header.parent);
+		printf("\tparent\t= %u\n", header.parent);
 		printf("\tInfo inode\t= %s (size = %d)\n",
 		       PrintInode(NULL, header.volumeInfo), code);
 	    }
@@ -583,7 +583,7 @@ void HandleVolume(struct DiskPartition *dp, char *name)
 	if (saveinodes)
 	    printf("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
 
-	printf("%d\t%9d%9d%10d%10d%9d\t%24s\n",
+	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n",
 	       V_id(vp), Vdiskused, Vauxsize, Vvnodesize, totvolsize,
 	       totvolsize-Vdiskused, V_name(vp));
     }
@@ -784,8 +784,8 @@ void PrintVnodes(Volume *vp, VnodeClass class)
 		FDH_REALLYCLOSE(fdP1);
 		IH_RELEASE(ih1);
 		close(ofd);
-		printf("... Copied inode %d to file %s (%d bytes)\n",
-		       ino, nfile, total);
+		printf("... Copied inode %llu to file %s (%d bytes)\n",
+		       (afs_uintmax_t)ino, nfile, total);
 	    }
 	} else {
 #if defined(AFS_NAMEI_ENV)
@@ -821,8 +821,8 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
     Vvnodesize += fileLength;
     if (dsizeOnly) return;
     if (orphaned && (fileLength ==0 || vnode->parent || !offset)) return;
-    printf("%10d Vnode %u.%u.%u cloned: %d, length: %d linkCount: %d parent: %d",
-        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, fileLength, vnode->linkCount, vnode->parent);
+    printf("%10d Vnode %u.%u.%u cloned: %d, length: %llu linkCount: %d parent: %u",
+        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, (afs_uintmax_t)fileLength, vnode->linkCount, vnode->parent);
     if (DumpInodeNumber)
 	printf(" inode: %s", PrintInode(NULL, ino));
     if (DumpDate)

@@ -272,7 +272,7 @@ static void FSYNC_sync() {
 #endif
 
 #ifndef AFS_NT40_ENV
-    signal(SIGPIPE, SIG_IGN);
+    (void) signal(SIGPIPE, SIG_IGN);
 #endif
 
 #ifdef AFS_PTHREAD_ENV

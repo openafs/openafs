@@ -369,3 +369,9 @@ dest: \
 	${DEST}/lib/afs/libafsutil.a \
 	${DEST}/bin/sys
 
+splint:
+	splint $(CFLAGS) \
+	    assert.c base64.c casestrcpy.c ktime.c volparse.c hostparse.c \
+	    hputil.c kreltime.c isathing.c get_krbrlm.c uuid.c serverLog.c \
+	    dirpath.c fileutil.c netutils.c flipbase64.c \
+	    afs_atomlist.c afs_lhash.c snprintf.c

@@ -208,10 +208,12 @@ int namei_ViceREADME(char *partition)
    int fd;
 
    /* Create the inode directory if we're starting for the first time */
-   sprintf(filename, "%s/%s", partition, INODEDIR);
+   (void) afs_snprintf(filename, sizeof filename,
+		       "%s/%s", partition, INODEDIR);
    mkdir(filename, 0700);
 
-   sprintf(filename, "%s/%s/README", partition, INODEDIR);
+   (void) afs_snprintf(filename, sizeof filename,
+		       "%s/%s/README", partition, INODEDIR);
    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
    if (fd >= 0) {
       (void) write(fd, VICE_README, strlen(VICE_README));
@@ -1219,7 +1221,8 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
 	    }
 	    else {
 		/* Open this handle */
-		(void) sprintf(path2, "%s/%s", path1, dp1->d_name);
+		(void) afs_snprintf(path2, sizeof path2,
+				    "%s/%s", path1, dp1->d_name);
 		linkHandle.fd_fd = open(path2, O_RDONLY, 0666);
 		info.linkCount = namei_GetLinkCount(&linkHandle, (Inode)0, 0);
 	    }
@@ -1514,7 +1517,7 @@ int namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
     t_ih.ih_dev = h->ih_dev;
     t_ih.ih_vid = h->ih_vid;
 
-    sprintf(oldpath, "%s/%s", dir_name, infoName);
+    (void) afs_snprintf(oldpath, sizeof oldpath, "%s/%s", dir_name, infoName);
     fd = open(oldpath, O_RDWR, 0);
     if (fd < 0) {
         Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
@@ -1542,7 +1545,7 @@ int namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 
     t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_SMALLINDEX);
     namei_HandleToName(&n, &t_ih);
-    sprintf(newpath, "%s/%s", dir_name, smallName);
+    (void) afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, smallName);
     fd = open(newpath, O_RDWR, 0);
     if (fd < 0) {
         Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n",
@@ -1556,7 +1559,7 @@ int namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
 
     t_ih.ih_ino = namei_MakeSpecIno(h->ih_vid, VI_LARGEINDEX);
     namei_HandleToName(&n, &t_ih);
-    sprintf(newpath, "%s/%s", dir_name, largeName);
+    (void) afs_snprintf(newpath, sizeof newpath, "%s/%s", dir_name, largeName);
     fd = open(newpath, O_RDWR, 0);
     if (fd < 0) {
         Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n",
@@ -1582,9 +1585,9 @@ char * PrintInode(char *s, Inode ino)
     if (!s)
 	s = result;
 
-    (void) sprintf((char*)s, "%Lu", ino);
+    (void) afs_snprintf(s, sizeof(afs_ino_str_t), "%llu", (afs_uintmax_t) ino);
 
-    return (char*)s;
+    return s;
 }
 
 

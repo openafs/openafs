@@ -795,7 +795,7 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 	{
 	  if (ShowProblems) {
 	  	ViceLog(7, 
-		  ("BCB: Failed on file %u.%d.%d, host %s:%d is down\n",
+		  ("BCB: Failed on file %u.%u.%u, host %s:%d is down\n",
 		   afidp->AFSCBFids_val->Volume, afidp->AFSCBFids_val->Vnode,
 		   afidp->AFSCBFids_val->Unique, afs_inet_ntoa_r(hp->host,hoststr), ntohs(hp->port)));
 		}
@@ -848,7 +848,7 @@ int BreakCallBack(struct host *xhost, AFSFid *fid, int flag)
     int hostindex;
     char hoststr[16];
 
-    ViceLog(7,("BCB: BreakCallBack(all but %s:%d, (%u,%d,%d))\n",
+    ViceLog(7,("BCB: BreakCallBack(all but %s:%d, (%u,%u,%u))\n",
 	       afs_inet_ntoa_r(xhost->host,hoststr), ntohs(xhost->port), fid->Volume, fid->Vnode, 
 	       fid->Unique));
 
@@ -932,13 +932,13 @@ int DeleteCallBack(struct host *host, AFSFid *fid)
     if (!fe) {
         h_Unlock_r(host);
 	H_UNLOCK
-	ViceLog(8,("DCB: No call backs for fid (%u, %d, %d)\n",
+	ViceLog(8,("DCB: No call backs for fid (%u, %u, %u)\n",
 	    fid->Volume, fid->Vnode, fid->Unique));
 	return 0;
     }
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
-	ViceLog(8,("DCB: No call back for host %s:%d, (%u, %d, %d)\n",
+	ViceLog(8,("DCB: No call back for host %s:%d, (%u, %u, %u)\n",
 	    afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port), fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
 	H_UNLOCK
@@ -1302,7 +1302,7 @@ int BreakVolumeCallBacksLater(afs_uint32 volume)
     struct host *host;
     int found = 0;
 
-    ViceLog(25, ("Setting later on volume %d\n", volume));
+    ViceLog(25, ("Setting later on volume %u\n", volume));
     H_LOCK
     for (hash=0; hash<VHASH; hash++) {
 	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
@@ -1361,7 +1361,7 @@ int BreakLaterCallBacks(void)
 	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
 	    if (fe && (fe->status & FE_LATER) && 
 		(fid.Volume == 0 || fid.Volume == fe->volid)) {
-		ViceLog(125, ("Unchaining for %d:%d:%d\n", fe->vnode, 
+		ViceLog(125, ("Unchaining for %u:%u:%u\n", fe->vnode, 
 			      fe->unique, fe->volid));
 		fid.Volume = fe->volid;
 		*feip = fe->fnext;
@@ -1401,7 +1401,7 @@ int BreakLaterCallBacks(void)
     }
 
     if (tthead) {
-	ViceLog(125, ("Breaking volume %d\n", fid.Volume));
+	ViceLog(125, ("Breaking volume %u\n", fid.Volume));
 	henumParms.ncbas = 0;
 	henumParms.fid = &fid;
 	henumParms.thead = tthead;

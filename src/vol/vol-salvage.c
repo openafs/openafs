@@ -1072,7 +1072,9 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 		 } else
 #endif
 		 {
-	       sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, jobs[startjob]->jobnumb);
+	       (void) afs_snprintf(logFileName, sizeof logFileName, "%s.%d",
+			    AFSDIR_SERVER_SLVGLOG_FILEPATH,
+			    jobs[startjob]->jobnumb);
 	       logFile = fopen(logFileName, "w");
 		 }
 	     if (!logFile) logFile = stdout;
@@ -1090,7 +1092,8 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 #endif
     if (!partP) {
        for (i=0; i<jobcount; i++) {
-	  sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
+	  (void) afs_snprintf(logFileName, sizeof logFileName, "%s.%d",
+			      AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
 	  if ((passLog = fopen(logFileName, "r"))) {
 	     while(fgets(buf, sizeof(buf), passLog)) {
 	        fputs(buf, logFile);
@@ -1487,7 +1490,8 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     (void) _putenv("TMP="); /* If "TMP" is set, then that overrides tdir. */
     (void) strcpy(summaryFileName, _tempnam(tdir, "salvage.temp"));
 #else
-    sprintf(summaryFileName, "%s/salvage.temp.%d", tdir, getpid());
+    (void) afs_snprintf(summaryFileName, sizeof summaryFileName,
+			"%s/salvage.temp.%d", tdir, getpid());
 #endif
     summaryFile = fopen(summaryFileName, "a+");
     if (summaryFile == NULL) {
@@ -1905,9 +1909,10 @@ void DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 #endif
 	    if (ip->linkCount != 0 && TraceBadLinkCounts) {
 		TraceBadLinkCounts--; /* Limit reports, per volume */
-		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %u, p=(%u,%u,%u,%u)\n",
+		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %llu, p=(%u,%u,%u,%u)\n",
 		    ip->linkCount, PrintInode(NULL, ip->inodeNumber),
-		    ip->byteCount, ip->u.param[0], ip->u.param[1],
+		    (afs_uintmax_t) ip->byteCount,
+		    ip->u.param[0], ip->u.param[1],
 		    ip->u.param[2], ip->u.param[3]);
 	    }
 	    while (ip->linkCount > 0) {
@@ -2086,7 +2091,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 
     if (isp->volSummary == NULL) {
 	char name[64];
-	sprintf(name, VFORMAT, isp->volumeId);
+	(void) afs_snprintf(name, sizeof name, VFORMAT, isp->volumeId);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
 	    return -1;
@@ -2111,7 +2116,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(name, isp->volSummary->fileName);
 	    } else {
-		sprintf(name, VFORMAT, isp->volumeId);
+		(void) afs_snprintf(name, sizeof name, VFORMAT, isp->volumeId);
 		isp->volSummary->fileName = ToString(name);
 	    }
 
@@ -2485,11 +2490,11 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 			    goto zooks;
 			}
 			if (!Showmode) {
-			    Log("Vnode %d: inode number incorrect; changed from %s to %s. FileSize=%d\n",
+			    Log("Vnode %d: inode number incorrect; changed from %s to %s. FileSize=%llu\n",
 				vnodeNumber,
 				PrintInode(stmp1, VNDISK_GET_INO(vnode)),
 				PrintInode(stmp2, ip->inodeNumber),
-				ip->byteCount);
+				(afs_uintmax_t)ip->byteCount);
 			}
 			VNDISK_SET_INO(vnode, ip->inodeNumber);
 			vnodeChanged = 1;
@@ -2497,13 +2502,17 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 		    VNDISK_GET_LEN(vnodeLength, vnode);
 		    if (ip->byteCount != vnodeLength) {
 			if (check) {
-			    if (!Showmode) Log("Vnode %d: length incorrect; (is %d should be %d)\n",
-					       vnodeNumber, vnodeLength, ip->byteCount);
+			    if (!Showmode) Log("Vnode %d: length incorrect; (is %llu should be %llu)\n",
+					       vnodeNumber,
+					       (afs_uintmax_t)vnodeLength,
+					       (afs_uintmax_t)ip->byteCount);
 			    err = -1;
 			    goto zooks;
 			}
-			if (!Showmode) Log("Vnode %d: length incorrect; changed from %d to %d\n",
-					   vnodeNumber, vnodeLength, ip->byteCount);
+			if (!Showmode) Log("Vnode %d: length incorrect; changed from %llu to %llu\n",
+					   vnodeNumber,
+					   (afs_uintmax_t)vnodeLength,
+					   (afs_uintmax_t)ip->byteCount);
 			VNDISK_SET_LEN(vnode, ip->byteCount);
 			vnodeChanged = 1;
 		    }
@@ -2716,7 +2725,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     vnodeEssence = CheckVnodeNumber(vnodeNumber);
     if (vnodeEssence == NULL) {
 	if (!Showmode) {
-	   Log("dir vnode %d: invalid entry deleted: %s/%s (vnode %d, unique %d)\n", 
+	   Log("dir vnode %u: invalid entry deleted: %s/%s (vnode %u, unique %u)\n", 
 	       dir->vnodeNumber, dir->name?dir->name:"??",
 	       name, vnodeNumber, unique);
 	}
@@ -2749,7 +2758,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 
     if (!(vnodeNumber & 1) && !Showmode &&
 	!(vnodeEssence->count || vnodeEssence->unique || vnodeEssence->modeBits)) {
-       Log("dir vnode %d: invalid entry: %s/%s (vnode %d, unique %d)%s\n",
+       Log("dir vnode %u: invalid entry: %s/%s (vnode %u, unique %u)%s\n",
 	   dir->vnodeNumber, (dir->name?dir->name:"??"),
 	   name, vnodeNumber, unique, 
 	   ((!unique)?(Testing?"-- would have deleted":" -- deleted"):""));
@@ -2780,7 +2789,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	todelete = ((!vnodeEssence->unique || dirOrphaned) ? 1 : 0);
 
 	if (!Showmode) {
-	   Log("dir vnode %d: %s/%s (vnode %d): unique changed from %d to %d %s\n",
+	   Log("dir vnode %u: %s/%s (vnode %u): unique changed from %u to %u %s\n",
 	       dir->vnodeNumber, (dir->name ? dir->name : "??"), 
 	       name, vnodeNumber, unique, vnodeEssence->unique,
 	       (!todelete?"":(Testing?"-- would have deleted":"-- deleted")));
@@ -2800,7 +2809,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     if (strcmp(name,".") == 0) {
 	if (dir->vnodeNumber != vnodeNumber || (dir->unique != unique)) {
 	    ViceFid fid;
-	    if (!Showmode) Log("directory vnode %d.%d: bad '.' entry (was %d.%d); fixed\n",
+	    if (!Showmode) Log("directory vnode %u.%u: bad '.' entry (was %u.%u); fixed\n",
 	        dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
@@ -2830,7 +2839,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    pa.Unique = dir->unique;
 	}
 	if ((pa.Vnode != vnodeNumber) || (pa.Unique != unique)) {
-	    if (!Showmode) Log("directory vnode %d.%d: bad '..' entry (was %d.%d); fixed\n",
+	    if (!Showmode) Log("directory vnode %u.%u: bad '..' entry (was %u.%u); fixed\n",
 	        dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
@@ -2845,7 +2854,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	dir->haveDotDot = 1;
     } else if (strncmp(name,".__afs",6) == 0) {
         if (!Showmode) {
-	    Log("dir vnode %d: special old unlink-while-referenced file %s %s deleted (vnode %d)\n",
+	    Log("dir vnode %u: special old unlink-while-referenced file %s %s deleted (vnode %u)\n",
                dir->vnodeNumber, name, (Testing?"would have been":"is"), vnodeNumber);
 	}
         if (!Testing) {
@@ -2893,7 +2902,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	if (vnodeIdToClass(vnodeNumber) == vLarge && 
 	    vnodeEssence->name == NULL) {
 	    char *n;
-	    if (n = (char*)malloc(strlen(name)+1))
+	    if ((n = (char*)malloc(strlen(name)+1)))
 		strcpy(n, name);
 	    vnodeEssence->name = n;
 	}
@@ -2912,7 +2921,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	       * another non-orphaned dir).
 	       */
 	      if (!Showmode) {
-		 Log("dir vnode %d: %s/%s (vnode %d, unique %d) -- parent vnode %schanged from %d to %d\n",
+		 Log("dir vnode %u: %s/%s (vnode %u, unique %u) -- parent vnode %schanged from %u to %u\n",
 		     dir->vnodeNumber, (dir->name ? dir->name : "??"), name,
 		     vnodeNumber, unique, (Testing?"would have been ":""),
 		     vnodeEssence->parent, dir->vnodeNumber);
@@ -2923,12 +2932,12 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	      /* Vnode was claimed by another directory */
 	      if (!Showmode) {
 		 if (dirOrphaned) {
-		   Log("dir vnode %d: %s/%s parent vnode is %d (vnode %d, unique %d) -- %sdeleted\n",
+		   Log("dir vnode %u: %s/%s parent vnode is %u (vnode %u, unique %u) -- %sdeleted\n",
 		       dir->vnodeNumber, (dir->name ? dir->name : "??"), name,
 		       vnodeEssence->parent, vnodeNumber, unique,
 		       (Testing?"would have been ":""));
 		 } else {
-		   Log("dir vnode %d: %s/%s already claimed by directory vnode %d (vnode %d, unique %d) -- %sdeleted\n",
+		   Log("dir vnode %u: %s/%s already claimed by directory vnode %u (vnode %u, unique %u) -- %sdeleted\n",
 		       dir->vnodeNumber, (dir->name ? dir->name : "??"), name,
 		       vnodeEssence->parent, vnodeNumber, unique, 
 		       (Testing?"would have been ":""));
@@ -3085,7 +3094,7 @@ void SalvageDir(char *name, VolumeId rwVid, struct VnodeInfo *dirVnodeInfo,
     dirok = ((RebuildDirs && !Testing) ? 0 : DirOK(&dir.dirHandle));
     if (!dirok) {
 	if (!RebuildDirs) {
-	   Log("Directory bad, vnode %d; %s...\n",
+	   Log("Directory bad, vnode %u; %s...\n",
 	       dir.vnodeNumber, (Testing ? "skipping" : "salvaging"));
 	}
 	if (!Testing) {
@@ -3249,7 +3258,7 @@ int SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t *alinkH)
 	        pa.Vnode  = ThisVnode;
 		pa.Unique = ThisUnique;
 
-		sprintf(npath, "%s.%d.%d", 
+		(void) afs_snprintf(npath, sizeof npath, "%s.%u.%u", 
 			((class == vLarge)?"__ORPHANDIR__":"__ORPHANFILE__"),
 			ThisVnode, ThisUnique);
 
@@ -3334,7 +3343,7 @@ int SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t *alinkH)
 		    }
 		} else if (vnp->count) {
 		    if (!Showmode) {
-		       Log("Vnode %d: link count incorrect (was %d, %s %d)\n",
+		       Log("Vnode %u: link count incorrect (was %d, %s %d)\n",
 			   vnodeNumber, oldCount, 
 			   (Testing?"would have changed to":"now"), vnode.linkCount);
 		    }
@@ -3505,8 +3514,9 @@ void PrintInodeList(void)
     nInodes = status.st_size / sizeof(struct ViceInodeInfo);
     assert(read(inodeFd, buf, status.st_size) == status.st_size);
     for(ip = buf; nInodes--; ip++) {
-	Log("Inode:%s, linkCount=%d, size=%u, p=(%u,%u,%u,%u)\n",
-	    PrintInode(NULL, ip->inodeNumber), ip->linkCount, ip->byteCount,
+	Log("Inode:%s, linkCount=%d, size=%#llx, p=(%u,%u,%u,%u)\n",
+	    PrintInode(NULL, ip->inodeNumber), ip->linkCount,
+	    (afs_uintmax_t) ip->byteCount,
 	    ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
     }
     free(buf);
@@ -3623,10 +3633,11 @@ void TimeStampLogFile(void)
 
   now = time(0);
   lt = localtime(&now);
-  sprintf(stampSlvgLog, "%s.%04d-%02d-%02d.%02d:%02d:%02d",
-          AFSDIR_SERVER_SLVGLOG_FILEPATH,
-          lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
-          lt->tm_hour, lt->tm_min, lt->tm_sec);
+  (void) afs_snprintf(stampSlvgLog, sizeof stampSlvgLog,
+		      "%s.%04d-%02d-%02d.%02d:%02d:%02d",
+		      AFSDIR_SERVER_SLVGLOG_FILEPATH,
+		      lt->tm_year + 1900, lt->tm_mon + 1, lt->tm_mday,
+		      lt->tm_hour, lt->tm_min, lt->tm_sec);
 
   /* try to link the logfile to a timestamped filename */
   /* if it fails, oh well, nothing we can do */
@@ -3664,45 +3675,44 @@ void showlog(void)
 void Log(const char *format, ...)
 {
     struct timeval now;
+    char tmp[1024];
     va_list args;
 
     va_start(args, format);
+    (void) afs_vsnprintf(tmp, sizeof tmp, format, args);
+    va_end(args);
 #ifndef AFS_NT40_ENV
     if ( useSyslog )
     {
-	char tmp[1024];
-	(void) vsnprintf(tmp, sizeof tmp, format, args);
 	syslog(LOG_INFO, "%s", tmp);
     } else 
 #endif
     {
 	gettimeofday(&now, 0);
-	fprintf(logFile, "%s ", TimeStamp(now.tv_sec, 1));
-	vfprintf(logFile, format, args);
+	fprintf(logFile, "%s %s", TimeStamp(now.tv_sec, 1), tmp);
 	fflush(logFile);
     }
-    va_end(args);
 }
 
 void Abort(const char *format, ...)
 {
     va_list args;
+    char tmp[1024];
 
     va_start(args, format);
+    (void) afs_vsnprintf(tmp, sizeof tmp, format, args);
+    va_end(args);
 #ifndef AFS_NT40_ENV
     if ( useSyslog )
     {
-	char tmp[1024];
-	(void) vsnprintf(tmp, sizeof tmp, format, args);
 	syslog(LOG_INFO, "%s", tmp);
     } else 
 #endif
     {
-	vfprintf(logFile, format, args);
+	fprintf(logFile, "%s", tmp);
 	fflush(logFile);
 	if (ShowLog) showlog();
     }
-    va_end(args);
 
     if (debug)
 	abort();
