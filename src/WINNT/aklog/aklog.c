@@ -23,6 +23,7 @@
 #include <afs/stds.h>
 #include <krb.h>
 #include <krb5.h>
+#include <afs/ptserver.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -172,16 +173,50 @@ void CloseConf(struct afsconf_dir **pconfigdir)
 	(void) afsconf_Close(*pconfigdir);
 }
 
-void ViceIDToUsername(char *username, int *status, 
-struct ktc_principal *aserver)
+#define ALLOW_REGISTER 1
+void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
+                      char * cell_to_use, CREDENTIALS *c,
+                      int *status, 
+                      struct ktc_principal *aclient, struct ktc_principal *aserver, struct ktc_token *atoken)
 {
-#ifndef WIN32
+    static char lastcell[MAXCELLCHARS+1] = { 0 };
+    static char confname[512] = { 0 };
 	long viceId;			/* AFS uid of user */
+#ifdef ALLOW_REGISTER
+    afs_int32 id;
+#endif /* ALLOW_REGISTER */
+
+    if (confname[0] == '\0') {
+        strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
+        confname[sizeof(confname) - 2] = '\0';
+    }
 
 	if (dflag)
 		printf("About to resolve name %s to id\n", username);
 
-	if (!pr_Initialize (0, AFSDIR_CLIENT_ETC_DIRPATH, aserver->cell))
+    /*
+    * Talk about DUMB!  It turns out that there is a bug in
+    * pr_Initialize -- even if you give a different cell name
+    * to it, it still uses a connection to a previous AFS server
+    * if one exists.  The way to fix this is to change the
+    * _filename_ argument to pr_Initialize - that forces it to
+    * re-initialize the connection.  We do this by adding and
+    * removing a "/" on the end of the configuration directory name.
+    */
+
+    if (lastcell[0] != '\0' && (strcmp(lastcell, aserver->cell) != 0)) {
+        int i = strlen(confname);
+        if (confname[i - 1] == '/') {
+            confname[i - 1] = '\0';
+        } else {
+            confname[i] = '/';
+            confname[i + 1] = '\0';
+        }
+    }
+
+    strcpy(lastcell, aserver->cell);
+
+	if (!pr_Initialize (0, confname, aserver->cell))
 		*status = pr_SNameToId (username, &viceId);
 
 	if (dflag)
@@ -201,9 +236,58 @@ struct ktc_principal *aserver)
 	* the code for tokens, this hack (AFS ID %d) will
 	* not work if you change %d to something else.
 	*/
-	if ((*status == 0) && (viceId != ANONYMOUSID))
-		sprintf (username, "AFS ID %d", viceId);
-#endif
+
+    /*
+    * This code is taken from cklog -- it lets people
+    * automatically register with the ptserver in foreign cells
+    */
+
+#ifdef ALLOW_REGISTER
+    if (*status == 0) {
+        if (viceId != ANONYMOUSID) {
+#else /* ALLOW_REGISTER */
+            if ((*status == 0) && (viceId != ANONYMOUSID))
+#endif /* ALLOW_REGISTER */
+                sprintf (username, "AFS ID %d", (int) viceId);
+#ifdef ALLOW_REGISTER
+            } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
+                if (dflag) {
+                    printf("doing first-time registration of %s "
+                            "at %s\n", username, cell_to_use);
+                }
+                id = 0;
+                strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
+                strcpy(aclient->instance, "");
+                strncpy(aclient->cell, c->realm, MAXKTCREALMLEN - 1);
+                if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
+                    printf("%s: unable to obtain tokens for cell %s "
+                            "(status: %d).\n", progname, cell_to_use, status);
+                    *status = AKLOG_TOKEN;
+                }
+
+                /*
+                 * In case you're wondering, we don't need to change the
+                 * filename here because we're still connecting to the
+                 * same cell -- we're just using a different authentication
+                 * level
+                 */
+
+                if ((*status = pr_Initialize(1L, confname, aserver->cell, 0))) {
+                    printf("Error %d\n", status);
+                }
+
+                if ((*status = pr_CreateUser(username, &id))) {
+                    printf("%s: unable to create remote PTS "
+                            "user %s in cell %s (status: %d).\n", progname,
+                            username, cell_to_use, *status);
+                } else {
+                    printf("created cross-cell entry for %s at %s\n",
+                            username, cell_to_use);
+                    sprintf(username, "AFS ID %d", (int) id);
+                }
+            }
+        }
+#endif /* ALLOW_REGISTER */
 }
 
 char *LastComponent(char *str)
@@ -469,6 +553,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	struct ktc_principal aclient;
 	struct ktc_token atoken, btoken;
 
+
 	/* try to avoid an expensive call to get_cellconfig */
 	if (cell && ll_string_check(&authedcells, cell))
 	{
@@ -665,7 +750,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 			strcat(username, realm_of_user);
 		}
 
-		ViceIDToUsername(username, &status, &aserver);
+		ViceIDToUsername(username, realm_of_user, realm_of_cell, cell_to_use, &c, &status, &aclient, &aserver, &atoken);
 	}
 
 	if (dflag)

@@ -789,40 +789,38 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     osi_Log2(afsd_logp, "GetCallback scp %x flags %lX", scp, flags);
 
 #ifdef AFS_FREELANCE_CLIENT
-	// yj
 	// The case where a callback is needed on /afs is handled
 	// specially. We need to fetch the status by calling
 	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
-	if (cm_freelanceEnabled &&
-        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-		scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
-		scp->fid.unique==0x1 &&
-		scp->fid.vnode==0x1) {
-		// Start by indicating that we're in the process
-		// of fetching the callback
+	if (cm_freelanceEnabled) {
+        if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
+             scp->fid.unique==0x1 &&
+             scp->fid.vnode==0x1) {
+            // Start by indicating that we're in the process
+            // of fetching the callback
 
-        lock_ObtainMutex(&cm_Freelance_Lock);
-		cm_fakeGettingCallback = 1;
-		lock_ReleaseMutex(&cm_Freelance_Lock);
+            lock_ObtainMutex(&cm_Freelance_Lock);
+            cm_fakeGettingCallback = 1;
+            lock_ReleaseMutex(&cm_Freelance_Lock);
 
-		// Fetch the status info 
-		cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
+            // Fetch the status info 
+            cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
 
-		// Indicate that the callback is not done
-		lock_ObtainMutex(&cm_Freelance_Lock);
-		cm_fakeDirCallback = 2;
-		// Indicate that we're no longer fetching the callback
-		cm_fakeGettingCallback = 0;
-		lock_ReleaseMutex(&cm_Freelance_Lock);
+            // Indicate that the callback is not done
+            lock_ObtainMutex(&cm_Freelance_Lock);
+            cm_fakeDirCallback = 2;
+            // Indicate that we're no longer fetching the callback
+            cm_fakeGettingCallback = 0;
+            lock_ReleaseMutex(&cm_Freelance_Lock);
 
-		return 0;
-	}
+            return 0;
+        }
 
         if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
-		osi_Log0(afsd_logp,"cm_getcallback should NEVER EVER get here... ");
-	}
-	// yj: end of getcallback modifications  ---------------
-		
+            osi_Log0(afsd_logp,"cm_getcallback should NEVER EVER get here... ");
+        }
+    }
 #endif /* AFS_FREELANCE_CLIENT */
 	
 	mustCall = (flags & 1);

@@ -1690,9 +1690,13 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (flags & PIOCTL_LOGON) {
 		  /* SMB user name with which to associate tokens */
 		  smbname = tp;
-          osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",osi_LogSaveString(smb_logp,smbname));		  
+          osi_Log2(smb_logp,"cm_IoctlSetToken for user [%s] smbname [%s]",
+                    osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
           fprintf(stderr, "SMB name = %s\n", smbname);
 		  tp += strlen(tp) + 1;
+        } else {
+            osi_Log1(smb_logp,"cm_IoctlSetToken for user [%s]",
+                      osi_LogSaveString(smb_logp,uname));
         }
 
 #ifndef DJGPP   /* for win95, session key is back in pioctl */
@@ -1701,8 +1705,10 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		if (!cm_FindTokenEvent(uuid, sessionKey))
 			return CM_ERROR_INVAL;
 #endif /* !DJGPP */
-	} else
+	} else {
 		cellp = cm_rootCellp;
+        osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
+    }
 
 	if (flags & PIOCTL_LOGON) {
           userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname);
@@ -1711,6 +1717,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	/* store the token */
 	lock_ObtainMutex(&userp->mx);
 	ucellp = cm_GetUCell(userp, cellp);
+    osi_Log1(smb_logp,"cm_IoctlSetToken ucellp %lx", ucellp);
 	ucellp->ticketLen = ticketLen;
 	if (ucellp->ticketp)
 		free(ucellp->ticketp);	/* Discard old token if any */
@@ -1945,6 +1952,8 @@ long cm_IoctlDelToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		return CM_ERROR_NOMORETOKENS;
 	}
 
+    osi_Log1(smb_logp,"cm_IoctlDelToken ucellp %lx", ucellp);
+
 	if (ucellp->ticketp) {
 		free(ucellp->ticketp);
 		ucellp->ticketp = NULL;
@@ -1965,7 +1974,8 @@ long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 	lock_ObtainMutex(&userp->mx);
 
-	for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
+    for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
+        osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
 		ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
 		ucellp->gen++;
 	}

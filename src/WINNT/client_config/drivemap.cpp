@@ -306,14 +306,18 @@ BOOL IsValidSubmountName (LPTSTR pszSubmount)
       return FALSE;
 
    for ( ; *pszSubmount; ++pszSubmount)
-      {
-      if (!isprint(*pszSubmount))
-         return FALSE;
-      if (*pszSubmount == TEXT(' '))
-         return FALSE;
-      if (*pszSubmount == TEXT('\t'))
-         return FALSE;
-      }
+   {
+       if (!isprint(*pszSubmount))
+           return FALSE;
+       if (*pszSubmount == TEXT(' '))
+           return FALSE;
+       if (*pszSubmount == TEXT('/'))
+           return FALSE;
+       if (*pszSubmount == TEXT('\\'))
+           return FALSE;
+       if (*pszSubmount == TEXT('\t'))
+           return FALSE;
+   }
 
    return TRUE;
 }

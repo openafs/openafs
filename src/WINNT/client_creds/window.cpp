@@ -246,40 +246,52 @@ void Main_Show (BOOL fShow)
 
 void Main_OnInitDialog (HWND hDlg)
 {
-   if (!g.fIsWinNT)
-      {
-      TCHAR szTitle[256];
-      GetString (szTitle, IDS_TITLE_95);
-      SetWindowText (hDlg, szTitle);
-      }
+    if (!g.fIsWinNT)
+    {
+        TCHAR szTitle[256];
+        GetString (szTitle, IDS_TITLE_95);
+        SetWindowText (hDlg, szTitle);
+    }
 
-   TCHAR szVersion[256];
-   DWORD dwPatch = 0;
-   TCHAR szUser[256];
-   GetString (szVersion, IDS_UNKNOWN);
-   GetString (szUser, IDS_UNKNOWN);
+    TCHAR szVersion[256];
+    DWORD dwPatch = 0;
+    TCHAR szUser[256];
+    GetString (szVersion, IDS_UNKNOWN);
+    GetString (szUser, IDS_UNKNOWN);
 
-   HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_AFS, &hk) == 0)
-      {
-      DWORD dwSize = sizeof(szVersion);
-      DWORD dwType = REG_SZ;
-      RegQueryValueEx (hk, REGVAL_AFS_VERSION, NULL, &dwType, (PBYTE)szVersion, &dwSize);
+    HKEY hk;
+    if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_AFS, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(szVersion);
+        DWORD dwType = REG_SZ;
+        RegQueryValueEx (hk, REGVAL_AFS_VERSION, NULL, &dwType, (PBYTE)szVersion, &dwSize);
 
-      dwSize = sizeof(dwPatch);
-      dwType = REG_DWORD;
-      RegQueryValueEx (hk, REGVAL_AFS_PATCH, NULL, &dwType, (PBYTE)&dwPatch, &dwSize);
-      RegCloseKey (hk);
-      }
+        dwSize = sizeof(dwPatch);
+        dwType = REG_DWORD;
+        RegQueryValueEx (hk, REGVAL_AFS_PATCH, NULL, &dwType, (PBYTE)&dwPatch, &dwSize);
+        RegCloseKey (hk);
+    }
 
-   BOOL fFoundUserName = FALSE;
-    if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Explorer"), &hk) == 0)
+    /* We should probably be using GetUserNameEx() for this */
+    BOOL fFoundUserName = FALSE;
+    if (RegOpenKey (HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
     {
         DWORD dwSize = sizeof(szUser);
         DWORD dwType = REG_SZ;
         if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
             fFoundUserName = TRUE;
         RegCloseKey (hk);
+    }
+    if (!fFoundUserName ) 
+    {
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Explorer"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+                fFoundUserName = TRUE;
+            RegCloseKey (hk);
+        }
     }
     if (!fFoundUserName ) 
     {
@@ -291,29 +303,29 @@ void Main_OnInitDialog (HWND hDlg)
                 fFoundUserName = TRUE;
             RegCloseKey (hk);
         }
+    }   
+    if (!fFoundUserName)
+    {
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+                fFoundUserName = TRUE;
+            RegCloseKey (hk);
+        }
     }
-   if (!fFoundUserName)
-   {
-       if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
-       {
-           DWORD dwSize = sizeof(szUser);
-           DWORD dwType = REG_SZ;
-           if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-               fFoundUserName = TRUE;
-           RegCloseKey (hk);
-       }
-   }
 
-   TCHAR szSource[ cchRESOURCE ];
-   TCHAR szTarget[ cchRESOURCE ];
+    TCHAR szSource[ cchRESOURCE ];
+    TCHAR szTarget[ cchRESOURCE ];
 
-   GetString (szSource, (dwPatch) ? IDS_TITLE_VERSION : IDS_TITLE_VERSION_NOPATCH);
-   wsprintf (szTarget, szSource, szVersion, dwPatch);
-   SetDlgItemText (hDlg, IDC_TITLE_VERSION, szTarget);
+    GetString (szSource, (dwPatch) ? IDS_TITLE_VERSION : IDS_TITLE_VERSION_NOPATCH);
+    wsprintf (szTarget, szSource, szVersion, dwPatch);
+    SetDlgItemText (hDlg, IDC_TITLE_VERSION, szTarget);
 
-   GetDlgItemText (hDlg, IDC_TITLE_NT, szSource, cchRESOURCE);
-   wsprintf (szTarget, szSource, szUser);
-   SetDlgItemText (hDlg, IDC_TITLE_NT, szTarget);
+    GetDlgItemText (hDlg, IDC_TITLE_NT, szSource, cchRESOURCE);
+    wsprintf (szTarget, szSource, szUser);
+    SetDlgItemText (hDlg, IDC_TITLE_NT, szTarget);
 }
 
 

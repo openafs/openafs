@@ -163,9 +163,11 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
-    if (fh == INVALID_HANDLE_VALUE)
-	return -1;
-
+	if (fh == INVALID_HANDLE_VALUE) {
+		if (GetLastError() == ERROR_DOWNGRADE_DETECTED)
+			fprintf(stderr, "Unable to open \"%s\": Authentication Downgrade Detected\n", tbuffer);
+		return -1;
+	}
     /* return fh and success code */
     *handlep = fh;
     return 0;
