@@ -106,14 +106,17 @@ BOOL InitApp (LPSTR pszCmdLineA)
          case 'A':
             fAutoInit = TRUE;
             break;
+
          case 'm':
          case 'M':
             fRenewMaps = TRUE;
             break;
+
          case 'n':
          case 'N':
             fNetDetect = TRUE;
             break;
+
          case 's':
          case 'S':
             fShow = TRUE;
@@ -138,14 +141,21 @@ BOOL InitApp (LPSTR pszCmdLineA)
          case 'U':
             fUninstall = TRUE;
             break;
+
 		 case ':':
 			 MapShareName(pszCmdLineA);
 			 break;
+
+         case 'z':
+         case 'Z':
+             DoUnMapShare(TRUE);
+             return(0);
+
          case 'x':
          case 'X':
              TestAndDoMapShare(SERVICE_START_PENDING);
              TestAndDoMapShare(SERVICE_RUNNING);
-	     return 0;
+             return 0;
          }
 
       while (*pszCmdLineA && (*pszCmdLineA != ' '))
