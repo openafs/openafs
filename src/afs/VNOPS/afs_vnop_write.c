@@ -294,7 +294,7 @@ int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #endif
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
-#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -610,7 +610,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
 	osi_UFSClose(tfile);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
-#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
