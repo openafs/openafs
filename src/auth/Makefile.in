@@ -36,7 +36,7 @@ copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o
 setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 
 ktc.krb.o: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/ktc.c -o ktc.krb.o
+	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/ktc.c -o ktc.krb.o
 
 libauth.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f libauth.a

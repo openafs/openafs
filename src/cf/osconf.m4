@@ -230,6 +230,7 @@ case $AFS_SYSNAME in
 		;;
 
 	amd64_linux*)
+		CCOBJ="${CC} -fPIC"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'

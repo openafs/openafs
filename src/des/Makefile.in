@@ -88,9 +88,9 @@ make_s:	make_s.o misc.o main.o
 crypt.o: crypt.c
 	case ${SYS_NAME} in \
 	rs_aix*)\
-		${CC} -c ${COMMON_INCL} -o crypt.o crypt.c ;;\
+		${CCOBJ} -c ${COMMON_INCL} -o crypt.o crypt.c ;;\
 	*)\
-		${CC} -c ${CFLAGS} -o crypt.o crypt.c ;;\
+		${CCOBJ} -c ${CFLAGS} -o crypt.o crypt.c ;;\
 	esac
 #
 # Table/code generation targets
