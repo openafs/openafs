@@ -153,6 +153,12 @@ case $system in
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+		 fi
                 :
 		fi
                 ;;
@@ -589,7 +595,7 @@ am_aux_dir=`CDPATH=:; cd $ac_aux_dir && pwd`
 ])
 
 dnl
-dnl $Id: aclocal.m4,v 1.10 2002/01/23 00:41:12 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.11 2002/01/28 01:38:08 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
