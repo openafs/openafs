@@ -27,10 +27,9 @@ RCSID("$Header$");
 #include <linux/init.h>
 #include <linux/sched.h>
 #endif
-#ifndef EXPORTED_SYS_CALL_TABLE
+#if !defined(EXPORTED_SYS_CALL_TABLE) && defined(HAVE_KERNEL_LINUX_SYSCALL_H)
 #include <linux/syscall.h>
 #endif
-
 
 
 #ifdef AFS_SPARC64_LINUX24_ENV
