@@ -87,7 +87,7 @@ setup:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-INST_LIBAFS ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
