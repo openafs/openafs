@@ -10,6 +10,9 @@
 #ifndef _OSI_PROTOTYPES_H_
 #define _OSI_PROTOTYPES_H_
 
+/* osi_file.c */
+extern afs_rwlock_t afs_xosi;
+
 /* osi_vnodeops.c */
 int afs_putapage(struct vnode *vp, struct page *pages,
 #if	defined(AFS_SUN56_ENV)
