@@ -44,7 +44,7 @@ for VERS in $LINUX_VERS ; do
 		errors=true
 		continue
 	fi
-	header=$LINUX_SRCDIR$VERS/include/linux/version.h
+	header=$LINUX_SRCDIR/include/linux/version.h
 	if [ ! -f $header ] ; then
 	    echo "ERROR: Cannot build for Linux kernel $VERS: $header does not exist."
 	    errors=true
