@@ -440,8 +440,8 @@ process):
 additional file server machine, return to <A HREF="auqbg006.htm#HDRWQ108">Starting Server Programs</A>).
 </OL>
 <HR><H2><A NAME="HDRWQ26" HREF="auqbg002.htm#ToC_39">Getting Started on Digital UNIX Systems</A></H2>
-<P>Begin by building AFS modifications into a new static
-kernel; Digital UNIX does not support dynamic loading. Then create
+<P>Begin by either building AFS modifications into a new static
+kernel or by setting up to dynamically load the AFS kernel module. Then create
 partitions for storing AFS volumes, and replace the Digital UNIX
 <B>fsck</B> program with a version that correctly handles AFS
 volumes. If the machine is to remain an AFS client machine, incorporate
@@ -451,6 +451,50 @@ matrix.
 <A NAME="IDX2267"></A>
 <A NAME="IDX2268"></A>
 <A NAME="IDX2269"></A>
+<P><H3><A NAME="HDRWQ27a" HREF="auqbg002.htm#ToC_40a">Loading AFS into the Digital UNIX Kernel</A></H3>
+<P>The <B>sysconfig</B> program is the dynamic kernel loader provided
+for Digital UNIX systems. 
+<P>For AFS to function correctly, the <B>sysconfig</B> program must run each
+time the machine reboots, so the AFS initialization script (included on the
+AFS CD-ROM) invokes it automatically. In this section you copy the
+appropriate AFS library file to the location where the <B>sysconfig</B>
+program accesses it and then run the script.
+<P>Mount the AFS CD-ROM for Digital UNIX on the local <B>/cdrom</B>
+directory. For instructions on mounting CD-ROMs (either locally or
+remotely via NFS), see your Digital UNIX documentation. Then change
+directory as indicated.
+<PRE>   
+   # <B>cd /cdrom/alpha_dux40/root.client</B>
+   
+</PRE>
+<P>Copy the AFS initialization script to the local directory for
+initialization files (by convention, <B>/sbin/init.d</B> on Digital
+UNIX machines). Note the removal of the <B>.rc</B> extension
+as you copy the script.
+<PRE>   
+   # <B>cp usr/vice/etc/afs.rc  /sbin/init.d/afs</B>
+   
+</PRE>
+<P>Copy the AFS kernel module to the local <B>/subsys</B>
+directory. 
+<PRE>  
+   # <B>cp bin/afs.mod /subsys/afs.mod</B>   
+</PRE> 
+<P>Set up the system to load the module at startup.
+<PRE>
+   # <B>/sbin/init.d/autosysconfig add afs</B>
+</PRE>
+<P>Reboot the machine to start using the new kernel, and login again as the
+superuser <B>root</B>. 
+<PRE>   
+   # <B>cd /</B>
+   
+   # <B>shutdown -r now</B>
+   
+   login: <B>root</B>
+   Password: <VAR>root_password</VAR>
+   
+</PRE>
 <P><H3><A NAME="HDRWQ27" HREF="auqbg002.htm#ToC_40">Building AFS into the Digital UNIX Kernel</A></H3>
 <P>Use the following instructions to build AFS modifications
 into the kernel on a Digital UNIX system.
