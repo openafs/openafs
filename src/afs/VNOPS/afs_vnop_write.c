@@ -171,7 +171,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	return (EFBIG);
     }
 #endif
-#if (!defined(AFS_VM_RDWR_ENV)||defined(AFS_LINUX20_ENV))
+#ifdef AFS_VM_RDWR_ENV
     /*
      * If write is implemented via VM, afs_FakeOpen() is called from the
      * high-level write op.
