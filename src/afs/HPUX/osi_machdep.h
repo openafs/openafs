@@ -89,13 +89,7 @@ extern caddr_t kmem_alloc();
 #include <sys/kthread_iface.h>	/* for kt_cred() */
 
 /* Expected to be available as a patch from HP */
+/* See section D of the top level README for details */
 #include <vfs_vm.h>
 
 #endif /* _OSI_MACHDEP_H_ */
-
-
-
-
-
-
-
