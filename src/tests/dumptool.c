@@ -71,6 +71,7 @@
 #include <errno.h>
 #include <termios.h>
 #include <fnmatch.h>
+#include <fcntl.h>
 
 #include <lock.h>
 #include <afs/param.h>
@@ -83,6 +84,9 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 
+#ifdef AFS_LINUX24_ENV
+#define _LARGEFILE64_SOURCE 1
+#endif
 #ifdef RESIDENCY
 #include <afs/rsdefs.h>
 #include <afs/remioint.h>
@@ -309,6 +313,7 @@ main(int argc, char *argv[])
     char *p;
     struct winsize win;
     FILE *f;
+    int fd;
 
 #ifdef RESIDENCY
     for (i = 0; i < RS_MAXRESIDENCIES; i++) {
@@ -430,8 +435,18 @@ main(int argc, char *argv[])
      * Try opening the dump file
      */
 
-    if ((f = fopen(argv[optind], "rb")) == NULL) {
+#ifdef O_LARGEFILE
+    if ((fd = open(argv[optind], O_RDONLY | O_LARGEFILE)) < 0) {
+#else
+    if ((fd = open(argv[optind], O_RDONLY)) < 0) {
+#endif
 	fprintf(stderr, "open of dumpfile %s failed: %s\n", argv[optind],
+		strerror(errno));
+	exit(1);
+    }
+
+    if ((f = fdopen(fd, "rb")) == NULL) {
+        fprintf(stderr, "fdopen of dumpfile %s failed: %s\n", argv[optind],
 		strerror(errno));
 	exit(1);
     }
