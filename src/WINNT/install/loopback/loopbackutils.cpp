@@ -627,3 +627,36 @@ UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
 	return ERROR_SUCCESS;
 }
 
+UINT __stdcall uninstallLoopbackMSI (MSIHANDLE hInstall)
+{
+	LPWSTR szValueBuf;
+	DWORD cbValueBuf = 256;
+	Args args;
+	UINT rc;
+
+	szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
+	while (rc = MsiGetPropertyW(hInstall, L"CustomActionData", szValueBuf, &cbValueBuf)) {
+		free (szValueBuf);
+		if (rc == ERROR_MORE_DATA) {
+			cbValueBuf++;
+			szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
+		} 
+        else 
+            return ERROR_INSTALL_FAILURE;
+	}
+
+	if (!process_args(szValueBuf, args)) 
+        return ERROR_INSTALL_FAILURE;
+		
+	rc = UnInstallLoopBack ();
+
+	if (rc == 1) 
+        return ERROR_INSTALL_FAILURE;
+
+	if (rc == 2) {
+		MsiDoActionW (hInstall, L"ScheduleReboot");
+	}
+
+	return ERROR_SUCCESS;
+}
+
