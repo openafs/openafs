@@ -1,6 +1,6 @@
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
-# 
+#
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
@@ -26,6 +26,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_STOREALL, "StoreAll vp 0x%lx len (0x%x, 0x%x)"
 	ec	CM_TRACE_INVALL, "InvalAll vp 0x%lx len 0x%x"
 	ec	CM_TRACE_TRUNCALL, "TruncAll vp 0x%lx old len (0x%x, 0x%x) new len (0x%x, 0x%x)"
+	
 	ec	CM_TRACE_GNLINK, "Gn_link vp 0x%lx name %s (returns 0x%x)"
 	ec	CM_TRACE_GMKDIR, "Gn_mkdir vp 0x%lx name %s mode 0x%x (returns 0x%x)"
 	ec	CM_TRACE_GMKNOD, "Gn_mknod vp 0x%lx name %s mode 0x%x (returns 0x%x)"
@@ -54,7 +55,7 @@ error_table 2 ZCM
 	ec	CM_TRACE_STUFFVCACHE, "StuffVcache 0x%lx callback host 0x%lx expires %u (in %u secs)"
 	ec	CM_TRACE_GETDCACHE1, "Getdcache vp 0x%lx failed to find chunk 0x%x"
 	ec	CM_TRACE_GETDCACHE2, "GetdCache vp 0x%lx dcache 0x%lx dcache low-version 0x%x, vcache low-version 0x%x"
-	ec	CM_TRACE_GETDCACHE3, "GetdCache tlen 0x%x size 0x%x abyte (0x%x, 0x%x) Position (0x%x, 0x%x)"
+	ec	CM_TRACE_GETDCACHE3, "GetdCache tlen 0x%x flags 0x%x abyte (0x%x, 0x%x) Position (0x%x, 0x%x)"
 	ec	CM_TRACE_STOREMINI, "storemini vp 0x%lx length 0x%x"
 	ec	CM_TRACE_STOREDCACHE, "StoreDCache vp 0x%lx chunk 0x%x length 0x%x at position 0x%x"
 	ec	CM_TRACE_STOREDCACHEDONE, "StoreDCache Done for vp 0x%lx (returns 0x%x)"
@@ -152,5 +153,9 @@ error_table 2 ZCM
 	ec	CM_TRACE_STOREPROC2, "StoreProc got 0x%x"
 	ec	CM_TRACE_ADJUSTSIZE, "AdjustSize index %d oldSize %d newSize %d blocksUsed %d"
 	ec	CM_TRACE_SETLENGTH, "%s line %d: m.Length was (0x%x, 0x%x), now (0x%x, 0x%x)"
+	ec	CM_TRACE_DCACHEWAIT, "%s line %d: sleeping or waiting for 0x%x flags 0x%x" 
+	ec	CM_TRACE_VNODEREAD, "UFSRead: tdc 0x%x, offset (0x%x, 0x%x) len (0x%x 0x%x)" 
+	ec	CM_TRACE_SLEEP, "Sleep: evp 0x%x, count %d seq 0x%x evp->seq 0x%x" 
+	ec	CM_TRACE_WAKE, "Wapeup: evp 0x%x, evp->seq 0x%x" 
 end
 

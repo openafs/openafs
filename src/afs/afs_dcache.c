@@ -1438,6 +1438,11 @@ static int afs_UFSCacheFetchProc(acall, afile, abase, adc, avc,
 	    length -= tlen;
 	    adc->validPos = abase;
 	    if (adc->flags & DFWaiting) {
+		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_INT32, __LINE__,
+			ICL_TYPE_POINTER, adc,
+			ICL_TYPE_INT32, adc->flags);
 		adc->flags &= ~DFWaiting;
 		afs_osi_Wakeup(&adc->validPos);
 	    }
@@ -1606,107 +1611,109 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 #endif
 	}
 	MReleaseReadLock(&afs_xdcache);
+	if (!shortcut)
+	    tdc = 0;
     }
-    if (!shortcut)
-      {
-
-    /*
-     * Hash on the [fid, chunk] and get the corresponding dcache index
-     * after write-locking the dcache.
-     */
+    if (!tdc) {
+        /*
+         * Hash on the [fid, chunk] and get the corresponding dcache index
+         * after write-locking the dcache.
+         */
  RetryLookup:
-    i = DCHash(&avc->fid, chunk);
-    afs_MaybeWakeupTruncateDaemon();	/* check to make sure our space is fine */
-    MObtainWriteLock(&afs_xdcache,280);
-    us = NULLIDX;
-    for(index = afs_dchashTbl[i]; index != NULLIDX;) {
-      if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-	tdc = afs_GetDSlot(index, (struct dcache *)0);
-	if (!FidCmp(&tdc->f.fid, &avc->fid) && chunk == tdc->f.chunk) {
-	    /* Move it up in the beginning of the list */
-	    if (afs_dchashTbl[i] != index)  {
-		afs_dcnextTbl[us] = afs_dcnextTbl[index];
-		afs_dcnextTbl[index] = afs_dchashTbl[i];
-		afs_dchashTbl[i] = index;
+        i = DCHash(&avc->fid, chunk);
+        afs_MaybeWakeupTruncateDaemon();	/* check to make sure our space is fine */
+        MObtainWriteLock(&afs_xdcache,280);
+        us = NULLIDX;
+        for(index = afs_dchashTbl[i]; index != NULLIDX;) {
+          if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	    tdc = afs_GetDSlot(index, (struct dcache *)0);
+	    if (!FidCmp(&tdc->f.fid, &avc->fid) && chunk == tdc->f.chunk) {
+	        /* Move it up in the beginning of the list */
+	        if (afs_dchashTbl[i] != index)  {
+		    afs_dcnextTbl[us] = afs_dcnextTbl[index];
+		    afs_dcnextTbl[index] = afs_dchashTbl[i];
+		    afs_dchashTbl[i] = index;
+	        }
+	        MReleaseWriteLock(&afs_xdcache);
+	        break;  /* leaving refCount high for caller */
 	    }
+	    tdc->refCount--; /* was incremented by afs_GetDSlot */
+	    tdc = 0;
+          }
+          us = index;
+          index = afs_dcnextTbl[index];
+        }
+        /*
+         * If we didn't find the entry, we'll create one.
+         */
+        if (index == NULLIDX) {
+	    afs_Trace2(afs_iclSetp, CM_TRACE_GETDCACHE1, ICL_TYPE_POINTER, avc,
+	           ICL_TYPE_INT32, chunk);
+
+	    if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {
+	        while (1) {
+		    if (!setLocks) avc->states |= CDCLock;
+		    afs_GetDownD(5, (int*)0);	/* just need slots */
+		    if (!setLocks) avc->states &= (~CDCLock);
+		    if (afs_discardDCList != NULLIDX || afs_freeDCList != NULLIDX)
+		        break;
+		    /* If we can't get space for 5 mins we give up and panic */
+		    if (++downDCount > 300)
+		        osi_Panic("getdcache"); 
+		    MReleaseWriteLock(&afs_xdcache);		
+		    afs_osi_Wait(1000, 0, 0);
+		    goto RetryLookup;
+	        }
+	    }
+	    if (afs_discardDCList == NULLIDX ||
+	        ((aflags & 2) && afs_freeDCList != NULLIDX)) {
+	        afs_indexFlags[afs_freeDCList] &= ~IFFree;
+	        tdc = afs_GetDSlot(afs_freeDCList, 0);
+	        afs_freeDCList = afs_dvnextTbl[tdc->index];
+	        afs_freeDCCount--;
+	    } else {
+	        afs_indexFlags[afs_discardDCList] &= ~IFDiscarded;
+	        tdc = afs_GetDSlot(afs_discardDCList, 0);
+	        afs_discardDCList = afs_dvnextTbl[tdc->index];
+	        afs_discardDCCount--;
+	        size = ((tdc->f.chunkBytes + afs_fsfragsize)^afs_fsfragsize)>>10;
+	        afs_blocksDiscarded -= size;
+	        afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
+	        if (aflags & 2) {
+		    /* Truncate the chunk so zeroes get filled properly */
+		    file = afs_CFileOpen(tdc->f.inode);
+		    afs_CFileTruncate(file, 0);
+		    afs_CFileClose(file);
+		    afs_AdjustSize(tdc, 0);
+	        }
+	    }
+    
+	    /*
+	     * Fill in the newly-allocated dcache record.
+	     */
+	    afs_indexFlags[tdc->index] &= ~(IFDirtyPages | IFAnyPages);
+	    tdc->f.fid = avc->fid;
+	    afs_indexUnique[tdc->index] = tdc->f.fid.Fid.Unique;
+	    hones(tdc->f.versionNo);	    /* invalid value */
+	    tdc->f.chunk = chunk;
+	    tdc->validPos = AFS_CHUNKTOBASE(chunk);
+	    /* XXX */
+	    if (tdc->lruq.prev == &tdc->lruq) osi_Panic("lruq 1");
+	    /*
+	     * Now add to the two hash chains - note that i is still set
+	     * from the above DCHash call.
+	     */
+	    afs_dcnextTbl[tdc->index] = afs_dchashTbl[i];
+	    afs_dchashTbl[i] = tdc->index;
+	    i = DVHash(&avc->fid);
+	    afs_dvnextTbl[tdc->index] = afs_dvhashTbl[i];
+	    afs_dvhashTbl[i] = tdc->index;
+	    tdc->flags = DFEntryMod;
+	    tdc->f.states = 0;
+	    afs_MaybeWakeupTruncateDaemon();
 	    MReleaseWriteLock(&afs_xdcache);
-	    break;  /* leaving refCount high for caller */
-	}
-	lockedPutDCache(tdc);
-      }
-      us = index;
-      index = afs_dcnextTbl[index];
-    }
-    /*
-     * If we didn't find the entry, we'll create one.
-     */
-    if (index == NULLIDX) {
-	afs_Trace2(afs_iclSetp, CM_TRACE_GETDCACHE1, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, chunk);
-
-	if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {
-	    while (1) {
-		if (!setLocks) avc->states |= CDCLock;
-		afs_GetDownD(5, (int*)0);	/* just need slots */
-		if (!setLocks) avc->states &= (~CDCLock);
-		if (afs_discardDCList != NULLIDX || afs_freeDCList != NULLIDX)
-		    break;
-		/* If we can't get space for 5 mins we give up and panic */
-		if (++downDCount > 300)
-		    osi_Panic("getdcache"); 
-		MReleaseWriteLock(&afs_xdcache);		
-		afs_osi_Wait(1000, 0, 0);
-		goto RetryLookup;
-	    }
-	}
-	if (afs_discardDCList == NULLIDX ||
-	    ((aflags & 2) && afs_freeDCList != NULLIDX)) {
-	    afs_indexFlags[afs_freeDCList] &= ~IFFree;
-	    tdc = afs_GetDSlot(afs_freeDCList, 0);
-	    afs_freeDCList = afs_dvnextTbl[tdc->index];
-	    afs_freeDCCount--;
-	} else {
-	    afs_indexFlags[afs_discardDCList] &= ~IFDiscarded;
-	    tdc = afs_GetDSlot(afs_discardDCList, 0);
-	    afs_discardDCList = afs_dvnextTbl[tdc->index];
-	    afs_discardDCCount--;
-	    size = ((tdc->f.chunkBytes + afs_fsfragsize)^afs_fsfragsize)>>10;
-	    afs_blocksDiscarded -= size;
-	    afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
-	    if (aflags & 2) {
-		/* Truncate the chunk so zeroes get filled properly */
-		file = afs_CFileOpen(tdc->f.inode);
-		afs_CFileTruncate(file, 0);
-		afs_CFileClose(file);
-		afs_AdjustSize(tdc, 0);
-	    }
-	}
-
-	/*
-	 * Fill in the newly-allocated dcache record.
-	 */
-	afs_indexFlags[tdc->index] &= ~(IFDirtyPages | IFAnyPages);
-	tdc->f.fid = avc->fid;
-	afs_indexUnique[tdc->index] = tdc->f.fid.Fid.Unique;
-	hones(tdc->f.versionNo);	    /* invalid value */
-	tdc->f.chunk = chunk;
-	/* XXX */
-	if (tdc->lruq.prev == &tdc->lruq) osi_Panic("lruq 1");
-	/*
-	 * Now add to the two hash chains - note that i is still set
-	 * from the above DCHash call.
-	 */
-	afs_dcnextTbl[tdc->index] = afs_dchashTbl[i];
-	afs_dchashTbl[i] = tdc->index;
-	i = DVHash(&avc->fid);
-	afs_dvnextTbl[tdc->index] = afs_dvhashTbl[i];
-	afs_dvhashTbl[i] = tdc->index;
-	tdc->flags = DFEntryMod;
-	tdc->f.states = 0;
-	afs_MaybeWakeupTruncateDaemon();
-	MReleaseWriteLock(&afs_xdcache);
-    }
-  }  /* else hint failed... */
+        }
+    }  /* else hint failed... */
 
     afs_Trace4(afs_iclSetp, CM_TRACE_GETDCACHE2, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_POINTER, tdc,
@@ -1727,7 +1734,10 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
      * that this chunk's data hasn't been filled by another client.
      */
     size = AFS_CHUNKSIZE(abyte);
-    tlen = *alen;
+    if (aflags & 4)	/* called from write */
+    	tlen = *alen;
+    else		/* called from read */
+	tlen = tdc->validPos - abyte;
     Position = AFS_CHUNKTOBASE(chunk);
     afs_Trace4(afs_iclSetp, CM_TRACE_GETDCACHE3, 
 	       ICL_TYPE_INT32, tlen,
@@ -1803,6 +1813,14 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 	hset(afs_indexTimes[tdc->index], afs_indexCounter);
 	hadd32(afs_indexCounter, 1);
 	updateV2DC(setLocks,avc,tdc,567);
+	if (vType(avc) == VDIR)
+	    *aoffset = abyte;
+	else
+	    *aoffset = AFS_CHUNKOFFSET(abyte);
+	if (tdc->validPos < abyte)
+	    *alen = (afs_size_t) 0;
+	else
+	    *alen = tdc->validPos - abyte;
 	return tdc;	/* check if we're done */
     }
     osi_Assert(setLocks || WriteLocked(&avc->lock));
@@ -1920,7 +1938,7 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 	afs_RemoveVCB(&avc->fid);
 	tdc->f.states |= DWriting;
 	tdc->flags |= DFFetching;
-	tdc->validPos = Position; /*Last valid position in this chunk*/
+	tdc->validPos = Position;	/*  which is AFS_CHUNKBASE(abyte) */
 	if (tdc->flags & DFFetchReq) {
 	    tdc->flags &= ~DFFetchReq;
 	    afs_osi_Wakeup(&tdc->validPos);
@@ -2234,6 +2252,11 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 
 	tdc->flags &= ~DFFetching;
 	if (tdc->flags & DFWaiting) {
+	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_INT32, __LINE__,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_INT32, tdc->flags);
 	    tdc->flags &= ~DFWaiting;
 	    afs_osi_Wakeup(&tdc->validPos);
 	}
@@ -2309,7 +2332,7 @@ done:
 	    *aoffset = abyte;
         else
 	    *aoffset = AFS_CHUNKOFFSET(abyte);
-        *alen = (tdc->f.chunkBytes - *aoffset);
+        *alen = *aoffset + tdc->f.chunkBytes - abyte;
     }
 
     return tdc;

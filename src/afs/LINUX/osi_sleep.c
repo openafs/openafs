@@ -129,6 +129,9 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				   by wakeup calls; wait will not return until
 				   it changes */
+    int dontSleep;		/* on SMP machines the wakeup call may be
+				   earlier than the sleep call. wakeup sets
+				   dontSleep and sleep resets it at return. */
 #if defined(AFS_LINUX24_ENV)
     wait_queue_head_t cond;
 #else
@@ -174,6 +177,7 @@ static afs_event_t *afs_getevent(char *event)
     }
     newp->event = event;
     newp->refcount = 1;
+    newp->dontSleep = 0;
     return newp;
 }
 
@@ -185,15 +189,42 @@ void afs_osi_Sleep(char *event)
 {
     struct afs_event *evp;
     int seq;
+    int count = 0;
+    int timeout = 1;
 
     evp = afs_getevent(event);
-    seq = evp->seq;
-    while (seq == evp->seq) {
-	AFS_ASSERT_GLOCK();
-	AFS_GUNLOCK();
-	interruptible_sleep_on(&evp->cond);
-	AFS_GLOCK();
+    if (evp->dontSleep) {
+        afs_Trace4(afs_iclSetp, CM_TRACE_SLEEP,
+		ICL_TYPE_POINTER, evp,
+		ICL_TYPE_INT32, count,
+		ICL_TYPE_INT32, seq,
+		ICL_TYPE_INT32, evp->seq);
+    } else {
+        seq = evp->seq;
+        while (seq == evp->seq && !evp->dontSleep) {
+	    AFS_ASSERT_GLOCK();
+	    AFS_GUNLOCK();
+#ifdef AFS_SMP
+	    /*
+	     * There seems to be a problem on SMP machines if the wake_up() and
+	     * interruptible_sleep() calls happen at the "same" time.
+	     */
+	    if (timeout < 1024)
+		timeout = timeout << 1;
+    	    interruptible_sleep_on_timeout(&evp->cond, timeout);
+#else
+	    interruptible_sleep_on(&evp->cond);
+#endif
+	    AFS_GLOCK();
+	    count++;
+            afs_Trace4(afs_iclSetp, CM_TRACE_SLEEP,
+		ICL_TYPE_POINTER, evp,
+		ICL_TYPE_INT32, count,
+		ICL_TYPE_INT32, seq,
+		ICL_TYPE_INT32, evp->seq);
+        }
     }
+    evp->dontSleep = 0;
     relevent(evp);
 }
 
@@ -233,8 +264,12 @@ void afs_osi_Wakeup(char *event)
     struct afs_event *evp;
 
     evp = afs_getevent(event);
+    evp->dontSleep = 1;
     if (evp->refcount > 1) {
 	evp->seq++;    
+        afs_Trace2(afs_iclSetp, CM_TRACE_WAKE,
+		ICL_TYPE_POINTER, evp,
+		ICL_TYPE_INT32, evp->seq);
 	wake_up(&evp->cond);
     }
     relevent(evp);

@@ -455,6 +455,11 @@ tagain:
     while ((adp->states & CStatd)
 	   && (dcp->flags & DFFetching)
 	   && hsame(adp->m.DataVersion, dcp->f.versionNo)) {
+	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_INT32, __LINE__,
+			ICL_TYPE_POINTER, dcp,
+			ICL_TYPE_INT32, dcp->flags);
 	dcp->flags |= DFWaiting;
 	ReleaseReadLock(&adp->lock);
 	afs_osi_Sleep(&dcp->validPos);

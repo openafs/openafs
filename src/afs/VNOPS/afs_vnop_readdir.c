@@ -518,6 +518,11 @@ tagain:
     while ((avc->states & CStatd)
 	   && (tdc->flags & DFFetching)
 	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_INT32, __LINE__,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_INT32, tdc->flags);
 	tdc->flags |= DFWaiting;
 	ReleaseReadLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
@@ -794,6 +799,11 @@ tagain:
     while ((avc->states & CStatd)
 	   && (tdc->flags & DFFetching)
 	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_INT32, __LINE__,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_INT32, tdc->flags);
 	tdc->flags |= DFWaiting;
 	ReleaseReadLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
