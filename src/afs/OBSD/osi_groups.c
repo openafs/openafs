@@ -57,10 +57,12 @@ Afs_xsetgroups(p, args, retval)
 
     code = afs_InitReq(&treq, osi_curcred());
     AFS_GUNLOCK();
-    if (code) return code;
+    if (code)
+	return code;
 
     code = setgroups(p, args, retval);
-    /* Note that if there is a pag already in the new groups we don't
+    /*
+     * Note that if there is a pag already in the new groups we don't
      * overwrite it with the old pag.
      */
     if (PagInCred(osi_curcred()) == NOPAG) {
@@ -120,7 +122,6 @@ afs_getgroups(
 }
 
 
-
 static int
 afs_setgroups(
     struct proc *proc,
@@ -135,15 +136,13 @@ afs_setgroups(
     AFS_STATCNT(afs_setgroups);
     /*
      * The real setgroups() call does this, so maybe we should too.
-     *
      */
     if (ngroups > NGROUPS)
 	return EINVAL;
     cr = *cred;
-    if (!change_parent) {
-	crhold(cr);
-	newcr = crcopy(cr);
-    } else
+    if (!change_parent)
+	newcr = crdup(cr);
+    else
 	newcr = cr;
     newcr->cr_ngroups = ngroups;
     gp = newcr->cr_groups;

@@ -154,7 +154,7 @@ afs_setpag (void)
 #if	defined(AFS_SUN5_ENV)
     if (!afs_suser(*credpp))
 #elif  defined(AFS_OBSD_ENV)
-    if (!afs_osi_suser(p->p_cred->pc_ucred))
+    if (!afs_osi_suser(p->p_ucred))
 #else
     if (!afs_suser())
 #endif
@@ -198,10 +198,10 @@ afs_setpag (void)
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
-#elif defined(AFS_DARWIN_ENV)  || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV)
     {
-       struct ucred *credp=crdup(p->p_cred->pc_ucred);
-       code=AddPag(p, genpag(), &credp);
+       struct ucred *credp = crdup(p->p_cred->pc_ucred);
+       code = AddPag(p, genpag(), &credp);
        crfree(credp);
     }
 #else
@@ -289,9 +289,9 @@ afs_setpag_val (int pagval)
 	code = AddPag(pagval, &credp);
 	crfree(credp);
     }
-#elif defined(AFS_DARWIN_ENV)  || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV)
     {
-       struct ucred *credp=crdup(p->p_cred->pc_ucred);
+       struct ucred *credp = crdup(p->p_cred->pc_ucred);
        code=AddPag(p, pagval, &credp);
        crfree(credp);
     }
@@ -309,9 +309,7 @@ afs_setpag_val (int pagval)
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
     return (code);
 }
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
 int afs_getpag_val()
 {
   int pagvalue;
@@ -334,10 +332,11 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #endif
 {
     afs_int32 newpag, code;
+
     AFS_STATCNT(AddPag);
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((code = setpag(p, credpp, aval, &newpag, 0)))
-#else	/* AFS_OSF_ENV */
+#else
     if ((code = setpag(credpp, aval, &newpag, 0)))
 #endif
 #if defined(KERNEL_HAVE_UERROR)

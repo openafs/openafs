@@ -85,9 +85,19 @@ DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 
+/*
+ * A macro that says whether we're going to need HandleClientContext().
+ * This is currently used only by the nfs translator.
+ */
+#if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
+#define AFS_NEED_CLIENTCONTEXT
+#endif
+
 /* Prototypes for private routines */
+#ifdef AFS_NEED_CLIENTCONTEXT
 static int HandleClientContext(struct afs_ioctl *ablob, int *com,
 	struct AFS_UCRED **acred, struct AFS_UCRED *credp);
+#endif
 int HandleIoctl(register struct vcache *avc, register afs_int32 acom, struct afs_ioctl *adata);
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	register struct afs_ioctl *ablob, int afollow, struct AFS_UCRED **acred);
@@ -795,7 +805,9 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     int	follow;
 {
     struct afs_ioctl data;
-    struct AFS_UCRED *tmpcred, *foreigncreds = 0;
+#ifdef AFS_NEED_CLIENTCONTEXT
+    struct AFS_UCRED *tmpcred, *foreigncreds = NULL;
+#endif
     register afs_int32 code = 0;
     struct vnode *vp;
 #ifdef AFS_DEC_ENV
@@ -807,8 +819,8 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_LINUX22_ENV
     cred_t *credp = crref();	/* don't free until done! */
     struct dentry *dp;
-
 #endif
+
     AFS_STATCNT(afs_syscall_pioctl);
     if (follow) follow = 1;	/* compat. with old venus */
     code = copyin_afs_ioctl(cmarg, &data);
@@ -820,9 +832,8 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	return (code);
     }
     if ((com & 0xff) == PSetClientContext) {
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	return EINVAL;		/* Not handling these yet. */
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
+#ifdef AFS_NEED_CLIENTCONTEXT
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
 	code = HandleClientContext(&data, &com, &foreigncreds, credp);
 #else
 	code = HandleClientContext(&data, &com, &foreigncreds, osi_curcred());
@@ -838,8 +849,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    return (code);
 #endif
 	}
+#else /* AFS_NEED_CLIENTCONTEXT */
+	return EINVAL;
+#endif /* AFS_NEED_CLIENTCONTEXT */
     }
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#ifdef AFS_NEED_CLIENTCONTEXT
     if (foreigncreds) {
 	/*
 	 * We could have done without temporary setting the u.u_cred below
@@ -852,32 +866,21 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef	AFS_SUN5_ENV
 	tmpcred = credp;
 	credp = foreigncreds;
-#else
-#ifdef	AFS_AIX41_ENV
+#elif defined(AFS_AIX41_ENV)
 	tmpcred = crref();	/* XXX */
 	crset(foreigncreds);
-#else
-#if	defined(AFS_HPUX101_ENV)
+#elif defined(AFS_HPUX101_ENV)
 	tmpcred = p_cred(u.u_procp);
 	set_p_cred(u.u_procp, foreigncreds);
-#else
-#ifdef AFS_SGI_ENV
+#elif defined(AFS_SGI_ENV)
         tmpcred = OSI_GET_CURRENT_CRED();
         OSI_SET_CURRENT_CRED(foreigncreds);
 #else
-#ifdef AFS_OBSD_ENV
-        tmpcred = osi_curcred();
-        osi_curcred() = foreigncreds;
-#else
         tmpcred = u.u_cred;
         u.u_cred = foreigncreds;
-#endif /* AFS_SGI64_ENV */
-#endif /* AFS_HPUX101_ENV */
-#endif
-#endif
 #endif
     }
-#endif
+#endif /* AFS_NEED_CLIENTCONTEXT */
     if ((com & 0xff) == 15) {
 	/* special case prefetch so entire pathname eval occurs in helper process.
 	   otherwise, the pioctl call is essentially useless */
@@ -920,7 +923,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
-#ifdef AFS_DEC_ENV
+#if defined(AFS_DEC_ENV)
 	/* Ultrix 4.0: can't get vcache entry unless we've got an AFS gnode.
 	 * So, we must test in this part of the code.  Also, must arrange to
 	 * GRELE the original gnode pointer when we're done, since in Ultrix 4.0,
@@ -931,11 +934,9 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    vp = (struct vnode *) afs_gntovn(vp); /* get vcache from gp */
 	}
 	else gp = NULL;
-#endif
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
-#else
-#ifdef	AFS_AIX41_ENV
+#elif defined(AFS_AIX41_ENV)
 	{
 	    struct ucred *cred1, *cred2;
 
@@ -950,29 +951,22 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 		crset(cred1);
 	    }
 	}
-#else
-#if	defined(AFS_HPUX101_ENV)
+#elif defined(AFS_HPUX101_ENV)
 	{
 	    struct ucred *cred = p_cred(u.u_procp);
 	    code = afs_HandlePioctl(vp, com, &data, follow, &cred);
 	}
-#else
-#ifdef AFS_SGI_ENV
+#elif defined(AFS_SGI_ENV)
 	{
 	    struct cred *credp;
 	    credp = OSI_GET_CURRENT_CRED();
 	    code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 	}
-#else
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
 	code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
 #endif
-#endif /* AFS_SGI_ENV */
-#endif /* AFS_HPUX101_ENV */
-#endif /* AFS_AIX41_ENV */
-#endif /* AFS_SUN5_ENV */
     } else {
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EINVAL);
@@ -988,7 +982,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     }
 
  rescred:
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if defined(AFS_NEED_CLIENTCONTEXT)
     if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 	crset(tmpcred);	/* restore original credentials */
@@ -1003,7 +997,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	crfree(foreigncreds);
 #endif /* AIX41 */
     }
-#endif /* LINUX, DARWIN, FBSD */
+#endif /* AFS_NEED_CLIENTCONTEXT */
     if (vp) {
 #ifdef AFS_LINUX22_ENV
 	dput(dp);
@@ -3108,6 +3102,7 @@ DECL_PIOCTL(PSetRxkcrypt)
     return 0;
 }
 
+#ifdef AFS_NEED_CLIENTCONTEXT
 /*
  * Create new credentials to correspond to a remote user with given
  * <hostaddr, uid, g0, g1>.  This allows a server running as root to
@@ -3118,9 +3113,6 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp)
 {
-#if	defined(AFS_DEC_ENV) || (defined(AFS_NONFSTRANS) && !defined(AFS_AIX_IAUTH_ENV))
-    return EINVAL;			/* NFS trans not supported for Ultrix */
-#else
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type;
@@ -3163,11 +3155,9 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
      */
     i = (*com) & 0xff;
     if (!afs_osi_suser(credp)) {
-#ifdef	AFS_SGI_ENV
-#ifndef AFS_SGI64_ENV
+#if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
 	/* Since SGI's suser() returns explicit failure after the call.. */
 	u.u_error = 0;
-#endif
 #endif
 	/* check for acceptable opcodes for normal folks, which are, so far,
 	 * set tokens and unlog.
@@ -3207,7 +3197,7 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
     newcred->cr_ngroups = 2;
 #else
-    for (i=2; i<NGROUPS; i++)
+    for (i=2; i < NGROUPS; i++)
 	newcred->cr_groups[i] = NOGROUP;
 #endif
 #endif
@@ -3231,27 +3221,27 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
     newcred->cr_uid = pag;
     *acred = newcred;
     if (!code && *com == PSETPAG) {
-      /* Special case for 'setpag' */
-      afs_uint32 pagvalue = genpag();
+	/* Special case for 'setpag' */
+	afs_uint32 pagvalue = genpag();
 
-      au = afs_GetUser(pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
-      /*
-       * Note that we leave the 'outexporter' struct held so it won't
-       * dissappear on us
-       */
-      au->exporter = outexporter;
-      if (ablob->out_size >= 4) {
-	AFS_COPYOUT((char *)&pagvalue, ablob->out, sizeof(afs_int32), code);
-      }
-      afs_PutUser(au, WRITE_LOCK);
-      if (code) return code;
-      return PSETPAG;		/*  Special return for setpag  */
+	au = afs_GetUser(pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
+	/*
+	 * Note that we leave the 'outexporter' struct held so it won't
+	 * dissappear on us
+	 */
+	au->exporter = outexporter;
+	if (ablob->out_size >= 4) {
+	    AFS_COPYOUT((char *)&pagvalue, ablob->out, sizeof(afs_int32), code);
+	}
+	afs_PutUser(au, WRITE_LOCK);
+	if (code) return code;
+	return PSETPAG;		/*  Special return for setpag  */
     } else if (!code) {
 	EXP_RELE(outexporter);
     }
     return code;
-#endif	/*defined(AFS_DEC_ENV) || defined(AFS_NONFSTRANS)*/
 }
+#endif /* AFS_NEED_CLIENTCONTEXT */
 
 /* get all interface addresses of this client */
 
