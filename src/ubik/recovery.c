@@ -26,6 +26,7 @@ RCSID("$Header$");
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <errno.h>
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"

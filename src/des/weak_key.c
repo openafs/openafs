@@ -19,11 +19,12 @@ RCSID("$Header$");
 
 #include <des.h>
 #include "des_internal.h"
-#if defined(HAVE_STRINGS_H)
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#if defined(HAVE_STRING_H)
-#include <string.h>
 #endif
 
 /*

@@ -26,6 +26,13 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
