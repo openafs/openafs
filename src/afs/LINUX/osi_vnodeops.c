@@ -28,6 +28,7 @@ RCSID("$Header$");
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/afs_stats.h"
+#include "../afs/afs_osidnlc.h"
 #include "../h/mm.h"
 #include "../h/pagemap.h"
 #if defined(AFS_LINUX24_ENV)
