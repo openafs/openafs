@@ -27,7 +27,7 @@ MULTIOBJS = rx_multi.obj
 
 XDROBJS = xdr.obj xdr_array.obj xdr_arrayn.obj xdr_float.obj xdr_mem.obj \
 	xdr_rec.obj  xdr_refernce.obj xdr_rx.obj xdr_update.obj \
-	xdr_afsuuid.obj
+	xdr_afsuuid.obj xdr_int64.obj
 
 RXOBJS = rx_event.obj rx_user.obj rx_pthread.obj rx.obj \
 	rx_null.obj rx_globals.obj rx_getaddr.obj rx_misc.obj rx_packet.obj \
@@ -87,6 +87,9 @@ xdr_update.obj: $(RX)\xdr_update.c
 
 xdr_afsuuid.obj: $(RX)\xdr_afsuuid.c
 	$(C2OBJ) $(RX)\xdr_afsuuid.c
+
+xdr_int64.obj: $(RX)\xdr_int64.c
+	$(C2OBJ) $(RX)\xdr_int64.c
 
 rx_event.obj: $(RX)\rx_event.c
 	$(C2OBJ) $(RX)\rx_event.c
