@@ -337,7 +337,7 @@ $(EXEDIR)\unlog.exe: $(OUT)\cunlog.obj $(OUT)\unlog.res $(EXELIBS)
 AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 
 AFSD_SDKLIBS =\
-	largeint.lib \
+#	largeint.lib \
 	netapi32.lib \
         dnsapi.lib \
         mpr.lib \
@@ -349,7 +349,7 @@ AFSD_SDKLIBS =\
         secur32.lib \
         ole32.lib \
         oleaut32.lib \
-        psapi.lib
+        psapi.lib wintrust.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
