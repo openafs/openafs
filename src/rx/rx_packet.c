@@ -1407,7 +1407,7 @@ struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
 	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
 	rxi_EncodePacketHeader(ap);
 	bzero(buf, sizeof(buf));
-	snprintf(buf, sizeof(buf), "%s", cml_version_number+4);
+	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
 	rx_packetwrite(ap, 0, 65, buf);
 	tl = ap->length;
 	ap->length = 65;
