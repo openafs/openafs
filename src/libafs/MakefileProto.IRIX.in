@@ -423,10 +423,10 @@ install_MODLOAD.libafs: ${LIBAFSNONFSO}
 dest_MODLOAD.libafs: ${LIBAFSNONFSO}
 <all -sgi_65>
 	${CP} ${LIBAFSNONFSO} \
-		${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.${MPSP}.${CPUARCH}.nonfs.o
+		${DEST}/root.client/usr/vice/etc/sgiload/libafs.${MPSP}.${CPUARCH}.nonfs.o
 <sgi_65>
 	${CP} ${LIBAFSNONFSO} \
-		${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.${IPNO}.nonfs.o
+		${DEST}/root.client/usr/vice/etc/sgiload/libafs.${IPNO}.nonfs.o
 <all>
 
 ${LIBAFSNONFSO}: $(AFSAOBJS) $(AFSNONFSOBJS)
@@ -441,9 +441,9 @@ install_COPYFILES:
 	chmod 644 ${DESTDIR}${afskerneldir}/afs
 
 dest_COPYFILES:
-	${CP} sgi_system ${DEST}/root.client/bin/afs.sm
+	${INSTALL} -f sgi_system ${DEST}/root.client/bin/afs.sm
 	chmod 644 ${DEST}/root.client/bin/afs.sm
-	${CP} sgi_master ${DEST}/root.client/bin/afs
+	${INSTALL} -f sgi_master ${DEST}/root.client/bin/afs
 	chmod 644 ${DEST}/root.client/bin/afs
 
 # Create symlinks to clients we don't need to build.
