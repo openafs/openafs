@@ -1166,8 +1166,7 @@ KFW_AFS_get_cred( char * username,
 {
     krb5_context ctx = 0;
     krb5_ccache cc = 0;
-    char * realm = 0;
-    char ** realmlist = 0;
+    char * realm = 0, * userrealm = 0;
     krb5_principal principal = 0;
     char * pname = 0;
     krb5_error_code code;
@@ -1195,19 +1194,19 @@ KFW_AFS_get_cred( char * username,
     code = KFW_AFS_get_cellconfig( cell, (void*)&cellconfig, local_cell);
     if ( code ) goto cleanup;
 
-    realm = strchr(username,'@');
-    if ( realm ) {
+    realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
+    userrealm = strchr(username,'@');
+    if (userrealm) {
         pname = strdup(username);
-        realm = strchr(pname, '@');
-        *realm = '\0';
+        userrealm = strchr(pname, '@');
+        *userrealm = '\0';
 
         /* handle kerberos iv notation */
         while ( dot = strchr(pname,'.') ) {
             *dot = '/';
         }
-        *realm++ = '@';
+        *userrealm++ = '@';
     } else {
-        realm = afs_realm_of_cell(ctx, &cellconfig);  // do not free
         pname = malloc(strlen(username) + strlen(realm) + 2);
 
         strcpy(pname, username);
@@ -2430,7 +2429,9 @@ ViceIDToUsername(char *username,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
+#ifdef AFS_ID_TO_NAME
     char username_copy[BUFSIZ];
+#endif /* AFS_ID_TO_NAME */
     long viceId;			/* AFS uid of user */
     int  status = 0;
 #ifdef ALLOW_REGISTER
@@ -2538,7 +2539,9 @@ KFW_AFS_klog(
 {
     long	rc = 0;
     CREDENTIALS	creds;
+#ifdef USE_KRB4
     KTEXT_ST    ticket;
+#endif /* USE_KRB4 */
     struct ktc_principal	aserver;
     struct ktc_principal	aclient;
     char	realm_of_user[REALM_SZ]; /* Kerberos realm of user */
@@ -2560,6 +2563,7 @@ KFW_AFS_klog(
     krb5_creds * k5creds = 0;
     krb5_error_code code;
     krb5_principal client_principal = 0;
+    krb5_data * k5data;
     int i, retry = 0;
 
     CurrentState = 0;
@@ -2621,7 +2625,15 @@ KFW_AFS_klog(
         goto skip_krb5_init;
     }
 
-    if ( strchr(krb5_princ_component(ctx,client_principal,0),'.') != NULL )
+    /* lookfor client principals which cannot be distinguished 
+     * from Kerberos 4 multi-component principal names
+     */
+    k5data = krb5_princ_component(ctx,client_principal,0);
+    for ( i=0; i<k5data->length; i++ ) {
+        if ( k5data->data[i] == '.' )
+            break;
+    }
+    if (i != k5data->length)
     {
         OutputDebugString("Illegal Principal name contains dot in first component\n");
         rc = KRB5KRB_ERR_GENERIC;
