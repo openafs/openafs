@@ -1636,7 +1636,7 @@ file_Seek(info, position)
 
 	w = USD_SEEK(p->fid, startOff, SEEK_SET, &stopOff);
 	if (w)
-	    info->error == w;
+	    info->error = w;
 	if (hcmp(startOff, stopOff) != 0)
 	    ERROR_EXIT(BUTM_POSITION);
 
@@ -1687,10 +1687,10 @@ file_SeekEODump(info, position)
 	p = (struct progress *)info->tmRock;
 	hset64(startOff, 0, 0);
 	w = USD_SEEK(p->fid, startOff, SEEK_END, &stopOff);
-	if (w)
-	    info->error == w;
-	if (w)
+	if (w) {
+	    info->error = w;
 	    ERROR_EXIT(BUTM_POSITION);
+	}
 
 	if (hgetlo(stopOff) % BUTM_BLOCKSIZE)
 	    ERROR_EXIT(BUTM_POSITION);
