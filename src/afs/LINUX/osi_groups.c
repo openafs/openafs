@@ -94,10 +94,13 @@ static int
 afs_getgroups(cred_t *cr, gid_t *groups)
 {
     int i;
+    int n;
+    gid_t *gp;
+
     AFS_STATCNT(afs_getgroups);
 
-    gid_t *gp = cr->cr_groups;
-    int n = cr->cr_ngroups;
+    gp = cr->cr_groups;
+    n = cr->cr_ngroups;
 
     for (i = 0; (i < n) && (*gp != (gid_t) NOGROUP); i++)
 	*groups++ = *gp++;
