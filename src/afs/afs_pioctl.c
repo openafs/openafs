@@ -60,6 +60,7 @@ static int PSetSPrefs(), PGetSPrefs(), PGag(), PTwiddleRx();
 static int PSetSPrefs33(), PStoreBehind(), PGCPAGs();
 static int PGetCPrefs(), PSetCPrefs(); /* client network addresses */
 static int PGetInitParams(), PFlushMount(), PRxStatProc(), PRxStatPeer();
+static int PGetRxkcrypt(), PSetRxkcrypt();
 int PExportAfs();
 
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp);
@@ -3144,7 +3145,7 @@ afs_int32 ainSize;
 afs_int32 *aoutSize;
 struct AFS_UCRED *acred;
 {
-    bcopy((char *)&cryptall, aout, sizeof(int32));
+    bcopy((char *)&cryptall, aout, sizeof(afs_int32));
     *aoutSize=sizeof(afs_int32);
     return 0;
 }
