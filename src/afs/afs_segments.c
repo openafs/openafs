@@ -533,7 +533,7 @@ restart:
 		}
 		if (tcall) {
 		    RX_AFS_GUNLOCK();
-		    code = rx_EndCall(tcall, code, avc, base);  
+		    code = rx_EndCall(tcall, code);  
 		    RX_AFS_GLOCK();
 		}
 	    } while (afs_Analyze(tc, code, &avc->fid, areq,

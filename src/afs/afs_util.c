@@ -166,7 +166,7 @@ long b,c,d,e,f,g,h,i,j;
 
 
 /* run everywhere, checking locks */
-void afs_CheckLocks()
+void afs_CheckLocks(void)
 {
     register int i;
 

@@ -212,6 +212,25 @@ extern void rx_ServerProc(void);
 
 
 /* rx_packet.c */
+extern void rxi_MorePackets(int apackets);
+extern void rxi_MorePacketsNoLock(int apackets);
+extern void rxi_FreeAllPackets(void);
+extern void rx_CheckPackets(void);
+extern void rxi_FreePacketNoLock(struct rx_packet *p);
+extern int rxi_FreeDataBufsNoLock(struct rx_packet *p, int first);
+extern void rxi_RestoreDataBufs(struct rx_packet *p);
+extern int rxi_TrimDataBufs(struct rx_packet *p, int first);
+extern void rxi_FreePacket(struct rx_packet *p);
+extern struct rx_packet *rxi_AllocPacketNoLock(int class);
+extern struct rx_packet *rxi_AllocPacket(int class);
+extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call, int want);
+
+extern void rxi_EncodePacketHeader(register struct rx_packet *p);
+extern void rxi_DecodePacketHeader(register struct rx_packet *p);
+
+extern struct rx_packet *rxi_SendSpecial(register struct rx_call *call, 
+        register struct rx_connection *conn, struct rx_packet *optionalPacket, 
+        int type, char *data, int nbytes, int istack);
 
 
 /* rxperf.c */
@@ -221,7 +240,7 @@ extern void rx_ServerProc(void);
 
 
 /* rx_rdwr.c */
-
+extern void rxi_FlushWrite(register struct rx_call *call);
 
 /* rx_stream.c */
 

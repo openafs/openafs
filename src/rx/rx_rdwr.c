@@ -1289,8 +1289,7 @@ int rx_WritevProc(call, iov, nio, nbytes)
 
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
-void rxi_FlushWrite(call)
-    register struct rx_call *call;
+void rxi_FlushWrite(register struct rx_call *call)
 {
     register struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *tp; /* Temporary packet pointer */

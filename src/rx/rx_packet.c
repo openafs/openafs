@@ -433,7 +433,7 @@ void rxi_FreeAllPackets(void)
 /* Allocate more packets iff we need more continuation buffers */
 /* In kernel, can't page in memory with interrupts disabled, so we
  * don't use the event mechanism. */
-void rx_CheckPackets()
+void rx_CheckPackets(void)
 {
   if (rxi_NeedMorePackets) {
     rxi_MorePackets(rx_initSendWindow); 
@@ -465,9 +465,7 @@ void rxi_FreePacketNoLock(struct rx_packet *p)
   queue_Append(&rx_freePacketQueue, p);
 }
 
-int rxi_FreeDataBufsNoLock(p, first)
-     struct rx_packet * p;
-     int first;
+int rxi_FreeDataBufsNoLock(struct rx_packet *p, int first)
 {
   struct iovec *iov, *end;
   
@@ -515,9 +513,7 @@ void rxi_RestoreDataBufs(struct rx_packet *p)
     }
 }
 
-int rxi_TrimDataBufs(p, first)
-     struct rx_packet * p;
-     int first;
+int rxi_TrimDataBufs(struct rx_packet *p, int first)
 {
   int length;
   struct iovec *iov, *end;
@@ -580,8 +576,7 @@ void rxi_FreePacket(struct rx_packet *p)
  * bytes in the packet at this point, **not including** the header.
  * The header is absolutely necessary, besides, this is the way the
  * length field is usually used */
-struct rx_packet *rxi_AllocPacketNoLock(class)
-     int class;
+struct rx_packet *rxi_AllocPacketNoLock(int class)
 {
   register struct rx_packet *p;
   
@@ -647,8 +642,7 @@ struct rx_packet *rxi_AllocPacketNoLock(class)
   return p;
 }
 
-struct rx_packet *rxi_AllocPacket(class)
-     int class;
+struct rx_packet *rxi_AllocPacket(int class)
 {
     register struct rx_packet *p;
 
@@ -663,9 +657,7 @@ struct rx_packet *rxi_AllocPacket(class)
  * returning.  caution: this is often called at NETPRI
  * Called with call locked.
  */
-struct rx_packet *rxi_AllocSendPacket(call, want)
-register struct rx_call *call;
-int want;
+struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call, int want)
 {
     register struct rx_packet *p = (struct rx_packet *) 0;
     register int mud;
@@ -729,8 +721,8 @@ int want;
 #ifndef KERNEL
 
 /* count the number of used FDs */
-static int CountFDs(amax)
-register int amax; {
+static int CountFDs(register int amax)
+{
     struct stat tstat;
     register int i, code;
     register int count;
@@ -1756,14 +1748,9 @@ void rxi_SendPacketList(struct rx_connection * conn,
  * copied into the packet.  Type is the type of the packet, as defined
  * in rx.h.  Bug: there's a lot of duplication between this and other
  * routines.  This needs to be cleaned up. */
-struct rx_packet *
-rxi_SendSpecial(call, conn, optionalPacket, type, data, nbytes, istack)
-    register struct rx_call *call;
-    register struct rx_connection *conn;
-    struct rx_packet *optionalPacket;
-    int type;
-    char *data;
-    int nbytes, istack;
+struct rx_packet *rxi_SendSpecial(register struct rx_call *call, 
+	register struct rx_connection *conn, struct rx_packet *optionalPacket, 
+	int type, char *data, int nbytes, int istack)
 {
     /* Some of the following stuff should be common code for all
      * packet sends (it's repeated elsewhere) */
@@ -1831,8 +1818,7 @@ rxi_SendSpecial(call, conn, optionalPacket, type, data, nbytes, istack)
 /* Encode the packet's header (from the struct header in the packet to
  * the net byte order representation in the wire representation of the
  * packet, which is what is actually sent out on the wire) */
-void rxi_EncodePacketHeader(p)
-register struct rx_packet *p;
+void rxi_EncodePacketHeader(register struct rx_packet *p)
 {
     register afs_uint32 *buf = (afs_uint32 *)(p->wirevec[0].iov_base);      /* MTUXXX */
 
@@ -1850,8 +1836,7 @@ register struct rx_packet *p;
 }
 
 /* Decode the packet's header (from net byte order to a struct header) */
-void rxi_DecodePacketHeader(p)
-register struct rx_packet *p;
+void rxi_DecodePacketHeader(register struct rx_packet *p)
 {
     register afs_uint32 *buf = (afs_uint32*)(p->wirevec[0].iov_base);      /* MTUXXX */
     afs_uint32 temp;

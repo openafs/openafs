@@ -3272,7 +3272,7 @@ static void rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acal
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
 		if (call != acall) MUTEX_ENTER(&call->lock);
-		TryAttach(call, -1, NULL, NULL, 1);
+		TryAttach(call, (osi_socket) -1, NULL, NULL, 1);
 		if (call != acall) MUTEX_EXIT(&call->lock);
 	    }
 	}
@@ -3790,7 +3790,7 @@ struct rx_packet *rxi_ReceiveResponsePacket(register struct rx_connection *conn,
 	    if (call) {
 		MUTEX_ENTER(&call->lock);
 		 if (call->state == RX_STATE_PRECALL)
-		     rxi_AttachServerProc(call, -1, NULL, NULL);
+		     rxi_AttachServerProc(call, (osi_socket) -1, NULL, NULL);
 		MUTEX_EXIT(&call->lock);
 	    }
 	}

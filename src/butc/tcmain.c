@@ -66,8 +66,6 @@ RCSID("$Header$");
 struct ubik_client *cstruct;
 extern void TC_ExecuteRequest();
 extern int  dbWatcher();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_service *rx_NewService();
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[256];
