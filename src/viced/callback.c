@@ -1387,7 +1387,7 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_cond_broadcast(&fsync_cond) == 0);
 #else
-    LWP_NoYieldSignal(&fsync_wait);
+    LWP_NoYieldSignal(fsync_wait);
 #endif
     return 0;
 }

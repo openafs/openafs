@@ -424,7 +424,7 @@ FiveMinuteCheckLWP()
 	    Do_VLRegisterRPC();
 	/* Force wakeup in case we missed something; pthreads does timedwait */
 #ifndef AFS_PTHREAD_ENV
-	LWP_NoYieldSignal(&fsync_wait);
+	LWP_NoYieldSignal(fsync_wait);
 #endif
 	if (printBanner && (++msg & 1)) {	/* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
@@ -495,7 +495,7 @@ FsyncCheckLWP()
 	if (code != 0 && code != ETIMEDOUT)
 	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
 #else /* AFS_PTHREAD_ENV */
-	if ((code = LWP_WaitProcess(&fsync_wait)) != LWP_SUCCESS)
+	if ((code = LWP_WaitProcess(fsync_wait)) != LWP_SUCCESS)
 	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
 #endif /* AFS_PTHREAD_ENV */
 	ViceLog(2, ("Checking for fsync events\n"));
