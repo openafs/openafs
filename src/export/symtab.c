@@ -10,6 +10,11 @@
 /*
  * symtab -	symbol table routines
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "sys/types.h"
 #include "sym.h"
 

@@ -9,7 +9,7 @@ SHELL    = /bin/sh
 COMPONENT=package
 include ../config/Makefile.${SYS_NAME}
 
-INCLUDES = -I/usr/include -I${SRCDIR}include
+INCLUDES = -I/usr/include -I${TOP_SRCDIR}/config -I${SRCDIR}include
 DBGFLAG  = -UDEBUG
 CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
 YFLAGS   = -vd

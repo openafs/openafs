@@ -12,6 +12,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef UKERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsutil.h"

@@ -9,6 +9,10 @@
 
 /* These two needed for rxgen output to work */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

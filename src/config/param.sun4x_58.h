@@ -1,5 +1,5 @@
-#ifndef	_PARAM_SUN4X_58_H_
-#define	_PARAM_SUN4X_58_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #define AFS_VFS_ENV	1
 /* Used only in vfsck/* code; is it needed any more???? */
@@ -106,4 +106,4 @@
 #endif
 #define	ROOTINO		UFSROOTINO
 
-#endif /* _PARAM_SUN4X_58_H_ */
+#endif /* AFS_PARAM_H */

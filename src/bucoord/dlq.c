@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/bubasics.h>
 
 #define	DLQ_ASSERT_HEAD(headptr)				\

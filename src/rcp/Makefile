@@ -24,7 +24,7 @@ SRCS=	rcp.c
 OBJS=   rcp.o ../rsh/rcmd.o ../rsh/herror.o ../inetd/ta-rauth.o
 COMPONENT=rcp
 
-CFLAGS = ${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${DESTDIR}include ${XCFLAGS}
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\
 		   ${LIBDIR}afs/libauth.a ${LIBDIR}afs/libsys.a \

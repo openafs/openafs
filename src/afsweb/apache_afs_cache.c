@@ -10,6 +10,10 @@
 /* This code borrows from nsafs.c - slightly modified - names,etc. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "apache_afs_cache.h"
 
 /*

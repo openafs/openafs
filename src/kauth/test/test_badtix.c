@@ -7,59 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.1  1990/08/07  19:12:42
- * Start with clean version to sync test and dev trees.
- *
- * Revision 1.15  90/02/07  09:51:17
- * Don't depend on GetPassword working, since it no longer is enabled by default.
- * 
- * Revision 1.14  89/12/13  09:53:30
- * Some problems that didn't appear on the RT, which is apparently the only
- *   place this had actually been compiled before(!).
- * Also call ka_CellConfig so that cell names (used by StringToKey) are
- *   recognized early on.
- * Request a tgt with lifetime of 100+ hours, since the default is exactly
- *   100 hosts, the ticket's end time should be trucated to this limit.
- *   This the result determines where we have a new or old server
- *   interface.
- * 
- * Revision 1.13  89/06/06  10:44:56
- * Actually exit when testing old tickets.
- * 
- * Revision 1.12  89/05/24  16:29:11
- * Major changes to use the fast keys mode to exercise oldKeys and key cache
- * 
- * Revision 1.11  89/03/10  10:25:25
- * Added #include for "kauth.h" instead of relying on implicit reference
- *   to <kauth.h>.
- * 
- * Revision 1.10  89/02/17  12:22:24
- * add hostname adaptability.
- * Call setpag and exec shell file of choice.
- * 
- * Revision 1.9  89/02/14  16:07:36 
- * Added several tests to detect incomatible changes to StringToKey.
- * Call SetPassword with various illegal keys.
- * Call des_check_key_parity and des_is_weak_key.
- * Call ka_Init with improved interface.
- * 
- * Revision 1.8  89/02/09  10:17:00 
- * Flush reference to obsolete kaclient.h.
- * 
- * Revision 1.7  89/02/02  14:52:26 
- * Updated copyright.
- * Call GetPassword at lookback addr to get password.
- * Use ticket w/ no expiration time.
- * Require constant key for AuthServer.Admin ("authserv").
- * Test lcstring, ucstring, and strcasecmp.
- * 
- * Revision 1.6  89/01/30  10:21:47
- * Minor cosmetic changes.
- * 
- * Revision 1.5  89/01/30  09:56:24
- * Added copyright notice.
- *  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 #include <sys/types.h>
 #include <des.h>

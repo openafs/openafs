@@ -11,6 +11,10 @@
 #include <assert.h>
 #include <security/pam_appl.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "afs_util.h"
 
 

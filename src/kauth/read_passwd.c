@@ -11,6 +11,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <des.h>
 

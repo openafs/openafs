@@ -13,6 +13,10 @@
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */

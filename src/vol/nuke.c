@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <stdio.h>

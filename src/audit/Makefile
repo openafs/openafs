@@ -23,7 +23,7 @@ LOCALDIR = ${DESTDIR}root.server/usr/afs/local/
 
 audobjs = audit.o
 
-CFLAGS = ${OPTMZ} -I$(SRCDIR)include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I$(SRCDIR)include ${XCFLAGS}
 
 include ../config/Makefile.version
 

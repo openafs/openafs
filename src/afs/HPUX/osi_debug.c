@@ -8,6 +8,10 @@
  */
 
 #include "param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "sysincludes.h"
 #include "afsincludes.h"
 #include "afs_cbqueue.h"

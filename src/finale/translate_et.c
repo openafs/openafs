@@ -7,31 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 1.8  90/03/02  12:00:19
- * Add bos error codes.
- * Print usage message when called w/o arguments.
- * If given multiple arguments, loop and translate each.
- * 
- * Revision 1.7  89/12/30  00:31:06
- * renamed initialize_pr_error_table -> initialize_pt_error_table
- * 
- * Revision 1.6  89/12/29  16:49:05
- * replaced all references of prserver/pr* -> ptserver/pt*
- * 
- * Revision 1.5  89/05/12  09:44:36
- * Added prserver and ubik to list.
- * 
- * Revision 1.4  89/03/13  12:30:38
- * Simplify code to call error_table_name a little.
- * 
- * Revision 1.3  89/02/19  19:31:17
- * added the vlserver error package
- * 
- * Revision 1.2  89/02/03  15:28:10
- * Added copyright, added cmd to list of known error_tables.
- *  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/com_err.h>
 #include <rx/rxkad.h>
 #include <afs/kautils.h>

@@ -8,6 +8,11 @@
  *			-1 ==> error
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>

@@ -16,6 +16,11 @@
  * a change in generator.c
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

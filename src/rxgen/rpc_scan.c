@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -46,8 +49,6 @@
 #endif
 #include "rpc_scan.h"
 #include "rpc_util.h"
-
-RCSID("$Header$");
 
 #define startcomment(where) (where[0] == '/' && where[1] == '*')
 #define endcomment(where) (where[-1] == '*' && where[0] == '/')

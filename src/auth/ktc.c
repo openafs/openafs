@@ -10,8 +10,15 @@
 /* ticket caching code */
 
 #if defined(UKERNEL)
-
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -31,7 +38,6 @@
 #ifdef	AFS_SUN5_ENV
 #include <unistd.h>
 #endif
-#include <afs/param.h>
 #include <stdio.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>

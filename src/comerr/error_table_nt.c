@@ -13,6 +13,10 @@
 #line 1 "error_table.y"
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 /*
  * If __STDC__ is defined, function prototypes in the SunOS 5.5.1 lex

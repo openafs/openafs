@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
@@ -45,8 +48,6 @@
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
-
-RCSID("$Header$");
 
 char curline[MAXLINESIZE];	/* current read line */
 char *where = curline;	/* current point in line */

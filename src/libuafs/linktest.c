@@ -12,6 +12,11 @@
  * test whether a program can link with libuafs.a.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <rx/rx.h>
 #include <afs/afs_usrops.h>

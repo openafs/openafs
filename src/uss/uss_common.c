@@ -15,6 +15,11 @@
 /*
  * --------------------- Required definitions ---------------------
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "uss_common.h"		/*Interface definitions*/
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN*/
 

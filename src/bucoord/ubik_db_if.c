@@ -10,6 +10,10 @@
 /* Interface and supporting routines for the backup system's ubik database */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>

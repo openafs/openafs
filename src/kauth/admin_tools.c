@@ -13,6 +13,10 @@
    update the database, change the server passwords, etc. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <afs/debug.h>
 #include <ctype.h>

@@ -2,9 +2,6 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
-
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.  The Berkeley software License Agreement

@@ -11,7 +11,14 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
+#ifdef KERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #ifndef UKERNEL
@@ -67,8 +74,6 @@ extern afs_int32 afs_termState;
 #endif /* AFS_AIX41_ENV */
 # include "../afsint/rxgen_consts.h"
 #else /* KERNEL */
-# include <afs/param.h>
-# include <afsconfig.h>
 # include <sys/types.h>
 # include <errno.h>
 #ifdef AFS_NT40_ENV

@@ -21,6 +21,10 @@
 */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_FBSD40_ENV
 #include "../rx/rx_kcommon.h"
 

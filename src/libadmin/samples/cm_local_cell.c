@@ -11,6 +11,11 @@
  * This file contains sample code for the client admin interface 
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <pthread.h>

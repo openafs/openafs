@@ -9,6 +9,14 @@
 
 #ifdef	KERNEL
 #include "afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#ifdef KERNEL
 #ifndef	UKERNEL
 #include "../h/types.h"
 #else /* !UKERNEL */
@@ -16,7 +24,6 @@
 #endif /* !UKERNEL */
 #include "../rx/rx.h"
 #else /* KERNEL */
-#include <afs/param.h>
 #include "rx.h"
 #endif /* KERNEL */
 

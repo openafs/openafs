@@ -19,6 +19,10 @@
 #include <sys/file.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <lock.h>
 #include <netinet/in.h>
 #define UBIK_INTERNALS

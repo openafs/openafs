@@ -7,12 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * ALL RIGHTS RESERVED
- */
-
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #else

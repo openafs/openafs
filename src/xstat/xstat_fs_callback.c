@@ -22,6 +22,11 @@
  *	need to be ``visible'' to anyone else.
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <errno.h>
 #include <stdio.h>			/*Standard I/O stuff*/
 #include <afs/afscbint.h>		/*Callback interface defs*/

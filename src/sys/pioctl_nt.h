@@ -10,7 +10,6 @@
 #ifndef TRANSARC_AFS_PIOCTL_H
 #define TRANSARC_AFS_PIOCTL_H
 
-#include <afs/param.h>
 /* define the basic DeviceIoControl structure for communicating with the
  * cache manager.
  */

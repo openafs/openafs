@@ -80,6 +80,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h> 
 #include <stdlib.h>      /* for malloc() */
 #include <time.h>        /* ANSI standard location for time stuff */

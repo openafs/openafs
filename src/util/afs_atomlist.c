@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef KERNEL
 #include "../afs/afs_atomlist.h"
 #else /* KERNEL */

@@ -23,6 +23,10 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <des.h>
 #include "des_internal.h"
 #if defined(HAVE_STRINGS_H)

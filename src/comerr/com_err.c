@@ -4,6 +4,11 @@
  * For copyright info, see mit-sipb-cr.h.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "internal.h"
 #include <stdio.h>
 #include <stdarg.h>

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef _PARAM_WIN95_H_
-#define _PARAM_WIN95_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 
 #define AFS_NT40_ENV        1
@@ -57,4 +57,4 @@ typedef int ssize_t;
 typedef char * caddr_t;
 
 #define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
-#endif /* _PARAM_WIN95_H_ */
+#endif /* AFS_PARAM_H */

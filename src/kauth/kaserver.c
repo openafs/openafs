@@ -7,19 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.3  1991/12/30  20:36:46
- * #837: Added AuthLog support for the kaserver
- *
- * Revision 2.2  90/08/29  15:10:50
- * Cleanups.
- * Don't create rxvab security object.
- * 
- * Revision 2.1  90/08/07  19:11:30
- * Start with clean version to sync test and dev trees.
- * */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -1,5 +1,5 @@
-#ifndef _PARAM_PPC_DARWIN_H_
-#define _PARAM_PPC_DARWIN_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 #define AFS_VFSINCL_ENV 1       /* NOBODY uses this.... */
 #define AFS_ENV                 1
@@ -45,4 +45,4 @@
 #define CMSERVERPREF
 #endif
 
-#endif /* _PARAM_PPC_DARWIN_H_ */
+#endif /* AFS_PARAM_H */

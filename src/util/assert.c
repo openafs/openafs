@@ -7,10 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /* ReallyAbort:  called from assert. May/85 */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 
 #ifdef AFS_NT40_ENV

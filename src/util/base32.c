@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "afsutil.h"
 
 static char *c_xlate = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";

@@ -7,13 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #include "AFS_component_version_number.c"
 

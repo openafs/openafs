@@ -9,6 +9,15 @@
 
 /* RX:  Globals for internal use, basically */
 
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 /* Enable data initialization when the header file is included */
 #define INIT(stuff) = stuff
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
@@ -18,14 +27,11 @@
 #endif
 
 #ifdef KERNEL
-#include	"../afs/param.h"
 #ifndef UKERNEL
 #include "../h/types.h"
 #else /* !UKERNEL */
 #include	"../afs/sysincludes.h"
-#endif /* !UKERNEL */
-#else /* KERNEL */
-#include	<afs/param.h>
+#endif /* UKERNEL */
 #endif /* KERNEL */
 
 #include "rx_globals.h"

@@ -18,6 +18,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #if defined(HAVE_STRINGS_H)

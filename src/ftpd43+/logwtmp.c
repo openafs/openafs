@@ -14,12 +14,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * static char sccsid[] = "@(#)logwtmp.c	5.2 (Berkeley) 9/20/88";
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)logwtmp.c	5.2 (Berkeley) 9/22/88";
-#endif /* not lint */
 
 #include <afs/param.h>
 #include <sys/types.h>

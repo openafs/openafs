@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <fcntl.h>
 #include <stdarg.h>
 #ifdef AFS_AIX32_ENV

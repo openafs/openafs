@@ -23,6 +23,10 @@ Creation date:
 
 --------------------------------------------------------------------------------------------------------------*/
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <stddef.h>
 #include <stdlib.h>

@@ -26,7 +26,8 @@ LDFLAGS = ${SHARE_LDFLAGS}
  SHOBJS = afs_auth.o afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o afs_util.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
-INCLUDES = -I${DESTDIR}include -I/usr/include -I/usr/include/sys
+INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}include \
+	-I/usr/include -I/usr/include/sys
 CFLAGS =  ${DEBUG}  ${INCLUDES} ${PAM_CFLAGS}
 
 TARGETS = pam_afs.so.1 test_pam pam_afs.krb.so.1

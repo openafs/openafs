@@ -16,6 +16,10 @@
  * --------------------- Required definitions ---------------------
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "uss_procs.h"		/*Module interface*/
 #include "uss_common.h"		/*Common defs & operations*/
 #include "uss_acl.h"		/*ACL-related operations*/

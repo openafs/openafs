@@ -15,6 +15,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxX11win.h"			/*Interface definition*/
 #include <stdio.h>			/*Standard I/O package*/
 

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_SUN4X_56_H_
-#define	_PARAM_SUN4X_56_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #include <afs/afs_sysnames.h>
 
@@ -83,4 +83,4 @@
 #endif
 #define	ROOTINO		UFSROOTINO
 
-#endif /* _PARAM_SUN4X_56_H_ */
+#endif /* AFS_PARAM_H */

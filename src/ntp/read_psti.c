@@ -7,11 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if	defined(REFCLOCK) && defined(PSTI)
-#ifndef	lint
-static char *sccsid = "@(#)read_psti.c	1.1	MS/ACF	89/02/17";
-#endif /* lint */
+#include <afs/param.h>
+#include <afsconfig.h>
 
+RCSID("$Header$");
+
+#if	defined(REFCLOCK) && defined(PSTI)
 #define	ERR_RATE	60	/* Repeat errors once an hour */
 
 /*

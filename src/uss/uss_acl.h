@@ -14,7 +14,6 @@
 
 #ifndef _USS_ACL_H_
 #define _USS_ACL_H_ 1
-#include <afs/param.h>
 /*
  * ------------------------ Exported functions  -----------------------
  */

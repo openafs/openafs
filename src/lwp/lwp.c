@@ -14,6 +14,11 @@
 * 								    *
 \*******************************************************************/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>

@@ -15,6 +15,11 @@
 /*
  * --------------------- Required definitions ---------------------
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "uss_ptserver.h"	/*Module interface*/
 #include <afs/ptclient.h>	/*Protection Server client interface*/
 #include <afs/pterror.h>	/*Protection Server error codes*/

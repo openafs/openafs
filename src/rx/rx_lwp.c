@@ -10,6 +10,10 @@
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
 # include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
 # include <signal.h>

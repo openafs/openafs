@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if !defined(lint) && !defined(LOCORE)  && defined(RCS_HDRS)
-#endif
 /*
  * In which the structures needed to facilitate interception of file system
  * related system calls by a user process ("agent", or "venus").

@@ -16,7 +16,6 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
-#include <afs/param.h>
 #ifdef AFS_AIX41_ENV
 
 

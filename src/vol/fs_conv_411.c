@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #if	defined(AFS_DUX40_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_SUN54_ENV)
 #if defined AFS_DUX40_ENV
 #define OSVERS "DUX 4.0D"

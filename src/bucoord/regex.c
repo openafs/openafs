@@ -7,10 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-static	char sccsid[] = "@(#)regex.c 1.1 86/09/24 SMI"; /* from UCB 4.1 80/12/21 */
-#endif
-
 /*
  * routines to do regular expression matching
  *

@@ -7,15 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 /* missing type from C language */
 #define Boolean short
 #define true 1
 #define false 0
 
-/* ************************************************************* */
-
-#include <afs/param.h>
-#include <afsconfig.h>
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

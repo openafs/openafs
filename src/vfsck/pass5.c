@@ -15,16 +15,14 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)pass5.c	5.10 (Berkeley) 2/1/90";
-#endif /* not lint */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 #define VICE
-#include <afs/param.h>
-
 #include <sys/param.h>
 #include <sys/time.h>
-
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
 #include <sys/mount.h>

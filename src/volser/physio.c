@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>

@@ -34,12 +34,13 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <string.h>
 #include "rpc_parse.h"
 #include "rpc_util.h"
-
-RCSID("$Header$");
 
 #define DEFAULT_TIMEOUT 25	/* in seconds */
 

@@ -9,9 +9,6 @@
 
 #include <errno.h>
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
-
 #ifndef	AFS_VOL_NFS_H
 #define	AFS_VOL_NFS_H 1
 /*

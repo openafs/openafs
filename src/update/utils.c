@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <rx/rxkad.h>
 #include "global.h"
@@ -29,8 +32,6 @@
 #include <unistd.h>
 #endif
 #include <stdlib.h>
-
-RCSID("$Header$");
 
 int
 AddToList(ah, aname)

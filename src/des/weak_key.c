@@ -12,6 +12,11 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <des.h>
 #include "des_internal.h"
 #if defined(HAVE_STRINGS_H)

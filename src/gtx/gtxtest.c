@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxwindows.h"
 #include "gtxobjects.h"
 #include "gtxtextobj.h"

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
 #include <stdlib.h>

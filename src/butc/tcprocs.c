@@ -10,6 +10,10 @@
 /* procedures invoked by the rpc stub */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV

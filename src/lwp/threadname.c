@@ -21,6 +21,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #else

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
-#include <afsconfig.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
  * SOLARIS/osi_vnodeops.c

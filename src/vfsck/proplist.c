@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #define VICE	/* control whether AFS changes are present */
 
 #ifdef   AFS_OSF_ENV

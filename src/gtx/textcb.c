@@ -14,6 +14,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxtextcb.h"		/*Module interface*/
 #include <stdio.h>			/*Standard I/O stuff*/
 #include <errno.h>

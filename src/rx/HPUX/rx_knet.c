@@ -3,6 +3,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "../h/types.h"
 #include "../h/param.h"
 #include "../rx/rx_kcommon.h"

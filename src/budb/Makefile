@@ -15,7 +15,7 @@ include ../config/Makefile.${SYS_NAME}
 COMPILE_ET = ${SRCDIR}bin/compile_et
 RXGEN=${SRCDIR}bin/rxgen
 
-CFLAGS = -g -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 INCLS= \
 	${SRCDIR}include/lock.h \

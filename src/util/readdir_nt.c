@@ -17,6 +17,10 @@
  * readdir
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <errno.h>
 #include <afs/errmap_nt.h>
 #include <windows.h>

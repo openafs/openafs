@@ -10,6 +10,10 @@
 /* RX Authentication Stress test: server side code. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <stdio.h>
 #include <sys/types.h>

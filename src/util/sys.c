@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+ 
 #include <stdio.h>
 
 #include "AFS_component_version_number.c"

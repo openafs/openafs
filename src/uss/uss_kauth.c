@@ -15,6 +15,11 @@
 /*
  * --------------------- Required definitions ---------------------
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "uss_kauth.h"		/*Module interface*/
 #include "uss_common.h"		/*Common defs & operations*/
 #include <errno.h>

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
  *	fasttime.c -- Get the time of day quickly by mapping the kernel's
  *		      time of day variable.
@@ -26,6 +24,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -13,6 +13,10 @@
 
 /* These two needed for rxgen output to work */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

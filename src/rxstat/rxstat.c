@@ -9,6 +9,14 @@
 
 #ifdef UKERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#ifdef UKERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "rxstat.h"

@@ -10,6 +10,10 @@
 /* File-oriented utility functions */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <stddef.h>
 #include <stdlib.h>

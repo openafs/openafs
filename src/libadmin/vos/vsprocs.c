@@ -18,6 +18,11 @@
  * eliminate the practice of reporting errors to STDOUT.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "vsprocs.h"
 #include "vosutils.h"
 #include "lockprocs.h"

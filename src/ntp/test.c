@@ -7,66 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif
-/*
- * Revision 2.2  90/09/20  09:30:19
- * Changed program to call test2 even in non-verbose mode.  Test2 fixed to
- *   be quiet if not in verbose mode and check more signed/unsigned
- *   conversions.
- * Added test5 to check precision sign extension and delay calculations.
- * Added test6 to check precision measurement.
- * 
- * Revision 2.1  90/08/07  19:23:42
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.5  89/12/11  14:26:49
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.4  89/05/24  12:27:54
- * Latest May 18, Version 4.3 release.
- * 
- * Revision 3.4.1.4  89/05/18  18:37:39
- * Add test for GENERIC_UNS_BUG to test.c
- * 
- * Revision 3.4.1.3  89/04/07  19:10:41
- * Add check for SUN_FLT_BUG problem in test.c
- * 
- * Revision 3.4.1.2  89/03/31  16:39:19
- * Bug fix for VAX_COMPILER_FLT_BUG test, start of test for Sun problem.
- * 
- * Revision 3.4.1.1  89/03/22  18:32:26
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4  89/03/17  18:37:32
- * Latest test release.
- * 
- * Revision 3.3  89/03/15  14:20:16
- * New baseline for next release.
- * 
- * Revision 3.2.1.1  89/03/15  14:11:08
- * Add in kludge for old VAX pcc compiler bug that incorrectly converts unsigned
- * longs to doubles.  This enables the ntest program to run when
- * VAX_COMPILER_FLT_BUG is defined on those systems.
- * 
- * Revision 3.2  89/03/07  18:30:16
- * New version of UNIX NTP daemon based on the 6 March 1989 draft of the new
- * NTP protocol spec.  This module has mostly cosmetic changes.
- * 
- * Revision 3.1.1.1  89/02/15  08:49:34
- * *** empty log message ***
- * 
- * 
- * Revision 3.1  89/01/30  14:43:19
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  16:01:37
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-#include <stdio.h>
 #include <sys/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#include <afs/stds.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>

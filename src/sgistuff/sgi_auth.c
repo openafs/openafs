@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #if defined(AFS_SGI_ENV)
 
 #include <limits.h>

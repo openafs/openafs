@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_USR_SGI63_H_
-#define	_PARAM_USR_SGI63_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #define AFS_VFS_ENV	1
 /* Used only in vfsck code; is it needed any more???? */
@@ -65,4 +65,4 @@
 #endif
 #define	ROOTINO		UFSROOTINO
 
-#endif /* _PARAM_USR_SGI63_H_ */
+#endif /* AFS_PARAM_H */

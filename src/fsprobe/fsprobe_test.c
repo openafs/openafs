@@ -13,6 +13,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <fsprobe.h>		/*Interface for fsprobe module*/
 
 /*

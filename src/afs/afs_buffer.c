@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "../afs/sysincludes.h"
 #if !defined(UKERNEL)
 #include "../h/param.h"

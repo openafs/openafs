@@ -15,17 +15,11 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1983 The Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)rsh.c	5.7 (Berkeley) 9/20/88";
-#endif /* not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <unistd.h>		/* select() prototype */
 #include <sys/types.h>		/* fd_set on older platforms */
 #include <sys/time.h>		/* struct timeval, select() prototype */

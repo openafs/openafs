@@ -14,6 +14,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <fsprobe.h>			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/
 #include <afs/cellconfig.h>

@@ -13,6 +13,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "xstat_fs.h"		/*Interface for xstat_fs module*/
 #include <cmd.h>		/*Command line interpreter*/
 #include <time.h>

@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_STRINGS_H
@@ -45,8 +48,6 @@
 #endif
 #include "rpc_util.h"
 #include "rpc_parse.h"
-
-RCSID("$Header$");
 
 static print_header();
 static print_trailer();

@@ -13,6 +13,10 @@
  * Linux implementation.
  */
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_LINUX22_ENV
 #include "../rx/rx_kcommon.h"
 #if defined(AFS_LINUX24_ENV)

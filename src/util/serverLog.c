@@ -17,6 +17,10 @@
 /* ********************************************************************** */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>

@@ -16,6 +16,10 @@
  *------------------------------------------------------------------------*/
 #define	IGNORE_STDS_H
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
 #define __HP_CURSES

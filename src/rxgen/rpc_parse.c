@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -47,8 +50,6 @@
 #include "rpc_util.h"
 #include "rpc_scan.h"
 #include "rpc_parse.h"
-
-RCSID("$Header$");
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
 char *SplitStart = NULL;

@@ -11,6 +11,11 @@
  * This file implements the kas related funtions for afscp
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "kas.h"
 #include <time.h>
 
@@ -216,7 +221,7 @@ DoKasPrincipalList(struct cmd_syndesc *as, char *arock)
 int
 DoKasPrincipalKeySet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {PRINCIPAL, INSTANCE, PASSWORD, VERSION}
+    typedef enum {PRINCIPAL, INSTANCE, PASSWORD, KEYVERSION}
       DoKasPrincipalKeySet_parm_t;
     afs_status_t st = 0;
     kas_encryptionKey_t key;
@@ -238,7 +243,7 @@ DoKasPrincipalKeySet(struct cmd_syndesc *as, char *arock)
     }
 
     password = as->parms[PASSWORD].items->data;
-    key_version = GetIntFromString(as->parms[VERSION].items->data,
+    key_version = GetIntFromString(as->parms[KEYVERSION].items->data,
 				   "invalid key version number");
     if (!kas_StringToKey(cell, password, &key, &st)) {
 	ERR_ST_EXT("kas_StringToKey", st);

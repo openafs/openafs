@@ -13,7 +13,8 @@ COMPONENT=gtx
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=$(SRCDIR)bin/compile_et
-CFLAGS= ${DBUG} -I. -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
+CFLAGS= ${DBUG} -I. -I${TOP_SRCDIR}/config \
+	-I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 #RPCINCLS=${SRCDIR}include/lwp.h ${SRCDIR}include/rx/rx.h bosint.h
 RPCINCLS=

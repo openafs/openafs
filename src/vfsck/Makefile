@@ -19,7 +19,7 @@
 COMPONENT=vfsck
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=	${DBUG} -w -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=	${DBUG} -w -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LIBC=	/lib/libc.a
 SRCS=	dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c pass4.c \
 	pass5.c setup.c utilities.c ufs_subr.c ufs_tables.c dirutils.c\

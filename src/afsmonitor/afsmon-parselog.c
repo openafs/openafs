@@ -19,6 +19,10 @@
 
 #include <stdio.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/xstat_fs.h>  
 #include <afs/xstat_cm.h>
 #include <malloc.h>

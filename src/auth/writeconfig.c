@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
 #include <sys/types.h>

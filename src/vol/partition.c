@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
 
 	System:		VICE-TWO
@@ -18,6 +16,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <windows.h>

@@ -7,97 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif
-/*
- * Revision 2.2  90/09/19  16:28:02
- * Print out number of packets dropped.
- * 
- * Revision 2.1  90/08/07  19:23:19
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.11  90/06/13  20:11:15
- * rs_aix31
- * 
- * Revision 1.10  89/12/22  20:32:52
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX and misc other changes
- * 
- * Revision 1.9  89/12/11  14:26:03
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.8  89/05/24  12:26:45
- * Latest May 18, Version 4.3 release from UMD.
- * 
- * Revision 3.4.1.7  89/05/18  18:31:26
- * A few cosmetic changes for ntpd.c
- * 
- * Revision 3.4.1.6  89/05/03  15:17:27
- * ntpdc now will display addional peer flags which indicate how far through
- * the clock selection process a peer was considered.
- * 
- * Revision 3.4.1.5  89/04/08  10:38:06
- * Minor cosmetic changes and removed dead debug code from ntpd.c
- * 
- * Revision 3.4.1.4  89/03/29  12:41:56
- * Check for success sending query before trying to listen for answers.  Will 
- * catch case of no server running and an ICMP port unreachable being returned.
- * 
- * Revision 3.4.1.3  89/03/22  18:29:53
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4.1.2  89/03/22  18:04:18
- * Display dispersion in milliseconds.  The peer->refid field was being ntohl()'ed
- * when it should have stayed in network byte order.
- * 
- * Revision 3.4.1.1  89/03/20  00:13:41
- * patch1: Delete unused variables.  Display interface address in numeric form
- * patch1: for local address, rather than symbolically.  For multiple host
- * patch1: queries, the name of the host is emitted prior to the data for that
- * patch1: host.
- * 
- * Revision 3.4  89/03/17  18:37:16
- * Latest test release.
- * 
- * Revision 3.3.1.1  89/03/17  18:27:43
- * Fix version number mismatch error message.
- * 
- * Revision 3.3  89/03/15  14:20:00
- * New baseline for next release.
- * 
- * Revision 3.2.1.2  89/03/15  14:03:02
- * The logical used to receive replies has been revised considerably.  Each packet
- * in the reply from the ntpd program carries the total number of packets in the
- * reply as well as a sequence number for this packet.  Thus, we know how many
- * packets to expect, and which one's we're received already.  A new UDP socket
- * is used for each host to prevent the replies from being mixed.  This was
- * a problem when querying an old ntpd which returned 7 bad version packets..
- * Use "%f" rather than "%lf" in format strings.
- * 
- * Revision 3.2.1.1  89/03/10  12:28:24
- * Clean up output fomatting somewhat.
- * 
- * Revision 3.2  89/03/07  18:27:52
- * Cosmetic changes and bug fixes.  Note that this version is likely to be
- * slightly incompatible with previous versions because the definitions of
- * the flage bits (PEER_FL_*) in ntp.h have changed.
- * 
- * A future version of this program will have a considerably different
- * packet format when Version 2 support is added.
- * 
- * Revision 3.1.1.1  89/02/15  09:01:39
- * Bugfixes to previous release version.
- * 
- * 
- * Revision 3.1  89/01/30  14:43:16
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  15:57:28
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <signal.h>

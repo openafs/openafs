@@ -13,17 +13,18 @@
  *-------------------------------------------------------------------------*/
 
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <errno.h>
 #include <cmd.h>
 #include <signal.h>
-#include <afs/param.h>
-#include <afsconfig.h>
-
 #undef IN
-
 #include <sys/types.h>
 #include <netinet/in.h>
 #ifndef AFS_DEC_ENV

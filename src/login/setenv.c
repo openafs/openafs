@@ -15,9 +15,10 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)setenv.c	5.2 (Berkeley) 6/27/88";
-#endif /* LIBC_SCCS and not lint */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 #include <sys/types.h>
 #include <stdio.h>

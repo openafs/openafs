@@ -11,6 +11,10 @@
  * All Rights Reserved
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <sys/types.h>
 #if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) && !defined(AFS_DARWIN_ENV)

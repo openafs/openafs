@@ -15,6 +15,10 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/param.h>
 #include <afs/kautils.h>
 #include "afs_message.h"

@@ -40,6 +40,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <lock.h>

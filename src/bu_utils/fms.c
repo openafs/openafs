@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>				/* for machine/host info */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #undef	IN
 #include <stdio.h>
 #include <errno.h>

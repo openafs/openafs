@@ -11,7 +11,7 @@
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = -g -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 INCLS=${SRCDIR}include/ubik.h \
 	${SRCDIR}include/lwp.h \

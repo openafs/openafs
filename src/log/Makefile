@@ -8,7 +8,7 @@
 COMPONENT=log
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${DESTDIR}include -I${DESTDIR}include/afs 
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${DESTDIR}include/afs 
 utilib=${DESTDIR}lib/afs/util.a
 
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBUG}

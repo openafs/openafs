@@ -138,9 +138,9 @@ whatfid: whatfid.o ${LIBS}
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} -g -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
+			${CCXPG2} -g -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
 		* ) \
-			${CC} ${CFLAGS} -g -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
+			${CC} ${CFLAGS} -g -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
 	esac
 
 fstrace: fstrace.o
@@ -150,7 +150,7 @@ fstrace: fstrace.o
 		sun4_411 | sun4c_411 | sun4m_412 ) \
 			${CCXPG2} ${CFLAGS} -g -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC}  -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
+			${CC} -I${TOP_SRCDIR}/config  -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
 		* ) \
 			${CC} ${CFLAGS} -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
 	esac

@@ -13,7 +13,7 @@ UKERNELDIR = ../libuafs/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o
-CFLAGS=${DBUG} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 KDSRCS=Kcallback.ss.c Kcallback.h Kvice.cs.c Kvice.h Kvice.xdr.c afscbint.h \
 afsint.h
 KSRCS=${KDSRCS} afsaux.c

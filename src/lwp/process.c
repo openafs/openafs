@@ -9,10 +9,14 @@
 
 /* process.c - manage lwp context switches be means of setjmp/longjmp. */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <assert.h>
 #include "lwp.h"
-#include <afsconfig.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif

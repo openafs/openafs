@@ -12,6 +12,11 @@
 /*                                                                       */
 /* ********************************************************************* */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <fcntl.h>
 #include <errno.h>
 #include <afs/vldbint.h>

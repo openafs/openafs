@@ -14,6 +14,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>

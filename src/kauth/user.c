@@ -12,6 +12,14 @@
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -28,7 +36,6 @@
 #include "../afs/kautils.h"
 #include "../afs/afsutil.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <signal.h>
 #include <afs/com_err.h>

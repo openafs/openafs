@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
 

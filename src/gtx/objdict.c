@@ -13,6 +13,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxobjdict.h"			/*Interface for this module*/
 #include <stdio.h>			/*Standard I/O package*/
 

@@ -7,26 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
-/*
- * $Revision$
- * $Date$
- * $State$
- * $Locker$
- ****************************************************************
- * Revision 1.3  89/12/22  20:29:14  
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX
- * 
- * Revision 1.2  88/11/11  16:03:44
- * New/improved primary servers.
- * 
- * Revision 1.1  88/08/15  22:21:44
- * Initial revision
- * 
- */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

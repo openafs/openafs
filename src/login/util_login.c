@@ -15,9 +15,10 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)login.c	5.1 (Berkeley) 9/27/88";
-#endif /* LIBC_SCCS and not lint */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -28,8 +29,6 @@ static char sccsid[] = "@(#)login.c	5.1 (Berkeley) 9/27/88";
 #include <unistd.h>
 #define L_SET SEEK_SET
 #endif
-
-#include <afs/param.h>
 
 #ifdef	AFS_SUN5_ENV
 #include <fcntl.h>

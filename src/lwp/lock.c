@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*******************************************************************\
 * 								    *
 * 	Information Technology Center				    *
@@ -25,6 +23,10 @@
 */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_PTHREAD_ENV
 #include <afs/assert.h>
 #else /* AFS_PTHREAD_ENV */

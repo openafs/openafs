@@ -10,6 +10,10 @@
 /* Security related utilities for the Windows platform */
 
 #include <param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stds.h>
 
 #include <stddef.h>

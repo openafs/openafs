@@ -7,12 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-
-#ifndef lint
-#endif
-/* getaddr -- get our internet address. July, 1986 */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV

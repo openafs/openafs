@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif
 /*
  * This module actually implements the the bulk of the NTP protocol processing.
  * It contains a minimum of machine and operating system dependencies (or at
@@ -16,127 +14,11 @@
  * ntpd.c module, while arithmetic conversion routines are in ntpsubs.c
  */
 
-/*
- * Revision 2.2  90/09/20  09:21:00
- * Print Input timestamp so that it follow ump_pkt outupt.
- * Add various checks for bogus timestamps and delays.
- * Parenthesize ?: expression properly.
- * 
- * Revision 2.1  90/08/07  19:22:57
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.4  90/05/24  16:18:43
- * Cause logstats to be printed out if debug mode is on.
- * 
- * Revision 1.3  89/12/22  20:31:43
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX and misc other changes
- * 
- * Revision 1.2  89/12/11  14:25:31
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.1  89/05/24  12:02:06
- * Initial revision
- * 
- * Revision 3.4.1.12  89/05/18  18:25:04
- * Changes for reference clock feature in ntp_proto.c
- * 
- * Revision 3.4.1.11  89/05/03  23:51:30
- * Had my head on backwards with a reversed test in the clockhopper avoidance
- * code.  Need to switch to the first selected clock when its stratum is lower
- * than the current sys.peer.
- * 
- * Revision 3.4.1.10  89/05/03  19:03:02
- * Stupid typo - dereferenced unused variable in select_clock()
- * 
- * Revision 3.4.1.9  89/05/03  15:13:25
- * Add code to count number of peer switches and inhibited peer switches.  Clock
- * selection code has been updated to reflect 21 April 1989 draft of NTP spec.
- * 
- * Revision 3.4.1.8  89/04/10  15:57:59
- * New -l option for ntpd to enable logging for clock adjust messages.  Changed
- * our idea of a bogus packet in the packet procedure to include a packet received
- * before a poll is sent.  Fix stupid bug in delay computation having to do with
- * peer->precision.
- * 
- * Revision 3.4.1.7  89/04/08  10:36:53
- * The syslog message for peer selection had to be moved to account for the
- * anti-peer flapping code just installed.
- * 
- * Revision 3.4.1.6  89/04/07  19:07:10
- * Don't clear peer.reach register in the clear() procedure.  Code to prevent
- * flapping between two peers with very similar dispersions.
- * 
- * Revision 3.4.1.5  89/03/31  16:36:38
- * There is now a run-time option that can be specified in the configuration 
- * which specifies if we will synchronize to unconfigured hosts.  Fixes to
- * receive() logic state machine.
- * 
- * Revision 3.4.1.4  89/03/29  12:29:10
- * The variable 'mode' in the peer structure was renamed 'hmode'.  Add 
- * poll_update() calls in a few places per Mills.  The receive() procedure is
- * now table driven.  The poll_update procedure only randomized the timer
- * when the interval changes.  If we lose synchronization, don't zap sys.stratum.
- * Clean up the sanity_check() routine a bit.
- * 
- * Revision 3.4.1.3  89/03/22  18:32:31
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4.1.2  89/03/22  18:02:22
- * Add some fiddles for BROADCAST NTP mode.  In the receive procedure, set the
- * reachability shift register of peers that are configured, even if we won't
- * synchronized to them.  Fix adjustment of delay in the process_packet()
- * routine.  Repair byteswapping problem.
- * 
- * 
- * Revision 3.4.1.1  89/03/20  00:10:06
- * patch1: sys.refid could have garbage left if the peer we're synchronized to
- * patch1: is lost.
- * 
- * Revision 3.4  89/03/17  18:37:05
- * Latest test release.
- * 
- * Revision 3.3.1.1  89/03/17  18:26:02
- * Oh my, peer->hpoll wasn't being set in peer_update!
- * 
- * Revision 3.3  89/03/15  14:19:49
- * New baseline for next release.
- * 
- * Revision 3.2.1.2  89/03/15  13:54:41
- * Change use of "%lf" in format strings to use "%f" instead.
- * poll_update no longer returns a value, due to a change in the transmit
- * procedure; it is now declared as returning void.  Removed syslog
- * message "Dropping peer ...".  You still get messages for peers which
- * were configured when reachability is lost with them.  Clarification of
- * calling poll_update on sys.peer rather than on the host whose packet
- * we're processing when sys.peer changes.  poll_update has been updated
- * including randomizing peer.timer.
- * 
- * Revision 3.2.1.1  89/03/10  11:30:33
- * Remove computation of peer->timer that was present due to a bug in the NTP
- * spec.  Don't set sys.precision in the NTP protocol initialization; this has
- * bad side effects with the code that get tick from the kernel and the NTP
- * config file scanner.
- * 
- * Revision 3.2  89/03/07  18:24:54
- * New version of UNIX NTP daemon based on the 6 March 1989 draft of the new
- * NTP protocol specification.  This version has a bunch of bugs fixes and
- * new algorithms which were discussed on the NTP mailing list over the past
- * few weeks.
- * 
- * Revision 3.1.1.1  89/02/15  08:57:34
- * *** empty log message ***
- * 
- * 
- * Revision 3.1  89/01/30  14:43:10
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  15:59:35
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>

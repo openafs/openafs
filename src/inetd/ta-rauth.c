@@ -12,6 +12,10 @@
  * token from the local system to the remote system.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>

@@ -13,6 +13,10 @@
  * Implements:
  */
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #include "../afs/afsincludes.h" /* Afs-based standard headers */
 #include "sys/limits.h"

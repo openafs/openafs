@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 extern char *errmsg();
 extern int des_string_to_key();

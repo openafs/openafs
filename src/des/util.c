@@ -7,6 +7,11 @@
  * Miscellaneous debug printing utilities
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <sys/types.h>

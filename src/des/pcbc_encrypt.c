@@ -24,6 +24,10 @@
 #include <stdio.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "des_internal.h"
 
 #define XPRT_PCBC_ENCRYPT

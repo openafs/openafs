@@ -7,26 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 1.5  89/02/14  16:32:55
- * Move ka_Init yet again!
- * 
- * Revision 1.4  89/02/14  16:10:58
- * Moved ka_Init here from authclient.c.
- * 
- * Revision 1.3  89/01/11  14:46:35
- * Collection of minor fixes so that afsconf_Open is called with the correct
- *   CLIENT/SERVER argument.
- * 
- * Revision 1.2  89/01/11  14:16:20
- * Added ka_CellConfig call to specify client or server operation.
- * 
- * Revision 1.1  89/01/11  11:05:08
- * Initial revision
- *  */
-
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/pthread_glock.h"
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -39,7 +29,6 @@
 #include "../afs/kautils.h"
 #include "../afs/afsutil.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

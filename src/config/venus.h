@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
 /* /usr/andrew/include/vice/ioctl.h
 
 Definitions of Venus-specific ioctls for Venus 2.

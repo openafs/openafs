@@ -15,7 +15,6 @@
  *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <sys/param.h>
 
 struct updatetype

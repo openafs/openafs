@@ -11,6 +11,15 @@
 
 This file is now obsolete.
 
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef	KERNEL
 #include "../h/types.h"
 #include "../h/uio.h"

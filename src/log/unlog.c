@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
         unlog -- Tell the Andrew Cache Manager to either clean up your connection completely
                     or eliminate the caller's PAG.
@@ -29,6 +27,10 @@
 #define	VICE	    1
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <potpourri.h>
 #ifdef	AFS_AIX32_ENV

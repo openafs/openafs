@@ -10,6 +10,10 @@
 #ifdef xbsa
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <stdio.h>

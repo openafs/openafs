@@ -11,6 +11,11 @@
  * export -	EXPORT kernel extension
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #define _KERNEL
 #include "sys/types.h"
 #include "sys/user.h"

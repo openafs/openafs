@@ -11,7 +11,8 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
 
-INCDIRS= -I${SRCDIR}include/afs -I${SRCDIR}include/rx -I${SRCDIR}include
+INCDIRS= -I${TOP_SRCDIR}/config -I${SRCDIR}include/afs \
+	-I${SRCDIR}include/rx -I${SRCDIR}include
 
 INCLS=${SRCDIR}include/afs/partition.h ${SRCDIR}include/afs/volume.h \
 	${SRCDIR}include/afs/vlserver.h ${SRCDIR}include/rx/rx.h \

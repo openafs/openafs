@@ -14,6 +14,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxobjects.h"		/*Interface for this module*/
 #include "gtxtextobj.h"		/*Text object interface*/
 #include "gtxlightobj.h"	/*Light object interface*/

@@ -15,6 +15,11 @@
  *
  *--------------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxwindows.h"		/*Interface for this module*/
 #include "gtxcurseswin.h"	/*Interface for the curses module*/
 #include "gtxdumbwin.h"		/*Interface for the dumb terminal module*/

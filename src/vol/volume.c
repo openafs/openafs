@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /* 1/1/89: NB:  this stuff is all going to be replaced.  Don't take it too seriously */
 /*
 
@@ -19,6 +17,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <ctype.h>

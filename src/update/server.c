@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -46,12 +49,8 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-
-RCSID("$Header$");
-
 #include "update.h"
 #include "global.h"
-
 
 extern int UPDATE_ExecuteRequest();
 static int AddObject(char **expPath, char *dir);

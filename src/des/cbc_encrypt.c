@@ -21,6 +21,10 @@
 #include <stdio.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #define XPRT_CBC_ENCRYPT
 

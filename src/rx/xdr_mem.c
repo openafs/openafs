@@ -26,10 +26,12 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifndef	NeXT
-#ifndef lint
-static char sccsid[] = "@(#)xdr_mem.c 1.1 86/02/03 Copyr 1984 Sun Micro";
-#endif
 
 /*
  * xdr_mem.h, XDR implementation using memory buffers.

@@ -6,6 +6,5 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>	/* perror() */
-#include <afs/param.h>
 
 extern void yyerror(const char *s);

@@ -22,6 +22,10 @@
 #define FRC 0x200      /* on free chain */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

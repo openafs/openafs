@@ -16,6 +16,10 @@
  * --------------------- Required definitions ---------------------
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "uss_fs.h"		/*Interface to this module*/
 #include <sys/types.h>
 #include <sys/errno.h>

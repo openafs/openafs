@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_OSF1_H_
-#define	_PARAM_OSF1_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #define	AFS_OSF_ENV	1
 #define	AFS_OSF20_ENV	1
@@ -105,4 +105,4 @@ enum vcexcl {NONEXCL, EXCL};
 #endif	/* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
-#endif	/* _PARAM_OSF1_H_ */
+#endif	/* AFS_PARAM_H */

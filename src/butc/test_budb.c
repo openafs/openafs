@@ -11,6 +11,10 @@
 #include <netinet/in.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/auth.h>
 #include <afs/budb_client.h>
 #include <afs/budb.h>

@@ -9,6 +9,10 @@
 
 #define	IGNORE_STDS_H
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>
 #endif

@@ -16,6 +16,10 @@
 #include <arpa/inet.h>
 #include <afs/prs_fs.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>

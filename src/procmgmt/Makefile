@@ -8,7 +8,7 @@
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${SRCDIR}include -I${TOP_SRCDIR}/config ${XCFLAGS}
 
 ########################################################################
 # build libprocmgmt.a

@@ -35,6 +35,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,8 +58,6 @@
 #include "rpc_util.h"
 #include "rpc_parse.h"
 #include "rpc_scan.h"
-
-RCSID("$Header$");
 
 #define EXTEND	1		/* alias for TRUE */
 

@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #ifdef UKERNEL

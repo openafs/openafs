@@ -1,5 +1,5 @@
-#ifndef _PARAM_USR_I386_FBSD_42_H_
-#define _PARAM_USR_I386_FBSD_42_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 
 #define UKERNEL			1	/* user space kernel */
@@ -57,4 +57,4 @@
 #include <sys/uio.h>
 #include <sys/socket.h>
 
-#endif /* _PARAM_USR_I386_FBSD_42_H_ */
+#endif /* AFS_PARAM_H */

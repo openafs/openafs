@@ -19,7 +19,6 @@
 /*
  * --------------------- Required definitions ---------------------
  */
-#include <afs/param.h>		/*Basic system configuration stuff*/
 #include <sys/param.h>		/*Ditto*/
 #include <stdio.h>		/*I/O stuff*/
 #include <afs/afsutil.h>

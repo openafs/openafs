@@ -69,6 +69,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <rx/xdr.h>

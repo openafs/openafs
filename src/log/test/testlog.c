@@ -20,6 +20,11 @@
 			    This implies -x, unless the given cellname matches our local one.
 */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <itc.h>
 #include <stdio.h>
 #include <pwd.h>

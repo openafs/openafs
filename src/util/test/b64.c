@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #if !defined(AFS_NT40_ENV)
 main() { printf("b64 not required for this operating system.\n"); exit(1); }

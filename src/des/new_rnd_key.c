@@ -16,6 +16,10 @@
 #include <mit-cpyright.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <des.h>
 #include "des_internal.h"
 #ifdef AFS_PTHREAD_ENV

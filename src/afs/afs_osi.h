@@ -10,7 +10,6 @@
 #ifndef _AFS_OSI_
 #define _AFS_OSI_
 
-#include "../afs/param.h"
 #include "../h/types.h"
 #include "../h/param.h"
 

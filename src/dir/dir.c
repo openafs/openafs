@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef KERNEL
 #if !defined(UKERNEL)
 #include "../h/types.h"

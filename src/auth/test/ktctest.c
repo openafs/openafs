@@ -15,6 +15,10 @@
 #include <errno.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>

@@ -11,6 +11,11 @@
  * This file implements the client related funtions for afscp
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "client.h"
 #include <afs/cellconfig.h>
 #include <afs/bosint.h>

@@ -15,10 +15,6 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)glob.c	5.7 (Berkeley) 12/14/88";
-#endif /* not lint */
-
 /*
  * C-shell glob for random programs.
  */

@@ -21,26 +21,15 @@
  */
 
 /*
- * HISTORY
- * Revision 1.1  1998/04/07  17:51:02
- * User space cache manager and netscape plugin
- *
- * Revision 1.2  1998/01/31  20:55:31
- * Port of AFS client to user space. This delta replaces the previous
- * delta, which had too many merge problems after I tried to change
- * some of the files back to their originals after the review.
- *
- * Revision 1.1  1998/01/23  20:36:14
- * Implemented login cache, cleaned up some bugs, and added
- * directory index generation.
- */
-
-/*
  * This module implements the Secure Hash Algorithm (SHA) as specified in
  * the Secure Hash Standard (SHS, FIPS PUB 180.1).
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

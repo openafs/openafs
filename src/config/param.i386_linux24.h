@@ -1,5 +1,5 @@
-#ifndef _PARAM_I386_LINUX24_H_
-#define _PARAM_I386_LINUX24_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
  * it's a judgment call. If something is obviously i386 specific, use that
@@ -70,6 +70,6 @@
 #define SYS_NAME       "i386_linux24"
 #define SYS_NAME_ID    SYS_NAME_ID_i386_linux24
 
-#endif /* _PARAM_I386_LINUX24_H_ */
+#endif /* AFS_PARAM_H */
 
 

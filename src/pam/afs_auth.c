@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 #include <syslog.h>
@@ -14,7 +19,6 @@
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
-#include <afs/param.h>
 #include <sys/param.h>
 #include <afs/kautils.h>
 #include "afs_message.h"

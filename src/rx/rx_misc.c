@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
 #include <afs/afsincludes.h>

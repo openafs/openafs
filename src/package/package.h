@@ -16,7 +16,6 @@
  *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <utmp.h>
 #include <sys/types.h>
 

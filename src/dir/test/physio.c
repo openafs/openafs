@@ -16,6 +16,10 @@
 
 /* First we have the kernel hacks' include files. */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <sys/param.h>
 #ifdef AFS_VFSINCL_ENV
 #include <ufs/fsdir.h>

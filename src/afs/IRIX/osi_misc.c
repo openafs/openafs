@@ -11,6 +11,10 @@
  * Implementation of miscellaneous Irix routines.
  */
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef	AFS_SGI62_ENV
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

@@ -10,6 +10,10 @@
 /* ticket caching code */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/stds.h>
 #include <stdio.h>
 #include <afs/pthread_glock.h>

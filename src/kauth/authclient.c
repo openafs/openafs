@@ -7,26 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.4  90/10/02  15:47:16
- * Call rxs_Release before losing the security object.
- * 
- * Revision 2.3  90/08/31  16:16:20
- * Move permit_xprt.h.
- * 
- * Revision 2.2  90/08/20  11:14:37
- * Include permit_xprt.h.
- * Cleanup; prune log data, line length <= 79.
- * Rename cbc_encrypt -> des_cbc_encrypt (etc).
- * 
- * Revision 2.1  90/08/07  19:10:21
- * Start with clean version to sync test and dev trees.
- * */
-
 /* These routines provide a convenient interface to the AuthServer. */
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/afs_usrops.h"
@@ -44,7 +36,6 @@
 #include "../afs/pthread_glock.h"
 
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>

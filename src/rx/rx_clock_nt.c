@@ -11,6 +11,10 @@
 /* See rx_clock.h for calling conventions */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
 #include <stdlib.h>

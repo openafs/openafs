@@ -13,7 +13,6 @@
 #include <limits.h>
 #include <stdio.h>
 
-#include <afs/param.h>
 #include <afs/vice.h>
 #include <afs/kautils.h>
 

@@ -7,24 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 1.5  89/03/14  13:19:57
- * Rename CBS and BBS to ka_* to avoid collisions with afsint.h.
- * 
- * Revision 1.4  88/12/09  14:35:57
- * Fixed a bug where BBS code didn't check error code which caused
- *   problems when Ubik retransmitted packets after previous call
- *   aborted and didn't return output parameters.
- * 
- * Revision 1.3  88/11/18  09:07:47
- * Conversion to Rx.
- * 
- * Revision 1.2  88/09/20  11:38:13
- * Added IBM Copyright
- * 
- * Revision 1.1  88/08/29  12:48:27
- * Initial revision
- *  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 #if defined(UKERNEL)
 #include "../rx/xdr.h"

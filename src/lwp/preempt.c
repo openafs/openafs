@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*******************************************************************\
 * 								    *
 * 	Information Technology Center				    *
@@ -16,6 +14,10 @@
 * 								    *
 \*******************************************************************/
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DJGPP_ENV)
 int PRE_Block = 0;

@@ -13,11 +13,18 @@
 
 #ifdef UKERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#ifdef UKERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../rx/rx.h"
-#else /* UKERNEL */
-#include <afs/param.h>
+#else /* ! UKERNEL */
 #include <sys/types.h>
 #include <errno.h>
 #include <assert.h>

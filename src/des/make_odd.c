@@ -7,6 +7,11 @@
  * This routine generates an odd-parity table for use in key generation.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 

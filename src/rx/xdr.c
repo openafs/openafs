@@ -26,10 +26,15 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#ifndef	NeXT
-#ifndef lint
-static char sccsid[] = "@(#)xdr.c 1.1 86/02/03 Copyr 1984 Sun Micro";
+
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
+#include <afs/param.h>
 #endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
 
 /*
  * xdr.c, Generic XDR routines implementation.
@@ -41,8 +46,9 @@ static char sccsid[] = "@(#)xdr.c 1.1 86/02/03 Copyr 1984 Sun Micro";
  * xdr.
  */
 
+#ifndef	NeXT
+
 #ifdef	KERNEL
-#include "../afs/param.h"
 #include <sys/param.h>
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>

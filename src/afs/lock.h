@@ -10,9 +10,6 @@
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
-
 /*
  * (C) COPYRIGHT IBM CORPORATION 1987
  * LICENSED MATERIALS - PROPERTY OF IBM

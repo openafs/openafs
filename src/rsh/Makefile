@@ -21,7 +21,7 @@ COMPONENT=rsh
 include ../config/Makefile.${SYS_NAME}
 
 LIBDIR = ${DESTDIR}lib/
-INCLUDES= -I${SRCDIR}include
+INCLUDES= -I${TOP_SRCDIR}/config -I${SRCDIR}include
 CFLAGS=	${DBUG} ${INCLUDES} ${XCFLAGS}
 LIBC=	/lib/libc.a
 OBJS=   rcmd.o ../inetd/ta-rauth.o herror.o

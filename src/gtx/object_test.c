@@ -11,6 +11,11 @@
  * object_test: A test of the gator object operations.
  *--------------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "gtxscreenobj.h"     /*Gator screen object interface*/
 #include "gtxtextobj.h"       /*Gator text object interface*/
 #include "gtxlightobj.h"      /*Gator light object interface*/

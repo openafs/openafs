@@ -10,6 +10,11 @@
 /*
  * cfgafs -	load/configure the AFS kernel extension
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>

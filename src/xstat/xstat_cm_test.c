@@ -13,6 +13,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "xstat_cm.h"		/*Interface for xstat_cm module*/
 #include <cmd.h>		/*Command line interpreter*/
 #include <time.h>

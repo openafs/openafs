@@ -14,6 +14,10 @@
 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <errno.h>
 #include <stdio.h>
 #ifdef AFS_PTHREAD_ENV

@@ -52,6 +52,10 @@
 #include <sys/stat.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #include "../lwp.h"
 #include "seltest.h"

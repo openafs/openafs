@@ -1,23 +1,14 @@
-#ifndef lint
-#endif
-
 /*
  * Copyright (c) 1983 Regents of the University of California.
  * All rights reserved.  The Berkeley software License Agreement
  * specifies the terms and conditions for redistribution.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1983 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)rexecd.c	5.4 (Berkeley) 5/9/86";
-#endif /* not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <afs/kautils.h>	/* for UserAuthGeneral */
 #include <sys/types.h>
 #ifdef	AFS_SUN5_ENV

@@ -9,6 +9,14 @@
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -21,7 +29,6 @@
 #include "../afs/auth.h"
 #include "../afs/pthread_glock.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>

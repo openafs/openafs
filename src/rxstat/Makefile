@@ -16,7 +16,7 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
 
-CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 

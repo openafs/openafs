@@ -9,6 +9,14 @@
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -18,7 +26,6 @@
 #include "../afs/lifetimes.h"
 #include "../afs/rxkad.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

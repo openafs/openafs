@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "../rx/rx_kcommon.h"
 #include "../h/tcp-param.h"
 /* This must be loaded after proc.h to avoid macro collision with a variable*/

@@ -9,7 +9,6 @@
 
 #ifndef __CMD_INCL__
 #define	__CMD_INCL__	    1
-#include <afs/param.h>
 
 /* parmdesc types */
 #define	CMD_FLAG	1	/* no parms */

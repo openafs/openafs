@@ -13,6 +13,10 @@
 #include <errno.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 
 #define MIN_ARGC	0	/* min # args, not incl flags */
 #define MAX_ARGC	2	/* max # args, not incl flags */

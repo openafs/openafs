@@ -11,6 +11,11 @@
  * This file implements the vos related funtions for afscp
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include "vos.h"
 
 /*

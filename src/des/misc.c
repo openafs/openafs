@@ -10,6 +10,11 @@
  * generating the intermediate source files.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header$");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"
