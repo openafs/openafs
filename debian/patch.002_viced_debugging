@@ -1,0 +1,28 @@
+Index: src/viced//afsfileprocs.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/viced/afsfileprocs.c,v
+retrieving revision 1.1.1.6
+diff -u -r1.1.1.6 afsfileprocs.c
+--- src/viced//afsfileprocs.c	14 Jul 2001 22:24:45 -0000	1.1.1.6
++++ src/viced//afsfileprocs.c	20 Jul 2001 09:56:14 -0000
+@@ -6403,16 +6403,16 @@
+ 			rc = IH_DEC(V_linkHandle(volptr), ino,
+ 				  V_parentId(volptr));
+     			if (!rc ) {
+-		    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
+-			    	    V_id(volptr), volptr->partition->name));
++		    	    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
++			    	    rc, V_id(volptr), volptr->partition->name));
+ 			    VTakeOffline (volptr);
+ 			}
+ 			free(buff);
+ 			return ENOSPC;
+ 		}
+ 		else {
+-	    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
+-		    	    V_id(volptr), volptr->partition->name));
++	    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
++		    	    V_id(volptr), volptr->partition->name, length, rdlen, wrlen, errno));
+ 		    /* Decrement this inode so salvager doesn't find it. */
+ 		    FDH_REALLYCLOSE(newFdP);
+ 		    IH_RELEASE(newH);
