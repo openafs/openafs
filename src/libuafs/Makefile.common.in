@@ -152,6 +152,7 @@ UAFSOBJ = \
 	$(UOBJ)/rx_knet.o \
 	$(UOBJ)/rx_kcommon.o \
 	$(UOBJ)/rx_misc.o \
+	$(UOBJ)/rx_multi.o \
 	$(UOBJ)/rx_null.o \
 	$(UOBJ)/rx_getaddr.o \
 	$(UOBJ)/rx_packet.o \
@@ -272,6 +273,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
 	$(WEBOBJ)/rx_misc.o \
+	$(WEBOBJ)/rx_multi.o \
 	$(WEBOBJ)/rx_null.o \
 	$(WEBOBJ)/rx_getaddr.o \
 	$(WEBOBJ)/rx_packet.o \
@@ -390,6 +392,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
 	$(WEBOBJ)/rx_misc.o \
+	$(WEBOBJ)/rx_multi.o \
 	$(WEBOBJ)/rx_null.o \
 	$(WEBOBJ)/rx_getaddr.o \
 	$(WEBOBJ)/rx_packet.o \
@@ -508,6 +511,7 @@ JUAFSOBJ = \
 	$(JUAFS)/rx_knet.o \
 	$(JUAFS)/rx_kcommon.o \
 	$(JUAFS)/rx_misc.o \
+	$(JUAFS)/rx_multi.o \
 	$(JUAFS)/rx_null.o \
 	$(JUAFS)/rx_getaddr.o \
 	$(JUAFS)/rx_packet.o \
@@ -679,6 +683,8 @@ $(UOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 $(UOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE1)
 $(UOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE1)
+$(UOBJ)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
 	$(CRULE1)
 $(UOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE1)
@@ -926,6 +932,8 @@ $(WEBOBJ)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 $(WEBOBJ)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE2)
 $(WEBOBJ)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE2)
+$(WEBOBJ)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
 	$(CRULE2)
 $(WEBOBJ)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE2)
@@ -1177,6 +1185,8 @@ $(JUAFS)/rx_event.o: $(TOP_SRC_RX)/rx_event.c
 $(JUAFS)/rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE1)
 $(JUAFS)/rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE1)
+$(JUAFS)/rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
 	$(CRULE1)
 $(JUAFS)/rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE1)

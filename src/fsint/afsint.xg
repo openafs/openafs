@@ -587,7 +587,7 @@ CheckToken(
 GetTime(
   OUT afs_uint32 *Seconds,
   afs_uint32 *USeconds
-) = 153;
+) multi = 153;
 
 NGetVolumeInfo(
   IN  string VolumeName<AFSNAMEMAX>,

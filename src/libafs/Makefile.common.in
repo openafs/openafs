@@ -138,6 +138,7 @@ AFSAOBJS = \
 	rx_null.o	\
 	rx_getaddr.o	\
 	rx_packet.o	\
+	rx_multi.o	\
 	xdr_rx.o	\
 	Kvldbint.cs.o	\
 	Kvldbint.xdr.o	\
@@ -299,6 +300,8 @@ rx_event.o: $(TOP_SRC_RX)/rx_event.c
 rx_globals.o: $(TOP_SRC_RX)/rx_globals.c
 	$(CRULE_NOOPT)
 rx_misc.o: $(TOP_SRC_RX)/rx_misc.c
+	$(CRULE_NOOPT)
+rx_multi.o: $(TOP_SRC_RX)/rx_multi.c
 	$(CRULE_NOOPT)
 rx_null.o: $(TOP_SRC_RX)/rx_null.c
 	$(CRULE_NOOPT)

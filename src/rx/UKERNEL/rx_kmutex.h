@@ -45,7 +45,9 @@
 				    } \
 				}
 
+#ifndef UKERNEL
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
+#endif
 
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()

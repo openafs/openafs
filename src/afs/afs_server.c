@@ -57,6 +57,7 @@ RCSID
 
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
+#include "rx/rx_multi.h"
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
@@ -504,9 +505,20 @@ afs_CheckServers(int adown, struct cell *acellp)
     char tbuffer[CVBS];
     int srvAddrCount;
     struct srvAddr **addrs;
+    struct conn **conns;
+    int nconns;
+    struct rx_connection **rxconns;      
+    int nrxconns;
+    afs_int32 *conntimer, *deltas;
     XSTATS_DECLS;
 
     AFS_STATCNT(afs_CheckServers);
+
+    conns = (struct conn **)0;
+    rxconns = (struct rx_connection **) 0;
+    conntimer = 0;
+    nconns = 0;
+
     if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return;
     ObtainReadLock(&afs_xserver);	/* Necessary? */
@@ -532,7 +544,13 @@ afs_CheckServers(int adown, struct cell *acellp)
     ReleaseReadLock(&afs_xsrvAddr);
     ReleaseReadLock(&afs_xserver);
 
+    conns = (struct conn **)afs_osi_Alloc(j * sizeof(struct conn *));
+    rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
+    conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
+    deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
+
     for (i = 0; i < j; i++) {
+	deltas[i] = 0;
 	sa = addrs[i];
 	ts = sa->server;
 	if (!ts)
@@ -565,109 +583,133 @@ afs_CheckServers(int adown, struct cell *acellp)
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || HaveCallBacksFrom(ts)
+	if ((sa->sa_flags & SRVADDR_ISDOWN) || HaveCallBacksFrom(sa->server)
 	    || (tc->srvr->server == afs_setTimeHost)) {
+	    conns[nconns]=tc; 
+	    rxconns[nconns]=tc->id;
 	    if (sa->sa_flags & SRVADDR_ISDOWN) {
 		rx_SetConnDeadTime(tc->id, 3);
-		setTimer = 1;
+		conntimer[nconns]=1;
 	    } else {
-		setTimer = 0;
+		conntimer[nconns]=0;
 	    }
+	    nconns++;
+	}
+    } /* Outer loop over addrs */
 
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETTIME);
-	    start = osi_Time();	/* time the gettimeofday call */
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_GetTime(tc->id, (afs_int32 *) & tv.tv_sec,
-			      (afs_int32 *) & tv.tv_usec);
-	    RX_AFS_GLOCK();
+    start = osi_Time();         /* time the gettimeofday call */
+    AFS_GUNLOCK(); 
+    multi_Rx(rxconns,nconns)
+	{
+	    tv.tv_sec = tv.tv_usec = 0;
+	    multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
+	    tc = conns[multi_i];
+	    sa = tc->srvr;
+	    if (conntimer[multi_i] == 0)
+		rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
 	    end = osi_Time();
-	    XSTATS_END_TIME;
-	    /*
-	     * If we're supposed to set the time, and the call worked
-	     * quickly (same second response) and this is the host we
-	     * use for the time and the time is really different, then
-	     * really set the time
-	     */
-	    if (code == 0 && start == end && afs_setTime != 0
-		&& (tc->srvr->server == afs_setTimeHost ||
-		    /* Sync only to a server in the local cell */
-		    (afs_setTimeHost == (struct server *)0
-		     && afs_IsPrimaryCell(ts->cell)))) {
-
-		char msgbuf[90];	/* strlen("afs: setting clock...") + slop */
+	    if ((start == end) && !multi_error)
+		deltas[multi_i] = end - tv.tv_sec;
+	    if (( multi_error >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
+		/* server back up */
+		print_internet_address("afs: file server ", sa, " is back up", 2);
+		
+                ObtainWriteLock(&afs_xserver, 244);
+                ObtainWriteLock(&afs_xsrvAddr, 245);        
+                afs_MarkServerUpOrDown(sa, 0);
+                ReleaseWriteLock(&afs_xsrvAddr);
+                ReleaseWriteLock(&afs_xserver);
+		
+		if (afs_waitForeverCount) {
+		    afs_osi_Wakeup(&afs_waitForever);
+		}
+	    } else {
+		if (multi_error < 0) {
+		                /* server crashed */
+		    afs_ServerDown(sa);
+		    ForceNewConnections(sa);  /* multi homed clients */
+		}
+	    }
+	    
+	} multi_End;
+    AFS_GLOCK(); 
+ 
+    /*
+     * If we're supposed to set the time, and the call worked
+     * quickly (same second response) and this is the host we
+     * use for the time and the time is really different, then
+     * really set the time
+     */
+    if (afs_setTime != 0) {
+	for (i=0; i<nconns; i++) {
+	    delta = deltas[i];
+	    tc = conns[i];
+	    sa = tc->srvr;
+	    
+	    if ((tc->srvr->server == afs_setTimeHost ||
+		 /* Sync only to a server in the local cell */
+		 (afs_setTimeHost == (struct server *)0 &&
+		  afs_IsPrimaryCell(sa->server->cell)))) {
 		/* set the time */
-		delta = end - tv.tv_sec;	/* how many secs fast we are */
+		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
+		delta = end - tv.tv_sec;   /* how many secs fast we are */
+		
+		afs_setTimeHost = tc->srvr->server;
 		/* see if clock has changed enough to make it worthwhile */
 		if (delta >= AFS_MINCHANGE || delta <= -AFS_MINCHANGE) {
+		    end = osi_Time();
 		    if (delta > AFS_MAXCHANGEBACK) {
 			/* setting clock too far back, just do it a little */
 			tv.tv_sec = end - AFS_MAXCHANGEBACK;
+		    } else {
+			tv.tv_sec = end - delta;
 		    }
 		    afs_osi_SetTime(&tv);
 		    if (delta > 0) {
 			strcpy(msgbuf, "afs: setting clock back ");
 			if (delta > AFS_MAXCHANGEBACK) {
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
+			    afs_strcat(msgbuf, 
+				       afs_cv2string(&tbuffer[CVBS], 
 						     AFS_MAXCHANGEBACK));
 			    afs_strcat(msgbuf, " seconds (of ");
-			    afs_strcat(msgbuf,
-				       afs_cv2string(&tbuffer[CVBS],
-						     delta -
+			    afs_strcat(msgbuf, 
+				       afs_cv2string(&tbuffer[CVBS], 
+						     delta - 
 						     AFS_MAXCHANGEBACK));
 			    afs_strcat(msgbuf, ", via ");
-			    print_internet_address(msgbuf, sa,
+			    print_internet_address(msgbuf, sa, 
 						   "); clock is still fast.",
 						   0);
 			} else {
-			    afs_strcat(msgbuf,
+			    afs_strcat(msgbuf, 
 				       afs_cv2string(&tbuffer[CVBS], delta));
 			    afs_strcat(msgbuf, " seconds (via ");
 			    print_internet_address(msgbuf, sa, ").", 0);
 			}
 		    } else {
 			strcpy(msgbuf, "afs: setting clock ahead ");
-			afs_strcat(msgbuf,
+			afs_strcat(msgbuf, 
 				   afs_cv2string(&tbuffer[CVBS], -delta));
 			afs_strcat(msgbuf, " seconds (via ");
 			print_internet_address(msgbuf, sa, ").", 0);
 		    }
-		}
-		afs_setTimeHost = tc->srvr->server;
-	    }
-	    if (setTimer)
-		rx_SetConnDeadTime(tc->id, afs_rx_deadtime);
-	    if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN)
-		&& (tc->srvr == sa)) {
-		/* server back up */
-		print_internet_address("afs: file server ", sa, " is back up",
-				       2);
-
-		ObtainWriteLock(&afs_xserver, 244);
-		ObtainWriteLock(&afs_xsrvAddr, 245);
-		afs_MarkServerUpOrDown(sa, 0);
-		ReleaseWriteLock(&afs_xsrvAddr);
-		ReleaseWriteLock(&afs_xserver);
-
-		if (afs_waitForeverCount) {
-		    afs_osi_Wakeup(&afs_waitForever);
-		}
-	    } else {
-		if (code < 0) {
-		    /* server crashed */
-		    afs_ServerDown(sa);
-		    ForceNewConnections(sa);	/* multi homed clients */
+                    /* We're only going to set it once; why bother looping? */
+		    break; 
 		}
 	    }
 	}
-
-	afs_PutConn(tc, SHARED_LOCK);	/* done with it now */
-    }				/* Outer loop over addrs */
-
+    }
+    for (i = 0; i < nconns; i++) {
+	afs_PutConn(conns[i], SHARED_LOCK);     /* done with it now */
+    }
+    
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
-
-}				/*afs_CheckServers */
+    afs_osi_Free(conns, j * sizeof(struct conn *));
+    afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
+    afs_osi_Free(conntimer, j * sizeof(afs_int32));
+    afs_osi_Free(deltas, j * sizeof(afs_int32));
+    
+} /*afs_CheckServers*/
 
 
 /* find a server structure given the host address */
