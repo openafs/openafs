@@ -11,7 +11,7 @@
 #define __CM_DIR_ENV__ 1
 
 #define CM_DIR_PAGESIZE		2048		/* bytes per page */
-#define CM_DIR_NHASHENT		128		/* entries in the hash tbl */
+#define CM_DIR_NHASHENT		256		/* entries in the hash tbl == NHSIZE */
 #define CM_DIR_MAXPAGES		128		/* max pages in a dir */
 #define CM_DIR_BIGMAXPAGES	1023		/* new big max pages */
 #define CM_DIR_EPP		64		/* dir entries per page */
@@ -63,6 +63,7 @@ typedef struct cm_dirEntry {
 	char name[16];
 } cm_dirEntry_t;
 
+#ifdef UNUSED
 typedef struct cm_dirXEntry {
 	/* A directory extension entry. */
 	char name[32];
@@ -79,6 +80,7 @@ typedef struct cm_dirPage1 {
 	cm_pageHeader_t header;
 	cm_dirEntry_t entry[1];
 } cm_dirPage1_t;
+#endif /* UNUSED */
 
 extern int cm_NameEntries(char *namep, size_t *lenp);
 

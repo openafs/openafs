@@ -9,9 +9,9 @@
 
 #include <ctype.h>
 
-#define 	CM_AFSNCNAMESIZE 	36 /* multiple of 4 */
-#define         NCSIZE 			300
-#define         NHSIZE 			256 /* must be power of 2== NHASHENT */
+#define 	CM_AFSNCNAMESIZE 	40  /* multiple of 8 (for 64-bit) */
+#define         NCSIZE 			512
+#define         NHSIZE 			256 /* must be power of 2 == CM_DIR_NHASHENT */
 
 
 struct nc {

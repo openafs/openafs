@@ -272,6 +272,7 @@ void cm_InitFakeRootDir() {
 	}
 	
 	// we know the fakeDir is setup properly, so we claim that we have callback
+    osi_Log0(afsd_logp,"cm_InitFakeRootDir fakeDirCallback=1");
 	cm_fakeDirCallback=1;
 
 	// when we get here, we've set up everything! done!
@@ -512,7 +513,7 @@ long cm_InitLocalMountPoints() {
             fprintf(fp,"%s#%s:root.cell.\n",rootCellName,rootCellName);
             fprintf(fp,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
             fclose(fp);
-            fopen(hdir, "r");
+            fp = fopen(hdir, "r");
         } else {
             fputs("0\n", fp);
             fclose(fp);
