@@ -83,8 +83,10 @@ extern char *gettmpdir(void);
 #ifndef AFS_HPUX102_ENV
 extern int utimes(char *file, struct timeval tvp[2]);
 #endif
+#if !defined(AFS_HPUX110_ENV)
 extern int random(void);
 extern void srandom(int seed);
+#endif
 extern int getdtablesize(void);
 extern void setlinebuf(FILE * file);
 extern void psignal(unsigned int sig, char *s);

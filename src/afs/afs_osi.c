@@ -324,7 +324,7 @@ afs_osi_Invisible(void)
     u.u_procp->p_type |= SSYS;
 #elif defined(AFS_SUN5_ENV)
     curproc->p_flag |= SSYS;
-#elif defined(AFS_HPUX101_ENV)
+#elif defined(AFS_HPUX101_ENV) && !defined(AFS_HPUX1123_ENV)
     set_system_proc(u.u_procp);
 #elif defined(AFS_DARWIN_ENV)
     /* maybe call init_process instead? */

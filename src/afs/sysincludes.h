@@ -239,6 +239,10 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #ifdef AFS_HPUX110_ENV
 #    include "h/resource.h"
 #endif
+#ifdef AFS_HPUX1123_ENV 
+#	include <sys/user.h>
+#	include <sys/cred.h>
+#endif
 #  endif /* AFS_HPUX_ENV */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #  if defined(AFS_FBSD50_ENV)
@@ -311,7 +315,7 @@ MALLOC_DECLARE(M_AFS);
 #include "h/ioctl.h"
 #endif /* AFS_FBSD_ENV */
 
-#if	defined(AFS_HPUX101_ENV)
+#if	defined(AFS_HPUX101_ENV) && !defined(AFS_HPUX1123_ENV)
 #include "h/proc_iface.h"
 #include "h/vas.h"
 #endif

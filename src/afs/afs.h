@@ -901,7 +901,7 @@ struct afs_fheader {
 #if defined(AFS_LINUX_64BIT_KERNEL)
 #define afs_inode_t long
 #else
-#if defined(AFS_AIX51_ENV)
+#if defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
 #define afs_inode_t ino_t
 #else
 #define afs_inode_t afs_int32

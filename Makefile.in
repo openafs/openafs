@@ -71,6 +71,8 @@ packages: dest
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
 	ia64_hpux1122 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
+	ia64_hpux1123 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.23 ;; \
 	*) \
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac

@@ -372,9 +372,13 @@ osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
 osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
 	$(CRULE_NOOPT)
 osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT) -o osi_vfsops_nfs.o
+	$(CRULE_NOOPT) -o osi_vfsops_nfs.o \
+	-DAFS_WRAPPER=${LIBAFS}_wrapper \
+	-DAFS_CONF_DATA=${LIBAFS}_conf_data
 osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS
+	$(CRULE_NOOPT) -DAFS_NONFSTRANS \
+	-DAFS_WRAPPER=${LIBAFSNONFS}_wrapper \
+	-DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
 osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 	$(CRULE_NOOPT)
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c

@@ -70,12 +70,18 @@ extern struct DirEntry *afs_dir_GetBlob();
 int
 BlobScan(ino64_t * afile, afs_int32 ablob)
 #else
+#if defined(AFS_HPUX1123_ENV)
+/*DEE should use afs_inode_t for all */
+int 
+BlobScan(ino_t *afile, afs_int32 ablob)
+#else
 #ifdef AFS_LINUX_64BIT_KERNEL
 int
 BlobScan(long *afile, afs_int32 ablob)
 #else
 int
 BlobScan(afs_int32 * afile, afs_int32 ablob)
+#endif
 #endif
 #endif
 {

@@ -181,12 +181,19 @@ afs_lockf(vp, flag, len, cred, fp, LB, UB)
 #endif
 #include "h/debug.h"
 #include "h/types.h"
+#if !defined(AFS_HPUX1123_ENV)
+	/* 11.23 is using 64 bit in many cases */
+#define kern_daddr_t daddr_t
+#endif
 #include "h/param.h"
 #include "h/vmmac.h"
 #include "h/time.h"
 #include "ufs/inode.h"
 #include "ufs/fs.h"
 #include "h/dbd.h"
+#if defined(AFS_HPUX1123_ENV)
+dbd_t       *finddbd();
+#endif /* AFS_HPUX1123_ENV */
 #include "h/vfd.h"
 #include "h/region.h"
 #include "h/pregion.h"
@@ -194,7 +201,9 @@ afs_lockf(vp, flag, len, cred, fp, LB, UB)
 #include "h/user.h"
 #include "h/sysinfo.h"
 #include "h/pfdat.h"
+#if !defined(AFS_HPUX1123_ENV)
 #include "h/tuneable.h"
+#endif
 #include "h/buf.h"
 #include "netinet/in.h"
 
@@ -207,7 +216,7 @@ struct buf *afs_bread_freebp = 0;
  */
 afs_bread(vp, lbn, bpp)
      struct vnode *vp;
-     daddr_t lbn;
+     kern_daddr_t lbn;
      struct buf **bpp;
 {
     int offset, fsbsize, error;
@@ -269,7 +278,7 @@ afs_brelse(vp, bp)
 
 afs_bmap(avc, abn, anvp, anbn)
      register struct vcache *avc;
-     afs_int32 abn, *anbn;
+     kern_daddr_t abn, *anbn;
      struct vcache **anvp;
 {
     AFS_STATCNT(afs_bmap);
@@ -525,7 +534,7 @@ mp_afs_fsync(register struct vnode *avc, struct AFS_UCRED *acred, int unused1)
 }
 
 int
-mp_afs_bread(register struct vnode *avc, daddr_t lbn, struct buf **bpp,
+mp_afs_bread(register struct vnode *avc, kern_daddr_t lbn, struct buf **bpp,
 	     struct vattr *unused1, struct ucred *unused2)
 {
     register int code;
@@ -692,7 +701,7 @@ afspgin_setup_io_ranges(vfspage_t * vm_info, pgcnt_t bpages, k_off_t isize,
     pgcnt_t maxpage;		/* one past last page to bring in */
     pgcnt_t maxpagein;
     pgcnt_t multio_maxpage;
-    daddr_t start_blk;
+    kern_daddr_t start_blk;
     dbd_t *dbd;
     expnd_flags_t up_reason, down_reason;
     int count = 1;
@@ -834,7 +843,7 @@ afspgin_blkflsh(vfspage_t * vm_info, struct vnode * devvp, pgcnt_t * num_4k)
 
     for (indx = 0; indx < num_io; indx++) {
 	flush_reslt =
-	    blkflush(devvp, (daddr_t) VM_GET_IO_STARTBLK(vm_info, indx),
+	    blkflush(devvp, (kern_daddr_t) VM_GET_IO_STARTBLK(vm_info, indx),
 		     ptob(VM_GET_IO_COUNT(vm_info, indx)), 0,
 		     VM_REGION(vm_info));
 	if (flush_reslt) {
@@ -966,7 +975,7 @@ afspgin_update_dbd(vfspage_t * vm_info, int bsize)
     k_off_t rem;
     pgcnt_t m;
     pgcnt_t pgindx;
-    daddr_t blkno;
+    kern_daddr_t blkno;
     int num_io = VM_GET_NUM_IO(vm_info);
     int i;
 
@@ -981,7 +990,7 @@ afspgin_update_dbd(vfspage_t * vm_info, int bsize)
 	VASSERT(rem % NBPG == 0);
 
 	pgindx -= (pgcnt_t) btop(rem);
-	blkno -= (daddr_t) btodb(rem);
+	blkno -= (kern_daddr_t) btodb(rem);
 
 	/*
 	 * This region could start in mid-block.  If so, pgindx
@@ -1024,7 +1033,7 @@ afs_pagein(vp, prp, wrt, space, vaddr, ret_startindex)
     pgcnt_t maxpagein;
     struct vnode *devvp;
     pgcnt_t count;
-    daddr_t start_blk = 0;
+    kern_daddr_t start_blk = 0;
     int bsize;
     int error;
     k_off_t isize;
@@ -1580,6 +1589,16 @@ afs_pageout(vp, prp, start, end, flags)
 	 */
 	old_cred = kt_cred(u.u_kthreadp);
 	if (vhand) {
+#if defined(AFS_HPUX1123_ENV)
+		/*
+		 * DEE - 1123 does not have the vas.h, and it looks
+		 * we should never be called with a NFS type file anyway.
+		 * so where did this come from? Was it copied from NFS?
+		 * I assume it was, so we will add an assert for now
+		 * and see if the code runs at all.
+		 */
+		VASSERT(filevp->v_fstype != VNFS);
+#else
 	    set_kt_cred(u.u_kthreadp, filevp->v_vas->va_cred);
 
 	    /*
@@ -1590,6 +1609,7 @@ afs_pageout(vp, prp, start, end, flags)
 	     */
 	    if (kt_cred(u.u_kthreadp) == NULL)
 		set_kt_cred(u.u_kthreadp, old_cred);
+#endif
 	}
 
 	/*
@@ -1708,13 +1728,13 @@ int
 afs_mapdbd(filevp, offset, bn, flags, hole, startidx, endidx)
      struct vnode *filevp;
      off_t offset;
-     daddr_t *bn;		/* Block number. */
+     kern_daddr_t *bn;		/* Block number. */
      int flags;			/* B_READ or B_WRITE */
      int *hole;			/* To be used for read-ahead. */
      pgcnt_t *startidx;		/* To be used for read-ahead. */
      pgcnt_t *endidx;		/* To be used for read-ahead. */
 {
-    daddr_t lbn, local_bn;
+    kern_daddr_t lbn, local_bn;
     int on;
     int err;
     long bsize = vtoblksz(filevp) & ~(DEV_BSIZE - 1);
@@ -1728,7 +1748,7 @@ afs_mapdbd(filevp, offset, bn, flags, hole, startidx, endidx)
     if (bsize <= 0)
 	osi_Panic("afs_mapdbd: zero size");
 
-    lbn = (daddr_t) (offset / bsize);
+    lbn = (kern_daddr_t) (offset / bsize);
     on = offset % bsize;
 
     err = VOP_BMAP(filevp, lbn, NULL, &local_bn, flags);
@@ -1775,7 +1795,15 @@ afs_vm_stopio(vp, args)
 {
     fsdata_t *fsdata = (fsdata_t *) args->fs_data;
 
-    if ((dbtob(VM_END_PAGEOUT_BLK(args)) + NBPG) % (fsdata->bsize) == 0) {
+#if defined(AFS_HPUX1123_ENV)
+	uint64_t tmpdb;
+	tmpdb = VM_END_PAGEOUT_BLK(args);
+
+	if ((dbtob(tmpdb) + NBPG) % (fsdata->bsize) == 0)
+#else
+    if ((dbtob(VM_END_PAGEOUT_BLK(args)) + NBPG) % (fsdata->bsize) == 0) 
+#endif /* AFS_HPUX1123_ENV */
+	{
 	return (1);
     } else {
 	return (0);

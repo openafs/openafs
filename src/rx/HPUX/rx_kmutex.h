@@ -41,6 +41,40 @@ extern lock_t *rx_sleepLock;
 /* This is supposed to atomically drop the mutex and go to sleep
  * and reacquire the mutex when it wakes up.
  */
+
+/* With 11.23, ksleep_prepare is not defined anywhere  and 
+ * ksleep_one is only referenced in a comment. sleep, get_sleep_lock 
+ * and wakeup are defined in driver manuals.
+ * This works with 11.0, 11i, and 11.23
+ * Note: wakeup wakes up all threads waiting on cv. 
+ */
+
+#define CV_WAIT(cv, lck) \
+	do { \
+		get_sleep_lock((caddr_t)(cv)); \
+		if (!b_owns_sema(lck)) \
+			osi_Panic("CV_WAIT mutex not held \n"); \
+		b_vsema(lck);	\
+		sleep((caddr_t)(cv), PRIBIO); \
+		b_psema(lck); \
+	} while(0)
+		
+#define CV_SIGNAL(cv)  \
+	do { \
+		lock_t * sleep_lock = get_sleep_lock((caddr_t)(cv)); \
+		wakeup((caddr_t)(cv)); \
+		spinunlock(sleep_lock); \
+	} while(0)
+
+#define CV_BROADCAST(cv) \
+	do { \
+		lock_t * sleep_lock = get_sleep_lock((caddr_t)(cv)); \
+		wakeup((caddr_t)(cv)); \
+		spinunlock(sleep_lock); \
+	} while(0)
+
+
+#if 0
 #define CV_WAIT(cv, lck) \
     do { \
         int code; \
@@ -80,6 +114,7 @@ extern lock_t *rx_sleepLock;
             osi_Panic("kwakeup_all failed: code = %d \n", code); \
         MP_SPINUNLOCK(rx_sleepLock); \
     } while (0)
+#endif /* 0 */
 
 #define CV_DESTROY(a)
 

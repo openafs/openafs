@@ -21,6 +21,47 @@ RCSID
 #include "afs/afs_stats.h"	/* statistics stuff */
 #include <sys/scall_kernprivate.h>
 
+#if defined(AFS_HPUX1123_ENV)
+#include <sys/moddefs.h>
+#endif /* AFS_HPUX1123_ENV */
+
+#if defined(AFS_HPUX1123_ENV)
+/* defind DLKM tables  so we can load dynamicly */
+/* we still need an afs_unload to unload */
+/* Note: There is to be a dependency on the
+ * the name of the struct <name>_wrapper, and the 
+ * name of the dynamicly loaded file <name>  
+ * We will define -DAFS_WRAPPER=<name>_wrapper
+ * and -DAFS_CONF_DATA=<name>_conf_data  and pass into
+ * this routine 
+ */ 
+
+extern struct mod_operations mod_misc_ops;
+extern struct mod_conf_data AFS_CONF_DATA;
+
+static int afs_load(void *arg);
+/* static int afs_unload(void *arg); */
+
+struct mod_type_data afs_mod_link = {
+	"AFS kernel module", 
+	NULL
+};
+
+struct modlink afs_modlink[] = {
+	{&mod_misc_ops, &afs_mod_link},
+	{ NULL, NULL }
+};
+
+struct modwrapper AFS_WRAPPER = {
+	MODREV, 
+	afs_load, 
+	NULL,      /* should be afs_unload if we had one */ 
+	NULL,
+	&AFS_CONF_DATA, 
+	afs_modlink 
+}; 
+
+#endif /* AFS_HPUX1123_ENV */
 
 static char afs_mountpath[512];
 struct vfs *afs_globalVFS = 0;
@@ -232,6 +273,16 @@ osi_InitGlock()
 	osi_Panic("osi_Init lost initialization race");
     }
 }
+
+#if defined(AFS_HPUX1123_ENV)
+/* DLKM routine called when loaded */
+static int
+afs_load(void *arg)
+{
+	afsc_link();
+	return 0;
+}
+#endif /* AFS_HPUX1123_ENV */
 
 /*
  * afsc_link - Initialize VFS
