@@ -795,7 +795,7 @@ afs1_readdir(avc, auio, acred, eofp)
 #else
 afs1_readdir(avc, auio, acred)
 #endif
-    register struct vcache *avc;
+    struct vcache *avc;
     struct uio *auio;
     struct AFS_UCRED *acred; {
     struct vrequest treq;

@@ -262,7 +262,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     code = soreceive(so, &bp, &tuio, &flags, &sp, (MBLKPP)NULL);
     if (!code) {
-        *lengthp = *lengthp - tuio.uio_resid;
+        *alength = *alength - tuio.uio_resid;
         if (bp) {
             memcpy((char*)addr, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
         } else {

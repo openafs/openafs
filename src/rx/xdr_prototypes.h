@@ -21,6 +21,22 @@
 /* xdr_afsuuid.c */
 extern int xdr_afsUUID(XDR *xdrs, afsUUID *objp);
 
+/* xdr_int32.c */
+extern bool_t xdr_afs_int32(register XDR *xdrs, afs_int32 *ip);
+extern bool_t xdr_afs_uint32(register XDR *xdrs, afs_uint32 *up);
+
+/* xdr_int64.c */
+extern bool_t xdr_int64(register XDR *xdrs, afs_int64 *ulp);
+extern bool_t xdr_afs_int64(register XDR *xdrs, afs_int64 *ulp);
+extern bool_t xdr_uint64(register XDR *xdrs, afs_uint64 *ulp);
+extern bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp);
+
+/* xdr_rx.c */
+extern void xdrrx_create(register XDR *xdrs, register struct rx_call *call, register enum xdr_op op);
+
+
+#ifndef XDR_AFS_DECLS_ONLY
+
 /* xdr_array.c */
 extern bool_t xdr_array(register XDR *xdrs, caddr_t *addrp, u_int *sizep, 
         u_int maxsize, u_int elsize, xdrproc_t elproc);
@@ -53,18 +69,6 @@ extern bool_t xdr_wrapstring(register XDR *xdrs, char **cpp);
 extern bool_t xdr_float(register XDR *xdrs, register float *fp);
 extern bool_t xdr_double(register XDR *xdrs, double *dp);
 
-
-/* xdr_int32.c */
-extern bool_t xdr_afs_int32(register XDR *xdrs, afs_int32 *ip);
-extern bool_t xdr_afs_uint32(register XDR *xdrs, afs_uint32 *up);
-
-/* xdr_int64.c */
-extern bool_t xdr_int64(register XDR *xdrs, afs_int64 *ulp);
-extern bool_t xdr_afs_int64(register XDR *xdrs, afs_int64 *ulp);
-extern bool_t xdr_uint64(register XDR *xdrs, afs_uint64 *ulp);
-extern bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp);
-
-
 /* xdr_mem.c */
 extern void xdrmem_create(register XDR *xdrs, caddr_t addr, u_int size, enum xdr_op op);
 
@@ -81,10 +85,6 @@ extern bool_t xdrrec_endofrecord(XDR *xdrs, bool_t sendnow);
 /* xdr_refernce.c */
 
 
-/* xdr_rx.c */
-extern void xdrrx_create(register XDR *xdrs, register struct rx_call *call, register enum xdr_op op);
-
-
 /* xdr_stdio.c */
 
 
@@ -95,10 +95,5 @@ extern bool_t xdr_vector(register XDR *xdrs, register char *basep,
         register u_int nelem, register u_int elemsize, register xdrproc_t xdr_elem);
 
 
-
-/* MISC PROTOTYPES - MOVE TO APPROPRIATE LOCATION LATER */
-
-
-
-
+#endif
 #endif /* _XDR_PROTOTYPES_H */

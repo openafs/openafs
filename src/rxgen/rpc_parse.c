@@ -1754,8 +1754,6 @@ er_ProcDeclExterns_setup()
 	defp = (definition *)listp->val;
 	if (defp->pc.proc_serverstub) {
 	    f_print(fout, "afs_int32 %s();\n", defp->pc.proc_serverstub);
-	} else {
-	    f_print(fout, "afs_int32 _%s%s%s(struct rx_call *z_call, XDR *z_xdrs);\n", prefix, defp->pc.proc_prefix, defp->pc.proc_name);
 	}
     }
 }
