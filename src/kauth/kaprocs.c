@@ -1109,7 +1109,7 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
     if (code) goto abort;
 
     code = tkt_MakeTicket (ticket, &ticketLen, &tgskey,
-			   aname, ainstance, lrealm, start, end, &sessionKey,
+			   aname, ainstance, "", start, end, &sessionKey,
 			   rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))),
 			   sname, sinst);
     if (code) goto abort;
@@ -1144,7 +1144,7 @@ static afs_int32 Authenticate (version, call, aname, ainstance, start, end,
       case 2:
 	code = PrepareTicketAnswer
 	    (oanswer, request.time+1, ticket, ticketLen, &sessionKey,
-	     start, end, &tentry, &server, lrealm,
+	     start, end, &tentry, &server, "",
 	     (tgt ? KA_GETTGT_ANS_LABEL : KA_GETADM_ANS_LABEL));
 	if (code) goto abort;
 #ifdef EXPIREPW
