@@ -8,7 +8,6 @@ XCFLAGS=-dy -Bdynamic
 MT_CFLAGS=-mt -DAFS_PTHREAD_ENV ${XCFLAGS}
 PAM_CFLAGS = -KPIC
 PAMLIBS= -lc -lpam -lsocket -lnsl -lm
-SHARE_LDFLAGS = -G -Bsymbolic
 LWP_OPTMZ=-g
 OPTMZ=-O
 DBG=-g
@@ -24,8 +23,10 @@ MTLIBS=-lpthread -lsocket
 XLIBELFA=-lelf
 XLIBKVM=-lkvm
 #
+SHLIB_LINKER=${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=-KPIC
+SHLIB_LDFLAGS = -G -Bsymbolic
 #
 # programs
 AR=/usr/ccs/bin/ar

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.10 2002/05/10 23:43:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.11 2002/09/26 18:57:58 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -30,7 +30,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.10 2002/05/10 
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */

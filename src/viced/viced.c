@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.8 2001/10/14 18:07:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.9 2002/09/26 19:09:16 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,11 +36,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.8 2001/10/14 18:0
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <sys/resource.h>
 #include <unistd.h>	/* sysconf() */
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
+#include <sys/resource.h>
 #endif /* AFS_NT40_ENV */
 #include <afs/stds.h>
 #undef SHARED
@@ -488,6 +488,7 @@ main(argc, argv)
     rx_SetDestroyConnProc(tservice, (char (*)()) h_FreeConnection);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
+    rx_SetCheckReach(tservice, 1);
 
     tservice = rx_NewService(0,  RX_STATS_SERVICE_ID, "rpcstats", sc, 4, RXSTATS_ExecuteRequest);
     if (!tservice) {

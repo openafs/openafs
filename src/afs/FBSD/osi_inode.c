@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_inode.c,v 1.1.1.3 2001/07/14 22:20:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_inode.c,v 1.1.1.4 2002/09/26 18:58:08 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -34,19 +34,16 @@ getinode(fs, dev, inode, ipp, perror)
      ino_t inode;
      int *perror;
 {
-    register struct vnode *vp;
-    char fake_vnode[FAKE_INODE_SIZE];
-    struct inode *ip;
+    struct vnode *vp;
     int code;
 
     *ipp = 0;
     *perror = 0;
     if (!fs) {
 	register struct ufsmount *ump;
-	register struct vnode *vp;
 	register struct mount *mp;
 	
-	MOUNTLIST_LOCK();
+        simple_lock(&mountlist_slock);
 	if (mp = TAILQ_FIRST(&mountlist)) do {
 	    /*
 	     * XXX Also do the test for MFS 
@@ -54,29 +51,25 @@ getinode(fs, dev, inode, ipp, perror)
 #undef m_data
 #undef m_next
 	    if (mp->mnt_stat.f_type == MOUNT_UFS) {	
-		MOUNTLIST_UNLOCK();
 		ump = VFSTOUFS(mp);
 		if (ump->um_fs == NULL)
 		    break;
 		if (ump->um_dev == dev) {
 		    fs = ump->um_mountp;
 		}
-		MOUNTLIST_LOCK();
 	    }
 	    mp = TAILQ_NEXT(mp, mnt_list);
 	} while (mp != TAILQ_FIRST(&mountlist));
-	MOUNTLIST_UNLOCK();
+        simple_unlock(&mountlist_slock);
 	if (!fs)
 	    return(ENXIO);
     }
-    vp = (struct vnode *) fake_vnode;
-    fake_inode_init(vp, fs);
-    code = iget(VTOI(vp), inode, &ip, 0);
+    code = VFS_VGET(fs,inode, &vp);
     if (code != 0) {
 	*perror = BAD_IGET;
         return code;
     } else {
-	*ipp = ip;
+	*ipp = VTOI(vp);
         return(0);
     }
 }
@@ -102,12 +95,12 @@ igetinode(vfsp, dev, inode, ipp, perror)
 
     if (ip->i_mode == 0) {
 	/* Not an allocated inode */
-	iforget(ip);	    
+	vput(ITOV(ip));	    
 	return(ENOENT);
     }
 
     if (ip->i_nlink == 0 || (ip->i_mode&IFMT) != IFREG) {
-	iput(ip);
+	vput(ITOV(ip));	    
 	return(ENOENT);
     }
 
@@ -115,23 +108,7 @@ igetinode(vfsp, dev, inode, ipp, perror)
     return(0);
 }
 
-iforget(ip)
-struct inode *ip;
-{
-    struct vnode *vp = ITOV(ip);
-
-    AFS_STATCNT(iforget);
-
-    VN_LOCK(vp);
-    /* this whole thing is too wierd.  Why??? XXX */
-    if (vp->v_usecount == 1) {
-	VN_UNLOCK(vp);
-	idrop(ip);
-    } else {
-	VN_UNLOCK(vp);
-    }
-}
-
+#if 0
 /*
  * icreate system call -- create an inode
  */
@@ -281,3 +258,23 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
     iput(ip);
     return(0);
 }
+#else
+afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
+     long *retval;
+     long dev, near_inode, param1, param2, param3, param4;
+{
+     return EOPNOTSUPP;
+}
+afs_syscall_iopen(dev, inode, usrmod, retval)
+     long *retval;
+     int dev, inode, usrmod;
+{
+     return EOPNOTSUPP;
+}
+afs_syscall_iincdec(dev, inode, inode_p1, amount)
+     int dev, inode, inode_p1, amount;
+{
+     return EOPNOTSUPP;
+}
+#endif
+

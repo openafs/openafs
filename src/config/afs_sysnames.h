@@ -50,6 +50,7 @@
 #define SYS_NAME_ID_ppc_darwin_12        503
 #define SYS_NAME_ID_ppc_darwin_13        504
 #define SYS_NAME_ID_ppc_darwin_14        505
+#define SYS_NAME_ID_ppc_darwin_60        506
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
@@ -141,6 +142,10 @@
 #define SYS_NAME_ID_alpha_linux_24      2002
 
 #define SYS_NAME_ID_i386_fbsd_42        2100
+#define SYS_NAME_ID_i386_fbsd_43        2101
+#define SYS_NAME_ID_i386_fbsd_44        2102
+#define SYS_NAME_ID_i386_fbsd_45        2103
+#define SYS_NAME_ID_i386_fbsd_46        2103
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.12 2002/01/22 19:52:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.13 2002/09/26 19:04:53 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -60,6 +60,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.12 2002/01/22
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
+
+#ifndef T_AFSDB
+#define T_AFSDB 18  /* per RFC1183 section 1 */
+#endif
 
 static ParseHostLine();
 static ParseCellLine();
@@ -539,6 +543,9 @@ static ParseHostLine(aline, addr, aname, aclone)
     if (code != 5) return AFSCONF_SYNTAX;
     addr->sin_family = AF_INET;
     addr->sin_port = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr->sin_len = sizeof(struct sockaddr_in);
+#endif
     tp = (char *) &addr->sin_addr;
     *tp++ = c1;
     *tp++ = c2;

@@ -16,6 +16,10 @@ MT_CFLAGS=-mt -DAFS_PTHREAD_ENV ${XCFLAGS}
 LWP_OPTMZ=-g
 OPTMZ=-O
 DBG=-g
+
+SHLIB_SUFFIX=so
+SHLIB_LINKER=${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text
+
 #
 # libraries
 XLIBS=@LIB_AFSDB@ -lsocket -lnsl -lintl -ldl

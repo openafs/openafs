@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/namei_ops.c,v 1.1.1.7 2001/10/14 18:07:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/namei_ops.c,v 1.1.1.8 2002/09/26 19:09:23 hartmans Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -317,8 +317,8 @@ delTree(char *root, char *tree, int *errp)
 	 */
 	*cp = 0; 
       }
-      if (!errno)
-	closedir(ds);
+      /* if (!errno) -- closedir not implicit if we got an error */
+      closedir(ds);
     } 
     
     /* finally axe the current dir */

@@ -91,7 +91,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.10 2002/05/11 00:03:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.11 2002/09/26 19:09:26 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -110,7 +110,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.10 2002/05/11
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
-#if	defined(AFS_AIX_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
 #define WCOREDUMP(x)	(x & 0200)
 #endif
 #include <rx/xdr.h>
@@ -824,6 +824,7 @@ struct stat *status;
 #endif
 
 #ifdef AFS_AIX42_ENV
+#ifndef AFS_NAMEI_ENV
 /* We don't want to salvage big files filesystems, since we can't put volumes on
  * them.
  */
@@ -851,6 +852,7 @@ int CheckIfBigFilesFS(mountPoint, devName)
     }
     return 0;
 }
+#endif
 #endif
 
 #ifdef AFS_NT40_ENV

@@ -15,10 +15,13 @@ XCFLAGS=-dy -Bdynamic
 MT_CFLAGS=-mt -DAFS_PTHREAD_ENV ${XCFLAGS}
 PAM_CFLAGS = -KPIC
 PAMLIBS= -lc -lpam -lsocket -lnsl -lm
-SHARE_LDFLAGS = -G -Bsymbolic
+SHLIB_LDFLAGS = -G -Bsymbolic
 LWP_OPTMZ=-g
 OPTMZ=-O
 DBG=-g
+
+SHLIB_SUFFIX=so
+SHLIB_LINKER=${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text
 #
 # libraries
 XLIBS=@LIB_AFSDB@ -lsocket -lnsl -lintl -ldl

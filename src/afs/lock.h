@@ -106,10 +106,14 @@ extern tid_t thread_self();
 #ifdef AFS_LINUX20_ENV
 #define MyPidxx current->pid
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
 #define MyPidxx (current_proc()->p_pid )
 #else
+#if defined(AFS_FBSD_ENV)
+#define MyPidxx (curproc->p_pid )
+#else
 #define MyPidxx (u.u_procp->p_pid )
+#endif /* AFS_FBSD_ENV */
 #endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_SGI64_ENV */

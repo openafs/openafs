@@ -1,13 +1,4 @@
 /*
- * Copyright 2000, International Business Machines Corporation and others.
- * All Rights Reserved.
- * 
- * This software has been released under the terms of the IBM Public
- * License.  For details, see the LICENSE file in the top-level source
- * directory or online at http://www.openafs.org/dl/license10.html
- */
-
-/*
  * This file is produced automatically.
  * Do not modify anything in here by hand.
  *
@@ -465,6 +456,27 @@ static __inline int VOP_POLL(vp, events, cred, p)
 	a.a_cred = cred;
 	a.a_p = p;
 	rc = VCALL(vp, VOFFSET(vop_poll), &a);
+	return (rc);
+}
+struct vop_kqfilter_args {
+	struct vnodeop_desc *a_desc;
+	struct vnode *a_vp;
+	struct knote *a_kn;
+};
+extern struct vnodeop_desc vop_kqfilter_desc;
+static __inline int VOP_KQFILTER __P((
+	struct vnode *vp,
+	struct knote *kn));
+static __inline int VOP_KQFILTER(vp, kn)
+	struct vnode *vp;
+	struct knote *kn;
+{
+	struct vop_kqfilter_args a;
+	int rc;
+	a.a_desc = VDESC(vop_kqfilter);
+	a.a_vp = vp;
+	a.a_kn = kn;
+	rc = VCALL(vp, VOFFSET(vop_kqfilter), &a);
 	return (rc);
 }
 struct vop_revoke_args {
@@ -1344,5 +1356,68 @@ static __inline int VOP_SETEXTATTR(vp, name, uio, cred, p)
 	a.a_cred = cred;
 	a.a_p = p;
 	rc = VCALL(vp, VOFFSET(vop_setextattr), &a);
+	return (rc);
+}
+struct vop_createvobject_args {
+	struct vnodeop_desc *a_desc;
+	struct vnode *a_vp;
+	struct ucred *a_cred;
+	struct proc *a_p;
+};
+extern struct vnodeop_desc vop_createvobject_desc;
+static __inline int VOP_CREATEVOBJECT __P((
+	struct vnode *vp,
+	struct ucred *cred,
+	struct proc *p));
+static __inline int VOP_CREATEVOBJECT(vp, cred, p)
+	struct vnode *vp;
+	struct ucred *cred;
+	struct proc *p;
+{
+	struct vop_createvobject_args a;
+	int rc;
+	a.a_desc = VDESC(vop_createvobject);
+	a.a_vp = vp;
+	a.a_cred = cred;
+	a.a_p = p;
+	rc = VCALL(vp, VOFFSET(vop_createvobject), &a);
+	return (rc);
+}
+struct vop_destroyvobject_args {
+	struct vnodeop_desc *a_desc;
+	struct vnode *a_vp;
+};
+extern struct vnodeop_desc vop_destroyvobject_desc;
+static __inline int VOP_DESTROYVOBJECT __P((
+	struct vnode *vp));
+static __inline int VOP_DESTROYVOBJECT(vp)
+	struct vnode *vp;
+{
+	struct vop_destroyvobject_args a;
+	int rc;
+	a.a_desc = VDESC(vop_destroyvobject);
+	a.a_vp = vp;
+	rc = VCALL(vp, VOFFSET(vop_destroyvobject), &a);
+	return (rc);
+}
+struct vop_getvobject_args {
+	struct vnodeop_desc *a_desc;
+	struct vnode *a_vp;
+	struct vm_object **a_objpp;
+};
+extern struct vnodeop_desc vop_getvobject_desc;
+static __inline int VOP_GETVOBJECT __P((
+	struct vnode *vp,
+	struct vm_object **objpp));
+static __inline int VOP_GETVOBJECT(vp, objpp)
+	struct vnode *vp;
+	struct vm_object **objpp;
+{
+	struct vop_getvobject_args a;
+	int rc;
+	a.a_desc = VDESC(vop_getvobject);
+	a.a_vp = vp;
+	a.a_objpp = objpp;
+	rc = VCALL(vp, VOFFSET(vop_getvobject), &a);
 	return (rc);
 }

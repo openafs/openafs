@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vm.c,v 1.1.1.6 2002/08/02 04:28:49 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vm.c,v 1.1.1.7 2002/09/26 18:58:05 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #include "../afs/afsincludes.h" /* Afs-based standard headers */
@@ -320,16 +320,18 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
 #endif
 
 }
-int osi_VM_Setup(struct vcache *avc) {
+int osi_VM_Setup(struct vcache *avc, int force) {
    int error;
    struct vnode *vp=AFSTOV(avc);
 
-   if (UBCISVALID(vp) && (avc->states & CStatd)) {
+   if (UBCISVALID(vp) && ((avc->states & CStatd) || force)) {
       if (!UBCINFOEXISTS(vp) && !ISSET(vp->v_flag, VTERMINATE)) {
          osi_vnhold(avc,0);  
+         avc->states  |= CUBCinit;
          AFS_GUNLOCK();
          if ((error=ubc_info_init(&avc->v)))  {
              AFS_GLOCK();
+             avc->states  &= ~CUBCinit;
              AFS_RELE(avc);
              return error;
          }
@@ -345,6 +347,7 @@ int osi_VM_Setup(struct vcache *avc) {
          simple_unlock(&avc->v.v_interlock);
 #endif
          AFS_GLOCK();
+         avc->states  &= ~CUBCinit;
          AFS_RELE(avc);
       }
       if (UBCINFOEXISTS(&avc->v))

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.1.1.8 2001/10/14 18:07:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.1.1.9 2002/09/26 19:09:36 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -3810,7 +3810,7 @@ static afs_int32 CheckVolume(volumeinfo, aserver, apart, modentry, maxvolid)
 	       if (entry.serverFlags[j] & ITSROVOL) {
 		  /* Verify this volume exists and print message we are orphaning it */
 		  if (pass == 1) {
-		     MapPartIdIntoName(apart, entry.serverPartition[j]);
+		     MapPartIdIntoName(apart, pname);
 		     fprintf(STDERR,"*** Warning: Orphaned RO volume %u exists on %s %s\n",
 			     entry.volumeId[ROVOL],
 			     hostutil_GetNameByINet(entry.serverNumber[j]), pname);
@@ -4103,7 +4103,7 @@ UV_SyncVolume(aserver, apart, avolname, flags)
        if (modified && (code == VL_NOENT)) {
 	  fprintf(STDOUT,"\n**entry deleted**\n");
        } else if (modified) {
-	  EnumerateEntry(vldbentry);
+	  EnumerateEntry(&vldbentry);
        } else {
 	  fprintf(STDOUT,"\n**no change**\n");
        }

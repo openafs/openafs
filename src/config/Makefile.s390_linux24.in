@@ -22,9 +22,10 @@ PAM_CFLAGS= -O -Dlinux -DLINUX_PAM -fPIC
 XCFLAGS= -O -g
 MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
 XLDFLAGS=
-SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_LDFLAGS = -shared -Xlinker -x
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=
+SHLIB_LINKER=${MT_CC} -shared
 #
 # libraries
 MTLIBS=-lpthread

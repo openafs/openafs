@@ -9,6 +9,9 @@
 # AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
 AFS_OSTYPE = NCR
 
+SHLIB_SUFFIX=so
+SHLIB_LINKER=${CC} -G -dy -Wl,-Mmapfile -Bsymbolic -z text
+
 # compilation and link editor flags
 #
 # libraries

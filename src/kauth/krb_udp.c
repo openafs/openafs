@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_udp.c,v 1.1.1.12 2002/08/02 04:35:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_udp.c,v 1.1.1.13 2002/09/26 19:06:20 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -857,6 +857,9 @@ afs_int32 init_krb_udp ()
     krb4name = "kerberos4";
     sp = getservbyname(krb4name, "udp");
     taddr.sin_family = AF_INET;  /* added for NCR port */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
     if ( !sp )	
     {
 	/* if kerberos-4 is not available, try "kerberos-iv" */

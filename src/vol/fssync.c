@@ -38,7 +38,7 @@ static int newVLDB = 1;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.6 2002/08/02 04:37:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.7 2002/09/26 19:09:21 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -236,9 +236,13 @@ static int getport(addr)
 
     memset(addr, 0, sizeof(*addr));
     assert((sd = socket(AF_INET, SOCK_STREAM, 0)) >= 0);
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr->sin_len = sizeof(struct sockaddr_in);
+#endif
     addr->sin_addr.s_addr = htonl(0x7f000001);
     addr->sin_family = AF_INET; /* was localhost->h_addrtype */
     addr->sin_port = htons(2040);  /* XXXX htons not _really_ neccessary */
+
     return sd;
 }
 

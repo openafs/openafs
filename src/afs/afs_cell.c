@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.10 2002/08/02 04:28:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.11 2002/09/26 18:57:50 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -25,7 +25,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.10 2002/08/02 04
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
 #include <netinet/in_var.h>
 #endif /* ! ASF_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -509,7 +509,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
 	tc->vlport = (vlport ? vlport : AFS_VLPORT);
 	afs_stats_cmperf.numCellsVisible++;
 	newc++;
-	if (!aflags & CAlias) {
+	if (!(aflags & CAlias)) {
 	    tc->realcellIndex = afs_realcellindex++;
 	} else {
 	    tc->realcellIndex = -1;
@@ -543,7 +543,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     tc->timeout = timeout;
 
     /* Allow converting an alias into a real cell */
-    if (!(aflags & CAlias)) {
+    if ((!(aflags & CAlias)) && (tc->states & CAlias)) {
 	tc->states &= ~CAlias;
 	tc->realcellIndex = afs_realcellindex++;
     }

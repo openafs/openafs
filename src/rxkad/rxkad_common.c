@@ -20,7 +20,7 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.10 2002/08/02 04:36:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.11 2002/09/26 19:07:58 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -28,6 +28,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.10 2002/08
 #include "../afs/afs_osi.h"
 #ifdef	AFS_AIX_ENV
 #include "../h/systm.h"
+#endif
+#ifdef AFS_DARWIN60_ENV
+#include "../h/kernel.h"
 #endif
 #include "../h/types.h"
 #include "../h/time.h"

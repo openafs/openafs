@@ -54,6 +54,6 @@
 #define CMSERVERPREF
 #endif
 
-#define HAVE_UCONTEXT_H		/* should be in afsconfig.h */
+#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */

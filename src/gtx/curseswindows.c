@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/curseswindows.c,v 1.1.1.5 2001/07/14 22:22:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/curseswindows.c,v 1.1.1.6 2002/09/26 19:06:06 hartmans Exp $");
 
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
@@ -758,7 +758,7 @@ int gator_cursesgwin_getdimensions(gwp, aparms)
     struct gator_cursesgwin *cwp;	/*Curses-specific data*/
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN60_ENV)
     aparms->maxx = cwp->wp->maxx;
     aparms->maxy = cwp->wp->maxy;
 #else

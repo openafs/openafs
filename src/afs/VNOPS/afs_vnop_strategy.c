@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.1.1.8 2002/05/10 23:44:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.1.1.9 2002/09/26 18:58:25 hartmans Exp $");
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
 
@@ -171,12 +171,13 @@ afs_ustrategy(abp)
 #endif
     }
 #if	!defined(AFS_AIX32_ENV) && !defined(AFS_SUN5_ENV)
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) || defined(AFS_FBSD_ENV)
     if (code) {
 	abp->b_error = code;
 	abp->b_flags |= B_ERROR;
     }
     biodone(abp);
+#if defined(AFS_DUX40_ENV)
     if (code && !(abp->b_flags & B_READ)) {
 	/* prevent ubc from retrying writes */
 	AFS_GUNLOCK();
@@ -185,9 +186,10 @@ afs_ustrategy(abp)
 		       PAGE_SIZE, B_INVAL);
 	AFS_GLOCK();
     }
-#else  /* AFS_DUX40_ENV */
+#endif
+#else  /* AFS_DUX40_ENV || AFS_FBSD_ENV */
     iodone(abp);
-#endif /* AFS_DUX40_ENV */
+#endif /* AFS_DUX40_ENV || AFS_FBSD_ENV */
 #endif
 #ifdef	AFS_AIX32_ENV
     crfree(credp);

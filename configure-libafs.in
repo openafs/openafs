@@ -1,8 +1,9 @@
 AC_INIT(Makefile.common)
-AM_INIT_AUTOMAKE(openafs-libafs,1.2.6)
+AM_INIT_AUTOMAKE(openafs-libafs,1.2.7)
 AC_CONFIG_HEADER(config/afsconfig.h)
 define(OPENAFS_CONFIGURE_LIBAFS)
 
+AC_PROG_CC
 OPENAFS_CONFIGURE_COMMON
 
 TOP_SRCDIR="${SRCDIR_PARENT}"

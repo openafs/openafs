@@ -6,19 +6,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-. /etc/rc.common
-
-CheckForNetwork 
-
-if [ "${NETWORKUP}" = "-NO-" ]; then exit; fi
-
-if [ -r /var/db/openafs ]; then
-   VICEETC=/var/db/openafs/etc
-   AFSD=/usr/sbin/afsd
-else
-   VICEETC=/usr/vice/etc
-   AFSD=$VICEETC/afsd
-fi
+VICEETC=/usr/vice/etc
+AFSD=$VICEETC/afsd
 CONFIG=$VICEETC/config
 AFSDOPT=$CONFIG/afsd.options
 PACKAGE=$CONFIG/package.options
@@ -35,10 +24,10 @@ fi
 
 # Need the commands ps, awk, kill, sleep
 PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin
-if kmodstat | grep -q openafs ; then
+if kmodstat | grep -q afs.ko ; then
 :
 else
-if [ -d $VICEETC/afs.ko ]; then
+if [ -f $VICEETC/afs.ko ]; then
 	echo "Loading AFS kernel extensions"
 	kldload $VICEETC/afs.ko
 else
@@ -46,10 +35,11 @@ else
 	exit 1
 fi
 fi
-if kldstat | grep -q openafs ; then
+if kldstat | grep -q afs.ko ; then
 :
 else
 	echo "AFS kernel extensions failed to initialize. Skipping AFS startup."
+	exit
 fi
 
 #

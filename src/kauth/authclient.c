@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.9 2001/10/14 18:05:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.10 2002/09/26 19:06:14 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -91,6 +91,10 @@ void ka_ExplicitCell (
 	    explicit_cell_server_list.hostName[i][0] = 0;
 	    explicit_cell_server_list.hostAddr[i].sin_port =
 		htons(AFSCONF_KAUTHPORT);
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	    explicit_cell_server_list.hostAddr[i].sin_len =
+		sizeof(struct sockaddr_in);
+#endif
 	    explicit = 1;
 	}	    
 	else break;

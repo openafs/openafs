@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.6 2002/05/10 23:43:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.7 2002/09/26 18:58:05 hartmans Exp $");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
 #include <afs/afsincludes.h>            /* Afs-based standard headers */
@@ -309,6 +309,17 @@ afs_vop_close(ap)
     osi_FlushPages(avc);        /* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN14_ENV
+    if (UBCINFOEXISTS(ap->a_vp) && ap->a_vp->v_ubcinfo->ui_refcount < 2) {
+      ubc_hold(ap->a_vp);
+      if (ap->a_vp->v_ubcinfo->ui_refcount < 2) {
+         printf("afs: Imminent ui_refcount panic\n");
+       } else {
+         printf("afs: WARNING: ui_refcount panic averted\n");
+       }
+    }
+#endif
+
     return code;
 }
 
@@ -1214,21 +1225,23 @@ afs_vop_print(ap)
     register struct vnode *vp = ap->a_vp;
     register struct vcache *vc = VTOAFS(ap->a_vp);
     int s = vc->states;
-    char buf[20];
     printf("tag %d, fid: %ld.%x.%x.%x, opens %d, writers %d", vp->v_tag, vc->fid.Cell,
 	   vc->fid.Fid.Volume, vc->fid.Fid.Vnode, vc->fid.Fid.Unique, vc->opens,
 	   vc->execsOrWriters);
     printf("\n  states%s%s%s%s%s", (s&CStatd) ? " statd" : "", (s&CRO) ? " readonly" : "",(s&CDirty) ? " dirty" : "",(s&CMAPPED) ? " mapped" : "", (s&CVFlushed) ? " flush in progress" : "");
-    if (UBCISVALID(vp))
-        printf("\n  UBC: %s%s",
-               UBCINFOEXISTS(vp) ? "exists, " : "does not exist",
+    if (UBCISVALID(vp)) {
+        printf("\n  UBC: ");
+        if (UBCINFOEXISTS(vp)) {
+               printf("exists, ") ;
 #ifdef AFS_DARWIN14_ENV
-               UBCINFOEXISTS(vp) ?
-                 sprintf(buf, "refs %d", vp->v_ubcinfo->ui_refcount),buf : "");
+                 printf("refs %d%s%s", vp->v_ubcinfo->ui_refcount,
+                         ubc_issetflags(vp, UI_HASOBJREF) ? " HASOBJREF" : "",
+                         ubc_issetflags(vp, UI_WASMAPPED) ? " WASMAPPED" : "");
 #else
-               UBCINFOEXISTS(vp) ?
-                 sprintf(buf, "holdcnt %d", vp->v_ubcinfo->ui_holdcnt),buf : "");
+                 printf("holdcnt %d", vp->v_ubcinfo->ui_holdcnt);
 #endif
+        } else printf("does not exist");
+    }
     printf("\n");
     return 0;
 }

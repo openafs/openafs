@@ -19,7 +19,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/netutils.c,v 1.1.1.6 2001/09/11 14:35:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/netutils.c,v 1.1.1.7 2002/09/26 19:08:58 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -256,40 +256,58 @@ const char *fileName;
   
   /* For each line in the NetInfo file */
   while ( fgets(line, MAX_NETFILE_LINE, fp) != NULL ) {
-    lineNo++;		/* input line number */
-    addr = extract_Addr(line, MAX_NETFILE_LINE);
+      int fake=0;
+
+      /* See if first char is an 'F' for fake */
+      /* Added to allow the fileserver to advertise fake IPS for use with
+       * the translation tables for NAT-like firewalls - defect 12462 */
+      for (fake=0; ((fake < strlen(line)) && isspace(line[fake])); fake++);
+      if ( (fake < strlen(line)) && ((line[fake]=='f') || (line[fake]=='F'))) {
+	  fake++;
+      } else {
+	  fake = 0;
+      }
+ 
+      lineNo++;		/* input line number */
+      addr = extract_Addr(&line[fake], strlen(&line[fake]));
     
-    if (addr == AFS_IPINVALID) { /* syntactically invalid */
-      fprintf(stderr,"afs:%s : line %d : parse error\n", fileName, lineNo);
-      continue;
-    }
-    if (addr == AFS_IPINVALIDIGNORE) { /* ignore error */
-      continue;
-    }
+      if (addr == AFS_IPINVALID) { /* syntactically invalid */
+	  fprintf(stderr,"afs:%s : line %d : parse error\n", fileName, lineNo);
+	  continue;
+      }
+      if (addr == AFS_IPINVALIDIGNORE) { /* ignore error */
+	  continue;
+      }
     
-    /* See if it is an address that really exists */
-    for (i=0; i < existNu; i++) {
-      if (existingAddr[i] == addr) break;
-    }
-    if (i >= existNu) continue;    /* not found - ignore */
+      /* See if it is an address that really exists */
+      for (i=0; i < existNu; i++) {
+	  if (existingAddr[i] == addr) break;
+      }
+      if ((i >= existNu) && (!fake)) continue;   /* not found/fake - ignore */
     
-    /* Check if it is a duplicate address we alread have */
-    for (l=0; l < count; l++) {
-      if ( final[l] == addr ) break;
-    }
-    if (l < count) {
-      fprintf(stderr,"afs:%x specified twice in NetInfo file\n", ntohl(addr));
-      continue; /* duplicate addr - ignore */
-    }
+      /* Check if it is a duplicate address we alread have */
+      for (l=0; l < count; l++) {
+	  if ( final[l] == addr ) break;
+      }
+      if (l < count) {
+	  fprintf(stderr,"afs:%x specified twice in NetInfo file\n", ntohl(addr));
+	  continue; /* duplicate addr - ignore */
+      }
     
-    if ( count == max ) { /* no more space */
-      fprintf(stderr,"afs:Too many interfaces. The current kernel configuration supports a maximum of %d interfaces\n", max);
-    } else {
-      final[count] = existingAddr[i];
-      mask[count]  = existingMask[i];
-      mtu[count]   = existingMtu[i];
-      count++;
-    }
+      if ( count > max ) { /* no more space */
+	  fprintf(stderr,"afs:Too many interfaces. The current kernel configuration supports a maximum of %d interfaces\n", max);
+      } else if (fake) {
+	  fprintf(stderr, "Client (2) also has address %s\n", line);
+	  final[count] = addr;
+	  mask[count]  = 0xffffffff;
+	  mtu[count]   = htonl(1500);
+	  count++;
+      } else {
+	  final[count] = existingAddr[i];
+	  mask[count]  = existingMask[i];
+	  mtu[count]   = existingMtu[i];
+	  count++;
+      }
   } /* while */
   
   /* in case of any error, we use all the interfaces present */

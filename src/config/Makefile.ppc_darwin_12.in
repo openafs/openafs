@@ -10,7 +10,6 @@ XCFLAGS=-traditional-cpp
 #MT_CC=cc
 KROOT=
 KINCLUDES=-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers
-#SHARE_LDFLAGS =
 LWP_OPTMZ=-g
 OPTMZ=-g
 DBG=-g

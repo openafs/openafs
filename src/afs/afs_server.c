@@ -32,7 +32,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_server.c,v 1.1.1.12 2002/05/10 23:43:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_server.c,v 1.1.1.13 2002/09/26 18:57:56 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -44,9 +44,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_server.c,v 1.1.1.12 2002/05/10 
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN60_ENV)
 #include <netinet/in_var.h>
 #endif /* AFS_HPUX110_ENV */
+#ifdef AFS_DARWIN60_ENV
+#include <net/if_var.h>
+#endif
 #endif /* !defined(UKERNEL) */
 
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -1039,7 +1042,7 @@ afsi_SetServerIPRank(sa, addr, subnetmask)
    }
 }
 #else /* AFS_USERSPACE_IP_ADDR */
-#if (! defined(AFS_SUN5_ENV)) && defined(USEIFADDR)
+#if (! defined(AFS_SUN5_ENV)) && !defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
 void
 afsi_SetServerIPRank(sa, ifa)
     struct srvAddr *sa;
@@ -1072,6 +1075,65 @@ afsi_SetServerIPRank(sa, ifa)
 	    t = MAXDEFRANK;
 	else 
 	    t = MED + (PPWEIGHT << ifa->ia_ifp->if_metric);
+	if (sa->sa_iprank > t)
+	    sa->sa_iprank = t;
+    }
+#endif /* IFF_POINTTOPOINT */
+}
+#endif /*(!defined(AFS_SUN5_ENV)) && defined(USEIFADDR)*/
+#if defined(AFS_DARWIN60_ENV) && defined(USEIFADDR)
+#ifndef afs_min
+#define afs_min(A,B) ((A)<(B)) ? (A) : (B)
+#endif
+void
+afsi_SetServerIPRank(sa, ifa)
+    struct srvAddr *sa;
+    struct ifaddr *ifa;
+{
+    struct sockaddr_in *sin;
+    int t;
+    
+   afs_uint32 subnetmask, myAddr, myNet, myDstaddr, mySubnet, netMask;
+   afs_uint32 serverAddr ; 
+
+   if (ifa->ifa_addr->sa_family != AF_INET)
+      return;
+   sin=(struct sockaddr_in *)ifa->ifa_addr;
+   myAddr = ntohl(sin->sin_addr.s_addr);   /* one of my IP addr in host order */
+   serverAddr = ntohl(sa->sa_ip); /* server's IP addr in host order */
+   sin=(struct sockaddr_in *)ifa->ifa_netmask;
+   subnetmask = ntohl(sin->sin_addr.s_addr);/* subnet mask in host order */
+   sin=(struct sockaddr_in *)ifa->ifa_dstaddr;
+   if (sin)
+      myDstaddr=sin->sin_addr.s_addr;
+
+   if      ( IN_CLASSA(myAddr) ) netMask = IN_CLASSA_NET;
+   else if ( IN_CLASSB(myAddr) ) netMask = IN_CLASSB_NET;
+   else if ( IN_CLASSC(myAddr) ) netMask = IN_CLASSC_NET;
+   else                          netMask = 0;
+
+   myNet    =  myAddr & netMask;
+   mySubnet =  myAddr & subnetmask;
+
+   if ( (serverAddr & netMask ) == myNet ) {
+      if ( (serverAddr & subnetmask ) == mySubnet) {
+	 if ( serverAddr == myAddr ) {    /* same machine */
+	   sa->sa_iprank = afs_min(sa->sa_iprank, TOPR);
+	 } else {                           /* same subnet */
+	    sa->sa_iprank = afs_min(sa->sa_iprank, HI + ifa->ifa_metric);
+	 }
+      } else {                               /* same net */
+	 sa->sa_iprank = afs_min(sa->sa_iprank, MED + ifa->ifa_metric);
+      }
+   }
+#ifdef  IFF_POINTTOPOINT
+    /* check for case #4 -- point-to-point link */
+    if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT) &&
+	(myDstaddr == serverAddr))) {
+	if (ifa->ia_ifp->if_metric >= (MAXDEFRANK - MED)/PPWEIGHT) 
+	    t = MAXDEFRANK;
+	else 
+	    t = MED + (PPWEIGHT << ifa->->ifa_metric);
 	if (sa->sa_iprank > t)
 	    sa->sa_iprank = t;
     }
@@ -1235,6 +1297,16 @@ static afs_SetServerPrefs(sa)
 #ifdef AFS_SGI62_ENV
     (void) hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		     (caddr_t)sa, NULL);
+#elif defined(AFS_DARWIN60_ENV)
+    {
+        struct ifnet *ifn;
+        struct ifaddr *ifa;
+        TAILQ_FOREACH(ifn , &ifnet, if_link) {
+            TAILQ_FOREACH(ifa , &ifn->if_addrhead, ifa_link) {
+                afsi_SetServerIPRank(sa, ifa);
+            }
+        }
+    }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     {
         struct in_ifaddr *ifa;

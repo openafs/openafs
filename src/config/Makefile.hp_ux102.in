@@ -31,6 +31,6 @@ LD=/bin/ld
 LEX=/opt/langtools/bin/lex
 DBM=/lib/libndbm.a
 PAM_CFLAGS=+DA1.0 +z -Wl,+k
-SHARE_LDFLAGS=-b -Bsymbolic
+SHLIB_LDFLAGS=-b -Bsymbolic
 PAMLIBS=/usr/lib/libpam.1
 YACC=/opt/langtools/bin/yacc

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.10 2002/06/10 11:48:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.11 2002/09/26 19:09:14 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -914,16 +914,19 @@ h_Enumerate(proc, param)
     free((void *)held);
 } /*h_Enumerate*/
 
-/* h_Enumerate_r: Calls (*proc)(host, held, param) for at least each host in
- * the at the start of the enumeration (perhaps more).  Hosts may be deleted
- * (have delete flag set); ditto for clients.  (*proc) is always called with
+/* h_Enumerate_r (revised):
+ * Calls (*proc)(host, held, param) for each host in hostList, starting
+ * at enumstart
+ * Hosts may be deleted (have delete flag set); ditto for clients.
+ * (*proc) is always called with
  * host h_held() and the global host lock (H_LOCK) locked.The hold state of the
  * host with respect to this lwp is passed to (*proc) as the param held.
  * The proc should return 0 if the host should be released, 1 if it should
  * be held after enumeration.
  */
-h_Enumerate_r(proc, param)
+h_Enumerate_r(proc, enumstart, param)
     int (*proc)();
+    struct host* enumstart;
     char *param;
 
 {
@@ -933,15 +936,14 @@ h_Enumerate_r(proc, param)
     if (hostCount == 0) {
 	return;
     }
-    for (host = hostList ; host ; host = host->next) {
+    for (host = enumstart ; host ; host = host->next) {
 	if (!(held = h_Held_r(host)))
 	    h_Hold_r(host);
 	held = (*proc)(host, held, param);
 	if (!held)
 	    h_Release_r(host);/* this might free up the host */
     }
-} /*h_Enumerate*/
-
+} /*h_Enumerate_r*/
 
 /* Host is returned held */
 struct host *h_GetHost_r(tcon)

@@ -42,7 +42,9 @@ enum vcexcl { EXCL, NONEXCL } ;
 /* 
  * Time related macros
  */
+#ifndef AFS_DARWIN60_ENV
 extern struct timeval time;
+#endif
 #define osi_Time() (time.tv_sec)
 #define afs_hz      hz
 

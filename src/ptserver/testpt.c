@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/testpt.c,v 1.1.1.8 2001/10/14 18:06:14 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/testpt.c,v 1.1.1.9 2002/09/26 19:07:29 hartmans Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -917,6 +917,9 @@ static int MyBeforeProc (as, arock)
 	    memcpy(&cellinfo.hostAddr[i].sin_addr, th->h_addr, sizeof(afs_int32));
 	    cellinfo.hostAddr[i].sin_family = AF_INET;
 	    cellinfo.hostAddr[i].sin_port = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	    cellinfo.hostAddr[i].sin_len = sizeof(struct sockaddr_in);
+#endif
 	}
 	cellinfo.numServers = i;
 	strcpy (cellinfo.name, lcell);

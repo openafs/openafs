@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.10 2002/08/02 04:29:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.11 2002/09/26 18:58:22 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -37,7 +37,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.10 2
 static int GetFlockCount(struct vcache *avc, struct vrequest *areq);
 
 void lockIdSet(flock, slp, clid)
-   int clid;  /* non-zero on SGI, OSF, SunOS */
+   int clid;  /* non-zero on SGI, OSF, SunOS, Darwin, xBSD *//* XXX ptr type */
     struct SimpleLocks *slp;
     struct AFS_FLOCK *flock;
 {
@@ -175,10 +175,11 @@ static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
       }
 #endif
       if ((flock1->l_pid == alp->pid) || 
-#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
 	  (!onlymine && (flock1->l_pid == getppid()))
 #else
-#if defined(AFS_SGI65_ENV)
+#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) 
+          /* XXX check this. used to be *only* irix for some reason. */ 
 	  (!onlymine && (flock1->l_pid == clid))
 #else
 	  (!onlymine && (flock1->l_pid == procp->p_ppid))
@@ -886,11 +887,7 @@ afs_xflock () {
     uap = (struct a *)args;
     getf(&fd, uap->fd, FILE_FLAGS_NULL, &u.u_file_state);
 #else /* AFS_OSF_ENV */
-#if defined(AFS_FBSD_ENV)
     uap = (struct a *)u.u_ap;
-#else
-    uap = (struct a *)u.u_ap;
-#endif /* AFS_FBSD_ENV */
     fd = getf(uap->fd);
 #endif
     if (!fd) {

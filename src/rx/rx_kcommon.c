@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.12 2002/06/10 11:47:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.13 2002/09/26 19:07:36 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -368,7 +368,11 @@ register struct rx_peer *pp;
       pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
+#ifdef AFS_DARWIN60_ENV
+    struct ifaddr *ifad = (struct ifaddr *) 0;
+#else
     struct in_ifaddr *ifad = (struct in_ifaddr *) 0;
+#endif
     struct ifnet *ifn;
 
     /* At some time we need to iterate through rxi_FindIfnet() to find the
@@ -645,7 +649,25 @@ int rxi_GetIFInfo()
     }
    return different;
 }
+#ifdef AFS_DARWIN60_ENV
+/* Returns ifnet which best matches address */
+struct ifnet *
+rxi_FindIfnet(addr, pifad) 
+     afs_uint32 addr;
+     struct ifaddr **pifad;
+{
+  struct sockaddr_in s;
 
+  if (numMyNetAddrs == 0)
+    (void) rxi_GetIFInfo();
+
+  s.sin_family=AF_INET;
+  s.sin_addr.s_addr=addr;
+  *pifad=ifa_ifwithnet((struct sockaddr *)&s);
+ done:
+  return (*pifad ?  (*pifad)->ifa_ifp : NULL );
+}
+#else
 /* Returns ifnet which best matches address */
 struct ifnet *
 rxi_FindIfnet(addr, pifad) 
@@ -710,6 +732,7 @@ rxi_FindIfnet(addr, pifad)
  done:
   return (*pifad ?  (*pifad)->ia_ifp : NULL );
 }
+#endif
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !SUN5 && !SGI62 */
 
@@ -766,6 +789,9 @@ struct osi_socket *rxk_NewSocket(short aport)
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = aport;
     myaddr.sin_addr.s_addr = 0;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    myaddr.sin_len = sizeof(myaddr);
+#endif
 
 #ifdef AFS_HPUX110_ENV
     bindnam = allocb_wait((addrsize+SO_MSGOFFSET+1), BPRI_MED);
@@ -792,7 +818,6 @@ struct osi_socket *rxk_NewSocket(short aport)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    myaddr.sin_len = sizeof(myaddr);
 #if defined(AFS_XBSD_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
 #else
@@ -1025,7 +1050,10 @@ void rxk_Listener(void)
 #ifdef AFS_SUN5_ENV
     rxk_ListenerPid = ttoproc(curthread)->p_pidp->pid_id;
 #endif /* AFS_SUN5_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#ifdef AFS_FBSD_ENV
+    rxk_ListenerPid = curproc->p_pid;
+#endif /* AFS_FBSD_ENV */
+#if defined(AFS_DARWIN_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)

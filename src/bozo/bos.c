@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bos.c,v 1.1.1.9 2001/10/14 18:04:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bos.c,v 1.1.1.10 2002/09/26 19:04:56 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stdlib.h>
@@ -1828,7 +1828,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     add_std_args (ts);
 
-    ts = cmd_CreateSyntax("restart", Restart, 0, "restart all processes");
+    ts = cmd_CreateSyntax("restart", Restart, 0, "restart processes");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-instance", CMD_LIST, CMD_OPTIONAL, "instances");
     cmd_AddParm(ts, "-bosserver", CMD_FLAG, CMD_OPTIONAL, "restart bosserver");

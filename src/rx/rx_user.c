@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_user.c,v 1.1.1.6 2001/09/11 14:34:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_user.c,v 1.1.1.7 2002/09/26 19:07:39 hartmans Exp $");
 
 # include <sys/types.h>
 # include <errno.h>
@@ -120,6 +120,9 @@ osi_socket rxi_GetUDPSocket(u_short port)
     taddr.sin_addr.s_addr = 0;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short)port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
 #define MAX_RX_BINDS 10
     for (binds=0; binds<MAX_RX_BINDS; binds++) {
       if (binds) rxi_Delay (10);

@@ -35,7 +35,7 @@ AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
           ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a \
 	  ${TOP_LIBDIR}/util.a
 
-LDFLAGS = ${SHARE_LDFLAGS}
+LDFLAGS = ${SHLIB_LDFLAGS}
    LIBS = ${TOP_LIBDIR}/libkauth.a ${LIBSA} ${TOP_LIBDIR}/libauth.a \
 	  ${AFSLIBS} ${PAMLIBS} @LIB_AFSDB@
   KLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${LIBSA} ${TOP_LIBDIR}/libauth.krb.a \

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dsvs.c,v 1.1.1.5 2001/09/11 14:31:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dsvs.c,v 1.1.1.6 2002/09/26 19:05:04 hartmans Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -151,6 +151,9 @@ int bc_ParseHost(aname, asockaddr)
 	/*
 	 * Four chunks were read, so we assume success.  Construct the socket.
 	 */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	asockaddr->sin_len=sizeof(struct sockaddr_in);
+#endif
 	asockaddr->sin_family = AF_INET;
 	asockaddr->sin_port   = 0;
 	addr = (b1<<24) | (b2<<16) | (b3<<8) | b4;
@@ -180,6 +183,9 @@ int bc_ParseHost(aname, asockaddr)
     /*
      * We found a mapping; construct the socket.
      */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    asockaddr->sin_len=sizeof(struct sockaddr_in);
+#endif
     asockaddr->sin_family = AF_INET;
     asockaddr->sin_port   = 0;
     memcpy(&tmp1, th->h_addr, sizeof(afs_int32));

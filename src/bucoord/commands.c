@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/commands.c,v 1.1.1.6 2001/09/11 14:31:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/commands.c,v 1.1.1.7 2002/09/26 19:05:02 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -325,6 +325,9 @@ int EvalVolumeSet2(aconfig, avs, avols, uclient)
 	      tvd->server.sin_addr.s_addr = entries[e].serverNumber[ei];
 	      tvd->server.sin_port        = 0; /* default FS port */
 	      tvd->server.sin_family      = AF_INET;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	      tvd->server.sin_len         = sizeof(struct sockaddr_in);
+#endif 
 
 	      /* String tvd off of partition struct */
 	      tvd->next  = ps->vdlist;

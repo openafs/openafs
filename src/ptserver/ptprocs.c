@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.9 2002/05/11 00:00:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.10 2002/09/26 19:07:27 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -360,7 +360,7 @@ struct prdebugentry *aentry;
     code = pr_ReadEntry(tt, 0, apos, aentry);
     if (code) ABORT_WITH(tt,code);
 
-    if (!AccessOK (tt, cid, aentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
+    if (!AccessOK (tt, cid, 0, PRP_STATUS_MEM, 0))
         ABORT_WITH(tt,PRPERM);
 
     /* Since prdebugentry is in the form of a prentry not a coentry, we will
@@ -524,7 +524,8 @@ afs_int32 idToName (call, aid, aname)
 
     /* leave this first for rpc stub */
     size = aid->idlist_len;
-    if (size <= 0) size = 0;
+    if (size == 0) return 0;
+    if (size <  0) return PRTOOMANY;
     aname->namelist_val = (prname *)malloc(size*PR_MAXNAMELEN);
     aname->namelist_len = 0;
     if (aname->namelist_val == 0) return PRNOMEM;

@@ -12,6 +12,7 @@ XCFLAGS= -D_NO_PROTO -DOSF
 MT_CFLAGS=-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=
+SHLIB_LINKER=${CC} -all -shared -expect_unresolved "*"
 XLIBS=@LIB_AFSDB@
 MTLIBS=-pthread -lpthread -lmach -lexc -lc
 NON_SHARED=-non_shared
@@ -23,6 +24,7 @@ CSTATIC=-non_shared
 RANLIB=/bin/true
 INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 CP=cp
+RM=rm
 
 #this is for the vol package
 FS_CONV_OSF40D         = fs_conv_dux40D

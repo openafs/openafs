@@ -12,6 +12,7 @@ XCFLAGS= -D_NO_PROTO -DOSF
 MT_CFLAGS=-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS=
+SHLIB_LINKER=${CC} -all -shared -expect_unresolved "*"
 XLIBS=@LIB_AFSDB@
 MTLIBS=-pthread -lpthread -lmach -lexc -lc
 NON_SHARED=-non_shared
@@ -20,6 +21,7 @@ LWP_OPTMZ=-O2
 OPTMZ=-O2
 DBG=-g3
 CP=cp
+RM=rm
 CSTATIC=-non_shared
 RANLIB=/bin/true
 INSTALL=${TOP_SRCDIR}/pinstall/pinstall

@@ -57,9 +57,6 @@ AC_ISC_POSIX
 AC_MINIX
 
 dnl Various compiler setup.
-AC_C_INLINE
-AC_C_CONST
-AC_PROG_CC
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
@@ -143,8 +140,16 @@ case $system in
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
+		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
+		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
+		  AC_DEFINE(EXPORTED_TASKLIST_LOCK)
+		 fi
+		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
+		  AC_DEFINE(COMPLETION_H_EXISTS)
+		 fi
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID)
 		 fi
@@ -171,6 +176,11 @@ case $system in
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
+                ;;
+        *-sunos*)
+		MKAFS_OSTYPE=SUNOS
+		enable_kernel_module=no
+                AC_MSG_RESULT(sun4)
                 ;;
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
@@ -228,6 +238,18 @@ else
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
+		i?86-*-freebsd4.3*)
+			AFS_SYSNAME="i386_fbsd_43"
+			;;
+		i?86-*-freebsd4.4*)
+			AFS_SYSNAME="i386_fbsd_44"
+			;;
+		i?86-*-freebsd4.5*)
+			AFS_SYSNAME="i386_fbsd_45"
+			;;
+		i?86-*-freebsd4.6*)
+			AFS_SYSNAME="i386_fbsd_46"
+			;;
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;
@@ -258,6 +280,12 @@ else
 		powerpc-apple-darwin5.5*)
 			AFS_SYSNAME="ppc_darwin_14"
 			;;
+		powerpc-apple-darwin6.0*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.1*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			;;
@@ -272,6 +300,9 @@ else
 			;;
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
+			;;
+		sparc-sun-sunos4*)
+			AFS_SYSNAME="sun4_413"
 			;;
 		i386-pc-solaris2.7)
 			AFS_SYSNAME="sunx86_57"
@@ -345,7 +376,17 @@ case $AFS_SYSNAME in
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 		;;
 esac
-
+AC_CACHE_VAL(ac_cv_sockaddr_len,
+[
+AC_MSG_CHECKING([if struct sockaddr has sa_len field])
+AC_TRY_COMPILE( [#include <sys/types.h>
+#include <sys/socket.h>],
+[struct sockaddr *a;
+a->sa_len=0;], ac_cv_sockaddr_len=yes, ac_cv_sockaddr_len=no)
+AC_MSG_RESULT($ac_cv_sockaddr_len)])
+if test "$ac_cv_sockaddr_len" = "yes"; then
+   AC_DEFINE(STRUCT_SOCKADDR_HAS_SA_LEN)
+fi
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
 else
@@ -476,10 +517,11 @@ AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname)
+AC_CHECK_FUNCS(setprogname getprogname sigaction)
+AC_CHECK_TYPE(ssize_t, int)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

@@ -38,7 +38,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.13 2002/08/02 04:28:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.14 2002/09/26 18:57:58 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -70,7 +70,7 @@ extern struct vcache *afs_globalVp;
 #ifdef AFS_OSF_ENV
 extern struct mount *afs_globalVFS;
 extern struct vnodeops Afs_vnodeops;
-#elif defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern struct mount *afs_globalVFS;
 #else
 extern struct vfs *afs_globalVFS;
@@ -490,6 +490,7 @@ restart:
     cur = head;
     while ((cur = cur->next) != head) {
 	dentry = list_entry(cur, struct dentry, d_alias);
+#ifdef notdef
 	if (DCOUNT(dentry)) {
 	    this_parent = dentry;
 	repeat:
@@ -528,6 +529,7 @@ restart:
 		goto resume;
 	    }
 	}
+#endif
 
 	if (!DCOUNT(dentry)) {
 	    AFS_GUNLOCK();
@@ -907,6 +909,14 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     tvc->v.v_freelist.tqe_prev=(struct vnode **)0xdeadb;
     /*tvc->vrefCount++;*/
 #endif 
+#ifdef AFS_FBSD_ENV
+    lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
+    cache_purge(AFSTOV(tvc)); 
+    tvc->v.v_data=tvc;
+    tvc->v.v_tag=VT_AFS;
+    tvc->v.v_usecount++; /* steal an extra ref for now so vfree never happens */
+                         /* This extra ref is dealt with above... */
+#endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
      */
@@ -1529,6 +1539,9 @@ afs_ProcessFS(avc, astat, areq)
 #ifdef AFS_LINUX22_ENV
     vcache2inode(avc);    /* Set the inode attr cache */
 #endif
+#ifdef AFS_DARWIN_ENV
+   osi_VM_Setup(avc,1);
+#endif
 
 } /*afs_ProcessFS*/
 
@@ -1670,7 +1683,7 @@ loop:
 #endif
 	ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_DARWIN_ENV
-        osi_VM_Setup(tvc);
+        osi_VM_Setup(tvc,0);
 #endif
 	return tvc;
     }
@@ -1735,9 +1748,6 @@ loop:
     }
 
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN_ENV
-    osi_VM_Setup(avc);
-#endif
     return tvc;
 
 } /*afs_GetVCache*/
@@ -1893,9 +1903,6 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_ProcessFS(tvc, &OutStatus, areq);
 
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN_ENV
-    osi_VM_Setup(tvc);
-#endif
     return tvc;
 
 }
@@ -2465,7 +2472,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
 #endif
 #ifdef AFS_DARWIN_ENV
     if (tvc)
-        osi_VM_Setup(tvc);
+        osi_VM_Setup(tvc, 0);
 #endif
     return tvc;
 } /*afs_FindVCache*/

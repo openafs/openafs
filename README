@@ -32,8 +32,9 @@ A. Creating the proper directory structure.
 
       alpha_dux40
       alpha_dux50 (only tested on 5.0A)
+      i386_fbsd42 (gmake is required to build for FreeBSD)	
       i386_linux22
-      i386_linux24 (only tested with 2.4.0 kernel)
+      i386_linux24 
       rs_aix42
       sgi_65 (file server not tested)
       sun4x_56
@@ -43,8 +44,13 @@ A. Creating the proper directory structure.
       ppc_darwin_13
       ppc_linux22
       ppc_linux24
-      alpha_linux22 (DES does not work, will require one more change to
-				compile)
+      alpha_linux22
+      alpha_linux24
+      ia64_linux24
+      sparc_linux22
+      sparc_linux24
+      sparc64_linux22
+      sparc64_linux24
       hp_ux110 (No client support, but db servers and utilities work)
       hp_ux102 (No client support, but db servers and utilities work)
 
