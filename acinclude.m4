@@ -228,6 +228,9 @@ else
 		sparc-sun-solaris2.8)
 			AFS_SYSNAME="sun4x_58"
 			;;
+		sparc-sun-solaris2.9)
+			AFS_SYSNAME="sun4x_59"
+			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
 			;;
