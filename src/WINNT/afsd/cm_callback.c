@@ -747,14 +747,15 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	struct cm_req *reqp, long flags)
 {
 	long code;
-        cm_conn_t *connp;
-        AFSFetchStatus afsStatus;
-        AFSVolSync volSync;
-        AFSCallBack callback;
-        AFSFid tfid;
-        cm_callbackRequest_t cbr;
-        int mustCall;
-        long sflags;
+    cm_conn_t *connp;
+    AFSFetchStatus afsStatus;
+    AFSVolSync volSync;
+    AFSCallBack callback;
+    AFSFid tfid;
+    cm_callbackRequest_t cbr;
+    int mustCall;
+    long sflags;
+    cm_fid_t sfid;
 
 #ifdef AFS_FREELANCE_CLIENT
 	// yj
@@ -762,14 +763,14 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	// specially. We need to fetch the status by calling
 	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
 	if (cm_freelanceEnabled &&
-          scp->fid.cell==0x1 &&
+        scp->fid.cell==0x1 &&
 		scp->fid.volume==0x20000001 &&
 		scp->fid.unique==0x1 &&
 		scp->fid.vnode==0x1) {
 		// Start by indicating that we're in the process
 		// of fetching the callback
 
-	        lock_ObtainMutex(&cm_Freelance_Lock);
+        lock_ObtainMutex(&cm_Freelance_Lock);
 		cm_fakeGettingCallback = 1;
 		lock_ReleaseMutex(&cm_Freelance_Lock);
 
@@ -798,41 +799,42 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	while (1) {
 		if (!mustCall && cm_HaveCallback(scp)) return 0;
 
-                /* turn off mustCall, since it has now forced us past the check above */
-                mustCall = 0;
+        /* turn off mustCall, since it has now forced us past the check above */
+        mustCall = 0;
 
-                /* otherwise, we have to make an RPC to get the status */
+        /* otherwise, we have to make an RPC to get the status */
 		sflags = CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK;
-                cm_SyncOp(scp, NULL, NULL, NULL, 0, sflags);
-                cm_StartCallbackGrantingCall(scp, &cbr);
+        cm_SyncOp(scp, NULL, NULL, NULL, 0, sflags);
+        cm_StartCallbackGrantingCall(scp, &cbr);
+        sfid = scp->fid;
 		lock_ReleaseMutex(&scp->mx);
 		
 		/* now make the RPC */
 		osi_Log1(afsd_logp, "CALL FetchStatus vp %x", (long) scp);
-	        do {
-			code = cm_Conn(&scp->fid, userp, reqp, &connp);
-	                if (code) continue;
+        do {
+			code = cm_Conn(&sfid, userp, reqp, &connp);
+            if (code) continue;
 		
-	                code = RXAFS_FetchStatus(connp->callp, &tfid,
-				&afsStatus, &callback, &volSync);
+            code = RXAFS_FetchStatus(connp->callp, &tfid,
+                                     &afsStatus, &callback, &volSync);
 
-		} while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
-				    &cbr, code));
-                code = cm_MapRPCError(code, reqp);
+		} while (cm_Analyze(connp, userp, reqp, &sfid, &volSync,
+                            &cbr, code));
+        code = cm_MapRPCError(code, reqp);
 		osi_Log0(afsd_logp, "CALL FetchStatus DONE");
 
 		lock_ObtainMutex(&scp->mx);
-                cm_SyncOpDone(scp, NULL, sflags);
+        cm_SyncOpDone(scp, NULL, sflags);
 		if (code == 0) {
-	                cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
-	                cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
-		}
-                else
-                	cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
+            cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
+            cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
+		}   
+        else
+            cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
 
-                /* now check to see if we got an error */
-                if (code) return code;
-        }
+        /* now check to see if we got an error */
+        if (code) return code;
+    }
 }
 
 /* called periodically by cm_daemon to shut down use of expired callbacks */

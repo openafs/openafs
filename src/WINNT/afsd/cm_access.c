@@ -118,43 +118,43 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
 {
 	long code;
 	cm_fid_t tfid;
-        cm_scache_t *aclScp;
+    cm_scache_t *aclScp;
 
 	/* pretty easy: just force a pass through the fetch status code */
         
 	osi_Log2(afsd_logp, "GetAccess scp %x user %x", scp, up);
 
-        /* first, start by finding out whether we have a directory or something
+    /* first, start by finding out whether we have a directory or something
 	 * else, so we can find what object's ACL we need.
-         */
-        code = cm_SyncOp(scp, NULL, up, reqp, 0, CM_SCACHESYNC_GETSTATUS
-        		| CM_SCACHESYNC_NEEDCALLBACK);
+     */
+    code = cm_SyncOp(scp, NULL, up, reqp, 0, CM_SCACHESYNC_GETSTATUS
+                      | CM_SCACHESYNC_NEEDCALLBACK);
                         
-        if (code) return code;
+    if (code) return code;
         
-        if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
 		/* not a dir, use parent dir's acl */
 		tfid.cell = scp->fid.cell;
-	        tfid.volume = scp->fid.volume;
-	        tfid.vnode = scp->parentVnode;
-	        tfid.unique = scp->parentUnique;
+        tfid.volume = scp->fid.volume;
+        tfid.vnode = scp->parentVnode;
+        tfid.unique = scp->parentUnique;
 		lock_ReleaseMutex(&scp->mx);
 		code = cm_GetSCache(&tfid, &aclScp, up, reqp);
-                if (code) {
+        if (code) {
 			lock_ObtainMutex(&scp->mx);
-                        return code;
-                }
+            return code;
+        }
                 
 		osi_Log1(afsd_logp, "GetAccess parent %x", aclScp);
 		lock_ObtainMutex(&aclScp->mx);
-                code = cm_GetCallback(aclScp, up, reqp, 1);
-                lock_ReleaseMutex(&aclScp->mx);
-                cm_ReleaseSCache(aclScp);
-                lock_ObtainMutex(&scp->mx);
-        }
-        else {
+        code = cm_GetCallback(aclScp, up, reqp, 1);
+        lock_ReleaseMutex(&aclScp->mx);
+        cm_ReleaseSCache(aclScp);
+        lock_ObtainMutex(&scp->mx);
+    } 
+    else {
 		code = cm_GetCallback(scp, up, reqp, 1);
-        }
+    }
 
 	return code;
 }

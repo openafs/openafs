@@ -434,37 +434,37 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **retscp)
 {
-        char *tp;
-        long code;
-        cm_dirEntry_t *dep;
-        cm_buf_t *bufferp;
-        long temp;
-        osi_hyper_t dirLength;
-        osi_hyper_t bufferOffset;
-        osi_hyper_t curOffset;
-        osi_hyper_t thyper;
-        long entryInDir;
-        long entryInBuffer;
+    char *tp;
+    long code;
+    cm_dirEntry_t *dep;
+    cm_buf_t *bufferp;
+    long temp;
+    osi_hyper_t dirLength;
+    osi_hyper_t bufferOffset;
+    osi_hyper_t curOffset;
+    osi_hyper_t thyper;
+    long entryInDir;
+    long entryInBuffer;
 	cm_pageHeader_t *pageHeaderp;
-        int slotInPage;
-        long nextEntryCookie;
-        int numDirChunks;	/* # of 32 byte dir chunks in this entry */
+    int slotInPage;
+    long nextEntryCookie;
+    int numDirChunks;	/* # of 32 byte dir chunks in this entry */
         
-        /* get the directory size */
+    /* get the directory size */
 	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, userp, reqp, PRSFS_LOOKUP,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) {
 		lock_ReleaseMutex(&scp->mx);
-                return code;
-        }
+        return code;
+    }
         
-        if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
+    if (scp->fileType != CM_SCACHETYPE_DIRECTORY) {
 		lock_ReleaseMutex(&scp->mx);
 		return CM_ERROR_NOTDIR;
-        }
+    }
 
-	if (  retscp ) 			/* if this is a lookup call */
+	if (retscp) 			/* if this is a lookup call */
 	{
 		cm_lookupSearch_t*	sp = parmp;
         int casefold = sp->caseFold;
@@ -484,163 +484,163 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
 	 * XXX We only get the length once.  It might change when we drop the
 	 * lock.
 	 */
-        dirLength = scp->length;
+    dirLength = scp->length;
 
 	lock_ReleaseMutex(&scp->mx);
 
-        bufferp = NULL;
-        bufferOffset.LowPart = bufferOffset.HighPart = 0;
+    bufferp = NULL;
+    bufferOffset.LowPart = bufferOffset.HighPart = 0;
 	if (startOffsetp)
-        	curOffset = *startOffsetp;
+        curOffset = *startOffsetp;
 	else {
-	        curOffset.HighPart = 0;
-	        curOffset.LowPart = 0;
-	}
+        curOffset.HighPart = 0;
+        curOffset.LowPart = 0;
+	}   
 
-        while (1) {
+    while (1) {
 		/* make sure that curOffset.LowPart doesn't point to the first
-                 * 32 bytes in the 2nd through last dir page, and that it
+         * 32 bytes in the 2nd through last dir page, and that it
 		 * doesn't point at the first 13 32-byte chunks in the first
 		 * dir page, since those are dir and page headers, and don't
 		 * contain useful information.
-                 */
+         */
 		temp = curOffset.LowPart & (2048-1);
-                if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
-			/* we're in the first page */
-                	if (temp < 13*32) temp = 13*32;
+        if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
+            /* we're in the first page */
+            if (temp < 13*32) temp = 13*32;
 		}
 		else {
 			/* we're in a later dir page */
-                        if (temp < 32) temp = 32;
-                }
+            if (temp < 32) temp = 32;
+        }
 		
-                /* make sure the low order 5 bits are zero */
-                temp &= ~(32-1);
+        /* make sure the low order 5 bits are zero */
+        temp &= ~(32-1);
                 
-                /* now put temp bits back ito curOffset.LowPart */
-                curOffset.LowPart &= ~(2048-1);
-                curOffset.LowPart |= temp;
+        /* now put temp bits back ito curOffset.LowPart */
+        curOffset.LowPart &= ~(2048-1);
+        curOffset.LowPart |= temp;
 
-                /* check if we've passed the dir's EOF */
-                if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength))
+        /* check if we've passed the dir's EOF */
+        if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength))
 			break;
                 
-                /* see if we can use the bufferp we have now; compute in which
-		 * page the current offset would be, and check whether that's
+        /* see if we can use the bufferp we have now; compute in which
+         * page the current offset would be, and check whether that's
 		 * the offset of the buffer we have.  If not, get the buffer.
 		 */
-                thyper.HighPart = curOffset.HighPart;
-                thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
-                if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
+        thyper.HighPart = curOffset.HighPart;
+        thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
+        if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
 			/* wrong buffer */
-                        if (bufferp) {
+            if (bufferp) {
 				lock_ReleaseMutex(&bufferp->mx);
-                        	buf_Release(bufferp);
-                                bufferp = NULL;
+                buf_Release(bufferp);
+                bufferp = NULL;
 			}
 
 			lock_ObtainRead(&scp->bufCreateLock);
-                        code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, &bufferp);
 			lock_ReleaseRead(&scp->bufCreateLock);
 
 			lock_ObtainMutex(&bufferp->mx);
-                        if (code) break;
-                        bufferOffset = thyper;
+            if (code) break;
+            bufferOffset = thyper;
 
-                        /* now get the data in the cache */
-                        while (1) {
-                        	lock_ObtainMutex(&scp->mx);
+            /* now get the data in the cache */
+            while (1) {
+                lock_ObtainMutex(&scp->mx);
 				code = cm_SyncOp(scp, bufferp, userp, reqp,
-					PRSFS_LOOKUP,
-                                	CM_SCACHESYNC_NEEDCALLBACK
-					| CM_SCACHESYNC_READ
-					| CM_SCACHESYNC_BUFLOCKED);
+                                 PRSFS_LOOKUP,
+                                 CM_SCACHESYNC_NEEDCALLBACK
+                                 | CM_SCACHESYNC_READ
+                                 | CM_SCACHESYNC_BUFLOCKED);
 				if (code) {
 					lock_ReleaseMutex(&scp->mx);
 					break;
 				}
                                 
-                                if (cm_HaveBuffer(scp, bufferp, 1)) {
+                if (cm_HaveBuffer(scp, bufferp, 1)) {
 					lock_ReleaseMutex(&scp->mx);
 					break;
 				}
                                 
-                                /* otherwise, load the buffer and try again */
-                                lock_ReleaseMutex(&bufferp->mx);
-                                code = cm_GetBuffer(scp, bufferp, NULL, userp,
-						    reqp);
-                                lock_ReleaseMutex(&scp->mx);
-                                lock_ObtainMutex(&bufferp->mx);
-                                if (code) break;
-                        }
-                        if (code) {
+                /* otherwise, load the buffer and try again */
+                lock_ReleaseMutex(&bufferp->mx);
+                code = cm_GetBuffer(scp, bufferp, NULL, userp,
+                                    reqp);
+                lock_ReleaseMutex(&scp->mx);
+                lock_ObtainMutex(&bufferp->mx);
+                if (code) break;
+            }
+            if (code) {
 				lock_ReleaseMutex(&bufferp->mx);
 				buf_Release(bufferp);
-                                bufferp = NULL;
-                        	break;
+                bufferp = NULL;
+                break;
 			}
-                }	/* if (wrong buffer) ... */
+        }	/* if (wrong buffer) ... */
                 
-                /* now we have the buffer containing the entry we're interested
-		 * in; copy it out if it represents a non-deleted entry.
-                 */
+        /* now we have the buffer containing the entry we're interested
+         * in; copy it out if it represents a non-deleted entry.
+         */
 		entryInDir = curOffset.LowPart & (2048-1);
-                entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
+        entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
 
 		/* page header will help tell us which entries are free.  Page
 		 * header can change more often than once per buffer, since
 		 * AFS 3 dir page size may be less than (but not more than) a
 		 * buffer package buffer.
-                 */
+         */
 		/* only look intra-buffer */
 		temp = curOffset.LowPart & (buf_bufferSize - 1);
-                temp &= ~(2048 - 1);	/* turn off intra-page bits */
+        temp &= ~(2048 - 1);	/* turn off intra-page bits */
 		pageHeaderp = (cm_pageHeader_t *) (bufferp->datap + temp);
 
 		/* now determine which entry we're looking at in the page.  If
 		 * it is free (there's a free bitmap at the start of the dir),
 		 * we should skip these 32 bytes.
-                 */
-                slotInPage = (entryInDir & 0x7e0) >> 5;
-                if (!(pageHeaderp->freeBitmap[slotInPage>>3]
-			& (1 << (slotInPage & 0x7)))) {
+         */
+        slotInPage = (entryInDir & 0x7e0) >> 5;
+        if (!(pageHeaderp->freeBitmap[slotInPage>>3]
+               & (1 << (slotInPage & 0x7)))) {
 			/* this entry is free */
-                        numDirChunks = 1;	/* only skip this guy */
-                        goto nextEntry;
-                }
+            numDirChunks = 1;	/* only skip this guy */
+            goto nextEntry;
+        }
 
 		tp = bufferp->datap + entryInBuffer;
-                dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
+        dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
 
-                /* while we're here, compute the next entry's location, too,
+        /* while we're here, compute the next entry's location, too,
 		 * since we'll need it when writing out the cookie into the
 		 * dir listing stream.
-                 */
+         */
 		numDirChunks = cm_NameEntries(dep->name, NULL);
 		
-                /* compute the offset of the cookie representing the next entry */
-                nextEntryCookie = curOffset.LowPart
+        /* compute the offset of the cookie representing the next entry */
+        nextEntryCookie = curOffset.LowPart
 			+ (CM_DIR_CHUNKSIZE * numDirChunks);
 
-                if (dep->fid.vnode != 0) {
+        if (dep->fid.vnode != 0) {
 			/* this is one of the entries to use: it is not deleted */
 			code = (*funcp)(scp, dep, parmp, &curOffset);
-                        if (code) break;
+            if (code) break;
 		}	/* if we're including this name */
                 
-nextEntry:
-                /* and adjust curOffset to be where the new cookie is */
+      nextEntry:
+        /* and adjust curOffset to be where the new cookie is */
 		thyper.HighPart = 0;
-                thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
-                curOffset = LargeIntegerAdd(thyper, curOffset);
-        }		/* while copying data for dir listing */
+        thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
+        curOffset = LargeIntegerAdd(thyper, curOffset);
+    }		/* while copying data for dir listing */
 
 	/* release the mutex */
-        if (bufferp) {
+    if (bufferp) {
 		lock_ReleaseMutex(&bufferp->mx);
-        	buf_Release(bufferp);
+        buf_Release(bufferp);
 	}
-        return code;
+    return code;
 }
 
 int cm_NoneUpper(char *s)
@@ -673,7 +673,7 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
 	matchName = dep->name;
 	if (sp->caseFold)
-        	match = cm_stricmp(matchName, sp->searchNamep);
+        match = cm_stricmp(matchName, sp->searchNamep);
 	else
 		match = strcmp(matchName, sp->searchNamep);
 

@@ -3247,7 +3247,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			  | (smb_GetSMBOffsetParm(inp, 20, 1) << 16);
 
 	/* mustBeDir is never set; createOptions directory bit seems to be
-         * more important
+     * more important
 	 */
 	if (createOptions & 1)
 		realDirFlag = 1;
@@ -3357,22 +3357,33 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	dscp = NULL;
 	code = 0;
     /* For an exclusive create, we want to do a case sensitive match for the last component. */
-    if (createDisp == 2 || createDisp == 4) {
+    if (createDisp == 2 || createDisp == 4 || createDisp == 5) {
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
-        if(code == 0) {
+        if (code == 0) {
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
-                             userp, tidPathp, &req, &scp);
+                             userp, &req, &scp);
+            if (code == CM_ERROR_NOSUCHFILE) {
+                code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
+                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
+                if (code == 0 && realDirFlag == 1) {
+					cm_ReleaseSCache(scp);
+                    cm_ReleaseSCache(dscp);
+                    cm_ReleaseUser(userp);
+                    free(realPathp);
+                    return CM_ERROR_EXISTS;
+                }
+            }
         } else
             dscp = NULL;
     } else {
         code = cm_NameI(baseDirp, realPathp, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &scp);
     }
-	
-    if (code == 0) foundscp = TRUE;
-	if (code != 0
-	    || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
+    if (code == 0) 
+		foundscp = TRUE;
+
+	if (!foundscp || (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE))) {
 		/* look up parent directory */
         /* If we are trying to create a path (i.e. multiple nested directories), then we don't *need*
          * the immediate parent.  We have to work our way up realPathp until we hit something that we
@@ -3380,35 +3391,37 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          */
 
         if ( !dscp ) {
-        while(1) {
-            char *tp;
+            while (1) {
+                char *tp;
 
-            code = cm_NameI(baseDirp, spacep->data,
+                code = cm_NameI(baseDirp, spacep->data,
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                              userp, tidPathp, &req, &dscp);
 
-            if (code && 
-                (tp = strrchr(spacep->data,'\\')) &&
-                (createDisp == 2) &&
-                (realDirFlag == 1)) {
-                *tp++ = 0;
-                treeCreate = TRUE;
-                treeStartp = realPathp + (tp - spacep->data);
+                if (code && 
+                     (tp = strrchr(spacep->data,'\\')) &&
+                     (createDisp == 2) &&
+                     (realDirFlag == 1)) {
+                    *tp++ = 0;
+                    treeCreate = TRUE;
+                    treeStartp = realPathp + (tp - spacep->data);
 
-                if (*tp && !smb_IsLegalFilename(tp)) {
-                    if(baseFid != 0) smb_ReleaseFID(baseFidp);
-                    cm_ReleaseUser(userp);
-                    free(realPathp);
-                    return CM_ERROR_BADNTFILENAME;
+                    if (*tp && !smb_IsLegalFilename(tp)) {
+                        if(baseFid != 0) 
+                            smb_ReleaseFID(baseFidp);
+                        cm_ReleaseUser(userp);
+                        free(realPathp);
+                        return CM_ERROR_BADNTFILENAME;
+                    }
                 }
+                else
+                    break;
             }
-            else
-                break;
-        }
         } else
             code = 0;
 
-        if (baseFid != 0) smb_ReleaseFID(baseFidp);
+        if (baseFid != 0) 
+			smb_ReleaseFID(baseFidp);
 
         if (code) {
             osi_Log0(smb_logp,"NTCreateX parent not found");
@@ -3417,7 +3430,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             return code;
         }
 
-        if(treeCreate && dscp->fileType == CM_SCACHETYPE_FILE) {
+        if (treeCreate && dscp->fileType == CM_SCACHETYPE_FILE) {
             /* A file exists where we want a directory. */
             cm_ReleaseSCache(dscp);
             cm_ReleaseUser(userp);
@@ -3425,8 +3438,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             return CM_ERROR_EXISTS;
         }
 
-        if (!lastNamep) lastNamep = realPathp;
-        else lastNamep++;
+        if (!lastNamep) 
+            lastNamep = realPathp;
+        else 
+            lastNamep++;
 
         if (!smb_IsLegalFilename(lastNamep)) {
             cm_ReleaseSCache(dscp);
@@ -3452,7 +3467,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		}
 	}
 	else {
-		if (baseFid != 0) smb_ReleaseFID(baseFidp);
+		if (baseFid != 0) 
+			smb_ReleaseFID(baseFidp);
 	}
 
 	/* if we get here, if code is 0, the file exists and is represented by
@@ -3853,12 +3869,23 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
 	dscp = NULL;
 	code = 0;
-    if (createDisp == 2 || createDisp == 4) {
+    if (createDisp == 2 || createDisp == 4 || createDisp == 5) {
         code = cm_NameI(baseDirp, spacep->data, CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                         userp, tidPathp, &req, &dscp);
         if (code == 0) {
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
-                             userp, tidPathp, &req, &scp);
+                             userp, &req, &scp);
+            if (code == CM_ERROR_NOSUCHFILE) {
+                code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, 
+                                 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, &req, &scp);
+                if (code == 0 && realDirFlag == 1) {
+					cm_ReleaseSCache(scp);
+                    cm_ReleaseSCache(dscp);
+                    cm_ReleaseUser(userp);
+                    free(realPathp);
+                    return CM_ERROR_EXISTS;
+                }
+            }
         } else 
             dscp = NULL;
     } else {

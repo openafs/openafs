@@ -2067,7 +2067,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC0000023L;	/* Buffer too small */
 	}
     else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-        NTStatus = 0xC000049CL; /* Potential file found */
+#ifdef COMMENT
+		NTStatus = 0xC000049CL; /* Potential file found */
+#else
+		NTStatus = 0xC0000035L;	/* Object name collision */
+#endif
     }
 	else {
 		NTStatus = 0xC0982001L;	/* SMB non-specific error */
