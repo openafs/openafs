@@ -2743,7 +2743,7 @@ void print_bkg(kmem)
 	uentry = &afs_brs[i];
 	if (uentry->refCount == 0) break;
 	printf("[%d] vcache=0x%lx, cred=0x%lx, code=%d, refCount=%d, opcode=%d, flags=%x [%lx, %lx, %lx, %lx]\n",
-	       i, uentry->vnode, uentry->cred, uentry->code, uentry->refCount, uentry->opcode, uentry->flags,
+	       i, uentry->vc, uentry->cred, uentry->code, uentry->refCount, uentry->opcode, uentry->flags,
 	       uentry->size_parm[0], uentry->size_parm[1], uentry->ptr_parm[0], uentry->ptr_parm[1]);
 
     }
