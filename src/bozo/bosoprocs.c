@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.2 2001/11/25 23:06:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.3 2001/11/26 00:27:25 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -1165,7 +1165,7 @@ struct bozo_bosEntryStats bozo_bosEntryStats[] = {
     {NULL, 1,1, 0755, 02}, /* AFSDIR_SERVER_LOGS_DIRPATH   */
     {NULL, 1,0, 0700, 07}, /* AFSDIR_SERVER_BACKUP_DIRPATH */
     {NULL, 1,1, 0700, 07}, /* AFSDIR_SERVER_DB_DIRPATH     */
-    {NULL, 1,1, 0700, 07}, /* AFSDIR_SERVER_LOCAL_DIRPATH  */
+    {NULL, 1,1, 0700, 02}, /* AFSDIR_SERVER_LOCAL_DIRPATH  */
     {NULL, 0,1, 0600, 07}, /* AFSDIR_SERVER_KEY_FILEPATH   */
     {NULL, 0,1, 0600, 03}};/* AFSDIR_SERVER_ULIST_FILEPATH */
 int bozo_nbosEntryStats =
