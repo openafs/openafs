@@ -221,16 +221,12 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* AFS_OSF20_ENV */
-#ifdef AFS_64BIT_ENV
-    a_result->Length = tvc->m.Length;
-#else /* AFS_64BIT_ENV */
-#ifdef AFS_64BIT_CLIENT
-    a_result->Length = tvc->m.Length;
-#else /* AFS_64BIT_CLIENT */
+#if !defined(AFS_64BIT_ENV) 
     a_result->Length.high = 0;
     a_result->Length.low = tvc->m.Length;
-#endif /* AFS_64BIT_CLIENT */
-#endif /* AFS_64BIT_ENV */
+#else
+    a_result->Length = tvc->m.Length;
+#endif
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
