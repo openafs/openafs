@@ -85,7 +85,8 @@ VLSERVER_EXECLIBS = \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)

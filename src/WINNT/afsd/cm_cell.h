@@ -30,6 +30,8 @@ extern void cm_InitCell(void);
 
 extern cm_cell_t *cm_GetCell(char *namep, long flags);
 
+extern cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags);
+
 extern cm_cell_t *cm_FindCellByID(long cellID);
 
 extern void cm_ChangeRankCellVLServer(cm_server_t       *tsp);

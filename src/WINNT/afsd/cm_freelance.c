@@ -435,13 +435,24 @@ cm_localMountPoint_t* cm_getLocalMountPoint(int vnode) {
 	return 0;
 }
 
-long cm_FreelanceAddMount(char *filename, char *cellname, char *volume)
+long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t *fidp)
 {
     FILE *fp;
     char hfile[120];
     char line[200];
+    char fullname[200];
     int n;
 
+    /* before adding, verify the cell name; if it is not a valid cell,
+       don't add the mount point */
+    /* major performance issue? */
+    if (!cm_GetCell_Gen(cellname, fullname, CM_FLAG_CREATE))
+      return -1;
+#if 0
+    if (strcmp(cellname, fullname) != 0)   /* no partial matches allowed */
+      return -1;
+#endif
+    
     lock_ObtainMutex(&cm_Freelance_Lock);
 
      cm_GetConfigDir(hfile);
@@ -455,12 +466,17 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume)
      fseek(fp, 0, SEEK_SET);
      fprintf(fp, "%d", n);
      fseek(fp, 0, SEEK_END);
-     fprintf(fp, "%s#%s:%s\n", filename, cellname, volume);
+     fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
      fclose(fp);
      lock_ReleaseMutex(&cm_Freelance_Lock);
 
+     /*cm_reInitLocalMountPoints(&vnode);*/
+     if (fidp) {
+       fidp->unique = 1;
+       fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
+     }
      cm_noteLocalMountPointChange();
-
+     
      return 0;
 }
 

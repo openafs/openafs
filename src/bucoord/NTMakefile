@@ -79,7 +79,8 @@ EXELIBS =\
         $(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib \
+     $(DESTDIR)\lib\cm_dns.obj
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
