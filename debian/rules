@@ -17,6 +17,19 @@ export DH_OPTIONS
 
 # The AFS sysname is determined by a script
 SYS_NAME=$(shell debian/sysname)
+package=openafs
+srcpkg = openafs-module-source
+modulepkg=openafs-module-$(KVERS)
+ifndef KSRC
+KSRC=/usr/src/linux
+endif
+MODDIR=..
+KVERS=`awk '{ if (NR==1) v=$$3; else if (NR==2) p=$$3; else if (NR==3) s=$$3; \
+       else if (NR==4) { e=$$3; exit; } } \
+       END { printf("%s.%s.%s%s\n",v,p,s,e); }' $(KSRC)/Makefile`
+
+
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
@@ -131,3 +144,95 @@ binary-arch: build install
 
 binary:  binary-arch
 .PHONY: build clean binary-indep binary-arch binary install configure
+
+############################Module package support
+kdist_image:  build
+	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. binary-modules
+	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+
+kdist:  build
+	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. KERNEL_DEPENDS=y binary-modules
+	KSRC="$(KSRC)" KMAINT="$(KMAINT)" KEMAIL="$(KEMAIL)" \
+		sh -v debian/genchanges.sh
+	$(MAKE) $(MFLAGS) -f debian/rules MODDIR=$(KSRC)/.. clean
+
+
+
+dist_config: configure
+
+dist_clean: clean
+
+############################ source stuff #################################
+binary-source:
+# Perform some tests
+	test -f debian/rules
+	test `id -u` = "0"
+
+
+# Setup everything first
+	-rm -rf debian/$(srcpkg) debian/substvars
+	install -d debian/$(srcpkg)
+# Clean up the sources	
+	install -d debian/$(srcpkg)/usr/src/modules/$(package)
+	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS \) -prune -o -print | \
+		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
+	( cd debian/$(srcpkg)/usr/src/modules/$(package); \
+		$(MAKE) -f debian/rules clean)
+	chown -R root.root debian/$(srcpkg)
+	find debian/$(srcpkg) -type d | xargs chmod 755
+	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
+	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
+	cd debian/$(srcpkg)/usr/src && \
+	  tar cf $(package).tar modules && \
+	  $(RM) -r modules/$(package)
+	gzip -9 debian/$(srcpkg)/usr/src/$(package).tar
+	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
+############################ modules stuff #################################
+
+build-modules: build-modules-stamp
+
+build-modules-stamp: configure
+	$(MAKE) SYS_NAME=$(SYS_NAME) lwp 
+	$(MAKE) SYS_NAME=$(SYS_NAME) libafs
+	touch build-modules-stamp
+
+binary-modules: build-modules
+# Perform some tests
+	test -f debian/rules
+	test `id -u` = "0"
+
+# Setup everything first
+	-rm -rf debian/$(modulepkg) debian/substvars
+	install -d debian/$(modulepkg)
+
+# Install the software
+	install -d -g root -o root -m 755 debian/$(modulepkg)/lib/modules/$(KVERS)/fs
+	install -g root -o root -m 755  dest/root.client/usr/vice/etc/modload/*.o \
+		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
+# Fix some stuff up
+	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc
+	rm -rf debian/$(modulepkg)/usr/include
+ifeq ($(KERNEL_DEPENDS),y)
+	sh debian/prep-modules $(KSRC) debian/control.module > debian/control
+else
+	sh debian/prep-modules $(KSRC) debian/control.module-image > debian/control
+endif
+
+# Install control files
+	install -d -o root -g root -m 755 debian/$(modulepkg)/DEBIAN
+	install -p -o root -g root -m 755 debian/prerm.mod \
+		debian/$(modulepkg)/DEBIAN/prerm
+	install -p -o root -g root -m 755 debian/postinst.mod \
+		debian/$(modulepkg)/DEBIAN/postinst
+
+# And now.. for the final packaging!
+	find debian/$(modulepkg) -type f | grep -v "./DEBIAN" | xargs md5sum | \
+		sed -e 's#debian/$(modulepkg)/##' > debian/$(modulepkg)/DEBIAN/md5sums
+
+	dpkg-gencontrol -isp \
+		-p`\ls -1 debian/$(modulepkg)/usr/share/doc` \
+		-v`cat debian/VERSION` \
+		-Pdebian/$(modulepkg)
+	chown -R root.root debian/$(modulepkg)
+	chmod -R go=rX debian/$(modulepkg)
+	dpkg --build debian/$(modulepkg) $(MODDIR)

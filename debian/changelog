@@ -1,3 +1,11 @@
+openafs (1.0.snap20001104-1) unstable; urgency=low
+
+  * New upstream snapshot
+  * Fix path to afsd in /etc/init.d/openafs-client
+  * Build openafs module packages
+
+ --
+
 openafs (1.0.snap20001103-1) unstable; urgency=low
 
   * Initial Release.
