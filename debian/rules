@@ -1,4 +1,4 @@
-#!/usr/bin/make -f
+r#!/usr/bin/make -f
 # Sample debian/rules that uses debhelper. 
 # GNU copyright 1997 by Joey Hess.
 #
@@ -61,10 +61,7 @@ clean:
 	# Add here commands to clean up after the build process.
 	-$(MAKE) -ki distclean
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
-	-rm -f config.status config.cache lib include
-
-
-
+	-rm -rf config.status config.cache lib include
 	dh_clean
 
 install: DH_OPTIONS=
