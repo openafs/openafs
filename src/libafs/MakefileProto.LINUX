@@ -52,6 +52,11 @@ LD = ld -m elf64_sparc
 CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
 DEFINES = -D__KERNEL__  -DCPU=sparc64 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<s390_linux22 s390_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+	-fno-strict-aliasing -fsigned-char -pipe \
+	-fno-builtin
+DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ppc_linux22 ppc_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
@@ -103,6 +108,8 @@ ${COMPDIRS}:
 		ln -s $${IDIR} netinet; \
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
+		rm -f asm-generic; \
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-generic asm-generic; \
 		rm -f asm; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-i386 asm ; \
