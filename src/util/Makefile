@@ -33,6 +33,7 @@ install0: ${DESTDIR}include/afs/dirpath.h \
 	${DESTDIR}include/afs/pthread_nosigs.h \
 	${objects} util.a ${DESTDIR}bin/sys ${someheaders} doc 
 	${INSTALL} util.a ${DESTDIR}lib/afs
+	${INSTALL} util.a ${DESTDIR}lib/afs/libafsutil.a
 	${INSTALL} assert.h errors.h vice.h remote.h ktime.h fileutil.h \
 		netutils.h packages.h afsutil.h pthread_glock.h \
 		afs_atomlist.h afs_lhash.h \
