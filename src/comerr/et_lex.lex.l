@@ -8,7 +8,7 @@ error_code	return ERROR_CODE_ENTRY;
 ec		return ERROR_CODE_ENTRY;
 end		return END;
 
-[\t\n ]		;
+[\t\n\r ]		;
 
 \"{PC}*\"	{ register char *p; yylval.dynstr = ds((char *)yytext+1);
 		  if (p=strrchr(yylval.dynstr, '"')) *p='\0';
