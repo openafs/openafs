@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.5 2001/09/11 15:47:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.6 2001/10/14 18:43:25 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -268,6 +268,7 @@ void afs_Daemon() {
 afs_CheckRootVolume () {
     char rootVolName[32];
     register struct volume *tvp;
+    int usingDynroot = afs_GetDynrootEnable();
 
     AFS_STATCNT(afs_CheckRootVolume);
     if (*afs_rootVolumeName == 0) {
@@ -276,7 +277,12 @@ afs_CheckRootVolume () {
     else {
 	strcpy(rootVolName, afs_rootVolumeName);
     }
-    tvp = afs_GetVolumeByName(rootVolName, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
+    if (usingDynroot) {
+	afs_GetDynrootFid(&afs_rootFid);
+	tvp = afs_GetVolume(&afs_rootFid, (struct vrequest *) 0, READ_LOCK);
+    } else {
+	tvp = afs_GetVolumeByName(rootVolName, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
+    }
     if (!tvp) {
 	char buf[128];
 	int len = strlen(rootVolName);
@@ -288,23 +294,25 @@ afs_CheckRootVolume () {
 	}
     }
     if (tvp) {
-	int volid = (tvp->roVol? tvp->roVol : tvp->volume);
-	afs_rootFid.Cell = LOCALCELL;
-	if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
-	    && afs_globalVp) {
-	    /* If we had a root fid before and it changed location we reset
-	     * the afs_globalVp so that it will be reevaluated.
-	     * Just decrement the reference count. This only occurs during
-	     * initial cell setup and can panic the machine if we set the
-	     * count to zero and fs checkv is executed when the current
-	     * directory is /afs.
-	     */
-	    AFS_FAST_RELE(afs_globalVp);
-	    afs_globalVp = 0;
+	if (!usingDynroot) {
+	    int volid = (tvp->roVol? tvp->roVol : tvp->volume);
+	    afs_rootFid.Cell = LOCALCELL;
+	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
+		&& afs_globalVp) {
+		/* If we had a root fid before and it changed location we reset
+		 * the afs_globalVp so that it will be reevaluated.
+		 * Just decrement the reference count. This only occurs during
+		 * initial cell setup and can panic the machine if we set the
+		 * count to zero and fs checkv is executed when the current
+		 * directory is /afs.
+		 */
+		AFS_FAST_RELE(afs_globalVp);
+		afs_globalVp = 0;
+	    }
+	    afs_rootFid.Fid.Volume = volid;
+	    afs_rootFid.Fid.Vnode = 1;
+	    afs_rootFid.Fid.Unique = 1;
 	}
-	afs_rootFid.Fid.Volume = volid;
-	afs_rootFid.Fid.Vnode = 1;
-	afs_rootFid.Fid.Unique = 1;
 	afs_initState = 300;    /* won */
 	afs_osi_Wakeup(&afs_initState);
 	afs_PutVolume(tvp, READ_LOCK);

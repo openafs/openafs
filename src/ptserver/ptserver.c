@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.6 2001/09/20 06:47:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.7 2001/10/14 18:43:29 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -24,6 +24,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.6 2001/09/20 06
 #else
 #include <netdb.h>
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <rx/xdr.h>
 #include <rx/rx.h>

@@ -81,6 +81,11 @@ CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
 	-fno-builtin -ffixed-r2
 DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<parisc_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -fno-common -fno-strength-reduce \
+        -fno-strict-aliasing -fsigned-char -mno-space-regs -mfast-indirect-calls \
+        -mdisable-fpregs -ffunction-sections -march=1.1 -mschedule=7100
+DEFINES = -D__KERNEL__  -D__linux__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ia64_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer -fno-strict-aliasing -pipe \
 	-ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
