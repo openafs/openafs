@@ -37,7 +37,11 @@ rxk_NewSocket(short aport)
     int code;
 
 
+#ifdef LINUX_KERNEL_IS_SELINUX
+    code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
+#else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#endif
     if (code < 0)
 	return NULL;
 
