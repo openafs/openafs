@@ -1247,7 +1247,7 @@ DECL_PIOCTL(PGetWSCell)
     struct cell *tcell = NULL;
 
     AFS_STATCNT(PGetWSCell);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     tcell = afs_GetPrimaryCell(READ_LOCK);
@@ -1266,7 +1266,7 @@ DECL_PIOCTL(PGetUserCell)
     register struct cell *tcell;
 
     AFS_STATCNT(PGetUserCell);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     /* return the cell name of the primary cell for this user */
@@ -1637,7 +1637,7 @@ DECL_PIOCTL(PGetTokens)
     int newStyle;
 
     AFS_STATCNT(PGetTokens);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     /* weird interface.  If input parameter is present, it is an integer and
@@ -1717,7 +1717,7 @@ DECL_PIOCTL(PUnlog)
     register struct unixuser *tu;
 
     AFS_STATCNT(PUnlog);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     i = UHash(areq->uid);
@@ -1790,7 +1790,7 @@ DECL_PIOCTL(PCheckServers)
 
     AFS_STATCNT(PCheckServers);
 
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     if (*lp == 0x12345678) {	/* For afs3.3 version */
@@ -1856,7 +1856,7 @@ DECL_PIOCTL(PCheckServers)
 DECL_PIOCTL(PCheckVolNames)
 {
     AFS_STATCNT(PCheckVolNames);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     afs_CheckRootVolume();
@@ -1876,7 +1876,7 @@ DECL_PIOCTL(PCheckAuth)
        afs_int32 retValue;
 
     AFS_STATCNT(PCheckAuth);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     retValue = 0;
@@ -2078,7 +2078,7 @@ DECL_PIOCTL(PNewCell)
     afs_int32 scount;
 
     AFS_STATCNT(PNewCell);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     if (!afs_osi_suser(*acred))
@@ -2126,7 +2126,7 @@ DECL_PIOCTL(PNewAlias)
     register afs_int32 code;
     char *realName, *aliasName;
 
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     if (!afs_osi_suser(*acred))
@@ -2149,7 +2149,7 @@ DECL_PIOCTL(PListCells)
     register char *cp, *tp = ain;
 
     AFS_STATCNT(PListCells);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     memcpy((char *)&whichCell, tp, sizeof(afs_int32));
@@ -2179,7 +2179,7 @@ DECL_PIOCTL(PListAliases)
     register struct cell_alias *tcalias=0;
     register char *cp, *tp = ain;
 
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
     if (ainSize < sizeof(afs_int32))
 	return EINVAL;
@@ -2327,7 +2327,7 @@ DECL_PIOCTL(PGetCellStatus)
     afs_int32 temp;
 
     AFS_STATCNT(PGetCellStatus);
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     tcell = afs_GetCellByName(ain, READ_LOCK);
@@ -2346,7 +2346,7 @@ DECL_PIOCTL(PSetCellStatus)
 
     if (!afs_osi_suser(*acred))
 	return EACCES;
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     tcell = afs_GetCellByName(ain+2*sizeof(afs_int32), WRITE_LOCK);
@@ -2371,7 +2371,7 @@ DECL_PIOCTL(PFlushVolumeData)
     AFS_STATCNT(PFlushVolumeData);
     if (!avc)
 	return EINVAL;
-    if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+    if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
     volume = avc->fid.Fid.Volume;  /* who to zap */
@@ -2768,7 +2768,7 @@ DECL_PIOCTL(PSetSPrefs)
   struct setspref *ssp;
   AFS_STATCNT(PSetSPrefs);
 
-  if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+  if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
   if (!afs_osi_suser(*acred))
@@ -2790,7 +2790,7 @@ DECL_PIOCTL(PSetSPrefs33)
 {
   struct spref *sp;
   AFS_STATCNT(PSetSPrefs);
-  if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+  if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
 
@@ -2821,7 +2821,7 @@ DECL_PIOCTL(PGetSPrefs)
    int isfs;
 
    AFS_STATCNT(PGetSPrefs);
-   if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+   if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
 
@@ -3228,7 +3228,7 @@ DECL_PIOCTL(PGetCPrefs)
 	int i,j;
 
 	AFS_STATCNT(PGetCPrefs);
-        if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+        if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	    return EIO;          /* Inappropriate ioctl for device */
 
 	if ( ainSize < sizeof (struct sprefrequest ))
@@ -3267,7 +3267,7 @@ DECL_PIOCTL(PSetCPrefs)
 	int i;
 
 	AFS_STATCNT(PSetCPrefs);
-        if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
+        if ( !afs_resourceinit_flag ) 	/* afs daemons haven't started yet */
 	    return EIO;          /* Inappropriate ioctl for device */
 
 	sin = (struct setspref *)ain;

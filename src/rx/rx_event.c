@@ -45,6 +45,9 @@ RCSID("$Header$");
 #endif
 extern void *osi_Alloc();
 #endif
+#if defined(AFS_OBSD_ENV)
+#include "h/proc.h"
+#endif
 #else /* KERNEL */
 #include <stdio.h>
 #include "rx_clock.h"

@@ -40,6 +40,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 
 /* don't set CDirty in here because RPC is called synchronously */
+int
 afs_symlink
 #ifdef	AFS_OSF_ENV
   (ndp, attrs, atargetName)
@@ -57,7 +58,7 @@ afs_symlink
     struct vattr *attrs;
     struct AFS_UCRED *acred; {
 #endif
-    afs_uint32 now;
+    afs_uint32 now = 0;
     struct vrequest treq;
     afs_int32 code;
     struct conn *tc;
@@ -329,6 +330,7 @@ int afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
     return 0;
 }
 
+int
 afs_readlink(OSI_VC_ARG(avc), auio, acred)
     OSI_VC_DECL(avc);
     struct uio *auio;

@@ -45,13 +45,12 @@ RCSID("$Header$");
 # include "afsint.h"
 #endif /* KERNEL */
 
-#define MAXBS	2048		/* try to avoid horrible allocs */
-static afs_int32 bslosers = 0;
-
 #ifdef KERNEL
 #define	NVALLOC(a)	osi_Alloc(a)
 #define	NVFREE(a,b)	osi_Free(a,b)
 #else /* KERNEL */
+#define MAXBS	2048		/* try to avoid horrible allocs */
+static afs_int32 bslosers = 0;
 #define	NVALLOC(a)	malloc(a)
 #define	NVFREE(a,b)	free(a)
 #endif /* KERNEL */

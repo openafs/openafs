@@ -63,7 +63,7 @@ simple_lock_data_t afs_global_lock;
 struct lock__bsd__ afs_global_lock;
 #endif
 
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 struct lock afs_global_lock;
 struct proc *afs_global_owner;
 #endif
@@ -1458,7 +1458,7 @@ void afs_shutdown(void)
 #endif
 #if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     afs_warn("RxEvent... ");
-    /* cancel rx event deamon */
+    /* cancel rx event daemon */
     while (afs_termState == AFSOP_STOP_RXEVENT) 
 	afs_osi_Sleep(&afs_termState);
 #if defined(RXK_LISTENER_ENV)

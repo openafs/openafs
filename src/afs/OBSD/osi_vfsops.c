@@ -247,7 +247,6 @@ struct proc *p;
 	return EBUSY;
     }
 
-    AFS_GLOCK();
     AFS_STATCNT(afs_mount);
 
 #ifdef AFS_DISCON_ENV
@@ -260,8 +259,6 @@ struct proc *p;
     mp->osi_vfs_bsize = 8192;
     mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
     mp->osi_vfs_fsid.val[1] = (int) AFS_VFSFSID; 
-
-    AFS_GUNLOCK();
 
     (void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN-1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
@@ -296,15 +293,11 @@ struct proc *p;
 
     vflush(afsp, NULLVP, 0); /* don't support forced */
     afsp->mnt_data = NULL;
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_enter(&afs_global_lock);
-#endif
+    AFS_GLOCK();
     afs_globalVFS = 0;
     afs_cold_shutdown = 1;
     afs_shutdown();			/* XXX */
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_exit(&afs_global_lock);
-#endif
+    AFS_GUNLOCK();
 
     /* give up syscall entries for ioctl & setgroups, which we've stolen */
     sysent[SYS_ioctl].sy_call = sys_ioctl;
@@ -344,9 +337,7 @@ afs_root(struct mount *mp,
 
     AFS_STATCNT(afs_root);
 
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_enter(&afs_global_lock);
-#endif
+    AFS_GLOCK();
     if (!(code = afs_InitReq(&treq, osi_curcred())) &&
 	!(code = afs_CheckInit())) {
 	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
@@ -367,9 +358,7 @@ afs_root(struct mount *mp,
 	} else
 	    code = ENOENT;
     }
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_exit(&afs_global_lock);
-#endif
+    AFS_GUNLOCK();
 
     if (!code)
 	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, curproc); /* return it locked */
@@ -380,17 +369,17 @@ int
 afs_statfs(struct osi_vfs *afsp, struct statfs *abp)
 {
     AFS_STATCNT(afs_statfs);
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_enter(&afs_global_lock);
-#endif
     abp->f_bsize = afsp->osi_vfs_bsize;
-    /* Fake a high number below to satisfy programs that use the ustat (for AIX), or statfs (for the rest) call to make sure that there's enough space in the device partition before storing something there (like ed(1)) */
-    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files = abp->f_ffree  = 9000000; /* XXX */
+
+    /*
+     * Fake a high number below to satisfy programs that use the ustat (for
+     * * AIX), or statfs (for the rest) call to make sure that there's
+     * enough * space in the device partition before storing something there
+     * (like * ed(1))
+     */
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files = abp->f_ffree  = 9000000;
     abp->f_fsid.val[0] = AFS_VFSMAGIC; /* magic */
     abp->f_fsid.val[1] = (int) AFS_VFSFSID;
-#ifdef  AFS_GLOBAL_SUNLOCK
-    mutex_exit(&afs_global_lock);
-#endif
     return 0;
 }
 

@@ -32,7 +32,7 @@ afs_lock_t osi_fsplock;
 
 static struct osi_packet {
     struct osi_packet *next;
-} *freePacketList = 0, *freeSmallList, *freeMediumList;
+} *freePacketList = NULL, *freeSmallList;
 afs_lock_t osi_flplock;
 
 
@@ -103,6 +103,8 @@ void osi_FreeSmallSpace(void *adata)
 }
 
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
+static struct osi_packet *freeMediumList;
+
 osi_AllocMoreMSpace(register afs_int32 preallocs)
 {
     register int i;
