@@ -20,7 +20,7 @@ _Description:  What AFS cell does this workstation belong to?
 
 Template: openafs-client/cachesize
 Type: string
-_Default: 50000
+Default: 50000
 _Description:  How large is your AFS cache (kb)?
  AFS uses a  area of the disk to cache remote files for faster
  access.  This cache will be mounted on /var/cache/openafs.  It is

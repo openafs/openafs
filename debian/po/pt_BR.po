@@ -14,7 +14,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs_1.2.8-4\n"
-"POT-Creation-Date: 2003-07-26 17:15-0400\n"
+"POT-Creation-Date: 2003-07-26 17:26-0400\n"
 "PO-Revision-Date: 2003-04-06 18:03-0300\n"
 "Last-Translator: André Luís Lopes <andrelop@ig.com.br>\n"
 "Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
@@ -68,11 +68,6 @@ msgstr ""
 "O espaço de arquivo AFS é organizado em células ou domínios administrativos. "
 "Cada estação de trabalho pertence a uma célula. Normalmente a  célula é o "
 "nome de domínio DNS do site."
-
-#. Default
-#: ../openafs-client.templates:23
-msgid "50000"
-msgstr "50000"
 
 #. Description
 #: ../openafs-client.templates:24
@@ -268,3 +263,6 @@ msgstr ""
 "Provavelmente, o servidor de arquivos irá simplesmente falhar ao iniciar. "
 "Caso consiga ser iniciado, poderá causar corrupção de dados. Você foi "
 "avisado."
+
+#~ msgid "50000"
+#~ msgstr "50000"
