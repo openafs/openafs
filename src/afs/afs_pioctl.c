@@ -816,8 +816,12 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_SGI_ENV
 	code = HandleClientContext(&data, &com, &foreigncreds, OSI_GET_CURRENT_CRED());
 #else
+#ifdef AFS_OBSD_ENV
+	code = HandleClientContext(&data, &com, &foreigncreds, osi_curcred());
+#else
 	code = HandleClientContext(&data, &com, &foreigncreds, u.u_cred);
 #endif /* AFS_SGI_ENV */
+#endif
 #endif
 #endif
 #endif
@@ -859,10 +863,15 @@ afs_syscall_pioctl(path, com, cmarg, follow)
         tmpcred = OSI_GET_CURRENT_CRED();
         OSI_SET_CURRENT_CRED(foreigncreds);
 #else
+#ifdef AFS_OBSD_ENV
+        tmpcred = osi_curcred();
+        osi_curcred() = foreigncreds;
+#else
         tmpcred = u.u_cred;
         u.u_cred = foreigncreds;
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
+#endif
 #endif
 #endif
     }
@@ -880,9 +889,13 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifdef AFS_SGI_ENV 
 	code =  Prefetch(path, &data, follow, OSI_GET_CURRENT_CRED());
 #else
+#ifdef AFS_OBSD_ENV
+	code =  Prefetch(path, &data, follow, osi_curcred());
+#else
 	code =  Prefetch(path, &data, follow, u.u_cred);
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
+#endif
 #endif
 #if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	if (foreigncreds) {

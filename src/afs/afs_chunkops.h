@@ -64,10 +64,14 @@
  */
 
 struct afs_cacheOps {
+#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
+    void *(*open)(ino_t ainode);
+#else
     void *(*open)(afs_int32 ainode);
-    int (*truncate)(struct osi_file *fp, int len);
-    int (*fread)(struct osi_file *fp, int offset, char *buf, int len);
-    int (*fwrite)(struct osi_file *fp, int offset, char *buf, int len);
+#endif
+    int (*truncate)(struct osi_file *fp, afs_int32 len);
+    int (*fread)(struct osi_file *fp, int offset, void *buf, afs_int32 len);
+    int (*fwrite)(struct osi_file *fp, afs_int32 offset, void *buf, afs_int32 len);
     int (*close)(struct osi_file *fp);
     int (*vread)(register struct vcache *avc, struct uio *auio, 
         struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock);

@@ -36,11 +36,12 @@
 #include <ufs/ffs/fs.h>
 #include <ufs/ufs/quota.h>
 #include <ufs/ufs/inode.h>
+#include <ufs/ufs/extattr.h>
 #include <ufs/ufs/ufsmount.h>
 #include <sys/mbuf.h>
 #include <sys/protosw.h>
 #include <sys/ioctl.h> 
-#include <vm/vm_kern.h>
+#include <sys/timeout.h>
 #include <rpc/rpc.h>
 #else /* AFS_OBSD_ENV */
 #ifdef AFS_LINUX22_ENV
