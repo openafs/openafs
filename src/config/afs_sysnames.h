@@ -214,6 +214,7 @@
 #define SYS_NAME_ID_ppc64_linux2	2900
 #define SYS_NAME_ID_ppc64_linux22	2901
 #define SYS_NAME_ID_ppc64_linux24	2902
+#define SYS_NAME_ID_ppc64_linux26	2903
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

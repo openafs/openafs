@@ -268,7 +268,11 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
 #elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT)
+#ifdef AFS_PPC64_LINUX26_ENV
+      if (current->thread_info->flags & _TIF_32BIT)
+#else /*Linux 2.6*/
+    if (current->thread.flags & PPC_FLAG_32BIT) 
+#endif
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
 #else
