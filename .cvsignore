@@ -1,6 +1,7 @@
 Makefile
 aclocal.m4
 config.log
+config.cache
 config.status
 configure
 configure-libafs
@@ -10,6 +11,7 @@ i386_linux22
 i386_linux24
 include
 lib
+parisc_linux24
 sgi_65
 sun4x_56
 sun4x_57
