@@ -868,7 +868,6 @@ void Print_cm_FullPerfInfo()
     static char rn[] = "Print_cm_FullPerfInfo"; /* routine name */
     struct afs_stats_AuthentInfo *authentP;	/*Ptr to authentication stats*/
     struct afs_stats_AccessInfo *accessinfP;	/*Ptr to access stats*/
-    struct afs_stats_AuthorInfo *authorP;	/*Ptr to authorship stats*/
    static afs_int32 fullPerfLongs =
 	(sizeof (struct afs_stats_CMFullPerf) >> 2); /*Correct #longs*/
     afs_int32 numLongs;				/*# longs actually received*/
