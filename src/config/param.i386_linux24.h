@@ -32,7 +32,7 @@
  * MP to compile for Linux
  */
 #ifdef AFS_SMP
-#define CONFIG_SMP
+#define CONFIG_SMP 1
 #ifndef CONFIG_X86_LOCAL_APIC
 #define CONFIG_X86_LOCAL_APIC
 #endif
