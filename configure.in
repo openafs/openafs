@@ -178,7 +178,7 @@ if test "x$PTHREAD_LIBS" = xerror; then
         AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
-        AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+        AC_MSG_WARN(*** Unable to locate working posix thread library ***)
 fi
 AC_SUBST(PTHREAD_LIBS)
 
