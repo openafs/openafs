@@ -1059,6 +1059,38 @@ int rx_WritevAlloc(call, iov, nio, maxio, nbytes)
     return bytes;
 }
 
+int rx_WritevInit(call)
+    struct rx_call *call;
+{
+    int bytes;
+    SPLVAR;
+
+    /*
+     * Free any packets from the last call to ReadvProc/WritevProc.
+     * We do not need the lock because the receiver threads only
+     * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
+     * RX_CALL_IOVEC_WAIT is always cleared before returning from
+     * ReadvProc/WritevProc.
+     */
+    if (!queue_IsEmpty(&call->iovq)) {
+        register struct rx_packet *rp;
+        register struct rx_packet *nxp;
+        for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
+            queue_Remove(rp);
+            rxi_FreePacket(rp);
+        }
+    }
+
+    NETPRI;
+    AFS_RXGLOCK();
+    MUTEX_ENTER(&call->lock);
+    bytes = rxi_WriteProc(call, &bytes, 0);
+    MUTEX_EXIT(&call->lock);
+    AFS_RXGUNLOCK();
+    USERPRI;
+    return bytes;
+}
+
 /* rxi_WritevProc -- internal version.
  *
  * Send buffers allocated in rxi_WritevAlloc.
