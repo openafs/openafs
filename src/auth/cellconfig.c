@@ -718,6 +718,11 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
     if (server_num == 0)		/* No AFSDB records */
 	return AFSCONF_NOTFOUND;
+
+    /* Convert the real cell name to lowercase */
+    for (p = (unsigned char *) realCellName; *p; p++)
+	*p = tolower(*p);
+
     strncpy(acellInfo->name, realCellName, sizeof(acellInfo->name));
     acellInfo->numServers = server_num;
 
