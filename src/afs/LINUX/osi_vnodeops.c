@@ -715,27 +715,7 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 /* afs_dentry_iput */
 static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
-#if defined(AFS_LINUX24_ENV)
-    if (atomic_read(&ip->i_count) == 0 || atomic_read(&ip->i_count) & 0xffff0000) {
-#else
-    if (ip->i_count == 0 || ip->i_count & 0xffff0000) {
-#endif
-	osi_Panic("Bad refCount %d on inode 0x%x\n",
-#if defined(AFS_LINUX24_ENV)
-		  atomic_read(&ip->i_count), ip);
-#else
-		  ip->i_count, ip);
-#endif
-    }
-#if defined(AFS_LINUX24_ENV)
-    atomic_dec(&ip->i_count);
-    if (!atomic_read(&ip->i_count)) {
-#else
-    ip->i_count --;
-    if (!ip->i_count) {
-#endif
-	afs_delete_inode(ip);
-    }
+    osi_iput(ip);
 }
 
 #if defined(AFS_LINUX24_ENV)
@@ -1146,11 +1126,11 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     setup_uio(&tuio, &iovec, (char*)address, pageoff(pp), PAGESIZE,
 	      UIO_READ, AFS_UIOSYS);
 #endif
-#ifdef AFS_LINUX24_ENV
+#if defined(AFS_LINUX24_ENV)
     lock_kernel();
 #endif
     code = afs_rdwr((struct vcache*)ip, &tuio, UIO_READ, 0, credp);
-#ifdef AFS_LINUX24_ENV
+#if defined(AFS_LINUX24_ENV)
     unlock_kernel();
 #endif
 
@@ -1159,6 +1139,9 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 	    memset((void*)(address+(PAGESIZE-tuio.uio_resid)), 0,
 		   tuio.uio_resid);
 #if defined(AFS_LINUX24_ENV)
+#ifndef __powerpc__
+        flush_dcache_page(pp);
+#endif
         SetPageUptodate(pp);
 #else
 	set_bit(PG_uptodate, &pp->flags);
@@ -1169,8 +1152,8 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     UnlockPage(pp);
 #else
     clear_bit(PG_locked, &pp->flags);
-#endif
     wake_up(&pp->wait);
+#endif
     free_page(address);
 
     crfree(credp);
@@ -1204,7 +1187,9 @@ int afs_linux_writepage(struct page *pp)
     if (pp->index >= end_index+1 || !offset)
 	return -EIO;
 do_it:
+    AFS_GLOCK();
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
+    AFS_GUNLOCK();
     SetPageUptodate(pp);
     UnlockPage(pp);
     /* kunmap(pp); */
@@ -1268,8 +1253,6 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     int f_flags = 0;
 
     credp = crref();
-    AFS_GLOCK();
-    lock_kernel();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
               ICL_TYPE_POINTER, pp,
               ICL_TYPE_INT32, atomic_read(&pp->count),
@@ -1288,8 +1271,6 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
               ICL_TYPE_INT32, atomic_read(&pp->count),
               ICL_TYPE_INT32, code);
 
-    unlock_kernel();
-    AFS_GUNLOCK();
     crfree(credp);
 
     return code;
@@ -1354,9 +1335,11 @@ static int afs_linux_commit_write(struct file *file, struct page *page, unsigned
 {
     long status;
 
-    /* lock_kernel(); */
+    AFS_GLOCK();
+    lock_kernel();
     status = afs_linux_updatepage(file, page, offset, to-offset);
-    /* unlock_kernel(); */
+    unlock_kernel();
+    AFS_GUNLOCK();
     kunmap(page);
 
     return status;

@@ -104,33 +104,6 @@ osi_UFSClose(afile)
       return 0;
   }
 
-#if defined(AFS_LINUX24_ENV)
-int osi_notify_change(struct dentry * dentry, struct iattr * attr)
-{
-    struct inode *inode = dentry->d_inode;
-    int error;
-    time_t now = CURRENT_TIME;
-    unsigned int ia_valid = attr->ia_valid;
-
-    attr->ia_ctime = now;
-    if (!(ia_valid & ATTR_ATIME_SET))
-	attr->ia_atime = now;
-    if (!(ia_valid & ATTR_MTIME_SET))
-	attr->ia_mtime = now;
-
-    lock_kernel();
-    if (inode && inode->i_op && inode->i_op->setattr)
-	error = inode->i_op->setattr(dentry, attr);
-    else {
-	error = inode_change_ok(inode, attr);
-	if (!error)
-	    inode_setattr(inode, attr);
-    }
-    unlock_kernel();
-    return error;
-}
-#endif
-
 osi_UFSTruncate(afile, asize)
     register struct osi_file *afile;
     afs_int32 asize; {
@@ -150,13 +123,18 @@ osi_UFSTruncate(afile, asize)
     MObtainWriteLock(&afs_xosi,321);    
     AFS_GUNLOCK();
     down(&inode->i_sem);
-#if defined(AFS_LINUX24_ENV)
-    newattrs.ia_size = asize;
-    newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
-    code = osi_notify_change(&afile->dentry, &newattrs);
-#else
     inode->i_size = newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
+#if defined(AFS_LINUX24_ENV)
+    newattrs.ia_ctime = CURRENT_TIME;
+
+    /* avoid notify_change() since it wants to update dentry->d_parent */
+    lock_kernel();
+    code = inode_change_ok(inode, &newattrs);
+    if (!code)
+	inode_setattr(inode, &newattrs);
+    unlock_kernel();
+#else
     if (inode->i_sb->s_op && inode->i_sb->s_op->notify_change) {
 	code = inode->i_sb->s_op->notify_change(&afile->dentry, &newattrs);
     }
