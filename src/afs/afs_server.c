@@ -1084,6 +1084,10 @@ static afs_SetServerPrefs(sa)
 
     if (sa) sa->sa_iprank= 0;
     for (ill = (struct ill_s *)*addr /*ill_g_headp*/; ill; ill = ill->ill_next ) {
+#ifdef AFS_SUN58_ENV
+	/* Make sure this is an IPv4 ILL */
+	if (ill->ill_isv6) continue;
+#endif
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next ) {
 	    subnet = ipif->ipif_local_addr & ipif->ipif_net_mask;
 	    subnetmask = ipif->ipif_net_mask;

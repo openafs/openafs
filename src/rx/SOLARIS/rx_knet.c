@@ -27,8 +27,13 @@ RCSID("$Header$");
 #include "../sys/fcntl.h"
 #ifdef AFS_SUN58_ENV
 #include "../netinet/ip6.h"
+#define ipif_local_addr ipif_lcl_addr
+#ifndef V4_PART_OF_V6
+#define V4_PART_OF_V6(v6)       v6.s6_addr32[3]
+#endif
 #endif
 #include "../inet/ip.h"
+#include "../inet/ip_if.h"
 #include "../netinet/udp.h"
 
 /*
@@ -47,9 +52,137 @@ int (*sockfs_sosendmsg)
 int (*sockfs_sosetsockopt)
     (struct sonode *, int, int, void *, int) = NULL;
 
-int rxi_GetIFInfo()
+static afs_uint32 myNetAddrs[ADDRSPERSITE];
+static int myNetMTUs[ADDRSPERSITE];
+static int numMyNetAddrs = 0;
+
+int
+rxi_GetIFInfo()
 {
-    return 0;
+    int i = 0;
+    int different = 0;
+
+    ill_t *ill;
+    ipif_t *ipif;
+    int rxmtu, maxmtu;
+
+    int mtus[ADDRSPERSITE];
+    afs_uint32 addrs[ADDRSPERSITE];
+    afs_uint32 ifinaddr;
+
+    memset(mtus, 0, sizeof(mtus));
+    memset(addrs, 0, sizeof(addrs));
+
+    for (ill = ill_g_head; ill; ill = ill->ill_next) {
+#ifdef AFS_SUN58_ENV
+	/* Make sure this is an IPv4 ILL */
+	if (ill->ill_isv6) continue;
+#endif
+
+	/* Iterate over all the addresses on this ILL */
+	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
+	    if (i >= ADDRSPERSITE) break;
+
+	    /* Ignore addresses which are down.. */
+	    if (!(ipif->ipif_flags & IFF_UP)) continue;
+
+	    /* Compute the Rx interface MTU */
+	    rxmtu = (ipif->ipif_mtu - RX_IPUDP_SIZE);
+
+	    ifinaddr = ntohl(ipif->ipif_local_addr);
+	    if (myNetAddrs[i] != ifinaddr)
+		different++;
+
+	    /* Copy interface MTU and address; adjust maxmtu */
+	    mtus[i] = rxmtu;
+	    rxmtu = rxi_AdjustIfMTU(rxmtu);
+	    maxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags-1) *
+					       UDP_HDR_SIZE);
+	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
+	    addrs[i] = ifinaddr;
+	    i++;
+
+	    if (ifinaddr != 0x7f000001 && maxmtu > rx_maxReceiveSize) {
+		rx_maxReceiveSize = MIN( RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize = MIN( rx_maxReceiveSize,
+					 rx_maxReceiveSizeUser);
+	    }
+	}
+    }
+
+    rx_maxJumboRecvSize = RX_HEADER_SIZE +
+			  rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
+			  (rxi_nDgramPackets-1) * RX_JUMBOHEADERSIZE;
+    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+
+    if (different) {
+	int j;
+
+	for (j = 0; j < i; j++) {
+	    myNetMTUs[j] = mtus[j];
+	    myNetAddrs[j] = addrs[j];
+	}
+    }
+
+    return different;
+}
+
+int
+rxi_FindIfMTU(addr)
+    afs_uint32 addr;
+{
+    ill_t *ill;
+    ipif_t *ipif;
+    afs_uint32 myAddr, netMask;
+    int match_value = 0;
+    int mtu = -1;
+
+    if (numMyNetAddrs == 0)
+	rxi_GetIFInfo();
+    myAddr = ntohl(addr);
+
+    if      (IN_CLASSA(myAddr)) netMask = IN_CLASSA_NET;
+    else if (IN_CLASSB(myAddr)) netMask = IN_CLASSB_NET;
+    else if (IN_CLASSC(myAddr)) netMask = IN_CLASSC_NET;
+    else                       netMask = 0;
+
+    for (ill = ill_g_head; ill; ill = ill->ill_next) {
+#ifdef AFS_SUN58_ENV
+	/* Make sure this is an IPv4 ILL */
+	if (ill->ill_isv6) continue;
+#endif
+
+	/* Iterate over all the addresses on this ILL */
+	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
+	    afs_uint32 thisAddr, subnetMask;
+	    int thisMtu;
+
+	    thisAddr   = ipif->ipif_local_addr;
+	    subnetMask = ipif->ipif_net_mask;
+	    thisMtu    = ipif->ipif_mtu;
+
+	    if ((myAddr & netMask) == (thisAddr & netMask)) {
+		if ((myAddr & subnetMask) == (thisAddr & subnetMask)) {
+		    if (myAddr == thisAddr) {
+			match_value = 4;
+			mtu = thisMtu;
+		    }
+
+		    if (match_value < 3) {
+			match_value = 3;
+			mtu = thisMtu;
+		    }
+		}
+
+		if (match_value < 2) {
+		    match_value = 2;
+		    mtu = thisMtu;
+		}
+	    }
+	}
+    }
+
+    return mtu;
 }
 
 /* rxi_NewSocket, rxi_FreeSocket and osi_NetSend are from the now defunct

@@ -111,6 +111,7 @@ extern rxk_portRocks_t rxk_portRocks;
 
 extern struct osi_socket *rxk_NewSocket(short aport);
 extern struct ifnet *rxi_FindIfnet();
+extern int rxi_FindIfMTU();
 
 extern int rxk_initDone;
 
