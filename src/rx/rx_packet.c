@@ -64,6 +64,9 @@ RCSID
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -826,13 +829,11 @@ rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes > 0)
 	    rxi_MorePackets(rx_initSendWindow);
-#ifndef AFS_NT40_ENV
 	else if (nbytes < 0 && errno == EWOULDBLOCK) {
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_stats.noPacketOnRead++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	}
-#endif
 	else {
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_stats.bogusPacketOnRead++;
