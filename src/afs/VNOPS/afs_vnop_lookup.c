@@ -148,8 +148,8 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      * doesn't exist? Try adding ".readonly" to volname and look for that.
      * Don't know why we do this. Would have still found it in above call - jpm.
      */
-    if (!tvp && (prefetch == 2)) {
-	buf = (char *)osi_AllocSmallSpace(strlen(volnamep) + 10);
+    if (!tvp && (prefetch == 2) && len < AFS_SMALLOCSIZ - 10) {
+	buf = (char *)osi_AllocSmallSpace(len + 10);
 
 	strcpy(buf, volnamep);
 	afs_strcat(buf, ".readonly");
@@ -1291,6 +1291,8 @@ OSI_VC_DECL(adp);
 	    ReleaseReadLock(&tdc->lock);
 	    ReleaseReadLock(&adp->lock);
 	    afs_PutDCache(tdc);
+	    if (tname && tname != aname)
+		osi_FreeLargeSpace(tname);
 	    goto redo;
 	}
 
