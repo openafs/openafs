@@ -315,9 +315,9 @@ afs_vop_close(ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
     if (ap->a_cred) 
-        code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
+        code = afs_close(avc, ap->a_fflag, ap->a_cred);
     else
-        code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
+        code = afs_close(avc, ap->a_fflag, &afs_osi_cred);
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);        /* hold bozon lock, but not basic vnode lock */
     afs_BozonUnlock(&avc->pvnLock, avc);

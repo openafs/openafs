@@ -270,7 +270,11 @@ afs_int32 afs_uuid_create (afsUUID *uuid)
 	seed ^= *seedp++;
 	seed ^= *seedp++;
 	seed ^= *seedp++;
-	rand_irand += seed + (afs_uint32)getpid();
+#if defined(KERNEL) && defined(AFS_XBSD_ENV)
+	rand_irand += seed + (afs_uint32) curproc->p_pid;
+#else
+	rand_irand += seed + (afs_uint32) getpid();
+#endif
 	uuid__get_os_time (&time_last);
 	clock_seq = true_random();
 #ifdef AFS_NT40_ENV
