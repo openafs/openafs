@@ -158,7 +158,7 @@ static void initDirPathArray(void)
 
     /* setup top level dirpath (/usr equivalent); valid for server ONLY */
     strcpy(dirPathArray[AFSDIR_USR_DIRPATH_ID], ntServerInstallDirShort);
-    serverPrefix = ntInstallDirShort;
+    serverPrefix = ntServerInstallDirShort;
     strcat(dirPathArray[AFSDIR_USR_DIRPATH_ID], AFSDIR_CANONICAL_USR_DIRPATH);
 
 #else /* AFS_NT40_ENV */

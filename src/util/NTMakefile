@@ -29,6 +29,9 @@ INCFILES =\
 $(DESTDIR)\include\afs\dirent.h: dirent_nt.h
 	$(COPY) $** $@
 
+$(DESTDIR)\include\afs\dirpath.h: dirpath.hin
+	$(COPY) $** $@
+
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 
 LIBOBJS = \

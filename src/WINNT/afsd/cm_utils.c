@@ -129,7 +129,7 @@ cm_space_t *cm_GetSpace(void)
 		cm_spaceListp = tsp->nextp;
         }
         else tsp = (cm_space_t *) malloc(sizeof(cm_space_t));
-	(void) memset(tsp, 0, sizeof(cm_space_t);
+	(void) memset(tsp, 0, sizeof(cm_space_t));
         lock_ReleaseWrite(&cm_utilsLock);
         
         return tsp;
