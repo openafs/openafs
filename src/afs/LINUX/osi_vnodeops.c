@@ -926,8 +926,11 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	goto done;
     }
 
-    /* A DNLC lookup failure cannot be trusted. Try a real lookup */
-    code = afs_lookup(parentvcp, name, &lookupvcp, credp);
+    /* A DNLC lookup failure cannot be trusted. Try a real lookup. 
+       Make sure to try the real name and not the @sys expansion; 
+       afs_lookup will expand @sys itself. */
+  
+    code = afs_lookup(parentvcp, dp->d_name.name, &lookupvcp, credp);
 
     /* Verify that the dentry does not point to an old inode */
     if (vcp != lookupvcp)
