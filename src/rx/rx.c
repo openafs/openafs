@@ -4635,9 +4635,9 @@ static void rxi_SendList(struct rx_call *call, struct rx_packet **list,
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
     MUTEX_EXIT(&call->lock);
     if (len > 1) {
-	rxi_SendPacketList(conn, list, len, istack);
+	rxi_SendPacketList(call, conn, list, len, istack);
     } else {
-	rxi_SendPacket(conn, list[0], istack);
+	rxi_SendPacket(call, conn, list[0], istack);
     }
     MUTEX_ENTER(&call->lock);
     CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
@@ -5083,7 +5083,7 @@ void rxi_Send(register struct rx_call *call, register struct rx_packet *p,
     /* Actually send the packet, filling in more connection-specific fields */
     CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
     MUTEX_EXIT(&call->lock);
-    rxi_SendPacket(conn, p, istack);
+    rxi_SendPacket(call, conn, p, istack);
     MUTEX_ENTER(&call->lock);
     CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
 

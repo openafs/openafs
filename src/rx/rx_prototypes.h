@@ -384,10 +384,10 @@ extern struct rx_packet *rxi_ReceiveDebugPacket(register struct rx_packet *ap,
         osi_socket asocket, afs_int32 ahost, short aport, int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(register struct rx_packet *ap, 
         osi_socket asocket, afs_int32 ahost, short aport, int istack);
-extern void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
-                    int istack);
-extern void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
-        int len, int istack);
+extern void rxi_SendPacket(struct rx_call * call, struct rx_connection * conn,
+			   struct rx_packet *p, int istack);
+extern void rxi_SendPacketList(struct rx_call * call, struct rx_connection * conn,
+			       struct rx_packet **list, int len, int istack);
 extern struct rx_packet *rxi_SendSpecial(register struct rx_call *call,
         register struct rx_connection *conn, struct rx_packet *optionalPacket,
         int type, char *data, int nbytes, int istack);

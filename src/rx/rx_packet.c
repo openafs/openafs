@@ -1434,14 +1434,15 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 }
 
 /* Send the packet to appropriate destination for the specified
- * connection.  The header is first encoded and placed in the packet.
+ * call.  The header is first encoded and placed in the packet.
  */
-void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
-		    int istack)
+void rxi_SendPacket(struct rx_call * call, struct rx_connection * conn,
+		    struct rx_packet *p, int istack)
 {
 #if defined(KERNEL)
     int waslocked;
 #endif
+    int code;
     struct sockaddr_in addr;
     register struct rx_peer *peer = conn->peer;
     osi_socket socket;
@@ -1514,14 +1515,24 @@ void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
 	waslocked = ISAFS_GLOCK();
 	if (waslocked) AFS_GUNLOCK();
 #endif
-	if (osi_NetSend(socket, &addr, p->wirevec, p->niovecs, 
-			p->length+RX_HEADER_SIZE, istack)){
+	if ((code = osi_NetSend(socket, &addr, p->wirevec, p->niovecs, 
+				p->length+RX_HEADER_SIZE, istack)) != 0) {
 	  /* send failed, so let's hurry up the resend, eh? */
 	  MUTEX_ENTER(&rx_stats_mutex);
 	  rx_stats.netSendFailures++;	   
 	  MUTEX_EXIT(&rx_stats_mutex);
 	  p->retryTime = p->timeSent;  /* resend it very soon */
 	  clock_Addmsec(&(p->retryTime), 10 + (((afs_uint32) p->backoff) << 8));
+
+#if defined(KERNEL) && defined(AFS_LINUX_ENV)
+	  /* Linux is nice -- it can tell us right away that we cannot
+	   * reach this recipient by returning an ENETUNREACH error
+	   * code.  So, when this happens let's "down" the host NOW so
+	   * we don't sit around waiting for this host to timeout later.
+	   */
+	  if (call && code == -ENETUNREACH)
+	    call->lastReceiveTime = 0;
+#endif
 	}
 #ifdef KERNEL
 	if (waslocked) AFS_GLOCK();
@@ -1546,8 +1557,8 @@ void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
 /* Send a list of packets to appropriate destination for the specified
  * connection.  The headers are first encoded and placed in the packets.
  */
-void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
-	int len, int istack)
+void rxi_SendPacketList(struct rx_call * call, struct rx_connection * conn,
+			struct rx_packet **list, int len, int istack)
 {
 #if     defined(AFS_SUN5_ENV) && defined(KERNEL)
     int waslocked;
@@ -1557,7 +1568,7 @@ void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
     osi_socket socket;
     struct rx_packet *p = NULL;
     struct iovec wirevec[RX_MAXIOVECS];
-    int i, length;
+    int i, length, code;
     afs_uint32 serial;
     afs_uint32 temp;
     struct rx_jumboHeader *jp;
@@ -1677,7 +1688,7 @@ void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
 	waslocked = ISAFS_GLOCK();
 	if (!istack && waslocked) AFS_GUNLOCK();
 #endif
-	if (osi_NetSend(socket, &addr, &wirevec[0], len+1, length, istack)){
+	if ((code = osi_NetSend(socket, &addr, &wirevec[0], len+1, length, istack)) != 0){
 	  /* send failed, so let's hurry up the resend, eh? */
 	  MUTEX_ENTER(&rx_stats_mutex);
 	  rx_stats.netSendFailures++;	   
@@ -1687,6 +1698,15 @@ void rxi_SendPacketList(struct rx_connection * conn, struct rx_packet **list,
 	    p->retryTime = p->timeSent;  /* resend it very soon */
 	    clock_Addmsec(&(p->retryTime), 10 + (((afs_uint32) p->backoff) << 8));
 	  }
+#if defined(KERNEL) && defined(AFS_LINUX_ENV)
+	  /* Linux is nice -- it can tell us right away that we cannot
+	   * reach this recipient by returning an ENETUNREACH error
+	   * code.  So, when this happens let's "down" the host NOW so
+	   * we don't sit around waiting for this host to timeout later.
+	   */
+	  if (call && code == -ENETUNREACH)
+	    call->lastReceiveTime = 0;
+#endif
 	}
 #if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 	if (!istack && waslocked) AFS_GLOCK();
@@ -1773,7 +1793,7 @@ struct rx_packet *rxi_SendSpecial(register struct rx_call *call,
     }
 
     if (call) rxi_Send(call, p, istack);
-    else rxi_SendPacket(conn, p, istack);
+    else rxi_SendPacket((struct rx_call *)0, conn, p, istack);
     if (saven) {  /* means we truncated the packet above.  We probably don't  */
       /* really need to do this, but it seems safer this way, given that  */
       /* sneaky optionalPacket... */
