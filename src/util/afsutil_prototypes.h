@@ -31,6 +31,7 @@ extern int base64_to_int(char *s);
 /* casestrcpy.c */
 extern char *lcstring (char *d, char *s, int n);
 extern char *ucstring (char *d, char *s, int n);
+extern char *strcompose(char *buf, size_t len, ...);
 
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
@@ -49,14 +50,22 @@ extern void FilepathNormalizeEx(char *path, int slashType);
 extern void FilepathNormalize(char *path);
 
 /* flipbase64.c */
+extern char *int_to_base32(b32_string_t s, int a);
+extern int base32_to_int(char *s);
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+/* base 64 converters for namei interface. Flip bits to differences are
+ * early in name.
+ */
 #ifdef AFS_64BIT_ENV
+#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_int64)(A))
 extern char *int64_to_flipbase64(lb64_string_t s, afs_int64 a);
 extern afs_int64 flipbase64_to_int64(char *s);
 #else
+#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
 extern char *int64_to_flipbase64(lb64_string_t s, u_int64_t a);
 extern int64_t flipbase64_to_int64(char *s);
 #endif
-
+#endif
 
 /* get_krbrlm.c */
 extern int afs_krb_get_lrealm(char *r, int n);

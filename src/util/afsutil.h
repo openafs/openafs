@@ -56,15 +56,6 @@ extern char *vctime(const time_t *atime);
 #endif  /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 
 
-/* Convert a 4 byte integer to a text string. */
-extern char*	afs_inet_ntoa(afs_uint32 addr);
-extern char*    afs_inet_ntoa_r(afs_uint32 addr, char *buf);
-
-/* copy strings, converting case along the way. */
-extern char *lcstring(char *d, char *s, int n);
-extern char *ucstring(char *d, char *s, int n);
-extern char *strcompose(char *buf, size_t len, ...);
-
 /* abort the current process. */
 #ifdef AFS_NT40_ENV
 #define afs_abort() afs_NTAbort()
@@ -97,33 +88,11 @@ extern int rc_exec(char *p);
 
 /* Abort on error, possibly trapping to debugger or dumping a trace. */
 void afs_NTAbort(void);
-#endif
+#endif /* NT40 */
 
-/* get temp dir path */
-char *gettmpdir(void);
-
-/* Base 32 conversions used for NT since directory names are
- * case-insensitive.
- */
 typedef char b32_string_t[8];
-char *int_to_base32(b32_string_t s, int a);
-int base32_to_int(char *s);
-
-#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
-/* base 64 converters for namei interface. Flip bits to differences are
- * early in name.
- */
+/* b64_string_t is 8 bytes, in stds.h */
 typedef char lb64_string_t[12];
-#ifdef AFS_64BIT_ENV
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (afs_int64)(A))
-char *int64_to_flipbase64(b64_string_t s, afs_int64 a);
-afs_int64 flipbase64_to_int64(char *s);
-#else
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
-char *int64_to_flipbase64(b64_string_t s, u_int64_t a);
-int64_t flipbase64_to_int64(char *s);
-#endif
-#endif
 
 #ifndef UKERNEL
 #include "afs/ktime.h"
