@@ -268,7 +268,7 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #endif /* AFS_SUN5_ENV */
 
 #include "../rpc/types.h"
-#include "../rpc/xdr.h"
+#include "../rx/xdr.h"
 
 #ifdef AFS_AIX32_ENV
 #  include "net/spl.h"
@@ -363,7 +363,7 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #undef register
 #endif	/* AFS_ALPHA_ENV */
 
-#include <rpc/xdr.h>
+#include <rx/xdr.h>
 #include <sys/proc.h>
 #include <sys/ioctl.h>
 

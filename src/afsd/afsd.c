@@ -55,7 +55,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.12 2002/01/22 19:52:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.13 2002/06/10 11:44:53 hartmans Exp $");
 
 #define VFS 1
 
@@ -1290,7 +1290,11 @@ mainproc(as, arock)
 	 * Cold shutdown is the default
 	 */
 	printf("afsd: Shutting down all afs processes and afs state\n");
-	call_syscall(AFSOP_SHUTDOWN, 1);
+	code = call_syscall(AFSOP_SHUTDOWN, 1);
+	if (code) {
+	    printf("afsd: AFS still mounted; Not shutting down\n");
+	    exit(1);
+	}
 	exit(0);
     }
     if (as->parms[21].items) {

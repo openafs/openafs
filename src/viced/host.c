@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.9 2002/05/11 00:03:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.10 2002/06/10 11:48:32 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -534,12 +534,15 @@ void h_flushhostcps(hostaddr, hport)
     register afs_uint32  hostaddr, hport;  /* net byte order */
 {
     register struct host *host;
+    int held;
     
     H_LOCK
-    host = h_Lookup_r(hostaddr, hport);
+    host = h_Lookup_r(hostaddr, hport, &held);
     if (host) {
       host->hcpsfailed = 1;
     }
+    if (!held)
+      h_Release_r(host);
     H_UNLOCK
 
 return;
@@ -635,18 +638,21 @@ struct host *h_Alloc_r(r_con)
 
 
 /* Lookup a host given an IP address and UDP port number. */
-struct host *h_Lookup(hostaddr, hport)
+struct host *h_Lookup(hostaddr, hport, heldp)
     afs_uint32 hostaddr, hport;     /* network byte order */
+    int *heldp;
 {
     struct host *retVal;
     H_LOCK
-    retVal = h_Lookup_r(hostaddr, hport);
+    retVal = h_Lookup_r(hostaddr, hport, heldp);
     H_UNLOCK
     return retVal;
 }
 
-struct host *h_Lookup_r(hostaddr, hport)
+/* Note: host should be released by caller if 0 == *heldp and non-null */
+struct host *h_Lookup_r(hostaddr, hport, heldp)
     afs_uint32 hostaddr, hport;     /* network byte order */
+    int *heldp;
 {
     register afs_int32 now;
     register struct host *host=0;
@@ -654,17 +660,30 @@ struct host *h_Lookup_r(hostaddr, hport)
     register index = h_HashIndex(hostaddr);
     extern int hostaclRefresh;
 
+restart:
     for (chain=hostHashTable[index]; chain; chain=chain->next) {
 	host = chain->hostPtr;
 	assert(host);
         if (!(host->hostFlags & HOSTDELETED) && chain->addr == hostaddr
 	    && host->port == hport) {
+	    *heldp = h_Held_r(host);
+	    if (!*heldp)
+		h_Hold_r(host);
+	    h_Lock_r(host);
+	    if (host->hostFlags & HOSTDELETED) {
+		h_Unlock_r(host);
+		if (!*heldp)
+		    h_Release_r(host);
+		goto restart;
+	    }
+	    h_Unlock_r(host);
             now = FT_ApproxTime();		/* always evaluate "now" */
 	    if (host->hcpsfailed || (host->cpsCall+hostaclRefresh < now )) {
 		/*
-		 * Every hostaclRefresh period (def 2 hrs) get the new membership list for the host.
-		 * Note this could be the first time that the host is added to a group.
-		 * Also here we also retry on previous legitimate hcps failures
+		 * Every hostaclRefresh period (def 2 hrs) get the new
+		 * membership list for the host.  Note this could be the
+		 * first time that the host is added to a group.  Also
+		 * here we also retry on previous legitimate hcps failures.
 		 */
 		h_gethostcps_r(host,now);
 	    }
@@ -947,14 +966,12 @@ struct host *h_GetHost_r(tcon)
 retry:
     code = 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
-    host = h_Lookup_r(haddr, hport);
+    host = h_Lookup_r(haddr, hport, &held);
     if (host && !identP && !(host->Console&1)) {
 	/* This is a new connection, and we already have a host
 	 * structure for this address. Verify that the identity
 	 * of the caller matches the identity in the host structure.
 	 */
-	if (!(held = h_Held_r(host)))
-		h_Hold_r(host);
 	h_Lock_r(host);
 	if ( !(host->hostFlags & ALTADDR) )
 	{
@@ -970,7 +987,7 @@ retry:
 	code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 	H_LOCK
 	if ( code == RXGEN_OPCODE ) {
-		identP = (struct Identity *)malloc(1);
+		identP = (struct Identity *)malloc(sizeof(struct Identity));
 		identP->valid = 0;
 		rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		/* The host on this connection was unable to respond to 
@@ -1016,8 +1033,6 @@ retry:
 	host->hostFlags |= ALTADDR;
 	h_Unlock_r(host);
     } else if (host) {
-	if (!(held = h_Held_r(host)))
-		h_Hold_r(host);
 	if ( ! (host->hostFlags & ALTADDR) ) 
 	{
         	/* another thread is doing the initialisation */
@@ -1057,7 +1072,7 @@ retry:
 		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 		H_LOCK
 		if ( code == RXGEN_OPCODE ) {
-		    identP = (struct Identity *)malloc(1);
+		  identP = (struct Identity *)malloc(sizeof(struct Identity));
 		    identP->valid = 0;
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		    ViceLog(25,

@@ -65,6 +65,33 @@
 void *afs_osi_Alloc();
 #define	osi_alloc		afs_osi_Alloc
 #define	osi_free		afs_osi_Free
+
+#ifndef UKERNEL
+#define xdr_void afs_xdr_void
+#define xdr_int afs_xdr_int
+#define xdr_u_int afs_xdr_u_int
+#define xdr_short afs_xdr_short
+#define xdr_u_short afs_xdr_u_short
+#define xdr_long afs_xdr_long
+#define xdr_u_long afs_xdr_u_long
+#define xdr_char afs_xdr_char
+#define xdr_u_char afs_xdr_u_char
+#define xdr_bool afs_xdr_bool
+#define xdr_enum afs_xdr_enum
+#define xdr_array afs_xdr_array
+#define xdr_arrayN afs_xdr_arrayN
+#define xdr_bytes afs_xdr_bytes
+#define xdr_opaque afs_xdr_opaque
+#define xdr_string afs_xdr_string
+#define xdr_union afs_xdr_union
+#define xdr_float afs_xdr_float
+#define xdr_double afs_xdr_double
+#define xdr_reference afs_xdr_reference
+#define xdr_wrapstring afs_xdr_wrapstring
+#define xdr_vector afs_xdr_vector
+#define xdr_int64 afs_xdr_int64
+#define xdr_uint64 afs_xdr_uint64
+#endif
 #endif
 #ifndef major		/* ouch! */
 #include <sys/types.h>
