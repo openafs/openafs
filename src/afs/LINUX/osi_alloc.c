@@ -103,7 +103,11 @@ static void *linux_alloc(unsigned int asize)
             if (--max_wait <=0) {
 		break;
             }
+#ifdef set_current_state
 	    set_current_state(TASK_INTERRUPTIBLE);
+#else
+	    current->state = TASK_INTERRUPTIBLE;
+#endif
 	    schedule_timeout(HZ);
         }
 	if (new) /* piggy back alloc type */
