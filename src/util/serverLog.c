@@ -27,6 +27,7 @@
 #endif
 #include <sys/param.h>
 #include <sys/time.h>
+#include <syslog.h>
 #endif
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
@@ -64,21 +65,16 @@ char *threadname();
 
 static int serverLogFD = -1;
 
+#ifndef AFS_NT40_ENV
+int serverLogSyslog = 0;
+int serverLogSyslogFacility = LOG_DAEMON;
+#endif
+
 #include <stdarg.h>
 int LogLevel;
 int mrafsStyleLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
-
-void WriteLogBuffer(buf,len)
-    char *buf;
-    afs_uint32 len;
-{
-    LOCK_SERVERLOG();
-    if (serverLogFD > 0)
-        write(serverLogFD, buf, len);
-    UNLOCK_SERVERLOG();
-}
 
 /* VARARGS1 */
 void FSLog (const char *format, ...)
@@ -110,8 +106,13 @@ void FSLog (const char *format, ...)
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
-    if (serverLogFD > 0)
-	write(serverLogFD, tbuffer, len);
+#ifndef AFS_NT40_ENV
+    if ( serverLogSyslog ){
+	syslog(LOG_INFO, "%s", info);
+    } else 
+#endif
+	if (serverLogFD > 0)
+	    write(serverLogFD, tbuffer, len);
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV)
@@ -189,6 +190,13 @@ int OpenLog(const char *fileName)
     struct tm *TimeFields;
     char FileName[MAXPATHLEN]; 
 
+    if ( serverLogSyslog ) {
+#ifndef AFS_NT40_ENV
+	openlog(NULL, LOG_PID, serverLogSyslogFacility);
+	return;
+#endif
+    }
+
     if (mrafsStyleLogs) {
         TM_GetTimeOfDay(&Start, 0);
         TimeFields = localtime(&Start.tv_sec);
@@ -243,6 +251,10 @@ int ReOpenLog(const char *fileName)
 
     if (access(fileName, F_OK)==0)
 	return 0; /* exists, no need to reopen. */
+
+    if ( serverLogSyslog ) {
+	return 0;
+    }
 
 #if defined(AFS_PTHREAD_ENV)
     LOCK_SERVERLOG();

@@ -143,13 +143,26 @@ void main (argc, argv)
 	else if (strncmp (arg, "-enable_process_stats", alen) == 0) {
 	    rx_enableProcessRPCStats();
 	}
+#ifndef AFS_NT40_ENV
+	else if (strncmp(arg, "-syslog", alen)==0) {
+	    /* set syslog logging flag */
+	    serverLogSyslog = 1;
+	} 
+	else if (strncmp(arg, "-syslog=", MIN(8,alen))==0) {
+	    serverLogSyslog = 1;
+	    serverLogSyslogFacility = atoi(arg+8);
+	}
+#endif
 	else if (*arg == '-') {
 	  usage:
 
 		/* hack in help flag support */
 
 	    	printf ("Usage: ptserver [-database <db path>] "
-			"[-p <number of processes>] [-rebuildDB] "
+#ifndef AFS_NT40_ENV
+			"[-syslog[=FACILITY]] "
+#endif
+			"[-p <number of processes>] [-rebuild] "
 			/* "[-enable_peer_stats] [-enable_process_stats] " */
 			"[-help]\n");
 		fflush(stdout);
