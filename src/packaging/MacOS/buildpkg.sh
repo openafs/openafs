@@ -1,4 +1,5 @@
 #!/bin/sh
+# Portions Copyright (c) 2003 Apple Computer, Inc.  All rights reserved.
 
 if [ -z "$1" ]; then
    echo Usage: buildpkg binary-dir
@@ -6,15 +7,28 @@ if [ -z "$1" ]; then
 fi
 BINDEST=$1
 RESSRC=`pwd`
-if [ ! -f /usr/bin/package ]; then
-   echo "/usr/bin/package does not exist. Please run this script on a MacOS X system"
-  echo "with the BSD subsystem installed"
-  exit 1
-fi
-if grep -q 'set resDir = ""' /usr/bin/package ; then
-   echo /usr/bin/package is buggy.
-   echo remove the line \''set resDir = ""'\' from /usr/bin/package and try again
-   exit 1
+majorvers=`uname -r | sed 's/\..*//'`
+if [ $majorvers -ge 7 ]; then
+    SEP=:
+    package=/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker
+    if [ ! -x $package ]; then
+       echo "PackageMaker does not exist. Please run this script on a MacOS X system"
+      echo "with the DeveloperTools package installed"
+      exit 1
+    fi
+else
+    SEP=.
+    package=/usr/bin/package
+    if [ ! -f $package ]; then
+       echo "$package does not exist. Please run this script on a MacOS X system"
+      echo "with the BSD subsystem installed"
+      exit 1
+    fi
+    if grep -q 'set resDir = ""' $package ; then
+       echo $package is buggy.
+       echo remove the line \''set resDir = ""'\' from $package and try again
+       exit 1
+    fi
 fi
 
 if [ -x /usr/bin/curl ]; then
@@ -54,22 +68,21 @@ rm -rf pkgroot pkgres
 mkdir -p $PKGROOT $PKGRES
 
 mkdir $PKGROOT/Library
-chown -R root.admin $PKGROOT
+chown -R root${SEP}admin $PKGROOT
 chmod -R 775 $PKGROOT
 mkdir $PKGROOT/Library/OpenAFS $PKGROOT/Library/OpenAFS/Tools
 cd $BINDEST
 pax -rw * $PKGROOT/Library/OpenAFS/Tools
 cd $RESSRC
-mkdir $PKGROOT/Library
 mkdir $PKGROOT/Library/StartupItems 
 mkdir $PKGROOT/Library/StartupItems/OpenAFS
 cp $BINDEST/root.client/usr/vice/etc/afs.rc  $PKGROOT/Library/StartupItems/OpenAFS/OpenAFS
 chmod a+x $PKGROOT/Library/StartupItems/OpenAFS/OpenAFS
 cp $BINDEST/root.client/usr/vice/etc/StartupParameters.plist  $PKGROOT/Library/StartupItems/OpenAFS/StartupParameters.plist
-chown -R root.admin $PKGROOT/Library
+chown -R root${SEP}admin $PKGROOT/Library
 chmod -R o-w $PKGROOT/Library
 chmod -R g+w $PKGROOT/Library
-chown -R root.wheel $PKGROOT/Library/OpenAFS/Tools
+chown -R root${SEP}wheel $PKGROOT/Library/OpenAFS/Tools
 chmod -R og-w $PKGROOT/Library/OpenAFS/Tools
 
 mkdir $PKGROOT/private $PKGROOT/private/var $PKGROOT/private/var/db
@@ -77,14 +90,22 @@ mkdir $PKGROOT/private/var/db/openafs $PKGROOT/private/var/db/openafs/cache
 mkdir $PKGROOT/private/var/db/openafs/etc $PKGROOT/private/var/db/openafs/etc/config
 cp $RESSRC/CellServDB $PKGROOT/private/var/db/openafs/etc/CellServDB.master
 echo andrew.cmu.edu > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
-echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
+if [ $majorvers -ge 7 ]; then
+    echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
+    make AFSINCLUDE=$BINDEST/include
+    cp afssettings $PKGROOT/private/var/db/openafs/etc/config
+    cp settings.plist $PKGROOT/private/var/db/openafs/etc/config/settings.plist.orig
+    make clean
+else
+    echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
+fi
 #echo '-stat 2000 -dcache 800 -daemons 3 -volumes 70 -rootvol root.afs.local' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
 
 strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
 cp -RP $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext $PKGROOT/private/var/db/openafs/etc
 
-chown -R root.wheel $PKGROOT/private
+chown -R root${SEP}wheel $PKGROOT/private
 chmod -R og-w $PKGROOT/private
 chmod  og-rx $PKGROOT/private/var/db/openafs/cache
 
@@ -102,26 +123,41 @@ done
 
 ln -s ../../Library/OpenAFS/Tools/root.client/usr/vice/etc/afsd $PKGROOT/usr/sbin/afsd
 
-chown -R root.wheel $PKGROOT/usr
+chown -R root${SEP}wheel $PKGROOT/usr
 chmod -R og-w $PKGROOT/usr
 
-cp License.rtf ReadMe.rtf OpenAFS.post_install OpenAFS.pre_upgrade $PKGRES
-cp OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade
-chmod a+x $PKGRES/OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade $PKGRES/OpenAFS.pre_upgrade
+if [ $majorvers -ge 7 ]; then
+    cp OpenAFS.post_install $PKGRES/postinstall
+    cp OpenAFS.pre_upgrade $PKGRES/preupgrade
+    cp OpenAFS.post_install $PKGRES/postupgrade
+    chmod a+x $PKGRES/postinstall $PKGRES/postupgrade $PKGRES/preupgrade
+else
+    cp OpenAFS.post_install OpenAFS.pre_upgrade $PKGRES
+    cp OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade
+    chmod a+x $PKGRES/OpenAFS.post_install $PKGRES/OpenAFS.post_upgrade $PKGRES/OpenAFS.pre_upgrade
+fi
+cp License.rtf ReadMe.rtf $PKGRES
 cp csrvdbmerge.pl $PKGRES
 chmod a+x $PKGRES/csrvdbmerge.pl
 cp CellServDB.list $PKGRES
-chown -R root.wheel $PKGRES
+chown -R root${SEP}wheel $PKGRES
 rm -rf OpenAFS.pkg
-echo /usr/bin/package $PKGROOT OpenAFS.info -r $PKGRES
-/usr/bin/package $PKGROOT OpenAFS.info -r $PKGRES
-#old versions of package didn't handle this properly
-if [ ! -r OpenAFS.pkg/Contents ]; then
-	mkdir OpenAFS.pkg/Contents OpenAFS.pkg/Contents/Resources
-	mv OpenAFS.pkg/OpenAFS.* OpenAFS.pkg/Contents/Resources
-	mv OpenAFS.pkg/*.rtf OpenAFS.pkg/Contents/Resources
-	mv OpenAFS.pkg/csrvdbmerge.pl OpenAFS.pkg/Contents/Resources
-	mv OpenAFS.pkg/CellServDB* OpenAFS.pkg/Contents/Resources
+if [ $majorvers -ge 7 ]; then
+    echo $package -build -p $RESSRC/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
+	-i OpenAFS.Info.plist -d OpenAFS.Description.plist
+    $package -build -p $RESSRC/OpenAFS.pkg -f $PKGROOT -r $PKGRES \
+	-i OpenAFS.Info.plist -d OpenAFS.Description.plist
+else
+    echo $package $PKGROOT OpenAFS.info -r $PKGRES
+    $package $PKGROOT OpenAFS.info -r $PKGRES
+    #old versions of package didn't handle this properly
+    if [ ! -r OpenAFS.pkg/Contents ]; then
+	    mkdir OpenAFS.pkg/Contents OpenAFS.pkg/Contents/Resources
+	    mv OpenAFS.pkg/OpenAFS.* OpenAFS.pkg/Contents/Resources
+	    mv OpenAFS.pkg/*.rtf OpenAFS.pkg/Contents/Resources
+	    mv OpenAFS.pkg/csrvdbmerge.pl OpenAFS.pkg/Contents/Resources
+	    mv OpenAFS.pkg/CellServDB* OpenAFS.pkg/Contents/Resources
+    fi
 fi
 
 rm -rf pkgroot pkgres

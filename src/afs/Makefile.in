@@ -4,6 +4,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 DEST=@DEST@
 TOP_INCDIR=@TOP_INCDIR@
@@ -30,7 +32,7 @@ UKERNELDIR = ../libuafs
 
 include ../config/Makefile.${SYS_NAME}
 
-all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h
+all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h ${TOP_INCDIR}/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
@@ -56,7 +58,7 @@ afszcm.cat: afs_trace.msf
 			/usr/etc/gencat afszcm.cat afs_trace.msf ;; \
 		*_linux* | *_umlinux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
-		ppc_darwin* | i386_fbsd*) \
+		*_darwin_* | i386_fbsd*) \
 			echo No gencat for ${SYS_NAME} ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \
@@ -74,7 +76,7 @@ ukinstall: ${UKERNELDIR}/afs AFS_component_version_number.c afs_trace.h
 ${UKERNELDIR}/afs:
 	mkdir -p $@
 
-install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h
+install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
@@ -117,8 +119,17 @@ ${DEST}/include/afs/afs_stats.h: afs_stats.h
 ${DESTDIR}${includedir}/afs/afs_stats.h: afs_stats.h
 	${INSTALL} $? $@
 
-
 ${TOP_INCDIR}/afs/afs_stats.h: afs_stats.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/sysctl.h: sysctl.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/sysctl.h: sysctl.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/sysctl.h: sysctl.h
 	${INSTALL} $? $@
 
 
@@ -144,13 +155,13 @@ ${TOP_INCDIR}/afs/nfsclient.h: nfsclient.h
 	${INSTALL} $? $@
 
 
-dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h
+dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/sysctl.h
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
 	esac
 	case ${SYS_NAME} in \
-		next_mach30 | vax_ul43 | ppc_darwin* | i386_fbsd* ) \
+		next_mach30 | vax_ul43 | *_darwin_* | i386_fbsd* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
 			${INSTALL} afszcm.cat ${DEST}/root.client/usr/vice/etc/C ;; \

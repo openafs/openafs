@@ -1,3 +1,6 @@
+/*
+ * Portions Copyright (c) 2003 Apple Computer, Inc.  All rights reserved.
+ */
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -9,6 +12,9 @@ RCSID("$Header$");
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/ubc.h>
+#if defined(AFS_DARWIN70_ENV)
+#include <vfs/vfs_support.h>
+#endif /* defined(AFS_DARWIN70_ENV) */
 
 int afs_vop_lookup(struct vop_lookup_args *);
 int afs_vop_create(struct vop_create_args *);
@@ -35,7 +41,9 @@ int afs_vop_rmdir(struct vop_rmdir_args *);
 int afs_vop_symlink(struct vop_symlink_args *);
 int afs_vop_readdir(struct vop_readdir_args *);
 int afs_vop_readlink(struct vop_readlink_args *);
+#if !defined(AFS_DARWIN70_ENV)
 extern int ufs_abortop(struct vop_abortop_args *);
+#endif /* !defined(AFS_DARWIN70_ENV) */
 int afs_vop_inactive(struct vop_inactive_args *);
 int afs_vop_reclaim(struct vop_reclaim_args *);
 int afs_vop_lock(struct vop_lock_args *);
@@ -89,9 +97,13 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 	{ &vop_symlink_desc, afs_vop_symlink },        /* symlink */
 	{ &vop_readdir_desc, afs_vop_readdir },        /* readdir */
 	{ &vop_readlink_desc, afs_vop_readlink },      /* readlink */
+#if defined(AFS_DARWIN70_ENV)
+	{ &vop_abortop_desc, nop_abortop },             /* abortop */
+#else /* ! defined(AFS_DARWIN70_ENV) */
 	/* Yes, we use the ufs_abortop call.  It just releases the namei
 	   buffer stuff */
 	{ &vop_abortop_desc, ufs_abortop },             /* abortop */
+#endif /* defined(AFS_DARWIN70_ENV) */
 	{ &vop_inactive_desc, afs_vop_inactive },      /* inactive */
 	{ &vop_reclaim_desc, afs_vop_reclaim },        /* reclaim */
 	{ &vop_lock_desc, afs_vop_lock },              /* lock */
@@ -277,17 +289,37 @@ afs_vop_open(ap)
 	} */ *ap;
 {
     int error;
-    struct vcache *vc = VTOAFS(ap->a_vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *vc = VTOAFS(vp);
+#ifdef AFS_DARWIN14_ENV
+    int didhold = 0;
+    /*----------------------------------------------------------------
+     * osi_VM_TryReclaim() removes the ubcinfo of a vnode, but that vnode
+     * can later be passed to vn_open(), which will skip the call to
+     * ubc_hold(), and when the ubcinfo is later added, the ui_refcount
+     * will be off.  So we compensate by calling ubc_hold() ourselves
+     * when ui_refcount is less than 2.  If an error occurs in afs_open()
+     * we must call ubc_rele(), which is what vn_open() would do if it
+     * was able to call ubc_hold() in the first place.
+     *----------------------------------------------------------------*/
+    if (vp->v_type == VREG && !(vp->v_flag & VSYSTEM)
+      && vp->v_ubcinfo->ui_refcount < 2)
+	didhold = ubc_hold(vp);
+#endif /* AFS_DARWIN14_ENV */
     AFS_GLOCK();
     error = afs_open(&vc, ap->a_mode, ap->a_cred);
 #ifdef DIAGNOSTIC
-    if (AFSTOV(vc) != ap->a_vp)
+    if (AFSTOV(vc) != vp)
 	panic("AFS open changed vnode!");
 #endif
     afs_BozonLock(&vc->pvnLock, vc);
     osi_FlushPages(vc, ap->a_cred);
     afs_BozonUnlock(&vc->pvnLock, vc);
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN14_ENV
+    if (error && didhold)
+	ubc_rele(vp);
+#endif /* AFS_DARWIN14_ENV */
     return error;
 }
 
@@ -1281,6 +1313,17 @@ afs_vop_pathconf(ap)
       case _PC_PIPE_BUF:
 	return EINVAL;
 	break;
+#if defined(AFS_DARWIN70_ENV)
+      case _PC_NAME_CHARS_MAX:
+	*ap->a_retval = NAME_MAX;
+	break;
+      case _PC_CASE_SENSITIVE:
+	*ap->a_retval = 1;
+	break;
+      case _PC_CASE_PRESERVING:
+	*ap->a_retval = 1;
+	break;
+#endif /* defined(AFS_DARWIN70_ENV) */
       default:
 	return EINVAL;
     }

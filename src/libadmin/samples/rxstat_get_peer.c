@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -24,6 +26,13 @@ RCSID("$Header$");
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
+
+#ifdef AFS_DARWIN_ENV
+pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif /* AFS_DARWIN_ENV */
+
 #include <rx/rxstat.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG

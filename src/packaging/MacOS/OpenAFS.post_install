@@ -1,10 +1,24 @@
 #!/bin/sh
+# Portions Copyright (c) 2003 Apple Computer, Inc.  All rights reserved.
 if [ -d /afs -a ! -h /afs ]; then
    rmdir /afs
 fi
-mkdir -p /Network/afs
-if [ ! -h /afs ]; then
-  ln -s /Network/afs /afs
+majorvers=`uname -r | sed 's/\..*//'`
+if [ $majorvers -ge 7 ]; then
+  # /Network is now readonly, so put AFS in /afs; make sure /afs is a directory
+  if [ -e /afs ]; then
+    if [ -h /afs -o ! -d /afs ]; then
+      rm -f /afs
+      mkdir /afs
+    fi
+  else
+    mkdir /afs
+  fi
+else
+  mkdir -p /Network/afs
+  if [ ! -h /afs ]; then
+    ln -s /Network/afs /afs
+  fi
 fi
 
 cd /var/db/openafs/etc
@@ -48,4 +62,14 @@ if [ -z "$done" ]; then
     cp CellServDB.master CellServDB.master.last
     cp CellServDB.master CellServDB
   fi
+fi
+
+if [ $majorvers -ge 7 ]; then
+  # make config/settings.plist if it doesn't exist
+  if [ ! -e config/settings.plist -a -e config/settings.plist.orig ]; then
+    cp config/settings.plist.orig config/settings.plist
+  fi
+elif [ -e config/afssettings ]; then
+  # turn off execution of afssettings
+  chmod a-x config/afssettings
 fi

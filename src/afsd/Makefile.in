@@ -5,6 +5,8 @@
 # This software has been released under the terms of the IBM Public
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
+#
+# Portions Copyright (c) 2003 Apple Computer, Inc.
 
 # afsd makefile
 DEST=@DEST@
@@ -52,7 +54,7 @@ afsd: afsd.o $(AFSLIBS)
 		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
 	sgi_64 | sgi_65 ) \
 		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
-	ppc_darwin* ) \
+	*_darwin_* ) \
 		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} -F/System/Library/PrivateFrameworks -framework DiskArbitration ;; \
 	* ) \
 		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
@@ -124,7 +126,7 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 		*linux* ) \
 			${INSTALLex} -f afs.rc.linux ${DEST}/root.client/usr/vice/etc/afs.rc; \
 			${INSTALL} -f afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
-		ppc_darwin*) \
+		*_darwin_*) \
 			${INSTALLex} -f afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL} -f afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \
