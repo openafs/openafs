@@ -972,7 +972,7 @@ typedef SERVICE_STATUS_HANDLE ( * RegisterServiceCtrlHandlerFunc   )(  LPCTSTR ,
 RegisterServiceCtrlHandlerExFunc pRegisterServiceCtrlHandlerEx = NULL;
 RegisterServiceCtrlHandlerFunc   pRegisterServiceCtrlHandler   = NULL; 
 
-void afsd_Main(DWORD argc, LPTSTR *argv)
+VOID WINAPI afsd_Main(DWORD argc, LPTSTR *argv)
 {
     long code;
     char *reason;
