@@ -1,369 +1,373 @@
+#ifndef EIO
+#error Can't deal with this case
+#endif /* EIO */
+
+/* Cases we know we should deal with */
+#ifndef EDQUOT
+#define EDQUOT ENOSPC
+#endif /* EDQUOT */
+
+/* Map everything else to EIO */
 #ifndef EPERM
-#define EPERM 0
+#define EPERM EIO
 #endif /* EPERM */
 #ifndef ENOENT
-#define ENOENT 0
+#define ENOENT EIO
 #endif /* ENOENT */
 #ifndef ESRCH
-#define ESRCH 0
+#define ESRCH EIO
 #endif /* ESRCH */
 #ifndef EINTR
-#define EINTR 0
+#define EINTR EIO
 #endif /* EINTR */
-#ifndef EIO
-#define EIO 0
-#endif /* EIO */
 #ifndef ENXIO
-#define ENXIO 0
+#define ENXIO EIO
 #endif /* ENXIO */
 #ifndef E2BIG
-#define E2BIG 0
+#define E2BIG EIO
 #endif /* E2BIG */
 #ifndef ENOEXEC
-#define ENOEXEC 0
+#define ENOEXEC EIO
 #endif /* ENOEXEC */
 #ifndef EBADF
-#define EBADF 0
+#define EBADF EIO
 #endif /* EBADF */
 #ifndef ECHILD
-#define ECHILD 0
+#define ECHILD EIO
 #endif /* ECHILD */
 #ifndef EAGAIN
-#define EAGAIN 0
+#define EAGAIN EIO
 #endif /* EAGAIN */
 #ifndef ENOMEM
-#define ENOMEM 0
+#define ENOMEM EIO
 #endif /* ENOMEM */
 #ifndef EACCES
-#define EACCES 0
+#define EACCES EIO
 #endif /* EACCES */
 #ifndef EFAULT
-#define EFAULT 0
+#define EFAULT EIO
 #endif /* EFAULT */
 #ifndef ENOTBLK
-#define ENOTBLK 0
+#define ENOTBLK EIO
 #endif /* ENOTBLK */
 #ifndef EBUSY
-#define EBUSY 0
+#define EBUSY EIO
 #endif /* EBUSY */
 #ifndef EEXIST
-#define EEXIST 0
+#define EEXIST EIO
 #endif /* EEXIST */
 #ifndef EXDEV
-#define EXDEV 0
+#define EXDEV EIO
 #endif /* EXDEV */
 #ifndef ENODEV
-#define ENODEV 0
+#define ENODEV EIO
 #endif /* ENODEV */
 #ifndef ENOTDIR
-#define ENOTDIR 0
+#define ENOTDIR EIO
 #endif /* ENOTDIR */
 #ifndef EISDIR
-#define EISDIR 0
+#define EISDIR EIO
 #endif /* EISDIR */
 #ifndef EINVAL
-#define EINVAL 0
+#define EINVAL EIO
 #endif /* EINVAL */
 #ifndef ENFILE
-#define ENFILE 0
+#define ENFILE EIO
 #endif /* ENFILE */
 #ifndef EMFILE
-#define EMFILE 0
+#define EMFILE EIO
 #endif /* EMFILE */
 #ifndef ENOTTY
-#define ENOTTY 0
+#define ENOTTY EIO
 #endif /* ENOTTY */
 #ifndef ETXTBSY
-#define ETXTBSY 0
+#define ETXTBSY EIO
 #endif /* ETXTBSY */
 #ifndef EFBIG
-#define EFBIG 0
+#define EFBIG EIO
 #endif /* EFBIG */
 #ifndef ENOSPC
-#define ENOSPC 0
+#define ENOSPC EIO
 #endif /* ENOSPC */
 #ifndef ESPIPE
-#define ESPIPE 0
+#define ESPIPE EIO
 #endif /* ESPIPE */
 #ifndef EROFS
-#define EROFS 0
+#define EROFS EIO
 #endif /* EROFS */
 #ifndef EMLINK
-#define EMLINK 0
+#define EMLINK EIO
 #endif /* EMLINK */
 #ifndef EPIPE
-#define EPIPE 0
+#define EPIPE EIO
 #endif /* EPIPE */
 #ifndef EDOM
-#define EDOM 0
+#define EDOM EIO
 #endif /* EDOM */
 #ifndef ERANGE
-#define ERANGE 0
+#define ERANGE EIO
 #endif /* ERANGE */
 #ifndef EDEADLK
-#define EDEADLK 0
+#define EDEADLK EIO
 #endif /* EDEADLK */
 #ifndef ENAMETOOLONG
-#define ENAMETOOLONG 0
+#define ENAMETOOLONG EIO
 #endif /* ENAMETOOLONG */
 #ifndef ENOLCK
-#define ENOLCK 0
+#define ENOLCK EIO
 #endif /* ENOLCK */
 #ifndef ENOSYS
-#define ENOSYS 0
+#define ENOSYS EIO
 #endif /* ENOSYS */
 #ifndef ENOTEMPTY
-#define ENOTEMPTY 0
+#define ENOTEMPTY EIO
 #endif /* ENOTEMPTY */
 #ifndef ELOOP
-#define ELOOP 0
+#define ELOOP EIO
 #endif /* ELOOP */
 #ifndef EWOULDBLOCK
-#define EWOULDBLOCK 0
+#define EWOULDBLOCK EIO
 #endif /* EWOULDBLOCK */
 #ifndef ENOMSG
-#define ENOMSG 0
+#define ENOMSG EIO
 #endif /* ENOMSG */
 #ifndef EIDRM
-#define EIDRM 0
+#define EIDRM EIO
 #endif /* EIDRM */
 #ifndef ECHRNG
-#define ECHRNG 0
+#define ECHRNG EIO
 #endif /* ECHRNG */
 #ifndef EL2NSYNC
-#define EL2NSYNC 0
+#define EL2NSYNC EIO
 #endif /* EL2NSYNC */
 #ifndef EL3HLT
-#define EL3HLT 0
+#define EL3HLT EIO
 #endif /* EL3HLT */
 #ifndef EL3RST
-#define EL3RST 0
+#define EL3RST EIO
 #endif /* EL3RST */
 #ifndef ELNRNG
-#define ELNRNG 0
+#define ELNRNG EIO
 #endif /* ELNRNG */
 #ifndef EUNATCH
-#define EUNATCH 0
+#define EUNATCH EIO
 #endif /* EUNATCH */
 #ifndef ENOCSI
-#define ENOCSI 0
+#define ENOCSI EIO
 #endif /* ENOCSI */
 #ifndef EL2HLT
-#define EL2HLT 0
+#define EL2HLT EIO
 #endif /* EL2HLT */
 #ifndef EBADE
-#define EBADE 0
+#define EBADE EIO
 #endif /* EBADE */
 #ifndef EBADR
-#define EBADR 0
+#define EBADR EIO
 #endif /* EBADR */
 #ifndef EXFULL
-#define EXFULL 0
+#define EXFULL EIO
 #endif /* EXFULL */
 #ifndef ENOANO
-#define ENOANO 0
+#define ENOANO EIO
 #endif /* ENOANO */
 #ifndef EBADRQC
-#define EBADRQC 0
+#define EBADRQC EIO
 #endif /* EBADRQC */
 #ifndef EBADSLT
-#define EBADSLT 0
+#define EBADSLT EIO
 #endif /* EBADSLT */
 #ifndef EBFONT
-#define EBFONT 0
+#define EBFONT EIO
 #endif /* EBFONT */
 #ifndef ENOSTR
-#define ENOSTR 0
+#define ENOSTR EIO
 #endif /* ENOSTR */
 #ifndef ENODATA
-#define ENODATA 0
+#define ENODATA EIO
 #endif /* ENODATA */
 #ifndef ETIME
-#define ETIME 0
+#define ETIME EIO
 #endif /* ETIME */
 #ifndef ENOSR
-#define ENOSR 0
+#define ENOSR EIO
 #endif /* ENOSR */
 #ifndef ENONET
-#define ENONET 0
+#define ENONET EIO
 #endif /* ENONET */
 #ifndef ENOPKG
-#define ENOPKG 0
+#define ENOPKG EIO
 #endif /* ENOPKG */
 #ifndef EREMOTE
-#define EREMOTE 0
+#define EREMOTE EIO
 #endif /* EREMOTE */
 #ifndef ENOLINK
-#define ENOLINK 0
+#define ENOLINK EIO
 #endif /* ENOLINK */
 #ifndef EADV
-#define EADV 0
+#define EADV EIO
 #endif /* EADV */
 #ifndef ESRMNT
-#define ESRMNT 0
+#define ESRMNT EIO
 #endif /* ESRMNT */
 #ifndef ECOMM
-#define ECOMM 0
+#define ECOMM EIO
 #endif /* ECOMM */
 #ifndef EPROTO
-#define EPROTO 0
+#define EPROTO EIO
 #endif /* EPROTO */
 #ifndef EMULTIHOP
-#define EMULTIHOP 0
+#define EMULTIHOP EIO
 #endif /* EMULTIHOP */
 #ifndef EDOTDOT
-#define EDOTDOT 0
+#define EDOTDOT EIO
 #endif /* EDOTDOT */
 #ifndef EBADMSG
-#define EBADMSG 0
+#define EBADMSG EIO
 #endif /* EBADMSG */
 #ifndef EOVERFLOW
-#define EOVERFLOW 0
+#define EOVERFLOW EIO
 #endif /* EOVERFLOW */
 #ifndef ENOTUNIQ
-#define ENOTUNIQ 0
+#define ENOTUNIQ EIO
 #endif /* ENOTUNIQ */
 #ifndef EBADFD
-#define EBADFD 0
+#define EBADFD EIO
 #endif /* EBADFD */
 #ifndef EREMCHG
-#define EREMCHG 0
+#define EREMCHG EIO
 #endif /* EREMCHG */
 #ifndef ELIBACC
-#define ELIBACC 0
+#define ELIBACC EIO
 #endif /* ELIBACC */
 #ifndef ELIBBAD
-#define ELIBBAD 0
+#define ELIBBAD EIO
 #endif /* ELIBBAD */
 #ifndef ELIBSCN
-#define ELIBSCN 0
+#define ELIBSCN EIO
 #endif /* ELIBSCN */
 #ifndef ELIBMAX
-#define ELIBMAX 0
+#define ELIBMAX EIO
 #endif /* ELIBMAX */
 #ifndef ELIBEXEC
-#define ELIBEXEC 0
+#define ELIBEXEC EIO
 #endif /* ELIBEXEC */
 #ifndef EILSEQ
-#define EILSEQ 0
+#define EILSEQ EIO
 #endif /* EILSEQ */
 #ifndef ERESTART
-#define ERESTART 0
+#define ERESTART EIO
 #endif /* ERESTART */
 #ifndef ESTRPIPE
-#define ESTRPIPE 0
+#define ESTRPIPE EIO
 #endif /* ESTRPIPE */
 #ifndef EUSERS
-#define EUSERS 0
+#define EUSERS EIO
 #endif /* EUSERS */
 #ifndef ENOTSOCK
-#define ENOTSOCK 0
+#define ENOTSOCK EIO
 #endif /* ENOTSOCK */
 #ifndef EDESTADDRREQ
-#define EDESTADDRREQ 0
+#define EDESTADDRREQ EIO
 #endif /* EDESTADDRREQ */
 #ifndef EMSGSIZE
-#define EMSGSIZE 0
+#define EMSGSIZE EIO
 #endif /* EMSGSIZE */
 #ifndef EPROTOTYPE
-#define EPROTOTYPE 0
+#define EPROTOTYPE EIO
 #endif /* EPROTOTYPE */
 #ifndef ENOPROTOOPT
-#define ENOPROTOOPT 0
+#define ENOPROTOOPT EIO
 #endif /* ENOPROTOOPT */
 #ifndef EPROTONOSUPPORT
-#define EPROTONOSUPPORT 0
+#define EPROTONOSUPPORT EIO
 #endif /* EPROTONOSUPPORT */
 #ifndef ESOCKTNOSUPPORT
-#define ESOCKTNOSUPPORT 0
+#define ESOCKTNOSUPPORT EIO
 #endif /* ESOCKTNOSUPPORT */
 #ifndef EOPNOTSUPP
-#define EOPNOTSUPP 0
+#define EOPNOTSUPP EIO
 #endif /* EOPNOTSUPP */
 #ifndef EPFNOSUPPORT
-#define EPFNOSUPPORT 0
+#define EPFNOSUPPORT EIO
 #endif /* EPFNOSUPPORT */
 #ifndef EAFNOSUPPORT
-#define EAFNOSUPPORT 0
+#define EAFNOSUPPORT EIO
 #endif /* EAFNOSUPPORT */
 #ifndef EADDRINUSE
-#define EADDRINUSE 0
+#define EADDRINUSE EIO
 #endif /* EADDRINUSE */
 #ifndef EADDRNOTAVAIL
-#define EADDRNOTAVAIL 0
+#define EADDRNOTAVAIL EIO
 #endif /* EADDRNOTAVAIL */
 #ifndef ENETDOWN
-#define ENETDOWN 0
+#define ENETDOWN EIO
 #endif /* ENETDOWN */
 #ifndef ENETUNREACH
-#define ENETUNREACH 0
+#define ENETUNREACH EIO
 #endif /* ENETUNREACH */
 #ifndef ENETRESET
-#define ENETRESET 0
+#define ENETRESET EIO
 #endif /* ENETRESET */
 #ifndef ECONNABORTED
-#define ECONNABORTED 0
+#define ECONNABORTED EIO
 #endif /* ECONNABORTED */
 #ifndef ECONNRESET
-#define ECONNRESET 0
+#define ECONNRESET EIO
 #endif /* ECONNRESET */
 #ifndef ENOBUFS
-#define ENOBUFS 0
+#define ENOBUFS EIO
 #endif /* ENOBUFS */
 #ifndef EISCONN
-#define EISCONN 0
+#define EISCONN EIO
 #endif /* EISCONN */
 #ifndef ENOTCONN
-#define ENOTCONN 0
+#define ENOTCONN EIO
 #endif /* ENOTCONN */
 #ifndef ESHUTDOWN
-#define ESHUTDOWN 0
+#define ESHUTDOWN EIO
 #endif /* ESHUTDOWN */
 #ifndef ETOOMANYREFS
-#define ETOOMANYREFS 0
+#define ETOOMANYREFS EIO
 #endif /* ETOOMANYREFS */
 #ifndef ETIMEDOUT
-#define ETIMEDOUT 0
+#define ETIMEDOUT EIO
 #endif /* ETIMEDOUT */
 #ifndef ECONNREFUSED
-#define ECONNREFUSED 0
+#define ECONNREFUSED EIO
 #endif /* ECONNREFUSED */
 #ifndef EHOSTDOWN
-#define EHOSTDOWN 0
+#define EHOSTDOWN EIO
 #endif /* EHOSTDOWN */
 #ifndef EHOSTUNREACH
-#define EHOSTUNREACH 0
+#define EHOSTUNREACH EIO
 #endif /* EHOSTUNREACH */
 #ifndef EALREADY
-#define EALREADY 0
+#define EALREADY EIO
 #endif /* EALREADY */
 #ifndef EINPROGRESS
-#define EINPROGRESS 0
+#define EINPROGRESS EIO
 #endif /* EINPROGRESS */
 #ifndef ESTALE
-#define ESTALE 0
+#define ESTALE EIO
 #endif /* ESTALE */
 #ifndef EUCLEAN
-#define EUCLEAN 0
+#define EUCLEAN EIO
 #endif /* EUCLEAN */
 #ifndef ENOTNAM
-#define ENOTNAM 0
+#define ENOTNAM EIO
 #endif /* ENOTNAM */
 #ifndef ENAVAIL
-#define ENAVAIL 0
+#define ENAVAIL EIO
 #endif /* ENAVAIL */
 #ifndef EISNAM
-#define EISNAM 0
+#define EISNAM EIO
 #endif /* EISNAM */
 #ifndef EREMOTEIO
-#define EREMOTEIO 0
+#define EREMOTEIO EIO
 #endif /* EREMOTEIO */
-#ifndef EDQUOT
-#define EDQUOT 0
-#endif /* EDQUOT */
 #ifndef ENOMEDIUM
-#define ENOMEDIUM 0
+#define ENOMEDIUM EIO
 #endif /* ENOMEDIUM */
 #ifndef EMEDIUMTYPE
-#define EMEDIUMTYPE 0
+#define EMEDIUMTYPE EIO
 #endif /* EMEDIUMTYPE */
