@@ -304,13 +304,13 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     strcpy(aserver.name, "afs");
     strcpy(aserver.cell, rootcell);
 
+    GetLocalTime (&stNow);
+    SystemTimeToFileTime (&stNow, &ftNow);
+    llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
+    llNow /= c100ns1SECOND;
+
     rc = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
     if ( rc == 0 ) {
-        GetLocalTime (&stNow);
-        SystemTimeToFileTime (&stNow, &ftNow);
-        llNow = (((LONGLONG)ftNow.dwHighDateTime) << 32) + (LONGLONG)(ftNow.dwLowDateTime);
-        llNow /= c100ns1SECOND;
-
         TimeToSystemTime (&stExpires, atoken.endTime);
         SystemTimeToFileTime (&stExpires, &ftExpires);
         llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
@@ -371,14 +371,15 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         KFW_AFS_renew_token_for_cell(rootcell);
 
         rc = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
-
-        TimeToSystemTime (&stExpires, atoken.endTime);
-        SystemTimeToFileTime (&stExpires, &ftExpires);
-        llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
-        llExpires /= c100ns1SECOND;
+        if ( rc == 0 ) {
+            TimeToSystemTime (&stExpires, atoken.endTime);
+            SystemTimeToFileTime (&stExpires, &ftExpires);
+            llExpires = (((LONGLONG)ftExpires.dwHighDateTime) << 32) + (LONGLONG)(ftExpires.dwLowDateTime);
+            llExpires /= c100ns1SECOND;
         
-        if (!rc && (llNow < llExpires))
-            goto cleanup;
+            if (llNow < llExpires)
+                goto cleanup;
+        }
     }
 
     SendMessage(hWnd, WM_OBTAIN_TOKENS, FALSE, (long)rootcell);

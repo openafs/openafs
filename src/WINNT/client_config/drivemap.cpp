@@ -26,6 +26,7 @@ extern "C" {
 #endif
 #include <osilog.h>
 #include <lanahelper.h>
+#include <strsafe.h>
 
 extern void Config_GetLanAdapter (ULONG *pnLanAdapter);
 
@@ -76,6 +77,28 @@ WriteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
 }
 
 static BOOL 
+WriteExpandedRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
+{
+    HKEY hkSub = NULL;
+    RegCreateKeyEx( key,
+                    subkey,
+                    0,
+                    NULL,
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_WRITE,
+                    NULL,
+                    &hkSub,
+                    NULL);
+
+    DWORD status = RegSetValueEx( hkSub, lhs, 0, REG_EXPAND_SZ, (const BYTE *)rhs, strlen(rhs)+1 );
+
+    if ( hkSub )
+        RegCloseKey( hkSub );
+
+    return (status == ERROR_SUCCESS);
+}
+
+static BOOL 
 ReadRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs, DWORD * size)
 {
     HKEY hkSub = NULL;
@@ -89,8 +112,19 @@ ReadRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs, DWORD * siz
                     &hkSub,
                     NULL);
 
-    DWORD dwType;
-    DWORD status = RegQueryValueEx( hkSub, lhs, 0, &dwType, (LPBYTE)rhs, size );
+    DWORD dwType = 0;
+    DWORD localSize = *size;
+
+    DWORD status = RegQueryValueEx( hkSub, lhs, 0, &dwType, (LPBYTE)rhs, &localSize);
+    if (status == 0 && dwType == REG_EXPAND_SZ) {
+        TCHAR * buf = (TCHAR *)malloc((*size) * sizeof(TCHAR));
+        memcpy(buf, rhs, (*size) * sizeof(TCHAR));
+        localSize = ExpandEnvironmentStrings(buf, rhs, *size);
+        free(buf);
+        if ( localSize > *size )
+            status = !ERROR_SUCCESS;
+    }
+    *size = localSize;
 
     if ( hkSub )
         RegCloseKey( hkSub );
@@ -112,7 +146,6 @@ DeleteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs)
                     &hkSub,
                     NULL);
 
-    DWORD dwType;
     DWORD status = RegDeleteValue( hkSub, lhs );
 
     if ( hkSub )
@@ -385,7 +418,7 @@ void QueryDriveMapList_ReadSubmounts (PDRIVEMAPLIST pList)
         HKEY hkSubmounts;
 
         RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                        "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                        cszSECTION_SUBMOUNTS,
                         0, 
                         "AFS", 
                         REG_OPTION_NON_VOLATILE,
@@ -414,10 +447,18 @@ void QueryDriveMapList_ReadSubmounts (PDRIVEMAPLIST pList)
             DWORD submountPathLen = MAX_PATH;
             TCHAR submountName[MAX_PATH];
             DWORD submountNameLen = MAX_PATH;
-            DWORD dwType;
+            DWORD dwType = 0;
 
             RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
                           &dwType, (LPBYTE)submountPath, &submountPathLen);
+
+            if (dwType == REG_EXPAND_SZ) {
+                char buf[MAX_PATH];
+                StringCbCopyA(buf, MAX_PATH, submountPath);
+                submountPathLen = ExpandEnvironmentStrings(buf, submountPath, MAX_PATH);
+                if (submountPathLen > MAX_PATH)
+                    continue;
+            }
 
             SUBMOUNT Submount;
             memset (&Submount, 0x00, sizeof(SUBMOUNT));
@@ -805,7 +846,7 @@ void AddSubMount (LPTSTR pszSubmount, LPTSTR pszMapping)
     if (!szRHS[0])
         lstrcpy (szRHS, TEXT("/"));
 
-    WriteRegistryString(HKEY_LOCAL_MACHINE, cszSECTION_SUBMOUNTS, pszSubmount, szRHS);
+    WriteExpandedRegistryString(HKEY_LOCAL_MACHINE, cszSECTION_SUBMOUNTS, pszSubmount, szRHS);
 }
 
 

@@ -39,6 +39,7 @@
 #endif
 
 #include "cm_rpc.h"
+#include <strsafe.h>
 
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -1991,32 +1992,32 @@ long cm_IoctlDelAllToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 {
-	char afspath[MAX_PATH];
-	char *submountreqp;
-	int nextAutoSubmount;
+    char afspath[MAX_PATH];
+    char *submountreqp;
+    int nextAutoSubmount;
     HKEY hkSubmounts;
     DWORD dwType, dwSize;
     DWORD status;
     DWORD dwIndex;
     DWORD dwSubmounts;
 
-	cm_SkipIoctlPath(ioctlp);
+    cm_SkipIoctlPath(ioctlp);
 
-	/* Serialize this one, to prevent simultaneous mods
-	 * to afsdsbmt.ini
-	 */
-	lock_ObtainMutex(&cm_Afsdsbmt_Lock);
+    /* Serialize this one, to prevent simultaneous mods
+     * to afsdsbmt.ini
+     */
+    lock_ObtainMutex(&cm_Afsdsbmt_Lock);
 
-	/* Parse the input parameters--first the required afs path,
-	 * then the requested submount name (which may be "").
-	 */
-	cm_NormalizeAfsPath (afspath, ioctlp->inDatap);
-	submountreqp = ioctlp->inDatap + (strlen(ioctlp->inDatap)+1);
+    /* Parse the input parameters--first the required afs path,
+     * then the requested submount name (which may be "").
+     */
+    cm_NormalizeAfsPath (afspath, ioctlp->inDatap);
+    submountreqp = ioctlp->inDatap + (strlen(ioctlp->inDatap)+1);
 
-	/* If the caller supplied a suggested submount name, see if
-	 * that submount name is in use... if so, the submount's path
-	 * has to match our path.
-	 */
+    /* If the caller supplied a suggested submount name, see if
+     * that submount name is in use... if so, the submount's path
+     * has to match our path.
+     */
 
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                     "SOFTWARE\\OpenAFS\\Client\\Submounts",
@@ -2029,22 +2030,22 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
                     NULL );
 
     if (submountreqp && *submountreqp) {
-		char submountPathNormalized[MAX_PATH];
-		char submountPath[MAX_PATH];
+        char submountPathNormalized[MAX_PATH];
+        char submountPath[MAX_PATH];
 
         dwSize = sizeof(submountPath);
         status = RegQueryValueEx( hkSubmounts, submountreqp, 0,
-                         &dwType, submountPath, &dwSize);
+                                  &dwType, submountPath, &dwSize);
 
-		if (status != ERROR_SUCCESS) {
+        if (status != ERROR_SUCCESS) {
 
-			/* The suggested submount name isn't in use now--
-			 * so we can safely map the requested submount name
-			 * to the supplied path. Remember not to write the
-			 * leading "/afs" when writing out the submount.
-			 */
+            /* The suggested submount name isn't in use now--
+             * so we can safely map the requested submount name
+             * to the supplied path. Remember not to write the
+             * leading "/afs" when writing out the submount.
+             */
             RegSetValueEx( hkSubmounts, submountreqp, 0,
-                           REG_SZ, 
+                           REG_EXPAND_SZ, 
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
                            &afspath[strlen(cm_mountRoot)]:"/",
                            (strlen(&afspath[strlen(cm_mountRoot)])) ?
@@ -2055,106 +2056,113 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
             return 0;
-		}
+        }
 
-		/* The suggested submount name is already in use--if the
-		 * supplied path matches the submount's path, we can still
-		 * use the suggested submount name.
-		 */
-		cm_NormalizeAfsPath (submountPathNormalized, submountPath);
-		if (!strcmp (submountPathNormalized, afspath)) {
-			strcpy(ioctlp->outDatap, submountreqp);
-			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+        /* The suggested submount name is already in use--if the
+         * supplied path matches the submount's path, we can still
+         * use the suggested submount name.
+         */
+        cm_NormalizeAfsPath (submountPathNormalized, submountPath);
+        if (!strcmp (submountPathNormalized, afspath)) {
+            strcpy(ioctlp->outDatap, submountreqp);
+            ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey( hkSubmounts );
-			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
+            lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
             return 0;
-		}
-	}
+        }
+    }
 
     RegQueryInfoKey( hkSubmounts,
-                 NULL,  /* lpClass */
-                 NULL,  /* lpcClass */
-                 NULL,  /* lpReserved */
-                 NULL,  /* lpcSubKeys */
-                 NULL,  /* lpcMaxSubKeyLen */
-                 NULL,  /* lpcMaxClassLen */
-                 &dwSubmounts, /* lpcValues */
-                 NULL,  /* lpcMaxValueNameLen */
-                 NULL,  /* lpcMaxValueLen */
-                 NULL,  /* lpcbSecurityDescriptor */
-                 NULL   /* lpftLastWriteTime */
-                 );
+                     NULL,  /* lpClass */
+                     NULL,  /* lpcClass */
+                     NULL,  /* lpReserved */
+                     NULL,  /* lpcSubKeys */
+                     NULL,  /* lpcMaxSubKeyLen */
+                     NULL,  /* lpcMaxClassLen */
+                     &dwSubmounts, /* lpcValues */
+                     NULL,  /* lpcMaxValueNameLen */
+                     NULL,  /* lpcMaxValueLen */
+                     NULL,  /* lpcbSecurityDescriptor */
+                     NULL   /* lpftLastWriteTime */
+                     );
 
 
-	/* Having obtained a list of all available submounts, start
-	 * searching that list for a path which matches the requested
-	 * AFS path. We'll also keep track of the highest "auto15"/"auto47"
-	 * submount, in case we need to add a new one later.
-	 */
+    /* Having obtained a list of all available submounts, start
+     * searching that list for a path which matches the requested
+     * AFS path. We'll also keep track of the highest "auto15"/"auto47"
+     * submount, in case we need to add a new one later.
+     */
 
-	nextAutoSubmount = 1;
+    nextAutoSubmount = 1;
 
     for ( dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
-		char submountPathNormalized[MAX_PATH];
-		char submountPath[MAX_PATH] = "";
-		DWORD submountPathLen = sizeof(submountPath);
-        char submountName[256];
+        char submountPathNormalized[MAX_PATH];
+        char submountPath[MAX_PATH] = "";
+        DWORD submountPathLen = sizeof(submountPath);
+        char submountName[MAX_PATH];
         DWORD submountNameLen = sizeof(submountName);
 
+        dwType = 0;
         RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
-              &dwType, submountPath, &submountPathLen);
+                      &dwType, submountPath, &submountPathLen);
+        if (dwType == REG_EXPAND_SZ) {
+            char buf[MAX_PATH];
+            StringCbCopyA(buf, MAX_PATH, submountPath);
+            submountPathLen = ExpandEnvironmentStrings(buf, submountPath, MAX_PATH);
+            if (submountPathLen > MAX_PATH)
+                continue;
+        }
 
-		/* If this is an Auto### submount, remember its ### value */
+        /* If this is an Auto### submount, remember its ### value */
+        if ((!strnicmp (submountName, "auto", 4)) &&
+             (isdigit (submountName[strlen("auto")]))) {
+            int thisAutoSubmount;
+            thisAutoSubmount = atoi (&submountName[strlen("auto")]);
+            nextAutoSubmount = max (nextAutoSubmount,
+                                     thisAutoSubmount+1);
+        }       
 
-		if ((!strnicmp (submountName, "auto", 4)) &&
-		    (isdigit (submountName[strlen("auto")]))) {
-			int thisAutoSubmount;
-			thisAutoSubmount = atoi (&submountName[strlen("auto")]);
-			nextAutoSubmount = max (nextAutoSubmount,
-						thisAutoSubmount+1);
-		}
+        if ((submountPathLen == 0) ||
+             (submountPathLen == sizeof(submountPath) - 1)) {
+            continue;
+        }
 
-		if ((submountPathLen == 0) ||
-		    (submountPathLen == sizeof(submountPath) - 1)) {
-			continue;
-		}
-
-		/* See if the path for this submount matches the path
-		 * that our caller specified. If so, we can return
-		 * this submount.
-		 */
-		cm_NormalizeAfsPath (submountPathNormalized, submountPath);
-		if (!strcmp (submountPathNormalized, afspath)) {
-			strcpy(ioctlp->outDatap, submountName);
-			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+        /* See if the path for this submount matches the path
+         * that our caller specified. If so, we can return
+         * this submount.
+         */
+        cm_NormalizeAfsPath (submountPathNormalized, submountPath);
+        if (!strcmp (submountPathNormalized, afspath)) {
+            strcpy(ioctlp->outDatap, submountName);
+            ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey(hkSubmounts);
-			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
+            lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
             return 0;
 
-		}
-	}
+        }
+    }
 
-	/* We've been through the entire list of existing submounts, and
-	 * didn't find any which matched the specified path. So, we'll
-	 * just have to add one. Remember not to write the leading "/afs"
-	 * when writing out the submount.
-	 */
+    /* We've been through the entire list of existing submounts, and
+     * didn't find any which matched the specified path. So, we'll
+     * just have to add one. Remember not to write the leading "/afs"
+     * when writing out the submount.
+     */
 
-	sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
+    sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
 
     RegSetValueEx( hkSubmounts, 
                    ioctlp->outDatap,
                    0,
-                   REG_SZ, 
+                   REG_EXPAND_SZ, 
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
                    &afspath[strlen(cm_mountRoot)]:"/",
                    (strlen(&afspath[strlen(cm_mountRoot)])) ?
                    strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
-	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
     RegCloseKey(hkSubmounts);
-	lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-	return 0;
+    lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
+    return 0;
 }
 
 long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
