@@ -300,9 +300,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key,
 	abort();
     }
 
-    ret = des_cbc_encrypt(in, out, insz, s, &ivec, 0);
-    if (ret)
-	return ret;
+    des_cbc_encrypt(in, out, insz, s, &ivec, 0);
 
     memcpy(cksum, (char *)out + CONFOUNDERSZ, cksumsz);
     memset((char *)out + CONFOUNDERSZ, 0, cksumsz);
