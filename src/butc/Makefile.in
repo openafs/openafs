@@ -28,7 +28,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -w ${INCDIRS} ${XCFLAGS} @XBSA_CFLAGS@
+CFLAGS=${DBG} -w ${INCDIRS} ${XCFLAGS} @XBSA_CFLAGS@
 
 INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
 	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}

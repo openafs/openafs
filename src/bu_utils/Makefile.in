@@ -28,7 +28,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
+CFLAGS=${DBG} -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
 all: fms

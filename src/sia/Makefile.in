@@ -28,7 +28,6 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-DEBUG = 
 #UNRESOLVED = -expect_unresolved \*
 UNRESOLVED =
 include ../config/Makefile.${SYS_NAME}
@@ -48,7 +47,7 @@ all: ${TOP_LIBDIR}/libafssiad.so ${TOP_LIBDIR}/libafssiad.krb.so
 clean:
 	$(RM) -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
 
-CFLAGS=$(DEBUG) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
 ${DEST}/lib/afs/libafssiad.so: libafssiad.so
 	${INSTALL} $? $@
@@ -57,21 +56,21 @@ ${DEST}/lib/afs/libafssiad.krb.so: libafssiad.krb.so
 	${INSTALL} $? $@
 
 siad.o: siad.c
-	$(CC) $(CFLAGS) -c -g siad.c -o siad.o
+	$(CC) $(CFLAGS) -c siad.c -o siad.o
 
 siad_krb.o: siad.c
-	$(CC) $(CFLAGS) -DAFS_KERBEROS_ENV -c -g siad.c -o siad_krb.o
+	$(CC) $(CFLAGS) -DAFS_KERBEROS_ENV -c siad.c -o siad_krb.o
 
 libafssiad.so: siad.o
-	$(LD) $(LDFLAGS) -g -shared -no_archive -o libafssiad.so \
+	$(LD) $(LDFLAGS) -shared -no_archive -o libafssiad.so \
 		 ${UNRESOLVED} siad.o ${LIBS} -none -lc
 
 libafssiad.krb.so: siad_krb.o
-	$(LD) $(LDFLAGS) -g -shared -no_archive -o libafssiad.krb.so \
+	$(LD) $(LDFLAGS) -shared -no_archive -o libafssiad.krb.so \
 		 ${UNRESOLVED} siad_krb.o ${KLIBS} ${LIBS} -none -lc
 
 test-reauth: test-reauth.o
-	$(CC) $(CFLAGS) -g -o test-reauth test-reauth.o -lc
+	$(CC) $(CFLAGS) -o test-reauth test-reauth.o -lc
 
 install: ${DESTDIR}${libdir}/afs/libafssiad.so ${DESTDIR}${libdir}/afs/libafssiad.krb.so
 

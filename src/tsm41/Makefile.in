@@ -25,8 +25,7 @@ TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
-OPTIMIZE=-g
-CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \

@@ -26,8 +26,8 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-CFLAGS=-g -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=${DBG} -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
 INCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 LIBS=${TOP_LIBDIR}/libbubasics.a \

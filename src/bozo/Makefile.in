@@ -28,7 +28,7 @@ SHELL=/bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
 INCLS=bnode.h \

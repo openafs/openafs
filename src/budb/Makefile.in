@@ -30,8 +30,8 @@ include ../config/Makefile.${SYS_NAME}
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
 INCLS=\
 	${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/ubik.h \

@@ -30,8 +30,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
 
 INSTALLex = ${INSTALL} -m 755
 
@@ -49,17 +49,17 @@ AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libsys.a ${
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
 	sgi_61 | sgi_62 | sgi_63) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
+		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib/libdwarf.a /usr/lib/libelf.a ;; \
 	sgi_64 | sgi_65 ) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
+		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} /usr/lib32/libdwarf.a /usr/lib32/libelf.a ;; \
 	ppc_darwin* ) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} -F/System/Library/PrivateFrameworks -framework DiskArbitration ;; \
+		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} -F/System/Library/PrivateFrameworks -framework DiskArbitration ;; \
 	* ) \
-		${CC} ${CFLAGS} -g -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
+		${CC} ${CFLAGS} -o afsd afsd.o $(NON_SHARED) $(LDFLAGS) $(AFSLIBS) ${XLIBS} ;; \
 	esac
 
 vsys: vsys.o
-	$(CC) -g -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
+	$(CC) -o vsys vsys.o ${TOP_LIBDIR}/libsys.a $(LDFLAGS) ${XLIBS}
 
 #
 # Objects

@@ -28,10 +28,9 @@ SHELL = 	/bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-OPTMZ=	-g
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS =	${OPTMZ} ${XLDFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS =	${XLDFLAGS}
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	       	${TOP_INCDIR}/lwp.h \

@@ -29,7 +29,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -I. \
+CFLAGS=${DBG} -I. \
 	-I${TOP_SRCDIR}/config \
 	-I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs \

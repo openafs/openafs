@@ -27,8 +27,8 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS = -g ${XLDFLAGS}
+CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/lock.h  \

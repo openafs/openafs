@@ -30,7 +30,7 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 LIBS= ${XLIBS}
-CFLAGS=${OPTMZ} -g -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=${OPTMZ} ${DBG} -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
 all: pinstall
 
