@@ -1004,10 +1004,28 @@ long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags, cm_user_t *us
                 return CM_ERROR_NOSUCHFILE;
         }
         else {  /* nonexistent dir on freelance root, so add it */
+            char fullname[200] = ".";
+            int  found = 0;
+
             osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", 
                       osi_LogSaveString(afsd_logp,namep));
-            code = cm_FreelanceAddMount(namep, namep, "root.cell.", namep[0] == '.', &rock.fid);
-            if (code < 0) {   /* add mount point failed, so give up */
+            if (namep[0] == '.') {
+                if (cm_GetCell_Gen(&namep[1], &fullname[1], CM_FLAG_CREATE)) {
+                    found = 1;
+                    if ( stricmp(&namep[1], &fullname[1]) )
+                        code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
+                    else
+                        code = cm_FreelanceAddMount(namep, &fullname[1], "root.cell.", 1, &rock.fid);
+                }
+            } else {
+                if (cm_GetCell_Gen(namep, fullname, CM_FLAG_CREATE))
+                    found = 1;
+                if ( stricmp(namep, fullname) )
+                    code = cm_FreelanceAddSymlink(namep, fullname, &rock.fid);
+                else
+                    code = cm_FreelanceAddMount(namep, fullname, "root.cell.", 0, &rock.fid);
+            }
+            if (!found || code < 0) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
                     return CM_ERROR_NOSUCHPATH;
                 else
