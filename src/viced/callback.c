@@ -1542,17 +1542,7 @@ static int GetSomeSpace_r(struct host *hostp, int locked)
 }
 
 /* locked - set if caller has already locked the host */
-int ClearHostCallbacks(struct host *hp, int locked)
-{
-    int retVal;
-    H_LOCK
-    retVal = ClearHostCallbacks_r(hp, locked);
-    H_UNLOCK
-    return retVal;
-}
-
-/* locked - set if caller has already locked the host */
-int ClearHostCallbacks_r(struct host *hp, int locked)
+static int ClearHostCallbacks_r(struct host *hp, int locked)
 {
     struct interfaceAddr interf;
     int code;
