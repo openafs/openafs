@@ -199,7 +199,9 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
 	struct afs_ioctl32 dst32;
 
-#ifdef AFS_SPARC64_LINUX20_ENV
+#ifdef AFS_SPARC64_LINUX24_ENV
+        if (current->thread.flags & SPARC_FLAG_32BIT)
+#elif AFS_SPARC64_LINUX20_ENV
 	if (current->tss.flags & SPARC_FLAG_32BIT) 
 #else
 #error Not done for this linux type
@@ -381,7 +383,7 @@ afs_xioctl (p, args, retval)
         caddr_t arg;
     } *uap = (struct a *)args;
 #else /* AFS_OSF_ENV */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct ioctl_args {
         int fd;
         u_long com;
@@ -411,12 +413,12 @@ afs_xioctl ()
 	caddr_t arg;
       } *uap = (struct a *)u.u_ap;
 #endif /* AFS_LINUX22_ENV */
-#endif /* AFS_DARWIN_ENV */
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #endif /* AFS_OSF_ENV */
 #endif	/* AFS_SUN5_ENV */
 #endif
 #ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       struct file *fd;
 #else
       register struct file *fd;
@@ -426,7 +428,7 @@ afs_xioctl ()
       register int ioctlDone = 0, code = 0;
       
       AFS_STATCNT(afs_xioctl);
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         if ((code=fdgetf(p, uap->fd, &fd)))
            return code;
 #else
@@ -502,7 +504,7 @@ afs_xioctl ()
 	    if (code) {
 	      osi_FreeSmallSpace(datap);
 	      AFS_GUNLOCK();
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
               return code;
 #else 
 #if	defined(AFS_SUN5_ENV)
@@ -575,7 +577,7 @@ afs_xioctl ()
 #endif
           code = ioctl(uap, rvp);
 #else
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         return ioctl(p, uap, retval);
 #else
 #ifdef  AFS_OSF_ENV
@@ -608,7 +610,7 @@ afs_xioctl ()
 #ifdef AFS_LINUX22_ENV
       return -code;
 #else
-#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
+#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
       if (!getuerror())
 	  setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
@@ -619,7 +621,7 @@ afs_xioctl ()
 #endif
 #endif /* AFS_LINUX22_ENV */
 #endif	/* AFS_SUN5_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       return (code);
 #endif
     }
@@ -671,7 +673,7 @@ afs_pioctl(p, args, retval)
 
 extern struct mount *afs_globalVFS;
 #else	/* AFS_OSF_ENV */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_pioctl(p, args, retval)
         struct proc *p;
         void *args;
@@ -706,7 +708,7 @@ afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
     rval_t *rvp;
     struct AFS_UCRED *credp;
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_syscall_pioctl(path, com, cmarg, follow, credp)
     struct AFS_UCRED *credp;
 #else
@@ -737,7 +739,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifndef	AFS_SUN5_ENV
     if (! _VALIDVICEIOCTL(com)) {
 	PIOCTL_FREE_CRED();
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         return EINVAL;
 #else	/* AFS_OSF_ENV */
 #if defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
@@ -752,7 +754,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (code);
 #else
 	setuerror(code);
@@ -760,7 +762,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
   }
     if ((com & 0xff) == PSetClientContext) {
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return EINVAL; /* Not handling these yet. */
 #else
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
@@ -782,14 +784,14 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	      crfree(foreigncreds);
 	  }
 	  PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	  return (code);
 #else
 	  return (setuerror(code), code);
 #endif
       }
     } 
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
       /*
        * We could have done without temporary setting the u.u_cred below
@@ -826,7 +828,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     if ((com & 0xff) == 15) {
       /* special case prefetch so entire pathname eval occurs in helper process.
 	 otherwise, the pioctl call is essentially useless */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code =  Prefetch(path, &data, follow,
 			 foreigncreds ? foreigncreds : credp);
 #else
@@ -840,7 +842,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
  	    crset(tmpcred);	/* restore original credentials */
@@ -861,7 +863,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	}
 #endif /* AFS_LINUX22_ENV */
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (code);
 #else
 	return (setuerror(code), code);
@@ -883,7 +885,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
 	if (code) {
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 	    if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 		crset(tmpcred);	/* restore original credentials */
@@ -904,7 +906,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    }
 #endif /* AFS_LINUX22_ENV */
 	    PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	    return (code);
 #else
 	    return(setuerror(code), code);
@@ -959,7 +961,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
       }
 #else
-#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
       code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
@@ -969,7 +971,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 #endif /* AFS_SUN5_ENV */
     } else {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	code = EINVAL;	/* not in /afs */
 #else
 	setuerror(EINVAL);
@@ -982,7 +984,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
 
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
     if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 	crset(tmpcred);
@@ -1010,7 +1012,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     return (code);
 #else
     if (!getuerror()) 	
@@ -1421,7 +1423,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
 	int pag;
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         struct proc *p=current_proc(); /* XXX */
         uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
                 p->p_pid, p->p_comm);
@@ -1664,8 +1666,9 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     register struct vcache *tvc;
     register struct dcache *tdc;
     struct VenusFid tfid;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys=0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
 
     AFS_STATCNT(PNewStatMount);
     if (!avc) return EINVAL;
@@ -1676,8 +1679,11 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     }
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -1717,7 +1723,7 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     ReleaseWriteLock(&tvc->lock);
     afs_PutVCache(tvc, WRITE_LOCK);
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
 }
 
@@ -1845,6 +1851,13 @@ static PUnlog(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	    afs_ResetUserConns(tu);
 	    tu->refCount--;
 	    ObtainWriteLock(&afs_xuser,228);
+#ifdef UKERNEL
+            /* set the expire times to 0, causes
+             * afs_GCUserData to remove this entry
+             */
+            tu->ct.EndTimestamp = 0;
+            tu->tokenTime = 0;
+#endif  /* UKERNEL */
 	}
     }
     ReleaseWriteLock(&afs_xuser);
@@ -2035,7 +2048,7 @@ struct AFS_UCRED *acred;
 {
     register char *tp;
     register afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;
@@ -2277,7 +2290,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
 
     linkedstate |= CNoSUID; /* setuid is disabled by default for fs newcell */
-    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport);
+    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0);
     return code;
 }
 
@@ -2334,8 +2347,9 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     afs_int32 ainSize;
     afs_int32 *aoutSize;	/* set this */ {
     register afs_int32 code;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys = 0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
     register struct conn *tc;
     register struct dcache *tdc;
     register struct vcache *tvc;
@@ -2355,8 +2369,11 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 
     tdc	= afs_GetDCache(avc, 0,	areq, &offset,	&len, 1);	/* test for error below */
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -2439,7 +2456,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     ReleaseWriteLock(&avc->lock);
     code = 0;
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;    
 }
 
@@ -2541,7 +2558,7 @@ struct AFS_UCRED *acred;
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV)
 		VN_HOLD((struct vnode *)tvc);
 #else
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		tvc->vrefCount++;
@@ -2669,7 +2686,6 @@ static PGetVnodeXStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
 /* (since we don't really believe remote uids anyway) */
  /* outname[] shouldn't really be needed- this is left as an excercise */
  /* for the reader.  */
-
 static PSetSysName(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 struct vcache *avc;
 int afun;
@@ -2684,15 +2700,17 @@ register struct AFS_UCRED *acred;
     register struct afs_exporter *exporter;
     extern struct unixuser *afs_FindUser();
     extern char *afs_sysname;
+    extern char *afs_sysnamelist[];
+    extern int afs_sysnamecount;
     register struct unixuser *au;
     register afs_int32 pag, error;
-    int t;
+    int t, count;
 
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
       /* Afsd is NOT running; disable it */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	return (EINVAL);
 #else
 	return (setuerror(EINVAL), EINVAL);
@@ -2702,9 +2720,24 @@ register struct AFS_UCRED *acred;
     bcopy(ain, (char *)&setsysname, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (setsysname) {
-      t = strlen(ain);
-      if (t > MAXSYSNAME)
+
+      /* Check my args */
+      if (setsysname < 0 || setsysname > MAXNUMSYSNAMES)
 	return EINVAL;
+      for(cp = ain,count = 0;count < setsysname;count++) {
+	/* won't go past end of ain since maxsysname*num < ain length */
+	t = strlen(cp);
+	if (t >= MAXSYSNAME || t <= 0)
+	  return EINVAL;
+	/* check for names that can shoot us in the foot */
+	if (*cp == '.' && (cp[1] == 0 || (cp[1] == '.' && cp[2] == 0)))
+	  return EINVAL;
+	cp += t+1;
+      }
+      /* args ok */
+
+      /* inname gets first entry in case we're being a translater */
+      t = strlen(ain);
       bcopy(ain, inname, t+1);  /* include terminating null */
       ain += t + 1;
     }
@@ -2731,23 +2764,50 @@ register struct AFS_UCRED *acred;
 	else foundname = 1;
 	afs_PutUser(au, READ_LOCK);
     } else {
+
+      /* Not xlating, so local case */
 	if (!afs_sysname) osi_Panic("PSetSysName: !afs_sysname\n");
-	if (!setsysname) {
+	if (!setsysname) {	/* user just wants the info */
 	    strcpy(outname, afs_sysname);
-	    foundname = 1;
-	} else {
-	    if (!afs_osi_suser(acred))     /* Local guy; only root can change sysname */
+	    foundname = afs_sysnamecount;
+	} else {     /* Local guy; only root can change sysname */
+	    if (!afs_osi_suser(acred))
 		return EACCES;
+	   
+	    /* clear @sys entries from the dnlc, once afs_lookup can
+	     do lookups of @sys entries and thinks it can trust them */
+	    /* privs ok, store the entry, ... */
 	    strcpy(afs_sysname, inname);
+	    if (setsysname > 1) { /* ... or list */
+	      cp = ain;
+	      for(count=1; count < setsysname;++count) {
+		if (!afs_sysnamelist[count])
+		  osi_Panic("PSetSysName: no afs_sysnamelist entry to write\n");
+		t = strlen(cp);
+		bcopy(cp, afs_sysnamelist[count], t+1); /* include null */
+		cp += t+1;
+	      }
+	    }
+	    afs_sysnamecount = setsysname;
 	}
     }
     if (!setsysname) {
-	cp = aout;
+	cp = aout;  /* not changing so report back the count and ... */
 	bcopy((char *)&foundname, cp, sizeof(afs_int32));
 	cp += sizeof(afs_int32);
 	if (foundname) {
-	    strcpy(cp, outname);
+	    strcpy(cp, outname);		/* ... the entry, ... */
 	    cp += strlen(outname)+1;
+	    for(count=1; count < foundname; ++count) { /* ... or list. */
+	      /* Note: we don't support @sys lists for exporters */
+	      if (!afs_sysnamelist[count])
+		osi_Panic("PSetSysName: no afs_sysnamelist entry to read\n");
+	      t = strlen(afs_sysnamelist[count]);
+	      if (t >= MAXSYSNAME)
+		osi_Panic("PSetSysName: sysname entry garbled\n");
+	      strcpy(cp, afs_sysnamelist[count]);
+	      cp += t + 1;
+	    }
 	}
 	*aoutSize = cp - aout;
     }
@@ -3491,8 +3551,9 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     register struct vcache *tvc;
     register struct dcache *tdc;
     struct VenusFid tfid;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys=0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
 
     AFS_STATCNT(PFlushMount);
     if (!avc) return EINVAL;
@@ -3503,8 +3564,11 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -3549,7 +3613,7 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 #endif
     afs_PutVCache(tvc, WRITE_LOCK);
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
 }
 

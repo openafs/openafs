@@ -1,8 +1,8 @@
-#ifndef _PARAM_I386_LINUX24_H_
-#define _PARAM_I386_LINUX24_H_
+#ifndef _PARAM_PPC_LINUX22_H_
+#define _PARAM_PPC_LINUX22_H_
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously i386 specific, use that
+ * it's a judgment call. If something is obviously ppc specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
@@ -10,10 +10,8 @@
 
 #define AFS_LINUX20_ENV        1
 #define AFS_LINUX22_ENV        1
-#define AFS_LINUX24_ENV        1
-#define AFS_I386_LINUX20_ENV   1
-#define AFS_I386_LINUX22_ENV   1
-#define AFS_I386_LINUX24_ENV   1
+#define AFS_PPC_LINUX20_ENV    1
+#define AFS_PPC_LINUX22_ENV    1
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"    /* The name of the filesystem type. */
@@ -31,9 +29,6 @@
  */
 #ifdef AFS_SMP
 #define CONFIG_SMP
-#ifndef CONFIG_X86_LOCAL_APIC
-#define CONFIG_X86_LOCAL_APIC
-#endif
 #ifndef __SMP__
 #define __SMP__
 #endif
@@ -48,11 +43,16 @@
 #endif /* __KERNEL__  && !DUMP_KERNEL*/
 
 #include <afs/afs_sysnames.h>
+
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
 #define AFS_GCPAGS             0       /* if nonzero, garbage collect PAGs */
 
-#define AFSLITTLE_ENDIAN    1
+
+/* Machine / Operating system information */
+#define SYS_NAME       "ppc_linux22"
+#define SYS_NAME_ID    SYS_NAME_ID_ppc_linux22
+#define AFSBIG_ENDIAN    1
 #define AFS_HAVE_FFS        1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0  /* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
@@ -66,10 +66,4 @@
 #endif
 #endif /* KERNEL */
 
-/* Machine / Operating system information */
-#define SYS_NAME       "i386_linux24"
-#define SYS_NAME_ID    SYS_NAME_ID_i386_linux24
-
-#endif /* _PARAM_I386_LINUX24_H_ */
-
-
+#endif /* _PARAM_PPC_LINUX22_H_ */

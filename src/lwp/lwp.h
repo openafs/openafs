@@ -309,7 +309,9 @@ extern int lwp_MaxStackSeen;
 
 /* External function declarations. */
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER	 /*skip if doing Microsoft foundation class*/
 #include <winsock2.h>
+#endif
 #elif defined(AFS_LINUX20_ENV)
 #include <unistd.h>
 #include <time.h>
@@ -334,7 +336,8 @@ extern void IOMGR_Sleep(int seconds);
 extern int IOMGR_Cancel(PROCESS pid);
 extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
-static void SignalTimeout(int code, struct timeval *timeout);
+extern int IOMGR_SoftSig( int (*aproc)(), char *arock);
+
 
 /* fasttime.c */
 extern int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz);
@@ -357,10 +360,21 @@ extern int LWP_WaitProcess(void *event);
 extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
+#else
+extern int LWP_CurrentProcess();
+extern int LWP_INTERNALSIGNAL();
+extern int LWP_InitializeProcessSupport();
+extern int LWP_CreateProcess();
+extern int LWP_DestroyProcess();
+extern int LWP_WaitProcess();
+extern PROCESS LWP_ThreadId();
 #endif
 
 /* max time we are allowed to spend in a select call on NT */
 #define IOMGR_MAXWAITTIME        5 /* seconds */
+
+/* max time we spend on a select in a Win95 DOS box */
+#define IOMGR_WIN95WAITTIME 5000 /* microseconds */
 
 #endif /* __LWP_INCLUDE_ */
 

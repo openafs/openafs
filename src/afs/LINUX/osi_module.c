@@ -20,6 +20,9 @@
 #include <linux/module.h>
 
 
+#ifdef AFS_SPARC64_LINUX24_ENV
+#define __NR_setgroups32      82 /* This number is not exported for some bizarre reason. */
+#endif
 
 asmlinkage int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
 #if !defined(AFS_ALPHA_LINUX20_ENV)
@@ -56,7 +59,10 @@ static void* afs_ni_syscall = 0;
  
 #ifdef AFS_SPARC64_LINUX20_ENV
 static unsigned int afs_ni_syscall32 = 0;
-asmlinkage int (*sys_setgroupsp32)(int gidsetsize, __kernel_gid_t32 *grouplist);
+asmlinkage int (*sys32_setgroupsp)(int gidsetsize, __kernel_gid_t32 *grouplist);
+#if defined(__NR_setgroups32)
+asmlinkage int (*sys32_setgroups32p)(int gidsetsize, __kernel_gid_t32 *grouplist);
+#endif
 extern unsigned int sys_call_table32[];
 
 asmlinkage int afs_syscall32(long syscall, long parm1, long parm2, long parm3,
@@ -73,7 +79,7 @@ __asm__ __volatile__ ("
 }
 #endif
 
-#if defined(AFS_LINUX24_ENV)
+#ifdef AFS_LINUX24_ENV
 asmlinkage int (*sys_setgroups32p)(int gidsetsize, __kernel_gid32_t *grouplist);
 #endif 
 
@@ -89,8 +95,14 @@ int init_module(void)
 {
     extern int afs_syscall();
     extern int afs_xsetgroups();
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_LINUX24_ENV)
+#if defined(__NR_setgroups32)
     extern int afs_xsetgroups32();
+#endif
+#ifdef AFS_SPARC64_LINUX20_ENV
+    extern int afs32_xsetgroups();
+#if defined(__NR_setgroups32)
+    extern int afs32_xsetgroups32();
+#endif
 #endif
 
     /* obtain PAGE_OFFSET value */
@@ -132,12 +144,16 @@ int init_module(void)
     sys_setgroupsp = SYSCALL2POINTER sys_call_table[__NR_setgroups];
     sys_call_table[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups;
 #ifdef AFS_SPARC64_LINUX20_ENV
-    sys_setgroupsp32 = SYSCALL2POINTER sys_call_table32[__NR_setgroups];
-    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups32;
+    sys32_setgroupsp = SYSCALL2POINTER sys_call_table32[__NR_setgroups];
+    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs32_xsetgroups;
 #endif
 #if defined(__NR_setgroups32)
     sys_setgroups32p = SYSCALL2POINTER sys_call_table[__NR_setgroups32];
     sys_call_table[__NR_setgroups32] = POINTER2SYSCALL afs_xsetgroups32;
+#ifdef AFS_SPARC64_LINUX20_ENV
+    sys32_setgroups32p = SYSCALL2POINTER sys_call_table32[__NR_setgroups32];
+    sys_call_table32[__NR_setgroups32] = POINTER2SYSCALL afs32_xsetgroups32;
+#endif
 #endif
 
     return 0;
@@ -150,11 +166,14 @@ void cleanup_module(void)
     sys_call_table[__NR_setgroups] = POINTER2SYSCALL sys_setgroupsp;
     sys_call_table[__NR_afs_syscall] = afs_ni_syscall;
 #ifdef AFS_SPARC64_LINUX20_ENV
-    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL sys_setgroupsp32;
+    sys_call_table32[__NR_setgroups] = POINTER2SYSCALL sys32_setgroupsp;
     sys_call_table32[__NR_afs_syscall] = afs_ni_syscall32;
 #endif
 #if defined(__NR_setgroups32)
     sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroups32p;
+#ifdef AFS_SPARC64_LINUX20_ENV
+    sys_call_table32[__NR_setgroups32] = POINTER2SYSCALL sys32_setgroups32p;
+#endif
 #endif
     unregister_filesystem(&afs_file_system);
 

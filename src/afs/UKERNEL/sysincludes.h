@@ -137,6 +137,11 @@
 #endif
 #endif /* AFS_USR_DARWIN_ENV || AFS_USR_FBSD_ENV */
 
+#ifdef AFS_AFSDB_ENV
+#include <arpa/nameser.h>
+#include <resolv.h>
+#endif /* AFS_AFSDB_ENV */
+
 /* glibc 2.2 has pthread_attr_setstacksize */
 #if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2)
 #define pthread_attr_setstacksize(a,b) 0
@@ -932,6 +937,8 @@ extern pthread_cond_t usr_sleep_cond;
 #define usr_cond_signal(A)	assert(pthread_cond_signal(A) == 0)
 #define usr_cond_broadcast(A)	assert(pthread_cond_broadcast(A) == 0)
 #define usr_cond_wait(A,B)	pthread_cond_wait(A,B)
+#define usr_cond_timedwait(A,B,C)  pthread_cond_timedwait(A,B,C)
+
 #define usr_thread_create(A,B,C) \
     do { \
 	pthread_attr_t attr; \
@@ -1377,5 +1384,7 @@ typedef struct {
 } usr_DIR;
 
 extern unsigned short usr_rx_port;
+
+#define AFS_LOOKUP_NOEVAL 1
 
 #endif /* __AFS_SYSINCLUDESH__  so idempotent */

@@ -1,8 +1,8 @@
-#ifndef _PARAM_ALPHA_LINUX2216_22_USR_H_
-#define _PARAM_ALPHA_LINUX2216_22_USR_H_
+#ifndef _PARAM_USR_PPC_LINUX22_H_
+#define _PARAM_USR_PPC_LINUX22_H_
 
 /* In user space the AFS_LINUX20_ENV should be sufficient. In the kernel,
- * it's a judgment call. If something is obviously sparc64 specific, use that
+ * it's a judgment call. If something is obviously ppc specific, use that
  * #define instead. Note that "20" refers to the linux 2.0 kernel. The "2"
  * in the sysname is the current version of the client. This takes into
  * account the perferred OS user space configuration as well as the kernel.
@@ -15,9 +15,8 @@
 #define AFS_NONFSTRANS 1
 
 #define AFS_MOUNT_AFS "afs"    /* The name of the filesystem type. */
-#define AFS_SYSCALL 338
+#define AFS_SYSCALL 137
 #define AFS_64BIT_IOPS_ENV  1
-#define AFS_64BIT_ENV       1
 #define AFS_NAMEI_ENV     1   /* User space interface to file system */
 #include <afs/afs_sysnames.h>
 
@@ -27,9 +26,9 @@
 
 
 /* Machine / Operating system information */
-#define SYS_NAME       "alpha_linux_22"
-#define SYS_NAME_ID    SYS_NAME_ID_alpha_linux_22
-#define AFSLITTLE_ENDIAN    1
+#define SYS_NAME       "ppc_linux22"
+#define SYS_NAME_ID    SYS_NAME_ID_ppc_linux22
+#define AFSBIG_ENDIAN       1
 #define AFS_HAVE_FFS        1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0  /* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV            1   /* read/write implemented via VM */
@@ -51,4 +50,4 @@
 #define CMSERVERPREF
 #endif
 
-#endif /* _PARAM_ALPHA_LINUX2216_22_USR_H_ */
+#endif /* _PARAM_USR_PPC_LINUX22_H_ */

@@ -13,7 +13,7 @@ include ../config/Makefile.${SYS_NAME}
 INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
-CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 INCLS = ${DESTDIR}include/afs/afsint.h \
 	${DESTDIR}include/afs/cmd.h \
@@ -275,7 +275,7 @@ kdump64 : kdump64.o
 	esac
 
 clean:
-	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c
+	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c fstrace gcpags
 
 beancount:
 	wc -l *.c *.h

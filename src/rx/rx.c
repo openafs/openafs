@@ -11,6 +11,7 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#include <afsconfig.h>
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #ifndef UKERNEL
@@ -67,6 +68,7 @@ extern afs_int32 afs_termState;
 # include "../afsint/rxgen_consts.h"
 #else /* KERNEL */
 # include <afs/param.h>
+# include <afsconfig.h>
 # include <sys/types.h>
 # include <errno.h>
 #ifdef AFS_NT40_ENV
@@ -81,6 +83,13 @@ extern afs_int32 afs_termState;
 # include <netinet/in.h>
 # include <sys/time.h>
 #endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
 # include "rx.h"
 # include "rx_user.h"
 # include "rx_clock.h"
@@ -90,10 +99,6 @@ extern afs_int32 afs_termState;
 # include "rx_internal.h"
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
-
-#ifdef RXDEBUG
-extern afs_uint32 LWP_ThreadId();
-#endif /* RXDEBUG */
 
 int (*registerProgram)() = 0;
 int (*swapNameProgram)() = 0;
@@ -217,8 +222,6 @@ assert(pthread_once(&rx_once_init, rxi_InitPthread)==0);
 #define INIT_PTHREAD_LOCKS
 #endif
 
-extern void rxi_DeleteCachedConnections(void);
-
 
 /* Variables for handling the minProcs implementation.  availProcs gives the
  * number of threads available in the pool at this moment (not counting dudes
@@ -242,11 +245,8 @@ extern void rxi_DeleteCachedConnections(void);
  * to manipulate the queue.
  */
 
-extern void rxi_Delay(int);
-
-static int rxi_ServerThreadSelectingCall;
-
 #ifdef RX_ENABLE_LOCKS
+static int rxi_ServerThreadSelectingCall;
 static afs_kmutex_t rx_rpc_stats;
 void rxi_StartUnlocked();
 #endif
@@ -296,8 +296,6 @@ void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #define CLEAR_CALL_QUEUE_LOCK(C)
 #endif /* RX_ENABLE_LOCKS */
 static void rxi_DestroyConnectionNoLock();
-void rxi_DestroyConnection();
-void rxi_CleanupConnection();
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
 
 /* ------------Exported Interfaces------------- */
@@ -359,6 +357,10 @@ int rx_Init(u_int port)
 #endif /* KERNEL */
     char *htable, *ptable;
     int tmp_status;
+
+#if defined(AFS_DJGPP_ENV) && !defined(DEBUG)
+    __djgpp_set_quiet_socket(1);
+#endif
 
     SPLVAR;
 
@@ -562,7 +564,7 @@ register struct rx_service *aservice;
 }
 
 #else /* RX_ENABLE_LOCKS */
-static QuotaOK(aservice)
+static int QuotaOK(aservice)
 register struct rx_service *aservice; {
     int rc=0;
     /* under min quota, we're OK */
@@ -621,7 +623,7 @@ void rxi_StartServerProcs(nExistingProcs)
 void rx_StartServer(donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs;
+    register int i, nProcs=0;
     SPLVAR;
     clock_NewTime();
 
@@ -658,14 +660,13 @@ void rx_StartServer(donateMe)
     if (donateMe) {
 #ifndef AFS_NT40_ENV
 #ifndef KERNEL
-	int code;
         char name[32];
 #ifdef AFS_PTHREAD_ENV
         pid_t pid;
-        pid = pthread_self();
+        pid = (pid_t) pthread_self();
 #else /* AFS_PTHREAD_ENV */
         PROCESS pid;
-        code = LWP_CurrentProcess(&pid);
+        LWP_CurrentProcess(&pid);
 #endif /* AFS_PTHREAD_ENV */
 
         sprintf(name,"srv_%d", ++nProcs);
@@ -859,7 +860,7 @@ static void rxi_DestroyConnectionNoLock(conn)
 	MUTEX_EXIT(&rx_stats_mutex);
     }
 
-    if (conn->refCount > 0) {
+    if ((conn->refCount > 0) || (conn->flags & RX_CONN_BUSY)) {
 	/* Busy; wait till the last guy before proceeding */
 	MUTEX_EXIT(&conn->conn_data_lock);
 	USERPRI;
@@ -1069,6 +1070,7 @@ struct rx_call *rx_NewCall(conn)
     return call;
 }
 
+int
 rxi_HasActiveCalls(aconn)
 register struct rx_connection *aconn; {
     register int i;
@@ -1077,7 +1079,7 @@ register struct rx_connection *aconn; {
 
     NETPRI;
     for(i=0; i<RX_MAXCALLS; i++) {
-      if (tcall = aconn->call[i]) {
+      if ((tcall = aconn->call[i])) {
 	if ((tcall->state == RX_STATE_ACTIVE) 
 	    || (tcall->state == RX_STATE_PRECALL)) {
 	  USERPRI;
@@ -1089,6 +1091,7 @@ register struct rx_connection *aconn; {
     return 0;
 }
 
+int
 rxi_GetCallNumberVector(aconn, aint32s)
 register struct rx_connection *aconn;
 register afs_int32 *aint32s; {
@@ -1107,6 +1110,7 @@ register afs_int32 *aint32s; {
     return 0;
 }
 
+int
 rxi_SetCallNumberVector(aconn, aint32s)
 register struct rx_connection *aconn;
 register afs_int32 *aint32s; {
@@ -1372,12 +1376,12 @@ osi_socket *socketp;
 {
     struct rx_serverQueueEntry *sq;
     register struct rx_call *call = (struct rx_call *) 0, *choice2;
-    struct rx_service *service;
+    struct rx_service *service = NULL;
     SPLVAR;
 
     MUTEX_ENTER(&freeSQEList_lock);
 
-    if (sq = rx_FreeSQEList) {
+    if ((sq = rx_FreeSQEList)) {
 	rx_FreeSQEList = *(struct rx_serverQueueEntry **)sq;
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {    /* otherwise allocate a new one and return that */
@@ -1528,14 +1532,14 @@ rx_GetCall(tno, cur_service, socketp)
 {
     struct rx_serverQueueEntry *sq;
     register struct rx_call *call = (struct rx_call *) 0, *choice2;
-    struct rx_service *service;
+    struct rx_service *service = NULL;
     SPLVAR;
 
     NETPRI;
     AFS_RXGLOCK();
     MUTEX_ENTER(&freeSQEList_lock);
 
-    if (sq = rx_FreeSQEList) {
+    if ((sq = rx_FreeSQEList)) {
 	rx_FreeSQEList = *(struct rx_serverQueueEntry **)sq;
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {    /* otherwise allocate a new one and return that */
@@ -1759,6 +1763,7 @@ afs_int32 rx_EndCall(call, rc)
 	MUTEX_ENTER(&conn->conn_call_lock);
 	MUTEX_ENTER(&call->lock);
 	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
 	    conn->flags &= (~RX_CONN_MAKECALL_WAITING);
 	    MUTEX_EXIT(&conn->conn_data_lock);
@@ -1797,8 +1802,10 @@ afs_int32 rx_EndCall(call, rc)
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
-    if (conn->type == RX_CLIENT_CONNECTION)
+    if (conn->type == RX_CLIENT_CONNECTION) {
 	MUTEX_EXIT(&conn->conn_call_lock);
+	conn->flags &= ~RX_CONN_BUSY;
+    }
     AFS_RXGUNLOCK();
     USERPRI;
     /*
@@ -3216,7 +3223,6 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     afs_uint32 serial;
     /* because there are CM's that are bogus, sending weird values for this. */
     afs_uint32 skew = 0;
-    int needRxStart = 0;
     int nbytes;
     int missing;
     int acked;
@@ -3253,8 +3259,9 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     if (rx_Log) {
       fprintf( rx_Log, 
 	      "RACK: reason %x previous %u seq %u serial %u skew %d first %u",
-	      ap->reason, ntohl(ap->previousPacket), np->header.seq, serial, 
-	      skew, ntohl(ap->firstPacket));
+	      ap->reason, ntohl(ap->previousPacket), 
+	      (unsigned int) np->header.seq, (unsigned int) serial, 
+	      (unsigned int) skew, ntohl(ap->firstPacket));
 	if (nAcks) {
 	    int offset;
 	    for (offset = 0; offset < nAcks; offset++) 
@@ -4440,8 +4447,8 @@ struct rx_packet *rxi_SendAck(call, optionalPacket, seq, serial, pflags, reason,
 #ifdef RXDEBUG
     if (rx_Log) {
 	fprintf(rx_Log, "SACK: reason %x previous %u seq %u first %u",
-		ap->reason, ntohl(ap->previousPacket), p->header.seq, 
-		ntohl(ap->firstPacket));
+		ap->reason, ntohl(ap->previousPacket), 
+		(unsigned int) p->header.seq, ntohl(ap->firstPacket));
 	if (ap->nAcks) {
 	    for (offset = 0; offset < ap->nAcks; offset++) 
 		putc(ap->acks[offset] == RX_ACK_TYPE_NACK? '-' : '*', rx_Log);
@@ -5306,7 +5313,6 @@ void rxi_ComputeRoundTripTime(p, sentp, peer)
 	struct timeval temptime;
 #endif
       register int rtt_timeout;
-      static char id[]="@(#)adaptive RTO";
 
 #if defined(AFS_ALPHA_LINUX20_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
       /* yet again. This was the worst Heisenbug of the port - stroucki */
@@ -5736,7 +5742,7 @@ rxi_DebugPrint(format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
 {
     struct clock now;
     clock_GetTime(&now);
-    fprintf(rx_Log, " %u.%.3u:", now.sec, now.usec/1000);
+    fprintf(rx_Log, " %u.%.3u:", (unsigned int) now.sec, (unsigned int) now.usec/1000);
     fprintf(rx_Log, format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
     putc('\n', rx_Log);
 }
@@ -5765,9 +5771,8 @@ void rx_PrintTheseStats (file, s, size, freePackets, version)
     }
 
     fprintf(file,
-	    "rx stats: free packets %d, "
-	    "allocs %d, ",
-	    freePackets,
+	    "rx stats: free packets %d, allocs %d, ",
+	    (int) freePackets,
 	    s->packetRequests);
 
     if (version >= RX_DEBUGI_VERSION_W_NEWPACKETTYPES) {
@@ -5847,7 +5852,7 @@ void rx_PrintTheseStats (file, s, size, freePackets, version)
 	    "   \t(these should be small) sendFailed %d, "
 	    "fatalErrors %d\n", 
 	    s->netSendFailures,
-	    s->fatalErrors);
+	    (int) s->fatalErrors);
 
     if (s->nRttSamples) {
 	fprintf(file,
@@ -5899,10 +5904,10 @@ struct rx_peer *peer;
 	    "Burst size %d, "
 	    "burst wait %u.%d.\n",
 	    ntohl(peer->host),
-	    peer->port,
-	    peer->burstSize,
-	    peer->burstWait.sec,
-	    peer->burstWait.usec);
+	    (int) peer->port,
+	    (int) peer->burstSize,
+	    (int) peer->burstWait.sec,
+	    (int) peer->burstWait.usec);
 
     fprintf(file,
 	    "   Rtt %d, "
@@ -5910,8 +5915,8 @@ struct rx_peer *peer;
 	    "total sent %d, "
 	    "resent %d\n",
 	    peer->rtt,
-	    peer->timeout.sec,
-	    peer->timeout.usec,
+	    (int) peer->timeout.sec,
+	    (int) peer->timeout.usec,
 	    peer->nSent,
 	    peer->reSends);
 
@@ -5920,8 +5925,8 @@ struct rx_peer *peer;
 	    "max in packet skew %d, "
 	    "max out packet skew %d\n",
 	    peer->ifMTU,
-	    peer->inPacketSkew,
-	    peer->outPacketSkew);
+	    (int) peer->inPacketSkew,
+	    (int) peer->outPacketSkew);
 }
 
 #ifdef AFS_PTHREAD_ENV
@@ -6241,7 +6246,6 @@ afs_int32 rx_GetServerPeers(
 {
     struct rx_debugIn in;
     afs_int32 rc = 0;
-    int i;
 
     /*
      * supportedValues is currently unused, but added to allow future
@@ -6399,7 +6403,7 @@ void shutdown_rx(void)
 
     MUTEX_ENTER(&freeSQEList_lock);
 
-    while (np = rx_FreeSQEList) {
+    while ((np = rx_FreeSQEList)) {
 	rx_FreeSQEList = *(struct rx_serverQueueEntry **)np;
 	MUTEX_DESTROY(&np->lock);
 	rxi_Free(np, sizeof(*np));
@@ -6596,7 +6600,8 @@ static int rxi_AddRpcStat(
      * queue.
      */
 
-    if ((rpc_stat == NULL) ||
+    if (queue_IsEnd(stats, rpc_stat) ||
+	(rpc_stat == NULL) ||
 	(rpc_stat->stats[0].interfaceId != rxInterface) ||
 	(rpc_stat->stats[0].remote_is_server != isServer)) {
 	int i;
@@ -6897,9 +6902,6 @@ int rx_RetrieveProcessRPCStats(
 	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
 
 	if (ptr != NULL) {
-	    register struct rx_peer *pp;
-	    int i;
-	    int num_copied = 0;
 	    rx_interface_stat_p rpc_stat, nrpc_stat;
 
 
@@ -7002,8 +7004,6 @@ int rx_RetrievePeerRPCStats(
 	ptr = *stats = (afs_uint32 *) rxi_Alloc(space);
 
 	if (ptr != NULL) {
-	    int i;
-	    int num_copied = 0;
 	    rx_interface_stat_p rpc_stat, nrpc_stat;
 	    char *fix_offset;
 

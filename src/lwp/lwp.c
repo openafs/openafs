@@ -125,7 +125,7 @@ int lwp_nextindex;
 /* Minimum stack size */
 int lwp_MinStackSize=0;
 
-static lwp_remove(p, q)
+static int lwp_remove(p, q)
     register PROCESS p;
     register struct QUEUE *q;
 {
@@ -141,9 +141,10 @@ static lwp_remove(p, q)
     if (q->head == p) q -> head = p -> next;
     q->count--;
     p -> next = p -> prev = NULL;
+    return 0;
 }
 
-static insert(p, q)
+static int insert(p, q)
     register PROCESS p;
     register struct QUEUE *q;
 {
@@ -157,9 +158,10 @@ static insert(p, q)
 	p -> next = q -> head;
     }
     q->count++;
+    return 0;
 }
 
-static move(p, from, to)
+static int move(p, from, to)
     PROCESS p;
     struct QUEUE *from, *to;
 {
@@ -167,7 +169,7 @@ static move(p, from, to)
     lwp_remove(p, from);
 
     insert(p, to);
-
+    return 0;
 }
 
 /* Iterator macro */
@@ -520,7 +522,7 @@ int LWP_DispatchProcess()		/* explicit voluntary preemption */
 }
 
 #ifdef DEBUG
-Dump_Processes()
+int Dump_Processes()
 {
     if (lwp_init) {
 	register int i;
@@ -532,6 +534,7 @@ Dump_Processes()
 	for_all_elts(x, blocked, { Dump_One_Process(x); })
     } else
 	printf("***LWP: LWP support not initialized\n");
+    return 0;
 }
 #endif
 
@@ -719,6 +722,7 @@ static void Abort_LWP(msg)
 	Exit_LWP();
     else
 	savecontext(Exit_LWP, &tempcontext, LWPANCHOR.outersp);
+    return;
 }
 
 static int Create_Process_Part2 ()	/* creates a context for the new process */
@@ -730,9 +734,10 @@ static int Create_Process_Part2 ()	/* creates a context for the new process */
     savecontext(Dispatcher, &temp->context, NULL);
     (*temp->ep)(temp->parm);
     LWP_DestroyProcess(temp);
+    return 0;
 }
 
-static Delete_PCB(pid) 	/* remove a PCB from the process list */
+static int Delete_PCB(pid) 	/* remove a PCB from the process list */
     register PROCESS pid;
 {
     Debug(4, ("Entered Delete_PCB"))
@@ -740,10 +745,11 @@ static Delete_PCB(pid) 	/* remove a PCB from the process list */
 		 ? &blocked
 		 : &runnable[pid->priority]));
     LWPANCHOR.processcnt--;
+    return 0;
 }
 
 #ifdef DEBUG
-static Dump_One_Process(pid)
+static int Dump_One_Process(pid)
    PROCESS pid;
 {
     int i;
@@ -779,17 +785,19 @@ static Dump_One_Process(pid)
     }
     if (pid->wakevent>0)
 	printf("***LWP: Number of last wakeup event: %d\n", pid->wakevent);
+    return 0;
 }
 #endif
 
-static purge_dead_pcbs()
+static int purge_dead_pcbs()
 {
     for_all_elts(cur, blocked, { if (cur->status == DESTROYED) Dispose_of_Dead_PCB(cur); })
+    return 0;
 }
 
 int LWP_TraceProcesses = 0;
 
-static Dispatcher()		/* Lightweight process dispatcher */
+static int Dispatcher()		/* Lightweight process dispatcher */
 {
     register int i;
 #ifdef DEBUG
@@ -895,7 +903,7 @@ static void Dispose_of_Dead_PCB (cur)
 */
 }
 
-static Exit_LWP()
+static int Exit_LWP()
 {
     abort();
 }
@@ -1000,6 +1008,7 @@ static afs_int32 Initialize_Stack(stackptr, stacksize)
 #else
 	*(afs_int32 *)stackptr = STACKMAGIC;
 #endif
+    return 0;
 }
 
 static int Stack_Used(stackptr, stacksize)

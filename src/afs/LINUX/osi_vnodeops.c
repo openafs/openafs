@@ -230,7 +230,7 @@ tagain:
 	len = strlen(de->name);
 
 	/* filldir returns -EINVAL when the buffer is full. */
-#ifdef AFS_LINUX24_ENV
+#if (defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE)
         {
              unsigned int type=DT_UNKNOWN;
              struct VenusFid afid;
@@ -508,7 +508,11 @@ static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     int code = 0;
     struct vcache *vcp = (struct vcache*)FILE_INODE(fp);
     cred_t *credp = crref();
+#ifdef AFS_LINUX24_ENV
+    struct flock64 flock;
+#else
     struct flock flock;
+#endif
     
     /* Convert to a lock format afs_lockctl understands. */
     memset((char*)&flock, 0, sizeof(flock));
@@ -683,8 +687,27 @@ static int afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 static int afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    /* Force revalidation as this may be a different client than the
-       one which caused an entry to get cached */
+    int code;
+    cred_t *credp;
+    struct vrequest treq;
+    struct inode *ip = (struct inode *)dp->d_inode;
+    
+    unsigned long timeout = 3*HZ; /* 3 seconds */
+    
+    if (!(flags & LOOKUP_CONTINUE)) {
+	long diff = CURRENT_TIME - dp->d_parent->d_inode->i_mtime;
+	
+	if (diff < 15*60)
+	    timeout = 0;
+    }
+    
+    if (time_after(jiffies, dp->d_time + timeout))
+	goto out_bad;
+    
+ out_valid:
+    return 1;
+    
+ out_bad:
     return 0;
 }
 
@@ -765,9 +788,7 @@ int afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 
 	dp->d_op = afs_dops;
-        /* This DV is probably wrong, unfortunately, Perhaps we should 
-           VerifyVCache the directory  */
-        dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
+	dp->d_time = jiffies;
 	d_instantiate(dp, ip);
     }
 
@@ -814,8 +835,7 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    ip->i_op = &afs_symlink_iops;
 #endif
     }
-    /* directory ought to be stat'd here.... */
-    dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
+    dp->d_time = jiffies;
     dp->d_op = afs_dops;
     d_add(dp, (struct inode*)vcp);
 
@@ -882,9 +902,7 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     if (!code) {
 	d_delete(dp);
 	if (putback) {
-           /* This DV is probably wrong, unfortunately, Perhaps we should 
-              VerifyVCache the directory  */
-            dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
+	    dp->d_time = jiffies;
 	    d_add(dp, NULL); /* means definitely does _not_ exist */
     }
     }
@@ -934,9 +952,7 @@ int afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	tvcp->v.v_fop = &afs_dir_fops;
 #endif
 	dp->d_op = afs_dops;
-        /* This DV is probably wrong, unfortunately, Perhaps we should 
-           VerifyVCache the directory  */
-        dp->d_time=hgetlo(((struct vcache *)dip)->m.DataVersion);
+	dp->d_time = jiffies;
 	d_instantiate(dp, (struct inode*)tvcp);
     }
     AFS_GUNLOCK();
@@ -998,9 +1014,7 @@ int afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 
     if (!code) {
         /* update time so it doesn't expire immediately */
-        /* This DV is probably wrong, unfortunately, Perhaps we should 
-           VerifyVCache the directory  */
-        newdp->d_time=hgetlo(((struct vcache *)newdp->d_parent->d_inode)->m.DataVersion);
+	newdp->d_time = jiffies;
 	d_move(olddp, newdp);
     }
 
@@ -1305,7 +1319,7 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 	       ICL_TYPE_POINTER, pp,
 	       ICL_TYPE_INT32, atomic_read(&pp->count),
 	       ICL_TYPE_INT32, 99999);
-    setup_uio(&tuio, &iovec, page_addr + offset, pp->offset + offset, count,
+    setup_uio(&tuio, &iovec, page_addr + offset, pageoff(pp) + offset, count,
 	      UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);

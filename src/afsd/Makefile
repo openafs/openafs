@@ -19,7 +19,7 @@ include ../config/Makefile.version
 
 INSTALLro = ${INSTALL} -m 644
 INSTALLex = ${INSTALL} -m 755
-CFLAGS = -g -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 
 noversion: install

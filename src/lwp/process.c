@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include "lwp.h"
+#include <afsconfig.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 #if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
 extern int PRE_Block;              /* used in lwp.c and process.s */
@@ -80,9 +84,8 @@ static jmp_buf	jmp_tmp;
 static char	(*EP)();
 static int  	rc;
 static jmp_buf_type  *jmpBuffer;
-static int 	code;
 
-savecontext(ep, savearea, sp)
+afs_int32 savecontext(ep, savearea, sp)
 char	(*ep)();
 struct lwp_context *savearea;
 char*	sp;
@@ -140,9 +143,10 @@ char*	sp;
 		  	perror("Error in setjmp2 : restoring\n");
 		  	exit(3);
 	}
+	return 0;
 }
 
-returnto(savearea)
+afs_int32 returnto(savearea)
 struct lwp_context *savearea;
 {
 #if	defined(DEBUG)
@@ -158,5 +162,6 @@ struct lwp_context *savearea;
 #endif
 	PRE_Block = 0;
 	longjmp(savearea->setjmp_buffer, 2);
+	return 0;
 }
 

@@ -287,13 +287,18 @@ char **argv; {
 	else {
 	    printf("volserver: unrecognized flag '%s'\n", argv[code]);
 usage:
+#ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
-#ifndef AFS_NT40_ENV
 		   "[-syslog[=FACILITY]] "
-#endif
-		   /* "[-enable_peer_stats] [-enable_process_stats] " */
+		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
+#else
+	    printf("Usage: volserver [-log] [-p <number of processes>] "
+		   "[-udpsize <size of socket buffer in bytes>] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#endif
 	    VS_EXIT(1);
 	}
     }
