@@ -113,6 +113,14 @@ RCSID("$Header$");
 #include <sys/vfs.h>
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+
 #include <netinet/in.h>
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
