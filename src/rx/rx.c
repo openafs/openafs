@@ -635,7 +635,7 @@ void rxi_StartServerProcs(int nExistingProcs)
 void rx_StartServer(int donateMe)
 {
     register struct rx_service *service;
-    register int i;
+    register int i, nProcs=0;
     SPLVAR;
     clock_NewTime();
 
