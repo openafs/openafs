@@ -103,6 +103,7 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	long code;
         cm_volume_t *volp = NULL;
         cm_serverRef_t *serversp = NULL;
+    cm_serverRef_t *newServersp = NULL;
         cm_cell_t *cellp = NULL;
 
         if (!fidp) {
@@ -116,6 +117,7 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
         code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
         if (code) return code;
         
+    lock_ObtainMutex(&volp->mx);
 	if (fidp->volume == volp->rwID)
         	serversp = volp->rwServersp;
 	else if (fidp->volume == volp->roID)
@@ -125,8 +127,36 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	else
 		serversp = NULL;
 
+    /* make a copy of the server list because by the time the 
+    caller tries to use it, it might have been freed.
+    Preserve server order. */
+    if(serversp) {
+        cm_serverRef_t ** nl;
+        cm_serverRef_t * tref;
+
+        nl = &newServersp;
+
+        lock_ObtainWrite(&cm_serverLock);
+        while(serversp) {
+
+            tref = malloc(sizeof(cm_serverRef_t));
+            tref->next = NULL;
+            tref->server = serversp->server;
+            tref->status = serversp->status;
+
+            tref->server->refCount++;
+
+            *nl = tref;
+            nl = &tref->next;
+
+            serversp = serversp->next;
+        }
+        lock_ReleaseWrite(&cm_serverLock);
+    }
+    lock_ReleaseMutex(&volp->mx);
+
         cm_PutVolume(volp);
-	*serverspp = serversp;
+    *serverspp = newServersp;
 	return 0;
 }
 
@@ -217,6 +247,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
             retry = 1;
         }
+        cm_FreeServerList(&serversp);
 
         if (fidp != NULL)   /* Not a VLDB call */
             cm_ForceUpdateVolume(fidp, userp, reqp);
@@ -231,6 +262,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 				tsrp->status = not_busy;
 		}
         lock_ReleaseWrite(&cm_serverLock);
+        cm_FreeServerList(&serversp);
 		thrd_Sleep(5000);
 		retry = 1;
 	}
@@ -247,6 +279,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 			}
 		}
         lock_ReleaseWrite(&cm_serverLock);
+        cm_FreeServerList(&serversp);
 		retry = 1;
 	}
 
@@ -279,11 +312,11 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 		/* Mark server offline for this volume */
 		cm_GetServerList(fidp, userp, reqp, &serversp);
-
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp)
 				tsrp->status = offline;
 		}
+        cm_FreeServerList(&serversp);
 		retry = 1;
 	}
 
@@ -556,5 +589,6 @@ long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
 	}
 
 	code = cm_ConnByMServers(serversp, userp, reqp, connpp);
+    cm_FreeServerList(&serversp);
         return code;
 }
