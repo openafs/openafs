@@ -104,6 +104,7 @@ osi_UFSClose(afile)
       return 0;
   }
 
+#if defined(AFS_LINUX24_ENV)
 int osi_notify_change(struct dentry * dentry, struct iattr * attr)
 {
     struct inode *inode = dentry->d_inode;
@@ -128,6 +129,7 @@ int osi_notify_change(struct dentry * dentry, struct iattr * attr)
     unlock_kernel();
     return error;
 }
+#endif
 
 osi_UFSTruncate(afile, asize)
     register struct osi_file *afile;
