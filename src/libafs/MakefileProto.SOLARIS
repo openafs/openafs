@@ -107,7 +107,7 @@ ${COMPDIRS}:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-<all -sun4x_57 sun4x_58>
+<all -sun4x_57 -sun4x_58>
 DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
