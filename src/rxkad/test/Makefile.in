@@ -5,16 +5,35 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
+SHELL = /bin/sh
+
 include ../../config/Makefile.${SYS_NAME}
+
+KERNELDIR = ../libafs/
+UKERNELDIR = ../libuafs/
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
 OPTIMIZE=-g
 
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=-g -I. -I${TOP_SRCDIR} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 
@@ -52,7 +71,7 @@ th_stress.ss.o: stress.ss.c
 
 th_stress.cs.o: stress.cs.c
 	${THRULE} -o th_stress.cs.o
-	
+
 th_stress.xdr.o: stress.xdr.c stress.h
 	${THRULE} -o th_stress.xdr.o
 
