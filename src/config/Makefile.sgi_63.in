@@ -27,6 +27,7 @@ TXLIBS= -lcurses
 XLIBS=@LIB_AFSDB@
 MTLIBS=-lpthread
 SHLIB_SUFFIX=so
+SHLIB_LINKER=${CC} -shared
 #
 # programs
 AR=ar

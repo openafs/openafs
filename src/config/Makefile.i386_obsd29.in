@@ -12,7 +12,7 @@ PAM_CFLAGS = -O2 -pipe -fpic
 XCFLAGS= -O2
 MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
 XLDFLAGS=
-SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_LDFLAGS = -shared -Xlinker -x
 SHLIB_SUFFIX=so
 SHLIB_CFLAGS= -fpic
 #
