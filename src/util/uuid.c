@@ -146,6 +146,64 @@ static afs_int32 time_cmp (uuid_time_p_t time1, uuid_time_p_t time2)
     return (0);
 }
 
+/*
+ *    Converts a string UUID to binary representation.
+ */
+
+int
+afsUUID_from_string(const char *str, afsUUID *uuid)
+{
+    unsigned int time_low, time_mid, time_hi_and_version;
+    unsigned int clock_seq_hi_and_reserved, clock_seq_low;
+    unsigned int node[6];
+    int i;
+
+    i = sscanf(str, "%08x-%04x-%04x-%02x-%02x-%02x%02x%02x%02x%02x%02x",
+               &time_low,
+               &time_mid,
+               &time_hi_and_version,
+               &clock_seq_hi_and_reserved,
+               &clock_seq_low,
+               &node[0], &node[1], &node[2], &node[3], &node[4], &node[5]);
+    if (i != 11)
+        return -1;
+    
+    uuid->time_low = time_low;
+    uuid->time_mid = time_mid;
+    uuid->time_hi_and_version = time_hi_and_version;
+    uuid->clock_seq_hi_and_reserved = clock_seq_hi_and_reserved;
+    uuid->clock_seq_low = clock_seq_low;
+
+    for (i = 0; i < 6; i++)
+        uuid->node[i] = node[i];
+
+    return 0;
+}
+
+/*
+ *    Converts a UUID from binary representation to a string representation.
+ */
+
+int
+afsUUID_to_string(const afsUUID *uuid, char *str, size_t strsz)
+{
+    snprintf(str, strsz,
+             "%08x-%04x-%04x-%02x-%02x-%02x%02x%02x%02x%02x%02x",
+             uuid->time_low,
+             uuid->time_mid,
+             uuid->time_hi_and_version,
+             (unsigned char)uuid->clock_seq_hi_and_reserved,
+             (unsigned char)uuid->clock_seq_low,
+             (unsigned char)uuid->node[0],
+             (unsigned char)uuid->node[1],
+             (unsigned char)uuid->node[2],
+             (unsigned char)uuid->node[3],
+             (unsigned char)uuid->node[4],
+             (unsigned char)uuid->node[5]);
+
+    return 0;
+}
+
 afs_int32 afs_uuid_create (afsUUID *uuid)
 {
     uuid_address_t eaddr;
