@@ -16,19 +16,20 @@
 
 /* domestic/crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket (const struct rx_connection *conn,
-        const fc_KeySchedule *schedule, const fc_InitializationVector *ivec,
-        const int len, struct rx_packet *packet);
+        const fc_KeySchedule *schedule, const afs_uint32 *ivec,
+        int len, struct rx_packet *packet);
 extern afs_int32 rxkad_EncryptPacket (const struct rx_connection *conn,
-        const fc_KeySchedule *schedule, const fc_InitializationVector *ivec, 
-        const int len, struct rx_packet *packet);
+        const fc_KeySchedule *schedule, const afs_uint32 *iv, 
+        int len, struct rx_packet *packet);
 
 
 /* domestic/fcrypt.c */
-extern int fc_keysched (struct ktc_encryptionKey *key, 
+extern int fc_keysched (void *key, 
         fc_KeySchedule schedule);
 extern afs_int32 fc_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher, 
         fc_KeySchedule schedule, int encrypt);
-extern afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length, 
+extern afs_int32 fc_cbc_encrypt (afs_uint32 *input, afs_uint32 *output,
+	afs_int32 length, 
         fc_KeySchedule key, afs_uint32 *xor, int encrypt);
 
 /* rxkad_client.c */
