@@ -2372,6 +2372,92 @@ static addServer(name, rank)
 	return code;
 }
 
+static BOOL IsWindowsNT (void)
+{
+    static BOOL fChecked = FALSE;
+    static BOOL fIsWinNT = FALSE;
+
+    if (!fChecked)
+    {
+        OSVERSIONINFO Version;
+
+        fChecked = TRUE;
+
+        memset (&Version, 0x00, sizeof(Version));
+        Version.dwOSVersionInfoSize = sizeof(Version);
+
+        if (GetVersionEx (&Version))
+        {
+            if (Version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+                fIsWinNT = TRUE;
+        }
+    }
+    return fIsWinNT;
+}
+
+
+BOOL IsAdmin (void)
+{
+    static BOOL fAdmin = FALSE;
+    static BOOL fTested = FALSE;
+
+    if (!fTested)
+    {
+        /* Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
+         * expect this call to succeed; if it does not, we can presume that
+         * it's not NT and therefore the user always has administrative
+         * privileges.
+         */
+        PSID psidAdmin = NULL;
+        SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
+
+        fTested = TRUE;
+
+        if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
+            fAdmin = TRUE;
+        else
+        {
+            /* Then open our current ProcessToken */
+            HANDLE hToken;
+
+            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
+            {
+                /* We'll have to allocate a chunk of memory to store the list of
+                 * groups to which this user belongs; find out how much memory
+                 * we'll need.
+                 */
+                DWORD dwSize = 0;
+                PTOKEN_GROUPS pGroups;
+                
+                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+            
+                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+                
+                /* Allocate that buffer, and read in the list of groups. */
+                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
+                {
+                    /* Look through the list of group SIDs and see if any of them
+                     * matches the Administrator group SID.
+                     */
+                    size_t iGroup = 0;
+                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    {
+                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
+                            fAdmin = TRUE;
+                    }
+                }
+
+                if (pGroups)
+                    free(pGroups);
+            }
+        }
+
+        if (psidAdmin)
+            FreeSid (psidAdmin);
+    }
+
+    return fAdmin;
+}
 
 static SetPrefCmd(as)
 register struct cmd_syndesc *as; {
@@ -2391,11 +2477,16 @@ register struct cmd_syndesc *as; {
   gblob.out_size = MAXSIZE;
 
 
-#ifndef WIN32
-  if (geteuid()) {
-    fprintf (stderr,"Permission denied: requires root access.\n");
-    return EACCES;
-  }
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
 #endif /* WIN32 */
 
   code = 0;
