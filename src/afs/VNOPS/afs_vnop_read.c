@@ -490,7 +490,7 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
     struct vrequest treq;
 
     AFS_STATCNT(afs_UFSRead);
-    if (avc->vc_error)
+    if (avc && avc->vc_error)
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
