@@ -179,6 +179,8 @@
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 
+#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
 #define	AFS_UIOFMODE		1	/* Only in afs/afs_vnodeops.c (afs_ustrategy) */
