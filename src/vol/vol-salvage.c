@@ -547,6 +547,14 @@ static handleit(as)
 	  orphans = ORPH_ATTACH;
     }
 
+#ifdef FAST_RESTART
+    if (ti = as->parms[16].items) {  /* -DontSalvage */
+      printf("Exiting immediately without salvage. Look into the FileLog");
+      printf(" to find volumes which really need to be salvaged!\n");
+      Exit(0);
+    }
+#endif /* FAST_RESTART */ 
+ 
     /* Note:  if seemvol we initialize this as a standard volume utility:  this has the
        implication that the file server may be running; negotations have to be made with
        the file server in this case to take the read write volume and associated read-only
@@ -713,6 +721,9 @@ char **argv;
     cmd_AddParm(ts, "-showsuid", CMD_FLAG,CMD_OPTIONAL, "Report on suid/sgid files");
     cmd_AddParm(ts, "-showmounts", CMD_FLAG,CMD_OPTIONAL, "Report on mountpoints");
     cmd_AddParm(ts, "-orphans", CMD_SINGLE, CMD_OPTIONAL, "ignore | remove | attach");
+#ifdef FAST_RESTART
+    cmd_AddParm(ts, "-DontSalvage", CMD_FLAG, CMD_OPTIONAL, "Don't salvage. This my be set in BosConfig to let the fileserver restart immediately after a crash. Bad volumes will be taken offline");
+#endif /* FAST_RESTART */
     err = cmd_Dispatch(argc, argv);
     Exit(err);
 }
