@@ -49,9 +49,12 @@ DEFINES = $(COMMON_DEFINES) -DCPU=586
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel
 DEFINES = $(COMMON_DEFINES) 
 
-<i386_umlinux22 i386_umlinux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
+<i386_umlinux22 i386_umlinux24 i386_umlinux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -Wno-strict-prototypes -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 DEFINES = $(COMMON_DEFINES) -DCPU=586
+
+<i386_umlinux26>
+EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 
 <alpha_linux_22 alpha_linux_24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
@@ -108,9 +111,9 @@ DESTDIRS=linux_destdirs
 
 include Makefile.common
 
-<linux26>
+<linux26 umlinux26>
 LINUX_MODULE_EXT=ko
-<all -linux26>
+<all -linux26 -umlinux26>
 LINUX_MODULE_EXT=o
 <all>
 
@@ -152,6 +155,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
 <i386_umlinux22 i386_umlinux24 i386_umlinux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
+	ln -fs ${LINUX_KERNEL_PATH}/arch/um/include/sysdep
 <amd64_linux24 amd64_linux26>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
 <s390_linux22 s390_linux24 s390_linux26>
@@ -235,17 +239,16 @@ libafs.ep: $(LIBAFS_EP)
 libafs.bm: $(LIBAFS_BM)
 	echo BM Build Complete
 
-<linux26>
+<linux26 umlinux26>
 ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 	cp libafs.ko $@
 
 .FORCE:
 libafs.ko: .FORCE
-	../$(srcdir)/make_kbuild_makefile.pl ${KDIR} $@ \
-	  @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
-	$(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" ../$(srcdir)/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL/src/libafs/${KDIR} modules
         
-<all -linux26>
+<all -linux26 -umlinux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)

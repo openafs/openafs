@@ -324,6 +324,26 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
+	i386_umlinux26)
+		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
+		MT_CC="gcc -pipe"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		DBG=-g
+		KERN_DBG=-g
+		LWP_DBG=-g
+		LWP_OPTMZ=-O2
+		OPTMZ=-O2
+		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
 	*_obsd*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'

@@ -213,6 +213,7 @@
 #define SYS_NAME_ID_i386_umlinux2	2800
 #define SYS_NAME_ID_i386_umlinux22	2801
 #define SYS_NAME_ID_i386_umlinux24	2802
+#define SYS_NAME_ID_i386_umlinux26	2803
 
 #define SYS_NAME_ID_ppc64_linux2	2900
 #define SYS_NAME_ID_ppc64_linux22	2901
