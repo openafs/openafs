@@ -238,7 +238,7 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
  * afs_InitFakeStat
  *
  * Must be called on an afs_fakestat_state object before calling
- * afs_EvalFakeStat or afs_PutFakeStat.  Calling afS_PutFakeStat
+ * afs_EvalFakeStat or afs_PutFakeStat.  Calling afs_PutFakeStat
  * without calling afs_EvalFakeStat is legal, as long as this
  * function is called.
  */
