@@ -69,7 +69,7 @@ RCSID
 #include "volser.h"
 #include "volint.h"
 
-#include <volser_prototypes.h>
+#include "volser_prototypes.h"
 
 extern int DoLogging;
 extern struct volser_trans *FindTrans(), *NewTrans(), *TransList();

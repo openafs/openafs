@@ -187,7 +187,7 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${COMPILE}
 
 volserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MTLIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
 
 ${DEST}/root.server/usr/afs/bin/volserver: volserver
 	${INSTALL} -ns $? $@
