@@ -158,5 +158,5 @@ install: $(LOCAL_INCFILES) $(LIBFILE) $(VOLSERVER_EXEFILE) $(CL_VOS_EXEFILE) \
 # Local clean target; augments predefined clean target
 
 clean::
-
-
+	$(DEL) volerr.c volser.h
+	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h

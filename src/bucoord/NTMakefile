@@ -110,4 +110,5 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 # Local clean target; augments predefined clean target
 
 clean::
+	$(DEL) bc.h bucoord_errs.c
 

@@ -144,3 +144,4 @@ install: $(BOS_LIBFILE) $(BOSSERVER_EXEFILE) $(CL_BOS_EXEFILE) $(INCFILES)
 # Local clean target; augments predefined clean target
 
 clean::
+	$(DEL) bnode.h boserr.c bosint.cs.c bosint.h bosint.ss.c bosint.xdr.c

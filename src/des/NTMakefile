@@ -138,4 +138,5 @@ install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)
 install9x: install
 
 clean::
-	$(DEL) $(LIBFILE)
+	$(DEL) $(LIBFILE) $(GENERATED_FILES)
+

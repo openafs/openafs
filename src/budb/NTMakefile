@@ -116,5 +116,4 @@ install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
 clean::
 	$(DEL) budb_errs.c budb_errs.h budb.h budb_client.h	
-
-
+	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
