@@ -25,6 +25,7 @@
 RCSID
     ("$Header$");
 
+#include <afs/cmd.h>		/*Command line parsing */
 #include <errno.h>
 #include <lock.h>
 #include <netinet/in.h>
@@ -51,6 +52,7 @@ void fix_pre();
 char *checkin();
 char *check_core();
 char *id_to_name();
+int CommandProc(struct cmd_syndesc *);
 
 struct hash_entry {
     char h_name[PR_MAXNAMELEN];
@@ -99,6 +101,37 @@ main(argc, argv)
      int argc;
      char **argv;
 {
+
+    register struct cmd_syndesc *cs;	/*Command line syntax descriptor */
+    register afs_int32 code;	/*Return code */
+
+    cs = cmd_CreateSyntax((char *)0, CommandProc, 0,
+			  "access protection database");
+    cmd_AddParm(cs, "-w", CMD_FLAG, CMD_OPTIONAL,
+		"update prdb with contents of data file");
+    cmd_AddParm(cs, "-user", CMD_FLAG, CMD_OPTIONAL, "display users");
+    cmd_AddParm(cs, "-group", CMD_FLAG, CMD_OPTIONAL, "display groups");
+    cmd_AddParm(cs, "-members", CMD_FLAG, CMD_OPTIONAL,
+		"display group members");
+    cmd_AddParm(cs, "-name", CMD_FLAG, CMD_OPTIONAL,
+		"follow name hash chains (not id hashes)");
+    cmd_AddParm(cs, "-system", CMD_FLAG, CMD_OPTIONAL,
+		"display only system data");
+    cmd_AddParm(cs, "-xtra", CMD_FLAG, CMD_OPTIONAL,
+		"display extra users/groups");
+    cmd_Seek(cs, 10);
+    cmd_AddParm(cs, "-prdb", CMD_SINGLE, CMD_OPTIONAL, "prdb file");
+    cmd_AddParm(cs, "-datafile", CMD_SINGLE, CMD_OPTIONAL, "data file");
+    code = cmd_Dispatch(argc, argv);
+
+    exit(code);
+
+}
+
+int
+CommandProc(a_as)
+     register struct cmd_syndesc *a_as;
+{
     register int i;
     register long code;
     long cc, upos, gpos;
@@ -106,50 +139,38 @@ main(argc, argv)
     struct ubik_hdr *uh;
     char *dfile = 0;
     char *pfile = "/usr/afs/db/prdb.DB0";
+    struct cmd_parmdesc *tparm;
 
-    while ((cc = getopt(argc, argv, "wugmxsnp:d:")) != EOF) {
-	switch (cc) {
-	case 'p':
-	    pfile = optarg;
-	    break;
-	case 'd':
-	    dfile = optarg;
-	    break;
-	case 'n':
-	    nflag++;
-	    break;
-	case 'w':
-	    wflag++;
-	    break;
-	case 'u':
-	    flags |= DO_USR;
-	    break;
-	case 'm':
-	    flags |= (DO_GRP | DO_MEM);
-	    break;
-	case 'g':
-	    flags |= DO_GRP;
-	    break;
-	case 's':
-	    flags |= DO_SYS;
-	    break;
-	case 'x':
-	    flags |= DO_OTR;
-	    break;
-	default:
-	    fprintf(stderr, "Usage: pt_util [options] [-d data] [-p prdb]\n");
-	    fputs("  Options:\n", stderr);
-	    fputs("    -w  Update prdb with contents of data file\n", stderr);
-	    fputs("    -u  Display users\n", stderr);
-	    fputs("    -g  Display groups\n", stderr);
-	    fputs("    -m  Display group members\n", stderr);
-	    fputs("    -n  Follow name hash chains (not id hashes)\n",
-		  stderr);
-	    fputs("    -s  Display only system data\n", stderr);
-	    fputs("    -x  Display extra users/groups\n", stderr);
-	    exit(1);
-	}
+    tparm = a_as->parms;
+
+    if (tparm[0].items) {
+	wflag++;
     }
+    if (tparm[1].items) {
+	flags |= DO_USR;
+    }
+    if (tparm[2].items) {
+	flags |= DO_GRP;
+    }
+    if (tparm[3].items) {
+	flags |= (DO_GRP | DO_MEM);
+    }
+    if (tparm[4].items) {
+	nflag++;
+    }
+    if (tparm[5].items) {
+	flags |= DO_SYS;
+    }
+    if (tparm[6].items) {
+	flags |= DO_OTR;
+    }
+    if (tparm[7].items) {
+	pfile = tparm[7].items->data;
+    }
+    if (tparm[8].items) {
+	dfile = tparm[8].items->data;
+    }
+
     if ((dbase_fd = open(pfile, (wflag ? O_RDWR : O_RDONLY) | O_CREAT, 0600))
 	< 0) {
 	fprintf(stderr, "pt_util: cannot open %s: %s\n", pfile,
@@ -225,11 +246,10 @@ main(argc, argv)
 					"Error setting group count on %s: %s\n",
 					name, error_message(code));
 			}
-			code =
-			    CreateEntry(0, u->name, &uid, 1 /*idflag */ ,
-					1 /*gflag */ ,
-					SYSADMINID /*oid */ ,
-					SYSADMINID /*cid */ );
+			code = CreateEntry(0, u->name, &uid, 1 /*idflag */ ,
+					   1 /*gflag */ ,
+					   SYSADMINID /*oid */ ,
+					   SYSADMINID /*cid */ );
 		    }
 		    if (code)
 			fprintf(stderr, "Error while creating %s: %s\n",
