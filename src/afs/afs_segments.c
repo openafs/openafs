@@ -832,6 +832,9 @@ afs_TruncateAllSegments(avc, alen, areq, acred)
 
     AFS_STATCNT(afs_TruncateAllSegments);
     avc->m.Date = osi_Time();
+    afs_Trace3(afs_iclSetp, CM_TRACE_TRUNCALL, ICL_TYPE_POINTER, avc,
+		   	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length), 
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(alen));
     if (alen >= avc->m.Length) {
 	/*
 	 * Special speedup since Sun's vm extends the file this way;
@@ -844,15 +847,8 @@ afs_TruncateAllSegments(avc, alen, areq, acred)
 	 */
 	avc->states |= CExtendedFile;
 	avc->m.Length = alen;
-	afs_Trace3(afs_iclSetp, CM_TRACE_TRUNCALL1, ICL_TYPE_POINTER, avc,
-		   	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length), 
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(alen));
 	return 0;
     }
-
-    afs_Trace3(afs_iclSetp, CM_TRACE_TRUNCALL2, ICL_TYPE_POINTER, avc,
-		   	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length), 
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(alen));
 
 #if	(defined(AFS_SUN5_ENV))
 

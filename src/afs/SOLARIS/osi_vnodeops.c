@@ -569,7 +569,8 @@ int afs_putpage(vp, off, len, flags, cred)
 #else
     afs_int32 tlen;
 #endif
-    afs_int32 endPos, NPages=0;
+    afs_offs_t endPos;
+    afs_int32 NPages=0;
 #if	defined(AFS_SUN56_ENV)
     u_offset_t toff = off;
 #else
@@ -594,8 +595,8 @@ int afs_putpage(vp, off, len, flags, cred)
 
     /* Get a list of modified (or whatever) pages */
     if (len) {
-	endPos = (int)off + len;		/* position we're supposed to write up to */
-	while ((afs_int32)toff < endPos && (afs_int32)toff < avc->m.Length) {
+	endPos = (afs_offs_t)off + len;		/* position we're supposed to write up to */
+	while ((afs_offs_t)toff < endPos && (afs_offs_t)toff < avc->m.Length) {
 	    /* If not invalidating pages use page_lookup_nowait to avoid reclaiming
 	     * them from the free list
 	     */
@@ -654,18 +655,16 @@ int afs_putapage(struct vnode *vp, struct page *pages,
     struct buf *tbuf;
     struct vcache *avc = (struct vcache *)vp;
     afs_int32 code = 0;
-    afs_offs_t  toff;
-    u_int tlen = PAGESIZE, off = (pages->p_offset/PAGESIZE)*PAGESIZE;
-    u_int poff = pages->p_offset;
+    u_int tlen = PAGESIZE;
+    afs_offs_t off = (pages->p_offset/PAGESIZE)*PAGESIZE;
 
     /*
      * Now we've got the modified pages.  All pages are locked and held 
      * XXX Find a kluster that fits in one block (or page). We also
      * adjust the i/o if the file space is less than a while page. XXX
      */
-    toff = off;
-    if (toff + tlen > avc->m.Length) {
-	tlen = avc->m.Length - toff;
+    if (off + tlen > avc->m.Length) {
+	tlen = avc->m.Length - off;
     }
     /* can't call mapout with 0 length buffers (rmfree panics) */
     if (((tlen>>24)&0xff) == 0xff) {
@@ -685,7 +684,7 @@ int afs_putapage(struct vnode *vp, struct page *pages,
 	afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUTONE, ICL_TYPE_LONG, avc, 
 		ICL_TYPE_LONG, pages,
 	       	ICL_TYPE_LONG, tlen, 
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(toff));
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off));
 	code = afs_ustrategy(tbuf, credp);	/* unlocks page */
 	AFS_GUNLOCK();
 	bp_mapout(tbuf);
@@ -693,7 +692,7 @@ int afs_putapage(struct vnode *vp, struct page *pages,
     pvn_write_done(pages, ((code) ? B_ERROR:0) | B_WRITE | flags);
     if ((int)tlen > 0)
 	pageio_done(tbuf);
-    if (offp) *offp = toff;
+    if (offp) *offp = off;
     if (lenp) *lenp = tlen;
     return code;
 }
@@ -959,8 +958,14 @@ struct AFS_UCRED *acred;
 	size = auio->afsio_resid + auio->afsio_offset;	/* new file size */
 	appendLength = size;		
 	origLength = avc->m.Length;
-	if (size > avc->m.Length) 
+	if (size > avc->m.Length) {
+	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
+		ICL_TYPE_STRING, __FILE__,
+		ICL_TYPE_LONG, __LINE__,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(size));
 	    avc->m.Length = size;	/* file grew */
+	}
 	avc->states |= CDirty;		/* Set the dirty bit */
 	avc->m.Date = osi_Time();	/* Set file date (for ranlib) */
     } else {

@@ -739,7 +739,6 @@ afs_BioDaemon (nbiods)
     }
 
     /* Ignore HUP signals... */
-#ifdef AFS_AIX41_ENV
     {
  	sigset_t sigbits, osigbits;
  	/*
@@ -749,11 +748,6 @@ afs_BioDaemon (nbiods)
  	SIGDELSET(sigbits, SIGHUP);		/*   except SIGHUP	*/
  	limit_sigs(&sigbits, &osigbits);	/*   and already masked */
     }
-#else
-    SIGDELSET(u.u_procp->p_sig, SIGHUP);
-    SIGADDSET(u.u_procp->p_sigignore, SIGHUP);
-    SIGDELSET(u.u_procp->p_sigcatch, SIGHUP);
-#endif
     /* Main body starts here -- this is an intentional infinite loop, and
      * should NEVER exit 
      *
@@ -784,15 +778,16 @@ afs_BioDaemon (nbiods)
 	if (bp->b_flags & B_PFSTORE) {	/* XXXX */
 	    ObtainWriteLock(&vcp->lock,404);	    
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
-#ifdef AFS_64BIT_CLIENT
-		if (vcp->m.Length < 
-				(afs_offs_t)dbtob(bp->b_blkno) + bp->b_bcount)
-		    vcp->m.Length = 
-				(afs_offs_t)dbtob(bp->b_blkno) + bp->b_bcount;
-#else /* AFS_64BIT_CLIENT */
-		if (vcp->m.Length < bp->b_bcount + (u_int)dbtob(bp->b_blkno))
-		    vcp->m.Length = bp->b_bcount + (u_int)dbtob(bp->b_blkno);
-#endif /* AFS_64BIT_CLIENT */
+	    	afs_offs_t newlength = 
+			(afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
+		if (vcp->m.Length < newlength) {
+		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
+			ICL_TYPE_STRING, __FILE__,
+			ICL_TYPE_LONG, __LINE__,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(vcp->m.Length),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
+		    vcp->m.Length = newlength;
+		}
 	    }
 	    ReleaseWriteLock(&vcp->lock);
 	}
@@ -1101,21 +1096,9 @@ afs_BioDaemon (nbiods)
 
 
     /* Ignore HUP signals... */
-#ifdef AFS_AIX41_ENV
-    {
- 	sigset_t sigbits, osigbits;
- 	/*
- 	 * add SIGHUP to the set of already masked signals
- 	 */
- 	SIGFILLSET(sigbits);			/* allow all signals	*/
- 	SIGDELSET(sigbits, SIGHUP);		/*   except SIGHUP	*/
- 	limit_sigs(&sigbits, &osigbits);	/*   and already masked */
-    }
-#else
     SIGDELSET(u.u_procp->p_sig, SIGHUP);
     SIGADDSET(u.u_procp->p_sigignore, SIGHUP);
     SIGDELSET(u.u_procp->p_sigcatch, SIGHUP);
-#endif
     /* Main body starts here -- this is an intentional infinite loop, and
      * should NEVER exit 
      *

@@ -269,8 +269,8 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	afsio_skip(auio, tlen);	    /* advance auio over data written */
 	/* compute new file size */
 	if (offset + len > tdc->f.chunkBytes) {
-	    afs_int32 toffset = offset+len;
-	    afs_AdjustSize(tdc, toffset);
+	    afs_int32 tlength = offset+len;
+	    afs_AdjustSize(tdc, tlength);
 	}
 	totalLength -= len;
 	transferLength += len;
@@ -279,8 +279,14 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
         /* afs_xwrite handles setting m.Length */
         osi_Assert(filePos <= avc->m.Length);
 #else
-	if (filePos > avc->m.Length)
+	if (filePos > avc->m.Length) {
+	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
+		ICL_TYPE_STRING, __FILE__,
+		ICL_TYPE_LONG, __LINE__,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos));
 	    avc->m.Length = filePos;
+	}
 #endif
 #ifndef AFS_VM_RDWR_ENV
 	/*
@@ -567,8 +573,8 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	afsio_skip(auio, tlen);	    /* advance auio over data written */
 	/* compute new file size */
 	if (offset + len > tdc->f.chunkBytes) {
-	    afs_int32 toffset = offset+len;
-	    afs_AdjustSize(tdc, toffset);
+	    afs_int32 tlength = offset+len;
+	    afs_AdjustSize(tdc, tlength);
 	}
 	totalLength -= len;
 	transferLength += len;
@@ -578,6 +584,11 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
         osi_Assert(filePos <= avc->m.Length);
 #else
 	if (filePos > avc->m.Length) {
+	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
+		ICL_TYPE_STRING, __FILE__,
+		ICL_TYPE_LONG, __LINE__,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos));
 	    avc->m.Length = filePos;
 	}
 #endif
