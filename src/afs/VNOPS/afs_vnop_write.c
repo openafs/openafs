@@ -260,9 +260,12 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 
 	code = afs_MemWriteUIO(tdc->f.inode, &tuio);
 	if (code) {
+	    void *mep; /* XXX in prototype world is struct memCacheEntry * */
 	    error = code;
 	    ZapDCE(tdc);		/* bad data */
-	    afs_MemCacheTruncate(tdc->f.inode, 0);
+	    mep = afs_MemCacheOpen(tdc->f.inode);
+	    afs_MemCacheTruncate(mep, 0);
+	    afs_MemCacheClose(mep);
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
 	    afs_indexFlags[tdc->index] &= ~IFDataMod;    /* so it does disappear */
 	    ReleaseWriteLock(&tdc->lock);
