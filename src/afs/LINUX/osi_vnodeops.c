@@ -30,6 +30,12 @@
 #include "../h/smp_lock.h"
 #endif
 
+#ifdef pgoff2loff
+#define pageoff(pp) pgoff2loff((pp)->index)
+#else
+#define pageoff(pp) pp->offset
+#endif
+
 extern struct vcache *afs_globalVp;
 
 extern struct dentry_operations *afs_dops;
@@ -1137,7 +1143,7 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     setup_uio(&tuio, &iovec, (char*)address, pp->index << PAGE_CACHE_SHIFT,
 	      PAGESIZE, UIO_READ, AFS_UIOSYS);
 #else
-    setup_uio(&tuio, &iovec, (char*)address, pp->offset, PAGESIZE,
+    setup_uio(&tuio, &iovec, (char*)address, pageoff(pp), PAGESIZE,
 	      UIO_READ, AFS_UIOSYS);
 #endif
 #ifdef AFS_LINUX24_ENV
@@ -1322,7 +1328,7 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 	       ICL_TYPE_POINTER, pp,
 	       ICL_TYPE_INT32, atomic_read(&pp->count),
 	       ICL_TYPE_INT32, 99999);
-    setup_uio(&tuio, &iovec, page_addr + offset, pp->offset + offset, count,
+    setup_uio(&tuio, &iovec, page_addr + offset, pageoff(pp) + offset, count,
 	      UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);

@@ -36,7 +36,7 @@ typedef struct vnode {
 	uid_t			i_uid;
 	gid_t			i_gid;
 	kdev_t			i_rdev;
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX24_ENV) || defined(_REISER_FS_I) /* XXX need better test */
         loff_t                  i_size;
 #else
 	off_t			i_size;
