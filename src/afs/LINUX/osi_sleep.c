@@ -103,7 +103,6 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
         if (code == EINTR) {
                 if (aintok) 
 		    return EINTR;
-                flush_signals(current);
         }
 #else
 	timer = afs_osi_CallProc(AfsWaitHack, (char *) current, ams);
