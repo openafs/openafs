@@ -110,6 +110,7 @@ rxkad_level enclevel; {
     
     /* now create the actual ticket */
     ticketLen = sizeof(tbuffer);
+    memset(tbuffer, '\0', sizeof(tbuffer));
     code = tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
 			   0xffffffff, &session, 0, "afs", "");
     /* parms were buffer, ticketlen, key to seal ticket with, principal

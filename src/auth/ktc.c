@@ -656,6 +656,8 @@ struct ktc_principal *aserver; {
     register char *tp;
     afs_int32 temp, index;
 
+    memset(tbuffer, 0, sizeof(tbuffer));
+
     LOCK_GLOBAL_MUTEX
 #ifndef NO_AFS_CLIENT
     TRY_KERNEL (KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
