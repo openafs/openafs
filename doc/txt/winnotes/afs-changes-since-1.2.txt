@@ -1,3 +1,17 @@
+Since 1.3.72/73:
+  * Add support for symlinks to Freelance root.afs volume
+    Stored at HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks
+       <number>  =  "<linkname>:<relative-path>."
+    Use symlink.exe to create, list, or remove
+
+  * Remove the fallback to the use of KFW's KRB4 library when obtaining
+    tokens.  We never obtain KRB4 tickets.
+
+  * Fix AFS Client Configuration Control Panel to support new SysName
+    protocol.
+  * Fix a bug in afsd_service.exe which could result in the SysName
+    not being read from the registry.
+
 Since 1.3.71:
   * Add code to block the issuance of AFS tokens by aklog.exe or
     afscreds.exe when the Kerberos 5 principal name contains a dot.

@@ -73,6 +73,8 @@ directories.
      description must be unique.  "home" cannot be reused.  We need a way 
      to remove "home" from the submount list.  
 
+     [Actually, an end user should not be able to modify the submount list]
+
 (16) WinAFS configuration values are still stored in old style INI files 
      instead of using the Registry.  This is especially important for
      per-user values such as drive mappings
@@ -115,20 +117,30 @@ directories.
      can be executed prior to the completion of the SMB registration
      and service thread initialization.
 
-(28) Should we allow the AFSCACHE file to be stored in the Virtual Paging
-     file as long as we do not support persistent caches?
-
-(29) CIFS Remote Administration Protocol implementation is incomplete.
+(28) CIFS Remote Administration Protocol implementation is incomplete.
      Notifications are not made to requestors when the view of a file
      or folder changes due to token acquisition; token expiration; or
      token destruction
 
-(30) Microsoft Office appears to have trouble editing files of ~20MB
-     or larger from within AFS.  Performance is particularly slow and
-     applications such as Word often crash upon saving the files.
+(29) The Cache Manager Flush routines do not return or check error 
+     codes.       
 
-(31) The Cache Manager Flush routines do not return or check error 
-     codes.        
+(30) Remove submount creation as a side effect of AFS drive mapping.
+     
+     The AFS Submount is effectively a server side alias for a path 
+     located in the AFS space.  This alias is exported by the AFS 
+     SMB/CIFS Server to the Windows SMB/CIFS client as a Share name.  
+     This makes the AFS Submount a system global setting which should 
+     only be modified by a member of the "AFS Client Admin" group.
+
+     afs_creds.exe and afs_config.exe should be modified to no longer 
+     use submount names when creating drive maps.  Drive maps should 
+     simply use the full AFS path name.  Submounts should not be 
+     created as a side effect of a drive mapping.
+
+     The creation of submounts should only be possible via afsshare.exe 
+     or by the new AFS Client Service Administration tool when executed 
+     by an authorized user.
 
 -------------------------------------------------------------------------
 List of unfunded projects:
@@ -155,7 +167,7 @@ List of unfunded projects:
    8. Re-write afs_config.exe to be only "per user" functionality which does not require admin 
       privileges
          1. default cell and principal for the user
-         2. drive mappings
+         2. drive mappings but no submounts
          3. visibility of afs creds and setting of afs creds startup options
    9. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) 
       which contains
@@ -176,7 +188,7 @@ List of unfunded projects:
   11. Add support for configurable Icon file representing AFS folders within the Explorer Shell
   12. Documentation Documentation Documentation
   13. Large File support (> 2GB)
-  14. Integrate KFW installation into the NSIS installer
+  14. Integrate KFW installation into the NSIS and MSI installers
   15. Add support for record locking to AFS (requires changes to the servers)
   16. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
@@ -184,17 +196,12 @@ List of unfunded projects:
       3. force share names to be no longer than 13 characters
       4. restrict authentication to ASCII only names and passwords
   17. Complete implementation of CIFS Remote Administration Protocol
-  18. Correct the problems with overlapped writes which adversely affect 
-      Microsoft Office applications storing documents and temporary files
-      within AFS volumes
   19. Add support for SMB/CIFS Digital Signatures
-  20. Development of afsmap.exe tool to provide AFS aware NET USE functionality
+  19. Development of afsmap.exe tool to provide AFS aware NET USE functionality
       afsmap.exe <drive> <afs-path> [/PERSISTENT]
       afsmap.exe <drive> <unc-path> [/PERSISTENT]
       afsmap.exe <drive> /DELETE
-  21. Write-through caching appears to be unsupported.   Files copied to AFS
-      do not end up in the local cache.
-  22. Missing SMB/CIFS functions: 
+  20. Missing SMB/CIFS functions: 
         Find
         FindUnique
         FindClose
@@ -202,11 +209,14 @@ List of unfunded projects:
         WriteBulk       
         WriteBulkData
         Tran2::SessionSetup
-  23. StoreBehind mode is not implemented.  Or more correctly, all data is
+  21. StoreBehind mode is not implemented.  Or more correctly, all data is
       written directly to the server and is not cached.  Writes invalidate
       the local cache entries which are then read back from the server.
-  24. The Power Management Flush Cache code does not work on Terminal 
+  22. The Power Management Flush Cache code does not work on Terminal 
       Server nor does it always successfully flush all of the dirty buffers
       to the AFS servers before suspend/hibernate operations occur.
-
-
+  23. Develop an optional Installable File System replacement for the SMB/CIFS 
+      Server.
+  24. Add support for storing Extended Attributes on files
+  25. Add support for storing Windows ACLs on files
+  26. Remove submount creation as a side effect of drive creation

@@ -358,6 +358,19 @@ the availability of this option should only be used by individuals until
 such time as their organizations can provide a more permanent solution.
 
 
+25. The Status Cache (AFS Config Control Panel: Advanced Page) is defined
+to have a maximum number of entries.  Each entry represents a single file
+or directory entry accessed within the AFS file system.  When the maximum
+number of entries are allocated, entries will begin to be reused according
+to a least recently used (LRU) algorithm.  If the number of files or 
+directories being accessed repeatedly by your applications is greater then
+the maximum number of entries, your host will begin to experience thrashing
+of the Status Cache and all requests will result in network operations.
+
+If you are experiencing poor performance you might want to increase the 
+maximum number of Status Cache entries.  Each entry requires 164K.  Only
+those entries which are used are allocated.
+
 
 ------------------------------------------------------------------------
 
