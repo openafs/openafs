@@ -74,7 +74,11 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
      * the root vnode (this is just a guess right now).
      * This has to be done outside the global lock.
      */
+#ifdef AFS_FBSD53_ENV
+    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+#else
     vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+#endif
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;
