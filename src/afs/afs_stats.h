@@ -455,6 +455,7 @@ struct afs_CMCallStats {
     afs_int32 C_afs_GetCell;	/* afs_resource.c*/
     afs_int32 C_afs_GetCellByIndex;	/* afs_resource.c*/
     afs_int32 C_afs_GetCellByName;	/* afs_resource.c*/
+    afs_int32 C_afs_GetRealCellByIndex;	/* afs_resource.c*/
     afs_int32 C_afs_NewCell;	/* afs_resource.c*/
     afs_int32 C_afs_GetUser;	/* afs_resource.c*/
     afs_int32 C_afs_PutUser;	/* afs_resource.c*/

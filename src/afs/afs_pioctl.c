@@ -2234,17 +2234,7 @@ DECL_PIOCTL(PListCells)
 
     memcpy((char *)&whichCell, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
-    ObtainReadLock(&afs_xcell);
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tcell = QTOC(cq); tq = QNext(cq);
-	if (tcell->states & CAlias) {
-	    tcell = 0;
-	    continue;
-	}
-	if (whichCell == 0) break;
-	tcell = 0;
-	whichCell--;
-    }
+    tcell = afs_GetRealCellByIndex(whichCell, READ_LOCK, 0);
     if (tcell) {
 	cp = aout;
 	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
@@ -2258,7 +2248,6 @@ DECL_PIOCTL(PListCells)
 	cp += strlen(tcell->cellName)+1;
 	*aoutSize = cp - aout;
     }
-    ReleaseReadLock(&afs_xcell);
     if (tcell) return 0;
     else return EDOM;
 }

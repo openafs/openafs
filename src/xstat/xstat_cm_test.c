@@ -458,6 +458,7 @@ print_cmCallStats()
     printf("\t%10d afs_GetCell\n",         cmp->callInfo.C_afs_GetCell);
     printf("\t%10d afs_GetCellByIndex\n",         cmp->callInfo.C_afs_GetCellByIndex);
     printf("\t%10d afs_GetCellByName\n",         cmp->callInfo.C_afs_GetCellByName);
+    printf("\t%10d afs_GetRealCellByIndex\n",         cmp->callInfo.C_afs_GetRealCellByIndex);
     printf("\t%10d afs_NewCell\n",         cmp->callInfo.C_afs_NewCell);
     printf("\t%10d CheckVLDB\n",         cmp->callInfo.C_CheckVLDB);
     printf("\t%10d afs_GetVolume\n",         cmp->callInfo.C_afs_GetVolume);
