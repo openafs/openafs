@@ -94,3 +94,19 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_is_selinux=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_SOCK_CREATE],[
+AC_MSG_CHECKING(for 5th argument in sock_create found in some SELinux kernels)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_sock_create_v,
+[
+AC_TRY_COMPILE(
+  [#include <linux/net.h>],
+  [
+  sock_create(0,0,0,0,0)
+  ],
+  ac_cv_linux_kernel_sock_create_v=yes,
+  ac_cv_linux_kernel_sock_create_v=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)
+
