@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.9 2002/01/22 20:29:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.10 2002/01/28 00:53:19 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -191,6 +191,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	    afs_osi_Invisible();
 	    afs_RX_Running = 2;
 	    afs_osi_Wakeup(&afs_RX_Running);
+#ifndef UKERNEL
+	    afs_osi_RxkRegister();
+#endif
 	    rxk_Listener();
 	}
 #ifdef	AFS_SGI_ENV
@@ -637,6 +640,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
 	char *cellname = afs_osi_Alloc(cellLen);
 
+#ifndef UKERNEL
+	afs_osi_MaskSignals();
+#endif
 	AFS_COPYIN((afs_int32 *)parm2, cellname, cellLen, code);
 	AFS_COPYIN((afs_int32 *)parm3, kmsg, kmsgLen, code);
 	if (!code) {
@@ -1254,6 +1260,9 @@ afs_shutdown()
 	afs_osi_Sleep(&afs_termState);
 #if defined(RXK_LISTENER_ENV)
     afs_warn("RxListener... ");
+#ifndef UKERNEL
+    afs_osi_UnmaskRxkSignals();
+#endif
     /* cancel rx listener */
     osi_StopListener(); /* This closes rx_socket. */
     while (afs_termState == AFSOP_STOP_RXK_LISTENER) 
