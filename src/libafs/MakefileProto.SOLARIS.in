@@ -121,17 +121,12 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
-<sun4x_57 sun4x_58 sun4x_59>
+<sun4x_57 sun4x_58 sun4x_59 sunx86_57 sunx86_58 sunx86_59>
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/libafs${BITS}.o
 
-libafs: ${LIBAFSNONFS} ${LIBAFS}
-
-install_libafs: ${LIBAFSNONFS} ${LIBAFS}
-	${INSTALL} -f ${LIBAFSNONFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
-	${INSTALL} -f ${LIBAFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.o
-
-dest_libafs: ${LIBAFSNONFS} ${LIBAFS}
-	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
-	${INSTALL} -f ${LIBAFS} ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.nonfs.o
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/libafs${BITS}.o
 
 <all>
 
