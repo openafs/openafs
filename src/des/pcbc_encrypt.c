@@ -27,7 +27,6 @@
 #include "des_internal.h"
 
 #define XPRT_PCBC_ENCRYPT
-#include "../permit_xprt.h"
 
 extern int des_debug;
 extern int des_debug_print();

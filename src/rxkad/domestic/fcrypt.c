@@ -56,11 +56,6 @@ int ROUNDS = 16;
 #endif
 
 #define XPRT_FCRYPT
-#ifdef KERNEL
-#include "../afs/permit_xprt.h"
-#else
-#include "../permit_xprt.h"
-#endif
 
 int fc_keysched (key, schedule)
   IN struct ktc_encryptionKey *key;

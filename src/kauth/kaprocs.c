@@ -41,9 +41,6 @@
 #include "kaport.h"
 #include "afs/audit.h"
 
-#include "../permit_xprt.h"
-
-
 extern struct ubik_dbase *KA_dbase;
 struct kaheader cheader;
 Date		cheaderReadTime;	/* time cheader last read in */

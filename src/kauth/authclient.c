@@ -43,7 +43,6 @@
 #include "../afs/kautils.h"
 #include "../afs/pthread_glock.h"
 
-#include "../afs/permit_xprt.h"
 #else /* defined(UKERNEL) */
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -63,8 +62,6 @@
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kautils.h"
-
-#include "../permit_xprt.h"
 #endif /* defined(UKERNEL) */
 
 

@@ -7,13 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.2  90/08/20  11:15:39
- * Include permit_xprt.h.
- * Cleanup line length.
- *  */
-/* See RCS log for older history. */
-
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #include "../afs/sysincludes.h"
@@ -28,7 +21,6 @@
 #include "../afs/pthread_glock.h"
 #include "../des/des.h"
 
-#include "../afs/permit_xprt.h"
 #else /* defined(UKERNEL) */
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -43,8 +35,6 @@
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kautils.h"
-
-#include "../permit_xprt.h"
 #endif /* defined(UKERNEL) */
 
 

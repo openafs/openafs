@@ -15,7 +15,6 @@ COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
-PE = ../permit_xprt.h
 INCLS=${SRCDIR}include/ubik.h \
 	${SRCDIR}include/lock.h  \
 	${SRCDIR}include/lwp.h \
@@ -98,7 +97,7 @@ ptclient: ptclient.o display.o libprot.a $(LIBS)
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
-ptuser.o: ptuser.c ${LINCLS} ${PE}
+ptuser.o: ptuser.c ${LINCLS}
 
 pterror.h pterror.c: pterror.et
 	$(RM) -f pterror.h pterror.c; ${COMPILE_ET} pterror

@@ -68,7 +68,7 @@ ${KERNELDIR}/afs/param.h ${DESTDIR}include/afs/param.h :: param.${SYS_NAME}.h
 ${KERNELDIR}/afs/afs_sysnames.h ${DESTDIR}include/afs/afs_sysnames.h :: afs_sysnames.h
 	$(RM) -f $@; $(CP) $? $@
 
-DESTINCLS = ${DESTDIR}include/afs/afs_args.h ${DESTDIR}include/afs/venus.h ${DESTDIR}include/afs/debug.h ${DESTDIR}include/afs/afs_sysnames.h  ${DESTDIR}include/afs/param.h  ${DESTDIR}include/afs/stds.h  ${DESTDIR}include/afs/icl.h ../permit_xprt.h
+DESTINCLS = ${DESTDIR}include/afs/afs_args.h ${DESTDIR}include/afs/venus.h ${DESTDIR}include/afs/debug.h ${DESTDIR}include/afs/afs_sysnames.h  ${DESTDIR}include/afs/param.h  ${DESTDIR}include/afs/stds.h  ${DESTDIR}include/afs/icl.h 
 
 ${KERNELDIR}/afs/stds.h ${DESTDIR}include/afs/stds.h :: stds.h
 	$(RM) -f $@; $(CP) $? $@
@@ -87,24 +87,6 @@ ${DESTDIR}include/afs/venus.h :: venus.h
 
 ${DESTDIR}include/afs/debug.h :: debug.h 
 	$(RM) -f $@; $(CP) $? $@
-
-${KERNELDIR}/afs/permit_xprt.h ../permit_xprt.h:
-	$(RM) -f ${KERNELDIR}/afs/permit_xprt.h ../permit_xprt.h
-	if [ -f SRC/../xprt/permit_xprt.h ] ; then \
-	   echo "XPRT" ; \
-	   perm_src=`pwd`/../xprt ; \
-	   echo "perm_src='$$perm_src'" ; \
-	   set -x ; \
-	   $(CP) $$perm_src/permit_export.h ${KERNELDIR}/afs/permit_xprt.h ; \
-	   ln -s $$perm_src/permit_xprt.h   ../permit_xprt.h ; \
-	else \
-	   echo "CONFIG" ; \
-	   perm_src=`pwd` ; \
-	   echo "perm_src='$$perm_src'" ; \
-	   set -x ; \
-	   $(CP) $$perm_src/permit_xprt.h   ${KERNELDIR}/afs/permit_xprt.h ; \
-	   ln -s $$perm_src/permit_xprt.h   ../permit_xprt.h ; \
-	fi		     
 
 $(UKDIRS): 
 	set $@; $(MKDIR_IF_NEEDED)
@@ -133,19 +115,6 @@ ${UKERNELDIR}/afs/venus.h :: venus.h
 ${UKERNELDIR}/afs/afs_args.h :: afs_args.h 
 	$(RM) -f $@; $(CP) $? $@
 
-${UKERNELDIR}/afs/permit_xprt.h:
-	$(RM) -f ${UKERNELDIR}/afs/permit_xprt.h
-	if [ -f SRC/../xprt/permit_xprt.h ] ; then \
-	   echo "XPRT" ; \
-	   perm_src=`pwd`/../xprt ; \
-	else \
-	   echo "CONFIG" ; \
-	   perm_src=`pwd`/../config ; \
-	fi; \
-	echo "perm_src='$$perm_src'" ; \
-	set -x ; \
-	ln -s $$perm_src/permit_xprt.h   ${UKERNELDIR}/afs/permit_xprt.h
-
 # lkversion is the target the Linux build uses to verify the build machine
 # has headers in the right place for the requested kernel builds.
 #
@@ -161,8 +130,6 @@ lkversion:
 	esac
 
 install.noversion: $(KDIRS) noversionMakef all $(DESTINCLS) venus.h
-	$(RM) -f ${DESTDIR}/include/afs/permit_xprt.h
-	$(CP) permit_xprt.h ${DESTDIR}/include/afs/
 
 system: install
 install: version install.noversion kinstall ukinstall
@@ -174,14 +141,14 @@ install: version install.noversion kinstall ukinstall
 
 kinstall: lkversion config $(KDIRS) ${KERNELDIR}/afs/param.h \
 	${KERNELDIR}/afs/stds.h \
-	${KERNELDIR}/afs/permit_xprt.h ${KERNELDIR}/afs/afs_sysnames.h \
+	${KERNELDIR}/afs/afs_sysnames.h \
 	${KERNELDIR}/config/Makefile.${SYS_NAME} \
 	${KERNELDIR}/afs/afs_args.h \
 	${KERNELDIR}/afs/icl.h \
 	${KERNELDIR}/afs/AFS_component_version_number.c
 
 ukinstall webinstall: $(DESTINCLS) config $(UKDIRS) ${UKERNELDIR}/afs/param.h ${UKERNELDIR}/afs/stds.h \
-	${UKERNELDIR}/afs/permit_xprt.h ${UKERNELDIR}/afs/afs_sysnames.h \
+	${UKERNELDIR}/afs/afs_sysnames.h \
 	${UKERNELDIR}/config/Makefile.${SYS_NAME} \
 	${UKERNELDIR}/afs/afs_args.h \
 	${UKERNELDIR}/afs/icl.h \

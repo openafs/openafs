@@ -29,12 +29,7 @@
 #define FT_ApproxTime() (int)time(0)
 #endif
 
-#ifdef rx_GetPacketCksum
-#include "../../permit_xprt.h"
-#endif
-
 extern int maxSkew;
-
 
 static char *whoami;
 

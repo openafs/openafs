@@ -208,9 +208,6 @@ ${DES_LIB}: ${TARGOBJS} ${COMMONOBJS} AFS_component_version_number.o
 	ar r ${DES_LIB} ${TARGOBJS} ${COMMONOBJS} AFS_component_version_number.o
 	$(RANLIB) ${DES_LIB}
 
-# export stuff
-des.o cbc_encrypt.o pcbc_encrypt.o new_rnd_key.o cksum.o testit.o verify.o: ../permit_xprt.h
-
 #	host system stuff
 make_ip: make_ip.o misc.o
 	${CC} make_ip.o misc.o ${LDFLAGS} -o make_ip

@@ -89,9 +89,6 @@
 #include <des.h>
 #include <afs/afsutil.h>
 
-#include "../permit_xprt.h"
-
-
 /*
  * The password reading routine in des/readpassword.c will not work if the
  * buffer size passed in is greater than BUFSIZ, so we pretty well have to

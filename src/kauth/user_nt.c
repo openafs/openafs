@@ -23,7 +23,6 @@
 #include <rx/rxkad.h>
 #include <crypt.h>
 #include <des.h>
-#include "../permit_xprt.h"
 
 int krb_add_host (struct sockaddr_in *server_list_p);
 static void krb_set_port(long port);

@@ -42,9 +42,6 @@
 #include "kauth.h"
 #include "kautils.h"
 
-#include "../permit_xprt.h"
-
-
 
 /* This should match the behavior of ParseLoginName on input so that the output
  * and input are compatible.  In names "." should show as \056 and in names and
