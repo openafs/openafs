@@ -199,7 +199,9 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
 	struct afs_ioctl32 dst32;
 
-#ifdef AFS_SPARC64_LINUX20_ENV
+#ifdef AFS_SPARC64_LINUX24_ENV
+        if (current->thread.flags & SPARC_FLAG_32BIT)
+#elif AFS_SPARC64_LINUX20_ENV
 	if (current->tss.flags & SPARC_FLAG_32BIT) 
 #else
 #error Not done for this linux type
