@@ -182,6 +182,14 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	goto bad_ticket;
     }
     
+    /* 
+     * If the first part of the name_string contains a dot, punt since
+     * then we can't see the diffrence between the kerberos 5
+     * principals foo.root and foo/root later in the fileserver.
+     */
+     if (strchr(decr_part.cname.name_string.val[0], '.') != NULL) 
+	 goto bad_ticket;
+
     /* Verify that decr_part.key is of right type */
     switch (decr_part.key.keytype) {
     case ETYPE_DES_CBC_CRC:
