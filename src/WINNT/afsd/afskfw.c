@@ -199,16 +199,6 @@ DECL_FUNC_PTR(LsaFreeReturnBuffer);
 DECL_FUNC_PTR(LsaGetLogonSessionData);
 #endif /* USE_MS2MIT */
 
-// AFS36 Token Functions
-DECL_FUNC_PTR(ktc_ListTokens);
-DECL_FUNC_PTR(ktc_GetToken);
-DECL_FUNC_PTR(ktc_SetToken);
-DECL_FUNC_PTR(ktc_ForgetAllTokens);
-
-// AFS36 Config Functions
-DECL_FUNC_PTR(cm_SearchCellFile);
-DECL_FUNC_PTR(cm_GetRootCellName);
-
 // CCAPI
 FUNC_INFO ccapi_fi[] = {
     MAKE_FUNC_INFO(cc_initialize),
@@ -349,20 +339,6 @@ FUNC_INFO lsa_fi[] = {
 };
 #endif /* USE_MS2MIT */
 
-FUNC_INFO afst_fi[] = {
-    MAKE_FUNC_INFO(ktc_ListTokens),
-    MAKE_FUNC_INFO(ktc_GetToken),
-    MAKE_FUNC_INFO(ktc_SetToken),
-    MAKE_FUNC_INFO(ktc_ForgetAllTokens),
-    END_FUNC_INFO
-};
-
-FUNC_INFO afsc_fi[] = {
-    MAKE_FUNC_INFO(cm_SearchCellFile),
-    MAKE_FUNC_INFO(cm_GetRootCellName),
-    END_FUNC_INFO
-};
-
 /* Static Prototypes */
 char *afs_realm_of_cell(struct afsconf_cell *);
 static long get_cellconfig_callback(void *, struct sockaddr_in *, char *);
@@ -421,8 +397,6 @@ KFW_initialize(void)
 #endif /* USE_MS2MIT */
             LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
             LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
-            LoadFuncs(AFSTOKENS_DLL, afst_fi, &hAfsTokens, 0, 1, 0, 0);
-            LoadFuncs(AFSCONF_DLL, afsc_fi, &hAfsConf, 0, 1, 0, 0);
             LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
             LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
 
@@ -435,7 +409,7 @@ KFW_initialize(void)
                 KFW_AFS_renew_expiring_tokens();
 
                 /* WIN32 NOTE: no way to get max chars */
-                if (!pcm_GetRootCellName(rootcell))
+                if (!cm_GetRootCellName(rootcell))
                     KFW_AFS_renew_token_for_cell(rootcell);
             }
         }
@@ -1071,7 +1045,7 @@ KFW_import_ccache_data(void)
                 strcpy(aserver.name, sname->data);
                 strcpy(aserver.cell, cell->data);
 
-                code = pktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
+                code = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
                 if (!code) {
                     // Found a token in AFS Client Server which matches
                     char pname[128], *p, *q;
@@ -2386,7 +2360,7 @@ KFW_AFS_unlog(void)
     if (CurrentState != SERVICE_RUNNING)
         return(0);
 
-    rc = pktc_ForgetAllTokens();
+    rc = ktc_ForgetAllTokens();
 
     return(0);
 }
@@ -2683,7 +2657,7 @@ KFW_AFS_klog(
         memcpy(atoken.ticket, k5creds->ticket.data, atoken.ticketLen);
 
       retry_gettoken5:
-        rc = pktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
+        rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
         if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
             if ( rc == KTC_NOCM && retry < 20 ) {
                 Sleep(500);
@@ -2739,7 +2713,7 @@ KFW_AFS_klog(
             aclient.smbname[0] = '\0';
         }
 
-        rc = pktc_SetToken(&aserver, &atoken, &aclient, 0);
+        rc = ktc_SetToken(&aserver, &atoken, &aclient, 0);
         if (!rc)
             goto cleanup;   /* We have successfully inserted the token */
 
@@ -2809,7 +2783,7 @@ KFW_AFS_klog(
     memcpy(atoken.ticket, creds.ticket_st.dat, atoken.ticketLen);
 
   retry_gettoken:
-    rc = pktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
+    rc = ktc_GetToken(&aserver, &btoken, sizeof(btoken), &aclient);
     if (rc != 0 && rc != KTC_NOENT && rc != KTC_NOCELL) {
         if ( rc == KTC_NOCM && retry < 20 ) {
             Sleep(500);
@@ -2857,7 +2831,7 @@ KFW_AFS_klog(
         aclient.smbname[0] = '\0';
     }
 
-    if (rc = pktc_SetToken(&aserver, &atoken, &aclient, 0))
+    if (rc = ktc_SetToken(&aserver, &atoken, &aclient, 0))
     {
         KFW_AFS_error(rc, "ktc_SetToken()");
         code = rc;
@@ -2926,7 +2900,7 @@ afs_realm_of_cell(struct afsconf_cell *cellconfig)
 }
 
 /**************************************/
-/* KFW_AFS_get_cellconfig():                  */
+/* KFW_AFS_get_cellconfig():          */
 /**************************************/
 int 
 KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell)
@@ -2938,7 +2912,7 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     memset(cellconfig, 0, sizeof(*cellconfig));
 
     /* WIN32: cm_GetRootCellName(local_cell) - NOTE: no way to get max chars */
-    if (rc = pcm_GetRootCellName(local_cell))
+    if (rc = cm_GetRootCellName(local_cell))
     {
         return(rc);
     }
@@ -2949,7 +2923,14 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
     strcpy(cellconfig->name, cell);
 
-    return pcm_SearchCellFile(cell, newcell, get_cellconfig_callback, (void*)cellconfig);
+    rc = cm_SearchCellFile(cell, newcell, get_cellconfig_callback, (void*)cellconfig);
+#ifdef AFS_AFSDB_ENV
+    if (rc != 0) {
+        int ttl;
+        rc = cm_SearchCellByDNS(cell, newcell, &ttl, get_cellconfig_callback, (void*)cellconfig);
+    }
+#endif
+    return rc;
 }
 
 /**************************************/
