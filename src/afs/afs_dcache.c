@@ -1406,12 +1406,16 @@ static int afs_UFSCacheFetchProc(register struct rx_call *acall,
 	    abase += tlen;
 	    length -= tlen;
 	    adc->validPos = abase;
+#ifdef AFS_AIX_ENV	    
 	    if (afs_osi_Wakeup(&adc->validPos) == 0)
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
 			   ICL_TYPE_STRING, __FILE__,
 			   ICL_TYPE_INT32, __LINE__,
 			   ICL_TYPE_POINTER, adc,
 			   ICL_TYPE_INT32, adc->dflags);
+#else
+	    afs_osi_Wakeup(&adc->validPos);
+#endif
 	}
     } while (moredata);
     osi_FreeLargeSpace(tbuffer);
@@ -2021,12 +2025,16 @@ RetryLookup:
 	tdc->validPos = Position;	/*  which is AFS_CHUNKBASE(abyte) */
 	if (tdc->mflags & DFFetchReq) {
 	    tdc->mflags &= ~DFFetchReq;
+#ifdef AFS_AIX_ENV
 	    if (afs_osi_Wakeup(&tdc->validPos) == 0)
 	        afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
 		       ICL_TYPE_STRING, __FILE__,
 		       ICL_TYPE_INT32, __LINE__,
 		       ICL_TYPE_POINTER, tdc,
 		       ICL_TYPE_INT32, tdc->dflags);
+#else
+	    afs_osi_Wakeup(&tdc->validPos);
+#endif
 	}
 	tsmall = (struct tlocal1 *) osi_AllocLargeSpace(sizeof(struct tlocal1));
 	setVcacheStatus = 0;
@@ -2332,12 +2340,16 @@ RetryLookup:
 #endif /* AFS_NOSTATS */
 
 	tdc->dflags &= ~DFFetching;
+#ifdef AFS_AIX_ENV
 	if (afs_osi_Wakeup(&tdc->validPos) == 0)
 	    afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
 		       ICL_TYPE_STRING, __FILE__,
 		       ICL_TYPE_INT32, __LINE__,
 		       ICL_TYPE_POINTER, tdc,
 		       ICL_TYPE_INT32, tdc->dflags);
+#else
+	    afs_osi_Wakeup(&tdc->validPos);
+#endif
 	if (avc->execsOrWriters == 0) tdc->f.states &= ~DWriting;
 
 	/* now, if code != 0, we have an error and should punt.

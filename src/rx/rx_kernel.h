@@ -29,10 +29,15 @@ typedef struct socket *osi_socket;
 #ifdef RX_KERNEL_TRACE
 #include "../afs/icl.h"
 #include "../afs/afs_trace.h"
+#ifdef AFS_AIX_ENV
 #define osi_rxSleep(a)  afs_Trace2(afs_iclSetp, CM_TRACE_RXSLEEP, \
         ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__); afs_osi_Sleep(a)
 #define osi_rxWakeup(a) if (afs_osi_Wakeup(a) == 0) afs_Trace2(afs_iclSetp, \
         CM_TRACE_RXWAKE, ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__)
+#else
+#define osi_rxSleep(a)  afs_osi_Sleep(a)
+#define osi_rxWakeup(a) afs_osi_Wakeup(a)
+#endif
 #else /* RX_KERNEL_TRACE */
 #define	osi_rxSleep(a)	afs_osi_Sleep(a)
 #define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
