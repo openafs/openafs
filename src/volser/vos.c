@@ -2246,7 +2246,7 @@ ShadowVolume(as)
     MapPartIdIntoName(frompart, fromPartName);
     fprintf(STDOUT, "Volume %lu shadowed from %s %s to %s %s \n",
 	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
-	    as->parms[4].items->data, toPartName);
+	    as->parms[3].items->data, toPartName);
 
     return 0;
 }
