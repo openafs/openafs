@@ -169,7 +169,6 @@ void namei_HandleToName(namei_t *name, IHandle_t *ih)
 {
     lb64_string_t str;
     int vno = (int)(ih->ih_ino & NAMEI_VNODEMASK);
-    int tmp;
 	
     namei_HandleToVolDir(name, ih);
 
@@ -235,8 +234,6 @@ do { \
 static int namei_CreateDataDirectories(namei_t *name, int *created)
 {
     char tmp[256];
-    char *s;
-    int i;
 
     *created = 0;
 
@@ -278,7 +275,6 @@ delTree(char *root, char *tree, int *errp)
   DIR *ds;
   struct dirent *dirp;
   struct stat st;
-  int er;
 
   if (*tree) {
     /* delete the children first */
@@ -293,7 +289,7 @@ delTree(char *root, char *tree, int *errp)
     /* now delete all entries in this dir */
     if ( (ds = opendir(root)) != (DIR *)NULL) {
       errno = 0;
-      while (dirp = readdir(ds)) {
+      while ((dirp = readdir(ds))) {
 	/* ignore . and .. */
 	if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
 	  continue;
@@ -422,8 +418,6 @@ static int SetOGM(int fd, int parm, int tag)
 /* GetOGM - get parm and tag from owner, group and mode bits. */
 static void GetOGMFromStat(struct stat *status, int *parm, int *tag)
 {
-    int tmp;
-
     *parm = status->st_uid | (status->st_gid << 15);
     *parm |= (status->st_mode & 0x18) << 27;
     *tag = status->st_mode & 0x7;
@@ -447,17 +441,12 @@ int big_vno = 0; /* Just in case we ever do 64 bit vnodes. */
 Inode namei_icreate(IHandle_t *lh, char *part, int p1, int p2, int p3, int p4)
 {
     namei_t name;
-    namei_ogm_t ogm;
-    b32_string_t str1;
-    char *p;
-    int i;
     int fd = -1;
     int code = 0;
     int created_dir = 0;
     IHandle_t tmp;
     FdHandle_t *fdP;
     FdHandle_t tfd;
-    int save_errno;
     int tag;
     int ogm_parm;
     
@@ -581,7 +570,6 @@ int namei_dec(IHandle_t *ih, Inode ino, int p1)
 
     if ((ino & NAMEI_INODESPECIAL) == NAMEI_INODESPECIAL) {
 	IHandle_t *tmp;
-	int was_closed = 0;
 	int inode_p1, tag;
 	int type = (int)((ino>>NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
 
@@ -805,7 +793,6 @@ static void namei_GetLCOffsetAndIndexFromIno(Inode ino, int *offset, int *index)
 int namei_GetLinkCount(FdHandle_t *h, Inode ino, int lockit)
 {
     unsigned short row = 0;
-    int junk;
     int offset, index;
 
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
@@ -1145,14 +1132,14 @@ int namei_ListAFSFiles(char *dev,
 	dirp1 = opendir(name.n_path);
 	if (!dirp1)
 	    return 0;
-	while (dp1 = readdir(dirp1)) {
+	while ((dp1 = readdir(dirp1))) {
 	    if (*dp1->d_name == '.') continue;
 	    (void) strcpy(path2, name.n_path);
 	    (void) strcat(path2, "/");
 	    (void) strcat(path2, dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
-		while (dp2 = readdir(dirp2)) {
+		while ((dp2 = readdir(dirp2))) {
 		    if (*dp2->d_name == '.') continue;
 		    if (!DecodeVolumeName(dp2->d_name, &ih.ih_vid)) {
 			ninodes += namei_ListAFSSubDirs(&ih, writeFun, fp,
@@ -1186,18 +1173,16 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
 			     int (*judgeFun)(struct ViceInodeInfo *, int),
 			     int singleVolumeNumber)
 {
-    int i;
     IHandle_t myIH = *dirIH;
     namei_t name;
     char path1[512], path2[512], path3[512];
     DIR *dirp1, *dirp2, *dirp3;
     struct dirent *dp1, *dp2, *dp3;
-    char *s;
     struct ViceInodeInfo info;
-    int tag, vno;
     FdHandle_t linkHandle;
     int ninodes = 0;
 #ifdef DELETE_ZLC
+    int i;
     static void AddToZLCDeleteList(char dir, char *name);
     static void DeleteZLCFiles(char *path);
 #endif
@@ -1214,7 +1199,7 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
     linkHandle.fd_fd = -1;
     dirp1 = opendir(path1);
     if (dirp1) {
-	while (dp1 = readdir(dirp1)) {
+	while ((dp1 = readdir(dirp1))) {
 	    if (*dp1->d_name == '.') continue;
 	    if (DecodeInode(path1, dp1->d_name, &info, myIH.ih_vid)<0)
 		continue;
@@ -1247,7 +1232,7 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
     
     dirp1 = opendir(path1);
     if (dirp1) {
-	while (dp1 = readdir(dirp1)) {
+	while ((dp1 = readdir(dirp1))) {
 	    if (*dp1->d_name == '.') continue;
 	    if (!strcmp(dp1->d_name, NAMEI_SPECDIR))
 		continue;
@@ -1258,7 +1243,7 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
 	    (void) strcat(path2, dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
-		while (dp2 = readdir(dirp2)) {
+		while ((dp2 = readdir(dirp2))) {
 		    if (*dp2->d_name == '.') continue;
 		    
 		    /* Now we've got to the actual data */
@@ -1267,7 +1252,7 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
 		    (void) strcat(path3, dp2->d_name);
 		    dirp3 = opendir(path3);
 		    if (dirp3) {
-			while (dp3 = readdir(dirp3)) {
+			while ((dp3 = readdir(dirp3))) {
 			    if (*dp3->d_name == '.') continue;
 			    if (DecodeInode(path3, dp3->d_name, &info,
 					    myIH.ih_vid)<0)
