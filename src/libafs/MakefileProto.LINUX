@@ -93,7 +93,7 @@ setup:
 			ln -fs ../Makefile $${KDIR}/Makefile ; \
 			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
 <i386_linux22 i386_linux24>
-			sh ./redhat.sh ${LINUX_VERS} $${KDIR}/Makefile.extradefs; \
+			sh ./redhat.sh ${LINUX_SRCDIR} $${KDIR}/Makefile.extradefs; \
 <all>
 		done \
 	done
@@ -119,7 +119,7 @@ ${COMPDIRS}:
 		ln -s $${IDIR} sys; \
 		rm -f asm; \
 <alpha_linux_22 alpha_linux_24>
-		ln -s ${LINUX_SRCDIR}$$v/include/asm-alpha asm ; \
+		ln -s ${LINUX_SRCDIR}/include/asm-alpha asm ; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-i386 asm ; \
 <s390_linux22 s390_linux24>
