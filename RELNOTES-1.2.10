@@ -1,0 +1,99 @@
+                  OpenAFS Release Notes - Version 1.2.10
+     _________________________________________________________________
+New platform support.
+All systems: Bugfixes.
+     _________________________________________________________________
+
+* New platform support: 
+
+HP-UX 11i and 11.22:
+
+HP-UX 11i and 11.22 are now supported. Thanks to Doug Engert and Carl 
+Davidson for their efforts. The new sysnames are hp_ux11i and ia64_hpux1122.
+
+Linux 2.4 for Opteron:
+
+Linux for the AMD Opteron is now supported. The new sysname is amd64_linux24.
+
+Usermode Linux for IA32:
+
+Usermode Linux for IA32-compatible processors is now supported. The new
+sysname is i386_umlinux24. Thanks to Kris Van Hees for his efforts.
+
+
+* Bugfixes:
+
+All systems:
+
+- A bug in fileserver logging of hosts which appear to change UUIDs 
+  that could cause a crash was fixed.
+
+- A condition which could cause a client to loop in afs_FetchStatus 
+  forever due to never triggering an end condition was corrected.
+
+- The namei fileserver could create files with one "tag" but try to open
+  with another due to an erroneous parent volume ID being passed into the
+  volume package by the volserver.
+
+- Avoid copying erroneous IP addresses when the primary IP address is masked 
+  from Ubik by NetInfo or NetRestrict.
+
+- Avoid crashing fileserver when mapname attempts to map a foreign user.
+
+- Add cellaliases found with AFSDB for cells in CellServDB, returning to 
+  1.2.8 behavior.
+
+- Avoid potential shutdown deadlock in fileserver.
+
+- Avoid deadlock on afsconf reread (AFS key change, CellServDB update) in
+  servers.
+
+- More volume errors are translated for on the wire to avoid error
+  conflicts between operating systems.
+
+- Make butc able to backup to and restore from large files on platform
+  which support it.
+
+Linux: 
+
+- Return setgroups errors correctly.
+
+- Fix GCPAGs support.
+
+- Busy out cache partition while in use.
+
+- Don't allow afsd to shut down while AFS is mounted.
+
+Solaris:
+
+- x86 Solaris has a bug fixed which caused shutdown to not work due to
+  double byteswapping a port.
+
+- kdump64 should be built if possible by default.
+
+- Deal with changes to kernel read_binding_file() routine.
+
+MacOS X:
+
+- Work around finder problems with caching of access() results.
+
+- Allow multiple mounts of AFS.
+
+- Support Disk Arbitration for AFS.
+
+- Don't unmount AFS unless forced, to preclude accidental "ejection" of AFS.
+
+- Support -nomount in afsd to allow startup without mounting AFS.
+
+Windows:
+
+- Fix large integer support for VC7.
+
+- Reset state while servicing SMB event loop.
+
+- Avoid erroneous "No Such Volume" errors.
+
+- Versioning for all files.
+
+- Correctly report directories by not setting incorrect field in SMB 
+  structure.
