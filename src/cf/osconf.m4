@@ -173,7 +173,6 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_12)
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LEX="lex -l"
 		LWP_OPTMZ="-g"
 		OPTMZ="-g"
@@ -182,7 +181,6 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_13)
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
@@ -190,7 +188,6 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_14)
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"

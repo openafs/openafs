@@ -247,14 +247,14 @@ void osi_VM_TryReclaim(avc, slept)
         else
            VOP_UNLOCK(vp, 0, p);
         if (obj) {
-        if (ISSET(vp->v_flag, VTERMINATE))
-            panic("afs_vnreclaim: already teminating");
-        SET(vp->v_flag, VTERMINATE);
-        memory_object_destroy(obj, 0);
-        while (ISSET(vp->v_flag, VTERMINATE)) {
-              SET(vp->v_flag, VTERMWANT);
-              tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "afs_vnreclaim", 0);
-        }
+            if (ISSET(vp->v_flag, VTERMINATE))
+                panic("afs_vnreclaim: already teminating");
+            SET(vp->v_flag, VTERMINATE);
+            memory_object_destroy(obj, 0);
+            while (ISSET(vp->v_flag, VTERMINATE)) {
+                  SET(vp->v_flag, VTERMWANT);
+                  tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "afs_vnreclaim", 0);
+            }
         }
    } else {
         if (simple_lock_try(&vp->v_interlock))
