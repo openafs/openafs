@@ -912,6 +912,7 @@ afs_lookup(adp, aname, avcp, acred)
     afs_hyper_t versionNo;
     int no_read_access = 0;
     struct sysname_info sysState;   /* used only for @sys checking */
+    int dynrootRetry = 1;
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
@@ -1112,8 +1113,26 @@ afs_lookup(adp, aname, avcp, acred)
     }
     tname = sysState.name;
 
-    ReleaseReadLock(&adp->lock);
     afs_PutDCache(tdc);
+
+    if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
+	struct cell *tcell;
+
+	ReleaseReadLock(&adp->lock);
+	dynrootRetry = 0;
+	if (*tname == '.')
+	    tcell = afs_GetCellByName(tname + 1, READ_LOCK);
+	else
+	    tcell = afs_GetCellByName(tname, READ_LOCK);
+	if (tcell) {
+	    afs_PutCell(tcell, READ_LOCK);
+	    afs_RefreshDynroot();
+	    if (tname != aname && tname) osi_FreeLargeSpace(tname);
+	    goto redo;
+	}
+    } else {
+	ReleaseReadLock(&adp->lock);
+    }
 
     /* new fid has same cell and volume */
     tfid.Cell = adp->fid.Cell;
@@ -1132,7 +1151,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* prefetch some entries, if the dir is currently open.  The variable
      * dirCookie tells us where to start prefetching from.
      */
-    if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)) {
+    if (AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign) && !afs_IsDynroot(adp)) {
         afs_int32 retry;
 	/* if the entry is not in the cache, or is in the cache,
 	 * but hasn't been statd, then do a bulk stat operation.

@@ -63,6 +63,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_daemons.o	\
 	$(UOBJ)/afs_dcache.o \
 	$(UOBJ)/afs_dir.o		\
+	$(UOBJ)/afs_dynroot.o \
 	$(UOBJ)/afs_init.o \
 	$(UOBJ)/afs_lock.o	\
 	$(UOBJ)/afs_mariner.o \
@@ -179,6 +180,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_daemons.o \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
+	$(WEBOBJ)/afs_dynroot.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
@@ -297,6 +299,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_daemons.o \
 	$(WEBOBJ)/afs_dcache.o \
 	$(WEBOBJ)/afs_dir.o \
+	$(WEBOBJ)/afs_dynroot.o \
 	$(WEBOBJ)/afs_init.o \
 	$(WEBOBJ)/afs_lock.o \
 	$(WEBOBJ)/afs_mariner.o \
@@ -416,6 +419,8 @@ $(UOBJ)/afs_cell.o: $(AFS)/afs_cell.c
 $(UOBJ)/afs_conn.o: $(AFS)/afs_conn.c
 	$(CRULE1);
 $(UOBJ)/afs_dcache.o: $(AFS)/afs_dcache.c
+	$(CRULE1);
+$(UOBJ)/afs_dynroot.o: $(AFS)/afs_dynroot.c
 	$(CRULE1);
 $(UOBJ)/afs_init.o: $(AFS)/afs_init.c
 	$(CRULE1);
@@ -659,6 +664,8 @@ $(WEBOBJ)/afs_cell.o: $(AFS)/afs_cell.c
 $(WEBOBJ)/afs_conn.o: $(AFS)/afs_conn.c
 	$(CRULE2);
 $(WEBOBJ)/afs_dcache.o: $(AFS)/afs_dcache.c
+	$(CRULE2);
+$(WEBOBJ)/afs_dynroot.o: $(AFS)/afs_dynroot.c
 	$(CRULE2);
 $(WEBOBJ)/afs_init.o: $(AFS)/afs_init.c
 	$(CRULE2);

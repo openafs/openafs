@@ -1687,8 +1687,15 @@ loop:
     /* stat the file */
     afs_RemoveVCB(afid);
     {
-    struct AFSFetchStatus OutStatus;
-    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+	struct AFSFetchStatus OutStatus;
+
+	if (afs_DynrootNewVnode(tvc, &OutStatus)) {
+	    afs_ProcessFS(tvc, &OutStatus, areq);
+	    tvc->states |= CStatd | CUnique;
+	    code = 0;
+	} else {
+	    code = afs_FetchStatus(tvc, afid, areq, &OutStatus);
+	}
     }
 
     if (code) {

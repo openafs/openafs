@@ -625,6 +625,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	afs_osi_Free(cellname, cellLen);
     }
 #endif
+    else if (parm == AFSOP_SET_DYNROOT) {
+	code = afs_SetDynrootEnable(parm2);
+    }
     else
       code = EINVAL;
 

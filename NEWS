@@ -1,10 +1,17 @@
-Openafs News -- history of user Visible changes. September 17, 2001
+OpenAFS News -- history of user-visible changes. October 9, 2001
 
 * Changes incorporated in OpenAFS 1.2.2
+
+** If afsd is started with the -dynroot flag, /afs will be locally
+   generated from the CellServDB.  AFSDB cells will be mounted
+   automatically upon access.
 
 ** The namei fileserver allows vice "partitions" to be directories instead
    of partitions and will attach and display accordingly. Creating the file
    "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
+
+** TSM support for butc no longer requires editing a Makefile, simply
+   specify the --enable-tivoli-tsm configure option.
 
 ** Linux builds no longer require source changes every time the kernel
    inode structure changes; the OpenAFS sources will now configure

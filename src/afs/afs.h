@@ -960,6 +960,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 
 extern struct cell	    *afs_GetCell();
 extern struct cell	    *afs_GetCellByName();
+extern struct cell	    *afs_GetCellByIndex();
 extern struct unixuser	    *afs_GetUser();
 extern struct volume	    *afs_GetVolume();
 extern struct volume	    *afs_GetVolumeByName();
@@ -991,6 +992,17 @@ extern void shutdown_cache();
 extern void afs_shutdown();
 /* afs_osifile.c */
 extern void shutdown_osifile();
+
+/* afs_dynroot.c */
+extern int afs_IsDynrootFid();
+extern void afs_GetDynrootFid();
+extern int afs_IsDynroot();
+extern void afs_RefreshDynroot();
+extern void afs_GetDynroot();
+extern void afs_PutDynroot();
+extern int afs_DynrootNewVnode();
+extern int afs_SetDynrootEnable();
+extern int afs_GetDynrootEnable();
 
 
 /* Performance hack - we could replace VerifyVCache2 with the appropriate
@@ -1050,6 +1062,7 @@ extern int afs_CacheTooFull;
  * afs_GetDownD wakes those processes once the cache is 95% full
  * (CM_CACHESIZEDRAINEDPCT).
  */
+extern void afs_MaybeWakeupTruncateDaemon();
 extern void afs_CacheTruncateDaemon();
 extern int afs_WaitForCacheDrain;
 #define CM_MAXDISCARDEDCHUNKS	16      /* # of chunks */
@@ -1064,19 +1077,6 @@ extern int afs_WaitForCacheDrain;
 	(CM_DCACHECOUNTFREEPCT*afs_cacheBlocks)/100 || \
      afs_freeDCCount - afs_discardDCCount < \
 	((100-CM_DCACHECOUNTFREEPCT)*afs_cacheFiles)/100)
-
-#define	afs_MaybeWakeupTruncateDaemon()	\
-    do { \
-	if (!afs_CacheTooFull && afs_CacheIsTooFull()) { \
-	    afs_CacheTooFull = 1; \
-            if (!afs_TruncateDaemonRunning) { \
-		afs_osi_Wakeup((char *)afs_CacheTruncateDaemon); \
-	    } \
-	} else if (!afs_TruncateDaemonRunning && \
-		   afs_blocksDiscarded > CM_MAXDISCARDEDCHUNKS) { \
-	    afs_osi_Wakeup((char *)afs_CacheTruncateDaemon); \
-	} \
-    } while (0)
 
 /* Handy max length of a numeric string. */
 #define	CVBS	12  /* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */

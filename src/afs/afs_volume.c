@@ -72,6 +72,7 @@ afs_int32 fvTable[NFENTRIES];
 /* Forward declarations */
 static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 				   struct vrequest *areq, afs_int32 locktype);
+static struct volume *afs_NewDynrootVolume(struct VenusFid *fid);
 static inVolList();
 
 
@@ -402,8 +403,12 @@ struct volume *afs_GetVolume(afid, areq, locktype)
 
     tv = afs_FindVolume(afid, locktype);
     if (!tv) {
-       bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
-       tv = afs_NewVolumeByName(bp, afid->Cell, 0, areq, locktype);
+       if (afs_IsDynrootFid(afid)) {
+          tv = afs_NewDynrootVolume(afid);
+       } else {
+          bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
+          tv = afs_NewVolumeByName(bp, afid->Cell, 0, areq, locktype);
+       }
     }
     return tv;
 } /*afs_GetVolume*/
@@ -547,6 +552,29 @@ struct volume *afs_GetVolumeByName(aname, acell, agood, areq, locktype)
 
   tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
   return(tv);
+}
+
+static struct volume *afs_NewDynrootVolume(struct VenusFid *fid) {
+    struct cell *tcell;
+    struct volume *tv;
+    struct vldbentry tve;
+    char *bp, tbuf[CVBS];
+
+    tcell = afs_GetCell(fid->Cell, READ_LOCK);
+    if (!tcell)
+	return (struct volume *) 0;
+    if (!(tcell->states & CHasVolRef))
+	tcell->states |= CHasVolRef;
+
+    bp = afs_cv2string(&tbuf[CVBS], fid->Fid.Volume);
+    memset(&tve, 0, sizeof(tve));
+    strcpy(tve.name, "local-dynroot");
+    tve.volumeId[ROVOL] = fid->Fid.Volume;
+    tve.flags = VLF_ROEXISTS;
+
+    tv = afs_SetupVolume(0, bp, &tve, tcell, 0, 0, 0);
+    afs_PutCell(tcell, READ_LOCK);
+    return tv;
 }
 
 int lastnvcode;
