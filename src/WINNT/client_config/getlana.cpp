@@ -424,8 +424,8 @@ void GetUncServerName(int lanaNumber, BOOL isGateway, TCHAR* name, int type)
 
 void GetAfsName(int lanaNumber, BOOL isGateway, TCHAR* name)
 {
-
-    GetUncServerName(lanaNumber, isGateway, name, NETBIOS_NAME_FULL);
-    _stprintf(name, _T("Your UNC name to reach the root of AFS is \\\\%s\\all"), name);
+    TCHAR tmpName[MAX_PATH];
+    GetUncServerName(lanaNumber, isGateway, tmpName, NETBIOS_NAME_FULL);
+    _stprintf(name, _T("Your UNC name to reach the root of AFS is \\\\%s\\all"), tmpName);
 }
 
