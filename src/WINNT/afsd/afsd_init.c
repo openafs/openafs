@@ -193,6 +193,141 @@ void afsd_ForceTrace(BOOL flush)
 	CloseHandle(handle);
 }
 
+static void
+configureBackConnectionHostNames(void)
+{
+    /* On Windows XP SP2, Windows 2003 SP1, and all future Windows operating systems
+     * there is a restriction on the use of SMB authentication on loopback connections.
+     * There are two work arounds available:
+     * 
+     *   (1) We can disable the check for matching host names.  This does not
+     *   require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
+     *     "DisableLoopbackCheck"=dword:00000001
+     *
+     *   (2) We can add the AFS SMB/CIFS service name to an approved list.  This
+     *   does require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
+     *     "BackConnectionHostNames"=multi-sz
+     *
+     * The algorithm will be:
+     *   (1) Check to see if cm_NetbiosName exists in the BackConnectionHostNames list
+     *   (2a) If not, add it to the list.  (This will not take effect until the next reboot.)
+     *   (2b1)    and check to see if DisableLoopbackCheck is set.
+     *   (2b2)    If not set, set the DisableLoopbackCheck value to 0x1 
+     *   (2b3)                and create HKLM\SOFTWARE\OpenAFS\Client  UnsetDisableLoopbackCheck
+     *   (2c) else If cm_NetbiosName exists in the BackConnectionHostNames list,
+     *             check for the UnsetDisableLoopbackCheck value.  
+     *             If set, set the DisableLoopbackCheck flag to 0x0 
+     *             and delete the UnsetDisableLoopbackCheck value
+     */
+    HKEY hkLsa;
+    HKEY hkMSV10;
+    HKEY hkClient;
+    DWORD dwType;
+    DWORD dwSize;
+    DWORD dwValue;
+    PBYTE pHostNames = NULL, pName;
+    BOOL  bNameFound = FALSE;   
+
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                       "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
+                       0,
+                       KEY_READ|KEY_WRITE,
+                       &hkMSV10) == ERROR_SUCCESS )
+    {
+        if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, NULL, &dwSize) == ERROR_SUCCESS) {
+            pHostNames = malloc(dwSize + strlen(cm_NetbiosName) + 1);
+            RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, pHostNames, &dwSize);
+
+            for (pName = pHostNames; *pName ; pName += strlen(pName) + 1)
+            {
+                if ( !stricmp(pName, cm_NetbiosName) ) {
+                    bNameFound = TRUE;
+                    break;
+                }   
+            }
+        }
+             
+        if ( !bNameFound ) {
+            if ( !pHostNames ) {
+                pName = pHostNames = malloc(strlen(cm_NetbiosName) + 2);
+                dwSize = 1;
+            }
+            strcpy(pName, cm_NetbiosName);
+            pName += strlen(cm_NetbiosName) + 1;
+            *pName = '\0';  /* add a second nul terminator */
+
+            dwType = REG_MULTI_SZ;
+            dwSize += strlen(cm_NetbiosName) + 1;
+            RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
+
+            if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                               "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                               0,
+                               KEY_READ|KEY_WRITE,
+                               &hkLsa) == ERROR_SUCCESS )
+            {
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) != ERROR_SUCCESS ||
+                     dwValue == 0 ) {
+                    dwType = REG_DWORD;
+                    dwSize = sizeof(DWORD);
+                    dwValue = 1;
+                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+
+                    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                        "SOFTWARE\\OpenAFS\\Client",
+                                        0,
+                                        NULL,
+                                        REG_OPTION_NON_VOLATILE,
+                                        KEY_READ|KEY_WRITE,
+                                        NULL,
+                                        &hkClient,
+                                        NULL) == ERROR_SUCCESS) {
+
+                        dwType = REG_DWORD;
+                        dwSize = sizeof(DWORD);
+                        dwValue = 1;
+                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, &dwValue, dwSize);
+                        RegCloseKey(hkClient);
+                    }
+                    RegCloseKey(hkLsa);
+                }
+            }
+        } else {
+            if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                "SOFTWARE\\OpenAFS\\Client",
+                                0,
+                                NULL,
+                                REG_OPTION_NON_VOLATILE,
+                                KEY_READ|KEY_WRITE,
+                                NULL,
+                                &hkClient,
+                                NULL) == ERROR_SUCCESS) {
+
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, &dwValue, &dwSize) == ERROR_SUCCESS &&
+                     dwValue == 1 ) {
+                    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                                       "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                                       0,
+                                       KEY_READ|KEY_WRITE,
+                                       &hkLsa) == ERROR_SUCCESS )
+                    {
+                        RegDeleteValue(hkLsa, "DisableLoopbackCheck");
+                        RegCloseKey(hkLsa);
+                    }
+                }
+                RegDeleteValue(hkClient, "RemoveDisableLoopbackCheck");
+                RegCloseKey(hkClient);
+            }
+        }
+        RegCloseKey(hkMSV10);
+    }
+}
+
+
 /*
  * AFSD Initialization
  */
@@ -673,6 +808,8 @@ int afsd_InitCM(char **reasonP)
             RegCloseKey (hk);
         }
     }
+
+    configureBackConnectionHostNames();
 
 	/* initialize RX, and tell it to listen to port 7001, which is used for
      * callback RPC messages.
