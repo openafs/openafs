@@ -194,7 +194,7 @@ extern afs_int32 ka_Init(
 #endif /* _MFC_VER */
 
 extern int ka_CellConfig (
-  char *dir
+  const char *dir
 );
 
 extern char *ka_LocalCell (

@@ -62,7 +62,7 @@
 static struct afsconf_dir *conf = 0;
 static char cell_name[MAXCELLCHARS];
 
-int ka_CellConfig (char *dir)
+int ka_CellConfig (const char *dir)
 {
     int code;
 #ifdef UKERNEL
