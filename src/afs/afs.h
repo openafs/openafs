@@ -522,6 +522,18 @@ struct SimpleLocks {
 #define vrefCount   v.v_usecount
 #endif /* AFS_FBSD_ENV */
 
+#ifdef AFS_LINUX24_ENV
+#define VREFCOUNT(v)		atomic_read(&((vnode_t *) v)->v_count)
+#define VREFCOUNT_SET(v, c)	atomic_set(&((vnode_t *) v)->v_count, c)
+#define VREFCOUNT_DEC(v)	atomic_dec(&((vnode_t *) v)->v_count)
+#define VREFCOUNT_INC(v)	atomic_inc(&((vnode_t *) v)->v_count)
+#else
+#define VREFCOUNT(v)		((v)->vrefCount)
+#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
+#define VREFCOUNT_DEC(v)	(v)->vrefCount--;
+#define VREFCOUNT_INC(v)	(v)->vrefCount++;
+#endif
+
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
 #define	AFS_NOTRUNC 0x7fffffff	    /* largest dataversion number */
 

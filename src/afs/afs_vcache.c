@@ -213,7 +213,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
     /* This should put it back on the vnode free list since usecount is 1 */
     afs_vcount--;
     vSetType(avc, VREG);
-    if (avc->vrefCount > 0) {
+    if (VREFCOUNT(avc) > 0) {
         VN_UNLOCK((struct vnode *)avc);
         AFS_RELE((struct vnode *)avc);
     } else {
@@ -582,7 +582,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	    if (tvc == afs_globalVp)
 		continue;
 
-	    if ( tvc->vrefCount && tvc->opens == 0 ) {
+	    if ( VREFCOUNT(tvc) && tvc->opens == 0 ) {
 		struct inode *ip = (struct inode*)tvc;
 		if (list_empty(&ip->i_dentry)) {
 		    vn --;
@@ -656,10 +656,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 		 refpanic ("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	    else if (QNext(uq) != tq)
 		 refpanic ("VLRU inconsistent");
-	    else if (tvc->vrefCount < 1) 
+	    else if (VREFCOUNT(tvc) < 1) 
 		 refpanic ("refcnt 0 on VLRU");
 
-	    if ( tvc->vrefCount == 1   &&   tvc->opens == 0 
+	    if ( VREFCOUNT(tvc) == 1   &&   tvc->opens == 0 
 		&& (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
@@ -711,7 +711,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 
 #ifdef AFS_DARWIN_ENV
 	   if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0) &&
-                tvc->vrefCount == 1 && UBCINFOEXISTS(&tvc->v)) {
+                VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
                osi_VM_TryReclaim(tvc, &fv_slept);
                if (fv_slept) {
                   uq = VLRU.prev;
@@ -720,7 +720,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
                }
             }
 #endif
-	   if (tvc->vrefCount == 0 && tvc->opens == 0
+	   if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 	       && (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
@@ -815,7 +815,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     /* Hold it for the LRU (should make count 2) */
     VN_HOLD((struct vnode *)tvc);
 #else	/* AFS_OSF_ENV */
-    tvc->vrefCount = 1;	/* us */
+    VREFCOUNT_SET(tvc, 1);	/* us */
 #endif	/* AFS_OSF_ENV */
 #ifdef	AFS_AIX32_ENV
     LOCK_INIT(&tvc->pvmlock, "vcache pvmlock");
@@ -1081,7 +1081,7 @@ afs_FlushActiveVcaches(doflocks)
 		/*
 		 * That's because if we come in via the CUnlinkedDel bit state path we'll be have 0 refcnt
 		 */
-		osi_Assert(tvc->vrefCount > 0);
+		osi_Assert(VREFCOUNT(tvc) > 0);
 		AFS_RWLOCK((vnode_t *)tvc, VRWLOCK_WRITE);
 #endif
 		ObtainWriteLock(&tvc->lock,52);
@@ -1136,7 +1136,7 @@ afs_FlushActiveVcaches(doflocks)
 		AFS_FAST_RELE(tvc);
 		if (didCore) {
 #ifdef	AFS_GFS_ENV
-		    tvc->vrefCount--;
+		    VREFCOUNT_DEC(tvc);
 #else
 		    AFS_RELE((struct vnode *)tvc);
 #endif
@@ -1145,7 +1145,7 @@ afs_FlushActiveVcaches(doflocks)
 		}
 	    }	       
 #ifdef AFS_DARWIN_ENV
-            if (tvc->vrefCount == 1 && UBCINFOEXISTS(&tvc->v)) {
+            if (VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
 		if (tvc->opens) panic("flushactive open, hasubc, but refcnt 1");
 		osi_VM_TryReclaim(tvc,0);
 	    }
@@ -2694,7 +2694,7 @@ void shutdown_vcache(void)
 		    vms_delete(tvc->segid);
 		    AFS_GLOCK();
 		    tvc->segid = tvc->vmh = NULL;
-		    if (tvc->vrefCount) osi_Panic("flushVcache: vm race");
+		    if (VREFCOUNT(tvc)) osi_Panic("flushVcache: vm race");
 		}
 		if (tvc->credp) {
 		    crfree(tvc->credp);

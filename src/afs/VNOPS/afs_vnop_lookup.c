@@ -969,7 +969,7 @@ afs_lookup(adp, aname, avcp, acred)
 	*avcp = tvc;
 	code = (tvc ? 0 : ENOENT);
 	hit = 1;
-	if (tvc && !tvc->vrefCount) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT1");
 	}
 	if (code) {
@@ -1005,7 +1005,7 @@ afs_lookup(adp, aname, avcp, acred)
 	code = 0;
 	*avcp = tvc = adp;
 	hit = 1;
-	if (adp && !adp->vrefCount) {
+	if (adp && !VREFCOUNT(adp)) {
 	    osi_Panic("TT2");
 	}
 	goto done;
@@ -1251,7 +1251,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    }
 	}
 	*avcp = tvc;
-	if (tvc && !tvc->vrefCount) {
+	if (tvc && !VREFCOUNT(tvc)) {
 	    osi_Panic("TT3");
 	}
 	code = 0;
