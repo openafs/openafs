@@ -210,7 +210,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                (va_list *) NULL
                                ) )
             {
-                fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                        tbuffer,gle,buf);
             }
         }
         if (gle != ERROR_DOWNGRADE_DETECTED)
@@ -262,7 +263,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                     (va_list *) NULL
                                     ) )
                 {
-                    fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+                    fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                             tbuffer,gle,buf);
                 }
             }
             return -1;
