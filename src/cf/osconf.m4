@@ -734,6 +734,7 @@ esac
 #
 case $AFS_SYSNAME in
 	sgi_6*)
+		IRIX_SYS_SYSTM_H_HAS_MEM_FUNCS
 		XFS_SIZE_CHECK="xfs_size_check"
 		install_XFS_SIZE_CHECK='$(DESTDIR)${afssrvsbindir}/xfs_size_check'
 		dest_XFS_SIZE_CHECK='$(DEST)/root.server/usr/afs/bin/xfs_size_check'

@@ -34,6 +34,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef EXPORTED_IA32_SYS_CALL_TABLE
 #undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
 #undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
