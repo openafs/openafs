@@ -1,3 +1,32 @@
+Since 1.3.71:
+  * smb_ReceiveCoreRename() was factored to produce smb_Rename()
+    which is used by both the original function and the new
+    smb_ReceiveNTRename().  smb_ReceiveNTRename() supports the
+    creation of HardLinks in addition to Renaming.  smb_Link() 
+    is a new function which creates HardLinks via cm_Link().
+    cm_Link() is a new vnodeops function which creates links
+    using RXAFS_Link().
+
+    smb_ReceiveNTRename() does not support the File Copy and 
+    Move Cluster Information operations described in its interface.
+    ReceiveNTRename is under documented in CIFS-TR-1p00_FINAL.pdf.
+
+  * When opening files via symlinks, we should follow the symlinks
+    until we reach the actual file stat cache entry.  The stat cache
+    entry of the file should then be stored in the FID instead of
+    stat scache entry of the symlink.
+
+  * return bad operation errors for all unimplemented functions
+    even if we do not know the functions exist.
+
+  * Log bad packets and unknown operation packets to the trace log
+
+  * Map CM_ERROR_BADOP to STATUS_NOT_SUPPORTED instead of 
+    0xC09820FF
+  
+  * Update list of known CIFS operations to include all those listed
+    in CIFS-TR-1p00_FINAL.pdf.
+
 Since 1.3.70:
   * A new Windows authorization group "AFS Client Admins" is now 
     created and populated with the members of the "Administrators"
