@@ -225,7 +225,9 @@ main(argc, argv)
     }
     vl_dbaseName = AFSDIR_SERVER_VLDB_FILEPATH;
 
+#ifndef AFS_NT40_ENV
     serverLogSyslogTag = "vlserver";
+#endif
     OpenLog(AFSDIR_SERVER_VLOG_FILEPATH);	/* set up logging */
     SetupLogSignals();
 

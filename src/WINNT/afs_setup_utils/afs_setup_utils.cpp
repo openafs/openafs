@@ -31,7 +31,6 @@ extern "C" {
 #include <WINNT/afsreg.h>
 #include <WINNT/afssw.h>
 #include <WINNT/talocale.h>
-#include <winnt/osi_malloc.h>
 
 #include "resource.h"
 #include "progress_dlg.h"

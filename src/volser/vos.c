@@ -4805,7 +4805,11 @@ Sizes(as)
     fprintf(STDOUT, "Volume: %s\n", as->parms[0].items->data);
 
     if (as->parms[3].items) {	/* do the dump estimate */
+#ifdef AFS_64BIT_ENV
 	vol_size.dump_size = 0;
+#else
+   FillInt64(vol_size.dump_size,0, 1);
+#endif
 	code = UV_GetSize(avolid, aserver, apart, fromdate, &vol_size);
 	if (code) {
 	    PrintDiagnostics("size", code);

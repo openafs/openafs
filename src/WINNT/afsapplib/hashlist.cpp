@@ -13,7 +13,6 @@ extern "C" {
 }
 
 #include <WINNT/TaLocale.h>
-#include <winnt/osi_malloc.h>
 
 
 /*

@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
-#include <winnt/osi_malloc.h>
 
 
 HANDLE main_inst;

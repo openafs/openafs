@@ -458,7 +458,7 @@ DontUseFile:
   ; Create the AFS service
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Service.exe"
-  nsExec::Exec "$R0 OpenAFSDaemon $INSTDIR\Client\Porgram\afsd_service.exe ""OpenAFS Client Service"""
+  nsExec::Exec "$R0 OpenAFSDaemon ""$INSTDIR\Client\Program\afsd_service.exe"" ""OpenAFS Client Service"""
   Delete $R0
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"

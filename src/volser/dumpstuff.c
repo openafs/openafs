@@ -1355,74 +1355,74 @@ SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
 {
     int code = 0;
     static char nullString[1] = "";	/*The ``contents'' of motd */
-    afs_int64 addvar;
+    afs_uint64 addvar;
 
 /*     if (!code) code = DumpTag(iodp, D_VOLUMEHEADER); */
     FillInt64(addvar,0, 1);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) {code = DumpInt32(iodp, 'i',V_id(vp));} */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'v',V_stamp(vp).version); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpString(iodp, 'n',V_name(vp)); */
     FillInt64(addvar,0, (2 + strlen(V_name(vp))));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpBool(iodp, 's',V_inService(vp)); */
     FillInt64(addvar,0, 2);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpBool(iodp, 'b',V_blessed(vp)); */
     FillInt64(addvar,0, 2);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'u',V_uniquifier(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpByte(iodp, 't',(byte)V_type(vp)); */
     FillInt64(addvar,0, 2);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code){ code = DumpInt32(iodp, 'p',V_parentId(vp));} */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'c',V_cloneId(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'q',V_maxquota(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'm',V_minquota(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'd',V_diskused(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'f',V_filecount(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'a', V_accountNumber(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'o', V_owner(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'C',V_creationDate(vp));	/\* Rw volume creation date *\/ */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'A',V_accessDate(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'U',V_updateDate(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'E',V_expirationDate(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'B',V_backupDate(vp));		/\* Rw volume backup clone date *\/ */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpString(iodp, 'O',V_offlineMessage(vp)); */
     FillInt64(addvar,0, (2 + strlen(V_offlineMessage(vp))));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     /\* */
 /*      * We do NOT dump the detailed volume statistics residing in the old */
 /*      * motd field, since we cannot tell from the info in a dump whether */
@@ -1431,16 +1431,16 @@ SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
 /*      *\/ */
 /*     if (!code) code = DumpString(iodp, 'M', nullString); */
     FillInt64(addvar,0, (2 + strlen(nullString)));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpArrayInt32(iodp, 'W', (afs_uint32 *)V_weekUse(vp), sizeof(V_weekUse(vp))/sizeof(V_weekUse(vp)[0])); */
     FillInt64(addvar,0, (3 + 4 * (sizeof(V_weekUse(vp)) / sizeof(V_weekUse(vp)[0]))));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'D', V_dayUseDate(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'Z', V_dayUse(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     return code;
 }
 
@@ -1448,9 +1448,9 @@ static int
 SizeDumpEnd(register struct iod *iodp, register struct volintSize *v_size)
 {
     int code = 0;
-    afs_int64 addvar;
+    afs_uint64 addvar;
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     return code;
 }
 
@@ -1481,7 +1481,7 @@ SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
     int code = 0;
     int UseLatestReadOnlyClone = 1;
     afs_int32 dumpTimes[2];
-    afs_int64 addvar;
+    afs_uint64 addvar;
 /*    iodp->device = vp->device; */
 /*    iodp->parentId = V_parentId(vp); */
 /*    iodp->dumpPartition = vp->partition; */
@@ -1489,18 +1489,18 @@ SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
     ZeroInt64(v_size->dump_size);	/* initialize the size */
 /*     if (!code) code = DumpDouble(iodp, D_DUMPHEADER, DUMPBEGINMAGIC, DUMPVERSION); */
     FillInt64(addvar,0, 9);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'v', UseLatestReadOnlyClone? V_id(vp): V_parentId(vp)); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpString(iodp, 'n',V_name(vp)); */
     FillInt64(addvar,0, (2 + strlen(V_name(vp))));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     dumpTimes[0] = fromtime; */
 /*     dumpTimes[1] = V_backupDate(vp);	/\* Until the time the clone was made *\/ */
 /*     if (!code) code = DumpArrayInt32(iodp, 't', (afs_uint32 *)dumpTimes, 2); */
     FillInt64(addvar,0, (3 + 4 * 2));
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     return code;
 }
 
@@ -1510,57 +1510,57 @@ SizeDumpVnode(register struct iod *iodp, struct VnodeDiskObject *v, int volid,
 	      register struct volintSize *v_size)
 {
     int code = 0;
-    afs_int64 addvar;
+    afs_uint64 addvar;
 
     if (!v || v->type == vNull)
 	return code;
 /*     if (!code) code = DumpDouble(iodp, D_VNODE, vnodeNumber, v->uniquifier); */
     FillInt64(addvar,0, 9);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     if (!dumpEverything)
 	return code;
 /*     if (!code)  code = DumpByte(iodp, 't',(byte)v->type); */
     FillInt64(addvar,0, 2);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpShort(iodp, 'l', v->linkCount); /\* May not need this *\/ */
     FillInt64(addvar,0, 3);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'v', v->dataVersion); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'm', v->unixModifyTime); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'a', v->author); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'o', v->owner); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code && v->group) code = DumpInt32(iodp, 'g', v->group);	/\* default group is 0 *\/ */
     if (v->group) {
 	FillInt64(addvar,0, 5);
-	AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+	AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     }
 /*     if (!code) code = DumpShort(iodp, 'b', v->modeBits); */
     FillInt64(addvar,0, 3);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'p', v->parent); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 's', v->serverModifyTime); */
     FillInt64(addvar,0, 5);
-    AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     if (v->type == vDirectory) {
 /*	acl_HtonACL(VVnodeDiskACL(v)); */
 /* 	if (!code) code = DumpByteString(iodp, 'A', (byte *) VVnodeDiskACL(v), VAclDiskSize(v)); */
 	FillInt64(addvar,0, (1 + VAclDiskSize(v)));
-	AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+	AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     }
 
     if (VNDISK_GET_INO(v)) {
 	FillInt64(addvar,0, (v->length + 5));
-	AddInt64(v_size->dump_size, addvar, &v_size->dump_size);
+	AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     }
     return code;
 }

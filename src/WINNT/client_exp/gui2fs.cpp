@@ -1223,45 +1223,6 @@ BOOL IsSymlink(const char * true_name)
 	return (code==0);
 }
 
-BOOL IsSymlink(const char * true_name)
-{
-    char parent_dir[MAXSIZE];		/*Parent directory of true name*/
-	char strip_name[MAXSIZE];
-    struct ViceIoctl blob;
-	char *last_component;
-    int code;
-	last_component = (char *) strrchr(true_name, '\\');
-	if (!last_component)
-	    last_component = (char *) strrchr(true_name, '/');
-	if (last_component) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name + 1);
-	    parent_dir[last_component - true_name + 1] = 0;
-	    last_component++;   /*Skip the slash*/
-	}
-	else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    fs_ExtractDriveLetter(true_name, parent_dir);
-	    strcat(parent_dir, ".");
-	    last_component = strip_name;
-        fs_StripDriveLetter(true_name, strip_name, sizeof(strip_name));
-	}
-
-	blob.in = last_component;
-	blob.in_size = strlen(last_component)+1;
-	blob.out_size = MAXSIZE;
-	blob.out = space;
-	memset(space, 0, MAXSIZE);
-	code = pioctl(parent_dir, VIOC_ISSYMLINK, &blob, 1);
-	return (code==0);
-}
-
 
 /*
  * Delete AFS mount points.  Variables are used as follows:
@@ -1529,82 +1490,6 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
 
 //	tokenInfo.Add("");
 //	return TRUE;
-
-BOOL RemoveSymlink(const char * linkName)
-{
-	BOOL error = FALSE;
-    INT code=0;
-    struct ViceIoctl blob;
-    char tbuffer[1024];
-    char lsbuffer[1024];
-	char tpbuffer[1024];
-    char *tp;
-    
-	tp = (char *) strrchr(linkName, '\\');
-	if (!tp)
-	    tp = (char *) strrchr(linkName, '/');
-	if (tp) {
-	    strncpy(tbuffer, linkName, code=tp-linkName+1);  /* the dir name */
-            tbuffer[code] = 0;
-	    tp++;   /* skip the slash */
-	}
-	else {
-	    fs_ExtractDriveLetter(linkName, tbuffer);
-	    strcat(tbuffer, ".");
-         fs_StripDriveLetter(tp, tpbuffer, 0);
-		 tp=tpbuffer;
-	}
-	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
-	blob.out = lsbuffer;
-	blob.out_size = sizeof(lsbuffer);
-	code = pioctl(tbuffer, VIOC_LISTSYMLINK, &blob, 0);
-	if (code)
-		return FALSE;
-	blob.out_size = 0;
-	blob.in = tp;
-	blob.in_size = strlen(tp)+1;
-	return (pioctl(tbuffer, VIOC_DELSYMLINK, &blob, 0)==0);
-}
-
-BOOL IsSymlink(const char * true_name)
-{
-    char parent_dir[MAXSIZE];		/*Parent directory of true name*/
-	char strip_name[MAXSIZE];
-    struct ViceIoctl blob;
-	char *last_component;
-    int code;
-	last_component = (char *) strrchr(true_name, '\\');
-	if (!last_component)
-	    last_component = (char *) strrchr(true_name, '/');
-	if (last_component) {
-	    /*
-	     * Found it.  Designate everything before it as the parent directory,
-	     * everything after it as the final component.
-	     */
-	    strncpy(parent_dir, true_name, last_component - true_name + 1);
-	    parent_dir[last_component - true_name + 1] = 0;
-	    last_component++;   /*Skip the slash*/
-	}
-	else {
-	    /*
-	     * No slash appears in the given file name.  Set parent_dir to the current
-	     * directory, and the last component as the given name.
-	     */
-	    fs_ExtractDriveLetter(true_name, parent_dir);
-	    strcat(parent_dir, ".");
-	    last_component = strip_name;
-        fs_StripDriveLetter(true_name, strip_name, sizeof(strip_name));
-	}
-
-	blob.in = last_component;
-	blob.in_size = strlen(last_component)+1;
-	blob.out_size = MAXSIZE;
-	blob.out = space;
-	memset(space, 0, MAXSIZE);
-	code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
-	return (code==0);
-}
 
 
 	HOURGLASS hourglass;

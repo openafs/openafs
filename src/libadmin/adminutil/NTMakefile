@@ -30,7 +30,6 @@ INCFILES= $(INCFILEDIR)\afs_AdminCommonErrors.h \
 	$(INCFILEDIR)\afs_AdminMiscErrors.h \
 	$(INCFILEDIR)\afs_AdminPtsErrors.h \
 	$(INCFILEDIR)\afs_AdminUtilErrors.h \
-	$(INCFILEDIR)\afsconfig.h \
  	$(INCFILEDIR)\afs_AdminVosErrors.h
 
 $(INCFILES):$$(@F)

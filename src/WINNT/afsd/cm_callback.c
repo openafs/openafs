@@ -867,7 +867,7 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
 }
 
 /* debug interface: not implemented */
-int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
+int SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, afs_int32 a_cellnum,
                           char **a_name, serverList *a_hosts)
 {
     /* XXXX */
