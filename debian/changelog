@@ -1,3 +1,11 @@
+openafs (1.3.70-1) experimental; urgency=low
+
+  * New upstream version
+  * debian/kern-sysname: 2.6* not 2.6
+  * Enable supergroups and largefile-fileserver
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 15 Aug 2004 18:56:48 -0400
+
 openafs (1.3.65-1) experimental; urgency=low
 
   * New upstream Version, Closes: #256580
