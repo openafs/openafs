@@ -220,9 +220,16 @@ generate_cacheinfo() {
 	if [ "$PART" = "NONE" ]; then
 	    echo "$CACHE or /usr/vice is not a separate partition"
 	    echo "you have to change the cachesize in $SYSCNF by hand"
-	    exit 1
+	    echo "AFS will be started with a VERY small cache of 8Mb."
+	    CACHESIZE=8000
 	else
-	    PARTSIZE=`echo $LINE | awk '{print $2}'`
+	    # Check to see if df has pretty-printed for long dev (i.e. LVM)
+            FCHAR=`echo $LINE | cut -c 1`
+            if [ "$FCHAR" = "/" ]; then
+                PARTSIZE=`echo $LINE | awk '{print $2}'`
+            else
+                PARTSIZE=`echo $LINE | awk '{print $1}'`
+	    fi
 	    CACHESIZE=`echo $PARTSIZE | awk '{printf "%d",int(($1*.8)/1000)*1000}'`
 	fi
     fi
