@@ -609,8 +609,6 @@ BOOL IsAdmin (void)
             return FALSE;
         }
 
-        fTested = TRUE;
-
         dwSize = 0;
         dwSize2 = 0;
 
@@ -645,39 +643,76 @@ BOOL IsAdmin (void)
 
             if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
             {
-                /* We'll have to allocate a chunk of memory to store the list of
-                 * groups to which this user belongs; find out how much memory
-                 * we'll need.
-                 */
-                DWORD dwSize = 0;
-                PTOKEN_GROUPS pGroups;
-                
-                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
-            
-                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
-                
-                /* Allocate that buffer, and read in the list of groups. */
-                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
-                {
-                    /* Look through the list of group SIDs and see if any of them
-                     * matches the AFS Client Admin group SID.
+
+                if (!CheckTokenMembership(hToken, psidAdmin, &fAdmin)) {
+                    /* We'll have to allocate a chunk of memory to store the list of
+                     * groups to which this user belongs; find out how much memory
+                     * we'll need.
                      */
-                    size_t iGroup = 0;
-                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    DWORD dwSize = 0;
+                    PTOKEN_GROUPS pGroups;
+
+                    GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+
+                    pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+
+                    /* Allocate that buffer, and read in the list of groups. */
+                    if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
                     {
-                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
-                            fAdmin = TRUE;
+                        /* Look through the list of group SIDs and see if any of them
+                         * matches the AFS Client Admin group SID.
+                         */
+                        size_t iGroup = 0;
+                        for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                        {
+                            if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
+                                fAdmin = TRUE;
+                            }
                         }
                     }
+
+                    if (pGroups)
+                        free(pGroups);
                 }
 
-                if (pGroups)
-                    free(pGroups);
+                /* if do not have permission because we were not explicitly listed
+                 * in the Admin Client Group let's see if we are the SYSTEM account
+                 */
+                if (!fAdmin) {
+                    PTOKEN_USER pTokenUser;
+                    SID_IDENTIFIER_AUTHORITY SIDAuth = SECURITY_NT_AUTHORITY;
+                    PSID pSidLocalSystem = 0;
+                    DWORD gle;
+
+                    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
+
+                    pTokenUser = (PTOKEN_USER)malloc(dwSize);
+
+                    if (!GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
+                        gle = GetLastError();
+
+                    if (AllocateAndInitializeSid( &SIDAuth, 1,
+                                                  SECURITY_LOCAL_SYSTEM_RID,
+                                                  0, 0, 0, 0, 0, 0, 0,
+                                                  &pSidLocalSystem))
+                    {
+                        if (EqualSid(pTokenUser->User.Sid, pSidLocalSystem)) {
+                            fAdmin = TRUE;
+                        }
+
+                        FreeSid(pSidLocalSystem);
+                    }
+
+                    if ( pTokenUser )
+                        free(pTokenUser);
+                }
             }
         }
 
         free(psidAdmin);
         free(pszRefDomain);
+
+        fTested = TRUE;
     }
 
     return fAdmin;
