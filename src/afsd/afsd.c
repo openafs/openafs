@@ -61,10 +61,8 @@ RCSID("$Header$");
 #include <afs/cmd.h>
 
 #include <assert.h>
-#include <itc.h>
+#include <potpourri.h>
 #include <afs/afsutil.h>
-#undef in
-#undef out
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
