@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-#include <winsock2.h> ]
+#include <winsock2.h>
 #include <lm.h>
 
 #include <afs/param.h>
@@ -197,19 +197,18 @@ DWORD APIENTRY NPGetCaps(DWORD index)
     }
 }       
 
-static NET_API_STATUS 
-NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath, DWORD profilePathLen )
+NET_API_STATUS 
+NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath, 
+                       DWORD profilePathLen )
 {
     NET_API_STATUS code;
     LPWSTR ServerName = NULL;
     LPUSER_INFO_3 p3 = NULL;
 
-    code = NetGetAnyDCName(NULL, Domain, (LPBYTE *)&ServerName);
-    if (code != NERR_Success)
-        return code;
-    if (ServerName == NULL)
-        return NERR_InvalidComputer;
-
+    NetGetAnyDCName(NULL, Domain, (LPBYTE *)&ServerName);
+    /* if NetGetAnyDCName fails, ServerName == NULL
+     * NetUserGetInfo will obtain local user information 
+     */
     code = NetUserGetInfo(ServerName, UserName, 3, (LPBYTE *)&p3);
     if (code == NERR_Success)
     {
@@ -217,19 +216,21 @@ NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath, DWO
         if (p3) {
             if (p3->usri3_profile) {
                 DWORD len = lstrlenW(p3->usri3_profile);
-
-                /* Convert From Unicode to ASCII */
-                len = len < profilePathLen ? len : profilePathLen - 1;
-                CharToOemBuffW(p3->usri3_profile, profilePath, len);
-                profilePath[len] = '\0';
-                code = NERR_Success;
+                if (len > 0) {
+                    /* Convert From Unicode to ANSI (UTF-8 for future) */
+                    len = len < profilePathLen ? len : profilePathLen - 1;
+                    WideCharToMultiByte(CP_UTF8, 0, p3->usri3_profile, len, profilePath, len, NULL, NULL);
+                    profilePath[len] = '\0';
+                    code = NERR_Success;
+                }
             }
             NetApiBufferFree(p3);
         }
     }
-    NetApiBufferFree(ServerName);
+    if (ServerName) 
+        NetApiBufferFree(ServerName);
     return code;
-}       
+}
 
 BOOL IsServiceRunning (void)
 {
@@ -562,8 +563,8 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
         lpszOutputString[min(uInputString.Length/2,nOutStringLen-1)] = '\0';
         return TRUE;
     }
-	else
-		lpszOutputString[0] = '\0';
+    else
+        lpszOutputString[0] = '\0';
     return FALSE;
 }  // UnicodeStringToANSI
 
@@ -892,8 +893,8 @@ VOID AFS_Startup_Event( PWLX_NOTIFICATION_INFO pInfo )
 VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
     DWORD code;
-    TCHAR profileDir[256] = TEXT("");
-    DWORD  len = 256;
+    TCHAR profileDir[1024] = TEXT("");
+    DWORD  len = 1024;
     PTOKEN_USER  tokenUser = NULL;
     DWORD  retLen;
     HANDLE hToken;
@@ -922,7 +923,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
         WCHAR Domain[64]=L"";
         GetLocalShortDomain(Domain, sizeof(Domain));
         if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
-            if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, &len))
+            if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
                 GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
         }
     }
