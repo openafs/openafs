@@ -2,6 +2,12 @@ OpenAFS News -- history of user-visible changes.  September 25, 2002.
 
 * Changes incorporated in OpenAFS 1.3
 
+** Mountpoint directory information is now only faked for cross-cell
+   mountpoits when using the -fakestat flag (e.g. for the directories
+   under /afs, but not for most other volumes mounted inside the cell).
+   The -fakestat-all switch can be used to fake information for all
+   mountpoints.
+
 ** When fakestat is enabled on MacOSX, the Finder can be used to browse
    a fully-populated /afs directory.  However, this precludes reliable
    use of entire volumes as MacOS bundles (i.e. containing a Contents
