@@ -825,6 +825,13 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     if (!vcp || !parentvcp)
         goto done;
 
+    /* If it is the AFS root, then there's no chance it needs 
+       revalidating */
+    if (vcp == afs_globalVp) {
+	bad_dentry = 0;
+	goto done;
+    }
+
     if ((code = afs_InitReq(&treq, credp)))
         goto done;
 
