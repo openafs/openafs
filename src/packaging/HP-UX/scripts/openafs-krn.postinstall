@@ -1,0 +1,49 @@
+#!/bin/sh
+##############
+# Subproduct: OPENAFS.Kernel
+# Fileset: OPENAFS-KRN32 | OPENAFS-KRN64
+# postinstall
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+# This check modifies only /stand on the root file system
+
+if [[ -z "${SW_DEFERRED_KERNBLD}" ]]
+then
+
+  ##########################################
+  #                                        #
+  # Place afs driver into /stand/system    #
+  #                                        #
+  ##########################################
+
+  mod_systemfile $SW_SYSTEM_FILE_PATH -a afs
+  if [[ $? -ne 0 ]]
+  then
+    print "ERROR:   Cannot update $SW_SYSTEM_FILE_PATH to"
+    print "         include afs ($FILESET functionality)."
+   exitval=$FAILURE
+  fi
+fi
+
+exit $exitval

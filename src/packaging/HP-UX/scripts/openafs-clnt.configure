@@ -1,0 +1,47 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-CLNT
+# configure
+# @(#) $Revision$
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+#
+# Add cacheinfo info only if it does not locally exist
+# 
+
+if [[ -d /usr/newconfig/usr/vice/etc && ! -f /usr/vice/etc/cacheinfo ]]; then
+
+  cp /usr/newconfig/usr/vice/etc/cacheinfo /usr/vice/etc
+  chmog 644 bin bin /usr/vice/etc/cacheinfo
+
+fi
+#
+# Add CellServDB info only if it does not locally exist
+# 
+if [[ -f /usr/newconfig/usr/vice/etc/CellServDB && ! -f /usr/afs/etc/CellServDB ]]; then
+    print "Adding CellServDB hosts into /usr/afs/etc/CellServDB"
+    cat /usr/newconfig/usr/vice/etc/CellServDB >> /usr/afs/etc/CellServDB
+fi
+
+exit $exitval

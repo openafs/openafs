@@ -1,0 +1,31 @@
+#!/bin/sh
+
+echo "NOTE:    Executing unconfigure script."
+#######
+#
+#  (c) Copyright
+#
+########
+
+    set -a
+    UTILS="/usr/lbin/sw/control_utils"
+    if [[ ! -f ${UTILS} ]]
+    then
+        echo "ERROR:   Cannot find ${UTILS}"
+        exit 1
+    fi
+    . ${UTILS}
+################################################
+# Remove the global MANPATH to exclude OPENAFS software
+ROOT=/opt/afs/
+
+mod_pathfile -d MP ${ROOT}man
+
+if [[ $? = 2 ]]
+then
+    echo "         /etc/MANPATH does not contains the OPENAFS component."
+else
+    echo "         ${ROOT}/man removed from /etc/MANPATH."
+fi
+
+exit 0

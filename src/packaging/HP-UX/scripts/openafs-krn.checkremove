@@ -1,0 +1,39 @@
+#!/bin/sh
+##############
+# Subproduct: OPENAFS.Kernel
+# Fileset: OPENAFS-KRN32 | OPENAFS-KRN64
+# checkremove
+# @(#) $Revision: 1.2
+##############
+#
+#  (c) Copyright Hewlett-Packard Company, 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+UTILS=/usr/lbin/sw/control_utils
+if [[ ! -f $UTILS ]]
+then
+    print "ERROR:   Cannot find the sh functions library $UTILS."
+    exit 1
+fi
+
+. $UTILS
+
+if [[ $SW_SESSION_IS_KERNEL = "TRUE" ]]; then
+
+    # Test here for afs filesystems before removing
+    # Write stdout to a file
+    # We really aren't testing, this script is provided as an example
+ 
+    if [ -s /tmp/afsfilesystem ] ; then
+        echo "ERROR:   AFS filesystems still exist on the system.  In order to"
+        echo "         remove the $FILESET fileset, you must remove the "
+        echo "         afs filesystems and re-execute the swremove command."
+        exit $FAILURE
+    fi
+    exit $SUCCESS
+fi
+

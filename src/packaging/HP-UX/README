@@ -1,0 +1,84 @@
+#
+# File:		README
+#
+# Purpose:	README for OpenAFS psf file
+#
+# Copyright:	None
+#
+# Header:	$Header$
+# Header:	$Header$
+#
+
+
+This directory contains a Product Specification File (PSF) which defines
+the layout of OpenAFS using the transarc-paths (--enable-transarc-paths).  If
+you did not run configure --enable-transarc-paths, using the psf file to
+package the distribution will work, but you will be missing directories
+when running the servers.  
+
+The source files and controlled scripts contained in these products'
+filesets are also provided in this directory.  
+
+In order to package the sofware using HP's Software Distributor follow 
+the following procedure:
+
+Ensure the AFS docs are installed in the AFS build directory.
+
+Install the latest SD patch PHCO_27672, earlier patches will work, but 
+this patch fixes several memory leaks.
+
+Change directory to the top level directory, replacing the "x" with the
+correct version number:
+
+	cd <path-to-toplevel>/openafs-1.2.x
+
+Run the configure --enable-transarc-paths
+
+Then create the distribution directory:
+
+	make dest
+
+Once the build in the distribution directory is completed, change dir to
+the swpackage directory:
+
+	cd <path-to-toplevel>/openafs-1.2.x/src/packaging/HP-UX
+
+Test the package creation, replace the "x" with the version just compiled:
+
+	swpackage -p -s psf-1.2.x-transarc-paths-11.00 
+
+The package does include vfsck, mount, umount, etc. for installation in 
+/sbin/fs/afs.  You will have to move the files into 
+hp_ux110/dest/root.server/etc in order to package them. 
+
+Run:
+	swpackage -s psf-1.2.x-transarc-paths-11.xx [@ /dir/to/destination_depot]
+
+This command will package the product for installation with software distributor
+into /var/spool/sw unless an alternate depot [ @ /dir/to/destination_depot] 
+is defined.
+
+Files can be compressed before transfer to the depot by using
+
+  swpackage -x compress_files=true -x reinstall_files=true \
+	-s psf-1.2.x-transarc-paths-11.xx [@ /dir/to/destination_depot]
+
+The psf file is designed to package the software for installation on 
+32bit or 64bit HP-UX 11.00.  The binaries should be compiled with +DAportable or
++DA1.0, or other options that allow binary compatibility between operating 
+the two operating systems (32bit or 64 bit).
+
+When installed, the package does install the kernel library, master.d file, 
+regen the kernel and cause a reboot.
+
+The 1.2.10 package does upgrade the 1.2.9 or the 1.2.8 package, so if a 
+previous version is packaged and installed a later packaged product will
+upgrade it.  (Worked for me).
+
+Follow the Quick Start Guide after installation to configure OPENAFS
+
+Feel free to make any corrections to any mistakes I may have made.
+
+Paul Weber
+Hewlett-Packard
+I N V E N T

@@ -1,0 +1,48 @@
+#!/bin/sh
+##############
+# Product: OPENAFS
+# Fileset: OPENAFS.OPENAFS-SRV
+# postremove
+# @(#) $Revision$
+##############
+#
+#  (c) Copyright 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+set -a
+UTILS="/usr/lbin/sw/control_utils"
+if [[ ! -f ${UTILS} ]]
+then
+    echo "ERROR:   Cannot find ${UTILS}"
+    exit 1
+fi
+. ${UTILS}
+
+exitval=$SUCCESS                # Anticipate success
+
+############################################################################
+
+#
+# After the removal of the server, we remove all the files and 
+# directories associated
+# with the server (which was created with the bosserver)
+
+RMDIRS="/usr/afs/db \
+	/usr/afs/local \
+	/usr/afs/etc/ThisCell \
+	/usr/afs/etc/CellServDB \
+	/usr/afs/logs"
+
+for dir in $RMDIRS
+do
+  if [[ -d $dir ]]; then
+    print "Removing directory $dir"
+    rm -fr $dir
+  fi
+done
+
+exit $exitval

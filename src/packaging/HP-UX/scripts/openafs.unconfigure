@@ -1,0 +1,53 @@
+#!/bin/sh
+
+echo "NOTE:    Executing unconfigure script."
+#######
+#
+#  (c) Copyright Hewlett-Packard Company 1994
+# @(#) OpenAFS unconfigure v1.2 4/22/03
+########
+
+    set -a
+    UTILS="/usr/lbin/sw/control_utils"
+    if [[ ! -f ${UTILS} ]]
+    then
+        echo "ERROR:   Cannot find ${UTILS}"
+        exit 1
+    fi
+    . ${UTILS}
+#
+# Anticipate SUCCESS
+exitval=$SUCCESS
+ 
+################################################
+# Set the global PATH to include OPENAFS software
+ROOT=/opt/afs/
+mod_pathfile -d P ${ROOT}bin
+
+if [[ $? = 2 ]]
+then
+    echo "         $ROOT already removed from /etc/PATH."
+else
+    echo "         ${ROOT}/bin removed from path"
+fi
+
+# Remove the startup/shutdown scripts from /sbin/init.d and /sbin/rc2.d
+# Remove the configuration files inserted by the configure script
+
+RMFILES="/usr/vice/etc/AFSlog \
+        /usr/vice/etc/CellServDB \
+        /usr/vice/etc/ThisCell \
+        /usr/vice/etc/cacheinfo \
+	/sbin/rc2.d/K800afs \
+        /sbin/rc2.d/S460afs \
+        /sbin/init.d/afs"
+
+for file in $RMFILES
+do
+  if [[ -f $file ]];then
+    print "Removing file $file"
+    rm $file
+  fi
+done
+
+exit $exitval
