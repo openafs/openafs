@@ -59,7 +59,7 @@ case $system in
 			LINUX_KERNEL_PATH="/usr/src/linux"
 		fi
 		if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'`
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'|tail -1`
 		 if test "x$linux_kvers" = "x"; then
 		  AC_MSG_ERROR(Linux headers lack version definition)
 		  exit 1
@@ -67,7 +67,7 @@ case $system in
 		  LINUX_VERSION="$linux_kvers"
 		 fi
 		else
-		 AC_MSG_ERROR(No linux headers found at $with_linux_kernel_headers)
+		 AC_MSG_ERROR(No linux headers found at $LINUX_KERNEL_PATH)
 		 exit 1
 		fi
                 AC_MSG_RESULT(linux)
