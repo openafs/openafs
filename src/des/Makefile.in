@@ -73,7 +73,16 @@ all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf
 .c.o:
 	${CC} -c -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS} $<
 
-libdes.a: ${OBJS} AFS_component_version_number.o
+
+PICTARGET =../pic/des
+PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS))
+$(PICTARGET)/%.o: %.c $(PICTARGET)
+	$(CC) -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}  -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
+
+$(PICTARGET):
+	mkdir -p $(PICTARGET)
+
+libdes.a: ${OBJS} AFS_component_version_number.o $(PICOBJS)
 	$(RM) -f libdes.a
 	$(AR) crv libdes.a ${OBJS} AFS_component_version_number.o
 	$(RANLIB) libdes.a
@@ -212,7 +221,7 @@ clean:
 	$(RM) -f *.a *.s *.o *.b core *~ *.com *.ld
 	$(RM) -f make_fp make_ip make_keyperm make_odd make_p \
 		make_p_table make_s_table key_perm.h p_table.h \
-		s_table.h odd.h p.c s.c fp.c ip.c AFS_component_version_number.c
+		s_table.h odd.h p.c s.c fp.c ip.c AFS_component_version_number.c $(PICTARGET)/*.o
 	cd test; $(MAKE) clean
 
 include ../config/Makefile.version
