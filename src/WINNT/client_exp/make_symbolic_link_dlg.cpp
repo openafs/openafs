@@ -51,7 +51,7 @@ void CMakeSymbolicLinkDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_NAME, m_strName);
 	DDV_MaxChars(pDX, m_strName, 63);
 	DDX_Text(pDX, IDC_DIR, m_strDir);
-	DDV_MaxChars(pDX, m_strDir, 63);
+	DDV_MaxChars(pDX, m_strDir, 255);
 	//}}AFX_DATA_MAP
 }
 

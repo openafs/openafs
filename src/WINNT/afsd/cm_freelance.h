@@ -16,6 +16,8 @@ extern int cm_reInitLocalMountPoints();
 extern void cm_InitFreelance();
 extern long cm_FreelanceRemoveMount(char *toremove);
 extern long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp);
+extern long cm_FreelanceRemoveSymlink(char *toremove);
+extern long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp);
 extern int cm_clearLocalMountPointChange();
 extern int cm_FakeRootFid(cm_fid_t *fidp);
 

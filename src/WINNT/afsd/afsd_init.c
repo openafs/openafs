@@ -22,7 +22,6 @@
 #include "afsd.h"
 #include <rx\rx.h>
 #include <rx\rx_null.h>
-
 #include <WINNT/syscfg.h>
 
 #include "smb.h"

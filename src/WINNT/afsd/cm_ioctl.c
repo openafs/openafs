@@ -458,13 +458,26 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
 
-    cellp = cm_FindCellByID(scp->fid.cell);
-    if (cellp) {
-        strcpy(ioctlp->outDatap, cellp->namep);
+#ifdef AFS_FREELANCE_CLIENT
+    if ( cm_freelanceEnabled && 
+         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
+         scp->fid.vnode==0x1 && scp->fid.unique==0x1 ) {
+        strcpy(ioctlp->outDatap, "Freelance.Local.Root");
         ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
         code = 0;
+    } else 
+#endif /* AFS_FREELANCE_CLIENT */
+    {
+        cellp = cm_FindCellByID(scp->fid.cell);
+        if (cellp) {
+            strcpy(ioctlp->outDatap, cellp->namep);
+            ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
+            code = 0;
+        }
+        else 
+            code = CM_ERROR_NOSUCHCELL;
     }
-    else code = CM_ERROR_NOSUCHCELL;
 
     cm_ReleaseSCache(scp);
     return code;
