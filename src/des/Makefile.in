@@ -85,6 +85,13 @@ make_p:	make_p.o misc.o main.o
 make_s:	make_s.o misc.o main.o 
 	${CC} make_s.o misc.o main.o ${LDFLAGS} -o make_s
 
+crypt.o: crypt.c
+	case ${SYS_NAME} in \
+	rs_aix*)\
+		${CC} -c ${COMMON_INCL} -o crypt.o crypt.c ;;\
+	*)\
+		${CC} -c ${CFLAGS} -o crypt.o crypt.c ;;\
+	esac
 #
 # Table/code generation targets
 #
