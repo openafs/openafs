@@ -67,20 +67,15 @@ int afs_iauth_initd = 0;
 
 extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
 
-int
 #if !defined(AFS_DEC_ENV) && !defined(AFS_ATHENA_ENV)
+int
 #ifdef AFS_AIX41_ENV
-afs_fid(OSI_VC_ARG(avc), fidpp, credp)
-     struct ucred *credp;
+afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp)
+#elif defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
+afs_fid(OSI_VC_DECL(avc), struct fid *fidpp)
 #else
-afs_fid(OSI_VC_ARG(avc), fidpp)
+afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 #endif				/* AFS_AIX41_ENV */
-     OSI_VC_DECL(avc);
-#if	defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
-     struct fid *fidpp;
-#else
-     struct fid **fidpp;
-#endif
 {
     struct SmallFid Sfid;
     long addr[2];

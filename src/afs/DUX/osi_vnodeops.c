@@ -114,8 +114,15 @@ mp_afs_lookup(adp, ndp)
      struct nameidata *ndp;
 {
     int code;
+    char aname[MAXNAMLEN + 1];  /* XXX */
+    struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
+    struct ucred *acred = ndp->ni_cred;
+    int wantparent = ndp->ni_nameiop & WANTPARENT;
+    int opflag = ndp->ni_nameiop & OPFLAG;
     AFS_GLOCK();
-    code = afs_lookup(adp, ndp);
+    memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
+    aname[ndp->ni_namelen] = '\0';
+    code = afs_lookup(adp, aname, avcp, acred, opflag, wantparent);
     AFS_GUNLOCK();
     return code;
 }
@@ -125,9 +132,18 @@ mp_afs_create(ndp, attrs)
      struct vattr *attrs;
 {
     int code;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    enum vcexcl aexcl = NONEXCL;        /* XXX - create called properly */
+    int amode = 0;              /* XXX - checked in higher level */
+    struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_create(ndp, attrs);
+    code = afs_create(adp, aname, attrs, aexcl, 
+		      amode, avcp, acred);
+
     AFS_GUNLOCK();
+    afs_PutVCache(adp);
     return code;
 }
 
@@ -208,8 +224,12 @@ mp_afs_remove(ndp)
      struct nameidata *ndp;
 {
     int code;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_remove(ndp);
+    code = afs_remove(adp, aname, acred);
+    afs_PutVCache(adp);
     AFS_GUNLOCK();
     return code;
 }
@@ -219,9 +239,13 @@ mp_afs_link(avc, ndp)
      struct nameidata *ndp;
 {
     int code;
+    struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_link(avc, ndp);
+    code = afs_link(avc, adp, aname, acred);
     AFS_GUNLOCK();
+    afs_PutVCache(adp);
     return code;
 }
 
@@ -229,8 +253,19 @@ mp_afs_rename(fndp, tndp)
      struct nameidata *fndp, *tndp;
 {
     int code;
+    struct vcache *aodp = VTOAFS(fndp->ni_dvp);
+    char *aname1 = fndp->ni_dent.d_name;
+    struct vcache *andp = VTOAFS(tndp->ni_dvp);
+    char *aname2 = tndp->ni_dent.d_name;
+    struct ucred *acred = tndp->ni_cred;
     AFS_GLOCK();
-    code = afs_rename(fndp, tndp);
+    code = afs_rename(aodp, aname1, andp, aname2, acred);
+    AFS_RELE(tndp->ni_dvp);
+    if (tndp->ni_vp != NULL) {
+        AFS_RELE(tndp->ni_vp);
+    }
+    AFS_RELE(fndp->ni_dvp);
+    AFS_RELE(fndp->ni_vp);
     AFS_GUNLOCK();
     return code;
 }
@@ -240,8 +275,13 @@ mp_afs_mkdir(ndp, attrs)
      struct vattr *attrs;
 {
     int code;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    register struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_mkdir(ndp, attrs);
+    code = afs_mkdir(adp, aname, attrs, avcp, acred);
+    AFS_RELE(adp);
     AFS_GUNLOCK();
     return code;
 }
@@ -250,8 +290,13 @@ mp_afs_rmdir(ndp)
      struct nameidata *ndp;
 {
     int code;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_rmdir(ndp);
+    code = afs_rmdir(adp, aname, acred);
+    afs_PutVCache(adp);
+    afs_PutVCache(ndp->ni_vp);
     AFS_GUNLOCK();
     return code;
 }
@@ -262,8 +307,12 @@ mp_afs_symlink(ndp, attrs, atargetName)
      register char *atargetName;
 {
     int code;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    char *aname = ndp->ni_dent.d_name;
+    struct ucred *acred = ndp->ni_cred;
     AFS_GLOCK();
-    code = afs_symlink(ndp, attrs, atargetName);
+    code = afs_symlink(adp, aname, attrs, atargetName, acred);
+    AFS_RELE(ndp->ni_dvp);
     AFS_GUNLOCK();
     return code;
 }
