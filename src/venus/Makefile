@@ -89,7 +89,7 @@ ${DESTDIR}etc/kdump: kdump
 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
 	*linux* ) \
 		for lv in ${LINUX_VERS}; do \
-			${INSTALL} -s $?-$$lv $@-$$lv ; \
+			${INSTALL} -s kdump-$$lv ${DESTDIR}etc/kdump-$$lv ; \
 		done ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
