@@ -49,6 +49,7 @@
 #define SYS_NAME_ID_mac_mach51		 502
 #define SYS_NAME_ID_ppc_darwin_12        503
 #define SYS_NAME_ID_ppc_darwin_13        504
+#define SYS_NAME_ID_ppc_darwin_14        505
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602

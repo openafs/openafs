@@ -186,7 +186,15 @@ case $AFS_SYSNAME in
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.o"
-		XCFLAGS="-no-precomp"
+		XCFLAGS="-no-cpp-precomp"
+		;;
+
+	ppc_darwin_14)
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LEX="lex -l"
+		LWP_OPTMZ="-O2"
+		REGEX_OBJ="regex.o"
+		XCFLAGS="-no-cpp-precomp"
 		;;
 
 	ppc_linux22)

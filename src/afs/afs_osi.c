@@ -300,6 +300,7 @@ void afs_osi_Invisible() {
     set_system_proc(u.u_procp);
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+    /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
 #else
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)

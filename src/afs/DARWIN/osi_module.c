@@ -58,4 +58,4 @@ kern_return_t afs_modunload(struct kmod_info *ki, void *data)
    return KERN_SUCCESS;
  } 
 
-KMOD_EXPLICIT_DECL(openafs, VERSION, afs_modload, afs_modunload)
+KMOD_EXPLICIT_DECL(org.openafs.filesystems.afs, VERSION, afs_modload, afs_modunload)
