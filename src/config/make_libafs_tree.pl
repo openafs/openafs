@@ -96,7 +96,7 @@ sub process_libafsdep
 	$subdir =~ s|/$||gio;
 
 	print "# $dir/$depname\n";
-	open(COMPS, "$dir/$depname");
+	open(COMPS, "$depname");
 	while ( defined($file = <COMPS>) )
 	{
 		my ($destdir, $proj_src,$obj_src);
