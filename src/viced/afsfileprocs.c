@@ -2308,13 +2308,13 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
 #ifdef AFS_64BIT_ENV
 #ifndef AFS_LARGEFILE_ENV
     if (Pos + Len > 0x7fffffff)
-	return E2BIG;
+	return EFBIG;
 #endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
     if (Pos.high || Len.high)
-	return E2BIG;
+	return EFBIG;
     tPos = Pos.low;
     tLen = Len.low;
 #endif /* AFS_64BIT_ENV */
@@ -3121,14 +3121,14 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
 #ifdef AFS_64BIT_ENV
 #ifndef AFS_LARGEFILE_ENV
     if (FileLength > 0x7fffffff)
-	return E2BIG;
+	return EFBIG;
 #endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
 #else /* AFS_64BIT_ENV */
     if (FileLength.high)
-	return E2BIG;
+	return EFBIG;
     tPos = Pos.low;
     tLength = Length.low;
     tFileLength = FileLength.low;
