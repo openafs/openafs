@@ -220,17 +220,18 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
 }
 
 
-void afs_RefreshCell(tc)
-    register struct cell *tc;
+void afs_RefreshCell(ac)
+    register struct cell *ac;
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
+    struct cell *tc;
     int timeout;
 
     /* Don't need to do anything if no timeout or it's not expired */
-    if (!tc->timeout || tc->timeout > osi_Time()) return;
+    if (!ac->timeout || ac->timeout > osi_Time()) return;
 
-    if (afs_GetCellHostsFromDns(tc->cellName, cellHosts, &timeout, &realName))
+    if (afs_GetCellHostsFromDns(ac->cellName, cellHosts, &timeout, &realName))
 	/* In case of lookup failure, keep old data */
 	goto done;
 
@@ -238,9 +239,19 @@ void afs_RefreshCell(tc)
     afs_NewCell(realName, cellHosts, 0, (char *) 0, 0, 0, timeout, (char *) 0);
 
     /* If this is an alias, update the alias entry too */
-    if (afs_strcasecmp(tc->cellName, realName))
-	afs_NewCell(tc->cellName, 0, CAlias, (char *) 0, 0, 0,
-		    timeout, realName);
+    if (afs_strcasecmp(ac->cellName, realName)) {
+	/*
+	 * Look up the entry we just updated, to compensate for
+	 * uppercase-vs-lowercase lossage with DNS.
+	 */
+	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+
+	if (tc) {
+	    afs_NewCell(ac->cellName, 0, CAlias, (char *) 0, 0, 0,
+			timeout, tc->cellName);
+	    afs_PutCell(tc, READ_LOCK);
+	}
+    }
 
 done:
     if (realName)
@@ -254,6 +265,7 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
+    struct cell *tc;
     int timeout;
 
     if (afs_GetCellHostsFromDns(acellName, cellHosts, &timeout, &realName))
@@ -264,9 +276,21 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 
     /* If this is an alias, create an entry for it too */
     if (afs_strcasecmp(acellName, realName)) {
-	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
-			timeout, realName))
+	/*
+	 * Look up the entry we just updated, to compensate for
+	 * uppercase-vs-lowercase lossage with DNS.
+	 */
+	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+	if (!tc)
 	    goto bad;
+
+	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
+			timeout, tc->cellName)) {
+	    afs_PutCell(tc, READ_LOCK);
+	    goto bad;
+	}
+
+	afs_PutCell(tc, READ_LOCK);
     }
 
     if (realName)
