@@ -59,7 +59,7 @@ int GetCurrentConfig(HWND hParent, BOOL& bCanceled)
 	bCancel = FALSE;
 	bBakConfigured = FALSE;
 
-	pProg = new PROGRESSDISPLAY(hParent, IDD_GET_CURRENT_CONFIG, (DLGPROC)GetCurConfigDlgProc);
+	pProg = New2 (PROGRESSDISPLAY,(hParent, IDD_GET_CURRENT_CONFIG, (DLGPROC)GetCurConfigDlgProc));
 	pProg->SetProgressRange(0, MAX_STEPS);
 
 	HWND hLogo = GetDlgItem(pProg->GetWindow(), IDC_LOGO);
