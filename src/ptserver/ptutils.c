@@ -167,6 +167,8 @@ int AccessOK (ut, cid, tentry, mem, any)
     } else if (aid < 0) {		/* checking on group */
 	if ((flags & mem) && IsAMemberOf (ut, cid, aid)) return 1;
     }
+    /* Allow members of SYSVIEWERID to get membership and status only */
+    if (((mem == PRP_STATUS_MEM)||(mem == PRP_MEMBER_MEM))&&(IsAMemberOf (ut, cid, SYSVIEWERID))) return 1;
     if (IsAMemberOf (ut, cid, SYSADMINID)) return 1;
     return 0;				/* no access */
 }
@@ -1048,6 +1050,7 @@ afs_int32 Initdb()
     InitialGroup (SYSBACKUPID, "system:backup");
     InitialGroup (ANYUSERID, "system:anyuser");
     InitialGroup (AUTHUSERID, "system:authuser");
+    InitialGroup (SYSVIEWERID, "system:ptsviewers");
     InitialGroup (ANONYMOUSID, "anonymous");
 
     /* Well, we don't really want the max id set to anonymousid, so we'll set
