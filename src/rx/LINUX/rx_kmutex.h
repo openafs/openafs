@@ -106,15 +106,27 @@ static inline void MUTEX_EXIT(afs_kmutex_t *l)
 static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
 {
     int isAFSGlocked = ISAFS_GLOCK(); 
+    sigset_t saved_set;
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
+
+    spin_lock_irq(&current->sigmask_lock);
+    saved_set = current->blocked;
+    sigfillset(&current->blocked);
+    recalc_sigpending(current);
+    spin_unlock_irq(&current->sigmask_lock);
 
 #if defined(AFS_LINUX24_ENV)
     interruptible_sleep_on((wait_queue_head_t *)cv);
 #else
     interruptible_sleep_on((struct wait_queue**)cv);
 #endif
+
+    spin_lock_irq(&current->sigmask_lock);
+    current->blocked = saved_set;
+    recalc_sigpending(current);
+    spin_unlock_irq(&current->sigmask_lock);
 
     MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
@@ -126,16 +138,28 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
 {
     int isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
+    sigset_t saved_set;
 
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
     
+    spin_lock_irq(&current->sigmask_lock);
+    saved_set = current->blocked;
+    sigfillset(&current->blocked);
+    recalc_sigpending(current);
+    spin_unlock_irq(&current->sigmask_lock);
+
 #if defined(AFS_LINUX24_ENV)
     t = interruptible_sleep_on_timeout((wait_queue_head_t *)cv, t);
 #else
     t = interruptible_sleep_on_timeout((struct wait_queue**)cv, t);
 #endif
     
+    spin_lock_irq(&current->sigmask_lock);
+    current->blocked = saved_set;
+    recalc_sigpending(current);
+    spin_unlock_irq(&current->sigmask_lock);
+
     MUTEX_ENTER(l);
     if (isAFSGlocked) AFS_GLOCK();
 
