@@ -290,7 +290,9 @@ void *osi_linux_alloc(unsigned int asize)
 	allocator_init = 1; /* initialization complete */
     }
 
+    up(&afs_linux_alloc_sem);
     new = linux_alloc(asize); /* get a chunk of memory of size asize */
+    down(&afs_linux_alloc_sem);
     if (!new) {
 	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
 	goto error;
@@ -320,8 +322,11 @@ void *osi_linux_alloc(unsigned int asize)
     return MEMADDR(new);
 
   free_error:
-    if (new)
-        linux_free(new);
+    if (new) {
+	up(&afs_linux_alloc_sem);
+	linux_free(new);
+	down(&afs_linux_alloc_sem);
+    }
     new = NULL;
     goto error;
 
