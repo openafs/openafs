@@ -325,3 +325,9 @@ daddr_t n_cont;			/* number of continuation inodes seen */
 #define fs_link         fs_unused[0]
 #define fs_rlink        fs_unused[1]
 #endif /* AFS_HPUX110_ENV */
+
+#ifdef AFS_SUN59_ENV
+/* diskaddr_t is longlong */
+int bread(int fd, char *buf, diskaddr_t blk, long size);
+int bwrite(int fd, char *buf,  diskaddr_t blk, long size);
+#endif

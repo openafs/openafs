@@ -388,7 +388,11 @@ ckfini()
 bread(fd, buf, blk, size)
      int fd;
      char *buf;
+#ifdef AFS_SUN59_ENV
+     diskaddr_t blk;
+#else
      daddr_t blk;
+#endif
      long size;
 {
     char *cp;
@@ -451,7 +455,11 @@ bread(fd, buf, blk, size)
 bwrite(fd, buf, blk, size)
      int fd;
      char *buf;
+#ifdef AFS_SUN59_ENV
+     diskaddr_t blk;
+#else
      daddr_t blk;
+#endif
      long size;
 {
     int i, n;
