@@ -19,7 +19,7 @@ RCSID
 #include "h/param.h"
 #include "h/types.h"
 #include "h/time.h"
-#if	defined(AFS_AIX31_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_AIX31_ENV) 
 #include "h/limits.h"
 #endif
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)

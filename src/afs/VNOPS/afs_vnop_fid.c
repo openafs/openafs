@@ -67,7 +67,7 @@ int afs_iauth_initd = 0;
 
 extern int afs_NFSRootOnly;	/* 1 => only allow NFS mounts of /afs. */
 
-#if !defined(AFS_DEC_ENV) && !defined(AFS_ATHENA_ENV)
+#if !defined(AFS_ATHENA_ENV)
 int
 #ifdef AFS_AIX41_ENV
 afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp)

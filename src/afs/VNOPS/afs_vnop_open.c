@@ -123,11 +123,11 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 #endif
 	/* normal file or symlink */
 	osi_FlushText(tvc);	/* only needed to flush text if text locked last time */
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	afs_BozonLock(&tvc->pvnLock, tvc);
 #endif
 	osi_FlushPages(tvc, acred);
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
     }

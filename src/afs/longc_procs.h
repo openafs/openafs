@@ -10,7 +10,7 @@
 #ifndef	_longc_procs_h_
 #define	_longc_procs_h_		1
 
-#if !defined(LONGCALL_DEFS) && defined(KERNEL) && defined(DYNEL) && (defined(AFS_DEC_ENV) || defined(AFS_DECOSF_ENV))
+#if !defined(LONGCALL_DEFS) && defined(KERNEL) && defined(DYNEL) && defined(AFS_DECOSF_ENV)
 
 #define LONGCALL_DEFS
 
@@ -67,49 +67,6 @@ struct afs_longcall_procs {
 #ifdef XDR_CHAR_IN_KERNEL
     int (*LC_xdr_char) ();
 #endif
-#ifdef AFS_DEC_ENV
-
-    int (*LC_gfs_unlock) ();
-    int (*LC_gfs_lock) ();
-    int (*LC_gput) ();
-    struct inode *(*LC_ufs_galloc) ();
-    int (*LC_gno_close) ();
-    int (*LC_km_alloc) ();
-    int (*LC_km_free) ();
-
-    int (*LC_nuxi_l) ();
-    int (*LC_nuxi_s) ();
-
-    struct inode *(*LC_gfs_gget) ();
-    int (*LC_binval) ();
-    int (*LC_splclock) ();
-    int (*LC_xumount) ();
-    int (*LC_bflush) ();
-    int (*LC_blkclr) ();
-    int (*LC_vmaccess) ();
-    struct gnode *(*LC_gfs_namei) ();
-    int (*LC_getpdev) ();
-    int (*LC_check_mountp) ();
-    int (*LC_access) ();
-    int (*LC_ovbcopy) ();
-    int (*LC_groupmember) ();
-    int (*LC_imin) ();
-    int (*LC_setjmp) ();
-
-    struct gnode *(*LC_gget) ();
-    void (*LC_grele) ();
-    void (*LC_gref) ();
-    int (*LC_xdr_char) ();
-    int (*LC_smp_lock_once) ();
-    int (*LC_smp_lock_long) ();
-    int (*LC_smp_lock_retry) ();
-    int (*LC_smp_unlock_long) ();
-    int (*LC_smp_owner) ();
-    int (*LC_xinval) ();
-    int (*LC_cacheinvalall) ();
-    int (*LC_psignal) ();
-    int (*LC_ufs_rwgp_lock) ();
-#else
     int (*LC_iunlock) ();
     int (*LC_ilock) ();
     int (*LC_iput) ();
@@ -129,7 +86,6 @@ struct afs_longcall_procs {
     struct inode *(*LC_iget) ();
     struct mbuf *(*LC_m_more) ();
     int (*LC__spl1) ();
-#endif
     int (*LC_rdwri) ();
     struct file *(*LC_falloc) ();
     int (*LC_rmfree) ();
@@ -238,46 +194,6 @@ extern struct afs_longcall_procs afs_longcall_procs;
 #define xdr_char (*afs_longcall_procs.LC_xdr_char)
 #endif
 
-#ifdef AFS_DEC_ENV
-#define psignal (*afs_longcall_procs.LC_psignal)
-#define ufs_rwgp_lock (*afs_longcall_procs.LC_ufs_rwgp_lock)
-#define gput (*afs_longcall_procs.LC_gput)
-#define ufs_galloc (*afs_longcall_procs.LC_ufs_galloc)
-#define gno_close (*afs_longcall_procs.LC_gno_close)
-
-#define km_alloc (*afs_longcall_procs.LC_km_alloc)
-#define km_free (*afs_longcall_procs.LC_km_free)
-
-#define nuxi_l (*afs_longcall_procs.LC_nuxi_l)
-#define nuxi_s (*afs_longcall_procs.LC_nuxi_s)
-
-#define gfs_gget (*afs_longcall_procs.LC_gfs_gget)
-#define binval (*afs_longcall_procs.LC_binval)
-#define splclock (*afs_longcall_procs.LC_splclock)
-#define xumount (*afs_longcall_procs.LC_xumount)
-#define bflush (*afs_longcall_procs.LC_bflush)
-#define blkclr (*afs_longcall_procs.LC_blkclr)
-#define vmaccess (*afs_longcall_procs.LC_vmaccess)
-#define gfs_namei (*afs_longcall_procs.LC_gfs_namei)
-#define getpdev (*afs_longcall_procs.LC_getpdev)
-#define check_mountp (*afs_longcall_procs.LC_check_mountp)
-#define access (*afs_longcall_procs.LC_access)
-#define ovbcopy (*afs_longcall_procs.LC_ovbcopy)
-#define groupmember (*afs_longcall_procs.LC_groupmember)
-#define imin (*afs_longcall_procs.LC_imin)
-#define setjmp (*afs_longcall_procs.LC_setjmp)
-#define gget (*afs_longcall_procs.LC_gget)
-#define grele (*afs_longcall_procs.LC_grele)
-#define gref (*afs_longcall_procs.LC_gref)
-#define xdr_char (*afs_longcall_procs.LC_xdr_char)
-#define smp_lock_once (*afs_longcall_procs.LC_smp_lock_once)
-#define smp_lock_long (*afs_longcall_procs.LC_smp_lock_long)
-#define smp_lock_retry (*afs_longcall_procs.LC_smp_lock_retry)
-#define smp_unlock_long (*afs_longcall_procs.LC_smp_unlock_long)
-#define smp_owner (*afs_longcall_procs.LC_smp_owner)
-#define xinval (*afs_longcall_procs.LC_xinval)
-#define cacheinvalall (*afs_longcall_procs.LC_cacheinvalall)
-#else
 #define iunlock (*afs_longcall_procs.LC_iunlock)
 #define ilock (*afs_longcall_procs.LC_ilock)
 #define iput (*afs_longcall_procs.LC_iput)
@@ -300,7 +216,6 @@ extern struct afs_longcall_procs afs_longcall_procs;
 #define iget (*afs_longcall_procs.LC_iget)
 #define m_more (*afs_longcall_procs.LC_m_more)
 #define _spl1 (*afs_longcall_procs.LC__spl1)
-#endif
 
 #define bcmp (*afs_longcall_procs.LC_bcmp)
 #if	!defined(AFS_DECOSF_ENV)

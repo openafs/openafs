@@ -169,7 +169,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
      * call FindVCache instead of GetVCache since if the file's really
      * gone, we won't be able to fetch the status info anyway.  */
     if (tvc) {
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	afs_BozonLock(&tvc->pvnLock, tvc);
 	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
@@ -183,7 +183,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 		afs_TryToSmush(tvc, acred, 0);
 	}
 	ReleaseWriteLock(&tvc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 	afs_PutVCache(tvc);

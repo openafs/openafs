@@ -659,7 +659,7 @@ incPosition(info, fid, dataSize)
 
     if (info->posCount >= 2147467264) {	/* 2GB - 16K */
 	info->posCount = 0;
-#if (defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV) || defined(AFS_LINUX24_ENV))
+#if (defined(AFS_SUN_ENV) || defined(AFS_LINUX24_ENV))
 	if (!isafile) {
         afs_hyper_t off;
 	    hset64(off, 0, 0);

@@ -519,7 +519,7 @@ saveTextToFile(ut, tbPtr)
 }
 
 
-#if (defined(AFS_DEC_ENV) || defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
+#if (defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
 
 /* mkstemp
  * entry:

@@ -57,11 +57,6 @@ RCSID
 #include <stdio.h>
 #endif
 #include "xdr.h"
-#if defined(KERNEL) && !defined(UKERNEL)
-#ifdef        AFS_DEC_ENV
-#include <afs/longc_procs.h>
-#endif
-#endif
 
 #define LASTUNSIGNED	((u_int)0-1)
 

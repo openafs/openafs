@@ -29,7 +29,7 @@ extern int afs_shuttingdown;
  * Macros to uniquely identify the AFS vfs struct
  */
 #define	AFS_VFSMAGIC		0x1234
-#if    defined(AFS_SUN_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
 #define	AFS_VFSFSID		99
 #else
 #if defined(AFS_SGI_ENV)
@@ -641,7 +641,7 @@ struct vcache {
     krwlock_t rwlock;
     struct cred *credp;
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_bozoLock_t pvnLock;	/* see locks.x */
 #endif
 #ifdef	AFS_AIX32_ENV

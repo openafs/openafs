@@ -44,11 +44,7 @@ extern char *whoami;
 #define	BC_MAXLEVELS	    20
 #define	MAXTAPESATONCE	    10
 
-#ifdef AFS_DEC_ENV
-#define HOSTADDR(sockaddr) (sockaddr)->sin_addr.S_un.S_addr
-#else
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
-#endif
 
 /* local structure to keep track of volumes and the dumps from which
  * they should be restored 

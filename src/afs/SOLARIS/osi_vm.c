@@ -18,7 +18,6 @@ RCSID
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
 
-#if	defined(AFS_SUN5_ENV)
 /* This file contains Solaris VM-related code for the cache manager. */
 
 #include <sys/mman.h>
@@ -199,5 +198,3 @@ osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
     pvn_vplist_dirty(AFSTOV(avc), alen, afs_putapage, B_TRUNC | B_INVAL,
 		     acred);
 }
-
-#endif /* SUN5 && !NCR */

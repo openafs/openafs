@@ -827,11 +827,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 #endif
 }
 
-#ifdef AFS_DEC_ENV
-#define HOSTADDR(sockaddr) (sockaddr)->sin_addr.S_un.S_addr
-#else
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
-#endif
 
 /* dumpPass
  *	Go through the list of volumes to dump, dumping each one. The action

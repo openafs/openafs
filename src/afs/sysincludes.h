@@ -204,7 +204,7 @@ typedef unsigned short etap_event_t;
 #include "h/socketvar.h"
 #include "h/protosw.h"
 
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
 #  include "h/dirent.h"
 #  ifdef	AFS_SUN5_ENV
 #    include "h/sysmacros.h"
@@ -213,11 +213,6 @@ typedef unsigned short etap_event_t;
 #else
 #  include "h/dir.h"
 #endif /* SGI || SUN || HPUX */
-
-#ifdef AFS_DEC_ENV
-#  include "h/smp_lock.h"
-#endif /* AFS_DEC_ENV */
-
 
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV)
 #include "h/user.h"
@@ -234,24 +229,6 @@ typedef unsigned short etap_event_t;
 
 
 /* ----- The following mainly deal with vnodes/inodes stuff ------ */
-#ifdef	AFS_DEC_ENV
-#  include "h/mount.h"
-#  include "machine/psl.h"
-#  include "afs/gfs_vnode.h"
-#endif
-
-#ifdef	AFS_MACH_ENV
-#    include <vfs/vfs.h>
-#    include <vfs/vnode.h>
-#    include <sys/inode.h>
-#    include <sys/mount.h>
-#    include <vm/vm_pager.h>
-#    include <kern/mfs.h>
-#    include <mach/vm_param.h>
-#    include <kern/parallel.h>
-#endif /* AFS_MACH_ENV */
-
-#ifndef AFS_DEC_ENV
 #  ifdef	AFS_SUN5_ENV
 #    include "h/statvfs.h"
 #  endif /* AFS_SUN5_ENV */
@@ -312,7 +289,6 @@ MALLOC_DECLARE(M_AFS);
 #    endif /* !AFS_AIX32_ENV */
 #  endif /* AFS_SUN5_ENV */
 #endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
-#endif /* AFS_DEC_ENV */
 
 /* These mainly deal with networking and rpc headers */
 #include "netinet/in.h"
@@ -348,19 +324,19 @@ MALLOC_DECLARE(M_AFS);
 #include "h/tty.h"
 #endif
 
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_MACH_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 
 #  include "h/text.h"
 #endif
 
 
-#if	defined(AFS_AIX_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_AIX_ENV) 
 #  include "h/flock.h"		/* fcntl.h is a user-level include in aix */
 #else
 #  include "h/fcntl.h"
-#endif /* AIX || DEC */
+#endif /* AIX */
 
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
 #  include "h/unistd.h"
 #endif /* SGI || SUN */
 
@@ -413,13 +389,13 @@ MALLOC_DECLARE(M_AFS);
 #include <sys/mbuf.h>
 #include <rpc/types.h>
 
-#ifdef	AFS_ALPHA_ENV
+#ifdef	AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 
 #include <rx/xdr.h>
 #include <sys/proc.h>

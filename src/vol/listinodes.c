@@ -80,9 +80,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#ifdef AFS_DEC_ENV
-#include <sys/time.h>
-#endif /* AFS_DEC_ENV */
 #ifdef	AFS_OSF_ENV
 #include <ufs/inode.h>
 #else /* AFS_OSF_ENV */

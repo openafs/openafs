@@ -299,7 +299,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
 
 	if (tvc) {
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	    afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
 	    ObtainWriteLock(&tvc->lock, 151);
@@ -318,7 +318,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		    afs_TryToSmush(tvc, acred, 0);
 	    }
 	    ReleaseWriteLock(&tvc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 	    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 	    afs_PutVCache(tvc);

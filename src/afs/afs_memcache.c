@@ -17,13 +17,13 @@ RCSID
 #ifndef AFS_LINUX22_ENV
 #include "rpc/types.h"
 #endif
-#ifdef	AFS_ALPHA_ENV
+#ifdef	AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
 
