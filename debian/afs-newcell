@@ -157,6 +157,18 @@ run("vos create $server a root.afs -localauth");
 # bring up client
 run("echo $cell >/etc/openafs/ThisCell");
 run("/etc/init.d/openafs-client force-start");
+my $afs_running = 0;
+open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+while(<MOUNT>) {
+if(m:^AFS:) {
+	$afs_running = 1;
+}
+	}
+unless ($afs_running) {
+print "The AFS client failed to start.\n";
+print  "Please fix whatever problem kept it from running.";
+	exit(1);
+}
 
 print <<eomsg; 
 Now, get tokens as $admin in the $cell cell.  Then, run

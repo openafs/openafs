@@ -1,3 +1,13 @@
+openafs (1.0.4-2) unstable; urgency=low
+
+  * Fix modversions and athlon memcpy mmx bug, closes: #91925
+  * Fix openafs-client to fail rather than starting a useless afsd if we don't have any db servers
+  * If AFS client fails to start for afs-newcell, then complain, closes: #98303
+  * New CellServDB
+  * Fix module builds on non-i386, closes: #100939
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 17 Jun 2001 01:22:37 -0400
+
 openafs (1.0.4-1) unstable; urgency=low
 
   * New upstream version, closes: #92776
