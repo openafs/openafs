@@ -538,8 +538,12 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 
     /* user name is here */
 
-    /* check that ticket will fit */
-    if (MAXKTCTICKETLEN < ticketLen)
+    /* check that ticket will fit 
+	 * this compares the size of the ktc_token allocated by the app
+	 * which might be smaller than the current definition of MAXKTCTICKETLEN
+	 */
+	maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
+	if (maxLen < ticketLen)
 		return KTC_TOOBIG;
 
     /* set return values */
