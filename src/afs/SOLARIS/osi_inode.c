@@ -58,9 +58,13 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
     }
     ufsvfsp = (struct ufsvfs *)vfsp->vfs_data;
 
+#if defined(AFS_SUN57_ENV)
     rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
+#endif
     code = (*ufs_igetp)(vfsp, inode, &ip, credp);
+#if defined(AFS_SUN57_ENV)
     rw_exit(&ufsvfsp->vfs_dqrwlock);
+#endif
 
     if (code) {
 	*perror = BAD_IGET;
@@ -162,10 +166,14 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 
     ufsvfsp = ip->i_ufsvfs;
     rw_enter(&ip->i_rwlock, RW_WRITER);
+#if defined(AFS_SUN57_ENV)
     rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
+#endif
     rw_enter(&ip->i_contents, RW_WRITER);
     code = (*ufs_iallocp)(ip, near_inode, 0, &newip, credp);
+#if defined(AFS_SUN57_ENV)
     rw_exit(&ufsvfsp->vfs_dqrwlock);
+#endif
     rw_exit(&ip->i_rwlock);
 
     AFS_ITIMES(ip);
