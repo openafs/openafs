@@ -1,11 +1,11 @@
-OpenAFS for Windows 1.3.66 Installation Notes
+OpenAFS for Windows 1.3.70 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
 1.2.x release cycle.  While the Unix version was being enhanced and its 
 quality was improving the Windows version stagnated.  The IBM AFS 3.6 product 
 was not designed for the Windows 2000/XP/2003 operating system nor was it 
-constructed with highly disconnected environments in mind.
+architected with highly disconnected environments in mind.
 
 The 1.3.x series of releases not only fixes a large number of bugs in the 1.2 
 series but also attempts to enhance the functionality of the product to better 
@@ -20,8 +20,9 @@ single sign-on capabilities with the Microsoft Windows Kerberos Logon Service.
 
 The 1.3.65 OpenAFS client will directly use Kerberos 5 tickets as tokens if 
 KFW is installed.  It requires that all of the AFS Servers which it 
-communicates support Kerberos 5 tickets. For OpenAFS this is any release 1.2.8 
-or higher.
+communicates support Kerberos 5 tickets.  This requires that all servers 
+be running OpenAFS release 1.2.8 or higher.  Transarc servers do not support
+Kerberos 5 tickets as tokens.
 
 When using a Microsoft Windows Active Directory as your KDC for the AFS cell 
 extremely large tickets may be issued.  If this is your situation you either 
@@ -63,19 +64,20 @@ Freelance mode.  Freelance mode is turned on by default in the OpenAFS.org
 installers.  
 
 A couple of notes about Freelance mode.  First, since the fake root.afs volume 
-is constructed on the fly, when it is first used there will be no entries in 
-the volume.  Do not be concerned. Any attempt to access a valid cell name will 
-automatically result in a new read-only mount point being created in the fake 
-root.afs volume.  These mount points are preserved between service starts in 
-the %WINDIR%\afs_freelance.ini file.  
+is constructed on the fly, when it is first used the only mount points will
+be for the default afs cell.  Do not be concerned.  Any attempt to access a 
+valid cell name will automatically result in a new read-only mount point 
+being created in the fake root.afs volume.  These mount points are preserved 
+between service starts in the HKLM\SOFTWARE\OpenAFS\Client\Freelance registry
+key.
 
-As of 1.3.66, Freelance mode supports read-write mount points in the fake
+As of 1.3.70, Freelance mode supports read-write mount points in the fake
 root.afs volume.  In addition, if the mount point list is empty, mount points
 for "cellname" (ro) and ".cellname" (rw) will be automatically generated.
 
 4. The OpenAFS for Windows client will make use of AFSDB DNS records to 
 discover cell information when it is not located in the local CellServDB file 
-(%WINDIR%\afsdcell.ini).
+(\Program Files\OpenAFS\Client\CellServDB).
 
 5. OpenAFS for Windows 1.3.65 only supports Windows 2000, Windows XP, and 
 Windows 2003.  Windows NT 4.0 and the entire Windows 9x/Me line are not 
@@ -103,7 +105,7 @@ In particular, if you are using this mode it is crucial that new AFS tokens
 not be obtained after the logon session starts except via the AFS Systray tool 
 as started by the AFS Network Provider.  If the AFS Systray tool is stopped 
 you must log off to obtain new tokens.  Do not use external tools such as 
-"aklog.exe" if High Security mode is turned on. As of 1.3.66, OpenAFS supports 
+"aklog.exe" if High Security mode is turned on. As of 1.3.70, OpenAFS supports 
 Authenticated SMB connections which removes the need for High Security mode. 
 DO NOT USE IT!!!!! 
 
@@ -179,26 +181,25 @@ reports.
 
 13. OpenAFS for Windows does not support files larger than 2GB.
 
-14. There are documented problems running the AFS Client on Hyperthreaded 
-Pentium 4 machines.  As of 1.3.66, a registry entry may be created to specify
+14. There are known problems running the AFS Client on Hyperthreaded 
+Pentium 4 machines.  As of 1.3.70, a registry entry may be created to specify
 that the AFS Client Service should only use a single processor.  If you have
 a hyperthreaded system it is strongly advised that this registry value be set.
 See "registry.txt" for details on the MaxCPUs value. 
 
 15. OpenAFS for Windows currently requires the use of TCP based RPC. If the 
 machine is restricted to Local RPC only, you will be unable to store tokens.
-As of 1.3.66, Local RPC is used as the default RPC mechanism for setting 
+As of 1.3.70, Local RPC is used as the default RPC mechanism for setting 
 tokens.  TCP RPC is still used for debugging and other functions.
 
-16. OpenAFS for Windows does not automatically open ports in the Windows 
-Internet Connection Firewall.  You must manually open port 7001 to allow for 
-incoming callback messages to be received by AFS file servers.
+16. As of 1.3.70, OpenAFS for Windows automatically open ports in the Windows 
+Internet Connection Firewall.
 
 17. The OpenAFS for Windows installer by default activates a weak form of 
 encrypted data transfer between the AFS client and the AFS servers.  This
 is often referred to as "crypt" mode.
 
-18. OpenAFS 1.3.66 adds support for authenticated SMB connections using 
+18. OpenAFS 1.3.70 adds support for authenticated SMB connections using 
 either NTLM or GSS SPNEGO (NTLM, Kerberos 5, ...).  In previous versions
 of OpenAFS the SMB connections were unauthenticated which left open the
 door for several security holes which could be used to obtain access to
@@ -220,8 +221,34 @@ a non-MS KDC for authentication, then your KDC administrator will have to
 add these service principals to the list of principals to be maintained
 for each host.
 
-19. As of 1.3.66, the use of INI files for the storage of AFS configuration
-data is no more.  No longer are there any AFS related files stored in the
+SMB Authentication will fail in the following situation.  If you have
+configured the Windows machine to authenticate to a non-Windows realm
+(MIT or Heimdal KDC) and you are using account mapping to map the 
+Kerberos principal to local account name.  If the password for the 
+Kerberos principal and the local machine account are not the same,
+SMB Authentication will fail.  To make AFS accessible to the user one
+of three things must be done:
+
+(1) The user must synchronize the local Windows password with the Kerberos
+    password
+
+(2) The user must login with the local Windows account
+
+(3) The user must attach to the AFS server using the local account credentials.
+    The user can do this either by browsing \\AFS in the Windows Explorer and
+    specify "remember my password" to avoid the need to perform this operation
+    in the future; or the following commands may be executed from the command
+    line:
+
+    NET USE \\AFS /USER:<local-account-name> <password>
+    NET USE \\AFS /SAVECRED
+
+(4) SMB Authentication for OpenAFS must be disabled.  (see registry.txt 
+    for information on how to set the SMBAuthType to NONE.
+
+
+19. As of 1.3.70, INI files are no longer used for the storage of AFS 
+configuration data.  No longer are there any AFS related files stored in the
 %WINDIR% directory.  The CellServDB file is no longer called "afsdsbmt.ini"
 and it is stored in the OpenAFS\Client directory.  The afs_freelance.ini
 and afsdsbmt.ini file data has been moved to the registry.  
@@ -230,13 +257,14 @@ IMPORTANT: while the CellServDB file location and freelance mountpoint
 data will be automatically migrated; there is no mechanism for automatic
 migration of Submounts, Drive Mappings, Active Maps, and CSCPolicy data.
 
-20. As of 1.3.66, the OpenAFS Client is compatible with Windows XP SP2.
-The Internet Connection Firewall will be automatically adjusted to allow
-the receipt of incoming callback messages from the AFS file server.  In 
-addition, the appropriate Back Connection entries are added to the registry
-to allow SMB authentication to be performed across the loopback connection.
+20. As of 1.3.70, the OpenAFS Client is compatible with Windows XP SP2
+and Windows 2003 SP1.  The Internet Connection Firewall will be 
+automatically adjusted to allow the receipt of incoming callback messages 
+from the AFS file server.  In addition, the appropriate Back Connection 
+entries are added to the registry to allow SMB authentication to be 
+performed across the loopback connection.
 
-21. As of 1.3.66, the OpenAFS Client Service supports the CIFS Remote
+21. As of 1.3.70, the OpenAFS Client Service supports the CIFS Remote
 Admin Protocol which provides browsing of server and share information.
 This significantly enhances the functionality of AFS volumes within the
 Explorer Shell.
