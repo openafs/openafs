@@ -39,7 +39,7 @@ configure-stamp:
 	 afslogsdir=/var/log/openafs sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	--prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
 	--localstatedir=/var/lib  afslocaldir=/etc/openafs/server-local \
-	--enable-supergroups --enable-largefile-fileserver
+	--enable-supergroups --enable-largefile-fileserver --enable-debug
 	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
@@ -101,6 +101,8 @@ install: build
 	# No, includes should not have the x bit set
 	find debian/libopenafs-dev/usr/include -type f -print | \
 		xargs chmod a-x
+	# bos gets annoyed if the partitions on /etc/openafs/server-local are too liberal
+	chmod 700 debian/openafs-fileserver/etc/openafs/server-local
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.

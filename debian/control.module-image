@@ -5,7 +5,7 @@ Maintainer: Sam Hartman <hartmans@debian.org>
 Standards-Version: 3.1.1
 
 Package: openafs-modules-=KVERS
-Conflicts: openafs-client (<< 1.3.64)
+Conflicts: openafs-client (<< 1.2.9)
 Provides: openafs-modules2
 Architecture: any
 Recommends: kernel-image-=KVERS (= =KREVS)

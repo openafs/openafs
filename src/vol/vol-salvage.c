@@ -2066,7 +2066,8 @@ DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 		ip->linkCount++;
 	    }
 
-	   Log("%d inodes to process\n",totalInodes); 
+	    if (totalInodes % 10000 == 0)
+		Log("%d inodes to process\n",totalInodes); 
 	}
 #ifdef AFS_NAMEI_ENV
 	while (dec_VGLinkH > 0) {

@@ -20,7 +20,7 @@ Description: The AFS distributed filesystem- client support
 Package: openafs-kpasswd
 Priority: extra
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, openafs-client (= ${Source-Version})
+Depends: ${shlibs:Depends}, openafs-client
 Conflicts: krb5-user, heimdal-clients, kerberos4kth-clients
 Description: The AFS distributed filesystem- old password changing
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -34,7 +34,7 @@ Description: The AFS distributed filesystem- old password changing
 
 Package: openafs-fileserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
+Depends: ${shlibs:Depends}, debconf, openafs-client
 Recommends: ntp
 Description: The AFS distributed filesystem- file server
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -46,7 +46,7 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386 powerpc sparc alpha s390 ia64 hppa amd64
-Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5
+Depends: ${shlibs:Depends}, debconf, openafs-fileserver, openafs-client, perl5
 Conflicts: openafs-ptutil
 Replaces: openafs-ptutil
 Provides: openafs-ptutil
