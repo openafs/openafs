@@ -28,7 +28,7 @@ VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
 
-LWPOBJS=lock.o fasttime.o
+LWPOBJS=lock.o fasttime.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
@@ -99,6 +99,9 @@ lock.o: ${LWP}/lock.c
 	${CRULE1};
 
 fasttime.o: ${LWP}/fasttime.c
+	${CRULE1};
+
+threadname.o: ${LWP}/threadname.c
 	${CRULE1};
 
 aclprocs.o: ${LIBACL}/aclprocs.c
