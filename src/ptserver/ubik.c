@@ -29,13 +29,15 @@ extern int dbase_fd;
 struct ubik_dbase *dbase;
 
 int
-ubik_ServerInit()
+ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
+                char *pathName, struct ubik_dbase **dbase)
 {
     return (0);
 }
 
 int
-ubik_BeginTrans()
+ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, 
+		struct ubik_trans **transPtr)
 {
     static int init = 0;
     struct ubik_hdr thdr;
@@ -54,56 +56,59 @@ ubik_BeginTrans()
 }
 
 int
-ubik_BeginTransReadAny()
+ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
+                       struct ubik_trans **transPtr)
 {
     return (0);
 }
 
 int
-ubik_AbortTrans()
+ubik_AbortTrans(register struct ubik_trans *transPtr)
 {
     return (0);
 }
 
 int
-ubik_EndTrans()
+ubik_EndTrans(register struct ubik_trans *transPtr)
 {
     return (0);
 }
 
 int
-ubik_Tell()
+ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
+          afs_int32 * position)
 {
     return (0);
 }
 
 int
-ubik_Truncate()
+ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
 {
     return (0);
 }
 
 long
-ubik_SetLock()
+ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
+             int atype)
 {
     return (0);
 }
 
 int
-ubik_WaitVersion()
+ubik_WaitVersion(register struct ubik_dbase *adatabase,
+                 register struct ubik_version *aversion)
 {
     return (0);
 }
 
 int
-ubik_CacheUpdate()
+ubik_CacheUpdate(register struct ubik_trans *atrans)
 {
     return (0);
 }
 
 int
-panic(a, b, c, d)
-     char *a, *b, *c, *d;
+panic(char *a, char *b, char *c, char *d)
 {
     printf(a, b, c, d);
     abort();
@@ -112,9 +117,7 @@ panic(a, b, c, d)
 }
 
 int
-ubik_GetVersion(dummy, ver)
-     int dummy;
-     struct ubik_version *ver;
+ubik_GetVersion(int dummy, struct ubik_version *ver)
 {
     memset(ver, 0, sizeof(struct ubik_version));
     return (0);
@@ -122,10 +125,7 @@ ubik_GetVersion(dummy, ver)
 
 
 int
-ubik_Seek(tt, afd, pos)
-     struct ubik_trans *tt;
-     long afd;
-     long pos;
+ubik_Seek(struct ubik_trans *tt, long afd, long pos)
 {
     if (lseek(dbase_fd, pos + HDRSIZE, 0) < 0) {
 	perror("ubik_Seek");
@@ -135,10 +135,7 @@ ubik_Seek(tt, afd, pos)
 }
 
 int
-ubik_Write(tt, buf, len)
-     struct ubik_trans *tt;
-     char *buf;
-     long len;
+ubik_Write(struct ubik_trans *tt, char *buf, long len)
 {
     int status;
 
@@ -151,10 +148,7 @@ ubik_Write(tt, buf, len)
 }
 
 int
-ubik_Read(tt, buf, len)
-     struct ubik_trans *tt;
-     char *buf;
-     long len;
+ubik_Read(struct ubik_trans *tt, char *buf, long len)
 {
     int status;
 
@@ -182,8 +176,8 @@ struct rx_securityClass *ubik_sc[3];
 
 /* Other declarations */
 
-int
-afsconf_GetNoAuthFlag()
+int 
+afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 {
     return (1);
 }
