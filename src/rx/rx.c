@@ -143,6 +143,7 @@ static unsigned int rxi_rpc_process_stat_cnt;
  * to ease NT porting
  */
 
+extern pthread_mutex_t rx_stats_mutex;
 extern pthread_mutex_t rxkad_stats_mutex;
 extern pthread_mutex_t des_init_mutex;
 extern pthread_mutex_t des_random_mutex;
@@ -166,6 +167,8 @@ static pthread_mutex_t rx_debug_mutex;
 
 static void rxi_InitPthread(void) {
     assert(pthread_mutex_init(&rx_clock_mutex,
+			      (const pthread_mutexattr_t*)0)==0);
+    assert(pthread_mutex_init(&rx_stats_mutex,
 			      (const pthread_mutexattr_t*)0)==0);
     assert(pthread_mutex_init(&rxi_connCacheMutex,
 			      (const pthread_mutexattr_t*)0)==0);
@@ -397,8 +400,6 @@ int rx_Init(u_int port)
     rxi_InitializeThreadSupport();
 #endif
 
-    MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex",MUTEX_DEFAULT,0);
-
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
 
@@ -413,6 +414,7 @@ int rx_Init(u_int port)
 #ifdef RX_LOCKS_DB
     rxdb_init();
 #endif /* RX_LOCKS_DB */
+    MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex",MUTEX_DEFAULT,0);
     MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats",MUTEX_DEFAULT,0);
     MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock",MUTEX_DEFAULT,0);
     MUTEX_INIT(&freeSQEList_lock, "freeSQEList lock",MUTEX_DEFAULT,0);
