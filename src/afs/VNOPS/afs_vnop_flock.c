@@ -496,7 +496,7 @@ struct AFS_UCRED *acred; {
     AFS_STATCNT(afs_lockctl);
     if (code = afs_InitReq(&treq, acred)) return code;
     afs_InitFakeStat(&fakestate);
-    code = afs_EvalFakeStat(&fakestate, &avc, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
 	afs_PutFakeStat(&fakestate);
 	return code;
