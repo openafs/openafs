@@ -92,7 +92,7 @@ setup:
 			ln -fs ../Makefile $${KDIR}/Makefile ; \
 			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
 <i386_linux22 i386_linux24>
-			sh ./redhat.sh ${LINUX_VERS} $${KDIR}/Makefile.extradefs; \
+			sh ./redhat.sh ${LINUX_SRCDIR}$$v $${KDIR}/Makefile.extradefs; \
 <all>
 		done \
 	done
