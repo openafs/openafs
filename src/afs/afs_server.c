@@ -282,7 +282,7 @@ static void CheckVLServer(sa, areq)
 
     AFS_STATCNT(CheckVLServer);
     /* Ping dead servers to see if they're back */
-    if (!(aserver->flags & SRVR_ISDOWN) || (aserver->flags & SRVR_ISGONE))
+    if (!((aserver->flags & SRVR_ISDOWN) || (sa->sa_flags & SRVADDR_ISDOWN)) || (aserver->flags & SRVR_ISGONE))
 	return;
     if (!aserver->cell)
 	return;	/* can't do much */
