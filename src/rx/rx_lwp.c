@@ -34,6 +34,7 @@
 # include "rx_globals.h"
 # include <lwp.h>
 
+#define MAXTHREADNAMELENGTH 64
 
 int debugSelectFailure;	/* # of times select failed */
 /*
@@ -62,6 +63,16 @@ static void rx_ListenerProc(void *dummy);
 void rxi_Delay(int sec)
 {
     IOMGR_Sleep(sec);
+}
+
+static int quitListening = 0;
+
+/* This routine will kill the listener thread, if it exists. */
+void
+rxi_StopListener()
+{
+    quitListening = 1;
+    rxi_ReScheduleEvents();
 }
 
 /* This routine will get called by the event package whenever a new,
@@ -128,10 +139,19 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
     struct timeval tv, *tvp;
     int i, code;
+    PROCESS pid;
+    char name[MAXTHREADNAMELENGTH] = "srv_0";
 
     clock_NewTime();
     lastPollWorked = 0;
     nextPollTime = 0;
+    code = LWP_CurrentProcess(&pid);
+    if (code) {
+        fprintf(stderr, "rxi_Listener: Can't get my pid.\n");
+        exit(1);
+    }
+    rx_listenerPid = pid;
+    swapthreadname(pid, "listener", &name);
 
     for (;;) {
 	/* Grab a new packet only if necessary (otherwise re-use the old one) */
@@ -174,6 +194,11 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 	    code = IOMGR_Select(rx_maxSocketNumber+1, rfds, 0, 0, tvp);
 	}
 	lastPollWorked = 0;	/* default is that it didn't find anything */
+
+	if (quitListening) {
+	    quitListening = 0;
+	    LWP_DestroyProcess(pid);
+	}
 
 	switch(code) {
 	    case 0: 
