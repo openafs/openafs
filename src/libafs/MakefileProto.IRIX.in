@@ -358,31 +358,31 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	        echo Building directory: $$dir; \
 		case $$p in \
 		IP19)   CPU_KDEFS="${IP19_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_32}";; \
+			CPU_LDFLAGS="${LDFLAGS_32}";; \
 		IP20)   CPU_KDEFS="${IP20_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_32}";; \
+			CPU_LDFLAGS="${LDFLAGS_32}";; \
 		IP21)   CPU_KDEFS="${IP21_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP22_4K)	CPU_KDEFS="${IP22_4K_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_32}";; \
+			CPU_LDFLAGS="${LDFLAGS_32}";; \
 		IP22_5K)	CPU_KDEFS="${IP22_5K_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_32}";; \
+			CPU_LDFLAGS="${LDFLAGS_32}";; \
 		IP25)   CPU_KDEFS="${IP25_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP26)   CPU_KDEFS="${IP26_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP27) 	CPU_KDEFS="${IP27_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP28)   CPU_KDEFS="${IP28_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP30)   CPU_KDEFS="${IP30_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP32_5K)	CPU_KDEFS="${IP32_5K_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_32}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP32_10K)	CPU_KDEFS="${IP32_10K_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		IP35)   CPU_KDEFS="${IP35_KDEFS}"; \
-			LDFLAGS="${LDFLAGS_64}";; \
+			CPU_LDFLAGS="${LDFLAGS_64}";; \
 		*) echo Unknown IP number $$p ; exit 1 ;; \
 		esac ;\
 		case $$t in \
@@ -392,9 +392,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		STATIC) echo X $${CPU_KDEFS} | sed 's/^X//' > $$dir/CPU_KDEFS;; \
 		esac ;\
 		export CPU_KDEFS ;\
-		export LDFLAGS ;\
+		export CPU_LDFLAGS ;\
 		cd $$dir ; \
-		$(MAKE) IPNO=$$p $@_$$t.libafs || exit $$?; \
+		$(MAKE) LDFLAGS="$${CPU_LDFLAGS}" IPNO=$$p $@_$$t.libafs || exit $$?; \
 		cd ../ ; \
 	  done; \
 	done
