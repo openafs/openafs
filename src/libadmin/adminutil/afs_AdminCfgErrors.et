@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table af
+error_table AF
 	ec ADMCFGNOTSUPPORTED, "the specified configuration option is not yet supported"
 	ec ADMCFGHOSTNAMENULL, "the host name parameter cannot be NULL"
 	ec ADMCFGHOSTNAMETOOLONG, "the host name parameter exceeds the maximum allowed length"

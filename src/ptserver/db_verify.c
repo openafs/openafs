@@ -1044,8 +1044,8 @@ WorkerBee (as, arock)
     char *recreateFile;
     struct misc_data misc;		/* info & statistics */
 
-    initialize_pt_error_table();
-    initialize_u_error_table();
+    initialize_PT_error_table();
+    initialize_U_error_table();
     
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
     memset(&misc, 0, sizeof(misc));

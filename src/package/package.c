@@ -338,7 +338,7 @@ main(argc, argv)
     /*
      * Set up the appropriate error tables.
      */
-    initialize_cmd_error_table();
+    initialize_CMD_error_table();
 
     /*
      * Parse command line switches & execute the command, then get the

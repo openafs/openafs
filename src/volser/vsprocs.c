@@ -232,12 +232,12 @@ PrintError(msg, errcode)
 
 		afs_int32 offset;
 
-		initialize_ka_error_table();
-		initialize_rxk_error_table();
-		initialize_ktc_error_table();
-		initialize_acfg_error_table();
-		initialize_cmd_error_table();
-		initialize_vl_error_table();
+		initialize_KA_error_table();
+		initialize_RXK_error_table();
+		initialize_KTC_error_table();
+		initialize_ACFG_error_table();
+		initialize_CMD_error_table();
+		initialize_VL_error_table();
 		
 		offset = errcode & ((1<<ERRCODE_RANGE)-1);
 		fprintf(STDERR,"%s: %s\n",error_table_name (errcode), error_message (errcode));

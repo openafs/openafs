@@ -339,7 +339,7 @@ main(argc, argv)
 #endif
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
-    initialize_budb_error_table();
+    initialize_BUDB_error_table();
     initializeArgHandler();
 
     /* Initialize dirpaths */

@@ -193,7 +193,7 @@ char **argv;
     }
 
     Initdb();
-    initialize_pt_error_table();
+    initialize_PT_error_table();
 
     if (wflag) {
 	struct usr_list *u;

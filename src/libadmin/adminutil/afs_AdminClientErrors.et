@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table al
+error_table AL
         ec ADMCLIENTCELLHANDLENULL, "the cell handle parameter cannot be NULL"
         ec ADMCLIENTCELLHANDLEPNULL, "the cell handle reference parameter cannot be NULL"
         ec ADMCLIENTCELLHANDLEBADMAGIC, "the server handle parameter failed to pass the magic number test.  Most likely the server handle is invalid, or has been overwritten by mistake."

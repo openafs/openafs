@@ -184,7 +184,7 @@ char **argv;
 #endif
     whoami = argv[0];
 
-    initialize_pt_error_table();
+    initialize_PT_error_table();
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     cell = 0;

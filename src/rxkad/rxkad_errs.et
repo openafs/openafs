@@ -10,7 +10,7 @@
 # NOTE: RXKADNOAUTH value is hardcoded in audit/audit.h, so if you make
 # changes here, make sure that audit/audit.h is kept up to date.
 
-error_table rxk
+error_table RXK
   ec RXKADINCONSISTENCY, "Security module structure inconsistent"
   ec RXKADPACKETSHORT, "Packet too short for security challenge"
   ec RXKADLEVELFAIL, "Security level negotiation failed"

@@ -9,7 +9,7 @@
 
 # Backup Tape Module error table
 
-error_table butm
+error_table BUTM
 	ec BUTM_OLDINTERFACE, "interface incompatible"
 	ec BUTM_NOMOUNT, "there is not an opened tape"
 	ec BUTM_PARALLELMOUNTS, "multiple simultaneous opens not permitted"

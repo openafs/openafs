@@ -147,7 +147,7 @@ ubik.o: ubik.c ${INCLS}
 
 prerror.h: pterror.h
 	${INSTALL} $? $@
-	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt' >> $@
+	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_PT' >> $@
 
 #
 # Installation targets

@@ -10,7 +10,7 @@
 # NOTE: VOLSERBAD_ACCESS value is hardcoded in audit/audit.h, so if you
 # make changes here, make sure that audit/audit.h is kept up to date.
 
-error_table vols
+error_table VOLS
 	ec VOLSERTRELE_ERROR, "internal error releasing transaction"
 	ec VOLSERNO_OP, "unknown internal error"
 	ec VOLSERREAD_DUMPERROR, "badly formatted dump"

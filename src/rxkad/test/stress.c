@@ -265,9 +265,9 @@ void main (argc, argv)
 
     whoami = argv[0];
 
-    initialize_rxk_error_table();
-    initialize_rks_error_table();
-    initialize_cmd_error_table();
+    initialize_RXK_error_table();
+    initialize_RKS_error_table();
+    initialize_CMD_error_table();
 
     code = rx_Init (0);
     rx_SetRxDeadTime(120);

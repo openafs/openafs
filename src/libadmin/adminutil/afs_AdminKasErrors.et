@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table ak
+error_table AK
         ec ADMKASSERVERHANDLENULL, "the server handle parameter cannot be NULL"
         ec ADMKASSERVERHANDLEBADMAGIC, "the server handle parameter failed to pass the magic number test.  Most likely the server handle is invalid, or has been overwritten by mistake."
         ec ADMKASSERVERHANDLENOTVALID, "the server handle parameter is marked invalid"

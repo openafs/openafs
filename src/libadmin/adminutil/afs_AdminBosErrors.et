@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table ab
+error_table AB
         ec ADMBOSSERVERNAMENULL, "the bos server name cannot be NULL"
         ec ADMBOSSERVERHANDLEPNULL, "the bos server handle cannot be NULL"
         ec ADMBOSSERVERHANDLENULL, "the bos server handle cannot be NULL"

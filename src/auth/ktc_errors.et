@@ -9,7 +9,7 @@
 
 # Kerberos Ticket Cache error table
 
-error_table ktc
+error_table KTC
   ec KTC_ERROR, "an unexpected error was encountered"
   ec KTC_TOOBIG, "a buffer was too small for the response"
   ec KTC_INVAL, "an invalid argument was passed in"

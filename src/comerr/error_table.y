@@ -276,9 +276,7 @@ int char_to_num(char c)
 }
 
 void set_table_num(char *string)
-{       char ucname[6];			/* I think 5 is enough but et_name.c used 6... */
-	extern char *ucstring();
-
+{
         if (msfile) {
 	    set_table_1num(string);
 	    return;
@@ -289,7 +287,6 @@ void set_table_num(char *string)
 		string[4] = '\0';
 		fprintf(stderr, "to %s\n", string);
 	}
-	string = ucstring (ucname, string, sizeof(ucname));
 	if (char_to_num (string[0]) > char_to_num ('z')) {
 		fprintf (stderr, "%s%s%s%s",
 			 "First character of error table name must be ",

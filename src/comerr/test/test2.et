@@ -1,4 +1,4 @@
-	error_table	quux
+	error_table	QUUX
 
 	ec	FOO_ERR, "foo"
 

@@ -340,12 +340,12 @@ int main(argc, argv)
     register struct cmd_syndesc *ts;
     long code;
 
-    initialize_u_error_table();
-    initialize_cmd_error_table();
-    initialize_rxk_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
-    initialize_ka_error_table();
+    initialize_U_error_table();
+    initialize_CMD_error_table();
+    initialize_RXK_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
+    initialize_KA_error_table();
 
     ts = cmd_CreateSyntax (0, Main, 0, "Main program");
     /* 0 */ cmd_AddParm (ts, "-number", CMD_SINGLE, CMD_OPTIONAL,

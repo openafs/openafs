@@ -59,25 +59,25 @@ static int error_init_done;
 
 static void init_once(void) {
 
-    initialize_ka_error_table();
-    initialize_rxk_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
-    initialize_cmd_error_table();
-    initialize_vl_error_table();
-    initialize_pt_error_table();
-    initialize_bz_error_table();
-    initialize_u_error_table();
-    initialize_ab_error_table();
-    initialize_af_error_table();
-    initialize_al_error_table();
-    initialize_ac_error_table();
-    initialize_ak_error_table();
-    initialize_am_error_table();
-    initialize_ap_error_table();
-    initialize_au_error_table();
-    initialize_av_error_table();
-    initialize_vols_error_table();
+    initialize_KA_error_table();
+    initialize_RXK_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
+    initialize_CMD_error_table();
+    initialize_VL_error_table();
+    initialize_PT_error_table();
+    initialize_BZ_error_table();
+    initialize_U_error_table();
+    initialize_AB_error_table();
+    initialize_AF_error_table();
+    initialize_AL_error_table();
+    initialize_AC_error_table();
+    initialize_AK_error_table();
+    initialize_AM_error_table();
+    initialize_AP_error_table();
+    initialize_AU_error_table();
+    initialize_AV_error_table();
+    initialize_VOLS_error_table();
     error_init_done = 1;
 }
 
