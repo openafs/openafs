@@ -1272,7 +1272,9 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	char *var;
 	char temp[1024];
 	DWORD sizeTemp;
+#ifdef DJGPP
     char sbmtpath[MAX_PATH];
+#endif
     char *p, *q;
 	HKEY parmKey;
 	DWORD code;

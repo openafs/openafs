@@ -767,17 +767,32 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	return 0;
 }
 
+#include <userenv.h>
 #include <Winwlx.h>
+#include "lanahelper.h"
 
-VOID AFS_Logoff_Event( 
-    PWLX_NOTIFICATION_INFO pInfo )
+VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
 {
     DWORD code;
-    if (code = ktc_ForgetAllTokens())
-        DebugEvent(NULL,"AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
-    else
-        DebugEvent0("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens succeeded");
+    TCHAR profileDir[256] = TEXT("");
+    TCHAR uncprefix[64] = TEXT("\\\\");
+    DWORD  len;
+
+    len = 256;
+    lana_GetNetbiosName(&uncprefix[2], LANA_NETBIOS_NAME_FULL);
+
+    if ( GetUserProfileDirectory(pInfo->hToken, profileDir, &len) ) {
+        if (_tcsnicmp(uncprefix, profileDir, _tcslen(uncprefix))) {
+            if (code = ktc_ForgetAllTokens())
+                DebugEvent(NULL,"AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+            else
+                DebugEvent0("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens succeeded");
+        } else {
+            DebugEvent0("AFS AfsLogon - AFS_Logoff_Event - Tokens left in place; profile in AFS");
+        }
+    }
 }   
+
 
 
 

@@ -218,6 +218,7 @@ LOGON_DLLLIBS =\
 	$(DESTDIR)\lib\libafsconf.lib \
     $(DESTDIR)\lib\afsrxkad.lib \
     $(DESTDIR)\lib\afsdes.lib \
+    $(DESTDIR)\lib\lanahelper.lib \
     $(AFSKFWLIB)
 
 LOGON_DLLSDKLIBS =\
@@ -228,7 +229,8 @@ LOGON_DLLSDKLIBS =\
 	oleaut32.lib \
 	ole32.lib \
 	adsiid.lib \
-	activeds.lib
+	activeds.lib \
+    userenv.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def $(LOGON_DLLSDKLIBS)
