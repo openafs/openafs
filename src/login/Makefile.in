@@ -74,13 +74,13 @@ all: login login.krb
 
 login:	${OBJS} ${LIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
+	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
 	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
 	esac 
 
 login.krb: ${KOBJS} ${KLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
+	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
 	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
 	esac 
 

@@ -102,11 +102,11 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 			esac;; \
 		sun4_52 | sun4_53 | sun4c_52 | sun4c_53 | sun4m_52 | sun4m_53 | sun4m_54 | sun4_54 | sun4c_54 | sunx86_54) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		sun4x_57 ) \
+		sun*_57 ) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		sun4x_58 ) \
+		sun*_58 ) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		sun4x_59 ) \
+		sun*_59 ) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
                         ${INSTALL} -f ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\

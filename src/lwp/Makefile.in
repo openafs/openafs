@@ -58,7 +58,7 @@ process.o	: process.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
 		$(CC) -c -I${TOP_INCDIR} ${srcdir}/process.s;; \
-	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
+	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_5?) \
 		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \

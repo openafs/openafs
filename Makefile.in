@@ -137,7 +137,7 @@ comerr: util
 
 cmd: comerr
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
+	sgi_6* | sun*_57 | sun*_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
@@ -244,7 +244,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -266,7 +266,7 @@ null: project
 ${TOP_LIBDIR}/libtermlib.a: 
 	$(RM) -f ${TOP_LIBDIR}/libtermlib.a
 	case ${SYS_NAME} in \
-	rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
+	rs_aix* | sun4x_* | sunx86_* | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
 		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	*) \
 		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
@@ -315,7 +315,7 @@ login: project kauth rxkad
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	parisc_linux24) \
 		echo Skipping pam/login for parisc_linux24 ;; \
-	sun4x_* | hp_ux11* | *linux* | *fbsd* ) \
+	sun4x_* | sunx86_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
 	ppc_darwin* | *_obsd* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
@@ -415,7 +415,7 @@ butc: project bubasics butm budb bucoord cmd
 
 tbutc: project bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
@@ -438,7 +438,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -446,7 +446,7 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -466,7 +466,7 @@ libadmin_real:
 
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
 			$(MAKE) libadmin_real ;; \
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
@@ -748,7 +748,7 @@ package.files: package
 ntp: project volser
 	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
-		sun4x_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
+		sun4x_58 | sunx86_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
 		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 		esac ;; \
 	*)	echo skipping deprecated target: ntp ;; \

@@ -62,7 +62,7 @@ all: ${MAN}
 
 ftpd: ${OBJS} ${LIBS}
 	case ${SYS_NAME} in \
-	sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
+	sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_*) \
 		${CC} -o $@ ${OBJS} ${LIBS} ${XLIBS} -lsocket -lnsl -lauth -ldl ;; \
 	rs_aix*) \
 		${CC} -o $@ ${OBJS} ${LIBS} ${XLIBS} -ls  ;; \

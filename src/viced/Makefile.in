@@ -110,7 +110,7 @@ cbd: cbd.o
 
 ${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*) \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
 	echo ${INSTALL} -ns $? $@ ; \
@@ -128,7 +128,7 @@ clean:
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*) \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
 	echo ${INSTALL} -ns $? $@ ; \

@@ -110,7 +110,7 @@ clean:
 
 install:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
@@ -121,7 +121,7 @@ install:
 include ../config/Makefile.version
 dest:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DEST}/etc/butc ; \

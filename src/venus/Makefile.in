@@ -109,7 +109,7 @@ ${DEST}/etc/kdump: kdump
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
-	sun4x_5[78] ) \
+	sun4x_5[78]|sunx86_5[78] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DEST}/etc/kdump32;; \
 	*linux* ) \
@@ -125,7 +125,7 @@ ${DEST}/etc/kdump: kdump
 ${DEST}/etc/kdump64: kdump64
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[78] | hp_ux11* ) \
+	sun4x_5[78] | hp_ux11* |sunx86_5[78] ) \
 		${INSTALL} -s $? $@ ;;\
 	* ) \
 		echo skipping kdump64 for ${SYS_NAME} ;; \
@@ -223,16 +223,16 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[78] | hp_ux11* ) \
+	sun4x_5[78] | hp_ux11* |sunx86_5[78] ) \
 		${CC} -g -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c ${srcdir}/kdump.c ;; \
 	esac
 
 kdump:  kdump.o
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
+	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_5? ) \
 		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
-	sun4x_5? ) \
+	sun4x_5? |sunx86_5? ) \
 		${CC} -g -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
@@ -266,7 +266,7 @@ kdump:  kdump.o
 kdump64 : kdump64.o
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[78] | hp_ux11* )  \
+	sun4x_5[78] | hp_ux11* |sunx86_5[78] )  \
 		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
@@ -324,7 +324,7 @@ ${DESTDIR}${sbindir}/kdump: kdump
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
 		done ;; \
-	sun4x_5[78] ) \
+	sun4x_5[78] |sunx86_5[78] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}${sbindir}/kdump32;; \
 	*linux* ) \
@@ -339,7 +339,7 @@ ${DESTDIR}${sbindir}/kdump: kdump
 ${DESTDIR}${sbindir}/kdump64: kdump64
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[78] | hp_ux11* ) \
+	sun4x_5[78] | hp_ux11* |sunx86_5[78] ) \
 		${INSTALL} -s $? $@ ;;\
 	* ) \
 		echo skipping kdump64 for ${SYS_NAME} ;; \
