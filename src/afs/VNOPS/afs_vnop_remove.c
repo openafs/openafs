@@ -14,9 +14,7 @@
  * afs_IsWired (DUX)
  * afsremove
  * afs_remove
- *
- * Local:
- * newname
+ * afs_newname
  *
  */
 #include <afsconfig.h>
@@ -193,8 +191,8 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     return (0);
 }
 
-static char *
-newname(void)
+char *
+afs_newname(void)
 {
     char *name, *sp, *p = ".__afs";
     afs_int32 rd = afs_random() & 0xffff;
@@ -412,7 +410,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
 #endif
     {
-	char *unlname = newname();
+	char *unlname = afs_newname();
 
 	ReleaseWriteLock(&adp->lock);
 	if (tdc)
