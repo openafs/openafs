@@ -12,16 +12,13 @@
 
 RCSID("$Header$");
 
-#ifdef KERNEL
 #include "afs_atomlist.h"
 #include "afs_lhash.h"
-#else /* KERNEL */
-#include "afs_atomlist.h"
-#include "afs_lhash.h"
+#ifndef KERNEL
 /* for now, only turn on assertions in user-space code */
 #include <assert.h>
 #define CHECK_INVARIANTS
-#endif /* KERNEL */
+#endif /* !KERNEL */
 
 /* max hash table load factor */
 enum { LOAD_FACTOR = 5 };
