@@ -3984,6 +3984,7 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    call->flags |= RX_CALL_WAIT_PROC;
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_nWaiting++;
+	    rx_nWaited++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
@@ -6217,6 +6218,9 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 	}
 	if (stat->version >= RX_DEBUGI_VERSION_W_GETPEER) {
 	    *supportedValues |= RX_SERVER_DEBUG_ALL_PEER;
+	}
+	if (stat->version >= RX_DEBUGI_VERSION_W_WAITED) {
+	    *supportedValues |= RX_SERVER_DEBUG_WAITED_CNT;
 	}
 
 	stat->nFreePackets = ntohl(stat->nFreePackets);

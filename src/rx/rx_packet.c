@@ -1160,6 +1160,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
 	    tstat.nWaiting = htonl(rx_nWaiting);
+	    tstat.nWaited = htonl(rx_nWaited);
 	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
 			tstat.idleThreads);
 	    MUTEX_EXIT(&rx_serverPool_lock);
