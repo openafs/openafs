@@ -20,10 +20,10 @@ All systems:
 
 Linux:
 - All Linux versions have a bug fix to make writes of files larger than
-  the AFS client cache work in all cases while preserving fixes which
-  prevent some writes from succeeding or failing (including cases where
-  a file write to an over-quota volume is being attempted, a problem
-  affecting all OpenAFS versions since release from IBM).
+  the AFS client cache work. This undoes a fix which attempted to correct
+  a problem where some writes neither succeeded nor failed
+  (including cases where a file write to an over-quota volume is being 
+  attempted, a problem affecting all OpenAFS versions since release from IBM).
 - Linux 2.2 PowerPC should install correctly again
 
 Digital UNIX:
