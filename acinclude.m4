@@ -23,6 +23,8 @@ AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( bos-new-config,
 [  --enable-bos-new-config	 	enable bosserver pickup of BosConfig.new on restarts],, enable_bos_new_config="no")
+AC_ARG_ENABLE( largefile-fileserver,
+[  --enable-largefile-fileserver        enable large file support in fileserver],, enable_largefile_fileserver="no")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
 AC_ARG_ENABLE( supergroups,
@@ -768,6 +770,10 @@ fi
 
 if test "$enable_bos_new_config" = "yes"; then
 	AC_DEFINE(BOS_NEW_CONFIG, 1, [define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup])
+fi
+
+if test "$enable_largefile_fileserver" = "yes"; then
+	AC_DEFINE(AFS_LARGEFILE_ENV, 1, [define if you want large file fileserver])
 fi
 
 if test "$enable_namei_fileserver" = "yes"; then

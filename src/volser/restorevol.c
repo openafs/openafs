@@ -147,7 +147,7 @@ readdata(buffer, size)
 	    if (code < 0)
 		fprintf(stderr, "Code = %d; Errno = %d\n", code, errno);
 	    else
-		fprintf(stderr, "Read %d bytes out of %d\n", code, size);
+		fprintf(stderr, "Read %d bytes out of %lld\n", code, (afs_uintmax_t)size);
 	}
 	if ((code >= 0) && (code < BUFSIZE))
 	    buffer[size] = 0;	/* Add null char at end */
