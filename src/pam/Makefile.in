@@ -46,7 +46,7 @@ LDFLAGS = ${SHLIB_LDFLAGS}
 INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}
 CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
 
-all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
+all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} $(PAM_CFLAGS) -c afs_setcred.c -o afs_setcred.o
@@ -117,7 +117,7 @@ test_pam: test_pam.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-install:  ${DESTDIR}${libdir}/pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
+install:  ${DESTDIR}${libdir}/pam_afs.so.1 
 
 ${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
@@ -166,5 +166,5 @@ ${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
 		${INSTALL} $? $@ ;; \
 	esac
 
-dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
+dest:  ${DEST}/lib/pam_afs.so.1
 
