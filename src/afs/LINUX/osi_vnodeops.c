@@ -1384,7 +1384,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     uio_t tuio;
     struct iovec iovec;
     struct inode *ip = FILE_INODE(fp);
-    int cnt = atomic_read(&pp->count);
+    int cnt = page_count(pp);
     struct vcache *avc = ITOAFS(ip);
 
     AFS_GLOCK();
@@ -1529,7 +1529,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     credp = crref();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
 
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
@@ -1551,7 +1551,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     code = code ? -code : count - tuio.uio_resid;
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
     crfree(credp);
@@ -1590,7 +1590,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
     credp = crref();
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
     setup_uio(&tuio, &iovec, page_addr + offset,
 	      (afs_offs_t) (pageoff(pp) + offset), count, UIO_WRITE,
@@ -1602,7 +1602,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     code = code ? -code : count - tuio.uio_resid;
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
     AFS_GUNLOCK();
