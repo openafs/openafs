@@ -613,6 +613,8 @@ restart:
 		tdc->dflags |= DFEntryMod;
 		ReleaseWriteLock(&tdc->lock);
 		afs_PutDCache(tdc);
+		/* Mark the entry as released */
+		dclist[i] = NULL;
 	    }
 
 	    if (code) {
@@ -620,6 +622,8 @@ restart:
 		    if ( dcList[j] ) {
 			ReleaseSharedLock(&(dcList[j]->lock));
 		    	afs_PutDCache(dcList[j]);
+			/* Releasing entry */
+			dcList[j] = NULL;
 		    }
 		}
 	    }
@@ -627,6 +631,18 @@ restart:
 	    afs_Trace2(afs_iclSetp, CM_TRACE_STOREALLDCDONE,
 		       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
 	    bytes = 0;
+	  }
+	}
+	
+	/* Release any zero-length dcache entries in our interval
+	 * that we locked but didn't store back above.
+	 */
+	for (j = 0; j<=high; j++) {
+	  tdc = dcList[j];
+	  if (tdc) {
+	    osi_Assert(tdc->f.chunkBytes == 0);
+	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
 	  }
 	}
       } /* if (j) */
