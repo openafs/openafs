@@ -13,12 +13,7 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o ${REGEX_OBJ}
 
-all: includes \
-	${TOP_LIBDIR}/util.a \
-	${TOP_LIBDIR}/libafsutil.a \
-	sys
-
-includes: \
+includes = \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
 	${TOP_INCDIR}/afs/assert.h \
@@ -36,7 +31,12 @@ includes: \
 	${TOP_INCDIR}/afs/afs_lhash.h \
 	${TOP_INCDIR}/potpourri.h 
 
-depinstall: includes
+all: ${includes} \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	sys
+
+depinstall: ${includes}
 
 dirpath.h: ${srcdir}/dirpath.hin Makefile
 	( sed \
@@ -58,67 +58,67 @@ util.a: ${objects} AFS_component_version_number.o
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
-assert.o: ${srcdir}/assert.c includes
+assert.o: ${srcdir}/assert.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/assert.c
 
-casestrcpy.o: ${srcdir}/casestrcpy.c includes
+casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
-hputil.o: ${srcdir}/hputil.c includes
+hputil.o: ${srcdir}/hputil.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
 
-flipbase64.o: ${srcdir}/flipbase64.c includes
+flipbase64.o: ${srcdir}/flipbase64.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
-volparse.o: ${srcdir}/volparse.c includes
+volparse.o: ${srcdir}/volparse.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/volparse.c
 
-snprintf.o: ${srcdir}/snprintf.c includes
+snprintf.o: ${srcdir}/snprintf.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/snprintf.c
 
-base64.o: ${srcdir}/base64.c includes
+base64.o: ${srcdir}/base64.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/base64.c
 
-hostparse.o: ${srcdir}/hostparse.c includes
+hostparse.o: ${srcdir}/hostparse.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
 
-ktime.o: ${srcdir}/ktime.c includes
+ktime.o: ${srcdir}/ktime.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
 
-kreltime.o: ${srcdir}/kreltime.c includes
+kreltime.o: ${srcdir}/kreltime.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
 
-get_krbrlm.o: ${srcdir}/get_krbrlm.c includes
+get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
 
-uuid.o: ${srcdir}/uuid.c includes
+uuid.o: ${srcdir}/uuid.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
 
-sys.o: ${srcdir}/sys.c AFS_component_version_number.c includes
+sys.o: ${srcdir}/sys.c AFS_component_version_number.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/sys.c
 
 sys: sys.o 
 	${CC} ${LDFLAGS} -o sys sys.o
 
-isathing.o: ${srcdir}/isathing.c includes
+isathing.o: ${srcdir}/isathing.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
 
-serverLog.o: ${srcdir}/serverLog.c includes
+serverLog.o: ${srcdir}/serverLog.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
-dirpath.o: ${srcdir}/dirpath.c includes
+dirpath.o: ${srcdir}/dirpath.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
 
-fileutil.o: ${srcdir}/fileutil.c includes
+fileutil.o: ${srcdir}/fileutil.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/fileutil.c
 
-netutils.o: ${srcdir}/netutils.c includes
+netutils.o: ${srcdir}/netutils.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/netutils.c
 
-afs_atomlist.o: ${srcdir}/afs_atomlist.c includes
+afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
 
-afs_lhash.o: ${srcdir}/afs_lhash.c includes
+afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
 #
