@@ -45,6 +45,10 @@ static ctl_table afs_sysctl_table[] = {
      &afs_rx_deadtime, sizeof(afs_int32), 0644, NULL,
      &proc_dointvec}
     ,
+    {6, "bkVolPref",
+     &afs_bkvolpref, sizeof(afs_int32), 0644, NULL,
+     &proc_dointvec}
+    ,
     {0}
 };
 

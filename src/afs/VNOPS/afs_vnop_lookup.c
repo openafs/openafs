@@ -36,6 +36,7 @@ extern struct inode_operations afs_symlink_iops, afs_dir_iops;
 #endif
 
 
+afs_int32 afs_bkvolpref = 0;
 afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
 int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
@@ -63,11 +64,11 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     struct volume *tvp = 0;
     struct VenusFid tfid;
     struct cell *tcell;
-    char *cpos, *volnamep;
-    char type, *buf;
-    afs_int32 prefetchRO;	/* 1=>No  2=>Yes */
-    afs_int32 mtptCell, assocCell, hac = 0;
-    afs_int32 samecell, roname, len;
+    char   *cpos, *volnamep;
+    char   type, *buf;
+    afs_int32  prefetch;          /* 1=>None  2=>RO  3=>BK */
+    afs_int32  mtptCell, assocCell, hac = 0;
+    afs_int32  samecell, roname, len;
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
@@ -111,28 +112,35 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 					       && (avc->fid.Cell ==
 						   assocCell));
 
-    /* Decide whether to prefetch the RO. Also means we want the RO.
-     * If this is a regular mountpoint with a RW volume name and
-     * we cross a cell boundary -or- start from a RO volume, then we will
-     * want to prefetch the RO volume when we get the RW below.
+    /* Decide whether to prefetch the BK, or RO.  Also means we want the BK or
+     * RO.
+     * If this is a regular mountpoint with a RW volume name
+     * - If BK preference is enabled AND we remain within the same cell AND
+     *   start from a BK volume, then we will want to prefetch the BK volume.
+     * - If we cross a cell boundary OR start from a RO volume, then we will
+     *   want to prefetch the RO volume.
      */
-    if ((type == '#') && !roname && (!samecell || (avc->states & CRO))) {
-	prefetchRO = 2;		/* Yes, prefetch the RO */
+    if ((type == '#') && !roname) {
+       if (afs_bkvolpref && samecell && (avc->states & CBackup))
+           prefetch = 3; /* Prefetch the BK */
+       else if (!samecell || (avc->states & CRO))
+           prefetch = 2; /* Prefetch the RO */
+       else
+           prefetch = 1; /* Do not prefetch */
     } else {
-	prefetchRO = 1;		/* No prefetch of the RO */
+       prefetch = 1; /* Do not prefetch */
     }
 
     /* Get the volume struct. Unless this volume name has ".readonly" or
      * ".backup" in it, this will get the volume struct for the RW volume.
      * The RO volume will be prefetched if requested (but not returned).
      */
-    tvp =
-	afs_GetVolumeByName(volnamep, mtptCell, prefetchRO, areq, WRITE_LOCK);
+    tvp = afs_GetVolumeByName(volnamep, mtptCell, prefetch, areq, WRITE_LOCK);
 
     /* If no volume was found in this cell, try the associated linked cell */
     if (!tvp && hac && areq->volumeError) {
-	tvp =
-	    afs_GetVolumeByName(volnamep, assocCell, prefetchRO, areq,
+       tvp =
+	    afs_GetVolumeByName(volnamep, assocCell, prefetch, areq,
 				WRITE_LOCK);
     }
 
@@ -140,7 +148,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      * doesn't exist? Try adding ".readonly" to volname and look for that.
      * Don't know why we do this. Would have still found it in above call - jpm.
      */
-    if (!tvp && (prefetchRO == 2)) {
+    if (!tvp && (prefetch == 2)) {
 	buf = (char *)osi_AllocSmallSpace(strlen(volnamep) + 10);
 
 	strcpy(buf, volnamep);
@@ -164,16 +172,26 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 	return ENODEV;
     }
 
-    /* If we want (prefetched) the RO and it exists, then drop the
-     * RW volume and get the RO. Othewise, go with the RW.
+    /* If we want (prefetched) the BK and it exists, then drop the RW volume
+     * and get the BK.
+     * Otherwise, if we want (prefetched0 the RO and it exists, then drop the
+     * RW volume and get the RO.
+     * Otherwise, go with the RW.
      */
-    if ((prefetchRO == 2) && tvp->roVol) {
-	tfid.Fid.Volume = tvp->roVol;	/* remember RO volume */
+    if ((prefetch == 3) && tvp->backVol) {
+	tfid.Fid.Volume = tvp->backVol;	/* remember BK volume */
 	tfid.Cell = tvp->cell;
 	afs_PutVolume(tvp, WRITE_LOCK);	/* release old volume */
 	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
 	if (!tvp)
 	    return ENODEV;	/* oops, can't do it */
+    } else if ((prefetch >= 2) && tvp->roVol) {
+	tfid.Fid.Volume = tvp->roVol;	/* remember RO volume */
+	tfid.Cell = tvp->cell;
+	afs_PutVolume(tvp, WRITE_LOCK);	/* release old volume */
+	tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK);	/* get the new one */
+	if (!tvp)
+	   return ENODEV;	/* oops, can't do it */
     }
 
     if (avc->mvid == 0)
