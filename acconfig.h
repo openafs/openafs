@@ -30,3 +30,10 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef INODE_SETATTR_NOT_VOID
 #undef STRUCT_INODE_HAS_I_BYTES
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.7 2001/07/14 22:20:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.8 2001/07/16 07:16:46 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -600,14 +600,17 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
 	if (type == T_AFSDB) {
 	    struct hostent *he;
+	    short afsdb_type;
 
+	    afsdb_type = (p[0] << 8) | p[1];
 	    code = dn_expand(answer, answer+len, p+2, host, sizeof(host));
 	    if (code < 0)
 		return AFSCONF_NOTFOUND;
 
-	    /* Do we want to get TTL data for the A record as well? */
-	    he = gethostbyname(host);
-	    if (he && server_num < MAXHOSTSPERCELL) {
+	    if ((afsdb_type == 1) &&
+		(server_num < MAXHOSTSPERCELL) &&
+		/* Do we want to get TTL data for the A record as well? */
+		(he = gethostbyname(host))) {
 		afs_int32 ipaddr;
 		memcpy(&ipaddr, he->h_addr, he->h_length);
 		acellInfo->hostAddr[server_num].sin_addr.s_addr = ipaddr;
