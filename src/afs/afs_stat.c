@@ -70,16 +70,16 @@ void afs_InitStats(void)
     }
 }
 
-int afs_GetCMStat(char **ptr, unsigned *size)
+void afs_GetCMStat(char **ptr, unsigned *size)
 {
 #ifndef AFS_NOSTATS
-      AFS_STATCNT(afs_GetCMStat);
-      *ptr = (char *)&afs_cmstats;
-      *size = sizeof(afs_cmstats);
+    AFS_STATCNT(afs_GetCMStat);
+    *ptr = (char *)&afs_cmstats;
+    *size = sizeof(afs_cmstats);
 #endif /* AFS_NOSTATS */
 }
 
-int afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue)
+void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue)
 {
-  AFS_STATCNT(afs_AddToMean);
+    AFS_STATCNT(afs_AddToMean);
 }

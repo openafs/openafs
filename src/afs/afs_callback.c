@@ -1110,7 +1110,7 @@ int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
 int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
     char **a_name, serverList *a_hosts)
 {
-    afs_int32 i, j;
+    afs_int32 i, j = 0;
     struct cell *tcell;
     char *t_name, *p_name = NULL;
 

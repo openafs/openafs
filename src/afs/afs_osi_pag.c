@@ -329,7 +329,7 @@ int afs_getpag_val()
 /* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
-#else	/* AFS_OSF_ENV || AFS_XBSD_ENV */
+#else
 int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #endif
 {
@@ -340,10 +340,10 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #else	/* AFS_OSF_ENV */
     if ((code = setpag(credpp, aval, &newpag, 0)))
 #endif
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	return (code);
-#else
+#if defined(KERNEL_HAVE_UERROR)
 	return (setuerror(code), code);
+#else
+	return (code);
 #endif
     return 0;
 }

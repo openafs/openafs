@@ -1478,7 +1478,10 @@ struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	register struct vrequest *areq, afs_size_t *aoffset, afs_size_t *alen, 
 	int aflags)
 {
-    register afs_int32 i, code, code1=0, shortcut, adjustsize=0;
+    register afs_int32 i, code, code1=0, shortcut;
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
+    register afs_int32 adjustsize = 0;
+#endif
     int setLocks;
     afs_int32 index;
     afs_int32 us;

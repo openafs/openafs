@@ -405,6 +405,11 @@ extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr);
 /* afs_osi_pag.c */
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp);
+#else
+extern int AddPag(afs_int32 aval, struct AFS_UCRED **credpp);
+#endif
 extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p);
@@ -428,6 +433,7 @@ extern char *osi_AllocSmall(register afs_int32 size, register afs_int32 morespac
 
 /* ARCH/osi_misc.c */
 extern void osi_iput(struct inode *ip);
+extern void afs_osi_SetTime(osi_timeval_t *atv);
 
 /* LINUX/osi_misc.c */
 #if AFS_LINUX24_ENV
@@ -441,7 +447,6 @@ extern void setup_uio(uio_t *uiop, struct iovec *iovecp, char *buf,
                              afs_offs_t pos, int count, uio_flag_t flag,
                              uio_seg_t seg);
 extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t *uiop);
-extern void afs_osi_SetTime(osi_timeval_t *tvp);
 extern void osi_linux_free_inode_pages(void);
 extern void osi_clear_inode(struct inode *ip);
 extern void check_bad_parent(struct dentry *dp);
@@ -599,9 +604,9 @@ extern struct afs_stats_CMPerf afs_stats_cmperf;
 extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
 extern afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 extern void afs_InitStats(void);
-extern int afs_GetCMStat(char **ptr, unsigned *size);
+extern void afs_GetCMStat(char **ptr, unsigned *size);
 #ifndef AFS_NOSTATS
-extern int afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
+extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
 
 
@@ -857,8 +862,8 @@ extern u_short afs_uuid_hash (afsUUID *uuid);
 
 /* MISC PROTOTYPES - THESE SHOULD NOT BE HERE */
 /* MOVE THEM TO APPROPRIATE LOCATIONS */
-extern int RXAFSCB_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
+extern afs_int32 RXAFSCB_ExecuteRequest(struct rx_call *acall);
+extern afs_int32 RXSTATS_ExecuteRequest(struct rx_call *acall);
 
 
 
@@ -867,4 +872,3 @@ extern int RXSTATS_ExecuteRequest();
 #endif
 
 #endif /* _AFS_PROTOTYPES_H_ */
-

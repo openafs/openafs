@@ -824,6 +824,11 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     vm_info_ptr = tvc->v.v_vm_info;
 #endif /* AFS_MACH_ENV */
 
+#if defined(AFS_OBSD_ENV)
+    if (tvc->v)
+	panic("afs_NewVCache(): free vcache with vnode attached");
+#endif
+
 #if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV)
     memset((char *)tvc, 0, sizeof(struct vcache));
 #else
@@ -839,6 +844,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->v.v_vm_info = vm_info_ptr;
     tvc->v.v_vm_info->pager = MEMORY_OBJECT_NULL;
 #endif /* AFS_MACH_ENV */
+#ifdef AFS_OBSD_ENV
+    afs_nbsd_getnewvnode(tvc);		/* includes one refcount */
+    lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
+#endif
     tvc->parentVnode = 0;
     tvc->mvid = NULL;
     tvc->linkData = NULL;
@@ -863,7 +872,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     /* Hold it for the LRU (should make count 2) */
     VN_HOLD(AFSTOV(tvc));
 #else	/* AFS_OSF_ENV */
+#ifndef AFS_OBSD_ENV
     VREFCOUNT_SET(tvc, 1);	/* us */
+#endif	/* AFS_OBSD_ENV */
 #endif	/* AFS_OSF_ENV */
 #ifdef	AFS_AIX32_ENV
     LOCK_INIT(&tvc->pvmlock, "vcache pvmlock");

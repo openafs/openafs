@@ -78,7 +78,7 @@ int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
 	ablocks, afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk, 
 	afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers)
 {
-    register afs_int32 i, preallocs;
+    register afs_int32 i;
     register struct volume *tv;
 
     AFS_STATCNT(afs_CacheInit);
@@ -108,24 +108,28 @@ int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
 
 
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    /*
-     * We want to also reserve space for the gnode struct which is associated
-     * with each vnode (vcache) one; we want to use the pinned pool for them   
-     * since they're referenced at interrupt level.
-     */
-    if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
-      preallocs = astatSize;
-    else {
-      preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
-      if (preallocs <= 0) preallocs = 10;
+    {
+	afs_int32 preallocs;
+
+	/*
+	 * We want to also reserve space for the gnode struct which is associated
+	 * with each vnode (vcache) one; we want to use the pinned pool for them   
+	 * since they're referenced at interrupt level.
+	 */
+	if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
+	    preallocs = astatSize;
+	else {
+	    preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
+	    if (preallocs <= 0) preallocs = 10;
+	}
+	osi_AllocMoreSSpace(preallocs);
     }
-    osi_AllocMoreSSpace(preallocs);
 #endif
     /* 
      * create volume list structure 
      */
-    if ( aVolumes < 50 )     aVolumes = 50;  
-    if (aVolumes > 3000) aVolumes = 3000;
+    if (aVolumes < 50) aVolumes = 50;
+    else if (aVolumes > 3000) aVolumes = 3000;
 
     tv = (struct volume *) afs_osi_Alloc(aVolumes * sizeof(struct volume));
     for (i=0;i<aVolumes-1;i++)
@@ -318,18 +322,18 @@ int afs_InitCacheInfo(register char *afile)
     if (code || !filevp) return ENOENT;
     {
 #if	defined(AFS_SUN56_ENV)
-      struct statvfs64 st;
+	struct statvfs64 st;
 #else
 #if	defined(AFS_HPUX102_ENV)
-      struct k_statvfs st;
+	struct k_statvfs st;
 #else
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
-      struct statvfs st;
+	struct statvfs st;
 #else 
 #if defined(AFS_DUX40_ENV)
-      struct nstatfs st;
+	struct nstatfs st;
 #else
-      struct statfs st;
+	struct statfs st;
 #endif /* DUX40 */
 #endif /* SUN5 SGI */
 #endif /* HP 10.20 */
@@ -337,42 +341,42 @@ int afs_InitCacheInfo(register char *afile)
 
 #if	defined(AFS_SGI_ENV)
 #ifdef AFS_SGI65_ENV
-      VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
-      if (!code) 
+	VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
+	if (!code) 
 #else
-      if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
+	if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
 #endif /* AFS_SGI65_ENV */
-#else /* AFS_SGI_ENV */
+#else  /* AFS_SGI_ENV */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-      if (!VFS_STATVFS(filevp->v_vfsp, &st)) 
+	if (!VFS_STATVFS(filevp->v_vfsp, &st)) 
 #else
 #ifdef	AFS_OSF_ENV
       
-      VFS_STATFS(filevp->v_vfsp, code);
-      /* struct copy */
-      st = filevp->v_vfsp->m_stat;
-      if (code == 0)
-#else	/* AFS_OSF_ENV */
+	VFS_STATFS(filevp->v_vfsp, code);
+	/* struct copy */
+	st = filevp->v_vfsp->m_stat;
+	if (code == 0)
+#else  /* AFS_OSF_ENV */
 #ifdef AFS_AIX41_ENV
-      if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
+	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
 #else
 #ifdef AFS_LINUX20_ENV
-	  {
-	      KERNEL_SPACE_DECL;
-	      TO_USER_SPACE();
+	{
+	    KERNEL_SPACE_DECL;
+	    TO_USER_SPACE();
 
-	      VFS_STATFS(filevp->v_vfsp, &st);
-	      TO_KERNEL_SPACE();
-	  }
+	    VFS_STATFS(filevp->v_vfsp, &st);
+	    TO_KERNEL_SPACE();
+	}
 #else
 #if defined(AFS_DARWIN_ENV)
-        if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
+	if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
 #else 
 #if defined(AFS_XBSD_ENV)
-        if (!VFS_STATFS(filevp->v_mount, &st, curproc))
+	if (!VFS_STATFS(filevp->v_mount, &st, curproc))
 #else 
 	if (!VFS_STATFS(filevp->v_vfsp, &st))  
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 #endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AIX41 */
@@ -380,14 +384,20 @@ int afs_InitCacheInfo(register char *afile)
 #endif /* SUN5 HP10 */
 #endif /* SGI */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-	afs_fsfragsize = st.f_frsize - 1; 
+	    afs_fsfragsize = st.f_frsize - 1; 
 #else
-	afs_fsfragsize = st.f_bsize - 1; 
+	    afs_fsfragsize = st.f_bsize - 1; 
 #endif
     }
 #ifdef AFS_LINUX20_ENV
     cacheInode = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
+#else
+#ifdef AFS_OBSD_ENV
+    cacheInode = VTOI(filevp)->i_number;
+    cacheDev.mp = filevp->v_mount;
+    cacheDev.held_vnode = filevp;
+    AFS_HOLD(filevp);		/* Make sure mount point stays busy. XXX */
 #else
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
@@ -395,6 +405,7 @@ int afs_InitCacheInfo(register char *afile)
     cacheInode = afs_vnodeToInumber(filevp);
     cacheDev.dev = afs_vnodeToDev(filevp);
     afs_cacheVfsp = filevp->v_vfsp;
+#endif /* AFS_OBSD_ENV */
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE((struct vnode *)filevp);
 #endif /* AFS_LINUX22_ENV */
@@ -409,7 +420,7 @@ int afs_InitCacheInfo(register char *afile)
 	    theader.firstCSize == AFS_FIRSTCSIZE &&
 	    theader.otherCSize == AFS_OTHERCSIZE &&
 	    theader.version == AFS_CI_VERSION
-	)
+	    )
 	    goodFile = 1;
     }
     if (!goodFile) {

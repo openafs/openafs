@@ -552,10 +552,14 @@ struct SimpleLocks {
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
 #define	CPSIZE	    2
-#if !defined(AFS_FBSD_ENV)
-#define	vrefCount   v.v_count
-#else
+#if defined(AFS_FBSD_ENV)
 #define vrefCount   v.v_usecount
+#else
+#if defined(AFS_OBSD_ENV)
+#define vrefCount   v->v_usecount
+#else
+#define vrefCount   v.v_count
+#endif /* AFS_OBSD_ENV */
 #endif /* AFS_FBSD_ENV */
 
 #ifdef AFS_LINUX24_ENV
@@ -590,20 +594,25 @@ extern afs_int32 vmPageHog; /* counter for # of vnodes which are page hogs. */
 /*
  * Fast map from vcache to dcache
  */
-struct	vtodc
-	{
-	struct dcache * dc;
-	afs_uint32		stamp;
-	struct osi_file * f;
-	afs_offs_t		minLoc;	/* smallest offset into dc. */
-	afs_offs_t		len;	/* largest offset into dc. */
-	};
+struct vtodc {
+    struct dcache *	dc;
+    afs_uint32		stamp;
+    struct osi_file *	f;
+    afs_offs_t		minLoc;	/* smallest offset into dc. */
+    afs_offs_t		len;	/* largest offset into dc. */
+};
 
 extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
-#define VTOAFS(V) ((struct vcache*)(V))
+#if defined(AFS_OBSD_ENV)
+#define VTOAFS(v) ((struct vcache *)(v)->v_data)
+#define AFSTOV(vc) ((vc)->v)
+#else
+#define VTOAFS(V) ((struct vcache *)(V))
 #define AFSTOV(V) (&(V)->v)
+#endif
+
 #ifdef AFS_LINUX22_ENV
 #define ITOAFS(V) ((struct vcache*)(V))
 #define AFSTOI(V) (struct inode *)(&(V)->v)
@@ -614,7 +623,12 @@ extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
+#if defined(AFS_OBSD_ENV)
+    struct vnode *v;
+    struct lock rwlock;			/* vnode lock */
+#else
     struct vnode v;			/* Has reference count in v.v_count */
+#endif
     struct afs_q vlruq;			/* lru q next and prev */
     struct vcache *nextfree;		/* next on free list (if free) */
     struct vcache *hnext;		/* Hash next */
@@ -678,10 +692,10 @@ struct vcache {
     afs_int32 activeV;
 #endif /* defined(AFS_SUN5_ENV) */
     struct SimpleLocks *slocks;
-    short opens;		    /* The numbers of opens, read or write, on this file. */
-    short execsOrWriters;	    /* The number of execs (if < 0) or writers (if > 0) of
-				       this file. */
-    short flockCount;		    /* count of flock readers, or -1 if writer */
+    short opens;			/* The numbers of opens, read or write, on this file. */
+    short execsOrWriters;		/* The number of execs (if < 0) or writers (if > 0) of
+					   this file. */
+    short flockCount;			/* count of flock readers, or -1 if writer */
     char mvstat;			/* 0->normal, 1->mt pt, 2->root. */
     afs_uint32 states;			/* state bits */
 #if	defined(AFS_SUN5_ENV)
@@ -717,7 +731,7 @@ struct vcache {
     struct AFS_UCRED *uncred;
     int asynchrony;                     /* num kbytes to store behind */
 #ifdef AFS_SUN5_ENV
-    short multiPage;		/* count of multi-page getpages in progress */
+    short multiPage;			/* count of multi-page getpages in progress */
 #endif
 };
 

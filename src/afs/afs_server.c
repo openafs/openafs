@@ -1298,15 +1298,16 @@ static int afs_SetServerPrefs(struct srvAddr *sa)
     }
 #endif
 
+  end: 
 #endif /* USEIFADDR */
 #endif /* AFS_SUN5_ENV */
 #endif /* else AFS_USERSPACE_IP_ADDR */
 
-  end: 
     if (sa) sa->sa_iprank += afs_randomMod15();
 
-return 0;
+    return 0;
 }  /* afs_SetServerPrefs */
+
 #undef TOPR
 #undef HI
 #undef MED

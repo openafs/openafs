@@ -542,7 +542,11 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 #ifdef	AFS_DEC_ENV
 		avc->vrefCount++;
 #else
+#ifdef AFS_NETBSD_ENV
+		AFS_HOLD(AFSTOV(avc));
+#else
 		VN_HOLD(AFSTOV(avc));
+#endif
 #endif
 	    }
 	    tb->refCount = ause+1;
@@ -1223,8 +1227,8 @@ void afs_BackgroundDaemon(void)
 
     MObtainWriteLock(&afs_xbrs,302);
     while (1) {
-	int min_ts;
-	struct brequest *min_tb;
+	int min_ts = 0;
+	struct brequest *min_tb = NULL;
 
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
@@ -1237,7 +1241,6 @@ void afs_BackgroundDaemon(void)
 	/* find a request */
 	tb = afs_brs;
 	foundAny = 0;
-	min_tb = NULL;
 	for(i=0; i<NBRS; i++, tb++) {
 	    /* look for request with smallest ts */
 	    if ((tb->refCount > 0) && !(tb->flags & BSTARTED)) {

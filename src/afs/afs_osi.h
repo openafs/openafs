@@ -62,7 +62,12 @@ struct osi_file {
 };
 
 struct osi_dev {
+#ifdef AFS_OBSD_ENV
+    struct mount *mp;
+    struct vnode *held_vnode;
+#else
     afs_int32 dev;
+#endif
 };
 
 struct afs_osi_WaitHandle {
@@ -97,6 +102,7 @@ struct afs_osi_WaitHandle {
 /*
  * Vnode related macros
  */
+#ifndef AFS_OBSD_ENV
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern int (**afs_vnodeop_p)();
 #define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
@@ -109,14 +115,17 @@ extern struct vnodeops *afs_ops;
 #define	vType(vc)	    (vc)->v.v_type
 #define	vSetType(vc,type)   (vc)->v.v_type = (type)
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
+#endif
 
 #ifdef AFS_SGI65_ENV
 #define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
              lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp),\
 			NULL)
 #else
+#ifndef AFS_OBSD_ENV
 #define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
              lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp))
+#endif
 #endif
 
 /*
@@ -216,6 +225,7 @@ typedef struct timeval osi_timeval_t;
 #define USERPRI
 #endif
 
+#ifndef AFS_OBSD_ENV
 /*
  * vnode/vcache ref count manipulation
  */
@@ -224,6 +234,8 @@ typedef struct timeval osi_timeval_t;
 #else /* defined(UKERNEL) */
 #define AFS_RELE(vp) do { AFS_GUNLOCK(); VN_RELE(vp); AFS_GLOCK(); } while (0)
 #endif /* defined(UKERNEL) */
+#endif
+
 /*
  * For some reason we do bare refcount manipulation in some places, for some
  * platforms.  The assumption is apparently that either we wouldn't call
@@ -239,7 +251,7 @@ typedef struct timeval osi_timeval_t;
 #else
 #define AFS_FAST_HOLD(vp) VN_HOLD(&(vp)->v)
 #endif
-#define AFS_FAST_RELE(vp) AFS_RELE(&(vp)->v)
+#define AFS_FAST_RELE(vp) AFS_RELE(AFSTOV(vp))
 
 /*
  * MP safe versions of routines to copy memory between user space
@@ -289,7 +301,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#else
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -299,7 +311,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#endif
 
 #else /* AFS_GLOBAL_SUNLOCK */
 

@@ -331,7 +331,7 @@ void afs_osi_Invisible(void)
 
 #ifndef AFS_LINUX20_ENV /* Linux version in osi_misc.c */
 /* set the real time */
-int afs_osi_SetTime(register osi_timeval_t *atv)
+void afs_osi_SetTime(osi_timeval_t *atv)
 {
 #ifdef	AFS_AIX32_ENV
     struct timestruc_t t;
@@ -397,17 +397,17 @@ int afs_osi_SetTime(register osi_timeval_t *atv)
 #endif
 #ifdef AFS_HPUX_ENV
     {
-    register ulong_t s;
-    struct timeval t;
-    t.tv_sec = atv->tv_sec;
-    t.tv_usec = atv->tv_usec;
-    s = spl7(); time = t; (void) splx(s);
-    resettodr(atv);
+	register ulong_t s;
+	struct timeval t;
+	t.tv_sec = atv->tv_sec;
+	t.tv_usec = atv->tv_usec;
+	s = spl7(); time = t; (void) splx(s);
+	resettodr(atv);
     }
 #else
     {
-    register int s;
-    s = splclock(); time = *atv; (void) splx(s);
+	register int s;
+	s = splclock(); time = *atv; (void) splx(s);
     }
     resettodr();
 #endif
@@ -421,7 +421,6 @@ int afs_osi_SetTime(register osi_timeval_t *atv)
 #endif /* AFS_SUN5_ENV */
 #endif /* AFS_AIX32_ENV */
     AFS_STATCNT(osi_SetTime);
-    return 0;
 }
 #endif /* AFS_LINUX20_ENV */
 
