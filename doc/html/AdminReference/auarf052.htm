@@ -54,13 +54,19 @@ script. The optional <VAR>arg</VAR><SUB>1</SUB> through
 <B>afsmonitor</B> program passes as arguments to the
 <VAR>cmd_to_execute</VAR> command. If any of them include one or more
 spaces, enclose the entire field in double quotes.
+<p>The <b>afsmonitor</b> program passes the following parameters to the
+<var>cmd_to_execute</var>&#58;
+<p><dt><b><var>host_name</var> fs|cm <var>field_name</var>
+<var>threshold_val</var>
+<var>actual_val</var> [&lt;<var>arg</var><sub>1</sub>>]
+. . . [&lt;<var>arg</var><sub>n</sub>>]</b>
 <P>The parameters <B>fs</B>, <B>cm</B>, <VAR>field_name</VAR>,
 <VAR>threshold_val</VAR>, and <VAR>arg</VAR><SUB>1</SUB> through
 <VAR>arg</VAR><SUB>n</SUB> correspond to the values with the same name on the
 <B>thresh</B> line. The <VAR>host_name</VAR> parameter identifies the
 file server or client machine where the statistic has crossed the threshold,
 and the <VAR>actual_val</VAR> parameter is the actual value of
-<VAR>field_name</VAR> that equals or exceeds the threshold value.
+<VAR>field_name</VAR> that exceeds the threshold value.
 <P>Use the <B>thresh</B> line to set either a global threshold, which
 applies to all file server machines listed on <B>fs</B> lines or client
 machines listed on <B>cm</B> lines in the configuration file, or a
