@@ -28,7 +28,9 @@
 #ifndef ATOMLIST_H
 #define ATOMLIST_H
 
+#ifndef KERNEL
 #include <stddef.h>
+#endif
 
 typedef struct afs_atomlist afs_atomlist;
 

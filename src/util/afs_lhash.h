@@ -28,7 +28,9 @@
 #ifndef AFS_LHASH_H
 #define AFS_LHASH_H
 
+#ifndef KERNEL
 #include <stddef.h>
+#endif
 
 /*
  * The user is responsible for generating the key values corresponding
