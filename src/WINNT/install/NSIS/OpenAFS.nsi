@@ -2430,6 +2430,7 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+
 !IFDEF DEBUG
 !IFDEF CL_1310
    File "${SYSTEMDIR}\msvcr71d.dll"
@@ -2540,10 +2541,16 @@ DoEnglish:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\en_US\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll" "$INSTDIR\Client\Program\afs_shl_ext_1033.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1033.dll"
@@ -2564,6 +2571,17 @@ DoEnglish:
    File "..\..\doc\help\en_US\taafssvrmgr.hlp"
    File "..\..\doc\help\en_US\taafsusrmgr.CNT"
    File "..\..\doc\help\en_US\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.pdb"
+!ENDIF
    goto done
 
 DoGerman:
@@ -2571,10 +2589,16 @@ DoGerman:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\de_DE\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll" "$INSTDIR\Client\Program\afs_shl_ext_1032.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1032.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1032.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1032.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1032.dll"
@@ -2597,92 +2621,14 @@ DoGerman:
    File "..\..\doc\help\de_DE\taafsusrmgr.hlp"
 
 !ifdef DEBUG
-   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1033.pdb"
-   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1033.pdb"
-   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1033.pdb"
-   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.pdb"
-   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.pdb"
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcr71d.pdb"
-   File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.pdb"
-   File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\mfc71d.pdb"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcr70d.pdb"
-   File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.pdb"
-   File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\mfc70d.pdb"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\mfc42d.pdb"
-   File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcp60d.pdb"
-   File "${SYSTEMDIR}\msvcrtd.dll"
-   File "${SYSTEMDIR}\msvcrtd.pdb"
-!ENDIF
-!ENDIF
-!ELSE
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\mfc71.dll"
-   File "${SYSTEMDIR}\msvcr71.dll"
-   File "${SYSTEMDIR}\msvcp71.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\mfc70.dll"
-   File "${SYSTEMDIR}\msvcr70.dll"
-   File "${SYSTEMDIR}\msvcp70.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42.dll"
-   File "${SYSTEMDIR}\msvcp60.dll"
-   File "${SYSTEMDIR}\msvcrt.dll"
-!ENDIF
-!ENDIF
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1032.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1032.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1032.pdb"
 !ENDIF
    goto done   
 
@@ -2691,10 +2637,16 @@ DoSpanish:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\es_ES\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll" "$INSTDIR\Client\Program\afs_shl_ext_1034.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1034.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1034.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1034.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1034.dll"
@@ -2715,6 +2667,17 @@ DoSpanish:
    File "..\..\doc\help\es_ES\taafssvrmgr.hlp"
    File "..\..\doc\help\es_ES\taafsusrmgr.CNT"
    File "..\..\doc\help\es_ES\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1034.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1034.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1034.pdb"
+!ENDIF
    goto done
 
 DoJapanese:
@@ -2722,10 +2685,16 @@ DoJapanese:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\ja_JP\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll" "$INSTDIR\Client\Program\afs_shl_ext_1041.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1041.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1041.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1041.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1041.dll"
@@ -2746,6 +2715,17 @@ DoJapanese:
    File "..\..\doc\help\ja_JP\taafssvrmgr.hlp"
    File "..\..\doc\help\ja_JP\taafsusrmgr.CNT"
    File "..\..\doc\help\ja_JP\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1041.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1041.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1041.pdb"
+!ENDIF
    goto done
    
 DoKorean:
@@ -2753,10 +2733,16 @@ DoKorean:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\ko_KR\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll" "$INSTDIR\Client\Program\afs_shl_ext_1042.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1042.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1042.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1042.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1042.dll"
@@ -2777,6 +2763,17 @@ DoKorean:
    File "..\..\doc\help\ko_KR\taafssvrmgr.hlp"
    File "..\..\doc\help\ko_KR\taafsusrmgr.CNT"
    File "..\..\doc\help\ko_KR\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1042.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1042.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1042.pdb"
+!ENDIF
    goto done
 
 
@@ -2785,10 +2782,16 @@ DoPortugueseBR:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\pt_BR\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll" "$INSTDIR\Client\Program\afs_shl_ext_1046.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1046.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1046.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1046.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1046.dll"
@@ -2809,6 +2812,17 @@ DoPortugueseBR:
    File "..\..\doc\help\pt_BR\taafssvrmgr.hlp"
    File "..\..\doc\help\pt_BR\taafsusrmgr.CNT"
    File "..\..\doc\help\pt_BR\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1046.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1046.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1046.pdb"
+!ENDIF
    goto done
    
 DoSimpChinese:
@@ -2816,10 +2830,16 @@ DoSimpChinese:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\zh_CN\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll" "$INSTDIR\Client\Program\afs_shl_ext_2052.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_2052.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_2052.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_2052.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_2052.dll"
@@ -2840,6 +2860,17 @@ DoSimpChinese:
    File "..\..\doc\help\zh_CN\taafssvrmgr.hlp"
    File "..\..\doc\help\zh_CN\taafsusrmgr.CNT"
    File "..\..\doc\help\zh_CN\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_2052.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_2052.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_2052.pdb"
+!ENDIF
    goto done
    
 DoTradChinese:
@@ -2847,10 +2878,16 @@ DoTradChinese:
    SetOutPath "$INSTDIR\Documentation"
    File "..\..\doc\install\Documentation\zh_TW\README.TXT"
 
+   SetOutPath "$INSTDIR\Client\Program"
+   File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"
+  !insertmacro UpgradeDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll" "$INSTDIR\Client\Program\afs_shl_ext_1028.dll" "$INSTDIR"
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.pdb"
+!endif
+
    SetOutPath "$INSTDIR\Common"
    File "${AFS_CLIENT_BUILDDIR}\afs_config_1028.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext_1028.dll"
-   File "${AFS_CLIENT_BUILDDIR}\afscreds_1028.dll"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.dll"
    File "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.dll"
    ;File "${AFS_SERVER_BUILDDIR}\afs_setup_utils_1028.dll"
@@ -2871,6 +2908,17 @@ DoTradChinese:
    File "..\..\doc\help\zh_TW\taafssvrmgr.hlp"
    File "..\..\doc\help\zh_TW\taafsusrmgr.CNT"
    File "..\..\doc\help\zh_TW\taafsusrmgr.hlp"
+
+!ifdef DEBUG
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_config_1028.pdb"
+   ;File "${AFS_CLIENT_BUILDDIR}\afs_cpa_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afseventmsg_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afsserver_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\afssvrcfg_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1028.pdb"
+   ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1028.pdb"
+!ENDIF
    goto done
    
 done:
