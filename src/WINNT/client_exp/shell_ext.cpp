@@ -28,9 +28,6 @@ extern "C" {
 #include "auth_dlg.h"
 #include "submounts_dlg.h"
 #include "make_symbolic_link_dlg.h"
-#if (_MSC_VER<=1200)
-#include <atlconv.h>
-#endif
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
