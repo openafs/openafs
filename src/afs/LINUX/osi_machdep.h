@@ -100,10 +100,10 @@ typedef struct cred {		/* maps to task field: */
 #else
     int cr_ref;
 #endif
-    unsigned short cr_uid;	/* euid */
-    unsigned short cr_ruid;	/* uid */
-    unsigned short cr_gid;	/* egid */
-    unsigned short cr_rgid;	/* gid */
+    uid_t cr_uid;	/* euid */
+    uid_t cr_ruid;	/* uid */
+    gid_t cr_gid;	/* egid */
+    gid_t cr_rgid;	/* gid */
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
 } cred_t;
