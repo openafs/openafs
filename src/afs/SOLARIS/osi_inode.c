@@ -32,6 +32,9 @@ extern int (*ufs_iallocp)(), (*ufs_iupdatp)(), (*ufs_igetp)(),
         mutex_exit(&(ip)->i_tlock); \
 }
 
+#define AFS_ITIMES_NOLOCK(ip) \
+	(*ufs_itimes_nolockp)(ip);
+
 getinode(vfsp, dev, inode, ipp, credp,perror)
      struct vfs *vfsp;
      struct AFS_UCRED *credp;
@@ -175,24 +178,20 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
 #endif
     rw_enter(&ip->i_contents, RW_WRITER);
     code = (*ufs_iallocp)(ip, near_inode, 0, &newip, credp);
+    AFS_ITIMES_NOLOCK(ip);
+    rw_exit(&ip->i_contents);
 #if defined(AFS_SUN57_ENV)
     rw_exit(&ufsvfsp->vfs_dqrwlock);
 #endif
     rw_exit(&ip->i_rwlock);
-
-    AFS_ITIMES(ip);
-    rw_exit(&ip->i_contents);
     VN_RELE(ITOV(ip));
 
     if (code) {
 	return (code);
     }
     rw_enter(&newip->i_contents, RW_WRITER);
-    mutex_enter(&newip->i_tlock);
     newip->i_flag |= IACC|IUPD|ICHG;
-    mutex_exit(&newip->i_tlock);
-    
-    
+
 #if	defined(AFS_SUN56_ENV)
     newip->i_vicemagic = VICEMAGIC;
 #else
@@ -224,7 +223,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
      */
     if (CrSync)
 	(*ufs_iupdatp)(newip, 1);
-    AFS_ITIMES(newip);
+    AFS_ITIMES_NOLOCK(newip);
     rw_exit(&newip->i_contents);
     VN_RELE(ITOV(newip));
     return (code);
@@ -342,13 +341,11 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
 	    dnlc_remove(ITOV(ip), "a");
 	    CLEAR_VICEMAGIC(ip);
 	}
-	mutex_enter(&ip->i_tlock);
 	ip->i_flag |= ICHG;
-	mutex_exit(&ip->i_tlock);
 	/* We may want to force the inode to the disk in case of crashes, other references, etc. */
 	if (IncSync)
 	    (*ufs_iupdatp)(ip, 1);
-	AFS_ITIMES(ip);
+	AFS_ITIMES_NOLOCK(ip);
 	rw_exit(&ip->i_contents);
 	VN_RELE(ITOV(ip));
     }
