@@ -280,46 +280,40 @@ afs_gfs_FlushText(vp)
 
 #endif /* AFS_TEXT_ENV */
 
-/* procedure for making our processes as invisible as we can */
-void afs_osi_Invisible() {
-#ifndef	AFS_AIX32_ENV
-    /* called once per "kernel" lwp to make it invisible */
+/* mask signals in afsds */
+void afs_osi_MaskSignals(){
 #ifdef AFS_LINUX22_ENV
     spin_lock_irq(&current->sigmask_lock);
     sigfillset(&current->blocked);
     recalc_sigpending(current);
     spin_unlock_irq(&current->sigmask_lock);
+#endif
+}
+    
+/* procedure for making our processes as invisible as we can */
+void afs_osi_Invisible() {
+#ifdef AFS_LINUX22_ENV
+    afs_osi_MaskSignals();
     
     daemonize();
-#else /* AFS_LINUX22_ENV */
+#endif 
 #ifdef AFS_DEC_ENV
     u.u_procp->p_type |= SSYS;
-#else /* AFS_DEC_ENV */
-#if	defined(AFS_SUN5_ENV)
+#endif 
+#if AFS_SUN5_ENV
     curproc->p_flag |= SSYS;
-#else /* AFS_SUN5_ENV */
-#if defined(AFS_SGI_ENV)
-    vrelvm();
-#endif /* AFS_SGI_ENV */
-#ifdef	AFS_SUN_ENV
-    relvm(u.u_procp); 	/* release all the resources */
-#endif /* AFS_SUN_ENV */
-#if	defined(AFS_HPUX101_ENV)
+#endif
+#if AFS_HPUX101_ENV
     set_system_proc(u.u_procp);
-#else /* AFS_HPUX101_ENV */
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
-#else /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
-#if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
-    u.u_procp->p_flag |= SSYS;
-#endif /* !AFS_SGI64_ENV && !AFS_LINUX20_ENV */
-#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
-#endif /* AFS_HPUX101_ENV */
-#endif /* AFS_SUN5_ENV */
-#endif /* AFS_DEC_ENV */
-#endif /* AFS_LINUX22_ENV */
-#endif /* AFS_AIX32_ENV */
+#endif
+#if defined(AFS_SGI_ENV)
+    vrelvm();
+#endif /* AFS_SGI_ENV */
+
     AFS_STATCNT(osi_Invisible);
 }
 
