@@ -2659,75 +2659,14 @@ static int
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    afs_int32 scIndex;
-    struct rx_securityClass *sc;
-    struct rx_connection *serverconns[VLDB_MAXSERVERS];
-    afs_int32 i;
 
-    code = rx_Init(0);
-    if (code) {
-	fprintf(stderr, "%s: could not initialize rx.\n", pn);
-	return code;
-    }
+    code = ugen_ClientInit(noAuthFlag, AFSDIR_CLIENT_ETC_DIRPATH, 
+			   info->name, 0, &uclient, 
+                           NULL, pn, rxkad_clear,
+                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
+                           0, 0, USER_SERVICE_ID);
     rxInitDone = 1;
-    rx_SetRxDeadTime(50);
-    if (!noAuthFlag) {		/* we don't need tickets for null */
-	strcpy(sname.cell, info->name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	if (code) {
-	    fprintf(stderr,
-		    "%s: Could not get afs tokens, running unauthenticated.\n",
-		    pn);
-	    scIndex = 0;
-	} else {
-	    /* got a ticket */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
-		scIndex = 2;	/* kerberos */
-	    else {
-		fprintf(stderr, "%s: funny kvno (%d) in ticket, proceeding\n",
-			pn, ttoken.kvno);
-		scIndex = 2;
-	    }
-	}
-    } else
-	scIndex = 0;		/* don't authenticate */
-    switch (scIndex) {
-    case 0:
-	sc = rxnull_NewClientSecurityObject();
-	break;
-
-    case 1:
-	break;
-    case 2:
-	sc = (struct rx_securityClass *)
-	    rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					  ttoken.kvno, ttoken.ticketLen,
-					  ttoken.ticket);
-	break;
-    }
-    if (info->numServers > VLDB_MAXSERVERS) {
-	fprintf(stderr, "%s: info.numServers=%d (> VLDB_MAXSERVERS=%d)\n", pn,
-		info->numServers, VLDB_MAXSERVERS);
-	exit(1);
-    }
-    memset(serverconns, 0, sizeof(serverconns));
-    for (i = 0; i < info->numServers; i++)
-	serverconns[i] =
-	    rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
-			     info->hostAddr[i].sin_port, USER_SERVICE_ID, sc,
-			     scIndex);
-
-    code = ubik_ClientInit(serverconns, &uclient);
-
-    if (code) {
-	fprintf(stderr, "%s: ubik client init failed.\n", pn);
-	return code;
-    }
-    return 0;
+    return code;
 }
 
 static struct ViceIoctl gblob;

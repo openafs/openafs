@@ -53,6 +53,7 @@ KAUTHOBJS = \
 	$(OUT)\user_nt.obj
 
 UBIKOBJS = \
+	$(OUT)\uinit.obj \
 	$(OUT)\ubikclient.obj \
 	$(OUT)\uerrors.obj \
 	$(OUT)\ubik_int.cs.obj \

@@ -48,6 +48,7 @@ KAUTHOBJS = \
 	read_passwd.o
 
 UBIKOBJS = \
+	uinit.o \
 	ubikclient.o \
 	uerrors.o \
 	ubik_int.cs.o \
@@ -158,6 +159,9 @@ read_passwd.o: ${KAUTH}/read_passwd.c
 	${CCRULE}
 
 ubikclient.o: ${UBIK}/ubikclient.c
+	${CCRULE}
+
+uinit.o: ${UBIK}/uinit.c
 	${CCRULE}
 
 uerrors.o: ${UBIK}/uerrors.c

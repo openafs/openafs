@@ -239,7 +239,7 @@ GetConn(as, aencrypt)
 	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	    if (code == 0) {
 		/* have tickets, will travel */
-		if (ttoken.kvno >= 0 && ttoken.kvno <= 255);
+		if (ttoken.kvno >= 0 && ttoken.kvno <= 256);
 		else {
 		    fprintf(stderr,
 			    "bos: funny kvno (%d) in ticket, proceeding\n",

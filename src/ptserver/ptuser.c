@@ -168,7 +168,7 @@ pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 	if (code)
 	    scIndex = 0;
 	else {
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
+	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
 		/* this is a kerberos ticket, set scIndex accordingly */
 		scIndex = 2;
 	    else {

@@ -2447,7 +2447,7 @@ struct afsconf_cell *info;
 	}
 	else {
 	    /* got a ticket */
-	    if (ttoken.kvno >= 0 && ttoken.kvno	<= 255)	scIndex	= 2;	/* kerberos */
+	    if (ttoken.kvno >= 0 && ttoken.kvno	<= 256)	scIndex	= 2;	/* kerberos */
 	    else {
 		fprintf (stderr, "fs: funny kvno (%d) in ticket, proceeding\n",
 			 ttoken.kvno);
