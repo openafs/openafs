@@ -13,7 +13,7 @@
 
 ; This version compiles with NSIS v2.0b3 or NSIS v2.0b4
 
-!ifndef v2.0b4       ; v2.0b3
+!ifdef v2.0b3       ; v2.0b3
 !ifndef DEBUG        ; !DEBUG
 !define MUI_PRODUCT "OpenAFS" ;Define your own software name here
 !else                ; DEBUG on v2.0b3
@@ -54,7 +54,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   SilentInstall normal
   SetCompressor bzip2
   !define MUI_ICON "..\..\client_config\afs_config.ico"
-  !ifndef v2.0b4
+  !ifdef v2.0b3
   !define MUI_UNICON "${NSISDIR}\Contrib\Icons\normal-uninstall.ico"
   !else
   !define MUI_UNICON "..\..\client_config\afs_config.ico"
@@ -68,11 +68,11 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   InstallDir "$PROGRAMFILES\OpenAFS"      ; Install to shorter path
   
   ;Remember install folder
-  InstallDirRegKey HKCU "Software\TransarcCorporation" ""
+  InstallDirRegKey HKCU ${AFS_REGKEY_ROOT} ""
   
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
-  !define MUI_LANGDLL_REGISTRY_KEY "Software\TransarcCorporation" 
+  !define MUI_LANGDLL_REGISTRY_KEY $(AFS_REGKEY_ROOT}
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
   
   ;Where are the files?
@@ -100,7 +100,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !define MUI_UNCONFIRMPAGE
   
   
-!IFNDEF v2.0b4       ; v2.0b3
+!IFDEF v2.0b3       ; v2.0b3
   !insertmacro MUI_PAGECOMMAND_WELCOME
  ;!insertmacro MUI_PAGECOMMAND_LICENSE
   !insertmacro MUI_PAGECOMMAND_COMPONENTS
@@ -200,7 +200,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_secServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   LangString DESC_secServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
-!ifdef v2.0b4  
+!ifndef v2.0b3 
   LangString DESC_secServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
 !endif
   LangString DESC_secServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
@@ -451,7 +451,9 @@ Section "AFS Client" secClient
   ;GetTempFileName $R0
   ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   ;nsExec::Exec '$R0 afscreds.exe'
+!IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
+!ENDIF
 
   nsExec::Exec "net stop TransarcAFSDaemon"
   nsExec::Exec "net stop TransarcAFSServer"
@@ -800,7 +802,9 @@ Section "AFS Server" secServer
   ;GetTempFileName $R0
   ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   ;nsExec::Exec '$R0 afscreds.exe'
+!IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
+!ENDIF
 
   nsExec::Exec "net stop TransarcAFSDaemon"
   nsExec::Exec "net stop TransarcAFSServer"
@@ -1007,7 +1011,7 @@ Section "Supplemental Documentation" secDocs
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
    StrCmp $LANGUAGE ${LANG_JAPANESE} DoJapanese
-!ifdef v2.0b4
+!ifndef v2.0b3
    StrCmp $LANGUAGE ${LANG_KOREAN} DoKorean
 !endif
    StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} DoPortugueseBR
@@ -1385,7 +1389,7 @@ FunctionEnd
 ;--------------------------------
 ;Descriptions
 
-!ifndef v2.0b4
+!ifdef v2.0b3
 !insertmacro MUI_FUNCTIONS_DESCRIPTION_BEGIN
 !else
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -1418,7 +1422,9 @@ StartRemove:
   GetTempFileName $R0
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"
   nsExec::Exec '$R0 afscreds.exe'
+!IFDEF INSTALL_KFW
   nsExec::Exec '$R0 krbcc32s.exe'
+!ENDIF
 
   ; Delete the AFS service
   GetTempFileName $R0
