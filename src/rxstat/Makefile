@@ -20,6 +20,8 @@ CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
+all: librxstat.a includes
+
 rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 	${RXGEN} -x rxstat.xg
 
