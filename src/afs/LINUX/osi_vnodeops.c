@@ -811,10 +811,22 @@ static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
     osi_iput(ip);
 }
 
+static int afs_dentry_delete(struct dentry *dp)
+{
+    if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
+	return 1;               /* bad inode? */
+
+    afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER, 
+	       dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
+	       ICL_TYPE_STRING, dp->d_name.name);
+    return 0;
+}
+
 #if defined(AFS_LINUX24_ENV)
 struct dentry_operations afs_dentry_operations = {
        d_revalidate:   afs_linux_dentry_revalidate,
        d_iput:         afs_dentry_iput,
+       d_delete:       afs_dentry_delete,
 };
 struct dentry_operations *afs_dops = &afs_dentry_operations;
 #else
@@ -977,7 +989,6 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     int code;
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
-    int putback = 0;
 
     AFS_GLOCK();
     code = afs_remove(ITOAFS(dip), name, credp);
