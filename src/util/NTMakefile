@@ -27,49 +27,43 @@ INCFILES =\
 	$(INCFILEDIR)\afsutil_prototypes.h \
 	$(INCFILEDIR)\secutil_nt.h
 
-$(INCFILEDIR)\dirent.h: dirent_nt.h
+$(DESTDIR)\include\afs\dirent.h: dirent_nt.h
 	$(COPY) $** $@
 
-$(INCFILEDIR)\afsconfig.h: ..\libadmin\adminutil\afscoinfig.h
-	$(COPY) $** $@
-
-$(INCFILEDIR)\dirpath.h: dirpath_nt.h
+$(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h
 	$(COPY) $** $@
 
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 
 LIBOBJS = \
-	assert.obj \
-	base32.obj \
-	casestrcpy.obj \
-	get_krbrlm.obj \
-	hostparse.obj \
-	isathing.obj \
-	kreltime.obj \
-	ktime.obj \
-	regex.obj \
-	readdir_nt.obj \
-	serverLog.obj \
-	uuid.obj \
-	volparse.obj \
-	winsock_nt.obj \
-	errmap_nt.obj \
-	dirpath.obj \
-	fileutil.obj \
-	secutil_nt.obj
-
-$(LIBOBJS): $$(@B).c
-	$(C2OBJ) -I..\libadmin\adminutil $**
-
-$(LIBOBJS):
+	$(OJT)\assert.obj \
+	$(OJT)\base32.obj \
+	$(OJT)\casestrcpy.obj \
+	$(OJT)\get_krbrlm.obj \
+	$(OJT)\hostparse.obj \
+	$(OJT)\isathing.obj \
+	$(OJT)\kreltime.obj \
+	$(OJT)\ktime.obj \
+	$(OJT)\regex.obj \
+	$(OJT)\readdir_nt.obj \
+	$(OJT)\serverLog.obj \
+	$(OJT)\uuid.obj \
+	$(OJT)\volparse.obj \
+	$(OJT)\winsock_nt.obj \
+	$(OJT)\errmap_nt.obj \
+	$(OJT)\dirpath.obj \
+	$(OJT)\fileutil.obj \
+	$(OJT)\secutil_nt.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-
-install: $(INCFILES) $(LIBFILE)
+install: $(INCFILES) $(LIBOBJS) $(LIBFILE)
 
 install9x: install
 
 clean::
 	$(DEL) $(LIBFILE)
+
+mkdir:
+	

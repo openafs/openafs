@@ -34,91 +34,88 @@ NTMAKE_HEADERS = nmake /nologo  /f ntmakefile install_headers
 NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 MKDIR = mkdir
 
-SDEBUG=echo cd $(SRC)\$@ >d:\dev\bat\gc.bat
-WDEBUG=echo cd $(SRC)\WINNT\$@ >d:\dev\bat\gc.bat
-LDEBUG=echo cd $(SRC)\libadmin\$@ >d:\dev\bat\gc.bat
-TDEBUG=echo cd $(SRC)\WINNT\talocale >d:\dev\bat\gc.bat
-WADEBUG=echo cd $(SRC)\WINNT\afs_setup_utils >d:\dev\bat\gc.bat
-WIDEBUG=echo cd $(SRC)\WINNT\install\$@ >d:\dev\bat\gc.bat
-RIDEBUG=echo cd $(SRC)\WINNT\afsreg >d:\dev\bat\gc.bat
+#debug statement support jumping to last know error
+DOCD=src\DOLASTCMP.BAT
 
 config:
      echo ***** $@
+	$(DOCD) $(SRC)\config
 	$(CD) $(SRC)\config
 	$(NTMAKE)
 	$(CD) ..\..
 
 procmgmt_headers:config
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\procmgmt
 	$(CD) $(SRC)\procmgmt
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 afsreg_headers:
      echo ***** $@
-	$(RIDEBUG)
+	$(DOCD) $(SRC)\WINNT\afsreg
 	$(CD) $(SRC)\WINNT\afsreg
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 util: procmgmt_headers afsreg_headers
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 comerr: util
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 cmd: comerr
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 afsreg: cmd
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 eventlog: afsreg
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 lwp: eventlog
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxgen: lwp
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 des: rxgen
      echo ***** $@
-	$(SDEBUG)
 !	IF (EXIST($(SRC)\des\NTMakefile))
+		$(DOCD) $(SRC)\des
 		$(CD) $(SRC)\des
 		$(NTMAKE)
 		$(CD) ..\..
 !	ELSE
+		$(DOCD) $(SRC)\des_stub
 		$(CD) $(SRC)\des_stub
 		$(NTMAKE)
 		$(CD) ..\..
@@ -126,417 +123,419 @@ des: rxgen
 
 rx: des
      echo ***** $@
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxstat: rx
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxkad: rxstat
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 pthread: rxkad
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 procmgmt: pthread
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 fsint: procmgmt
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 audit: fsint
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 osi_headers: audit
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\client_osi
 	$(CD) $(SRC)\WINNT\client_osi
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 libacl_headers: osi_headers
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\libacl
 	$(CD) $(SRC)\libacl
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 cm_headers: libacl_headers
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 sys: cm_headers
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 afsdobjs: sys
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
 	$(NTMAKE_OBJS)
 	$(CD) ..\..\..
 
 auth: afsdobjs
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 ubik: auth
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
 
 ptserver: ubik
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
 
 libacl: ptserver
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 kauth: libacl
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 vlserver: kauth
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 usd: vlserver
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bubasics: usd
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 budb:	bubasics
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 butm:  budb
      echo ***** $@
-	$(SDEBUG)
+     $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 dir: butm
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 vol: dir
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 volser: vol
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 viced: volser
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 update: viced
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bucoord: update
      echo ***** $@
-	$(SDEBUG)
+     $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 butc:   bucoord
      echo ***** $@
-	$(SDEBUG)
+     $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 bozo: butc
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bosctlsvc: bozo
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 bu_utils: bosctlsvc
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 libafsrpc: bu_utils
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 libafsauthent: libafsrpc
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 tviced: libafsauthent
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 tbutc:  tviced
      echo ***** $@
-	$(SDEBUG)
+     $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 libadmin: tbutc
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 adminutil: libadmin
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 vos: adminutil
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client: vos
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 kas: client
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 pts: kas
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 bos: pts
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 cfg: bos
      echo ***** $@
-	$(LDEBUG)
+	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 admintest: cfg
      echo ***** $@
+	$(DOCD) $(SRC)\libadmin\test
 	$(CD) $(SRC)\libadmin\test
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 talocale: admintest
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 license: talocale
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsadmsvr: license
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsusrmgr: afsadmsvr
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrmgr: afsusrmgr
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrcfg: afssvrmgr
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrcpa: afssvrcfg
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_talocale: afssvrcpa
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\talocale
 	$(CD) $(SRC)\WINNT\talocale
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_osi: client_talocale
      echo ***** $@
-	$(TDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsd: client_osi
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_cpa: afsd
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_config: client_cpa
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_exp: client_config
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_creds: client_exp
      echo ***** $@
-	$(WDEBUG)
+	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 finale: client_creds
      echo ***** $@
-	$(SDEBUG)
+	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
@@ -548,12 +547,12 @@ install: finale
 
 InstallShield5:
 	echo ***** afs_setup_utils
-	$(WADEBUG)
+	$(DOCD) $(SRC)\WINNT\afs_setup_utils
 	$(CD) $(SRC)\WINNT\afs_setup_utils
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-	$(WIDEBUG)
+	$(DOCD) $(SRC)\WINNT\install\$@
 	$(CD) $(SRC)\WINNT\install\$@
 	$(NTMAKE)
 	$(CD) ..\..\..\..

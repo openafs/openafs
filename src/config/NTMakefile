@@ -165,7 +165,6 @@ clean::
 	$(DEL) $(DESTDIR)\LIB\*.DLL
 	$(DEL) $(DESTDIR)\bin\mkver.exe
 	$(DEL) $(DESTDIR)\bin\touch.exe
-	$(DEL) $(DESTDIR)\bin\util_cr.exe
+	$(DEL) util_cr.exe
 	$(DEL) mkver.exe
 	$(DEL) touch.exe
-	$(DEL) util_cr.exe
