@@ -1156,13 +1156,11 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #ifndef afs_vnodeToDev
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
-#else
-#ifdef AFS_DECOSF_ENV
+#elif defined(AFS_DECOSF_ENV)
 #define afs_vnodeToDev(V) osi_vnodeToDev(V)
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
-#endif /* AFS_DECOSF_ENV */
-#endif /* AFS_SGI62_ENV */
+#endif
 #endif
 
 

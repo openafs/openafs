@@ -202,6 +202,8 @@ afs_ustrategy(abp)
 	AFS_GLOCK();
     }
 #endif
+#elif defined(AFS_FBSD50_ENV)
+    biodone(&abp->b_io);
 #else /* AFS_DUX40_ENV */
     iodone(abp);
 #endif /* AFS_DUX40_ENV */

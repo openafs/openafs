@@ -357,6 +357,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     return code;
 }
 
+int
 #ifdef	AFS_OSF_ENV
 afs_rename(fndp, tndp)
      struct nameidata *fndp, *tndp;

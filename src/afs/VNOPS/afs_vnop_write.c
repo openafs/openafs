@@ -516,24 +516,19 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	trimlen = len;
 	afsio_trim(&tuio, trimlen);
 	tuio.afsio_offset = offset;
-#ifdef	AFS_AIX_ENV
-#ifdef	AFS_AIX41_ENV
+#if defined(AFS_AIX41_ENV)
 	AFS_GUNLOCK();
 	code =
 	    VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, &tuio, NULL, NULL,
 		      NULL, afs_osi_credp);
 	AFS_GLOCK();
-#else
-#ifdef AFS_AIX32_ENV
+#elif defined(AFS_AIX32_ENV)
 	code = VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, &tuio, NULL, NULL);
-#else
+#elif defined(AFS_AIX_ENV)
 	code =
 	    VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, (off_t) & offset,
 		      &tuio, NULL, NULL, -1);
-#endif
-#endif /* AFS_AIX41_ENV */
-#else /* AFS_AIX_ENV */
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
 	AFS_GUNLOCK();
 	VOP_RWLOCK(tfile->vnode, 1);
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
@@ -542,8 +537,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	if (code == ENOSPC)
 	    afs_warnuser
 		("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
 	AFS_GUNLOCK();
 	avc->states |= CWritingUFS;
 	AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
@@ -551,8 +545,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
 	avc->states &= ~CWritingUFS;
 	AFS_GLOCK();
-#else
-#ifdef	AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
 	{
 	    struct ucred *tmpcred = u.u_cred;
 	    u.u_cred = afs_osi_credp;
@@ -562,45 +555,40 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    AFS_GLOCK();
 	    u.u_cred = tmpcred;
 	}
-#else /* AFS_OSF_ENV */
-#if defined(AFS_HPUX100_ENV)
+#elif defined(AFS_HPUX100_ENV)
 	{
 	    AFS_GUNLOCK();
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
 	    AFS_GLOCK();
 	}
-#else
-#ifdef	AFS_HPUX_ENV
-	tuio.uio_fpflags &= ~FSYNCIO;	/* don't do sync io */
-#endif
-#if defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX20_ENV)
 	AFS_GUNLOCK();
 	code = osi_file_uio_rdwr(tfile, &tuio, UIO_WRITE);
 	AFS_GLOCK();
-#else
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_UNLOCK(tfile->vnode, 0, current_proc());
 	AFS_GLOCK();
-#else
-#if defined(AFS_XBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+	AFS_GUNLOCK();
+	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
+	VOP_UNLOCK(tfile->vnode, 0, curthread);
+	AFS_GLOCK();
+#elif defined(AFS_XBSD_ENV)
 	AFS_GUNLOCK();
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_UNLOCK(tfile->vnode, 0, curproc);
 	AFS_GLOCK();
 #else
+#ifdef	AFS_HPUX_ENV
+	tuio.uio_fpflags &= ~FSYNCIO;	/* don't do sync io */
+#endif
 	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
-#endif /* AFS_XBSD_ENV */
-#endif /* AFS_DARWIN_ENV */
-#endif /* AFS_LINUX20_ENV */
-#endif /* AFS_HPUX100_ENV */
-#endif /* AFS_OSF_ENV */
-#endif /* AFS_SGI_ENV */
-#endif /* AFS_SUN5_ENV */
-#endif /* AFS_AIX41_ENV */
+#endif
 	if (code) {
 	    error = code;
 	    ZapDCE(tdc);	/* bad data */

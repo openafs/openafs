@@ -288,6 +288,8 @@ afs_readdir_type(avc, ade)
 #define AFS_MOVE_UNLOCK()
 #endif
 char bufofzeros[64];		/* gotta fill with something */
+
+int
 afs_readdir_move(de, vc, auio, slen, rlen, off)
      struct DirEntry *de;
      struct vcache *vc;
@@ -491,6 +493,7 @@ afs_bulkstat_send(avc, req)
  * It has to do with 'offset' (seek locations).
 */
 
+int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_readdir(OSI_VC_ARG(avc), auio, acred, eofp)
      int *eofp;

@@ -31,6 +31,7 @@ extern afs_rwlock_t afs_xcbhash;
 /* Note that we don't set CDirty here, this is OK because the link
  * RPC is called synchronously. */
 
+int
 #ifdef	AFS_OSF_ENV
 afs_link(avc, ndp)
      struct vcache *avc;

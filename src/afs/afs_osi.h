@@ -71,12 +71,12 @@ struct osi_dev {
 #ifdef AFS_OBSD_ENV
     struct mount *mp;
     struct vnode *held_vnode;
-#else
-#ifdef AFS_AIX42_ENV
+#elif defined(AFS_FBSD50_ENV)
+    struct cdev *dev;
+#elif defined(AFS_AIX42_ENV)
     dev_t dev;
 #else
     afs_int32 dev;
-#endif
 #endif
 };
 

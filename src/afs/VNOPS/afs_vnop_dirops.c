@@ -35,6 +35,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 /* don't set CDirty in here because RPC is called synchronously */
 
+int
 #ifdef	AFS_OSF_ENV
 afs_mkdir(ndp, attrs)
      struct nameidata *ndp;
@@ -177,6 +178,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
 }
 
 
+int
 #ifdef	AFS_OSF_ENV
 afs_rmdir(ndp)
      struct nameidata *ndp;
