@@ -40,7 +40,7 @@ A. Creating the proper directory structure.
       i386_linux26
       i386_umlinux22
       i386_umlinux24
-      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34
+      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
@@ -163,7 +163,8 @@ F  OpenBSD Notes
    There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
    should make a package for the client.  Use pkg_add to install.  The
    package will install using transarc-paths, regardless of how you
-   configured.
+   configured.  The package builder does not work on OpenBSD 3.5 and later
+   due to the incompatible re-write of pkg_create.
 
    There is no server package, but I am told that "make install" will put
    server binaries in /usr/afs.
