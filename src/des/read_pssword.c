@@ -62,7 +62,7 @@ static int intrupt;
 #endif
 
 static int intrupt;
-#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_FBSD_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
+#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
 #undef	BSDUNIX
 #endif
 
@@ -112,7 +112,7 @@ lose:
     return ok;
 }
 
-#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 static void catch(int);
 #endif
 
@@ -134,12 +134,12 @@ des_read_pw_string(s,maxa,prompt,verify)
 {
     int ok = 0, cnt1=0;
     char *ptr;
-#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     register int fno;
     struct sigaction newsig, oldsig;
     struct termios save_ttyb, ttyb;
 #endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     FILE *fi;
 #endif
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
@@ -172,7 +172,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 	return -1;
     }
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((fi = fopen("/dev/tty", "r")) == NULL)
         return -1;
     setbuf(fi, (char *)NULL);			/* We don't want any buffering for our i/o. */
@@ -310,7 +310,7 @@ lose:
     if (!ok)
 	memset(s, 0, maxa);
     printf("\n");
-#if defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_XBSD_ENV)
     /*
      * Restore the terminal to its previous characteristics.
      * Restore the old signal handler for SIGINT.
@@ -400,7 +400,7 @@ sig_restore()
 #endif
 
 
-#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 static void
 catch(int junk)
 {

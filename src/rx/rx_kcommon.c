@@ -427,7 +427,7 @@ register struct rx_peer *pp;
  */
 
 
-#if ! defined(AFS_AIX_ENV) && ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(AFS_LINUX20_ENV) && !defined (AFS_DARWIN_ENV) && !defined (AFS_FBSD_ENV)
+#if ! defined(AFS_AIX_ENV) && ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(AFS_LINUX20_ENV) && !defined (AFS_DARWIN_ENV) && !defined (AFS_XBSD_ENV)
 /* Routine called during the afsd "-shutdown" process to put things back to
  * the initial state.
  */
@@ -552,7 +552,7 @@ afs_int32 rxi_Findcbi(addr)
 
 #else /* AFS_USERSPACE_IP_ADDR */
 
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_DUX40_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_DUX40_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #define IFADDR2SA(f) (&((f)->ifa_addr))
 #else /* AFS_AIX41_ENV */
 #define IFADDR2SA(f) ((f)->ifa_addr)
@@ -573,14 +573,14 @@ int rxi_GetIFInfo()
     memset(addrs, 0, sizeof(addrs));
     memset(mtus, 0, sizeof(mtus));
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
       if (i >= ADDRSPERSITE) break;
 #else 
     for (ifn = ifnet; ifn != NULL && i < ADDRSPERSITE; ifn = ifn->if_next) {
 #endif
       rxmtu = (ifn->if_mtu - RX_IPUDP_SIZE);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
       TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
       if (i >= ADDRSPERSITE) break;
 #else
@@ -640,7 +640,7 @@ rxi_FindIfnet(addr, pifad)
 
   /* if we're given an address, skip everything until we find it */
   if (!*pifad)
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     *pifad = TAILQ_FIRST(&in_ifaddrhead);
 #else 
     *pifad = in_ifaddr;
@@ -648,14 +648,14 @@ rxi_FindIfnet(addr, pifad)
   else {
     if (((ppaddr & (*pifad)->ia_subnetmask) == (*pifad)->ia_subnet))
       match_value = 2; /* don't find matching nets, just subnets */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     *pifad = TAILQ_NEXT(*pifad, ia_link);
 #else   
     *pifad = (*pifad)->ia_next;
 #endif
   }
     
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
   for (ifa = *pifad; ifa; ifa = TAILQ_NEXT(ifa, ia_link) ) {
 #else
   for (ifa = *pifad; ifa; ifa = ifa->ia_next ) {
@@ -717,7 +717,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 #endif
 
     AFS_STATCNT(osi_NewSocket);
-#if (defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)) && defined(KERNEL_FUNNEL)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
 #if	defined(AFS_HPUX102_ENV)
@@ -730,7 +730,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 #else
 #ifdef AFS_SGI65_ENV
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM,IPPROTO_UDP);
-#elif defined(AFS_FBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM,IPPROTO_UDP, curproc);
 #else
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0);
@@ -766,9 +766,9 @@ struct osi_socket *rxk_NewSocket(short aport)
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     myaddr.sin_len = sizeof(myaddr);
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
     code = sobind(newSocket, (struct sockaddr *)&myaddr, curproc);
 #else
     code = sobind(newSocket, (struct sockaddr *)&myaddr);
@@ -785,7 +785,7 @@ struct osi_socket *rxk_NewSocket(short aport)
     nam = m_get(M_WAIT, MT_SONAME);
 #endif
     if (nam == NULL) {
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_XBSD_ENV)
  	setuerror(ENOBUFS);
 #endif
 	goto bad;
@@ -799,7 +799,7 @@ struct osi_socket *rxk_NewSocket(short aport)
     BHV_PDATA(&bhv) = (void*)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
-#elif defined(AFS_FBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     code = sobind(newSocket, nam, curproc);
 #else
     code = sobind(newSocket, nam);
@@ -1000,7 +1000,7 @@ void rxk_Listener(void)
 #ifdef AFS_SUN5_ENV
     rxk_ListenerPid = ttoproc(curthread)->p_pidp->pid_id;
 #endif /* AFS_SUN5_ENV */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
 #if defined(RX_ENABLE_LOCKS) && !defined(AFS_SUN5_ENV)
@@ -1042,7 +1042,7 @@ void rxk_Listener(void)
 #endif /* AFS_SUN5_ENV */
 }
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 /* The manner of stopping the rx listener thread may vary. Most unix's should
  * be able to call soclose.
  */

@@ -1,0 +1,47 @@
+# Copyright 1998 Transarc Corporation 
+#
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = OBSD
+# Base directory for linux kernel source. Actually a prefix which is complete
+# when LINUX_VERS is appended to it.
+# LINUX_SRCDIR = /usr/src/linux-
+# Default list of Linux kernels to build. Build will run only if all
+# can be built. To build a different set, specify LINUX_VERS to make.
+# LINUX_VERS = 2.2.5-15 2.2.10 2.2.12 2.2.12-20 2.2.13 2.2.14
+
+#
+# compilation and link editor flags
+DBG=-g
+OPTMZ=-O2
+PAM_CFLAGS = -O2 -pipe -fpic
+# Put -O2 here to _ensure_ all Makefiles pick it up.
+XCFLAGS= -O2
+MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
+XLDFLAGS=
+SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS= -fpic
+#
+# libraries
+MTLIBS=-pthread
+TXLIBS= /usr/lib/libcurses.so
+XLIBS=@LIB_AFSDB@ -lcompat
+
+#
+# programs
+AR=ar
+AS=as
+CP=cp
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+LD=ld   
+MT_CC=cc
+MV=mv
+RANLIB=ranlib
+RM=rm
+#
+# Other OS specific requirements
+#
+YACC =yacc
+LEX =flex -l

@@ -311,7 +311,7 @@ login: project kauth rxkad
 		 ${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	sun4x_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
-	ppc_darwin* ) \
+	ppc_darwin* | *_obsd* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
@@ -372,7 +372,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* ) \
+	hp_ux102* | *_obsd* ) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \

@@ -26,7 +26,7 @@ RCSID("$Header$");
 #endif
 #include <sys/mtio.h>
 #endif /* AFS_AIX_ENV */
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV)
 #include <sys/ioctl.h>
 #endif
 #include <afs/debug.h>

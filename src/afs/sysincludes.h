@@ -10,6 +10,39 @@
 #ifndef __AFS_SYSINCLUDESH__
 #define __AFS_SYSINCLUDESH__ 1
 
+#ifdef AFS_OBSD_ENV
+#include <sys/errno.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/lock.h>
+#include <sys/queue.h>
+#include <sys/resourcevar.h>
+#include <sys/kernel.h>
+#include <sys/proc.h>
+#include <sys/systm.h>
+#include <sys/time.h>
+#include <sys/filedesc.h>
+#include <sys/file.h>
+#include <sys/socket.h>
+#include <sys/socketvar.h>
+#include <sys/dirent.h>
+#include <sys/user.h>
+#include <sys/uio.h>
+#include <sys/buf.h>
+#include <sys/stat.h>
+#include <sys/mount.h>
+#include <sys/vnode.h>
+#include <sys/malloc.h>
+#include <ufs/ffs/fs.h>
+#include <ufs/ufs/quota.h>
+#include <ufs/ufs/inode.h>
+#include <ufs/ufs/ufsmount.h>
+#include <sys/mbuf.h>
+#include <sys/protosw.h>
+#include <sys/ioctl.h> 
+#include <vm/vm_kern.h>
+#include <rpc/rpc.h>
+#else /* AFS_OBSD_ENV */
 #ifdef AFS_LINUX22_ENV
 #include <linux/version.h>
 #include <linux/config.h>
@@ -336,5 +369,6 @@ struct vfspage;			/* for vnode.h compiler warnings */
 
 #endif	/* AFS_OSF_ENV */
 #endif /* AFS_LINUX22_ENV */
+#endif /* AFS_OBSD_ENV */
 
 #endif /* __AFS_SYSINCLUDESH__  so idempotent */

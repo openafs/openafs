@@ -18,7 +18,7 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include "../afs/sysincludes.h"
 #else
 #include "../h/types.h"

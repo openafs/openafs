@@ -110,7 +110,7 @@ syscall.o: syscall.s
 		$(RM) -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
 		touch syscall.o;; \
-	i386_fbsd* ) \
+	i386_*bsd* ) \
 		touch syscall.o;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
