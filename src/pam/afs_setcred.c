@@ -45,7 +45,7 @@ pam_sm_setcred(
     int origmask;
     int logmask = LOG_UPTO(LOG_INFO);
     int nowarn = 0;
-    int use_first_pass = 0; /* use the password passed in by auth */
+    int use_first_pass = 1; /* use the password passed in by auth */
     int try_first_pass = 0;
     int got_authtok = 0;
     int ignore_uid  = 0;
