@@ -115,22 +115,12 @@ B  Building
       e.g. sun4x_57/dest or i386_linux22/dest 
 
    2. As appropriate you can clean up or, if you're using Linux, build for
-      another kernel version:
-      a. To clean up:
+      another kernel version.
+      To clean up:
          % make clean
 
-      b. To build for another Linux kernel version:
-         the system type defined in step A1.
-         % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
-         % make 
-
-         Your dest tree will now include an additional kernel module for your
-         additional kernel headers. Be aware that if the kernel version string
-         which UTS_RELEASE is defined to in include/linux/version.h matches
-         the last kernel you built for, the previous kernel module will be 
-         overwritten.
-
 C  Problems
+
    If you have a problem building this source, you may want to visit
    http://www.openafs.org/ to see if any problems have been reported 
    or to find out how to get more help.
@@ -138,7 +128,21 @@ C  Problems
    Mailing lists have been set up to help; More details can be found
    on the openafs.org site.
 
-D Notes
+D  Linux Notes
+
+   To build for another Linux kernel version:
+   the system type defined in step A1.
+      % ./configure --with-afs-sysname=i386_linux22 --with-linux-kernel-headers=/usr/src/linux-2.2.19-i686
+      % make 
+
+   Your dest tree will now include an additional kernel module for your
+   additional kernel headers. Be aware that if the kernel version string
+   which UTS_RELEASE is defined to in include/linux/version.h matches the
+   last kernel you built for, the previous kernel module will be
+   overwritten.
+
+E  HP-UX 11.0 Notes
+
    HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on their
    web site: http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,687,00.html
    To navigate down from the top level of the portal, one would do
@@ -146,3 +150,16 @@ D Notes
         www.hp.com/dspp -> i want to... -> download software -> operating systems
 
    to get to the same page. 
+
+F  OpenBSD Notes
+
+   For now, you need kernel source installed to build OpenAFS.
+
+   There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
+   should make a package for the client.  Use pkg_add to install.  There is
+   no server package, but I am told that "make install" will put server
+   binaries in /usr/afs.
+
+   Your kernel may panic when you try to shutdown after running the OpenAFS
+   client.  To prevent this, change the "dangling vnode" panic in
+   sys/kern/vfs_syscalls.c to a printf and build a new kernel.

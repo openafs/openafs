@@ -29,4 +29,4 @@ ln -s $SRC/afsd/afs.rc.obsd usr/vice/etc/rc.securelevel.afs
 
 echo '/afs:/usr/vice/cache:96000' >usr/vice/etc/cacheinfo
 
-pkg_create -v -h -f packinglist -c -OpenAFS -d desc -p / -s $PWD openafs
+pkg_create -v -h -f packinglist -c -OpenAFS -d desc -p / -s $PWD openafs-client
