@@ -507,6 +507,13 @@ static void afs_TryFlushDcacheChildren(struct vcache *tvc)
     struct list_head *head = &ip->i_dentry;
     struct dentry *dentry;
     
+#if 1
+    VN_HOLD(tvc);
+    AFS_GUNLOCK();
+    d_prune_aliases(ip);
+    AFS_GLOCK();
+    VN_RELE(tvc);
+#else
 restart:
     DLOCK();
     cur = head;
@@ -562,7 +569,7 @@ restart:
 	}
     }
     DUNLOCK();
-
+#endif
 }
 #endif /* AFS_LINUX22_ENV */
 
