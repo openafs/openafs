@@ -3205,6 +3205,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 #endif /* USE_FSPROBE */
     DWORD       CurrentState;
     char        HostName[64];
+    int         use_kfw = KFW_is_available();
 
     CurrentState = 0;
     memset(HostName, '\0', sizeof(HostName));
@@ -3216,7 +3217,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         return;
     }
 
-    if ( KFW_is_available() ) {
+    if ( use_kfw ) {
         code = pkrb5_init_context(&ctx);
         if ( code ) goto cleanup;
     }
@@ -3233,7 +3234,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 
     rc = pktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
 
-    if ( KFW_is_available() ) {
+    if ( use_kfw ) {
         code = pkrb5_timeofday(ctx, &now);
         if ( code ) 
             now = 0;
@@ -3281,7 +3282,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 #ifdef USE_FSPROBE
     serverReachable = cellPing(NULL);
 #else
-    if ( KFW_is_available() ) {
+    if ( use_kfw ) {
         // If we can't use the FSProbe interface we can attempt to forge
         // a kinit and if we can back an invalid user error we know the
         // kdc is at least reachable
@@ -3346,7 +3347,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     if ( IsDebuggerPresent() )
         OutputDebugString("Server Reachable\n");
 
-    if ( KFW_is_available() ) {
+    if ( use_kfw ) {
 #ifdef USE_MS2MIT
         KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
