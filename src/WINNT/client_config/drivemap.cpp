@@ -774,19 +774,15 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 	  if (*pszSubmount==0)
               return FALSE;
       }
-      ++pszSubmount;
-       if(!*pszSubmount || _tcsncicmp(pszSubmount, szNetBiosName, _tcslen(szNetBiosName)))
-           return FALSE;
 
-#ifdef COMMENT
        // note that szNetBiosName has a '\\' tagged in the end earlier
       for (++pszSubmount; *pszSubmount && (*pszSubmount != TEXT('\\')); ++pszSubmount)
-         if (!lstrncmpi (pszSubmount, szNetBiosName, lstrlen(szNetBiosName)))
+         if (!_tcsncicmp(pszSubmount, szNetBiosName, _tcslen(szNetBiosName)))
             break;
       if ((!*pszSubmount) || (*pszSubmount == TEXT('\\')))
          return FALSE;
-#endif
-      pszSubmount += _tcslen(szNetBiosName);
+
+       pszSubmount += _tcslen(szNetBiosName);
       }
    else // (!IsWindowsNT())
       {
