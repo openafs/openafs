@@ -793,7 +793,18 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 
 	    if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
+#ifdef AFS_OBSD_ENV
+		/*
+		 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
+		 * then it puts the vnode on the free list.
+		 * If we don't do this we end up with a cleaned vnode that's
+		 * not on the free list.
+		 */
+		vgone(AFSTOV(tvc));
+		code = fv_slept = 0;
+#else
 		code = afs_FlushVCache(tvc, &fv_slept);
+#endif
 		if (code == 0) {
 		    anumber--;
 		}
