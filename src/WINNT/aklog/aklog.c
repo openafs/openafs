@@ -990,7 +990,7 @@ int main(int argc, char *argv[])
 	linked_list paths;		/* List of paths to log to */
 	ll_node *cur_node;
 
-	krb5_context context;
+	krb5_context context = 0;
 
 	memset(&cellinfo, 0, sizeof(cellinfo));
 
