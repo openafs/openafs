@@ -58,6 +58,9 @@ int DumpVnodes = 0;	/* Dump everything, i.e. summary of all vnodes */
 int DumpInodeNumber = 0;	/* Dump inode numbers with vnodes */
 int DumpDate = 0;		/* Dump vnode date (server modify date) with vnode */
 int InodeTimes = 0;		/* Dump some of the dates associated with inodes */
+#if defined(AFS_NAMEI_ENV)
+int PrintFileNames = 0;
+#endif
 int online = 0;
 int dheader=0;
 int dsizeOnly = 0, totvolsize=0, Vauxsize = 0, Vdiskused = 0, Vvnodesize = 0;
@@ -74,8 +77,13 @@ void HandleVolume(struct DiskPartition *partP, char *name);
 struct DiskPartition *FindCurrentPartition(void);
 Volume *AttachVolume(struct DiskPartition *dp, char *volname,
 		     register struct VolumeHeader *header);
+#if defined(AFS_NAMEI_ENV)
+void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber,
+		Inode ino, Volume* vp);
+#else
 void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber,
 		Inode ino);
+#endif
 void PrintVnodes(Volume *vp, VnodeClass class);
 
 char *date(time_t date)
@@ -256,6 +264,12 @@ static int handleit(struct cmd_syndesc *as)
 	orphaned = 1;
 	DumpVnodes = 1;
     } else    
+#if defined(AFS_NAMEI_ENV)
+    if (as->parms[12].items) {
+	PrintFileNames = 1;
+	DumpVnodes = 1;
+    } else    
+#endif
 	orphaned = 0;    
 
     DInit(10);
@@ -593,6 +607,9 @@ char **argv;
     cmd_AddParm(ts, "-fixheader", CMD_FLAG, CMD_OPTIONAL, "Try to fix header");    
     cmd_AddParm(ts, "-saveinodes", CMD_FLAG, CMD_OPTIONAL, "Try to save all inodes");    
     cmd_AddParm(ts, "-orphaned", CMD_FLAG, CMD_OPTIONAL, "List all dir/files without a parent");    
+#if defined(AFS_NAMEI_ENV)
+    cmd_AddParm(ts, "-filenames", CMD_FLAG, CMD_OPTIONAL, "Print filenames");    
+#endif
     code = cmd_Dispatch(argc, argv);
     return code;
 }
@@ -769,16 +786,29 @@ void PrintVnodes(Volume *vp, VnodeClass class)
 		       ino, nfile, total);
 	    }
 	} else {
+#if defined(AFS_NAMEI_ENV)
+	    PrintVnode(offset, vnode,
+		       bitNumberToVnodeNumber(vnodeIndex, class), ino, vp);
+#else
 	    PrintVnode(offset, vnode,
 		       bitNumberToVnodeNumber(vnodeIndex, class), ino);
+#endif
 	}
     }
     STREAM_CLOSE(file);
     FDH_CLOSE(fdP);
 }
 
+#if defined(AFS_NAMEI_ENV)
+void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino, Volume *vp)
+#else
 void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
+#endif
 {
+#if defined(AFS_NAMEI_ENV)
+    IHandle_t *ihtmpp;
+    namei_t filename;
+#endif
     Vvnodesize += vnode->length;
     if (dsizeOnly) return;
     if (orphaned && (vnode->length ==0 || vnode->parent || !offset)) return;
@@ -788,5 +818,12 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
 	printf(" inode: %s", PrintInode(NULL, ino));
     if (DumpDate)
 	printf(" ServerModTime: %s", date(vnode->serverModifyTime));
+#if defined(AFS_NAMEI_ENV)
+    if(PrintFileNames) {
+	    IH_INIT(ihtmpp, V_device(vp), V_parentId(vp), ino);
+	    namei_HandleToName(&filename, ihtmpp);
+	    printf(" UFS-Filename: %s",filename.n_path);
+    }
+#endif
     printf("\n");
 }
