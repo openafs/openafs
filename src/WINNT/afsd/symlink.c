@@ -232,6 +232,11 @@ static MakeLinkCmd(as)
 register struct cmd_syndesc *as; {
     register afs_int32 code;
     struct ViceIoctl blob;
+#ifdef WIN32
+    char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
+    BOOL isGateway = FALSE;
+    lana_number_t lanaNum;
+#endif
 
     if (!InAFS(Parent(as->parms[0].items->data))) {
 	fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
@@ -243,6 +248,11 @@ register struct cmd_syndesc *as; {
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
+
+    /* TODO: Code needs to go here to prevent the creation of symlinks
+     * in \\AFS\all when not in the "AFS Client Admins" group.
+     */
+
     blob.out_size = 0;
     blob.in_size = 1 + strlen(space);
     blob.in = space;

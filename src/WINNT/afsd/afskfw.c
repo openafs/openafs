@@ -56,7 +56,7 @@
 
 
 #define USE_MS2MIT
-#define USE_KRB4
+#undef  USE_KRB4
 #include "afskfw-int.h"
 #include "afskfw.h"
 
@@ -288,6 +288,7 @@ FUNC_INFO k5_fi[] = {
     END_FUNC_INFO
 };
 
+#ifdef USE_KRB4
 FUNC_INFO k4_fi[] = {
     MAKE_FUNC_INFO(krb_get_cred),
     MAKE_FUNC_INFO(krb_get_tf_realm),
@@ -295,6 +296,7 @@ FUNC_INFO k4_fi[] = {
     MAKE_FUNC_INFO(tkt_string),
     END_FUNC_INFO
 };
+#endif
 
 FUNC_INFO k524_fi[] = {
     MAKE_FUNC_INFO(krb524_init_ets),
@@ -388,7 +390,9 @@ KFW_initialize(void)
         if ( !inited ) {
             inited = 1;
             LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
+#ifdef USE_KRB4
             LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 0, 0);
+#endif /* USE_KRB4 */
             LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
             LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
 #ifdef USE_MS2MIT
@@ -2639,7 +2643,8 @@ KFW_AFS_klog(
         }       
     }
 #else
-    goto cleanup;
+    if (!try_krb5)
+        goto cleanup;
 #endif
     strcpy(realm_of_cell, afs_realm_of_cell(ctx, &ak_cellconfig));
 
@@ -2696,7 +2701,7 @@ KFW_AFS_klog(
         code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
         if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
              code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-			 code == KRB5KRB_AP_ERR_MSG_TYPE) {
+             code == KRB5KRB_AP_ERR_MSG_TYPE) {
             /* Or service@REALM */
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
@@ -2726,7 +2731,7 @@ KFW_AFS_klog(
 
         if ((code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
               code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
-			  code == KRB5KRB_AP_ERR_MSG_TYPE) &&
+              code == KRB5KRB_AP_ERR_MSG_TYPE) &&
              strcmp(RealmName, realm_of_cell)) {
             /* Or service/cell@REALM_OF_CELL */
             strcpy(RealmName, realm_of_cell);
@@ -3017,7 +3022,7 @@ KFW_AFS_klog(
     if (ctx && (ctx != alt_ctx))
         pkrb5_free_context(ctx);
 
-	return(rc? rc : code);
+    return(rc? rc : code);
 }
 
 /**************************************/

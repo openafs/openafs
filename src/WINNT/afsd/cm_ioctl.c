@@ -1510,6 +1510,26 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     cp = ioctlp->inDatap;		/* contents of link */
 
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+        /* we are adding the symlink to the root dir., so call
+         * the freelance code to do the add. */
+        if (cp[0] == cp[1] && cp[1] == '\\' && 
+            !_strnicmp(cm_NetbiosName,cp+2,strlen(cm_NetbiosName))) 
+        {
+            /* skip \\AFS\ or \\AFS\all\ */
+            char * p;
+            p = cp + 2 + strlen(cm_NetbiosName) + 1;
+            if ( !_strnicmp("all", p, 3) )
+                p += 4;
+            cp = p;
+        }
+        osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
+        code = cm_FreelanceAddSymlink(leaf, cp, NULL);
+        return code;
+    }
+#endif
+
     /* Create symlink with mode 0755. */
     tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
     tattr.unixModeBits = 0755;
@@ -1618,6 +1638,16 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) return code;
 
     cp = ioctlp->inDatap;
+
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+        /* we are adding the mount point to the root dir., so call
+         * the freelance code to do the add. */
+        osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
+        code = cm_FreelanceRemoveSymlink(cp);
+        return code;
+    }
+#endif
 
     code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         

@@ -329,7 +329,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         cm_hashTablep[hash]=scp;
         scp->flags |= CM_SCACHEFLAG_INHASH;
         scp->refCount = 1;
-        scp->fileType = CM_SCACHETYPE_MOUNTPOINT;
+        scp->fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
 
         lock_ObtainMutex(&cm_Freelance_Lock);
         scp->length.LowPart = strlen(mp)+4;
