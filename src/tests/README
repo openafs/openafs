@@ -1,0 +1,239 @@
+AFS verification suite
+14 Jan 2002
+
+Prerequisites
+
+1) A Kerberos KDC should already be configured 
+2) An afs key should be in the KeyFile the AFS binaries will use
+   (/usr/afs/etc/KeyFile in an IBM-style installation; bos_util can be used
+    to set it up)
+3) 2 srvtabs or keytabs with user keys, one for the user "admin"
+   and one for the user "user" that can be used for authenticated testing 
+   of the AFS installation
+4) The necessary tools for getting an AFS token from the installed Kerberos
+   (typically aklog) should be available.
+5) Ability to run as root on the "test" node.
+6) If the AFS to be tested is not OpenAFS, pt_util from OpenAFS should be
+   built and installed.
+7) Volume dump test tools included in new versions of OpenAFS.
+8) The "test" node should have partitions mounted as /vicepa and /vicepb
+9) perl5
+10) wget (should be configurable to use curl; what else?)
+
+(*) This is not yet true but will be by the time the suite is delivered.
+
+Setup
+1) Scripts provided bootstrap and populate a "test cell". (afs-newcell)
+
+Tests
+
+A) Simple tests
+10) Create a file. (creat1)
+20) Create a directory. (mkdir1/mkdir2)
+30) Create a symlink. (symlink)
+40) Create a in-same-directory hardlink. (hardlink1)
+50) Create a hardlink to a different-directory-same-volume file. (hardlink4)
+60) Create a hardlink to a directory. (hardlink2)
+70) Create a cross-volume hardlink. (hardlink5)
+80) Touch a file. (touch1)
+90) Write a simple file. (write1)
+100) Rewrite a file. (write3)
+110) Rename a file. (rename1)
+
+B) Basic functionality
+10) Stat multiple hardlinked files. (hardlink3)
+20) Write, truncate, rewrite a file. (write2)
+30) Append to a file. (append1)
+40) Rename a file over another file. (rename2)
+50) Rename a file into a same-volume directory. (rename4)
+60) Rename a file into another-volume directory. (rename6)
+70) Rename an open directory. (rename-under-feet)
+80) Create a file with a large filename. (large-filename)
+90) Chmod a file by descriptor. (fchmod)
+100) Utimes a file. (utime-file)
+110) Utimes a directory. (utime-dir)
+120) Test directory "link count" increasing/decreasing appropriately. (mkdir3)
+
+C) Mountpoint tests
+10) Create and remove a good mountpoint. (mkm-rmm)
+20) Create a mountpoint to a nonexistant volume. (mountpoint)
+
+D) ACL tests
+10) Add a valid PTS user to an ACL. (acladduser)
+20) Add a valid PTS group to an ACL. (acladdgroup)
+30) Add ACL rights for a PTS user. (acladdrights)
+40) Add negative ACL rights for a PTS user. (acladdnegrights)
+50) Clear negative ACL rights for a PTS user. (aclclearnegrights)
+60) Remove a valid PTS user from an ACL. (aclremoveuser)
+70) Remove a valid PTS group from an ACL. (aclremovegroup)
+80) Copy an ACL. (aclcopy)
+
+E) Executable tests
+10) Write and execute a script in a directory. (exec)
+20) Download and build http://www.openafs.org/dl/openafs/1.2.2/openafs-1.2.2-src.tar.gz, then run something from it. (build-openafs)
+
+F) mmap tests
+10) Append over a mapped page. (append-over-page)
+20) Write via mmap to a shared-mapped file. (mmap-shared-write)
+30) Compare a file being read via mmap private and read (mmap-vs-read2)
+40) Compare a file being read via mmap shared and read (mmap-vs-read)
+50) Compare a file being read via read and mmap shared (read-vs-mmap2)
+60) Compare a file being read via read and mmap private (read-vs-mmap)
+
+G) Filesystem Semantics tests
+10) Create a file with 8 bit characters in its name. (strange-characters)
+20) Test pine lockfile semantics. (pine)
+30) Create and remove a single file in parallel. (parallel1)
+40) Create a >2gb file (write-large)
+
+H) AFS behavior tests
+10) Write a file in a readonly volume. (write-ro)
+20) Create 31707 entries in a directory. (too-many-files)
+30) Test setpag(). (setpag)
+40) Test setgroups(). (setgroups)
+
+I) Remote operation tests
+10) Write a file locally and read it in a foreign cache manager. (extcopyin)
+20) Write a file in a foreign cache manager and read it locally. (extcopyout)
+
+K) Client abuse tests
+10) Write a file, read, rewrite and reread a file with the same open descriptor. (read-write)
+20) Populate and clean up a directory tree. (create-remove-files)
+30) FSX file system stresser (fsx)
+
+L) Fileserver tests
+
+M) Ptserver tests
+10) Create a user (ptscreateuser)
+20) Create a group (ptscreategroup)
+30) Add a user to a group (ptsadduser)
+40) Chown a group (ptschown)
+50) Get user membership (ptsmembersuser)
+60) Get group membership (ptsmembersgroup)
+70) Examine a user (ptsexamineuser)
+80) Examine a group (ptsexaminegroup)
+90) Remove a user from a group (ptsremove)
+100) List groups a user owns (ptslistown)
+100) Set maxuser (ptssetmax)
+110) List maxuser (ptslistmax)
+130) Set fields on a user (ptssetf)
+140) Delete a group (ptsdeletegroup)
+150) Delete a user (ptsdeleteuser)
+160) pt_util exercising (?)
+
+N) Volserver/vlserver tests
+10) Create a volume (voscreate)
+20) Move a volume (vosmove)
+30) Add a replication site (vosaddsite)
+40) Release a volume (vosrelease)
+50) Remove a replication site (vosremsite)
+70) Remove a volume (vosremove)
+80) Delete a VLDB entry (vosdelentry)
+90) Synchronize vldb to volumes (vossyncvldb)
+100) Zap a volume (voszap)
+110) Synchronize volumes to vldb (vossyncserv)
+120) Lock a VLDB entry (voslock)
+130) Unlock a VLDB entry (vosunlock)
+140) Unlock all VLDB entries after locking one or more (vosunlockall)
+150) Rename a volume. (vosrename)
+160) List all volumes on a partition. (voslistvol)
+170) List vldb (voslistvldb)
+180) Get partition info. (vospartinfo)
+190) List partitions (voslistpart)
+200) Backup a volume (vosbackup)
+210) Examine a volume (vosexamine)
+220) Dump a volume (vosdump)
+230) Restore a volume (vosrestore)
+240) Verify a volume dump (?)
+
+O) Bosserver tests
+10) Add a bosserver host (bosaddhost)
+20) List server hosts (bostlisthosts)
+30) Remove a server host (bosremovehost)
+40) Add a superuser (bosadduser)
+50) List superusers (boslistusers)
+60) Remove a superuser (bosremoveuser)
+70) Install an executable shell script (bosinstall)
+80) Execute something via the bosserver (bosexec)
+80) Create a bos bnode (boscreate)
+90) Delete a running bnode (bosdeleterunning)
+100) Get a bnode status (bosstatus)
+110) Stop a bos bnode (bosstop)
+120) Restart a bos bnode (bosrestartstopped)
+130) Start a bos bnode (bosstart)
+140) Shutdown a bnode (bosshutdown)
+150) Delete a stopped bnode (bosdelete)
+160) Add a key (bosaddkey)
+170) List keys (boslistkeys)
+180) Remove a key (bosremovekey)
+180) Salvage a volume (bossalvagevolume)
+190) Salvage a partition (bossalvagepart)
+200) Salvage a server (bossalvageserver)
+
+P) Regression
+10) Write a file larger than the cache. (fcachesize-write-file)
+20) Read a file larger than the cache. (fcachesize-read-file)
+30) Restore volume with a bad uniquifier in it, salvage, check. (baduniq)
+40) Check for bad dentry caching on Linux taking advantage of last test. (?)
+
+---
+Copyright information
+
+The AFStools perl modules are:
+
+## Copyright (c) 1996, 2001 Carnegie Mellon University
+## All Rights Reserved.
+#
+# Permission to use, copy, modify and distribute this software and its
+# documentation is hereby granted, provided that both the copyright
+# notice and this permission notice appear in all copies of the
+# software, derivative works or modified versions, and any portions
+# thereof, and that both notices appear in supporting documentation.
+#
+# CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+# CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+# ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+#
+# Carnegie Mellon requests users of this software to return to
+#
+#  Software Distribution Coordinator  or  Software_Distribution@CS.CMU.EDU
+#  School of Computer Science
+#  Carnegie Mellon University
+#  Pittsburgh PA 15213-3890
+#
+# any improvements or extensions that they make and grant Carnegie Mellon
+# the rights to redistribute these changes.
+
+Some tests as noted are:
+/*
+ * Copyright (c) 2001 Kungliga Tekniska Högskolan
+ * (Royal Institute of Technology, Stockholm, Sweden).
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */

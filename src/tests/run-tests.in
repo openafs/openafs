@@ -1,0 +1,417 @@
+#!/bin/sh
+#
+# $Id: run-tests.in,v 1.1 2002/01/22 19:54:42 hartmans Exp $
+#
+srcdir=@srcdir@
+objdir=`pwd`
+SHELL=/bin/sh
+VERSION=@VERSION@
+PACKAGE=@PACKAGE@
+host=@host@
+RUNAS=nobody
+FS=@afssrvbindir@/fs
+export FS
+
+AFSROOT=${AFSROOT-/afs}
+export AFSROOT
+
+BASIC_TESTS="creat1			\
+	    mkdir1			\
+	    mkdir2 			\
+	    symlink 			\
+	    hardlink1			\
+	    hardlink4			\
+	    hardlink2			\
+	    hardlink5			\
+	    touch1			\
+	    write1			\
+	    write3			\
+	    rename1			\
+	    hardlink3			\
+	    write2			\
+	    append1			\
+	    rename2			\
+	    rename4			\
+	    rename6			\
+	    rename-under-feet		\
+	    large-filename		\
+	    fchmod			\
+	    utime-file			\
+	    utime-dir			\
+	    mkdir3"
+
+MTPT_TESTS="mkm-rmm			\
+	    mountpoint"
+
+ACL_TESTS="acladduser.pl		\
+	    acladdgroup.pl		\
+	    acladdrights.pl		\
+	    acladdnegrights.pl		\
+	    aclclearnegrights.pl	\
+	    aclremoveuser.pl		\
+	    aclremovegroup.pl		\
+	    aclcopy.pl"
+
+EXEC_TESTS="exec			\
+	    hello-world			\
+	    build-openafs"
+
+MMAP_TESTS="append-over-page		\
+	    mmap-shared-write		\
+	    mmap-vs-read2		\
+	    mmap-vs-read		\
+	    read-vs-mmap2		\
+	    read-vs-mmap"
+
+FS_TESTS="strange-characters		\
+	    pine			\
+	    parallel1			\
+	    write-large"
+
+AFS_TESTS="write-ro			\
+	    too-many-files		\
+	    setpag			\
+	    setgroups"
+
+RMT_TESTS="extcopyin			\
+	    extcopyout"
+
+ABUSE_TESTS="read-write			\
+	    create-remove-files		\
+	    run-fsx"
+
+PTS_TESTS="ptscreateuser.pl		\
+	    ptscreategroup.pl		\
+	    ptsadduser.pl		\
+	    ptschown.pl			\
+	    ptsmembersuser.pl		\
+	    ptsmembersgroup.pl		\
+	    ptsexamineuser.pl		\
+	    ptsexaminegroup.pl		\
+	    ptsremove.pl		\
+	    ptslistown.pl		\
+	    ptssetmax.pl		\
+	    ptslistmax.pl		\
+	    ptssetf.pl			\
+	    ptsdeletegroup.pl		\
+	    ptsdeleteuser.pl"
+
+VOS_TESTS="voscreate.pl		\
+	    vosmove.pl			\
+	    vosaddsite.pl		\
+	    vosrelease.pl		\
+	    vosremsite.pl		\
+	    vosremove.pl		\
+	    vosdelentry.pl		\
+	    vossyncvldb.pl		\
+	    voszap.pl			\
+	    vossyncserv.pl		\
+	    voslock.pl			\
+	    vosunlock.pl		\
+	    vosunlockall.pl		\
+	    vosrename.pl		\
+	    voslistvol.pl		\
+	    voslistvldb.pl		\
+	    vospartinfo.pl		\
+	    voslistpart.pl		\
+	    vosbackup.pl		\
+	    vosexamine.pl		\
+	    vosdump.pl			\
+	    vosrestore.pl"
+
+BOS_TESTS="bosaddhost.pl		\
+	    boslisthosts.pl		\
+	    bosremovehost.pl		\
+	    bosadduser.pl		\
+	    boslistusers.pl		\
+	    bosremoveuser.pl		\
+	    bosinstall.pl		\
+	    bosexec.pl			\
+	    boscreate.pl		\
+	    bosdeleterunning.pl		\
+	    bosstatus.pl		\
+	    bosstop.pl			\
+	    bosrestartstopped.pl	\
+	    bosstart.pl			\
+	    bosshutdown.pl		\
+	    bosdelete.pl		\
+	    bosaddkey.pl		\
+	    boslistkeys.pl		\
+	    bosremovekey.pl		\
+	    bossalvagevolume.pl		\
+	    bossalvagepart.pl		\
+	    bossalvageserver.pl"
+
+REG_TESTS="fcachesize-write-file	\
+	    fcachesize-read-file	\
+	    baduniq.pl"
+
+ALL_TESTS="creat1			\
+	    mkdir1			\
+	    mkdir2 			\
+	    symlink 			\
+	    hardlink1			\
+	    hardlink4			\
+	    hardlink2			\
+	    hardlink5			\
+	    touch1			\
+	    write1			\
+	    write3			\
+	    rename1			\
+	    hardlink3			\
+	    write2			\
+	    append1			\
+	    rename2			\
+	    rename4			\
+	    rename6			\
+	    rename-under-feet		\
+	    large-filename		\
+	    fchmod			\
+	    utime-file			\
+	    utime-dir			\
+	    mkdir3			\
+	    mkm-rmm			\
+	    mountpoint			\
+	    acladduser.pl		\
+	    acladdgroup.pl		\
+	    acladdrights.pl		\
+	    acladdnegrights.pl		\
+	    aclclearnegrights.pl	\
+	    aclremoveuser.pl		\
+	    aclremovegroup.pl		\
+	    aclcopy.pl			\
+	    exec			\
+	    hello-world			\
+	    build-openafs		\
+	    append-over-page		\
+	    mmap-shared-write		\
+	    mmap-vs-read2		\
+	    mmap-vs-read		\
+	    read-vs-mmap2		\
+	    read-vs-mmap		\
+	    strange-characters		\
+	    pine			\
+	    parallel1			\
+	    write-large			\
+	    write-ro			\
+	    too-many-files		\
+	    setpag			\
+	    setgroups			\
+	    extcopyin			\
+	    extcopyout			\
+	    read-write			\
+	    create-remove-files		\
+	    run-fsx			\
+	    ptscreateuser.pl		\
+	    ptscreategroup.pl		\
+	    ptsadduser.pl		\
+	    ptschown.pl			\
+	    ptsmembersuser.pl		\
+	    ptsmembersgroup.pl		\
+	    ptsexamineuser.pl		\
+	    ptsexaminegroup.pl		\
+	    ptsremove.pl		\
+	    ptslistown.pl		\
+	    ptssetmax.pl		\
+	    ptslistmax.pl		\
+	    ptssetf.pl			\
+	    ptsdeletegroup.pl		\
+	    ptsdeleteuser.pl		\
+	    voscreate.pl		\
+	    vosmove.pl			\
+	    vosaddsite.pl		\
+	    vosrelease.pl		\
+	    vosremsite.pl		\
+	    vosremove.pl		\
+	    vosdelentry.pl		\
+	    vossyncvldb.pl		\
+	    voszap.pl			\
+	    vossyncserv.pl		\
+	    voslock.pl			\
+	    vosunlock.pl		\
+	    vosunlockall.pl		\
+	    vosrename.pl		\
+	    voslistvol.pl		\
+	    voslistvldb.pl		\
+	    vospartinfo.pl		\
+	    voslistpart.pl		\
+	    vosbackup.pl		\
+	    vosexamine.pl		\
+	    vosdump.pl			\
+	    vosrestore.pl		\
+	    bosaddhost.pl		\
+	    boslisthosts.pl		\
+	    bosremovehost.pl		\
+	    bosadduser.pl		\
+	    boslistusers.pl		\
+	    bosremoveuser.pl		\
+	    bosinstall.pl		\
+	    bosexec.pl			\
+	    boscreate.pl		\
+	    bosdeleterunning.pl		\
+	    bosstatus.pl		\
+	    bosstop.pl			\
+	    bosrestartstopped.pl	\
+	    bosstart.pl			\
+	    bosshutdown.pl		\
+	    bosdelete.pl		\
+	    bosaddkey.pl		\
+	    boslistkeys.pl		\
+	    bosremovekey.pl		\
+	    bossalvagevolume.pl		\
+	    bossalvagepart.pl		\
+	    bossalvageserver.pl		\
+	    fcachesize-write-file	\
+	    fcachesize-read-file	\
+	    baduniq.pl"
+
+TESTS="$ALL_TESTS"
+TEST_MODE="all"
+
+linebreak=":-------------------------------;"
+
+PARALLELL=
+FAST=
+LARGE=
+PRINT_CACHESIZE=
+usage="Usage: $0 [-user user] [-all] [-fast] [-large] [-j] [-verbose] [-x] tests ..."
+while true
+do
+  case $1 in
+  -all) ALL=yes;;
+  -fast) FAST=yes;;
+  -large) LARGE=yes;;
+  -j) PARALLELL="&";;
+  -verbose) VERBOSE=yes;;
+  -user) RUNAS=$1; shift;;
+  -x) SHELLVERBOSE="-x";;
+  -p) PRINT_CACHESIZE="yes";;
+  -basic) TESTS="$BASIC_TESTS";TEST_MODE="basic";;
+  -mtpt) TESTS="$MTPT_TESTS";TEST_MODE="mtpt";;
+  -acl) TESTS="$ACL_TESTS";TEST_MODE="acl";;
+  -exec) TESTS="$EXEC_TESTS";TEST_MODE="exec";;
+  -mmap) TESTS="$MMAP_TESTS";TEST_MODE="mmap";;
+  -fs) TESTS="$FS_TESTS";TEST_MODE="fs";;
+  -afs) TESTS="$AFS_TESTS";TEST_MODE="afs";;
+  -rmt) TESTS="$RMT_TESTS";TEST_MODE="rmt";;
+  -abuse) TESTS="$ABUSE_TESTS";TEST_MODE="abuse";;
+  -pts) TESTS="$PTS_TESTS";TEST_MODE="pts";;
+  -vos) TESTS="$VOS_TESTS";TEST_MODE="vos";;
+  -bos) TESTS="$BOS_TESTS";TEST_MODE="bos";;
+  -reg) TESTS="$REG_TESTS";TEST_MODE="reg";;
+  -help|--help) echo $usage; 
+	echo "tests available: $linebreak"; for a in "$ALL_TESTS"; do echo $a ; done;
+	exit 0;;
+  -version|--version) echo "$0 $Id: run-tests.in,v 1.1 2002/01/22 19:54:42 hartmans Exp $"; exit 0;;
+  -*) echo "$0: Bad option $1"; echo $usage; exit 1;;
+  *) break;;
+  esac
+  shift
+done
+
+if test "X$WORKDIR" = "X";then
+	echo "WORKDIR=workdir $0 $* or env WORKDIR=workdir $0 $*"; exit 1;
+fi
+
+RUNTESTS=
+if test "X$ALL" != "X" ; then
+    RUNTESTS="$TESTS"
+elif test $# -lt 1; then
+    echo $usage; exit
+else
+    RUNTESTS=$*
+fi
+
+# these are variables exported to the scripts
+
+export FAST
+export LARGE
+export VERBOSE
+export SHELLVERBOSE
+
+# and file descriptors
+
+# 3 - progress
+# 4 - details
+
+if test "$VERBOSE" = "yes"; then
+  exec 3>/dev/null
+  exec 4>&1
+else
+  exec 3>&1
+  exec 4>/dev/null
+fi
+
+# Find out where we really are
+
+srcdir=`cd $srcdir; pwd`
+objdir=`cd $objdir; pwd`
+
+export srcdir
+export objdir
+
+echo "-------------------------------------------------"
+echo "$PACKAGE-$VERSION"
+echo "hosttype $host"
+echo "${SHELL},${SHELLVERBOSE},${VERBOSE},${PARALLELL},${FAST}"
+echo "testmode ${TEST_MODE}"
+echo "runas ${RUNAS}"
+echo "${srcdir}"
+echo "${objdir}"
+echo "${WORKDIR}"
+date
+echo "-------------------------------------------------"
+
+test "X$VERBOSE" != "X" && echo "Running tests"
+
+FAILEDTESTS=
+exitval=0
+
+for a in $RUNTESTS; do
+  #
+  # XXX Test if binary in $srcdir, shellscript in $srcdir else
+  # its a binary in objdir
+  #
+  if test -x ${srcdir}/$a ; then
+    b="${srcdir}/$a"
+  elif test -f ${srcdir}/$a ; then
+    b="${SHELL} ${SHELLVERBOSE} ${srcdir}/$a"
+  else
+    b="${objdir}/$a"
+  fi
+  echo "Running $a"
+  test "X$VERBOSE" != "X" && echo "Running test $a ($b)."
+  if test "$a" = "setgroups" ; then
+     b="${objdir}/asu root $b"
+  else
+     b="${objdir}/asu $RUNAS $b"
+  fi
+  tmpdir="`hostname`-$a-`date +%Y-%m-%d-%H-%M-%S`-$$"
+  cd $WORKDIR && mkdir $tmpdir && (cd $tmpdir && $b ${PARALLELL})
+  saved_res=$?
+  test "X$VERBOSE" != "X" && echo "Saved res = $saved_res"
+  if test "X${PARALLELL}" = "X" ;then
+     if test $saved_res != 0 ; then 
+	echo "Test $a FAILED"
+        FAILEDTESTS="${FAILEDTESTS} $a"; 
+        exitval=$savedres
+     else
+	test "X$VERBOSE" != "X" && echo "Test $a succeeded, tmpdir is removed"
+	${objdir}/rm-rf $tmpdir
+     fi
+     test "X$VERBOSE" != "X" && echo "Done test $a."
+  fi
+  test "X${PRINT_CACHESIZE}" = Xyes && $objdir/../appl/fs/fs calculate
+done
+
+wait
+date
+
+if test "$FAILEDTESTS"; then
+  echo "-----------------------------------------------------------"
+  echo "Failed test(s) were: $FAILEDTESTS"
+else
+  echo "All test(s) were succesful!"
+fi
+
+exit $exitval
