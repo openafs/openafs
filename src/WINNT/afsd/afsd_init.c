@@ -94,6 +94,12 @@ int cm_dnsEnabled = 1;
 
 char cm_NetBiosName[32];
 
+extern initUpperCaseTable();
+void afsd_initUpperCaseTable() 
+{
+	initUpperCaseTable();
+}
+
 void
 afsi_start()
 {
@@ -210,6 +216,8 @@ int afsd_InitCM(char **reasonP)
     lana_number_t lanaNum;
 
 	WSAStartup(0x0101, &WSAjunk);
+
+    afsd_initUpperCaseTable();
 
 	/* setup osidebug server at RPC slot 1000 */
 	osi_LongToUID(1000, &debugID);

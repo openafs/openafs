@@ -1149,7 +1149,6 @@ KFW_import_ccache_data(void)
 
 int
 KFW_AFS_get_cred(char * username, 
-                  char * instance, 
                   char * cell,
                   char * password,
                   int lifetime,
@@ -1174,11 +1173,7 @@ KFW_AFS_get_cred(char * username,
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_get_cred for token ");
         OutputDebugString(username);
-        if ( instance ) {
-            OutputDebugString("/");
-            OutputDebugString(instance);
-        }
-        OutputDebugString("@");
+        OutputDebugString(" in cell ");
         OutputDebugString(cell);
         OutputDebugString("\n");
     }
@@ -1204,8 +1199,8 @@ KFW_AFS_get_cred(char * username,
     }
 
     code = pkrb5_build_principal(ctx, &principal, strlen(realm),
-                                 realm, username, 
-                                 (instance && instance[0]) ? instance : NULL, 
+                                 realm, username,
+                                 NULL,
                                  NULL);
 
     code = KFW_get_ccache(ctx, principal, &cc);

@@ -428,7 +428,7 @@ DWORD APIENTRY NPLogonNotify(
         if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))
 		{			
             if ( KFW_is_available() )
-                code = KFW_AFS_get_cred(uname, "", cell, password, 0, uname, &reason);
+                code = KFW_AFS_get_cred(uname, cell, password, 0, uname, &reason);
             else
                 code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                 uname, "", cell, password, uname, 0, &pw_exp, 0,
@@ -447,7 +447,7 @@ DWORD APIENTRY NPLogonNotify(
         else if (ISLOGONINTEGRATED(LogonOption) && ISHIGHSECURITY(LogonOption))
 		{
             if ( KFW_is_available() )
-                code = KFW_AFS_get_cred(uname, "", cell, password, 0, RandomName, &reason);
+                code = KFW_AFS_get_cred(uname, cell, password, 0, RandomName, &reason);
             else
                 code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
                                                 uname, "", cell, password,RandomName, 0, &pw_exp, 0,

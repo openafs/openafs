@@ -1745,6 +1745,71 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     return code;
 }
 
+#ifndef USE_OLD_MATCHING
+// char table for case insensitive comparison
+char mapCaseTable[256];
+
+VOID initUpperCaseTable(VOID) 
+{
+    int i;
+    for (i = 0; i < 256; ++i) 
+       mapCaseTable[i] = toupper(i);
+    // make '"' match '.' 
+    mapCaseTable[(int)'"'] = toupper('.');
+}
+
+// Compare 'pattern' (containing metacharacters '*' and '?') with the file
+// name 'name'.
+// Note : this procedure works recursively calling itself.
+// Parameters
+// PSZ pattern    : string containing metacharacters.
+// PSZ name       : file name to be compared with 'pattern'.
+// Return value
+// BOOL : TRUE/FALSE (match/mistmatch)
+
+BOOL szWildCardMatchFileName(PSZ pattern, PSZ name) {
+   PSZ pename;         // points to the last 'name' character
+   PSZ p;
+   pename = name + strlen(name) - 1;
+   while (*name) {
+      switch (*pattern) {
+         case '?':
+            if (*(++pattern) != '<' || *(++pattern) != '*') {
+               if (*name == '.') return FALSE;
+               ++name;
+               break;
+            } /* endif */
+         case '<':
+         case '*':
+            while ((*pattern == '<') || (*pattern == '*') || (*pattern == '?')) ++pattern;
+            if (!*pattern) return TRUE;
+            for (p = pename; p >= name; --p) {
+               if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
+                   szWildCardMatchFileName(pattern + 1, p + 1))
+                  return TRUE;
+            } /* endfor */
+            return FALSE;
+         default:
+            if (mapCaseTable[*name] != mapCaseTable[*pattern]) return FALSE;
+            ++pattern, ++name;
+            break;
+      } /* endswitch */
+   } /* endwhile */ return !*pattern;
+}
+
+/* do a case-folding search of the star name mask with the name in namep.
+ * Return 1 if we match, otherwise 0.
+ */
+int smb_V3MatchMask(char *namep, char *maskp, int flags) 
+{
+	/* make sure we only match 8.3 names, if requested */
+	if ((flags & CM_FLAG_8DOT3) && !cm_Is8Dot3(namep)) 
+        return 0;
+	
+	return szWildCardMatchFileName(maskp, namep) ? 1:0;
+}
+
+#else /* USE_OLD_MATCHING */
 /* do a case-folding search of the star name mask with the name in namep.
  * Return 1 if we match, otherwise 0.
  */
@@ -1882,6 +1947,7 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 		}
 	}
 }
+#endif /* USE_OLD_MATCHING */
 
 long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
