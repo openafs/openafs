@@ -70,6 +70,10 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	code = EXDEV;
 	goto done;
     }
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
     code = afs_VerifyVCache(adp, &treq);
     if (code) goto done;
 

@@ -257,6 +257,13 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
       return code;
     }
+    if (strlen(aname) > AFSNAMEMAX) {
+#ifdef  AFS_OSF_ENV
+	afs_PutVCache(adp, 0);
+	afs_PutVCache(tvc, 0);
+#endif
+	return ENAMETOOLONG;
+    }
 tagain:
     code = afs_VerifyVCache(adp, &treq);
 #ifdef	AFS_OSF_ENV

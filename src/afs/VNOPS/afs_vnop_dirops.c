@@ -72,6 +72,11 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     if (code = afs_InitReq(&treq, acred)) 
 	goto done2;
 
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
+
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
 	goto done;
@@ -199,6 +204,11 @@ afs_rmdir(adp, aname, acred)
 
     if (code = afs_InitReq(&treq, acred)) 
 	goto done2;
+
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
 
     code = afs_VerifyVCache(adp, &treq);
     if (code) goto done;

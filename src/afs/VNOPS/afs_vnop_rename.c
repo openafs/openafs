@@ -55,6 +55,11 @@ afsrename(aodp, aname1, andp, aname2, acred)
 
     if (code = afs_InitReq(&treq, acred)) return code;
 
+    if (strlen(aname1) > AFSNAMEMAX || strlen(aname2) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
+
     /* verify the latest versions of the stat cache entries */
 tagain:
     code = afs_VerifyVCache(aodp, &treq);

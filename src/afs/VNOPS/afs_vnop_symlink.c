@@ -79,6 +79,11 @@ afs_symlink
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
 
+    if (strlen(aname) > AFSNAMEMAX || strlen(atargetName) > AFSPATHMAX) {
+	code = ENAMETOOLONG;
+	goto done2;
+    }
+
     if (afs_IsDynroot(adp)) {
 	code = afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
 	goto done2;
