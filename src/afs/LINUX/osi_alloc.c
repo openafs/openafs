@@ -335,9 +335,7 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
 
   free_error:
     if (new) {
-	up(&afs_linux_alloc_sem);
 	linux_free(new);
-	down(&afs_linux_alloc_sem);
     }
     new = NULL;
     goto error;
