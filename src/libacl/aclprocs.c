@@ -276,8 +276,10 @@ acl_Internalize(elist, acl)
     nextc++;			/* now at the beginning of the entry list */
     for (i = 0; i < (*acl)->positive; i++) {
 	int k;
-	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2)
+	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2) {
+	    free(lnames.namelist_val);
 	    return (-1);
+	}
 	(*acl)->entries[i].rights = k;
 	nextc = strchr(nextc, '\n');
 	nextc++;		/* 1 + index can cast ptr to integer */
@@ -287,8 +289,10 @@ acl_Internalize(elist, acl)
 	 i--, j++) {
 	if (sscanf
 	    (nextc, "%s\t%d\n", lnames.namelist_val[j],
-	     &((*acl)->entries[j].rights)) != 2)
+	     &((*acl)->entries[j].rights)) != 2) {
+	    free(lnames.namelist_val);
 	    return (-1);
+	}
 	nextc = strchr(nextc, '\n');
 	nextc++;
     }

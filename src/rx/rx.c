@@ -1699,6 +1699,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    if (afs_termState == AFSOP_STOP_RXCALLBACK) {
 		AFS_RXGUNLOCK();
 		USERPRI;
+		rxi_Free(sq, sizeof(struct rx_serverQueueEntry));
 		return (struct rx_call *)0;
 	    }
 #endif

@@ -1447,6 +1447,7 @@ CheckPrDatabase(misc)
 	       misc->nforeigns, misc->ngroups);
     }
 
+    free(map);
     return code;
 }
 

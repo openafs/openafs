@@ -457,6 +457,7 @@ CreateEntry(at, aname, aid, idflag, flag, oid, creator)
 	strcpy(cellGroup, AUTHUSER_GROUP);
 	strcat(cellGroup, atsign);
 	pos = FindByName(at, cellGroup, &centry);
+	free(cellGroup);
 	if (!pos)
 	    return PRBADNAM;
 	code = pr_Read(at, 0, pos, &centry, sizeof(centry));

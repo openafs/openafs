@@ -189,13 +189,17 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     tcp->type |= rxkad_client;
     tcp->level = level;
     code = fc_keysched(sessionkey, tcp->keysched);
-    if (code)
+    if (code) {
+	rxi_Free(tsc, size);
 	return 0;		/* bad key */
+    }
     memcpy((void *)tcp->ivec, (void *)sessionkey, sizeof(tcp->ivec));
     tcp->kvno = kvno;		/* key version number */
     tcp->ticketLen = ticketLen;	/* length of ticket */
-    if (tcp->ticketLen > MAXKTCTICKETLEN)
+    if (tcp->ticketLen > MAXKTCTICKETLEN) {
+	rxi_Free(tsc, size);
 	return 0;		/* bad key */
+    }
     memcpy(tcp->ticket, ticket, ticketLen);
 
     LOCK_RXKAD_STATS rxkad_stats_clientObjects++;

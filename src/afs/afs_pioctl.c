@@ -1573,32 +1573,43 @@ DECL_PIOCTL(PSetVolumeStatus)
     XSTATS_DECLS;
 
     AFS_STATCNT(PSetVolumeStatus);
-    if (!avc)
-	return EINVAL;
+    if (!avc) {
+	code = EINVAL;
+	goto out;
+    }
 
     tvp = afs_GetVolume(&avc->fid, areq, READ_LOCK);
     if (tvp) {
 	if (tvp->states & (VRO | VBackup)) {
 	    afs_PutVolume(tvp, READ_LOCK);
-	    return EROFS;
+	    code = EROFS;
+	    goto out;
 	}
 	afs_PutVolume(tvp, READ_LOCK);
-    } else
-	return ENODEV;
+    } else {
+	code = ENODEV;
+	goto out;
+    }
     /* Copy the junk out, using cp as a roving pointer. */
     cp = ain;
     memcpy((char *)&volstat, cp, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
-    if (strlen(cp) >= sizeof(volName))
-	return E2BIG;
+    if (strlen(cp) >= sizeof(volName)) {
+	code = E2BIG;
+	goto out;
+    }
     strcpy(volName, cp);
     cp += strlen(volName) + 1;
-    if (strlen(cp) >= sizeof(offLineMsg))
-	return E2BIG;
+    if (strlen(cp) >= sizeof(offLineMsg)) {
+	code = E2BIG;
+	goto out;
+    }
     strcpy(offLineMsg, cp);
     cp += strlen(offLineMsg) + 1;
-    if (strlen(cp) >= sizeof(motd))
-	return E2BIG;
+    if (strlen(cp) >= sizeof(motd)) {
+	code = E2BIG;
+	goto out;
+    }
     strcpy(motd, cp);
     storeStat.Mask = 0;
     if (volstat.MinQuota != -1) {

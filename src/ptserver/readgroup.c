@@ -100,6 +100,7 @@ main(argc, argv)
 	}
     }
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
+    free(cellname);
     if (code) {
 	fprintf(stderr, "pr_Initialize failed .. exiting.\n");
 	fprintf(stderr, "%s (%d).\n", pr_ErrorMsg(code), code);

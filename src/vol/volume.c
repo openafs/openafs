@@ -788,6 +788,7 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
 	    vp->specialStatus = 0;
 	Log("VAttachVolume: volume salvage flag is ON for %s; volume needs salvage\n", path);
 	*ec = VSALVAGE;
+	FreeVolume(vp);
 	return NULL;
     }
     if (programType == fileServer) {
