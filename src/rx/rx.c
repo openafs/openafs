@@ -5523,20 +5523,10 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 {
     struct clock thisRtt, *rttp = &thisRtt;
 
-#if defined(AFS_ALPHA_LINUX22_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
-    /* making year 2038 bugs to get this running now - stroucki */
-    struct timeval temptime;
-#endif
     register int rtt_timeout;
 
-#if defined(AFS_ALPHA_LINUX20_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
-    /* yet again. This was the worst Heisenbug of the port - stroucki */
-    clock_GetTime(&temptime);
-    rttp->sec = (afs_int32) temptime.tv_sec;
-    rttp->usec = (afs_int32) temptime.tv_usec;
-#else
     clock_GetTime(rttp);
-#endif
+
     if (clock_Lt(rttp, sentp)) {
 	clock_Zero(rttp);
 	return;			/* somebody set the clock back, don't count this time. */
