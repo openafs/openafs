@@ -2451,6 +2451,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 			if (check) {
 			    if (!Showmode) {
 				Log("Vnode %d:  inode number incorrect (is %s should be %s). FileSize=%d\n",
+				    vnodeNumber,
 				    PrintInode(stmp1, VNDISK_GET_INO(vnode)),
 				    PrintInode(stmp2, ip->inodeNumber),
 				    ip->byteCount);
