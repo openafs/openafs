@@ -1,3 +1,10 @@
+openafs (1.0.4-3) unstable; urgency=medium
+
+  * Fix patch introduced in -2 to be consistent with what is sent upstream.
+  * openafs-modules-source depends on debhelper
+
+ -- Sam Hartman <hartmansdebian.org>  Wed,  4 Jul 2001 03:52:37 -0400
+
 openafs (1.0.4-2) unstable; urgency=low
 
   * Fix modversions and athlon memcpy mmx bug, closes: #91925
