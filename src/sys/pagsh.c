@@ -85,11 +85,11 @@ char **argv;
 
 static afs_uint32 curpag()
 {
-    afs_uint32 groups[30];
+    afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
 
-    if (getgroups(30, groups) < 2) return 0;
+    if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
 
     g0 = groups[0] & 0xffff;
     g1 = groups[1] & 0xffff;
