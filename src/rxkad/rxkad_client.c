@@ -41,6 +41,13 @@ RCSID("$Header$");
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -119,7 +126,8 @@ rxkad_AllocCID(aobj, aconn)
 	clock_GetTime(&tgen.time);	/* changes time1 and time2 */
 	tgen.time.sec = htonl(tgen.time.sec);
 	tgen.time.usec = htonl(tgen.time.usec);
-	tgen.counter = htonl(counter++);
+	tgen.counter = htonl(counter);
+	counter++;
 #ifdef KERNEL
 	tgen.random1 = afs_random() & 0x7fffffff;	/* was "80000" */
 	tgen.random2 = afs_random() & 0x7fffffff;	/* was "htonl(100)" */
