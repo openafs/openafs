@@ -2,7 +2,7 @@ Source: openafs
 Section: non-us/main
 Priority: optional
 Maintainer: Sam Hartman <hartmans@mit.edu>
-Build-Depends: debhelper (>= 1.1.17), libncurses5-dev, libpam0g-dev, bison
+Build-Depends: debhelper (>= 2.0.0), libncurses5-dev, libpam0g-dev, bison
 Standards-Version: 3.1.1
 
 Package: openafs-client
@@ -30,7 +30,7 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386
-Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), perl5
+Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), perl5, openafs-ptutil
 Description: The AFS distributed filesystem- database server
    AFS is a distributed filesystem allowing cross-platform sharing of
    files among multiple computers.  Facilities are provided for access
@@ -42,6 +42,7 @@ Description: The AFS distributed filesystem- database server
 
 Package: libopenafs-dev
 Architecture: i386
+Priority: extra
 Description: The AFS distributed filesystem- development libraries
    AFS is a distributed filesystem allowing cross-platform sharing of
    files among multiple computers.  Facilities are provided for access
