@@ -423,20 +423,35 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         
         /* otherwise, get from VLDB */
 	if (!volp) {
-            if ( cm_data.currentVolumes >= cm_data.maxVolumes )
+            if ( cm_data.currentVolumes >= cm_data.maxVolumes ) {
+                for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
+                    if ( volp->refCount == 0 ) {
+                        /* There is one we can re-use */
+                        break;
+                    }
+                }
                 osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
+            }
 
-            volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
-            memset(volp, 0, sizeof(cm_volume_t));
-            volp->magic = CM_VOLUME_MAGIC;
+            if (volp) {
+                volp->rwID = volp->roID = volp->bkID = 0;
+                volp->dotdotFid.cell = 0;
+                volp->dotdotFid.volume = 0;
+                volp->dotdotFid.unique = 0;
+                volp->dotdotFid.vnode = 0;
+            } else {
+                volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
+                memset(volp, 0, sizeof(cm_volume_t));
+                volp->magic = CM_VOLUME_MAGIC;
+                volp->nextp = cm_data.allVolumesp;
+                cm_data.allVolumesp = volp;
+                lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
+            }
             volp->cellp = cellp;
-            volp->nextp = cm_data.allVolumesp;
-            cm_data.allVolumesp = volp;
             strncpy(volp->namep, volumeNamep, VL_MAXNAMELEN);
             volp->namep[VL_MAXNAMELEN-1] = '\0';
-            lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
             volp->refCount = 1;	/* starts off held */
-            volp->flags |= CM_VOLUMEFLAG_RESET;
+            volp->flags = CM_VOLUMEFLAG_RESET;
 	}
         else {
             volp->refCount++;
@@ -509,16 +524,16 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 /* find the appropriate servers from a volume */
 cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
 {
-	cm_serverRef_t **serverspp;
+    cm_serverRef_t **serverspp;
     cm_serverRef_t *current;;
 
     lock_ObtainWrite(&cm_serverLock);
 
-	if (volume == volp->rwID)
+    if (volume == volp->rwID)
         serverspp = &volp->rwServersp;
-	else if (volume == volp->roID)
+    else if (volume == volp->roID)
         serverspp = &volp->roServersp;
-	else if (volume == volp->bkID)
+    else if (volume == volp->bkID)
         serverspp = &volp->bkServersp;
     else 
         osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
@@ -533,9 +548,9 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
 
 void cm_PutVolume(cm_volume_t *volp)
 {
-	lock_ObtainWrite(&cm_volumeLock);
-	osi_assert(volp->refCount-- > 0);
-	lock_ReleaseWrite(&cm_volumeLock);
+    lock_ObtainWrite(&cm_volumeLock);
+    osi_assert(volp->refCount-- > 0);
+    lock_ReleaseWrite(&cm_volumeLock);
 }
 
 /* return the read-only volume, if there is one, or the read-write volume if

@@ -1517,13 +1517,20 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
 	if (scp) {
             if (scp->cbServerp != cbrp->serverp) {
                 serverp = scp->cbServerp;
+                if (!freeFlag)
+                    cm_GetServer(cbrp->serverp);
+                scp->cbServerp = cbrp->serverp;
+            } else {
+                if (freeFlag)
+                    serverp = cbrp->serverp;
             }
-            scp->cbServerp = cbrp->serverp;
             scp->cbExpires = cbrp->startTime + cbp->ExpirationTime;
         } else {
-            serverp = cbrp->serverp;
+            if (freeFlag)
+                serverp = cbrp->serverp;
         }
-        cbrp->serverp = NULL;
+        if (freeFlag)
+            cbrp->serverp = NULL;
     }
 
     /* a callback was actually revoked during our granting call, so

@@ -99,16 +99,16 @@ void cm_InitReq(cm_req_t *reqp)
 static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	struct cm_req *reqp, cm_serverRef_t ***serversppp)
 {
-	long code;
+    long code;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp = NULL;
 
     if (!fidp) {
-		*serversppp = NULL;
-		return 0;
-	}
+        *serversppp = NULL;
+        return 0;
+    }
 
-	cellp = cm_FindCellByID(fidp->cell);
+    cellp = cm_FindCellByID(fidp->cell);
     if (!cellp) return CM_ERROR_NOSUCHCELL;
 
     code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
@@ -117,7 +117,7 @@ static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     *serversppp = cm_GetVolServers(volp, fidp->volume);
 
     cm_PutVolume(volp);
-	return 0;
+    return 0;
 }
 
 /*
@@ -204,7 +204,24 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
     } 
 
-    /* if all servers are offline, mark them non-busy and start over */
+    /* if there is nosuchvolume, then we have a situation in which a 
+     * previously known volume no longer has a set of servers 
+     * associated with it.  Either the volume has moved or
+     * the volume has been deleted.  Try to find a new server list
+     * until the timeout period expires.
+     */
+    else if (errorCode == CM_ERROR_NOSUCHVOLUME) {
+        if (timeLeft > 7) {
+            osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_NOSUCHVOLUME.");
+            thrd_Sleep(5000);
+            
+            retry = 1;
+
+            if (fidp != NULL)   /* Not a VLDB call */
+                cm_ForceUpdateVolume(fidp, userp, reqp);
+        }
+    }
+
     else if (errorCode == CM_ERROR_ALLOFFLINE) {
         if (timeLeft > 7) {
             osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");

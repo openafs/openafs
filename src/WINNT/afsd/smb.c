@@ -6519,11 +6519,11 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp,
                                                  rwcp);
             else {
-                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-                osi_Log4(smb_logp,"Dispatch %s vcp[%x] lana[%d] lsn[%d]",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
+                osi_LogEvent("AFS Dispatch %s",(myCrt_Dispatch(inp->inCom)),"vcp 0x%x lana %d lsn %d",(int)vcp,vcp->lana,vcp->lsn);
+                osi_Log4(smb_logp,"Dispatch %s vcp 0x%x lana %d lsn %d",myCrt_Dispatch(inp->inCom),vcp,vcp->lana,vcp->lsn);
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_LogEvent("AFS Dispatch return",NULL,"Code[%d]",(code==0)?0:code-CM_ERROR_BASE);
-                osi_Log1(smb_logp,"Dispatch return  code[%d]",(code==0)?0:code-CM_ERROR_BASE);
+                osi_LogEvent("AFS Dispatch return",NULL,"Code 0x%x",(code==0)?0:code-CM_ERROR_BASE);
+                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%x lana %d lsn %d",(code==0)?0:code-CM_ERROR_BASE,vcp,vcp->lana,vcp->lsn);
 #ifdef LOG_PACKET
                 if ( code == CM_ERROR_BADSMB ||
                      code == CM_ERROR_BADOP )
@@ -6973,7 +6973,7 @@ void smb_Server(VOID *parmp)
         if (idx_NCB < 0 || idx_NCB > (sizeof(NCBs) / sizeof(NCBs[0])))
         {
             /* this is fatal - log as much as possible */
-            osi_Log1(smb_logp, "Fatal: idx_NCB [ %d ] out of range.\n", idx_NCB);
+            osi_Log1(smb_logp, "Fatal: idx_NCB %d out of range.\n", idx_NCB);
             osi_assert(0);
         }
 
@@ -7002,13 +7002,13 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal buffer address", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x08:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session number out of range", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session number out of range", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x09:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no resource available", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x0a:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session closed", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session closed", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x0b:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: command cancelled", ncbp->ncb_lsn, idx_session);
@@ -7023,10 +7023,10 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: no deletions, name has active lsn %d sessions", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x11:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: local lsn %d session table full", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: local session table full", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x12:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: remote lsn %d session table full", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: remote session table full", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x13:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: illegal name number", ncbp->ncb_lsn, idx_session);
@@ -7044,7 +7044,7 @@ void smb_Server(VOID *parmp)
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name deleted", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x18:
-                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: lsn %d session ended abnormally", ncbp->ncb_lsn, idx_session);
+                osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: session ended abnormally", ncbp->ncb_lsn, idx_session);
                 break;
             case 0x19:
                 osi_Log2(smb_logp, "NCBRECV failure lsn %d session %d: name conflict detected", ncbp->ncb_lsn, idx_session);
@@ -7108,9 +7108,8 @@ void smb_Server(VOID *parmp)
             break;
 
         case NRC_PENDING:
-            /* Can this happen? Or is it just my
-             * UNIX paranoia? 
-             */
+            /* Can this happen? Or is it just my UNIX paranoia? */
+            osi_Log2(smb_logp, "NCBRECV pending lsn %d session %d", ncbp->ncb_lsn, idx_session);
             continue;
 
         case NRC_SCLOSED:
@@ -7128,15 +7127,17 @@ void smb_Server(VOID *parmp)
              * also cleanup after dead vcp 
              */
             if (vcp) {
-                if (dead_vcp)
-                    osi_Log1(smb_logp,
-                             "dead_vcp already set, %x",
-                             dead_vcp);
+                if (dead_vcp == vcp)
+                    osi_Log1(smb_logp, "dead_vcp already set, 0x%x", dead_vcp);
                 else if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
-                    osi_Log2(smb_logp,
-                             "setting dead_vcp %x, user struct %x",
+                    osi_Log2(smb_logp, "setting dead_vcp 0x%x, user struct 0x%x",
                              vcp, vcp->usersp);
                     smb_HoldVC(vcp);
+                    if (dead_vcp) {
+                        smb_ReleaseVC(dead_vcp);
+                        osi_Log1(smb_logp,
+                                  "Previous dead_vcp %x", dead_vcp);
+                    }
                     dead_vcp = vcp;
                     vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
                 }
@@ -7271,7 +7272,7 @@ void smb_Server(VOID *parmp)
         "bufp=0x%x\n",
         bufp->dos_pkt / 16, bufp);*/
         fflush(stderr);
-        dosmemget(bufp->dos_pkt, ncbp->ncb_length, bufp->data);
+        dosmemget(bufp->dos_pkt, ncbp-d>ncb_length, bufp->data);
 #endif /* DJGPP */
         smbp = (smb_t *)bufp->data;
         outbufp->flags = 0;
@@ -7552,7 +7553,6 @@ void smb_Listener(void *parmp)
         vcp = smb_FindVC(ncbp->ncb_lsn, SMB_FLAG_CREATE, ncbp->ncb_lana_num);
         vcp->flags |= flags;
         strcpy(vcp->rname, rname);
-        smb_ReleaseVC(vcp);
 
         /* Allocate slot in session arrays */
         /* Re-use dead session if possible, otherwise add one more */
@@ -7565,43 +7565,82 @@ void smb_Listener(void *parmp)
             }
         }
 
-        /* assert that we do not exceed the maximum number of sessions or NCBs.
-         * we should probably want to wait for a session to be freed in case
-         * we run out.
-         */
+        if (i >= Sessionmax - 1  || numNCBs >= NCBmax - 1) {
+            unsigned long code = CM_ERROR_ALLBUSY;
+            smb_packet_t * outp = GetPacket();
+            unsigned char *outWctp;
+            smb_t *smbp;
+            
+            outp->ncbp = ncbp;
 
-        osi_assert(i < Sessionmax - 1);
-        osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
-
-        LSNs[i] = ncbp->ncb_lsn;
-        lanas[i] = ncbp->ncb_lana_num;
-		
-        if (i == numSessions) {
-            /* Add new NCB for new session */
-            char eventName[MAX_PATH];
-
-            osi_Log1(smb_logp, "smb_Listener creating new session %d", i);
-
-            InitNCBslot(numNCBs);
-            numNCBs++;
-            thrd_SetEvent(NCBavails[0]);
-            thrd_SetEvent(NCBevents[0]);
-            for (j = 0; j < smb_NumServerThreads; j++)
-                thrd_SetEvent(NCBreturns[j][0]);
-            /* Also add new session event */
-            sprintf(eventName, "SessionEvents[%d]", i);
-            SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
-            if ( GetLastError() == ERROR_ALREADY_EXISTS )
-                osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
-            numSessions++;
-            osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
-            thrd_SetEvent(SessionEvents[0]);
+            if (vcp->flags & SMB_VCFLAG_STATUS32) {
+                unsigned long NTStatus;
+                smb_MapNTError(code, &NTStatus);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                smbp->rcls = (unsigned char) (NTStatus & 0xff);
+                smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
+                smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
+                smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
+                smbp->flg2 |= SMB_FLAGS2_32BIT_STATUS;
+            } else {
+                unsigned short errCode;
+                unsigned char errClass;
+                smb_MapCoreError(code, vcp, &errCode, &errClass);
+                outWctp = outp->wctp;
+                smbp = (smb_t *) &outp->data;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                *outWctp++ = 0;
+                smbp->errLow = (unsigned char) (errCode & 0xff);
+                smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
+                smbp->rcls = errClass;
+            }
+            smb_SendPacket(vcp, outp);
+            smb_FreePacket(outp);
         } else {
-            thrd_SetEvent(SessionEvents[i]);
+            /* assert that we do not exceed the maximum number of sessions or NCBs.
+            * we should probably want to wait for a session to be freed in case
+            * we run out.
+            */
+            osi_assert(i < Sessionmax - 1);
+            osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
+
+            LSNs[i] = ncbp->ncb_lsn;
+            lanas[i] = ncbp->ncb_lana_num;
+		
+            if (i == numSessions) {
+                /* Add new NCB for new session */
+                char eventName[MAX_PATH];
+
+                osi_Log1(smb_logp, "smb_Listener creating new session %d", i);
+
+                InitNCBslot(numNCBs);
+                numNCBs++;
+                thrd_SetEvent(NCBavails[0]);
+                thrd_SetEvent(NCBevents[0]);
+                for (j = 0; j < smb_NumServerThreads; j++)
+                    thrd_SetEvent(NCBreturns[j][0]);
+                /* Also add new session event */
+                sprintf(eventName, "SessionEvents[%d]", i);
+                SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+                if ( GetLastError() == ERROR_ALREADY_EXISTS )
+                    osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
+                numSessions++;
+                osi_Log2(smb_logp, "increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
+                thrd_SetEvent(SessionEvents[0]);
+            } else {
+                thrd_SetEvent(SessionEvents[i]);
+            }
         }
+        
+        smb_ReleaseVC(vcp);
+
         /* unlock */
         lock_ReleaseMutex(&smb_ListenerLock);
-
     }	/* dispatch while loop */
 }
 
@@ -8076,13 +8115,15 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
+                    char message[256];
+                    sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                                       nts, ntsEx);
+                    OutputDebugString(message);
                     osi_Log2(smb_logp,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
                               nts, ntsEx);
-                    OutputDebugString("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                                       nts, ntsEx);
                 } else {
-                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
                     OutputDebugString("MsV1_0SetProcessOption success");
+                    osi_Log0(smb_logp,"MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */
 
