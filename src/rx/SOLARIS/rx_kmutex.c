@@ -20,7 +20,9 @@ RCSID("$Header$");
 
 #if defined(AFS_SUN5_ENV) && defined(KERNEL) 
 
+#include "../rx/rx_kcommon.h"
 #include "../rx/rx_kmutex.h"
+#include "../rx/rx_kernel.h"
 
 #include <errno.h>
 #include <sys/tiuser.h>
