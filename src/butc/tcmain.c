@@ -55,6 +55,7 @@ RCSID
 #include "error_macros.h"
 #include <afs/budb_errs.h>
 #include "afs/butx.h"
+#define XBSA_TCMAIN
 #include "butc_xbsa.h"
 
 #define N_SECURITY_OBJECTS 3
@@ -91,20 +92,6 @@ char *opencallout;
 char *closecallout;
 char *restoretofile;
 int forcemultiple;
-
-/* XBSA Global Parameters */
-afs_int32 xbsaType;
-#ifdef xbsa
-struct butx_transactionInfo butxInfo;
-
-#define rpc_c_protect_level_default 0
-afs_uint32 dumpRestAuthnLevel = rpc_c_protect_level_default;
-char *xbsaObjectOwner;
-char *appObjectOwner;
-char *adsmServerName;
-char *xbsaSecToken;
-char *xbsalGName;
-#endif
 
 int maxpass;
 #define PASSESMIN  1
