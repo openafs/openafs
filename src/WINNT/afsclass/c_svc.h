@@ -23,7 +23,7 @@ typedef enum
    SERVICETYPE_SIMPLE,
    SERVICETYPE_FS,
    SERVICETYPE_CRON
-   } SERVICETYPE;
+   } AFSSERVICETYPE;
 
 typedef enum
    {
@@ -44,7 +44,7 @@ typedef struct
    ULONG nStarts;
    ULONG dwErrLast;
    ULONG dwSigLast;
-   SERVICETYPE type;
+   AFSSERVICETYPE type;
    SERVICESTATE state;
    } SERVICESTATUS, *LPSERVICESTATUS;
 

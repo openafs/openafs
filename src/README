@@ -77,7 +77,7 @@ B  Building
 
    2. Begin building
       a. For Linux
-         % make SYS_NAME="i386_linux22" LINUX_VERSION="2.2.14"
+         % make SYS_NAME="i386_linux22" LINUX_VERS="2.2.14"
 
       b. For UNIX versions, specify the system name as given by
          the system type defined in step A1.
