@@ -238,12 +238,6 @@ ${DEST}/include/afs/cnvldb.h: cnvldb.h
 ${DEST}/etc/vldb_check: vldb_check
 	${INSTALL} $? $@
 
-${DEST}/root.server/usr/afs/bin/vlserver: vlserver
-	${INSTALL} $? $@
-
-${DEST}/etc/vldb_convert: cnvldb
-	${INSTALL} -f $? $@
-
 #
 # Misc targets
 #
