@@ -136,7 +136,7 @@ cmdebug: cmdebug.o ${CMLIBS}
 kdump-build: kdump.c ${INCLS} AFS_component_version_number.c
 	$(MAKE) kdump kdump64
 	touch kdump-build
-	
+
 #
 # Build targets - one for each type of kdump build process we have
 #
@@ -320,7 +320,7 @@ install: \
 #
 
 clean:
-	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags
+	$(RM) -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags livesys
 
 test:
 	cd test; $(MAKE)
