@@ -55,7 +55,9 @@
 #ifndef CONFIG_X86_LOCAL_APIC
 #define CONFIG_X86_LOCAL_APIC
 #endif
+#ifndef __SMP__
 #define __SMP__
+#endif
 #define AFS_GLOBAL_SUNLOCK
 #endif
 

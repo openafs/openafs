@@ -45,7 +45,9 @@
  */
 #ifdef AFS_SMP
 #define CONFIG_SMP
+#ifndef __SMP__
 #define __SMP__
+#endif
 #define AFS_GLOBAL_SUNLOCK
 #endif
 
