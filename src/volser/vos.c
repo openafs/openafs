@@ -62,6 +62,10 @@ RCSID
 #endif
 #include "volser_prototypes.h"
 
+#ifdef HAVE_POSIX_REGEX
+#include <regex.h>
+#endif
+
 struct tqElem {
     afs_int32 volid;
     struct tqElem *next;
@@ -3928,6 +3932,20 @@ BackSys(as)
     if (seenprefix) {
 	for (ti = as->parms[0].items; ti; ti = ti->next) {
 	    if (strncmp(ti->data, "^", 1) == 0) {
+#ifdef HAVE_POSIX_REGEX
+		regex_t re;
+		char errbuf[256];
+
+		code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		if (code != 0) {
+		    regerror(code, &re, errbuf, sizeof errbuf);
+		    fprintf(STDERR,
+			    "Unrecognizable -prefix regular expression: '%s': %s\n",
+			    ti->data, errbuf);
+		    exit(1);
+		}
+		regfree(&re);
+#else
 		ccode = (char *)re_comp(ti->data);
 		if (ccode) {
 		    fprintf(STDERR,
@@ -3935,12 +3953,27 @@ BackSys(as)
 			    ti->data, ccode);
 		    exit(1);
 		}
+#endif
 	    }
 	}
     }
     if (seenxprefix) {
 	for (ti = as->parms[4].items; ti; ti = ti->next) {
 	    if (strncmp(ti->data, "^", 1) == 0) {
+#ifdef HAVE_POSIX_REGEX
+		regex_t re;
+		char errbuf[256];
+
+		code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		if (code != 0) {
+		    regerror(code, &re, errbuf, sizeof errbuf);
+		    fprintf(STDERR,
+			    "Unrecognizable -xprefix regular expression: '%s': %s\n",
+			    ti->data, errbuf);
+		    exit(1);
+		}
+		regfree(&re);
+#else
 		ccode = (char *)re_comp(ti->data);
 		if (ccode) {
 		    fprintf(STDERR,
@@ -3948,6 +3981,7 @@ BackSys(as)
 			    ti->data, ccode);
 		    exit(1);
 		}
+#endif
 	    }
 	}
     }
@@ -4012,6 +4046,22 @@ BackSys(as)
 	if (seenprefix) {
 	    for (ti = as->parms[0].items; ti; ti = ti->next) {
 		if (strncmp(ti->data, "^", 1) == 0) {
+#ifdef HAVE_POSIX_REGEX
+		    regex_t re;
+		    char errbuf[256];
+
+		    /* XXX -- should just do the compile once! */
+		    code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		    if (code != 0) {
+			regerror(code, &re, errbuf, sizeof errbuf);
+			fprintf(STDERR,
+				"Error in -prefix regular expression: '%s': %s\n",
+				ti->data, errbuf);
+			exit(1);
+		    }
+		    match = (regexec(&re, vllist->name, 0, NULL, 0) == 0);
+		    regfree(&re);
+#else
 		    ccode = (char *)re_comp(ti->data);
 		    if (ccode) {
 			fprintf(STDERR,
@@ -4020,6 +4070,7 @@ BackSys(as)
 			exit(1);
 		    }
 		    match = (re_exec(vllist->name) == 1);
+#endif
 		} else {
 		    match =
 			(strncmp(vllist->name, ti->data, strlen(ti->data)) ==
@@ -4040,6 +4091,23 @@ BackSys(as)
 	if (match && seenxprefix) {
 	    for (ti = as->parms[4].items; ti; ti = ti->next) {
 		if (strncmp(ti->data, "^", 1) == 0) {
+#ifdef HAVE_POSIX_REGEX
+		    regex_t re;
+		    char errbuf[256];
+
+		    /* XXX -- should just do the compile once! */
+		    code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		    if (code != 0) {
+			regerror(code, &re, errbuf, sizeof errbuf);
+			fprintf(STDERR,
+				"Error in -xprefix regular expression: '%s': %s\n",
+				ti->data, errbuf);
+			exit(1);
+		    }
+		    if (regexec(&re, vllist->name, 0, NULL, 0) == 0)
+			    match = 0;
+		    regfree(&re);
+#else
 		    ccode = (char *)re_comp(ti->data);
 		    if (ccode) {
 			fprintf(STDERR,
@@ -4051,6 +4119,7 @@ BackSys(as)
 			match = 0;
 			break;
 		    }
+#endif
 		} else {
 		    if (strncmp(vllist->name, ti->data, strlen(ti->data)) ==
 			0) {

@@ -806,7 +806,7 @@ AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
 
 if test "$ac_cv_header_security_pam_modules_h" = "yes"; then
 	HAVE_PAM="yes"
@@ -817,6 +817,19 @@ AC_SUBST(HAVE_PAM)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
+
+AC_CHECK_FUNCS(regcomp regexec regerror)
+AC_MSG_CHECKING([for POSIX regex library])
+if test "$ac_cv_header_regex_h" = "yes" && \
+	test "$ac_cv_func_regcomp" = "yes" && \
+	test "$ac_cv_func_regexec" = "yes" && \
+	test "$ac_cv_func_regerror" = "yes"; then
+    AC_DEFINE(HAVE_POSIX_REGEX, 1, [define if you have POSIX regex library])
+    AC_MSG_RESULT(yes)
+else
+    AC_MSG_RESULT(no)
+fi
+	
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 

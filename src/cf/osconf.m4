@@ -181,21 +181,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="ld -b"
 		;;
 
-	i386_fbsd_4*)
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-pthread"
-		#MT_CFLAGS='-DAFS_PTHREAD_ENV -D_THREAD_SAFE -I/usr/local/include/pthread/linuxthreads ${XCFLAGS}'
-		#MT_LIBS="-L/usr/local/lib -llthread -llgcc_r"
-		PAM_CFLAGS="-O2 -pipe -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -pipe"
-		XLIBS="${LIB_AFSDB} -lcompat"
-		YACC="byacc"
-		;;
-
-	*fbsd_5*)
+	*fbsd_*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
@@ -203,7 +189,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe"
-		XLIBS="${LIB_AFSDB} -lcompat"
 		YACC="byacc"
 		;;
 
@@ -215,7 +200,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
-		XLIBS="${LIB_AFSDB} -lcompat"
 		YACC="yacc"
 		;;
 
@@ -227,7 +211,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-O2 -pipe"
-		XLIBS="${LIB_AFSDB} -lcompat"
 		YACC="bison -y"
 		;;
 
@@ -332,7 +315,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS="-O2"
-		XLIBS="${LIB_AFSDB} -lcompat"
 		YACC="yacc"
 		;;
 

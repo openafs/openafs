@@ -38,6 +38,9 @@ RCSID
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
+#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
+#include <regex.h>
+#endif
 
 extern int smallMem;
 extern extent_mod;
@@ -1376,6 +1379,10 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
     int pollcount = 0;
     int namematchRWBK, namematchRO, thismatch, matchtype;
     char volumename[VL_MAXNAMELEN];
+#ifdef HAVE_POSIX_REGEX
+    regex_t re;
+    int need_regfree = 0;
+#endif
 
     COUNT_REQ(VLLISTATTRIBUTESN2);
     vldbentries->nbulkentries_val = 0;
@@ -1433,11 +1440,19 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 	findflag = ((attributes->Mask & VLLIST_FLAG) ? 1 : 0);
 	if (name && (strcmp(name, ".*") != 0) && (strcmp(name, "") != 0)) {
 	    sprintf(volumename, "^%s$", name);
+#ifdef HAVE_POSIX_REGEX
+	    if (regcomp(&re, volumename, REG_BASIC | REG_NOSUB) != 0) {
+		errorcode = VL_BADNAME;
+		goto done;
+	    }
+	    need_regfree = 1;
+#else
 	    t = (char *)re_comp(volumename);
 	    if (t) {
 		errorcode = VL_BADNAME;
 		goto done;
 	    }
+#endif
 	    findname = 1;
 	}
 
@@ -1468,9 +1483,15 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 		    if (tentry.flags & VLF_RWEXISTS) {
 			if (findname) {
 			    sprintf(volumename, "%s", tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_RWVOL;
+			    }
+#else
 			    if (re_exec(volumename)) {
 				thismatch = VLSF_RWVOL;
 			    }
+#endif
 			} else {
 			    thismatch = VLSF_RWVOL;
 			}
@@ -1480,9 +1501,15 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 		    if (!thismatch && (tentry.flags & VLF_BACKEXISTS)) {
 			if (findname) {
 			    sprintf(volumename, "%s.backup", tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_BACKVOL;
+			    }
+#else
 			    if (re_exec(volumename)) {
 				thismatch = VLSF_BACKVOL;
 			    }
+#endif
 			} else {
 			    thismatch = VLSF_BACKVOL;
 			}
@@ -1504,8 +1531,14 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
 			    } else {
 				sprintf(volumename, "%s.readonly",
 					tentry.name);
+#ifdef HAVE_POSIX_REGEX
+			    if (regexec(&re, volumename, 0, NULL, 0) == 0) {
+				thismatch = VLSF_ROVOL;
+			    }
+#else
 				if (re_exec(volumename))
 				    thismatch = VLSF_ROVOL;
+#endif
 			    }
 			} else {
 			    thismatch = VLSF_ROVOL;
@@ -1566,6 +1599,11 @@ SVL_ListAttributesN2(rxcall, attributes, name, startindex, nentries,
     }
 
   done:
+#ifdef HAVE_POSIX_REGEX
+    if (need_regfree)
+	regfree(&re);
+#endif
+
     if (errorcode) {
 	COUNT_ABO;
 	ubik_AbortTrans(trans);
