@@ -95,6 +95,8 @@ int main(int argc, char *argv[])
     cmd_AddParm(ts, "-tracebuf", CMD_SINGLE, CMD_OPTIONAL, "trace buffer size");
     cmd_AddParm(ts, "-startup", CMD_FLAG, CMD_OPTIONAL, "start AFS client");
     cmd_AddParm(ts, "-diskcache", CMD_SINGLE, CMD_OPTIONAL, "diskcache size");
+    cmd_AddParm(ts, "-afsdb", CMD_FLAG, CMD_OPTIONAL, "use DNS for cell server resolution");
+    cmd_AddParm(ts, "-freelance", CMD_FLAG, CMD_OPTIONAL, "virtual AFS root");
 
     return (cmd_Dispatch(argc, argv));
 }

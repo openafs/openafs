@@ -23,6 +23,9 @@
 #include "afsd.h"
 
 osi_mutex_t cm_bufGetMutex;
+#ifdef AFS_FREELANCE_CLIENT
+extern osi_mutex_t cm_Freelance_Lock;
+#endif
 
 /* functions called back from the buffer package when reading or writing data,
  * or when holding or releasing a vnode pointer.
@@ -1075,11 +1078,23 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         struct rx_call *callp;
         cm_bulkIO_t biod;		/* bulk IO descriptor */
         cm_conn_t *connp;
+	int getroot;
+	long t1, t2;
 
         /* now, the buffer may or may not be filled with good data (buf_GetNew
          * drops lots of locks, and may indeed return a properly initialized
          * buffer, although more likely it will just return a new, empty, buffer.
          */
+
+#ifdef AFS_FREELANCE_CLIENT
+
+	// yj: if they're trying to get the /afs directory, we need to
+	// handle it differently, since it's local rather than on any
+	// server
+
+	getroot = (scp==cm_rootSCachep) ;
+#endif
+
 	cm_AFSFidFromFid(&tfid, &scp->fid);
 
 	code = cm_SetupFetchBIOD(scp, &bufp->offset, &biod, up, reqp);
@@ -1119,6 +1134,73 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         DPRINTF("cm_GetBuffer: fetching data scpDV=%d bufDV=%d scp=%x bp=%x dcp=%x\n",
                 scp->dataVersion, bufp->dataVersion, scp, bufp, bufp->dcp);
 #endif /* DISKCACHE95 */
+
+#ifdef AFS_FREELANCE_CLIENT
+
+	// yj code
+	// if getroot then we don't need to make any calls
+	// just return fake data
+	
+	 if (cm_freelanceEnabled && getroot) {
+		// setup the fake status			
+		afsStatus.InterfaceVersion = 0x1;
+		afsStatus.FileType = 0x2;
+		afsStatus.LinkCount = scp->linkCount;
+		afsStatus.Length = cm_fakeDirSize;
+		afsStatus.DataVersion = cm_fakeDirVersion;
+		afsStatus.Author = 0x1;
+		afsStatus.Owner = 0x0;
+		afsStatus.CallerAccess = 0x9;
+		afsStatus.AnonymousAccess = 0x9;
+		afsStatus.UnixModeBits = 0x1ff;
+		afsStatus.ParentVnode = 0x1;
+		afsStatus.ParentUnique = 0x1;
+		afsStatus.SegSize = 0;
+		afsStatus.ClientModTime = 0x3b49f6e2;
+		afsStatus.ServerModTime = 0x3b49f6e2;
+		afsStatus.Group = 0;
+		afsStatus.SyncCounter = 0;
+		afsStatus.dataVersionHigh = 0;
+	
+		// once we're done setting up the status info,
+		// we just fill the buffer pages with fakedata
+		// from cm_FakeRootDir. Extra pages are set to
+		// 0. 
+		
+		lock_ObtainMutex(&cm_Freelance_Lock);
+#ifdef DEBUG
+		afsi_log("bufp->offset is %d", bufp->offset);
+#endif
+		t1 = bufp->offset.LowPart;
+		qdp = biod.bufListEndp;
+		while (qdp) {
+			tbufp = osi_GetQData(qdp);
+			bufferp=tbufp->datap;
+			memset(bufferp, 0, buf_bufferSize);
+			t2 = cm_fakeDirSize - t1;
+			if (t2>buf_bufferSize) t2=buf_bufferSize;
+#ifdef DEBUG
+			afsi_log("t1:%d, t2:%d", t1, t2);
+#endif
+			if (t2 > 0) {
+				memcpy(bufferp, cm_FakeRootDir+t1, t2);
+			} else {
+				t2 = 0;
+			}
+			t1+=t2;
+			qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
+			
+		}
+		lock_ReleaseMutex(&cm_Freelance_Lock);
+	
+		// once we're done, we skip over the part of the
+		// code that does the ACTUAL fetching of data for
+		// real files
+
+		goto fetchingcompleted;
+	}
+
+#endif /* AFS_FREELANCE_CLIENT */
 
 	/* now make the call */
         do {
@@ -1230,6 +1312,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
                 osi_Log0(afsd_logp, "CALL FetchData DONE");
                 
 	} while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, code));
+
+  fetchingcompleted:
         code = cm_MapRPCError(code, reqp);
 
         lock_ObtainMutex(&scp->mx);

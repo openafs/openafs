@@ -24,6 +24,9 @@ RCSID("$Header$");
 #include <sys/utime.h>
 #include <io.h>
 #include <WINNT/afssw.h>
+#ifdef AFS_AFSDB_ENV
+#include <cm_dns.h>
+#endif /* AFS_AFSDB_ENV */
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -56,6 +59,7 @@ RCSID("$Header$");
 #include <afs/afsutil.h>
 #include "cellconfig.h"
 #include "keys.h"
+#include <afs/afsint.h>
 
 static ParseHostLine();
 static ParseCellLine();
@@ -364,9 +368,12 @@ char clones[];
 #else
     i = GetCellUnix(adir);
 #endif
+
+#ifndef AFS_FREELANCE_CLIENT  /* no local cell not fatal in freelance */
     if (i) {
 	return i;
     }
+#endif
 
     /* now parse the individual lines */
     curEntry = 0;
@@ -564,6 +571,7 @@ afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
 }
 
 #ifdef AFS_AFSDB_ENV
+#if !defined(AFS_NT40_ENV)
 afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     char *acellName;
     char *aservice;
@@ -656,6 +664,58 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
     return 0;
 }
+#else  /* windows */
+int afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
+  char *aservice;
+  char *acellName;
+  struct afsconf_cell *acellInfo;
+{
+    register afs_int32 i;
+    int tservice;
+    struct afsconf_entry DNSce;
+    char *DNStmpStrp; /* a temp string pointer */
+    struct hostent *thp;
+    afs_int32 cellHosts[AFSMAXCELLHOSTS];
+    int numServers;
+    int rc;
+    int *ttl;
+
+    DNSce.cellInfo.numServers=0;
+    DNSce.next = NULL;
+    rc = getAFSServer(acellName, cellHosts, &numServers, &ttl);
+    /* ignore the ttl here since this code is only called by transitory programs
+       like klog, etc. */
+    if (rc < 0)
+      return -1;
+    if (numServers == 0)
+      return -1;
+
+    for (i = 0; i < numServers; i++)
+    {
+        memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHosts[i], sizeof(long));
+        acellInfo->hostAddr[i].sin_family = AF_INET;
+
+        /* sin_port supplied by connection code */
+    }
+
+    acellInfo->numServers = numServers;
+    strcpy(acellInfo->name, acellName);
+    if (aservice) {
+        LOCK_GLOBAL_MUTEX
+        tservice = afsconf_FindService(aservice);
+     UNLOCK_GLOBAL_MUTEX
+        if (tservice < 0) {
+            return AFSCONF_NOTFOUND;  /* service not found */
+     }
+     for(i=0; i< acellInfo->numServers; i++) {
+            acellInfo->hostAddr[i].sin_port = tservice;
+     }
+    }
+    acellInfo->linkedCell = NULL;    /* no linked cell */
+    acellInfo->flags = 0;
+    return 0;
+}
+#endif /* windows */
 #endif /* AFS_AFSDB_ENV */
 
 afsconf_GetCellInfo(adir, acellName, aservice, acellInfo)

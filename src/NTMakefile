@@ -21,6 +21,7 @@ CD = cd
 NTMAKE = nmake /nologo /f ntmakefile install
 NTMAKELANG = nmake /nologo /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo /f ntmakefile install_headers
+NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 MKDIR = mkdir
 OBJ = src
 
@@ -178,7 +179,13 @@ sys: cm_headers
 	$(NTMAKE)
 	$(CD) ..\..
 
-auth: sys
+afsdobjs: sys
+     echo ***** $@
+	$(CD) $(OBJ)\WINNT\afsd
+	$(NTMAKE_OBJS)
+	$(CD) ..\..\..
+
+auth: afsdobjs
      echo ***** $@
 	$(CD) $(OBJ)\$@
 	$(NTMAKE)

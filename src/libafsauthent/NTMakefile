@@ -90,6 +90,7 @@ DLLOBJS =\
 	$(SYSOBJS) \
 	$(WINNTAFSDOBJS) \
 	$(AUDITOBJS) \
+	$(DESTDIR)\lib\cm_dns.obj \
 	afsauthent.res
 
 audit.obj: $(AUDIT)\audit.c

@@ -96,6 +96,7 @@ afs_int32 ka_UserAuthenticateGeneral(
 	char fullRealm[256];
 	char upperRealm[256];
 	struct servent *sp;
+	int ttl;
 
 	struct ktc_principal server;
 	struct ktc_principal client;
@@ -106,6 +107,11 @@ afs_int32 ka_UserAuthenticateGeneral(
 
 	code = cm_SearchCellFile(realm, fullRealm, ka_AddHostProc, NULL);
 
+#ifdef AFS_AFSDB_ENV
+	if (code) {
+	  code = cm_SearchCellByDNS(realm, fullRealm, &ttl, ka_AddHostProc, NULL);
+        }
+#endif
 	if (code) {
 		*reasonP = "specified realm is unknown";
 		return (code);
@@ -310,24 +316,27 @@ static check_response
     ptr = (char *) cip->dat + 8;
 
     /* Check and extract server's name */
-    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length)
+    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
 	return(INTK_BADPW);
+    }
 
     (void) strncpy(s_service, ptr, sizeof(s_service)-1);
     s_service[sizeof(s_service)-1] = '\0';
     ptr += strlen(s_service) + 1;
 
     /* Check and extract server's instance */
-    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length)
+    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
 	return(INTK_BADPW);
+    }
 
     (void) strncpy(s_instance,ptr, sizeof(s_instance)-1);
     s_instance[sizeof(s_instance)-1] = '\0';
     ptr += strlen(s_instance) + 1;
 
     /* Check and extract server's realm */
-    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length)
+    if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
 	return(INTK_BADPW);
+    }
 
     (void) strncpy(s_realm,ptr, sizeof(s_realm));
     s_realm[sizeof(s_realm)-1] = '\0';
@@ -340,8 +349,9 @@ static check_response
     ticket_len = (unsigned char) *ptr++;
     
     if ((ticket_len < 0) ||
-	((ticket_len + (ptr - (char *) cip->dat)) > (int) cip->length))
+	((ticket_len + (ptr - (char *) cip->dat)) > (int) cip->length)) {
 	return(INTK_BADPW);
+    }
 
     /* Check returned server name, instance, and realm fields */
     /*

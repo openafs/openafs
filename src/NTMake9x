@@ -179,7 +179,13 @@ sys: cm_headers
 	$(NTMAKE)
 	$(CD) ..\..
 
-auth: sys
+afsdobjs: sys
+     echo ***** $@
+     $(CD) $(OBJ)\WINNT\afsd
+     $(NTMAKE_OBJS)
+     $(CD) ..\..\..
+
+auth: afsdobjs
      echo ***** $@
 	$(CD) $(OBJ)\$@
 	$(NTMAKE)

@@ -22,6 +22,10 @@
 #include <string.h>
 
 #include "cm_config.h"
+#ifdef AFS_AFSDB_ENV
+#include "cm_dns.h"
+#include <afs/afsint.h>
+#endif
 
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
@@ -274,6 +278,35 @@ long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
                         }
                 }	/* a vldb line */
         }		/* while loop processing all lines */
+}
+
+long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
+               cm_configProc_t *procp, void *rockp)
+{
+#ifdef AFS_AFSDB_ENV
+     int rc;
+     int cellHosts[AFSMAXCELLHOSTS];
+     int numServers;
+     int i;
+     struct sockaddr_in vlSockAddr;
+
+     rc = getAFSServer(cellNamep, cellHosts, &numServers, ttl);
+     if (rc == 0 && numServers > 0) {     /* found the cell */
+       for (i = 0; i < numServers; i++) {
+           memcpy(&vlSockAddr.sin_addr.s_addr, &cellHosts[i],
+               sizeof(long));
+           vlSockAddr.sin_family = AF_INET;
+           /* sin_port supplied by connection code */
+           if (procp)
+          (*procp)(rockp, &vlSockAddr, NULL);
+           if(newCellNamep)
+          strcpy(newCellNamep,cellNamep);
+       }
+       return 0;   /* found cell */
+     }
+     else
+#endif /* AFS_AFSDB_ENV */
+       return -1;  /* not found */
 }
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
@@ -552,4 +585,33 @@ extern long cm_CloseCellFile(cm_configFile_t *filep)
         if (code) code = errno;
         
         return code;
+}
+
+void cm_GetConfigDir(char *dir)
+{
+	char wdir[256];
+     char *afsconf_path;
+     int code;
+     int tlen;
+
+#if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
+	code = GetWindowsDirectory(wdir, sizeof(wdir));
+      if (code == 0 || code > sizeof(wdir)) wdir[0] = 0;
+        
+	/* add trailing backslash, if required */
+        tlen = strlen(wdir);
+        if (wdir[tlen-1] != '\\') strcat(wdir, "\\");
+#else
+#ifdef DJGPP
+        strcpy(wdir,cm_confDir);
+#else
+        afsconf_path = getenv("AFSCONF");
+        if (!afsconf_path)
+          strcpy(wdir, AFSDIR_CLIENT_ETC_DIRPATH);
+        else
+          strcpy(wdir, afsconf_path);
+#endif /* !DJGPP */
+        strcat(wdir,"\\");
+#endif /* DJGPP || WIN95 */
+        strcpy(dir, wdir);
 }

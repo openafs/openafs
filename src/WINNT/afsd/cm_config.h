@@ -36,6 +36,9 @@ extern long cm_GetRootCellName(char *namep);
 extern long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 	cm_configProc_t *procp, void *rockp);
 
+extern long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
+               cm_configProc_t *procp, void *rockp);
+
 extern long cm_WriteConfigString(char *labelp, char *valuep);
 
 extern long cm_WriteConfigInt(char *labelp, long value);

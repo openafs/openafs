@@ -60,20 +60,38 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
 	cm_cell_t *cp;
         long code;
         static cellCounter = 1;		/* locked by cm_cellLock */
+	int ttl;
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
 		if (strcmp(namep, cp->namep) == 0) break;
         }
-	if (!cp && (flags & CM_FLAG_CREATE)) {
-		cp = malloc(sizeof(*cp));
+
+	if ((!cp && (flags & CM_FLAG_CREATE))
+#ifdef AFS_AFSDB_ENV
+	    /* if it's from DNS, see if it has expired */
+	    || (cp && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout))
+#endif
+	  ) {
+		if (!cp) cp = malloc(sizeof(*cp));
                 memset(cp, 0, sizeof(*cp));
                 code = cm_SearchCellFile(namep, NULL, cm_AddCellProc, cp);
-                if (code) {
-			free(cp);
-                        cp = NULL;
-                        goto done;
-                }
+#ifdef AFS_AFSDB_ENV
+                if (code && cm_dnsEnabled) {
+                  code = cm_SearchCellByDNS(namep, NULL, &ttl, cm_AddCellProc, cp);
+#endif
+		  if (code) {
+		    free(cp);
+		    cp = NULL;
+		    goto done;
+		  }
+#ifdef AFS_AFSDB_ENV
+		  else {   /* got cell from DNS */
+		    cp->flags |= CM_CELLFLAG_DNS;
+		    cp->timeout = time(0) + ttl;
+		  }
+		}
+#endif
 
 		/* randomise among those vlservers having the same rank*/ 
 		cm_RandomizeServer(&cp->vlServersp);
@@ -100,11 +118,30 @@ done:
 cm_cell_t *cm_FindCellByID(long cellID)
 {
 	cm_cell_t *cp;
+	int ttl;
+     int code;
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
 		if (cellID == cp->cellID) break;
         }
+
+#ifdef AFS_AFSDB_ENV
+	/* if it's from DNS, see if it has expired */
+	if (cp && cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout)) {
+	  code = cm_SearchCellByDNS(cp->namep, NULL, &ttl, cm_AddCellProc, cp);
+	  if (code == 0) {   /* got cell from DNS */
+	    cp->flags |= CM_CELLFLAG_DNS;
+#ifdef DEBUG
+	    fprintf(stderr, "cell %s: ttl=%d\n", cp->namep, ttl);
+#endif
+	    cp->timeout = time(0) + ttl;
+	  }
+	  /* if we fail to find it this time, we'll just do nothing and leave the
+	     current entry alone */
+	}
+#endif /* AFS_AFSDB_ENV */
+
 	lock_ReleaseWrite(&cm_cellLock);	
 	
         return cp;

@@ -94,7 +94,8 @@ AFSLIBS =  \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afsrxkad.lib
+	$(DESTDIR)\lib\afsrxkad.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 	
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 

@@ -17,3 +17,7 @@ EXPORTS
 	cm_AppendNewCell		@10
 	cm_AppendNewCellLine		@11
 	cm_CloseCellFile		@12
+     cm_SearchCellByDNS       @13
+     getAFSServer             @14
+     cm_InitDNS               @15
+     cm_GetConfigDir          @16
