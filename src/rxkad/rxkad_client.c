@@ -190,14 +190,16 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     tcp->level = level;
     code = fc_keysched(sessionkey, tcp->keysched);
     if (code) {
-	rxi_Free(tsc, size);
+	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tsc, sizeof(struct rx_securityClass));
 	return 0;		/* bad key */
     }
     memcpy((void *)tcp->ivec, (void *)sessionkey, sizeof(tcp->ivec));
     tcp->kvno = kvno;		/* key version number */
     tcp->ticketLen = ticketLen;	/* length of ticket */
     if (tcp->ticketLen > MAXKTCTICKETLEN) {
-	rxi_Free(tsc, size);
+	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tsc, sizeof(struct rx_securityClass));
 	return 0;		/* bad key */
     }
     memcpy(tcp->ticket, ticket, ticketLen);
