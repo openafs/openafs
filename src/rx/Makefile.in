@@ -69,6 +69,8 @@ ${MULTIOBJS}: rx.h rx_multi.h
 
 ${XDROBJS}: xdr.h
 
+rxperf.o: rx.h rx_null.h rx_globals.h
+
 rx_user.o: rx.h rx_user.h
 
 rx_packet.o: rx_packet.c rx_packet.h
@@ -88,6 +90,9 @@ rx_globals.o: rx.h rx_user.h rx_globals.h
 xdr_rx.o: xdr.h rx.h
 
 xdr_refernce.o: xdr_refernce.c xdr.h
+
+rxperf: rxperf.o librx.a
+	${CC} -o $@ rxperf.o ${LIBS}
 
 librx.a: ${LIBOBJS} RX_component_version_number.o
 	-$(RM) -f $@
