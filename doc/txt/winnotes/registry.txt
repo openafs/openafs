@@ -614,6 +614,10 @@ Function: InitApp(), Main_OnCheckTerminate()
   This value used to be stored at 
   [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].
 
+  The current user value is checked first; if it does not exist the local 
+  machine value is checked.
+
+
 Value   : EnableKFW
 Type    : DWORD {0, 1}
 Default : 1
@@ -621,7 +625,8 @@ Function: KFW_is_available()
 
   When MIT Kerberos for Windows can be loaded, Kerberos 5 will be used
   to obtain AFS credentials.  By setting this value to 0, the internal
-  Kerberos 4 implementation will be used instead.
+  Kerberos 4 implementation will be used instead.  The current user value 
+  is checked first; if it does not exist the local machine value is checked.
 
 Value   : AfscredsShortcutParams
 Type    : REG_SZ
@@ -629,7 +634,12 @@ Default : "-A -M -N -Q"
 Function: Shortcut_FixStartup
 
   This value specifies the command line options which should be set
-  as part of the shortcut to afscreds.exe.
+  as part of the shortcut to afscreds.exe.  afscreds.exe rewrites the 
+  shortcut each time it exits so as to ensure that the shortcut points
+  to the latest version of the program.  This value is used to determine
+  which values should be used for command line parameters.  The current
+  user value is checked first; if it does not exist the local machine
+  value is checked.
 
 
 Regkey:

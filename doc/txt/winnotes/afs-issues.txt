@@ -140,7 +140,8 @@ List of unfunded projects:
       conflicts; and there is no attempt to cleanly shutdown the service which causes 
       problems when restarting and prevents the implementation of a persistent cache
    3. Implement a persistent cache
-   4. Prevent panic situation when the root.afs volume is not reachable
+   4. Prevent panic situation when the root.afs volume is not reachable and 
+      the AFS Client Server is not using Freelance mode
    5. Prevent panic situation when the IP address to which the SMB server is bound is removed 
       from the local machine's network configuration
    6. Identify and fix the problems with running the RX library on Hyperthreaded systems
@@ -187,4 +188,10 @@ List of unfunded projects:
       3. force share names to be no longer than 13 characters
       4. restrict authentication to ASCII only names and passwords
   19. Complete implementation of CIFS Remote Administration Protocol
-  20. Identify and correct the problems with Microsoft Office applications
+  20. Correct the problems with overlapped writes which adversely affect 
+      Microsoft Office applications storing documents and temporary files
+      within AFS volumes
+  21. Development of afsmap.exe tool to provide AFS aware NET USE functionality
+      afsmap.exe <drive> <afs-path> [/PERSISTENT]
+      afsmap.exe <drive> <unc-path> [/PERSISTENT]
+      afsmap.exe <drive> /DELETE

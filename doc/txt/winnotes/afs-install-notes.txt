@@ -118,18 +118,21 @@ options:
     -Z = unmap drives
 
 autoinit will result in automated attempts to acquire AFS tokens when 
-afscreds.exe is started.  When used in combination with ip address change 
-detection, afscreds.exe will attempt to acquire AFS tokens whenever a new IP 
-address is added to the system.
+afscreds.exe is started.  afscreds.exe will attempt to utilize tickets stored
+in the MSLSA credentials cache; any existing CCAPI credentials cache; and
+finally display an Obtain Tokens dialog to the user.  When used in combination 
+with ip address change detection, afscreds.exe will attempt to acquire AFS 
+tokens whenever a new IP address is added to the system.
 
 The renew drive maps option is used to ensure that the user drive maps 
-constructs via the AFS tools (not NET USE) are re-constructed at afscreds.exe 
+constructed via the AFS tools (not NET USE) are re-constructed at afscreds.exe 
 start time.
 
 By default afscreds.exe is configured by the OpenAFS.org installers to use -A 
--N -M as startup options.  Currently, there is no UI to change this selection 
+-N -M -Q as startup options.  Currently, there is no UI to change this selection 
 after install time although these options may be set via the registry either 
-per machine or per user.
+per machine or per user.  See AfscredsShortcutParams in registry.txt.
+
 
 8. Some attempts in the 1.3.65 release have been made to restrict the behavior 
 of users with regards to their ability to alter the state of the AFS Client 
@@ -248,6 +251,12 @@ unless the user's profile was loaded from an AFS volume.  In this situation
 there is no mechanism to determine when the profile has been successfully
 written back to the network.  It is therefore unsafe to release the user's
 tokens.
+
+23. Terminal Server installations.
+When installing under Terminal Server, you must execute the installer
+from within the Add/Remove Programs Control Panel.  Failure to do so 
+will result in AFS not running properly.  The AFS Server should not 
+be installed on a machine with Terminal Server installed.
 
 ------------------------------------------------------------------------
 
