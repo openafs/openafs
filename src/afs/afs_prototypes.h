@@ -31,12 +31,12 @@ extern void afs_FreeAllAxs(struct axscache **headp);
 
 /* afs_buffer.c */
 extern void DInit(int abuffers);
-extern char *DRead(register afs_inode_t * fid, register int page);
+extern void *DRead(register afs_inode_t * fid, register int page);
 extern void DRelease(register struct buffer *bp, int flag);
 extern int DVOffset(register void *ap);
 extern void DZap(afs_inode_t * fid);
 extern void DFlush(void);
-extern char *DNew(register afs_inode_t * fid, register int page);
+extern void *DNew(register afs_inode_t * fid, register int page);
 extern void shutdown_bufferpackage(void);
 
 /* afs_call.c */

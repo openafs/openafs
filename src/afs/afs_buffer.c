@@ -149,7 +149,7 @@ DInit(int abuffers)
     return;
 }
 
-char *
+void *
 DRead(register afs_inode_t * fid, register int page)
 {
     /* Read a page from the disk. */
@@ -484,7 +484,7 @@ DFlush(void)
     MReleaseReadLock(&afs_bufferLock);
 }
 
-char *
+void *
 DNew(register afs_inode_t * fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */

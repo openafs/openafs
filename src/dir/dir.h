@@ -78,6 +78,8 @@ struct DirPage1 {
 extern int DVOffset(void *ap);
 
 
+/* This is private to buffer.c */
+struct buffer;
 
 /* Prototypes */
 extern int NameBlobs(char *name);
@@ -99,7 +101,7 @@ extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
 extern int DirHash(register char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
-extern void DRelease(register struct buffer *bp, int flag);
+extern void DRelease();
 extern int DVOffset(register void *ap);
 extern int DFlushVolume(register afs_int32 vid);
 extern int DFlushEntry(register afs_int32 *fid);
@@ -108,7 +110,7 @@ extern int DFlushEntry(register afs_int32 *fid);
    in afs_prototypes.h */
 #ifndef KERNEL
 extern int DInit(int abuffers);
-extern void *DRead(register afs_int32 *fid, register int page);
+extern void *DRead();
 extern int DFlush();
 extern void *DNew(register afs_int32 *fid, register int page);
 extern void DZap(register afs_int32 *fid);

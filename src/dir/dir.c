@@ -82,8 +82,10 @@ RCSID
 #include "netinet/in.h"
 #endif
 
-/* Irix needs this */
-struct DirEntry *DRead();
+/* afs_buffer.c */
+/* These are needed because afs_prototypes.h is not included here */
+extern void *DRead();
+extern void *DNew();
 
 #else /* !defined(UKERNEL) */
 #include "afs/stds.h"
