@@ -17,6 +17,10 @@ CONFIG=/usr/vice/etc/config
 AFSDOPT=$CONFIG/afsd.options
 PACKAGE=$CONFIG/package.options
 
+# EXTRAOPTS can be used to enable/disable AFSDB support (-afsdb)
+# and Dynroot (dynamically-generated /afs) support (-dynroot).
+EXTRAOPTS="-afsdb"
+
 LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
 MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
 SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
@@ -24,7 +28,7 @@ SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
 if [ -f $AFSDOPT ]; then
     OPTIONS=`cat $AFSDOPT`
 else
-    OPTIONS=$MEDIUM
+    OPTIONS="$MEDIUM $EXTRAOPTS"
 fi
 
 # Need the commands ps, awk, kill, sleep

@@ -218,6 +218,12 @@ choose_afsdoptions() {
 		fi
 	fi
 	AFSD_OPTIONS="$OPTIONS $VERBOSE"
+	if is_on $ENABLE_AFSDB; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -afsdb"
+	fi
+	if is_on $ENABLE_DYNROOT; then
+		AFSD_OPTIONS="$AFSD_OPTIONS -dynroot"
+	fi
 }
 
 case "$1" in 

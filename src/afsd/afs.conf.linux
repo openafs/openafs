@@ -13,6 +13,12 @@
 AFS_CLIENT=on
 AFS_SERVER=off
 
+# ENABLE_AFSDB and ENABLE_DYNROOT determine whether AFSDB support and
+# Dynroot support (dynamically generated /afs), respectively, should be
+* enabled in the AFS client.
+ENABLE_AFSDB=on
+ENABLE_DYNROOT=off
+
 # AFS client configuration options:
 XXLARGE="-stat 4000 -dcache 4000 -daemons 6 -volumes 256 -files 50000"
 XLARGE="-stat 3600 -dcache 3600 -daemons 5 -volumes 196 -files 50000"
