@@ -5,7 +5,7 @@ openafs (1.0.3-2) unstable; urgency=low
   * Include build instructions in modules, closes: #92032
   * Don't grep a file for a potentially null string, closes: #89967
 
- --
+ -- Sam Hartman <hartmans@debian.org>  Thu, 29 Mar 2001 22:09:29 -0500
 
 openafs (1.0.3-1) unstable; urgency=low
 
