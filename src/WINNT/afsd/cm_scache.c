@@ -344,7 +344,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->parentUnique = 0x1;
         scp->parentVnode=0x1;
         scp->group=0;
-        scp->dataVersion=0x8;
+        scp->dataVersion=cm_fakeDirVersion;
         *outScpp = scp;
         lock_ReleaseWrite(&cm_scacheLock);
         /*afsi_log("   getscache done");*/
@@ -844,7 +844,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->FileType = CM_SCACHETYPE_DIRECTORY;
         statusp->LinkCount = scp->linkCount;
         statusp->Length = cm_fakeDirSize;
-        statusp->DataVersion = scp->dataVersion;
+        statusp->DataVersion = cm_fakeDirVersion;
         statusp->Author = 0x1;
         statusp->Owner = 0x0;
         statusp->CallerAccess = 0x9;
@@ -853,8 +853,8 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
         statusp->ParentVnode = 0x1;
         statusp->ParentUnique = 0x1;
         statusp->ResidencyMask = 0;
-        statusp->ClientModTime = FakeFreelanceModTime;
-        statusp->ServerModTime = FakeFreelanceModTime;
+        statusp->ClientModTime = (afs_uint32)FakeFreelanceModTime;
+        statusp->ServerModTime = (afs_uint32)FakeFreelanceModTime;
         statusp->Group = 0;
         statusp->SyncCounter = 0;
         statusp->dataVersionHigh = 0;
