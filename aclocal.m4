@@ -61,8 +61,6 @@ AC_ARG_ENABLE(tivoli-tsm,
 [  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
 )
 
-AC_PROG_CC
-
 dnl weird ass systems
 AC_AIX
 AC_ISC_POSIX
@@ -71,6 +69,7 @@ AC_MINIX
 dnl Various compiler setup.
 AC_C_INLINE
 AC_C_CONST
+AC_PROG_CC
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
@@ -139,6 +138,9 @@ case $system in
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
 	         )
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
+		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
@@ -147,6 +149,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
 		 fi
                 :
 		fi
@@ -161,6 +166,9 @@ case $system in
                 AC_MSG_RESULT(hp_ux)
                 ;;
         *-irix*)
+		if test -d /usr/include/sys/SN/SN1; then
+		 IRIX_BUILD_IP35="IP35"
+		fi
 		MKAFS_OSTYPE=IRIX
                 AC_MSG_RESULT(sgi)
                 ;;
@@ -216,18 +224,15 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+			;;
+		powerpc-apple-darwin5.1*)
+			AFS_SYSNAME="ppc_darwin_51"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -301,6 +306,12 @@ else
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
 
+case $AFS_SYSNAME in
+	*_darwin*)
+		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+		;;
+esac
 
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
@@ -491,26 +502,9 @@ AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
+AC_SUBST(IRIX_BUILD_IP35)
 
 ])
-
-#serial 1
-# This test replaces the one in autoconf.
-# Currently this macro should have the same name as the autoconf macro
-# because gettext's gettext.m4 (distributed in the automake package)
-# still uses it.  Otherwise, the use in gettext.m4 makes autoheader
-# give these diagnostics:
-#   configure.in:556: AC_TRY_COMPILE was called before AC_ISC_POSIX
-#   configure.in:556: AC_TRY_RUN was called before AC_ISC_POSIX
-
-undefine([AC_ISC_POSIX])
-
-AC_DEFUN([AC_ISC_POSIX],
-  [
-    dnl This test replaces the obsolescent AC_ISC_POSIX kludge.
-    AC_CHECK_LIB(cposix, strerror, [LIBS="$LIBS -lcposix"])
-  ]
-)
 
 
 # AM_PROG_LEX
@@ -595,7 +589,7 @@ am_aux_dir=`CDPATH=:; cd $ac_aux_dir && pwd`
 ])
 
 dnl
-dnl $Id: aclocal.m4,v 1.9 2001/10/14 19:17:16 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.10 2002/01/23 00:41:12 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -663,6 +657,21 @@ ac_cv_linux_fs_struct_inode_has_i_bytes=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_bytes)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM, [
+AC_MSG_CHECKING(for i_truncate_sem in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_truncate_sem,
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _i;
+printf("%x\n", _i.i_truncate_sem);], 
+ac_cv_linux_fs_struct_inode_has_i_truncate_sem=yes,
+ac_cv_linux_fs_struct_inode_has_i_truncate_sem=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_truncate_sem)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, [
 AC_MSG_CHECKING(for page_lock in struct address_space)
 save_CPPFLAGS="$CPPFLAGS"
@@ -689,6 +698,82 @@ outputdir=ifelse([$2], ,src/afs/LINUX,$2)
 chmod +x $configdir/make_vnode.pl
 $configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -o $outputdir
 ])
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED, [
+AC_MSG_CHECKING(for i_mmap_shared in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mmap_shared,
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mmap_shared);],
+ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes,
+ac_cv_linux_fs_struct_inode_has_i_mmap_shared=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, [
+AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_dirty_data_buffers);], 
+ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
+ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD, [
+AC_MSG_CHECKING(for i_mapping_overload in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_mapping_overload, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_mapping_overload);], 
+ac_cv_linux_fs_struct_inode_has_i_mapping_overload=yes,
+ac_cv_linux_fs_struct_inode_has_i_mapping_overload=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mapping_overload)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_CDEV, [
+AC_MSG_CHECKING(for i_cdev in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_cdev);], 
+ac_cv_linux_fs_struct_inode_has_i_cdev=yes,
+ac_cv_linux_fs_struct_inode_has_i_cdev=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DEVICES, [
+AC_MSG_CHECKING(for i_devices in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_cdev, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_devices);], 
+ac_cv_linux_fs_struct_inode_has_i_devices=yes,
+ac_cv_linux_fs_struct_inode_has_i_devices=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_devices)
+CPPFLAGS="$save_CPPFLAGS"])
+
 
 AC_DEFUN(LINUX_INODE_SETATTR_RETURN_TYPE,[
 AC_MSG_CHECKING(for inode_setattr return type)

@@ -6,6 +6,9 @@ case `arch` in
 i[3456]86)
 	echo i386_linux22
 ;;
+    ia64)
+    echo ia64_linux24
+;;
     ppc)
 	echo ppc_linux22
 	;;

@@ -1,3 +1,10 @@
+openafs (1.2.3.candidate1-1) unstable; urgency=low
+
+  *  New upstream release candidate
+  * Add ia64 as a potential architecture
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 22 Jan 2002 19:00:51 -0500
+
 openafs (1.2.2-3) unstable; urgency=low
 
   * Support s390, closes: #123540
