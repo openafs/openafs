@@ -508,12 +508,12 @@ BEGIN
     IDS_SERVICE_STARTING    "Please wait; the AFS Client Service is starting..."
     IDS_SERVICE_UNKNOWN     "The status of the AFS Client Service could not be determined."
     IDS_SERVICE_FAIL_STOP   "The AFS Client Service could not be stopped successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
+    IDS_SERVICE_FAIL_START  "The AFS Client Service could not be started successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
+    IDS_SERVICE_FAIL_CONFIG "The AFS Client Service's startup parameters could not be changed. You might not have authorization to perform this operation.\n\nError 0x%1."
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVICE_FAIL_START  "The AFS Client Service could not be started successfully. You might not have authorization to perform this operation.\n\nError 0x%1."
-    IDS_SERVICE_FAIL_CONFIG "The AFS Client Service's startup parameters could not be changed. You might not have authorization to perform this operation.\n\nError 0x%1."
     IDS_SERVICE_ERROR       "Error Configuring Service"
     IDS_ERROR_TITLE         "Error - AFS Client"
     IDS_ERROR_TITLE_95      "Error - AFS Light"
@@ -531,11 +531,11 @@ BEGIN
     IDS_WIZ_NEXT            "&Next >"
     IDS_WIZ_FINISH          "&Finish"
     IDS_MAP_LETTER          "Drive *:"
-    IDS_DRIVE_MAP           "Drive %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDS_DRIVE_MAP           "Drive %1: \t%2"
     IDS_ERROR_MAP           "Error Mapping Network Drive"
     IDS_ERROR_MAP_DESC      "AFS was unable to map the network drive to the specified path in AFS. Check to make sure the drive letter is not currently in use.\n\nError: 0x%1."
     IDS_ERROR_UNMAP         "Error Mapping Network Drive"
@@ -551,11 +551,14 @@ BEGIN
     IDS_NEWSUB_TITLE_95     "Caution - AFS Light"
     IDS_NEWSUB_DESC         "AFS was unable to use the description you specified when connecting the network drive.\n\nThe specified description is already used for a different AFS path."
     IDS_BADSUB_TITLE        "Error - AFS Client"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_BADSUB_TITLE_95     "Error - AFS Light"
     IDS_BADSUB_DESC         "The drive letter description you entered cannot be used.\n\nA drive letter description may have no more than 12 characters, and may not contain spaces or tabs."
     IDS_TITLE_95            "AFS Light"
 END
-
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

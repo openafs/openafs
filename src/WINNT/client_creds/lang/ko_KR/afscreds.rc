@@ -491,6 +491,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS 클라이언트"
+    IDS_TOOLTIP_95          "AFS 라이트"
     IDS_CREDENTIALS         "토큰"
     IDS_UNKNOWN             "(알 수 없음)"
     IDS_ADVANCED            "고급"
@@ -503,37 +504,21 @@ BEGIN
     IDS_SERVICE_STARTING    "기다리십시오. AFS 클라이언트 서비스가 시작 중입니다..."
     IDS_SERVICE_UNKNOWN     "AFS 클라이언트 서비스의 상태를 판별할 수 없습니다."
     IDS_SERVICE_FAIL_STOP   "AFS 클라이언트 서비스를 정지할 수 없습니다. 이 조작을 수행할 수 있는 권한이 없습니다.\n\n오류 0x%1."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "네트워크 드라이브 맵핑 오류"
-    IDS_ERROR_MAP_DESC      "AFS는 네트워크 드라이브를 AFS에서 지정된 경로에 맵핑할 수 없습니다. 현재 드라이브 이름이 사용 중이어서는 안됩니다.\n\n오류: 0x%1."
-    IDS_ERROR_UNMAP         "네트워크 드라이브 맵핑 오류"
-    IDS_ERROR_UNMAP_DESC    "AFS는 지정된 네트워크 드라이브를 언맵할 수 없습니다. 현재 드라이브 이름이 사용 중이어서는 안됩니다.\n\n오류: 0x%1."
-    IDS_CELL_GATEWAY        "%s(%s 게이트웨이를 통해)"
-    IDS_BADMAP_TITLE        "네트워크 드라이브 맵핑 오류"
-    IDS_BADMAP_DESC         "AFS는 경로가 \\afs""로 시작하지 않으므로 드라이브 이름을 지정된 경로에 맵핑할 수 없습니다.\n\n입력한 경로가 \\afs""로 시작하는지 확인하고 다시 시도하십시오."
-    IDS_UNCONFIG_TITLE      "오류 - AFS 클라이언트"
-    IDS_UNCONFIG_DESC       "AFS 클라이언트가 아직 구성되지 않았으므로 사용할 수 없습니다.\n\nAFS 클라이언트를 구성하려면, 제어판을 열고 AFS 클라이언트 아이콘을 두 번 누르십시오."
-    IDS_NEWSUB_TITLE        "주의 - AFS 클라이언트"
-    IDS_NEWSUB_DESC         "AFS는 네트워크 드라이브에 연결할 때 지정된 설명을 사용할 수 없습니다.\n\n지정된 설명은 이미 다른 AFS 경로에서 사용되었습니다."
-    IDS_BADSUB_TITLE        "오류 - AFS 클라이언트"
-    IDS_BADSUB_DESC         "입력한 드라이브 이름 설명을 사용할 수 없습니다.\n\n드라이브 이름 설명에는 12 문자 이상을 사용할 수 없으며 공백 또는 탭을 포함할 수 없습니다."
-    IDS_TITLE_95            "AFS 라이트"
-    IDS_TOOLTIP_95          "AFS 라이트"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "AFS 클라이언트 서비스를 시작할 수 없습니다. 이 조작을 수행할 수 있는 권한이 없습니다.\n\n오류 0x%1."
     IDS_SERVICE_FAIL_CONFIG "AFS 클라이언트 서비스의 시동 매개변수를 변경할 수 없습니다. 이 조작을 수행할 수 있는 권한이 없습니다.\n\n오류 0x%1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "서비스 구성 오류"
     IDS_ERROR_TITLE         "오류 - AFS 클라이언트"
+    IDS_ERROR_TITLE_95      "오류 - AFS 라이트"
+    IDS_ERROR_DESTROY_95    "%1 셀에 있는 토큰을 파괴할 수 없습니다.\n\n오류: %2"
     IDS_ERROR_DESTROY_NOCM  "AFS 클라이언트 서비스가 응답하지 않았으므로 %1 셀에 있는 토큰을 파괴할 수 없습니다.\n\n고급 탭을 확인하여 AFS 클라이언트가 제대로 실행 중인지 보십시오.\n\n오류: %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "%1 셀에 있는 토큰을 파괴할 수 없습니다.\n\n확장 탭을 확인하여 AFS 클라이언트가 제대로 실행 중인지 보십시오.\n\n오류: %2"
     IDS_ERROR_OBTAIN        "AFS 클라이언트는 토큰을 %1 셀의 %2(으)로 확보할 수 없습니다.\n\n오류: %4(%3)"
+    IDS_ERROR_OBTAIN_95     "AFS 라이트는 토큰을 %1 셀의 %2(으)로서 확보할 수 없습니다.\n\n오류: %4(%3)"
     IDS_TITLE_VERSION       "%s AFS 버전"
     IDS_TITLE_VERSION_NOPATCH "%s AFS 버전"
     IDS_MOUNT_SOME          "다음 드라이브 이름을 AFS의 경로에 맵핑하도록 선택했습니다."
@@ -542,18 +527,33 @@ BEGIN
     IDS_WIZ_NEXT            "다음(&N) >"
     IDS_WIZ_FINISH          "종료(&F)"
     IDS_MAP_LETTER          "드라이브 *:"
-    IDS_DRIVE_MAP           "%1: 드라이브 \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "오류 - AFS 라이트"
-    IDS_ERROR_DESTROY_95    "%1 셀에 있는 토큰을 파괴할 수 없습니다.\n\n오류: %2"
-    IDS_ERROR_OBTAIN_95     "AFS 라이트는 토큰을 %1 셀의 %2(으)로서 확보할 수 없습니다.\n\n오류: %4(%3)"
+    IDS_DRIVE_MAP           "%1: 드라이브 \t%2"
+    IDS_ERROR_MAP           "네트워크 드라이브 맵핑 오류"
+    IDS_ERROR_MAP_DESC      "AFS는 네트워크 드라이브를 AFS에서 지정된 경로에 맵핑할 수 없습니다. 현재 드라이브 이름이 사용 중이어서는 안됩니다.\n\n오류: 0x%1."
+    IDS_ERROR_UNMAP         "네트워크 드라이브 맵핑 오류"
+    IDS_ERROR_UNMAP_DESC    "AFS는 지정된 네트워크 드라이브를 언맵할 수 없습니다. 현재 드라이브 이름이 사용 중이어서는 안됩니다.\n\n오류: 0x%1."
+    IDS_CELL_GATEWAY        "%s(%s 게이트웨이를 통해)"
+    IDS_BADMAP_TITLE        "네트워크 드라이브 맵핑 오류"
+    IDS_BADMAP_DESC         "AFS는 경로가 \\afs""로 시작하지 않으므로 드라이브 이름을 지정된 경로에 맵핑할 수 없습니다.\n\n입력한 경로가 \\afs""로 시작하는지 확인하고 다시 시도하십시오."
     IDS_UNCONFIG_TITLE_95   "오류 - AFS 라이트"
     IDS_UNCONFIG_DESC_95    "AFS 라이트가 아직 구성되지 않았으므로 사용할 수 없습니다.\n\nAFS 라이트를 구성하려면, 제어판을 열고 AFS 라이트 구성 아이콘을 두 번 누르십시오."
+    IDS_UNCONFIG_TITLE      "오류 - AFS 클라이언트"
+    IDS_UNCONFIG_DESC       "AFS 클라이언트가 아직 구성되지 않았으므로 사용할 수 없습니다.\n\nAFS 클라이언트를 구성하려면, 제어판을 열고 AFS 클라이언트 아이콘을 두 번 누르십시오."
+    IDS_NEWSUB_TITLE        "주의 - AFS 클라이언트"
     IDS_NEWSUB_TITLE_95     "주의 - AFS 라이트"
+    IDS_NEWSUB_DESC         "AFS는 네트워크 드라이브에 연결할 때 지정된 설명을 사용할 수 없습니다.\n\n지정된 설명은 이미 다른 AFS 경로에서 사용되었습니다."
+    IDS_BADSUB_TITLE        "오류 - AFS 클라이언트"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "오류 - AFS 라이트"
+    IDS_BADSUB_DESC         "입력한 드라이브 이름 설명을 사용할 수 없습니다.\n\n드라이브 이름 설명에는 12 문자 이상을 사용할 수 없으며 공백 또는 탭을 포함할 수 없습니다."
+    IDS_TITLE_95            "AFS 라이트"
 END
 
 #endif    // Korean resources

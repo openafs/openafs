@@ -603,11 +603,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS Client"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MP_REMOVE_ITEM      "&Remove..."
     IDS_MP_MAKE_ITEM        "&Make..."
     IDS_FLUSH_FILE_DIR_ITEM "&Flush File/Dir"
@@ -636,6 +631,11 @@ BEGIN
     IDS_REMOVE_MP_COLUMN    "Result"
     IDS_REMOVE_SYMLINK_ITEM "&Remove Symbolic Link"
     IDS_REALLY_REMOVE_SYMLINK "Are you sure you want to remove the selected Symbolic Link?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS Client"
 END
 
 #endif    // English (U.S.) resources

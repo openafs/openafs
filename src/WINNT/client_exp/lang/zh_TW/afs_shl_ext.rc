@@ -595,11 +595,6 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS 用戶端"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
     IDS_MP_REMOVE_ITEM      "移除(&R)..."
     IDS_MP_MAKE_ITEM        "製作(&M)..."
     IDS_FLUSH_FILE_DIR_ITEM "沖寫檔案 / 目錄(&F)"
@@ -625,6 +620,11 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "檔案伺服器"
     IDS_REMOVE_MP           "移除裝載點"
     IDS_REMOVE_MP_COLUMN    "結果"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS 用戶端"
 END
 
 #endif    // Chinese (Taiwan) resources

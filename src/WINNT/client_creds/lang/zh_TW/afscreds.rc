@@ -502,6 +502,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS 用戶端"
+    IDS_TOOLTIP_95          "AFS Light "
     IDS_CREDENTIALS         "記號"
     IDS_UNKNOWN             "（不明）"
     IDS_ADVANCED            "進階"
@@ -514,37 +515,21 @@ BEGIN
     IDS_SERVICE_STARTING    "請稍候；正在啟動「AFS 用戶端服務」..."
     IDS_SERVICE_UNKNOWN     "無法判斷「AFS 用戶端服務」的狀態。"
     IDS_SERVICE_FAIL_STOP   "無法順利停止「AFS 用戶端服務」。您可能未獲得執行此一作業的權限。\n\n錯誤 0x%1。"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "對應網路磁碟機時發生錯誤"
-    IDS_ERROR_MAP_DESC      "AFS 無法對應網路磁碟機到 AFS 上的指定路徑。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
-    IDS_ERROR_UNMAP         "對應網路磁碟機時發生錯誤"
-    IDS_ERROR_UNMAP_DESC    "AFS 無法取消對應指定的網路磁碟機。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
-    IDS_CELL_GATEWAY        "%s （透過閘道 %s）"
-    IDS_BADMAP_TITLE        "對應網路磁碟機時發生錯誤"
-    IDS_BADMAP_DESC         "AFS 無法對應磁碟機代號到指定路徑，因為路徑並非以 ""\\afs"" 為開頭。\n\n請確定您所輸入的路徑開頭為 ""\\afs""，然後再試一次。"
-    IDS_UNCONFIG_TITLE      "錯誤 - AFS 用戶端"
-    IDS_UNCONFIG_DESC       "尚未架構「AFS 用戶端」，因此無法使用。\n\n如要架構「AFS 用戶端」，請開啟「主控台」並在「AFS 用戶端」圖示上按兩下。"
-    IDS_NEWSUB_TITLE        "警告 - AFS 用戶端"
-    IDS_NEWSUB_DESC         "AFS 在連接網路磁碟機時，無法使用您所指定的說明。 \n\n\n所指定的說明已用於不同的 AFS 路徑。"
-    IDS_BADSUB_TITLE        "錯誤 - AFS 用戶端"
-    IDS_BADSUB_DESC         "您所輸入的磁碟機代號說明無法使用。\n\n磁碟機代號說明最多不能超過 12 個字元，而且不可包含空格或標欄。"
-    IDS_TITLE_95            "AFS Light "
-    IDS_TOOLTIP_95          "AFS Light "
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "無法順利啟動「AFS 用戶端服務」。您可能未獲得執行此一作業的權限。\n\n錯誤 0x%1。"
     IDS_SERVICE_FAIL_CONFIG "無法變更「AFS 用戶端服務」的啟動參數。您的權限不足以執行此項作業。\n\n錯誤 0x%1。"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "架構服務時發生錯誤"
     IDS_ERROR_TITLE         "錯誤 - AFS 用戶端"
+    IDS_ERROR_TITLE_95      "錯誤 - AFS Light "
+    IDS_ERROR_DESTROY_95    "無法銷毀您在 %1 Cell 中的記號。\n\n錯誤： %2 "
     IDS_ERROR_DESTROY_NOCM  "您在 %1 Cell 中的記號無法銷毀，因為「AFS 用戶端服務」沒有回應。\n\n請檢查「進階」標籤，查看「AFS 用戶端」是否正常執行。\n\n錯誤： %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "您在 %1 Cell 中的記號無法銷毀。\n\n請檢查「進階」標籤，查看「 AFS 用戶端」是否正常執行。\n\n錯誤： %2"
     IDS_ERROR_OBTAIN        "「AFS 用戶端」無法在 Cell %1 中取得 %2 的記號。\n\n錯誤： %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "「AFS Light 」無法在 Cell %1 中取得 %2 的記號。\n\n錯誤： %4 (%3)"
     IDS_TITLE_VERSION       "AFS 版本 %s"
     IDS_TITLE_VERSION_NOPATCH "AFS 版本 %s"
     IDS_MOUNT_SOME          "您已選擇將以下的磁碟機代號對應至 AFS 路徑："
@@ -553,18 +538,33 @@ BEGIN
     IDS_WIZ_NEXT            "下一步(&N) >"
     IDS_WIZ_FINISH          "完成(&F)"
     IDS_MAP_LETTER          "磁碟機 *:"
-    IDS_DRIVE_MAP           "磁碟機 %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "錯誤 - AFS Light "
-    IDS_ERROR_DESTROY_95    "無法銷毀您在 %1 Cell 中的記號。\n\n錯誤： %2 "
-    IDS_ERROR_OBTAIN_95     "「AFS Light 」無法在 Cell %1 中取得 %2 的記號。\n\n錯誤： %4 (%3)"
+    IDS_DRIVE_MAP           "磁碟機 %1: \t%2"
+    IDS_ERROR_MAP           "對應網路磁碟機時發生錯誤"
+    IDS_ERROR_MAP_DESC      "AFS 無法對應網路磁碟機到 AFS 上的指定路徑。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
+    IDS_ERROR_UNMAP         "對應網路磁碟機時發生錯誤"
+    IDS_ERROR_UNMAP_DESC    "AFS 無法取消對應指定的網路磁碟機。請確定目前並未使用該磁碟機代號。\n\n錯誤： 0x%1。"
+    IDS_CELL_GATEWAY        "%s （透過閘道 %s）"
+    IDS_BADMAP_TITLE        "對應網路磁碟機時發生錯誤"
+    IDS_BADMAP_DESC         "AFS 無法對應磁碟機代號到指定路徑，因為路徑並非以 ""\\afs"" 為開頭。\n\n請確定您所輸入的路徑開頭為 ""\\afs""，然後再試一次。"
     IDS_UNCONFIG_TITLE_95   "錯誤 - AFS Light "
     IDS_UNCONFIG_DESC_95    "尚未架構「AFS Light 」，因此無法使用。\n\n如要架構「AFS Light 」，請開啟「控制台」，並在「AFS Light 架構」圖示上按兩下。"
+    IDS_UNCONFIG_TITLE      "錯誤 - AFS 用戶端"
+    IDS_UNCONFIG_DESC       "尚未架構「AFS 用戶端」，因此無法使用。\n\n如要架構「AFS 用戶端」，請開啟「主控台」並在「AFS 用戶端」圖示上按兩下。"
+    IDS_NEWSUB_TITLE        "警告 - AFS 用戶端"
     IDS_NEWSUB_TITLE_95     "警告 - AFS Light "
+    IDS_NEWSUB_DESC         "AFS 在連接網路磁碟機時，無法使用您所指定的說明。 \n\n\n所指定的說明已用於不同的 AFS 路徑。"
+    IDS_BADSUB_TITLE        "錯誤 - AFS 用戶端"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "錯誤 - AFS Light "
+    IDS_BADSUB_DESC         "您所輸入的磁碟機代號說明無法使用。\n\n磁碟機代號說明最多不能超過 12 個字元，而且不可包含空格或標欄。"
+    IDS_TITLE_95            "AFS Light "
 END
 
 #endif    // Chinese (Taiwan) resources

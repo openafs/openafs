@@ -523,6 +523,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS Client"
+    IDS_TOOLTIP_95          "AFS Light"
     IDS_CREDENTIALS         "Señales"
     IDS_UNKNOWN             "(desconocido)"
     IDS_ADVANCED            "Avanzado"
@@ -535,37 +536,21 @@ BEGIN
     IDS_SERVICE_STARTING    "Espere por favor; el Servicio de AFS Client se está iniciando..."
     IDS_SERVICE_UNKNOWN     "No ha podido determinarse el estado del Servicio de AFS Client."
     IDS_SERVICE_FAIL_STOP   "No ha podido detenerse satisfactoriamente el Servicio de AFS Client. Es posible que no disponga de autorización para efectuar esta operación.\n\nError 0x%1."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "Error al correlacionar unidad de red"
-    IDS_ERROR_MAP_DESC      "AFS no ha podido correlacionar unidad de red con la vía de acceso especificada en AFS. Asegúrese de que la letra de unidad no se está utilizando en la actualidad.\n\nError: 0x%1."
-    IDS_ERROR_UNMAP         "Error al correlacionar unidad de red"
-    IDS_ERROR_UNMAP_DESC    "AFS no ha podido descorrelacionar unidad de red especificada. Asegúrese de que la letra de unidad no se está utilizando en la actualidad.\n\nError: 0x%1."
-    IDS_CELL_GATEWAY        "%s (por medio de pasarela %s)"
-    IDS_BADMAP_TITLE        "Error al correlacionar unidad de red"
-    IDS_BADMAP_DESC         "AFS no ha podido correlacionar una letra de unidad con la vía de acceso especificada debido a que la vía de acceso no comienza por ""\\afs"".\n\nAsegúrese de que la vía de acceso entrada comienza por ""\\afs"" y vuélvalo a intentar."
-    IDS_UNCONFIG_TITLE      "Error - AFS Client"
-    IDS_UNCONFIG_DESC       "El AFS Client no puede utilizarse porque todavía no se ha configurado.\n\nPara configurar el AFS Client, abra el Panel de control y efectúe una doble pulsación en el icono AFS Client."
-    IDS_NEWSUB_TITLE        "Precaución - AFS Client"
-    IDS_NEWSUB_DESC         "AFS no ha podido utilizar la descripción especificada al conectar la unidad de red.\n\nLa descripción especificada ya se ha utilizado para otra vía de acceso de AFS diferente. "
-    IDS_BADSUB_TITLE        "Error - AFS Client"
-    IDS_BADSUB_DESC         "No puede utilizarse la descripción de la letra de unidad entrada.\n\nUna descripción de letra de unidad no puede tener más de 12 caracteres y no puede contener ni espacios ni tabuladores. "
-    IDS_TITLE_95            "AFS Light"
-    IDS_TOOLTIP_95          "AFS Light"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "No ha podido iniciarse satisfactoriamente el Servicio de AFS Client. Es posible que no disponga de autorización para efectuar esta operación.\n\nError 0x%1."
     IDS_SERVICE_FAIL_CONFIG "No han podido cambiarse los parámetros de arranque del Servicio de AFS Client. Es posible que no disponga de autorización para efectuar esta operación.\n\nError 0x%1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "Error al configurar el servicio"
     IDS_ERROR_TITLE         "Error - AFS Client"
+    IDS_ERROR_TITLE_95      "Error - AFS Light"
+    IDS_ERROR_DESTROY_95    "Las señales de la célula %1 no han podido destruirse.\n\nError: %2"
     IDS_ERROR_DESTROY_NOCM  "Las señales de la célula %1 no han podido destruirse debido a que el Servicio de AFS Client no está respondiendo.\n\nCompruebe el tabulador Avanzado para ver si el AFS Client se está ejecutando debidamente.\n\nError: %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "Las señales de la célula %1 no han podido destruirse.\n\nCompruebe el tabulador Avanzado para ver si el AFS Client se está ejecutando debidamente.\n\nError: %2"
     IDS_ERROR_OBTAIN        "El AFS Client no ha podido obtener señales como %2 en la célula %1.\n\nError: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "AFS Light no ha podido obtener señales como %2 en la célula %1.\n\nError: %4 (%3)"
     IDS_TITLE_VERSION       "AFS Versión %s"
     IDS_TITLE_VERSION_NOPATCH "AFS Versión %s"
     IDS_MOUNT_SOME          "Ha optado por correlacionar las siguientes letras de unidad con las vías de acceso de AFS:"
@@ -574,18 +559,33 @@ BEGIN
     IDS_WIZ_NEXT            "&Siguiente >"
     IDS_WIZ_FINISH          "&Finalizar"
     IDS_MAP_LETTER          "Unidad *:"
-    IDS_DRIVE_MAP           "Unidad %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "Error - AFS Light"
-    IDS_ERROR_DESTROY_95    "Las señales de la célula %1 no han podido destruirse.\n\nError: %2"
-    IDS_ERROR_OBTAIN_95     "AFS Light no ha podido obtener señales como %2 en la célula %1.\n\nError: %4 (%3)"
+    IDS_DRIVE_MAP           "Unidad %1: \t%2"
+    IDS_ERROR_MAP           "Error al correlacionar unidad de red"
+    IDS_ERROR_MAP_DESC      "AFS no ha podido correlacionar unidad de red con la vía de acceso especificada en AFS. Asegúrese de que la letra de unidad no se está utilizando en la actualidad.\n\nError: 0x%1."
+    IDS_ERROR_UNMAP         "Error al correlacionar unidad de red"
+    IDS_ERROR_UNMAP_DESC    "AFS no ha podido descorrelacionar unidad de red especificada. Asegúrese de que la letra de unidad no se está utilizando en la actualidad.\n\nError: 0x%1."
+    IDS_CELL_GATEWAY        "%s (por medio de pasarela %s)"
+    IDS_BADMAP_TITLE        "Error al correlacionar unidad de red"
+    IDS_BADMAP_DESC         "AFS no ha podido correlacionar una letra de unidad con la vía de acceso especificada debido a que la vía de acceso no comienza por ""\\afs"".\n\nAsegúrese de que la vía de acceso entrada comienza por ""\\afs"" y vuélvalo a intentar."
     IDS_UNCONFIG_TITLE_95   "Error - AFS Light"
     IDS_UNCONFIG_DESC_95    "AFS Light no puede utilizarse porque todavía no se ha configurado.\n\nPara configurar AFS Light, abra el Panel de control y efectúe una doble pulsación en el icono Configuración de AFS Light."
+    IDS_UNCONFIG_TITLE      "Error - AFS Client"
+    IDS_UNCONFIG_DESC       "El AFS Client no puede utilizarse porque todavía no se ha configurado.\n\nPara configurar el AFS Client, abra el Panel de control y efectúe una doble pulsación en el icono AFS Client."
+    IDS_NEWSUB_TITLE        "Precaución - AFS Client"
     IDS_NEWSUB_TITLE_95     "Precaución - AFS Light"
+    IDS_NEWSUB_DESC         "AFS no ha podido utilizar la descripción especificada al conectar la unidad de red.\n\nLa descripción especificada ya se ha utilizado para otra vía de acceso de AFS diferente. "
+    IDS_BADSUB_TITLE        "Error - AFS Client"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "Error - AFS Light"
+    IDS_BADSUB_DESC         "No puede utilizarse la descripción de la letra de unidad entrada.\n\nUna descripción de letra de unidad no puede tener más de 12 caracteres y no puede contener ni espacios ni tabuladores. "
+    IDS_TITLE_95            "AFS Light"
 END
 
 #endif    // English (U.S.) resources

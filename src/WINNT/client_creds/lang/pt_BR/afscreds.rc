@@ -498,6 +498,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS Client"
+    IDS_TOOLTIP_95          "AFS Básico"
     IDS_CREDENTIALS         "Tokens"
     IDS_UNKNOWN             "(desconhecido)"
     IDS_ADVANCED            "Avançado"
@@ -510,37 +511,21 @@ BEGIN
     IDS_SERVICE_STARTING    "Aguarde; o Serviço do AFS Client está iniciando..."
     IDS_SERVICE_UNKNOWN     "O status do Serviço do AFS Client não pôde ser determinado."
     IDS_SERVICE_FAIL_STOP   "O Serviço do AFS Client não pôde ser parado com êxito. Você pode não ter autorização para realizar esta operação.\n\nErro 0x%1."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "Erro Mapeando Unidade de Rede"
-    IDS_ERROR_MAP_DESC      "O AFS foi incapaz de mapear a unidade de rede para o caminho especificado no AFS. Certifique-se de que a letra da unidade não esteja sendo utilizada.\n\nErro: 0x%1."
-    IDS_ERROR_UNMAP         "Erro Mapeando Unidade de Rede"
-    IDS_ERROR_UNMAP_DESC    "O AFS foi incapaz de remover o mapeamento da unidade de rede especificada. Certifique-se de que a letra da unidade não esteja sendo utilizada.\n\nErro: 0x%1."
-    IDS_CELL_GATEWAY        "%s (via gateway %s)"
-    IDS_BADMAP_TITLE        "Erro Mapeando Unidade de Rede"
-    IDS_BADMAP_DESC         "O AFS não pode mapear uma letra de unidade para o caminho especificado porque o caminho não começa com ""\\afs"".\n\nDigite um caminho que comece com ""\\afs"", e tente novamente."
-    IDS_UNCONFIG_TITLE      "Erro - AFS Client"
-    IDS_UNCONFIG_DESC       "O AFS Client não pode ser usado porque ainda não está configurado.\n\nPara configurar o AFS Client, abra o Painel de Controle e dê um clique duplo no ícone de Configuração de AFS Client."
-    IDS_NEWSUB_TITLE        "Atenção - AFS Client"
-    IDS_NEWSUB_DESC         "O AFS não pôde usar a descrição especificada ao conectar-se à unidade de rede.\n\nA descrição especificada já é usada por um outro caminho do AFS."
-    IDS_BADSUB_TITLE        "Erro - AFS Client"
-    IDS_BADSUB_DESC         "A descrição da letra de unidade informada não pode ser usada.\n\nUma descrição de letra de unidade não pode ter mais de 12 caracteres, e não pode conter espaços ou tabulações."
-    IDS_TITLE_95            "AFS Básico"
-    IDS_TOOLTIP_95          "AFS Básico"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "O Serviço do AFS Client não pôde ser iniciado com êxito. Você pode não ter autorização para realizar esta operação.\n\nErro 0x%1."
     IDS_SERVICE_FAIL_CONFIG "Os parâmetros de inicialização do Serviço do AFS Client não puderam ser alterados. Você pode não ter autorização para realizar esta operação.\n\nErro 0x%1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "Erro ao Configurar Serviço"
     IDS_ERROR_TITLE         "Erro - AFS Client"
+    IDS_ERROR_TITLE_95      "Erro - AFS Básico"
+    IDS_ERROR_DESTROY_95    "Seus tokens na célula %1 não puderam ser eliminados.\n\nErro: %2"
     IDS_ERROR_DESTROY_NOCM  "Seus tokens na célula %1 não puderam ser eliminados porque o Serviço do AFS Client não está respondendo.\n\nVerifique a guia Avançado para ver se o AFS Client está executando corretamente.\n\nErro: %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "Seus tokens na célula %1 não puderam ser eliminados.\n\nVerifique a guia Avançado para ver se o AFS Client está sendo executado corretamente.\n\nErro: %2"
     IDS_ERROR_OBTAIN        "O AFS Client não conseguiu obter tokens como %2 na célula %1.\n\nErro: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "O AFS Básico não conseguiu obter tokens como %2 na célula %1.\n\nErro: %4 (%3)"
     IDS_TITLE_VERSION       "AFS Versão %s"
     IDS_TITLE_VERSION_NOPATCH "AFS Versão %s"
     IDS_MOUNT_SOME          "Você escolheu mapear as seguintes letras de unidades para caminhos no AFS:"
@@ -549,18 +534,33 @@ BEGIN
     IDS_WIZ_NEXT            "A&vançar >"
     IDS_WIZ_FINISH          "&Finalizar"
     IDS_MAP_LETTER          "Unidade *:"
-    IDS_DRIVE_MAP           "Unidade %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "Erro - AFS Básico"
-    IDS_ERROR_DESTROY_95    "Seus tokens na célula %1 não puderam ser eliminados.\n\nErro: %2"
-    IDS_ERROR_OBTAIN_95     "O AFS Básico não conseguiu obter tokens como %2 na célula %1.\n\nErro: %4 (%3)"
+    IDS_DRIVE_MAP           "Unidade %1: \t%2"
+    IDS_ERROR_MAP           "Erro Mapeando Unidade de Rede"
+    IDS_ERROR_MAP_DESC      "O AFS foi incapaz de mapear a unidade de rede para o caminho especificado no AFS. Certifique-se de que a letra da unidade não esteja sendo utilizada.\n\nErro: 0x%1."
+    IDS_ERROR_UNMAP         "Erro Mapeando Unidade de Rede"
+    IDS_ERROR_UNMAP_DESC    "O AFS foi incapaz de remover o mapeamento da unidade de rede especificada. Certifique-se de que a letra da unidade não esteja sendo utilizada.\n\nErro: 0x%1."
+    IDS_CELL_GATEWAY        "%s (via gateway %s)"
+    IDS_BADMAP_TITLE        "Erro Mapeando Unidade de Rede"
+    IDS_BADMAP_DESC         "O AFS não pode mapear uma letra de unidade para o caminho especificado porque o caminho não começa com ""\\afs"".\n\nDigite um caminho que comece com ""\\afs"", e tente novamente."
     IDS_UNCONFIG_TITLE_95   "Erro - AFS Básico"
     IDS_UNCONFIG_DESC_95    "O AFS Básico não pode ser usado porque ainda não está configurado.\n\nPara configurar o AFS Básico, abra o Painel de Controle e dê um clique duplo no ícone de Configuração do AFS Básico."
+    IDS_UNCONFIG_TITLE      "Erro - AFS Client"
+    IDS_UNCONFIG_DESC       "O AFS Client não pode ser usado porque ainda não está configurado.\n\nPara configurar o AFS Client, abra o Painel de Controle e dê um clique duplo no ícone de Configuração de AFS Client."
+    IDS_NEWSUB_TITLE        "Atenção - AFS Client"
     IDS_NEWSUB_TITLE_95     "Atenção - AFS Básico"
+    IDS_NEWSUB_DESC         "O AFS não pôde usar a descrição especificada ao conectar-se à unidade de rede.\n\nA descrição especificada já é usada por um outro caminho do AFS."
+    IDS_BADSUB_TITLE        "Erro - AFS Client"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "Erro - AFS Básico"
+    IDS_BADSUB_DESC         "A descrição da letra de unidade informada não pode ser usada.\n\nUma descrição de letra de unidade não pode ter mais de 12 caracteres, e não pode conter espaços ou tabulações."
+    IDS_TITLE_95            "AFS Básico"
 END
 
 #endif    // English (U.S.) resources

@@ -2416,23 +2416,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVER_SERVICE      "%1:%2"
-    IDS_SERVICETYPE_SIMPLE  "Einfach"
-    IDS_SERVICETYPE_CRON    "Cron"
-    IDS_SERVICESTATE_STOPPED "Gestoppt"
-    IDS_SERVICESTATE_STOPPING "Wird gestoppt"
-    IDS_SERVICESTATE_STARTING "Wird gestartet"
-    IDS_SERVICESTATE_RUNNING "Aktiv"
-    IDS_SERVICETYPE_FS_LONG "FS (Dateisystem)"
-    IDS_SERVICETYPE_FS      "FS"
-    IDS_SERVICE_LASTERROR   "%1"
-    IDS_SERVICES_IN_CELL    "Alle Services in Zelle %1:"
-    IDS_SERVICE_STARTDATE   "%1 wurde gestartet"
-    IDS_SERVICE_STOPDATE    "%1 wurde gestoppt"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_PERCENTAGE          "%1 %%"
     IDS_AGGREGATES_IN_SERVER "Partitionen auf Server %1:"
     IDS_AGGREGATES_IN_CELL  "Alle Partitionen in Zelle %1:"
@@ -2480,11 +2463,11 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_BAD_CREDENTIALS 
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
                             "Die eingegebene AFS-ID wurde nicht erkannt, oder das angegebene Kennwort ist falsch."
-    IDS_CREDS_NONE          "(keine Token)"
-    IDS_CREDS_VALID         "%2, läuft %3 ab"
-    IDS_CREDS_EXPIRED       "(Token %3 abgelaufen)"
+    IDS_SVR_CREDS_NONE          "(keine Token)"
+    IDS_SVR_CREDS_VALID         "%2, läuft %3 ab"
+    IDS_SVR_CREDS_EXPIRED       "(Token %3 abgelaufen)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -3014,6 +2997,23 @@ BEGIN
                             "Der AFS Server Manager konnte aufgrund eines unbekannten Problems nicht gestartet werden.\n\nSie müssen das AFS Control Center möglicherweise erneut installieren."
     IDS_ERROR_CANT_CHANGEADDR 
                             "Der AFS Server Manager konnte die IP-Adresse in der VLDB für Server %1 nicht ändern."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "Einfach"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "Gestoppt"
+    IDS_SERVICESTATE_STOPPING "Wird gestoppt"
+    IDS_SERVICESTATE_STARTING "Wird gestartet"
+    IDS_SERVICESTATE_RUNNING "Aktiv"
+    IDS_SERVICETYPE_FS_LONG "FS (Dateisystem)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "Alle Services in Zelle %1:"
+    IDS_SERVICE_STARTDATE   "%1 wurde gestartet"
+    IDS_SERVICE_STOPDATE    "%1 wurde gestoppt"
 END
 
 #endif    // English (U.S.) resources

@@ -50,6 +50,10 @@ BEGIN
     IDS_TITLE               "AFS(R) Windows 版"
     IDS_CANT_DETERMINE_APP_PATH 
                             "确定应用程序安装目录失败"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS 客户机"
     IDS_SERVER_APP_NAME     "AFS 服务器"
     IDS_CC_APP_NAME         "AFS 控制中心"
@@ -65,6 +69,10 @@ BEGIN
     IDS_PRESERVE_SERVER_CONFIG_INFO "您希望保留服务器的配置信息吗? 您可能会在升级或重新安装时这样做。"
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "恢复以前的配置信息失败"
     IDS_SAVE_OF_CONFIG_INFO_FAILED  "保存配置信息失败。要继续卸装吗?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "您希望保留 AFS Light 的配置信息吗? 您可能会在升级或重新安装时这样做。"
     IDS_PRESERVE_CC_CONFIG_INFO "您希望保留控制中心的配置信息吗? 您可能会在升级或重新安装时这样做。"
 END

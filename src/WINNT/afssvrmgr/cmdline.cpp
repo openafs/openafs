@@ -245,7 +245,7 @@ CMDLINEOP ParseCommandLine (LPTSTR pszCmdLine)
       ULONG status;
       if (!AfsAppLib_SetCredentials (pszCell, aSWITCHES[ swUSER ].szValue, aSWITCHES[ swPASSWORD ].szValue, &status))
          {
-         ImmediateErrorDialog (status, IDS_ERROR_BAD_CREDENTIALS);
+         ImmediateErrorDialog (status, IDS_SVR_ERROR_BAD_CREDENTIALS);
          return opCLOSEAPP;
          }
       }

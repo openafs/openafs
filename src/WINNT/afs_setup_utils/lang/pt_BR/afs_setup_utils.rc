@@ -50,6 +50,10 @@ BEGIN
     IDS_TITLE               "AFS® para Windows"
     IDS_CANT_DETERMINE_APP_PATH 
                             "Falha ao determinar o diretório de instalação da aplicação"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_CLIENT_APP_NAME     "AFS Client"
     IDS_SERVER_APP_NAME     "AFS Server"
     IDS_CC_APP_NAME         "Centro de Controle do AFS"
@@ -65,6 +69,10 @@ BEGIN
     IDS_PRESERVE_SERVER_CONFIG_INFO "Deseja preservar as informações de configuração do Servidor? Isto pode ser desejável se estiver atualizando ou reinstalando."
     IDS_RESTORE_OF_PREVIOUS_CONFIG_FAILED "Não foi possível restaurar as informações da configuração anterior."
     IDS_SAVE_OF_CONFIG_INFO_FAILED  "Não foi possível salvar as informações da configuração. Prosseguir a remoção da instalação?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
     IDS_PRESERVE_LIGHT_CLIENT_CONFIG_INFO   "Deseja preservar as informações de configuração do AFS Básico? Isto pode ser desejável se estiver atualizando ou reinstalando."
     IDS_PRESERVE_CC_CONFIG_INFO "Deseja preservar as informações de configuração do Centro de Controle? Isto pode ser desejável se estiver atualizando ou reinstalando."
 END

@@ -509,6 +509,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS クライアント"
+    IDS_TOOLTIP_95          "AFS Light"
     IDS_CREDENTIALS         "トークン"
     IDS_UNKNOWN             "(不明)"
     IDS_ADVANCED            "拡張"
@@ -521,37 +522,21 @@ BEGIN
     IDS_SERVICE_STARTING    "お待ちください。AFS クライアント・サービスを開始中です..."
     IDS_SERVICE_UNKNOWN     "AFS クライアント・サービスの状況を判別できませんでした。"
     IDS_SERVICE_FAIL_STOP   "AFS クライアント・サービスを正常に停止できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1 "
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "ネットワーク・ドライブのマッピング・エラー"
-    IDS_ERROR_MAP_DESC      "AFS は AFS 内の指定されたパスにネットワーク・ドライブをマッピングできませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1 "
-    IDS_ERROR_UNMAP         "ネットワーク・ドライブのマッピング・エラー"
-    IDS_ERROR_UNMAP_DESC    "AFS は指定されたネットワーク・ドライブをマッピング解除できませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1"
-    IDS_CELL_GATEWAY        "%s (ゲートウェイ %s 経由)"
-    IDS_BADMAP_TITLE        "ネットワーク・ドライブのマッピング・エラー"
-    IDS_BADMAP_DESC         "パスが ""\\afs"" で始まっていないため、AFS はドライブ名を指定されたパスにマッピングできません。\n\n入力したパスが ""\\afs"" で始まっているかを確かめてから、やり直してください。"
-    IDS_UNCONFIG_TITLE      "エラー - AFS クライアント"
-    IDS_UNCONFIG_DESC       "AFS クライアントが構成されていないため使用できません。\n\nAFS クライアントを構成するには、コントロール・パネルを開いて「AFS クライアント」アイコンをダブルクリックしてください。"
-    IDS_NEWSUB_TITLE        "注意 - AFS クライアント"
-    IDS_NEWSUB_DESC         "AFS はネットワーク・ドライブの接続時に指定された記述を使用できませんでした。\n\n指定された記述はすでに他の AFS パスに使用されています。"
-    IDS_BADSUB_TITLE        "エラー - AFS クライアント"
-    IDS_BADSUB_DESC         "入力したドライブ名記述を使用できません。\n\nドライブ名の記述は 12 文字を超えてはならず、スペースまたはタブを含んでいてはいけません。"
-    IDS_TITLE_95            "AFS Light"
-    IDS_TOOLTIP_95          "AFS Light"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "AFS クライアント・サービスを正常に開始できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1"
     IDS_SERVICE_FAIL_CONFIG "AFS クライアント・サービスの始動パラメーターを変更できませんでした。この操作を実行する権限を持っていない可能性があります。\n\nエラー 0x%1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "サービスの構成エラー"
     IDS_ERROR_TITLE         "エラー - AFS クライアント"
+    IDS_ERROR_TITLE_95      "エラー - AFS Light "
+    IDS_ERROR_DESTROY_95    "%1 セルのトークンを破棄できませんでした。\n\nエラー: %2"
     IDS_ERROR_DESTROY_NOCM  "AFS クライアント・サービスが応答していないため、%1 セルのトークンを破棄できませんでした。\n\nAFS クライアントが正常に実行されているかを「拡張」タブで調べてください。\n\nエラー: %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "%1 セルのトークンを破棄できませんでした。\n\nAFS クライアントが正常に実行されているかを「拡張」タブで調べてください。\n\nエラー: %2"
     IDS_ERROR_OBTAIN        "AFS クライアントがセル %1 で %2 としてトークンを取得できませんでした。\n\nエラー: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "AFS Light がセル %1 で %2 としてトークンを取得できませんでした。\n\nエラー: %4 (%3)"
     IDS_TITLE_VERSION       "AFS バージョン %s"
     IDS_TITLE_VERSION_NOPATCH "AFS バージョン %s"
     IDS_MOUNT_SOME          "以下のドライブ名の AFS 内のパスへのマッピングを選択しました:"
@@ -560,18 +545,33 @@ BEGIN
     IDS_WIZ_NEXT            "次へ(&N) >"
     IDS_WIZ_FINISH          "終了(&F)"
     IDS_MAP_LETTER          "ドライブ *:"
-    IDS_DRIVE_MAP           "ドライブ %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "エラー - AFS Light "
-    IDS_ERROR_DESTROY_95    "%1 セルのトークンを破棄できませんでした。\n\nエラー: %2"
-    IDS_ERROR_OBTAIN_95     "AFS Light がセル %1 で %2 としてトークンを取得できませんでした。\n\nエラー: %4 (%3)"
+    IDS_DRIVE_MAP           "ドライブ %1: \t%2"
+    IDS_ERROR_MAP           "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_MAP_DESC      "AFS は AFS 内の指定されたパスにネットワーク・ドライブをマッピングできませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1 "
+    IDS_ERROR_UNMAP         "ネットワーク・ドライブのマッピング・エラー"
+    IDS_ERROR_UNMAP_DESC    "AFS は指定されたネットワーク・ドライブをマッピング解除できませんでした。ドライブ名が現在使用中でないかを確かめてください。\n\nエラー: 0x%1"
+    IDS_CELL_GATEWAY        "%s (ゲートウェイ %s 経由)"
+    IDS_BADMAP_TITLE        "ネットワーク・ドライブのマッピング・エラー"
+    IDS_BADMAP_DESC         "パスが ""\\afs"" で始まっていないため、AFS はドライブ名を指定されたパスにマッピングできません。\n\n入力したパスが ""\\afs"" で始まっているかを確かめてから、やり直してください。"
     IDS_UNCONFIG_TITLE_95   "エラー - AFS Light "
     IDS_UNCONFIG_DESC_95    "AFS Light が構成されていないため使用できません。\n\nAFS Light を構成するには、コントロール・パネルを開いて「AFS Light 構成」アイコンをダブルクリックしてください。"
+    IDS_UNCONFIG_TITLE      "エラー - AFS クライアント"
+    IDS_UNCONFIG_DESC       "AFS クライアントが構成されていないため使用できません。\n\nAFS クライアントを構成するには、コントロール・パネルを開いて「AFS クライアント」アイコンをダブルクリックしてください。"
+    IDS_NEWSUB_TITLE        "注意 - AFS クライアント"
     IDS_NEWSUB_TITLE_95     "注意 - AFS Light "
+    IDS_NEWSUB_DESC         "AFS はネットワーク・ドライブの接続時に指定された記述を使用できませんでした。\n\n指定された記述はすでに他の AFS パスに使用されています。"
+    IDS_BADSUB_TITLE        "エラー - AFS クライアント"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "エラー - AFS Light "
+    IDS_BADSUB_DESC         "入力したドライブ名記述を使用できません。\n\nドライブ名の記述は 12 文字を超えてはならず、スペースまたはタブを含んでいてはいけません。"
+    IDS_TITLE_95            "AFS Light"
 END
 
 #endif    // Japanese resources

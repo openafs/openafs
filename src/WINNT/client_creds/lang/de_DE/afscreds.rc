@@ -499,6 +499,7 @@ IDB_WIZ256              BITMAP  DISCARDABLE     "wiz256.bmp"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TOOLTIP             "AFS Client"
+    IDS_TOOLTIP_95          "AFS Light"
     IDS_CREDENTIALS         "Token"
     IDS_UNKNOWN             "(unbekannt)"
     IDS_ADVANCED            "Erweitert"
@@ -511,37 +512,21 @@ BEGIN
     IDS_SERVICE_STARTING    "Bitte warten; der AFS Client-Service wird gestartet..."
     IDS_SERVICE_UNKNOWN     "Der Status des AFS Client-Service konnte nicht bestimmt werden."
     IDS_SERVICE_FAIL_STOP   "Der AFS Client-Service konnte nicht ordnungsgemäß beendet werden. Sie besitzen möglicherweise nicht das Recht, diese Operation durchzuführen.\n\nFehler 0x%1."
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
-    IDS_ERROR_MAP           "Fehler beim Zuordnen des Netzlaufwerks"
-    IDS_ERROR_MAP_DESC      "AFS konnte das Netzlaufwerk nicht dem angegebenen Pfad in AFS zuordnen. Überprüfen Sie, ob der Laufwerkbuchstabe momentan nicht verwendet wird.\n\nFehler: 0x%1."
-    IDS_ERROR_UNMAP         "Fehler beim Zuordnen des Netzlaufwerks"
-    IDS_ERROR_UNMAP_DESC    "AFS konnte die Zuordnung des angegebenen Netzlaufwerk nicht aufheben. Überprüfen Sie, ob der Laufwerkbuchstabe momentan nicht verwendet wird.\n\nFehler: 0x%1."
-    IDS_CELL_GATEWAY        "%s (über Gateway %s)"
-    IDS_BADMAP_TITLE        "Fehler beim Zuordnen des Netzlaufwerks"
-    IDS_BADMAP_DESC         "AFS kann dem angegebenen Pfad keinen Laufwerkbuchstabe zuordnen, da der Pfad nicht mit ""\\afs"" beginnt.\n\nStellen Sie sicher, daß der eingegebene Pfad mit ""\\afs"" beginnt, und versuchen Sie es erneut."
-    IDS_UNCONFIG_TITLE      "Fehler - AFS Client"
-    IDS_UNCONFIG_DESC       "Der AFS Client kann nicht verwendet werden, da er noch konfiguriert wurde.\n\nUm den AFS Client zu konfigurieren, öffnen Sie die Systemsteuerung und doppelklicken Sie auf das Symbol AFS Client."
-    IDS_NEWSUB_TITLE        "Achtung - AFS Client"
-    IDS_NEWSUB_DESC         "AFS konnte die beim Verbinden des Netzlaufwerks angegebene Beschreibung nicht verwenden.\n\nDie angegebene Beschreibung wird bereits für einen anderen AFS-Pfad verwendet."
-    IDS_BADSUB_TITLE        "Fehler - AFS Client"
-    IDS_BADSUB_DESC         "Die eingegebene Beschreibung für den Laufwerkbuchstaben kann nicht verwendet werden.\n\nDie Beschreibung für den Laufwerkbuchstaben darf nicht mehr als 12 Zeichen umfassen und keine Leerzeichen oder Tabulatoren enthalten."
-    IDS_TITLE_95            "AFS Light"
-    IDS_TOOLTIP_95          "AFS Light"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_SERVICE_FAIL_START  "Der AFS Client-Service konnte nicht ordnungsgemäß gestartet werden. Sie besitzen möglicherweise nicht das Recht, diese Operation durchzuführen.\n\nFehler 0x%1."
     IDS_SERVICE_FAIL_CONFIG "Die Startparameter des AFS Client-Service konnten nicht geändert werden. Sie besitzen möglicherweise nicht das Recht, diese Operation durchzuführen.\n\nFehler 0x%1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_SERVICE_ERROR       "Fehler beim Konfigurieren des Service"
     IDS_ERROR_TITLE         "Fehler - AFS Client"
+    IDS_ERROR_TITLE_95      "Fehler - AFS Light"
+    IDS_ERROR_DESTROY_95    "Ihre Token in der Zelle %1 konnten nicht gelöscht werden.\n\nFehler: %2"
     IDS_ERROR_DESTROY_NOCM  "Ihre Token in der Zelle %1 konnten nicht gelöscht werden, da der AFS Client-Service nicht reagiert.\n\nÜberprüfen Sie das Register Erweitert, ob der AFS Client ordnungsgemäß ausgeführt wird.\n\nFehler: %2"
     IDS_ERROR_DESTROY_UNKNOWN 
                             "Ihre Token in der Zelle %1 konnten nicht gelöscht werden.\n\nÜberprüfen Sie das Register Erweitert, ob der AFS Client ordnungsgemäß ausgeführt wird.\n\nFehler: %2"
     IDS_ERROR_OBTAIN        "Der AFS Client konnte in der Zelle %1 keine Token als %2 erhalten.\n\nFehler: %4 (%3)"
+    IDS_ERROR_OBTAIN_95     "AFS Light konnte in der Zelle %1 keine Token als %2 erhalten.\n\nFehler: %4 (%3)"
     IDS_TITLE_VERSION       "AFS-Version %s"
     IDS_TITLE_VERSION_NOPATCH "AFS-Version %s"
     IDS_MOUNT_SOME          "Sie haben gewählt, die folgenden Laufwerkbuchstaben Pfaden in AFS zuzuordnen:"
@@ -550,18 +535,33 @@ BEGIN
     IDS_WIZ_NEXT            " &Weiter >"
     IDS_WIZ_FINISH          "&Fertigstellen"
     IDS_MAP_LETTER          "Laufwerk *:"
-    IDS_DRIVE_MAP           "Laufwerk %1: \t%2"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_TITLE_95      "Fehler - AFS Light"
-    IDS_ERROR_DESTROY_95    "Ihre Token in der Zelle %1 konnten nicht gelöscht werden.\n\nFehler: %2"
-    IDS_ERROR_OBTAIN_95     "AFS Light konnte in der Zelle %1 keine Token als %2 erhalten.\n\nFehler: %4 (%3)"
+    IDS_DRIVE_MAP           "Laufwerk %1: \t%2"
+    IDS_ERROR_MAP           "Fehler beim Zuordnen des Netzlaufwerks"
+    IDS_ERROR_MAP_DESC      "AFS konnte das Netzlaufwerk nicht dem angegebenen Pfad in AFS zuordnen. Überprüfen Sie, ob der Laufwerkbuchstabe momentan nicht verwendet wird.\n\nFehler: 0x%1."
+    IDS_ERROR_UNMAP         "Fehler beim Zuordnen des Netzlaufwerks"
+    IDS_ERROR_UNMAP_DESC    "AFS konnte die Zuordnung des angegebenen Netzlaufwerk nicht aufheben. Überprüfen Sie, ob der Laufwerkbuchstabe momentan nicht verwendet wird.\n\nFehler: 0x%1."
+    IDS_CELL_GATEWAY        "%s (über Gateway %s)"
+    IDS_BADMAP_TITLE        "Fehler beim Zuordnen des Netzlaufwerks"
+    IDS_BADMAP_DESC         "AFS kann dem angegebenen Pfad keinen Laufwerkbuchstabe zuordnen, da der Pfad nicht mit ""\\afs"" beginnt.\n\nStellen Sie sicher, daß der eingegebene Pfad mit ""\\afs"" beginnt, und versuchen Sie es erneut."
     IDS_UNCONFIG_TITLE_95   "Fehler - AFS Light"
     IDS_UNCONFIG_DESC_95    "AFS Light kann nicht verwendet werden, da es noch nicht konfiguriert wurde.\n\nUm AFS Light zu konfigurieren, öffnen Sie die Systemsteuerung und doppelklicken auf das Symbol für die Konfiguration von AFS Light."
+    IDS_UNCONFIG_TITLE      "Fehler - AFS Client"
+    IDS_UNCONFIG_DESC       "Der AFS Client kann nicht verwendet werden, da er noch konfiguriert wurde.\n\nUm den AFS Client zu konfigurieren, öffnen Sie die Systemsteuerung und doppelklicken Sie auf das Symbol AFS Client."
+    IDS_NEWSUB_TITLE        "Achtung - AFS Client"
     IDS_NEWSUB_TITLE_95     "Achtung - AFS Light"
+    IDS_NEWSUB_DESC         "AFS konnte die beim Verbinden des Netzlaufwerks angegebene Beschreibung nicht verwenden.\n\nDie angegebene Beschreibung wird bereits für einen anderen AFS-Pfad verwendet."
+    IDS_BADSUB_TITLE        "Fehler - AFS Client"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDS_BADSUB_TITLE_95     "Fehler - AFS Light"
+    IDS_BADSUB_DESC         "Die eingegebene Beschreibung für den Laufwerkbuchstaben kann nicht verwendet werden.\n\nDie Beschreibung für den Laufwerkbuchstaben darf nicht mehr als 12 Zeichen umfassen und keine Leerzeichen oder Tabulatoren enthalten."
+    IDS_TITLE_95            "AFS Light"
 END
 
 #endif    // English (U.S.) resources
