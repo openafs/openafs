@@ -639,7 +639,7 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   else
     *numServers = 0;
   
-  close(commSock);
+  closesocket(commSock);
   if (*numServers == 0)
     return(-1);
 
