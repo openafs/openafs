@@ -253,7 +253,7 @@ proc ScanStatus
  );
 
 proc DeleteDump
- ( IN afs_uint32  dumpId,
+ ( IN afs_uint32  aDumpId,
    OUT afs_uint32 *taskId
  );
 
