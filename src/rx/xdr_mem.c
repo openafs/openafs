@@ -78,7 +78,7 @@ void xdrmem_create(register XDR *xdrs, caddr_t addr, u_int size, enum xdr_op op)
 	xdrs->x_op = op;
 	xdrs->x_ops = &xdrmem_ops;
 	xdrs->x_private = xdrs->x_base = addr;
-	xdrs->x_handy = size;
+	xdrs->x_handy = (size > INT_MAX) ? INT_MAX : size; /* XXX */
 }
 
 static void xdrmem_destroy(void)
@@ -87,8 +87,10 @@ static void xdrmem_destroy(void)
 
 static bool_t xdrmem_getint32(register XDR *xdrs, afs_int32 *lp)
 {
-	if ((xdrs->x_handy -= sizeof(afs_int32)) < 0)
+	if (xdrs->x_handy -= sizeof(afs_int32))
 		return (FALSE);
+	else
+		xdrs->x_handy -= sizeof(afs_int32);
 	*lp = ntohl(*((afs_int32 *)(xdrs->x_private)));
 	xdrs->x_private += sizeof(afs_int32);
 	return (TRUE);
@@ -96,8 +98,10 @@ static bool_t xdrmem_getint32(register XDR *xdrs, afs_int32 *lp)
 
 static bool_t xdrmem_putint32(register XDR *xdrs, afs_int32 *lp)
 {
-	if ((xdrs->x_handy -= sizeof(afs_int32)) < 0)
+	if (xdrs->x_handy -= sizeof(afs_int32))
 		return (FALSE);
+	else
+		xdrs->x_handy -= sizeof(afs_int32);
 	*(afs_int32 *)xdrs->x_private = htonl(*lp);
 	xdrs->x_private += sizeof(afs_int32);
 	return (TRUE);
@@ -105,8 +109,10 @@ static bool_t xdrmem_putint32(register XDR *xdrs, afs_int32 *lp)
 
 static bool_t xdrmem_getbytes(register XDR *xdrs, caddr_t addr, register u_int len)
 {
-	if ((xdrs->x_handy -= len) < 0)
+	if (xdrs->x_handy < len)
 		return (FALSE);
+	else
+		xdrs->x_handy -= len;
 	memcpy(addr, xdrs->x_private, len);
 	xdrs->x_private += len;
 	return (TRUE);
@@ -114,8 +120,10 @@ static bool_t xdrmem_getbytes(register XDR *xdrs, caddr_t addr, register u_int l
 
 static bool_t xdrmem_putbytes(register XDR *xdrs, caddr_t addr, register u_int len)
 {
-	if ((xdrs->x_handy -= len) < 0)
+	if (xdrs->x_handy < len)
 		return (FALSE);
+	else
+		xdrs->x_handy -= len;
 	memcpy(xdrs->x_private, addr, len);
 	xdrs->x_private += len;
 	return (TRUE);
@@ -142,7 +150,7 @@ static afs_int32 *xdrmem_inline(register XDR *xdrs, int len)
 {
 	afs_int32 *buf = 0;
 
-	if (xdrs->x_handy >= len) {
+	if (len >= 0 && xdrs->x_handy >= len) {
 		xdrs->x_handy -= len;
 		buf = (afs_int32 *) xdrs->x_private;
 		xdrs->x_private += len;
