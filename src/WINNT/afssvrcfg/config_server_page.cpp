@@ -1397,7 +1397,7 @@ try_again:
         nr.lpLocalName=m_szDriveToMapTo;
         nr.lpRemoteName=szAfsRootDir;
         nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-        DWORD res=WNetAddConnection2(&nr,TEXT(""),NULL,0);
+        DWORD res=WNetAddConnection2(&nr,NULL,NULL,0);
         m_bRootAfsDriveMappingCreated = (res == NO_ERROR);
         // m_bRootAfsDriveMappingCreated = (WNetAddConnection(A2S(szAfsRootDir), TEXT(""), A2S(m_szDriveToMapTo)) == NO_ERROR);
         g_LogFile.Write(m_bRootAfsDriveMappingCreated ? "succeeded.\r\n" : "failed.\r\n");
