@@ -1253,9 +1253,9 @@ SRXAFS_StoreData (tcon, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
     struct rx_connection *tcon;		/* Rx connection Handle */
     struct AFSFid *Fid;			/* Fid of taret file */
     struct AFSStoreStatus *InStatus;	/* Input Status for Fid */
-    afs_int32 Pos;				/* Not implemented yet */
-    afs_int32 Length;			/* Length of data to store */
-    afs_int32 FileLength;			/* Length of file after store */
+    afs_uint32 Pos;                    /* Not implemented yet */
+    afs_uint32 Length;                 /* Length of data to store */
+    afs_uint32 FileLength;             /* Length of file after store */
     struct AFSFetchStatus *OutStatus;	/* Returned status for target fid */
 
 {
@@ -1487,8 +1487,9 @@ SRXAFS_StoreData64 (tcon, Fid, InStatus, Pos, Length, FileLength, OutStatus, Syn
     struct rx_connection *tcon;         /* Rx connection Handle */
     struct AFSFid *Fid;                 /* Fid of taret file */
     struct AFSStoreStatus *InStatus;    /* Input Status for Fid */
-    afs_int64 Pos;                              /* Not implemented yet */           afs_int64 Length;                   /* Length of data to store */
-    afs_int64 FileLength;                       /* Length of file after store */
+    afs_uint64 Pos;                     /* Not implemented yet */
+    afs_uint64 Length;                  /* Length of data to store */
+    afs_uint64 FileLength;              /* Length of file after store */
     struct AFSFetchStatus *OutStatus;   /* Returned status for target fid */
 {
     int code;
@@ -5247,9 +5248,9 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
     struct AFSFid *Fid;
     struct client *client;
     register struct rx_call *Call;
-    afs_int32 Pos;
-    afs_int32 Length;
-    afs_int32 FileLength;
+    afs_uint32 Pos;
+    afs_uint32 Length;
+    afs_uint32 FileLength;
     int sync;
 #if FS_STATS_DETAILED
     afs_int32 *a_bytesToStoreP;

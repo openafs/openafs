@@ -443,9 +443,9 @@ FetchStatus(
 StoreData(
   IN  AFSFid *Fid,
   AFSStoreStatus *InStatus,
-  afs_int32 Pos,
-  afs_int32 Length,
-  afs_int32 FileLength,
+  afs_uint32 Pos,
+  afs_uint32 Length,
+  afs_uint32 FileLength,
   OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) split = 133;
