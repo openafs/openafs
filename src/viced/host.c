@@ -1217,7 +1217,7 @@ static MapName_r(aname, acell, aval)
 		return 0;
 	    }		    
 	    foreign = 1;  /* attempt cross-cell authentication */
-	    tname = (char *) malloc(anamelen+cnamelen+2);
+	    tname = (char *) malloc(PR_MAXNAMELEN);
 	    strcpy(tname, aname);
 	    tname[anamelen] = '@';
 	    strcpy(tname+anamelen+1, acell);
