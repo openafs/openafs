@@ -287,8 +287,7 @@ struct osi_socket *rxk_NewSocket(short aport)
     return (struct osi_socket *)so;
 }
 
-int osi_FreeSocket(asocket)
-    register struct osi_socket *asocket; 
+int osi_FreeSocket(register struct osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
@@ -305,13 +304,8 @@ int osi_FreeSocket(asocket)
     return 0;
 }
 
-int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack) 
-    struct osi_socket *asocket;
-    struct sockaddr_in *addr; 
-    struct iovec dvec[];
-    int nvecs;
-    afs_int32 asize;
-    int istack;
+int osi_NetSend(struct osi_socket *asocket, struct sockaddr_in *addr, 
+	struct iovec dvec[], int nvecs, afs_int32 asize, int istack) 
 {
     struct sonode *so = (struct sonode *)asocket;
     struct nmsghdr msg;
@@ -349,12 +343,8 @@ int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack)
     return error;
 }
 
-int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
-    struct osi_socket *asocket;
-    struct sockaddr_in *addr;
-    struct iovec *dvec;
-    int nvecs;
-    int *alength;
+int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr, 
+	struct iovec *dvec, int nvecs, int *alength)
 {
     struct sonode *so = (struct sonode *)asocket;
     struct nmsghdr msg;
@@ -524,8 +514,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 }
 
 
-int osi_FreeSocket(asocket)
-    register struct osi_socket *asocket; 
+int osi_FreeSocket(register struct osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     TIUSER *udp_tiptr = (TIUSER *) asocket;    
@@ -539,13 +528,8 @@ int osi_FreeSocket(asocket)
 }
 
 
-int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack) 
-    register struct osi_socket *asocket;
-    struct iovec dvec[];
-    int nvecs;
-    register afs_int32 asize;
-    struct sockaddr_in *addr; 
-    int istack;
+int osi_NetSend(register struct osi_socket *asocket, struct sockaddr_in *addr, 
+	struct iovec dvec[], int nvecs, register afs_int32 asize, int istack) 
 {
     int i;
     int code;
@@ -629,12 +613,8 @@ int osi_NetSend(asocket, addr, dvec, nvecs, asize, istack)
 }
 
 
-int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
-    struct osi_socket *asocket;
-    struct sockaddr_in *addr;
-    struct iovec *dvec;
-    int nvecs;
-    int *alength;
+int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr, 
+	struct iovec *dvec, int nvecs, int *alength)
 {
     int i;
     TIUSER *udp_tiptr = (TIUSER *) asocket;    

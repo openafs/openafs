@@ -209,14 +209,8 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 #endif /* ! RXK_LISTENER_ENV */
 
 /* steal decl from sgi_65 */
-int
-osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct socket *asocket;
-     struct iovec *dvec;
-     int nvec;
-     register afs_int32 asize;
-     struct sockaddr_in *addr;
-     int istack;
+int osi_NetSend(register struct socket *asocket, struct sockaddr_in *addr, 
+	struct iovec *dvec, int nvec, register afs_int32 asize, int istack)
 {
     struct uio uio;
     MBLKP bp;

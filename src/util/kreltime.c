@@ -58,9 +58,7 @@ static struct parseseqS
  *	afs_int32 value of encoded date.
  */
 
-afs_int32
-ktimeRelDate_ToInt32(kdptr)
-     struct ktime_date *kdptr;
+afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr)
 {
     afs_int32 retval;
 
@@ -74,9 +72,7 @@ ktimeRelDate_ToInt32(kdptr)
  *	structure
  */
 
-Int32To_ktimeRelDate(int32Date, kdptr)
-     afs_int32 int32Date;
-     struct ktime_date *kdptr;
+int Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
 {
     memset(kdptr, 0, sizeof(*kdptr));
     
@@ -108,9 +104,7 @@ Int32To_ktimeRelDate(int32Date, kdptr)
  *	ktimePtr - ptr to struct for the return value
  */
 
-ktimeDate_FromInt32(timeSecs, ktimePtr)
-     afs_int32 timeSecs;
-     struct ktime_date *ktimePtr;
+int ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 {
     struct tm *timePtr;
 
@@ -145,10 +139,7 @@ ktimeDate_FromInt32(timeSecs, ktimePtr)
  *	0 - error in date specification
  */
 
-afs_int32
-ParseRelDate(dateStr, relDatePtr)
-     char *dateStr;
-     struct ktime_date *relDatePtr;
+afs_int32 ParseRelDate(char *dateStr, struct ktime_date *relDatePtr)
 {
     struct parseseqS *psPtr;
     afs_int32 value, digit_limit;
@@ -246,9 +237,7 @@ error:
  *	ptr to static string
  */
 
-char *
-RelDatetoString(datePtr)
-     struct ktime_date *datePtr;
+char *RelDatetoString(struct ktime_date *datePtr)
 {
     static char dateString[64];
     char tempstring[64], *sptr;
@@ -289,10 +278,7 @@ RelDatetoString(datePtr)
  *	returns specified time with relative time added.
  */
 
-afs_int32
-Add_RelDate_to_Time(relDatePtr, atime)
-     struct ktime_date *relDatePtr;
-     afs_int32 atime;
+afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr, afs_int32 atime)
 {
     afs_int32 moreYears;
     static struct ktime_date absDate;

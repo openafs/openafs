@@ -35,9 +35,8 @@ struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
 
 /* copy out attributes from cache entry */
-afs_CopyOutAttrs(avc, attrs)
-    register struct vattr *attrs;
-    register struct vcache *avc; {
+int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
+{
     register struct volume *tvp;
     register struct cell *tcell;
     register afs_int32 i;
@@ -183,14 +182,10 @@ afs_CopyOutAttrs(avc, attrs)
 
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_getattr(OSI_VC_ARG(avc), attrs, flags, acred)
-    int flags;
+int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags, struct AFS_UCRED *acred)
 #else
-afs_getattr(OSI_VC_ARG(avc), attrs, acred)
+int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
-    OSI_VC_DECL(avc);
-    struct vattr *attrs;
-    struct AFS_UCRED *acred; 
 {
     afs_int32 code;
     struct vrequest treq;
@@ -308,10 +303,9 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 }
 
 /* convert a Unix request into a status store request */
-afs_VAttrToAS(avc, av, as)
-register struct vcache *avc;
-register struct vattr *av;
-register struct AFSStoreStatus *as; {
+int afs_VAttrToAS(register struct vcache *avc, register struct vattr *av, 
+	register struct AFSStoreStatus *as)
+{
     register int mask;
     mask = 0;
     AFS_STATCNT(afs_VAttrToAS);
@@ -391,15 +385,12 @@ register struct AFSStoreStatus *as; {
 /* We don't set CDirty bit in avc->states because setattr calls WriteVCache
  * synchronously, therefore, it's not needed.
  */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_setattr(OSI_VC_ARG(avc), attrs, flags, acred)
-    int flags;
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags, struct AFS_UCRED *acred)
 #else
-afs_setattr(avc, attrs, acred)
+int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
-    OSI_VC_DECL(avc);
-    register struct vattr *attrs;
-    struct AFS_UCRED *acred; {
+{
     struct vrequest treq;
     struct AFSStoreStatus astat;
     register afs_int32 code;

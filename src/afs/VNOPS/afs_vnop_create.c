@@ -25,38 +25,31 @@ RCSID("$Header$");
 #include "../afs/nfsclient.h"
 #include "../afs/afs_osidnlc.h"
 
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-
 /* question: does afs_create need to set CDirty in the adp or the avc?
  * I think we can get away without it, but I'm not sure.  Note that
  * afs_setattr is called in here for truncation.
  */
 #ifdef	AFS_OSF_ENV
-afs_create(ndp, attrs)
-    struct nameidata *ndp;
-    struct vattr *attrs; {
+int afs_create(struct nameidata *ndp, struct vattr *attrs)
+#else	/* AFS_OSF_ENV */
+#ifdef AFS_SGI64_ENV
+int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags, 
+	int amode, struct vcache **avcp, struct AFS_UCRED *acred)
+#else /* AFS_SGI64_ENV */
+int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl aexcl, 
+	int amode, struct vcache **avcp, struct AFS_UCRED *acred)
+#endif /* AFS_SGI64_ENV */
+#endif /* AFS_OSF_ENV */
+    {
+#ifdef AFS_OSF_ENV
     register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     enum vcexcl aexcl = NONEXCL; /* XXX - create called properly */
     int amode = 0; /* XXX - checked in higher level */
     struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
     struct ucred *acred = ndp->ni_cred;
-#else	/* AFS_OSF_ENV */
-#ifdef AFS_SGI64_ENV
-afs_create(OSI_VC_ARG(adp), aname, attrs, flags, amode, avcp, acred)
-    int flags;
-#else /* AFS_SGI64_ENV */
-afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
-    enum vcexcl aexcl;
-#endif /* AFS_SGI64_ENV */
-    OSI_VC_DECL(adp);
-    char *aname;
-    struct vattr *attrs;
-    int amode;
-    struct vcache **avcp;
-    struct AFS_UCRED *acred; {
-#endif /* AFS_OSF_ENV */
+#endif
+
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
@@ -77,7 +70,7 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
 
 
     AFS_STATCNT(afs_create);
-    if (code = afs_InitReq(&treq, acred)) 
+    if ((code = afs_InitReq(&treq, acred))) 
 	goto done2;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
@@ -486,11 +479,9 @@ done2:
  * This routine must be called with the stat cache entry write-locked,
  * and dcache entry write-locked.
  */
-afs_LocalHero(avc, adc, astat, aincr)
-    register struct vcache *avc;
-    register AFSFetchStatus *astat;
-    register struct dcache *adc;
-    register int aincr; {
+int afs_LocalHero(register struct vcache *avc, register struct dcache *adc, 
+	register AFSFetchStatus *astat, register int aincr)
+{
     register afs_int32 ok;
     afs_hyper_t avers;
 

@@ -56,10 +56,6 @@ afs_int32 VolumeExists(), CheckVldbRWBK(), CheckVldb();
 
 struct ubik_client *cstruct;
 int verbose = 0;
-extern struct  rx_securityClass *rxnull_NewClientSecurityObject();
-extern struct rx_connection *rx_NewConnection();
-extern void AFSVolExecuteRequest();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern int VL_GetNewVolumeId();
 extern int VL_SetLock();
 extern int VL_ReleaseLock();

@@ -1255,17 +1255,10 @@ struct dcache *afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
  * Environment:
  *	Nothing interesting.
  */
-static int afs_UFSCacheStoreProc(acall, afile, alen, avc, shouldWake,
-			      abytesToXferP, abytesXferredP)
-     register struct rx_call *acall;
-     struct osi_file *afile;
-     register afs_int32 alen;
-     afs_size_t *abytesToXferP;
-     afs_size_t *abytesXferredP;
-     struct vcache *avc;
-     int *shouldWake;
-{ /* afs_UFSCacheStoreProc*/
-
+static int afs_UFSCacheStoreProc(register struct rx_call *acall, 
+	struct osi_file *afile, register afs_int32 alen, struct vcache *avc, 
+	int *shouldWake, afs_size_t *abytesToXferP, afs_size_t *abytesXferredP)
+{
     afs_int32 code, got;
     register char *tbuffer;
     register int tlen;
@@ -1354,17 +1347,11 @@ static int afs_UFSCacheStoreProc(acall, afile, alen, avc, shouldWake,
  *	Nothing interesting.
  */
 
-static int afs_UFSCacheFetchProc(acall, afile, abase, adc, avc,
-			      abytesToXferP, abytesXferredP, lengthFound)
-    register struct rx_call *acall;
-    afs_size_t abase;
-    afs_size_t *abytesToXferP;
-    afs_size_t *abytesXferredP;
-    struct dcache *adc;
-    struct vcache *avc;
-    struct osi_file *afile;
-    afs_int32 lengthFound;
-{ /*UFS_CacheFetchProc*/
+static int afs_UFSCacheFetchProc(register struct rx_call *acall, 
+	struct osi_file *afile, afs_size_t abase, struct dcache *adc, 
+	struct vcache *avc, afs_size_t *abytesToXferP, 
+	afs_size_t *abytesXferredP, afs_int32 lengthFound)
+{
     afs_int32 length;
     register afs_int32 code;
     register char *tbuffer;
@@ -2629,7 +2616,6 @@ afs_WriteThroughDSlots()
 
 struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 { /*afs_MemGetDSlot*/
-
     register afs_int32 code;
     register struct dcache *tdc;
     register char *tfile;
@@ -2716,12 +2702,8 @@ unsigned int last_error = 0, lasterrtime = 0;
  * Environment:
  *	afs_xdcache lock write-locked.
  */
-struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
-    register afs_int32 aslot;
-    register struct dcache *tmpdc;
-
-{ /*afs_UFSGetDSlot*/
-
+struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
+{
     register afs_int32 code;
     register struct dcache *tdc;
     int existing = 0;

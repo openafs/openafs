@@ -272,9 +272,7 @@ int afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
       return 0;
   }
 
-afs_UFSHandleLink(avc, areq)
-    register struct vcache *avc;
-    struct vrequest *areq; 
+int afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 {
     register struct dcache *tdc;
     register char *tp, *rbuf;

@@ -38,6 +38,7 @@
 #include "../rx/rx_packet.h"
 #include "../rx/rx_misc.h"
 #include "../netinet/in.h"
+#include "../sys/socket.h"
 #else /* KERNEL */
 # include <sys/types.h>
 # include <stdio.h>

@@ -745,7 +745,7 @@ static int CountFDs(register int amax)
  * (host,port) of the sender are stored in the supplied variables, and
  * the data length of the packet is stored in the packet structure.
  * The header is decoded. */
-int rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 *host, u_short *port)
+int rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 *host, u_short *port)
 {
     struct sockaddr_in from;
     int nbytes;

@@ -24,8 +24,7 @@ afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct super_block *afs_cacheSBp;
 
-void *osi_UFSOpen(ainode)
-    afs_int32 ainode;
+void *osi_UFSOpen(afs_int32 ainode)
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
@@ -91,8 +90,7 @@ afs_osi_Stat(afile, astat)
     return code;
 }
 
-osi_UFSClose(afile)
-     register struct osi_file *afile;
+int osi_UFSClose(register struct osi_file *afile)
   {
       AFS_STATCNT(osi_Close);
       if (afile) {

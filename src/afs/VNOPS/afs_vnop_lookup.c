@@ -61,9 +61,7 @@ static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
  * what "@sys" is in binary... */
 #define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
 
-char *
-afs_strcat(s1, s2)
-	register char *s1, *s2;
+char *afs_strcat(register char *s1, register char *s2)
 {
 	register char *os1;
 
@@ -237,8 +235,8 @@ EvalMountPoint(avc, advc, avolpp, areq)
     return 0;
 }
     
-afs_ENameOK(aname)
-    register char *aname; {
+int afs_ENameOK(register char *aname)
+{
     register char tc;
     register int tlen;
 

@@ -29,6 +29,7 @@ all: ukinstall kinstall \
 	${TOP_INCDIR}/afs/netutils.h \
 	${TOP_INCDIR}/afs/packages.h \
 	${TOP_INCDIR}/afs/afsutil.h \
+	${TOP_INCDIR}/afs/afsutil_prototypes.h \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
@@ -57,67 +58,67 @@ util.a: ${objects} AFS_component_version_number.o
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
-assert.o: ${srcdir}/assert.c
+assert.o: ${srcdir}/assert.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/assert.c
 
-casestrcpy.o: ${srcdir}/casestrcpy.c
+casestrcpy.o: ${srcdir}/casestrcpy.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
-hputil.o: ${srcdir}/hputil.c
+hputil.o: ${srcdir}/hputil.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
 
-flipbase64.o: ${srcdir}/flipbase64.c ${TOP_INCDIR}/afs/dirpath.h
+flipbase64.o: ${srcdir}/flipbase64.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
-volparse.o: ${srcdir}/volparse.c
+volparse.o: ${srcdir}/volparse.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/volparse.c
 
-snprintf.o: ${srcdir}/snprintf.c
+snprintf.o: ${srcdir}/snprintf.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/snprintf.c
 
-base64.o: ${srcdir}/base64.c
+base64.o: ${srcdir}/base64.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/base64.c
 
-hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h ${TOP_INCDIR}/afs/dirpath.h
+hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h ${srcdir}/afsutil_prototypes.h ${TOP_INCDIR}/afs/dirpath.h
 	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
 
-ktime.o: ${srcdir}/ktime.c ${TOP_INCDIR}/afs/dirpath.h
+ktime.o: ${srcdir}/ktime.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
 
-kreltime.o: ${srcdir}/kreltime.c ${TOP_INCDIR}/afs/dirpath.h
+kreltime.o: ${srcdir}/kreltime.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
 
-get_krbrlm.o: ${srcdir}/get_krbrlm.c ${TOP_INCDIR}/afs/dirpath.h
+get_krbrlm.o: ${srcdir}/get_krbrlm.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
 
-uuid.o: ${srcdir}/uuid.c ${TOP_INCDIR}/afs/dirpath.h
+uuid.o: ${srcdir}/uuid.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
 
-sys.o: ${srcdir}/sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c
+sys.o: ${srcdir}/sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/sys.c
 
 sys: sys.o 
 	${CC} ${LDFLAGS} -o sys sys.o
 
-isathing.o: ${srcdir}/isathing.c
+isathing.o: ${srcdir}/isathing.c ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
 
-serverLog.o: ${srcdir}/serverLog.c ${TOP_INCDIR}/afs/dirpath.h
+serverLog.o: ${srcdir}/serverLog.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
-dirpath.o: ${srcdir}/dirpath.c ${TOP_INCDIR}/afs/dirpath.h
+dirpath.o: ${srcdir}/dirpath.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
 
-fileutil.o: ${srcdir}/fileutil.c ${srcdir}/fileutil.h
+fileutil.o: ${srcdir}/fileutil.c ${srcdir}/fileutil.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/fileutil.c
 
-netutils.o: ${srcdir}/netutils.c ${srcdir}/netutils.h
+netutils.o: ${srcdir}/netutils.c ${srcdir}/netutils.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/netutils.c
 
-afs_atomlist.o: ${srcdir}/afs_atomlist.c ${srcdir}/afs_atomlist.h
+afs_atomlist.o: ${srcdir}/afs_atomlist.c ${srcdir}/afs_atomlist.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
 
-afs_lhash.o: ${srcdir}/afs_lhash.c ${srcdir}/afs_lhash.h ${srcdir}/afs_atomlist.h
+afs_lhash.o: ${srcdir}/afs_lhash.c ${srcdir}/afs_lhash.h ${srcdir}/afs_atomlist.h ${srcdir}/afsutil_prototypes.h
 	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
 #
@@ -138,6 +139,7 @@ install: \
 	${DESTDIR}${includedir}/afs/netutils.h \
 	${DESTDIR}${includedir}/afs/packages.h \
 	${DESTDIR}${includedir}/afs/afsutil.h \
+	${DESTDIR}${includedir}/afs/afsutil_prototypes.h \
 	${DESTDIR}${includedir}/afs/pthread_glock.h \
 	${DESTDIR}${includedir}/afs/afs_atomlist.h \
 	${DESTDIR}${includedir}/afs/afs_lhash.h \
@@ -177,6 +179,9 @@ ${TOP_INCDIR}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/afsutil.h: ${srcdir}/afsutil.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
@@ -230,6 +235,9 @@ ${DESTDIR}${includedir}/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afsutil.h: ${srcdir}/afsutil.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
@@ -287,6 +295,9 @@ ${DEST}/include/afs/packages.h: ${srcdir}/packages.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/afsutil.h: ${srcdir}/afsutil.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/pthread_glock.h: ${srcdir}/pthread_glock.h
@@ -352,6 +363,7 @@ ukinstall: \
 	${UKDIR}/vice.h \
 	${UKDIR}/errors.h \
 	${UKDIR}/afsutil.h \
+	${UKDIR}/afsutil_prototypes.h \
 	${UKDIR}/dirpath.h \
 	${UKDIR}/dirpath.c \
 	${UKDIR}/fileutil.h \
@@ -365,6 +377,9 @@ ${UKDIR}/errors.h: ${srcdir}/errors.h
 	${INSTALL} $? $@
 
 ${UKDIR}/afsutil.h: ${srcdir}/afsutil.h
+	${INSTALL} $? $@
+
+${UKDIR}/afsutil_prototypes.h: ${srcdir}/afsutil_prototypes.h
 	${INSTALL} $? $@
 
 ${UKDIR}/dirpath.h: dirpath.h
@@ -437,6 +452,7 @@ dest: \
 	${DEST}/include/afs/netutils.h \
 	${DEST}/include/afs/packages.h \
 	${DEST}/include/afs/afsutil.h \
+	${DEST}/include/afs/afsutil_prototypes.h \
 	${DEST}/include/afs/pthread_glock.h \
 	${DEST}/include/afs/afs_atomlist.h \
 	${DEST}/include/afs/afs_lhash.h \

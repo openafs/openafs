@@ -217,6 +217,5 @@ struct afsUUID {
     char node[6];
 };
 typedef struct afsUUID afsUUID;
-extern int xdr_afsUUID();
 
 #endif /* TRANSARC_CONFIG_AFS_STDS_H */

@@ -159,7 +159,7 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
     AFS_STATCNT(CheckVLDB);
     afs_FinalizeReq(areq);
 
-    if (i = afs_InitReq(&treq, &afs_osi_cred)) return DUNNO;
+    if ((i = afs_InitReq(&treq, &afs_osi_cred))) return DUNNO;
     tcell = afs_GetCell(afid->Cell, READ_LOCK);
     bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
     do {

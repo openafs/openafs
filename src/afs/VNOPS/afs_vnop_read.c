@@ -434,13 +434,8 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
      * Also need to worry about DFFetching, and IFFree, I think. */
 static struct dcache *savedc = 0;
 
-afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    int noLock;
-    daddr_t albn;
-    struct buf **abpp; 
+int afs_UFSReadFast(register struct vcache *avc, struct uio *auio, 
+	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
 {
     struct vrequest treq;
     int offDiff;
@@ -580,13 +575,8 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
     return afs_UFSRead(avc, auio, acred, albn, abpp, noLock);
 }
 
-afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
-    struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    daddr_t albn;
-    int noLock;
-    struct buf **abpp; 
+int afs_UFSRead(register struct vcache *avc, struct uio *auio,
+	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;

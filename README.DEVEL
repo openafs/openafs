@@ -41,21 +41,20 @@ Format of the prototype files should look like:
 
 	#endif /* AFS_SRC_DDD_PROTO_H */
 
-The declaration of the routines should be done in ANSI style: (can we 
-do this safely on all platforms? might want to use ansi2knr if not)
+In most of the existing prototypes, the define is DDD_PROTOTYPES_H, which is
+probably ok as well.
 
-	rettype
-	routine(argtype arg)
+The declaration of the routines should be done in ANSI style. If at some
+later date, it is determined that prototypes don't work on some platform 
+properly, we can use ansi2knr during the compile.
+
+	rettype routine(argtype arg)
 	{
 
 	}
 
-Note - that format is required for ansi2knr to work properly. Not clear yet
-if we care or not.
-
 All routines should have a return type specified, void if nothing returned,
-and should have (void) if no arguments are taken. (still checking on this
-to make sure it works everywhere)
+and should have (void) if no arguments are taken.
 
 Header files should not contain macros or other definitions unless they
 are used across multiple source files.

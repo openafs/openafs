@@ -208,6 +208,24 @@ extern void rx_ServerProc(void);
 extern void osi_AssertFailK(const char *expr, const char *file, int line);
 
 
+/* rx_knet.c */
+extern struct osi_socket *rxk_NewSocket(short aport);
+extern int rxk_FreeSocket(register struct socket *asocket);
+#if 0
+/* definitions are all different at the moment */
+#ifdef KERNEL
+extern int osi_NetSend(struct socket *sop, struct sockaddr_in *to,
+                struct iovec *iov, int iovcnt, int size, int istack);
+#endif
+#endif
+#if 0
+extern int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
+                   struct iovec *iov, int iovcnt, int *lengthp);
+#endif
+extern void osi_StopListener(void);
+
+
+
 /* rx_lwp.c */
 extern void rx_ServerProc(void);
 extern void rxi_Sleep(void *addr);
@@ -223,7 +241,7 @@ extern void rxi_StartServerProc(void (*proc)(void), int stacksize);
 extern void rxi_StartListener(void);
 extern void rx_ServerProc(void);
 extern int rxi_Listen(osi_socket sock);
-extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
+extern int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 
 
@@ -259,11 +277,13 @@ extern void rxi_FreePacket(struct rx_packet *p);
 extern struct rx_packet *rxi_AllocPacketNoLock(int class);
 extern struct rx_packet *rxi_AllocPacket(int class);
 extern struct rx_packet *rxi_AllocSendPacket(register struct rx_call *call, int want);
-extern int rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 *host, u_short *port);
+extern int rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 *host, u_short *port);
 extern struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, 
         short port, int first);
+#ifndef KERNEL
 extern int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec, int nvecs, 
         int length, int istack);
+#endif
 extern struct rx_packet *rxi_ReceiveDebugPacket(register struct rx_packet *ap, 
         osi_socket asocket, afs_int32 ahost, short aport, int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(register struct rx_packet *ap, 
@@ -291,13 +311,13 @@ extern int rxi_AdjustDgramPackets(int frags, int mtu);
 extern void rxi_Delay(int sec);
 extern void rxi_InitializeThreadSupport(void);
 extern void rxi_StartServerProc(void (*proc)(void), int stacksize);
-#ifndef KERNEL
+#ifndef rxi_ReScheduleEvents
 extern void rxi_ReScheduleEvents(void);
 #endif
 extern void rx_ServerProc(void);
 extern void rxi_StartListener(void);
 extern int rxi_Listen(osi_socket sock);
-extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
+extern int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 
 

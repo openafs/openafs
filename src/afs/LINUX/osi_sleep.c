@@ -52,10 +52,11 @@ static int afs_osi_CancelProc(struct timer_list *timer)
     return 0;
 }
 
-static AfsWaitHack()
+static int AfsWaitHack(void)
 {
     AFS_STATCNT(WaitHack);
     wakeup(&waitV);
+    return 0;
 }
 
 #endif
@@ -84,8 +85,7 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
  */
 int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
-    int code;
-    afs_int32 endTime, tid;
+    afs_int32 endTime;
     struct timer_list *timer = NULL;
 
     AFS_STATCNT(osi_Wait);
@@ -96,6 +96,7 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     AFS_ASSERT_GLOCK();
     do {
 #if	defined(AFS_GLOBAL_SUNLOCK)
+        int code;
         code = osi_TimedSleep(&waitV, ams, 1);
         if (code == EINTR) {
                 if (aintok) 
@@ -266,6 +267,7 @@ void afs_osi_Sleep(int *event)
  * Returns 0 if timeout, EINTR if signalled, and EGAIN if it might
  * have raced.
  */
+#if defined(AFS_GLOBAL_SUNLOCK)
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 {
     long t = ams * HZ / 1000;
@@ -292,6 +294,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 
     return t ? EINTR : 0;
 }
+#endif
 
 
 void afs_osi_Wakeup(int *event)

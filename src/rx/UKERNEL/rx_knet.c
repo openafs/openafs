@@ -26,8 +26,7 @@ struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
 void rxk_InitializeSocket();
 
-void afs_rxevent_daemon(argp)
-void *argp;
+void afs_rxevent_daemon(void *argp)
 {
     struct timespec tv;
     struct clock temp;
@@ -59,10 +58,7 @@ void *argp;
 
 /* Loop to listen on a socket. Return setting *newcallp if this
  * thread should become a server thread.  */
-void rxi_ListenerProc(usockp, tnop, newcallp)
-osi_socket usockp;
-int *tnop;
-struct rx_call **newcallp;
+void rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
 {
     struct rx_packet *tp;
     afs_uint32 host;
@@ -134,7 +130,7 @@ void rxk_Listener(void)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     osi_socket sock;
     int threadID;
@@ -186,7 +182,7 @@ struct osi_socket *rxk_NewSocket(short aport)
  * we allocated in rxk_NewSocket. Now is the time to bind our
  * socket and start the receiver threads.
  */
-void rxk_InitializeSocket()
+void rxk_InitializeSocket(void)
 {
     int rc, sock, i;
 #ifdef AFS_USR_AIX_ENV
@@ -259,8 +255,7 @@ void rxk_InitializeSocket()
     rx_port = usockp->port;
 }
 
-int rxk_FreeSocket(sockp)
-struct usr_socket *sockp;
+int rxk_FreeSocket(struct usr_socket *sockp)
 {
     return 0;
 }
@@ -270,13 +265,8 @@ void osi_StopListener(void)
     rxk_FreeSocket((struct usr_socket *)rx_socket);
 }
 
-int osi_NetSend(sockp, addr, iov, nio, size, stack) 
-    struct osi_socket *sockp;
-    struct sockaddr_in *addr; 
-    struct iovec *iov;
-    int nio;
-    afs_int32 size;
-    int stack;
+int osi_NetSend(struct osi_socket *sockp, struct sockaddr_in *addr, 
+	struct iovec *iov, int nio, afs_int32 size, int stack) 
 {
     int rc;
     int i;
@@ -315,7 +305,7 @@ void shutdown_rxkernel(void)
     rxk_shutdownPorts();
 }
 
-void rx_Finalize()
+void rx_Finalize(void)
 {
     usr_assert(0);
 }
@@ -324,10 +314,7 @@ void rx_Finalize()
  * Recvmsg.
  *
  */
-int rxi_Recvmsg
-    (int socket,
-     struct msghdr *msg_p,
-     int flags)
+int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     do {

@@ -46,8 +46,8 @@ RCSID("$Header$");
 
 
 /* also parse a.b.c.d addresses */
-struct hostent *hostutil_GetHostByName(ahost)
-register char *ahost; {
+struct hostent *hostutil_GetHostByName(register char *ahost)
+{
     register int tc;
     static struct hostent thostent;
     static char *addrp[2];
@@ -114,8 +114,7 @@ register char *ahost; {
 /* Translate an internet address into a nice printable string. The
  * variable addr is in network byte order.
  */
-char *hostutil_GetNameByINet(addr)
-  afs_uint32 addr;
+char *hostutil_GetNameByINet(afs_uint32 addr)
 {
   struct hostent *th;
   static char    tbuffer[256];
@@ -142,10 +141,7 @@ char *hostutil_GetNameByINet(addr)
 ** w.x.y.z 	# machineName
 ** returns the network interface in network byte order 
 */
-afs_uint32
-extractAddr(line, maxSize)
-char* line;
-int maxSize;
+afs_uint32 extractAddr(char *line, int maxSize)
 {
 	char byte1[32], byte2[32], byte3[32], byte4[32];
 	int i=0;
@@ -236,7 +232,7 @@ int maxSize;
 ** On Solaris, if we pass a 4 byte integer directly into inet_ntoa(), it
 ** causes a memory fault. 
 */
-char* afs_inet_ntoa(afs_uint32 addr)
+char *afs_inet_ntoa(afs_uint32 addr)
 {
     struct in_addr temp;
     temp.s_addr = addr;
@@ -244,7 +240,7 @@ char* afs_inet_ntoa(afs_uint32 addr)
 }
 
 /* same as above, but to a non-static buffer, must be freed by called */
-char* afs_inet_ntoa_r(afs_uint32 addr, char *buf)
+char *afs_inet_ntoa_r(afs_uint32 addr, char *buf)
 {
     int temp;
 

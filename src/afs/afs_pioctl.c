@@ -26,7 +26,7 @@ afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;   /* show all messages */
 
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
 	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
-	struct AFS_UCRED *acred)
+	struct AFS_UCRED **acred)
 
 /* Prototypes for pioctl routines */
 DECL_PIOCTL(PGetFID);
@@ -1091,10 +1091,7 @@ int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom,
     }
     outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     outSize = 0;
-    if (function == 3 && device == 'V')	/* PSetTokens */
-	code = (*pioctlSw[function])(avc, function, &treq, inData, outData, inSize, &outSize, acred);
-    else
-	code = (*pioctlSw[function])(avc, function, &treq, inData, outData, inSize, &outSize, *acred);
+    code = (*pioctlSw[function])(avc, function, &treq, inData, outData, inSize, &outSize, acred);
     osi_FreeLargeSpace(inData);
     if (code == 0 && ablob->out_size > 0) {
       if (outSize > ablob->out_size) outSize = ablob->out_size;
@@ -1168,7 +1165,7 @@ DECL_PIOCTL(PStoreBehind)
 
   sbr = (struct sbstruct *)ain;
   if (sbr->sb_default != -1) {
-    if (afs_osi_suser(acred))
+    if (afs_osi_suser(*acred))
       afs_defaultAsynchrony = sbr->sb_default;
     else code = EPERM;
   }
@@ -1192,7 +1189,7 @@ DECL_PIOCTL(PStoreBehind)
 
 DECL_PIOCTL(PGCPAGs)
 {
-  if (!afs_osi_suser(acred)) {
+  if (!afs_osi_suser(*acred)) {
     return EACCES;
   }
   afs_gcpags = AFS_GCPAGS_USERDISABLED;
@@ -1594,7 +1591,7 @@ DECL_PIOCTL(PFlush)
     avc->states	&= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
-    afs_TryToSmush(avc, acred, 1);
+    afs_TryToSmush(avc, *acred, 1);
     osi_dnlc_purgedp(avc);
     afs_symhint_inval(avc);
     if (avc->linkData && !(avc->states & CCore)) {
@@ -1849,7 +1846,7 @@ DECL_PIOCTL(PCheckServers)
 	    memcpy(cp, (char *)&PROBE_INTERVAL, sizeof(afs_int32));
 	    *aoutSize = sizeof(afs_int32);
 	    if (pcheck->tinterval > 0) {
-		if (!afs_osi_suser(acred))
+		if (!afs_osi_suser(*acred))
 		    return EACCES;
 		PROBE_INTERVAL=pcheck->tinterval;
 	    }
@@ -2035,7 +2032,7 @@ DECL_PIOCTL(PSetCacheSize)
     int waitcnt = 0;
     
     AFS_STATCNT(PSetCacheSize);
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
     /* too many things are setup initially in mem cache version */
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM) return EROFS;
@@ -2131,7 +2128,7 @@ DECL_PIOCTL(PNewCell)
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
 
     memcpy((char *)&magic, tp, sizeof(afs_int32));
@@ -2180,7 +2177,7 @@ DECL_PIOCTL(PNewAlias)
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
 
     aliasName = tp;
@@ -2433,7 +2430,7 @@ DECL_PIOCTL(PSetCellStatus)
     register struct cell *tcell;
     afs_int32 temp;
     
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
@@ -2495,7 +2492,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		ReleaseWriteLock(&afs_xcbhash);
 		if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 		    osi_dnlc_purgedp(tvc);
-		afs_TryToSmush(tvc, acred, 1);
+		afs_TryToSmush(tvc, *acred, 1);
 		ReleaseWriteLock(&tvc->lock);
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
@@ -2647,8 +2644,8 @@ DECL_PIOCTL(PSetSysName)
       memcpy(inname, ain, t+1);  /* include terminating null */
       ain += t + 1;
     }
-    if (acred->cr_gid == RMTUSER_REQ) { /* Handles all exporters */
-	pag = PagInCred(acred);
+    if ((*acred)->cr_gid == RMTUSER_REQ) { /* Handles all exporters */
+	pag = PagInCred(*acred);
 	if (pag == NOPAG) {
 	    return EINVAL;  /* Better than panicing */
 	}
@@ -2677,7 +2674,7 @@ DECL_PIOCTL(PSetSysName)
 	    strcpy(outname, afs_sysname);
 	    foundname = afs_sysnamecount;
 	} else {     /* Local guy; only root can change sysname */
-	    if (!afs_osi_suser(acred))
+	    if (!afs_osi_suser(*acred))
 		return EACCES;
 	   
 	    /* clear @sys entries from the dnlc, once afs_lookup can
@@ -2846,7 +2843,7 @@ DECL_PIOCTL(PSetSPrefs)
   if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
-  if (!afs_osi_suser(acred))
+  if (!afs_osi_suser(*acred))
       return EACCES;
 
   if (ainSize < sizeof(struct setspref)) 
@@ -2869,7 +2866,7 @@ DECL_PIOCTL(PSetSPrefs33)
 	return EIO;          /* Inappropriate ioctl for device */
 
 
-  if (!afs_osi_suser(acred))
+  if (!afs_osi_suser(*acred))
     return EACCES;
 
   sp = (struct spref *)ain;
@@ -2994,7 +2991,7 @@ DECL_PIOCTL(PExportAfs)
 	memcpy(aout, (char *)&handleValue, sizeof(afs_int32));
 	*aoutSize = sizeof(afs_int32);
     } else {
-	if (!afs_osi_suser(acred))
+	if (!afs_osi_suser(*acred))
 	    return EACCES;    /* Only superuser can do this */
 	if (newint) {
 	    if (export & 2) {
@@ -3057,7 +3054,7 @@ DECL_PIOCTL(PGag)
 {
 struct gaginfo *gagflags;
 
-  if (!afs_osi_suser(acred))
+  if (!afs_osi_suser(*acred))
     return EACCES;
 
   gagflags = (struct gaginfo *) ain;
@@ -3071,7 +3068,7 @@ DECL_PIOCTL(PTwiddleRx)
 {
   struct rxparams *rxp;
 
-  if (!afs_osi_suser(acred))
+  if (!afs_osi_suser(*acred))
     return EACCES;
 
   rxp = (struct rxparams *) ain;
@@ -3136,7 +3133,7 @@ DECL_PIOCTL(PSetRxkcrypt)
 {
     afs_int32 tmpval;
 
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
       return EPERM;
     if (ainSize != sizeof(afs_int32) || ain == NULL)
       return EINVAL;
@@ -3417,7 +3414,7 @@ DECL_PIOCTL(PFlushMount)
     tvc->states	&= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
-    afs_TryToSmush(tvc, acred, 1);
+    afs_TryToSmush(tvc, *acred, 1);
     osi_dnlc_purgedp(tvc);
     afs_symhint_inval(tvc);
     if (tvc->linkData && !(tvc->states & CCore)) {
@@ -3439,7 +3436,7 @@ DECL_PIOCTL(PRxStatProc)
     int code = 0;
     afs_int32 flags;
 
-    if (!afs_osi_suser(acred)) {
+    if (!afs_osi_suser(*acred)) {
 	code = EACCES;
 	goto out;
     }
@@ -3472,7 +3469,7 @@ DECL_PIOCTL(PRxStatPeer)
     int code = 0;
     afs_int32 flags;
 
-    if (!afs_osi_suser(acred)) {
+    if (!afs_osi_suser(*acred)) {
 	code = EACCES;
 	goto out;
     }

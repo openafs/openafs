@@ -273,8 +273,12 @@ extern void osi_FreeSmallSpace(void *adata);
 extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
 extern int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok);
+#ifndef afs_osi_Wakeup
 extern void afs_osi_Wakeup(int *event);
+#endif
+#ifndef afs_osi_Sleep
 extern void afs_osi_Sleep(int *event);
+#endif
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
@@ -319,6 +323,18 @@ extern struct server *afs_GetServer(afs_uint32 *aserver, afs_int32 nservers,
 				    afs_int32 addr_uniquifier);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
 extern void afs_ServerDown(struct srvAddr *sa);
+
+/* afs_osidnlc.c */
+extern int osi_dnlc_enter(struct vcache *adp, char *aname, struct vcache *avc, afs_hyper_t *avno);
+extern struct vcache *osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype);
+extern int osi_dnlc_remove(struct vcache *adp, char *aname, struct vcache *avc );
+extern int osi_dnlc_purgedp(struct vcache *adp);
+extern int osi_dnlc_purgevp(struct vcache *avc);
+extern int osi_dnlc_purge(void);
+extern int osi_dnlc_purgevol(struct VenusFid *fidp);
+extern int osi_dnlc_init(void);
+extern int osi_dnlc_shutdown(void);
+
 
 /* UKERNEL/afs_usrops.c */
 extern void uafs_Shutdown(void);
@@ -380,6 +396,52 @@ extern int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq);
 extern struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq, 
         afs_int32 *cached, struct vcache *avc, afs_int32 locktype);
 extern void afs_PutVCache(register struct vcache *avc, afs_int32 locktype);
+
+/* VNOPS/afs_vnop_access.c */
+extern afs_int32 afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights, 
+        register struct vrequest *areq);
+extern int afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq, 
+        afs_int32 check_mode_bits);
+#if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
+extern int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, int flags, struct AFS_UCRED *acred);
+#else
+extern int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, struct AFS_UCRED *acred);
+#endif
+extern int afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights, struct AFS_UCRED *acred);
+
+/* VNOPS/afs_vnop_attrs.c */
+extern int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs);
+#if     defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+extern int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags, struct AFS_UCRED *acred);
+#else
+extern int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred);
+#endif
+extern int afs_VAttrToAS(register struct vcache *avc, register struct vattr *av, 
+        register struct AFSStoreStatus *as);
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+extern int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags, struct AFS_UCRED *acred);
+#else
+extern int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, struct AFS_UCRED *acred);
+#endif
+
+/* VNOPS/afs_vnop_create.c */
+#ifdef  AFS_OSF_ENV
+extern int afs_create(struct nameidata *ndp, struct vattr *attrs);
+#else   /* AFS_OSF_ENV */
+#ifdef AFS_SGI64_ENV
+extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags, 
+        int amode, struct vcache **avcp, struct AFS_UCRED *acred);
+#else /* AFS_SGI64_ENV */
+extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl aexcl,
+        int amode, struct vcache **avcp, struct AFS_UCRED *acred);
+#endif /* AFS_SGI64_ENV */
+#endif /* AFS_OSF_ENV */
+extern int afs_LocalHero(register struct vcache *avc, register struct dcache *adc, 
+        register AFSFetchStatus *astat, register int aincr);
+
+
+/* VNOPS/afs_vnop_lookup.c */
+extern int afs_ENameOK(register char *aname);
 
 /* VNOPS/afs_vnop_read.c */
 extern afs_int32 maxIHint;
