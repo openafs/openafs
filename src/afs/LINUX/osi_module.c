@@ -170,9 +170,10 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 
     struct afsprocdata sysargs;
 
+    if (cmd != VIOC_SYSCALL) return -EINVAL;
 
     if (copy_from_user(&sysargs, (void *)arg, sizeof(struct afsprocdata)))
-	return -1;
+	return -EFAULT;
 
     return afs_syscall(sysargs.syscall, sysargs.param1,
 		       sysargs.param2, sysargs.param3, sysargs.param4);

@@ -315,8 +315,8 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf,
 #endif /* AFS_NAMEI_ENV */
 
 #ifdef AFS_LINUX20_ENV
-int proc_afs_syscall(int syscall, int param1, int param2, int param3, 
-		     int param4, int *rval) {
+int proc_afs_syscall(long syscall, long param1, long param2, long param3, 
+		     long param4, int *rval) {
   struct afsprocdata syscall_data;
   int fd = open(PROC_SYSCALL_FNAME, O_RDWR);
 
@@ -360,7 +360,7 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
     int errcode, rval;
 
 #ifdef AFS_LINUX20_ENV
-    rval = proc_afs_syscall(AFSCALL_PIOCTL, (unsigned int)path, cmd, (unsigned int)cmarg, follow, &errcode);
+    rval = proc_afs_syscall(AFSCALL_PIOCTL, (long)path, cmd, (long)cmarg, follow, &errcode);
 
     if(rval)
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);

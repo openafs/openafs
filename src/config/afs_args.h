@@ -183,11 +183,11 @@ typedef struct cm_initparams_v1 {
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
  
 struct afsprocdata {
-  int param4;
-  int param3;
-  int param2;
-  int param1;
-  int syscall;
+  long param4;
+  long param3;
+  long param2;
+  long param1;
+  long syscall;
 };
  
 #endif
