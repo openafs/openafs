@@ -762,6 +762,9 @@ int cmd_Dispatch(int argc, char **argv)
        otherwise it is a real nuisance */
     if (ts->parms[CMD_HELPPARM].items) {
 	PrintSyntax(ts);
+	/* Display full help syntax if we don't have subcommands */
+	if (noOpcodes)
+	    PrintFlagHelp(ts);
 	ResetSyntax(ts);
 	return 0;
     }
