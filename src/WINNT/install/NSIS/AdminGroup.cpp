@@ -62,7 +62,7 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    if(stricmp(argv[1], "-create")) {
+    if(!stricmp(argv[1], "-create")) {
         rv = createAfsAdminGroup();
         if(rv) {
             if(rv != ERROR_ALIAS_EXISTS) {
@@ -77,7 +77,7 @@ int main(int argc, char ** argv) {
             if(rv)
                 fprintf(stderr, "%s: Can't populate AFS Client Admin group. NetApi error %u\n", rv);
         }
-    } else if(stricmp(argv[1], "-remove")) {
+    } else if(!stricmp(argv[1], "-remove")) {
         removeAfsAdminGroup();
         rv = 0;
     } else {
