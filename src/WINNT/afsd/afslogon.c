@@ -90,6 +90,7 @@ void DebugEvent(char *a,char *b,...)
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
 	va_start(marker,b);
 	_vsnprintf(buf,MAXBUF_,b,marker);
+    buf[MAXBUF_] = '\0';
 	ptbuf[0] = buf;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
 	DeregisterEventSource(h);
@@ -320,10 +321,10 @@ DWORD APIENTRY NPLogonNotify(
 	LPVOID StationHandle,
 	LPWSTR *lpLogonScript)
 {
-	char uname[256];
+	char uname[256]="";
 	char *ctemp;
-	char password[256];
-	char cell[256];
+	char password[256]="";
+	char cell[256]="<non-integrated logon>";
 	MSV1_0_INTERACTIVE_LOGON *IL;
 	DWORD code;
 	int pw_exp;
@@ -338,6 +339,8 @@ DWORD APIENTRY NPLogonNotify(
     int sleepInterval = DEFAULT_SLEEP_INTERVAL;        /* seconds        */
     BOOLEAN afsWillAutoStart;
 	CHAR RandomName[MAXRANDOMNAMELEN];
+
+    /* Initialize Logon Script to none */
 	*lpLogonScript=NULL;
         
 	IL = (MSV1_0_INTERACTIVE_LOGON *) lpAuthentInfo;
@@ -376,44 +379,42 @@ DWORD APIENTRY NPLogonNotify(
 		LogonOption=LOGON_OPTION_INTEGRATED;	/*default to integrated logon only*/
 	DebugEvent("AFS AfsLogon - NPLogonNotify","LogonOption[%x], Service AutoStart[%d]",
                 LogonOption,AFSWillAutoStart());
-	/* Check for zero length password if integrated logon*/
-	if ( ISLOGONINTEGRATED(LogonOption) && (password[0] == 0) )  {
-		code = GT_PW_NULL;
-		reason = "zero length password is illegal";
-		code=0;
-	}
 
-	/* Get cell name if doing integrated logon */
-	if (ISLOGONINTEGRATED(LogonOption))
-	{
+    
+    /* Get local machine specified login behavior (or defaults) */
+    GetLoginBehavior(&retryInterval, &failSilently);
+        
+    afsWillAutoStart = AFSWillAutoStart();
+        
+    /* Check for zero length password if integrated logon*/
+	if ( ISLOGONINTEGRATED(LogonOption) )  {
+        if ( password[0] == 0 ) {
+            code = GT_PW_NULL;
+            reason = "zero length password is illegal";
+            code=0;
+        }
+
+        /* Get cell name if doing integrated logon */
 		code = cm_GetRootCellName(cell);
 		if (code < 0) { 
 			code = KTC_NOCELL;
 			reason = "unknown cell";
 			code=0;
 		}
-	}
 
-    /* Get user specified login behavior (or defaults) */
-    GetLoginBehavior(&retryInterval, &failSilently);
-        
-    afsWillAutoStart = AFSWillAutoStart();
-        
-    /*only do if high security option is on*/
-    if (ISHIGHSECURITY(LogonOption))
-        *lpLogonScript = GetLogonScript(GenRandomName(RandomName));	
-    else
-        *lpLogonScript = GetLogonScript(uname);	
+        /*only do if high security option is on*/
+        if (ISHIGHSECURITY(LogonOption))
+            *lpLogonScript = GetLogonScript(GenRandomName(RandomName));	
+    }
 
     /* loop until AFS is started. */
     while (TRUE) {
         code=0;
 		
         /* is service started yet?*/
-
-        
         DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s]",
                    code,uname,cell);
+
         /* if Integrated Logon only */
         if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))
 		{			
@@ -492,16 +493,18 @@ DWORD APIENTRY NPLogonNotify(
         }
 	    code = MapAuthError(code);
 		SetLastError(code);
-		if (ISHIGHSECURITY(LogonOption) && (code!=0))
+
+		if (ISLOGONINTEGRATED(LogonOption) && (code!=0))
 		{
 			if (*lpLogonScript)
 				LocalFree(*lpLogonScript);
 			*lpLogonScript = NULL;
-			if (!(afsWillAutoStart || ISLOGONINTEGRATED(LogonOption)))	// its not running, so if not autostart or integrated logon then just skip
-				return 0;
+			if (!afsWillAutoStart)	// its not running, so if not autostart or integrated logon then just skip
+				code = 0;
 
 		}
 	}
+
 	DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
 	return code;
 }

@@ -959,16 +959,16 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 {
 	long code;
 	int dnlcHit = 1;	/* did we hit in the dnlc? yes, we did */
-        cm_scache_t *tscp = NULL;
-        cm_scache_t *mountedScp;
-        cm_lookupSearch_t rock;
-        char tname[256];
+    cm_scache_t *tscp = NULL;
+    cm_scache_t *mountedScp;
+    cm_lookupSearch_t rock;
+    char tname[256];
 	int getroot;
 
 	if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
-	    && strcmp(namep, "..") == 0) {
+         && strcmp(namep, "..") == 0) {
 		if (dscp->dotdotFidp == (cm_fid_t *)NULL
-		    || dscp->dotdotFidp->volume == 0)
+             || dscp->dotdotFidp->volume == 0)
 			return CM_ERROR_NOSUCHVOLUME;
 		rock.fid = *dscp->dotdotFidp;
 		goto haveFid;
@@ -976,98 +976,100 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 
 	if (cm_ExpandSysName(namep, tname, sizeof(tname))) {
 		namep = tname;
-        }
+    }
 	memset(&rock, 0, sizeof(rock));
-        rock.fid.cell = dscp->fid.cell;
-        rock.fid.volume = dscp->fid.volume;
-        rock.searchNamep = namep;
-        rock.caseFold = (flags & CM_FLAG_CASEFOLD);
+    rock.fid.cell = dscp->fid.cell;
+    rock.fid.volume = dscp->fid.volume;
+    rock.searchNamep = namep;
+    rock.caseFold = (flags & CM_FLAG_CASEFOLD);
 	rock.hasTilde = ((strchr(namep, '~') != NULL) ? 1 : 0);
 
 	/* If NOMOUNTCHASE, bypass DNLC by passing NULL scp pointer */
 	code = cm_ApplyDir(dscp, cm_LookupSearchProc, &rock, NULL, userp, reqp,
-			   (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
+                       (flags & CM_FLAG_NOMOUNTCHASE) ? NULL : &tscp);
 
 	/* code == 0 means we fell off the end of the dir, while stopnow means
-         * that we stopped early, probably because we found the entry we're
+     * that we stopped early, probably because we found the entry we're
 	 * looking for.  Any other non-zero code is an error.
-         */
-        if (code && code != CM_ERROR_STOPNOW) return code;
+     */
+    if (code && code != CM_ERROR_STOPNOW) 
+        return code;
 
 	getroot = (dscp==cm_rootSCachep) ;
-        if (!rock.found) {
-	  if (!cm_freelanceEnabled || !getroot) {
-		if (flags & CM_FLAG_CHECKPATH)
-			return CM_ERROR_NOSUCHPATH;
-		else
-			return CM_ERROR_NOSUCHFILE;
-	  }
-	  else {  /* nonexistent dir on freelance root, so add it */
-	    code = cm_FreelanceAddMount(namep, namep, "root.cell.",
+    if (!rock.found) {
+        if (!cm_freelanceEnabled || !getroot) {
+            if (flags & CM_FLAG_CHECKPATH)
+                return CM_ERROR_NOSUCHPATH;
+            else
+                return CM_ERROR_NOSUCHFILE;
+        }
+        else {  /* nonexistent dir on freelance root, so add it */
+            code = cm_FreelanceAddMount(namep, namep, "root.cell.",
 					&rock.fid);
-	    if (code < 0) {   /* add mount point failed, so give up */
-	      if (flags & CM_FLAG_CHECKPATH)
-		return CM_ERROR_NOSUCHPATH;
-	      else
-		return CM_ERROR_NOSUCHFILE;
-	    }
-	    tscp = NULL;   /* to force call of cm_GetSCache */
-	  }
+            if (code < 0) {   /* add mount point failed, so give up */
+                if (flags & CM_FLAG_CHECKPATH)
+                    return CM_ERROR_NOSUCHPATH;
+                else
+                    return CM_ERROR_NOSUCHFILE;
+            }
+            tscp = NULL;   /* to force call of cm_GetSCache */
+        }
 	}
-        
+
 haveFid:       
 	if ( !tscp )    /* we did not find it in the dnlc */
 	{
 		dnlcHit = 0;	
-        	code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
-        	if (code) return code;
+        code = cm_GetSCache(&rock.fid, &tscp, userp, reqp);
+        if (code) 
+            return code;
 	}
-        /* tscp is now held */
-        
+    /* tscp is now held */
+
 	lock_ObtainMutex(&tscp->mx);
 	code = cm_SyncOp(tscp, NULL, userp, reqp, 0,
-        	CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
-        if (code) {
+                      CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
+    if (code) { 
 		lock_ReleaseMutex(&tscp->mx);
 		cm_ReleaseSCache(tscp);
-        	return code;
+        return code;
 	}
-        /* tscp is now locked */
+    /* tscp is now locked */
 
-        if (!(flags & CM_FLAG_NOMOUNTCHASE)
+    if (!(flags & CM_FLAG_NOMOUNTCHASE)
 	      && tscp->fileType == CM_SCACHETYPE_MOUNTPOINT) {
 		/* mount points are funny: they have a volume name to mount
-                 * the root of.
-                 */
+         * the root of.
+         */
 		code = cm_ReadMountPoint(tscp, userp, reqp);
-                if (code == 0)
+        if (code == 0)
 			code = cm_FollowMountPoint(tscp, dscp, userp, reqp,
-						   &mountedScp);
+                                        &mountedScp);
 		lock_ReleaseMutex(&tscp->mx);
 		cm_ReleaseSCache(tscp);
 		if (code) {
-                        return code;
-                }
-                tscp = mountedScp;
+            return code;
         }
+        tscp = mountedScp;
+    }
 	else {
 		lock_ReleaseMutex(&tscp->mx);
 	}
 
 	/* copy back pointer */
-        *outpScpp = tscp;
+    *outpScpp = tscp;
 
 	/* insert scache in dnlc */
 	if ( !dnlcHit && !(flags & CM_FLAG_NOMOUNTCHASE) ) {
 	    /* lock the directory entry to prevent racing callback revokes */
 	    lock_ObtainMutex(&dscp->mx);
 	    if ( dscp->cbServerp && dscp->cbExpires )
-		cm_dnlcEnter(dscp, namep, tscp);
+            cm_dnlcEnter(dscp, namep, tscp);
 	    lock_ReleaseMutex(&dscp->mx);
 	}
 
 	/* and return */
-        return 0;
+    return 0;
 }
 
 long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)

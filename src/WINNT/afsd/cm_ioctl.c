@@ -1155,53 +1155,53 @@ long cm_IoctlStoreBehind(struct smb_ioctl *ioctlp, struct cm_user *userp)
 long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
 	char leaf[256];
-        long code;
-        cm_scache_t *dscp;
-        cm_attr_t tattr;
-        char *cp;
+    long code;
+    cm_scache_t *dscp;
+    cm_attr_t tattr;
+    char *cp;
 	cm_req_t req;
-        char mpInfo[256];
-        char fullCell[256];
+    char mpInfo[256];
+    char fullCell[256];
 	char volume[256];
 	char cell[256];
 	int ttl;
 
 	cm_InitReq(&req);
         
-        code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
-        if (code) return code;
+    code = cm_ParseIoctlParent(ioctlp, userp, &req, &dscp, leaf);
+    if (code) return code;
 
-        /* Translate chars for the mount point name */
-        TranslateExtendedChars(leaf);
+    /* Translate chars for the mount point name */
+    TranslateExtendedChars(leaf);
 
-        /* 
-         * The fs command allows the user to specify partial cell names on NT.  These must
-         * be expanded to the full cell name for mount points so that the mount points will
-         * work on UNIX clients.
-         */
+    /* 
+     * The fs command allows the user to specify partial cell names on NT.  These must
+     * be expanded to the full cell name for mount points so that the mount points will
+     * work on UNIX clients.
+     */
 
 	/* Extract the possibly partial cell name */
 	strcpy(cell, ioctlp->inDatap + 1);      /* Skip the mp type character */
         
-        if (cp = strchr(cell, ':')) {
+    if (cp = strchr(cell, ':')) {
 		/* Extract the volume name */
-	        *cp = 0;
+        *cp = 0;
 		strcpy(volume,  cp + 1);
 	
-	        /* Get the full name for this cell */
-	        code = cm_SearchCellFile(cell, fullCell, 0, 0);
+        /* Get the full name for this cell */
+        code = cm_SearchCellFile(cell, fullCell, 0, 0);
 #ifdef AFS_AFSDB_ENV
 		if (code && cm_dnsEnabled)
-                  code = cm_SearchCellByDNS(cell, fullCell, &ttl, 0, 0);
+            code = cm_SearchCellByDNS(cell, fullCell, &ttl, 0, 0);
 #endif
-		  if (code)
+        if (code)
 			return CM_ERROR_NOSUCHCELL;
 	
-	        sprintf(mpInfo, "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
+        sprintf(mpInfo, "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
 	} else {
-	        /* No cell name specified */
-	        strcpy(mpInfo, ioctlp->inDatap);
-        }
+        /* No cell name specified */
+        strcpy(mpInfo, ioctlp->inDatap);
+    }
 
 #ifdef AFS_FREELANCE_CLIENT
 	if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
@@ -1212,21 +1212,20 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	}
 #endif
 	/* create the symlink with mode 644.  The lack of X bits tells
-         * us that it is a mount point.
-         */
+     * us that it is a mount point.
+     */
 	tattr.mask = CM_ATTRMASK_UNIXMODEBITS | CM_ATTRMASK_CLIENTMODTIME;
-        tattr.unixModeBits = 0644;
+    tattr.unixModeBits = 0644;
 	tattr.clientModTime = time(NULL);
 
-        code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
+    code = cm_SymLink(dscp, leaf, mpInfo, 0, &tattr, userp, &req);
 	if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 		smb_NotifyChange(FILE_ACTION_ADDED,
-				 FILE_NOTIFY_CHANGE_DIR_NAME,
-				 dscp, leaf, NULL, TRUE);
+                         FILE_NOTIFY_CHANGE_DIR_NAME,
+                         dscp, leaf, NULL, TRUE);
 
-        cm_ReleaseSCache(dscp);
-
-        return code;
+    cm_ReleaseSCache(dscp);
+    return code;
 }
 
 long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
