@@ -1530,13 +1530,12 @@ LPWSTR StringToUnicode (LPCTSTR pszOriginal)
     int len = lstrlen(pszOriginal);
     if ((pszTargetW = AllocateUnicode (1+len)) != NULL) {
 #ifdef UNICODE
-        CopyAnsiToUnicode (pszTargetW, pszOriginal);
+        lstrcpyW ((LPWSTR)pszTargetW, (LPWSTR)pszOriginal);
 #else
-        lstrcpy ((LPSTR)pszTargetW, (LPSTR)pszOriginal);
+        CopyAnsiToUnicode (pszTargetW, pszOriginal);
 #endif
     }
     return pszTargetW;
-#endif
 }
 
 LPTSTR UnicodeToString (LPCWSTR pszOriginalW)
@@ -1546,13 +1545,12 @@ LPTSTR UnicodeToString (LPCWSTR pszOriginalW)
     LPTSTR pszTarget;
     if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL) {
 #ifdef UNICODE
-        CopyUnicodeToAnsi (pszTarget, pszOriginalW);
+        lstrcpyW ((LPWSTR)pszTargetW, (LPWSTR)pszOriginal);
 #else
-        lstrcpyA ((LPSTR)pszTarget, pszOriginalW);
+        CopyUnicodeToAnsi (pszTarget, pszOriginalW);
 #endif
     }
     return pszTarget;
-#endif
 }
 
 
