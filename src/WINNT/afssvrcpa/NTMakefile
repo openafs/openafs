@@ -55,7 +55,9 @@ lang::
 # Local clean target; augments predefined clean target
 
 clean::
-
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile clean
+	$(CD) ..
 
 mkdir:
 	-mkdir $(OUT)\lang
