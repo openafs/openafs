@@ -288,12 +288,9 @@ extern void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime);
 /* rx_knet.c */
 extern struct osi_socket *rxk_NewSocket(short aport);
 extern int rxk_FreeSocket(register osi_socket asocket);
-#if 0
-/* definitions are all different at the moment */
-#ifdef KERNEL
-extern int osi_NetSend(struct socket *sop, struct sockaddr_in *to,
-                struct iovec *iov, int iovcnt, int size, int istack);
-#endif
+#if defined(KERNEL) && !defined(AFS_SGI_ENV)
+extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+		       struct iovec *dvec, int nvecs, afs_int32 asize, int istack);
 #endif
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
                    struct iovec *dvec, int nvecs, int *lengthp);
@@ -377,7 +374,7 @@ extern int rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 *
 extern struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, 
         short port, int first);
 #ifndef KERNEL
-extern int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec, int nvecs, 
+extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs, 
         int length, int istack);
 #endif
 extern struct rx_packet *rxi_ReceiveDebugPacket(register struct rx_packet *ap, 

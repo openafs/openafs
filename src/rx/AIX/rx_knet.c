@@ -289,13 +289,9 @@ void shutdown_rxkernel(void)
  * and just queue those.  XXX
  */
 
-osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-register struct socket *asocket;
-struct iovec *dvec;
-int nvec;
-register afs_int32 asize;
-struct sockaddr_in *addr;
-int istack;
+int
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+	    struct iovec *dvec, int nvec, afs_int32 asize, int istack)
 {
     register struct mbuf *tm, *um;
     register afs_int32 code;

@@ -33,34 +33,41 @@ typedef unsigned short                  etap_event_t;
 #include "../h/disp.h"
 #endif
 #include "../h/socket.h"
-#ifndef AFS_LINUX22_ENV
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_OBSD_ENV)
 #include "../h/socketvar.h"
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV)
 #include "../h/domain.h"
 #include "../h/dir.h"
 #include "../h/buf.h"
 #include "../h/mbuf.h"
-#else
-#if defined(AFS_XBSD_ENV)
+#else /* !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV) */
+#if defined(AFS_FBSD_ENV)
 #include "../h/dirent.h"
 #include "../h/socket.h"
 #include "../h/domain.h"
 #include "../h/buf.h"
 #include "../h/mbuf.h"
-#endif /* AFS_XBSD_ENV */
-#endif
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_FBSD_ENV */
+#endif /* !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV) */
+#endif /* !defined(AFS_LINUX22_ENV) && !defined(AFS_OBSD_ENV) */
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
 #ifdef AFS_FBSD_ENV
 #include "../h/sysctl.h"
 #endif
+#ifdef AFS_OBSD_ENV
+#include "../h/socket.h"
+#include "../h/domain.h"
+#include "../h/buf.h"
+#include "../net/if.h"
+#include "../h/signalvar.h"
+#endif /* AFS_OBSD_ENV */
 #include "../netinet/in.h"
 #include "../net/route.h"
 #include "../netinet/in_systm.h"
 #include "../netinet/ip.h"
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV) && !defined(AFS_OBSD_ENV)
 #include "../netinet/in_pcb.h"
 #endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
 #ifndef AFS_LINUX22_ENV
@@ -82,8 +89,10 @@ struct coda_inode_info {};
 #include "../h/sched.h"
 #include "../h/netdevice.h"
 #else
+#if !defined(AFS_OBSD_ENV)
 #include "../h/proc.h"
 #include "../h/file.h"
+#endif
 #endif
 #include "../net/if.h"
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV)
@@ -104,6 +113,9 @@ struct coda_inode_info {};
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
+#endif
+#if defined(AFS_OBSD_ENV)
+#include "../netinet/in_pcb.h"
 #endif
 
 #define        MAXRXPORTS  20

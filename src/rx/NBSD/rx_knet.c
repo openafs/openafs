@@ -102,14 +102,9 @@ void osi_StopListener(void)
  */
 
 
-int 
-osi_NetSend(asocket, addr, dvec, nvecs, alength, istack)
-     register struct socket *asocket;
-     struct iovec *dvec;
-     int nvecs;
-     register afs_int32 alength;
-     struct sockaddr_in *addr;
-     int istack;
+int
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+	    struct iovec *dvec, int nvecs, afs_int32 alength, int istack)
 {
     register afs_int32 code;
     int s;

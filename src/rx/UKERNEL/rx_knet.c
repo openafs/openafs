@@ -265,7 +265,7 @@ void osi_StopListener(void)
     rxk_FreeSocket((struct usr_socket *)rx_socket);
 }
 
-int osi_NetSend(struct osi_socket *sockp, struct sockaddr_in *addr, 
+int osi_NetSend(osi_socket sockp, struct sockaddr_in *addr, 
 	struct iovec *iov, int nio, afs_int32 size, int stack) 
 {
     int rc;

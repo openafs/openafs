@@ -71,8 +71,8 @@ int rxk_FreeSocket(register struct socket *asocket)
  * 0 = success
  * non-zero = failure
  */
-int osi_NetSend(struct socket *sop, struct sockaddr_in *to,
-		struct iovec *iov, int iovcnt, int size, int istack)
+int osi_NetSend(osi_socket sop, struct sockaddr_in *to,
+		struct iovec *iov, int iovcnt, afs_int32 size, int istack)
 {
     KERNEL_SPACE_DECL;
     struct msghdr msg;

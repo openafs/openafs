@@ -98,13 +98,8 @@ void osi_StopListener(void)
 }
 
 int 
-osi_NetSend(asocket, addr, dvec, nvecs, alength, istack)
-     register struct socket *asocket;
-     struct iovec *dvec;
-     int nvecs;
-     register afs_int32 alength;
-     struct sockaddr_in *addr;
-     int istack;
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+	    struct iovec *dvec, int nvecs, afs_int32 alength, int istack)
 {
     register afs_int32 code;
     int s;
@@ -351,13 +346,8 @@ register struct sockbuf *sb; {
 /* We only have to do all the mbuf management ourselves if we can be called at
    interrupt time. in RXK_LISTENER_ENV, we can just call sosend() */
 int 
-osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct socket *asocket;
-     struct iovec *dvec;
-     int nvec;
-     register afs_int32 asize;
-     struct sockaddr_in *addr;
-     int istack;
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+	    struct iovec *dvec, int nvec, afs_int32 asize, int istack)
 {
     register struct mbuf *tm, *um;
     register afs_int32 code;

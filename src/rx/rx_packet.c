@@ -916,7 +916,7 @@ struct rx_packet *rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 h
 
 #ifndef KERNEL
 /* Send a udp datagram */
-int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec, int nvecs, 
+int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs, 
 	int length, int istack)
 {
     struct msghdr msg;
@@ -932,7 +932,7 @@ int osi_NetSend(osi_socket socket, char *addr, struct iovec *dvec, int nvecs,
     return 0;
 }
 #elif !defined(UKERNEL)
-/* osi_NetSend is defined in afs/afs_osinet.c
+/*
  * message receipt is done in rxk_input or rx_put.
  */
 
