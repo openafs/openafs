@@ -28,6 +28,21 @@ ac_cv_linux_fs_struct_inode_has_i_bytes=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_bytes)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM, [
+AC_MSG_CHECKING(for i_alloc_sem in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_alloc_sem,
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _i;
+printf("%x\n", _i.i_alloc_sem);], 
+ac_cv_linux_fs_struct_inode_has_i_alloc_sem=yes,
+ac_cv_linux_fs_struct_inode_has_i_alloc_sem=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_alloc_sem)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM, [
 AC_MSG_CHECKING(for i_truncate_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
