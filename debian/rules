@@ -16,7 +16,7 @@ export DH_COMPAT=2
 export DH_OPTIONS
 
 # The AFS sysname is determined by a script
-SYS_NAME=$(shell debian/sysname)
+SYS_NAME=$(shell sh debian/sysname)
 package=openafs
 srcpkg = openafs-modules-source
 modulepkg=$(shell echo openafs-modules-$(KVERS))
@@ -59,9 +59,9 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
-	-rm -rf obj dest $(SYS_NAME)
+	-rm -rf obj dest $(SYS_NAME) @sys Makefile
 	# Add here commands to clean up after the build process.
-	-$(MAKE) clean
+
 
 	dh_clean
 
@@ -135,6 +135,9 @@ binary-arch: build install
 	dh_fixperms
 	# You may want to make some executables suid here.
 	chmod 700 debian/openafs-client/var/cache/openafs
+	chmod 700 debian/openafs-fileserver/etc/openafs/server
+	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
+	chmod 700 debian/openafs-fileserver/var/lib/openafs/cores
 	dh_suidregister
 	dh_installdeb
 #	dh_makeshlibs
