@@ -202,7 +202,7 @@ CreateDir(name, dir)
 
 ReallyRead(dir, block, data)
     dirhandle *dir;
-    afs_size_t block;
+    int block;
     char *data;
 {
     int code;
@@ -218,7 +218,7 @@ ReallyRead(dir, block, data)
 
 ReallyWrite(dir, block, data)
     dirhandle *dir;
-    afs_size_t block;
+    int block;
     char *data;
 {
     int code;

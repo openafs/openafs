@@ -87,9 +87,8 @@ static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp);
 static int ReadVnodes(register struct iod *iodp, Volume *vp,
 		      int incremental, afs_int32 *Lbuf, afs_int32 s1,
 		      afs_int32 *Sbuf, afs_int32 s2, afs_int32 delo);
-static afs_offs_t volser_WriteFile(int vn, struct iod *iodp,
-				   FdHandle_t *handleP,
-				   int tag, Error *status);
+static bit32 volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP,
+			      Error *status);
 
 
 static void iod_Init(register struct iod *iodp, register struct rx_call *call)
@@ -421,18 +420,14 @@ static int DumpByteString(register struct iod *iodp, char tag,
     return 0;
 }
     
-static int DumpFile(struct iod *iodp, int vnode, FdHandle_t *handleP)
+static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
 {
     int   code = 0, lcode = 0, error = 0;
     afs_int32 pad = 0, offset;
-    afs_size_t   n, nbytes, howMany, howBig;
+    int   n, nbytes, howMany, howBig;
     byte  *p;
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else
     struct stat status;
-#endif
-    afs_size_t size;
+    int size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
     struct statfs tstatfs;
@@ -443,11 +438,7 @@ static int DumpFile(struct iod *iodp, int vnode, FdHandle_t *handleP)
     howMany = 4096;
 
 #else
-#ifdef AFS_LARGEFILE_ENV
-    fstat64(handleP->fd_fd, &status);
-#else /* !AFS_LARGEFILE_ENV */
     fstat(handleP->fd_fd, &status);
-#endif /* !AFS_LARGEFILE_ENV */
     howBig = status.st_size;
 
 #ifdef	AFS_AIX_ENV
@@ -463,19 +454,7 @@ static int DumpFile(struct iod *iodp, int vnode, FdHandle_t *handleP)
 
 
     size = FDH_SIZE(handleP);
-#ifdef AFS_LARGEFILE_ENV
-    {
-	afs_uint32	hi,lo;
-	SplitInt64(size, hi, lo);
-	if (hi == 0L) {
-	    code = DumpInt32(iodp, 'f', lo);
-	} else {
-	    code = DumpDouble(iodp, 'h', hi, lo);
-	}
-    }
-#else /* !AFS_LARGEFILE_ENV */
-    code = DumpInt32(iodp, 'f', size);
-#endif /* !AFS_LARGEFILE_ENV */
+    code = DumpInt32(iodp, tag, size);
     if (code) {
        return VOLSERDUMPERROR;
     }
@@ -748,7 +727,7 @@ static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
 	    IH_RELEASE(ihP);
 	    return VOLSERREAD_DUMPERROR;
 	}
-	code = DumpFile(iodp, vnodeNumber, fdP);
+	code = DumpFile(iodp, 'f', vnodeNumber, fdP);
 	FDH_CLOSE(fdP);
 	IH_RELEASE(ihP);
     }
@@ -786,19 +765,9 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 			cnt1++;
 			if (DoLogging) {
-#ifdef AFS_LARGEFILE_ENV
-			   afs_offs_t fileLen;
-			   VNDISK_GET_LEN(fileLen, vnode);
-			   Log("RestoreVolume %d Cleanup: Removing old vnode=%d inode=%d size=(0X%x,0X%x)\n", 
-			       V_id(vp), bitNumberToVnodeNumber(i,class),
-			       VNDISK_GET_INO(vnode),
-			       (unsigned) (fileLen >> 32),
-			       (unsigned) (fileLen & 0xffffffff));
-#else /* !AFS_LARGEFILE_ENV */
 			   Log("RestoreVolume %d Cleanup: Removing old vnode=%d inode=%d size=%d\n", 
 			       V_id(vp), bitNumberToVnodeNumber(i,class),
 			       VNDISK_GET_INO(vnode), vnode->length);
-#endif /* !AFS_LARGEFILE_ENV */
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),
 			     V_parentId(vp));
@@ -1008,13 +977,9 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 				   VAclDiskSize(vnode));
 		    acl_NtohACL(VVnodeDiskACL(vnode));
 		    break;
-#ifdef AFS_LARGEFILE_ENV
-	        case 'h':
-#endif
 		case 'f': {
 		    Inode ino;
 		    Error error;
-		    afs_offs_t fileLen;
 
 		    ino = IH_CREATE(V_linkHandle(vp),
 				    V_device(vp),
@@ -1035,10 +1000,8 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 			IH_RELEASE(tmpH);
 			return VOLSERREAD_DUMPERROR;
 		    }
-		    
-		    fileLen = volser_WriteFile(vnodeNumber, iodp, fdP,
-						     tag, &error);
-		    VNDISK_SET_LEN(vnode, fileLen);
+		    vnode->length = volser_WriteFile(vnodeNumber, iodp, fdP,
+						     &error);
 		    FDH_REALLYCLOSE(fdP);
 		    IH_RELEASE(tmpH);
 		    if (error) {
@@ -1106,41 +1069,22 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
  * needing to read an ungetc'd character, since the ReadInt32 will have read
  * it instead.
  */
-static afs_offs_t volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP,
-			      int tag, Error *status)
+static bit32 volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP,
+			      Error *status)
 {
     afs_int32 code;
-    afs_offs_t filesize;
-    afs_offs_t written=0;
+    afs_uint32 filesize;
+    bit32 written=0;
     register afs_uint32 size = 8192;
-    register afs_offs_t nbytes;
+    register afs_uint32 nbytes;
     unsigned char *p;
 
 
     *status = 0;
-#ifdef AFS_64BIT_ENV
-    {
-	afs_uint32 filesize_high = 0L, filesize_low = 0L;
-#ifdef AFS_LARGEFILE_ENV
-	if (tag == 'h') {
-	    if (!ReadInt32(iodp, &filesize_high) ) {
-		*status = 1;
-		return(0);
-	    }
-	}
-#endif
-	if (!ReadInt32(iodp, &filesize_low)) {
-	    *status = 1;
-	    return(0);
-	}
-	FillInt64(filesize, filesize_high, filesize_low);
-    }
-#else /* !AFS_64BIT_ENV */
     if (!ReadInt32(iodp, &filesize)) {
         *status = 1;
 	return(0);
     }
-#endif /* !AFS_64BIT_ENV */
     p = (unsigned char *) malloc(size);
     if (p == NULL) {
         *status = 2;
@@ -1151,14 +1095,7 @@ static afs_offs_t volser_WriteFile(int vn, struct iod *iodp, FdHandle_t *handleP
 	    size = nbytes;
 	
 	if ((code = iod_Read(iodp, p, size)) != size) {
-#ifdef AFS_64BIT_ENV
-	    Log("1 Volser: WriteFile: Error reading dump file %d size=(0X%x,0X%x) nbytes=%d (%d of %d); restore aborted\n", vn,
-		(unsigned) (filesize >> 32),
-		(unsigned) (filesize & 0xffffffff),
-		nbytes, code, size);
-#else /* !AFS_LARGEFILE_ENV */
 	    Log("1 Volser: WriteFile: Error reading dump file %d size=%d nbytes=%d (%d of %d); restore aborted\n", vn, filesize, nbytes, code, size);
-#endif /* !AFS_LARGEFILE_ENV */
 	    *status = 3;
 	    break;
 	}

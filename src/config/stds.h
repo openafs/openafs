@@ -88,11 +88,9 @@ typedef struct u_Int64 afs_uint64;
 #ifdef AFS_64BIT_CLIENT
 typedef afs_int64 afs_size_t;
 typedef afs_uint64 afs_offs_t;
-#define SplitOffsetOrSize(t,h,l) SplitInt64(t,h,l)
 #else /* AFS_64BIT_CLIENT */
 typedef afs_int32 afs_size_t;
 typedef afs_uint32 afs_offs_t;
-#define SplitOffsetOrSize(t,h,l) (h) = 0; (l) = (t);
 #endif /* AFS_64BIT_CLIENT */
 
 /* you still have to include <netinet/in.h> to make these work */

@@ -22,17 +22,11 @@ RCSID("$Header$");
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #else
-#ifdef AFS_LARGEFILE_ENV
-#include <fcntl.h>
-#else
 #include <sys/file.h>
-#endif
 #include <unistd.h>
 #include <sys/stat.h>
 #if defined(AFS_SUN5_ENV) || defined(AFS_NBSD_ENV)
-#ifndef AFS_LARGEFILE_ENV
 #include <sys/fcntl.h>
-#endif
 #include <sys/resource.h>
 #endif
 #endif
@@ -105,7 +99,7 @@ void ih_glock_init()
 #endif /* AFS_PTHREAD_ENV */
 
 /* Initialize the file descriptor cache */
-void ih_Initialize(void) {
+void ih_Initialize() {
     int i;
     assert(!ih_Inited);
     ih_Inited = 1;
@@ -150,7 +144,7 @@ void ih_Initialize(void) {
 
 /* Make the file descriptor cache as big as possible. Don't this call
  * if the program uses fopen or fdopen. */
-void ih_UseLargeCache(void) {
+void ih_UseLargeCache() {
     IH_LOCK
 
     if (!ih_Inited) {
@@ -162,7 +156,7 @@ void ih_UseLargeCache(void) {
 }
 
 /* Allocate a chunk of inode handles */
-void iHandleAllocateChunk(void)
+void iHandleAllocateChunk()
 {
     int i;
     IHandle_t *ihP;
@@ -228,7 +222,7 @@ IHandle_t *ih_copy(IHandle_t *ihP)
 }
 
 /* Allocate a chunk of file descriptor handles */
-void fdHandleAllocateChunk(void)
+void fdHandleAllocateChunk()
 {
     int i;
     FdHandle_t *fdP;
@@ -245,7 +239,7 @@ void fdHandleAllocateChunk(void)
 }
 
 /* Allocate a chunk of stream handles */
-void streamHandleAllocateChunk(void)
+void streamHandleAllocateChunk()
 {
     int i;
     StreamHandle_t *streamP;
@@ -494,10 +488,9 @@ StreamHandle_t *stream_open(const char *filename, const char *mode)
 }
 
 /* fread for buffered I/O handles */
-afs_size_t stream_read(void *ptr, afs_size_t size, afs_size_t nitems,
-		       StreamHandle_t *streamP)
+int stream_read(void *ptr, int size, int nitems, StreamHandle_t *streamP)
 {
-    afs_size_t nbytes, bytesRead, bytesToRead;
+    int nbytes, bytesRead, bytesToRead;
     char *p;
 
     /* Need to seek before changing direction */
@@ -544,11 +537,10 @@ afs_size_t stream_read(void *ptr, afs_size_t size, afs_size_t nitems,
 }
 
 /* fwrite for buffered I/O handles */
-afs_size_t stream_write(void *ptr, afs_size_t size, afs_size_t nitems,
-			StreamHandle_t *streamP)
+int stream_write(void *ptr, int size, int nitems, StreamHandle_t *streamP)
 {
     char *p;
-    afs_size_t rc, nbytes, bytesWritten, bytesToWrite;
+    int rc, nbytes, bytesWritten, bytesToWrite;
 
     /* Need to seek before changing direction */
     if (streamP->str_direction == STREAM_DIRECTION_NONE) {
@@ -591,7 +583,7 @@ afs_size_t stream_write(void *ptr, afs_size_t size, afs_size_t nitems,
 }
 
 /* fseek for buffered I/O handles */
-int stream_seek(StreamHandle_t *streamP, afs_size_t offset, int whence)
+int stream_seek(StreamHandle_t *streamP, int offset, int whence)
 {
     int rc;
     int retval = 0;
@@ -847,17 +839,11 @@ Inode ih_icreate(IHandle_t *ih, int dev, char *part, Inode nI, int p1, int p2,
 
 
 #ifndef AFS_NT40_ENV
-afs_size_t ih_size(int fd)
+int ih_size(int fd)
 {
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-    if (fstat64(fd, &status)<0)
-	return -1;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
     if (fstat(fd, &status)<0)
 	return -1;
-#endif /* !AFS_LARGEFILE_ENV */
     return status.st_size;
 }
 #endif

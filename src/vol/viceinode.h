@@ -46,7 +46,7 @@ struct SpecialInodeParams {
  */
 struct ViceInodeInfo {
     Inode	inodeNumber;
-    afs_offs_t	byteCount;
+    int		byteCount;
     int		linkCount;
     union {
         bit32			  param[4];

@@ -815,22 +815,11 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
     char filename[MAX_PATH];
 #endif
 #endif
-    afs_size_t	fileLength;
-
-    VNDISK_GET_LEN(fileLength, vnode);
-    Vvnodesize += fileLength;
+    Vvnodesize += vnode->length;
     if (dsizeOnly) return;
-    if (orphaned && (fileLength ==0 || vnode->parent || !offset)) return;
-#ifdef AFS_LARGEFILE_ENV
-    printf("%10d Vnode %u.%u.%u cloned: %d, length: (0X%x,0X%x) linkCount: %d parent: %d",
-        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned,
-	   (unsigned) (fileLength >> 32),
-	   (unsigned) (fileLength & 0xffffffff),
-	   vnode->linkCount, vnode->parent);
-#else
+    if (orphaned && (vnode->length ==0 || vnode->parent || !offset)) return;
     printf("%10d Vnode %u.%u.%u cloned: %d, length: %d linkCount: %d parent: %d",
-        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, fileLength, vnode->linkCount, vnode->parent);
-#endif
+        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, vnode->length, vnode->linkCount, vnode->parent);
     if (DumpInodeNumber)
 	printf(" inode: %s", PrintInode(NULL, ino));
     if (DumpDate)

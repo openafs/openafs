@@ -34,10 +34,8 @@ extern Inode namei_MakeSpecIno(int volid, int type);
 extern Inode namei_icreate(IHandle_t *h, char *p, int p1, int p2, int p3, int p4);
 extern FD_t namei_iopen(IHandle_t *h);
 extern int namei_irelease(IHandle_t *h);
-afs_size_t namei_iread(IHandle_t *h, afs_size_t offset,
-		       char *buf, afs_size_t size);
-afs_size_t namei_iwrite(IHandle_t *h, afs_size_t offset,
-			char *buf, afs_size_t size);
+int namei_iread(IHandle_t *h, int offset, char *buf, int size);
+int namei_iwrite(IHandle_t *h, int offset, char *buf, int size);
 extern int namei_dec(IHandle_t *h, Inode ino, int p1);
 extern int namei_inc(IHandle_t *h, Inode ino, int p1);
 extern int namei_GetLinkCount(FdHandle_t *h, Inode ino, int lockit);

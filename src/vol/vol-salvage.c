@@ -322,7 +322,7 @@ struct VnodeInfo {
 			      0 after scanning all directories */
         unsigned salvaged:1;/* Set if this directory vnode has already been salvaged. */	
         unsigned todelete:1;/* Set if this vnode is to be deleted (should not be claimed) */
-	afs_offs_t blockCount;
+	afs_uint32 blockCount;
 			    /* Number of blocks (1K) used by this vnode,
 			       approximately */
 	VnodeId parent;	    /* parent in vnode */
@@ -1438,11 +1438,7 @@ int OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber)
  */
 int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 {
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
-#endif /* !AFS_LARGEFILE_ENV */
     int forceSal, err;
     struct ViceInodeInfo *ip;
     struct InodeSummary summary;
@@ -1473,13 +1469,7 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	ForceSalvage = 1;
     }
     inodeFd = open(path, O_RDWR);
-    if (inodeFd == -1 ||
-#ifdef AFS_LARGEFILE_ENV
-	fstat64(inodeFd, &status)
-#else /* !AFS_LARGEFILE_ENV */
-	fstat(inodeFd, &status)
-#endif /* !AFS_LARGEFILE_ENV */
-	== -1) {
+    if (inodeFd == -1 || fstat(inodeFd, &status) == -1) {
 	unlink(path);
 	Abort("No inode description file for \"%s\"; not salvaged\n", dev);
     }
@@ -1522,13 +1512,8 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	    Abort("Unable to read inode table; %s not salvaged\n", dev);
 	}
 	qsort(ip, nInodes, sizeof(struct ViceInodeInfo), CompareInodes);
-	if (
-#ifdef AFS_LARGEFILE_ENV
-	    lseek64(inodeFd, (off64_t) 0, SEEK_SET) == -1
-#else /* !AFS_LARGEFILE_ENV */
-	    lseek(inodeFd, (off_t) 0, SEEK_SET) == -1
-#endif /* !AFS_LARGEFILE_ENV */
-	    || write(inodeFd, ip, status.st_size) != status.st_size) {
+	if (lseek(inodeFd, 0, SEEK_SET) == -1 ||
+	    write(inodeFd, ip, status.st_size) != status.st_size) {
 	    fclose(summaryFile); close(inodeFd);
 	    unlink(path);
 	    unlink(summaryFileName);
@@ -1565,21 +1550,13 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	    Exit(1);	/* salvage of this partition aborted */
 	}
     }
-#ifdef AFS_LARGEFILE_ENV
-    assert(fstat64(fileno(summaryFile), &status) != -1);
-#else /* !AFS_LARGEFILE_ENV */
     assert(fstat(fileno(summaryFile), &status) != -1);
-#endif /* !AFS_LARGEFILE_ENV */
     if ( status.st_size != 0 ) {
 	int ret;
 	inodeSummary = (struct InodeSummary *) malloc(status.st_size);
 	assert(inodeSummary != NULL);
 	/* For GNU we need to do lseek to get the file pointer moved. */
-#ifdef AFS_LARGEFILE_ENV
-	assert(lseek64(fileno(summaryFile), (off64_t) 0, SEEK_SET) == 0);
-#else /* !AFS_LARGEFILE_ENV */
-	assert(lseek(fileno(summaryFile), (off_t) 0, SEEK_SET) == 0);
-#endif /* !AFS_LARGEFILE_ENV */
+	assert(lseek(fileno(summaryFile), 0, SEEK_SET) == 0);
 	ret = read(fileno(summaryFile), inodeSummary, status.st_size);
 	assert(ret == status.st_size);
     }
@@ -1832,11 +1809,7 @@ void DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
     allInodes = inodes - isp->index; /* this would the base of all the inodes
 					for the partition, if all the inodes
 					had been read into memory */
-#ifdef AFS_LARGEFILE_ENV
-    assert(lseek64(inodeFd,(off64_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1);
-#else /* !AFS_LARGEFILE_ENV */
-    assert(lseek(inodeFd,(off_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1);
-#endif /* !AFS_LARGEFILE_ENV */
+    assert(lseek(inodeFd,isp->index*sizeof(struct ViceInodeInfo),SEEK_SET) != -1);
     assert(read(inodeFd,inodes,size) == size);
 
     /* Don't try to salvage a read write volume if there isn't one on this
@@ -1923,19 +1896,10 @@ void DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 #endif
 	    if (ip->linkCount != 0 && TraceBadLinkCounts) {
 		TraceBadLinkCounts--; /* Limit reports, per volume */
-#ifdef AFS_LARGEFILE_ENV
-		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size (0X%x,0x%x), p=(%u,%u,%u,%u)\n",
-		    ip->linkCount, PrintInode(NULL, ip->inodeNumber),
-		    (unsigned) ((ip->byteCount) >> 32),
-		    (unsigned) ((ip->byteCount) & 0xffffffff),
-		    ip->u.param[0], ip->u.param[1],
-		    ip->u.param[2], ip->u.param[3]);
-#else
 		Log("#### DEBUG #### Link count incorrect by %d; inode %s, size %u, p=(%u,%u,%u,%u)\n",
 		    ip->linkCount, PrintInode(NULL, ip->inodeNumber),
 		    ip->byteCount, ip->u.param[0], ip->u.param[1],
 		    ip->u.param[2], ip->u.param[3]);
-#endif /* !AFS_LARGEFILE_ENV */
 	    }
 	    while (ip->linkCount > 0) {
 		/* below used to assert, not break */
@@ -2344,7 +2308,7 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
     int err = 0;
     StreamHandle_t *file;
     struct VnodeClassInfo *vcp;
-    afs_size_t size, vnodeSize;
+    int size;
     int vnodeIndex, nVnodes;
     afs_ino_str_t stmp1, stmp2;
     IHandle_t *handle;
@@ -2500,75 +2464,36 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 		    if (ip->inodeNumber != VNDISK_GET_INO(vnode)) {
 			if (check) {
 			    if (!Showmode) {
-#ifdef AFS_LARGEFILE_ENV
-				Log("Vnode %d:  inode number incorrect (is %s should be %s). FileSize=(0X%x,0X%x)\n",
-				    vnodeNumber,
-				    PrintInode(stmp1, VNDISK_GET_INO(vnode)),
-				    PrintInode(stmp2, ip->inodeNumber),
-				    (unsigned) (ip->byteCount >> 32),
-				    (unsigned) (ip->byteCount & 0xffffffff));
-#else
 				Log("Vnode %d:  inode number incorrect (is %s should be %s). FileSize=%d\n",
 				    vnodeNumber,
 				    PrintInode(stmp1, VNDISK_GET_INO(vnode)),
 				    PrintInode(stmp2, ip->inodeNumber),
 				    ip->byteCount);
-#endif /* !AFS_LARGEFILE_ENV */
 			    }
 			    VNDISK_SET_INO(vnode, ip->inodeNumber);
 			    err = -1;
 			    goto zooks;
 			}
 			if (!Showmode) {
-#ifdef AFS_LARGEFILE_ENV
-			    Log("Vnode %d: inode number incorrect; changed from %s to %s. FileSize=(0X%x,0X%x)\n",
-				vnodeNumber,
-				PrintInode(stmp1, VNDISK_GET_INO(vnode)),
-				PrintInode(stmp2, ip->inodeNumber),
-				(unsigned) (ip->byteCount >> 32),
-				(unsigned) (ip->byteCount & 0xffffffff));
-#else
 			    Log("Vnode %d: inode number incorrect; changed from %s to %s. FileSize=%d\n",
 				vnodeNumber,
 				PrintInode(stmp1, VNDISK_GET_INO(vnode)),
 				PrintInode(stmp2, ip->inodeNumber),
 				ip->byteCount);
-#endif /* !AFS_LARGEFILE_ENV */
 			}
 			VNDISK_SET_INO(vnode, ip->inodeNumber);
 			vnodeChanged = 1;
 		    }
-		    VNDISK_GET_LEN(vnodeSize, vnode);
-		    if (ip->byteCount != vnodeSize) {
+		    if (ip->byteCount != vnode->length) {
 			if (check) {
-			    if (!Showmode)
-#ifdef AFS_LARGEFILE_ENV
-				Log("Vnode %d: length incorrect; (is (0X%x,0X%x) should be (0X%x,0X%x))\n",
-				    vnodeNumber,
-				    (unsigned) (vnodeSize >> 32),
-				    (unsigned) (vnodeSize & 0xffffffff),
-				    (unsigned) (ip->byteCount >> 32),
-				    (unsigned) (ip->byteCount & 0xffffffff));
-#else
-				Log("Vnode %d: length incorrect; (is %d should be %d)\n",
-				    vnodeNumber, vnodeSize, ip->byteCount);
-#endif /* !AFS_LARGEFILE_ENV */
+			    if (!Showmode) Log("Vnode %d: length incorrect; (is %d should be %d)\n",
+					       vnodeNumber, vnode->length, ip->byteCount);
 			    err = -1;
 			    goto zooks;
 			}
-			if (!Showmode)
-#ifdef AFS_LARGEFILE_ENV
-			    Log("Vnode %d: length incorrect; changed from (0X%x,0X%x) to (0X%x,0X%x)\n",
-				vnodeNumber,
-				(unsigned) (vnodeSize >> 32),
-				(unsigned) (vnodeSize & 0xffffffff),
-				(unsigned) (ip->byteCount >> 32),
-				(unsigned) (ip->byteCount & 0xffffffff));
-#else
-			    Log("Vnode %d: length incorrect; changed from %d to %d\n",
-				vnodeNumber, vnodeSize, ip->byteCount);
-#endif /* !AFS_LARGEFILE_ENV */
-			VNDISK_SET_LEN(vnode, ip->byteCount);
+			if (!Showmode) Log("Vnode %d: length incorrect; changed from %d to %d\n",
+					   vnodeNumber, vnode->length, ip->byteCount);
+			vnode->length = ip->byteCount;
 			vnodeChanged = 1;
 		    }
 		    if (!check)
@@ -2752,7 +2677,7 @@ void CopyAndSalvage(register struct DirSummary *dir)
     }
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
-    VNDISK_SET_LEN(&vnode, (afs_size_t) Length(&newdir));
+    vnode.length = Length(&newdir);
     code = IH_IWRITE(vnodeInfo[vLarge].handle,
 		    vnodeIndexOffset(vcp, dir->vnodeNumber),
 		    (char*)&vnode, sizeof (vnode));
@@ -3054,11 +2979,9 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
       nVnodes--, vnodeIndex++) {
 	if (vnode->type != vNull) {
 	    register struct VnodeEssence *vep = &vip->vnodes[vnodeIndex];
-	    afs_size_t	vnodeLength;
 	    vip->nAllocatedVnodes++;
 	    vep->count = vnode->linkCount;
-	    VNDISK_GET_LEN(vnodeLength, vnode);
-	    vep->blockCount = nBlocks(vnodeLength);
+	    vep->blockCount = nBlocks(vnode->length);
 	    vip->volumeBlockCount += vep->blockCount;
 	    vep->parent = vnode->parent;
 	    vep->unique = vnode->uniquifier;
@@ -3558,34 +3481,18 @@ void PrintInodeList(void)
 {
     register struct ViceInodeInfo *ip;
     struct ViceInodeInfo *buf;
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
-#endif /* !AFS_LARGEFILE_ENV */
     register nInodes;
 
-#ifdef AFS_LARGEFILE_ENV
-    assert(fstat64(inodeFd, &status) == 0);
-#else /* !AFS_LARGEFILE_ENV */
     assert(fstat(inodeFd, &status) == 0);
-#endif /* !AFS_LARGEFILE_ENV */
     buf = (struct ViceInodeInfo *) malloc(status.st_size);
     assert(buf != NULL);
     nInodes = status.st_size / sizeof(struct ViceInodeInfo);
     assert(read(inodeFd, buf, status.st_size) == status.st_size);
     for(ip = buf; nInodes--; ip++) {
-#ifdef AFS_LARGEFILE_ENV
-	Log("Inode:%s, linkCount=%d, size=(0X%x,0X%x), p=(%u,%u,%u,%u)\n",
-	    PrintInode(NULL, ip->inodeNumber), ip->linkCount,
-	    (unsigned) (ip->byteCount >> 32),
-	    (unsigned) (ip->byteCount & 0xffffffff),
-	    ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
-#else
 	Log("Inode:%s, linkCount=%d, size=%u, p=(%u,%u,%u,%u)\n",
 	    PrintInode(NULL, ip->inodeNumber), ip->linkCount, ip->byteCount,
 	    ip->u.param[0], ip->u.param[1], ip->u.param[2], ip->u.param[3]);
-#endif
     }
     free(buf);
 }

@@ -46,10 +46,9 @@ RCSID("$Header$");
 
 extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 
-afs_size_t namei_iread(IHandle_t *h, afs_size_t offset,
-		       char *buf, afs_size_t size)
+int namei_iread(IHandle_t *h, int offset, char *buf, int size)
 {
-    afs_size_t nBytes;
+    int nBytes;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(h);
@@ -66,10 +65,9 @@ afs_size_t namei_iread(IHandle_t *h, afs_size_t offset,
     return nBytes;
 }
 
-afs_size_t namei_iwrite(IHandle_t *h, afs_size_t offset,
-			char *buf, afs_size_t size)
+int namei_iwrite(IHandle_t *h, int offset, char *buf, int size)
 {
-    afs_size_t nBytes;
+    int nBytes;
     FdHandle_t *fdP;
 
     fdP = IH_OPEN(h);
@@ -285,11 +283,7 @@ delTree(char *root, char *tree, int *errp)
   char *cp;
   DIR *ds;
   struct dirent *dirp;
-#ifdef AFS_LARGEFILE_ENV
-  struct stat64 st;
-#else
   struct stat st;
-#endif
 
   if (*tree) {
     /* delete the children first */
@@ -313,13 +307,7 @@ delTree(char *root, char *tree, int *errp)
 	 */
 	strcat(root, "/");
 	strcat(root, dirp->d_name);
-	if (
-#ifdef AFS_LARGEFILE_ENV
-	    stat64(root, &st) == 0
-#else /* !AFS_LARGEFILE_ENV */
-	    stat(root, &st) == 0
-#endif /* !AFS_LARGEFILE_ENV */
-	      && S_ISDIR(st.st_mode)) {
+	if (  stat(root, &st) == 0 && S_ISDIR(st.st_mode)) {
 	  /* delete this subtree */
 	  delTree(root, cp+1, errp); 
 	} else
@@ -437,11 +425,7 @@ static int SetOGM(int fd, int parm, int tag)
 }
 
 /* GetOGM - get parm and tag from owner, group and mode bits. */
-#ifdef AFS_LARGEFILE_ENV
-static void GetOGMFromStat(struct stat64 *status, int *parm, int *tag)
-#else /* ! AFS_LARGEFILE_ENV */
 static void GetOGMFromStat(struct stat *status, int *parm, int *tag)
-#endif /* !AFS_LARGEFILE_ENV */
 {
     *parm = status->st_uid | (status->st_gid << 15);
     *parm |= (status->st_mode & 0x18) << 27;
@@ -450,15 +434,9 @@ static void GetOGMFromStat(struct stat *status, int *parm, int *tag)
 
 static int GetOGM(int fd, int *parm, int *tag)
 {
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-    if (fstat64(fd, &status)<0) 
-	return -1;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
     if (fstat(fd, &status)<0) 
 	return -1;
-#endif /* !AFS_LARGEFILE_ENV */
 
     GetOGMFromStat(&status, parm, tag);
     return 0;
@@ -533,20 +511,12 @@ Inode namei_icreate(IHandle_t *lh, char *part, int p1, int p2, int p3, int p4)
     }
 
     namei_HandleToName(&name, &tmp);
-#ifdef AFS_LARGEFILE_ENV
-    fd = open64(name.n_path, O_CREAT|O_EXCL|O_TRUNC|O_RDWR, 0);
-#else /* !AFS_LARGEFILE_ENV */
     fd = open(name.n_path, O_CREAT|O_EXCL|O_TRUNC|O_RDWR, 0);
-#endif /* !AFS_LARGEFILE_ENV */
     if (fd < 0) {
 	if (errno == ENOTDIR || errno == ENOENT) {
 	    if (namei_CreateDataDirectories(&name, &created_dir)<0)
 		goto bad;
-#ifdef AFS_LARGEFILE_ENV
-	    fd = open64(name.n_path, O_CREAT|O_EXCL|O_TRUNC|O_RDWR, 0);
-#else /* !AFS_LARGEFILE_ENV */
 	    fd = open(name.n_path, O_CREAT|O_EXCL|O_TRUNC|O_RDWR, 0);
-#endif /* !AFS_LARGEFILE_ENV */
 	    if (fd < 0)
 		goto bad;
 	}
@@ -592,11 +562,7 @@ int namei_iopen(IHandle_t *h)
 
     /* Convert handle to file name. */
     namei_HandleToName(&name, h);
-#ifdef AFS_LARGEFILE_ENV
-    fd = open64(name.n_path, O_RDWR, 0666);
-#else /* !AFS_LARGEFILE_ENV */
     fd = open(name.n_path, O_RDWR, 0666);
-#endif /* !AFS_LARGEFILE_ENV */
     return fd;
 }
 
@@ -819,7 +785,7 @@ int namei_inc(IHandle_t *h, Inode ino, int p1)
 #define LINKTABLE_WIDTH 2
 #define LINKTABLE_SHIFT 1 /* log 2 = 1 */
 
-static void namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_size_t *offset, int *index)
+static void namei_GetLCOffsetAndIndexFromIno(Inode ino, int *offset, int *index)
 {
     int toff = (int) (ino & NAMEI_VNODEMASK);
     int tindex = (int)((ino>>NAMEI_TAGSHIFT) & NAMEI_TAGMASK);
@@ -836,8 +802,7 @@ static void namei_GetLCOffsetAndIndexFromIno(Inode ino, afs_size_t *offset, int 
 int namei_GetLinkCount(FdHandle_t *h, Inode ino, int lockit)
 {
     unsigned short row = 0;
-    afs_size_t offset;
-    int index;
+    int offset, index;
 
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
@@ -850,13 +815,8 @@ int namei_GetLinkCount(FdHandle_t *h, Inode ino, int lockit)
 	    return -1;
     }
 
-#ifdef AFS_LARGEFILE_ENV
-    if (lseek64(h->fd_fd, (off64_t) offset, SEEK_SET) == -1)
+    if (lseek(h->fd_fd, offset, SEEK_SET) == -1)
 	goto bad_getLinkByte;
-#else /* !AFS_LARGEFILE_ENV */
-    if (lseek(h->fd_fd, (off_t) offset, SEEK_SET) == -1)
-	goto bad_getLinkByte;
-#endif /* !AFS_LARGEFILE_ENV */
     
     if (read(h->fd_fd, (char*)&row, sizeof(row))!=sizeof(row)) {
 	goto bad_getLinkByte;
@@ -878,7 +838,7 @@ int namei_GetLinkCount(FdHandle_t *h, Inode ino, int lockit)
 static int GetFreeTag(IHandle_t *ih, int vno)
 {
     FdHandle_t *fdP;
-    afs_size_t offset;
+    int offset;
     int col;
     int coldata;
     short row;
@@ -900,15 +860,9 @@ static int GetFreeTag(IHandle_t *ih, int vno)
     }
     
     offset = (vno <<  LINKTABLE_SHIFT) + 8; /* * 2 + sizeof stamp */
-#ifdef AFS_LARGEFILE_ENV
-    if (lseek64(fdP->fd_fd, (off64_t) offset, SEEK_SET) == -1) {
+    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	goto badGetFreeTag;
     }
-#else /* !AFS_LARGEFILE_ENV */
-    if (lseek(fdP->fd_fd, (off_t) offset, SEEK_SET) == -1) {
-	goto badGetFreeTag;
-    }
-#endif /* !AFS_LARGEFILE_ENV */
 	
     code = read(fdP->fd_fd, (char*)&row, sizeof(row));
     if (code != sizeof(row)) {
@@ -929,15 +883,9 @@ static int GetFreeTag(IHandle_t *ih, int vno)
     coldata = 1 << (col * 3);
     row |= coldata;
 
-#ifdef AFS_LARGEFILE_ENV
-    if (lseek64(fdP->fd_fd, (off64_t) offset, SEEK_SET) == -1) {
+    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	goto badGetFreeTag;
     }
-#else /* !AFS_LARGEFILE_ENV */
-    if (lseek(fdP->fd_fd, (off_t) offset, SEEK_SET) == -1) {
-	goto badGetFreeTag;
-    }
-#endif /* !AFS_LARGEFILE_ENV */
     if (write(fdP->fd_fd, (char*)&row, sizeof(row))!=sizeof(row)) {
 	goto badGetFreeTag;
     }
@@ -968,8 +916,7 @@ static int GetFreeTag(IHandle_t *ih, int vno)
  */
 int namei_SetLinkCount(FdHandle_t *fdP, Inode ino, int count, int locked)
 {
-    afs_size_t offset;
-    int index;
+    int offset, index;
     unsigned short row;
     int junk;
     int code = -1;
@@ -985,17 +932,10 @@ int namei_SetLinkCount(FdHandle_t *fdP, Inode ino, int count, int locked)
 	    return -1;
 	}
     }
-#ifdef AFS_LARGEFILE_ENV
-    if (lseek64(fdP->fd_fd, (off64_t) offset, SEEK_SET) == -1) {
+    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	errno = EBADF;
 	goto bad_SetLinkCount;
     }
-#else /* !AFS_LARGEFILE_ENV */
-    if (lseek(fdP->fd_fd, (off_t) offset, SEEK_SET) == -1) {
-	errno = EBADF;
-	goto bad_SetLinkCount;
-    }
-#endif /* !AFS_LARGEFILE_ENV */
 
     
     code = read(fdP->fd_fd, (char*)&row, sizeof(row));
@@ -1012,17 +952,10 @@ int namei_SetLinkCount(FdHandle_t *fdP, Inode ino, int count, int locked)
     row &= (unsigned short)~junk;
     row |= (unsigned short)count;
 
-#ifdef AFS_LARGEFILE_ENV
-    if (lseek64(fdP->fd_fd, (off64_t) offset, SEEK_SET) == -1) {
+    if (lseek(fdP->fd_fd, offset, SEEK_SET) == -1) {
 	errno =  EBADF;
 	goto bad_SetLinkCount;
     }
-#else /* !AFS_LARGEFILE_ENV */
-    if (lseek(fdP->fd_fd, (off_t) offset, SEEK_SET) == -1) {
-	errno =  EBADF;
-	goto bad_SetLinkCount;
-    }
-#endif /* !AFS_LARGEFILE_ENV */
 
     if (write(fdP->fd_fd, (char*)&row, sizeof(short)) != sizeof(short)) {
 	errno = EBADF;
@@ -1077,19 +1010,9 @@ static int WriteInodeInfo(FILE *fp, struct ViceInodeInfo *info, char *dir,
 int mode_errors; /* Number of errors found in mode bits on directories. */
 void VerifyDirPerms(char *path)
 {
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
-#endif /* !AFS_LARGEFILE_ENV */
 
-    if (
-#ifdef AFS_LARGEFILE_ENV
-	stat64(path, &status)
-#else /* ! AFS_LARGEFILE_ENV */
-	stat(path, &status)
-#endif /* ! AFS_LARGEFILE_ENV */
-	<0) {
+    if (stat(path, &status)<0) {
 	Log("Unable to stat %s. Please manually verify mode bits for this"
 	    " directory\n", path);
     }
@@ -1119,11 +1042,7 @@ int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 {
     FILE *fp = (FILE*)-1;
     int ninodes;
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
-#endif /* !AFS_LARGEFILE_ENV */
 
     if (resultFile) {
 	fp = fopen(resultFile, "w");
@@ -1166,13 +1085,7 @@ int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (
-#ifdef AFS_LARGEFILE_ENV
-	stat64(resultFile, &status)
-#else /* !AFS_LARGEFILE_ENV */
-	stat(resultFile, &status)
-#endif /* !AFS_LARGEFILE_ENV */
-	== -1) {
+    if (stat(resultFile, &status) == -1) {
 	Log("Unable to successfully stat inode file for %s\n", mountedOn);
 	return -2;
     }
@@ -1305,11 +1218,7 @@ static int namei_ListAFSSubDirs(IHandle_t *dirIH,
 	    else {
 		/* Open this handle */
 		(void) sprintf(path2, "%s/%s", path1, dp1->d_name);
-#ifdef AFS_LARGEFILE_ENV
-		linkHandle.fd_fd = open64(path2, O_RDONLY, 0666);
-#else /* !AFS_LARGEFILE_ENV */
 		linkHandle.fd_fd = open(path2, O_RDONLY, 0666);
-#endif /* !AFS_LARGEFILE_ENV */
 		info.linkCount = namei_GetLinkCount(&linkHandle, (Inode)0, 0);
 	    }
 	    if (judgeFun && !(*judgeFun)(&info, singleVolumeNumber))
@@ -1421,26 +1330,16 @@ static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
 		       int volid)
 {
     char fpath[512];
-#ifdef AFS_LARGEFILE_ENV
-    struct stat64 status;
-#else /* !AFS_LARGEFILE_ENV */
     struct stat status;
-#endif /* !AFS_LARGEFILE_ENV */
     int parm, tag;
 
     (void) strcpy(fpath, dpath);
     (void) strcat(fpath, "/");
     (void) strcat(fpath, name);
 
-#ifdef AFS_LARGEFILE_ENV
-    if (stat64(fpath, &status)<0) {
-	return -1;
-    }
-#else /* !AFS_LARGEFILE_ENV */
     if (stat(fpath, &status)<0) {
 	return -1;
     }
-#endif /* !AFS_LARGEFILE_ENV */
 
     info->byteCount = status.st_size;
     info->inodeNumber = flipbase64_to_int64(name);

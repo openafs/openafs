@@ -154,33 +154,6 @@ typedef struct Vnode {
 	(sizeof(struct Vnode) - sizeof(VnodeDiskObject) + SIZEOF_LARGEDISKVNODE)
 #define SIZEOF_SMALLVNODE	(sizeof (struct Vnode))
 
-#ifdef AFS_LARGEFILE_ENV
-
-#ifndef AFS_NAMEI_ENV
-#define AFS_NAMEI_ENV
-#endif
-
-#define VN_GET_INO(V) ((Inode)((V)->disk.vn_ino_lo | \
-                       (((Inode)(V)->disk.uniquifier)<<32)))
-
-#define VN_SET_INO(V, I) ((V)->disk.vn_ino_lo = (int)((I)&0xffffffff))
-
-#define VNDISK_GET_INO(V) ((Inode)((V)->vn_ino_lo | \
-                           (((Inode)(V)->uniquifier)<<32)))
-
-#define VNDISK_SET_INO(V, I) ((V)->vn_ino_lo = (int)((I)&0xffffffff))
-
-#define VN_GET_LEN(N, V)  FillInt64(N, (V)->disk.vn_ino_hi, (V)->disk.length)
-#define VNDISK_GET_LEN(N, V)  FillInt64(N, (V)->vn_ino_hi, (V)->length)
-
-#define VN_SET_LEN(V, N)  SplitInt64(N, (V)->disk.vn_ino_hi, (V)->disk.length)
-#define VNDISK_SET_LEN(V, N) SplitInt64(N, (V)->vn_ino_hi, (V)->length)
-
-#define SET_STATUS_LEN(S, V) (((S)->Length_hi=(afs_uint32)(V)->disk.vn_ino_hi), \
-                              ((S)->Length=(afs_uint32)(V)->disk.length))
-
-#else /*AFS_LARGEFILE_ENV*/
-
 #ifdef AFS_64BIT_IOPS_ENV
 #define VN_GET_INO(V) ((Inode)((V)->disk.vn_ino_lo | \
 			       ((V)->disk.vn_ino_hi ? \
@@ -203,17 +176,6 @@ typedef struct Vnode {
 #define VNDISK_GET_INO(V) ((V)->vn_ino_lo)
 #define VNDISK_SET_INO(V, I) ((V)->vn_ino_lo = (I))
 #endif
-
-#define VN_GET_LEN(N, V)  (N) = (V)->disk.length;
-#define VNDISK_GET_LEN(N, V)  (N) = (V)->length;
-#define VN_SET_LEN(V, N)  (V)->disk.length = (N);
-#define VNDISK_SET_LEN(V, N) (V)->length = (N);
-
-#define SET_STATUS_LEN(S, V) (((S)->Length_hi = 0), \
-                              ((S)->Length = (afs_uint32)(V)->disk.length))
-
-#endif /*AFS_LARGEFILE_ENV*/
-
 
 #define VVnodeDiskACL(v)     /* Only call this with large (dir) vnode!! */ \
 	((AL_AccessList *) (((byte *)(v))+SIZEOF_SMALLDISKVNODE))

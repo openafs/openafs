@@ -48,14 +48,14 @@ RCSID("$Header$");
 #ifdef PAGESIZE
 #undef PAGESIZE
 #endif
-#define PAGESIZE (afs_size_t)2048
+#define PAGESIZE 2048
 
 extern int LogLevel;
 
 afs_int32 lpErrno, lpCount;
 
 /* returns 0 on success, errno on failure */
-int ReallyRead (DirHandle *file, afs_size_t block, char *data)
+int ReallyRead (DirHandle *file, int block, char *data)
 {
     int code;
     FdHandle_t *fdP;
@@ -69,7 +69,7 @@ int ReallyRead (DirHandle *file, afs_size_t block, char *data)
 		  PrintInode(NULL, file->dirh_handle->ih_ino), code));
 	return code;
     }
-    if (FDH_SEEK(fdP, (afs_size_t)block * PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
 	code = errno;
         ViceLog (0,
 		 ("ReallyRead(): lseek failed device %X inode %s errno %d\n",
@@ -97,7 +97,7 @@ int ReallyRead (DirHandle *file, afs_size_t block, char *data)
 }
 
 /* returns 0 on success, errno on failure */
-int ReallyWrite (DirHandle *file, afs_size_t block, char *data)
+int ReallyWrite (DirHandle *file, int block, char *data)
 {
     afs_int32 count;
     FdHandle_t *fdP;
@@ -111,7 +111,7 @@ int ReallyWrite (DirHandle *file, afs_size_t block, char *data)
 	lpErrno = errno;
 	return 0;
     }
-    if (FDH_SEEK(fdP, (afs_size_t) block * PAGESIZE, SEEK_SET) < 0) {
+    if (FDH_SEEK(fdP, block * PAGESIZE, SEEK_SET) < 0) {
         ViceLog (0,
 		 ("ReallyWrite(): lseek failed device %X inode %s errno %d\n",
 		  file->dirh_handle->ih_dev,

@@ -197,7 +197,7 @@ Volume	* vp;
     IHandle_t *h;
     FdHandle_t *fdP;
     int code;
-    afs_offs_t length;
+    int length;
 
     memset(vnode, 0, SIZEOF_LARGEDISKVNODE);    
 
@@ -236,7 +236,7 @@ Volume	* vp;
     vnode->cloned = 0;
     vnode->modeBits = 0777;
     vnode->linkCount = 2;
-    VNDISK_SET_LEN(vnode, length);
+    vnode->length = length;
     vnode->uniquifier = 1;
     V_uniquifier(vp) = vnode->uniquifier+1;
     vnode->dataVersion = 1;
@@ -257,8 +257,7 @@ Volume	* vp;
     assert(code == SIZEOF_LARGEDISKVNODE);
     FDH_REALLYCLOSE(fdP);
     IH_RELEASE(h);
-    VNDISK_GET_LEN(length, vnode);
-    V_diskused(vp) = nBlocks(length);
+    V_diskused(vp) = nBlocks(vnode->length);
 
     return 1;
 }
