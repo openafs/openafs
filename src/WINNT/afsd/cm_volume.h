@@ -20,7 +20,7 @@ typedef struct cm_volume {
 	struct cm_fid *dotdotFidp;	/* parent of volume root */
     osi_mutex_t mx;
     long flags;			/* by mx */
-    int refCount;			/* by cm_volumeLock */
+    unsigned long refCount;			/* by cm_volumeLock */
     cm_serverRef_t *rwServersp;	/* by mx */
     cm_serverRef_t *roServersp;	/* by mx */
     cm_serverRef_t *bkServersp;	/* by mx */

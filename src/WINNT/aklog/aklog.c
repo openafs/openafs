@@ -390,11 +390,11 @@ static int get_v5cred(krb5_context context,
 
     memset((char *)&increds, 0, sizeof(increds));
 
-	if ((r = krb5_build_principal(context, &increds.server,
-                     strlen(realm), realm,
-                     name,
-           (inst && strlen(inst)) ? inst : 0,
-                     0))) {
+    if ((r = krb5_build_principal(context, &increds.server,
+                                  strlen(realm), realm,
+                                  name,
+                                  (inst && strlen(inst)) ? inst : 0,
+                                  0))) {
         return((int)r);
     }
 
@@ -623,6 +623,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     if (usev5) 
     { /* using krb5 */
         int retry = 1;
+
+        if ( strchr(name,'.') != NULL ) {
+            fprintf(stderr, "%s: Can't support principal names including a dot.\n",
+                    progname);
+            return(AKLOG_MISC);
+        }
 
       try_v5:
         if (dflag)

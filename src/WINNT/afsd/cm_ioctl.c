@@ -411,6 +411,7 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     AFSFid fid;
     int tlen;
     cm_req_t req;
+    struct rx_connection * callp;
 
     cm_InitReq(&req);
 
@@ -427,9 +428,10 @@ long cm_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
         code = cm_Conn(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_FetchACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_FetchACL(callp, &fid, &acl, &fileStatus, &volSync);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, &req);
     cm_ReleaseSCache(scp);
@@ -478,6 +480,7 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
     long code;
     AFSFid fid;
     cm_req_t req;
+    struct rx_connection * callp;
 
     cm_InitReq(&req);
 
@@ -494,9 +497,10 @@ long cm_IoctlSetACL(struct smb_ioctl *ioctlp, struct cm_user *userp)
         code = cm_Conn(&scp->fid, userp, &req, &connp);
         if (code) continue;
 
-        lock_ObtainMutex(&connp->mx);
-        code = RXAFS_StoreACL(connp->callp, &fid, &acl, &fileStatus, &volSync);
-        lock_ReleaseMutex(&connp->mx);
+        callp = cm_GetRxConn(connp);
+        code = RXAFS_StoreACL(callp, &fid, &acl, &fileStatus, &volSync);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(connp, userp, &req, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, &req);
 
@@ -578,6 +582,7 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     char *cp;
     cm_cell_t *cellp;
     cm_req_t req;
+    struct rx_connection * callp;
 
     cm_InitReq(&req);
 
@@ -621,10 +626,11 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         code = cm_Conn(&scp->fid, userp, &req, &tcp);
         if (code) continue;
 
-        lock_ObtainMutex(&tcp->mx);
-        code = RXAFS_SetVolumeStatus(tcp->callp, scp->fid.volume,
+        callp = cm_GetRxConn(tcp);
+        code = RXAFS_SetVolumeStatus(callp, scp->fid.volume,
                                       &storeStat, volName, offLineMsg, motd);
-        lock_ReleaseMutex(&tcp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
     code = cm_MapRPCError(code, &req);
 
@@ -668,6 +674,7 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     char *OfflineMsg;
     char *MOTD;
     cm_req_t req;
+    struct rx_connection * callp;
 
     cm_InitReq(&req);
 
@@ -681,10 +688,11 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
         code = cm_Conn(&scp->fid, userp, &req, &tcp);
         if (code) continue;
 
-        lock_ObtainMutex(&tcp->mx);
-        code = RXAFS_GetVolumeStatus(tcp->callp, scp->fid.volume,
+        callp = cm_GetRxConn(tcp);
+        code = RXAFS_GetVolumeStatus(callp, scp->fid.volume,
                                       &volStat, &Name, &OfflineMsg, &MOTD);
-        lock_ReleaseMutex(&tcp->mx);
+        rx_PutConnection(callp);
+
     } while (cm_Analyze(tcp, userp, &req, &scp->fid, NULL, NULL, NULL, code));
     code = cm_MapRPCError(code, &req);
 

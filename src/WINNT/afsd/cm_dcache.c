@@ -129,12 +129,13 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
         if (code) 
             continue;
 		
+        lock_ObtainMutex(&connp->mx);
         callp = rx_NewCall(connp->callp);
+        lock_ReleaseMutex(&connp->mx);
 
         osi_Log3(afsd_logp, "CALL StoreData vp %x, off 0x%x, size 0x%x",
                  (long) scp, biod.offset.LowPart, nbytes);
 
-        lock_ObtainMutex(&connp->mx);
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     biod.offset.LowPart, nbytes, truncPos);
 
@@ -174,8 +175,6 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
                 osi_Log1(afsd_logp, "EndRXAFS_StoreData failed (%lX)",code);
         }
         code = rx_EndCall(callp, code);
-        lock_ReleaseMutex(&connp->mx);
-
         osi_Log0(afsd_logp, "CALL StoreData DONE");
                 
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
@@ -263,17 +262,16 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         if (code) 
             continue;
 		
-        callp = rx_NewCall(connp->callp);
-
         lock_ObtainMutex(&connp->mx);
+        callp = rx_NewCall(connp->callp);
+        lock_ReleaseMutex(&connp->mx);
+
         code = StartRXAFS_StoreData(callp, &tfid, &inStatus,
                                     0, 0, truncPos);
 
         if (code == 0)
             code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
         code = rx_EndCall(callp, code);
-
-        lock_ReleaseMutex(&connp->mx);
 
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
@@ -1241,6 +1239,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 		
         lock_ObtainMutex(&connp->mx);
         callp = rx_NewCall(connp->callp);
+        lock_ReleaseMutex(&connp->mx);
 
         osi_Log3(afsd_logp, "CALL FetchData vp %x, off 0x%x, size 0x%x",
                   (long) scp, biod.offset.LowPart, biod.length);
@@ -1352,8 +1351,6 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         if (code == RXKADUNKNOWNKEY)
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
         osi_Log0(afsd_logp, "CALL FetchData DONE");
-
-        lock_ReleaseMutex(&connp->mx);
 
     } while (cm_Analyze(connp, up, reqp, &scp->fid, &volSync, NULL, NULL, code));
 

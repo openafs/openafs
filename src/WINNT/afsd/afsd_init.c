@@ -373,7 +373,7 @@ int afsd_InitCM(char **reasonP)
     static struct rx_securityClass *nullServerSecurityClassp;
     struct hostent *thp;
     char *msgBuf;
-    char buf[200];
+    char buf[1024];
     HKEY parmKey;
     DWORD dummyLen;
     DWORD regType;
@@ -645,15 +645,37 @@ int afsd_InitCM(char **reasonP)
     }
     cm_sysName = cm_sysNameList[0];
 
-    dummyLen = MAXSYSNAME;
-    code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, cm_sysName, &dummyLen);
-    if (code == ERROR_SUCCESS)
-        afsi_log("Sys name %s", cm_sysName);
-    else {
+    dummyLen = sizeof(buf);
+    code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, buf, &dummyLen);
+    if (code == ERROR_SUCCESS && buf[0]) {
+        char * p, *q; 
+        afsi_log("Sys name %s", buf);
+
+        for (p = q = buf; p < cm_sysName + dummyLen; p++)
+        {
+            if (*p == '\0' || isspace(*p)) {
+                memcpy(cm_sysNameList[cm_sysNameCount],q,p-q);
+                cm_sysNameList[cm_sysNameCount][p-q] = '\0';
+                cm_sysNameCount++;
+
+                do {
+                    if (*p == '\0')
+                        goto done_sysname;
+                        
+                    p++;
+                } while (*p == '\0' || isspace(*p));
+                q = p;
+                p--;
+            }
+        }
+      done_sysname:
+        StringCbCopyA(cm_sysName, MAXSYSNAME, cm_sysNameList[0]);
+    } else {
+        cm_sysNameCount = 1;
         StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
+        StringCbCopyA(cm_sysNameList[0], MAXSYSNAME, "i386_nt40");
         afsi_log("Default sys name %s", cm_sysName);
     }
-    cm_sysNameCount = 1;
 
     dummyLen = sizeof(cryptall);
     code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,

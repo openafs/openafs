@@ -58,7 +58,7 @@ typedef struct cm_scache {
         				 * write-locked to prevent buffers from
                                          * being created during a truncate op, etc.
                                          */
-        int refCount;			/* reference count; cm_scacheLock */
+        unsigned long refCount;			/* reference count; cm_scacheLock */
         osi_queueData_t *bufReadsp;	/* queue of buffers being read */
         osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
