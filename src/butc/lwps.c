@@ -775,7 +775,7 @@ PromptForTape(flag, name, dbDumpId, taskId, tapecount)
 	while (1) {
 	    if (time(0) > start + BELLTIME) {
 		start = time(0);
-		FFlushInput(stdin);
+		FFlushInput();
 		putchar(BELLCHAR);
 		fflush(stdout);
 	    }
