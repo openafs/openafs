@@ -677,8 +677,8 @@ static int DumpVnodeIndex(register struct iod *iodp, Volume *vp,
     assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes+1)*vcp->diskSize == size)
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0)
+	assert((nVnodes+1)*vcp->diskSize == size);
+	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     }
     else nVnodes = 0;
     for (vnodeIndex = 0; nVnodes && STREAM_READ(vnode, vcp->diskSize, 1, file) == 1 && !code;
@@ -818,7 +818,7 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 	OS_SYNC(afile->str_fd);
     } else {
 	size = OS_SIZE(fdP->fd_fd);
-	assert(size != -1)
+	assert(size != -1);
 	nVnodes = (size <= vcp->diskSize ? 0 :
 		   size-vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {

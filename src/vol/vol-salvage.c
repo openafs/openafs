@@ -1843,11 +1843,11 @@ void DoSalvageVolumeGroup(register struct InodeSummary *isp, int nVols)
 					for the partition, if all the inodes
 					had been read into memory */
 #ifdef AFS_LARGEFILE_ENV
-    assert(lseek64(inodeFd,(off64_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1)
+    assert(lseek64(inodeFd,(off64_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1);
 #else /* !AFS_LARGEFILE_ENV */
-    assert(lseek(inodeFd,(off_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1)
+    assert(lseek(inodeFd,(off_t)(isp->index*sizeof(struct ViceInodeInfo)),SEEK_SET) != -1);
 #endif /* !AFS_LARGEFILE_ENV */
-    assert(read(inodeFd,inodes,size) == size)
+    assert(read(inodeFd,inodes,size) == size);
 
     /* Don't try to salvage a read write volume if there isn't one on this
        partition */
@@ -2132,7 +2132,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    isp->volumeId, (Testing?"it would have been ":""),
 			   fileSysPathName, name);
 	headerFd = open(name, O_RDWR|O_CREAT|O_TRUNC, 0644);
-	assert(headerFd != -1)
+	assert(headerFd != -1);
 	isp->volSummary = (struct VolumeSummary *)
 	    malloc(sizeof(struct VolumeSummary));
 	isp->volSummary->fileName = ToString(name);
@@ -2158,7 +2158,7 @@ int SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 		return -1;
 
 	    headerFd = open(name, O_RDWR|O_TRUNC, 0644);
-	    assert(headerFd != -1)
+	    assert(headerFd != -1);
 	  }
     }
     if (headerFd) {
@@ -2365,14 +2365,14 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
     fdP = IH_OPEN(handle);
     assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
-    assert(file != NULL)
+    assert(file != NULL);
     vcp = &VnodeClassInfo[class];
     size = OS_SIZE(fdP->fd_fd);
     assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes+1) * vcp->diskSize == size)
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0)
+	assert((nVnodes+1) * vcp->diskSize == size);
+	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     }
     else {
 	nVnodes = 0;
@@ -2796,7 +2796,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	}
 	if (!Testing) {
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0)
+	    assert(Delete(&dir->dirHandle, name) == 0);
         }
 	return;
     }
@@ -2862,9 +2862,9 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    fid.Vnode = vnodeNumber;
 	    fid.Unique = vnodeEssence->unique;
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0)
+	    assert(Delete(&dir->dirHandle, name) == 0);
 	    if (!todelete)
-	       assert(Create(&dir->dirHandle, name, &fid) == 0)
+	       assert(Create(&dir->dirHandle, name, &fid) == 0);
 	}
 	if (todelete) return; /* no need to continue */
     }
@@ -2876,10 +2876,10 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	        dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
-		assert(Delete(&dir->dirHandle, ".") == 0)
+		assert(Delete(&dir->dirHandle, ".") == 0);
 		fid.Vnode = dir->vnodeNumber;
 		fid.Unique = dir->unique;
-		assert(Create(&dir->dirHandle, ".", &fid) == 0)
+		assert(Create(&dir->dirHandle, ".", &fid) == 0);
 	    }
 
 	    vnodeNumber = fid.Vnode;         /* Get the new Essence */
@@ -2922,7 +2922,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	}
         if (!Testing) {
 	    CopyOnWrite(dir);
-	    assert(Delete(&dir->dirHandle, name) == 0)
+	    assert(Delete(&dir->dirHandle, name) == 0);
 	}
 	vnodeEssence->claimed  = 0;   /* Not claimed: Orphaned */
 	vnodeEssence->todelete = 1;   /* Will later delete vnode and decr inode */
@@ -3028,20 +3028,20 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
 
     IH_INIT(vip->handle, fileSysDevice, rwVId, ino);
     fdP = IH_OPEN(vip->handle);
-    assert(fdP != NULL)
+    assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
     assert(file != NULL);
     size = OS_SIZE(fdP->fd_fd);
     assert(size != -1);
     vip->nVnodes = (size / vcp->diskSize) - 1;
     if (vip->nVnodes > 0) {
-	assert((vip->nVnodes+1)*vcp->diskSize == size)
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0)
+	assert((vip->nVnodes+1)*vcp->diskSize == size);
+	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
 	assert((vip->vnodes = (struct VnodeEssence *)
-	  calloc(vip->nVnodes, sizeof(struct VnodeEssence))) != NULL)
+	  calloc(vip->nVnodes, sizeof(struct VnodeEssence))) != NULL);
 	if (class == vLarge) {
 	    assert((vip->inodes = (Inode *)
-	      calloc(vip->nVnodes, sizeof (Inode))) != NULL)
+	      calloc(vip->nVnodes, sizeof (Inode))) != NULL);
 	}
 	else {
 	    vip->inodes = NULL;
@@ -3075,7 +3075,7 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
 	    vep->owner = vnode->owner;
 	    vep->group = vnode->group;
 	    if (vnode->type == vDirectory) {
-		assert(class == vLarge)
+		assert(class == vLarge);
 		vip->inodes[vnodeIndex] = VNDISK_GET_INO(vnode); 
 	    }
 	}
@@ -3479,7 +3479,7 @@ void ClearROInUseBit(struct VolumeSummary *summary)
     
     nBytes = IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader));
     assert(nBytes == sizeof(volHeader));
-    assert(volHeader.stamp.magic == VOLUMEINFOMAGIC)
+    assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
     volHeader.inUse = 0;
     volHeader.needsSalvaged = 0;
     volHeader.inService = 1;
@@ -3629,7 +3629,7 @@ int Fork(void) {
     assert(0); /* Fork is never executed in the NT code path */
 #else
     f = fork();
-    assert(f >= 0)
+    assert(f >= 0);
 #endif
     return f;
 }
@@ -3653,7 +3653,7 @@ int Wait(char *prog)
     int status;
     int pid;
     pid = wait(&status);
-    assert(pid != -1)
+    assert(pid != -1);
     if (WCOREDUMP(status))
 	Log("\"%s\" core dumped!\n", prog);
     if (WIFSIGNALED(status) != 0 || WEXITSTATUS(status) != 0)
@@ -3770,7 +3770,7 @@ char * ToString(char *s)
 {
     register char *p;
     p = (char *) malloc(strlen(s)+1);
-    assert(p != NULL)
+    assert(p != NULL);
     strcpy(p,s);
     return p;
 
