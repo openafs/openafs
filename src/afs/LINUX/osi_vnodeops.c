@@ -230,7 +230,7 @@ tagain:
 	len = strlen(de->name);
 
 	/* filldir returns -EINVAL when the buffer is full. */
-#ifdef AFS_LINUX24_ENV
+#if (defined(AFS_LINUX24_ENV) || defined(pgoff2loff)) && defined(DECLARE_FSTYPE)
         {
              unsigned int type=DT_UNKNOWN;
              struct VenusFid afid;
@@ -1319,7 +1319,7 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 	       ICL_TYPE_POINTER, pp,
 	       ICL_TYPE_INT32, atomic_read(&pp->count),
 	       ICL_TYPE_INT32, 99999);
-    setup_uio(&tuio, &iovec, page_addr + offset, pp->offset + offset, count,
+    setup_uio(&tuio, &iovec, page_addr + offset, pageoff(pp) + offset, count,
 	      UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
