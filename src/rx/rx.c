@@ -360,6 +360,10 @@ int rx_Init(u_int port)
     char *htable, *ptable;
     int tmp_status;
 
+#if defined(AFS_DJGPP_ENV) && !defined(DEBUG)
+    __djgpp_set_quiet_socket(1);
+#endif
+
     SPLVAR;
 
     INIT_PTHREAD_LOCKS

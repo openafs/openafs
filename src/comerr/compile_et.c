@@ -7,6 +7,7 @@
  *
  */
 
+#undef MEMORYLEAK
 #include <afs/param.h>
 #include <stdio.h>
 

@@ -10,7 +10,11 @@
 #ifndef __CM_SERVER_H_ENV__
 #define __CM_SERVER_H_ENV__ 1
 
+#ifndef DJGPP
 #include <winsock2.h>
+#else /* DJGPP */
+#include <netinet/in.h>
+#endif /* !DJGPP */
 #include <osi.h>
 
 /* pointed to by volumes and cells without holds; cm_serverLock is obtained

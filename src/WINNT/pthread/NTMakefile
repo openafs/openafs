@@ -44,11 +44,15 @@ $(PTHR95_DLLFILE): $(PTHR95_DLLOBJS)
 pthread_95.obj: pthread.c
 	$(C2OBJ) pthread.c -DAFS_WIN95_ENV /Fopthread_95.obj
 
+install: $(PTHR_DLLFILE) $(LIBINCLUDES)
 
-install: $(PTHR_DLLFILE) $(PTHR95_DLLFILE) $(LIBINCLUDES)
+install9x: $(PTHR95_DLLFILE) install
 
 pthread.res: pthread.rc AFS_component_version_number.h
 	$(RC) $*.rc
 
 pthread95.res: pthread95.rc AFS_component_version_number.h
 	$(RC) $*.rc
+
+clean::
+	$(DEL) /q $(DESTDIR)\lib\win95\*.*

@@ -6,7 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!IF (EXIST(..\config\NTMakefile.version))
 !INCLUDE ..\config\NTMakefile.version
+!ENDIF
 
 
 INCFILEDIR = $(DESTDIR)\include
@@ -31,3 +33,5 @@ rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 	$(RXGEN) -x $**
 
 install: $(LIBFILE) $(INCFILES)
+
+install9x: install

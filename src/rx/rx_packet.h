@@ -10,11 +10,12 @@
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
 #ifndef UKERNEL
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #include "rx_xmit_nt.h"
-#else
-#include <sys/uio.h>
 #endif
+#ifndef AFS_NT40_ENV
+#include <sys/uio.h>
+#endif /* !AFS_NT40_ENV */
 #endif /* !UKERNEL */
 /* this file includes the macros and decls which depend on packet
  * format, and related packet manipulation macros.  Note that code
@@ -32,7 +33,7 @@
  */
 
 
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifndef MIN
 #define MIN(a,b)  ((a)<(b)?(a):(b))
 #endif

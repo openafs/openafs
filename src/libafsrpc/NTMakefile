@@ -6,7 +6,6 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 !include ..\config\NTMakefile.$(SYS_NAME)
-
 !include ..\config\NTMakefile.version
 
 RX = ..\rx
@@ -257,7 +256,11 @@ NTMAKE = nmake /nologo /f ntmakefile
 
 
 DLLLIBS =\
+!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
+	$(DESTDIR)\lib\win95\pthread.lib \
+!ELSE
 	$(DESTDIR)\lib\pthread.lib \
+!ENDIF
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
@@ -277,6 +280,8 @@ install:
 		$(NTMAKE) libstub
 !	endif
 
+install9x: install
+
 !IF (EXIST(..\..\src\des\NTMakefile))
 !ELSE IF (EXIST(..\..\DESLIB))
 DESPAR = ..\..\DESLIB\dest
@@ -293,3 +298,6 @@ libstub:
 		$(DESTDIR)\lib\afsrpc.lib
 	$(COPY) $(DESPAR)\lib\afsrpc.exp \
 		$(DESTDIR)\lib\afsrpc.exp
+
+clean::
+	$(DEL) $(DESTDIR)\lib\afsrpc.dll $(DESTDIR)\lib\afsrpc.lib $(DESTDIR)\lib\afsrpc.exp

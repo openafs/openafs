@@ -1,0 +1,50 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = DJGPP
+DESTDIR=DEST/
+SRCDIR=DEST/
+
+# compilation and link editor flags
+DBG=-g
+#OPTMZ=-O2
+#PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
+# Put -O2 here to _ensure_ all Makefiles pick it up.
+XCFLAGS= ${DBG} -Dfds_bits=fd_bits
+MT_CFLAGS=${XCFLAGS}
+XLDFLAGS=
+SHARE_LDFLAGS = -shared -Xlinker -x
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=
+#
+# libraries
+MTLIBS=
+TXLIBS=
+XLIBS=
+#
+# programs
+AR=dos-ar
+AS=dos-as
+CP=cp
+INSTALL=${SRCDIR}bin/install
+LD=dos-ld   
+CC=dos-gcc -bmmap
+RANLIB=dos-ranlib
+MT_CC=dos-gcc -bmmap
+MV=mv
+RM=rm
+WASHTOOL=${SRCDIR}bin/washtool
+#
+# Other OS specific requirements
+#
+YACC = bison -y
+LEX = flex -l
+# Used in des library.
+CRYPT_OBJ = crypt.o

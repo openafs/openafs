@@ -39,8 +39,10 @@ install_headers: $(INCFILES)
 
 install: $(LIBFILE)
 
-clean::
+install9x: install
 
+clean::
+	$(DEL) $(INCFILES)
 
 ############################################################################
 # Auxiliary build targets not built by default; e.g. test programs

@@ -17,8 +17,6 @@ SRCROOT = ..\..\..\src
 !ERROR Can not find src directory from current directory.
 !ENDIF
 
-
-
 INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
@@ -34,6 +32,9 @@ $(INCFILEDIR)\param.h: param.$(SYS_NAME).h
 	$(COPY) $? $@
 
 idirs: doclink
+!	IF (!EXIST($(DESTDIR)))
+		$(MKDIR) $(DESTDIR)
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\include))
 		$(MKDIR) $(DESTDIR)\include
 !	ENDIF
@@ -76,6 +77,15 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\root.server\usr\afs\bin))
 		$(MKDIR) $(DESTDIR)\root.server\usr\afs\bin
 !	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client))
+		$(MKDIR) $(DESTDIR)\root.client
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr))
+		$(MKDIR) $(DESTDIR)\root.client\usr
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr\vice))
+		$(MKDIR) $(DESTDIR)\root.client\usr\vice
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
 		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
 !	ENDIF
@@ -101,6 +111,12 @@ NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
 		$(COPY) NTMakefile.version-NOCML NTMakefile.version
 !	ENDIF
 
+$(DESTDIR)\bin\util_cr.exe: util_cr.exe
+	$(COPY) util_cr.exe $(DESTDIR)\bin
+
+$(DESTDIR)\bin\touch.exe: touch.exe
+	$(COPY) touch.exe $(DESTDIR)\bin
+
 $(DESTDIR)\bin\mkvers.exe: mkvers.exe
 	$(COPY) mkvers.exe $(DESTDIR)\bin
 
@@ -109,16 +125,28 @@ $(DESTDIR)\NTDllmap.txt: NTDllmap.txt
 	$(COPY) NTDllmap.txt $(DESTDIR)
 
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat
+# $$$: make CR/LF when doing copy here
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe
 	$(COPY) NTLang.bat $(DESTDIR)\bin
+	util_cr + $(DESTDIR)\bin\NTLang.bat
+
+util_cr.obj : util_cr.c
+	$(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) $*.c
+
+util_cr.exe : util_cr.obj
+	$(EXECONLINK)
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 
+install: idirs version $(DESTDIR)\bin\touch.exe $(DESTDIR)\bin\util_cr.exe $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
 
-install: idirs version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
-
+install9x: install
 
 # This clean target must be named something different than the universal
 # 'clean' so that the version file can be removed last.
 clean_version:
 	$(DEL) NTMakefile.version
+
+clean::
+	$(DEL) $(DESTDIR)\LIB\*.DLL
+	$(DEL) $(DESTDIR)\bin\mkvers.exe

@@ -12,21 +12,25 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <rpc.h>
+#include "dbrpc.h"
+#endif /* !DJGPP */
 #include <malloc.h>
 #include "osi.h"
-#include "dbrpc.h"
 #include <assert.h>
 
-static CRITICAL_SECTION osi_fdCS;
+static Crit_Sec osi_fdCS;
 osi_fd_t *osi_allFDs;
 osi_fdType_t *osi_allFDTypes;
 long osi_nextFD = 0;
 
 osi_fdOps_t osi_TypeFDOps = {
 	osi_FDTypeCreate,
+#ifndef DJGPP
 	osi_FDTypeGetInfo,
+#endif
 	osi_FDTypeClose
 };
 
@@ -49,7 +53,7 @@ long osi_UnregisterFDType(char *namep)
         osi_fdTypeFormat_t *nffp;
 
 	/* check for dup name */
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	ftp = osi_FindFDType(namep);
         if (!ftp) return -1;
         
@@ -68,7 +72,7 @@ long osi_UnregisterFDType(char *namep)
         free(ftp);
 
 	/* cleanup and go */
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 	return 0;
 }
 
@@ -77,7 +81,7 @@ osi_fdType_t *osi_RegisterFDType(char *namep, osi_fdOps_t *opsp, void *datap)
 	osi_fdType_t *ftp;
 
 	/* check for dup name */
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	osi_assertx(osi_FindFDType(namep) == NULL, "registering duplicate iteration type");
 
 	ftp = (osi_fdType_t *) malloc(sizeof(*ftp));
@@ -92,7 +96,7 @@ osi_fdType_t *osi_RegisterFDType(char *namep, osi_fdOps_t *opsp, void *datap)
 	ftp->formatListp = NULL;
 
 	osi_QAdd((osi_queue_t **) &osi_allFDTypes, &ftp->q);
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 
 	return ftp;
 }
@@ -114,10 +118,10 @@ osi_AddFDFormatInfo(osi_fdType_t *typep, long region, long index,
 	formatp->index = index;
 
 	/* thread on the list when done */
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	formatp->nextp = typep->formatListp;
 	typep->formatListp = formatp;
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 
 	/* all done */
 	return 0;
@@ -130,7 +134,7 @@ osi_InitFD(void) {
 
 	osi_allFDs = NULL;
 	osi_allFDTypes = NULL;
-	InitializeCriticalSection(&osi_fdCS);
+	thrd_InitCrit(&osi_fdCS);
 
 	/* now, initialize the types system by adding a type
 	 * iteration operator
@@ -151,7 +155,7 @@ osi_fd_t *osi_AllocFD(char *namep)
 	/* initialize for failure */
 	fdp = NULL;
 	
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	fdTypep = osi_FindFDType(namep);
 	if (fdTypep) {
 		code = (fdTypep->opsp->Create)(fdTypep, &fdp);
@@ -162,7 +166,7 @@ osi_fd_t *osi_AllocFD(char *namep)
 		}
 		else fdp = NULL;
 	}
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 
 	return fdp;
 }
@@ -171,11 +175,11 @@ osi_fd_t *osi_FindFD(long fd)
 {
 	osi_fd_t *fdp;
 
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	for(fdp = osi_allFDs; fdp; fdp = (osi_fd_t *) osi_QNext(&fdp->q)) {
 		if (fdp->fd == fd) break;
 	}
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 
 	return fdp;
 }
@@ -184,9 +188,9 @@ osi_CloseFD(osi_fd_t *fdp)
 {
 	long code;
 
-	EnterCriticalSection(&osi_fdCS);
+	thrd_EnterCrit(&osi_fdCS);
 	osi_QRemove((osi_queue_t **) &osi_allFDs, &fdp->q);
-	LeaveCriticalSection(&osi_fdCS);
+	thrd_LeaveCrit(&osi_fdCS);
 
 	/* this call frees the FD's storage, so make sure everything is unthreaded
 	 * before here.
@@ -211,6 +215,7 @@ long osi_FDTypeCreate(osi_fdType_t *fdTypep, osi_fd_t **outpp)
 }
 
 
+#ifndef DJGPP
 long osi_FDTypeGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *outp)
 {
 	osi_typeFD_t *fdp;
@@ -223,9 +228,9 @@ long osi_FDTypeGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *outp)
 		outp->icount = 0;
 		outp->scount = 1;
 		strcpy(outp->sdata[0], typep->namep);
-		EnterCriticalSection(&osi_fdCS);
+		thrd_EnterCrit(&osi_fdCS);
 		fdp->curp = (osi_fdType_t *) osi_QNext(&typep->q);
-		LeaveCriticalSection(&osi_fdCS);
+		thrd_LeaveCrit(&osi_fdCS);
 		return 0;
 	}
 	else {
@@ -233,6 +238,7 @@ long osi_FDTypeGetInfo(osi_fd_t *ifdp, osi_remGetInfoParms_t *outp)
 		return OSI_DBRPC_EOF;
 	}
 }
+#endif /* !DJGPP */
 
 long osi_FDTypeClose(osi_fd_t *ifdp)
 {

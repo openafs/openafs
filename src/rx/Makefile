@@ -24,11 +24,24 @@ XDROBJS = xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-	xdr_int64.o
+	xdr_int64.o 
 
 MULTIOBJS = rx_multi.o
 
 LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
+
+LIBOBJS_djgpp = ${RXOBJS_djgpp} ${MULTIOBJS} ${XDROBJS_djgpp}
+
+XMIT = rx_xmit_nt.o
+XMIT_H = rx_xmit_nt.h
+
+XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
+	xdr_float.o  xdr_refernce.o  xdr_update.o \
+	xdr_array.o xdr_mem.o 
+
+RXOBJS_djgpp = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
+		rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
+		$(XMIT)
 
 BASICINCLS = ${SRCDIR}include/lwp.h ${SRCDIR}include/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
@@ -96,8 +109,13 @@ xdr_refernce.o: xdr_refernce.c xdr.h
 
 librx.a: ${LIBOBJS} RX_component_version_number.o
 	-rm -f $@
-	ar rv $@ RX_component_version_number.o ${LIBOBJS}
+	$(AR) rv $@ RX_component_version_number.o ${LIBOBJS}
 	$(RANLIB) $@
+
+librx-djgpp: ${LIBOBJS_djgpp} RX_component_version_number.o
+	-rm -f librx.a
+	$(AR) rv librx.a RX_component_version_number.o ${LIBOBJS_djgpp}
+	$(RANLIB) librx.a
 
 ${DESTDIR}etc/rxdebug: rxdebug
 	${INSTALL} rxdebug ${DESTDIR}etc/rxdebug
@@ -108,7 +126,14 @@ rxdebug: rxdebug.o ${DESTDIR}lib/afs/util.a ${DESTDIR}lib/afs/libsys.a
 install.noversion noversion install all system: librx.a includes kinstall ukinstall
 	${INSTALL} librx.a ${DESTDIR}lib
 
-includes: rx.h rx_user.h rx_event.h rx_queue.h rx_clock.h xdr.h rx_null.h rx_globals.h
+install-djgpp: librx-djgpp includes includes-djgpp kinstall ukinstall
+	${INSTALL} librx.a ${DESTDIR}lib
+
+includes-djgpp: $(XMIT_H)
+	set ${DESTDIR}include/rx; $(MKDIR_IF_NEEDED)
+	${INSTALL} $(XMIT_H) ${DESTDIR}include/rx
+
+includes: rx.h rx_user.h rx_event.h rx_queue.h rx_clock.h xdr.h rx_null.h rx_globals.h 
 	set ${DESTDIR}include/rx; $(MKDIR_IF_NEEDED)
 	${INSTALL} rx_packet.h rx.h rx_user.h rx_event.h rx_queue.h \
 	rx_globals.h \

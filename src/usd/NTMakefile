@@ -6,7 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
-!INCLUDE ..\config\NTMakefile.version
+!IF (EXIST(..\config\NTMakefile.version))
+!include ..\config\NTMakefile.version
+!ENDIF
 
 
 ############################################################################
@@ -35,9 +37,10 @@ $(LIBFILE): $(LIBOBJS)
 
 install: $(INCFILES) $(LIBFILE)
 
+install9x: install
 
 clean::
-
+	$(DEL) $(LIBFILE)
 
 test: 
 	$(CD) test

@@ -138,3 +138,8 @@ make_ip.exe: make_ip.obj misc.obj
 	$(EXECONLINK)
 
 install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)
+
+install9x: install
+
+clean::
+	$(DEL) $(LIBFILE)

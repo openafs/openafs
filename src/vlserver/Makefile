@@ -125,3 +125,7 @@ install: kinstall ukinstall vlserver vlclient libvldb.a cnvldb ${DESTDIR}root.se
 	${INSTALL} cnvldb.h ${DESTDIR}include/afs
 	${INSTALL} vldb_check ${DESTDIR}/etc
 
+libinstall: libvldb.a
+	${INSTALL} libvldb.a ${DESTDIR}lib/afs
+	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}include/afs
+	${INSTALL} cnvldb.h ${DESTDIR}include/afs

@@ -10,15 +10,19 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#include <nb30.h>
+#else
+#include <sys/socket.h>
+#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 
 #include <osi.h>
 #include <rx/rx.h>
-#include <nb30.h>
 #include "afsd.h"
 
 osi_rwlock_t cm_serverLock;

@@ -12,7 +12,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif
 #include <osi.h>
 #include <malloc.h>
 #include <stdio.h>
@@ -74,11 +76,13 @@ long buf_nOrigBuffers;
 long buf_bufferSize = CM_BUF_SIZE;
 long buf_hashSize = CM_BUF_HASHSIZE;
 
+#ifndef DJGPP
 static
 HANDLE CacheHandle;
 
 static
 SYSTEM_INFO sysInfo;
+#endif /* !DJGPP */
 
 /* buffer reservation variables */
 long buf_reservedBufs;
@@ -93,6 +97,14 @@ cm_buf_t **buf_hashTablepp;
 
 /* another hash table */
 cm_buf_t **buf_fileHashTablepp;
+
+#ifdef DISKCACHE95
+/* for experimental disk caching support in Win95 client */
+cm_buf_t *buf_diskFreeListp;
+cm_buf_t *buf_diskFreeListEndp;
+cm_buf_t *buf_diskAllp;
+extern int cm_diskCacheEnabled;
+#endif /* DISKCACHE95 */
 
 /* hold a reference to an already held buffer */
 void buf_Hold(cm_buf_t *bp)
@@ -116,8 +128,12 @@ void buf_IncrSyncer(long parm)
         lock_ReleaseWrite(&buf_globalLock);
         nAtOnce = buf_nbuffers / 10;
 	while (1) {
-		i = SleepEx(5000, 1);
+#ifndef DJGPP
+                i = SleepEx(5000, 1);
                 if (i != 0) continue;
+#else
+		thrd_Sleep(5000);
+#endif /* DJGPP */
                 
                 /* now go through our percentage of the buffers */
                 for(i=0; i<nAtOnce; i++) {
@@ -147,6 +163,7 @@ void buf_IncrSyncer(long parm)
         }		/* whole daemon's while loop */
 }
 
+#ifndef DJGPP
 /* Create a security attribute structure suitable for use when the cache file
  * is created.  What we mainly want is that only the administrator should be
  * able to do anything with the file.  We create an ACL with only one entry,
@@ -192,7 +209,9 @@ PSECURITY_ATTRIBUTES CreateCacheFileSA()
 
 	return psa;
 }
+#endif /* !DJGPP */
 
+#ifndef DJGPP
 /* Free a security attribute structure created by CreateCacheFileSA() */
 VOID FreeCacheFileSA(PSECURITY_ATTRIBUTES psa)
 {
@@ -204,6 +223,7 @@ VOID FreeCacheFileSA(PSECURITY_ATTRIBUTES psa)
 	GlobalFree(psa->lpSecurityDescriptor);
 	GlobalFree(psa);
 }
+#endif /* !DJGPP */
 	
 /* initialize the buffer package; called with no locks
  * held during the initialization phase.
@@ -213,16 +233,20 @@ long buf_Init(cm_buf_ops_t *opsp)
 	static osi_once_t once;
         cm_buf_t *bp;
         long sectorSize;
-        HANDLE phandle;
+        thread_t phandle;
+#ifndef DJGPP
+	HANDLE hf, hm;
+	PSECURITY_ATTRIBUTES psa;
+#endif /* !DJGPP */
 	long i;
         unsigned long pid;
-	HANDLE hf, hm;
 	char *data;
-	PSECURITY_ATTRIBUTES psa;
 	long cs;
 
+#ifndef DJGPP
 	/* Get system info; all we really want is the allocation granularity */ 
 	GetSystemInfo(&sysInfo);
+#endif /* !DJGPP */
 
 	/* Have to be able to reserve a whole chunk */
 	if (((buf_nbuffers - 3) * buf_bufferSize) < cm_chunkSize)
@@ -235,6 +259,7 @@ long buf_Init(cm_buf_ops_t *opsp)
 		/* initialize global locks */
 		lock_InitializeRWLock(&buf_globalLock, "Global buffer lock");
 
+#ifndef DJGPP
 		/*
 		 * Cache file mapping constrained by
 		 * system allocation granularity;
@@ -248,6 +273,7 @@ long buf_Init(cm_buf_ops_t *opsp)
 			afsi_log("Cache size rounded up to %d buffers",
 				 buf_nbuffers);
 		}
+#endif /* !DJGPP */
 
 		/* remember this for those who want to reset it */
 	        buf_nOrigBuffers = buf_nbuffers;
@@ -268,6 +294,7 @@ long buf_Init(cm_buf_ops_t *opsp)
 		/* min value for which this works */
 		sectorSize = 1;
 
+#ifndef DJGPP
 		/* Reserve buffer space by mapping cache file */
 		psa = CreateCacheFileSA();
 		hf = CreateFile(cm_CachePath,
@@ -305,6 +332,10 @@ long buf_Init(cm_buf_ops_t *opsp)
 			return CM_ERROR_INVAL;
 		}
 		CloseHandle(hm);
+#else
+                /* djgpp doesn't support memory mapped files */
+                data = malloc(buf_nbuffers * buf_bufferSize);
+#endif /* !DJGPP */
 
                 /* create buffer headers and put in free list */
 		bp = malloc(buf_nbuffers * sizeof(cm_buf_t));
@@ -345,10 +376,14 @@ long buf_Init(cm_buf_ops_t *opsp)
 		osi_EndOnce(&once);
                 
                 /* and create the incr-syncer */
-                phandle = CreateThread((SECURITY_ATTRIBUTES *) 0, 0,
-	                (LPTHREAD_START_ROUTINE) buf_IncrSyncer, 0, 0, &pid);
+                phandle = thrd_Create(0, 0,
+                                      (ThreadFunc) buf_IncrSyncer, 0, 0, &pid,
+                                      "buf_IncrSyncer");
+
 		osi_assertx(phandle != NULL, "buf: can't create incremental sync proc");
+#ifndef DJGPP
 		CloseHandle(phandle);
+#endif /* !DJGPP */
         }
 
 	return 0;
@@ -362,6 +397,7 @@ long buf_AddBuffers(long nbuffers)
 	cm_buf_t *bp;
         int i;
 	char *data;
+#ifndef DJGPP
 	HANDLE hm;
 	long cs;
 
@@ -399,6 +435,9 @@ long buf_AddBuffers(long nbuffers)
 		return CM_ERROR_INVAL;
 	}
 	CloseHandle(hm);
+#else
+        data = malloc(buf_nbuffers * buf_bufferSize);
+#endif /* DJGPP */
 
 	/* Create buffer headers and put in free list */
         bp = malloc(nbuffers * sizeof(*bp));
@@ -554,6 +593,12 @@ void buf_LockedCleanAsync(cm_buf_t *bp, cm_req_t *reqp)
                 
                 lock_ObtainMutex(&bp->mx);
                 if (code) break;
+
+#ifdef DISKCACHE95
+                /* Disk cache support */
+                /* write buffer to disk cache (synchronous for now) */
+                diskcache_Update(bp->dcp, bp->datap, buf_bufferSize, bp->dataVersion);
+#endif /* DISKCACHE95 */
 	};
 
         /* do logging after call to GetLastError, or else */
@@ -857,6 +902,9 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         osi_hyper_t pageOffset;
         unsigned long tcount;
         int created;
+#ifdef DISKCACHE95
+        cm_diskcache_t *dcp;
+#endif /* DISKCACHE95 */
 
 	created = 0;
         pageOffset.HighPart = offsetp->HighPart;
@@ -869,6 +917,11 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 			/* lock it and break out */
                 	lock_ObtainMutex(&bp->mx);
                         break;
+
+#ifdef DISKCACHE95
+                        /* touch disk chunk to update LRU info */
+                        diskcache_Touch(bp->dcp);
+#endif /* DISKCACHE95 */
                 }
                 
                 /* otherwise, we have to create a page */
@@ -895,15 +948,25 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 		osi_assert(!(bp->flags & (CM_BUF_READING | CM_BUF_WRITING)));
 
 		/* setup offset, event */
+#ifndef DJGPP  /* doesn't seem to be used */
 	        bp->over.Offset = bp->offset.LowPart;
 	        bp->over.OffsetHigh = bp->offset.HighPart;
+#endif /* !DJGPP */
 
 		/* start the I/O; may drop lock */
                 bp->flags |= CM_BUF_READING;
                	code = (*cm_buf_opsp->Readp)(bp, buf_bufferSize, &tcount, NULL);
+
+#ifdef DISKCACHE95
+                code = diskcache_Get(&bp->fid, &bp->offset, bp->datap, buf_bufferSize, &bp->dataVersion, &tcount, &dcp);
+                bp->dcp = dcp;    /* pointer to disk cache struct. */
+#endif /* DISKCACHE95 */
+
 		if (code != 0) {
 			/* failure or queued */
+#ifndef DJGPP   /* cm_bufRead always returns 0 */
                         if (code != ERROR_IO_PENDING) {
+#endif
 				bp->error = code;
                                 bp->flags |= CM_BUF_ERROR;
                                 bp->flags &= ~CM_BUF_READING;
@@ -914,7 +977,9 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 				lock_ReleaseMutex(&bp->mx);
                                 buf_Release(bp);
                                 return code;
+#ifndef DJGPP
                         }
+#endif
                 } else {
 	                /* otherwise, I/O completed instantly and we're done, except
                          * for padding the xfr out with 0s and checking for EOF

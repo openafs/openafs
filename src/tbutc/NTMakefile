@@ -70,7 +70,11 @@ BUTCLIBS   = $(DESTDIR)\lib\afs\afsbudb.lib \
 	     $(DESTDIR)\lib\afs\afsreg.lib \
 	     $(DESTDIR)\lib\afs\afsprocmgmt.lib \
              $(DESTDIR)\lib\afs\afseventlog.lib \
-	     $(DESTDIR)\lib\pthread.lib \
+!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
+	$(DESTDIR)\lib\win95\pthread.lib \
+!ELSE
+	$(DESTDIR)\lib\pthread.lib \
+!ENDIF
 	     $(DESTDIR)\lib\afsdes.lib
 
 #	$(DESTDIR)\lib\afsauthent.lib \

@@ -10,7 +10,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -549,6 +551,7 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
 	/* We sometimes see 0 word count.  What to do? */
 	if (*inp->wctp == 0) {
+#ifndef DJGPP
 		HANDLE h;
 		char *ptbuf[1];
 
@@ -559,6 +562,9 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1003, NULL,
 			    1, inp->ncb_length, ptbuf, inp);
 		DeregisterEventSource(h);
+#else /* DJGPP */
+		osi_Log0(afsd_logp, "TRANSACTION2 word count = 0"); 
+#endif /* !DJGPP */
 
                 smb_SetSMBDataLength(outp, 0);
                 smb_SendPacket(vcp, outp);
@@ -1042,7 +1048,7 @@ struct smb_ShortNameRock {
 	size_t shortNameLen;
 };
 
-long cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
+int cm_GetShortNameProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *vrockp,
 	osi_hyper_t *offp)
 {
 	struct smb_ShortNameRock *rockp;
@@ -1235,7 +1241,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	if (infoLevel == 0x108) {
 		code = cm_GetShortName((char *)(&p->parmsp[3]), userp, &req,
 					tidPathp, scp->fid.vnode, shortName,
-					&len);
+					(size_t *) &len);
 		if (code) {
 			goto done;
 		}
@@ -1888,6 +1894,8 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	char shortName[13];		/* 8.3 name if needed */
 	int NeedShortName;
 	char *shortNameEnd;
+        int fileType;
+        cm_fid_t fid;
         
         cm_req_t req;
 
@@ -2199,6 +2207,24 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 			|| (NeedShortName
 			    && smb_V3MatchMask(shortName, maskp,
 						CM_FLAG_CASEFOLD)))) {
+
+                        /* Eliminate entries that don't match requested
+                           attributes */
+                        if (!(dsp->attribute & 0x10))  /* no directories */
+                        {
+                            /* We have already done the cm_TryBulkStat above */
+                            fid.cell = scp->fid.cell;
+                            fid.volume = scp->fid.volume;
+                            fid.vnode = ntohl(dep->fid.vnode);
+                            fid.unique = ntohl(dep->fid.unique);
+                            fileType = cm_FindFileType(&fid);
+                            /*osi_Log2(afsd_logp, "smb_ReceiveTran2SearchDir: file %s "
+                              "has filetype %d", dep->name,
+                              fileType);*/
+                            if (fileType == CM_SCACHETYPE_DIRECTORY)
+                              goto nextEntry;
+                        }
+
 			/* finally check if this name will fit */
 
 			/* standard dir entry stuff */
@@ -2960,7 +2986,11 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	/* set the packet data length the count of the # of bytes */
         smb_SetSMBDataLength(outp, count);
 
+#ifndef DJGPP
 	code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount);
+#else /* DJGPP */
+	code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount, FALSE);
+#endif /* !DJGPP */
 
 	/* fix some things up */
 	smb_SetSMBParm(outp, 5, finalCount);

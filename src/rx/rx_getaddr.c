@@ -7,11 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+
 #ifndef lint
 #endif
 /* getaddr -- get our internet address. July, 1986 */
 
 #include <afs/param.h>
+#ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/types.h>
@@ -480,3 +482,5 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */
+
+#endif /* !AFS_DJGPP_ENV */

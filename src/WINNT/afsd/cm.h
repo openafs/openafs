@@ -11,6 +11,10 @@
 #define __CM_H_ENV__ 1
 
 #include <rx/rx.h>
+#ifdef DJGPP      /* we need these for vldbentry decl., etc. */
+#include <afs/vldbint.h>
+#include <afs/afsint.h>
+#endif /* DJGPP */
 
 /* from .xg file */
 long VL_GetEntryByID(struct rx_connection *, long, long, struct vldbentry *);
@@ -41,36 +45,36 @@ extern RXAFS_FetchStatus (struct rx_connection *,
 	struct AFSCallBack *CallBack, 
 	struct AFSVolSync *Sync);
 
-StartRXAFS_StoreData (struct rx_call *,
+int StartRXAFS_StoreData (struct rx_call *,
 	struct AFSFid *Fid, 
 	struct AFSStoreStatus *InStatus, 
 	afs_int32 Pos, 
 	afs_int32 Length, 
 	afs_int32 FileLength);
 
-EndRXAFS_StoreData(struct rx_call *,
+int EndRXAFS_StoreData(struct rx_call *,
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_StoreACL (struct rx_connection *,
+int RXAFS_StoreACL (struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSOpaque *AccessList,  
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_StoreStatus(struct rx_connection *,
+int RXAFS_StoreStatus(struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSStoreStatus *InStatus, 
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_RemoveFile (struct rx_connection *,
+int RXAFS_RemoveFile (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *namep,
 	struct AFSFetchStatus *OutStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_CreateFile (struct rx_connection *,
+int RXAFS_CreateFile (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *Name,
 	struct AFSStoreStatus *InStatus, 
@@ -80,7 +84,7 @@ RXAFS_CreateFile (struct rx_connection *,
 	struct AFSCallBack *CallBack, 
 	struct AFSVolSync *Sync);
 
-RXAFS_Rename (struct rx_connection *,
+int RXAFS_Rename (struct rx_connection *,
 	struct AFSFid *OldDirFid, 
 	char *OldName,
 	struct AFSFid *NewDirFid, 
@@ -89,7 +93,7 @@ RXAFS_Rename (struct rx_connection *,
 	struct AFSFetchStatus *OutNewDirStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_Symlink (struct rx_connection *,
+int RXAFS_Symlink (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *name,
 	char *LinkContents,
@@ -99,7 +103,7 @@ RXAFS_Symlink (struct rx_connection *,
 	struct AFSFetchStatus *OutDirStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_Link (struct rx_connection *,
+int RXAFS_Link (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *Name,
 	struct AFSFid *ExistingFid, 
@@ -107,7 +111,7 @@ RXAFS_Link (struct rx_connection *,
 	struct AFSFetchStatus *OutDirStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_MakeDir (struct rx_connection *,
+int RXAFS_MakeDir (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *name,
 	struct AFSStoreStatus *InStatus, 
@@ -117,69 +121,69 @@ RXAFS_MakeDir (struct rx_connection *,
 	struct AFSCallBack *CallBack, 
 	struct AFSVolSync *Sync);
 
-RXAFS_RemoveDir (struct rx_connection *,
+int RXAFS_RemoveDir (struct rx_connection *,
 	struct AFSFid *DirFid, 
 	char *Name,
 	struct AFSFetchStatus *OutDirStatus, 
 	struct AFSVolSync *Sync);
 
-RXAFS_GetStatistics (struct rx_connection *,
+int RXAFS_GetStatistics (struct rx_connection *,
 	struct ViceStatistics *Statistics);
 
-RXAFS_GiveUpCallBacks (struct rx_connection *,
+int RXAFS_GiveUpCallBacks (struct rx_connection *,
 	struct AFSCBFids *Fids_Array,
 	struct AFSCBs *CallBacks_Array);
 
-RXAFS_GetVolumeInfo (struct rx_connection *,
+int RXAFS_GetVolumeInfo (struct rx_connection *,
 	char *VolumeName,
 	struct VolumeInfo *Volumeinfo);
 
-RXAFS_GetVolumeStatus (struct rx_connection *,
+int RXAFS_GetVolumeStatus (struct rx_connection *,
 	afs_int32 Volumeid, 
 	struct AFSFetchVolumeStatus *Volumestatus, 
 	char **name,
         char **offlineMsg,
         char **motd);
 
-RXAFS_SetVolumeStatus (struct rx_connection *,
+int RXAFS_SetVolumeStatus (struct rx_connection *,
 	afs_int32 Volumeid, 
 	struct AFSStoreVolumeStatus *Volumestatus,
 	char *name,
 	char *olm,
 	char *motd);
 
-RXAFS_GetRootVolume (struct rx_connection *,
+int RXAFS_GetRootVolume (struct rx_connection *,
 	char **VolumeName);
 
-RXAFS_CheckToken (struct rx_connection *,
+int RXAFS_CheckToken (struct rx_connection *,
 	afs_int32 ViceId,
 	struct AFSOpaque *token);
 
-RXAFS_GetTime (struct rx_connection *,
+int RXAFS_GetTime (struct rx_connection *,
 	afs_uint32 *Seconds, 
 	afs_uint32 *USeconds);
 
-RXAFS_BulkStatus (struct rx_connection *,
+int RXAFS_BulkStatus (struct rx_connection *,
 	struct AFSCBFids *FidsArray,
 	struct AFSBulkStats *StatArray,
 	struct AFSCBs *CBArray,
 	struct AFSVolSync *Sync);
 
-RXAFS_SetLock (struct rx_connection *,
+int RXAFS_SetLock (struct rx_connection *,
 	struct AFSFid *Fid, 
 	int Type, 
 	struct AFSVolSync *Sync);
 
-RXAFS_ExtendLock (struct rx_connection *,
+int RXAFS_ExtendLock (struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSVolSync *Sync);
 
-RXAFS_ReleaseLock (struct rx_connection *,
+int RXAFS_ReleaseLock (struct rx_connection *,
 	struct AFSFid *Fid, 
 	struct AFSVolSync *Sync);
 
 /* This interface is to supported the AFS/DFS Protocol Translator */
-RXAFS_Lookup (struct rx_connection *,
+int RXAFS_Lookup (struct rx_connection *,
 	struct AFSFid *DirFid,
 	char *Name,
 	struct AFSFid *OutFid,
@@ -240,5 +244,6 @@ RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_NOIPC			(CM_ERROR_BASE+36)
 #define CM_ERROR_BADNTFILENAME		(CM_ERROR_BASE+37)
 #define CM_ERROR_BUFFERTOOSMALL		(CM_ERROR_BASE+38)
+#define CM_ERROR_RENAME_IDENTICAL	(CM_ERROR_BASE+39)
 
 #endif /*  __CM_H_ENV__ */

@@ -11,8 +11,12 @@
 #ifndef _OSISLEEP_H_ENV_
 #define _OSISLEEP_H_ENV_ 1
 
+/*#include "osi.h"*/
 #include "osifd.h"
 #include "osiqueue.h"
+#ifdef DJGPP
+#include "osithrd95.h"
+#endif /* DJGPP */
 
 /* states bits */
 #define OSI_SLEEPINFO_SIGNALLED	1	/* this sleep structure has been signalled */
@@ -26,7 +30,7 @@ typedef struct osi_sleepInfo {
 	osi_queue_t q;
 	long value;		/* sleep value when in a sleep queue, patch addr for turnstiles */
 	unsigned long tid;	/* thread ID of sleeper */
-	HANDLE sema;		/* semaphore for this entry */
+	EVENT_HANDLE sema;		/* semaphore for this entry */
 	unsigned short states;	/* states bits */
 	unsigned short idx;	/* sleep hash table we're in, if in hash */
         unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
@@ -47,7 +51,11 @@ typedef struct osi_sleepFD{
 
 /* struct for single-shot initialization support */
 typedef struct osi_once {
+#ifndef DJGPP
 	long atomic;	/* used for atomicity */
+#else
+	osi_mutex_t atomic;	/* used for atomicity */
+#endif /* !DJGPP */
 	int done;	/* tells if initialization is done */
 } osi_once_t;
 
@@ -66,10 +74,10 @@ typedef struct osi_once {
  * holding this lock, so that locks don't get released while we're copying
  * out this info.
  */
-extern CRITICAL_SECTION osi_sleepCookieCS;
+extern Crit_Sec osi_sleepCookieCS;
 
 /* spin lock version of atomic sleep, used internally only */
-extern void osi_SleepSpin(long value, CRITICAL_SECTION *counterp);
+extern void osi_SleepSpin(long value, Crit_Sec *counterp);
 
 /* spin lock version of wakeup, used internally only */
 extern void osi_WakeupSpin(long value);
@@ -99,10 +107,13 @@ extern int osi_TestOnce(osi_once_t *);
  */
 extern void osi_EndOnce(osi_once_t *);
 
+
+#ifndef DJGPP
 /* exported function to wakeup those sleeping on a value */
 extern void osi_Wakeup (long);
 
 extern void osi_Init (void);
+#endif /* !DJGPP */
 
 /* create a ptr to a cookie */
 osi_sleepFD_t *osi_CreateSleepCookie(void);
@@ -115,7 +126,9 @@ int osi_NextSleepCookie(osi_sleepFD_t *);
 
 /* functions for the sleep FD implementation */
 extern long osi_SleepFDCreate(osi_fdType_t *, osi_fd_t **);
+#ifndef DJGPP
 extern long osi_SleepFDGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
+#endif
 extern long osi_SleepFDClose(osi_fd_t *);
 
 /* functions for getting hash sizes */
@@ -142,13 +155,13 @@ void osi_panic(char *, char *, long);
 unsigned long osi_Time(void);
 
 extern void osi_TWait(osi_turnstile_t *turnp, int waitFor, void *patchp,
-	CRITICAL_SECTION *releasep);
+	Crit_Sec *releasep);
 
 extern void osi_TSignal(osi_turnstile_t *turnp);
 
 extern void osi_TBroadcast(osi_turnstile_t *turnp);
 
-extern void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SECTION *csp);
+extern void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, Crit_Sec *csp);
 
 #define osi_TInit(t)	((t)->firstp = (t)->lastp = 0)
 

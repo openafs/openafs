@@ -28,7 +28,7 @@ all: libafsint.a $(KSRCS)
 
 libafsint.a: ${OBJS} AFS_component_version_number.o
 	-rm -f $@
-	ar rv $@ ${OBJS} AFS_component_version_number.o
+	$(AR) rv $@ ${OBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 afsaux.o: afsaux.c afsint.h

@@ -8,7 +8,7 @@
 # Override default definitions in NTMakefile.$(SYS_NAME) before including.
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
-!INCLUDE ..\config\NTMakefile.version
+!include ..\config\NTMakefile.version
 
 
 ############################################################################
@@ -205,6 +205,9 @@ install: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) $(KASERVER) $(KAS) \
 	kpwvalid.exe rebuild.exe  \
 	$(DESTDIR)\etc\kas.exe
 
+install9X: $(INCFILES) $(KAUTH_LIBFILE) $(KAUTH_KRB_LIBFILE) \
+	$(KPASSWD_EXEFILE) 
+
 # installation targets that depend on local targets
 $(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
 	$(COPY) $(DESTDIR)\root.server\usr\afs\bin\kas.exe \
@@ -215,7 +218,7 @@ $(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
 # Local clean target; augments predefined clean target
 
 clean::
-
+	$(DEL) $(KPASSWD_EXEFILE)
 
 
 

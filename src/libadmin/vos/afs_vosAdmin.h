@@ -14,7 +14,9 @@
 #include <afs/afs_Admin.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif /* _MFC_VER */
 #else
 #include <sys/socket.h>
 #endif

@@ -113,7 +113,7 @@ DESTDIR = $(AFSROOT)\DEST
 
 # Command macros.
 COPY = copy
-DEL = del
+DEL = -del
 MKDIR = mkdir
 REN = ren
 ECHO = echo
@@ -128,8 +128,8 @@ MIDL  = midl
 # Common clean target.
 # Double colon (::) syntax allows supplemental clean target to be specified.
 clean::
-	$(DEL) *.obj *.lib *.dll *.exe
-	$(DEL) *_component_version_number.*
+	$(DEL) /q *.obj *.lib *.dll *.exe
+	$(DEL) /q *_component_version_number.*
 
 # Common lang target.
 # Double colon (::) syntax allows supplemental lang target to be specified.

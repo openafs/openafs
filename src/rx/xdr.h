@@ -39,7 +39,9 @@
 #define __XDR_INCLUDE__
 #include <afs/param.h>
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif /* _MFC_VER */
 #endif
 #define	bool_t	int
 #define	enum_t	int

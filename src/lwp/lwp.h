@@ -309,7 +309,9 @@ extern int lwp_MaxStackSeen;
 
 /* External function declarations. */
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER	 /*skip if doing Microsoft foundation class*/
 #include <winsock2.h>
+#endif
 #elif defined(AFS_LINUX20_ENV)
 #include <unistd.h>
 #include <time.h>
@@ -361,6 +363,9 @@ extern int LWP_QSignal(PROCESS pid);
 
 /* max time we are allowed to spend in a select call on NT */
 #define IOMGR_MAXWAITTIME        5 /* seconds */
+
+/* max time we spend on a select in a Win95 DOS box */
+#define IOMGR_WIN95WAITTIME 5000 /* microseconds */
 
 #endif /* __LWP_INCLUDE_ */
 

@@ -25,7 +25,7 @@ rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 
 librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	-rm -f $@
-	ar rv $@ AFS_component_version_number.o ${LIBOBJS}
+	$(AR) rv $@ AFS_component_version_number.o ${LIBOBJS}
 	$(RANLIB) $@
 
 kinstall: ${KSRCS} 

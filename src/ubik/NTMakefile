@@ -97,6 +97,8 @@ uerrors.c $(INCFILEDIR)\ubik.h: uerrors.et ubik.p.h
 ############################################################################
 # Install target; primary makefile target
 
+install9X: $(INCFILES) $(LIBFILE)
+
 install: $(INCFILES) $(LIBFILE)  $(CL_UDBG_EXEFILE)
 
 

@@ -99,8 +99,29 @@ struct QUEUE {
 	    }\
 	}
 
+#ifdef AFS_WIN95_ENV
+
+LPVOID ConvertThreadToFiber(PROCESS x)
+{
+	return NULL;
+}
+LPVOID CreateFiber(DWORD x ,LPVOID y,PROCESS z)
+{
+	return NULL;
+}
+
+VOID SwitchToFiber(LPVOID p)
+{
+}
+
+VOID DeleteFiber(LPVOID p)
+{
+}
+#endif
+
 
 int lwp_MinStackSize = 0;
+
 /* LWP_InitializeProcessSupport - setup base support for fibers.
  *
  * Arguments:
@@ -112,6 +133,7 @@ int lwp_MinStackSize = 0;
  *	LWP_SUCCESS (else aborts)
  *	
  */
+
 int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 {
     PROCESS pcb;
@@ -601,6 +623,7 @@ static void Delete_PCB(PROCESS pid)
 		     : &runnable[pid->priority]));
     LWPANCHOR.processcnt--;
 }
+
 
 static void Free_PCB(PROCESS pid)
 {

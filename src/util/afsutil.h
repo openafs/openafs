@@ -74,7 +74,9 @@ extern char *strcompose(char *buf, size_t len, ...);
 
 
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif /* _MFC_VER */
 
 /* Initialize the windows sockets before calling networking routines. */
 extern int afs_winsockInit(void);

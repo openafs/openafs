@@ -28,12 +28,12 @@ noversion: install
 #
 liblwp.a	: ${LIBOBJS}
 		-rm -f liblwp.a
-		ar rv liblwp.a ${LIBOBJS}
+		$(AR) rv liblwp.a ${LIBOBJS}
 		$(RANLIB) liblwp.a
 
 libtlwp.a	: ${LIBTOBJS}
 		-rm -f libtlwp.a
-		ar rv libtlwp.a ${LIBTOBJS}
+		$(AR) rv libtlwp.a ${LIBTOBJS}
 		$(RANLIB) libtlwp.a
 
 tlwp.o: lwp.c lwp.h
@@ -140,3 +140,6 @@ clean:
 
 beancount:
 	wc -l *.[ch]
+
+includes:
+	${INSTALL} *.h ${DESTDIR}include

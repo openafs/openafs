@@ -10,7 +10,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>

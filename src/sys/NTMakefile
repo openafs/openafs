@@ -29,8 +29,10 @@ $(LIBFILE): $(LIBOBJS)
 # Install target; primary makefile target
 
 install: $(INCFILES) $(LIBFILE)
+install9x: install
 
 ############################################################################
 # Local clean target; augments predefined clean target
 
 clean::
+   $(DEL) $(LIBFILE)

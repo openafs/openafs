@@ -11,8 +11,13 @@
 #ifndef _OSIFD_H_ENV_
 #define _OSIFD_H_ENV_ 1
 
+#ifndef DJGPP
 #include "dbrpc.h"
+#endif /* !DJGPP */
 #include "osiqueue.h"
+
+struct osi_fd;
+struct osi_fdType;
 
 /* operations on a file descriptor */
 typedef struct osi_fdOps {
@@ -22,10 +27,12 @@ typedef struct osi_fdOps {
 	 */
 	long (*Create)(struct osi_fdType *, struct osi_fd **);
 
+#ifndef DJGPP
 	/* gets info about the object; fields are type specific, and eventually
 	 * self-labelling
 	 */
 	long (*GetInfo)(struct osi_fd *, osi_remGetInfoParms_t *);
+#endif
 
 	/* close an object; frees the storage associated with it */
 	long (*Close)(struct osi_fd *);
@@ -84,7 +91,9 @@ extern osi_CloseFD(osi_fd_t *);
 
 extern long osi_FDTypeCreate(osi_fdType_t *, osi_fd_t **);
 
+#ifndef DJGPP
 extern long osi_FDTypeGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
+#endif
 
 extern long osi_FDTypeClose(osi_fd_t *);
 

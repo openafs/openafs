@@ -38,6 +38,10 @@
 #include "cellconfig.h"
 #include "keys.h"
 
+#ifdef AFS_DNS
+#include "DNS_AFS.h"
+#endif /* AFS_DNS */
+
 static ParseHostLine();
 static ParseCellLine();
 static afsconf_OpenInternal();
@@ -73,6 +77,7 @@ register char *aname; {
     /* lookup a service name */
     struct servent *ts;
     register struct afsconf_servPair *tsp;
+
 #if     defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
     ts = getservbyname(aname, "");
 #else
@@ -82,6 +87,7 @@ register char *aname; {
 	/* we found it in /etc/services, so we use this value */
 	return ts->s_port;  /* already in network byte order */
     }
+
     /* not found in /etc/services, see if it is one of ours */
     for(tsp = serviceTable;; tsp++) {
 	if (tsp->name == (char *) 0) return -1;
@@ -552,6 +558,53 @@ struct afsconf_cell *acellInfo; {
     char *tcell;
     int cnLen, ambig;
     char tbuffer[64];
+
+#ifdef AFS_DNS
+    /////////////////////////////////////////////
+    //TRY A DNS QUERY FOR THAT CELL FIRST!
+
+    struct afsconf_entry DNSce;
+    char *DNStmpStrp; /* a temp string pointer */
+    struct hostent *thp;
+
+
+    DNSce.cellInfo.numServers=0;
+    DNSce.next = NULL;
+    DNStmpStrp = getAFSServer(acellName);
+    while(DNStmpStrp != NULL) {
+      strcpy(DNSce.cellInfo.hostName[DNSce.cellInfo.numServers],DNStmpStrp);
+      thp = gethostbyname(DNStmpStrp);
+      if (!thp)
+     thp = DNSgetHostByName(DNStmpStrp);
+      if (thp) {
+     memcpy(&DNSce.cellInfo.hostAddr[DNSce.cellInfo.numServers].sin_addr.s_addr, thp->h_addr,
+            sizeof(long));
+     DNSce.cellInfo.hostAddr[DNSce.cellInfo.numServers].sin_family = AF_INET;
+     /* sin_port supplied by connection code */
+      }
+      DNSce.cellInfo.numServers++; /* add the server to the VLDB server list */
+      DNStmpStrp = getAFSServer(acellName);
+    };
+
+    if (DNSce.cellInfo.numServers>0) {
+      strcpy(&(DNSce.cellInfo.name),acellName);
+      *acellInfo = DNSce.cellInfo; /* structure assignment */
+      if (aservice) {
+     LOCK_GLOBAL_MUTEX
+     tservice = afsconf_FindService(aservice);
+     UNLOCK_GLOBAL_MUTEX
+     if (tservice < 0) {
+       return AFSCONF_NOTFOUND;  /* service not found */
+     }
+     for(i=0;i<acellInfo->numServers;i++) {
+       acellInfo->hostAddr[i].sin_port = tservice;
+     }
+      };
+      return 0;
+    };
+    /////////////////////////////////////////////
+#endif /* AFS_DNS */
+
 
     LOCK_GLOBAL_MUTEX
     if (adir) afsconf_Check(adir);

@@ -11,12 +11,14 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif /* !DJGPP */
 #include "osi.h"
 #include <stdlib.h>
 
 /* critical section protecting allocation of osi_queueData_t elements */
-CRITICAL_SECTION osi_qdcrit;
+Crit_Sec osi_qdcrit;
 
 /* free list of queue elements */
 osi_queueData_t *osi_QDFreeListp = NULL;
@@ -112,7 +114,7 @@ void osi_InitQueue(void)
 	if (initd) return;
 
 	initd = 1;
-	InitializeCriticalSection(&osi_qdcrit);
+	thrd_InitCrit(&osi_qdcrit);
 }
 
 osi_queueData_t *osi_QDAlloc(void)
@@ -120,7 +122,7 @@ osi_queueData_t *osi_QDAlloc(void)
 	osi_queueData_t *tp;
 	int i;
 
-	EnterCriticalSection(&osi_qdcrit);
+	thrd_EnterCrit(&osi_qdcrit);
 	if (tp = osi_QDFreeListp) {
 		osi_QDFreeListp = (osi_queueData_t *) tp->q.nextp;
 	}
@@ -142,7 +144,7 @@ osi_queueData_t *osi_QDAlloc(void)
 		 */
                 tp->datap = NULL;
 	}
-	LeaveCriticalSection(&osi_qdcrit);
+	thrd_LeaveCrit(&osi_qdcrit);
 
 	osi_assertx(tp->datap == NULL, "queue freelist screwup");
 
@@ -151,9 +153,9 @@ osi_queueData_t *osi_QDAlloc(void)
 
 void osi_QDFree(osi_queueData_t *qp)
 {
-	EnterCriticalSection(&osi_qdcrit);
+	thrd_EnterCrit(&osi_qdcrit);
 	qp->q.nextp = (osi_queue_t *) osi_QDFreeListp;
         qp->datap = NULL;
 	osi_QDFreeListp = qp;
-        LeaveCriticalSection(&osi_qdcrit);
+        thrd_LeaveCrit(&osi_qdcrit);
 }
