@@ -49,6 +49,7 @@ install : $(DLLFILE)
 
 clean ::
 	@if exist $(OUT)\*.res del $(OUT)\*.res
+	@if exist AFS_component_version_number.h del AFS_component_version_number.h
 	@if exist RC*. del RC*.
 	@if exist RD*. del RD*.
 

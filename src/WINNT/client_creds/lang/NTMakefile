@@ -48,6 +48,7 @@ $(DLLFILE) : $(DLLOBJS)
 install : $(DLLFILE)
 
 clean ::
+	@if exist AFS_component_version_number.h del AFS_component_version_number.h
 	$(DEL) $(OUT)\*.res RC* RD* $(DLLFILE)
 
 ############################################################################
