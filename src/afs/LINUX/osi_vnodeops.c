@@ -840,6 +840,7 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     struct vcache *parentvcp = ITOAFS(dp->d_parent->d_inode);
 
     AFS_GLOCK();
+    lock_kernel();
 
     sysState.allocked = 0;
 
@@ -896,6 +897,7 @@ done:
         shrink_dcache_parent(dp);
         d_drop(dp);
     }
+    unlock_kernel();
 
     return !bad_dentry;
 }
