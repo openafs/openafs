@@ -280,6 +280,7 @@ OSI_VC_DECL(adp);
 	return code;
     }
 
+#if 0
     if (adp->mvstat == 2) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
@@ -288,6 +289,7 @@ OSI_VC_DECL(adp);
 #endif
 	return EISDIR;
     }
+#endif
 
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
