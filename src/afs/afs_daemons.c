@@ -358,7 +358,7 @@ void BPath(ab)
     code = gop_lookupname((char *)ab->parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, (struct vnode **)&tvn);
 #endif
     AFS_GLOCK();
-    osi_FreeSmallSpace((char *)ab->parm[0]); /* free path name buffer here */
+    osi_FreeLargeSpace((char *)ab->parm[0]); /* free path name buffer here */
     if (code) return;
     /* now path may not have been in afs, so check that before calling our cache manager */
     if (!tvn || !IsAfsVnode((struct vnode *) tvn)) {

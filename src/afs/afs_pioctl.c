@@ -1942,14 +1942,14 @@ struct AFS_UCRED *acred;
 
     AFS_STATCNT(Prefetch);
     if (!apath) return EINVAL;
-    tp = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    tp = osi_AllocLargeSpace(1024);
     AFS_COPYINSTR(apath, tp, 1024, &bufferSize, code);
     if (code) {
-	osi_FreeSmallSpace(tp);
+	osi_FreeLargeSpace(tp);
 	return code;
     }
     if (afs_BBusy()) {	/* do this as late as possible */
-	osi_FreeSmallSpace(tp);
+	osi_FreeLargeSpace(tp);
 	return EWOULDBLOCK;	/* pretty close */
     }
     afs_BQueue(BOP_PATH, (struct vcache*)0, 0, 0, acred, (long)tp, 0L, 0L, 0L);
