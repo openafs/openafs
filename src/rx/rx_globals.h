@@ -316,10 +316,13 @@ EXT int rxi_callAbortDelay INIT(3000);
  */
 
 #if defined(AFS_PTHREAD_ENV)
+EXT int rxi_fcfs_thread_num INIT(0);
 EXT pthread_key_t rx_thread_id_key;
 /* keep track of pthread numbers - protected by rx_stats_mutex, 
    except in rx_Init() before mutex exists! */
 EXT int rxi_pthread_hinum INIT(0);
+#else
+#define rxi_fcfs_thread_num (0)
 #endif
 
 #if defined(RX_ENABLE_LOCKS)

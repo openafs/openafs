@@ -1429,8 +1429,8 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 		if (!QuotaOK(service)) {
 		    continue;
 		}
-		if (!tno || !tcall->queue_item_header.next) {
-		    /* If we're thread 0, then  we'll just use 
+		if (tno==rxi_fcfs_thread_num || !tcall->queue_item_header.next  ) {
+		    /* If we're the fcfs thread , then  we'll just use 
 		     * this call. If we haven't been able to find an optimal 
 		     * choice, and we're at the end of the list, then use a 
 		     * 2d choice if one has been identified.  Otherwise... */
@@ -1578,8 +1578,8 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 	for (queue_Scan(&rx_incomingCallQueue, tcall, ncall, rx_call)) {
 	  service = tcall->conn->service;
 	  if (QuotaOK(service)) {
-	     if (!tno || !tcall->queue_item_header.next  ) {
-		 /* If we're thread 0, then  we'll just use 
+	     if (tno==rxi_fcfs_thread_num || !tcall->queue_item_header.next  ) {
+		 /* If we're the fcfs thread, then  we'll just use 
 		  * this call. If we haven't been able to find an optimal 
 		  * choice, and we're at the end of the list, then use a 
 		  * 2d choice if one has been identified.  Otherwise... */
