@@ -264,6 +264,9 @@ NewSetToken(aserver, atoken, aclient, flags)
     return EINVAL;
 }
 
+#define MAXPIOCTLTOKENLEN \
+(3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
+
 static int
 OldSetToken(aserver, atoken, aclient, flags)
      struct ktc_principal *aserver, *aclient;
@@ -271,7 +274,7 @@ OldSetToken(aserver, atoken, aclient, flags)
      afs_int32 flags;
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register char *tp;
     struct ClearToken ct;
     register afs_int32 code;
@@ -488,7 +491,7 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
      struct ktc_token *atoken;
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register afs_int32 code;
     int index;
     char *stp, *cellp;		/* secret token ptr */
@@ -679,7 +682,7 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
      struct ktc_principal *aserver;
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXPIOCTLTOKENLEN];
     register afs_int32 code;
     register char *tp;
     afs_int32 temp, index;

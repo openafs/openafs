@@ -1049,6 +1049,8 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
 }
 
+#define MAXPIOCTLTOKENLEN \
+(3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
 
 int
 afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
@@ -1059,7 +1061,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     struct vrequest treq;
     register afs_int32 code;
     register afs_int32 function, device;
-    afs_int32 inSize, outSize;
+    afs_int32 inSize, outSize, outSizeMax;
     char *inData, *outData;
     int (*(*pioctlSw)) ();
     int pioctlSwSize;
@@ -1101,37 +1103,66 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     inSize = ablob->in_size;
 
     /* Do all range checking before continuing */
-    if (inSize >= PIGGYSIZE || inSize < 0 || ablob->out_size < 0)
+    if (inSize >= MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
 	return E2BIG;
 
-    inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    if (inSize > AFS_LRALLOCSIZE) {
+        inData = osi_AllocLargeSpace(inSize+1);
+    } else {
+        inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    }
+    if (!inData)
+        return ENOMEM;
     if (inSize > 0) {
 	AFS_COPYIN(ablob->in, inData, inSize, code);
 	inData[inSize] = '\0';
     } else
 	code = 0;
     if (code) {
-	osi_FreeLargeSpace(inData);
-	afs_PutFakeStat(&fakestate);
-	return code;
+    if (inSize > AFS_LRALLOCSIZ) {
+        osi_Free(inData, inSize+1);
+    } else {
+        osi_FreeLargeSpace(inData);
     }
-    outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    afs_PutFakeStat(&fakestate);
+    return code;
+    }
+    if (function == 8 && device == 'V') { /* PGetTokens */
+        outSizeMax = MAXPIOCTLTOKENLEN;
+        outData = osi_Alloc(outSizeMax);
+    } else {
+        outSizeMax = AFS_LRALLOCSIZ;
+        outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    }
+    if (!outData) {
+        if (inSize > AFS_LRALLOCSIZ) {
+            osi_Free(inData, inSize+1);
+        } else {
+            osi_FreeLargeSpace(inData);
+        }
+        return ENOMEM;
+    }
     outSize = 0;
     code =
 	(*pioctlSw[function]) (avc, function, &treq, inData, outData, inSize,
 			       &outSize, acred);
-    osi_FreeLargeSpace(inData);
-    if (code == 0 && ablob->out_size > 0) {
-	if (outSize > ablob->out_size)
-	    outSize = ablob->out_size;
-	if (outSize >= PIGGYSIZE)
-	    code = E2BIG;
-	else if (outSize) {
-	    outData[outSize] = '\0';
-	    AFS_COPYOUT(outData, ablob->out, outSize, code);
-	}
+    if (inSize > AFS_LRALLOCSIZ) {
+        osi_Free(inData, inSize+1);
+    } else {
+        osi_FreeLargeSpace(inData);
     }
-    osi_FreeLargeSpace(outData);
+    if (code == 0 && ablob->out_size > 0) {
+        if (outSize > ablob->out_size) {
+            code = E2BIG; /* data wont fit in user buffer */
+        } else if (outSize) {
+            AFS_COPYOUT(outData, ablob->out, outSize, code);
+        }
+    }
+    if (outSizeMax > AFS_LRALLOCSIZ) {
+        osi_Free(outData, outSizeMax);
+    } else {
+        osi_FreeLargeSpace(outData);
+    }
     afs_PutFakeStat(&fakestate);
     return afs_CheckCode(code, &treq, 41);
 }
