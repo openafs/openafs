@@ -38,6 +38,7 @@
 RCSID("$Header$");
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "rpc_util.h"
 #include "rpc_parse.h"
@@ -46,6 +47,7 @@ static pconstdef();
 static pstructdef();
 static puniondef();
 static pprogramdef();
+static psprocdef();
 static penumdef();
 static ptypedef();
 static pdeclaration();
@@ -81,6 +83,9 @@ print_datadef(def)
 		break;
 	case DEF_PROGRAM:
 		pprogramdef(def);
+		break;
+	case DEF_PROC:
+		psprocdef(def);
 		break;
 	case DEF_CONST:
 		pconstdef(def);
@@ -201,6 +206,56 @@ pprogramdef(def)
 			pprocdef(proc, vers);
 		}
 	}
+}
+
+static
+psproc1(defp,callTconnF,type,prefix,iomask)
+definition *defp;
+int callTconnF;
+char *type, *prefix;
+int iomask;
+{
+	proc1_list *plist, *plist1;
+
+	f_print(fout,"\nextern %s %s%s%s(\n",type,prefix,defp->pc.proc_prefix,defp->pc.proc_name);
+
+	if (callTconnF) {
+		f_print(fout,"\t/*IN */ struct rx_call *z_call");
+	} else {
+		f_print(fout,"\t/*IN */ struct rx_connection *z_conn");    
+	}
+
+	for (plist = defp->pc.plists; plist; plist = plist->next) {
+		if (plist->component_kind == DEF_PARAM && (iomask & (1<<plist->pl.param_kind))) {
+			switch (plist->pl.param_kind) {
+			case DEF_INPARAM:	f_print(fout,",\n\t/*IN */ ");	break;
+			case DEF_OUTPARAM:	f_print(fout,",\n\t/*OUT*/ ");	break;
+			case DEF_INOUTPARAM:	f_print(fout,",\n\t/*I/O*/ ");	break;
+			}
+			if (plist->pl.param_flag & OUT_STRING) {
+				f_print(fout,"%s *%s",plist->pl.param_type,plist->pl.param_name);
+			} else {
+				f_print(fout,"%s %s",plist->pl.param_type,plist->pl.param_name);
+			}
+		}
+	}
+	f_print(fout, ");\n");
+}
+
+static
+psprocdef(defp)
+definition *defp;
+{
+	int split_flag = defp->pc.split_flag;
+
+	if (split_flag) {
+		psproc1(defp,1,"int","Start",(1<<DEF_INPARAM )|(1<<DEF_INOUTPARAM));
+		psproc1(defp,1,"int","End",  (1<<DEF_OUTPARAM)|(1<<DEF_INOUTPARAM));
+	} else {
+		psproc1(defp,0,"int","",0xFFFFFFFF);
+	}
+
+	psproc1(defp,1,"afs_int32","S",0xFFFFFFFF);
 }
 
 
