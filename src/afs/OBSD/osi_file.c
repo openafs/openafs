@@ -17,7 +17,7 @@ RCSID("$Header$");
 #include "afs/afs_stats.h"  /* afs statistics */
 
 
-int afs_osicred_initialized=0;
+int afs_osicred_initialized;
 struct  AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
@@ -26,10 +26,10 @@ extern struct mount *afs_cacheVfsp;
 
 void *osi_UFSOpen(afs_int32 ainode)
 {
-    struct osi_file *afile = NULL;
+    struct osi_file *afile;
     struct vnode *vp;
     extern int cacheDiskType;
-    afs_int32 code = 0;
+    afs_int32 code;
 
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -47,12 +47,12 @@ void *osi_UFSOpen(afs_int32 ainode)
 	osi_Panic("UFSOpen: igetinode failed");
     }
     afile->vnode = vp;
-    afile->size = 0;
+    afile->size = VTOI(vp)->i_ffs_size;
     afile->offset = 0;
-    afile->proc = (int (*)()) NULL;
+    afile->proc = NULL;
     afile->inum = ainode;	/* for hint validity checking */
     VOP_UNLOCK(vp, 0, curproc);
-    return (void *)afile;
+    return (void *) afile;
 }
 
 int afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
@@ -66,7 +66,7 @@ int afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     code = VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
     AFS_GLOCK();
     if (code == 0) {
-	astat->size = tvattr.va_size;
+	astat->size = afile->size = tvattr.va_size;
 	astat->blksize = tvattr.va_blocksize;
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
@@ -94,7 +94,8 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 
     AFS_STATCNT(osi_Truncate);
 
-    /* This routine only shrinks files, and most systems
+    /*
+     * This routine only shrinks files, and most systems
      * have very slow truncates, even when the file is already
      * small enough.  Check now and save some time.
      */
@@ -110,6 +111,8 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
     VOP_UNLOCK(afile->vnode, 0, curproc);
     AFS_GLOCK();
+    if (code == 0)
+	afile->size = asize;
     MReleaseWriteLock(&afs_xosi);
     return code;
 }
@@ -117,8 +120,7 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 void osi_DisableAtimes(struct vnode *avp)
 {
 #if 0
-    struct inode *ip = VTOI(avp);
-    ip->i_flag &= ~IACC;
+    VTOI(avp)->i_flag &= ~IACC;
 #endif
 }
 
@@ -131,7 +133,7 @@ int afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize
 
     AFS_STATCNT(osi_Read);
 
-    /**
+    /*
      * If the osi_file passed in is NULL, panic only if AFS is not shutting
      * down. No point in crashing when we are already shutting down
      */
@@ -182,6 +184,8 @@ int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int3
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
+	if (afile->offset > afile->size)
+	    afile->size = afile->offset;
     } else
 	code = -1;
 
@@ -191,10 +195,11 @@ int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int3
     return code;
 }
 
-
-/*  This work should be handled by physstrat in ca/machdep.c.
-    This routine written from the RT NFS port strategy routine.
-    It has been generalized a bit, but should still be pretty clear. */
+/*
+ * This work should be handled by physstrat in ca/machdep.c.  This routine
+ * written from the RT NFS port strategy routine.  It has been generalized a
+ * bit, but should still be pretty clear.
+ */
 int afs_osi_MapStrategy(int (*aproc)(), struct buf *bp)
 {
     afs_int32 returnCode;
@@ -204,8 +209,6 @@ int afs_osi_MapStrategy(int (*aproc)(), struct buf *bp)
 
     return returnCode;
 }
-
-
 
 void shutdown_osifile(void)
 {

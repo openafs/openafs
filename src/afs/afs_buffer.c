@@ -213,12 +213,19 @@ char *DRead(register afs_inode_t *fid, register int page)
     tb = afs_newslot(fid, page, (tb ? tb : tb2));
     if (!tb) {
 	MReleaseWriteLock(&afs_bufferLock);
-	return 0;
+	return NULL;
     }
     MObtainWriteLock(&tb->lock,260);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
     tfile = afs_CFileOpen(fid[0]);
+    if (page * AFS_BUFFER_PAGESIZE >= tfile->size) {
+	dirp_Zap(tb->fid);
+	tb->lockers--;
+	MReleaseWriteLock(&tb->lock);
+	afs_CFileClose(tfile);
+	return NULL;
+    }
     code = afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			 tb->data, AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
@@ -226,7 +233,7 @@ char *DRead(register afs_inode_t *fid, register int page)
 	dirp_Zap(tb->fid);
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
-	return 0;
+	return NULL;
     }
     /* Note that findslot sets the page field in the buffer equal to
      * what it is searching for. */
