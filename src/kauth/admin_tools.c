@@ -707,6 +707,13 @@ int StringToKey (
     ka_PrintBytes ((char *)&key, sizeof(key));
     printf ("'.\n");
 
+    des_string_to_key (as->parms[0].items->data, &key);
+      
+    printf ("Converting %s with the DES string to key yields key='",
+	    as->parms[0].items->data);
+    ka_PrintBytes (&key, sizeof(key));
+    printf ("'.\n");
+
     return 0;
 }
 
@@ -1329,6 +1336,11 @@ static int MyBeforeProc(
 	  ka_StringToKey (passwd, cell, &key);
 	  code = ka_GetAdminToken (name, instance, cell, &key, KA_SIXHOURS,
 				   &token, 0/* !new */);
+	  if (code == KABADREQUEST) {
+	      des_string_to_key (passwd, &key);
+	      code = ka_GetAdminToken (name, instance, cell, &key, KA_SIXHOURS,
+				       &token, 0/* !new */);
+	  }
 	  if ((code == KABADREQUEST) && (strlen(passwd) > 8)) {
 	     /* try with only the first 8 characters incase they set
 	      * their password with an old style passwd program. */
