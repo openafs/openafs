@@ -27,7 +27,7 @@ DLLOBJS =\
 	afsprocmgmt.res
 
 DLLLIBS =\
-	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)

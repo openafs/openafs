@@ -137,6 +137,8 @@ doneTrace:
 	}
 }
 
+#if 0
+/* This code was moved to Drivemap.cpp*/
 /* Mount a drive into AFS if the user wants us to */
 void CheckMountDrive()
 {
@@ -177,6 +179,7 @@ void CheckMountDrive()
 
         RegCloseKey(hKey);
 }
+#endif
 
 void afsd_Main()
 {
@@ -248,7 +251,7 @@ void afsd_Main()
 	}
 
         /* Check if we should mount a drive into AFS */
-        CheckMountDrive();
+/*        CheckMountDrive();*/
 
 	WaitForSingleObject(WaitToTerminate, INFINITE);
 	

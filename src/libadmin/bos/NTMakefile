@@ -35,7 +35,7 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afsvosadmin.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\pthread.lib
+	$(DESTDIR)\lib\afspthread.lib
 
 $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:bosadmin.def

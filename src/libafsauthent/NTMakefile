@@ -209,9 +209,9 @@ cm_config.obj: $(WINNTAFSD)\cm_config.c
 
 DLLLIBS =\
 !IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
-	$(DESTDIR)\lib\win95\pthread.lib \
+	$(DESTDIR)\lib\win95\afspthread.lib \
 !ELSE
-	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsdes.lib \

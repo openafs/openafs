@@ -30,14 +30,6 @@ CLEAN ::
 "$(OUTDIR)" ::
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
-HEADERS = ".\sdrc.h"
-
-".\sdrc.h" : $(IS5ROOT)\INCLUDE\sdrc.h
-    $(COPY) $(IS5ROOT)\INCLUDE\sdrc.h .
-!   IF EXIST($(IS5ROOT)\Script\ISRT\Include\sdrc.h)
-    $(COPY) $(IS5ROOT)\Script\ISRT\Include\sdrc.h .
-!      ENDIF
-
 CPP=cl.exe
 CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
@@ -85,20 +77,10 @@ LINK32_OBJS= \
 	"$(INTDIR)\_isuser.obj" \
 	"$(INTDIR)\_Isuser.res"
 
-"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(HEADERS) $(DEF_FILE) $(LINK32_OBJS)
+"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
   $(LINK32_FLAGS) $(LINK32_OBJS)
 <<
-
-
-!IF "$(NO_EXTERNAL_DEPS)" != "1"
-!IF EXISTS("_IsUser.dep")
-!INCLUDE "_IsUser.dep"
-!ELSE 
-!MESSAGE Warning: cannot find "_IsUser.dep"
-!ENDIF 
-!ENDIF 
-
 
 SOURCE=.\_isuser.c
 

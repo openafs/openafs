@@ -10,12 +10,12 @@
 test tests: ptest.exe tsd.exe native.exe
 
 
-ptest.exe: ptest.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+ptest.exe: ptest.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-tsd.exe: tsd.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+tsd.exe: tsd.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 
-native.exe: native.obj $(DESTDIR)/lib/pthread.lib $(DESTDIR)/lib/afs/afsutil.lib
+native.exe: native.obj $(DESTDIR)/lib/afspthread.lib $(DESTDIR)/lib/afs/afsutil.lib
 	$(EXECONLINK)
 

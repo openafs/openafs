@@ -471,6 +471,7 @@ finale: client_creds
 	$(CD) $(OBJ)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
+	echo Build Finished Successfully
 
 install: start finale
 
@@ -487,12 +488,12 @@ InstallShield5:
 	$(CD) ..\..\..\..
 
 media: InstallShield5
-
+	echo Install Script Finished Successfully
 
 
 # Clean target for obj tree
 clean: start
-        nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" install
+	nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile clean" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile clean" "NTMAKE_OBJS = nmake /nologo /f ntmakefile clean" install
 	$(CD) $(OBJ)\config
 	nmake /nologo /f ntmakefile clean_version
 	$(CD) ..\..

@@ -37,7 +37,7 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.2 a
+AFSPRODUCT_VERSION=1.2.2 b
 CELLNAME_DEFAULT=Your Cell Name
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
@@ -312,7 +312,7 @@ CPP2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
 RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\""
 
 # Lex/Yacc macros
-LEX = flex -l
+LEX =1.2.2 a
 YACC = bison
 
 # Inference rules for building and installing targets
