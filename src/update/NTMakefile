@@ -21,7 +21,8 @@ LIBS = \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 ############################################################################
 # Definitions for generating files via RXGEN

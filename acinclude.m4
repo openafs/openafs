@@ -48,8 +48,6 @@ AC_ARG_ENABLE(tivoli-tsm,
 [  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
 )
 
-AC_PROG_CC
-
 dnl weird ass systems
 AC_AIX
 AC_ISC_POSIX
@@ -58,6 +56,7 @@ AC_MINIX
 dnl Various compiler setup.
 AC_C_INLINE
 AC_C_CONST
+AC_PROG_CC
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
@@ -126,6 +125,9 @@ case $system in
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
 	         )
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
+		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
@@ -134,6 +136,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM)
 		 fi
                 :
 		fi
@@ -148,6 +153,9 @@ case $system in
                 AC_MSG_RESULT(hp_ux)
                 ;;
         *-irix*)
+		if test -d /usr/include/sys/SN/SN1; then
+		 IRIX_BUILD_IP35="IP35"
+		fi
 		MKAFS_OSTYPE=IRIX
                 AC_MSG_RESULT(sgi)
                 ;;
@@ -203,18 +211,15 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
-			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+			;;
+		powerpc-apple-darwin5.1*)
+			AFS_SYSNAME="ppc_darwin_51"
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -288,6 +293,12 @@ else
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
 
+case $AFS_SYSNAME in
+	*_darwin*)
+		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+		;;
+esac
 
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
@@ -478,5 +489,6 @@ AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 AC_SUBST(DARWIN_INFOFILE)
+AC_SUBST(IRIX_BUILD_IP35)
 
 ])

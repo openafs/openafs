@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+AFSDEV_NETGUI = 1
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -168,7 +169,7 @@ install: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\tokens.exe \
 	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
 	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
-	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
+	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
 	$(DESTDIR)\bin\kpasswd.exe
 
@@ -306,7 +307,7 @@ $(DESTDIR)\bin\kpasswd.exe: $(KPASSWD_OBJS) $(KPASSWD_LIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
-	
+
 ############################################################################
 # generate versioninfo resources
 

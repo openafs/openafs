@@ -419,7 +419,7 @@ struct FILEINFO fileInfo[] = {
     { TARGETDIR"\\Common\\afsadminutil.dll",            SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsrpc.dll",                  SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsauthent.dll",              SERVER | CLIENT | LCLIENT | CC },
-    { TARGETDIR"\\Common\\pthread.dll",                 SERVER | CLIENT | LCLIENT | CC },
+    { TARGETDIR"\\Common\\afspthread.dll",              SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\TaAfsAppLib.dll",             SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsprocmgmt.dll",             SERVER | CLIENT | LCLIENT },
     { TARGETDIR"\\Common\\afs_config.exe",              CLIENT | LCLIENT| CC },
@@ -908,6 +908,10 @@ static int InstallService(char *pszName, char *pszDependOn, char *pszDisplayName
     SC_HANDLE hServer = 0, hSCM;
     BOOL bRestoreOldConfig = FALSE;
 
+    if (!AddToProviderOrder(AFSREG_CLT_SVC_NAME)) {
+        ShowError(ERROR_FILE_NOT_FOUND, GetLastError());
+		return -1;
+    }
     hSCM = OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
     if (!hSCM) {
         ShowError(IDS_SCM_OPEN_FAILED, GetLastError());
@@ -976,6 +980,10 @@ static int UninstallService(struct APPINFO *pAppInfo)
     BOOL bServer = FALSE;
     BOOL bShowingProgressDlg = FALSE;
 
+    if (!RemoveFromProviderOrder(AFSREG_CLT_SVC_NAME)) {
+        ShowError(ERROR_FILE_NOT_FOUND, GetLastError());
+		return -1;
+    }
     hSCM = OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
     if (!hSCM) {
         ShowError(IDS_SCM_OPEN_FAILED, GetLastError());

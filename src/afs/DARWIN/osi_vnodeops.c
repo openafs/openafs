@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.4 2001/09/11 14:24:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.5 2002/01/22 19:48:06 hartmans Exp $");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
 #include <afs/afsincludes.h>            /* Afs-based standard headers */
@@ -755,12 +755,10 @@ afs_vop_remove(ap)
     error =  afs_remove((struct vcache *)dvp, name, cnp->cn_cred);
     AFS_GUNLOCK();
     cache_purge(vp);
-    if (dvp == vp)
-	vrele(vp);
-    else
-	vput(vp);
-    vput(dvp);
-    if (UBCINFOEXISTS(vp)) {
+    if (!error && UBCINFOEXISTS(vp)) {
+#ifdef AFS_DARWIN14_ENV
+             (void) ubc_uncache(vp); 
+#else
              int wasmapped=ubc_issetflags(vp, UI_WASMAPPED);
              int hasobjref=ubc_issetflags(vp, UI_HASOBJREF);
              if (wasmapped)
@@ -768,7 +766,13 @@ afs_vop_remove(ap)
              if (hasobjref)
                 ubc_release(vp);
              /* WARNING vp may not be valid after this */
+#endif
     }
+    if (dvp == vp)
+	vrele(vp);
+    else
+	vput(vp);
+    vput(dvp);
 
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
     DROPNAME();
@@ -1218,8 +1222,13 @@ afs_vop_print(ap)
     if (UBCISVALID(vp))
         printf("\n  UBC: %s%s",
                UBCINFOEXISTS(vp) ? "exists, " : "does not exist",
+#ifdef AFS_DARWIN14_ENV
+               UBCINFOEXISTS(vp) ?
+                 sprintf(buf, "refs %d", vp->v_ubcinfo->ui_refcount),buf : "");
+#else
                UBCINFOEXISTS(vp) ?
                  sprintf(buf, "holdcnt %d", vp->v_ubcinfo->ui_holdcnt),buf : "");
+#endif
     printf("\n");
     return 0;
 }

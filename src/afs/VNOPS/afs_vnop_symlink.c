@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.1.1.4 2001/07/14 22:19:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.1.1.5 2002/01/22 19:48:17 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -77,6 +77,10 @@ afs_symlink
     AFS_STATCNT(afs_symlink);
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
+
+    if (afs_IsDynroot(adp))
+	return afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+
     if (code = afs_InitReq(&treq, acred))
        return code;
 

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vfsops.c,v 1.1.1.4 2001/07/14 22:19:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vfsops.c,v 1.1.1.5 2002/01/22 19:48:10 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -523,7 +523,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
     register afs_int32 code = 0;
     afs_int32 ret;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
     afs_fid2_t *afid2;
 #endif    
 
@@ -533,11 +533,11 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
     *avcp = NULL;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
     afid2 = (afs_fid2_t*)fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
-	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK);
+	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK, 0 /* !refresh */);
 	if (!tcell) {
 	    code = ENOENT;
 	    goto out;

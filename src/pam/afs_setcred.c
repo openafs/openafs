@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_setcred.c,v 1.1.1.6 2001/09/11 14:34:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_setcred.c,v 1.1.1.7 2002/01/22 19:54:10 hartmans Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>
@@ -45,7 +45,7 @@ pam_sm_setcred(
     int origmask;
     int logmask = LOG_UPTO(LOG_INFO);
     int nowarn = 0;
-    int use_first_pass = 0; /* use the password passed in by auth */
+    int use_first_pass = 1; /* use the password passed in by auth */
     int try_first_pass = 0;
     int got_authtok = 0;
     int ignore_uid  = 0;
@@ -262,11 +262,14 @@ pam_sm_setcred(
 	  if (logmask && LOG_MASK(LOG_DEBUG))
 	    syslog(LOG_DEBUG, "New PAG created in pam_setcred()");
 	   setpag();
+#ifdef AFS_KERBEROS_ENV
+	   ktc_newpag();
+#endif
 	}
 
 	if ( flags & PAM_REFRESH_CRED ) {
 	    if (use_klog) {
-               auth_ok = do_klog(user, password, "00:00:01");
+               auth_ok = ! do_klog(user, password, "00:00:01");
 	       ktc_ForgetAllTokens();
 	    } else {
             if ( ka_VerifyUserPassword(
@@ -286,7 +289,7 @@ pam_sm_setcred(
 	}
 	    
 	if (  flags & PAM_ESTABLISH_CRED ) {
-	   if (use_klog) auth_ok = do_klog(user, password, NULL);
+	   if (use_klog) auth_ok = ! do_klog(user, password, NULL);
 	   else {
 	    if ( ka_UserAuthenticateGeneral(
                            KA_USERAUTH_VERSION,
@@ -327,7 +330,6 @@ pam_sm_setcred(
 		    pam_afs_syslog(LOG_ERR, PAMAFS_PASSEXPFAIL, user);
 	    }
 #if defined(AFS_KERBEROS_ENV)
-    	    if (!use_klog) {
                if (upwd) {
         	if ( chown(ktc_tkt_string(), upwd->pw_uid, upwd->pw_gid) < 0 )
 		    pam_afs_syslog(LOG_ERR, PAMAFS_CHOWNKRB, user);
@@ -336,7 +338,6 @@ pam_sm_setcred(
                 if ( errcode != PAM_SUCCESS )
                     pam_afs_syslog(LOG_ERR, PAMAFS_KRBFAIL, user);
 	       }
-    	    }
 #endif
 
 	    RET(PAM_SUCCESS);

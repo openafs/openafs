@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.7 2001/10/14 18:07:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.8 2002/01/22 19:55:12 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -748,6 +748,10 @@ h_TossStuff_r(host)
 	    FreeCE(client);
 	} else cp = &client->next;
     }
+
+    /* We've just cleaned out all the deleted clients; clear the flag */
+    host->hostFlags &= ~CLIENTDELETED;
+
     if (host->hostFlags & HOSTDELETED) {
 	register struct h_hashChain **hp, *th;
 	register struct rx_connection *rxconn;

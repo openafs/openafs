@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosserver.c,v 1.1.1.10 2001/10/14 18:04:05 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosserver.c,v 1.1.1.11 2002/01/22 19:52:32 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -670,7 +670,9 @@ char **envp;
     struct ktc_encryptionKey tkey;
     int i;
     char namebuf[AFSDIR_PATH_MAX];
-
+#ifndef AFS_NT40_ENV
+    int nofork = 0;
+#endif
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
 
@@ -748,6 +750,9 @@ char **envp;
 	    DoSyslog = 1;
 	    DoSyslogFacility = atoi(argv[code]+8);
 	}
+	else if (strcmp(argv[code], "-nofork")==0) {
+	    nofork = 1;
+	}
 #endif
 	else if (strcmp(argv[code], "-enable_peer_stats")==0) {
 	    rx_enablePeerRPCStats();
@@ -768,6 +773,7 @@ char **envp;
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-nofork] "
 		   "[-help]\n");
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
@@ -811,6 +817,7 @@ char **envp;
     /* go into the background and remove our controlling tty */
 
 #ifndef AFS_NT40_ENV
+    if (!nofork)
     background();
 #endif /* ! AFS_NT40_ENV */
 

@@ -55,7 +55,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.11 2001/10/14 18:03:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.12 2002/01/22 19:52:07 hartmans Exp $");
 
 #define VFS 1
 
@@ -807,6 +807,10 @@ static int doSweepAFSCache(vFilesFound,directory,dirNum,maxDir)
 		  (strcmp(currp->d_name,         "quota.user") == 0) ||
 		  (strcmp(currp->d_name,         "quota.group") == 0) ||
 #endif
+#ifdef AFS_LINUX22_ENV
+		  /* this is the ext3 journal file */
+		  (strcmp(currp->d_name,         ".journal") == 0) ||
+#endif
 		  (strcmp(currp->d_name, "lost+found") == 0)) {
 	    /*
 	     * Don't do anything - this file is legit, and is to be left alone.
@@ -1055,6 +1059,16 @@ struct afsconf_dir *adir; {
 	     aci->name,			/* cell name */
 	     cellFlags,			/* is this the home cell? */
 	     aci->linkedCell);		/* Linked cell, if any */
+    return 0;
+}
+
+static ConfigCellAlias(aca, arock, adir)
+    register struct afsconf_cellalias *aca;
+    char *arock;
+    struct afsconf_dir *adir;
+{
+    /* push the alias into the kernel */
+    call_syscall(AFSOP_ADDCELLALIAS, aca->aliasName, aca->realName);
     return 0;
 }
 
@@ -1612,6 +1626,7 @@ mainproc(as, arock)
     lookingForHomeCell = 1;
 
     afsconf_CellApply(cdir, ConfigCell, (char *) 0);
+    afsconf_CellAliasApply(cdir, ConfigCellAlias, (char *) 0);
 
     /*
      * If we're still looking for the home cell after the whole cell configuration database
@@ -1996,7 +2011,7 @@ long param1, param2, param3, param4, param5, param6, param7;
 #endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);
-    if (afsd_verbose) printf("SScall(%d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, error);
+    if (afsd_verbose) printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1, error);
     return (error);
 }
 #else	/* AFS_AIX32_ENV */

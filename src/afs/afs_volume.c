@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.8 2001/10/14 17:59:00 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.9 2002/01/22 19:48:02 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -225,6 +225,7 @@ void afs_ResetVolumes(struct server *srvp)
      for (vp=afs_volumes[j]; vp; vp=vp->next) {
 	for (k=0; k<MAXHOSTS; k++) {
 	   if (!srvp || (vp->serverHost[k] == srvp)) {
+	      vp->serverHost[k] = 0;
 	      afs_ResetVolumeInfo(vp);
 	      break;
 	   }

@@ -10,13 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pagsh.c,v 1.1.1.5 2001/07/14 22:24:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pagsh.c,v 1.1.1.6 2002/01/22 19:54:37 hartmans Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
@@ -84,11 +85,11 @@ char **argv;
 
 static afs_uint32 curpag()
 {
-    afs_uint32 groups[30];
+    afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
 
-    if (getgroups(30, groups) < 2) return 0;
+    if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
 
     g0 = groups[0] & 0xffff;
     g1 = groups[1] & 0xffff;

@@ -103,6 +103,10 @@ enum vcexcl {NONEXCL, EXCL};
 #include <net/net_globals.h>
 
 #endif	/* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
+
+#define memset(A, B, S) bzero(A, S)
+#define memcpy(B, A, S) bcopy(A, B, S)
+#define memcmp(A, B, S) bcmp(A, B, S)
 #endif /* _KERNEL */
 
 #endif	/* AFS_PARAM_H */

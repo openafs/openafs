@@ -13,9 +13,8 @@
 
 /* Unsafe: conflicts with _KERNEL inclusion of headers below */
 /* #include <afs/param.h> */
-#include <afsconfig.h>
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/export/export.c,v 1.1.1.3 2001/07/11 03:08:53 hartmans Exp $");
+/* #include <afsconfig.h> */
+/* RCSID("$Header: /tmp/cvstemp/openafs/src/export/export.c,v 1.1.1.4 2002/01/22 19:53:11 hartmans Exp $"); */
 
 #define _KERNEL
 #include "sys/types.h"

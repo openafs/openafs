@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.8 2001/10/14 17:58:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.9 2002/01/22 19:47:57 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -78,7 +78,7 @@ char afs_AfsdbHandler_ReqPending = 0;
 char afs_AfsdbHandler_Completed = 0;
 
 
-static struct cell *afs_GetCellByName_int();
+struct cell *afs_GetCellByName2();
 
 int afs_strcasecmp(s1, s2)
     register char *s1, *s2;
@@ -220,17 +220,18 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
 }
 
 
-void afs_RefreshCell(tc)
-    register struct cell *tc;
+void afs_RefreshCell(ac)
+    register struct cell *ac;
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
+    struct cell *tc;
     int timeout;
 
     /* Don't need to do anything if no timeout or it's not expired */
-    if (!tc->timeout || tc->timeout > osi_Time()) return;
+    if (!ac->timeout || ac->timeout > osi_Time()) return;
 
-    if (afs_GetCellHostsFromDns(tc->cellName, cellHosts, &timeout, &realName))
+    if (afs_GetCellHostsFromDns(ac->cellName, cellHosts, &timeout, &realName))
 	/* In case of lookup failure, keep old data */
 	goto done;
 
@@ -238,9 +239,19 @@ void afs_RefreshCell(tc)
     afs_NewCell(realName, cellHosts, 0, (char *) 0, 0, 0, timeout, (char *) 0);
 
     /* If this is an alias, update the alias entry too */
-    if (afs_strcasecmp(tc->cellName, realName))
-	afs_NewCell(tc->cellName, 0, CAlias, (char *) 0, 0, 0,
-		    timeout, realName);
+    if (afs_strcasecmp(ac->cellName, realName)) {
+	/*
+	 * Look up the entry we just updated, to compensate for
+	 * uppercase-vs-lowercase lossage with DNS.
+	 */
+	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+
+	if (tc) {
+	    afs_NewCell(ac->cellName, 0, CAlias, (char *) 0, 0, 0,
+			timeout, tc->cellName);
+	    afs_PutCell(tc, READ_LOCK);
+	}
+    }
 
 done:
     if (realName)
@@ -254,6 +265,7 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
+    struct cell *tc;
     int timeout;
 
     if (afs_GetCellHostsFromDns(acellName, cellHosts, &timeout, &realName))
@@ -264,14 +276,26 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 
     /* If this is an alias, create an entry for it too */
     if (afs_strcasecmp(acellName, realName)) {
-	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
-			timeout, realName))
+	/*
+	 * Look up the entry we just updated, to compensate for
+	 * uppercase-vs-lowercase lossage with DNS.
+	 */
+	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+	if (!tc)
 	    goto bad;
+
+	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
+			timeout, tc->cellName)) {
+	    afs_PutCell(tc, READ_LOCK);
+	    goto bad;
+	}
+
+	afs_PutCell(tc, READ_LOCK);
     }
 
     if (realName)
 	afs_osi_Free(realName, strlen(realName) + 1);
-    return afs_GetCellByName_int(acellName, locktype, 0);
+    return afs_GetCellByName2(acellName, locktype, 0);
 
 bad:
     if (realName)
@@ -280,15 +304,17 @@ bad:
 }
 
 
-static struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
+struct cell *afs_GetCellByName2(acellName, locktype, trydns)
     register char *acellName;
     afs_int32 locktype;
     char trydns;
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
+    int didAlias = 0;
 
     AFS_STATCNT(afs_GetCellByName);
+retry:
     ObtainWriteLock(&afs_xcell,100);
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq); tq = QNext(cq);
@@ -297,9 +323,11 @@ static struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
 	    QAdd(&CellLRU, &tc->lruq);
 	    ReleaseWriteLock(&afs_xcell);
 	    afs_RefreshCell(tc);
-	    if (tc->states & CAlias) {
-		tc = tc->alias;
-		afs_RefreshCell(tc);
+	    if ((tc->states & CAlias) && (didAlias == 0)) {
+		acellName = tc->realName;
+		if (!acellName) return (struct cell *) 0;
+		didAlias = 1;
+		goto retry;
 	    }
 	    return tc;
 	}
@@ -308,47 +336,65 @@ static struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
     return trydns ? afs_GetCellByName_Dns(acellName, locktype)
 		  : (struct cell *) 0;
 
-} /*afs_GetCellByName_int*/
+} /*afs_GetCellByName2*/
 
 
 struct cell *afs_GetCellByName(acellName, locktype)
     register char *acellName;
     afs_int32 locktype;
 {
-    return afs_GetCellByName_int(acellName, locktype, 1);
+    return afs_GetCellByName2(acellName, locktype, 1);
 
 } /*afs_GetCellByName*/
 
-
-struct cell *afs_GetCell(acell, locktype)
+static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
     register afs_int32 acell;
     afs_int32 locktype;
+    int holdxcell;
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
 
     AFS_STATCNT(afs_GetCell);
     if (acell == 1 && afs_rootcell) return afs_rootcell;
-    ObtainWriteLock(&afs_xcell,101);
+    if (holdxcell)
+	ObtainWriteLock(&afs_xcell,101);
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq); tq = QNext(cq);
 	if (tc->cell == acell) {
 	    QRemove(&tc->lruq);
 	    QAdd(&CellLRU, &tc->lruq);
-	    ReleaseWriteLock(&afs_xcell);
+	    if (holdxcell)
+		ReleaseWriteLock(&afs_xcell);
 	    afs_RefreshCell(tc);
 	    return tc;
 	}
     }
-    ReleaseWriteLock(&afs_xcell);
+    if (holdxcell)
+	ReleaseWriteLock(&afs_xcell);
     return (struct cell *) 0;
 
 } /*afs_GetCell*/
 
+struct cell *afs_GetCell(acell, locktype)
+    register afs_int32 acell;
+    afs_int32 locktype;
+{
+    return afs_GetCellInternal(acell, locktype, 1);
+}
 
-struct cell *afs_GetCellByIndex(cellindex, locktype)
+/* This is only to be called if the caller is already holding afs_xcell */
+struct cell *afs_GetCellNoLock(acell, locktype)
+    register afs_int32 acell;
+    afs_int32 locktype;
+{
+    return afs_GetCellInternal(acell, locktype, 0);
+}
+
+struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
     register afs_int32 cellindex;
     afs_int32 locktype;
+    afs_int32 refresh;
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -361,7 +407,7 @@ struct cell *afs_GetCellByIndex(cellindex, locktype)
 	    QRemove(&tc->lruq);
 	    QAdd(&CellLRU, &tc->lruq);
 	    ReleaseWriteLock(&afs_xcell);
-	    afs_RefreshCell(tc);
+	    if (refresh) afs_RefreshCell(tc);
 	    return tc;
 	}
     }
@@ -419,6 +465,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     }
     else {
 	tc = (struct cell *) afs_osi_Alloc(sizeof(struct cell));
+	memset((char *)tc, 0, sizeof(*tc));
 	QAdd(&CellLRU, &tc->lruq);		       	/* put in lruq */
 	tc->cellName = (char *) afs_osi_Alloc(strlen(acellName)+1);
 	strcpy(tc->cellName, acellName);
@@ -464,25 +511,19 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     }
     tc->states |= aflags;
     tc->timeout = timeout;
+
+    /* Allow converting an alias into a real cell */
+    if (!(aflags & CAlias)) tc->states &= ~CAlias;
  
     memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
     if (aflags & CAlias) {
-	struct cell *tca = NULL;
-
 	if (!aliasFor) {
 	    code = EINVAL;
 	    goto bad;
 	}
-	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	    tca = QTOC(cq); tq = QNext(cq);
-	    if (!afs_strcasecmp(tca->cellName, aliasFor))
-		break;
-	}
-	if (!tca) {
-	    code = ENOENT;
-	    goto bad;
-	}
-	tc->alias = tca;
+	if (tc->realName) afs_osi_Free(tc->realName, strlen(tc->realName)+1);
+	tc->realName = (char *) afs_osi_Alloc(strlen(aliasFor)+1);
+	strcpy(tc->realName, aliasFor);
 	goto done;
     }
 

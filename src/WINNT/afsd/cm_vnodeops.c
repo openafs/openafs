@@ -959,6 +959,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
         cm_scache_t *mountedScp;
         cm_lookupSearch_t rock;
         char tname[256];
+	int getroot;
 
 	if (dscp->fid.vnode == 1 && dscp->fid.unique == 1
 	    && strcmp(namep, "..") == 0) {
@@ -988,12 +989,27 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 	 * looking for.  Any other non-zero code is an error.
          */
         if (code && code != CM_ERROR_STOPNOW) return code;
-        
-        if (!rock.found)
+
+	getroot = (dscp==cm_rootSCachep) ;
+        if (!rock.found) {
+	  if (!cm_freelanceEnabled || !getroot) {
 		if (flags & CM_FLAG_CHECKPATH)
 			return CM_ERROR_NOSUCHPATH;
 		else
 			return CM_ERROR_NOSUCHFILE;
+	  }
+	  else {  /* nonexistent dir on freelance root, so add it */
+	    code = cm_FreelanceAddMount(namep, namep, "root.cell.",
+					&rock.fid);
+	    if (code < 0) {   /* add mount point failed, so give up */
+	      if (flags & CM_FLAG_CHECKPATH)
+		return CM_ERROR_NOSUCHPATH;
+	      else
+		return CM_ERROR_NOSUCHFILE;
+	    }
+	    tscp = NULL;   /* to force call of cm_GetSCache */
+	  }
+	}
         
 haveFid:       
 	if ( !tscp )    /* we did not find it in the dnlc */
@@ -1190,9 +1206,17 @@ long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
                 *newRootScpp = cm_rootSCachep;
                 cm_HoldSCache(cm_rootSCachep);
         } else if (*linkp == '\\' || *linkp == '/') {
+	  /* formerly, this was considered to be from the AFS root,
+	     but this seems to create problems.  instead, we will just
+	     reject the link */
+#if 0
 		strcpy(tsp->data, linkp+1);
                 *newRootScpp = cm_rootSCachep;
                 cm_HoldSCache(cm_rootSCachep);
+#else
+		code = CM_ERROR_NOSUCHPATH;
+		goto done;
+#endif
         }
         else {
 		/* a relative link */

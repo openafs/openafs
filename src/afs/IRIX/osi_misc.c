@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_misc.c,v 1.1.1.4 2001/07/14 22:19:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_misc.c,v 1.1.1.5 2002/01/22 19:48:10 hartmans Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -51,14 +51,16 @@ int afs_init_kernel_config(int flag)
 	    inventory_t *pinv;
 	    /* test for numa arch. */
 	    /* Determine if thisis a NUMA platform. Currently, this is true
-	     * only if it's an IP27.
+	     * only if it's an IP27 or IP35.
 	     */
 	    pinv = find_inventory((inventory_t*)NULL, INV_PROCESSOR,
 				  INV_CPUBOARD, -1, -1, -1);
 	    if (!pinv)
 		code = ENODEV;
-	    else
-		afs_is_numa_arch = (pinv->inv_state == INV_IP27BOARD) ? 1 : 0;
+	    else 
+		afs_is_numa_arch = ((pinv->inv_state == INV_IP27BOARD) || 
+				    (pinv->inv_state == INV_IP35BOARD)) 
+		  ? 1 : 0;
 	}
 	else
 	    afs_is_numa_arch = flag;
@@ -85,6 +87,8 @@ int afs_ipno = 27;
 int afs_ipno = 28;
 #elif defined(IP30)
 int afs_ipno = 30;
+#elif defined(IP35)
+int afs_ipno = 35;
 #else
 int afs_ipno = -1;
 #endif

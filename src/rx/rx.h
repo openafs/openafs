@@ -506,6 +506,7 @@ struct rx_connection {
     u_short secondsUntilDead;	    /* Maximum silence from peer before RX_CALL_DEAD */
     u_short hardDeadTime;	    /* hard max for call execution */
     u_char ackRate;                 /* how many packets between ack requests */
+    u_char makeCallWaiters;         /* how many rx_NewCalls are waiting */
     int nSpecific;		    /* number entries in specific data */
     void **specific;		    /* pointer to connection specific data */
 };
@@ -735,9 +736,10 @@ struct rx_ackPacket {
 #define	RX_ACK_TYPE_ACK		1   /* I have this packet, although I may discard it later */
 
 /* The packet size transmitted for an acknowledge is adjusted to reflect the actual size of the acks array.  This macro defines the size */
-#define rx_AckDataSize(nAcks) (sizeof(struct rx_ackPacket) - RX_MAXACKS + (nAcks))
+#define rx_AckDataSize(nAcks) (3 + offsetof(struct rx_ackPacket, acks[nAcks]))
 
 #define	RX_CHALLENGE_TIMEOUT	2   /* Number of seconds before another authentication request packet is generated */
+#define RX_CHALLENGE_MAXTRIES	50  /* Max # of times we resend challenge */
 
 /* RX error codes.  RX uses error codes from -1 to -64.  Rxgen may use other error codes < -64; user programs are expected to return positive error codes */
 

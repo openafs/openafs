@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.8 2001/09/11 14:25:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.9 2002/01/22 19:48:11 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -87,7 +87,13 @@ static void *linux_alloc(unsigned int asize)
 
     /*  if we can use kmalloc use it to allocate the required memory. */
     if (asize <  MAX_KMALLOC_SIZE) {
-        new = (void *)(unsigned long)kmalloc(asize, GFP_KERNEL);
+        new = (void *)(unsigned long)kmalloc(asize, 
+#ifdef GFP_NOFS
+					     GFP_NOFS
+#else
+					     GFP_KERNEL
+#endif
+					     );
         if (new) /* piggy back alloc type */
             (unsigned long)new |= KM_TYPE;
     }
@@ -97,7 +103,12 @@ static void *linux_alloc(unsigned int asize)
             if (--max_wait <=0) {
 		break;
             }
-	    schedule();
+#ifdef set_current_state
+	    set_current_state(TASK_INTERRUPTIBLE);
+#else
+	    current->state = TASK_INTERRUPTIBLE;
+#endif
+	    schedule_timeout(HZ);
         }
 	if (new) /* piggy back alloc type */
 	    (unsigned long)new |= VM_TYPE;

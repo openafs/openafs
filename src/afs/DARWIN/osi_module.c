@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.4 2001/09/11 14:24:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.5 2002/01/22 19:48:05 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -58,4 +58,4 @@ kern_return_t afs_modunload(struct kmod_info *ki, void *data)
    return KERN_SUCCESS;
  } 
 
-KMOD_EXPLICIT_DECL(openafs, VERSION, afs_modload, afs_modunload)
+KMOD_EXPLICIT_DECL(org.openafs.filesystems.afs, VERSION, afs_modload, afs_modunload)

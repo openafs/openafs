@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.7 2001/09/11 14:24:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.8 2002/01/22 19:47:59 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -300,6 +300,7 @@ void afs_osi_Invisible() {
     set_system_proc(u.u_procp);
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+    /* maybe call init_process instead? */
     current_proc()->p_flag |= P_SYSTEM;
 #else
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)

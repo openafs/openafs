@@ -25,7 +25,7 @@
 		<key>com.apple.kernel.bsd</key>
 		<string>1.1</string>
 		<key>com.apple.kernel.mach</key>
-		<string>1.0.0b1</string>
+		<string>1.1</string>
 	</dict>
 </dict>
 </plist>

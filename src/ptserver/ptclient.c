@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptclient.c,v 1.1.1.7 2001/10/14 18:06:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptclient.c,v 1.1.1.8 2002/01/22 19:54:13 hartmans Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -21,8 +21,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptclient.c,v 1.1.1.7 2001/10/1
 #include <WINNT/afsevent.h>
 #else
 #include <netinet/in.h>
-#endif
 #include <netdb.h>
+#endif
 #include <stdio.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>

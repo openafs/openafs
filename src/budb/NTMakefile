@@ -75,7 +75,8 @@ EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_sleep.c,v 1.1.1.3 2001/07/14 22:20:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_sleep.c,v 1.1.1.4 2002/01/22 19:48:05 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #include "../afs/afsincludes.h" /* Afs-based standard headers */
@@ -131,9 +131,14 @@ void afs_osi_Sleep(char *event)
     seq = evp->seq;
     while (seq == evp->seq) {
 	AFS_ASSERT_GLOCK();
-	assert_wait((event_t)event, 0);
 	AFS_GUNLOCK();
+#ifdef AFS_DARWIN14_ENV
+        /* this is probably safe for all versions, but testing is hard */
+        sleep(event, PVFS);
+#else
+	assert_wait((event_t)event, 0);
 	thread_block(0);
+#endif
 	AFS_GLOCK();
     }
     relevent(evp);
@@ -153,24 +158,37 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     int code = 0;
     struct afs_event *evp;
     int ticks,seq;
+    int prio;
 
     ticks = ( ams * afs_hz )/1000;
 
 
     evp = afs_getevent(event);
     seq=evp->seq;
-    assert_wait((event_t)event, aintok ? THREAD_ABORTSAFE : 0);
     AFS_GUNLOCK();
+#ifdef AFS_DARWIN14_ENV
+    /* this is probably safe for all versions, but testing is hard. */
+    /* using tsleep instead of assert_wait/thread_set_timer/thread_block
+       allows shutdown to work in 1.4 */
+    /* lack of PCATCH does *not* prevent signal delivery, neither does 
+       a low priority. We would need to deal with ERESTART here if we 
+       wanted to mess with p->p_sigmask, and messing with p_sigignore is
+       not the way to go.... (someone correct me if I'm wrong)
+    */
+    if (aintok)
+       prio=PCATCH|PPAUSE;
+    else
+       prio=PVFS;
+    code=tsleep(event, prio, "afs_osi_TimedSleep", ticks);
+#else 
+    assert_wait((event_t)event, aintok ? THREAD_ABORTSAFE : THREAD_UNINT);
     thread_set_timer(ticks, NSEC_PER_SEC / hz);
     thread_block(0);
+    code=0;
+#endif
     AFS_GLOCK();
-#if 0 /* thread_t structure only available if MACH_KERNEL_PRIVATE */
-    if (current_thread()->wait_result != THREAD_AWAKENED)
-	code = EINTR;
-#else
     if (seq == evp->seq)
 	code = EINTR;
-#endif
     
     relevent(evp);
     return code;
@@ -184,7 +202,12 @@ void afs_osi_Wakeup(char *event)
     evp = afs_getevent(event);
     if (evp->refcount > 1) {
 	evp->seq++;    
+#ifdef AFS_DARWIN14_ENV
+    /* this is probably safe for all versions, but testing is hard. */
+        wakeup(event);
+#else
 	thread_wakeup((event_t)event);
+#endif
     }
     relevent(evp);
 }

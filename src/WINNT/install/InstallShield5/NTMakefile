@@ -35,7 +35,7 @@ prep: AFS_component_version_number.txt
 	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Comments=$(AFSBUILDCOMMENTS)"
 	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] ApplicationName=AFSforWindows"
 	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Company=Open AFS"
-	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Title=AFS for Windows"
+	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] Title=Open AFS for Windows"
 	$(DESTDIR)\bin\util_cr.exe @ "$(AFSROOT)\src\WINNT\install\InstallShield5\packageweb.pfw" "[Options] OutputSpec="$(DESTDIR)\WinInstall\PackageWeb\AFSforWindows.exe"
 !     ENDIF
     CreateISDirTree.bat
@@ -62,8 +62,8 @@ build:
 	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
 	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
 !ENDIF
-	xcopy/s/e/y "Media\Transarc AFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
+	xcopy /s/e/y "Media\OpenAFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
 	copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
-	$(DEL) /q "Media\Transarc AFS\Disk Images\disk1\*.*"
+	$(DEL) /q "Media\OpenAFS\Disk Images\disk1\*.*"
 
 install: prep build

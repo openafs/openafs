@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.8 2001/09/11 14:35:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.9 2002/01/22 19:54:57 hartmans Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -1863,6 +1863,35 @@ static ListCellsCmd(as)
     return 0;
 }
 
+static ListAliasesCmd(as)
+    struct cmd_syndesc *as;
+{
+    afs_int32 code, i;
+    char *tp, *aliasName, *realName;
+    struct ViceIoctl blob;
+
+    for(i=0;;i++) {
+	tp = space;
+	memcpy(tp, &i, sizeof(afs_int32));
+	blob.out_size = MAXSIZE;
+	blob.in_size = sizeof(afs_int32);
+	blob.in = space;
+	blob.out = space;
+	code = pioctl(0, VIOC_GETALIAS, &blob, 1);
+	if (code < 0) {
+	    if (errno == EDOM) break;	/* done with the list */
+	    Die(errno, 0);
+	    return 1;
+	}
+	tp = space;
+	aliasName = tp;
+	tp += strlen(aliasName) + 1;
+	realName = tp;
+	printf("Alias %s for cell %s\n", aliasName, realName);
+    }
+    return 0;
+}
+
 static NewCellCmd(as)
     struct cmd_syndesc *as;
 {
@@ -1959,6 +1988,40 @@ static NewCellCmd(as)
     code = pioctl(0, VIOCNEWCELL, &blob, 1);
     if (code < 0) {
 	Die(errno, 0);
+	return 1;
+    }
+    return 0;
+}
+
+static NewAliasCmd(as)
+    struct cmd_syndesc *as;
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    char *tp;
+    char *aliasName, *realName;
+
+    /* Now setup and do the NEWCELL pioctl call */
+    aliasName = as->parms[0].items->data;
+    realName = as->parms[1].items->data;
+    tp = space;
+    strcpy(tp, aliasName);
+    tp += strlen(aliasName) + 1;
+    strcpy(tp, realName);
+    tp += strlen(realName) + 1;
+
+    blob.in_size = tp - space;
+    blob.in = space;
+    blob.out_size = 0;
+    blob.out = space;
+    code = pioctl(0, VIOC_NEWALIAS, &blob, 1);
+    if (code < 0) {
+	if (errno == EEXIST) {
+	    fprintf(stderr, "%s: cell name `%s' in use by an existing cell.\n",
+		    pn, aliasName);
+	} else {
+	    Die(errno, 0);
+	}
 	return 1;
     }
     return 0;
@@ -2984,6 +3047,8 @@ defect 3069
     ts = cmd_CreateSyntax("listcells", ListCellsCmd, 0, "list configured cells");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
 
+    ts = cmd_CreateSyntax("listaliases", ListAliasesCmd, 0, "list configured cell aliases");
+
     ts = cmd_CreateSyntax("setquota", SetQuotaCmd, 0, "set volume quota");
     cmd_AddParm(ts, "-path", CMD_SINGLE, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-max", CMD_SINGLE, 0, "max quota in kbytes");
@@ -2996,6 +3061,10 @@ defect 3069
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL, "linked cell name");
+
+    ts = cmd_CreateSyntax("newalias", NewAliasCmd, 0, "configure new cell alias");
+    cmd_AddParm(ts, "-alias", CMD_SINGLE, 0, "alias name");
+    cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "real name of cell");
 
 #ifdef FS_ENABLE_SERVER_DEBUG_PORTS
 /*

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/user_nt.c,v 1.1.1.7 2001/10/14 18:05:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/user_nt.c,v 1.1.1.8 2002/01/22 19:53:24 hartmans Exp $");
 
 #include <afs/stds.h>
 
@@ -86,6 +86,22 @@ afs_int32 ka_UserAuthenticateGeneral(
 	afs_int32 spare,
 	char **reasonP)
 {
+  return ka_UserAuthenticateGeneral2(flags, name, instance, realm, password, NULL,
+				     lifetime, password_expiresP, spare, reasonP);
+}
+  
+afs_int32 ka_UserAuthenticateGeneral2(
+	afs_int32 flags,
+	char *name,
+	char *instance,
+	char *realm,
+	char *password,
+	char *smbname,
+	Date lifetime,
+	afs_int32 *password_expiresP,
+	afs_int32 spare,
+	char **reasonP)
+{
 	int code;
 	struct ktc_encryptionKey key1, key2;
 	char *ticket = NULL;
@@ -147,6 +163,8 @@ afs_int32 ka_UserAuthenticateGeneral(
 	strcpy(client.name, name);
 	strcpy(client.instance, instance);
 	strcpy(client.cell, upperRealm);
+	if (smbname)
+	  strcpy(client.smbname, smbname);
 
 	token.startTime = 0;		/* XXX */
 	token.endTime = expirationTime;
@@ -317,8 +335,8 @@ static check_response
 
     /* Check and extract server's name */
     if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
-	return(INTK_BADPW);
-    }
+		return(INTK_BADPW);
+	}
 
     (void) strncpy(s_service, ptr, sizeof(s_service)-1);
     s_service[sizeof(s_service)-1] = '\0';
@@ -326,8 +344,8 @@ static check_response
 
     /* Check and extract server's instance */
     if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
-	return(INTK_BADPW);
-    }
+		return(INTK_BADPW);
+	}
 
     (void) strncpy(s_instance,ptr, sizeof(s_instance)-1);
     s_instance[sizeof(s_instance)-1] = '\0';
@@ -335,8 +353,8 @@ static check_response
 
     /* Check and extract server's realm */
     if ((strlen(ptr) + (ptr - (char *) cip->dat)) > cip->length) {
-	return(INTK_BADPW);
-    }
+		return(INTK_BADPW);
+	}
 
     (void) strncpy(s_realm,ptr, sizeof(s_realm));
     s_realm[sizeof(s_realm)-1] = '\0';
@@ -351,7 +369,7 @@ static check_response
     if ((ticket_len < 0) ||
 	((ticket_len + (ptr - (char *) cip->dat)) > (int) cip->length)) {
 	return(INTK_BADPW);
-    }
+	}
 
     /* Check returned server name, instance, and realm fields */
     /*

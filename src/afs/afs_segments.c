@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.5 2001/09/11 14:24:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_segments.c,v 1.1.1.6 2002/01/22 19:48:00 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -182,13 +182,13 @@ afs_StoreAllSegments(avc, areq, sync)
     dcList = (struct dcache **) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREALL, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, avc->m.Length);
-#ifndef AFS_AIX32_ENV
+#if !defined(AFS_AIX32_ENV) && !defined(AFS_SGI65_ENV)
     /* In the aix vm implementation we need to do the vm_writep even
      * on the memcache case since that's we adjust the file's size
      * and finish flushing partial vm pages.
      */
     if (cacheDiskType != AFS_FCACHE_TYPE_MEM) 
-#endif /* AFS_AIX32_ENV */
+#endif /* !AFS_AIX32_ENV && !AFS_SGI65_ENV */
     {
 	/* If we're not diskless, reading a file may stress the VM
 	 * system enough to cause a pageout, and this vnode would be

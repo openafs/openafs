@@ -14,7 +14,11 @@ extern "C" {
 
 #include "afscreds.h"
 #include "..\afsreg\afsreg.h" // So we can see if the server's installed
-
+#include "drivemap.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <osilog.h>
+#include "rxkad.h"
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -69,6 +73,8 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdSh
    return 0;
 }
 
+#define ISHIGHSECURITY(v) ( ((v) & LOGON_OPTION_HIGHSECURITY)==LOGON_OPTION_HIGHSECURITY)
+#define REG_CLIENT_PROVIDER_KEY "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider"
 
 BOOL InitApp (LPSTR pszCmdLineA)
 {
@@ -111,10 +117,29 @@ BOOL InitApp (LPSTR pszCmdLineA)
          case 'U':
             fUninstall = TRUE;
             break;
+		 case ':':
+			 MapShareName(pszCmdLineA);
+			 break;
+         case 'x':
+         case 'X':
+	     DWORD LogonOption;
+	     DWORD LSPtype, LSPsize;
+	     HKEY NPKey;
+	     LSPsize=sizeof(LogonOption);
+	     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PROVIDER_KEY,
+				 0, KEY_QUERY_VALUE, &NPKey);
+	     RegQueryValueEx(NPKey, "LogonOptions", NULL,
+                             &LSPtype, (LPBYTE)&LogonOption, &LSPsize);
+	     RegCloseKey (NPKey);
+	     if (ISHIGHSECURITY(LogonOption))
+		 DoMapShare();
+	     GlobalMountDrive();
+	     return 0;
          }
 
       while (*pszCmdLineA && (*pszCmdLineA != ' '))
          ++pszCmdLineA;
+	  if (*pszCmdLineA==' ') ++pszCmdLineA;
       }
 
    if (fInstall)

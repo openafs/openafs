@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc.c,v 1.2 2001/11/25 23:10:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc.c,v 1.1.1.8 2002/01/22 19:52:29 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

@@ -139,24 +139,6 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     pwd = smb_ParseString(tp, &tp);
     usern = smb_ParseString(tp, &tp);
 
-    if (strlen(usern)==0) {
-        /*return CM_ERROR_NOACCESS;*/
-        newUid = 0;   /* always assign uid 0 for blank username */
-        uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
-#ifdef DEBUG_VERBOSE
-		{
-        HANDLE h; char *ptbuf[1],buf[132];
-        h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
-        sprintf(buf, "VCP[%x] lsn[%d] anonymous, uid[%d]",vcp,vcp->lsn,uidp->userID);
-        ptbuf[0] = buf;
-        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
-		}
-#endif
-        smb_ReleaseUID(uidp);
-        goto done;
-    }
-
     /* On Windows 2000, this function appears to be called more often than
        it is expected to be called. This resulted in multiple smb_user_t
        records existing all for the same user session which results in all
@@ -171,16 +153,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         unp = uidp->unp;
         userp = unp->userp;
         newUid = (unsigned short)uidp->userID;  /* For some reason these are different types!*/
-#ifdef DEBUG_VERBOSE
-        {
-		   HANDLE h; char *ptbuf[1],buf[132];
-			h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
-			sprintf(buf,"FindUserByName:VCP[%x],Lana[%d],lsn[%d],userid[%d],name[%s]",vcp,vcp->lana,vcp->lsn,newUid,usern);
-			ptbuf[0] = buf;
-			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-			DeregisterEventSource(h);
-        }
-#endif
+		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"FindUserByName:Lana[%d],lsn[%d],userid[%d],name[%s]",vcp->lana,vcp->lsn,newUid,usern);
+		osi_Log3(afsd_logp,"smb_ReceiveV3SessionSetupX FindUserByName:Lana[%d],lsn[%d],userid[%d]",vcp->lana,vcp->lsn,newUid);
         smb_ReleaseUID(uidp);
     }
     else {
@@ -192,7 +166,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         if (!userp)
           userp = cm_NewUser();
         lock_ObtainMutex(&vcp->mx);
-        newUid = vcp->uidCounter++;
+        newUid = (strlen(usern)==0)?0:vcp->uidCounter++;
         lock_ReleaseMutex(&vcp->mx);
 
         /* Create a new smb_user_t structure and connect them up */
@@ -203,21 +177,12 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         uidp = smb_FindUID(vcp, newUid, SMB_FLAG_CREATE);
         lock_ObtainMutex(&uidp->mx);
         uidp->unp = unp;
-#ifdef DEBUG_VERBOSE
-		{
-		   HANDLE h; char *ptbuf[1],buf[132];
-			h = RegisterEventSource(NULL, "AFS Service - smb_ReceiveV3SessionSetupX");
-			sprintf(buf,"NewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],name[%s]",vcp,vcp->lana,vcp->lsn,newUid,usern);
-			ptbuf[0] = buf;
-			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-			DeregisterEventSource(h);
-		}
-#endif
+		osi_LogEvent("AFS smb_ReceiveV3SessionSetupX",NULL,"MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d],TicketKTCName[%s]",vcp,vcp->lana,vcp->lsn,newUid,usern);
+		osi_Log4(afsd_logp,"smb_ReceiveV3SessionSetupX MakeNewUser:VCP[%x],Lana[%d],lsn[%d],userid[%d]",vcp,vcp->lana,vcp->lsn,newUid);
         lock_ReleaseMutex(&uidp->mx);
         smb_ReleaseUID(uidp);
     }
 
- done:
     /* Return UID to the client */
     ((smb_t *)outp)->uid = newUid;
     /* Also to the next chained message */
@@ -619,6 +584,8 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 lock_ReleaseWrite(&smb_globalLock);
                 
                 /* now dispatch it */
+				osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%x] lana[%d] lsn[%d]",vcp,vcp->lana,vcp->lsn);
+				osi_Log4(afsd_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
                 code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
 
 		/* if an error is returned, we're supposed to send an error packet,
@@ -4137,7 +4104,6 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
 {
     cm_user_t *userp;
     /*int newUid;*/
-    smb_user_t *uidp;
     smb_username_t *unp;
 
     unp = smb_FindUserByName(usern, machine, SMB_FLAG_CREATE);
@@ -4145,27 +4111,10 @@ cm_user_t *smb_FindCMUserByName(/*smb_vc_t *vcp,*/ char *usern, char *machine)
         lock_ObtainMutex(&unp->mx);
         unp->userp = cm_NewUser();
         lock_ReleaseMutex(&unp->mx);
-#ifdef DEBUG_VERBOSE
-		{       //jimpeter
-		   HANDLE h; char *ptbuf[1],buf[132];
-			h = RegisterEventSource(NULL, "AFS Service - smb_FindCMUserByName");
-			sprintf(buf,"New User name[%s] machine[%s]",usern,machine);
-			ptbuf[0] = buf;
-			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-			DeregisterEventSource(h);
-		}
-#endif
-    } 
-#ifdef DEBUG_VERBOSE
-	  else	{       //jimpeter
-		   HANDLE h; char *ptbuf[1],buf[132];
-			h = RegisterEventSource(NULL, "AFS Service - smb_FindCMUserByName");
-			sprintf(buf,"Found-name[%s] machine[%s]",usern,machine);
-			ptbuf[0] = buf;
-			ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-			DeregisterEventSource(h);
-		}
-#endif
+		osi_LogEvent("AFS smb_FindCMUserByName New User",NULL,"name[%s] machine[%s]",usern,machine);
+    }  else	{
+		osi_LogEvent("AFS smb_FindCMUserByName Found",NULL,"name[%s] machine[%s]",usern,machine);
+	}
     return unp->userp;
 }
 

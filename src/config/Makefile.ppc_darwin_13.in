@@ -5,7 +5,7 @@ AFS_OSTYPE = DARWIN
 #
 #
 # compilation and link editor flags
-XCFLAGS=-no-precomp
+XCFLAGS=-no-cpp-precomp
 #MT_CFLAGS=-D_REENTRANT -DAFS_PTHREAD_ENV ${XCFLAGS}
 #MT_CC=cc
 KROOT=

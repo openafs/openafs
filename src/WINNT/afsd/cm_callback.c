@@ -312,6 +312,13 @@ SRXAFSCB_Probe(struct rx_call *callp)
 }
 
 /* debug interface: not implemented */
+SRXAFSCB_GetCE64(struct rx_call *callp, long index, AFSDBCacheEntry *cep)
+{
+    /* XXXX */
+    return RXGEN_OPCODE;
+}
+
+/* debug interface: not implemented */
 SRXAFSCB_GetLock(struct rx_call *callp, long index, AFSDBLock *lockp)
 {
 	/* XXXX */

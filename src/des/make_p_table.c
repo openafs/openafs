@@ -9,7 +9,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_p_table.c,v 1.1.1.5 2001/07/14 22:21:34 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_p_table.c,v 1.1.1.6 2002/01/22 19:53:08 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -58,7 +58,7 @@ void gen(stream)
 	for (j = 0; j < 64; j++) {
 	    fprintf(stream,"\n");
 	    for (k = 0; k < 4; k++) {
-		fprintf(stream,"0x%08lX",P_prime[i][j*4+k]);
+		fprintf(stream,"0x%08lX",(unsigned long)P_prime[i][j*4+k]);
 		if ((j == 63) && (k == 3))
 		    fprintf(stream, "}");
 		if ((i == 3) && (j == 63) && (k == 3))

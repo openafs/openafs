@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vm.c,v 1.1.1.3 2001/07/14 22:20:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vm.c,v 1.1.1.4 2002/01/22 19:48:05 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #include "../afs/afsincludes.h" /* Afs-based standard headers */
@@ -39,6 +39,10 @@ osi_VM_FlushVCache(avc, slept)
     int *slept;
 {
     struct vnode *vp=(struct vnode *)avc;
+#ifdef AFS_DARWIN14_ENV
+    if (UBCINFOEXISTS(vp))
+	return EBUSY;
+#endif
     if (avc->vrefCount)
 	return EBUSY;
 
@@ -51,6 +55,7 @@ osi_VM_FlushVCache(avc, slept)
 
     AFS_GUNLOCK();
     cache_purge(vp);
+#ifndef AFS_DARWIN14_ENV
     if (UBCINFOEXISTS(vp))
 	{
                 ubc_clean(vp, 1);
@@ -58,6 +63,7 @@ osi_VM_FlushVCache(avc, slept)
                 ubc_release(vp);
 	        ubc_info_free(vp);
 	}
+#endif
 
     AFS_GLOCK();
 
@@ -186,11 +192,19 @@ void osi_VM_TryReclaim(avc, slept)
         AFS_RELE(vp);
         return;
     }
+#ifdef AFS_DARWIN14_ENV
+    if (vp->v_ubcinfo->ui_refcount > 1) {
+        simple_unlock(&vp->v_interlock);
+        AFS_RELE(vp);
+        return;
+    }
+#else
     if (vp->v_ubcinfo->ui_holdcnt) {
         simple_unlock(&vp->v_interlock);
         AFS_RELE(vp);
         return;
     }
+#endif
     if (slept && ubc_issetflags(vp, UI_WASMAPPED)) {
        /* We can't possibly release this in time for this NewVCache to get it */
         simple_unlock(&vp->v_interlock);
@@ -209,14 +223,22 @@ void osi_VM_TryReclaim(avc, slept)
     obj=0;
     if (ubc_issetflags(vp, UI_WASMAPPED)) {
         simple_unlock(&vp->v_interlock);
+#ifdef  AFS_DARWIN14_ENV
+        ubc_release_named(vp);
+#else
         ubc_release(vp);
+#endif
         if (ubc_issetflags(vp, UI_HASOBJREF))
             printf("ubc_release didn't release the reference?!\n");
     } else if (!vn_lock(vp, LK_EXCLUSIVE|LK_INTERLOCK,current_proc())) {
-#ifdef UBC_NOREACTIVATE
+#ifdef AFS_DARWIN14_ENV
+        obj = ubc_getobject(vp,UBC_HOLDOBJECT);
+#else
+#ifdef AFS_DARWIN13_ENV
         obj = ubc_getobject(vp,(UBC_NOREACTIVATE|UBC_HOLDOBJECT));
 #else
         obj = ubc_getobject(vp);
+#endif
 #endif
         (void)ubc_clean(vp, 1);
         vinvalbuf(vp, V_SAVE, &afs_osi_cred, p, 0, 0);
@@ -224,6 +246,7 @@ void osi_VM_TryReclaim(avc, slept)
            VOP_INACTIVE(vp, p);
         else
            VOP_UNLOCK(vp, 0, p);
+        if (obj) {
         if (ISSET(vp->v_flag, VTERMINATE))
             panic("afs_vnreclaim: already teminating");
         SET(vp->v_flag, VTERMINATE);
@@ -232,13 +255,14 @@ void osi_VM_TryReclaim(avc, slept)
               SET(vp->v_flag, VTERMWANT);
               tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "afs_vnreclaim", 0);
         }
+        }
    } else {
         if (simple_lock_try(&vp->v_interlock))
             panic("afs_vnreclaim: slept, but did no work :(");
         if (UBCINFOEXISTS(vp) && vp->v_count == 1) {
            vp->v_usecount++;
            simple_unlock(&vp->v_interlock);
-           AFS_RELE(vp);
+           VN_RELE(vp);
         } else 
            simple_unlock(&vp->v_interlock);
    }
@@ -254,8 +278,19 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
     void *object;
     struct vcache *avc = (struct vcache *)vp;
 
+#ifdef AFS_DARWIN14_ENV
+    offset=trunc_page(offset);
+    size=round_page(size+1);
+    while (size) {
+        ubc_page_op(vp, (vm_offset_t)offset, 
+                              UPL_POP_SET | UPL_POP_BUSY | UPL_POP_DUMP,
+                              0, 0);
+        size-=PAGE_SIZE;
+        offset+=PAGE_SIZE;
+    }
+#else
     object=NULL;
-#ifdef UBC_NOREACTIVATE
+#ifdef AFS_DARWIN13_ENV
     if (UBCINFOEXISTS(vp))
         object = ubc_getobject(vp, UBC_NOREACTIVATE);
 #else
@@ -268,7 +303,7 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
     offset=trunc_page(offset);
     size=round_page(size+1);
 
-#ifdef UBC_NOREACTIVATE
+#ifdef AFS_DARWIN13_ENV
     while (size) {
         memory_object_page_op(object, (vm_offset_t)offset, 
                               UPL_POP_SET | UPL_POP_BUSY | UPL_POP_DUMP,
@@ -277,9 +312,11 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
         offset+=PAGE_SIZE;
     }
 #else 
+    /* This is all we can do, and it's not enough. sucks to be us */
     ubc_setsize(vp, offset);
     size=(offset + size > avc->m.Length) ? offset + size : avc->m.Length;
     ubc_setsize(vp, size);
+#endif
 #endif
 
 }
@@ -296,15 +333,17 @@ int osi_VM_Setup(struct vcache *avc) {
              AFS_RELE(avc);
              return error;
          }
+#ifndef AFS_DARWIN14_ENV
          simple_lock(&avc->v.v_interlock);
          if (!ubc_issetflags(&avc->v, UI_HASOBJREF))
-#ifdef UBC_NOREACTIVATE
+#ifdef AFS_DARWIN13_ENV
             if (ubc_getobject(&avc->v, (UBC_NOREACTIVATE|UBC_HOLDOBJECT)))
                    panic("VM_Setup: null object");
 #else
             (void)_ubc_getobject(&avc->v, 1); /* return value not used */
 #endif
          simple_unlock(&avc->v.v_interlock);
+#endif
          AFS_GLOCK();
          AFS_RELE(avc);
       }

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.11 2001/10/14 18:04:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.12 2002/01/22 19:52:29 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -33,12 +33,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.11 2001/10/14
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
-#include <afs/afsint.h>
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #include <resolv.h>
 #endif /* AFS_AFSDB_ENV */
 #endif /* AFS_NT40_ENV */
+#include <afs/afsint.h>
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
@@ -357,6 +357,7 @@ char clones[];
     FILE *tf;
     register char *tp, *bp;
     register struct afsconf_entry *curEntry;
+    struct afsconf_aliasentry *curAlias;
     register afs_int32 code;
     afs_int32 i;
     char tbuffer[256], tbuf1[256];
@@ -469,7 +470,44 @@ char clones[];
 	curEntry->next = adir->entries;
 	adir->entries = curEntry;
     }
-    
+
+    /* Read in the alias list */
+    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE, NULL);
+
+    tf = fopen(tbuffer, "r");
+    while (tf) {
+	char *aliasPtr;
+
+	tp = fgets(tbuffer, sizeof(tbuffer), tf);
+	if (!tp) break;
+	TrimLine(tbuffer);  /* remove white space */
+
+	if (tbuffer[0] == '\0' ||
+	    tbuffer[0] == '\n' ||
+	    tbuffer[0] == '#') continue;	/* empty line */
+
+	tp = tbuffer;
+	while (tp[0] != '\0' && tp[0] != ' ' && tp[0] != '\t') tp++;
+	if (tp[0] == '\0') continue;		/* invalid line */
+
+	while (tp[0] != '\0' && (tp[0] == ' ' || tp[0] == '\t')) 0[tp++] = '\0';
+	if (tp[0] == '\0') continue;		/* invalid line */
+
+	aliasPtr = tp;
+	while (tp[0] != '\0' && tp[0] != ' ' && tp[0] != '\t' &&
+	       tp[0] != '\r' && tp[0] != '\n') tp++;
+	tp[0] = '\0';
+
+	curAlias = malloc(sizeof(*curAlias));
+	memset(curAlias, 0, sizeof(*curAlias));
+
+	strcpy(curAlias->aliasInfo.aliasName, aliasPtr);
+	strcpy(curAlias->aliasInfo.realName, tbuffer);
+
+	curAlias->next = adir->alias_entries;
+	adir->alias_entries = curAlias;
+    }
+
     /* now read the fs keys, if possible */
     adir->keystr = (struct afsconf_keys *) 0;
     afsconf_IntGetKeys(adir);
@@ -536,6 +574,28 @@ char *arock; {
     LOCK_GLOBAL_MUTEX
     for(tde=adir->entries; tde; tde=tde->next) {
 	code = (*aproc)(&tde->cellInfo, arock, adir);
+	if (code) {
+	    UNLOCK_GLOBAL_MUTEX
+	    return code;
+	}
+    }
+    UNLOCK_GLOBAL_MUTEX
+    return 0;
+}
+
+/* call aproc(entry, arock, adir) for all cell aliases.
+ * Proc must return 0, or we'll stop early and return the code it returns
+ */
+afsconf_CellAliasApply(adir, aproc, arock)
+    struct afsconf_dir *adir;
+    int (*aproc)();
+    char *arock;
+{
+    register struct afsconf_aliasentry *tde;
+    register afs_int32 code;
+    LOCK_GLOBAL_MUTEX
+    for(tde=adir->alias_entries; tde; tde=tde->next) {
+	code = (*aproc)(&tde->aliasInfo, arock, adir);
 	if (code) {
 	    UNLOCK_GLOBAL_MUTEX
 	    return code;
@@ -658,6 +718,11 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
     if (server_num == 0)		/* No AFSDB records */
 	return AFSCONF_NOTFOUND;
+
+    /* Convert the real cell name to lowercase */
+    for (p = (unsigned char *) realCellName; *p; p++)
+	*p = tolower(*p);
+
     strncpy(acellInfo->name, realCellName, sizeof(acellInfo->name));
     acellInfo->numServers = server_num;
 
@@ -734,6 +799,7 @@ char *aservice;
 char *acellName;
 struct afsconf_cell *acellInfo; {
     register struct afsconf_entry *tce;
+    struct afsconf_aliasentry *tcae;
     struct afsconf_entry *bestce;
     register afs_int32 i;
     int tservice;
@@ -765,6 +831,15 @@ struct afsconf_cell *acellInfo; {
 	UNLOCK_GLOBAL_MUTEX
 	return 0;
     }
+
+    /* Look through the list of aliases */
+    for (tcae = adir->alias_entries; tcae; tcae = tcae->next) {
+	if (strcasecmp(tcae->aliasInfo.aliasName, tcell) == 0) {
+	    tcell = tcae->aliasInfo.realName;
+	    break;
+	}
+    }
+
     for(tce=adir->entries;tce;tce=tce->next) {
 	if (strcasecmp(tce->cellInfo.name, tcell) == 0) {
 	    /* found our cell */
@@ -797,7 +872,7 @@ struct afsconf_cell *acellInfo; {
     else {
 	UNLOCK_GLOBAL_MUTEX
 #ifdef AFS_AFSDB_ENV
-	return afsconf_GetAfsdbInfo(acellName, aservice, acellInfo);
+	return afsconf_GetAfsdbInfo(tcell, aservice, acellInfo);
 #else
 	return AFSCONF_NOTFOUND;
 #endif /* AFS_AFSDB_ENV */
