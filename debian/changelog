@@ -1,8 +1,12 @@
-openafs (1.2.4-0) unstable; urgency=low
+openafs (1.2.4-1) unstable; urgency=low
 
   * New upstream version
+  * Now builds for ia64, closes: #142287
+  * Now works again with 2.2 kernels, thanks to upstream fix, closes: #140187
+  * openafs-modules-source depends on kernel-package, Closes: #137169
+  * Fix typo in readme.modules, Closes: #148155
 
- -- Sam Hartman <hartmans@debian.org>  Sun, 12 May 2002 02:01:15 -0400
+ -- Sam Hartman <hartmans@debian.org>  Sun,  2 Jun 2002 17:54:42 -0400
 
 openafs (1.2.3final2-5) unstable; urgency=medium
 
