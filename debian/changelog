@@ -1,3 +1,10 @@
+openafs (1.2.8-2) unstable; urgency=low
+
+  * Convert v5 principal names to v4 style names in rxkad 2b.  Especially
+    important for rcmd vs host
+
+ --
+
 openafs (1.2.8-1) unstable; urgency=low
 
   * New upstream version

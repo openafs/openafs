@@ -1,0 +1,171 @@
+Index: ticket5.c
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/src/rxkad/ticket5.c,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 ticket5.c
+--- ticket5.c	11 Dec 2002 02:44:48 -0000	1.1.1.1
++++ ticket5.c	18 Dec 2002 03:32:49 -0000
+@@ -30,6 +30,29 @@
+  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+  * SUCH DAMAGE.
+  */
++/*
++ * Copyright 1992, 2002 by the Massachusetts Institute of Technology.
++ * All Rights Reserved.
++ *
++ * Export of this software from the United States of America may
++ *   require a specific license from the United States Government.
++ *   It is the responsibility of any person or organization contemplating
++ *   export to obtain such a license before exporting.
++ * 
++ * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
++ * distribute this software and its documentation for any purpose and
++ * without fee is hereby granted, provided that the above copyright
++ * notice appear in all copies and that both that copyright notice and
++ * this permission notice appear in supporting documentation, and that
++ * the name of M.I.T. not be used in advertising or publicity pertaining
++ * to distribution of the software without specific, written prior
++ * permission.  Furthermore if you modify this software you must label
++ * your software as modified software and not distribute it in such a
++ * fashion that it might be confused with the original M.I.T. software.
++ * M.I.T. makes no representations about the suitability of
++ * this software for any purpose.  It is provided "as is" without express
++ * or implied warranty.
++ */
+ 
+ #include <afsconfig.h>
+ #if defined(UKERNEL)
+@@ -78,6 +101,83 @@
+ #include "v5der.c"
+ #include "v5gen.c"
+ 
++/*
++ * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
++ * find a need to change the services here, please consider opening a
++ * bug with MIT by sending mail to krb5-bugs@mit.edu.
++ */
++
++struct krb_convert {
++    char		*v4_str;
++    char		*v5_str;
++  unsigned int	flags;
++  unsigned int	len;
++};
++
++#define DO_REALM_CONVERSION 0x00000001
++
++/*
++ * Kadmin doesn't do realm conversion because it's currently
++ * kadmin/REALM.NAME.  Zephyr doesn't because it's just zephyr/zephyr.
++ *
++ * "Realm conversion" is a bit of a misnomer; really, the v5 name is
++ * using a FQDN or something that looks like it, where the v4 name is
++ * just using the first label.  Sometimes that second principal name
++ * component is a hostname, sometimes the realm name, sometimes it's
++ * neither.
++ *
++ * This list should probably be more configurable, and more than
++ * likely on a per-realm basis, so locally-defined services can be
++ * added, or not.
++ */
++static const struct krb_convert sconv_list[] = {
++    /* Realm conversion, Change service name */
++#define RC(V5NAME,V4NAME) { V5NAME, V4NAME, DO_REALM_CONVERSION, sizeof(V5NAME)-1 }
++    /* Realm conversion */
++#define R(NAME)		{ NAME, NAME, DO_REALM_CONVERSION, sizeof(NAME)-1 }
++    /* No Realm conversion */
++#define NR(NAME)	{ NAME, NAME, 0, sizeof(NAME)-1 }
++
++    NR("kadmin"),
++    RC("rcmd", "host"),
++    R("discuss"),
++    R("rvdsrv"),
++    R("sample"),
++    R("olc"),
++    R("pop"),
++    R("sis"),
++    R("rfs"),
++    R("imap"),
++    R("ftp"),
++    R("ecat"),
++    R("daemon"),
++    R("gnats"),
++    R("moira"),
++    R("prms"),
++    R("mandarin"),
++    R("register"),
++    R("changepw"),
++    R("sms"),
++    R("afpserver"),
++    R("gdss"),
++    R("news"),
++    R("abs"),
++    R("nfs"),
++    R("tftp"),
++    NR("zephyr"),
++    R("http"),
++    R("khttp"),
++    R("pgpsigner"),
++    R("irc"),
++    R("mandarin-agent"),
++    R("write"),
++    R("palladium"),
++    {0, 0, 0, 0},
++#undef R
++#undef RC
++#undef NR
++};
++
+ static int
+ krb5_des_decrypt(struct ktc_encryptionKey *, 
+ 		 int, void *, size_t, void *, size_t *);
+@@ -104,6 +204,8 @@
+     int code;
+     size_t siz, plainsiz;
+     int v5_serv_kvno;
++    char *v5_comp0, *v5_comp1, *c;
++    const struct krb_convert *p;
+ 
+     memset(&t5, 0, sizeof(t5));
+     memset(&decr_part, 0, sizeof(decr_part));
+@@ -172,9 +274,37 @@
+     inst[0] = '\0';
+     switch (decr_part.cname.name_string.len) {
+     case 2:
+-	strncpy(inst, decr_part.cname.name_string.val[1], MAXKTCNAMELEN);
+-	inst[MAXKTCNAMELEN - 1] = '\0';
+-    case 1:
++      v5_comp0 = decr_part.cname.name_string.val[0];
++      v5_comp1 = decr_part.cname.name_string.val[1];
++      p = sconv_list;
++      while (p->v4_str) {
++	if (strncmp(p->v5_str, v5_comp0, p->len) == 0) {
++	  /*
++	   * It is, so set the new name now, and chop off
++	   * instance's domain name if requested.
++	   */
++	  strncpy(name,p->v4_str, MAXKTCNAMELEN);
++	  name[MAXKTCNAMELEN - 1] = '\0';
++	  if (p->flags & DO_REALM_CONVERSION) {
++	    c = strchr(v5_comp1, '.');
++	    if (!c || (c - v5_comp1) >= MAXKTCNAMELEN - 1)
++	      goto bad_ticket;
++	    strncpy(inst, v5_comp1, c - v5_comp1);
++	    inst[c - v5_comp1] = '\0';
++	  }
++	  break;
++	}
++	p++;
++      }
++
++	if (!p->v4_str) {
++	  strncpy(inst, decr_part.cname.name_string.val[1], MAXKTCNAMELEN);
++	  inst[MAXKTCNAMELEN - 1] = '\0';
++	strncpy(name, decr_part.cname.name_string.val[0], MAXKTCNAMELEN);
++	name[MAXKTCNAMELEN - 1] = '\0';
++	}
++	break;
++	      case 1:
+ 	strncpy(name, decr_part.cname.name_string.val[0], MAXKTCNAMELEN);
+ 	name[MAXKTCNAMELEN - 1] = '\0';
+ 	break;
