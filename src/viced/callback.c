@@ -697,6 +697,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	fe->vnode = fid->Vnode;
 	fe->unique = fid->Unique;
 	fe->ncbs = 0;
+	fe->status = 0;
 	hash = VHash(fid->Volume, fid->Unique);
 	fe->fnext = HashTable[hash];
 	HashTable[hash] = fetoi(fe);
