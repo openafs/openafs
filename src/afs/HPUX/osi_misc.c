@@ -29,7 +29,7 @@ RCSID
  * Here we have to save and restore errno since the HP-UX suser() sets errno.
  */
 
-afs_suser()
+afs_suser(void *credp)
 {
     int save_errno;
     int code;

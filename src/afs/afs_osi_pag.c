@@ -161,7 +161,7 @@ afs_setpag(void)
 #elif  defined(AFS_OBSD_ENV)
     if (!afs_osi_suser(p->p_ucred))
 #else
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 #endif
     {
 	while (osi_Time() - pag_epoch < pagCounter) {
@@ -251,7 +251,7 @@ afs_setpag_val(int pagval)
 #ifdef AFS_SUN5_ENV
     if (!afs_suser(*credpp))
 #else
-    if (!afs_suser())
+    if (!afs_suser(NULL))
 #endif
     {
 	while (osi_Time() - pag_epoch < pagCounter) {

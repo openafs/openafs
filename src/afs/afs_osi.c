@@ -617,7 +617,7 @@ afs_osi_suser(void *credp)
 #if defined(AFS_SUN5_ENV)
     return afs_suser(credp);
 #else
-    return afs_suser();
+    return afs_suser(NULL);
 #endif
 }
 #endif

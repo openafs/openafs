@@ -67,7 +67,7 @@ extern struct simplelock afs_rxglobal_lock;
 /* proc, cred */
 #define	AFS_PROC	struct proc
 #define	AFS_UCRED	ucred
-#define afs_suser()	afs_osi_suser(osi_curcred())
+#define afs_suser(x)	afs_osi_suser(osi_curcred())
 #define getpid()	curproc
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
 #define osi_curproc()	curproc

@@ -86,7 +86,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4)
 
     AFS_STATCNT(afs_syscall_icreate);
 
-    if (!afs_suser()) {
+    if (!afs_suser(NULL)) {
 	u.u_error = EPERM;
 	goto out;
     }
@@ -131,7 +131,7 @@ afs_syscall_iopen(dev, inode, usrmod)
 
     AFS_STATCNT(afs_syscall_iopen);
 
-    if (!afs_suser()) {
+    if (!afs_suser(NULL)) {
 	u.u_error = EPERM;
 	goto out;
     }
@@ -190,7 +190,7 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount)
     struct inode *ip;
     register afs_int32 code;
 
-    if (!afs_suser()) {
+    if (!afs_suser(NULL)) {
 	u.u_error = EPERM;
 	goto out;
     }

@@ -49,7 +49,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
  * Note that it must NOT set errno.
  */
 
-afs_suser()
+afs_suser(void *credp)
 {
     int error;
     struct proc *p = current_proc();
