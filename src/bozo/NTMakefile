@@ -66,7 +66,8 @@ BOSSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 $(BOSSERVER_EXEFILE): $(BOSSERVER_EXEOBJS) $(BOSSERVER_EXELIBS)
 	$(EXECONLINK)
@@ -100,7 +101,8 @@ BOS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbos.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\afs\afspioctl.lib
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\cm_dns.obj
 
 
 $(RS_BOS_EXEFILE): $(BOS_EXEOBJS) $(BOS_EXELIBS)

@@ -33,12 +33,12 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
-#include <afs/afsint.h>
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #include <resolv.h>
 #endif /* AFS_AFSDB_ENV */
 #endif /* AFS_NT40_ENV */
+#include <afs/afsint.h>
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>

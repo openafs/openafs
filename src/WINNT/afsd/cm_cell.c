@@ -57,14 +57,23 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 /* load up a cell structure from the cell database, afsdcell.ini */
 cm_cell_t *cm_GetCell(char *namep, long flags)
 {
+  return cm_GetCell_Gen(namep, NULL, flags);
+}
+
+cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
+{
 	cm_cell_t *cp;
         long code;
         static cellCounter = 1;		/* locked by cm_cellLock */
 	int ttl;
+	char fullname[200];
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
-		if (strcmp(namep, cp->namep) == 0) break;
+		if (strcmp(namep, cp->namep) == 0) {
+		  strcpy(fullname, cp->namep);
+		  break;
+		}
         }
 
 	if ((!cp && (flags & CM_FLAG_CREATE))
@@ -75,10 +84,11 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
 	  ) {
 		if (!cp) cp = malloc(sizeof(*cp));
                 memset(cp, 0, sizeof(*cp));
-                code = cm_SearchCellFile(namep, NULL, cm_AddCellProc, cp);
+                code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
+		if (code) {
 #ifdef AFS_AFSDB_ENV
-                if (code && cm_dnsEnabled) {
-                  code = cm_SearchCellByDNS(namep, NULL, &ttl, cm_AddCellProc, cp);
+		  if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/)
+		    code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
 #endif
 		  if (code) {
 		    free(cp);
@@ -90,8 +100,8 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
 		    cp->flags |= CM_CELLFLAG_DNS;
 		    cp->timeout = time(0) + ttl;
 		  }
-		}
 #endif
+		}
 
 		/* randomise among those vlservers having the same rank*/ 
 		cm_RandomizeServer(&cp->vlServersp);
@@ -100,8 +110,8 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
                 lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
 
 		/* copy in name */
-                cp->namep = malloc(strlen(namep)+1);
-                strcpy(cp->namep, namep);
+                cp->namep = malloc(strlen(fullname)+1);
+                strcpy(cp->namep, fullname);
 
 		/* thread on global list */
                 cp->nextp = cm_allCellsp;
@@ -111,6 +121,8 @@ cm_cell_t *cm_GetCell(char *namep, long flags)
         }
 
 done:
+	if (newnamep)
+	  strcpy(newnamep, fullname);
 	lock_ReleaseWrite(&cm_cellLock);
         return cp;
 }

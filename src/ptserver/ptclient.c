@@ -21,8 +21,8 @@ RCSID("$Header$");
 #include <WINNT/afsevent.h>
 #else
 #include <netinet/in.h>
-#endif
 #include <netdb.h>
+#endif
 #include <stdio.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
