@@ -172,9 +172,8 @@ static int parm_setacl_id, parm_copyacl_id, parm_listacl_id;
  * Determine whether either the -id or -if switches are present, and
  * return 0, 1 or 2, as appropriate. Abort if both switches are present.
  */
-static int getidf(as, id)
-    struct cmd_syndesc *as;
-    int id;	/* Offset of -id switch; -if is next switch */
+/*    int id;	Offset of -id switch; -if is next switch */
+static int getidf(struct cmd_syndesc *as, int id)
 {
     int idf = 0;
 
@@ -194,9 +193,7 @@ static int getidf(as, id)
     return idf;
 }
 
-static int PRights(arights, dfs)
-    afs_int32 arights;
-    int dfs;
+static int PRights(afs_int32 arights, int dfs)
 {
     if (!dfs) {
 	if (arights & PRSFS_READ) printf("r");
@@ -234,8 +231,7 @@ static int PRights(arights, dfs)
 }
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
-static int InAFS(apath)
-    char *apath;
+static int InAFS(char *apath)
 {
     struct ViceIoctl blob;
     afs_int32 code;
@@ -252,8 +248,7 @@ static int InAFS(apath)
 }
 
 /* return a static pointer to a buffer */
-static char *Parent(apath)
-    char *apath;
+static char *Parent(char *apath)
 {
     char *tp;
     strcpy(tspace, apath);
@@ -267,10 +262,7 @@ static char *Parent(apath)
 
 enum rtype {add, destroy, deny};
 
-static afs_int32 Convert(arights, dfs, rtypep)
-    char *arights;
-    int dfs;
-    enum rtype *rtypep;
+static afs_int32 Convert(char *arights, int dfs, enum rtype *rtypep)
 {
     int i, len;
     afs_int32 mode;
@@ -345,9 +337,7 @@ static afs_int32 Convert(arights, dfs, rtypep)
     return mode;
 }
 
-static struct AclEntry *FindList(alist, aname)
-    struct AclEntry *alist;
-    char *aname;
+static struct AclEntry *FindList(struct AclEntry *alist, char *aname)
 {
     while (alist) {
         if (!foldcmp(alist->name, aname)) return alist;
@@ -357,8 +347,7 @@ static struct AclEntry *FindList(alist, aname)
 }
 
 /* if no parm specified in a particular slot, set parm to be "." instead */
-static void SetDotDefault(aitemp)
-    struct cmd_item **aitemp;
+static void SetDotDefault(struct cmd_item **aitemp)
 {
     struct cmd_item *ti;
     if (*aitemp) return;	/* already has value */
@@ -372,11 +361,7 @@ static void SetDotDefault(aitemp)
     *aitemp = ti;
 }
 
-static void ChangeList(al, plus, aname, arights)
-    struct Acl *al;
-    afs_int32 plus;
-    char *aname;
-    afs_int32 arights;
+static void ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights)
 {
     struct AclEntry *tlist;
     tlist = (plus ? al->pluslist : al->minuslist);
@@ -410,8 +395,7 @@ static void ChangeList(al, plus, aname, arights)
     }
 }
 
-static void ZapList(alist)
-    struct AclEntry *alist;
+static void ZapList(struct AclEntry *alist)
 {
     struct AclEntry *tp, *np;
     for (tp = alist; tp; tp = np) {
@@ -420,9 +404,7 @@ static void ZapList(alist)
     }
 }
 
-static int PruneList(ae, dfs)
-    struct AclEntry **ae;
-    int dfs;
+static int PruneList(struct AclEntry **ae, int dfs)
 {
     struct AclEntry **lp;
     struct AclEntry *te, *ne;
@@ -444,8 +426,7 @@ static int PruneList(ae, dfs)
     return ctr;
 }
 
-static char *SkipLine(astr)
-    char *astr;
+static char *SkipLine(char *astr)
 {
     while (*astr !='\n') astr++;
     astr++;
@@ -459,8 +440,7 @@ static char *SkipLine(astr)
  * assume that the acl is AFS: for DFS, the user can always resort to
  * acl_edit, but for AFS there may be no other way out).
  */
-static struct Acl *EmptyAcl(astr)
-    char *astr;
+static struct Acl *EmptyAcl(char *astr)
 {
     struct Acl *tp;
     int junk;
@@ -474,8 +454,7 @@ static struct Acl *EmptyAcl(astr)
     return tp;
 }
 
-static struct Acl *ParseAcl(astr)
-    char *astr;
+static struct Acl *ParseAcl(char *astr)
 {
     int nplus, nminus, i, trights;
     char tname[MAXNAME];
@@ -528,10 +507,7 @@ static struct Acl *ParseAcl(astr)
     return ta;
 }
 
-static PrintStatus(status, name, offmsg)
-    VolumeStatus *status;
-    char *name;
-    char *offmsg;
+static int PrintStatus(VolumeStatus *status, char *name, char *offmsg)
 {
     printf("Volume status for vid = %u named %s\n",status->Vid, name);
     if (*offmsg != 0)
@@ -541,11 +517,10 @@ static PrintStatus(status, name, offmsg)
     else printf("unlimited\n");
     printf("Current blocks used are %d\n",status->BlocksInUse);
     printf("The partition has %d blocks available out of %d\n\n",status->PartBlocksAvail, status->PartMaxBlocks);
+    return 0;
 }
 
-static QuickPrintStatus(status, name)
-    VolumeStatus *status;
-    char *name;
+static int QuickPrintStatus(VolumeStatus *status, char *name)
 {
     double QuotaUsed =0.0;
     double PartUsed =0.0;
@@ -573,11 +548,10 @@ static QuickPrintStatus(status, name)
 	printf("  <<WARNING\n");
     }
     else printf("\n");
+    return 0;
 }
 
-static QuickPrintSpace(status, name)
-    VolumeStatus *status;
-    char *name;
+static int QuickPrintSpace(VolumeStatus *status, char *name)
 {
     double PartUsed =0.0;
     int WARN = 0;
@@ -595,10 +569,10 @@ static QuickPrintSpace(status, name)
 	printf("  <<WARNING\n");
     }
     else printf("\n");
+    return 0;
 }
 
-static char *AclToString(acl)
-    struct Acl *acl;
+static char *AclToString(struct Acl *acl)
 {
     static char mydata[MAXSIZE];
     char tstring[MAXSIZE];
@@ -619,8 +593,7 @@ static char *AclToString(acl)
     return mydata;
 }
 
-static SetACLCmd(as)
-    struct cmd_syndesc *as;
+static int SetACLCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -738,8 +711,7 @@ static SetACLCmd(as)
 }
 
 
-static CopyACLCmd(as)
-    struct cmd_syndesc *as;
+static int CopyACLCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -817,8 +789,7 @@ static CopyACLCmd(as)
 }
 
 /* pioctl() call to get the cellname of a pathname */
-static afs_int32 GetCell(fname, cellname)
-  char *fname, *cellname;
+static afs_int32 GetCell(char *fname, char *cellname)
 {
   afs_int32 code;
   struct ViceIoctl blob;
@@ -835,8 +806,7 @@ static afs_int32 GetCell(fname, cellname)
  * negative sign), then it might be bad. We then query the ptserver
  * to see.
  */
-static BadName(aname, fname)
-    char *aname, *fname;
+static BadName(char *aname, char *fname)
 {
     afs_int32  tc, code, id;
     char   *nm;
@@ -862,9 +832,7 @@ static BadName(aname, fname)
 
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
-static CleanAcl(aa, fname)
-    struct Acl *aa;
-    char *fname;     /* The file name */
+static CleanAcl(struct Acl *aa, char *fname)
 {
     struct AclEntry *te, **le, *ne;
     int changes;
@@ -908,8 +876,7 @@ static CleanAcl(aa, fname)
 
 
 /* clean up an acl to not have bogus entries */
-static CleanACLCmd(as)
-    struct cmd_syndesc *as;
+static int CleanACLCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct Acl *ta = 0;
@@ -989,8 +956,7 @@ static CleanACLCmd(as)
     return error;
 }
 
-static ListACLCmd(as)
-    struct cmd_syndesc *as;
+static int ListACLCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct Acl *ta;
@@ -1051,8 +1017,7 @@ static ListACLCmd(as)
     return error;
 }
 
-static FlushVolumeCmd(as)
-    struct cmd_syndesc *as;
+static int FlushVolumeCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1073,8 +1038,7 @@ static FlushVolumeCmd(as)
     return error;
 }
 
-static FlushCmd(as)
-    struct cmd_syndesc *as;
+static int FlushCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1100,8 +1064,7 @@ static FlushCmd(as)
 }
 
 /* all this command does is repackage its args and call SetVolCmd */
-static SetQuotaCmd(as)
-    struct cmd_syndesc *as;
+static int SetQuotaCmd(struct cmd_syndesc *as)
 {
     struct cmd_syndesc ts;
 
@@ -1110,8 +1073,7 @@ static SetQuotaCmd(as)
     return SetVolCmd(&ts);
 }
 
-static SetVolCmd(as)
-    struct cmd_syndesc *as;
+static int SetVolCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1163,8 +1125,7 @@ static SetVolCmd(as)
     return error;
 }
 
-static ExamineCmd(as)
-    struct cmd_syndesc *as;
+static int ExamineCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1193,8 +1154,7 @@ static ExamineCmd(as)
     return error;
 }
 
-static ListQuotaCmd(as)
-    struct cmd_syndesc *as;
+static int ListQuotaCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1224,8 +1184,7 @@ static ListQuotaCmd(as)
     return error;
 }
 
-static WhereIsCmd(as)
-    struct cmd_syndesc *as;
+static int WhereIsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1261,8 +1220,7 @@ static WhereIsCmd(as)
 }
 
 
-static DiskFreeCmd(as)
-    struct cmd_syndesc *as;
+static int DiskFreeCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1292,8 +1250,7 @@ static DiskFreeCmd(as)
     return error;
 }
 
-static QuotaCmd(as)
-    struct cmd_syndesc *as;
+static int QuotaCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1322,8 +1279,7 @@ static QuotaCmd(as)
     return error;
 }
 
-static ListMountCmd(as)
-    struct cmd_syndesc *as;
+static int ListMountCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1445,8 +1401,7 @@ static ListMountCmd(as)
     return error;
 }
 
-static MakeMountCmd(as)
-    struct cmd_syndesc *as;
+static MakeMountCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     char *cellName, *volName, *tmpName;
@@ -1544,8 +1499,7 @@ defect #3069
  *	    (or ``.'' if none is provided)
  *      tp: Set to point to the actual name of the mount point to nuke.
  */
-static RemoveMountCmd(as)
-    struct cmd_syndesc *as;
+static int RemoveMountCmd(struct cmd_syndesc *as)
 {
     afs_int32 code=0;
     struct ViceIoctl blob;
@@ -1597,8 +1551,7 @@ static RemoveMountCmd(as)
 /*
 */
 
-static CheckServersCmd(as)
-    struct cmd_syndesc *as;
+static int CheckServersCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1692,8 +1645,7 @@ static CheckServersCmd(as)
     return code;
 }
 
-static MessagesCmd(as)
-    struct cmd_syndesc *as;
+static int MessagesCmd(struct cmd_syndesc *as)
 {
     afs_int32 code=0;
     struct ViceIoctl blob;
@@ -1738,8 +1690,7 @@ static MessagesCmd(as)
     return 0;
 }
 
-static CheckVolumesCmd(as)
-    struct cmd_syndesc *as;
+static int CheckVolumesCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1756,8 +1707,7 @@ static CheckVolumesCmd(as)
     return 0;
 }
 
-static SetCacheSizeCmd(as)
-    struct cmd_syndesc *as;
+static int SetCacheSizeCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1795,8 +1745,7 @@ static SetCacheSizeCmd(as)
 }
 
 #define MAXGCSIZE	16
-static GetCacheParmsCmd(as)
-    struct cmd_syndesc *as;
+static int GetCacheParmsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1819,8 +1768,7 @@ static GetCacheParmsCmd(as)
     return 0;
 }
 
-static ListCellsCmd(as)
-    struct cmd_syndesc *as;
+static int ListCellsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     afs_int32 i, j;
@@ -1870,8 +1818,7 @@ static ListCellsCmd(as)
     return 0;
 }
 
-static ListAliasesCmd(as)
-    struct cmd_syndesc *as;
+static int ListAliasesCmd(struct cmd_syndesc *as)
 {
     afs_int32 code, i;
     char *tp, *aliasName, *realName;
@@ -1899,8 +1846,7 @@ static ListAliasesCmd(as)
     return 0;
 }
 
-static NewCellCmd(as)
-    struct cmd_syndesc *as;
+static int NewCellCmd(struct cmd_syndesc *as)
 {
     afs_int32 code, linkedstate=0, size=0, *lp;
     struct ViceIoctl blob;
@@ -2006,8 +1952,7 @@ static NewCellCmd(as)
     return 0;
 }
 
-static NewAliasCmd(as)
-    struct cmd_syndesc *as;
+static int NewAliasCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2040,8 +1985,7 @@ static NewAliasCmd(as)
     return 0;
 }
 
-static WhichCellCmd(as)
-  struct cmd_syndesc *as;
+static int WhichCellCmd(struct cmd_syndesc *as)
 {
   afs_int32 code;
   struct cmd_item *ti;
@@ -2065,8 +2009,7 @@ static WhichCellCmd(as)
   return error;
 }
 
-static WSCellCmd(as)
-    struct cmd_syndesc *as;
+static int WSCellCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2095,8 +2038,7 @@ static PrimaryCellCmd(as)
 }
 */
 
-static MonitorCmd(as)
-    struct cmd_syndesc *as;
+static int MonitorCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2158,8 +2100,7 @@ static MonitorCmd(as)
     return 0;
 }
 
-static SysNameCmd(as)
-    struct cmd_syndesc *as;
+static int SysNameCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2211,8 +2152,7 @@ static SysNameCmd(as)
 }
 
 static char *exported_types[] = {"null", "nfs", ""};
-static ExportAfsCmd(as)
-    struct cmd_syndesc *as;
+static int ExportAfsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2297,8 +2237,7 @@ static ExportAfsCmd(as)
 }
 
 
-static GetCellCmd(as)
-    struct cmd_syndesc *as;
+static int GetCellCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2343,8 +2282,7 @@ static GetCellCmd(as)
     return error;
 }
 
-static SetCellCmd(as)
-    struct cmd_syndesc *as;
+static int SetCellCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2391,9 +2329,7 @@ static SetCellCmd(as)
     return error;
 }
 
-static GetCellName(cellName, info)
-    char *cellName;
-    struct afsconf_cell *info;
+static int GetCellName(char *cellName, struct afsconf_cell *info)
 {
     struct afsconf_dir *tdir;
     int code;
@@ -2416,9 +2352,7 @@ static GetCellName(cellName, info)
 }
 
 
-static VLDBInit(noAuthFlag, info)
-    int noAuthFlag;
-    struct afsconf_cell *info;
+static int VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
     struct ktc_principal sname;
@@ -2507,7 +2441,7 @@ static int debug = 0;
  * 0 on success,
  * errno value if error and no error message printed
  */
-static pokeServers()
+static int pokeServers(void)
 {
     int code;
 
@@ -2534,9 +2468,7 @@ static pokeServers()
  * 0 on success,
  * errno value if error and no error message printed
  */
-static addServer(name, rank)
-    char *name;
-    afs_int32 rank;
+static int addServer(char *name, afs_int32 rank)
 {
     int t,code;
     struct setspref *ssp;
@@ -2583,8 +2515,7 @@ static addServer(name, rank)
 }
 
 
-static SetPrefCmd(as)
-    struct cmd_syndesc *as;
+static int SetPrefCmd(struct cmd_syndesc *as)
 {
     FILE *infd;
     afs_int32 code;
@@ -2683,8 +2614,7 @@ static SetPrefCmd(as)
 
 
 
-static GetPrefCmd(as)
-    struct cmd_syndesc *as;
+static int GetPrefCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -2753,8 +2683,7 @@ static GetPrefCmd(as)
     return 0;
 }
 
-static StoreBehindCmd(as)
-    struct cmd_syndesc *as;
+static int StoreBehindCmd(struct cmd_syndesc *as)
 {
     afs_int32 code=0;
     struct ViceIoctl blob;
@@ -2854,8 +2783,7 @@ static StoreBehindCmd(as)
 }
 
 
-static afs_int32 SetCryptCmd(as)
-    struct cmd_syndesc *as;
+static afs_int32 SetCryptCmd(struct cmd_syndesc *as)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -2881,8 +2809,7 @@ static afs_int32 SetCryptCmd(as)
 }
 
 
-static afs_int32 GetCryptCmd(as)
-    struct cmd_syndesc *as;
+static afs_int32 GetCryptCmd(struct cmd_syndesc *as)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -2910,9 +2837,7 @@ static afs_int32 GetCryptCmd(as)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-    int argc;
-    char **argv;
+int main(int argc, char **argv)
 {
     afs_int32 code;
     struct cmd_syndesc *ts;
@@ -3166,9 +3091,7 @@ defect 3069
     return code;
 }
 
-static void Die(errnum, filename)
-    int errnum;
-    char *filename;
+static void Die(int errnum, char *filename)
 {
     switch (errnum) {
     case EINVAL:
@@ -3207,9 +3130,7 @@ static void Die(errnum, filename)
 }
 
 /* get clients interface addresses */
-static int
-GetClientAddrsCmd(as)
-    struct cmd_syndesc *as;
+static int GetClientAddrsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -3255,9 +3176,7 @@ GetClientAddrsCmd(as)
     return 0;
 }
 
-static int
-SetClientAddrsCmd(as)
-    struct cmd_syndesc *as;
+static int SetClientAddrsCmd(struct cmd_syndesc *as)
 {
     afs_int32 code, addr;
     struct cmd_item *ti;
@@ -3329,9 +3248,7 @@ SetClientAddrsCmd(as)
     return error;
 }
 
-static int
-FlushMountCmd(as)
-    struct cmd_syndesc *as;
+static int FlushMountCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -3446,9 +3363,7 @@ FlushMountCmd(as)
     return error;
 }
 
-static int
-RxStatProcCmd(as)
-    struct cmd_syndesc *as;
+static int RxStatProcCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     afs_int32 flags = 0;
@@ -3482,9 +3397,7 @@ RxStatProcCmd(as)
     return 0;
 }
 
-static int
-RxStatPeerCmd(as)
-    struct cmd_syndesc *as;
+static int RxStatPeerCmd(struct cmd_syndesc *as)
 {
     afs_int32 code;
     afs_int32 flags = 0;
