@@ -157,7 +157,8 @@ error_table 2 ZCM
 	ec	CM_TRACE_VNODEREAD, "UFSRead: tdc 0x%x, offset (0x%x, 0x%x) len (0x%x 0x%x)" 
 	ec	CM_TRACE_SLEEP, "Sleep: evp 0x%x, count %d seq 0x%x evp->seq 0x%x" 
 	ec	CM_TRACE_WAKE, "Wakeup: evp 0x%x, evp->seq 0x%x"
-        ec      CM_TRACE_DENTRYDELETE, "dentry_delete inode 0x%x d_name %s/%s"
-        ec      CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren tvc 0x%x"
+	ec	CM_TRACE_DENTRYDELETE, "d_delete inode 0x%x d_name %s/%s"
+	ec	CM_TRACE_DENTRYIPUT, "d_iput inode 0x%x d_name %s/%s"
+	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x"
 end
 
