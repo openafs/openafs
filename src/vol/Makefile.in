@@ -23,7 +23,7 @@ PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h voldefs.h partition.h\
 
 VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
-	 namei_ops.o ${EXTRA_VLIBOBJS}
+	 namei_ops.o fstab.o
 
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o
 
@@ -160,9 +160,9 @@ gi: ${TOP_LIBDIR}/libsys.a
 			${CC} ${LDFLAGS} -o gi gi.o ${TOP_LIBDIR}/libsys.a;; \
         esac
 
-volinfo: vol-info.o physio.o ihandle.o ${LIBS}
+volinfo: vol-info.o physio.o ihandle.o fstab.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
-		ihandle.o ${LIBS} ${XLIBS}
+		ihandle.o fstab.o ${LIBS} ${XLIBS}
 
 fs_conv_dux40D: fs_conv_411.o
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}

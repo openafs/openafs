@@ -38,7 +38,7 @@ DIROBJS=buffer.o dir.o salvage.o
 
 VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o \
-	 ${EXTRA_VLIBOBJS}
+	 fstab.o
 
 FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 
@@ -150,7 +150,7 @@ devname.o: ${VOL}/devname.c
 
 # only for darwin
 fstab.o: ${VOL}/fstab.c
-	${COMPILE}
+	${CCRULE}
 
 common.o: ${VOL}/common.c
 	${CCRULE}
