@@ -464,7 +464,7 @@ int afsd_InitCM(char **reasonP)
         
 	/* setup and enable debug log */
 	afsd_logp = osi_LogCreate("afsd", traceBufSize);
-	afsi_log("osi_LogCreate log addr %x", afsd_logp);
+	afsi_log("osi_LogCreate log addr %x", (int)afsd_logp);
         osi_LogEnable(afsd_logp);
 	logReady = 1;
 
@@ -510,7 +510,7 @@ int afsd_InitCM(char **reasonP)
 	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
         serverp = rx_NewService(0, 1, "AFS", &nullServerSecurityClassp, 1,
         	RXAFSCB_ExecuteRequest);
-	afsi_log("rx_NewService addr %x", serverp);
+	afsi_log("rx_NewService addr %x", (int)serverp);
 	if (serverp == NULL) {
 		*reasonP = "unknown error";
 		return -1;
@@ -519,7 +519,7 @@ int afsd_InitCM(char **reasonP)
 	nullServerSecurityClassp = rxnull_NewServerSecurityObject();
         serverp = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats",
 		&nullServerSecurityClassp, 1, RXSTATS_ExecuteRequest);
-	afsi_log("rx_NewService addr %x", serverp);
+	afsi_log("rx_NewService addr %x", (int)serverp);
 	if (serverp == NULL) {
 		*reasonP = "unknown error";
 		return -1;
@@ -575,7 +575,7 @@ int afsd_InitCM(char **reasonP)
 
         if (code == 0 && !cm_freelanceEnabled) {
 	  cm_rootCellp = cm_GetCell(rootCellName, CM_FLAG_CREATE);
-          afsi_log("cm_GetCell addr %x", cm_rootCellp);
+          afsi_log("cm_GetCell addr %x", (int)cm_rootCellp);
 	  if (cm_rootCellp == NULL) {
 	    *reasonP = "can't find root cell in afsdcell.ini";
 	    return -1;

@@ -970,7 +970,7 @@ WorkerBee(as, arock)
 	    readentry(record[i].addr, &vlentry, &type);
 
 	    if (InvalidVolname(vlentry.name))
-		printf("Volume '%s' at addr has an invalid name\n",
+		printf("Volume '%s' at addr %u has an invalid name\n",
 		       vlentry.name, record[i].addr);
 
 	    if (!(record[i].type & NH))

@@ -502,9 +502,9 @@ static afs_int32
 ktime_ParseDate(char *adate, struct ktime_date *akdate)
 {
     int code;
-    afs_int32 month, day, year, hour, min, sec;
+    afs_int32 month, day2, year, hour, min, sec;
     char never[7];
-    char c;
+    char c[2];
 
     lcstring(never, adate, sizeof(never));
     if (strcmp(never, "never") == 0)
@@ -518,23 +518,23 @@ ktime_ParseDate(char *adate, struct ktime_date *akdate)
 
 
     code =
-	sscanf(adate, "%d / %d / %d %d : %d : %d%1s", &month, &day, &year,
-	       &hour, &min, &sec, &c);
+	sscanf(adate, "%d / %d / %d %d : %d : %d%1s", &month, &day2, &year,
+	       &hour, &min, &sec, &c[0]);
     if (code != 6) {
 	sec = 0;
 	code =
-	    sscanf(adate, "%d / %d / %d %d : %d%1s", &month, &day, &year,
-		   &hour, &min, &c);
+	    sscanf(adate, "%d / %d / %d %d : %d%1s", &month, &day2, &year,
+		   &hour, &min, &c[0]);
 	if (code != 5) {
 	    hour = min = 0;
-	    code = sscanf(adate, "%d / %d / %d%1s", &month, &day, &year, &c);
+	    code = sscanf(adate, "%d / %d / %d%1s", &month, &day2, &year, &c[0]);
 	    if (code != 3) {
 		return -1;
 	    }
 	}
     }
 
-    if ((year < 0) || (month < 1) || (month > 12) || (day < 1) || (day > 31) ||	/* more or less */
+    if ((year < 0) || (month < 1) || (month > 12) || (day2 < 1) || (day2 > 31) ||	/* more or less */
 	(hour < 0) || (hour > 23) || (min < 0) || (min > 59) || (sec < 0)
 	|| (sec > 59))
 	return -2;
@@ -552,7 +552,7 @@ ktime_ParseDate(char *adate, struct ktime_date *akdate)
 
     akdate->year = year;
     akdate->month = month;
-    akdate->day = day;
+    akdate->day = day2;
     akdate->hour = hour;
     akdate->min = min;
     akdate->sec = sec;

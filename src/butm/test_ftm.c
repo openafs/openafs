@@ -388,7 +388,7 @@ PerformDumpTest(TestInfo * tip)
 	    if ((tlen == 0) && (flen == 0))
 		break;		/* correct termination */
 	    if (flen != tlen) {
-		printf("File length mismatch for %dth file (%d)\n", i,
+		printf("File length mismatch for %dth file (%s)\n", i,
 		       tip->files[i]);
 		ERROR_EXIT(6);
 	    }

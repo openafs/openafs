@@ -29,8 +29,8 @@ void
 usuage()
 {
     printf("util_cr file ;remove cr (from crlf)\n\
-	OR util_cr } ProductVersion in_filename out_filename ; substitute for %1-%5 in file\n\
-	   %1=Major version, %2=Minor version, %3=Patch(first digit) %4=(last two digits) %5=Version display string \n\
+	OR util_cr } ProductVersion in_filename out_filename ; substitute for %%1-%%5 in file\n\
+	   %%1=Major version, %%2=Minor version, %%3=Patch(first digit) %%4=(last two digits) %%5=Version display string \n\
 	   ProductVersion=maj.min.pat.pat2 ;maj=numeric, min=numeric pat,pat2 are not more than 3 digits or 1-2 digits and one alpha \n\
 	   e.g 1.0.4.1, 1.0.4 a 1.0.401, 1.0.4a  all represent the same version\n\
 	OR util_cr + file ;add cr\n \

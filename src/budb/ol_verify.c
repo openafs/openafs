@@ -294,10 +294,10 @@ char *
 TypeName(index)
      int index;
 {
-    static char error[16];
+    static char error[36];
 
     if ((index < 0) || (index >= NBLOCKTYPES)) {
-	sprintf(error, "UNKNOWN_TYPE", index);
+	sprintf(error, "UNKNOWN_TYPE %d", index);
 	return (error);
     }
     return (typeName[index]);
@@ -1044,7 +1044,7 @@ verifyFreeLists()
 
 	    /* check block type */
 	    if (blockMap[blockIndex]->header.type != i) {
-		Log("verifyFreeLists: Found %s type in %s free chain\n",
+		Log("verifyFreeLists: Found %s type in %s free chain (addr 0x%x)\n",
 		    TypeName(blockMap[blockIndex]->header.type), TypeName(i),
 		    addr);
 		if (BumpErrors())

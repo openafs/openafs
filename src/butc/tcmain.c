@@ -210,7 +210,7 @@ atocl(numstring, crunit, number)
     }
 
     count =
-	sscanf(numstring, "%f%c%s", (unsigned char *)&total, &cunit, rest);
+	sscanf(numstring, "%f%c%s", &total, &cunit, rest);
     if ((count > 2) || (count <= 0))
 	return -1;
     if (count == 1)

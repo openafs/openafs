@@ -817,7 +817,7 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 					    changed_oldTime) << 1) | vnp->
 	  delete);
     if (thisProcess != vnp->writer)
-	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n", vnp);
+	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n", (int)vnp);
     if (vnp->delete) {
 	return 0;
     }
@@ -851,8 +851,8 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 		 * range or the inode table is full.
 		 */
 		VOL_LOCK if (code == BAD_IGET) {
-		    Log("VPutVnode: bad inumber %llu\n",
-			(afs_uintmax_t) vp->vnodeIndex[class].handle->ih_ino);
+		    Log("VPutVnode: bad inumber %s\n",
+			PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 		    *ec = VIO;
 		} else {
 		    Log("VPutVnode: Couldn't write vnode %u, volume %u (%s)\n", vnp->vnodeNumber, V_id(vnp->volumePtr), V_name(vnp->volumePtr));

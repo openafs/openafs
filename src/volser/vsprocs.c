@@ -3458,7 +3458,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	    replicas[i].trans = 0;
 	    if (code) {
 		fprintf(STDERR,
-			"Failed to end transaction on ro volume %u at server 0x%x\n",
+			"Failed to end transaction on ro volume %u at server %s\n",
 			entry.volumeId[ROVOL],
 			hostutil_GetNameByINet(htonl
 					       (replicas[i].server.

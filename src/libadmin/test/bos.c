@@ -1093,8 +1093,8 @@ Print_bos_KeyInfo_p(bos_KeyInfo_p key, const char *prefix)
     printf("%sVersion number: %d\n", prefix, key->keyVersionNumber);
     printf("%sLast modification date %d\n", prefix,
 	   key->keyStatus.lastModificationDate);
-    printf("%sLast modification micro seconds %d\n",
-	   key->keyStatus.lastModificationMicroSeconds, prefix);
+    printf("%sLast modification micro seconds %d\n", prefix,
+	   key->keyStatus.lastModificationMicroSeconds);
     printf("%sChecksum %u\n", prefix, key->keyStatus.checkSum);
 
     printf("%sKey: \n", prefix);

@@ -841,8 +841,8 @@ PrintVnodes(Volume * vp, VnodeClass class)
 		FDH_REALLYCLOSE(fdP1);
 		IH_RELEASE(ih1);
 		close(ofd);
-		printf("... Copied inode %llu to file %s (%d bytes)\n",
-		       (afs_uintmax_t) ino, nfile, total);
+		printf("... Copied inode %s to file %s (%d bytes)\n",
+		       PrintInode(NULL, ino), nfile, total);
 	    }
 	} else {
 #if defined(AFS_NAMEI_ENV)

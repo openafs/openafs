@@ -797,14 +797,14 @@ send_recv(pkt, rpkt, f, _to)
 	(void)fflush(stdout);
     }
     FD_ZERO(&readfds);
-    FD_SET(f, &readfds);
+    FD_SET(f,&readfds);
     errno = 0;
     /* select - either recv is ready, or timeout */
     /* see if timeout or error or wrong descriptor */
     if (select(f + 1, &readfds, (fd_set *) 0, (fd_set *) 0, &timeout) < 1
 	|| !FD_ISSET(f, &readfds)) {
 	if (krb_debug) {
-	    fprintf(stderr, "select failed: readfds=%x", readfds);
+	    fprintf(stderr, "select failed: readfds=%p", readfds);
 	    perror("");
 	}
 	return 0;
