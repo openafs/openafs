@@ -14,7 +14,20 @@
 #define NOLOGGING
 #ifndef NOLOGGING
 extern "C" {
-    void afsi_log(...);
+#include<stdio.h>
+#include<stdarg.h>
+
+    void afsi_log(TCHAR *p, ...) {
+        va_list marker;
+        TCHAR buffer[200];
+
+        va_start(marker,p);
+        _vstprintf(buffer,p,marker);
+        va_end(marker);
+        _tcscat(buffer,_T("\n"));
+
+        OutputDebugString(buffer);
+    }
 }
 #endif
 
@@ -439,9 +452,9 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	LONG rv;
 	int regLana;
 	int regGateway, regNoFindLanaByName;
-	char regNbName[MAX_NB_NAME_LENGTH];
-	char nbName[MAX_NB_NAME_LENGTH];
-	char hostname[MAX_COMPUTERNAME_LENGTH+1];
+	TCHAR regNbName[MAX_NB_NAME_LENGTH];
+	TCHAR nbName[MAX_NB_NAME_LENGTH];
+	TCHAR hostname[MAX_COMPUTERNAME_LENGTH+1];
 
 	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,szAFSConfigKeyName,0,KEY_READ,&hkConfig);
 	if(rv == ERROR_SUCCESS) {
@@ -572,8 +585,9 @@ extern "C" void lana_GetUncServerName(TCHAR *name, int type) {
 
 extern "C" void lana_GetAfsNameString(int lanaNumber, BOOL isGateway, TCHAR* name)
 {
-    lana_GetUncServerNameDynamic(lanaNumber, isGateway, name,LANA_NETBIOS_NAME_FULL);
-    _stprintf(name, _T("Your UNC name to reach the root of AFS is \\\\%s\\all"), name);
+    TCHAR netbiosName[32];
+    lana_GetUncServerNameDynamic(lanaNumber, isGateway, netbiosName, LANA_NETBIOS_NAME_FULL);
+    _stprintf(name, _T("Your UNC name to reach the root of AFS is \\\\%s\\all"), netbiosName);
 }
 
 extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
