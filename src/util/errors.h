@@ -48,8 +48,12 @@
 				   propagated to the application level */
 #define VMOVED		111	/* Volume has moved to another server; do a VGetVolumeInfo
 				   to THIS server to find out where */
-#define VIO		112	/* Vnode temporarily unaccessible, but not known to
+#define VIO		112	/* Vnode temporarily unaccessible, but not known 
 				   to be permanently bad. */
+#define VRESTRICTED     120     /* Volume is restricted from using one or more
+                                   of the given residencies; do a
+                                   vos examine to find out the current
+                                   restrictions. */
 #define VRESTARTING	-100    /* server is restarting, otherwise similar to 
 				   VBUSY above.  This is negative so that old
 				   cache managers treat it as "server is down"*/
