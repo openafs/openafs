@@ -65,7 +65,8 @@ case "$1" in
 	echo AFS_AFSDB=$RET >>/etc/openafs/afs.conf.client
 	db_get openafs-client/crypt
 	echo AFS_CRYPT=$RET >>/etc/openafs/afs.conf.client
-
+db_get openafs-client/dynroot
+echo AFS_DYNROOT=$RET >>/etc/openafs/afs.conf.client
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
