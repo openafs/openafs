@@ -179,3 +179,43 @@ afs_int32 *aval;
     else *aval = total;
     return 0;
 }
+
+afs_uint32
+GetUInt32 (as, aval)
+register char *as;
+afs_uint32 *aval;
+{
+    register afs_uint32 total;
+    register int tc;
+    int base;
+
+    total = 0;  /* initialize things */
+
+    /* skip over leading spaces */
+    while (tc = *as) {
+        if (tc != ' ' && tc != '\t') break;
+    }
+
+    /* compute the base */
+    if (*as == '0') {
+        as++;
+        if (*as == 'x' || *as == 'X') {
+            base = 16;
+            as++;
+	}
+        else base = 8;
+    }
+    else base = 10;
+
+    /* compute the # itself */
+    while(tc = *as) {
+        if (!ismeta(tc, base)) return -1;
+        total *= base;
+        total += getmeta(tc);
+        as++;
+    }
+    
+    *aval = total;
+    return 0;
+}
+
