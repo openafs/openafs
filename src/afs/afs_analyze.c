@@ -129,6 +129,17 @@ afs_CheckCode(acode, areq, where)
 	return EWOULDBLOCK;
     if (acode == VNOVNODE)
 	return ENOENT;
+    if (acode == VDISKFULL)
+	return ENOSPC;
+    if (acode == VOVERQUOTA)
+	return
+#ifdef EDQUOT
+	    EDQUOT
+#else
+	    ENOSPC
+#endif
+	    ;
+
     return acode;
 
 } /*afs_CheckCode*/
