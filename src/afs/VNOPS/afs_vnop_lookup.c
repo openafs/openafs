@@ -242,30 +242,23 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
  * without calling afs_EvalFakeStat is legal, as long as this
  * function is called.
  */
-
 void afs_InitFakeStat(struct afs_fakestat_state *state)
 {
     state->valid = 1;
     state->did_eval = 0;
     state->need_release = 0;
-    state->nonblock = 0;
 }
 
 /*
- * afs_EvalFakeStat
+ * afs_EvalFakeStat_int
  *
- * Automatically does the equivalent of EvalMountPoint for vcache entries
- * which are mount points.  Remembers enough state to properly release
- * the volume root vcache when afs_PutFakeStat() is called.
+ * The actual implementation of afs_EvalFakeStat and afs_TryEvalFakeStat,
+ * which is called by those wrapper functions.
  *
- * State variable must be initialized by afs_InitFakeState() beforehand.
- *
- * Returns 0 when everything succeeds and *avcp points to the vcache entry
- * that should be used for the real vnode operation.  Returns non-zero if
- * something goes wrong and the error code should be returned to the user.
+ * Only issues RPCs if canblock is non-zero.
  */
-int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
-	struct vrequest *areq)
+int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq, int canblock)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -284,7 +277,7 @@ int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
     code = afs_VerifyVCache(tvc, areq);
     if (code)
 	goto done;
-    if (!state->nonblock) {
+    if (canblock) {
 	ObtainWriteLock(&tvc->lock, 599);
 	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
 	ReleaseWriteLock(&tvc->lock);
@@ -297,7 +290,7 @@ int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
 	}
     }
     if (tvc->mvid && (tvc->states & CMValid)) {
-	if (state->nonblock) {
+	if (!canblock) {
 	    afs_int32 retry;
 
 	    do {
@@ -314,7 +307,7 @@ int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
 	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
 	}
 	if (!root_vp) {
-	    code = state->nonblock ? 0 : ENOENT;
+	    code = canblock ? ENOENT : 0;
 	    goto done;
 	}
 	if (tvolp) {
@@ -332,13 +325,33 @@ int afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
 	*avcp = root_vp;
 	code = 0;
     } else {
-	code = state->nonblock ? 0 : ENOENT;
+	code = canblock ? ENOENT : 0;
     }
 
 done:
     if (tvolp)
 	afs_PutVolume(tvolp, WRITE_LOCK);
     return code;
+}
+
+/*
+ * afs_EvalFakeStat
+ *
+ * Automatically does the equivalent of EvalMountPoint for vcache entries
+ * which are mount points.  Remembers enough state to properly release
+ * the volume root vcache when afs_PutFakeStat() is called.
+ *
+ * State variable must be initialized by afs_InitFakeState() beforehand.
+ *
+ * Returns 0 when everything succeeds and *avcp points to the vcache entry
+ * that should be used for the real vnode operation.  Returns non-zero if
+ * something goes wrong and the error code should be returned to the user.
+ */
+int
+afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq)
+{
+    return afs_EvalFakeStat_int(avcp, state, areq, 1);
 }
 
 /*
@@ -354,8 +367,7 @@ done:
 int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
 	struct vrequest *areq)
 {
-    state->nonblock = 1;
-    return afs_EvalFakeStat(avcp, state, areq);
+    return afs_EvalFakeStat_int(avcp, state, areq, 0);
 }
 
 /*
