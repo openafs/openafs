@@ -121,7 +121,7 @@ struct coda_inode_info {};
 #include "afs/longc_procs.h"
 #include "afs/afs_stats.h"
 #include "h/errno.h"
-#ifdef KERNEL
+#if 0/*def KERNEL*/
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #endif
