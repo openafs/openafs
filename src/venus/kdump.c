@@ -55,7 +55,7 @@ struct ncp_sb_info{};
 #define u16 unsigned short
 #include <features.h>
 #if __GLIBC_MINOR__ >= 2
-#define _SYS_TYPES_H
+#define _SYS_TYPES_H 1
 #endif
 #define __KERNEL__
 #endif

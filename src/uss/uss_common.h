@@ -23,6 +23,13 @@
 #include <stdio.h>		/*I/O stuff*/
 #include <afs/afsutil.h>
 #include <errno.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 /*
  * --------------------- Exported definitions ---------------------
