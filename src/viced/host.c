@@ -529,15 +529,6 @@ return;
  */
 #define	DEF_ROPCONS 2115
 
-struct host *h_Alloc(register struct rx_connection *r_con)
-{
-    struct host *retVal;
-    H_LOCK
-    retVal = h_Alloc_r(r_con);
-    H_UNLOCK
-    return retVal;
-}
-
 struct host *h_Alloc_r(register struct rx_connection *r_con)
 {
     register int code;
@@ -607,7 +598,7 @@ struct host *h_Alloc_r(register struct rx_connection *r_con)
 #endif /* FS_STATS_DETAILED */
     return host;
 
-} /*h_Alloc*/
+} /*h_Alloc_r*/
 
 
 /* Lookup a host given an IP address and UDP port number. */
