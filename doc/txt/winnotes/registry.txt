@@ -264,6 +264,12 @@ Variable: HardDeadtimeout
   The provides an opportunity for at least one retry.
 
 
+Value  : TraceOption
+Type   : DWORD {1|0}
+Default : 0
+
+  Enables trace events for the AFS client and network provider.
+
 Value   : AllSubmount
 Type    : DWORD {0, 1}
 Default : 1
@@ -320,7 +326,7 @@ Regkey:
 
 2. Network provider parameters
 ------------------------------
-Affects the network provider (aklogon.dll).
+Affects the network provider (afslogon.dll).
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]
@@ -369,24 +375,6 @@ NSIS    : Tcpip NETBIOS RpcSs
   depends.  Windows should not attempt to start the AFS Client Service
   until all of the specified services have successfully started.
   
-Value   : LogonOptions
-Type    : DWORD
-NSIS    : depends on user configuration
-
-  0x00 - Integrated Logon is not used
-  0x01 - Integrated Logon is used
-  0x02 - High Security Mode is used
-  0x03 - Integrated Logon with High Security Mode is used
-
-  High Security Mode generates random SMB names for the creation of
-  Drive Mappings.  This mode should not be used without Integrated Logon.
-
-Value   : LogonScript
-Type    : REG_SZ
-NSIS    : <install path>\afscreds.exe -:%s -x
-
-  Specifies the command to be executed at the end of successful logon.
-
 Value   : Name
 Type    : REG_SZ
 NSIS    : "OpenAFSDaemon"
@@ -399,17 +387,152 @@ NSIS    : <install path>\afslogon.dll
 
   Specifies the DLL to use for the network provider
 
-Value  : TraceOption
-Type   : DWORD {1|0}
-Default : 0
+2.1 Domain specific configuration keys
+--------------------------------------
 
-  Enables trace events for the network provider.
+The network provider can be configured to have different behavior
+depending on the domain that the user logs into.  These settings are
+only relevant when using integrated login.  A domain refers to an
+Active Directory (AD) domain, a trusted Kerberos (non-AD) realm or the
+local machine (i.e. local account logins).  The domain name that is
+used for selecting the domain would be the domain that is passed into
+the NPLogonNotify function of the network provider.
 
-Value   : VerboseLogging
-Type    : DWORD
-NSIS    : 0x0a
+Domain specific registry keys are :
 
-  Determines the level of logging to be enabled
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+  (NP key)
+
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
+  (Domains key)
+
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
+  (Specific domain key. One per domain.)
+
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]
+  (Localhost key)
+
+eg:
+ HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider
+  |
+  +- Domain
+     +-AD1.EXAMPLE.COM
+     +-AD2.EXAMPLE.NET
+     +-LOCALHOST
+
+Each of the domain specific keys can have the set of values described
+in 2.1.1.  The effective values are chosen as described in 2.1.2.
+
+2.1.1  Domain specific configuration values
+-------------------------------------------
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]
+
+  Value   : LogonOptions
+  Type    : DWORD
+  Default : 0x01
+  NSIS/WiX: depends on user configuration
+
+  0x00 - Integrated Logon is not used
+  0x01 - Integrated Logon is used
+  0x02 - High Security Mode is used
+  0x03 - Integrated Logon with High Security Mode is used
+
+  High Security Mode generates random SMB names for the creation of
+  Drive Mappings.  This mode should not be used without Integrated Logon.
+
+  As of 1.3.65 the SMB server supports SMB authentication.  The High
+  Security Mode should not be used when using SMB authentication
+  (SMBAuthType setting is non zero).
+
+  Value   : FailLoginsSilently
+  Type    : DWORD (1|0)
+  Default : 0
+  NSIS/WiX: (not set)
+
+     If true, does not display any visible warnings in the event of an
+     error during the integrated login process.
+
+  Value   : LogonScript
+  Type    : REG_SZ or REG_EXPAND_SZ
+  Default : (null)
+  NSIS/WiX: (only value under NP key) <install path>\afscreds.exe -:%s -x -a -m -n -q
+
+     A logon script that will be scheduled to be run after the profile
+     load is complete.  If using the REG_EXPAND_SZ type, you can use
+     any system environment variable as "%varname%" which would be
+     expanded at the time the network provider is run.  Optionally
+     using a "%s" in the value would result in it being expanded into
+     the AFS SMB username for the session.
+
+  Value   : LoginRetryInterval
+  Type    : DWORD
+  Default : 30
+  NSIS/WiX: (not set)
+
+     If the OpenAFS client service has not started yet, the network
+     provider will wait for a maximum of "LoginRetryInterval" seconds
+     while retrying every "LoginSleepInterval" seconds to check if the
+     service is up.
+
+  Value   : LoginSleepInterval
+  Type    : DWORD
+  Default : 5
+  NSIS/WiX: (not set)
+
+     See description of LoginRetryInterval.
+
+
+2.1.2  Selection of effective values for domain specific configuration
+----------------------------------------------------------------------
+
+  During login to domain X, where X is the domain passed into
+  NPLogonNotify as lpAuthentInfo->LogonDomainName or the string
+  'LOCALHOST' if lpAuthentInfo->LogonDomainName equals the name of the
+  computer, the following keys will be looked up.
+
+    1. NP key. ("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider")
+    2. Domains key. (NP key\"Domain")
+    3. Specific domain key. (Domains key\X)
+
+  If the specific domain key does not exist, then the domains key will
+  be ignored.  All the configuration information in this case will
+  come from the NP key.
+
+  If the specific domain key exists, then for each of the values
+  metioned in (2), they will be looked up in the specific domain key,
+  domains key and the NP key successively until the value is found.
+  The first instance of the value found this way will be the effective
+  for the login session.  If no such instance can be found, the
+  default will be used.  To re-iterate, a value in a more specific key
+  supercedes a value in a less specific key.  The exceptions to this
+  rule are stated below.
+
+2.1.3  Exceptions to 2.1.2
+--------------------------
+
+  To retain backwards compatibility, the following exceptions are made
+  to 2.1.2.
+
+2.1.3.1 'FailLoginsSilently'
+
+  Historically, the 'FailLoginsSilently' value was in
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+  key and not in the NP key.  Therefore, for backwards compatibility,
+  the value in the Parameters key will supercede all instances of this
+  value in other keys.  In the absence of this value in the Parameters
+  key, normal scope rules apply.
+
+2.1.3.2 'LogonScript'
+
+  If a 'LogonScript' is not specified in the specific domain key nor
+  in the domains key, the value in the NP key will only be checked if
+  the effective 'LogonOptions' specify a high security integrated
+  login.  If a logon script is specified in the specific domain key or
+  the domains key, it will be used regardless of the high security
+  setting.  Please be aware of this when setting this value.
 
 
 3. AFS Credentials System Tray Tool parameters
