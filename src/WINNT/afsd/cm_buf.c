@@ -19,8 +19,13 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <assert.h>
+#include <strsafe.h>
 
 #include "afsd.h"
+
+#ifdef DEBUG
+#define TRACE_BUFFER 1
+#endif
 
 extern void afsi_log(char *pattern, ...);
 
@@ -306,12 +311,12 @@ long buf_Init(cm_buf_ops_t *opsp)
                              OPEN_ALWAYS,
                              FILE_ATTRIBUTE_NORMAL,
                              NULL);
+            FreeCacheFileSA(psa);
             if (hf == INVALID_HANDLE_VALUE) {
                 afsi_log("Error creating cache file \"%s\" error %d", 
                           cm_CachePath, GetLastError());
                 return CM_ERROR_INVAL;
             }
-            FreeCacheFileSA(psa);
         } else { /* buf_cacheType == CM_BUF_CACHETYPE_VIRTUAL */
             hf = INVALID_HANDLE_VALUE;
         }
@@ -378,8 +383,11 @@ long buf_Init(cm_buf_ops_t *opsp)
         /* just for safety's sake */
         buf_maxReservedBufs = buf_nbuffers - 3;
 
+#ifdef TRACE_BUFFER
         /* init the buffer trace log */
-        buf_logp = osi_LogCreate("buffer", 10);
+        buf_logp = osi_LogCreate("buffer", 1000);
+        osi_LogEnable(buf_logp);
+#endif
 
         osi_EndOnce(&once);
 
@@ -532,7 +540,7 @@ void buf_WaitIO(cm_buf_t *bp)
         bp->flags |= CM_BUF_WAITING;
         osi_SleepM((long) bp, &bp->mx);
         lock_ObtainMutex(&bp->mx);
-		osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
+        osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%x", bp);
     }
         
     /* if we get here, the IO is done, but we may have to wakeup people waiting for
@@ -1481,3 +1489,24 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie)
     return 0;
 }
 
+void buf_ForceTrace(BOOL flush)
+{
+    HANDLE handle;
+    int len;
+    char buf[256];
+
+    if (!buf_logp) 
+        return;
+
+    len = GetTempPath(sizeof(buf)-10, buf);
+    StringCbCopyA(&buf[len], sizeof(buf)-len, "/afs-buffer.log");
+    handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
+			    NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (handle == INVALID_HANDLE_VALUE) {
+        osi_panic("Cannot create log file", __FILE__, __LINE__);
+    }
+    osi_LogPrint(buf_logp, handle);
+    if (flush)
+        FlushFileBuffers(handle);
+    CloseHandle(handle);
+}

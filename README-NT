@@ -42,17 +42,38 @@ The Microsoft development tools require anywhere from 660 MB to 1.8GB
 of storage depending on which compilers are selected.  The following 
 versions are supported:
 
-    Microsoft Visual C++ 6.0
     Microsoft Visual .NET 
-    Microsoft Visual .NET 2003 (recommended)
+      available via a MSDN subscription
 
-    Microsoft Platform SDK for Windows XP SP2
-      [Core and Data Access SDKs are required]
+    Microsoft Visual .NET 2003 (recommended)
+      available via a MSDN subscription
+
+    Microsoft Visual C++ Toolkit 2003 (same as .NET 2003)
+      http://msdn.microsoft.com/visualc/vctoolkit2003/
+
+The following Microsoft SDK is required:
+
+    Microsoft Platform SDK for Windows XP SP2 [Core, Data Access and Installer SDKs are required]
+      http://www.microsoft.com/msdownload/platformsdk/sdkupdate/downlevel.htm [IE required]
+      http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
+
+The following Microsoft DDK is required:
+
+    Microsoft Windows Server 2003 DDK
+      available via a MSDN subscription or via free CD
+      http://www.microsoft.com/whdc/devtools/ddk/orderddkcd.mspx
 
 The NSIS installer requires about 14 MB of storage. The following 
-version is supported.
+version is supported:
 
     Nullsoft Scriptable Installation System 2.0 
+      http://nsis.sourceforge.net/home/
+
+The WiX installer requires about 18 MB of storage.  The following 
+version is supported:
+
+    Wix 2.0.2217.0
+      http://prdownloads.sourceforge.net/wix/sources-2.0.2217.0.zip
 
 The InstallShield scripts (although not supported) require version 5.5
 of InstallShiled. Version 6.0 or higher of InstallShield are not 
@@ -69,13 +90,13 @@ Transfer OpenAFS source tree onto your hardrive.  The source can be
 downloaded from the OpenAFS web site:
 	http://www.OpenAFS.org/release/snapindex.html.
 
-For this example, download source for version 1.3.60 using the
+For this example, download source for version 1.3.74 using the
 following URL:
-http://www.openafs.org/dl/openafs/1.3.60/openafs-1.3.60-src.tar
+http://www.openafs.org/dl/openafs/1.3.74/openafs-1.3.74-src.tar
 
 HINT: DailySnapShots are pre-release source trees and much more
 likely to have compilation errors. If this is your first attempt, do
-your build based on a release version of the source, e.g. 1.3.60. Once
+your build based on a release version of the source, e.g. 1.3.74. Once
 you have completed a build process successfully, you can experiment with
 other source trees.
 
@@ -83,23 +104,24 @@ You will need an unzip utility that can expand compressed tar files.
 For example "Pkzip for Windows" from Pkware will uncompress tar files.
 (http://www.pkware.com/)
 
-Expand the downloaded tar file (openafs-1.3.60-src.tar) into target
+Expand the downloaded tar file (openafs-1.3.74-src.tar) into target
 directory (c:\OpenAFS), the unzip routine will expand the source into a
 subdirectory tree:
-		c:\OpenAFS\OpenAFS-1.3.60\src
+    c:\OpenAFS\OpenAFS-1.3.74\src
 
 Copy the files 'NTMakefile' and 'ntbuild.bat' from 'src' to the OpenAFS 
-base directory:
+base directory (aka %AFSROOT%):
 
   From a DOS command prompt window, enter the following copy commands:
 
-    copy c:\OpenAFS\OpenAFS-1.3.60\src\NTMakefile c:\OpenAFS\OpenAFS-1.3.60\.
-    copy c:\OpenAFS\OpenAFS-1.3.60\src\ntbuild.bat c:\OpenAFS\OpenAFS-1.3.60\.
+    cd c:\OpenAFS\OpenAFS-1.3.74
+    copy src\NTMakefile .
+    copy src\ntbuild.bat .
 
 
 The AFS base directory should look something like the following:
 
-  c:\OpenAFS\OpenAFS-1.3.60\
+  c:\OpenAFS\OpenAFS-1.3.74\
     NTMakefile
     ntbuild.bat
     src
@@ -107,8 +129,8 @@ The AFS base directory should look something like the following:
 
 STEP B. Install compiler and development tools.
 
-Install a copy of Microsoft Visual C++ 6.0, Visual .NET, or Visual .NET 2003.
-The "Typical" install setting is sufficient.
+Install a copy of Microsoft Visual .NET, Visual .NET 2003, Visual C++
+Toolkit 2003.  The "Typical" install setting is sufficient.
 
 (1) You can reduce the installation size by selecting "Custom" install
 and remove all but the following Options:
@@ -121,17 +143,19 @@ and remove all but the following Options:
 
 STEP C. Install SDK header files.
 
-Files from Microsoft's Platform SDK (August 2001 or later) are required to
-complete a build on Windows 2000 or XP.   You can install the "Core SDK"
-from
+Files from Microsoft's Platform SDK for Windows XP SP2 is required to
+complete a build on Windows 2000/XP/2003.   You can install the "Core, Data
+Access and Installer SDKs" from
 
   http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
 
 by using Internet Explorer 5.x or higher.  (Active X controls are required)
+If you do not which to use IE a complete SDK package is available from
+
+  http://www.microsoft.com/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
 
 The header files that are required are found from a Microsoft SDK are:
 
-   netspi.h   (Windows 9x builds)
    npapi.h    (Windows 2000,XP,2003 builds)
    netcfgx.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
    netcfgn.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
@@ -139,16 +163,11 @@ The header files that are required are found from a Microsoft SDK are:
 These files come from the following Microsoft DDKs/SDKs:
 
    npapi.h:
-        Windows XP/2003 Platform SDK - include/
+        Windows XP SP2 Platform SDK - include/
 
    netcfgn.h, netcfgx.h:
         Windows XP/2003 DDK - inc/wxp/
 
-   netmpr.h, netspi.h:
-       July 1998 Windows 95 DDK - net/inc/netmpr.h and net/inc/netspi.h
-       July 1999 Windows 98 DDK - src/net/inc/netmpr.h and src/net/inc/netspi.h
-                                - you need to install "Legacy and Related
-                                  driver samples"
 
 STEP D. Configure NTBUILD.BAT.
 
@@ -159,6 +178,7 @@ must be defined to match your configuration:
   AFSVER_CL: Set to 1200 if using MS Visual C++ 6.0
              Set to 1300 if using MS Visual .NET
              Set to 1310 if using MS Visual .NET 2003
+             Set to 1400 if using MS Visual .NET 2005
 
   MSVCDIR: Set to the short name version of the directory into which
            the visual C++ compiler was installed regardless of version
@@ -184,17 +204,17 @@ Edit file %AFSROOT%\src\config\NTMakefile.i386_nt40
     AFSPRODUCT_VER_MINOR - Version Minor Number
     AFSPRODUCT_VER_PATCH - Version Patch Number
     AFSPRODUCT_VER_BUILD - Version Build Number
-	CELLSERVDB_INSTALL - The default file name for the CellServDB
-	included in the install Package.
-	CELLNAME_DEFAULT -  The default home cell name.
-	CELLSERVDB_WEB  - The default web address to obtain CellServDB
+    CELLSERVDB_INSTALL   - The default file name for the CellServDB
+                     	   included in the install Package.
+    CELLNAME_DEFAULT     - The default home cell name.
+    CELLSERVDB_WEB       - The default web address to obtain CellServDB
 
 For example: in the file %AFSROOT%\src\config\NTMakefile.i386_nt40 you would
 see the following:
 
    AFSPRODUCT_VER_MAJOR=1
    AFSPRODUCT_VER_MINOR=3
-   AFSPRODUCT_VER_PATCH=6000
+   AFSPRODUCT_VER_PATCH=7400
    AFSPRODUCT_VER_BUILD=0
    CELLNAME_DEFAULT=openafs.org
    CELLSERVDB_INSTALL=CellServDB.GrandCentral
@@ -206,7 +226,7 @@ one that can be downloaded from the web (CELLSERVDB_WEB).
 
 STEP F. Begin the build
 
-(1) From Windows 2000/XP open up a DOS prompt window.
+(1) From Windows 2000/XP/2003 open up a DOS prompt window.
 
 (2) Change to the %AFSROOT% directory
 
@@ -267,16 +287,16 @@ sources.  The following changes were made to exehead\config.h.
 
 STEP H.  Build OpenAFS NSIS install package
 
-From the DOS command prompt window run:
+From the %AFSROOT% directory execute:
 
     nmake /f NTMakefile NSIS
 
 
 STEP I.  Install Wix MSI Installer
 
-Download the Wix 2.0.1927.1 installer from 
+Download the Wix 2.0.2217.0 installer from 
 
-    http://prdownloads.sourceforge.net/wix/sources-2.0.1927.1.zip
+    http://prdownloads.sourceforge.net/wix/sources-2.0.2217.0.zip
 
 Apply the following patches to the source tree and execute 
 
@@ -284,152 +304,114 @@ Apply the following patches to the source tree and execute
 
 from the \src\wix directory.  
 
+Index: src/wix/Common.cs
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/Common.cs,v
+retrieving revision 1.7
+diff -w -r1.7 Common.cs
+140a141,146
+> 		public static long GetFileTimeFromDateTime(string dateTime) 
+> 		{
+> 			System.DateTime sdt = System.Xml.XmlConvert.ToDateTime(dateTime);
+> 			return sdt.ToFileTime();
+> 		}
+> 
 Index: src/wix/Compiler.cs
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/Compiler.cs,v
-retrieving revision 1.10
-diff -u -w -r1.10 Compiler.cs
---- src/wix/Compiler.cs	28 Jul 2004 15:50:22 -0000	1.10
-+++ src/wix/Compiler.cs	4 Aug 2004 16:28:16 -0000
-@@ -647,7 +647,7 @@
-                 // add the core registry keys for each context in the class
-                 for (int i = 0; i < contextCount; ++i)
-                 {
--                    this.AddRegistryKey(sourceLineNumbers, null, 0, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[!", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
-+                    this.AddRegistryKey(sourceLineNumbers, null, 0, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[#", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
-                     if (null != icon) // ClassId default icon
-                     {
-                         if (null != iconIndex)
-@@ -7385,6 +7385,20 @@
-                             break;
-                     }
-                         break;
-+					case "Delete":
-+						switch (attrib.Value)
-+						{
-+							case "install":
-+								events |= MsiInterop.MsidbServiceControlEventDelete;
-+								break;
-+							case "uninstall":
-+								events |= MsiInterop.MsidbServiceControlEventUninstallDelete;
-+								break;
-+							case "both":
-+								events |= MsiInterop.MsidbServiceControlEventDelete | MsiInterop.MsidbServiceControlEventUninstallDelete;
-+								break;
-+						}
-+						break;
-                     case "Wait":
-                         wait = Common.IsYes(attrib.Value, sourceLineNumbers, node.Name, attrib.Name, id) ? "1" : "0";   // strings used since integer column is nullable
-                         break;
-@@ -8715,6 +8729,7 @@
-                         }
-                         bits ^= (bit * 65536);
-                         break;
-+
-                     default:
-                         bit = this.NameToBit(MsiInterop.CommonControlAttributes, attrib.Name, attrib.Value, node.Name, id);
-                         if (-1 == bit)
+retrieving revision 1.14
+diff -w -r1.14 Compiler.cs
+847c847
+<                     this.AddRegistryKey(sourceLineNumbers, null, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[!", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
+---
+>                     this.AddRegistryKey(sourceLineNumbers, null, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[#", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
+2352a2353,2358
+> 			// if a Value attribute was given by itself, make this a type 19 custom action
+> 			if( sourceBits == 0 && targetBits == MsiInterop.MsidbCustomActionTypeTextData ) 
+> 			{
+> 				sourceBits = MsiInterop.MsidbCustomActionTypeSourceFile;
+> 			}
+> 
+3881c3887
+<                         minDate = attrib.Value;
+---
+>                         minDate = Common.GetFileTimeFromDateTime( attrib.Value ).ToString();
+3884c3890
+<                         maxDate = attrib.Value;
+---
+>                         maxDate = Common.GetFileTimeFromDateTime( attrib.Value ).ToString();
+8187a8194,8207
+> 					case "Delete":
+> 						switch (attrib.Value)
+> 						{
+> 							case "install":
+> 								events |= MsiInterop.MsidbServiceControlEventDelete;
+> 								break;
+> 							case "uninstall":
+> 								events |= MsiInterop.MsidbServiceControlEventUninstallDelete;
+> 								break;
+> 							case "both":
+> 								events |= MsiInterop.MsidbServiceControlEventDelete | MsiInterop.MsidbServiceControlEventUninstallDelete;
+> 								break;
+> 						}
+> 						break;
+9685a9706
+> 
 Index: src/wix/Preprocessor.cs
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/Preprocessor.cs,v
-retrieving revision 1.5
-diff -u -w -r1.5 Preprocessor.cs
---- src/wix/Preprocessor.cs	28 Jul 2004 15:50:22 -0000	1.5
-+++ src/wix/Preprocessor.cs	4 Aug 2004 16:28:16 -0000
-@@ -267,12 +267,12 @@
-                             break;
-                         case "ifdef":
-                             stack.Push(context);
--                            context = new IfContext(context.IsTrue & context.Active, this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
-+                            context = new IfContext(context.IsTrue & context.Active, this.IsDefined(reader.Value.Trim()), IfState.If);
-                             ignore = true;
-                             break;
-                         case "ifndef":
-                             stack.Push(context);
--                            context = new IfContext(context.IsTrue & context.Active, !this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
-+                            context = new IfContext(context.IsTrue & context.Active, !this.IsDefined(reader.Value.Trim()), IfState.If);
-                             ignore = true;
-                             break;
-                         case "elseif":
-@@ -354,6 +354,8 @@
-                             break;
-                         case "endforeach": // endforeach is handled in PreprocessForeach, so seeing it here is an error
-                             throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), "Cannot have a <?endforeach?> processing instruction without a matching <?foreach?>.");
-+						case "error":
-+							throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), this.PreprocessVariables(reader.Value));
-                         default:
-                             // Console.WriteLine("processing instruction: {0}, {1}", reader.Name, reader.Value);
-                             break;
-@@ -401,6 +403,22 @@
-         }
- 
-         /// <summary>
-+		/// Returns true if the symbol exists.
-+		/// </summary>
-+		/// <param name="symbol">symbol name to check</param>
-+		/// <returns>true if symbol is defined</returns>
-+		private bool IsDefined(string symbol)
-+		{
-+			if( symbol.StartsWith("env.") )
-+				return Environment.GetEnvironmentVariable(symbol.Substring(4)) != null;
-+			if( symbol.StartsWith("var.") )
-+				return this.variables.ContainsKey(symbol.Substring(4));
-+			if( symbol.StartsWith("sys.") )
-+				return this.systemVariables.ContainsKey(symbol.Substring(4));
-+			return this.variables.ContainsKey(symbol);
-+		}
-+
-+        /// <summary>
-         /// Replaces parameters in the source text.
-         /// </summary>
-         /// <param name="value">Text that may contain parameters to replace.</param>
+retrieving revision 1.6
+diff -w -r1.6 Preprocessor.cs
+274c274
+<                             context = new IfContext(context.IsTrue & context.Active, this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
+---
+>                             context = new IfContext(context.IsTrue & context.Active, this.IsDefined(reader.Value.Trim()), IfState.If);
+279c279
+<                             context = new IfContext(context.IsTrue & context.Active, !this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
+---
+>                             context = new IfContext(context.IsTrue & context.Active, !this.IsDefined(reader.Value.Trim()), IfState.If);
+360a361,362
+> 						case "error":
+> 							throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), this.PreprocessVariables(reader.Value));
+419a422,437
+> 		/// Returns true if the symbol exists.
+> 		/// </summary>
+> 		/// <param name="symbol">symbol name to check</param>
+> 		/// <returns>true if symbol is defined</returns>
+> 		private bool IsDefined(string symbol)
+> 		{
+> 			if( symbol.StartsWith("env.") )
+> 				return Environment.GetEnvironmentVariable(symbol.Substring(4)) != null;
+> 			if( symbol.StartsWith("var.") )
+> 				return this.variables.ContainsKey(symbol.Substring(4));
+> 			if( symbol.StartsWith("sys.") )
+> 				return this.systemVariables.ContainsKey(symbol.Substring(4));
+> 			return this.variables.ContainsKey(symbol);
+> 		}
+> 
+>         /// <summary>
 Index: src/wix/wix.csproj
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/wix.csproj,v
 retrieving revision 1.4
-diff -u -w -r1.4 wix.csproj
---- src/wix/wix.csproj	31 May 2004 01:07:40 -0000	1.4
-+++ src/wix/wix.csproj	4 Aug 2004 16:28:16 -0000
-@@ -659,9 +659,19 @@
-                     BuildAction = "EmbeddedResource"
-                 />
-                 <File
-+                    RelPath = "Xsd\wix.xsx"
-+                    DependentUpon = "wix.xsd"
-+                    BuildAction = "None"
-+                />
-+                <File
-                     RelPath = "Xsd\wixloc.xsd"
-                     BuildAction = "Content"
-                 />
-+                <File
-+                    RelPath = "Xsd\wixloc.xsx"
-+                    DependentUpon = "wixloc.xsd"
-+                    BuildAction = "None"
-+                />
-             </Include>
-         </Files>
-     </CSHARP>
-Index: src/wix/Xsd/wix.xsd
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/Xsd/wix.xsd,v
-retrieving revision 1.12
-diff -u -w -r1.12 wix.xsd
---- src/wix/Xsd/wix.xsd	28 Jul 2004 15:50:24 -0000	1.12
-+++ src/wix/Xsd/wix.xsd	4 Aug 2004 16:28:17 -0000
-@@ -2733,6 +2733,7 @@
- 					</xs:restriction>
- 				</xs:simpleType>
- 			</xs:attribute>
-+			<xs:attribute name="Separator" type="xs:string"/>
- 			<xs:attribute name="Permanent" type="YesNoType"/>
- 			<xs:attribute name="System" type="YesNoType"/>
- 		</xs:complexType>
+diff -w -r1.4 wix.csproj
+661a662,666
+>                     RelPath = "Xsd\wix.xsx"
+>                     DependentUpon = "wix.xsd"
+>                     BuildAction = "None"
+>                 />
+>                 <File
+664a670,674
+>                 <File
+>                     RelPath = "Xsd\wixloc.xsx"
+>                     DependentUpon = "wixloc.xsd"
+>                     BuildAction = "None"
+>                 />
 
 
 STEP J.  Build Wix MSI install package
 
-From the DOS command prompt window run:
+From the %AFSROOT% directory execute:
 
     nmake /f NTMakefile wix
 
@@ -442,7 +424,7 @@ STEP K. Final Results
 The build process generates its binaries in %AFSROOT%\DEST. The subdirectory
 would look like the following:
 
-%AFSROOT%:\DEST\{checked,free}\
+%AFSROOT%\DEST\{checked,free}\
 	bin
 	etc
 	include
@@ -454,7 +436,8 @@ would look like the following:
     Bin - contains build utilities.
     root.client - contains Open AFS binaries
     root.server - contain Open AFS Server binaries
-    WinInstall\OpenAFSforWindows.exe - is the install package for Open AFS
+    WinInstall\OpenAFSforWindows.exe - is the NSIS install package
+    WinInstall\openafs-en_US.msi - is the WiX MSI install package
 
 
 STEP L. Optional Items

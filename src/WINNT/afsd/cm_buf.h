@@ -195,6 +195,8 @@ extern long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp,
 
 extern long buf_SetNBuffers(long nbuffers);
 
+extern void buf_ForceTrace(BOOL flush);
+
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */
 #define CM_ERROR_BASEBUF	0x33333333

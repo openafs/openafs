@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_module.c,v 1.5 2004/03/10 23:01:51 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_module.c,v 1.5.2.1 2004/11/09 17:11:34 shadow Exp $");
 
 #include <afs/sysincludes.h>
 #include <afsincludes.h>
@@ -43,21 +43,25 @@ afs_module_handler(module_t mod, int what, void *arg)
     case MOD_LOAD:
 	if (inited) {
 	    printf("afs cannot be MOD_LOAD'd more than once\n");
-	    error = -1;
+	    error = EBUSY;
 	    break;
 	}
 	if (sysent[AFS_SYSCALL].sy_call != nosys
 	    && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
 	    printf("AFS_SYSCALL in use. aborting\n");
-	    error = -1;
+	    error = EBUSY;
 	    break;
 	}
 	memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
+#ifdef AFS_FBSD53_ENV
+	afs_vfsconf.vfc_version = VFS_VERSION;
+#endif
 	strcpy(afs_vfsconf.vfc_name, "AFS");
 	afs_vfsconf.vfc_vfsops = &afs_vfsops;
 	afs_vfsconf.vfc_typenum = -1;	/* set by vfs_register */
 	afs_vfsconf.vfc_flags = VFCF_NETWORK;
-	vfs_register(&afs_vfsconf);	/* doesn't fail */
+	if ((error = vfs_register(&afs_vfsconf)) != 0)
+	    break;
 	vfs_add_vnodeops(&afs_vnodeop_opv_desc);
 	osi_Init();
 #if 0
@@ -80,11 +84,10 @@ afs_module_handler(module_t mod, int what, void *arg)
 	    break;
 	}
 	if (afs_globalVFS) {
-	    error = -1;
+	    error = EBUSY;
 	    break;
 	}
-	if (vfs_unregister(&afs_vfsconf)) {
-	    error = -1;
+	if ((error = vfs_unregister(&afs_vfsconf)) != 0) {
 	    break;
 	}
 	vfs_rm_vnodeops(&afs_vnodeop_opv_desc);

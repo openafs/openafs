@@ -126,6 +126,9 @@ $(DLLFILE) : $(DLLOBJS) $(DLLLIBS)
 	$(DEL) $*.lib $*.exp
 
 clean::
+	$(CD) lang
+	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile clean
+	$(CD) ..
 
 
 ############################################################################

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.2 2004/10/18 17:44:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.3 2004/11/05 19:21:58 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -530,7 +530,7 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
 	CloseHandle(reqHandle);
 	errno = CMtoUNIXerror(temp);
         if ( IoctlDebug() )
-            fprintf(stderr, "pioctl temp != 0: %d\r\n",temp);
+            fprintf(stderr, "pioctl temp != 0: 0x%X\r\n",temp);
 	return -1;
     }
 

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.18 2003/07/15 23:14:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.18.2.1 2004/11/09 17:18:18 shadow Exp $");
 
 /* Ugly Ugly Ugly  but precludes conflicting XDR macros; We want kernel xdr */
 #define __XDR_INCLUDE__
@@ -747,6 +747,13 @@ afs_nfs3_noaccess(struct afs_nfs3_resp *resp)
     resp->flags = FALSE;
 }
 
+void
+afs_nfs3_notsupp(struct afs_nfs3_resp *resp)
+{
+    resp->status = NFS3ERR_NOTSUPP;
+    resp->flags = FALSE;
+}
+
 afs_int32
 nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
 {
@@ -1370,6 +1377,8 @@ afs_nfs3_readdirplus(char *args, char *xp, char *exp, char *rp, char *crp)
 			    crp);
     if (call > 1)
 	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+    else if (call == 1)
+	afs_nfs3_notsupp((struct afs_nfs3_resp *)xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_READDIRPLUS].orig_proc) (args, xp, exp,
 							      rp, crp);

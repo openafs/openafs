@@ -458,13 +458,26 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ParseIoctlPath(ioctlp, userp, &req, &scp);
     if (code) return code;
 
-    cellp = cm_FindCellByID(scp->fid.cell);
-    if (cellp) {
-        strcpy(ioctlp->outDatap, cellp->namep);
+#ifdef AFS_FREELANCE_CLIENT
+    if ( cm_freelanceEnabled && 
+         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
+         scp->fid.vnode==0x1 && scp->fid.unique==0x1 ) {
+        strcpy(ioctlp->outDatap, "Freelance.Local.Root");
         ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
         code = 0;
+    } else 
+#endif /* AFS_FREELANCE_CLIENT */
+    {
+        cellp = cm_FindCellByID(scp->fid.cell);
+        if (cellp) {
+            strcpy(ioctlp->outDatap, cellp->namep);
+            ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
+            code = 0;
+        }
+        else 
+            code = CM_ERROR_NOSUCHCELL;
     }
-    else code = CM_ERROR_NOSUCHCELL;
 
     cm_ReleaseSCache(scp);
     return code;
@@ -983,6 +996,7 @@ long cm_IoctlTraceControl(struct smb_ioctl *ioctlp, struct cm_user *userp)
     /* print trace */
     if (inValue & 8) {
         afsd_ForceTrace(FALSE);
+        buf_ForceTrace(FALSE);
     }
         
     if (inValue & 2) {
@@ -1213,6 +1227,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
          * do lookups of @sys entries and thinks it can trust them */
         /* privs ok, store the entry, ... */
         strcpy(cm_sysName, inname);
+		strcpy(cm_sysNameList[0], inname);
         if (setSysName > 1) {       /* ... or list */
             cp = ioctlp->inDatap;
             for (count = 1; count < setSysName; ++count) {
@@ -1220,7 +1235,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
                                __FILE__, __LINE__);
                 t = strlen(cp);
-                memcpy(cm_sysNameList[count], cp, t + 1);  /* include null */
+                strcpy(cm_sysNameList[count], cp);
                 cp += t + 1;
             }
         }
@@ -1509,6 +1524,26 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     cp = ioctlp->inDatap;		/* contents of link */
 
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+        /* we are adding the symlink to the root dir., so call
+         * the freelance code to do the add. */
+        if (cp[0] == cp[1] && cp[1] == '\\' && 
+            !_strnicmp(cm_NetbiosName,cp+2,strlen(cm_NetbiosName))) 
+        {
+            /* skip \\AFS\ or \\AFS\all\ */
+            char * p;
+            p = cp + 2 + strlen(cm_NetbiosName) + 1;
+            if ( !_strnicmp("all", p, 3) )
+                p += 4;
+            cp = p;
+        }
+        osi_Log0(afsd_logp,"IoctlCreateSymlink within Freelance root dir");
+        code = cm_FreelanceAddSymlink(leaf, cp, NULL);
+        return code;
+    }
+#endif
+
     /* Create symlink with mode 0755. */
     tattr.mask = CM_ATTRMASK_UNIXMODEBITS;
     tattr.unixModeBits = 0755;
@@ -1617,6 +1652,16 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) return code;
 
     cp = ioctlp->inDatap;
+
+#ifdef AFS_FREELANCE_CLIENT
+    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+        /* we are adding the mount point to the root dir., so call
+         * the freelance code to do the add. */
+        osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
+        code = cm_FreelanceRemoveSymlink(cp);
+        return code;
+    }
+#endif
 
     code = cm_Lookup(dscp, cp, CM_FLAG_NOMOUNTCHASE, userp, &req, &scp);
         

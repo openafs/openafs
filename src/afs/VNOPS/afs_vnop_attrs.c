@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.2 2004/11/09 17:17:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -317,6 +317,14 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 				     CMB_ALLOW_EXEC_AS_READ)) {
 		    return EACCES;
 		}
+#if 0
+/* The effect of the following is to force the NFS client to refetch the
+ * volume root every time, since the mtime changes.  For Solaris 9 NFSv3
+ * clients, this means looping forever, since for some reason (related
+ * to caching?) it wants the mtime to be consistent two reads in a row.
+ * Why are volume roots special???
+ * --jhutz 2-May-2004
+ */
 		if (avc->mvstat == 2) {
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		    attrs->va_mtime.tv_nsec += ((++avc->xlatordv) * 1000);
@@ -324,6 +332,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 		    attrs->va_mtime.tv_usec += ++avc->xlatordv;
 #endif
 		}
+#endif
 	    }
 	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
 		register struct afs_exporter *exporter = au->exporter;

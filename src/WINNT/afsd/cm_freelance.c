@@ -73,6 +73,45 @@ void cm_FreelanceChangeNotifier(void * parmp) {
         }
     }
 }
+
+void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
+    HANDLE hFreelanceSymlinkChangeEvent = 0;
+    HKEY   hkFreelance = 0;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      0,
+                      KEY_NOTIFY,
+                      &hkFreelance) == ERROR_SUCCESS) {
+
+        hFreelanceSymlinkChangeEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (hFreelanceSymlinkChangeEvent == NULL) {
+            RegCloseKey(hkFreelance);
+            return;
+        }
+    }
+
+    while ( TRUE ) {
+    /* check hFreelanceSymlinkChangeEvent to see if it is set. 
+     * if so, call cm_noteLocalMountPointSymlinkChange()
+     */
+        if (RegNotifyChangeKeyValue( hkFreelance,   /* hKey */
+                                     FALSE,         /* bWatchSubtree */
+                                     REG_NOTIFY_CHANGE_LAST_SET, /* dwNotifyFilter */
+                                     hFreelanceSymlinkChangeEvent, /* hEvent */
+                                     TRUE          /* fAsynchronous */
+                                     ) != ERROR_SUCCESS) {
+            RegCloseKey(hkFreelance);
+            CloseHandle(hFreelanceSymlinkChangeEvent);
+            return;
+        }
+
+        if (WaitForSingleObject(hFreelanceSymlinkChangeEvent, INFINITE) == WAIT_OBJECT_0)
+        {
+            cm_noteLocalMountPointChange();
+        }
+    }
+}
 #endif
 
 void cm_InitFreelance() {
@@ -98,13 +137,17 @@ void cm_InitFreelance() {
                           NULL, 0, &lpid, "cm_FreelanceChangeNotifier");
     osi_assert(phandle != NULL);
     thrd_CloseHandle(phandle);
+
+    phandle = thrd_Create(NULL, 65536, (ThreadFunc) cm_FreelanceSymlinkChangeNotifier,
+                          NULL, 0, &lpid, "cm_FreelanceSymlinkChangeNotifier");
+    osi_assert(phandle != NULL);
+    thrd_CloseHandle(phandle);
 #endif
 }
 
 /* yj: Initialization of the fake root directory */
 /* to be called while holding freelance lock unless during init. */
 void cm_InitFakeRootDir() {
-	
     int i, t1, t2;
     char* currentPos;
     int noChunks;
@@ -398,12 +441,12 @@ long cm_InitLocalMountPoints() {
     long code;
     char rootCellName[256];
 #if !defined(DJGPP)
-    HKEY hkFreelance = 0;
+    HKEY hkFreelance = 0, hkFreelanceSymlinks = 0;
     DWORD dwType, dwSize;
-    DWORD dwMountPoints;
+    DWORD dwMountPoints = 0;
     DWORD dwIndex;
+    DWORD dwSymlinks = 0;
     FILETIME ftLastWriteTime;
-    afs_uint32 unixTime;
 #endif
 
 #if !defined(DJGPP)
@@ -440,9 +483,34 @@ long cm_InitLocalMountPoints() {
             dwMountPoints = 2;
         }
 
+        if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                          "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                          0,
+                          NULL,
+                          REG_OPTION_NON_VOLATILE,
+                          KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                          NULL,
+                          &hkFreelanceSymlinks,
+                          NULL) == ERROR_SUCCESS) {
+
+            RegQueryInfoKey( hkFreelanceSymlinks,
+                             NULL,  /* lpClass */
+                             NULL,  /* lpcClass */
+                             NULL,  /* lpReserved */
+                             NULL,  /* lpcSubKeys */
+                             NULL,  /* lpcMaxSubKeyLen */
+                             NULL,  /* lpcMaxClassLen */
+                             &dwSymlinks, /* lpcValues */
+                             NULL,  /* lpcMaxValueNameLen */
+                             NULL,  /* lpcMaxValueLen */
+                             NULL,  /* lpcbSecurityDescriptor */
+                             NULL   /* lpftLastWriteTime */
+                             );
+        }
+
         // get the number of entries there are from the first line
         // that we read
-        cm_noLocalMountPoints = dwMountPoints;
+        cm_noLocalMountPoints = dwMountPoints + dwSymlinks;
 
         // create space to store the local mount points
         cm_localMountPoints = malloc(sizeof(cm_localMountPoint_t) * cm_noLocalMountPoints);
@@ -478,14 +546,16 @@ long cm_InitLocalMountPoints() {
                 cm_noLocalMountPoints--;
                 continue;
             }
+
+            aLocalMountPoint->fileType = CM_SCACHETYPE_MOUNTPOINT;
             aLocalMountPoint->namep=malloc(t-line+1);
             strncpy(aLocalMountPoint->namep, line, t-line);
             aLocalMountPoint->namep[t-line] = '\0';
 		
-            /* copy the mount point string without the trailing dot */
+            /* copy the mount point string */
             aLocalMountPoint->mountPointStringp=malloc(strlen(t));
-			strncpy(aLocalMountPoint->mountPointStringp, t, strlen(t)-1);
-			aLocalMountPoint->mountPointStringp[strlen(t)-1] = '\0';
+            strncpy(aLocalMountPoint->mountPointStringp, t, strlen(t)-1);
+            aLocalMountPoint->mountPointStringp[strlen(t)-1] = '\0';
     
             osi_Log2(afsd_logp,"found mount point: name %s, string %s",
                       osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
@@ -494,6 +564,48 @@ long cm_InitLocalMountPoints() {
             aLocalMountPoint++;
         }
 
+        for ( dwIndex = 0 ; dwIndex < dwSymlinks; dwIndex++ ) {
+            TCHAR szValueName[16];
+            DWORD dwValueSize = 16;
+            dwSize = sizeof(line);
+            RegEnumValue( hkFreelanceSymlinks, dwIndex, szValueName, &dwValueSize, NULL,
+                          &dwType, line, &dwSize);
+
+            /* find the trailing dot; null terminate after it */
+            t2 = strrchr(line, '.');
+            if (t2)
+                *(t2+1) = '\0';
+
+            // line is not empty, so let's parse it
+            t = strchr(line, ':');
+
+            // make sure that there is a ':' separator in the line
+            if (!t) {
+                afsi_log("error occurred while parsing symlink entry: no ':' separator in line %d", dwIndex);
+                fprintf(stderr, "error occurred while parsing symlink entry: no ':' separator in line %d", dwIndex);
+                cm_noLocalMountPoints--;
+                continue;
+            }
+
+            aLocalMountPoint->fileType = CM_SCACHETYPE_SYMLINK;
+            aLocalMountPoint->namep=malloc(t-line+1);
+            strncpy(aLocalMountPoint->namep, line, t-line);
+            aLocalMountPoint->namep[t-line] = '\0';
+		
+            /* copy the symlink string */
+            aLocalMountPoint->mountPointStringp=malloc(strlen(t)-1);
+            strncpy(aLocalMountPoint->mountPointStringp, t+1, strlen(t)-2);
+            aLocalMountPoint->mountPointStringp[strlen(t)-2] = '\0';
+    
+            osi_Log2(afsd_logp,"found symlink: name %s, string %s",
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->mountPointStringp));
+
+            aLocalMountPoint++;
+        }
+
+        if ( hkFreelanceSymlinks )
+            RegCloseKey( hkFreelanceSymlinks );
         RegCloseKey(hkFreelance);
         return 0;
     }
@@ -625,10 +737,6 @@ int cm_getNoLocalMountPoints() {
     return cm_noLocalMountPoints;
 }
 
-cm_localMountPoint_t* cm_getLocalMountPoint(int vnode) {
-    return 0;
-}
-
 long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp)
 {
     FILE *fp;
@@ -688,22 +796,35 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
                          );
 
         if (rw)
-            sprintf(line, "%s%%%s:%s\n", filename, fullname, volume);
+            sprintf(line, "%s%%%s:%s", filename, fullname, volume);
         else
-            sprintf(line, "%s#%s:%s\n", filename, fullname, volume);
+            sprintf(line, "%s#%s:%s", filename, fullname, volume);
 
         /* If we are adding a new value, there must be an unused name
          * within the range 0 to dwMountPoints 
          */
         for ( dwIndex = 0; dwIndex <= dwMountPoints; dwIndex++ ) {
             char szIndex[16];
+            char szMount[1024];
+
+            dwSize = sizeof(szMount);
             sprintf(szIndex, "%d", dwIndex);
-            if (RegQueryValueEx( hkFreelance, szIndex, 0, &dwType, NULL, &dwSize) != ERROR_SUCCESS) {
+            if (RegQueryValueEx( hkFreelance, szIndex, 0, &dwType, szMount, &dwSize) != ERROR_SUCCESS) {
                 /* found an unused value */
                 dwType = REG_SZ;
                 dwSize = strlen(line) + 1;
                 RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
                 break;
+            } else {
+				int len = strlen(filename);
+				if ( dwType == REG_SZ && !strncmp(filename, szMount, len) && 
+					(szMount[len] == '%' || szMount[len] == '#')) {
+                    /* Replace the existing value */
+                    dwType = REG_SZ;
+                    dwSize = strlen(line) + 1;
+                    RegSetValueEx( hkFreelance, szIndex, 0, dwType, line, dwSize);
+                    break;
+                }
             }
         }
         RegCloseKey(hkFreelance);
@@ -847,4 +968,160 @@ long cm_FreelanceRemoveMount(char *toremove)
     return 0;
 }
 
+long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
+{
+    FILE *fp;
+    char hfile[120];
+    char line[512];
+    char fullname[200];
+    int n;
+    int alias = 0;
+#if !defined(DJGPP)
+    HKEY hkFreelanceSymlinks = 0;
+    DWORD dwType, dwSize;
+    DWORD dwSymlinks;
+    DWORD dwIndex;
+#endif
+
+    /* before adding, verify the cell name; if it is not a valid cell,
+       don't add the mount point.
+       allow partial matches as a means of poor man's alias. */
+    /* major performance issue? */
+    osi_Log2(afsd_logp,"Freelance Add Symlink request: filename=%s destination=%s",
+              osi_LogSaveString(afsd_logp,filename), 
+              osi_LogSaveString(afsd_logp,destination));
+    
+    lock_ObtainMutex(&cm_Freelance_Lock);
+
+#if !defined(DJGPP)
+    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                        "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                        NULL,
+                        &hkFreelanceSymlinks,
+                        NULL) == ERROR_SUCCESS) {
+
+        RegQueryInfoKey( hkFreelanceSymlinks,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwSymlinks, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
+
+        sprintf(line, "%s:%s.", filename, destination);
+
+        /* If we are adding a new value, there must be an unused name
+         * within the range 0 to dwSymlinks 
+         */
+        for ( dwIndex = 0; dwIndex <= dwSymlinks; dwIndex++ ) {
+            char szIndex[16];
+            char szLink[1024];
+
+            dwSize = sizeof(szLink);
+            sprintf(szIndex, "%d", dwIndex);
+            if (RegQueryValueEx( hkFreelanceSymlinks, szIndex, 0, &dwType, szLink, &dwSize) != ERROR_SUCCESS) {
+                /* found an unused value */
+                dwType = REG_SZ;
+                dwSize = strlen(line) + 1;
+                RegSetValueEx( hkFreelanceSymlinks, szIndex, 0, dwType, line, dwSize);
+                break;
+            } else {
+				int len = strlen(filename);
+				if ( dwType == REG_SZ && !strncmp(filename, szLink, len) && szLink[len] == ':') {
+                    /* Replace the existing value */
+                    dwType = REG_SZ;
+                    dwSize = strlen(line) + 1;
+                    RegSetValueEx( hkFreelanceSymlinks, szIndex, 0, dwType, line, dwSize);
+                    break;
+                }
+            }
+        }
+        RegCloseKey(hkFreelanceSymlinks);
+    } 
+#endif
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+
+    /* cm_reInitLocalMountPoints(); */
+    if (fidp) {
+        fidp->unique = 1;
+        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
+    }
+    cm_noteLocalMountPointChange();
+    return 0;
+}
+
+long cm_FreelanceRemoveSymlink(char *toremove)
+{
+    int i, n;
+    char* cp;
+    char line[512];
+    char shortname[200];
+    char hfile[120], hfile2[120];
+    FILE *fp1, *fp2;
+    int found=0;
+#if !defined(DJGPP)
+    HKEY hkFreelanceSymlinks = 0;
+    DWORD dwType, dwSize;
+    DWORD dwSymlinks;
+    DWORD dwIndex;
+#endif
+
+    lock_ObtainMutex(&cm_Freelance_Lock);
+
+
+#if !defined(DJGPP)
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkFreelanceSymlinks) == ERROR_SUCCESS) {
+
+        RegQueryInfoKey( hkFreelanceSymlinks,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwSymlinks, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
+
+        for ( dwIndex = 0; dwIndex < dwSymlinks; dwIndex++ ) {
+            TCHAR szValueName[16];
+            DWORD dwValueSize = 16;
+            dwSize = sizeof(line);
+            RegEnumValue( hkFreelanceSymlinks, dwIndex, szValueName, &dwValueSize, NULL,
+                          &dwType, line, &dwSize);
+
+            cp=strchr(line, ':');
+            memcpy(shortname, line, cp-line);
+            shortname[cp-line]=0;
+
+            if (!strcmp(shortname, toremove)) {
+                RegDeleteValue( hkFreelanceSymlinks, szValueName );
+                break;
+            }
+        }
+        RegCloseKey(hkFreelanceSymlinks);
+    }
+#endif
+    
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    cm_noteLocalMountPointChange();
+    return 0;
+}
 #endif /* AFS_FREELANCE_CLIENT */

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/utilities.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/utilities.c,v 1.5.2.1 2004/11/09 17:18:48 shadow Exp $");
 
 #include <sys/param.h>
 #define VICE			/* allow us to put our changes in at will */
@@ -388,7 +388,11 @@ ckfini()
 bread(fd, buf, blk, size)
      int fd;
      char *buf;
+#ifdef AFS_SUN59_ENV
+     diskaddr_t blk;
+#else
      daddr_t blk;
+#endif
      long size;
 {
     char *cp;
@@ -451,7 +455,11 @@ bread(fd, buf, blk, size)
 bwrite(fd, buf, blk, size)
      int fd;
      char *buf;
+#ifdef AFS_SUN59_ENV
+     diskaddr_t blk;
+#else
      daddr_t blk;
+#endif
      long size;
 {
     int i, n;

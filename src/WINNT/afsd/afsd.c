@@ -53,6 +53,7 @@ void afsd_notifier(char *msgp, char *filep, long line)
 	MessageBox(NULL, tbuffer, msgp, MB_OK|MB_ICONSTOP|MB_SETFOREGROUND);
 
 	afsd_ForceTrace(TRUE);
+        buf_ForceTrace(TRUE);
 
 	if (traceOnPanic) {
 		_asm int 3h;

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.1 2004/10/18 07:11:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_buffer.c,v 1.16.2.2 2004/11/09 17:14:57 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -63,7 +63,7 @@ RCSID
 /* page hash table size - this is pretty intertwined with pHash */
 #define PHSIZE (PHPAGEMASK + PHFIDMASK + 1)
 /* the pHash macro */
-#define pHash(fid,page) ((((afs_int32)((fid)->inode)) & PHFIDMASK) \
+#define pHash(fid,page) ((((afs_int32)((fid)->f.inode)) & PHFIDMASK) \
 			 | (page & PHPAGEMASK))
 
 #ifdef	dirty
@@ -88,7 +88,7 @@ static int nbuffers;
 static afs_int32 timecounter;
 
 /* Prototypes for static routines */
-static struct buffer *afs_newslot(struct fcache * afid, afs_int32 apage,
+static struct buffer *afs_newslot(struct dcache * afid, afs_int32 apage,
 				  register struct buffer *lp);
 
 static int dinit_flag = 0;
@@ -150,7 +150,7 @@ DInit(int abuffers)
 }
 
 void *
-DRead(register struct fcache * fid, register int page)
+DRead(register struct dcache * fid, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
@@ -224,13 +224,13 @@ DRead(register struct fcache * fid, register int page)
     MObtainWriteLock(&tb->lock, 260);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
-    if (page * AFS_BUFFER_PAGESIZE >= fid->chunkBytes) {
+    if (page * AFS_BUFFER_PAGESIZE >= fid->f.chunkBytes) {
 	dirp_Zap(tb->fid);
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
     }
-    tfile = afs_CFileOpen(fid->inode);
+    tfile = afs_CFileOpen(fid->f.inode);
     code =
 	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
 		      AFS_BUFFER_PAGESIZE);
@@ -273,7 +273,7 @@ FixupBucket(register struct buffer *ap)
 
 /* lp is pointer to a fairly-old buffer */
 static struct buffer *
-afs_newslot(struct fcache * afid, afs_int32 apage, register struct buffer *lp)
+afs_newslot(struct dcache * afid, afs_int32 apage, register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -340,7 +340,7 @@ afs_newslot(struct fcache * afid, afs_int32 apage, register struct buffer *lp)
     }
 
     if (lp->dirty) {
-	tfile = afs_CFileOpen(lp->fid->inode);
+	tfile = afs_CFileOpen(lp->fid->f.inode);
 	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
 		       AFS_BUFFER_PAGESIZE);
 	lp->dirty = 0;
@@ -432,7 +432,7 @@ DVOffset(register void *ap)
  * method of DRead...
  */
 void
-DZap(struct fcache * fid)
+DZap(struct dcache * fid)
 {
     register int i;
     /* Destroy all buffers pertaining to a particular fid. */
@@ -469,7 +469,7 @@ DFlush(void)
 	    tb->lockers++;
 	    MReleaseReadLock(&afs_bufferLock);
 	    if (tb->dirty) {
-		tfile = afs_CFileOpen(tb->fid->inode);
+		tfile = afs_CFileOpen(tb->fid->f.inode);
 		afs_CFileWrite(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			       tb->data, AFS_BUFFER_PAGESIZE);
 		tb->dirty = 0;	/* Clear the dirty flag */
@@ -484,7 +484,7 @@ DFlush(void)
 }
 
 void *
-DNew(register struct fcache * fid, register int page)
+DNew(register struct dcache * fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;
@@ -493,6 +493,11 @@ DNew(register struct fcache * fid, register int page)
     if ((tb = afs_newslot(fid, page, NULL)) == 0) {
 	MReleaseWriteLock(&afs_bufferLock);
 	return 0;
+    }
+    /* extend the chunk, if needed */
+    if ((page + 1) * AFS_BUFFER_PAGESIZE > fid->f.chunkBytes) {
+        afs_AdjustSize(fid, (page + 1) * AFS_BUFFER_PAGESIZE);
+        afs_WriteDCache(fid, 1);
     }
     MObtainWriteLock(&tb->lock, 265);
     MReleaseWriteLock(&afs_bufferLock);
