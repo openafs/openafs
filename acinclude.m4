@@ -558,13 +558,19 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			if test -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
-			 AFS_ISUML=`awk '$[]2 == "CONFIG_USERMODE"{print $[]3}' $LINUX_KERNEL_PATH/include/linux/autoconf.h`
-			 if test "x${AFS_ISUML}" = "x1"; then
-			  _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
-			 fi
-			 AFS_SYSNAME="$_AFS_SYSNAME"
+			save_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
+			AC_TRY_COMPILE(
+			 [#include <linux/autoconf.h>],
+			 [#ifndef CONFIG_USERMODE
+			  #error not UML
+			  #endif],
+			 ac_cv_linux_is_uml=yes,)
+			if test "${ac_cv_linux_is_uml}" = yes; then
+			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
 			fi
+			CPPFLAGS="$save_CPPFLAGS"
+			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)

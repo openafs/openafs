@@ -32,6 +32,8 @@ COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
 
 COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 
+LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+
 # System specific build commands and flags
 <i386_linux22 i386_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
@@ -42,7 +44,7 @@ CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel
 DEFINES = $(COMMON_DEFINES) 
 
 <i386_umlinux22 i386_umlinux24>
-CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I/usr/src/linux/arch/um/include -I/usr/src/linux/arch/um/kernel/tt/include -I/usr/src/linux/arch/um/kernel/skas/include
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 DEFINES = $(COMMON_DEFINES) -DCPU=586
 
 <alpha_linux_22 alpha_linux_24>
@@ -95,7 +97,6 @@ DESTDIRS=linux_destdirs
 
 include Makefile.common
 
-LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_MODULE_NAME=
 LOCAL_SMP_DEF=
 
