@@ -410,7 +410,7 @@ afs_int32 *aid;
     return PRSUCCESS;
 }
 
-afs_int32 IDCmp(a,b)
+int IDCmp(a,b)
 afs_int32 *a;
 afs_int32 *b;
 {

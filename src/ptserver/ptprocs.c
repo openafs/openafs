@@ -45,7 +45,7 @@ afs_int32 listEntries(), changeEntry(), setFieldsEntry(), put_prentries();
 afs_int32 listElements(), listOwned(), isAMemberOf(), idToName();
 
 static stolower();
-extern afs_int32 IDCmp();
+extern int IDCmp();
 
 /* When abort, reset initd so that the header is read in on next call.
  * Abort the transarction and return the code.
