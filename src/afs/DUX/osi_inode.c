@@ -249,7 +249,7 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
     
     FP_UNLOCK(fp);
 #ifdef AFS_DUX50_ENV
-    u_set_fe(fd, fe, fd, &u.u_file_state);
+    u_set_fe(fd, fe, fp, &u.u_file_state);
 #else
     U_FD_SET(fd, fp, &u.u_file_state);
 #endif
