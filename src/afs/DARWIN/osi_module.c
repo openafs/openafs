@@ -17,6 +17,7 @@ extern int afs3_syscall();
 
 extern int ioctl();
 extern int setgroups();
+extern int maxvfsconf;
 kern_return_t afs_modload(struct kmod_info *ki, void *data)
 {
    if (sysent[AFS_SYSCALL].sy_call != nosys) {
@@ -26,7 +27,7 @@ kern_return_t afs_modload(struct kmod_info *ki, void *data)
    memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
    strcpy(afs_vfsconf.vfc_name, "afs");
    afs_vfsconf.vfc_vfsops=&afs_vfsops;
-   afs_vfsconf.vfc_typenum=VT_AFS;
+   afs_vfsconf.vfc_typenum=maxvfsconf++;/* oddly not VT_AFS */
    afs_vfsconf.vfc_flags=MNT_NODEV;
    if (vfsconf_add(&afs_vfsconf)) {
        printf("AFS: vfsconf_add failed. aborting\n"); 
