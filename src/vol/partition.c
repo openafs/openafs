@@ -24,7 +24,8 @@
 #include <winioctl.h>
 #else
 #include <sys/param.h>
-
+#include <sys/types.h>
+ 
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
@@ -109,7 +110,12 @@
 #include "ntops.h"
 #else
 #include "namei_ops.h"
-#endif
+#if defined(AFS_SGI_ENV)
+#include <sys/dir.h>
+#else
+#include <dirent.h>
+#endif /* AFS_SGI_ENV */
+#endif /* AFS_NT40_ENV */
 #endif /* AFS_NAMEI_ENV */
 #include "vnode.h"
 #include "volume.h"
