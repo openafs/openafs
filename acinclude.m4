@@ -410,17 +410,17 @@ if test "x$enable_transarc_paths" = "xyes"  ; then
     afsbackupdir=${afsbackupdir=/usr/afs/backup}
     afsbosconfigdir=${afsbosconfigdir=/usr/afs/local}
     else 
-    afsconfdir=${afsconfdir=$sysconfdir/openafs/server}
-    viceetcdir=${viceetcdir=$sysconfdir/openafs}
-    afskerneldir=${afskerneldir=$libdir/openafs}
-    afssrvbindir=${afssrvbindir=$bindir}
-    afssrvsbindir=${afssrvsbindir=$sbindir}
-    afssrvlibexecdir=${afssrvlibexecdir=$libexecdir/openafs}
-    afsdbdir=${afsdbdir=$localstatedir/openafs/db}
-    afslogsdir=${afslogsdir=$localstatedir/openafs/logs}
-    afslocaldir=${afslocaldir=$localstatedir/openafs}
-    afsbackupdir=${afsbackupdir=$localstatedir/openafs/backup}
-    afsbosconfigdir=${afsbosconfigdir=$sysconfdir/openafs}
+    afsconfdir=${afsconfdir=\${sysconfdir\}/openafs/server}
+    viceetcdir=${viceetcdir=\${sysconfdir\}/openafs}
+    afskerneldir=${afskerneldir=\${libdir\}/openafs}
+    afssrvbindir=${afssrvbindir=\${bindir}}
+    afssrvsbindir=${afssrvsbindir=\${sbindir}}
+    afssrvlibexecdir=${afssrvlibexecdir=\${libexecdir\}/openafs}
+    afsdbdir=${afsdbdir=\${localstatedir\}/openafs/db}
+    afslogsdir=${afslogsdir=\${localstatedir\}/openafs/logs}
+    afslocaldir=${afslocaldir=\${localstatedir\}/openafs}
+    afsbackupdir=${afsbackupdir=\${localstatedir\}/openafs/backup}
+    afsbosconfigdir=${afsbosconfigdir=\${sysconfdir\}/openafs}
 
 fi
 AC_SUBST(afsconfdir)
