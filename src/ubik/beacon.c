@@ -549,7 +549,7 @@ static verifyInterfaceAddress(ame, info, aservers)
     {
 	for ( i=0; i < totalServers; i++) {
             if (info)
-		tmpAddr = ntohl((afs_uint32) info->hostAddr[i].sin_addr.s_addr);
+		tmpAddr = (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
 	    else 
 		tmpAddr = aservers[i];
             if ( myAddr[j] == tmpAddr) {
