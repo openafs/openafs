@@ -639,7 +639,9 @@ struct vrequest *areq; {
 
 
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV) && !defined (AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
-#ifdef AFS_DUX40_ENV
+#ifdef AFS_DUX50_ENV
+#define vno_close(X) vn_close((X), 0, NOCRED)
+#elif defined(AFS_DUX40_ENV)
 #define      vno_close       vn_close
 #endif
 /* We don't need this for AIX since: 

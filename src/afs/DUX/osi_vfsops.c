@@ -200,6 +200,14 @@ int mp_afs_sync(struct mount *mp, int flags)
 }
 
 
+#ifdef AFS_DUX50_ENV
+int mp_afs_smoothsync(struct mount *mp, u_int age, u_int smsync_flag)
+{
+    AFS_STATCNT(afs_sync);
+    return 0;
+}
+#endif
+
 int mp_afs_fhtovp(struct mount *afsp, struct fid *fidp, struct vnode **avcp)
 {
     struct vrequest treq;
@@ -350,7 +358,10 @@ struct vfsops afs_vfsops = {
     mp_afs_vptofh,
     mp_Afs_init,
     mp_afs_mountroot,
-    mp_afs_swapvp
+    mp_afs_swapvp,
+#ifdef AFS_DUX50_ENV
+    mp_afs_smoothsync
+#endif
 };
 
 

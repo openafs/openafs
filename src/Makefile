@@ -444,7 +444,7 @@ libafs_setup: config minproject export
 # Warning: The next few lines are _extremely_ sensitive to spaces and tabs.
 	${WASHTOOL} object libafs
 	case ${SYS_NAME} in \
-	alpha_dux4* ) \
+	alpha_dux* ) \
 		MKAFS_OSTYPE=DUX;; \
 	hp_ux* ) \
 		MKAFS_OSTYPE=HPUX;; \
@@ -475,7 +475,7 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=AIX;; \
 	sun4x_5* ) \
 		MKAFS_OSTYPE=SOLARIS;; \
-	alpha_dux4* ) \
+	alpha_dux* ) \
 		MKAFS_OSTYPE=DUX;; \
 	sgi_6* ) \
 		MKAFS_OSTYPE=IRIX;; \
