@@ -26,9 +26,9 @@ LIBS=\
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libafsutil.a
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
 
@@ -45,20 +45,18 @@ depinstall: \
 	${TOP_INCDIR}/afs/vldbint.h \
 	${TOP_INCDIR}/afs/cnvldb.h 
 
-vldb_check: vldb_check.o
-	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${XLIBS} \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a
+vldb_check: vldb_check.o ${LIBS}
+	$(CC) ${CFLAGS} -o vldb_check vldb_check.o ${LIBS} ${XLIBS} 
 
 vldb_check.o: vldb_check.c AFS_component_version_number.o
 
-cnvldb: cnvldb.o 
-	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${XLIBS} ${TOP_LIBDIR}/libcmd.a\
-		 ${TOP_LIBDIR}/util.a		 
+cnvldb: cnvldb.o ${LIBS}
+	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${LIBS} ${XLIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
-sascnvldb: sascnvldb.o 
-	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${XLIBS}
+sascnvldb: sascnvldb.o ${LIBS}
+	$(CC) ${CFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${XLIBS}
 
 sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
 
