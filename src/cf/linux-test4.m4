@@ -422,3 +422,18 @@ ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes,
 ac_cv_linux_sched_struct_task_struct_has_signal_rlim=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_signal_rlim)
 CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_EXIT_STATE], [
+AC_MSG_CHECKING(for exit_state in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_exit_state,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.exit_state);],
+ac_cv_linux_sched_struct_task_struct_has_exit_state=yes,
+ac_cv_linux_sched_struct_task_struct_has_exit_state=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_exit_state)
+CPPFLAGS="$save_CPPFLAGS"])

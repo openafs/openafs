@@ -860,14 +860,24 @@ afs_osi_TraverseProcTable()
 #endif
 #ifdef DEFINED_FOR_EACH_PROCESS
     for_each_process(p) if (p->pid) {
+#ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+	if (p->exit_state)
+	    continue;
+#else
 	if (p->state & TASK_ZOMBIE)
 	    continue;
+#endif
 	afs_GCPAGs_perproc_func(p);
     }
 #else
     for_each_task(p) if (p->pid) {
+#ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
+	if (p->exit_state)
+	    continue;
+#else
 	if (p->state & TASK_ZOMBIE)
 	    continue;
+#endif
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
