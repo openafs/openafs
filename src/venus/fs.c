@@ -1917,6 +1917,8 @@ static NewCellCmd(as)
      * MAXCELLHOSTS (8) servers. To determine which we are talking to,
      * do a GETCELL pioctl and pass it a magic number. If an array of
      * 8 comes back, its a 3.5 client. If not, its a 3.4 client.
+     * If we get back EDOM, there are no cells in the kernel yet,
+     * and we'll assume a 3.5 client.
      */
     tp = space;
     lp = (afs_int32 *)tp;
@@ -1927,13 +1929,17 @@ static NewCellCmd(as)
     blob.in       = space;
     blob.out      = space;
     code = pioctl(0, VIOCGETCELL, &blob, 1);
-    if (code < 0) {
+    if (code < 0 && errno != EDOM) {
        Die(errno, 0);
        return 1;
     }
-    tp = space;
-    cellname = tp + MAXCELLHOSTS*sizeof(afs_int32);
-    scount = ((cellname[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
+    if (code < 1 && errno == EDOM) {
+       scount = MAXHOSTS;
+    } else {
+       tp = space;
+       cellname = tp + MAXCELLHOSTS*sizeof(afs_int32);
+       scount = ((cellname[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
+    }
 
     /* Now setup and do the NEWCELL pioctl call */
     memset(space, 0, (scount+1) * sizeof(afs_int32));
