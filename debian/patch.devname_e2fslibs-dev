@@ -1,0 +1,17 @@
+Index: src/vol/devname.c
+===================================================================
+RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/vol/devname.c,v
+retrieving revision 1.1.1.8
+diff -u -r1.1.1.8 devname.c
+--- src/vol/devname.c	14 Oct 2001 18:07:21 -0000	1.1.1.8
++++ src/vol/devname.c	20 Nov 2003 21:03:46 -0000
+@@ -86,8 +86,7 @@
+ #endif /* ITIMER_REAL */
+ #include "partition.h"
+ #ifdef AFS_LINUX22_ENV
+-#include <asm/types.h>
+-#include <linux/ext2_fs.h>
++#include <ext2fs/ext2_fs.h>
+ #define ROOTINO EXT2_ROOT_INO /* Assuming we do this on ext2, of course. */
+ #endif
+ 

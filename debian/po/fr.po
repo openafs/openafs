@@ -14,9 +14,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.2.9-2\n"
-"Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2003-10-13 00:08-0400\n"
-"PO-Revision-Date: 2003-07-31 10:36+0100\n"
+"PO-Revision-Date: 2003-10-16 23:34+0100\n"
 "Last-Translator: Christian Perrier <bubulle@debian.org>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -98,7 +97,6 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:34
-#, fuzzy
 msgid ""
 "Should the Openafs filesystem be started and mounted at boot? Normally, most "
 "users who install the openafs-client package expect to run it at boot.  "
@@ -112,8 +110,9 @@ msgstr ""
 "paquet openafs-client s'attendent à ce qu'il soit lancé au démarrage. "
 "Cependant, si vous prévoyez de mettre en service une nouvelle cellule ou si "
 "vous utilisez un ordinateur portable, vous ne souhaitez peut-être pas le "
-"lancer au démarrage. Dans ce cas, refusez ici et utilisez la commande « /etc/"
-"init.d/openafs-client force-start » pour le lancer."
+"lancer au démarrage. Si vous préférez ne pas le lancer au démarrage, "
+"utilisez la commande « /etc/init.d/openafs-client force-start » pour le "
+"lancer quand vous en aurez besoin."
 
 #. Description
 #: ../openafs-client.templates:45
@@ -176,15 +175,15 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:65
-#, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
-"CellAlias to include aliases for common cells. DO NOT SELECT tHIS OPTION if "
+"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION if "
 "this machine is the first database server in a new cell ."
 msgstr ""
 "Si vous créez /afs de manière dynamique, vous aurez peut-être à créer /etc/"
 "openafs/CellAlias pour inclure les alias des cellules communes. NE "
-"CHOISISSEZ PAS CETTE OPTION SI VOUS CRÉEZ UNE NOUVELLE CELLULE."
+"CHOISISSEZ PAS CETTE OPTION si cette machine est le premier serveur de bases "
+"de données d'une nouvelle cellule."
 
 #. Description
 #: ../openafs-client.templates:78

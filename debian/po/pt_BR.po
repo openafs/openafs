@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs_1.2.10-1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-10-13 00:08-0400\n"
+"POT-Creation-Date: 2003-11-20 16:00-0500\n"
 "PO-Revision-Date: 2003-08-31 13:28-0300\n"
 "Last-Translator: André Luís Lopes <andrelop@debian.org>\n"
 "Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
@@ -71,13 +71,15 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kb)?"
+#, fuzzy
+msgid "How large is your AFS cache (kB)?"
 msgstr "Qual o tamanho de seu cache AFS (em kb) ?"
 
 #. Description
 #: ../openafs-client.templates:24
+#, fuzzy
 msgid ""
-"AFS uses a  area of the disk to cache remote files for faster access.  This "
+"AFS uses an  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
@@ -174,8 +176,8 @@ msgstr ""
 #, fuzzy
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
-"CellAlias to include aliases for common cells. DO NOT SELECT tHIS OPTION if "
-"this machine is the first database server in a new cell ."
+"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
+"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
 msgstr ""
 "Caso você gere o /afs dinamicamente, você pode precisar criar o /etc/openafs/"
 "CellAlias para incluir apelidos (aliases) para células comuns. NÂO SELECIONE "

@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-10-13 00:08-0400\n"
+"POT-Creation-Date: 2003-11-20 16:00-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,13 +58,13 @@ msgstr ""
 
 #. Description
 #: ../openafs-client.templates:24
-msgid "How large is your AFS cache (kb)?"
+msgid "How large is your AFS cache (kB)?"
 msgstr ""
 
 #. Description
 #: ../openafs-client.templates:24
 msgid ""
-"AFS uses a  area of the disk to cache remote files for faster access.  This "
+"AFS uses an  area of the disk to cache remote files for faster access.  This "
 "cache will be mounted on /var/cache/openafs.  It is important that the cache "
 "not overfill the partition it is located on.  Often, people find it useful "
 "to dedicate a partition to their AFS cache."
@@ -133,8 +133,8 @@ msgstr ""
 #: ../openafs-client.templates:65
 msgid ""
 "If you generate /afs dynamically, you may need to create /etc/openafs/"
-"CellAlias to include aliases for common cells. DO NOT SELECT tHIS OPTION if "
-"this machine is the first database server in a new cell ."
+"CellAlias to include aliases for common cells. DO NOT SELECT THIS OPTION IF "
+"THIS MACHINE IS THE FIRST DATABASE SERVER IN A NEW CELL ."
 msgstr ""
 
 #. Description

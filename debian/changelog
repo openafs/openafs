@@ -1,3 +1,13 @@
+openafs (1.2.10-3) unstable; urgency=low
+
+  * Fix Openafs not to include kernel headers from /usr/include,
+  Closes: #220600 
+  * Fix typo in openafs templates, Closes: #215714
+  * New French translations, Closes: #216158
+  * Build-depend on e2fslibs-dev to get appropriate headers
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 20 Nov 2003 16:02:45 -0500
+
 openafs (1.2.10-2) unstable; urgency=low
 
   * New Brazilian Portuguese (pt_BR) translations, Closes: #208035

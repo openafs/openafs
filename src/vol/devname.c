@@ -10,7 +10,7 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.1.1.8 2001/10/14 18:07:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.2 2003/11/20 21:43:49 hartmans Exp $");
 
 #include <afs/param.h>
 #include <rx/xdr.h>
@@ -86,8 +86,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.1.1.8 2001/10/14 18:0
 #endif /* ITIMER_REAL */
 #include "partition.h"
 #ifdef AFS_LINUX22_ENV
-#include <asm/types.h>
-#include <linux/ext2_fs.h>
+#include <ext2fs/ext2_fs.h>
 #define ROOTINO EXT2_ROOT_INO /* Assuming we do this on ext2, of course. */
 #endif
 
