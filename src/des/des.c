@@ -89,7 +89,7 @@ afs_int32 des_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher,
 #endif
 #ifndef BITS32
 #ifndef BITS16
-    dunno how to do this machine type, you lose;
+#error dunno how to do this machine type, you lose;
 #endif
 #endif
     afs_uint32 P_temp;
