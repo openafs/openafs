@@ -49,6 +49,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
 #undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)

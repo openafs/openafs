@@ -29,7 +29,7 @@ AFS_OS_NONFSOBJS = \
 
 
 # System specific build commands and flags
-DBUG=-g
+DBUG=-g2
 
 <sgi_62>
 MPS=MP SP
@@ -147,46 +147,77 @@ R10000_KDEFS = -DKONA -DIP27 -DIP27 -DDISCONTIG_PHYSMEM -DNUMA_BASE -DNUMA_PM \
 # While -G 8 is recommended for space, we know that the table overflows when
 # both AFS and DFS are compiled into the kernel. For Irix 6.5, define MP
 # so we pick up locks.
+#
+# For cc flags see:
+# http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&db=man&fname=/usr/share/catman/u_man/cat1/cc.z&srch=cc
+#
 KDEFS= -I/usr/include -I/usr/include/sys -DSTATIC=static -DAFS_SGIMP_ENV \
 	-DMP -D_KERNEL -DMP_STREAMS -D_MP_NETLOCKS -DMRSP_AS_MR \
-	-fullwarn -non_shared -G 0 \
+	${CPU_KDEFS} -fullwarn -non_shared -G 0 \
 	-TENV:kernel -OPT:space -OPT:Olimit=0 -CG:unique_exit=on \
 	-TENV:X=1 -OPT:IEEE_arithmetic=1 -OPT:roundoff=0 \
 	-OPT:wrap_around_unsafe_opt=off \
-	${CPU_KDEFS} -woff 1209,1196,1496
+	-woff 1209,1196,1496
 # 32 bit specific flags:
 KDEFS_32 = -n32 -D_PAGESZ=4096 -mips3
 # 64 bit specific flags:
 KDEFS_64 = -64 -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -mips4
 
 # CPU board specific flags:
+# To get more help on all board/cpu combinations see http://sgistuff.g-lenerz.de/machines.html
+#
+#IP19 (Challenge DM/L/XL, Onyx) CPU's R4000, R4400
 IP19_KDEFS = -DIP19 -DEVEREST -DMP -DR4000 \
-	-mips3  -D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -64
+	-D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -TARG:platform=ip19:processor=r4000 $(KDEFS_32)
+#IP20 (Indigo) CPU's R4000
 IP20_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
-		-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS $(KDEFS_32)
-IP21_KDEFS = -DIP21 -DEVEREST -DMP -DTFP -TARG:processor=r8000 $(KDEFS_64)
-IP25_KDEFS = -DIP25 -DEVEREST -DMP -DR10000 -TARG:processor=r10000 $(KDEFS_64)
-IP26_KDEFS = -DIP26 -DTFP -TARG:sync=off -TARG:processor=r8000 $(KDEFS_64)
+		-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -Ofast=ip20 $(KDEFS_32)
+#IP21 (Power Challenge DM/L/XL, Power Onyx) R8000
+IP21_KDEFS = -DIP21 -DEVEREST -DMP -DTFP -TARG:processor=r8000 -Ofast=ip21 $(KDEFS_64)
+#IP22 (Indigo 2, Challenge M) CPU's R4000, R4400, R4600 (and by bug in hinv(1) also Indy IP24 machines with R4x00)
+# -Ofast=ip22_4k is same as -TARG:ip22_4k -O3 -IPA -OPT:roundoff=3:Olimit=0:div_split=on:alias=typed
+# when -Ofast used on IP24 Indy, the STATIC.*/libafs*.a claims to be 64-bit and /etc/refuses to build the
+# object in the kernel.
+IP22_4K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
+	-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -TARG:platform=ip22_4k:processor=r4000 $(KDEFS_32) 
+IP22_5K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
+	-D_R5000_CVT_WAR=1 -DCKPT -D_MTEXT_VFS -TARG:platform=ip22_5k:processor=r5000 $(KDEFS_32)
+#IP24 (Indy, Challenge S) is reported by hinv(1) as IP22, CPU's R4000, R4400, R4600, R5000
+# therefore same as IP22
+#IP25 (Power Challenge L/XL, Power Onyx) CPU's R10000
+IP25_KDEFS = -DIP25 -DEVEREST -DMP -DR10000 -Ofast=ip25 -TARG:processor=r10000 $(KDEFS_64)
+#IP26 (Power Challenge M, Power Indigo 2) CPU's R8000
+IP26_KDEFS = -DIP26 -DTFP -TARG:sync=off -Ofast=ip26 -TARG:processor=r8000 $(KDEFS_64)
+#IP27 (Origin 200, Origin 2000, Onyx 2, Origin 3000) CPU's R10000, R12000
 IP27_KDEFS =  -DIP27 -DR10000 -DMP -DSN -DSN0 -DMAPPED_KERNEL \
 	-DLARGE_CPU_COUNT \
 	-DPTE_64BIT -DULI -DCKPT -DMIPS4_ISA -DR10K_LLSC_WAR -DNUMA_BASE \
 	-DNUMA_PM  -DNUMA_TBORROW -DNUMA_MIGR_CONTROL -DNUMA_REPLICATION \
 	-DNUMA_REPL_CONTROL -DNUMA_SCHED -DCELL_PREPARE -DBHV_PREPARE \
-	-TARG:processor=r10000 $(KDEFS_64)
+	-Ofast=ip27 -TARG:processor=r10000 $(KDEFS_64)
+#IP28 (Indigo 2), CPU's R10000
 IP28_KDEFS = -DIP28 -DR10000 -DSCACHE_SET_ASSOC=2 -D_NO_UNCACHED_MEM_WAR \
-	-DR10000_SPECULATION_WAR -TARG:processor=r10000 \
+	-DR10000_SPECULATION_WAR -Ofast=ip28 -TARG:processor=r10000 \
 	-TARG:t5_no_spec_stores $(KDEFS_64)
+#IP30 (Octane and Octane 2) CPU's R10000, R12000, R14000 (and by bug also Indy IP24 with R5000)
 IP30_KDEFS = -DIP30 -DR10000 -DMP -DCELL_PREPARE -DBHV_PREPARE \
-	-TARG:processor=r10000 $(KDEFS_64)
+	-Ofast=ip30 -TARG:processor=r10000 $(KDEFS_64)
+#IP32 (O2 and O2+) CPU's R5000, R10000, R12000
+IP32_5K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
+	-D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -Ofast=ip32_5k $(KDEFS_64)
+IP32_10K_KDEFS = -DIP20 -DR4000 -DJUMP_WAR -DBADVA_WAR -DTRITON -DUSE_PCI_PIO \
+	-D_PAGESZ=16384 -D_MIPS3_ADDRSPACE -Ofast=ip32_10k $(KDEFS_64)
+#IP35 (Fuel, Origin 3000) CPU's R14000, R16000
 IP35_KDEFS =  -DIP35 -DR10000 -DMP -DSN -DSN1 -DMAPPED_KERNEL \
 	-DLARGE_CPU_COUNT \
 	-DPTE_64BIT -DULI -DCKPT -DMIPS4_ISA -DNUMA_BASE \
 	-DNUMA_PM  -DNUMA_TBORROW -DNUMA_MIGR_CONTROL -DNUMA_REPLICATION \
 	-DNUMA_REPL_CONTROL -DNUMA_SCHED -DCELL_PREPARE -DBHV_PREPARE \
-	-TARG:processor=r10000 $(KDEFS_64)
+	-Ofast=ip35 $(KDEFS_64)
+#IP53 (Tezro) CPU's R16000
 # Loader flags
-LDFLAGS_64 = -64
-LDFLAGS_32 = -n32
+LDFLAGS_64 = -64 -IPA
+LDFLAGS_32 = -n32 -IPA
 
 
 <all>
@@ -212,7 +243,7 @@ PROCESSORS = R5000 R1000
 <sgi_64>
 PROCESSORS = R10000
 <sgi_65>
-PROCESSORS = IP19 IP20 IP21 IP25 IP26 IP27 IP28 IP30 @IRIX_BUILD_IP35@
+PROCESSORS = IP19 IP20 IP21 IP22_4K IP22_5K IP25 IP26 IP27 IP28 IP30 IP32_5K IP32_10K @IRIX_BUILD_IP35@
 <all>
 
 KOBJ = STATIC MODLOAD
@@ -261,7 +292,7 @@ setup:
 	    done; \
 	done
 <all>
-	echo Setup compelete.
+	echo Setup complete.
 
 
 # Compile static and modload versions of the clients.
@@ -287,7 +318,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			 CPU_KDEFS="${R4000_32_KDEFS}"; \
 			 LDFLAGS="${R4000_32_LDFLAGS}";; \
 			R5000) \
-			 CPUBOARD=IP32; \
+			 CPUBOARD=IP32_5K; \
 			 CPU_KDEFS="${R5000_KDEFS}"; \
 			 LDFLAGS="${R5000_LDFLAGS}";; \
 			R8000) \
@@ -298,7 +329,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 <sgi_62>
 			 CPUBOARD=IP28; \
 <sgi_63>
-			 CPUBOARD=IP32; \
+			 CPUBOARD=IP32_10K; \
 <sgi_64>
 			 CPUBOARD=IP27; \
 <sgi_62 sgi_63 sgi_64>
@@ -325,18 +356,33 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	    for t in ${KOBJ} ; do \
 	      dir=$$t.$$p ; \
 	        echo Building directory: $$dir; \
-		LDFLAGS="${LDFLAGS_64}"; \
 		case $$p in \
-		IP19)   CPU_KDEFS="${IP19_KDEFS}";; \
+		IP19)   CPU_KDEFS="${IP19_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_32}";; \
 		IP20)   CPU_KDEFS="${IP20_KDEFS}"; \
 			LDFLAGS="${LDFLAGS_32}";; \
-		IP21)   CPU_KDEFS="${IP21_KDEFS}";; \
-		IP25)   CPU_KDEFS="${IP25_KDEFS}";; \
-		IP26)   CPU_KDEFS="${IP26_KDEFS}";; \
-		IP27) 	CPU_KDEFS="${IP27_KDEFS}";; \
-		IP28)   CPU_KDEFS="${IP28_KDEFS}";; \
-		IP30)   CPU_KDEFS="${IP30_KDEFS}";; \
-		IP35)   CPU_KDEFS="${IP35_KDEFS}";; \
+		IP21)   CPU_KDEFS="${IP21_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP22_4K)	CPU_KDEFS="${IP22_4K_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_32}";; \
+		IP22_5K)	CPU_KDEFS="${IP22_5K_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_32}";; \
+		IP25)   CPU_KDEFS="${IP25_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP26)   CPU_KDEFS="${IP26_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP27) 	CPU_KDEFS="${IP27_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP28)   CPU_KDEFS="${IP28_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP30)   CPU_KDEFS="${IP30_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP32_5K)	CPU_KDEFS="${IP32_5K_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_32}";; \
+		IP32_10K)	CPU_KDEFS="${IP32_10K_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
+		IP35)   CPU_KDEFS="${IP35_KDEFS}"; \
+			LDFLAGS="${LDFLAGS_64}";; \
 		*) echo Unknown IP number $$p ; exit 1 ;; \
 		esac ;\
 		case $$t in \
@@ -438,14 +484,7 @@ dest_COPYFILES:
 # If this changes, also change the kdump symlinks.
 install_LINKFILES:
 <sgi_65>
-	ln -fs libafs.IP20.a       ${DESTDIR}${afskerneldir}/libafs.IP22.a
-	ln -fs libafs.IP20.a       ${DESTDIR}${afskerneldir}/libafs.IP32.a
-	ln -fs libafs.IP20.nonfs.a ${DESTDIR}${afskerneldir}/libafs.IP22.nonfs.a
-	ln -fs libafs.IP20.nonfs.a ${DESTDIR}${afskerneldir}/libafs.IP32.nonfs.a
-	ln -fs libafs.IP20.o       ${DESTDIR}${afskerneldir}/libafs.IP22.o
-	ln -fs libafs.IP20.o       ${DESTDIR}${afskerneldir}/libafs.IP32.o
-	ln -fs libafs.IP20.nonfs.o ${DESTDIR}${afskerneldir}/libafs.IP22.nonfs.o
-	ln -fs libafs.IP20.nonfs.o ${DESTDIR}${afskerneldir}/libafs.IP32.nonfs.o
+	echo "Now we support also IP22_4K, IP22_5K, IP32_5K, IP32_10K cpu boards."
 <all>
 
 # Create symlinks to clients we don't need to build.

@@ -81,7 +81,9 @@ RCSID
 #ifndef KERNEL
 #define osi_Time() time(0)
 #endif
-struct rxkad_stats rxkad_stats;
+/* variable initialization for the benefit of darwin compiler; if it causes
+   problems elsewhere, conditionalize for darwin or fc_test compile breaks */
+struct rxkad_stats rxkad_stats = {0};
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
