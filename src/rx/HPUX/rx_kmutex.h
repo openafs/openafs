@@ -2,6 +2,8 @@
 #define _RX_KMUTEX_H_
 #include <sys/spinlock.h>
 #include <sys/sem_sync.h>
+#include <sys/ksleep.h>
+#include <net/netmp.h>
 
 #define RX_ENABLE_LOCKS         1
 extern lock_t*  rx_sleepLock;
@@ -31,5 +33,5 @@ typedef caddr_t afs_kcondvar_t;
 #define MUTEX_TRYENTER(a) 1
 #define MUTEX_EXIT(a)  
 #define MUTEX_INIT(a,b,c,d) 
-/* #define MUTEX_ISMINE(a) */
+#define MUTEX_ISMINE(a) (1)
 #endif
