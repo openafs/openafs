@@ -71,12 +71,17 @@ case $system in
 		    LINUX_VERSION="$linux_kvers"
 		  fi
 		 else
+                    enable_kernel_module="no"
+                 fi
+		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
+		     enable_kernel_module="no"
+		 fi
+		 if test "x$enable_kernel_module" = "xno"; then
 		  if test "x$with_linux_kernel_headers" != "x"; then
-		   AC_MSG_ERROR(No linux headers found at $LINUX_KERNEL_PATH)
+		   AC_MSG_ERROR(No usable linux headers found at $LINUX_KERNEL_PATH)
 		   exit 1
 		  else
-		   AC_MSG_WARN(No linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
-		   enable_kernel_module="no"
+		   AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
 		  fi
 		 fi
 		fi
@@ -84,6 +89,9 @@ case $system in
 		if test "x$enable_kernel_module" = "xyes"; then
 	         LINUX_FS_STRUCT_INODE_HAS_I_BYTES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
+		 LINUX_NEED_RHCONFIG
+		 LINUX_WHICH_MODULES
+                :
 		fi
                 ;;
         *-solaris*)

@@ -71,7 +71,7 @@ CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
-MPS = MP SP
+MPS = @MPS@
 
 # COMPDIRS is called in Makefile.common to do the actual builds.
 COMPDIRS=linux_compdirs
@@ -124,10 +124,10 @@ ${COMPDIRS}:
 		KDIR=${KOBJ}-${LINUX_VERS}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="-DAFS_SMP -D__BOOT_KERNEL_SMP=1 -D__BOOT_KERNEL_UP=0 -D__SMP__" ; \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ -D__SMP__" ; \
 			TARG="libafs.mp" ; \
 		else  \
-			SMP_DEF="-D__BOOT_KERNEL_SMP=0 -D__BOOT_KERNEL_UP=1 -U__SMP__" ; \
+			SMP_DEF="@RHCONFIG_SP@ -U__SMP__" ; \
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
