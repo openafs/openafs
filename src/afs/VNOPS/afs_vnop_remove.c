@@ -238,11 +238,21 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	       ICL_TYPE_STRING, aname);
 
     /* Check if this is dynroot */
-    if (afs_IsDynroot(adp))
+    if (afs_IsDynroot(adp)) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
 	return afs_DynrootVOPRemove(adp, acred, aname);
+    }
 
-    if (code = afs_InitReq(&treq, acred))
+    if (code = afs_InitReq(&treq, acred)) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
       return code;
+    }
 tagain:
     code = afs_VerifyVCache(adp, &treq);
 #ifdef	AFS_OSF_ENV
@@ -264,6 +274,10 @@ tagain:
       * fileserver
       */
     if ( adp->states & CRO ) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
         code = EROFS;
 	return code;
     }

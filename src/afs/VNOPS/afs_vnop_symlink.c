@@ -79,16 +79,18 @@ afs_symlink
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
 
-    if (afs_IsDynroot(adp))
-	return afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+    if (afs_IsDynroot(adp)) {
+	code = afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+	goto done2;
+    }
 
     if (code = afs_InitReq(&treq, acred))
-       return code;
+	goto done2;
 
     code = afs_VerifyVCache(adp, &treq);
     if (code) { 
       code = afs_CheckCode(code, &treq, 30);
-      return code;
+      goto done2;
     }
 
     /** If the volume is read-only, return error without making an RPC to the
@@ -96,7 +98,7 @@ afs_symlink
       */
     if ( adp->states & CRO ) {
         code = EROFS;
-	return code;
+	goto done2;
     }
 
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE;
@@ -216,12 +218,13 @@ afs_symlink
     afs_PutVCache(tvc, WRITE_LOCK);
     code = 0;
 done:
-#ifdef  AFS_OSF_ENV
-    AFS_RELE(ndp->ni_dvp);
-#endif  /* AFS_OSF_ENV */
     if ( volp ) 
 	afs_PutVolume(volp, READ_LOCK);
     code = afs_CheckCode(code, &treq, 31);
+done2:
+#ifdef  AFS_OSF_ENV
+    AFS_RELE(ndp->ni_dvp);
+#endif  /* AFS_OSF_ENV */
     return code;
 }
 

@@ -69,7 +69,8 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
 
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
@@ -153,10 +154,11 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     }
     else code = ENOENT;
 done:
+    code = afs_CheckCode(code, &treq, 26);
+done2:
 #ifdef	AFS_OSF_ENV
     AFS_RELE(ndp->ni_dvp);
 #endif	/* AFS_OSF_ENV */
-    code = afs_CheckCode(code, &treq, 26);
     return code;
 }
 
@@ -195,7 +197,9 @@ afs_rmdir(adp, aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp, 
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
     code = afs_VerifyVCache(adp, &treq);
     if (code) goto done;
 
@@ -300,10 +304,11 @@ afs_rmdir(adp, aname, acred)
     code = 0;
 
 done:
+    code = afs_CheckCode(code, &treq, 27); 
+done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, 0);
     afs_PutVCache(ndp->ni_vp, 0);
 #endif	/* AFS_OSF_ENV */
-    code = afs_CheckCode(code, &treq, 27); 
     return code;
 }

@@ -63,7 +63,9 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
     /* create a hard link; new entry is aname in dir adp */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
     if (avc->fid.Cell != adp->fid.Cell || avc->fid.Fid.Volume != adp->fid.Fid.Volume) {
 	code = EXDEV;
 	goto done;
@@ -146,9 +148,11 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     ReleaseWriteLock(&avc->lock);
     code = 0;
 done:
+    code = afs_CheckCode(code, &treq, 24);
+done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, WRITE_LOCK);
 #endif	/* AFS_OSF_ENV */
-    return afs_CheckCode(code, &treq, 24);
+    return code;
 }
 

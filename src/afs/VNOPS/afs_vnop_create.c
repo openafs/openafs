@@ -77,7 +77,9 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
 
 
     AFS_STATCNT(afs_create);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname, ICL_TYPE_INT32, amode);
 
@@ -460,10 +462,15 @@ done:
 #ifdef	AFS_OSF_ENV
     if (!code && !strcmp(aname, "core"))
 	tvc->states |= CCore1;
+#endif
+
+    code = afs_CheckCode(code, &treq, 20);
+
+done2:
+#ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, 0);
 #endif	/* AFS_OSF_ENV */
 
-    code = afs_CheckCode(code, &treq, 20);
     return code;
 }
 
