@@ -1311,7 +1311,7 @@ long smb_FindShareProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 {
     int matchType = 0;
     smb_findShare_rock_t * vrock = (smb_findShare_rock_t *) rockp;
-    if(!strnicmp(dep->name, vrock->shareName, 12)) {
+    if (!strnicmp(dep->name, vrock->shareName, 12)) {
         if(!stricmp(dep->name, vrock->shareName))
             matchType = SMB_FINDSHARE_EXACT_MATCH;
         else
@@ -1475,7 +1475,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
             (uidp? (uidp->unp ? uidp->unp->userp : NULL) : NULL), &req, NULL);
         cm_ReleaseSCache(cm_rootSCachep);
 
-        if(vrock.matchType) {
+        if (vrock.matchType) {
             sprintf(pathName,"/%s/",vrock.match);
             *pathNamep = strdup(strlwr(pathName));
             free(vrock.match);
@@ -4950,8 +4950,7 @@ void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
     rock.name = pathp;
     rock.vnode = scp;
 
-    code = cm_ApplyDir(dscp, smb_FullNameProc, &rock, NULL, 
-                       userp, reqp, NULL); 
+    code = cm_ApplyDir(dscp, smb_FullNameProc, &rock, NULL, userp, reqp, NULL); 
     if (code == CM_ERROR_STOPNOW)
         *newPathp = rock.fullName;
     else
@@ -6965,6 +6964,7 @@ DWORD smb_ServerExceptionFilter(void) {
     }
 
     afsd_ForceTrace(TRUE);
+    buf_ForceTrace(TRUE);
     return EXCEPTION_CONTINUE_SEARCH;
 }       
 #endif

@@ -82,6 +82,7 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     osi_LogEnable(afsd_logp);
 
     afsd_ForceTrace(TRUE);
+    buf_ForceTrace(TRUE);
 
     afsi_log("--- begin dump ---");
     cm_DumpSCache(afsi_file, "a");
@@ -176,8 +177,10 @@ afsd_ServiceControlHandler(DWORD ctrlCode)
         RegCloseKey (parmKey);
         if (code != ERROR_SUCCESS)
             doTrace = 0;
-        if (doTrace)
+        if (doTrace) {
             afsd_ForceTrace(FALSE);
+            buf_ForceTrace(FALSE);
+        }
 
       doneTrace:
         ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
@@ -239,8 +242,10 @@ afsd_ServiceControlHandlerEx(
         RegCloseKey (parmKey);
         if (code != ERROR_SUCCESS)
             doTrace = 0;
-        if (doTrace)
+        if (doTrace) {
             afsd_ForceTrace(FALSE);
+            buf_ForceTrace(FALSE);
+        }
 
       doneTrace:
         ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;

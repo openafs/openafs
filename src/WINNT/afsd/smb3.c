@@ -2488,8 +2488,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
     rock.shortName = shortName;
     rock.vnode = vnode;
     rock.maskp = lastNamep;
-    code = cm_ApplyDir(dscp, cm_GetShortNameProc, &rock, &thyper, userp,
-                        reqp, NULL);
+    code = cm_ApplyDir(dscp, cm_GetShortNameProc, &rock, &thyper, userp, reqp, NULL);
 
     cm_ReleaseSCache(dscp);
 

@@ -427,6 +427,9 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
  * Iterate through all entries in a directory.
  * When the function funcp is called, the buffer is locked but the
  * directory vnode is not.
+ *
+ * If the retscp parameter is not NULL, the parmp must be a 
+ * cm_lookupSearch_t object.  
  */
 long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                   osi_hyper_t *startOffsetp, cm_user_t *userp, cm_req_t *reqp,
@@ -465,17 +468,26 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
     if (retscp) 			/* if this is a lookup call */
     {
         cm_lookupSearch_t*	sp = parmp;
-        int casefold = sp->caseFold;
 
-        sp->caseFold = 0; /* we have a strong preference for exact matches */
-        if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
-        {
-            sp->caseFold = casefold;
-            lock_ReleaseMutex(&scp->mx);
-            return 0;
-        }
-
-        sp->caseFold = casefold;
+#ifdef AFS_FREELANCE_CLIENT
+	/* Freelance entries never end up in the DNLC because they
+	 * do not have an associated cm_server_t
+	 */
+    if ( !(cm_freelanceEnabled &&
+			sp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+			sp->fid.volume==AFS_FAKE_ROOT_VOL_ID ) )
+#endif /* AFS_FREELANCE_CLIENT */
+		{
+	        int casefold = sp->caseFold;
+			sp->caseFold = 0; /* we have a strong preference for exact matches */
+			if ( *retscp = cm_dnlcLookup(scp, sp))	/* dnlc hit */
+			{
+				sp->caseFold = casefold;
+				lock_ReleaseMutex(&scp->mx);
+				return 0;
+			}
+	        sp->caseFold = casefold;
+		}
     }	
 
     /*
@@ -1097,6 +1109,13 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
     int sysNameIndex = 0;
     cm_scache_t *scp = 0;
 
+    if ( stricmp(namep,SMB_IOCTL_FILENAME_NOSLASH) == 0 ) {
+        if (flags & CM_FLAG_CHECKPATH)
+            return CM_ERROR_NOSUCHPATH;
+        else
+            return CM_ERROR_NOSUCHFILE;
+    }
+
     for ( sysNameIndex = 0; sysNameIndex < MAXNUMSYSNAMES; sysNameIndex++) {
         code = cm_ExpandSysName(namep, tname, sizeof(tname), sysNameIndex);
         if (code > 0) {
@@ -1660,11 +1679,10 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     bb.counter = 0;
     bb.bufOffset = *offsetp;
 
-	lock_ReleaseMutex(&dscp->mx);
+    lock_ReleaseMutex(&dscp->mx);
     /* first, assemble the file IDs we need to stat */
-    code = cm_ApplyDir(dscp, cm_TryBulkProc, (void *) &bb, offsetp, userp,
-                        reqp, NULL);
-	lock_ObtainMutex(&dscp->mx);
+    code = cm_ApplyDir(dscp, cm_TryBulkProc, (void *) &bb, offsetp, userp, reqp, NULL);
+    lock_ObtainMutex(&dscp->mx);
 
     /* if we failed, bail out early */
     if (code && code != CM_ERROR_STOPNOW) return;

@@ -996,6 +996,7 @@ long cm_IoctlTraceControl(struct smb_ioctl *ioctlp, struct cm_user *userp)
     /* print trace */
     if (inValue & 8) {
         afsd_ForceTrace(FALSE);
+        buf_ForceTrace(FALSE);
     }
         
     if (inValue & 2) {
