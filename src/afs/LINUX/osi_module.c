@@ -289,7 +289,7 @@ int init_module(void)
 #else
 #if defined(AFS_AMD64_LINUX20_ENV)
     ptr=(unsigned long *)&init_mm;
-    datalen=0x180000/sizeof(ptr);
+    datalen=0x360000/sizeof(ptr);
 #else
     ptr=(unsigned long *)&init_mm;
     datalen=16384;
