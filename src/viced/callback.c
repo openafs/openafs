@@ -1408,6 +1408,7 @@ BreakLaterCallBacks(void)
     /* Unchain first */
     ViceLog(25, ("Looking for FileEntries to unchain\n"));
     H_LOCK;
+    FSYNC_LOCK;
     /* Pick the first volume we see to clean up */
     fid.Volume = fid.Vnode = fid.Unique = 0;
 
@@ -1430,14 +1431,14 @@ BreakLaterCallBacks(void)
 		feip = &fe->fnext;
 	}
     }
+    FSYNC_UNLOCK;
 
     if (!myfe) {
-	H_UNLOCK;
+	H_UNLOCK
 	return 0;
     }
 
     /* loop over FEs from myfe and free/break */
-    FSYNC_UNLOCK;
     tthead = 0;
     for (fe = myfe; fe;) {
 	register struct CallBack *cbnext;
@@ -1475,8 +1476,7 @@ BreakLaterCallBacks(void)
 	    henumParms.ncbas = 0;
 	}
     }
-    FSYNC_LOCK;
-    H_UNLOCK;;
+    H_UNLOCK;
 
     /* Arrange to be called again */
     return 1;
