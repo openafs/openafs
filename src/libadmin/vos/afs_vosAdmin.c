@@ -8,14 +8,23 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <afs/stds.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <io.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -2054,7 +2063,6 @@ static int GetVLDBEntryRPC(
     int rc = 0;
     afs_status_t tst = 0;
     vldb_entry_get_p entry = (vldb_entry_get_p) rpc_specific;
-    int index = entry->index;
 
     /*
      * Copy the next entry into the cache
@@ -2171,7 +2179,6 @@ int ADMINAPI vos_VLDBGetBegin(
     afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     vldb_entry_get_p entry = (vldb_entry_get_p) calloc(1, sizeof(vldb_entry_get_t));
     struct VldbListByAttributes attr;
-    afs_int32 nentries = 0;
 
     attr.Mask = 0;
     memset(&attr, 0, sizeof(attr));
@@ -3665,8 +3672,6 @@ static int copyvolintXInfo(
 
     rc = 1;
 
-fail_copyvolintXInfo:
-
     if (st != NULL) {
 	*st = tst;
     }
@@ -3785,7 +3790,6 @@ static int GetVolumeRPC(
     int rc = 0;
     afs_status_t tst = 0;
     volume_get_p entry = (volume_get_p) rpc_specific;
-    int index = entry->index;
 
     /*
      * Copy the next entry into the cache

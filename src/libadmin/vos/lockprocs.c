@@ -8,6 +8,12 @@
  */
 
 #include "lockprocs.h"
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
@@ -58,7 +64,6 @@ static void SetAValue (
   afs_int32 type)
 {
     int e;
-    afs_int32 error = 0;
 
     e = FindIndex(cellHandle, entry, oserver, opart, type);
     if (e == -1)

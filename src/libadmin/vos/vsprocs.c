@@ -24,11 +24,20 @@
 #include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>
 #include "afs_vosAdmin.h"
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
 
-static GroupEntries();
+static afs_int32 GroupEntries();
 
 struct release {
   afs_int32 time;
@@ -946,10 +955,9 @@ int UV_BackupVolume(
     afs_status_t tst = 0, temp = 0;
     afs_int32 ttid = 0, btid = 0;
     afs_int32 backupID;
-    afs_int32 code = 0, rcode = 0;
+    afs_int32 rcode = 0;
     char vname[VOLSER_MAXVOLNAME +1];
     struct nvldbentry entry;
-    afs_int32 error = 0;
     int vldblocked = 0, vldbmod = 0, backexists = 1;
     struct rx_connection *aconn = UV_Bind(cellHandle, aserver,
 					  AFSCONF_VOLUMEPORT);
@@ -1151,6 +1159,7 @@ static int DelVol (
 #define ONERROR(ec, ep, es) if (ec) { fprintf(STDERR, (es), (ep)); error = (ec); goto rfail; }
 #define ERROREXIT(ec) { error = (ec); goto rfail; }
 
+#if 0 /* doesn't appear to be used, why compile it */
 static int CloneVol (
   afs_cell_handle_p cellHandle,
   struct rx_connection *conn,
@@ -1255,6 +1264,7 @@ fail_CloneVol:
     }
     return rc;
 }
+#endif
 
 /* Get a "transaction" on this replica.  Create the volume 
  * if necessary.  Return the time from which a dump should
@@ -1371,13 +1381,6 @@ static int SimulateForwardMultiple(
 }
 
 
-static int rel_compar (
-  struct release *r1,
-  struct release *r2)
-{
-  return (r1->time - r2->time);
-}
-
 /* VolumeExists()
  *      Determine if a volume exists on a server and partition.
  *      Try creating a transaction on the volume. If we can,
@@ -1393,7 +1396,7 @@ static afs_int32 VolumeExists(
   afs_status_p st)
 {
    int rc = 0;
-   afs_status_t tst = -1;
+   afs_status_t tst = 0;
    struct rx_connection *conn=(struct rx_connection *)0;
    volEntries           volumeInfo;
  
@@ -1443,16 +1446,15 @@ int UV_ReleaseVolume(
   struct release *times=0;
   int nservers = 0;
   struct rx_connection *fromconn = (struct rx_connection *)0;
-  afs_int32 error = 0;
   int islocked = 0;
   afs_int32 clonetid=0, onlinetid;
   afs_int32 fromtid=0;
-  afs_uint32 fromdate, thisdate;
+  afs_uint32 fromdate=0, thisdate;
   int s;
   manyDests tr;
   manyResults results;
   int rwindex, roindex, roclone, roexists;
-  afs_int32 rwcrdate;
+  afs_int32 rwcrdate = 0;
   struct rtime {
     int     validtime;
     afs_uint32 time;
@@ -2062,7 +2064,7 @@ int UV_DumpVolume(
     if(tst) {
 	goto fail_UV_DumpVolume;
     }
-    if (tst = DumpFunction(fromcall,filename)) {
+    if ((tst = DumpFunction(fromcall,filename))) {
 	goto fail_UV_DumpVolume;
     }
     tst = rx_EndCall(fromcall,rxError);
@@ -2225,7 +2227,7 @@ int UV_RestoreVolume(
     afs_status_t etst = 0;
     struct rx_connection *toconn,*tempconn;
     struct rx_call *tocall;
-    afs_int32 totid, rcode, terror = 0;
+    afs_int32 totid, rcode;
     afs_int32 rxError = 0;
     struct volser_status tstatus;
     char partName[10];
@@ -2500,7 +2502,6 @@ int UV_AddSite(
     afs_status_t tst = 0;
     int j, nro=0, islocked=0;
     struct nvldbentry entry;
-    afs_int32 error=0;
     int same = 0;
 
     tst = ubik_Call(VL_SetLock, cellHandle->vos, 0,volid,RWVOL, VLOP_ADDSITE);
@@ -2580,7 +2581,7 @@ int UV_RemoveSite(
     int rc = 0;
     afs_status_t tst = 0;
     struct nvldbentry entry;
-    int islocked;
+    int islocked = 0;
 
     tst = ubik_Call(VL_SetLock, cellHandle->vos, 0,volid, RWVOL, VLOP_ADDSITE);
     if(tst) {
@@ -3204,7 +3205,6 @@ static afs_int32 CheckVldbRWBK(
    afs_status_t tst = 0;
    int modentry = 0;
    int idx;
-   afs_int32 error = 0;
  
    if (modified) *modified = 0;
    idx = Lp_GetRwIndex(cellHandle, entry, 0);
@@ -3312,7 +3312,6 @@ static int CheckVldbRO(
    afs_status_t tst = 0;
    int idx;
    int foundro = 0, modentry = 0;
-   afs_int32 error = 0;
  
    if (modified) *modified = 0;
  
@@ -3374,8 +3373,7 @@ int CheckVldb(
     int rc = 0;
     afs_status_t tst = 0;
     afs_int32 vcode;
-    int islocked;
-    struct rx_connection *server = NULL;
+    int islocked = 0;
     int pass = 0;
     afs_int32 modentry = 0;
     afs_int32 delentry = 0;
@@ -3707,7 +3705,7 @@ fail_UV_RenameVolume:
 *if the volume is rw. <count> is the number of entries to be processesd.
 *<pntr> points to the first entry.< myQueue> is the queue with entries 
 *grouped */
-static int GroupEntries(
+static afs_int32 GroupEntries(
   struct rx_connection *server,
   volintInfo *pntr,
   afs_int32 count,
