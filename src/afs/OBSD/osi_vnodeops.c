@@ -213,6 +213,7 @@ int afs_debug;
 #undef VREF
 #define VREF afs_nbsd_ref
 
+#if 0
 extern int afs_lookup();
 extern int afs_open();
 extern int afs_close();
@@ -226,6 +227,7 @@ extern int afs_rmdir();
 extern int afs_symlink();
 extern int afs_readdir();
 extern int afs_readlink();
+#endif
 
 int
 afs_nbsd_lookup(ap)

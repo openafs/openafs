@@ -66,7 +66,7 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 
     AFS_STATCNT(osi_CancelWait);
     proc = achandle->proc;
-    if (proc == 0)
+    if (proc == NULL)
 	return;
     achandle->proc = NULL;
     wakeup(&waitV);
@@ -78,30 +78,37 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
  */
 int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
-    int code = 0;
-    afs_int32 endTime;
-    int timo = (ams * afs_hz) / 1000 + 1;
+    int timo, code = 0;
+    struct timeval atv, endTime;
 
     AFS_STATCNT(osi_Wait);
-    endTime = osi_Time() + (ams / 1000);
+
+    atv.tv_sec = ams / 1000;
+    atv.tv_usec = (ams % 1000) * 1000;
+    timeradd(&atv, &time, &endTime);
+
     if (ahandle)
 	ahandle->proc = (caddr_t) curproc;
     AFS_ASSERT_GLOCK();
     AFS_GUNLOCK();
+
     do {
+	timersub(&endTime, &time, &atv);
+	timo = atv.tv_sec * hz + atv.tv_usec * hz / 1000000 + 1;
 	if (aintok) {
-	    code = tsleep(&waitV, PCATCH | PVFS, "afs_osi_Wait", timo);
-	    if (code)	/* if interrupted, return EINTR */
-		code = EINTR;
+	    code = tsleep(&waitV, PCATCH | PVFS, "afs_W1", timo);
+	    if (code)
+		code = (code == EWOULDBLOCK) ? 0 : EINTR;
 	} else
-	    tsleep(&waitV, PVFS, "afs_osi_Wait", timo);
+	    tsleep(&waitV, PVFS, "afs_W2", timo);
 
 	/* if we were cancelled, quit now */
 	if (ahandle && (ahandle->proc == NULL)) {
 	    /* we've been signalled */
 	    break;
 	}
-    } while (osi_Time() < endTime);
+    } while (timercmp(&time, &endTime, <));
+
     AFS_GLOCK();
     return code;
 }

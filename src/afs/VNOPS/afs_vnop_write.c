@@ -788,8 +788,7 @@ off_t offset;
 struct flid *flp;
 #endif
 #endif
-#else /* SGI */
-#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
+#elif	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 #ifdef	AFS_SUN5_ENV
 afs_close(OSI_VC_ARG(avc), aflags, count, offset, acred)
     offset_t offset;
@@ -797,12 +796,8 @@ afs_close(OSI_VC_ARG(avc), aflags, count, offset, acred)
 afs_close(OSI_VC_ARG(avc), aflags, count, acred)
 #endif
 int count;
-#elif defined(AFS_OBSD_ENV)
-afs_close(OSI_VC_ARG(avc), aflags, acred, aproc)
-    struct proc *aproc;
 #else
 afs_close(OSI_VC_ARG(avc), aflags, acred)
-#endif
 #endif
     OSI_VC_DECL(avc);
     afs_int32 aflags;
@@ -838,14 +833,12 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
  	return 0;
     }
-#else
-#if	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
 	afs_PutFakeStat(&fakestat);
 	return 0;
     }
-#endif
 #endif
 #ifndef	AFS_SUN5_ENV
 #if defined(AFS_SGI_ENV)
@@ -865,18 +858,16 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->m.Length));
-#else
+#else /* AFS_SGI_ENV */
     if (avc->flockCount) {		/* Release Lock */
 #if	defined(AFS_OSF_ENV) || defined(AFS_SUN_ENV)
 	HandleFlock(avc, LOCK_UN, &treq, u.u_procp->p_pid, 1/*onlymine*/);
-#elif defined(AFS_OBSD_ENV)
-	HandleFlock(avc, LOCK_UN, &treq, aproc->p_pid, 1/*onlymine*/);
 #else
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1/*onlymine*/);
 #endif
     }
-#endif
-#endif
+#endif /* AFS_SGI_ENV */
+#endif /* AFS_SUN5_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
 	if (afs_BBusy()) {
 	    /* do it yourself if daemons are all busy */

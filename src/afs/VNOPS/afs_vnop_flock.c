@@ -415,13 +415,13 @@ int HandleFlock(register struct vcache *avc, int acom,
 		break;
 	    }
 	    /* now, if we got EWOULDBLOCK, and we're supposed to wait, we do */
-	    if(((code == EWOULDBLOCK)||(code == EAGAIN)) && !(acom & LOCK_NB)) {
+	    if(((code == EWOULDBLOCK) || (code == EAGAIN)) && !(acom & LOCK_NB)) {
 		/* sleep for a second, allowing interrupts */
 		ReleaseWriteLock(&avc->lock);
 #if defined(AFS_SGI_ENV)
 		AFS_RWUNLOCK((vnode_t *)avc, VRWLOCK_WRITE);
 #endif
-		code = afs_osi_Wait(1000, (struct afs_osi_WaitHandle *) 0, 1);
+		code = afs_osi_Wait(1000, NULL, 1);
 #if defined(AFS_SGI_ENV)
 		AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);
 #endif
@@ -460,13 +460,11 @@ static void DoLockWarning(void)
 #ifdef	AFS_OSF_ENV
 afs_lockctl(struct vcache *avc, struct eflock *af, int flag, 
 	struct AFS_UCRED *acred, pid_t clid, off_t offset)
-#else
-#if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred, pid_t clid)
 #else
 u_int clid=0;
 afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred)
-#endif
 #endif
 {
     struct vrequest treq;
@@ -551,20 +549,18 @@ afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED
 	}
 	if (((acmd == F_SETLK) 
 #if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV)) && !defined(AFS_SUN58_ENV)
-	|| (acmd == F_RSETLK) 
+	      || (acmd == F_RSETLK) 
 #endif
 	) && code != LOCK_UN)
 	    code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) 
+#if	(defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV) 
 	code = HandleFlock(avc, code, &treq, clid, 0/*!onlymine*/);
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
 	AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);
 	code = HandleFlock(avc, code, &treq, clid, 0/*!onlymine*/);
 	AFS_RWUNLOCK((vnode_t *)avc, VRWLOCK_WRITE);
 #else
 	code = HandleFlock(avc, code, &treq, 0, 0/*!onlymine*/);
-#endif
 #endif
 	code = afs_CheckCode(code, &treq, 3); /* defeat AIX -O bug */
 	afs_PutFakeStat(&fakestate);
@@ -597,8 +593,10 @@ static int HandleGetLock(register struct vcache *avc,
 
     ObtainWriteLock(&avc->lock,122);
     if (avc->flockCount == 0) {
-	/* We don't know ourselves, so ask the server. Unfortunately, we don't know the pid.
-	 * Not even the server knows the pid.  Besides, the process with the lock is on another machine
+	/*
+	 * We don't know ourselves, so ask the server. Unfortunately, we
+	 * don't know the pid.  Not even the server knows the pid.  Besides,
+	 * the process with the lock is on another machine
 	 */
 	code = GetFlockCount(avc, areq);
 	if (code == 0 || (af->l_type == F_RDLCK && code > 0)) {

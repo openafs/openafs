@@ -825,6 +825,14 @@ extern int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *a
 extern int afs_lookup();
 
 
+/* VNOPS/afs_vnop_open.c */
+#ifdef AFS_SGI64_ENV
+extern int afs_open(bhv_desc_t *bhv, struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred);
+#else
+extern int afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred);
+#endif
+
+
 /* VNOPS/afs_vnop_read.c */
 extern afs_int32 maxIHint;
 extern afs_int32 nihints;
@@ -837,6 +845,7 @@ extern int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 
 /* VNOPS/afs_vnop_readdir.c */
 extern int afs_rd_stash_i;
+
 
 /* VNOPS/afs_vnop_remove.c */
 extern int afsremove(register struct vcache *adp, register struct dcache *tdc, 
@@ -867,7 +876,6 @@ extern int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq
 extern int afs_closex(register struct file *afd);
 
 /* other VNOPS (please fix these) */
-extern int afs_open();
 extern int afs_close();
 extern int HandleIoctl();
 extern int afs_fsync();

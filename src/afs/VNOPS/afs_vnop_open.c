@@ -32,15 +32,12 @@ RCSID("$Header$");
  * checks are done here, instead they're done by afs_create or afs_access,
  * both called by the vn_open call.
  */
+int
 #ifdef AFS_SGI64_ENV
-afs_open(bhv, avcp, aflags, acred)
-    bhv_desc_t *bhv;
+afs_open(bhv_desc_t *bhv, struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 #else
-afs_open(avcp, aflags, acred)
+afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 #endif
-    register struct vcache **avcp;
-    afs_int32 aflags;
-    struct AFS_UCRED *acred; 
 {
     register afs_int32 code;
     struct vrequest treq;
