@@ -13,7 +13,7 @@ include ../config/Makefile.${SYS_NAME}
 # subtle bugs that may have been introduced in process.s, be warned!
 OPTIMIZE=${LWP_OPTMZ}
 
-CFLAGS=${OPTIMIZE} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 include ../config/Makefile.version
 

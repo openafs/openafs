@@ -336,7 +336,8 @@ extern void IOMGR_Sleep(int seconds);
 extern int IOMGR_Cancel(PROCESS pid);
 extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
-static void SignalTimeout(int code, struct timeval *timeout);
+extern int IOMGR_SoftSig( int (*aproc)(), char *arock);
+
 
 /* fasttime.c */
 extern int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz);
