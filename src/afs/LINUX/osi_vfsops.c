@@ -475,5 +475,5 @@ void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp)
 
     VATTR_NULL(&vattr);
     afs_CopyOutAttrs(rootvp, &vattr);
-    vattr2inode(AFSTOV(mpvp), &vattr);
+    vattr2inode(AFSTOI(mpvp), &vattr);
 }
