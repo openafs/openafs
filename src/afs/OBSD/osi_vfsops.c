@@ -405,8 +405,10 @@ afs_vget(vp, lfl)
 	panic("afs_vget");
     }
     error = vget(vp, lfl, curproc);
-    if (!error)
-	insmntque(vp, afs_globalVFS);	/* take off free list */
+    if (!error && vp->v_usecount == 1) {
+	/* vget() took it off the freelist; put it on our mount queue */
+	insmntque(vp, afs_globalVFS);
+    }
     return error;
 }
 
