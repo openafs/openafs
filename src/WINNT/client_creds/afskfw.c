@@ -2605,7 +2605,7 @@ KFW_AFS_klog(
     memset(&creds, '\0', sizeof(creds));
 
     if ( try_krb5 ) {
-        int len;
+        int i, len;
         char *p;
 
         /* First try service/cell@REALM */
@@ -2731,8 +2731,11 @@ KFW_AFS_klog(
         } else
             aclient.instance[0] = '\0';
         len = min(k5creds->client->realm.length,MAXKTCNAMELEN - 1);
-        strncpy(aclient.cell, k5creds->client->realm.data, len);
+	    for ( i=0; i<len; i++ ) {
+			aclient.cell[i] = tolower(k5creds->client->realm.data[i]);
+		}
         aclient.cell[len] = '\0';
+		aclient.smbname[0] = '\0';
 
         rc = pktc_SetToken(&aserver, &atoken, &aclient, 0);
         if (!rc)
@@ -2756,27 +2759,27 @@ KFW_AFS_klog(
     } else {
       use_krb4:
 #ifdef USE_KRB4
-        rc = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds);
-        if (rc == NO_TKT_FIL) {
+        code = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds);
+        if (code == NO_TKT_FIL) {
             // if the problem is that we have no krb4 tickets
             // do not attempt to continue
             goto cleanup;
         }
-        if (rc != KSUCCESS)
-            rc = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds);
+        if (code != KSUCCESS)
+            code = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds);
 
-        if (rc != KSUCCESS)
+        if (code != KSUCCESS)
         {
-            if ((rc = (*pkrb_mk_req)(&ticket, ServiceName, CellName, RealmName, 0)) == KSUCCESS)
+            if ((code = (*pkrb_mk_req)(&ticket, ServiceName, CellName, RealmName, 0)) == KSUCCESS)
             {
-                if ((rc = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds)) != KSUCCESS)
+                if ((code = (*pkrb_get_cred)(ServiceName, CellName, RealmName, &creds)) != KSUCCESS)
                 {
                     goto cleanup;
                 }
             }
-            else if ((rc = (*pkrb_mk_req)(&ticket, ServiceName, "", RealmName, 0)) == KSUCCESS)
+            else if ((code = (*pkrb_mk_req)(&ticket, ServiceName, "", RealmName, 0)) == KSUCCESS)
             {
-                if ((rc = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds)) != KSUCCESS)
+                if ((code = (*pkrb_get_cred)(ServiceName, "", RealmName, &creds)) != KSUCCESS)
                 {
                     goto cleanup;
                 }
@@ -2854,7 +2857,7 @@ KFW_AFS_klog(
     if (ctx && (ctx != alt_ctx))
         pkrb5_free_context(ctx);
 
-   return(code);
+	return(rc? rc : code);
 }
 
 /**************************************/
