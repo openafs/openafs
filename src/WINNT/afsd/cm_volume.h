@@ -12,18 +12,18 @@
 
 typedef struct cm_volume {
 	struct cm_cell *cellp;		/* never changes */
-        char *namep;			/* by cm_volumeLock */
+    char *namep;			/* by cm_volumeLock */
 	unsigned long rwID;		/* by cm_volumeLock */
 	unsigned long roID;		/* by cm_volumeLock */
 	unsigned long bkID;		/* by cm_volumeLock */
-        struct cm_volume *nextp;	/* by cm_volumeLock */
+    struct cm_volume *nextp;	/* by cm_volumeLock */
 	struct cm_fid *dotdotFidp;	/* parent of volume root */
-        osi_mutex_t mx;
-        long flags;			/* by mx */
-        int refCount;			/* by cm_volumeLock */
-        cm_serverRef_t *rwServersp;	/* by mx */
-        cm_serverRef_t *roServersp;	/* by mx */
-        cm_serverRef_t *bkServersp;	/* by mx */
+    osi_mutex_t mx;
+    long flags;			/* by mx */
+    int refCount;			/* by cm_volumeLock */
+    cm_serverRef_t *rwServersp;	/* by mx */
+    cm_serverRef_t *roServersp;	/* by mx */
+    cm_serverRef_t *bkServersp;	/* by mx */
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	1	/* reload this info on next use */
@@ -43,7 +43,7 @@ extern long cm_GetVolumeByID(struct cm_cell *cellp, long volumeID,
 extern void cm_ForceUpdateVolume(struct cm_fid *fidp, cm_user_t *userp,
 	cm_req_t *reqp);
 
-extern cm_serverRef_t *cm_GetVolServers(cm_volume_t *volp, unsigned long volume);
+extern cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume);
 
 extern void cm_ChangeRankVolume(cm_server_t *tsp);
 

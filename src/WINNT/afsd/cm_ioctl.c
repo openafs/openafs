@@ -696,7 +696,7 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_scache_t *scp;
     cm_cell_t *cellp;
     cm_volume_t *tvp;
-	cm_serverRef_t *tsrp, *current;
+	cm_serverRef_t **tsrpp, *current;
     cm_server_t *tsp;
     unsigned long volume;
     char *cp;
@@ -720,15 +720,15 @@ long cm_IoctlWhereIs(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
         
 	lock_ObtainMutex(&tvp->mx);
-	tsrp = cm_GetVolServers(tvp, volume);
+	tsrpp = cm_GetVolServers(tvp, volume);
 	lock_ObtainRead(&cm_serverLock);
-	for (current = tsrp; current; current = current->next) {
+	for (current = *tsrpp; current; current = current->next) {
 		tsp = current->server;
 		memcpy(cp, (char *)&tsp->addr.sin_addr.s_addr, sizeof(long));
 		cp += sizeof(long);
 	}
 	lock_ReleaseRead(&cm_serverLock);
-    cm_FreeServerList(&tsrp);
+    cm_FreeServerList(tsrpp);
     lock_ReleaseMutex(&tvp->mx);
 
 	/* still room for terminating NULL, add it on */

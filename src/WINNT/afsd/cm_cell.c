@@ -97,8 +97,10 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
         else {
             dns_expired = 1;
             /* must empty cp->vlServersp */
+            lock_ObtainWrite(&cp->mx);
             cm_FreeServerList(&cp->vlServersp);
             cp->vlServersp = NULL;
+            lock_ReleaseWrite(&cp->mx);
         }
 
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);

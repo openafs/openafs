@@ -97,15 +97,15 @@ void cm_InitReq(cm_req_t *reqp)
  
 }
 
-long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
-	struct cm_req *reqp, cm_serverRef_t **serverspp)
+static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
+	struct cm_req *reqp, cm_serverRef_t ***serversppp)
 {
 	long code;
     cm_volume_t *volp = NULL;
     cm_cell_t *cellp = NULL;
 
     if (!fidp) {
-		*serverspp = NULL;
+		*serversppp = NULL;
 		return 0;
 	}
 
@@ -115,7 +115,7 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
     code = cm_GetVolumeByID(cellp, fidp->volume, userp, reqp, &volp);
     if (code) return code;
     
-    *serverspp = cm_GetVolServers(volp, fidp->volume);
+    *serversppp = cm_GetVolServers(volp, fidp->volume);
 
     cm_PutVolume(volp);
 	return 0;
@@ -145,6 +145,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	cm_callbackRequest_t *cbrp, long errorCode)
 {
 	cm_server_t *serverp;
+    cm_serverRef_t **serverspp = 0;
 	cm_serverRef_t *tsrp;
 	cm_ucell_t *ucellp;
     int retry = 0;
@@ -199,7 +200,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		 * flag and reset the busy state as well.
 		 */
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serversp);
+            cm_GetServerList(fidp, userp, reqp, &serverspp);
+            serversp = *serverspp;
             free_svr_list = 1;
         }
         if (serversp) {
@@ -210,8 +212,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                     tsrp->status = not_busy;
             }
             lock_ReleaseWrite(&cm_serverLock);
-            if (free_svr_list)
+            if (free_svr_list) {
                 cm_FreeServerList(&serversp);
+                *serverspp = serversp;
+            }
             retry = 1;
         }
 
@@ -223,7 +227,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     if (errorCode == CM_ERROR_ALLBUSY && timeLeft > 7) {
         thrd_Sleep(5000);
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serversp);
+            cm_GetServerList(fidp, userp, reqp, &serverspp);
+            serversp = *serverspp;
             free_svr_list = 1;
         }
 		lock_ObtainWrite(&cm_serverLock);
@@ -232,15 +237,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 				tsrp->status = not_busy;
 		}
         lock_ReleaseWrite(&cm_serverLock);
-        if (free_svr_list)
+        if (free_svr_list) {
             cm_FreeServerList(&serversp);
+            *serverspp = serversp;
+        }
 		retry = 1;
 	}
 
 	/* special codes:  VBUSY and VRESTARTING */
 	if (errorCode == VBUSY || errorCode == VRESTARTING) {
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serversp);
+            cm_GetServerList(fidp, userp, reqp, &serverspp);
+            serversp = *serverspp;
             free_svr_list = 1;
         }
 		lock_ObtainWrite(&cm_serverLock);
@@ -252,8 +260,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 			}
 		}
         lock_ReleaseWrite(&cm_serverLock);
-        if (free_svr_list)
+        if (free_svr_list) {
             cm_FreeServerList(&serversp);
+            *serverspp = serversp;
+        }
 		retry = 1;
 	}
 
@@ -286,15 +296,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
 		/* Mark server offline for this volume */
         if (!serversp) {
-            cm_GetServerList(fidp, userp, reqp, &serversp);
+            cm_GetServerList(fidp, userp, reqp, &serverspp);
+            serversp = *serverspp;
             free_svr_list = 1;
         }
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp)
 				tsrp->status = offline;
 		}
-        if (free_svr_list)
+        if (free_svr_list) {
             cm_FreeServerList(&serversp);
+            *serverspp = serversp;
+        }
         if ( timeLeft > 2 )
 		retry = 1;
 	}
@@ -559,15 +572,15 @@ long cm_Conn(struct cm_fid *fidp, struct cm_user *userp, cm_req_t *reqp,
 {
 	long code;
 
-	cm_serverRef_t *serversp;
+	cm_serverRef_t **serverspp;
 
-	code = cm_GetServerList(fidp, userp, reqp, &serversp);
+	code = cm_GetServerList(fidp, userp, reqp, &serverspp);
 	if (code) {
 		*connpp = NULL;
 		return code;
 	}
 
-	code = cm_ConnByMServers(serversp, userp, reqp, connpp);
-    cm_FreeServerList(&serversp);
+	code = cm_ConnByMServers(*serverspp, userp, reqp, connpp);
+    cm_FreeServerList(serverspp);
     return code;
 }

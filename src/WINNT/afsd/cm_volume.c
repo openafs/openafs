@@ -303,27 +303,27 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 }
 
 /* find the appropriate servers from a volume */
-cm_serverRef_t *cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
+cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
 {
-	cm_serverRef_t *serversp;
+	cm_serverRef_t **serverspp;
     cm_serverRef_t *current;;
 
     lock_ObtainWrite(&cm_serverLock);
 
 	if (volume == volp->rwID)
-        serversp = volp->rwServersp;
+        serverspp = &volp->rwServersp;
 	else if (volume == volp->roID)
-        serversp = volp->roServersp;
+        serverspp = &volp->roServersp;
 	else if (volume == volp->bkID)
-        serversp = volp->bkServersp;
+        serverspp = &volp->bkServersp;
 	else osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
         
-    for (current = serversp; current; current = current->next)
+    for (current = *serverspp; current; current = current->next)
         current->refCount++;
 
     lock_ReleaseWrite(&cm_serverLock);
 
-    return serversp;
+    return serverspp;
 }
 
 void cm_PutVolume(cm_volume_t *volp)
