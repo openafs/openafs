@@ -93,7 +93,7 @@ afs_CopyOutAttrs(avc, attrs)
     attrs->va_nlink = avc->m.LinkCount;
     attrs->va_size = avc->m.Length;
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
-	avc->m.Date;
+	(int)avc->m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
      * use of mtime as a dataversion #.  We take it mod 512K because
      * microseconds *must* be less than a million, and 512K is the biggest
