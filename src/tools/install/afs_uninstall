@@ -28,7 +28,10 @@ rm -f /usr/vice/etc/CellServDB
 rm -f /usr/vice/etc/ThisCell
 rm -f /usr/vice/etc/AFSLog
 rm -rf /usr/vice/cache
+rm -f $afscodeFileDir/install_output
+rm -f $afscodeFileDir/done.txt
 mkdir /usr/vice/cache
+echo "If you were using K5 authentication, make sure you delete all AFS related principals."
 echo "Uninstall" > $afscodeFileDir/.afs_state
 echo "complete" >> $afscodeFileDir/.afs_state
 

@@ -26,6 +26,7 @@ cp -f afsinit_client $mainFileDir/
 cp -f afsinit_server $mainFileDir/
 cp -f afs_uninstall $mainFileDir/
 cp -f install_afs $mainFileDir/
+cp -f K5_README $mainFileDir/
 cp -f check_udebug.pl $mainFileDir/
 cp -f write_fstab.pl $mainFileDir/
 cp -f write_pam.pl $mainFileDir/
