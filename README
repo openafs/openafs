@@ -51,7 +51,7 @@ A. Creating the proper directory structure.
       sparc_linux24
       sparc64_linux22
       sparc64_linux24
-      hp_ux110 
+      hp_ux110 (See notes below for information on getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)
 
    2. Using configure in the top level directory, configure for your
@@ -136,3 +136,11 @@ C  Problems
    Mailing lists have been set up to help; More details can be found
    on the openafs.org site.
 
+D Notes
+   HP-UX 11.0 requires a header called vfs_vm.h which HP has provided on their
+   web site: http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,687,00.html
+   To navigate down from the top level of the portal, one would do
+
+        www.hp.com/dspp -> i want to... -> download software -> operating systems
+
+   to get to the same page. 
