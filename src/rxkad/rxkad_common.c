@@ -59,9 +59,9 @@ RCSID("$Header$");
 
 char *rxi_Alloc();
 
-#ifndef max
-#define	max(a,b)    ((a) < (b)? (b) : (a))
-#endif /* max */
+#ifndef afs_max
+#define	afs_max(a,b)    ((a) < (b)? (b) : (a))
+#endif /* afs_max */
 
 #ifndef KERNEL
 #define osi_Time() time(0)
@@ -452,7 +452,7 @@ rxs_return_t rxkad_PreparePacket (aobj, acall, apacket)
     switch (level) {
       case rxkad_clear: return 0;	/* shouldn't happen */
       case rxkad_auth:
-	nlen = max (ENCRYPTIONBLOCKSIZE,
+	nlen = afs_max (ENCRYPTIONBLOCKSIZE,
 		    len + rx_GetSecurityHeaderSize(tconn));
 	if (nlen > (len + rx_GetSecurityHeaderSize(tconn))) {
 	  rxi_RoundUpPacket(apacket, nlen - (len + rx_GetSecurityHeaderSize(tconn)));

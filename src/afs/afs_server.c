@@ -968,8 +968,8 @@ typedef struct ill_s {			/**/
 #endif
 
 #ifdef AFS_USERSPACE_IP_ADDR
-#ifndef min
-#define min(A,B) ((A)<(B)) ? (A) : (B)
+#ifndef afs_min
+#define afs_min(A,B) ((A)<(B)) ? (A) : (B)
 #endif
 /*
  * The IP addresses and ranks are determined by afsd (in user space) and
@@ -1000,12 +1000,12 @@ afsi_SetServerIPRank(sa, addr, subnetmask)
    if ( (serverAddr & netMask ) == myNet ) {
       if ( (serverAddr & subnetmask ) == mySubnet) {
 	 if ( serverAddr == myAddr ) {    /* same machine */
-	   sa->sa_iprank = min(sa->sa_iprank, TOPR);
+	   sa->sa_iprank = afs_min(sa->sa_iprank, TOPR);
 	 } else {                           /* same subnet */
-	    sa->sa_iprank = min(sa->sa_iprank, HI);
+	    sa->sa_iprank = afs_min(sa->sa_iprank, HI);
 	 }
       } else {                               /* same net */
-	 sa->sa_iprank = min(sa->sa_iprank, MED);
+	 sa->sa_iprank = afs_min(sa->sa_iprank, MED);
       }
    }
 }
