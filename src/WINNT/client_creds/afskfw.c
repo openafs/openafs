@@ -397,34 +397,50 @@ void
 KFW_initialize(void)
 {
     static int inited = 0;
+
     if ( !inited ) {
-        inited = 1;
-        LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
-        LoadFuncs(KRB4_DLL, k4_fi, &hKrb5, 0, 1, 0, 0);
-        LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
-        LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
-#ifdef USE_MS2MIT
-        LoadFuncs(SECUR32_DLL, lsa_fi, &hSecur32, 0, 1, 1, 1);
-#endif /* USE_MS2MIT */
-        LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
-        LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
-        LoadFuncs(AFSTOKENS_DLL, afst_fi, &hAfsTokens, 0, 1, 0, 0);
-        LoadFuncs(AFSCONF_DLL, afsc_fi, &hAfsConf, 0, 1, 0, 0);
-        LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
-        LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
+        char mutexName[MAX_PATH];
+        HANDLE hMutex = NULL;
 
-        if ( KFW_is_available() ) {
-            char rootcell[MAXCELLCHARS+1];
-#ifdef USE_MS2MIT
-            KFW_import_windows_lsa();
-#endif /* USE_MS2MIT */
-            KFW_import_ccache_data();
-		    KFW_AFS_renew_expiring_tokens();
-
-            /* WIN32 NOTE: no way to get max chars */
-            if (!pcm_GetRootCellName(rootcell))
-                KFW_AFS_renew_token_for_cell(rootcell);
+        sprintf(mutexName, "AFS KFW Init pid=%d", getpid());
+        
+        hMutex = CreateMutex( NULL, TRUE, mutexName );
+        if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
+            if ( WaitForSingleObject( hMutex, INFINITE ) != WAIT_OBJECT_0 ) {
+                return;
+            }
         }
+        if ( !inited ) {
+            inited = 1;
+            LoadFuncs(KRB5_DLL, k5_fi, &hKrb5, 0, 1, 0, 0);
+            LoadFuncs(KRB4_DLL, k4_fi, &hKrb4, 0, 1, 0, 0);
+            LoadFuncs(COMERR_DLL, ce_fi, &hComErr, 0, 0, 1, 0);
+            LoadFuncs(SERVICE_DLL, service_fi, &hService, 0, 1, 0, 0);
+#ifdef USE_MS2MIT
+            LoadFuncs(SECUR32_DLL, lsa_fi, &hSecur32, 0, 1, 1, 1);
+#endif /* USE_MS2MIT */
+            LoadFuncs(KRB524_DLL, k524_fi, &hKrb524, 0, 1, 1, 1);
+            LoadFuncs(PROFILE_DLL, profile_fi, &hProfile, 0, 1, 0, 0);
+            LoadFuncs(AFSTOKENS_DLL, afst_fi, &hAfsTokens, 0, 1, 0, 0);
+            LoadFuncs(AFSCONF_DLL, afsc_fi, &hAfsConf, 0, 1, 0, 0);
+            LoadFuncs(LEASH_DLL, leash_fi, &hLeash, 0, 1, 0, 0);
+            LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
+
+            if ( KFW_is_available() ) {
+                char rootcell[MAXCELLCHARS+1];
+#ifdef USE_MS2MIT
+                KFW_import_windows_lsa();
+#endif /* USE_MS2MIT */
+                KFW_import_ccache_data();
+                KFW_AFS_renew_expiring_tokens();
+
+                /* WIN32 NOTE: no way to get max chars */
+                if (!pcm_GetRootCellName(rootcell))
+                    KFW_AFS_renew_token_for_cell(rootcell);
+            }
+        }
+        ReleaseMutex(hMutex);
+        CloseHandle(hMutex);
     }
 }
 
@@ -490,7 +506,7 @@ KFW_is_available(void)
          hSecur32 && 
 #endif /* USE_MS2MIT */
          hKrb524 &&
-         hProfile && hAfsTokens && hAfsConf )
+         hProfile && hAfsTokens && hAfsConf && hLeash && hCCAPI )
         return TRUE;
     return FALSE;
 }
@@ -832,6 +848,9 @@ KFW_get_ccache(krb5_context alt_ctx, krb5_principal principal, krb5_ccache * cc)
     char * ccname = 0;
     krb5_error_code code;
 
+    if (!pkrb5_init_context)
+        return 0;
+
     if ( alt_ctx ) {
         ctx = alt_ctx;
     } else {
@@ -878,6 +897,9 @@ KFW_import_windows_lsa(void)
     char cell[128]="";
     int i;
          
+    if (!pkrb5_init_context)
+        return;
+
     if ( !MSLSA_IsKerberosLogon() )
         return;
 
@@ -1138,6 +1160,9 @@ KFW_AFS_get_cred(char * username,
     int  cell_count=0;
     afsconf_cell cellconfig;
 
+    if (!pkrb5_init_context)
+        return 0;
+
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_get_cred for token ");
         OutputDebugString(username);
@@ -1262,6 +1287,9 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
     int count;
     char ** principals = NULL;
 
+    if (!pkrb5_init_context)
+        return 0;
+
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_destroy_ticets_for_cell: ");
         OutputDebugString(cell);
@@ -1328,6 +1356,9 @@ KFW_AFS_renew_expiring_tokens(void)
     const char * realm = NULL;
     char local_cell[MAXCELLCHARS+1]="";
     afsconf_cell cellconfig;
+
+    if (!pkrb5_init_context)
+        return 0;
 
     if ( pcc_next == NULL ) // nothing to do
         return 0;
@@ -1422,6 +1453,9 @@ KFW_AFS_renew_token_for_cell(char * cell)
     int count;
     char ** principals = NULL;
 
+    if (!pkrb5_init_context)
+        return 0;
+
     if ( IsDebuggerPresent() ) {
         OutputDebugString("KFW_AFS_renew_token_for_cell:");
         OutputDebugString(cell);
@@ -1435,7 +1469,9 @@ KFW_AFS_renew_token_for_cell(char * cell)
     if ( count > 0 ) {
         krb5_principal      princ = 0;
         krb5_principal      service = 0;
+#ifdef COMMENT
         krb5_creds          mcreds, creds;
+#endif /* COMMENT */
         krb5_ccache			cc  = 0;
         const char * realm = NULL;
         afsconf_cell cellconfig;
@@ -1553,6 +1589,9 @@ KFW_renew(krb5_context alt_ctx, krb5_ccache alt_cc)
     krb5_principal              server = 0;
     krb5_creds			        my_creds;
     krb5_data                   *realm = 0;
+
+    if (!pkrb5_init_context)
+        return 0;
 
 	memset(&my_creds, 0, sizeof(krb5_creds));
 
@@ -1830,6 +1869,9 @@ KFW_kdestroy(krb5_context alt_ctx, krb5_ccache alt_cc)
     krb5_context		ctx;
     krb5_ccache			cc;
     krb5_error_code		code;
+
+    if (!pkrb5_init_context)
+        return 0;
 
     if (alt_ctx)
     {
@@ -2538,6 +2580,9 @@ KFW_AFS_klog(
         return(-2);
     }
 
+    if (!pkrb5_init_context)
+        return 0;
+
     memset(RealmName, '\0', sizeof(RealmName));
     memset(CellName, '\0', sizeof(CellName));
     memset(ServiceName, '\0', sizeof(ServiceName));
@@ -2816,6 +2861,9 @@ afs_realm_of_cell(afsconf_cell *cellconfig)
     krb5_error_code r;
 
     if (!cellconfig)
+        return 0;
+
+    if (!pkrb5_init_context)
         return 0;
 
     r = pkrb5_init_context(&ctx); 
@@ -3216,6 +3264,9 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         SendMessage(hWnd, WM_START_SERVICE, FALSE, 0L);
         return;
     }
+
+    if (!pkrb5_init_context)
+        return;
 
     if ( use_kfw ) {
         code = pkrb5_init_context(&ctx);
