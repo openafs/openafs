@@ -77,6 +77,8 @@ DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
 
 
 # libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+
+.PHONY: libafs
 libafs:	$(DEST_LIBAFSNONFS)
 
 

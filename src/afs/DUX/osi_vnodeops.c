@@ -40,6 +40,7 @@ int mp_afs_reclaim(), mp_afs_bmap(), mp_afs_strategy(), mp_afs_print();
 int mp_afs_page_read(), mp_afs_page_write(), mp_afs_swap(), mp_afs_bread();
 int mp_afs_brelse(), mp_afs_lockctl(), mp_afs_syncdata(), mp_afs_close();
 int mp_afs_closex();
+int mp_afs_ioctl();
 
 /* AFS vnodeops */
 struct vnodeops Afs_vnodeops = {
@@ -53,7 +54,7 @@ struct vnodeops Afs_vnodeops = {
 	mp_afs_setattr,
 	mp_afs_ubcrdwr,
 	mp_afs_ubcrdwr,
-	afs_badop,	/* vn_ioctl */
+	mp_afs_ioctl,	/* vn_ioctl */
 	seltrue,	/* vn_select */
 	mp_afs_mmap,
 	mp_afs_fsync,
@@ -510,8 +511,13 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	flags = 0;
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
+#ifdef AFS_DUX50_ENV
+	code = ubc_lookup(((struct vnode *)avc)->v_object, pageBase,
+			  PAGE_SIZE, PAGE_SIZE, &page, &flags, NULL);
+#else
 	code = ubc_lookup(((struct vnode *)avc)->v_object, pageBase,
 			  PAGE_SIZE, PAGE_SIZE, &page, &flags);
+#endif
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,163);
 
@@ -561,9 +567,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	}
 	AFS_GUNLOCK();
 	ubc_page_wait(page);
-	data = (char *)page->pg_addr; /* DUX 4.0D */
-	if (data == 0)
-            data = (char *)PHYS_TO_KSEG(page->pg_phys_addr);  /* DUX 4.0E */
+        data = ubc_load(page, pageOffset, page_size);
 	AFS_GLOCK();
 	ReleaseWriteLock(&avc->lock);	/* uiomove may page fault */
 	AFS_GUNLOCK();
@@ -666,6 +670,12 @@ out:
     return code;
 }
 
+int
+mp_afs_ioctl(struct vnode *vp, int com, caddr_t data, int fflag,
+	     struct ucred *cred, int *retval)
+{
+  return ENOSYS;
+}
 
 /*
  * Now for some bad news.  Since we artificially hold on to vnodes by doing
@@ -724,15 +734,25 @@ mp_afs_mmap(avc, offset, map, addrp, len, prot, maxprot, flags, cred)
 }
 
 
-int mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
+int mp_afs_getpage(vop, offset, len, protp, pl, plsz, 
+#ifdef AFS_DUX50_ENV
+		   policy,
+#else
+		   mape, addr, 
+#endif
+		   rw, cred)
     vm_ubc_object_t vop;
     vm_offset_t offset;
     vm_size_t len;
     vm_prot_t *protp;
     vm_page_t *pl;
     int plsz;
+#ifdef AFS_DUX50_ENV
+    struct vm_policy *policy;
+#else
     vm_map_entry_t mape;
     vm_offset_t addr;
+#endif
     int rw;
     struct ucred *cred;
 {
@@ -774,8 +794,13 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
 	flags = 0;
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
+#ifdef AFS_DUX50_ENV
+	code = ubc_lookup(((struct vnode *)avc)->v_object, off,
+			PAGE_SIZE, PAGE_SIZE, pagep, &flags, NULL);
+#else
 	code = ubc_lookup(((struct vnode *)avc)->v_object, off,
 			PAGE_SIZE, PAGE_SIZE, pagep, &flags);
+#endif
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,168);
 	if (code) {
@@ -815,7 +840,11 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
 	}
 	if ((rw & B_READ) == 0) {
 	    AFS_GUNLOCK();
+#ifdef AFS_DUX50_ENV
+	    ubc_page_dirty(pl[i], 0);
+#else
 	    ubc_page_dirty(pl[i]);
+#endif
 	    AFS_GLOCK();
 	} else {
 	    if (protp && (flags & B_DIRTY) == 0) {
@@ -1045,6 +1074,21 @@ mp_afs_write_check(vm_ubc_object_t vop, vm_page_t pp)
         return TRUE;
 }
 
+#ifdef AFS_DUX50_ENV
+int
+mp_afs_objtovp(vm_ubc_object_t vop, struct vnode **vp)
+{
+  *vp = vop->vu_vp;
+  return 0;
+}
+
+int
+mp_afs_setpgstamp(vm_page_t pp, unsigned int tick)
+{
+  pp->pg_stamp = tick;
+  return 0;
+}
+#endif
 
 
 struct vfs_ubcops afs_ubcops = {
@@ -1053,6 +1097,10 @@ struct vfs_ubcops afs_ubcops = {
         mp_afs_getpage,            /* get page */
         mp_afs_putpage,            /* put page */
         mp_afs_write_check,        /* check writablity */
+#ifdef AFS_DUX50_ENV
+        mp_afs_objtovp,            /* get vnode pointer */
+        mp_afs_setpgstamp          /* set page stamp */
+#endif
 };
 
 

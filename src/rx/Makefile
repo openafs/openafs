@@ -119,8 +119,8 @@ includes: rx.h rx_user.h rx_event.h rx_queue.h rx_clock.h xdr.h rx_null.h rx_glo
 kinstall: includes
 	set $(KERNELDIR)rx; $(MKDIR_IF_NEEDED)
 	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
-	@case ${SYS_NAME} in \
-	alpha_dux4* ) \
+	case ${SYS_NAME} in \
+	alpha_dux* ) \
 		$(INSTALL) DUX/*.[ch] $(KERNELDIR)rx;; \
 	hp_ux* ) \
 		$(INSTALL) HPUX/*.[ch] $(KERNELDIR)rx;; \
@@ -139,7 +139,7 @@ kinstall: includes
 ukinstall webinstall: includes
 	set $(UKERNELDIR)rx; $(MKDIR_IF_NEEDED)
 	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
-	$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
+	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
 
 clean:
 	rm -f *.o *.a core *_component_version_number.c

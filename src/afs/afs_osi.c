@@ -713,6 +713,13 @@ void afs_osi_TraverseProcTable()
 void afs_osi_TraverseProcTable()
 {
     struct pid_entry *pe;
+#ifdef AFS_DUX50_ENV
+extern struct pid_entry *pidtab;
+extern int npid; 
+#define pidNPID (pidtab + npid)
+#define PID_LOCK()
+#define PID_UNLOCK()
+#endif
     PID_LOCK();
     for (pe = pidtab; pe < pidNPID; ++pe) {
        if (pe->pe_proc != PROC_NULL)

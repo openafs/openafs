@@ -56,6 +56,9 @@ getinode(fs, dev, inode, ipp, perror)
 		}
 		MOUNTLIST_LOCK();
 	    }
+#ifdef AFS_DUX50_ENV
+#define m_next m_nxt
+#endif
 	    mp = mp->m_next;
 	} while (mp != rootfs);
 	MOUNTLIST_UNLOCK();
@@ -212,6 +215,9 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
     int fd;
     extern struct fileops vnops;
     register int code;
+#ifdef AFS_DUX50_ENV
+    struct ufile_entry *fe;
+#endif
     
     AFS_STATCNT(afs_syscall_iopen);
     
@@ -222,10 +228,17 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
     if (code) {
 	return(code);
     }
+#ifdef AFS_DUX50_ENV
+    if ((code = falloc(&fp, &fd, &fe)) != 0) {
+        iput(ip);
+        return(code);
+    }
+#else
     if ((code = falloc(&fp, &fd)) != 0) {
 	iput(ip);
 	return(code);
     }
+#endif
     IN_UNLOCK(ip);
     
     FP_LOCK(fp);
@@ -235,7 +248,11 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
     fp->f_data = (caddr_t)ITOV(ip);
     
     FP_UNLOCK(fp);
+#ifdef AFS_DUX50_ENV
+    u_set_fe(fd, fe, fd, &u.u_file_state);
+#else
     U_FD_SET(fd, fp, &u.u_file_state);
+#endif
     *retval = fd;
     return(0);
 }
