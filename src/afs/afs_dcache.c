@@ -2049,7 +2049,7 @@ RetryLookup:
 	    if (size > dynrootLen)
 		size = dynrootLen;
 	    if (size < 0) size = 0;
-	    code = afs_osi_Write(file, -1, dynrootDir, size);
+	    code = afs_CFileWrite(file, 0, dynrootDir, size);
 	    afs_PutDynroot();
 
 	    if (code == size)
