@@ -161,7 +161,7 @@ int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32
     cm_initParams.cmi_nVolumeCaches = aVolumes;
     cm_initParams.cmi_firstChunkSize = AFS_FIRSTCSIZE;
     cm_initParams.cmi_otherChunkSize = AFS_OTHERCSIZE;
-    cm_initParams.cmi_cacheSize = ablocks;
+    cm_initParams.cmi_cacheSize = afs_cacheBlocks;
     cm_initParams.cmi_setTime = afs_setTime;
     cm_initParams.cmi_memCache = (aflags & AFSCALL_INIT_MEMCACHE) ? 1 : 0;
 
