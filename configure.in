@@ -17,6 +17,10 @@ AC_ARG_ENABLE( bos-restricted-mode,
 [  --enable-bos-restricted-mode 	enable bosserver restricted mode which disables certain bosserver functionality],, enable_bos_restricted_mode="no")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+AC_ARG_ENABLE( fast-restart,
+[  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
+AC_ARG_ENABLE( bitmap-later,
+[  --enable-bitmap-later 		enable fast startup of file server by not reading bitmap till needed],, enable_bitmap_later="no")
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux)]
 )
@@ -175,6 +179,15 @@ fi
 WITH_INSECURE=NO
 if test "$enable_insecure" = "yes"; then
 	WITH_INSECURE=YES
+fi
+
+# Fast restart
+if test "$enable_fast_restart" = "yes"; then
+	AC_DEFINE(FAST_RESTART)
+fi
+
+if test "$enable_bitmap_later" = "yes"; then
+	AC_DEFINE(BITMAP_LATER)
 fi
 
 # Should autocompute a default
