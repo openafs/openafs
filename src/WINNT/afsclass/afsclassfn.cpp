@@ -1952,7 +1952,7 @@ BOOL AfsClass_RenameFileset (LPIDENT lpiFileset, LPTSTR pszNewName, ULONG *pStat
 
 #define iswhite(_ch) ((_ch)==TEXT(' ') || (_ch)==TEXT('\t'))
 
-LPIDENT AfsClass_CreateService (LPIDENT lpiServer, LPTSTR pszService, LPTSTR pszCommand, LPTSTR pszParams, LPTSTR pszNotifier, SERVICETYPE type, SYSTEMTIME *pstIfCron, ULONG *pStatus)
+LPIDENT AfsClass_CreateService (LPIDENT lpiServer, LPTSTR pszService, LPTSTR pszCommand, LPTSTR pszParams, LPTSTR pszNotifier, AFSSERVICETYPE type, SYSTEMTIME *pstIfCron, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status;
