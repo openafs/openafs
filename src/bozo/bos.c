@@ -1792,8 +1792,8 @@ main(argc, argv)
     afsconf_SawCell = 0;	/* Reset it */
     /* don't check error code, since fails sometimes when we're setting up a
      * system */
-    initialize_cmd_error_table();
-    initialize_bz_error_table();
+    initialize_CMD_error_table();
+    initialize_BZ_error_table();
 
     ts = cmd_CreateSyntax("start", StartServer, 0, "start running a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");

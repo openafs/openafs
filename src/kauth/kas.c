@@ -59,11 +59,11 @@ int main (
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    initialize_cmd_error_table();
-    initialize_ktc_error_table();
-    initialize_ka_error_table();
-    initialize_acfg_error_table();
-    initialize_u_error_table();
+    initialize_CMD_error_table();
+    initialize_KTC_error_table();
+    initialize_KA_error_table();
+    initialize_ACFG_error_table();
+    initialize_U_error_table();
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */

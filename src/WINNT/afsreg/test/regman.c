@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
     whoami = argv[0];
 
     /* initialize command syntax */
-    initialize_cmd_error_table();
+    initialize_CMD_error_table();
 
     SetupVptCmd();
     SetupDirCmd();

@@ -8,7 +8,7 @@
 # Backup BUTX error table
 #
 
-error_table butx
+error_table BUTX
         ec BUTX_RCSID, "Version 1"
 	ec BUTX_NOLIBRARY,           "XBSA couldn't mount shared library"
 	ec BUTX_ILLEGALINIT,         "XBSA handle already initialized"

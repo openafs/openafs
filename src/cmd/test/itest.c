@@ -54,7 +54,7 @@ char **argv; {
     long code;
     char *tv[100];
     
-    initialize_cmd_error_table();
+    initialize_CMD_error_table();
 
     ts = cmd_CreateSyntax("apple", cproc1, (char *) 0, "describe apple");
 

@@ -27,18 +27,18 @@ main()
 
 	printf("With 0: tgt-expired -> %s\n", error_message(KRB_MK_AP_TGTEXP));
 
-	initialize_krb_error_table();
-	initialize_krb_error_table();
+	initialize_KRB_error_table();
+	initialize_KRB_error_table();
 	printf("KRB error table initialized:  base %d (%s), name %s\n",
-	       ERROR_TABLE_BASE_krb, error_message(ERROR_TABLE_BASE_krb),
-	       error_table_name(ERROR_TABLE_BASE_krb));
+	       ERROR_TABLE_BASE_KRB, error_message(ERROR_TABLE_BASE_KRB),
+	       error_table_name(ERROR_TABLE_BASE_KRB));
 	printf("With krb: tgt-expired -> %s\n",
 	       error_message(KRB_MK_AP_TGTEXP));
 
-	initialize_quux_error_table();
+	initialize_QUUX_error_table();
 	printf("QUUX error table initialized: base %d (%s), name %s\n",
-	       ERROR_TABLE_BASE_quux, error_message(ERROR_TABLE_BASE_quux),
-	       error_table_name(ERROR_TABLE_BASE_quux));
+	       ERROR_TABLE_BASE_QUUX, error_message(ERROR_TABLE_BASE_QUUX),
+	       error_table_name(ERROR_TABLE_BASE_QUUX));
 
 	printf("Msg for TGT-expired is '%s'\n",
 	       error_message(KRB_MK_AP_TGTEXP));

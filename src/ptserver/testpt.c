@@ -990,12 +990,12 @@ main (argc, argv)
     struct cmd_syndesc *ts;	    /* ptr to parsed command line syntax */
 
     whoami = argv[0];
-    initialize_cmd_error_table();
-    initialize_acfg_error_table();
-    initialize_ktc_error_table();
-    initialize_u_error_table();
-    initialize_pt_error_table();
-    initialize_rxk_error_table();
+    initialize_CMD_error_table();
+    initialize_ACFG_error_table();
+    initialize_KTC_error_table();
+    initialize_U_error_table();
+    initialize_PT_error_table();
+    initialize_RXK_error_table();
 
 #ifdef AFS_NT40_ENV 
     /* initialize winsock */

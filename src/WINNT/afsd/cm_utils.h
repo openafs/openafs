@@ -17,7 +17,7 @@ typedef struct cm_space {
 } cm_space_t;
 
 /* error code hack */
-#define ERROR_TABLE_BASE_vl	(363520L)
+#define ERROR_TABLE_BASE_VL	(363520L)
 #define VL_NOENT		(363524L)
 
 extern cm_space_t *cm_GetSpace(void);

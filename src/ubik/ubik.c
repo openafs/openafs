@@ -216,7 +216,7 @@ int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, db
     extern void rx_ServerProc();
     extern int rx_stackSize;
 
-    initialize_u_error_table();
+    initialize_U_error_table();
 
     tdb = (struct ubik_dbase *) malloc(sizeof(struct ubik_dbase));
     tdb->pathName = (char *) malloc(strlen(pathName)+1);

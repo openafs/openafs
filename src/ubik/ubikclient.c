@@ -200,7 +200,7 @@ int ubik_ClientInit(
     int offset;
     register struct ubik_client *tc;
 
-    initialize_u_error_table();
+    initialize_U_error_table();
 
     if ( *aclient ) { 	/* the application is doing a re-initialization*/
 	LOCK_UBIK_CLIENT((*aclient))

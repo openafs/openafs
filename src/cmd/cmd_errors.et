@@ -7,7 +7,7 @@
 
 # */
 
-error_table cmd
+error_table CMD
   ec CMD_EXCESSPARMS, "More than the maximum number of parameters defined"
   ec CMD_INTERNALERROR, "Internal parsing error"
   ec CMD_NOTLIST, "Too many values specified after a CMD_SINGLE switch"

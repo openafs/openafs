@@ -10,7 +10,7 @@
 # NOTE: BZACCESS value is hardcoded in audit/audit.h, so if you make
 # changes here, make sure that audit/audit.h is kept up to date.
 
-error_table bz
+error_table BZ
 	ec BZNOTACTIVE, "process not active"
 	ec BZNOENT, "no such entity"
 	ec BZBUSY, "can't do operation now"

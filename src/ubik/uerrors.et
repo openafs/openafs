@@ -9,7 +9,7 @@
 
 # Ubik error table
 
-error_table u
+error_table U
 	ec UNOQUORUM, "no quorum elected"
 	ec UNOTSYNC, "not synchronization site (should work on sync site)"
 	ec UNHOSTS, "too many hosts"

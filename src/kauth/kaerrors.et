@@ -12,7 +12,7 @@
 # NOTE: KANOAUTH value is hardcoded in audit/audit.h, so if you make
 # changes here, make sure that audit/audit.h is kept up to date.
 
-error_table ka
+error_table KA
 	ec KADATABASEINCONSISTENT, "AuthServer database is inconsistent"
 	ec KAEXIST, "user already exists"
 	ec KAIO, "Ubik I/O error"

@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table au
+error_table AU
     ec ADMUTILSERVERENTRYPNULL, "the server entry parameter cannot be NULL"
     ec ADMUTILSERVERNAMENULL, "the server name parameter cannot be NULL"
     ec ADMUTILSERVERADDRESSNULL, "the server address parameter cannot be NULL"

@@ -7,7 +7,7 @@
 
 # Backup Tape Coordinator Module error table
 
-error_table butc
+error_table BUTC
 # dump/restore management
 	ec TC_DUMPERROR, "error in dump/restore process "
 	ec TC_FORCEDABORT, "ungraceful abort "

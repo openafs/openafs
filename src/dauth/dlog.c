@@ -400,9 +400,9 @@ main (argc, argv)
     zero_argc = argc;
     zero_argv = argv;
 
-    initialize_u_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
+    initialize_U_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
 
     ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "obtain Kerberos authentication");
 

@@ -114,7 +114,7 @@ main (argc, argv)
     TestInfo ti;
 
     whoami = argv[0];
-    initialize_butm_error_table();
+    initialize_BUTM_error_table();
     if (argc < 2) 
       goto usage;
 

@@ -51,7 +51,7 @@ PTSERVER_EXEOBJS =\
 	ptprocs.obj \
 	utils.obj \
 	ptserver.res
-	
+
 
 PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -163,7 +163,7 @@ $(INCFILEDIR)\afs\prerror.h: $(INCFILEDIR)\afs\pterror.h
 
 $(INCFILEDIR)\afs\prclient.h: $(INCFILEDIR)\afs\ptclient.h
 	$(COPY)	$(INCFILEDIR)\afs\ptclient.h $(INCFILEDIR)\afs\prclient.h
-	$(ECHO) #define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt >> $(INCFILEDIR)\afs\prclient.h
+	$(ECHO) #define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_PT >> $(INCFILEDIR)\afs\prclient.h
 
 ############################################################################
 # clean up
@@ -180,7 +180,7 @@ TEST_LIBS = $(PTS_EXELIBS)
 
 readgroup.exe: readgroup.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
-	
+
 readpwd.exe: readpwd.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK)
 
