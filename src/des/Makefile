@@ -36,8 +36,8 @@ DBG	=
 GPROF	=
 # by default do not try to hide entry points
 F_CC	= -c ${GPROF} ${DBG} ${XCFLAGS}
-F_CPP	= -I${K_INC} -I.
-MK_STR	= "	\$${CC} -I\$${SRC} \$${F_CPP} \$${F_CC}"
+F_CPP	= -I${K_INC} -I. -I${TOP_SRCDIR}/config 
+MK_STR	= "	\$${CC} -I\$${SRC} \$${F_CPP} \$${F_CC}" -I${TOP_SRCDIR}/config 
 LDFLAGS = ${XLDFLAGS}
 
 # dont use optimizer, since it pessimizes on uvax2,
@@ -125,12 +125,14 @@ GPROGS	= \
 	make_p_table \
 	make_s_table \
 	make_odd \
-	make_e \
 	make_p \
 	make_s \
 	make_fp \
-	make_ip \
-	misc
+	make_ip
+
+XGPROGS = \
+	misc \
+	make_e
 
 # Library component lists.
 
@@ -162,6 +164,8 @@ noversion: install
 
 all:	${GFILES} ${CFILES} ${DEP_LIBS}
 
+gprogs: ${GPROGS}
+
 test: 
 	cd test; $(MAKE)
 
@@ -179,11 +183,11 @@ ${DESTDIR}lib/libdes.a: libdes.a
 	${INSTALL} $? $@
 
 install install.noversion: all ukinstall ${DESTDIR}lib/libdes.a
-	${INSTALL} des.h des_conf.h mit-cpyright.h ${DESTDIR}include
+	${INSTALL} des.h des_conf.h mit-cpyright.h crypt.h ${DESTDIR}include
 	${INSTALL} odd.h ${DESTDIR}include/des_odd.h
 
 clean:
-	rm -f ${OBJECTS} ${DEP_LIBS} ${PROGS} ${GPROGS} ${GFILES} AFS_component_version_number.c
+	rm -f ${OBJECTS} ${DEP_LIBS} ${PROGS} ${GPROGS} ${GFILES} AFS_component_version_number.c misco.c
 	rm -f *.s *.o *.b core *~ *.com *.ld
 	rm -f tags TAGS ${LLIB}
 
@@ -367,6 +371,7 @@ strng_to_key.o: des.h
 strng_to_key.o: mit-cpyright.h
 strng_to_key.o: des_conf.h ./odd.h
 debug_decl.o: debug_decl.c
+make_e.o: make_e.c
 make_keyperm.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/make_keyperm.c
 make_ip.o:
@@ -395,6 +400,8 @@ key_test.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/key_test.c
 testit.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/testit.c
+crypt.o:
+	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/crypt.c
 des.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/des.c
 cbc_encrypt.o:
@@ -423,5 +430,7 @@ strng_to_key.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/strng_to_key.c
 debug_decl.o:
 	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/debug_decl.c
+make_e.o:
+	${CC} -I${SRC} ${F_CPP} ${F_CC} ${SRC}/make_e.c
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY (see make depend above)

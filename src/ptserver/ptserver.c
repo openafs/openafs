@@ -43,7 +43,6 @@ struct afsconf_dir *prdir;
 extern afs_int32 ubik_lastYesTime;
 extern afs_int32 ubik_nBuffers;
 
-extern int afsconf_ClientAuth();
 extern int afsconf_ServerAuth();
 extern int afsconf_CheckAuth();
 
@@ -158,13 +157,17 @@ void main (argc, argv)
 
 		/* hack in help flag support */
 
-	    	printf ("Usage: ptserver [-database <db path>] "
 #ifndef AFS_NT40_ENV
+	    	printf ("Usage: ptserver [-database <db path>] "
 			"[-syslog[=FACILITY]] "
-#endif
 			"[-p <number of processes>] [-rebuild] "
-			/* "[-enable_peer_stats] [-enable_process_stats] " */
+			"[-enable_peer_stats] [-enable_process_stats] "
 			"[-help]\n");
+#else
+	    	printf ("Usage: ptserver [-database <db path>] "
+			"[-p <number of processes>] [-rebuild] "
+			"[-help]\n");
+#endif
 		fflush(stdout);
 
 	    PT_EXIT(1);
@@ -252,7 +255,6 @@ void main (argc, argv)
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;
     if (kerberosKeys) {
-	extern int afsconf_GetKey();
 	sc[2] = rxkad_NewServerSecurityObject
 	    (0, prdir, afsconf_GetKey, (char *)0);
     }

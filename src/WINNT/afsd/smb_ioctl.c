@@ -10,7 +10,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -24,6 +26,9 @@
 #include "smb.h"
 
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
+
+/*extern unsigned char smb_LANadapter;*/
+extern LANA_ENUM lana_list;
 
 void smb_InitIoctl(void)
 {
@@ -64,6 +69,9 @@ void smb_InitIoctl(void)
 	smb_ioctlProcsp[VIOC_MAKESUBMOUNT] = cm_IoctlMakeSubmount;
 	smb_ioctlProcsp[VIOC_GETRXKCRYPT] = cm_IoctlGetRxkcrypt;
 	smb_ioctlProcsp[VIOC_SETRXKCRYPT] = cm_IoctlSetRxkcrypt;
+#ifdef DJGPP
+	smb_ioctlProcsp[VIOC_SHUTDOWN] = cm_IoctlShutdown;
+#endif
 }
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -79,6 +87,7 @@ void smb_SetupIoctlFid(smb_fid_t *fidp, cm_space_t *prefix)
 		iop = malloc(sizeof(*iop));
                 memset(iop, 0, sizeof(*iop));
                 fidp->ioctlp = iop;
+				iop->fidp = fidp;
         }
 	if (prefix) {
 		copyPrefix = cm_GetSpace();
@@ -176,11 +185,6 @@ long smb_IoctlRead(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
         }
 
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
-
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
         if (count > leftToCopy) count = leftToCopy;
         
@@ -219,7 +223,7 @@ long smb_IoctlWrite(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_packe
         long count;
         long code;
         char *op;
-        long inDataBlockCount;
+        int inDataBlockCount;
 
 	code = 0;
 	count = smb_GetSMBParm(inp, 1);
@@ -271,9 +275,13 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 		smb_user_t *uidp;
 
 		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			 uidp->userID, userp,
-			 osi_LogSaveString(afsd_logp, uidp->name));
+		if (uidp && uidp->unp)
+		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+			     uidp->userID, userp,
+			     osi_LogSaveString(afsd_logp, uidp->unp->name));
+		else
+		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+			     uidp->userID, userp);
 		smb_ReleaseUID(uidp);
 	}
 
@@ -285,11 +293,6 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                 smb_ReleaseFID(fidp);
 		return code;
         }
-
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
 
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
         if (count > leftToCopy) count = leftToCopy;
@@ -334,13 +337,26 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
 /* called from Read Raw to handle IOCTL descriptor reads */
 long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
-	smb_packet_t *outp)
+	smb_packet_t *outp
+#ifdef DJGPP
+, dos_ptr rawBuf
+#endif /* DJGPP */
+)
 {
 	smb_ioctl_t *iop;
 	long leftToCopy;
 	NCB *ncbp;
 	long code;
 	cm_user_t *userp;
+#ifdef DJGPP
+        dos_ptr dos_ncb;
+
+        if (rawBuf == 0)
+        {
+                osi_Log0(afsd_logp, "Failed to get raw buf for smb_IoctlReadRaw");
+                return -1;
+        }
+#endif /* DJGPP */
 
 	iop = fidp->ioctlp;
 
@@ -350,9 +366,13 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		smb_user_t *uidp;
 
 		uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
-		osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
-			 uidp->userID, userp,
-			 osi_LogSaveString(afsd_logp, uidp->name));
+		if (uidp && uidp->unp)
+		    osi_Log3(afsd_logp, "Ioctl uid %d user %x name %s",
+			     uidp->userID, userp,
+			     osi_LogSaveString(afsd_logp, uidp->unp->name));
+		else
+		    osi_Log2(afsd_logp, "Ioctl uid %d user %x no name",
+			     uidp->userID, userp);
 		smb_ReleaseUID(uidp);
 	}
 
@@ -365,11 +385,6 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 		return code;
 	}
 
-	if (iop->flags & SMB_IOCTLFLAG_LOGON) {
-		vcp->logonDLLUser = userp;
-		userp->flags |= CM_USERFLAG_WASLOGON;
-	}
-
 	leftToCopy = (iop->outDatap - iop->outAllocp) - iop->outCopied;
 
 	ncbp = outp->ncbp;
@@ -378,9 +393,19 @@ long smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
 	ncbp->ncb_length = (unsigned short) leftToCopy;
 	ncbp->ncb_lsn = (unsigned char) vcp->lsn;
 	ncbp->ncb_command = NCBSEND;
-	ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;
+    /*ncbp->ncb_lana_num = smb_LANadapter;*/
+	ncbp->ncb_lana_num = vcp->lana;
 
+#ifndef DJGPP
+	ncbp->ncb_buffer = iop->outCopied + iop->outAllocp;
 	code = Netbios(ncbp);
+#else /* DJGPP */
+        dosmemput(iop->outCopied + iop->outAllocp, ncbp->ncb_length, rawBuf);
+        ncbp->ncb_buffer = rawBuf;
+        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
+	code = Netbios(ncbp, dos_ncb);
+#endif /* !DJGPP */
+
 	if (code != 0)
 		osi_Log1(afsd_logp, "ReadRaw send failure code %d", code);
 

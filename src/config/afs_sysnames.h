@@ -108,6 +108,7 @@
 #define SYS_NAME_ID_ncrx86_30		1301
 
 #define SYS_NAME_ID_i386_nt35		1400
+#define SYS_NAME_ID_i386_win95	1401
 
 #define SYS_NAME_ID_i386_linux2		1500
 #define SYS_NAME_ID_i386_linux22	1501
@@ -122,6 +123,7 @@
 
 #define SYS_NAME_ID_sparc64_linux2	1800
 #define SYS_NAME_ID_sparc64_linux22	1801
+#define SYS_NAME_ID_sparc64_linux24	1802
 
 #define SYS_NAME_ID_s390_linux2         1900
 #define SYS_NAME_ID_s390_linux22        1901

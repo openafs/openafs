@@ -72,4 +72,4 @@ install install.noversion: kinstall ukinstall
 	esac
 
 clean:
-	echo Nothing to delete.
+	rm -f *.o core AFS_component_version_number.c afs_trace.h afs_trace.msf afszcm.cat

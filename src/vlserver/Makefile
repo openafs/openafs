@@ -14,7 +14,7 @@ KERNELDIR=../libafs/
 UKERNELDIR=../libuafs/
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
-CFLAGS = ${DBUG} -I. -I.. -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${DBUG} -I. -I.. -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS=${SRCDIR}include/ubik.h \
              ${SRCDIR}include/lwp.h \
              ${SRCDIR}include/lock.h  \
@@ -125,3 +125,7 @@ install: kinstall ukinstall vlserver vlclient libvldb.a cnvldb ${DESTDIR}root.se
 	${INSTALL} cnvldb.h ${DESTDIR}include/afs
 	${INSTALL} vldb_check ${DESTDIR}/etc
 
+libinstall: libvldb.a
+	${INSTALL} libvldb.a ${DESTDIR}lib/afs
+	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}include/afs
+	${INSTALL} cnvldb.h ${DESTDIR}include/afs

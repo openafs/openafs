@@ -12,7 +12,7 @@ include ../config/Makefile.${SYS_NAME}
 RXGEN=${SRCDIR}bin/rxgen
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
-CFLAGS = $(DBG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 #####################################################################
 # include files

@@ -758,12 +758,16 @@ char **envp;
 
 	    /* hack to support help flag */
 
-	    printf("Usage: bosserver [-noauth] [-log] "
 #ifndef AFS_NT40_ENV
+	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-syslog[=FACILITY]] "
-#endif
-		   /* "[-enable_peer_stats] [-enable_process_stats] " */
+		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
+#else
+	    printf("Usage: bosserver [-noauth] [-log] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#endif
 	    fflush(stdout);
 
 	    exit(0);

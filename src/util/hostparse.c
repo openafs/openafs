@@ -231,6 +231,20 @@ char* afs_inet_ntoa(afs_uint32 addr)
     return (char *) inet_ntoa(temp);
 }
 
+/* same as above, but to a non-static buffer, must be freed by called */
+char* afs_inet_ntoa_r(afs_uint32 addr, char *buf)
+{
+    int temp;
+
+    temp = ntohl(addr);
+    sprintf(buf, "%d.%d.%d.%d", 
+	    (temp >> 24 ) & 0xff,
+	    (temp >> 16 ) & 0xff, 
+	    (temp >> 8  ) & 0xff,
+	    (temp       ) & 0xff);
+    return buf;
+}
+
 /*
  * gettmpdir() -- Returns pointer to global temporary directory string.
  *     Always succeeds.  Never attempt to deallocate directory string.

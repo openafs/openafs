@@ -16,12 +16,17 @@
 #include <mit-cpyright.h>
 
 #include <afs/param.h>
+#include <des.h>
+#include "des_internal.h"
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
 #include <string.h>
-#include <des.h>
-#include "des_internal.h"
+#endif
 #include "stats.h"
 
 extern void des_fixup_key_parity();
@@ -95,7 +100,7 @@ des_random_key(key)
  *
  * Note: this routine calls des_set_random_generator_seed.
  */
-#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_DJGPP_ENV)
   you lose...   (aka, you get to implement an analog of this for your
 		 system...)
 #else
@@ -124,7 +129,7 @@ void des_init_random_number_generator(key)
      * use a host id and process id in generating the seed to ensure
      * that different servers have different streams:
      */
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     seed.host_id = gethostid();
 #endif
     seed.process_id = getpid();

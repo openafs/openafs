@@ -33,7 +33,7 @@ char *int64_to_flipbase64(lb64_string_t s, afs_int64 a)
 char *int64_to_flipbase64(lb64_string_t s, u_int64_t a)
 #endif
 {
-    int i, j;
+    int i;
 #ifdef AFS_64BIT_ENV
     afs_int64 n;
 #else

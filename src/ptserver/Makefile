@@ -14,7 +14,7 @@ RXGEN=${SRCDIR}bin/rxgen
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS=${SRCDIR}include/ubik.h \
 	${SRCDIR}include/lock.h  \
 	${SRCDIR}include/lwp.h \
@@ -56,7 +56,7 @@ include ../config/Makefile.version
 clean:
 	$(RM) -f *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	libprot.a  pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
-	 core  AFS_component_version_number.c
+	 core  AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${auditlib}
 	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o  ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${XLIBS} ${auditlib}
@@ -173,3 +173,12 @@ install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root
 	${INSTALL} ptclient.h ${DESTDIR}include/afs/prclient.h
 	${INSTALL} -f db_verify ${DESTDIR}etc/prdb_check
 	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt' >> ${DESTDIR}include/afs/prerror.h
+
+libinstall: ${DESTDIR}lib/afs/libprot.a
+	${INSTALL} libprot.a ${DESTDIR}lib/afs/libprot.a
+	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}include/afs
+	${INSTALL} ptserver.h ${DESTDIR}include/afs/prserver.h
+	${INSTALL} ptint.h ${DESTDIR}include/afs/print.h
+	${INSTALL} pterror.h ${DESTDIR}include/afs/prerror.h
+	${INSTALL} ptclient.h ${DESTDIR}include/afs/prclient.h
+

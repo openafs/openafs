@@ -35,6 +35,11 @@ LIBFILE = $(DESTDIR)\lib\afs\talocale.lib
 
 install: $(LIBINCLUDES) $(LIBFILE)
 
+install9x: install
+
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
+
+clean::
+	$(DEL) $(LIBINCLUDES)

@@ -10,6 +10,7 @@
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
 # include <afs/param.h>
+# include <afsconfig.h>
 # include <sys/types.h>
 # include <errno.h>
 # include <signal.h>
@@ -26,11 +27,18 @@
 # include <sys/ioctl.h>
 #endif
 # include <fcntl.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
 # include <sys/syscall.h>
 #endif
 #include <afs/afs_args.h>
 #include <afs/afsutil.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
 
 #ifndef	IPPORT_USERRESERVED
 /* If in.h doesn't define this, define it anyway.  Unfortunately, defining
@@ -44,9 +52,6 @@
 #endif
 # include "rx.h"
 # include "rx_globals.h"
-
-
-extern void rxi_Delay();
 
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
@@ -86,14 +91,13 @@ pthread_mutex_t rx_if_mutex;
  */
 osi_socket rxi_GetUDPSocket(u_short port)
 {
-    int binds, code;
+    int binds, code=0;
     osi_socket socketFd = OSI_NULLSOCKET;
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
-    extern int rxi_Listen(osi_socket sock);
-    int greedy;
+    int greedy=0;
 
-#ifndef AFS_NT40_ENV
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
@@ -125,7 +129,7 @@ osi_socket rxi_GetUDPSocket(u_short port)
       goto error;
     }
 
-#ifndef AFS_NT40_ENV
+#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     /*
      * Set close-on-exec on rx socket 
      */
@@ -140,6 +144,7 @@ osi_socket rxi_GetUDPSocket(u_short port)
 
 	len1 = 32766;
 	len2 = rx_UdpBufSize;
+#ifndef AFS_DJGPP_ENV
 	greedy = 
 	  (setsockopt(socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
 		      sizeof(len2)) >= 0);
@@ -152,10 +157,13 @@ osi_socket rxi_GetUDPSocket(u_short port)
 		      sizeof(len1)) >= 0) &&
 	  (setsockopt(socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
 		      sizeof(len2)) >= 0);
+#endif /* AFS_DJGPP_ENV */
     }
 
+#ifndef AFS_DJGPP_ENV
     if (!greedy)
 	(osi_Msg "%s*WARNING* Unable to increase buffering on socket\n", name);
+#endif /* AFS_DJGPP_ENV */
     if (rxi_Listen(socketFd) < 0) {
 	goto error;
     }
@@ -228,7 +236,7 @@ static int myNetFlags[ADDRSPERSITE];
 u_int rxi_numNetAddrs;
 static int Inited = 0;
 
-#if defined(AFS_NT40_ENV)
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 int rxi_getaddr(void)
 {
     if (rxi_numNetAddrs > 0)
@@ -314,7 +322,7 @@ return msk;
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DJGPP_ENV)
 int rxi_syscall(a3, a4, a5)
 afs_uint32 a3, a4;
 void * a5;
@@ -341,13 +349,15 @@ void rx_GetIFInfo()
 {
     int     s;
     int     i, j, len, res;
+#ifndef AFS_DJGPP_ENV
     struct ifconf   ifc;
     struct ifreq    ifs[ADDRSPERSITE];
-    struct ifreq ifreq, *ifr;
+    struct ifreq *ifr;
 #ifdef	AFS_AIX41_ENV
     char buf[BUFSIZ], *cp, *cplim;
 #endif
     struct sockaddr_in *a;
+#endif /* AFS_DJGPP_ENV */
 
     LOCK_IF_INIT
     if (Inited) {
@@ -368,6 +378,7 @@ void rx_GetIFInfo()
     s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0) return;
 
+#ifndef AFS_DJGPP_ENV
 #ifdef	AFS_AIX41_ENV
     ifc.ifc_len = sizeof (buf);
     ifc.ifc_buf = buf;
@@ -534,6 +545,10 @@ void rx_GetIFInfo()
 	rxi_MorePackets(npackets*(ncbufs+1));
       }
     }
+#else /* AFS_DJGPP_ENV */
+    close(s);
+    return;
+#endif /* AFS_DJGPP_ENV */
 }
 #endif /* AFS_NT40_ENV */
 

@@ -11,10 +11,14 @@
 #define _RX_XMIT_NT_H_
 
 
-typedef struct iovec {
+typedef struct iovec
+#ifndef AFS_DJGPP_ENV
+{
 	void *iov_base;
 	int iov_len;
-} iovec_t;
+}
+#endif
+iovec_t;
 
 struct msghdr {
     char * msg_name;

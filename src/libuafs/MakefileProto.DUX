@@ -9,17 +9,16 @@
 #
 DBUG=-O
 
-include $(DESTDIR)/../obj/config/Makefile.${SYS_NAME}
+include ../config/Makefile.${SYS_NAME}
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # System specific build commands and flags
-CC = cc
 DEFINES=-DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE -D_NO_PROTO -DOSF
 KOPTS=
 DBUG=
 OPTF=-O
-CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG} -pthread
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG} -pthread
 WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 TEST_CFLAGS=-pthread -D_NO_PROTO -D_REENTRANT -DAFS_PTHREAD_ENV -Dosf -DAFS_OSF_ENV -DOSF

@@ -206,20 +206,29 @@ afsrpc_c.obj: $(WINNTAFSD)\afsrpc_c.c
 cm_config.obj: $(WINNTAFSD)\cm_config.c
 	$(C2OBJ) $(WINNTAFSD)\cm_config.c
 
-install: $(DESTDIR)\lib\afsauthent.dll
-
 DLLLIBS =\
+!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
+	$(DESTDIR)\lib\win95\pthread.lib \
+!ELSE
 	$(DESTDIR)\lib\pthread.lib \
+!ENDIF
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib
 
-$(DESTDIR)\lib\afsauthent.dll: $(DLLOBJS) $(DLLLIBS)
+$(LIBFILE): $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources
 afsauthent.res: afsauthent.rc AFS_component_version_number.h
 	$(RC) $*.rc
+
+install: $(LIBFILE)
+
+install9x: install
+
+clean ::
+	$(DEL) $(LIBFILE)

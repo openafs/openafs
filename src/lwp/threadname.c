@@ -20,6 +20,14 @@
 /* ********************************************************************** */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>
 #else /* defined(AFS_PTHREAD_ENV) */
@@ -77,14 +85,16 @@ int registerthread(id, name)
     for (i = 0; i < nThreads; i++) {
        if (ThreadId[i] == id) {
            strncpy(&ThreadName[i][0], name, MAXTHREADNAMELENGTH);
-           return;
+           return 0;
        }
     }
-    if (nThreads == MAX_THREADS) return;
+    if (nThreads == MAX_THREADS) return 0;
     ThreadId[nThreads] = id;
     strncpy(&ThreadName[nThreads][0], name, MAXTHREADNAMELENGTH);
     ThreadName[nThreads][MAXTHREADNAMELENGTH -1] =0;
     nThreads++;
+
+    return 0;
 }
 
 int swapthreadname(id, new, old)

@@ -177,6 +177,9 @@ tagain:
 		if ((amode & VWRITE) || len != 0xffffffff) 
 #endif
 		  {
+		    /* needed for write access check */
+		    tvc->parentVnode = adp->fid.Fid.Vnode;
+		    tvc->parentUnique = adp->fid.Fid.Unique;
 		    /* need write mode for these guys */
 		    if (!afs_AccessOK(tvc, PRSFS_WRITE, &treq, CHECK_MODE_BITS)) {
 			afs_PutVCache(tvc, READ_LOCK);

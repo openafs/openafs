@@ -18,7 +18,7 @@ OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o # comktc.o comvice.o comauth.o 
 
-CFLAGS=-g -I${SRCDIR}include ${XCFLAGS} 
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} 
 LDIRS= 
 LIBS= libauth.a ${DESTDIR}lib/afs/libsys.a \
       ${DESTDIR}lib/librxkad.a ${DESTDIR}lib/libdes.a \
@@ -97,6 +97,11 @@ install.noversion: all kinstall ukinstall ${DESTDIR}etc/copyauth
 	${INSTALL} libauth.krb.a ${DESTDIR}lib/afs/libauth.krb.a
 	${INSTALL} auth.h ${DESTDIR}include/afs
 #	${INSTALL} comauth.h ${DESTDIR}include/afs
+	${INSTALL} cellconfig.h ${DESTDIR}include/afs
+	${INSTALL} keys.h ${DESTDIR}include/afs
+
+includes: auth.h cellconfig.h keys.h
+	${INSTALL} auth.h ${DESTDIR}include/afs
 	${INSTALL} cellconfig.h ${DESTDIR}include/afs
 	${INSTALL} keys.h ${DESTDIR}include/afs
 

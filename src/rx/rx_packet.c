@@ -9,6 +9,7 @@
 
 #ifdef KERNEL
 #include "../afs/param.h"
+#include <afsconfig.h>
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -44,11 +45,17 @@
 #include "../rx/rx_globals.h"
 #else /* KERNEL */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include "sys/types.h"
 #include <sys/stat.h>
 #include <errno.h>
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif /* AFS_NT40_ENV */
 #include "rx_xmit_nt.h"
 #include <stdlib.h>
 #else
@@ -65,8 +72,17 @@
 #include "rx_globals.h"
 #include <lwp.h>
 #include "rx_internal.h"
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #endif /* KERNEL */
-
 
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */
@@ -77,12 +93,9 @@ struct rx_packet *rx_mallocedP = 0;
 extern char cml_version_number[];
 extern int (*rx_almostSent)();
 
-void rxi_FreePacketNoLock(struct rx_packet *p);
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-			       afs_int32 ahost, short aport, afs_int32 istack);
+                               afs_int32 ahost, short aport, afs_int32 istack);
 
-extern char cml_version_number[];
-extern int (*rx_almostSent)();
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
  * a security trailer, but iov_len masks that fact.  If the security
@@ -207,9 +220,6 @@ afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
 static struct rx_packet * allocCBuf(int class)
 {
   struct rx_packet *c;
-#ifndef KERNEL
-  extern void rxi_MorePacketsNoLock();
-#endif /* !KERNEL */
   SPLVAR;
   
   NETPRI;
@@ -259,7 +269,9 @@ static struct rx_packet * allocCBuf(int class)
     osi_Panic("rxi_AllocPacket: packet not free\n");
   c->header.flags = 0;
   
+#ifdef KERNEL
  done:
+#endif
   MUTEX_EXIT(&rx_freePktQ_lock);
   
   USERPRI;
@@ -271,7 +283,6 @@ static struct rx_packet * allocCBuf(int class)
  */
 void rxi_freeCBuf(struct rx_packet *c)
 {
-  extern void rxi_PacketsUnWait();
   SPLVAR;
   
   NETPRI;
@@ -325,7 +336,7 @@ int rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
   
   for (i=p->niovecs; nb>0 && i<RX_MAXWVECS; i++) {  
       register struct rx_packet *cb;
-      if (cb = allocCBuf(class)) {
+      if ((cb = allocCBuf(class))) {
 	  p->wirevec[i].iov_base = (caddr_t) cb->localdata;
 	  p->wirevec[i].iov_len = RX_CBUFFERSIZE;
 	  nb -= RX_CBUFFERSIZE;
@@ -341,7 +352,6 @@ int rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 /* Add more packet buffers */
 void rxi_MorePackets(int apackets)
 {
-  extern void rxi_PacketsUnWait();
   struct rx_packet *p, *e;
   int getme;
   SPLVAR;
@@ -378,7 +388,6 @@ void rxi_MorePackets(int apackets)
 /* Add more packet buffers */
 void rxi_MorePacketsNoLock(int apackets)
 {
-  extern void rxi_PacketsUnWait();
   struct rx_packet *p, *e;
   int getme;
 
@@ -504,7 +513,6 @@ int rxi_TrimDataBufs(p, first)
      struct rx_packet * p;
      int first;
 {
-  extern void rxi_PacketsUnWait();
   int length;
   struct iovec *iov, *end;
   SPLVAR;
@@ -547,7 +555,6 @@ int rxi_TrimDataBufs(p, first)
  * remove it yourself first if you call this routine. */
 void rxi_FreePacket(struct rx_packet *p)
 {
-  extern void rxi_PacketsUnWait();
   SPLVAR;
   
   NETPRI;
@@ -665,7 +672,7 @@ int want;
     while (!(call->error)) {
       MUTEX_ENTER(&rx_freePktQ_lock);
       /* if an error occurred, or we get the packet we want, we're done */
-      if (p = rxi_AllocPacketNoLock(RX_PACKET_CLASS_SEND)) {
+      if ((p = rxi_AllocPacketNoLock(RX_PACKET_CLASS_SEND))) {
 	MUTEX_EXIT(&rx_freePktQ_lock);
 
 	want += delta;
@@ -1179,7 +1186,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 			tconn.serial = htonl(tc->serial);
 			for(j=0;j<RX_MAXCALLS;j++) {
 			    tconn.callNumber[j] = htonl(tc->callNumber[j]);
-			    if (tcall=tc->call[j]) {
+			    if ((tcall=tc->call[j])) {
 				tconn.callState[j] = tcall->state;
 				tconn.callMode[j] = tcall->mode;
 				tconn.callFlags[j] = tcall->flags;
@@ -1243,7 +1250,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	 */
 
 	case RX_DEBUGI_GETPEER: {
-	    int i, j;
+	    int i;
 	    register struct rx_peer *tp;
 	    struct rx_debugPeer tpeer;
 
@@ -1390,7 +1397,7 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     int i;
     int nbytes;
     int saven = 0;
-    size_t savelen;
+    size_t savelen = 0;
 #ifdef KERNEL
     int waslocked = ISAFS_GLOCK();
 #endif
@@ -1435,7 +1442,9 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
 		    int istack)
 {
+#if defined(KERNEL)
     int waslocked;
+#endif
     struct sockaddr_in addr;
     register struct rx_peer *peer = conn->peer;
     osi_socket socket;
@@ -1544,11 +1553,13 @@ void rxi_SendPacketList(struct rx_connection * conn,
 			int len,
 			int istack)
 {
+#if     defined(AFS_SUN5_ENV) && defined(KERNEL)
     int waslocked;
+#endif
     struct sockaddr_in addr;
     register struct rx_peer *peer = conn->peer;
     osi_socket socket;
-    struct rx_packet *p;
+    struct rx_packet *p = NULL;
     struct iovec wirevec[RX_MAXIOVECS];
     int i, length;
     afs_uint32 serial;
@@ -1724,7 +1735,7 @@ rxi_SendSpecial(call, conn, optionalPacket, type, data, nbytes, istack)
      * packet sends (it's repeated elsewhere) */
     register struct rx_packet *p;
     unsigned int i = 0;
-    int savelen, saven = 0;
+    int savelen = 0, saven = 0;
     int channel, callNumber;
     if (call) {
 	channel = call->channel;

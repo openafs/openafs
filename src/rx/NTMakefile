@@ -11,6 +11,7 @@
 # RX has different strings for it's version number.
 VERSFILE=RX_component_version_number
 CML_PREFIX=rx_
+
 !include ..\config\NTMakefile.version
 
 # Additional debugging flag for RX.
@@ -84,5 +85,6 @@ $(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
 	$(EXECONLINK)
 	$(EXEPREP)
 
-
 install: $(LIBFILE) $(INCFILES) $(RXDEBUG)
+
+install9x: $(LIBFILE) $(INCFILES)

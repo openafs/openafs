@@ -768,7 +768,11 @@ int SetPassword (
     if (as->parms[3].items) 
       sscanf (as->parms[3].items->data, "%d", &kvno);
 
+#ifdef AFS_S390_LINUX20_ENV
+    code = ubik_Call (KAM_SetPassword, conn, 0, name, instance, kvno, 0, key);
+#else
     code = ubik_Call (KAM_SetPassword, conn, 0, name, instance, kvno, key);
+#endif
     if (code) com_err (whoami, code,
 		       "so can't set password for %s.%s", name, instance);
     return code;

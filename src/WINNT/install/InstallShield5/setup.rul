@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright (C) 1998  Transarc Corporation.
+// Copyright (C) 1998  OpenAFS
 // All rights reserved.
 //
 //
@@ -15,6 +15,7 @@
 
     #include "sdlang.h"
     #include "sddialog.h"
+
 
 ////////////////////// string defines ////////////////////////////
 
@@ -2056,12 +2057,16 @@ end;
 ///////////////////////////////////////////////////////////////////////////////
 function AddPath(szPath)
 begin
-    LongPathToShortPath(szPath);
-
-    if (AddToPath(szPath) < 0) then
-        ShowError(@ADD_PATH_ERROR, WARNING);
+   LongPathToShortPath(szPath);
+   if (bWin98 || bWin95) then
+	   if (EzBatchAddPath ("Path", szPath, "", AFTER) < 0) then
+       	 ShowError(@ADD_PATH_ERROR, WARNING);
+	    endif;
+    else
+	   if (AddToPath(szPath) < 0) then
+       	 ShowError(@ADD_PATH_ERROR, WARNING);
+	    endif;
     endif;
-
 	return 0;
 end;
 
@@ -2733,6 +2738,8 @@ end;
 
 // --- include script file section ---
 #include "sddialog.rul"
+
+
 
 
 

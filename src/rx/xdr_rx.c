@@ -296,6 +296,7 @@ xdrrx_putbytes(xdrs, addr, len)
 	return code;
 }
 
+#ifdef undef /* not used */
 static u_int
 xdrrx_getpos(xdrs)
 	register XDR *xdrs;
@@ -312,6 +313,7 @@ xdrrx_setpos(xdrs, pos)
         /* Not supported */
         return FALSE;
 }
+#endif
 
 static AFS_RPC_INLINE_T *
 xdrrx_inline(xdrs, len)

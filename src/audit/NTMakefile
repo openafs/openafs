@@ -26,4 +26,7 @@ $(LIBFILE): $(LIBOBJS)
 
 install:  $(INCFILES)  $(LIBFILE)
 
+install9x: install
+
 clean::
+	$(DEL) $(INCFILES)

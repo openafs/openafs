@@ -79,6 +79,8 @@ typedef struct cm_req {
 				   VBUSY above.  This is negative so that old
 				   cache managers treat it as "server is down"*/
 
+#include "cm_server.h"
+
 extern void cm_InitConn(void);
 
 extern void cm_InitReq(cm_req_t *reqp);

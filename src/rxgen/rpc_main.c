@@ -34,23 +34,29 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <limits.h>
 #include <stdio.h>
-#ifdef	AFS_AIX32_ENV
+#include <stdlib.h>
+#include <ctype.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
-#include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#ifndef AFS_NT40_ENV
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
 #include "rpc_util.h"
 #include "rpc_parse.h"
 #include "rpc_scan.h"
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_main.c,v 1.1.1.4 2001/07/05 01:04:07 hartmans Exp $");
 
 #define EXTEND	1		/* alias for TRUE */
 
@@ -120,17 +126,18 @@ static char *XTRA_CPPFLAGS[] = {
 };
 #endif
 
-static c_output();
-static h_output();
-static s_output();
-static l_output();
-static do_registers();
-static parseargs();
+static int c_output();
+static int h_output();
+static int s_output();
+static int l_output();
+static int do_registers();
+static int parseargs();
 
 static int allc = sizeof(allv)/sizeof(allv[0]);
 
 #include "AFS_component_version_number.c"
 
+int
 main(argc, argv)
 	int argc;
 	char *argv[];
@@ -246,11 +253,7 @@ write_int32_macros(fout)
 
 #if (INT_MAX == 0x7FFFFFFF) && (UINT_MAX == 0xFFFFFFFFu)
 	f_print(fout, "#ifndef xdr_afs_int32\n");
-	f_print(fout, "#ifdef AFS_64BIT_ENV\n");
 	f_print(fout, "#define xdr_afs_int32 xdr_int\n");
-	f_print(fout, "#else\n");
-	f_print(fout, "#define xdr_afs_int32 xdr_long\n");
-	f_print(fout, "#endif\n");
 	f_print(fout, "#endif\n");
 	f_print(fout, "#ifndef xdr_afs_uint32\n");
 	f_print(fout, "#define xdr_afs_uint32 xdr_u_int\n");

@@ -83,7 +83,7 @@ install: all
 	${INSTALL} backup ${DESTDIR}etc
 
 clean:
-	rm -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c
+	rm -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
 
 lint:
 	lint -IDEST/include -IDEST/include/afs *.h *.c

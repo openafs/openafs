@@ -50,7 +50,7 @@ noversion:	install
 all: 		dlog dpass
 
 clean:
-		rm -f adkint.h adkint.cs.c adkint.ss.c adkint.xdr.c *.o dlog
+		rm -f adkint.h adkint.cs.c adkint.ss.c adkint.xdr.c *.o dlog dpass AFS_component_version_number.c
 
 adkint.cs.o:	adkint.cs.c
 adkint.xdr.o:	adkint.xdr.c adkint.h

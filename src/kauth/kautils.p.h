@@ -183,12 +183,18 @@ extern afs_int32 ka_ParseLoginName (
   char  cell[MAXKTCREALMLEN]
 );
 
+#ifdef _MFC_VER
+extern "C" {
+#endif /* _MFC_VER */
 extern afs_int32 ka_Init(
   int flags
 );
+#ifdef _MFC_VER
+}
+#endif /* _MFC_VER */
 
 extern int ka_CellConfig (
-  char *dir
+  const char *dir
 );
 
 extern char *ka_LocalCell (

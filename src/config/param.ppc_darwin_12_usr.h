@@ -43,4 +43,4 @@
 #define CMSERVERPREF
 #endif
 
-#endif  _PARAM_PPC_DARWIN_H_
+#endif /* _PARAM_PPC_DARWIN_H_ */

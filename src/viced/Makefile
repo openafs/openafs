@@ -10,7 +10,8 @@ COMPONENT=viced
 include ../config/Makefile.${SYS_NAME}
 
 DBUG = -g
-CFLAGS =  -DNINTERFACE ${DBUG} -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
+CFLAGS =  -DNINTERFACE ${DBUG} \
+	-I${TOP_SRCDIR}/config -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
 	 ${XCFLAGS} ${DBG_DEFS} -DRXDEBUG
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 
@@ -72,7 +73,7 @@ check_sysid: check_sysid.c
 fileserver: viced.o ${objects} ${headers} ${LIBS}
 	set -x; \
 	case ${SYS_NAME} in \
-	*linux*) \
+	*linux* | *fbsd* ) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
 	    ${auditlib} ${LIBS} ${XLIBS} ;; \
 	rs_aix*) \
@@ -113,7 +114,7 @@ install: all  ${DESTDIR}root.server/usr/afs/bin/fileserver
 system: install
 
 clean:
-	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c
+	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
 beancount:
 	wc -l *.c *.h

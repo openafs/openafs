@@ -49,6 +49,7 @@ int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
     afsp->vfs_bsize = 8192;
     afsp->vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
     afsp->vfs_fsid.val[1] = AFS_VFSFSID; 
+    afsp->vfs_dev = AFS_VFSMAGIC;
 
     AFS_GUNLOCK();
     return 0;

@@ -28,7 +28,7 @@ all: libafsint.a $(KSRCS)
 
 libafsint.a: ${OBJS} AFS_component_version_number.o
 	-rm -f $@
-	ar rv $@ ${OBJS} AFS_component_version_number.o
+	$(AR) rv $@ ${OBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 afsaux.o: afsaux.c afsint.h
@@ -103,4 +103,4 @@ install:  all  kinstall ukinstall
 	${INSTALL} afscbint.h ${DESTDIR}include/afs
 
 clean:
-	rm -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c
+	rm -f *.o *.cs.c *.ss.c *.er.c afsint.h afsint.xdr.c libafsint.a $(KDSRCS) core AFS_component_version_number.c afscbint.xdr.c

@@ -817,7 +817,7 @@ static afs_int32 GetCell(fname, cellname)
   blob.out      = cellname;
 
   code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-  return code;
+  return code ? errno : 0;
 }
 
 /* Check if a username is valid: If it contains only digits (or a
@@ -1975,7 +1975,7 @@ static WhichCellCmd(as)
         if (errno == ENOENT)
 	   fprintf(stderr,"%s: no such cell as '%s'\n", pn, ti->data);
 	else
-	   Die(code, ti->data);
+	   Die(errno, ti->data);
 	error = 1;
 	continue;
      }
@@ -2085,29 +2085,33 @@ static SysNameCmd(as)
     struct ViceIoctl blob;
     struct cmd_item *ti;
     char *input = space;
-    afs_int32 setp = 1;
+    afs_int32 setp = 0;
 
     ti = as->parms[0].items;
-    if (!ti) setp = 0;
     blob.in = space;
     blob.out = space;
     blob.out_size = MAXSIZE;
     blob.in_size = sizeof(afs_int32);
-    bcopy(&setp, input, sizeof(afs_int32));
     input += sizeof(afs_int32);
-    if (ti) {
-	strcpy(input, ti->data);
+    for(; ti; ti=ti->next) {
+	setp++;
 	blob.in_size += strlen(ti->data) + 1;
+	if (blob.in_size > MAXSIZE) {
+	  fprintf(stderr, "%s: sysname%s too long.\n", pn, setp > 1 ? "s" : "");
+	  return 1;
+	}
+	strcpy(input, ti->data);
 	input += strlen(ti->data);
 	*(input++) = '\0';
     }
+    bcopy(&setp, space, sizeof(afs_int32));
     code = pioctl(0, VIOC_AFS_SYSNAME, &blob, 1);
     if (code) {
 	Die(errno, 0);
 	return 1;
     }
     if (setp) {
-	printf("%s: new sysname set.\n", pn);
+	printf("%s: new sysname%s set.\n", pn, setp > 1 ? " list" : "");
 	return 0;
     }
     input = space;
@@ -2117,7 +2121,12 @@ static SysNameCmd(as)
 	fprintf(stderr, "No sysname name value was found\n");
 	return 1;
     }
-    printf("Current sysname is '%s'\n", input);
+    printf("Current sysname%s is:", setp>1 ? " list" : "");
+    for(;setp>0;--setp) {
+      printf(" %s", input);
+      input += strlen(input) + 1;
+    }
+    printf("\n");
     return 0;
 }
 
@@ -2787,7 +2796,7 @@ static afs_int32 SetCryptCmd(as)
     blob.out_size = 0;
     code = pioctl(0, VIOC_SETRXKCRYPT, &blob, 1);
     if (code)
-      Die(code, (char *) 0);
+      Die(errno, (char *) 0);
     return 0;
 }
 
@@ -2806,7 +2815,7 @@ static afs_int32 GetCryptCmd(as)
 
     code = pioctl(0, VIOC_GETRXKCRYPT, &blob, 1);
 
-    if (code) Die(code, (char *) 0);
+    if (code) Die(errno, (char *) 0);
     else {
       tp = space;
       bcopy(tp, &flag, sizeof(afs_int32));
@@ -3024,7 +3033,7 @@ defect 3069
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
     ts = cmd_CreateSyntax("sysname", SysNameCmd, 0, "get/set sysname (i.e. @sys) value");
-    cmd_AddParm(ts, "-newsys", CMD_SINGLE, CMD_OPTIONAL, "new sysname");
+    cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
     ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, 0, "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");

@@ -58,7 +58,7 @@ void rxi_Wakeup(void *addr)
 }
 
 PROCESS rx_listenerPid = 0;	/* LWP process id of socket listener process */
-void rx_ListenerProc(void *dummy);
+static void rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -149,7 +149,10 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
     afs_int32 nextPollTime;		/* time to next poll FD before sleeping */
     int lastPollWorked, doingPoll;	/* true iff last poll was useful */
     struct timeval tv, *tvp;
-    int i, code;
+    int code;
+#ifdef AFS_NT40_ENV
+    int i;
+#endif
     PROCESS pid;
     char name[MAXTHREADNAMELENGTH] = "srv_0";
 
@@ -364,11 +367,19 @@ int rxi_Listen(sock)
      * Put the socket into non-blocking mode so that rx_Listener
      * can do a polling read before entering select
      */
+#ifndef AFS_DJGPP_ENV
     if (fcntl(sock, F_SETFL, FNDELAY) == -1) {
 	perror("fcntl");
 	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
 	return -1;
     }
+#else
+    if ( __djgpp_set_socket_blocking_mode(sock, 1) < 0 ) {
+      perror("__djgpp_set_socket_blocking_mode");
+      (osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
+      return -1;
+    }
+#endif /* AFS_DJGPP_ENV */
 
     if (sock > FD_SETSIZE-1) {
 	(osi_Msg "rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",
@@ -432,4 +443,5 @@ int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     }
     if (sfds)
 	IOMGR_FreeFDSet(sfds);
+    return 0;
 }

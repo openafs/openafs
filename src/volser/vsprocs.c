@@ -1021,7 +1021,7 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
      * clone the read/write volume locally.
      * ***/
 
-    if (verbose) fprintf(STDOUT,"Starting transaction  on source volume %u ...",afromvol);
+    if (verbose) fprintf(STDOUT,"Starting transaction on source volume %u ...",afromvol);
     fflush(STDOUT);
     code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
     ONERR (code, "Failed to create transaction on the volume %u\n", afromvol);

@@ -273,3 +273,28 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
     }
 }
 
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+/*
+ * afs_getRights
+ * This function is just an interface to afs_GetAccessBits
+ */
+int afs_getRights(OSI_VC_ARG(avc), arights, acred)
+    OSI_VC_DECL(avc);
+    register afs_int32 arights;
+    struct AFS_UCRED *acred;
+{
+    register afs_int32 code;
+    struct vrequest treq;
+    OSI_VC_CONVERT(avc)
+
+    if (code = afs_InitReq(&treq, acred)) return code;
+
+    code = afs_VerifyVCache(avc, &treq);
+    if (code) {
+      code = afs_CheckCode(code, &treq, 16);
+      return code; 
+    }
+
+    return afs_GetAccessBits(avc, arights, &treq);
+}
+#endif /* defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS) */

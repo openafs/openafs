@@ -8,7 +8,7 @@
 # Override default definitions in NTMakefile.$(SYS_NAME) before including.
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
-!INCLUDE ..\config\NTMakefile.version
+!include ..\config\NTMakefile.version
 
 
 ############################################################################
@@ -65,8 +65,11 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\afs\afsprocmgmt.lib
+	$(DESTDIR)\lib\afs\afsreg.lib
+
+!IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
+PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
+!ENDIF
 
 
 $(PTSERVER): $(PTSERVER_EXEOBJS) $(PTSERVER_EXELIBS)
@@ -138,6 +141,12 @@ install: $(INCFILES) $(LIBFILE) $(PTSERVER) $(PTS) readgroup.exe \
 	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
 	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
 
+install9X: $(INCFILES) $(LIBFILE) $(PTS) \
+	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
+	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
+	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
+
+install_libutils: $(INCFILES) $(LIBFILE) $(PTS)
 
 # install various exe's and header files
 $(DESTDIR)\root.server\usr\afs\bin\pts.exe: $(PTS)
@@ -163,6 +172,7 @@ clean::
 	$(DEL) ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h
 	$(DEL) readgroup.exe readpwd.exe db_verify.exe testpt.exe 
 	$(DEL) pterror.h pterror.c
+	$(DEL) $(PTS)
 
 ############################################################################
 # tests?

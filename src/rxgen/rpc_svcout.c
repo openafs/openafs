@@ -27,23 +27,25 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#ifndef lint
-static char sccsid[] = "@(#)rpc_svcout.c 1.6 87/06/24 (C) 1987 SMI";
-#endif
 
 /*
  * rpc_svcout.c, Server-skeleton outputter for the RPC protocol compiler
  * Copyright (C) 1987, Sun Microsytsems, Inc. 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include "rpc_parse.h"
 #include "rpc_util.h"
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.2 2001/07/05 01:04:07 hartmans Exp $");
 
 static char RQSTP[] = "rqstp";
 static char TRANSP[] = "transp";

@@ -87,6 +87,7 @@ typedef struct cm_cacheParms {
 #define VIOC_LISTSYMLINK		0x24
 #define VIOC_DELSYMLINK			0x25
 #define VIOC_MAKESUBMOUNT		0x26
+#define VIOC_SHUTDOWN                   0x27
 
 #define VIOC_GETRXKCRYPT		0x27
 #define VIOC_SETRXKCRYPT		0x28

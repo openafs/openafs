@@ -13,6 +13,7 @@
  * This module resides in the lib/afs/librmtsys.a library.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>
@@ -23,6 +24,9 @@
 #include <stdio.h>
 #include <rx/xdr.h>
 #include <signal.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 

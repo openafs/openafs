@@ -788,8 +788,13 @@ afs_int32 ka_ChangePassword (
     afs_int32	   code;
 
     LOCK_GLOBAL_MUTEX
+#ifdef AFS_S390_LINUX20_ENV
+    code = ubik_Call_New (KAM_SetPassword, conn, 0, name, 
+                         instance, 0, 0, *newkey);
+#else
     code = ubik_Call_New (KAM_SetPassword, conn, 0, name, 
 			  instance, 0, *newkey);
+#endif
     UNLOCK_GLOBAL_MUTEX
     return code;
 }

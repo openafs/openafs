@@ -41,7 +41,7 @@ pinstall: install.c  AFS_component_version_number.c
                 sgi_* ) \
                         $(CC) -g -I${DESTDIR}include ${CFLAGS} install.c -o pinstall ${LIBS} -lmld ;; \
                 *) \
-                        $(CC) -g -I${DESTDIR}include ${CFLAGS} install.c -o pinstall ${LIBS} ;; \
+                        $(CC) -g -I. -I${DESTDIR}include ${CFLAGS} install.c -o pinstall ${LIBS} ;; \
         esac
 	- [ -d test ] && ( cd test; $(MAKE) )
 	- [ -d test ] && ./test/test_install

@@ -6,7 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
+!IF (EXIST(..\config\NTMakefile.version))
 !INCLUDE ..\config\NTMakefile.version
+!ENDIF
 
 # Definitions for installing header files
 
@@ -80,6 +82,8 @@ $(MT_LIBFILE): $(MT_LIBOBJS)
 	$(LIBARCH)  
 
 install: $(LIBFILE) $(INCFILES) $(MT_LIBFILE)
+
+install9x: install
 
 clean::
 	$(DEL) *.cs.c *.ss.c *.xdr.c afsint.h afscbint.h

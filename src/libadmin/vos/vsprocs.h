@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

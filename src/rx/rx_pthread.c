@@ -69,7 +69,7 @@ struct clock rxi_clockNow;
 /*
  * Delay the current thread the specified number of seconds.
  */
-rxi_Delay(sec)
+void rxi_Delay(sec)
     int sec;
 {
     sleep(sec);

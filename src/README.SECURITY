@@ -20,3 +20,6 @@ has RFC2228 security extensions.
 In any case, carefully consider the security implications before deploying 
 these utilities.
 
+To enable building of the insecure code included with OpenAFS, run
+configure with the --enable-insecure switch.
+

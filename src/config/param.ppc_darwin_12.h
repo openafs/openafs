@@ -55,4 +55,4 @@
 #define VN_HOLD(vp)     VREF(((struct vnode *)(vp)))
 
 #endif
-#endif  _PARAM_PPC_DARWIN_H_
+#endif /* _PARAM_PPC_DARWIN_H_ */

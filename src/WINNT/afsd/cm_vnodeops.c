@@ -10,9 +10,11 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
-#include <stddef.h>
 #include <winsock2.h>
+#endif /* !DJGPP */
+#include <stddef.h>
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
@@ -2178,6 +2180,10 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
 	 * which makes the code a little verbose.
          */
 	if (oldDscp == newDscp) {
+                /* check for identical names */
+                if (strcmp(oldNamep, newNamep) == 0)
+                        return CM_ERROR_RENAME_IDENTICAL;
+
 		oneDir = 1;
 		lock_ObtainMutex(&oldDscp->mx);
 		cm_dnlcRemove(oldDscp, oldNamep);

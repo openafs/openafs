@@ -20,6 +20,7 @@
 #include <cmd.h>
 #include <signal.h>
 #include <afs/param.h>
+#include <afsconfig.h>
 
 #undef IN
 
@@ -29,6 +30,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #endif
+#include <ctype.h>
 
 #include <gtxwindows.h>		/*Generic window package*/
 #include <gtxobjects.h>		/*Object definitions*/
@@ -308,7 +310,9 @@ struct hostent *GetHostByName(name)
 char *name;
 {
 	struct hostent *he;
+#ifdef AFS_SUN5_ENV
 	char ip_addr[32];
+#endif
 	
 	he = gethostbyname(name);
 #ifdef AFS_SUN5_ENV
@@ -356,7 +360,6 @@ int a_exitVal;		/* exit code */
    int i;
    int j;
    int bufslot;
-   int exitVal;
    int code;
  
    if (afsmon_debug) {
@@ -714,6 +717,7 @@ print_CM()
    }
    fprintf(debugFD,"\t\t-----End of List-----\n");
    }
+   return(0);
 }	/* print_CM() */
 
 
@@ -748,8 +752,6 @@ char *a_line;
    char arg3[CFG_STR_LEN];		/* threshold value */
    char arg4[CFG_STR_LEN];		/* user's handler  */
    struct hostent *he;			/* host entry */
-   int code;
-   char ip_addr[32];
 
    if (afsmon_debug) {
 	fprintf(debugFD,"[ %s ] Called, a_line = %s\n",rn, a_line);
@@ -824,8 +826,6 @@ char *a_line;
    char arg3[CFG_STR_LEN];		/* threshold value */
    char arg4[CFG_STR_LEN];		/* user's handler  */
    char arg5[CFG_STR_LEN];		/* junk characters */
-   struct hostent *he;			/* host entry */
-   int code;
 
    if (afsmon_debug) {
 	fprintf(debugFD,"[ %s ] Called, a_line = %s\n",rn, a_line);
@@ -842,7 +842,7 @@ char *a_line;
 	return(-1);
    }
    if (strlen(arg3) > THRESH_VAR_LEN-2) {
-	fprintf(stderr,"[%s ] threshold value too long\n");
+	fprintf(stderr,"[%s ] threshold value too long\n", rn);
 	return(-1);
    }
 
@@ -1096,7 +1096,7 @@ char *a_line;
    int fromIdx;
    int toIdx;
    int found;
-   int idx;				/* index to fs_categories[] */
+   int idx = 0;				/* index to fs_categories[] */
    int i;
    int j;
 
@@ -1384,7 +1384,7 @@ char *a_config_filename;
    struct afsmon_hostEntry *curr_host;
    struct hostent *he;			/* hostentry to resolve host name*/
    char *handlerPtr;			/* ptr to pass theresh handler string */
-   int code;				/* error code */
+   int code = 0;				/* error code */
    int linenum = 0;			/* config file line number */
    int threshCount;		/* count of thresholds for each server */
    int error_in_config;         /* syntax errors in config file  ?? */
@@ -1579,7 +1579,7 @@ char *a_config_filename;
 					arg2,arg3,handlerPtr); 
 						
 		else {
-			fprintf(stderr,"[ %s ] Programming error 6\n");
+			fprintf(stderr,"[ %s ] Programming error 6\n", rn);
 			afsmon_Exit(40);
 		}
 		if (code) {
@@ -1594,7 +1594,7 @@ char *a_config_filename;
 
 
    fclose(configFD);
-
+   return(0);
 }
 
 /*-----------------------------------------------------------------------
@@ -1667,7 +1667,6 @@ int a_newProbeCycle;	/* start of a new probe cycle ? */
 
 {	/* save_FS_results_inCB() */
    static char rn[] = "save_FS_results_inCB";	/* routine name */
-   int code;					/* return status */
    struct afsmon_fs_Results_list *tmp_fslist_item;  /* temp fs list item */
    struct xstat_fs_ProbeResults *tmp_fsPR;	/* temp ptr */
    int i;
@@ -2085,7 +2084,6 @@ struct xstat_fs_ProbeResults *a_fsResults;
    static char rn[] = "save_FS_data_forDisplay";	/* routine name */
    struct fs_Display_Data *curr_fsDataP;	/* tmp ptr to curr_fsData*/
    struct fs_Display_Data *prev_fsDataP;	/* tmp ptr to prev_fsData*/
-   struct afsmon_hostEntry *tmp_fsNames;
    struct afsmon_hostEntry *curr_host;
    static int probes_Received = 0;	/* number of probes reveived in
 		the current cycle. If this is equal to numFS we got all
@@ -2399,14 +2397,13 @@ int a_newProbeCycle;	/* start of new probe cycle ? */
 
 {	/* save_CM_results_inCB() */
    static char rn[] = "save_CM_results_inCB";	/* routine name */
-   int code;					/* return status */
    struct afsmon_cm_Results_list *tmp_cmlist_item;  /* temp cm list item */
    struct xstat_cm_ProbeResults *tmp_cmPR;	/* temp ptr */
    int i;
 
 
    if (afsmon_debug) {
-	fprintf(debugFD,"[ %s ] Called, a_newProbeCycle= %d\n",a_newProbeCycle);
+	fprintf(debugFD,"[ %s ] Called, a_newProbeCycle= %d\n",rn, a_newProbeCycle);
 	fflush(debugFD);
    }
 
@@ -2758,7 +2755,7 @@ struct cm_Display_Data *a_Data;		/* ptr to cm data to be displayed */
 	if (pValue > tValue) {
 
                 if (afsmon_debug) {
-                fprintf(debugFD,"[ %s ] cm = %s, thresh ovf for %s, threshold= % s, probevalue= %s\n",
+                fprintf(debugFD,"[ %s ] cm = %s, thresh ovf for %s, threshold= %s, probevalue= %s\n",
                 rn, a_hostEntry->hostName, threshP->itemName, threshP->threshVal , a_Data->data[idx]);
                 fflush(debugFD);
                 }
@@ -2821,7 +2818,6 @@ struct xstat_cm_ProbeResults *a_cmResults;
    static char rn[] = "save_CM_data_forDisplay";	/* routine name */
    struct cm_Display_Data *curr_cmDataP;
    struct cm_Display_Data *prev_cmDataP;
-   struct afsmon_hostEntry *tmp_cmNames;
    struct afsmon_hostEntry *curr_host;
    static int probes_Received = 0;	/* number of probes reveived in
 		the current cycle. If this is equal to numFS we got all
@@ -3030,7 +3026,6 @@ afsmon_CM_Handler()
    static char rn[] = "afsmon_CM_Handler";	/* routine name */
    int code;					/* return status */
    int newProbeCycle;			/* start of new probe cycle ? */
-   int i;
 
   if (afsmon_debug) {
   	fprintf(debugFD,
@@ -3481,7 +3476,6 @@ afsmon_execute()
    int CMinitFlags = 0;				/* flags for xstat_cm_Init */
    int code;					/* function return code */
    struct timeval tv;				/* time structure */
-   int i;
 
    if (afsmon_debug) {
 	fprintf(debugFD,"[ %s ] Called\n",rn);
@@ -3511,7 +3505,7 @@ afsmon_execute()
 	strncpy(fullhostname,curr_FS->hostName,sizeof(fullhostname));
 	he = GetHostByName(fullhostname);
 	if (he == (struct hostent *)0) {
-	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",fullhostname);
+	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",rn, fullhostname);
 	   return(-1);
 	}
 	strncpy(curr_FS->hostName,he->h_name,HOST_NAME_LEN); /* complete name*/
@@ -3530,7 +3524,7 @@ afsmon_execute()
    numCollIDs = 1;
    collIDP = (afs_int32 *) malloc (sizeof (afs_int32));
    if (collIDP == (afs_int32 *)0) {
-	fprintf(stderr,"[ %s ] failed to allocate a measely afs_int32 word.Argh!\n");
+	fprintf(stderr,"[ %s ] failed to allocate a measely afs_int32 word.Argh!\n", rn);
 	return(-1);
    }
    *collIDP = 2; 		/* USE A macro for this */
@@ -3582,7 +3576,7 @@ afsmon_execute()
 	strncpy(fullhostname,curr_CM->hostName,sizeof(fullhostname));
 	he = GetHostByName(fullhostname);
 	if (he == (struct hostent *)0) {
-	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",fullhostname);
+	   fprintf(stderr,"[ %s ] Cannot get host info for %s\n",rn, fullhostname);
 	   return(-1);
 	}
 	strncpy(curr_CM->hostName,he->h_name,HOST_NAME_LEN); /* complete name*/
@@ -3601,7 +3595,7 @@ afsmon_execute()
    numCollIDs = 1;
    collIDP = (afs_int32 *) malloc (sizeof (afs_int32));
    if (collIDP == (afs_int32 *)0) {
-	fprintf(stderr,"[ %s ] failed to allocate a measely long word.Argh!\n");
+	fprintf(stderr,"[ %s ] failed to allocate a measely long word.Argh!\n", rn);
 	return(-1);
    }
    *collIDP = 2; 		/* USE A macro for this */
@@ -3698,7 +3692,6 @@ struct cmd_syndesc *as;
 
    static char rn[] = "afsmonInit";	/* Routine name */
    char *debug_filename;	/* pointer to debug filename */
-   char *config_filename;	/* pointer to config filename */
    FILE *outputFD; 		/* output file descriptor */
    struct cmd_item *hostPtr;	/* ptr to parse command line args */
    char buf[256];		/* buffer for processing hostnames */
@@ -3960,7 +3953,7 @@ struct cmd_syndesc *as;
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {	/* main() */
@@ -4021,5 +4014,6 @@ char **argv;
     else
       afsmon_Exit(2);
 
+    exit(0); /* redundant, but gets rid of warning */
 } /*main*/
 

@@ -10,12 +10,14 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#include <nb30.h>
+#endif /* !DJGPP */
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
-#include <nb30.h>
 #include <osi.h>
 
 #include "afsd.h"
@@ -1113,6 +1115,11 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
         
         lock_ReleaseMutex(&scp->mx);
 
+#ifdef DISKCACHE95
+        DPRINTF("cm_GetBuffer: fetching data scpDV=%d bufDV=%d scp=%x bp=%x dcp=%x\n",
+                scp->dataVersion, bufp->dataVersion, scp, bufp, bufp->dcp);
+#endif /* DISKCACHE95 */
+
 	/* now make the call */
         do {
 		code = cm_Conn(&scp->fid, up, reqp, &connp);
@@ -1237,6 +1244,12 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *up,
 		    qdp = (osi_queueData_t *) osi_QNext(&qdp->q)) {
 			tbufp = osi_GetQData(qdp);
                         tbufp->dataVersion = afsStatus.DataVersion;
+
+#ifdef DISKCACHE95
+                        /* write buffer out to disk cache */
+                        diskcache_Update(tbufp->dcp, tbufp->datap, buf_bufferSize,
+                                         tbufp->dataVersion);
+#endif /* DISKCACHE95 */
                 }
         }
 

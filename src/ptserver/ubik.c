@@ -1,4 +1,4 @@
-/* $Id: ubik.c,v 1.1 2001/01/19 20:55:46 hartmans Exp $ */
+/* $Id: ubik.c,v 1.1.1.2 2001/07/05 01:03:43 hartmans Exp $ */
 
 #include <sys/types.h>
 #include <netinet/in.h>

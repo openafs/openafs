@@ -26,7 +26,8 @@ INCFILES =\
 	$(INCFILEDIR)\osidb.h \
 	$(INCFILEDIR)\osilog.h \
 	$(INCFILEDIR)\osisleep.h \
-	$(INCFILEDIR)\perf.h
+	$(INCFILEDIR)\perf.h \
+     $(INCFILEDIR)\osithrdnt.h
 
 
 $(INCFILEDIR)\dbrpc.h: dbrpc.h
@@ -82,9 +83,11 @@ install_headers: $(INCFILES)
 
 install: install_headers $(DLLFILE)
 
+install9x: install
+
 ############################################################################
 # Local clean target; augments predefined clean target
 
 clean::
-	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h 
+	$(DEL) dbrpc_s.c dbrpc_c.c dbrpc.h $(DLLFILE) $(INCFILES)
 

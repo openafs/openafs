@@ -31,7 +31,7 @@ struct Threshold {
 
 
 /* structures to store info of hosts to be monitored */
-static struct afsmon_hostEntry {
+struct afsmon_hostEntry {
 	char hostName[HOST_NAME_LEN];	/* fs or cm host name */
 	int numThresh;			/* number of thresholds for this host */
 	struct Threshold *thresh;	/* ptr to threshold entries */

@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
 #include <afs/afsincludes.h>
@@ -24,6 +25,17 @@
 #ifdef AFS_PTHREAD_ENV
 #include "rx.h"
 #endif /* AFS_PTHREAD_ENV */
+#include <stdlib.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #endif
 
 /*
@@ -36,6 +48,7 @@
  * Convert from the local (host) to the standard 
  * (network) system error code.
  */
+int
 hton_syserr_conv(code)
     register afs_int32 code;
 {
@@ -43,7 +56,7 @@ hton_syserr_conv(code)
 
     if (code == ENOSPC)
 	err = VDISKFULL;
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     /* EDQUOT doesn't exist on solaris */
     else if (code == EDQUOT)
 	err = VOVERQUOTA;
@@ -58,6 +71,7 @@ hton_syserr_conv(code)
  * Convert from the standard (Network) format to the
  * local (host) system error code.
  */
+int
 ntoh_syserr_conv(int code)
 {
     register afs_int32 err;
@@ -65,7 +79,7 @@ ntoh_syserr_conv(int code)
     if (code == VDISKFULL)
 	err = ENOSPC;
     else if (code == VOVERQUOTA)
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 	err = ENOSPC;
 #else
 	err = EDQUOT;
@@ -114,15 +128,17 @@ char * osi_alloc(x)
     return (char *)(mem_alloc(x));
 }
 
+int
 osi_free(x, size)
     char *x;
     afs_int32 size; 
 {
-    if ((x == &memZero) || !x) return;
+    if ((x == &memZero) || !x) return 0;
     LOCK_MALLOC_STATS
     osi_alloccnt--; osi_allocsize -= size;
     UNLOCK_MALLOC_STATS
     mem_free(x, size);
+    return 0;
 }
 #endif
 #endif /* KERNEL */

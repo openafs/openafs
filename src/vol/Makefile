@@ -10,7 +10,7 @@ COMPONENT=vol
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-INCDIRS= -I. -I${DESTDIR}include ${FSINCLUDES}
+INCDIRS= -I${TOP_SRCDIR}/config -I. -I${DESTDIR}include ${FSINCLUDES}
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS= ${DESTDIR}lib/afs/libcmd.a vlib.a ${SRCDIR}lib/afs/util.a \
@@ -101,7 +101,7 @@ gi: ${DESTDIR}/lib/afs/libsys.a
 
 volinfo: vol-info.o physio.o ihandle.o
 	case ${SYS_NAME} in \
-		*linux*) \
+		*linux* | *fbsd*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
 				ihandle.o ${LIBS}  ;; \
 		*) \
@@ -124,7 +124,8 @@ xfs_size_check: xfs_size_check.c
 
 clean:
 	rm -f *.o *.a AFS_component_version_number.c
-	rm -f ${SCMPROGS} ${STAGEPROGS} core
+	rm -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
+
 
 beancount:
 	wc -l *.c *.h

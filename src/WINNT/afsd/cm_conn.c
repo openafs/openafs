@@ -10,12 +10,18 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif /* !DJGPP */
 #include <string.h>
 #include <malloc.h>
 #include <osi.h>
 #include <rx/rx.h>
+#ifndef DJGPP
 #include <rxkad.h>
+#else
+#include <rx/rxkad.h>
+#endif
 
 #include "afsd.h"
 
@@ -45,7 +51,12 @@ void cm_InitConn(void)
 void cm_InitReq(cm_req_t *reqp)
 {
 	memset((char *)reqp, 0, sizeof(cm_req_t));
+#ifndef DJGPP
 	reqp->startTime = GetCurrentTime();
+#else
+        gettimeofday(&reqp->startTime, NULL);
+#endif
+ 
 }
 
 long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
@@ -130,7 +141,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 			if (tsrp->status == busy)
 				tsrp->status = not_busy;
 		}
-		Sleep(5000);
+		thrd_Sleep(5000);
 		retry = 1;
 	}
 
@@ -154,7 +165,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		int same;
 
 		/* Back off to allow move to complete */
-		Sleep(2000);
+		thrd_Sleep(2000);
 
 		/* Update the volume location and see if it changed */
 		cm_GetServerList(fidp, userp, reqp, &serversp);
@@ -181,6 +192,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		 * this is to prevent the SMB session from timing out
 		 * In addition, we log an event to the event log 
 		 */
+#ifndef DJGPP
 		HANDLE h;
                 char *ptbuf[1];
                 char s[100];
@@ -190,6 +202,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
                         1, 0, ptbuf, NULL);
                 DeregisterEventSource(h);
+#endif /* !DJGPP */
 	  
 		retry = 0;
 	  	osi_Log0(afsd_logp, "cm_Analyze: hardDeadTime exceeded");
@@ -236,10 +249,19 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
         long firstError = 0;
 	int someBusy = 0, someOffline = 0;
 	long timeUsed, timeLeft, hardTimeLeft;
+#ifdef DJGPP
+        struct timeval now;
+#endif /* DJGPP */        
 
         *connpp = NULL;
 
+#ifndef DJGPP
 	timeUsed = (GetCurrentTime() - reqp->startTime) / 1000;
+#else
+        gettimeofday(&now, NULL);
+        timeUsed = sub_time(now, reqp->startTime) / 1000;
+#endif
+        
 	/* leave 5 seconds margin of safety */
 	timeLeft = RDRtimeout - timeUsed - 5;
 	hardTimeLeft = timeLeft;

@@ -39,7 +39,9 @@
 #define __XDR_INCLUDE__
 #include <afs/param.h>
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif /* _MFC_VER */
 #endif
 #define	bool_t	int
 #define	enum_t	int
@@ -326,14 +328,16 @@ extern bool_t xdrrec_eof();		/* true iff no more input */
  */
 
 #ifndef xdr_afs_int32
-#ifdef  AFS_64BIT_ENV
 #define xdr_afs_int32 xdr_int
-#else
-#define xdr_afs_int32 xdr_long
-#endif
 #endif
 #ifndef xdr_afs_uint32
 #define xdr_afs_uint32 xdr_u_int
+#endif
+#ifndef xdr_afs_int64
+#define xdr_afs_int64 xdr_int64
+#endif
+#ifndef xdr_afs_uint64
+#define xdr_afs_uint64 xdr_uint64
 #endif
 
 #endif /* __XDR_INCLUDE__ */

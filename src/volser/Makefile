@@ -13,7 +13,7 @@ COMPILE_ET=${SRCDIR}bin/compile_et
 CFLAGS=${DBG} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS} ${DBG_DEFS}
 LDFLAGS=${DBG} ${OPTMZ} ${XLDFLAGS}
 
-INCDIRS= -I${SRCDIR}include/afs -I${SRCDIR}include
+INCDIRS= -I${TOP_SRCDIR}/config -I${SRCDIR}include/afs -I${SRCDIR}include
 INCLIBS=-L${SRCDIR}lib/afs -L${SRCDIR}lib
 
 VINCLS=${SRCDIR}include/afs/partition.h ${SRCDIR}include/afs/volume.h \
@@ -102,7 +102,7 @@ volint.xdr.o: volint.xdr.c ${INTINCLS}
 
 volserver: $(SOBJS) $(LIBS) $(HACKS)
 	case ${SYS_NAME} in \
-                *linux*) \
+                *linux* | *fbsd* ) \
                         ${CC} ${DBUG} -o volserver $(SOBJS) $(HACKS) \
 				${LDFLAGS} $(LIBS) ${XLIBS} ;; \
                 *) \
@@ -131,7 +131,7 @@ install: all $(TARGETS)
 
 clean:
 	rm -f volserver *.o volint.ss.c volint.cs.c *.a  volint.h \
-	volint.xdr.c vos core volser.h volerr.c AFS_component_version_number.c
+	volint.xdr.c vos core volser.h volerr.c AFS_component_version_number.c restorevol
 
 lint:	vos.c vsprocs.c volmain.c volprocs.c lockprocs.c
 	lint -hb ${INCDIRS} ${INCLIBS} vos.c

@@ -10,6 +10,10 @@
 #ifndef __SMB_H_ENV__
 #define __SMB_H_ENV__ 1
 
+#ifdef DJGPP
+#include "netbios95.h"
+#endif /* DJGPP */
+
 /* basic core protocol SMB structure */
 typedef struct smb {
 	unsigned char id[4];
@@ -74,6 +78,10 @@ typedef struct smb_packet {
 	unsigned char oddByte;
 	unsigned short ncb_length;
 	unsigned char flags;
+#ifdef DJGPP
+        dos_ptr dos_pkt;
+        unsigned int dos_pkt_sel;
+#endif /* DJGPP */
 } smb_packet_t;
 
 /* smb_packet flags */
@@ -87,6 +95,11 @@ typedef struct myncb {
 	NCB ncb;			/* ncb to use */
         struct myncb *nextp;		/* when on free list */
         long magic;
+#ifdef DJGPP
+        dos_ptr dos_ncb;
+        smb_packet_t *orig_pkt;
+        unsigned int dos_ncb_sel;
+#endif /* DJGPP */
 } smb_ncb_t;
 
 /* structures representing environments from kernel / SMB network.
@@ -111,8 +124,10 @@ typedef struct smb_vc {
         struct smb_fid *fidsp;		/* the first child in the open file list */
 	struct smb_user *justLoggedOut;	/* ready for profile upload? */
 	unsigned long logoffTime;	/* tick count when logged off */
-	struct cm_user *logonDLLUser;	/* integrated logon user */
+	/*struct cm_user *logonDLLUser;	/* integrated logon user */
 	unsigned char errorCount;
+        char rname[17];
+	int lana;
 } smb_vc_t;
 
 					/* have we negotiated ... */
@@ -131,9 +146,18 @@ typedef struct smb_user {
         osi_mutex_t mx;
         long userID;			/* the session identifier */
         struct smb_vc *vcp;		/* back ptr to virtual circuit */
-	struct cm_user *userp;		/* CM user structure */
-	char *name;			/* user name */
+  struct smb_username *unp;        /* user name struct */
 } smb_user_t;
+
+typedef struct smb_username {
+	struct smb_username *nextp;		/* next sibling */
+        long refCount;			/* ref count */
+        long flags;			/* flags; locked by mx */
+        osi_mutex_t mx;
+	struct cm_user *userp;		/* CM user structure */
+        char *name;			/* user name */
+  char *machine;                  /* machine name */
+} smb_username_t;
 
 #define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
 
@@ -181,6 +205,9 @@ typedef struct smb_ioctl {
 	
         /* flags */
         long flags;
+
+        /* fid pointer */
+        struct smb_fid *fidp;
 } smb_ioctl_t;
 
 /* flags for smb_ioctl_t */
@@ -209,7 +236,7 @@ typedef struct smb_fid {
 	int curr_chunk;			/* chunk being read */
 	int prev_chunk;			/* previous chunk read */
 	int raw_writers;		/* pending async raw writes */
-	HANDLE raw_write_event;		/* signal this when raw_writers zero */
+	EVENT_HANDLE raw_write_event;	/* signal this when raw_writers zero */
 } smb_fid_t;
 
 #define SMB_FID_OPENREAD		1	/* open for reading */
@@ -252,6 +279,7 @@ typedef struct smb_dirListPatch {
 	osi_queue_t q;
         char *dptr;		/* ptr to attr, time, data, sizel, sizeh */
 	cm_fid_t fid;
+  cm_dirEntry_t *dep;   /* temp */
 } smb_dirListPatch_t;
 
 /* waiting lock list elements */
@@ -279,11 +307,16 @@ typedef struct smb_dispatch {
 						 * the response was already
 						 * sent.
                                                  */
+#define SMB_MAX_PATH                    256     /* max path length */
 
 /* prototypes */
 
 extern void smb_Init(osi_log_t *logp, char *smbNamep, int useV3, int LANadapt,
-	int nThreads, void *aMBfunc);
+	int nThreads
+#ifndef DJGPP
+        , void *aMBfunc
+#endif
+  );
 
 extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, long unixTime);
 
@@ -297,7 +330,7 @@ extern void smb_DosUTimeFromUnixTime(long *dosUTimep, long unixTime);
 
 extern void smb_UnixTimeFromDosUTime(long *unixTimep, long dosUTime);
 
-extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags);
+extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 
 extern void smb_ReleaseVC(smb_vc_t *vcp);
 
@@ -402,8 +435,13 @@ extern unsigned char *smb_ParseVblBlock(unsigned char *inp, char **chainpp, int 
 
 extern int smb_SUser(cm_user_t *userp);
 
+#ifndef DJGPP
 extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 	char *op, cm_user_t *userp, long *readp);
+#else /* DJGPP */
+extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
+	char *op, cm_user_t *userp, long *readp, int dosflag);
+#endif /* !DJGPP */
 
 extern BOOL smb_IsLegalFilename(char *filename);
 
@@ -411,5 +449,7 @@ extern BOOL smb_IsLegalFilename(char *filename);
 #include "smb3.h"
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
+
+cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, char *usern);
 
 #endif /* whole file */

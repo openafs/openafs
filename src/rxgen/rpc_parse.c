@@ -33,20 +33,22 @@
  * Copyright (C) 1987 Sun Microsystems, Inc.
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#if defined(AFS_SUN5_ENV)
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif
 #else
-#include <strings.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include "rpc_util.h"
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.3 2001/07/05 01:04:06 hartmans Exp $");
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
 char *SplitStart = NULL;
@@ -121,6 +123,7 @@ static cs_ProcTail_setup();
 static ss_Proc_CodeGeneration();
 static ss_ProcName_setup();
 static ss_ProcParams_setup();
+static ss_ProcProto_setup();
 static ss_ProcSpecial_setup();
 static ss_ProcUnmarshallInParams_setup();
 static ss_ProcCallRealProc_setup();
@@ -1166,7 +1169,7 @@ int split_flag;
 	    }
 	    plist->pl.param_flag |= PROCESSED_PARAM;
 	    for (plist1 = defp->pc.plists; plist1; plist1 = plist1->next) {
-		if (streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
+		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    char *star="";
 		    char *pntr = index(plist1->pl.param_type, '*');
 		    if (pntr) star = "*";
@@ -1345,6 +1348,7 @@ definition *defp;
     ss_ProcName_setup(defp);
     if (!cflag) {
 	ss_ProcParams_setup(defp, &somefrees);
+	ss_ProcProto_setup(defp, &somefrees);
 	ss_ProcSpecial_setup(defp, &somefrees);
 	ss_ProcUnmarshallInParams_setup(defp);
 	ss_ProcCallRealProc_setup(defp);
@@ -1407,7 +1411,7 @@ int *somefrees;
 	    }
 	    plist->pl.param_flag |= PROCESSED_PARAM;
 	    for (plist1 = defp->pc.plists; plist1; plist1 = plist1->next) {
-		if (streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
+		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    if (plist1->pl.param_flag & INDIRECT_PARAM) {
 			    f_print(fout, ", %s", plist1->pl.param_name);
 		    } else if (index(plist1->pl.param_type, '*') == 0) {
@@ -1438,6 +1442,23 @@ int *somefrees;
 	}
     }	
     fprintf(fout, "\n");
+}
+
+
+static
+ss_ProcProto_setup(defp, somefrees)
+definition *defp;
+int *somefrees;
+{
+    proc1_list *plist, *plist1;
+    list *listp;
+    definition *defp1;
+    int preserve_flag = 0;
+
+	f_print(fout, "#ifndef KERNEL\n");
+	f_print(fout, "\tafs_int32 %s%s%s%s();\n", prefix, ServerPrefix, 
+		PackagePrefix[PackageIndex], defp->pc.proc_name);
+	f_print(fout, "#endif\n");
 }
 
 
@@ -1784,7 +1805,7 @@ er_ProcProcsArray_setup()
 static
 er_ProcMainBody_setup()
 {
-    f_print(fout, "%s%sExecuteRequest(z_call)\n", prefix,  PackagePrefix[PackageIndex]);
+    f_print(fout, "int %s%sExecuteRequest(z_call)\n", prefix,  PackagePrefix[PackageIndex]);
     f_print(fout, "\tregister struct rx_call *z_call;\n");
     f_print(fout, "{\n\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
@@ -1800,7 +1821,7 @@ er_ProcMainBody_setup()
 static
 er_HeadofOldStyleProc_setup()
 {
-    f_print(fout, "\n%s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+    f_print(fout, "\nint %s%sExecuteRequest (z_call)\n", prefix, (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
     f_print(fout, "\tregister struct rx_call *z_call;\n");
     f_print(fout, "{\n");
     f_print(fout, "\tint op;\n");

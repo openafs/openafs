@@ -68,7 +68,7 @@ audit.o: audit.c audit.h
 	${CC} ${CFLAGS} -c audit.c
 
 clean:
-	rm -f *.o core AFS_component_version_number.c
+	rm -f *.o core AFS_component_version_number.c *.a
 
 beancount:
 	wc -l *.c *.h

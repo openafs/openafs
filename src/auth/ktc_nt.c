@@ -283,10 +283,14 @@ int ktc_SetToken(
 	 * Instead of sending the session key in the clear, we zero it,
 	 * and send it later, via RPC, encrypted.
 	 */
+#ifndef AFS_WIN95_ENV
 	/*
 	memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
 	 */
 	memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
+#else
+	memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
+#endif
 	ct.BeginTimestamp = token->startTime;
 	ct.EndTimestamp = token->endTime;
 	if (ct.BeginTimestamp == 0) ct.BeginTimestamp = 1;
@@ -330,6 +334,7 @@ int ktc_SetToken(
 	memcpy(tp, &uuid, sizeof(uuid));
 	tp += sizeof(uuid);
 
+#ifndef AFS_WIN95_ENV
 	/* RPC to send session key */
 	status = send_key(uuid, token->sessionKey.data);
 	if (status != RPC_S_OK) {
@@ -343,6 +348,7 @@ int ktc_SetToken(
 		else
 			return KTC_RPC;
 	}
+#endif /* AFS_WIN95_ENV */
 
 	/* set up for pioctl */
 	iob.in = tbuffer;
@@ -429,6 +435,7 @@ int ktc_GetToken(
 			return KTC_PIOCTLFAIL;
 	}
 
+#ifndef AFS_WIN95_ENV   /* get rid of RPC for win95 build */
 	/* RPC to receive session key */
 	status = receive_key(uuid, token->sessionKey.data);
 	if (status != RPC_S_OK) {
@@ -442,6 +449,7 @@ int ktc_GetToken(
 		else
 			return KTC_RPC;
 	}
+#endif /* AFS_WIN95_ENV */
 
 	cp = tbuffer;
 
@@ -484,12 +492,13 @@ int ktc_GetToken(
 	token->endTime = ct.EndTimestamp;
 	if (ct.AuthHandle == -1) ct.AuthHandle = 999;
 	token->kvno = ct.AuthHandle;
+#ifndef AFS_WIN95_ENV
 	/*
 	 * Session key has already been set via RPC
 	 */
-	/*
+#else
 	memcpy(&token->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
-	 */
+#endif /* AFS_WIN95_ENV */
 	token->ticketLen = ticketLen;
 	if (client) {
 		strcpy(client->name, cp);

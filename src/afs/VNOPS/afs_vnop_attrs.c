@@ -128,14 +128,14 @@ afs_CopyOutAttrs(avc, attrs)
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.	
      */
-#ifdef	AFS_OSF_ENV
+#if   defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 #ifdef	va_size_rsv
     attrs->va_size_rsv = 0;
 #endif
 /* XXX do this */
 /*    attrs->va_gen = avc->m.DataVersion;*/
     attrs->va_flags = 0;
-#endif	/* AFS_OSF_ENV */
+#endif	/* AFS_OSF_ENV || AFS_DARWIN_ENV */
 
 #if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #if !defined(AFS_HPUX_ENV)

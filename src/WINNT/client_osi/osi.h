@@ -11,11 +11,29 @@
 #ifndef _OSI_H_ENV_
 #define _OSI_H_ENV_ 1
 
-#include <rpc.h>
-/* misc definitions */
-typedef LARGE_INTEGER osi_hyper_t;
-typedef GUID osi_uid_t;
+#include <afs/param.h>
 
+/* misc definitions */
+
+/* large int */
+#ifndef DJGPP
+#include <rpc.h>
+#include <largeint.h>
+#include "osithrdnt.h"
+#else /* DJGPP */
+#include "largeint95.h"
+#endif /* !DJGPP */
+
+typedef LARGE_INTEGER osi_hyper_t;
+#ifndef DJGPP
+typedef GUID osi_uid_t;
+#else /* DJGPP */
+typedef int osi_uid_t;
+#endif /* !DJGPP */
+
+typedef int int32;
+
+#ifndef DJGPP
 /* basic util functions */
 #include "osiutils.h"
 
@@ -24,10 +42,12 @@ typedef GUID osi_uid_t;
 
 /* lock type definitions */
 #include "osiltype.h"
+#endif /* !DJGPP */
 
 /* basic sleep operations */
 #include "osisleep.h"
 
+#ifndef DJGPP
 /* base lock definitions */
 #include "osibasel.h"
 
@@ -36,11 +56,11 @@ typedef GUID osi_uid_t;
 
 /* RPC debug stuff */
 #include "osidb.h"
+#else /* DJGPP */
+#include "osithrd95.h"
+#endif /* !DJGPP */
 
 /* log stuff */
 #include "osilog.h"
-
-/* large int */
-#include <largeint.h>
 
 #endif /*_OSI_H_ENV_ */

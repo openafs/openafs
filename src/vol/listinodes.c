@@ -72,7 +72,7 @@ int *forcep, forceR;
 #ifdef	  AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
-#if defined(AFS_DARWIN_ENV)
+#if !defined(AFS_DARWIN_ENV)
 #include <ufs/inode.h>
 #endif
 #endif

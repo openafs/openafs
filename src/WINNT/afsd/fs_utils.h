@@ -18,7 +18,9 @@
 #include <afs/prs_fs.h>
 #include <afs/pioctl_nt.h>
 
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif
 
 /* Fake error code since NT errno.h doesn't define it */
 #include <afs/errmap_nt.h>

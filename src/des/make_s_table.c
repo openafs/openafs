@@ -46,7 +46,7 @@ void gen(stream)
             n = swap_four_bits_to_ansi(m);
             if (des_debug)
                 fprintf(stderr,
-                "i = %d, j = %d, k = %d, l = %d, m = %d, n = %d\n",
+                "i = %ld, j = %ld, k = %ld, l = %ld, m = %ld, n = %ld\n",
                         i,j,k,l,m,n);
             temp[i][j] = n;
         }

@@ -159,7 +159,7 @@ asmlinkage int afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
 }
 #endif
 #if defined(AFS_SPARC64_LINUX20_ENV)
-asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
+asmlinkage int afs32_xsetgroups(int gidsetsize, __kernel_gid_t32 *grouplist)
 {
     gid_t gl[NGROUPS];
     int ret, i;
@@ -175,6 +175,24 @@ asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
     set_fs (old_fs);
     return ret;
 }
+#ifdef AFS_LINUX24_ENV
+asmlinkage int afs32_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
+{
+    gid_t gl[NGROUPS];
+    int ret, i;
+    mm_segment_t old_fs = get_fs ();
+
+    if ((unsigned) gidsetsize > NGROUPS)
+	return -EINVAL;
+    for (i = 0; i < gidsetsize; i++, grouplist++)
+	if (__get_user (gl[i], grouplist))
+	    return -EFAULT;
+    set_fs (KERNEL_DS);
+    ret = afs_xsetgroups32(gidsetsize, gl);
+    set_fs (old_fs);
+    return ret;
+}
+#endif
 #endif
 
 static int afs_setgroups(cred_t **cr, int ngroups, gid_t *gidset, int change_parent)

@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -31,6 +32,16 @@
 #include <sys/time.h>
 #include <dirent.h>
 #endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 #include <rx/xdr.h>
@@ -40,6 +51,8 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.3 2001/07/05 01:04:23 hartmans Exp $");
 
 #include "update.h"
 #include "global.h"
@@ -223,7 +236,6 @@ again:
     while(1){/*keep doing it */
 	char c, c1;
 	for(df = dirname; df; df=df->next) {   /*for each directory do */
-	    afs_int32 isDir = 0;
 	    char *curDir;
 
 	    if (verbose) printf ("Checking dir %s\n", df->name);
@@ -232,7 +244,7 @@ again:
 	    ZapList(&okhostfiles);
 
 	    /* construct local path from canonical (wire-format) path */
-	    if (errcode = ConstructLocalPath(df->name, "/", &curDir)) {
+	    if ((errcode = ConstructLocalPath(df->name, "/", &curDir))) {
 		com_err(whoami, errcode, "Unable to construct local path");
 		return errcode;
 	    }
@@ -323,7 +335,7 @@ again:
 		    goto fail;
 		}
 
-		while(dp = readdir(dirp)) {
+		while((dp = readdir(dirp))) {
 		    /* for all the files in the directory df->name do*/
 		    strcpy(filename, curDir);
 		    strcat(filename,"/");
@@ -377,7 +389,7 @@ afs_int32 time, length;
     char *localname;
 
     /* construct a local path from canonical (wire-format) path */
-    if (error = ConstructLocalPath(filename, "/", &localname) ) {
+    if ((error = ConstructLocalPath(filename, "/", &localname))) {
 	com_err(whoami, error, "Unable to construct local path");
 	return error;
     }
@@ -393,6 +405,7 @@ afs_int32 time, length;
 	return 0;
 }
 
+int
 FetchFile(call, remoteFile, localFile, dirFlag)
   struct rx_call *call;
   char *localFile, *remoteFile;
@@ -436,7 +449,9 @@ int update_ReceiveFile(fd, call, status)
 {
     register char *buffer = (char*) 0;
     afs_int32 length;
+#ifdef notdef
     XDR xdr;
+#endif
     register int blockSize;
     afs_int32 error = 0, len;
 #ifdef	AFS_AIX_ENV
@@ -467,7 +482,7 @@ int update_ReceiveFile(fd, call, status)
 	return UPDATE_ERROR;
     }
     while (!error && length) {
-	register nbytes = (length>blockSize?blockSize:length);
+	register int nbytes = (length>blockSize?blockSize:length);
 	nbytes = rx_Read(call, buffer, nbytes);
 	if (!nbytes) error = UPDATE_ERROR;
 	if (write(fd, buffer, nbytes) != nbytes) {
@@ -552,7 +567,7 @@ int NotOnHost(filename, okhostfiles)
     
     for(tf=okhostfiles; tf; tf=tf->next) {
 	/* construct local path from canonical (wire-format) path */
-	if (rc = ConstructLocalPath(tf->name, "/", &hostfile)) {
+	if ((rc = ConstructLocalPath(tf->name, "/", &hostfile))) {
 	    com_err(whoami, rc, "Unable to construct local path");
 	    return -1;
 	}
@@ -578,7 +593,7 @@ static int RenameNewFiles(struct filestr *modFiles)
 
   for(tf = modFiles; tf; tf=tf->next) {
       /* construct local path from canonical (wire-format) path */
-      if (errcode = ConstructLocalPath(tf->name, "/", &fname)) {
+      if ((errcode = ConstructLocalPath(tf->name, "/", &fname))) {
 	  com_err(whoami, errcode, "Unable to construct local path");
 	  return errcode;
       }
@@ -652,7 +667,8 @@ int GetFileFromUpServer(struct rx_connection *conn, /* handle for upserver */
   /* now set the rest of the file status */
   errcode = chmod(newfile, mode);
   if(errcode){
-    printf("could not change protection on %s to %u\n",newfile, mode);
+    printf("could not change protection on %s to %u\n",newfile, 
+	(unsigned int) mode);
     com_err (whoami, errno,
 	     "could not change protection on %s to %u",
 	     newfile, mode);
@@ -676,7 +692,7 @@ int GetFileFromUpServer(struct rx_connection *conn, /* handle for upserver */
   errcode = utimes(newfile, tvp);
 #endif /* NT40 */
   if (errcode) {
-    printf("could not change access and modify times on %s to %u %u\n",newfile, atime, mtime);
+    printf("could not change access and modify times on %s to %u %u\n",newfile, (unsigned int) atime, (unsigned int) mtime);
     com_err (whoami, errno,
 	     "could not change access and modify times on %s to %u %u",newfile, atime, mtime);
     return 1;

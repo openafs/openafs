@@ -33,14 +33,20 @@
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
+#include <stdlib.h>
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include "rpc_util.h"
 #include "rpc_parse.h"
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_cout.c,v 1.1.1.2 2001/07/05 01:04:06 hartmans Exp $");
 
 static print_header();
 static print_trailer();

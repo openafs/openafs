@@ -10,7 +10,7 @@ COMPONENT=tviced
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES=-I. -I.. -I${SRCDIR}include -I${SRCDIR}include/afs
+INCLUDES=-I${TOP_SRCDIR}/config -I. -I.. -I${SRCDIR}include -I${SRCDIR}include/afs
 CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
 LDFLAGS=${DBG} ${XLDFLAGS}
 
@@ -45,7 +45,8 @@ objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
 LIBS=	${SRCDIR}lib/libafsauthent.a	\
-	${SRCDIR}lib/libafsrpc.a
+	${SRCDIR}lib/libafsrpc.a \
+	${SRCDIR}lib/afs/util.a
 
 include ../config/Makefile.version
 

@@ -27,6 +27,9 @@ KLIBS = ${DESTDIR}/lib/afs/libkauth.krb.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.kr
 
 all: test-reauth ${DESTDIR}/lib/afs/libafssiad.so ${DESTDIR}/lib/afs/libafssiad.krb.so
 
+clean:
+	rm -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
+
 CFLAGS = $(DEBUG) -I${SRCDIR}include ${XCFLAGS}
 
 ${DESTDIR}/lib/afs/libafssiad.so: libafssiad.so

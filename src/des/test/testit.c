@@ -8,10 +8,6 @@
  *		-1 ==> error
  */
 
-#ifndef	lint
-static char rcsid_testit_c[] =
-#endif	lint
-
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>

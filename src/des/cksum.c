@@ -20,10 +20,11 @@
 #include <afs/param.h>
 #include <mit-cpyright.h>
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
+#if defined(HAVE_STRINGS_H)
 #include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
+#include <string.h>
 #endif
 
 #include <des.h>

@@ -58,7 +58,7 @@ extern char *vctime(const time_t *atime);
 
 /* Convert a 4 byte integer to a text string. */
 extern char*	afs_inet_ntoa(afs_uint32 addr);
-
+extern char*    afs_inet_ntoa_r(afs_uint32 addr, char *buf);
 
 /* copy strings, converting case along the way. */
 extern char *lcstring(char *d, char *s, int n);
@@ -74,7 +74,9 @@ extern char *strcompose(char *buf, size_t len, ...);
 
 
 #ifdef AFS_NT40_ENV
+#ifndef _MFC_VER
 #include <winsock2.h>
+#endif /* _MFC_VER */
 
 /* Initialize the windows sockets before calling networking routines. */
 extern int afs_winsockInit(void);

@@ -10,7 +10,9 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
+#endif /* !DJGPP */
 #include <malloc.h>
 #include <string.h>
 
@@ -143,7 +145,7 @@ void cm_CheckTokenCache(long now)
         extern smb_vc_t *smb_allVCsp; /* global vcp list */
 	smb_vc_t   *vcp;
 	smb_user_t *usersp;
-	cm_user_t  *userp;
+	cm_user_t  *userp = NULL;
 	cm_ucell_t *ucellp;
 	BOOL bExpired=FALSE;
   
@@ -153,8 +155,11 @@ void cm_CheckTokenCache(long now)
 	lock_ObtainWrite(&smb_rctLock);
 	for(vcp=smb_allVCsp; vcp; vcp=vcp->nextp) {
 	        for(usersp=vcp->usersp; usersp; usersp=usersp->nextp) {
-		        userp=usersp->userp;
-			osi_assert(userp);
+				if (usersp->unp) {
+		           if ((userp=usersp->unp->userp)==0)
+					   continue;
+				} else
+					continue;
 			lock_ObtainMutex(&userp->mx);
 			for(ucellp=userp->cellInfop; ucellp; ucellp=ucellp->nextp) {
 			  if(ucellp->flags & CM_UCELLFLAG_RXKAD) {

@@ -17,7 +17,7 @@ UKERNELDIR = ../libuafs/
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS = ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS= ${SRCDIR}include/rx/rx.h \
        ${SRCDIR}include/rx/xdr.h \
        rxkad.h
@@ -39,7 +39,7 @@ all: librxkad.a
 system: install
 
 clean: 
-	rm -f *.o tcrypt core *.a rxkad_errs.c rxkad.h AFS_component_version_number.c
+	rm -f *.o tcrypt core *.a rxkad_errs.c rxkad.h AFS_component_version_number.c crypt_conn.c fcrypt.c fcrypt.h sboxes.h
 
 librxkad.a: $(OBJS) ${REGOBJS} AFS_component_version_number.o
 	-rm -f librxkad.a

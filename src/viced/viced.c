@@ -599,10 +599,12 @@ main(argc, argv)
 	ViceLog(0, ("Can't find address for FileServer '%s'\n",	FS_HostName));
     }
     else {
-      bcopy(he->h_addr, &FS_HostAddr_NBO, 4);
-      FS_HostAddr_HBO = ntohl(FS_HostAddr_NBO);
-      ViceLog(0,("FileServer %s has address 0x%x (0x%x in host byte order)\n",
-		 FS_HostName, FS_HostAddr_NBO, FS_HostAddr_HBO));
+	char hoststr[16];
+	bcopy(he->h_addr, &FS_HostAddr_NBO, 4);
+	afs_inet_ntoa_r(FS_HostAddr_NBO, hoststr);
+	FS_HostAddr_HBO = ntohl(FS_HostAddr_NBO);
+	ViceLog(0,("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
+		   FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
     }
 
     /* Install handler to catch the shutdown signal */
@@ -646,15 +648,17 @@ static FiveMinuteCheckLWP()
 	ViceLog(2, ("Set disk usage statistics\n"));
 	VSetDiskUsage();
 	if (FS_registered == 1) Do_VLRegisterRPC();
-#ifndef AFS_QUIETFS_ENV
 	if(printBanner && (++msg&1)) { /* Every 10 minutes */
 	    time_t now = FT_ApproxTime();
 	    if (console != NULL) {
+#ifndef AFS_QUIETFS_ENV
 		fprintf(console,"File server is running at %s\r",
 			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+#endif /* AFS_QUIETFS_ENV */
+		ViceLog(2, ("File server is running at %s\n",
+			afs_ctime(&now, tbuffer, sizeof(tbuffer))));
 	    }
 	}
-#endif /* AFS_QUIETFS_ENV */
     }
 } /*FiveMinuteCheckLWP*/
 
@@ -857,17 +861,24 @@ int dopanic;
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-#ifndef AFS_QUIETFS_ENV
     if (console != NULL) {
 	now = time(0);
-	if (dopanic)
+	if (dopanic) {
+#ifndef AFS_QUIETFS_ENV
 	    fprintf(console, "File server has terminated abnormally at %s\r",
 		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-	else 
+#endif
+	    ViceLog(0, ("File server has terminated abnormally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	} else {
+#ifndef AFS_QUIETFS_ENV
 	    fprintf(console, "File server has terminated normally at %s\r",
 		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    }
 #endif
+	    ViceLog(0, ("File server has terminated normally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	}
+    }
 
     exit(0);
 

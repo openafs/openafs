@@ -22,10 +22,15 @@
 
 #include <mit-cpyright.h>
 #include <stdio.h>
-#include <string.h>
 #include <afs/param.h>
 #include <des.h>
 #include "des_internal.h"
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
+#include <string.h>
+#endif
 
 extern int des_debug;
 extern int des_debug_print();
@@ -114,7 +119,7 @@ des_string_to_key(str,key)
 
     if (des_debug)
 	fprintf(stdout,
-		"\nResulting string_to_key = 0x%x 0x%x\n",
+		"\nResulting string_to_key = 0x%lx 0x%lx\n",
 		*((afs_uint32 *) key),
 		*((afs_uint32 *) key+1));
 }

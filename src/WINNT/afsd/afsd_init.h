@@ -9,9 +9,14 @@
 
 void afsi_start();
 
+#ifndef DJGPP
 int afsd_InitCM(char **reasonP);
-int afsd_InitDaemons(char **reasonP);
 int afsd_InitSMB(char **reasonP, void *aMBfunc);
+#else /* DJGPP */
+int afsd_InitCM(char **reasonP, struct cmd_syndesc *as, char *arock);
+int afsd_InitSMB(char **reasonP);
+#endif /* !DJGPP */
+int afsd_InitDaemons(char **reasonP);
 
 void afsd_ForceTrace(BOOL flush);
 

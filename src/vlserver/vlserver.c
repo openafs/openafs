@@ -174,12 +174,16 @@ char	**argv;
 #endif
 	} else {
 	    /* support help flag */
-	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 #ifndef AFS_NT40_ENV
+	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-syslog[=FACILITY]] "
-#endif
-		   /*" [-enable_peer_stats] [-enable_process_stats] " */
+		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
+#else
+	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-help]\n");
+#endif
 	    fflush(stdout);
 	    exit(0);
 	}
@@ -221,7 +225,7 @@ char	**argv;
     }
     bcopy(th->h_addr,&myHost,sizeof(afs_int32));
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */

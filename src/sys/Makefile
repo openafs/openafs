@@ -14,7 +14,7 @@ include ../config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR=../libuafs/
-CFLAGS= ${DBUG}  -I${SRCDIR}include  ${XCFLAGS} ${DBG_DEFS}
+CFLAGS= ${DBUG}  -I${TOP_SRCDIR}/config -I${SRCDIR}include  ${XCFLAGS} ${DBG_DEFS}
 SFLAGS=-P -I${SRCDIR}include  
 LIBS= libsys.a ${SRCDIR}lib/librx.a libsys.a ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/util.a ${XLIBS}
 UKSRCS=afsl.exp
@@ -183,7 +183,7 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 clean:
 	rm -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
-	rmtsysd AFS_component_version_number.c
+	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
 
 beancount:
 	wc -l *.c *.s

@@ -7,11 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+
 #ifndef lint
 #endif
 /* getaddr -- get our internet address. July, 1986 */
 
 #include <afs/param.h>
+#ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/types.h>
@@ -63,6 +65,7 @@ afs_int32 rxi_getaddr() {
 #ifndef KERNEL
 
 /* to satisfy those who call setaddr */
+int
 rxi_setaddr(x)
 afs_int32 x; {
     return 0;
@@ -325,7 +328,9 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
     struct ifconf   ifc;
     struct ifreq    ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+#if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
     char	*cp, *cplim;	/* used only for AIX 41 */
+#endif
 
     s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0)
@@ -390,9 +395,11 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
    int     s;
    int     i, len, count=0;
    struct ifconf   ifc;
-   struct ifreq    ifs[NIFS], *ifr, tempIfr;
+   struct ifreq    ifs[NIFS], *ifr;
    struct sockaddr_in *a;
+#if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
    char        *cp, *cplim;    /* used only for AIX 41 */
+#endif
 
 #if !defined(AFS_USERSPACE_IP_ADDR)
    count = rx_getAllAddr(addrBuffer, 1024);
@@ -480,3 +487,5 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */
+
+#endif /* !AFS_DJGPP_ENV */

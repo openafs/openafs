@@ -17,8 +17,6 @@ SRCROOT = ..\..\..\src
 !ERROR Can not find src directory from current directory.
 !ENDIF
 
-
-
 INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
@@ -34,6 +32,9 @@ $(INCFILEDIR)\param.h: param.$(SYS_NAME).h
 	$(COPY) $? $@
 
 idirs: doclink
+!	IF (!EXIST($(DESTDIR)))
+		$(MKDIR) $(DESTDIR)
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\include))
 		$(MKDIR) $(DESTDIR)\include
 !	ENDIF
@@ -76,10 +77,41 @@ idirs: doclink
 !	IF (!EXIST($(DESTDIR)\root.server\usr\afs\bin))
 		$(MKDIR) $(DESTDIR)\root.server\usr\afs\bin
 !	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client))
+		$(MKDIR) $(DESTDIR)\root.client
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr))
+		$(MKDIR) $(DESTDIR)\root.client\usr
+!	ENDIF
+!	IF (!EXIST($(DESTDIR)\root.client\usr\vice))
+		$(MKDIR) $(DESTDIR)\root.client\usr\vice
+!	ENDIF
 !	IF (!EXIST($(DESTDIR)\root.client\usr\vice\etc))
 		$(MKDIR) $(DESTDIR)\root.client\usr\vice\etc
 !	ENDIF
 
+INCCOPY = \
+	$(DESTDIR)\bin\rmbat.bat \
+	$(DESTDIR)\bin\rmbat.rsp \
+	$(DESTDIR)\bin\NTBUILD.bat
+
+$(DESTDIR)\bin\rmbat.bat:..\rmbat.bat
+	$(COPY) $? $@
+	util_cr + $@
+
+$(DESTDIR)\bin\rmbat.rsp:..\rmbat.rsp
+	$(COPY) $? $@
+
+$(DESTDIR)\bin\NTBUILD.bat:..\NTBUILD.bat
+	$(COPY) $? $@
+	util_cr + $@
+
+$(DESTDIR)\bin\NTLang.bat: NTLang.bat util_cr.exe
+	$(COPY) NTLang.bat $(DESTDIR)\bin
+	util_cr + $(DESTDIR)\bin\NTLang.bat
+
+$(DESTDIR)\NTDllmap.txt:NTDllmap.txt
+	$(COPY) $? $@
 
 # Create link to docs needed for media build; allow to fail in case
 # symlink not available, e.g. if using a 3.4a client, since most builds
@@ -101,24 +133,42 @@ NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
 		$(COPY) NTMakefile.version-NOCML NTMakefile.version
 !	ENDIF
 
-$(DESTDIR)\bin\mkvers.exe: mkvers.exe
-	$(COPY) mkvers.exe $(DESTDIR)\bin
+INCTOOLS = \
+	$(DESTDIR)\bin\mkvers.exe \
+	$(DESTDIR)\bin\util_cr.exe \
+	$(DESTDIR)\bin\touch.exe
 
+#mkvers.exe : mkvers.obj
+#	$(EXECONLINK)
 
-$(DESTDIR)\NTDllmap.txt: NTDllmap.txt
-	$(COPY) NTDllmap.txt $(DESTDIR)
+$(DESTDIR)\bin\mkvers.exe:mkvers.exe
+	$(COPY) mkvers.exe $(DESTDIR)\bin\.
 
+$(DESTDIR)\bin\util_cr.exe:util_cr.exe
+	$(COPY) util_cr.exe $(DESTDIR)\bin\.
 
-$(DESTDIR)\bin\NTLang.bat: NTLang.bat
-	$(COPY) NTLang.bat $(DESTDIR)\bin
+util_cr.exe : util_cr.obj
+	$(EXECONLINK)
+
+$(DESTDIR)\bin\touch.exe:touch.exe
+	$(COPY) touch.exe $(DESTDIR)\bin\.
 
 langsetup: $(DESTDIR)\bin\NTLang.bat
 
+install: idirs $(INCTOOLS) $(INCCOPY) version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup 
 
-install: idirs version $(INCFILES) $(DESTDIR)\NTDllmap.txt langsetup
-
+install9x: install
 
 # This clean target must be named something different than the universal
 # 'clean' so that the version file can be removed last.
 clean_version:
 	$(DEL) NTMakefile.version
+
+clean::
+	$(DEL) $(DESTDIR)\LIB\*.DLL
+	$(DEL) $(DESTDIR)\bin\mkver.exe
+	$(DEL) $(DESTDIR)\bin\touch.exe
+	$(DEL) $(DESTDIR)\bin\util_cr.exe
+	$(DEL) mkver.exe
+	$(DEL) touch.exe
+	$(DEL) util_cr.exe

@@ -11,6 +11,13 @@
 #include "vsprocs.h"
 #include "lockprocs.h"
 #include <afs/afs_AdminErrors.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#endif
 
 /*
  * Functions that aren't prototyped, but that we use

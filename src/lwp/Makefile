@@ -13,7 +13,7 @@ include ../config/Makefile.${SYS_NAME}
 # subtle bugs that may have been introduced in process.s, be warned!
 OPTIMIZE=${LWP_OPTMZ}
 
-CFLAGS=${OPTIMIZE} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 include ../config/Makefile.version
 
@@ -28,12 +28,12 @@ noversion: install
 #
 liblwp.a	: ${LIBOBJS}
 		-rm -f liblwp.a
-		ar rv liblwp.a ${LIBOBJS}
+		$(AR) rv liblwp.a ${LIBOBJS}
 		$(RANLIB) liblwp.a
 
 libtlwp.a	: ${LIBTOBJS}
 		-rm -f libtlwp.a
-		ar rv libtlwp.a ${LIBTOBJS}
+		$(AR) rv libtlwp.a ${LIBTOBJS}
 		$(RANLIB) libtlwp.a
 
 tlwp.o: lwp.c lwp.h
@@ -121,6 +121,7 @@ rw.o: rw.c
 #
 #	Installation
 #
+all: system
 system:	install
 
 kinstall ukinstall webinstall:
@@ -140,3 +141,6 @@ clean:
 
 beancount:
 	wc -l *.[ch]
+
+includes:
+	${INSTALL} *.h ${DESTDIR}include

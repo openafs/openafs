@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -16,8 +17,22 @@
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <netdb.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <string.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include <sys/stat.h>
 #include <afs/stds.h>
@@ -60,7 +75,7 @@ register char *aname;
     return ts->s_port;	/* returns it in network byte order */
 }
 
-MainCommand(as, arock)
+int MainCommand(as, arock)
 char *arock;
 struct cmd_syndesc *as;
 {
@@ -491,7 +506,7 @@ struct cmd_syndesc *as;
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
 #endif
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {

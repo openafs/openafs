@@ -6,7 +6,6 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 !include ..\config\NTMakefile.$(SYS_NAME)
-
 !include ..\config\NTMakefile.version
 
 INCFILEDIR = $(DESTDIR)\include\afs
@@ -17,3 +16,7 @@ INCFILES = \
 
 install: $(INCFILES)
 
+install9x: install
+
+clean::
+	$(DEL) $(INCFILES)

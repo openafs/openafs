@@ -12,9 +12,14 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
-#include <string.h>
 #include <des.h>
 #include "des_internal.h"
+#if defined(HAVE_STRINGS_H)
+#include <strings.h>
+#endif
+#if defined(HAVE_STRING_H)
+#include <string.h>
+#endif
 
 /*
  * The following are the weak DES keys:

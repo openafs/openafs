@@ -21,6 +21,10 @@
 
 #include <osi.h>
 
+#ifdef DEBUG
+//#define NOTSERVICE
+#endif
+
 extern void afsi_log(char *pattern, ...);
 
 extern char AFSConfigKeyName[];
@@ -186,6 +190,7 @@ void afsd_Main()
 
 	WaitToTerminate = CreateEvent(NULL, TRUE, FALSE, NULL);
 
+#ifndef NOTSERVICE
 	StatusHandle = RegisterServiceCtrlHandler(AFS_DAEMON_SERVICE_NAME,
 			(LPHANDLER_FUNCTION) afsd_ServiceControlHandler);
 
@@ -197,6 +202,7 @@ void afsd_Main()
 	ServiceStatus.dwWaitHint = 15000;
 	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
+#endif
 {       
         HANDLE h; char *ptbuf[1];
 	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
@@ -223,12 +229,14 @@ void afsd_Main()
 		if (code != 0)
 			osi_panic(reason, __FILE__, __LINE__);
 
+#ifndef NOTSERVICE
 		ServiceStatus.dwCurrentState = SERVICE_RUNNING;
 		ServiceStatus.dwWin32ExitCode = NO_ERROR;
 		ServiceStatus.dwCheckPoint = 0;
 		ServiceStatus.dwWaitHint = 0;
 		ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
 		SetServiceStatus(StatusHandle, &ServiceStatus);
+#endif
 	{
 	        HANDLE h; char *ptbuf[1];
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
@@ -261,6 +269,14 @@ void afsd_Main()
 	SetServiceStatus(StatusHandle, &ServiceStatus);
 }
 
+#ifdef NOTSERVICE
+void main()
+{
+	afsd_Main();
+	Sleep(1000);
+	return ;
+}
+#else
 void _CRTAPI1 main()
 {
 	LONG status = ERROR_SUCCESS;
@@ -272,3 +288,4 @@ void _CRTAPI1 main()
 	if (!StartServiceCtrlDispatcher(dispatchTable))
 		status = GetLastError();
 }
+#endif

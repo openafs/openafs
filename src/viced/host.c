@@ -986,9 +986,11 @@ retry:
 		    goto retry;
 		}
 	} else {
-	   	ViceLog(0,("CB: WhoAreYou failed for %x.%d, error %d\n", 
-			host->host, host->port, code));
-	        host->hostFlags |= VENUSDOWN;
+	    char hoststr[16];
+	    afs_inet_ntoa_r(host->host, hoststr);
+	    ViceLog(0,("CB: WhoAreYou failed for %s:%d, error %d\n", 
+		       hoststr, ntohs(host->port), code));
+	    host->hostFlags |= VENUSDOWN;
 	}
 	host->hostFlags |= ALTADDR;
 	h_Unlock_r(host);
@@ -1085,9 +1087,11 @@ retry:
 		}
 	   }
 	   if (code) {
-	   	ViceLog(0,("CB: RCallBackConnectBack failed for %x.%d\n", 
-			host->host, host->port));
-	        host->hostFlags |= VENUSDOWN;
+               char hoststr[16];
+               afs_inet_ntoa_r(host->host, hoststr);
+               ViceLog(0,("CB: RCallBackConnectBack failed for %s:%d\n", 
+			  hoststr, ntohs(host->port)));
+	       host->hostFlags |= VENUSDOWN;
 	    }
 	    else
 		host->hostFlags |= RESETDONE;
@@ -1905,11 +1909,13 @@ int CheckHost(host, held)
 		    host->hostFlags |= ALTADDR; /* alternate addresses valid */
 		    if ( code )
 		    {
-		    	ViceLog(0,
-			    ("CB: RCallBackConnectBack (host.c) failed for host %x.%d\n",
-			    host->host, host->port));
-		    	host->hostFlags |= VENUSDOWN;
-		     }
+			char hoststr[16];
+			afs_inet_ntoa_r(host->host, hoststr);
+                        ViceLog(0,
+				("CB: RCallBackConnectBack (host.c) failed for host %s:%d\n",
+				 hoststr, ntohs(host->port)));
+                        host->hostFlags |= VENUSDOWN;
+		    }
 		    /* Note:  it's safe to delete hosts even if they have call
 		     * back state, because break delayed callbacks (called when a
 		     * message is received from the workstation) will always send a 
@@ -1927,10 +1933,12 @@ int CheckHost(host, held)
 			H_LOCK
 			if(code) {
 			    if ( MultiProbeAlternateAddress_r(host) ) {
-		    		ViceLog(0,
-					("ProbeUuid failed for host %x.%d\n",
-					 host->host, host->port));
-		        	host->hostFlags |= VENUSDOWN;
+				char hoststr[16];
+				afs_inet_ntoa_r(host->host, hoststr);
+                                ViceLog(0,
+					("ProbeUuid failed for host %s:%d\n",
+					 hoststr, ntohs(host->port)));
+                                host->hostFlags |= VENUSDOWN;
 			    }
 			}
 		    } else {
@@ -1938,9 +1946,11 @@ int CheckHost(host, held)
 			code = RXAFSCB_Probe(host->callback_rxcon);
 			H_LOCK
 			if (code) {
-		    	    ViceLog(0, ("ProbeUuid failed for host %x.%d\n",
-				    host->host, host->port));
-		            host->hostFlags |= VENUSDOWN;
+			    char hoststr[16];
+			    afs_inet_ntoa_r(host->host, hoststr);
+			    ViceLog(0, ("ProbeUuid failed for host %s:%d\n",
+					hoststr, ntohs(host->port)));
+			    host->hostFlags |= VENUSDOWN;
 			}
 		    }
 		}

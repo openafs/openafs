@@ -47,12 +47,12 @@ cmd64.o: cmd.c ${INCLS}
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-rm -f libcmd64.a
-	ar r libcmd64.a ${LIB64OBJS} AFS_component_version_number64.o
+	$(AR) r libcmd64.a ${LIB64OBJS} AFS_component_version_number64.o
 	$(RANLIB) libcmd64.a
 
 libcmd.a: ${LIBOBJS} AFS_component_version_number.o
 	-rm -f libcmd.a
-	ar r libcmd.a ${LIBOBJS} AFS_component_version_number.o
+	$(AR) r libcmd.a ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) libcmd.a
 
 kinstall:

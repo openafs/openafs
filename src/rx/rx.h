@@ -90,6 +90,10 @@ int rx_ReadProc();
 int rx_ReadvProc();
 int rx_ReadProc32();
 void rx_FlushWrite();
+void rxi_DeleteCachedConnections();
+void rxi_DestroyConnection();
+void rxi_CleanupConnection();
+int rxi_Listen();
 int rxi_WriteProc();
 int rxi_WritevProc();
 int rxi_WritevAlloc();
@@ -97,16 +101,44 @@ int rxi_ReadProc();
 int rxi_ReadvProc();
 int rxi_FillReadVec();
 void rxi_FlushWrite();
+int rxi_getAllAddrMaskMtu();
+int rx_getAllAddr();
+void rxi_FreePacket();
+void rxi_FreePacketNoLock();
+int rxi_AllocDataBuf();
+void rxi_RestoreDataBufs();
+void rxi_Sleep();
+void rxi_InitializeThreadSupport();
+int rxi_Recvmsg();
+int rxi_Sendmsg();
+int rxi_IsConnInteresting();
+afs_int32 rx_SlowReadPacket();
+afs_int32 rx_SlowWritePacket();
+afs_int32 rx_SlowGetInt32();
+void rxi_StopListener();
+void rxi_InitPeerParams();
+void rxi_FreeAllPackets();
+void rxi_SendPacketList();
+void rxi_SendPacket();
+void rxi_MorePackets();
+void rxi_MorePacketsNoLock();
+void rxi_PacketsUnWait();
+void rx_CheckPackets();
+void rxi_Wakeup();
 void rx_PrintStats();
 void rx_PrintPeerStats();
 void rx_SetArrivalProc();
 void rx_Finalize();
 void rx_GetIFInfo();
+void shutdown_rxevent();
+int clock_UnInit();
+void rxi_Delay(int);
 #ifndef KERNEL
 typedef void (*rx_destructor_t)(void *);
 int rx_KeyCreate(rx_destructor_t);
 void *rx_GetSpecific(struct rx_connection *conn, int key);
 void rx_SetSpecific(struct rx_connection *conn, int key, void *ptr);
+osi_socket rxi_GetUDPSocket(u_short port);
 #endif /* KERNEL */
 int ntoh_syserr_conv(int error);
 
@@ -481,6 +513,7 @@ struct rx_connection {
 #define RX_CONN_USING_PACKET_CKSUM  4	/* non-zero header.spare field seen */
 #define RX_CONN_KNOW_WINDOW         8   /* window size negotiation works */
 #define RX_CONN_RESET		   16   /* connection is reset, remove */
+#define RX_CONN_BUSY               32   /* connection is busy; don't delete */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0

@@ -23,7 +23,7 @@
 #if	defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK	k_flock
 #else
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK	flock
@@ -534,11 +534,16 @@ struct AFS_UCRED *acred; {
 	   with it in.  However, they fail in race conditions.  The question is
 	   what to do for people who don't have source to their application;
 	   this way at least, they can get work done */
+#ifdef AFS_LINUX24_ENV
+       if (af->l_len == OFFSET_MAX)
+	   af->l_len = 0;      /* since some systems indicate it as EOF */
+#else
 	if (af->l_len == 0x7fffffff)
 	    af->l_len = 0;	/* since some systems indicate it as EOF */
 #ifdef AFS_LINUX_64BIT_KERNEL
 	if (af->l_len == LONG_MAX)
 	    af->l_len = 0;      /* since some systems indicate it as EOF */
+#endif
 #endif
 	/* next line makes byte range locks always succeed,
 	   even when they should block */

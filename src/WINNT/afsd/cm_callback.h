@@ -11,13 +11,14 @@
 #define _CM_CALLBACK_H_ENV__ 1
 
 #include <osi.h>
-#include "cm_scache.h"
 
 typedef struct cm_callbackRequest {
 	long callbackCount;		/* callback count at start of the request */
         long startTime;			/* time when we started the call */
         struct cm_server *serverp;	/* server we really got the callback from */
 } cm_callbackRequest_t;
+
+#include "cm_scache.h"
 
 typedef struct cm_racingRevokes {
         osi_queue_t q;			/* queue for forward/backward searches */

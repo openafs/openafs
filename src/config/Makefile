@@ -139,7 +139,8 @@ install: version install.noversion kinstall ukinstall
 # kernel include environment.  param.h is, well, param.h.  The afs_sysnames.h
 # file is needed by param.h to create unique identifiers for each SYS_TYPE.
 
-kinstall: lkversion config $(KDIRS) ${KERNELDIR}/afs/param.h \
+# lkversion
+kinstall: config $(KDIRS) ${KERNELDIR}/afs/param.h \
 	${KERNELDIR}/afs/stds.h \
 	${KERNELDIR}/afs/afs_sysnames.h \
 	${KERNELDIR}/config/Makefile.${SYS_NAME} \
@@ -156,4 +157,4 @@ ukinstall webinstall: $(DESTINCLS) config $(UKDIRS) ${UKERNELDIR}/afs/param.h ${
 	${UKERNELDIR}/afs/AFS_component_version_number.c
 
 clean:
-	$(RM) -f *.o config core xprt 
+	$(RM) -f *.o config core xprt AFS_component_version_number.c

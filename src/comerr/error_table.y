@@ -146,7 +146,7 @@ char *gensym(const char *x)
 	}
 	symbol = (char *)malloc(32 * sizeof(char));
 	gensym_n++;
-	sprintf(symbol, "et%ld", gensym_n);
+	sprintf(symbol, "et%ld", (long int) gensym_n);
 	return(symbol);
 }
 
@@ -236,7 +236,7 @@ void put_ecs(void)
 	for (i = 0; i < current; i++) {
 	     if (error_codes[i] != (char *)NULL)
 		  fprintf(hfile, "#define %-40s (%ldL)\n",
-			  error_codes[i], table_number + i);
+			  error_codes[i], (long int) table_number + i);
 	}
 }
 

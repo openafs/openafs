@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#define snprintf _snprintf
 #else
 #include <sys/socket.h>
 #include <netdb.h>

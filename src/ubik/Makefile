@@ -10,7 +10,7 @@ COMPONENT=ubik
 include ../config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS=${OPTMZ} -I./ -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I./ -I${SRCDIR}include ${XCFLAGS}
 UKERNELDIR=../libuafs/
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
@@ -36,7 +36,7 @@ test: utst_server utst_client udebug
 
 clean:
 	rm -f *.o utst_server utst_client udebug *.a *.cs.c *.ss.c *.xdr.c
-	rm -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c
+	rm -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
 
 system: install
 

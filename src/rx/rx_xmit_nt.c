@@ -15,15 +15,28 @@
  */
 
 #include <afs/param.h>
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 
+#ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#else
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+typedef int SOCKET;
+#endif
 
 #include "rx.h"
 #include "rx_packet.h"
 #include "rx_globals.h"
 #include "rx_xmit_nt.h"
+#ifdef AFS_NT40_ENV
 #include <malloc.h>
+#endif
 #include <errno.h>
 
 int recvmsg(int socket, struct msghdr *msgP, int flags)
@@ -101,6 +114,7 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
     code = sendto((SOCKET)socket, sbuf, size, flags,
 		  (struct sockaddr*)(msgP->msg_name), msgP->msg_namelen);
 
+#ifdef AFS_NT40_ENV
     if (code == SOCKET_ERROR) {
 	code = WSAGetLastError();
 	switch (code) {
@@ -116,6 +130,7 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
 	}
 	code = -1;
     }
+#endif /* AFS_NT40_ENV */
 
     if (code < size) {
 	errno = EIO;
@@ -129,4 +144,4 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
 
 
 
-#endif
+#endif /* AFS_NT40_ENV || AFS_DJGPP_ENV */
