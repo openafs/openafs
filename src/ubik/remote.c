@@ -30,6 +30,7 @@ RCSID
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
