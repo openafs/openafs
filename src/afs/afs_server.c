@@ -507,7 +507,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     XSTATS_DECLS;
 
     AFS_STATCNT(afs_CheckServers);
-    if ((code = afs_InitReq(&treq, &afs_osi_cred)))
+    if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return;
     ObtainReadLock(&afs_xserver);	/* Necessary? */
     ObtainReadLock(&afs_xsrvAddr);

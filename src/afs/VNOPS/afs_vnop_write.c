@@ -521,7 +521,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_GUNLOCK();
 	code =
 	    VNOP_RDWR(tfile->vnode, UIO_WRITE, FWRITE, &tuio, NULL, NULL,
-		      NULL, &afs_osi_cred);
+		      NULL, afs_osi_credp);
 	AFS_GLOCK();
 #else
 #ifdef AFS_AIX32_ENV
@@ -536,7 +536,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #ifdef	AFS_SUN5_ENV
 	AFS_GUNLOCK();
 	VOP_RWLOCK(tfile->vnode, 1);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_RWUNLOCK(tfile->vnode, 1);
 	AFS_GLOCK();
 	if (code == ENOSPC)
@@ -547,7 +547,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	AFS_GUNLOCK();
 	avc->states |= CWritingUFS;
 	AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
-	AFS_VOP_WRITE(tfile->vnode, &tuio, IO_ISLOCKED, &afs_osi_cred, code);
+	AFS_VOP_WRITE(tfile->vnode, &tuio, IO_ISLOCKED, afs_osi_credp, code);
 	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
 	avc->states &= ~CWritingUFS;
 	AFS_GLOCK();
@@ -555,10 +555,10 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #ifdef	AFS_OSF_ENV
 	{
 	    struct ucred *tmpcred = u.u_cred;
-	    u.u_cred = &afs_osi_cred;
+	    u.u_cred = afs_osi_credp;
 	    tuio.uio_rw = UIO_WRITE;
 	    AFS_GUNLOCK();
-	    VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred, code);
+	    VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp, code);
 	    AFS_GLOCK();
 	    u.u_cred = tmpcred;
 	}
@@ -566,7 +566,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if defined(AFS_HPUX100_ENV)
 	{
 	    AFS_GUNLOCK();
-	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, &afs_osi_cred);
+	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
 	    AFS_GLOCK();
 	}
 #else
@@ -581,18 +581,18 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if defined(AFS_DARWIN_ENV)
 	AFS_GUNLOCK();
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_UNLOCK(tfile->vnode, 0, current_proc());
 	AFS_GLOCK();
 #else
 #if defined(AFS_XBSD_ENV)
 	AFS_GUNLOCK();
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
-	code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_UNLOCK(tfile->vnode, 0, curproc);
 	AFS_GLOCK();
 #else
-	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, &afs_osi_cred);
+	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, afs_osi_credp);
 #endif /* AFS_XBSD_ENV */
 #endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */

@@ -323,7 +323,7 @@ VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
     AFS_STATCNT(CheckVLDB);
     afs_FinalizeReq(areq);
 
-    if ((i = afs_InitReq(&treq, &afs_osi_cred)))
+    if ((i = afs_InitReq(&treq, afs_osi_credp)))
 	return DUNNO;
     v = afs_osi_Alloc(sizeof(*v));
     tcell = afs_GetCell(afid->Cell, READ_LOCK);

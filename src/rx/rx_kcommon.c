@@ -786,9 +786,8 @@ rxk_NewSocket(short aport)
 #elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
 #elif defined(AFS_FBSD50_ENV)
-    code =
-	socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, &afs_osi_cred,
-		 curthread);
+    code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
+		    afs_osi_credp, curthread);
 #elif defined(AFS_FBSD40_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP, curproc);
 #else

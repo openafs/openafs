@@ -60,7 +60,7 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
-    code = VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = afile->size = tvattr.va_size;
@@ -107,7 +107,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     tvattr.va_size = asize;
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curproc);
-    code = VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, curproc);
+    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
     VOP_UNLOCK(afile->vnode, 0, curproc);
     AFS_GLOCK();
     if (code == 0)
@@ -150,7 +150,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
     AFS_GUNLOCK();
     code =
 	vn_rdwr(UIO_READ, afile->vnode, aptr, asize, afile->offset,
-		AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
+		AFS_UIOSYS, IO_UNIT, afs_osi_credp, &resid, curproc);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
@@ -182,7 +182,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curproc);
     code =
 	vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
+		AFS_UIOSYS, IO_UNIT, afs_osi_credp, &resid, curproc);
     VOP_UNLOCK(afile->vnode, 0, curproc);
     AFS_GLOCK();
 

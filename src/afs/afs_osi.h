@@ -396,7 +396,7 @@ typedef struct timeval osi_timeval_t;
 /* Declare any structures which use these macros after the OSI implementation
  * has had the opportunity to redefine them.
  */
-extern struct AFS_UCRED afs_osi_cred;
+extern struct AFS_UCRED afs_osi_cred, *afs_osi_credp;
 
 #ifndef osi_curcred
 #define osi_curcred() (u.u_cred)

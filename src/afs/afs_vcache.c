@@ -335,7 +335,7 @@ afs_FlushVCBs(afs_int32 lockit)
     struct vrequest treq;
     struct conn *tc;
     int safety1, safety2, safety3;
-    XSTATS_DECLS if ((code = afs_InitReq(&treq, &afs_osi_cred)))
+    XSTATS_DECLS if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return code;
     treq.flags |= O_NONBLOCK;
     tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
@@ -1199,7 +1199,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&tvc->lock, 51);
 		do {
-		    afs_InitReq(&treq, &afs_osi_cred);
+		    afs_InitReq(&treq, afs_osi_credp);
 		    treq.flags |= O_NONBLOCK;
 
 		    tc = afs_Conn(&tvc->fid, &treq, SHARED_LOCK);
