@@ -169,11 +169,9 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     struct vnode *vp;
     struct vm_object *obj;
-    printf("|");
     vp=avc;
     simple_lock(&vp->v_interlock);
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
-       printf("X|");
        vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
