@@ -1,0 +1,76 @@
+                  OpenAFS Release Notes - Version 1.2.7
+     _________________________________________________________________
+New platform support.
+All systems: New functionality and minor bugfixes.
+     _________________________________________________________________
+
+This is the first OpenAFS 1.2.x release to support MacOS X 10.2 (aka
+"Jaguar") and FreeBSD 4.3 and later.  The FreeBSD client is still
+under development, and should not be used except by those doing development
+on the OpenAFS FreeBSD client.
+
+Additionally, support for building all userland code on SunOS 4 is now
+present.  The kernel module and any code that depends on filesystem layout
+(vfsck, salvager) are not supported.
+
+All systems:
+
+- The fileserver will now use rx pings to determine that clients are reachable
+  before allocating threads to them.  This prevents asymmetric clients from
+  consuming all resources on a fileserver.
+
+- Support the "NetInfo" file to better support clients/servers being used
+  in conjuction with a NAT.
+
+- Return ENODEV instead of ELOOP when traversing a mountpoint boundary from
+  a BK volume to a BK volume, to prevent find from getting a fatal error
+  when traversing a directory tree with backup volumes mounted.
+
+- "vos listaddrs" will now correctly display all server IP addresses registered
+  in the VLDB.
+
+- The "bos restart" usage message has been corrected to not imply that the
+  "-all" flag is the default.
+
+- Allow users with admin bits to store different user/group IDs along
+  with a StoreData call; they can already do so anyway by using
+  StoreStatus.  Fixes a spurious permission denied error with arla
+  clients.
+
+- The bosserver will not create directories it won't use.
+
+- "fs newcell" will now work even when there are no cells in the kernel yet.
+
+- Shared library versions of libafsrpc and libafsauthent are now compiled.
+
+- ACL the ptserver dumpentry RPC to superusers or those with readonly access 
+  to the entire database.
+
+- Do length checking so we can reject tokens too large to be valid with a 
+  useful error.
+
+Solaris:
+- Set the maxfilesize rlimit to infinity while writing to cache files to 
+  avoid potential truncation if the user's rlimit is too low.
+
+Linux:
+- Update to support newer 2.2.x kernels.
+- Make Linux gcpags support SMP safe.
+- Provide kernel thread support in the client.
+- Correctly compute the size of our cache.
+
+MacOS X/Darwin:
+- MacOS X 10.2 support integrated, includes misc. bug fixes relevant to the
+  client on 10.1.
+- Work around MacOS X Finder's behavior by returning ENOENT when the user
+  tries to look up Contents or .DS_Store in an uncached volume root.
+
+AIX:
+- The namei fileserver and salvager should now work on AIX.
+
+Windows:
+- Fix some build errors.
+
+
+
+
