@@ -17,8 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
+RCSID("$Header$");
 
 #include <stdlib.h>
 #include <stdio.h>

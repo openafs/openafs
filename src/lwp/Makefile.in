@@ -47,15 +47,12 @@ process.o	: process.s process.c
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
-	i386_obsd31 | i386_obsd32 | i386_obsd33 ) \
+	i386_*bsd*) \
+		echo foo ; \
 		cp ${srcdir}/process.i386.s process.S ; \
-		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
+		${CC} -E -I${srcdir} -I${TOP_INCDIR} process.S >process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
-	i386_*bsd* ) \
-		/usr/bin/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s > process.ss; \
-		${AS} -o process.o process.ss; \
-		$(RM) process.ss ;; \
 	ncrx86_* | sunx86_*) \
 		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
 		${AS} -o process.o process.ss; \

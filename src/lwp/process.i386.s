@@ -16,10 +16,7 @@
  * "ojala que es correcto!"
  */
 
-#define IGNORE_STDS_H	1
-/*#ifndef AFS_DJGPP_ENV*/
-#include <afs/param.h>
-/*#endif /* AFS_DJGPP_ENV */
+#include <lwp_elf.h>
 
 	.file "process.s"
 
@@ -45,22 +42,14 @@
 	.set	area1,12
 	.set	newsp,16
 
+.globl	_C_LABEL(PRE_Block)
+.globl	_C_LABEL(savecontext)
 
-#if defined(AFS_DJGPP_ENV) || (defined(AFS_OBSD_ENV) && !defined (AFS_OBSD34_ENV))
-#define PRE_Block	_PRE_Block
-#define savecontext	_savecontext
-#define abort		_abort
-#define returnto	_returnto
-#endif /* AFS_DJGPP_ENV */
-
-.globl	PRE_Block
-.globl	savecontext
-
-savecontext:
+ENTRY(savecontext)
 	pushl	%ebp			/* New Frame! */
 	movl	%esp,%ebp
 	pusha				/* Push all registers */
-	movl	$1,PRE_Block		/* Pre-emption code */
+	movl	$1,_C_LABEL(PRE_Block)	/* Pre-emption code */
 	movl	area1(%ebp),%eax	/* eax = base of savearea */
 	movl	%esp,(%eax)		/* area->topstack = esp */
 	movl	newsp(%ebp),%eax	/* get new sp into eax */
@@ -82,15 +71,15 @@ L1:
 /* stack offset */
 	.set	area2,8
 
-.globl	returnto
+.globl	_C_LABEL(returnto)
 
-returnto:
+ENTRY(returnto)
 	pushl	%ebp
 	movl	%esp, %ebp		/* New frame, to get correct pointer */
 	movl	area2(%ebp),%eax	/* eax = area2 */
 	movl	(%eax),%esp		/* restore esp */
 	popa 
-	movl	$0,PRE_Block		/* clear it up... */
+	movl	$0,_C_LABEL(PRE_Block)		/* clear it up... */
 	popl	%ebp
 	ret
 
