@@ -117,7 +117,6 @@ binary-indep: build install binary-source
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo
-	dh_undocumented
 	dh_installchangelogs   ChangeLog
 	dh_link
 	dh_compress
@@ -147,7 +146,6 @@ binary-arch: build install
 	dh_installcron
 #	dh_installmanpages
 	dh_installinfo
-	dh_undocumented
 	dh_installchangelogs   ChangeLog
 	dh_strip
 	dh_link
@@ -208,10 +206,11 @@ binary-source:
 		$(MAKE) -f debian/rules clean && \
 	rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint; \
 		mv debian/kern-sysname debian/sysname)
-	chown -R root.root debian/$(srcpkg)
+	chown -R root.src debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
 	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
+	chmod 775 debian/$(srcpkg)/usr/src/modules
 	cd debian/$(srcpkg)/usr/src && \
 	  tar cf $(package).tar modules && \
 	  $(RM) -r modules/$(package)
