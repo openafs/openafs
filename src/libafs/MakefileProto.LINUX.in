@@ -118,7 +118,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f linux 
 	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
 	$(RM) -f net 
-	ln -fs ${LINUX_KERNEL_PATH}/include/linux net 
+	ln -fs ${LINUX_KERNEL_PATH}/include/net net 
 	$(RM) -f netinet 
 	ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet 
 	$(RM) -f sys

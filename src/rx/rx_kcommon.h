@@ -18,12 +18,19 @@
 #ifndef _RX_KCOMMON_H_
 #define _RX_KCOMMON_H_
 
+#ifdef AFS_LINUX22_ENV
+#define _LINUX_CODA_FS_I 1
+#define _CODA_HEADER_ 1
+struct coda_inode_info {};
+#endif
 #ifdef AFS_DARWIN_ENV
 #ifndef _MACH_ETAP_H_
 #define _MACH_ETAP_H_
 typedef unsigned short                  etap_event_t;
 #endif
 #endif  
+
+
 #include "h/types.h"
 #include "h/param.h"
 #ifndef AFS_LINUX22_ENV
@@ -75,7 +82,11 @@ typedef unsigned short                  etap_event_t;
 #include "h/signalvar.h"
 #endif /* AFS_OBSD_ENV */
 #include "netinet/in.h"
+#ifdef AFS_LINUX22_ENV
+#include "linux/route.h"
+#else
 #include "net/route.h"
+#endif
 #include "netinet/in_systm.h"
 #include "netinet/ip.h"
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV) && !defined(AFS_OBSD_ENV)
@@ -95,17 +106,16 @@ typedef unsigned short                  etap_event_t;
 #include "h/user.h"
 #endif
 #ifdef AFS_LINUX22_ENV
-#define _LINUX_CODA_FS_I
-struct coda_inode_info {};
 #include "h/sched.h"
 #include "h/netdevice.h"
+#include "linux/if.h"
 #else
 #if !defined(AFS_OBSD_ENV)
 #include "h/proc.h"
 #include "h/file.h"
 #endif
-#endif
 #include "net/if.h"
+#endif
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV)
 #include "netinet/in_var.h"
 #endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
