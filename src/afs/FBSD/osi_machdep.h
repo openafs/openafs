@@ -50,8 +50,29 @@ extern struct simplelock afs_rxglobal_lock;
 #undef afs_suser
 
 #ifdef KERNEL
-extern struct proc * afs_global_owner;
 extern struct lock afs_global_lock;
+#if defined(AFS_FBSD50_ENV)
+#define VT_AFS		"afs"
+#define VROOT		VV_ROOT
+#define v_flag		v_vflag
+extern struct thread * afs_global_owner;
+#define AFS_GLOCK() \
+    do { \
+        osi_Assert(curthread); \
+ 	lockmgr(&afs_global_lock, LK_EXCLUSIVE, 0, curthread); \
+        osi_Assert(afs_global_owner == 0); \
+   	afs_global_owner = curthread; \
+    } while (0)
+#define AFS_GUNLOCK() \
+    do { \
+        osi_Assert(curthread); \
+ 	osi_Assert(afs_global_owner == curthread); \
+        afs_global_owner = 0; \
+        lockmgr(&afs_global_lock, LK_RELEASE, 0, curthread); \
+    } while(0)
+#define ISAFS_GLOCK() (afs_global_owner == curthread && curthread)
+#else /* FBSD50 */
+extern struct proc * afs_global_owner;
 #define AFS_GLOCK() \
     do { \
         osi_Assert(curproc); \
@@ -67,6 +88,7 @@ extern struct lock afs_global_lock;
         lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
+#endif /* FBSD50 */
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
 #define ISAFS_RXGLOCK() 1

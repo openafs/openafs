@@ -198,6 +198,9 @@ typedef unsigned short                  etap_event_t;
 #include "h/user.h"
 #endif /* AFS_SGI64_ENV */
 #define	MACH_USER_API	1
+#if defined(AFS_FBSD50_ENV)
+#include "h/bio.h"
+#endif
 #include "h/file.h"
 #include "h/uio.h"
 #include "h/buf.h"

@@ -29,7 +29,6 @@
 #define AFS_X86_FBSD50_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
-#define O_SYNC O_FSYNC
 #define FTRUNC O_TRUNC
 
 #define IUPD 0x0010
